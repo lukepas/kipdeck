@@ -18,13 +18,13 @@ Hi [Manager name],
 
 I would like your written approval, or a clear no, on a side project before I take it any further. I have kept it separate from client work, and I want to keep it that way.
 
-What it is: I maintain a fork of Agent Office, an MIT-licensed open-source tool by an independent developer. It runs a team of AI coding agents (Claude Code, Codex and others) in a shared browser-based workspace, with a task queue, GitHub issue and PR boards and per-person sign-ins. My changes so far are security hardening, deployment scripts and hackathon prototypes. I built it on my own equipment and my own time, using my own accounts. No client code, client data or [Company] tooling is involved. [If any was, say exactly what here.]
+What it is: I maintain a fork of Agent Office, an MIT-licensed open-source tool by an independent developer. It runs a team of AI coding agents (Claude Code, Codex and others) in a shared browser-based workspace, with a task queue, GitHub issue and PR boards and per-person sign-ins. My changes so far are one security fix, a Nebius model-provider integration and the start of an MCP server for hackathon prototypes; more is in progress. [Update this sentence from the branch table in README.md on the day you send it.] I built it on my own equipment and my own time, using my own accounts. No client code, client data or [Company] tooling is involved. [If any was, say exactly what here.]
 
 What I want to do next, in the next three months:
 
 1. Contribute the security fixes back to the upstream open-source project under its MIT license.
 2. Enter public hackathons (Colosseum, Amazon, Nebius x NVIDIA, Vultr, Meta) with prototypes built on the fork. Deadlines run from Oct 12 to Nov 18.
-3. Apply for small grants and startup cloud credits (Solana Foundation, Base, Filecoin, Innovation Agency Lithuania).
+3. Apply for small grants and startup cloud credits (Solana Foundation, Filecoin, Innovation Agency Lithuania), and accept a Base Builder Grant if one is offered (Base picks recipients; there is no application).
 4. Offer a fixed-price pilot and a workshop on running teams of coding agents to companies.
 
 I see two ways to handle this and would be glad with either:

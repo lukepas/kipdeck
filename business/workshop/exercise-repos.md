@@ -1,6 +1,6 @@
 # Exercise repositories
 
-Five small repositories with seeded issues, built once and reset for each group. Each lives in a workshop GitHub organization, has a `workshop-start` tag to reset to, CI that finishes in under 2 minutes, and a README that says it is training material.
+Five small repositories with seeded issues, to be built once and reset for each group. These are specifications: as of 2026-09-30 none of the repositories has been built, so budget the time to build them before selling a workshop date. Each lives in a workshop GitHub organization, has a `workshop-start` tag to reset to, CI that finishes in under 2 minutes, and a README that says it is training material.
 
 Common rules for all five:
 

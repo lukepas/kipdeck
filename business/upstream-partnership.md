@@ -7,7 +7,15 @@ Two facts shape how to approach it:
 - The repository's `CLAUDE.md` says PRs from anyone other than webdevcody are merged only when he links them, after a security review. So open an issue first, let him decide whether he wants the change, and only then open the PR he links.
 - `docs/how-it-works.md` (Security notes) already states the threat model: anyone who can sign in can run commands as the office user. Some of the fixes below are defense in depth under that model, not vulnerabilities. Say so plainly; overselling a finding to a maintainer who wrote the threat model burns trust.
 
-Send security details privately first if the repository has a security policy or advisory channel. None of the items below lets someone who is not signed in do anything, so a public issue is acceptable if there is no private channel, but ask first anyway.
+## Status of the fixes (checked 2026-09-30)
+
+The only fix committed on `launch/security-hardening` is the meetings one below (PR 0). PRs 1-5 are drafts of work that does not exist yet. Do not send the first message as written until each fix you list is committed with its tests; until then, list only PR 0 and drop the rest from the message.
+
+PR 0 is different in kind from 1-5: a repository someone opens in the office could make the office overwrite a file in the office user's home folder, with no sign-in by the attacker. Treat it as a vulnerability, not hardening.
+
+## Where to send security details
+
+Checked on 2026-09-30: the upstream repository has no SECURITY.md and GitHub private vulnerability reporting is switched off. So for PR 0, do not put details in a public issue. Open a short issue or send a DM asking for a private channel ("I found a file-overwrite issue in saved meetings and have a fix; where can I send details?"), and send the details there. PRs 1-5 do not let someone who is not signed in do anything, so a public issue is fine for them.
 
 ## First message
 
@@ -15,15 +23,16 @@ Where: a GitHub issue titled "Offer: a few security hardening PRs", or a DM if h
 
 Hi Cody,
 
-I have been running a fork of Agent Office for a team setup and made a handful of hardening changes along the way. I would like to offer them back, one small PR each, and only the ones you want:
+I have been running a fork of Agent Office and made some security changes along the way. I would like to offer them back, one small PR each, and only the ones you want. [Keep only the items that are committed with tests on launch/security-hardening when you send this. As of 2026-09-30 that is item 0 only.]
 
+0. A file-overwrite issue in how saved meetings are restored, which a repository opened in the office can trigger. I have a fix with tests and would rather send the details privately; where should they go? [If this message goes in a public issue, keep item 0 at this level of detail.]
 1. Team notifications webhook: only admins can set or change it. Right now any signed-in member can point it at their own URL, while the other office-wide settings (prompts, worker limit, default worker) are already admin-only.
 2. Security headers on the app shell: a Content-Security-Policy, HSTS when the request is HTTPS, and a Permissions-Policy that allows only the microphone and screen capture the office uses.
 3. Sign-in throttling per account name as well as per IP, so guessing one account from many addresses hits a limit.
 4. Webhook URLs must be https (loopback excepted), since the secret is in the path.
 5. An opt-in flag that stops the picture fetcher and the webhook from reaching private and link-local addresses, for deployments where workers run in a sandbox and so do not already have the machine's network reach. Off by default, because your threat model notes that a shell worker can already curl anything.
 
-Each one has tests and a line in docs/how-it-works.md. None is urgent: nothing lets a signed-out visitor in. Happy to adjust them to your style, or drop any you do not want. If you would rather I open them as issues first so you can link the ones you want, I will do that.
+Each one has tests. Items 1-5 are not urgent, since none of them lets a signed-out visitor in; item 0 is the one I would fix first. Happy to adjust them to your style, or drop any you do not want. If you would rather I open them as issues first so you can link the ones you want, I will do that.
 
 Thanks for building this and for putting it under MIT.
 
@@ -54,7 +63,22 @@ If any of this is interesting, a 30-minute call would be enough to see whether i
 
 ## PR description drafts
 
-One PR per fix, each branched from freshly fetched `origin/main`. Reconcile file paths and line numbers with the final diff on the `launch/security-hardening` branch before sending; the references below are to `main` at commit 665aeec. Drop any item that branch did not implement.
+One PR per fix, each branched from freshly fetched `origin/main`. Reconcile file paths and line numbers with the final diff on the `launch/security-hardening` branch before sending; the references below are to `main` at commit 665aeec (checked 2026-09-30). PRs 1-5 describe planned changes: as of 2026-09-30 none is implemented, so the Changes and Tests sections are a plan, not a record. Drop any item that branch did not implement.
+
+### PR 0: Saved meetings stay inside the checkout
+
+Title: Refuse saved meetings whose ids or paths leave the checkout
+
+Status: committed on `launch/security-hardening` as 2b6672b. Send the description only through the private channel until it is merged.
+
+A repository can ship `.agent-office/meetings.json`. On restore, the office trusted its ids and note paths, so an id like `../../../../.zshrc` and notes pointing at a file in the repository made stopping the meeting copy that file over one in the home folder.
+
+Changes:
+- Restored meetings need an office-made id, notes where the office keeps them, output and part files inside the checkout (symlinks followed), and a worktree under `.agent-office/worktrees` on an `office/` branch.
+- Copies and deletes check where they land before they run.
+- New `src/server/safefs.ts`: shared helpers for reading and writing state files without trusting git-tracked files or following symlinks.
+
+Tests: `tests/meetings-security.test.ts` and `tests/safefs.test.ts`.
 
 ### PR 1: Only admins can change the team webhook
 

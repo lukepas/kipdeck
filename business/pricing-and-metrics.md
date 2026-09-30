@@ -6,7 +6,7 @@ One place for the numbers the other documents quote. Prices are in EUR, excludin
 
 | Item | Assumption | Notes |
 | --- | --- | --- |
-| Senior consultant day | EUR 1,000 | Baltic and Nordic senior contractor rates for AI and DevOps work cluster around EUR 700-1,200 a day. Check against your employer's rate card if this runs as an internal offering. |
+| Senior consultant day | EUR 1,000 | Working assumption. The EUR 700-1,200 range often quoted for Baltic and Nordic senior AI and DevOps contractors is unverified; check it against current contractor listings, and against your employer's rate card if this runs as an internal offering. |
 | Second engineer day | EUR 700 | Only in the Standard and Extended tiers |
 | Contingency | 15% | Onboarding delays, client access requests, review meetings |
 | Hosting per pilot | EUR 50-250 a month | One VM (4-8 vCPU, 16-32 GB RAM) in an EU region runs the office and 6-10 workers. GPU is not needed; the models are called over APIs. |

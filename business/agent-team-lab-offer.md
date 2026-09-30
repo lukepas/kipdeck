@@ -42,7 +42,7 @@ The Standard tier, 4 weeks. Starter compresses weeks 1-2 into one and skips week
 Week 0, before start (client side, 1-2 hours): nominate a lead engineer, pick the repositories, grant access, provide model accounts (see "Who pays for models" in the pricing document), export baseline data for the last 4-8 weeks.
 
 Week 1, set up and baseline:
-- Install the office on a VM in the client's cloud account or in our EU hosting; connect GitHub; set up sign-ins per engineer.
+- Install the office on a VM in the client's cloud account, or on an EU-region VM we set up for the pilot; connect GitHub; set up sign-ins per engineer.
 - Agree review rules: which directories agents may change, required checks, who approves, branch protection.
 - Label 30-60 existing issues as agent-suitable with a short rubric (clear acceptance, small blast radius, testable).
 - Record the baseline metrics.
@@ -91,7 +91,7 @@ Assume that anyone who can sign in to the office can run commands as the office'
 
 Hosting and access:
 - One office per client, never shared between clients. One VM or container host per office.
-- Default region: an EU region of the client's choice, in the client's own cloud account when possible. Our hosting runs in EU regions only.
+- Default region: an EU region of the client's choice, in the client's own cloud account when possible. If we host the office, we use EU regions only. (No hosted offering exists yet; the first hosted pilot sets it up.)
 - The office listens on localhost behind a reverse proxy with TLS, or on a private network (VPN or tailnet). No office is exposed without TLS.
 - Sign-in with named accounts and admin roles; the shared password is switched off once accounts exist. Invite links are single-use.
 - Security group or firewall allows only the proxy and SSH from named addresses.
@@ -101,14 +101,14 @@ Credentials and data:
 - The consultancy does not hold client API keys or GitHub tokens outside the office VM. If we provide model access, keys are scoped to the pilot and revoked on the last day.
 - GitHub access uses fine-grained tokens or a GitHub App limited to the pilot repositories. Branch protection stays on; agents never push to the default branch.
 - Agents run in the client's repositories only. No client code or data leaves the office VM except to the model providers the client has approved, under the client's agreements with them.
-- Workers run as an unprivileged OS user. For stricter setups, workers run in containers without access to the host network or cloud metadata, and the office's outbound fetches are limited to public addresses.
+- Workers run as an unprivileged OS user. For stricter setups, put the whole office in its own VM with no route to other client systems and block the cloud metadata address at the firewall. Running each worker in its own container and limiting the office's own outbound fetches to public addresses are planned (`launch/docker-sandbox` and PR 5 in upstream-partnership.md) but not built as of 2026-09-30; do not offer them until they are.
 
 Model providers:
 - The client chooses the providers. We document which ones see code, their data-retention terms and training-use settings, and set the account options (for example zero-retention or no-training) where the provider offers them.
 
 During and after:
 - Every agent PR is reviewed by a client engineer before merge.
-- Access log of who signed in and who ran which worker is part of the handover.
+- A record of who had an account and when, from the office's account list and the reverse proxy's access logs, is part of the handover. The office has no built-in audit log, so keep the proxy logs for the length of the pilot.
 - On the last day: revoke our accounts, rotate any shared secrets, delete our copy of hosted data within 30 days unless the client continues on hosted support. Written confirmation of deletion.
 - A data processing agreement is signed before any hosted pilot handles client code.
 

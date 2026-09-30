@@ -97,7 +97,7 @@ Teams take B3 ("modernize the billing service"). They must produce 5-8 agent-rea
 
 Talk:
 - Threat model: anyone who can sign in to an agent workspace can run commands as its OS user. Agents read untrusted text (issues, dependencies, web pages) that can carry instructions.
-- Controls: per-person sign-ins, fine-grained tokens scoped to the repositories, branch protection with required review, workers in containers without host network or cloud metadata access, secrets outside repositories and agent environments, logs of who ran what.
+- Controls: per-person sign-ins, fine-grained tokens scoped to the repositories, branch protection with required review, workers in containers without host network or cloud metadata access, secrets outside repositories and agent environments, logs of who ran what. Be clear about which of these the office does today: per-person sign-ins and token stripping yes; per-worker containers and a built-in audit log no (as of 2026-09-30), so those come from the VM, the firewall and the reverse proxy.
 
 Exercise:
 - Review B5's agent PR for personal data written to logs.
