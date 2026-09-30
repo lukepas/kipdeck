@@ -1,0 +1,491 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//agent-office fork//launch kits//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Agent Office fork: launch deadlines
+BEGIN:VEVENT
+UID:kickoff@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20260930
+DTEND;VALUE=DATE:20261001
+SUMMARY:Kickoff: apply to Meta VR Start\, register on Colosseum Arena\, Dev
+ post (Amazon\, Nebius\, Meta) and lablab.ai
+DESCRIPTION:Kit: launch/README.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Kickoff: apply to Meta VR Start\, register on Colosseum Arena\,
+  Devpost (Amazon\, Nebius\, Meta) and lablab.ai
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:organizer-questions@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261001
+DTEND;VALUE=DATE:20261002
+SUMMARY:Ask each organizer whether a fork of a third-party MIT project is e
+ ligible\; send a courtesy note to the upstream author
+DESCRIPTION:Kit: launch/disclosure.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Ask each organizer whether a fork of a third-party MIT project 
+ is eligible\; send a courtesy note to the upstream author
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sponsors-setup@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261002
+DTEND;VALUE=DATE:20261003
+SUMMARY:Enable GitHub 2FA\, apply for GitHub Sponsors\, decide on an Open C
+ ollective host
+DESCRIPTION:Kit: launch/sponsors.md\nhttps://github.com/sponsors
+URL:https://github.com/sponsors
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Enable GitHub 2FA\, apply for GitHub Sponsors\, decide on an Op
+ en Collective host
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:colosseum-videos@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261009
+DTEND;VALUE=DATE:20261010
+SUMMARY:Colosseum: freeze the build\, record the pitch and technical demo v
+ ideos
+DESCRIPTION:Kit: launch/colosseum-worlds-fair.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Colosseum: freeze the build\, record the pitch and technical de
+ mo videos
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:colosseum-deadline@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART:20261013T055900Z
+DTEND:20261013T065900Z
+SUMMARY:DEADLINE: Colosseum Crypto World's Fair: registration and submissio
+ n close
+DESCRIPTION:Closes 23:59 PT (PDT\, UTC-7) (2026-10-13 06:59 UTC\, 2026-10-1
+ 3 09:59 Europe/Vilnius).\nKit: launch/colosseum-worlds-fair.md\nhttps://co
+ losseum.com/worldsfair
+URL:https://colosseum.com/worldsfair
+CATEGORIES:DEADLINE
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Colosseum Crypto World's Fair: registration and submi
+ ssion close
+TRIGGER:-P7D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Colosseum Crypto World's Fair: registration and submi
+ ssion close
+TRIGGER:-P2D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Colosseum Crypto World's Fair: registration and submi
+ ssion close
+TRIGGER:-PT5H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:solana-grant@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261014
+DTEND;VALUE=DATE:20261015
+SUMMARY:Solana Foundation grant: submit the application (rolling\, reuse th
+ e Colosseum material)
+DESCRIPTION:Kit: launch/solana-foundation-grant.md\nhttps://solana.org/gran
+ ts-funding
+URL:https://solana.org/grants-funding
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Solana Foundation grant: submit the application (rolling\, reus
+ e the Colosseum material)
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:vultr-signup@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261015
+DTEND;VALUE=DATE:20261016
+SUMMARY:Vultr Agent Rush: sign up on lablab.ai\, join the Discord\, ask abo
+ ut the on-site day in Salt Lake City
+DESCRIPTION:Kit: launch/vultr-agent-rush.md\nhttps://lablab.ai/ai-hackathon
+ s/vultr-hackathon
+URL:https://lablab.ai/ai-hackathons/vultr-hackathon
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Vultr Agent Rush: sign up on lablab.ai\, join the Discord\, ask
+  about the on-site day in Salt Lake City
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:amazon-video@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261020
+DTEND;VALUE=DATE:20261021
+SUMMARY:Amazon: record the demo video and finish the friction log
+DESCRIPTION:Kit: launch/amazon-build-ship-shape.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Amazon: record the demo video and finish the friction log
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:lt-travel-apply@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261021
+DTEND;VALUE=DATE:20261022
+SUMMARY:Innovation Agency Lithuania: file the foreign-event travel applicat
+ ion in KIP as soon as the Salt Lake City flights are booked
+DESCRIPTION:Kit: launch/innovation-agency-lithuania.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Innovation Agency Lithuania: file the foreign-event travel appl
+ ication in KIP as soon as the Salt Lake City flights are booked
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:amazon-deadline@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART:20261023T180000Z
+DTEND:20261023T190000Z
+SUMMARY:DEADLINE: Amazon Build Ship Shape (Alexa+ track): submission closes
+DESCRIPTION:Closes 12:00 PT (PDT\, UTC-7) (2026-10-23 19:00 UTC\, 2026-10-2
+ 3 22:00 Europe/Vilnius).\nKit: launch/amazon-build-ship-shape.md\nhttps://
+ amazonappdev2026.devpost.com/
+URL:https://amazonappdev2026.devpost.com/
+CATEGORIES:DEADLINE
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Amazon Build Ship Shape (Alexa+ track): submission cl
+ oses
+TRIGGER:-P7D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Amazon Build Ship Shape (Alexa+ track): submission cl
+ oses
+TRIGGER:-P2D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Amazon Build Ship Shape (Alexa+ track): submission cl
+ oses
+TRIGGER:-PT5H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:nebius-video@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261027
+DTEND;VALUE=DATE:20261028
+SUMMARY:Nebius x NVIDIA: record the demo video\, check the hosted demo and 
+ README
+DESCRIPTION:Kit: launch/nebius-nvidia.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Nebius x NVIDIA: record the demo video\, check the hosted demo 
+ and README
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:base-nomination@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261028
+DTEND;VALUE=DATE:20261029
+SUMMARY:Base Builder Grants: nominate the project once x402 payments are li
+ ve on Base mainnet
+DESCRIPTION:Kit: launch/base-builder-grants.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Base Builder Grants: nominate the project once x402 payments ar
+ e live on Base mainnet
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:nebius-deadline@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART:20261030T160000Z
+DTEND:20261030T170000Z
+SUMMARY:DEADLINE: Nebius x NVIDIA Global AI Hackathon: submission closes
+DESCRIPTION:Closes 10:00 PT (PDT\, UTC-7) (2026-10-30 17:00 UTC\, 2026-10-3
+ 0 19:00 Europe/Vilnius).\nKit: launch/nebius-nvidia.md\nhttps://nebiusglob
+ alaihackathon.devpost.com/
+URL:https://nebiusglobalaihackathon.devpost.com/
+CATEGORIES:DEADLINE
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Nebius x NVIDIA Global AI Hackathon: submission close
+ s
+TRIGGER:-P7D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Nebius x NVIDIA Global AI Hackathon: submission close
+ s
+TRIGGER:-P2D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Nebius x NVIDIA Global AI Hackathon: submission close
+ s
+TRIGGER:-PT5H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:vultr-build@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261103
+DTEND;VALUE=DATE:20261109
+SUMMARY:Vultr Agent Rush: online build phase (start and end times not publi
+ shed yet) [unverified]
+DESCRIPTION:Not confirmed by the organizer yet: check the official page bef
+ ore relying on it.\nKit: launch/vultr-agent-rush.md\nhttps://lablab.ai/ai-
+ hackathons/vultr-hackathon
+URL:https://lablab.ai/ai-hackathons/vultr-hackathon
+CATEGORIES:EVENT
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Vultr Agent Rush: online build phase (start and end times not p
+ ublished yet) [unverified]
+TRIGGER:-P1D
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:vultr-final@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261108
+DTEND;VALUE=DATE:20261109
+SUMMARY:DEADLINE: Vultr Agent Rush: submission and on-site day in Salt Lake
+  City (exact cut-off time not published yet) [unverified]
+DESCRIPTION:Not confirmed by the organizer yet: check the official page bef
+ ore relying on it.\nKit: launch/vultr-agent-rush.md\nhttps://lablab.ai/ai-
+ hackathons/vultr-hackathon
+URL:https://lablab.ai/ai-hackathons/vultr-hackathon
+CATEGORIES:DEADLINE
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Vultr Agent Rush: submission and on-site day in Salt 
+ Lake City (exact cut-off time not published yet) [unverified]
+TRIGGER:-P7D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Vultr Agent Rush: submission and on-site day in Salt 
+ Lake City (exact cut-off time not published yet) [unverified]
+TRIGGER:-P2D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Vultr Agent Rush: submission and on-site day in Salt 
+ Lake City (exact cut-off time not published yet) [unverified]
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:lt-travel-deadline@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART:20261111T140000Z
+DTEND:20261111T150000Z
+SUMMARY:DEADLINE: Innovation Agency Lithuania: startup foreign-event suppor
+ t call closes
+DESCRIPTION:Closes 17:00 Lithuania (EET\, UTC+2) (2026-11-11 15:00 UTC\, 20
+ 26-11-11 17:00 Europe/Vilnius).\nKit: launch/innovation-agency-lithuania.m
+ d\nhttps://www.inovacijuagentura.lt/finansavimo-kvietimas/skatinti-lietuvo
+ s-startuoliu-dalyvavima-uzsienio-renginiuose-kurie-vyksta-nuo-2026-m-liepo
+ s-16-d-iki-2026-m-gruodzio-31-d/
+URL:https://www.inovacijuagentura.lt/finansavimo-kvietimas/skatinti-lietuvo
+ s-startuoliu-dalyvavima-uzsienio-renginiuose-kurie-vyksta-nuo-2026-m-liepo
+ s-16-d-iki-2026-m-gruodzio-31-d/
+CATEGORIES:DEADLINE
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Innovation Agency Lithuania: startup foreign-event su
+ pport call closes
+TRIGGER:-P7D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Innovation Agency Lithuania: startup foreign-event su
+ pport call closes
+TRIGGER:-P2D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Innovation Agency Lithuania: startup foreign-event su
+ pport call closes
+TRIGGER:-PT5H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:meta-video@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261112
+DTEND;VALUE=DATE:20261113
+SUMMARY:Meta VR Start: record real headset footage for the demo video (no A
+ I-generated video)
+DESCRIPTION:Kit: launch/meta-vr-start.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Meta VR Start: record real headset footage for the demo video (
+ no AI-generated video)
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:meta-deadline@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART:20261118T190000Z
+DTEND:20261118T200000Z
+SUMMARY:DEADLINE: Meta VR Start Developer Competition 2026: submission clos
+ es
+DESCRIPTION:Closes 12:00 PT (PST\, UTC-8) (2026-11-18 20:00 UTC\, 2026-11-1
+ 8 22:00 Europe/Vilnius).\nKit: launch/meta-vr-start.md\nhttps://start-deve
+ loper-competition-26.devpost.com/
+URL:https://start-developer-competition-26.devpost.com/
+CATEGORIES:DEADLINE
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Meta VR Start Developer Competition 2026: submission 
+ closes
+TRIGGER:-P7D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Meta VR Start Developer Competition 2026: submission 
+ closes
+TRIGGER:-P2D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Meta VR Start Developer Competition 2026: submission 
+ closes
+TRIGGER:-PT5H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:filecoin-apply@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261125
+DTEND;VALUE=DATE:20261126
+SUMMARY:Filecoin: apply for a Next Step microgrant or an Open Grant\, only 
+ if the IPFS prototype exists [unverified]
+DESCRIPTION:Not confirmed by the organizer yet: check the official page bef
+ ore relying on it.\nKit: launch/filecoin-microgrant.md\nhttps://github.com
+ /filecoin-project/devgrants
+URL:https://github.com/filecoin-project/devgrants
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Filecoin: apply for a Next Step microgrant or an Open Grant\, o
+ nly if the IPFS prototype exists [unverified]
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:lt-ict-check@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261130
+DTEND;VALUE=DATE:20261201
+SUMMARY:Innovation Agency Lithuania: check for a new ICT prototype call [un
+ verified]
+DESCRIPTION:Not confirmed by the organizer yet: check the official page bef
+ ore relying on it.\nKit: launch/innovation-agency-lithuania.md\nhttps://ww
+ w.inovacijuagentura.lt/finansavimas/
+URL:https://www.inovacijuagentura.lt/finansavimas/
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Innovation Agency Lithuania: check for a new ICT prototype call
+  [unverified]
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:amazon-results@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261203
+DTEND;VALUE=DATE:20261204
+SUMMARY:Results: Amazon Build Ship Shape: winners announced (on or around)
+DESCRIPTION:Kit: launch/amazon-build-ship-shape.md
+CATEGORIES:RESULT
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:colosseum-results@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261205
+DTEND;VALUE=DATE:20261206
+SUMMARY:Results: Colosseum Crypto World's Fair: winners announced (by)
+DESCRIPTION:Kit: launch/colosseum-worlds-fair.md
+CATEGORIES:RESULT
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:meta-results@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20261211
+DTEND;VALUE=DATE:20261212
+SUMMARY:Results: Meta VR Start Developer Competition: winners announced
+DESCRIPTION:Kit: launch/meta-vr-start.md
+CATEGORIES:RESULT
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:nebius-results@agent-office-launch
+DTSTAMP:20260930T000000Z
+DTSTART;VALUE=DATE:20270111
+DTEND;VALUE=DATE:20270112
+SUMMARY:Results: Nebius x NVIDIA Global AI Hackathon: winners announced
+DESCRIPTION:Kit: launch/nebius-nvidia.md
+CATEGORIES:RESULT
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR
