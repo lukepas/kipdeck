@@ -16,7 +16,8 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
     "build:server": "tsc -p tsconfig.server.json",
-    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit",
+    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit && tsc -p tsconfig.launch.json",
+    "launch:check": "tsx launch/tools/calendar.ts --check && tsx launch/tools/lint.ts",
     "start": "node bin/agent-office.js",
     "prepare": "npm run build"
   },

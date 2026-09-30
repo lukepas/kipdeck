@@ -1,3 +1,5 @@
 # The deploy scripts run under bash, and provision.sh is piped to a Linux server: CRLF breaks both
 # (Git for Windows checks text files out with CRLF by default).
 *.sh text eol=lf
+# The launch calendar is iCalendar, whose lines must end in CRLF (RFC 5545); keep them byte for byte.
+launch/calendar.ics -text
