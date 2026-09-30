@@ -1,0 +1,229 @@
+{
+  "calendar": {
+    "name": "Agent Office fork: launch deadlines",
+    "stamp": "2026-09-30T00:00:00Z",
+    "from": "2026-09-30",
+    "home": "Europe/Vilnius"
+  },
+  "upstream": {
+    "repo": "https://github.com/AgentSystemLabs/agent-office",
+    "license": "MIT",
+    "copyright": "Copyright (c) 2026 AgentSystemLabs",
+    "author": "webdevcody (Web Dev Cody), AgentSystemLabs",
+    "firstCommit": "2026-09-25",
+    "baseline": "665aeec571bc03f76cbd16de8d628dd169a48874",
+    "baselineDate": "2026-09-30"
+  },
+  "events": [
+    {
+      "id": "kickoff",
+      "date": "2026-09-30",
+      "kind": "task",
+      "title": "Kickoff: apply to Meta VR Start, register on Colosseum Arena, Devpost (Amazon, Nebius, Meta) and lablab.ai",
+      "kit": "README.md",
+      "verified": true
+    },
+    {
+      "id": "organizer-questions",
+      "date": "2026-10-01",
+      "kind": "task",
+      "title": "Ask each organizer whether a fork of a third-party MIT project is eligible; send a courtesy note to the upstream author",
+      "kit": "disclosure.md",
+      "verified": true
+    },
+    {
+      "id": "sponsors-setup",
+      "date": "2026-10-02",
+      "kind": "task",
+      "title": "Enable GitHub 2FA, apply for GitHub Sponsors, decide on an Open Collective host",
+      "kit": "sponsors.md",
+      "url": "https://github.com/sponsors",
+      "verified": true
+    },
+    {
+      "id": "colosseum-videos",
+      "date": "2026-10-09",
+      "kind": "task",
+      "title": "Colosseum: freeze the build, record the pitch and technical demo videos",
+      "kit": "colosseum-worlds-fair.md",
+      "verified": true
+    },
+    {
+      "id": "colosseum-deadline",
+      "at": "2026-10-12T23:59:00-07:00",
+      "zone": "PT (PDT, UTC-7)",
+      "kind": "deadline",
+      "title": "Colosseum Crypto World's Fair: registration and submission close",
+      "kit": "colosseum-worlds-fair.md",
+      "url": "https://colosseum.com/worldsfair",
+      "verified": true
+    },
+    {
+      "id": "solana-grant",
+      "date": "2026-10-14",
+      "kind": "task",
+      "title": "Solana Foundation grant: submit the application (rolling, reuse the Colosseum material)",
+      "kit": "solana-foundation-grant.md",
+      "url": "https://solana.org/grants-funding",
+      "verified": true
+    },
+    {
+      "id": "vultr-signup",
+      "date": "2026-10-15",
+      "kind": "task",
+      "title": "Vultr Agent Rush: sign up on lablab.ai, join the Discord, ask about the on-site day in Salt Lake City",
+      "kit": "vultr-agent-rush.md",
+      "url": "https://lablab.ai/ai-hackathons/vultr-hackathon",
+      "verified": true
+    },
+    {
+      "id": "amazon-video",
+      "date": "2026-10-20",
+      "kind": "task",
+      "title": "Amazon: record the demo video and finish the friction log",
+      "kit": "amazon-build-ship-shape.md",
+      "verified": true
+    },
+    {
+      "id": "amazon-deadline",
+      "at": "2026-10-23T12:00:00-07:00",
+      "zone": "PT (PDT, UTC-7)",
+      "kind": "deadline",
+      "title": "Amazon Build Ship Shape (Alexa+ track): submission closes",
+      "kit": "amazon-build-ship-shape.md",
+      "url": "https://amazonappdev2026.devpost.com/",
+      "verified": true
+    },
+    {
+      "id": "nebius-video",
+      "date": "2026-10-27",
+      "kind": "task",
+      "title": "Nebius x NVIDIA: record the demo video, check the hosted demo and README",
+      "kit": "nebius-nvidia.md",
+      "verified": true
+    },
+    {
+      "id": "base-nomination",
+      "date": "2026-10-28",
+      "kind": "task",
+      "title": "Base Builder Grants: nominate the project once x402 payments are live on Base mainnet",
+      "kit": "base-builder-grants.md",
+      "verified": true
+    },
+    {
+      "id": "nebius-deadline",
+      "at": "2026-10-30T10:00:00-07:00",
+      "zone": "PT (PDT, UTC-7)",
+      "kind": "deadline",
+      "title": "Nebius x NVIDIA Global AI Hackathon: submission closes",
+      "kit": "nebius-nvidia.md",
+      "url": "https://nebiusglobalaihackathon.devpost.com/",
+      "verified": true
+    },
+    {
+      "id": "vultr-build",
+      "date": "2026-11-03",
+      "end": "2026-11-08",
+      "kind": "event",
+      "title": "Vultr Agent Rush: online build phase (start and end times not published yet)",
+      "kit": "vultr-agent-rush.md",
+      "url": "https://lablab.ai/ai-hackathons/vultr-hackathon",
+      "verified": false
+    },
+    {
+      "id": "vultr-final",
+      "date": "2026-11-08",
+      "kind": "deadline",
+      "title": "Vultr Agent Rush: submission and on-site day in Salt Lake City (exact cut-off time not published yet)",
+      "kit": "vultr-agent-rush.md",
+      "url": "https://lablab.ai/ai-hackathons/vultr-hackathon",
+      "verified": false
+    },
+    {
+      "id": "lt-travel-apply",
+      "date": "2026-10-21",
+      "kind": "task",
+      "title": "Innovation Agency Lithuania: file the foreign-event travel application in KIP as soon as the Salt Lake City flights are booked",
+      "kit": "innovation-agency-lithuania.md",
+      "verified": true
+    },
+    {
+      "id": "lt-travel-deadline",
+      "at": "2026-11-11T17:00:00+02:00",
+      "zone": "Lithuania (EET, UTC+2)",
+      "kind": "deadline",
+      "title": "Innovation Agency Lithuania: startup foreign-event support call closes",
+      "kit": "innovation-agency-lithuania.md",
+      "url": "https://www.inovacijuagentura.lt/finansavimo-kvietimas/skatinti-lietuvos-startuoliu-dalyvavima-uzsienio-renginiuose-kurie-vyksta-nuo-2026-m-liepos-16-d-iki-2026-m-gruodzio-31-d/",
+      "verified": true
+    },
+    {
+      "id": "meta-video",
+      "date": "2026-11-12",
+      "kind": "task",
+      "title": "Meta VR Start: record real headset footage for the demo video (no AI-generated video)",
+      "kit": "meta-vr-start.md",
+      "verified": true
+    },
+    {
+      "id": "meta-deadline",
+      "at": "2026-11-18T12:00:00-08:00",
+      "zone": "PT (PST, UTC-8)",
+      "kind": "deadline",
+      "title": "Meta VR Start Developer Competition 2026: submission closes",
+      "kit": "meta-vr-start.md",
+      "url": "https://start-developer-competition-26.devpost.com/",
+      "verified": true
+    },
+    {
+      "id": "filecoin-apply",
+      "date": "2026-11-25",
+      "kind": "task",
+      "title": "Filecoin: apply for a Next Step microgrant or an Open Grant, only if the IPFS prototype exists",
+      "kit": "filecoin-microgrant.md",
+      "url": "https://github.com/filecoin-project/devgrants",
+      "verified": false
+    },
+    {
+      "id": "lt-ict-check",
+      "date": "2026-11-30",
+      "kind": "task",
+      "title": "Innovation Agency Lithuania: check for a new ICT prototype call",
+      "kit": "innovation-agency-lithuania.md",
+      "url": "https://www.inovacijuagentura.lt/finansavimas/",
+      "verified": false
+    },
+    {
+      "id": "amazon-results",
+      "date": "2026-12-03",
+      "kind": "result",
+      "title": "Amazon Build Ship Shape: winners announced (on or around)",
+      "kit": "amazon-build-ship-shape.md",
+      "verified": true
+    },
+    {
+      "id": "colosseum-results",
+      "date": "2026-12-05",
+      "kind": "result",
+      "title": "Colosseum Crypto World's Fair: winners announced (by)",
+      "kit": "colosseum-worlds-fair.md",
+      "verified": true
+    },
+    {
+      "id": "meta-results",
+      "date": "2026-12-11",
+      "kind": "result",
+      "title": "Meta VR Start Developer Competition: winners announced",
+      "kit": "meta-vr-start.md",
+      "verified": true
+    },
+    {
+      "id": "nebius-results",
+      "date": "2027-01-11",
+      "kind": "result",
+      "title": "Nebius x NVIDIA Global AI Hackathon: winners announced",
+      "kit": "nebius-nvidia.md",
+      "verified": true
+    }
+  ]
+}
