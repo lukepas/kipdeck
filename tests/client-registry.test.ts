@@ -268,21 +268,6 @@ test('view effects: the first grip that holds on, the field of view through each
   assert.equal(view.covered(), true);
 });
 
-test('view filters wrap the frame, the first outermost, and only those that are on', () => {
-  const view = new View();
-  const log: string[] = [];
-  const f = { delta: 0, dt: 0, t: 7, now: 0 };
-  let drunk = true;
-  view.add({ filter: { begin: () => (log.push('outer begin'), true), end: (x) => void log.push(`outer end ${x.t}`) } });
-  view.add({ filter: { begin: () => (log.push('drunk begin'), drunk), end: () => void log.push('drunk end') } });
-  view.draw(f, () => log.push('draw'));
-  assert.deepEqual(log, ['outer begin', 'drunk begin', 'draw', 'drunk end', 'outer end 7']);
-  log.length = 0;
-  drunk = false;
-  view.draw(f, () => log.push('draw'));
-  assert.deepEqual(log, ['outer begin', 'drunk begin', 'draw', 'outer end 7']);
-});
-
 test('an effect taken out stops having a say', () => {
   const view = new View();
   const off = view.add({ fov: (f) => f * 2, covers: () => true });

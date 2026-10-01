@@ -1,6 +1,6 @@
 /**
  * Sitting down: on a chair, a stool, the couch. Sitting there already, E gets you up, or
- * does what the seat's for (the TV from the couch, Minesweeper from the boss's chair, the bar's menu).
+ * does what the seat's for (the TV from the couch, Minesweeper from the boss's chair).
  */
 import { seatPlace, type SeatDef, type SeatPlace } from '../../../shared/layout';
 import { OFFICE_PLAN } from '../../../shared/plan';
@@ -25,8 +25,6 @@ export interface SeatingDeps {
   watchShare(): void;
   /** The boss's monitor (see features/arcade). */
   arcade: Arcade;
-  /** The bar's menu (see features/bar). */
-  showBar(): void;
   /** What you can use where you are, and what's in the way of looking at it (see usable in input/pointer.ts). */
   usable(): (readonly Interactable[])[];
 }
@@ -63,7 +61,6 @@ export function installSeating(ctx: Ctx, deps: SeatingDeps) {
     if (player.seat?.seatId === seatId) {
       if (seat.tv && tvShowing()) deps.watchShare();
       else if (seat.game) deps.arcade.play();
-      else if (seat.bar) deps.showBar();
       else standUp();
       return;
     }
@@ -113,7 +110,7 @@ export function installSeating(ctx: Ctx, deps: SeatingDeps) {
       if (!seat) return { k: '', parts: [] };
       if (ctx.player.seat?.seatId === seat.id) {
         const tv = !!seat.tv && tvShowing();
-        const use = tv ? 'Watch the TV' : seat.game ? 'Play Minesweeper' : seat.bar ? 'Order a drink' : '';
+        const use = tv ? 'Watch the TV' : seat.game ? 'Play Minesweeper' : '';
         return { k: `${seat.id}|sitting|${tv}`, parts: [hintTitle(seat.label), aside('sitting'), ...(use ? [key('E', use), key('W A S D', 'Get up')] : [key('E', 'Get up')])] };
       }
       const full = !freePlace(seat);

@@ -83,7 +83,7 @@ export function rememberFloor(id: string | null) {
 
 const SPOT_KEY = 'agent-office.spot';
 
-/** Where you were standing, on which floor (or the roof), to be back there when you come back in. */
+/** Where you were standing, on which floor, to be back there when you come back in. */
 export interface Spot {
   floor: string;
   /** What that floor was called, to say so if it's gone by then. */

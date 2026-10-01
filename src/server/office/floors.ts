@@ -2,7 +2,6 @@ import { existsSync } from 'node:fs';
 import { WebSocket } from 'ws';
 import type { FloorDef } from '../building.js';
 import { Floor, type FloorContext } from '../floor.js';
-import { ROOF } from '../../shared/rooftop.js';
 import type { FloorInfo, ServerMsg } from '../../shared/protocol.js';
 import type { Ctx, FloorHelpers, FloorsOpen } from './context.js';
 import { SLOW_CLIENT_BYTES, type Client } from './client.js';
@@ -37,7 +36,7 @@ export function floorHelpers(ctx: Ctx): FloorHelpers {
 
   /**
    * Takes `floor` off the building (already out of floors.json): everyone on it rides the elevator to
-   * the next floor, or out to the lobby if it was the last (the roof goes with it), and its workers stop.
+   * the next floor, or out to the lobby if it was the last, and its workers stop.
    */
   const closeFloor = (floor: Floor, who: string) => {
     const name = floor.def.name;
@@ -47,7 +46,7 @@ export function floorHelpers(ctx: Ctx): FloorHelpers {
     floorsSent = JSON.stringify(list);
     ctx.broadcast({ t: 'floors', floors: list });
     for (const c of ctx.clients.values()) {
-      if (c.peer.floor === floor.id || (!next && c.peer.floor === ROOF)) {
+      if (c.peer.floor === floor.id) {
         if (next) ctx.goToFloor(c, next);
         else ctx.toLobby(c);
         ctx.sendTo(c, { t: 'toast', text: next ? `🛗 ${who} took ${name} off the building, so you rode the elevator to ${next.def.name}` : `🛗 ${who} took ${name}, the last floor, off the building`, level: 'warn' });

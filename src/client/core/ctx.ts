@@ -22,8 +22,6 @@ export interface CoreState {
   thud: number;
   /** The issue card in your hands, taken off this floor's issues board (see features/carrying), or null. */
   carrying: CarriedIssue | null;
-  /** Where you are now: up on the roof (true), or on a floor of the office. */
-  upTop: boolean;
   /** A trip to another floor under way (see Trip, and core/travel.ts). */
   trip: Trip | null;
 }
@@ -33,7 +31,7 @@ export interface CoreState {
  * in `parts` by the time anything asks for them (see main.ts).
  */
 export function createCtx(parts: Parts): { ctx: Ctx; core: CoreState } {
-  const core: CoreState = { hintKey: '', thud: 0, carrying: null, upTop: false, trip: null };
+  const core: CoreState = { hintKey: '', thud: 0, carrying: null, trip: null };
   const ctx: Ctx = {
     get scene() {
       return parts.stage.scene;
@@ -87,7 +85,6 @@ export function createCtx(parts: Parts): { ctx: Ctx; core: CoreState } {
       return parts.hud.hud;
     },
     world: () => parts.worlds.world(),
-    upTop: () => core.upTop,
     trip: () => core.trip,
     carrying: () => core.carrying,
     holdingBall: () => parts.hoops.holding(),

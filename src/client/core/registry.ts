@@ -161,11 +161,11 @@ export class Keys<E extends KeyPress = KeyPress> {
  * - vehicles: what you might be riding moves first (the cars)
  * - move: you move
  * - moved: what where you've got to does to you (a lap timed, a car shoving you, a pole's hole)
- * - play: games and what they hold you in (the arcade, the tee, the dart board)
+ * - play: games and what they hold you in (the arcade, the tee)
  * - me: your character, your hands and the camera, what you hear, and telling the office where you are
  * - others: everyone and everything else that moves (people, cars' engines, workers, the dog, the ball)
  * - world: the building and what's in it (its doors and floors, smoke breaks, particles, a picture being hung)
- * - env: the sky, the weather and the light, then what's lit by it (the roof's strobes)
+ * - env: the sky, the weather and the light
  * - aim: what you're pointing at, and the hint bar
  * - hud: the panels that follow what people are doing
  * - render: drawing the frame
@@ -221,7 +221,7 @@ export interface Activity<Why extends string = string, E = unknown, El = unknown
   hint?(el: El): void;
   /** The camera's its own while it's active (over your shoulder at the tee, say): no crosshair, and you're in view. */
   readonly takesCamera?: boolean;
-  /** Your hands are busy out of sight while it's active (on the club, a dart, the wheel): none drawn in first person. */
+  /** Your hands are busy out of sight while it's active (on the club, the wheel): none drawn in first person. */
   readonly hidesHands?: boolean;
   /** Both your hands are on it while it's active (the club): your character holds nothing else (the coffee mug). */
   readonly bothHands?: boolean;
@@ -304,19 +304,10 @@ export class Activities<Why extends string = string, E = unknown, El = unknown> 
 // ---- Your view -------------------------------------------------------------------------------------
 
 /**
- * A filter the frame's drawn through (the drunk vision): `begin` before the frame's drawn, true when
- * it's on this frame, and then `end` once it's drawn.
- */
-export interface FrameFilter {
-  begin(): boolean;
-  end(f: Frame): void;
-}
-
-/**
  * What something you can do makes of you and your view while it's going on: holding on to the ladder,
- * the view narrowing at the dart board or widening down a pole, the telescope or a game having the
- * screen to itself, the drunk vision. The office's own ticks (moving you, the building, drawing the
- * frame) ask each effect, in the order they were added. `G` is what you can hold on to.
+ * the view widening down a pole, the telescope or a game having the screen to itself. The office's
+ * own ticks (moving you, the building, drawing the frame) ask each effect, in the order they were
+ * added. `G` is what you can hold on to.
  */
 export interface ViewEffect<G = unknown> {
   /** What you're holding on to (the ladder, a pole), or null. */
@@ -327,8 +318,6 @@ export interface ViewEffect<G = unknown> {
   update?(): void;
   /** It has the screen to itself right now (the telescope, a game up close): your hands aren't drawn over it. */
   covers?(): boolean;
-  /** Draws the frame through this. */
-  filter?: FrameFilter;
 }
 
 /** How what you're doing changes you and your view each frame (see ViewEffect). */
@@ -362,18 +351,6 @@ export class View<G = unknown> {
   covered(): boolean {
     for (const e of this.effects.items) if (e.covers?.()) return true;
     return false;
-  }
-
-  /** The filters that are on this frame (kept, so drawing one allocates nothing). */
-  private readonly on: FrameFilter[] = [];
-
-  /** Draws the frame (`draw`) through every filter that's on, the first one outermost. */
-  draw(f: Frame, draw: () => void): void {
-    const on = this.on;
-    on.length = 0;
-    for (const e of this.effects.items) if (e.filter?.begin()) on.push(e.filter);
-    draw();
-    for (let i = on.length - 1; i >= 0; i--) on[i].end(f);
   }
 }
 

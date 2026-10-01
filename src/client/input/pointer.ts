@@ -16,7 +16,7 @@ import { store } from '../state';
 import { modalOpen, toast } from '../ui/dom';
 import type { Interactable } from '../world/types';
 
-export type PointerParts = Pick<Parts, 'rooftop' | 'place' | 'you' | 'boards' | 'cards' | 'seating' | 'hoops' | 'emotes' | 'hanging' | 'telescope' | 'hintbar'>;
+export type PointerParts = Pick<Parts, 'place' | 'you' | 'boards' | 'cards' | 'seating' | 'hoops' | 'emotes' | 'hanging' | 'telescope' | 'hintbar'>;
 
 /** Listens for the mouse over the canvas, registers the aim tick ('aim'), and takes the player's clicks. */
 export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
@@ -53,8 +53,6 @@ export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
 
   /** What you can use where you are, and what's in the way of looking at it. */
   function usable(): (readonly Interactable[])[] {
-    const roof = parts.rooftop.roof();
-    if (core.upTop && roof) return [roof.interactables];
     return [office.interactables, ...ctx.usables.lists()];
   }
 
@@ -87,8 +85,7 @@ export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
   function aimedAt(ndc: THREE.Vector2, slack = 0): { it: Interactable; near: boolean; hit: THREE.Intersection } | null {
     raycaster.setFromCamera(ndc, camera);
     eye.set(player.pos.x, player.pos.y + EYE_HEIGHT, player.pos.z);
-    const roof = parts.rooftop.roof();
-    for (const hit of raycaster.intersectObjects(core.upTop && roof ? roof.pickables : [office.group, ...ctx.usables.pickables()], true)) {
+    for (const hit of raycaster.intersectObjects([office.group, ...ctx.usables.pickables()], true)) {
       let it: Interactable | undefined;
       let shown = true;
       for (let o: THREE.Object3D | null = hit.object; o; o = o.parent) {

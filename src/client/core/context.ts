@@ -92,8 +92,6 @@ export interface Ctx {
 
   /** The office as the workers know it: its seats, its boards, how they walk in and out. */
   world(): World;
-  /** Up on the roof, rather than on a floor of the office. */
-  upTop(): boolean;
   /** The trip to another floor under way, if any. */
   trip(): Trip | null;
 

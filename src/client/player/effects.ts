@@ -1,5 +1,5 @@
-// What's going on with you that changes how you move and what you see: a coffee's buzz and the jitters,
-// a few drinks. Each is its own record, added once by whatever brings it on (see Effects.add) and
+// What's going on with you that changes how you move and what you see: a coffee's buzz and the jitters.
+// Each is its own record, added once by whatever brings it on (see Effects.add) and
 // written by it whenever it changes (each frame, say); the player reads them all together.
 
 /** What one thing going on does to you. */
@@ -10,16 +10,14 @@ export interface Effect {
   jump: number;
   /** 0 (steady) to 1: how hard the view trembles. */
   jitter: number;
-  /** How drunk you are (see features/bar/booze.ts): the view rolls and sways, and you stagger as you walk. */
-  sway: number;
 }
 
 /** Nothing going on: your normal speed and jumps, and a steady view. */
-const STEADY: Readonly<Effect> = { speed: 1, jump: 1, jitter: 0, sway: 0 };
+const STEADY: Readonly<Effect> = { speed: 1, jump: 1, jitter: 0 };
 
 /**
  * Everything going on with you, in the order it was added, and what it all comes to: speeds and jumps
- * multiply, the view trembles as hard as the hardest tremble, and sways add up.
+ * multiply, and the view trembles as hard as the hardest tremble.
  */
 export class Effects {
   private list: readonly Effect[] = [];
@@ -57,10 +55,4 @@ export class Effects {
     return jitter;
   }
 
-  /** How drunk you are, all told: the view rolls and sways, and you stagger as you walk. */
-  get sway(): number {
-    let sway = 0;
-    for (const e of this.list) sway += e.sway;
-    return sway;
-  }
 }

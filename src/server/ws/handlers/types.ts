@@ -15,7 +15,7 @@ export type HandlerMap<M extends { t: string }> = { [K in M['t']]: (ctx: Ctx, c:
  */
 export interface FeatureHooks {
   /**
-   * `c` is leaving `was` (undefined for the roof or the lobby) for somewhere else: let go of what's
+   * `c` is leaving `was` (undefined for the lobby) for somewhere else: let go of what's
    * theirs there. What it returns runs once they've arrived, after everyone has seen them go.
    */
   leaving?(ctx: Ctx, c: Client, was: Floor | undefined): (() => void) | void;

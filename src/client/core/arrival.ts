@@ -6,7 +6,6 @@
  * sign-ins a newcomer is greeted with.
  */
 import { SLAB, inElevator } from '../../shared/layout';
-import { ROOF, ROOF_NAME } from '../../shared/rooftop';
 import { renderTitle } from '../shared/title';
 import { lastFloor, lastSpot, store, type Spot } from '../state';
 import { routeAccountsMessage } from '../ui/accounts';
@@ -22,10 +21,10 @@ import { restarting, showRestarting, showUpgraded } from '../ui/upgrade';
 import { routeWhiteboardMessage } from '../features/whiteboard/ui';
 import type { Ctx } from './context';
 import type { CoreState } from './ctx';
-import { builtFloors, pastTheWing } from './floors';
+import { pastTheWing } from './floors';
 import type { Parts } from './parts';
 
-export type ArrivalParts = Pick<Parts, 'worlds' | 'place' | 'travel' | 'views' | 'cards' | 'hoops' | 'bar' | 'golf' | 'bargames' | 'cars' | 'focus'>;
+export type ArrivalParts = Pick<Parts, 'worlds' | 'place' | 'travel' | 'views' | 'cards' | 'hoops' | 'golf' | 'cars' | 'focus'>;
 
 /**
  * Registers arriving's messages and the routers (see the order below), and what follows the upgrade,
@@ -75,7 +74,6 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     if (firstWelcome && mine) {
       firstWelcome = false;
       // Where the office put you: back in the spot you left (if there's still room there), or in the elevator car.
-      travel.setPlace();
       travel.syncStack();
       // Back to where you were (not in the elevator: that's arriving), if there's still room there.
       if (lastSpot() && !inElevator(mine.x, mine.z) && !pastTheWing(mine, parts.worlds.officeWing()) && player.fits(mine.x, mine.z, mine.y)) {
@@ -83,7 +81,7 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
         travel.arrive('back');
       } else {
         // The car you were in (or nearest): the garage's, if you were down there.
-        placeInCar(mine, !core.upTop && mine.y < -SLAB - 1);
+        placeInCar(mine, mine.y < -SLAB - 1);
         travel.arrive();
       }
       floorWentWhileAway(wasOn);
@@ -98,11 +96,7 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     if (player.seat) net.send({ t: 'sit', seat: player.seat.key });
     const carrying = core.carrying;
     if (carrying) net.send({ t: 'carry', issue: carrying.issue, title: carrying.title });
-    const shownDrink = parts.bar.shownDrink();
-    if (shownDrink) net.send({ t: 'act', drink: shownDrink });
     if (parts.golf.golf.active) net.send({ t: 'act', golf: true });
-    const { thrower } = parts.bargames;
-    if (thrower.playing) net.send({ t: 'act', throwing: thrower.playing });
     // The office let go of the ball for you while you were away, and of your seat in a car.
     parts.hoops.ballNews(false);
     parts.cars.carAgain();
@@ -161,13 +155,6 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
   function renderProject() {
     const p = store.project;
     renderTitle();
-    if (store.floor === ROOF) {
-      const n = builtFloors().length;
-      $('project-meta').classList.remove('lobby');
-      $('project-name').textContent = `🍸 ${ROOF_NAME}`;
-      $('project-meta').textContent = `🛗 on top of ${n} floor${n === 1 ? '' : 's'} · 🎧 drum & bass`;
-      return;
-    }
     if (!p) {
       $('project-name').textContent = '🏢 Agent Office';
       $('project-meta').textContent = store.floors.length ? '🛗 Take the elevator to a floor' : '🛗 No floors yet — add a project in the elevator';
@@ -190,12 +177,13 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     return firstWelcome ? lastSpot() : parts.place.spotHere();
   }
 
-  /** You asked to come back to floor `was`, and it's gone (taken off the building, or its checkout deleted): the office sent you up to the roof. */
+  /** You asked to come back to floor `was`, and it's gone (taken off the building, or its checkout deleted): the office put you on another. */
   function floorWentWhileAway(was: string | null) {
-    if (!was || was === ROOF || store.floor !== ROOF || store.floors.some((f) => f.id === was)) return;
+    if (!was || store.floor === was || store.floors.some((f) => f.id === was)) return;
     const saved = lastSpot();
     const name = saved?.floor === was && saved.name ? saved.name : 'Your floor';
-    toast(`🛗 ${name} isn't in the building any more, so the elevator brought you up to the roof`, 'warn');
+    const now = store.currentFloor()?.name;
+    toast(now ? `🛗 ${name} isn't in the building any more, so the elevator brought you to ${now}` : `🛗 ${name} isn't in the building any more`, 'warn');
   }
 
   return { renderProject, whereNow };

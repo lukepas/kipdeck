@@ -1,7 +1,6 @@
 import './elevator.css';
 import type { CloneProgress, FloorInfo, RepoChoice, ServerMsg } from '../../shared/protocol';
 import { cloneLabel, cloneStep, floorPalette, normalizeRepo, sameRepo } from '../../shared/floors';
-import { ROOF, ROOF_NAME } from '../../shared/rooftop';
 import type { Net } from '../net';
 import { store } from '../state';
 import { h, openModal, timeAgo, toast, type Modal } from './dom';
@@ -14,13 +13,13 @@ import { confirmDialog } from './prompt';
 
 /**
  * The garage under the building, where the elevator goes too. It isn't a floor: it's down under the
- * one you're on (from the roof, the bottom one), level with the street.
+ * one you're on, level with the street.
  */
 export const GARAGE = '@garage';
 
 export interface ElevatorOptions {
   net: Net;
-  /** Rides to a floor, the roof (ROOF) or the garage (GARAGE). */
+  /** Rides to a floor or the garage (GARAGE). */
   ride(floorId: string): void;
   /** You're down in the garage (or out on the street), under the floor you're on. */
   downstairs(): boolean;
@@ -175,30 +174,10 @@ export function openElevator(opts: ElevatorOptions): void {
     confirmDialog(`Take ${f.name} off the building?`, `${workers}${people}Nothing is deleted: its checkout stays in ${f.dir}, .agent-office folder and all.${own}`, '🗑 Remove floor', () => net.send({ t: 'floor.remove', floor: f.id }));
   };
 
-  /** The roof, over every floor: the rooftop bar. */
-  const roofButton = () => {
-    const here = store.floor === ROOF;
-    const people = [...store.peers.values()].filter((p) => p.floor === ROOF).length;
-    const btn = h(
-      'button.floor-btn',
-      { type: 'button', class: here ? 'here' : '', disabled: here, title: here ? "You're up on the roof" : `Ride up to the ${ROOF_NAME.toLowerCase()}` },
-      h('span.floor-no', { style: 'background:#2b2d42' }, '🍸'),
-      h('span.floor-text', {}, h('span.floor-name', {}, ROOF_NAME, here ? h('span.here-tag', {}, 'you are here') : null), h('span.floor-sub', {}, 'The roof: a DJ playing drum and bass, a bar, and the city all around')),
-      h('span.floor-stats', {}, people ? h('span', { title: 'People up there' }, `🧑 ${people}`) : ''),
-    );
-    btn.addEventListener('click', () => {
-      if (here) return;
-      modal.close();
-      opts.ride(ROOF);
-    });
-    return btn;
-  };
-
   /** Under floor 1: the garage, level with the street. */
   const garageButton = () => {
     const here = opts.downstairs();
-    const bottom = store.floors.find((f) => !f.cloning);
-    const under = store.floor === ROOF ? `Under ${bottom?.name ?? 'the building'}, level with the street` : 'Under the building, level with the street: the cars, and the way out';
+    const under = 'Under the building, level with the street: the cars, and the way out';
     const btn = h(
       'button.floor-btn',
       { type: 'button', class: here ? 'here' : '', disabled: here, title: here ? "You're down at the street" : 'Ride down to the garage' },
@@ -217,9 +196,8 @@ export function openElevator(opts: ElevatorOptions): void {
   const renderFloors = () => {
     const floors = store.floors;
     const built = floors.some((f) => !f.cloning);
-    // Top floor first, the way an elevator's buttons stack, with the roof over them, floor 1 and then the garage at the bottom.
+    // Top floor first, the way an elevator's buttons stack, floor 1 and then the garage at the bottom.
     floorsEl.replaceChildren(
-      ...(built ? [roofButton()] : []),
       ...(floors.length ? floors.map(floorRow).reverse() : [h('p.empty', {}, 'No floors yet.')]),
       ...(built ? [garageButton()] : []),
     );

@@ -1,11 +1,9 @@
 // People in the office: walking about, reaching for things, sitting, carrying issue cards, emotes,
 // their name and look, what they have open, voice and screen sharing, and chat.
 import type { ChatLine, PresenceClientMsg } from '../../../shared/protocol.js';
-import { seatHere } from '../../../shared/layout.js';
+import { seatAt } from '../../../shared/layout.js';
 import { sanitizeLook } from '../../../shared/avatar.js';
 import { isEmote } from '../../../shared/emotes.js';
-import { ROOF, isDrink } from '../../../shared/rooftop.js';
-import { isBarGame } from '../../../shared/bargames.js';
 import { throttle } from '../../office/client.js';
 import { COLOR_RE, issueNumber, num, str } from '../../office/input.js';
 import type { HandlerMap } from './types.js';
@@ -21,15 +19,6 @@ export const presenceHandlers = {
     ctx.toNeighbors(c, { t: 'peer.move', id: c.id, x: p.x, y: p.y, z: p.z, rotY: p.rotY, moving: p.moving }, true);
   },
   act(ctx, c, msg) {
-    if (msg.drink !== undefined) {
-      // A drink from the rooftop bar, which stays up there.
-      const drink = isDrink(msg.drink) && c.peer.floor === ROOF ? msg.drink : undefined;
-      if (drink === c.peer.drink) return;
-      if (drink) c.peer.drink = drink;
-      else delete c.peer.drink;
-      ctx.broadcast({ t: 'peer.act', id: c.id, drink: drink ?? null }, c.id, true);
-      return;
-    }
     if (typeof msg.smoke === 'boolean') {
       if (msg.smoke === !!c.peer.smoking) return;
       c.peer.smoking = msg.smoke;
@@ -37,21 +26,11 @@ export const presenceHandlers = {
       return;
     }
     if (typeof msg.golf === 'boolean') {
-      // The tee's on an office floor's balcony; there's none up on the roof.
-      const golf = msg.golf && c.peer.floor !== ROOF;
+      const golf = msg.golf;
       if (golf === !!c.peer.golfing) return;
       if (golf) c.peer.golfing = true;
       else delete c.peer.golfing;
       ctx.broadcast({ t: 'peer.act', id: c.id, golf }, c.id, true);
-      return;
-    }
-    if (msg.throwing !== undefined) {
-      // The dart board and the axe lane are up on the roof.
-      const game = isBarGame(msg.throwing) && c.peer.floor === ROOF ? msg.throwing : undefined;
-      if (game === c.peer.throwing) return;
-      if (game) c.peer.throwing = game;
-      else delete c.peer.throwing;
-      ctx.broadcast({ t: 'peer.act', id: c.id, throwing: game ?? null }, c.id, true);
       return;
     }
     if (!throttle(c, 'act', 100)) return;
@@ -62,9 +41,8 @@ export const presenceHandlers = {
   },
   sit(ctx, c, msg) {
     // Everyone sees them sit down (or get up), and anyone who comes in later finds them sitting.
-    // Only on a seat where they are: the roof's up on the roof, the office's on a floor.
     const key = str(msg.seat, 40);
-    const seat = seatHere(key, c.peer.floor === ROOF) ? key : undefined;
+    const seat = seatAt(key) ? key : undefined;
     if (seat === c.peer.seat) return;
     // Somebody on the floor got there first (two people arriving at an empty couch at once).
     // (Not yourself, on a connection that hasn't timed out yet after a reconnect.)

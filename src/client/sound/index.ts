@@ -2,8 +2,7 @@
  * Office sounds, synthesized with Web Audio so there are no audio files to ship: the room's air and a
  * humming fridge, workers typing while they work, footsteps, the coffee machine, birds outside the
  * windows by day and crickets at night, rain and thunder, the odd rustle or phone and the gong,
- * and the dings when a worker needs you. And the lounge jukebox, whose tunes are in music.ts,
- * and up on the roof, the wind, the city far below and the DJ's drum and bass (../dnb.ts).
+ * and the dings when a worker needs you. And the lounge jukebox, whose tunes are in music.ts.
  *
  * Everything goes through one master gain that Settings turns down or mutes. Voice chat doesn't, and
  * the jukebox has a volume of its own.
@@ -14,11 +13,10 @@
  * (features/golf/sound.ts, and so on), and this class only hands them the core.
  */
 import type { GongWhy } from '../../shared/protocol';
-import { birdsong, deskPhones, Fridge, nightCrickets, startRoomTone, startWind } from './ambience';
+import { birdsong, deskPhones, Fridge, nightCrickets, startRoomTone } from './ambience';
 import { ding } from './alerts';
 import { arcade } from '../features/cabinet/sound';
 import { ball, type BallSound } from '../features/basketball/sound';
-import { Dj, hiccup, pour } from '../features/bar/sound';
 import { carDoor, crash, honk, Motors, type Engine } from '../features/cars/sound';
 import { bonk, hatch, poleLanding, rung, slide, twirl } from '../features/climbing/sound';
 import { coffee } from '../features/coffee/sound';
@@ -28,14 +26,12 @@ import { gong } from '../features/gong/sound';
 import { Jukebox, type JukeboxPlay } from '../features/jukebox/sound';
 import type { Pos } from './places';
 import { pageTurn, paper, step, stepAt } from './steps';
-import { toss, type TossSound } from '../features/bargames/sound';
 import { fidgeting, Typing } from './typing';
 import { Rain, thunder } from './weather';
 
 export class OfficeSound {
   private readonly a: AudioCore = new AudioCore({ start: (ctx) => this.start(ctx), touched: () => this.music.touched() });
   private readonly music = new Jukebox(this.a, (text) => this.onMusicError?.(text));
-  private readonly dj = new Dj(this.a);
   private readonly typing = new Typing(this.a);
   private readonly motors = new Motors(this.a);
   private readonly fridge = new Fridge(this.a);
@@ -61,19 +57,15 @@ export class OfficeSound {
     this.a.every((now) => this.fidgets.tick(now));
   }
 
-  /** Audio has just started (see AudioCore.unlock): the jukebox and the DJ join the graph, and the room starts up. */
+  /** Audio has just started (see AudioCore.unlock): the jukebox joins the graph, and the room starts up. */
   private start(ctx: AudioContext) {
     this.music.connect(ctx);
-    this.dj.connect(this.music.musicBus);
     this.a.applyVolume();
     this.music.applyMusicVolume();
     this.music.applyJukebox();
     this.a.applyVisibility();
     startRoomTone(this.a);
     this.fridge.startFridge();
-    startWind(this.a);
-    this.a.applyOutdoors();
-    this.dj.applyDj();
     const now = ctx.currentTime;
     this.birds.start(now);
     this.crickets.start(now);
@@ -119,11 +111,6 @@ export class OfficeSound {
   /** Moves your ears and schedules whatever the room does next. */
   update(l: Listener) {
     this.a.update(l);
-  }
-
-  /** Up on the roof (true), or inside on a floor: the office's hum gives way to the wind and the city. */
-  setOutdoors(on: boolean) {
-    this.a.setOutdoors(on);
   }
 
   // ---- Workers, footsteps and paper (typing.ts, steps.ts) ---------------------------------------
@@ -179,14 +166,10 @@ export class OfficeSound {
     poleLanding(this.a, speed, at);
   }
 
-  // ---- Games (features/golf, bargames, basketball and cabinet) -------------------------------------
+  // ---- Games (features/golf, basketball and cabinet) -------------------------------------
 
   golf(kind: GolfSound, at?: Pos, speed = 5) {
     golf(this.a, kind, at, speed);
-  }
-
-  toss(kind: TossSound, at: Pos) {
-    toss(this.a, kind, at);
   }
 
   ball(kind: BallSound, at: Pos, speed: number) {
@@ -231,25 +214,6 @@ export class OfficeSound {
 
   ding(kind: 'done' | 'needs_input') {
     ding(this.a, kind);
-  }
-
-  // ---- The rooftop bar (features/bar) -------------------------------------------------------------
-
-  /** The DJ's set on the roof, `clock` saying how far into it it is (see djTime); null stops it. */
-  setDj(clock: (() => number) | null) {
-    this.dj.setDj(clock);
-  }
-
-  horn() {
-    this.dj.horn();
-  }
-
-  pour(at: Pos) {
-    pour(this.a, at);
-  }
-
-  hiccup() {
-    hiccup(this.a);
   }
 
   // ---- The jukebox (features/jukebox) -------------------------------------------------------------

@@ -34,8 +34,8 @@ export class PlayerController extends PlayerInput {
   /** Eased out after a step up or down, so the camera glides up stairs instead of popping. */
   stepOffset = 0;
   /**
-   * What's going on with you (a coffee's buzz and the jitters, a few drinks): how fast you walk and
-   * how high you jump, how hard the view trembles and how drunk you are (see effects.ts).
+   * What's going on with you (a coffee's buzz and the jitters): how fast you walk and
+   * how high you jump, and how hard the view trembles (see effects.ts).
    */
   readonly effects = new Effects();
   /** How far below the floor you're on the street is: further down the higher your floor (see streetBelow). */
@@ -192,11 +192,8 @@ export class PlayerController extends PlayerInput {
       ix /= len;
       iz /= len;
       // Camera-relative: "forward" is where the camera looks.
-      // Drunk, your feet wander off to one side and then the other.
-      const t = this.jitterT;
-      const stagger = this.effects.sway * (0.4 * Math.sin(t * 1.6) + 0.22 * Math.sin(t * 3.7 + 1));
-      const sin = Math.sin(this.camYaw + stagger);
-      const cos = Math.cos(this.camYaw + stagger);
+      const sin = Math.sin(this.camYaw);
+      const cos = Math.cos(this.camYaw);
       const dx = ix * cos + iz * sin;
       const dz = -ix * sin + iz * cos;
       const speed = (k.has('ShiftLeft') || k.has('ShiftRight') ? RUN : WALK) * this.effects.speed;
@@ -285,9 +282,9 @@ export class PlayerController extends PlayerInput {
     this.shake();
   }
 
-  /** The jitters: the view trembles a little, on top of wherever you're looking. Drunk, it rolls and sways. */
+  /** The jitters: the view trembles a little, on top of wherever you're looking. */
   private shake() {
-    shakeCamera(this.camera, this.jitterT, this.effects.sway, this.effects.jitter);
+    shakeCamera(this.camera, this.jitterT, this.effects.jitter);
   }
 
   /** Unit vector the character is facing, on the XZ plane. */

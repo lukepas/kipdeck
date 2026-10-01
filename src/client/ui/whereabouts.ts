@@ -1,6 +1,5 @@
-import { BALCONY, DANCE_FLOOR, FIRE_PIT, FLOOR, LOFT, MEETING_ROOM, ROOF_BAR, ROOF_TABLES, SEATING_BY_ID, STAGE, WING, inWing, seatAt } from '../../shared/layout';
+import { BALCONY, FLOOR, LOFT, MEETING_ROOM, SEATING_BY_ID, WING, inWing, seatAt } from '../../shared/layout';
 import type { PeerInfo } from '../../shared/protocol';
-import { ROOF } from '../../shared/rooftop';
 import { CARS, type CarSeat } from '../../shared/garage';
 
 /**
@@ -18,7 +17,6 @@ export function whereabouts(p: PeerInfo, car?: { car: number; seat: CarSeat }): 
   if (def) return `🏎️ ${car.seat === 'driver' ? 'driving' : 'riding in'} the ${def.name}`;
   if (p.smoking) return '🚬 on a smoke break';
   if (p.golfing) return '🏌️ teeing off';
-  if (p.throwing) return p.throwing === 'darts' ? '🎯 playing darts' : '🪓 throwing axes';
   const place = p.seat ? seatAt(p.seat) : undefined;
   const seat = place && SEATING_BY_ID.get(place.seatId);
   if (seat) {
@@ -26,8 +24,6 @@ export function whereabouts(p: PeerInfo, car?: { car: number; seat: CarSeat }): 
     const [icon, ...name] = seat.label.split(' ');
     return `${icon} ${seat.game ? 'in' : 'on'} the ${name.join(' ').toLowerCase()}`;
   }
-  // The roof is the office's size, but none of its rooms are up there.
-  if (p.floor === ROOF) return onTheRoof(p);
   // Through the north wall in the back office: nobody gets there unless the floor's built out.
   if (p.y > -1 && inWing(p.x, p.z, WING.rows)) return '🏗️ in the back office';
   // Down on the street, or out the back door on the stairs down to it.
@@ -38,12 +34,3 @@ export function whereabouts(p: PeerInfo, car?: { car: number; seat: CarSeat }): 
   return undefined;
 }
 
-/** Somewhere on the rooftop bar worth saying they are, standing up. */
-function onTheRoof(p: PeerInfo): string | undefined {
-  if (p.x > STAGE.minX && p.x < STAGE.maxX && p.z < STAGE.maxZ) return '🎧 up on the stage';
-  if (p.x > DANCE_FLOOR.minX && p.x < DANCE_FLOOR.maxX && p.z > DANCE_FLOOR.minZ && p.z < DANCE_FLOOR.maxZ) return '🪩 on the dance floor';
-  if (p.x > ROOF_BAR.x - 2.5 && p.z > ROOF_BAR.minZ - 0.5 && p.z < ROOF_BAR.maxZ + 0.5) return '🍸 at the bar';
-  if (ROOF_TABLES.some((t) => Math.hypot(p.x - t.x, p.z - t.z) < 1.3)) return '🕯️ at a tall table';
-  if (Math.hypot(p.x - FIRE_PIT.x, p.z - FIRE_PIT.z) < 3.5) return '🔥 by the fire';
-  return undefined;
-}

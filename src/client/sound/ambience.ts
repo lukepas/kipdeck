@@ -11,7 +11,7 @@ export function startRoomTone(a: AudioCore) {
   const rumble = a.noise(a.buf.brown, true);
   const rumbleG = ctx.createGain();
   rumbleG.gain.value = 0.07;
-  rumble.connect(biquad(ctx, 'lowpass', 300, 0.7)).connect(rumbleG).connect(a.indoors);
+  rumble.connect(biquad(ctx, 'lowpass', 300, 0.7)).connect(rumbleG).connect(a.ambience);
   // ...and the air vents, swelling slowly.
   const air = a.noise(a.buf.white, true);
   const airG = ctx.createGain();
@@ -21,7 +21,7 @@ export function startRoomTone(a: AudioCore) {
   const swellDepth = ctx.createGain();
   swellDepth.gain.value = 0.004;
   swell.connect(swellDepth).connect(airG.gain);
-  air.connect(biquad(ctx, 'bandpass', 650, 0.5)).connect(airG).connect(a.indoors);
+  air.connect(biquad(ctx, 'bandpass', 650, 0.5)).connect(airG).connect(a.ambience);
   rumble.start();
   air.start();
   swell.start();
@@ -48,7 +48,7 @@ export class Fridge {
     hum.connect(tone);
     whine.connect(whineG).connect(tone);
     const out = this.a.panner(FRIDGE, 1, 1.6);
-    tone.connect(gain).connect(out).connect(this.a.indoors);
+    tone.connect(gain).connect(out).connect(this.a.ambience);
     hum.start();
     whine.start();
     this.fridge = { gain, on: false, next: ctx.currentTime + rand(3, 12) };
@@ -61,7 +61,7 @@ export class Fridge {
     f.on = !f.on;
     f.gain.gain.setTargetAtTime(f.on ? 0.06 : 0, now, f.on ? 0.6 : 0.3);
     f.next = now + (f.on ? rand(25, 50) : rand(20, 45));
-    this.a.play(pick(this.a.buf.steps), { at: FRIDGE, gain: 0.25, rate: 0.6, ref: 1, rolloff: 1.6, dest: this.a.indoors });
+    this.a.play(pick(this.a.buf.steps), { at: FRIDGE, gain: 0.25, rate: 0.6, ref: 1, rolloff: 1.6, dest: this.a.ambience });
     this.a.count(f.on ? 'fridgeOn' : 'fridgeOff');
   }
 
@@ -175,41 +175,11 @@ export function nightCrickets(a: AudioCore): NowAndThen {
   );
 }
 
-/** A desk phone ringing across the room now and then (in the office, not on the roof). */
+/** A desk phone ringing across the room now and then. */
 export function deskPhones(a: AudioCore): NowAndThen {
   return new NowAndThen(
     () => rand(60, 150),
     () => rand(90, 240),
-    (now) => {
-      if (!a.outdoors) phone(a, now);
-    },
+    (now) => phone(a, now),
   );
-}
-
-// ---- The roof ---------------------------------------------------------------------------------
-
-export function startWind(a: AudioCore) {
-  const ctx = a.ctx!;
-  // Traffic, far below…
-  const city = a.noise(a.buf.brown, true);
-  const cityG = ctx.createGain();
-  cityG.gain.value = 0.08;
-  city.connect(biquad(ctx, 'lowpass', 420, 0.6)).connect(cityG).connect(a.outside);
-  // …and the wind, gusting and dropping, whistling higher as it picks up.
-  const wind = a.noise(a.buf.white, true);
-  const tone = biquad(ctx, 'bandpass', 520, 0.8);
-  const windG = ctx.createGain();
-  windG.gain.value = 0.012;
-  const gust = ctx.createOscillator();
-  gust.frequency.value = 0.08;
-  const gustDepth = ctx.createGain();
-  gustDepth.gain.value = 0.009;
-  gust.connect(gustDepth).connect(windG.gain);
-  const pitch = ctx.createGain();
-  pitch.gain.value = 220;
-  gust.connect(pitch).connect(tone.frequency);
-  wind.connect(tone).connect(windG).connect(a.outside);
-  city.start();
-  wind.start();
-  gust.start();
 }

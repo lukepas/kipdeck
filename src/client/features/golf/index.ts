@@ -89,10 +89,10 @@ export function installGolf(ctx: Ctx, deps: GolfDeps) {
   });
   ctx.ticks.add('play', ({ dt }) => {
     // Pulled away from the tee (sat down, off up the ladder, into the elevator): the club goes back.
-    if (golf.active && (ctx.trip() || ctx.activities.running('hanger') || ctx.activities.running('climber') || ctx.player.seat || ctx.upTop())) golf.stop();
+    if (golf.active && (ctx.trip() || ctx.activities.running('hanger') || ctx.activities.running('climber') || ctx.player.seat)) golf.stop();
     golf.update(dt);
   });
-  // The balls in the air (none up on the roof, where the darts are), and the next one on the tee.
+  // The balls in the air, and the next one on the tee.
   ctx.ticks.add('play', ({ dt, now }) => {
     balls.update(dt);
     ctx.office.tee.ball.visible = golf.doing !== 'watch' && now > teeEmptyUntil;
@@ -159,11 +159,11 @@ export function installGolf(ctx: Ctx, deps: GolfDeps) {
   /** Someone else on the floor hit one: their swing, then their ball, off the same tee. */
   function theirShot(id: string, shot: Shot) {
     const p = store.peers.get(id);
-    if (!p || !store.onMyFloor(p) || ctx.upTop()) return;
+    if (!p || !store.onMyFloor(p)) return;
     deps.personOf(id)?.golfSwing(shot.power);
     const floor = store.floor;
     setTimeout(() => {
-      if (store.floor !== floor || ctx.upTop()) return;
+      if (store.floor !== floor) return;
       balls.launch(shotHere(shot), p.name, false);
       teeEmptyUntil = performance.now() + 1800;
       ctx.sound.golf('hit', TEE_BALL);

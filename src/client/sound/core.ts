@@ -30,11 +30,6 @@ export class AudioCore {
   ambience!: GainNode;
   /** Worker dings, which you still want to hear from another tab. */
   alerts!: GainNode;
-  /** The office's own hum (the room and the fridge), left behind going up on the roof… */
-  indoors!: GainNode;
-  /** …where there's wind, and the city far below. */
-  outside!: GainNode;
-  outdoors = false;
   /** How many rows the floor's back office is built out: in there you're indoors too. */
   wing = 0;
   private analyser!: AnalyserNode;
@@ -111,11 +106,6 @@ export class AudioCore {
     this.ambience.connect(this.master);
     this.alerts = ctx.createGain();
     this.alerts.connect(this.master);
-    this.indoors = ctx.createGain();
-    this.indoors.connect(this.ambience);
-    this.outside = ctx.createGain();
-    this.outside.gain.value = 0;
-    this.outside.connect(this.ambience);
     // The rest of the sound graph, and what plays all the time.
     this.hooks.start(ctx);
     void ctx.resume();
@@ -175,19 +165,6 @@ export class AudioCore {
     const under = (m: number) => x > FLOOR.minX - m && x < FLOOR.maxX + m && z > FLOOR.minZ - m && z < FLOOR.maxZ + m;
     if ((under(0) || inWing(x, z, this.wing)) && y > -0.5) return 'office';
     return under(0.3) ? 'garage' : 'out';
-  }
-
-  /** Up on the roof (true), or inside on a floor: the office's hum gives way to the wind and the city. */
-  setOutdoors(on: boolean) {
-    this.outdoors = on;
-    this.applyOutdoors();
-  }
-
-  applyOutdoors() {
-    if (!this.ctx) return;
-    const now = this.ctx.currentTime;
-    this.indoors.gain.setTargetAtTime(this.outdoors ? 0 : 1, now, 0.3);
-    this.outside.gain.setTargetAtTime(this.outdoors ? 1 : 0, now, 0.3);
   }
 
   // ---- Plumbing --------------------------------------------------------------------------------

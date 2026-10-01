@@ -7,11 +7,9 @@ import * as THREE from 'three';
 import { seatAt } from '../../../shared/layout';
 import { sameLook } from '../../../shared/avatar';
 import type { PeerInfo } from '../../../shared/protocol';
-import { DRINK_BY_ID } from '../../../shared/rooftop';
 import { SEAT_HIPS } from '../../../shared/garage';
 import { gripOf, type Grip } from '../climbing/controller';
 import type { Ctx } from '../../core/context';
-import type { CoreState } from '../../core/ctx';
 import { noOutline } from '../../core/outline';
 import type { Parts } from '../../core/parts';
 import { groundAt } from '../../player';
@@ -37,7 +35,7 @@ export interface RemotePeer {
 }
 
 /** Registers what follows the people in the office (store 'peers' and 'cars'), their ticks, and chat and peer.act. */
-export function installPeers(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'puff' | 'cars' | 'walking' | 'talk' | 'hud'>) {
+export function installPeers(ctx: Ctx, parts: Pick<Parts, 'puff' | 'cars' | 'walking' | 'talk' | 'hud'>) {
   const { scene, voice, sound, player, office } = ctx;
   const remotes = new Map<string, RemotePeer>();
   const editProfile = () => parts.hud.editProfile();
@@ -72,8 +70,6 @@ export function installPeers(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'puff
       }
       r.person.setSmoking(!!peer.smoking);
       r.person.setGolf(!!peer.golfing);
-      r.person.setThrowing(peer.throwing ?? null);
-      r.person.holdDrink(peer.drink ? (DRINK_BY_ID.get(peer.drink) ?? null) : null);
       r.person.carry(peer.carrying);
       r.person.read(!!peer.reading);
       r.person.sit(store.carOf(id) ? SEAT_HIPS : peer.seat ? (seatAt(peer.seat)?.hips ?? null) : null);
@@ -116,7 +112,7 @@ export function installPeers(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'puff
       const ground = groundAt(player.colliders, p.x, p.z, p.y);
       const airborne = !sat && p.y > ground + 0.05;
       // Or holding on to the ladder or a pole; off a pole onto the mat, the firehouse bell rings.
-      const holding = sat || core.upTop ? null : gripOf(p, office.stack.poles(), ground);
+      const holding = sat ? null : gripOf(p, office.stack.poles(), ground);
       if (r.grip === 'pole' && !holding && Math.abs(p.y) < 0.2) sound.poleLanding(6, { x: pos.x, y: 0.5, z: pos.z });
       r.grip = holding;
       r.person.setGrip(holding);
@@ -157,27 +153,6 @@ export function installPeers(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'puff
   ctx.messages.on('chat', (msg) => sayBubble(msg.from, msg.text));
   ctx.messages.on('peer.act', (msg) => {
     const r = remotes.get(msg.id);
-    if (msg.drink !== undefined) {
-      // A drink from the rooftop bar in their hand, or put down.
-      const p = store.peers.get(msg.id);
-      if (p) {
-        if (msg.drink) p.drink = msg.drink;
-        else delete p.drink;
-      }
-      if (msg.drink) r?.person.reach();
-      r?.person.holdDrink(msg.drink ? (DRINK_BY_ID.get(msg.drink) ?? null) : null);
-      return;
-    }
-    if (msg.throwing !== undefined) {
-      // Stepped up to the dart board or the axe lane, or back from it.
-      const p = store.peers.get(msg.id);
-      if (p) {
-        if (msg.throwing) p.throwing = msg.throwing;
-        else delete p.throwing;
-      }
-      r?.person.setThrowing(msg.throwing);
-      return;
-    }
     if (msg.golf !== undefined) {
       // A club out at the tee, or back in the bag.
       const p = store.peers.get(msg.id);

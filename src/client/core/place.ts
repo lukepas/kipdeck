@@ -3,7 +3,6 @@
  * you're standing, to come back to.
  */
 import { ELEVATOR, ELEVATOR_CAR, FLOOR, POLE, SLAB, STOREY, WALL_HEIGHT, inElevator, inWing } from '../../shared/layout';
-import { ROOF, ROOF_NAME } from '../../shared/rooftop';
 import type { Arrival } from '../features/climbing/controller';
 import { rememberSpot, store, type Spot } from '../state';
 import type { Ctx } from './context';
@@ -22,7 +21,7 @@ export function installPlace(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worl
 
   /** Down in the garage (or out on the street) under the floor you're on. */
   function downstairs(): boolean {
-    return !core.upTop && player.pos.y < -SLAB - 1;
+    return player.pos.y < -SLAB - 1;
   }
 
   /**
@@ -31,7 +30,7 @@ export function installPlace(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worl
    */
   function indoors(): boolean {
     const p = player.pos;
-    if (core.upTop || p.y < -1 || p.y > WALL_HEIGHT) return false;
+    if (p.y < -1 || p.y > WALL_HEIGHT) return false;
     return (p.x > FLOOR.minX && p.x < FLOOR.maxX && p.z > FLOOR.minZ && p.z < FLOOR.maxZ) || inWing(p.x, p.z, parts.worlds.officeWing());
   }
 
@@ -53,7 +52,7 @@ export function installPlace(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worl
     // Sitting, it's where you'd get up to; in a car, where you'd get out.
     const { driver } = parts.cars;
     const at = (driver.active ? driver.wayOut() : player.standingSpot()) ?? player.pos;
-    const name = store.floor === ROOF ? ROOF_NAME : (store.currentFloor()?.name ?? '');
+    const name = store.currentFloor()?.name ?? '';
     return { floor: store.floor, name, x: at.x, y: at.y, z: at.z, facing: player.facing };
   }
 

@@ -3,10 +3,7 @@
  * and F to hang a picture; the project in the corner (click it for the floors); Settings, and your
  * character.
  */
-import { ROOF } from '../../../shared/rooftop';
 import type { Ctx } from '../../core/context';
-import type { CoreState } from '../../core/ctx';
-import { builtFloors } from '../../core/floors';
 import type { Parts } from '../../core/parts';
 import { waitingInOrder, waitingLabel } from '../../nextup';
 import { saveSettings, store } from '../../state';
@@ -28,7 +25,7 @@ import { describeSky } from '../../world/sky';
 export type HudParts = Pick<Parts, 'place' | 'travel' | 'you' | 'actions' | 'waiting' | 'meeting' | 'bookshelf' | 'hanging' | 'talk' | 'notifier'>;
 
 /** Listens for clicks on the HUD and the project, registers what the HUD follows (see mountHud), and binds Tab, H and F. */
-export function installHud(ctx: Ctx, core: CoreState, parts: HudParts) {
+export function installHud(ctx: Ctx, parts: HudParts) {
   const { net, voice, settings, player, sound } = ctx;
   const { travel, waiting, actions, hanging, talk } = parts;
 
@@ -40,7 +37,7 @@ export function installHud(ctx: Ctx, core: CoreState, parts: HudParts) {
   // The project in the corner is the floor you're on; click it for the list of floors to go to.
   $('project').addEventListener('click', () => {
     if (!store.floor) return travel.showElevator();
-    toggleFloorMenu($('project'), { go: travel.switchFloor, indoors: () => parts.place.indoors(), elevator: travel.showElevator, roof: () => travel.ride(ROOF) });
+    toggleFloorMenu($('project'), { go: travel.switchFloor, indoors: () => parts.place.indoors(), elevator: travel.showElevator });
   });
 
   // ---- The HUD: a few buttons on the top bar, everything else in the ☰ menu ----------------------------
@@ -67,7 +64,6 @@ export function installHud(ctx: Ctx, core: CoreState, parts: HudParts) {
       { id: 'search', icon: '🔎', label: 'Search', section: 'Open', key: '/', title: () => 'Search the chat and every terminal', run: waiting.showSearch },
       { id: 'docs', icon: '📚', label: 'Docs', section: 'Open', title: () => 'Read the project’s docs', run: parts.bookshelf.showBookshelf },
       { id: 'elevator', icon: '🛗', label: 'Elevator', section: 'Open', count: () => store.floors.reduce((n, f) => n + (f.id === store.floor ? 0 : f.waiting), 0), title: () => 'Ride to another project', run: travel.showElevator },
-      { id: 'roof', icon: '🍸', label: 'Rooftop bar', section: 'Open', shown: () => !core.upTop && builtFloors().length > 0, title: () => 'Ride the elevator up to the roof: a DJ, drinks and the city', run: () => travel.ride(ROOF) },
       // In voice, V is push to talk, so leaving is only from here.
       { id: 'voice', icon: '🎙️', label: () => (voice.inVoice ? 'Leave voice' : 'Join voice'), section: 'Together', key: () => (voice.inVoice ? undefined : 'V'), on: () => voice.inVoice, blocked: noMedia, run: () => void talk.toggleVoice() },
       // While you're in voice, the top bar keeps the mute button handy. Muted is the usual with push to talk, so it doesn't stand out then.

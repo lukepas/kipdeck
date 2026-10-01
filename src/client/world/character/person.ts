@@ -2,19 +2,15 @@ import * as THREE from 'three';
 import { HAIR_COLORS, HAIR_STYLES, SKIN_TONES, type Look } from '../../../shared/avatar';
 import { EMOTE_BY_ID, type EmoteId } from '../../../shared/emotes';
 import type { CarriedIssue, Theme } from '../../../shared/protocol';
-import type { BarGame } from '../../../shared/bargames';
-import type { Drink } from '../../../shared/rooftop';
 import { HIPS, type PersonRig } from './rig';
-import { axeModel, dartModel } from '../../features/bargames/world';
 import { OpenBook } from '../../features/bookshelf/book';
 import { HeldCard } from '../../features/carrying/card';
 import { UNDEAD_SKIN, santaHat, warlockHat } from '../costumes';
 import { disposeSprite, mesh, textSprite, toon, toonUnique } from '../toon';
 import { EXHALE_AT, REACH_TIME, SMOKE_CYCLE, dragCurve, reachCurve } from './curves';
-import { cigarette, coffeeMug, drinkGlass, putDownGlass, undress } from './props';
+import { cigarette, coffeeMug, undress } from './props';
 import { styleHair } from './person-hair';
 import { clubSwing, strike, swingStep, type Golf } from './person-golf';
-import { propPosition, throwStep, type Oche } from './person-throw';
 import { poseEmote, type Emoting } from './person-emote';
 
 export type Pose = 'stand' | 'walk' | 'sit' | 'type';
@@ -33,7 +29,7 @@ const DOING_LIFT = 0.25;
 export class Person {
   readonly root = new THREE.Group();
   private body = new THREE.Group();
-  /** Its moving parts, for what poses them from the other files here (a golf swing, a throw, an emote). */
+  /** Its moving parts, for what poses them from the other files here (a golf swing, an emote). */
   private rig: PersonRig;
   private legL: THREE.Object3D;
   private legR: THREE.Object3D;
@@ -60,12 +56,9 @@ export class Person {
   private talkUntil = 0;
   private walkPhase = 0;
   private reachT = -1;
-  /** Held in the left hand, kept upright however the arm swings: a mug of coffee or a drink. */
+  /** Held in the left hand, kept upright however the arm swings: a mug of coffee. */
   private mug = new THREE.Group();
-  private cup: THREE.Group;
   private wantsMug = false;
-  /** A drink from the rooftop bar, in the mug's place. */
-  private glass: { id: string; group: THREE.Group } | null = null;
   /** An issue card off the board, held out in front in both hands. */
   private card: HeldCard;
   private cardHolder = new THREE.Group();
@@ -104,19 +97,9 @@ export class Person {
    * `autoT` is a whole swing playing by itself (golfSwing), taken back to `power`.
    */
   private golf: Golf | null = null;
-  /**
-   * At the dart board's oche or the axe lane's line (see setThrowing): the dart or axe in hand, how
-   * far it's been drawn back (`back`, easing to `want`), a throw under way (`throwT` seconds in, from
-   * `top`) or taking it back all by itself first (`autoT`), and how long until the next is in hand.
-   */
-  private oche: Oche | null = null;
   /** Dressed up for a holiday (see setCostume): a warlock's hat and undead skin, or a Santa hat. */
   private costume: Theme | null = null;
   private hat: THREE.Object3D[] = [];
-  /** A hand on someone's shoulder, marching them along (see holdOn). */
-  private gripping = false;
-  /** Something they're saying (see say), and for how many more seconds. */
-  private speech: { sprite: THREE.Sprite; left: number } | null = null;
 
   constructor(
     private name: string,
@@ -169,7 +152,7 @@ export class Person {
     this.armR = limb(0.24, 0.08, this.shirt, 0.33, 0.9);
     for (const arm of [this.armL, this.armR]) arm.add(mesh(new THREE.SphereGeometry(0.085, 12, 10), skin, 0, -0.38, 0));
     // Forward is +z, so the character's left arm is the one on +x. The handle faces the hand.
-    const cup = (this.cup = coffeeMug(1.4));
+    const cup = coffeeMug(1.4);
     cup.position.set(0.02, -0.08, 0.1);
     cup.rotation.y = -Math.PI / 2;
     this.mug.add(cup);
@@ -319,54 +302,10 @@ export class Person {
     this.reachT = 0;
   }
 
-  /** Puts something on them to stay: on their head (a helm), their body, or in their right hand or their left (a halberd). */
-  wear(o: THREE.Object3D, on: 'head' | 'body' | 'hand' | 'offhand') {
-    o.traverse((m) => ((m as THREE.Mesh).castShadow = true));
-    // Forward is +z, so the character's right arm is the one on -x (see reach).
-    (on === 'head' ? this.head : on === 'hand' ? this.armL : on === 'offhand' ? this.armR : this.body).add(o);
-  }
-
-  /** Keeps a hand out in front, on the shoulder of someone they're marching along (or lets go). */
-  holdOn(on: boolean) {
-    this.gripping = on;
-  }
-
-  /** Says something in a bubble over their head for `seconds` (the one before goes). */
-  say(text: string, seconds = 3.5) {
-    this.hush();
-    this.speech = { sprite: textSprite(text, { bg: '#fffaf3', size: 34 }), left: seconds };
-    this.speech.sprite.position.y = this.bubbleY;
-    this.root.add(this.speech.sprite);
-  }
-
-  private hush() {
-    if (!this.speech) return;
-    this.root.remove(this.speech.sprite);
-    disposeSprite(this.speech.sprite);
-    this.speech = null;
-  }
-
   /** A mug of coffee in the left hand, or not. */
   holdMug(on: boolean) {
     this.wantsMug = on;
-    this.cup.visible = !this.glass;
-    this.mug.visible = (on || !!this.glass) && !this.card.held && !this.book && !this.ball && this.oche?.game !== 'axe';
-  }
-
-  /** A drink from the rooftop bar in the left hand (in place of a mug), or none (null). */
-  holdDrink(d: Drink | null) {
-    if ((d?.id ?? null) === (this.glass?.id ?? null)) return;
-    if (this.glass) {
-      putDownGlass(this.glass.group);
-      this.glass = null;
-    }
-    if (d) {
-      const group = drinkGlass(d, 1.4);
-      group.position.set(0.02, -0.08, 0.1);
-      this.mug.add(group);
-      this.glass = { id: d.id, group };
-    }
-    this.holdMug(this.wantsMug);
+    this.mug.visible = on && !this.card.held && !this.book && !this.ball;
   }
 
   /** Carries an issue card in both hands, or puts it down (null). The mug waits while the hands are full. */
@@ -537,59 +476,6 @@ export class Person {
     swingStep(this.rig, this.golf!, dt);
   }
 
-  /** At the oche with a dart in the right hand, or the axe lane's line with an axe in both, or neither (null). */
-  setThrowing(game: BarGame | null) {
-    if (game === (this.oche?.game ?? null)) return;
-    if (this.oche) {
-      this.oche.prop.removeFromParent();
-      this.oche.prop.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
-      this.oche = null;
-      for (const limb of [this.armL, this.armR]) limb.rotation.set(0, 0, 0);
-    }
-    if (game) {
-      const prop = game === 'darts' ? dartModel(this.shirt.color.getStyle()) : axeModel();
-      this.body.add(prop);
-      this.oche = { game, prop, back: 0, want: 0, top: 0, throwT: -1, autoT: -1, reload: 0, release: null };
-    }
-    this.holdMug(this.wantsMug);
-  }
-
-  /** Drawing the dart or axe back, `k` of the way (0 aiming, 1 as far as it goes). */
-  tossBack(k: number) {
-    const o = this.oche;
-    if (o && o.throwT < 0 && o.autoT < 0) o.want = THREE.MathUtils.clamp(k, 0, 1);
-  }
-
-  /** Throws from wherever it's drawn back to. `release` is told where it left the hand (and how an axe was turned, see AXE), as it does. */
-  toss(release: (from: THREE.Vector3, turn: number) => void) {
-    const o = this.oche;
-    if (!o) return;
-    o.release = release;
-    o.top = o.back;
-    o.throwT = 0;
-    o.autoT = -1;
-  }
-
-  /** A whole throw on its own, drawing back first (someone else's). */
-  tossAuto(release: (from: THREE.Vector3, turn: number) => void) {
-    const o = this.oche;
-    if (!o) return release(this.root.localToWorld(new THREE.Vector3(0, 1.4, 0.3)), 0);
-    // One still on its way out of the hand goes first.
-    o.release?.(this.propWorld(new THREE.Vector3()), o.prop.rotation.x);
-    o.release = release;
-    o.throwT = -1;
-    o.autoT = 0;
-  }
-
-  private propWorld(out: THREE.Vector3): THREE.Vector3 {
-    return propPosition(this.rig, this.oche!, out);
-  }
-
-  /** The throwing arm (or arms), and the dart or axe in hand, over whatever they were doing (see throwStep). */
-  private ocheStep(dt: number) {
-    throwStep(this.rig, this.oche!, dt);
-  }
-
   /** `pace` speeds up the walk cycle for someone walking faster than usual. */
   update(dt: number, t: number, moving: boolean, airborne: boolean, pace = 1) {
     const target = moving ? 1 : 0;
@@ -648,15 +534,6 @@ export class Person {
       this.armL.rotation.z = THREE.MathUtils.lerp(this.armL.rotation.z, 0.22, reach);
       if (this.reachT >= REACH_TIME) this.reachT = -1;
     }
-    if (this.gripping && !this.book && !this.card.held && !this.ball) {
-      // The right arm out and a little down, onto the shoulder of whoever's in front.
-      this.armL.rotation.x = THREE.MathUtils.lerp(this.armL.rotation.x, -1.15, Math.min(1, dt * 10));
-      this.armL.rotation.z = THREE.MathUtils.lerp(this.armL.rotation.z, 0.3, Math.min(1, dt * 10));
-    }
-    if (this.speech) {
-      this.speech.left -= dt;
-      if (this.speech.left <= 0) this.hush();
-    }
     // Lean into the reach a little.
     this.body.rotation.x = reach * 0.12;
     this.body.rotation.z = 0;
@@ -694,6 +571,5 @@ export class Person {
     this.body.rotation.y = this.body.rotation.z = 0;
     if (this.emoting) this.emoteStep(dt, moving || airborne ? 0 : 1 - sit);
     if (this.golf && !sit && !airborne) this.golfStep(dt);
-    if (this.oche && !sit) this.ocheStep(dt);
   }
 }

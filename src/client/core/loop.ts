@@ -29,7 +29,7 @@ export function installLoop(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'stage
   ctx.ticks.add('me', tellWhereYouAre);
   ctx.ticks.add('world', updateWorld);
   ctx.ticks.add('env', updateSky);
-  ctx.ticks.add('render', drawFrame);
+  ctx.ticks.add('render', drawScene);
 
   let lastSent = { x: 0, y: 0, z: 0, rotY: 0, moving: false, at: 0 };
   let spotSavedAt = 0;
@@ -130,11 +130,9 @@ export function installLoop(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'stage
     const { player, office, camera, sound } = ctx;
     const { remotes } = parts.peers;
     const { departures, arrivals } = parts.views;
-    if (!core.upTop) {
-      ctx.world().update(t, dt, [player.pos, ...[...remotes.values()].map((r) => r.person.root.position), ...departures.positions(), ...arrivals.positions()]);
-      office.stack.update(dt, [{ x: player.pos.x, y: player.pos.y, z: player.pos.z, grip: ctx.view.grip() }, ...[...remotes.values()].map((r) => ({ x: r.person.root.position.x, y: r.person.root.position.y, z: r.person.root.position.z, grip: r.grip }))], camera.position);
-      office.jukebox.update(t, dt, sound.beat());
-    }
+    ctx.world().update(t, dt, [player.pos, ...[...remotes.values()].map((r) => r.person.root.position), ...departures.positions(), ...arrivals.positions()]);
+    office.stack.update(dt, [{ x: player.pos.x, y: player.pos.y, z: player.pos.z, grip: ctx.view.grip() }, ...[...remotes.values()].map((r) => ({ x: r.person.root.position.x, y: r.person.root.position.y, z: r.person.root.position.z, grip: r.grip }))], camera.position);
+    office.jukebox.update(t, dt, sound.beat());
     ctx.smoke.update(dt, camera);
     ctx.confetti.update(dt);
   }
@@ -145,20 +143,15 @@ export function installLoop(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'stage
     const { sun, scene, holiday } = parts.stage;
     // Out along the scenic loop, the haze thins (there's more out there to see), and the sun's shadows
     // come with you: otherwise they're only cast round the office.
-    const away = !core.upTop ? Math.hypot(player.pos.x, player.pos.z) : 0;
+    const away = Math.hypot(player.pos.x, player.pos.z);
     sky.open = THREE.MathUtils.smoothstep(away, 70, 160);
     if (away > 40) sun.target.position.set(Math.round(player.pos.x / 4) * 4, player.pos.y, Math.round(player.pos.z / 4) * 4);
     else sun.target.position.set(0, 0, 0);
     sun.target.updateMatrixWorld();
     sky.update(dt, t, camera);
-    if (!core.upTop) office.scenic.cull(camera.position, office.night.street, (scene.fog as THREE.Fog).far);
-    if (!core.upTop) holiday.update(t, sky.lampsOn, camera);
+    office.scenic.cull(camera.position, office.night.street, (scene.fog as THREE.Fog).far);
+    holiday.update(t, sky.lampsOn, camera);
     sound.setWeather(sky.rain, 1 - sky.daylight);
-  }
-
-  /** Draws the frame, through whatever it's drawn through (a few drinks in, the drunk vision: see ctx.view). */
-  function drawFrame(f: Frame) {
-    ctx.view.draw(f, drawScene);
   }
 
   /** The scene, then your hands on top of it. */

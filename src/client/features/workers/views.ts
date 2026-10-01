@@ -46,7 +46,7 @@ export interface WorkerView {
 const HOLD_NEAR = 4;
 const HOLD_LEAVE = 5;
 
-export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'rooftop' | 'cabinet' | 'notifier' | 'waiting' | 'peers'>;
+export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'cabinet' | 'notifier' | 'waiting' | 'peers'>;
 
 /**
  * Registers what follows the workers, the floor plan, the meeting, the pull requests and
@@ -237,12 +237,11 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     player.wing = sound.wing = level;
     sky.setWing(level);
     parts.travel.syncStack();
-    parts.rooftop.syncRoof();
     arrangeSeats();
     if (was.floor === store.floor && level > was.wing) {
-      const at = { x: (WING.minX + WING.maxX) / 2, y: 1.2, z: wingRowZ(level) };
+      const at = { x: (WING.minX + WING.maxX) / 2, z: wingRowZ(level) };
       confetti.burst(at.x, 2.4, at.z, 140, 0.8);
-      sound.toss('thunk', at);
+      sound.step('land');
     }
   }
   store.on('floorPlan', syncPlan);

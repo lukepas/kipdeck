@@ -118,7 +118,7 @@ export interface FloorHelpers {
   arrivalFloor(wanted: string | null): Floor | undefined;
   /**
    * Takes `floor` off the building (already out of floors.json): everyone on it rides the elevator to
-   * the next floor, or out to the lobby if it was the last (the roof goes with it), and its workers stop.
+   * the next floor, or out to the lobby if it was the last, and its workers stop.
    */
   closeFloor(floor: Floor, who: string): void;
 }
@@ -142,8 +142,6 @@ export interface Navigation {
    * everything. They arrive in the elevator, or `at` the spot they came by.
    */
   goToFloor(c: Client, floor: Floor, at?: Spot): void;
-  /** Up to the rooftop bar, by elevator. */
-  goToRoof(c: Client): void;
   /** Out to the lobby, where the elevator has nowhere to go: the building's last floor was taken off. */
   toLobby(c: Client): void;
 }

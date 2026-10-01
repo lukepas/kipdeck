@@ -5,7 +5,6 @@
 import { groundAt } from '../player';
 import { store } from '../state';
 import { officeWorld } from '../world/world';
-import { ROOF } from '../../shared/rooftop';
 import type { Ctx } from './context';
 import { idleAgentsIn } from './stations';
 
@@ -16,9 +15,9 @@ export function createWorlds(ctx: Ctx) {
   /** The board agents waiting at the office's kiosks. */
   const idleAgents = idleAgentsIn(world);
 
-  /** How many rows the office's back office is built out where you are: the floor's plan, none on the roof. */
+  /** How many rows the office's back office is built out on the floor you're on. */
   function officeWing(): number {
-    return store.floor !== ROOF ? store.floorPlan.wing : 0;
+    return store.floorPlan.wing;
   }
 
   /** The top of whatever's underfoot at (x, z) for feet at `y`: its floor, a step, the street. */

@@ -1,10 +1,9 @@
 /**
- * Floors and the elevator: the building as tall as its floors, riding the elevator (up to the roof,
- * down to the garage), straight to another floor from the floor list, through the ceiling up the
- * ladder or down a pole; and arriving, up on the roof or on a floor, with the doors opening onto it.
+ * Floors and the elevator: the building as tall as its floors, riding the elevator (down to the
+ * garage), straight to another floor from the floor list, through the ceiling up the ladder or down
+ * a pole; and arriving on a floor, with the doors opening onto it.
  */
-import { inElevator, roofDrop, streetBelow } from '../../shared/layout';
-import { ROOF } from '../../shared/rooftop';
+import { inElevator, streetBelow } from '../../shared/layout';
 import type { Arrival, Grip } from '../features/climbing/controller';
 import { store } from '../state';
 import { $, clip, closeAllModals, modalOpen } from '../ui/dom';
@@ -14,7 +13,6 @@ import type { CoreState } from './ctx';
 import { builtFloors, floorWings } from './floors';
 import { aside, hintTitle, key, onE } from './hint';
 import type { Parts } from './parts';
-import { FAR } from './scene';
 
 // The kinds of thing you can use that this defines (see InteractKinds in world/types.ts).
 declare module '../world/types' {
@@ -23,12 +21,11 @@ declare module '../world/types' {
   }
 }
 
-export type TravelParts = Pick<Parts, 'stage' | 'worlds' | 'place' | 'walking' | 'seating' | 'climbing' | 'cars' | 'rooftop' | 'telescope' | 'bar' | 'bargames' | 'hanging' | 'golf' | 'floorWatch' | 'arrival'>;
+export type TravelParts = Pick<Parts, 'place' | 'walking' | 'seating' | 'climbing' | 'cars' | 'golf' | 'floorWatch' | 'arrival'>;
 
 /** Registers what follows the building's floors (store 'floors'). */
 export function installTravel(ctx: Ctx, core: CoreState, parts: TravelParts) {
-  const { player, office, net, sound, sky, camera } = ctx;
-  const { holiday } = parts.stage;
+  const { player, office, net, sound } = ctx;
   const { placeInCar, downstairs, indoors, standingAt, unstick } = parts.place;
 
   let wingsShown = '';
@@ -39,8 +36,7 @@ export function installTravel(ctx: Ctx, core: CoreState, parts: TravelParts) {
   function syncStack() {
     const floors = builtFloors();
     const index = floors.findIndex((f) => f.id === store.floor);
-    // Up on the roof there's no ladder or pole to take: nothing above, nothing below.
-    const up = store.floor === ROOF ? undefined : floors[index + 1]?.name;
+    const up = floors[index + 1]?.name;
     const down = index > 0 ? floors[index - 1]?.name : undefined;
     const count = index < 0 ? 1 : floors.length;
     const wings = floorWings(floors);
@@ -91,21 +87,19 @@ export function installTravel(ctx: Ctx, core: CoreState, parts: TravelParts) {
     use: onE(() => showElevator()),
   });
 
-  /** The elevator where you are: the office's, its stop down in the garage, or the one up on the roof. */
+  /** The elevator where you are: the office's, or its stop down in the garage. */
   function lift() {
-    const roof = parts.rooftop.roof();
-    return core.upTop && roof ? roof.elevator : downstairs() ? office.garageLift : office.elevator;
+    return downstairs() ? office.garageLift : office.elevator;
   }
 
   /**
-   * Rides the elevator to another floor, up to the roof or down to the garage (GARAGE). From outside
-   * the car, you step in while the lights are down. Between your floor and the garage under it you
-   * stay on that floor, just further down the shaft (or back up it); from the roof, the garage is the
-   * bottom floor's.
+   * Rides the elevator to another floor, or down to the garage (GARAGE). From outside the car, you
+   * step in while the lights are down. Between your floor and the garage under it you stay on that
+   * floor, just further down the shaft (or back up it).
    */
   function ride(to: string): void {
     const garage = to === GARAGE;
-    const floorId = garage ? (core.upTop || !store.floor ? builtFloors()[0]?.id : store.floor) : to;
+    const floorId = garage ? (store.floor ?? builtFloors()[0]?.id) : to;
     if (core.trip || !floorId || (floorId === store.floor && garage === downstairs())) return;
     closeAllModals();
     stopForTrip();
@@ -122,8 +116,7 @@ export function installTravel(ctx: Ctx, core: CoreState, parts: TravelParts) {
         setTimeout(() => {
           placeInCar(inside ? player.pos : undefined, garage && within);
           if (within) setTimeout(rodeWithin, 700);
-          // Down to the garage from the roof: the bottom floor, and down its shaft once it's here (see arrive).
-          else net.send({ t: 'floor.go', floor: floorId, ...(garage ? { at: { x: player.pos.x, y: streetBelow(0), z: player.pos.z, rotY: 0 } } : {}) });
+          else net.send({ t: 'floor.go', floor: floorId });
         }, 320);
       },
       inside ? 650 : 0,
@@ -160,8 +153,6 @@ export function installTravel(ctx: Ctx, core: CoreState, parts: TravelParts) {
 
   /** Straight to another floor from the floor list: a blink, and you're standing in the same spot there. */
   function switchFloor(floorId: string, keepWalking = false): void {
-    // The roof isn't laid out like a floor: to and from it, it's the elevator.
-    if (core.upTop || floorId === ROOF) return ride(floorId);
     if (core.trip || floorId === store.floor) return;
     // Outside, the same spot on another floor looks just like this one: the elevator brings you in
     // to that floor instead, into its car.
@@ -201,45 +192,12 @@ export function installTravel(ctx: Ctx, core: CoreState, parts: TravelParts) {
   }
 
   /**
-   * Up on the roof, or back down in the office: shows the one you're in, and walks, sounds, lights and
-   * looks as it does there.
-   */
-  function setPlace() {
-    parts.telescope.exit();
-    const up = store.floor === ROOF;
-    if (up === core.upTop) return;
-    core.upTop = up;
-    const { rooftop } = parts;
-    const r = up ? rooftop.theRoof() : rooftop.roof();
-    const world = ctx.world();
-    world.group.visible = !up;
-    // The holiday decorations are dressed round the office and the street below it, not up here.
-    holiday.group.visible = !up;
-    if (r) r.group.visible = up;
-    player.colliders = up ? r!.colliders : world.colliders;
-    sky.setRoof(up, roofDrop(rooftop.roofFloors()));
-    sound.setOutdoors(up);
-    sound.setDj(up ? rooftop.djAt : null);
-    // You can see the whole city from up there (and its clouds); from the top floors, as far as the haze.
-    camera.far = up ? 700 : FAR;
-    camera.updateProjectionMatrix();
-    // Drinks stay at the bar (what you've had comes down with you).
-    if (!up) parts.bar.booze.putDown();
-    // Whatever was thrown up there while you were away, you didn't see: the boards start clean.
-    if (up) parts.bargames.freshBoards(r!);
-    const { hanger } = parts.hanging;
-    if (hanger.active) hanger.cancel();
-    ctx.hint.invalidate();
-  }
-
-  /**
    * You're on a floor (or in the building without one): paint it, and open the doors (or carry on down
    * the pole…). `back` is standing in the spot you left from last time, the doors open already.
    */
   function arrive(how: TripKind | 'back' = core.trip?.how ?? 'elevator') {
     // The balls lying about were this floor's.
     parts.golf.balls.clear();
-    setPlace();
     parts.floorWatch.paintFloor();
     parts.arrival.renderProject();
     parts.floorWatch.noticeWaiting();
@@ -263,7 +221,7 @@ export function installTravel(ctx: Ctx, core: CoreState, parts: TravelParts) {
       // The doors stand open, the way the last one out left them.
       lift()?.setOpen(true);
       player.enabled = !modalOpen();
-      if (!core.upTop) unstick();
+      unstick();
       return;
     }
     if (how !== 'elevator') {
@@ -275,5 +233,5 @@ export function installTravel(ctx: Ctx, core: CoreState, parts: TravelParts) {
     doorsOpen();
   }
 
-  return { syncStack, takenAway, showElevator, lift, ride, switchFloor, travel, setPlace, arrive };
+  return { syncStack, takenAway, showElevator, lift, ride, switchFloor, travel, arrive };
 }

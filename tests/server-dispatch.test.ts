@@ -340,10 +340,9 @@ test('the toys on a floor, and letting go of them on leaving the floor or the of
   assert.equal((await b.take('jukebox')).state.on, false);
   assert.equal((await b.take('toast', (m) => m.text.startsWith('🔇'))).text, '🔇 Cy turned the jukebox off');
 
-  // The gong once, not twice in a row; no air horn off the roof, and no golf without a club.
+  // The gong once, not twice in a row, and no golf without a club.
   a.send({ t: 'gong' });
   a.send({ t: 'gong' });
-  a.send({ t: 'horn' });
   a.send({ t: 'golf', yaw: 0, loft: 0.5, power: 0.5 });
   a.send({ t: 'act', golf: true });
   a.send({ t: 'golf', yaw: 0.25, loft: 0.5, power: 0.5 });
@@ -367,14 +366,6 @@ test('the toys on a floor, and letting go of them on leaving the floor or the of
     assert.equal((await b.take('cabinet')).state.player?.id, cy);
     await b.drain();
   };
-  await holdEverything();
-  // Up to the roof: the floor sees the arcade free up, Cy go, and then the whiteboard, the ball and the car.
-  a.send({ t: 'floor.go', floor: '@roof' });
-  assert.equal((await a.take('floor.enter')).floor, '@roof');
-  assert.deepEqual(await b.next(5), ['cabinet', 'peer.update', 'wb.people', 'ball', 'cars']);
-
-  a.send({ t: 'floor.go', floor: floor.id });
-  assert.equal((await a.take('floor.enter')).floor, floor.id);
   await holdEverything();
   // Out of the office: the whiteboard, the arcade, the ball and the car, then Cy's gone.
   await a.close();

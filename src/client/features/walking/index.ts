@@ -104,11 +104,11 @@ export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
 
   /**
    * Walks you over to `at` on this floor and does `then` when you get there, as if you'd walked up
-   * and pressed E. Where there's no walking to be done (up on the roof, riding the elevator, on the
+   * and pressed E. Where there's no walking to be done (riding the elevator, on the
    * ladder, driving a car) it just does it. A key of yours takes over, and then it doesn't happen.
    */
   function walkThen(at: { x: number; y?: number; z: number }, what: string, then: () => void, face?: { x: number; z: number }) {
-    if (core.upTop || core.trip || ctx.activities.running('climber') || ctx.activities.running('driver')) return then();
+    if (core.trip || ctx.activities.running('climber') || ctx.activities.running('driver')) return then();
     closeAllModals();
     if (player.seat) parts.seating.standUp();
     ctx.activities.stopAll('errand');

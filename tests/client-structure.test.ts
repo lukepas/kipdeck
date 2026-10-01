@@ -42,7 +42,7 @@ function graph(entry: string): Set<string> {
 test('main.ts installs every feature, each with one install line', () => {
   const main = read(path.join(client, 'main.ts'));
   const features = readdirSync(path.join(client, 'features')).filter((d) => statSync(path.join(client, 'features', d)).isDirectory());
-  assert.ok(features.length >= 30, `found ${features.length} features`);
+  assert.ok(features.length >= 10, `found ${features.length} features`);
   for (const f of features) {
     const dir = path.join(client, 'features', f);
     const installs = readdirSync(dir)

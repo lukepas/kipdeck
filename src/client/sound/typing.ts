@@ -123,13 +123,11 @@ export class Typing {
 
 }
 
-/** Someone at a worker's desk fidgets every so often (not up on the roof). */
+/** Someone at a worker's desk fidgets every so often. */
 export function fidgeting(a: AudioCore, typing: Typing): NowAndThen {
   return new NowAndThen(
     () => rand(8, 20),
     () => rand(10, 30),
-    (now) => {
-      if (!a.outdoors) typing.fidget(now);
-    },
+    (now) => typing.fidget(now),
   );
 }

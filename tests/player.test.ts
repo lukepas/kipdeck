@@ -207,22 +207,18 @@ test('seat places are only the ones the office has', () => {
   for (const bad of ['couch:3', 'couch:', 'couch', 'sofa:0', 'couch:-1', 'couch:1.5', '']) assert.equal(seatAt(bad), undefined, bad);
 });
 
-test('effects on you combine: speeds and jumps multiply, the hardest tremble shows, sways add up', () => {
+test('effects on you combine: speeds and jumps multiply, the hardest tremble shows', () => {
   const effects = new Effects();
-  assert.deepEqual([effects.speed, effects.jump, effects.jitter, effects.sway], [1, 1, 0, 0]);
-  const tipsy = effects.add();
+  assert.deepEqual([effects.speed, effects.jump, effects.jitter], [1, 1, 0]);
+  const slow = effects.add();
   const buzz = effects.add();
-  assert.deepEqual([effects.speed, effects.jump, effects.jitter, effects.sway], [1, 1, 0, 0], 'a new one is steady');
+  assert.deepEqual([effects.speed, effects.jump, effects.jitter], [1, 1, 0], 'a new one is steady');
   Object.assign(buzz, { speed: 1.4, jump: 1.2, jitter: 0.3 });
-  tipsy.sway = 0.8;
-  assert.deepEqual([effects.speed, effects.jump, effects.jitter, effects.sway], [1.4, 1.2, 0.3, 0.8]);
-  Object.assign(tipsy, { speed: 0.5, jump: 0.5, jitter: 0.6, sway: 0.8 });
-  assert.deepEqual([effects.speed, effects.jump, effects.jitter, effects.sway], [0.7, 0.6, 0.6, 0.8]);
-  const more = effects.add();
-  more.sway = 0.2;
-  assert.equal(effects.sway, 1);
-  effects.remove(tipsy);
-  assert.deepEqual([effects.speed, effects.jump, effects.jitter, effects.sway], [1.4, 1.2, 0.3, 0.2]);
+  assert.deepEqual([effects.speed, effects.jump, effects.jitter], [1.4, 1.2, 0.3]);
+  Object.assign(slow, { speed: 0.5, jump: 0.5, jitter: 0.6 });
+  assert.deepEqual([effects.speed, effects.jump, effects.jitter], [0.7, 0.6, 0.6]);
+  effects.remove(slow);
+  assert.deepEqual([effects.speed, effects.jump, effects.jitter], [1.4, 1.2, 0.3]);
 });
 
 test('a buzz on you walks you further and jumps you higher', (t) => {

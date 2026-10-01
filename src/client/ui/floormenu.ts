@@ -1,6 +1,5 @@
 import './floormenu.css';
 import { cloneLabel, floorPalette } from '../../shared/floors';
-import { ROOF, ROOF_NAME } from '../../shared/rooftop';
 import type { FloorInfo } from '../../shared/protocol';
 import { store } from '../state';
 import { h } from './dom';
@@ -16,8 +15,6 @@ export interface FloorMenuOptions {
   indoors(): boolean;
   /** Open the elevator's panel, to add a project. */
   elevator(): void;
-  /** Up to the rooftop bar, by elevator; null on a map with no roof to go up to. */
-  roof: (() => void) | null;
 }
 
 let current: { el: HTMLElement; close(): void } | null = null;
@@ -71,23 +68,9 @@ export function toggleFloorMenu(anchor: HTMLElement, opts: FloorMenuOptions): vo
       close();
       opts.elevator();
     });
-    // Top floor first, the way a building's directory reads, and the roof over them.
+    // Top floor first, the way a building's directory reads.
     const items = floors.map((f, i) => item(f, i, here)).reverse();
-    const onRoof = store.floor === ROOF;
-    const people = [...store.peers.values()].filter((p) => p.floor === ROOF).length;
-    const roof = h(
-      'button.floor-item',
-      { type: 'button', role: 'menuitem', class: onRoof ? 'here' : '', disabled: onRoof, title: onRoof ? "You're up on the roof" : 'Take the elevator up to the roof' },
-      h('span.floor-no', { style: 'background:#2b2d42' }, '🍸'),
-      h('span.floor-text', {}, h('span.floor-name', {}, ROOF_NAME), h('span.floor-sub', {}, onRoof ? 'you are here' : 'A DJ, drinks and the city')),
-      h('span.floor-stats', {}, people ? h('span', { title: 'People up there' }, `🧑 ${people}`) : ''),
-    );
-    roof.addEventListener('click', () => {
-      if (onRoof) return;
-      close();
-      opts.roof?.();
-    });
-    el.replaceChildren(h('div.floor-menu-head', {}, `🏢 ${floors.length} floor${floors.length === 1 ? '' : 's'}`), ...(floors.length && opts.roof ? [roof] : []), ...items, add);
+    el.replaceChildren(h('div.floor-menu-head', {}, `🏢 ${floors.length} floor${floors.length === 1 ? '' : 's'}`), ...items, add);
   };
 
   const place = () => {

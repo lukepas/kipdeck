@@ -1,4 +1,3 @@
-import { ROOF, ROOF_NAME } from '../../shared/rooftop';
 import { store } from '../state';
 import type { Voice } from '../voice';
 import { $, h } from './dom';
@@ -29,11 +28,7 @@ export function renderPeople(voice: Voice, onEditProfile: () => void, onWalkTo: 
       p.account ? h('span.acct', { title: `Signed in with ${you ? 'your' : 'their'} own account` }, '✓') : null,
       you ? h('span.you', {}, '(you)') : null,
       // Somewhere else in the building: which floor.
-      !you && !store.onMyFloor(p)
-        ? p.floor === ROOF
-          ? h('span.where', { title: 'Up on the roof' }, `🍸 ${ROOF_NAME}`)
-          : h('span.where', { title: 'On another floor' }, `🛗 ${store.floors.find((f) => f.id === p.floor)?.name ?? 'lobby'}`)
-        : null,
+      !you && !store.onMyFloor(p) ? h('span.where', { title: 'On another floor' }, `🛗 ${store.floors.find((f) => f.id === p.floor)?.name ?? 'lobby'}`) : null,
       p.sharing ? h('span', { title: 'Sharing screen' }, '🖥️') : null,
       h('span.mic', {}, mic),
     );

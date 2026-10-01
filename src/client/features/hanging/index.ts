@@ -6,7 +6,7 @@ import type { Ctx } from '../../core/context';
 import { aside, hintTitle, key, onE } from '../../core/hint';
 import { Hanger } from './controller';
 import { store } from '../../state';
-import { h, toast } from '../../ui/dom';
+import { h } from '../../ui/dom';
 import type { Gallery } from './world';
 
 // The kinds of thing you can use that this defines (see InteractKinds in world/types.ts).
@@ -90,9 +90,8 @@ export function installHanging(ctx: Ctx, deps: HangingDeps) {
     });
   }
 
-  /** F: hang a picture on a wall of this floor. There are no walls for them up on the roof. */
+  /** F: hang a picture on a wall of this floor. */
   function startHanging() {
-    if (ctx.upTop()) return toast('No walls to hang pictures on up here — take the elevator down to a floor', 'warn');
     hanger.start();
   }
 
