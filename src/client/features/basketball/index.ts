@@ -214,7 +214,7 @@ export function installBasketball(ctx: Ctx, deps: BasketballDeps) {
     renderShotMeter(now);
   }
   ctx.ticks.add('others', ({ dt, now }) => {
-    if (!ctx.upTop() && ctx.inOffice()) updateBall(now, dt);
+    if (!ctx.upTop()) updateBall(now, dt);
   });
 
   /** The wind-up meter over the hint, while you hold E: a green band where the shot drops in, when you're shooting at the hoop. */

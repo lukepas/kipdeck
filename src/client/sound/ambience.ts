@@ -1,7 +1,7 @@
 import { DESKS } from '../../shared/layout';
 import { NowAndThen, type AudioCore } from './core';
 import { biquad, envelope, pick, rand, randInt } from './dsp';
-import { FRIDGE } from './places';
+import { FRIDGE, WINDOWS } from './places';
 
 // ---- Around the room --------------------------------------------------------------------------
 
@@ -27,7 +27,7 @@ export function startRoomTone(a: AudioCore) {
   swell.start();
 }
 
-/** The kitchen's fridge, humming away (not in a castle). */
+/** The kitchen's fridge, humming away. */
 export class Fridge {
   private fridge: { gain: GainNode; on: boolean; next: number } | null = null;
 
@@ -58,13 +58,6 @@ export class Fridge {
   tickFridge(now: number) {
     const f = this.fridge;
     if (!f || now < f.next) return;
-    // No fridge in a castle: it goes quiet, and doesn't clunk.
-    if (this.a.hall) {
-      f.on = false;
-      f.gain.gain.setTargetAtTime(0, now, 0.3);
-      f.next = now + 20;
-      return;
-    }
     f.on = !f.on;
     f.gain.gain.setTargetAtTime(f.on ? 0.06 : 0, now, f.on ? 0.6 : 0.3);
     f.next = now + (f.on ? rand(25, 50) : rand(20, 45));
@@ -78,7 +71,7 @@ export class Fridge {
 function birds(a: AudioCore, now: number) {
   const ctx = a.ctx!;
   a.count('birds');
-  const out = a.panner(pick(a.windows()), 2, 1.2);
+  const out = a.panner(pick(WINDOWS), 2, 1.2);
   // Heard through the glass.
   out.connect(biquad(ctx, 'lowpass', 5000, 0.7)).connect(a.ambience);
   const base = rand(2400, 4200);
@@ -107,7 +100,7 @@ function birds(a: AudioCore, now: number) {
 function crickets(a: AudioCore, now: number) {
   const ctx = a.ctx!;
   a.count('crickets');
-  const out = a.panner(pick(a.windows()), 2, 1.2);
+  const out = a.panner(pick(WINDOWS), 2, 1.2);
   out.connect(biquad(ctx, 'lowpass', 6000, 0.7)).connect(a.ambience);
   const freq = rand(4200, 5200);
   let t = now + 0.05;
@@ -182,13 +175,13 @@ export function nightCrickets(a: AudioCore): NowAndThen {
   );
 }
 
-/** A desk phone ringing across the room now and then (in the office, not on the roof or in a hall). */
+/** A desk phone ringing across the room now and then (in the office, not on the roof). */
 export function deskPhones(a: AudioCore): NowAndThen {
   return new NowAndThen(
     () => rand(60, 150),
     () => rand(90, 240),
     (now) => {
-      if (!a.outdoors && !a.hall) phone(a, now);
+      if (!a.outdoors) phone(a, now);
     },
   );
 }

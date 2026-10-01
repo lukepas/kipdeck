@@ -1,5 +1,6 @@
 import type { AudioCore } from './core';
 import { biquad, envelope, pick, rand } from './dsp';
+import { WINDOWS } from './places';
 
 // The weather outside: rain, muffled indoors, pattering on the windows or all round you, and thunder.
 
@@ -36,7 +37,7 @@ export class Rain {
     if (rain > 0.05 && now >= this.nextDrip) {
       this.nextDrip = now + rand(0.03, 0.2) / rain;
       const l = this.a.listener;
-      const at = where === 'office' ? pick(this.a.windows()) : { x: l.x + rand(-4, 4), y: l.y - 1.2, z: l.z + rand(-4, 4) };
+      const at = where === 'office' ? pick(WINDOWS) : { x: l.x + rand(-4, 4), y: l.y - 1.2, z: l.z + rand(-4, 4) };
       this.a.play(this.a.buf.drop, { at, gain: rand(0.05, 0.14), rate: rand(0.7, 1.4), ref: 1.5, rolloff: 1.3 });
       this.a.count('drip');
     }

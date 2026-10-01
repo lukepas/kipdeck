@@ -4,8 +4,8 @@
  * they are to you.
  */
 import * as THREE from 'three';
+import { seatAt } from '../../../shared/layout';
 import { sameLook } from '../../../shared/avatar';
-import { seatOn } from '../../../shared/maps';
 import type { PeerInfo } from '../../../shared/protocol';
 import { DRINK_BY_ID } from '../../../shared/rooftop';
 import { SEAT_HIPS } from '../../../shared/garage';
@@ -37,9 +37,8 @@ export interface RemotePeer {
 }
 
 /** Registers what follows the people in the office (store 'peers' and 'cars'), their ticks, and chat and peer.act. */
-export function installPeers(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'puff' | 'worlds' | 'cars' | 'walking' | 'talk' | 'hud'>) {
+export function installPeers(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'puff' | 'cars' | 'walking' | 'talk' | 'hud'>) {
   const { scene, voice, sound, player, office } = ctx;
-  const { plan, inOffice } = parts.worlds;
   const remotes = new Map<string, RemotePeer>();
   const editProfile = () => parts.hud.editProfile();
   const walkTo = (id: string) => parts.walking.walkTo(id);
@@ -77,8 +76,8 @@ export function installPeers(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'puff
       r.person.holdDrink(peer.drink ? (DRINK_BY_ID.get(peer.drink) ?? null) : null);
       r.person.carry(peer.carrying);
       r.person.read(!!peer.reading);
-      r.person.sit(store.carOf(id) ? SEAT_HIPS : peer.seat ? (seatOn(plan(), peer.seat)?.hips ?? null) : null);
-      r.person.setDoing(whereabouts(peer, store.carOf(id), plan()));
+      r.person.sit(store.carOf(id) ? SEAT_HIPS : peer.seat ? (seatAt(peer.seat)?.hips ?? null) : null);
+      r.person.setDoing(whereabouts(peer, store.carOf(id)));
     }
     for (const [id, r] of remotes) {
       const peer = store.peers.get(id);
@@ -100,7 +99,7 @@ export function installPeers(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'puff
       if (!p) continue;
       // Sitting, they're wherever their seat puts them; in a car, right in it as it goes.
       const ride = parts.cars.rideOf(id);
-      const sat = ride ?? (p.seat ? seatOn(plan(), p.seat) : undefined);
+      const sat = ride ?? (p.seat ? seatAt(p.seat) : undefined);
       const at = sat ?? p;
       r.target.set(at.x, at.y, at.z);
       const pos = r.person.root.position;
@@ -117,7 +116,7 @@ export function installPeers(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'puff
       const ground = groundAt(player.colliders, p.x, p.z, p.y);
       const airborne = !sat && p.y > ground + 0.05;
       // Or holding on to the ladder or a pole; off a pole onto the mat, the firehouse bell rings.
-      const holding = sat || core.upTop || !inOffice() ? null : gripOf(p, office.stack.poles(), ground);
+      const holding = sat || core.upTop ? null : gripOf(p, office.stack.poles(), ground);
       if (r.grip === 'pole' && !holding && Math.abs(p.y) < 0.2) sound.poleLanding(6, { x: pos.x, y: 0.5, z: pos.z });
       r.grip = holding;
       r.person.setGrip(holding);
@@ -147,7 +146,7 @@ export function installPeers(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'puff
       // What people are up to changes as they walk about, not only when they open something.
       for (const [id, r] of remotes) {
         const p = store.peers.get(id);
-        if (p) r.person.setDoing(whereabouts(p, store.carOf(id), plan()));
+        if (p) r.person.setDoing(whereabouts(p, store.carOf(id)));
       }
       renderPeople(voice, editProfile, walkTo, false);
       updateSpeaking(voice);

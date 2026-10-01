@@ -4,6 +4,7 @@
  * asleep) and its changes, the search over every terminal, and the task queue's window.
  */
 import * as THREE from 'three';
+import { OFFICE_PLAN } from '../../../shared/plan';
 import { isAsleep } from '../../../shared/status';
 import type { Ctx } from '../../core/context';
 import type { CoreState } from '../../core/ctx';
@@ -31,7 +32,7 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
   function goToNextWaiting() {
     if (core.trip) return;
     const w = nextUp.next(store.workers.values(), waitingBeside());
-    const desk = w && parts.worlds.plan().byId.get(w.deskId);
+    const desk = w && OFFICE_PLAN.byId.get(w.deskId);
     nextToast?.remove();
     if (!w || !desk) {
       const other = store.floors.find((f) => f.id !== store.floor && f.waiting > 0);

@@ -13,7 +13,7 @@ import type { MeetingState } from './meetings.js';
 import type { PeerInfo } from './presence.js';
 import type { QueueState } from './queue.js';
 import type { ServicesState } from './settings.js';
-import type { JailState, WorkerInfo } from './workers.js';
+import type { WorkerInfo } from './workers.js';
 
 export interface ProjectInfo {
   name: string;
@@ -119,8 +119,6 @@ export interface FloorView {
   ball: BallState;
   /** The cars in the garage (see CARS in shared/garage.ts): where each one is, and who's in it. */
   cars: CarState[];
-  /** Workers sent home and locked up in the dungeon, on a map that has one. */
-  jail: JailState;
 }
 
 export type FloorClientMsg =

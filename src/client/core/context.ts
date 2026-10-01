@@ -4,7 +4,6 @@
  * takes a `Ctx` (`import type { Ctx }`) and never imports main.ts; core/ctx.ts builds the one there is.
  */
 import type * as THREE from 'three';
-import type { MapPlan } from '../../shared/maps';
 import type { CarriedIssue, GhIssue, ServerMsg } from '../../shared/protocol';
 import type { Grip } from '../features/climbing/controller';
 import type { DeskKey } from '../interaction';
@@ -37,13 +36,12 @@ export interface Hint {
  * - start: you're starting something else at a thing you used (the tee, the dart board, the ladder, a pole, a car)
  * - taken: the office put you on another floor (yours was taken off the building)
  * - trip: you're off to another floor (the elevator, the floor list)
- * - map: the building changed maps
  * - walk: you're walking over to someone
  * - errand: you're walking over to something to use it (Shift+Enter in the palette)
  * - desk: you're put in front of a desk (the PR board's "Go to desk", N), or placed anywhere else
  *   (only the car hears that: see placeAt in core/place.ts)
  */
-export type StopWhy = 'start' | 'taken' | 'trip' | 'map' | 'walk' | 'errand' | 'desk';
+export type StopWhy = 'start' | 'taken' | 'trip' | 'walk' | 'errand' | 'desk';
 
 /** How you're going to another floor: by elevator, straight there from the floor list, or by the ladder or a pole. */
 export type TripKind = 'elevator' | 'switch' | Grip;
@@ -74,7 +72,7 @@ export interface Ctx {
   readonly renderer: THREE.WebGLRenderer;
   /** What the office is drawn on (the renderer's canvas), where the mouse aims and clicks. */
   readonly canvas: HTMLCanvasElement;
-  /** The office building, whichever map is up (see world()). */
+  /** The office building. */
   readonly office: Office;
   readonly sky: Sky;
   readonly player: PlayerController;
@@ -92,12 +90,8 @@ export interface Ctx {
   readonly reduceMotion: MediaQueryList;
   readonly hud: Hud;
 
-  /** The world the building's map is built as: the office, or a map of its own (the castle). */
+  /** The office as the workers know it: its seats, its boards, how they walk in and out. */
   world(): World;
-  /** Where everything is on the building's map. */
-  plan(): MapPlan;
-  /** Whether the building's on the office's own map. */
-  inOffice(): boolean;
   /** Up on the roof, rather than on a floor of the office. */
   upTop(): boolean;
   /** The trip to another floor under way, if any. */

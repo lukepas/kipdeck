@@ -1,7 +1,7 @@
 // Every slice of the store, the core's included, in the one order the store runs them in: the order
 // they take in each message and each floor you arrive on, and so the order their topics fire in. On
-// `welcome`, after the map (see map.ts), the floor's topics fire from `floor` on down, then everyone
-// else's from the top; on every other message, the topics fire top to bottom. That's the order the
+// `welcome`, the floor's topics fire from `floor` on down, then everyone else's from the top; on every
+// other message, the topics fire top to bottom. That's the order the
 // office has always fired them in, so a new slice goes at the end.
 //
 // Each slice's module also adds its fields and topics to Store and Topics (see ../store.ts), which only
@@ -15,11 +15,9 @@ import { cabinet } from './cabinet';
 import { cars } from './cars';
 import { decor } from './decor';
 import { floorPlan } from './floor-plan';
-import { jail } from './jail';
 import { jukebox } from './jukebox';
 import { leaveOnMerge } from './leave-on-merge';
 import { machine } from './machine';
-import { map } from './map';
 import { meeting } from './meeting';
 import { notify } from './notify';
 import { prompts } from './prompts';
@@ -44,7 +42,6 @@ export const SLICES: readonly Slice[] = [
   theme,
   prompts,
   leaveOnMerge,
-  map,
   floor,
   meeting,
   decor,
@@ -55,7 +52,6 @@ export const SLICES: readonly Slice[] = [
   cabinet,
   ball,
   cars,
-  jail,
   team,
   accounts,
   signins,

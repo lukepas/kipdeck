@@ -5,12 +5,12 @@
  * buttons do with a worker.
  */
 import { STATION_AGENT, deskSeat, type DeskDef } from '../../../shared/layout';
+import { OFFICE_PLAN } from '../../../shared/plan';
 import { canLabel } from '../../../shared/floorplan';
 import { officeFull, pressureNote } from '../../../shared/machine';
 import type { AgentEffort, AgentProvider, WorkerInfo } from '../../../shared/protocol';
 import { isAsleep, isBusy } from '../../../shared/status';
 import type { Ctx, Hint } from '../../core/context';
-import type { CoreState } from '../../core/ctx';
 import { seatBuilt } from '../../core/floors';
 import { aside, key } from '../../core/hint';
 import type { Parts } from '../../core/parts';
@@ -37,12 +37,11 @@ declare module '../../world/types' {
   }
 }
 
-export type WorkerActionsParts = Pick<Parts, 'worlds' | 'seating' | 'walking' | 'waiting' | 'meeting' | 'cards'>;
+export type WorkerActionsParts = Pick<Parts, 'seating' | 'walking' | 'waiting' | 'meeting' | 'cards'>;
 
 /** Registers the worktree answer (worker.worktree), and defines what's done at a desk and at a board agent. */
-export function installWorkerActions(ctx: Ctx, core: CoreState, parts: WorkerActionsParts) {
-  const { player, net, me, settings } = ctx;
-  const { plan, inOffice } = parts.worlds;
+export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
+  const { player, net, settings } = ctx;
   const openWorkerTerminal = (id: string) => parts.waiting.openWorkerTerminal(id);
   const openWorkerChanges = (id: string, repo?: string) => parts.waiting.openWorkerChanges(id, repo);
 
@@ -50,7 +49,7 @@ export function installWorkerActions(ctx: Ctx, core: CoreState, parts: WorkerAct
     // Prefer the empty desk nearest to you; when they're all taken, the bean bag that's out.
     let best: string | null = null;
     let bestD = Infinity;
-    for (const d of plan().desks) {
+    for (const d of OFFICE_PLAN.desks) {
       if (!seatBuilt(d.id)) continue;
       if (store.workerAtDesk(d.id)) continue;
       const dist = Math.hypot(d.x - player.pos.x, d.z - player.pos.z);
@@ -62,9 +61,9 @@ export function installWorkerActions(ctx: Ctx, core: CoreState, parts: WorkerAct
     return best ?? firstFreeSeat() ?? null;
   }
 
-  /** The first seat nobody's at, in the map's order: the desks (as far as the floor's built out), then the overflow seats. */
+  /** The first seat nobody's at: the desks (as far as the floor's built out), then the overflow seats. */
   function firstFreeSeat(): string | undefined {
-    return [...plan().desks, ...plan().overflow].find((d) => seatBuilt(d.id) && !store.workerAtDesk(d.id))?.id;
+    return [...OFFICE_PLAN.desks, ...OFFICE_PLAN.overflow].find((d) => seatBuilt(d.id) && !store.workerAtDesk(d.id))?.id;
   }
 
   let askedToNotify = false;
@@ -77,8 +76,8 @@ export function installWorkerActions(ctx: Ctx, core: CoreState, parts: WorkerAct
     return true;
   }
 
-  function hire(deskId: string, prompt?: string, worktree = false, provider?: AgentProvider, model?: string, effort?: AgentEffort, issue?: number, repos?: string[], via?: 'herald') {
-    net.send({ t: 'worker.spawn', deskId, prompt, worktree, provider, model, effort, issue, repos: repos?.length ? repos : undefined, via });
+  function hire(deskId: string, prompt?: string, worktree = false, provider?: AgentProvider, model?: string, effort?: AgentEffort, issue?: number, repos?: string[]) {
+    net.send({ t: 'worker.spawn', deskId, prompt, worktree, provider, model, effort, issue, repos: repos?.length ? repos : undefined });
     // The moment notifications start to matter: ask once (it has to come from a key press or click).
     if (settings.notify && notifyPermission() === 'default' && !askedToNotify) {
       askedToNotify = true;
@@ -93,7 +92,7 @@ export function installWorkerActions(ctx: Ctx, core: CoreState, parts: WorkerAct
 
   function promptAtDesk(deskId: string) {
     const w = store.workerAtDesk(deskId);
-    const desk = plan().byId.get(deskId)!;
+    const desk = OFFICE_PLAN.byId.get(deskId)!;
     if (!w) {
       if (officeIsFull()) return;
       openPrompt({
@@ -128,7 +127,7 @@ export function installWorkerActions(ctx: Ctx, core: CoreState, parts: WorkerAct
 
   /** Direct hire from an empty desk, with an optional first prompt and provider choice. */
   function hireAtDesk(deskId: string) {
-    const desk = plan().byId.get(deskId)!;
+    const desk = OFFICE_PLAN.byId.get(deskId)!;
     if (officeIsFull()) return;
     openPrompt({
       title: `✨ Hire a worker at ${desk.label}`,
@@ -148,7 +147,7 @@ export function installWorkerActions(ctx: Ctx, core: CoreState, parts: WorkerAct
   function killWorker(id: string) {
     const w = store.workers.get(id);
     if (!w) return;
-    const where = plan().byId.get(w.deskId)?.label ?? 'the desk';
+    const where = OFFICE_PLAN.byId.get(w.deskId)?.label ?? 'the desk';
     const session = w.kind === 'shell' ? 'shared shell' : `${providerLabel(w.provider, store.project)} session`;
     if (w.meeting) {
       // The meeting's worktree is the whole table's: it's tidied away once they've all gone.
@@ -170,7 +169,7 @@ export function installWorkerActions(ctx: Ctx, core: CoreState, parts: WorkerAct
       });
       return;
     }
-    const body = plan().byId.get(w.deskId)?.station
+    const body = OFFICE_PLAN.byId.get(w.deskId)?.station
       ? `This stops its ${session} for everyone, and it forgets what it was asked. The next prompt at the ${where} starts a fresh one.`
       : `This stops the ${session} at ${where} for everyone and frees the desk.`;
     confirmDialog(`Send ${w.name} home?`, body, 'Send home', () => net.send({ t: 'worker.kill', workerId: id }));
@@ -178,7 +177,7 @@ export function installWorkerActions(ctx: Ctx, core: CoreState, parts: WorkerAct
 
   /** E at a board agent: type it a request. It's hired with it when nobody is there yet. */
   function askStation(deskId: string) {
-    const kind = plan().byId.get(deskId)?.station;
+    const kind = OFFICE_PLAN.byId.get(deskId)?.station;
     if (!kind) return;
     const w = store.workerAtDesk(deskId);
     const name = STATION_AGENT[kind].name;
@@ -286,7 +285,7 @@ export function installWorkerActions(ctx: Ctx, core: CoreState, parts: WorkerAct
 
   /** Puts you in front of a desk, looking at it: the PR board's "Go to desk". */
   function goToDesk(deskId: string) {
-    const desk = plan().byId.get(deskId);
+    const desk = OFFICE_PLAN.byId.get(deskId);
     if (!desk) return;
     closeAllModals();
     standAt(desk);
@@ -302,40 +301,7 @@ export function installWorkerActions(ctx: Ctx, core: CoreState, parts: WorkerAct
     ctx.activities.stop('driver', 'desk');
     ctx.activities.stopAll('desk');
     parts.walking.stopWalkingTo();
-    // In line for the throne: in front of it, where it stands.
-    const w = store.workerAtDesk(desk.id);
-    const court = parts.worlds.court();
-    const inLine = w && court ? court.spotOf(w.id) : -1;
-    if (inLine >= 0) {
-      // At the front: up on the throne, if it's free, where E is for them.
-      const throne = inLine === 0 && plan().throne ? seating.freePlace(plan().throne!) : null;
-      if (throne) {
-        player.pos.set(throne.x, throne.y, throne.z);
-        player.sit(throne);
-        me.sit(throne.hips);
-        net.send({ t: 'sit', seat: throne.key });
-        player.camYaw = throne.rotY - Math.PI;
-        player.lookPitch = -0.2;
-        return;
-      }
-      // Else beside it in line, turned to it.
-      const at = plan().lineup[inLine];
-      const x = at.x + Math.cos(at.rotY) * 1.3;
-      const z = at.z - Math.sin(at.rotY) * 1.3;
-      player.pos.set(x, parts.worlds.groundHere(x, z, 1.5), z);
-      player.vy = 0;
-      player.facing = Math.atan2(at.x - x, at.z - z);
-      player.camYaw = player.facing - Math.PI;
-      player.lookPitch = -0.2;
-      return;
-    }
-    let spot = deskSeat(desk, desk.station ? -1.6 : desk.beanbag ? 1.6 : 2.4);
-    // On a map of its own, the office's distances can land in a pillar: the nearest open floor to it.
-    const world = ctx.world();
-    if (!inOffice() && (!player.fits(spot.x, spot.z, 0) || !world.nav.walkable(spot.x, spot.z))) {
-      const [x, z] = world.nav.nearestWalkable([spot.x, spot.z]);
-      spot = { x, z };
-    }
+    const spot = deskSeat(desk, desk.station ? -1.6 : desk.beanbag ? 1.6 : 2.4);
     player.pos.set(spot.x, 0, spot.z);
     player.vy = 0;
     player.facing = Math.atan2(desk.x - spot.x, desk.z - spot.z);
@@ -345,11 +311,11 @@ export function installWorkerActions(ctx: Ctx, core: CoreState, parts: WorkerAct
 
   function deskHint(deskId: string): Hint {
     const w = store.workerAtDesk(deskId);
-    if (!w && plan().byId.get(deskId)?.room) return { k: 'room', parts: [h('span.title', {}, `🤝 ${plan().byId.get(deskId)!.label} · free`), key('E', 'Call a meeting')] };
+    if (!w && OFFICE_PLAN.byId.get(deskId)?.room) return { k: 'room', parts: [h('span.title', {}, `🤝 ${OFFICE_PLAN.byId.get(deskId)!.label} · free`), key('E', 'Call a meeting')] };
     // The sign over it, if it has one, and L to hang one (or change it).
     const sign = store.floorPlan.labels[deskId]?.text;
     const labelKey = canLabel(deskId) ? key('L', sign ? 'Sign' : 'Label') : '';
-    const deskName = `${sign ? `🪧 ${sign} · ` : ''}${plan().byId.get(deskId)!.label}`;
+    const deskName = `${sign ? `🪧 ${sign} · ` : ''}${OFFICE_PLAN.byId.get(deskId)!.label}`;
     if (!w) {
       const paused = hiringPaused();
       const m = store.machine;
@@ -411,7 +377,7 @@ export function installWorkerActions(ctx: Ctx, core: CoreState, parts: WorkerAct
   }
 
   function stationHint(deskId: string): Hint {
-    const kind = plan().byId.get(deskId)?.station;
+    const kind = OFFICE_PLAN.byId.get(deskId)?.station;
     if (!kind) return { k: '', parts: [] };
     const w = store.workerAtDesk(deskId);
     const info = STATION_INFO[kind];
@@ -451,7 +417,7 @@ export function installWorkerActions(ctx: Ctx, core: CoreState, parts: WorkerAct
       if (key === 'L') return openDeskLabel(net, it.deskId);
       const w = store.workerAtDesk(it.deskId);
       // Nobody is hired at the meeting table: a meeting seats its own workers there.
-      if (!w && plan().byId.get(it.deskId)?.room) return key === 'E' ? parts.meeting.showMeeting() : undefined;
+      if (!w && OFFICE_PLAN.byId.get(it.deskId)?.room) return key === 'E' ? parts.meeting.showMeeting() : undefined;
       if (key === 'B' && !w) return openShell(it.deskId);
       if (key === 'P') return promptAtDesk(it.deskId);
       if (key === 'E') return w ? openWorkerTerminal(w.id) : hireAtDesk(it.deskId);
@@ -484,7 +450,7 @@ export function installWorkerActions(ctx: Ctx, core: CoreState, parts: WorkerAct
     openAsk({
       title,
       ...text,
-      newDesk: desk ? plan().byId.get(desk)!.label : undefined,
+      newDesk: desk ? OFFICE_PLAN.byId.get(desk)!.label : undefined,
       workers: awake.map((w) => ({ id: w.id, name: w.name, color: w.color, status: w.status })),
       worktreeOption: !!store.project?.branch,
       providerOption: true,

@@ -1,5 +1,6 @@
 /** The board agents: what each is for, and the ones waiting by their boards before anyone has asked them anything. */
 import { STATION_AGENT, type StationKind } from '../../shared/layout';
+import { OFFICE_PLAN } from '../../shared/plan';
 import { Worker } from '../world/character';
 import type { DeskView } from '../world/types';
 import type { World } from '../world/world';
@@ -20,13 +21,12 @@ export interface IdleAgent {
 
 /** The board agents waiting by their boards in `w`. */
 export function idleAgentsIn(w: World): IdleAgent[] {
-  return w.plan.stations.map((def) => {
+  return OFFICE_PLAN.stations.map((def) => {
     const kind = def.station!;
     const agent = STATION_AGENT[kind];
     const model = new Worker(agent.name, agent.color);
     model.setStatus('idle', false);
     model.setTask({ name: STATION_INFO[kind].offer, summary: STATION_INFO[kind].does });
-    model.setOutfit(w.plan.agents.outfit === 'peasant' ? 'peasant' : null);
     const view = w.desks.get(def.id)!;
     view.vacancy.children[0].add(model.root);
     noOutline(model.root);

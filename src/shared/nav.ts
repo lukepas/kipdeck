@@ -1,6 +1,5 @@
-// Getting around a floor on a coarse grid, round the furniture: the dog's walks (server/dog.ts), a
-// worker's way out when it's sent home, and on a map of its own (see shared/maps), a worker's walks
-// about the hall. The office's grid is below; a map builds one from its plan (NavGrid).
+// Getting around a floor on a coarse grid, round the furniture: a worker's way in to a meeting and
+// out when it's sent home, and your walk over to someone (NavGrid).
 // An office floor built out into the back office (see WING) has more of it to get round: the office's
 // helpers take how many rows it's built out (`wing`), and each level gets a grid of its own.
 
@@ -73,11 +72,11 @@ function obstacles(wing: number): Obstacles {
   // The bookshelf against the south wall, as features/bookshelf/world.ts puts it.
   rects.push([BOOKSHELF.x - BOOKSHELF.width / 2 - 0.04, BOOKSHELF.x + BOOKSHELF.width / 2 + 0.04, BOOKSHELF.z - BOOKSHELF.depth / 2 - 0.03, FLOOR.maxZ]);
   // The ladder up the west wall, and the fire poles: a hole with a railing round it, or a landing mat.
-  // Which spot has which changes floor by floor, so the dog keeps off both.
+  // Which spot has which changes floor by floor, so walkers keep off both.
   rects.push([FLOOR.minX, FLOOR.minX + 0.3, LADDER.z - LADDER.width / 2 - 0.05, LADDER.z + LADDER.width / 2 + 0.05]);
   for (const p of POLES) rects.push([p.x - POLE.rail - 0.05, p.x + POLE.rail + 0.05, p.z - POLE.rail - 0.05, p.z + POLE.rail + 0.05]);
   // The overflow bean bags and their lap desks. They're only out while every desk is taken, but they
-  // always come out in the same spots, so the dog keeps off those.
+  // always come out in the same spots, so walkers keep off those.
   for (const b of BEANBAGS) {
     const corners = [deskPoint(b, -0.62, -1.1), deskPoint(b, 0.62, -1.1), deskPoint(b, -0.62, 0.64), deskPoint(b, 0.62, 0.64)];
     const xs = corners.map(([x]) => x);

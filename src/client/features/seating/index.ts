@@ -1,8 +1,9 @@
 /**
- * Sitting down: on a chair, a stool, the couch, the throne. Sitting there already, E gets you up, or
+ * Sitting down: on a chair, a stool, the couch. Sitting there already, E gets you up, or
  * does what the seat's for (the TV from the couch, Minesweeper from the boss's chair, the bar's menu).
  */
 import { seatPlace, type SeatDef, type SeatPlace } from '../../../shared/layout';
+import { OFFICE_PLAN } from '../../../shared/plan';
 import type { Ctx } from '../../core/context';
 import { aside, hintTitle, key, onE } from '../../core/hint';
 import { store } from '../../state';
@@ -56,7 +57,7 @@ export function installSeating(ctx: Ctx, deps: SeatingDeps) {
 
   /** E at a seat: sit down on it. Sitting there already, get up, or on the couch facing the TV, watch it. */
   function useSeat(seatId: string) {
-    const seat = ctx.plan().seatingById.get(seatId);
+    const seat = OFFICE_PLAN.seatingById.get(seatId);
     if (!seat) return;
     const player = ctx.player;
     if (player.seat?.seatId === seatId) {
@@ -108,7 +109,7 @@ export function installSeating(ctx: Ctx, deps: SeatingDeps) {
   ctx.interactions.define('seat', {
     reach: 3,
     hint: (it) => {
-      const seat = ctx.plan().seatingById.get(it.seatId ?? '');
+      const seat = OFFICE_PLAN.seatingById.get(it.seatId ?? '');
       if (!seat) return { k: '', parts: [] };
       if (ctx.player.seat?.seatId === seat.id) {
         const tv = !!seat.tv && tvShowing();

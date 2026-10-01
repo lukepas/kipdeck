@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { OFFICE_PLAN } from '../../../shared/plan';
 import { GAME, type CabinetFrame } from '../../../shared/cabinet';
 import type { WorkerInfo } from '../../../shared/protocol';
 import type { Net } from '../../net';
@@ -400,6 +401,6 @@ export function lostGame(asked: string, id: string): boolean {
 
 /** " at Desk 3", or nothing when it's not at a desk here. */
 function deskOf(w: WorkerInfo): string {
-  const d = store.plan().byId.get(w.deskId);
+  const d = OFFICE_PLAN.byId.get(w.deskId);
   return d ? ` at ${d.station ? `the ${d.label}` : d.label}` : '';
 }

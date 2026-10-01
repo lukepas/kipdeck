@@ -20,7 +20,6 @@ import type { Building, FloorDef } from '../building.js';
 import type { Floor } from '../floor.js';
 import type { Sky } from '../sky.js';
 import type { Themes } from '../theme.js';
-import type { Maps } from '../maps.js';
 import type { OfficePrompts } from '../prompts.js';
 import type { LeaveOnMerge } from '../leave-on-merge.js';
 import type { ChatLog } from '../history.js';
@@ -58,7 +57,6 @@ export interface Core {
 export interface BuildingServices {
   sky: Sky;
   themes: Themes;
-  maps: Maps;
   prompts: OfficePrompts;
   leaveOnMerge: LeaveOnMerge;
   ledger: Ledger;

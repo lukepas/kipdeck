@@ -71,11 +71,6 @@ export interface Slice {
   readonly on?: Handlers;
   /** What it takes in from each floor you arrive on (see Store.apply), in place of the last one's. */
   readonly enter?: Take<FloorView>;
-  /**
-   * On a message that brings a floor, its topics fire before the floor is taken in rather than after it:
-   * the floor's own state hangs on it (the map: the floor's workers sit down in its seats, not the last one's).
-   */
-  readonly beforeFloor?: boolean;
 }
 
 /** The floor a message brings with it: you were let in (welcome), or you went to another floor (floor.enter). */
@@ -116,7 +111,7 @@ export class Store {
   // The slices, and each message type's handlers in their order. Kept in # fields, which aren't among
   // the store's keys: those are its state (window.__office.store).
   readonly #slices: readonly Slice[];
-  readonly #handlers = new Map<ServerMsg['t'], { slice: Slice; take: Take<ServerMsg> }[]>();
+  readonly #handlers = new Map<ServerMsg['t'], Take<ServerMsg>[]>();
 
   /** A store made of the core and `slices`, which run in this order. */
   constructor(slices: readonly Slice[]) {
@@ -129,7 +124,7 @@ export class Store {
       for (const t of Object.keys(on) as ServerMsg['t'][]) {
         let list = this.#handlers.get(t);
         if (!list) this.#handlers.set(t, (list = []));
-        list.push({ slice, take: on[t] as Take<ServerMsg> });
+        list.push(on[t] as Take<ServerMsg>);
       }
     }
   }
@@ -169,21 +164,17 @@ export class Store {
   /**
    * Takes in a server message: every slice that handles its type takes it in, in order, and then the
    * topics they changed fire. A message that brings a floor (welcome, floor.enter) has the floor taken
-   * in between the two (see enter), after the topics of any slice the floor hangs on (beforeFloor).
+   * in between the two (see enter).
    */
   apply(msg: ServerMsg) {
+    const topics: Topic[] = [];
+    for (const take of this.#handlers.get(msg.t) ?? []) {
+      const changed = take(this, msg);
+      if (changed) topics.push(...changed);
+    }
     const floor = floorOf(msg);
-    const first: Topic[] = [];
-    const then: Topic[] = [];
-    for (const { slice, take } of this.#handlers.get(msg.t) ?? []) {
-      const topics = take(this, msg);
-      if (topics) (floor && slice.beforeFloor ? first : then).push(...topics);
-    }
-    if (floor) {
-      for (const t of first) this.emit(t);
-      this.enter(floor);
-    }
-    for (const t of then) this.emit(t);
+    if (floor) this.enter(floor);
+    for (const t of topics) this.emit(t);
   }
 
   /** Everything on the floor you just arrived on, in place of the last one's: every slice takes it in, then their topics fire. */

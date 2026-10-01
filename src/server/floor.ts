@@ -7,7 +7,7 @@ import { DESK_BY_ID } from '../shared/layout.js';
 import type { FloorDef } from './building.js';
 import { excludeFromGit } from './config.js';
 import { agentProviders, configuredProvider } from './agents.js';
-import { WorkerManager, workedMs, type HookEnv, type RunAs } from './workers.js';
+import { WorkerManager, type HookEnv, type RunAs } from './workers.js';
 import { GitHub, MergeWatch } from './github.js';
 import type { GhAs } from './signins.js';
 import { TaskQueue } from './queue.js';
@@ -16,7 +16,6 @@ import { Decor } from './decor.js';
 import { FloorPlanStore } from './floorplan.js';
 import { Docs } from './docs.js';
 import { Court } from './court.js';
-import { Jail } from './jail.js';
 import { Garage } from './garage.js';
 import { Jukebox } from './jukebox.js';
 import { Whiteboard } from './whiteboard.js';
@@ -65,8 +64,6 @@ export interface FloorContext {
   pullsChanged(floor: Floor): void;
   /** Whether a worker on another floor works in this floor's project too. */
   lent(floor: Floor): boolean;
-  /** Whether the building's map locks up workers sent home (see MapPlan.sendHome), instead of letting them go. */
-  locksUp(): boolean;
 }
 
 /** The open pull request on a floor's board whose head is `branch`. */
@@ -129,8 +126,6 @@ export class Floor {
   readonly court = new Court();
   /** The cars in the garage: who's in which, and where their drivers have left them. */
   readonly garage = new Garage();
-  /** Workers sent home on a map that locks them up (see MapPlan.sendHome). */
-  readonly jail: Jail;
   private timer: NodeJS.Timeout;
   /** Pull requests merging, to ring the gong for. */
   private merges = new MergeWatch();
@@ -152,7 +147,6 @@ export class Floor {
     this.docs = new Docs(def.dir);
     // Before the workers: the back office's desks are only there once it's built.
     this.plan = new FloorPlanStore(dataDir);
-    this.jail = new Jail(dataDir);
 
     this.workers = new WorkerManager(
       def.dir,
@@ -172,10 +166,7 @@ export class Floor {
         },
         remove: (workerId, info) => {
           this.changes?.forget(workerId);
-          // Sent home on a map that locks workers up: into the dungeon with it, for good (a meeting's
-          // workers aren't sent home when it's over, just let go).
-          const jail = info && !info.meeting && ctx.locksUp() ? this.jail.add({ ...info, workedMs: workedMs(info) }) : undefined;
-          ctx.emit(this, { t: 'worker.remove', workerId, ...(jail ? { jail } : {}) });
+          ctx.emit(this, { t: 'worker.remove', workerId });
           this.queue?.onWorkerGone(workerId);
           this.meetings?.onWorkerGone(workerId);
           ctx.workerChanged(this, workerId);

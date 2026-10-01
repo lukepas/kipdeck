@@ -267,7 +267,7 @@ test('welcomes a browser and dispatches what it sends', async () => {
   assert.equal(ada?.name, 'Ada');
   assert.equal(ada?.color, '#ff8a5b');
   assert.equal(ada?.floor, floor.id);
-  assert.deepEqual(Object.keys(welcome).slice(-16), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'decor', 'plan', 'services', 'ball', 'cars', 'jail', 'jukebox', 'whiteboard', 'meeting', 'cabinet']);
+  assert.deepEqual(Object.keys(welcome).slice(-15), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'decor', 'plan', 'services', 'ball', 'cars', 'jukebox', 'whiteboard', 'meeting', 'cabinet']);
 
   a.send({ t: 'ping', at: 42 });
   const pong = await a.take('pong');
@@ -392,8 +392,6 @@ test('settings, accounts, sign-ins and the boards answer as before', async () =>
   a.send({ t: 'theme.set', pick: 'off' });
   assert.equal((await a.take('theme')).state.pick, 'off');
   assert.equal(await told('Eve took'), 'Eve took the holiday decorations down');
-  a.send({ t: 'map.set', map: 'nowhere' });
-  await warned('There’s no map by that name, or it won’t load: see ⚙️ Settings');
   a.send({ t: 'machine.limit', limit: 0 });
   await warned('The worker limit is a whole number from 1 to 500');
   a.send({ t: 'machine.limit', limit: 3 });

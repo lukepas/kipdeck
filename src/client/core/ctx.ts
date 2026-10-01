@@ -87,8 +87,6 @@ export function createCtx(parts: Parts): { ctx: Ctx; core: CoreState } {
       return parts.hud.hud;
     },
     world: () => parts.worlds.world(),
-    plan: () => parts.worlds.plan(),
-    inOffice: () => parts.worlds.inOffice(),
     upTop: () => core.upTop,
     trip: () => core.trip,
     carrying: () => core.carrying,

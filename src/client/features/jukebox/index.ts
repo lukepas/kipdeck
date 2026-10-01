@@ -24,7 +24,7 @@ export function installJukebox(ctx: Ctx, deps: JukeboxDeps) {
   // It's the office's: on a map of its own there's none to hear.
   function playJukebox() {
     const j = store.jukebox;
-    ctx.sound.setJukebox(j.on && ctx.inOffice() ? { track: j.track, url: j.url, startedAt: j.startedAt, since: j.since } : null);
+    ctx.sound.setJukebox(j.on ? { track: j.track, url: j.url, startedAt: j.startedAt, since: j.since } : null);
     ctx.office.jukebox.show(j.on, trackTitle(j));
   }
   store.on('jukebox', playJukebox);

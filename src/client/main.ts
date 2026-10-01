@@ -22,7 +22,7 @@ import { installPlace } from './core/place';
 import { installYou, makeMe, makeSmoke, makeSound } from './core/you';
 import { installTravel } from './core/travel';
 import { installArrival } from './core/arrival';
-import { installMaps } from './core/maps';
+import { installFloorWatch } from './core/floorwatch';
 import { installHintBar } from './core/hintbar';
 import { installKeyboard, installKeyGuards } from './input/keyboard';
 import { installFocus } from './input/focus';
@@ -43,7 +43,6 @@ import { installEmotes } from './features/emotes';
 import { installGolf } from './features/golf';
 import { installGong } from './features/gong';
 import { installGallery, installHanging } from './features/hanging';
-import { installHerald } from './features/herald';
 import { installHud } from './features/hud';
 import { installJukebox } from './features/jukebox';
 import { installMeeting } from './features/meeting';
@@ -133,16 +132,15 @@ parts.cars = installCars(ctx, { standUp, stopWalking });
 
 parts.travel = installTravel(ctx, core, parts);
 parts.arrival = installArrival(ctx, core, parts);
-parts.maps = installMaps(ctx, core, parts);
+parts.floorWatch = installFloorWatch(ctx);
 parts.peers = installPeers(ctx, core, parts);
 parts.walking = installWalking(ctx, core, parts);
-parts.views = installWorkerViews(ctx, core, parts);
-parts.actions = installWorkerActions(ctx, core, parts);
+parts.views = installWorkerViews(ctx, parts);
+parts.actions = installWorkerActions(ctx, parts);
 parts.waiting = installWaiting(ctx, core, parts);
 installPalette(ctx, parts);
 parts.meeting = installMeeting(ctx, parts);
 parts.bookshelf = installBookshelf(ctx);
-installHerald(ctx, parts);
 
 parts.bar = installBar(ctx, { roof: parts.rooftop.roof, djAt: parts.rooftop.djAt, reach });
 parts.coffee = installCoffee(ctx);
@@ -155,13 +153,11 @@ parts.cards = installCarrying(ctx, {
   reach,
   dropBall: parts.hoops.dropBall,
   hire: parts.actions.hire,
-  heraldSeat: parts.views.heraldSeat,
-  heraldHires: parts.views.heraldHires,
   officeIsFull: parts.actions.officeIsFull,
   showMeeting: parts.meeting.showMeeting,
 });
 parts.seating = installSeating(ctx, { shares: () => parts.talk.currentShares(), watchShare: () => parts.talk.watchShare(), arcade: parts.arcade, showBar: parts.bar.showBar, usable: () => parts.pointer.usable() });
-installGong(ctx, { burstOver: parts.views.burstOver, workerViews: parts.views.workerViews, court: () => parts.worlds.court(), idleAgents: () => parts.worlds.idleAgents() });
+installGong(ctx, { burstOver: parts.views.burstOver, workerViews: parts.views.workerViews, idleAgents: () => parts.worlds.idleAgents() });
 
 parts.hintbar = installHintBar(ctx, core, parts);
 parts.emotes = installEmotes(ctx, { personOf });
@@ -229,7 +225,7 @@ void whoami().then(() => {
 
 // Debug handle for quick checks from the console / headless screenshots.
 const { worlds, views, rooftop, bar, coffee, golf, bargames, hanging, climbing, cars, emotes, hoops } = parts;
-(window as any).__office = { world: () => worlds.world(), court: () => worlds.court(), sendoffs: views.sendoffs, jail: views.jail, plan: worlds.plan, applyMap: parts.maps.applyMap, roof: rooftop.roof, booze: bar.booze, dj: () => djFrame(rooftop.djAt()), store, player: parts.player, caffeine: coffee.caffeine, camera: ctx.camera, arcade: parts.arcade, cabinet: parts.cabinet, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, hands: parts.hands, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, gallery: parts.gallery, hanger: hanging.hanger, office: ctx.office, ride: parts.travel.ride, switchFloor: parts.travel.switchFloor, climber: climbing.climber, driver: cars.driver, getIn: cars.getIn, getOut: cars.getOut, golf: golf.golf, balls: golf.balls, thrower: bargames.thrower, elevatorPanelOpen, confetti: parts.confetti, sky: ctx.sky, holiday: parts.stage.holiday, carried: () => core.carrying, emoteWheel: emotes.emoteWheel, emote: emotes.emote, ball: hoops.ball };
+(window as any).__office = { world: () => worlds.world(), roof: rooftop.roof, booze: bar.booze, dj: () => djFrame(rooftop.djAt()), store, player: parts.player, caffeine: coffee.caffeine, camera: ctx.camera, arcade: parts.arcade, cabinet: parts.cabinet, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, hands: parts.hands, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, gallery: parts.gallery, hanger: hanging.hanger, office: ctx.office, ride: parts.travel.ride, switchFloor: parts.travel.switchFloor, climber: climbing.climber, driver: cars.driver, getIn: cars.getIn, getOut: cars.getOut, golf: golf.golf, balls: golf.balls, thrower: bargames.thrower, elevatorPanelOpen, confetti: parts.confetti, sky: ctx.sky, holiday: parts.stage.holiday, carried: () => core.carrying, emoteWheel: emotes.emoteWheel, emote: emotes.emote, ball: hoops.ball };
 (window as any).__voice = parts.voice;
 (window as any).__sound = parts.sound;
 (window as any).__notify = parts.notifier;

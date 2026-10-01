@@ -47,7 +47,7 @@ import type { installFocus } from '../input/focus';
 import type { installPointer } from '../input/pointer';
 import type { installArrival } from './arrival';
 import type { installHintBar } from './hintbar';
-import type { installMaps } from './maps';
+import type { installFloorWatch } from './floorwatch';
 import type { installPlace } from './place';
 import type { Stage } from './scene';
 import type { installTravel } from './travel';
@@ -59,7 +59,7 @@ type Made<F extends (...args: never[]) => unknown> = ReturnType<F>;
 export interface Parts {
   // ---- What the office is made of ------------------------------------------------------------------
   stage: Stage;
-  /** The building's map as it's built, and the one it's on (see core/worlds.ts). */
+  /** The office as the workers know it, and its board agents (see core/worlds.ts). */
   worlds: Made<typeof createWorlds>;
   net: Net;
   voice: Voice;
@@ -85,7 +85,7 @@ export interface Parts {
   you: Made<typeof installYou>;
   travel: Made<typeof installTravel>;
   arrival: Made<typeof installArrival>;
-  maps: Made<typeof installMaps>;
+  floorWatch: Made<typeof installFloorWatch>;
   hintbar: Made<typeof installHintBar>;
   focus: Made<typeof installFocus>;
   pointer: Made<typeof installPointer>;
