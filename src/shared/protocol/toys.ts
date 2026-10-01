@@ -1,8 +1,7 @@
-// The toys on every floor: pictures, the jukebox, the arcade, the whiteboard, the ball, the cars and the dog.
+// The toys on every floor: pictures, the jukebox, the arcade, the whiteboard, the ball, and the cars.
 
 import type { CabinetFrame, CabinetState } from '../cabinet.js';
 import type { DecorPlacement, Decoration } from '../decor.js';
-import type { DogState } from '../dog.js';
 import type { CarSeat, CarState } from '../garage.js';
 import type { BallState } from '../hoop.js';
 import type { JukeboxState } from '../jukebox.js';
@@ -61,16 +60,8 @@ export type CarClientMsg =
   /** Honk the horn of the car you're in. */
   | { t: 'car.honk' };
 
-export type DogClientMsg =
-  /** Give the dog on your floor a pat; it has to be within reach. */
-  | { t: 'dog.pet' }
-  /** Name the dog on your floor ('' gives it back its first name). */
-  | { t: 'dog.name'; name: string };
-
 export type ToysServerMsg =
   | { t: 'decor'; items: Decoration[] }
-  /** What the dog on your floor is up to now: sent at the start of each leg of its day. */
-  | { t: 'dog'; dog: DogState }
   /** The basketball on your floor was picked up, thrown, or put back under the hoop. */
   | { t: 'ball'; ball: BallState }
   /** Someone got into one of your floor's cars, or out of one; `answer` to each car.enter and car.leave of yours, whether you got in or not. */

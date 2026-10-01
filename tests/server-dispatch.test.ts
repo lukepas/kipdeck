@@ -92,11 +92,11 @@ class Browser {
     this.inbox = [];
   }
 
-  /** The types of the next `n` messages, in the order they came, leaving out the elevator's list and the dog, who goes about its day. */
+  /** The types of the next `n` messages, in the order they came, leaving out the elevator's list. */
   async next(n: number, ms = 5000): Promise<string[]> {
     const until = Date.now() + ms;
     for (;;) {
-      const got = this.inbox.filter((m) => m.t !== 'floors' && m.t !== 'dog');
+      const got = this.inbox.filter((m) => m.t !== 'floors');
       if (got.length >= n) {
         this.inbox = [];
         return got.slice(0, n).map((m) => m.t);
@@ -267,7 +267,7 @@ test('welcomes a browser and dispatches what it sends', async () => {
   assert.equal(ada?.name, 'Ada');
   assert.equal(ada?.color, '#ff8a5b');
   assert.equal(ada?.floor, floor.id);
-  assert.deepEqual(Object.keys(welcome).slice(-17), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'decor', 'plan', 'services', 'dog', 'ball', 'cars', 'jail', 'jukebox', 'whiteboard', 'meeting', 'cabinet']);
+  assert.deepEqual(Object.keys(welcome).slice(-16), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'decor', 'plan', 'services', 'ball', 'cars', 'jail', 'jukebox', 'whiteboard', 'meeting', 'cabinet']);
 
   a.send({ t: 'ping', at: 42 });
   const pong = await a.take('pong');
@@ -339,8 +339,6 @@ test('the toys on a floor, and letting go of them on leaving the floor or the of
   a.send({ t: 'jukebox.stop' });
   assert.equal((await b.take('jukebox')).state.on, false);
   assert.equal((await b.take('toast', (m) => m.text.startsWith('🔇'))).text, '🔇 Cy turned the jukebox off');
-  a.send({ t: 'dog.name', name: 'Rex' });
-  assert.equal((await b.take('toast', (m) => m.text.startsWith('🐶'))).text, '🐶 Cy named the dog Rex');
 
   // The gong once, not twice in a row; no air horn off the roof, and no golf without a club.
   a.send({ t: 'gong' });

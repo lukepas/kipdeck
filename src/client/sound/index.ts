@@ -1,8 +1,8 @@
 /**
  * Office sounds, synthesized with Web Audio so there are no audio files to ship: the room's air and a
  * humming fridge, workers typing while they work, footsteps, the coffee machine, birds outside the
- * windows by day and crickets at night, rain and thunder, the odd rustle or phone, the gong, the dog
- * barking, and the dings when a worker needs you. And the lounge jukebox, whose tunes are in music.ts,
+ * windows by day and crickets at night, rain and thunder, the odd rustle or phone and the gong,
+ * and the dings when a worker needs you. And the lounge jukebox, whose tunes are in music.ts,
  * and up on the roof, the wind, the city far below and the DJ's drum and bass (../dnb.ts).
  *
  * Everything goes through one master gain that Settings turns down or mutes. Voice chat doesn't, and
@@ -11,7 +11,7 @@
  * OfficeSound is all the rest of the office sees. What every sound shares (the context, the buses,
  * where your ears are, what runs every frame) is AudioCore in core.ts; each sound is a recipe in a
  * file of its own, beside this one (weather.ts, steps.ts and so on) or in its feature's folder
- * (features/golf/sound.ts, features/dog/sound.ts and so on), and this class only hands them the core.
+ * (features/golf/sound.ts, and so on), and this class only hands them the core.
  */
 import type { GongWhy } from '../../shared/protocol';
 import { birdsong, deskPhones, Fridge, nightCrickets, startRoomTone, startWind } from './ambience';
@@ -23,7 +23,6 @@ import { carDoor, crash, honk, Motors, type Engine } from '../features/cars/soun
 import { bonk, hatch, poleLanding, rung, slide, twirl } from '../features/climbing/sound';
 import { coffee } from '../features/coffee/sound';
 import { AudioCore, type Hall, type Listener } from './core';
-import { bark, yip } from '../features/dog/sound';
 import { cellDoor, thud } from '../features/workers/sound';
 import { golf, type GolfSound } from '../features/golf/sound';
 import { gong } from '../features/gong/sound';
@@ -230,18 +229,10 @@ export class OfficeSound {
     crash(this.a, at, speed);
   }
 
-  // ---- The kitchen, the dog, the weather, the gong, the dings --------------------------------------
+  // ---- The kitchen, the weather, the gong, the dings --------------------------------------
 
   coffee() {
     coffee(this.a);
-  }
-
-  bark(x: number, z: number, times: number) {
-    bark(this.a, x, z, times);
-  }
-
-  yip(x: number, z: number) {
-    yip(this.a, x, z);
   }
 
   thunder(delay: number, loud: number) {

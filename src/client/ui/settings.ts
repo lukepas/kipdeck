@@ -5,7 +5,6 @@ import { askNotifyPermission, notifyPermission, type DesktopNotifier } from '../
 import type { ThemePick, WebhookKind } from '../../shared/protocol';
 import { THEME_PICKS } from '../../shared/theme';
 import { mapChoices } from '../../shared/maps';
-import { DOG_NAME_MAX, cleanDogName } from '../../shared/dog';
 import { h, openModal, timeAgo } from './dom';
 import { agentFields, choiceLabel, officeChoice } from './provider';
 import { openPromptEditor, rewrittenPrompts } from './prompts';
@@ -26,7 +25,7 @@ const PANES: { id: SettingsPane; icon: string; label: string; blurb: string }[] 
   { id: 'you', icon: '🧍', label: 'You', blurb: 'How you look, how you see the office, and how you’re signed in.' },
   { id: 'sound', icon: '🔊', label: 'Sound & voice', blurb: 'How loud the office is for you, and how voice chat works.' },
   { id: 'notify', icon: '🔔', label: 'Notifications', blurb: 'Hear about a worker that needs someone, or finished, while you’re somewhere else.' },
-  { id: 'building', icon: '🏢', label: 'Building', blurb: 'The map, the decorations, the sky, the dog, and where new floors are cloned.' },
+  { id: 'building', icon: '🏢', label: 'Building', blurb: 'The map, the decorations, the sky, and where new floors are cloned.' },
   { id: 'workers', icon: '🤖', label: 'Workers', blurb: 'What workers start on, how many run at once, when they go home and what the office tells them.' },
 ];
 
@@ -476,30 +475,6 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
   });
   dirDefault.addEventListener('click', () => net.send({ t: 'floor.projectsDir', dir: '' }));
 
-  // The dog on this floor, named for everyone here.
-  const dogInput = h('input', { type: 'text', maxlength: DOG_NAME_MAX, 'aria-label': 'The dog’s name', spellcheck: 'false', autocomplete: 'off' }) as HTMLInputElement;
-  const dogSave = h('button.btn.primary', { type: 'button' }, 'Rename');
-  const dogNote = h('p.setting-note');
-  const dogSection = setting('Office dog', 'floor', h('div.webhook', {}, dogInput, dogSave), dogNote);
-  const paintDog = () => {
-    const dog = store.dog;
-    dogSection.classList.toggle('hidden', !dog);
-    if (!dog) return;
-    dogInput.placeholder = dog.name;
-    dogNote.textContent = `${dog.name} lives on this floor. When a worker needs input, ${dog.name} runs to its desk and barks. Walk up and press E to pet it. A new name is for everyone on this floor.`;
-  };
-  paintDog();
-  const renameDog = () => {
-    const name = cleanDogName(dogInput.value);
-    if (!name) return dogInput.focus();
-    net.send({ t: 'dog.name', name });
-    dogInput.value = '';
-  };
-  dogSave.addEventListener('click', renameDog);
-  dogInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') renameDog();
-  });
-
   const account = store.me.account;
   const signOut = h('button.btn', { type: 'button' }, '🚪 Sign out');
   signOut.addEventListener('click', onSignOut);
@@ -511,7 +486,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       setting('Signed in', null, h('div.volume', {}, signOut), h('p.setting-note', {}, account ? `As ${account.name}, with your own account (${account.role}).` : 'With the shared office password.')),
     ],
     sound: [
-      setting('Office sounds', 'you', soundRow, h('p.setting-note', {}, 'Workers typing, footsteps, the coffee machine, birds and rain outside, the dog, and the ding when a worker is done. Voice chat isn’t affected.')),
+      setting('Office sounds', 'you', soundRow, h('p.setting-note', {}, 'Workers typing, footsteps, the coffee machine, birds and rain outside, and the ding when a worker is done. Voice chat isn’t affected.')),
       setting('Page turns at the bookshelf', 'you', pagesRow, h('p.setting-note', {}, 'A soft swish each time the book in your hands turns a page, as you open a doc or scroll through one. The 🔈 at the top of the bookshelf turns it off too.')),
       setting('Jukebox', 'you', musicRow, h('p.setting-note', {}, 'The jukebox in the lounge. Everyone on the floor hears the same song, louder the closer they are to it; this is how loud it is for you alone.')),
       setting('Voice chat', 'you', talkRow, h('p.setting-note', {}, 'Either way, V joins voice, holding V talks and you’re muted once you let go, and M mutes or unmutes. With push to talk you join muted. Leave voice from the ☰ menu.')),
@@ -533,7 +508,6 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
             ),
           ]
         : []),
-      dogSection,
       setting('Workspace folder', 'office', dirRow, dirActions, dirNote),
     ],
     workers: [
@@ -579,7 +553,6 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
   const close = h('button.btn.close', { 'aria-label': 'Close' }, '✕');
   const el = h('div.modal.settings', { role: 'dialog', 'aria-label': 'Settings' }, h('header', {}, h('h2', {}, '⚙️ Settings'), close), h('div.settings-body', {}, nav, ...bodies.values()));
   const offNotify = store.on('notify', paintHook);
-  const offDog = store.on('dog', paintDog);
   const offTheme = store.on('theme', paintTheme);
   const offMap = store.on('map', paintMap);
   const offLeave = store.on('leaveOnMerge', paintLeave);
@@ -590,7 +563,6 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     doing: '⚙️ in settings',
     onClose: () => {
       offNotify();
-      offDog();
       offTheme();
       offMap();
       offLeave();

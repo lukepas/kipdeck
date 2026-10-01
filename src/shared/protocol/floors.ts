@@ -2,7 +2,6 @@
 
 import type { CabinetView } from '../cabinet.js';
 import type { Decoration } from '../decor.js';
-import type { DogState } from '../dog.js';
 import type { FloorPlan } from '../floorplan.js';
 import type { CarState } from '../garage.js';
 import type { BallState } from '../hoop.js';
@@ -108,8 +107,6 @@ export interface FloorView {
   /** The signs over this floor's desks, and how far its back office is built out. */
   plan: FloorPlan;
   services: ServicesState;
-  /** The floor's dog; null in a building with no floors yet. */
-  dog: DogState | null;
   /** What the lounge jukebox is playing. */
   jukebox: JukeboxState;
   /** Who's at the arcade cabinet, what's on its screen, and the building's high scores. */

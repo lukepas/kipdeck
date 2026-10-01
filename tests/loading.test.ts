@@ -27,13 +27,13 @@ function gate(t: TestContext) {
 test('comes down once everything it waits on is in, and the cap after that does nothing', async (t) => {
   const { calls, g, tick } = gate(t);
   const frame = later();
-  const dog = later();
-  g.until([frame.p, dog.p]);
+  const floor = later();
+  g.until([frame.p, floor.p]);
   frame.resolve();
   await settle();
-  assert.deepEqual(calls, [], 'still waiting on the dog');
+  assert.deepEqual(calls, [], 'still waiting on the floor');
   tick(CAP_MS / 2);
-  dog.resolve();
+  floor.resolve();
   await settle();
   assert.deepEqual(calls, ['ready']);
   tick(CAP_MS);
@@ -43,9 +43,9 @@ test('comes down once everything it waits on is in, and the cap after that does 
 
 test('a step that fails counts as done, and its rejection goes no further', async (t) => {
   const { calls, g } = gate(t);
-  const dog = later();
-  g.until([Promise.resolve(), dog.p]);
-  dog.reject(new Error("the dog's model didn't load"));
+  const floor = later();
+  g.until([Promise.resolve(), floor.p]);
+  floor.reject(new Error("the floor didn't come"));
   await settle();
   assert.deepEqual(calls, ['ready']);
 });

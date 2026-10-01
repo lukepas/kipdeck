@@ -12,7 +12,7 @@ import { builtFloors } from './floors';
 import type { Parts } from './parts';
 import { streetOf } from './worlds';
 
-export type MapsParts = Pick<Parts, 'stage' | 'worlds' | 'place' | 'travel' | 'arrival' | 'views' | 'walking' | 'peers' | 'telescope' | 'smoking' | 'hoops' | 'arcade' | 'cabinet' | 'dog' | 'jukebox' | 'boards'>;
+export type MapsParts = Pick<Parts, 'stage' | 'worlds' | 'place' | 'travel' | 'arrival' | 'views' | 'walking' | 'peers' | 'telescope' | 'smoking' | 'hoops' | 'arcade' | 'cabinet' | 'jukebox' | 'boards'>;
 
 /** Registers the floor's paint (store 'floors'), the map (store 'map') and the floors' waiting count (the 'floors' message). */
 export function installMaps(ctx: Ctx, core: CoreState, parts: MapsParts) {
@@ -73,9 +73,8 @@ export function installMaps(ctx: Ctx, core: CoreState, parts: MapsParts) {
     sky.setIndoors(world.room.enclosed);
     // What you hear: the office's phones and fridge, or the hall's own windows and gong.
     sound.setHall(world.acoustics ? { bounds: plan().bounds, ...world.acoustics } : null);
-    // The office's own: the holiday decorations round it and the street, the dog, the jukebox.
+    // The office's own: the holiday decorations round it and the street, the jukebox.
     holiday.group.visible = inOffice() && !core.upTop;
-    parts.dog.root.visible = inOffice() && !!store.dog;
     parts.jukebox.playJukebox();
     boards.dressBoards(world);
     painted = -1;

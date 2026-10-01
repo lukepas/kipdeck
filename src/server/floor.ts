@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
-import type { ChangesState, FloorInfo, PeerInfo, ProjectInfo, ServerMsg, WorkerInfo } from '../shared/protocol.js';
+import type { ChangesState, FloorInfo, ProjectInfo, ServerMsg, WorkerInfo } from '../shared/protocol.js';
 import { isBusy } from '../shared/status.js';
 import { DESK_BY_ID } from '../shared/layout.js';
 import type { FloorDef } from './building.js';
@@ -15,7 +15,6 @@ import { Changes } from './changes.js';
 import { Decor } from './decor.js';
 import { FloorPlanStore } from './floorplan.js';
 import { Docs } from './docs.js';
-import { Dog } from './dog.js';
 import { Court } from './court.js';
 import { Jail } from './jail.js';
 import { Garage } from './garage.js';
@@ -58,8 +57,6 @@ export interface FloorContext {
   workerChanged(floor: Floor, w: WorkerInfo | string): void;
   /** How many people are on this floor right now. */
   people(floor: Floor): number;
-  /** Who's on this floor, and where they stand. */
-  peers(floor: Floor): PeerInfo[];
   /** ⚙️ Settings: a worker whose pull request merged goes home by itself. */
   leaveOnMerge(): boolean;
   /** Another floor of the building: a worker across repositories works in its project too (see WorkerInfo.repos). */
@@ -128,7 +125,6 @@ export class Floor {
   readonly docs: Docs;
   /** Settles once the workers whose terminals outlived the last office are picked back up, and the rest woken. */
   readonly ready: Promise<void>;
-  readonly dog: Dog;
   /** The basketball by the hoop: who has it, or how it was last thrown. */
   readonly court = new Court();
   /** The cars in the garage: who's in which, and where their drivers have left them. */
@@ -154,17 +150,9 @@ export class Floor {
     excludeFromGit(def.dir);
     this.project = projectInfo(def.dir, def.name, ctx.agentCmd, ctx.agentArgs);
     this.docs = new Docs(def.dir);
-    // Before the workers and the dog: the back office's desks are only there once it's built.
+    // Before the workers: the back office's desks are only there once it's built.
     this.plan = new FloorPlanStore(dataDir);
     this.jail = new Jail(dataDir);
-
-    // Before the workers, so it hears about the ones who wake up needing input.
-    this.dog = new Dog(def.id, dataDir, {
-      workers: () => this.workers?.list() ?? [],
-      people: () => ctx.peers(this),
-      send: (dog) => ctx.emit(this, { t: 'dog', dog }),
-      wing: () => this.plan.wing,
-    });
 
     this.workers = new WorkerManager(
       def.dir,
@@ -178,7 +166,6 @@ export class Floor {
           // Still being built: the first updates come from waking the workers already at their desks.
           this.queue?.onWorker(worker);
           this.meetings?.onWorker(worker);
-          this.dog.onWorker(worker);
           ctx.workerChanged(this, worker);
           // Its turn ended, or whoever had its terminal open closed it: it may be free to go now.
           this.sendLandedHome();
@@ -191,7 +178,6 @@ export class Floor {
           ctx.emit(this, { t: 'worker.remove', workerId, ...(jail ? { jail } : {}) });
           this.queue?.onWorkerGone(workerId);
           this.meetings?.onWorkerGone(workerId);
-          this.dog.onWorkerGone(workerId);
           ctx.workerChanged(this, workerId);
         },
         data: (workerId, data, viewers) => ctx.termData(workerId, data, viewers),
@@ -411,7 +397,6 @@ export class Floor {
   shutdown(keep = false) {
     clearInterval(this.timer);
     clearTimeout(this.landedTimer);
-    this.dog.stop();
     this.github.stop();
     this.queue.shutdown();
     this.meetings.shutdown();

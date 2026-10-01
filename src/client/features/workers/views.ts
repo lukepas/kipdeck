@@ -53,7 +53,7 @@ const HOLD_LEAVE = 5;
 /** How long a worker sent out from the herald has to turn up before its seat's forgotten. */
 const HERALD_WAIT = 30_000;
 
-export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'rooftop' | 'cabinet' | 'notifier' | 'waiting' | 'dog' | 'peers'>;
+export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'rooftop' | 'cabinet' | 'notifier' | 'waiting' | 'peers'>;
 
 /**
  * Registers what follows the workers, the jail, the floor plan, the meeting, the pull requests and
@@ -369,13 +369,12 @@ export function installWorkerViews(ctx: Ctx, core: CoreState, parts: WorkerViews
 
   /**
    * Dresses the building up for the holiday it's set to (⚙️ Settings), or takes it all down: the sky and
-   * the decorations, the dog, your hands and your character, everyone else, and every worker.
+   * the decorations, your hands and your character, everyone else, and every worker.
    */
   function dressUp() {
     const theme = store.theme.active;
     holiday.set(theme);
     sky.setTheme(theme);
-    parts.dog.setCostume(theme);
     hands.setCostume(theme);
     me.setCostume(theme);
     for (const r of parts.peers.remotes.values()) r.person.setCostume(theme);

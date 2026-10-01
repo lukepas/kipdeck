@@ -15,7 +15,7 @@ test('unused desk keys are not handled without an interaction target', () => {
 test('E remains handled by representative nearby interactions', () => {
   assert.equal(interactionAvailable(interaction('desk', { deskId: 'desk-1' }), 'E', state()), true);
   assert.equal(interactionAvailable(interaction('elevator'), 'E', state()), true);
-  assert.equal(interactionAvailable(interaction('dog'), 'E', state()), true);
+  assert.equal(interactionAvailable(interaction('tv'), 'E', state()), true);
   assert.equal(interactionAvailable(interaction('ladder'), 'E', state()), true);
 });
 

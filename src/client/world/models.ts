@@ -2,11 +2,6 @@ import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import deskPropsUrl from '../models/desk_props.glb?url';
-import dogCorgiUrl from '../models/dog-corgi.glb?url';
-import dogDachshundUrl from '../models/dog-dachshund.glb?url';
-import dogPugUrl from '../models/dog-pug.glb?url';
-import dogPupUrl from '../models/dog-pup.glb?url';
-import dogShibaUrl from '../models/dog-shiba.glb?url';
 import kitchenUrl from '../models/kitchen.glb?url';
 import loungeUrl from '../models/lounge.glb?url';
 import plantsUrl from '../models/plants.glb?url';
@@ -14,19 +9,13 @@ import { toon } from './toon';
 
 // The things in the world modelled in Blender rather than built in code. Each .glb is exported by a
 // script in blender/scripts/ (blender/README.md has the conventions they keep); add it here by name.
-// `preload` ones are loaded before the world is built, for builders that take theirs with model();
-// the rest load the first time loadModel() asks for them (a floor's dog is only ever one breed).
+// They're all loaded before the world is built, for builders that take theirs with model().
 const MODELS = {
-  'dog-pup': { url: dogPupUrl, preload: false },
-  'dog-corgi': { url: dogCorgiUrl, preload: false },
-  'dog-dachshund': { url: dogDachshundUrl, preload: false },
-  'dog-pug': { url: dogPugUrl, preload: false },
-  'dog-shiba': { url: dogShibaUrl, preload: false },
-  desk_props: { url: deskPropsUrl, preload: true },
-  kitchen: { url: kitchenUrl, preload: true },
-  lounge: { url: loungeUrl, preload: true },
-  plants: { url: plantsUrl, preload: true },
-} satisfies Record<string, { url: string; preload: boolean }>;
+  desk_props: deskPropsUrl,
+  kitchen: kitchenUrl,
+  lounge: loungeUrl,
+  plants: plantsUrl,
+} satisfies Record<string, string>;
 
 export type ModelName = keyof typeof MODELS;
 
@@ -73,7 +62,7 @@ function fetchModel(name: ModelName): Promise<GLTF> {
   let p = loading.get(name);
   if (!p) {
     // Each chunk that comes in tells the watchers too, though the counts are still by file.
-    p = new GLTFLoader().loadAsync(MODELS[name].url, () => tell()).then((gltf) => {
+    p = new GLTFLoader().loadAsync(MODELS[name], () => tell()).then((gltf) => {
       loaded.set(name, gltf);
       return gltf;
     });
@@ -93,28 +82,23 @@ function fetchModel(name: ModelName): Promise<GLTF> {
 // A plain clone() would leave a copy's skin bound to the original's bones.
 const copy = (gltf: GLTF): Model => ({ scene: clone(gltf.scene), clips: gltf.animations });
 
-/** A copy of a model to pose and dress on its own, once it has loaded. */
-export async function loadModel(name: ModelName): Promise<Model> {
-  return copy(await fetchModel(name));
-}
-
 /**
- * Loads every `preload` model, so the world can be built with them straight away (see model()). One
- * that doesn't load is logged and left out: whatever it was for goes missing, the office still opens.
+ * Loads every model, so the world can be built with them straight away (see model()). One that
+ * doesn't load is logged and left out: whatever it was for goes missing, the office still opens.
  */
 export async function preloadModels(): Promise<void> {
-  const names = (Object.keys(MODELS) as ModelName[]).filter((name) => MODELS[name].preload);
+  const names = Object.keys(MODELS) as ModelName[];
   await Promise.all(names.map((name) => fetchModel(name).catch((err: unknown) => console.error(`${name}.glb didn't load`, err))));
 }
 
-/** A copy of a `preload` model (see preloadModels()), or null if it couldn't be loaded. */
+/** A copy of a model (see preloadModels()), or null if it couldn't be loaded. */
 export function model(name: ModelName): Model | null {
   const gltf = loaded.get(name);
   return gltf ? copy(gltf) : null;
 }
 
 /**
- * A painted copy of one piece of a `preload` model, the object called `part` in it, for a model that holds
+ * A painted copy of one piece of a model, the object called `part` in it, for a model that holds
  * several things placed each on their own (a plant of each species, the lounge's sofa and its table).
  * `paint` gives the material for each name, as for paintModel(). If the model didn't load, or has no such
  * piece, an empty group: the office opens without it.

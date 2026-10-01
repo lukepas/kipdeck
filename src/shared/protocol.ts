@@ -13,7 +13,7 @@ import type { PresenceClientMsg, PresenceServerMsg } from './protocol/presence.j
 import type { QueueClientMsg, QueueServerMsg } from './protocol/queue.js';
 import type { RooftopClientMsg, RooftopServerMsg } from './protocol/rooftop.js';
 import type { SettingsClientMsg, SettingsServerMsg } from './protocol/settings.js';
-import type { BallClientMsg, CabinetClientMsg, CarClientMsg, DecorClientMsg, DogClientMsg, JukeboxClientMsg, ToysServerMsg, WhiteboardClientMsg } from './protocol/toys.js';
+import type { BallClientMsg, CabinetClientMsg, CarClientMsg, DecorClientMsg, JukeboxClientMsg, ToysServerMsg, WhiteboardClientMsg } from './protocol/toys.js';
 import type { UsageClientMsg, UsageServerMsg } from './protocol/usage.js';
 import type { WorkerClientMsg, WorkerServerMsg } from './protocol/workers.js';
 
@@ -51,8 +51,7 @@ export type ClientMsg =
   | CabinetClientMsg
   | WhiteboardClientMsg
   | BallClientMsg
-  | CarClientMsg
-  | DogClientMsg;
+  | CarClientMsg;
 
 export type ServerMsg =
   | PresenceServerMsg

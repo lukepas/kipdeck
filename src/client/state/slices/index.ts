@@ -14,7 +14,6 @@ import { ball } from './ball';
 import { cabinet } from './cabinet';
 import { cars } from './cars';
 import { decor } from './decor';
-import { dog } from './dog';
 import { floorPlan } from './floor-plan';
 import { jail } from './jail';
 import { jukebox } from './jukebox';
@@ -51,7 +50,6 @@ export const SLICES: readonly Slice[] = [
   decor,
   floorPlan,
   services,
-  dog,
   jukebox,
   whiteboard,
   cabinet,

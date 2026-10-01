@@ -109,7 +109,6 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
       for (const c of clients.values()) if (c.peer.floor === floor.id) n++;
       return n;
     },
-    peers: (floor) => [...clients.values()].filter((c) => c.peer.floor === floor.id).map((c) => c.peer),
     leaveOnMerge: () => ctx.leaveOnMerge.on,
     floor: (id) => floors.get(id),
     pullsChanged: (floor) => {

@@ -26,7 +26,6 @@ import type { installCarrying } from '../features/carrying';
 import type { installCars } from '../features/cars';
 import type { installClimbing } from '../features/climbing';
 import type { installCoffee } from '../features/coffee';
-import type { installDog } from '../features/dog';
 import type { installEmotes } from '../features/emotes';
 import type { installGolf } from '../features/golf';
 import type { installGallery, installHanging } from '../features/hanging';
@@ -98,7 +97,6 @@ export interface Parts {
   arcade: Made<typeof installArcade>;
   rooftop: Made<typeof installRooftop>;
   telescope: Made<typeof installTelescope>;
-  dog: Made<typeof installDog>;
   jukebox: Made<typeof installJukebox>;
   cabinet: Made<typeof installCabinet>;
   golf: Made<typeof installGolf>;
