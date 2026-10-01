@@ -47,8 +47,6 @@ export interface Interactable {
   seatId?: string;
   /** Which of POLES, for a fire pole. */
   pole?: number;
-  /** Which of CARS (shared/garage.ts), for a car. */
-  car?: number;
   /** Put away for now (a bean bag nobody needs yet): can't be used. */
   off?: boolean;
 }
@@ -95,13 +93,6 @@ export interface Office extends OfficeHandles {
   fixtures(): WallRect[];
   /** Paints the walls, their trim and the floor in a floor's colors, so each project looks like itself. */
   setLook(p: FloorPalette): void;
-  /**
-   * You're on floor `index` of a building `count` floors tall (0 is the bottom one): the rest of the
-   * building goes up over you and down under you, the street that many storeys down, and only the
-   * bottom floor has its exit door. `wings` is how far each floor's back office is built out, for
-   * the building's outside.
-   */
-  setLevel(index: number, count: number, wings?: readonly number[]): void;
   /** Animates the office; doors open for anyone in `people` who comes up to them. */
   update(t: number, dt: number, people: Iterable<{ x: number; y: number; z: number }>): void;
 }

@@ -1,8 +1,7 @@
-// The toys on every floor: pictures, the jukebox, the arcade, the whiteboard, the ball, and the cars.
+// The toys on every floor: pictures, the jukebox, the arcade, the whiteboard and the ball.
 
 import type { CabinetFrame, CabinetState } from '../cabinet.js';
 import type { DecorPlacement, Decoration } from '../decor.js';
-import type { CarSeat, CarState } from '../garage.js';
 import type { BallState } from '../hoop.js';
 import type { JukeboxState } from '../jukebox.js';
 import type { WbElement, WbPointer } from '../whiteboard.js';
@@ -50,26 +49,10 @@ export type BallClientMsg =
   /** Throw the basketball in your hands from (x, y, z) at (vx, vy, vz) m/s, or drop it; everyone on the floor sees it fly. */
   | { t: 'ball.throw'; x: number; y: number; z: number; vx: number; vy: number; vz: number };
 
-export type CarClientMsg =
-  /** Get into a seat of one of the floor's cars (by its place in CARS): yours if nobody's in it. */
-  | { t: 'car.enter'; car: number; seat: CarSeat }
-  /** Get out of the car you're in; driving, it stays parked where you left it. */
-  | { t: 'car.leave' }
-  /** Where the car you're driving has got to, and how it's going; everyone else on the floor sees it there. */
-  | { t: 'car.drive'; car: number; x: number; z: number; rotY: number; speed: number; steer: number }
-  /** Honk the horn of the car you're in. */
-  | { t: 'car.honk' };
-
 export type ToysServerMsg =
   | { t: 'decor'; items: Decoration[] }
   /** The basketball on your floor was picked up, thrown, or put back under the hoop. */
   | { t: 'ball'; ball: BallState }
-  /** Someone got into one of your floor's cars, or out of one; `answer` to each car.enter and car.leave of yours, whether you got in or not. */
-  | { t: 'cars'; cars: CarState[]; answer?: boolean }
-  /** A car on your floor is being driven (see car.drive). */
-  | { t: 'car.move'; car: number; x: number; z: number; rotY: number; speed: number; steer: number }
-  /** Someone in a car on your floor honked its horn. */
-  | { t: 'car.honk'; car: number }
   | { t: 'jukebox'; state: JukeboxState }
   /** Who's at the arcade cabinet on your floor now, and the building's high scores. */
   | { t: 'cabinet'; state: CabinetState }

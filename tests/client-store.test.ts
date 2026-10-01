@@ -4,7 +4,6 @@ import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { EMPTY_PLAN } from '../src/shared/floorplan.js';
-import { parked } from '../src/shared/garage.js';
 import { JUKEBOX_TUNES } from '../src/shared/jukebox.js';
 import type { ServerMsg } from '../src/shared/protocol.js';
 
@@ -43,7 +42,6 @@ function floorView(floor: string) {
     whiteboard: { elements: [el('e1', 1)], people: [] },
     meeting: { current: null, past: [] },
     ball: {},
-    cars: [{ x: 0, z: 0, rotY: 0, speed: 0, steer: 0, driver: 'p-b' }],
   };
 }
 
@@ -63,22 +61,20 @@ const welcome = () =>
     me: { admin: true },
     notify: {},
     machine: { cpu: 0, cores: 1, memUsed: 0, memTotal: 1, history: [], workers: 1 },
-    sky: { hour: 1 },
-    theme: { pick: 'auto', active: null },
     prompts: { custom: {} },
     leaveOnMerge: { on: false },
     ...floorView('f1'),
   });
 
 /** What a floor you arrive on fires, in order. */
-const FLOOR_TOPICS = ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'meeting', 'decor', 'floorPlan', 'services', 'jukebox', 'whiteboard', 'drawing', 'cabinet', 'cabinetFrame', 'ball', 'cars'];
+const FLOOR_TOPICS = ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'meeting', 'decor', 'floorPlan', 'services', 'jukebox', 'whiteboard', 'drawing', 'cabinet', 'cabinetFrame', 'ball'];
 
 /** Every topic, to listen for them all. */
-const TOPICS = ['peers', 'workers', 'issues', 'pulls', 'chat', 'project', 'screens', 'team', 'upgrade', 'services', 'decor', 'floorPlan', 'usage', 'limits', 'queue', 'me', 'accounts', 'signins', 'notify', 'machine', 'floors', 'floor', 'projectsDir', 'repos', 'jukebox', 'sky', 'theme', 'leaveOnMerge', 'whiteboard', 'drawing', 'cabinet', 'cabinetFrame', 'meeting', 'prompts', 'ball', 'cars'] as const;
+const TOPICS = ['peers', 'workers', 'issues', 'pulls', 'chat', 'project', 'screens', 'team', 'upgrade', 'services', 'decor', 'floorPlan', 'usage', 'limits', 'queue', 'me', 'accounts', 'signins', 'notify', 'machine', 'floors', 'floor', 'projectsDir', 'repos', 'jukebox', 'leaveOnMerge', 'whiteboard', 'drawing', 'cabinet', 'cabinetFrame', 'meeting', 'prompts', 'ball'] as const;
 
 /** Every message the store takes in (and one it doesn't), and the topics it fires, in the order it has always fired them. */
 const RUN: [ServerMsg, string[]][] = [
-  [welcome(), [...FLOOR_TOPICS, 'peers', 'chat', 'upgrade', 'usage', 'limits', 'me', 'notify', 'machine', 'floors', 'projectsDir', 'sky', 'theme', 'prompts', 'leaveOnMerge']],
+  [welcome(), [...FLOOR_TOPICS, 'peers', 'chat', 'upgrade', 'usage', 'limits', 'me', 'notify', 'machine', 'floors', 'projectsDir', 'prompts', 'leaveOnMerge']],
   [msg({ t: 'pong', at: 0, now: 1_000_000 }), ['jukebox']],
   [msg({ t: 'pong', at: -1e6, now: 1_000_000 }), []],
   [msg({ t: 'floors', floors: [{ id: 'f1', name: 'f1' }] }), ['floors']],
@@ -114,10 +110,6 @@ const RUN: [ServerMsg, string[]][] = [
   [msg({ t: 'notify', state: {} }), ['notify']],
   [msg({ t: 'machine', state: {} }), ['machine']],
   [msg({ t: 'ball', ball: {} }), ['ball']],
-  [msg({ t: 'cars', cars: [{ x: 0, z: 0, rotY: 0, speed: 0, steer: 0 }] }), ['cars']],
-  [msg({ t: 'car.move', car: 0, x: 1, z: 1, rotY: 0, speed: 1, steer: 0 }), []],
-  [msg({ t: 'sky', state: { hour: 2 } }), ['sky']],
-  [msg({ t: 'theme', state: { pick: 'none', active: null } }), ['theme']],
   [msg({ t: 'prompts', state: { custom: {} } }), ['prompts']],
   [msg({ t: 'leaveOnMerge', state: { on: true } }), ['leaveOnMerge']],
   [msg({ t: 'chat', name: 'A', color: '#fff', text: 'hi', at: 1 }), ['chat']],
@@ -141,7 +133,6 @@ test('each message leaves the fields it always has', () => {
   assert.equal(store.you, 'p-a');
   assert.equal(store.floor, 'f1');
   assert.deepEqual([...store.workers.keys()], ['f1-w1']);
-  assert.equal(store.carOf('p-b')?.seat, 'driver');
   assert.equal(storage.get('agent-office.floor'), 'f1');
   // A screen that changes size starts over.
   store.apply(msg({ t: 'screen', workerId: 'f1-w1', cols: 80, rows: 24, lines: { 1: [['a', 1, -1, 0]] }, full: true, cursor: [1, 1] }));
@@ -165,9 +156,6 @@ test('each message leaves the fields it always has', () => {
   store.apply(msg({ t: 'pong', at: clock, now: 5_000_000 }));
   const now = store.officeNow();
   assert.ok(now > 5_000_000 && now < 5_001_000, String(now));
-  // A car that isn't there doesn't move.
-  store.apply(msg({ t: 'car.move', car: 5, x: 1, z: 1, rotY: 0, speed: 1, steer: 0 }));
-  assert.equal(store.cars.length, 1);
 });
 
 test('a listener sees the store as it was when its topic fired', () => {
@@ -175,12 +163,12 @@ test('a listener sees the store as it was when its topic fired', () => {
   const seen: Record<string, unknown> = {};
   const offs = [
     // The floor's topics fire once all of it is in, and the people's once the floor's have.
-    store.on('floor', () => (seen.floor = { peers: [...store.peers.keys()], workers: [...store.workers.keys()], cars: store.cars.length })),
+    store.on('floor', () => (seen.floor = { peers: [...store.peers.keys()], workers: [...store.workers.keys()] })),
     // The workers' and the people's already see the whole floor, the jukebox's clock already forgotten.
     store.on('peers', () => (seen.peers = { floor: store.floor, workers: [...store.workers.keys()], clock: store.clock })),
   ];
   store.apply(msg({ t: 'floor.enter', peers: [peer('p-z', { floor: 'f2' })], ...floorView('f2') }));
-  assert.deepEqual(seen.floor, { peers: ['p-z'], workers: ['f2-w1'], cars: 1 });
+  assert.deepEqual(seen.floor, { peers: ['p-z'], workers: ['f2-w1'] });
   store.apply(msg({ t: 'pong', at: clock, now: 9_000_000 }));
   store.apply({ ...welcome(), floor: 'f1', workers: [worker('w-9', 'desk-9')] } as ServerMsg);
   assert.deepEqual(seen.peers, { floor: 'f1', workers: ['w-9'], clock: undefined });
@@ -205,7 +193,7 @@ test('what the browser remembers keeps its keys and shapes', () => {
 
 test("the store's keys are its state, as window.__office shows them", () => {
   // As the office had them before its store was split into slices: methods and the slices aren't among them.
-  assert.deepEqual(Object.keys(store).sort(), ['accounts', 'ball', 'cabinet', 'cabinetFrame', 'cars', 'carsAt', 'chat', 'clock', 'decor', 'drawing', 'floor', 'floorPlan', 'floors', 'ice', 'invites', 'issues', 'jukebox', 'leaveOnMerge', 'limits', 'machine', 'me', 'meeting', 'notify', 'peers', 'profile', 'project', 'projectsDir', 'prompts', 'pulls', 'queue', 'repos', 'screens', 'services', 'signins', 'sky', 'subs', 'team', 'theme', 'upgrade', 'usage', 'whiteboard', 'workers', 'you']);
+  assert.deepEqual(Object.keys(store).sort(), ['accounts', 'ball', 'cabinet', 'cabinetFrame', 'chat', 'clock', 'decor', 'drawing', 'floor', 'floorPlan', 'floors', 'ice', 'invites', 'issues', 'jukebox', 'leaveOnMerge', 'limits', 'machine', 'me', 'meeting', 'notify', 'peers', 'profile', 'project', 'projectsDir', 'prompts', 'pulls', 'queue', 'repos', 'screens', 'services', 'signins', 'subs', 'team', 'upgrade', 'usage', 'whiteboard', 'workers', 'you']);
 });
 
 test('a new store starts every field where it always has', async () => {
@@ -224,11 +212,10 @@ test('a new store starts every field where it always has', async () => {
       upgrade: { available: false, phase: 'idle' },
       usage: { total: { input: 0, output: 0, cacheWrite: 0, cacheRead: 0, cost: 0, calls: 0 }, today: { input: 0, output: 0, cacheWrite: 0, cacheRead: 0, cost: 0, calls: 0 }, day: '', pauseHiring: false },
       limits: { windows: [], at: 0 }, notify: {}, machine: { cpu: 0, cores: 0, memUsed: 0, memTotal: 0, history: [], workers: 0 },
-      sky: null, theme: { pick: 'auto', active: null }, prompts: { custom: {} }, leaveOnMerge: { on: false },
+      prompts: { custom: {} }, leaveOnMerge: { on: false },
       meeting: { current: null, past: [] }, decor: [], floorPlan: EMPTY_PLAN, services: { items: [], port: 4600 },
       jukebox: { on: false, track: JUKEBOX_TUNES[0].id, startedAt: 0, elapsed: 0, since: 0 }, clock: '<undefined>',
       whiteboard: [], drawing: [], cabinet: { player: null, scores: [] }, cabinetFrame: null, ball: {},
-      cars: parked(), carsAt: [],
       team: null, accounts: null, signins: null,
     },
   );

@@ -7,7 +7,7 @@ import type { Door } from './shell';
 // The office floor is put together from fixtures, built one after another in the order build.ts lists
 // them (which is the order everything in the floor is made in, kept on purpose). Each builds its part
 // into the site (the floor as it stands so far) and hands back what it gives the office to reach it
-// by (see OfficeHandles), what it does each frame and what it does when you change floors.
+// by (see OfficeHandles) and what it does each frame.
 
 /** The floor as it's being built: what a fixture builds into, and what the ones before it built. */
 export interface Site {
@@ -34,16 +34,6 @@ export interface Site {
   get<K extends keyof OfficeHandles>(key: K): OfficeHandles[K];
 }
 
-/** Down on the street (see downstairs in ground.ts): what's built down there goes down with the street. */
-export interface StreetSite extends Site {
-  /**
-   * The street under the floor, and what's in the way down there: on a floor above the bottom one,
-   * all of it is that many storeys further down (see Office.setLevel).
-   */
-  readonly ground: THREE.Group;
-  readonly groundColliders: Collider[];
-}
-
 /** What a fixture hands back once it's built. `K` names the fields of Office it gives (see OfficeHandles). */
 export interface Built<K extends keyof OfficeHandles = never> {
   /** The fields of Office it gives. */
@@ -55,12 +45,10 @@ export interface Built<K extends keyof OfficeHandles = never> {
   interactables?: readonly Interactable[];
   /** Animates it, each frame (see Office.update). */
   update?(t: number, dt: number): void;
-  /** You're on floor `index` of a building `count` floors tall (see Office.setLevel). */
-  setLevel?(index: number, count: number, wings: readonly number[]): void;
 }
 
 /** One part of the office floor: it builds itself into the site, and says what it gives the office. */
-export type Fixture<K extends keyof OfficeHandles = never, S extends Site = Site> = (site: S) => Built<K>;
+export type Fixture<K extends keyof OfficeHandles = never> = (site: Site) => Built<K>;
 
 /** The fields of Office fixture `F` gives it (see Built.handle). Any fixture at all is a Fixture (giving nothing, as far as it's known). */
 export type Gives<F> = F extends (site: never) => { handle?: infer H } ? keyof NonNullable<H> : never;

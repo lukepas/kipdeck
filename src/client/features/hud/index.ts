@@ -20,7 +20,6 @@ import { needsSigningIn, openSignIns } from '../../ui/signins';
 import { openTeam } from '../../ui/team';
 import { openUpgrade } from '../../ui/upgrade';
 import { openWhiteboard } from '../whiteboard/ui';
-import { describeSky } from '../../world/sky';
 
 export type HudParts = Pick<Parts, 'place' | 'travel' | 'you' | 'actions' | 'waiting' | 'meeting' | 'bookshelf' | 'hanging' | 'talk' | 'notifier'>;
 
@@ -160,7 +159,6 @@ export function installHud(ctx: Ctx, parts: HudParts) {
       () => sound.ding('done'),
       parts.notifier,
       signOut,
-      store.sky ? { now: describeSky(store.sky, store.officeNow()), live: !!store.sky.city } : undefined,
       pane,
     );
   }

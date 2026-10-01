@@ -1,45 +1,37 @@
 /**
  * Office sounds, synthesized with Web Audio so there are no audio files to ship: the room's air and a
- * humming fridge, workers typing while they work, footsteps, the coffee machine, birds outside the
- * windows by day and crickets at night, rain and thunder, the odd rustle or phone and the gong,
- * and the dings when a worker needs you. And the lounge jukebox, whose tunes are in music.ts.
+ * humming fridge, workers typing while they work, footsteps, the coffee machine, the odd rustle or
+ * phone and the gong, and the dings when a worker needs you. And the lounge jukebox, whose tunes are in music.ts.
  *
  * Everything goes through one master gain that Settings turns down or mutes. Voice chat doesn't, and
  * the jukebox has a volume of its own.
  *
  * OfficeSound is all the rest of the office sees. What every sound shares (the context, the buses,
  * where your ears are, what runs every frame) is AudioCore in core.ts; each sound is a recipe in a
- * file of its own, beside this one (weather.ts, steps.ts and so on) or in its feature's folder
- * (features/golf/sound.ts, and so on), and this class only hands them the core.
+ * file of its own, beside this one (steps.ts, typing.ts and so on) or in its feature's folder
+ * (features/basketball/sound.ts and so on), and this class only hands them the core.
  */
 import type { GongWhy } from '../../shared/protocol';
-import { birdsong, deskPhones, Fridge, nightCrickets, startRoomTone } from './ambience';
+import { deskPhones, Fridge, startRoomTone } from './ambience';
 import { ding } from './alerts';
 import { arcade } from '../features/cabinet/sound';
 import { ball, type BallSound } from '../features/basketball/sound';
-import { carDoor, crash, honk, Motors, type Engine } from '../features/cars/sound';
 import { bonk, hatch, poleLanding, rung, slide, twirl } from '../features/climbing/sound';
 import { coffee } from '../features/coffee/sound';
 import { AudioCore, type Listener } from './core';
-import { golf, type GolfSound } from '../features/golf/sound';
 import { gong } from '../features/gong/sound';
 import { Jukebox, type JukeboxPlay } from '../features/jukebox/sound';
 import type { Pos } from './places';
 import { pageTurn, paper, step, stepAt } from './steps';
 import { fidgeting, Typing } from './typing';
-import { Rain, thunder } from './weather';
 
 export class OfficeSound {
   private readonly a: AudioCore = new AudioCore({ start: (ctx) => this.start(ctx), touched: () => this.music.touched() });
   private readonly music = new Jukebox(this.a, (text) => this.onMusicError?.(text));
   private readonly typing = new Typing(this.a);
-  private readonly motors = new Motors(this.a);
   private readonly fridge = new Fridge(this.a);
-  private readonly rain = new Rain(this.a);
-  private readonly birds = birdsong(this.a);
-  private readonly crickets = nightCrickets(this.a);
   private readonly phones = deskPhones(this.a);
-  private readonly fidgets = fidgeting(this.a, this.typing);
+  private readonly fidgets = fidgeting(this.typing);
   /** A stream that won't play here. */
   onMusicError?: (text: string) => void;
   /** How many of each sound have played, for quick checks from the console. */
@@ -50,9 +42,6 @@ export class OfficeSound {
     this.a.every((now) => this.music.hearJukebox(now));
     this.a.every((now) => this.typing.scheduleTyping(now));
     this.a.every((now) => this.fridge.tickFridge(now));
-    this.a.every((now) => this.birds.tick(now));
-    this.a.every((now) => this.crickets.tick(now));
-    this.a.every((now) => this.rain.tickRain(now));
     this.a.every((now) => this.phones.tick(now));
     this.a.every((now) => this.fidgets.tick(now));
   }
@@ -67,8 +56,6 @@ export class OfficeSound {
     startRoomTone(this.a);
     this.fridge.startFridge();
     const now = ctx.currentTime;
-    this.birds.start(now);
-    this.crickets.start(now);
     this.phones.start(now);
     this.fidgets.start(now);
   }
@@ -78,11 +65,6 @@ export class OfficeSound {
   /** Volume is 0–1; muted silences everything without losing the level. */
   setVolume(volume: number, muted: boolean) {
     this.a.setVolume(volume, muted);
-  }
-
-  /** The weather outside (see world/sky.ts), every frame. */
-  setWeather(rain: number, night: number) {
-    this.a.setWeather(rain, night);
   }
 
   /** Output level (RMS) right now, for headless checks. */
@@ -97,15 +79,6 @@ export class OfficeSound {
 
   get state(): AudioContextState | 'locked' {
     return this.a.state;
-  }
-
-  /** How many rows the floor's back office is built out: in there you're indoors too. */
-  get wing(): number {
-    return this.a.wing;
-  }
-
-  set wing(level: number) {
-    this.a.wing = level;
   }
 
   /** Moves your ears and schedules whatever the room does next. */
@@ -166,11 +139,7 @@ export class OfficeSound {
     poleLanding(this.a, speed, at);
   }
 
-  // ---- Games (features/golf, basketball and cabinet) -------------------------------------
-
-  golf(kind: GolfSound, at?: Pos, speed = 5) {
-    golf(this.a, kind, at, speed);
-  }
+  // ---- Games (features/basketball and cabinet) -------------------------------------
 
   ball(kind: BallSound, at: Pos, speed: number) {
     ball(this.a, kind, at, speed);
@@ -180,32 +149,10 @@ export class OfficeSound {
     arcade(this.a, kind, lines);
   }
 
-  // ---- The cars in the garage (features/cars) -----------------------------------------------------
-
-  setEngines(running: Engine[]) {
-    this.motors.setEngines(running);
-  }
-
-  honk(at: Pos, high: boolean) {
-    honk(this.a, at, high);
-  }
-
-  carDoor(at: Pos) {
-    carDoor(this.a, at);
-  }
-
-  crash(at: Pos, speed: number) {
-    crash(this.a, at, speed);
-  }
-
-  // ---- The kitchen, the weather, the gong, the dings --------------------------------------
+  // ---- The kitchen, the gong, the dings --------------------------------------
 
   coffee() {
     coffee(this.a);
-  }
-
-  thunder(delay: number, loud: number) {
-    thunder(this.a, delay, loud);
   }
 
   gong(why: GongWhy) {

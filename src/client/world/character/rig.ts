@@ -6,9 +6,6 @@ import * as THREE from 'three';
 /** The Person's hips above their feet, standing. Sitting puts them on the seat, and your eyes move with them. */
 export const HIPS = 0.42;
 
-/** Straight down: the way an arm hangs, turned from here to point it at the hands. */
-export const DOWN = new THREE.Vector3(0, -1, 0);
-
 /** A Person's moving parts. Forward is +z, so the character's right arm is armL, the one on -x. */
 export interface PersonRig {
   root: THREE.Group;

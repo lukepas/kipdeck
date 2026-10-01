@@ -86,7 +86,7 @@ export interface KeyPress {
 
 /**
  * The stages a key press goes through before the bindings, in order: guards (nothing gets a key while
- * a window's open, say), then whatever you're in the middle of (the ladder, the tee, a car…), then the
+ * a window's open, say), then whatever you're in the middle of (the ladder, a pole…), then the
  * emotes. A handler returns true when it took the key, which ends it there.
  */
 export type KeyStage = 'guard' | 'activity' | 'emote';
@@ -156,21 +156,19 @@ export class Keys<E extends KeyPress = KeyPress> {
  * The phases of a frame, in the order they run (see frame() in core/loop.ts, which runs them all). Within a
  * phase, callbacks run in the order they were registered: the office's own before any feature's.
  *
- * - pre: before anything moves: the frame rate, coffee and the view's shake, then drinks
+ * - pre: before anything moves: the frame rate, coffee and the view's shake
  * - steer: where you're headed on your own (walking over to someone)
- * - vehicles: what you might be riding moves first (the cars)
  * - move: you move
- * - moved: what where you've got to does to you (a lap timed, a car shoving you, a pole's hole)
- * - play: games and what they hold you in (the arcade, the tee)
+ * - moved: what where you've got to does to you (a pole's hole)
+ * - play: games and what they hold you in (the arcade)
  * - me: your character, your hands and the camera, what you hear, and telling the office where you are
- * - others: everyone and everything else that moves (people, cars' engines, workers, the dog, the ball)
- * - world: the building and what's in it (its doors and floors, smoke breaks, particles, a picture being hung)
- * - env: the sky, the weather and the light
+ * - others: everyone and everything else that moves (people, workers, the ball)
+ * - world: the building and what's in it (its doors and floors, particles, a picture being hung)
  * - aim: what you're pointing at, and the hint bar
  * - hud: the panels that follow what people are doing
  * - render: drawing the frame
  */
-export const TICK_PHASES = ['pre', 'steer', 'vehicles', 'move', 'moved', 'play', 'me', 'others', 'world', 'env', 'aim', 'hud', 'render'] as const;
+export const TICK_PHASES = ['pre', 'steer', 'move', 'moved', 'play', 'me', 'others', 'world', 'aim', 'hud', 'render'] as const;
 export type TickPhase = (typeof TICK_PHASES)[number];
 
 /** What each tick gets about the frame it's in. */
@@ -207,7 +205,7 @@ export class Ticks {
 
 /**
  * Something you can be in the middle of that takes over the controls (hanging a picture, the ladder,
- * the golf tee…). `Why` names what's making you stop (see Activities.stopAll), `E` is a key press and
+ * a pole…). `Why` names what's making you stop (see Activities.stopAll), `E` is a key press and
  * `El` is where the hint bar draws.
  */
 export interface Activity<Why extends string = string, E = unknown, El = unknown> {

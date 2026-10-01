@@ -19,9 +19,3 @@ export function canvasTexture(w: number, h: number, draw?: (g: CanvasRenderingCo
   return t;
 }
 
-/** A canvas texture (see canvasTexture) that tiles: for UVs that run past 1, or a repeat set later. */
-export function tilingCanvasTexture(w: number, h: number, draw: (g: CanvasRenderingContext2D) => void): THREE.CanvasTexture {
-  const t = canvasTexture(w, h, draw);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  return t;
-}

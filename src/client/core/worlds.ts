@@ -11,7 +11,7 @@ import { idleAgentsIn } from './stations';
 /** The office's world and its board agents. Needs ctx.office (and ctx.player) made. */
 export function createWorlds(ctx: Ctx) {
   const { office } = ctx;
-  const world = officeWorld(office, () => office.stack.state.index > 0, () => officeWing());
+  const world = officeWorld(office, () => officeWing());
   /** The board agents waiting at the office's kiosks. */
   const idleAgents = idleAgentsIn(world);
 
@@ -20,8 +20,8 @@ export function createWorlds(ctx: Ctx) {
     return store.floorPlan.wing;
   }
 
-  /** The top of whatever's underfoot at (x, z) for feet at `y`: its floor, a step, the street. */
-  const groundHere = (x: number, z: number, y: number) => Math.max(groundAt(world.colliders, x, z, y), ctx.player.street);
+  /** The top of whatever's underfoot at (x, z) for feet at `y`: its floor, a step. */
+  const groundHere = (x: number, z: number, y: number) => Math.max(groundAt(world.colliders, x, z, y), ctx.player.lowest);
 
   return {
     world: () => world,

@@ -1,13 +1,11 @@
 /**
  * Everyone else on your floor, as you see them: where they are and what they're up to, walking,
- * sitting, climbing, driving and smoking, what they said (a bubble over their head), and how loud
- * they are to you.
+ * sitting and climbing, what they said (a bubble over their head), and how loud they are to you.
  */
 import * as THREE from 'three';
 import { seatAt } from '../../../shared/layout';
 import { sameLook } from '../../../shared/avatar';
 import type { PeerInfo } from '../../../shared/protocol';
-import { SEAT_HIPS } from '../../../shared/garage';
 import { gripOf, type Grip } from '../climbing/controller';
 import type { Ctx } from '../../core/context';
 import { noOutline } from '../../core/outline';
@@ -34,8 +32,8 @@ export interface RemotePeer {
   grip: Grip | null;
 }
 
-/** Registers what follows the people in the office (store 'peers' and 'cars'), their ticks, and chat and peer.act. */
-export function installPeers(ctx: Ctx, parts: Pick<Parts, 'puff' | 'cars' | 'walking' | 'talk' | 'hud'>) {
+/** Registers what follows the people in the office (store 'peers'), their ticks, and chat and peer.act. */
+export function installPeers(ctx: Ctx, parts: Pick<Parts, 'walking' | 'talk' | 'hud'>) {
   const { scene, voice, sound, player, office } = ctx;
   const remotes = new Map<string, RemotePeer>();
   const editProfile = () => parts.hud.editProfile();
@@ -48,8 +46,6 @@ export function installPeers(ctx: Ctx, parts: Pick<Parts, 'puff' | 'cars' | 'wal
       let r = remotes.get(id);
       if (!r) {
         const person = new Person(peer.name, peer.color, peer.look);
-        person.setCostume(store.theme.active);
-        person.onSmoke = parts.puff;
         person.root.position.set(peer.x, peer.y, peer.z);
         scene.add(person.root);
         noOutline(person.root);
@@ -68,12 +64,10 @@ export function installPeers(ctx: Ctx, parts: Pick<Parts, 'puff' | 'cars' | 'wal
         r.person.setLook(peer.look);
         noOutline(r.person.root);
       }
-      r.person.setSmoking(!!peer.smoking);
-      r.person.setGolf(!!peer.golfing);
       r.person.carry(peer.carrying);
       r.person.read(!!peer.reading);
-      r.person.sit(store.carOf(id) ? SEAT_HIPS : peer.seat ? (seatAt(peer.seat)?.hips ?? null) : null);
-      r.person.setDoing(whereabouts(peer, store.carOf(id)));
+      r.person.sit(peer.seat ? (seatAt(peer.seat)?.hips ?? null) : null);
+      r.person.setDoing(whereabouts(peer));
     }
     for (const [id, r] of remotes) {
       const peer = store.peers.get(id);
@@ -86,28 +80,20 @@ export function installPeers(ctx: Ctx, parts: Pick<Parts, 'puff' | 'cars' | 'wal
     parts.talk.refreshShares();
   }
   store.on('peers', syncPeers);
-  // Into a car or out of one: sitting in it, or back on their feet.
-  store.on('cars', syncPeers);
 
   ctx.ticks.add('others', ({ dt, t, now }) => {
     for (const [id, r] of remotes) {
       const p = store.peers.get(id);
       if (!p) continue;
-      // Sitting, they're wherever their seat puts them; in a car, right in it as it goes.
-      const ride = parts.cars.rideOf(id);
-      const sat = ride ?? (p.seat ? seatAt(p.seat) : undefined);
+      // Sitting, they're wherever their seat puts them.
+      const sat = p.seat ? seatAt(p.seat) : undefined;
       const at = sat ?? p;
       r.target.set(at.x, at.y, at.z);
       const pos = r.person.root.position;
-      if (ride) {
-        pos.copy(r.target);
-        r.person.root.rotation.y = ride.rotY;
-      } else {
-        pos.lerp(r.target, Math.min(1, dt * 12));
-        let diff = at.rotY - r.person.root.rotation.y;
-        diff = Math.atan2(Math.sin(diff), Math.cos(diff));
-        r.person.root.rotation.y += diff * Math.min(1, dt * 12);
-      }
+      pos.lerp(r.target, Math.min(1, dt * 12));
+      let diff = at.rotY - r.person.root.rotation.y;
+      diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+      r.person.root.rotation.y += diff * Math.min(1, dt * 12);
       // On their feet if they're standing on something: the floor, a desk, a stair, the loft.
       const ground = groundAt(player.colliders, p.x, p.z, p.y);
       const airborne = !sat && p.y > ground + 0.05;
@@ -142,7 +128,7 @@ export function installPeers(ctx: Ctx, parts: Pick<Parts, 'puff' | 'cars' | 'wal
       // What people are up to changes as they walk about, not only when they open something.
       for (const [id, r] of remotes) {
         const p = store.peers.get(id);
-        if (p) r.person.setDoing(whereabouts(p, store.carOf(id)));
+        if (p) r.person.setDoing(whereabouts(p));
       }
       renderPeople(voice, editProfile, walkTo, false);
       updateSpeaking(voice);
@@ -151,26 +137,7 @@ export function installPeers(ctx: Ctx, parts: Pick<Parts, 'puff' | 'cars' | 'wal
     }
   });
   ctx.messages.on('chat', (msg) => sayBubble(msg.from, msg.text));
-  ctx.messages.on('peer.act', (msg) => {
-    const r = remotes.get(msg.id);
-    if (msg.golf !== undefined) {
-      // A club out at the tee, or back in the bag.
-      const p = store.peers.get(msg.id);
-      if (p) {
-        if (msg.golf) p.golfing = true;
-        else delete p.golfing;
-      }
-      r?.person.setGolf(msg.golf);
-      return;
-    }
-    if (msg.smoke === undefined) {
-      r?.person.reach();
-      return;
-    }
-    const p = store.peers.get(msg.id);
-    if (p) p.smoking = msg.smoke;
-    r?.person.setSmoking(msg.smoke);
-  });
+  ctx.messages.on('peer.act', (msg) => remotes.get(msg.id)?.person.reach());
 
   function sayBubble(from: string, text: string) {
     if (from === store.you) return;

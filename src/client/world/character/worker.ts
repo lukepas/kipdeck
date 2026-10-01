@@ -1,22 +1,20 @@
 import * as THREE from 'three';
-import type { Theme, WorkerAction, WorkerStatus, WorkerTask } from '../../../shared/protocol';
+import type { WorkerAction, WorkerStatus, WorkerTask } from '../../../shared/protocol';
 import { isAsleep, type WorkerPr } from '../../../shared/status';
 import { disposeSprite, mesh, textSprite, toon, toonUnique } from '../toon';
 import type { WorkerRig } from './rig';
 import { ease, popIn } from './curves';
-import { undress } from './props';
 import { ACT_MIN, DESPAIR_MIN, TWIRL_TIME, WAIT_CYCLE, WAIT_HOPS, blendStance, type Act, type Stance } from './worker-stance';
 import { STATUS_BULB, bubbleFor } from './worker-badges';
 import { globe, papers } from './worker-props';
 import { DANCE, groove, type Dancing, type Stage } from './worker-dance';
 import { packUp, waddle, type Leaving } from './worker-leave';
-import { dressUp } from './worker-dress';
 
 /** The little Claude worker that sits at a desk. Forward is +z. */
 export class Worker {
   readonly root = new THREE.Group();
   private body = new THREE.Group();
-  /** Its moving parts, for what poses them from the other files here (a dance, a costume). */
+  /** Its moving parts, for what poses them from the other files here (a dance, packing up). */
   private rig: WorkerRig;
   private bulb: THREE.MeshToonMaterial;
   private bulbMesh: THREE.Mesh;
@@ -69,17 +67,12 @@ export class Worker {
   /** Beside its laptop, where the globe floats (see setPropSpot). */
   private spot = new THREE.Vector3(-1, 1.1, 1.3);
   private skin: THREE.MeshToonMaterial;
-  /** Dressed up for a holiday (see setCostume), and what it's wearing. */
-  private costume: Theme | null = null;
-  private outfit: THREE.Object3D[] = [];
-  /** Where it is in its own shamble, so a room full of zombies doesn't sway in step. */
-  private phase = Math.random() * Math.PI * 2;
   /** How far through its stride it is, walking in. */
   private stride = 0;
 
   constructor(
     name: string,
-    private color: string,
+    color: string,
   ) {
     const skin = (this.skin = toonUnique(color));
     const white = toon('#ffffff');
@@ -153,14 +146,6 @@ export class Worker {
   celebrate() {
     this.twirlT = 0;
     this.cheer(1.2);
-  }
-
-  /** Dresses it up for a holiday (a zombie for Halloween, an elf for Christmas), or back in its own skin (null). */
-  setCostume(theme: Theme | null) {
-    if (theme === this.costume) return;
-    this.costume = theme;
-    undress(this.outfit);
-    dressUp(this.rig, theme, this.color, this.outfit);
   }
 
   setName(name: string) {
@@ -314,14 +299,6 @@ export class Worker {
       : this.status === 'working' ? (this.action ?? 'type')
       : 'rest';
     const s = this.pose(act, dt, t);
-    // A zombie at rest stands with its arms out in front of it, groping, listing to one side and swaying.
-    const shamble = this.costume === 'halloween' ? Math.min(1, this.acts.get('rest') ?? 0) : 0;
-    if (shamble > 0) {
-      s.armLx += (-1.4 + Math.sin(t * 1.6 + this.phase) * 0.12 - s.armLx) * shamble;
-      s.armRx += (-1.4 + Math.sin(t * 1.6 + this.phase + 1.3) * 0.12 - s.armRx) * shamble;
-      s.roll += (0.09 + Math.sin(t * 1.1 + this.phase) * 0.05) * shamble;
-    }
-
     this.armL.rotation.set(s.armLx, 0, s.armLz);
     this.armR.rotation.set(s.armRx, 0, s.armRz);
     this.armL.position.set(-0.3 + s.reach * 0.07, 0.55 - s.drop, 0.05 + s.reach * 0.12);
@@ -441,6 +418,5 @@ export class Worker {
   dispose() {
     if (this.bubble) disposeSprite(this.bubble);
     if (this.nameTag) disposeSprite(this.nameTag);
-    undress(this.outfit);
   }
 }

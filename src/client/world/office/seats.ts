@@ -53,8 +53,7 @@ export function buildDesk(def: DeskDef, index: number, trimMat: THREE.Material):
   }
   // Modesty panel facing away from the worker
   group.add(mesh(box(width - 0.3, 0.32, 0.03), trimMat, 0, height - 0.26, -depth / 2 + 0.06));
-  // Little desk decorations. Which desk gets which stays as it is: the holiday present goes in whichever
-  // back corner it leaves free (DESK_SPOTS in holiday.ts).
+  // Little desk decorations, which desk gets which by its place in the room.
   const deco = index % 3;
   if (deco === 0) {
     // In the chair's color.

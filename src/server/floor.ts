@@ -16,7 +16,6 @@ import { Decor } from './decor.js';
 import { FloorPlanStore } from './floorplan.js';
 import { Docs } from './docs.js';
 import { Court } from './court.js';
-import { Garage } from './garage.js';
 import { Jukebox } from './jukebox.js';
 import { Whiteboard } from './whiteboard.js';
 import { MeetingRoom } from './meetings.js';
@@ -124,8 +123,6 @@ export class Floor {
   readonly ready: Promise<void>;
   /** The basketball by the hoop: who has it, or how it was last thrown. */
   readonly court = new Court();
-  /** The cars in the garage: who's in which, and where their drivers have left them. */
-  readonly garage = new Garage();
   private timer: NodeJS.Timeout;
   /** Pull requests merging, to ring the gong for. */
   private merges = new MergeWatch();

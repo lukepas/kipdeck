@@ -14,11 +14,11 @@ import { loadingScreen } from './ui/loading';
 import { offerLite, touchOnly } from './ui/litesuggest';
 import { createCtx } from './core/ctx';
 import type { Parts } from './core/parts';
-import { createScene, fitWindow, installSky, makeRenderer, noWebGL } from './core/scene';
+import { createScene, fitWindow, makeRenderer, noWebGL } from './core/scene';
 import { createWorlds } from './core/worlds';
 import { frameLoop, installLoop } from './core/loop';
 import { installPlace } from './core/place';
-import { installYou, makeMe, makeSmoke, makeSound } from './core/you';
+import { installYou, makeMe, makeSound } from './core/you';
 import { installTravel } from './core/travel';
 import { installArrival } from './core/arrival';
 import { installFloorWatch } from './core/floorwatch';
@@ -32,12 +32,10 @@ import { installBoards } from './features/boards';
 import { installBookshelf } from './features/bookshelf';
 import { installCabinet } from './features/cabinet';
 import { installCarrying } from './features/carrying';
-import { installCars } from './features/cars';
 import { installChat } from './features/chat';
 import { installClimbing } from './features/climbing';
 import { installCoffee } from './features/coffee';
 import { installEmotes } from './features/emotes';
-import { installGolf } from './features/golf';
 import { installGong } from './features/gong';
 import { installGallery, installHanging } from './features/hanging';
 import { installHud } from './features/hud';
@@ -46,7 +44,6 @@ import { installMeeting } from './features/meeting';
 import { installPalette } from './features/palette';
 import { installPeers } from './features/peers';
 import { installSeating } from './features/seating';
-import { installSmoke } from './features/smoke';
 import { installTelescope } from './features/telescope';
 import { installTv } from './features/tv';
 import { installVoice } from './features/voice';
@@ -82,7 +79,6 @@ installLoop(ctx, core, parts, { offer2d });
 const canvas = $('scene') as HTMLCanvasElement;
 parts.stage = createScene(canvas, makeRenderer(canvas) ?? (await noWebGL()));
 parts.worlds = createWorlds(ctx);
-installSky(ctx);
 
 // ---- The install list ---------------------------------------------------------------------------
 parts.boards = installBoards(ctx, { aimedNote: () => parts.pointer.aimedNote(), pickUp: (it) => parts.cards.pickUp(it), boardActions: () => parts.actions.boardActions(), showQueue: () => parts.waiting.showQueue() });
@@ -109,7 +105,6 @@ parts.player.view = parts.settings.view;
 parts.hands = new Hands(store.profile.color, parts.me.skinColor);
 parts.you = installYou(ctx);
 parts.reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-({ smoke: parts.smoke, puff: parts.puff } = makeSmoke(ctx));
 parts.sound = makeSound(parts.settings);
 
 parts.jukebox = installJukebox(ctx, { showSettings: (pane) => parts.hud.showSettings(pane) });
@@ -119,10 +114,8 @@ const standUp = () => parts.seating.standUp();
 const stopWalking = () => parts.walking.stopWalkingTo();
 const personOf = (id: string) => parts.peers.remotes.get(id)?.person;
 const reach = () => parts.you.reach();
-parts.golf = installGolf(ctx, { standUp, stopWalking, stopSmoking: () => parts.smoking.stop(), personOf });
 parts.hanging = installHanging(ctx, { gallery: parts.gallery, reach });
 parts.climbing = installClimbing(ctx, { travel: (floorId, how, at) => parts.travel.travel(floorId, how, at), standUp, stopWalking });
-parts.cars = installCars(ctx, { standUp, stopWalking });
 
 parts.travel = installTravel(ctx, core, parts);
 parts.arrival = installArrival(ctx, core, parts);
@@ -137,7 +130,6 @@ parts.meeting = installMeeting(ctx, parts);
 parts.bookshelf = installBookshelf(ctx);
 
 parts.coffee = installCoffee(ctx);
-parts.smoking = installSmoke(ctx);
 parts.hoops = installBasketball(ctx, { remotes: parts.peers.remotes, reach });
 parts.cards = installCarrying(ctx, {
   hold: (card) => void (core.carrying = card),
@@ -217,8 +209,8 @@ void whoami().then(() => {
 });
 
 // Debug handle for quick checks from the console / headless screenshots.
-const { worlds, views, coffee, golf, hanging, climbing, cars, emotes, hoops } = parts;
-(window as any).__office = { world: () => worlds.world(), store, player: parts.player, caffeine: coffee.caffeine, camera: ctx.camera, arcade: parts.arcade, cabinet: parts.cabinet, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, hands: parts.hands, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, gallery: parts.gallery, hanger: hanging.hanger, office: ctx.office, ride: parts.travel.ride, switchFloor: parts.travel.switchFloor, climber: climbing.climber, driver: cars.driver, getIn: cars.getIn, getOut: cars.getOut, golf: golf.golf, balls: golf.balls, elevatorPanelOpen, confetti: parts.confetti, sky: ctx.sky, holiday: parts.stage.holiday, carried: () => core.carrying, emoteWheel: emotes.emoteWheel, emote: emotes.emote, ball: hoops.ball };
+const { worlds, views, coffee, hanging, climbing, emotes, hoops } = parts;
+(window as any).__office = { world: () => worlds.world(), store, player: parts.player, caffeine: coffee.caffeine, camera: ctx.camera, arcade: parts.arcade, cabinet: parts.cabinet, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, hands: parts.hands, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, gallery: parts.gallery, hanger: hanging.hanger, office: ctx.office, ride: parts.travel.ride, switchFloor: parts.travel.switchFloor, climber: climbing.climber, elevatorPanelOpen, confetti: parts.confetti, carried: () => core.carrying, emoteWheel: emotes.emoteWheel, emote: emotes.emote, ball: hoops.ball };
 (window as any).__voice = parts.voice;
 (window as any).__sound = parts.sound;
 (window as any).__notify = parts.notifier;

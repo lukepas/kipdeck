@@ -1,4 +1,4 @@
-// ⚙️ Settings and the building's services: notifications, the machine, upgrades, the sky, holidays, prompts.
+// ⚙️ Settings and the building's services: notifications, the machine, upgrades, prompts.
 
 import type { PromptId } from '../prompts.js';
 import type { AgentChoice } from './agents.js';
@@ -109,40 +109,6 @@ export interface UpgradeState {
   error?: string;
 }
 
-export type Weather = 'clear' | 'cloudy' | 'rain' | 'storm' | 'snow' | 'fog';
-export const WEATHERS: readonly Weather[] = ['clear', 'cloudy', 'rain', 'storm', 'snow', 'fog'];
-
-/** What it's like outside the windows. The server decides it, so everyone sees the same sky. */
-export interface SkyState {
-  /** Where the office is, for the sun: a configured city, or a guess from the host's time zone. */
-  lat: number;
-  lon: number;
-  /** The office's clock, in minutes east of UTC. */
-  utcOffset: number;
-  weather: Weather;
-  /** 0–1: a drizzle to a downpour, a few flakes to a blizzard, haze to pea soup. */
-  intensity: number;
-  /** The city whose live forecast this is. Unset when the weather is made up or pinned. */
-  city?: string;
-  /** °C, from the forecast. */
-  temp?: number;
-}
-
-/** A holiday the whole building dresses up for (see shared/theme.ts). */
-export type Theme = 'halloween' | 'christmas';
-/** What someone picked in ⚙️ Settings: a holiday, none, or whichever the calendar says. */
-export type ThemePick = Theme | 'auto' | 'off';
-
-/** The building's holiday theme: the same on every floor, for everyone. */
-export interface ThemeState {
-  pick: ThemePick;
-  /** What's up right now: the pick, or for 'auto' the holiday it is at the office. Null for none. */
-  active: Theme | null;
-  /** Who picked it, and when. Unset for the default (auto). */
-  by?: string;
-  at?: number;
-}
-
 /**
  * Whether a worker whose pull request merged goes home by itself (⚙️ Settings), for every floor:
  * once it's at rest and nobody has its terminal open, it leaves and its worktree and branch are deleted.
@@ -163,8 +129,6 @@ export type SettingsClientMsg =
   | { t: 'machine.limit'; limit: number | null }
   | { t: 'upgrade.check' }
   | { t: 'upgrade.start' }
-  /** Dress the building up for a holiday, take the decorations down ('off'), or follow the calendar ('auto'). */
-  | { t: 'theme.set'; pick: ThemePick }
   /** Workers whose pull request merged go home by themselves (true), or wait to be sent home. */
   | { t: 'leaveOnMerge.set'; on: boolean }
   /** Rewrite one of the office's prompts (admins only); null puts the default back. */
@@ -177,7 +141,5 @@ export type SettingsServerMsg =
   | { t: 'services'; state: ServicesState }
   | { t: 'notify'; state: NotifyState }
   | { t: 'machine'; state: MachineState }
-  | { t: 'sky'; state: SkyState }
-  | { t: 'theme'; state: ThemeState }
   | { t: 'prompts'; state: PromptsState }
   | { t: 'leaveOnMerge'; state: LeaveOnMergeState };

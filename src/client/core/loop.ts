@@ -1,6 +1,6 @@
 /**
  * The frame loop, and the office's own parts of each frame: moving you, what you hear, telling the
- * office where you are, the building, the sky and drawing it all. They're registered before anything
+ * office where you are, the building and drawing it all. They're registered before anything
  * else's (see installLoop), so within a phase they come first.
  */
 import * as THREE from 'three';
@@ -28,7 +28,6 @@ export function installLoop(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'stage
   ctx.ticks.add('me', listen);
   ctx.ticks.add('me', tellWhereYouAre);
   ctx.ticks.add('world', updateWorld);
-  ctx.ticks.add('env', updateSky);
   ctx.ticks.add('render', drawScene);
 
   let lastSent = { x: 0, y: 0, z: 0, rotY: 0, moving: false, at: 0 };
@@ -77,13 +76,10 @@ export function installLoop(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'stage
     me.setVoiceLevel(voice.inVoice ? voice.localLevel : 0);
     const firstPerson = player.view === 'first';
     // In first person you are the camera; in third, hide yourself when it's zoomed in right behind your head.
-    // At the tee the camera's behind the ball, and you're the one holding the club.
-    // So is the camera over your shoulder at the dart board or the axe lane.
     me.root.visible = ctx.activities.any('takesCamera') || (!firstPerson && camera.position.distanceTo(headPos.set(player.pos.x, player.pos.y + 1.3, player.pos.z)) > 1.5);
-    // In a car, your hands are on the wheel, out of sight.
     if (firstPerson && !ctx.activities.any('hidesHands')) hands.update(dt, t, { yaw: player.camYaw, pitch: player.lookPitch, walkPhase: player.walkPhase, walking: player.moving && player.grounded, airborne: !player.grounded, jitter: player.effects.jitter, grip });
-    // What you're doing widens the view (down a pole) or narrows it (at the oche or the line), and once
-    // it's set, may take it over (the telescope) or streak its edges (down a pole): see ctx.view.
+    // What you're doing widens the view (down a pole), and once it's set, may take it over (the
+    // telescope) or streak its edges (down a pole): see ctx.view.
     const fov = ctx.view.fov(FOV);
     if (Math.abs(camera.fov - fov) > 0.05) {
       camera.fov += (fov - camera.fov) * Math.min(1, dt * 8);
@@ -125,50 +121,29 @@ export function installLoop(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'stage
     }
   }
 
-  /** The building and what's in it: its doors, its floors, the jukebox's lights, the smoke and the confetti. */
+  /** The building and what's in it: its doors, its floors, the jukebox's lights and the confetti. */
   function updateWorld({ dt, t }: Frame) {
     const { player, office, camera, sound } = ctx;
     const { remotes } = parts.peers;
-    const { departures, arrivals } = parts.views;
-    ctx.world().update(t, dt, [player.pos, ...[...remotes.values()].map((r) => r.person.root.position), ...departures.positions(), ...arrivals.positions()]);
+    const { arrivals } = parts.views;
+    ctx.world().update(t, dt, [player.pos, ...[...remotes.values()].map((r) => r.person.root.position), ...arrivals.positions()]);
     office.stack.update(dt, [{ x: player.pos.x, y: player.pos.y, z: player.pos.z, grip: ctx.view.grip() }, ...[...remotes.values()].map((r) => ({ x: r.person.root.position.x, y: r.person.root.position.y, z: r.person.root.position.z, grip: r.grip }))], camera.position);
     office.jukebox.update(t, dt, sound.beat());
-    ctx.smoke.update(dt, camera);
     ctx.confetti.update(dt);
-  }
-
-  /** The sky, the weather and the light. */
-  function updateSky({ dt, t }: Frame) {
-    const { player, camera, sky, office, sound } = ctx;
-    const { sun, scene, holiday } = parts.stage;
-    // Out along the scenic loop, the haze thins (there's more out there to see), and the sun's shadows
-    // come with you: otherwise they're only cast round the office.
-    const away = Math.hypot(player.pos.x, player.pos.z);
-    sky.open = THREE.MathUtils.smoothstep(away, 70, 160);
-    if (away > 40) sun.target.position.set(Math.round(player.pos.x / 4) * 4, player.pos.y, Math.round(player.pos.z / 4) * 4);
-    else sun.target.position.set(0, 0, 0);
-    sun.target.updateMatrixWorld();
-    sky.update(dt, t, camera);
-    office.scenic.cull(camera.position, office.night.street, (scene.fog as THREE.Fog).far);
-    holiday.update(t, sky.lampsOn, camera);
-    sound.setWeather(sky.rain, 1 - sky.daylight);
   }
 
   /** The scene, then your hands on top of it. */
   function drawScene() {
-    const { player, hands, sky, camera, renderer } = ctx;
+    const { player, hands, camera, renderer } = ctx;
     const { effect, scene } = parts.stage;
     const firstPerson = player.view === 'first';
     effect.render(scene, camera);
     // Not while something has the screen to itself (the telescope, the boss's monitor or the arcade up close), where they'd cover it.
     if (firstPerson && !ctx.view.covered() && !ctx.activities.any('hidesHands')) {
       // Hands go on top of everything, so they never clip into a desk you walk up to. They have
-      // lights of their own, turned down to match wherever you're standing.
+      // lights of their own.
       renderer.clearDepth();
-      hands.setLight(sky.lightAt(camera.position));
-      sky.shading(false);
       effect.render(hands.scene, hands.camera);
-      sky.shading(true);
     }
   }
 }

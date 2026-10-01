@@ -1,8 +1,7 @@
 // The way over to a teammate you clicked in the sidebar: round the furniture downstairs (see
-// shared/nav.ts), and up the stairs to the boss's office or out through the balcony doors when that's
-// where they are.
+// shared/nav.ts), and up the stairs to the boss's office when that's where they are.
 
-import { BALCONY, BALCONY_DOOR, FLOOR, LOFT, STAIRS, WALL_T, inWing } from '../../../shared/layout';
+import { FLOOR, LOFT, STAIRS, inWing } from '../../../shared/layout';
 import { route } from '../../../shared/nav';
 
 export interface Spot {
@@ -11,7 +10,7 @@ export interface Spot {
   z: number;
 }
 
-type Zone = 'floor' | 'stairs' | 'loft' | 'balcony' | 'outside';
+type Zone = 'floor' | 'stairs' | 'loft' | 'off';
 
 const STAIRS_Z = (STAIRS.minZ + STAIRS.maxZ) / 2;
 /** Just inside the boss's office door at the top of the stairs, and just off the bottom step. */
@@ -19,24 +18,20 @@ const STAIRS_TOP = { x: LOFT.minX + 0.6, z: STAIRS_Z };
 const STAIRS_FOOT = { x: STAIRS.fromX - 0.6, z: STAIRS_Z };
 /**
  * The points on the way from each part of the building out onto the office floor: down the stairs
- * from the boss's office (out through its door at the top), in through the balcony doors.
+ * from the boss's office (out through its door at the top).
  */
 const WAY_DOWN: Record<Zone, { x: number; z: number }[]> = {
   floor: [],
   stairs: [STAIRS_FOOT],
   loft: [STAIRS_TOP, STAIRS_FOOT],
-  balcony: [
-    { x: BALCONY_DOOR.u, z: FLOOR.maxZ + WALL_T + 0.6 },
-    { x: BALCONY_DOOR.u, z: FLOOR.maxZ - 0.7 },
-  ],
-  outside: [],
+  off: [],
 };
 
 function zoneOf(p: Spot, wing: number): Zone {
   // The back office is more of the office floor, through where the north wall was.
   if (p.y > -1 && p.y < 0.5 && inWing(p.x, p.z, wing)) return 'floor';
-  if (p.y < -1 || p.x < FLOOR.minX || p.x > FLOOR.maxX || p.z < FLOOR.minZ) return 'outside';
-  if (p.z > FLOOR.maxZ) return p.x >= BALCONY.minX && p.x <= BALCONY.maxX ? 'balcony' : 'outside';
+  // Down a shaft on the ladder or a pole, or past the walls: off the office floor's map.
+  if (p.y < -1 || p.x < FLOOR.minX || p.x > FLOOR.maxX || p.z < FLOOR.minZ || p.z > FLOOR.maxZ) return 'off';
   if (p.x > LOFT.minX && p.z > LOFT.minZ && p.y > LOFT.y - 0.5) return 'loft';
   // Off the office floor's map, which has the stairs down as a wall.
   if (p.x > STAIRS.fromX - 0.1 && p.x < STAIRS.toX + 0.1 && p.z > STAIRS.minZ - 0.1 && p.y > 0.05) return 'stairs';
@@ -50,8 +45,8 @@ function zoneOf(p: Spot, wing: number): Zone {
 export function wayTo(from: Spot, to: Spot, wing = 0): { x: number; z: number }[] {
   const a = zoneOf(from, wing);
   const b = zoneOf(to, wing);
-  // Across the same room upstairs or on the balcony, or somewhere the office has no map of: straight there.
-  if ((a === b && a !== 'floor') || a === 'outside' || b === 'outside') return [{ x: to.x, z: to.z }];
+  // Across the same room upstairs, or somewhere the office has no map of: straight there.
+  if ((a === b && a !== 'floor') || a === 'off' || b === 'off') return [{ x: to.x, z: to.z }];
   // Between the stairs and the boss's office at the top of them: through its door.
   if ((a === 'stairs' && b === 'loft') || (a === 'loft' && b === 'stairs')) return [STAIRS_TOP, { x: to.x, z: to.z }];
   const out = WAY_DOWN[a];

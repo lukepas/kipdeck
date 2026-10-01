@@ -1,9 +1,7 @@
-// ⚙️ Settings: team notifications, the worker limit, upgrades, the holiday theme, the office's
-// prompts and default worker, and whether merged workers go home by themselves.
+// ⚙️ Settings: team notifications, the worker limit, upgrades, the office's prompts and default worker, and whether merged workers go home by themselves.
 import path from 'node:path';
 import { OPEN_CODE_MODEL_MAX } from '../../../shared/providers.js';
 import { MAX_WORKER_LIMIT, parseWorkerLimit } from '../../machine.js';
-import { isThemePick } from '../../../shared/theme.js';
 import { PROMPTS, PROMPT_MAX, isPromptId } from '../../../shared/prompts.js';
 import type { SettingsClientMsg } from '../../../shared/protocol.js';
 import { str } from '../../office/input.js';
@@ -44,22 +42,6 @@ export const settingsHandlers = {
       if (err) ctx.warn(c, err);
       else ctx.toastAll(`${who} is upgrading the office — it restarts when the new version is built`);
     });
-  },
-  'theme.set'(ctx, c, msg) {
-    const who = c.peer.name;
-    if (!isThemePick(msg.pick)) return;
-    if (msg.pick === ctx.themes.state().pick) return;
-    ctx.themes.set(msg.pick, who);
-    const now = ctx.themes.state().active;
-    ctx.toastAll(
-      msg.pick === 'halloween'
-        ? `🎃 ${who} dressed the office up for Halloween`
-        : msg.pick === 'christmas'
-          ? `🎄 ${who} dressed the office up for Christmas`
-          : msg.pick === 'off'
-            ? `${who} took the holiday decorations down`
-            : `📅 ${who} set the decorations to follow the calendar${now ? ` (it's ${now === 'halloween' ? 'Halloween 🎃' : 'Christmas 🎄'} season)` : ''}`,
-    );
   },
   'leaveOnMerge.set'(ctx, c, msg) {
     const who = c.peer.name;

@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { FLOOR, STREET_Y, WALL_T, type SeatPlace } from '../../shared/layout';
+import { STOREY, type SeatPlace } from '../../shared/layout';
 import type { ViewMode } from '../state';
 import type { Collider } from '../world/types';
 import { HIPS } from '../world/character/rig';
 import { PlayerInput, isTyping } from './pointer';
 import { HEIGHT, STEP, blockerAt, ceilingAt, groundAt, stepTo } from './collide';
-import { EYE_HEIGHT, aimCamera, shakeCamera, type Room } from './camera';
+import { EYE_HEIGHT, aimCamera, shakeCamera } from './camera';
 import { Effects } from './effects';
 
 // You: walking, running, jumping and sitting, bumping into things and climbing stairs, and the camera
@@ -38,13 +38,8 @@ export class PlayerController extends PlayerInput {
    * how high you jump, and how hard the view trembles (see effects.ts).
    */
   readonly effects = new Effects();
-  /** How far below the floor you're on the street is: further down the higher your floor (see streetBelow). */
-  street = STREET_Y;
-  /**
-   * The room the camera stays in while you're in it, and how thick its outside walls are: the
-   * office's. `enclosed`: walled and roofed all round, with no street or garage under it to see from.
-   */
-  room: Room = { ...FLOOR, wall: WALL_T, enclosed: false };
+  /** How far down there's anything to stand on: the floor below, through a hole in this one. */
+  readonly lowest = -STOREY;
   /** How many rows the floor's back office is built out (see WING): the camera keeps inside it too. */
   wing = 0;
   private jitterT = 0;
@@ -63,8 +58,6 @@ export class PlayerController extends PlayerInput {
    * frame, with no walking, falling or bumping into things, and the camera follows.
    */
   rig: ((dt: number) => void) | null = null;
-  /** The rig is a car (see features/cars/controller.ts): out on the street or in the garage, not up a shaft indoors. */
-  riding = false;
 
   constructor(
     private camera: THREE.PerspectiveCamera,
@@ -207,8 +200,8 @@ export class PlayerController extends PlayerInput {
       }
     }
 
-    // Never below the street: past the edge of the grass there's nothing else to stand on.
-    const ground = Math.max(groundAt(this.colliders, this.pos.x, this.pos.z, this.pos.y), this.street);
+    // Never below the floor below: down a hole in this one there's nothing else to stand on.
+    const ground = Math.max(groundAt(this.colliders, this.pos.x, this.pos.z, this.pos.y), this.lowest);
     const jump = this.enabled && k.has('Space') && this.grounded;
     if (jump) {
       this.vy = JUMP_V * this.effects.jump;

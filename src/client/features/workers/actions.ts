@@ -297,8 +297,6 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
   function standAt(desk: DeskDef) {
     const { seating } = parts;
     if (player.seat) seating.standUp();
-    // The car first (the activities' own order has it last).
-    ctx.activities.stop('driver', 'desk');
     ctx.activities.stopAll('desk');
     parts.walking.stopWalkingTo();
     const spot = deskSeat(desk, desk.station ? -1.6 : desk.beanbag ? 1.6 : 2.4);

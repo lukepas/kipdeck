@@ -4,9 +4,9 @@ import * as THREE from 'three';
 import { PlayerController } from '../src/client/player/index.js';
 import { Effects } from '../src/client/player/effects.js';
 import type { Collider } from '../src/client/world/types.js';
-import { BALCONY, FLOOR, LOFT, SEATING_BY_ID, SLAB, STAIRS, seatAt, seatPlace } from '../src/shared/layout.js';
+import { FLOOR, LOFT, SEATING_BY_ID, SLAB, STAIRS, seatAt, seatPlace } from '../src/shared/layout.js';
 
-/** The office floor: upstairs, over the garage, so off it you'd drop to the street. */
+/** The office floor, over the floor below. */
 const officeFloor: Collider = { ...FLOOR, bottom: -SLAB, top: 0 };
 
 function controller(t: TestContext, colliders: Collider[]) {
@@ -183,22 +183,6 @@ test('gets up off a beanbag to the side when something stands in front of it', (
   player.sit(place);
   player.stand();
   for (const c of [bean, crate]) assert.ok(!overlaps(c, player.pos.x, player.pos.z), `stood inside something at ${player.pos.toArray()}`);
-});
-
-test('gets up off the balcony bench onto the deck, clear of the bench', (t) => {
-  const deck: Collider = { ...BALCONY, bottom: -SLAB, top: 0 };
-  const bench: Collider = { minX: -10, maxX: -8, minZ: BALCONY.minZ, maxZ: BALCONY.minZ + 0.55, top: 0.49 };
-  const { player, keys, frames } = controller(t, [deck, bench]);
-  for (const i of [0, 1]) {
-    player.sit(seatPlace(SEATING_BY_ID.get('bench')!, i));
-    keys('KeyS');
-    frames(1);
-    assert.equal(player.seat, null);
-    assert.ok(!overlaps(bench, player.pos.x, player.pos.z), `stood inside the bench at ${player.pos.toArray()}`);
-    keys();
-    frames(30);
-    assert.equal(player.pos.y, 0, 'still on the balcony');
-  }
 });
 
 test('seat places are only the ones the office has', () => {

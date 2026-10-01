@@ -12,7 +12,6 @@ import { building, floor, me, presence } from '../core';
 import { accounts } from './accounts';
 import { ball } from './ball';
 import { cabinet } from './cabinet';
-import { cars } from './cars';
 import { decor } from './decor';
 import { floorPlan } from './floor-plan';
 import { jukebox } from './jukebox';
@@ -23,9 +22,7 @@ import { notify } from './notify';
 import { prompts } from './prompts';
 import { services } from './services';
 import { signins } from './signins';
-import { sky } from './sky';
 import { team } from './team';
-import { theme } from './theme';
 import { upgrade } from './upgrade';
 import { usage } from './usage';
 import { whiteboard } from './whiteboard';
@@ -38,8 +35,6 @@ export const SLICES: readonly Slice[] = [
   notify,
   machine,
   building,
-  sky,
-  theme,
   prompts,
   leaveOnMerge,
   floor,
@@ -51,7 +46,6 @@ export const SLICES: readonly Slice[] = [
   whiteboard,
   cabinet,
   ball,
-  cars,
   team,
   accounts,
   signins,

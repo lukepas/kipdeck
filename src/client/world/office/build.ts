@@ -1,28 +1,21 @@
 import * as THREE from 'three';
 import type { WallRect } from '../../../shared/decor';
 import type { FloorPalette } from '../../../shared/floors';
-import { street } from '../outside';
-import { cars } from '../../features/cars/world';
-import { scenic } from '../scenic';
 import { toon, toonUnique } from '../toon';
-import { elevator, garageLift } from '../elevator';
+import { elevator } from '../elevator';
 import { gong } from '../../features/gong/world';
 import { jukebox } from '../../features/jukebox/world';
 import { bookshelf } from '../../features/bookshelf/world';
 import { cabinet } from '../../features/cabinet/world';
 import { whiteboard } from '../../features/whiteboard/world';
-import { green, tee } from '../../features/golf/world';
 import { stack } from '../stack';
-import { tower } from '../tower';
 import { hoop } from '../../features/basketball/world';
 import { kitchen } from '../kitchen';
 import { signs } from '../desksigns';
 import type { Collider, DeskView, Interactable, Office, OfficeHandles } from '../types';
 import { PALETTE, floorTexture, paintPlanks, type Looks } from './materials';
-import { boards, clearOfStairs, lamps, lounge, machineMonitor, nightLights, plants, rugs, tv } from './room';
-import { plug, walls, type Door } from './shell';
-import { balcony } from './balcony';
-import { downstairs } from './ground';
+import { boards, clearOfStairs, lamps, lounge, machineMonitor, plants, rugs, tv } from './room';
+import { walls, type Door } from './shell';
 import { wing } from './wing';
 import { beanbags, desks, kiosks } from './seats';
 import { meetingRoom } from './meeting-room';
@@ -30,8 +23,7 @@ import { loft } from './loft';
 import type { Fixture, Gives, Site } from './fixture';
 
 // The office floor, put together from its fixtures (see fixture.ts): the room and its walls, the desks
-// and everything else in it, the balcony, the loft and the meeting room under it, the back office, and
-// the street, the garage and the rest of the building round it.
+// and everything else in it, the loft and the meeting room under it, and the back office.
 
 /**
  * The office floor's fixtures, in the order they're built: which is the order everything in the floor
@@ -41,13 +33,7 @@ function floorPlan() {
   return [
     stack,
     rugs,
-    nightLights,
     walls,
-    balcony,
-    tee,
-    ...downstairs(cars, street, green, scenic),
-    plug,
-    tower,
     desks,
     beanbags,
     kiosks,
@@ -67,7 +53,6 @@ function floorPlan() {
     loft,
     meetingRoom,
     elevator,
-    garageLift,
     gong,
     hoop,
     whiteboard,
@@ -112,7 +97,6 @@ export function buildOffice(): Office {
 
   // Each fixture in turn, with what it hands back.
   const updates: ((t: number, dt: number) => void)[] = [];
-  const levels: ((index: number, count: number, wings: readonly number[]) => void)[] = [];
   const plan: readonly Fixture[] = floorPlan();
   for (const fixture of plan) {
     const built = fixture(site);
@@ -124,7 +108,6 @@ export function buildOffice(): Office {
       Object.assign(given, { [key]: value });
     }
     if (built.update) updates.push(built.update);
-    if (built.setLevel) levels.push(built.setLevel);
   }
 
   const setLook = (p: FloorPalette) => {
@@ -136,16 +119,11 @@ export function buildOffice(): Office {
     }
   };
 
-  const setLevel = (index: number, count: number, wings: readonly number[] = []) => {
-    for (const level of levels) level(index, count, wings);
-  };
-  setLevel(0, 1);
-
   const update = (t: number, dt: number, people: Iterable<{ x: number; y: number; z: number }>) => {
     const near = new Set<Door>();
     for (const p of people) for (const d of doors) if (Math.abs(p.y - d.y) < 1.6 && Math.hypot(p.x - d.x, p.z - d.z) < 2.4) near.add(d);
     for (const d of doors) {
-      const want = near.has(d) && !d.locked ? 1 : 0;
+      const want = near.has(d) ? 1 : 0;
       if (d.open === want) continue;
       d.open = want > d.open ? Math.min(1, d.open + dt * 2.5) : Math.max(0, d.open - dt * 1.6);
       d.show(d.open);
@@ -159,5 +137,5 @@ export function buildOffice(): Office {
     for (const u of updates) u(t, dt);
   };
 
-  return { ...(given as OfficeHandles), group, colliders, interactables, desks, fixtures: () => walls, setLook, setLevel, update };
+  return { ...(given as OfficeHandles), group, colliders, interactables, desks, fixtures: () => walls, setLook, update };
 }

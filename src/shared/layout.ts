@@ -1,6 +1,5 @@
 // Static office layout shared by the server (validation) and client (rendering).
-// Units are meters; +y is up. The office floor spans FLOOR.minX..maxX / minZ..maxZ at y = 0,
-// upstairs over a garage whose floor is level with the street (STREET_Y).
+// Units are meters; +y is up. The office floor spans FLOOR.minX..maxX / minZ..maxZ at y = 0.
 
 export const FLOOR = { minX: -18, maxX: 18, minZ: -13, maxZ: 13 } as const;
 /** How high the ceiling is: a meter over the loft's roof (LOFT.y + LOFT.height), all the way across the room. */
@@ -58,8 +57,7 @@ export const DESKS: DeskDef[] = buildDesks();
  * The back office: a bay knocked through the north wall between the gong and the east wall, for a
  * floor that needs more desks than the room has. Each time someone expands the floor (see
  * shared/floorplan.ts), its back wall goes another `row` meters north, with two more desks back to
- * back in the middle, up to `rows` times: any further and it would stand in the street behind the
- * building (world/city.ts). It runs from `minX` (the gong keeps its bit of wall) to the east wall,
+ * back in the middle, up to `rows` times. It runs from `minX` (the gong keeps its bit of wall) to the east wall,
  * and from the old north wall back to wingMinZ.
  */
 export const WING = { minX: 13.4, maxX: FLOOR.maxX, row: 4.6, rows: 2 } as const;
@@ -262,7 +260,7 @@ export const CABINET = { x: FLOOR.maxX - 0.42, z: 7.05, width: 0.8, depth: 0.8, 
 
 /**
  * The bookshelf of the project's docs (every Markdown file in it, see shared/docs.ts): against the
- * south wall between the middle window and the balcony doors, facing into the room (-z). `width`
+ * south wall by the middle window, facing into the room (-z). `width`
  * runs along the wall.
  */
 export const BOOKSHELF = { x: -6.5, z: FLOOR.maxZ - 0.21, width: 1.7, depth: 0.42, height: 2.3 } as const;
@@ -301,25 +299,12 @@ export function plantsAt(level: number): readonly (readonly [x: number, z: numbe
  */
 export const WHITEBOARD = { x: 5.4, z: -5.4, width: 4, height: 2.2, bottom: 0.5 } as const;
 
-/**
- * The bottom floor of the building is its second storey: the street, and the open garage under the
- * office, are this far below its floor. Each floor stands one STOREY higher than the one below it,
- * so from floor `i` the street is `streetBelow(i)` down.
- */
-export const STREET_Y = -3.6;
-/** The street runs east–west in front of the building (south, +z), with a sidewalk along either side. */
-export const ROAD = { minZ: 23, maxZ: 31 } as const;
-/** The office's floor slab, which is the garage's ceiling: it runs from -SLAB up to 0. */
+/** The office's floor slab, over the ceiling of the floor below: it runs from -SLAB up to 0. */
 export const SLAB = 0.3;
 /** From one floor of the building up to the next: the office's ceiling, and the slab over it. */
 export const STOREY = WALL_HEIGHT + SLAB;
 /** How thick the outside walls are. They stand just outside FLOOR. */
 export const WALL_T = 0.3;
-
-/** How far below floor `index` of the building (0 is the bottom one) the street is. */
-export function streetBelow(index: number): number {
-  return STREET_Y - Math.max(0, index) * STOREY;
-}
 
 export type Side = 'north' | 'south' | 'east' | 'west';
 
@@ -344,51 +329,8 @@ export const WINDOWS: Opening[] = [
 ];
 
 /**
- * The way out of the bottom floor: a door in the west wall onto a landing, with stairs down to the
- * street. The floors above have no door there; workers leave them off the balcony (see PARACHUTE).
- */
-export const EXIT_DOOR: Opening = { wall: 'west', u: 6.5, width: 1.4, y0: 0, y1: 2.4 };
-export const EXIT_STAIRS = {
-  maxX: FLOOR.minX - WALL_T,
-  minX: FLOOR.minX - WALL_T - 1.6,
-  /** The landing outside the door, level with the office floor. */
-  landingZ0: 5.6,
-  landingZ1: 7.5,
-  /** The steps run south from the landing down to the street. */
-  steps: 15,
-  run: 0.34,
-} as const;
-
-/** Glass doors out to the balcony, on the south wall. They slide apart into the wall on either side. */
-export const BALCONY_DOOR: Opening = { wall: 'south', u: -4, width: 3, y0: 0, y1: 2.5 };
-/** The smoking balcony, hanging over the garage entrance. */
-export const BALCONY = { minX: -10.5, maxX: 2.5, minZ: FLOOR.maxZ + WALL_T, maxZ: FLOOR.maxZ + WALL_T + 3.4 } as const;
-/** The ashtray on the balcony, where a smoke break starts. */
-export const ASHTRAY = { x: -8.2, z: BALCONY.maxZ - 0.55 } as const;
-/**
- * The golf tee on the balcony, between the ashtray and the doors: a square of turf `size` across,
- * with the ball teed up at `ball`, hit out over the railing at the hole across the street
- * (GOLF_HOLE). The golf bag leans on the wall behind it at `bag`, just short of the doors.
- */
-export const GOLF_TEE = { x: -6.75, z: 14.75, size: 1.5, ball: { x: -6.95, z: 14.75 }, bag: { x: -5.8, z: BALCONY.minZ + 0.28 } } as const;
-/**
- * The hole across the street, out past the far sidewalk where the neighbours leave a gap: its pin,
- * the green round it (`green` its radius) and the fairway leading up to it (x `fairway` wide, from
- * the sidewalk to the green). Down on the street, so it's further down the higher your floor is.
- */
-export const GOLF_HOLE = { x: -5, z: 58, green: 5.5, fairway: [-11, 0] } as const;
-/**
- * Leaving a floor above the bottom one, with no exit door: out through the balcony doors to the
- * railing straight ahead (`jump`), up onto its top (`railTop` high), and over it by parachute. The
- * chute circles down onto the lot in front of the garage: `out` further from the building than it
- * opened, and `east` (a random bit of it) along, clear of the balconies below and the street lamp by
- * the balcony doors.
- */
-export const PARACHUTE = { jump: { x: BALCONY_DOOR.u, z: BALCONY.maxZ - 0.45 }, railTop: 1.09, out: 1.2, east: [0.6, 1.8] } as const;
-
-/**
  * Something to sit on, standing at x, z on the floor at `y` (the loft's, for what's up there). You
- * sit facing `rotY` (0 = +z). A couch or a bench has a few places side by side; a chair, a stool or a beanbag has one.
+ * sit facing `rotY` (0 = +z). A couch has a few places side by side; a chair or a beanbag has one.
  */
 export interface SeatDef {
   id: string;
@@ -413,8 +355,7 @@ export interface SeatDef {
 }
 
 /**
- * Where people can sit: the office's couches, beanbags, chairs and the balcony bench (buildOffice puts
- * them there). Workers have their own seats, the desks and bean bags in SEATS.
+ * Where people can sit: the office's couches, beanbags and chairs (buildOffice puts them there). Workers have their own seats, the desks and bean bags in SEATS.
  */
 export const SEATING: SeatDef[] = [
   // The lounge couch, its back to the room, facing the TV.
@@ -425,10 +366,6 @@ export const SEATING: SeatDef[] = [
   // Up in the boss office: the couch against the east wall, and the chair at the big desk, facing the glass.
   { id: 'loft-couch', label: '🛋️ Couch', x: LOFT.maxX - 0.65, y: LOFT.y, z: (LOFT.minZ + LOFT.maxZ) / 2, rotY: -Math.PI / 2, places: [-0.5, 0.5], hips: 0.5, depth: -0.05, out: 0.9 },
   { id: 'boss-chair', label: "🪑 Boss's chair", x: (LOFT.minX + LOFT.maxX) / 2 + 0.5, y: LOFT.y, z: (LOFT.minZ + LOFT.maxZ) / 2 + 0.7, rotY: Math.PI, places: [0], hips: 0.62, depth: -0.05, out: -0.8, game: true },
-  // Out on the balcony: the bench under the window, looking out over the street, and a stool either side of the bistro table.
-  { id: 'bench', label: '🪑 Bench', x: -9, y: 0, z: BALCONY.minZ + 0.3, rotY: 0, places: [-0.5, 0.5], hips: 0.47, depth: 0, out: 0.8 },
-  { id: 'stool-1', label: '🪑 Stool', x: -0.6, y: 0, z: (BALCONY.minZ + BALCONY.maxZ) / 2 + 0.2, rotY: Math.PI / 2, places: [0], hips: 0.5, depth: 0, out: -0.7 },
-  { id: 'stool-2', label: '🪑 Stool', x: 1, y: 0, z: (BALCONY.minZ + BALCONY.maxZ) / 2 + 0.2, rotY: -Math.PI / 2, places: [0], hips: 0.5, depth: 0, out: -0.7 },
 ];
 export const SEATING_BY_ID = new Map(SEATING.map((s) => [s.id, s]));
 

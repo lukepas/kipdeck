@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { FLOOR, SLAB, STREET_Y, WING, inWing, wingMinZ } from '../../shared/layout';
+import { FLOOR, SLAB, WING, inWing, wingMinZ } from '../../shared/layout';
 import type { ViewMode } from '../state';
 import type { Collider } from '../world/types';
 import { ceilingAt, groundAt } from './collide';
@@ -10,17 +10,7 @@ import { ceilingAt, groundAt } from './collide';
 /** Camera height above your feet in first person (the Person's eyes). */
 export const EYE_HEIGHT = 1.4;
 
-/** The room the camera keeps to (see PlayerController.room). */
-export interface Room {
-  minX: number;
-  maxX: number;
-  minZ: number;
-  maxZ: number;
-  wall: number;
-  enclosed: boolean;
-}
-
-/** What the camera follows you by: where you are and look, and the room you're in (see PlayerController). */
+/** What the camera follows you by: where you are and look (see PlayerController). */
 export interface Followed {
   view: ViewMode;
   pos: THREE.Vector3;
@@ -29,12 +19,10 @@ export interface Followed {
   camPitch: number;
   camDist: number;
   stepOffset: number;
-  room: Room;
   wing: number;
   rig: ((dt: number) => void) | null;
-  riding: boolean;
   colliders: Collider[];
-  street: number;
+  lowest: number;
 }
 
 /**
@@ -54,50 +42,21 @@ export function aimCamera(camera: THREE.PerspectiveCamera, p: Followed, bob: num
     Math.cos(p.camYaw) * Math.cos(p.camPitch),
   ).multiplyScalar(p.camDist);
   const cam = target.clone().add(off);
-  // Keep the camera on your side of the outside walls, so they never block the view: inside the
-  // room while you're in the office, out of the building while you're outside or on the balcony.
-  // And under the loft, its roof or the garage ceiling.
+  // Keep the camera inside the office's walls, so they never block the view, and under the loft or
+  // the ceiling. On the ladder or a pole you can be down in a shaft under the floor, still indoors.
   const m = 0.4;
-  const R = p.room;
-  // On the ladder or a pole you can be down in a shaft under the floor, but you're still indoors.
-  const rigged = !!p.rig && !p.riding;
-  const under = p.pos.x > R.minX && p.pos.x < R.maxX && p.pos.z > R.minZ && p.pos.z < R.maxZ;
-  // In the office's back office, between its walls, and out through where the north wall was into the room.
-  const back = !R.enclosed && p.pos.y > -SLAB - 0.5 && inWing(p.pos.x, p.pos.z, p.wing);
-  const indoors = ((rigged || p.pos.y > -SLAB - 0.5) && under) || back;
-  if (back) {
+  const rigged = !!p.rig;
+  if (p.pos.y > -SLAB - 0.5 && inWing(p.pos.x, p.pos.z, p.wing)) {
+    // In the back office, between its walls, and out through where the north wall was into the room.
     cam.x = THREE.MathUtils.clamp(cam.x, WING.minX + m, WING.maxX - m);
     cam.z = THREE.MathUtils.clamp(cam.z, wingMinZ(p.wing) + m, FLOOR.maxZ - m);
-  } else if (indoors) {
-    cam.x = THREE.MathUtils.clamp(cam.x, R.minX + m, R.maxX - m);
-    cam.z = THREE.MathUtils.clamp(cam.z, R.minZ + m, R.maxZ - m);
+  } else {
+    cam.x = THREE.MathUtils.clamp(cam.x, FLOOR.minX + m, FLOOR.maxX - m);
+    cam.z = THREE.MathUtils.clamp(cam.z, FLOOR.minZ + m, FLOOR.maxZ - m);
   }
-  const floorY = rigged ? 0 : Math.max(groundAt(p.colliders, p.pos.x, p.pos.z, p.pos.y), p.street);
+  const floorY = rigged ? 0 : Math.max(groundAt(p.colliders, p.pos.x, p.pos.z, p.pos.y), p.lowest);
   const roof = ceilingAt(p.colliders, cam.x, cam.z, floorY) - 0.3;
   cam.y = THREE.MathUtils.clamp(cam.y, floorY + 0.6, Math.max(floorY + 0.6, Math.min(floorY + 3.5, roof)));
-  // Down on the street, stay under the garage ceiling so its edge never cuts across the view; in the
-  // garage, on this side of its back and west walls too (the elevator comes down in the back one).
-  const garage = p.street - STREET_Y - SLAB;
-  if (!R.enclosed && p.pos.y < garage - 1 && !rigged) {
-    cam.y = Math.min(cam.y, Math.max(floorY + 0.6, garage - 0.3));
-    if (under) {
-      cam.x = Math.max(cam.x, R.minX + m);
-      cam.z = Math.max(cam.z, R.minZ + m);
-    }
-  }
-  // How far you are out past each outside wall (west, east, north, south), and how far inside them the camera is.
-  const e = R.wall + m;
-  const out = [R.minX - R.wall - p.pos.x, p.pos.x - R.maxX - R.wall, R.minZ - R.wall - p.pos.z, p.pos.z - R.maxZ - R.wall];
-  const side = out.indexOf(Math.max(...out));
-  const camIn = Math.min(cam.x - (R.minX - e), R.maxX + e - cam.x, cam.z - (R.minZ - e), R.maxZ + e - cam.z) > 0;
-  // Outside, back the camera out through the wall you're standing beyond: above the garage always,
-  // and down in it where it's walled in (the west and north sides).
-  if (!indoors && out[side] > 0 && camIn && (R.enclosed || cam.y > garage || side === 0 || side === 2)) {
-    if (side === 0) cam.x = R.minX - e;
-    else if (side === 1) cam.x = R.maxX + e;
-    else if (side === 2) cam.z = R.minZ - e;
-    else cam.z = R.maxZ + e;
-  }
   if (snap) camera.position.copy(cam);
   else camera.position.lerp(cam, 0.25);
   camera.lookAt(target);

@@ -5,7 +5,7 @@
  * says about where you are: the project in the corner and the tab's title, the upgrade banner, and the
  * sign-ins a newcomer is greeted with.
  */
-import { SLAB, inElevator } from '../../shared/layout';
+import { inElevator } from '../../shared/layout';
 import { renderTitle } from '../shared/title';
 import { lastFloor, lastSpot, store, type Spot } from '../state';
 import { routeAccountsMessage } from '../ui/accounts';
@@ -24,7 +24,7 @@ import type { CoreState } from './ctx';
 import { pastTheWing } from './floors';
 import type { Parts } from './parts';
 
-export type ArrivalParts = Pick<Parts, 'worlds' | 'place' | 'travel' | 'views' | 'cards' | 'hoops' | 'golf' | 'cars' | 'focus'>;
+export type ArrivalParts = Pick<Parts, 'worlds' | 'place' | 'travel' | 'views' | 'cards' | 'hoops' | 'focus'>;
 
 /**
  * Registers arriving's messages and the routers (see the order below), and what follows the upgrade,
@@ -57,7 +57,7 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
   );
   ctx.messages.on('floor.enter', () => parts.views.seatedOnArrival(), 'before');
   ctx.messages.on('worker.remove', (msg) => parts.views.sendingHome(msg.workerId), 'before');
-  // Once the store has it (the cars have their own, registered with them, first).
+  // Once the store has it.
   ctx.messages.onAny(() => parts.views.settled());
   ctx.messages.onAny(routeTerminalMessage);
   ctx.messages.onAny(routeChangesMessage);
@@ -80,8 +80,8 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
         placeAt(mine);
         travel.arrive('back');
       } else {
-        // The car you were in (or nearest): the garage's, if you were down there.
-        placeInCar(mine, mine.y < -SLAB - 1);
+        // The car you were in, or the middle of it.
+        placeInCar(mine);
         travel.arrive();
       }
       floorWentWhileAway(wasOn);
@@ -96,10 +96,8 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     if (player.seat) net.send({ t: 'sit', seat: player.seat.key });
     const carrying = core.carrying;
     if (carrying) net.send({ t: 'carry', issue: carrying.issue, title: carrying.title });
-    if (parts.golf.golf.active) net.send({ t: 'act', golf: true });
-    // The office let go of the ball for you while you were away, and of your seat in a car.
+    // The office let go of the ball for you while you were away.
     parts.hoops.ballNews(false);
-    parts.cars.carAgain();
     // After a reconnect the server has forgotten which terminal we had open, and what we're doing.
     parts.focus.sendDoing(true);
     const openId = openTerminalFor();

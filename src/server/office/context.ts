@@ -18,8 +18,6 @@ import type { Webhook } from '../webhook.js';
 import type { Machine } from '../machine.js';
 import type { Building, FloorDef } from '../building.js';
 import type { Floor } from '../floor.js';
-import type { Sky } from '../sky.js';
-import type { Themes } from '../theme.js';
 import type { OfficePrompts } from '../prompts.js';
 import type { LeaveOnMerge } from '../leave-on-merge.js';
 import type { ChatLog } from '../history.js';
@@ -55,8 +53,6 @@ export interface Core {
 
 /** Made once the hook server listens, before any floor opens (office/services.ts). */
 export interface BuildingServices {
-  sky: Sky;
-  themes: Themes;
   prompts: OfficePrompts;
   leaveOnMerge: LeaveOnMerge;
   ledger: Ledger;

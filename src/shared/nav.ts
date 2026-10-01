@@ -1,9 +1,9 @@
-// Getting around a floor on a coarse grid, round the furniture: a worker's way in to a meeting and
-// out when it's sent home, and your walk over to someone (NavGrid).
+// Getting around a floor on a coarse grid, round the furniture: a worker's way in to a meeting, and
+// your walk over to someone (NavGrid).
 // An office floor built out into the back office (see WING) has more of it to get round: the office's
 // helpers take how many rows it's built out (`wing`), and each level gets a grid of its own.
 
-import { BALCONY, BALCONY_DOOR, BEANBAGS, BOOKSHELF, CABINET, DESK_SIZE, ELEVATOR, ELEVATOR_FRONT, EXIT_DOOR, EXIT_STAIRS, FLOOR, GONG, JUKEBOX, KIOSK, LADDER, LOFT, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, PARACHUTE, POLE, POLES, ROAD, STAIRS, STATIONS, WHITEBOARD, WING, builtDesks, plantsAt, wingLevel, wingMinZ, type DeskDef } from './layout.js';
+import { BEANBAGS, BOOKSHELF, CABINET, DESK_SIZE, ELEVATOR, ELEVATOR_FRONT, FLOOR, GONG, JUKEBOX, KIOSK, LADDER, LOFT, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, POLE, POLES, STAIRS, STATIONS, WHITEBOARD, WING, builtDesks, plantsAt, wingLevel, wingMinZ, type DeskDef } from './layout.js';
 
 
 export type Pt = [number, number];
@@ -265,31 +265,6 @@ export class NavGrid {
   }
 
   /**
-   * From beside `seat`, where a worker hops down, round the furniture to `to`. It gets down on
-   * whichever side of its chair (its bean bag, its kiosk) is the shorter way.
-   */
-  wayFrom(seat: DeskDef, to: Pt): Pt[] {
-    const ways = [-1, 1].map((side) => {
-      // Beside the chair and back from the desk into the aisle, off the bean bag and round behind it, or
-      // out from behind the kiosk and round its front, into the room.
-      const [down, back] = seat.beanbag
-        ? [deskPoint(seat, side * 1.05, 0.1), deskPoint(seat, side * 1.05, 1.25)]
-        : seat.station
-          ? [deskPoint(seat, side * 0.95, KIOSK.stand), deskPoint(seat, side * 0.95, -1)]
-          : seat.wing
-            ? // In the back office the chair has its back to a wall or the next row: out to the side of it instead.
-              [deskPoint(seat, side * 0.7, 0.95), deskPoint(seat, side * 0.95, 1.25)]
-            : // At the meeting table there's less room behind the chair, before the glass.
-              [deskPoint(seat, side * 0.7, 0.95), deskPoint(seat, side * 0.7, seat.room ? 1.4 : 1.75)];
-      // A bean bag or a kiosk can stand with one side up against something (the elevator, by the queue).
-      const blocked = !!(seat.beanbag || seat.station) && !this.walkable(down[0], down[1]);
-      const pts = [down, ...this.route(back, to)];
-      return { pts, cost: (blocked ? 1000 : 0) + pathLength(pts) };
-    });
-    return ways[0].cost <= ways[1].cost ? ways[0].pts : ways[1].pts;
-  }
-
-  /**
    * From `from`, round the furniture to beside `seat`'s chair (the last point), on whichever side is
    * the shorter way, where it hops on.
    */
@@ -315,9 +290,6 @@ export function officeNav(wing = 0): NavGrid {
     (level > 0 && x > WING.minX + m && x < WING.maxX - m && z > wingMinZ(level) + m && z < FLOOR.maxZ - m);
   return (OFFICE_NAVS[level] ??= new NavGrid({ ...FLOOR, minZ: wingMinZ(level) }, obstacles(level), on));
 }
-
-/** The office floor as it is until it's built out. */
-export const OFFICE_NAV = officeNav(0);
 
 export function walkable(x: number, z: number, wing = 0): boolean {
   return officeNav(wing).walkable(x, z);
@@ -378,18 +350,7 @@ class Heap {
 }
 
 
-// ---- Sent home ----------------------------------------------------------------------------------
-
-/** Just inside the exit door, in the west wall. */
-const EXIT: Pt = [FLOOR.minX + 0.45, EXIT_DOOR.u];
-/** Just inside the balcony doors, in the south wall. */
-const BALCONY_IN: Pt = [BALCONY_DOOR.u, FLOOR.maxZ - 0.45];
-/** Down the middle of the steps outside it. */
-const STEPS_X = (EXIT_STAIRS.minX + EXIT_STAIRS.maxX) / 2;
-/** Along the near sidewalk, between the lot and the trees planted in it. */
-const SIDEWALK_Z = ROAD.minZ - 1.7;
-/** How far west along the sidewalk they get before they're gone. */
-const WALK_OFF_X = -38;
+// ---- Called to a meeting -----------------------------------------------------------------------
 
 /** Where a worker called to a meeting comes in: out of the elevator. */
 const IN_FROM: Pt = [ELEVATOR.x, ELEVATOR_FRONT + 0.5];
@@ -400,35 +361,4 @@ const IN_FROM: Pt = [ELEVATOR.x, ELEVATOR_FRONT + 0.5];
  */
 export function wayIn(seat: DeskDef, wing = 0): Pt[] {
   return officeNav(wing).wayTo(IN_FROM, seat);
-}
-
-/**
- * A worker's walk out of the building once it's sent home. The first point is where it hops down,
- * beside its chair (or its bean bag) on whichever side is the shorter way out; then round the
- * furniture to the exit door in the west wall, across the landing outside, down the steps to the
- * street and off along the sidewalk.
- */
-export function wayHome(seat: DeskDef, wing = 0): Pt[] {
-  const inside = wayTo(seat, EXIT, wing);
-  const { landingZ1, steps, run } = EXIT_STAIRS;
-  return [...inside, [STEPS_X, EXIT_DOOR.u], ...walkOff([STEPS_X, landingZ1 + (steps - 1) * run + 0.6])];
-}
-
-/**
- * The same walk on a floor above the bottom one, which has no exit door: round the furniture to the
- * balcony doors, out across the balcony and up to its railing (PARACHUTE.jump), where it goes over.
- */
-export function wayToBalcony(seat: DeskDef, wing = 0): Pt[] {
-  const inside = wayTo(seat, BALCONY_IN, wing);
-  return [...inside, [BALCONY_DOOR.u, BALCONY.minZ + 0.4], [PARACHUTE.jump.x, PARACHUTE.jump.z]];
-}
-
-/** From `from`, down on the street, over to the near sidewalk and off along it to the west, where they're gone. */
-export function walkOff(from: Pt): Pt[] {
-  return [from, [from[0], SIDEWALK_Z], [WALK_OFF_X, SIDEWALK_Z]];
-}
-
-/** From beside `seat`, where it hops down, round the furniture to `door` on the office floor. */
-function wayTo(seat: DeskDef, door: Pt, wing: number): Pt[] {
-  return officeNav(wing).wayFrom(seat, door);
 }

@@ -16,7 +16,7 @@ import { wayTo } from './walkto';
 const NEAR_ENOUGH = 1.6;
 
 /** Registers the walk's own tick ('steer'), and takes the player's path ends. */
-export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worlds' | 'travel' | 'cars' | 'seating' | 'climbing'>) {
+export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worlds' | 'travel' | 'seating' | 'climbing'>) {
   const { player } = ctx;
   const { officeWing } = parts.worlds;
   /** Who you're on your way to (clicked in the sidebar), and when to look again at where they've got to. */
@@ -28,7 +28,6 @@ export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     if (!p || id === store.you) return;
     if (p.lite) return void toast(`📱 ${p.name} is on the 2D view, not anywhere in the office itself`);
     if (!store.onMyFloor(p) && !p.floor) return;
-    if (!parts.cars.getOut()) return;
     if (player.seat) parts.seating.standUp();
     ctx.activities.stopAll('walk');
     errand = null;
@@ -52,7 +51,7 @@ export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
 
   /** Where they are, sitting or standing. */
   function whereIs(p: PeerInfo): { x: number; y: number; z: number } {
-    return parts.cars.rideOf(p.id) ?? ((p.seat && seatAt(p.seat)) || p);
+    return (p.seat && seatAt(p.seat)) || p;
   }
 
   /** There: stop, and turn to them. */
@@ -65,7 +64,7 @@ export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
 
   /** Each frame: keep heading for them, looking again every so often in case they've moved on. */
   function walkTick(now: number) {
-    if (!walkingTo || core.trip || parts.climbing.climber.active || parts.cars.driver.active || !player.enabled) return;
+    if (!walkingTo || core.trip || parts.climbing.climber.active || !player.enabled) return;
     // Sitting down on the way is stopping there.
     if (player.seat) return stopWalking();
     const p = store.peers.get(walkingTo.id);
@@ -104,11 +103,11 @@ export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
 
   /**
    * Walks you over to `at` on this floor and does `then` when you get there, as if you'd walked up
-   * and pressed E. Where there's no walking to be done (riding the elevator, on the
-   * ladder, driving a car) it just does it. A key of yours takes over, and then it doesn't happen.
+   * and pressed E. Where there's no walking to be done (riding the elevator, on the ladder) it just
+   * does it. A key of yours takes over, and then it doesn't happen.
    */
   function walkThen(at: { x: number; y?: number; z: number }, what: string, then: () => void, face?: { x: number; z: number }) {
-    if (core.trip || ctx.activities.running('climber') || ctx.activities.running('driver')) return then();
+    if (core.trip || ctx.activities.running('climber')) return then();
     closeAllModals();
     if (player.seat) parts.seating.standUp();
     ctx.activities.stopAll('errand');

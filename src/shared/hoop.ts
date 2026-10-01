@@ -2,7 +2,7 @@
 // was last thrown (see server/court.ts); every page works out the rest itself, flying and bouncing it
 // the same way from that throw (simulate below), so everyone on the floor sees the same shot.
 
-import { BALCONY, FLOOR, LOFT, WALL_HEIGHT } from './layout.js';
+import { FLOOR, LOFT, WALL_HEIGHT } from './layout.js';
 
 /**
  * The hoop, on the west wall between the exit door and the kitchen, facing into the room (+x).
@@ -61,12 +61,10 @@ export function throwOk(s: { x: number; y: number; z: number; vx: number; vy: nu
   return inBounds(s.x, s.y, s.z, 1);
 }
 
-/** Inside the office (or out on the balcony), under the ceiling, give or take `slack` meters. */
+/** Inside the office, under the ceiling, give or take `slack` meters. */
 function inBounds(x: number, y: number, z: number, slack = 0): boolean {
   if (y < -0.5 - slack || y > WALL_HEIGHT + slack) return false;
-  const room = x > FLOOR.minX - slack && x < FLOOR.maxX + slack && z > FLOOR.minZ - slack && z < FLOOR.maxZ + slack;
-  const balcony = x > BALCONY.minX - slack && x < BALCONY.maxX + slack && z > BALCONY.minZ - 1 - slack && z < BALCONY.maxZ + slack;
-  return room || balcony;
+  return x > FLOOR.minX - slack && x < FLOOR.maxX + slack && z > FLOOR.minZ - slack && z < FLOOR.maxZ + slack;
 }
 
 // ---- Flying it --------------------------------------------------------------------------------------
@@ -122,9 +120,9 @@ export function launch(s: { x: number; y: number; z: number; vx: number; vy: num
   return { x: s.x, y: s.y, z: s.z, vx: s.vx, vy: s.vy, vz: s.vz, t: 0, still: false, lost: false, scored: false, touched: { rim: false, board: false }, under: false };
 }
 
-/** The solids near enough to the floor for the ball to reach; the rest of the building (the street, other floors) can't be. */
+/** The solids near enough to the floor for the ball to reach; the rest of the building (other floors) can't be. */
 export function nearSolids(all: readonly Solid[]): Solid[] {
-  return all.filter((c) => c.maxX > FLOOR.minX - 2 && c.minX < FLOOR.maxX + 2 && c.maxZ > FLOOR.minZ - 2 && c.minZ < BALCONY.maxZ + 2 && c.top > -1 && (c.bottom ?? 0) < WALL_HEIGHT + 1);
+  return all.filter((c) => c.maxX > FLOOR.minX - 2 && c.minX < FLOOR.maxX + 2 && c.maxZ > FLOOR.minZ - 2 && c.minZ < FLOOR.maxZ + 2 && c.top > -1 && (c.bottom ?? 0) < WALL_HEIGHT + 1);
 }
 
 /** The backboard, as the ball meets it (the office's colliders have it too, for walking into). */

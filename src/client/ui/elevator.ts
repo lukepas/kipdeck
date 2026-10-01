@@ -9,20 +9,12 @@ import { confirmDialog } from './prompt';
 // The elevator's panel: a button for every floor (every project), and "add a project", which clones
 // one of the repositories the office's gh login can see and makes it a new floor. The first time
 // the office runs there are no floors, and this is where you start. Admins can take a floor off the
-// building here too; its checkout stays on disk. Under the floors, it goes down to the garage.
-
-/**
- * The garage under the building, where the elevator goes too. It isn't a floor: it's down under the
- * one you're on, level with the street.
- */
-export const GARAGE = '@garage';
+// building here too; its checkout stays on disk.
 
 export interface ElevatorOptions {
   net: Net;
-  /** Rides to a floor or the garage (GARAGE). */
+  /** Rides to a floor. */
   ride(floorId: string): void;
-  /** You're down in the garage (or out on the street), under the floor you're on. */
-  downstairs(): boolean;
 }
 
 /** How many repositories the list shows at once; typing narrows it down. */
@@ -117,9 +109,7 @@ export function openElevator(opts: ElevatorOptions): void {
   const choice = (): string | undefined => selected ?? normalizeRepo(filter);
 
   const floorButton = (f: FloorInfo, i: number) => {
-    // Down in the garage, your floor is somewhere to go back up to.
-    const mine = f.id === store.floor;
-    const here = mine && !opts.downstairs();
+    const here = f.id === store.floor;
     const p = floorPalette(f.palette);
     const stats: (HTMLElement | string)[] = [];
     if (f.cloning) stats.push(h('span', { title: f.clone?.detail ?? 'Being cloned' }, cloneLabel(f.clone)));
@@ -131,12 +121,12 @@ export function openElevator(opts: ElevatorOptions): void {
     }
     const btn = h(
       'button.floor-btn',
-      { type: 'button', class: here ? 'here' : '', disabled: f.cloning || here, title: here ? "You're on this floor" : f.cloning ? 'Still being cloned' : `Ride ${mine ? 'back up ' : ''}to ${f.name}` },
+      { type: 'button', class: here ? 'here' : '', disabled: f.cloning || here, title: here ? "You're on this floor" : f.cloning ? 'Still being cloned' : `Ride to ${f.name}` },
       h('span.floor-no', { style: `background:${p.trim}` }, String(i + 1)),
       h(
         'span.floor-text',
         {},
-        h('span.floor-name', {}, f.name, here ? h('span.here-tag', {}, 'you are here') : mine ? h('span.here-tag', {}, 'your floor') : null),
+        h('span.floor-name', {}, f.name, here ? h('span.here-tag', {}, 'you are here') : null),
         h('span.floor-sub', {}, [f.repo ?? f.dir, f.cloning ? f.clone?.detail : ''].filter(Boolean).join(' · ')),
         f.cloning ? cloneBar(f.clone) : null,
       ),
@@ -174,33 +164,10 @@ export function openElevator(opts: ElevatorOptions): void {
     confirmDialog(`Take ${f.name} off the building?`, `${workers}${people}Nothing is deleted: its checkout stays in ${f.dir}, .agent-office folder and all.${own}`, '🗑 Remove floor', () => net.send({ t: 'floor.remove', floor: f.id }));
   };
 
-  /** Under floor 1: the garage, level with the street. */
-  const garageButton = () => {
-    const here = opts.downstairs();
-    const under = 'Under the building, level with the street: the cars, and the way out';
-    const btn = h(
-      'button.floor-btn',
-      { type: 'button', class: here ? 'here' : '', disabled: here, title: here ? "You're down at the street" : 'Ride down to the garage' },
-      h('span.floor-no', { style: 'background:#2b2d42' }, '🏎️'),
-      h('span.floor-text', {}, h('span.floor-name', {}, 'Garage', here ? h('span.here-tag', {}, 'you are here') : null), h('span.floor-sub', {}, under)),
-      h('span.floor-stats', {}),
-    );
-    btn.addEventListener('click', () => {
-      if (here) return;
-      modal.close();
-      opts.ride(GARAGE);
-    });
-    return btn;
-  };
-
   const renderFloors = () => {
     const floors = store.floors;
-    const built = floors.some((f) => !f.cloning);
-    // Top floor first, the way an elevator's buttons stack, floor 1 and then the garage at the bottom.
-    floorsEl.replaceChildren(
-      ...(floors.length ? floors.map(floorRow).reverse() : [h('p.empty', {}, 'No floors yet.')]),
-      ...(built ? [garageButton()] : []),
-    );
+    // Top floor first, the way an elevator's buttons stack.
+    floorsEl.replaceChildren(...(floors.length ? floors.map(floorRow).reverse() : [h('p.empty', {}, 'No floors yet.')]));
   };
 
   const repoRow = (r: RepoChoice) => {

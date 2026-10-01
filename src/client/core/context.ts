@@ -17,8 +17,6 @@ import type { Person } from '../world/character';
 import type { Confetti } from '../world/confetti';
 import type { Hands } from '../world/hands';
 import type { Interactable, Office } from '../world/types';
-import type { Sky } from '../world/sky';
-import type { Smoke } from '../world/smoke';
 import type { World } from '../world/world';
 import type { Activities, Hooks, Interactions, Keys, Messages, Ticks, Usables, View } from './registry';
 
@@ -33,28 +31,23 @@ export interface Hint {
  * Why whatever you're in the middle of is being stopped (see Activities.stopAll); each activity decides
  * which of these stop it.
  *
- * - start: you're starting something else at a thing you used (the tee, the dart board, the ladder, a pole, a car)
+ * - start: you're starting something else at a thing you used (the ladder, a pole)
  * - taken: the office put you on another floor (yours was taken off the building)
  * - trip: you're off to another floor (the elevator, the floor list)
  * - walk: you're walking over to someone
  * - errand: you're walking over to something to use it (Shift+Enter in the palette)
- * - desk: you're put in front of a desk (the PR board's "Go to desk", N), or placed anywhere else
- *   (only the car hears that: see placeAt in core/place.ts)
+ * - desk: you're put in front of a desk (the PR board's "Go to desk", N)
  */
 export type StopWhy = 'start' | 'taken' | 'trip' | 'walk' | 'errand' | 'desk';
 
 /** How you're going to another floor: by elevator, straight there from the floor list, or by the ladder or a pole. */
 export type TripKind = 'elevator' | 'switch' | Grip;
 
-/**
- * A trip under way: the lights are down (and by elevator the doors are shut) until the next floor
- * arrives. `garage` is down to the garage under it.
- */
+/** A trip under way: the lights are down (and by elevator the doors are shut) until the next floor arrives. */
 export interface Trip {
   floor: string;
   how: TripKind;
   timer: number;
-  garage?: boolean;
 }
 
 /** The types the office's things-you-can-use are about (see Interactions). */
@@ -74,7 +67,6 @@ export interface Ctx {
   readonly canvas: HTMLCanvasElement;
   /** The office building. */
   readonly office: Office;
-  readonly sky: Sky;
   readonly player: PlayerController;
   /** Your own character. */
   readonly me: Person;
@@ -85,7 +77,6 @@ export interface Ctx {
   readonly sound: OfficeSound;
   readonly settings: Settings;
   readonly confetti: Confetti;
-  readonly smoke: Smoke;
   /** The system asks for less motion: no shaking the view, no swaying. */
   readonly reduceMotion: MediaQueryList;
   readonly hud: Hud;
@@ -110,7 +101,7 @@ export interface Ctx {
     draw(el: HTMLElement, k: string, parts: () => (HTMLElement | string)[]): void;
   };
   /**
-   * Shakes the view (a bump in a car, a hiccup), easing off by itself; a stronger shake going on
+   * Shakes the view (a landing off a pole), easing off by itself; a stronger shake going on
    * already stays. `replace`: this one's how hard it shakes now, whatever was going on (a landing).
    * Nothing, when the system asks for less motion.
    */

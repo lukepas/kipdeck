@@ -2,7 +2,7 @@ import type * as THREE from 'three';
 import type { FloorPalette } from '../../shared/floors';
 import { LOFT, WALL_HEIGHT, FLOOR, type DeskDef } from '../../shared/layout';
 import type { BoardKey } from '../../shared/plan';
-import { officeNav, wayHome, wayIn, wayToBalcony, type NavGrid, type Pt } from '../../shared/nav';
+import { officeNav, wayIn, type NavGrid, type Pt } from '../../shared/nav';
 import type { Area } from './confetti';
 import type { Gong } from '../features/gong/world';
 import type { Collider, DeskView, Interactable, Office } from './types';
@@ -12,13 +12,8 @@ import type { Collider, DeskView, Interactable, Office } from './types';
  * workers walk in and out. The office has a great deal more of its own (the elevator, the lounge…).
  */
 
-/** The ways a worker walks, on this map. */
+/** The ways a worker walks. */
 export interface Ways {
-  /**
-   * Out of the building from `seat`, or from `from` if it's already up and about: the first point
-   * is where it gets down. `chute`: it goes over the balcony railing by parachute at the end.
-   */
-  home(seat: DeskDef, from?: Pt): { way: Pt[]; chute: boolean };
   /** In to beside `seat`'s chair, from the elevator. */
   in(seat: DeskDef): Pt[];
 }
@@ -56,11 +51,8 @@ function ceilingOver(x: number, z: number): number {
   return loft ? LOFT.y - 0.35 : WALL_HEIGHT - 0.1;
 }
 
-/**
- * The office as a world. `upstairs` says whether this floor is above the bottom one (no exit door:
- * workers leave by the balcony), and `wing` how many rows its back office is built out (see WING).
- */
-export function officeWorld(office: Office, upstairs: () => boolean, wing: () => number): World {
+/** The office as a world. `wing` is how many rows its back office is built out (see WING). */
+export function officeWorld(office: Office, wing: () => number): World {
   return {
     group: office.group,
     colliders: office.colliders,
@@ -75,7 +67,6 @@ export function officeWorld(office: Office, upstairs: () => boolean, wing: () =>
       return officeNav(wing());
     },
     ways: {
-      home: (seat) => (upstairs() ? { way: wayToBalcony(seat, wing()), chute: true } : { way: wayHome(seat, wing()), chute: false }),
       in: (seat) => wayIn(seat, wing()),
     },
     rain: [

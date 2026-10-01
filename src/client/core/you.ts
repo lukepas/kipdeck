@@ -1,18 +1,13 @@
 /**
- * You: your character as everyone else sees it, the cigarette smoke off it, what you hear, and
- * reaching out with your hands to use something.
+ * You: your character as everyone else sees it, what you hear, and reaching out with your hands to
+ * use something.
  */
-import * as THREE from 'three';
 import { OfficeSound } from '../sound';
 import { store, type Profile, type Settings } from '../state';
 import { toast } from '../ui/dom';
 import { Person } from '../world/character';
-import { Smoke } from '../world/smoke';
 import type { Ctx } from './context';
 import { noOutline } from './outline';
-
-/** A puff of cigarette smoke off someone's cigarette: a wisp off it, or a breath of it out. */
-export type Puff = (kind: 'wisp' | 'exhale', at: THREE.Vector3, dir: THREE.Vector3) => void;
 
 /** Your own character, as everyone else sees it (no name tag over your own head). */
 export function makeMe(ctx: Ctx): Person {
@@ -21,22 +16,6 @@ export function makeMe(ctx: Ctx): Person {
   ctx.scene.add(me.root);
   noOutline(me.root);
   return me;
-}
-
-/** Cigarette smoke, from anyone on a smoke break: the particles, and a puff of them off someone's cigarette. Needs ctx.me made. */
-export function makeSmoke(ctx: Ctx): { smoke: Smoke; puff: Puff } {
-  const smoke = new Smoke();
-  ctx.scene.add(smoke.group);
-  const puff: Puff = (kind, at, dir) => (kind === 'wisp' ? smoke.wisp(at) : smoke.exhale(at, dir));
-  const camLocal = new THREE.Vector3();
-  // In first person yours comes off the cigarette in your hand and out in front of the camera.
-  ctx.me.onSmoke = (kind, at, dir) => {
-    const { camera } = ctx;
-    if (ctx.player.view !== 'first') return puff(kind, at, dir);
-    if (kind === 'wisp') return smoke.wisp(camera.localToWorld(ctx.hands.cigTip(camLocal)));
-    smoke.exhale(camera.localToWorld(camLocal.set(0, -0.14, -0.3)), camera.getWorldDirection(camLocal).setY(0.1).normalize());
-  };
-  return { smoke, puff };
 }
 
 /** What you hear, as loud as your settings have it. */

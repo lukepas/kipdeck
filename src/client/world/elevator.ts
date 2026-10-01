@@ -1,12 +1,11 @@
 import * as THREE from 'three';
-import { ELEVATOR, ELEVATOR_CAR, ELEVATOR_FRONT, FLOOR, SLAB, STREET_Y, WALL_HEIGHT, streetBelow } from '../../shared/layout';
+import { ELEVATOR, ELEVATOR_CAR, ELEVATOR_FRONT, FLOOR, WALL_HEIGHT } from '../../shared/layout';
 import { mesh, roundedBox, textPlane, toon } from './toon';
 import type { Collider, Interactable } from './types';
 import type { Fixture } from './office/fixture';
 
 // The elevator: a steel shaft against the north wall, doors facing into the room. Every floor has
-// it in the same place; riding it swaps the floor around you while the doors are shut. The shaft
-// goes on down to the garage under the building, where it stops at the back wall too.
+// it in the same place; riding it swaps the floor around you while the doors are shut.
 
 const STEEL = '#b8c1cc';
 const STEEL_DARK = '#8d99ae';
@@ -212,8 +211,6 @@ export function buildElevator(height = WALL_HEIGHT): Elevator {
 declare module './types' {
   interface OfficeHandles {
     elevator: Elevator;
-    /** The elevator's stop down in the garage, under the building. */
-    garageLift: Elevator;
     /** The sign over the elevator doors: which floor you're on. */
     setProjectName(name: string): void;
   }
@@ -229,22 +226,5 @@ export const elevator: Fixture<'elevator' | 'setProjectName'> = (site) => {
     interactables: [built.interactable],
     update: (_t, dt) => built.update(dt),
     handle: { elevator: built, setProjectName: (name) => built.setSign(`🛗 ${name}`) },
-  };
-};
-
-/**
- * Its stop in the garage, at the bottom of the same shaft: as tall as the garage, and as far down
- * as the street is (see Office.setLevel).
- */
-export const garageLift: Fixture<'garageLift'> = () => {
-  const built = buildElevator(-SLAB - STREET_Y);
-  built.setSign('🛗 Garage');
-  return {
-    group: built.group,
-    colliders: built.colliders,
-    interactables: [built.interactable],
-    update: (_t, dt) => built.update(dt),
-    setLevel: (index) => built.setFloor(streetBelow(index)),
-    handle: { garageLift: built },
   };
 };

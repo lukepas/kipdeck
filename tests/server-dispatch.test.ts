@@ -149,7 +149,7 @@ before(async () => {
 
   for (const k of Object.keys(process.env)) if (k.startsWith('AGENT_OFFICE_')) delete process.env[k];
   const port = await freePort();
-  const cfg = loadConfig([project, '--home', home, '--projects', path.join(tmp, 'projects'), '--port', String(port), '--password', PASSWORD, '--no-open', '--weather', 'clear', '--agent', claude]);
+  const cfg = loadConfig([project, '--home', home, '--projects', path.join(tmp, 'projects'), '--port', String(port), '--password', PASSWORD, '--no-open', '--agent', claude]);
   office = await startServer(cfg, { publicDir });
   base = `http://127.0.0.1:${port}`;
   hooks = `http://127.0.0.1:${office.hookPort}`;
@@ -267,7 +267,7 @@ test('welcomes a browser and dispatches what it sends', async () => {
   assert.equal(ada?.name, 'Ada');
   assert.equal(ada?.color, '#ff8a5b');
   assert.equal(ada?.floor, floor.id);
-  assert.deepEqual(Object.keys(welcome).slice(-15), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'decor', 'plan', 'services', 'ball', 'cars', 'jukebox', 'whiteboard', 'meeting', 'cabinet']);
+  assert.deepEqual(Object.keys(welcome).slice(-14), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'decor', 'plan', 'services', 'ball', 'jukebox', 'whiteboard', 'meeting', 'cabinet']);
 
   a.send({ t: 'ping', at: 42 });
   const pong = await a.take('pong');
@@ -340,13 +340,11 @@ test('the toys on a floor, and letting go of them on leaving the floor or the of
   assert.equal((await b.take('jukebox')).state.on, false);
   assert.equal((await b.take('toast', (m) => m.text.startsWith('🔇'))).text, '🔇 Cy turned the jukebox off');
 
-  // The gong once, not twice in a row, and no golf without a club.
+  // The gong once, not twice in a row; a reach is passed on.
   a.send({ t: 'gong' });
   a.send({ t: 'gong' });
-  a.send({ t: 'golf', yaw: 0, loft: 0.5, power: 0.5 });
-  a.send({ t: 'act', golf: true });
-  a.send({ t: 'golf', yaw: 0.25, loft: 0.5, power: 0.5 });
-  assert.deepEqual(await b.next(3), ['gong', 'peer.act', 'golf']);
+  a.send({ t: 'act' });
+  assert.deepEqual(await b.next(2), ['gong', 'peer.act']);
 
   a.send({ t: 'wb.open' });
   assert.deepEqual((await b.take('wb.people')).people, [cy]);
@@ -359,17 +357,14 @@ test('the toys on a floor, and letting go of them on leaving the floor or the of
     a.send({ t: 'wb.open' });
     a.send({ t: 'ball.take' });
     assert.equal((await b.take('ball')).ball.holder, cy);
-    a.send({ t: 'car.enter', car: 0, seat: 'driver' });
-    await a.take('cars', (m) => m.answer === true);
-    await b.take('cars');
     a.send({ t: 'cabinet.play' });
     assert.equal((await b.take('cabinet')).state.player?.id, cy);
     await b.drain();
   };
   await holdEverything();
-  // Out of the office: the whiteboard, the arcade, the ball and the car, then Cy's gone.
+  // Out of the office: the whiteboard, the arcade and the ball, then Cy's gone.
   await a.close();
-  assert.deepEqual(await b.next(5), ['wb.people', 'cabinet', 'ball', 'cars', 'peer.leave']);
+  assert.deepEqual(await b.next(4), ['wb.people', 'cabinet', 'ball', 'peer.leave']);
   await b.close();
 });
 
@@ -379,10 +374,6 @@ test('settings, accounts, sign-ins and the boards answer as before', async () =>
   const warned = async (text: string) => assert.equal((await a.take('toast', (m) => m.level === 'warn')).text, text);
   const told = async (start: string) => (await a.take('toast', (m) => m.level === 'info' && m.text.startsWith(start))).text;
 
-  a.send({ t: 'theme.set', pick: 'nope' });
-  a.send({ t: 'theme.set', pick: 'off' });
-  assert.equal((await a.take('theme')).state.pick, 'off');
-  assert.equal(await told('Eve took'), 'Eve took the holiday decorations down');
   a.send({ t: 'machine.limit', limit: 0 });
   await warned('The worker limit is a whole number from 1 to 500');
   a.send({ t: 'machine.limit', limit: 3 });

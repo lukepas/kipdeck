@@ -1,7 +1,7 @@
 /**
  * The workers as you see them: at their desks with their laptops, walking in to a meeting, packing up
  * when they're sent home, and the seats: which are free, the bean bags, the back office built out.
- * Also the building dressed up for a holiday, and what the workers have spent.
+ * Also what the workers have spent.
  */
 import * as THREE from 'three';
 import { OFFICE_PLAN } from '../../../shared/plan';
@@ -50,24 +50,17 @@ export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'cabi
 
 /**
  * Registers what follows the workers, the floor plan, the meeting, the pull requests and
- * the queue, the theme, and what's been spent (see the order below), and the workers' own tick.
+ * the queue, and what's been spent (see the order below), and the workers' own tick.
  */
 export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
-  const { scene, sound, player, camera, office, sky, confetti, hands, me, net } = ctx;
-  const { holiday } = parts.stage;
+  const { scene, sound, player, camera, office, confetti, net } = ctx;
   const { groundHere, officeWing } = parts.worlds;
 
   const workerViews = new Map<string, WorkerView>();
-  /** Workers a `worker.remove` is taking out of the store right now. They walk out of the building; a worker that's gone because you changed floors just vanishes. */
+  /** Workers a `worker.remove` is taking out of the store right now. They pack up and go; a worker that's gone because you changed floors just vanishes. */
   const sentHome = new Set<string>();
-  // Workers sent home, packing up and walking out with a box of their things.
-  const departures = new Departures(
-    scene,
-    groundHere,
-    (x, y, z) => sound.stepAt(x, z, y),
-    () => arrangeSeats(),
-    () => ctx.world().ways,
-  );
+  // Workers sent home, packing up a box of their things at their seats.
+  const departures = new Departures(scene, () => arrangeSeats());
   // Workers called to a meeting, walking in from the elevator to the meeting table.
   const arrivals = new Arrivals(
     scene,
@@ -93,7 +86,6 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
       if (!v) {
         departures.vacate(w.deskId);
         const model = new Worker(w.name, w.color);
-        model.setCostume(store.theme.active);
         desk.seatAnchor.add(model.root);
         // Its globe floats beside the laptop (or the kiosk's counter), out from behind the card over
         // its head and the back of its chair, so it shows from across the room.
@@ -141,7 +133,7 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
       if (store.workers.has(id)) continue;
       arrivals.forget(v.model);
       const desk = world.desks.get(v.deskId);
-      // Sent home: it packs up and walks out, and the seat shows as free once it's up (see departures).
+      // Sent home: it packs up and goes, and the seat shows as free once it's gone (see departures).
       if (desk && sentHome.has(id)) departures.add(v.model, v.laptop, desk);
       else {
         v.model.root.removeFromParent();
@@ -192,7 +184,7 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     const free = vacantSeats(store.workers.values(), (id) => departures.seated(id));
     for (const [id, desk] of world.desks) desk.vacancy.visible = free.has(id) && seatBuilt(id);
     const appeared = world.setBeanbags(beanbagsOut((id) => !free.has(id), store.floorPlan.wing));
-    // One came out right where you're standing (on the office floor, not down in the garage): you end up on top of it.
+    // One came out right where you're standing (on the office floor, not down a shaft): you end up on top of it.
     const p = player.pos;
     for (const c of appeared) if (p.y > -0.1 && p.y < c.top && p.x > c.minX - 0.3 && p.x < c.maxX + 0.3 && p.z > c.minZ - 0.3 && p.z < c.maxZ + 0.3) p.y = c.top;
   }
@@ -234,8 +226,7 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     }
     office.setWing(level);
     office.signs.set(fp.labels, (d) => deskBuilt(d, level));
-    player.wing = sound.wing = level;
-    sky.setWing(level);
+    player.wing = level;
     parts.travel.syncStack();
     arrangeSeats();
     if (was.floor === store.floor && level > was.wing) {
@@ -267,21 +258,6 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
   store.on('queue', paintPrs);
   store.on('workers', renderUsage);
 
-  /**
-   * Dresses the building up for the holiday it's set to (⚙️ Settings), or takes it all down: the sky and
-   * the decorations, your hands and your character, everyone else, and every worker.
-   */
-  function dressUp() {
-    const theme = store.theme.active;
-    holiday.set(theme);
-    sky.setTheme(theme);
-    hands.setCostume(theme);
-    me.setCostume(theme);
-    for (const r of parts.peers.remotes.values()) r.person.setCostume(theme);
-    for (const v of workerViews.values()) v.model.setCostume(theme);
-    for (const a of parts.worlds.idleAgents()) a.model.setCostume(theme);
-  }
-  store.on('theme', dressUp);
   store.on('usage', renderUsage);
   store.on('limits', renderLimits);
   // The reset countdowns tick down between reads.

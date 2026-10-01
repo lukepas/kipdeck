@@ -30,8 +30,7 @@ export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
   let pointer: THREE.Vector2 | null = null;
 
   function pickTarget(): Interactable | null {
-    // Nearly everything you can use is upstairs; down on the street you're under it all, but for the
-    // elevator's stop in the garage.
+    // Down a shaft on the ladder or a pole, nothing on the floor is in reach.
     const below = player.pos.y < -SLAB - 1;
     let best: Interactable | null = null;
     let bestD = Infinity;

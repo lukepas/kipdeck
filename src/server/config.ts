@@ -3,7 +3,6 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync } fr
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { WEATHERS, type Weather } from '../shared/protocol.js';
 import { AGENT_PROVIDERS, PROVIDER_META } from '../shared/providers.js';
 import { MAX_WORKER_LIMIT, parseWorkerLimit } from './machine.js';
 
@@ -55,10 +54,6 @@ export interface Config {
   maxWorkers?: number;
   /** Slack / Discord webhook to post to when a worker needs input or finishes ('' turns it off). */
   webhook?: string;
-  /** Where the office is: its sun and live weather follow this city's forecast. */
-  city?: string;
-  /** Weather pinned for good, instead of made up or forecast. */
-  weather?: Weather;
 }
 
 export interface RTCIceServerLike {
@@ -142,14 +137,6 @@ Options:
       --webhook <url>     Post to this Slack or Discord webhook when a worker
                           needs input or finishes (env AGENT_OFFICE_WEBHOOK).
                           Also settable from ⚙️ Settings in the office; "" turns it off
-      --city <name>       Put the office in a real city, e.g. "Berlin" or
-                          "Portland, Oregon" (env AGENT_OFFICE_CITY): the sun
-                          keeps its hours of daylight and the weather outside
-                          follows its live forecast from open-meteo.com.
-                          Without it the weather is made up. Either way a
-                          whole day and night go by every hour
-      --weather <kind>    Pin the weather: clear, cloudy, rain, storm, snow or
-                          fog (env AGENT_OFFICE_WEATHER)
   -h, --help              Show this help
 
 Started in a terminal, the office opens in your browser already signed in, with
@@ -227,8 +214,6 @@ export function loadConfig(argv: string[]): Config {
   let budgetPause = !!process.env.AGENT_OFFICE_BUDGET_PAUSE && process.env.AGENT_OFFICE_BUDGET_PAUSE !== '0';
   let maxWorkers = process.env.AGENT_OFFICE_MAX_WORKERS || '';
   let webhook = process.env.AGENT_OFFICE_WEBHOOK;
-  let city = process.env.AGENT_OFFICE_CITY || '';
-  let weather = process.env.AGENT_OFFICE_WEATHER || '';
   const iceServers: RTCIceServerLike[] = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
 
   for (let i = 0; i < argv.length; i++) {
@@ -303,12 +288,6 @@ export function loadConfig(argv: string[]): Config {
       case '--projects':
         projects = path.resolve(takeValue(argv, i++, a));
         break;
-      case '--city':
-        city = takeValue(argv, i++, a);
-        break;
-      case '--weather':
-        weather = takeValue(argv, i++, a);
-        break;
       default:
         if (a.startsWith('-')) {
           console.error(`agent-office: unknown option ${a}\n`);
@@ -342,11 +321,6 @@ export function loadConfig(argv: string[]): Config {
   const workerLimit = maxWorkers ? parseWorkerLimit(maxWorkers) : undefined;
   if (maxWorkers && workerLimit === undefined) {
     console.error(`agent-office: --max-workers needs a whole number from 1 to ${MAX_WORKER_LIMIT}, e.g. --max-workers 6`);
-    process.exit(2);
-  }
-  weather = weather.trim().toLowerCase();
-  if (weather && !(WEATHERS as readonly string[]).includes(weather)) {
-    console.error(`agent-office: --weather is one of ${WEATHERS.join(', ')}`);
     process.exit(2);
   }
 
@@ -443,8 +417,6 @@ export function loadConfig(argv: string[]): Config {
     budgetPause,
     maxWorkers: workerLimit,
     webhook,
-    city: city.trim() || undefined,
-    weather: (weather as Weather) || undefined,
   };
 }
 

@@ -1,16 +1,19 @@
 import * as THREE from 'three';
-import { DESKS, DESK_SIZE, FLOOR, SLAB, WALL_HEIGHT, WALL_T, WING, WING_DESKS, deskSeat, wingMinZ, wingRowZ } from '../../../shared/layout';
-import type { NightParts } from '../outside';
+import { DESKS, DESK_SIZE, FLOOR, SLAB, WALL_HEIGHT, WALL_T, WING, WING_DESKS, deskSeat, wingMinZ, wingRowZ, type Opening } from '../../../shared/layout';
 import { mesh, roundedBox, toon } from '../toon';
-import { wingWindows } from '../tower';
 import type { Collider, DeskView, Interactable } from '../types';
 import type { Fixture } from './fixture';
 import { PALETTE, box, type Looks } from './materials';
 import { pendant } from './props';
 import { buildDesk } from './seats';
-import { wallRun, wetPane, windowIn } from './shell';
+import { wallRun, windowIn } from './shell';
 
 // The back office through the north wall, built out a row of desks at a time as the floor fills up.
+
+/** A window in each row of a back office, in the building's east wall. */
+function wingWindows(level: number): Opening[] {
+  return Array.from({ length: level }, (_, i) => ({ wall: 'east' as const, u: wingRowZ(i + 1), width: 2.4, y0: 1.1, y1: 3.3 }));
+}
 
 /** The back office, as far as it's built out (see WING). */
 export interface WingView {
@@ -64,7 +67,7 @@ function paintGrowSign(c: HTMLCanvasElement, level: number) {
  * middle of each row, a rug under them, a lamp over them and a window in the east wall. The sign that
  * says there's room to grow hangs on whichever wall is at the back.
  */
-export function buildWing(group: THREE.Group, colliders: Collider[], interactables: Interactable[], desks: Map<string, DeskView>, looks: Looks, trimMat: THREE.Material, planks: THREE.Material, ceiling: THREE.Material, night: NightParts): WingView {
+export function buildWing(group: THREE.Group, colliders: Collider[], interactables: Interactable[], desks: Map<string, DeskView>, looks: Looks, trimMat: THREE.Material, planks: THREE.Material, ceiling: THREE.Material): WingView {
   const T = WALL_T;
   const midX = (WING.minX + WING.maxX) / 2;
 
@@ -168,7 +171,6 @@ export function buildWing(group: THREE.Group, colliders: Collider[], interactabl
         wallRun(shell, mine, 'x', back - T / 2, WING.minX - T, FLOOR.maxX + T, -1, [], looks, [true, true]);
         for (const o of windows) {
           shell.add(windowIn(o));
-          shell.add(wetPane(o, night.wetGlass));
         }
         take(shell);
 
@@ -228,7 +230,7 @@ declare module '../types' {
 
 /** The back office through the north wall past the gong, walled up until the floor's built out. */
 export const wing: Fixture<'wing' | 'setWing'> = (site) => {
-  const built = buildWing(site.group, site.colliders, site.interactables, site.desks, site.looks, site.looks.trim, site.planks, site.get('stack').ceiling, site.get('night'));
+  const built = buildWing(site.group, site.colliders, site.interactables, site.desks, site.looks, site.looks.trim, site.planks, site.get('stack').ceiling);
   site.wall('north', (WING.minX + FLOOR.maxX) / 2, WALL_HEIGHT / 2, FLOOR.maxX - WING.minX, WALL_HEIGHT);
   const setWing = (level: number) => {
     built.set(level);

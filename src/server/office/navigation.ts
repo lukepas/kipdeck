@@ -41,7 +41,6 @@ export function navigation(ctx: Ctx): Navigation {
     const spot = at ?? { ...elevatorSpot(), y: 0, rotY: 0 };
     Object.assign(c.peer, { x: spot.x, y: spot.y, z: spot.z, rotY: spot.rotY, moving: false });
     delete c.peer.seat;
-    delete c.peer.golfing;
     // An issue card belongs to the board it came off, which is on the floor they left.
     delete c.peer.carrying;
     return after;

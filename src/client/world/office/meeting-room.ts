@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { MEETING_BOARD, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, deskSeat, type DeskDef } from '../../../shared/layout';
-import type { NightParts } from '../outside';
 import { mesh, roundedBox, textPlane, toon } from '../toon';
 import type { Collider, DeskView, Interactable } from '../types';
 import type { Fixture } from './fixture';
@@ -41,7 +40,7 @@ function buildMeetingSeat(def: DeskDef, index: number): DeskView {
  * sliding glass door facing the lounge, a long table with its chairs (MEETING_SEATS), a board on the
  * back wall for the meeting's output and a sign by the door for how it's going.
  */
-export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], interactables: Interactable[], desks: Map<string, DeskView>, doors: Door[], night: NightParts): { board: THREE.Mesh; sign: THREE.Mesh } {
+export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], interactables: Interactable[], desks: Map<string, DeskView>, doors: Door[]): { board: THREE.Mesh; sign: THREE.Mesh } {
   const R = MEETING_ROOM;
   const H = R.height;
   const T = 0.1;
@@ -169,7 +168,6 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
   // Flat lights set in the loft's floor over the table: a hanging lamp would be in front of the board.
   for (const dx of [-0.95, 0.95]) {
     group.add(mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.04, 20), toon('#fff7d6', { emissive: '#ffe08a' }), top.x + dx, H - 0.02, top.z, false));
-    night.halos.push({ at: new THREE.Vector3(top.x + dx, H - 0.08, top.z), size: 0.9, color: '#ffe08a' });
   }
   return { board: face, sign };
 }
@@ -184,7 +182,7 @@ declare module '../types' {
 
 /** Under the loft: the meeting room. */
 export const meetingRoom: Fixture<'meetingBoard' | 'meetingSign'> = (site) => {
-  const built = buildMeetingRoom(site.group, site.colliders, site.interactables, site.desks, site.doors, site.get('night'));
+  const built = buildMeetingRoom(site.group, site.colliders, site.interactables, site.desks, site.doors);
   site.wall('south', MEETING_BOARD.x, MEETING_BOARD.y, MEETING_BOARD.width + 0.4, MEETING_BOARD.height + 0.4);
   return { handle: { meetingBoard: built.board, meetingSign: built.sign } };
 };

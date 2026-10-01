@@ -3,7 +3,6 @@
 import type { CabinetView } from '../cabinet.js';
 import type { Decoration } from '../decor.js';
 import type { FloorPlan } from '../floorplan.js';
-import type { CarState } from '../garage.js';
 import type { BallState } from '../hoop.js';
 import type { JukeboxState } from '../jukebox.js';
 import type { WhiteboardView } from '../whiteboard.js';
@@ -117,8 +116,6 @@ export interface FloorView {
   meeting: MeetingState;
   /** The basketball by the hoop: who has it, or how it was last thrown. */
   ball: BallState;
-  /** The cars in the garage (see CARS in shared/garage.ts): where each one is, and who's in it. */
-  cars: CarState[];
 }
 
 export type FloorClientMsg =

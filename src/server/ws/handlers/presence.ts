@@ -18,21 +18,7 @@ export const presenceHandlers = {
     p.moving = !!msg.moving;
     ctx.toNeighbors(c, { t: 'peer.move', id: c.id, x: p.x, y: p.y, z: p.z, rotY: p.rotY, moving: p.moving }, true);
   },
-  act(ctx, c, msg) {
-    if (typeof msg.smoke === 'boolean') {
-      if (msg.smoke === !!c.peer.smoking) return;
-      c.peer.smoking = msg.smoke;
-      ctx.broadcast({ t: 'peer.act', id: c.id, smoke: msg.smoke }, c.id, true);
-      return;
-    }
-    if (typeof msg.golf === 'boolean') {
-      const golf = msg.golf;
-      if (golf === !!c.peer.golfing) return;
-      if (golf) c.peer.golfing = true;
-      else delete c.peer.golfing;
-      ctx.broadcast({ t: 'peer.act', id: c.id, golf }, c.id, true);
-      return;
-    }
+  act(ctx, c) {
     if (!throttle(c, 'act', 100)) return;
     ctx.toNeighbors(c, { t: 'peer.act', id: c.id }, true);
   },

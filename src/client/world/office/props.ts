@@ -4,14 +4,12 @@ import { palette, piece } from '../models';
 import { PALETTE } from './materials';
 
 // The office's furnishings: the potted plants, the desks' knick-knacks and the lounge's furniture (all
-// modelled in Blender), the pendant lamps and the framed boards on the walls. The lab (lab/props.ts), the
-// holidays use some of them too.
+// modelled in Blender), the pendant lamps and the framed boards on the walls.
 
 // The potted plants are modelled in Blender (blender/scripts/build_plants.py): each plant is a painted
 // copy of one species in plants.glb (see piece()). A species is its pot, named after it, with everything that
-// grows out of the pot hung under it as `<species>_leaves` (see plantLeaves()). The colors are the old
-// code-built plants' pot and greens, the Christmas tree's trunk brown for the soil, the street trees'
-// trunk brown for the ficus's, and the kitchen cupboards' blue for the snake plant's glazed pot.
+// grows out of the pot hung under it as `<species>_leaves`. The colors are the old
+// code-built plants' pot and greens, a dark brown for the soil, a trunk brown for the ficus's, and the kitchen cupboards' blue for the snake plant's glazed pot.
 export type PlantSpecies = 'monstera' | 'snake_plant' | 'ficus' | 'succulent';
 /** The species that stand on the floor, which a row of plants takes turns with (see floorPlant()). */
 export const FLOOR_PLANTS = ['monstera', 'snake_plant', 'ficus'] as const satisfies readonly PlantSpecies[];
@@ -34,19 +32,6 @@ export function plant(species: PlantSpecies, scale = 1): THREE.Group {
 /** The floor species for the `i`th of a row of plants: they take turns, so no two neighbours match. */
 export function floorPlant(i: number): PlantSpecies {
   return FLOOR_PLANTS[i % FLOOR_PLANTS.length];
-}
-
-/**
- * A plant's leaves, and whatever else grows out of its pot (stalks, a trunk): everything but the pot and
- * its soil. Christmas hides them and stands a little tree in the pot instead (world/holiday.ts). None if
- * the model didn't load.
- */
-export function plantLeaves(potted: THREE.Object3D): THREE.Object3D[] {
-  const leaves: THREE.Object3D[] = [];
-  potted.traverse((o) => {
-    if (o.name.endsWith('_leaves')) leaves.push(o);
-  });
-  return leaves;
 }
 
 // The desks' knick-knacks are modelled in Blender (blender/scripts/build_desk_props.py): a mug of coffee,

@@ -1,13 +1,11 @@
 import * as THREE from 'three';
-import { BALCONY_DOOR, EXIT_DOOR, FLOOR, WALL_HEIGHT, WALL_T, WINDOWS, WING, type Opening, type Side } from '../../../shared/layout';
-import type { NightParts } from '../outside';
-import { mergeByMaterial, mesh, textPlane, toon } from '../toon';
+import { FLOOR, WALL_HEIGHT, WALL_T, WINDOWS, WING, type Opening, type Side } from '../../../shared/layout';
+import { mergeByMaterial, mesh, toon } from '../toon';
 import type { Collider } from '../types';
 import type { Fixture } from './fixture';
-import { GLASS, PALETTE, box, glassPane, onWall, type Looks } from './materials';
+import { PALETTE, box, glassPane, onWall, type Looks } from './materials';
 
-// The office's shell: its outside walls, the windows in them, and the doors out (the exit and the
-// balcony's), which open by themselves.
+// The office's shell: its outside walls and the windows in them.
 
 /** A door that opens by itself when someone comes up to it, and closes behind them. */
 export interface Door {
@@ -17,8 +15,6 @@ export interface Door {
   /** 0 shut, 1 wide open. */
   open: number;
   show(open: number): void;
-  /** Stays shut: the exit door, seen from a floor above it. */
-  locked?: boolean;
 }
 
 /** A window filling its hole in an outside wall: a frame lining the hole, a mullion, sills and real glass. */
@@ -45,143 +41,11 @@ export function windowIn(o: Opening): THREE.Group {
   return g;
 }
 
-/** Rain on the outside of a window's glass (see sky.ts), kept out of the merged glazing so it keeps its UVs. */
-export function wetPane(o: Opening, mat: THREE.Material): THREE.Group {
-  const F = 0.09;
-  const w = o.width - 2 * F;
-  const h = o.y1 - o.y0 - 2 * F;
-  const geo = new THREE.PlaneGeometry(w, h);
-  // The drops are the same size on every window, whatever its size.
-  const uv = geo.attributes.uv as THREE.BufferAttribute;
-  for (let i = 0; i < uv.count; i++) uv.setXY(i, (uv.getX(i) * w) / 0.9, (uv.getY(i) * h) / 0.9 + o.u * 0.37);
-  const pane = new THREE.Mesh(geo, mat);
-  pane.position.set(0, (o.y0 + o.y1) / 2, 0.05);
-  const g = new THREE.Group();
-  g.add(pane);
-  const at = onWall(o.wall, o.u);
-  g.position.set(at.x, 0, at.z);
-  g.rotation.y = at.rotY;
-  return g;
-}
-
-/** A door's frame and threshold, lining its hole in the wall (built like windowIn: along x, outdoors toward +z). */
-function doorFrame(o: Opening): THREE.Group {
-  const g = new THREE.Group();
-  const frame = toon('#ffffff');
-  const F = 0.08;
-  const D = WALL_T + 0.04;
-  g.add(mesh(box(o.width, F, D), frame, 0, o.y1 - F / 2, 0, false));
-  for (const sx of [-1, 1]) g.add(mesh(box(F, o.y1, D), frame, sx * (o.width / 2 - F / 2), o.y1 / 2, 0, false));
-  g.add(mesh(box(o.width, 0.03, D), toon('#8d99ae'), 0, 0.015, 0, false));
-  return g;
-}
-
-/** Stands a wall-built group (along x, outdoors toward +z) in its wall. */
-function mount(g: THREE.Group, o: Opening): THREE.Group {
-  const at = onWall(o.wall, o.u);
-  g.position.set(at.x, 0, at.z);
-  g.rotation.y = at.rotY;
-  return g;
-}
-
-/** The way out: a teal door with a porthole in the west wall. It swings outward, onto the landing. */
-export function exitDoor(night: NightParts): { group: THREE.Group; door: Door } {
-  const o = EXIT_DOOR;
-  const g = doorFrame(o);
-  const F = 0.08;
-  const leafW = o.width - 2 * F - 0.02;
-  const leafH = o.y1 - F - 0.02;
-  const shape = new THREE.Shape();
-  shape.moveTo(0, 0);
-  shape.lineTo(leafW, 0);
-  shape.lineTo(leafW, leafH);
-  shape.lineTo(0, leafH);
-  shape.closePath();
-  const port = { x: leafW / 2, y: leafH - 0.55, r: 0.2 };
-  const hole = new THREE.Path();
-  hole.absarc(port.x, port.y, port.r, 0, Math.PI * 2, true);
-  shape.holes.push(hole);
-  const leafGeo = new THREE.ExtrudeGeometry(shape, { depth: 0.06, bevelEnabled: false, curveSegments: 16 });
-  leafGeo.translate(0, 0, -0.03);
-  const leaf = new THREE.Group();
-  leaf.add(mesh(leafGeo, toon('#2a9d8f'), 0, 0.01, 0));
-  leaf.add(mesh(new THREE.CircleGeometry(port.r, 20), GLASS, port.x, port.y + 0.01, 0, false));
-  leaf.add(mesh(new THREE.TorusGeometry(port.r, 0.035, 8, 24), toon('#ffffff'), port.x, port.y + 0.01, 0, false));
-  // A push bar inside, a pull handle outside.
-  leaf.add(mesh(box(leafW * 0.7, 0.05, 0.05), toon('#adb5bd'), leafW * 0.5, 1.0, -0.07));
-  leaf.add(mesh(box(0.05, 0.3, 0.05), toon('#adb5bd'), leafW - 0.15, 1.0, 0.07));
-  // Hinged on the outer face, so it opens out of the building.
-  const hinge = new THREE.Group();
-  hinge.position.set(-o.width / 2 + F + 0.01, 0, WALL_T / 2 - 0.05);
-  hinge.add(leaf);
-  g.add(hinge);
-
-  const exit = textPlane('EXIT', { bg: '#2a9d4b', color: '#ffffff', size: 64, border: '#ffffff' });
-  exit.scale.multiplyScalar(0.7);
-  exit.position.set(0, o.y1 + 0.35, -(WALL_T / 2 + 0.03));
-  exit.rotation.y = Math.PI;
-  g.add(exit);
-  // A lamp over it outside.
-  g.add(mesh(box(0.32, 0.1, 0.18), toon(PALETTE.ink), 0, o.y1 + 0.42, WALL_T / 2 + 0.09));
-  g.add(mesh(new THREE.SphereGeometry(0.08, 10, 8), toon('#fff7d6', { emissive: '#ffe08a' }), 0, o.y1 + 0.33, WALL_T / 2 + 0.12, false));
-
-  const at = onWall(o.wall, o.u);
-  // Over the landing, where it lights the way down at night.
-  const lampAt = new THREE.Vector3(at.x - WALL_T / 2 - 0.14, o.y1 + 0.33, at.z);
-  night.halos.push({ at: lampAt, size: 0.9, color: '#ffe08a', ground: true });
-  night.lamps.push({ x: lampAt.x - 0.6, y: lampAt.y, z: lampAt.z, reach: 5, color: '#ffe3a3', power: 2.2, ground: true });
-  const door: Door = {
-    x: at.x,
-    y: 0,
-    z: at.z,
-    open: 0,
-    show: (k) => (hinge.rotation.y = -1.8 * k * k * (3 - 2 * k)),
-  };
-  return { group: mount(g, o), door };
-}
-
-/** Glass doors out to the balcony that slide apart, into the wall on either side, when someone comes up. */
-export function balconyDoor(): { group: THREE.Group; door: Door } {
-  const o = BALCONY_DOOR;
-  const g = doorFrame(o);
-  const F = 0.08;
-  const half = (o.width - 2 * F) / 2;
-  const h = o.y1 - F;
-  const alu = toon('#aab4be');
-  const panels: [THREE.Group, number][] = [];
-  for (const side of [-1, 1]) {
-    const p = new THREE.Group();
-    const pw = half + 0.02;
-    for (const y of [0.04, h - 0.04]) p.add(mesh(box(pw, 0.08, 0.05), alu, 0, y, 0, false));
-    for (const x of [-pw / 2 + 0.035, pw / 2 - 0.035]) p.add(mesh(box(0.07, h, 0.05), alu, x, h / 2, 0, false));
-    const pane = glassPane(pw - 0.14, h - 0.16);
-    pane.position.y = h / 2;
-    p.add(pane);
-    p.add(mesh(box(0.03, 0.45, 0.08), toon(PALETTE.ink), -side * (pw / 2 - 0.12), 1.05, 0, false));
-    const x0 = (side * half) / 2;
-    p.position.x = x0;
-    g.add(p);
-    panels.push([p, x0]);
-  }
-  const at = onWall(o.wall, o.u);
-  const door: Door = {
-    x: at.x,
-    y: 0,
-    z: at.z,
-    open: 0,
-    show: (k) => {
-      const e = k * k * (3 - 2 * k);
-      for (const [p, x0] of panels) p.position.x = x0 + Math.sign(x0) * e * (half + 0.04);
-    },
-  };
-  return { group: mount(g, o), door };
-}
-
 /** Walls throw shade only this far up: any higher and a low sun's shadow would fill the room. */
 const SHADE_HEIGHT = 4.2;
 
 /**
- * The four outside walls, built in pieces around their windows and doors. Each is painted inside in
+ * The four outside walls, built in pieces around their windows. Each is painted inside in
  * the floor's colors and outside in the building's.
  */
 export function buildWalls(group: THREE.Group, colliders: Collider[], openings: Opening[], looks: Looks) {
@@ -251,22 +115,6 @@ export function buildWalls(group: THREE.Group, colliders: Collider[], openings: 
   }
 }
 
-/** Wall where the exit door is, for the floors above the bottom one: painted like the rest of the wall, inside and out, with its baseboard. */
-export function exitPlug(looks: Looks): { group: THREE.Group; collider: Collider } {
-  const o = EXIT_DOOR;
-  const at = onWall(o.wall, o.u);
-  const group = new THREE.Group();
-  // A box's faces go +x, -x, +y, -y, +z, -z; on the west wall, -x is outdoors.
-  const mats = Array.from({ length: 6 }, (_, i) => (i === 1 ? toon(PALETTE.exterior) : looks.wall));
-  const wall = new THREE.Mesh(box(WALL_T, o.y1 - o.y0, o.width), mats);
-  wall.position.set(at.x, (o.y0 + o.y1) / 2, at.z);
-  wall.receiveShadow = true;
-  group.add(wall);
-  group.add(mesh(box(WALL_T + 0.04, 0.25, o.width), looks.trim, at.x, 0.125, at.z, false));
-  group.visible = false;
-  return { group, collider: { minX: FLOOR.minX - WALL_T, maxX: FLOOR.minX, minZ: o.u - o.width / 2, maxZ: o.u + o.width / 2, top: 99 } };
-}
-
 /**
  * A straight run of outside wall `at` (z for one along x, x for one along z) from `u0` to `u1`, with
  * its outdoor side toward `out` (-1 or +1): painted inside in the floor's colors and outside in the
@@ -308,36 +156,14 @@ export function wallRun(into: THREE.Group, cols: Collider[], axis: 'x' | 'z', at
   cols.push(axis === 'x' ? { minX: u0, maxX: u1, minZ: at - T / 2, maxZ: at + T / 2, top: 99 } : { minX: at - T / 2, maxX: at + T / 2, minZ: u0, maxZ: u1, top: 99 });
 }
 
-/** Outside walls, with real windows you see out of and a door out, and the glass doors out to the balcony. */
+/** Outside walls, with real windows you see out of. */
 export const walls: Fixture = (site) => {
-  const night = site.get('night');
-  const openings = [...WINDOWS, EXIT_DOOR, BALCONY_DOOR];
-  buildWalls(site.group, site.colliders, openings, site.looks);
+  buildWalls(site.group, site.colliders, WINDOWS, site.looks);
   const glazing = new THREE.Group();
   for (const o of WINDOWS) {
     glazing.add(windowIn(o));
     site.wall(o.wall, o.u, (o.y0 + o.y1) / 2 - 0.03, o.width + 0.2, o.y1 - o.y0 + 0.12);
-    site.group.add(wetPane(o, night.wetGlass));
   }
   site.group.add(mergeByMaterial(glazing));
-  // Out the glass doors on the south wall: the balcony.
-  const slider = balconyDoor();
-  site.group.add(slider.group);
-  site.doors.push(slider.door);
-  site.wall(BALCONY_DOOR.wall, BALCONY_DOOR.u, (BALCONY_DOOR.y1 + 0.1) / 2, BALCONY_DOOR.width + 0.2, BALCONY_DOOR.y1 + 0.1);
   return {};
-};
-
-/** Upstairs there's no way out on the west side: the doorway is wall like the rest of it. */
-export const plug: Fixture = (site) => {
-  const built = exitPlug(site.looks);
-  return {
-    group: built.group,
-    setLevel: (index) => {
-      built.group.visible = index > 0;
-      const i = site.colliders.indexOf(built.collider);
-      if (index > 0 && i < 0) site.colliders.push(built.collider);
-      else if (index === 0 && i >= 0) site.colliders.splice(i, 1);
-    },
-  };
 };
