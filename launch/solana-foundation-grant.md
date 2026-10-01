@@ -1,35 +1,37 @@
 # Solana Foundation grant
 
-Last checked: 2026-09-30. Source: the Solana Foundation grants page (link below). The application form itself was not opened, so its exact fields and limits are [unverified].
+Last checked: 2026-10-01. Source: the Solana Foundation grants page (link below). The application form itself was not opened, so its exact fields and limits are [unverified].
 
 Plan: apply for a milestone-based grant (or a convertible grant, since there is a commercial side) to turn the bounty escrow from the Colosseum entry into a public good: an open source, tool-agnostic escrow program and SDK for paying AI agents and contributors per merged pull request.
+
+Code status on 2026-10-01: `launch/solana-escrow` has no commits. There is no escrow program, SDK or devnet deployment yet, and the grant page asks for a clear plan, so do not apply before the Colosseum build exists. Move the 2026-10-14 target if it slips.
 
 ## Deadline
 
 - **Rolling**: no deadline. Internal target: submit on **2026-10-14**, two days after the Colosseum submission, reusing its material and whatever feedback arrives.
-- Review about one week; a decision about three weeks after that; then a legal agreement.
+- The page says review takes about one week and a final decision and contact come within three weeks. A grant agreement after that is expected [unverified].
 
 ## Links
 
 - Grants and funding: https://solana.org/grants-funding
 - Application form: https://share.hsforms.com/1GE1hYdApQGaDiCgaiWMXHA5lohw
-- Smaller asks: Superteam microgrants (around $10k) are mentioned on the same page; Superteam has country chapters [unverified: whether one covers Lithuania].
+- Smaller asks: the same page mentions Superteam's "quick microgrants ($10k) to early-stage Solana builders in emerging markets like India, Southeast Asia, Eastern Europe, and Africa" [unverified: whether a Superteam chapter covers Lithuania].
 
 ## Eligibility checklist
 
 - [ ] Open to individuals, teams, companies, nonprofits, universities and governments.
-- [ ] A public good: a significant open source contribution or a meaningful free community offering. The escrow program and SDK are MIT and usable without Agent Office.
+- [ ] A public good: "a significant open-source contribution to the Solana ecosystem" or "a meaningful free community offering". The escrow program and SDK are MIT and usable without Agent Office.
 - [ ] A clear answer to "why Solana and not elsewhere".
-- [ ] A thoughtful budget with milestones that have measurable outcomes.
-- [ ] Grant type: **Grant** if the work is purely public good; **Convertible grant** if it has a commercial component (the hosted office and payout fee). Pick convertible and say so plainly if the business plan stays in the pitch.
+- [ ] A well-structured budget with clear, measurable milestones, and an amount that matches the impact on the community.
+- [ ] Grant type: a milestone-based **grant** for a public good; a **convertible grant** for a public good with a commercial component (the hosted office and payout fee). The Foundation also issues RFPs for its own priorities. Pick convertible and say so plainly if the business plan stays in the pitch.
 - [ ] Employer: the employer's permission for outside work and for receiving grant money, in writing.
 - [ ] KYC and tax forms are expected before payout [unverified].
-- [ ] Something working to show: the Colosseum demo, deployed on devnet.
+- [ ] Something working to show: the Colosseum demo, deployed on devnet (not built on 2026-10-01).
 
 ## Pre-existing code disclosure
 
 ```field name="Prior work" max-chars=900
-The escrow program and SDK are new work by us, started during the Colosseum Crypto World's Fair (September to October 2026). The first product that uses them is our fork of Agent Office, an MIT-licensed open source 3D office for coding agents created by webdevcody / AgentSystemLabs; the office itself is their work, and the grant does not fund it. The grant funds only the escrow program, its SDK, audits and documentation, which do not depend on Agent Office. Upstream: github.com/AgentSystemLabs/agent-office. Our work so far: {{DIFF_URL}}
+The escrow program and SDK are new work by us, started during the Colosseum Crypto World's Fair (October 2026). The first product that uses them is our fork of Agent Office, an MIT-licensed open source 3D office for coding agents created by webdevcody / AgentSystemLabs; the office itself is their work, and the grant does not fund it. The grant funds only the escrow program, its SDK, audits and documentation, which do not depend on Agent Office. Upstream: github.com/AgentSystemLabs/agent-office. Our work so far: {{DIFF_URL}}
 ```
 
 ## Project description

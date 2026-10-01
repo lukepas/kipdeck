@@ -1,6 +1,6 @@
 # Launch kits
 
-Submission and application kits for this fork of Agent Office: five hackathons, four grant programs and sponsorship, with every deadline in one calendar. Written on 2026-09-30 from each program's official pages. Rules change: re-read the official page before you submit, and fix the kit when they differ.
+Submission and application kits for this fork of Agent Office: five hackathons, four grant programs and sponsorship, with every deadline in one calendar. Written on 2026-09-30 from each program's official pages and re-checked against them on 2026-10-01. Rules change: re-read the official page before you submit, and fix the kit when they differ.
 
 Agent Office is an MIT open source project by webdevcody / AgentSystemLabs. This fork is not theirs and they have not endorsed it. Every kit credits upstream and lists exactly what the fork adds; the shared wording and the facts behind it are in [disclosure.md](disclosure.md).
 
@@ -14,7 +14,7 @@ Agent Office is an MIT open source project by webdevcody / AgentSystemLabs. This
 | [vultr-agent-rush.md](vultr-agent-rush.md) | Vultr Agent Rush (lablab.ai) | 2026-11-08 [unverified time] | Sandboxed workers on a Vultr VM |
 | [meta-vr-start.md](meta-vr-start.md) | Meta VR Start Developer Competition 2026 | 2026-11-18 12:00 PT | WebXR, hands-first office in the Quest browser |
 | [solana-foundation-grant.md](solana-foundation-grant.md) | Solana Foundation grant | rolling | Open source escrow program and SDK |
-| [base-builder-grants.md](base-builder-grants.md) | Base Builder Grants | rolling, retroactive | x402 pay-per-task on Base, once live |
+| [base-builder-grants.md](base-builder-grants.md) | Base Builder Grants | rolling | x402 pay-per-task on Base, once live on mainnet |
 | [filecoin-microgrant.md](filecoin-microgrant.md) | Filecoin devgrants | rolling [unverified status] | Not ready: needs an IPFS prototype first |
 | [innovation-agency-lithuania.md](innovation-agency-lithuania.md) | Innovation Agency Lithuania | 2026-11-11 17:00 EET | Travel refund for the Salt Lake City on-site day |
 | [sponsors.md](sponsors.md) | GitHub Sponsors and Open Collective | none | Sponsor profile for the fork |
@@ -25,13 +25,13 @@ Each kit has the same sections in the same order: deadline, links, eligibility c
 
 The risks that could sink an entry, in order:
 
-1. **The base project is someone else's, and it is new.** Upstream's first commit is 2026-09-25. Meta's Adapted division needs a project that existed before 2026-09-24, so it probably does not fit; the others want work that is new or significantly updated during their period, and none says whether a fork of a third-party project counts. Ask each organizer in writing (task on 2026-10-01) and disclose everything regardless.
+1. **The base project is someone else's, and it is new.** Upstream's first commit is 2026-09-25. Meta's Adapted division needs a project that existed before 2026-09-24, and its New division says "no pre-existing codebases", so neither fits cleanly; the others want work that is new or significantly updated during their period, and none says whether a fork of a third-party project counts. Ask each organizer in writing (task on 2026-10-01) and disclose everything regardless.
 2. **Employer permission.** Colosseum's rules make you warrant that entering does not breach your employer's policies. Get the employer's written position on outside work, IP and prizes before registering anywhere.
 3. **Memberships that take time.** Meta requires Meta VR Start membership at submission time; approval time is unknown. Colosseum closes registration at the submission deadline. Apply on day one.
 4. **One demo, many rules.** Vultr requires every model call through Vultr Serverless Inference; Nebius requires Token Factory and an NVIDIA open model; Meta requires hands-only. Keep a per-event configuration rather than one demo that half-fits all.
 5. **Public demos run real agents.** Judges get a live office. Sandboxes, spending caps and a judge password are part of every checklist.
-6. **AI-generated video.** Meta bans it outright. The other rules are silent on AI voiceover; every script assumes your own voice.
-7. **Drafts describe the plan.** The project descriptions and video scripts are written as if each workstream ships as planned. Before submitting, cut every claim the branch does not do yet, and fill the `{{...}}` numbers with real figures or "none yet".
+6. **AI-generated video.** Meta's judging notes say to show real footage that honestly represents the experience and not to lean on AI-generated video to carry the pitch. The other rules are silent on AI voiceover; every script assumes your own voice.
+7. **Drafts describe the plan, and most of the plan is not built.** On 2026-10-01 only `launch/nebius-nemotron` and `launch/x402-base` work end to end; `launch/voice-mcp` has a tested MCP-over-HTTP core that the office does not serve yet; `launch/webxr-mode`, `launch/docker-sandbox`, `launch/vultr-deploy` and `launch/solana-escrow` have no commits. The status table in [disclosure.md](disclosure.md) has the details. The project descriptions and video scripts are written as if each workstream ships as planned. Before submitting, cut every claim the branch does not do yet, and fill the `{{...}}` numbers with real figures or "none yet".
 
 ## Timeline
 

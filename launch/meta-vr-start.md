@@ -1,15 +1,18 @@
 # Meta VR Start Developer Competition 2026
 
-Last checked: 2026-09-30. Sources: the Devpost overview and official rules, and Meta's announcement blog post (links below). Anything not stated there is marked [unverified].
+Last checked: 2026-10-01. Sources: the Devpost overview and official rules, and Meta's announcement blog post (links below). Anything not stated there is marked [unverified].
 
 Plan: enter Agent Office's WebXR mode (branch `launch/webxr-mode`) as a hands-first productivity app in the Quest browser, where you sit at a desk with your coding agents and manage them with your hands.
+
+Code status on 2026-10-01: `launch/webxr-mode` and `launch/docker-sandbox` have no commits. Nothing in the XR description, the gestures, the seated mode or the sandboxed demo office exists yet; all of it is the plan. Upstream already has the 3D office, workers at desks, shared terminals, voice chat and multiplayer in the browser.
 
 ## Deadline
 
 - Submission closes: **Wednesday 2026-11-18, 12:00 PST (UTC-8)**. That is 20:00 UTC and 22:00 in Vilnius. US daylight saving ends on 2026-11-01, so this is PST, not PDT.
-- Entry period opened 2026-09-24.
+- Entry period opened 2026-09-24, 10:00 PT.
+- Judging: on or around 2026-11-18 to on or around 2026-12-09.
 - The project must stay available to judges until the winner announcement.
-- Winners announced: 2026-12-11.
+- Winners announced: on or around 2026-12-11.
 - Internal target: headset footage recorded by 2026-11-12, submit by 2026-11-16 to leave two days for a failed upload.
 
 ## Links
@@ -24,16 +27,16 @@ Plan: enter Agent Office's WebXR mode (branch `launch/webxr-mode`) as a hands-fi
 ## Eligibility checklist
 
 - [ ] 18 or older, and of the age of majority where you live.
-- [ ] Not resident in, or an entity based in, Brazil, Quebec, Crimea, Russia, Cuba, Iran, North Korea, Syria or a US-sanctioned area. Lithuania is fine.
+- [ ] Not resident in, or an entity based in, Brazil, Quebec, or an area under comprehensive international sanctions (the rules name Crimea, Russia, Cuba, Iran, North Korea and Syria). Lithuania is fine.
 - [ ] A Meta account with developer access enabled.
 - [ ] **Member of the Meta VR Start program by the time you submit.** Apply today: approval time is not published [unverified], and without it the entry is void.
-- [ ] One entry per person (you may also be a non-representative member of other teams).
+- [ ] One submission per person. You can be a solo creator, a solo creator with non-representative team members, or a team representative, but not two of these at once [unverified: whether a non-representative member may also join other teams].
 - [ ] Built with tools and SDKs that are public or available to Start members. WebXR in the Quest browser qualifies; IWSDK is Meta's suggested WebXR path (Node 20.19 or newer).
 - [ ] Fully usable with hands end to end: someone must be able to finish the whole experience without ever pairing a controller.
 - [ ] English, or English subtitles.
 - [ ] Third-party code properly licensed: Agent Office is MIT, so keep `LICENSE` and credit it.
 - [ ] Employer: check the employer's policy on outside work, IP ownership and accepting prizes before registering.
-- [ ] **Division.** Adapted / Significantly Updated is for a project that existed before 2026-09-24. Upstream Agent Office's first commit is 2026-09-25, so it does not qualify as pre-existing. The honest choice is the **New** division with a full disclosure that the base is third-party MIT code. Ask Meta on the Devpost discussion board or by email which division they expect for a fork of a third-party project started inside the window, and keep the answer. [unverified]
+- [ ] **Division.** Adapted / Significantly Updated is for "any build, prototype, or published app that existed prior to September 24, 2026". Upstream Agent Office's first commit is 2026-09-25, so it does not qualify as pre-existing. New is for a project "conceived of and built within the competition window" with "no pre-existing codebases", and a fork of someone else's codebase may break that. Neither fits cleanly. Ask Meta on the Devpost discussion board or by email which division they expect for a fork of a third-party project started inside the window, keep the answer, and disclose fully either way. [unverified]
 - [ ] Track: **Productivity** (multi-panel workspaces, task management). Special awards to aim for: Best Agentic Interaction ($25k) and Social and Multiplayer ($25k).
 
 ## Pre-existing code disclosure
@@ -41,14 +44,14 @@ Plan: enter Agent Office's WebXR mode (branch `launch/webxr-mode`) as a hands-fi
 The form asks Adapted entries for "a summary of the new features and capabilities added during the competition window" with screenshots and changelogs. Give the same summary in the New division, in the description, so there is no doubt about what is ours. Paste the long text from [disclosure.md](disclosure.md), then:
 
 ```field name="What we built during the window" max-chars=1200
-During the competition window we added a WebXR immersive mode to Agent Office so it runs in the Meta Quest browser and on Meta VR Glasses with hands only: pinch to walk to a desk, poke the laptop to focus a worker's terminal, pinch-drag to scroll, a palm-up wrist menu to hire, pause or dismiss a worker, and a seated mode that keeps every desk within reach. Workers run in throwaway Docker containers so the public demo office is safe to open. Everything else (the 3D office, the agents at desks, shared terminals, voice chat, GitHub boards) is upstream Agent Office by webdevcody (MIT). Changelog: {{DIFF_URL}}
+During the competition window we added a WebXR immersive mode to Agent Office so it runs in the Meta Quest browser with hands only: pinch to walk to a desk, poke the laptop to focus a worker's terminal, pinch-drag to scroll, a palm-up wrist menu to hire, pause or dismiss a worker, and a seated mode that keeps every desk within reach. Workers run in throwaway Docker containers so the public demo office is safe to open. Everything else (the 3D office, the agents at desks, shared terminals, voice chat, GitHub boards) is upstream Agent Office by webdevcody (MIT). Changelog: {{DIFF_URL}}
 ```
 
 Then paste the output of `npx tsx launch/tools/whats-new.ts` (see [disclosure.md](disclosure.md)).
 
 ## Project description
 
-The official form asks for a project name, track, division, a description of 500 words or less covering inspiration, how it was built, what is next and a target launch date, team details, the build (APK invite link or a WebXR URL) and the video link. Devpost's own name and tagline limits are assumed below [unverified: Devpost defaults].
+The official form asks for a project name, track, division, a description (the overview suggests 500 words or less; the rules give no limit) covering inspiration, how it was built, what is next and a target launch date, team details, the build (APK invite link or a WebXR URL) and the video link. Devpost's own name and tagline limits are assumed below [unverified: Devpost defaults].
 
 ```field name="Project name" max-chars=60
 Agent Office XR
@@ -91,14 +94,14 @@ Stage one is a pass/fail check against the requirements. Stage two scores four c
 | --- | --- | --- |
 | Innovation and creativity | Originality, ambition, fit with the track | Managing a team of coding agents as coworkers at desks is new in VR; productivity track, agentic interaction award |
 | Experience design | Mechanics, user journey, seated and hands-first | Seated mode, desks within reach, pinch and poke only, a satisfying loop in under ten minutes: hire, assign, watch it open a PR |
-| Technical implementation | Expertise, reliability, platform tools, 60 fps minimum | WebXR hand tracking, instanced office geometry, terminal text as textures updated only on change; show the frame counter in the video |
+| Technical implementation | Expertise, reliability, platform tools, performance [unverified: whether a frame-rate floor is stated] | WebXR hand tracking, instanced office geometry, terminal text as textures updated only on change; show the frame counter in the video |
 | Polish and presentation | UI, art direction, submission material | Cartoon office art from upstream, clear wrist menu, a video that leads with the best 20 seconds |
 
 Special awards that fit: Best Agentic Interaction (agents doing real work while you watch), Social and Multiplayer (a team in the same office with voice).
 
 ## Demo video script
 
-Rules: under three minutes, footage of the project on a Meta VR device or the XR Simulator or an equivalent emulator, public on YouTube or Vimeo. Judges need not watch past three minutes, so lead with the best material. **The rules ban AI-generated video: show real footage that honestly represents the experience.** Treat an AI voiceover the same way and narrate it yourself; the rules do not mention voiceover separately [unverified]. English narration or English subtitles.
+Rules: less than three minutes, footage of the project as viewed on a Meta Quest device or via the XR Simulator or an equivalent emulator, public on YouTube or Vimeo [unverified: hosting sites]. Lead with the best material. **Meta's judging notes say: "show real gameplay that honestly represents the experience. Don't lean on AI-generated video to carry the pitch."** Use real footage only. Treat an AI voiceover the same way and narrate it yourself; the rules do not mention voiceover separately [unverified]. English narration or English subtitles.
 
 Runtime target: 2:45 (limit: under 3:00)
 

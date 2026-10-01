@@ -1,8 +1,10 @@
 # Colosseum Crypto World's Fair
 
-Last checked: 2026-09-30. Sources: the event page, the official rules PDF and the Colosseum hackathon FAQ (links below). Anything not stated there is marked [unverified].
+Last checked: 2026-10-01. Sources: the event page, the official rules PDF and the Colosseum hackathon FAQ (links below). Anything not stated there is marked [unverified].
 
-Plan: enter the Solana track with bounty escrow for agent work (branch `launch/solana-escrow`): a maintainer funds an escrow for a GitHub issue, a worker in Agent Office solves it, and the escrow pays out when the pull request merges. The x402 pay-per-task work on Base (branch `launch/x402-base`) is the second chain story; whether one project can be judged in two tracks is [unverified], so lead with Solana.
+Plan: enter the Solana track with bounty escrow for agent work (branch `launch/solana-escrow`): a maintainer funds an escrow for a GitHub issue, a worker in Agent Office solves it, and the escrow pays out when the pull request merges. The x402 pay-per-task work on Base (branch `launch/x402-base`) is the second chain story (the rules list a Base track: $25,000 across 5 projects; Solana: $100,000 across 10). Whether one project can be judged in two tracks is [unverified], so lead with Solana.
+
+Code status on 2026-10-01: `launch/solana-escrow` has no commits, so nothing on Solana exists yet. `launch/x402-base` works: paid tasks over x402 with USDC on Base Sepolia by default and Base mainnet by flag, held for admin approval. With eleven days left, either build the escrow by 2026-10-09 or switch the lead to the Base track, where the code already runs. Every field below that describes the escrow describes the plan.
 
 ## Deadline
 
@@ -28,23 +30,23 @@ Plan: enter the Solana track with bounty escrow for agent work (branch `launch/s
 - [ ] **Employer permission.** The rules make you warrant that entering does not breach an employer's policies or contracts. Get the employer's written OK for outside work, IP ownership and prizes before registering.
 - [ ] Every member registered on colosseum.com with profile information and consent, before 2026-10-12 23:59 PT.
 - [ ] Each person is on one team only; one submission per team.
-- [ ] Prizes need signed prize acceptance documents and passing Colosseum's and the sponsors' due diligence (expect KYC) [unverified: what the due diligence involves]; prizes are paid in the Phantom CASH stablecoin to the team leader's wallet.
-- [ ] **Pre-existing code is allowed but all relevant past development must be disclosed** in the form; misrepresenting it can mean disqualification, a ban and revoked prizes. Open source libraries by others are not "pre-existing code", but an entire forked product is closer to it, so disclose in full.
-- [ ] Projects must not have raised a funding round beforehand [unverified: stated in a third-party summary, not in the rules PDF].
+- [ ] Prizes need signed prize acceptance documents and passing Colosseum's and the sponsors' due diligence (expect KYC) [unverified: what the due diligence involves]; prizes are stated in Phantom CASH stablecoin and paid to the team leader, who may have to set up a wallet address.
+- [ ] **Pre-existing code is allowed but all relevant past development must be disclosed** in the form (FAQ); misrepresenting it can mean disqualification, a ban from future Colosseum hackathons and revoked prizes. The FAQ says open-source code developed by others is not "pre-existing code", but an entire forked product is closer to it, so disclose in full. The rules PDF also asks entrants to tell Colosseum the status and ownership of any open-source or third-party code.
+- [ ] The FAQ says the hackathons are "for new startups that haven't raised significant outside capital". The rules PDF does not say it.
 
 ## Pre-existing code disclosure
 
 Paste into "anything else judges should know" (or the prior-work question if the form has one):
 
 ```field name="Prior work disclosure" max-chars=1500
-This is a fork of Agent Office (github.com/AgentSystemLabs/agent-office), an MIT-licensed open source project by webdevcody / AgentSystemLabs with community contributors. Upstream started on 2026-09-25, inside the contest period, and we are not its authors or affiliated with it. Upstream built the 3D multiplayer office, the desks where coding agent CLIs run in terminals, shared terminals, voice chat, the GitHub issue and PR boards and the deploy scripts. Nothing onchain existed upstream. Everything crypto in this submission is ours and was built during the contest: the Solana escrow program for per-issue bounties, its client in the office server, the payout on pull request merge, the wallet UI at the desk, and (on Base) x402 pay-per-task access to hosted workers. Upstream baseline commit: 665aeec (2026-09-30). Our commits and files against it: {{DIFF_URL}}
+This is a fork of Agent Office (github.com/AgentSystemLabs/agent-office), an MIT-licensed open source project by webdevcody / AgentSystemLabs with community contributors. Upstream started on 2026-09-25, inside the contest period, and we are not its authors or affiliated with it. Upstream built the 3D multiplayer office, the desks where coding agent CLIs run in terminals, shared terminals, voice chat, the GitHub issue and PR boards and the deploy scripts. Nothing onchain existed upstream. Everything crypto in this submission is ours and was built during the contest: {{ONCHAIN_WORK_LIST}} (on 2026-10-01: x402 paid tasks on Base, held for admin approval, and a dependency-free x402 package; add the Solana escrow only once it exists). Upstream baseline commit: 665aeec (2026-09-30). Our commits and files against it: {{DIFF_URL}}
 ```
 
 Then the `whats-new.ts` output (see [disclosure.md](disclosure.md)).
 
 ## Project description
 
-Form fields (from the FAQ): product name and description, blockchains and tools integrated, every teammate with background and experience, team location, logo, GitHub repo (open source preferred, private allowed), pitch video, technical demo video, go-to-market with demand validation, and "anything else judges should know". Character limits are not published [unverified]; the drafts below are kept short.
+Form fields (from the FAQ): product name and description, blockchains and tools integrated, every teammate with background and experience, team location, logo, GitHub repo (open source encouraged; a private repo needs access granted to hackathon@colosseum.com), pitch video, technical demo video, go-to-market with demand validation, and "anything else judges should know". Character limits are not published [unverified]; the drafts below are kept short. The description, blockchains field and demo script describe the planned escrow; on 2026-10-01 none of it is built.
 
 ```field name="Product name" max-chars=60
 Agent Office Bounties
@@ -65,11 +67,11 @@ Why Solana: fast, cheap transactions make small bounties ($5 to $50 per issue) p
 ```
 
 ```field name="Blockchains and tools" max-chars=300
-Solana (Anchor program for escrow, @solana/web3.js client), Phantom wallet, GitHub webhooks for merge events; Base with x402 for pay-per-task access to hosted workers [only if merged by submission]. Built on Agent Office (TypeScript, three.js, Node).
+Solana (Anchor program for escrow, @solana/web3.js client), Phantom wallet, GitHub webhooks for merge events [planned, not built]; Base with x402 and USDC for paid tasks on hosted workers [built on launch/x402-base]. Built on Agent Office (TypeScript, three.js, Node).
 ```
 
 ```field name="Go-to-market and demand validation" max-words=200
-First users are open source maintainers who already run coding agents and teams paying contractors for small fixes. Channel: the Agent Office community (the upstream repo is public and growing fast), GitHub issue labels ("bounty"), and a consultancy pilot where we run an office for a client team. Revenue: a small fee on each payout and a hosted office subscription. Validation so far: {{DEMAND_VALIDATION}} (conversations, sign-ups, pilots; fill in with real numbers only).
+First users are open source maintainers who already run coding agents and teams paying contractors for small fixes. Channel: the Agent Office community (the upstream repo is public), GitHub issue labels ("bounty"), and a consultancy pilot where we run an office for a client team. Revenue: a small fee on each payout and a hosted office subscription. Validation so far: {{DEMAND_VALIDATION}} (conversations, sign-ups, pilots; fill in with real numbers only).
 ```
 
 ## Judging criteria
