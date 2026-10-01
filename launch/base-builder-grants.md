@@ -1,12 +1,14 @@
 # Base Builder Grants
 
-Last checked: 2026-09-30. Sources: the Base grants team's post "Calling Based Builders" and the Base "Get funded" docs (links below). The nomination form was not opened, so its fields are [unverified].
+Last checked: 2026-10-01. Sources: the Base grants team's post "Calling Based Builders" (dated 2023-10-30) and the Base "Get funded" docs (links below). The "Get funded" page lists Base Batches and the Base Ecosystem Fund but not Builder Grants, and the post is three years old, so whether Builder Grants still run in this form in 2026 is [unverified]. The nomination form was not opened, so its fields are [unverified].
 
-Plan: once x402 pay-per-task payments (branch `launch/x402-base`) are live on Base mainnet and someone other than us has paid for a task, nominate the project. Base Builder Grants are retroactive: they reward something already shipped, not a plan.
+Plan: once x402 pay-per-task payments (branch `launch/x402-base`) are live on Base mainnet and someone other than us has paid for a task, nominate the project. The post describes "small grants for builders with early ideas or initial prototypes", but one of its three questions is whether the work is live and making an impact, and third-party summaries call the program retroactive. Nominate something that is live, not a plan.
+
+Code status on 2026-10-01: `launch/x402-base` works. With `--x402` (off by default) the office takes paid tasks at `/api/x402/tasks`: x402 v2, exact USDC by EIP-3009, on Base Sepolia by default or Base mainnet with `--x402-network base`, priced by `--x402-price` (0.10 USDC by default). The facilitator verifies and settles the payment; the task then waits on the queue until an admin approves it (unless `--x402-auto`). Nothing runs on mainnet yet and nobody else has paid.
 
 ## Deadline
 
-- **No deadline**: nominations are reviewed continuously and grants go out in cohorts.
+- **No deadline**: the post describes a rolling program with ongoing discovery [unverified: third-party summaries say grants go out in cohorts announced on X and Farcaster].
 - Internal target: nominate on **2026-10-28**, after the Colosseum entry and once real payments exist on mainnet. Nominating earlier, with nothing live, wastes the one shot at a first impression.
 
 ## Links
@@ -19,15 +21,15 @@ Plan: once x402 pay-per-task payments (branch `launch/x402-base`) are live on Ba
 
 - [ ] Shipped and live on Base mainnet, usable by the public.
 - [ ] Real onchain activity from users who are not us.
-- [ ] Posted about on X or Farcaster: the team finds most grantees there, and only contacts the ones it picks.
-- [ ] W-8BEN (non-US) or W-9 ready: grantees must provide one for KYC, tax and legal reasons.
-- [ ] A Base wallet to receive ETH (grants have ranged 1 to 5 ETH).
+- [ ] Posted about on X or Farcaster: the team finds grantees "through Twitter, Farcaster, and nominations submitted from the community", and only reaches out to the ones it selects.
+- [ ] W-8BEN (non-US) or W-9 ready: the team collects W-8/W-9 forms from all recipients for KYC, tax, compliance and legal reasons.
+- [ ] A Base wallet to receive ETH (the 2023 post says grants range from 1 to 5 ETH).
 - [ ] Employer: the employer's permission for outside work and for receiving the grant.
 
 ## Pre-existing code disclosure
 
 ```field name="Prior work" max-chars=700
-We build on Agent Office, an MIT open source 3D office for coding agents by webdevcody / AgentSystemLabs (github.com/AgentSystemLabs/agent-office); the office is their work. What is ours and on Base: x402 pay-per-task access, so anyone can pay a few cents in USDC on Base to have a hosted coding agent take a GitHub issue, with the payment verified onchain before the worker starts. Our changes against upstream: {{DIFF_URL}}
+We build on Agent Office, an MIT open source 3D office for coding agents by webdevcody / AgentSystemLabs (github.com/AgentSystemLabs/agent-office); the office is their work. What is ours and on Base: x402 paid tasks, so anyone can pay a set price in USDC on Base to put a task on a hosted office's queue. A facilitator verifies and settles the payment, and an admin approves the task before a coding agent starts on it. Our changes against upstream: {{DIFF_URL}}
 ```
 
 ## Project description
@@ -35,11 +37,11 @@ We build on Agent Office, an MIT open source 3D office for coding agents by webd
 Fields are not published [unverified]. The three questions the team asks are below; answer each directly.
 
 ```field name="What it is" max-chars=280
-Pay a hosted AI coding agent per task with x402 on Base: send a few cents of USDC, the agent takes your GitHub issue in a shared 3D office, and you watch it work. No account, no subscription.
+Pay a hosted AI coding agent per task with x402 on Base: pay a set price in USDC, an admin approves the task, and an agent works on it at a desk in a shared 3D office. No account, no subscription.
 ```
 
 ```field name="Is it unique and fun?" max-words=80
-Coding agents sit at desks in a cartoon 3D office you can walk around, and you pay one per task by HTTP 402 instead of signing up for anything. Watching your paid agent type at its desk is the fun part.
+Coding agents sit at desks in a cartoon 3D office you can walk around, and you pay one per task by HTTP 402 instead of signing up for anything. Payers and agents show by their Basenames.
 ```
 
 ```field name="Is it bringing more users onchain?" max-words=80
@@ -70,8 +72,8 @@ The limit above is X's standard upload length [unverified]. Post the clip native
 
 | Time | Shot | Caption or voiceover |
 | --- | --- | --- |
-| 0:00-0:10 | A GitHub issue, then a "Pay 0.25 USDC" button | "Fix this issue for a quarter." |
-| 0:10-0:25 | Wallet confirms on Base; the x402 receipt; a worker sits down at a desk | "x402 payment on Base, and an agent takes the job." |
+| 0:00-0:10 | A task prompt and the 402 answer with the price (set with `--x402-price`) | "Ask an agent for a fix, and the office names its price." |
+| 0:10-0:25 | The payment settles on Base; the admin approves it on the queue; a worker sits down at a desk | "x402 payment on Base, an approval, and an agent takes the job." |
 | 0:25-0:40 | Terminal typing, then the PR opens | "It opens a pull request." |
 | 0:40-0:45 | Card: built on Agent Office (MIT), link | "Built on the open source Agent Office." |
 

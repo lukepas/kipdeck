@@ -1,6 +1,6 @@
 # Filecoin devgrants microgrant
 
-Last checked: 2026-09-30. Sources: the filecoin-project/devgrants repository and its Microgrants and Builder Next Step pages (links below). fil.org/grants refused the request (HTTP 429), so the 2026 status of every program here is [unverified].
+Last checked: 2026-10-01. Sources: the filecoin-project/devgrants repository and its Microgrants and Builder Next Step pages (links below). fil.org/grants refused the request again (HTTP 429), so the 2026 status of every program here is [unverified]. The repository's README now lists Open Grants (up to $50,000, by GitHub issue) and RFPs (none open, "Stay tuned!"); the Microgrant and Next Step pages are still in the repo but not listed there.
 
 Plan: **not ready to apply.** Every Filecoin program below needs a working prototype built on Filecoin, IPFS or related technology first, and none of the fork's workstreams touch Filecoin yet. The prototype that fits Agent Office: archive a worker's session (terminal recording, the PR it opened, the meeting notes and whiteboards from the office) to IPFS and Filecoin, so a team has a verifiable, permanent record of what its agents did. Build that small prototype first, then apply.
 
@@ -21,17 +21,19 @@ Plan: **not ready to apply.** Every Filecoin program below needs a working proto
 ## Eligibility checklist
 
 - [ ] Pick the program that is actually open on the day (check the repo's README and issue templates):
-  - Next Step Microgrant: $5,000 paid in FIL ($1,000 up front, $4,000 after a mainnet or testnet deployment); needs a working prototype on Filecoin, IPFS, IPLD or libp2p; must fit the current focus area.
-  - FIL Builder Next Step Grant: $5,000 to $10,000; needs an on-chain project on the Filecoin Virtual Machine and a proof of concept.
+  - Next Step Microgrant: $5,000 paid in FIL ($1,000 up front, $4,000 after a functional deployment to Filecoin mainnet or the latest testnet); needs a working prototype on Filecoin or related technology (IPFS, IPLD, libp2p and similar); must fit the current focus area.
+  - FIL Builder Next Step Grant: $5,000 to $10,000; needs an on-chain project on the Filecoin Virtual Machine and a proof of concept (or a strong web3 background), deployed to the calibration testnet and mainnet. A session archive on IPFS is not an FVM project, so this one likely does not fit.
   - Open Grant: up to $50,000; for work that advances the Filecoin ecosystem or brings significant new usage.
 - [ ] A working prototype exists (**not yet**).
 - [ ] Work completable within 3 months.
-- [ ] Grant-funded work open source (MIT or Apache 2.0 for code, CC-BY-SA 4.0 for content).
+- [ ] Grant-funded work open source (the microgrant page asks for MIT for code; check the license terms of the program you apply to).
 - [ ] Monthly progress updates as comments on the GitHub issue, and a final report.
 - [ ] Payment in FIL: a Filecoin wallet; KYC and tax forms [unverified].
 - [ ] Employer: the employer's permission for outside work and for receiving grant money.
 
 ## Pre-existing code disclosure
+
+These two fields describe a prototype that does not exist yet. Rewrite them from what is actually built before filing.
 
 ```field name="Prior work" max-chars=800
 Our prototype is part of a fork of Agent Office, an MIT open source 3D office for coding agents by webdevcody / AgentSystemLabs (github.com/AgentSystemLabs/agent-office). The office, its workers and terminals are upstream work. Ours: the session archive that stores a worker's terminal recording, pull request and meeting notes on IPFS and Filecoin, and everything the grant would fund. Our changes against upstream: {{DIFF_URL}}

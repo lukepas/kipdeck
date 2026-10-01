@@ -1,8 +1,10 @@
 # Vultr Agent Rush (lablab.ai)
 
-Last checked: 2026-09-30. Sources: the lablab.ai event page and lablab's general submission guidelines (links below). The event schedule is "to be announced", so every time below is [unverified] until lablab publishes it.
+Last checked: 2026-10-01. Sources: the lablab.ai event page and lablab's general submission guidelines (links below). The event schedule is "to be announced", so every time below is [unverified] until lablab publishes it.
 
 Plan: the challenge "Blast Radius Zero: Safe Agent Execution on Vultr" asks for a web-based agent doing real work with every action inside a sandbox on Vultr. That is Agent Office with the Vultr deploy (branch `launch/vultr-deploy`) and per-worker Docker sandboxes (branch `launch/docker-sandbox`): coding agents at desks, each in its own container, every model call through Vultr Serverless Inference.
+
+Code status on 2026-10-01: `launch/vultr-deploy` and `launch/docker-sandbox` have no commits, so none of the Vultr deploy, Serverless Inference routing or sandboxing exists yet. Everything in the description and video below is the plan for the build week. The nearest working piece is `launch/nebius-nemotron`, which shows how to point OpenCode workers at an OpenAI-compatible endpoint through their inline config; the same approach should work for Vultr [unverified until built].
 
 ## Deadline
 
@@ -24,11 +26,12 @@ Plan: the challenge "Blast Radius Zero: Safe Agent Execution on Vultr" asks for 
 - [ ] lablab.ai account, signed up to the event, and joined the Discord.
 - [ ] Team of 1 to 6 (solo is allowed).
 - [ ] For the on-site day: approval from lablab, a US travel authorization (ESTA for Lithuanian citizens), flights and a hotel at your own cost. The Innovation Agency Lithuania call may refund the travel: see [innovation-agency-lithuania.md](innovation-agency-lithuania.md).
-- [ ] Vultr account; each participant gets $200 of Vultr credits [unverified: how they are issued].
+- [ ] Vultr account; each participant gets $200 of Vultr credits, by a coupon code the page says will be published before kickoff.
 - [ ] Backend deployed on a Vultr VM as the control and orchestration layer.
-- [ ] **All agent LLM calls through Vultr Serverless Inference.** Agent CLIs that only talk to their own vendor's API (Claude Code, Codex) do not satisfy this: the demo workers must use a harness pointed at Vultr's OpenAI-compatible endpoint (OpenCode or DeepSeek Harness with a custom base URL) [unverified: which upstream harness takes a custom endpoint cleanly].
-- [ ] Sandboxes run as containers or throwaway instances on Vultr, never inside the app process; Docker is strongly recommended.
-- [ ] Safety requirements: process isolation, no credentials in the sandbox, time and memory limits, reset or destroy after each task.
+- [ ] **All agent LLM calls through Vultr Serverless Inference.** Agent CLIs that only talk to their own vendor's API (Claude Code, Codex) do not satisfy this: the demo workers must use a harness pointed at Vultr's OpenAI-compatible endpoint. OpenCode takes a custom provider in its inline config (the Nebius branch does this for Token Factory); whether DeepSeek Harness takes a custom base URL is [unverified].
+- [ ] Sandboxes run as containers or throwaway instances on Vultr, never inside the app process; Docker is recommended, and OpenSandbox, gVisor or E2B are also accepted.
+- [ ] Safety requirements: process isolation with no host or runtime access, no API keys or credentials in the sandbox, time and memory caps on every run, reset or destroy after each task.
+- [ ] Required in the submission: GitHub repo with docs, the backend on a Vultr VM, a public demo URL, and a demo video with one safety moment (a blocked `rm -rf` or infinite loop, for example).
 - [ ] Employer: check the employer's policy on outside work, IP ownership and accepting prizes.
 - [ ] Pre-existing code: the pages read do not address it [unverified]. This is a five-day build event, so ask in the Discord before the start whether building on an existing open source project is fine, and disclose everything.
 
@@ -42,7 +45,7 @@ Built on Agent Office, an MIT open source project by webdevcody / AgentSystemLab
 
 ## Project description
 
-lablab's form: title, short description, long description, technology and category tags, cover image (16:9), video presentation (under 300 MB, up to 5 minutes), slide presentation, public GitHub repo, demo application platform and a live demo URL.
+lablab's form (from its general guidelines): title (max 50 characters), short description (max 255 characters), long description (at least 100 words; no maximum stated), tracks and technology tags, cover image (16:9 recommended), video presentation (under 300 MB and within 5 minutes), public GitHub repo, demo application platform and a live demo URL. A slide presentation is expected by habit at lablab events but the guidelines page read did not list it [unverified].
 
 ```field name="Title" max-chars=50
 Agent Office: Blast Radius Zero
@@ -52,7 +55,7 @@ Agent Office: Blast Radius Zero
 A shared 3D office where coding agents work at desks. Every worker runs in its own throwaway Docker sandbox on Vultr, every model call goes through Vultr Serverless Inference, and a bad command never leaves the box.
 ```
 
-```field name="Long description" min-words=100 max-words=600
+```field name="Long description" min-words=100
 Coding agents are useful because they run real commands, and dangerous for the same reason. Agent Office (an MIT open source project by webdevcody) gives a team a 3D office where each coding agent sits at a desk and its live terminal is on the laptop in front of it, so people can watch and step in. For Agent Rush we made that office safe to run in public.
 
 The backend runs on a Vultr VM and orchestrates everything. When you hire a worker and hand it a task, the VM starts a fresh Docker container for it: the repo is mounted, there are no host credentials inside, CPU, memory and wall-clock time are capped, and outbound network is limited to the model endpoint and GitHub. The agent writes code, runs it and runs the tests inside the container, and the office streams its terminal to everyone. Every model call the agent makes goes through Vultr Serverless Inference over the OpenAI-compatible API. When the task ends, the container is destroyed and the next task starts clean.

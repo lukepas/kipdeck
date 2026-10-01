@@ -1,8 +1,10 @@
 # Amazon Build Ship Shape, Alexa+ track
 
-Last checked: 2026-09-30. Sources: the Devpost overview and official rules (links below). Anything not stated there is marked [unverified].
+Last checked: 2026-10-01. Sources: the Devpost overview, official rules and resources page (links below). Anything not stated there is marked [unverified].
 
-Plan: enter the Alexa+ track with a self-hosted remote MCP server for Agent Office (branch `launch/voice-mcp`), so Alexa+ can hire, check on and steer the office's coding agents by voice. Also enter the Open Source mini challenge, which explicitly accepts a fork.
+Plan: enter the Alexa+ track with a self-hosted remote MCP server for Agent Office (branch `launch/voice-mcp`), so Alexa+ can hire, check on and steer the office's coding agents by voice. Also enter the Open Source mini challenge; the overview says "PRs don't need to be merged; a forked, unmerged version is fine."
+
+Code status on 2026-10-01: `launch/voice-mcp` has `src/server/mcp.ts`, a tested MCP core (initialize, ping, tools/list, tools/call) over stateless Streamable HTTP with bearer-token auth, Origin checks and schema checks on arguments. The office server does not mount it yet, it defines no tools of its own, and there are no resources, prompts, spoken summaries or Alexa+ connection. The only tools today are upstream's four on the stdio server: list_workers, hire_worker, send_home and tell_worker. The description and video below describe the plan; cut what is not built by 2026-10-20.
 
 ## Deadline
 
@@ -23,9 +25,9 @@ Plan: enter the Alexa+ track with a self-hosted remote MCP server for Agent Offi
 
 - [ ] Age of majority where you live.
 - [ ] Not resident in Brazil, Quebec, Russia, Crimea, Cuba, Iran, North Korea or an OFAC-sanctioned territory. Lithuania is fine.
-- [ ] Not hackathon staff, a judge, their household, or an Amazon employee involved in the event.
+- [ ] Not an employee, representative or agent of the promotion entities, or a member of their immediate family or household.
 - [ ] Registered on the Devpost page (free, no purchase needed).
-- [ ] An Amazon developer account for the Alexa+ tools. The rules do not require one to register, but the platform tools do [unverified: which console the Alexa+ MCP path needs].
+- [ ] An Amazon developer account for the Alexa+ tools. The rules do not require one to register, but the platform tools do [unverified: the resources page links "Build with Agent Skills" and the Streamable HTTP spec but does not say which console or account the Alexa+ MCP path needs].
 - [ ] Individual, team or organization entry. Pick one and keep it for prize payment.
 - [ ] Employer: check the employer's policy on outside work, IP ownership and accepting prizes.
 - [ ] **New or significantly updated after 2026-08-31, and the update clearly described and demoed.** The base was created 2026-09-25 by a third party. Ask the organizers (Devpost discussion or the contact on the rules page) whether a fork counts, and describe only our additions as ours. [unverified]
@@ -37,14 +39,14 @@ Plan: enter the Alexa+ track with a self-hosted remote MCP server for Agent Offi
 Upstream already ships an MCP server for managing workers, but it speaks stdio to local agents only (upstream PR #192, 2026-09-29). Say so, because a judge reading the repo will find it.
 
 ```field name="What is new (for the description)" max-chars=1000
-Agent Office is an MIT open source project by webdevcody / AgentSystemLabs: a 3D office where coding agents work at desks. Upstream already has a local stdio MCP server that lets agents manage workers. For this hackathon we added a self-hosted remote MCP server over Streamable HTTP (MCP spec 2025-11-25) with authentication, tools and prompts shaped for voice (hire a worker for an issue, what is everyone doing, pause, approve a pull request), short spoken summaries of long terminal output, and the Alexa+ connection. Full list of our commits and files against the upstream baseline: {{DIFF_URL}}
+Agent Office is an MIT open source project by webdevcody / AgentSystemLabs: a 3D office where coding agents work at desks. Upstream already has a local stdio MCP server that lets agents manage workers. For this hackathon we added a self-hosted remote MCP server over Streamable HTTP (MCP spec 2025-11-25) with bearer-token authentication and argument checks against each tool's schema. {{VOICE_WORK_BUILT}} Full list of our commits and files against the upstream baseline: {{DIFF_URL}}
 ```
 
 Paste the `whats-new.ts` output after it (see [disclosure.md](disclosure.md)).
 
 ## Project description
 
-Required fields: project description, GitHub repository link (public with an open source license, or private and shared with testing@devpost.com and the Amazon team), demo video, product feedback on the tools and APIs used, primary track, and mini challenge if any. Open Source mini challenge adds: contribution URL, repository URL, GitHub username and an impact description. The rules set no character limits; the name and tagline limits are Devpost defaults [unverified].
+Required fields: project description, GitHub repository link (public with an open source license, or private and shared with testing@devpost.com and the Amazon team's GitHub accounts listed in the rules), demo video, product feedback on the tools and APIs used, primary track, and mini challenge if any. Open Source mini challenge adds: contribution URL, repository URL, GitHub username and an impact description. The rules set no character limits; the name and tagline limits are Devpost defaults [unverified].
 
 ```field name="Project name" max-chars=60
 Agent Office for Alexa+
@@ -59,7 +61,7 @@ Agent Office (an MIT open source project by webdevcody) puts a team's coding age
 
 We built a self-hosted MCP server for Agent Office on the 2025-11-25 spec over Streamable HTTP, so Alexa+ can talk to the office. Ask "what is everyone working on?" and Alexa reads a two-sentence summary per worker instead of a terminal dump. Say "hire a Claude worker for issue 42" and a new agent sits down at a desk and starts. "Pause the one that is failing tests", "approve the pull request from the docs worker" and "what did I miss?" all map to MCP tools with confirmations for anything destructive.
 
-How it works: the office server already tracks every worker, its terminal and its GitHub state. The MCP server exposes that as tools (list_workers, hire_worker, worker_summary, pause_worker, review_pr), resources (a worker's recent output) and prompts. Summaries come from the terminal history, trimmed for speech. Every call is authenticated with a per-office token, and anything that changes code or merges needs a spoken confirmation.
+How it works: the office server already tracks every worker, its terminal and its GitHub state. The MCP server exposes that as tools (list_workers and hire_worker exist upstream; worker_summary, pause_worker and review_pr are planned), resources (a worker's recent output) and prompts [planned]. Summaries come from the terminal history, trimmed for speech. Every call is authenticated with a per-office token, and anything that changes code or merges needs a spoken confirmation.
 
 What is next: notifications pushed from the office ("the release agent needs you"), and multi-office support for teams.
 
@@ -73,7 +75,7 @@ Built on Agent Office by webdevcody / AgentSystemLabs (MIT). Our additions are l
 Write the product feedback from the friction log (below): what you tried, what you expected, what happened, how bad it was. A friction log can earn up to a 10 percent judging bonus.
 
 ```field name="Open Source mini challenge: impact" max-words=150
-We forked Agent Office (MIT) and added a remote MCP transport and voice-shaped tools that any MCP client can use, not only Alexa+. The fork keeps the MIT license; the general parts are offered upstream as pull requests: {{UPSTREAM_PR_URL}}
+We forked Agent Office (MIT) and added a remote MCP transport over Streamable HTTP, with token auth and schema-checked arguments, that any MCP client can use. {{VOICE_TOOLS_IF_BUILT}} The fork keeps the MIT license; the general parts are offered upstream as pull requests: {{UPSTREAM_PR_URL}}
 ```
 
 ## Judging criteria
@@ -82,7 +84,7 @@ Stage two: four criteria at 25 percent each, plus up to a 10 percent bonus for a
 
 | Criterion (25% each) | Our answer |
 | --- | --- |
-| Tech implementation | Real MCP server on 2025-11-25 Streamable HTTP, auth, tools, resources and prompts; tests in the repo; show a live call in the video |
+| Tech implementation | MCP server on 2025-11-25 Streamable HTTP with auth and schema-checked tools (built, tests in the repo); resources and prompts [planned]; show a live call in the video |
 | Design | Voice-first answers: short summaries, confirmations before destructive actions, graceful "I did not catch which worker" |
 | Potential impact | Every team running several coding agents needs to check on them away from the screen; the server works with any MCP client |
 | Quality of the idea | Alexa+ as the manager's voice for a team of AI coworkers, not another timer or shopping list |
@@ -109,7 +111,7 @@ Screen-record the office in a browser at 1080p and film the Echo device (or the 
 ## Submission checklist
 
 - [ ] Organizer's answer on forks saved.
-- [ ] MCP server passes the spec 2025-11-25 conformance you can check (initialize, tools/list, Streamable HTTP session) and runs against a real Alexa+ path or the simulated experience with source in the repo.
+- [ ] MCP server mounted on the office server, passes the spec 2025-11-25 checks you can run (initialize, tools/list, tools/call over stateless Streamable HTTP), and runs against a real Alexa+ path or the simulated experience with source in the repo.
 - [ ] Repo public with `LICENSE` (MIT, upstream notice kept), or private and shared with testing@devpost.com and the Amazon team.
 - [ ] README says how to run the MCP server and connect it.
 - [ ] Video under 3:00, own voice, English, public; no copyrighted music.

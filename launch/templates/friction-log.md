@@ -6,7 +6,7 @@ Severity: 1 = cosmetic, 2 = cost time but had a workaround, 3 = blocked until fi
 
 | When | Tool, API or doc (with link) | What I tried | What I expected | What happened | Severity | Workaround |
 | --- | --- | --- | --- | --- | --- | --- |
-| (example, delete me) | {{TOOL_OR_DOC_URL}} | Connect the MCP server over Streamable HTTP | Session starts after initialize | 405 on GET, no hint in the docs | 3 | Added the SSE GET handler |
+| (example, delete me) | {{TOOL_OR_DOC_URL}} | Connect the MCP server over Streamable HTTP | The client says why it rejected the server | Generic connection error, no detail | 3 | Read the server's request log to find the cause |
 
 ## Summary for the form
 
