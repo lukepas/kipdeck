@@ -20,7 +20,7 @@ export interface PromptsState {
 /** Where a team webhook posts: Slack and Discord get their own message format, anything else plain JSON. */
 export type WebhookKind = 'slack' | 'discord' | 'other';
 
-/** The office's Slack / Discord webhook, pinged when a worker needs input or finishes (see server/webhook.ts). */
+/** The office's Slack / Discord webhook, pinged when a worker needs input, finishes or gets stuck (see server/webhook.ts). */
 export interface NotifyState {
   /** Never the URL itself (it lets anyone post to the channel): just where it goes. */
   webhook?: { kind: WebhookKind; hint: string; by: string; at: number };

@@ -59,7 +59,7 @@ export interface Config {
   budgetPause: boolean;
   /** The most workers the office runs at once, across every floor; ⚙️ Settings can't go past it. */
   maxWorkers?: number;
-  /** Slack / Discord webhook to post to when a worker needs input or finishes ('' turns it off). */
+  /** Slack / Discord webhook to post to when a worker needs input, finishes or gets stuck ('' turns it off). */
   webhook?: string;
 }
 
@@ -155,7 +155,7 @@ Options:
                           is refused. Admins can lower the limit from ⚙️
                           Settings, but not raise it past this
       --webhook <url>     Post to this Slack or Discord webhook when a worker
-                          needs input or finishes (env AGENT_OFFICE_WEBHOOK).
+                          needs input, finishes or gets stuck (env AGENT_OFFICE_WEBHOOK).
                           Also settable from ⚙️ Settings in the office; "" turns it off
   -h, --help              Show this help
 

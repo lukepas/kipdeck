@@ -34,9 +34,10 @@ curl -fsSL https://raw.githubusercontent.com/AgentSystemLabs/agent-office/main/i
 
 - **A floor per project.** Open **Floors**, pick one of your GitHub repos, and the office clones it (showing how far along it is) and opens a floor for it. Every worker, board and queue on that floor works in that checkout.
 - **Workers at desks.** Walk up to an empty desk, press **E**, and pick Claude Code, Codex, OpenCode, Grok, Muse, DeepSeek Harness or Pi. The agent's live terminal shows on its laptop, and anyone can open it and type.
-- **You can see who needs you.** A worker that needs input or has finished jumps up and down and dings, the Workers panel lists them all, and a desktop notification finds you in another tab. Press **N** to go straight to the one that has waited longest.
+- **Mission control.** Press **I** for what needs a person right now, on every floor: each worker ranked (needs you, stuck, to review), with why in plain words (*working but silent for 12 min*, *done 40 min ago, nobody looked*) and one button for the next step. Each floor has a mission and milestones, shown under its name and given to new workers as context, and every worker is linked to a goal or an issue, with progress and spend per goal. See [docs/mission-control.md](docs/mission-control.md).
+- **You can see who needs you.** A worker that needs input, has finished or gets stuck dings, the attention chip on the top bar counts them across every floor, and a desktop notification finds you in another tab. Press **N** to go straight to the one that has waited longest, then on to the next floor's.
 - **Milestones you don't miss.** A merged pull request or a finished task queue is a toast, a ding and a desktop notification for everyone on the floor.
-- **From your phone, too.** `/lite` is the office in 2D: every worker and what it's waiting on, its terminal with the keys a phone keyboard lacks, and the boards. The 3D office offers it on a phone or a slow computer.
+- **From your phone, too.** `/lite` is the office in 2D: every worker (on your floor or all of them) ranked by what needs you and why, Mission control, its terminal with the keys a phone keyboard lacks, and the boards. The 3D office offers it on a phone or a slow computer.
 - **GitHub on the walls.** Issues and pull requests hang on cork boards. Hand an issue to a worker, queue tasks, give a worker its own git worktree and open its PR with one key (if one gets deleted behind the office's back, the worker waits at its desk until you rebuild it). One task can span several projects: the worker gets a worktree of each, and a PR in each that links the others.
 - **Agents that manage agents.** Every worker can list, hire, message and send home the others, through an `agent-office` MCP server (Claude Code, Codex, OpenCode) or the `office-workers` command. Ask one to "send everyone whose PR merged home" and it does, deleting their worktrees and branches unless they hold unpushed work.
 - **On mission.** The project's docs on the bookshelf, a shared whiteboard to plan on, voice, chat and screen sharing on the lounge TV.
@@ -324,7 +325,8 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 | E | Interact: hire a worker, open its terminal, read a board, sit down, open Floors at the elevator |
 | P | Give a task to a new worker, or to the one at this desk |
 | C | See a worker's changes: diff, commit, open a PR |
-| N | Go to the next worker that's waiting on you |
+| I | Mission control: what needs someone on every floor, the floor's goals, and work to review |
+| N | Go to the next worker that's waiting on you, then the next floor's |
 | X | Send a worker home |
 | L | Hang a sign over a desk ("Operations", "Code cleanup") |
 | T / Enter | Chat |
@@ -354,6 +356,7 @@ Every change to the app that lands on `main` is published as a GitHub release by
 ## More
 
 - [Features](docs/features.md): seeing what every agent does, handing out work, reviewing it and staying on mission
+- [Mission control](docs/mission-control.md): the attention ranking, the floor's mission and milestones, and linking work to goals
 - [Agents](docs/agents.md): Claude Code, Codex and OpenCode, models and effort, and the office's prompts
 - [Configuration](docs/configuration.md): every command-line option, and where the office keeps its data
 - [AWS reference](docs/aws.md): Tailscale, service tunnels, upgrades, and everything `deploy/aws.sh` does

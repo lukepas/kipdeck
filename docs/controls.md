@@ -15,7 +15,8 @@ Back to the [README](../README.md).
 | X | Send a worker home (frees the desk; a worker with its own worktree asks what to do with it) |
 | L | Hang a big sign over the desk you face (*Operations*, *Code cleanup*), in one of seven colors; again to change it or take it down |
 | O | Open a pull request for a worker on its own branch, or see the one it has (a worker across several projects gets one in each) |
-| N | Go to the worker that has waited longest on someone; again for the next one |
+| I | Mission control: what needs someone on every floor, ranked, with why and one next step; the floor's mission and milestones; finished work to review. Inside, 1 2 3 switch tabs, the arrows pick a row and Enter does its step (see [Mission control](mission-control.md)) |
+| N | Go to the worker that has waited longest on someone; again for the next one, and after the last one on your floor, on to the next floor's |
 | Q | Put back the issue card you're carrying |
 | H | These controls |
 | T / Enter | Chat |
