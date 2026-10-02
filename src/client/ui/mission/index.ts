@@ -41,6 +41,7 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
     bar.append(b);
   });
   const body = h('div.mc-body', { role: 'tabpanel' });
+  body.addEventListener('focusout', () => setTimeout(() => behind && render(), 0));
   const el = h('div.modal.mission-control', { role: 'dialog', 'aria-label': 'Mission control' }, h('header', {}, h('h2', {}, 'Mission control'), bar), body);
 
   function paintTabs() {
@@ -52,9 +53,22 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
     }
   }
 
-  /** Draws the tab again, keeping the row you were on and where you'd scrolled to; never under a box being edited. */
+  /** Set when a redraw waited for you to finish with a box or a picker. */
+  let behind = false;
+  /**
+   * Draws the tab again, keeping the row you were on, where you'd scrolled to, and what you're typing
+   * in a box that stays (data-keep). Never under a box being edited or a picker in use: it catches
+   * up once you leave it.
+   */
   function render() {
-    if ((document.activeElement as HTMLElement | null)?.classList.contains(EDITING)) return;
+    const active = document.activeElement as HTMLElement | null;
+    if (active && body.contains(active) && (active.classList.contains(EDITING) || active.matches('select'))) {
+      behind = true;
+      return;
+    }
+    behind = false;
+    const keep = active && body.contains(active) ? active.dataset.keep : undefined;
+    const typed = keep ? (active as HTMLInputElement).value : '';
     const focused = (document.activeElement as HTMLElement | null)?.closest<HTMLElement>('.mc-row')?.dataset.id;
     const scroll = body.scrollTop;
     const now = Date.now();
@@ -62,6 +76,11 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
     body.replaceChildren(current === 'attention' ? renderAttention(deps, ranked, now) : current === 'review' ? renderReview(deps, ranked, now) : renderGoals(deps));
     body.scrollTop = scroll;
     if (focused) body.querySelector<HTMLElement>(`.mc-row[data-id="${CSS.escape(focused)}"]`)?.focus();
+    const again = keep ? body.querySelector<HTMLInputElement>(`[data-keep="${CSS.escape(keep)}"]`) : null;
+    if (again) {
+      again.value = typed;
+      again.focus();
+    }
     paintTabs();
   }
 

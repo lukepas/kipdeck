@@ -16,7 +16,7 @@
 /* Attention: a group per level, the most urgent first. */
 .mc-group { margin-bottom: 14px; }
 .mc-level { display: flex; align-items: baseline; gap: 8px; width: 100%; padding: 4px 2px; border: 0; background: none; font: inherit; color: var(--ink); cursor: pointer; text-align: left; }
-.mc-level-name { font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; }
+.mc-level-name { white-space: nowrap; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; }
 .mc-level-n { font-size: 12px; font-weight: 900; color: var(--muted); }
 .mc-level-what { font-size: 12px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mc-level.working[aria-expanded=false]::after, .mc-level.parked[aria-expanded=false]::after { content: 'show'; margin-left: auto; font-size: 12px; font-weight: 800; color: var(--muted); text-decoration: underline; }
@@ -87,6 +87,10 @@
 .ms-unlinked { color: #b5651d; font-weight: 900; white-space: nowrap; }
 
 @media (max-width: 720px) {
+  /* The tabs get a row of their own under the title and the ✕. */
+  .mc-tabs { order: 3; flex: 1 1 100%; }
+  .mission-control header h2 { flex: 1; }
+  .mc-reason { white-space: normal; }
   .mc-main { grid-template-columns: auto minmax(0, 1fr) auto; }
   .mc-what { grid-column: 2 / -1; grid-row: 2; }
   .mc-time { grid-column: 3; grid-row: 1; }

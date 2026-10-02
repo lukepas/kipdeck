@@ -6,6 +6,9 @@ import { store } from '../../state';
 import { h } from '../dom';
 import { doingLabel, linkLabel, money, runAction, snooze, snoozeLabel, type MissionDeps } from './act';
 
+/** The rows whose "..." menu is open, kept while Mission control draws itself again. */
+const expanded = new Set<string>();
+
 /** The milestone picker in a row's "..." menu, for a worker on your floor. */
 function linkPicker(deps: MissionDeps, r: Ranked): HTMLElement {
   const e = r.entry;
@@ -36,7 +39,7 @@ function moreMenu(deps: MissionDeps, r: Ranked): HTMLElement {
   );
 }
 
-/** A row of the roster. `onFocus` hears it was chosen with the mouse, for the arrow keys. */
+/** A row of the roster, which the arrow keys can move to (see index.ts). */
 export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { showFloor: boolean }): HTMLElement {
   const e = r.entry;
   const snoozed = snoozeLabel(e);
@@ -44,10 +47,12 @@ export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { sho
   const doing = doingLabel(e);
   const link = linkLabel(e);
   const more = moreMenu(deps, r);
-  more.hidden = true;
-  const toggle = h('button.btn.small.mc-dots', { type: 'button', 'aria-label': `More for ${e.name}`, 'aria-expanded': 'false', title: 'Snooze, link, open the terminal, send home' }, '...');
+  more.hidden = !expanded.has(e.id);
+  const toggle = h('button.btn.small.mc-dots', { type: 'button', 'aria-label': `More for ${e.name}`, 'aria-expanded': String(!more.hidden), title: 'Snooze, link, open the terminal, send home' }, '...');
   toggle.addEventListener('click', () => {
     more.hidden = !more.hidden;
+    if (more.hidden) expanded.delete(e.id);
+    else expanded.add(e.id);
     toggle.setAttribute('aria-expanded', String(!more.hidden));
   });
   const primary = h('button.btn.small.mc-act', { type: 'button', class: r.att.level === 'needs-you' ? 'primary' : '', onclick: () => runAction(deps, e, r.att.action) }, ACTION_LABEL[r.att.action]);

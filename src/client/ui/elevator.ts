@@ -128,6 +128,8 @@ export function openElevator(opts: ElevatorOptions): void {
         {},
         h('span.floor-name', {}, f.name, here ? h('span.here-tag', {}, 'you are here') : null),
         h('span.floor-sub', {}, [f.repo ?? f.dir, f.cloning ? f.clone?.detail : ''].filter(Boolean).join(' · ')),
+        // What it's for, so every floor's purpose shows from anywhere (see Mission control).
+        f.missionLine ? h('span.floor-sub.floor-mission', { title: f.missionLine }, f.missionLine) : null,
         f.cloning ? cloneBar(f.clone) : null,
       ),
       h('span.floor-stats', {}, ...stats.flatMap((s, j) => (j ? [' ', s] : [s]))),

@@ -91,12 +91,16 @@ function milestoneRow(deps: MissionDeps, m: MissionMilestone, i: number, n: numb
   );
 }
 
+/** Whether "Tell the workers" was left open, kept while the tab draws itself again. */
+let tellOpen = false;
+
 /** Tell the agents on the floor what the mission is now, as their next prompt; you pick which. */
 function tellBox(deps: MissionDeps): HTMLElement | null {
   const agents = [...store.workers.values()].filter((w) => w.kind === 'agent' && !w.lost && store.rosterEntry(w.id));
   if (!agents.length || (!store.mission.statement && !store.mission.milestones.length)) return null;
   const picks = agents.map((w) => ({ id: w.id, box: h('input', { type: 'checkbox', checked: w.status === 'working' }) as HTMLInputElement, name: w.name }));
-  const box = h('details.mc-tell', {}, h('summary', {}, 'Tell the workers about a change'));
+  const box = h('details.mc-tell', { open: tellOpen }, h('summary', {}, 'Tell the workers about a change')) as HTMLDetailsElement;
+  box.addEventListener('toggle', () => (tellOpen = box.open));
   box.append(
     h('p.mc-note', {}, 'Workers are never interrupted when the mission changes. Pick the ones to tell: they get a one-line note as their next prompt, and carry on with their task.'),
     h('div.mc-picks', {}, ...picks.map((p) => h('label', {}, p.box, p.name))),
@@ -118,7 +122,7 @@ export function renderGoals(deps: MissionDeps): HTMLElement {
     can,
     save: (text) => deps.net.send({ t: 'mission.set', statement: text }),
   });
-  const add = h('input', { type: 'text', maxlength: MISSION_LIMITS.title, placeholder: 'Add a milestone, then Enter', 'aria-label': 'New milestone' }) as HTMLInputElement;
+  const add = h('input', { type: 'text', maxlength: MISSION_LIMITS.title, placeholder: 'Add a milestone, then Enter', 'aria-label': 'New milestone', 'data-keep': 'add-milestone' }) as HTMLInputElement;
   add.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' || e.isComposing || !add.value.trim()) return;
     e.preventDefault();
