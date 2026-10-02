@@ -26,7 +26,6 @@ export const HELP_ROWS: readonly (readonly [string, string])[] = [
   ['Q', 'Put back the issue card in your hands (E at a note on the issues board, or ✋ Pick it up in an issue; then E at an empty desk, a worker or the queue board)'],
   ['O', 'Open a pull request for a worker on its own branch, or see the one it has'],
   ['T', 'Chat'],
-  ['G / 1–6', 'Emote: hold G, point at one and let go (or tap G and click one), or press 1–6: wave, thumbs up, clap, dance, point, facepalm. Everyone on your floor sees it'],
   ['/', 'Search the chat and every terminal on your floor, back to before the office last restarted'],
   [IS_MAC ? '⌘K' : 'Ctrl+K', 'Command palette: type a few letters to find a worker, issue, PR, service, board, teammate or action. Enter opens it, Shift+Enter walks you over to it first'],
   ['V', 'Join voice. In voice, hold V to talk (push to talk): you’re muted once you let go. Leave voice from the ☰ menu'],

@@ -1,6 +1,6 @@
 /**
  * The keyboard: every key press goes down the chain in ctx.keys (see Keys): the guards, what you're
- * in the middle of, the emotes, then the office's own keys, bound with what they do.
+ * in the middle of, then the office's own keys, bound with what they do.
  */
 import type { Ctx } from '../core/context';
 import type { Parts } from '../core/parts';
@@ -26,18 +26,15 @@ export function installKeyGuards(ctx: Ctx, parts: Pick<Parts, 'focus'>) {
 }
 
 /**
- * Listens for keys on the window and hands each down the chain; the emote wheel's own key; and binds
+ * Listens for keys on the window and hands each down the chain, and binds
  * the keys that use what you're facing.
  */
-export function installKeyboard(ctx: Ctx, parts: Pick<Parts, 'emotes' | 'pointer'>) {
+export function installKeyboard(ctx: Ctx, parts: Pick<Parts, 'pointer'>) {
   const { player } = ctx;
-  // Every key press goes down the chain in ctx.keys: the guards, what you're in the middle of, the
-  // emotes, then the office's own keys (bound with what they do). One of those clears the walking keys.
+  // Every key press goes down the chain in ctx.keys: the guards, what you're in the middle of, then
+  // the office's own keys (bound with what they do). One of those clears the walking keys.
   window.addEventListener('keydown', (e) => {
     if (ctx.keys.handle(e) === 'bound') player.clearKeys();
-  });
-  window.addEventListener('keyup', (e) => {
-    if (e.code === 'KeyG') parts.emotes.emoteWheel.release();
   });
 
   // Keys that use what you're facing: at a desk, each does something else (see interact).

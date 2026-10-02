@@ -1,5 +1,4 @@
 import type { WebSocket } from 'ws';
-import { EMOTE_EVERY, EmoteBucket } from '../../shared/emotes.js';
 import type { PeerInfo } from '../../shared/protocol.js';
 
 /** A viewer with more than this waiting to go out skips terminal output, and gets a fresh snapshot once it catches up. */
@@ -22,7 +21,6 @@ export interface Client {
   lastMoveAt: number;
   /** When each rate-limited thing they do was last let through, by name (see throttle). */
   throttles: Map<string, number>;
-  emotes: EmoteBucket;
   /** When this client last said it was typing, per terminal (see 'term.typing'). */
   typingAt: Map<string, number>;
   /** Cleared at each heartbeat ping and set again by the pong; still clear at the next one means gone. */
@@ -40,8 +38,6 @@ export function newClient(id: string, ws: WebSocket, who: { accountId: string | 
     stale: new Set(),
     lastMoveAt: 0,
     throttles: new Map(),
-    // A little more lenient than the page's own, so emotes it let through aren't dropped for arriving bunched up.
-    emotes: new EmoteBucket(EMOTE_EVERY * 0.8),
     typingAt: new Map(),
     isAlive: true,
     peer,

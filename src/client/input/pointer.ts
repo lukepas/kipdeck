@@ -15,7 +15,7 @@ import { store } from '../state';
 import { modalOpen, toast } from '../ui/dom';
 import type { Interactable } from '../world/types';
 
-export type PointerParts = Pick<Parts, 'place' | 'you' | 'boards' | 'cards' | 'seating' | 'emotes' | 'hintbar'>;
+export type PointerParts = Pick<Parts, 'place' | 'you' | 'boards' | 'cards' | 'seating' | 'hintbar'>;
 
 /** Listens for the mouse over the canvas, registers the aim tick ('aim'), and takes the player's clicks. */
 export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
@@ -131,9 +131,7 @@ export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
   });
 
   player.onClick = (ndc) => {
-    const { emotes } = parts;
     if (modalOpen()) return;
-    if (emotes.emoteWheel.isOpen) return emotes.emoteWheel.click();
     if (player.view === 'first') {
       // Reach out even at nothing, like poking the air.
       reach();

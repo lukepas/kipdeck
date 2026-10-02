@@ -86,11 +86,10 @@ export interface KeyPress {
 
 /**
  * The stages a key press goes through before the bindings, in order: guards (nothing gets a key while
- * a window's open, say), then whatever you're in the middle of, then the
- * emotes. A handler returns true when it took the key, which ends it there.
+ * a window's open, say), then whatever you're in the middle of. A handler returns true when it took the key, which ends it there.
  */
-export type KeyStage = 'guard' | 'activity' | 'emote';
-export const KEY_STAGES: readonly KeyStage[] = ['guard', 'activity', 'emote'];
+export type KeyStage = 'guard' | 'activity';
+export const KEY_STAGES: readonly KeyStage[] = ['guard', 'activity'];
 
 /** A key of the office's own, once no stage has taken it. */
 export interface KeyBinding<E extends KeyPress = KeyPress> {

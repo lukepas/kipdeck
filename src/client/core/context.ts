@@ -105,6 +105,6 @@ export interface Ctx {
    * being built into the floor (see usable and aimedAt in input/pointer.ts).
    */
   readonly usables: Usables<Interactable, THREE.Object3D>;
-  /** What lets go when a window opens: the emote wheel (see input/focus.ts). */
+  /** What lets go when a window opens (see input/focus.ts). */
   readonly windowOpened: Hooks;
 }

@@ -1,9 +1,8 @@
-// People in the office: walking about, reaching for things, sitting, carrying issue cards, emotes,
+// People in the office: walking about, reaching for things, sitting, carrying issue cards,
 // their name and look, what they have open, voice and screen sharing, and chat.
 import type { ChatLine, PresenceClientMsg } from '../../../shared/protocol.js';
 import { seatAt } from '../../../shared/layout.js';
 import { sanitizeLook } from '../../../shared/avatar.js';
-import { isEmote } from '../../../shared/emotes.js';
 import { throttle } from '../../office/client.js';
 import { COLOR_RE, issueNumber, num, str } from '../../office/input.js';
 import type { HandlerMap } from './types.js';
@@ -21,9 +20,6 @@ export const presenceHandlers = {
   act(ctx, c) {
     if (!throttle(c, 'act', 100)) return;
     ctx.toNeighbors(c, { t: 'peer.act', id: c.id }, true);
-  },
-  emote(ctx, c, msg) {
-    if (isEmote(msg.emote) && c.emotes.take(Date.now())) ctx.toNeighbors(c, { t: 'peer.emote', id: c.id, emote: msg.emote }, true);
   },
   sit(ctx, c, msg) {
     // Everyone sees them sit down (or get up), and anyone who comes in later finds them sitting.

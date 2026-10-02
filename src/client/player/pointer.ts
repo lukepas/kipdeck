@@ -58,8 +58,6 @@ export abstract class PlayerInput {
   /** When the mouse last moved, or a lock that settles landed. */
   private movedAt = 0;
   enabled = true;
-  /** False while the mouse picks something else (an emote on the wheel), so it doesn't turn the camera. */
-  mouseLook = true;
 
   constructor(private dom: HTMLElement) {
     window.addEventListener('keydown', (e) => {
@@ -118,7 +116,6 @@ export abstract class PlayerInput {
       const now = performance.now();
       const rested = now - this.movedAt;
       this.movedAt = now;
-      if (!this.mouseLook) return;
       if (this.locked) {
         // Held for a moment under a window (see yieldMouse), the mouse doesn't turn your head.
         if (!this.enabled) return;

@@ -127,19 +127,6 @@
 }
 .crosshair.free .look-hint { display: block; }
 .crosshair.on .look-hint { transform: translateX(-50%) scale(.625); transform-origin: top center; }
-/* Your own emote's emoji in first person, where you can't see it over your head. */
-.emote-pop { position: absolute; left: 50%; bottom: 96px; font-size: 56px; line-height: 1; pointer-events: none !important; animation: emote-pop var(--secs, 2s) ease-out forwards; }
-@keyframes emote-pop {
-  0% { transform: translateX(-50%) scale(0); opacity: 1; }
-  12% { transform: translateX(-50%) scale(1.25); }
-  20% { transform: translateX(-50%) scale(1); }
-  80% { opacity: 1; }
-  100% { transform: translateX(-50%) translateY(-40px); opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .emote-pop { animation: emote-fade var(--secs, 2s) linear forwards; transform: translateX(-50%); }
-}
-@keyframes emote-fade { 80% { opacity: 1; } 100% { opacity: 0; } }
 
 #shares { position: absolute; left: 12px; top: 72px; display: flex; flex-direction: column; gap: 8px; }
 /* The floor details make the name taller: what's under it moves down. */

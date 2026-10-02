@@ -1,14 +1,12 @@
 import * as THREE from 'three';
 import { HAIR_COLORS, SKIN_TONES, type Look } from '../../../shared/avatar';
-import { EMOTE_BY_ID, type EmoteId } from '../../../shared/emotes';
 import type { CarriedIssue } from '../../../shared/protocol';
-import { HIPS, type PersonRig } from './rig';
+import { HIPS } from './rig';
 import { OpenBook } from '../../features/bookshelf/book';
 import { HeldCard } from '../../features/carrying/card';
 import { disposeSprite, mesh, textSprite, toon, toonUnique } from '../toon';
 import { REACH_TIME, reachCurve } from './curves';
 import { styleHair } from './person-hair';
-import { poseEmote, type Emoting } from './person-emote';
 
 export type Pose = 'stand' | 'walk' | 'sit' | 'type';
 
@@ -24,8 +22,6 @@ const DOING_LIFT = 0.25;
 export class Person {
   readonly root = new THREE.Group();
   private body = new THREE.Group();
-  /** Its moving parts, for what poses them from the other files here (an emote). */
-  private rig: PersonRig;
   private legL: THREE.Object3D;
   private legR: THREE.Object3D;
   private armL: THREE.Object3D;
@@ -58,13 +54,6 @@ export class Person {
   private book: OpenBook | null = null;
   private bookHolder = new THREE.Group();
   pose: Pose = 'stand';
-  /** The emote being played, how far into it (seconds), and its emoji over their head. */
-  private emoting: Emoting | null = null;
-  /** A thumb up and a pointing finger on the right hand, out only for those emotes. */
-  private thumb: THREE.Mesh;
-  private finger: THREE.Mesh;
-  /** How much higher (meters) an emote's emoji pops up, to clear a chat bubble over their head. */
-  emojiLift = 0;
   /** Hips this high above the feet while sitting (on the seat), or null on their feet. */
   private hips: number | null = null;
   /** The last seat's, so getting up eases back down from it. */
@@ -134,21 +123,11 @@ export class Person {
     this.bookHolder.rotation.set(0.85, Math.PI, 0);
     this.bookHolder.scale.setScalar(1.25);
     this.body.add(this.bookHolder);
-    // Along the arm (the fist's -y) the finger points; the thumb sticks out of the front of the fist,
-    // which is up once the arm is out in front.
-    this.thumb = mesh(new THREE.CapsuleGeometry(0.035, 0.07, 4, 8).rotateX(Math.PI / 2), skin, 0, -0.38, 0.1, false);
-    this.finger = mesh(new THREE.CapsuleGeometry(0.03, 0.09, 4, 8), skin, 0, -0.5, 0.02, false);
-    for (const m of [this.thumb, this.finger]) {
-      m.visible = false;
-      this.armL.add(m);
-    }
-
     // Little mic icon that pops up while speaking
     this.mic = mesh(new THREE.SphereGeometry(0.09, 10, 8), toon('#7cf29a', { emissive: '#2a9d4b' }), 0, 2.25, 0, false);
     this.mic.visible = false;
     this.root.add(this.mic);
 
-    this.rig = { root: this.root, body: this.body, head: this.head, armL: this.armL, armR: this.armR, legL: this.legL, legR: this.legR };
     this.setLabel(name, false);
   }
 
@@ -257,39 +236,6 @@ export class Person {
     this.book?.turn();
   }
 
-  /** Waves, gives a thumbs up, claps…: the gesture, with its emoji popping up over their head. */
-  emote(id: EmoteId) {
-    const emote = EMOTE_BY_ID.get(id);
-    if (!emote) return;
-    this.endEmote();
-    const pop = textSprite(emote.emoji, { size: 72 });
-    const size = new THREE.Vector2(pop.scale.x, pop.scale.y);
-    pop.scale.set(0.001, 0.001, 1);
-    this.root.add(pop);
-    this.emoting = { emote, t: 0, pop, size };
-    this.thumb.visible = id === 'thumbs';
-    this.finger.visible = id === 'point';
-  }
-
-  /** The emote playing now, if any. */
-  get emoteId(): EmoteId | null {
-    return this.emoting?.emote.id ?? null;
-  }
-
-  private endEmote() {
-    const e = this.emoting;
-    if (!e) return;
-    this.root.remove(e.pop);
-    disposeSprite(e.pop);
-    this.emoting = null;
-    this.thumb.visible = this.finger.visible = false;
-  }
-
-  /** Poses the emote over whatever the arms were doing (see poseEmote), and puts it away once it's over. */
-  private emoteStep(dt: number, still: number) {
-    if (!poseEmote(this.rig, this.emoting!, dt, still, this.emojiLift)) this.endEmote();
-  }
-
   /** Sits down with the hips `hips` above the feet, on a couch or a chair, or gets up (null). */
   sit(hips: number | null) {
     this.hips = hips;
@@ -362,6 +308,5 @@ export class Person {
     this.head.rotation.x = -this.mouthOpen * 0.08 + (this.book ? 0.32 : 0);
     this.head.rotation.y = this.head.rotation.z = 0;
     this.body.rotation.y = this.body.rotation.z = 0;
-    if (this.emoting) this.emoteStep(dt, moving || airborne ? 0 : 1 - sit);
   }
 }

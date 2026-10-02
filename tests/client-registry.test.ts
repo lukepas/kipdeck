@@ -42,11 +42,10 @@ const press = (code: string, extra: Partial<{ key: string; repeat: boolean }> = 
 };
 type Press = ReturnType<typeof press>;
 
-test('keys go to the guards, then activities, then emotes, then bindings', () => {
+test('keys go to the guards, then activities, then bindings', () => {
   const log: string[] = [];
   const keys = new Keys<Press>();
   keys.bind({ code: 'KeyE', run: () => void log.push('bound E') });
-  keys.add('emote', (e) => (log.push('emote'), e.code === 'KeyG'));
   keys.add('activity', (e) => (log.push('activity'), e.code === 'KeyE' && e.key === 'busy'));
   keys.add('guard', (e) => (log.push('guard'), e.key === 'typing'));
   assert.equal(keys.handle(press('KeyE', { key: 'typing' })), 'guard');
@@ -55,11 +54,8 @@ test('keys go to the guards, then activities, then emotes, then bindings', () =>
   assert.equal(keys.handle(press('KeyE', { key: 'busy' })), 'activity');
   assert.deepEqual(log, ['guard', 'activity']);
   log.length = 0;
-  assert.equal(keys.handle(press('KeyG')), 'emote');
-  assert.deepEqual(log, ['guard', 'activity', 'emote']);
-  log.length = 0;
   assert.equal(keys.handle(press('KeyE')), 'bound');
-  assert.deepEqual(log, ['guard', 'activity', 'emote', 'bound E']);
+  assert.deepEqual(log, ['guard', 'activity', 'bound E']);
   assert.equal(keys.handle(press('KeyZ')), null);
 });
 

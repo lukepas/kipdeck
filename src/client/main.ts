@@ -29,7 +29,6 @@ import { installBoards } from './features/boards';
 import { installBookshelf } from './features/bookshelf';
 import { installCarrying } from './features/carrying';
 import { installChat } from './features/chat';
-import { installEmotes } from './features/emotes';
 import { installGong } from './features/gong';
 import { installHud } from './features/hud';
 import { installMeeting } from './features/meeting';
@@ -95,7 +94,6 @@ parts.reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 parts.sound = makeSound(parts.settings);
 
 parts.notifier = new DesktopNotifier(() => parts.settings.notify, (id) => parts.waiting.openWorkerTerminal(id));
-const personOf = (id: string) => parts.peers.remotes.get(id)?.person;
 const reach = () => parts.you.reach();
 
 parts.travel = installTravel(ctx, core, parts);
@@ -123,7 +121,6 @@ parts.seating = installSeating(ctx, { shares: () => parts.talk.currentShares(), 
 installGong(ctx, { burstOver: parts.views.burstOver, workerViews: parts.views.workerViews, idleAgents: () => parts.worlds.idleAgents() });
 
 parts.hintbar = installHintBar(ctx, core, parts);
-parts.emotes = installEmotes(ctx, { personOf });
 installKeyboard(ctx, parts);
 parts.focus = installFocus(ctx, core, parts);
 parts.pointer = installPointer(ctx, core, parts);
@@ -187,8 +184,8 @@ void whoami().then(() => {
 });
 
 // Debug handle for quick checks from the console / headless screenshots.
-const { worlds, views, emotes } = parts;
-(window as any).__office = { world: () => worlds.world(), store, player: parts.player, camera: ctx.camera, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, office: ctx.office, ride: parts.travel.ride, switchFloor: parts.travel.switchFloor, elevatorPanelOpen, confetti: parts.confetti, carried: () => core.carrying, emoteWheel: emotes.emoteWheel, emote: emotes.emote };
+const { worlds, views } = parts;
+(window as any).__office = { world: () => worlds.world(), store, player: parts.player, camera: ctx.camera, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, office: ctx.office, ride: parts.travel.ride, switchFloor: parts.travel.switchFloor, elevatorPanelOpen, confetti: parts.confetti, carried: () => core.carrying };
 (window as any).__voice = parts.voice;
 (window as any).__sound = parts.sound;
 (window as any).__notify = parts.notifier;

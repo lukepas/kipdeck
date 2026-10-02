@@ -103,7 +103,6 @@ export function installPeers(ctx: Ctx, parts: Pick<Parts, 'walking' | 'talk' | '
         sound.stepAt(pos.x, pos.z);
       }
       r.person.setVoiceLevel(p.voice && !p.muted ? voice.levelOf(id) : 0);
-      r.person.emojiLift = r.bubble ? 0.45 : 0;
       if (r.bubble && now > r.bubble.until) {
         r.person.root.remove(r.bubble.sprite);
         disposeSprite(r.bubble.sprite);

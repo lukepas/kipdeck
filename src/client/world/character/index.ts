@@ -3,5 +3,5 @@
 export { Person, type Pose } from './person';
 export { Worker } from './worker';
 export type { Stage } from './worker-dance';
-export { REACH_TIME, emoteEnvelope, popCurve, reachCurve } from './curves';
+export { REACH_TIME, reachCurve } from './curves';
 export { boxOfStuff, coffeeMug } from './props';

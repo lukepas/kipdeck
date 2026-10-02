@@ -60,7 +60,7 @@ export function installFocus(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'walk
     // Opening something on the way over to someone is stopping there.
     if (open && !core.trip) parts.walking.stopWalkingTo();
     if (open) {
-      // What lets go when a window opens: the emote wheel.
+      // What lets go when a window opens.
       ctx.windowOpened.run();
       // A phone has no mouse to take back afterwards.
       if (finePointer) player.yieldMouse();

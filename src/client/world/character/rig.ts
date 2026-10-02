@@ -1,21 +1,10 @@
 import * as THREE from 'three';
 
-// The bodies' shared measurements, and the parts of a Person or a Worker that the other files here
-// pose, passed to them by the class (see person.ts, worker.ts).
+// The bodies' shared measurements, and the parts of a Worker that the other files here pose, passed
+// to them by the class (see worker.ts).
 
 /** The Person's hips above their feet, standing. Sitting puts them on the seat, and your eyes move with them. */
 export const HIPS = 0.42;
-
-/** A Person's moving parts. Forward is +z, so the character's right arm is armL, the one on -x. */
-export interface PersonRig {
-  root: THREE.Group;
-  body: THREE.Group;
-  head: THREE.Group;
-  armL: THREE.Object3D;
-  armR: THREE.Object3D;
-  legL: THREE.Object3D;
-  legR: THREE.Object3D;
-}
 
 /** A Worker's moving parts, and its skin and status light. Forward is +z. */
 export interface WorkerRig {
