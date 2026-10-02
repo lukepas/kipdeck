@@ -54,6 +54,7 @@ They're in `core/registry.ts`, and each is a field of `ctx`. Every registration 
 - **`hooks/`** is the loopback-only hook server the workers call: their agents' hook events (`/hooks/<provider>`), the board agents' queue (`/office/queue`) and `office-workers` (`/office/workers`).
 - **`workers/`** is the worker manager (`WorkerManager` in `workers/manager.ts`) and its pieces: worktrees, pull requests, tasks, terminals, ACP workers, and saving to `workers.json`. `src/server/workers.ts` re-exports it for the modules that imported it from there.
 - **`providers/`** holds one adapter per agent CLI (see [Adding an agent provider](#adding-an-agent-provider)).
+- **`tunnel/`** is `agent-office tunnel`, the one part that runs on someone's own computer instead of the office's: it asks the office for the workers' web servers (`/api/services`, in `http/routes/services.ts`) and listens on each one's port there. It imports nothing from the office but what the two say to each other (`tunnel/wire.ts`), the cookies' names (`auth.ts`) and `safefs.ts` for the file it keeps its session in.
 
 The rest of `src/server/` is a module per service or per thing a floor keeps (`queue.ts`, `meetings.ts`, `whiteboard.ts`, `mission.ts`, `timeline.ts`, `review.ts`), made by the office or by each `Floor` (`floor.ts`). The building-wide roster and the reminders' sweep are `office/roster.ts` and `office/reminders.ts`.
 

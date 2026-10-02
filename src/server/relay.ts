@@ -4,12 +4,14 @@ import net from 'node:net';
 import type { Duplex } from 'node:stream';
 import type { ServiceInfo } from '../shared/protocol.js';
 import { withoutOfficeCookies } from './auth.js';
+import { SERVICE_HEADER } from './tunnel/wire.js';
 
 // Service tunnels: `ssh -L 5173:localhost:4600 office@box` lands on the office's own port, and the
 // browser's Host header (localhost:5173) says which worker server it's for. So teammates reach
 // every service through the one port their SSH key may already forward to, and only while
 // signed in to the office. On a Tailscale network it's https://<office>.ts.net:5173 instead, which
-// Tailscale Serve points at the office's port too (see tailnet.ts).
+// Tailscale Serve points at the office's port too (see tailnet.ts). `agent-office tunnel` opens
+// every worker's server on someone's computer by itself, and names the port in a header (tunnel/).
 
 /**
  * Set on everything the office relays, so a server that proxies back to the office can't loop. Its
@@ -42,8 +44,34 @@ export function tunneledPort(req: http.IncomingMessage, officePort: number, tail
   return port && port !== officePort ? port : undefined;
 }
 
+/** A request that came through a tunnel: the port it's for, and that worker's server ('gone' when nothing serves it). */
+export interface Tunneled {
+  port: number;
+  svc: ServiceInfo | 'gone';
+  /** It came from `agent-office tunnel` (it named the port in SERVICE_HEADER), not by its Host. */
+  client: boolean;
+}
+
+/**
+ * The worker's server a request is for, or undefined when it's for the office itself. A request
+ * the tunnel client sent is never for the office, whatever else it says and even when nothing
+ * serves the port it names: the page that made it is a worker's, so it must never reach the
+ * office's own routes or /ws. The caller still refuses one the office relayed already (relayedBack).
+ */
+export function tunneledService(req: http.IncomingMessage, officePort: number, tailnet: string | undefined, lookup: (port: number) => ServiceInfo | 'gone' | undefined): Tunneled | undefined {
+  const named = req.headers[SERVICE_HEADER];
+  if (named !== undefined) {
+    const port = typeof named === 'string' && /^\d{1,5}$/.test(named) ? Number(named) : 0;
+    return { port, svc: (port > 0 && port !== officePort && lookup(port)) || 'gone', client: true };
+  }
+  const port = tunneledPort(req, officePort, tailnet);
+  const svc = port ? lookup(port) : undefined;
+  return port && svc ? { port, svc, client: false } : undefined;
+}
+
 function upstreamHeaders(req: http.IncomingMessage, svc: ServiceInfo): http.OutgoingHttpHeaders {
   const headers: http.OutgoingHttpHeaders = { ...req.headers, [RELAYED]: RELAY_MARK };
+  delete headers[SERVICE_HEADER];
   // From the tailnet, the server gets the Host it would through a tunnel: dev servers like Vite
   // refuse names they don't know. X-Forwarded-Host (set by Tailscale Serve) still has the real one.
   if (!LOOPBACK_HOST.test(req.headers.host ?? '')) headers.host = `localhost:${svc.port}`;
@@ -132,6 +160,11 @@ if(r.ok)location.reload();else err.textContent=(await r.json().catch(()=>({}))).
 /** A request the office relayed came back to it: a worker's server proxies to the office. */
 export function loopPage(res: http.ServerResponse, port: number) {
   page(res, 508, 'Going round in circles', `<p>The server on port ${port} sent the office's own request back to it. Point its proxy somewhere else.</p>`);
+}
+
+/** `agent-office tunnel` sent a request without a session that works (it signs in again by itself). */
+export function tunnelSignedOutPage(res: http.ServerResponse, port: number) {
+  page(res, 401, 'Not signed in', `<p>This is a worker's server on port ${port}, forwarded by <code>agent-office tunnel</code>, which isn't signed in to the office right now. It signs in again by itself (look at its terminal); reload in a moment.</p>`);
 }
 
 export function stoppedPage(res: http.ServerResponse, port: number) {

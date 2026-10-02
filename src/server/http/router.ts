@@ -1,6 +1,6 @@
 import type http from 'node:http';
 import type { Session } from '../auth.js';
-import { RELAY_LOGIN, loopPage, relayedBack, relayRequest, signInPage, stoppedPage, tunneledPort } from '../relay.js';
+import { RELAY_LOGIN, loopPage, relayedBack, relayRequest, signInPage, stoppedPage, tunneledService, tunnelSignedOutPage } from '../relay.js';
 import type { Ctx } from '../office/context.js';
 import { hostnameOf } from '../hosts.js';
 import { login, loginOptions } from './routes/auth.js';
@@ -57,15 +57,20 @@ export function requestHandler(ctx: Ctx, routes: readonly Route[]) {
     try {
       // Only for the names the office is reached at: never another site's name pointed at it (DNS rebinding).
       if (!hosts.hostOk(req)) return misdirected(res, hosts.requestHost(req));
-      // A service tunnel (localhost:5173 -> the office): relay to that worker's server.
-      const tunneled = tunneledPort(req, cfg.port, cfg.tailnet);
-      if (tunneled && relayedBack(req)) return loopPage(res, tunneled);
-      const svc = tunneled ? ctx.services.lookup(tunneled) : undefined;
-      if (tunneled && svc) {
-        if (req.method === 'POST' && req.url === RELAY_LOGIN) return hosts.postOk(req) ? await login(ctx, req, res, true) : send(res, 403, { error: 'Forbidden' });
-        if (!auth.fromAnyCookie(req)) return signInPage(res, tunneled, loginOptions(ctx));
-        if (svc === 'gone') return stoppedPage(res, tunneled);
-        return relayRequest(req, res, svc);
+      // A service tunnel (localhost:5173 -> the office), or `agent-office tunnel` naming the port in a
+      // header: relay to that worker's server, never to the office's own routes.
+      const tunneled = tunneledService(req, cfg.port, cfg.tailnet, (port) => ctx.services.lookup(port));
+      if (tunneled && relayedBack(req)) return loopPage(res, tunneled.port);
+      if (tunneled) {
+        // The tunnel client signs itself in; a worker's page there gets no sign-in form to post to.
+        if (tunneled.client) {
+          if (!auth.fromAnyCookie(req)) return tunnelSignedOutPage(res, tunneled.port);
+        } else {
+          if (req.method === 'POST' && req.url === RELAY_LOGIN) return hosts.postOk(req) ? await login(ctx, req, res, true) : send(res, 403, { error: 'Forbidden' });
+          if (!auth.fromAnyCookie(req)) return signInPage(res, tunneled.port, loginOptions(ctx));
+        }
+        if (tunneled.svc === 'gone') return stoppedPage(res, tunneled.port);
+        return relayRequest(req, res, tunneled.svc);
       }
       let url: URL;
       let p: string;

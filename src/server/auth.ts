@@ -235,7 +235,7 @@ function cookieName(req: IncomingMessage): string {
 }
 
 /** What a sign-in on a service tunnel's page is kept as (see cookie()). */
-const RELAY_COOKIE_NAME = 'ao_relay';
+export const RELAY_COOKIE_NAME = 'ao_relay';
 
 const OFFICE_COOKIE = new RegExp(`^(?:${COOKIE_NAME}|${RELAY_COOKIE_NAME})(?:_\\d+)?$`);
 

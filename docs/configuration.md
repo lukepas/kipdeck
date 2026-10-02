@@ -56,6 +56,13 @@ agent-office accounts [list | invite [name] [--admin] | revoke <name> | signout 
 
   Invite, list and revoke people's own accounts, sign one out of every browser,
   and switch the shared password off or on. Works while the office runs.
+
+agent-office tunnel [office@address | url] [--port <n>] [--office-port <n>] [--name <name>] [--password <pw>] [--no-open] [--insecure] [-- <ssh options>]
+
+  On your own computer, for an office that runs somewhere else: every web server
+  a worker starts there opens on the same port here, by itself, and closes when
+  the worker stops it. Given an SSH address it opens the tunnel to the office too.
+  See docs/tunnel.md.
 ```
 
 Sign-ins last 7 days; `AGENT_OFFICE_SESSION_DAYS` sets it, from 1 to 90. What each of these protects against is in [Security](security.md).

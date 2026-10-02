@@ -2,7 +2,7 @@ import type http from 'node:http';
 import type https from 'node:https';
 import type { Duplex } from 'node:stream';
 import { WebSocketServer } from 'ws';
-import { relayedBack, relayUpgrade, tunneledPort } from '../relay.js';
+import { relayedBack, relayUpgrade, tunneledService } from '../relay.js';
 import type { Ctx } from '../office/context.js';
 import { onConnection } from './connection.js';
 
@@ -21,11 +21,12 @@ export function acceptWebSockets(ctx: Ctx, server: http.Server | https.Server) {
   server.on('upgrade', (req, socket, head) => {
     socket.on('error', () => socket.destroy());
     if (!hosts.hostOk(req)) return refuseUpgrade(socket, '421 Misdirected Request');
-    const tunneled = tunneledPort(req, cfg.port, cfg.tailnet);
+    // A service tunnel's, or one `agent-office tunnel` sent (it names the port in a header): only
+    // ever a worker's server, never the office's own /ws.
+    const tunneled = tunneledService(req, cfg.port, cfg.tailnet, (port) => ctx.services.lookup(port));
     if (tunneled && relayedBack(req)) return refuseUpgrade(socket, '508 Loop Detected');
-    const svc = tunneled ? ctx.services.lookup(tunneled) : undefined;
-    if (tunneled && svc) {
-      if (svc !== 'gone' && auth.fromAnyCookie(req)) return relayUpgrade(req, socket, head, svc);
+    if (tunneled) {
+      if (tunneled.svc !== 'gone' && auth.fromAnyCookie(req)) return relayUpgrade(req, socket, head, tunneled.svc);
       return refuseUpgrade(socket);
     }
     let url: URL;
