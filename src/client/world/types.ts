@@ -23,7 +23,7 @@ export interface Collider {
  *
  *   declare module '../../world/types' {
  *     interface InteractKinds {
- *       gong: true;
+ *       whiteboard: true;
  *     }
  *   }
  *
@@ -69,7 +69,7 @@ export interface DeskView {
  *
  *   declare module './types' {
  *     interface OfficeHandles {
- *       gong: Gong;
+ *       whiteboard: WhiteboardStand;
  *     }
  *   }
  *
