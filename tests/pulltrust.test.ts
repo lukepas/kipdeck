@@ -103,6 +103,26 @@ test("the office refuses a prompt that checks out a fork's PR, whoever wrote it,
   assert.equal(ran, true, 'a prompt without a checkout goes through straight away');
 });
 
+test('a checkout named by a quoted number, a branch or owner:branch is still found, so it gets checked', () => {
+  assert.deepEqual(checkedOutPulls('gh pr checkout "12"'), [12]);
+  assert.deepEqual(checkedOutPulls("gh pr checkout '12' && npm i"), [12]);
+  assert.deepEqual(checkedOutPulls('gh pr checkout evil:patch-1'), ['evil:patch-1']);
+  assert.deepEqual(checkedOutPulls('run gh pr checkout patch-1 then build'), ['patch-1']);
+  assert.deepEqual(checkedOutPulls('gh pr checkout --repo other/repo 3'), ['--repo'], 'another repository is not this one\'s PR #3');
+  assert.deepEqual(checkedOutPulls('gh pr checkout -R=other/repo 3'), ['--repo']);
+  assert.deepEqual(checkedOutPulls('gh pr checkout --branch="x" 4'), [4]);
+});
+
+test("a fork's PR named by branch is resolved through GitHub and refused; another repository is refused outright", async (t) => {
+  const fork = fakeGh(t, { fork: true, author: 'mallory' }, 'admin');
+  assert.match((await fork.checkoutProblem('gh pr checkout evil:patch-1')) ?? '', /PR #7 \(evil:patch-1\).*fork/);
+  assert.match((await fork.checkoutProblem('gh pr checkout "7"')) ?? '', /PR #7 .*fork/);
+  const mate = fakeGh(t, { fork: false, author: 'ada' }, 'write');
+  assert.equal(await mate.checkoutProblem('gh pr checkout patch-1'), undefined, "a teammate's branch resolves to a trusted PR");
+  assert.match((await mate.checkoutProblem('gh pr checkout -R other/repo 7')) ?? '', /Name the PR by number/);
+  assert.match((await mate.checkoutProblem(Array.from({ length: 6 }, (_, i) => `gh pr checkout ${i + 1}`).join('\n'))) ?? '', /at most five/);
+});
+
 test("a teammate's PR may be checked out", async (t) => {
   assert.equal(await fakeGh(t, { fork: false, author: 'ada' }, 'write').checkoutProblem('gh pr checkout 7'), undefined);
 });

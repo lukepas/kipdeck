@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process';
 import type { GhCheck, GhCloseReason, GhComment, GhIssue, GhIssueDetail, GhLabel, GhMergeMethod, GhPull, GhPullDetail, GhRepoInfo, GhReviewComment, GhState } from '../shared/protocol.js';
 import type { GhAs } from './signins.js';
-import { checkedOutPulls, pullTrust, type GhPullTrust } from '../shared/pulltrust.js';
+import { checkedOutPulls, pullTrust, type GhPullTrust, type PullRef } from '../shared/pulltrust.js';
 
 const REFRESH_MS = 90_000;
 /** How long an author's permission on the repository is taken as known. */
@@ -236,19 +236,20 @@ export class GitHub {
     return pullTrust(fork, author, fork ? undefined : await this.permissionOf(author));
   }
 
-  /** Whether pull request `n` may be checked out and built by a worker, asked of GitHub (see shared/pulltrust.ts). */
-  async pullTrust(n: number): Promise<GhPullTrust> {
+  /**
+   * Whether pull request `n` may be checked out and built by a worker, asked of GitHub (see
+   * shared/pulltrust.ts). `n` may be a branch or owner:branch, which GitHub resolves to its PR.
+   */
+  async pullTrust(n: PullRef): Promise<GhPullTrust & { number?: number }> {
+    const name = typeof n === 'number' ? `#${n}` : n;
     try {
-      return await this.trustOf(JSON.parse(await gh(['pr', 'view', String(n), '--json', 'isCrossRepository,author'], this.dir)));
+      const p = JSON.parse(await gh(['pr', 'view', String(n), '--json', 'number,isCrossRepository,author'], this.dir));
+      return { ...(await this.trustOf(p)), number: Number(p.number) || undefined };
     } catch (err) {
-      return { trusted: false, fork: false, reason: `The office couldn't look up pull request #${n} on GitHub: ${(err as Error).message}` };
+      return { trusted: false, fork: false, reason: `The office couldn't look up pull request ${name} on GitHub: ${(err as Error).message}` };
     }
   }
 
-  /**
-   * Why a prompt can't go to a worker, when it has the worker check out a pull request (see
-   * checkedOutPulls) that comes from a fork or from someone who can't push to the repository.
-   */
   /**
    * Runs `ok` when `prompt` checks out no pull request it shouldn't (see checkoutProblem), else
    * `refuse` with why. Straight away when it checks out none at all, as most prompts don't.
@@ -258,10 +259,22 @@ export class GitHub {
     void this.checkoutProblem(prompt).then((why) => (why ? refuse(why) : ok()));
   }
 
+  /**
+   * Why a prompt can't go to a worker, when it has the worker check out a pull request (see
+   * checkedOutPulls) that comes from a fork or from someone who can't push to the repository. A
+   * checkout by branch name is resolved through GitHub, and refused when GitHub can't say which
+   * PR it is; a checkout from another repository (--repo) is always refused.
+   */
   async checkoutProblem(prompt: string): Promise<string | undefined> {
-    for (const n of checkedOutPulls(prompt).slice(0, 5)) {
-      const t = await this.pullTrust(n);
-      if (!t.trusted) return `Not handing PR #${n} to a worker to check out: ${t.reason ?? 'its code is not the repository\'s'} Review it with gh pr diff instead, or push its commits to a branch of the repository first.`;
+    const refs = checkedOutPulls(prompt);
+    if (refs.length > 5) return `Not handing this to a worker: it checks out ${refs.length} pull requests. Name at most five, by number.`;
+    for (const ref of refs) {
+      if (typeof ref === 'string' && (ref.startsWith('-') || !/^[\w./:-]+$/.test(ref))) {
+        return 'Not handing this to a worker: it checks out a pull request the office can\'t check (another repository, or not a PR number). Name the PR by number.';
+      }
+      const t = await this.pullTrust(ref);
+      const name = typeof ref === 'number' ? `PR #${ref}` : t.number ? `PR #${t.number} (${ref})` : `"${ref}"`;
+      if (!t.trusted) return `Not handing ${name} to a worker to check out: ${t.reason ?? 'its code is not the repository\'s'} Review it with gh pr diff instead, or push its commits to a branch of the repository first. Name the PR by number.`;
     }
     return undefined;
   }
