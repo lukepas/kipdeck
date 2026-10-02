@@ -16,7 +16,7 @@ Back to the [README](../README.md).
 | L | Hang a big sign over the desk you face (*Operations*, *Code cleanup*), in one of seven colors; again to change it or take it down |
 | O | Open a pull request for a worker on its own branch, or see the one it has (a worker across several projects gets one in each) |
 | I | Mission control: the reminders, then what needs someone on every floor, ranked, with why and one next step; the floor's mission and milestones; everything waiting for a review; the timeline of what happened. Inside, 1 2 3 4 switch tabs, the arrows pick a row and Enter does its step (see [Mission control](mission-control.md)) |
-| N | Go to the worker that has waited longest on someone; again for the next one, and after the last one on your floor, on to the next floor's |
+| N | Go to the next worker waiting on someone, the ones that need you first and then the ones that are done, longest-waiting first; again for the next one, and after the last one on your floor, on to the next floor's (one that needs you on another floor comes before one here that's only done) |
 | Q | Put back the issue card you're carrying |
 | H | These controls |
 | T / Enter | Chat |

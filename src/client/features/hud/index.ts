@@ -147,7 +147,7 @@ export function installHud(ctx: Ctx, parts: HudParts) {
         sound.setVolume(settings.volume, settings.muted);
       },
       editProfile,
-      () => sound.ding('done'),
+      sound,
       parts.notifier,
       signOut,
       pane,

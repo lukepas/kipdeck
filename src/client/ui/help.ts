@@ -14,7 +14,7 @@ export const HELP_ROWS: readonly (readonly [string, string])[] = [
   ['📝', 'The whiteboard on wheels between the desks and the lounge: press E to draw on it with everyone on your floor, live. What you draw stays up on the board'],
   ['✅', 'Whenever a pull request merges or the task queue finishes, everyone on the floor gets a toast and a ding, and a desktop notification when the office is in another tab'],
   ['I', 'Mission control: the reminders, then what needs someone right now on every floor (needs you, stuck, to review), ranked, with why and one next step; the floor\'s mission and milestones; everything waiting for a review; and the timeline of what happened. 1 2 3 4 switch tabs, the arrows pick a row, Enter does its step'],
-  ['N', "Next worker that needs you: go to whoever has waited longest (needs input, or done and nobody's looked), and again for the next one, then on to the next floor's. Arrows at the edge of the screen point to the ones out of sight"],
+  ['N', "Next worker that needs you: go to whoever needs input (they have a red beacon over their desk, and a banner up top says what each is asking), then whoever is done and nobody's looked at, longest-waiting first, and again for the next one, then on to the next floor's. One that needs you on another floor comes before one here that's only done. Arrows at the edge of the screen point to the ones out of sight"],
   ['Drag / wheel', 'Orbit and zoom the camera in third person'],
   ['P', 'Prompt: give a task to a new or existing worker at the desk you face'],
   ['C', 'Changes: what the worker at the desk you face changed — files and diff, commit, discard, open a PR'],

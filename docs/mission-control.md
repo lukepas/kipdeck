@@ -40,7 +40,7 @@ A worker on another floor takes you to its floor and its desk first, then does i
 
 **...** on a row has the rest: open its terminal, snooze it for 30 minutes, 2 hours or until its status next changes, link it to a milestone, send it home. A snooze is shared: everyone sees *snoozed by Ana until 14:30*, so two people don't both chase the same worker. A snoozed worker stays in the list, greyed, but it isn't counted and nothing notifies about it.
 
-The same ranking runs everywhere: the attention chip on the top bar (*2 need you · 1 stuck · 3 to review*, click it for this tab), the tab title's count, the order of the Workers panel (which shows the reason in place of the bare status), the 2D view's list, the webhook, and what agents see from `list_workers`. It lives in one place, `src/shared/attention.ts`, with its thresholds.
+The same ranking runs everywhere: the attention chip on the top bar (*2 need you · 1 stuck · 3 to review*, click it for this tab), the tab title's count, the needs-you banner and the beacons over desks (the *Needs you* level, the snoozed ones left out), the order **N** goes in, the order of the Workers panel (which shows the reason in place of the bare status), the 2D view's list, the webhook, and what agents see from `list_workers`. It lives in one place, `src/shared/attention.ts`, with its thresholds.
 
 **N** goes to the worker on your floor that has waited longest on someone, then the next; after the last one on your floor it takes you to the next floor's.
 

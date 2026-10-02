@@ -34,6 +34,7 @@ import { installDictation } from './features/dictation';
 import { installHud } from './features/hud';
 import { installMeeting } from './features/meeting';
 import { installMission } from './features/mission';
+import { installNeedsYou } from './features/needsyou';
 import { installPalette } from './features/palette';
 import { installPeers } from './features/peers';
 import { installSeating } from './features/seating';
@@ -93,7 +94,7 @@ parts.you = installYou(ctx);
 parts.reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 parts.sound = makeSound(parts.settings);
 
-parts.notifier = new DesktopNotifier(() => parts.settings.notify, (id) => parts.waiting.openWorkerTerminal(id));
+parts.notifier = new DesktopNotifier(() => parts.settings.notify, (id) => parts.waiting.answerWorker(id));
 const reach = () => parts.you.reach();
 
 parts.travel = installTravel(ctx, core, parts);
@@ -105,6 +106,7 @@ parts.views = installWorkerViews(ctx, parts);
 parts.actions = installWorkerActions(ctx, parts);
 parts.waiting = installWaiting(ctx, core, parts);
 parts.mission = installMission(ctx, parts);
+parts.needsYou = installNeedsYou(ctx, parts);
 installPalette(ctx, parts);
 parts.meeting = installMeeting(ctx, parts);
 parts.bookshelf = installBookshelf(ctx);

@@ -14,9 +14,10 @@ export function isBusy(status: WorkerStatus): boolean {
 
 /**
  * One line for a notification about a worker: what it's asking for when it needs input, or what it
- * was on when it's done (its last activity may be a permission prompt it has long got past).
+ * was on when it's done (its last activity may be a permission prompt it has long got past). A roster
+ * entry (on any floor) has no prompt, only its activity and task.
  */
-export function alertDetail(w: WorkerInfo): string | undefined {
+export function alertDetail(w: Pick<WorkerInfo, 'status' | 'activity' | 'task'> & { prompt?: string }): string | undefined {
   return w.status === 'needs_input' ? (w.activity ?? w.task?.summary) : (w.task?.summary ?? w.prompt);
 }
 

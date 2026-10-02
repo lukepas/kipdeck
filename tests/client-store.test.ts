@@ -160,7 +160,7 @@ test('what the browser remembers keeps its keys and shapes', () => {
   assert.deepEqual(state.lastSpot(), { floor: 'f1', name: 'F', x: 1, y: 2, z: 3, facing: 4 });
   assert.ok(storage.has('agent-office.spot'));
   const settings = state.loadSettings();
-  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: false, pushToTalk: false, notify: true, hud: state.HUD_DEFAULTS, pins: [], missionTab: 'attention', allFloors: false });
+  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: false, pushToTalk: false, notify: true, needsYouSound: 'once', hud: state.HUD_DEFAULTS, pins: [], missionTab: 'attention', allFloors: false });
   // Mission control's last tab is one of its tabs.
   storage.set('agent-office.settings', JSON.stringify({ missionTab: 'goals', allFloors: true }));
   assert.deepEqual([state.loadSettings().missionTab, state.loadSettings().allFloors], ['goals', true]);
@@ -172,6 +172,11 @@ test('what the browser remembers keeps its keys and shapes', () => {
   state.saveSettings({ ...settings, volume: 2, view: 'third' });
   assert.equal(state.loadSettings().volume, 1);
   assert.equal(state.loadSettings().view, 'third');
+  state.saveSettings({ ...settings, needsYouSound: 'remind' });
+  assert.equal(state.loadSettings().needsYouSound, 'remind');
+  // An alarm setting the office doesn't know goes back to how it starts.
+  state.saveSettings({ ...settings, needsYouSound: 'loud' as never });
+  assert.equal(state.loadSettings().needsYouSound, 'once');
   store.apply(welcome());
   assert.equal(state.lastFloor(), 'f1');
 });

@@ -1,7 +1,7 @@
 /**
  * Who's waiting on you: N (and the count in the Workers panel) takes you to each in turn, and the
- * compass points to the ones you can't see. Also opening a worker's terminal (waking it if it's
- * asleep) and its changes, the search over every terminal, and the task queue's window.
+ * compass points to the ones you can't see. Also going to a worker's desk, opening its terminal
+ * (waking it if it's asleep) and its changes, the search over every terminal, and the task queue's window.
  */
 import * as THREE from 'three';
 import { OFFICE_PLAN } from '../../../shared/plan';
@@ -28,28 +28,46 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
   let nextToast: HTMLElement | null = null;
   const workerPos = new THREE.Vector3();
 
-  /** N: to the worker that has waited longest on someone, and on each press after, the next. */
+  /**
+   * N: to the first worker waiting on someone, and on each press after, the next. In the ranking's
+   * order (shared/attention.ts): the ones that need you before the ones that are done, so one that
+   * needs you on another floor comes before one here that's only done, as the banner says (features/needsyou).
+   */
   function goToNextWaiting() {
     if (core.trip) return;
-    const w = nextUp.next(store.workers.values(), waitingBeside());
-    const desk = w && OFFICE_PLAN.byId.get(w.deskId);
+    const waiting = waitingInOrder(store.workers.values());
+    const other = elsewhere();
+    const away = !waiting.length || (other?.status === 'needs_input' && waiting[0].status !== 'needs_input');
+    const w = away ? undefined : nextUp.next(store.workers.values(), waitingBeside());
     nextToast?.remove();
-    if (!w || !desk) {
+    if (!w || !goToWorker(w.id)) {
       // Building-wide: after the last one here, the one on another floor that has waited longest.
-      const other = elsewhere();
       if (!other) {
         nextToast = toast('👍 Nobody is waiting on you');
         return;
       }
-      nextToast = toast(`🛗 Nobody's waiting on this floor: over to ${other.name} on ${other.floorName}`);
+      nextToast = toast(other.status === 'needs_input' ? `🛗 ${other.name} needs you: over to ${other.floorName}` : `🛗 Nobody's waiting on this floor: over to ${other.name} on ${other.floorName}`);
       parts.mission.missionDeps.goTo(other.floor, other.deskId);
       return;
     }
+    const of = waiting.length > 1 ? ` (${waiting.findIndex((x) => x.id === w.id) + 1} of ${waiting.length})` : '';
+    nextToast = toast(`${w.status === 'needs_input' ? `🙋 ${w.name} needs you` : `✅ ${w.name} is done`}${of}. E opens its terminal`);
+  }
+
+  /** Puts you behind worker `id` on this floor, looking over its shoulder, with any window closed. False when there's no getting there (you're between floors, or it's gone). */
+  function goToWorker(id: string): boolean {
+    const w = store.workers.get(id);
+    const desk = w && OFFICE_PLAN.byId.get(w.deskId);
+    if (core.trip || !desk) return false;
     closeAllModals();
     parts.actions.standAt(desk);
-    const waiting = waitingInOrder(store.workers.values());
-    const of = waiting.length > 1 ? ` (${waiting.findIndex((x) => x.id === w.id) + 1} of ${waiting.length})` : '';
-    nextToast = toast(`${w.status === 'needs_input' ? `🙋 ${w.name} needs input` : `✅ ${w.name} is done`}${of}. E opens its terminal`);
+    return true;
+  }
+
+  /** From a notification about worker `id`: over to its desk, with its terminal open to answer it. */
+  function answerWorker(id: string) {
+    goToWorker(id);
+    openWorkerTerminal(id);
   }
 
   /** Who has waited longest on someone on another floor, by the building-wide ranking (snoozed ones left out). */
@@ -78,6 +96,7 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     const el = $('waiting');
     el.classList.toggle('hidden', !waiting.length);
     el.classList.toggle('all-done', waiting.every((w) => w.status === 'done'));
+    el.classList.toggle('needs-you-now', waiting.some((w) => w.status === 'needs_input'));
     if (waiting.length) el.replaceChildren(h('span', {}, waitingLabel(waiting)), h('span.key', {}, 'N'));
   }
   $('waiting').addEventListener('click', () => goToNextWaiting());
@@ -142,5 +161,5 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     openQueue(net, { openTerminal: openWorkerTerminal });
   }
 
-  return { goToNextWaiting, renderWaiting, openWorkerTerminal, openWorkerChanges, showSearch, showQueue };
+  return { goToNextWaiting, goToWorker, answerWorker, renderWaiting, openWorkerTerminal, openWorkerChanges, showSearch, showQueue };
 }

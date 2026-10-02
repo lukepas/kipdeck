@@ -4,8 +4,8 @@
 import { SLICES } from './slices';
 import { Store } from './store';
 
-export { AVATAR_COLORS, HUD_DEFAULTS, MISSION_TABS, lastFloor, lastHere, lastSpot, loadProfile, loadSettings, rememberSpot, saveProfile, saveSettings, stampHere } from './persist';
-export type { HudPanel, MissionTab, Profile, Settings, Spot, ViewMode } from './persist';
+export { AVATAR_COLORS, HUD_DEFAULTS, MISSION_TABS, NEEDS_YOU_SOUNDS, lastFloor, lastHere, lastSpot, loadProfile, loadSettings, rememberSpot, saveProfile, saveSettings, stampHere } from './persist';
+export type { HudPanel, MissionTab, NeedsYouSound, Profile, Settings, Spot, ViewMode } from './persist';
 export { workerForPull } from './store';
 export type { ScreenState, Slice, Store, Topic, Topics } from './store';
 

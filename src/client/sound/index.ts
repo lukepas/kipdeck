@@ -11,6 +11,7 @@
  */
 import { deskPhones, startRoomTone } from './ambience';
 import { ding } from './alerts';
+import { needsYou } from '../features/needsyou/sound';
 import { AudioCore, type Listener } from './core';
 import { paper, step, stepAt } from './steps';
 import { fidgeting, Typing } from './typing';
@@ -88,5 +89,10 @@ export class OfficeSound {
 
   ding(kind: 'done' | 'needs_input') {
     ding(this.a, kind);
+  }
+
+  /** The alarm for a worker that needs you, or (`again`) the soft reminder while it still does. */
+  needsYou(again = false) {
+    needsYou(this.a, again);
   }
 }

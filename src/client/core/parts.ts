@@ -18,6 +18,7 @@ import type { installCarrying } from '../features/carrying';
 import type { installHud } from '../features/hud';
 import type { installMeeting } from '../features/meeting';
 import type { installMission } from '../features/mission';
+import type { installNeedsYou } from '../features/needsyou';
 import type { installPeers } from '../features/peers';
 import type { installSeating } from '../features/seating';
 import type { installTv } from '../features/tv';
@@ -75,6 +76,8 @@ export interface Parts {
   waiting: Made<typeof installWaiting>;
   /** Mission control and the mission strip (see features/mission). */
   mission: Made<typeof installMission>;
+  /** The beacon over a worker that needs you, the banner, the flash and the alarm (see features/needsyou). */
+  needsYou: Made<typeof installNeedsYou>;
   meeting: Made<typeof installMeeting>;
   bookshelf: Made<typeof installBookshelf>;
   cards: Made<typeof installCarrying>;

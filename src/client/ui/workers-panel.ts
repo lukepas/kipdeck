@@ -1,5 +1,6 @@
 // The workers list in the sidebar: every worker on your floor, most in need of someone first (the
-// building's one ranking, see shared/attention.ts), why, what it's on, and what it has spent.
+// building's one ranking, see shared/attention.ts), why, what it's on, and what it has spent. One that
+// needs you (the ranking's needs-you level) is in red, saying what it's asking and for how long.
 
 import { duration } from '../../shared/attention';
 import type { WorkerInfo } from '../../shared/protocol';
@@ -19,6 +20,7 @@ export function renderWorkers(onOpen: (id: string) => void) {
   const at = (w: WorkerInfo) => order.get(w.id) ?? Number.MAX_SAFE_INTEGER;
   const workers = [...store.workers.values()].sort((a, b) => at(a) - at(b) || a.createdAt - b.createdAt);
   const now = Date.now();
+  let needy = false;
   for (const w of workers) {
     const provider = w.kind === 'agent' ? providerLabel(w.provider, store.project) : null;
     const providerKind = w.kind === 'agent' ? resolvedProvider(w.provider, store.project) : undefined;
@@ -31,10 +33,12 @@ export function renderWorkers(onOpen: (id: string) => void) {
     const att = why.get(w.id);
     // Why it needs someone, in words, in place of the bare status.
     const reason = att?.reason && !att.snoozed && (att.level === 'needs-you' || att.level === 'stuck' || att.level === 'review') ? att : undefined;
+    const asking = reason?.level === 'needs-you';
+    if (asking) needy = true;
     ul.append(
       h(
         'li',
-        { onclick: () => onOpen(w.id), title: `Open ${w.name}'s terminal` },
+        { class: asking ? 'needs-you-row' : '', onclick: () => onOpen(w.id), title: asking ? `${w.name} needs you: open its terminal to answer` : `Open ${w.name}'s terminal` },
         h('span.dot', { style: `background:${w.color}` }),
         h('span.name', {}, w.name, sub ? h('span.sub', {}, sub) : null,
           usageState === 'tracked' && w.usage ? h('span.cost', { title: usageTitle(w.usage, providerKind) }, usageLabel(w.usage, providerKind)) : null),
@@ -46,6 +50,7 @@ export function renderWorkers(onOpen: (id: string) => void) {
       ),
     );
   }
+  $('workers-panel').classList.toggle('needs-you-panel', needy);
   if (!workers.length) ul.append(h('li.empty', {}, 'Walk up to a desk and press E to hire one'));
   // The count is the workers hired onto desks and bean bags (and a meeting's table): the board agents
   // standing at the Issues, PR and queue kiosks are listed but aren't counted.

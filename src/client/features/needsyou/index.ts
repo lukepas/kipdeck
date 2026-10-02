@@ -1,0 +1,133 @@
+/**
+ * A worker that needs you is the one thing in the office that can't wait, so it's the hardest to
+ * miss: a beacon over its desk you can see from across the room, a banner under the top bar saying
+ * who and what for (on any floor), a flash round the edge of the screen and an alarm when one on your
+ * floor starts asking, and (if you ask for it) a reminder until someone's at its terminal.
+ *
+ * Who needs you is the building's one ranking (shared/attention.ts): its needs-you level, the
+ * snoozed ones left out, the same workers the attention chip, the tab title and N count first.
+ */
+import * as THREE from 'three';
+import type { Ctx } from '../../core/context';
+import type { Parts } from '../../core/parts';
+import { store } from '../../state';
+import { $ } from '../../ui/dom';
+import { bannerText, Fresh, needingYou, Reminders, waitKey } from './logic';
+import { Banner } from './ui';
+import { Beacon } from './world';
+
+/** How close (m) the beacon's light is gone altogether, and how far off it's at its brightest. */
+const NEAR = 3;
+const FAR = 6.5;
+
+/** Follows the roster for the banner, the flash and the alarm, and registers the beacons' tick ('others', after the workers' own). */
+export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'views' | 'waiting' | 'mission'>) {
+  const { scene, camera, sound, settings, player, reduceMotion } = ctx;
+  const fresh = new Fresh();
+  const reminders = new Reminders();
+  /** The waits the banner was put away on (see waitKey): it comes back for anyone else, or when one of these asks again. */
+  const hidden = new Set<string>();
+  const beacons = new Map<string, Beacon>();
+
+  /** Everyone who needs you, on every floor, longest first. */
+  const asking = () => needingYou(store.ranked());
+  /** The ones on your floor, as the office has them (with who has their terminal open). */
+  const askingHere = () => asking().flatMap((e) => (e.floor === store.floor ? (store.workers.get(e.id) ?? []) : []));
+
+  const banner = new Banner($('hud'), {
+    go: (b) => {
+      if (b.floor === store.floor) parts.waiting.goToWorker(b.id);
+      else parts.mission.missionDeps.goTo(b.floor, b.deskId);
+    },
+    hide: () => {
+      for (const e of asking()) hidden.add(waitKey(e));
+      paintBanner();
+    },
+  });
+
+  function paintBanner() {
+    const all = asking();
+    for (const key of hidden) if (!all.some((e) => waitKey(e) === key)) hidden.delete(key);
+    banner.show(bannerText(all.filter((e) => !hidden.has(waitKey(e))), Date.now(), store.floor));
+  }
+
+  function sync() {
+    // Only on your floor, and not ones that were asking already when the page first saw them (a reload, a floor you've just arrived on).
+    if (fresh.take(store.ranked(store.floor)).length) {
+      banner.flash();
+      if (settings.needsYouSound !== 'off') {
+        sound.needsYou();
+        reminders.rang(performance.now());
+      }
+    }
+    const here = new Set(askingHere().map((w) => w.id));
+    for (const [id, b] of beacons) {
+      if (here.has(id)) continue;
+      b.dispose();
+      beacons.delete(id);
+    }
+    for (const id of here) {
+      if (beacons.has(id)) continue;
+      const b = new Beacon();
+      b.root.visible = false;
+      scene.add(b.root);
+      beacons.set(id, b);
+    }
+    paintBanner();
+  }
+  // The roster has the ranking; the floor's own workers have their views and who's at their terminals.
+  store.on('roster', sync);
+  store.on('workers', sync);
+
+  // Another floor's workers: whoever's asking there has a wait of their own before the first reminder.
+  store.on('floor', () => reminders.quiet());
+
+  // How long it has waited ticks on, and the reminder comes round, whether or not a frame is drawn.
+  setInterval(() => {
+    if (asking().length) paintBanner();
+    if (reminders.due(askingHere(), performance.now()) && settings.needsYouSound === 'remind') sound.needsYou(true);
+  }, 1000);
+
+  const at = new THREE.Vector3();
+  const ground = new THREE.Vector3();
+  const size = new THREE.Vector3();
+  ctx.ticks.add('others', ({ t }) => {
+    for (const [id, b] of beacons) {
+      const v = parts.views.workerViews.get(id);
+      const root = v?.model.root;
+      // Not drawn (it's on its way in, or out of sight): neither is its beacon.
+      b.root.visible = !!root && inView(root, scene);
+      if (!root || !b.root.visible) continue;
+      root.getWorldPosition(at);
+      // The floor its desk stands on.
+      const desk = ctx.world().desks.get(v.deskId);
+      const floor = desk ? desk.group.getWorldPosition(ground).y : at.y;
+      const d = Math.hypot(at.x - player.pos.x, at.z - player.pos.z);
+      const near = 1 - Math.min(1, Math.max(0, (d - NEAR) / (FAR - NEAR)));
+      // A worker is the size its seat makes it, and its card with it.
+      const top = at.y + topOf(root) * root.getWorldScale(size).y;
+      b.update(at, floor, top, camera.position.distanceTo(at), t, near, reduceMotion.matches);
+    }
+  });
+
+  return { beacons };
+}
+
+/** How high over a worker's feet the top of what's over its head is: its card or bubble, or its name. */
+function topOf(root: THREE.Object3D): number {
+  let top = 1.7;
+  for (const c of root.children) {
+    const s = c as THREE.Sprite;
+    if (s.isSprite && s.visible) top = Math.max(top, s.position.y + s.scale.y * (1 - s.center.y));
+  }
+  return top;
+}
+
+/** Whether `o` is in the scene and nothing it's inside is hidden. */
+function inView(o: THREE.Object3D, scene: THREE.Scene): boolean {
+  for (let p: THREE.Object3D | null = o; p; p = p.parent) {
+    if (!p.visible) return false;
+    if (p === scene) return true;
+  }
+  return false;
+}
