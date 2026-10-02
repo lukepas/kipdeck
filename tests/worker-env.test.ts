@@ -111,3 +111,8 @@ test("the other agents' own settings pass too", () => {
   const env = pickEnv({ GROK_HOME: '/g', MUSE_BIN: '/m', PI_CODING_AGENT_DIR: '/p', XAI_API_KEY: 'x', DSH_PROFILE: 'acp' }, { policy: 'clean', allow: [] });
   assert.deepEqual(Object.keys(env).sort(), ['DSH_PROFILE', 'GROK_HOME', 'MUSE_BIN', 'PI_CODING_AGENT_DIR', 'XAI_API_KEY']);
 });
+
+test("Cursor's sign-in and settings folder pass, but not the variables of a Cursor shell the office was started from", () => {
+  const env = pickEnv({ CURSOR_API_KEY: 'k', CURSOR_CONFIG_DIR: '/c', CURSOR_AGENT: '1', CURSOR_CONVERSATION_ID: 'chat', CURSOR_TRACE_ID: 't' }, { policy: 'clean', allow: [] });
+  assert.deepEqual(Object.keys(env).sort(), ['CURSOR_API_KEY', 'CURSOR_CONFIG_DIR']);
+});

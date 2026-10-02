@@ -51,6 +51,9 @@ export const AGENT_ENV = [
   'OPENROUTER_API_KEY', 'GEMINI_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY', 'GROQ_API_KEY', 'MISTRAL_API_KEY',
   // The other agents the office runs: Grok, Muse, Pi and dsh keep their homes and settings in these.
   'XAI_*', 'GROK_*', 'MUSE_*', 'PI_*', 'DSH_*',
+  // The Cursor CLI signs in with CURSOR_API_KEY when it's set, and keeps its settings and chats in CURSOR_CONFIG_DIR.
+  // Not CURSOR_*: Cursor's own shells set CURSOR_AGENT and the like, which a worker must not inherit.
+  'CURSOR_API_KEY', 'CURSOR_CONFIG_DIR',
   'GH_TOKEN', 'GITHUB_TOKEN', 'GH_HOST', 'GH_CONFIG_DIR', 'GIT_AUTHOR_*', 'GIT_COMMITTER_*', 'GIT_SSH_COMMAND', 'GIT_SSH', 'GIT_ASKPASS', 'GIT_CONFIG_GLOBAL',
 ];
 
