@@ -101,6 +101,9 @@ test('the review queue: open office pull requests and review requests no worker 
     pull({ number: 46, headRefName: 'office/draft', isDraft: true }),
     pull({ number: 47, headRefName: 'office/closed', state: 'MERGED' }),
     pull({ number: 48, headRefName: 'queued' }),
+    // A fork can name its branch anything: not the office's, though it looks it.
+    pull({ number: 49, headRefName: 'office/sneaky', fork: true }),
+    pull({ number: 50, headRefName: 'mine', fork: true }),
   ];
   const tasks = [{ id: 't', title: 't', prompt: '', addedBy: 'x', addedAt: 0, status: 'done' as const, pr: { number: 48, url: '', state: 'OPEN', title: '' } }];
   const q = reviewQueue([{ id: 'f1', name: 'api', pulls, tasks, branches: ['mine'] }], roster);

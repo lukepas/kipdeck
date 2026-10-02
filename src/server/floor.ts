@@ -74,9 +74,9 @@ export interface FloorContext {
   lent(floor: Floor): boolean;
 }
 
-/** The open pull request on a floor's board whose head is `branch`. */
+/** The open pull request on a floor's board whose head is `branch` of the repository itself (a fork can use any branch name). */
 function openPull(floor: Floor, branch: string): { number: number; url: string } | undefined {
-  const pr = floor.github.pulls.items.find((p) => p.state === 'OPEN' && p.headRefName === branch);
+  const pr = floor.github.pulls.items.find((p) => p.state === 'OPEN' && !p.fork && p.headRefName === branch);
   return pr ? { number: pr.number, url: pr.url } : undefined;
 }
 
@@ -352,11 +352,14 @@ export class Floor {
     this.watch.merged(n, this.github.pulls.items.find((p) => p.number === n)?.title, by);
   }
 
-  /** Whether a pull request is the office's own: from one of its branches, a worker's, or a queue task's. */
+  /**
+   * Whether a pull request is the office's own: from one of its branches, a worker's, or a queue
+   * task's. A branch name counts only from the repository itself, since a fork can use any name.
+   */
   officePull(p: GhPull): boolean {
-    if (p.headRefName.startsWith(BRANCH_PREFIX)) return true;
+    if (!p.fork && p.headRefName.startsWith(BRANCH_PREFIX)) return true;
     if (this.queue.state().tasks.some((t) => t.pr?.number === p.number)) return true;
-    return this.workers.list().some((w) => w.pr?.number === p.number || w.worktree?.branch === p.headRefName);
+    return this.workers.list().some((w) => w.pr?.number === p.number || (!p.fork && w.worktree?.branch === p.headRefName));
   }
 
   /**

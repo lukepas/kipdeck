@@ -65,7 +65,7 @@ Everything on every floor that waits for a person's decision, oldest first:
 - workers done and nobody has looked, with what they changed (*+120 -30 · 4 files*, from the Changes window's own look, taken once each time the worker comes to rest);
 - workers with commits on their branch and no pull request (**Open PR**);
 - pull requests by state: waiting for a review, approved and ready to merge (**Merge**), checks failing, merge conflicts or changes requested (**Hand back**), with the checks' state beside them;
-- pull requests the office made that no worker at a desk stands for any more (from an `office/` branch, a worker's branch or a queue task), and pull requests your review is requested on (yours by your own GitHub sign-in, or the office's on the shared password);
+- pull requests the office made that no worker at a desk stands for any more (from an `office/` branch, a worker's branch or a queue task; a branch counts only in the repository itself, never a fork's, since a fork can name a branch anything), and pull requests your review is requested on (yours by your own GitHub sign-in, or the office's on the shared password);
 - workers whose pull request merged (**Send home**).
 
 Each row says what it is, its floor, its goal, the checks, the diff size and how long it has waited. Opening a finished worker's work from here (reviewing its changes, its pull request, sending it home) marks it seen, as opening its terminal does. The attention chip's *to review* counts this whole list.

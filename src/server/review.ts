@@ -106,7 +106,9 @@ export function reviewQueue(floors: readonly ReviewFloor[], roster: readonly Ros
     const heads = new Set(f.branches);
     for (const p of f.pulls) {
       if (p.state !== 'OPEN' || p.isDraft || tied.has(`${f.id}:${p.number}`)) continue;
-      const office = p.headRefName.startsWith(BRANCH_PREFIX) || taskPrs.has(p.number) || heads.has(p.headRefName);
+      // A branch name is only the office's from the repository itself: anyone can name a fork's branch office/...
+      const ownBranch = !p.fork && (p.headRefName.startsWith(BRANCH_PREFIX) || heads.has(p.headRefName));
+      const office = ownBranch || taskPrs.has(p.number);
       if (!office && !p.reviewRequests?.length) continue;
       out.push(reviewPull(f, p, office));
     }

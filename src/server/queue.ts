@@ -216,7 +216,8 @@ export class TaskQueue {
       if (t.status === 'queued') continue;
       const since = (t.startedAt ?? t.addedAt) - 60_000;
       const match = pulls
-        .filter((p) => (t.branch && p.headRefName === t.branch) || (t.issue !== undefined && p.closes.includes(t.issue) && Date.parse(p.createdAt) >= since))
+        // Never a fork's: a stranger can name a branch anything, and say it closes any issue.
+        .filter((p) => !p.fork && ((t.branch && p.headRefName === t.branch) || (t.issue !== undefined && p.closes.includes(t.issue) && Date.parse(p.createdAt) >= since)))
         .sort((a, b) => Number(b.headRefName === t.branch) - Number(a.headRefName === t.branch) || b.createdAt.localeCompare(a.createdAt))[0];
       if (!match) continue;
       const pr = { number: match.number, url: match.url, state: match.isDraft ? 'DRAFT' : match.state, title: match.title };
