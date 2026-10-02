@@ -166,6 +166,16 @@ export function unlinked(roster: readonly RosterEntry[]): RosterEntry[] {
 }
 
 /**
+ * What it's linked to: its milestone, else its issue, else nothing (unlinked). A shell is never
+ * called unlinked, as unlinked() leaves shells out: it gets no mission note to link to.
+ */
+export function linkLabel(e: RosterEntry): string {
+  if (e.goalTitle) return e.issue ? `${e.goalTitle} · #${e.issue}` : e.goalTitle;
+  if (e.issue) return `#${e.issue}`;
+  return e.kind === 'agent' ? 'unlinked' : '';
+}
+
+/**
  * What fills the 'worker.mission' prompt for a worker on milestone `goal`: the statement and the
  * milestones as quoted data, each line empty when there's nothing to say. Undefined when the floor
  * has no mission, so nothing is sent.

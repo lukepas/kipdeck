@@ -25,7 +25,8 @@ import { openMeeting, type MeetingPreset } from './ui/meeting';
 import { openSignIns } from './ui/signins';
 import { modelBadge, providerLabel } from './ui/provider';
 import { attentionChip, digestCard, openMissionControl, recallDigest, renderStrip, runAction, watchAway, type MissionDeps } from './ui/mission';
-import { doingLabel, linkLabel } from './ui/mission/act';
+import { doingLabel } from './ui/mission/act';
+import { linkLabel } from '../shared/mission';
 import { watchStuck } from './ui/mission/watch';
 import { confirmSendHome } from './ui/sendhome';
 import { askNotifyPermission, DesktopNotifier, notifyPermission, waitingOnSomeone } from './notify';
@@ -164,7 +165,7 @@ function elsewhereCard(e: RosterEntry, att: Attention): HTMLElement {
       'button.lite-card',
       { type: 'button', onclick: () => runAction(missionDeps, e, att.action), 'aria-label': `${e.name} on ${e.floorName}: ${att.reason ?? STATUS_LABEL[e.status] ?? e.status}` },
       h('span.dot', { style: `background:${e.color}` }),
-      h('span.lite-info', {}, h('span.lite-name', {}, e.name), whyLine(att), doing ? h('span.lite-now', {}, doing) : null, h('span.lite-sub', {}, h('b', {}, e.floorName), ` · ${linkLabel(e)}`)),
+      h('span.lite-info', {}, h('span.lite-name', {}, e.name), whyLine(att), doing ? h('span.lite-now', {}, doing) : null, h('span.lite-sub', {}, h('b', {}, e.floorName), linkLabel(e) ? ` · ${linkLabel(e)}` : '')),
       h('span.lite-state', {}, h('span.pill', { class: e.status }, STATUS_LABEL[e.status] ?? e.status)),
     ),
   );

@@ -4,7 +4,8 @@
 import { ACTION_LABEL, SNOOZE_CHOICES, duration, type Ranked } from '../../../shared/attention';
 import { store } from '../../state';
 import { h } from '../dom';
-import { doingLabel, linkLabel, money, runAction, snooze, snoozeLabel, type MissionDeps } from './act';
+import { linkLabel } from '../../../shared/mission';
+import { doingLabel, money, runAction, snooze, snoozeLabel, type MissionDeps } from './act';
 
 /** The rows whose "..." menu is open, kept while Mission control draws itself again. */
 const expanded = new Set<string>();

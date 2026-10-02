@@ -193,12 +193,6 @@ export function money(usd: number | undefined): string {
   return usd < 0.01 ? '<$0.01' : `$${usd.toFixed(2)}`;
 }
 
-/** What it's linked to: its milestone, else its issue, else nothing (unlinked). */
-export function linkLabel(e: RosterEntry): string {
-  if (e.goalTitle) return e.issue ? `${e.goalTitle} · #${e.issue}` : e.goalTitle;
-  return e.issue ? `#${e.issue}` : 'unlinked';
-}
-
 /** What it's on: its task's name and line, else its latest activity. */
 export function doingLabel(e: RosterEntry): string {
   if (e.task?.name) return e.task.summary ? `${e.task.name}: ${e.task.summary}` : e.task.name;

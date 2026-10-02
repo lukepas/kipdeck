@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { MISSION_LIMITS, cleanMission, cleanText, goalFor, milestoneProgress, missionLine, missionVars, unlinked } from '../src/shared/mission.js';
+import { MISSION_LIMITS, cleanMission, cleanText, goalFor, milestoneProgress, linkLabel, missionLine, missionVars, unlinked } from '../src/shared/mission.js';
 import { fillPrompt, PROMPTS } from '../src/shared/prompts.js';
 import type { GhIssue, GhPull, Mission, RosterEntry, WorkerInfo } from '../src/shared/protocol.js';
 import { MissionStore } from '../src/server/mission.js';
@@ -73,6 +73,10 @@ test("a milestone's progress: its issues closed, PRs open, workers on it, and wh
   const roster = [e({ id: 'w1', goal: 'a1', pr: { number: 52, state: 'open' }, usd: 2, tokens: 10, workedMs: 1000, workingSince: 9000 }), e({ id: 'w2', goal: 'a1', status: 'done', pr: { number: 50, state: 'open' } }), e({ id: 'w3' })];
   assert.deepEqual(milestoneProgress(mission().milestones[0], issues, roster, pulls, 10_000), { closed: 1, issues: 2, prsOpen: 2, workers: 2, working: 1, usd: 3, tokens: 110, workedMs: 62_000 });
   assert.deepEqual(unlinked(roster).map((x) => x.id), ['w3']);
+  // The row says the same as the count: an agent with nothing is unlinked, a shell is never called so.
+  const shell = e({ id: 's1', kind: 'shell' });
+  assert.deepEqual(unlinked([...roster, shell]).map((x) => x.id), ['w3']);
+  assert.deepEqual([linkLabel(e({})), linkLabel(shell), linkLabel(e({ issue: 4 })), linkLabel(e({ goalTitle: 'Auth', issue: 4 }))], ['unlinked', '', '#4', 'Auth · #4']);
 });
 
 test("the team context for a worker's first prompt is quoted data, and nothing without a mission", () => {
