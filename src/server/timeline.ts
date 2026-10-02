@@ -27,7 +27,9 @@ function cleanEvent(raw: unknown, floor: string): TimelineEvent | undefined {
   const at = num(r.at);
   const text = cleanText(r.text, TIMELINE_TEXT);
   if (at === undefined || !KINDS.has(r.kind as TimelineKind) || typeof r.id !== 'string' || !/^[a-z0-9-]{1,32}$/.test(r.id) || !text) return undefined;
-  return made({ ...(r as unknown as NewEvent), at }, floor, r.id);
+  // Written by an older office with the whole activity line in it (see needsInputText).
+  const old = r.kind === 'needs-input' ? /^(.*?) needs input: (.*)$/s.exec(text) : null;
+  return made({ ...(r as unknown as NewEvent), at, ...(old ? { text: needsInputText(old[1], old[2]) } : {}) }, floor, r.id);
 }
 
 /** An event with everything in it cleaned and capped: the office's own words, at most TIMELINE_TEXT long. */
@@ -98,17 +100,20 @@ export class Timeline {
     const text = readState(this.file);
     if (text === undefined) return;
     const raw = text.split('\n').filter(Boolean);
+    let scrubbed = false;
     for (const line of raw) {
       try {
-        const e = cleanEvent(JSON.parse(line), this.floor);
+        const obj = JSON.parse(line);
+        const e = cleanEvent(obj, this.floor);
         if (e) this.events.push(e);
+        if (e && e.text !== obj.text) scrubbed = true;
       } catch {
         // a torn last line (the office died mid-write) is skipped
       }
     }
     this.events.sort((a, b) => a.at - b.at);
     this.fileLines = raw.length;
-    if (this.events.length > TIMELINE_KEEP || this.events.length !== raw.length) {
+    if (scrubbed || this.events.length > TIMELINE_KEEP || this.events.length !== raw.length) {
       this.events = this.events.slice(-TIMELINE_KEEP);
       this.rewrite();
     }
@@ -122,6 +127,22 @@ export class Timeline {
       // disk issues shouldn't take the office down
     }
   }
+}
+
+/**
+ * An agent is done at the end of every turn and asks something every so often: a repeat of the
+ * same finish (same task) or the same question within this long is folded into the last one, so
+ * the timeline keeps answering what happened to the mission instead of logging every turn.
+ */
+export const TIMELINE_FOLD_MS = 30 * 60_000;
+
+/**
+ * What a needs-input event says. A permission prompt names the tool only, never its input (a shell
+ * command can carry a token): the timeline is kept on disk and shown to everyone on the floor.
+ */
+export function needsInputText(name: string, activity: string | undefined): string {
+  const asks = /^Wants permission: ([\w.-]{1,60})/.exec(activity ?? '');
+  return asks ? `${name} wants permission to use ${asks[1]}` : `${name} needs input`;
 }
 
 const money = (usd: number | undefined) => (usd ? (usd < 0.01 ? 'under $0.01' : `$${usd.toFixed(2)}`) : '');
@@ -147,6 +168,8 @@ export class TimelineWatch {
   private mission?: Mission;
   private progress = new Map<string, { closed: number; of: number }>();
   private issueState = new Map<number, string>();
+  /** Each worker's last done or needs-input event, for folding repeats (TIMELINE_FOLD_MS). */
+  private last = new Map<string, { text: string; at: number }>();
 
   constructor(
     private t: Timeline,
@@ -175,16 +198,26 @@ export class TimelineWatch {
       return this.add({ kind: 'hired', ...this.who(w), text: `${w.createdBy} hired ${w.name}${what ? ` ${what}` : ''}${w.kind === 'shell' ? ' (a shell)' : ''}` });
     }
     if (prev === w.status || w.kind !== 'agent') return;
-    // Its activity line as the roster carries it, 80 characters at most: never a whole prompt.
-    const asks = cleanText(w.activity, 80);
-    if (w.status === 'needs_input') return this.add({ kind: 'needs-input', ...this.who(w), text: `${w.name} needs input${asks ? `: ${asks}` : ''}` });
-    if (w.status === 'done') return this.add({ kind: 'done', ...this.who(w), text: `${w.name} finished${w.task?.name ? `: ${w.task.name}` : ''}` });
+    if (w.status === 'needs_input') return this.routine(w, 'needs-input', needsInputText(w.name, w.activity));
+    if (w.status === 'done') return this.routine(w, 'done', `${w.name} finished${w.task?.name ? `: ${w.task.name}` : ''}`);
     if (w.status === 'working' && (prev === 'exited' || prev === 'offline')) return this.add({ kind: 'resumed', ...this.who(w), text: `${w.name} woke up and is working again` });
+  }
+
+  /** A done or needs-input event, unless it repeats the worker's last one of that kind (TIMELINE_FOLD_MS). */
+  private routine(w: WorkerInfo, kind: 'done' | 'needs-input', text: string) {
+    const now = Date.now();
+    const key = `${w.id}:${kind}`;
+    const last = this.last.get(key);
+    if (last && last.text === text && now - last.at < TIMELINE_FOLD_MS) return;
+    this.last.set(key, { text, at: now });
+    this.add({ kind, ...this.who(w), text });
   }
 
   /** A worker went home. */
   gone(w: WorkerInfo) {
     this.status.delete(w.id);
+    this.last.delete(`${w.id}:done`);
+    this.last.delete(`${w.id}:needs-input`);
     if (!onRoster(w)) return;
     const worked = workedMs(w);
     const usd = w.usage?.cost;

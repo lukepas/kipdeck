@@ -4,7 +4,7 @@
 // The command palette opens it again.
 
 import { duration } from '../../../shared/attention';
-import { digest, type Digest } from '../../../shared/digest';
+import { digest, digestShown, type Digest } from '../../../shared/digest';
 import type { Net } from '../../net';
 import { stampHere, store } from '../../state';
 import { h, modalOpen, onModalChange, openModal, type Modal } from '../dom';
@@ -21,7 +21,7 @@ const sinceLabel = (since: number) => `Since ${new Date(since).toLocaleTimeStrin
 
 /** What the digest shows, for the window and for the 2D view's card. */
 function digestBody(deps: MissionDeps, d: Digest & { since: number }, showFloor: boolean): HTMLElement[] {
-  const shown = d.events.slice(0, 50);
+  const shown = digestShown(d.events, 50);
   return [
     h('p.dg-since', {}, sinceLabel(d.since)),
     h('p.dg-summary', {}, d.summary),

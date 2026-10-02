@@ -13,6 +13,14 @@ export interface Digest {
   events: TimelineEvent[];
 }
 
+/** The kinds every agent turn makes: shown after the rest, so the mission's own events stay in view. */
+const ROUTINE = new Set<TimelineEvent['kind']>(['done', 'needs-input', 'resumed']);
+
+/** The first `max` of a digest's events to list: PRs, milestones, stuck workers and the like first, then the routine ones, each newest first. */
+export function digestShown(events: readonly TimelineEvent[], max: number): TimelineEvent[] {
+  return [...events.filter((e) => !ROUTINE.has(e.kind)), ...events.filter((e) => ROUTINE.has(e.kind))].slice(0, max);
+}
+
 const n = (k: number, one: string, many = `${one}s`) => `${k} ${k === 1 ? one : many}`;
 
 /** Distinct workers among `events` of `kind`. */

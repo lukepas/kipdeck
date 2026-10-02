@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { appendFileSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { TIMELINE_KEEP, Timeline, TimelineWatch } from '../src/server/timeline.js';
-import { digest } from '../src/shared/digest.js';
+import { TIMELINE_FOLD_MS, TIMELINE_KEEP, Timeline, TimelineWatch } from '../src/server/timeline.js';
+import { digest, digestShown } from '../src/shared/digest.js';
 import { rankRoster } from '../src/shared/attention.js';
 import { zeroTotals } from '../src/shared/mission.js';
 import type { GhIssue, GhPull, Meeting, Mission, QueueState, RosterEntry, TimelineEvent, WorkerInfo } from '../src/shared/protocol.js';
@@ -74,7 +74,7 @@ test('the watch writes what changed, never what was already so', () => {
     w.worker(worker({ id: 'old', createdAt: NOW - 60 * MIN }));
     w.worker(worker({ goal: 'm1', issue: 12 }));
     w.worker(worker({ status: 'working' }));
-    w.worker(worker({ status: 'needs_input', activity: 'Wants permission: Bash' }));
+    w.worker(worker({ status: 'needs_input', activity: 'Wants permission: Bash: curl -H "Authorization: Bearer sk-secret" x' }));
     w.worker(worker({ status: 'done', task: { name: 'Fix login', summary: '' } }));
     w.worker(worker({ status: 'exited' }));
     w.worker(worker({ status: 'working' }));
@@ -109,7 +109,7 @@ test('the watch writes what changed, never what was already so', () => {
     const texts = t.list({ limit: 100 }).events.reverse().map((e) => e.text);
     assert.deepEqual(texts, [
       'Ed hired Mochi for Auth on #12',
-      'Mochi needs input: Wants permission: Bash',
+      'Mochi wants permission to use Bash',
       'Mochi finished: Fix login',
       'Mochi woke up and is working again',
       'Mochi went home after 25 min on task, $1.50',
@@ -159,4 +159,49 @@ test('the digest says what happened while you were away in one line', () => {
   assert.equal(digest([ev({ kind: 'resumed', worker: 'a' })], ranked).summary, '1 small thing happened');
   const order = digest([ev({ id: 'old', at: NOW - MIN }), ev({ id: 'new', at: NOW })], []).events.map((e) => e.id);
   assert.deepEqual(order, ['new', 'old']);
+});
+
+test("a permission prompt's input never reaches the timeline, and an older office's line is scrubbed on load", () => {
+  const dir = tmp();
+  try {
+    const t = new Timeline(dir, 'f1');
+    const w = new TimelineWatch(t, { goalTitle: () => undefined, officePull: () => false }, NOW - MIN);
+    w.worker(worker());
+    w.worker(worker({ status: 'needs_input', activity: 'Approve the plan?' }));
+    assert.equal(t.list({ limit: 1 }).events[0].text, 'Mochi needs input', 'a question is said to be one, not quoted');
+    const file = path.join(dir, 'timeline.jsonl');
+    writeFileSync(file, `${JSON.stringify({ id: 'a1', at: NOW, kind: 'needs-input', text: 'Mochi needs input: Wants permission: Bash: export TOKEN=sk-123' })}\n`);
+    assert.equal(new Timeline(dir, 'f1').list({ limit: 1 }).events[0].text, 'Mochi wants permission to use Bash');
+    assert.ok(!readFileSync(file, 'utf8').includes('sk-123'), 'rewritten on disk too');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('every turn of the same task is one "finished" on the timeline, not one per turn', (t) => {
+  const dir = tmp();
+  try {
+    t.mock.timers.enable({ apis: ['Date'], now: NOW });
+    const tl = new Timeline(dir, 'f1');
+    const w = new TimelineWatch(tl, { goalTitle: () => undefined, officePull: () => false }, NOW - MIN);
+    w.worker(worker());
+    const task = { name: 'Fix login', summary: '' };
+    for (let i = 0; i < 5; i++) {
+      w.worker(worker({ status: 'working', task }));
+      w.worker(worker({ status: 'done', task }));
+    }
+    w.worker(worker({ status: 'working', task: { name: 'Docs', summary: '' } }));
+    w.worker(worker({ status: 'done', task: { name: 'Docs', summary: '' } }));
+    t.mock.timers.tick(TIMELINE_FOLD_MS);
+    w.worker(worker({ status: 'working', task: { name: 'Docs', summary: '' } }));
+    w.worker(worker({ status: 'done', task: { name: 'Docs', summary: '' } }));
+    assert.deepEqual(tl.list({ limit: 100 }).events.filter((e) => e.kind === 'done').map((e) => e.text).reverse(), ['Mochi finished: Fix login', 'Mochi finished: Docs', 'Mochi finished: Docs']);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("the digest lists the mission's events before the routine ones", () => {
+  const events = [ev({ id: 'd1', kind: 'done', at: NOW }), ev({ id: 'm1', kind: 'pr-merged', at: NOW - MIN }), ev({ id: 'n1', kind: 'needs-input', at: NOW - 2 * MIN }), ev({ id: 's1', kind: 'stuck', at: NOW - 3 * MIN })];
+  assert.deepEqual(digestShown(events, 3).map((e) => e.id), ['m1', 's1', 'd1']);
 });
