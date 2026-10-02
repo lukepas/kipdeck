@@ -1,4 +1,4 @@
-import { CABINET, FLOOR, GONG, WINDOWS as OPENINGS } from '../../shared/layout';
+import { FLOOR, GONG, WINDOWS as OPENINGS } from '../../shared/layout';
 
 /** A point in the office, where a sound comes from or where you hear it. */
 export type Pos = { x: number; y: number; z: number };
@@ -14,5 +14,3 @@ export const WINDOWS: Pos[] = OPENINGS.filter((o) => o.y0 < 2).map((o) =>
 );
 /** The middle of the gong's disc. */
 export const GONG_AT: Pos = { x: GONG.x, y: GONG.height - 1.36, z: GONG.z };
-/** The arcade cabinet's speaker, under its screen. */
-export const CABINET_AT: Pos = { x: CABINET.x - 0.2, y: 1.2, z: CABINET.z };

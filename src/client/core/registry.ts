@@ -160,7 +160,6 @@ export class Keys<E extends KeyPress = KeyPress> {
  * - steer: where you're headed on your own (walking over to someone)
  * - move: you move
  * - moved: what where you've got to does to you (a pole's hole)
- * - play: games and what they hold you in (the arcade)
  * - me: your character and the camera, what you hear, and telling the office where you are
  * - others: everyone and everything else that moves (people, workers)
  * - world: the building and what's in it (its doors and floors, particles, a picture being hung)
@@ -168,7 +167,7 @@ export class Keys<E extends KeyPress = KeyPress> {
  * - hud: the panels that follow what people are doing
  * - render: drawing the frame
  */
-export const TICK_PHASES = ['pre', 'steer', 'move', 'moved', 'play', 'me', 'others', 'world', 'aim', 'hud', 'render'] as const;
+export const TICK_PHASES = ['pre', 'steer', 'move', 'moved', 'me', 'others', 'world', 'aim', 'hud', 'render'] as const;
 export type TickPhase = (typeof TICK_PHASES)[number];
 
 /** What each tick gets about the frame it's in. */

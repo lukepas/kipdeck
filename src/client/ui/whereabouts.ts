@@ -15,7 +15,7 @@ export function whereabouts(p: PeerInfo): string | undefined {
   if (seat) {
     // "🛋️ Couch" -> "🛋️ on the couch".
     const [icon, ...name] = seat.label.split(' ');
-    return `${icon} ${seat.game ? 'in' : 'on'} the ${name.join(' ').toLowerCase()}`;
+    return `${icon} ${seat.id === 'boss-chair' ? 'in' : 'on'} the ${name.join(' ').toLowerCase()}`;
   }
   // Through the north wall in the back office: nobody gets there unless the floor's built out.
   if (p.y > -1 && inWing(p.x, p.z, WING.rows)) return '🏗️ in the back office';

@@ -6,7 +6,6 @@ import { elevator } from '../elevator';
 import { gong } from '../../features/gong/world';
 import { jukebox } from '../../features/jukebox/world';
 import { bookshelf } from '../../features/bookshelf/world';
-import { cabinet } from '../../features/cabinet/world';
 import { whiteboard } from '../../features/whiteboard/world';
 import { stack } from '../stack';
 import { kitchen } from '../kitchen';
@@ -37,12 +36,11 @@ function floorPlan() {
     beanbags,
     kiosks,
     boards,
-    // The lounge: the TV, the couch and its table and poufs, and the jukebox and the arcade in the corner.
+    // The lounge: the TV, the couch and its table and poufs, and the jukebox in the corner.
     tv,
     machineMonitor,
     lounge,
     jukebox,
-    cabinet,
     bookshelf,
     kitchen,
     plants,

@@ -25,10 +25,8 @@ import { installHintBar } from './core/hintbar';
 import { installKeyboard, installKeyGuards } from './input/keyboard';
 import { installFocus } from './input/focus';
 import { installPointer } from './input/pointer';
-import { installArcade } from './features/arcade';
 import { installBoards } from './features/boards';
 import { installBookshelf } from './features/bookshelf';
-import { installCabinet } from './features/cabinet';
 import { installCarrying } from './features/carrying';
 import { installChat } from './features/chat';
 import { installClimbing } from './features/climbing';
@@ -86,7 +84,6 @@ installWhiteboard(ctx);
 parts.confetti = new Confetti((x, z, y) => groundAt(ctx.player.colliders, x, z, y, false));
 ctx.scene.add(parts.confetti.mesh);
 parts.tv = installTv(ctx, { shares: () => parts.talk.currentShares(), watch: () => parts.talk.watchShare() });
-parts.arcade = installArcade(ctx);
 
 // You, and how you talk to the office.
 parts.net = new Net(() => store.profile, () => parts.arrival.whereNow());
@@ -105,7 +102,6 @@ parts.reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 parts.sound = makeSound(parts.settings);
 
 parts.jukebox = installJukebox(ctx, { showSettings: (pane) => parts.hud.showSettings(pane) });
-parts.cabinet = installCabinet(ctx, { openTerminal: (id) => parts.waiting.openWorkerTerminal(id) });
 parts.notifier = new DesktopNotifier(() => parts.settings.notify, (id) => parts.waiting.openWorkerTerminal(id));
 const standUp = () => parts.seating.standUp();
 const stopWalking = () => parts.walking.stopWalkingTo();
@@ -136,7 +132,7 @@ parts.cards = installCarrying(ctx, {
   officeIsFull: parts.actions.officeIsFull,
   showMeeting: parts.meeting.showMeeting,
 });
-parts.seating = installSeating(ctx, { shares: () => parts.talk.currentShares(), watchShare: () => parts.talk.watchShare(), arcade: parts.arcade, usable: () => parts.pointer.usable() });
+parts.seating = installSeating(ctx, { shares: () => parts.talk.currentShares(), watchShare: () => parts.talk.watchShare(), usable: () => parts.pointer.usable() });
 installGong(ctx, { burstOver: parts.views.burstOver, workerViews: parts.views.workerViews, idleAgents: () => parts.worlds.idleAgents() });
 
 parts.hintbar = installHintBar(ctx, core, parts);
@@ -205,7 +201,7 @@ void whoami().then(() => {
 
 // Debug handle for quick checks from the console / headless screenshots.
 const { worlds, views, coffee, hanging, climbing, emotes } = parts;
-(window as any).__office = { world: () => worlds.world(), store, player: parts.player, caffeine: coffee.caffeine, camera: ctx.camera, arcade: parts.arcade, cabinet: parts.cabinet, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, gallery: parts.gallery, hanger: hanging.hanger, office: ctx.office, ride: parts.travel.ride, switchFloor: parts.travel.switchFloor, climber: climbing.climber, elevatorPanelOpen, confetti: parts.confetti, carried: () => core.carrying, emoteWheel: emotes.emoteWheel, emote: emotes.emote };
+(window as any).__office = { world: () => worlds.world(), store, player: parts.player, caffeine: coffee.caffeine, camera: ctx.camera, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, gallery: parts.gallery, hanger: hanging.hanger, office: ctx.office, ride: parts.travel.ride, switchFloor: parts.travel.switchFloor, climber: climbing.climber, elevatorPanelOpen, confetti: parts.confetti, carried: () => core.carrying, emoteWheel: emotes.emoteWheel, emote: emotes.emote };
 (window as any).__voice = parts.voice;
 (window as any).__sound = parts.sound;
 (window as any).__notify = parts.notifier;

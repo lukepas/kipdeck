@@ -14,7 +14,6 @@
 import type { GongWhy } from '../../shared/protocol';
 import { deskPhones, Fridge, startRoomTone } from './ambience';
 import { ding } from './alerts';
-import { arcade } from '../features/cabinet/sound';
 import { bonk, hatch, poleLanding, rung, slide, twirl } from '../features/climbing/sound';
 import { coffee } from '../features/coffee/sound';
 import { AudioCore, type Listener } from './core';
@@ -136,12 +135,6 @@ export class OfficeSound {
 
   poleLanding(speed: number, at?: Pos) {
     poleLanding(this.a, speed, at);
-  }
-
-  // ---- Games (features/cabinet) -------------------------------------
-
-  arcade(kind: 'land' | 'clear' | 'over', lines = 1) {
-    arcade(this.a, kind, lines);
   }
 
   // ---- The kitchen, the gong, the dings --------------------------------------

@@ -1,6 +1,5 @@
 // The building: its floors, going between them, and what each floor holds.
 
-import type { CabinetView } from '../cabinet.js';
 import type { Decoration } from '../decor.js';
 import type { FloorPlan } from '../floorplan.js';
 import type { JukeboxState } from '../jukebox.js';
@@ -107,8 +106,6 @@ export interface FloorView {
   services: ServicesState;
   /** What the lounge jukebox is playing. */
   jukebox: JukeboxState;
-  /** Who's at the arcade cabinet, what's on its screen, and the building's high scores. */
-  cabinet: CabinetView;
   /** What's drawn on this floor's whiteboard, and who's drawing. */
   whiteboard: WhiteboardView;
   /** The meeting room: who's meeting about what, and the meetings before. */

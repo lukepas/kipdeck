@@ -46,7 +46,7 @@ export interface WorkerView {
 const HOLD_NEAR = 4;
 const HOLD_LEAVE = 5;
 
-export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'cabinet' | 'notifier' | 'waiting' | 'peers'>;
+export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'notifier' | 'waiting' | 'peers'>;
 
 /**
  * Registers what follows the workers, the floor plan, the meeting, the pull requests and
@@ -105,8 +105,6 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
         if (waitingOnSomeone(w) && v.status !== '' && w.status !== v.status) {
           sound.ding(w.status);
           parts.notifier.alert(w);
-          // Playing at the arcade: one of yours stops the game.
-          if (w.status === 'needs_input' && yours(w)) parts.cabinet.needsYou(w);
         }
         // Finished what it was on: a little spin and a puff of confetti.
         if (w.status === 'done' && (v.status === 'working' || v.status === 'needs_input')) {
