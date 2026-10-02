@@ -27,8 +27,7 @@ export const routes: readonly Route[] = [
   pageRoutes.favicon,
   // Signed in.
   authRoutes.whoami,
-  agentRoutes.openCodeModels,
-  agentRoutes.grokModels,
+  agentRoutes.models,
   fileRoutes.whiteboardFile,
   fileRoutes.termDrop,
   fileRoutes.changedFile,

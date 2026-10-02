@@ -7,7 +7,7 @@ import type { Auth } from '../auth.js';
 import type { HostGuard } from '../hosts.js';
 import type { Accounts } from '../accounts.js';
 import type { SignIns, GhAs } from '../signins.js';
-import type { GrokModelCatalogue, OpenCodeModelCatalogue } from '../models.js';
+import type { ModelCatalogue } from '../models.js';
 import type { Tailnet } from '../tailnet.js';
 import type { Team } from '../team.js';
 import type { Upgrader } from '../upgrade.js';
@@ -21,7 +21,7 @@ import type { Floor } from '../floor.js';
 import type { OfficePrompts } from '../prompts.js';
 import type { LeaveOnMerge } from '../leave-on-merge.js';
 import type { ChatLog } from '../history.js';
-import type { FloorInfo, Me, Reminder, ReminderSnooze, ReviewPull, RosterEntry, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
+import type { AgentProvider, FloorInfo, Me, Reminder, ReminderSnooze, ReviewPull, RosterEntry, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
 import type { Client } from './client.js';
 import type { Spot } from './input.js';
 
@@ -42,8 +42,8 @@ export interface Core {
   chat: ChatLog;
   /** What the office is called where it has no project of its own to go by (webhooks, invites). */
   officeName: string;
-  openCodeModels: OpenCodeModelCatalogue;
-  grokModels: GrokModelCatalogue;
+  /** The models each provider's own CLI lists, for the ones that list them (see models.ts). */
+  models: Partial<Record<AgentProvider, ModelCatalogue>>;
   /** The building: a floor per project, each with its own workers, boards and queue. */
   building: Building;
   floors: Map<string, Floor>;

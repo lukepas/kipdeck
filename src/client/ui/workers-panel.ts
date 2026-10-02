@@ -27,7 +27,7 @@ export function renderWorkers(onOpen: (id: string) => void) {
     const usageState = w.kind === 'agent' ? providerUsageState(w.provider, store.project, w.usage) : undefined;
     const waiting = usageState === 'waiting' ? providerWaitingLabel(providerKind, store.project) : '';
     const usageNote = usageState === 'untracked' ? ' · usage untracked' : waiting ? ` · ${waiting}` : '';
-    const badge = w.kind === 'agent' ? modelBadge(w.provider, w.model, w.effort) : undefined;
+    const badge = w.kind === 'agent' ? modelBadge(w.provider, w.model, w.effort, w.usage?.model) : undefined;
     const worked = (w.workedMs ?? 0) + (w.workingSince === undefined ? 0 : Math.max(0, now - w.workingSince));
     const sub = [provider && `⚙️ ${provider}${badge ? ` · ${badge}` : ''}${usageNote}`, w.worktree && `🌿 ${w.worktree.branch}`, w.repos?.length && `🗂️ ${w.repos.length + 1} repos`, w.pr && `🔀 PR #${w.pr.number}`, worked >= 60_000 && `${duration(worked)} on task`, w.activity || w.title || w.prompt].filter(Boolean).join(' · ');
     const att = why.get(w.id);
