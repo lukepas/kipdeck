@@ -11,6 +11,7 @@ import { saveSettings, store, type MissionTab } from '../../state';
 import { $ } from '../../ui/dom';
 import { openMissionControl, renderStrip, runAction, type MissionDeps } from '../../ui/mission';
 import { watchStuck } from '../../ui/mission/watch';
+import { renderWorkers } from '../../ui/workers-panel';
 
 export type MissionParts = Pick<Parts, 'waiting' | 'actions' | 'travel' | 'notifier' | 'settings'>;
 
@@ -44,6 +45,9 @@ export function installMission(ctx: Ctx, parts: MissionParts) {
     const { settings } = parts;
     openMissionControl(deps, { tab: settings.missionTab, save: (t) => ((settings.missionTab = t), saveSettings(settings)) }, tab);
   }
+
+  // The Workers panel is in the roster's order, with its reasons: it follows the roster too.
+  store.on('roster', () => renderWorkers((id) => parts.waiting.openWorkerTerminal(id)));
 
   // The strip under the floor's name (a HUD panel, see ui/menu.ts).
   const strip = $('mission-strip');
