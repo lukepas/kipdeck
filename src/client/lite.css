@@ -23,8 +23,20 @@ body.lite { min-height: 100dvh; background: var(--paper); -webkit-tap-highlight-
 .lite-go:hover { background: #ffc2d1; }
 .lite-h { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin: 4px 0 10px; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; }
 .lite-waiting { font-size: 13px; text-transform: none; letter-spacing: 0; color: #c9184a; }
+.lite-all { margin-left: auto; height: 32px; padding: 0 10px; font-size: 12px; text-transform: none; letter-spacing: 0; }
+.lite-all[aria-pressed=true] { background: var(--ink); color: #fff; }
+.lite-bar .n:empty { display: none; }
+.lite-bar .n { min-width: 20px; padding: 0 5px; border-radius: 999px; background: var(--bad); color: #fff; font-size: 12px; line-height: 20px; }
+/* The mission strip (ui/mission/strip.ts), the first card. */
+.lite-mission { margin-bottom: 12px; background: #fff; border: 3px solid var(--ink); border-radius: var(--radius); box-shadow: 0 3px 0 var(--ink); overflow: hidden; }
+.lite-mission:empty { display: none; }
+.lite-mission .ms-strip { padding: 10px 14px; }
+/* Why it needs someone, in words (see shared/attention.ts). */
+.lite-why { font-size: 13px; font-weight: 900; overflow-wrap: anywhere; }
+.lite-worker.stuck { box-shadow: 0 3px 0 var(--ink), inset 6px 0 0 #f4a261; }
+.lite-worker.elsewhere .lite-sub b { color: var(--ink); }
 
-/* A card per worker, the ones waiting on someone first (see byUrgency). */
+/* A card per worker, the ones that need someone first (the building's one ranking, shared/attention.ts). */
 .lite-workers { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .lite-worker { display: flex; align-items: stretch; background: #fff; border: 3px solid var(--ink); border-radius: var(--radius); box-shadow: 0 3px 0 var(--ink); overflow: hidden; }
 .lite-worker.waiting { box-shadow: 0 3px 0 var(--ink), inset 6px 0 0 var(--bad); }

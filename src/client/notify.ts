@@ -1,8 +1,8 @@
 // Getting your attention when the office isn't the tab you're looking at: desktop notifications
-// for workers that need input or finish (the tab title counts them too, see main.ts), and for the
-// floor's milestones (a pull request merged, the task queue done).
+// for workers that need input, finish or get stuck (the tab title counts them too, see
+// shared/title.ts), and for the floor's milestones (a pull request merged, the task queue done).
 
-import type { WorkerInfo } from '../shared/protocol';
+import type { RosterEntry, WorkerInfo } from '../shared/protocol';
 import { alertDetail } from '../shared/status';
 
 export type NotifyPermission = NotificationPermission | 'unsupported';
@@ -32,6 +32,8 @@ export function waitingOnSomeone(w: WorkerInfo): w is WorkerInfo & { status: 'ne
 export class DesktopNotifier {
   /** The notification up for each worker, to take down once it's handled. */
   private shown = new Map<string, Notification>();
+  /** The ones about stuck workers, on any floor, taken down when you're back. */
+  private stuckShown = new Map<string, Notification>();
 
   constructor(
     private enabled: () => boolean,
@@ -62,6 +64,27 @@ export class DesktopNotifier {
     this.shown.set(w.id, n);
   }
 
+  /**
+   * A worker, on any floor, just got stuck (see shared/attention.ts): silent while working, crashed,
+   * failing again and again. A click brings you to it (`open`).
+   */
+  stuck(e: RosterEntry, reason: string, open: () => void) {
+    if (!this.enabled() || notifyPermission() !== 'granted') return;
+    if (!document.hidden && document.hasFocus()) return;
+    this.stuckShown.get(e.id)?.close();
+    const n = this.show(`${e.name} looks stuck`, { body: [`${e.floorName}: ${reason}`, e.task?.name].filter(Boolean).join('\n'), tag: `stuck-${e.id}` });
+    if (!n) return;
+    n.onclick = () => {
+      window.focus();
+      n.close();
+      open();
+    };
+    n.onclose = () => {
+      if (this.stuckShown.get(e.id) === n) this.stuckShown.delete(e.id);
+    };
+    this.stuckShown.set(e.id, n);
+  }
+
   /** Takes down notifications for workers nobody needs to get to any more (someone else did). */
   sync(workers: Map<string, WorkerInfo>) {
     for (const [id, n] of this.shown) {
@@ -86,7 +109,7 @@ export class DesktopNotifier {
 
   /** What one looks like, from ⚙️ Settings. */
   sample() {
-    const n = this.show('🔔 Notifications are on', { body: 'This is how a worker that needs input or is done gets your attention while you are in another tab.' });
+    const n = this.show('🔔 Notifications are on', { body: 'This is how a worker that needs input, is done or gets stuck gets your attention while you are in another tab.' });
     if (!n) return;
     n.onclick = () => {
       window.focus();
@@ -95,8 +118,9 @@ export class DesktopNotifier {
   }
 
   private closeAll() {
-    for (const n of this.shown.values()) n.close();
+    for (const n of [...this.shown.values(), ...this.stuckShown.values()]) n.close();
     this.shown.clear();
+    this.stuckShown.clear();
   }
 
   private show(title: string, opts: NotificationOptions): Notification | null {

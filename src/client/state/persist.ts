@@ -37,9 +37,13 @@ export function saveProfile(p: Omit<Profile, 'look'> & { look?: Look }) {
 export type ViewMode = 'first' | 'third';
 
 /** The panels you can show or hide on screen, from the ☰ menu. */
-export type HudPanel = 'workers' | 'people' | 'spend' | 'limits' | 'chat' | 'floor';
-/** Out of the way by default: the workers and the chat show until you turn the rest on. */
-export const HUD_DEFAULTS: Record<HudPanel, boolean> = { workers: true, people: false, spend: false, limits: false, chat: true, floor: false };
+export type HudPanel = 'mission' | 'workers' | 'people' | 'spend' | 'limits' | 'chat' | 'floor';
+/** Out of the way by default: the mission, the workers and the chat show until you turn the rest on. */
+export const HUD_DEFAULTS: Record<HudPanel, boolean> = { mission: true, workers: true, people: false, spend: false, limits: false, chat: true, floor: false };
+
+/** Mission control's tabs (see ui/mission). */
+export type MissionTab = 'attention' | 'goals' | 'review';
+export const MISSION_TABS: readonly MissionTab[] = ['attention', 'goals', 'review'];
 
 export interface Settings {
   view: ViewMode;
@@ -54,6 +58,10 @@ export interface Settings {
   hud: Record<HudPanel, boolean>;
   /** The ☰ menu's actions you pinned to the top bar, by id. */
   pins: string[];
+  /** The Mission control tab you had open last. */
+  missionTab: MissionTab;
+  /** The 2D view lists the workers on every floor, not just yours. */
+  allFloors: boolean;
 }
 
 const SETTINGS_KEY = 'agent-office.settings';
@@ -114,7 +122,7 @@ export function rememberSpot(s: Spot) {
 }
 
 export function loadSettings(): Settings {
-  const s: Settings = { view: 'first', volume: 0.7, muted: false, pushToTalk: false, notify: true, hud: { ...HUD_DEFAULTS }, pins: [] };
+  const s: Settings = { view: 'first', volume: 0.7, muted: false, pushToTalk: false, notify: true, hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null');
     if (saved?.view === 'first' || saved?.view === 'third') s.view = saved.view;
@@ -124,6 +132,8 @@ export function loadSettings(): Settings {
     if (typeof saved?.notify === 'boolean') s.notify = saved.notify;
     for (const k of Object.keys(s.hud) as HudPanel[]) if (typeof saved?.hud?.[k] === 'boolean') s.hud[k] = saved.hud[k];
     if (Array.isArray(saved?.pins)) s.pins = saved.pins.filter((p: unknown): p is string => typeof p === 'string').slice(0, 30);
+    if (MISSION_TABS.includes(saved?.missionTab)) s.missionTab = saved.missionTab;
+    if (typeof saved?.allFloors === 'boolean') s.allFloors = saved.allFloors;
   } catch {
     // storage blocked
   }

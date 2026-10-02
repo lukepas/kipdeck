@@ -15,12 +15,14 @@
         <span class="lite-floor-label">Floor</span>
         <select id="floor" aria-label="Floor"></select>
       </label>
+      <button id="btn-mission" class="btn" type="button" title="Mission control: what needs someone, on every floor, and the floor's goals">Mission <span class="n"></span></button>
       <a id="to-3d" class="btn" href="/?3d=1" title="The 3D office, where you walk around">🏢 3D</a>
     </header>
     <main class="lite-main">
       <p id="floor-meta" class="lite-meta"></p>
+      <div id="mission-strip" class="lite-mission"></div>
       <div id="elsewhere" class="lite-elsewhere hidden"></div>
-      <h2 class="lite-h">Workers <span id="waiting-now" class="lite-waiting"></span></h2>
+      <h2 class="lite-h">Workers <span id="waiting-now" class="lite-waiting"></span><button id="all-floors" class="btn lite-all" type="button" aria-pressed="false" title="Show the workers on every floor, not just this one">All floors</button></h2>
       <ul id="workers" class="lite-workers"></ul>
     </main>
     <nav class="lite-nav" aria-label="Office">

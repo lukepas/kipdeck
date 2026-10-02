@@ -4,6 +4,7 @@ import type { Net } from '../net';
 import { store } from '../state';
 import { h, openModal, timeAgo, STATUS_LABEL } from './dom';
 import { confirmDialog } from './prompt';
+import { goalPicker } from './mission/goalpick';
 import { providerPicker, providerLabel, providerUsageState, providerWaitingLabel, resolvedProvider, modelBadge } from './provider';
 import { officeFull } from '../../shared/machine';
 
@@ -53,8 +54,9 @@ export function openQueue(net: Net, actions: QueueActions) {
 
   const ta = h('textarea', { rows: 2, placeholder: 'Describe a task for the next free worker…', 'aria-label': 'New task' }) as HTMLTextAreaElement;
   const provider = providerPicker(store.project, 'queue-provider');
+  const goal = goalPicker();
   const addBtn = h('button.btn.primary', { type: 'submit' }, 'Add to queue');
-  const form = h('form.queue-add', {}, ta, provider.element, addBtn) as HTMLFormElement;
+  const form = h('form.queue-add', {}, ta, provider.element, goal.element, addBtn) as HTMLFormElement;
   form.noValidate = true;
   const submit = () => {
     const text = ta.value.trim();
@@ -63,7 +65,7 @@ export function openQueue(net: Net, actions: QueueActions) {
       return;
     }
     if (!provider.valid()) return;
-    net.send({ t: 'queue.add', prompt: text, provider: provider.value(), model: provider.model(), effort: provider.effort() });
+    net.send({ t: 'queue.add', prompt: text, provider: provider.value(), model: provider.model(), effort: provider.effort(), goal: goal.value() });
     ta.value = '';
   };
   form.addEventListener('submit', (e) => {

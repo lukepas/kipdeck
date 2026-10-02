@@ -17,6 +17,7 @@ import type { installBookshelf } from '../features/bookshelf';
 import type { installCarrying } from '../features/carrying';
 import type { installHud } from '../features/hud';
 import type { installMeeting } from '../features/meeting';
+import type { installMission } from '../features/mission';
 import type { installPeers } from '../features/peers';
 import type { installSeating } from '../features/seating';
 import type { installTv } from '../features/tv';
@@ -72,6 +73,8 @@ export interface Parts {
   views: Made<typeof installWorkerViews>;
   actions: Made<typeof installWorkerActions>;
   waiting: Made<typeof installWaiting>;
+  /** Mission control and the mission strip (see features/mission). */
+  mission: Made<typeof installMission>;
   meeting: Made<typeof installMeeting>;
   bookshelf: Made<typeof installBookshelf>;
   cards: Made<typeof installCarrying>;

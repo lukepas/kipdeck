@@ -1,6 +1,5 @@
 import './menu.css';
 import { store, type HudPanel, type Settings, type Topic } from '../state';
-import { waitingOnSomeone } from '../notify';
 import { DESK_BY_ID } from '../../shared/layout';
 import { $, h, openModal, type Modal } from './dom';
 
@@ -32,6 +31,7 @@ export interface HudAction {
 }
 
 const PANELS: { id: HudPanel; icon: string; label: string; what: string }[] = [
+  { id: 'mission', icon: '🎯', label: 'Mission', what: 'What the floor is for, and its milestone' },
   { id: 'workers', icon: '🤖', label: 'Workers', what: 'Every desk and what it’s up to' },
   { id: 'people', icon: '👥', label: 'People', what: 'Who’s here, on which floor' },
   { id: 'spend', icon: '💸', label: 'Spend', what: 'Today, the budget, all time' },
@@ -41,7 +41,7 @@ const PANELS: { id: HudPanel; icon: string; label: string; what: string }[] = [
 ];
 
 /** The element each panel is. */
-const PANEL_EL: Record<HudPanel, string> = { workers: 'workers-panel', people: 'people-panel', spend: 'spend', limits: 'limits', chat: 'chat', floor: 'project-meta' };
+const PANEL_EL: Record<HudPanel, string> = { mission: 'mission-strip', workers: 'workers-panel', people: 'people-panel', spend: 'spend', limits: 'limits', chat: 'chat', floor: 'project-meta' };
 
 const PIN_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M16 9V4h1a1 1 0 0 0 0-2H7a1 1 0 0 0 0 2h1v5a3 3 0 0 1-3 3v2h5.97v7l1 1 1-1v-7H19v-2a3 3 0 0 1-3-3z"/></svg>';
 
@@ -130,9 +130,8 @@ export function mountHud(actions: HudAction[], settings: Settings, save: () => v
     const workers = [...store.workers.values()];
     // Hired onto desks, bean bags and the meeting room's table; the board agents at their kiosks don't count.
     const hired = workers.filter((w) => !DESK_BY_ID.get(w.deskId)?.station).length;
-    const waiting = workers.filter(waitingOnSomeone).length;
-    const workersTitle = hired || waiting ? `${hired} worker${hired === 1 ? '' : 's'} on this floor${waiting ? `, ${waiting} waiting on someone` : ''}` : 'No workers on this floor yet';
-    // Who's waiting has its own button on the bar (the 'waiting' action), so this just counts them.
+    const workersTitle = hired ? `${hired} worker${hired === 1 ? '' : 's'} on this floor` : 'No workers on this floor yet';
+    // What needs someone has its own chip on the bar (the 'mission' action), so this just counts them.
     items.push(panelChip('workers', '🤖', 'Workers', hired, workersTitle));
     // Redrawn only when it looks different, so a busy worker's updates don't swap a button out from under a click.
     const next = h('div', {}, ...items);
@@ -277,7 +276,7 @@ export function mountHud(actions: HudAction[], settings: Settings, save: () => v
     },
     true,
   );
-  for (const t of ['workers', 'peers', 'issues', 'pulls', 'services', 'queue', 'meeting', 'upgrade', 'me', 'floors', 'signins'] as Topic[]) store.on(t, render);
+  for (const t of ['workers', 'roster', 'peers', 'issues', 'pulls', 'services', 'queue', 'meeting', 'upgrade', 'me', 'floors', 'signins'] as Topic[]) store.on(t, render);
   applyPanels();
   render();
   return { refresh: render, toggleMenu };

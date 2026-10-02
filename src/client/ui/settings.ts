@@ -189,7 +189,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
         ? 'This browser can’t show notifications from the office here. They need https or localhost (an SSH tunnel counts).'
         : perm === 'denied'
           ? 'Your browser blocks notifications from the office. Allow them in the site settings (the icon left of the address), then open this again.'
-          : 'When a worker needs input or finishes while you’re in another tab or app, you get a notification. Click it to jump to that worker’s terminal. The tab title counts the workers waiting on someone either way.';
+          : 'When a worker needs input, finishes or gets stuck while you’re in another tab or app, you get a notification. Click it to jump to that worker. The tab title counts the workers that need someone either way.';
   };
   paintNotify();
 
@@ -211,7 +211,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     hookSave.textContent = webhook ? 'Replace' : 'Save';
     hookStatus.classList.toggle('bad', !!error);
     hookStatus.textContent = !webhook
-      ? 'Paste an incoming https webhook from Slack or Discord, and the office posts to that channel when a worker needs input or finishes and nobody has its terminal open. It’s for everyone in the office.'
+      ? 'Paste an incoming https webhook from Slack or Discord, and the office posts to that channel when a worker needs input, finishes or gets stuck and nobody has its terminal open. It’s for everyone in the office.'
       : error
         ? `⚠️ Posting to ${WEBHOOK_NAME[webhook.kind]} (${webhook.hint}) failed: ${error}`
         : `📣 Posting to ${WEBHOOK_NAME[webhook.kind]} (${webhook.hint}), set by ${webhook.by} ${timeAgo(webhook.at)}${lastSentAt ? ` · last message ${timeAgo(lastSentAt)}` : ''}.`;

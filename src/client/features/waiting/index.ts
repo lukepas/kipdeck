@@ -20,7 +20,7 @@ import { openSearch } from '../../ui/search';
 import { openTerminal, type TerminalFind } from '../../ui/terminal';
 
 /** Registers N (and the Workers panel's count), the compass's tick ('render') and / (search). */
-export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worlds' | 'views' | 'actions'>) {
+export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worlds' | 'views' | 'actions' | 'mission'>) {
   const { player, camera, net } = ctx;
   const nextUp = new NextUp();
   const compass = new Compass($('compass'));
@@ -35,8 +35,14 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     const desk = w && OFFICE_PLAN.byId.get(w.deskId);
     nextToast?.remove();
     if (!w || !desk) {
-      const other = store.floors.find((f) => f.id !== store.floor && f.waiting > 0);
-      nextToast = toast(other ? `🛗 Nobody's waiting on this floor. ${other.waiting} on the ${other.name} floor: switch to it from the project name` : '👍 Nobody is waiting on you');
+      // Building-wide: after the last one here, the one on another floor that has waited longest.
+      const other = elsewhere();
+      if (!other) {
+        nextToast = toast('👍 Nobody is waiting on you');
+        return;
+      }
+      nextToast = toast(`🛗 Nobody's waiting on this floor: over to ${other.name} on ${other.floorName}`);
+      parts.mission.missionDeps.goTo(other.floor, other.deskId);
       return;
     }
     closeAllModals();
@@ -44,6 +50,11 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     const waiting = waitingInOrder(store.workers.values());
     const of = waiting.length > 1 ? ` (${waiting.findIndex((x) => x.id === w.id) + 1} of ${waiting.length})` : '';
     nextToast = toast(`${w.status === 'needs_input' ? `🙋 ${w.name} needs input` : `✅ ${w.name} is done`}${of}. E opens its terminal`);
+  }
+
+  /** Who has waited longest on someone on another floor, by the building-wide ranking (snoozed ones left out). */
+  function elsewhere() {
+    return store.ranked().find((r) => r.entry.floor !== store.floor && !r.att.snoozed && (r.entry.status === 'needs_input' || (r.entry.status === 'done' && !r.entry.acked)))?.entry;
   }
 
   /** The waiting worker you're standing at, if any: N skips it while anyone else is waiting. */

@@ -71,7 +71,7 @@ test('the 2D view loads no three.js, and none of the 3D office: what it shares w
     assert.ok(!/^(core|features|input|world|player)\//.test(rel), `lite.ts loads ${rel}, part of the 3D office`);
   }
   // What the 2D view and the 3D office share.
-  for (const shared of ['shared/title.ts', 'shared/hiring.ts']) {
+  for (const shared of ['shared/title.ts', 'shared/hiring.ts', 'ui/mission/index.ts', 'ui/sendhome.ts']) {
     assert.ok(lite.has(path.join(client, shared)), `lite.ts uses ${shared}`);
     assert.ok(graph(path.join(client, 'main.ts')).has(path.join(client, shared)), `the 3D office uses ${shared}`);
   }

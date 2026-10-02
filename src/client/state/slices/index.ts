@@ -14,6 +14,7 @@ import { floorPlan } from './floor-plan';
 import { leaveOnMerge } from './leave-on-merge';
 import { machine } from './machine';
 import { meeting } from './meeting';
+import { mission } from './mission';
 import { notify } from './notify';
 import { prompts } from './prompts';
 import { services } from './services';
@@ -41,4 +42,5 @@ export const SLICES: readonly Slice[] = [
   team,
   accounts,
   signins,
+  mission,
 ];

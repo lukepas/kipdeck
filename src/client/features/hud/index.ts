@@ -5,7 +5,7 @@
  */
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
-import { waitingInOrder, waitingLabel } from '../../nextup';
+import { attentionChip } from '../../ui/mission';
 import { saveSettings, store } from '../../state';
 import { openAccounts } from '../../ui/accounts';
 import { openBoard } from '../../ui/boards';
@@ -21,7 +21,7 @@ import { openTeam } from '../../ui/team';
 import { openUpgrade } from '../../ui/upgrade';
 import { openWhiteboard } from '../whiteboard/ui';
 
-export type HudParts = Pick<Parts, 'place' | 'travel' | 'you' | 'actions' | 'waiting' | 'meeting' | 'bookshelf' | 'talk' | 'notifier'>;
+export type HudParts = Pick<Parts, 'place' | 'travel' | 'you' | 'actions' | 'waiting' | 'meeting' | 'bookshelf' | 'talk' | 'notifier' | 'mission'>;
 
 /** Listens for clicks on the HUD and the project, registers what the HUD follows (see mountHud), and binds Tab, H and F. */
 export function installHud(ctx: Ctx, parts: HudParts) {
@@ -40,10 +40,22 @@ export function installHud(ctx: Ctx, parts: HudParts) {
   });
 
   // ---- The HUD: a few buttons on the top bar, everything else in the ☰ menu ----------------------------
-  const waitingNow = () => waitingInOrder(store.workers.values());
   const noMedia = () => (window.isSecureContext ? undefined : 'Voice and screen sharing need HTTPS or localhost — use a TLS proxy, --self-signed, or an SSH tunnel');
   const hud = mountHud(
     [
+      // Up on the top bar while anyone, on any floor, needs someone: "2 need you · 1 stuck · 3 to review".
+      {
+        id: 'mission',
+        icon: '🎯',
+        label: 'Mission control',
+        section: 'Open',
+        key: 'I',
+        status: () => attentionChip().total > 0,
+        chip: () => attentionChip().text,
+        tone: () => (attentionChip().tone === 'danger' ? 'danger' : attentionChip().tone === 'warn' ? 'primary' : undefined),
+        title: () => `Mission control: what needs someone, on every floor, and the floor's goals (I)${attentionChip().text ? ` · ${attentionChip().text}` : ''}`,
+        run: () => parts.mission.showMission('attention'),
+      },
       { id: 'issues', icon: '📌', label: 'Issues', section: 'Open', count: () => store.issues.items.filter((i) => i.state === 'OPEN').length, run: () => openBoard('issues', net, actions.boardActions()) },
       { id: 'pulls', icon: '🔀', label: 'Pull requests', section: 'Open', count: () => store.pulls.items.filter((p) => p.state === 'OPEN').length, run: () => openBoard('pulls', net, actions.boardActions()) },
       { id: 'queue', icon: '📋', label: 'Task queue', section: 'Open', count: () => store.queue.tasks.filter((t) => t.status !== 'done').length, title: () => 'Issues and tasks waiting for a worker', run: waiting.showQueue },
@@ -98,21 +110,6 @@ export function installHud(ctx: Ctx, parts: HudParts) {
         tone: () => (store.upgrade.latest && store.upgrade.phase !== 'building' ? 'primary' : undefined),
         title: () => (store.upgrade.latest ? `New version: ${store.upgrade.latest.subject}` : 'Upgrade the office'),
         run: () => openUpgrade(net),
-      },
-      // Up on the top bar while workers wait on someone (N does the same), next to the Workers button.
-      {
-        id: 'waiting',
-        icon: () => (waitingNow().some((w) => w.status === 'needs_input') ? '🙋' : '✅'),
-        label: 'Next worker that needs you',
-        section: 'Open',
-        key: 'N',
-        shown: () => waitingNow().length > 0,
-        status: () => waitingNow().length > 0,
-        chip: () => waitingLabel(waitingNow()).replace(/^(🙋|✅) /, ''),
-        on: () => waitingNow().every((w) => w.status === 'done'),
-        tone: () => (waitingNow().some((w) => w.status === 'needs_input') ? 'danger' : undefined),
-        title: () => 'Go to the worker that has waited longest on someone (N)',
-        run: waiting.goToNextWaiting,
       },
     ],
     settings,

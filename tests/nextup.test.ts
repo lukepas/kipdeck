@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { byUrgency, NextUp, waitingInOrder, waitingLabel } from '../src/client/nextup.js';
+import { NextUp, waitingInOrder, waitingLabel } from '../src/client/nextup.js';
 import type { WorkerInfo, WorkerStatus } from '../src/shared/protocol.js';
 
 function worker(id: string, status: WorkerStatus, waitingSince?: number, acked = false, createdAt = 0): WorkerInfo {
@@ -46,19 +46,4 @@ test('the Workers panel counts who needs input and who is done', () => {
   assert.equal(waitingLabel(waitingInOrder([worker('a', 'needs_input', 1), worker('b', 'needs_input', 2), worker('c', 'done', 3)])), '🙋 2 waiting · ✅ 1 done');
   assert.equal(waitingLabel([worker('c', 'done', 3)]), '✅ 1 done');
   assert.equal(waitingLabel([]), '');
-});
-
-test('the 2D view lists the workers waiting on someone first, then the busy ones, then the rest, asleep last', () => {
-  const workers = [
-    worker('asleep', 'offline', undefined, false, 1),
-    worker('seen', 'done', 50, true, 2),
-    worker('ready', 'idle', undefined, false, 3),
-    worker('late', 'working', undefined, false, 9),
-    worker('asks', 'needs_input', 300, false, 4),
-    worker('early', 'starting', undefined, false, 5),
-    worker('finished', 'done', 100, false, 6),
-    worker('gone', 'exited', undefined, false, 0),
-  ];
-  assert.deepEqual(byUrgency(workers).map((w) => w.id), ['finished', 'asks', 'early', 'late', 'seen', 'ready', 'gone', 'asleep']);
-  assert.deepEqual(byUrgency([]), []);
 });

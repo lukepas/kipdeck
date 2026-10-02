@@ -39,6 +39,10 @@
 .panel-x:hover { background: var(--paper-2); color: var(--ink); }
 @media (hover: none) { .panel-x { opacity: .6; } }
 
+/* Under the floor's name, top left: one line of what the floor is for (ui/mission/strip.ts). */
+.mission-strip { position: absolute; top: 72px; left: 12px; width: min(440px, 40vw); padding: 0; overflow: hidden; }
+.mission-strip:empty { display: none; }
+
 .side { position: absolute; top: 72px; right: 12px; width: 250px; display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - 90px); pointer-events: none; }
 .side > * { pointer-events: auto; }
 .side h3 { margin: 0 0 6px; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: baseline; gap: 5px; }

@@ -160,7 +160,12 @@ test('what the browser remembers keeps its keys and shapes', () => {
   assert.deepEqual(state.lastSpot(), { floor: 'f1', name: 'F', x: 1, y: 2, z: 3, facing: 4 });
   assert.ok(storage.has('agent-office.spot'));
   const settings = state.loadSettings();
-  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: false, pushToTalk: false, notify: true, hud: state.HUD_DEFAULTS, pins: [] });
+  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: false, pushToTalk: false, notify: true, hud: state.HUD_DEFAULTS, pins: [], missionTab: 'attention', allFloors: false });
+  // Mission control's last tab is one of its tabs.
+  storage.set('agent-office.settings', JSON.stringify({ missionTab: 'goals', allFloors: true }));
+  assert.deepEqual([state.loadSettings().missionTab, state.loadSettings().allFloors], ['goals', true]);
+  storage.set('agent-office.settings', JSON.stringify({ missionTab: '__proto__' }));
+  assert.equal(state.loadSettings().missionTab, 'attention');
   // Settings saved by an older office, with keys for things that are gone (the jukebox's volume), still load.
   storage.set('agent-office.settings', JSON.stringify({ volume: 0.4, music: 0.9, musicMuted: true }));
   assert.deepEqual(state.loadSettings(), { ...settings, volume: 0.4 });
@@ -173,7 +178,7 @@ test('what the browser remembers keeps its keys and shapes', () => {
 
 test("the store's keys are its state, as window.__office shows them", () => {
   // As the office had them before its store was split into slices: methods and the slices aren't among them.
-  assert.deepEqual(Object.keys(store).sort(), ['accounts', 'chat', 'drawing', 'floor', 'floorPlan', 'floors', 'ice', 'invites', 'issues', 'leaveOnMerge', 'limits', 'machine', 'me', 'meeting', 'notify', 'peers', 'profile', 'project', 'projectsDir', 'prompts', 'pulls', 'queue', 'repos', 'screens', 'services', 'signins', 'subs', 'team', 'upgrade', 'usage', 'whiteboard', 'workers', 'you']);
+  assert.deepEqual(Object.keys(store).sort(), ['accounts', 'chat', 'drawing', 'floor', 'floorPlan', 'floors', 'ice', 'invites', 'issues', 'leaveOnMerge', 'limits', 'machine', 'me', 'meeting', 'mission', 'notify', 'peers', 'profile', 'project', 'projectsDir', 'prompts', 'pulls', 'queue', 'repos', 'roster', 'screens', 'services', 'signins', 'subs', 'team', 'upgrade', 'usage', 'whiteboard', 'workers', 'you']);
 });
 
 test('a new store starts every field where it always has', async () => {
@@ -196,6 +201,7 @@ test('a new store starts every field where it always has', async () => {
       meeting: { current: null, past: [] }, floorPlan: EMPTY_PLAN, services: { items: [], port: 4600 },
       whiteboard: [], drawing: [],
       team: null, accounts: null, signins: null,
+      roster: [], mission: { statement: '', milestones: [] },
     },
   );
 });
@@ -234,4 +240,20 @@ test("a slice's topics fire in its place in the list; a floor's after the messag
   assert.deepEqual(fired, ['c']);
   assert.equal((s as unknown as { hello(): string }).hello(), 'hi');
   assert.ok(!Object.keys(s).includes('hello'));
+});
+
+test("the roster and your floor's mission: ranked the building's one way, another floor's mission left out", () => {
+  const entry = (id: string, floor: string, extra: object = {}) => ({ id, floor, floorName: floor, deskId: 'desk-1', name: id, color: '#fff', kind: 'agent', status: 'working', acked: true, createdAt: 1, tasked: true, workingSince: Date.now(), ...extra });
+  store.apply(welcome());
+  store.apply(msg({ t: 'roster', entries: [entry('busy', 'f1'), entry('asks', 'f2', { status: 'needs_input', waitingSince: 5 })] }));
+  assert.deepEqual(store.ranked().map((r) => r.entry.id), ['asks', 'busy']);
+  assert.deepEqual(store.ranked('f1').map((r) => r.entry.id), ['busy']);
+  assert.equal(store.rosterEntry('asks')?.floor, 'f2');
+  const mission = { statement: 'Ship it', milestones: [] };
+  store.apply(msg({ t: 'mission', floor: 'f2', mission }));
+  assert.equal(store.mission.statement, '', "another floor's");
+  store.apply(msg({ t: 'mission', floor: 'f1', mission }));
+  assert.equal(store.mission.statement, 'Ship it');
+  store.apply(msg({ t: 'floor.enter', peers: [], ...floorView('f2'), mission: { statement: 'Other', milestones: [] } }));
+  assert.equal(store.mission.statement, 'Other');
 });

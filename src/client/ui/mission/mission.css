@@ -1,0 +1,95 @@
+/* Mission control (ui/mission) and the mission strip: calm on purpose. One accent per level, the
+   reason in plain words, and nothing that moves unless it needs you. */
+
+.modal.mission-control { width: min(980px, 100%); height: min(760px, calc(100vh - 32px)); }
+.mission-control header { flex-wrap: wrap; }
+.mission-control header h2 { flex: 0 1 auto; }
+.mc-tabs { display: flex; gap: 6px; flex: 1; }
+.mc-tab { font: inherit; font-weight: 800; font-size: 14px; padding: 5px 12px; border: 2px solid var(--ink); border-radius: 10px; background: #fff; color: var(--ink); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.mc-tab[aria-selected=true] { background: var(--ink); color: #fff; }
+.mc-n { font-size: 11px; font-weight: 900; padding: 0 6px; border-radius: 999px; background: var(--bad); color: #fff; }
+.mc-body { padding: 14px 16px 18px; overflow: auto; flex: 1; }
+.mc-note { margin: 6px 0; font-size: 12px; font-weight: 700; color: var(--muted); }
+.mc-empty, .mc-calm { margin: 18px 0; text-align: center; font-weight: 800; color: var(--muted); }
+.mc-calm { color: #2a7d5f; }
+
+/* Attention: a group per level, the most urgent first. */
+.mc-group { margin-bottom: 14px; }
+.mc-level { display: flex; align-items: baseline; gap: 8px; width: 100%; padding: 4px 2px; border: 0; background: none; font: inherit; color: var(--ink); cursor: pointer; text-align: left; }
+.mc-level-name { font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; }
+.mc-level-n { font-size: 12px; font-weight: 900; color: var(--muted); }
+.mc-level-what { font-size: 12px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mc-level.working[aria-expanded=false]::after, .mc-level.parked[aria-expanded=false]::after { content: 'show'; margin-left: auto; font-size: 12px; font-weight: 800; color: var(--muted); text-decoration: underline; }
+.mc-rows { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.mc-row { border: 2px solid var(--ink); border-left-width: 8px; border-radius: 12px; background: #fff; padding: 8px 10px; outline: none; }
+.mc-row:focus-visible, .mc-row:focus { box-shadow: 0 0 0 3px var(--accent); }
+.mc-row.needs-you { border-left-color: var(--bad); }
+.mc-row.stuck { border-left-color: #f4a261; }
+.mc-row.review { border-left-color: var(--good); }
+.mc-row.working { border-left-color: var(--warn); }
+.mc-row.parked { border-left-color: #ced4da; }
+.mc-row.snoozed { opacity: .65; }
+.mc-main { display: grid; grid-template-columns: auto minmax(110px, 1.1fr) minmax(0, 3fr) auto auto auto; gap: 10px; align-items: center; }
+.mc-who, .mc-what { display: flex; flex-direction: column; min-width: 0; }
+.mc-name { font-weight: 900; }
+.mc-sub, .mc-doing, .mc-snoozed { font-size: 12px; font-weight: 700; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mc-reason { font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mc-time, .mc-cost { font-size: 12px; font-weight: 800; color: var(--muted); white-space: nowrap; text-align: right; }
+.mc-btns { display: flex; gap: 4px; }
+.btn.small { padding: 3px 9px; font-size: 13px; border-width: 2px; box-shadow: 0 2px 0 var(--ink); }
+.mc-more { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 2px dashed #e9ecef; }
+.mc-more[hidden] { display: none; }
+.mc-link { display: inline-flex !important; gap: 6px; align-items: center; margin: 0 !important; font-size: 13px !important; }
+.mc-link select, .mc-unlinked select { font: inherit; font-size: 13px; padding: 2px 6px; border: 2px solid var(--ink); border-radius: 8px; background: #fff; }
+
+/* Goals: the statement, then the milestones. */
+.mc-goals h3 { margin: 14px 0 6px; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: .05em; }
+.mc-statement { margin-bottom: 4px; }
+.mc-statement .mc-text { white-space: pre-wrap; font-size: 16px; font-weight: 700; line-height: 1.45; }
+.mc-editable { min-width: 0; flex: 1; }
+.mc-edit-btn { all: unset; cursor: text; display: block; border-radius: 8px; padding: 2px 4px; margin: -2px -4px; }
+.mc-edit-btn:hover, .mc-edit-btn:focus-visible { background: var(--paper-2); outline: 2px dashed var(--muted); }
+.mc-placeholder { color: var(--muted); font-weight: 700; font-style: italic; }
+.mc-hint { display: block; margin-top: 4px; font-size: 11px; font-weight: 700; color: var(--muted); }
+.mc-editable input[type=text], .mc-editable textarea { padding: 6px 9px; font-size: 14px; border-width: 2px; }
+.mc-lock { display: inline-flex !important; gap: 6px; align-items: center; font-size: 13px !important; color: var(--muted); }
+.mc-milestones { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.mc-milestone { border: 2px solid var(--ink); border-radius: 12px; background: #fff; padding: 10px 12px; }
+.mc-milestone.active { border-width: 3px; background: #fffdf7; }
+.mc-milestone.done { opacity: .7; }
+.mc-ms-head { display: flex; align-items: center; gap: 8px; font-weight: 900; }
+.mc-badge { font-size: 11px; font-weight: 900; padding: 1px 8px; border-radius: 999px; background: var(--ink); color: #fff; }
+.mc-due { font-size: 12px; font-weight: 800; color: var(--muted); }
+.mc-bar { height: 6px; margin: 8px 0 4px; border-radius: 999px; background: #e9ecef; overflow: hidden; }
+.mc-bar > span { display: block; height: 100%; background: var(--good); }
+.mc-stats { font-size: 12px; font-weight: 800; color: var(--muted); }
+.mc-ms-detail { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin-top: 8px; font-size: 13px; font-weight: 700; align-items: start; }
+.mc-label { color: var(--muted); font-weight: 800; }
+.mc-issues { list-style: none; margin: 0; padding: 0; }
+.mc-issues li.closed { text-decoration: line-through; color: var(--muted); }
+.mc-unlinked ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.mc-unlinked li { display: flex; gap: 8px; align-items: center; font-weight: 800; }
+.mc-tell { margin-top: 16px; }
+.mc-tell summary { cursor: pointer; font-weight: 900; }
+.mc-picks { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 6px 0 10px; }
+.mc-picks label { display: inline-flex !important; gap: 6px; align-items: center; margin: 0 !important; }
+
+/* The mission strip: one line under the floor's name. */
+.ms-strip { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; width: 100%; padding: 6px 10px; font-size: 13px; font-weight: 700; color: var(--ink); }
+.ms-strip:hover, .ms-strip:focus-visible { background: var(--paper-2); }
+.ms-statement { flex: 1 1 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 800; }
+.ms-empty { color: var(--muted); font-style: italic; }
+.ms-milestone { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.ms-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+.ms-bar { width: 56px; height: 5px; border-radius: 999px; background: #e9ecef; overflow: hidden; flex: none; }
+.ms-bar > span { display: block; height: 100%; background: var(--good); }
+.ms-count { color: var(--muted); white-space: nowrap; }
+.ms-unlinked { color: #b5651d; font-weight: 900; white-space: nowrap; }
+
+@media (max-width: 720px) {
+  .mc-main { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .mc-what { grid-column: 2 / -1; grid-row: 2; }
+  .mc-time { grid-column: 3; grid-row: 1; }
+  .mc-cost { display: none; }
+  .mc-btns { grid-column: 1 / -1; grid-row: 3; }
+}

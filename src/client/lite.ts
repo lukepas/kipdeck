@@ -5,16 +5,17 @@
 // anywhere in it.
 
 import { Net } from './net';
-import { AVATAR_COLORS, loadProfile, loadSettings, saveProfile, store } from './state';
+import { AVATAR_COLORS, loadProfile, loadSettings, saveProfile, saveSettings, store, type MissionTab } from './state';
 import { randomLook } from '../shared/avatar';
 import { cloneLabel } from '../shared/floors';
 import { DESK_BY_ID, nextFreeSeat } from '../shared/layout';
 import { isAsleep } from '../shared/status';
-import type { AgentEffort, AgentProvider, FloorInfo, WorkerInfo } from '../shared/protocol';
+import type { AgentEffort, AgentProvider, FloorInfo, RosterEntry, WorkerInfo } from '../shared/protocol';
+import type { Attention } from '../shared/attention';
 import { $, clip, closeAllModals, doingNow, h, onDoingChange, onModalChange, openModal, readingNow, STATUS_LABEL, timeAgo, toast } from './ui/dom';
 import { openTerminal, openTerminalFor, routeTerminalMessage } from './ui/terminal';
 import { openChanges, openChangesFor, routeChangesMessage } from './ui/changes';
-import { lostWorktreeDialog, openPrompt, routeWorktreeMessage, sendHomeDialog } from './ui/prompt';
+import { lostWorktreeDialog, openPrompt, routeWorktreeMessage } from './ui/prompt';
 import { openBoard } from './ui/boards';
 import type { BoardActions } from './ui/github/prompts';
 import { openPull, routePullMessage } from './ui/pull';
@@ -23,7 +24,10 @@ import { openAsk } from './ui/ask';
 import { openMeeting, type MeetingPreset } from './ui/meeting';
 import { openSignIns } from './ui/signins';
 import { modelBadge, providerLabel } from './ui/provider';
-import { byUrgency, waitingInOrder, waitingLabel } from './nextup';
+import { attentionChip, openMissionControl, renderStrip, runAction, type MissionDeps } from './ui/mission';
+import { doingLabel, linkLabel } from './ui/mission/act';
+import { watchStuck } from './ui/mission/watch';
+import { confirmSendHome } from './ui/sendhome';
 import { askNotifyPermission, DesktopNotifier, notifyPermission, waitingOnSomeone } from './notify';
 import { repoChoices } from './shared/hiring';
 // The tab title counts the workers waiting on someone, on every floor, as the 3D office's does.
@@ -116,16 +120,53 @@ store.on('project', renderFloors);
 /** What each worker was last, to tell when one starts waiting on someone. */
 const lastStatus = new Map<string, string>();
 
+/**
+ * The workers, most in need of someone first: the building's one ranking (shared/attention.ts), on
+ * this floor or, with All floors, on every floor. The board agents (not on the roster) come last.
+ */
 function renderWorkers() {
-  const list = byUrgency(store.workers.values());
+  const ranked = store.ranked(settings.allFloors ? undefined : store.floor);
+  const cards = ranked.map((r) => {
+    const w = r.entry.floor === store.floor ? store.workers.get(r.entry.id) : undefined;
+    return w ? workerCard(w, r.att) : elsewhereCard(r.entry, r.att);
+  });
+  const listed = new Set(ranked.map((r) => r.entry.id));
+  for (const w of [...store.workers.values()].sort((a, b) => a.createdAt - b.createdAt)) if (!listed.has(w.id)) cards.push(workerCard(w));
   const ul = $('workers');
-  ul.replaceChildren(...list.map(workerCard));
-  if (!list.length) ul.append(h('li.lite-empty', {}, store.project ? 'Nobody is working on this floor. ✨ New task hires someone.' : 'No workers here.'));
-  $('waiting-now').textContent = waitingLabel(waitingInOrder(list));
+  ul.replaceChildren(...cards);
+  if (!cards.length) ul.append(h('li.lite-empty', {}, store.project ? 'Nobody is working on this floor. ✨ New task hires someone.' : 'No workers here.'));
+  const chip = attentionChip();
+  $('waiting-now').textContent = chip.text;
+  $('btn-mission').querySelector('.n')!.textContent = chip.total ? String(chip.total) : '';
+  const all = $('all-floors');
+  all.setAttribute('aria-pressed', String(settings.allFloors));
+  all.classList.toggle('hidden', store.floors.length < 2);
   renderTitle();
 }
 
-function workerCard(w: WorkerInfo): HTMLElement {
+/** Why it needs someone, for its card, when it does. */
+function whyLine(att: Attention | undefined): HTMLElement | null {
+  if (!att?.reason || att.snoozed || (att.level !== 'needs-you' && att.level !== 'stuck' && att.level !== 'review')) return null;
+  return h('span.lite-why', {}, att.reason);
+}
+
+/** A worker on another floor (All floors): what it's for and why it needs someone; a tap rides there and opens it. */
+function elsewhereCard(e: RosterEntry, att: Attention): HTMLElement {
+  const doing = doingLabel(e);
+  return h(
+    'li.lite-worker.elsewhere',
+    { class: `${e.status} ${att.level}` },
+    h(
+      'button.lite-card',
+      { type: 'button', onclick: () => runAction(missionDeps, e, att.action), 'aria-label': `${e.name} on ${e.floorName}: ${att.reason ?? STATUS_LABEL[e.status] ?? e.status}` },
+      h('span.dot', { style: `background:${e.color}` }),
+      h('span.lite-info', {}, h('span.lite-name', {}, e.name), whyLine(att), doing ? h('span.lite-now', {}, doing) : null, h('span.lite-sub', {}, h('b', {}, e.floorName), ` · ${linkLabel(e)}`)),
+      h('span.lite-state', {}, h('span.pill', { class: e.status }, STATUS_LABEL[e.status] ?? e.status)),
+    ),
+  );
+}
+
+function workerCard(w: WorkerInfo, att?: Attention): HTMLElement {
   const desk = DESK_BY_ID.get(w.deskId);
   const waiting = waitingOnSomeone(w);
   const asleep = isAsleep(w.status);
@@ -147,10 +188,11 @@ function workerCard(w: WorkerInfo): HTMLElement {
     w.worktree && `🌿 ${w.worktree.branch}`,
     w.pr && `🔀 PR #${w.pr.number}`,
     w.lastInput && `⌨️ ${w.lastInput.by} ${timeAgo(w.lastInput.at)}`,
+    store.rosterEntry(w.id) && linkLabel(store.rosterEntry(w.id)!),
   ].filter(Boolean);
   return h(
     'li.lite-worker',
-    { class: `${w.status}${waiting ? ' waiting' : ''}` },
+    { class: `${w.status}${waiting ? ' waiting' : ''}${att?.level === 'stuck' && !att.snoozed ? ' stuck' : ''}` },
     h(
       'button.lite-card',
       { type: 'button', onclick: () => openWorker(w.id), 'aria-label': `${w.name}, ${STATUS_LABEL[w.status] ?? w.status}: open its terminal` },
@@ -159,6 +201,7 @@ function workerCard(w: WorkerInfo): HTMLElement {
         'span.lite-info',
         {},
         h('span.lite-name', {}, w.name),
+        whyLine(att),
         task ? h('span.lite-task', {}, task) : null,
         now ? h('span.lite-now', {}, now) : null,
         h('span.lite-sub', {}, sub.join(' · ')),
@@ -187,6 +230,7 @@ store.on('workers', () => {
   renderWorkers();
 });
 store.on('project', renderWorkers);
+store.on('roster', renderWorkers);
 // "3m ago" moves on by itself.
 setInterval(renderWorkers, 30_000);
 
@@ -218,16 +262,7 @@ function fixLostWorktree(w: WorkerInfo) {
       toast(all ? `Rebuilding ${others.length + 1} worktrees…` : `Rebuilding ${w.name}'s worktree…`);
       net.send({ t: 'worker.rebuild', workerId: w.id, all });
     },
-    sendHome: () =>
-      sendHomeDialog({
-        workerId: w.id,
-        name: w.name,
-        where: DESK_BY_ID.get(w.deskId)?.label ?? 'its desk',
-        worktree,
-        repos: w.repos?.length ? [worktree.path.split(/[\\/]/).pop() ?? 'its own', ...w.repos.map((r) => r.name)] : undefined,
-        ask: () => net.send({ t: 'worker.worktree', workerId: w.id }),
-        onConfirm: (cleanup) => net.send({ t: 'worker.kill', workerId: w.id, cleanup }),
-      }),
+    sendHome: () => confirmSendHome(net, w),
   });
 }
 
@@ -244,8 +279,8 @@ function promptWorker(id: string) {
 }
 
 // ---- New work: a prompt for a worker who's here, or a new one at a free desk -------------------
-function hire(deskId: string, prompt: string, worktree: boolean, provider?: AgentProvider, model?: string, effort?: AgentEffort, repos?: string[]) {
-  net.send({ t: 'worker.spawn', deskId, prompt, worktree, provider, model, effort, repos: repos?.length ? repos : undefined });
+function hire(deskId: string, prompt: string, worktree: boolean, provider?: AgentProvider, model?: string, effort?: AgentEffort, repos?: string[], goal?: string) {
+  net.send({ t: 'worker.spawn', deskId, prompt, worktree, provider, model, effort, repos: repos?.length ? repos : undefined, goal });
 }
 
 function sendToWorker(title: string, text: { context?: string; initial?: string } = {}) {
@@ -262,9 +297,9 @@ function sendToWorker(title: string, text: { context?: string; initial?: string 
     worktreeOption: !!store.project.branch,
     providerOption: true,
     repoOptions: repoChoices(),
-    onSubmit: (prompt, to, worktree, provider, model, effort, repos) => {
+    onSubmit: (prompt, to, worktree, provider, model, effort, repos, goal) => {
       if (to) net.send({ t: 'worker.prompt', workerId: to, prompt });
-      else if (desk) hire(desk, prompt, worktree, provider, model, effort, repos);
+      else if (desk) hire(desk, prompt, worktree, provider, model, effort, repos, goal);
     },
   });
 }
@@ -286,23 +321,48 @@ function boardActions(): BoardActions {
   };
 }
 
-function showMeeting(preset?: MeetingPreset) {
-  openMeeting(
-    net,
-    {
-      openTerminal: openWorker,
-      openPr: (id) => {
-        const w = store.workers.get(id);
-        if (!w) return;
-        const it = w.pr && store.pulls.items.find((p) => p.number === w.pr!.number);
-        if (it) openPull(it, net, boardActions());
-        else if (w.pr) window.open(w.pr.url, '_blank', 'noopener');
-        else net.send({ t: 'worker.pr', workerId: id });
-      },
-    },
-    preset,
-  );
+/** A worker's pull request: its window, GitHub's page, or a new one opened from its branch. */
+function openPrFor(id: string) {
+  const w = store.workers.get(id);
+  if (!w) return;
+  const it = w.pr && store.pulls.items.find((p) => p.number === w.pr!.number);
+  if (it) openPull(it, net, boardActions());
+  else if (w.pr) window.open(w.pr.url, '_blank', 'noopener');
+  else net.send({ t: 'worker.pr', workerId: id });
 }
+
+function showMeeting(preset?: MeetingPreset) {
+  openMeeting(net, { openTerminal: openWorker, openPr: openPrFor }, preset);
+}
+
+// ---- Mission control: what needs someone, on every floor (ui/mission, as in the 3D office) -----
+const missionDeps: MissionDeps = {
+  net,
+  openTerminal: openWorker,
+  openChanges: (id) => openChanges(net, id, () => openWorker(id)),
+  openPr: openPrFor,
+  fixLost: (id) => {
+    const w = store.workers.get(id);
+    if (w) fixLostWorktree(w);
+  },
+  goTo: (floor) => net.send({ t: 'floor.go', floor }),
+};
+function showMission(tab?: MissionTab) {
+  openMissionControl(missionDeps, { tab: settings.missionTab, save: (t) => ((settings.missionTab = t), saveSettings(settings)) }, tab);
+}
+$('btn-mission').addEventListener('click', () => showMission());
+$('all-floors').addEventListener('click', () => {
+  settings.allFloors = !settings.allFloors;
+  saveSettings(settings);
+  renderWorkers();
+});
+const paintStrip = () => renderStrip($('mission-strip'), (tab) => showMission(tab));
+for (const t of ['mission', 'roster', 'floor', 'issues', 'pulls'] as const) store.on(t, paintStrip);
+// Stuck anywhere: a notification while you're away, and a buzz.
+watchStuck((e, reason) => {
+  notifier.stuck(e, reason, () => runAction(missionDeps, e, 'look'));
+  if (e.floor === store.floor) navigator.vibrate?.(200);
+});
 
 $('btn-issues').addEventListener('click', () => openBoard('issues', net, boardActions()));
 $('btn-pulls').addEventListener('click', () => openBoard('pulls', net, boardActions()));
@@ -391,6 +451,7 @@ void (async () => {
 renderFloors();
 renderWorkers();
 renderNav();
+paintStrip();
 
 // Debug handle for quick checks from the console / headless screenshots.
 (window as any).__lite = { store, net };
