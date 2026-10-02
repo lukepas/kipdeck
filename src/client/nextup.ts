@@ -4,7 +4,8 @@
 // panel's button counts them. Every list of workers is in the building's one ranking instead
 // (shared/attention.ts), which puts the same ones first.
 
-import type { WorkerInfo } from '../shared/protocol';
+import type { Ranked } from '../shared/attention';
+import type { RosterEntry, WorkerInfo } from '../shared/protocol';
 import { waitingOnSomeone } from './notify';
 
 type Waiting = WorkerInfo & { status: 'needs_input' | 'done' };
@@ -20,6 +21,25 @@ const blocked = (w: WorkerInfo) => (w.status === 'needs_input' ? 0 : 1);
 /** Workers waiting on someone: the ones that need you, then the ones that are done, whoever has waited longest first. */
 export function waitingInOrder(workers: Iterable<WorkerInfo>): Waiting[] {
   return [...workers].filter(waitingOnSomeone).sort((a, b) => blocked(a) - blocked(b) || since(a) - since(b) || a.createdAt - b.createdAt || a.id.localeCompare(b.id));
+}
+
+/**
+ * `workers` without the ones snoozed in the ranking (shared/attention.ts): a snooze means "not now",
+ * so N, the count on its button and a desktop notification leave them out, as the banner and the chip do.
+ */
+export function unsnoozed<T extends { id: string }>(workers: Iterable<T>, ranked: readonly Ranked[]): T[] {
+  const snoozed = new Set(ranked.filter((r) => r.att.snoozed).map((r) => r.entry.id));
+  return [...workers].filter((w) => !snoozed.has(w.id));
+}
+
+/** Who has waited longest on someone on another floor than `here`, by the building-wide ranking (snoozed ones left out). */
+export function waitingElsewhere(ranked: readonly Ranked[], here: string | null): RosterEntry | undefined {
+  return ranked.find((r) => r.entry.floor !== here && !r.att.snoozed && (r.entry.status === 'needs_input' || (r.entry.status === 'done' && !r.entry.acked)))?.entry;
+}
+
+/** How many workers on floors other than `here` wait on someone, by the ranking (snoozed ones left out). */
+export function waitingElsewhereCount(ranked: readonly Ranked[], here: string | null): number {
+  return ranked.filter((r) => r.entry.floor !== here && !r.att.snoozed && (r.entry.status === 'needs_input' || (r.entry.status === 'done' && !r.entry.acked))).length;
 }
 
 /** "2 need you · 1 done": the ones that need input, then the ones that finished. */

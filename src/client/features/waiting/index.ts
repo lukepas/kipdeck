@@ -9,7 +9,7 @@ import { isAsleep } from '../../../shared/status';
 import type { Ctx } from '../../core/context';
 import type { CoreState } from '../../core/ctx';
 import type { Parts } from '../../core/parts';
-import { NextUp, waitingInOrder, waitingLabel } from '../../nextup';
+import { NextUp, unsnoozed, waitingElsewhere, waitingInOrder, waitingLabel } from '../../nextup';
 import { waitingOnSomeone } from '../../notify';
 import { store } from '../../state';
 import { openChanges } from '../../ui/changes';
@@ -32,13 +32,15 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
    * N: to the first worker waiting on someone, and on each press after, the next. In the ranking's
    * order (shared/attention.ts): the ones that need you before the ones that are done, so one that
    * needs you on another floor comes before one here that's only done, as the banner says (features/needsyou).
+   * Snoozed ones are left out here too, as everywhere else.
    */
   function goToNextWaiting() {
     if (core.trip) return;
-    const waiting = waitingInOrder(store.workers.values());
+    const here = awake();
+    const waiting = waitingInOrder(here);
     const other = elsewhere();
     const away = !waiting.length || (other?.status === 'needs_input' && waiting[0].status !== 'needs_input');
-    const w = away ? undefined : nextUp.next(store.workers.values(), waitingBeside());
+    const w = away ? undefined : nextUp.next(here, waitingBeside());
     nextToast?.remove();
     if (!w || !goToWorker(w.id)) {
       // Building-wide: after the last one here, the one on another floor that has waited longest.
@@ -72,14 +74,19 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
 
   /** Who has waited longest on someone on another floor, by the building-wide ranking (snoozed ones left out). */
   function elsewhere() {
-    return store.ranked().find((r) => r.entry.floor !== store.floor && !r.att.snoozed && (r.entry.status === 'needs_input' || (r.entry.status === 'done' && !r.entry.acked)))?.entry;
+    return waitingElsewhere(store.ranked(), store.floor);
+  }
+
+  /** This floor's workers, the ones snoozed in the ranking left out. */
+  function awake() {
+    return unsnoozed(store.workers.values(), store.ranked(store.floor));
   }
 
   /** The waiting worker you're standing at, if any: N skips it while anyone else is waiting. */
   function waitingBeside(): string | undefined {
     let best: string | undefined;
     let bestD = 2.5;
-    for (const w of store.workers.values()) {
+    for (const w of awake()) {
       const v = parts.views.workerViews.get(w.id);
       if (!v || !waitingOnSomeone(w)) continue;
       const d = v.model.root.getWorldPosition(workerPos).distanceTo(player.pos);
@@ -92,13 +99,15 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
   }
 
   function renderWaiting() {
-    const waiting = waitingInOrder(store.workers.values());
+    const waiting = waitingInOrder(awake());
     const el = $('waiting');
     el.classList.toggle('hidden', !waiting.length);
     el.classList.toggle('all-done', waiting.every((w) => w.status === 'done'));
     el.classList.toggle('needs-you-now', waiting.some((w) => w.status === 'needs_input'));
     if (waiting.length) el.replaceChildren(h('span', {}, waitingLabel(waiting)), h('span.key', {}, 'N'));
   }
+  // A snooze is in the roster, not the floor's workers.
+  store.on('roster', renderWaiting);
   $('waiting').addEventListener('click', () => goToNextWaiting());
   ctx.keys.bind({
     code: 'KeyN',
@@ -113,7 +122,7 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
   function pointToWaiting(now: number) {
     bearings.length = 0;
     if (!core.trip && !modalOpen()) {
-      for (const w of store.workers.values()) {
+      for (const w of awake()) {
         const v = parts.views.workerViews.get(w.id);
         if (!v || !waitingOnSomeone(w)) continue;
         const at = v.model.root.getWorldPosition((heads[bearings.length] ??= new THREE.Vector3()));

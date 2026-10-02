@@ -1,10 +1,11 @@
-/* A worker needs you (features/needsyou): the banner under the top bar, the flash round the edge of the
-   screen when one starts asking, and the pulse on what else says so (the attention chip, the Workers panel). */
-.needs-you { position: absolute; top: 72px; left: 50%; transform: translateX(-50%); z-index: 2; display: flex; align-items: stretch; max-width: min(600px, calc(100vw - 572px)); border: 3px solid var(--ink); border-radius: var(--radius); background: var(--bad); color: #fff; --rest: var(--shadow); box-shadow: var(--rest); animation: needs-you-in .3s cubic-bezier(.2, 1.4, .4, 1), needs-you-ring 1.6s ease-out .3s infinite; }
+/* A worker needs you (features/needsyou): the banner under the top bar, and the flash round the edge of the
+   screen when one starts asking. The banner is the one thing on screen that keeps saying so: it comes in
+   once and then holds still, and the attention chip and the N button only turn red (their tone). */
+.needs-you { position: absolute; top: 72px; left: 50%; transform: translateX(-50%); z-index: 2; display: flex; align-items: stretch; max-width: min(600px, calc(100vw - 572px)); border: 3px solid var(--ink); border-radius: var(--radius); background: var(--bad); color: #fff; box-shadow: var(--shadow); animation: needs-you-in .3s cubic-bezier(.2, 1.4, .4, 1); }
 .needs-you button { border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
 .needs-you-go { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 8px 6px 8px 14px; text-align: left; border-radius: 12px 0 0 12px; }
 .needs-you-go:hover, .needs-you-x:hover { background: rgba(43, 45, 66, .18); }
-.needs-you-icon { font-size: 26px; line-height: 1; animation: needs-you-wave 1.2s ease-in-out infinite; transform-origin: 50% 90%; }
+.needs-you-icon { font-size: 26px; line-height: 1; }
 .needs-you-text { display: grid; min-width: 0; }
 .needs-you-text strong { font-size: 17px; font-weight: 900; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .needs-you-ask { font-size: 13px; font-weight: 700; opacity: .95; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -19,17 +20,10 @@
 .needs-you-flash { position: fixed; inset: 0; z-index: 60; opacity: 0; pointer-events: none !important; box-shadow: inset 0 0 0 8px var(--bad), inset 0 0 150px 36px rgba(239, 71, 111, .8); }
 .needs-you-flash.on { animation: needs-you-flash 2.4s ease-out; }
 
-/* Mission control's attention chip on the top bar while anyone needs you (its tone is the ranking's), and the count in the Workers panel. */
-.dock-btn[data-action=mission].danger { --rest: 0 3px 0 var(--ink); animation: needs-you-ring 1.6s ease-out infinite; }
-#waiting.needs-you-now { --rest: 0 0 0 0 transparent; animation: needs-you-ring 1.6s ease-out infinite; }
-
 @keyframes needs-you-in { from { transform: translateX(-50%) translateY(-18px) scale(.9); opacity: 0; } }
-/* A ring spreading out from it and fading, round whatever shadow it rests on (--rest). */
-@keyframes needs-you-ring { from { box-shadow: var(--rest), 0 0 0 0 rgba(239, 71, 111, .75); } to { box-shadow: var(--rest), 0 0 0 16px rgba(239, 71, 111, 0); } }
-@keyframes needs-you-wave { 0%, 60%, 100% { transform: rotate(0); } 15%, 45% { transform: rotate(-14deg); } 30% { transform: rotate(12deg); } }
 @keyframes needs-you-flash { 0%, 100% { opacity: 0; } 12%, 46%, 80% { opacity: 1; } 29%, 63% { opacity: .25; } }
 @media (prefers-reduced-motion: reduce) {
-  .needs-you, .needs-you-icon, .dock-btn[data-action=mission].danger, #waiting.needs-you-now { animation: none; }
+  .needs-you { animation: none; }
   .needs-you-flash.on { animation: needs-you-fade 1.6s ease-out; }
 }
 @keyframes needs-you-fade { from { opacity: 1; } to { opacity: 0; } }

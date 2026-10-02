@@ -42,7 +42,7 @@ A worker on another floor takes you to its floor and its desk first, then does i
 
 The same ranking runs everywhere: the attention chip on the top bar (*2 need you · 1 stuck · 3 to review*, click it for this tab), the tab title's count, the needs-you banner and the beacons over desks (the *Needs you* level, the snoozed ones left out), the order **N** goes in, the order of the Workers panel (which shows the reason in place of the bare status), the 2D view's list, the webhook, and what agents see from `list_workers`. It lives in one place, `src/shared/attention.ts`, with its thresholds.
 
-**N** goes to the worker on your floor that has waited longest on someone, then the next; after the last one on your floor it takes you to the next floor's.
+**N** goes to the workers waiting on someone in the ranking's order: the ones that need you first, then the ones that are done, longest-waiting first within each. After the last one on your floor it takes you to the next floor's, and one that needs you on another floor comes before one here that's only done. Snoozed ones are skipped.
 
 A worker that gets stuck dings on your floor and, while you're in another tab, pops up a desktop notification wherever it is. After the same few seconds' wait as the other alerts, the team's webhook gets a line about it too. Nothing else new dings.
 

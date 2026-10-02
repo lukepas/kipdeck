@@ -122,3 +122,14 @@ test('a page that comes up with someone asking already waits a whole turn before
   assert.equal(r.due(asking, 500_000 + REMIND_EVERY - 1), false);
   assert.equal(r.due(asking, 500_000 + REMIND_EVERY), true);
 });
+
+test('the banner is the one needs-you signal that stays up, and nothing on screen keeps pulsing for it', async () => {
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync(new URL('../src/client/features/needsyou/ui.css', import.meta.url), 'utf8');
+  // The banner comes in once; the chip and the N button only change tone (styles/hud.css, the mission chip's own).
+  assert.doesNotMatch(css, /infinite/);
+  assert.doesNotMatch(css, /data-action=mission|#waiting/);
+  const floorwatch = readFileSync(new URL('../src/client/core/floorwatch.ts', import.meta.url), 'utf8');
+  // Another floor's worker is on the banner already: no toast or ding of the elevator's as well.
+  assert.doesNotMatch(floorwatch, /toast\(|ding\(/);
+});

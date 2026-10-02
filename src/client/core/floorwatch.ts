@@ -1,12 +1,12 @@
 /** The floor you're on and the others: its paint, and who's waiting on another floor. */
 import { floorPalette } from '../../shared/floors';
 import { store } from '../state';
-import { $, toast } from '../ui/dom';
+import { waitingElsewhereCount } from '../nextup';
+import { $ } from '../ui/dom';
 import type { Ctx } from './context';
 
-/** Registers the floor's paint (store 'floors') and the floors' waiting count (the 'floors' message). */
+/** Registers the floor's paint (store 'floors') and the other floors' waiting count (the 'floors' message and the roster). */
 export function installFloorWatch(ctx: Ctx) {
-  const { sound } = ctx;
 
   /** Which of the floor palettes the walls are painted in now. */
   let painted = -1;
@@ -20,21 +20,15 @@ export function installFloorWatch(ctx: Ctx) {
   store.on('floors', paintFloor);
 
   ctx.messages.on('floors', () => noticeWaiting());
-  /** Workers waiting on someone, per floor, the last time the elevator said so. */
-  const waitingOn = new Map<string, number>();
-  /** Someone's waiting on another floor: say so, since you can't see or hear it from here. */
+  // The count is the ranking's, which a snooze changes too.
+  store.on('roster', () => noticeWaiting());
+  /**
+   * How many wait on someone on other floors, on the project name's badge: the building's ranking,
+   * snoozed ones left out, as the chip and the needs-you banner count them. The banner names them
+   * and takes you there, so there's no toast or ding of its own.
+   */
   function noticeWaiting() {
-    let elsewhere = 0;
-    for (const f of store.floors) {
-      const before = waitingOn.get(f.id);
-      waitingOn.set(f.id, f.waiting);
-      if (f.id === store.floor) continue;
-      elsewhere += f.waiting;
-      if (before !== undefined && f.waiting > before) {
-        toast(`🙋 A worker on the ${f.name} floor is waiting on someone: switch to it from the project name`, 'warn');
-        sound.ding('needs_input');
-      }
-    }
+    const elsewhere = waitingElsewhereCount(store.ranked(), store.floor);
     const badge = $('floors-waiting');
     badge.textContent = elsewhere ? String(elsewhere) : '';
     badge.classList.toggle('hidden', !elsewhere);

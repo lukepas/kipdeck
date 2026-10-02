@@ -14,6 +14,7 @@ import { pastTheWing, seatBuilt } from '../../core/floors';
 import { aside, hintTitle, key, onE } from '../../core/hint';
 import { noOutline } from '../../core/outline';
 import type { Parts } from '../../core/parts';
+import { unsnoozed } from '../../nextup';
 import { waitingOnSomeone } from '../../notify';
 import { renderTitle } from '../../shared/title';
 import { store } from '../../state';
@@ -103,8 +104,10 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
       if (v.status !== w.status || v.acked !== w.acked) {
         // It just finished or started waiting on you (not already so when this page first saw it): ding (one that needs you has an alarm of its own, see features/needsyou), and notify if you're away.
         if (waitingOnSomeone(w) && v.status !== '' && w.status !== v.status) {
-          if (w.status === 'done') sound.ding('done');
-          parts.notifier.alert(w);
+          // Snoozed in the ranking: "not now", so no ding or notification for it either.
+          const snoozed = !unsnoozed([w], store.ranked(store.floor)).length;
+          if (w.status === 'done' && !snoozed) sound.ding('done');
+          if (!snoozed) parts.notifier.alert(w);
         }
         // Finished what it was on: a little spin and a hop.
         if (w.status === 'done' && (v.status === 'working' || v.status === 'needs_input')) v.model.celebrate();
