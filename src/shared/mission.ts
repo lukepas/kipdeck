@@ -166,6 +166,22 @@ export function unlinked(roster: readonly RosterEntry[]): RosterEntry[] {
 }
 
 /**
+ * The unlinked() workers worth asking someone to link: only while the floor has an open milestone
+ * to link them to, so a floor without milestones isn't told to do what it can't.
+ */
+export function toLink(m: Mission, roster: readonly RosterEntry[]): RosterEntry[] {
+  return m.milestones.some((x) => !x.done) ? unlinked(roster) : [];
+}
+
+/**
+ * What a milestone's progress says in a line: its issues closed (or that none are linked yet, as
+ * a bar over no issues would only ever read 0%), and the workers on it.
+ */
+export function progressLine(p: Pick<MilestoneProgress, 'closed' | 'issues' | 'workers'>): string {
+  return [p.issues ? `${p.closed}/${p.issues} issues` : 'no issues linked yet', p.workers ? `${p.workers} worker${p.workers === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ');
+}
+
+/**
  * What it's linked to: its milestone, else its issue, else nothing (unlinked). A shell is never
  * called unlinked, as unlinked() leaves shells out: it gets no mission note to link to.
  */

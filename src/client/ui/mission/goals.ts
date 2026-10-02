@@ -3,7 +3,7 @@
 // workers nobody linked to anything, and telling the workers when the mission changes.
 
 import { duration } from '../../../shared/attention';
-import { MISSION_LIMITS, milestoneProgress, unlinked } from '../../../shared/mission';
+import { MISSION_LIMITS, milestoneProgress, toLink, unlinked } from '../../../shared/mission';
 import type { MissionMilestone } from '../../../shared/protocol';
 import { store } from '../../state';
 import { h, timeAgo } from '../dom';
@@ -55,7 +55,7 @@ function milestoneRow(deps: MissionDeps, m: MissionMilestone, i: number, n: numb
   const p = milestoneProgress(m, store.issues.items, floorRoster, store.pulls.items);
   const active = store.mission.active === m.id;
   const pct = p.issues ? Math.round((p.closed / p.issues) * 100) : 0;
-  const stats = [`issues ${p.closed}/${p.issues}`, `PRs ${p.prsOpen} open`, `${p.working} working`, money(p.usd), p.workedMs ? `${duration(p.workedMs)} on task` : ''].filter(Boolean).join(' · ');
+  const stats = [p.issues ? `issues ${p.closed}/${p.issues}` : 'no issues linked yet', p.prsOpen ? `PRs ${p.prsOpen} open` : '', p.working ? `${p.working} working` : '', money(p.usd), p.workedMs ? `${duration(p.workedMs)} on task` : ''].filter(Boolean).join(' · ');
   const issues = m.issues.map((num) => {
     const it = store.issues.items.find((x) => x.number === num);
     return h('li', { class: it?.state === 'CLOSED' ? 'closed' : '' }, `#${num}`, it ? ` ${it.title}` : '');
@@ -76,7 +76,7 @@ function milestoneRow(deps: MissionDeps, m: MissionMilestone, i: number, n: numb
       can ? btn('Down', `Move ${m.title} down`, () => send({ op: 'move', id: m.id, delta: 1 }), i === n - 1) : null,
       can ? btn('Remove', `Remove ${m.title}`, () => send({ op: 'remove', id: m.id })) : null,
     ),
-    h('div.mc-bar', { role: 'progressbar', 'aria-label': `${m.title}: ${p.closed} of ${p.issues} issues closed`, 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-valuenow': pct }, h('span', { style: `width:${pct}%` })),
+    p.issues ? h('div.mc-bar', { role: 'progressbar', 'aria-label': `${m.title}: ${p.closed} of ${p.issues} issues closed`, 'aria-valuemin': 0, 'aria-valuemax': 100, 'aria-valuenow': pct }, h('span', { style: `width:${pct}%` })) : null,
     h('div.mc-stats', {}, stats),
     h(
       'div.mc-ms-detail',
@@ -129,7 +129,10 @@ export function renderGoals(deps: MissionDeps): HTMLElement {
     deps.net.send({ t: 'mission.milestone', op: 'add', title: add.value });
     add.value = '';
   });
-  const lost = unlinked(store.roster.filter((e) => e.floor === store.floor));
+  const floorRoster = store.roster.filter((e) => e.floor === store.floor);
+  const lost = toLink(m, floorRoster);
+  // Workers nobody linked, and no open milestone yet to link them to: say how, rather than ask.
+  const noTarget = !lost.length && unlinked(floorRoster).length > 0;
   const linkRow = (id: string, name: string) => {
     const select = h('select', { 'aria-label': `Milestone for ${name}` }, h('option', { value: '' }, 'Link to...'), ...m.milestones.filter((x) => !x.done).map((x) => h('option', { value: x.id }, x.title))) as HTMLSelectElement;
     select.addEventListener('change', () => select.value && deps.net.send({ t: 'worker.goal', workerId: id, goal: select.value }));
@@ -143,6 +146,7 @@ export function renderGoals(deps: MissionDeps): HTMLElement {
     store.me.admin ? h('label.mc-lock', {}, h('input', { type: 'checkbox', checked: !!m.locked, onchange: (e: Event) => deps.net.send({ t: 'mission.lock', locked: (e.target as HTMLInputElement).checked }) }), 'Only admins can change the mission') : null,
     h('section', {}, h('h3', {}, 'Milestones'), m.milestones.length ? h('ol.mc-milestones', {}, ...m.milestones.map((x, i) => milestoneRow(deps, x, i, m.milestones.length, can))) : h('p.mc-empty', {}, 'No milestones yet. Each one is a step of the mission, with the issues it covers.'), can && m.milestones.length < MISSION_LIMITS.milestones ? add : null),
     lost.length ? h('section.mc-unlinked', {}, h('h3', {}, `Unlinked: ${lost.length}`), h('p.mc-note', {}, 'Workers with no milestone and no issue: link each one, so the reason it is here is not lost.'), h('ul', {}, ...lost.map((e) => linkRow(e.id, e.name)))) : null,
+    noTarget ? h('p.mc-note.mc-link-hint', {}, 'Add a milestone to link workers to it.') : null,
     tellBox(deps),
   );
 }

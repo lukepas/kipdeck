@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { MISSION_LIMITS, cleanMission, cleanText, goalFor, milestoneProgress, linkLabel, missionLine, missionVars, unlinked } from '../src/shared/mission.js';
+import { MISSION_LIMITS, cleanMission, cleanText, goalFor, milestoneProgress, linkLabel, missionLine, missionVars, progressLine, toLink, unlinked } from '../src/shared/mission.js';
 import { fillPrompt, PROMPTS } from '../src/shared/prompts.js';
 import type { GhIssue, GhPull, Mission, RosterEntry, WorkerInfo } from '../src/shared/protocol.js';
 import { MissionStore } from '../src/server/mission.js';
@@ -76,6 +76,13 @@ test("a milestone's progress: its issues closed, PRs open, workers on it, and wh
   // The row says the same as the count: an agent with nothing is unlinked, a shell is never called so.
   const shell = e({ id: 's1', kind: 'shell' });
   assert.deepEqual(unlinked([...roster, shell]).map((x) => x.id), ['w3']);
+  // Asked to link them only while there's an open milestone to link them to.
+  assert.deepEqual(toLink(mission(), roster).map((x) => x.id), ['w3']);
+  assert.deepEqual(toLink({ statement: '', milestones: [] }, roster), []);
+  assert.deepEqual(toLink({ statement: '', milestones: mission().milestones.map((x) => ({ ...x, done: true })) }, roster), []);
+  // A milestone with no issues has nothing to show a bar for.
+  assert.equal(progressLine({ closed: 0, issues: 0, workers: 0 }), 'no issues linked yet');
+  assert.equal(progressLine({ closed: 1, issues: 3, workers: 2 }), '1/3 issues · 2 workers');
   assert.deepEqual([linkLabel(e({})), linkLabel(shell), linkLabel(e({ issue: 4 })), linkLabel(e({ goalTitle: 'Auth', issue: 4 }))], ['unlinked', '', '#4', 'Auth · #4']);
 });
 

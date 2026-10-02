@@ -22,7 +22,7 @@ Every worker hired onto a desk, a bean bag or the meeting table, on every floor 
 
 Within a level, whoever has waited longest comes first. The working and *Ready or asleep* groups stay folded until you open them, so the list stays short. What waits for review is one line, *To review N*, that opens the Review tab, where it's listed; N is the same count as the chip's and the tab title's, so it includes pull requests no worker stands for.
 
-Each row shows the worker, its floor, what it's for (its milestone, its issue, or *unlinked*), what it's doing, the reason, how long it has been that way and what it has cost, with one button for the next step:
+Each row shows the worker, its floor, what it's for (its milestone, its issue, or *unlinked* for an agent; a shell is never called that), what it's doing, the reason, how long it has been that way and what it has cost, with one button for the next step:
 
 | Button | What it does |
 | --- | --- |
@@ -50,9 +50,9 @@ A worker that gets stuck dings on your floor and, while you're in another tab, p
 
 What the floor is for. Click the mission statement to edit it (up to 500 characters): **Enter** saves, **Shift+Enter** is a new line, **Esc** cancels, and clicking away keeps what you typed. Under it are up to 12 milestones, each with a title, the issues it covers, an optional due date and a done box. One is active: the step the team is on now. Edit a milestone's title, issues or date the same way, move it up or down, mark it done, make it active, or remove it.
 
-Each milestone shows how far it has got and what it has cost: *issues 3/7 · PRs 2 open · 2 working · $4.10 · 3 h 20 min on task*, a progress bar of its issues closed, and the workers on it. Its spend and time include the workers who have gone home from it.
+Each milestone shows how far it has got and what it has cost: *issues 3/7 · PRs 2 open · 2 working · $4.10 · 3 h 20 min on task*, a progress bar of its issues closed (only once it has issues: without any it says *no issues linked yet*), and the workers on it. Its spend and time include the workers who have gone home from it.
 
-Workers with no milestone and no issue are listed as **unlinked**, each with a picker to link it. **Tell the workers about a change** sends the agents you pick a one-line note as their next prompt when the mission changes; nobody is interrupted otherwise.
+Agents with no milestone and no issue are listed as **unlinked**, each with a picker to link it, while the floor has an open milestone to link them to; without one, the tab says *Add a milestone to link workers to it* instead. **Tell the workers about a change** sends the agents you pick a one-line note as their next prompt when the mission changes; nobody is interrupted otherwise.
 
 Anyone signed in can edit the mission. An admin can tick *Only admins can change the mission* to lock it. Since the mission and the active milestone go ahead of every new worker's first prompt, a statement or milestone title that would have a worker check out a pull request the office can't vouch for (a fork's, or one by someone who can't push) is refused, the same as a typed prompt (see [security](security.md)).
 
@@ -113,7 +113,7 @@ The office looks once a minute. A reminder shows at the top of the Attention tab
 
 ## The mission strip
 
-One line under the floor's name, top left, in the 3D office (and the first card in the 2D view): the floor's mission, the active milestone with a thin progress bar (*Auth rewrite · 3/7 issues · 2 workers*), and *unlinked: 2* when workers aren't tied to anything. With no mission yet it reads *No mission yet. Set one*. Click it for the Goals tab. The **☰** menu's *Mission* switch hides it.
+One line under the floor's name, top left, in the 3D office (and the first card in the 2D view): the floor's mission, the active milestone with a thin progress bar (*Auth rewrite · 3/7 issues · 2 workers*), and *unlinked: 2* when agents aren't tied to anything and there is an open milestone to tie them to. A milestone with no issues shows no bar, just *no issues linked yet*. With no mission yet it reads *No mission yet. Set one*. Click it for the Goals tab. The **☰** menu's *Mission* switch hides it.
 
 ## Linking work to goals
 
