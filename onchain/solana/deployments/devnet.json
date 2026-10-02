@@ -1,0 +1,9 @@
+{
+  "cluster": "devnet",
+  "programId": "JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6",
+  "upgradeAuthority": "TyQidKVXFC52NRtsais3yaFbBkJksBeU5Y68TSwb1zE",
+  "status": "not deployed yet: the devnet faucet refused CLI airdrops (daily rate limit). Fund the upgrade authority with 2 devnet SOL and run scripts/e2e.sh devnet, which deploys and rewrites this file with the end-to-end signatures.",
+  "testMint": "9CL3xM1UNUQk7XqKz8JHbYhPNH9iwZF4mU67sjSEzbMz",
+  "attester": "3VFTNzfonYmnqXxuw4aADLc5GCHqNEa1wHzok4yvZFHk",
+  "approver": "55vgpiASBFv3r31ePiPSEGzMomdiRBtjPM1ay7Bx5ypN"
+}

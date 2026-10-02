@@ -1,0 +1,44 @@
+{
+  "cluster": "localnet",
+  "programId": "JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6",
+  "upgradeAuthority": "TyQidKVXFC52NRtsais3yaFbBkJksBeU5Y68TSwb1zE",
+  "deployedAt": "2026-10-02T20:23:30.056Z",
+  "note": "solana-test-validator on 127.0.0.1 (Agave 4.3); the ledger was local and is gone. Testnet only. The program was built with the test-mint feature, so it accepts devnet USDC and the test mint below. The upgrade authority is kept so devnet redeploys stay possible.",
+  "testMint": "9CL3xM1UNUQk7XqKz8JHbYhPNH9iwZF4mU67sjSEzbMz",
+  "attester": "3VFTNzfonYmnqXxuw4aADLc5GCHqNEa1wHzok4yvZFHk",
+  "approver": "55vgpiASBFv3r31ePiPSEGzMomdiRBtjPM1ay7Bx5ypN",
+  "e2e": [
+    {
+      "at": "2026-10-02T20:22:58.544Z",
+      "repo": "proof-of-merge/devnet-demo",
+      "issue": 1790972575,
+      "bounty": "62UP9uZeVHPd8cU3E6iA7ckTR7NFNtVx6zTPcF6y3ymV",
+      "funder": "Fr5n1zC3nTLvMESM1KoR6D7qNtLgyaNb5GCdK5CcAus",
+      "operator": "FU7ER8xsCunDEWzFsgwiNRsouuTeGo4myzADf5myCQAz",
+      "amount": "25",
+      "note": "Demo bounty: no GitHub merge behind it; the attester checks run in the office and SDK tests.",
+      "signatures": {
+        "open": "4NaiauiJ4g1bbvFZEKceAZ6WFQSDxXM33ihFqjGjve4ffPHmwPwqdaCiH24akd1SFjoxY73NESj2FVQ6vmuDL1wJ",
+        "fund": "39FZaxKSBTAPUgoPCNTEBz4bCsxkD1aQuL7aDDuz4pgzpLLWsu5RzrpUBQTvB5YBYPtUVB1984RxYLNLzhHhZiQN",
+        "claim": "21HNR4A6nPwYphZMruRybrBfsmt9yLFFfZDBCT7EfXJmjHHLtWEMtcriXybxP1GKUTtNUfkSeL1WfNTZ8YbSBq8D",
+        "release": "2KWuZAgqGYvdexkUrPdnBDKZMppQnMoHRY75hrzstwNGXHdBcN59TiFLiM8j3wozeRRcUFkdrsaxzMWgFnouPzi5"
+      }
+    },
+    {
+      "at": "2026-10-02T20:23:30.056Z",
+      "repo": "proof-of-merge/devnet-demo",
+      "issue": 1790972607,
+      "bounty": "FwFsCiGeoPskJxoJ2bVdW5Sd8j389TgLcdSMn6wwgYxb",
+      "funder": "Fr5n1zC3nTLvMESM1KoR6D7qNtLgyaNb5GCdK5CcAus",
+      "operator": "FU7ER8xsCunDEWzFsgwiNRsouuTeGo4myzADf5myCQAz",
+      "amount": "25",
+      "note": "Demo bounty: no GitHub merge behind it; the attester checks run in the office and SDK tests.",
+      "signatures": {
+        "open": "utCrCjQBqTyYG5raDpUQspMWpRff5DSH1gq76sbFTiqVc4Xr9f2m3pKgrX5XjZEE7pKN4z1BEHfVsXtU1j7YtkX",
+        "fund": "4s7kLc1EnrgijHGeCdSHWLxJfRC8qqXduaL7v6DDo47shzMdP8RBFGoGPF1yzVhnMf4Y9wqkEJ2oAt4PBSJDw7U3",
+        "claim": "XFArBWojrwgmeodzJonXwSpgppRjSQsy4F3mjdSZ5F4Eu3BXrqVY1VPLDAeHiPYdx2zyYf4VA5ueKjWwHGhJ5qC",
+        "release": "5viXS7WoJYGNzHNvU4GL9Aw4VEvj2hbo7kW2hxZeLz1bRH8UrZXooYpjB3kP9mgXCEqAdfHbtQPzQ8DM3gdRiZBU"
+      }
+    }
+  ]
+}

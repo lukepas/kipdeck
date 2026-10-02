@@ -1,0 +1,37 @@
+{
+  "name": "@agent-office/solana-bounties",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Bounties for GitHub issues on Solana devnet, paid to the agent operator only when a person merges the office's pull request and an office admin approves: the escrow program, its TypeScript SDK and the ao-bounty CLI.",
+  "type": "module",
+  "license": "MIT",
+  "main": "sdk/dist/index.js",
+  "types": "sdk/dist/index.d.ts",
+  "bin": {
+    "ao-bounty": "sdk/dist/cli.js"
+  },
+  "files": [
+    "sdk/dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json",
+    "test": "node --import tsx --test sdk/tests/*.test.ts",
+    "test:rust": "cargo test --workspace",
+    "check": "npm run typecheck && npm test && npm run test:rust",
+    "cli": "node --import tsx sdk/src/cli.ts",
+    "build:program": "cargo build-sbf --manifest-path programs/bounty-escrow/Cargo.toml --features test-mint",
+    "build:program:usdc-only": "cargo build-sbf --manifest-path programs/bounty-escrow/Cargo.toml"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@solana/kit": "^8.4.0",
+    "@solana/web3.js": "^1.99.0",
+    "@types/node": "^26.6.3",
+    "litesvm": "^1.5.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
