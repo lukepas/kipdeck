@@ -1,0 +1,16 @@
+[package]
+name = "bounty-escrow-core"
+description = "The bounty escrow's state machine and wire formats, with no Solana dependencies, so they test with plain cargo test."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[features]
+# Also allow the test mint (TEST_MINT in lib.rs): local tests and the devnet demo build.
+test-mint = []
+
+[dependencies]
+
+[dev-dependencies]
+serde_json = "1"

@@ -1,0 +1,18 @@
+[workspace]
+resolver = "2"
+members = ["programs/bounty-escrow-core", "programs/bounty-escrow"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+# No repository field: this lives in a fork whose public URL isn't settled yet, and the upstream
+# (agent-office, MIT, by webdevcody / AgentSystemLabs) doesn't ship this escrow.
+# Cargo.lock pins a few crates (zeroize, blake3, proc-macro-crate, indexmap) to releases that still
+# build on this Rust: newer ones need edition 2024. `cargo update` may undo that on an older toolchain.
+rust-version = "1.81"
+
+[profile.release]
+overflow-checks = true
+lto = "fat"
+codegen-units = 1

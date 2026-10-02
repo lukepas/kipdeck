@@ -1,0 +1,872 @@
+{
+  "about": "Every case is run by the Rust state machine (programs/bounty-escrow-core/tests/fixtures.rs) and by the SDK's machine (sdk/tests/fixtures.test.ts), so both refuse the same steps with the same errors. Keys are names: a number stands for 32 copies of that byte, a string for the hex of a real key. 'nobody' is the all-zero key. A bounty is opened for issue 12 of repo hash 'repo' with nonce 0 by 'creator', in 'usdc' unless the step says another mint, with the 'attester' and 'approver' unless the step says otherwise. Amounts are strings, as a u64 can be bigger than a JSON number holds exactly. Add a case by hand: both sides pick it up.",
+  "maxDurationSecs": 31622400,
+  "keys": {
+    "nobody": 0,
+    "funder": 1,
+    "attester": 2,
+    "approver": 3,
+    "agent": 4,
+    "stranger": 5,
+    "funder2": 6,
+    "creator": 7,
+    "bounty": 8,
+    "othermint": 9,
+    "repo": 10,
+    "usdc": "3b442cb3912157f13a933d0134282d032b5ffecd01a2dbf1b7790608df002ea7"
+  },
+  "cases": [
+    {
+      "name": "a merge pays the claimant once the attester and the approver both sign, once",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok",
+          "state": "open",
+          "total_after": "0"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "50000000",
+          "now": 1500,
+          "expect": "ok",
+          "total_after": "50000000",
+          "contribution_after": "50000000",
+          "funders_after": 1
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 7,
+          "wallet": "agent",
+          "now": 2000,
+          "expect": "ok",
+          "state": "claimed"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "approver",
+          "pr": 7,
+          "now": 3000,
+          "expect": "ok",
+          "state": "released",
+          "paid": "50000000"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "approver",
+          "pr": 7,
+          "now": 3100,
+          "expect": "WrongState"
+        },
+        {
+          "op": "refund",
+          "funder": "funder",
+          "now": 6000,
+          "expect": "WrongState",
+          "state": "released"
+        }
+      ]
+    },
+    {
+      "name": "neither signer releases alone, and swapped roles do not count",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "10",
+          "now": 1500,
+          "expect": "ok"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 7,
+          "wallet": "agent",
+          "now": 2000,
+          "expect": "ok"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "nobody",
+          "pr": 7,
+          "now": 3000,
+          "expect": "Unauthorized"
+        },
+        {
+          "op": "release",
+          "attester": "nobody",
+          "approver": "approver",
+          "pr": 7,
+          "now": 3000,
+          "expect": "Unauthorized"
+        },
+        {
+          "op": "release",
+          "attester": "stranger",
+          "approver": "approver",
+          "pr": 7,
+          "now": 3000,
+          "expect": "Unauthorized"
+        },
+        {
+          "op": "release",
+          "attester": "approver",
+          "approver": "attester",
+          "pr": 7,
+          "now": 3000,
+          "expect": "Unauthorized",
+          "state": "claimed"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "approver",
+          "pr": 7,
+          "now": 3000,
+          "expect": "ok",
+          "state": "released",
+          "paid": "10"
+        }
+      ]
+    },
+    {
+      "name": "only the attester claims",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "10",
+          "now": 1500,
+          "expect": "ok"
+        },
+        {
+          "op": "claim",
+          "signer": "stranger",
+          "pr": 7,
+          "wallet": "stranger",
+          "now": 2000,
+          "expect": "Unauthorized"
+        },
+        {
+          "op": "claim",
+          "signer": "approver",
+          "pr": 7,
+          "wallet": "agent",
+          "now": 2000,
+          "expect": "Unauthorized"
+        },
+        {
+          "op": "claim",
+          "signer": "funder",
+          "pr": 7,
+          "wallet": "agent",
+          "now": 2000,
+          "expect": "Unauthorized",
+          "state": "open"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 0,
+          "wallet": "agent",
+          "now": 2000,
+          "expect": "InvalidPullRequest"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 7,
+          "wallet": "nobody",
+          "now": 2000,
+          "expect": "InvalidRecipient",
+          "state": "open"
+        }
+      ]
+    },
+    {
+      "name": "nothing is released before a claim",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "10",
+          "now": 1500,
+          "expect": "ok"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "approver",
+          "pr": 7,
+          "now": 3000,
+          "expect": "WrongState",
+          "state": "open"
+        }
+      ]
+    },
+    {
+      "name": "a release names the PR the bounty was claimed for",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "10",
+          "now": 1500,
+          "expect": "ok"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 7,
+          "wallet": "agent",
+          "now": 2000,
+          "expect": "ok"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "approver",
+          "pr": 8,
+          "now": 3000,
+          "expect": "PullRequestMismatch"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "approver",
+          "pr": 0,
+          "now": 3000,
+          "expect": "InvalidPullRequest"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 8,
+          "wallet": "agent",
+          "now": 2000,
+          "expect": "ok"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "approver",
+          "pr": 7,
+          "now": 3000,
+          "expect": "PullRequestMismatch"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "approver",
+          "pr": 8,
+          "now": 3000,
+          "expect": "ok",
+          "state": "released"
+        }
+      ]
+    },
+    {
+      "name": "the attester re-binds a re-opened PR until the release",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "10",
+          "now": 1500,
+          "expect": "ok"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 7,
+          "wallet": "agent",
+          "now": 2000,
+          "expect": "ok"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 9,
+          "wallet": "stranger",
+          "now": 2000,
+          "expect": "ok",
+          "state": "claimed",
+          "pr_after": 9,
+          "wallet_after": "stranger"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "approver",
+          "pr": 9,
+          "now": 3000,
+          "expect": "ok",
+          "state": "released"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 10,
+          "wallet": "agent",
+          "now": 3500,
+          "expect": "WrongState",
+          "pr_after": 9
+        }
+      ]
+    },
+    {
+      "name": "a mint off the allowlist is refused",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "MintNotAllowed",
+          "mint": "othermint"
+        }
+      ]
+    },
+    {
+      "name": "the attester and the approver are two real keys",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "SameAuthority",
+          "approver": "attester"
+        },
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "InvalidRecipient",
+          "approver": "nobody"
+        },
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "InvalidRecipient",
+          "attester": "nobody"
+        }
+      ]
+    },
+    {
+      "name": "an expiry is in the future and at most a year out",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 1000,
+          "expect": "InvalidExpiry"
+        },
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 31623401,
+          "expect": "InvalidExpiry"
+        },
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 31623400,
+          "expect": "ok",
+          "state": "open"
+        }
+      ]
+    },
+    {
+      "name": "funding and claiming stop at the expiry, and so does releasing",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "10",
+          "now": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "10",
+          "now": 5001,
+          "expect": "Expired",
+          "total_after": "10"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 7,
+          "wallet": "agent",
+          "now": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "approver",
+          "pr": 7,
+          "now": 5001,
+          "expect": "Expired",
+          "state": "claimed"
+        },
+        {
+          "op": "refund",
+          "funder": "funder",
+          "now": 5001,
+          "expect": "ok",
+          "state": "refunded",
+          "paid": "10"
+        }
+      ]
+    },
+    {
+      "name": "a release is on time up to the second the bounty expires",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "10",
+          "now": 1500,
+          "expect": "ok"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 3,
+          "wallet": "agent",
+          "now": 2000,
+          "expect": "ok"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "approver",
+          "pr": 3,
+          "now": 5000,
+          "expect": "ok",
+          "state": "released"
+        }
+      ]
+    },
+    {
+      "name": "every funder gets their own refund through the crank",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "30",
+          "now": 1500,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder2",
+          "amount": "20",
+          "now": 1500,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "5",
+          "now": 1500,
+          "expect": "ok",
+          "contribution_after": "35",
+          "funders_after": 2,
+          "total_after": "55"
+        },
+        {
+          "op": "refund",
+          "funder": "funder",
+          "now": 5000,
+          "expect": "NotExpired"
+        },
+        {
+          "op": "refund",
+          "funder": "funder",
+          "now": 6000,
+          "expect": "ok",
+          "paid": "35",
+          "state": "open"
+        },
+        {
+          "op": "refund",
+          "funder": "funder",
+          "now": 6000,
+          "expect": "AlreadyRefunded"
+        },
+        {
+          "op": "refund",
+          "funder": "funder2",
+          "now": 6000,
+          "expect": "ok",
+          "paid": "20",
+          "state": "refunded"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 7,
+          "wallet": "agent",
+          "now": 6100,
+          "expect": "WrongState"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "1",
+          "now": 6100,
+          "expect": "WrongState"
+        }
+      ]
+    },
+    {
+      "name": "a claimed bounty that expires unreleased goes back too",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "10",
+          "now": 1500,
+          "expect": "ok"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 7,
+          "wallet": "agent",
+          "now": 2000,
+          "expect": "ok"
+        },
+        {
+          "op": "refund",
+          "funder": "funder",
+          "now": 6000,
+          "expect": "ok",
+          "state": "refunded",
+          "paid": "10"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "approver",
+          "pr": 7,
+          "now": 6100,
+          "expect": "WrongState"
+        }
+      ]
+    },
+    {
+      "name": "an empty bounty cancels without anyone, closing it",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "cancel",
+          "approver": "nobody",
+          "now": 1600,
+          "expect": "ok",
+          "result": "close",
+          "state": "cancelled"
+        }
+      ]
+    },
+    {
+      "name": "a funded bounty cancels only by the approver, before a claim, and refunds at once",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "10",
+          "now": 1500,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder2",
+          "amount": "4",
+          "now": 1500,
+          "expect": "ok"
+        },
+        {
+          "op": "cancel",
+          "approver": "nobody",
+          "now": 1600,
+          "expect": "Unauthorized"
+        },
+        {
+          "op": "cancel",
+          "approver": "stranger",
+          "now": 1600,
+          "expect": "Unauthorized"
+        },
+        {
+          "op": "cancel",
+          "approver": "attester",
+          "now": 1600,
+          "expect": "Unauthorized",
+          "state": "open"
+        },
+        {
+          "op": "cancel",
+          "approver": "approver",
+          "now": 1600,
+          "expect": "ok",
+          "result": "refunds",
+          "state": "cancelled"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "1",
+          "now": 1700,
+          "expect": "WrongState"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 7,
+          "wallet": "agent",
+          "now": 1700,
+          "expect": "WrongState"
+        },
+        {
+          "op": "refund",
+          "funder": "funder",
+          "now": 1700,
+          "expect": "ok",
+          "paid": "10",
+          "state": "cancelled"
+        },
+        {
+          "op": "refund",
+          "funder": "funder2",
+          "now": 1700,
+          "expect": "ok",
+          "paid": "4",
+          "state": "cancelled"
+        },
+        {
+          "op": "refund",
+          "funder": "funder2",
+          "now": 1700,
+          "expect": "AlreadyRefunded"
+        }
+      ]
+    },
+    {
+      "name": "a claimed bounty is not cancelled",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "10",
+          "now": 1500,
+          "expect": "ok"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 7,
+          "wallet": "agent",
+          "now": 2000,
+          "expect": "ok"
+        },
+        {
+          "op": "cancel",
+          "approver": "approver",
+          "now": 2100,
+          "expect": "WrongState",
+          "state": "claimed"
+        }
+      ]
+    },
+    {
+      "name": "nothing, or more than a u64, is not an amount",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "0",
+          "now": 1500,
+          "expect": "InvalidAmount"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "18446744073709551615",
+          "now": 1500,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder2",
+          "amount": "1",
+          "now": 1500,
+          "expect": "Overflow",
+          "total_after": "18446744073709551615",
+          "funders_after": 1
+        }
+      ]
+    },
+    {
+      "name": "a release pays the whole vault, and refuses a vault short of the total",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "fund",
+          "funder": "funder",
+          "amount": "10",
+          "now": 1500,
+          "expect": "ok"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 7,
+          "wallet": "agent",
+          "now": 2000,
+          "expect": "ok"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "approver",
+          "pr": 7,
+          "now": 3000,
+          "expect": "InvalidData",
+          "vault": "9"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "approver",
+          "pr": 7,
+          "now": 3000,
+          "expect": "ok",
+          "vault": "12",
+          "paid": "12",
+          "state": "released"
+        }
+      ]
+    },
+    {
+      "name": "an empty bounty is not released",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 7,
+          "wallet": "agent",
+          "now": 2000,
+          "expect": "ok"
+        },
+        {
+          "op": "release",
+          "attester": "attester",
+          "approver": "approver",
+          "pr": 7,
+          "now": 3000,
+          "expect": "InvalidAmount",
+          "state": "claimed"
+        }
+      ]
+    }
+  ]
+}
