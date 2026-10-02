@@ -128,6 +128,39 @@ export class MergeWatch {
   }
 }
 
+/**
+ * The issues workers just took. Assigning one on GitHub and listing the issues again takes seconds,
+ * so each is marked `taken` on the board from the moment it's handed over until a list has its assignee.
+ */
+export class Claims {
+  /** By issue number: when GitHub had it assigned (Infinity until it answers). */
+  private claimed = new Map<number, { at: number }>();
+
+  /** A worker took issue `n`. Call what it returns once GitHub has answered, with whether it's assigned now. */
+  take(n: number): (assigned: boolean, now?: number) => void {
+    const claim = { at: Infinity };
+    this.claimed.set(n, claim);
+    return (assigned, now = Date.now()) => {
+      if (assigned) claim.at = now;
+      // Unless someone handed it over again meanwhile, and GitHub hasn't answered them yet.
+      else if (this.claimed.get(n) === claim) this.claimed.delete(n);
+    };
+  }
+
+  has(n: number): boolean {
+    return this.claimed.has(n);
+  }
+
+  /**
+   * `items` with the taken ones marked. A list asked for (`asked`) before an issue was assigned doesn't
+   * have its assignee yet, so it stays marked over it; one asked for after is believed, and the claim forgotten.
+   */
+  mark(items: GhIssue[], asked = 0): GhIssue[] {
+    for (const [n, claim] of this.claimed) if (claim.at < asked) this.claimed.delete(n);
+    return items.map(({ taken, ...it }) => (this.claimed.has(it.number) ? { ...it, taken: true } : it));
+  }
+}
+
 export class GitHub {
   issues: GhState<GhIssue> = { items: [], fetchedAt: 0, loading: false };
   pulls: GhState<GhPull> = { items: [], fetchedAt: 0, loading: false };
@@ -139,6 +172,7 @@ export class GitHub {
   private relabeled = new Map<string, { labels: GhLabel[]; at: number }>();
   /** Pull request authors' permissions on the repository, by login (see permissionOf). */
   private permissions = new Map<string, { at: number; permission: Promise<string | undefined> }>();
+  private claims = new Claims();
 
   constructor(
     private dir: string,
@@ -452,15 +486,32 @@ export class GitHub {
     });
   }
 
-  /** Assigns the issue to `as` (else the office's own gh), which moves it to In progress on the board. */
+  /**
+   * A worker took the issue: it moves to In progress on the board at once, and is assigned on GitHub
+   * to `as` (else the office's own gh), which is what keeps it there. Returns an error when GitHub
+   * wouldn't assign it, and the card goes back to where it was.
+   */
   async claim(issue: number, as?: GhAs): Promise<string | undefined> {
+    const answered = this.claims.take(issue);
+    this.showClaims();
     try {
       await gh(['issue', 'edit', String(issue), '--add-assignee', '@me'], this.dir, undefined, as?.env);
     } catch (err) {
+      answered(false);
+      this.showClaims();
       return (err as Error).message;
     }
-    void this.refreshIssues();
+    answered(true);
+    // For its assignee's name. A look already under way goes round once more (see coalesce); if the
+    // list still came back without the assignee (asked in the same instant), look once more.
+    void this.refreshIssues().then(() => (this.claims.has(issue) ? this.refreshIssues() : undefined));
     return undefined;
+  }
+
+  /** Puts the issues workers have taken (or no longer have) on the board, ahead of the next look at GitHub. */
+  private showClaims() {
+    this.issues = { ...this.issues, items: this.claims.mark(this.issues.items) };
+    this.onIssues(this.issues);
   }
 
   /** Asked for while a look is under way, the issues are looked at once more when it ends. */
@@ -492,7 +543,7 @@ export class GitHub {
         body: String(i.body ?? '').slice(0, 4000),
         comments: Array.isArray(i.comments) ? i.comments.length : Number(i.comments ?? 0),
       }));
-      const items = this.relabel('issue', fetched, asked);
+      const items = this.claims.mark(this.relabel('issue', fetched, asked), asked);
       this.issues = { items, fetchedAt: Date.now(), loading: false };
     } catch (err) {
       this.issues = { ...this.issues, loading: false, error: (err as Error).message, fetchedAt: Date.now() };
