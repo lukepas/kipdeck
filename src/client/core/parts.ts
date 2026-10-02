@@ -16,7 +16,6 @@ import type { Confetti } from '../world/confetti';
 import type { installBoards } from '../features/boards';
 import type { installBookshelf } from '../features/bookshelf';
 import type { installCarrying } from '../features/carrying';
-import type { installClimbing } from '../features/climbing';
 import type { installCoffee } from '../features/coffee';
 import type { installEmotes } from '../features/emotes';
 import type { installGallery, installHanging } from '../features/hanging';
@@ -78,7 +77,6 @@ export interface Parts {
   tv: Made<typeof installTv>;
   telescope: Made<typeof installTelescope>;
   hanging: Made<typeof installHanging>;
-  climbing: Made<typeof installClimbing>;
   peers: Made<typeof installPeers>;
   walking: Made<typeof installWalking>;
   views: Made<typeof installWorkerViews>;

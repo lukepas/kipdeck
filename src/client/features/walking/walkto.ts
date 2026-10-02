@@ -30,7 +30,7 @@ const WAY_DOWN: Record<Zone, { x: number; z: number }[]> = {
 function zoneOf(p: Spot, wing: number): Zone {
   // The back office is more of the office floor, through where the north wall was.
   if (p.y > -1 && p.y < 0.5 && inWing(p.x, p.z, wing)) return 'floor';
-  // Down a shaft on the ladder or a pole, or past the walls: off the office floor's map.
+  // Past the walls: off the office floor's map.
   if (p.y < -1 || p.x < FLOOR.minX || p.x > FLOOR.maxX || p.z < FLOOR.minZ || p.z > FLOOR.maxZ) return 'off';
   if (p.x > LOFT.minX && p.z > LOFT.minZ && p.y > LOFT.y - 0.5) return 'loft';
   // Off the office floor's map, which has the stairs down as a wall.

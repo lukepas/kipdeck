@@ -5,7 +5,6 @@
  */
 import type * as THREE from 'three';
 import type { CarriedIssue, GhIssue, ServerMsg } from '../../shared/protocol';
-import type { Grip } from '../features/climbing/controller';
 import type { DeskKey } from '../interaction';
 import type { Net } from '../net';
 import type { PlayerController } from '../player';
@@ -30,7 +29,7 @@ export interface Hint {
  * Why whatever you're in the middle of is being stopped (see Activities.stopAll); each activity decides
  * which of these stop it.
  *
- * - start: you're starting something else at a thing you used (the ladder, a pole)
+ * - start: you're starting something else at a thing you used
  * - taken: the office put you on another floor (yours was taken off the building)
  * - trip: you're off to another floor (the elevator, the floor list)
  * - walk: you're walking over to someone
@@ -39,8 +38,8 @@ export interface Hint {
  */
 export type StopWhy = 'start' | 'taken' | 'trip' | 'walk' | 'errand' | 'desk';
 
-/** How you're going to another floor: by elevator, straight there from the floor list, or by the ladder or a pole. */
-export type TripKind = 'elevator' | 'switch' | Grip;
+/** How you're going to another floor: by elevator, or straight there from the floor list. */
+export type TripKind = 'elevator' | 'switch';
 
 /** A trip under way: the lights are down (and by elevator the doors are shut) until the next floor arrives. */
 export interface Trip {
@@ -95,12 +94,6 @@ export interface Ctx {
      */
     draw(el: HTMLElement, k: string, parts: () => (HTMLElement | string)[]): void;
   };
-  /**
-   * Shakes the view (a landing off a pole), easing off by itself; a stronger shake going on
-   * already stays. `replace`: this one's how hard it shakes now, whatever was going on (a landing).
-   * Nothing, when the system asks for less motion.
-   */
-  shake(amount: number, replace?: boolean): void;
 
   readonly messages: Messages<ServerMsg>;
   readonly keys: Keys<KeyboardEvent>;
@@ -108,7 +101,7 @@ export interface Ctx {
   readonly activities: Activities<StopWhy, KeyboardEvent, HTMLElement>;
   readonly interactions: Interactions<OfficeInteraction>;
   /** What what you're doing makes of you and your view each frame (see ViewEffect). */
-  readonly view: View<Grip>;
+  readonly view: View;
   /**
    * What else there is to use on the office's own map, and to aim at: the pictures on the walls, the
    * dog (see usable and aimedAt in input/pointer.ts).

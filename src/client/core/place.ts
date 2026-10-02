@@ -2,14 +2,13 @@
  * Where you are, and putting you somewhere: in the elevator car, or on your feet at a spot; and where
  * you're standing, to come back to.
  */
-import { ELEVATOR, ELEVATOR_CAR, FLOOR, POLE, WALL_HEIGHT, inElevator, inWing } from '../../shared/layout';
-import type { Arrival } from '../features/climbing/controller';
+import { ELEVATOR, ELEVATOR_CAR, FLOOR, WALL_HEIGHT, inElevator, inWing } from '../../shared/layout';
 import { rememberSpot, store, type Spot } from '../state';
 import type { Ctx } from './context';
 import type { CoreState } from './ctx';
 import type { Parts } from './parts';
 
-export function installPlace(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worlds' | 'seating' | 'climbing'>) {
+export function installPlace(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worlds' | 'seating'>) {
   const { player } = ctx;
 
   /** In the car, facing out through the doors: where you are when you arrive on a floor. */
@@ -18,7 +17,7 @@ export function installPlace(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worl
     placeAt({ x: spot.x, y: 0, z: spot.z, rotY: 0 });
   }
 
-  /** Standing in the office on your floor, its back office as far as it's built out too: not in a shaft on the ladder or a pole. */
+  /** Standing in the office on your floor, its back office as far as it's built out too. */
   function indoors(): boolean {
     const p = player.pos;
     if (p.y < -1 || p.y > WALL_HEIGHT) return false;
@@ -35,9 +34,9 @@ export function installPlace(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worl
     player.lookPitch = -0.08;
   }
 
-  /** Where you're standing, to come back to (see lastSpot): nowhere while you're between floors, or climbing between them. */
+  /** Where you're standing, to come back to (see lastSpot): nowhere while you're between floors. */
   function spotHere(): Spot | null {
-    if (!store.floor || core.trip || parts.climbing.climber.active) return null;
+    if (!store.floor || core.trip) return null;
     // Sitting, it's where you'd get up to.
     const at = player.standingSpot() ?? player.pos;
     const name = store.currentFloor()?.name ?? '';
@@ -50,20 +49,9 @@ export function installPlace(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worl
   }
 
   /** Where you are, to arrive at the same spot on another floor. */
-  function standingAt(): Arrival {
+  function standingAt(): { x: number; y: number; z: number; rotY: number } {
     return { x: player.pos.x, y: player.pos.y, z: player.pos.z, rotY: player.facing };
   }
 
-  /** Arrived in a spot that's a pole's hole on this floor: step out of it, the way in. */
-  function unstick() {
-    const { office } = ctx;
-    if (!office.stack.polesGoDown()) return;
-    const p = player.pos;
-    const spot = office.stack.poles().find((s) => Math.max(Math.abs(p.x - s.x), Math.abs(p.z - s.z)) <= POLE.rail + 0.35);
-    if (!spot) return;
-    const out = POLE.rail + 0.7;
-    p.set(spot.x + Math.sin(spot.open) * out, Math.max(0, p.y), spot.z + Math.cos(spot.open) * out);
-  }
-
-  return { placeInCar, indoors, placeAt, spotHere, saveSpot, standingAt, unstick };
+  return { placeInCar, indoors, placeAt, spotHere, saveSpot, standingAt };
 }

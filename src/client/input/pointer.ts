@@ -4,7 +4,6 @@
  * the mouse points at, and clicking the world to use what's there.
  */
 import * as THREE from 'three';
-import { SLAB } from '../../shared/layout';
 import { OFFICE_PLAN } from '../../shared/plan';
 import type { GhIssue } from '../../shared/protocol';
 import type { Ctx } from '../core/context';
@@ -30,14 +29,11 @@ export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
   let pointer: THREE.Vector2 | null = null;
 
   function pickTarget(): Interactable | null {
-    // Down a shaft on the ladder or a pole, nothing on the floor is in reach.
-    const below = player.pos.y < -SLAB - 1;
     let best: Interactable | null = null;
     let bestD = Infinity;
     for (const list of usable()) {
       for (const it of list) {
         if (it.off) continue;
-        if (below !== (it.y ?? 0) < -SLAB - 1) continue;
         // Up on the loft, or down underneath it.
         if (Math.abs((it.y ?? 0) - player.pos.y) > 1.5) continue;
         const d = Math.hypot(it.x - player.pos.x, it.z - player.pos.z);

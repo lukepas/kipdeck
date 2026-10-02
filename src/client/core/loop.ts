@@ -54,8 +54,7 @@ export function installLoop(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'stage
     const secs = now / 1000;
     buzz.speed = caffeine.speed(secs);
     buzz.jump = caffeine.jump(secs);
-    core.thud = Math.max(0, core.thud - dt * 2.5);
-    buzz.jitter = reduceMotion.matches ? 0 : Math.max(caffeine.jitter(secs), core.thud);
+    buzz.jitter = reduceMotion.matches ? 0 : caffeine.jitter(secs);
     const mug = caffeine.buzzed(secs);
     me.holdMug(mug);
     renderCaffeine(caffeine, secs);
@@ -67,16 +66,13 @@ export function installLoop(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'stage
     me.root.position.copy(player.pos);
     me.root.position.y += player.stepOffset;
     me.root.rotation.y = player.facing;
-    // Holding on to the ladder or a pole (see ctx.view).
-    const grip = ctx.view.grip();
-    me.setGrip(grip);
-    me.update(dt, t, (player.moving && player.grounded) || (grip === 'ladder' && player.moving), !player.grounded && !grip, player.effects.speed);
+    me.update(dt, t, player.moving && player.grounded, !player.grounded, player.effects.speed);
     me.setVoiceLevel(voice.inVoice ? voice.localLevel : 0);
     const firstPerson = player.view === 'first';
     // In first person you are the camera; in third, hide yourself when it's zoomed in right behind your head.
     me.root.visible = !firstPerson && camera.position.distanceTo(headPos.set(player.pos.x, player.pos.y + 1.3, player.pos.z)) > 1.5;
-    // What you're doing widens the view (down a pole), and once it's set, may take it over (the
-    // telescope) or streak its edges (down a pole): see ctx.view.
+    // What you're doing may change the field of view, and once it's set, take it over (the
+    // telescope): see ctx.view.
     const fov = ctx.view.fov(FOV);
     if (Math.abs(camera.fov - fov) > 0.05) {
       camera.fov += (fov - camera.fov) * Math.min(1, dt * 8);
@@ -120,11 +116,10 @@ export function installLoop(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'stage
 
   /** The building and what's in it: its doors, its floors and the confetti. */
   function updateWorld({ dt, t }: Frame) {
-    const { player, office, camera, sound } = ctx;
+    const { player } = ctx;
     const { remotes } = parts.peers;
     const { arrivals } = parts.views;
     ctx.world().update(t, dt, [player.pos, ...[...remotes.values()].map((r) => r.person.root.position), ...arrivals.positions()]);
-    office.stack.update(dt, [{ x: player.pos.x, y: player.pos.y, z: player.pos.z, grip: ctx.view.grip() }, ...[...remotes.values()].map((r) => ({ x: r.person.root.position.x, y: r.person.root.position.y, z: r.person.root.position.z, grip: r.grip }))], camera.position);
     ctx.confetti.update(dt);
   }
 

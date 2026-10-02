@@ -8,16 +8,14 @@
  * OfficeSound is all the rest of the office sees. What every sound shares (the context, the buses,
  * where your ears are, what runs every frame) is AudioCore in core.ts; each sound is a recipe in a
  * file of its own, beside this one (steps.ts, typing.ts and so on) or in its feature's folder
- * (features/climbing/sound.ts and so on), and this class only hands them the core.
+ * (features/coffee/sound.ts and so on), and this class only hands them the core.
  */
 import type { GongWhy } from '../../shared/protocol';
 import { deskPhones, Fridge, startRoomTone } from './ambience';
 import { ding } from './alerts';
-import { bonk, hatch, poleLanding, rung, slide, twirl } from '../features/climbing/sound';
 import { coffee } from '../features/coffee/sound';
 import { AudioCore, type Listener } from './core';
 import { gong } from '../features/gong/sound';
-import type { Pos } from './places';
 import { pageTurn, paper, step, stepAt } from './steps';
 import { fidgeting, Typing } from './typing';
 
@@ -95,32 +93,6 @@ export class OfficeSound {
 
   stepAt(x: number, z: number, y = 0) {
     stepAt(this.a, x, z, y);
-  }
-
-  // ---- The ladder and the fire poles (features/climbing) --------------------------------------------
-
-  rung(soft = false) {
-    rung(this.a, soft);
-  }
-
-  hatch(at: Pos, open: boolean) {
-    hatch(this.a, at, open);
-  }
-
-  bonk() {
-    bonk(this.a);
-  }
-
-  slide(seconds = 1.6) {
-    slide(this.a, seconds);
-  }
-
-  twirl() {
-    twirl(this.a);
-  }
-
-  poleLanding(speed: number, at?: Pos) {
-    poleLanding(this.a, speed, at);
   }
 
   // ---- The kitchen, the gong, the dings --------------------------------------

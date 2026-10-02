@@ -86,7 +86,7 @@ export interface KeyPress {
 
 /**
  * The stages a key press goes through before the bindings, in order: guards (nothing gets a key while
- * a window's open, say), then whatever you're in the middle of (the ladder, a pole…), then the
+ * a window's open, say), then whatever you're in the middle of (hanging a picture), then the
  * emotes. A handler returns true when it took the key, which ends it there.
  */
 export type KeyStage = 'guard' | 'activity' | 'emote';
@@ -159,7 +159,6 @@ export class Keys<E extends KeyPress = KeyPress> {
  * - pre: before anything moves: the frame rate, coffee and the view's shake
  * - steer: where you're headed on your own (walking over to someone)
  * - move: you move
- * - moved: what where you've got to does to you (a pole's hole)
  * - me: your character and the camera, what you hear, and telling the office where you are
  * - others: everyone and everything else that moves (people, workers)
  * - world: the building and what's in it (its doors and floors, particles, a picture being hung)
@@ -167,7 +166,7 @@ export class Keys<E extends KeyPress = KeyPress> {
  * - hud: the panels that follow what people are doing
  * - render: drawing the frame
  */
-export const TICK_PHASES = ['pre', 'steer', 'move', 'moved', 'me', 'others', 'world', 'aim', 'hud', 'render'] as const;
+export const TICK_PHASES = ['pre', 'steer', 'move', 'me', 'others', 'world', 'aim', 'hud', 'render'] as const;
 export type TickPhase = (typeof TICK_PHASES)[number];
 
 /** What each tick gets about the frame it's in. */
@@ -203,8 +202,7 @@ export class Ticks {
 // ---- Activities -----------------------------------------------------------------------------------
 
 /**
- * Something you can be in the middle of that takes over the controls (hanging a picture, the ladder,
- * a pole…). `Why` names what's making you stop (see Activities.stopAll), `E` is a key press and
+ * Something you can be in the middle of that takes over the controls (hanging a picture). `Why` names what's making you stop (see Activities.stopAll), `E` is a key press and
  * `El` is where the hint bar draws.
  */
 export interface Activity<Why extends string = string, E = unknown, El = unknown> {
@@ -287,14 +285,10 @@ export class Activities<Why extends string = string, E = unknown, El = unknown> 
 // ---- Your view -------------------------------------------------------------------------------------
 
 /**
- * What something you can do makes of you and your view while it's going on: holding on to the ladder,
- * the view widening down a pole, the telescope or a game having the screen to itself. The office's
- * own ticks (moving you, the building, drawing the frame) ask each effect, in the order they were
- * added. `G` is what you can hold on to.
+ * What something you can do makes of your view while it's going on (the telescope). The office's own
+ * ticks ask each effect, in the order they were added.
  */
-export interface ViewEffect<G = unknown> {
-  /** What you're holding on to (the ladder, a pole), or null. */
-  grip?(): G | null;
+export interface ViewEffect {
   /** The field of view (degrees) as this has it, given what it is so far. */
   fov?(fov: number): number;
   /** Runs each frame once the view's field of view is set. */
@@ -302,20 +296,11 @@ export interface ViewEffect<G = unknown> {
 }
 
 /** How what you're doing changes you and your view each frame (see ViewEffect). */
-export class View<G = unknown> {
-  private readonly effects = new List<ViewEffect<G>>();
+export class View {
+  private readonly effects = new List<ViewEffect>();
 
-  add(e: ViewEffect<G>): Off {
+  add(e: ViewEffect): Off {
     return this.effects.add(e);
-  }
-
-  /** What you're holding on to: the first effect's that has you holding on to something, else null. */
-  grip(): G | null {
-    for (const e of this.effects.items) {
-      const g = e.grip?.() ?? null;
-      if (g !== null) return g;
-    }
-    return null;
   }
 
   /** The field of view, from `fov` through every effect's, in order. */

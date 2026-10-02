@@ -20,7 +20,6 @@ export interface Followed {
   camDist: number;
   stepOffset: number;
   wing: number;
-  rig: ((dt: number) => void) | null;
   colliders: Collider[];
   lowest: number;
 }
@@ -43,9 +42,8 @@ export function aimCamera(camera: THREE.PerspectiveCamera, p: Followed, bob: num
   ).multiplyScalar(p.camDist);
   const cam = target.clone().add(off);
   // Keep the camera inside the office's walls, so they never block the view, and under the loft or
-  // the ceiling. On the ladder or a pole you can be down in a shaft under the floor, still indoors.
+  // the ceiling.
   const m = 0.4;
-  const rigged = !!p.rig;
   if (p.pos.y > -SLAB - 0.5 && inWing(p.pos.x, p.pos.z, p.wing)) {
     // In the back office, between its walls, and out through where the north wall was into the room.
     cam.x = THREE.MathUtils.clamp(cam.x, WING.minX + m, WING.maxX - m);
@@ -54,7 +52,7 @@ export function aimCamera(camera: THREE.PerspectiveCamera, p: Followed, bob: num
     cam.x = THREE.MathUtils.clamp(cam.x, FLOOR.minX + m, FLOOR.maxX - m);
     cam.z = THREE.MathUtils.clamp(cam.z, FLOOR.minZ + m, FLOOR.maxZ - m);
   }
-  const floorY = rigged ? 0 : Math.max(groundAt(p.colliders, p.pos.x, p.pos.z, p.pos.y), p.lowest);
+  const floorY = Math.max(groundAt(p.colliders, p.pos.x, p.pos.z, p.pos.y), p.lowest);
   const roof = ceilingAt(p.colliders, cam.x, cam.z, floorY) - 0.3;
   cam.y = THREE.MathUtils.clamp(cam.y, floorY + 0.6, Math.max(floorY + 0.6, Math.min(floorY + 3.5, roof)));
   if (snap) camera.position.copy(cam);

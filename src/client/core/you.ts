@@ -3,7 +3,6 @@
  */
 import { OfficeSound } from '../sound';
 import { store, type Profile, type Settings } from '../state';
-import { toast } from '../ui/dom';
 import { Person } from '../world/character';
 import type { Ctx } from './context';
 import { noOutline } from './outline';

@@ -230,18 +230,12 @@ test('an activity taken out is gone from the order', () => {
   );
 });
 
-test('view effects: the first grip that holds on, the field of view through each in order, updates', () => {
-  const view = new View<'ladder' | 'pole'>();
+test('view effects: the field of view through each in order, updates', () => {
+  const view = new View();
   const log: string[] = [];
-  let grip: 'ladder' | 'pole' | null = null;
   let narrow = false;
   view.add({ fov: (f) => (narrow ? 24 : f), update: () => log.push('first') });
-  view.add({ grip: () => grip, fov: (f) => f + 0.5 * 16, update: () => log.push('second') });
-  view.add({ grip: () => 'pole' });
-  // The first effect holding on to something says what you hold.
-  assert.equal(view.grip(), 'pole');
-  grip = 'ladder';
-  assert.equal(view.grip(), 'ladder');
+  view.add({ fov: (f) => f + 0.5 * 16, update: () => log.push('second') });
   // Through each effect in the order they were added: the second widens what the first narrowed.
   assert.equal(view.fov(55), 55 + 8);
   narrow = true;

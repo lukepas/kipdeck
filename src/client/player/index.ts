@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { STOREY, type SeatPlace } from '../../shared/layout';
+import type { SeatPlace } from '../../shared/layout';
 import type { ViewMode } from '../state';
 import type { Collider } from '../world/types';
 import { HIPS } from '../world/character/rig';
@@ -38,8 +38,8 @@ export class PlayerController extends PlayerInput {
    * how high you jump, and how hard the view trembles (see effects.ts).
    */
   readonly effects = new Effects();
-  /** How far down there's anything to stand on: the floor below, through a hole in this one. */
-  readonly lowest = -STOREY;
+  /** Nothing to stand on is lower than the floor. */
+  readonly lowest = 0;
   /** How many rows the floor's back office is built out (see WING): the camera keeps inside it too. */
   wing = 0;
   private jitterT = 0;
@@ -53,11 +53,6 @@ export class PlayerController extends PlayerInput {
   private stuckFor = 0;
   /** A walk along a path ended: at its end, by a key of yours, or up against something. */
   onPathEnd: ((why: 'arrived' | 'cancelled' | 'stuck') => void) | null = null;
-  /**
-   * Something that has hold of you instead of your legs (the ladder, a fire pole): it moves you each
-   * frame, with no walking, falling or bumping into things, and the camera follows.
-   */
-  rig: ((dt: number) => void) | null = null;
 
   constructor(
     private camera: THREE.PerspectiveCamera,
@@ -143,16 +138,6 @@ export class PlayerController extends PlayerInput {
   update(dt: number) {
     dt = Math.min(dt, 0.05);
     const k = this.keys;
-    if (this.rig) {
-      this.rig(dt);
-      this.vy = 0;
-      this.grounded = false;
-      this.stepOffset *= Math.exp(-dt * 16);
-      this.bob = 0;
-      this.jitterT += dt;
-      this.updateCamera();
-      return;
-    }
     if (this.seat) {
       if (!this.enabled || !GET_UP.some((c) => k.has(c))) {
         this.moving = false;
@@ -200,7 +185,7 @@ export class PlayerController extends PlayerInput {
       }
     }
 
-    // Never below the floor below: down a hole in this one there's nothing else to stand on.
+    // Never below the floor.
     const ground = Math.max(groundAt(this.colliders, this.pos.x, this.pos.z, this.pos.y), this.lowest);
     const jump = this.enabled && k.has('Space') && this.grounded;
     if (jump) {

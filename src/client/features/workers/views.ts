@@ -149,12 +149,6 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     renderTitle();
   }
 
-  /** Hired by you (at a desk, or through the queue), or last given something to do by you. */
-  function yours(w: WorkerInfo): boolean {
-    const name = store.peers.get(store.you)?.name ?? store.profile.name;
-    return w.createdBy === name || w.createdBy === `${name} (queue)` || w.lastInput?.by === name;
-  }
-
   /**
    * The card over a worker at the meeting table: its role, the round, and whether it has the floor
    * (working on its part) or is listening while the others work on theirs.
@@ -225,7 +219,6 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     office.setWing(level);
     office.signs.set(fp.labels, (d) => deskBuilt(d, level));
     player.wing = level;
-    parts.travel.syncStack();
     arrangeSeats();
     if (was.floor === store.floor && level > was.wing) {
       const at = { x: (WING.minX + WING.maxX) / 2, z: wingRowZ(level) };

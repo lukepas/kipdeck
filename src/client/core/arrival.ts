@@ -72,7 +72,6 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     if (firstWelcome && mine) {
       firstWelcome = false;
       // Where the office put you: back in the spot you left (if there's still room there), or in the elevator car.
-      travel.syncStack();
       // Back to where you were (not in the elevator: that's arriving), if there's still room there.
       if (lastSpot() && !inElevator(mine.x, mine.z) && !pastTheWing(mine, parts.worlds.officeWing()) && player.fits(mine.x, mine.z, mine.y)) {
         placeAt(mine);
