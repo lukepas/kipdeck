@@ -54,7 +54,7 @@ Each milestone shows how far it has got and what it has cost: *issues 3/7 · PRs
 
 Workers with no milestone and no issue are listed as **unlinked**, each with a picker to link it. **Tell the workers about a change** sends the agents you pick a one-line note as their next prompt when the mission changes; nobody is interrupted otherwise.
 
-Anyone signed in can edit the mission. An admin can tick *Only admins can change the mission* to lock it.
+Anyone signed in can edit the mission. An admin can tick *Only admins can change the mission* to lock it. Since the mission and the active milestone go ahead of every new worker's first prompt, a statement or milestone title that would have a worker check out a pull request the office can't vouch for (a fork's, or one by someone who can't push) is refused, the same as a typed prompt (see [security](security.md)).
 
 The **Reminders** sit above the levels; see [Reminders](#reminders).
 

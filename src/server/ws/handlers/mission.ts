@@ -60,13 +60,18 @@ function milestoneOp(msg: Record<string, unknown>): MilestoneOp | undefined {
 export const missionHandlers = {
   'mission.set'(ctx, c, msg) {
     const floor = editable(ctx, c);
-    if (floor) ctx.warn(c, floor.mission.setStatement(str(msg.statement, 5000), c.peer.name));
+    if (!floor) return;
+    const statement = str(msg.statement, 5000);
+    // It goes ahead of every new worker's first prompt (see mission.note), so it's checked like one.
+    floor.github.guardCheckout(statement, () => ctx.warn(c, floor.mission.setStatement(statement, c.peer.name)), (why) => ctx.warn(c, why));
   },
   'mission.milestone'(ctx, c, msg) {
     const op = milestoneOp(msg as unknown as Record<string, unknown>);
     if (!op) return;
     const floor = editable(ctx, c);
-    if (floor) ctx.warn(c, floor.mission.milestone(op, c.peer.name));
+    if (!floor) return;
+    const title = op.op === 'add' || op.op === 'update' ? (op.title ?? '') : '';
+    floor.github.guardCheckout(title, () => ctx.warn(c, floor.mission.milestone(op, c.peer.name)), (why) => ctx.warn(c, why));
   },
   'mission.lock'(ctx, c, msg) {
     const floor = here(ctx, c);
