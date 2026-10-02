@@ -64,6 +64,8 @@ export class TaskQueue {
   /** Set on shutdown: the workers' exit events must not seat anyone into a dying office. */
   private stopped = false;
   private lastStatus = new Map<string, WorkerStatus>();
+  /** Until the floor's workers are back (adopted or resumed after a restart), nothing is settled or seated. */
+  private held = false;
 
   constructor(
     dataDir: string,
@@ -71,10 +73,21 @@ export class TaskQueue {
     /** Seat workers in their own git worktree (only when the project is a git repo). */
     private useWorktree: boolean,
     private events: QueueEvents,
+    /** Resolves once the workers from before a restart are back at their desks (WorkerManager.start). */
+    ready?: Promise<unknown>,
   ) {
     this.statePath = path.join(dataDir, 'queue.json');
     this.restore();
     this.timer = setInterval(() => this.pump(), PUMP_MS);
+    if (ready) {
+      this.held = true;
+      const go = () => {
+        this.held = false;
+        for (const w of this.workers.list()) this.lastStatus.set(w.id, w.status);
+        this.pump();
+      };
+      void ready.then(go, go);
+    }
   }
 
   state(): QueueState {
@@ -215,7 +228,7 @@ export class TaskQueue {
 
   /** Finishes tasks whose worker stopped, then seats queued tasks while there's room. */
   pump() {
-    if (this.stopped) return;
+    if (this.stopped || this.held) return;
     if (this.pumping) {
       this.again = true;
       return;
@@ -406,8 +419,10 @@ export class TaskQueue {
           error: s.error,
           pr: s.pr,
         };
-        // Whatever was running died with the old office process; its worker comes back asleep at best.
-        if (t.status === 'running') {
+        // A running task's worker comes back with the office: its terminal is adopted from the pty
+        // host, or it's resumed. It stays running, and the first pump settles it if its worker didn't
+        // make it. One with no worker on record can't be followed, so it stopped.
+        if (t.status === 'running' && !t.workerId) {
           t.status = 'done';
           t.outcome = 'exited';
           t.finishedAt = Date.now();

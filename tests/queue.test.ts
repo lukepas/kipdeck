@@ -405,3 +405,54 @@ test("a queue worker that switches to a branch of its own takes its task's branc
   }]);
   assert.equal(q.state().tasks[0].pr?.number, 242);
 });
+
+test('a running task whose worker carries on through an office restart stays running, and holds its slot', async (t) => {
+  const f = fixture(); t.after(() => f.close());
+  const q = f.open(); q.setLimit(1);
+  q.add('First', 'Tester'); q.add('Second', 'Tester');
+  assert.deepEqual(q.state().tasks.map((t) => t.status), ['running', 'queued']);
+  q.shutdown();
+  // The office comes back: its worker's terminal is adopted from the pty host, still at work.
+  let back!: () => void;
+  const ready = new Promise<void>((r) => (back = r));
+  const restored = new TaskQueue(f.dir, { defaultProvider: 'claude', list: () => f.workers, deskOccupied: (d) => f.workers.some((w) => w.deskId === d), spawn: () => 'no hiring in this test', kill: async () => ({}) }, false, {
+    update() {}, toast() {}, claimIssue: async () => undefined, refreshGitHub() {}, hiringPaused: () => undefined, emptied() {},
+  }, ready);
+  t.after(() => restored.shutdown());
+  // Nothing is settled or seated before the workers are back.
+  restored.pump();
+  assert.deepEqual(restored.state().tasks.map((t) => t.status), ['running', 'queued']);
+  back(); await ready; await Promise.resolve();
+  assert.deepEqual(restored.state().tasks.map((t) => [t.status, t.outcome]), [['running', undefined], ['queued', undefined]]);
+  assert.equal(f.workers.length, 1);
+});
+
+test('a running task whose worker did not survive an office restart is settled once the workers are back', async (t) => {
+  const f = fixture(); t.after(() => f.close());
+  const toasts: string[] = [];
+  const q = f.open(); q.setLimit(1);
+  q.add('First', 'Tester'); q.add('Second', 'Tester');
+  q.shutdown();
+  // Its worker came back stopped: the task finishes as stopped short, and the next one takes the slot.
+  f.workers[0].status = 'exited';
+  const ready = Promise.resolve();
+  const restored = new TaskQueue(f.dir, {
+    defaultProvider: 'claude', list: () => f.workers, deskOccupied: (d) => f.workers.some((w) => w.deskId === d),
+    spawn(deskId, by, prompt, worktree, kind, provider) {
+      const w = { ...f.workers[0], id: 'worker-next', deskId, kind, provider, prompt, status: 'working' as const };
+      f.workers.push(w);
+      return w;
+    },
+    kill: async () => ({}),
+  }, false, {
+    update() {}, toast: (text) => toasts.push(text), claimIssue: async () => undefined, refreshGitHub() {}, hiringPaused: () => undefined, emptied() {},
+  }, ready);
+  t.after(() => restored.shutdown());
+  await ready; await Promise.resolve();
+  assert.deepEqual(restored.state().tasks.map((t) => [t.status, t.outcome]), [['done', 'exited'], ['running', undefined]]);
+  assert.ok(toasts.some((x) => /stopped before finishing/.test(x)));
+  // One whose worker is gone altogether is settled too.
+  f.workers.splice(0, f.workers.length);
+  restored.pump();
+  assert.deepEqual(restored.state().tasks.map((t) => [t.status, t.outcome]), [['done', 'exited'], ['done', 'killed']]);
+});

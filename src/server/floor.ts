@@ -197,6 +197,10 @@ export class Floor {
       },
     );
     // The 📋 task queue seats workers by itself: it watches the workers and links PRs from GitHub.
+    // It waits for the workers from before a restart to be back (see this.ready) before it settles
+    // its running tasks or seats anyone, so a task whose worker carries on isn't taken for stopped.
+    let workersBack!: () => void;
+    const workersReady = new Promise<void>((resolve) => (workersBack = resolve));
     this.queue = new TaskQueue(dataDir, this.workers, !!this.project.branch, {
       update: (state) => {
         ctx.emit(this, { t: 'queue', state });
@@ -216,7 +220,7 @@ export class Floor {
         ctx.emit(this, { t: 'milestone', kind: 'queue' });
       },
       worktreeNote: () => officePrompt(ctx.prompts, 'queue.worktree'),
-    });
+    }, workersReady);
 
     // Meetings seat their own workers round the meeting room's table and run them round by round.
     const workers = this.workers;
@@ -279,6 +283,7 @@ export class Floor {
 
     this.whiteboard = new Whiteboard(dataDir);
     this.ready = this.workers.start();
+    void this.ready.then(workersBack, workersBack);
 
     void this.github.refresh();
     // A floor with people on it, or work under way, keeps its boards fresh; the others check in now and then.
