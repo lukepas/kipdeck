@@ -31,6 +31,33 @@ export function gh(args: string[], cwd: string, timeout = 30_000, env?: Record<s
   });
 }
 
+/**
+ * Wraps a refresh so calls never overlap: one asked for while a run is under way doesn't start
+ * another, it has the current one go round once more when it ends (its answer may predate whatever
+ * prompted the call, a merge say). Every caller's promise resolves once the last round is in.
+ */
+export function coalesce(run: () => Promise<void>): () => Promise<void> {
+  let running: Promise<void> | undefined;
+  let again = false;
+  return () => {
+    if (running) {
+      again = true;
+      return running;
+    }
+    running = (async () => {
+      try {
+        do {
+          again = false;
+          await run();
+        } while (again);
+      } finally {
+        running = undefined;
+      }
+    })();
+    return running;
+  };
+}
+
 function labels(raw: any[]): GhLabel[] {
   return (raw ?? []).map((l) => ({ name: String(l.name), color: `#${l.color ?? '888888'}` }));
 }
@@ -334,11 +361,8 @@ export class GitHub {
     } catch (err) {
       return (err as Error).message;
     }
-    const refresh = () => (kind === 'issue' ? this.refreshIssues() : this.refreshPulls());
-    // A refresh already in flight returns at once and can still list it as open, so look again shortly after.
-    void refresh().then(() => {
-      if ((kind === 'issue' ? this.issues : this.pulls).items.some((i) => i.number === n && i.state === 'OPEN')) setTimeout(() => void refresh(), 3000);
-    });
+    // A refresh already in flight goes round once more (see coalesce), so the board shows it closed.
+    void (kind === 'issue' ? this.refreshIssues() : this.refreshPulls());
     return undefined;
   }
 
@@ -426,8 +450,12 @@ export class GitHub {
     return undefined;
   }
 
-  private async refreshIssues() {
-    if (this.issues.loading) return;
+  /** Asked for while a look is under way, the issues are looked at once more when it ends. */
+  private refreshIssues = coalesce(() => this.fetchIssues());
+  /** The same for the pull requests: a merge, close or comment right after another refresh still shows. */
+  private refreshPulls = coalesce(() => this.fetchPulls());
+
+  private async fetchIssues() {
     this.issues = { ...this.issues, loading: true };
     this.onIssues(this.issues);
     const asked = Date.now();
@@ -459,8 +487,7 @@ export class GitHub {
     this.onIssues(this.issues);
   }
 
-  private async refreshPulls() {
-    if (this.pulls.loading) return;
+  private async fetchPulls() {
     this.pulls = { ...this.pulls, loading: true };
     this.onPulls(this.pulls);
     const asked = Date.now();
