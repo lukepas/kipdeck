@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { relayRequest, tunneledPort } from '../src/server/relay.js';
+import { relayedBack, relayRequest, tunneledPort } from '../src/server/relay.js';
 import type { ServiceInfo } from '../src/shared/protocol.js';
 
 const req = (host: string, extra: Record<string, string> = {}) => ({ headers: { host, ...extra } }) as unknown as http.IncomingMessage;
@@ -22,8 +22,9 @@ test("on the tailnet, <office>.ts.net:<port> is that worker's server, and the of
   // Another machine's name, or no tailnet at all.
   assert.equal(tunneledPort(req(`other.tail1234.ts.net:5173`), 4600, TAILNET), undefined);
   assert.equal(tunneledPort(req(`${TAILNET}:5173`), 4600), undefined);
-  // Something the office relayed already never loops back.
-  assert.equal(tunneledPort(req(`${TAILNET}:5173`, { 'x-agent-office-relay': '1' }), 4600, TAILNET), undefined);
+  // A page can send the relay header too: it still names the tunnel, and isn't taken for the office's own.
+  assert.equal(tunneledPort(req(`${TAILNET}:5173`, { 'x-agent-office-relay': '1' }), 4600, TAILNET), 5173);
+  assert.equal(relayedBack(req(`${TAILNET}:5173`, { 'x-agent-office-relay': '1' })), false);
 });
 
 test('from the tailnet, the worker\'s server gets a localhost Host and no office cookie', async () => {
@@ -52,6 +53,9 @@ test('from the tailnet, the worker\'s server gets a localhost Host and no office
     assert.equal(seen.host, `localhost:${port}`);
     assert.equal(seen['x-forwarded-host'], `${TAILNET}:${port}`);
     assert.equal(seen.cookie, 'theirs=1');
+    const mark = String(seen['x-agent-office-relay']);
+    assert.ok(mark.length >= 20 && mark !== '1', 'marked with a secret, not a value a page could guess');
+    assert.equal(relayedBack(req('localhost:5173', { 'x-agent-office-relay': mark })), true, 'so a loop back to the office is still caught');
 
     // Through an SSH tunnel it already is one, and stays as it was.
     await get(`127.0.0.1:${port}`);

@@ -2,7 +2,7 @@ import type http from 'node:http';
 import type https from 'node:https';
 import type { Duplex } from 'node:stream';
 import { WebSocketServer } from 'ws';
-import { relayUpgrade, tunneledPort } from '../relay.js';
+import { relayedBack, relayUpgrade, tunneledPort } from '../relay.js';
 import type { Ctx } from '../office/context.js';
 import { onConnection } from './connection.js';
 
@@ -22,6 +22,7 @@ export function acceptWebSockets(ctx: Ctx, server: http.Server | https.Server) {
     socket.on('error', () => socket.destroy());
     if (!hosts.hostOk(req)) return refuseUpgrade(socket, '421 Misdirected Request');
     const tunneled = tunneledPort(req, cfg.port, cfg.tailnet);
+    if (tunneled && relayedBack(req)) return refuseUpgrade(socket, '508 Loop Detected');
     const svc = tunneled ? ctx.services.lookup(tunneled) : undefined;
     if (tunneled && svc) {
       if (svc !== 'gone' && auth.fromAnyCookie(req)) return relayUpgrade(req, socket, head, svc);

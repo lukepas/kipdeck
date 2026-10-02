@@ -208,8 +208,13 @@ export class Auth {
     return false;
   }
 
-  cookie(req: IncomingMessage, token: string, secure: boolean): string {
-    return `${cookieName(req)}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(this.ttlMs / 1000)}${secure ? '; Secure' : ''}`;
+  /**
+   * The Set-Cookie for a sign-in. `relay` is a sign-in on a service tunnel's page (see relay.ts):
+   * its cookie only opens worker servers (fromAnyCookie), never the office's own routes or /ws on
+   * that port, so a page the worker's server served there can't use it against the office.
+   */
+  cookie(req: IncomingMessage, token: string, secure: boolean, relay = false): string {
+    return `${relay ? cookieName(req).replace(COOKIE_NAME, RELAY_COOKIE_NAME) : cookieName(req)}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(this.ttlMs / 1000)}${secure ? '; Secure' : ''}`;
   }
 
   clearCookie(req: IncomingMessage): string {
@@ -229,7 +234,10 @@ function cookieName(req: IncomingMessage): string {
   return port ? `${COOKIE_NAME}_${port}` : COOKIE_NAME;
 }
 
-const OFFICE_COOKIE = new RegExp(`^${COOKIE_NAME}(?:_\\d+)?$`);
+/** What a sign-in on a service tunnel's page is kept as (see cookie()). */
+const RELAY_COOKIE_NAME = 'ao_relay';
+
+const OFFICE_COOKIE = new RegExp(`^(?:${COOKIE_NAME}|${RELAY_COOKIE_NAME})(?:_\\d+)?$`);
 
 /** The Cookie header without the office's session cookies, for passing on to someone else's server. */
 export function withoutOfficeCookies(header: string | undefined): string | undefined {

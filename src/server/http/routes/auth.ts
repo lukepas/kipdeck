@@ -24,10 +24,13 @@ async function readGuess(ctx: Ctx, req: http.IncomingMessage, res: http.ServerRe
   }
   send(res, 400, { error: 'Bad request' });
 }
-const signedIn = (ctx: Ctx, req: http.IncomingMessage, accountId?: string) => ({ 'set-cookie': ctx.auth.cookie(req, ctx.auth.issue(accountId), isSecure(req, ctx.cfg)) });
+const signedIn = (ctx: Ctx, req: http.IncomingMessage, accountId?: string, relay = false) => ({ 'set-cookie': ctx.auth.cookie(req, ctx.auth.issue(accountId), isSecure(req, ctx.cfg), relay) });
 
-/** With a name, that person's own account; without one, the shared office password (while it's on). */
-export async function login(ctx: Ctx, req: http.IncomingMessage, res: http.ServerResponse) {
+/**
+ * With a name, that person's own account; without one, the shared office password (while it's on).
+ * `relay` is the sign-in page on a service tunnel, whose cookie opens worker servers only.
+ */
+export async function login(ctx: Ctx, req: http.IncomingMessage, res: http.ServerResponse, relay = false) {
   const { accounts, auth } = ctx;
   const guess = await readGuess(ctx, req, res);
   if (!guess) return;
@@ -37,14 +40,14 @@ export async function login(ctx: Ctx, req: http.IncomingMessage, res: http.Serve
     const account = await accounts.check(name, password);
     if (!account) return send(res, 401, { error: 'Wrong name or password' });
     auth.recordSuccess(guess.ip);
-    return send(res, 200, { ok: true }, signedIn(ctx, req, account.id));
+    return send(res, 200, { ok: true }, signedIn(ctx, req, account.id, relay));
   }
   if (!accounts.sharedPassword) return send(res, 401, { error: 'Sign in with your name and your own password' });
   if (!(await auth.checkPassword(password))) {
     return send(res, 401, { error: accounts.any ? 'Wrong password. With an account of your own, type your name too.' : 'Wrong password' });
   }
   auth.recordSuccess(guess.ip);
-  return send(res, 200, { ok: true }, signedIn(ctx, req));
+  return send(res, 200, { ok: true }, signedIn(ctx, req, undefined, relay));
 }
 /** Which fields the sign-in forms ask for. */
 export const loginOptions = (ctx: Ctx) => ({ accounts: ctx.accounts.any, shared: ctx.accounts.sharedPassword });

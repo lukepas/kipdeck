@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import http from 'node:http';
 import net from 'node:net';
 import type { Duplex } from 'node:stream';
@@ -10,8 +11,18 @@ import { withoutOfficeCookies } from './auth.js';
 // signed in to the office. On a Tailscale network it's https://<office>.ts.net:5173 instead, which
 // Tailscale Serve points at the office's port too (see tailnet.ts).
 
-/** Set on everything the office relays, so a server that proxies back to the office can't loop. */
+/**
+ * Set on everything the office relays, so a server that proxies back to the office can't loop. Its
+ * value is this process's own secret: a page can send the header too, and must not be able to pass
+ * for a relayed request (see relayedBack).
+ */
 const RELAYED = 'x-agent-office-relay';
+const RELAY_MARK = randomBytes(18).toString('base64url');
+
+/** Whether a request is one the office relayed itself, come back to it through a worker's server. */
+export function relayedBack(req: http.IncomingMessage): boolean {
+  return req.headers[RELAYED] === RELAY_MARK;
+}
 const LOOPBACK_HOST = /^(?:localhost|127\.0\.0\.1|\[::1\]|[a-z0-9-]+\.localhost):(\d{1,5})$/i;
 
 /** "agent-office.tail1234.ts.net:5173" -> 5173, for the office's own name on the tailnet. */
@@ -20,9 +31,11 @@ function tailnetPort(host: string, tailnet: string | undefined): number {
   return tailnet && i > 0 && host.slice(0, i).toLowerCase() === tailnet ? Number(host.slice(i + 1)) || 0 : 0;
 }
 
-/** The service port a request came in for, when it came through a service tunnel or the tailnet. */
+/**
+ * The service port a request came in for, when it came through a service tunnel or the tailnet.
+ * The caller relays it, or refuses it when the office relayed it already (relayedBack).
+ */
 export function tunneledPort(req: http.IncomingMessage, officePort: number, tailnet?: string): number | undefined {
-  if (req.headers[RELAYED]) return undefined;
   const host = req.headers.host ?? '';
   const m = LOOPBACK_HOST.exec(host);
   const port = m ? Number(m[1]) : tailnetPort(host, tailnet);
@@ -30,7 +43,7 @@ export function tunneledPort(req: http.IncomingMessage, officePort: number, tail
 }
 
 function upstreamHeaders(req: http.IncomingMessage, svc: ServiceInfo): http.OutgoingHttpHeaders {
-  const headers: http.OutgoingHttpHeaders = { ...req.headers, [RELAYED]: '1' };
+  const headers: http.OutgoingHttpHeaders = { ...req.headers, [RELAYED]: RELAY_MARK };
   // From the tailnet, the server gets the Host it would through a tunnel: dev servers like Vite
   // refuse names they don't know. X-Forwarded-Host (set by Tailscale Serve) still has the real one.
   if (!LOOPBACK_HOST.test(req.headers.host ?? '')) headers.host = `localhost:${svc.port}`;
@@ -114,6 +127,11 @@ export function signInPage(res: http.ServerResponse, port: number, opts: { accou
 try{const r=await fetch(${JSON.stringify(RELAY_LOGIN)},{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:n?n.value:'',password:document.getElementById('pw').value})});
 if(r.ok)location.reload();else err.textContent=(await r.json().catch(()=>({}))).error||'Sign-in failed'}catch{err.textContent='Could not reach the office'}})`,
   );
+}
+
+/** A request the office relayed came back to it: a worker's server proxies to the office. */
+export function loopPage(res: http.ServerResponse, port: number) {
+  page(res, 508, 'Going round in circles', `<p>The server on port ${port} sent the office's own request back to it. Point its proxy somewhere else.</p>`);
 }
 
 export function stoppedPage(res: http.ServerResponse, port: number) {

@@ -118,6 +118,16 @@ test("another site can't sign a visitor in or out: the auth POSTs check the Orig
   assert.match(await login(), /^ao_session_\d+=/);
 });
 
+test("a forged relay header on another port neither reaches the office's API nor loops", async () => {
+  const other = port + 1;
+  const forged = { host: `localhost:${other}`, origin: `http://localhost:${other}`, 'x-agent-office-relay': '1' };
+  // Signed in on the tunnel's sign-in page: an ao_relay cookie, which only opens worker servers.
+  const own = cookieOf(await call('/api/login', { method: 'POST', headers: { host: `localhost:${other}` }, body: { password: PASSWORD } }));
+  const relayCookie = own.replace(/^ao_session_/, 'ao_relay_');
+  const r = await call('/api/whoami', { headers: { ...forged, cookie: relayCookie } });
+  assert.equal(r.status, 401, "a page a worker's server served on that port can't use it against the office");
+});
+
 function socket(headers: Record<string, string>): Promise<{ ws?: WebSocket; status?: number; messages: any[] }> {
   return new Promise((resolve) => {
     const messages: any[] = [];
