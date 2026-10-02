@@ -59,6 +59,36 @@ function listen(server: http.Server, port: number, host: string): Promise<NodeJS
   });
 }
 
+/** The names a browser on this computer reaches a forwarded port by, as an Origin's hostname. */
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
+
+/**
+ * Whether a request comes from this computer's own pages, so the client's session may go with it.
+ * Any website the user opens can send a request to localhost:<port> (a form, fetch with no-cors,
+ * a WebSocket), and the Host check passes for it; without this, the tunnel would sign it in for
+ * them. A page on a forwarded port (a worker's front end calling its API on another) is fine; a
+ * link from elsewhere still opens the page, as one would to a server running here.
+ */
+export function fromHere(req: http.IncomingMessage, open: (port: number) => boolean, upgrade = false): boolean {
+  const origin = req.headers.origin;
+  if (origin !== undefined) {
+    let url: URL;
+    try {
+      url = new URL(origin);
+    } catch {
+      return false;
+    }
+    const host = url.hostname.toLowerCase();
+    if (url.protocol !== 'http:' || !(LOOPBACK_HOSTS.has(host) || host.endsWith('.localhost'))) return false;
+    return open(Number(url.port || 80));
+  }
+  // Every browser sends an Origin with a WebSocket handshake, so one without it is a tool here.
+  if (upgrade) return false;
+  if (req.headers['sec-fetch-site'] !== 'cross-site') return true;
+  // A link someone followed from another site: the page itself, nothing it could post or embed.
+  return (req.method === 'GET' || req.method === 'HEAD') && req.headers['sec-fetch-mode'] === 'navigate' && req.headers['sec-fetch-dest'] === 'document';
+}
+
 function refuse(res: http.ServerResponse, status: number, text: string) {
   res.writeHead(status, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' });
   res.end(`${text}\n`);
@@ -174,6 +204,7 @@ export class Forwarder {
   private relay(port: number, req: http.IncomingMessage, res: http.ServerResponse) {
     const headers = this.headers(port, req);
     if (!headers) return refuse(res, 421, `This is localhost:${port}, forwarded by agent-office tunnel. Open it as http://localhost:${port}.`);
+    if (!fromHere(req, (p) => this.open.has(p))) return refuse(res, 403, `A page on another site asked for localhost:${port}, forwarded by agent-office tunnel: it isn't let through.`);
     const up = this.office.request(req.method, req.url, headers, (ur) => {
       res.writeHead(ur.statusCode ?? 502, ur.statusMessage, ur.headers);
       ur.pipe(res);
@@ -194,7 +225,7 @@ export class Forwarder {
   private upgrade(port: number, req: http.IncomingMessage, socket: Duplex, head: Buffer) {
     socket.on('error', () => socket.destroy());
     const headers = this.headers(port, req);
-    if (!headers) return void socket.destroy();
+    if (!headers || !fromHere(req, (p) => this.open.has(p), true)) return void socket.destroy();
     const lines = [`${req.method} ${req.url} HTTP/1.1`];
     for (const [k, v] of Object.entries(headers)) {
       for (const one of Array.isArray(v) ? v : [v]) if (one !== undefined) lines.push(`${k}: ${one}`);

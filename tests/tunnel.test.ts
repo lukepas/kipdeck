@@ -18,7 +18,8 @@ import { serviceRoutes } from '../src/server/http/routes/services.js';
 import type { Ctx } from '../src/server/office/context.js';
 import { acceptWebSockets } from '../src/server/ws/upgrade.js';
 import { Forwarder } from '../src/server/tunnel/forwarder.js';
-import { officeUrl, parseArgs } from '../src/server/tunnel/index.js';
+import { clean, describe, officeUrl, parseArgs } from '../src/server/tunnel/index.js';
+import { pageTitle } from '../src/server/services.js';
 import { Office } from '../src/server/tunnel/office.js';
 import { sshArgs } from '../src/server/tunnel/ssh.js';
 import type { Forward } from '../src/server/tunnel/wire.js';
@@ -148,7 +149,7 @@ test("a worker's server opens on the same port here, for anything on this comput
 
     // WebSockets (hot reload) go through too.
     const echoed = await new Promise<string>((resolve, reject) => {
-      const req = http.request({ host: '127.0.0.1', port: t.port, headers: { host: `localhost:${t.port}`, connection: 'Upgrade', upgrade: 'echo' } });
+      const req = http.request({ host: '127.0.0.1', port: t.port, headers: { host: `localhost:${t.port}`, origin: `http://localhost:${t.port}`, connection: 'Upgrade', upgrade: 'echo' } });
       req.on('upgrade', (_res, socket) => {
         socket.on('data', (d) => {
           resolve(String(d));
@@ -238,6 +239,53 @@ test("the client's session reaches the office only as a tunnel cookie, which nev
     await t.forwarder.sync([{ port: t.port, title: 'x', command: 'x' }]);
     assert.equal((await get(t.port, '/x', { cookie: 'ao_session_4600=theirs; mine=1' })).body, 'worker GET /x');
     assert.equal(t.seen.at(-1)!.cookie, 'mine=1');
+  } finally {
+    t.close();
+  }
+});
+
+test("a page on another website never gets the client's session sent with its requests", async () => {
+  const t = await setup();
+  try {
+    await t.office.signIn('', 'hunter2');
+    await t.forwarder.sync([{ port: t.port, title: 'x', command: 'x' }]);
+    const before = t.seen.length;
+    const post = (headers: http.OutgoingHttpHeaders) =>
+      new Promise<number>((resolve, reject) => {
+        const req = http.request({ host: '127.0.0.1', port: t.port, method: 'POST', path: '/api/do', headers: { host: `localhost:${t.port}`, ...headers }, agent: false }, (res) => (res.resume(), resolve(res.statusCode ?? 0)));
+        req.on('error', reject);
+        req.end('x=1');
+      });
+    // A form or a no-cors fetch from evil.example: refused here, so it never reaches the office.
+    assert.equal(await post({ origin: 'https://evil.example' }), 403);
+    assert.equal(await post({ origin: 'null' }), 403);
+    assert.equal(await post({ origin: `http://localhost:${t.port}.evil.example` }), 403);
+    assert.equal(await post({ 'sec-fetch-site': 'cross-site', 'sec-fetch-mode': 'no-cors' }), 403);
+    // Embedding it, or an image from it, from another site.
+    assert.equal((await get(t.port, '/', { 'sec-fetch-site': 'cross-site', 'sec-fetch-mode': 'navigate', 'sec-fetch-dest': 'iframe' })).status, 403);
+    assert.equal((await get(t.port, '/a.png', { 'sec-fetch-site': 'cross-site', 'sec-fetch-mode': 'no-cors', 'sec-fetch-dest': 'image' })).status, 403);
+    // A localhost port that isn't one of the workers' isn't the worker's page either.
+    const other = await freePort();
+    assert.equal(await post({ origin: `http://localhost:${other}` }), 403);
+    assert.equal(t.seen.length, before);
+
+    // Its own page, the worker's other forwarded servers, and a link someone followed are fine.
+    assert.equal(await post({ origin: `http://localhost:${t.port}` }), 200);
+    assert.equal(await post({ origin: `http://127.0.0.1:${t.port}`, 'sec-fetch-site': 'same-origin' }), 200);
+    assert.equal((await get(t.port, '/', { 'sec-fetch-site': 'cross-site', 'sec-fetch-mode': 'navigate', 'sec-fetch-dest': 'document' })).status, 200);
+
+    // A WebSocket from another site, or with no Origin at all, is closed before it reaches the office.
+    const upgrade = (headers: http.OutgoingHttpHeaders) =>
+      new Promise<string>((resolve) => {
+        const req = http.request({ host: '127.0.0.1', port: t.port, headers: { host: `localhost:${t.port}`, connection: 'Upgrade', upgrade: 'echo', ...headers } });
+        req.on('upgrade', (_res, socket) => (socket.destroy(), resolve('upgraded')));
+        req.on('error', () => resolve('closed'));
+        req.end();
+      });
+    assert.equal(await upgrade({ origin: 'https://evil.example' }), 'closed');
+    assert.equal(await upgrade({}), 'closed');
+    assert.equal(t.seen.length, before + 3);
+    assert.equal(await upgrade({ origin: `http://localhost:${t.port}` }), 'upgraded');
   } finally {
     t.close();
   }
@@ -333,4 +381,17 @@ test('the command line', () => {
 
   // The one forward an invited key may open: this computer's port to the office's own.
   assert.deepEqual(sshArgs('office@203.0.113.7', 4700, 4600, ['-i', 'key']).slice(-5), ['-L', '4700:localhost:4600', '-i', 'key', 'office@203.0.113.7']);
+});
+
+test("a worker's page title never reaches this terminal as an escape sequence", () => {
+  const f: Forward = { port: 5173, title: 'a\x1b]52;c;aGk=\x07b', command: 'vite\x1b[2J', worker: 'By\x9bte', floor: 'acme\r' };
+  const line = describe(f);
+  assert.doesNotMatch(line, /[\u0000-\u001f\u007f-\u009f]/);
+  assert.equal(line, 'a ]52;c;aGk= b - vite [2J (By te on acme)');
+  assert.equal(clean(undefined), '');
+  // The office strips them too, for the Services board and anything else that shows the title.
+  assert.equal(pageTitle('<title>a\x1b]52;c;aGk=\x07b</title>'), 'a ]52;c;aGk= b');
+  assert.equal(pageTitle('<title> Vite &amp; React </title>'), 'Vite & React');
+  assert.equal(pageTitle('<title>\x1b\x07</title>'), undefined);
+  assert.equal(pageTitle('<p>none</p>'), undefined);
 });

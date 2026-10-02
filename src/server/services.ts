@@ -151,16 +151,30 @@ function probe(host: string, port: number): Promise<{ ok: boolean; title?: strin
         body += c;
         if (body.length > 64 * 1024 || /<\/title>/i.test(body)) res.destroy();
       });
-      const done = () => {
-        const t = /<title[^>]*>([^<]*)<\/title>/i.exec(body)?.[1];
-        resolve({ ok: true, title: t ? decodeEntities(t).replace(/\s+/g, ' ').trim().slice(0, 100) || undefined : undefined });
-      };
+      const done = () => resolve({ ok: true, title: pageTitle(body) });
       res.on('end', done);
       res.on('close', done);
     });
     req.on('timeout', () => req.destroy());
     req.on('error', () => resolve({ ok: false }));
   });
+}
+
+/**
+ * A page's <title>, as plain text: the worker's server writes it, and it ends up in the Services
+ * board and in a teammate's terminal (agent-office tunnel), so no control characters (an escape
+ * sequence that retitles the window or writes the clipboard) get through.
+ */
+export function pageTitle(html: string): string | undefined {
+  const t = /<title[^>]*>([^<]*)<\/title>/i.exec(html)?.[1];
+  if (!t) return undefined;
+  return (
+    decodeEntities(t)
+      .replace(/[\u0000-\u001f\u007f-\u009f]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 100) || undefined
+  );
 }
 
 function decodeEntities(s: string): string {

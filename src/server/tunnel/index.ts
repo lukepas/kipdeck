@@ -107,9 +107,18 @@ export function officeUrl(where: string): URL | undefined {
 
 const say = (line = '') => console.log(line);
 
-function describe(f: Forward): string {
-  const what = f.title === f.command ? f.title : `${f.title} - ${f.command}`;
-  const who = [f.worker, f.floor].filter(Boolean).join(' on ');
+/**
+ * Text the office sent, fit for this terminal: a worker's server names its page, and a title (or
+ * a command line, a worker's name) with an escape sequence in it would otherwise reach the
+ * terminal as one, to retitle the window, rewrite the lines above or write the clipboard.
+ */
+export const clean = (s?: string) => (s ?? '').replace(/[\u0000-\u001f\u007f-\u009f]+/g, ' ').trim();
+
+export function describe(f: Forward): string {
+  const title = clean(f.title);
+  const command = clean(f.command);
+  const what = title === command ? title : `${title} - ${command}`;
+  const who = [clean(f.worker), clean(f.floor)].filter(Boolean).join(' on ');
   return who ? `${what} (${who})` : what;
 }
 
@@ -142,7 +151,7 @@ export async function tunnelCommand(argv: string[]): Promise<number> {
     office,
     {
       opened: (f) => say(`  + http://localhost:${f.port}  ${describe(f)}`),
-      closed: (f) => say(`  - localhost:${f.port} closed: ${f.worker ?? 'the worker'} stopped the server`),
+      closed: (f) => say(`  - localhost:${f.port} closed: ${clean(f.worker) || 'the worker'} stopped the server`),
       busy: (f, why) =>
         say(
           why === 'denied'
