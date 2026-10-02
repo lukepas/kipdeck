@@ -146,6 +146,7 @@ export class TimelineWatch {
   private meeting?: { id: string; status: string } | null;
   private mission?: Mission;
   private progress = new Map<string, { closed: number; of: number }>();
+  private issueState = new Map<number, string>();
 
   constructor(
     private t: Timeline,
@@ -174,7 +175,9 @@ export class TimelineWatch {
       return this.add({ kind: 'hired', ...this.who(w), text: `${w.createdBy} hired ${w.name}${what ? ` ${what}` : ''}${w.kind === 'shell' ? ' (a shell)' : ''}` });
     }
     if (prev === w.status || w.kind !== 'agent') return;
-    if (w.status === 'needs_input') return this.add({ kind: 'needs-input', ...this.who(w), text: `${w.name} needs input${w.activity ? `: ${w.activity}` : ''}` });
+    // Its activity line as the roster carries it, 80 characters at most: never a whole prompt.
+    const asks = cleanText(w.activity, 80);
+    if (w.status === 'needs_input') return this.add({ kind: 'needs-input', ...this.who(w), text: `${w.name} needs input${asks ? `: ${asks}` : ''}` });
     if (w.status === 'done') return this.add({ kind: 'done', ...this.who(w), text: `${w.name} finished${w.task?.name ? `: ${w.task.name}` : ''}` });
     if (w.status === 'working' && (prev === 'exited' || prev === 'offline')) return this.add({ kind: 'resumed', ...this.who(w), text: `${w.name} woke up and is working again` });
   }
@@ -256,9 +259,14 @@ export class TimelineWatch {
     if (before.active !== m.active && active && was.has(active.id)) this.add({ kind: 'milestone', goal: active.id, name: active.title, text: `${by} made ${active.title} the milestone the team is on` });
   }
 
-  /** A fresh list of issues: each milestone's issues closed, when that moved (and the list it covers didn't). */
+  /**
+   * A fresh list of issues: each milestone's issues closed, when that moved (and the list it covers
+   * didn't). An issue that dropped off GitHub's list (it only sends the latest closed ones) keeps
+   * the state it was last seen in, so it doesn't look reopened.
+   */
   issues(items: readonly GhIssue[], m: Mission) {
-    const state = new Map(items.map((i) => [i.number, i.state]));
+    for (const i of items) this.issueState.set(i.number, i.state);
+    const state = this.issueState;
     for (const x of m.milestones) {
       if (!x.issues.length) continue;
       const known = x.issues.filter((n) => state.has(n));

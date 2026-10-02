@@ -1,6 +1,6 @@
-import { rankRoster, type Ranked } from '../../../shared/attention';
+import { attentionCounts, rankRoster, type AttentionCounts, type Ranked } from '../../../shared/attention';
 import { emptyMission } from '../../../shared/mission';
-import { reviewInbox, type ReviewItem } from '../../../shared/review';
+import { inboxCount, reviewInbox, type ReviewItem } from '../../../shared/review';
 import type { Mission, Reminder, ReviewPull, RosterEntry } from '../../../shared/protocol';
 import type { Slice } from '../store';
 
@@ -20,6 +20,11 @@ declare module '../store' {
     ranked(floor?: string | null): Ranked[];
     /** Everything on every floor waiting for a person's decision, oldest first (see shared/review.ts). */
     inbox(): ReviewItem[];
+    /**
+     * How many need someone at each level across the building, as the chip and the tab title count
+     * them: the ranking's, with "to review" the whole review inbox.
+     */
+    counts(): AttentionCounts;
     /** A worker's roster entry, on any floor. */
     rosterEntry(id: string): RosterEntry | undefined;
   }
@@ -48,6 +53,11 @@ export const mission: Slice = {
       // Your own GitHub sign-in's login, else the office's (the shared password, or an admin on the machine's).
       const mine = this.signins?.github.status === 'ok' ? this.signins.github.who : undefined;
       return reviewInbox(this.ranked(), this.reviewQueue, mine ?? this.ghViewer);
+    },
+    counts() {
+      const c = attentionCounts(this.ranked());
+      c.review = inboxCount(this.inbox());
+      return c;
     },
     rosterEntry(id) {
       return this.roster.find((e) => e.id === id);

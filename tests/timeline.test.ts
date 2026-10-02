@@ -103,6 +103,8 @@ test('the watch writes what changed, never what was already so', () => {
     w.missionChanged({ ...mission, statement: 'Ship it', by: 'Ed', milestones: [{ ...mission.milestones[0], done: true }] });
     w.issues([issue(1, 'CLOSED'), issue(2, 'OPEN')], mission);
     w.issues([issue(1, 'CLOSED'), issue(2, 'CLOSED')], mission);
+    // Issue 1 drops off the list GitHub sends: still closed, nothing moved.
+    w.issues([issue(2, 'CLOSED')], mission);
 
     const texts = t.list({ limit: 100 }).events.reverse().map((e) => e.text);
     assert.deepEqual(texts, [

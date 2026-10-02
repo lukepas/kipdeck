@@ -3,8 +3,7 @@
 // for a person's decision), Timeline (what happened). The same module serves the 3D office and the
 // 2D view, so it imports no three.js and nothing of the 3D office's (tests/client-structure.test.ts checks).
 import './mission.css';
-import { attentionCounts, attentionLabel, needingSomeone } from '../../../shared/attention';
-import { inboxCount } from '../../../shared/review';
+import { attentionLabel, needingSomeone } from '../../../shared/attention';
 import { MISSION_TABS, store, type MissionTab, type Topic } from '../../state';
 import { h, openModal, type Modal } from '../dom';
 import { setMissionOpen, type MissionDeps } from './act';
@@ -50,7 +49,7 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
   const el = h('div.modal.mission-control', { role: 'dialog', 'aria-label': 'Mission control' }, h('header', {}, h('h2', {}, 'Mission control'), bar), body);
 
   function paintTabs() {
-    const counts = chipCounts();
+    const counts = store.counts();
     const badge: Record<MissionTab, number> = { attention: counts['needs-you'] + counts.stuck + openReminders().length, goals: 0, review: counts.review, timeline: 0 };
     for (const [t, b] of tabs) {
       b.setAttribute('aria-selected', String(t === current));
@@ -151,21 +150,11 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
 }
 
 /**
- * The building's counts as the chip shows them: the ranking's, with "to review" the whole review
- * inbox (pull requests no worker stands for included).
- */
-function chipCounts() {
-  const counts = attentionCounts(store.ranked());
-  counts.review = inboxCount(store.inbox());
-  return counts;
-}
-
-/**
  * What the attention chip says: "2 need you · 1 stuck · 3 to review", across every floor, and
  * whether any reminders are open (an amber dot).
  */
 export function attentionChip(): { text: string; tone: 'danger' | 'warn' | 'ok' | undefined; total: number; reminders: number } {
-  const counts = chipCounts();
+  const counts = store.counts();
   const total = needingSomeone(counts);
   const reminders = openReminders().length;
   return { text: attentionLabel(counts), tone: counts['needs-you'] ? 'danger' : counts.stuck ? 'warn' : counts.review ? 'ok' : undefined, total, reminders };
