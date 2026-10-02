@@ -35,17 +35,6 @@ export function readBytes(req: http.IncomingMessage, limit: number): Promise<Buf
   });
 }
 
-/** Whether the page asking is the office itself, so another site can't open a socket with a visitor's cookie. */
-export function sameOrigin(req: http.IncomingMessage, cfg: Config): boolean {
-  const origin = req.headers.origin;
-  const host = (cfg.trustProxy && (req.headers['x-forwarded-host'] as string)) || req.headers.host;
-  try {
-    return !!origin && new URL(origin).host === host;
-  } catch {
-    return false;
-  }
-}
-
 export function send(res: http.ServerResponse, status: number, body: unknown, headers: Record<string, string> = {}) {
   const json = JSON.stringify(body);
   res.writeHead(status, { 'content-type': 'application/json', 'cache-control': 'no-store', ...headers });

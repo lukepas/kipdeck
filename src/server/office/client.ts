@@ -1,5 +1,6 @@
 import type { WebSocket } from 'ws';
 import type { PeerInfo } from '../../shared/protocol.js';
+import type { Session } from '../auth.js';
 
 /** A viewer with more than this waiting to go out skips terminal output, and gets a fresh snapshot once it catches up. */
 export const SLOW_CLIENT_BYTES = 8 * 1024 * 1024;
@@ -11,6 +12,8 @@ export interface Client {
   peer: PeerInfo;
   /** Signed in with this account; none means the shared office password. */
   accountId?: string;
+  /** The sign-in it came with, checked again as it goes (see Auth.current). */
+  session: Session;
   /** Whether this person was last told they're an admin (see `me`). */
   admin: boolean;
   /** Signed out while connected; whatever it still sends is dropped until the socket closes. */
@@ -28,11 +31,12 @@ export interface Client {
 }
 
 /** A client that just connected, with nothing going on yet. */
-export function newClient(id: string, ws: WebSocket, who: { accountId: string | undefined; admin: boolean }, peer: PeerInfo): Client {
+export function newClient(id: string, ws: WebSocket, who: { accountId: string | undefined; admin: boolean; session: Session }, peer: PeerInfo): Client {
   return {
     id,
     ws,
     accountId: who.accountId,
+    session: who.session,
     admin: who.admin,
     attached: new Set(),
     stale: new Set(),

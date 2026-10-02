@@ -5,7 +5,7 @@ import { WB_MAX_FILE_BYTES } from '../../../shared/whiteboard.js';
 import { DROP_MAX_BYTES } from '../../../shared/drops.js';
 import type { Ctx } from '../../office/context.js';
 import { repoOf, str } from '../../office/input.js';
-import { readBody, readBytes, sameOrigin, send } from '../util.js';
+import { readBody, readBytes, send } from '../util.js';
 import type { Route } from '../router.js';
 
 // Which floor a request is about: its boards and its workers.
@@ -18,6 +18,7 @@ export const fileRoutes = {
     async handle(ctx, { req, res, url }) {
       const floor = floorParam(ctx, url);
       // Pictures on the whiteboard. Their ids are hashes of what's in them, so they never change.
+      if (req.method === 'POST' && !ctx.hosts.originOk(req)) return send(res, 403, { error: 'Forbidden' });
       if (!floor) return send(res, 404, { error: 'No such floor' });
       if (req.method === 'GET') {
         const f = floor.whiteboard.file(url.searchParams.get('id') ?? '');
@@ -25,7 +26,6 @@ export const fileRoutes = {
         return send(res, 200, f, { 'cache-control': 'private, max-age=31536000, immutable' });
       }
       if (req.method !== 'POST') return send(res, 405, { error: 'Method not allowed' });
-      if (!sameOrigin(req, ctx.cfg)) return send(res, 403, { error: 'Forbidden' });
       let body: unknown;
       try {
         body = JSON.parse(await readBody(req, WB_MAX_FILE_BYTES + 4096));
@@ -44,7 +44,7 @@ export const fileRoutes = {
       const floor = floorParam(ctx, url);
       // A file dropped or pasted into a worker's terminal, kept on this machine for the terminal to type its path.
       if (req.method !== 'POST') return send(res, 405, { error: 'Method not allowed' });
-      if (!sameOrigin(req, ctx.cfg)) return send(res, 403, { error: 'Forbidden' });
+      if (!ctx.hosts.originOk(req)) return send(res, 403, { error: 'Forbidden' });
       if (!floor) return send(res, 404, { error: 'No such floor' });
       const workerId = str(url.searchParams.get('worker'), 32);
       if (!floor.workers.get(workerId)) return send(res, 404, { error: 'No such worker' });

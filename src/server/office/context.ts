@@ -4,6 +4,7 @@
 // only ever uses what was already there when it was made.
 import type { Config } from '../config.js';
 import type { Auth } from '../auth.js';
+import type { HostGuard } from '../hosts.js';
 import type { Accounts } from '../accounts.js';
 import type { SignIns, GhAs } from '../signins.js';
 import type { GrokModelCatalogue, OpenCodeModelCatalogue } from '../models.js';
@@ -33,6 +34,8 @@ export interface Core {
   publicDir: string;
   accounts: Accounts;
   auth: Auth;
+  /** Which names the office answers to, and whether a page asking is its own (see hosts.ts). */
+  hosts: HostGuard;
   /** Everyone in the office, by connection. */
   clients: Map<string, Client>;
   /** Kept on disk, so a restart doesn't wipe it. */

@@ -247,6 +247,10 @@ test('answers the signed-in routes', async () => {
   const out = await post('/api/logout', {}, me);
   assert.equal(out.status, 200);
   assert.match(out.headers.get('set-cookie') ?? '', /Max-Age=0/);
+  // Signed out on the office's side too: the same cookie no longer works.
+  assert.equal((await get('/api/whoami', me)).status, 401);
+  const again = await post('/api/login', { password: PASSWORD });
+  cookie = (again.headers.get('set-cookie') ?? '').split(';')[0];
 });
 
 test('refuses a WebSocket from another site or without a session', async () => {

@@ -381,11 +381,30 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
   const signOut = h('button.btn', { type: 'button' }, '🚪 Sign out');
   signOut.addEventListener('click', onSignOut);
   const character = h('button.btn', { type: 'button' }, account ? '🧍 Change your look' : '🧍 Change your look & name');
+  // Your own account's password: a new one signs out every other browser it's in (the office does it).
+  const pwCurrent = h('input', { type: 'password', placeholder: 'Current password', 'aria-label': 'Current password', autocomplete: 'current-password' }) as HTMLInputElement;
+  const pwNew = h('input', { type: 'password', placeholder: 'New password', 'aria-label': 'New password', autocomplete: 'new-password' }) as HTMLInputElement;
+  const pwSave = h('button.btn', { type: 'button' }, 'Change password');
+  const pwNote = h('p.setting-note', {}, 'A new password signs you out of every other browser.');
+  pwSave.addEventListener('click', async () => {
+    if (!pwCurrent.value || !pwNew.value) return (pwCurrent.value ? pwNew : pwCurrent).focus();
+    pwSave.disabled = true;
+    try {
+      const res = await fetch('/api/password', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ current: pwCurrent.value, password: pwNew.value }) });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      if (res.ok) return location.reload();
+      pwNote.textContent = body.error ?? `That didn't work (${res.status})`;
+    } catch {
+      pwNote.textContent = "Couldn't reach the office";
+    }
+    pwSave.disabled = false;
+  });
   const panes: Record<SettingsPane, Node[]> = {
     you: [
       setting('Your character', null, character),
       setting('Camera view', 'you', seg, note),
       setting('Signed in', null, h('div.volume', {}, signOut), h('p.setting-note', {}, account ? `As ${account.name}, with your own account (${account.role}).` : 'With the shared office password.')),
+      ...(account ? [setting('Password', null, h('div.webhook', {}, pwCurrent, pwNew, pwSave), pwNote)] : []),
     ],
     sound: [
       setting('Office sounds', 'you', soundRow, h('p.setting-note', {}, 'Workers typing, footsteps, and the ding when a worker is done. Voice chat isn’t affected.')),

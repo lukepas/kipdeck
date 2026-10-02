@@ -109,6 +109,37 @@ export const authRoutes = {
       return send(res, 200, { ok: true }, signedIn(ctx, req));
     },
   },
-  logout: { method: 'POST', path: '/api/logout', auth: 'public', handle: (ctx, { req, res }) => send(res, 200, { ok: true }, { 'set-cookie': ctx.auth.clearCookie(req) }) },
+  logout: {
+    method: 'POST',
+    path: '/api/logout',
+    auth: 'public',
+    handle(ctx, { req, res }) {
+      // Out on the office's side too, so a copy of the cookie stops working as well.
+      const s = ctx.auth.fromRequest(req);
+      if (s) {
+        ctx.auth.revoke(s);
+        ctx.accountsChanged();
+      }
+      return send(res, 200, { ok: true }, { 'set-cookie': ctx.auth.clearCookie(req) });
+    },
+  },
+  // A new password for your own account: every other sign-in of it is signed out.
+  password: {
+    method: 'POST',
+    path: '/api/password',
+    auth: 'public',
+    async handle(ctx, { req, res }) {
+      const s = ctx.auth.fromRequest(req);
+      if (!s?.account) return send(res, 401, { error: 'Sign in with your own account to change its password' });
+      const guess = await readGuess(ctx, req, res);
+      if (!guess) return;
+      if (!(await ctx.accounts.check(s.account.name, str(guess.body.current, 512)))) return send(res, 401, { error: 'Wrong password' });
+      const err = await ctx.accounts.setPassword(s.account.id, str(guess.body.password, 1024));
+      if (err) return send(res, 400, { error: err });
+      ctx.auth.recordSuccess(guess.ip);
+      ctx.accountsChanged();
+      return send(res, 200, { ok: true }, signedIn(ctx, req, s.account.id));
+    },
+  },
   whoami: { path: '/api/whoami', auth: 'session', handle: (ctx, { res, session }) => send(res, 200, { ok: true, me: ctx.meOf(session.account?.id) }) },
 } satisfies Record<string, Route>;

@@ -21,6 +21,8 @@ export interface Account {
   createdAt: number;
   createdBy: string;
   lastSeenAt?: number;
+  /** Sessions signed in at another generation no longer count: signing out and a new password move it on. */
+  gen?: number;
 }
 
 interface Saved {
@@ -195,6 +197,30 @@ export class Accounts {
     return a;
   }
 
+  /** Signs an account out everywhere: every session it has stops working on its next request. */
+  bumpSessions(id: string): Account | undefined {
+    const a = this.get(id);
+    if (!a) return undefined;
+    a.gen = (a.gen ?? 0) + 1;
+    this.save();
+    return a;
+  }
+
+  /** Gives an account a new password, and signs out every session it had. Returns what's wrong, if anything. */
+  async setPassword(id: string, password: string): Promise<string | undefined> {
+    if (password.length < PASSWORD_MIN) return `Pick a password of at least ${PASSWORD_MIN} characters`;
+    if (password.length > PASSWORD_MAX) return 'That password is too long';
+    const salt = randomBytes(16);
+    const derived = await hash(password, salt);
+    const a = this.get(id);
+    if (!a) return 'That account is gone';
+    a.hash = derived.toString('hex');
+    a.salt = salt.toString('hex');
+    a.gen = (a.gen ?? 0) + 1;
+    this.save();
+    return undefined;
+  }
+
   setRole(id: string, role: AccountRole): Account | undefined {
     const a = this.get(id);
     if (!a) return undefined;
@@ -291,6 +317,7 @@ Usage:
   agent-office accounts invite [name] [--admin]
                                                Make a single-use invite link (valid 7 days)
   agent-office accounts revoke <name>          Delete an account; it's signed out at once
+  agent-office accounts signout <name>         Sign an account out of every browser
   agent-office accounts role <name> admin|member
   agent-office accounts password on|off        Whether the shared office password still works
 
@@ -356,10 +383,16 @@ export function accountsCommand(argv: string[]): number {
       return 0;
     }
     case 'revoke':
+    case 'signout':
     case 'role': {
       if (!arg) return usage(`${cmd} needs a name`);
       const a = accounts.byName(arg);
       if (!a) return fail(`there's no account called ${arg}`);
+      if (cmd === 'signout') {
+        accounts.bumpSessions(a.id);
+        console.log(`Signed ${a.name} out of every browser. They're signed out of the office within seconds.`);
+        return 0;
+      }
       if (cmd === 'revoke') {
         accounts.revoke(a.id);
         console.log(`Revoked ${a.name}'s account. They're signed out of the office within seconds.`);

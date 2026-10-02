@@ -1,12 +1,15 @@
 // The office's pages and the rest of the client bundle.
 import path from 'node:path';
+import { contentSecurityPolicy } from '../../csp.js';
 import { publicFile, serveFile } from '../static.js';
 import { send } from '../util.js';
 import type { Route, RouteRequest } from '../router.js';
 import type { Ctx } from '../../office/context.js';
 
 /** One of the bundle's own pages, never cached, so a new version is picked up at once. */
-const page = (name: string) => (ctx: Ctx, { res }: RouteRequest) => serveFile(res, path.join(ctx.publicDir, name), false);
+const page = (name: string) => (ctx: Ctx, r: RouteRequest) => serveFile(r.res, path.join(ctx.publicDir, name), false, csp(ctx, r));
+/** The policy for a page, with the office's socket at the host the browser reached it by. */
+const csp = (ctx: Ctx, { req }: RouteRequest) => contentSecurityPolicy(ctx.hosts.requestHost(req));
 
 export const pageRoutes = {
   health: { path: '/api/health', auth: 'public', handle: (_ctx, { res }) => send(res, 200, { ok: true }) },
@@ -30,9 +33,10 @@ export const pageRoutes = {
   bundle: {
     prefix: '/',
     auth: 'session',
-    handle(ctx, { res, path: p }) {
-      const file = publicFile(ctx.publicDir, p);
-      if (file) return serveFile(res, file, false);
+    handle(ctx, r) {
+      const file = publicFile(ctx.publicDir, r.path);
+      if (file) return serveFile(r.res, file, false, csp(ctx, r));
+      const { res } = r;
       res.writeHead(404, { 'content-type': 'text/plain' }).end('Not found');
     },
   },

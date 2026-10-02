@@ -5,6 +5,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { AGENT_PROVIDERS, PROVIDER_META } from '../shared/providers.js';
 import { MAX_WORKER_LIMIT, parseWorkerLimit } from './machine.js';
+import { parseAllowedHosts } from './hosts.js';
 import { readStateJson, stateDirProblem, untrustedState, writeState } from './safefs.js';
 
 export interface Config {
@@ -39,6 +40,8 @@ export interface Config {
   dshProfile: string;
   tls?: { cert: string; key: string };
   trustProxy: boolean;
+  /** More names the office is reached at, besides localhost, this machine's and the public host (see hosts.ts). */
+  allowedHosts: string[];
   iceServers: RTCIceServerLike[];
   /** How to run the script that deployed the office, e.g. "deploy/azure.sh --name team2" (set by deploy/provision.sh), for the commands it suggests. */
   deployScript?: string;
@@ -124,6 +127,10 @@ Options:
       --tls-key <file>    ...and this private key (PEM)
       --self-signed       Serve HTTPS with a generated self-signed certificate
       --trust-proxy       Trust X-Forwarded-* headers (behind Caddy/nginx)
+      --allowed-host <n>  Another name the office is reached at (repeatable; env
+                          AGENT_OFFICE_ALLOWED_HOSTS, comma separated). It answers
+                          to IP addresses, localhost, this machine's name and the
+                          public host already; ".example.com" allows every name under it
       --turn <url>        Add a TURN server for voice (repeatable), e.g.
                           turn:user:pass@turn.example.com:3478
       --budget <usd>      Daily budget for tracked Claude Code spend (env
@@ -209,6 +216,7 @@ export function loadConfig(argv: string[]): Config {
   let tlsKey = '';
   let selfSigned = false;
   let trustProxy = false;
+  const allowedHosts = parseAllowedHosts(process.env.AGENT_OFFICE_ALLOWED_HOSTS);
   let claimToken = process.env.AGENT_OFFICE_CLAIM_TOKEN || '';
   let resetPassword = false;
   let budget = process.env.AGENT_OFFICE_BUDGET || '';
@@ -257,6 +265,9 @@ export function loadConfig(argv: string[]): Config {
         break;
       case '--trust-proxy':
         trustProxy = true;
+        break;
+      case '--allowed-host':
+        allowedHosts.push(...parseAllowedHosts(takeValue(argv, i++, a)));
         break;
       case '--claim-token':
         claimToken = takeValue(argv, i++, a);
@@ -422,6 +433,7 @@ export function loadConfig(argv: string[]): Config {
     dshProfile: dshProfile.trim() || 'acp',
     tls,
     trustProxy,
+    allowedHosts,
     iceServers,
     deployScript: process.env.AGENT_OFFICE_DEPLOY_SCRIPT || undefined,
     publicHost: process.env.AGENT_OFFICE_PUBLIC_HOST || undefined,

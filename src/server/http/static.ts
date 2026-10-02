@@ -3,6 +3,7 @@ import type http from 'node:http';
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { contentSecurityPolicy } from '../csp.js';
 
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -21,6 +22,9 @@ const MIME: Record<string, string> = {
 };
 
 export function findPublicDir(): string {
+  // A bundle somewhere else: for tests, which serve a few pages of their own.
+  const given = process.env.AGENT_OFFICE_PUBLIC_DIR;
+  if (given && existsSync(path.join(given, 'index.html'))) return path.resolve(given);
   // Two folders up from here, as from server.ts before it: src/ under tsx, dist/server/ once built.
   const here = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
   const candidates = [path.resolve(here, '../../public'), path.resolve(here, '../../dist/public')];
@@ -28,7 +32,11 @@ export function findPublicDir(): string {
   throw new Error(`Client bundle not found (looked in ${candidates.join(', ')}). Run \`npm run build\`.`);
 }
 
-export function serveFile(res: http.ServerResponse, file: string, cache: boolean) {
+/**
+ * Sends one file of the bundle. `csp` is the Content-Security-Policy an HTML page goes out with
+ * (see csp.ts); a page never goes out without one.
+ */
+export function serveFile(res: http.ServerResponse, file: string, cache: boolean, csp?: string) {
   const ext = path.extname(file);
   res.writeHead(200, {
     'content-type': MIME[ext] ?? 'application/octet-stream',
@@ -36,6 +44,8 @@ export function serveFile(res: http.ServerResponse, file: string, cache: boolean
     'x-content-type-options': 'nosniff',
     'x-frame-options': 'DENY',
     'referrer-policy': 'no-referrer',
+    // The office's own pages only run the office's own scripts.
+    ...(ext === '.html' ? { 'content-security-policy': csp ?? contentSecurityPolicy() } : {}),
   });
   createReadStream(file).pipe(res);
 }

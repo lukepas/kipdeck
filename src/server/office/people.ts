@@ -13,8 +13,11 @@ export function people(ctx: Ctx): People {
     const a = ctx.accounts.get(accountId);
     return a ? { account: { name: a.name, role: a.role }, admin: a.role === 'admin' } : { admin: !accountId };
   };
-  /** Still signed in: the account wasn't revoked, and the shared password wasn't switched off. */
-  const stillIn = (c: Client) => (c.accountId ? !!ctx.accounts.get(c.accountId) : ctx.accounts.sharedPassword);
+  /**
+   * Still signed in: the account wasn't revoked or signed out, the shared password wasn't switched
+   * off, and this sign-in hasn't signed out or expired (see Auth.current).
+   */
+  const stillIn = (c: Client) => !!ctx.auth.current(c.session);
   const signOut = (c: Client) => {
     c.out = true;
     c.ws.close(SIGNED_OUT, 'Signed out');
