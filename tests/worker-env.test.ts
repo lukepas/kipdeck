@@ -19,6 +19,7 @@ const office = {
   SENTRY_ORG: 'org',
   CLAUDECODE: '1',
   AGENT_OFFICE_PASSWORD: 'office-test',
+  AGENT_OFFICE_TURN: 'turn:office:secret@turn.example.com:3478',
   Path: 'C:\\Windows',
 };
 
@@ -67,6 +68,7 @@ test('childEnv still scrubs a parent session and the office\'s own variables und
     const env = childEnv({ policy, allow: ['CLAUDECODE', 'AGENT_OFFICE_*'] }, office);
     assert.equal('CLAUDECODE' in env, false, policy);
     assert.equal('AGENT_OFFICE_PASSWORD' in env, false, policy);
+    assert.equal('AGENT_OFFICE_TURN' in env, false, policy);
   }
   // Without one it's the office's own: the allowlist, unless it was started with --inherit-env.
   assert.equal(childEnv(undefined, office).DATABASE_URL, undefined);

@@ -148,7 +148,8 @@ Options:
       --inherit-env       Pass workers the office's whole environment instead
                           (env AGENT_OFFICE_INHERIT_ENV=1)
       --turn <url>        Add a TURN server for voice (repeatable), e.g.
-                          turn:user:pass@turn.example.com:3478
+                          turn:user:pass@turn.example.com:3478 (env
+                          AGENT_OFFICE_TURN, several separated by spaces)
       --budget <usd>      Daily budget for tracked Claude Code spend (env
                           AGENT_OFFICE_BUDGET). Everyone is warned when the
                           day's spend passes it. OpenCode/Codex/Grok/Muse spend is excluded
@@ -242,6 +243,8 @@ export function loadConfig(argv: string[]): Config {
   let maxWorkers = process.env.AGENT_OFFICE_MAX_WORKERS || '';
   let webhook = process.env.AGENT_OFFICE_WEBHOOK;
   const iceServers: RTCIceServerLike[] = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
+  // A container can't take --turn (deploy/container/compose.yaml), so the TURN servers come from the environment too.
+  for (const url of (process.env.AGENT_OFFICE_TURN ?? '').split(/\s+/).filter(Boolean)) iceServers.push(parseTurn(url));
 
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
