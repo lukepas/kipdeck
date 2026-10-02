@@ -23,7 +23,6 @@ export function installCoffee(ctx: Ctx) {
   function drinkCoffee() {
     const jittery = caffeine.drink(performance.now() / 1000);
     ctx.sound.coffee();
-    if (ctx.player.view === 'first') ctx.hands.sip();
     if (jittery) toast('☕ One cup too many… you’ve got the jitters!', 'warn');
     else if (caffeine.cups > 1) toast('☕ Another cup: back to a full minute of buzz');
     else toast('☕ Fresh coffee! A minute of quicker feet and higher jumps');

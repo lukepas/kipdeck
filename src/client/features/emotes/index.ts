@@ -14,7 +14,7 @@ export function installEmotes(ctx: Ctx, deps: EmotesDeps) {
   /** The same limit the server keeps, so an emote you see yourself do is one everyone else sees too. */
   const emoteLimit = new EmoteBucket();
   let emoteWarnedAt = 0;
-  /** Plays an emote on your character and your hands, and shows it to everyone else on the floor. */
+  /** Plays an emote on your character, and shows it to everyone else on the floor. */
   function emote(id: EmoteId) {
     const now = performance.now();
     if (!emoteLimit.take(now)) {
@@ -25,7 +25,6 @@ export function installEmotes(ctx: Ctx, deps: EmotesDeps) {
       return;
     }
     ctx.me.emote(id);
-    ctx.hands.emote(id);
     if (ctx.player.view === 'first') popEmoji(id);
     ctx.net.send({ t: 'emote', emote: id });
   }

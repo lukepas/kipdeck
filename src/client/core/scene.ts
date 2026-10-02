@@ -73,7 +73,7 @@ export function createScene(canvas: HTMLCanvasElement, renderer: THREE.WebGLRend
   return { canvas, renderer, effect, scene, camera, office };
 }
 
-/** The canvas and the camera (and your hands' own camera) fit the window, and keep fitting it. */
+/** The canvas and the camera fit the window, and keep fitting it. */
 export function fitWindow(ctx: Ctx) {
   function resize() {
     const w = window.innerWidth;
@@ -81,7 +81,6 @@ export function fitWindow(ctx: Ctx) {
     ctx.renderer.setSize(w, hgt, false);
     ctx.camera.aspect = w / hgt;
     ctx.camera.updateProjectionMatrix();
-    ctx.hands.setAspect(w / hgt);
   }
   window.addEventListener('resize', resize);
   resize();

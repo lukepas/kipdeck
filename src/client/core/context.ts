@@ -15,7 +15,6 @@ import type { Hud } from '../ui/menu';
 import type { Voice } from '../voice';
 import type { Person } from '../world/character';
 import type { Confetti } from '../world/confetti';
-import type { Hands } from '../world/hands';
 import type { Interactable, Office } from '../world/types';
 import type { World } from '../world/world';
 import type { Activities, Hooks, Interactions, Keys, Messages, Ticks, Usables, View } from './registry';
@@ -70,8 +69,6 @@ export interface Ctx {
   readonly player: PlayerController;
   /** Your own character. */
   readonly me: Person;
-  /** Your hands, in first person. */
-  readonly hands: Hands;
   readonly net: Net;
   readonly voice: Voice;
   readonly sound: OfficeSound;
@@ -88,8 +85,6 @@ export interface Ctx {
 
   /** The issue card in your hands, if any. */
   carrying(): CarriedIssue | null;
-  /** Whether the basketball's in your hands. */
-  holdingBall(): boolean;
 
   readonly hint: {
     /** Asks the hint bar to draw itself again, next frame. */
@@ -116,9 +111,9 @@ export interface Ctx {
   readonly view: View<Grip>;
   /**
    * What else there is to use on the office's own map, and to aim at: the pictures on the walls, the
-   * dog, the ball (see usable and aimedAt in input/pointer.ts).
+   * dog (see usable and aimedAt in input/pointer.ts).
    */
   readonly usables: Usables<Interactable, THREE.Object3D>;
-  /** What lets go when a window opens: the shot you were winding up, the emote wheel (see input/focus.ts). */
+  /** What lets go when a window opens: the emote wheel (see input/focus.ts). */
   readonly windowOpened: Hooks;
 }

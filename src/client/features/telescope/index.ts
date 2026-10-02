@@ -59,6 +59,6 @@ export function installTelescope(ctx: Ctx, deps: TelescopeDeps): TelescopeView {
   });
   // Looking through it, the view is the telescope's (once you've moved and the camera's followed), and
   // it has the screen to itself: no hands drawn over it.
-  ctx.view.add({ update: () => telescope.update(), covers: () => telescope.active });
+  ctx.view.add({ update: () => telescope.update() });
   return telescope;
 }

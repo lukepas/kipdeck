@@ -9,7 +9,6 @@ import { bookshelf } from '../../features/bookshelf/world';
 import { cabinet } from '../../features/cabinet/world';
 import { whiteboard } from '../../features/whiteboard/world';
 import { stack } from '../stack';
-import { hoop } from '../../features/basketball/world';
 import { kitchen } from '../kitchen';
 import { signs } from '../desksigns';
 import type { Collider, DeskView, Interactable, Office, OfficeHandles } from '../types';
@@ -54,7 +53,6 @@ function floorPlan() {
     meetingRoom,
     elevator,
     gong,
-    hoop,
     whiteboard,
     clearOfStairs,
   ] as const;

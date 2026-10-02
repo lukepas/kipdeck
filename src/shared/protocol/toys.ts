@@ -1,8 +1,7 @@
-// The toys on every floor: pictures, the jukebox, the arcade, the whiteboard and the ball.
+// The toys on every floor: pictures, the jukebox, the arcade and the whiteboard.
 
 import type { CabinetFrame, CabinetState } from '../cabinet.js';
 import type { DecorPlacement, Decoration } from '../decor.js';
-import type { BallState } from '../hoop.js';
 import type { JukeboxState } from '../jukebox.js';
 import type { WbElement, WbPointer } from '../whiteboard.js';
 
@@ -43,16 +42,8 @@ export type WhiteboardClientMsg =
   /** Where your mouse is on the whiteboard, and what you have selected there. */
   | ({ t: 'wb.pointer'; selected?: string[] } & WbPointer);
 
-export type BallClientMsg =
-  /** Pick up the floor's basketball (or catch it): yours if nobody else has it. */
-  | { t: 'ball.take' }
-  /** Throw the basketball in your hands from (x, y, z) at (vx, vy, vz) m/s, or drop it; everyone on the floor sees it fly. */
-  | { t: 'ball.throw'; x: number; y: number; z: number; vx: number; vy: number; vz: number };
-
 export type ToysServerMsg =
   | { t: 'decor'; items: Decoration[] }
-  /** The basketball on your floor was picked up, thrown, or put back under the hoop. */
-  | { t: 'ball'; ball: BallState }
   | { t: 'jukebox'; state: JukeboxState }
   /** Who's at the arcade cabinet on your floor now, and the building's high scores. */
   | { t: 'cabinet'; state: CabinetState }

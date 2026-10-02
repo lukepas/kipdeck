@@ -9,13 +9,12 @@
  * OfficeSound is all the rest of the office sees. What every sound shares (the context, the buses,
  * where your ears are, what runs every frame) is AudioCore in core.ts; each sound is a recipe in a
  * file of its own, beside this one (steps.ts, typing.ts and so on) or in its feature's folder
- * (features/basketball/sound.ts and so on), and this class only hands them the core.
+ * (features/climbing/sound.ts and so on), and this class only hands them the core.
  */
 import type { GongWhy } from '../../shared/protocol';
 import { deskPhones, Fridge, startRoomTone } from './ambience';
 import { ding } from './alerts';
 import { arcade } from '../features/cabinet/sound';
-import { ball, type BallSound } from '../features/basketball/sound';
 import { bonk, hatch, poleLanding, rung, slide, twirl } from '../features/climbing/sound';
 import { coffee } from '../features/coffee/sound';
 import { AudioCore, type Listener } from './core';
@@ -139,11 +138,7 @@ export class OfficeSound {
     poleLanding(this.a, speed, at);
   }
 
-  // ---- Games (features/basketball and cabinet) -------------------------------------
-
-  ball(kind: BallSound, at: Pos, speed: number) {
-    ball(this.a, kind, at, speed);
-  }
+  // ---- Games (features/cabinet) -------------------------------------
 
   arcade(kind: 'land' | 'clear' | 'over', lines = 1) {
     arcade(this.a, kind, lines);

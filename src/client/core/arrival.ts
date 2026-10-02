@@ -24,7 +24,7 @@ import type { CoreState } from './ctx';
 import { pastTheWing } from './floors';
 import type { Parts } from './parts';
 
-export type ArrivalParts = Pick<Parts, 'worlds' | 'place' | 'travel' | 'views' | 'cards' | 'hoops' | 'focus'>;
+export type ArrivalParts = Pick<Parts, 'worlds' | 'place' | 'travel' | 'views' | 'cards' | 'focus'>;
 
 /**
  * Registers arriving's messages and the routers (see the order below), and what follows the upgrade,
@@ -96,8 +96,6 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     if (player.seat) net.send({ t: 'sit', seat: player.seat.key });
     const carrying = core.carrying;
     if (carrying) net.send({ t: 'carry', issue: carrying.issue, title: carrying.title });
-    // The office let go of the ball for you while you were away.
-    parts.hoops.ballNews(false);
     // After a reconnect the server has forgotten which terminal we had open, and what we're doing.
     parts.focus.sendDoing(true);
     const openId = openTerminalFor();
@@ -122,9 +120,6 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
       toast(`📌 #${carrying.issue} stayed behind on the other floor's board`);
       parts.cards.setCarrying(null);
     }
-    // So does the ball: it's back under that floor's hoop.
-    if (parts.hoops.holding()) toast('🏀 The ball stayed behind, back under the other floor’s hoop');
-    parts.hoops.ballNews(false);
     travel.arrive();
   });
   ctx.messages.on('signins', () => {

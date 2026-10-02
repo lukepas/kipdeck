@@ -26,10 +26,10 @@ export function installKeyGuards(ctx: Ctx, parts: Pick<Parts, 'focus'>) {
 }
 
 /**
- * Listens for keys on the window and hands each down the chain; the ball's and the emote wheel's own
- * keys and mouse button; and binds the keys that use what you're facing.
+ * Listens for keys on the window and hands each down the chain; the emote wheel's own key; and binds
+ * the keys that use what you're facing.
  */
-export function installKeyboard(ctx: Ctx, parts: Pick<Parts, 'hoops' | 'emotes' | 'pointer'>) {
+export function installKeyboard(ctx: Ctx, parts: Pick<Parts, 'emotes' | 'pointer'>) {
   const { player } = ctx;
   // Every key press goes down the chain in ctx.keys: the guards, what you're in the middle of, the
   // emotes, then the office's own keys (bound with what they do). One of those clears the walking keys.
@@ -38,12 +38,6 @@ export function installKeyboard(ctx: Ctx, parts: Pick<Parts, 'hoops' | 'emotes' 
   });
   window.addEventListener('keyup', (e) => {
     if (e.code === 'KeyG') parts.emotes.emoteWheel.release();
-    if (e.code === 'KeyE') parts.hoops.letFly();
-  });
-  window.addEventListener('blur', () => parts.hoops.stopWinding());
-  // First person with the mouse captured, the button winds up a shot like E does (see player.onClick).
-  window.addEventListener('pointerup', (e) => {
-    if (e.button === 0 && parts.hoops.winding() && player.locked) parts.hoops.letFly();
   });
 
   // Keys that use what you're facing: at a desk, each does something else (see interact).

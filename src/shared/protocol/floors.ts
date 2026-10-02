@@ -3,7 +3,6 @@
 import type { CabinetView } from '../cabinet.js';
 import type { Decoration } from '../decor.js';
 import type { FloorPlan } from '../floorplan.js';
-import type { BallState } from '../hoop.js';
 import type { JukeboxState } from '../jukebox.js';
 import type { WhiteboardView } from '../whiteboard.js';
 import type { AgentProvider } from './agents.js';
@@ -114,8 +113,6 @@ export interface FloorView {
   whiteboard: WhiteboardView;
   /** The meeting room: who's meeting about what, and the meetings before. */
   meeting: MeetingState;
-  /** The basketball by the hoop: who has it, or how it was last thrown. */
-  ball: BallState;
 }
 
 export type FloorClientMsg =

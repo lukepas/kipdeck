@@ -3,7 +3,6 @@ import { Net } from './net';
 import { DesktopNotifier } from './notify';
 import { store, loadProfile, loadSettings } from './state';
 import { PlayerController, groundAt } from './player';
-import { Hands } from './world/hands';
 import { Confetti } from './world/confetti';
 import { Voice } from './voice';
 import { $ } from './ui/dom';
@@ -27,7 +26,6 @@ import { installKeyboard, installKeyGuards } from './input/keyboard';
 import { installFocus } from './input/focus';
 import { installPointer } from './input/pointer';
 import { installArcade } from './features/arcade';
-import { installBasketball } from './features/basketball';
 import { installBoards } from './features/boards';
 import { installBookshelf } from './features/bookshelf';
 import { installCabinet } from './features/cabinet';
@@ -102,7 +100,6 @@ parts.place = installPlace(ctx, core, parts);
 // Everyone arrives by elevator (the welcome says exactly where).
 parts.place.placeInCar();
 parts.player.view = parts.settings.view;
-parts.hands = new Hands(store.profile.color, parts.me.skinColor);
 parts.you = installYou(ctx);
 parts.reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 parts.sound = makeSound(parts.settings);
@@ -130,13 +127,11 @@ parts.meeting = installMeeting(ctx, parts);
 parts.bookshelf = installBookshelf(ctx);
 
 parts.coffee = installCoffee(ctx);
-parts.hoops = installBasketball(ctx, { remotes: parts.peers.remotes, reach });
 parts.cards = installCarrying(ctx, {
   hold: (card) => void (core.carrying = card),
   boards: parts.boards,
   aimedNote: () => parts.pointer.aimedNote(),
   reach,
-  dropBall: parts.hoops.dropBall,
   hire: parts.actions.hire,
   officeIsFull: parts.actions.officeIsFull,
   showMeeting: parts.meeting.showMeeting,
@@ -209,8 +204,8 @@ void whoami().then(() => {
 });
 
 // Debug handle for quick checks from the console / headless screenshots.
-const { worlds, views, coffee, hanging, climbing, emotes, hoops } = parts;
-(window as any).__office = { world: () => worlds.world(), store, player: parts.player, caffeine: coffee.caffeine, camera: ctx.camera, arcade: parts.arcade, cabinet: parts.cabinet, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, hands: parts.hands, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, gallery: parts.gallery, hanger: hanging.hanger, office: ctx.office, ride: parts.travel.ride, switchFloor: parts.travel.switchFloor, climber: climbing.climber, elevatorPanelOpen, confetti: parts.confetti, carried: () => core.carrying, emoteWheel: emotes.emoteWheel, emote: emotes.emote, ball: hoops.ball };
+const { worlds, views, coffee, hanging, climbing, emotes } = parts;
+(window as any).__office = { world: () => worlds.world(), store, player: parts.player, caffeine: coffee.caffeine, camera: ctx.camera, arcade: parts.arcade, cabinet: parts.cabinet, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, gallery: parts.gallery, hanger: hanging.hanger, office: ctx.office, ride: parts.travel.ride, switchFloor: parts.travel.switchFloor, climber: climbing.climber, elevatorPanelOpen, confetti: parts.confetti, carried: () => core.carrying, emoteWheel: emotes.emoteWheel, emote: emotes.emote };
 (window as any).__voice = parts.voice;
 (window as any).__sound = parts.sound;
 (window as any).__notify = parts.notifier;

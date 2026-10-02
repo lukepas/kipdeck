@@ -267,7 +267,7 @@ test('welcomes a browser and dispatches what it sends', async () => {
   assert.equal(ada?.name, 'Ada');
   assert.equal(ada?.color, '#ff8a5b');
   assert.equal(ada?.floor, floor.id);
-  assert.deepEqual(Object.keys(welcome).slice(-14), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'decor', 'plan', 'services', 'ball', 'jukebox', 'whiteboard', 'meeting', 'cabinet']);
+  assert.deepEqual(Object.keys(welcome).slice(-13), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'decor', 'plan', 'services', 'jukebox', 'whiteboard', 'meeting', 'cabinet']);
 
   a.send({ t: 'ping', at: 42 });
   const pong = await a.take('pong');
@@ -355,16 +355,14 @@ test('the toys on a floor, and letting go of them on leaving the floor or the of
 
   const holdEverything = async () => {
     a.send({ t: 'wb.open' });
-    a.send({ t: 'ball.take' });
-    assert.equal((await b.take('ball')).ball.holder, cy);
     a.send({ t: 'cabinet.play' });
     assert.equal((await b.take('cabinet')).state.player?.id, cy);
     await b.drain();
   };
   await holdEverything();
-  // Out of the office: the whiteboard, the arcade and the ball, then Cy's gone.
+  // Out of the office: the whiteboard and the arcade, then Cy's gone.
   await a.close();
-  assert.deepEqual(await b.next(4), ['wb.people', 'cabinet', 'ball', 'peer.leave']);
+  assert.deepEqual(await b.next(3), ['wb.people', 'cabinet', 'peer.leave']);
   await b.close();
 });
 

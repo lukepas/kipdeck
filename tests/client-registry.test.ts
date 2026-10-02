@@ -137,7 +137,7 @@ test('a tick taken out mid-frame still runs the rest of that frame', () => {
 
 type Why = 'trip' | 'walk';
 
-function activity(id: string, log: string[], opts: { on?: boolean; stopsFor?: Why[]; key?: string; camera?: boolean } = {}) {
+function activity(id: string, log: string[], opts: { on?: boolean; stopsFor?: Why[]; key?: string } = {}) {
   const a = {
     id,
     on: opts.on ?? false,
@@ -148,7 +148,6 @@ function activity(id: string, log: string[], opts: { on?: boolean; stopsFor?: Wh
       a.on = false;
     },
     key: (e: string) => (log.push(`${id} key ${e}`), e === opts.key),
-    takesCamera: opts.camera,
   };
   return a;
 }
@@ -156,7 +155,7 @@ function activity(id: string, log: string[], opts: { on?: boolean; stopsFor?: Wh
 test('activities keep their declared order whatever order they were added in', () => {
   const log: string[] = [];
   const acts = new Activities<Why, string>(['hanger', 'climber', 'golf']);
-  const golf = activity('golf', log, { on: true, key: 'KeyE', camera: true });
+  const golf = activity('golf', log, { on: true, key: 'KeyE' });
   const extra = activity('extra', log, { on: true });
   const hanger = activity('hanger', log, { on: true, key: 'Escape' });
   acts.add(golf);
@@ -171,8 +170,6 @@ test('activities keep their declared order whatever order they were added in', (
   assert.equal(acts.busy(), true);
   assert.equal(acts.running('golf'), true);
   assert.equal(acts.running('climber'), false);
-  assert.equal(acts.any('takesCamera'), true);
-  assert.equal(acts.any('hidesHands'), false);
   // Keys go to what's going on, in order, until one takes it.
   assert.equal(acts.key('KeyE'), true);
   assert.deepEqual(log, ['hanger key KeyE', 'golf key KeyE']);
@@ -222,17 +219,6 @@ test('stop stops one activity alone, only while it is going on, and it decides w
   assert.deepEqual(log, ['driver stops for trip']);
 });
 
-test('an activity with both hands busy says so, only while it is going on', () => {
-  const acts = new Activities(['golf', 'driver']);
-  let golfing = false;
-  acts.add({ id: 'golf', active: () => golfing, stop: () => {}, bothHands: true, hidesHands: true });
-  acts.add({ id: 'driver', active: () => true, stop: () => {}, hidesHands: true });
-  assert.equal(acts.any('hidesHands'), true);
-  assert.equal(acts.any('bothHands'), false);
-  golfing = true;
-  assert.equal(acts.any('bothHands'), true);
-});
-
 test('an activity taken out is gone from the order', () => {
   const acts = new Activities(['a', 'b']);
   const off = acts.add({ id: 'a', active: () => true, stop: () => {} });
@@ -244,13 +230,12 @@ test('an activity taken out is gone from the order', () => {
   );
 });
 
-test('view effects: the first grip that holds on, the field of view through each in order, updates, cover', () => {
+test('view effects: the first grip that holds on, the field of view through each in order, updates', () => {
   const view = new View<'ladder' | 'pole'>();
   const log: string[] = [];
   let grip: 'ladder' | 'pole' | null = null;
   let narrow = false;
-  let covered = false;
-  view.add({ fov: (f) => (narrow ? 24 : f), covers: () => covered, update: () => log.push('first') });
+  view.add({ fov: (f) => (narrow ? 24 : f), update: () => log.push('first') });
   view.add({ grip: () => grip, fov: (f) => f + 0.5 * 16, update: () => log.push('second') });
   view.add({ grip: () => 'pole' });
   // The first effect holding on to something says what you hold.
@@ -263,18 +248,14 @@ test('view effects: the first grip that holds on, the field of view through each
   assert.equal(view.fov(55), 24 + 8);
   view.update();
   assert.deepEqual(log, ['first', 'second']);
-  assert.equal(view.covered(), false);
-  covered = true;
-  assert.equal(view.covered(), true);
 });
 
 test('an effect taken out stops having a say', () => {
   const view = new View();
-  const off = view.add({ fov: (f) => f * 2, covers: () => true });
+  const off = view.add({ fov: (f) => f * 2 });
   assert.equal(view.fov(10), 20);
   off();
   assert.equal(view.fov(10), 10);
-  assert.equal(view.covered(), false);
 });
 
 test('hooks run in the order they were added, and one taken out stops running', () => {

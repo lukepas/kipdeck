@@ -161,8 +161,8 @@ export class Keys<E extends KeyPress = KeyPress> {
  * - move: you move
  * - moved: what where you've got to does to you (a pole's hole)
  * - play: games and what they hold you in (the arcade)
- * - me: your character, your hands and the camera, what you hear, and telling the office where you are
- * - others: everyone and everything else that moves (people, workers, the ball)
+ * - me: your character and the camera, what you hear, and telling the office where you are
+ * - others: everyone and everything else that moves (people, workers)
  * - world: the building and what's in it (its doors and floors, particles, a picture being hung)
  * - aim: what you're pointing at, and the hint bar
  * - hud: the panels that follow what people are doing
@@ -217,16 +217,7 @@ export interface Activity<Why extends string = string, E = unknown, El = unknown
   key?(e: E): boolean;
   /** Draws the hint bar while it's active. */
   hint?(el: El): void;
-  /** The camera's its own while it's active (over your shoulder at the tee, say): no crosshair, and you're in view. */
-  readonly takesCamera?: boolean;
-  /** Your hands are busy out of sight while it's active (on the club, the wheel): none drawn in first person. */
-  readonly hidesHands?: boolean;
-  /** Both your hands are on it while it's active (the club): your character holds nothing else (the coffee mug). */
-  readonly bothHands?: boolean;
 }
-
-/** The flags an activity can have, for Activities.any. */
-export type ActivityFlag = 'takesCamera' | 'hidesHands' | 'bothHands';
 
 /**
  * What you can be in the middle of. They're kept in a declared order (the constructor's `order`, then
@@ -277,11 +268,6 @@ export class Activities<Why extends string = string, E = unknown, El = unknown> 
     return this.list.some((a) => a.active());
   }
 
-  /** Whether anything going on has `flag`. */
-  any(flag: ActivityFlag): boolean {
-    return this.list.some((a) => !!a[flag] && a.active());
-  }
-
   /** Stops everything going on (but `except`) because of `why`, in order. Each decides for itself whether `why` stops it. */
   stopAll(why: Why, except: readonly string[] = []): void {
     for (const a of this.list) if (!except.includes(a.id) && a.active()) a.stop(why);
@@ -314,8 +300,6 @@ export interface ViewEffect<G = unknown> {
   fov?(fov: number): number;
   /** Runs each frame once the view's field of view is set. */
   update?(): void;
-  /** It has the screen to itself right now (the telescope, a game up close): your hands aren't drawn over it. */
-  covers?(): boolean;
 }
 
 /** How what you're doing changes you and your view each frame (see ViewEffect). */
@@ -345,11 +329,6 @@ export class View<G = unknown> {
     for (const e of this.effects.items) e.update?.();
   }
 
-  /** Whether anything has the screen to itself. */
-  covered(): boolean {
-    for (const e of this.effects.items) if (e.covers?.()) return true;
-    return false;
-  }
 }
 
 // ---- Things you can use ---------------------------------------------------------------------------
@@ -433,7 +412,7 @@ export class Hooks {
 
 // ---- What else there is to use ----------------------------------------------------------------------
 
-/** One part of the office with things of its own to use (the pictures, the dog, the ball): `I` is one of them, `O` what the aim can land on. */
+/** One part of the office with things of its own to use (the pictures): `I` is one of them, `O` what the aim can land on. */
 export interface UsableSource<I, O> {
   /** What there is to use of it right now. */
   usable(): readonly I[];

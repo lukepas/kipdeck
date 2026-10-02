@@ -48,7 +48,7 @@ export function installLoop(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'stage
 
   /** Coffee, and the view's shake easing off. */
   function feelTheCoffee({ dt, now }: Frame) {
-    const { me, hands, reduceMotion } = ctx;
+    const { me, reduceMotion } = ctx;
     // Coffee: quicker feet, higher jumps, a mug in hand, and maybe the jitters.
     const { caffeine, buzz } = parts.coffee;
     const secs = now / 1000;
@@ -57,27 +57,24 @@ export function installLoop(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'stage
     core.thud = Math.max(0, core.thud - dt * 2.5);
     buzz.jitter = reduceMotion.matches ? 0 : Math.max(caffeine.jitter(secs), core.thud);
     const mug = caffeine.buzzed(secs);
-    // Not while both your hands are on something else (the club, at the tee).
-    me.holdMug(mug && !ctx.activities.any('bothHands'));
-    hands.holdMug(mug);
+    me.holdMug(mug);
     renderCaffeine(caffeine, secs);
   }
 
-  /** You as everyone else sees you, your hands as you see them, and the camera's view. */
+  /** You as everyone else sees you, and the camera's view. */
   function moveMe({ dt, t }: Frame) {
-    const { player, me, hands, voice, camera } = ctx;
+    const { player, me, voice, camera } = ctx;
     me.root.position.copy(player.pos);
     me.root.position.y += player.stepOffset;
     me.root.rotation.y = player.facing;
     // Holding on to the ladder or a pole (see ctx.view).
     const grip = ctx.view.grip();
     me.setGrip(grip);
-    me.update(dt, t, (player.moving && player.grounded) || (grip === 'ladder' && player.moving), !player.grounded && !grip && !ctx.activities.any('hidesHands'), player.effects.speed);
+    me.update(dt, t, (player.moving && player.grounded) || (grip === 'ladder' && player.moving), !player.grounded && !grip, player.effects.speed);
     me.setVoiceLevel(voice.inVoice ? voice.localLevel : 0);
     const firstPerson = player.view === 'first';
     // In first person you are the camera; in third, hide yourself when it's zoomed in right behind your head.
-    me.root.visible = ctx.activities.any('takesCamera') || (!firstPerson && camera.position.distanceTo(headPos.set(player.pos.x, player.pos.y + 1.3, player.pos.z)) > 1.5);
-    if (firstPerson && !ctx.activities.any('hidesHands')) hands.update(dt, t, { yaw: player.camYaw, pitch: player.lookPitch, walkPhase: player.walkPhase, walking: player.moving && player.grounded, airborne: !player.grounded, jitter: player.effects.jitter, grip });
+    me.root.visible = !firstPerson && camera.position.distanceTo(headPos.set(player.pos.x, player.pos.y + 1.3, player.pos.z)) > 1.5;
     // What you're doing widens the view (down a pole), and once it's set, may take it over (the
     // telescope) or streak its edges (down a pole): see ctx.view.
     const fov = ctx.view.fov(FOV);
@@ -132,19 +129,9 @@ export function installLoop(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'stage
     ctx.confetti.update(dt);
   }
 
-  /** The scene, then your hands on top of it. */
+  /** The scene, toon outlines and all. */
   function drawScene() {
-    const { player, hands, camera, renderer } = ctx;
-    const { effect, scene } = parts.stage;
-    const firstPerson = player.view === 'first';
-    effect.render(scene, camera);
-    // Not while something has the screen to itself (the telescope, the boss's monitor or the arcade up close), where they'd cover it.
-    if (firstPerson && !ctx.view.covered() && !ctx.activities.any('hidesHands')) {
-      // Hands go on top of everything, so they never clip into a desk you walk up to. They have
-      // lights of their own.
-      renderer.clearDepth();
-      effect.render(hands.scene, hands.camera);
-    }
+    parts.stage.effect.render(parts.stage.scene, ctx.camera);
   }
 }
 

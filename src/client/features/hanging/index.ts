@@ -21,7 +21,7 @@ export { installGallery } from './gallery';
 export interface HangingDeps {
   /** The pictures on the walls (see installGallery). */
   gallery: Gallery;
-  /** Plays the reach on your hands and your character, and shows it to everyone else. */
+  /** Plays the reach on your character, and shows it to everyone else. */
   reach(): void;
 }
 

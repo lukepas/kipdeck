@@ -38,7 +38,5 @@ export function installCabinet(ctx: Ctx, deps: CabinetDeps): Cabinet {
     },
     use: onE(() => cabinet.play()),
   });
-  // With the camera up at its screen, the game has the screen: no hands drawn over it.
-  ctx.view.add({ covers: () => cabinet.zoomed });
   return cabinet;
 }

@@ -54,9 +54,6 @@ export function createCtx(parts: Parts): { ctx: Ctx; core: CoreState } {
     get me() {
       return parts.me;
     },
-    get hands() {
-      return parts.hands;
-    },
     get net() {
       return parts.net;
     },
@@ -81,7 +78,6 @@ export function createCtx(parts: Parts): { ctx: Ctx; core: CoreState } {
     world: () => parts.worlds.world(),
     trip: () => core.trip,
     carrying: () => core.carrying,
-    holdingBall: () => parts.hoops.holding(),
     hint: {
       // Not '': that reads as "no hint shown", and a hint still up (the ladder's, say) would stay up.
       invalidate: () => void (core.hintKey = 'stale'),

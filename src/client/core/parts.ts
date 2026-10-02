@@ -13,9 +13,7 @@ import type { Settings } from '../state';
 import type { Voice } from '../voice';
 import type { Person } from '../world/character';
 import type { Confetti } from '../world/confetti';
-import type { Hands } from '../world/hands';
 import type { installArcade } from '../features/arcade';
-import type { installBasketball } from '../features/basketball';
 import type { installBoards } from '../features/boards';
 import type { installBookshelf } from '../features/bookshelf';
 import type { installCabinet } from '../features/cabinet';
@@ -60,8 +58,6 @@ export interface Parts {
   me: Person;
   settings: Settings;
   player: PlayerController;
-  /** Your hands, in first person. */
-  hands: Hands;
   /** The system asks for less motion: no shaking the view, no swaying. */
   reduceMotion: MediaQueryList;
   sound: OfficeSound;
@@ -97,7 +93,6 @@ export interface Parts {
   meeting: Made<typeof installMeeting>;
   bookshelf: Made<typeof installBookshelf>;
   coffee: Made<typeof installCoffee>;
-  hoops: Made<typeof installBasketball>;
   cards: Made<typeof installCarrying>;
   seating: Made<typeof installSeating>;
   emotes: Made<typeof installEmotes>;

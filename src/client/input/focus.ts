@@ -11,7 +11,7 @@ import { $, doingNow, modalOpen, onDoingChange, onModalChange, readingNow } from
 
 /** Listens for windows opening and closing, what they say you're doing, the mouse and keys (captured) and pointer lock. */
 export function installFocus(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'telescope' | 'walking'>) {
-  const { player, me, hands, canvas, net } = ctx;
+  const { player, me, canvas, net } = ctx;
   /** A mouse you point with (not a finger on a touch screen). */
   const finePointer = window.matchMedia('(pointer: fine)').matches;
 
@@ -56,14 +56,12 @@ export function installFocus(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'tele
     player.enabled = !open;
     player.clearKeys();
     sendDoing();
-    // Reading off the bookshelf: an open book in your hands, and your character's.
-    const reading = readingNow();
-    me.read(reading);
-    hands.read(reading);
+    // Reading off the bookshelf: an open book in your character's hands.
+    me.read(readingNow());
     // Opening something on the way over to someone is stopping there.
     if (open && !core.trip) parts.walking.stopWalkingTo();
     if (open) {
-      // What lets go when a window opens: the shot you were winding up, the emote wheel.
+      // What lets go when a window opens: the emote wheel.
       ctx.windowOpened.run();
       // A phone has no mouse to take back afterwards.
       if (finePointer) player.yieldMouse();

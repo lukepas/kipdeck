@@ -16,7 +16,7 @@ import { store } from '../state';
 import { modalOpen, toast } from '../ui/dom';
 import type { Interactable } from '../world/types';
 
-export type PointerParts = Pick<Parts, 'place' | 'you' | 'boards' | 'cards' | 'seating' | 'hoops' | 'emotes' | 'hanging' | 'telescope' | 'hintbar'>;
+export type PointerParts = Pick<Parts, 'place' | 'you' | 'boards' | 'cards' | 'seating' | 'emotes' | 'hanging' | 'telescope' | 'hintbar'>;
 
 /** Listens for the mouse over the canvas, registers the aim tick ('aim'), and takes the player's clicks. */
 export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
@@ -113,13 +113,13 @@ export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
   canvas.addEventListener('pointerleave', () => (pointer = null));
   // What you're pointing at (first person) or standing at (third), and what the hint bar says about it.
   ctx.ticks.add('aim', () => {
-    const { seating, hoops } = parts;
+    const { seating } = parts;
     const firstPerson = player.view === 'first';
     aimedNote = null;
     if (modalOpen() || parts.telescope.active || ctx.activities.busy()) target = null;
     else if (firstPerson) {
       const aim = aimedAt(CROSSHAIR);
-      target = aim?.near ? aim.it : (seating.mySeat() ?? hoops.ballAtFeet());
+      target = aim?.near ? aim.it : seating.mySeat();
       if (aim?.near) aimedNote = noteUnder(aim);
     } else {
       target = seating.mySeat() ?? pickTarget();
@@ -135,17 +135,11 @@ export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
   });
 
   player.onClick = (ndc) => {
-    const { emotes, hoops } = parts;
+    const { emotes } = parts;
     // At the tee, a click is you steadying the mouse to aim: nothing else is in reach.
     // At the dart board or the axe lane, the button throws (see Thrower).
-    if (modalOpen() || ctx.activities.any('takesCamera')) return;
+    if (modalOpen()) return;
     if (emotes.emoteWheel.isOpen) return emotes.emoteWheel.click();
-    // The ball in your hands: press to wind up, let go (or click again, with no mouse captured) to shoot.
-    if (hoops.holding()) {
-      if (hoops.winding() && !player.locked) hoops.letFly();
-      else hoops.windUp();
-      return;
-    }
     const { hanger } = parts.hanging;
     if (hanger.active) {
       reach();

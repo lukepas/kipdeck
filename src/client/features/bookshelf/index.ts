@@ -50,7 +50,6 @@ export function installBookshelf(ctx: Ctx) {
   /** You turned a page on the bookshelf: so does the book in your hands, for everyone watching it too. */
   function turnPage() {
     ctx.me.turnPage();
-    ctx.hands.turnPage();
     const now = performance.now();
     if (settings.pageTurns && now - turnedAt > 1000) ctx.sound.pageTurn();
     turnedAt = now;

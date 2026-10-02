@@ -24,10 +24,8 @@ export interface CarryingDeps {
   boards: { cardMoved(): void };
   /** The note on the issues board you're pointing at, if any (see aimedNote in input/pointer.ts). */
   aimedNote(): GhIssue | null;
-  /** Plays the reach on your hands and your character, and shows it to everyone else. */
+  /** Plays the reach on your character, and shows it to everyone else. */
   reach(): void;
-  /** Drops the ball, if it's in your hands (see features/basketball). */
-  dropBall(): void;
   /** Hires a worker at `deskId` (see hire in features/workers/actions.ts). */
   hire(deskId: string, prompt?: string, worktree?: boolean, provider?: AgentProvider, model?: string, effort?: AgentEffort, issue?: number, repos?: string[]): void;
   /** The office is at its worker limit: says so, and says yes. */
@@ -41,7 +39,6 @@ export function installCarrying(ctx: Ctx, deps: CarryingDeps) {
     if ((card?.issue ?? 0) === (ctx.carrying()?.issue ?? 0)) return;
     deps.hold(card);
     ctx.me.carry(card);
-    ctx.hands.carry(card);
     ctx.net.send({ t: 'carry', issue: card?.issue, title: card?.title });
     deps.boards.cardMoved();
     ctx.hint.invalidate();
@@ -50,7 +47,6 @@ export function installCarrying(ctx: Ctx, deps: CarryingDeps) {
   /** ✋ in an issue's window, or E at its note on the board: its card comes off the board and into your hands. */
   function pickUp(it: GhIssue) {
     closeAllModals();
-    deps.dropBall();
     const carrying = ctx.carrying();
     if (carrying?.issue === it.number) return;
     if (carrying) toast(`📌 #${carrying.issue} went back on the board`);
@@ -144,7 +140,6 @@ export function installCarrying(ctx: Ctx, deps: CarryingDeps) {
     const parts = (...mid: (HTMLElement | string)[]) => [h('span.title', {}, `🗂️ #${card.issue} in hand`), ...mid, key('Q', 'Put it back')];
     const aimedNote = deps.aimedNote();
     if (it?.kind === 'issues') return aimedNote ? { k: String(aimedNote.number), parts: parts(key('E', `Swap it for #${aimedNote.number}`)) } : { k: '', parts: parts(key('E', 'Pin it back up')) };
-    if (it?.kind === 'ball') return { k: 'ball', parts: parts(aside('🏀 hands full')) };
     if (it?.kind === 'queue') {
       const on = onQueue(card.issue);
       return { k: String(on), parts: parts(on ? aside('already on the queue') : key('E', 'Put it on the queue')) };
