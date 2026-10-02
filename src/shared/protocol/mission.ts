@@ -79,8 +79,10 @@ export interface RosterEntry {
   task?: WorkerTask;
   /** Its latest activity line, at most 80 characters. */
   activity?: string;
-  /** Its pull request, and how its checks are doing. */
-  pr?: { number: number; state: 'open' | 'merged'; checks?: GhPull['checks'] };
+  /** Its pull request: how its checks are doing, what reviewers said, and whether it conflicts. */
+  pr?: { number: number; state: 'open' | 'merged'; checks?: GhPull['checks']; review?: PullReview; conflicting?: boolean };
+  /** What it changed, once it's at rest (from the Changes service): files, lines, and commits on its branch. */
+  work?: WorkSummary;
   /** Its queue task failed to start. */
   taskFailed?: boolean;
   issue?: number;
@@ -93,6 +95,73 @@ export interface RosterEntry {
   workedMs?: number;
   workingSince?: number;
   snooze?: Snooze;
+}
+
+/** What reviewers said of a pull request: approved, changes requested, or a review still required. */
+export type PullReview = 'approved' | 'changes' | 'required';
+
+/** What a worker at rest changed against its base: files, lines added and taken out, commits ahead. */
+export interface WorkSummary {
+  files: number;
+  additions: number;
+  deletions: number;
+  ahead: number;
+}
+
+/**
+ * An open pull request on some floor that waits for a person and no worker on the roster stands for:
+ * one the office made (its branch, or a queue task's), or one somebody's review is requested on.
+ */
+export interface ReviewPull {
+  floor: string;
+  floorName: string;
+  number: number;
+  /** At most 120 characters. */
+  title: string;
+  /** Its page on GitHub (always https). */
+  url: string;
+  author: string;
+  checks: GhPull['checks'];
+  review?: PullReview;
+  conflicting?: boolean;
+  /** Made by the office: from one of its workers' branches, or a queue task's. */
+  office: boolean;
+  /** GitHub logins whose review is requested (at most 10). */
+  requested: string[];
+  additions: number;
+  deletions: number;
+  /** When it was opened (ms). */
+  createdAt: number;
+}
+
+export type ReminderKind = 'snooze-over' | 'approved-unmerged' | 'queue-paused' | 'milestone-overdue' | 'unpushed-asleep' | 'needs-input-long';
+
+/** Put aside on purpose: until a time, or until what it's about changes (its key goes away). */
+export interface ReminderSnooze {
+  until: number | 'change';
+  by: string;
+  at: number;
+}
+
+/**
+ * Something nobody has to answer right now but somebody will have to eventually, raised by the
+ * server's sweep from what the office already knows (see shared/reminders.ts).
+ */
+export interface Reminder {
+  /** Stable while it's about the same thing: its kind and what it's about ("approved-unmerged:<floor>:41"). */
+  key: string;
+  kind: ReminderKind;
+  floor: string;
+  floorName: string;
+  /** In plain words. */
+  text: string;
+  /** Since when it has been this way (ms). */
+  since: number;
+  worker?: string;
+  pr?: number;
+  goal?: string;
+  /** Snoozed or dismissed by someone; shown, but not counted. */
+  snooze?: ReminderSnooze;
 }
 
 /** A milestone change (see 'mission.milestone'). */
@@ -116,10 +185,16 @@ export type MissionClientMsg =
   /** Puts a worker aside for a while (ms since epoch), until its status changes, or no longer (null). */
   | { t: 'worker.snooze'; workerId: string; until: number | 'change' | null }
   /** Links a worker to a milestone or an issue; null takes the link off, undefined leaves it. */
-  | { t: 'worker.goal'; workerId: string; goal?: string | null; issue?: number | null };
+  | { t: 'worker.goal'; workerId: string; goal?: string | null; issue?: number | null }
+  /** You looked at what a finished worker did (from the Review tab): it's no longer waiting for review. */
+  | { t: 'worker.ack'; workerId: string }
+  /** Puts a reminder aside until a time, until it changes ('change': dismissed), or no longer (null). */
+  | { t: 'reminder.snooze'; key: string; until: number | 'change' | null };
 
 export type MissionServerMsg =
   /** Every hired worker in the building, to everyone: sent on a change, at most a few times a second. */
-  | { t: 'roster'; entries: RosterEntry[] }
+  | { t: 'roster'; entries: RosterEntry[]; reviewQueue: ReviewPull[]; viewer?: string }
+  /** The reminders open on every floor, the snoozed ones too (see Reminder); sent when they change. */
+  | { t: 'reminders'; items: Reminder[] }
   /** Your floor's mission changed. */
   | { t: 'mission'; floor: string; mission: Mission };

@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
-import type { ChangesState, FloorInfo, Mission, ProjectInfo, ServerMsg, WorkerInfo } from '../shared/protocol.js';
+import type { ChangesState, FloorInfo, GhPull, Mission, ProjectInfo, ServerMsg, TimelineEvent, WorkerInfo } from '../shared/protocol.js';
 import { isBusy } from '../shared/status.js';
 import { DESK_BY_ID } from '../shared/layout.js';
 import type { FloorDef } from './building.js';
@@ -14,6 +14,9 @@ import { TaskQueue } from './queue.js';
 import { Changes } from './changes.js';
 import { FloorPlanStore } from './floorplan.js';
 import { MissionStore } from './mission.js';
+import { Timeline, TimelineWatch } from './timeline.js';
+import { WorkLooks } from './review.js';
+import { BRANCH_PREFIX } from './worktrees.js';
 import { missionLine, missionVars } from '../shared/mission.js';
 import { Docs } from './docs.js';
 import { Whiteboard } from './whiteboard.js';
@@ -55,6 +58,10 @@ export interface FloorContext {
   workerChanged(floor: Floor, w: WorkerInfo | string): void;
   /** This floor's mission changed. */
   missionChanged(floor: Floor, mission: Mission): void;
+  /** Something went on this floor's timeline. */
+  timelineEvent(floor: Floor, event: TimelineEvent): void;
+  /** What a worker at rest changed came back different: the roster should go out again. */
+  workChanged(): void;
   /** How many people are on this floor right now. */
   people(floor: Floor): number;
   /** ⚙️ Settings: a worker whose pull request merged goes home by itself. */
@@ -115,6 +122,11 @@ export class Floor {
   readonly plan: FloorPlanStore;
   /** What the floor is for: its mission statement and milestones (see mission.ts). */
   readonly mission: MissionStore;
+  /** What happened on the floor, kept in timeline.jsonl (see timeline.ts), and what writes it. */
+  readonly timeline: Timeline;
+  readonly watch: TimelineWatch;
+  /** What each worker at rest changed, for the review inbox (see review.ts). */
+  readonly work: WorkLooks;
   /** The whiteboard everyone on the floor draws on together. */
   readonly whiteboard: Whiteboard;
   /** The meeting room, where workers work through a question together (see meetings.ts). */
@@ -149,7 +161,16 @@ export class Floor {
     this.docs = new Docs(def.dir);
     // Before the workers: the back office's desks are only there once it's built.
     this.plan = new FloorPlanStore(dataDir);
-    this.mission = new MissionStore(dataDir, (m) => ctx.missionChanged(this, m));
+    this.timeline = new Timeline(dataDir, def.id, (e) => ctx.timelineEvent(this, e));
+    this.watch = new TimelineWatch(this.timeline, {
+      goalTitle: (id) => this.mission.title(id),
+      officePull: (p) => this.officePull(p),
+    });
+    this.mission = new MissionStore(dataDir, (m) => {
+      this.watch.missionChanged(m);
+      ctx.missionChanged(this, m);
+    });
+    this.watch.missionChanged(this.mission.state());
 
     this.workers = new WorkerManager(
       def.dir,
@@ -163,6 +184,7 @@ export class Floor {
           // Still being built: the first updates come from waking the workers already at their desks.
           this.queue?.onWorker(worker);
           this.meetings?.onWorker(worker);
+          this.watch.worker(worker);
           ctx.workerChanged(this, worker);
           // Its turn ended, or whoever had its terminal open closed it: it may be free to go now.
           this.sendLandedHome();
@@ -170,6 +192,8 @@ export class Floor {
         remove: (workerId, info) => {
           // What it spent and worked stays on its milestone.
           if (info) this.mission.retire(info);
+          if (info) this.watch.gone(info);
+          this.work?.forget(workerId);
           this.changes?.forget(workerId);
           ctx.emit(this, { t: 'worker.remove', workerId });
           this.queue?.onWorkerGone(workerId);
@@ -197,7 +221,10 @@ export class Floor {
 
     this.github = new GitHub(
       def.dir,
-      (state) => ctx.emit(this, { t: 'gh.issues', state }),
+      (state) => {
+        ctx.emit(this, { t: 'gh.issues', state });
+        if (!state.loading && !state.error) this.watch.issues(state.items, this.mission.state());
+      },
       (state) => {
         ctx.emit(this, { t: 'gh.pulls', state });
         this.queue?.onPulls(state.items);
@@ -208,6 +235,7 @@ export class Floor {
           ctx.toast(this, `🎉 PR #${p.number} merged: ${p.title}`);
           this.merged(p.number);
         }
+        this.watch.pulls(state.items);
         this.sendLandedHome();
         ctx.pullsChanged(this);
       },
@@ -220,6 +248,7 @@ export class Floor {
     this.queue = new TaskQueue(dataDir, this.workers, !!this.project.branch, {
       update: (state) => {
         ctx.emit(this, { t: 'queue', state });
+        this.watch.queue(state);
         // A task's pull request may just have been linked (or merged).
         this.sendLandedHome();
       },
@@ -256,7 +285,10 @@ export class Floor {
       },
       this.project.branch ? new Worktrees(def.dir) : undefined,
       {
-        update: (state) => ctx.emit(this, { t: 'meeting', state }),
+        update: (state) => {
+          ctx.emit(this, { t: 'meeting', state });
+          this.watch.meetingRoom(state);
+        },
         toast: (text, level) => ctx.toast(this, text, level),
         hiringPaused: () => ctx.ledger.hiringPaused,
         postReview: (pr, file, owner) => {
@@ -297,6 +329,11 @@ export class Floor {
       },
     );
 
+    this.work = new WorkLooks((id) => this.changes.summary(id), (id) => this.workers.get(id), () => ctx.workChanged());
+    // What the queue and the meeting room are now: the timeline only notes what changes from here.
+    this.watch.queue(this.queue.state());
+    this.watch.meetingRoom(this.meetings.state());
+
     this.whiteboard = new Whiteboard(dataDir);
     this.ready = this.workers.start();
     void this.ready.then(workersBack, workersBack);
@@ -310,7 +347,16 @@ export class Floor {
 
   /** Pull request `n` merged (`by` someone, from the PR window): the floor hears so, once per PR. */
   merged(n: number, by?: string) {
-    if (this.merges.ring(n)) this.ctx.emit(this, { t: 'milestone', kind: 'merged', pr: n, by });
+    if (!this.merges.ring(n)) return;
+    this.ctx.emit(this, { t: 'milestone', kind: 'merged', pr: n, by });
+    this.watch.merged(n, this.github.pulls.items.find((p) => p.number === n)?.title, by);
+  }
+
+  /** Whether a pull request is the office's own: from one of its branches, a worker's, or a queue task's. */
+  officePull(p: GhPull): boolean {
+    if (p.headRefName.startsWith(BRANCH_PREFIX)) return true;
+    if (this.queue.state().tasks.some((t) => t.pr?.number === p.number)) return true;
+    return this.workers.list().some((w) => w.pr?.number === p.number || w.worktree?.branch === p.headRefName);
   }
 
   /**
@@ -408,6 +454,7 @@ export class Floor {
     this.queue.shutdown();
     this.meetings.shutdown();
     this.changes.stop();
+    this.work.stop();
     this.whiteboard.flush();
     this.workers.shutdown(keep);
   }

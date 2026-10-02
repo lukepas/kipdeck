@@ -8,6 +8,7 @@ import { messaging } from './office/messaging.js';
 import { createCore } from './office/core.js';
 import { floorHelpers, openFloors } from './office/floors.js';
 import { rosterHelpers } from './office/roster.js';
+import { reminderHelpers } from './office/reminders.js';
 import { createLateServices, createServices } from './office/services.js';
 import { people } from './office/people.js';
 import { navigation } from './office/navigation.js';
@@ -32,7 +33,7 @@ export async function startServer(cfg: Config, opts: StartOptions = {}) {
   // order the office has always started up in: the hook server already answers the workers still
   // running from the last office while the floors open.
   const ctx = {} as Ctx;
-  Object.assign(ctx, messaging(ctx), floorHelpers(ctx), rosterHelpers(ctx), people(ctx), navigation(ctx), gates(ctx));
+  Object.assign(ctx, messaging(ctx), floorHelpers(ctx), rosterHelpers(ctx), reminderHelpers(ctx), people(ctx), navigation(ctx), gates(ctx));
   Object.assign(ctx, createCore(ctx, cfg, publicDir));
   const { hookServer, hookPort } = await startHookServer(ctx);
   Object.assign(ctx, createServices(ctx));

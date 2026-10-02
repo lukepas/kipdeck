@@ -1,7 +1,7 @@
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import net from 'node:net';
 import { tmpdir } from 'node:os';
@@ -242,4 +242,34 @@ test('the routes that change files on the machine only take a POST from the offi
     const r = await call(p, { method: 'POST', headers: { cookie, origin: 'https://attacker.example' }, body: {} });
     assert.equal(r.status, 403, p);
   }
+});
+
+test('back after a while away, an account is told since when, and not while it is still here in another tab', async () => {
+  const cookie = await login(admin);
+  const welcomeOf = async () => {
+    const s = await socket({ cookie, ...own() });
+    const w = await until(s.messages, (m) => m.t === 'welcome');
+    return { s, w };
+  };
+  const first = await welcomeOf();
+  first.s.ws!.close();
+  await new Promise((r) => setTimeout(r, 200));
+  // Last seen as it left: twenty minutes ago, as far as the office can tell.
+  const file = path.join(home, '.agent-office', 'accounts.json');
+  const data = JSON.parse(readFileSync(file, 'utf8'));
+  const away = Date.now() - 20 * 60_000;
+  for (const a of data.accounts) if (a.name === admin.name) a.lastSeenAt = away;
+  writeFileSync(file, JSON.stringify(data), { mode: 0o600 });
+  const back = await welcomeOf();
+  assert.equal(back.w.awaySince, away);
+  // Opened in a second tab meanwhile: never away.
+  const tab = await welcomeOf();
+  assert.equal(tab.w.awaySince, undefined);
+  back.s.ws!.close();
+  tab.s.ws!.close();
+  // Just left and came straight back: not away either.
+  await new Promise((r) => setTimeout(r, 200));
+  const again = await welcomeOf();
+  assert.equal(again.w.awaySince, undefined);
+  again.s.ws!.close();
 });

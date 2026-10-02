@@ -4,6 +4,7 @@ import type { Session } from '../auth.js';
 import type { ClientMsg } from '../../shared/protocol.js';
 import { elevatorSpot } from '../../shared/layout.js';
 import { lookFromSeed, sanitizeLook } from '../../shared/avatar.js';
+import { AWAY_MS } from '../../shared/attention.js';
 import type { Ctx } from '../office/context.js';
 import { newClient } from '../office/client.js';
 import { COLOR_RE, spotFrom, str } from '../office/input.js';
@@ -50,6 +51,9 @@ export function onConnection(ctx: Ctx, ws: WebSocket, url: URL, session: Session
     ...(url.searchParams.get('lite') === '1' ? { lite: true } : {}),
     ...(floor ? { floor: floor.id } : {}),
   });
+  // Away for a while (and not here in another tab): the digest of what happened since opens.
+  const lastSeen = account && ![...clients.values()].some((c) => c.accountId === account.id) ? accounts.get(account.id)?.lastSeenAt : undefined;
+  const awaySince = lastSeen !== undefined && Date.now() - lastSeen >= AWAY_MS ? lastSeen : undefined;
   clients.set(id, client);
   if (account) accounts.seen(account.id);
   ws.on('pong', () => (client.isAlive = true));
@@ -73,6 +77,10 @@ export function onConnection(ctx: Ctx, ws: WebSocket, url: URL, session: Session
     prompts: prompts.state(),
     leaveOnMerge: leaveOnMerge.state(),
     roster: ctx.rosterEntries(),
+    reviewQueue: ctx.reviewQueue(),
+    ...(ctx.viewer() ? { viewer: ctx.viewer() } : {}),
+    reminders: ctx.reminders(),
+    ...(awaySince !== undefined ? { awaySince } : {}),
     ...floorView(ctx, floor),
   });
   screensOf(ctx, client, floor);
@@ -106,6 +114,8 @@ export function onConnection(ctx: Ctx, ws: WebSocket, url: URL, session: Session
     for (const f of features) f.closed?.(ctx, client);
     for (const floor of floors.values()) for (const f of features) f.closedOn?.(ctx, client, floor);
     broadcast({ t: 'peer.leave', id });
+    // Last seen as they leave, so the time away starts now and not when they came in.
+    if (account) accounts.seen(account.id);
     if (account) accountsChanged();
     floorsChanged();
   });

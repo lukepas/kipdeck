@@ -21,7 +21,7 @@ import type { Floor } from '../floor.js';
 import type { OfficePrompts } from '../prompts.js';
 import type { LeaveOnMerge } from '../leave-on-merge.js';
 import type { ChatLog } from '../history.js';
-import type { FloorInfo, Me, RosterEntry, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
+import type { FloorInfo, Me, Reminder, ReminderSnooze, ReviewPull, RosterEntry, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
 import type { Client } from './client.js';
 import type { Spot } from './input.js';
 
@@ -120,10 +120,24 @@ export interface FloorHelpers {
 export interface RosterHelpers {
   rosterEntries(): RosterEntry[];
   rosterEntryOf(workerId: string): RosterEntry | undefined;
+  /** The pull requests waiting for a person that no worker stands for (see server/review.ts). */
+  reviewQueue(): ReviewPull[];
+  /** Who the office's own gh is signed in as, once known. */
+  viewer(): string | undefined;
   /** Something a roster entry shows may have changed: tell everyone, at most a few times a second, if it did. */
   rosterChanged(): void;
   /** Drops a `rosterChanged` still waiting to go out (the office is closing). */
   cancelRosterChanged(): void;
+}
+
+/** Reminders for what nobody has answered yet (office/reminders.ts). */
+export interface ReminderHelpers {
+  /** The reminders open now, the snoozed ones too. */
+  reminders(): Reminder[];
+  /** Looks for reminders again (once a minute, and after a snooze): tells everyone when they changed, and toasts new ones. */
+  sweepReminders(): void;
+  /** Puts reminder `key` aside (null: no longer); why not, if it can't. */
+  snoozeReminder(key: string, snooze: ReminderSnooze | null): string | undefined;
 }
 
 /** Who's signed in (office/people.ts). */
@@ -174,4 +188,4 @@ export interface Gates {
   claudeFor(provider: string | undefined): SignInKind | undefined;
 }
 
-export type Ctx = Core & BuildingServices & FloorsOpen & LateServices & Messaging & FloorHelpers & RosterHelpers & People & Navigation & Gates;
+export type Ctx = Core & BuildingServices & FloorsOpen & LateServices & Messaging & FloorHelpers & RosterHelpers & ReminderHelpers & People & Navigation & Gates;

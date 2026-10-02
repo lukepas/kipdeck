@@ -105,6 +105,8 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
       ctx.floorsChanged();
       ctx.rosterChanged();
     },
+    timelineEvent: (_floor, event) => ctx.broadcast({ t: 'timeline.event', event }, undefined, true),
+    workChanged: () => ctx.rosterChanged(),
     missionChanged: (floor, mission) => {
       ctx.toFloor(floor, { t: 'mission', floor: floor.id, mission });
       ctx.floorsChanged();

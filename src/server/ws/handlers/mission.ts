@@ -1,6 +1,7 @@
-// Mission control: the floor's mission and milestones, linking workers to them, and snoozing a
-// worker so it stops asking for attention.
+// Mission control: the floor's mission and milestones, linking workers to them, snoozing a worker
+// so it stops asking for attention, marking finished work as looked at, and putting reminders aside.
 import { emptyMission, milestoneOf, missionVars } from '../../../shared/mission.js';
+import { REMINDER_KEY } from '../../../shared/reminders.js';
 import type { MilestoneOp, MissionClientMsg } from '../../../shared/protocol.js';
 import type { Floor } from '../../floor.js';
 import type { Ctx } from '../../office/context.js';
@@ -122,5 +123,18 @@ export const missionHandlers = {
     }
     if (msg.goal === undefined && msg.issue === undefined) return;
     w.floor.workers.annotate(w.wid, patch);
+  },
+  'worker.ack'(ctx, _c, msg) {
+    const w = workerOf(ctx, msg.workerId);
+    // As opening its terminal does: a finished turn, seen. A question still waits for its answer.
+    if (w && w.info.status === 'done' && !w.info.acked) w.floor.workers.annotate(w.wid, { acked: true });
+  },
+  'reminder.snooze'(ctx, c, msg) {
+    const key = str(msg.key, 128);
+    if (!REMINDER_KEY.test(key)) return;
+    const now = Date.now();
+    const until = msg.until === 'change' ? 'change' : typeof msg.until === 'number' && Number.isFinite(msg.until) && msg.until > now ? Math.min(msg.until, now + SNOOZE_MAX_MS) : null;
+    if (until === null && msg.until !== null) return ctx.warn(c, 'Snooze it until a time to come, or dismiss it');
+    ctx.warn(c, ctx.snoozeReminder(key, until === null ? null : { until, by: c.peer.name, at: now }));
   },
 } satisfies HandlerMap<MissionClientMsg>;

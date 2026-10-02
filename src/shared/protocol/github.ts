@@ -46,6 +46,10 @@ export interface GhPull {
   closes: number[];
   /** From a fork (GitHub's isCrossRepository): its code isn't the repository's (see shared/pulltrust.ts). */
   fork?: boolean;
+  /** MERGEABLE, CONFLICTING or UNKNOWN (GitHub still working it out). */
+  mergeable?: string;
+  /** Logins (and team names) whose review is requested. */
+  reviewRequests?: string[];
 }
 
 export interface GhState<T> {

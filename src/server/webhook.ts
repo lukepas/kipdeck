@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import type { NotifyState, RosterEntry, WebhookKind, WorkerInfo, WorkerStatus } from '../shared/protocol.js';
+import type { NotifyState, Reminder, RosterEntry, WebhookKind, WorkerInfo, WorkerStatus } from '../shared/protocol.js';
 import { alertDetail } from '../shared/status.js';
 import { BlockedAddressError, guardedFetch, readLimited, type GuardOptions } from './netguard.js';
 import { readStateJson, writeState } from './safefs.js';
@@ -14,7 +14,7 @@ const TIMEOUT_MS = 10_000;
 const MAX_BACKLOG = 20;
 
 type Alert = Extract<WorkerStatus, 'needs_input' | 'done'>;
-type PostKind = Alert | 'stuck' | 'test';
+type PostKind = Alert | 'stuck' | 'reminder' | 'test';
 
 interface Saved {
   url: string;
@@ -152,6 +152,11 @@ export class Webhook {
     }, this.stuckSettleMs);
     timer.unref();
     this.stuckPending.set(e.id, timer);
+  }
+
+  /** A reminder worth the channel hearing about once (see office/reminders.ts): a worker waiting on an answer for over an hour. */
+  onReminder(r: Reminder) {
+    void this.post({ kind: 'reminder', title: `⏰ Reminder from ${r.floorName}`, detail: oneLine(r.text, 300), worker: r.worker ? this.latest.get(r.worker) : undefined });
   }
 
   /** Posts a test message. Resolves to an error message if it didn't get through. */

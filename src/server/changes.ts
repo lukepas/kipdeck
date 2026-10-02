@@ -211,6 +211,12 @@ export class Changes {
     for (const key of [...this.watches.keys()]) this.drop(key);
   }
 
+  /** What a worker changed, looked at once without watching (the review inbox's diff size); undefined for no such worker. */
+  async summary(workerId: string): Promise<ChangesState | undefined> {
+    const t = this.target(workerId);
+    return t ? this.compute({ workerId }, t) : undefined;
+  }
+
   /** The diff of one changed file, as `git diff` prints it. */
   async diff(workerId: string, filePath: string, repo?: string): Promise<{ diff: string; truncated: boolean } | string> {
     const t = this.target(workerId, repo);

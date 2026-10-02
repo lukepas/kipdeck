@@ -492,7 +492,7 @@ export class GitHub {
     this.onPulls(this.pulls);
     const asked = Date.now();
     try {
-      const fields = 'number,title,state,isDraft,url,author,labels,reviewDecision,headRefName,headRefOid,baseRefName,createdAt,updatedAt,additions,deletions,statusCheckRollup,body,closingIssuesReferences,isCrossRepository';
+      const fields = 'number,title,state,isDraft,url,author,labels,reviewDecision,headRefName,headRefOid,baseRefName,createdAt,updatedAt,additions,deletions,statusCheckRollup,body,closingIssuesReferences,isCrossRepository,mergeable,reviewRequests';
       const [open, merged, closed] = await Promise.all([
         gh(['pr', 'list', '--state', 'open', '--limit', '150', '--json', fields], this.dir),
         gh(['pr', 'list', '--state', 'merged', '--limit', '30', '--json', fields], this.dir),
@@ -521,6 +521,8 @@ export class GitHub {
         body: String(p.body ?? '').slice(0, 4000),
         closes: (p.closingIssuesReferences ?? []).map((r: any) => Number(r.number)).filter((n: number) => Number.isInteger(n) && n > 0),
         ...(p.isCrossRepository ? { fork: true } : {}),
+        ...(typeof p.mergeable === 'string' ? { mergeable: p.mergeable } : {}),
+        ...(Array.isArray(p.reviewRequests) && p.reviewRequests.length ? { reviewRequests: p.reviewRequests.map((r: any) => String(r?.login ?? r?.name ?? r?.slug ?? '')).filter(Boolean).slice(0, 20) } : {}),
       }));
       const items = this.relabel('pull', fetched, asked);
       this.pulls = { items, fetchedAt: Date.now(), loading: false };

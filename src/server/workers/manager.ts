@@ -217,8 +217,8 @@ export class WorkerManager {
     return false;
   }
 
-  /** Links a worker to a milestone or an issue, or snoozes it; an undefined field there takes it off. */
-  annotate(id: string, patch: Partial<Pick<WorkerInfo, 'goal' | 'issue' | 'snooze'>>): WorkerInfo | undefined {
+  /** Links a worker to a milestone or an issue, snoozes it, or marks its finished turn seen; an undefined field there takes it off. */
+  annotate(id: string, patch: Partial<Pick<WorkerInfo, 'goal' | 'issue' | 'snooze' | 'acked'>>): WorkerInfo | undefined {
     const w = this.workers.get(id);
     if (!w) return undefined;
     Object.assign(w.info, patch);

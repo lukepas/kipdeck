@@ -1,6 +1,7 @@
 // One hired worker as the building-wide roster carries it (RosterEntry): what the attention ranking
 // needs and enough to show its row, never its prompts or its terminal.
-import type { GhPull, QueueTask, RosterEntry, WorkerInfo } from '../shared/protocol.js';
+import type { GhPull, QueueTask, RosterEntry, WorkSummary, WorkerInfo } from '../shared/protocol.js';
+import { pullReview } from '../shared/review.js';
 import { DESK_BY_ID } from '../shared/layout.js';
 import { workerPr } from '../shared/status.js';
 
@@ -11,6 +12,8 @@ export interface RosterFloor {
   pulls: GhPull[];
   tasks: QueueTask[];
   goalTitle(id: string | undefined): string | undefined;
+  /** What a worker at rest changed, once the office has looked (see server/review.ts). */
+  work?(workerId: string): WorkSummary | undefined;
 }
 
 const line = (s: string | undefined, max: number) => {
@@ -31,6 +34,8 @@ export function rosterEntry(f: RosterFloor, w: WorkerInfo): RosterEntry {
   const u = w.usage;
   const goalTitle = f.goalTitle(w.goal);
   const activity = line(w.activity, 80);
+  const review = pull && pr.state === 'open' ? pullReview(pull.reviewDecision) : undefined;
+  const work = w.kind === 'agent' ? f.work?.(w.id) : undefined;
   return {
     id: w.id,
     floor: f.id,
@@ -51,7 +56,8 @@ export function rosterEntry(f: RosterFloor, w: WorkerInfo): RosterEntry {
     tasked: !!(w.prompt || w.task || w.lastInput || w.meeting),
     ...(w.task ? { task: { name: line(w.task.name, 80) ?? '', summary: line(w.task.summary, 120) ?? '' } } : {}),
     ...(activity ? { activity } : {}),
-    ...(pr ? { pr: { number: pr.number, state: pr.state, ...(pull ? { checks: pull.checks } : {}) } } : {}),
+    ...(pr ? { pr: { number: pr.number, state: pr.state, ...(pull ? { checks: pull.checks } : {}), ...(review ? { review } : {}), ...(pr.state === 'open' && pull?.mergeable === 'CONFLICTING' ? { conflicting: true } : {}) } } : {}),
+    ...(work ? { work: { ...work } } : {}),
     ...(task?.outcome === 'failed' ? { taskFailed: true } : {}),
     ...(w.issue ? { issue: w.issue } : {}),
     ...(w.goal && goalTitle ? { goal: w.goal, goalTitle } : {}),

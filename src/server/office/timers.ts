@@ -1,8 +1,9 @@
 import type { Ctx } from './context.js';
 import { SLOW_CLIENT_BYTES } from './client.js';
 import { ROSTER_TICK_MS } from './roster.js';
+import { REMINDER_SWEEP_MS } from './reminders.js';
 
-/** The office's own clocks: terminals re-sent to viewers who fell behind, the heartbeat and the roster. Returns what stops them. */
+/** The office's own clocks: terminals re-sent to viewers who fell behind, the heartbeat, the roster and the reminders. Returns what stops them. */
 export function startTimers(ctx: Ctx): () => void {
   const { clients } = ctx;
   const resync = setInterval(() => {
@@ -34,8 +35,13 @@ export function startTimers(ctx: Ctx): () => void {
 
   // A worker goes silent, or a finished one is forgotten, without anything happening to it: look again now and then.
   const roster = setInterval(() => ctx.rosterChanged(), ROSTER_TICK_MS);
+  // Reminders come up by time passing too; the first look waits for the boards to come back from GitHub.
+  const firstSweep = setTimeout(() => ctx.sweepReminders(), 10_000);
+  const reminders = setInterval(() => ctx.sweepReminders(), REMINDER_SWEEP_MS);
 
   return () => {
+    clearTimeout(firstSweep);
+    clearInterval(reminders);
     clearInterval(roster);
     clearInterval(heartbeat);
     clearInterval(resync);

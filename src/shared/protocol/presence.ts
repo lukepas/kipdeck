@@ -2,7 +2,7 @@
 
 import type { Look } from '../avatar.js';
 import type { Me } from './accounts.js';
-import type { RosterEntry } from './mission.js';
+import type { Reminder, ReviewPull, RosterEntry } from './mission.js';
 import type { FloorInfo, FloorView, ProjectsDirState } from './floors.js';
 import type { LeaveOnMergeState, MachineState, NotifyState, PromptsState, UpgradeState } from './settings.js';
 import type { PlanLimits, UsageState } from './usage.js';
@@ -116,6 +116,13 @@ export type PresenceServerMsg =
       leaveOnMerge: LeaveOnMergeState;
       /** Every hired worker in the building, for the attention ranking (see RosterEntry). */
       roster: RosterEntry[];
+      /** Pull requests waiting for a person that no worker on the roster stands for (see ReviewPull). */
+      reviewQueue: ReviewPull[];
+      /** Who the office's own gh is signed in as, when known: whose review requests are yours on the shared password. */
+      viewer?: string;
+      reminders: Reminder[];
+      /** Your account was last seen this long ago (ms since epoch), when that's longer than AWAY_MS: the digest opens. */
+      awaySince?: number;
     } & FloorView)
   | { t: 'peer.join'; peer: PeerInfo }
   | { t: 'peer.update'; peer: PeerInfo }

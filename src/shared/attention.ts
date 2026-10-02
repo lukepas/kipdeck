@@ -10,6 +10,18 @@ export const SILENT_MS = 10 * 60_000;
 export const FORGOTTEN_MS = 30 * 60_000;
 /** Hired this long ago and still never given anything to do. */
 export const IDLE_NO_TASK_MS = 15 * 60_000;
+/** Reminders (shared/reminders.ts): a PR approved and green this long, and still not merged. */
+export const APPROVED_UNMERGED_MS = 60 * 60_000;
+/** A paused queue (no workers allowed) with tasks waiting this long. */
+export const QUEUE_PAUSED_MS = 30 * 60_000;
+/** Asleep this long with commits nobody pushed. */
+export const UNPUSHED_ASLEEP_MS = 24 * 60 * 60_000;
+/** Waiting on an answer this long: a reminder, and the team's channel hears once. */
+export const NEEDS_INPUT_LONG_MS = 60 * 60_000;
+/** A reminder still open is raised again (a toast) at most this often. */
+export const REMINDER_REPEAT_MS = 60 * 60_000;
+/** Gone this long: the "While you were away" digest opens when you're back. */
+export const AWAY_MS = 15 * 60_000;
 /** The snoozes the menus offer, besides "until it changes". */
 export const SNOOZE_CHOICES: readonly { label: string; ms: number }[] = [
   { label: '30 min', ms: 30 * 60_000 },
@@ -29,7 +41,7 @@ export const LEVEL_LABEL: Record<AttentionLevel, string> = {
 };
 
 /** The one thing to do next about a worker. */
-export type NextAction = 'answer' | 'look' | 'review' | 'open-pr' | 'fix-checks' | 'resume' | 'rebuild' | 'send-home' | 'give-task';
+export type NextAction = 'answer' | 'look' | 'review' | 'open-pr' | 'fix-checks' | 'merge' | 'hand-back' | 'resume' | 'rebuild' | 'send-home' | 'give-task';
 
 export const ACTION_LABEL: Record<NextAction, string> = {
   answer: 'Answer',
@@ -37,6 +49,8 @@ export const ACTION_LABEL: Record<NextAction, string> = {
   review: 'Review changes',
   'open-pr': 'Open PR',
   'fix-checks': 'Fix checks',
+  merge: 'Merge',
+  'hand-back': 'Hand back',
   resume: 'Resume',
   rebuild: 'Rebuild',
   'send-home': 'Send home',
@@ -94,15 +108,26 @@ export function attention(e: RosterEntry, now: number): Attention {
   }
   if (e.taskFailed) return at('stuck', 'look', waited, 'its queue task failed');
   if (e.kind === 'agent' && e.status === 'idle' && !e.tasked && now - e.createdAt >= IDLE_NO_TASK_MS) return at('stuck', 'give-task', e.createdAt, 'hired but never given a task');
-  if (e.pr?.state === 'open' && e.pr.checks === 'fail' && e.status !== 'working' && e.status !== 'starting') return at('review', 'fix-checks', waited, `PR #${e.pr.number} checks failing`);
+  const busy = e.status === 'working' || e.status === 'starting';
+  const pr = e.pr;
+  if (pr?.state === 'open' && pr.checks === 'fail' && !busy) return at('review', 'fix-checks', waited, `PR #${pr.number} checks failing`);
   if (e.status === 'done' && !e.acked) {
     const ago = now - waited;
     return at('review', 'review', waited, ago >= FORGOTTEN_MS ? `forgotten: done ${duration(ago)} ago, nobody looked` : `done ${duration(ago)} ago`);
   }
-  if (e.pr?.state === 'merged' && e.status !== 'working' && e.status !== 'starting') return at('review', 'send-home', waited, `PR #${e.pr.number} merged: it can go home`);
-  if (e.status === 'working' || e.status === 'starting') return at('working', 'look', e.workingSince ?? waited);
+  if (pr?.state === 'merged' && !busy) return at('review', 'send-home', waited, `PR #${pr.number} merged: it can go home`);
+  if (pr?.state === 'open' && !busy) {
+    if (pr.conflicting) return at('review', 'hand-back', waited, `PR #${pr.number} has merge conflicts`);
+    if (pr.review === 'changes') return at('review', 'hand-back', waited, `PR #${pr.number}: changes requested`);
+    if (pr.review === 'approved' && pr.checks !== 'pending') return at('review', 'merge', waited, `PR #${pr.number} approved: ready to merge`);
+    return at('review', 'open-pr', waited, `PR #${pr.number} waits for a review`);
+  }
+  // Commits on its branch and no pull request: the work isn't anywhere a person can review it.
+  if (!pr && !busy && e.kind === 'agent' && e.work && e.work.ahead > 0) {
+    return at('review', 'open-pr', waited, `${e.work.ahead} commit${e.work.ahead === 1 ? '' : 's'}, no PR yet`);
+  }
+  if (busy) return at('working', 'look', e.workingSince ?? waited);
   if (e.status === 'exited' || e.status === 'offline') return at('parked', 'resume', waited);
-  if (e.pr?.state === 'open') return at('parked', 'open-pr', waited);
   return at('parked', e.tasked ? 'review' : 'give-task', waited);
 }
 

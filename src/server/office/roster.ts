@@ -1,7 +1,8 @@
 import { attention } from '../../shared/attention.js';
-import type { RosterEntry } from '../../shared/protocol.js';
+import type { ReviewPull, RosterEntry } from '../../shared/protocol.js';
 import type { Floor } from '../floor.js';
 import { onRoster, rosterEntry, type RosterFloor } from '../roster.js';
+import { reviewQueue } from '../review.js';
 import type { Ctx, RosterHelpers } from './context.js';
 
 /** How often the roster is looked at again even when nothing changed: a worker goes silent by not changing. */
@@ -9,7 +10,17 @@ export const ROSTER_TICK_MS = 30_000;
 
 /** What the roster knows about a floor. */
 export function rosterFloor(f: Floor): RosterFloor {
-  return { id: f.id, name: f.def.name, pulls: f.github.pulls.items, tasks: f.queue.state().tasks, goalTitle: (id) => f.mission.title(id) };
+  return {
+    id: f.id,
+    name: f.def.name,
+    pulls: f.github.pulls.items,
+    tasks: f.queue.state().tasks,
+    goalTitle: (id) => f.mission.title(id),
+    work: (id) => {
+      const w = f.workers.get(id);
+      return w && f.work.get(w);
+    },
+  };
 }
 
 /**
@@ -40,7 +51,10 @@ export function rosterHelpers(ctx: Ctx): RosterHelpers {
       const a = attention(e, now);
       if (a.level !== 'stuck' || a.snoozed) continue;
       next.add(e.id);
-      if (stuck && !stuck.has(e.id)) ctx.webhook.onStuck(e, a.reason ?? 'stuck', () => stillStuck(e.id));
+      if (stuck && !stuck.has(e.id)) {
+        ctx.webhook.onStuck(e, a.reason ?? 'stuck', () => stillStuck(e.id));
+        ctx.floors.get(e.floor)?.watch.stuck(e, a.reason ?? 'stuck');
+      }
     }
     stuck = next;
   };
@@ -51,19 +65,48 @@ export function rosterHelpers(ctx: Ctx): RosterHelpers {
     return a && a.level === 'stuck' && !a.snoozed && !ctx.workerFloor(id)?.workers.get(id)?.viewers.length ? (a.reason ?? 'stuck') : undefined;
   };
 
+  /** The pull requests waiting for a person that no worker on the roster stands for (see review.ts). */
+  const queueOf = (entries: RosterEntry[]): ReviewPull[] =>
+    reviewQueue(
+      [...ctx.floors.values()].map((f) => ({
+        id: f.id,
+        name: f.def.name,
+        pulls: f.github.pulls.items,
+        tasks: f.queue.state().tasks,
+        branches: f.workers.list().flatMap((w) => (w.worktree ? [w.worktree.branch] : [])),
+      })),
+      entries,
+    );
+
+  /** Who the office's own gh is signed in as: asked once, the first time the roster goes out. */
+  let viewer: string | undefined;
+  let askedViewer = false;
+  const askViewer = () => {
+    if (askedViewer) return;
+    askedViewer = true;
+    const f = ctx.floors.values().next().value as Floor | undefined;
+    void f?.github.viewer().then((login) => {
+      if (!login) return;
+      viewer = login;
+      rosterChanged();
+    });
+  };
+
   let sent = '';
   let timer: NodeJS.Timeout | undefined;
   const flush = () => {
     timer = undefined;
+    askViewer();
     const entries = rosterEntries();
     noticeStuck(entries, Date.now());
-    const json = JSON.stringify(entries);
+    const review = queueOf(entries);
+    const json = JSON.stringify([entries, review, viewer]);
     if (json === sent) return;
     sent = json;
-    ctx.broadcast({ t: 'roster', entries });
+    ctx.broadcast({ t: 'roster', entries, reviewQueue: review, ...(viewer ? { viewer } : {}) });
   };
   const rosterChanged = () => {
     timer ??= setTimeout(flush, 250);
   };
-  return { rosterEntries, rosterEntryOf: entryOf, rosterChanged, cancelRosterChanged: () => clearTimeout(timer) };
+  return { rosterEntries, rosterEntryOf: entryOf, reviewQueue: () => queueOf(rosterEntries()), viewer: () => viewer, rosterChanged, cancelRosterChanged: () => clearTimeout(timer) };
 }

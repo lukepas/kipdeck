@@ -1,7 +1,8 @@
 import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import type { MilestoneOp, Mission, MissionMilestone, WorkerInfo } from '../shared/protocol.js';
+import type { MilestoneOp, Mission, MissionMilestone, ReminderSnooze, WorkerInfo } from '../shared/protocol.js';
+import { REMINDER_KEY } from '../shared/reminders.js';
 import { MISSION_LIMITS, cleanDue, cleanIssues, cleanMission, cleanText, emptyMission, findMilestone, goalFor, milestoneOf, zeroTotals } from '../shared/mission.js';
 import { workedMs } from './workers/clock.js';
 import { readStateJson, writeState } from './safefs.js';
@@ -15,6 +16,8 @@ import { readStateJson, writeState } from './safefs.js';
 export class MissionStore {
   private mission: Mission;
   private file: string;
+  /** Reminders someone put aside, by key (see shared/reminders.ts): kept here, never sent with the mission. */
+  private dismissed = new Map<string, ReminderSnooze>();
 
   constructor(
     dataDir: string,
@@ -135,6 +138,35 @@ export class MissionStore {
     this.onChange(this.state());
   }
 
+  /** How reminder `key` was put aside, if it was. */
+  reminderSnooze(key: string): ReminderSnooze | undefined {
+    return this.dismissed.get(key);
+  }
+
+  /** Puts a reminder aside (null: no longer). */
+  snoozeReminder(key: string, snooze: ReminderSnooze | null) {
+    if (snooze) {
+      this.dismissed.delete(key);
+      this.dismissed.set(key, { until: snooze.until, by: cleanText(snooze.by, 64) || '?', at: snooze.at });
+      while (this.dismissed.size > REMINDERS_KEPT) this.dismissed.delete(this.dismissed.keys().next().value!);
+    } else if (!this.dismissed.delete(key)) return;
+    this.save();
+  }
+
+  /**
+   * Forgets what no longer matters: snoozes that ran out, and dismissals ("until it changes") of
+   * reminders that aren't open any more (`live`), since what they were about has changed.
+   */
+  pruneReminders(live: ReadonlySet<string>, now: number) {
+    let changed = false;
+    for (const [key, s] of this.dismissed) {
+      if (s.until === 'change' ? live.has(key) : s.until > now) continue;
+      this.dismissed.delete(key);
+      changed = true;
+    }
+    if (changed) this.save();
+  }
+
   private changed(by: string): undefined {
     this.mission.by = cleanText(by, 64) || '?';
     this.mission.at = Date.now();
@@ -146,7 +178,9 @@ export class MissionStore {
   private load(): Mission {
     if (!existsSync(this.file)) return emptyMission();
     try {
-      return cleanMission(readStateJson(this.file));
+      const raw = readStateJson(this.file);
+      this.dismissed = cleanDismissals(raw?.reminders);
+      return cleanMission(raw);
     } catch {
       // a broken file just means no mission yet
       return emptyMission();
@@ -155,9 +189,27 @@ export class MissionStore {
 
   private save() {
     try {
-      writeState(this.file, JSON.stringify(this.mission, null, 2));
+      const reminders = this.dismissed.size ? { reminders: Object.fromEntries(this.dismissed) } : {};
+      writeState(this.file, JSON.stringify({ ...this.mission, ...reminders }, null, 2));
     } catch {
       // disk issues shouldn't take the office down
     }
   }
+}
+
+/** The most reminder dismissals a floor keeps; the oldest go first. */
+const REMINDERS_KEPT = 200;
+
+/** Reminder dismissals as read back from disk: anything that doesn't fit is dropped. */
+function cleanDismissals(raw: unknown): Map<string, ReminderSnooze> {
+  const out = new Map<string, ReminderSnooze>();
+  if (!raw || typeof raw !== 'object') return out;
+  for (const [key, v] of Object.entries(raw as Record<string, unknown>)) {
+    const s = (v ?? {}) as Record<string, unknown>;
+    const until = s.until === 'change' ? 'change' : typeof s.until === 'number' && Number.isFinite(s.until) ? s.until : undefined;
+    if (!REMINDER_KEY.test(key) || until === undefined) continue;
+    out.set(key, { until, by: cleanText(s.by, 64) || '?', at: typeof s.at === 'number' && Number.isFinite(s.at) ? s.at : 0 });
+    if (out.size === REMINDERS_KEPT) break;
+  }
+  return out;
 }

@@ -1,0 +1,273 @@
+// The activity timeline: notable things that happened on a floor, kept in the floor's
+// .agent-office/timeline.jsonl (a line per event, capped, as the chat is in history.ts). The events
+// are written here from state changes only (TimelineWatch), never from what a browser sent.
+import path from 'node:path';
+import type { GhIssue, GhPull, MeetingState, Mission, QueueState, RosterEntry, TaskStatus, TimelineEvent, TimelineKind, WorkerInfo, WorkerStatus } from '../shared/protocol.js';
+import { TIMELINE_TEXT } from '../shared/protocol.js';
+import { cleanText } from '../shared/mission.js';
+import { duration } from '../shared/attention.js';
+import { appendState, readState, writeState } from './safefs.js';
+import { workedMs } from './workers/clock.js';
+import { onRoster } from './roster.js';
+
+/** How many events a floor keeps, across restarts. */
+export const TIMELINE_KEEP = 2000;
+
+const KINDS = new Set<TimelineKind>(['hired', 'needs-input', 'done', 'stuck', 'resumed', 'sent-home', 'pr-opened', 'pr-merged', 'pr-closed', 'task-started', 'task-done', 'task-failed', 'meeting-started', 'meeting-ended', 'mission', 'milestone', 'milestone-done', 'progress']);
+
+/** What a new event says; the timeline stamps the rest. */
+export type NewEvent = Omit<TimelineEvent, 'id' | 'at' | 'floor'> & { at?: number };
+
+const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : undefined);
+const int = (v: unknown) => (Number.isSafeInteger(v) && (v as number) > 0 ? (v as number) : undefined);
+
+/** An event as read back from disk, or undefined when it doesn't hold together. */
+function cleanEvent(raw: unknown, floor: string): TimelineEvent | undefined {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  const at = num(r.at);
+  const text = cleanText(r.text, TIMELINE_TEXT);
+  if (at === undefined || !KINDS.has(r.kind as TimelineKind) || typeof r.id !== 'string' || !/^[a-z0-9-]{1,32}$/.test(r.id) || !text) return undefined;
+  return made({ ...(r as unknown as NewEvent), at }, floor, r.id);
+}
+
+/** An event with everything in it cleaned and capped: the office's own words, at most TIMELINE_TEXT long. */
+function made(e: NewEvent & { at: number }, floor: string, id: string): TimelineEvent {
+  const s = (v: unknown, max: number) => (typeof v === 'string' ? cleanText(v, max) || undefined : undefined);
+  const out: TimelineEvent = { id, at: e.at, kind: e.kind, floor, text: cleanText(e.text, TIMELINE_TEXT) };
+  const worker = s(e.worker, 32);
+  const name = s(e.name, 120);
+  const goal = s(e.goal, 16);
+  if (worker) out.worker = worker;
+  if (name) out.name = name;
+  if (goal) out.goal = goal;
+  for (const k of ['issue', 'pr'] as const) if (int(e[k])) out[k] = e[k];
+  for (const k of ['from', 'to', 'of', 'usd', 'workedMs'] as const) if (num(e[k]) !== undefined) out[k] = e[k];
+  return out;
+}
+
+/** One floor's timeline: newest last in memory, a line per event on disk. */
+export class Timeline {
+  private events: TimelineEvent[] = [];
+  private file: string;
+  /** Lines in the file. It only grows between rewrites, which trim it back to TIMELINE_KEEP. */
+  private fileLines = 0;
+  private seq = 0;
+
+  constructor(
+    dataDir: string,
+    readonly floor: string,
+    private onEvent: (e: TimelineEvent) => void = () => {},
+  ) {
+    this.file = path.join(dataDir, 'timeline.jsonl');
+    this.load();
+  }
+
+  add(e: NewEvent): TimelineEvent | undefined {
+    const at = e.at ?? Date.now();
+    const event = made({ ...e, at }, this.floor, `${at.toString(36)}-${(this.seq++).toString(36)}`);
+    if (!event.text) return undefined;
+    this.events.push(event);
+    if (this.events.length > TIMELINE_KEEP) this.events.splice(0, this.events.length - TIMELINE_KEEP);
+    if (this.fileLines >= TIMELINE_KEEP * 2) this.rewrite();
+    else {
+      try {
+        appendState(this.file, `${JSON.stringify(event)}\n`);
+        this.fileLines++;
+      } catch {
+        // disk issues shouldn't take the office down
+      }
+    }
+    this.onEvent(event);
+    return event;
+  }
+
+  /** Events newest first: only after `since` or before `before`, at most `limit`, and whether there are more. */
+  list(opts: { since?: number; before?: number; limit: number }): { events: TimelineEvent[]; more: boolean } {
+    const out: TimelineEvent[] = [];
+    for (let i = this.events.length - 1; i >= 0; i--) {
+      const e = this.events[i];
+      if (opts.before !== undefined && e.at >= opts.before) continue;
+      if (opts.since !== undefined && e.at <= opts.since) break;
+      if (out.length === opts.limit) return { events: out, more: true };
+      out.push(e);
+    }
+    return { events: out, more: false };
+  }
+
+  private load() {
+    const text = readState(this.file);
+    if (text === undefined) return;
+    const raw = text.split('\n').filter(Boolean);
+    for (const line of raw) {
+      try {
+        const e = cleanEvent(JSON.parse(line), this.floor);
+        if (e) this.events.push(e);
+      } catch {
+        // a torn last line (the office died mid-write) is skipped
+      }
+    }
+    this.events.sort((a, b) => a.at - b.at);
+    this.fileLines = raw.length;
+    if (this.events.length > TIMELINE_KEEP || this.events.length !== raw.length) {
+      this.events = this.events.slice(-TIMELINE_KEEP);
+      this.rewrite();
+    }
+  }
+
+  private rewrite() {
+    try {
+      writeState(this.file, this.events.map((e) => `${JSON.stringify(e)}\n`).join(''));
+      this.fileLines = this.events.length;
+    } catch {
+      // disk issues shouldn't take the office down
+    }
+  }
+}
+
+const money = (usd: number | undefined) => (usd ? (usd < 0.01 ? 'under $0.01' : `$${usd.toFixed(2)}`) : '');
+
+/** What the watch needs from the floor. */
+export interface WatchFloor {
+  goalTitle(id: string | undefined): string | undefined;
+  /** Whether a pull request is the office's own (a worker's, or a queue task's): only those get "opened" and "closed". */
+  officePull(p: GhPull): boolean;
+}
+
+/**
+ * Turns a floor's state changes into timeline events: each feeds it what it already passes on
+ * (a worker's update, a fresh list of pull requests, the queue...), and it says what changed.
+ * The first look at anything only takes note, so a restart writes nothing.
+ */
+export class TimelineWatch {
+  private status = new Map<string, WorkerStatus>();
+  private openPulls?: Map<number, GhPull>;
+  private tasks?: Map<string, TaskStatus | 'failed'>;
+  /** null: no meeting in the room; undefined: not looked at yet. */
+  private meeting?: { id: string; status: string } | null;
+  private mission?: Mission;
+  private progress = new Map<string, { closed: number; of: number }>();
+
+  constructor(
+    private t: Timeline,
+    private floor: WatchFloor,
+    /** Workers made before this are from an earlier office: not "hired" now. */
+    private since = Date.now(),
+  ) {}
+
+  private add(e: NewEvent) {
+    this.t.add(e);
+  }
+
+  private who(w: Pick<WorkerInfo, 'id' | 'name' | 'goal' | 'issue'>) {
+    return { worker: w.id, name: w.name, ...(w.goal ? { goal: w.goal } : {}), ...(w.issue ? { issue: w.issue } : {}) };
+  }
+
+  /** A worker's update. */
+  worker(w: WorkerInfo) {
+    if (!onRoster(w)) return;
+    const prev = this.status.get(w.id);
+    this.status.set(w.id, w.status);
+    if (prev === undefined) {
+      if (w.createdAt < this.since) return;
+      const goal = this.floor.goalTitle(w.goal);
+      const what = [goal && `for ${goal}`, w.issue && `on #${w.issue}`].filter(Boolean).join(' ');
+      return this.add({ kind: 'hired', ...this.who(w), text: `${w.createdBy} hired ${w.name}${what ? ` ${what}` : ''}${w.kind === 'shell' ? ' (a shell)' : ''}` });
+    }
+    if (prev === w.status || w.kind !== 'agent') return;
+    if (w.status === 'needs_input') return this.add({ kind: 'needs-input', ...this.who(w), text: `${w.name} needs input${w.activity ? `: ${w.activity}` : ''}` });
+    if (w.status === 'done') return this.add({ kind: 'done', ...this.who(w), text: `${w.name} finished${w.task?.name ? `: ${w.task.name}` : ''}` });
+    if (w.status === 'working' && (prev === 'exited' || prev === 'offline')) return this.add({ kind: 'resumed', ...this.who(w), text: `${w.name} woke up and is working again` });
+  }
+
+  /** A worker went home. */
+  gone(w: WorkerInfo) {
+    this.status.delete(w.id);
+    if (!onRoster(w)) return;
+    const worked = workedMs(w);
+    const usd = w.usage?.cost;
+    const tail = [worked && `${duration(worked)} on task`, money(usd)].filter(Boolean).join(', ');
+    this.add({ kind: 'sent-home', ...this.who(w), ...(usd ? { usd } : {}), ...(worked ? { workedMs: worked } : {}), text: `${w.name} went home${tail ? ` after ${tail}` : ''}` });
+  }
+
+  /** The roster saw a worker get stuck. */
+  stuck(e: RosterEntry, reason: string) {
+    this.add({ kind: 'stuck', worker: e.id, name: e.name, ...(e.goal ? { goal: e.goal } : {}), ...(e.issue ? { issue: e.issue } : {}), text: `${e.name} got stuck: ${reason}` });
+  }
+
+  /** Pull request `p` merged (from the PR window `by` someone, or seen on GitHub). */
+  merged(n: number, title: string | undefined, by?: string) {
+    this.add({ kind: 'pr-merged', pr: n, text: `${by ? `${by} merged` : 'Merged'} PR #${n}${title ? `: ${title}` : ''}` });
+  }
+
+  /** A fresh list of pull requests: the office's own that opened, or closed without merging. */
+  pulls(items: readonly GhPull[]) {
+    const open = new Map(items.filter((p) => p.state === 'OPEN').map((p) => [p.number, p]));
+    const before = this.openPulls;
+    this.openPulls = open;
+    if (!before) return;
+    for (const p of open.values()) if (!before.has(p.number) && this.floor.officePull(p)) this.add({ kind: 'pr-opened', pr: p.number, text: `PR #${p.number} opened: ${p.title}` });
+    for (const p of items) if (p.state === 'CLOSED' && before.has(p.number) && this.floor.officePull(p)) this.add({ kind: 'pr-closed', pr: p.number, text: `PR #${p.number} closed without merging: ${p.title}` });
+  }
+
+  /** The queue's state: tasks that started, finished or failed. */
+  queue(state: QueueState) {
+    const next = new Map(state.tasks.map((t) => [t.id, t.outcome === 'failed' ? ('failed' as const) : t.status]));
+    const before = this.tasks;
+    this.tasks = next;
+    if (!before) return;
+    for (const t of state.tasks) {
+      const was = before.get(t.id);
+      const now = next.get(t.id);
+      if (was === now) continue;
+      const base = { ...(t.workerId ? { worker: t.workerId } : {}), ...(t.workerName ? { name: t.workerName } : {}), ...(t.goal ? { goal: t.goal } : {}), ...(t.issue ? { issue: t.issue } : {}) };
+      if (now === 'running') this.add({ kind: 'task-started', ...base, text: `${t.workerName ?? 'A worker'} started the queue task ${t.title}` });
+      else if (now === 'failed') this.add({ kind: 'task-failed', ...base, text: `The queue task ${t.title} failed${t.error ? `: ${t.error}` : ''}` });
+      else if (now === 'done' && was === 'running') this.add({ kind: 'task-done', ...base, text: `The queue task ${t.title} ended (${t.outcome ?? 'done'})` });
+    }
+  }
+
+  /** The meeting room's state. */
+  meetingRoom(state: MeetingState) {
+    const m = state.current;
+    const before = this.meeting;
+    this.meeting = m ? { id: m.id, status: m.status } : null;
+    if (before === undefined || !m) return;
+    if (m.status === 'running' && before?.id !== m.id) this.add({ kind: 'meeting-started', ...(m.issue ? { issue: m.issue } : {}), ...(m.pr ? { pr: m.pr } : {}), text: `${m.calledBy} called a meeting: ${m.title}` });
+    else if (m.status !== 'running' && before?.id === m.id && before.status === 'running') this.add({ kind: 'meeting-ended', ...(m.pr ? { pr: m.pr } : {}), text: `The meeting ${m.title} ${m.status === 'done' ? `ended, its output in ${m.output}` : `stopped${m.reason ? `: ${m.reason}` : ''}`}` });
+  }
+
+  /** The floor's mission changed. */
+  missionChanged(m: Mission) {
+    const before = this.mission;
+    this.mission = structuredClone(m);
+    if (!before) return;
+    const by = m.by ?? 'Someone';
+    if (before.statement !== m.statement) this.add({ kind: 'mission', text: m.statement ? `${by} changed the mission: ${m.statement}` : `${by} cleared the mission` });
+    const was = new Map(before.milestones.map((x) => [x.id, x]));
+    for (const x of m.milestones) {
+      const old = was.get(x.id);
+      if (!old) this.add({ kind: 'milestone', goal: x.id, name: x.title, text: `${by} added the milestone ${x.title}` });
+      else if (!old.done && x.done) this.add({ kind: 'milestone-done', goal: x.id, name: x.title, text: `${x.title} is done` });
+      else if (old.title !== x.title) this.add({ kind: 'milestone', goal: x.id, name: x.title, text: `${by} renamed ${old.title} to ${x.title}` });
+    }
+    const now = new Set(m.milestones.map((x) => x.id));
+    for (const x of before.milestones) if (!now.has(x.id)) this.add({ kind: 'milestone', name: x.title, text: `${by} removed the milestone ${x.title}` });
+    const active = m.milestones.find((x) => x.id === m.active);
+    if (before.active !== m.active && active && was.has(active.id)) this.add({ kind: 'milestone', goal: active.id, name: active.title, text: `${by} made ${active.title} the milestone the team is on` });
+  }
+
+  /** A fresh list of issues: each milestone's issues closed, when that moved (and the list it covers didn't). */
+  issues(items: readonly GhIssue[], m: Mission) {
+    const state = new Map(items.map((i) => [i.number, i.state]));
+    for (const x of m.milestones) {
+      if (!x.issues.length) continue;
+      const known = x.issues.filter((n) => state.has(n));
+      const closed = known.filter((n) => state.get(n) === 'CLOSED').length;
+      const of = x.issues.length;
+      const before = this.progress.get(x.id);
+      this.progress.set(x.id, { closed, of });
+      if (!before || before.of !== of || before.closed === closed) continue;
+      this.add({ kind: 'progress', goal: x.id, name: x.title, from: before.closed, to: closed, of, text: `${x.title}: ${closed} of ${of} issues closed` });
+    }
+  }
+}

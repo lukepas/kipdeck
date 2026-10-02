@@ -440,6 +440,49 @@ test('mission control: the mission, its milestones, and the roster with snoozes 
   await a.close();
 });
 
+test('mission control: the timeline, the review queue and reminders', async () => {
+  const floor = office.floors()[0];
+  const a = await Browser.open('?name=Ed');
+  const welcome = await a.take('welcome');
+  assert.deepEqual([welcome.reviewQueue, welcome.reminders, welcome.awaySince], [[], [], undefined], 'on the shared password the browser keeps track of when you were here');
+
+  // Hiring goes on the timeline, building-wide, in the office's own words.
+  a.send({ t: 'worker.spawn', deskId: 'desk-3', kind: 'shell' });
+  const hired = (await a.take('timeline.event', (m) => m.event.kind === 'hired')).event;
+  assert.equal(hired.floor, floor.id);
+  assert.match(hired.text, /^Ed hired .+ \(a shell\)$/);
+  const id = hired.worker!;
+  a.send({ t: 'timeline.get' });
+  const page = await a.take('timeline', (m) => m.since === undefined);
+  assert.equal(page.events[0].id, hired.id);
+  assert.equal(page.more, false);
+  a.send({ t: 'timeline.get', floor: floor.id, since: hired.at });
+  assert.deepEqual((await a.take('timeline', (m) => m.since === hired.at)).events, [], 'only what came after');
+  a.send({ t: 'timeline.get', floor: 'nope' });
+  assert.deepEqual((await a.take('timeline', (m) => m.floor === 'nope')).events, []);
+  // Kept in the floor's own state folder, readable only by the office.
+  const file = path.join(floor.dir, '.agent-office', 'timeline.jsonl');
+  assert.equal(statSync(file).mode & 0o777, 0o600);
+  assert.ok(readFileSync(file, 'utf8').includes(hired.id));
+
+  // Marking a worker seen does nothing to one that isn't done; a reminder that isn't open can't be put aside.
+  a.send({ t: 'worker.ack', workerId: id });
+  a.send({ t: 'worker.ack', workerId: 'nope' });
+  a.send({ t: 'reminder.snooze', key: 'queue-paused:nope', until: 'change' });
+  assert.equal((await a.take('toast', (m) => m.level === 'warn')).text, 'That reminder is gone');
+  a.send({ t: 'reminder.snooze', key: '<script>', until: 'change' });
+  a.send({ t: 'reminder.snooze', key: 'queue-paused:nope', until: 5 });
+  assert.match((await a.take('toast', (m) => m.level === 'warn')).text, /^Snooze it until a time to come/);
+
+  a.send({ t: 'worker.kill', workerId: id, cleanup: 'keep' });
+  const home = (await a.take('timeline.event', (m) => m.event.kind === 'sent-home')).event;
+  assert.equal(home.worker, id);
+  a.send({ t: 'ping', at: 45 });
+  await a.take('pong');
+  assert.deepEqual(a.pending('toast').filter((m) => m.t === 'toast' && m.level !== 'info'), [], 'no other warnings');
+  await a.close();
+});
+
 test('settings, accounts, sign-ins and the boards answer as before', async () => {
   const a = await Browser.open('?name=Eve');
   await a.take('welcome');
