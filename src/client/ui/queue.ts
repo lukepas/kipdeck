@@ -7,6 +7,7 @@ import { confirmDialog } from './prompt';
 import { goalPicker } from './mission/goalpick';
 import { providerPicker, providerLabel, providerUsageState, providerWaitingLabel, resolvedProvider, modelBadge } from './provider';
 import { officeFull } from '../../shared/machine';
+import { dictateField } from './dictate';
 
 export interface QueueActions {
   openTerminal(workerId: string): void;
@@ -56,7 +57,7 @@ export function openQueue(net: Net, actions: QueueActions) {
   const provider = providerPicker(store.project, 'queue-provider');
   const goal = goalPicker();
   const addBtn = h('button.btn.primary', { type: 'submit' }, 'Add to queue');
-  const form = h('form.queue-add', {}, ta, provider.element, goal.element, addBtn) as HTMLFormElement;
+  const form = h('form.queue-add', {}, dictateField(ta), provider.element, goal.element, addBtn) as HTMLFormElement;
   form.noValidate = true;
   const submit = () => {
     const text = ta.value.trim();

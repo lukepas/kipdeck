@@ -30,6 +30,7 @@ import { installBookshelf } from './features/bookshelf';
 import { installCarrying } from './features/carrying';
 import { installChat } from './features/chat';
 import { installLanded } from './features/landed';
+import { installDictation } from './features/dictation';
 import { installHud } from './features/hud';
 import { installMeeting } from './features/meeting';
 import { installMission } from './features/mission';
@@ -126,6 +127,7 @@ parts.focus = installFocus(ctx, core, parts);
 parts.pointer = installPointer(ctx, core, parts);
 installChat(ctx);
 parts.talk = installVoice(ctx, { tv: parts.tv });
+installDictation(ctx);
 parts.hud = installHud(ctx, parts);
 
 // ---- Main loop ---------------------------------------------------------------------------------------

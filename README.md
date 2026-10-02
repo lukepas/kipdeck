@@ -35,6 +35,7 @@ curl -fsSL https://raw.githubusercontent.com/AgentSystemLabs/agent-office/main/i
 - **A floor per project.** Open **Floors**, pick one of your GitHub repos, and the office clones it (showing how far along it is) and opens a floor for it. Every worker, board and queue on that floor works in that checkout.
 - **Workers at desks.** Walk up to an empty desk, press **E**, and pick Claude Code, Codex, OpenCode, Grok, Muse, DeepSeek Harness or Pi. The agent's live terminal shows on its laptop, and anyone can open it and type.
 - **Mission control.** Press **I** for what needs a person right now, on every floor: each worker ranked (needs you, stuck, to review), with why in plain words (*working but silent for 12 min*, *done 40 min ago, nobody looked*) and one button for the next step. Each floor has a mission and milestones, shown under its name and given to new workers as context, and every worker is linked to a goal or an issue, with progress and spend per goal. A Review inbox holds everything waiting for a person's decision (finished work, pull requests to merge or hand back, reviews requested of you), a Timeline says what happened on every floor, reminders catch what would otherwise be forgotten, and coming back after a while you get a short *While you were away*. See [docs/mission-control.md](docs/mission-control.md).
+- **Talk instead of typing.** Hold **Ctrl+Space** (or the **🎤**) in a worker's terminal or a prompt box and say what you want: it's typed in for you to send. Your browser does the listening, so there's nothing to install.
 - **You can see who needs you.** A worker that needs input, has finished or gets stuck dings, the attention chip on the top bar counts them across every floor, and a desktop notification finds you in another tab. Press **N** to go straight to the one that has waited longest, then on to the next floor's.
 - **Milestones you don't miss.** A merged pull request or a finished task queue is a toast, a ding and a desktop notification for everyone on the floor.
 - **From your phone, too.** `/lite` is the office in 2D: every worker (on your floor or all of them) ranked by what needs you and why, Mission control, its terminal with the keys a phone keyboard lacks, and the boards. The 3D office offers it on a phone or a slow computer.
@@ -332,6 +333,7 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 | T / Enter | Chat |
 | V | Join voice; then hold V to talk |
 | M | Mute / unmute in voice |
+| Ctrl + Space | Dictate into a terminal or a prompt box: hold it and talk (or hold the **🎤**) |
 | Tab | The ☰ menu: every window |
 | Esc | Close any window |
 | Ctrl + [ | Send Esc to a terminal, to close a menu like Claude's `/skills` or interrupt Claude (or **⎋ Esc** in its header) |
