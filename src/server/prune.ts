@@ -1,8 +1,9 @@
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, lstatSync, readdirSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { WORKSPACE_FILES, WORKTREES_DIR, Worktrees, describeWork, gitError } from './worktrees.js';
+import { readStateJson, realWithin, stateDirProblem, within } from './safefs.js';
 
 const HELP = `agent-office prune — remove leftover worker worktrees and branches
 
@@ -32,7 +33,8 @@ interface SavedWorker {
 /** The workers an office keeps in a project's .agent-office/workers.json; none when it has no office there. */
 function savedWorkers(dir: string): SavedWorker[] {
   try {
-    const saved = JSON.parse(readFileSync(path.join(dir, '.agent-office', 'workers.json'), 'utf8'));
+    // Not one the repository ships (see safefs.ts): its worktree paths are only used to keep folders here.
+    const saved = readStateJson(path.join(dir, '.agent-office', 'workers.json'));
     return Array.isArray(saved) ? saved : [];
   } catch {
     return [];
@@ -52,7 +54,7 @@ function workspaceLeft(abs: string): 'empty' | string[] | undefined {
   }
   const trees = names.filter((n) => existsSync(path.join(abs, n, '.git')));
   if (trees.length) return trees;
-  return names.every((n) => WORKSPACE_FILES.has(n) && statSync(path.join(abs, n)).isFile()) ? 'empty' : undefined;
+  return names.every((n) => WORKSPACE_FILES.has(n) && lstatSync(path.join(abs, n)).isFile()) ? 'empty' : undefined;
 }
 
 /** `agent-office prune`: exits 0 when done, 1 when the dir is not a git repo, 2 for a usage error. */
@@ -82,6 +84,16 @@ export async function prune(argv: string[]): Promise<number> {
     console.error(`agent-office prune: not a git repository: ${dir}`);
     return 1;
   }
+
+  // A symlinked .agent-office or worktrees folder would point the deletes below somewhere else entirely.
+  const unsafe = stateDirProblem(dir);
+  if (unsafe) {
+    console.error(`agent-office prune: ${unsafe} — not touching anything`);
+    return 1;
+  }
+  const home = path.join(dir, WORKTREES_DIR);
+  /** Whether deleting this folder deletes something under the worktrees folder, and nothing outside it. */
+  const deletable = (rel: string) => within(home, path.join(dir, rel)) && realWithin(home, path.join(dir, rel));
 
   // Workers the office still has, awake or asleep, keep theirs: send them home from the office instead.
   const ownerOfBranch = new Map<string, string>();
@@ -183,6 +195,10 @@ export async function prune(argv: string[]): Promise<number> {
     if (Array.isArray(left)) {
       // Worktrees of other projects: pruning those projects takes them out, with their own checks.
       keep(rel, `a workspace with worktrees of other projects in it (${left.join(', ')}) — run agent-office prune in those projects`);
+      continue;
+    }
+    if (!deletable(rel)) {
+      keep(rel, 'it leads outside the worktrees folder (a symlink?) — not deleting it');
       continue;
     }
     if (left === 'empty') {

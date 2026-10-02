@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { isSafeId, symlinkOnTheWay } from './safefs.js';
 
 /** The name ending a picture dropped without one gets, so the agent can tell it's a picture. */
 const PICTURE_EXT: Record<string, string> = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/gif': '.gif', 'image/webp': '.webp' };
@@ -41,6 +42,8 @@ export class DropStore {
 
   /** Deletes what was dropped for workers that are no longer at a desk. */
   prune(keep: Set<string>) {
+    // Never through a symlinked folder: a repository can ship .agent-office/drops pointing at a home folder.
+    if (symlinkOnTheWay(this.dir)) return;
     try {
       for (const id of readdirSync(this.dir)) if (!keep.has(id)) this.remove(id);
     } catch {
@@ -48,8 +51,11 @@ export class DropStore {
     }
   }
 
+  /** A worker's folder, when it's safe to write into and clear out: never through a symlink. */
   private folder(workerId: string): string | undefined {
-    return /^[\w-]{1,64}$/.test(workerId) ? path.join(this.dir, workerId) : undefined;
+    if (!isSafeId(workerId)) return undefined;
+    const dir = path.join(this.dir, workerId);
+    return symlinkOnTheWay(dir) ? undefined : dir;
   }
 }
 

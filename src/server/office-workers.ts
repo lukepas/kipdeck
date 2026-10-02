@@ -2,13 +2,13 @@
 // server (bin/office-workers.js) get from the /office/workers endpoint on the loopback hook port, and
 // how their requests are read. The endpoint itself is in server.ts, next to the board agents' queue.
 
-import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import type { AgentEffort, AgentProvider, GhPull, QueueTask, WorkerInfo, WorkerStatus, WorktreeCleanup } from '../shared/protocol.js';
 import { isAgentEffort, isAgentProvider } from '../shared/protocol.js';
 import { DESK_BY_ID, STATION_AGENT } from '../shared/layout.js';
 import { workerPr } from '../shared/status.js';
 import { landedWork, notLeaving } from './leave-on-merge.js';
+import { writeState } from './safefs.js';
 
 /** One worker as an agent sees it: enough to pick the ones to send home, and say why. */
 export interface WorkerRow {
@@ -183,7 +183,7 @@ export const MCP_READ_ONLY = [`mcp__${MCP_NAME}__list_workers`];
 export function writeClaudeMcpConfig(dataDir: string, script: string): string {
   const file = path.join(dataDir, 'agent-office-mcp.json');
   const config = { mcpServers: { [MCP_NAME]: { type: 'stdio', command: process.execPath, args: [script, 'mcp'] } } };
-  writeFileSync(file, JSON.stringify(config, null, 2), { mode: 0o600 });
+  writeState(file, JSON.stringify(config, null, 2));
   return file;
 }
 

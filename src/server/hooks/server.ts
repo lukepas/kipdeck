@@ -1,8 +1,8 @@
 // The loopback-only server for the workers' own calls: their agents' hook events, and the office's
 // queue and workers for the board agents and the office-workers command.
 import http from 'node:http';
-import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { readState, writeState } from '../safefs.js';
 import type { Ctx } from '../office/context.js';
 import { readBody, send } from '../http/util.js';
 import { officeQueue } from './office-queue.js';
@@ -54,12 +54,12 @@ export async function startHookServer(ctx: Ctx): Promise<{ hookServer: http.Serv
     });
   let lastHookPort = 0;
   try {
-    lastHookPort = Number(readFileSync(hookPortPath, 'utf8')) || 0;
+    lastHookPort = Number(readState(hookPortPath)) || 0;
   } catch {
     // first start
   }
   await listenHooks(lastHookPort).catch(() => listenHooks(0));
   const hookPort = (hookServer.address() as { port: number }).port;
-  writeFileSync(hookPortPath, String(hookPort), { mode: 0o600 });
+  writeState(hookPortPath, String(hookPort));
   return { hookServer, hookPort };
 }

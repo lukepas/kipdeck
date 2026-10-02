@@ -1,5 +1,6 @@
-import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import path from 'node:path';
+import { writeState } from './safefs.js';
 
 export const CODEX_HOOK_EVENTS = [
   'SessionStart',
@@ -103,8 +104,7 @@ export function codexHookArgs(hookPath: string): string[] {
 export function writeCodexHook(dataDir: string): string {
   mkdirSync(dataDir, { recursive: true, mode: 0o700 });
   const file = path.join(dataDir, 'agent-office-codex-hook.cjs');
-  writeFileSync(file, CODEX_HOOK_SOURCE, { mode: 0o600 });
-  chmodSync(file, 0o600);
+  writeState(file, CODEX_HOOK_SOURCE);
   return file;
 }
 

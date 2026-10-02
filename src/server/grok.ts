@@ -1,5 +1,6 @@
-import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import path from 'node:path';
+import { writeState } from './safefs.js';
 
 export const GROK_HOOK_EVENTS = [
   'SessionStart',
@@ -96,8 +97,7 @@ function shellQuote(value: string): string {
 export function writeGrokHook(dataDir: string): string {
   mkdirSync(dataDir, { recursive: true, mode: 0o700 });
   const file = path.join(dataDir, 'agent-office-grok-hook.cjs');
-  writeFileSync(file, GROK_HOOK_SOURCE, { mode: 0o600 });
-  chmodSync(file, 0o600);
+  writeState(file, GROK_HOOK_SOURCE);
   return file;
 }
 
@@ -115,7 +115,7 @@ export function writeGrokHome(dataDir: string): { home: string; hook: string; so
     const command = [process.execPath, hook, event].map(shellQuote).join(' ');
     hooks[event] = [{ hooks: [{ type: 'command', command, timeout: 3 }] }];
   }
-  writeFileSync(path.join(hooksDir, 'agent-office.json'), JSON.stringify({ hooks }, null, 2), { mode: 0o600 });
+  writeState(path.join(hooksDir, 'agent-office.json'), JSON.stringify({ hooks }, null, 2));
   return { home, hook, socket: path.join(dataDir, 'grok-leader.sock') };
 }
 

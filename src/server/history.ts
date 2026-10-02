@@ -1,9 +1,10 @@
-import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, rmSync } from 'node:fs';
 import path from 'node:path';
 import type headless from '@xterm/headless';
 import type serialize from '@xterm/addon-serialize';
 import type { ChatLine } from '../shared/protocol.js';
 import { logicalLines, searchKey, snippet } from '../shared/search.js';
+import { appendState, isSafeId, readState, symlinkOnTheWay, writeState } from './safefs.js';
 
 type HeadlessTerminal = InstanceType<typeof headless.Terminal>;
 type Serializer = InstanceType<typeof serialize.SerializeAddon>;
@@ -32,7 +33,7 @@ export class ChatLog {
     if (this.lines.length > CHAT_KEEP) this.lines.splice(0, this.lines.length - CHAT_KEEP);
     if (this.fileLines >= CHAT_KEEP * 2) return this.rewrite();
     try {
-      appendFileSync(this.file, `${JSON.stringify(line)}\n`, { mode: 0o600 });
+      appendState(this.file, `${JSON.stringify(line)}\n`);
       this.fileLines++;
     } catch {
       // disk issues shouldn't take the office down
@@ -52,13 +53,9 @@ export class ChatLog {
   }
 
   private load() {
-    if (!existsSync(this.file)) return;
-    let raw: string[];
-    try {
-      raw = readFileSync(this.file, 'utf8').split('\n').filter(Boolean);
-    } catch {
-      return;
-    }
+    const text = readState(this.file);
+    if (text === undefined) return;
+    const raw = text.split('\n').filter(Boolean);
     for (const s of raw) {
       try {
         const l = JSON.parse(s) as Partial<ChatLine>;
@@ -77,7 +74,7 @@ export class ChatLog {
 
   private rewrite() {
     try {
-      writeFileSync(this.file, this.lines.map((l) => `${JSON.stringify(l)}\n`).join(''), { mode: 0o600 });
+      writeState(this.file, this.lines.map((l) => `${JSON.stringify(l)}\n`).join(''));
       this.fileLines = this.lines.length;
     } catch {
       // disk issues shouldn't take the office down
@@ -98,8 +95,8 @@ export class ScrollbackStore {
     if (!file) return;
     try {
       mkdirSync(this.dir, { recursive: true, mode: 0o700 });
-      if (data) writeFileSync(file, data, { mode: 0o600 });
-      else rmSync(file, { force: true });
+      if (data) writeState(file, data);
+      else if (!symlinkOnTheWay(this.dir)) rmSync(file, { force: true });
     } catch {
       // disk issues shouldn't take the office down
     }
@@ -108,7 +105,7 @@ export class ScrollbackStore {
   load(workerId: string): string | undefined {
     const file = this.file(workerId);
     try {
-      return file && existsSync(file) ? readFileSync(file, 'utf8') : undefined;
+      return file ? readState(file) : undefined;
     } catch {
       return undefined;
     }
@@ -117,7 +114,7 @@ export class ScrollbackStore {
   remove(workerId: string) {
     const file = this.file(workerId);
     try {
-      if (file) rmSync(file, { force: true });
+      if (file && !symlinkOnTheWay(path.dirname(file))) rmSync(file, { force: true });
     } catch {
       // already gone
     }
@@ -125,6 +122,8 @@ export class ScrollbackStore {
 
   /** Deletes what's kept for workers that are no longer at a desk. */
   prune(keep: Set<string>) {
+    // Never through a symlinked folder, whose files would go instead.
+    if (symlinkOnTheWay(this.dir)) return;
     try {
       for (const f of readdirSync(this.dir)) {
         if (f.endsWith('.ansi') && !keep.has(f.slice(0, -'.ansi'.length))) rmSync(path.join(this.dir, f), { force: true });
@@ -135,7 +134,7 @@ export class ScrollbackStore {
   }
 
   private file(workerId: string): string | undefined {
-    return /^[\w-]{1,64}$/.test(workerId) ? path.join(this.dir, `${workerId}.ansi`) : undefined;
+    return isSafeId(workerId) ? path.join(this.dir, `${workerId}.ansi`) : undefined;
   }
 }
 

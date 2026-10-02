@@ -1,7 +1,8 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { canLabel, cleanLabel, cleanPlan, rowDesks, signColor, type DeskLabel, type FloorPlan } from '../shared/floorplan.js';
 import { DESK_BY_ID, WING } from '../shared/layout.js';
+import { readStateJson, writeState } from './safefs.js';
 
 /**
  * A floor's own layout: the signs over its desks, and how far its back office is built out. Saved in
@@ -63,7 +64,7 @@ export class FloorPlanStore {
   private load(): FloorPlan {
     if (!existsSync(this.file)) return cleanPlan(undefined);
     try {
-      return cleanPlan(JSON.parse(readFileSync(this.file, 'utf8')));
+      return cleanPlan(readStateJson(this.file) ?? {});
     } catch {
       // a broken file just means the office as it comes
       return cleanPlan(undefined);
@@ -72,7 +73,7 @@ export class FloorPlanStore {
 
   private save() {
     try {
-      writeFileSync(this.file, JSON.stringify(this.plan, null, 2), { mode: 0o600 });
+      writeState(this.file, JSON.stringify(this.plan, null, 2));
     } catch {
       // disk issues shouldn't take the office down
     }

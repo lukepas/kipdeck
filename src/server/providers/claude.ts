@@ -1,9 +1,9 @@
 // Claude Code: hooks from a settings file the office writes (its own hook route, /hooks/claude),
 // usage read off the session transcript and booked in the budget, and tasks the office names.
-import { writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { FAILS_TO_DESPAIR, outputFailed, toolAction } from '../../shared/actions.js';
 import { MCP_READ_ONLY, writeClaudeMcpConfig } from '../office-workers.js';
+import { writeState } from '../safefs.js';
 import { QUEUE_AGENT_DISALLOWED_TOOLS } from '../stations.js';
 import { answered, notified, wantsPermission } from '../workers/lifecycle.js';
 import { shq } from '../workers/process.js';
@@ -43,7 +43,7 @@ function writeHookSettings(dataDir: string): string {
   ];
   // Minimal VPS images sometimes lack curl; the office's own node binary is always there.
   const nodeHook = path.join(dataDir, 'hook.cjs');
-  writeFileSync(
+  writeState(
     nodeHook,
     `const http = require('http');
 const [event] = process.argv.slice(2);
@@ -64,7 +64,6 @@ process.stdin.on('end', () => {
   send(${HOOK_TRIES});
 });
 `,
-    { mode: 0o600 },
   );
   const hooks: Record<string, unknown[]> = {};
   for (const [event, matcher] of events) {
@@ -79,7 +78,7 @@ process.stdin.on('end', () => {
   }
   // Looking at the office's workers doesn't need anyone's say-so; hiring and sending home still asks.
   const permissions = { allow: MCP_READ_ONLY };
-  writeFileSync(settingsPath, JSON.stringify({ hooks, permissions }, null, 2), { mode: 0o600 });
+  writeState(settingsPath, JSON.stringify({ hooks, permissions }, null, 2));
   return settingsPath;
 }
 

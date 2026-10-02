@@ -1,11 +1,12 @@
 // workers.json: every worker as the office last saw it, to pick them all back up after a restart.
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import type { AgentProvider, WorkerInfo, WorkerStatus, WorkerTask } from '../../shared/protocol.js';
 import { DESK_BY_ID } from '../../shared/layout.js';
 import { isAgentProvider, savedEffort, savedModel } from '../../shared/providers.js';
 import { providerAdapter } from '../providers/index.js';
 import { reportedUsage } from '../reported-usage.js';
 import { restoreTracker, trackerUsage } from '../usage.js';
+import { isSafeId, readStateJson, writeState } from '../safefs.js';
+import { savedWorktree } from '../worktrees.js';
 import { workedMs } from './clock.js';
 import { midTurn } from './lifecycle.js';
 import type { Worker } from './types.js';
@@ -49,23 +50,40 @@ export function saveWorkers(file: string, workers: Iterable<Worker>, stopping: b
     midTurn: !stopping && (!!interrupted || midTurn({ info, bootBlocked })),
   }));
   try {
-    writeFileSync(file, JSON.stringify(saved, null, 2), { mode: 0o600 });
+    writeState(file, JSON.stringify(saved, null, 2));
   } catch {
     // disk issues shouldn't take the office down
   }
 }
 
-/** Takes back the workers saved in `file` into `workers`, each at its desk (while it is free), all of them offline. */
-export function restoreWorkers(file: string, workers: Map<string, Worker>, defaultProvider: AgentProvider, deskOccupied: (deskId: string) => boolean) {
-  if (!existsSync(file)) return;
+/** A session id handed to an agent's --resume: never something it would read as a flag of its own. */
+export function isSessionId(v: unknown): v is string {
+  return typeof v === 'string' && /^\w[\w.:-]{0,127}$/.test(v);
+}
+
+/**
+ * Takes back the workers saved in `file` into `workers`, each at its desk (while it is free), all of
+ * them offline. `dir` is the floor's checkout: a saved worktree must be one the office makes there.
+ * The file is never one the repository ships (see safefs.ts), and every id and path in it is checked.
+ */
+export function restoreWorkers(file: string, dir: string, workers: Map<string, Worker>, defaultProvider: AgentProvider, deskOccupied: (deskId: string) => boolean) {
   try {
-    const saved = JSON.parse(readFileSync(file, 'utf8')) as (Partial<WorkerInfo> & { owner?: unknown; tracker?: unknown; hookToken?: unknown; pty?: any; midTurn?: unknown } & Record<string, unknown>)[];
+    const saved = readStateJson<(Partial<WorkerInfo> & { owner?: unknown; tracker?: unknown; hookToken?: unknown; pty?: any; midTurn?: unknown } & Record<string, unknown>)[]>(file);
+    if (!Array.isArray(saved)) return;
     for (const s of saved) {
-      if (!s.id || !s.deskId || !DESK_BY_ID.has(s.deskId) || deskOccupied(s.deskId)) continue;
+      if (!s || !isSafeId(s.id) || typeof s.deskId !== 'string' || !DESK_BY_ID.has(s.deskId) || deskOccupied(s.deskId)) continue;
+      // Its worktree is where it's started, and where briefs are written and folders deleted: only
+      // one the office could have made will do (see savedWorktree). A worker with a bad one is left out.
+      const worktree = s.worktree === undefined ? undefined : savedWorktree(dir, s.worktree);
+      if (s.worktree !== undefined && !worktree) {
+        console.warn(`agent-office: leaving ${String(s.name ?? s.id)} out of ${file}: its worktree isn't one the office makes`);
+        continue;
+      }
       const tracker = restoreTracker(s.tracker);
+      // A custom agent command is the office's to pick, so a saved worker only keeps it when that's the default.
       const provider = s.kind === 'shell'
         ? undefined
-        : isAgentProvider(s.provider)
+        : isAgentProvider(s.provider) && (s.provider !== 'custom' || defaultProvider === 'custom')
           ? s.provider
           : tracker.transcript
             ? 'claude'
@@ -85,10 +103,10 @@ export function restoreWorkers(file: string, workers: Map<string, Worker>, defau
         createdBy: s.createdBy ?? '?',
         createdAt: s.createdAt ?? Date.now(),
         prompt: s.prompt,
-        worktree: s.worktree,
-        repos: s.worktree ? validRepos(s.repos) : undefined,
+        worktree,
+        repos: worktree ? validRepos(s.repos, dir) : undefined,
         title: s.title,
-        sessionId: s.sessionId,
+        sessionId: isSessionId(s.sessionId) ? s.sessionId : undefined,
         activity: s.activity,
         task: validTask(s.task),
         pr: s.pr && typeof s.pr.number === 'number' && typeof s.pr.url === 'string' ? { number: s.pr.number, url: s.pr.url } : undefined,
@@ -104,7 +122,7 @@ export function restoreWorkers(file: string, workers: Map<string, Worker>, defau
       if (typeof s.owner === 'string' && s.owner) w.owner = s.owner;
       usage?.restore?.(w.state, s);
       w.screenDirty = false;
-      if (typeof s.pty?.id === 'string') {
+      if (isSafeId(s.pty?.id)) {
         const status: WorkerStatus = RUNNING.has(s.pty.status) ? s.pty.status : 'idle';
         w.saved = { ptyId: s.pty.id, status, acked: s.pty.acked !== false, waitingSince: typeof s.pty.waitingSince === 'number' ? s.pty.waitingSince : undefined };
       }

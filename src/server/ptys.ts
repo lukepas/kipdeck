@@ -1,11 +1,12 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { spawn as spawnProcess } from 'node:child_process';
-import { closeSync, openSync, readFileSync, writeFileSync } from 'node:fs';
+import { closeSync } from 'node:fs';
 import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as pty from '@lydell/node-pty';
+import { openState, readStateJson, writeState } from './safefs.js';
 
 /**
  * Workers' terminals live in a small host process of their own (ptyhost.ts), not in the office.
@@ -311,7 +312,7 @@ export class PtyHost {
   private hello(): Promise<{ sock: net.Socket; version: number; sessions: string[] } | undefined> {
     let token: string;
     try {
-      token = JSON.parse(readFileSync(this.infoPath, 'utf8')).token;
+      token = readStateJson<{ token: string }>(this.infoPath)!.token;
     } catch {
       return Promise.resolve(undefined);
     }
@@ -338,13 +339,13 @@ export class PtyHost {
 
   /** Starts a host, detached so that it outlives this process and never sees its Ctrl+C. */
   private startHost() {
-    writeFileSync(this.infoPath, JSON.stringify({ token: randomBytes(24).toString('hex') }), { mode: 0o600 });
+    writeState(this.infoPath, JSON.stringify({ token: randomBytes(24).toString('hex') }));
     const here = fileURLToPath(import.meta.url);
     // Under tsx this is ptyhost.ts, run with the same loader flags; built, it's ptyhost.js.
     const script = path.join(path.dirname(here), `ptyhost${path.extname(here)}`);
     // A relative path in them (`--import ./x.ts`) is from where the office started, not the host's cwd.
     const flags = process.execArgv.filter((a) => !/^--(inspect|debug)/.test(a)).map((a) => a.replace(/^(--[\w-]+=)?(\.\.?\/.*)$/, (_, flag = '', p) => `${flag}${path.resolve(p)}`));
-    const log = openSync(path.join(this.dataDir, 'pty-host.log'), 'w', 0o600);
+    const log = openState(path.join(this.dataDir, 'pty-host.log'), true);
     try {
       const child = spawnProcess(process.execPath, [...flags, script, this.socketPath, this.infoPath], {
         detached: true,

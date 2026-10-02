@@ -1,6 +1,8 @@
 import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
 import { closeSync, fstatSync, openSync, readSync, rmSync } from 'node:fs';
+import { openState, symlinkOnTheWay } from './safefs.js';
 import path from 'node:path';
+import { normalizeRepo } from '../shared/floors.js';
 import type { CloneProgress } from '../shared/protocol.js';
 
 // One `gh repo clone`, run so the office can see how it's getting on. git's progress goes to a log
@@ -100,7 +102,8 @@ export class CloneRun {
   static start(repo: string, dest: string, log: string, opts: CloneRunOptions = {}): Promise<CloneRun | string> {
     let fd: number;
     try {
-      fd = openSync(log, 'w', 0o600);
+      // Never through a symlink: the log is truncated, and a link there could point at any file.
+      fd = openState(log, true);
     } catch (err) {
       return Promise.resolve(`Couldn't write ${log}: ${(err as Error).message}`);
     }
@@ -220,8 +223,24 @@ export class CloneRun {
   }
 }
 
+/**
+ * Whether a clone read back from cloning.json is one the office could have started: its log is a
+ * file of its own in `logsDir`, and its checkout is <projects folder>/<owner>/<name> of its repository.
+ */
+export function savedClone(s: { pid?: unknown; log?: unknown; dir?: unknown; name?: unknown; repo?: unknown } | null | undefined, logsDir: string): boolean {
+  if (!s || !Number.isInteger(s.pid) || (s.pid as number) <= 0 || typeof s.name !== 'string') return false;
+  if (typeof s.log !== 'string' || path.dirname(s.log) !== logsDir || !/^[\w.-]+\.log$/.test(path.basename(s.log))) return false;
+  const repo = normalizeRepo(s.repo);
+  if (!repo || typeof s.dir !== 'string' || !path.isAbsolute(s.dir)) return false;
+  const [owner, name] = repo.toLowerCase().split('/');
+  const abs = path.resolve(s.dir);
+  return path.basename(abs).toLowerCase() === name && path.basename(path.dirname(abs)).toLowerCase() === owner;
+}
+
 /** Deletes a clone's log. On Windows a clone still writing it holds it open: it stays until next time. */
 export function dropLog(log: string) {
+  // A symlinked clones folder isn't the office's: nothing in it is deleted.
+  if (symlinkOnTheWay(path.dirname(log))) return;
   try {
     rmSync(log, { force: true });
   } catch {

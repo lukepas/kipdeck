@@ -1,6 +1,7 @@
 // Starting things for the workers: which shell, where a command is, how to run one without
 // blocking the office, and the install's own bin/ scripts and the commands that run them.
-import { accessSync, chmodSync, constants, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { accessSync, chmodSync, constants, existsSync, mkdirSync } from 'node:fs';
+import { writeState } from '../safefs.js';
 import { execFile, execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -92,10 +93,10 @@ export function writeOfficeCommands(dataDir: string): string | undefined {
     if (!script) continue;
     mkdirSync(dir, { recursive: true, mode: 0o700 });
     const file = path.join(dir, name);
-    writeFileSync(file, `#!/bin/sh\n# ${what} (see bin/${name}.js).\nexec ${shq(process.execPath)} ${shq(script)} "$@"\n`, { mode: 0o700 });
+    writeState(file, `#!/bin/sh\n# ${what} (see bin/${name}.js).\nexec ${shq(process.execPath)} ${shq(script)} "$@"\n`, 0o700);
     chmodSync(file, 0o700);
     // cmd.exe and PowerShell find it by PATHEXT; Git Bash (Claude Code's shell there) runs the sh one.
-    if (WIN) writeFileSync(`${file}.cmd`, `@"${process.execPath}" "${script}" %*\r\n`);
+    if (WIN) writeState(`${file}.cmd`, `@"${process.execPath}" "${script}" %*\r\n`);
     wrote = true;
   }
   return wrote ? dir : undefined;

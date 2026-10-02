@@ -1,12 +1,13 @@
 // Pi: its command line (a session folder per desk, the office's extension) and the extension that
 // reports its lifecycle on /hooks/pi, in the same statuses as OpenCode's plugin (see providers/pi.ts).
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import type { AgentEffort } from '../shared/protocol.js';
 import type { OpenCodeStatusEvent } from './opencode.js';
+import { writeState } from './safefs.js';
 
 /** A Pi session id, as Pi itself accepts one for --session-id. */
-const PI_SESSION_ID = /^[A-Za-z0-9._-]{1,160}$/;
+const PI_SESSION_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,159}$/;
 
 /** Keep sessions per desk; do not resume another worker's most recent conversation. */
 export function piArgs(extra: string[], options: { extension: string; sessionDir: string; sessionId?: string; model?: string; effort?: AgentEffort; prompt?: string }): string[] {
@@ -58,7 +59,7 @@ export function normalizePiHook(value: unknown): OpenCodeStatusEvent | undefined
 export function writePiExtension(dataDir: string): string {
   mkdirSync(dataDir, { recursive: true, mode: 0o700 });
   const file = path.join(dataDir, 'agent-office-pi-extension.mjs');
-  writeFileSync(file, PI_EXTENSION_SOURCE, { mode: 0o600 });
+  writeState(file, PI_EXTENSION_SOURCE);
   return file;
 }
 

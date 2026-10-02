@@ -1,6 +1,7 @@
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import { WB_MAX_BYTES, WB_MAX_ELEMENTS, WB_MAX_ELEMENT_BYTES, WB_MAX_FILES_BYTES, byIndex, checkElement, checkFile, newer, type WbElement, type WbFile } from '../shared/whiteboard.js';
+import { readStateJson, symlinkOnTheWay, writeState } from './safefs.js';
 
 /** How long after the last stroke the drawing is written to disk. */
 const SAVE_DELAY_MS = 2000;
@@ -80,7 +81,7 @@ export class Whiteboard {
   file(id: string): WbFile | undefined {
     if (!this.files.has(id)) return undefined;
     try {
-      const f = checkFile(JSON.parse(readFileSync(path.join(this.filesDir, `${id}.json`), 'utf8')));
+      const f = checkFile(readStateJson(path.join(this.filesDir, `${id}.json`)) ?? {});
       return typeof f === 'string' ? undefined : f;
     } catch {
       return undefined;
@@ -97,7 +98,7 @@ export class Whiteboard {
     if (this.fileBytes + json.length > WB_MAX_FILES_BYTES) return 'The whiteboard has too many pictures on it. Delete some first.';
     try {
       mkdirSync(this.filesDir, { recursive: true, mode: 0o700 });
-      writeFileSync(path.join(this.filesDir, `${f.id}.json`), json, { mode: 0o600 });
+      writeState(path.join(this.filesDir, `${f.id}.json`), json);
     } catch {
       return "Couldn't save the picture on the office's machine";
     }
@@ -134,6 +135,8 @@ export class Whiteboard {
 
   /** Pictures that no element shows any more, deleted elements included (an undo can bring those back). */
   private forgetUnusedFiles() {
+    // A symlinked pictures folder isn't the board's: its files are never deleted.
+    if (symlinkOnTheWay(this.filesDir)) return;
     const used = new Set<string>();
     for (const e of this.elements.values()) if (e.fileId) used.add(e.fileId);
     for (const [id, size] of this.files) {
@@ -160,8 +163,7 @@ export class Whiteboard {
       mkdirSync(this.dir, { recursive: true, mode: 0o700 });
       // Written aside and moved into place, so a crash mid-write can't leave half a drawing.
       const file = path.join(this.dir, 'elements.json');
-      writeFileSync(`${file}.tmp`, JSON.stringify(this.scene()), { mode: 0o600 });
-      renameSync(`${file}.tmp`, file);
+      writeState(file, JSON.stringify(this.scene()));
     } catch {
       // disk issues shouldn't take the office down
     }
@@ -171,7 +173,7 @@ export class Whiteboard {
     const file = path.join(this.dir, 'elements.json');
     if (existsSync(file)) {
       try {
-        const saved = JSON.parse(readFileSync(file, 'utf8')) as unknown;
+        const saved = (readStateJson(file) ?? {}) as unknown;
         const now = Date.now();
         for (const item of Array.isArray(saved) ? saved : []) {
           const el = checkElement(item);
@@ -183,6 +185,7 @@ export class Whiteboard {
       }
     }
     try {
+      if (symlinkOnTheWay(this.filesDir)) throw new Error('symlinked');
       for (const name of readdirSync(this.filesDir)) {
         if (!name.endsWith('.json')) continue;
         const size = statSync(path.join(this.filesDir, name)).size;

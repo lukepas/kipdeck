@@ -21,6 +21,7 @@ import { landedWork, landedWorkers, type Landed } from './leave-on-merge.js';
 import type { Ledger } from './usage.js';
 import type { Capacity } from './machine.js';
 import { officePrompt, type PromptSource } from './prompts.js';
+import { stateDirProblem, trackedState } from './safefs.js';
 
 type ToastLevel = 'info' | 'warn' | 'error';
 
@@ -131,7 +132,12 @@ export class Floor {
     this.id = def.id;
     this.dir = def.dir;
     const dataDir = path.join(def.dir, '.agent-office');
+    // The state folder is the checkout's: a symlink there could send the office's writes and deletes anywhere.
+    const unsafe = stateDirProblem(def.dir);
+    if (unsafe) throw new Error(unsafe);
     mkdirSync(dataDir, { recursive: true, mode: 0o700 });
+    const shipped = trackedState(def.dir);
+    if (shipped.size) console.warn(`agent-office: the ${def.name} floor's repository ships ${shipped.size} file${shipped.size === 1 ? '' : 's'} in .agent-office; the office ignores them (see docs/security.md)`);
     excludeFromGit(def.dir);
     this.project = projectInfo(def.dir, def.name, ctx.agentCmd, ctx.agentArgs);
     this.docs = new Docs(def.dir);

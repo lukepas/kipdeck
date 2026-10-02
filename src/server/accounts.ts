@@ -1,7 +1,8 @@
 import { createHash, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
-import { existsSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { officeHome } from './config.js';
+import { untrustedState, writeState } from './safefs.js';
 import type { AccountInvite, AccountRole, AccountsState } from '../shared/protocol.js';
 
 export const NAME_MAX = 24;
@@ -247,6 +248,8 @@ export class Accounts {
       return;
     }
     try {
+      const bad = untrustedState(this.file);
+      if (bad) throw new Error(bad);
       const saved = JSON.parse(readFileSync(this.file, 'utf8')) as Partial<Saved>;
       this.data = {
         accounts: Array.isArray(saved.accounts) ? saved.accounts.filter((a) => a && typeof a.id === 'string' && typeof a.hash === 'string') : [],
@@ -266,10 +269,8 @@ export class Accounts {
       return;
     }
     // Written whole and renamed into place, so the office and the `accounts` command never read half a file.
-    const tmp = `${this.file}.${process.pid}.tmp`;
     try {
-      writeFileSync(tmp, JSON.stringify(this.data, null, 2), { mode: 0o600 });
-      renameSync(tmp, this.file);
+      writeState(this.file, JSON.stringify(this.data, null, 2));
     } catch (err) {
       console.error(`agent-office: couldn't save ${this.file}: ${(err as Error).message}`);
       return;

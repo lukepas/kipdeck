@@ -1,9 +1,10 @@
 import { execFile, spawn } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import * as pty from '@lydell/node-pty';
 import type { SignInKind, SignInState, SignInsState } from '../shared/protocol.js';
+import { readState, readStateJson, symlinkOnTheWay, tryStateJson, writeState } from './safefs.js';
 
 /*
  * Everyone's own Claude and GitHub
@@ -258,7 +259,8 @@ export class SignIns {
     this.stop(id, 'github');
     this.live.delete(id);
     const home = path.join(this.homes, id);
-    if (!existsSync(home)) return;
+    // Only ever a real folder of the office's: never through a symlink to somewhere else.
+    if (!existsSync(home) || symlinkOnTheWay(home)) return;
     // On a Mac, Claude keeps the login in the keychain, not the folder: sign out so it goes too.
     void this.logout(id, 'claude').finally(() => {
       try {
@@ -271,6 +273,7 @@ export class SignIns {
 
   /** Deletes the folders of accounts that no longer exist (revoked from the terminal meanwhile). */
   prune(accounts: Set<string>) {
+    if (symlinkOnTheWay(this.homes)) return;
     let names: string[];
     try {
       names = readdirSync(this.homes);
@@ -329,7 +332,7 @@ export class SignIns {
 
   private load(id: string): Saved {
     try {
-      const s = JSON.parse(readFileSync(path.join(this.home(id), 'signins.json'), 'utf8')) as Saved;
+      const s = readStateJson<Saved>(path.join(this.home(id), 'signins.json'));
       return s && typeof s === 'object' ? s : {};
     } catch {
       return {};
@@ -339,7 +342,7 @@ export class SignIns {
   private save(id: string, s: Saved) {
     this.prepare(id);
     try {
-      writeFileSync(path.join(this.home(id), 'signins.json'), JSON.stringify(s, null, 2), { mode: 0o600 });
+      writeState(path.join(this.home(id), 'signins.json'), JSON.stringify(s, null, 2));
     } catch (err) {
       console.error(`agent-office: couldn't save ${id}'s sign-ins: ${(err as Error).message}`);
     }
@@ -561,18 +564,13 @@ export class SignIns {
   /** Claude's own settings in an account's folder: its first-run questions already answered. */
   private seed(dir: string, change?: (c: any) => void) {
     const file = path.join(dir, '.claude.json');
-    let c: any = {};
-    try {
-      c = JSON.parse(readFileSync(file, 'utf8'));
-    } catch {
-      // new
-    }
+    const c: any = tryStateJson(file) ?? {};
     const before = JSON.stringify(c);
     c.hasCompletedOnboarding = true;
     change?.(c);
     if (JSON.stringify(c) === before) return;
     try {
-      writeFileSync(file, JSON.stringify(c, null, 2), { mode: 0o600 });
+      writeState(file, JSON.stringify(c, null, 2));
     } catch (err) {
       console.error(`agent-office: couldn't write ${file}: ${(err as Error).message}`);
     }
@@ -614,8 +612,8 @@ export class SignIns {
     const text = `${lines.join('\n')}\n`;
     const file = path.join(home, 'gitconfig');
     try {
-      if (existsSync(file) && readFileSync(file, 'utf8') === text) return;
-      writeFileSync(file, text, { mode: 0o600 });
+      if (readState(file) === text) return;
+      writeState(file, text);
     } catch (err) {
       console.error(`agent-office: couldn't write ${file}: ${(err as Error).message}`);
     }

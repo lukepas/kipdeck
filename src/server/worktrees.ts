@@ -4,6 +4,7 @@ import { rm } from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import type { LostBranch, WorktreeState } from '../shared/protocol.js';
+import { isSymlink, realWithin } from './safefs.js';
 
 export type { WorktreeCleanup, WorktreeState } from '../shared/protocol.js';
 
@@ -328,7 +329,8 @@ export class Worktrees {
     }
     const branches = (await this.git(['for-each-ref', '--format=%(refname:short)', `refs/heads/${BRANCH_PREFIX}`])).split('\n').filter(Boolean);
     const known = worktrees.map((w) => path.join(this.root, w.path));
-    const strays = existsSync(home)
+    // A symlinked worktrees folder isn't the office's: nothing in it is a stray to delete.
+    const strays = existsSync(home) && !isSymlink(home)
       ? readdirSync(home)
           .map((n) => path.join(home, n))
           .filter((p) => !known.some((k) => k === p || within(p, k)) && isDir(p))
@@ -350,6 +352,44 @@ export class Worktrees {
     const { stdout } = await execFileP('git', args, { cwd, encoding: 'utf8', timeout: 60_000, maxBuffer: 16 * 1024 * 1024 });
     return stdout.trim();
   }
+}
+
+/**
+ * Whether a branch name read back from saved state is one git would take and no command would read
+ * as a flag: office/ada-1f2e, or a branch the worker made itself, never "--upload-pack=..." or "a..b".
+ */
+export function isBranchName(v: unknown): v is string {
+  return typeof v === 'string' && v.length <= 200 && /^[A-Za-z0-9_][\w./+-]*$/.test(v) && !v.includes('..') && !v.includes('@{') && !v.endsWith('.lock') && !v.endsWith('/') && !v.endsWith('.');
+}
+
+/**
+ * Whether a worktree folder read back from saved state (relative to the project `dir`) is one the
+ * office makes: .agent-office/worktrees/<slug>, or <slug>/<name> for a worker across repositories,
+ * and still in there once symlinks are followed. Anything else would have the office start agents
+ * in, write briefs into, and delete folders anywhere on the machine.
+ */
+export function isWorktreePath(dir: string, rel: unknown): rel is string {
+  if (typeof rel !== 'string' || !rel || path.isAbsolute(rel) || rel.length > 300) return false;
+  const trees = path.resolve(dir, WORKTREES_DIR);
+  const abs = path.resolve(dir, rel);
+  const parts = path.relative(trees, abs).split(path.sep);
+  if (parts.length < 1 || parts.length > 2 || !parts.every(isFolderName)) return false;
+  return !isSymlink(trees) && realWithin(trees, abs);
+}
+
+/** One folder's name, as the office names worktree folders ("worker 29-1f2e", "next.js"): never . or .., a separator or a control character. */
+function isFolderName(v: string): boolean {
+  return v.length > 0 && v.length <= 100 && v !== '.' && v !== '..' && !/[/\\\0-\x1f]/.test(v);
+}
+
+/** A worktree read back from saved state, when it's one the office could have made (see isWorktreePath). */
+export function savedWorktree(dir: string, raw: unknown): { path: string; branch: string; base: string; from?: string; made?: string } | undefined {
+  const w = raw as (Partial<WorktreeRef> & { from?: unknown }) | null | undefined;
+  if (!w || !isWorktreePath(dir, w.path) || !isBranchName(w.branch)) return undefined;
+  if (typeof w.base !== 'string' || !/^[0-9a-f]{7,64}$/.test(w.base)) return undefined;
+  if (w.made !== undefined && !isBranchName(w.made)) return undefined;
+  if (w.from !== undefined && !isBranchName(w.from)) return undefined;
+  return { path: w.path, branch: w.branch, base: w.base, ...(w.from ? { from: w.from } : {}), ...(w.made ? { made: w.made } : {}) };
 }
 
 /**

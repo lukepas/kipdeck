@@ -124,7 +124,7 @@ export class WorkerManager {
     this.host = new PtyHost(dataDir, () => this.events.toast("The workers' terminal host stopped — resuming them", 'warn'));
     this.scrollback = new ScrollbackStore(dataDir);
     this.drops = new DropStore(dataDir);
-    restoreWorkers(this.statePath, this.workers, this.defaultProvider, (deskId) => this.deskOccupied(deskId));
+    restoreWorkers(this.statePath, this.dir, this.workers, this.defaultProvider, (deskId) => this.deskOccupied(deskId));
     this.scrollback.prune(new Set(this.workers.keys()));
     this.drops.prune(new Set(this.workers.keys()));
     // A session may have ended (and written its final tally) while the office was down.

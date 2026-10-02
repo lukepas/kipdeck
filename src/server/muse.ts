@@ -1,5 +1,6 @@
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, symlinkSync } from 'node:fs';
 import path from 'node:path';
+import { writeState } from './safefs.js';
 
 export const MUSE_HOOK_EVENTS = [
   'SessionStart',
@@ -130,8 +131,7 @@ function linkAuth(src: string, dest: string) {
 export function writeMuseHook(dataDir: string): string {
   mkdirSync(dataDir, { recursive: true, mode: 0o700 });
   const file = path.join(dataDir, 'agent-office-muse-hook.cjs');
-  writeFileSync(file, MUSE_HOOK_SOURCE, { mode: 0o600 });
-  chmodSync(file, 0o600);
+  writeState(file, MUSE_HOOK_SOURCE);
   return file;
 }
 
@@ -169,7 +169,7 @@ export function writeMuseHome(dataDir: string, userMuseDir?: string): MuseHome {
     ...(defaults.model ? { model: defaults.model } : {}),
     hooks,
   };
-  writeFileSync(path.join(configDir, 'settings.json'), JSON.stringify(settings, null, 2), { mode: 0o600 });
+  writeState(path.join(configDir, 'settings.json'), JSON.stringify(settings, null, 2));
   if (userMuseDir) {
     const auth = path.join(userMuseDir, 'auth.json');
     if (existsSync(auth)) linkAuth(auth, path.join(configDir, 'auth.json'));

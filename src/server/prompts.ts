@@ -1,8 +1,8 @@
-import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { isAgentEffort, isAgentProvider, type AgentChoice, type AgentProvider, type PromptsState } from '../shared/protocol.js';
 import { PROMPTS, PROMPT_MAX, fillPrompt, isPromptId, promptText, type PromptId, type PromptVars } from '../shared/prompts.js';
 import { validateWorkerEffort, validateWorkerModel } from './agents.js';
+import { readStateJson, writeState } from './safefs.js';
 
 /** What the floors read: a prompt as the office has it now, and what workers start on. */
 export interface PromptSource {
@@ -89,7 +89,7 @@ export class OfficePrompts implements PromptSource {
   private restore() {
     let raw: Partial<PromptsState>;
     try {
-      raw = JSON.parse(readFileSync(this.path, 'utf8'));
+      raw = readStateJson(this.path) ?? {};
     } catch {
       return; // never changed: the defaults
     }
@@ -107,7 +107,7 @@ export class OfficePrompts implements PromptSource {
 
   private persist() {
     try {
-      writeFileSync(this.path, JSON.stringify(this.saved, null, 2), { mode: 0o600 });
+      writeState(this.path, JSON.stringify(this.saved, null, 2));
     } catch {
       // disk issues shouldn't take the office down
     }

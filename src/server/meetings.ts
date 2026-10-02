@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { closeSync, cpSync, existsSync, mkdirSync, openSync, readFileSync, readSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import { MEETING_SEATS } from '../shared/layout.js';
@@ -8,7 +8,9 @@ import { MAX_MEETING_BUDGET, MEETING_NOTES_DIR, MEETING_PATTERNS, TOKENS_PER_SEA
 import { fmtTokens, isAgentEffort, isAgentProvider, tokensOf, type AgentChoice, type AgentEffort, type AgentProvider, type Meeting, type MeetingRecord, type MeetingRequest, type MeetingState, type MeetingTurn, type WorkerInfo, type WorkerStatus } from '../shared/protocol.js';
 import { validateWorkerEffort, validateWorkerModel } from './agents.js';
 import { providerMeta, takesEffort, takesModel } from '../shared/providers.js';
-import { gitError, type WorktreeRef, type WorktreeState } from './worktrees.js';
+import { WORKTREES_DIR, gitError, type WorktreeRef, type WorktreeState } from './worktrees.js';
+import { isSafeId, readStateJson, realWithin, within, writeState } from './safefs.js';
+import { meetingCwd, meetingFile, readStart, restorableMeeting } from './meeting-files.js';
 import { PROMPTS, fillPrompt, type PromptId, type PromptVars } from '../shared/prompts.js';
 
 const execFileP = promisify(execFile);
@@ -198,7 +200,7 @@ export class MeetingRoom {
       // Without git, the notes go with the floor's other state.
       notes: worktree ? MEETING_NOTES_DIR : `.agent-office/meetings/${id}`,
     };
-    mkdirSync(path.join(this.cwd(m), m.notes), { recursive: true });
+    mkdirSync(path.join(meetingCwd(this.dir, m), m.notes), { recursive: true });
     const first = this.plan(m, 1, 1) ?? [];
     for (let i = 0; i < m.seats.length; i++) {
       const part = first.find((p) => p.seat === i);
@@ -319,7 +321,7 @@ export class MeetingRoom {
     const retry = () => {
       t.retried = true;
       this.readySince.delete(t);
-      return this.workers.prompt(w.id, this.say('meeting.nudge', { file: path.join(this.cwd(m), t.file) }), BY);
+      return this.workers.prompt(w.id, this.say('meeting.nudge', { file: path.join(meetingCwd(this.dir, m), t.file) }), BY);
     };
     switch (t.state) {
       case 'waiting': {
@@ -407,7 +409,7 @@ export class MeetingRoom {
     this.keepNotes(m);
     const p = MEETING_PATTERNS[m.pattern];
     this.events.toast(`🤝 The ${p.label} meeting on “${m.title}” is done: it wrote ${m.output}`, 'info');
-    const cwd = this.cwd(m);
+    const cwd = meetingCwd(this.dir, m);
     if (m.pattern === 'review' && m.pr !== undefined) {
       const pr = m.pr;
       void this.events.postReview(pr, path.join(cwd, m.output), m.owner).then(
@@ -463,11 +465,12 @@ export class MeetingRoom {
     if (!wt || !this.trees) return this.persist();
     // Kept with the floor's state already (keepNotes): the notes, and a review panel's review, which
     // is on the pull request now, go, so they don't count as work left behind.
-    const cwd = this.cwd(m);
-    const own = path.resolve(this.dir, '.agent-office', 'worktrees') + path.sep;
+    const cwd = meetingCwd(this.dir, m);
+    const own = path.resolve(this.dir, WORKTREES_DIR);
     for (const leftover of [m.notes, m.pattern === 'review' ? m.output : undefined]) {
       const abs = leftover && path.resolve(cwd, leftover);
-      if (abs && abs.startsWith(own)) rmSync(abs, { recursive: true, force: true });
+      // Only ever inside the meeting's own worktree, with symlinks followed too.
+      if (abs && within(own, abs) && realWithin(own, abs) && realWithin(cwd, abs)) rmSync(abs, { recursive: true, force: true });
     }
     const state = await this.trees.inspect(wt);
     if (state.error || state.dirty) {
@@ -538,10 +541,10 @@ export class MeetingRoom {
       about: m.prompt,
       pullRequest: m.pr !== undefined ? `The pull request is #${m.pr}: read it with gh pr view ${m.pr} and gh pr diff ${m.pr}.` : '',
       issue: m.issue !== undefined ? `It comes from GitHub issue #${m.issue}: gh issue view ${m.issue} --comments.` : '',
-      cwd: this.cwd(m),
-      notes: path.join(this.cwd(m), m.notes),
+      cwd: meetingCwd(this.dir, m),
+      notes: path.join(meetingCwd(this.dir, m), m.notes),
       output: m.output,
-      outputPath: path.join(this.cwd(m), m.output),
+      outputPath: path.join(meetingCwd(this.dir, m), m.output),
       rounds: `${m.rounds} round${m.rounds === 1 ? '' : 's'}`,
       budget: fmtTokens(m.budget),
       where: where + inside,
@@ -563,7 +566,7 @@ export class MeetingRoom {
     const n = m.seats.length;
     // Parts name their files by full path: a worktree sits inside the project's own folder, and an
     // agent can take a relative path to be the project's (and then it's asked about writing outside).
-    const A = (rel: string) => path.join(this.cwd(m), rel);
+    const A = (rel: string) => path.join(meetingCwd(this.dir, m), rel);
     const note = (r: number, i: number) => `${m.notes}/r${r}-${i + 1}-${slugify(m.seats[i].role, 24)}.md`;
     const notes = (r: number, seats: number[]) => seats.map((i) => A(note(r, i))).join(', ');
     const all = m.seats.map((_, i) => i);
@@ -638,14 +641,12 @@ export class MeetingRoom {
 
   // --- Files -----------------------------------------------------------------
 
-  private cwd(m: Meeting): string {
-    return m.worktree ? path.join(this.dir, m.worktree.path) : this.dir;
-  }
-
   /** Whether a part's file is there, with something in it, written since the part was handed over. */
   private written(m: Meeting, t: MeetingTurn): boolean {
     try {
-      const st = statSync(path.join(this.cwd(m), t.file));
+      const file = meetingFile(this.dir, m, t.file);
+      if (!file) return false;
+      const st = statSync(file);
       return st.isFile() && st.size > 0 && st.mtimeMs >= (t.sentAt ?? 0) - 2000;
     } catch {
       return false;
@@ -656,7 +657,8 @@ export class MeetingRoom {
   private head(m: Meeting, file: string | undefined): string {
     if (!file) return '';
     try {
-      return readStart(path.join(this.cwd(m), file), 400).split('\n').find((l) => l.trim()) ?? '';
+      const abs = meetingFile(this.dir, m, file);
+      return abs ? (readStart(abs, 400).split('\n').find((l) => l.trim()) ?? '') : '';
     } catch {
       return '';
     }
@@ -666,7 +668,8 @@ export class MeetingRoom {
   private readPreview(m: Meeting): boolean {
     let text: string | undefined;
     try {
-      text = readStart(path.join(this.cwd(m), m.output), PREVIEW_CHARS * 2).slice(0, PREVIEW_CHARS);
+      const file = meetingFile(this.dir, m, m.output);
+      text = file ? readStart(file, PREVIEW_CHARS * 2).slice(0, PREVIEW_CHARS) : undefined;
     } catch {
       text = undefined;
     }
@@ -678,11 +681,16 @@ export class MeetingRoom {
   /** Copies the meeting's notes and output next to the floor's other state, where they outlive its worktree. */
   private keepNotes(m: Meeting) {
     try {
-      const to = path.join(this.dataDir, 'meetings', m.id);
-      const from = path.join(this.cwd(m), m.notes);
-      if (path.resolve(from) !== path.resolve(to) && existsSync(from)) cpSync(from, to, { recursive: true });
-      const out = path.join(this.cwd(m), m.output);
-      if (existsSync(out)) cpSync(out, path.join(to, `output-${path.basename(m.output)}`));
+      // Only to a folder of its own under the floor's state, and only from inside its checkout.
+      const kept = path.join(this.dataDir, 'meetings');
+      if (!isSafeId(m.id)) return;
+      const to = path.join(kept, m.id);
+      if (!within(kept, to) || !realWithin(this.dataDir, to)) return;
+      const from = meetingFile(this.dir, m, m.notes);
+      if (from && path.resolve(from) !== path.resolve(to) && existsSync(from)) cpSync(from, to, { recursive: true, verbatimSymlinks: true });
+      const out = meetingFile(this.dir, m, m.output);
+      const dest = path.join(to, `output-${path.basename(m.output)}`);
+      if (out && existsSync(out) && realWithin(this.dataDir, dest)) cpSync(out, dest);
     } catch {
       // the notes are a courtesy; the meeting is over either way
     }
@@ -696,20 +704,21 @@ export class MeetingRoom {
 
   private persist() {
     try {
-      writeFileSync(this.statePath, JSON.stringify({ current: this.current, past: this.past }, null, 2), { mode: 0o600 });
+      writeState(this.statePath, JSON.stringify({ current: this.current, past: this.past }, null, 2));
     } catch {
       // disk issues shouldn't take the office down
     }
   }
 
   private restore() {
-    if (!existsSync(this.statePath)) return;
     try {
-      const saved = JSON.parse(readFileSync(this.statePath, 'utf8')) as Partial<MeetingState>;
-      if (Array.isArray(saved.past)) this.past = saved.past.filter((r) => r && typeof r.id === 'string' && typeof r.summary === 'string').slice(0, PAST_MAX);
+      const saved = readStateJson<Partial<MeetingState>>(this.statePath);
+      if (!saved) return;
+      if (Array.isArray(saved.past)) this.past = saved.past.filter((r) => r && isSafeId(r.id) && typeof r.summary === 'string').slice(0, PAST_MAX);
       const m = saved.current;
       // The workers at the table outlive a restart of the office, so a meeting carries on where it was.
-      if (m && typeof m.id === 'string' && isMeetingPattern(m.pattern) && Array.isArray(m.seats) && Array.isArray(m.turns)) this.current = m;
+      if (m && restorableMeeting(this.dir, m)) this.current = m;
+      else if (m) console.warn(`agent-office: not picking the meeting in ${this.statePath} back up: its files or worktree aren't where the office puts them`);
     } catch {
       // corrupt state file: an empty room
     }
@@ -726,18 +735,6 @@ async function commitAll(cwd: string, message: string, leaveOut: string): Promis
   if (!(await git(['diff', '--cached', '--name-only']))) return undefined;
   await git(['commit', '-q', '-m', message]);
   return git(['rev-parse', '--short', 'HEAD']);
-}
-
-/** The start of a file, at most `bytes` of it. */
-function readStart(file: string, bytes: number): string {
-  const fd = openSync(file, 'r');
-  try {
-    const buf = Buffer.alloc(bytes);
-    const n = readSync(fd, buf, 0, bytes, 0);
-    return buf.subarray(0, n).toString('utf8').replace(/�+$/, '');
-  } finally {
-    closeSync(fd);
-  }
 }
 
 /** Roles that repeat get numbered, so each worker at the table has one of its own: Engineer 1, Engineer 2. */

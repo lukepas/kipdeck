@@ -1,10 +1,11 @@
 import { randomBytes, scryptSync } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, appendFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { AGENT_PROVIDERS, PROVIDER_META } from '../shared/providers.js';
 import { MAX_WORKER_LIMIT, parseWorkerLimit } from './machine.js';
+import { readStateJson, stateDirProblem, untrustedState, writeState } from './safefs.js';
 
 export interface Config {
   /** The office's own folder: the building's data lives in its .agent-office. */
@@ -325,17 +326,29 @@ export function loadConfig(argv: string[]): Config {
   }
 
   const dataDir = path.join(dir, '.agent-office');
+  // In a project, .agent-office is the checkout's: whatever the repository ships there isn't the office's.
+  const unsafe = stateDirProblem(dir);
+  if (unsafe) {
+    console.error(`agent-office: ${unsafe}`);
+    process.exit(2);
+  }
   mkdirSync(dataDir, { recursive: true, mode: 0o700 });
   if (project) excludeFromGit(dir);
 
   const cfgPath = path.join(dataDir, 'config.json');
+  // A config.json the repository ships would carry a password and session secret someone else knows.
+  const shipped = existsSync(cfgPath) ? untrustedState(cfgPath) : undefined;
+  if (shipped) {
+    console.error(`agent-office: refusing ${cfgPath}: ${shipped}. Take it out of the repository and start again.`);
+    process.exit(2);
+  }
   let stored: { password?: string; verifier?: string; salt?: string; secret?: string; claimedAt?: number } = {};
   try {
-    stored = JSON.parse(readFileSync(cfgPath, 'utf8'));
+    stored = readStateJson(cfgPath) ?? {};
   } catch {
     // first run
   }
-  const save = () => writeFileSync(cfgPath, JSON.stringify(stored, null, 2), { mode: 0o600 });
+  const save = () => writeState(cfgPath, JSON.stringify(stored, null, 2));
   if (!stored.secret) stored.secret = randomBytes(32).toString('hex');
   if (!stored.salt) stored.salt = randomBytes(16).toString('hex');
   const salt = Buffer.from(stored.salt, 'hex');
@@ -431,7 +444,7 @@ export async function ensureSelfSigned(cfg: Config): Promise<void> {
   const selfsigned = await import('selfsigned');
   const gen = (selfsigned as any).generate ?? (selfsigned as any).default?.generate;
   const pems = await gen([{ name: 'commonName', value: 'agent-office' }], { days: 825, keySize: 2048 });
-  writeFileSync(certPath, pems.cert, { mode: 0o600 });
-  writeFileSync(keyPath, pems.private, { mode: 0o600 });
+  writeState(certPath, pems.cert);
+  writeState(keyPath, pems.private);
   cfg.tls = { cert: pems.cert, key: pems.private };
 }

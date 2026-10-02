@@ -1,11 +1,12 @@
 import { execFileSync, spawn } from 'node:child_process';
-import { accessSync, constants, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { accessSync, constants, existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { FLOOR_PALETTES, MAX_FLOORS, normalizeRepo, sameRepo } from '../shared/floors.js';
 import type { CloneProgress, ProjectsDirState, RepoChoice } from '../shared/protocol.js';
-import { CloneRun, dropLog, whyCloneFailed, type CloneEnd, type CloneRunOptions } from './clone.js';
+import { CloneRun, dropLog, savedClone, whyCloneFailed, type CloneEnd, type CloneRunOptions } from './clone.js';
 import { gh } from './github.js';
+import { isSymlink, readStateJson, symlinkOnTheWay, writeState } from './safefs.js';
 
 /** A floor as floors.json keeps it. */
 export interface FloorDef {
@@ -136,7 +137,7 @@ export class Building {
     }
     this.picked = dir === this.defaultProjectsDir ? undefined : { dir, by, at: Date.now() };
     try {
-      writeFileSync(this.pickedFile, JSON.stringify(this.picked ?? {}, null, 2), { mode: 0o600 });
+      writeState(this.pickedFile, JSON.stringify(this.picked ?? {}, null, 2));
     } catch (err) {
       console.error(`agent-office: couldn't save the projects folder: ${(err as Error).message}`);
     }
@@ -348,6 +349,7 @@ export class Building {
     } catch (err) {
       return `Couldn't make ${this.logsDir}: ${(err as Error).message}`;
     }
+    if (symlinkOnTheWay(this.logsDir)) return `${this.logsDir} is a symlink; the office only writes its clone logs in a real folder`;
     const run = await CloneRun.start(repo, dest, path.join(this.logsDir, `${repo.replace('/', '__')}.log`), { ...this.opts.clone, changed: () => this.cloneChanged?.() });
     if (typeof run === 'string') return run;
     p.run = run;
@@ -394,9 +396,10 @@ export class Building {
   }
 
   private load() {
-    if (!existsSync(this.file)) return;
     try {
-      const saved = JSON.parse(readFileSync(this.file, 'utf8')) as Partial<FloorDef>[];
+      // Never one a repository ships (see safefs.ts): each floor in it is a checkout the office opens.
+      const saved = readStateJson<Partial<FloorDef>[]>(this.file);
+      if (!saved) return;
       const ids = new Set<string>();
       for (const s of Array.isArray(saved) ? saved : []) {
         if (typeof s.id !== 'string' || !/^[a-z0-9-]{1,40}$/.test(s.id) || ids.has(s.id) || typeof s.dir !== 'string' || !path.isAbsolute(s.dir)) continue;
@@ -418,7 +421,7 @@ export class Building {
 
   private loadPicked() {
     try {
-      const saved = JSON.parse(readFileSync(this.pickedFile, 'utf8')) as Partial<PickedDir>;
+      const saved = (readStateJson(this.pickedFile) ?? {}) as Partial<PickedDir>;
       if (typeof saved.dir === 'string' && path.isAbsolute(saved.dir)) {
         this.picked = { dir: saved.dir, by: typeof saved.by === 'string' ? saved.by : '?', at: typeof saved.at === 'number' ? saved.at : Date.now() };
       }
@@ -429,7 +432,7 @@ export class Building {
 
   private loadLocalOff() {
     try {
-      const saved = JSON.parse(readFileSync(this.localFile, 'utf8')) as Partial<LocalOff>;
+      const saved = (readStateJson(this.localFile) ?? {}) as Partial<LocalOff>;
       if (typeof saved.dir === 'string' && path.isAbsolute(saved.dir)) {
         this.localOff = { dir: saved.dir, by: typeof saved.by === 'string' ? saved.by : '?', at: typeof saved.at === 'number' ? saved.at : Date.now() };
       }
@@ -441,8 +444,8 @@ export class Building {
   private setLocalOff(off: LocalOff | undefined) {
     this.localOff = off;
     try {
-      if (off) writeFileSync(this.localFile, JSON.stringify(off, null, 2), { mode: 0o600 });
-      else rmSync(this.localFile, { force: true });
+      if (off) writeState(this.localFile, JSON.stringify(off, null, 2));
+      else if (!isSymlink(this.localFile)) rmSync(this.localFile, { force: true });
     } catch (err) {
       console.error(`agent-office: couldn't save ${this.localFile}: ${(err as Error).message}`);
     }
@@ -450,7 +453,7 @@ export class Building {
 
   private save() {
     try {
-      writeFileSync(this.file, JSON.stringify(this.defs, null, 2), { mode: 0o600 });
+      writeState(this.file, JSON.stringify(this.defs, null, 2));
     } catch (err) {
       console.error(`agent-office: couldn't save the floors: ${(err as Error).message}`);
     }
@@ -458,12 +461,11 @@ export class Building {
 
   private loadClones(): SavedClone[] {
     try {
-      const saved = JSON.parse(readFileSync(this.clonesFile, 'utf8')) as Partial<SavedClone>[];
-      return (Array.isArray(saved) ? saved : []).filter(
-        // Its log is one of ours (it gets deleted), in .agent-office/clones.
-        (s): s is SavedClone =>
-          Number.isInteger(s.pid) && (s.pid as number) > 0 && typeof s.log === 'string' && path.dirname(s.log) === this.logsDir && typeof s.dir === 'string' && path.isAbsolute(s.dir) && typeof s.name === 'string',
-      );
+      const saved = readStateJson<Partial<SavedClone>[]>(this.clonesFile);
+      if (symlinkOnTheWay(this.logsDir)) return [];
+      // Its log is one of ours (it gets deleted), in .agent-office/clones, and its checkout is where
+      // the office clones a repository, since it becomes a floor (see savedClone).
+      return (Array.isArray(saved) ? saved : []).filter((s): s is SavedClone => savedClone(s, this.logsDir));
     } catch {
       return [];
     }
@@ -473,8 +475,8 @@ export class Building {
   private saveClones() {
     const saved: SavedClone[] = [...this.cloning.values()].flatMap((p) => (p.run ? [{ ...p.def, pid: p.run.pid, log: p.run.log, owner: p.owner, empty: p.empty }] : []));
     try {
-      if (saved.length) writeFileSync(this.clonesFile, JSON.stringify(saved, null, 2), { mode: 0o600 });
-      else rmSync(this.clonesFile, { force: true });
+      if (saved.length) writeState(this.clonesFile, JSON.stringify(saved, null, 2));
+      else if (!isSymlink(this.clonesFile)) rmSync(this.clonesFile, { force: true });
     } catch (err) {
       console.error(`agent-office: couldn't save ${this.clonesFile}: ${(err as Error).message}`);
     }

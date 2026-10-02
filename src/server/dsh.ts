@@ -9,10 +9,11 @@
 // can drive a fake ACP agent over stdio without a DSH install (tests/dsh.test.ts).
 
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { commandAction, toolAction } from '../shared/actions.js';
 import type { AgentEffort, Usage, WorkerAction, WorkerStatus } from '../shared/protocol.js';
+import { writeState } from './safefs.js';
 
 export const DSH_PROFILE_DEFAULT = 'acp';
 /** Where a floor keeps the sessions the office lists and resumes (under its .agent-office dir). */
@@ -692,8 +693,7 @@ export function writeDshPatch(dataDir: string): string {
     '',
   ].join('\n');
   mkdirSync(dataDir, { recursive: true, mode: 0o700 });
-  writeFileSync(file, body, { mode: 0o600 });
-  chmodSync(file, 0o600);
+  writeState(file, body);
   return file;
 }
 

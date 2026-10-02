@@ -1,7 +1,8 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import type { NotifyState, WebhookKind, WorkerInfo, WorkerStatus } from '../shared/protocol.js';
 import { alertDetail } from '../shared/status.js';
+import { readStateJson, writeState } from './safefs.js';
 
 /** A worker has to stay put this long before the channel hears about it, so a flicker never posts. */
 const SETTLE_MS = 5_000;
@@ -206,7 +207,7 @@ export class Webhook {
 
   private persist() {
     try {
-      writeFileSync(this.path, JSON.stringify(this.saved ?? {}, null, 2), { mode: 0o600 });
+      writeState(this.path, JSON.stringify(this.saved ?? {}, null, 2));
     } catch {
       // disk issues shouldn't take the office down
     }
@@ -215,7 +216,7 @@ export class Webhook {
   private restore() {
     if (!existsSync(this.path)) return;
     try {
-      const s = JSON.parse(readFileSync(this.path, 'utf8')) as Partial<Saved>;
+      const s = (readStateJson(this.path) ?? {}) as Partial<Saved>;
       if (typeof s.url === 'string' && URL.canParse(s.url)) this.saved = { url: s.url, by: typeof s.by === 'string' ? s.by : '?', at: typeof s.at === 'number' ? s.at : Date.now() };
     } catch {
       // a broken file just means no webhook

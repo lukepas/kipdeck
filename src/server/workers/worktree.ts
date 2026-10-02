@@ -2,12 +2,13 @@
 // of them in workers.json, making them, keeping each worker's branch up to date, noticing one deleted
 // from under a worker and putting it back, and what becomes of them when the worker goes home.
 import { execFileSync } from 'node:child_process';
-import { existsSync, readdirSync, rmdirSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, rmdirSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import type { WorkerInfo, WorkerRepo } from '../../shared/protocol.js';
 import { normalizeRepo } from '../../shared/floors.js';
 import { officePrompt } from '../prompts.js';
-import { WORKSPACE_FILES, WORKTREES_DIR, Worktrees, describeWork, workspaceOf, type WorktreeCleanup, type WorktreeRef, type WorktreeState } from '../worktrees.js';
+import { writeState } from '../safefs.js';
+import { WORKSPACE_FILES, WORKTREES_DIR, Worktrees, describeWork, isBranchName, isWorktreePath, workspaceOf, type WorktreeCleanup, type WorktreeRef, type WorktreeState } from '../worktrees.js';
 import { midTurn } from './lifecycle.js';
 import type { RepoSource, Worker, WorkerContext, Worktree } from './types.js';
 
@@ -37,13 +38,15 @@ export function clearWorkspace(abs: string) {
   }
 }
 
-/** The other repositories of a worker across repositories, as workers.json kept them. */
-export function validRepos(raw: unknown): WorkerRepo[] | undefined {
+/** The other repositories of a worker across repositories, as workers.json kept them; `home` is the floor's checkout. */
+export function validRepos(raw: unknown, home: string): WorkerRepo[] | undefined {
   if (!Array.isArray(raw)) return undefined;
   const str = (v: unknown) => (typeof v === 'string' && v ? v : undefined);
   const repos = raw.flatMap((r): WorkerRepo[] => {
     const floor = str(r?.floor), name = str(r?.name), dir = str(r?.dir), rel = str(r?.path), branch = str(r?.branch), base = str(r?.base);
     if (!floor || !name || !dir || !rel || !branch || !base) return [];
+    // Worktrees of other projects in this worker's workspace, under this floor's worktrees folder.
+    if (!path.isAbsolute(dir) || !isWorktreePath(home, rel) || !isBranchName(branch) || !/^[0-9a-f]{7,64}$/.test(base)) return [];
     const pr = r.pr && typeof r.pr.number === 'number' && typeof r.pr.url === 'string' ? { number: r.pr.number, url: r.pr.url } : undefined;
     return [{ floor, name, repo: str(r.repo), dir, path: rel, branch, base, from: str(r.from), pr }];
   });
@@ -132,7 +135,7 @@ export class WorkerTrees {
       home,
       repos: [line(path.basename(primary.path), home, primary.from, " (this floor's project)"), ...others.map((o) => line(o.name, o.project, o.from))].join('\n'),
     });
-    for (const file of WORKSPACE_FILES) writeFileSync(path.join(this.ctx.dir, path.dirname(primary.path), file), `${brief.trim()}\n`);
+    for (const file of WORKSPACE_FILES) writeState(path.join(this.ctx.dir, path.dirname(primary.path), file), `${brief.trim()}\n`);
   }
 
   /** Sending home a worker across repositories: what `kill` does with a worktree, for each of its worktrees, and then its workspace. */

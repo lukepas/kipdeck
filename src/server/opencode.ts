@@ -1,7 +1,8 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Usage } from '../shared/protocol.js';
+import { writeState } from './safefs.js';
 
 export type OpenCodeHookStatus = 'starting' | 'working' | 'needs_input' | 'done';
 
@@ -53,7 +54,7 @@ export function mergeOpenCodeConfigContent(existing: string | undefined, plugin:
 export function writeOpenCodePlugin(dataDir: string): string {
   mkdirSync(dataDir, { recursive: true, mode: 0o700 });
   const file = path.join(dataDir, 'agent-office-opencode.mjs');
-  writeFileSync(file, OPENCODE_PLUGIN_SOURCE, { mode: 0o600 });
+  writeState(file, OPENCODE_PLUGIN_SOURCE);
   return file;
 }
 

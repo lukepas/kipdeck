@@ -1,6 +1,7 @@
-import { closeSync, existsSync, fstatSync, openSync, readdirSync, readFileSync, readSync, writeFileSync } from 'node:fs';
+import { closeSync, existsSync, fstatSync, openSync, readdirSync, readSync } from 'node:fs';
 import path from 'node:path';
 import type { Usage, UsageState } from '../shared/protocol.js';
+import { readStateJson, writeState } from './safefs.js';
 
 /*
  * Where a worker's numbers come from
@@ -346,7 +347,7 @@ export class Ledger {
 
   private write() {
     try {
-      writeFileSync(this.file, JSON.stringify({ total: this.total, days: this.days }, null, 2), { mode: 0o600 });
+      writeState(this.file, JSON.stringify({ total: this.total, days: this.days }, null, 2));
     } catch {
       // disk issues shouldn't take the office down
     }
@@ -355,7 +356,7 @@ export class Ledger {
   private load() {
     if (!existsSync(this.file)) return;
     try {
-      const saved = JSON.parse(readFileSync(this.file, 'utf8'));
+      const saved = readStateJson(this.file) ?? {};
       this.total = asUsage(saved?.total) ?? zeroUsage();
       if (saved?.days && typeof saved.days === 'object') {
         for (const [day, u] of Object.entries(saved.days)) {
