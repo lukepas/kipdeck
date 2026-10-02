@@ -16,12 +16,39 @@ function later() {
   return { p, resolve, reject };
 }
 
+/**
+ * A clock the test moves with tick(): setTimeout and clearTimeout are swapped for ones on it for the
+ * test's length (a plain mock, so the run prints no warning about the experimental MockTimers API).
+ */
+function clock(t: TestContext) {
+  let now = 0;
+  let next = 1;
+  const timers = new Map<number, { at: number; fn: () => void }>();
+  t.mock.method(globalThis, 'setTimeout', ((fn: () => void, ms = 0) => {
+    const id = next++;
+    timers.set(id, { at: now + ms, fn });
+    return id;
+  }) as unknown as typeof setTimeout);
+  t.mock.method(globalThis, 'clearTimeout', ((id: number) => void timers.delete(id)) as typeof clearTimeout);
+  return (ms: number) => {
+    const until = now + ms;
+    for (;;) {
+      const due = [...timers].filter(([, x]) => x.at <= until).sort((a, b) => a[1].at - b[1].at || a[0] - b[0])[0];
+      if (!due) break;
+      timers.delete(due[0]);
+      now = due[1].at;
+      due[1].fn();
+    }
+    now = until;
+  };
+}
+
 /** A gate that notes each time it's released and why, on a clock the test moves with tick(). */
 function gate(t: TestContext) {
-  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const tick = clock(t);
   const calls: string[] = [];
   const g = new Gate((why) => calls.push(why), CAP_MS);
-  return { calls, g, tick: (ms: number) => t.mock.timers.tick(ms) };
+  return { calls, g, tick };
 }
 
 test('comes down once everything it waits on is in, and the cap after that does nothing', async (t) => {
