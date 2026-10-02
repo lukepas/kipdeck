@@ -2,6 +2,7 @@
 
 import type { Look } from '../avatar.js';
 import type { Me } from './accounts.js';
+import type { RosterEntry } from './mission.js';
 import type { FloorInfo, FloorView, ProjectsDirState } from './floors.js';
 import type { LeaveOnMergeState, MachineState, NotifyState, PromptsState, UpgradeState } from './settings.js';
 import type { PlanLimits, UsageState } from './usage.js';
@@ -113,6 +114,8 @@ export type PresenceServerMsg =
       /** The office's prompts and the worker everyone starts on. */
       prompts: PromptsState;
       leaveOnMerge: LeaveOnMergeState;
+      /** Every hired worker in the building, for the attention ranking (see RosterEntry). */
+      roster: RosterEntry[];
     } & FloorView)
   | { t: 'peer.join'; peer: PeerInfo }
   | { t: 'peer.update'; peer: PeerInfo }

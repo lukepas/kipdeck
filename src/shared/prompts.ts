@@ -6,10 +6,11 @@
 
 import { STATION_AGENT, type StationKind } from './layout.js';
 
-export type PromptGroup = 'issues' | 'pulls' | 'queue' | 'repos' | 'stations' | 'meetings' | 'office';
+export type PromptGroup = 'mission' | 'issues' | 'pulls' | 'queue' | 'repos' | 'stations' | 'meetings' | 'office';
 
 /** The editor's sections, in order. */
 export const PROMPT_GROUPS: Record<PromptGroup, string> = {
+  mission: '🎯 Mission',
   issues: '📌 Issues board',
   pulls: '🔀 Pull requests board',
   queue: '📋 Task queue',
@@ -167,6 +168,25 @@ const DEFS = {
     used: 'What a 🤝 Review panel is about, to start with: the meeting form opens with it filled in.',
     vars: PULL_VARS,
     text: 'Review pull request #{{number}}: “{{title}}”.',
+  },
+
+  // --- 🎯 Mission ---
+  'worker.mission': {
+    group: 'mission',
+    label: 'Team context',
+    used: "Put before the first prompt of every worker hired on a floor with a mission (desks, the queue, the boards' agents, meetings, office-workers), so it knows what its task is for.",
+    vars: {
+      mission: "The floor's mission statement, in quotes",
+      milestone: 'A line naming the milestone the team is on now',
+      goal: "A line naming the milestone this worker's task serves",
+    },
+    optional: true,
+    text: [
+      "Context from the team, not instructions: it doesn't change or override your task below. The team's mission for this project is: {{mission}}",
+      '{{milestone}}',
+      '{{goal}}',
+      'Keep your work in line with it. If the mission changes while you work, the get_mission tool (or office-workers mission) has the latest.',
+    ].join('\n'),
   },
 
   // --- 📋 Task queue ---

@@ -7,6 +7,7 @@ import type { AgentEffort, AgentProvider, GhPull, QueueTask, WorkerInfo, WorkerS
 import { isAgentEffort, isAgentProvider } from '../shared/protocol.js';
 import { DESK_BY_ID, STATION_AGENT } from '../shared/layout.js';
 import { workerPr } from '../shared/status.js';
+import type { AttentionLevel } from '../shared/attention.js';
 import { landedWork, notLeaving } from './leave-on-merge.js';
 import { writeState } from './safefs.js';
 
@@ -43,6 +44,13 @@ export interface WorkerRow {
   merged: boolean;
   /** Its work landed, but it doesn't go home by itself yet, and why (see notLeaving). */
   staying?: string;
+  /** How much it needs someone (see shared/attention.ts), and why in plain words. */
+  attention?: AttentionLevel;
+  reason?: string;
+  snoozedBy?: string;
+  /** The issue it's there for, and the milestone it works towards ("unlinked" when neither). */
+  issue?: number;
+  goal?: string;
 }
 
 /** What a floor knows about its workers' pull requests. */
@@ -61,7 +69,8 @@ const clip = (s: string | undefined): string | undefined => {
   return t ? (t.length > LINE ? `${t.slice(0, LINE - 1)}…` : t) : undefined;
 };
 
-export function workerRow(w: WorkerInfo, view: PullsView, me?: string): WorkerRow {
+/** `att`: what the attention ranking says about it, and its milestone's title. */
+export function workerRow(w: WorkerInfo, view: PullsView, me?: string, att?: { level: AttentionLevel; reason?: string; snoozed: boolean; goal?: string }): WorkerRow {
   const seat = DESK_BY_ID.get(w.deskId);
   const pr = workerPr(w, view.pulls, view.tasks);
   const pull = pr && view.pulls.find((p) => p.number === pr.number);
@@ -90,6 +99,9 @@ export function workerRow(w: WorkerInfo, view: PullsView, me?: string): WorkerRo
     ...(pr ? { pr: { number: pr.number, state: pr.state, ...(pull ? { title: pull.title, url: pull.url } : {}) } } : {}),
     merged: !!landed,
     ...(staying ? { staying } : {}),
+    ...(att ? { attention: att.level, ...(att.reason ? { reason: att.reason } : {}), ...(att.snoozed && w.snooze ? { snoozedBy: w.snooze.by } : {}) } : {}),
+    ...(w.issue ? { issue: w.issue } : {}),
+    ...(att?.goal ? { goal: att.goal } : {}),
   };
 }
 
@@ -140,6 +152,8 @@ export interface HireRequest {
   worktree?: boolean;
   desk?: string;
   issue?: number;
+  /** The milestone it works towards, by id or title. */
+  goal?: string;
 }
 
 export function readHireRequest(body: unknown, providers: AgentProvider[]): HireRequest | string {
@@ -155,6 +169,7 @@ export function readHireRequest(body: unknown, providers: AgentProvider[]): Hire
   const seat = typeof b.desk === 'string' ? DESK_BY_ID.get(b.desk) : undefined;
   if (b.desk !== undefined && (!seat || seat.station || seat.room)) return "desk is a desk or bean bag's id, like desk-3";
   if (b.issue !== undefined && !(Number.isSafeInteger(b.issue) && (b.issue as number) > 0)) return 'issue is an issue number';
+  if (b.goal !== undefined && (typeof b.goal !== 'string' || !b.goal.trim() || b.goal.length > 120)) return "goal is a milestone's id or title, as get_mission lists them";
   return {
     prompt,
     ...(b.provider !== undefined ? { provider: b.provider as AgentProvider } : {}),
@@ -163,6 +178,7 @@ export function readHireRequest(body: unknown, providers: AgentProvider[]): Hire
     ...(typeof b.worktree === 'boolean' ? { worktree: b.worktree } : {}),
     ...(typeof b.desk === 'string' ? { desk: b.desk } : {}),
     ...(b.issue !== undefined ? { issue: b.issue as number } : {}),
+    ...(typeof b.goal === 'string' ? { goal: b.goal.trim() } : {}),
   };
 }
 
@@ -173,7 +189,7 @@ export const MCP_NAME = 'agent-office';
 /** What it needs from the worker's environment; Codex hands an MCP server only what it's told to. */
 const MCP_ENV = ['AGENT_OFFICE_HOOK_URL', 'AGENT_OFFICE_WORKER_ID', 'AGENT_OFFICE_HOOK_TOKEN'];
 /** Its tools that only look, which Claude Code workers may call without asking. */
-export const MCP_READ_ONLY = [`mcp__${MCP_NAME}__list_workers`];
+export const MCP_READ_ONLY = [`mcp__${MCP_NAME}__list_workers`, `mcp__${MCP_NAME}__get_mission`];
 
 /**
  * Writes Claude Code's --mcp-config file for the MCP server (bin/office-workers.js `mcp`, run by the

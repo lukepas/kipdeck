@@ -5,6 +5,7 @@ import type { WhiteboardView } from '../whiteboard.js';
 import type { AgentProvider } from './agents.js';
 import type { GhIssue, GhPull, GhState } from './github.js';
 import type { MeetingState } from './meetings.js';
+import type { Mission } from './mission.js';
 import type { PeerInfo } from './presence.js';
 import type { QueueState } from './queue.js';
 import type { ServicesState } from './settings.js';
@@ -55,6 +56,8 @@ export interface FloorInfo {
   people: number;
   /** How many rows its back office is built out (see WING), for the building's outside. */
   wing: number;
+  /** The start of its mission statement, so every floor's purpose shows from anywhere. */
+  missionLine?: string;
 }
 
 /** How far a new floor's clone has got, from git's progress. */
@@ -104,6 +107,8 @@ export interface FloorView {
   whiteboard: WhiteboardView;
   /** The meeting room: who's meeting about what, and the meetings before. */
   meeting: MeetingState;
+  /** What the floor is for: its mission statement and milestones. */
+  mission: Mission;
 }
 
 export type FloorClientMsg =

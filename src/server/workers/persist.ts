@@ -1,5 +1,5 @@
 // workers.json: every worker as the office last saw it, to pick them all back up after a restart.
-import type { AgentProvider, WorkerInfo, WorkerStatus, WorkerTask } from '../../shared/protocol.js';
+import type { AgentProvider, Snooze, WorkerInfo, WorkerStatus, WorkerTask } from '../../shared/protocol.js';
 import { DESK_BY_ID } from '../../shared/layout.js';
 import { isAgentProvider, savedEffort, savedModel } from '../../shared/providers.js';
 import { providerAdapter } from '../providers/index.js';
@@ -40,6 +40,11 @@ export function saveWorkers(file: string, workers: Iterable<Worker>, stopping: b
     pr: info.pr,
     meeting: info.meeting,
     workedMs: workedMs(info),
+    issue: info.issue,
+    goal: info.goal,
+    snooze: info.snooze,
+    activityAt: info.activityAt,
+    outputAt: info.outputAt,
     tracker: info.kind === 'agent' ? tracker : undefined,
     usage: providerAdapter(info.provider)?.usage?.persisted ? info.usage : undefined,
     ...providerAdapter(info.provider)?.usage?.save?.(state),
@@ -117,6 +122,11 @@ export function restoreWorkers(file: string, dir: string, workers: Map<string, W
         viewerIds: [],
         meeting: typeof s.meeting === 'string' && DESK_BY_ID.get(s.deskId)?.room ? s.meeting : undefined,
         workedMs: typeof s.workedMs === 'number' && Number.isFinite(s.workedMs) && s.workedMs > 0 ? s.workedMs : undefined,
+        issue: Number.isSafeInteger(s.issue) && (s.issue as number) > 0 ? s.issue : undefined,
+        goal: typeof s.goal === 'string' && /^[a-z0-9]{1,16}$/.test(s.goal) ? s.goal : undefined,
+        snooze: validSnooze(s.snooze),
+        activityAt: stamp(s.activityAt),
+        outputAt: stamp(s.outputAt),
       };
       const w = newWorker(info, tracker, typeof s.hookToken === 'string' && s.hookToken ? s.hookToken : undefined);
       if (typeof s.owner === 'string' && s.owner) w.owner = s.owner;
@@ -135,6 +145,15 @@ export function restoreWorkers(file: string, dir: string, workers: Map<string, W
   } catch {
     // corrupt state file: start fresh
   }
+}
+
+const stamp = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : undefined);
+
+function validSnooze(v: unknown): Snooze | undefined {
+  const s = v as Partial<Snooze> | undefined;
+  if (!s || typeof s.by !== 'string' || !stamp(s.at)) return undefined;
+  if (s.until !== 'change' && !stamp(s.until)) return undefined;
+  return { until: s.until as Snooze['until'], by: s.by.slice(0, 64), at: s.at as number };
 }
 
 function validTask(t: unknown): WorkerTask | undefined {

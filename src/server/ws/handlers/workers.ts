@@ -35,8 +35,9 @@ export const workerHandlers = {
     }
     // A shell is theirs too: `claude auth login` or `gh auth login` typed there signs them in.
     const hire = () => {
-      const r = floor.workers.spawn(str(msg.deskId, 32), who, str(msg.prompt, 20000) || undefined, msg.worktree === true, kind, msg.provider, model, effort, undefined, c.accountId, repos);
       const issue = kind === 'agent' ? issueNumber(msg.issue) : undefined;
+      const link = { goal: str(msg.goal, 32) || undefined, issue };
+      const r = floor.workers.spawn(str(msg.deskId, 32), who, str(msg.prompt, 20000) || undefined, msg.worktree === true, kind, msg.provider, model, effort, undefined, c.accountId, repos, link);
       const across = repos.length ? ` across ${[floor.def.name, ...repos.map((x) => x.name)].join(' + ')}` : '';
       if (typeof r === 'string') ctx.warn(c, r);
       else ctx.toastFloor(floor, kind === 'shell' ? `${who} opened a shell at a desk` : `${who} hired ${r.name}${issue ? ` for issue #${issue}` : r.prompt ? ' with a task' : ''}${across}`);
@@ -124,6 +125,8 @@ export const workerHandlers = {
       ctx.warn(c, err);
       const issue = w?.info.kind === 'agent' ? issueNumber(msg.issue) : undefined;
       if (w && !err && issue) {
+        // It's there for that issue now, and on the milestone the issue is on when it had none.
+        w.floor.workers.annotate(w.wid, { issue, goal: w.info.goal ?? w.floor.mission.goalFor(undefined, issue) });
         ctx.toastFloor(w.floor, `${who} handed issue #${issue} to ${w.info.name}`);
         ctx.takeIssue(c, w.floor, issue);
       }

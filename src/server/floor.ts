@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
-import type { ChangesState, FloorInfo, ProjectInfo, ServerMsg, WorkerInfo } from '../shared/protocol.js';
+import type { ChangesState, FloorInfo, Mission, ProjectInfo, ServerMsg, WorkerInfo } from '../shared/protocol.js';
 import { isBusy } from '../shared/status.js';
 import { DESK_BY_ID } from '../shared/layout.js';
 import type { FloorDef } from './building.js';
@@ -13,6 +13,8 @@ import type { GhAs } from './signins.js';
 import { TaskQueue } from './queue.js';
 import { Changes } from './changes.js';
 import { FloorPlanStore } from './floorplan.js';
+import { MissionStore } from './mission.js';
+import { missionLine, missionVars } from '../shared/mission.js';
 import { Docs } from './docs.js';
 import { Whiteboard } from './whiteboard.js';
 import { MeetingRoom } from './meetings.js';
@@ -51,6 +53,8 @@ export interface FloorContext {
   changes(state: ChangesState, clients: string[]): void;
   /** A worker on this floor changed, or left (then just its id). */
   workerChanged(floor: Floor, w: WorkerInfo | string): void;
+  /** This floor's mission changed. */
+  missionChanged(floor: Floor, mission: Mission): void;
   /** How many people are on this floor right now. */
   people(floor: Floor): number;
   /** ⚙️ Settings: a worker whose pull request merged goes home by itself. */
@@ -109,6 +113,8 @@ export class Floor {
   readonly changes: Changes;
   /** The signs over its desks, and how far its back office is built out. */
   readonly plan: FloorPlanStore;
+  /** What the floor is for: its mission statement and milestones (see mission.ts). */
+  readonly mission: MissionStore;
   /** The whiteboard everyone on the floor draws on together. */
   readonly whiteboard: Whiteboard;
   /** The meeting room, where workers work through a question together (see meetings.ts). */
@@ -143,6 +149,7 @@ export class Floor {
     this.docs = new Docs(def.dir);
     // Before the workers: the back office's desks are only there once it's built.
     this.plan = new FloorPlanStore(dataDir);
+    this.mission = new MissionStore(dataDir, (m) => ctx.missionChanged(this, m));
 
     this.workers = new WorkerManager(
       def.dir,
@@ -161,6 +168,8 @@ export class Floor {
           this.sendLandedHome();
         },
         remove: (workerId, info) => {
+          // What it spent and worked stays on its milestone.
+          if (info) this.mission.retire(info);
           this.changes?.forget(workerId);
           ctx.emit(this, { t: 'worker.remove', workerId });
           this.queue?.onWorkerGone(workerId);
@@ -178,6 +187,13 @@ export class Floor {
       ctx.dshProfile,
     );
     this.workers.wing = () => this.plan.wing;
+    this.workers.mission = {
+      goalFor: (goal, issue) => this.mission.goalFor(goal, issue),
+      note: (info) => {
+        const vars = missionVars(this.mission.state(), info.goal);
+        return vars && (officePrompt(ctx.prompts, 'worker.mission', vars) || undefined);
+      },
+    };
 
     this.github = new GitHub(
       def.dir,
@@ -380,6 +396,7 @@ export class Floor {
       waiting: ws.filter((w) => w.kind === 'agent' && (w.status === 'needs_input' || (w.status === 'done' && !w.acked))).length,
       people: this.ctx.people(this),
       wing: this.plan.wing,
+      missionLine: missionLine(this.mission.state()),
     };
   }
 

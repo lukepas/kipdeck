@@ -72,6 +72,7 @@ export function onConnection(ctx: Ctx, ws: WebSocket, url: URL, session: Session
     machine: machine.state(),
     prompts: prompts.state(),
     leaveOnMerge: leaveOnMerge.state(),
+    roster: ctx.rosterEntries(),
     ...floorView(ctx, floor),
   });
   screensOf(ctx, client, floor);

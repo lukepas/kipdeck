@@ -40,7 +40,8 @@ export async function officeQueue(ctx: Ctx, req: http.IncomingMessage, res: http
   if (untrusted) return send(res, 403, { error: untrusted });
   const issue = Number.isInteger(body?.issue) && (body.issue as number) > 0 ? (body.issue as number) : undefined;
   // Its tasks run as whoever the board agent runs as.
-  const err = floor.queue.add(prompt, agent.name, str(body?.title, 200) || undefined, issue, undefined, undefined, undefined, floor.workers.ownerOf(agent.id));
+  // A board agent files against the milestone its issue is on, else the one the team is on now.
+  const err = floor.queue.add(prompt, agent.name, str(body?.title, 200) || undefined, issue, undefined, undefined, undefined, floor.workers.ownerOf(agent.id), floor.mission.goalFor(undefined, issue));
   if (err) return send(res, 400, { error: err });
   const task = floor.queue.state().tasks.at(-1)!;
   ctx.toastFloor(floor, `📋 The ${agent.name} queued ${issue !== undefined ? `issue #${issue}` : `“${task.title}”`}`);

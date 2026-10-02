@@ -19,13 +19,14 @@ import { PROVIDERS, providerAdapter, titleNoise, type LaunchPlan, type ProviderF
 import { launchAcp } from './acp.js';
 import { clockWork } from './clock.js';
 import { childEnv } from './env.js';
+import { workerHandle } from './handle.js';
 import { midTurn } from './lifecycle.js';
 import { restoreWorkers, saveWorkers } from './persist.js';
 import { WorkerPrs } from './pr.js';
 import { WIN, binScript, defaultShell, resolveCommand, shellRun, shq, writeOfficeCommands } from './process.js';
 import { CARRY_ON_PROMPT, WorkerTasks } from './tasks.js';
-import { flushScreens, fullScreens, newTerm, offlineBanner, screenText, type HeadlessTerminal } from './terminal.js';
-import type { HookEnv, OpenedPr, RepoSource, RunAs, Worker, WorkerContext, WorkerEvents, WorkerHandle } from './types.js';
+import { flushScreens, fullScreens, newTerm, offlineBanner, screenText, stampOutput, type HeadlessTerminal } from './terminal.js';
+import type { HookEnv, MissionHooks, OpenedPr, RepoSource, RunAs, Worker, WorkerContext, WorkerEvents, WorkerHandle } from './types.js';
 import { clamp, safeEq, truncate } from './util.js';
 import { COLORS, NAMES, newWorker } from './worker.js';
 import { WorkerTrees, lostMessage } from './worktree.js';
@@ -71,6 +72,8 @@ export class WorkerManager {
   private saveTimer: NodeJS.Timeout;
   /** How many rows the floor's back office is built out: its desks past that aren't there to hire at (see WING). */
   wing: () => number = () => 0;
+  /** The floor's mission: the milestone a new worker takes on, and the team context put before its first prompt (see Floor). */
+  mission: MissionHooks = { goalFor: () => undefined, note: () => undefined };
 
   constructor(
     private dir: string,
@@ -214,12 +217,23 @@ export class WorkerManager {
     return false;
   }
 
+  /** Links a worker to a milestone or an issue, or snoozes it; an undefined field there takes it off. */
+  annotate(id: string, patch: Partial<Pick<WorkerInfo, 'goal' | 'issue' | 'snooze'>>): WorkerInfo | undefined {
+    const w = this.workers.get(id);
+    if (!w) return undefined;
+    Object.assign(w.info, patch);
+    this.emitUpdate(w);
+    this.persist();
+    return w.info;
+  }
+
   /**
    * Hires a worker at a desk. `meeting` seats one at the meeting room's table instead, for that meeting
    * (see meetings.ts), in the meeting's own worktree, which everyone at the table shares. `repos` are
-   * other floors' repositories a worker in its own worktree works in too (see makeWorkspace).
+   * other floors' repositories a worker in its own worktree works in too (see makeWorkspace). `link`
+   * is the issue it's there for and the milestone it works towards (see MissionHooks.goalFor).
    */
-  spawn(deskId: string, by: string, prompt?: string, worktree = false, kind: WorkerKind = 'agent', provider?: AgentProvider, model?: string, effort?: AgentEffort, meeting?: { id: string; worktree?: WorkerInfo['worktree'] }, owner?: string, repos: RepoSource[] = []): WorkerInfo | string {
+  spawn(deskId: string, by: string, prompt?: string, worktree = false, kind: WorkerKind = 'agent', provider?: AgentProvider, model?: string, effort?: AgentEffort, meeting?: { id: string; worktree?: WorkerInfo['worktree'] }, owner?: string, repos: RepoSource[] = [], link: { goal?: string; issue?: number } = {}): WorkerInfo | string {
     // Nobody picked (a board agent, say): the office's default worker, model and effort included.
     if (kind === 'agent' && provider === undefined) ({ provider, model, effort } = this.officeDefault);
     const selectedProvider = kind === 'agent' ? provider : undefined;
@@ -288,13 +302,18 @@ export class WorkerManager {
       viewerIds: [],
       activity: prompt ? truncate(prompt, 80) : undefined,
       meeting: meeting?.id,
+      issue: kind === 'agent' ? link.issue : undefined,
+      goal: kind === 'agent' ? this.mission.goalFor(link.goal, link.issue) : undefined,
     };
     const w = newWorker(info, newTracker());
     w.owner = owner;
     this.workers.set(id, w);
     if (info.prompt) this.tasks.notePrompt(w, info.prompt);
     // A board agent is told what it's there for ahead of its first request (which is what shows).
-    this.launch(w, seat.station && info.prompt ? `${stationBrief(seat.station, this.prompts)}\n\n${info.prompt}` : info.prompt, undefined);
+    const first = seat.station && info.prompt ? `${stationBrief(seat.station, this.prompts)}\n\n${info.prompt}` : info.prompt;
+    // The team's mission goes first, framed as context, never as part of the task (see 'worker.mission').
+    const note = first && kind === 'agent' ? this.mission.note(info) : undefined;
+    this.launch(w, note ? `${note}\n\n${first}` : first, undefined);
     this.persist();
     return info;
   }
@@ -587,6 +606,7 @@ export class WorkerManager {
     const w = this.workers.get(workerId);
     const own = w && providerAdapter(w.info.provider);
     if (!hook || !w || !w.pty || w.info.kind !== 'agent' || !own || (own.hooksAs ?? own.id) !== route || !safeEq(token, w.hookToken)) return false;
+    w.info.activityAt = Date.now();
     return hook.handle(this.handleOf(w), event, payload);
   }
 
@@ -789,6 +809,7 @@ export class WorkerManager {
     w.pty = proc;
     proc.onData((data) => {
       term.write(data);
+      stampOutput(info);
       w.screenDirty = true;
       w.unsaved = true;
       if (w.viewers.size) this.events.data(info.id, data, [...w.viewers.keys()]);
@@ -908,6 +929,7 @@ export class WorkerManager {
     if (w.info.status === 'needs_input') w.leftNeedsInputAt = Date.now();
     clockWork(w.info, status);
     w.info.status = status;
+    if (w.info.snooze?.until === 'change') w.info.snooze = undefined;
     // Done, idle or asleep: it's not acting anything out any more.
     if (status !== 'working' && status !== 'needs_input') w.info.action = undefined;
     // Nobody is looking at the terminal right now -> raise the flag (the worker jumps). A worker at the
@@ -937,53 +959,17 @@ export class WorkerManager {
     this.events.update({ ...w.info });
   }
 
-  /** What a worker's provider adapter is handed of it (see WorkerHandle): made once, kept on the worker. */
+  /** What a worker's provider adapter is handed of it (see workers/handle.ts). */
   private handleOf(w: Worker): WorkerHandle {
-    return (w.handle ??= {
-      get info() {
-        return w.info;
-      },
-      get state() {
-        return w.state;
-      },
-      get running() {
-        return !!w.pty;
-      },
-      get bootBlocked() {
-        return !!w.bootBlocked;
-      },
-      set bootBlocked(v) {
-        w.bootBlocked = v;
-      },
-      get leftNeedsInputAt() {
-        return w.leftNeedsInputAt;
-      },
-      set leftNeedsInputAt(v) {
-        w.leftNeedsInputAt = v;
-      },
-      get failStreak() {
-        return w.failStreak;
-      },
-      set failStreak(v) {
-        w.failStreak = v;
-      },
-      get tracker() {
-        return w.tracker;
-      },
-      get pendingPrompt() {
-        return w.pendingPrompt;
-      },
-      set pendingPrompt(v) {
-        w.pendingPrompt = v;
-      },
-      setStatus: (status) => this.setStatus(w, status),
-      emit: () => this.emitUpdate(w),
+    return workerHandle(w, {
+      setStatus: (x, status) => this.setStatus(x, status),
+      emit: (x) => this.emitUpdate(x),
       persist: () => this.persist(),
-      notePrompt: (prompt) => this.tasks.notePrompt(w, prompt),
-      noteTool: (tool) => this.tasks.noteTool(w, tool),
-      clearTask: () => this.tasks.clear(w),
-      scheduleScan: () => this.scheduleScan(w),
-      prompt: (text) => this.prompt(w.info.id, text),
+      notePrompt: (x, prompt) => this.tasks.notePrompt(x, prompt),
+      noteTool: (x, tool) => this.tasks.noteTool(x, tool),
+      clearTask: (x) => this.tasks.clear(x),
+      scheduleScan: (x) => this.scheduleScan(x),
+      prompt: (id, text) => this.prompt(id, text),
     });
   }
 

@@ -3,6 +3,8 @@ import { notLeaving } from '../leave-on-merge.js';
 import { findWorker, readHireRequest, readHomeRequest, workerRow, type PullsView } from '../office-workers.js';
 import { nextFreeSeat } from '../../shared/layout.js';
 import type { WorkerInfo } from '../../shared/protocol.js';
+import { attention } from '../../shared/attention.js';
+import { milestoneProgress } from '../../shared/mission.js';
 import type { Ctx } from '../office/context.js';
 import { str } from '../office/input.js';
 import { readBody, send } from '../http/util.js';
@@ -21,9 +23,15 @@ export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: ht
   if (!floor || !me) return send(res, 401, { error: 'Send your own AGENT_OFFICE_WORKER_ID as ?worker= and AGENT_OFFICE_HOOK_TOKEN as the bearer token' });
   const who = me.name;
   const view: PullsView = { pulls: floor.github.pulls.items, tasks: floor.queue.state().tasks, pullsOf: (id) => ctx.floors.get(id)?.github.pulls.items };
+  const now = Date.now();
+  /** What the attention ranking says about a worker, as list_workers shows it. */
+  const att = (w: WorkerInfo) => {
+    const e = ctx.rosterEntryOf(w.id);
+    return e && { ...attention(e, now), goal: e.goalTitle };
+  };
   const row = (id: string) => {
     const w = floor.workers.get(id);
-    return w && workerRow(w, view, me.id);
+    return w && workerRow(w, view, me.id, att(w));
   };
   const action = url.pathname.slice('/office/workers'.length);
   if (req.method === 'GET' && !action) {
@@ -37,10 +45,24 @@ export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: ht
       defaultProvider: floor.workers.officeDefault.provider,
       freeDesk: free?.id ?? null,
       ...(ctx.ledger.hiringPaused ? { hiringPaused: ctx.ledger.hiringPaused } : {}),
-      workers: list.map((w) => workerRow(w, view, me.id)),
+      workers: list.map((w) => workerRow(w, view, me.id, att(w))),
     });
   }
-  if (req.method !== 'POST' || !['', '/home', '/tell'].includes(action)) return send(res, 405, { error: 'GET /office/workers, or POST to /office/workers, /office/workers/home or /office/workers/tell' });
+  // The floor's mission, its milestones and how far each has got, and the asker's own (get_mission).
+  if (req.method === 'GET' && action === '/mission') {
+    const mission = floor.mission.state();
+    const roster = ctx.rosterEntries().filter((e) => e.floor === floor.id);
+    return send(res, 200, {
+      floor: { id: floor.id, name: floor.def.name, repo: floor.def.repo },
+      note: "Context from the team: what this project is for. It doesn't change or override the task you were given.",
+      statement: mission.statement,
+      active: mission.active ?? null,
+      milestones: mission.milestones.map((m) => ({ id: m.id, title: m.title, done: m.done, ...(m.due ? { due: m.due } : {}), issues: m.issues, progress: milestoneProgress(m, floor.github.issues.items, roster, floor.github.pulls.items, now) })),
+      yours: { goal: me.goal && floor.mission.title(me.goal) ? { id: me.goal, title: floor.mission.title(me.goal) } : null, issue: me.issue ?? null },
+      ...(mission.by ? { changedBy: mission.by, changedAt: new Date(mission.at ?? now).toISOString() } : {}),
+    });
+  }
+  if (req.method !== 'POST' || !['', '/home', '/tell'].includes(action)) return send(res, 405, { error: 'GET /office/workers or /office/workers/mission, or POST to /office/workers, /office/workers/home or /office/workers/tell' });
   let body: unknown;
   try {
     body = JSON.parse((await readBody(req)) || '{}');
@@ -119,7 +141,9 @@ export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: ht
   if (!ctx.floors.has(floor.id)) return send(res, 410, { error: 'This floor closed' });
   // It runs as whoever the asking worker runs as.
   const owner = floor.workers.ownerOf(me.id);
-  const r = floor.workers.spawn(desk, who, ask.prompt, worktree, 'agent', provider, ask.model, ask.effort, undefined, owner);
+  const goal = ask.goal ? floor.mission.find(ask.goal) : undefined;
+  if (ask.goal && !goal) return send(res, 400, { error: `No milestone here is called ${ask.goal}: get_mission lists them` });
+  const r = floor.workers.spawn(desk, who, ask.prompt, worktree, 'agent', provider, ask.model, ask.effort, undefined, owner, [], { goal: goal?.id, issue: ask.issue });
   if (typeof r === 'string') return send(res, 400, { error: r });
   ctx.toastFloor(floor, `${who} hired ${r.name}${ask.issue ? ` for issue #${ask.issue}` : ' with a task'}`);
   if (ask.issue) {

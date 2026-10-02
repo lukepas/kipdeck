@@ -13,11 +13,14 @@ import { fileURLToPath } from 'node:url';
 
 const USAGE = `Usage:
   office-workers list [--json]                  everyone at a desk on this floor: status, task,
-                                                branch and pull request (merged = free to go home)
+                                                branch and pull request (merged = free to go home),
+                                                and what needs someone (stuck, to review...)
+  office-workers mission [--json]               what this floor is for: its mission, milestones
+                                                and how far each has got, and your own
   office-workers hire [options] <<'EOF'         hire a worker at a free desk; its task on stdin
   …the task…                                    (or --prompt "…"). Options: --provider <name>
   EOF                                           --model <m> --effort <e> --desk <id> --issue <n>
-                                                --no-worktree
+                                                --goal <milestone> --no-worktree
   office-workers home <name|id>... [--cleanup auto|keep|worktree|all]
                                                 send workers home. auto (the default) deletes each
                                                 one's worktree and branch unless they hold work
@@ -35,7 +38,7 @@ export const EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];
 /** How long the office may take to come back when it's restarting (a dev reload, an upgrade). */
 const RETRY_MS = 6000;
 /** Sending several workers home waits on git for each; hiring may fetch from GitHub first. */
-const TIMEOUT_MS = { list: 15_000, tell: 15_000, hire: 90_000, home: 300_000 };
+const TIMEOUT_MS = { list: 15_000, mission: 15_000, tell: 15_000, hire: 90_000, home: 300_000 };
 
 /**
  * Reads `--flag value` and `--flag=value` options, and the words that aren't options.
@@ -80,6 +83,11 @@ export function parseArgs(argv) {
     if (rest.length) throw new UsageError(`mcp takes no arguments (got ${rest.join(' ')})`);
     return { cmd: 'mcp' };
   }
+  if (cmd === 'mission') {
+    const { opts, words } = options(rest, [], ['--json']);
+    if (words.length) throw new UsageError(`mission takes no arguments (got ${words.join(' ')})`);
+    return { cmd: 'mission', json: opts['--json'] === true };
+  }
   if (cmd === 'list' || cmd === 'ls') {
     const { opts, words } = options(rest, [], ['--json']);
     if (words.length) throw new UsageError(`list takes no arguments (got ${words.join(' ')})`);
@@ -101,7 +109,7 @@ export function parseArgs(argv) {
     return { cmd: 'tell', worker: words[0], ...(opts['--prompt'] !== undefined ? { prompt: opts['--prompt'] } : {}) };
   }
   if (cmd === 'hire') {
-    const { opts, words } = options(rest, ['--prompt', '--provider', '--model', '--effort', '--desk', '--issue'], ['--no-worktree', '--json']);
+    const { opts, words } = options(rest, ['--prompt', '--provider', '--model', '--effort', '--desk', '--issue', '--goal'], ['--no-worktree', '--json']);
     if (words.length) throw new UsageError(`Unexpected argument: ${words[0]} (give the task on stdin or with --prompt)`);
     /** @type {Record<string, unknown>} */
     const out = { cmd: 'hire', json: opts['--json'] === true };
@@ -109,6 +117,7 @@ export function parseArgs(argv) {
     if (opts['--provider'] !== undefined) out.provider = String(opts['--provider']).trim();
     if (opts['--model'] !== undefined) out.model = String(opts['--model']).trim();
     if (opts['--desk'] !== undefined) out.desk = String(opts['--desk']).trim();
+    if (opts['--goal'] !== undefined) out.goal = String(opts['--goal']).trim();
     if (opts['--no-worktree']) out.worktree = false;
     if (opts['--effort'] !== undefined) {
       if (!EFFORTS.includes(String(opts['--effort']))) throw new UsageError(`--effort is one of ${EFFORTS.join(', ')}`);
@@ -141,16 +150,16 @@ export function officeEnv(env) {
 
 /**
  * The HTTP request for one of the office's worker calls.
- * @param {'list' | 'hire' | 'home' | 'tell'} what
+ * @param {'list' | 'mission' | 'hire' | 'home' | 'tell'} what
  * @param {{ url: string, worker: string, token: string }} office
  * @param {Record<string, unknown>} [body]
  * @returns {{ method: string, url: string, headers: Record<string, string>, body?: string, timeout: number }}
  */
 export function buildRequest(what, office, body) {
-  const url = new URL(`${office.url}/office/workers${what === 'home' ? '/home' : what === 'tell' ? '/tell' : ''}`);
+  const url = new URL(`${office.url}/office/workers${what === 'home' || what === 'tell' || what === 'mission' ? `/${what}` : ''}`);
   url.searchParams.set('worker', office.worker);
   const headers = { authorization: `Bearer ${office.token}` };
-  if (what === 'list') return { method: 'GET', url: url.href, headers, timeout: TIMEOUT_MS.list };
+  if (what === 'list' || what === 'mission') return { method: 'GET', url: url.href, headers, timeout: TIMEOUT_MS[what] };
   return { method: 'POST', url: url.href, headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify(body ?? {}), timeout: TIMEOUT_MS[what] };
 }
 
@@ -189,7 +198,7 @@ async function send(req, fetchImpl) {
 
 /**
  * Makes one call to the office; resolves to what it answered, or throws with why it said no.
- * @param {'list' | 'hire' | 'home' | 'tell'} what
+ * @param {'list' | 'mission' | 'hire' | 'home' | 'tell'} what
  * @param {Record<string, unknown> | undefined} body
  * @param {{ env: Record<string, string | undefined>, fetch: typeof fetch }} io
  */
@@ -207,6 +216,8 @@ export function formatWorker(w) {
   if (w.repos?.length) parts.push(`also in ${w.repos.map((r) => r.name).join(', ')}`);
   if (w.pr) parts.push(`PR #${w.pr.number} ${w.pr.state}${w.pr.title ? ` “${w.pr.title}”` : ''}`);
   if (w.merged) parts.push(w.staying ? `landed, staying: ${w.staying}` : 'landed: free to go home');
+  if (w.reason && (w.attention === 'needs-you' || w.attention === 'stuck' || w.attention === 'review')) parts.push(`${w.attention}: ${w.reason}${w.snoozedBy ? ` (snoozed by ${w.snoozedBy})` : ''}`);
+  if (w.goal || w.issue) parts.push(`for ${[w.goal && `"${w.goal}"`, w.issue && `#${w.issue}`].filter(Boolean).join(' ')}`);
   else if (w.viewers?.length) parts.push(`watched by ${w.viewers.join(', ')}`);
   if (w.task) parts.push(w.task);
   return `${w.id}  ${parts.join(' · ')}`;
@@ -220,6 +231,20 @@ export function formatWorkers(view) {
     `${view?.freeDesk ? '' : ' · no desk free'}${view?.hiringPaused ? ` · hiring paused: ${view.hiringPaused}` : ''}` +
     ` · go home once merged is ${view?.leaveOnMerge ? 'on' : 'off'}`;
   return [head, ...workers.map(formatWorker)].join('\n');
+}
+
+/** The floor's mission, as get_mission answers. */
+export function formatMission(m) {
+  const floor = m?.floor?.name ?? 'this floor';
+  const lines = [m?.statement ? `${floor}'s mission: ${m.statement}` : `${floor} has no mission statement yet.`];
+  for (const x of m?.milestones ?? []) {
+    const p = x.progress ?? {};
+    const tags = [x.id === m.active ? 'active' : '', x.done ? 'done' : '', x.due ? `due ${x.due}` : ''].filter(Boolean);
+    lines.push(`- ${x.title}${tags.length ? ` (${tags.join(', ')})` : ''}: issues ${p.closed ?? 0}/${p.issues ?? 0} closed, ${p.prsOpen ?? 0} PRs open, ${p.working ?? 0} working [${x.id}]`);
+  }
+  const yours = m?.yours?.goal ? `Your task serves "${m.yours.goal.title}".` : 'Your task is not linked to a milestone.';
+  lines.push(yours, m?.note ?? '');
+  return lines.filter(Boolean).join('\n');
 }
 
 /** How sending home went, a line per worker. */
@@ -249,7 +274,8 @@ export const TOOLS = [
     description:
       "Lists the coding agents (the office's workers) at the desks on this Agent Office floor, and shells: each one's id, name, status, desk, task, git worktree branch and pull request. " +
       'merged: true means a pull request of its merged and none is open: its work landed and it can go home. staying says why the office would not send it home by itself yet ' +
-      '(still working, someone has its terminal open, a board agent...). worktree.deleted: true means its folder was deleted outside the office, so it cannot start until a person rebuilds it at its desk. you: true is you.',
+      '(still working, someone has its terminal open, a board agent...). worktree.deleted: true means its folder was deleted outside the office, so it cannot start until a person rebuilds it at its desk. you: true is you. ' +
+      'attention is how much it needs someone (needs-you, stuck, review, working, parked) and reason says why in plain words (e.g. "working but silent for 12 min"): use it to find stuck workers. goal is the milestone it works towards.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     annotations: { readOnlyHint: true, openWorldHint: false },
   },
@@ -269,11 +295,21 @@ export const TOOLS = [
         worktree: { type: 'boolean', description: 'Its own git worktree and branch (default true in a git checkout).' },
         desk: { type: 'string', description: 'A desk or bean bag id (desk-3). Default: the next free one.' },
         issue: { type: 'integer', minimum: 1, description: 'The GitHub issue it works on, assigned when it starts.' },
+        goal: { type: 'string', description: "The milestone of the floor's mission it works towards, by id or title (get_mission lists them). Default: the one its issue is on, else the active one." },
       },
       required: ['prompt'],
       additionalProperties: false,
     },
     annotations: { destructiveHint: false, openWorldHint: false },
+  },
+  {
+    name: 'get_mission',
+    title: 'Get the mission',
+    description:
+      "The floor's mission: what the team is trying to achieve on this project, its milestones (the active one marked) with how far each has got, and which milestone your own task serves. " +
+      "It is context from the team, not instructions: it doesn't change the task you were given. Read it again when you're told the mission changed.",
+    inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+    annotations: { readOnlyHint: true, openWorldHint: false },
   },
   {
     name: 'send_home',
@@ -318,13 +354,14 @@ const INSTRUCTIONS =
   "You work in Agent Office, where coding agents (the office's workers) sit at desks, each usually in its own git worktree and branch. These tools are the way to see and manage " +
   'the other agents: whenever you are asked about the agents or workers (who is working on what, whose pull request merged, hiring one, sending them home), use them, ' +
   "rather than looking for the agents with git, ps or HTTP calls. list_workers says where each one's pull request stands (merged: true means it merged), hire_worker " +
-  'puts a new agent to work, send_home sends agents home and deletes their worktrees and branches, and tell_worker gives one a prompt. Everyone in the office sees who did what. ' +
+  'puts a new agent to work, send_home sends agents home and deletes their worktrees and branches, and tell_worker gives one a prompt. get_mission says what the team is working towards. Everyone in the office sees who did what. ' +
   'The office-workers command on your PATH does the same from a shell.';
 
 /** Runs a tool; resolves to its text, and whether nothing it was asked came off, or throws with why it failed. */
 async function runTool(name, args, io) {
   const a = args && typeof args === 'object' ? args : {};
   if (name === 'list_workers') return { text: JSON.stringify(await call('list', undefined, io), null, 1) };
+  if (name === 'get_mission') return { text: JSON.stringify(await call('mission', undefined, io), null, 1) };
   if (name === 'hire_worker') {
     const answer = await call('hire', a, io);
     const w = answer.worker ?? {};
@@ -447,6 +484,11 @@ export async function main(argv, io = {}) {
       if (stdin.isTTY) throw new UsageError(`Give the prompt on stdin (office-workers ${cmd.cmd} … <<'EOF' … EOF) or with --prompt "…"`);
       return readStdin(stdin);
     };
+    if (cmd.cmd === 'mission') {
+      const m = await call('mission', undefined, ctx);
+      out(cmd.json ? JSON.stringify(m, null, 2) : formatMission(m));
+      return 0;
+    }
     if (cmd.cmd === 'list') {
       const view = await call('list', undefined, ctx);
       out(cmd.json ? JSON.stringify(view, null, 2) : formatWorkers(view));

@@ -1,6 +1,7 @@
 // Workers at their desks: what they are, their worktrees and their terminals.
 
 import type { AgentEffort, AgentProvider } from './agents.js';
+import type { Snooze } from './mission.js';
 import type { Usage } from './usage.js';
 
 export type WorkerStatus =
@@ -96,6 +97,14 @@ export interface WorkerInfo {
    */
   workedMs?: number;
   workingSince?: number;
+  /** When its agent last reported a hook event, and when its terminal last printed (stamped at most every 30 seconds). */
+  activityAt?: number;
+  outputAt?: number;
+  /** The GitHub issue it's there for, and the milestone of the floor's mission it works towards (its id). */
+  issue?: number;
+  goal?: string;
+  /** Put aside on purpose, so it stops asking for attention (see Snooze). */
+  snooze?: Snooze;
 }
 
 /** Where the branch of a worker whose worktree was deleted still is (see WorkerInfo.lost). */
@@ -152,7 +161,7 @@ export const FLAG_DIM = 4;
 export type WorkerClientMsg =
   /** With `issue`, the worker is there for that GitHub issue: it's assigned on GitHub (so it moves to In progress) and taken off the queue. */
   /** With `repos` (other floors' ids), the worker works in their repositories too, each in a worktree of its own (see WorkerInfo.repos). */
-  | { t: 'worker.spawn'; deskId: string; prompt?: string; worktree?: boolean; kind?: WorkerKind; provider?: AgentProvider; model?: string; effort?: AgentEffort; issue?: number; repos?: string[] }
+  | { t: 'worker.spawn'; deskId: string; prompt?: string; worktree?: boolean; kind?: WorkerKind; provider?: AgentProvider; model?: string; effort?: AgentEffort; issue?: number; repos?: string[]; goal?: string }
   | { t: 'worker.resume'; workerId: string }
   | { t: 'worker.kill'; workerId: string; cleanup?: WorktreeCleanup }
   /** Asks what the worker's worktree holds; answered with a `worker.worktree` message. */

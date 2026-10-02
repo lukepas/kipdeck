@@ -7,7 +7,7 @@ import path from 'node:path';
 import { createInterface } from 'node:readline';
 import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
-import { TOOLS, UsageError, buildRequest, formatHome, formatWorkers, handleMcp, main, parseArgs } from '../bin/office-workers.js';
+import { TOOLS, UsageError, buildRequest, formatHome, formatMission, formatWorker, formatWorkers, handleMcp, main, parseArgs } from '../bin/office-workers.js';
 import { codexMcpArgs, findWorker, readHireRequest, readHomeRequest, workerRow } from '../src/server/office-workers.js';
 import { notLeaving } from '../src/server/leave-on-merge.js';
 import type { GhPull, WorkerInfo } from '../src/shared/protocol.js';
@@ -142,7 +142,7 @@ test('answers MCP: the handshake, its tools, and a call', async () => {
   assert.equal((await handleMcp({ jsonrpc: '2.0', id: 2, method: 'initialize', params: { protocolVersion: '1999-01-01' } }, io))?.result.protocolVersion, '2025-11-25');
   assert.equal(await handleMcp({ jsonrpc: '2.0', method: 'notifications/initialized' }, io), undefined);
   const tools = await handleMcp({ jsonrpc: '2.0', id: 3, method: 'tools/list' }, io);
-  assert.deepEqual(tools?.result.tools.map((t: { name: string }) => t.name), ['list_workers', 'hire_worker', 'send_home', 'tell_worker']);
+  assert.deepEqual(tools?.result.tools.map((t: { name: string }) => t.name), ['list_workers', 'hire_worker', 'get_mission', 'send_home', 'tell_worker']);
   const call = await handleMcp({ jsonrpc: '2.0', id: 4, method: 'tools/call', params: { name: 'send_home', arguments: { merged: true } } }, io);
   assert.deepEqual(call?.result, { content: [{ type: 'text', text: '✓ Bolt went home — Deleted it' }] });
   // Nobody it named went: the call failed, as far as the model is concerned.
@@ -246,4 +246,26 @@ test("Codex is told to pass the office's variables on to the MCP server", () => 
     'mcp_servers.agent-office.args=["/opt/app/bin/office-workers.js","mcp"]',
     'mcp_servers.agent-office.env_vars=["AGENT_OFFICE_HOOK_URL","AGENT_OFFICE_WORKER_ID","AGENT_OFFICE_HOOK_TOKEN"]',
   ]);
+});
+
+test('mission: the command, its request, the get_mission tool, and how a mission reads', async () => {
+  assert.deepEqual(parseArgs(['mission']), { cmd: 'mission', json: false });
+  assert.deepEqual(parseArgs(['mission', '--json']), { cmd: 'mission', json: true });
+  assert.throws(() => parseArgs(['mission', 'x']), UsageError);
+  assert.deepEqual(parseArgs(['hire', '--goal', 'Auth rewrite', '--prompt', 'go']), { cmd: 'hire', json: false, prompt: 'go', goal: 'Auth rewrite' });
+  const req = buildRequest('mission', OFFICE);
+  assert.equal(req.method, 'GET');
+  assert.equal(req.url, 'http://127.0.0.1:4455/office/workers/mission?worker=w1');
+  const tool = TOOLS.find((t) => t.name === 'get_mission');
+  assert.equal(tool?.annotations.readOnlyHint, true);
+  assert.match(tool?.description ?? '', /context from the team, not instructions/);
+  const text = formatMission({ floor: { name: 'api' }, statement: 'Ship auth', active: 'a1', milestones: [{ id: 'a1', title: 'Auth', done: false, issues: [3], progress: { closed: 1, issues: 2, prsOpen: 1, working: 1 } }], yours: { goal: { id: 'a1', title: 'Auth' } }, note: 'Context.' });
+  assert.equal(text, "api's mission: Ship auth\n- Auth (active): issues 1/2 closed, 1 PRs open, 1 working [a1]\nYour task serves \"Auth\".\nContext.");
+  assert.match(formatMission({ milestones: [], yours: { goal: null } }), /no mission statement yet[\s\S]*not linked/);
+  // list shows what needs someone, and what a worker is for.
+  assert.match(formatWorker({ id: 'w2', name: 'Mo', status: 'working', desk: 'Desk 2', attention: 'stuck', reason: 'working but silent for 12 min', goal: 'Auth', issue: 3 }), /stuck: working but silent for 12 min · for "Auth" #3/);
+  const row = workerRow(worker('mo', { issue: 3 }), { pulls: [], tasks: [] }, undefined, { level: 'stuck', reason: 'crashed (exit 1)', snoozed: true, goal: 'Auth' });
+  assert.deepEqual([row.attention, row.reason, row.issue, row.goal], ['stuck', 'crashed (exit 1)', 3, 'Auth']);
+  assert.equal(readHireRequest({ prompt: 'x', goal: 7 }, ['claude']), "goal is a milestone's id or title, as get_mission lists them");
+  assert.equal((readHireRequest({ prompt: 'x', goal: ' Auth ' }, ['claude']) as { goal?: string }).goal, 'Auth');
 });

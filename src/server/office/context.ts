@@ -21,7 +21,7 @@ import type { Floor } from '../floor.js';
 import type { OfficePrompts } from '../prompts.js';
 import type { LeaveOnMerge } from '../leave-on-merge.js';
 import type { ChatLog } from '../history.js';
-import type { FloorInfo, Me, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
+import type { FloorInfo, Me, RosterEntry, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
 import type { Client } from './client.js';
 import type { Spot } from './input.js';
 
@@ -116,6 +116,16 @@ export interface FloorHelpers {
   closeFloor(floor: Floor, who: string): void;
 }
 
+/** Every hired worker in the building, for the attention ranking (office/roster.ts). */
+export interface RosterHelpers {
+  rosterEntries(): RosterEntry[];
+  rosterEntryOf(workerId: string): RosterEntry | undefined;
+  /** Something a roster entry shows may have changed: tell everyone, at most a few times a second, if it did. */
+  rosterChanged(): void;
+  /** Drops a `rosterChanged` still waiting to go out (the office is closing). */
+  cancelRosterChanged(): void;
+}
+
 /** Who's signed in (office/people.ts). */
 export interface People {
   /** Who a connection is: its account's current name and role, or an admin guest on the shared password. */
@@ -164,4 +174,4 @@ export interface Gates {
   claudeFor(provider: string | undefined): SignInKind | undefined;
 }
 
-export type Ctx = Core & BuildingServices & FloorsOpen & LateServices & Messaging & FloorHelpers & People & Navigation & Gates;
+export type Ctx = Core & BuildingServices & FloorsOpen & LateServices & Messaging & FloorHelpers & RosterHelpers & People & Navigation & Gates;

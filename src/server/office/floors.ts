@@ -55,6 +55,7 @@ export function floorHelpers(ctx: Ctx): FloorHelpers {
     ctx.floors.delete(floor.id);
     floor.shutdown();
     floorsChanged();
+    ctx.rosterChanged();
     // Its workers made room under the worker limit.
     ctx.pumpQueues();
   };
@@ -102,6 +103,12 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
       } else ctx.webhook.onWorker(w);
       ctx.machine.workersChanged();
       ctx.floorsChanged();
+      ctx.rosterChanged();
+    },
+    missionChanged: (floor, mission) => {
+      ctx.toFloor(floor, { t: 'mission', floor: floor.id, mission });
+      ctx.floorsChanged();
+      ctx.rosterChanged();
     },
     people: (floor) => {
       let n = 0;
@@ -112,6 +119,8 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
     floor: (id) => floors.get(id),
     pullsChanged: (floor) => {
       for (const f of floors.values()) if (f !== floor && worksIn(f, floor)) f.sendLandedHome();
+      // A pull request's checks or state show on the roster.
+      ctx.rosterChanged();
     },
     lent: (floor) => [...floors.values()].some((f) => f !== floor && worksIn(f, floor)),
     runAs: ctx.signins,

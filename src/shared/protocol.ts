@@ -12,6 +12,7 @@ import type { MeetingClientMsg, MeetingServerMsg } from './protocol/meetings.js'
 import type { PresenceClientMsg, PresenceServerMsg } from './protocol/presence.js';
 import type { QueueClientMsg, QueueServerMsg } from './protocol/queue.js';
 import type { MilestoneServerMsg } from './protocol/milestones.js';
+import type { MissionClientMsg, MissionServerMsg } from './protocol/mission.js';
 import type { SettingsClientMsg, SettingsServerMsg } from './protocol/settings.js';
 import type { ToysServerMsg, WhiteboardClientMsg } from './protocol/toys.js';
 import type { UsageClientMsg, UsageServerMsg } from './protocol/usage.js';
@@ -24,6 +25,7 @@ export * from './protocol/floors.js';
 export * from './protocol/github.js';
 export * from './protocol/meetings.js';
 export * from './protocol/milestones.js';
+export * from './protocol/mission.js';
 export * from './protocol/presence.js';
 export * from './protocol/queue.js';
 export * from './protocol/settings.js';
@@ -45,7 +47,8 @@ export type ClientMsg =
   | SignInsClientMsg
   | SettingsClientMsg
   | UsageClientMsg
-  | WhiteboardClientMsg;
+  | WhiteboardClientMsg
+  | MissionClientMsg;
 
 export type ServerMsg =
   | PresenceServerMsg
@@ -59,4 +62,5 @@ export type ServerMsg =
   | AccountsServerMsg
   | SettingsServerMsg
   | UsageServerMsg
-  | ToysServerMsg;
+  | ToysServerMsg
+  | MissionServerMsg;

@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import type { NotifyState, WebhookKind, WorkerInfo, WorkerStatus } from '../shared/protocol.js';
+import type { NotifyState, RosterEntry, WebhookKind, WorkerInfo, WorkerStatus } from '../shared/protocol.js';
 import { alertDetail } from '../shared/status.js';
 import { BlockedAddressError, guardedFetch, readLimited, type GuardOptions } from './netguard.js';
 import { readStateJson, writeState } from './safefs.js';
@@ -14,6 +14,7 @@ const TIMEOUT_MS = 10_000;
 const MAX_BACKLOG = 20;
 
 type Alert = Extract<WorkerStatus, 'needs_input' | 'done'>;
+type PostKind = Alert | 'stuck' | 'test';
 
 interface Saved {
   url: string;
@@ -60,6 +61,8 @@ export class Webhook {
   /** Each worker's latest state, and the alert waiting out its settle time. */
   private latest = new Map<string, WorkerInfo>();
   private pending = new Map<string, { status: Alert; timer: NodeJS.Timeout }>();
+  /** Stuck workers waiting out their settle time (see onStuck). */
+  private stuckPending = new Map<string, NodeJS.Timeout>();
   private chain: Promise<unknown> = Promise.resolve();
   private backlog = 0;
 
@@ -127,16 +130,38 @@ export class Webhook {
   onWorkerGone(id: string) {
     this.cancel(id);
     this.latest.delete(id);
+    clearTimeout(this.stuckPending.get(id));
+    this.stuckPending.delete(id);
+  }
+
+  /**
+   * A worker just got stuck (see shared/attention.ts): silent while working, crashed, failing
+   * again and again... The channel hears about it once it's still that way a few seconds later
+   * (`still` says why, or undefined once it isn't, or someone has its terminal open).
+   */
+  onStuck(e: RosterEntry, reason: string, still: () => string | undefined) {
+    if (this.stuckPending.has(e.id) || e.kind !== 'agent') return;
+    const timer = setTimeout(() => {
+      this.stuckPending.delete(e.id);
+      const why = still();
+      if (!why) return;
+      const task = e.task?.name ? ` — ${oneLine(e.task.name, 80)}` : '';
+      void this.post({ kind: 'stuck', title: `⚠️ ${e.name} looks stuck in ${e.floorName}${task}`, detail: oneLine(why || reason, 300), worker: this.latest.get(e.id) });
+    }, SETTLE_MS);
+    timer.unref();
+    this.stuckPending.set(e.id, timer);
   }
 
   /** Posts a test message. Resolves to an error message if it didn't get through. */
   test(by: string): Promise<string | undefined> {
     if (!this.saved) return Promise.resolve('No webhook is set');
-    return this.post({ kind: 'test', title: `🔔 ${by} connected ${this.project()} to this channel`, detail: 'Workers that need input or finish will show up here.' });
+    return this.post({ kind: 'test', title: `🔔 ${by} connected ${this.project()} to this channel`, detail: 'Workers that need input, finish or get stuck will show up here.' });
   }
 
   stop() {
     for (const id of [...this.pending.keys()]) this.cancel(id);
+    for (const t of this.stuckPending.values()) clearTimeout(t);
+    this.stuckPending.clear();
   }
 
   private cancel(id: string) {
@@ -153,7 +178,7 @@ export class Webhook {
     return this.post({ kind: status, title: `${what} in ${this.project(w.id)}${task}`, detail: detail ? oneLine(detail, 300) : undefined, worker: w });
   }
 
-  private post(msg: { kind: Alert | 'test'; title: string; detail?: string; worker?: WorkerInfo }): Promise<string | undefined> {
+  private post(msg: { kind: PostKind; title: string; detail?: string; worker?: WorkerInfo }): Promise<string | undefined> {
     if (!this.saved) return Promise.resolve('No webhook is set');
     if (this.backlog >= MAX_BACKLOG) return Promise.resolve('Too many messages are waiting to be posted');
     const saved = this.saved;
@@ -170,7 +195,7 @@ export class Webhook {
     return run;
   }
 
-  private async send(saved: Saved, msg: { kind: Alert | 'test'; title: string; detail?: string; worker?: WorkerInfo }): Promise<string | undefined> {
+  private async send(saved: Saved, msg: { kind: PostKind; title: string; detail?: string; worker?: WorkerInfo }): Promise<string | undefined> {
     const url = new URL(saved.url);
     const kind = webhookKind(url);
     let body: unknown;

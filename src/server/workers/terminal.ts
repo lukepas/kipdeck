@@ -10,6 +10,14 @@ import type { Worker, WorkerEvents } from './types.js';
 
 export type HeadlessTerminal = InstanceType<typeof headless.Terminal>;
 
+/** The least time between two stamps of a worker's latest output (WorkerInfo.outputAt), so output never floods anything. */
+export const OUTPUT_STAMP_MS = 30_000;
+
+/** Its terminal printed something: stamped at most every OUTPUT_STAMP_MS, and never broadcast by itself (the roster picks it up). */
+export function stampOutput(info: WorkerInfo, now = Date.now()) {
+  if (now - (info.outputAt ?? 0) >= OUTPUT_STAMP_MS) info.outputAt = now;
+}
+
 /** How often each screen is sent whole, since diffs can be dropped for slow clients. */
 const KEYFRAME_MS = 8000;
 

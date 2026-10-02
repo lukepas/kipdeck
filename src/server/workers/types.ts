@@ -103,6 +103,14 @@ export interface Worker {
   rebuilding?: boolean;
 }
 
+/** What a floor's mission gives the workers hired there (see MissionStore). */
+export interface MissionHooks {
+  /** The milestone a new worker takes on: the one asked for, or the one its issue is on, or the active one. */
+  goalFor(goal?: string, issue?: number): string | undefined;
+  /** The team context put before its first prompt, or nothing when the floor has no mission. */
+  note(info: WorkerInfo): string | undefined;
+}
+
 export interface WorkerEvents {
   update(info: WorkerInfo): void;
   /** It's gone (sent home), and what it was as it went. */

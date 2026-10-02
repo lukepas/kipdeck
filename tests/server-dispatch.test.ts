@@ -4,7 +4,7 @@
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import net from 'node:net';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -272,7 +272,7 @@ test('welcomes a browser and dispatches what it sends', async () => {
   assert.equal(ada?.name, 'Ada');
   assert.equal(ada?.color, '#ff8a5b');
   assert.equal(ada?.floor, floor.id);
-  assert.deepEqual(Object.keys(welcome).slice(-10), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'plan', 'services', 'whiteboard', 'meeting']);
+  assert.deepEqual(Object.keys(welcome).slice(-11), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'plan', 'services', 'whiteboard', 'meeting', 'mission']);
 
   a.send({ t: 'ping', at: 42 });
   const pong = await a.take('pong');
@@ -365,6 +365,79 @@ test('milestones and the whiteboard on a floor, and letting go of it on leaving 
   await a.close();
   assert.deepEqual(await b.next(2), ['wb.people', 'peer.leave']);
   await b.close();
+});
+
+test('mission control: the mission, its milestones, and the roster with snoozes and goals', async () => {
+  const floor = office.floors()[0];
+  const a = await Browser.open('?name=Ed');
+  const welcome = await a.take('welcome');
+  assert.deepEqual(welcome.mission, { statement: '', milestones: [] });
+  assert.ok(Array.isArray(welcome.roster));
+
+  // What people type is cleaned on the server: control and invisible characters go, and it's capped.
+  a.send({ t: 'mission.set', statement: `Ship\u0007 the ‮auth rewrite\u0000 ${'x'.repeat(900)}` });
+  const set = await a.take('mission');
+  assert.equal(set.floor, floor.id);
+  assert.ok(set.mission.statement.startsWith('Ship the auth rewrite x'));
+  assert.equal(set.mission.statement.length, 500);
+  assert.equal(set.mission.by, 'Ed');
+  // The floor's purpose shows on the elevator's list.
+  const floors = await a.take('floors', (m) => !!m.floors[0].missionLine);
+  assert.equal(floors.floors[0].missionLine?.length, 120);
+
+  a.send({ t: 'mission.milestone', op: 'add', title: '  Auth\nrewrite  ', issues: [3, 3, -1, 2.5, 7], due: '2026-02-30' });
+  const added = (await a.take('mission', (m) => m.mission.milestones.length === 1)).mission;
+  const m1 = added.milestones[0];
+  assert.equal(m1.title, 'Auth rewrite');
+  assert.deepEqual(m1.issues, [3, 7]);
+  assert.equal(m1.due, undefined, 'not a real day');
+  assert.equal(added.active, m1.id, 'the first milestone is the one the team is on');
+  a.send({ t: 'mission.milestone', op: 'add', title: 'Docs' });
+  const m2 = (await a.take('mission', (m) => m.mission.milestones.length === 2)).mission.milestones[1];
+  a.send({ t: 'mission.milestone', op: 'move', id: m2.id, delta: -1 });
+  assert.deepEqual((await a.take('mission', (m) => m.mission.milestones[0].id === m2.id)).mission.milestones.map((m) => m.title), ['Docs', 'Auth rewrite']);
+  a.send({ t: 'mission.milestone', op: 'nope', id: m2.id });
+  a.send({ t: 'mission.milestone', op: 'remove', id: m2.id });
+  assert.deepEqual((await a.take('mission', (m) => m.mission.milestones.length === 1)).mission.milestones.map((m) => m.id), [m1.id]);
+  // Kept in the floor's own state folder, readable only by the office.
+  const file = path.join(floor.dir, '.agent-office', 'mission.json');
+  assert.equal(statSync(file).mode & 0o777, 0o600);
+  assert.equal(JSON.parse(readFileSync(file, 'utf8')).active, m1.id);
+
+  // A shell at a desk is on the roster; a goal and a snooze show there, for everyone.
+  a.send({ t: 'worker.spawn', deskId: 'desk-2', kind: 'shell' });
+  const hired = await a.take('roster', (m) => m.entries.some((e) => e.deskId === 'desk-2'));
+  const entry = hired.entries.find((e) => e.deskId === 'desk-2')!;
+  assert.equal(entry.floor, floor.id);
+  assert.equal(entry.kind, 'shell');
+  assert.equal('prompt' in entry, false, 'the roster never carries a prompt');
+  a.send({ t: 'worker.goal', workerId: entry.id, goal: m1.id, issue: 3 });
+  const linked = (await a.take('roster', (m) => m.entries.some((e) => e.id === entry.id && e.goal === m1.id))).entries.find((e) => e.id === entry.id)!;
+  assert.equal(linked.goalTitle, 'Auth rewrite');
+  assert.equal(linked.issue, 3);
+  a.send({ t: 'worker.goal', workerId: entry.id, goal: 'gone' });
+  assert.equal((await a.take('toast', (m) => m.level === 'warn')).text, 'That milestone is gone');
+  const until = Date.now() + 30 * 60_000;
+  a.send({ t: 'worker.snooze', workerId: entry.id, until });
+  const snoozed = (await a.take('roster', (m) => m.entries.some((e) => e.id === entry.id && !!e.snooze))).entries.find((e) => e.id === entry.id)!;
+  assert.deepEqual({ until: snoozed.snooze?.until, by: snoozed.snooze?.by }, { until, by: 'Ed' });
+  a.send({ t: 'worker.snooze', workerId: entry.id, until: Date.now() - 1 });
+  assert.match((await a.take('toast', (m) => m.level === 'warn')).text, /Snooze it until a time to come/);
+  a.send({ t: 'worker.snooze', workerId: entry.id, until: null });
+  await a.take('roster', (m) => m.entries.some((e) => e.id === entry.id && !e.snooze));
+
+  // An admin (the office's password is one) can lock it; it's still theirs to change.
+  a.send({ t: 'mission.lock', locked: true });
+  assert.equal((await a.take('mission', (m) => m.mission.locked === true)).mission.locked, true);
+  a.send({ t: 'mission.lock', locked: false });
+  await a.take('mission', (m) => !m.mission.locked);
+
+  // Sent home: what it spent stays on its milestone, and it's off the roster.
+  a.send({ t: 'worker.kill', workerId: entry.id, cleanup: 'keep' });
+  const retired = (await a.take('mission', (m) => m.mission.milestones[0]?.totals.workers === 1)).mission.milestones[0];
+  assert.equal(retired.totals.workers, 1);
+  await a.take('roster', (m) => !m.entries.some((e) => e.id === entry.id));
+  await a.close();
 });
 
 test('settings, accounts, sign-ins and the boards answer as before', async () => {

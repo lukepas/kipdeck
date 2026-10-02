@@ -1,7 +1,8 @@
 import type { Ctx } from './context.js';
 import { SLOW_CLIENT_BYTES } from './client.js';
+import { ROSTER_TICK_MS } from './roster.js';
 
-/** The office's own clocks: terminals re-sent to viewers who fell behind, and the heartbeat. Returns what stops them. */
+/** The office's own clocks: terminals re-sent to viewers who fell behind, the heartbeat and the roster. Returns what stops them. */
 export function startTimers(ctx: Ctx): () => void {
   const { clients } = ctx;
   const resync = setInterval(() => {
@@ -31,7 +32,11 @@ export function startTimers(ctx: Ctx): () => void {
     if (accountsMoved) ctx.accountsChanged();
   }, 20_000);
 
+  // A worker goes silent, or a finished one is forgotten, without anything happening to it: look again now and then.
+  const roster = setInterval(() => ctx.rosterChanged(), ROSTER_TICK_MS);
+
   return () => {
+    clearInterval(roster);
     clearInterval(heartbeat);
     clearInterval(resync);
   };

@@ -22,7 +22,8 @@ export const queueHandlers = {
     const prompt = str(msg.prompt, 20000);
     // Its worker runs on the sign-ins of whoever queued it, whenever it gets a desk.
     const add = () => {
-      const err = floor.queue.add(prompt, who, str(msg.title, 200), issue, msg.provider, model, effort, c.accountId);
+      const goal = floor.mission.goalFor(str(msg.goal, 32) || undefined, issue);
+      const err = floor.queue.add(prompt, who, str(msg.title, 200), issue, msg.provider, model, effort, c.accountId, goal);
       if (err) ctx.warn(c, err);
       else ctx.toastFloor(floor, `📋 ${who} queued ${issue !== undefined ? `issue #${issue}` : 'a task'}`);
     };
