@@ -18,6 +18,8 @@ export class MissionStore {
   private file: string;
   /** Reminders someone put aside, by key (see shared/reminders.ts): kept here, never sent with the mission. */
   private dismissed = new Map<string, ReminderSnooze>();
+  /** Since when each dismissed reminder hasn't been open, in this office's run (see pruneReminders). */
+  private absentSince = new Map<string, number>();
 
   constructor(
     dataDir: string,
@@ -155,13 +157,24 @@ export class MissionStore {
 
   /**
    * Forgets what no longer matters: snoozes that ran out, and dismissals ("until it changes") of
-   * reminders that aren't open any more (`live`), since what they were about has changed.
+   * reminders that haven't been open (`live`) for DISMISS_GRACE_MS, since what they were about has
+   * changed. Not at once: after a restart some reminders can't be found until GitHub has answered,
+   * an asleep worker's worktree was looked at, or a paused queue has been paused a while again.
    */
   pruneReminders(live: ReadonlySet<string>, now: number) {
     let changed = false;
     for (const [key, s] of this.dismissed) {
-      if (s.until === 'change' ? live.has(key) : s.until > now) continue;
+      if (s.until === 'change') {
+        if (live.has(key)) {
+          this.absentSince.delete(key);
+          continue;
+        }
+        const since = this.absentSince.get(key);
+        if (since === undefined) this.absentSince.set(key, now);
+        if (since === undefined || now - since < DISMISS_GRACE_MS) continue;
+      } else if (s.until > now) continue;
       this.dismissed.delete(key);
+      this.absentSince.delete(key);
       changed = true;
     }
     if (changed) this.save();
@@ -199,6 +212,12 @@ export class MissionStore {
 
 /** The most reminder dismissals a floor keeps; the oldest go first. */
 const REMINDERS_KEPT = 200;
+/**
+ * How long a dismissed reminder must stay gone before its dismissal is forgotten: longer than it
+ * takes, after a restart, for everything a reminder is found from to be known again (an asleep
+ * worker's worktree is looked at hourly, a paused queue counts after 30 minutes).
+ */
+export const DISMISS_GRACE_MS = 2 * 60 * 60_000;
 
 /** Reminder dismissals as read back from disk: anything that doesn't fit is dropped. */
 function cleanDismissals(raw: unknown): Map<string, ReminderSnooze> {

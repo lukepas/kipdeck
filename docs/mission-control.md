@@ -109,7 +109,7 @@ Things nobody has to answer right now, but somebody will:
 | Unpushed work | A worker asleep for a day with commits nobody pushed |
 | A long wait | A worker waiting on an answer for over an hour (the team's channel hears once) |
 
-The office looks once a minute. A reminder shows at the top of the Attention tab with its next step, puts an amber dot on the attention chip (and on the 2D view's **Mission** button), and toasts the people on its floor when it comes up, again at most once an hour while it stays open. **Snooze 30 min** puts it aside for a while; **Dismiss** puts it aside until what it's about changes. Everyone sees who did. A restart remembers both and toasts nothing on its first look. The thresholds are in `src/shared/attention.ts`, with the ranking's.
+The office looks once a minute. A reminder shows at the top of the Attention tab with its next step, puts an amber dot on the attention chip (and on the 2D view's **Mission** button), and toasts the people on its floor when it comes up, again at most once an hour while it stays open. **Snooze 30 min** puts it aside for a while; **Dismiss** puts it aside until what it's about changes: the dismissal is forgotten once the reminder has been gone for two hours, so a restart, when GitHub and the worktrees haven't answered yet, doesn't drop it. Everyone sees who did. A restart remembers both and toasts nothing on its first look. The thresholds are in `src/shared/attention.ts`, with the ranking's.
 
 ## The mission strip
 

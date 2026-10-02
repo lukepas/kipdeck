@@ -6,7 +6,7 @@ import path from 'node:path';
 import { APPROVED_UNMERGED_MS, NEEDS_INPUT_LONG_MS, QUEUE_PAUSED_MS, UNPUSHED_ASLEEP_MS } from '../src/shared/attention.js';
 import { REMINDER_KEY, findReminders, reminderSnoozed, type ReminderFloor } from '../src/shared/reminders.js';
 import type { GhIssue, GhPull, Mission, RosterEntry } from '../src/shared/protocol.js';
-import { MissionStore } from '../src/server/mission.js';
+import { DISMISS_GRACE_MS, MissionStore } from '../src/server/mission.js';
 import { zeroTotals } from '../src/shared/mission.js';
 import { reminderHelpers } from '../src/server/office/reminders.js';
 import type { Ctx } from '../src/server/office/context.js';
@@ -84,7 +84,18 @@ test('dismissals live in mission.json, survive a restart, and go once what they 
     again.pruneReminders(new Set(['queue-paused:f1', 'approved-unmerged:f1:41']), NOW + 31 * MIN);
     assert.equal(again.reminderSnooze('approved-unmerged:f1:41'), undefined);
     assert.ok(again.reminderSnooze('queue-paused:f1'));
-    again.pruneReminders(new Set(), NOW);
+    // Gone from the list: kept a while (after a restart, GitHub and the worktrees haven't answered yet)...
+    again.pruneReminders(new Set(), NOW + 32 * MIN);
+    assert.ok(again.reminderSnooze('queue-paused:f1'), 'not forgotten on the first look without it');
+    assert.ok(JSON.parse(readFileSync(file, 'utf8')).reminders['queue-paused:f1'], 'nor rewritten out of mission.json');
+    again.pruneReminders(new Set(), NOW + 32 * MIN + DISMISS_GRACE_MS - 1);
+    assert.ok(again.reminderSnooze('queue-paused:f1'));
+    // ...and back in view before that: the clock starts over.
+    again.pruneReminders(new Set(['queue-paused:f1']), NOW + 32 * MIN + DISMISS_GRACE_MS);
+    again.pruneReminders(new Set(), NOW + 33 * MIN + DISMISS_GRACE_MS);
+    assert.ok(again.reminderSnooze('queue-paused:f1'));
+    // Gone for good: forgotten.
+    again.pruneReminders(new Set(), NOW + 33 * MIN + 2 * DISMISS_GRACE_MS);
     assert.equal(again.reminderSnooze('queue-paused:f1'), undefined);
     again.snoozeReminder('x:1', { until: 'change', by: 'Ed', at: NOW });
     again.snoozeReminder('x:1', null);
@@ -138,9 +149,28 @@ test('the sweep toasts a new reminder once, again an hour on, tells the channel 
   r.sweepReminders();
   assert.deepEqual(toasts.slice(2).map((x) => x.split(' has')[0]), ['Reminder: Mochi', 'Reminder: Pip'], 'an hour on, the open ones come up again, and not the dismissed one');
   assert.equal(posted.length, 1);
-  // Unpaused: it's gone, and so is its dismissal.
+  // Unpaused: it's gone, and a while later so is its dismissal.
   queue.maxWorkers = 2;
+  r.sweepReminders();
+  assert.ok(mission.reminderSnooze('queue-paused:f1'));
+  now += DISMISS_GRACE_MS;
   r.sweepReminders();
   assert.equal(mission.reminderSnooze('queue-paused:f1'), undefined);
   assert.ok(sent.length >= 3);
+
+  // A restart: the queue is paused again, but the new office's first look can't tell for 30 min.
+  // The dismissal made before it is kept, and the reminder doesn't toast once it's found again.
+  queue.maxWorkers = 0;
+  mission.snoozeReminder('queue-paused:f1', { until: 'change', by: 'Ana', at: now });
+  const restarted = new MissionStore(dir);
+  const ctx2 = { ...ctx, floors: new Map([['f1', { ...floor, mission: restarted }]]), rosterEntries: () => [] } as unknown as Ctx;
+  const r2 = reminderHelpers(ctx2, () => now);
+  const before = toasts.length;
+  r2.sweepReminders();
+  assert.ok(restarted.reminderSnooze('queue-paused:f1'), 'kept on the first sweep, though no reminder is found yet');
+  assert.ok(JSON.parse(readFileSync(path.join(dir, 'mission.json'), 'utf8')).reminders['queue-paused:f1']);
+  now += QUEUE_PAUSED_MS;
+  r2.sweepReminders();
+  assert.equal(r2.reminders().find((x) => x.kind === 'queue-paused')?.snooze?.by, 'Ana');
+  assert.equal(toasts.length, before, 'still dismissed: no toast');
 });
