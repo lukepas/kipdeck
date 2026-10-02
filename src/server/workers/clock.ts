@@ -1,4 +1,4 @@
-// How long each worker has spent working (WorkerInfo.workedMs), for its card and the map.
+// How long each worker has spent working (WorkerInfo.workedMs): its time on task in the Workers panel and Mission control, and each milestone's.
 import type { WorkerInfo, WorkerStatus } from '../../shared/protocol.js';
 
 /** How long a worker has spent working (ms), the stretch it's in now included. */
