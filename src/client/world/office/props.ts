@@ -9,7 +9,7 @@ import { PALETTE } from './materials';
 // The potted plants are modelled in Blender (blender/scripts/build_plants.py): each plant is a painted
 // copy of one species in plants.glb (see piece()). A species is its pot, named after it, with everything that
 // grows out of the pot hung under it as `<species>_leaves`. The colors are the old
-// code-built plants' pot and greens, a dark brown for the soil, a trunk brown for the ficus's, and the kitchen cupboards' blue for the snake plant's glazed pot.
+// code-built plants' pot and greens, a dark brown for the soil, a trunk brown for the ficus's, and a blue for the snake plant's glazed pot.
 export type PlantSpecies = 'monstera' | 'snake_plant' | 'ficus' | 'succulent';
 /** The species that stand on the floor, which a row of plants takes turns with (see floorPlant()). */
 export const FLOOR_PLANTS = ['monstera', 'snake_plant', 'ficus'] as const satisfies readonly PlantSpecies[];
@@ -103,7 +103,7 @@ export function pouf(color: string): THREE.Object3D {
   return upholstered('pouf', color);
 }
 
-/** The lounge's round coffee table, 0.9 round, its top 0.46 up (where the holiday pumpkin stands). */
+/** The lounge's round coffee table, 0.9 round, its top 0.46 up. */
 export function coffeeTable(): THREE.Object3D {
   return piece('lounge', 'coffee_table', paintLounge);
 }

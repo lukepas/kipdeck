@@ -16,7 +16,6 @@ import type { Confetti } from '../world/confetti';
 import type { installBoards } from '../features/boards';
 import type { installBookshelf } from '../features/bookshelf';
 import type { installCarrying } from '../features/carrying';
-import type { installCoffee } from '../features/coffee';
 import type { installEmotes } from '../features/emotes';
 import type { installGallery, installHanging } from '../features/hanging';
 import type { installHud } from '../features/hud';
@@ -84,7 +83,6 @@ export interface Parts {
   waiting: Made<typeof installWaiting>;
   meeting: Made<typeof installMeeting>;
   bookshelf: Made<typeof installBookshelf>;
-  coffee: Made<typeof installCoffee>;
   cards: Made<typeof installCarrying>;
   seating: Made<typeof installSeating>;
   emotes: Made<typeof installEmotes>;

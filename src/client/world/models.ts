@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import deskPropsUrl from '../models/desk_props.glb?url';
-import kitchenUrl from '../models/kitchen.glb?url';
 import loungeUrl from '../models/lounge.glb?url';
 import plantsUrl from '../models/plants.glb?url';
 import { toon } from './toon';
@@ -12,7 +11,6 @@ import { toon } from './toon';
 // They're all loaded before the world is built, for builders that take theirs with model().
 const MODELS = {
   desk_props: deskPropsUrl,
-  kitchen: kitchenUrl,
   lounge: loungeUrl,
   plants: plantsUrl,
 } satisfies Record<string, string>;

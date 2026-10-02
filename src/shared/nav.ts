@@ -40,7 +40,7 @@ export function deskPoint(d: DeskDef, t: number, s: number): Pt {
   return [d.x + Math.cos(d.rotY) * t + Math.sin(d.rotY) * s, d.z - Math.sin(d.rotY) * t + Math.cos(d.rotY) * s];
 }
 
-/** What's in the way on the office floor, built out `wing` rows. The lounge, kitchen and plants are where world/office/room.ts (and world/kitchen.ts) put them. */
+/** What's in the way on the office floor, built out `wing` rows. The lounge and plants are where world/office/room.ts puts them. */
 function obstacles(wing: number): Obstacles {
   const rects: Rect[] = [];
   const circles: Circle[] = [];
@@ -55,7 +55,6 @@ function obstacles(wing: number): Obstacles {
   rects.push([10, 11, -2.2, 2.2]); // couch
   rects.push([12.2, 13.8, -0.8, 0.8]); // coffee table
   circles.push([12.5, 3.5, 0.5], [14.5, -3.4, 0.5]); // beanbags
-  rects.push([-17, -10.75, 11.7, 12.7]); // kitchen counter and fridge
   for (const [x, z, s] of plantsAt(wing)) circles.push([x, z, 0.3 * s]);
   // The loft's posts, the stairs up to it, and the elevator shaft.
   for (const x of [LOFT.minX + 0.15, (LOFT.minX + LOFT.maxX) / 2]) circles.push([x, LOFT.minZ + 0.15, 0.14]);

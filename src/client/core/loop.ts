@@ -6,9 +6,7 @@
 import * as THREE from 'three';
 import { SlowFrames } from '../framerate';
 import { EYE_HEIGHT } from '../player';
-import { renderCaffeine } from '../features/coffee/meter';
 import type { Ctx } from './context';
-import type { CoreState } from './ctx';
 import type { Parts } from './parts';
 import type { Frame } from './registry';
 import { FOV } from './scene';
@@ -19,10 +17,9 @@ export interface LoopDeps {
 }
 
 /** Registers the office's own ticks: install it before anything else registers one. */
-export function installLoop(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'stage' | 'coffee' | 'peers' | 'views' | 'place'>, deps: LoopDeps) {
+export function installLoop(ctx: Ctx, parts: Pick<Parts, 'stage' | 'peers' | 'views' | 'place'>, deps: LoopDeps) {
   // Registered before anything else's, so within a phase they come first.
   ctx.ticks.add('pre', watchFrameRate);
-  ctx.ticks.add('pre', feelTheCoffee);
   ctx.ticks.add('move', ({ dt }) => ctx.player.update(dt));
   ctx.ticks.add('me', moveMe);
   ctx.ticks.add('me', listen);
@@ -46,27 +43,13 @@ export function installLoop(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'stage
     if (slowFrames.frame(now, delta * 1000)) deps.offer2d('slow');
   }
 
-  /** Coffee, and the view's shake easing off. */
-  function feelTheCoffee({ dt, now }: Frame) {
-    const { me, reduceMotion } = ctx;
-    // Coffee: quicker feet, higher jumps, a mug in hand, and maybe the jitters.
-    const { caffeine, buzz } = parts.coffee;
-    const secs = now / 1000;
-    buzz.speed = caffeine.speed(secs);
-    buzz.jump = caffeine.jump(secs);
-    buzz.jitter = reduceMotion.matches ? 0 : caffeine.jitter(secs);
-    const mug = caffeine.buzzed(secs);
-    me.holdMug(mug);
-    renderCaffeine(caffeine, secs);
-  }
-
   /** You as everyone else sees you, and the camera's view. */
   function moveMe({ dt, t }: Frame) {
     const { player, me, voice, camera } = ctx;
     me.root.position.copy(player.pos);
     me.root.position.y += player.stepOffset;
     me.root.rotation.y = player.facing;
-    me.update(dt, t, player.moving && player.grounded, !player.grounded, player.effects.speed);
+    me.update(dt, t, player.moving && player.grounded, !player.grounded);
     me.setVoiceLevel(voice.inVoice ? voice.localLevel : 0);
     const firstPerson = player.view === 'first';
     // In first person you are the camera; in third, hide yourself when it's zoomed in right behind your head.

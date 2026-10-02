@@ -17,7 +17,7 @@ export interface AudioHooks {
 /**
  * The audio every sound shares: the context (started on the first click or key, as browsers want),
  * the buses a sound goes out on, your volume, the tab hiding, where your ears are and what's round
- * them, the samples, and what runs every frame. The recipes (steps.ts, features/coffee/sound.ts and the rest) are
+ * them, the samples, and what runs every frame. The recipes (steps.ts, features/gong/sound.ts and the rest) are
  * functions of one of these; OfficeSound (index.ts) puts them together.
  */
 export class AudioCore {

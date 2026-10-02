@@ -1,19 +1,17 @@
 /**
- * Office sounds, synthesized with Web Audio so there are no audio files to ship: the room's air and a
- * humming fridge, workers typing while they work, footsteps, the coffee machine, the odd rustle or
- * phone and the gong, and the dings when a worker needs you.
+ * Office sounds, synthesized with Web Audio so there are no audio files to ship: the room's air,
+ * workers typing while they work, footsteps, the odd rustle or phone and the gong, and the dings when a worker needs you.
  *
  * Everything goes through one master gain that Settings turns down or mutes. Voice chat doesn't.
  *
  * OfficeSound is all the rest of the office sees. What every sound shares (the context, the buses,
  * where your ears are, what runs every frame) is AudioCore in core.ts; each sound is a recipe in a
  * file of its own, beside this one (steps.ts, typing.ts and so on) or in its feature's folder
- * (features/coffee/sound.ts and so on), and this class only hands them the core.
+ * (features/gong/sound.ts and so on), and this class only hands them the core.
  */
 import type { GongWhy } from '../../shared/protocol';
-import { deskPhones, Fridge, startRoomTone } from './ambience';
+import { deskPhones, startRoomTone } from './ambience';
 import { ding } from './alerts';
-import { coffee } from '../features/coffee/sound';
 import { AudioCore, type Listener } from './core';
 import { gong } from '../features/gong/sound';
 import { pageTurn, paper, step, stepAt } from './steps';
@@ -22,7 +20,6 @@ import { fidgeting, Typing } from './typing';
 export class OfficeSound {
   private readonly a: AudioCore = new AudioCore({ start: (ctx) => this.start(ctx) });
   private readonly typing = new Typing(this.a);
-  private readonly fridge = new Fridge(this.a);
   private readonly phones = deskPhones(this.a);
   private readonly fidgets = fidgeting(this.typing);
   /** How many of each sound have played, for quick checks from the console. */
@@ -31,7 +28,6 @@ export class OfficeSound {
   constructor() {
     // What the room does every frame, in this order (it's the order the random numbers are drawn in).
     this.a.every((now) => this.typing.scheduleTyping(now));
-    this.a.every((now) => this.fridge.tickFridge(now));
     this.a.every((now) => this.phones.tick(now));
     this.a.every((now) => this.fidgets.tick(now));
   }
@@ -41,7 +37,6 @@ export class OfficeSound {
     this.a.applyVolume();
     this.a.applyVisibility();
     startRoomTone(this.a);
-    this.fridge.startFridge();
     const now = ctx.currentTime;
     this.phones.start(now);
     this.fidgets.start(now);
@@ -95,11 +90,7 @@ export class OfficeSound {
     stepAt(this.a, x, z, y);
   }
 
-  // ---- The kitchen, the gong, the dings --------------------------------------
-
-  coffee() {
-    coffee(this.a);
-  }
+  // ---- The gong, the dings --------------------------------------
 
   gong(why: GongWhy) {
     gong(this.a, why);

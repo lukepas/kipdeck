@@ -5,8 +5,7 @@ import type { Collider } from '../world/types';
 import { HIPS } from '../world/character/rig';
 import { PlayerInput, isTyping } from './pointer';
 import { HEIGHT, STEP, blockerAt, ceilingAt, groundAt, stepTo } from './collide';
-import { EYE_HEIGHT, aimCamera, shakeCamera } from './camera';
-import { Effects } from './effects';
+import { EYE_HEIGHT, aimCamera } from './camera';
 
 // You: walking, running, jumping and sitting, bumping into things and climbing stairs, and the camera
 // that follows. The keys and the mouse are PlayerInput's (pointer.ts).
@@ -33,16 +32,10 @@ export class PlayerController extends PlayerInput {
   private bob = 0;
   /** Eased out after a step up or down, so the camera glides up stairs instead of popping. */
   stepOffset = 0;
-  /**
-   * What's going on with you (a coffee's buzz and the jitters): how fast you walk and
-   * how high you jump, and how hard the view trembles (see effects.ts).
-   */
-  readonly effects = new Effects();
   /** Nothing to stand on is lower than the floor. */
   readonly lowest = 0;
   /** How many rows the floor's back office is built out (see WING): the camera keeps inside it too. */
   wing = 0;
-  private jitterT = 0;
   /** Where you're sitting, or null on your feet. You stay put there until you walk off or jump up. */
   seat: SeatPlace | null = null;
   /** You got up by walking off or jumping (not by stand()). */
@@ -142,7 +135,6 @@ export class PlayerController extends PlayerInput {
       if (!this.enabled || !GET_UP.some((c) => k.has(c))) {
         this.moving = false;
         this.facing = this.seat.rotY;
-        this.jitterT += dt;
         this.updateCamera();
         return;
       }
@@ -174,7 +166,7 @@ export class PlayerController extends PlayerInput {
       const cos = Math.cos(this.camYaw);
       const dx = ix * cos + iz * sin;
       const dz = -ix * sin + iz * cos;
-      const speed = (k.has('ShiftLeft') || k.has('ShiftRight') ? RUN : WALK) * this.effects.speed;
+      const speed = (k.has('ShiftLeft') || k.has('ShiftRight') ? RUN : WALK);
       this.tryMove(this.pos.x + dx * speed * dt, this.pos.z);
       this.tryMove(this.pos.x, this.pos.z + dz * speed * dt);
       if (this.view === 'third') {
@@ -189,7 +181,7 @@ export class PlayerController extends PlayerInput {
     const ground = Math.max(groundAt(this.colliders, this.pos.x, this.pos.z, this.pos.y), this.lowest);
     const jump = this.enabled && k.has('Space') && this.grounded;
     if (jump) {
-      this.vy = JUMP_V * this.effects.jump;
+      this.vy = JUMP_V;
       this.grounded = false;
     } else if (this.grounded && this.pos.y > ground && this.pos.y - ground <= STEP + 0.02) {
       // Walking down a stair: stay on your feet rather than falling a step.
@@ -212,10 +204,9 @@ export class PlayerController extends PlayerInput {
     }
     this.stepOffset *= Math.exp(-dt * 16);
     const walking = this.moving && this.grounded;
-    this.walkPhase += dt * (walking ? (k.has('ShiftLeft') || k.has('ShiftRight') ? 14 : 11) * this.effects.speed : 0);
+    this.walkPhase += dt * (walking ? (k.has('ShiftLeft') || k.has('ShiftRight') ? 14 : 11) : 0);
     const bob = walking ? Math.abs(Math.sin(this.walkPhase)) * 0.035 : 0;
     this.bob += (bob - this.bob) * Math.min(1, dt * 18);
-    this.jitterT += dt;
     this.updateCamera();
   }
 
@@ -237,7 +228,7 @@ export class PlayerController extends PlayerInput {
     // Run the long way round, walk the last few meters.
     let left = dist;
     for (let i = 1; i < path.length; i++) left += Math.hypot(path[i].x - path[i - 1].x, path[i].z - path[i - 1].z);
-    const step = Math.min(dist, (left > 6 ? RUN : WALK) * this.effects.speed * dt);
+    const step = Math.min(dist, (left > 6 ? RUN : WALK) * dt);
     const x0 = this.pos.x;
     const z0 = this.pos.z;
     this.tryMove(this.pos.x + (dx / dist) * step, this.pos.z);
@@ -257,12 +248,6 @@ export class PlayerController extends PlayerInput {
 
   updateCamera(snap = false) {
     aimCamera(this.camera, this, this.bob, this.lift, snap);
-    this.shake();
-  }
-
-  /** The jitters: the view trembles a little, on top of wherever you're looking. */
-  private shake() {
-    shakeCamera(this.camera, this.jitterT, this.effects.jitter);
   }
 
   /** Unit vector the character is facing, on the XZ plane. */

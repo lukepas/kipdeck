@@ -7,7 +7,6 @@ import { gong } from '../../features/gong/world';
 import { bookshelf } from '../../features/bookshelf/world';
 import { whiteboard } from '../../features/whiteboard/world';
 import { stack } from '../stack';
-import { kitchen } from '../kitchen';
 import { signs } from '../desksigns';
 import type { Collider, DeskView, Interactable, Office, OfficeHandles } from '../types';
 import { PALETTE, floorTexture, paintPlanks, type Looks } from './materials';
@@ -40,7 +39,6 @@ function floorPlan() {
     machineMonitor,
     lounge,
     bookshelf,
-    kitchen,
     plants,
     lamps,
     wing,

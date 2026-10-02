@@ -5,7 +5,7 @@ import type { Collider } from '../world/types';
 import { ceilingAt, groundAt } from './collide';
 
 // The camera: your eyes in first person, or following you round in third without going through the
-// walls, and the view trembling after too much coffee.
+// walls.
 
 /** Camera height above your feet in first person (the Person's eyes). */
 export const EYE_HEIGHT = 1.4;
@@ -58,13 +58,4 @@ export function aimCamera(camera: THREE.PerspectiveCamera, p: Followed, bob: num
   if (snap) camera.position.copy(cam);
   else camera.position.lerp(cam, 0.25);
   camera.lookAt(target);
-}
-
-/** The jitters: the view trembles a little, on top of wherever you're looking. `t` is the jitters' clock. */
-export function shakeCamera(camera: THREE.PerspectiveCamera, t: number, jitter: number) {
-  if (jitter <= 0) return;
-  const a = jitter * 0.01;
-  camera.rotation.x += a * (Math.sin(t * 71) + 0.6 * Math.sin(t * 131 + 1));
-  camera.rotation.y += a * (Math.sin(t * 89 + 2) + 0.6 * Math.sin(t * 157));
-  camera.rotation.z += a * Math.sin(t * 113 + 3);
 }

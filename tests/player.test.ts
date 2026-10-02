@@ -2,7 +2,6 @@ import test, { type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { PlayerController } from '../src/client/player/index.js';
-import { Effects } from '../src/client/player/effects.js';
 import type { Collider } from '../src/client/world/types.js';
 import { FLOOR, LOFT, SEATING_BY_ID, SLAB, STAIRS, seatAt, seatPlace } from '../src/shared/layout.js';
 
@@ -189,42 +188,4 @@ test('seat places are only the ones the office has', () => {
   assert.equal(seatAt('couch:2')?.seatId, 'couch');
   assert.equal(seatAt('loft-couch:1')?.y, LOFT.y);
   for (const bad of ['couch:3', 'couch:', 'couch', 'sofa:0', 'couch:-1', 'couch:1.5', '']) assert.equal(seatAt(bad), undefined, bad);
-});
-
-test('effects on you combine: speeds and jumps multiply, the hardest tremble shows', () => {
-  const effects = new Effects();
-  assert.deepEqual([effects.speed, effects.jump, effects.jitter], [1, 1, 0]);
-  const slow = effects.add();
-  const buzz = effects.add();
-  assert.deepEqual([effects.speed, effects.jump, effects.jitter], [1, 1, 0], 'a new one is steady');
-  Object.assign(buzz, { speed: 1.4, jump: 1.2, jitter: 0.3 });
-  assert.deepEqual([effects.speed, effects.jump, effects.jitter], [1.4, 1.2, 0.3]);
-  Object.assign(slow, { speed: 0.5, jump: 0.5, jitter: 0.6 });
-  assert.deepEqual([effects.speed, effects.jump, effects.jitter], [0.7, 0.6, 0.6]);
-  effects.remove(slow);
-  assert.deepEqual([effects.speed, effects.jump, effects.jitter], [1.4, 1.2, 0.3]);
-});
-
-test('a buzz on you walks you further and jumps you higher', (t) => {
-  const plain = controller(t, []);
-  const buzzed = controller(t, []);
-  Object.assign(buzzed.player.effects.add(), { speed: 1.4, jump: 1.2 });
-  for (const { player, keys, frames } of [plain, buzzed]) {
-    player.pos.set(0, 0, 5);
-    keys('KeyW');
-    frames(30);
-  }
-  const walked = (p: PlayerController) => 5 - p.pos.z;
-  assert.ok(Math.abs(walked(buzzed.player) - 1.4 * walked(plain.player)) < 1e-9, `walked ${walked(buzzed.player)} against ${walked(plain.player)}`);
-  const highest = [0, 0];
-  for (const [i, { player, keys, frames }] of [plain, buzzed].entries()) {
-    keys('Space');
-    frames(1);
-    keys();
-    for (let f = 0; f < 60; f++) {
-      frames(1);
-      highest[i] = Math.max(highest[i], player.pos.y);
-    }
-  }
-  assert.ok(highest[1] > highest[0] * 1.4, `jumped ${highest[1]} against ${highest[0]}`);
 });
