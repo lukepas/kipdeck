@@ -1,6 +1,10 @@
 import type http from 'node:http';
 import { notLeaving } from '../leave-on-merge.js';
-import { findWorker, readHireRequest, readHomeRequest, workerRow, type PullsView } from '../office-workers.js';
+import { findWorker, readHireRequest, readHomeRequest, readPrRequest, workerRow, type PullsView } from '../office-workers.js';
+import { gh } from '../github.js';
+import { parsePullUrl } from '../workers/pr.js';
+import { sameRepo } from '../../shared/floors.js';
+import type { Floor } from '../floor.js';
 import { nextFreeSeat } from '../../shared/layout.js';
 import type { WorkerInfo } from '../../shared/protocol.js';
 import { attention } from '../../shared/attention.js';
@@ -10,9 +14,39 @@ import { str } from '../office/input.js';
 import { readBody, send } from '../http/util.js';
 
 /**
+ * Pull request `n` on a floor, for a worker to have as its own: one that's open, or merged and still
+ * on the floor's list, in the floor's own repository and not from a fork (see shared/pulltrust.ts:
+ * a fork's pull request is never the office's work). A string says why it can't be.
+ */
+async function pullOf(floor: Floor, n: number, repo?: string): Promise<{ number: number; url: string } | string> {
+  const here = floor.def.repo;
+  if (repo && !sameRepo(repo, here)) return here ? `That pull request is in ${repo}, and this floor is ${here}` : `This floor has no GitHub repository to match ${repo} against`;
+  const listed = floor.github.pulls.items.find((p) => p.number === n);
+  let pr: { url: string; state: string; fork?: boolean } | undefined = listed;
+  if (!pr) {
+    if (!here) return `No pull request #${n} on this floor's list, and the floor has no GitHub repository to look it up in`;
+    try {
+      const got = JSON.parse(await gh(['pr', 'view', String(n), '--repo', here, '--json', 'url,state,isCrossRepository'], floor.dir)) as { url?: unknown; state?: unknown; isCrossRepository?: unknown };
+      pr = { url: String(got.url ?? ''), state: String(got.state ?? ''), fork: got.isCrossRepository === true };
+    } catch (err) {
+      return `No pull request #${n} here: ${(err as Error).message}`;
+    }
+  }
+  if (pr.fork) return `PR #${n} comes from a fork: only a pull request from a branch of this floor's own repository can be a worker's`;
+  if (pr.state === 'CLOSED') return `PR #${n} was closed without merging`;
+  // The office follows the open ones and the last ones merged: an older one would look open for good.
+  if (!listed && pr.state === 'MERGED') return `PR #${n} merged too long ago for the office to follow: send the worker home by name instead`;
+  // What GitHub answered is kept only when it is this pull request, in this repository.
+  const parsed = parsePullUrl(pr.url);
+  if (!parsed || parsed.number !== n || (here && !sameRepo(parsed.repo, here))) return `GitHub's answer for PR #${n} isn't a pull request of ${here ?? 'this floor'}`;
+  return { number: n, url: parsed.url };
+}
+
+/**
  * The floor's workers, for any worker on it (see office-workers.ts, and bin/office-workers.js, the
  * command and MCP server that call it): GET lists them, POST hires one, POST /home sends some home
- * (its worktree and branch go too, unless they hold work), POST /tell types a prompt to one. The
+ * (its worktree and branch go too, unless they hold work), POST /tell types a prompt to one, POST /pr
+ * says which pull request is one's (for one the office couldn't tell by itself). The
  * worker's own hook token says who's asking, and the floor hears who did what, as from anyone.
  */
 export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: http.ServerResponse, url: URL) {
@@ -62,7 +96,7 @@ export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: ht
       ...(mission.by ? { changedBy: mission.by, changedAt: new Date(mission.at ?? now).toISOString() } : {}),
     });
   }
-  if (req.method !== 'POST' || !['', '/home', '/tell'].includes(action)) return send(res, 405, { error: 'GET /office/workers or /office/workers/mission, or POST to /office/workers, /office/workers/home or /office/workers/tell' });
+  if (req.method !== 'POST' || !['', '/home', '/tell', '/pr'].includes(action)) return send(res, 405, { error: 'GET /office/workers or /office/workers/mission, or POST to /office/workers, /office/workers/home, /office/workers/tell or /office/workers/pr' });
   let body: unknown;
   try {
     body = JSON.parse((await readBody(req)) || '{}');
@@ -124,6 +158,21 @@ export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: ht
     // Stopped or asleep: it wakes up with this as its next message.
     if (err === 'Worker is not running') err = floor.workers.resume(w.id, text);
     if (err) return send(res, 400, { error: err });
+    return send(res, 200, { ok: true, worker: row(w.id) });
+  }
+
+  if (action === '/pr') {
+    const ask = readPrRequest(body);
+    if (typeof ask === 'string') return send(res, 400, { error: ask });
+    const w = ask.worker ? findWorker(floor.workers.list(), ask.worker) : me;
+    if (typeof w === 'string') return send(res, 404, { error: w });
+    if (w.kind !== 'agent') return send(res, 400, { error: `${w.name} is a shell, not an agent` });
+    const pr = ask.pr === undefined ? undefined : await pullOf(floor, ask.pr, ask.repo);
+    if (typeof pr === 'string') return send(res, 400, { error: pr });
+    const err = floor.workers.linkPr(w.id, pr);
+    if (err) return send(res, 404, { error: err });
+    const whose = w.id === me.id ? 'its own' : `${w.name}'s`;
+    ctx.toastFloor(floor, pr ? `${who} said PR #${pr.number} is ${whose}` : `${who} said ${w.id === me.id ? 'it has' : `${w.name} has`} no pull request`);
     return send(res, 200, { ok: true, worker: row(w.id) });
   }
 

@@ -29,18 +29,21 @@ export interface WorkerPr {
 
 /**
  * Where its work stands on GitHub: a pull request from its desk, its worktree branch or its queue
- * task is open (one still open wins, e.g. a follow-up on the same branch), or merged, so it can be
+ * task, or one it opened itself, is open (one still open wins, e.g. a follow-up on the same branch), or merged, so it can be
  * sent home. Undefined when it has none, or only closed ones.
  */
 export function workerPr(w: WorkerInfo, pulls: GhPull[], tasks: QueueTask[]): WorkerPr | undefined {
   const mine = new Set<number>();
   if (w.pr) mine.add(w.pr.number);
+  for (const n of w.pastPrs ?? []) mine.add(n);
   for (const t of tasks) if (t.workerId === w.id && t.pr) mine.add(t.pr.number);
-  const seen = pulls.filter((p) => mine.has(p.number) || (w.worktree && w.worktree.branch === p.headRefName)).map((p) => ({ number: p.number, state: p.state }));
+  // Never a fork's (see shared/pulltrust.ts): anyone can open one from a branch named like the
+  // worker's, or print its URL where the worker would read it.
+  const seen = pulls.filter((p) => !p.fork && (mine.has(p.number) || (w.worktree && w.worktree.branch === p.headRefName))).map((p) => ({ number: p.number, state: p.state }));
   // Its task's PR can drop off the list GitHub sends (the last 30 merged): keep what the queue saw.
   for (const t of tasks) if (t.workerId === w.id && t.pr && !seen.some((p) => p.number === t.pr!.number)) seen.push({ number: t.pr.number, state: t.pr.state });
   // Opened from its desk but not on the list yet (still loading, or no gh to ask): it's open.
-  if (w.pr && !seen.some((p) => p.number === w.pr!.number)) seen.push({ number: w.pr.number, state: 'OPEN' });
+  if (w.pr && !pulls.some((p) => p.number === w.pr!.number)) seen.push({ number: w.pr.number, state: 'OPEN' });
   const open = seen.find((p) => p.state === 'OPEN' || p.state === 'DRAFT');
   if (open) return { state: 'open', number: open.number };
   const merged = seen.find((p) => p.state === 'MERGED');

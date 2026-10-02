@@ -10,6 +10,7 @@ import { workerPr } from '../shared/status.js';
 import type { AttentionLevel } from '../shared/attention.js';
 import { landedWork, notLeaving } from './leave-on-merge.js';
 import { writeState } from './safefs.js';
+import { parsePullUrl } from './workers/pr.js';
 
 /** One worker as an agent sees it: enough to pick the ones to send home, and say why. */
 export interface WorkerRow {
@@ -180,6 +181,30 @@ export function readHireRequest(body: unknown, providers: AgentProvider[]): Hire
     ...(b.issue !== undefined ? { issue: b.issue as number } : {}),
     ...(typeof b.goal === 'string' ? { goal: b.goal.trim() } : {}),
   };
+}
+
+/**
+ * A request to say which pull request is a worker's, read from its JSON body: its number, or its
+ * URL (then `repo` is whose it is). With neither and unlink: true, the worker's is taken off.
+ */
+export interface PrRequest {
+  /** Whose: the worker asking, when it doesn't say. */
+  worker?: string;
+  pr?: number;
+  repo?: string;
+}
+
+export function readPrRequest(body: unknown): PrRequest | string {
+  const b = (body ?? {}) as { worker?: unknown; pr?: unknown; unlink?: unknown };
+  if (b.worker !== undefined && (typeof b.worker !== 'string' || !b.worker.trim())) return 'worker is a worker name or id';
+  const who = typeof b.worker === 'string' ? { worker: b.worker.trim() } : {};
+  if (b.unlink === true) return b.pr === undefined ? who : 'Give pr or unlink: true, not both';
+  const text = typeof b.pr === 'string' ? b.pr.trim() : '';
+  // A URL only as GitHub writes one (see parsePullUrl): its repository is then checked against the floor's.
+  const url = /^https?:\/\//i.test(text) ? parsePullUrl(text) : undefined;
+  const n = typeof b.pr === 'number' ? b.pr : url ? url.number : /^#?\d{1,9}$/.test(text) ? Number(text.replace('#', '')) : NaN;
+  if (!Number.isSafeInteger(n) || n < 1) return "Say which pull request: pr, its number or its URL (or unlink: true to take the worker's off)";
+  return { ...who, pr: n, ...(url ? { repo: url.repo } : {}) };
 }
 
 // --- The MCP server -------------------------------------------------------------------------------

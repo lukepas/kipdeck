@@ -10,6 +10,7 @@ export interface HandleOps {
   persist(): void;
   notePrompt(w: Worker, prompt: string): void;
   noteTool(w: Worker, tool: string): void;
+  notePr(w: Worker, command: unknown, output: string): void;
   clearTask(w: Worker): void;
   scheduleScan(w: Worker): void;
   prompt(id: string, text: string): string | undefined;
@@ -59,6 +60,7 @@ export function workerHandle(w: Worker, ops: HandleOps): WorkerHandle {
     persist: () => ops.persist(),
     notePrompt: (prompt) => ops.notePrompt(w, prompt),
     noteTool: (tool) => ops.noteTool(w, tool),
+    notePr: (command, output) => ops.notePr(w, command, output),
     clearTask: () => ops.clearTask(w),
     scheduleScan: () => ops.scheduleScan(w),
     prompt: (text) => ops.prompt(w.info.id, text),
