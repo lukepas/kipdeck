@@ -27,7 +27,9 @@ export function openUpgrade(net: Net) {
     if (u.current) body.append(h('label', {}, 'Running now'), version(u.current));
     const busy = u.phase === 'building' || u.phase === 'restarting';
     recheck.disabled = !!u.checking || busy;
-    go.disabled = !u.latest || !!u.checking || busy;
+    // Only admins can upgrade (the office checks too).
+    go.disabled = !u.latest || !!u.checking || busy || !store.me.admin;
+    go.title = store.me.admin ? '' : 'Only admins can upgrade the office';
 
     if (u.phase === 'building') {
       body.append(h('p.upgrade-status.busy', {}, h('span.spinner'), `Building ${u.latest?.sha ?? 'the new version'}${u.by ? ` (started by ${u.by})` : ''}. The office keeps working until it restarts, usually in a minute or two.`));

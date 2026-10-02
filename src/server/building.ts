@@ -62,6 +62,8 @@ export interface BuildingOptions {
   clone?: Pick<CloneRunOptions, 'stallMs' | 'tickMs'>;
 }
 
+/** What GitHub calls a login that can push to a repository (viewerPermission). */
+const PUSHERS = new Set(['ADMIN', 'MAINTAIN', 'WRITE']);
 /** How long the list of repositories `gh` can see is reused before it's asked again. */
 const REPOS_TTL_MS = 5 * 60_000;
 const MAX_REPOS = 1000;
@@ -279,9 +281,10 @@ export class Building {
    * Clones a repository into the projects folder and adds it as a floor. `started` hears about the
    * floor as soon as the clone begins; resolves to the finished floor, or to why there's none. A
    * checkout that's already where the clone would go is used as it is. `account` (whoever's adding it)
-   * can stop the clone, as admins can.
+   * can stop the clone, as admins can. Without `anyRepo` (whoever's adding it isn't an admin) only a
+   * repository the office's login can push to will do: a stranger's repository could carry anything.
    */
-  async add(input: string, by: string, started: (def: FloorDef) => void, account?: string): Promise<FloorDef | string> {
+  async add(input: string, by: string, started: (def: FloorDef) => void, account?: string, anyRepo = true): Promise<FloorDef | string> {
     const wanted = normalizeRepo(input);
     if (!wanted) return 'Pick a repository, or type it as owner/name';
     if (this.defs.some((d) => sameRepo(d.repo, wanted))) return `${wanted} already has a floor`;
@@ -302,9 +305,10 @@ export class Building {
     let repo: string;
     let empty = false;
     try {
-      const view = JSON.parse(await gh(['repo', 'view', wanted, '--json', 'nameWithOwner,isEmpty'], this.dataDir, 30_000)) as { nameWithOwner?: string; isEmpty?: boolean };
+      const view = JSON.parse(await gh(['repo', 'view', wanted, '--json', 'nameWithOwner,isEmpty,viewerPermission'], this.dataDir, 30_000)) as { nameWithOwner?: string; isEmpty?: boolean; viewerPermission?: string };
       repo = normalizeRepo(view.nameWithOwner) ?? wanted;
       empty = view.isEmpty === true;
+      if (!anyRepo && !PUSHERS.has(String(view.viewerPermission))) return `Only admins can add a floor for ${repo}: the office's GitHub login can't push to it`;
     } catch (err) {
       return `Couldn't find ${wanted} on GitHub: ${(err as Error).message}`;
     }

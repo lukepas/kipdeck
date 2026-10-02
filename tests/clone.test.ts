@@ -14,7 +14,7 @@ const FAKE_GH = `#!/bin/sh
 case "$1 $2" in
   "repo view")
     [ -d "$FAKE_GH_REPOS/$3.git" ] || { echo "GraphQL: Could not resolve to a Repository with the name '$3'." >&2; exit 1; }
-    echo "{\\"nameWithOwner\\":\\"$3\\",\\"isEmpty\\":false}"
+    echo "{\\"nameWithOwner\\":\\"$3\\",\\"isEmpty\\":false,\\"viewerPermission\\":\\"\${FAKE_GH_PERM:-WRITE}\\"}"
     ;;
   "repo clone")
     name="$3"; dest="$4"
@@ -60,7 +60,7 @@ function office(t: { after(fn: () => void): void }) {
   execFileSync('git', ['clone', '-q', '--bare', work, path.join(repos, 'acme', 'game.git')]);
   process.env.PATH = `${bin}${path.delimiter}${process.env.PATH}`;
   process.env.FAKE_GH_REPOS = repos;
-  for (const k of ['FAKE_GH_DELAY', 'FAKE_GH_HANG', 'FAKE_GH_FAIL']) delete process.env[k];
+  for (const k of ['FAKE_GH_DELAY', 'FAKE_GH_HANG', 'FAKE_GH_FAIL', 'FAKE_GH_PERM']) delete process.env[k];
   const projects = path.join(root, 'projects');
   /** The clones under way, as the office keeps them for the next one. */
   const saved = () => (existsSync(path.join(dataDir, 'cloning.json')) ? (JSON.parse(readFileSync(path.join(dataDir, 'cloning.json'), 'utf8')) as (FloorDef & { pid: number })[]) : []);
@@ -118,6 +118,17 @@ test('a clone shows how far along it is, then becomes a floor', async (t) => {
   assert.deepEqual(building.pending(), []);
   assert.deepEqual(saved(), [], "cloning.json is gone once it's done");
   assert.deepEqual(readdirSync(path.join(dataDir, 'clones')), [], 'and so is its log');
+});
+
+test("a member can't add a floor for a repository the office can't push to; an admin can", async (t) => {
+  const { dataDir, projects } = office(t);
+  process.env.FAKE_GH_PERM = 'READ';
+  const building = new Building(dataDir, projects, fast);
+  const r = await building.add('acme/game', 'Sam', () => assert.fail('no clone starts'), 'member-1', false);
+  assert.match(String(r), /Only admins can add a floor for acme\/game/);
+  assert.equal(existsSync(path.join(projects, 'acme', 'game')), false);
+  const ok = await building.add('acme/game', 'Ada', () => {}, 'admin-1', true);
+  assert.equal(typeof ok, 'object', String(ok));
 });
 
 test("a clone that goes quiet is stopped as stalled, and one that can't sign in says why", async (t) => {

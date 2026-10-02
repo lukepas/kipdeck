@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import type { NotifyState, WebhookKind, WorkerInfo, WorkerStatus } from '../shared/protocol.js';
 import { alertDetail } from '../shared/status.js';
+import { BlockedAddressError, guardedFetch, readLimited, type GuardOptions } from './netguard.js';
 import { readStateJson, writeState } from './safefs.js';
 
 /** A worker has to stay put this long before the channel hears about it, so a flicker never posts. */
@@ -24,6 +25,13 @@ export function webhookKind(url: URL): WebhookKind {
   if (url.hostname === 'hooks.slack.com') return 'slack';
   if (/^(ptb\.|canary\.)?discord(app)?\.com$/.test(url.hostname) && url.pathname.startsWith('/api/webhooks/')) return 'discord';
   return 'other';
+}
+
+/** Why a webhook link won't do, or undefined when it will: it has to be https, since its path is the secret. */
+export function webhookProblem(url: URL): string | undefined {
+  if (url.protocol !== 'https:') return 'The webhook has to be an https link';
+  if (url.username || url.password) return "The webhook link can't have a user name or password in it";
+  return undefined;
 }
 
 /** Where the webhook goes, without the secret part of its path: "hooks.slack.com/…/x7Qe". */
@@ -60,6 +68,8 @@ export class Webhook {
     /** The project a worker works on (the floor it's on), or the office's name without one. */
     private project: (workerId?: string) => string,
     private onState: (state: NotifyState) => void,
+    /** Tests only: see GuardOptions. */
+    private guard: GuardOptions = {},
   ) {
     this.path = path.join(dataDir, 'webhook.json');
     this.restore();
@@ -83,7 +93,8 @@ export class Webhook {
       } catch {
         return "That isn't a link. Paste the webhook URL from Slack or Discord.";
       }
-      if (url.protocol !== 'https:' && url.protocol !== 'http:') return 'The webhook has to be an http(s) link';
+      const bad = webhookProblem(url);
+      if (bad) return bad;
       if (text.length > 2000) return 'That link is too long';
       this.saved = { url: url.toString(), by, at: Date.now() };
     }
@@ -179,20 +190,16 @@ export class Webhook {
     }
     let error: string | undefined;
     try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(body),
-        redirect: 'error',
-        signal: AbortSignal.timeout(TIMEOUT_MS),
-      });
-      if (!res.ok) {
-        const why = oneLine((await res.text().catch(() => '')) || res.statusText, 120);
+      // https only, never redirected, and only to a public address (see netguard.ts).
+      const res = await guardedFetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), timeoutMs: TIMEOUT_MS, protocols: ['https:'] }, this.guard);
+      const text = (await readLimited(res.body, 4096).catch(() => undefined))?.toString('utf8') ?? '';
+      if (res.status < 200 || res.status >= 300) {
+        const why = oneLine(text || res.statusText, 120);
         error = `The webhook answered ${res.status}${why ? `: ${why}` : ''}`;
       }
     } catch (err) {
       const e = err as Error;
-      error = e.name === 'TimeoutError' ? 'The webhook did not answer in time' : `Couldn't reach the webhook: ${(e.cause as Error | undefined)?.message ?? e.message}`;
+      error = e instanceof BlockedAddressError ? `The webhook has to be on the public internet: ${e.message}` : e.name === 'TimeoutError' ? 'The webhook did not answer in time' : `Couldn't reach the webhook: ${(e.cause as Error | undefined)?.message ?? e.message}`;
     }
     // The link was changed while this was on its way; its outcome says nothing about the new one.
     if (this.saved !== saved) return error;
@@ -217,7 +224,7 @@ export class Webhook {
     if (!existsSync(this.path)) return;
     try {
       const s = (readStateJson(this.path) ?? {}) as Partial<Saved>;
-      if (typeof s.url === 'string' && URL.canParse(s.url)) this.saved = { url: s.url, by: typeof s.by === 'string' ? s.by : '?', at: typeof s.at === 'number' ? s.at : Date.now() };
+      if (typeof s.url === 'string' && URL.canParse(s.url) && !webhookProblem(new URL(s.url))) this.saved = { url: s.url, by: typeof s.by === 'string' ? s.by : '?', at: typeof s.at === 'number' ? s.at : Date.now() };
     } catch {
       // a broken file just means no webhook
     }

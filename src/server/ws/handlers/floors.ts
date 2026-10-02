@@ -29,6 +29,8 @@ export const floorHandlers = {
           ctx.toastAll(`🛗 ${who} is adding a floor for ${def.repo ?? def.name}…`);
         },
         c.accountId,
+        // Opening a checkout runs what it ships past the office's checks: members only add the office's own repositories.
+        ctx.meOf(c.accountId).admin,
       )
       .then((r) => {
         ctx.floorsChanged();

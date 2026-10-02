@@ -13,6 +13,8 @@ export const servicesView: ViewPieces['services'] = (ctx, floor) => ctx.services
 export const settingsHandlers = {
   'notify.webhook'(ctx, c, msg) {
     const who = c.peer.name;
+    // Every worker's status goes wherever it points: only admins pick where.
+    if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can change team notifications');
     const url = str(msg.url, 4096).trim();
     const err = ctx.webhook.set(url, who);
     ctx.warn(c, err);
@@ -38,6 +40,8 @@ export const settingsHandlers = {
   },
   'upgrade.start'(ctx, c) {
     const who = c.peer.name;
+    // It rebuilds and restarts the whole office.
+    if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can upgrade the office');
     void ctx.upgrader.start(who).then((err) => {
       if (err) ctx.warn(c, err);
       else ctx.toastAll(`${who} is upgrading the office — it restarts when the new version is built`);

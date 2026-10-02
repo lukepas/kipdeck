@@ -200,16 +200,22 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
   const hookTest = h('button.btn', { type: 'button' }, 'Send a test');
   const hookRemove = h('button.btn.danger', { type: 'button' }, 'Remove');
   const hookActions = h('div.seg', { style: 'margin-top:8px' }, hookTest, hookRemove);
+  const hookRow = h('div.webhook', {}, hookInput, hookSave);
   const paintHook = () => {
     const { webhook, error, lastSentAt } = store.notify;
+    // Where every worker's status is posted: only admins change it (the office checks too).
+    const admin = store.me.admin;
+    hookRow.classList.toggle('hidden', !admin);
+    hookRemove.classList.toggle('hidden', !admin);
     hookActions.classList.toggle('hidden', !webhook);
     hookSave.textContent = webhook ? 'Replace' : 'Save';
     hookStatus.classList.toggle('bad', !!error);
     hookStatus.textContent = !webhook
-      ? 'Paste an incoming webhook from Slack or Discord, and the office posts to that channel when a worker needs input or finishes and nobody has its terminal open. It’s for everyone in the office.'
+      ? 'Paste an incoming https webhook from Slack or Discord, and the office posts to that channel when a worker needs input or finishes and nobody has its terminal open. It’s for everyone in the office.'
       : error
         ? `⚠️ Posting to ${WEBHOOK_NAME[webhook.kind]} (${webhook.hint}) failed: ${error}`
         : `📣 Posting to ${WEBHOOK_NAME[webhook.kind]} (${webhook.hint}), set by ${webhook.by} ${timeAgo(webhook.at)}${lastSentAt ? ` · last message ${timeAgo(lastSentAt)}` : ''}.`;
+    if (!admin) hookStatus.textContent += ' Admins can change it.';
   };
   paintHook();
   const saveHook = () => {
@@ -387,7 +393,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     ],
     notify: [
       setting('Desktop notifications', 'you', notifyRow, notifyNote),
-      setting('Team notifications (Slack / Discord)', 'office', h('div.webhook', {}, hookInput, hookSave), hookActions, hookStatus),
+      setting('Team notifications (Slack / Discord)', 'office', hookRow, hookActions, hookStatus),
     ],
     building: [
       setting('Workspace folder', 'office', dirRow, dirActions, dirNote),
