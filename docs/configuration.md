@@ -27,6 +27,12 @@ agent-office [dir] [options]
       --tls-key <file>    …and key
       --self-signed       Serve HTTPS with a generated self-signed cert
       --trust-proxy       Trust X-Forwarded-* (behind Caddy/nginx)
+      --allowed-host <n>  Another name the office is reached at (repeatable, env AGENT_OFFICE_ALLOWED_HOSTS;
+                          ".example.com" allows every name under it). IPs, localhost, this machine's name,
+                          the public host and the tailnet name are always allowed
+      --worker-env <names> More of the office's environment variables for workers, e.g. "AWS_PROFILE,SENTRY_*"
+                          (repeatable, env AGENT_OFFICE_WORKER_ENV); workers get an allowlist by default
+      --inherit-env       Pass workers the office's whole environment (env AGENT_OFFICE_INHERIT_ENV=1)
       --turn <url>        Add a TURN server for voice, e.g. turn:user:pass@host:3478
       --budget <usd>      Daily tracked Claude Code budget (OpenCode/Codex/Grok/Muse/DSH excluded)
       --budget-pause      ...and nobody can hire a new worker until the next day
@@ -46,8 +52,10 @@ agent-office prune [dir] [-n|--dry-run] [-f|--force]
   kept unless --force is given. A worker across several projects has worktrees of them in its
   own floor's workspace: prune each project to clear those out.
 
-agent-office accounts [list | invite [name] [--admin] | revoke <name> | role <name> admin|member | password on|off] [-d <dir>]
+agent-office accounts [list | invite [name] [--admin] | revoke <name> | signout <name> | role <name> admin|member | password on|off] [-d <dir>]
 
-  Invite, list and revoke people's own accounts, and switch the shared password
-  off or on. Works while the office runs.
+  Invite, list and revoke people's own accounts, sign one out of every browser,
+  and switch the shared password off or on. Works while the office runs.
 ```
+
+Sign-ins last 7 days; `AGENT_OFFICE_SESSION_DAYS` sets it, from 1 to 90. What each of these protects against is in [Security](security.md).
