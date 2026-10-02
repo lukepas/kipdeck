@@ -34,7 +34,7 @@ curl -fsSL https://raw.githubusercontent.com/AgentSystemLabs/agent-office/main/i
 
 - **A floor per project.** Open **Floors**, pick one of your GitHub repos, and the office clones it (showing how far along it is) and opens a floor for it. Every worker, board and queue on that floor works in that checkout.
 - **Workers at desks.** Walk up to an empty desk, press **E**, and pick Claude Code, Codex, OpenCode, Grok, Muse, DeepSeek Harness or Pi. The agent's live terminal shows on its laptop, and anyone can open it and type.
-- **Mission control.** Press **I** for what needs a person right now, on every floor: each worker ranked (needs you, stuck, to review), with why in plain words (*working but silent for 12 min*, *done 40 min ago, nobody looked*) and one button for the next step. Each floor has a mission and milestones, shown under its name and given to new workers as context, and every worker is linked to a goal or an issue, with progress and spend per goal. See [docs/mission-control.md](docs/mission-control.md).
+- **Mission control.** Press **I** for what needs a person right now, on every floor: each worker ranked (needs you, stuck, to review), with why in plain words (*working but silent for 12 min*, *done 40 min ago, nobody looked*) and one button for the next step. Each floor has a mission and milestones, shown under its name and given to new workers as context, and every worker is linked to a goal or an issue, with progress and spend per goal. A Review inbox holds everything waiting for a person's decision (finished work, pull requests to merge or hand back, reviews requested of you), a Timeline says what happened on every floor, reminders catch what would otherwise be forgotten, and coming back after a while you get a short *While you were away*. See [docs/mission-control.md](docs/mission-control.md).
 - **You can see who needs you.** A worker that needs input, has finished or gets stuck dings, the attention chip on the top bar counts them across every floor, and a desktop notification finds you in another tab. Press **N** to go straight to the one that has waited longest, then on to the next floor's.
 - **Milestones you don't miss.** A merged pull request or a finished task queue is a toast, a ding and a desktop notification for everyone on the floor.
 - **From your phone, too.** `/lite` is the office in 2D: every worker (on your floor or all of them) ranked by what needs you and why, Mission control, its terminal with the keys a phone keyboard lacks, and the boards. The 3D office offers it on a phone or a slow computer.
@@ -325,7 +325,7 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 | E | Interact: hire a worker, open its terminal, read a board, sit down, open Floors at the elevator |
 | P | Give a task to a new worker, or to the one at this desk |
 | C | See a worker's changes: diff, commit, open a PR |
-| I | Mission control: what needs someone on every floor, the floor's goals, and work to review |
+| I | Mission control: reminders and what needs someone on every floor, the floor's goals, the review inbox and the timeline |
 | N | Go to the next worker that's waiting on you, then the next floor's |
 | X | Send a worker home |
 | L | Hang a sign over a desk ("Operations", "Code cleanup") |
@@ -356,7 +356,7 @@ Every change to the app that lands on `main` is published as a GitHub release by
 ## More
 
 - [Features](docs/features.md): seeing what every agent does, handing out work, reviewing it and staying on mission
-- [Mission control](docs/mission-control.md): the attention ranking, the floor's mission and milestones, and linking work to goals
+- [Mission control](docs/mission-control.md): the attention ranking, the floor's mission and milestones, linking work to goals, the review inbox, the timeline, reminders and the digest
 - [Agents](docs/agents.md): Claude Code, Codex and OpenCode, models and effort, and the office's prompts
 - [Configuration](docs/configuration.md): every command-line option, and where the office keeps its data
 - [AWS reference](docs/aws.md): Tailscale, service tunnels, upgrades, and everything `deploy/aws.sh` does

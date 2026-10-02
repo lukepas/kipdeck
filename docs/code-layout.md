@@ -39,7 +39,7 @@ They're in `core/registry.ts`, and each is a field of `ctx`. Every registration 
 - **`ui/`** is the app shell: the HUD, the menu and the windows (settings, the palette, terminals, changes, the queue, and the GitHub windows in `ui/github/`). Each module imports its own stylesheet (`import './palette.css'`), as a feature's `ui.ts` does (`import './ui.css'`).
 - **`world/`** is the engine and the scenery: toon materials and shapes (`toon.ts`), the characters (`world/character/`), and the office floor (`world/office/`). The types they share (what you bump into, what you can use, the seats, `Office`) are in `world/types.ts`.
 - **`sound/`** is the office's sound. `OfficeSound` (`sound/index.ts`, the `ctx.sound` every part uses) is a facade over `AudioCore` (`sound/core.ts`: the audio context, its buses, where your ears are) and the recipes, each in a file of its own, here (`steps.ts`, `typing.ts`, `alerts.ts`) or in its feature's folder.
-- **`shared/`** (`src/client/shared/`) is what the 3D office and the 2D view at `/lite` both use: the tab title and hiring. Mission control (`ui/mission/`) and sending a worker home (`ui/sendhome.ts`) are shared the same way: each view hands Mission control a small `MissionDeps` (how it opens a terminal and gets you to a floor), and the ranking itself is in `src/shared/attention.ts`, which the server uses too. The 2D view loads no three.js and nothing from `core/`, `features/`, `input/`, `world/` or `player/`; `tests/client-structure.test.ts` follows `lite.ts`'s imports to check.
+- **`shared/`** (`src/client/shared/`) is what the 3D office and the 2D view at `/lite` both use: the tab title and hiring. Mission control (`ui/mission/`) and sending a worker home (`ui/sendhome.ts`) are shared the same way: each view hands Mission control a small `MissionDeps` (how it opens a terminal, a pull request and the queue, and gets you to a floor), and what it shows is worked out in `src/shared/`, which the server uses too: the ranking in `attention.ts` (every threshold is there), the review inbox in `review.ts`, the reminders in `reminders.ts` and the *While you were away* summary in `digest.ts`. The 2D view loads no three.js and nothing from `core/`, `features/`, `input/`, `world/` or `player/`; `tests/client-structure.test.ts` follows `lite.ts`'s imports to check.
 
 ### Stylesheets
 
@@ -55,7 +55,7 @@ They're in `core/registry.ts`, and each is a field of `ctx`. Every registration 
 - **`workers/`** is the worker manager (`WorkerManager` in `workers/manager.ts`) and its pieces: worktrees, pull requests, tasks, terminals, ACP workers, and saving to `workers.json`. `src/server/workers.ts` re-exports it for the modules that imported it from there.
 - **`providers/`** holds one adapter per agent CLI (see [Adding an agent provider](#adding-an-agent-provider)).
 
-The rest of `src/server/` is a module per service or per thing a floor keeps (`queue.ts`, `meetings.ts`, `whiteboard.ts`), made by the office or by each `Floor` (`floor.ts`).
+The rest of `src/server/` is a module per service or per thing a floor keeps (`queue.ts`, `meetings.ts`, `whiteboard.ts`, `mission.ts`, `timeline.ts`, `review.ts`), made by the office or by each `Floor` (`floor.ts`). The building-wide roster and the reminders' sweep are `office/roster.ts` and `office/reminders.ts`.
 
 ## Shared
 

@@ -2,11 +2,11 @@
 
 Back to the [README](../README.md).
 
-Mission control answers one question: what needs a person right now, on any floor. It ranks every hired worker in the building by how much it needs someone, says why in plain words, and offers one next step. Next to that it keeps what each floor is for (its mission and milestones), so every worker, task and pull request can be tied back to a goal.
+Mission control answers one question: what needs a person right now, on any floor. It ranks every hired worker in the building by how much it needs someone, says why in plain words, and offers one next step. Next to that it keeps what each floor is for (its mission and milestones), so every worker, task and pull request can be tied back to a goal, an inbox of everything waiting for a review, a timeline of what happened, and reminders for what would otherwise be forgotten.
 
-Open it with **I** anywhere in the office, from the attention chip on the top bar, from **☰** > **Mission control**, or from the command palette (**Ctrl+K**: *Mission control*, *Edit the mission*, *Review finished work*). In the 2D view (`/lite`) it's the **Mission** button in the top bar. It has a ✕ in the top right, and Esc closes it and puts you straight back into looking around. It remembers the tab you had open last.
+Open it with **I** anywhere in the office, from the attention chip on the top bar, from **☰** > **Mission control**, or from the command palette (**Ctrl+K**: *Mission control*, *Edit the mission*, *Review finished work*, *Timeline*, *While you were away*). In the 2D view (`/lite`) it's the **Mission** button in the top bar. It has a ✕ in the top right, and Esc closes it and puts you straight back into looking around. It remembers the tab you had open last.
 
-Inside it, **1** **2** **3** switch tabs, the arrow keys move between rows, and **Enter** does the selected row's next step.
+Inside it, **1** **2** **3** **4** switch tabs (Attention, Goals, Review, Timeline), the arrow keys move between rows, and **Enter** does the selected row's next step.
 
 ## Attention
 
@@ -16,7 +16,7 @@ Every worker hired onto a desk, a bean bag or the meeting table, on every floor 
 | --- | --- |
 | Needs you | It's waiting on an answer or a permission: *needs input for 18 min: Wants permission: Bash: npm test* |
 | Stuck | Working but no hook event and no terminal output for 10 minutes (*working but silent for 12 min*); tests or a build failing again and again; crashed (*crashed (exit 1)*); its worktree was deleted; hired 15 minutes ago and never given a task; its queue task failed to start |
-| To review | Done and nobody has looked (after 30 minutes: *forgotten: done 42 min ago, nobody looked*); its pull request's checks are failing; its pull request merged, so it can go home |
+| To review | Done and nobody has looked (after 30 minutes: *forgotten: done 42 min ago, nobody looked*); its pull request's checks are failing, it has merge conflicts, changes were requested, it's approved and ready to merge, or it waits for a review; commits on its branch and no pull request yet; its pull request merged, so it can go home |
 | Working | At work and showing signs of life |
 | Parked | Done and seen to, or asleep |
 
@@ -28,7 +28,9 @@ Each row shows the worker, its floor, what it's for (its milestone, its issue, o
 | --- | --- |
 | Answer, Look into it | Opens its terminal |
 | Review changes | Opens its Changes window |
-| Open PR, Fix checks | Opens its pull request's window, where **Fix comments & merge** hands it to a worker (after checking who the pull request is from) |
+| Open PR, Fix checks | Opens its pull request's window, where **Fix comments & merge** hands it to a worker (after checking who the pull request is from); with no pull request yet, pushes its branch and opens one |
+| Merge | Opens its pull request's window and then its **Merge** dialog |
+| Hand back | Opens its pull request's window and hands it back to a worker with the review comments (its **Fix comments & merge**, or **Fix conflicts & merge**) |
 | Resume | Starts it again |
 | Rebuild | Puts its deleted worktree back, or sends it home |
 | Send home | Sends it home, asking what to do with its worktree |
@@ -54,9 +56,60 @@ Workers with no milestone and no issue are listed as **unlinked**, each with a p
 
 Anyone signed in can edit the mission. An admin can tick *Only admins can change the mission* to lock it.
 
+The **Reminders** sit above the levels; see [Reminders](#reminders).
+
 ## Review
 
-The workers whose work is done and waits for a person, across every floor, oldest first: finished turns nobody looked at, pull requests with failing checks, and merged ones whose workers can go home.
+Everything on every floor that waits for a person's decision, oldest first:
+
+- workers done and nobody has looked, with what they changed (*+120 -30 · 4 files*, from the Changes window's own look, taken once each time the worker comes to rest);
+- workers with commits on their branch and no pull request (**Open PR**);
+- pull requests by state: waiting for a review, approved and ready to merge (**Merge**), checks failing, merge conflicts or changes requested (**Hand back**), with the checks' state beside them;
+- pull requests the office made that no worker at a desk stands for any more (from an `office/` branch, a worker's branch or a queue task), and pull requests your review is requested on (yours by your own GitHub sign-in, or the office's on the shared password);
+- workers whose pull request merged (**Send home**).
+
+Each row says what it is, its floor, its goal, the checks, the diff size and how long it has waited. Opening a finished worker's work from here (reviewing its changes, its pull request, sending it home) marks it seen, as opening its terminal does. The attention chip's *to review* counts this whole list.
+
+## Timeline
+
+What happened on every floor, newest first. The office writes it from what changes, never from what anyone types (the mission excepted, which is cleaned first):
+
+| Event | When |
+| --- | --- |
+| Hired | Someone hired a worker, with the goal and issue it's for |
+| Needs input, Done | A worker started waiting on an answer, or finished its turn |
+| Stuck | The ranking first saw it stuck, with why |
+| Resumed | An asleep worker started working again |
+| Went home | A worker went home, with its time on task and what it cost |
+| PR opened, PR closed | One of the office's pull requests opened, or closed without merging |
+| PR merged | Any pull request on the floor merged, and who merged it from the PR window |
+| Queue | A queue task started, ended or failed |
+| Meeting | A meeting was called, and when it ended, the file it wrote |
+| Mission, Milestone | The mission statement changed; a milestone was added, renamed, removed, made the active one or done |
+| Progress | A milestone's issues closed went up or down (*Auth rewrite: 5 of 7 issues closed*) |
+
+Pick a floor, a goal or a worker to see only theirs, and **Load older** for more. **Open** on an event goes to what it's about: the worker's terminal (if it's still here), the pull request, the queue or the Goals tab, on its floor.
+
+## While you were away
+
+Back after 15 minutes or more, *While you were away* opens once: a one-line summary and the events since you left, with **Show what needs me** for the Attention tab. The summary is worked out the same way everywhere (`src/shared/digest.ts`): *3 PRs merged, 2 workers finished and wait for review, 1 got stuck, Auth rewrite moved from 3/7 to 5/7*.
+
+With an account, the office remembers when you were last here (when you left, not when you came in, and never while you're still here in another tab). On the shared password, this browser does. In the 3D office it's a window that waits until the office has loaded, no other window is open and you aren't typing. In the 2D view it's the first card, and **Catch up** brings it back. From the palette, *While you were away* opens it again (the last hour's, if you weren't away).
+
+## Reminders
+
+Things nobody has to answer right now, but somebody will:
+
+| Reminder | When |
+| --- | --- |
+| A snooze ran out | A timed snooze ended and the worker still needs someone |
+| Approved, not merged | A pull request approved and green for over an hour |
+| Paused queue | The queue lets no worker on and tasks have waited over 30 minutes |
+| Past due | A milestone past its due date with open issues |
+| Unpushed work | A worker asleep for a day with commits nobody pushed |
+| A long wait | A worker waiting on an answer for over an hour (the team's channel hears once) |
+
+The office looks once a minute. A reminder shows at the top of the Attention tab with its next step, puts an amber dot on the attention chip (and on the 2D view's **Mission** button), and toasts the people on its floor when it comes up, again at most once an hour while it stays open. **Snooze 30 min** puts it aside for a while; **Dismiss** puts it aside until what it's about changes. Everyone sees who did. A restart remembers both and toasts nothing on its first look. The thresholds are in `src/shared/attention.ts`, with the ranking's.
 
 ## The mission strip
 
@@ -80,11 +133,9 @@ The block is the editable *Team context* prompt in Settings > **Workers** > **Ed
 
 - The mission is in the floor's checkout, `.agent-office/mission.json`, written through the office's state-file helpers (mode 600, never through a symlink, never a file the repository ships; see [security](security.md)).
 - Each worker's goal, issue, snooze and its last hook event and output times are in `.agent-office/workers.json`; a queue task's goal is in the queue's file.
+- The timeline is `.agent-office/timeline.jsonl`, the last 2000 events of the floor, written through the same helpers; a torn last line (the office stopped mid-write) is skipped. Its text is the office's own words, cut to 200 characters. Reminders someone snoozed or dismissed are kept in `mission.json`, and never sent with the mission.
+- Pull requests in the review queue carry a title cut to 120 characters, the author, the checks and the logins whose review is requested, and a link only when it's an https one.
 - Text people type is cleaned on the server: trimmed, cut to its length, and stripped of control characters and the invisible ones that reorder or hide text. Milestone ids are made by the office, and issue numbers must be positive whole numbers.
 - The page shows the mission as plain text, never as HTML or Markdown.
 - The building-wide roster carries task names, short activity lines (80 characters at most) and ids, never a full prompt or terminal output.
 - Terminal output is stamped at most every 30 seconds and never broadcast by itself; the roster picks it up on its next look.
-
-## Not yet
-
-The timeline of what happened, the digest of what changed while you were away and the review inbox's own pull-request list come next.
