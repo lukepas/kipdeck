@@ -56,6 +56,35 @@ export function checksList(checks: GhCheck[]) {
 
 const METHOD_LABEL: Record<GhMergeMethod, string> = { squash: 'Squash and merge', merge: 'Create a merge commit', rebase: 'Rebase and merge' };
 
+/**
+ * Instead of handing a pull request to a worker that would check it out and build it: why not, and
+ * what to do instead. `untrusted` is false while the office is still finding out. (The office
+ * refuses such a prompt too; this says so before anyone writes one.)
+ */
+export function openUntrusted(it: GhPull, reason: string, untrusted: boolean) {
+  const ok = h('button.btn.primary', { type: 'button' }, 'OK');
+  const close = h('button.btn.close', { 'aria-label': 'Close' }, '✕');
+  const el = h(
+    'div.modal.gh-merge',
+    { role: 'alertdialog', 'aria-label': `PR #${it.number} isn't handed to a worker` },
+    h('header', {}, h('h2', {}, untrusted ? `Not handing PR #${it.number} to a worker` : `PR #${it.number} is still loading`), close),
+    h(
+      'div.body',
+      {},
+      h('p.gh-merge-title', {}, it.title, h('small', {}, `${it.headRefName} → ${it.baseRefName}`)),
+      h('div.gh-status', { class: untrusted ? 'warn' : 'muted' }, h('span', {}, untrusted ? '⚠️' : 'ℹ️'), reason),
+      untrusted
+        ? h('p', {}, "Fixing it up or resolving its conflicts means a worker checks its branch out, installs it and runs it, with the office's sign-ins. Read the Files tab here first; to go ahead, check it out yourself, or push its commits to a branch of the repository and open a pull request from that.")
+        : null,
+    ),
+    h('footer', {}, h('span.grow'), ok),
+  );
+  const modal = openModal(el);
+  ok.addEventListener('click', () => modal.close());
+  close.addEventListener('click', () => modal.close());
+  setTimeout(() => ok.focus(), 30);
+}
+
 export function openMerge(it: GhPull, d: GhPullDetail, net: Net, handToWorker: () => void, onMerged: () => void) {
   const st = mergeStatus(d);
   const methods = d.repo.methods;

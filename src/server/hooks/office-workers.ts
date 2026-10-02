@@ -95,6 +95,9 @@ export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: ht
     if (w.kind !== 'agent') return send(res, 400, { error: `${w.name} is a shell, not an agent` });
     const text = str(b.prompt, 20000).replace(/\r\n?/g, '\n').trim();
     if (!text) return send(res, 400, { error: 'Say what to tell it: prompt' });
+    // Never a fork's or an outsider's PR to check out and run (see shared/pulltrust.ts).
+    const untrusted = await floor.github.checkoutProblem(text);
+    if (untrusted) return send(res, 403, { error: untrusted });
     let err = floor.workers.prompt(w.id, text, who);
     // Stopped or asleep: it wakes up with this as its next message.
     if (err === 'Worker is not running') err = floor.workers.resume(w.id, text);
@@ -104,6 +107,8 @@ export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: ht
 
   const ask = readHireRequest(body, floor.project.agentProviders);
   if (typeof ask === 'string') return send(res, 400, { error: ask });
+  const untrusted = ask.prompt ? await floor.github.checkoutProblem(ask.prompt) : undefined;
+  if (untrusted) return send(res, 403, { error: untrusted });
   const desk = ask.desk ?? nextFreeSeat((id) => floor.workers.deskOccupied(id), floor.plan.wing)?.id;
   if (!desk) return send(res, 409, { error: 'Every desk and bean bag is taken: send someone home first' });
   // A model or effort is the office's default worker's unless it says whose.

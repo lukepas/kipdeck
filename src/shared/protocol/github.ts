@@ -1,4 +1,5 @@
 // The floor's GitHub boards: issues, pull requests, and what the office does to them.
+import type { GhPullTrust } from '../pulltrust.js';
 
 /** A GitHub label; `color` is a CSS color ("#d73a4a"). */
 export interface GhLabel {
@@ -43,6 +44,8 @@ export interface GhPull {
   body: string;
   /** Issues it closes ("closes #12" in its description), as GitHub links them. */
   closes: number[];
+  /** From a fork (GitHub's isCrossRepository): its code isn't the repository's (see shared/pulltrust.ts). */
+  fork?: boolean;
 }
 
 export interface GhState<T> {
@@ -117,6 +120,8 @@ export interface GhPullDetail {
   repo: GhRepoInfo;
   /** Who gh is signed in as on the server, and so who comments from the office appear from ('' if unknown). */
   viewer: string;
+  /** Whether a worker may check it out and build it: not from a fork, by someone who can push (see shared/pulltrust.ts). */
+  trust: GhPullTrust;
 }
 
 /** GET /api/gh/issue?number=N */

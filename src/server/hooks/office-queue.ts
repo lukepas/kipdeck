@@ -34,9 +34,13 @@ export async function officeQueue(ctx: Ctx, req: http.IncomingMessage, res: http
   } catch {
     return send(res, 400, { error: 'Send JSON: {"title": "…", "prompt": "…", "issue": 12}' });
   }
+  const prompt = str(body?.prompt, 20000);
+  // A PR's text can talk the board agent into queueing its own checkout: never a fork's or an outsider's.
+  const untrusted = await floor.github.checkoutProblem(prompt);
+  if (untrusted) return send(res, 403, { error: untrusted });
   const issue = Number.isInteger(body?.issue) && (body.issue as number) > 0 ? (body.issue as number) : undefined;
   // Its tasks run as whoever the board agent runs as.
-  const err = floor.queue.add(str(body?.prompt, 20000), agent.name, str(body?.title, 200) || undefined, issue, undefined, undefined, undefined, floor.workers.ownerOf(agent.id));
+  const err = floor.queue.add(prompt, agent.name, str(body?.title, 200) || undefined, issue, undefined, undefined, undefined, floor.workers.ownerOf(agent.id));
   if (err) return send(res, 400, { error: err });
   const task = floor.queue.state().tasks.at(-1)!;
   ctx.toastFloor(floor, `📋 The ${agent.name} queued ${issue !== undefined ? `issue #${issue}` : `“${task.title}”`}`);

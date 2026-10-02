@@ -8,7 +8,8 @@ import { getJson, getText } from './api';
 import { openClose } from './close';
 import { commentBox } from './comment-box';
 import { labelButton, labelChip } from './labels';
-import { checksList, conflicted, mergeStatus, openMerge } from './merge';
+import { checksList, conflicted, mergeStatus, openMerge, openUntrusted } from './merge';
+import { pullTrust } from '../../../shared/pulltrust';
 import { avatar, commentCard, errorBox, nodes, REVIEW_BADGE, spinnerRow, stateOf } from './pieces';
 import { FILES_KEY, mergePref, pref, savePref, TAB_KEY } from './prefs';
 import { fixAndMergePrompt, fixConflictsPrompt, pullContext, pullVars, reviewPrompt, type BoardActions } from './prompts';
@@ -67,6 +68,10 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions) {
   );
 
   const handToWorker = () => {
+    // A worker checks the branch out and builds it: never a stranger's code (see shared/pulltrust.ts).
+    const trust = detail?.trust ?? (it.fork ? pullTrust(true, it.author, undefined) : undefined);
+    if (!trust) return openUntrusted(it, 'The office is still checking who this pull request is from. Try again once it has loaded.', false);
+    if (!trust.trusted) return openUntrusted(it, trust.reason ?? '', true);
     const p = mergePref(detail?.repo.methods ?? ['squash', 'merge', 'rebase']);
     if (detail && conflicted(detail)) actions.assign(fixConflictsPrompt(it, p.method, p.deleteBranch), `Fix conflicts & merge PR #${it.number}`);
     else actions.assign(fixAndMergePrompt(it, p.method, p.deleteBranch), `Fix up & merge PR #${it.number}`);
@@ -167,6 +172,7 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions) {
 
     const st = mergeStatus(d);
     const box = h('section.gh-mergebox', { class: st.cls }, h('div.gh-status', { class: st.cls }, h('span', {}, st.icon), st.text), d.checks.length ? checksList(d.checks) : null);
+    if (it.state === 'OPEN' && !d.trust.trusted) box.append(h('div.gh-status.warn.gh-untrusted', {}, h('span', {}, '⚠️'), `${d.trust.reason} Workers won't check it out or build it from here.`));
     if (it.state === 'OPEN' && st.can) box.append(h('div.gh-mergebox-go', {}, h('button.btn.primary', { type: 'button', onclick: () => openMerge(it, d, net, handToWorker, loadAll) }, '🔀 Merge…')));
     if (conflicted(d)) box.append(h('div.gh-mergebox-go', {}, h('button.btn.primary', { type: 'button', onclick: handToWorker }, '✨ New worker: fix conflicts & merge')));
     else if (it.state === 'OPEN' && !st.can && !d.isDraft) box.append(h('div.gh-mergebox-go', {}, h('button.btn', { type: 'button', onclick: handToWorker }, '🤖 Have a worker fix it & merge')));

@@ -1,8 +1,11 @@
 import { execFile } from 'node:child_process';
 import type { GhCheck, GhCloseReason, GhComment, GhIssue, GhIssueDetail, GhLabel, GhMergeMethod, GhPull, GhPullDetail, GhRepoInfo, GhReviewComment, GhState } from '../shared/protocol.js';
 import type { GhAs } from './signins.js';
+import { checkedOutPulls, pullTrust, type GhPullTrust } from '../shared/pulltrust.js';
 
 const REFRESH_MS = 90_000;
+/** How long an author's permission on the repository is taken as known. */
+const PERMISSION_MS = 10 * 60_000;
 /** How long the repo's list of labels is kept before the label picker asks GitHub again. */
 const LABELS_MS = 60_000;
 
@@ -107,6 +110,8 @@ export class GitHub {
   private labelList?: { at: number; list: Promise<GhLabel[]> };
   /** Labels just changed from the office, by "issue:N" or "pull:N", and when. */
   private relabeled = new Map<string, { labels: GhLabel[]; at: number }>();
+  /** Pull request authors' permissions on the repository, by login (see permissionOf). */
+  private permissions = new Map<string, { at: number; permission: Promise<string | undefined> }>();
 
   constructor(
     private dir: string,
@@ -150,7 +155,7 @@ export class GitHub {
    * GitHub login of whoever asked, when they're signed in to their own; else it's the office's.
    */
   async pullDetail(n: number, me?: string): Promise<GhPullDetail> {
-    const fields = 'number,body,state,isDraft,reviewDecision,headRefName,baseRefName,mergeable,mergeStateStatus,commits,comments,reviews,statusCheckRollup';
+    const fields = 'number,body,state,isDraft,reviewDecision,headRefName,baseRefName,mergeable,mergeStateStatus,commits,comments,reviews,statusCheckRollup,isCrossRepository,author';
     const jq = '.[] | {id, in_reply_to_id, path, line, side, body, user: .user.login, created_at, html_url}';
     const [view, lines, repo, viewer] = await Promise.all([
       gh(['pr', 'view', String(n), '--json', fields], this.dir),
@@ -159,6 +164,7 @@ export class GitHub {
       me ?? this.viewer(),
     ]);
     const p = JSON.parse(view);
+    const trust = await this.trustOf(p);
     const reviewComments: GhReviewComment[] = lines
       .split('\n')
       .filter((l) => l.trim())
@@ -192,7 +198,68 @@ export class GitHub {
       checks: (p.statusCheckRollup ?? []).map(checkOf),
       repo,
       viewer,
+      trust,
     };
+  }
+
+  /** A fork's code is a stranger's whoever opened it; otherwise it's down to whether its author can push. */
+  private async trustOf(p: { isCrossRepository?: unknown; author?: { login?: unknown } }): Promise<GhPullTrust> {
+    const author = String(p.author?.login ?? '');
+    const fork = p.isCrossRepository !== false;
+    return pullTrust(fork, author, fork ? undefined : await this.permissionOf(author));
+  }
+
+  /** Whether pull request `n` may be checked out and built by a worker, asked of GitHub (see shared/pulltrust.ts). */
+  async pullTrust(n: number): Promise<GhPullTrust> {
+    try {
+      return await this.trustOf(JSON.parse(await gh(['pr', 'view', String(n), '--json', 'isCrossRepository,author'], this.dir)));
+    } catch (err) {
+      return { trusted: false, fork: false, reason: `The office couldn't look up pull request #${n} on GitHub: ${(err as Error).message}` };
+    }
+  }
+
+  /**
+   * Why a prompt can't go to a worker, when it has the worker check out a pull request (see
+   * checkedOutPulls) that comes from a fork or from someone who can't push to the repository.
+   */
+  /**
+   * Runs `ok` when `prompt` checks out no pull request it shouldn't (see checkoutProblem), else
+   * `refuse` with why. Straight away when it checks out none at all, as most prompts don't.
+   */
+  guardCheckout(prompt: string, ok: () => void, refuse: (why: string) => void) {
+    if (!checkedOutPulls(prompt).length) return ok();
+    void this.checkoutProblem(prompt).then((why) => (why ? refuse(why) : ok()));
+  }
+
+  async checkoutProblem(prompt: string): Promise<string | undefined> {
+    for (const n of checkedOutPulls(prompt).slice(0, 5)) {
+      const t = await this.pullTrust(n);
+      if (!t.trusted) return `Not handing PR #${n} to a worker to check out: ${t.reason ?? 'its code is not the repository\'s'} Review it with gh pr diff instead, or push its commits to a branch of the repository first.`;
+    }
+    return undefined;
+  }
+
+  /**
+   * What `login` may do in the repository (admin, maintain, write, triage, read or none), asked of
+   * GitHub and kept a while. Undefined when GitHub won't say (a bot, or gh not allowed to ask).
+   */
+  permissionOf(login: string): Promise<string | undefined> {
+    if (!/^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/.test(login)) return Promise.resolve(undefined);
+    const hit = this.permissions.get(login);
+    if (hit && Date.now() - hit.at < PERMISSION_MS) return hit.permission;
+    const entry = {
+      at: Date.now(),
+      permission: gh(['api', `repos/{owner}/{repo}/collaborators/${login}/permission`, '--jq', '.permission'], this.dir).then(
+        (out) => out.trim() || undefined,
+        () => {
+          // Not kept: a hiccup at GitHub shouldn't leave a teammate's PR untrusted for the next ten minutes.
+          if (this.permissions.get(login) === entry) this.permissions.delete(login);
+          return undefined;
+        },
+      ),
+    };
+    this.permissions.set(login, entry);
+    return entry.permission;
   }
 
   /** The PR's unified diff, as `git diff` prints it. */
@@ -398,7 +465,7 @@ export class GitHub {
     this.onPulls(this.pulls);
     const asked = Date.now();
     try {
-      const fields = 'number,title,state,isDraft,url,author,labels,reviewDecision,headRefName,headRefOid,baseRefName,createdAt,updatedAt,additions,deletions,statusCheckRollup,body,closingIssuesReferences';
+      const fields = 'number,title,state,isDraft,url,author,labels,reviewDecision,headRefName,headRefOid,baseRefName,createdAt,updatedAt,additions,deletions,statusCheckRollup,body,closingIssuesReferences,isCrossRepository';
       const [open, merged, closed] = await Promise.all([
         gh(['pr', 'list', '--state', 'open', '--limit', '150', '--json', fields], this.dir),
         gh(['pr', 'list', '--state', 'merged', '--limit', '30', '--json', fields], this.dir),
@@ -426,6 +493,7 @@ export class GitHub {
         checks: checksOf(p.statusCheckRollup),
         body: String(p.body ?? '').slice(0, 4000),
         closes: (p.closingIssuesReferences ?? []).map((r: any) => Number(r.number)).filter((n: number) => Number.isInteger(n) && n > 0),
+        ...(p.isCrossRepository ? { fork: true } : {}),
       }));
       const items = this.relabel('pull', fetched, asked);
       this.pulls = { items, fetchedAt: Date.now(), loading: false };

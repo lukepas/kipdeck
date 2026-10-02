@@ -44,7 +44,10 @@ export const workerHandlers = {
     };
     // Every project it gets a worktree of starts from what's on GitHub.
     const fresh = [floor, ...repos.map((x) => ctx.floors.get(x.floor)!)];
-    ctx.withSignIn(c, kind === 'agent' ? ctx.claudeFor(msg.provider ?? floor.workers.officeDefault.provider) : undefined, () => (msg.worktree === true ? ctx.withFreshBase(c, fresh, hire) : hire()));
+    const go = () => ctx.withSignIn(c, kind === 'agent' ? ctx.claudeFor(msg.provider ?? floor.workers.officeDefault.provider) : undefined, () => (msg.worktree === true ? ctx.withFreshBase(c, fresh, hire) : hire()));
+    // Never a fork's or an outsider's PR to check out and run (see shared/pulltrust.ts).
+    const prompt = kind === 'agent' ? str(msg.prompt, 20000) : '';
+    floor.github.guardCheckout(prompt, go, (why) => ctx.warn(c, why));
   },
   'worker.resume'(ctx, c, msg) {
     const w = workerOf(ctx, msg.workerId);
@@ -115,13 +118,19 @@ export const workerHandlers = {
   'worker.prompt'(ctx, c, msg) {
     const who = c.peer.name;
     const w = workerOf(ctx, msg.workerId);
-    const err = w ? w.floor.workers.prompt(w.wid, str(msg.prompt, 20000), who) : 'No such worker';
-    ctx.warn(c, err);
-    const issue = w?.info.kind === 'agent' ? issueNumber(msg.issue) : undefined;
-    if (w && !err && issue) {
-      ctx.toastFloor(w.floor, `${who} handed issue #${issue} to ${w.info.name}`);
-      ctx.takeIssue(c, w.floor, issue);
-    }
+    const prompt = str(msg.prompt, 20000);
+    const send = () => {
+      const err = w ? w.floor.workers.prompt(w.wid, prompt, who) : 'No such worker';
+      ctx.warn(c, err);
+      const issue = w?.info.kind === 'agent' ? issueNumber(msg.issue) : undefined;
+      if (w && !err && issue) {
+        ctx.toastFloor(w.floor, `${who} handed issue #${issue} to ${w.info.name}`);
+        ctx.takeIssue(c, w.floor, issue);
+      }
+    };
+    // Typed into an agent, never a fork's or an outsider's PR to check out and run (see shared/pulltrust.ts).
+    if (w?.info.kind !== 'agent') return send();
+    w.floor.github.guardCheckout(prompt, send, (why) => ctx.warn(c, why));
   },
   'station.prompt'(ctx, c, msg) {
     const who = c.peer.name;

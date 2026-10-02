@@ -19,12 +19,15 @@ export const queueHandlers = {
     const issue = Number.isInteger(msg.issue) && (msg.issue as number) > 0 ? (msg.issue as number) : undefined;
     const model = msg.model === undefined ? undefined : str(msg.model, OPEN_CODE_MODEL_MAX + 1);
     const effort = isAgentEffort(msg.effort) ? msg.effort : undefined;
+    const prompt = str(msg.prompt, 20000);
     // Its worker runs on the sign-ins of whoever queued it, whenever it gets a desk.
-    ctx.withSignIn(c, ctx.claudeFor(msg.provider ?? floor.workers.officeDefault.provider), () => {
-      const err = floor.queue.add(str(msg.prompt, 20000), who, str(msg.title, 200), issue, msg.provider, model, effort, c.accountId);
+    const add = () => {
+      const err = floor.queue.add(prompt, who, str(msg.title, 200), issue, msg.provider, model, effort, c.accountId);
       if (err) ctx.warn(c, err);
       else ctx.toastFloor(floor, `📋 ${who} queued ${issue !== undefined ? `issue #${issue}` : 'a task'}`);
-    });
+    };
+    // Never a fork's or an outsider's PR to check out and run (see shared/pulltrust.ts).
+    floor.github.guardCheckout(prompt, () => ctx.withSignIn(c, ctx.claudeFor(msg.provider ?? floor.workers.officeDefault.provider), add), (why) => ctx.warn(c, why));
   },
   'queue.remove'(ctx, c, msg) {
     const floor = here(ctx, c);
