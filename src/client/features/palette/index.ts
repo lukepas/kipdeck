@@ -87,7 +87,9 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
     const chip = attentionChip();
     out.push({ icon: '🎯', kind: 'Action', title: 'Mission control', detail: chip.text || 'Nobody needs you right now', keywords: ['attention', 'stuck', 'waiting', 'needs you', 'review', 'roster'], open: () => parts.mission.showMission('attention') });
     out.push({ icon: '🎯', kind: 'Action', title: 'Edit the mission', detail: store.mission.statement ? 'What this floor is for, and its milestones' : 'This floor has no mission yet', keywords: ['goals', 'milestones', 'mission statement'], open: () => parts.mission.showMission('goals') });
-    out.push({ icon: '🎯', kind: 'Action', title: 'Review finished work', detail: 'Done work, failing checks and merged pull requests, oldest first', keywords: ['review', 'done'], open: () => parts.mission.showMission('review') });
+    out.push({ icon: '🎯', kind: 'Action', title: 'Review finished work', detail: 'Done work, pull requests to see to and reviews requested of you, oldest first', keywords: ['review', 'done', 'inbox', 'merge'], open: () => parts.mission.showMission('review') });
+    out.push({ icon: '🎯', kind: 'Action', title: 'Timeline', detail: 'What happened on every floor, newest first', keywords: ['activity', 'history', 'log', 'events'], open: () => parts.mission.showMission('timeline') });
+    out.push({ icon: '🎯', kind: 'Action', title: 'While you were away', detail: 'What happened since you were last here', keywords: ['digest', 'catch up', 'missed', 'away'], open: () => parts.mission.showDigest() });
 
     const free = nearestFreeDesk();
     const hireAt = (d: DeskDef) => () => actions.hireAtDesk(d.id);

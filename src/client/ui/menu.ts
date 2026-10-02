@@ -24,6 +24,8 @@ export interface HudAction {
   status?: () => boolean;
   /** Its words on the top bar while `status` put it there; a pinned one is just its icon. */
   chip?: () => string;
+  /** An amber dot on it: something nobody has to answer now, but somebody will (Mission control's reminders). */
+  dot?: () => boolean;
   /** Why it can't work here: it's greyed out and says so. */
   blocked?: () => string | undefined;
   title?: () => string;
@@ -108,6 +110,7 @@ export function mountHud(actions: HudAction[], settings: Settings, save: () => v
       iconOf(a),
       chip ? h('span.lbl', {}, chip) : null,
       badge(a.count?.()),
+      a.dot?.() ? h('span.dock-dot', { 'aria-label': 'reminders open' }) : null,
     );
   }
 

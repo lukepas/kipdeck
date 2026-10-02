@@ -21,6 +21,8 @@
 .dock-btn .lbl { font-size: 14px; }
 .dock-btn .n { font-size: 14px; font-variant-numeric: tabular-nums; }
 .dock-btn .svc-count { margin-left: 0; }
+/* Mission control's reminders: something can wait, but not forever. */
+.dock-dot { width: 9px; height: 9px; border-radius: 50%; background: #e9a23b; box-shadow: 0 0 0 2px #fff; flex: none; }
 .dock-btn.dim, .menu-item.dim { opacity: .5; }
 /* A panel that's showing: its button stays pressed in. */
 .dock-panel[aria-pressed=true] { background: var(--paper-2); transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }

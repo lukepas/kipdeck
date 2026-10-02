@@ -20,6 +20,7 @@ import { prompts } from './prompts';
 import { services } from './services';
 import { signins } from './signins';
 import { team } from './team';
+import { timeline } from './timeline';
 import { upgrade } from './upgrade';
 import { usage } from './usage';
 import { whiteboard } from './whiteboard';
@@ -43,4 +44,5 @@ export const SLICES: readonly Slice[] = [
   accounts,
   signins,
   mission,
+  timeline,
 ];

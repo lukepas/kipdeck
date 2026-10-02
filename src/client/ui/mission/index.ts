@@ -1,21 +1,25 @@
-// Mission control: one window for what needs a person right now, across every floor. Attention (who
-// needs you, ranked), Goals (what the floor is for), Review (done work waiting for a person). The
-// same module serves the 3D office and the 2D view, so it imports no three.js and nothing of the 3D
-// office's (tests/client-structure.test.ts checks).
+// Mission control: one window for what needs a person right now, across every floor. Attention (the
+// reminders, then who needs you, ranked), Goals (what the floor is for), Review (everything waiting
+// for a person's decision), Timeline (what happened). The same module serves the 3D office and the
+// 2D view, so it imports no three.js and nothing of the 3D office's (tests/client-structure.test.ts checks).
 import './mission.css';
 import { attentionCounts, attentionLabel, needingSomeone } from '../../../shared/attention';
+import { inboxCount } from '../../../shared/review';
 import { MISSION_TABS, store, type MissionTab, type Topic } from '../../state';
 import { h, openModal, type Modal } from '../dom';
-import type { MissionDeps } from './act';
+import { setMissionOpen, type MissionDeps } from './act';
 import { renderAttention } from './attention';
 import { EDITING, renderGoals } from './goals';
+import { openReminders } from './reminders';
 import { renderReview } from './review';
+import { renderTimeline } from './timeline';
 
 export type { MissionDeps } from './act';
 export { runAction } from './act';
 export { renderStrip } from './strip';
+export { digestCard, openDigest, recallDigest, watchAway } from './digest';
 
-const TAB_LABEL: Record<MissionTab, string> = { attention: 'Attention', goals: 'Goals', review: 'Review' };
+const TAB_LABEL: Record<MissionTab, string> = { attention: 'Attention', goals: 'Goals', review: 'Review', timeline: 'Timeline' };
 
 /** Where the last tab is remembered (the view's Settings). */
 export interface MissionPrefs {
@@ -28,6 +32,7 @@ let open: { modal: Modal; show(tab: MissionTab): void } | null = null;
 export function missionOpen(): boolean {
   return !!open;
 }
+setMissionOpen(missionOpen);
 
 /** Opens Mission control on `tab` (else the one you had last), or switches the open one to it. */
 export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: MissionTab = prefs.tab) {
@@ -45,8 +50,8 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
   const el = h('div.modal.mission-control', { role: 'dialog', 'aria-label': 'Mission control' }, h('header', {}, h('h2', {}, 'Mission control'), bar), body);
 
   function paintTabs() {
-    const counts = attentionCounts(store.ranked());
-    const badge: Record<MissionTab, number> = { attention: needingSomeone(counts), goals: 0, review: counts.review };
+    const counts = chipCounts();
+    const badge: Record<MissionTab, number> = { attention: counts['needs-you'] + counts.stuck + openReminders().length, goals: 0, review: counts.review, timeline: 0 };
     for (const [t, b] of tabs) {
       b.setAttribute('aria-selected', String(t === current));
       b.replaceChildren(TAB_LABEL[t], badge[t] ? h('span.mc-n', {}, String(badge[t])) : '');
@@ -73,7 +78,7 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
     const scroll = body.scrollTop;
     const now = Date.now();
     const ranked = store.ranked();
-    body.replaceChildren(current === 'attention' ? renderAttention(deps, ranked, now) : current === 'review' ? renderReview(deps, ranked, now) : renderGoals(deps));
+    body.replaceChildren(current === 'attention' ? renderAttention(deps, ranked, now) : current === 'review' ? renderReview(deps, ranked, now) : current === 'timeline' ? renderTimeline(deps, deps.net) : renderGoals(deps));
     body.scrollTop = scroll;
     if (focused) body.querySelector<HTMLElement>(`.mc-row[data-id="${CSS.escape(focused)}"]`)?.focus();
     const again = keep ? body.querySelector<HTMLInputElement>(`[data-keep="${CSS.escape(keep)}"]`) : null;
@@ -91,7 +96,7 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
     render();
   }
 
-  /** ↑↓ walk the rows, Enter does the row's action, 1-3 switch tabs, Esc cancels an edit or closes. */
+  /** ↑↓ walk the rows, Enter does the row's action, 1-4 switch tabs, Esc cancels an edit or closes. */
   function onKey(e: KeyboardEvent) {
     const top = document.querySelector('#modal-root > .backdrop:last-child');
     if (!top?.contains(el)) return;
@@ -123,7 +128,7 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
     }
   }
 
-  const topics: Topic[] = ['roster', 'mission', 'issues', 'pulls', 'workers', 'floor', 'me'];
+  const topics: Topic[] = ['roster', 'mission', 'issues', 'pulls', 'workers', 'floor', 'me', 'reminders', 'timeline', 'signins'];
   const offs = topics.map((t) => store.on(t, render));
   // "12 min" moves on by itself, and a worker goes silent by not changing.
   const timer = window.setInterval(render, 30_000);
@@ -145,9 +150,23 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
   setTimeout(() => (body.querySelector<HTMLElement>('.mc-row') ?? body.querySelector<HTMLElement>('button'))?.focus({ preventScroll: true }), 30);
 }
 
-/** What the attention chip says: "2 need you · 1 stuck · 3 to review", across every floor. */
-export function attentionChip(): { text: string; tone: 'danger' | 'warn' | 'ok' | undefined; total: number } {
+/**
+ * The building's counts as the chip shows them: the ranking's, with "to review" the whole review
+ * inbox (pull requests no worker stands for included).
+ */
+function chipCounts() {
   const counts = attentionCounts(store.ranked());
+  counts.review = inboxCount(store.inbox());
+  return counts;
+}
+
+/**
+ * What the attention chip says: "2 need you · 1 stuck · 3 to review", across every floor, and
+ * whether any reminders are open (an amber dot).
+ */
+export function attentionChip(): { text: string; tone: 'danger' | 'warn' | 'ok' | undefined; total: number; reminders: number } {
+  const counts = chipCounts();
   const total = needingSomeone(counts);
-  return { text: attentionLabel(counts), tone: counts['needs-you'] ? 'danger' : counts.stuck ? 'warn' : counts.review ? 'ok' : undefined, total };
+  const reminders = openReminders().length;
+  return { text: attentionLabel(counts), tone: counts['needs-you'] ? 'danger' : counts.stuck ? 'warn' : counts.review ? 'ok' : undefined, total, reminders };
 }

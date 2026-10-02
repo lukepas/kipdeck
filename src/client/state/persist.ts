@@ -42,8 +42,8 @@ export type HudPanel = 'mission' | 'workers' | 'people' | 'spend' | 'limits' | '
 export const HUD_DEFAULTS: Record<HudPanel, boolean> = { mission: true, workers: true, people: false, spend: false, limits: false, chat: true, floor: false };
 
 /** Mission control's tabs (see ui/mission). */
-export type MissionTab = 'attention' | 'goals' | 'review';
-export const MISSION_TABS: readonly MissionTab[] = ['attention', 'goals', 'review'];
+export type MissionTab = 'attention' | 'goals' | 'review' | 'timeline';
+export const MISSION_TABS: readonly MissionTab[] = ['attention', 'goals', 'review', 'timeline'];
 
 export interface Settings {
   view: ViewMode;
@@ -79,6 +79,30 @@ export function lastFloor(): string | null {
 export function rememberFloor(id: string | null) {
   try {
     if (id) localStorage.setItem(FLOOR_KEY, id);
+  } catch {
+    // storage blocked
+  }
+}
+
+const SEEN_KEY = 'agent-office.seen';
+
+/**
+ * When this browser was last in the office (ms), for the "While you were away" digest on the shared
+ * password, where there's no account for the office to remember it by.
+ */
+export function lastHere(): number | undefined {
+  try {
+    const at = Number(localStorage.getItem(SEEN_KEY));
+    return Number.isFinite(at) && at > 0 ? at : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/** This browser is in the office now. */
+export function stampHere(at = Date.now()) {
+  try {
+    localStorage.setItem(SEEN_KEY, String(at));
   } catch {
     // storage blocked
   }

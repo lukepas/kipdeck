@@ -153,6 +153,8 @@ test('the digest says what happened while you were away in one line', () => {
   const more = digest([ev({ kind: 'done', worker: 'a' }), ev({ kind: 'done', worker: 'c' }), ev({ kind: 'needs-input', worker: 'd' }), ev({ kind: 'hired', worker: 'e' }), ev({ kind: 'sent-home', worker: 'f' }), ev({ kind: 'task-failed' }), ev({ kind: 'milestone-done', name: 'Docs' })], ranked);
   assert.equal(more.summary, '2 workers finished (1 still waits for review), 1 waits on an answer, 1 queue task failed, 1 worker hired, 1 went home, Docs completed');
   assert.equal(digest([], ranked).summary, 'Nothing much happened');
+  assert.equal(digest([ev({ kind: 'mission' }), ev({ kind: 'milestone' }), ev({ kind: 'pr-opened' }), ev({ kind: 'meeting-ended' })], ranked).summary, '1 PR opened, 1 meeting ended, the mission changed, 1 milestone change');
+  assert.equal(digest([ev({ kind: 'resumed', worker: 'a' })], ranked).summary, '1 small thing happened');
   const order = digest([ev({ id: 'old', at: NOW - MIN }), ev({ id: 'new', at: NOW })], []).events.map((e) => e.id);
   assert.deepEqual(order, ['new', 'old']);
 });

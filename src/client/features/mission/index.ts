@@ -1,15 +1,18 @@
 /**
  * Mission control in the 3D office: I (or the attention chip, the ☰ menu, the palette) opens it, the
- * mission strip sits under the floor's name, and a worker that gets stuck anywhere in the building
- * dings on your floor and notifies you while you're in another tab. The window itself is ui/mission,
- * which the 2D view uses too; this says how the 3D office opens a terminal and gets you to a desk.
+ * mission strip sits under the floor's name, a worker that gets stuck anywhere in the building dings
+ * on your floor and notifies you while you're in another tab, and back after a while away the
+ * "While you were away" digest opens once. The windows themselves are ui/mission, which the 2D view
+ * uses too; this says how the 3D office opens a terminal, a pull request and the queue, and gets you
+ * to a desk.
  */
 import { OFFICE_PLAN } from '../../../shared/plan';
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { saveSettings, store, type MissionTab } from '../../state';
-import { $ } from '../../ui/dom';
-import { openMissionControl, renderStrip, runAction, type MissionDeps } from '../../ui/mission';
+import { $, modalOpen, toast } from '../../ui/dom';
+import { openDigest, openMissionControl, recallDigest, renderStrip, runAction, watchAway, type MissionDeps } from '../../ui/mission';
+import { openPull } from '../../ui/pull';
 import { watchStuck } from '../../ui/mission/watch';
 import { renderWorkers } from '../../ui/workers-panel';
 
@@ -26,6 +29,13 @@ export function installMission(ctx: Ctx, parts: MissionParts) {
       const w = store.workers.get(id);
       if (w) parts.actions.pullRequestFor(w);
     },
+    openPull: (number, then) => {
+      const it = store.pulls.items.find((p) => p.number === number);
+      if (it) openPull(it, net, parts.actions.boardActions(), then);
+      else toast(`PR #${number} isn't on this floor's board yet`, 'warn');
+    },
+    openQueue: () => parts.waiting.showQueue(),
+    showTab: (tab) => showMission(tab),
     fixLost: (id) => {
       const w = store.workers.get(id);
       if (w) parts.actions.fixLostWorktree(w);
@@ -34,7 +44,7 @@ export function installMission(ctx: Ctx, parts: MissionParts) {
     goTo: (floor, deskId) => {
       const off = store.on('floor', () => {
         off();
-        const desk = OFFICE_PLAN.byId.get(deskId);
+        const desk = deskId ? OFFICE_PLAN.byId.get(deskId) : undefined;
         if (store.floor === floor && desk) setTimeout(() => parts.actions.standAt(desk), 0);
       });
       parts.travel.switchFloor(floor);
@@ -68,5 +78,14 @@ export function installMission(ctx: Ctx, parts: MissionParts) {
     parts.notifier.stuck(e, reason, () => runAction(deps, e, 'look'));
   });
 
-  return { showMission, missionDeps: deps };
+  // Back after a while away: what happened meanwhile, once nothing else is open.
+  const showDigest = () => openDigest(deps, () => showMission('attention'));
+  // Never over the loading screen, another window, or what you're typing.
+  const typing = () => {
+    const a = document.activeElement as HTMLElement | null;
+    return !!a && (a.matches('input, textarea, select') || a.isContentEditable);
+  };
+  watchAway(net, showDigest, () => !!document.getElementById('loading') || modalOpen() || typing());
+
+  return { showMission, showDigest: () => recallDigest(showDigest), missionDeps: deps };
 }

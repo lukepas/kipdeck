@@ -40,7 +40,7 @@ function moreMenu(deps: MissionDeps, r: Ranked): HTMLElement {
 }
 
 /** A row of the roster, which the arrow keys can move to (see index.ts). */
-export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { showFloor: boolean }): HTMLElement {
+export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { showFloor: boolean; extra?: (HTMLElement | null)[] }): HTMLElement {
   const e = r.entry;
   const snoozed = snoozeLabel(e);
   const cost = money(e.usd);
@@ -75,6 +75,7 @@ export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { sho
         r.att.reason ? h('span.mc-reason', {}, r.att.reason) : null,
         doing ? h('span.mc-doing', { title: doing }, doing) : null,
         snoozed ? h('span.mc-snoozed', {}, snoozed) : null,
+        ...(opts.extra ?? []),
       ),
       h('span.mc-time', { title: 'Time in this state' }, duration(now - r.att.since)),
       h('span.mc-cost', { title: 'Spent so far' }, cost),

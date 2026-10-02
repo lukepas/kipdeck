@@ -25,8 +25,8 @@ function workers(events: readonly TimelineEvent[], kind: TimelineEvent['kind']):
 /**
  * The digest of `events` (any order) given who needs someone now (`ranked`): how many pull requests
  * merged, workers finished (and of them, how many still wait for review), got stuck, wait on an
- * answer, were hired and went home, queue tasks failed, milestones completed, and how far each
- * milestone moved.
+ * answer, were hired and went home, queue tasks failed, PRs opened, meetings ended, whether the
+ * mission changed, milestone edits and completions, and how far each milestone moved.
  */
 export function digest(events: readonly TimelineEvent[], ranked: readonly Ranked[]): Digest {
   const sorted = [...events].sort((a, b) => b.at - a.at || b.id.localeCompare(a.id));
@@ -49,6 +49,14 @@ export function digest(events: readonly TimelineEvent[], ranked: readonly Ranked
   if (hired) parts.push(`${n(hired, 'worker')} hired`);
   const home = workers(sorted, 'sent-home').size;
   if (home) parts.push(`${home} went home`);
+  const opened = sorted.filter((e) => e.kind === 'pr-opened').length;
+  if (opened) parts.push(`${n(opened, 'PR')} opened`);
+  const meetings = sorted.filter((e) => e.kind === 'meeting-ended').length;
+  if (meetings) parts.push(`${n(meetings, 'meeting')} ended`);
+  const mission = sorted.find((e) => e.kind === 'mission');
+  if (mission) parts.push('the mission changed');
+  const edits = sorted.filter((e) => e.kind === 'milestone').length;
+  if (edits) parts.push(`${n(edits, 'milestone change')}`);
   const completed = sorted.filter((e) => e.kind === 'milestone-done');
   for (const e of completed.slice().reverse()) parts.push(`${e.name ?? 'a milestone'} completed`);
   // Each milestone from where it was when you left to where it is now: the oldest event's `from`, the newest's `to`.
@@ -60,5 +68,6 @@ export function digest(events: readonly TimelineEvent[], ranked: readonly Ranked
     else moved.set(e.goal, { name: e.name ?? 'A milestone', from: e.from, to: e.to, of: e.of ?? e.to });
   }
   for (const m of moved.values()) if (m.from !== m.to) parts.push(`${m.name} moved from ${m.from}/${m.of} to ${m.to}/${m.of}`);
-  return { summary: parts.length ? parts.join(', ') : 'Nothing much happened', parts, events: sorted };
+  const summary = parts.length ? parts.join(', ') : sorted.length ? n(sorted.length, 'small thing', 'small things') + ' happened' : 'Nothing much happened';
+  return { summary: summary.charAt(0).toUpperCase() + summary.slice(1), parts, events: sorted };
 }

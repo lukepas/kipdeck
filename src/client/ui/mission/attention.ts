@@ -1,10 +1,12 @@
-// Mission control's Attention tab: every hired worker in the building, grouped by how much it needs
-// someone, most first. The working and parked ones wait behind a fold, so the list stays short.
+// Mission control's Attention tab: the reminders first, then every hired worker in the building,
+// grouped by how much it needs someone, most first. The working and parked ones wait behind a fold,
+// so the list stays short.
 
 import { ATTENTION_LEVELS, LEVEL_LABEL, attentionCounts, type AttentionLevel, type Ranked } from '../../../shared/attention';
 import { store } from '../../state';
 import { h } from '../dom';
 import type { MissionDeps } from './act';
+import { renderReminders } from './reminders';
 import { rosterRow } from './rows';
 
 /** Levels that show without unfolding. */
@@ -24,7 +26,8 @@ const unfolded = new Set<AttentionLevel>();
 export function renderAttention(deps: MissionDeps, ranked: Ranked[], now: number): HTMLElement {
   const showFloor = store.floors.length > 1;
   const counts = attentionCounts(ranked);
-  if (!ranked.length) return h('p.mc-empty', {}, 'Nobody is hired yet. Hire a worker at a desk, or put a task on the queue.');
+  const reminders = renderReminders(deps, now);
+  if (!ranked.length) return h('div.mc-attention', {}, reminders, h('p.mc-empty', {}, 'Nobody is hired yet. Hire a worker at a desk, or put a task on the queue.'));
   const sections: HTMLElement[] = [];
   for (const level of ATTENTION_LEVELS) {
     const rows = ranked.filter((r) => r.att.level === level);
@@ -48,5 +51,5 @@ export function renderAttention(deps: MissionDeps, ranked: Ranked[], now: number
     sections.push(h('section.mc-group', {}, head, list));
   }
   const calm = !counts['needs-you'] && !counts.stuck && !counts.review;
-  return h('div.mc-attention', {}, calm ? h('p.mc-calm', {}, 'Nobody needs you right now.') : null, ...sections);
+  return h('div.mc-attention', {}, reminders, calm ? h('p.mc-calm', {}, 'Nobody needs you right now.') : null, ...sections);
 }

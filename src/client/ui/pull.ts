@@ -4,3 +4,4 @@ export { routePullMessage } from './github/api';
 export { openIssue } from './github/issue-window';
 export { labelChip, openLabels } from './github/labels';
 export { openPull } from './github/pull-window';
+export type { PullThen } from './github/pull-window';

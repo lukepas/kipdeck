@@ -19,8 +19,15 @@ import { buildTree, looksGenerated, parseDiff, renderFileDiff, renderThread, rep
 // reviews, line comments, checks) with a Files tab for the diff, where you tick files off as
 // reviewed; from here you comment, label, merge or close it, or hand it to a worker to review, fix up and merge.
 
-export function openPull(first: GhPull, net: Net, actions: BoardActions) {
+/**
+ * What to do once the window has loaded, for Mission control's Review tab: open the Merge dialog, or
+ * hand the PR back to a worker with the review comments (as 🤖 Fix comments & merge does).
+ */
+export type PullThen = 'merge' | 'hand-back';
+
+export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: PullThen) {
   let it = first;
+  let pending = then;
   const itemUrl = it.url;
   const reviewed = new Reviewed(it.url);
   let detail: GhPullDetail | null = null;
@@ -490,6 +497,10 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions) {
         it = { ...it, state: d.state, isDraft: d.isDraft, reviewDecision: d.reviewDecision };
         // Line comments go into the diff, so draw it again with them.
         if (files) setupFiles();
+        const next = pending;
+        pending = undefined;
+        if (next === 'merge' && d.state === 'OPEN') setTimeout(() => openMerge(it, d, net, handToWorker, loadAll), 0);
+        else if (next === 'hand-back' && d.state === 'OPEN') setTimeout(handToWorker, 0);
       })
       .catch((err) => g === generation && (detailError = (err as Error).message))
       .finally(() => g === generation && (renderFrame(), renderConv()));

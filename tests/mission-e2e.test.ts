@@ -1,6 +1,7 @@
 // End to end: Mission control in the built office, in a headless browser. In the 2D view: the
 // mission strip, the Mission button, editing the mission and a milestone in place, the tabs and
-// their keys, and Esc closing the window. In the 3D office: I opens it and Esc puts it away.
+// their keys, the timeline, and Esc closing the window; back after a while away, the digest as the
+// first card. In the 3D office: I opens it and Esc puts it away, and the digest opens by itself.
 // Skipped (not failed) when there's no build (npm run build) or no browser playwright-core can start.
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -77,16 +78,17 @@ after(async () => {
   await rm(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
 });
 
-/** A page signed in to the office, with a character picked, noting every uncaught error. */
-async function signedIn(viewport = { width: 1280, height: 800 }) {
+/** A page signed in to the office, with a character picked, noting every uncaught error. `away`: this browser was last here that long ago. */
+async function signedIn(viewport = { width: 1280, height: 800 }, away = 0) {
   const context = await browser!.newContext({ viewport });
-  await context.addInitScript(() => {
+  await context.addInitScript((away) => {
     try {
       localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4f86f7', look: { skin: 0, hair: 0, style: 0 } }));
+      if (away) localStorage.setItem('agent-office.seen', String(Date.now() - away));
     } catch {
       // storage blocked
     }
-  });
+  }, away);
   const page = await context.newPage();
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -141,8 +143,16 @@ test('the 2D view: the strip, Mission control, editing the mission in place, the
   await page.keyboard.press('1');
   assert.equal(await modal.locator('.mc-tab[aria-selected=true]').innerText(), 'Attention');
   await modal.locator('.mc-empty', { hasText: 'Nobody is hired yet' }).waitFor();
+  await page.keyboard.press('4');
+  assert.match(await modal.locator('.mc-tab[aria-selected=true]').innerText(), /^Timeline/);
+  // What just happened is on the timeline, newest first, as text.
+  await modal.locator('.tl-row', { hasText: 'Tess added the milestone Auth rewrite' }).waitFor();
+  await modal.locator('.tl-row', { hasText: 'Tess changed the mission: Make sign-in boring' }).waitFor();
+  assert.equal(await modal.locator('.tl-row script').count(), 0);
+  assert.match(await modal.locator('.tl-row').first().innerText(), /added the milestone/);
   await page.keyboard.press('3');
   assert.match(await modal.locator('.mc-tab[aria-selected=true]').innerText(), /^Review/);
+  await modal.locator('.mc-empty', { hasText: 'Nothing waits for review' }).waitFor();
 
   // Esc closes it; the Mission button brings it back on the tab you had last.
   await page.keyboard.press('Escape');
@@ -182,4 +192,39 @@ test('the 3D office: the strip under the floor name, I opens Mission control, Es
   await page.keyboard.press('Escape');
   assert.equal(await missionOpen(page), 0);
   assert.deepEqual(errors, []);
+});
+
+test('back after a while away: the digest is the first card in the 2D view, and a window in the 3D office', async (t) => {
+  if (why) return t.skip(why);
+  const lite = await signedIn({ width: 420, height: 860 }, 40 * 60_000);
+  t.after(() => lite.context.close());
+  await lite.page.goto(`${base}/lite`);
+  const card = lite.page.locator('.lite-digest');
+  await card.waitFor({ timeout: 15_000 });
+  await card.locator('.dg-summary').waitFor();
+  assert.match(await card.innerText(), /While you were away/);
+  await card.locator('button', { hasText: 'Show what needs me' }).click();
+  const modal = lite.page.locator('.modal.mission-control');
+  await modal.waitFor();
+  assert.equal(await modal.locator('.mc-tab[aria-selected=true]').innerText(), 'Attention');
+  await lite.page.keyboard.press('Escape');
+  await card.locator('button[aria-label=Dismiss]').click();
+  assert.equal(await card.count(), 0);
+  // Catch up brings it back.
+  await lite.page.locator('#btn-digest').click();
+  await lite.page.locator('.lite-digest').waitFor();
+  assert.deepEqual(lite.errors, []);
+
+  const office = await signedIn(undefined, 40 * 60_000);
+  t.after(() => office.context.close());
+  await office.page.goto(`${base}/`);
+  const digest = office.page.locator('.modal.digest');
+  await digest.waitFor({ timeout: 60_000 });
+  assert.match(await digest.locator('.dg-summary').innerText(), /./);
+  await digest.locator('.tl-row', { hasText: 'Auth rewrite' }).first().waitFor();
+  assert.equal(await digest.locator('header .close').count(), 1);
+  if (process.env.MISSION_E2E_SHOT) await office.page.screenshot({ path: process.env.MISSION_E2E_SHOT.replace(/\.png$/, '-digest.png') });
+  await office.page.keyboard.press('Escape');
+  assert.equal(await digest.count(), 0);
+  assert.deepEqual(office.errors, []);
 });

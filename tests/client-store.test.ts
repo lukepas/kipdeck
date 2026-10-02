@@ -178,7 +178,7 @@ test('what the browser remembers keeps its keys and shapes', () => {
 
 test("the store's keys are its state, as window.__office shows them", () => {
   // As the office had them before its store was split into slices: methods and the slices aren't among them.
-  assert.deepEqual(Object.keys(store).sort(), ['accounts', 'chat', 'drawing', 'floor', 'floorPlan', 'floors', 'ice', 'invites', 'issues', 'leaveOnMerge', 'limits', 'machine', 'me', 'meeting', 'mission', 'notify', 'peers', 'profile', 'project', 'projectsDir', 'prompts', 'pulls', 'queue', 'repos', 'roster', 'screens', 'services', 'signins', 'subs', 'team', 'upgrade', 'usage', 'whiteboard', 'workers', 'you']);
+  assert.deepEqual(Object.keys(store).sort(), ['accounts', 'away', 'chat', 'drawing', 'floor', 'floorPlan', 'floors', 'ghViewer', 'ice', 'invites', 'issues', 'leaveOnMerge', 'limits', 'machine', 'me', 'meeting', 'mission', 'notify', 'peers', 'profile', 'project', 'projectsDir', 'prompts', 'pulls', 'queue', 'reminders', 'repos', 'reviewQueue', 'roster', 'screens', 'services', 'signins', 'subs', 'team', 'timeline', 'upgrade', 'usage', 'whiteboard', 'workers', 'you']);
 });
 
 test('a new store starts every field where it always has', async () => {
@@ -201,7 +201,8 @@ test('a new store starts every field where it always has', async () => {
       meeting: { current: null, past: [] }, floorPlan: EMPTY_PLAN, services: { items: [], port: 4600 },
       whiteboard: [], drawing: [],
       team: null, accounts: null, signins: null,
-      roster: [], mission: { statement: '', milestones: [] },
+      roster: [], reviewQueue: [], reminders: [], ghViewer: '<undefined>', mission: { statement: '', milestones: [] },
+      timeline: { events: [], loaded: false, more: false }, away: '<undefined>',
     },
   );
 });
@@ -256,4 +257,57 @@ test("the roster and your floor's mission: ranked the building's one way, anothe
   assert.equal(store.mission.statement, 'Ship it');
   store.apply(msg({ t: 'floor.enter', peers: [], ...floorView('f2'), mission: { statement: 'Other', milestones: [] } }));
   assert.equal(store.mission.statement, 'Other');
+});
+
+test('the timeline: pages put together newest first, live events added, and the digest asked for once you were away', async () => {
+  const { Store } = await import('../src/client/state/store.js');
+  const { SLICES } = await import('../src/client/state/slices/index.js');
+  const ev = (id: string, at: number, floor = 'f1') => ({ id, at, floor, kind: 'done', text: id });
+  // On the shared password, this browser's last visit says whether you were away.
+  storage.set('agent-office.seen', String(Date.now() - 20 * 60_000));
+  const s = new Store(SLICES);
+  const fired: string[] = [];
+  for (const t of ['timeline', 'away'] as const) s.on(t, () => fired.push(t));
+  s.apply(welcome());
+  assert.equal(s.away?.since, Number(storage.get('agent-office.seen')));
+  s.apply(msg({ t: 'timeline', events: [ev('b', 2), ev('a', 1)], more: true }));
+  assert.deepEqual([s.timeline.events.map((e) => e.id), s.timeline.loaded, s.timeline.more], [['b', 'a'], true, true]);
+  s.apply(msg({ t: 'timeline', events: [ev('z', 0)], more: false, before: 1 }));
+  s.apply(msg({ t: 'timeline.event', event: ev('c', 3) }));
+  s.apply(msg({ t: 'timeline.event', event: ev('c', 3) }));
+  assert.deepEqual(s.timeline.events.map((e) => e.id), ['c', 'b', 'a', 'z'], 'each once, newest first');
+  // A floor's own page is the tab's to look at, not the building's list.
+  s.apply(msg({ t: 'timeline', events: [ev('x', 9)], more: false, floor: 'f1' }));
+  assert.equal(s.timeline.events.length, 4);
+  // The digest's answer.
+  const since = s.away!.since;
+  s.apply(msg({ t: 'timeline', events: [ev('d', since + 1)], more: false, since }));
+  assert.deepEqual(s.away?.events?.map((e) => e.id), ['d']);
+  assert.ok(fired.includes('away'));
+  // A reconnect: the timeline is asked for again; whether you were away isn't.
+  s.apply(welcome());
+  assert.deepEqual([s.timeline.loaded, s.away?.since], [false, since]);
+  // Here a minute ago: not away.
+  storage.set('agent-office.seen', String(Date.now() - 60_000));
+  const t = new Store(SLICES);
+  t.apply(welcome());
+  assert.equal(t.away, null);
+  // An account: the office says.
+  const u = new Store(SLICES);
+  u.apply(msg({ ...welcome(), me: { admin: false, account: { name: 'Ana', role: 'member' } }, awaySince: 12345 }));
+  assert.equal(u.away?.since, 12345);
+});
+
+test('the review inbox and reminders come with the roster', async () => {
+  const { Store } = await import('../src/client/state/store.js');
+  const { SLICES } = await import('../src/client/state/slices/index.js');
+  const s = new Store(SLICES);
+  s.apply(welcome());
+  const pr = { floor: 'f2', floorName: 'web', number: 8, title: 'x', url: '', author: 'bo', checks: 'pass', office: false, requested: ['ana'], additions: 1, deletions: 0, createdAt: 5 };
+  s.apply(msg({ t: 'roster', entries: [], reviewQueue: [pr], viewer: 'ana' }));
+  assert.deepEqual(s.inbox().map((i) => i.key), ['pr:f2:8'], "the office's gh is signed in as you");
+  s.apply(msg({ t: 'signins', state: { claude: { status: 'none', how: 'login' }, github: { status: 'ok', how: 'login', who: '@bo' }, office: false } }));
+  assert.deepEqual(s.inbox(), [], 'your own GitHub sign-in is someone else');
+  s.apply(msg({ t: 'reminders', items: [{ key: 'queue-paused:f1', kind: 'queue-paused', floor: 'f1', floorName: 'api', text: 'x', since: 1 }] }));
+  assert.equal(s.reminders.length, 1);
 });

@@ -24,7 +24,7 @@ import { openAsk } from './ui/ask';
 import { openMeeting, type MeetingPreset } from './ui/meeting';
 import { openSignIns } from './ui/signins';
 import { modelBadge, providerLabel } from './ui/provider';
-import { attentionChip, openMissionControl, renderStrip, runAction, type MissionDeps } from './ui/mission';
+import { attentionChip, digestCard, openMissionControl, recallDigest, renderStrip, runAction, watchAway, type MissionDeps } from './ui/mission';
 import { doingLabel, linkLabel } from './ui/mission/act';
 import { watchStuck } from './ui/mission/watch';
 import { confirmSendHome } from './ui/sendhome';
@@ -126,6 +126,8 @@ const lastStatus = new Map<string, string>();
  */
 function renderWorkers() {
   const ranked = store.ranked(settings.allFloors ? undefined : store.floor);
+  // Back after a while away: what happened meanwhile, as the first card.
+  const digest = digestShown ? digestCard(missionDeps, () => showMission('attention'), () => ((digestShown = false), renderWorkers())) : null;
   const cards = ranked.map((r) => {
     const w = r.entry.floor === store.floor ? store.workers.get(r.entry.id) : undefined;
     return w ? workerCard(w, r.att) : elsewhereCard(r.entry, r.att);
@@ -133,11 +135,13 @@ function renderWorkers() {
   const listed = new Set(ranked.map((r) => r.entry.id));
   for (const w of [...store.workers.values()].sort((a, b) => a.createdAt - b.createdAt)) if (!listed.has(w.id)) cards.push(workerCard(w));
   const ul = $('workers');
-  ul.replaceChildren(...cards);
+  ul.replaceChildren(...(digest ? [digest] : []), ...cards);
   if (!cards.length) ul.append(h('li.lite-empty', {}, store.project ? 'Nobody is working on this floor. ✨ New task hires someone.' : 'No workers here.'));
   const chip = attentionChip();
   $('waiting-now').textContent = chip.text;
   $('btn-mission').querySelector('.n')!.textContent = chip.total ? String(chip.total) : '';
+  $('btn-mission').classList.toggle('reminders', chip.reminders > 0);
+  $('btn-mission').title = `Mission control: what needs someone, on every floor, and the floor's goals${chip.reminders ? ` · reminders open: ${chip.reminders}` : ''}`;
   const all = $('all-floors');
   all.setAttribute('aria-pressed', String(settings.allFloors));
   all.classList.toggle('hidden', store.floors.length < 2);
@@ -231,6 +235,7 @@ store.on('workers', () => {
 });
 store.on('project', renderWorkers);
 store.on('roster', renderWorkers);
+store.on('reminders', renderWorkers);
 // "3m ago" moves on by itself.
 setInterval(renderWorkers, 30_000);
 
@@ -341,6 +346,13 @@ const missionDeps: MissionDeps = {
   openTerminal: openWorker,
   openChanges: (id) => openChanges(net, id, () => openWorker(id)),
   openPr: openPrFor,
+  openPull: (number, then) => {
+    const it = store.pulls.items.find((p) => p.number === number);
+    if (it) openPull(it, net, boardActions(), then);
+    else toast(`PR #${number} isn't on this floor's board yet`, 'warn');
+  },
+  openQueue: () => openQueue(net, { openTerminal: openWorker }),
+  showTab: (tab) => showMission(tab),
   fixLost: (id) => {
     const w = store.workers.get(id);
     if (w) fixLostWorktree(w);
@@ -358,6 +370,15 @@ $('all-floors').addEventListener('click', () => {
 });
 const paintStrip = () => renderStrip($('mission-strip'), (tab) => showMission(tab));
 for (const t of ['mission', 'roster', 'floor', 'issues', 'pulls'] as const) store.on(t, paintStrip);
+// Back after a while away: the digest as the first card (here it never covers anything, so it shows straight away).
+let digestShown = false;
+const showDigest = () => {
+  digestShown = true;
+  renderWorkers();
+  window.scrollTo({ top: 0 });
+};
+watchAway(net, showDigest, () => false);
+$('btn-digest').addEventListener('click', () => recallDigest(showDigest));
 // Stuck anywhere: a notification while you're away, and a buzz.
 watchStuck((e, reason) => {
   notifier.stuck(e, reason, () => runAction(missionDeps, e, 'look'));

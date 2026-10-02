@@ -88,3 +88,11 @@ body.lite { min-height: 100dvh; background: var(--paper); -webkit-tap-highlight-
   .modal.board .column { min-width: 78vw; }
   .modal.board header .board-status { display: none; }
 }
+
+/* Mission control's reminders: an amber dot on its button. */
+#btn-mission.reminders::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: #e9a23b; box-shadow: 0 0 0 2px #fff; }
+/* While you were away, as the first card. */
+.lite-digest { list-style: none; border: 3px solid var(--ink); border-radius: 14px; background: #fffdf7; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.lite-digest .dg-head { display: flex; justify-content: space-between; align-items: center; }
+.lite-digest .dg-summary { font-size: 15px; margin: 0; }
+.lite-digest > .btn { align-self: flex-start; }
