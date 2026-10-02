@@ -21,8 +21,6 @@ export function makeMe(ctx: Ctx): Person {
 export function makeSound(settings: Settings): OfficeSound {
   const sound = new OfficeSound();
   sound.setVolume(settings.volume, settings.muted);
-  sound.setMusicVolume(settings.music, settings.musicMuted);
-  sound.onMusicError = (text) => toast(text, 'warn');
   return sound;
 }
 

@@ -21,7 +21,6 @@ import type { installCoffee } from '../features/coffee';
 import type { installEmotes } from '../features/emotes';
 import type { installGallery, installHanging } from '../features/hanging';
 import type { installHud } from '../features/hud';
-import type { installJukebox } from '../features/jukebox';
 import type { installMeeting } from '../features/meeting';
 import type { installPeers } from '../features/peers';
 import type { installSeating } from '../features/seating';
@@ -78,7 +77,6 @@ export interface Parts {
   gallery: Made<typeof installGallery>;
   tv: Made<typeof installTv>;
   telescope: Made<typeof installTelescope>;
-  jukebox: Made<typeof installJukebox>;
   hanging: Made<typeof installHanging>;
   climbing: Made<typeof installClimbing>;
   peers: Made<typeof installPeers>;

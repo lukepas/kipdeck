@@ -1,10 +1,9 @@
 /**
  * Office sounds, synthesized with Web Audio so there are no audio files to ship: the room's air and a
  * humming fridge, workers typing while they work, footsteps, the coffee machine, the odd rustle or
- * phone and the gong, and the dings when a worker needs you. And the lounge jukebox, whose tunes are in music.ts.
+ * phone and the gong, and the dings when a worker needs you.
  *
- * Everything goes through one master gain that Settings turns down or mutes. Voice chat doesn't, and
- * the jukebox has a volume of its own.
+ * Everything goes through one master gain that Settings turns down or mutes. Voice chat doesn't.
  *
  * OfficeSound is all the rest of the office sees. What every sound shares (the context, the buses,
  * where your ears are, what runs every frame) is AudioCore in core.ts; each sound is a recipe in a
@@ -18,38 +17,30 @@ import { bonk, hatch, poleLanding, rung, slide, twirl } from '../features/climbi
 import { coffee } from '../features/coffee/sound';
 import { AudioCore, type Listener } from './core';
 import { gong } from '../features/gong/sound';
-import { Jukebox, type JukeboxPlay } from '../features/jukebox/sound';
 import type { Pos } from './places';
 import { pageTurn, paper, step, stepAt } from './steps';
 import { fidgeting, Typing } from './typing';
 
 export class OfficeSound {
-  private readonly a: AudioCore = new AudioCore({ start: (ctx) => this.start(ctx), touched: () => this.music.touched() });
-  private readonly music = new Jukebox(this.a, (text) => this.onMusicError?.(text));
+  private readonly a: AudioCore = new AudioCore({ start: (ctx) => this.start(ctx) });
   private readonly typing = new Typing(this.a);
   private readonly fridge = new Fridge(this.a);
   private readonly phones = deskPhones(this.a);
   private readonly fidgets = fidgeting(this.typing);
-  /** A stream that won't play here. */
-  onMusicError?: (text: string) => void;
   /** How many of each sound have played, for quick checks from the console. */
   readonly played: Record<string, number> = this.a.played;
 
   constructor() {
     // What the room does every frame, in this order (it's the order the random numbers are drawn in).
-    this.a.every((now) => this.music.hearJukebox(now));
     this.a.every((now) => this.typing.scheduleTyping(now));
     this.a.every((now) => this.fridge.tickFridge(now));
     this.a.every((now) => this.phones.tick(now));
     this.a.every((now) => this.fidgets.tick(now));
   }
 
-  /** Audio has just started (see AudioCore.unlock): the jukebox joins the graph, and the room starts up. */
+  /** Audio has just started (see AudioCore.unlock): the room starts up. */
   private start(ctx: AudioContext) {
-    this.music.connect(ctx);
     this.a.applyVolume();
-    this.music.applyMusicVolume();
-    this.music.applyJukebox();
     this.a.applyVisibility();
     startRoomTone(this.a);
     this.fridge.startFridge();
@@ -68,11 +59,6 @@ export class OfficeSound {
   /** Output level (RMS) right now, for headless checks. */
   level(): number {
     return this.a.level();
-  }
-
-  /** The jukebox's level (RMS) where you stand, after your music volume. A stream doesn't show here. */
-  musicLevel(): number {
-    return this.music.musicLevel();
   }
 
   get state(): AudioContextState | 'locked' {
@@ -149,22 +135,5 @@ export class OfficeSound {
 
   ding(kind: 'done' | 'needs_input') {
     ding(this.a, kind);
-  }
-
-  // ---- The jukebox (features/jukebox) -------------------------------------------------------------
-
-  /** What the jukebox on your floor plays, or null for nothing. It starts once the browser allows audio. */
-  setJukebox(play: JukeboxPlay | null) {
-    this.music.setJukebox(play);
-  }
-
-  /** Your own jukebox volume, 0–1, apart from the office sounds'. */
-  setMusicVolume(volume: number, muted: boolean) {
-    this.music.setMusicVolume(volume, muted);
-  }
-
-  /** 1 on each beat of the tune, falling to 0 before the next, for the jukebox's lights. */
-  beat(): number {
-    return this.music.beat();
   }
 }

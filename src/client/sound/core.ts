@@ -12,8 +12,6 @@ export interface Listener extends Pos {
 export interface AudioHooks {
   /** Audio just started: the rest of the graph goes up, and whatever plays all the time starts. */
   start(ctx: AudioContext): void;
-  /** Audio was already going and the page was touched (or a ding came) again. */
-  touched(): void;
 }
 
 /**
@@ -66,8 +64,6 @@ export class AudioCore {
   unlock() {
     if (this.ctx) {
       if (this.ctx.state === 'suspended') void this.ctx.resume();
-      // A ding can start audio before you've touched the page, when a stream isn't allowed to play yet.
-      this.hooks.touched();
       return;
     }
     let ctx: AudioContext;

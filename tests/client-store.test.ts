@@ -4,7 +4,6 @@ import { readdirSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { EMPTY_PLAN } from '../src/shared/floorplan.js';
-import { JUKEBOX_TUNES } from '../src/shared/jukebox.js';
 import type { ServerMsg } from '../src/shared/protocol.js';
 
 // The store keeps the floor you're on in localStorage and times things by performance.now(): stand both
@@ -37,7 +36,6 @@ function floorView(floor: string) {
     decor: [],
     plan: { labels: {}, wing: 1 },
     services: { items: [], port: 4600 },
-    jukebox: { on: true, track: 'lofi', startedAt: 5000, elapsed: 300 },
     whiteboard: { elements: [el('e1', 1)], people: [] },
     meeting: { current: null, past: [] },
   };
@@ -65,16 +63,15 @@ const welcome = () =>
   });
 
 /** What a floor you arrive on fires, in order. */
-const FLOOR_TOPICS = ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'meeting', 'decor', 'floorPlan', 'services', 'jukebox', 'whiteboard', 'drawing'];
+const FLOOR_TOPICS = ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'meeting', 'decor', 'floorPlan', 'services', 'whiteboard', 'drawing'];
 
 /** Every topic, to listen for them all. */
-const TOPICS = ['peers', 'workers', 'issues', 'pulls', 'chat', 'project', 'screens', 'team', 'upgrade', 'services', 'decor', 'floorPlan', 'usage', 'limits', 'queue', 'me', 'accounts', 'signins', 'notify', 'machine', 'floors', 'floor', 'projectsDir', 'repos', 'jukebox', 'leaveOnMerge', 'whiteboard', 'drawing', 'meeting', 'prompts'] as const;
+const TOPICS = ['peers', 'workers', 'issues', 'pulls', 'chat', 'project', 'screens', 'team', 'upgrade', 'services', 'decor', 'floorPlan', 'usage', 'limits', 'queue', 'me', 'accounts', 'signins', 'notify', 'machine', 'floors', 'floor', 'projectsDir', 'repos', 'leaveOnMerge', 'whiteboard', 'drawing', 'meeting', 'prompts'] as const;
 
 /** Every message the store takes in (and one it doesn't), and the topics it fires, in the order it has always fired them. */
 const RUN: [ServerMsg, string[]][] = [
   [welcome(), [...FLOOR_TOPICS, 'peers', 'chat', 'upgrade', 'usage', 'limits', 'me', 'notify', 'machine', 'floors', 'projectsDir', 'prompts', 'leaveOnMerge']],
-  [msg({ t: 'pong', at: 0, now: 1_000_000 }), ['jukebox']],
-  [msg({ t: 'pong', at: -1e6, now: 1_000_000 }), []],
+  [msg({ t: 'pong', at: 0, now: 1_000_000 }), []],
   [msg({ t: 'floors', floors: [{ id: 'f1', name: 'f1' }] }), ['floors']],
   [msg({ t: 'projectsDir', state: { dir: '~/q', custom: true } }), ['projectsDir']],
   [msg({ t: 'floor.repos', repos: [] }), ['repos']],
@@ -95,7 +92,6 @@ const RUN: [ServerMsg, string[]][] = [
   [msg({ t: 'services', state: { items: [], port: 1 } }), ['services']],
   [msg({ t: 'decor', items: [] }), ['decor']],
   [msg({ t: 'plan', plan: { labels: {}, wing: 2 } }), ['floorPlan']],
-  [msg({ t: 'jukebox', state: { on: false, track: 'lofi', startedAt: 0, elapsed: 0 } }), ['jukebox']],
   [msg({ t: 'wb.update', elements: [el('e2', 1)] }), ['whiteboard']],
   [msg({ t: 'wb.update', elements: [el('e2', 0)] }), []],
   [msg({ t: 'wb.people', people: ['p-a'] }), ['drawing']],
@@ -140,10 +136,6 @@ test('each message leaves the fields it always has', () => {
   for (let i = 0; i < 205; i++) store.apply(msg({ t: 'chat', name: 'A', color: '#fff', text: `${i}`, at: i }));
   assert.equal(store.chat.length, 200);
   assert.equal(store.chat[0].text, '5');
-  // The quickest pong sets the office's clock.
-  store.apply(msg({ t: 'pong', at: clock, now: 5_000_000 }));
-  const now = store.officeNow();
-  assert.ok(now > 5_000_000 && now < 5_001_000, String(now));
 });
 
 test('a listener sees the store as it was when its topic fired', () => {
@@ -152,14 +144,13 @@ test('a listener sees the store as it was when its topic fired', () => {
   const offs = [
     // The floor's topics fire once all of it is in, and the people's once the floor's have.
     store.on('floor', () => (seen.floor = { peers: [...store.peers.keys()], workers: [...store.workers.keys()] })),
-    // The workers' and the people's already see the whole floor, the jukebox's clock already forgotten.
-    store.on('peers', () => (seen.peers = { floor: store.floor, workers: [...store.workers.keys()], clock: store.clock })),
+    // The workers' and the people's already see the whole floor.
+    store.on('peers', () => (seen.peers = { floor: store.floor, workers: [...store.workers.keys()] })),
   ];
   store.apply(msg({ t: 'floor.enter', peers: [peer('p-z', { floor: 'f2' })], ...floorView('f2') }));
   assert.deepEqual(seen.floor, { peers: ['p-z'], workers: ['f2-w1'] });
-  store.apply(msg({ t: 'pong', at: clock, now: 9_000_000 }));
   store.apply({ ...welcome(), floor: 'f1', workers: [worker('w-9', 'desk-9')] } as ServerMsg);
-  assert.deepEqual(seen.peers, { floor: 'f1', workers: ['w-9'], clock: undefined });
+  assert.deepEqual(seen.peers, { floor: 'f1', workers: ['w-9'] });
   for (const off of offs) off();
 });
 
@@ -171,7 +162,10 @@ test('what the browser remembers keeps its keys and shapes', () => {
   assert.deepEqual(state.lastSpot(), { floor: 'f1', name: 'F', x: 1, y: 2, z: 3, facing: 4 });
   assert.ok(storage.has('agent-office.spot'));
   const settings = state.loadSettings();
-  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: false, music: 0.5, musicMuted: false, pageTurns: true, pushToTalk: false, notify: true, hud: state.HUD_DEFAULTS, pins: [] });
+  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: false, pageTurns: true, pushToTalk: false, notify: true, hud: state.HUD_DEFAULTS, pins: [] });
+  // Settings saved by an older office, with keys for things that are gone (the jukebox's volume), still load.
+  storage.set('agent-office.settings', JSON.stringify({ volume: 0.4, music: 0.9, musicMuted: true }));
+  assert.deepEqual(state.loadSettings(), { ...settings, volume: 0.4 });
   state.saveSettings({ ...settings, volume: 2, view: 'third' });
   assert.equal(state.loadSettings().volume, 1);
   assert.equal(state.loadSettings().view, 'third');
@@ -181,7 +175,7 @@ test('what the browser remembers keeps its keys and shapes', () => {
 
 test("the store's keys are its state, as window.__office shows them", () => {
   // As the office had them before its store was split into slices: methods and the slices aren't among them.
-  assert.deepEqual(Object.keys(store).sort(), ['accounts', 'chat', 'clock', 'decor', 'drawing', 'floor', 'floorPlan', 'floors', 'ice', 'invites', 'issues', 'jukebox', 'leaveOnMerge', 'limits', 'machine', 'me', 'meeting', 'notify', 'peers', 'profile', 'project', 'projectsDir', 'prompts', 'pulls', 'queue', 'repos', 'screens', 'services', 'signins', 'subs', 'team', 'upgrade', 'usage', 'whiteboard', 'workers', 'you']);
+  assert.deepEqual(Object.keys(store).sort(), ['accounts', 'chat', 'decor', 'drawing', 'floor', 'floorPlan', 'floors', 'ice', 'invites', 'issues', 'leaveOnMerge', 'limits', 'machine', 'me', 'meeting', 'notify', 'peers', 'profile', 'project', 'projectsDir', 'prompts', 'pulls', 'queue', 'repos', 'screens', 'services', 'signins', 'subs', 'team', 'upgrade', 'usage', 'whiteboard', 'workers', 'you']);
 });
 
 test('a new store starts every field where it always has', async () => {
@@ -202,7 +196,6 @@ test('a new store starts every field where it always has', async () => {
       limits: { windows: [], at: 0 }, notify: {}, machine: { cpu: 0, cores: 0, memUsed: 0, memTotal: 0, history: [], workers: 0 },
       prompts: { custom: {} }, leaveOnMerge: { on: false },
       meeting: { current: null, past: [] }, decor: [], floorPlan: EMPTY_PLAN, services: { items: [], port: 4600 },
-      jukebox: { on: false, track: JUKEBOX_TUNES[0].id, startedAt: 0, elapsed: 0, since: 0 }, clock: '<undefined>',
       whiteboard: [], drawing: [],
       team: null, accounts: null, signins: null,
     },

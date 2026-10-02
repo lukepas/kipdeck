@@ -68,8 +68,6 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
   ctx.messages.onAny((msg) => routeWhiteboardMessage(msg, net));
   ctx.messages.on('welcome', (msg) => {
     const { travel } = parts;
-    // A few pings, to line this page's clock up with the office's for the jukebox.
-    for (let i = 0; i < 5; i++) setTimeout(() => net.send({ t: 'ping', at: performance.now() }), 200 + i * 500);
     const mine = store.peers.get(store.you);
     if (firstWelcome && mine) {
       firstWelcome = false;

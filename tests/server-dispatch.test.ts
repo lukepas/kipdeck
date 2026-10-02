@@ -267,7 +267,7 @@ test('welcomes a browser and dispatches what it sends', async () => {
   assert.equal(ada?.name, 'Ada');
   assert.equal(ada?.color, '#ff8a5b');
   assert.equal(ada?.floor, floor.id);
-  assert.deepEqual(Object.keys(welcome).slice(-12), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'decor', 'plan', 'services', 'jukebox', 'whiteboard', 'meeting']);
+  assert.deepEqual(Object.keys(welcome).slice(-11), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'decor', 'plan', 'services', 'whiteboard', 'meeting']);
 
   a.send({ t: 'ping', at: 42 });
   const pong = await a.take('pong');
@@ -332,13 +332,6 @@ test('the toys on a floor, and letting go of them on leaving the floor or the of
   const b = await Browser.open('?name=Di');
   await b.take('welcome');
   await a.take('peer.join');
-
-  a.send({ t: 'jukebox.skip' });
-  assert.equal((await b.take('jukebox')).state.on, true);
-  assert.match((await b.take('toast', (m) => m.text.startsWith('⏭️'))).text, /^⏭️ Cy skipped to “.+”$/);
-  a.send({ t: 'jukebox.stop' });
-  assert.equal((await b.take('jukebox')).state.on, false);
-  assert.equal((await b.take('toast', (m) => m.text.startsWith('🔇'))).text, '🔇 Cy turned the jukebox off');
 
   // The gong once, not twice in a row; a reach is passed on.
   a.send({ t: 'gong' });

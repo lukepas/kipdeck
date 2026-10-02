@@ -86,7 +86,7 @@ button { font-family: inherit; }
 .close.corner { position: absolute; top: 10px; right: 10px; z-index: 1; }
 
 /* Pieces several windows share: button rows, the notes under a setting, an input with its buttons,
-   color swatches, a list of things to click (services, the jukebox, the bar), a spinner and a when. */
+   color swatches, a list of things to click (services), a spinner and a when. */
 .seg { display: flex; gap: 8px; flex-wrap: wrap; }
 .setting-note { margin: 10px 0 0; font-size: 13px; font-weight: 600; color: var(--muted); line-height: 1.4; }
 .setting-note.bad { color: var(--bad); }

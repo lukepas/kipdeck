@@ -153,7 +153,6 @@ export function installHud(ctx: Ctx, parts: HudParts) {
         }
         player.setView(settings.view);
         sound.setVolume(settings.volume, settings.muted);
-        sound.setMusicVolume(settings.music, settings.musicMuted);
       },
       editProfile,
       () => sound.ding('done'),

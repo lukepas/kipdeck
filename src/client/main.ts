@@ -35,7 +35,6 @@ import { installEmotes } from './features/emotes';
 import { installGong } from './features/gong';
 import { installGallery, installHanging } from './features/hanging';
 import { installHud } from './features/hud';
-import { installJukebox } from './features/jukebox';
 import { installMeeting } from './features/meeting';
 import { installPalette } from './features/palette';
 import { installPeers } from './features/peers';
@@ -101,7 +100,6 @@ parts.you = installYou(ctx);
 parts.reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 parts.sound = makeSound(parts.settings);
 
-parts.jukebox = installJukebox(ctx, { showSettings: (pane) => parts.hud.showSettings(pane) });
 parts.notifier = new DesktopNotifier(() => parts.settings.notify, (id) => parts.waiting.openWorkerTerminal(id));
 const standUp = () => parts.seating.standUp();
 const stopWalking = () => parts.walking.stopWalkingTo();

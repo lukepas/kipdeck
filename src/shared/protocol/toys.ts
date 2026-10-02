@@ -1,7 +1,6 @@
-// The toys on every floor: pictures, the jukebox and the whiteboard.
+// The toys on every floor: pictures and the whiteboard.
 
 import type { DecorPlacement, Decoration } from '../decor.js';
-import type { JukeboxState } from '../jukebox.js';
 import type { WbElement, WbPointer } from '../whiteboard.js';
 
 export type DecorClientMsg =
@@ -10,13 +9,6 @@ export type DecorClientMsg =
   /** Move, resize, re-frame or swap the image of a picture. */
   | { t: 'decor.update'; id: string; decor: Partial<DecorPlacement> }
   | { t: 'decor.remove'; id: string };
-
-export type JukeboxClientMsg =
-  /** Put a tune on the jukebox (a JUKEBOX_TUNES id), or a stream; with neither, turn it back on. */
-  | { t: 'jukebox.play'; track?: string; url?: string }
-  /** On to the next tune. */
-  | { t: 'jukebox.skip' }
-  | { t: 'jukebox.stop' };
 
 export type WhiteboardClientMsg =
   /** You opened the whiteboard (or closed it): everyone on the floor sees who's drawing. */
@@ -29,7 +21,6 @@ export type WhiteboardClientMsg =
 
 export type ToysServerMsg =
   | { t: 'decor'; items: Decoration[] }
-  | { t: 'jukebox'; state: JukeboxState }
   /** Someone changed these elements on the floor's whiteboard (sent to everyone else on the floor). */
   | { t: 'wb.update'; elements: WbElement[] }
   /** Who has the floor's whiteboard open now. */

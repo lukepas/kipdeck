@@ -12,7 +12,6 @@ import { building, floor, me, presence } from '../core';
 import { accounts } from './accounts';
 import { decor } from './decor';
 import { floorPlan } from './floor-plan';
-import { jukebox } from './jukebox';
 import { leaveOnMerge } from './leave-on-merge';
 import { machine } from './machine';
 import { meeting } from './meeting';
@@ -40,7 +39,6 @@ export const SLICES: readonly Slice[] = [
   decor,
   floorPlan,
   services,
-  jukebox,
   whiteboard,
   team,
   accounts,

@@ -2,7 +2,6 @@
 
 import type { Decoration } from '../decor.js';
 import type { FloorPlan } from '../floorplan.js';
-import type { JukeboxState } from '../jukebox.js';
 import type { WhiteboardView } from '../whiteboard.js';
 import type { AgentProvider } from './agents.js';
 import type { GhIssue, GhPull, GhState } from './github.js';
@@ -104,8 +103,6 @@ export interface FloorView {
   /** The signs over this floor's desks, and how far its back office is built out. */
   plan: FloorPlan;
   services: ServicesState;
-  /** What the lounge jukebox is playing. */
-  jukebox: JukeboxState;
   /** What's drawn on this floor's whiteboard, and who's drawing. */
   whiteboard: WhiteboardView;
   /** The meeting room: who's meeting about what, and the meetings before. */

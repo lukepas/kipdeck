@@ -4,7 +4,6 @@ import type { FloorPalette } from '../../../shared/floors';
 import { toon, toonUnique } from '../toon';
 import { elevator } from '../elevator';
 import { gong } from '../../features/gong/world';
-import { jukebox } from '../../features/jukebox/world';
 import { bookshelf } from '../../features/bookshelf/world';
 import { whiteboard } from '../../features/whiteboard/world';
 import { stack } from '../stack';
@@ -36,11 +35,10 @@ function floorPlan() {
     beanbags,
     kiosks,
     boards,
-    // The lounge: the TV, the couch and its table and poufs, and the jukebox in the corner.
+    // The lounge: the TV, the couch and its table and poufs, 
     tv,
     machineMonitor,
     lounge,
-    jukebox,
     bookshelf,
     kitchen,
     plants,

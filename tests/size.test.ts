@@ -43,7 +43,8 @@ function linesOf(file: string): number {
 
 test(`no source file is over ${BUDGET} lines, and none of the ones already over grows`, () => {
   const files = sources();
-  assert.ok(files.length > 400, `found only ${files.length} source files under src/`);
+  // A sanity check that git listed the tree at all, not a count to keep up.
+  assert.ok(files.length > 200, `found only ${files.length} source files under src/`);
   const over: string[] = [];
   for (const file of files) {
     const lines = linesOf(file);

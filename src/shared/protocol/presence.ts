@@ -128,5 +128,5 @@ export type PresenceServerMsg =
   | { t: 'toast'; text: string; level: 'info' | 'warn' | 'error' }
   /** Sent to whoever tried to sit where someone on the floor already is. */
   | { t: 'sit.refused'; seat: string; by: string }
-  /** `now` is the office's clock as it answered, which the jukebox keeps time by. */
+  /** `now` is the office's clock as it answered. */
   | { t: 'pong'; at: number; now: number };
