@@ -83,7 +83,7 @@ parts.settings = loadSettings();
 parts.player = new PlayerController(ctx.camera, canvas, ctx.office.colliders);
 installKeyGuards(ctx, parts);
 parts.place = installPlace(ctx, core, parts);
-// Everyone arrives by elevator (the welcome says exactly where).
+// Everyone arrives in the elevator car (the welcome says exactly where).
 parts.place.placeInCar();
 parts.player.view = parts.settings.view;
 parts.you = installYou(ctx);
@@ -182,7 +182,7 @@ void whoami().then(() => {
 
 // Debug handle for quick checks from the console / headless screenshots.
 const { worlds, views } = parts;
-(window as any).__office = { world: () => worlds.world(), store, player: parts.player, camera: ctx.camera, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, office: ctx.office, ride: parts.travel.ride, switchFloor: parts.travel.switchFloor, elevatorPanelOpen, carried: () => core.carrying };
+(window as any).__office = { world: () => worlds.world(), store, player: parts.player, camera: ctx.camera, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, office: ctx.office, switchFloor: parts.travel.switchFloor, elevatorPanelOpen, carried: () => core.carrying };
 (window as any).__voice = parts.voice;
 (window as any).__sound = parts.sound;
 (window as any).__notify = parts.notifier;

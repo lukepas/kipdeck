@@ -22,7 +22,7 @@ export interface ProjectInfo {
 
 /**
  * One floor of the building: a project in its own checkout, with its own desks, workers, boards
- * and queue. You go between them in the elevator.
+ * and queue. You go between them from the Floors window or the floor list.
  */
 export interface FloorInfo {
   id: string;
@@ -108,7 +108,7 @@ export interface FloorView {
 
 export type FloorClientMsg =
   /**
-   * Go to another floor; the server answers with `floor.enter`. By elevator you arrive in the car;
+   * Go to another floor; the server answers with `floor.enter`. Without `at` you arrive in the elevator car;
    * `at` is where you arrive instead: the same spot on the other floor (switching floors from the
    * floor list).
    */

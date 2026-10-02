@@ -1,5 +1,5 @@
 /**
- * Walking over to someone (clicked in the sidebar, or in the palette), riding the elevator first if
+ * Walking over to someone (clicked in the sidebar, or in the palette), going to their floor first if
  * they're on another floor; and walking over to something to use it (Shift+Enter in the palette).
  * A key of yours takes over.
  */
@@ -22,7 +22,7 @@ export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
   /** Who you're on your way to (clicked in the sidebar), and when to look again at where they've got to. */
   let walkingTo: { id: string; replanAt: number } | null = null;
 
-  /** Walks you over to a teammate, riding the elevator first if they're on another floor. A key of yours takes over. */
+  /** Walks you over to a teammate, going to their floor first if they're on another one. A key of yours takes over. */
   function walkTo(id: string) {
     const p = store.peers.get(id);
     if (!p || id === store.you) return;
@@ -34,8 +34,8 @@ export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     walkingTo = { id, replanAt: 0 };
     if (store.onMyFloor(p)) toast(`🚶 Walking over to ${p.name}`);
     else {
-      toast(`🛗 Taking the elevator to ${p.name}, on the ${store.floors.find((f) => f.id === p.floor)?.name ?? 'other'} floor`);
-      parts.travel.ride(p.floor!);
+      toast(`🛗 Over to ${p.name}, on the ${store.floors.find((f) => f.id === p.floor)?.name ?? 'other'} floor`);
+      parts.travel.switchFloor(p.floor!, true);
     }
   }
 
@@ -103,7 +103,7 @@ export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
 
   /**
    * Walks you over to `at` on this floor and does `then` when you get there, as if you'd walked up
-   * and pressed E. Where there's no walking to be done (riding the elevator) it just
+   * and pressed E. Where there's no walking to be done (on the way to another floor) it just
    * does it. A key of yours takes over, and then it doesn't happen.
    */
   function walkThen(at: { x: number; y?: number; z: number }, what: string, then: () => void, face?: { x: number; z: number }) {

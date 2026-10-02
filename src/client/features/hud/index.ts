@@ -36,7 +36,7 @@ export function installHud(ctx: Ctx, parts: HudParts) {
   // The project in the corner is the floor you're on; click it for the list of floors to go to.
   $('project').addEventListener('click', () => {
     if (!store.floor) return travel.showElevator();
-    toggleFloorMenu($('project'), { go: travel.switchFloor, indoors: () => parts.place.indoors(), elevator: travel.showElevator });
+    toggleFloorMenu($('project'), { go: (id) => travel.switchFloor(id), floors: travel.showElevator });
   });
 
   // ---- The HUD: a few buttons on the top bar, everything else in the ☰ menu ----------------------------
@@ -62,7 +62,7 @@ export function installHud(ctx: Ctx, parts: HudParts) {
       },
       { id: 'search', icon: '🔎', label: 'Search', section: 'Open', key: '/', title: () => 'Search the chat and every terminal', run: waiting.showSearch },
       { id: 'docs', icon: '📚', label: 'Docs', section: 'Open', title: () => 'Read the project’s docs', run: parts.bookshelf.showBookshelf },
-      { id: 'elevator', icon: '🛗', label: 'Elevator', section: 'Open', count: () => store.floors.reduce((n, f) => n + (f.id === store.floor ? 0 : f.waiting), 0), title: () => 'Ride to another project', run: travel.showElevator },
+      { id: 'elevator', icon: '🛗', label: 'Floors', section: 'Open', count: () => store.floors.reduce((n, f) => n + (f.id === store.floor ? 0 : f.waiting), 0), title: () => 'Go to another project, or add one', run: travel.showElevator },
       // In voice, V is push to talk, so leaving is only from here.
       { id: 'voice', icon: '🎙️', label: () => (voice.inVoice ? 'Leave voice' : 'Join voice'), section: 'Together', key: () => (voice.inVoice ? undefined : 'V'), on: () => voice.inVoice, blocked: noMedia, run: () => void talk.toggleVoice() },
       // While you're in voice, the top bar keeps the mute button handy. Muted is the usual with push to talk, so it doesn't stand out then.

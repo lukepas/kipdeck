@@ -71,7 +71,7 @@ Usage:
   agent-office prune [dir] [--dry-run] [--force]
   agent-office accounts [list|invite|revoke|role|password] ...
 
-Runs the office. Every project is a floor of the building: ride the elevator,
+Runs the office. Every project is a floor of the building: open Floors,
 pick one of the repositories your \`gh\` login can see, and the office clones it
 into the projects folder as a new floor. Workers, terminals, boards and the
 task queue on a floor all belong to that floor's checkout.

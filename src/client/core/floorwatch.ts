@@ -31,7 +31,7 @@ export function installFloorWatch(ctx: Ctx) {
       if (f.id === store.floor) continue;
       elsewhere += f.waiting;
       if (before !== undefined && f.waiting > before) {
-        toast(`🙋 A worker on the ${f.name} floor is waiting on someone — take the elevator up`, 'warn');
+        toast(`🙋 A worker on the ${f.name} floor is waiting on someone: switch to it from the project name`, 'warn');
         sound.ding('needs_input');
       }
     }

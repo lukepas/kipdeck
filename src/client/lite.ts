@@ -93,7 +93,7 @@ function renderFloors() {
   floorSelect.disabled = store.floors.length < 2;
   const p = store.project;
   const f = store.currentFloor();
-  $('floor-meta').textContent = p ? [p.branch && `⎇ ${p.branch}`, f?.repo ?? p.dir, f && `👥 ${f.people} here`].filter(Boolean).join(' · ') : store.floors.length ? '' : 'Add a project from the elevator in the 3D office.';
+  $('floor-meta').textContent = p ? [p.branch && `⎇ ${p.branch}`, f?.repo ?? p.dir, f && `👥 ${f.people} here`].filter(Boolean).join(' · ') : store.floors.length ? '' : 'Add a project from Floors in the 3D office.';
   // Someone waiting on another floor: a way straight there.
   const elsewhere = store.floors.filter((o) => o.id !== store.floor && o.waiting > 0 && !o.cloning);
   const box = $('elsewhere');

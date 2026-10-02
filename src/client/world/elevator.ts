@@ -4,8 +4,8 @@ import { mesh, roundedBox, textPlane, toon } from './toon';
 import type { Collider, Interactable } from './types';
 import type { Fixture } from './office/fixture';
 
-// The elevator: a steel shaft against the north wall, doors facing into the room. Every floor has
-// it in the same place; riding it swaps the floor around you while the doors are shut.
+// The elevator: a steel car against the north wall, open to the room. Every floor has it in the
+// same place: it's where you arrive, and E there opens the Floors window.
 
 const STEEL = '#b8c1cc';
 const STEEL_DARK = '#8d99ae';
@@ -15,30 +15,18 @@ export interface Elevator {
   group: THREE.Group;
   /** What stops you walking out through shut doors. Part of the office's colliders. */
   colliders: Collider[];
-  /** Step in, or up to the call button, and press E. */
+  /** Step in, or up to it, and press E. */
   interactable: Interactable;
-  /** Opens or shuts the doors; they slide there over a moment. */
-  setOpen(open: boolean): void;
-  readonly open: boolean;
-  /** Whether the doors have finished moving. */
-  readonly settled: boolean;
-  /** The sign over the doors, and the display inside: which floor this is. */
+  /** The sign over the doorway: which floor this is. */
   setSign(text: string): void;
-  /** Stands it on the floor at `y`: the garage's goes further down the higher your floor is. */
-  setFloor(y: number): void;
-  update(dt: number): void;
 }
 
-/**
- * An elevator `height` tall, the storey it stands in: the office's, or the garage's under it. The
- * office's walls go on up out of reach; a shorter one's stop at its ceiling.
- */
-export function buildElevator(height = WALL_HEIGHT): Elevator {
+/** The elevator, the office's full height: its walls go on up out of reach. */
+export function buildElevator(): Elevator {
+  const height = WALL_HEIGHT;
   const { x, width, depth, wall, doorWidth, doorHeight } = ELEVATOR;
   const group = new THREE.Group();
   const colliders: Collider[] = [];
-  const tall = height >= WALL_HEIGHT;
-  const topOf = (floorY: number) => (tall ? 99 : floorY + height);
   const minX = x - width / 2;
   const maxX = x + width / 2;
   const back = FLOOR.minZ;
@@ -51,7 +39,7 @@ export function buildElevator(height = WALL_HEIGHT): Elevator {
   // Side walls, the whole height of the room.
   for (const sx of [minX + wall / 2, maxX - wall / 2]) {
     group.add(mesh(new THREE.BoxGeometry(wall, height, depth), steel, sx, height / 2, midZ));
-    colliders.push({ minX: sx - wall / 2, maxX: sx + wall / 2, minZ: back, maxZ: front, bottom: 0, top: topOf(0) });
+    colliders.push({ minX: sx - wall / 2, maxX: sx + wall / 2, minZ: back, maxZ: front, bottom: 0, top: 99 });
   }
   // The front: a pillar either side of the doorway, and a header over it up to the ceiling line.
   const pillar = (width - doorWidth) / 2;
@@ -60,7 +48,7 @@ export function buildElevator(height = WALL_HEIGHT): Elevator {
     [x + doorWidth / 2, maxX],
   ]) {
     group.add(mesh(new THREE.BoxGeometry(pillar, height, wall), steel, (x0 + x1) / 2, height / 2, front - wall / 2));
-    colliders.push({ minX: x0, maxX: x1, minZ: front - wall, maxZ: front, bottom: 0, top: topOf(0) });
+    colliders.push({ minX: x0, maxX: x1, minZ: front - wall, maxZ: front, bottom: 0, top: 99 });
   }
   const header = height - doorHeight;
   group.add(mesh(new THREE.BoxGeometry(doorWidth, header, wall), steel, x, doorHeight + header / 2, front - wall / 2));
@@ -111,39 +99,7 @@ export function buildElevator(height = WALL_HEIGHT): Elevator {
   panelIn.rotation.y = Math.PI;
   group.add(panelIn);
 
-  // The call button outside, on the right-hand pillar.
-  const call = new THREE.Group();
-  call.add(mesh(roundedBox(0.2, 0.36, 0.04, 0.02), brass, 0, 0, 0, false));
-  const arrow = (up: boolean) => {
-    const a = mesh(new THREE.ConeGeometry(0.045, 0.06, 3), toon('#fff7d6', { emissive: up ? '#7cf29a' : '#6c7288' }), 0, up ? 0.07 : -0.07, 0.03, false);
-    if (!up) a.rotation.z = Math.PI;
-    call.add(a);
-  };
-  arrow(true);
-  arrow(false);
-  call.position.set(x + doorWidth / 2 + pillar / 2, 1.2, front + 0.02);
-  group.add(call);
-
-  // The doors: two steel panels that slide apart behind the pillars.
-  const half = doorWidth / 2 + 0.02;
-  const doorZ = front - wall - 0.03;
-  const doorMat = toon('#d9dee4');
-  const doors = [-1, 1].map((side) => {
-    const d = new THREE.Group();
-    d.add(mesh(new THREE.BoxGeometry(half, doorHeight - 0.02, 0.05), doorMat, 0, 0, 0));
-    // A seam line and a porthole of light, so they read as elevator doors from across the room.
-    d.add(mesh(new THREE.BoxGeometry(0.02, doorHeight - 0.1, 0.055), steelDark, (-side * half) / 2 + side * 0.01, 0, 0, false));
-    d.add(mesh(new THREE.BoxGeometry(half - 0.2, 0.05, 0.055), steelDark, 0, 0.35, 0, false));
-    d.position.set(x + (side * half) / 2, doorHeight / 2, doorZ);
-    group.add(d);
-    return { group: d, side };
-  });
-  const doorCollider: Collider = { minX: x - doorWidth / 2, maxX: x + doorWidth / 2, minZ: front - wall - 0.06, maxZ: front, bottom: 0, top: topOf(0) };
-  colliders.push(doorCollider);
-  /** The floor it stands on: open doors drop their collider under it. */
-  let floorY = 0;
-
-  // What floor this is: a sign over the doors, facing the room.
+  // What floor this is: a sign over the doorway, facing the room.
   let sign: ReturnType<typeof textPlane> | null = null;
   const setSign = (text: string) => {
     if (sign) {
@@ -154,76 +110,31 @@ export function buildElevator(height = WALL_HEIGHT): Elevator {
     }
     sign = textPlane(text, { bg: '#2b2d42', color: '#fffaf3', size: 64, border: '#fffaf3' });
     const { width: sw, height: sh } = sign.geometry.parameters;
-    // As big as fits over the doors (in the garage, under its low ceiling too).
+    // As big as fits over the doorway.
     sign.scale.multiplyScalar(Math.min(1.6, (width + 0.6) / sw, (header - 0.2) / sh));
     sign.position.set(x, doorHeight + Math.min(0.75, header / 2), front + 0.03);
     group.add(sign);
   };
 
-  let open = false;
-  let openness = 0; // 0 shut, 1 open
-  const setOpen = (v: boolean) => {
-    open = v;
-    // Shut means shut at once for walking, so nobody slips out while they close.
-    if (!v) doorCollider.top = topOf(floorY);
-  };
-  const update = (dt: number) => {
-    const target = open ? 1 : 0;
-    if (openness !== target) {
-      openness = target > openness ? Math.min(1, openness + dt / 0.7) : Math.max(0, openness - dt / 0.6);
-      // Eased, like a real one: slow to start, slow to stop.
-      const e = openness * openness * (3 - 2 * openness);
-      // As far as the pillars hide them; a sliver still shows at the edge of the doorway.
-      for (const d of doors) d.group.position.x = x + (d.side * half) / 2 + d.side * e * (pillar - 0.03);
-    }
-    if (open && openness > 0.85) doorCollider.top = floorY - 1;
-  };
-
   const interactable: Interactable = { kind: 'elevator', x, z: front - 0.4, radius: 1.9 };
   group.userData.interact = interactable;
-  const setFloor = (y: number) => {
-    floorY = y;
-    group.position.y = y;
-    interactable.y = y;
-    for (const c of colliders) {
-      c.bottom = y;
-      c.top = topOf(y);
-    }
-    if (open && openness > 0.85) doorCollider.top = y - 1;
-  };
-  return {
-    group,
-    colliders,
-    interactable,
-    setOpen,
-    get open() {
-      return open;
-    },
-    get settled() {
-      return openness === (open ? 1 : 0);
-    },
-    setSign,
-    setFloor,
-    update,
-  };
+  return { group, colliders, interactable, setSign };
 }
 
 declare module './types' {
   interface OfficeHandles {
-    elevator: Elevator;
-    /** The sign over the elevator doors: which floor you're on. */
+    /** The sign over the elevator's doorway: which floor you're on. */
     setProjectName(name: string): void;
   }
 }
 
 /** The elevator to the other floors, against the north wall east of the PR board. */
-export const elevator: Fixture<'elevator' | 'setProjectName'> = () => {
+export const elevator: Fixture<'setProjectName'> = () => {
   const built = buildElevator();
   return {
     group: built.group,
     colliders: built.colliders,
     interactables: [built.interactable],
-    update: (_t, dt) => built.update(dt),
-    handle: { elevator: built, setProjectName: (name) => built.setSign(`🛗 ${name}`) },
+    handle: { setProjectName: (name) => built.setSign(`🛗 ${name}`) },
   };
 };

@@ -68,7 +68,7 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     (x, y, z) => sound.stepAt(x, z, y),
     () => ctx.world().ways,
   );
-  /** Set while a floor's workers arrive with it (a welcome, an elevator ride): they're in their seats already. */
+  /** Set while a floor's workers arrive with it (a welcome, a floor switch): they're in their seats already. */
   let seatedAlready = false;
   /** A floor arriving (a welcome, a floor.enter): nobody's still leaving or coming in, and its workers are seated already. */
   function seatedOnArrival() {

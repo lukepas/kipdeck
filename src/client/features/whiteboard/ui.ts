@@ -39,7 +39,7 @@ let redrawBoard = () => {};
 export function openWhiteboard(net: Net) {
   if (open) return;
   const floor = store.floor;
-  if (!floor) return toast('Take the elevator to a floor first', 'warn');
+  if (!floor) return toast('Go to a floor first', 'warn');
   const people = h('div.wb-people');
   const close = h('button.btn.close', { 'aria-label': 'Close', title: 'Close (Esc)' }, '✕');
   const host = h('div.wb-host', {}, h('div.wb-loading', {}, '✏️ Getting the markers out…'));
@@ -136,7 +136,7 @@ export function mirrorWhiteboard(show: (drawing: HTMLCanvasElement | null) => vo
     try {
       const elements = [...store.whiteboard.values()].sort(byIndex);
       const drawing = elements.some((el) => !el.isDeleted) ? await (await excalidraw()).renderPreview(elements, width, height) : null;
-      // Rode the elevator meanwhile: this floor's drawing is on its way.
+      // Went to another floor meanwhile: this floor's drawing is on its way.
       if (store.floor === floor) show(drawing);
     } catch {
       // keep whatever the board shows

@@ -52,7 +52,7 @@ const agent = office.resolvedAgent;
 function floorsLine() {
   const floors = office.floors();
   const where = `new ones are cloned into ${tildify(office.projectsDir())}`;
-  if (!floors.length) return `🛗 no floors yet — ride the elevator in the office to add a project (${where})`;
+  if (!floors.length) return `🛗 no floors yet — open Floors in the office to add a project (${where})`;
   return `🛗 ${floors.length} floor${floors.length === 1 ? '' : 's'}: ${floors.map((f) => f.def.name).join(', ')} (${where})`;
 }
 

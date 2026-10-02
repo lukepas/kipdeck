@@ -107,7 +107,7 @@ export interface FloorHelpers {
   /** Where someone arriving goes: the floor they asked for, else the first one there is. */
   arrivalFloor(wanted: string | null): Floor | undefined;
   /**
-   * Takes `floor` off the building (already out of floors.json): everyone on it rides the elevator to
+   * Takes `floor` off the building (already out of floors.json): everyone on it goes to
    * the next floor, or out to the lobby if it was the last, and its workers stop.
    */
   closeFloor(floor: Floor, who: string): void;

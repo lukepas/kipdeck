@@ -1,4 +1,4 @@
-// The building: every project is a floor you ride the elevator to. Shared by the server (which
+// The building: every project is a floor you switch to. Shared by the server (which
 // assigns each floor its look) and the client (which paints it).
 
 import type { CloneProgress } from './protocol.js';

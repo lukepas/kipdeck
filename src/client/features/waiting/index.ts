@@ -36,7 +36,7 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     nextToast?.remove();
     if (!w || !desk) {
       const other = store.floors.find((f) => f.id !== store.floor && f.waiting > 0);
-      nextToast = toast(other ? `🛗 Nobody's waiting on this floor. ${other.waiting} on the ${other.name} floor: take the elevator` : '👍 Nobody is waiting on you');
+      nextToast = toast(other ? `🛗 Nobody's waiting on this floor. ${other.waiting} on the ${other.name} floor: switch to it from the project name` : '👍 Nobody is waiting on you');
       return;
     }
     closeAllModals();

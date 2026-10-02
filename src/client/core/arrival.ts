@@ -75,7 +75,7 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
       // Back to where you were (not in the elevator: that's arriving), if there's still room there.
       if (lastSpot() && !inElevator(mine.x, mine.z) && !pastTheWing(mine, parts.worlds.officeWing()) && player.fits(mine.x, mine.z, mine.y)) {
         placeAt(mine);
-        travel.arrive('back');
+        travel.arrive();
       } else {
         // The car you were in, or the middle of it.
         placeInCar(mine);
@@ -147,7 +147,7 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     renderTitle();
     if (!p) {
       $('project-name').textContent = '🏢 Agent Office';
-      $('project-meta').textContent = store.floors.length ? '🛗 Take the elevator to a floor' : '🛗 No floors yet — add a project in the elevator';
+      $('project-meta').textContent = store.floors.length ? '🛗 Pick a floor' : '🛗 No floors yet: add a project in Floors';
       // Where to go next, so it shows even with the floor details turned off.
       $('project-meta').classList.add('lobby');
       ctx.world().setProjectName(store.floors.length ? 'Pick a floor' : 'Lobby');
@@ -173,7 +173,7 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     const saved = lastSpot();
     const name = saved?.floor === was && saved.name ? saved.name : 'Your floor';
     const now = store.currentFloor()?.name;
-    toast(now ? `🛗 ${name} isn't in the building any more, so the elevator brought you to ${now}` : `🛗 ${name} isn't in the building any more`, 'warn');
+    toast(now ? `🛗 ${name} isn't in the building any more, so you're on ${now} now` : `🛗 ${name} isn't in the building any more`, 'warn');
   }
 
   return { renderProject, whereNow };

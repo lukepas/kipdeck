@@ -1,4 +1,4 @@
-// The building's floors: riding the elevator between them, and adding and taking off floors.
+// The building's floors: going between them, and adding and taking off floors.
 import type { FloorClientMsg } from '../../../shared/protocol.js';
 import { arrivalSpot, str } from '../../office/input.js';
 import type { HandlerMap, ViewPieces } from './types.js';

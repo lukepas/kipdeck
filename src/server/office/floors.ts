@@ -35,7 +35,7 @@ export function floorHelpers(ctx: Ctx): FloorHelpers {
   const arrivalFloor = (wanted: string | null): Floor | undefined => (wanted && ctx.floors.get(wanted)) || ctx.floors.values().next().value;
 
   /**
-   * Takes `floor` off the building (already out of floors.json): everyone on it rides the elevator to
+   * Takes `floor` off the building (already out of floors.json): everyone on it goes to
    * the next floor, or out to the lobby if it was the last, and its workers stop.
    */
   const closeFloor = (floor: Floor, who: string) => {
@@ -49,7 +49,7 @@ export function floorHelpers(ctx: Ctx): FloorHelpers {
       if (c.peer.floor === floor.id) {
         if (next) ctx.goToFloor(c, next);
         else ctx.toLobby(c);
-        ctx.sendTo(c, { t: 'toast', text: next ? `🛗 ${who} took ${name} off the building, so you rode the elevator to ${next.def.name}` : `🛗 ${who} took ${name}, the last floor, off the building`, level: 'warn' });
+        ctx.sendTo(c, { t: 'toast', text: next ? `🛗 ${who} took ${name} off the building, so you're on ${next.def.name} now` : `🛗 ${who} took ${name}, the last floor, off the building`, level: 'warn' });
       } else ctx.sendTo(c, { t: 'toast', text: `🛗 ${who} took ${name} off the building`, level: 'info' });
     }
     ctx.floors.delete(floor.id);

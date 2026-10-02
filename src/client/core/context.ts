@@ -30,20 +30,16 @@ export interface Hint {
  *
  * - start: you're starting something else at a thing you used
  * - taken: the office put you on another floor (yours was taken off the building)
- * - trip: you're off to another floor (the elevator, the floor list)
+ * - trip: you're off to another floor (the Floors window, the floor list)
  * - walk: you're walking over to someone
  * - errand: you're walking over to something to use it (Shift+Enter in the palette)
  * - desk: you're put in front of a desk (the PR board's "Go to desk", N)
  */
 export type StopWhy = 'start' | 'taken' | 'trip' | 'walk' | 'errand' | 'desk';
 
-/** How you're going to another floor: by elevator, or straight there from the floor list. */
-export type TripKind = 'elevator' | 'switch';
-
-/** A trip under way: the lights are down (and by elevator the doors are shut) until the next floor arrives. */
+/** A trip to another floor under way: the lights are down until the next floor arrives. */
 export interface Trip {
   floor: string;
-  how: TripKind;
   timer: number;
 }
 

@@ -22,7 +22,7 @@ export function installBookshelf(ctx: Ctx) {
   const { settings } = ctx;
 
   function showBookshelf() {
-    if (!store.floor) return toast('Take the elevator to a floor first');
+    if (!store.floor) return toast('Go to a floor first');
     openBookshelf({
       floor: store.floor,
       project: store.project?.name,

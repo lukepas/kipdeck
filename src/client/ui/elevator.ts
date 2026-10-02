@@ -6,7 +6,7 @@ import { store } from '../state';
 import { h, openModal, timeAgo, toast, type Modal } from './dom';
 import { confirmDialog } from './prompt';
 
-// The elevator's panel: a button for every floor (every project), and "add a project", which clones
+// The Floors window: a button for every floor (every project), and "add a project", which clones
 // one of the repositories the office's gh login can see and makes it a new floor. The first time
 // the office runs there are no floors, and this is where you start. Admins can take a floor off the
 // building here too; its checkout stays on disk.
@@ -14,7 +14,7 @@ import { confirmDialog } from './prompt';
 export interface ElevatorOptions {
   net: Net;
   /** Rides to a floor. */
-  ride(floorId: string): void;
+  go(floorId: string): void;
 }
 
 /** How many repositories the list shows at once; typing narrows it down. */
@@ -135,7 +135,7 @@ export function openElevator(opts: ElevatorOptions): void {
     btn.addEventListener('click', () => {
       if (here || f.cloning) return;
       modal.close();
-      opts.ride(f.id);
+      opts.go(f.id);
     });
     return btn;
   };
@@ -158,7 +158,7 @@ export function openElevator(opts: ElevatorOptions): void {
   const confirmRemove = (f: FloorInfo) => {
     const next = store.floors.find((o) => o.id !== f.id && !o.cloning);
     const workers = f.workers ? `Its ${f.workers} worker${f.workers === 1 ? '' : 's'} stop${f.workers === 1 ? 's' : ''}. ` : '';
-    const people = f.people ? `Everyone on it rides the elevator to ${next ? next.name : 'the lobby'}. ` : '';
+    const people = f.people ? `Everyone on it goes to ${next ? next.name : 'the lobby'}. ` : '';
     // The office was started in it: its accounts, password and chat live in that .agent-office too, and stay.
     const own = f.local ? ' The office keeps its own settings there too, so it carries on as before, just without this floor.' : '';
     confirmDialog(`Take ${f.name} off the building?`, `${workers}${people}Nothing is deleted: its checkout stays in ${f.dir}, .agent-office folder and all.${own}`, '🗑 Remove floor', () => net.send({ t: 'floor.remove', floor: f.id }));
@@ -186,7 +186,7 @@ export function openElevator(opts: ElevatorOptions): void {
         // Already a floor: the button takes you there.
         if (floor.id !== store.floor && !floor.cloning) {
           modal.close();
-          opts.ride(floor.id);
+          opts.go(floor.id);
         }
         return;
       }
@@ -280,7 +280,7 @@ export function openElevator(opts: ElevatorOptions): void {
     clearTimeout(startTimer);
     if (floor) {
       modal.close();
-      opts.ride(floor);
+      opts.go(floor);
       return;
     }
     error = why ?? 'The floor could not be added';
@@ -347,7 +347,7 @@ export function openElevator(opts: ElevatorOptions): void {
   );
   const unsubs = [store.on('floors', () => (checkAdding(), renderFloors(), renderAdd())), store.on('repos', renderAdd), store.on('projectsDir', () => (editDir(false), renderAdd())), store.on('floor', renderFloors), store.on('peers', renderFloors), store.on('me', () => (renderFloors(), renderAdd()))];
   const modal = openModal(el, {
-    doing: '🛗 at the elevator',
+    doing: '🛗 looking at the floors',
     // A stray click shouldn't lose the first-run panel; ✕ and Esc still close it.
     backdropCloses: !setup,
     onClose: () => {

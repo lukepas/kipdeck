@@ -151,9 +151,8 @@
 /* A count on a dock button or a ☰ menu item, and by the floor's name the floors waiting on you. */
 .svc-count { margin-left: 6px; background: var(--accent); color: #fff; border-radius: 999px; padding: 0 7px; font-size: 12px; }
 
-#fade.quick { transition-duration: .16s; }
 
 /* The lights going down on the way to another floor, and where each person is in the people panel. */
-#fade { position: fixed; inset: 0; background: #1b1d2e; opacity: 0; pointer-events: none; transition: opacity .3s ease; z-index: 40; }
+#fade { position: fixed; inset: 0; background: #1b1d2e; opacity: 0; pointer-events: none; transition: opacity .16s ease; z-index: 40; }
 #fade.on { opacity: 1; }
 .people .where { font-size: 11px; font-weight: 800; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
