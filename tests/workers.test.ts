@@ -1524,3 +1524,45 @@ test("a worker whose worktree was deleted outside the office waits, marked lost,
   assert.equal(after.get(gone.id)?.lost, undefined);
   assert.deepEqual(toasts, []);
 });
+
+test("a new worker gets the floor's mission before its first prompt, takes its milestone, and a hook stamps its activity", async (t) => {
+  const f = fixture();
+  isolateProviderEnvironment(f, t);
+  const previousLog = process.env.FAKE_AGENT_LOG;
+  process.env.FAKE_AGENT_LOG = f.log;
+  t.after(() => {
+    if (previousLog === undefined) delete process.env.FAKE_AGENT_LOG;
+    else process.env.FAKE_AGENT_LOG = previousLog;
+    f.close();
+  });
+  const updates: WorkerInfo[] = [];
+  const workers = manager(f, f.claude, updates);
+  t.after(() => workers.shutdown());
+  const asked: [string | undefined, number | undefined][] = [];
+  workers.mission = {
+    goalFor: (goal, issue) => (asked.push([goal, issue]), issue === 7 ? 'auth' : undefined),
+    note: (info) => `TEAM CONTEXT for ${info.goal ?? 'nothing'}`,
+  };
+  const w = workers.spawn('desk-1', 'test', 'fix the login', false, 'agent', undefined, undefined, undefined, undefined, undefined, [], { issue: 7 });
+  assert.equal(typeof w, 'object');
+  if (typeof w === 'string') return;
+  assert.deepEqual([w.goal, w.issue], ['auth', 7]);
+  assert.deepEqual(asked, [[undefined, 7]]);
+  // The prompt shown for the worker is its own; the agent gets the team context first.
+  assert.equal(w.prompt, 'fix the login');
+  const launched = await waitFor(() => f.read(), (records) => records.some((r) => r.kind === 'claude' && r.args.includes('--settings')));
+  const run = launched.find((r) => r.kind === 'claude' && r.args.includes('--settings'))!;
+  assert.ok(hasPrompt(run, 'TEAM CONTEXT for auth\n\nfix the login'));
+
+  // A hook event marks it alive; a snooze "until it changes" goes when its status does.
+  workers.annotate(w.id, { snooze: { until: 'change', by: 'Ana', at: 1 } });
+  assert.equal(workers.get(w.id)?.snooze?.by, 'Ana');
+  const before = Date.now();
+  assert.equal(workers.handleHook(w.id, run.env.hookToken!, 'SessionStart', { session_id: 'mission-session' }), true);
+  assert.ok((workers.get(w.id)?.activityAt ?? 0) >= before);
+  assert.equal(workers.get(w.id)?.snooze, undefined);
+  // A shell is never told the mission.
+  const shell = workers.spawn('desk-2', 'test', undefined, false, 'shell');
+  assert.equal(typeof shell === 'object' && shell.goal, undefined);
+  if (typeof shell === 'object') await workers.kill(shell.id);
+});

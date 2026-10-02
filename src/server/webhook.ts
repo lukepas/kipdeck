@@ -73,6 +73,8 @@ export class Webhook {
     private onState: (state: NotifyState) => void,
     /** Tests only: see GuardOptions. */
     private guard: GuardOptions = {},
+    /** Tests only: how long a stuck worker has to stay stuck before it's posted. */
+    private stuckSettleMs = SETTLE_MS,
   ) {
     this.path = path.join(dataDir, 'webhook.json');
     this.restore();
@@ -147,7 +149,7 @@ export class Webhook {
       if (!why) return;
       const task = e.task?.name ? ` — ${oneLine(e.task.name, 80)}` : '';
       void this.post({ kind: 'stuck', title: `⚠️ ${e.name} looks stuck in ${e.floorName}${task}`, detail: oneLine(why || reason, 300), worker: this.latest.get(e.id) });
-    }, SETTLE_MS);
+    }, this.stuckSettleMs);
     timer.unref();
     this.stuckPending.set(e.id, timer);
   }
