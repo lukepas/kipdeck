@@ -63,6 +63,19 @@ export function pullUrl(repo: string, number: number): string {
   return `https://github.com/${repo}/pull/${number}`;
 }
 
+/**
+ * Whether pull request `n` of `repo` comes from a branch of that repository itself, as GitHub says:
+ * false for a fork's (see shared/pulltrust.ts), and when GitHub can't be asked.
+ */
+async function fromBranchOf(repo: string, n: number, cwd: string): Promise<boolean> {
+  try {
+    const got = JSON.parse(await gh(['pr', 'view', String(n), '--repo', repo, '--json', 'number,isCrossRepository'], cwd)) as { number?: unknown; isCrossRepository?: unknown };
+    return got.number === n && got.isCrossRepository === false;
+  } catch {
+    return false;
+  }
+}
+
 async function findOpenPr(branch: string, cwd: string): Promise<{ number: number; url: string } | undefined> {
   const out = await gh(['pr', 'list', '--head', branch, '--state', 'open', '--limit', '1', '--json', 'number,url'], cwd);
   const found = (JSON.parse(out || '[]') as { number: number; url: string }[])[0];
@@ -134,23 +147,30 @@ export class WorkerPrs {
    * made, so this is how the office knows which pull request is whose. For a worker across
    * repositories, one in another of its repositories is kept with that repository.
    */
-  noteOwn(w: Worker, command: unknown, output: string) {
+  noteOwn(w: Worker, command: unknown, output: string): Promise<void> {
     const pr = ownPr(command, output);
-    if (!pr) return;
+    if (!pr) return Promise.resolve();
     const { info } = w;
     // Only one in the floor's own repository (or another repository the worker works in): a pull
     // request it printed from anywhere else isn't the floor's to show, review or send it home on.
     const same = (repo?: string) => sameRepo(repo, pr.repo);
     this.origin ??= { repo: originRepo(this.ctx.dir) };
     const other = same(this.origin.repo) ? undefined : info.repos?.find((r) => same(r.repo));
-    if (!same(this.origin.repo) && !other) return;
-    if ((other ?? info).pr?.number === pr.number) return;
-    // The one it had may still be open (a second task, a follow-up): it stays its own too.
-    if (!other && info.pr) info.pastPrs = [...new Set([...(info.pastPrs ?? []), info.pr.number])].filter((n) => n !== pr.number).slice(-MAX_PAST_PRS);
-    (other ?? info).pr = { number: pr.number, url: pr.url };
-    this.ctx.persist();
-    this.ctx.emit(w);
-    this.ctx.events.toast(`${info.name} opened PR #${pr.number}${other ? ` in ${other.name}` : ''}`, 'info');
+    if (!same(this.origin.repo) && !other) return Promise.resolve();
+    if ((other ?? info).pr?.number === pr.number) return Promise.resolve();
+    // The worker wrote the command and what it printed, so the URL may be any pull request there,
+    // a fork's included: only one GitHub says is from a branch of that repository is its own.
+    return fromBranchOf(pr.repo, pr.number, this.ctx.dir).then((ours) => {
+      if (!ours || this.ctx.workers.get(info.id) !== w) return;
+      const target = other ? info.repos?.find((r) => same(r.repo)) : info;
+      if (!target || target.pr?.number === pr.number) return;
+      // The one it had may still be open (a second task, a follow-up): it stays its own too.
+      if (!other && info.pr) info.pastPrs = [...new Set([...(info.pastPrs ?? []), info.pr.number])].filter((n) => n !== pr.number).slice(-MAX_PAST_PRS);
+      target.pr = { number: pr.number, url: pr.url };
+      this.ctx.persist();
+      this.ctx.emit(w);
+      this.ctx.events.toast(`${info.name} opened PR #${pr.number}${other ? ` in ${other.name}` : ''}`, 'info');
+    });
   }
 
   /**

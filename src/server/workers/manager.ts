@@ -966,7 +966,7 @@ export class WorkerManager {
       persist: () => this.persist(),
       notePrompt: (x, prompt) => this.tasks.notePrompt(x, prompt),
       noteTool: (x, tool) => this.tasks.noteTool(x, tool),
-      notePr: (x, command, output) => this.prs.noteOwn(x, command, output),
+      notePr: (x, command, output) => void this.prs.noteOwn(x, command, output),
       clearTask: (x) => this.tasks.clear(x),
       scheduleScan: (x) => this.scheduleScan(x),
       prompt: (id, text) => this.prompt(id, text),

@@ -354,12 +354,15 @@ export class Floor {
 
   /**
    * Whether a pull request is the office's own: from one of its branches, a worker's, or a queue
-   * task's. A branch name counts only from the repository itself, since a fork can use any name.
+   * task's. Never a fork's (see shared/pulltrust.ts): a fork can use any branch name, and a worker
+   * can claim any number.
    */
   officePull(p: GhPull): boolean {
-    if (!p.fork && p.headRefName.startsWith(BRANCH_PREFIX)) return true;
+    // A fork's is never one, whatever number a worker has: it may have said one of theirs is its own.
+    if (p.fork) return false;
+    if (p.headRefName.startsWith(BRANCH_PREFIX)) return true;
     if (this.queue.state().tasks.some((t) => t.pr?.number === p.number)) return true;
-    return this.workers.list().some((w) => w.pr?.number === p.number || (!p.fork && w.worktree?.branch === p.headRefName));
+    return this.workers.list().some((w) => w.pr?.number === p.number || w.worktree?.branch === p.headRefName);
   }
 
   /**

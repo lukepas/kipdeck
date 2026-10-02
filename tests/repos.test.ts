@@ -364,4 +364,9 @@ test('a worker across repositories goes home once its pull requests have merged 
   assert.deepEqual(landedWorkers([apiOnly], [], [], floors([pull(9, 'MERGED', 'office/pip-1', 'h9')])).map((l) => l.prs), [['api #9']]);
   // web's own PR open: it stays.
   assert.deepEqual(landedWorkers([w], [pull(3, 'OPEN', 'office/pip-1')], [], floors([pull(9, 'MERGED', 'office/pip-1')])), []);
+  // A fork's #9 merging isn't its PR merging, whatever number it has as its own there.
+  const fork = { ...pull(9, 'MERGED', 'someone-else', 'h9'), fork: true };
+  assert.deepEqual(landedWorkers([apiOnly], [], [], floors([fork])), []);
+  assert.deepEqual(landedWorkers([w], web, [], floors([fork])), []);
+  assert.deepEqual(landedWorkers([{ ...apiOnly, repos: [{ ...w.repos![0], pr: undefined }] }], [], [], floors([{ ...pull(4, 'MERGED', 'office/pip-1'), fork: true }])), []);
 });

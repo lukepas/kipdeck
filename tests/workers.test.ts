@@ -1256,6 +1256,8 @@ test('a Claude worker that opens a pull request itself has it as its own', async
   });
   execFileSync('git', ['init', '-q'], { cwd: f.root });
   execFileSync('git', ['remote', 'add', 'origin', 'git@github.com:acme/app.git'], { cwd: f.root });
+  // GitHub, as `gh pr view` answers: #13 is a fork's pull request into acme/app, the rest are acme/app's own.
+  writeFileSync(path.join(path.dirname(f.claude), 'gh'), `#!/bin/sh\ncase "$3" in 13) echo '{"number":13,"isCrossRepository":true}';; *) echo "{\\"number\\":$3,\\"isCrossRepository\\":false}";; esac\n`, { mode: 0o700 });
   const toasts: string[] = [];
   const hookEnv = { url: 'http://127.0.0.1:1', token: '' };
   const workers = new WorkerManager(f.root, f.data, f.claude, [], hookEnv, { ...events([]), toast: (text) => toasts.push(text) }, ledger(f.data));
@@ -1274,17 +1276,23 @@ test('a Claude worker that opens a pull request itself has it as its own', async
   hook('PostToolUse', { tool_name: 'Bash', tool_input: { command: 'gh pr view 3 --json url' }, tool_response: { stdout: 'https://github.com/acme/app/pull/3' } });
   hook('PostToolUse', { tool_name: 'Bash', tool_input: { command: 'grep -rn "gh pr create" docs' }, tool_response: { stdout: 'docs/a.md: gh pr create … https://github.com/acme/app/pull/3' } });
   hook('PostToolUse', { ...create, tool_response: { stdout: 'https://github.com/other/thing/pull/9\n', stderr: '' } });
+  // A fork's pull request into this repository, printed after gh pr create: GitHub says it's a fork's, so it isn't its own.
+  hook('PostToolUse', { ...create, tool_response: { stdout: 'https://github.com/acme/app/pull/13\n', stderr: '' } });
+  await new Promise((resolve) => setTimeout(resolve, 300));
   assert.equal(pr(), undefined);
+  assert.deepEqual(toasts, []);
   hook('PostToolUse', { ...create, tool_response: { stdout: 'https://github.com/acme/app/pull/12\n', stderr: 'Creating pull request for fix-login into main in acme/app' } });
+  await waitFor(pr, (p) => p !== undefined);
   assert.deepEqual(pr(), { number: 12, url: 'https://github.com/acme/app/pull/12' });
   assert.deepEqual(toasts, [`${worker.name} opened PR #12`]);
   assert.equal(JSON.parse(readFileSync(path.join(f.data, 'workers.json'), 'utf8')).find((w: { id: string }) => w.id === worker.id).pr.number, 12, 'kept across a restart');
   // A follow-up whose branch already had one: gh fails, and says which.
   hook('PostToolUseFailure', { ...create, error: 'Exit code 1\na pull request for branch "fix-more" into branch "main" already exists:\nhttps://github.com/acme/app/pull/14' });
-  assert.equal(pr()?.number, 14);
+  await waitFor(pr, (p) => p?.number === 14);
   assert.deepEqual(workers.get(worker.id)?.pastPrs, [12], 'the first one is still its own');
   // Said again, it's no news.
   hook('PostToolUseFailure', { ...create, error: 'Exit code 1\nhttps://github.com/acme/app/pull/14' });
+  await new Promise((resolve) => setTimeout(resolve, 100));
   assert.equal(toasts.length, 2);
 
   // And someone can say which is whose, or that none is (office-workers pr).
