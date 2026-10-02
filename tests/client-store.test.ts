@@ -160,7 +160,7 @@ test('what the browser remembers keeps its keys and shapes', () => {
   assert.deepEqual(state.lastSpot(), { floor: 'f1', name: 'F', x: 1, y: 2, z: 3, facing: 4 });
   assert.ok(storage.has('agent-office.spot'));
   const settings = state.loadSettings();
-  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: false, pageTurns: true, pushToTalk: false, notify: true, hud: state.HUD_DEFAULTS, pins: [] });
+  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: false, pushToTalk: false, notify: true, hud: state.HUD_DEFAULTS, pins: [] });
   // Settings saved by an older office, with keys for things that are gone (the jukebox's volume), still load.
   storage.set('agent-office.settings', JSON.stringify({ volume: 0.4, music: 0.9, musicMuted: true }));
   assert.deepEqual(state.loadSettings(), { ...settings, volume: 0.4 });

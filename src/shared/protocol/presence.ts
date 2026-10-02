@@ -36,7 +36,7 @@ export interface PeerInfo {
   floor?: string;
   /** What they have open, in their own words: "in Pixel's terminal", "reading PR #12". */
   doing?: string;
-  /** Reading something off the bookshelf: an open book in their hands, its pages turning. */
+  /** Reading something off the bookshelf (the bookshelf's hint lists who). */
   reading?: boolean;
   /** On the 2D view (/lite: a phone, say, or a slow computer): in the office, but not standing anywhere in it. */
   lite?: boolean;

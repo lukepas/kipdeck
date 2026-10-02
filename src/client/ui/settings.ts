@@ -134,37 +134,6 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
   };
   paintTalk();
 
-  // The swish of the book's pages at the bookshelf, on or off.
-  const pagesRow = h('div.seg', { role: 'radiogroup', 'aria-label': 'Page turns at the bookshelf' });
-  const paintPages = () => {
-    pagesRow.replaceChildren(
-      ...(
-        [
-          [true, '📖 On'],
-          [false, 'Off'],
-        ] as const
-      ).map(([on, label]) =>
-        h(
-          'button.btn',
-          {
-            type: 'button',
-            role: 'radio',
-            'aria-checked': String(settings.pageTurns === on),
-            class: settings.pageTurns === on ? 'on' : '',
-            onclick: () => {
-              if (settings.pageTurns === on) return;
-              settings = { ...settings, pageTurns: on };
-              onChange(settings);
-              paintPages();
-            },
-          },
-          label,
-        ),
-      ),
-    );
-  };
-  paintPages();
-
   // Desktop notifications: this browser's permission, then your own on/off.
   const notifyRow = h('div.seg');
   const notifyNote = h('p.setting-note');
@@ -414,7 +383,6 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     ],
     sound: [
       setting('Office sounds', 'you', soundRow, h('p.setting-note', {}, 'Workers typing, footsteps, and the ding when a worker is done. Voice chat isn’t affected.')),
-      setting('Page turns at the bookshelf', 'you', pagesRow, h('p.setting-note', {}, 'A soft swish each time the book in your hands turns a page, as you open a doc or scroll through one. The 🔈 at the top of the bookshelf turns it off too.')),
       setting('Voice chat', 'you', talkRow, h('p.setting-note', {}, 'Either way, V joins voice, holding V talks and you’re muted once you let go, and M mutes or unmutes. With push to talk you join muted. Leave voice from the ☰ menu.')),
     ],
     notify: [

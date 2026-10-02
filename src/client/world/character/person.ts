@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { HAIR_COLORS, SKIN_TONES, type Look } from '../../../shared/avatar';
 import type { CarriedIssue } from '../../../shared/protocol';
 import { HIPS } from './rig';
-import { OpenBook } from '../../features/bookshelf/book';
 import { HeldCard } from '../../features/carrying/card';
 import { disposeSprite, mesh, textSprite, toon, toonUnique } from '../toon';
 import { REACH_TIME, reachCurve } from './curves';
@@ -50,9 +49,6 @@ export class Person {
   /** An issue card off the board, held out in front in both hands. */
   private card: HeldCard;
   private cardHolder = new THREE.Group();
-  /** A book off the bookshelf, open in both hands while they read (see read). */
-  private book: OpenBook | null = null;
-  private bookHolder = new THREE.Group();
   pose: Pose = 'stand';
   /** Hips this high above the feet while sitting (on the seat), or null on their feet. */
   private hips: number | null = null;
@@ -117,12 +113,6 @@ export class Person {
     holder.rotation.x = -0.1;
     this.body.add(holder);
     this.card = new HeldCard(holder, 0.46);
-    // Held out at chest height, turned round and tipped up so the pages face their eyes, top edge
-    // away from them, with the hands on its bottom corners.
-    this.bookHolder.position.set(0, 1, 0.48);
-    this.bookHolder.rotation.set(0.85, Math.PI, 0);
-    this.bookHolder.scale.setScalar(1.25);
-    this.body.add(this.bookHolder);
     // Little mic icon that pops up while speaking
     this.mic = mesh(new THREE.SphereGeometry(0.09, 10, 8), toon('#7cf29a', { emissive: '#2a9d4b' }), 0, 2.25, 0, false);
     this.mic.visible = false;
@@ -217,25 +207,6 @@ export class Person {
     this.card.set(card);
   }
 
-  /** Opens a book in both hands and reads it, turning the pages (or closes it). A card they carry waits. */
-  read(on: boolean) {
-    if (on === !!this.book) return;
-    if (on) {
-      this.book = new OpenBook();
-      this.bookHolder.add(this.book.group);
-    } else {
-      this.bookHolder.remove(this.book!.group);
-      this.book!.dispose();
-      this.book = null;
-    }
-    this.cardHolder.visible = !on;
-  }
-
-  /** Turns a page of the book they're reading now. */
-  turnPage() {
-    this.book?.turn();
-  }
-
   /** Sits down with the hips `hips` above the feet, on a couch or a chair, or gets up (null). */
   sit(hips: number | null) {
     this.hips = hips;
@@ -269,12 +240,7 @@ export class Person {
       for (const leg of [this.legL, this.legR]) leg.rotation.x = THREE.MathUtils.lerp(leg.rotation.x, -1.35, sit);
       for (const arm of [this.armL, this.armR]) arm.rotation.x = THREE.MathUtils.lerp(arm.rotation.x, -0.55, sit);
     }
-    if (this.book) {
-      // Both arms out in front, hands under the book's bottom corners.
-      this.armL.rotation.set(-1.5, 0, 0.32);
-      this.armR.rotation.set(-1.5, 0, -0.32);
-      this.book.update(dt);
-    } else if (this.card.held) {
+    if (this.card.held) {
       // Both arms out in front, hands on the card's edges: they don't swing while they walk.
       this.armL.rotation.set(-1.25, 0, 0.3);
       this.armR.rotation.set(-1.25, 0, -0.3);
@@ -304,8 +270,7 @@ export class Person {
     this.smile.visible = !talking;
     this.mouth.visible = talking;
     if (talking) this.mouth.scale.set(0.07 * (1 - this.mouthOpen * 0.2), 0.01 + this.mouthOpen * 0.045, 0.05);
-    // Reading, they look down into the book.
-    this.head.rotation.x = -this.mouthOpen * 0.08 + (this.book ? 0.32 : 0);
+    this.head.rotation.x = -this.mouthOpen * 0.08;
     this.head.rotation.y = this.head.rotation.z = 0;
     this.body.rotation.y = this.body.rotation.z = 0;
   }

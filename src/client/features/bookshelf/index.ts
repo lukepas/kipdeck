@@ -1,7 +1,7 @@
-/** The bookshelf: the project's docs to read, with a book in your hands (and a swish as its pages turn). */
+/** The bookshelf: the project's docs to read, and who else on the floor is reading them. */
 import type { Ctx } from '../../core/context';
 import { aside, hintTitle, key, onE } from '../../core/hint';
-import { saveSettings, store } from '../../state';
+import { store } from '../../state';
 import { openBookshelf } from './ui';
 import { clip, toast } from '../../ui/dom';
 
@@ -19,20 +19,12 @@ function githubUrl(remote?: string): string | undefined {
 }
 
 export function installBookshelf(ctx: Ctx) {
-  const { settings } = ctx;
-
   function showBookshelf() {
     if (!store.floor) return toast('Go to a floor first');
     openBookshelf({
       floor: store.floor,
       project: store.project?.name,
       repoUrl: githubUrl(store.project?.remote),
-      onTurn: turnPage,
-      pageSound: settings.pageTurns,
-      onPageSound: (on) => {
-        settings.pageTurns = on;
-        saveSettings(settings);
-      },
     });
   }
 
@@ -44,16 +36,6 @@ export function installBookshelf(ctx: Ctx) {
     },
     use: onE(() => showBookshelf()),
   });
-
-  /** When a page last turned, so flicking through a doc is one swish rather than a swish a screenful. */
-  let turnedAt = 0;
-  /** You turned a page on the bookshelf: so does the book in your hands, for everyone watching it too. */
-  function turnPage() {
-    ctx.me.turnPage();
-    const now = performance.now();
-    if (settings.pageTurns && now - turnedAt > 1000) ctx.sound.pageTurn();
-    turnedAt = now;
-  }
 
   return { showBookshelf };
 }

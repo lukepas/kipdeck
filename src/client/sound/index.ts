@@ -12,7 +12,7 @@
 import { deskPhones, startRoomTone } from './ambience';
 import { ding } from './alerts';
 import { AudioCore, type Listener } from './core';
-import { pageTurn, paper, step, stepAt } from './steps';
+import { paper, step, stepAt } from './steps';
 import { fidgeting, Typing } from './typing';
 
 export class OfficeSound {
@@ -78,10 +78,6 @@ export class OfficeSound {
 
   paper() {
     paper(this.a);
-  }
-
-  pageTurn() {
-    pageTurn(this.a);
   }
 
   stepAt(x: number, z: number, y = 0) {

@@ -17,11 +17,6 @@ export interface ShelfDeps {
   project?: string;
   /** The project on GitHub, for links to files that aren't docs. */
   repoUrl?: string;
-  /** You turned a page (opened a doc, or scrolled a screenful): the book in your hands turns one too. */
-  onTurn(): void;
-  /** Whether a page turning makes a sound (⚙️'s setting), and the 🔈 up top that turns it on or off. */
-  pageSound: boolean;
-  onPageSound(on: boolean): void;
 }
 
 /** A doc that passes the filter: how well, and which letters of its title and path matched. */
@@ -160,23 +155,10 @@ export function openBookshelf(deps: ShelfDeps) {
   const meta = h('div.bs-meta');
   const toc = h('select.bs-toc', { 'aria-label': 'Jump to a heading', title: 'Jump to a heading' }) as HTMLSelectElement;
   const page = h('div.bs-page', { tabindex: -1 });
-  let pageSound = deps.pageSound;
-  const soundBtn = h('button.btn.bs-sound', { type: 'button', 'aria-label': 'Page turn sound' });
-  const paintSound = () => {
-    soundBtn.textContent = pageSound ? '🔈' : '🔇';
-    soundBtn.title = pageSound ? 'Pages swish as they turn: click to turn that off' : 'Pages turn silently: click to hear them swish';
-    soundBtn.setAttribute('aria-pressed', String(pageSound));
-  };
-  paintSound();
-  soundBtn.addEventListener('click', () => {
-    pageSound = !pageSound;
-    deps.onPageSound(pageSound);
-    paintSound();
-  });
   const el = h(
     'div.modal.bookshelf',
     { role: 'dialog', 'aria-label': 'Bookshelf' },
-    h('header', {}, h('h2', {}, '📚 Bookshelf', deps.project ? h('span.bs-project', {}, ` · ${deps.project}`) : ''), soundBtn),
+    h('header', {}, h('h2', {}, '📚 Bookshelf', deps.project ? h('span.bs-project', {}, ` · ${deps.project}`) : '')),
     h(
       'div.body',
       {},
@@ -195,7 +177,6 @@ export function openBookshelf(deps: ShelfDeps) {
   let current: string | null = null;
   let opening = 0;
   /** Where the page was last time it turned (see the scroll listener). */
-  let turnedAt = 0;
 
   const modal = openModal(el, { doing: '📚 at the bookshelf', reading: true });
 
@@ -330,11 +311,9 @@ export function openBookshelf(deps: ShelfDeps) {
       [`${Math.max(1, Math.round(words / 220))} min read`, info ? size(info.size) : '', info ? `updated ${timeAgo(info.mtime)}` : ''].filter(Boolean).join(' · '),
       repoUrl ? h('a', { href: `${repoUrl}/blob/HEAD/${path.split('/').map(encodeURIComponent).join('/')}`, target: '_blank', rel: 'noopener noreferrer', title: 'Open it on GitHub' }, 'GitHub ↗') : '',
     );
-    turnedAt = 0;
     jump(hash);
     renderList();
     setDoing(modal, `📚 reading ${info?.title ?? nameOf(path)}`);
-    deps.onTurn();
   };
 
   page.addEventListener('click', (e) => {
@@ -342,12 +321,6 @@ export function openBookshelf(deps: ShelfDeps) {
     if (!a) return;
     e.preventDefault();
     void openDoc(a.dataset.doc!, a.dataset.hash ?? '');
-  });
-  // Every screenful you read, a page of the book in your hands turns.
-  page.addEventListener('scroll', () => {
-    if (Math.abs(page.scrollTop - turnedAt) < page.clientHeight * 0.8) return;
-    turnedAt = page.scrollTop;
-    deps.onTurn();
   });
   toc.addEventListener('change', () => {
     jump(toc.value);

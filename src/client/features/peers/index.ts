@@ -62,7 +62,6 @@ export function installPeers(ctx: Ctx, parts: Pick<Parts, 'walking' | 'talk' | '
         noOutline(r.person.root);
       }
       r.person.carry(peer.carrying);
-      r.person.read(!!peer.reading);
       r.person.sit(peer.seat ? (seatAt(peer.seat)?.hips ?? null) : null);
       r.person.setDoing(whereabouts(peer));
     }

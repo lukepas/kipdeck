@@ -31,7 +31,7 @@ export interface Modal {
   backdrop: HTMLElement;
   /** What having it open says you're doing, under your name tag (see PeerInfo.doing). */
   doing?: string;
-  /** You're reading while it's open: your character holds an open book (see PeerInfo.reading). */
+  /** You're reading while it's open: the bookshelf shows who else is (see PeerInfo.reading). */
   reading?: boolean;
   close(): void;
 }
