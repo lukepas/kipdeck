@@ -36,7 +36,6 @@ import { installMeeting } from './features/meeting';
 import { installPalette } from './features/palette';
 import { installPeers } from './features/peers';
 import { installSeating } from './features/seating';
-import { installTelescope } from './features/telescope';
 import { installTv } from './features/tv';
 import { installVoice } from './features/voice';
 import { installWaiting } from './features/waiting';
@@ -86,7 +85,6 @@ parts.voice = new Voice(parts.net);
 parts.me = makeMe(ctx);
 parts.settings = loadSettings();
 parts.player = new PlayerController(ctx.camera, canvas, ctx.office.colliders);
-parts.telescope = installTelescope(ctx, { clearTarget: () => parts.pointer.clearTarget(), backToGame: () => parts.focus.backToGame() });
 installKeyGuards(ctx, parts);
 parts.place = installPlace(ctx, core, parts);
 // Everyone arrives by elevator (the welcome says exactly where).

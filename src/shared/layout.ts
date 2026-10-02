@@ -2,7 +2,7 @@
 // Units are meters; +y is up. The office floor spans FLOOR.minX..maxX / minZ..maxZ at y = 0.
 
 export const FLOOR = { minX: -18, maxX: 18, minZ: -13, maxZ: 13 } as const;
-/** How high the ceiling is: a meter over the loft's roof (LOFT.y + LOFT.height), all the way across the room. */
+/** How high the ceiling is, all the way across the room. */
 export const WALL_HEIGHT = 6.8;
 
 export interface DeskDef {
@@ -158,18 +158,12 @@ export const STATION_AGENT: Record<StationKind, { name: string; color: string }>
   queue: { name: 'Queue agent', color: '#06d6a0' },
 };
 
-/** The upstairs office: a glass-walled loft on posts in the south-east corner, looking down on the desks. */
-export const LOFT = { minX: 9, maxX: FLOOR.maxX, minZ: 8, maxZ: FLOOR.maxZ, y: 3, height: 2.8 } as const;
-/** Its stairs climb east along the south wall and arrive at the loft's west door. */
-export const STAIRS = { fromX: 3, toX: LOFT.minX, minZ: 11.2, maxZ: FLOOR.maxZ, steps: 15 } as const;
-
 /**
- * The meeting room: glass walls round the space under the boss office, from the loft's posts to the
- * outside walls, with a long table in the middle. Workers called to a meeting sit round it (see
- * MEETING_SEATS and server/meetings.ts). The glass stops under the loft's floor; the door is in the
- * north wall, facing the lounge.
+ * The meeting room: glass walls in the south-east corner, out to the outside walls, under a flat roof,
+ * with a long table in the middle. Workers called to a meeting sit round it (see MEETING_SEATS and
+ * server/meetings.ts). The door is in the north wall, facing the lounge.
  */
-export const MEETING_ROOM = { minX: LOFT.minX + 0.15, maxX: FLOOR.maxX, minZ: LOFT.minZ + 0.15, maxZ: FLOOR.maxZ, height: LOFT.y - 0.25, door: { x0: 10, x1: 11.4 } } as const;
+export const MEETING_ROOM = { minX: 9.15, maxX: FLOOR.maxX, minZ: 8.15, maxZ: FLOOR.maxZ, height: 2.75, door: { x0: 10, x1: 11.4 } } as const;
 export const MEETING_TABLE = { x: 13.7, z: 10.55, width: 3.6, depth: 1.2, height: 0.76 } as const;
 /**
  * The chairs round the meeting table, in the order a meeting fills them: the head of the table at its
@@ -313,16 +307,14 @@ export interface Opening {
   y1: number;
 }
 
-/** Windows you can see out of, and the loft's two, which sit higher up. */
+/** Windows you can see out of. */
 export const WINDOWS: Opening[] = [
   ...[-14, -9, 1].map((u) => ({ wall: 'south' as const, u, width: 3, y0: 1.1, y1: 3.3 })),
   ...[-9, -3, 3].map((u) => ({ wall: 'west' as const, u, width: 3, y0: 1.1, y1: 3.3 })),
-  { wall: 'south', u: LOFT.minX + 2, width: 2.8, y0: LOFT.y + 0.9, y1: LOFT.y + 2.5 },
-  { wall: 'east', u: (LOFT.minZ + LOFT.maxZ) / 2, width: 2.8, y0: LOFT.y + 0.9, y1: LOFT.y + 2.5 },
 ];
 
 /**
- * Something to sit on, standing at x, z on the floor at `y` (the loft's, for what's up there). You
+ * Something to sit on, standing at x, z on the floor at `y`. You
  * sit facing `rotY` (0 = +z). A couch has a few places side by side; a chair or a beanbag has one.
  */
 export interface SeatDef {
@@ -354,9 +346,6 @@ export const SEATING: SeatDef[] = [
   // Beanbags either side of the lounge, turned to the TV.
   { id: 'lounge-beanbag-1', label: '🫘 Beanbag', x: 12.5, y: 0, z: 3.5, rotY: Math.atan2(TV.x - 12.5, TV.z - 3.5), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
   { id: 'lounge-beanbag-2', label: '🫘 Beanbag', x: 14.5, y: 0, z: -3.4, rotY: Math.atan2(TV.x - 14.5, TV.z + 3.4), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
-  // Up in the boss office: the couch against the east wall, and the chair at the big desk, facing the glass.
-  { id: 'loft-couch', label: '🛋️ Couch', x: LOFT.maxX - 0.65, y: LOFT.y, z: (LOFT.minZ + LOFT.maxZ) / 2, rotY: -Math.PI / 2, places: [-0.5, 0.5], hips: 0.5, depth: -0.05, out: 0.9 },
-  { id: 'boss-chair', label: "🪑 Boss's chair", x: (LOFT.minX + LOFT.maxX) / 2 + 0.5, y: LOFT.y, z: (LOFT.minZ + LOFT.maxZ) / 2 + 0.7, rotY: Math.PI, places: [0], hips: 0.62, depth: -0.05, out: -0.8 },
 ];
 export const SEATING_BY_ID = new Map(SEATING.map((s) => [s.id, s]));
 

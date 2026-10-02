@@ -76,7 +76,7 @@ export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     if (Math.hypot(at.x - player.pos.x, at.z - player.pos.z) < NEAR_ENOUGH && Math.abs(at.y - player.pos.y) < 1) return arrivedAt(at);
     if (now < walkingTo.replanAt) return;
     walkingTo.replanAt = now + 800;
-    // Round the office's rooms and up its stairs.
+    // Round the office's furniture.
     player.walkPath(wayTo(player.pos, at, officeWing()));
   }
 

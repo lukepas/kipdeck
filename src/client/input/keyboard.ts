@@ -9,8 +9,8 @@ import { isTyping } from '../player';
 import { modalOpen } from '../ui/dom';
 
 /**
- * The office's own parts of the key chain. Install it right after the telescope's guard (looking
- * through it, no key does anything else) and before anything else's, so within a stage they come first.
+ * The office's own parts of the key chain. Install it before anything else's, so within a stage they
+ * come first.
  */
 export function installKeyGuards(ctx: Ctx, parts: Pick<Parts, 'focus'>) {
   const { player } = ctx;

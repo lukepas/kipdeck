@@ -4,7 +4,7 @@ import type { Collider } from '../world/types';
 // Bumping into things: where you can stand, what's in your way, and what's over your head.
 
 const RADIUS = 0.32;
-/** Top of your head above your feet, for walking under the loft. */
+/** Top of your head above your feet, for walking under things. */
 export const HEIGHT = 1.7;
 /** The tallest ledge you walk up (or down) without jumping, like a stair. */
 export const STEP = 0.3;
@@ -105,7 +105,7 @@ export function groundAt(colliders: Collider[], x: number, z: number, y: number,
   return g;
 }
 
-/** The underside of whatever is overhead at (x, z) for feet at `y` (the loft, its roof), or Infinity. */
+/** The underside of whatever is overhead at (x, z) for feet at `y` (the meeting room's roof, the ceiling), or Infinity. */
 export function ceilingAt(colliders: Collider[], x: number, z: number, y: number): number {
   let top = Infinity;
   for (const c of colliders) {

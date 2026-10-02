@@ -41,7 +41,7 @@ export function aimCamera(camera: THREE.PerspectiveCamera, p: Followed, bob: num
     Math.cos(p.camYaw) * Math.cos(p.camPitch),
   ).multiplyScalar(p.camDist);
   const cam = target.clone().add(off);
-  // Keep the camera inside the office's walls, so they never block the view, and under the loft or
+  // Keep the camera inside the office's walls, so they never block the view, and under the meeting room's roof or
   // the ceiling.
   const m = 0.4;
   if (p.pos.y > -SLAB - 0.5 && inWing(p.pos.x, p.pos.z, p.wing)) {

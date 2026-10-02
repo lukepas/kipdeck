@@ -36,7 +36,7 @@ function buildMeetingSeat(def: DeskDef, index: number): DeskView {
 }
 
 /**
- * The meeting room under the loft: glass walls from the loft's posts round to the outside walls, a
+ * The meeting room: glass walls in the south-east corner round to the outside walls under a flat roof, a
  * sliding glass door facing the lounge, a long table with its chairs (MEETING_SEATS), a board on the
  * back wall for the meeting's output and a sign by the door for how it's going.
  */
@@ -75,9 +75,17 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
   run('x', R.minX, R.door.x0, R.minZ);
   run('x', R.door.x1, R.maxX, R.minZ);
   run('z', R.minZ, R.maxZ, R.minX);
-  // Over the door, up to the loft's floor.
+  // Over the door, up to the roof.
   bar(R.door.x1 - R.door.x0, 0.1, T + 0.06, (R.door.x0 + R.door.x1) / 2, 2.3, R.minZ);
   group.add(walls);
+  // The roof, its trim facing the room, and on top of it nothing but the ceiling far above.
+  const roofT = 0.25;
+  const roofW = R.maxX - R.minX + T;
+  const roofD = R.maxZ - R.minZ + T;
+  const roof = mesh(box(roofW, roofT, roofD), frameMat, (R.minX + R.maxX - T) / 2, H + roofT / 2, (R.minZ + R.maxZ - T) / 2);
+  roof.receiveShadow = true;
+  group.add(roof);
+  colliders.push({ minX: R.minX - T / 2, maxX: R.maxX, minZ: R.minZ - T / 2, maxZ: R.maxZ, bottom: H, top: H + roofT });
 
   // The door: two glass leaves that slide apart over the glass on either side when someone comes up.
   const dx = (R.door.x0 + R.door.x1) / 2;
@@ -165,7 +173,7 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
   sign.userData.interact = door;
   plate.userData.interact = door;
 
-  // Flat lights set in the loft's floor over the table: a hanging lamp would be in front of the board.
+  // Flat lights set in the roof over the table: a hanging lamp would be in front of the board.
   for (const dx of [-0.95, 0.95]) {
     group.add(mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.04, 20), toon('#fff7d6', { emissive: '#ffe08a' }), top.x + dx, H - 0.02, top.z, false));
   }
@@ -180,7 +188,7 @@ declare module '../types' {
   }
 }
 
-/** Under the loft: the meeting room. */
+/** The meeting room, in the south-east corner. */
 export const meetingRoom: Fixture<'meetingBoard' | 'meetingSign'> = (site) => {
   const built = buildMeetingRoom(site.group, site.colliders, site.interactables, site.desks, site.doors);
   return { handle: { meetingBoard: built.board, meetingSign: built.sign } };

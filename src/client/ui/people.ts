@@ -9,7 +9,7 @@ let peopleKey = '';
 /** The people list in the sidebar. Click yourself to change your character, or anyone else to walk over to them. */
 export function renderPeople(voice: Voice, onEditProfile: () => void, onWalkTo: (id: string) => void, force = true) {
   const peers = [...store.peers.values()].sort((a, b) => (a.id === store.you ? -1 : b.id === store.you ? 1 : a.name.localeCompare(b.name)));
-  // What each of them is up to changes as they walk about (into the meeting room, up the stairs).
+  // What each of them is up to changes as they walk about (into the meeting room).
   const doing = peers.map((p) => (p.id === store.you ? undefined : whereabouts(p)));
   const key = peers.map((p, i) => `${p.id}|${doing[i] ?? ''}`).join('\n');
   if (!force && key === peopleKey) return;

@@ -11,7 +11,7 @@ export interface Collider {
   minZ: number;
   maxZ: number;
   top: number;
-  /** Underside, for things you walk beneath (the loft). Defaults to the floor. */
+  /** Underside, for things you walk beneath (the meeting room's roof). Defaults to the floor. */
   bottom?: number;
   /** Only there to keep people out: its top isn't anything to land on, so confetti falls through it. */
   fence?: boolean;
@@ -38,7 +38,7 @@ export interface Interactable {
   kind: InteractKind;
   x: number;
   z: number;
-  /** The floor it's on, when that's not the office floor (the loft's). */
+  /** The floor it's on, when that's not the office floor. */
   y?: number;
   radius: number;
   deskId?: string;

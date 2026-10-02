@@ -14,11 +14,10 @@ import { walls, type Door } from './shell';
 import { wing } from './wing';
 import { beanbags, desks, kiosks } from './seats';
 import { meetingRoom } from './meeting-room';
-import { loft } from './loft';
 import type { Fixture, Gives, Site } from './fixture';
 
 // The office floor, put together from its fixtures (see fixture.ts): the room and its walls, the desks
-// and everything else in it, the loft and the meeting room under it, and the back office.
+// and everything else in it, the meeting room, and the back office.
 
 /**
  * The office floor's fixtures, in the order they're built: which is the order everything in the floor
@@ -42,7 +41,6 @@ function floorPlan() {
     lamps,
     wing,
     signs,
-    loft,
     meetingRoom,
     elevator,
     gong,

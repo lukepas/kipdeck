@@ -18,7 +18,7 @@ export function arrivalSpot(at: unknown): Spot | undefined {
   if (!at || typeof at !== 'object') return undefined;
   const a = at as Record<string, unknown>;
   const clamp = (v: unknown, lo: number, hi: number) => Math.min(hi, Math.max(lo, num(v)));
-  // On the floor, or up on something standing on it (a desk, the loft).
+  // On the floor, or up on something standing on it (a desk).
   return { x: clamp(a.x, -60, 60), y: clamp(a.y, 0, 10), z: clamp(a.z, -60, 60), rotY: num(a.rotY) };
 }
 /** The spot someone coming back in says they were standing in (see Net.connect), if they say. */

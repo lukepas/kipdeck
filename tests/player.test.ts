@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { PlayerController } from '../src/client/player/index.js';
 import type { Collider } from '../src/client/world/types.js';
-import { FLOOR, LOFT, SEATING_BY_ID, SLAB, STAIRS, seatAt, seatPlace } from '../src/shared/layout.js';
+import { FLOOR, SEATING_BY_ID, SLAB, seatAt, seatPlace } from '../src/shared/layout.js';
 
 /** The office floor, over the floor below. */
 const officeFloor: Collider = { ...FLOOR, bottom: -SLAB, top: 0 };
@@ -37,7 +37,7 @@ function controller(t: TestContext, colliders: Collider[]) {
 
 const desk: Collider = { minX: -1.05, maxX: 1.05, minZ: -0.53, maxZ: 0.53, top: 0.78 };
 
-test('can walk away from a loft post overlapping the randomized spawn area', (t) => {
+test('can walk away from a post overlapping the randomized spawn area', (t) => {
   const post: Collider = { minX: 9.01, maxX: 9.29, minZ: 8.01, maxZ: 8.29, top: 2.75 };
   const { player, keys, frames } = controller(t, [post]);
   player.pos.set(9.15, 0, 7.98);
@@ -80,12 +80,14 @@ test('escaping one collider cannot move deeper into an adjacent collider', (t) =
   assert.ok(player.pos.z <= 0.6 + 1e-6, 'must not tunnel into the wall to escape the desk');
 });
 
-test('walks up and down the office stairs without jumping', (t) => {
-  const colliders: Collider[] = Array.from({ length: STAIRS.steps }, (_, i) => ({
-    minX: STAIRS.fromX + i * 0.4, maxX: STAIRS.fromX + (i + 1) * 0.4,
-    minZ: STAIRS.minZ, maxZ: STAIRS.maxZ, top: (i + 1) * 0.2,
+test('walks up and down a flight of stairs without jumping', (t) => {
+  // Fifteen steps east along a wall, up to a landing 3 m up.
+  const stairs = { fromX: 3, minZ: 11.2, maxZ: 13, steps: 15 };
+  const colliders: Collider[] = Array.from({ length: stairs.steps }, (_, i) => ({
+    minX: stairs.fromX + i * 0.4, maxX: stairs.fromX + (i + 1) * 0.4,
+    minZ: stairs.minZ, maxZ: stairs.maxZ, top: (i + 1) * 0.2,
   }));
-  colliders.push({ minX: LOFT.minX, maxX: LOFT.maxX, minZ: LOFT.minZ, maxZ: LOFT.maxZ, bottom: 2.75, top: 3 });
+  colliders.push({ minX: 9, maxX: 18, minZ: 8, maxZ: 13, bottom: 2.75, top: 3 });
   const { player, keys, frames } = controller(t, colliders);
   player.pos.set(2.6, 0, 12);
   keys('KeyD', 'ShiftLeft');
@@ -98,7 +100,7 @@ test('walks up and down the office stairs without jumping', (t) => {
   assert.equal(player.pos.y, 0);
 });
 
-test('can walk beneath the loft and land on a desk after jumping', (t) => {
+test('can walk beneath a raised floor and land on a desk after jumping', (t) => {
   const slab: Collider = { minX: 3, maxX: 6, minZ: -2, maxZ: 2, bottom: 2.75, top: 3 };
   const { player, keys, frames } = controller(t, [desk, slab]);
   player.pos.set(4, 0, 0);
@@ -157,20 +159,6 @@ test('sits on the lounge couch until you walk off, then gets up clear of it', (t
   assert.equal(player.pos.y, 0);
 });
 
-test("gets up from the boss's chair behind it, away from the desk", (t) => {
-  const floor: Collider = { minX: LOFT.minX, maxX: LOFT.maxX, minZ: LOFT.minZ, maxZ: LOFT.maxZ, bottom: 2.75, top: 3 };
-  const desk: Collider = { minX: 12.7, maxX: 15.3, minZ: 9.6, maxZ: 10.8, bottom: 3, top: 3.8 };
-  const { player, keys, frames } = controller(t, [floor, desk]);
-  player.sit(seatPlace(SEATING_BY_ID.get('boss-chair')!, 0));
-  keys('Space');
-  frames(1);
-  assert.equal(player.seat, null);
-  assert.ok(player.pos.z > 11.9, `got up into the desk at ${player.pos.toArray()}`);
-  keys();
-  frames(60);
-  assert.equal(player.pos.y, 3);
-});
-
 test('gets up off a beanbag to the side when something stands in front of it', (t) => {
   const bag = SEATING_BY_ID.get('lounge-beanbag-1')!;
   const bean: Collider = { minX: bag.x - 0.5, maxX: bag.x + 0.5, minZ: bag.z - 0.5, maxZ: bag.z + 0.5, top: 0.42 };
@@ -186,6 +174,6 @@ test('gets up off a beanbag to the side when something stands in front of it', (
 
 test('seat places are only the ones the office has', () => {
   assert.equal(seatAt('couch:2')?.seatId, 'couch');
-  assert.equal(seatAt('loft-couch:1')?.y, LOFT.y);
+  assert.equal(seatAt('lounge-beanbag-1:0')?.seatId, 'lounge-beanbag-1');
   for (const bad of ['couch:3', 'couch:', 'couch', 'sofa:0', 'couch:-1', 'couch:1.5', '']) assert.equal(seatAt(bad), undefined, bad);
 });

@@ -1,6 +1,6 @@
 import type * as THREE from 'three';
 import type { FloorPalette } from '../../shared/floors';
-import { LOFT, WALL_HEIGHT, FLOOR, type DeskDef } from '../../shared/layout';
+import { WALL_HEIGHT, FLOOR, MEETING_ROOM, type DeskDef } from '../../shared/layout';
 import type { BoardKey } from '../../shared/plan';
 import { officeNav, wayIn, type NavGrid, type Pt } from '../../shared/nav';
 import type { Area } from './confetti';
@@ -45,10 +45,10 @@ export interface World {
   update(t: number, dt: number, people: Iterable<{ x: number; y: number; z: number }>): void;
 }
 
-/** Where confetti rains from over (x, z) downstairs in the office: the ceiling, or under the loft, the underside of its floor. */
+/** Where confetti rains from over (x, z) in the office: the meeting room's roof, or the ceiling. */
 function ceilingOver(x: number, z: number): number {
-  const loft = x > LOFT.minX && x < LOFT.maxX && z > LOFT.minZ && z < LOFT.maxZ;
-  return loft ? LOFT.y - 0.35 : WALL_HEIGHT - 0.1;
+  const inMeeting = x > MEETING_ROOM.minX && x < MEETING_ROOM.maxX && z > MEETING_ROOM.minZ && z < MEETING_ROOM.maxZ;
+  return inMeeting ? MEETING_ROOM.height - 0.1 : WALL_HEIGHT - 0.1;
 }
 
 /** The office as a world. `wing` is how many rows its back office is built out (see WING). */
@@ -71,7 +71,6 @@ export function officeWorld(office: Office, wing: () => number): World {
     },
     rain: [
       { area: FLOOR, top: ceilingOver },
-      { area: LOFT, top: () => LOFT.y + LOFT.height - 0.1 },
     ],
     setBeanbags: (out) => office.setBeanbags(out),
     setLook: (p) => office.setLook(p),

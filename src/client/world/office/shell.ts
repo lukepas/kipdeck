@@ -68,7 +68,7 @@ export function buildWalls(group: THREE.Group, colliders: Collider[], openings: 
     const at = (u: number, y: number) => (alongX ? new THREE.Vector3(u, y, w.at) : new THREE.Vector3(w.at, y, u));
     const piece = (u0: number, u1: number, y0: number, y1: number) => {
       if (u1 - u0 < 0.001 || y1 - y0 < 0.001) return;
-      // Up high the sun shines through, as it does through the ceiling and the loft's roof.
+      // Up high the light shines through, as it does through the ceiling.
       if (y0 < SHADE_HEIGHT && y1 > SHADE_HEIGHT) {
         piece(u0, u1, y0, SHADE_HEIGHT);
         piece(u0, u1, SHADE_HEIGHT, y1);

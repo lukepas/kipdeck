@@ -112,7 +112,7 @@ export class Confetti {
       const x = minX + Math.random() * (maxX - minX);
       const z = minZ + Math.random() * (maxZ - minZ);
       const y = r.from(x, z) - Math.random() * 0.3;
-      // Knowing roughly what's underneath already (the loft's floor, a stair) keeps it from falling through.
+      // Knowing roughly what's underneath already (the meeting room's roof, a desk) keeps it from falling through.
       const below = this.groundAt(x, z, y);
       const vel = new THREE.Vector3((Math.random() - 0.5) * 0.4, -0.2 - Math.random() * 0.6, (Math.random() - 0.5) * 0.4);
       // As long as it takes to come down, then a few seconds lying there.

@@ -282,39 +282,6 @@ export class Activities<Why extends string = string, E = unknown, El = unknown> 
   }
 }
 
-// ---- Your view -------------------------------------------------------------------------------------
-
-/**
- * What something you can do makes of your view while it's going on (the telescope). The office's own
- * ticks ask each effect, in the order they were added.
- */
-export interface ViewEffect {
-  /** The field of view (degrees) as this has it, given what it is so far. */
-  fov?(fov: number): number;
-  /** Runs each frame once the view's field of view is set. */
-  update?(): void;
-}
-
-/** How what you're doing changes you and your view each frame (see ViewEffect). */
-export class View {
-  private readonly effects = new List<ViewEffect>();
-
-  add(e: ViewEffect): Off {
-    return this.effects.add(e);
-  }
-
-  /** The field of view, from `fov` through every effect's, in order. */
-  fov(fov: number): number {
-    for (const e of this.effects.items) if (e.fov) fov = e.fov(fov);
-    return fov;
-  }
-
-  update(): void {
-    for (const e of this.effects.items) e.update?.();
-  }
-
-}
-
 // ---- Things you can use ---------------------------------------------------------------------------
 
 /** The types the office's interactions are about: what you use, its hint, the keys, and the note you're pointing at. */

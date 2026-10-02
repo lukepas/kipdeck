@@ -3,7 +3,7 @@
 // An office floor built out into the back office (see WING) has more of it to get round: the office's
 // helpers take how many rows it's built out (`wing`), and each level gets a grid of its own.
 
-import { BEANBAGS, BOOKSHELF, DESK_SIZE, ELEVATOR, ELEVATOR_FRONT, FLOOR, GONG, KIOSK, LOFT, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, STAIRS, STATIONS, WHITEBOARD, WING, builtDesks, plantsAt, wingLevel, wingMinZ, type DeskDef } from './layout.js';
+import { BEANBAGS, BOOKSHELF, DESK_SIZE, ELEVATOR, ELEVATOR_FRONT, FLOOR, GONG, KIOSK, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, STATIONS, WHITEBOARD, WING, builtDesks, plantsAt, wingLevel, wingMinZ, type DeskDef } from './layout.js';
 
 
 export type Pt = [number, number];
@@ -56,9 +56,7 @@ function obstacles(wing: number): Obstacles {
   rects.push([12.2, 13.8, -0.8, 0.8]); // coffee table
   circles.push([12.5, 3.5, 0.5], [14.5, -3.4, 0.5]); // beanbags
   for (const [x, z, s] of plantsAt(wing)) circles.push([x, z, 0.3 * s]);
-  // The loft's posts, the stairs up to it, and the elevator shaft.
-  for (const x of [LOFT.minX + 0.15, (LOFT.minX + LOFT.maxX) / 2]) circles.push([x, LOFT.minZ + 0.15, 0.14]);
-  rects.push([STAIRS.fromX, STAIRS.toX, STAIRS.minZ - 0.1, STAIRS.maxZ]);
+  // The elevator shaft.
   rects.push([ELEVATOR.x - ELEVATOR.width / 2, ELEVATOR.x + ELEVATOR.width / 2, FLOOR.minZ, ELEVATOR_FRONT]);
   // The gong's frame, as features/gong/world.ts puts it.
   rects.push([GONG.x - GONG.width / 2 - 0.12, GONG.x + GONG.width / 2 + 0.3, GONG.z - 0.3, GONG.z + 0.3]);
@@ -81,7 +79,7 @@ function obstacles(wing: number): Obstacles {
     const zs = corners.map(([, z]) => z);
     rects.push([Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs)]);
   }
-  // The meeting room under the loft: its glass walls, with the doorway in the north one, and the
+  // The meeting room: its glass walls, with the doorway in the north one, and the
   // table with its chairs, as world/office/meeting-room.ts puts them.
   const room = MEETING_ROOM;
   const G = 0.06;
@@ -271,7 +269,7 @@ export class NavGrid {
 /** How far it is along `pts`, corner to corner. */
 export const pathLength = (pts: Pt[]) => pts.reduce((n, p, i) => (i ? n + Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) : 0), 0);
 
-/** The office floor downstairs (no stairs, no loft, no elevator), built out `wing` rows, made the first time it's needed. */
+/** The office floor (no elevator), built out `wing` rows, made the first time it's needed. */
 const OFFICE_NAVS: NavGrid[] = [];
 export function officeNav(wing = 0): NavGrid {
   const level = wingLevel(wing);

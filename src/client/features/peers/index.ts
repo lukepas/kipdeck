@@ -91,7 +91,7 @@ export function installPeers(ctx: Ctx, parts: Pick<Parts, 'walking' | 'talk' | '
       let diff = at.rotY - r.person.root.rotation.y;
       diff = Math.atan2(Math.sin(diff), Math.cos(diff));
       r.person.root.rotation.y += diff * Math.min(1, dt * 12);
-      // On their feet if they're standing on something: the floor, a desk, a stair, the loft.
+      // On their feet if they're standing on something: the floor or a desk.
       const ground = groundAt(player.colliders, p.x, p.z, p.y);
       const airborne = !sat && p.y > ground + 0.05;
       const walking = !sat && p.moving && !airborne;

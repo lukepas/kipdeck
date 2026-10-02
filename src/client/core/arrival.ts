@@ -111,7 +111,7 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     const { travel } = parts;
     // Not a trip of yours: the floor you were on was taken off the building, and the elevator took you away.
     if (!core.trip) travel.takenAway();
-    // The card belongs to the board downstairs (or up): the office already put it back there.
+    // The card belongs to the other floor's board: the office already put it back there.
     const carrying = core.carrying;
     if (carrying) {
       toast(`📌 #${carrying.issue} stayed behind on the other floor's board`);

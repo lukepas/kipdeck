@@ -16,7 +16,7 @@ import type { Person } from '../world/character';
 import type { Confetti } from '../world/confetti';
 import type { Interactable, Office } from '../world/types';
 import type { World } from '../world/world';
-import type { Activities, Hooks, Interactions, Keys, Messages, Ticks, Usables, View } from './registry';
+import type { Activities, Hooks, Interactions, Keys, Messages, Ticks, Usables } from './registry';
 
 /** What the hint bar says. */
 export interface Hint {
@@ -100,8 +100,6 @@ export interface Ctx {
   readonly ticks: Ticks;
   readonly activities: Activities<StopWhy, KeyboardEvent, HTMLElement>;
   readonly interactions: Interactions<OfficeInteraction>;
-  /** What what you're doing makes of you and your view each frame (see ViewEffect). */
-  readonly view: View;
   /**
    * What else there is to use on the office's own map, and to aim at, that moves about rather than
    * being built into the floor (see usable and aimedAt in input/pointer.ts).

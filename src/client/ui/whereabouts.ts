@@ -1,4 +1,4 @@
-import { LOFT, MEETING_ROOM, SEATING_BY_ID, WING, inWing, seatAt } from '../../shared/layout';
+import { MEETING_ROOM, SEATING_BY_ID, WING, inWing, seatAt } from '../../shared/layout';
 import type { PeerInfo } from '../../shared/protocol';
 
 /**
@@ -15,11 +15,10 @@ export function whereabouts(p: PeerInfo): string | undefined {
   if (seat) {
     // "🛋️ Couch" -> "🛋️ on the couch".
     const [icon, ...name] = seat.label.split(' ');
-    return `${icon} ${seat.id === 'boss-chair' ? 'in' : 'on'} the ${name.join(' ').toLowerCase()}`;
+    return `${icon} on the ${name.join(' ').toLowerCase()}`;
   }
   // Through the north wall in the back office: nobody gets there unless the floor's built out.
   if (p.y > -1 && inWing(p.x, p.z, WING.rows)) return '🏗️ in the back office';
-  if (p.y > LOFT.y - 0.5 && p.x > LOFT.minX && p.z > LOFT.minZ) return "👔 in the boss's office";
   if (p.x > MEETING_ROOM.minX && p.z > MEETING_ROOM.minZ) return '🤝 in the meeting room';
   return undefined;
 }

@@ -9,7 +9,6 @@ import { EYE_HEIGHT } from '../player';
 import type { Ctx } from './context';
 import type { Parts } from './parts';
 import type { Frame } from './registry';
-import { FOV } from './scene';
 
 export interface LoopDeps {
   /** Offers the 2D view (/lite), where the 3D is hard going (see main.ts). */
@@ -54,14 +53,6 @@ export function installLoop(ctx: Ctx, parts: Pick<Parts, 'stage' | 'peers' | 'vi
     const firstPerson = player.view === 'first';
     // In first person you are the camera; in third, hide yourself when it's zoomed in right behind your head.
     me.root.visible = !firstPerson && camera.position.distanceTo(headPos.set(player.pos.x, player.pos.y + 1.3, player.pos.z)) > 1.5;
-    // What you're doing may change the field of view, and once it's set, take it over (the
-    // telescope): see ctx.view.
-    const fov = ctx.view.fov(FOV);
-    if (Math.abs(camera.fov - fov) > 0.05) {
-      camera.fov += (fov - camera.fov) * Math.min(1, dt * 8);
-      camera.updateProjectionMatrix();
-    }
-    ctx.view.update();
   }
 
   /** What you hear, from where you are, and your footsteps. */

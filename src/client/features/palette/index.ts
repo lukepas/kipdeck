@@ -22,7 +22,7 @@ import { IS_MAC } from '../../ui/termkeys';
 import { openWhiteboard } from '../whiteboard/ui';
 import type { InteractKind, Interactable } from '../../world/types';
 
-export type PaletteParts = Pick<Parts, 'walking' | 'waiting' | 'actions' | 'hud' | 'meeting' | 'telescope'>;
+export type PaletteParts = Pick<Parts, 'walking' | 'waiting' | 'actions' | 'hud' | 'meeting'>;
 
 /** Listens for Ctrl+K (⌘K) on the window. */
 export function installPalette(ctx: Ctx, parts: PaletteParts) {
@@ -154,7 +154,7 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
   window.addEventListener('keydown', (e) => {
     if (!isPaletteKey(e, IS_MAC)) return;
     const inPalette = paletteOpen() && !!(e.target as HTMLElement | null)?.closest?.('.modal.palette');
-    if (!inPalette && (isTyping(e) || parts.telescope.active)) return;
+    if (!inPalette && isTyping(e)) return;
     e.preventDefault();
     if (!e.repeat) togglePalette(paletteEntries);
   });

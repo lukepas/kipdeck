@@ -52,7 +52,7 @@ export const whiteboardHandlers = {
 
 export const whiteboardHooks: FeatureHooks = {
   leaving(ctx, c, was) {
-    // The whiteboard downstairs stays downstairs.
+    // The whiteboard stays on its floor.
     const wasDrawing = drawers.has(c);
     drawers.delete(c);
     if (wasDrawing) return () => drawingChanged(ctx, was);

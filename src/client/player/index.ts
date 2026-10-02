@@ -7,7 +7,7 @@ import { PlayerInput, isTyping } from './pointer';
 import { HEIGHT, STEP, blockerAt, ceilingAt, groundAt, stepTo } from './collide';
 import { EYE_HEIGHT, aimCamera } from './camera';
 
-// You: walking, running, jumping and sitting, bumping into things and climbing stairs, and the camera
+// You: walking, running, jumping and sitting, bumping into things and stepping up and down, and the camera
 // that follows. The keys and the mouse are PlayerInput's (pointer.ts).
 
 const WALK = 4.6;
@@ -30,7 +30,7 @@ export class PlayerController extends PlayerInput {
   /** Walk cycle phase, shared by the camera bob and the first-person hands. */
   walkPhase = 0;
   private bob = 0;
-  /** Eased out after a step up or down, so the camera glides up stairs instead of popping. */
+  /** Eased out after a step up or down, so the camera glides instead of popping. */
   stepOffset = 0;
   /** Nothing to stand on is lower than the floor. */
   readonly lowest = 0;

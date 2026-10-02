@@ -15,7 +15,7 @@ import { store } from '../state';
 import { modalOpen, toast } from '../ui/dom';
 import type { Interactable } from '../world/types';
 
-export type PointerParts = Pick<Parts, 'place' | 'you' | 'boards' | 'cards' | 'seating' | 'emotes' | 'telescope' | 'hintbar'>;
+export type PointerParts = Pick<Parts, 'place' | 'you' | 'boards' | 'cards' | 'seating' | 'emotes' | 'hintbar'>;
 
 /** Listens for the mouse over the canvas, registers the aim tick ('aim'), and takes the player's clicks. */
 export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
@@ -34,7 +34,7 @@ export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
     for (const list of usable()) {
       for (const it of list) {
         if (it.off) continue;
-        // Up on the loft, or down underneath it.
+        // Up on something, or down underneath it.
         if (Math.abs((it.y ?? 0) - player.pos.y) > 1.5) continue;
         const d = Math.hypot(it.x - player.pos.x, it.z - player.pos.z);
         if (d < it.radius && d < bestD) {
@@ -112,7 +112,7 @@ export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
     const { seating } = parts;
     const firstPerson = player.view === 'first';
     aimedNote = null;
-    if (modalOpen() || parts.telescope.active || ctx.activities.busy()) target = null;
+    if (modalOpen() || ctx.activities.busy()) target = null;
     else if (firstPerson) {
       const aim = aimedAt(CROSSHAIR);
       target = aim?.near ? aim.it : seating.mySeat();
@@ -152,8 +152,6 @@ export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
   return {
     /** What you're pointing at (first person) or standing at (third), if anything. */
     target: () => target,
-    /** Lets go of what you were pointing at (looking through the telescope, say). */
-    clearTarget: () => void (target = null),
     aimedNote: () => aimedNote,
     usable,
     use,

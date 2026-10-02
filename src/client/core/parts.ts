@@ -21,7 +21,6 @@ import type { installHud } from '../features/hud';
 import type { installMeeting } from '../features/meeting';
 import type { installPeers } from '../features/peers';
 import type { installSeating } from '../features/seating';
-import type { installTelescope } from '../features/telescope';
 import type { installTv } from '../features/tv';
 import type { installVoice } from '../features/voice';
 import type { installWaiting } from '../features/waiting';
@@ -72,7 +71,6 @@ export interface Parts {
   // ---- Features ------------------------------------------------------------------------------------
   boards: Made<typeof installBoards>;
   tv: Made<typeof installTv>;
-  telescope: Made<typeof installTelescope>;
   peers: Made<typeof installPeers>;
   walking: Made<typeof installWalking>;
   views: Made<typeof installWorkerViews>;

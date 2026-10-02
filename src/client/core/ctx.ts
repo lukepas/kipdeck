@@ -8,7 +8,7 @@ import { store } from '../state';
 import type { Interactable } from '../world/types';
 import type { Ctx, OfficeInteraction, StopWhy, Trip } from './context';
 import type { Parts } from './parts';
-import { Activities, Hooks, Interactions, Keys, Messages, Ticks, Usables, View } from './registry';
+import { Activities, Hooks, Interactions, Keys, Messages, Ticks, Usables } from './registry';
 
 /** What you can be in the middle of, in the order it gets keys, has the hint bar and stops in (see Activities). */
 const ACTIVITY_ORDER: string[] = [];
@@ -90,7 +90,6 @@ export function createCtx(parts: Parts): { ctx: Ctx; core: CoreState } {
     ticks: new Ticks(),
     activities: new Activities<StopWhy, KeyboardEvent, HTMLElement>(ACTIVITY_ORDER),
     interactions: new Interactions<OfficeInteraction>(),
-    view: new View(),
     usables: new Usables<Interactable, THREE.Object3D>(),
     windowOpened: new Hooks(),
   };

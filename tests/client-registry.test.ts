@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
-import { Activities, Hooks, Interactions, Keys, Messages, TICK_PHASES, Ticks, Usables, View, type KeyPress } from '../src/client/core/registry.js';
+import { Activities, Hooks, Interactions, Keys, Messages, TICK_PHASES, Ticks, Usables, type KeyPress } from '../src/client/core/registry.js';
 
 type Msg = { t: 'hello'; n: number } | { t: 'bye' };
 
@@ -228,28 +228,6 @@ test('an activity taken out is gone from the order', () => {
     acts.all().map((a) => a.id),
     ['b'],
   );
-});
-
-test('view effects: the field of view through each in order, updates', () => {
-  const view = new View();
-  const log: string[] = [];
-  let narrow = false;
-  view.add({ fov: (f) => (narrow ? 24 : f), update: () => log.push('first') });
-  view.add({ fov: (f) => f + 0.5 * 16, update: () => log.push('second') });
-  // Through each effect in the order they were added: the second widens what the first narrowed.
-  assert.equal(view.fov(55), 55 + 8);
-  narrow = true;
-  assert.equal(view.fov(55), 24 + 8);
-  view.update();
-  assert.deepEqual(log, ['first', 'second']);
-});
-
-test('an effect taken out stops having a say', () => {
-  const view = new View();
-  const off = view.add({ fov: (f) => f * 2 });
-  assert.equal(view.fov(10), 20);
-  off();
-  assert.equal(view.fov(10), 10);
 });
 
 test('hooks run in the order they were added, and one taken out stops running', () => {
