@@ -37,6 +37,7 @@ export function readBytes(req: http.IncomingMessage, limit: number): Promise<Buf
 
 export function send(res: http.ServerResponse, status: number, body: unknown, headers: Record<string, string> = {}) {
   const json = JSON.stringify(body);
-  res.writeHead(status, { 'content-type': 'application/json', 'cache-control': 'no-store', ...headers });
+  // Never shown in a frame, or read as anything but JSON: a framed page redirected here gets nothing to run.
+  res.writeHead(status, { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', ...headers });
   res.end(json);
 }

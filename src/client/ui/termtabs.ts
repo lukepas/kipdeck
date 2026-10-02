@@ -3,6 +3,7 @@
 // anyone else, and they're kept per worker until the page reloads.
 import './termtabs.css';
 import { clip, h, toast } from './dom';
+import { WEB_TAB_SANDBOX, webTabUrl } from '../../shared/webtabs';
 
 /** A web page pinned open beside a worker's terminal. */
 interface WebTab {
@@ -13,12 +14,6 @@ interface WebTab {
 
 /** Web tabs survive closing and reopening a worker's terminal, until the page reloads. */
 const tabsByWorker = new Map<string, WebTab[]>();
-
-/**
- * What a pinned page may do in its frame: run, sign in, send forms and open links in a new tab,
- * but never navigate the office's own tab away, or reach camera, mic or clipboard.
- */
-const SANDBOX = 'allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox';
 
 export interface TermTabsOptions {
   /** The terminal's own area and keypad, hidden while a web page shows. */
@@ -94,7 +89,7 @@ export function termTabs(workerId: string, opts: TermTabsOptions): { bar: HTMLEl
     else render();
   };
   const frameFor = (t: WebTab) => {
-    const frame = h('iframe.term-webframe.hidden', { src: t.url, title: t.title, loading: 'lazy', referrerpolicy: 'no-referrer', sandbox: SANDBOX }) as HTMLIFrameElement;
+    const frame = h('iframe.term-webframe.hidden', { src: t.url, title: t.title, loading: 'lazy', referrerpolicy: 'no-referrer', sandbox: WEB_TAB_SANDBOX }) as HTMLIFrameElement;
     frames.set(t.id, frame);
     pages.append(frame);
   };
@@ -113,16 +108,9 @@ export function termTabs(workerId: string, opts: TermTabsOptions): { bar: HTMLEl
   cancelBtn.addEventListener('click', closeForm);
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    let parsed: URL;
-    try {
-      parsed = new URL(tabUrl.value.trim());
-    } catch {
-      toast('That doesn’t look like a web address', 'warn');
-      return;
-    }
-    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return toast('Only http:// and https:// addresses can open in a tab', 'warn');
-    // The office itself would run in the frame signed in as you, with nothing between it and this page.
-    if (parsed.origin === location.origin) return toast("The office's own pages can't open in a tab", 'warn');
+    // https only, and never the office's own pages (see shared/webtabs.ts).
+    const parsed = webTabUrl(tabUrl.value, location.origin);
+    if (typeof parsed === 'string') return toast(parsed, 'warn');
     const tab: WebTab = { id: `web-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, title: tabName.value.trim() || parsed.hostname.replace(/^www\./, ''), url: parsed.toString() };
     tabs.push(tab);
     frameFor(tab);
