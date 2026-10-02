@@ -145,6 +145,8 @@ export interface ModelField {
   max?: number;
   /** The line under the fields. */
   hint: string;
+  /** How to write an id that the hint says and the dialog has no field for (Cursor's effort in brackets): said even when its list can't be had. */
+  syntax?: string;
   /** What a typed id it turns down says. */
   invalid?: string;
 }
@@ -181,6 +183,18 @@ export interface ProviderMeta {
     /** The note under the provider picker. */
     note: string;
   };
+}
+
+/**
+ * The line under the hire dialog's model field: its own hint, or while its catalogue loads or after
+ * it couldn't be had, saying so (and still how to write an id the dialog has no field for).
+ */
+export function modelHint(m: Pick<ProviderMeta, 'label' | 'models'>, catalogue?: { request?: unknown; failed?: boolean }): string {
+  const field = m.models;
+  if (!field) return '';
+  if (field.catalog && catalogue?.request) return `Loading ${m.label} models…`;
+  if (field.catalog && catalogue?.failed) return [`${m.label}’s models couldn’t be listed: leave it empty for its default, or type a model id.`, field.syntax].filter(Boolean).join(' ');
+  return field.hint;
 }
 
 export const PROVIDER_META: Record<AgentProvider, ProviderMeta> = {
@@ -315,7 +329,8 @@ export const PROVIDER_META: Record<AgentProvider, ProviderMeta> = {
       catalog: true,
       unset: 'Default (Cursor settings)',
       max: CURSOR_MODEL_MAX,
-      hint: 'Optional model id; suggestions come from `cursor-agent models` once Cursor is signed in on the office machine. An effort goes in brackets after it: model[effort=high].',
+      hint: 'Optional model id; suggestions come from cursor-agent models once Cursor is signed in on the office machine. An effort goes in brackets after it: model[effort=high].',
+      syntax: 'An effort goes in brackets after it: model[effort=high].',
       invalid: 'Use a Cursor model id: letters, digits and . _ -, with any overrides in brackets, like model[effort=high] (up to 128 characters).',
     },
     usage: { note: 'Cursor uses the Cursor CLI login on the office machine. Usage and cost stay in its terminal and your Cursor account; the office does not meter them.' },

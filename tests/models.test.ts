@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { isValidGrokModel, isValidMuseModel, isValidOpenCodeModel } from '../src/shared/providers.js';
 import { MODEL_LISTERS, createModelCatalogue, fetchCodexModels, fetchCursorModels, fetchGrokModels, fetchOpenCodeModels, type ModelCommandRunner } from '../src/server/models.js';
-import { AGENT_PROVIDERS, PROVIDER_META } from '../src/shared/providers.js';
+import { AGENT_PROVIDERS, PROVIDER_META, modelHint } from '../src/shared/providers.js';
 
 test('OpenCode model ids require provider/model and reject whitespace or control characters', () => {
   assert.equal(isValidOpenCodeModel('openai/gpt-5'), true);
@@ -248,4 +248,23 @@ test('OpenCode catalogue errors do not expose command output', async () => {
   await assert.rejects(createModelCatalogue(() => fetchOpenCodeModels('opencode', '/project', runner)).get(), (error: unknown) => {
     return error instanceof Error && /unavailable/i.test(error.message) && !error.message.includes('secret-token');
   });
+});
+
+test("the hire dialog's model hints are plain text, and Cursor's effort syntax stays when its list can't be had", () => {
+  // Hints go in with textContent: markdown backticks would show as they are.
+  for (const p of AGENT_PROVIDERS) {
+    const m = PROVIDER_META[p];
+    for (const text of [m.models?.hint, m.models?.syntax, m.unpicked]) assert.doesNotMatch(text ?? '', /`/, p);
+  }
+  const cursor = PROVIDER_META.cursor;
+  assert.equal(modelHint(cursor), cursor.models!.hint);
+  assert.equal(modelHint(cursor, { request: {} }), 'Loading Cursor models…');
+  // Not signed in yet (a common first run): it says so, and still how an effort goes in, since Cursor has no Effort field.
+  assert.equal(cursor.takesEffort, undefined);
+  const failed = modelHint(cursor, { failed: true });
+  assert.match(failed, /couldn’t be listed/);
+  assert.match(failed, /model\[effort=high\]/);
+  // One with an Effort field of its own needs nothing more.
+  assert.doesNotMatch(modelHint(PROVIDER_META.opencode, { failed: true }), /\[effort/);
+  assert.equal(modelHint(PROVIDER_META.custom), '');
 });

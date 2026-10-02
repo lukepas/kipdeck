@@ -1,7 +1,7 @@
 import './provider.css';
 import type { AgentChoice, AgentEffort, AgentProvider, ProjectInfo, Usage, WorkerInfo } from '../../shared/protocol';
 import { AGENT_EFFORTS, isAgentEffort } from '../../shared/protocol';
-import { AGENT_PROVIDERS, CLAUDE_MODEL_NAMES, PROVIDER_META, claudeModelName, isAgentProvider, isClaudeModel, takesEffort, type ModelOption } from '../../shared/providers';
+import { AGENT_PROVIDERS, CLAUDE_MODEL_NAMES, PROVIDER_META, claudeModelName, isAgentProvider, isClaudeModel, modelHint, takesEffort, type ModelOption } from '../../shared/providers';
 import { store } from '../state';
 import { h } from './dom';
 
@@ -223,10 +223,7 @@ export function agentFields(project: ProjectInfo | null, id: string, initial: Ag
     effortLabel.classList.toggle('hidden', !m.takesEffort);
     effortSelect.classList.toggle('hidden', !m.takesEffort);
     effortSelect.setAttribute('aria-label', m.effortLabel ? `${m.label} ${m.effortLabel.toLowerCase()} level` : `${m.label} reasoning effort`);
-    if (!field) hint.textContent = m.unpicked ?? '';
-    else if (field.catalog && catalogue?.request) hint.textContent = `Loading ${m.label} models…`;
-    else if (field.catalog && catalogue?.failed) hint.textContent = `${m.label}’s models couldn’t be listed: leave it empty for its default, or type a model id.`;
-    else hint.textContent = field.hint;
+    hint.textContent = field ? modelHint(m, catalogue) : (m.unpicked ?? '');
     fields.classList.toggle('hidden', !field && !m.takesEffort && !hint.textContent);
     paintEffort();
   };
