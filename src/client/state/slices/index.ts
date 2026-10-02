@@ -10,7 +10,6 @@
 import type { Slice } from '../store';
 import { building, floor, me, presence } from '../core';
 import { accounts } from './accounts';
-import { decor } from './decor';
 import { floorPlan } from './floor-plan';
 import { leaveOnMerge } from './leave-on-merge';
 import { machine } from './machine';
@@ -36,7 +35,6 @@ export const SLICES: readonly Slice[] = [
   leaveOnMerge,
   floor,
   meeting,
-  decor,
   floorPlan,
   services,
   whiteboard,

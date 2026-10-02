@@ -3,7 +3,6 @@
 import type { ClientMsg } from '../../../shared/protocol.js';
 import { accountsHandlers } from './accounts.js';
 import { changesHandlers, changesHooks } from './changes.js';
-import { decorHandlers, decorView } from './decor.js';
 import { floorHandlers, projectView } from './floors.js';
 import { githubHandlers, issuesView, pullsView } from './github.js';
 import { meetingHandlers, meetingView } from './meetings.js';
@@ -23,7 +22,6 @@ import type { FeatureHooks, HandlerMap, ViewPieces } from './types.js';
 export const handlers: HandlerMap<ClientMsg> = {
   ...accountsHandlers,
   ...changesHandlers,
-  ...decorHandlers,
   ...floorHandlers,
   ...githubHandlers,
   ...meetingHandlers,
@@ -52,7 +50,6 @@ export const views: ViewPieces = {
   issues: issuesView,
   pulls: pullsView,
   queue: queueView,
-  decor: decorView,
   plan: planView,
   services: servicesView,
   whiteboard: whiteboardView,

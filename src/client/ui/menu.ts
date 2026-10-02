@@ -51,7 +51,7 @@ export function panelHide(id: HudPanel): HTMLElement {
 }
 
 export interface Hud {
-  /** Redraws the top bar for a change the store doesn't announce (voice, hanging a picture). */
+  /** Redraws the top bar for a change the store doesn't announce (voice). */
   refresh(): void;
   toggleMenu(): void;
 }

@@ -103,8 +103,8 @@ export interface Ctx {
   /** What what you're doing makes of you and your view each frame (see ViewEffect). */
   readonly view: View;
   /**
-   * What else there is to use on the office's own map, and to aim at: the pictures on the walls, the
-   * dog (see usable and aimedAt in input/pointer.ts).
+   * What else there is to use on the office's own map, and to aim at, that moves about rather than
+   * being built into the floor (see usable and aimedAt in input/pointer.ts).
    */
   readonly usables: Usables<Interactable, THREE.Object3D>;
   /** What lets go when a window opens: the emote wheel (see input/focus.ts). */

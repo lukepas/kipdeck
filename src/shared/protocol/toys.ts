@@ -1,14 +1,6 @@
-// The toys on every floor: pictures and the whiteboard.
+// The whiteboard on every floor.
 
-import type { DecorPlacement, Decoration } from '../decor.js';
 import type { WbElement, WbPointer } from '../whiteboard.js';
-
-export type DecorClientMsg =
-  /** Hang a picture on a wall. */
-  | { t: 'decor.add'; decor: DecorPlacement }
-  /** Move, resize, re-frame or swap the image of a picture. */
-  | { t: 'decor.update'; id: string; decor: Partial<DecorPlacement> }
-  | { t: 'decor.remove'; id: string };
 
 export type WhiteboardClientMsg =
   /** You opened the whiteboard (or closed it): everyone on the floor sees who's drawing. */
@@ -20,7 +12,6 @@ export type WhiteboardClientMsg =
   | ({ t: 'wb.pointer'; selected?: string[] } & WbPointer);
 
 export type ToysServerMsg =
-  | { t: 'decor'; items: Decoration[] }
   /** Someone changed these elements on the floor's whiteboard (sent to everyone else on the floor). */
   | { t: 'wb.update'; elements: WbElement[] }
   /** Who has the floor's whiteboard open now. */

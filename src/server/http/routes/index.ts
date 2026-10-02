@@ -28,7 +28,6 @@ export const routes: readonly Route[] = [
   authRoutes.whoami,
   agentRoutes.openCodeModels,
   agentRoutes.grokModels,
-  fileRoutes.image,
   fileRoutes.whiteboardFile,
   fileRoutes.termDrop,
   fileRoutes.changedFile,

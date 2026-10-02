@@ -1,6 +1,5 @@
 import type * as THREE from 'three';
 import type { DeskDef } from '../../shared/layout';
-import type { WallRect } from '../../shared/decor';
 import type { FloorPalette } from '../../shared/floors';
 
 // The world's shared types: what you bump into and what you can use, the seats workers sit in, and the
@@ -43,7 +42,6 @@ export interface Interactable {
   y?: number;
   radius: number;
   deskId?: string;
-  decorId?: string;
   seatId?: string;
   /** Put away for now (a bean bag nobody needs yet): can't be used. */
   off?: boolean;
@@ -87,8 +85,6 @@ export interface Office extends OfficeHandles {
   interactables: Interactable[];
   /** Every seat by id: the desks, the bean bags and the board agents' kiosks. */
   desks: Map<string, DeskView>;
-  /** What's already on the walls (boards, the TV, windows…), so pictures don't hang over it (see Site.wall). */
-  fixtures(): WallRect[];
   /** Paints the walls, their trim and the floor in a floor's colors, so each project looks like itself. */
   setLook(p: FloorPalette): void;
   /** Animates the office; doors open for anyone in `people` who comes up to them. */

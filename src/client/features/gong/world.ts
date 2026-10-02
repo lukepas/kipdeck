@@ -146,8 +146,7 @@ declare module '../../world/types' {
 }
 
 /** The gong, just past the elevator from the PR board. */
-export const gong: Fixture<'gong'> = (site) => {
+export const gong: Fixture<'gong'> = () => {
   const built = buildGong();
-  site.wall('north', GONG.x, (GONG.height + 0.3) / 2, GONG.width + 1.2, GONG.height + 0.3);
   return { group: built.group, colliders: built.colliders, interactables: [built.interactable], update: (_t, dt) => built.update(dt), handle: { gong: built } };
 };

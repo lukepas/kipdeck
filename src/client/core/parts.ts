@@ -17,7 +17,6 @@ import type { installBoards } from '../features/boards';
 import type { installBookshelf } from '../features/bookshelf';
 import type { installCarrying } from '../features/carrying';
 import type { installEmotes } from '../features/emotes';
-import type { installGallery, installHanging } from '../features/hanging';
 import type { installHud } from '../features/hud';
 import type { installMeeting } from '../features/meeting';
 import type { installPeers } from '../features/peers';
@@ -72,10 +71,8 @@ export interface Parts {
 
   // ---- Features ------------------------------------------------------------------------------------
   boards: Made<typeof installBoards>;
-  gallery: Made<typeof installGallery>;
   tv: Made<typeof installTv>;
   telescope: Made<typeof installTelescope>;
-  hanging: Made<typeof installHanging>;
   peers: Made<typeof installPeers>;
   walking: Made<typeof installWalking>;
   views: Made<typeof installWorkerViews>;

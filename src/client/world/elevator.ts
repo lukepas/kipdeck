@@ -217,9 +217,8 @@ declare module './types' {
 }
 
 /** The elevator to the other floors, against the north wall between the PR board and the gong. */
-export const elevator: Fixture<'elevator' | 'setProjectName'> = (site) => {
+export const elevator: Fixture<'elevator' | 'setProjectName'> = () => {
   const built = buildElevator();
-  site.wall('north', ELEVATOR.x, WALL_HEIGHT / 2, ELEVATOR.width + 0.1, WALL_HEIGHT);
   return {
     group: built.group,
     colliders: built.colliders,

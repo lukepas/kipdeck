@@ -231,7 +231,6 @@ declare module '../types' {
 /** The back office through the north wall past the gong, walled up until the floor's built out. */
 export const wing: Fixture<'wing' | 'setWing'> = (site) => {
   const built = buildWing(site.group, site.colliders, site.interactables, site.desks, site.looks, site.looks.trim, site.planks, site.get('stack').ceiling);
-  site.wall('north', (WING.minX + FLOOR.maxX) / 2, WALL_HEIGHT / 2, FLOOR.maxX - WING.minX, WALL_HEIGHT);
   const setWing = (level: number) => {
     built.set(level);
     for (const p of site.inTheWay) {

@@ -237,7 +237,8 @@ test('answers the signed-in routes', async () => {
   await bad(await get(`/api/docs/file?floor=${floor}`, me), 400, 'Bad request');
   await bad(await get(`/api/docs/other?floor=${floor}&path=x`, me), 404, 'Not found');
   assert.deepEqual(await (await fetch(base + '/api/whoami', { method: 'POST', headers: me })).json(), { ok: true, me: { admin: true } });
-  for (const [method, p] of [['GET', '/nothing-here.txt'], ['PUT', '/api/login'], ['POST', '/api/docs'], ['POST', '/api/search']]) {
+  // /api/image, the wall pictures' fetch-any-URL proxy, is gone with them.
+  for (const [method, p] of [['GET', '/nothing-here.txt'], ['GET', '/api/image?url=http%3A%2F%2F127.0.0.1%2F'], ['PUT', '/api/login'], ['POST', '/api/docs'], ['POST', '/api/search']]) {
     const missing = await fetch(base + p, { method, headers: me });
     assert.equal(missing.status, 404, `${method} ${p}`);
     assert.equal(await missing.text(), 'Not found');
@@ -267,7 +268,7 @@ test('welcomes a browser and dispatches what it sends', async () => {
   assert.equal(ada?.name, 'Ada');
   assert.equal(ada?.color, '#ff8a5b');
   assert.equal(ada?.floor, floor.id);
-  assert.deepEqual(Object.keys(welcome).slice(-11), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'decor', 'plan', 'services', 'whiteboard', 'meeting']);
+  assert.deepEqual(Object.keys(welcome).slice(-10), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'plan', 'services', 'whiteboard', 'meeting']);
 
   a.send({ t: 'ping', at: 42 });
   const pong = await a.take('pong');

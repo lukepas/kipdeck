@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import type { WallRect } from '../../../shared/decor';
 import type { FloorPalette } from '../../../shared/floors';
 import { toon, toonUnique } from '../toon';
 import { elevator } from '../elevator';
@@ -10,7 +9,7 @@ import { stack } from '../stack';
 import { signs } from '../desksigns';
 import type { Collider, DeskView, Interactable, Office, OfficeHandles } from '../types';
 import { PALETTE, floorTexture, paintPlanks, type Looks } from './materials';
-import { boards, clearOfStairs, lamps, lounge, machineMonitor, plants, rugs, tv } from './room';
+import { boards, lamps, lounge, machineMonitor, plants, rugs, tv } from './room';
 import { walls, type Door } from './shell';
 import { wing } from './wing';
 import { beanbags, desks, kiosks } from './seats';
@@ -48,7 +47,6 @@ function floorPlan() {
     elevator,
     gong,
     whiteboard,
-    clearOfStairs,
   ] as const;
 }
 
@@ -60,7 +58,6 @@ export function buildOffice(): Office {
   const group = new THREE.Group();
   const colliders: Collider[] = [];
   const interactables: Interactable[] = [];
-  const walls: WallRect[] = [];
   // What each floor paints its own way (see setLook): the walls, their trim, the planks.
   const looks: Looks = { wall: toonUnique(PALETTE.wall), trim: toonUnique(PALETTE.wallTrim), planks: [] };
   // The floor's planks, which the stack lays the floor with (and the back office its own).
@@ -75,7 +72,6 @@ export function buildOffice(): Office {
     group,
     colliders,
     interactables,
-    wall: (wall, u, y, w, h) => void walls.push({ wall, u0: u - w / 2, u1: u + w / 2, y0: y - h / 2, y1: y + h / 2 }),
     looks,
     planks,
     desks,
@@ -129,5 +125,5 @@ export function buildOffice(): Office {
     for (const u of updates) u(t, dt);
   };
 
-  return { ...(given as OfficeHandles), group, colliders, interactables, desks, fixtures: () => walls, setLook, update };
+  return { ...(given as OfficeHandles), group, colliders, interactables, desks, setLook, update };
 }

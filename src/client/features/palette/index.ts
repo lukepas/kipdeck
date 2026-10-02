@@ -22,7 +22,7 @@ import { IS_MAC } from '../../ui/termkeys';
 import { openWhiteboard } from '../whiteboard/ui';
 import type { InteractKind, Interactable } from '../../world/types';
 
-export type PaletteParts = Pick<Parts, 'walking' | 'waiting' | 'actions' | 'hud' | 'hanging' | 'meeting' | 'telescope'>;
+export type PaletteParts = Pick<Parts, 'walking' | 'waiting' | 'actions' | 'hud' | 'meeting' | 'telescope'>;
 
 /** Listens for Ctrl+K (⌘K) on the window. */
 export function installPalette(ctx: Ctx, parts: PaletteParts) {
@@ -65,7 +65,7 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
 
   /** Everything the palette finds, in the order it lists them before you type. */
   function paletteEntries(): PaletteEntry[] {
-    const { waiting, actions, meeting, hanging } = parts;
+    const { waiting, actions, meeting } = parts;
     const out: PaletteEntry[] = [];
     for (const w of store.workers.values()) {
       const desk = DESK_BY_ID.get(w.deskId);
@@ -97,7 +97,6 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
     out.push({ icon: '⚙️', kind: 'Action', title: 'Settings', keywords: ['preferences', 'options'], open: () => parts.hud.showSettings() });
     if (store.invites) out.push({ icon: '👥', kind: 'Action', title: 'Invite teammates', keywords: ['team', 'add people'], open: () => openTeam(net) });
     else if (store.me.admin) out.push({ icon: '👥', kind: 'Action', title: 'Invite people', detail: 'Accounts', keywords: ['invite teammates', 'accounts', 'team'], open: () => openAccounts(net) });
-    out.push({ icon: '🖼️', kind: 'Action', title: 'Hang a picture', detail: 'On a wall of this floor', keywords: ['decorate', 'frame', 'art'], open: hanging.startHanging });
     out.push({ icon: '🔎', kind: 'Action', title: 'Search the chat and every terminal', keywords: ['find'], open: showSearch });
 
     out.push(at('issues', 'the Issues board', { icon: '📌', kind: 'Board', title: 'Issues board', open: () => openBoard('issues', net, actions.boardActions()) }));

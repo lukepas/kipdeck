@@ -162,7 +162,6 @@ export const walls: Fixture = (site) => {
   const glazing = new THREE.Group();
   for (const o of WINDOWS) {
     glazing.add(windowIn(o));
-    site.wall(o.wall, o.u, (o.y0 + o.y1) / 2 - 0.03, o.width + 0.2, o.y1 - o.y0 + 0.12);
   }
   site.group.add(mergeByMaterial(glazing));
   return {};

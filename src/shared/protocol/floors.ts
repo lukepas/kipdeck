@@ -1,6 +1,5 @@
 // The building: its floors, going between them, and what each floor holds.
 
-import type { Decoration } from '../decor.js';
 import type { FloorPlan } from '../floorplan.js';
 import type { WhiteboardView } from '../whiteboard.js';
 import type { AgentProvider } from './agents.js';
@@ -98,8 +97,6 @@ export interface FloorView {
   issues: GhState<GhIssue>;
   pulls: GhState<GhPull>;
   queue: QueueState;
-  /** Pictures on this floor's walls. */
-  decor: Decoration[];
   /** The signs over this floor's desks, and how far its back office is built out. */
   plan: FloorPlan;
   services: ServicesState;

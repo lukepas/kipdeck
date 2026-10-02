@@ -1,5 +1,4 @@
 import type * as THREE from 'three';
-import type { WallId } from '../../../shared/decor';
 import type { Collider, DeskView, Interactable, OfficeHandles } from '../types';
 import type { Looks } from './materials';
 import type { Door } from './shell';
@@ -15,11 +14,6 @@ export interface Site {
   readonly group: THREE.Group;
   readonly colliders: Collider[];
   readonly interactables: Interactable[];
-  /**
-   * Marks a stretch of wall `w` wide and `h` high, centered `u` along it and `y` up, as taken (a board,
-   * a window, a door), so pictures don't hang over it (see Office.fixtures).
-   */
-  wall(wall: WallId, u: number, y: number, w: number, h: number): void;
   /** What each floor paints its own way (see Office.setLook). */
   readonly looks: Looks;
   /** The floor's planks, which the back office's floor is laid with too. */

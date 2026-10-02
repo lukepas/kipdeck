@@ -120,8 +120,7 @@ export function buildBookshelf(): BookshelfModel {
 }
 
 /** The bookshelf of the project's docs, on the south wall between the middle window and the balcony doors. */
-export const bookshelf: Fixture = (site) => {
+export const bookshelf: Fixture = () => {
   const built = buildBookshelf();
-  site.wall('south', BOOKSHELF.x, (BOOKSHELF.height + 0.55) / 2, BOOKSHELF.width + 0.2, BOOKSHELF.height + 0.55);
   return { group: built.group, colliders: [built.collider], interactables: [built.interactable] };
 };

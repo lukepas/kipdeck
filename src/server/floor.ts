@@ -12,7 +12,6 @@ import { GitHub, MergeWatch } from './github.js';
 import type { GhAs } from './signins.js';
 import { TaskQueue } from './queue.js';
 import { Changes } from './changes.js';
-import { Decor } from './decor.js';
 import { FloorPlanStore } from './floorplan.js';
 import { Docs } from './docs.js';
 import { Whiteboard } from './whiteboard.js';
@@ -97,7 +96,7 @@ export function projectInfo(dir: string, name: string, agentCmd: string, agentAr
 
 /**
  * One floor of the building: a project's checkout with its own desks and workers, issues and PR
- * boards, task queue and pictures, all kept in that checkout's .agent-office folder.
+ * boards, and task queue, all kept in that checkout's .agent-office folder.
  */
 export class Floor {
   readonly id: string;
@@ -107,7 +106,6 @@ export class Floor {
   readonly github: GitHub;
   readonly queue: TaskQueue;
   readonly changes: Changes;
-  readonly decor: Decor;
   /** The signs over its desks, and how far its back office is built out. */
   readonly plan: FloorPlanStore;
   /** The whiteboard everyone on the floor draws on together. */
@@ -273,7 +271,6 @@ export class Floor {
       },
     );
 
-    this.decor = new Decor(dataDir);
     this.whiteboard = new Whiteboard(dataDir);
     this.ready = this.workers.start();
 

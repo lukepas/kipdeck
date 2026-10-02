@@ -1,4 +1,4 @@
-// Files a floor's windows show or take: pictures on the walls and the whiteboard, files dropped into
+// Files a floor's windows show or take: pictures on the whiteboard, files dropped into
 // a terminal, changed pictures in the Changes window, and the bookshelf's Markdown.
 import type { Floor } from '../../floor.js';
 import { WB_MAX_FILE_BYTES } from '../../../shared/whiteboard.js';
@@ -12,26 +12,6 @@ import type { Route } from '../router.js';
 export const floorParam = (ctx: Ctx, url: URL): Floor | undefined => ctx.floors.get(url.searchParams.get('floor') ?? '');
 
 export const fileRoutes = {
-  image: {
-    method: 'GET',
-    path: '/api/image',
-    auth: 'session',
-    async handle(ctx, { res, url }) {
-      // A picture on the wall, fetched by the office so the 3D view can draw it (see decor.ts).
-      const r = await ctx.images.get(url.searchParams.get('url') ?? '');
-      if ('error' in r) return send(res, r.status, { error: r.error });
-      res.writeHead(200, {
-        'content-type': r.type,
-        'content-length': String(r.body.length),
-        'cache-control': 'private, max-age=3600',
-        'x-content-type-options': 'nosniff',
-        // Opened on its own (an SVG, say), it still can't run anything on the office's origin.
-        'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
-        'cross-origin-resource-policy': 'same-origin',
-      });
-      res.end(r.body);
-    },
-  },
   whiteboardFile: {
     path: '/api/whiteboard/file',
     auth: 'session',

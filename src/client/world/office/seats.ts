@@ -290,8 +290,6 @@ export const kiosks: Fixture = (site) => {
     const it: Interactable = { kind: 'station', deskId: def.id, x: fx, z: fz, radius: 1.3 };
     site.interactables.push(it);
     view.group.userData.interact = it;
-    // The agent, its name tag and the card over its head, up against the wall.
-    site.wall('north', def.x, 1.45, 1.4, 2.9);
   }
   return {};
 };

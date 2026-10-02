@@ -12,7 +12,7 @@ export function installHintBar(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'po
 
   function renderHint() {
     const el = $('hint');
-    // Whatever you're in the middle of has the hint bar to itself: the picture you're hanging
+    // Whatever you're in the middle of has the hint bar to itself.
     const doing = modalOpen() ? undefined : ctx.activities.current((a) => !!a.hint);
     if (doing) return doing.hint!(el);
     const target = parts.pointer.target();

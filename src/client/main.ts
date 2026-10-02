@@ -31,7 +31,6 @@ import { installCarrying } from './features/carrying';
 import { installChat } from './features/chat';
 import { installEmotes } from './features/emotes';
 import { installGong } from './features/gong';
-import { installGallery, installHanging } from './features/hanging';
 import { installHud } from './features/hud';
 import { installMeeting } from './features/meeting';
 import { installPalette } from './features/palette';
@@ -75,7 +74,6 @@ parts.worlds = createWorlds(ctx);
 
 // ---- The install list ---------------------------------------------------------------------------
 parts.boards = installBoards(ctx, { aimedNote: () => parts.pointer.aimedNote(), pickUp: (it) => parts.cards.pickUp(it), boardActions: () => parts.actions.boardActions(), showQueue: () => parts.waiting.showQueue() });
-parts.gallery = installGallery(ctx);
 installWhiteboard(ctx);
 // Onto whatever you're walking on: the office's floor and furniture.
 parts.confetti = new Confetti((x, z, y) => groundAt(ctx.player.colliders, x, z, y, false));
@@ -101,7 +99,6 @@ parts.sound = makeSound(parts.settings);
 parts.notifier = new DesktopNotifier(() => parts.settings.notify, (id) => parts.waiting.openWorkerTerminal(id));
 const personOf = (id: string) => parts.peers.remotes.get(id)?.person;
 const reach = () => parts.you.reach();
-parts.hanging = installHanging(ctx, { gallery: parts.gallery, reach });
 
 parts.travel = installTravel(ctx, core, parts);
 parts.arrival = installArrival(ctx, core, parts);
@@ -192,8 +189,8 @@ void whoami().then(() => {
 });
 
 // Debug handle for quick checks from the console / headless screenshots.
-const { worlds, views, hanging, emotes } = parts;
-(window as any).__office = { world: () => worlds.world(), store, player: parts.player, camera: ctx.camera, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, gallery: parts.gallery, hanger: hanging.hanger, office: ctx.office, ride: parts.travel.ride, switchFloor: parts.travel.switchFloor, elevatorPanelOpen, confetti: parts.confetti, carried: () => core.carrying, emoteWheel: emotes.emoteWheel, emote: emotes.emote };
+const { worlds, views, emotes } = parts;
+(window as any).__office = { world: () => worlds.world(), store, player: parts.player, camera: ctx.camera, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, office: ctx.office, ride: parts.travel.ride, switchFloor: parts.travel.switchFloor, elevatorPanelOpen, confetti: parts.confetti, carried: () => core.carrying, emoteWheel: emotes.emoteWheel, emote: emotes.emote };
 (window as any).__voice = parts.voice;
 (window as any).__sound = parts.sound;
 (window as any).__notify = parts.notifier;

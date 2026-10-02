@@ -1,6 +1,5 @@
 import * as THREE from 'three';
-import { BOARDS, LOFT, MACHINE_MONITOR, PLANTS, SEATING_BY_ID, STAIRS, TV, WALL_HEIGHT, plantByWing } from '../../../shared/layout';
-import { wallFacing } from '../../../shared/decor';
+import { BOARDS, MACHINE_MONITOR, PLANTS, SEATING_BY_ID, TV, WALL_HEIGHT, plantByWing } from '../../../shared/layout';
 import { mesh, roundedBox, textPlane, toon } from '../toon';
 import type { Collider, Interactable } from '../types';
 import type { Fixture } from './fixture';
@@ -56,10 +55,6 @@ export const boards: Fixture<'boardMeshes'> = (site) => {
     const it: Interactable = { kind: key, x: b.x + nx * 1.6, z: b.z + nz * 1.6, radius: 2.4 };
     site.interactables.push(it);
     bg.userData.interact = it;
-    // The board and its label above it, up to the ceiling.
-    const wall = wallFacing(b.rotY);
-    const bottom = b.y - (b.height + 0.3) / 2;
-    site.wall(wall, wall === 'north' || wall === 'south' ? b.x : b.z, (bottom + WALL_HEIGHT) / 2, b.width + 0.3, WALL_HEIGHT - bottom);
   }
   return { handle: { boardMeshes } };
 };
@@ -78,7 +73,6 @@ export const tv: Fixture<'tvScreen'> = (site) => {
   const it: Interactable = { kind: 'tv', x: TV.x - 4.5, z: TV.z, radius: 3.2 };
   site.interactables.push(it);
   tvGroup.userData.interact = it;
-  site.wall('east', TV.z, TV.y, TV.width + 0.3, TV.height + 0.3);
   return { handle: { tvScreen } };
 };
 
@@ -94,7 +88,6 @@ export const machineMonitor: Fixture<'machineScreen'> = (site) => {
   monitor.position.set(MACHINE_MONITOR.x + 0.07, MACHINE_MONITOR.y, MACHINE_MONITOR.z);
   monitor.rotation.y = Math.PI / 2;
   site.group.add(monitor);
-  site.wall('west', MACHINE_MONITOR.z, MACHINE_MONITOR.y, MACHINE_MONITOR.width + 0.2, MACHINE_MONITOR.height + 0.2);
   return { handle: { machineScreen } };
 };
 
@@ -164,19 +157,5 @@ export const lamps: Fixture = (site) => {
     lamp.position.set(x, lampY, z);
     site.group.add(lamp);
   }
-  return {};
-};
-
-/**
- * Pictures stay clear of the stairs (step by step, so they can hang above them) and of what's on the
- * loft's walls upstairs, as buildLoft places it: the couch and the sign.
- */
-export const clearOfStairs: Fixture = (site) => {
-  const run = (STAIRS.toX - STAIRS.fromX) / STAIRS.steps;
-  const rise = LOFT.y / STAIRS.steps;
-  for (let i = 1; i <= STAIRS.steps; i++) site.wall('south', STAIRS.fromX + (i - 0.5) * run, (i * rise) / 2, run, i * rise);
-  const loftZ = (LOFT.minZ + LOFT.maxZ) / 2;
-  site.wall('east', loftZ, LOFT.y + 0.5, 2.4, 1);
-  site.wall('south', LOFT.maxX - 3, LOFT.y + 1.9, 2.6, 0.6);
   return {};
 };

@@ -86,7 +86,7 @@ export interface KeyPress {
 
 /**
  * The stages a key press goes through before the bindings, in order: guards (nothing gets a key while
- * a window's open, say), then whatever you're in the middle of (hanging a picture), then the
+ * a window's open, say), then whatever you're in the middle of, then the
  * emotes. A handler returns true when it took the key, which ends it there.
  */
 export type KeyStage = 'guard' | 'activity' | 'emote';
@@ -202,7 +202,7 @@ export class Ticks {
 // ---- Activities -----------------------------------------------------------------------------------
 
 /**
- * Something you can be in the middle of that takes over the controls (hanging a picture). `Why` names what's making you stop (see Activities.stopAll), `E` is a key press and
+ * Something you can be in the middle of that takes over the controls. `Why` names what's making you stop (see Activities.stopAll), `E` is a key press and
  * `El` is where the hint bar draws.
  */
 export interface Activity<Why extends string = string, E = unknown, El = unknown> {

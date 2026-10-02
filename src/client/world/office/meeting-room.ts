@@ -183,6 +183,5 @@ declare module '../types' {
 /** Under the loft: the meeting room. */
 export const meetingRoom: Fixture<'meetingBoard' | 'meetingSign'> = (site) => {
   const built = buildMeetingRoom(site.group, site.colliders, site.interactables, site.desks, site.doors);
-  site.wall('south', MEETING_BOARD.x, MEETING_BOARD.y, MEETING_BOARD.width + 0.4, MEETING_BOARD.height + 0.4);
   return { handle: { meetingBoard: built.board, meetingSign: built.sign } };
 };
