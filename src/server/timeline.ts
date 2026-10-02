@@ -13,7 +13,7 @@ import { onRoster } from './roster.js';
 /** How many events a floor keeps, across restarts. */
 export const TIMELINE_KEEP = 2000;
 
-const KINDS = new Set<TimelineKind>(['hired', 'needs-input', 'done', 'stuck', 'resumed', 'sent-home', 'pr-opened', 'pr-merged', 'pr-closed', 'task-started', 'task-done', 'task-failed', 'meeting-started', 'meeting-ended', 'mission', 'milestone', 'milestone-done', 'progress']);
+const KINDS = new Set<TimelineKind>(['hired', 'needs-input', 'done', 'stuck', 'resumed', 'sent-home', 'pr-opened', 'pr-merged', 'pr-closed', 'task-started', 'task-done', 'task-failed', 'meeting-started', 'meeting-ended', 'mission', 'milestone', 'milestone-done', 'progress', 'bounty-funded', 'bounty-claimed', 'bounty-paid', 'bounty-refunded']);
 
 /** What a new event says; the timeline stamps the rest. */
 export type NewEvent = Omit<TimelineEvent, 'id' | 'at' | 'floor'> & { at?: number };
@@ -44,6 +44,8 @@ function made(e: NewEvent & { at: number }, floor: string, id: string): Timeline
   if (goal) out.goal = goal;
   for (const k of ['issue', 'pr'] as const) if (int(e[k])) out[k] = e[k];
   for (const k of ['from', 'to', 'of', 'usd', 'workedMs'] as const) if (num(e[k]) !== undefined) out[k] = e[k];
+  // A transaction signature: base58 on devnet, mock-tx-N on the mock.
+  if (typeof e.tx === 'string' && /^[1-9A-HJ-NP-Za-km-z]{32,90}$|^mock-tx-\d{1,12}$/.test(e.tx)) out.tx = e.tx;
   return out;
 }
 
@@ -228,6 +230,11 @@ export class TimelineWatch {
   /** The roster saw a worker get stuck. */
   stuck(e: RosterEntry, reason: string) {
     this.add({ kind: 'stuck', worker: e.id, name: e.name, ...(e.goal ? { goal: e.goal } : {}), ...(e.issue ? { issue: e.issue } : {}), text: `${e.name} got stuck: ${reason}` });
+  }
+
+  /** A bounty changed hands on chain (see server/bounties.ts): funded, claimed, paid or refunded. */
+  bounty(kind: 'bounty-funded' | 'bounty-claimed' | 'bounty-paid' | 'bounty-refunded', e: { issue: number; pr?: number; tx?: string; text: string; worker?: string; name?: string }) {
+    this.add({ kind, issue: e.issue, ...(e.pr ? { pr: e.pr } : {}), ...(e.worker ? { worker: e.worker } : {}), ...(e.name ? { name: e.name } : {}), ...(e.tx ? { tx: e.tx } : {}), text: e.text });
   }
 
   /** Pull request `p` merged (from the PR window `by` someone, or seen on GitHub). */

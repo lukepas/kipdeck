@@ -20,7 +20,12 @@ export type TimelineKind =
   | 'milestone'
   | 'milestone-done'
   /** A milestone's issues closed went from `from` to `to`, of `of`. */
-  | 'progress';
+  | 'progress'
+  /** Proof of Merge bounties (see protocol/bounties.ts): each with the transaction's signature in `tx`. */
+  | 'bounty-funded'
+  | 'bounty-claimed'
+  | 'bounty-paid'
+  | 'bounty-refunded';
 
 /**
  * One thing that happened on a floor. Written by the server from state changes only, never from text
@@ -48,6 +53,8 @@ export interface TimelineEvent {
   /** 'sent-home': what it spent and how long it worked. */
   usd?: number;
   workedMs?: number;
+  /** 'bounty-*': the transaction's signature (base58 on devnet, mock-tx-N on the mock). */
+  tx?: string;
 }
 
 /** Characters in an event's text. */

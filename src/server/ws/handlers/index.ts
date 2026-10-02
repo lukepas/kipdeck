@@ -2,6 +2,7 @@
 // floor. A new feature adds its handler file and a line here.
 import type { ClientMsg } from '../../../shared/protocol.js';
 import { accountsHandlers } from './accounts.js';
+import { bountiesHandlers, bountiesView } from './bounties.js';
 import { changesHandlers, changesHooks } from './changes.js';
 import { floorHandlers, projectView } from './floors.js';
 import { githubHandlers, issuesView, pullsView } from './github.js';
@@ -22,6 +23,7 @@ import type { FeatureHooks, HandlerMap, ViewPieces } from './types.js';
 /** Each domain's handlers put together, in alphabetical order. */
 export const handlers: HandlerMap<ClientMsg> = {
   ...accountsHandlers,
+  ...bountiesHandlers,
   ...changesHandlers,
   ...floorHandlers,
   ...githubHandlers,
@@ -57,4 +59,5 @@ export const views: ViewPieces = {
   whiteboard: whiteboardView,
   meeting: meetingView,
   mission: missionView,
+  bounties: bountiesView,
 };

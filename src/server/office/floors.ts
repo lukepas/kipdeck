@@ -123,6 +123,8 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
       for (const f of floors.values()) if (f !== floor && worksIn(f, floor)) f.sendLandedHome();
       // A pull request's checks or state show on the roster.
       ctx.rosterChanged();
+      // A worker's PR may claim a bounty now, or have merged (made after the floors open, hence the ?).
+      ctx.bounties?.pulls(floor);
     },
     lent: (floor) => [...floors.values()].some((f) => f !== floor && worksIn(f, floor)),
     runAs: ctx.signins,

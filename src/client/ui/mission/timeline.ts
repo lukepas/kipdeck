@@ -27,6 +27,10 @@ export const KIND_LABEL: Record<TimelineKind, string> = {
   milestone: 'Milestone',
   'milestone-done': 'Milestone',
   progress: 'Progress',
+  'bounty-funded': 'Bounty',
+  'bounty-claimed': 'Bounty',
+  'bounty-paid': 'Bounty paid',
+  'bounty-refunded': 'Bounty',
 };
 
 /** What the tab is filtered by, kept while the page is open. */
@@ -70,6 +74,8 @@ export function eventRow(deps: MissionDeps, e: TimelineEvent, showFloor: boolean
       h('span.tl-kind', {}, KIND_LABEL[e.kind] ?? e.kind),
       h('span.tl-text', {}, e.text),
       showFloor && floorName ? h('span.tl-floor', {}, floorName) : null,
+      // A bounty's transaction, on the devnet explorer (a mock one has nowhere to go).
+      e.tx && !e.tx.startsWith('mock-') ? h('a.tl-tx', { href: `https://explorer.solana.com/tx/${encodeURIComponent(e.tx)}?cluster=devnet`, target: '_blank', rel: 'noopener noreferrer' }, 'tx') : null,
       h('button.btn.small.mc-act', { type: 'button', onclick: () => openEvent(deps, e), 'aria-label': `Open: ${e.text}` }, 'Open'),
     ),
   );

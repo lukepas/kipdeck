@@ -12,6 +12,7 @@ import { Machine } from '../machine.js';
 import type { Floor } from '../floor.js';
 import { OfficePrompts } from '../prompts.js';
 import { LeaveOnMerge } from '../leave-on-merge.js';
+import { Bounties } from '../bounties.js';
 import type { ServiceInfo, ServicesState } from '../../shared/protocol.js';
 import type { BuildingServices, Ctx, LateServices } from './context.js';
 import type { Client } from './client.js';
@@ -138,6 +139,9 @@ export function createLateServices(ctx: Ctx): LateServices {
   );
 
 
+  // Proof of Merge bounties: off until an admin turns them on in ⚙️ Settings.
+  const bounties = new Bounties({ dataDir: cfg.dataDir, floors: () => floors.values(), broadcast: (msg) => ctx.broadcast(msg), toastFloor: (f, text, level) => ctx.toastFloor(f, text, level) });
+
   const upgrader = new Upgrader(
     (state) => ctx.broadcast({ t: 'upgrade', state }),
     () => {
@@ -146,5 +150,5 @@ export function createLateServices(ctx: Ctx): LateServices {
       process.kill(process.pid, 'SIGTERM');
     },
   );
-  return { team, tailnet, services, upgrader, servicesState };
+  return { team, tailnet, services, upgrader, servicesState, bounties };
 }

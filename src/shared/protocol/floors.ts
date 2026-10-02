@@ -3,6 +3,7 @@
 import type { FloorPlan } from '../floorplan.js';
 import type { WhiteboardView } from '../whiteboard.js';
 import type { AgentProvider } from './agents.js';
+import type { BountiesState } from './bounties.js';
 import type { GhIssue, GhPull, GhState } from './github.js';
 import type { MeetingState } from './meetings.js';
 import type { Mission } from './mission.js';
@@ -109,6 +110,8 @@ export interface FloorView {
   meeting: MeetingState;
   /** What the floor is for: its mission statement and milestones. */
   mission: Mission;
+  /** Proof of Merge bounties on the floor's issues (see protocol/bounties.ts). */
+  bounties: BountiesState;
 }
 
 export type FloorClientMsg =

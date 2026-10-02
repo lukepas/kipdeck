@@ -47,7 +47,7 @@ export const LEVEL_LABEL: Record<AttentionLevel, string> = {
 };
 
 /** The one thing to do next about a worker. */
-export type NextAction = 'answer' | 'look' | 'review' | 'open-pr' | 'fix-checks' | 'merge' | 'hand-back' | 'resume' | 'rebuild' | 'send-home' | 'give-task';
+export type NextAction = 'answer' | 'look' | 'review' | 'open-pr' | 'fix-checks' | 'merge' | 'hand-back' | 'resume' | 'rebuild' | 'send-home' | 'give-task' | 'approve-payout' | 'set-wallet';
 
 export const ACTION_LABEL: Record<NextAction, string> = {
   answer: 'Answer',
@@ -61,6 +61,8 @@ export const ACTION_LABEL: Record<NextAction, string> = {
   rebuild: 'Rebuild',
   'send-home': 'Send home',
   'give-task': 'Give it a task',
+  'approve-payout': 'Approve payout',
+  'set-wallet': 'Set payout wallet',
 };
 
 export interface Attention {

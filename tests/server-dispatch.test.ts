@@ -199,6 +199,22 @@ test('answers the open routes before anyone signs in', async () => {
   assert.equal((await post('/api/join', { token: 'nope' })).status, 410);
 });
 
+test("the Fund-this-issue Action is public, CORS-open and off until an admin opts a repository in", async () => {
+  const manifest = await get('/actions.json');
+  assert.equal(manifest.status, 404);
+  assert.equal(manifest.headers.get('access-control-allow-origin'), '*');
+  const pre = await fetch(base + '/api/actions/fund?repo=a/b&issue=1', { method: 'OPTIONS' });
+  assert.equal(pre.status, 204);
+  assert.match(pre.headers.get('access-control-allow-headers') ?? '', /X-Action-Version/);
+  const off = await get('/api/actions/fund?repo=a/b&issue=1');
+  assert.equal(off.status, 404);
+  assert.equal(off.headers.get('x-blockchain-ids'), 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1');
+  assert.deepEqual(await off.json(), { message: 'No bounties are open for funding on that repository' });
+  assert.equal((await get('/api/actions/fund?repo=nope&issue=1')).status, 400);
+  assert.equal((await post('/api/actions/fund?repo=a/b&issue=1&amount=5', { account: 'x' })).status, 404);
+  assert.equal((await get('/api/actions/icon.svg')).headers.get('content-type'), 'image/svg+xml');
+});
+
 test('signs in with the office password', async () => {
   const wrong = await post('/api/login', { password: 'nope' });
   assert.equal(wrong.status, 401);
@@ -272,7 +288,7 @@ test('welcomes a browser and dispatches what it sends', async () => {
   assert.equal(ada?.name, 'Ada');
   assert.equal(ada?.color, '#ff8a5b');
   assert.equal(ada?.floor, floor.id);
-  assert.deepEqual(Object.keys(welcome).slice(-11), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'plan', 'services', 'whiteboard', 'meeting', 'mission']);
+  assert.deepEqual(Object.keys(welcome).slice(-12), ['floor', 'project', 'workers', 'issues', 'pulls', 'queue', 'plan', 'services', 'whiteboard', 'meeting', 'mission', 'bounties']);
 
   a.send({ t: 'ping', at: 42 });
   const pong = await a.take('pong');

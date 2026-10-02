@@ -21,6 +21,7 @@ import type { Floor } from '../floor.js';
 import type { OfficePrompts } from '../prompts.js';
 import type { LeaveOnMerge } from '../leave-on-merge.js';
 import type { ChatLog } from '../history.js';
+import type { Bounties } from '../bounties.js';
 import type { AgentProvider, FloorInfo, Me, Reminder, ReminderSnooze, ReviewPull, RosterEntry, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
 import type { Client } from './client.js';
 import type { Spot } from './input.js';
@@ -81,6 +82,8 @@ export interface LateServices {
   upgrader: Upgrader;
   /** A floor's Services board: its own workers' servers. */
   servicesState(floor: Floor | undefined, items?: ServiceInfo[]): ServicesState;
+  /** Proof of Merge bounties on every floor's issues (see bounties.ts). */
+  bounties: Bounties;
 }
 
 /** Sending to browsers (office/messaging.ts). */

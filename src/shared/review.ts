@@ -5,10 +5,23 @@
 // chip and /lite count the same things.
 
 import type { NextAction, Ranked } from './attention.js';
-import type { GhPull, PullReview, ReviewPull, RosterEntry, WorkSummary } from './protocol.js';
+import type { BountiesState, GhPull, PullReview, ReviewPull, RosterEntry, WorkSummary } from './protocol.js';
+
+/** A bounty that waits for a person: a payout to approve (admins), or a payout wallet to set. */
+export interface ReviewPayout {
+  floor: string;
+  floorName: string;
+  issue: number;
+  pr?: number;
+  /** "20 USDC". */
+  amount: string;
+  workerName?: string;
+  kind: 'approve' | 'wallet';
+  note?: string;
+}
 
 export interface ReviewItem {
-  /** "w:<worker id>" or "pr:<floor>:<number>". */
+  /** "w:<worker id>", "pr:<floor>:<number>" or "bounty:<floor>:<issue>". */
   key: string;
   floor: string;
   floorName: string;
@@ -20,6 +33,8 @@ export interface ReviewItem {
   entry?: RosterEntry;
   /** The pull request it's about, for a row of its own. */
   pull?: ReviewPull;
+  /** The bounty it's about, for a row of its own. */
+  payout?: ReviewPayout;
   checks?: GhPull['checks'];
   work?: WorkSummary;
   goalTitle?: string;
@@ -53,7 +68,7 @@ function pullWhy(p: ReviewPull, mine: boolean): { reason: string; action: NextAc
  * office made or that `me` (a GitHub login, when known) is asked to review. Oldest first, the
  * snoozed ones last.
  */
-export function reviewInbox(ranked: readonly Ranked[], queue: readonly ReviewPull[], me?: string): ReviewItem[] {
+export function reviewInbox(ranked: readonly Ranked[], queue: readonly ReviewPull[], me?: string, payouts: readonly (ReviewPayout & { since: number })[] = []): ReviewItem[] {
   const out: ReviewItem[] = [];
   for (const r of ranked) {
     if (r.att.level !== 'review') continue;
@@ -79,7 +94,38 @@ export function reviewInbox(ranked: readonly Ranked[], queue: readonly ReviewPul
     const why = pullWhy(p, mine);
     out.push({ key: `pr:${p.floor}:${p.number}`, floor: p.floor, floorName: p.floorName, since: p.createdAt, reason: `PR #${p.number} ${why.reason}`, action: why.action, pull: p, checks: p.checks, snoozed: false });
   }
+  for (const p of payouts) {
+    const { since, ...payout } = p;
+    const reason = p.kind === 'approve' ? `Approve payout of ${p.amount} to ${p.workerName ?? 'the office'} for PR #${p.pr}` : (p.note ?? 'set a payout wallet to claim this bounty');
+    out.push({ key: `bounty:${p.floor}:${p.issue}`, floor: p.floor, floorName: p.floorName, since, reason, action: p.kind === 'approve' ? 'approve-payout' : 'set-wallet', payout, snoozed: false });
+  }
   return out.sort((a, b) => Number(a.snoozed) - Number(b.snoozed) || a.since - b.since || a.key.localeCompare(b.key));
+}
+
+/** Base units as a person reads them: "12500000" with 6 decimals is "12.5". */
+export function tokenAmount(units: string, decimals: number): string {
+  if (!/^\d+$/.test(units)) return '0';
+  const s = units.padStart(decimals + 1, '0');
+  const whole = s.slice(0, s.length - decimals).replace(/^0+(?=\d)/, '');
+  const frac = decimals ? s.slice(s.length - decimals).replace(/0+$/, '') : '';
+  return frac ? `${whole}.${frac}` : whole;
+}
+
+/**
+ * A floor's bounties that wait for a person, for the inbox: a merged PR's payout to approve, and a
+ * claim that waits for its worker's owner to set a payout wallet. `since` is when it last moved.
+ */
+export function bountyPayouts(floor: { id: string; name: string }, state: BountiesState | undefined): (ReviewPayout & { since: number })[] {
+  if (!state?.enabled) return [];
+  const out: (ReviewPayout & { since: number })[] = [];
+  for (const b of state.items) {
+    const since = b.txs.length ? b.txs[b.txs.length - 1].at : 0;
+    const amount = `${tokenAmount(b.amount, b.decimals)} ${b.symbol}`;
+    const base = { floor: floor.id, floorName: floor.name, issue: b.issue, amount, since, ...(b.claimPr ? { pr: b.claimPr } : {}), ...(b.workerName ? { workerName: b.workerName } : {}) };
+    if (b.phase === 'awaiting-approval') out.push({ ...base, kind: 'approve' });
+    else if (b.phase === 'open' && b.note && /payout wallet/.test(b.note)) out.push({ ...base, kind: 'wallet', note: b.note });
+  }
+  return out;
 }
 
 /** How many wait in the inbox, the snoozed ones left out. */
