@@ -38,8 +38,8 @@ export type ViewMode = 'first' | 'third';
 
 /** The panels you can show or hide on screen, from the ☰ menu. */
 export type HudPanel = 'workers' | 'people' | 'spend' | 'limits' | 'chat' | 'floor';
-/** Out of the way by default: only the chat shows until you turn the rest on. */
-export const HUD_DEFAULTS: Record<HudPanel, boolean> = { workers: false, people: false, spend: false, limits: false, chat: true, floor: false };
+/** Out of the way by default: the workers and the chat show until you turn the rest on. */
+export const HUD_DEFAULTS: Record<HudPanel, boolean> = { workers: true, people: false, spend: false, limits: false, chat: true, floor: false };
 
 export interface Settings {
   view: ViewMode;

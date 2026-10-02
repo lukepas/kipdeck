@@ -107,7 +107,6 @@ button { font-family: inherit; }
 .svc-title { font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .svc-meta { font-size: 12px; font-weight: 700; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .svc-list .btn { padding: 3px 10px; font-size: 13px; text-decoration: none; color: inherit; }
-.jb-icon { flex: none; font-size: 18px; }
 .spinner { width: 16px; height: 16px; flex: none; border-radius: 50%; border: 3px solid rgba(43, 45, 66, .2); border-top-color: var(--ink); animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .when { color: var(--muted); font-weight: 700; text-decoration: none; }
