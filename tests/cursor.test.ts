@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { execFileSync, spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -12,6 +12,7 @@ import {
   isCursorChatId,
   normalizeCursorHook,
   removeCursorHooks,
+  forgetCursorOriginals,
   withoutCursorLaunchArgs,
   writeCursorHook,
 } from '../src/server/cursor.js';
@@ -147,6 +148,35 @@ test('a project\'s own hooks.json keeps its hooks and comes back byte for byte',
   assert.match(after, /^\{\n\t"version"/);
   assert.equal(after.endsWith('\n'), false);
   assert.equal(existsSync(path.join(dir, '.cursor', 'rules.md')), true);
+});
+
+test("a hooks.json the repository tracks never shows the office's entries to git, and comes back after a restart", (t) => {
+  const dir = scratch(t);
+  const hook = writeCursorHook(path.join(dir, 'data'));
+  const cwd = path.join(dir, 'repo');
+  mkdirSync(path.join(cwd, '.cursor'), { recursive: true });
+  const original = '{\n    "version": 1,\n    "hooks": { "stop": [{ "command": "./notify.sh" }] }\n}\n';
+  writeFileSync(hooksFile(cwd), original);
+  const git = (...args: string[]) => execFileSync('git', args, { cwd, encoding: 'utf8' });
+  git('init', '-q');
+  git('add', '.');
+  git('-c', 'user.name=t', '-c', 'user.email=t@example.invalid', 'commit', '-qm', 'hooks');
+
+  assert.equal(addCursorHooks(cwd, hook, 'abc123'), true);
+  assert.ok(readFileSync(hooksFile(cwd), 'utf8').includes(hook));
+  // A worker's `git add -A` commits nothing of the office's: not this machine's paths, not its worker id.
+  assert.equal(git('status', '--porcelain'), '');
+  git('add', '-A');
+  assert.equal(git('diff', '--cached', '--name-only'), '');
+
+  // The office restarts while the worker runs: the project's file still comes back byte for byte.
+  forgetCursorOriginals();
+  removeCursorHooks(cwd, 'abc123');
+  assert.equal(readFileSync(hooksFile(cwd), 'utf8'), original);
+  assert.equal(git('ls-files', '-v', '--', '.cursor/hooks.json').trim(), 'H .cursor/hooks.json', 'git sees it again');
+  assert.equal(git('status', '--porcelain'), '');
+  // Nothing of the office's left in git's directory either.
+  assert.deepEqual(readdirSync(path.join(cwd, '.git')).filter((f) => f.startsWith('agent-office')), []);
 });
 
 test('a hooks.json the office cannot read is left alone', (t) => {

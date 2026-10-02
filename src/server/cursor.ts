@@ -5,10 +5,12 @@
 // its settings and chats), and its terminal only fires the prompt and stop hooks when one of those
 // two files has them, so a plugin's hooks (--plugin-dir) aren't enough. So each worker's own entries
 // go into the hooks.json of the folder it works in as it starts, and come out again when it ends.
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, mkdirSync, readFileSync, rmdirSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import { excludeFromGit } from './config.js';
-import { isSymlink, realWithin, writeState } from './safefs.js';
+import { isSymlink, readState, realWithin, writeState } from './safefs.js';
 
 /** Cursor's hook events the office listens to, and the lifecycle event each one is (see workers/lifecycle.ts). */
 export const CURSOR_HOOK_EVENTS = {
@@ -149,6 +151,68 @@ function strip(config: HooksConfig, workerId: string) {
 /** A project's own hooks.json as it was before the office's first entry went in, to put back exactly. */
 const originals = new Map<string, string>();
 
+/** Where hooks.json is in git's index: a path git may be told about. */
+const HOOKS_ENTRY = '.cursor/hooks.json';
+
+function git(cwd: string, args: string[]): string | undefined {
+  try {
+    return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Where the project's own hooks.json is kept while the office's entries are in it: in the folder's
+ * own git directory (per worktree), which no commit and no checkout ever holds, so it outlives an
+ * office restart without ever showing up as a change.
+ */
+function originalCopy(cwd: string): string | undefined {
+  const dir = git(cwd, ['rev-parse', '--absolute-git-dir']);
+  // Named for the folder too: two folders of one repository each have their own.
+  const of = createHash('sha256').update(path.resolve(cwd)).digest('hex').slice(0, 12);
+  return dir ? path.join(dir, `agent-office-cursor-hooks-${of}.json`) : undefined;
+}
+
+/** What an office restart forgets: only the copies in git's directory are left. For tests. */
+export function forgetCursorOriginals() {
+  originals.clear();
+}
+
+function keepOriginal(cwd: string, file: string, text: string) {
+  originals.set(file, text);
+  const copy = originalCopy(cwd);
+  try {
+    if (copy) writeState(copy, text, 0o644);
+  } catch {
+    // kept in memory only: still put back unless the office restarts first
+  }
+}
+
+/** The project's own hooks.json, as kept by keepOriginal; forgotten once taken. */
+function takeOriginal(cwd: string, file: string): string | undefined {
+  const kept = originals.get(file);
+  originals.delete(file);
+  const copy = originalCopy(cwd);
+  const saved = copy ? readState(copy) : undefined;
+  if (copy && saved !== undefined) {
+    try {
+      unlinkSync(copy);
+    } catch {
+      // gone already
+    }
+  }
+  return kept ?? saved;
+}
+
+/**
+ * A hooks.json the repository tracks: while the office's entries (this machine's paths) are in it,
+ * git is told to leave it out (skip-worktree), so a worker's `git add -A` never commits them.
+ */
+function tracked(cwd: string): boolean {
+  return git(cwd, ['ls-files', '--error-unmatch', '--', HOOKS_ENTRY]) !== undefined;
+}
+
 function sameJson(text: string, config: unknown): boolean {
   try {
     return JSON.stringify(JSON.parse(text)) === JSON.stringify(config);
@@ -181,7 +245,7 @@ export function addCursorHooks(cwd: string, hook: string, workerId: string): boo
   const config: HooksConfig = found === 'none' ? { version: 1, hooks: {} } : found.config;
   const before = found === 'none' ? undefined : found.text;
   // The project's own file, untouched until now: kept to put back as it was (see removeCursorHooks).
-  if (before !== undefined && !before.includes(HOOK_FILE)) originals.set(file, before);
+  if (before !== undefined && !before.includes(HOOK_FILE)) keepOriginal(cwd, file, before);
   // Left behind by a run that was cut off.
   strip(config, workerId);
   for (const event of Object.keys(CURSOR_HOOK_EVENTS)) {
@@ -196,8 +260,10 @@ export function addCursorHooks(cwd: string, hook: string, workerId: string): boo
   } catch {
     return false;
   }
-  // A file the office made is no change of the worker's: git doesn't list it.
-  if (before === undefined) excludeFromGit(cwd, '.cursor/hooks.json');
+  // A file the office made is no change of the worker's: git doesn't list it. Nor is the office's
+  // entries in one the repository has.
+  if (before === undefined) excludeFromGit(cwd, HOOKS_ENTRY);
+  else if (tracked(cwd)) git(cwd, ['update-index', '--skip-worktree', '--', HOOKS_ENTRY]);
   return true;
 }
 
@@ -209,8 +275,7 @@ export function removeCursorHooks(cwd: string, workerId: string) {
   const { config, text } = found;
   strip(config, workerId);
   const shared = Object.values(config.hooks).some((entries) => Array.isArray(entries) && entries.some((e) => isOffice(e)));
-  const original = shared ? undefined : originals.get(file);
-  if (!shared) originals.delete(file);
+  const original = shared ? undefined : takeOriginal(cwd, file);
   try {
     if (original !== undefined && sameJson(original, config)) {
       writeState(file, original, 0o644);
@@ -227,6 +292,8 @@ export function removeCursorHooks(cwd: string, workerId: string) {
   } catch {
     // The folder is gone (a worktree that was deleted), or can't be written: nothing to take out.
   }
+  // The office's entries are out: git sees the file again, with any change the project made meanwhile.
+  if (!shared && tracked(cwd)) git(cwd, ['update-index', '--no-skip-worktree', '--', HOOKS_ENTRY]);
 }
 
 /**
