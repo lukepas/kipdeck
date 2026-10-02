@@ -8,6 +8,7 @@ import { h, openModal, timeAgo } from './dom';
 import { agentFields, choiceLabel, officeChoice } from './provider';
 import { openPromptEditor, rewrittenPrompts } from './prompts';
 import { choiceRow } from './settings-rows';
+import { bountySettings } from './bounty-settings';
 
 const VIEWS: [ViewMode, string, string][] = [
   ['first', '👀 First person', 'See through your own eyes. Click the office to look around with the mouse and click things to use them. Esc frees the mouse.'],
@@ -18,7 +19,7 @@ const VIEWS: [ViewMode, string, string][] = [
 const WEBHOOK_NAME: Record<WebhookKind, string> = { slack: 'Slack', discord: 'Discord', other: 'a webhook' };
 
 /** The categories down the side of ⚙️ Settings. */
-export type SettingsPane = 'you' | 'sound' | 'notify' | 'building' | 'workers';
+export type SettingsPane = 'you' | 'sound' | 'notify' | 'building' | 'workers' | 'bounties';
 
 const PANES: { id: SettingsPane; icon: string; label: string; blurb: string }[] = [
   { id: 'you', icon: '🧍', label: 'You', blurb: 'How you look, how you see the office, and how you’re signed in.' },
@@ -26,6 +27,7 @@ const PANES: { id: SettingsPane; icon: string; label: string; blurb: string }[] 
   { id: 'notify', icon: '🔔', label: 'Notifications', blurb: 'Hear about a worker that needs someone, or finished, while you’re somewhere else.' },
   { id: 'building', icon: '🏢', label: 'Building', blurb: 'Where new floors are cloned.' },
   { id: 'workers', icon: '🤖', label: 'Workers', blurb: 'What workers start on, how many run at once, when they go home and what the office tells them.' },
+  { id: 'bounties', icon: '💰', label: 'Bounties', blurb: 'Proof of Merge: devnet USDC on issues, paid only when a person merges the office\'s pull request.' },
 ];
 
 /** Who a setting is for, shown by its name: some are yours alone, some the whole office's. */
@@ -384,6 +386,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     }
     pwSave.disabled = false;
   });
+  const bounty = bountySettings(net);
   const panes: Record<SettingsPane, Node[]> = {
     you: [
       setting('Your character', null, character),
@@ -409,6 +412,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       setting('Workers whose pull request merged', 'office', leaveRow, leaveNote),
       setting('Prompts', 'office', promptsOpen, promptsNote),
     ],
+    bounties: [setting('Proof of Merge bounties', 'office', ...bounty.nodes)],
   };
 
   // The categories down the side, the one picked on the right.
@@ -458,6 +462,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       offLimit.forEach((off) => off());
       offDir.forEach((off) => off());
       offPrompts.forEach((off) => off());
+      bounty.off();
     },
   });
   show(first ?? lastPane);

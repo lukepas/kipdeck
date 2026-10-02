@@ -10,6 +10,7 @@
 import type { Slice } from '../store';
 import { building, floor, me, presence } from '../core';
 import { accounts } from './accounts';
+import { bounties } from './bounties';
 import { floorPlan } from './floor-plan';
 import { leaveOnMerge } from './leave-on-merge';
 import { machine } from './machine';
@@ -45,4 +46,5 @@ export const SLICES: readonly Slice[] = [
   signins,
   mission,
   timeline,
+  bounties,
 ];

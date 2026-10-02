@@ -4,6 +4,7 @@
 
 import { attention, type NextAction } from '../../../shared/attention';
 import type { Reminder, ReviewPull, RosterEntry, TimelineEvent } from '../../../shared/protocol';
+import type { ReviewPayout } from '../../../shared/review';
 import type { Net } from '../../net';
 import { store, type MissionTab } from '../../state';
 import { closeAllModals, toast } from '../dom';
@@ -109,6 +110,23 @@ export function runPull(deps: MissionDeps, p: ReviewPull, action: NextAction) {
   onFloor(deps, { floor: p.floor, floorName: p.floorName, what: `PR #${p.number}` }, () => {
     closeAllModals();
     deps.openPull(p.number, action === 'merge' ? 'merge' : action === 'hand-back' ? 'hand-back' : undefined);
+  });
+}
+
+/**
+ * A bounty row's action: approving the payout (an admin's; the office checks again, and reads the
+ * approver key only then), or setting your payout wallet.
+ */
+export function runPayout(deps: MissionDeps, p: ReviewPayout, action: NextAction) {
+  if (action === 'approve-payout') {
+    deps.net.send({ t: 'bounty.approve', issue: p.issue, floor: p.floor });
+    return toast(`💰 Approving the payout of ${p.amount} for PR #${p.pr}...`);
+  }
+  openPrompt({
+    title: 'Your payout wallet',
+    placeholder: 'Your Solana devnet address',
+    subtitle: 'A Solana devnet address (not a key). Bounties your workers\' pull requests claim are paid there once a person merges them and an admin approves.',
+    onSubmit: (text) => deps.net.send({ t: 'bounty.wallet', address: text.trim() }),
   });
 }
 

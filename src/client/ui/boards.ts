@@ -10,6 +10,7 @@ import { inProgress } from './github/progress';
 import type { BoardActions } from './github/prompts';
 import { openPull } from './github/pull-window';
 import { providerLabel } from './provider';
+import { bountyChip } from './bounty';
 
 const TILTS = ['-1.2deg', '0.8deg', '-0.4deg', '1.4deg', '0deg', '-0.9deg'];
 const NOTE_COLORS = ['#fff7b0', '#ffd6e0', '#caffbf', '#bde0fe', '#ffe5b4'];
@@ -260,7 +261,7 @@ export function openBoard(kind: 'issues' | 'pulls', net: Net, actions: BoardActi
       for (const col of issueColumns(store.issues.items)) {
         body.append(
           column(col, all, (it, i) =>
-            card(it.number, it.title, [...labelChips(it.labels), queueChip(it.number), it.assignees.length ? `👤 ${it.assignees.join(', ')}` : it.taken ? '🤖 handed to a worker' : `by ${it.author}`, it.comments ? `💬 ${it.comments}` : '', timeAgo(it.updatedAt)], i, () => openIssue(it, net, actions), () => openLabels('issue', it, net)),
+            card(it.number, it.title, [...labelChips(it.labels), bountyChip(it.number, net), queueChip(it.number), it.assignees.length ? `👤 ${it.assignees.join(', ')}` : it.taken ? '🤖 handed to a worker' : `by ${it.author}`, it.comments ? `💬 ${it.comments}` : '', timeAgo(it.updatedAt)], i, () => openIssue(it, net, actions), () => openLabels('issue', it, net)),
           ),
         );
       }
@@ -299,6 +300,8 @@ export function openBoard(kind: 'issues' | 'pulls', net: Net, actions: BoardActi
   };
 
   const unsubs = [store.on(kind, render), store.on('queue', render)];
+  // A bounty's chip on its issue's card.
+  if (kind === 'issues') unsubs.push(store.on('bounties', render));
   // Which desk a PR came from can change (a worker sent home, a PR opened from a desk).
   if (kind === 'pulls') unsubs.push(store.on('workers', render));
   const timer = setInterval(() => {

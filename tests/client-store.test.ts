@@ -183,7 +183,7 @@ test('what the browser remembers keeps its keys and shapes', () => {
 
 test("the store's keys are its state, as window.__office shows them", () => {
   // As the office had them before its store was split into slices: methods and the slices aren't among them.
-  assert.deepEqual(Object.keys(store).sort(), ['accounts', 'away', 'chat', 'drawing', 'floor', 'floorPlan', 'floors', 'ghViewer', 'ice', 'invites', 'issues', 'leaveOnMerge', 'limits', 'machine', 'me', 'meeting', 'mission', 'notify', 'peers', 'profile', 'project', 'projectsDir', 'prompts', 'pulls', 'queue', 'reminders', 'repos', 'reviewQueue', 'roster', 'screens', 'services', 'signins', 'subs', 'team', 'timeline', 'upgrade', 'usage', 'whiteboard', 'workers', 'you']);
+  assert.deepEqual(Object.keys(store).sort(), ['accounts', 'away', 'bounties', 'bountySettings', 'chat', 'drawing', 'floor', 'floorPlan', 'floors', 'ghViewer', 'ice', 'invites', 'issues', 'leaveOnMerge', 'limits', 'machine', 'me', 'meeting', 'mission', 'notify', 'peers', 'profile', 'project', 'projectsDir', 'prompts', 'pulls', 'queue', 'reminders', 'repos', 'reviewQueue', 'roster', 'screens', 'services', 'signins', 'subs', 'team', 'timeline', 'upgrade', 'usage', 'whiteboard', 'workers', 'you']);
 });
 
 test('a new store starts every field where it always has', async () => {
@@ -208,6 +208,7 @@ test('a new store starts every field where it always has', async () => {
       team: null, accounts: null, signins: null,
       roster: [], reviewQueue: [], reminders: [], ghViewer: '<undefined>', mission: { statement: '', milestones: [] },
       timeline: { events: [], loaded: false, more: false }, away: '<undefined>',
+      bounties: {}, bountySettings: '<undefined>',
     },
   );
 });

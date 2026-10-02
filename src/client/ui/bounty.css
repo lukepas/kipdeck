@@ -1,0 +1,57 @@
+/* Proof of Merge bounties: the chip on issue cards and the Fund window (see bounty.ts). */
+.bounty-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: #fff3c4;
+  color: #5a4300;
+  font-weight: 600;
+}
+.bounty-chip.none {
+  background: transparent;
+  padding: 0;
+}
+.bounty-chip.awaiting-approval,
+.bounty-chip.paying {
+  background: #ffe08a;
+}
+.bounty-chip.released {
+  background: #c7f0d2;
+  color: #12502a;
+}
+.bounty-chip.blocked,
+.bounty-chip.expired,
+.bounty-chip.refunded,
+.bounty-chip.cancelled {
+  background: #eee;
+  color: #555;
+}
+.bounty-fund {
+  border: 1px solid #b8860b;
+  background: #fff;
+  color: #5a4300;
+  border-radius: 6px;
+  padding: 0 5px;
+  font: inherit;
+  cursor: pointer;
+}
+.bounty-modal .bounty-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px 16px;
+  max-width: 460px;
+}
+.bounty-modal input {
+  width: 8em;
+}
+.bounty-wallets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bounty-wallets img {
+  vertical-align: middle;
+}

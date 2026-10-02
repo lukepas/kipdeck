@@ -127,7 +127,7 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
     }
   }
 
-  const topics: Topic[] = ['roster', 'mission', 'issues', 'pulls', 'workers', 'floor', 'me', 'reminders', 'timeline', 'signins'];
+  const topics: Topic[] = ['roster', 'mission', 'issues', 'pulls', 'workers', 'floor', 'me', 'reminders', 'timeline', 'signins', 'bounties'];
   const offs = topics.map((t) => store.on(t, render));
   // "12 min" moves on by itself, and a worker goes silent by not changing.
   const timer = window.setInterval(render, 30_000);

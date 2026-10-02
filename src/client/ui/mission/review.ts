@@ -8,7 +8,7 @@ import { diffLabel, type ReviewItem } from '../../../shared/review';
 import type { GhPull } from '../../../shared/protocol';
 import { store } from '../../state';
 import { h } from '../dom';
-import { runPull, type MissionDeps } from './act';
+import { runPayout, runPull, type MissionDeps } from './act';
 import { rosterRow } from './rows';
 
 const CHECKS: Record<GhPull['checks'], [string, string]> = {
@@ -50,6 +50,26 @@ function pullRow(deps: MissionDeps, i: ReviewItem, now: number, showFloor: boole
   );
 }
 
+/** A bounty waiting for a person: a payout to approve, or a payout wallet to set. */
+function payoutRow(deps: MissionDeps, i: ReviewItem, now: number, showFloor: boolean): HTMLElement {
+  const p = i.payout!;
+  const sub = [showFloor ? p.floorName : '', `issue #${p.issue}`, p.amount].filter(Boolean).join(' · ');
+  return h(
+    'li.mc-row.review',
+    { tabindex: '-1', 'data-id': i.key },
+    h(
+      'div.mc-main',
+      {},
+      h('span.dot.mc-pr-dot', { 'aria-hidden': 'true' }),
+      h('div.mc-who', {}, h('span.mc-name', {}, `💰 Bounty #${p.issue}`), h('span.mc-sub', {}, sub)),
+      h('div.mc-what', {}, h('span.mc-reason', {}, i.reason)),
+      h('span.mc-time', { title: 'Waiting this long' }, i.since ? duration(now - i.since) : ''),
+      h('span.mc-cost'),
+      h('div.mc-btns', {}, h('button.btn.small.mc-act', { type: 'button', onclick: () => runPayout(deps, p, i.action) }, ACTION_LABEL[i.action])),
+    ),
+  );
+}
+
 export function renderReview(deps: MissionDeps, ranked: Ranked[], now: number): HTMLElement {
   const items = store.inbox();
   if (!items.length) return h('p.mc-empty', {}, 'Nothing waits for review. Finished work, pull requests to see to and reviews requested of you show up here.');
@@ -57,7 +77,7 @@ export function renderReview(deps: MissionDeps, ranked: Ranked[], now: number): 
   const byId = new Map(ranked.map((r) => [r.entry.id, r]));
   const rows = items.map((i) => {
     const r = i.entry && byId.get(i.entry.id);
-    if (!r) return i.pull ? pullRow(deps, i, now, showFloor) : null;
+    if (!r) return i.pull ? pullRow(deps, i, now, showFloor) : i.payout ? payoutRow(deps, i, now, showFloor) : null;
     return rosterRow(deps, r, now, { showFloor, extra: facts(i) });
   });
   return h('div.mc-review', {}, h('p.mc-note', {}, 'Oldest first. Opening a finished worker\'s work marks it seen.'), h('ul.mc-rows', {}, ...rows));

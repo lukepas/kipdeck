@@ -24,6 +24,7 @@ import { renderWorkers } from '../../ui/workers-panel';
 import { renderLimits } from '../../ui/limits';
 import { modelBadge, providerLabel } from '../../ui/provider';
 import { renderUsage } from '../../ui/usage';
+import { workerBounty } from '../../ui/bounty';
 import { Worker } from '../../world/character';
 import { Laptop } from './laptop';
 import { Arrivals, Departures } from './leaving';
@@ -120,7 +121,10 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
       v.model.setPr(workerPr(w, store.pulls.items, store.queue.tasks));
       v.model.setLost(!!w.lost);
       const engineBadge = w.kind === 'agent' ? modelBadge(w.provider, w.model, w.effort, w.usage?.model) : undefined;
-      v.model.setTask(meetingCard(w) ?? (w.task && w.kind === 'agent' ? { ...w.task, name: `${providerLabel(w.provider, store.project)}${engineBadge ? ` · ${engineBadge}` : ''} · ${w.task.name}` } : w.task));
+      // A worker holding a claimed bounty wears what it's worth on its card.
+      const bounty = workerBounty(w.id);
+      const card = meetingCard(w) ?? (w.task && w.kind === 'agent' ? { ...w.task, name: `${providerLabel(w.provider, store.project)}${engineBadge ? ` · ${engineBadge}` : ''} · ${w.task.name}` } : w.task);
+      v.model.setTask(bounty ? { name: card ? `${bounty} · ${card.name}` : bounty, summary: card?.summary ?? 'Its PR claims a bounty' } : card);
       const deskDef = OFFICE_PLAN.byId.get(w.deskId);
       // Keys clack while it types, not while it reads, watches its tests or browses.
       if (deskDef) sound.setTyping(w.id, deskDef.x, deskDef.z, w.status === 'working' && (!w.action || w.action === 'edit'));
@@ -181,6 +185,7 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     for (const c of appeared) if (p.y > -0.1 && p.y < c.top && p.x > c.minX - 0.3 && p.x < c.maxX + 0.3 && p.z > c.minZ - 0.3 && p.z < c.maxZ + 0.3) p.y = c.top;
   }
   store.on('workers', syncWorkers);
+  store.on('bounties', syncWorkers);
   const workerPos = new THREE.Vector3();
   ctx.ticks.add('others', ({ dt, t }) => {
     const camPos = camera.position;
