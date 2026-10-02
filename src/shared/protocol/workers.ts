@@ -102,6 +102,12 @@ export interface WorkerInfo {
   /** When its agent last reported a hook event, and when its terminal last printed (stamped at most every 30 seconds). */
   activityAt?: number;
   outputAt?: number;
+  /**
+   * When a tool call it started (one not finished yet) began, for an agent with no hook for its
+   * permission prompt (Cursor): a tool that's still open while nothing else happens may be waiting
+   * on one (see shared/attention.ts). Not kept across restarts.
+   */
+  toolOpenSince?: number;
   /** The GitHub issue it's there for, and the milestone of the floor's mission it works towards (its id). */
   issue?: number;
   goal?: string;

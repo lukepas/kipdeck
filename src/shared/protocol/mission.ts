@@ -70,6 +70,8 @@ export interface RosterEntry {
   activityAt?: number;
   /** Its terminal's last output (stamped at most every 30 seconds). */
   outputAt?: number;
+  /** A tool call of an agent without a permission hook (Cursor) started then and hasn't finished (WorkerInfo.toolOpenSince). */
+  toolOpenSince?: number;
   exitCode?: number;
   action?: WorkerAction;
   /** Its worktree was deleted outside the office. */

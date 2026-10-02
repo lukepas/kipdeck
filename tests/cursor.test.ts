@@ -290,3 +290,23 @@ test('helper stays quiet for another worker, a person\'s own Cursor session, a s
     assert.deepEqual(received, []);
   }
 });
+
+test("a tool a Cursor worker started and hasn't finished is stamped, for the ranking to call it stuck sooner", async () => {
+  const { cursor } = await import('../src/server/providers/cursor.js');
+  const chat = '5f2c9a1e-7b1d-4c2a-9f3e-0a1b2c3d4e5f';
+  const info = { id: 'w1', status: 'working', sessionId: chat } as { id: string; status: string; sessionId: string; toolOpenSince?: number };
+  const noop = () => {};
+  const h = { info, setStatus: (s: string) => (info.status = s), emit: noop, persist: noop, clearTask: noop, notePrompt: noop, noteTool: noop, prompt: () => undefined } as never;
+  const send = (event: string, more: object = {}) => cursor.hook!.handle(h, event, { conversation_id: chat, ...more });
+  const before = Date.now();
+  assert.equal(send('preToolUse', { tool_name: 'Shell', tool_use_id: 't1' }), true);
+  assert.ok(info.toolOpenSince! >= before);
+  assert.equal(send('postToolUse', { tool_name: 'Shell', tool_use_id: 't1' }), true);
+  assert.equal(info.toolOpenSince, undefined);
+  send('preToolUse', { tool_name: 'Shell' });
+  send('stop');
+  assert.equal(info.toolOpenSince, undefined);
+  // Another chat's tool isn't this worker's.
+  assert.equal(send('preToolUse', { conversation_id: '00000000-7b1d-4c2a-9f3e-0a1b2c3d4e5f' }), false);
+  assert.equal(info.toolOpenSince, undefined);
+});

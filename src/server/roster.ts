@@ -50,6 +50,7 @@ export function rosterEntry(f: RosterFloor, w: WorkerInfo): RosterEntry {
     ...(w.waitingSince !== undefined ? { waitingSince: w.waitingSince } : {}),
     ...(w.activityAt !== undefined ? { activityAt: w.activityAt } : {}),
     ...(w.outputAt !== undefined ? { outputAt: w.outputAt } : {}),
+    ...(w.toolOpenSince !== undefined ? { toolOpenSince: w.toolOpenSince } : {}),
     ...(w.exitCode !== undefined ? { exitCode: w.exitCode } : {}),
     ...(w.action ? { action: w.action } : {}),
     ...(w.lost ? { lost: true } : {}),

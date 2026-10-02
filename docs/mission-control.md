@@ -15,7 +15,7 @@ Every worker hired onto a desk, a bean bag or the meeting table, on every floor 
 | Level | What puts a worker there |
 | --- | --- |
 | Needs you | It's waiting on an answer or a permission: *needs input for 18 min: Wants permission: Bash: npm test* |
-| Stuck | Working but no hook event and no terminal output for 10 minutes (*working but silent for 12 min*); tests or a build failing again and again; crashed (*crashed (exit 1)*); its worktree was deleted; hired 15 minutes ago and never given a task; its queue task failed to start |
+| Stuck | Working but no hook event and no terminal output for 10 minutes (*working but silent for 12 min*), or for 2 minutes in the middle of a tool call for an agent with no hook for its permission prompt (Cursor); tests or a build failing again and again; crashed (*crashed (exit 1)*); its worktree was deleted; hired 15 minutes ago and never given a task; its queue task failed to start |
 | To review | Done and nobody has looked (after 30 minutes: *forgotten: done 42 min ago, nobody looked*); its pull request's checks are failing, it has merge conflicts, changes were requested, it's approved and ready to merge, or it waits for a review; commits on its branch and no pull request yet; its pull request merged, so it can go home |
 | Working | At work and showing signs of life |
 | Ready or asleep | Ready for its next task (finished and seen to), or asleep |

@@ -6,6 +6,11 @@ import type { RosterEntry } from './protocol.js';
 
 /** Working, but no hook event and no terminal output for this long: it may be stuck. */
 export const SILENT_MS = 10 * 60_000;
+/**
+ * Silent this long with a tool call open, for an agent whose hooks can't say it's asking permission
+ * (Cursor): its terminal is most likely showing the prompt, so it's stuck sooner.
+ */
+export const TOOL_SILENT_MS = 2 * 60_000;
 /** Done this long and nobody has looked: it's been forgotten. */
 export const FORGOTTEN_MS = 30 * 60_000;
 /** Hired this long ago and still never given anything to do. */
@@ -105,6 +110,7 @@ export function attention(e: RosterEntry, now: number): Attention {
   if (e.status === 'working' && e.action === 'failing') return at('stuck', 'look', e.workingSince ?? waited, 'tests or build failing repeatedly');
   if (e.status === 'working') {
     const sign = lastSign(e);
+    if (e.toolOpenSince !== undefined && now - sign >= TOOL_SILENT_MS) return at('stuck', 'look', sign, `silent for ${duration(now - sign)} in the middle of a tool: it may be asking permission in its terminal`);
     if (now - sign >= SILENT_MS) return at('stuck', 'look', sign, `working but silent for ${duration(now - sign)}`);
   }
   if (e.taskFailed) return at('stuck', 'look', waited, 'its queue task failed');

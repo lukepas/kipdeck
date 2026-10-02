@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { FORGOTTEN_MS, IDLE_NO_TASK_MS, SILENT_MS, attention, attentionCounts, attentionLabel, chipTab, duration, isSnoozed, needingSomeone, rankRoster } from '../src/shared/attention.js';
+import { FORGOTTEN_MS, IDLE_NO_TASK_MS, SILENT_MS, TOOL_SILENT_MS, attention, attentionCounts, attentionLabel, chipTab, duration, isSnoozed, needingSomeone, rankRoster } from '../src/shared/attention.js';
 import type { RosterEntry } from '../src/shared/protocol.js';
 
 const NOW = 1_800_000_000_000;
@@ -24,6 +24,15 @@ test('a working worker with no sign of life for SILENT_MS is stuck, and one that
   assert.equal(attention({ ...silent, outputAt: NOW - SILENT_MS + 1000 }, NOW).level, 'working');
   // Only just started: its own start counts as a sign of life.
   assert.equal(attention(entry({ workingSince: NOW - 1000 }), NOW).level, 'working');
+});
+
+test("a Cursor worker silent in the middle of a tool is stuck after TOOL_SILENT_MS, since it may be on a permission prompt no hook reports", () => {
+  const open = entry({ workingSince: NOW - 30 * MIN, toolOpenSince: NOW - 3 * MIN, activityAt: NOW - 3 * MIN, outputAt: NOW - 3 * MIN });
+  assert.deepEqual([attention(open, NOW).level, attention(open, NOW).reason], ['stuck', 'silent for 3 min in the middle of a tool: it may be asking permission in its terminal']);
+  // Still printing (a long test run): working.
+  assert.equal(attention({ ...open, outputAt: NOW - TOOL_SILENT_MS + 1000 }, NOW).level, 'working');
+  // The tool finished: only the usual silence counts.
+  assert.equal(attention({ ...open, toolOpenSince: undefined }, NOW).level, 'working');
 });
 
 test('crashed, failing again and again, a lost worktree, a failed task and a worker never given anything are stuck', () => {

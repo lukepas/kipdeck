@@ -42,7 +42,15 @@ export const cursor: ProviderAdapter<undefined, CursorSetup> = {
       if (report.event === 'UserPromptSubmit' && h.info.sessionId && h.info.sessionId !== report.sessionId) {
         reduceLifecycle(h, { sessionId: report.sessionId, event: 'SessionStart', source: 'clear' });
       }
-      return reduceLifecycle(h, report);
+      const taken = reduceLifecycle(h, report, {
+        // Cursor has no hook for its permission prompt: a tool still open while nothing else happens
+        // may be on one, and the ranking calls it stuck sooner (shared/attention.ts). Set before the
+        // update goes out, so the roster has it.
+        onReport: () => {
+          h.info.toolOpenSince = report.event === 'PreToolUse' ? Date.now() : undefined;
+        },
+      });
+      return taken;
     },
   },
   // A resumed chat fires no sessionStart, so it's idle as soon as it runs; the login screen is read off its terminal.
