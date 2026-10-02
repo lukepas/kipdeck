@@ -2,8 +2,8 @@
   "cluster": "localnet",
   "programId": "JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6",
   "upgradeAuthority": "TyQidKVXFC52NRtsais3yaFbBkJksBeU5Y68TSwb1zE",
-  "deployedAt": "2026-10-02T20:23:30.056Z",
-  "note": "solana-test-validator on 127.0.0.1 (Agave 4.3); the ledger was local and is gone. Testnet only. The program was built with the test-mint feature, so it accepts devnet USDC and the test mint below. The upgrade authority is kept so devnet redeploys stay possible.",
+  "deployedAt": "2026-10-02T21:17:08.810Z",
+  "note": "Testnet only. The program was built with the test-mint feature, so it accepts devnet USDC and the test mint below. The upgrade authority is kept so devnet redeploys stay possible.",
   "testMint": "9CL3xM1UNUQk7XqKz8JHbYhPNH9iwZF4mU67sjSEzbMz",
   "attester": "3VFTNzfonYmnqXxuw4aADLc5GCHqNEa1wHzok4yvZFHk",
   "approver": "55vgpiASBFv3r31ePiPSEGzMomdiRBtjPM1ay7Bx5ypN",
@@ -38,6 +38,22 @@
         "fund": "4s7kLc1EnrgijHGeCdSHWLxJfRC8qqXduaL7v6DDo47shzMdP8RBFGoGPF1yzVhnMf4Y9wqkEJ2oAt4PBSJDw7U3",
         "claim": "XFArBWojrwgmeodzJonXwSpgppRjSQsy4F3mjdSZ5F4Eu3BXrqVY1VPLDAeHiPYdx2zyYf4VA5ueKjWwHGhJ5qC",
         "release": "5viXS7WoJYGNzHNvU4GL9Aw4VEvj2hbo7kW2hxZeLz1bRH8UrZXooYpjB3kP9mgXCEqAdfHbtQPzQ8DM3gdRiZBU"
+      }
+    },
+    {
+      "at": "2026-10-02T21:17:08.813Z",
+      "repo": "proof-of-merge/devnet-demo",
+      "issue": 1790975825,
+      "bounty": "5U42D6cpdj1g4iKE2Jy8Kjh84bcd5i9Bg6sFrLusyiPa",
+      "funder": "Fr5n1zC3nTLvMESM1KoR6D7qNtLgyaNb5GCdK5CcAus",
+      "operator": "FU7ER8xsCunDEWzFsgwiNRsouuTeGo4myzADf5myCQAz",
+      "amount": "25",
+      "note": "Demo bounty: no GitHub merge behind it; the attester checks run in the office and SDK tests.",
+      "signatures": {
+        "open": "2dutjH6EEr88a3hquL2pM8sv5QEUMYYi7EGPbWP8yXGQE8NjaSogvQCA9UoHLfgtAjcPZVGuvh97NT76Nx1AGbPM",
+        "fund": "Jo5KaLQSw81zcumdXNYDYTN5e7ZVD1twkq2Nv8dYR4K62hcvp6y3tL9VDtuiHtqVSUVuvnZbwjbXEyxsy2MChfp",
+        "claim": "uEbRUuBzgjwysSPi628XcRbrRi1DDCVoyPhztwZRSCaoCQNG2eBH2BKSqCVC1saNT1Uwxb4VcumeHywcisMYRt9",
+        "release": "YUyMKFWLssQmWUj8pnJ6iGJSPyZABH9nGHvj9LhpUTzZ3cue3jpjYXhFu7UcXAjkezCCVXdUdthd4b99A6TPgTt"
       }
     }
   ]

@@ -372,6 +372,7 @@ Every change to the app that lands on `main` is published as a GitHub release by
 
 - [Features](docs/features.md): seeing what every agent does, handing out work, reviewing it and staying on mission
 - [Mission control](docs/mission-control.md): the attention ranking, the floor's mission and milestones, linking work to goals, the review inbox, the timeline, reminders and the digest
+- [Proof of Merge bounties](docs/bounties.md): devnet USDC escrowed against an issue, paid only when a person merges the office's pull request and an admin approves (testnet only, off by default)
 - [Agents](docs/agents.md): every harness the office runs (Claude Code, Codex, OpenCode, Grok, Muse, DeepSeek Harness, Pi, Cursor), models and effort, and the office's prompts
 - [Configuration](docs/configuration.md): every command-line option, and where the office keeps its data
 - [Workers' servers on your own computer](docs/tunnel.md): `agent-office tunnel`, which opens every worker's web server on your computer by itself

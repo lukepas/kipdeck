@@ -109,7 +109,7 @@ The deployer keeps the upgrade authority, so devnet redeploys stay possible. The
 ### Status
 
 - `cargo test`, the SDK tests and the litesvm runs of the built `.so` pass.
-- `scripts/e2e.sh localnet` ran on `solana-test-validator` (Agave 4.3): see `deployments/localnet.json` for the signatures (that ledger was local and is gone).
+- `scripts/e2e.sh localnet` ran on `solana-test-validator` (Agave 4.3) three times, the last on 2026-10-03 at the current commit: see `deployments/localnet.json` for the signatures (those ledgers were local and are gone). The office's guarded RPC fetch read the released bounty back from that validator (loopback allowed explicitly), and refused it with the default guard.
 - Devnet: not deployed yet. The devnet faucet refused CLI airdrops for the day (rate limit), and faucet.solana.com needs a browser sign-in. Fund the deployer `TyQidKVXFC52NRtsais3yaFbBkJksBeU5Y68TSwb1zE` with 2 devnet SOL, then run `scripts/e2e.sh devnet`. The program id will be `JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`.
 - The program is not audited.
 

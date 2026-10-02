@@ -77,6 +77,10 @@ A web page pinned beside a worker's terminal (**+ Web page**) stays in that brow
 
 Changing the team webhook, upgrading the office, editing the office's prompts, the worker limit, taking a floor off and managing accounts need an admin. The office checks each on its side; Settings and the upgrade panel say so to members.
 
+## Bounties (testnet only)
+
+[Proof of Merge bounties](bounties.md) are off until an admin turns them on, and only reach Solana devnet. Approving a payout and changing bounty settings need an admin; the approver key signs only after that check, and a release needs both the attester's and the approver's signature on chain. RPC calls go through the network guard to `api.devnet.solana.com` only. The public "Fund this issue" routes under `/api/actions/` serve only repositories an admin opted into, after the host check, rate-limited per client address, and answer with unsigned transactions the funder's own wallet signs. The key files sit in `~/.config/agent-office-chain` (mode 0700, files 0600), but workers run as the same OS user and could read them, so they must be dedicated testnet keys.
+
 ## Sessions
 
 - A sign-in lasts 7 days (it was 14). `AGENT_OFFICE_SESSION_DAYS` sets it, from 1 to 90.
