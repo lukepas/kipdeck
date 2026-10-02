@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { setWorkerEnv } from './workers/env.js';
 import https from 'node:https';
 import type { Config } from './config.js';
 import { resolveCommand } from './workers.js';
@@ -24,6 +25,8 @@ export interface StartOptions {
 
 export async function startServer(cfg: Config, opts: StartOptions = {}) {
   const publicDir = opts.publicDir ?? findPublicDir();
+  // Workers get the office's environment through its allowlist, unless it was told otherwise (worker-env.ts).
+  setWorkerEnv(cfg.workerEnv);
   // Everything the office's parts share (see office/context.ts), filled in a stage at a time in the
   // order the office has always started up in: the hook server already answers the workers still
   // running from the last office while the floors open.

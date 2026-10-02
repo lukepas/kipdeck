@@ -10,6 +10,10 @@ import { Worktrees } from '../src/server/worktrees.js';
 import type { AgentProvider, WorkerInfo } from '../src/shared/protocol.js';
 import type { PromptSource } from '../src/server/prompts.js';
 import { PROMPTS } from '../src/shared/prompts.js';
+import { setWorkerEnv } from '../src/server/workers/env.js';
+
+// The stand-in agents are steered by FAKE_AGENT_* variables: let them through the worker allowlist.
+setWorkerEnv({ policy: 'clean', allow: ['FAKE_*', 'GH_STATE'] });
 
 type Invocation = {
   kind: string;

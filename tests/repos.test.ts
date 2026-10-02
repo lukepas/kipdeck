@@ -11,6 +11,10 @@ import { Ledger } from '../src/server/usage.js';
 import { WorkerManager, relatedBlock, withRelated, workspaceNames, type RepoSource, type WorkerEvents } from '../src/server/workers.js';
 import { Worktrees } from '../src/server/worktrees.js';
 import type { ChangesState, GhPull, WorkerInfo } from '../src/shared/protocol.js';
+import { setWorkerEnv } from '../src/server/workers/env.js';
+
+// The stand-in agents are steered by FAKE_AGENT_* variables: let them through the worker allowlist.
+setWorkerEnv({ policy: 'clean', allow: ['FAKE_*', 'GH_STATE'] });
 
 // A worker across repositories (WorkerInfo.repos): hired on one floor with other floors' projects,
 // it works in a workspace holding a worktree of each, all on one branch, and opens a PR in each.

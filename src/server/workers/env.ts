@@ -1,5 +1,7 @@
-// The environment the workers start with: the office's own, minus a parent agent session's.
+// The environment the workers start with: the office's own, through the allowlist (see
+// worker-env.ts), minus a parent agent session's.
 import { PROVIDERS } from '../providers/index.js';
+import { CLEAN_ENV, pickEnv, type WorkerEnvConfig } from '../worker-env.js';
 
 // Env vars from a parent agent session (e.g. starting the office from inside Claude Code) that
 // would make a worker think it is a child session — that silently turns off transcript saving,
@@ -11,9 +13,15 @@ const SCRUB_ENV = new Set([
 const SCRUB_PREFIXES = [...Object.values(PROVIDERS).flatMap((p) => p.scrubPrefixes ?? []), 'NEBULA_', 'AGENT_OFFICE_'];
 const scrubbed = (k: string) => SCRUB_ENV.has(k) || SCRUB_PREFIXES.some((p) => k.startsWith(p));
 
-/** The office's environment, minus anything that would make a child think it's a nested session. */
-export function childEnv(): Record<string, string> {
-  const env: Record<string, string> = {};
-  for (const [k, v] of Object.entries(process.env)) if (v !== undefined && !scrubbed(k)) env[k] = v;
-  return env;
+/** Which of the office's variables workers get: the allowlist, unless the office was told otherwise. */
+let policy: WorkerEnvConfig = CLEAN_ENV;
+
+/** Set once as the office starts, from --worker-env and --inherit-env (see config.ts). */
+export function setWorkerEnv(cfg: WorkerEnvConfig) {
+  policy = cfg;
+}
+
+/** The office's environment as a worker gets it: the allowlist, minus anything that would make it think it's a nested session. */
+export function childEnv(cfg: WorkerEnvConfig = policy, source: NodeJS.ProcessEnv = process.env): Record<string, string> {
+  return pickEnv(source, cfg, scrubbed);
 }

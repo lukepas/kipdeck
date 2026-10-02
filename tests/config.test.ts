@@ -50,3 +50,14 @@ test('--no-open leaves the browser alone', (t) => {
   assert.equal(load(t).open, true);
   assert.equal(load(t, '--no-open').open, false);
 });
+
+test('workers get the clean allowlist unless --inherit-env, and --worker-env adds to it', (t) => {
+  assert.deepEqual(load(t).workerEnv, { policy: 'clean', allow: [] });
+  assert.deepEqual(load(t, '--inherit-env').workerEnv, { policy: 'inherit', allow: [] });
+  assert.deepEqual(load(t, '--worker-env', 'AWS_PROFILE,SENTRY_*', '--worker-env', 'FOO').workerEnv.allow, ['AWS_PROFILE', 'SENTRY_*', 'FOO']);
+  assert.throws(() => load(t, '--worker-env', 'A=B'), /exit 2: agent-office: --worker-env takes variable names/);
+});
+
+test('--allowed-host adds names the office answers to', (t) => {
+  assert.deepEqual(load(t, '--allowed-host', 'office.example.com:8443', '--allowed-host', '.corp.example').allowedHosts, ['office.example.com', '.corp.example']);
+});

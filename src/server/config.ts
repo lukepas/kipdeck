@@ -6,6 +6,7 @@ import { execFileSync } from 'node:child_process';
 import { AGENT_PROVIDERS, PROVIDER_META } from '../shared/providers.js';
 import { MAX_WORKER_LIMIT, parseWorkerLimit } from './machine.js';
 import { parseAllowedHosts } from './hosts.js';
+import { splitEnvNames, validEnvPattern, type WorkerEnvConfig } from './worker-env.js';
 import { readStateJson, stateDirProblem, untrustedState, writeState } from './safefs.js';
 
 export interface Config {
@@ -42,6 +43,8 @@ export interface Config {
   trustProxy: boolean;
   /** More names the office is reached at, besides localhost, this machine's and the public host (see hosts.ts). */
   allowedHosts: string[];
+  /** Which of the office's variables workers get: an allowlist unless --inherit-env (see worker-env.ts). */
+  workerEnv: WorkerEnvConfig;
   iceServers: RTCIceServerLike[];
   /** How to run the script that deployed the office, e.g. "deploy/azure.sh --name team2" (set by deploy/provision.sh), for the commands it suggests. */
   deployScript?: string;
@@ -131,6 +134,15 @@ Options:
                           AGENT_OFFICE_ALLOWED_HOSTS, comma separated). It answers
                           to IP addresses, localhost, this machine's name and the
                           public host already; ".example.com" allows every name under it
+      --worker-env <names>
+                          More of the office's environment variables to pass to
+                          workers, comma separated, a trailing * for a prefix
+                          ("AWS_PROFILE,SENTRY_*"; repeatable; env
+                          AGENT_OFFICE_WORKER_ENV). Workers get an allowlist
+                          by default: what a terminal, the usual toolchains and
+                          the agents' sign-ins need
+      --inherit-env       Pass workers the office's whole environment instead
+                          (env AGENT_OFFICE_INHERIT_ENV=1)
       --turn <url>        Add a TURN server for voice (repeatable), e.g.
                           turn:user:pass@turn.example.com:3478
       --budget <usd>      Daily budget for tracked Claude Code spend (env
@@ -217,6 +229,8 @@ export function loadConfig(argv: string[]): Config {
   let selfSigned = false;
   let trustProxy = false;
   const allowedHosts = parseAllowedHosts(process.env.AGENT_OFFICE_ALLOWED_HOSTS);
+  const workerEnvAllow = splitEnvNames(process.env.AGENT_OFFICE_WORKER_ENV || '');
+  let inheritEnv = !!process.env.AGENT_OFFICE_INHERIT_ENV && process.env.AGENT_OFFICE_INHERIT_ENV !== '0';
   let claimToken = process.env.AGENT_OFFICE_CLAIM_TOKEN || '';
   let resetPassword = false;
   let budget = process.env.AGENT_OFFICE_BUDGET || '';
@@ -265,6 +279,12 @@ export function loadConfig(argv: string[]): Config {
         break;
       case '--trust-proxy':
         trustProxy = true;
+        break;
+      case '--worker-env':
+        workerEnvAllow.push(...splitEnvNames(takeValue(argv, i++, a)));
+        break;
+      case '--inherit-env':
+        inheritEnv = true;
         break;
       case '--allowed-host':
         allowedHosts.push(...parseAllowedHosts(takeValue(argv, i++, a)));
@@ -333,6 +353,12 @@ export function loadConfig(argv: string[]): Config {
   const workerLimit = maxWorkers ? parseWorkerLimit(maxWorkers) : undefined;
   if (maxWorkers && workerLimit === undefined) {
     console.error(`agent-office: --max-workers needs a whole number from 1 to ${MAX_WORKER_LIMIT}, e.g. --max-workers 6`);
+    process.exit(2);
+  }
+
+  const badEnv = workerEnvAllow.find((n) => !validEnvPattern(n));
+  if (badEnv) {
+    console.error(`agent-office: --worker-env takes variable names (a trailing * for a prefix), not "${badEnv}"`);
     process.exit(2);
   }
 
@@ -434,6 +460,7 @@ export function loadConfig(argv: string[]): Config {
     tls,
     trustProxy,
     allowedHosts,
+    workerEnv: { policy: inheritEnv ? 'inherit' : 'clean', allow: workerEnvAllow },
     iceServers,
     deployScript: process.env.AGENT_OFFICE_DEPLOY_SCRIPT || undefined,
     publicHost: process.env.AGENT_OFFICE_PUBLIC_HOST || undefined,
