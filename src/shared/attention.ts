@@ -37,7 +37,8 @@ export const LEVEL_LABEL: Record<AttentionLevel, string> = {
   stuck: 'Stuck',
   review: 'To review',
   working: 'Working',
-  parked: 'Parked',
+  // The same word the status pill uses for an idle worker ('ready'), so a worker is called one thing.
+  parked: 'Ready or asleep',
 };
 
 /** The one thing to do next about a worker. */
@@ -159,6 +160,14 @@ export function attentionCounts(ranked: readonly Ranked[]): AttentionCounts {
 /** How many need a person now: the ones that need input, are stuck, or wait for review. */
 export function needingSomeone(c: AttentionCounts): number {
   return c['needs-you'] + c.stuck + c.review;
+}
+
+/**
+ * Which Mission control tab the attention chip opens: the Review tab when finished work is all
+ * that waits (so "3 to review" lands on the three), else Attention.
+ */
+export function chipTab(c: AttentionCounts, reminders: number): 'attention' | 'review' {
+  return !c['needs-you'] && !c.stuck && !reminders && c.review ? 'review' : 'attention';
 }
 
 /** "2 need you · 1 stuck · 3 to review", or '' when nobody needs anyone. */

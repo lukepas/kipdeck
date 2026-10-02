@@ -43,19 +43,20 @@ export function installHud(ctx: Ctx, parts: HudParts) {
   const noMedia = () => (window.isSecureContext ? undefined : 'Voice and screen sharing need HTTPS or localhost — use a TLS proxy, --self-signed, or an SSH tunnel');
   const hud = mountHud(
     [
-      // Up on the top bar while anyone, on any floor, needs someone: "2 need you · 1 stuck · 3 to review".
+      // Always on the top bar, the hub of the office: "2 need you · 1 stuck · 3 to review" while anyone,
+      // on any floor, needs someone, and a quiet "Mission control" while nobody does.
       {
         id: 'mission',
         icon: '🎯',
         label: 'Mission control',
         section: 'Open',
         key: 'I',
-        status: () => attentionChip().total > 0 || attentionChip().reminders > 0,
-        chip: () => attentionChip().text || `${attentionChip().reminders} reminder${attentionChip().reminders === 1 ? '' : 's'}`,
+        status: () => true,
+        chip: () => attentionChip().text || (attentionChip().reminders ? `${attentionChip().reminders} reminder${attentionChip().reminders === 1 ? '' : 's'}` : 'Mission control'),
         dot: () => attentionChip().reminders > 0,
         tone: () => (attentionChip().tone === 'danger' ? 'danger' : attentionChip().tone === 'warn' ? 'primary' : undefined),
         title: () => `Mission control: what needs someone, on every floor, and the floor's goals (I)${attentionChip().text ? ` · ${attentionChip().text}` : ''}${attentionChip().reminders ? ` · reminders open: ${attentionChip().reminders}` : ''}`,
-        run: () => parts.mission.showMission('attention'),
+        run: () => parts.mission.showMission(attentionChip().tab),
       },
       { id: 'issues', icon: '📌', label: 'Issues', section: 'Open', count: () => store.issues.items.filter((i) => i.state === 'OPEN').length, run: () => openBoard('issues', net, actions.boardActions()) },
       { id: 'pulls', icon: '🔀', label: 'Pull requests', section: 'Open', count: () => store.pulls.items.filter((p) => p.state === 'OPEN').length, run: () => openBoard('pulls', net, actions.boardActions()) },

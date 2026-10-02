@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { FORGOTTEN_MS, IDLE_NO_TASK_MS, SILENT_MS, attention, attentionCounts, attentionLabel, duration, isSnoozed, needingSomeone, rankRoster } from '../src/shared/attention.js';
+import { FORGOTTEN_MS, IDLE_NO_TASK_MS, SILENT_MS, attention, attentionCounts, attentionLabel, chipTab, duration, isSnoozed, needingSomeone, rankRoster } from '../src/shared/attention.js';
 import type { RosterEntry } from '../src/shared/protocol.js';
 
 const NOW = 1_800_000_000_000;
@@ -84,6 +84,14 @@ test('the ranking: by level, the snoozed after the rest of theirs, the longest w
   assert.equal(attentionLabel(counts), '2 need you · 1 stuck · 1 to review');
   assert.equal(attentionLabel({ 'needs-you': 1, stuck: 0, review: 0, working: 3, parked: 0 }), '1 needs you');
   assert.equal(attentionLabel({ 'needs-you': 0, stuck: 0, review: 0, working: 3, parked: 0 }), '');
+});
+
+test("the chip opens the tab that lists what it counts: Review when finished work is all that waits", () => {
+  const c = (over: Partial<Record<'needs-you' | 'stuck' | 'review', number>>) => ({ 'needs-you': 0, stuck: 0, review: 0, working: 0, parked: 0, ...over });
+  assert.equal(chipTab(c({ review: 1 }), 0), 'review');
+  assert.equal(chipTab(c({ review: 1, stuck: 1 }), 0), 'attention');
+  assert.equal(chipTab(c({ review: 1 }), 1), 'attention', 'reminders are on the Attention tab');
+  assert.equal(chipTab(c({}), 0), 'attention');
 });
 
 test('durations read as people say them', () => {

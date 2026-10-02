@@ -3,7 +3,7 @@
 // for a person's decision), Timeline (what happened). The same module serves the 3D office and the
 // 2D view, so it imports no three.js and nothing of the 3D office's (tests/client-structure.test.ts checks).
 import './mission.css';
-import { attentionLabel, needingSomeone } from '../../../shared/attention';
+import { attentionLabel, chipTab, needingSomeone } from '../../../shared/attention';
 import { MISSION_TABS, store, type MissionTab, type Topic } from '../../state';
 import { h, openModal, type Modal } from '../dom';
 import { setMissionOpen, type MissionDeps } from './act';
@@ -153,9 +153,9 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
  * What the attention chip says: "2 need you · 1 stuck · 3 to review", across every floor, and
  * whether any reminders are open (an amber dot).
  */
-export function attentionChip(): { text: string; tone: 'danger' | 'warn' | 'ok' | undefined; total: number; reminders: number } {
+export function attentionChip(): { text: string; tone: 'danger' | 'warn' | 'ok' | undefined; total: number; reminders: number; tab: 'attention' | 'review' } {
   const counts = store.counts();
   const total = needingSomeone(counts);
   const reminders = openReminders().length;
-  return { text: attentionLabel(counts), tone: counts['needs-you'] ? 'danger' : counts.stuck ? 'warn' : counts.review ? 'ok' : undefined, total, reminders };
+  return { text: attentionLabel(counts), tone: counts['needs-you'] ? 'danger' : counts.stuck ? 'warn' : counts.review ? 'ok' : undefined, total, reminders, tab: chipTab(counts, reminders) };
 }

@@ -4,7 +4,7 @@ Back to the [README](../README.md).
 
 Mission control answers one question: what needs a person right now, on any floor. It ranks every hired worker in the building by how much it needs someone, says why in plain words, and offers one next step. Next to that it keeps what each floor is for (its mission and milestones), so every worker, task and pull request can be tied back to a goal, an inbox of everything waiting for a review, a timeline of what happened, and reminders for what would otherwise be forgotten.
 
-Open it with **I** anywhere in the office, from the attention chip on the top bar, from **☰** > **Mission control**, or from the command palette (**Ctrl+K**: *Mission control*, *Edit the mission*, *Review finished work*, *Timeline*, *While you were away*). In the 2D view (`/lite`) it's the **Mission** button in the top bar. It has a ✕ in the top right, and Esc closes it and puts you straight back into looking around. It remembers the tab you had open last.
+Open it with **I** anywhere in the office, from the attention chip on the top bar (always there: *2 need you · 1 stuck · 3 to review* while something waits, which opens the Review tab when finished work is all that does, and a quiet *Mission control* while nothing does), from **☰** > **Mission control**, or from the command palette (**Ctrl+K**: *Mission control*, *Edit the mission*, *Review finished work*, *Timeline*, *While you were away*). In the 2D view (`/lite`) it's the **Mission** button in the top bar. It has a ✕ in the top right, and Esc closes it and puts you straight back into looking around. It remembers the tab you had open last.
 
 Inside it, **1** **2** **3** **4** switch tabs (Attention, Goals, Review, Timeline), the arrow keys move between rows, and **Enter** does the selected row's next step.
 
@@ -18,9 +18,9 @@ Every worker hired onto a desk, a bean bag or the meeting table, on every floor 
 | Stuck | Working but no hook event and no terminal output for 10 minutes (*working but silent for 12 min*); tests or a build failing again and again; crashed (*crashed (exit 1)*); its worktree was deleted; hired 15 minutes ago and never given a task; its queue task failed to start |
 | To review | Done and nobody has looked (after 30 minutes: *forgotten: done 42 min ago, nobody looked*); its pull request's checks are failing, it has merge conflicts, changes were requested, it's approved and ready to merge, or it waits for a review; commits on its branch and no pull request yet; its pull request merged, so it can go home |
 | Working | At work and showing signs of life |
-| Parked | Done and seen to, or asleep |
+| Ready or asleep | Ready for its next task (finished and seen to), or asleep |
 
-Within a level, whoever has waited longest comes first. The working and parked groups stay folded until you open them, so the list stays short.
+Within a level, whoever has waited longest comes first. The working and *Ready or asleep* groups stay folded until you open them, so the list stays short. What waits for review is one line, *To review N*, that opens the Review tab, where it's listed; N is the same count as the chip's and the tab title's, so it includes pull requests no worker stands for.
 
 Each row shows the worker, its floor, what it's for (its milestone, its issue, or *unlinked*), what it's doing, the reason, how long it has been that way and what it has cost, with one button for the next step:
 
