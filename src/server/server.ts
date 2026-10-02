@@ -13,7 +13,7 @@ import { createLateServices, createServices } from './office/services.js';
 import { people } from './office/people.js';
 import { navigation } from './office/navigation.js';
 import { gates } from './office/gates.js';
-import { startTimers } from './office/timers.js';
+import { stampConnected, startTimers } from './office/timers.js';
 import { findPublicDir } from './http/static.js';
 import { requestHandler } from './http/router.js';
 import { routes } from './http/routes/index.js';
@@ -59,6 +59,8 @@ export async function startServer(cfg: Config, opts: StartOptions = {}) {
   /** With `keep` (a restart), workers' terminals keep running for the next office to pick up. */
   const shutdown = (keep = false) => {
     stopTimers();
+    // Before the sockets go: their close may not finish before the process exits.
+    stampConnected(ctx);
     ctx.cancelFloorsChanged();
     ctx.cancelRosterChanged();
     ctx.upgrader.stop();

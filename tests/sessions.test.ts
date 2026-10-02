@@ -118,3 +118,21 @@ test("a page's Origin must be on the allowlist and be the host it came in on", (
   const proxied = new HostGuard({ port: 4600, host: '127.0.0.1', publicHost: 'office.example.com', allowedHosts: [], trustProxy: true });
   assert.equal(proxied.originOk(req({ host: '127.0.0.1:4600', 'x-forwarded-host': 'office.example.com', origin: 'https://office.example.com' })), true);
 });
+
+test("everyone connected is stamped as here at once, so a crash or a slow shutdown doesn't make them look away", async (t) => {
+  const { accounts, dir } = office(t);
+  const ana = await account(accounts, 'Ana');
+  const bo = await account(accounts, 'Bo');
+  t.mock.timers.enable({ apis: ['Date'], now: 1_800_000_000_000 });
+  const { stampConnected } = await import('../src/server/office/timers.js');
+  const clients = new Map([
+    ['c1', { accountId: ana.id }],
+    ['c2', { accountId: ana.id }],
+    ['c3', { accountId: undefined }],
+  ]);
+  stampConnected({ clients, accounts } as unknown as Parameters<typeof stampConnected>[0]);
+  assert.equal(accounts.get(ana.id)?.lastSeenAt, 1_800_000_000_000);
+  assert.equal(accounts.get(bo.id)?.lastSeenAt, undefined, 'not connected, not stamped');
+  // On disk too, for the next office.
+  assert.equal(new Accounts(dir).get(ana.id)?.lastSeenAt, 1_800_000_000_000);
+});

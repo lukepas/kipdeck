@@ -237,10 +237,20 @@ export class Accounts {
   }
 
   seen(id: string) {
-    const a = this.get(id);
-    if (!a) return;
-    a.lastSeenAt = Date.now();
-    this.save();
+    this.seenAll([id]);
+  }
+
+  /** Everyone in `ids` is here now: one write for them all. */
+  seenAll(ids: Iterable<string>) {
+    const now = Date.now();
+    let any = false;
+    for (const id of new Set(ids)) {
+      const a = this.get(id);
+      if (!a) continue;
+      a.lastSeenAt = now;
+      any = true;
+    }
+    if (any) this.save();
   }
 
   private nameTaken(n: string, exceptInvite?: string): string | undefined {
