@@ -95,11 +95,11 @@ export class DesktopNotifier {
     }
   }
 
-  /** A milestone on your floor (see features/milestones), while you're in another tab. */
-  milestone(title: string, body: string) {
+  /** Work landed on your floor (see features/landed), while you're in another tab. */
+  landed(title: string, body: string) {
     if (!this.enabled() || notifyPermission() !== 'granted') return;
     if (!document.hidden && document.hasFocus()) return;
-    const n = this.show(title, { body, tag: `milestone-${title}` });
+    const n = this.show(title, { body, tag: `landed-${title}` });
     if (!n) return;
     n.onclick = () => {
       window.focus();

@@ -28,7 +28,7 @@ import { installBoards } from './features/boards';
 import { installBookshelf } from './features/bookshelf';
 import { installCarrying } from './features/carrying';
 import { installChat } from './features/chat';
-import { installMilestones } from './features/milestones';
+import { installLanded } from './features/landed';
 import { installHud } from './features/hud';
 import { installMeeting } from './features/meeting';
 import { installMission } from './features/mission';
@@ -117,7 +117,7 @@ parts.cards = installCarrying(ctx, {
   showMeeting: parts.meeting.showMeeting,
 });
 parts.seating = installSeating(ctx, { shares: () => parts.talk.currentShares(), watchShare: () => parts.talk.watchShare(), usable: () => parts.pointer.usable() });
-installMilestones(ctx, { notifier: parts.notifier });
+installLanded(ctx, { notifier: parts.notifier });
 
 parts.hintbar = installHintBar(ctx, core, parts);
 installKeyboard(ctx, parts);

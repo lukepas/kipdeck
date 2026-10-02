@@ -344,10 +344,10 @@ test('milestones and the whiteboard on a floor, and letting go of it on leaving 
   // A pull request merging is a milestone the whole floor hears about, once.
   floor.merged(7, 'Cy');
   floor.merged(7, 'Cy');
-  assert.deepEqual(await b.take('milestone'), { t: 'milestone', kind: 'merged', pr: 7, by: 'Cy' });
+  assert.deepEqual(await b.take('landed'), { t: 'landed', kind: 'merged', pr: 7, by: 'Cy' });
   b.send({ t: 'ping', at: 1 });
   await b.take('pong');
-  assert.deepEqual(b.pending('milestone'), []);
+  assert.deepEqual(b.pending('landed'), []);
 
   a.send({ t: 'wb.open' });
   assert.deepEqual((await b.take('wb.people')).people, [cy]);

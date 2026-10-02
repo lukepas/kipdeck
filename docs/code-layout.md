@@ -12,7 +12,7 @@ There are three parts: `src/client` (the page, built by Vite, with three.js), `s
 
 `src/client/main.ts` is the install list: it makes the scene, calls each part's `install…(ctx, …)` in turn, and boots. The order is the order everything registers in (messages, keys, ticks, store topics), and it's kept on purpose, so a new feature's line goes at the end of its group unless it has to come before something.
 
-Every part gets `ctx`: the `Ctx` type in `core/context.ts`, built by `createCtx` in `core/ctx.ts`. It has the scene, the camera, the player, the socket (`net`), sound, settings, what you're holding, the hint bar, and the registries. A feature imports `Ctx` as a type and never imports `main.ts` (a test checks). When a part needs another one, it says which: a small `deps` object of callbacks that `main.ts` passes in (`MilestonesDeps` in `features/milestones/index.ts`), or a `Pick` of `Parts` (`core/parts.ts`, every part `main.ts` makes, by name). Parts are only read when something happens, never while installing, so a part can reach one installed after it.
+Every part gets `ctx`: the `Ctx` type in `core/context.ts`, built by `createCtx` in `core/ctx.ts`. It has the scene, the camera, the player, the socket (`net`), sound, settings, what you're holding, the hint bar, and the registries. A feature imports `Ctx` as a type and never imports `main.ts` (a test checks). When a part needs another one, it says which: a small `deps` object of callbacks that `main.ts` passes in (`LandedDeps` in `features/landed/index.ts`), or a `Pick` of `Parts` (`core/parts.ts`, every part `main.ts` makes, by name). Parts are only read when something happens, never while installing, so a part can reach one installed after it.
 
 ### The registries
 
@@ -68,7 +68,7 @@ The rest is data and pure code both sides use: the floor's layout and plan, the 
 
 A new feature adds files of its own and one line in each list it joins. For something on the floor that everyone there sees and uses, that's:
 
-1. **Its messages** in a protocol domain file (`src/shared/protocol/toys.ts`, say). A new domain file also goes in `protocol.ts`: its `import type`, its `export *` and its members of the unions.
+1. **Its messages** in a protocol domain file (`src/shared/protocol/whiteboard.ts`, say). A new domain file also goes in `protocol.ts`: its `import type`, its `export *` and its members of the unions.
 2. **A server handler file**, `src/server/ws/handlers/<name>.ts`, and its line in `handlers` in `ws/handlers/index.ts`. If it keeps something per person, its `FeatureHooks` go in `features` there; if people arriving on a floor need its state, that's a field of `FloorView` (`protocol/floors.ts`) and its piece in `views`. What a floor keeps is a module of its own in `src/server/`, which `Floor` makes.
 3. **A state slice**, `src/client/state/slices/<name>.ts`, and its line at the end of `SLICES` in `state/slices/index.ts`.
 4. **`src/client/features/<name>/`** with its `install<Name>(ctx, deps)`, and its line in `main.ts`. If another part needs what it returns, a line in `Parts` (`core/parts.ts`) too.

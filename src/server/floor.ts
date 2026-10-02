@@ -262,7 +262,7 @@ export class Floor {
       room: () => ctx.capacity.room(),
       emptied: () => {
         ctx.toast(this, '📋 The queue is empty: every task is done 🎉');
-        ctx.emit(this, { t: 'milestone', kind: 'queue' });
+        ctx.emit(this, { t: 'landed', kind: 'queue' });
       },
       worktreeNote: () => officePrompt(ctx.prompts, 'queue.worktree'),
     }, workersReady);
@@ -348,7 +348,7 @@ export class Floor {
   /** Pull request `n` merged (`by` someone, from the PR window): the floor hears so, once per PR. */
   merged(n: number, by?: string) {
     if (!this.merges.ring(n)) return;
-    this.ctx.emit(this, { t: 'milestone', kind: 'merged', pr: n, by });
+    this.ctx.emit(this, { t: 'landed', kind: 'merged', pr: n, by });
     this.watch.merged(n, this.github.pulls.items.find((p) => p.number === n)?.title, by);
   }
 

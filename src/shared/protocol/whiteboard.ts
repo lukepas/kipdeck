@@ -11,7 +11,7 @@ export type WhiteboardClientMsg =
   /** Where your mouse is on the whiteboard, and what you have selected there. */
   | ({ t: 'wb.pointer'; selected?: string[] } & WbPointer);
 
-export type ToysServerMsg =
+export type WhiteboardServerMsg =
   /** Someone changed these elements on the floor's whiteboard (sent to everyone else on the floor). */
   | { t: 'wb.update'; elements: WbElement[] }
   /** Who has the floor's whiteboard open now. */
