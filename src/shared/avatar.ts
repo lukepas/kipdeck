@@ -1,4 +1,4 @@
-// What a person looks like in the office, picked on the character select screen.
+// What a person looks like in the office: dealt at random, and changed under Settings > Your character.
 // Server and client share these lists so a look is just three small indexes on the wire.
 
 export const SKIN_TONES = ['#ffe3cc', '#ffd7b5', '#f1c27d', '#e0ac69', '#c68642', '#a0663a', '#8d5524', '#5c3a21'];

@@ -160,7 +160,7 @@ export function installHud(ctx: Ctx, parts: HudParts) {
   }
 
   function editProfile() {
-    openCharacter(false, (p) => {
+    openCharacter((p) => {
       parts.you.showMyProfile(p);
       net.send({ t: 'profile', name: p.name, color: p.color, look: p.look });
     });

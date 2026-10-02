@@ -73,7 +73,6 @@ body.lite { min-height: 100dvh; background: var(--paper); -webkit-tap-highlight-
 
 /* No zooming in on a box as you tap it (iOS does, for text under 16px). */
 .modal textarea, .modal input[type=text], .modal input[type=password], .modal select { font-size: 16px; }
-.lite-name .body p { margin: 0 0 12px; font-weight: 700; }
 
 /* On a phone, the big windows take the whole screen; the small ones stay dialogs. */
 @media (max-width: 640px) {

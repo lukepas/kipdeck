@@ -12,7 +12,7 @@ export interface Profile {
 const PROFILE_KEY = 'agent-office.profile';
 export const AVATAR_COLORS = ['#ff8a5b', '#4f86f7', '#06d6a0', '#ef476f', '#ffd166', '#9d4edd', '#00b4d8', '#f77f00'];
 
-/** Your saved profile. `look` is missing if you joined before there was a character select screen. */
+/** Your saved profile. `look` is missing when only the 2D view (or an office from before looks) saved it. */
 export function loadProfile(): (Omit<Profile, 'look'> & { look?: Look }) | null {
   try {
     const p = JSON.parse(localStorage.getItem(PROFILE_KEY) ?? 'null');
@@ -25,7 +25,7 @@ export function loadProfile(): (Omit<Profile, 'look'> & { look?: Look }) | null 
   return null;
 }
 
-/** Without a look, the 3D office still has you pick a character (the 2D view saves only a name). */
+/** Without a look, the 3D office deals one the first time (the 2D view saves only a name). */
 export function saveProfile(p: Omit<Profile, 'look'> & { look?: Look }) {
   try {
     localStorage.setItem(PROFILE_KEY, JSON.stringify(p));

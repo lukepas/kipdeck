@@ -78,12 +78,15 @@ after(async () => {
   await rm(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
 });
 
-/** A page signed in to the office, with a character picked, noting every uncaught error. `away`: this browser was last here that long ago. */
-async function signedIn(viewport = { width: 1280, height: 800 }, away = 0) {
+/**
+ * A page signed in to the office, with a character picked unless `fresh` (a browser that has never
+ * been in), noting every uncaught error. `away`: this browser was last here that long ago.
+ */
+async function signedIn(viewport = { width: 1280, height: 800 }, away = 0, fresh = false) {
   const context = await browser!.newContext({ viewport });
-  await context.addInitScript((away) => {
+  if (!fresh) await context.addInitScript((away) => {
     try {
-      localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4f86f7', look: { skin: 0, hair: 0, style: 0 } }));
+      if (!localStorage.getItem('agent-office.profile')) localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4f86f7', look: { skin: 0, hair: 0, style: 0 } }));
       if (away) localStorage.setItem('agent-office.seen', String(Date.now() - away));
     } catch {
       // storage blocked
@@ -130,6 +133,10 @@ test('the 2D view: the strip, Mission control, editing the mission in place, the
   await add.press('Enter');
   await modal.locator('.mc-milestone.active', { hasText: 'Auth rewrite' }).waitFor();
   await page.locator('#mission-strip .ms-title', { hasText: 'Auth rewrite' }).waitFor();
+  // No issues on it yet: no bar stuck at 0%, it says so instead.
+  assert.equal(await page.locator('#mission-strip .ms-bar').count(), 0);
+  assert.match(await page.locator('#mission-strip .ms-count').innerText(), /no issues linked yet/);
+  assert.equal(await modal.locator('.mc-milestone .mc-bar').count(), 0);
 
   // Esc while editing cancels the edit and leaves the window open.
   await modal.locator('.mc-milestone .mc-ms-head .mc-edit-btn').click();
@@ -174,6 +181,8 @@ test('the 3D office: the strip under the floor name, I opens Mission control, Es
   await page.waitForFunction(() => !!(window as unknown as { __office?: { store: { floor: string | null } } }).__office?.store.floor, null, { timeout: 60_000 });
   // The mission from the test before is on the strip, top left.
   await page.locator('#mission-strip .ms-statement', { hasText: 'Make sign-in boring' }).waitFor({ timeout: 15_000 });
+  // Mission control is on the top bar even while nothing needs anyone.
+  assert.match(await page.locator('#dock .dock-btn[aria-label="Mission control"]').innerText(), /Mission control/);
   await page.locator('#scene').focus();
   await page.keyboard.press('i');
   const modal = page.locator('.modal.mission-control');
@@ -227,4 +236,23 @@ test('back after a while away: the digest is the first card in the 2D view, and 
   await office.page.keyboard.press('Escape');
   assert.equal(await digest.count(), 0);
   assert.deepEqual(office.errors, []);
+});
+
+test('a first visit to the 3D office asks only for a name, never for a character', async (t) => {
+  if (why) return t.skip(why);
+  const { page, errors, context } = await signedIn(undefined, 0, true);
+  t.after(() => context.close());
+  await page.goto(`${base}/`);
+  const ask = page.locator('.modal.name-ask');
+  await ask.waitFor({ timeout: 60_000 });
+  assert.equal(await page.locator('.modal.charsel').count(), 0, 'no character creator in the way');
+  assert.equal(await ask.locator('header .close').count(), 1);
+  await ask.locator('input').fill('Nia');
+  await ask.locator('button[type=submit]').click();
+  await page.waitForFunction(() => !!(window as unknown as { __office?: { store: { floor: string | null } } }).__office?.store.floor, null, { timeout: 60_000 });
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('agent-office.profile') ?? 'null'));
+  assert.equal(saved.name, 'Nia');
+  assert.ok(saved.look, 'a look was dealt, and kept for next time');
+  await page.locator('#mission-strip').waitFor();
+  assert.deepEqual(errors, []);
 });

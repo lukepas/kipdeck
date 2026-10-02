@@ -12,7 +12,8 @@ import { DESK_BY_ID, nextFreeSeat } from '../shared/layout';
 import { isAsleep } from '../shared/status';
 import type { AgentEffort, AgentProvider, FloorInfo, RosterEntry, WorkerInfo } from '../shared/protocol';
 import type { Attention } from '../shared/attention';
-import { $, clip, closeAllModals, doingNow, h, onDoingChange, onModalChange, openModal, readingNow, STATUS_LABEL, timeAgo, toast } from './ui/dom';
+import { $, clip, closeAllModals, doingNow, h, onDoingChange, onModalChange, readingNow, STATUS_LABEL, timeAgo, toast } from './ui/dom';
+import { askName } from './ui/name';
 import { openTerminal, openTerminalFor, routeTerminalMessage } from './ui/terminal';
 import { openChanges, openChangesFor, routeChangesMessage } from './ui/changes';
 import { lostWorktreeDialog, openPrompt, routeWorktreeMessage } from './ui/prompt';
@@ -429,27 +430,6 @@ bell.addEventListener('click', async () => {
 if (notifyPermission() === 'default' && settings.notify) $('to-3d').before(bell);
 
 // ---- In ----------------------------------------------------------------------------------------
-/** Your name, the first time this browser comes in on the shared password. */
-function askName(done: (name: string) => void) {
-  const input = h('input', { type: 'text', maxlength: 24, placeholder: 'Your name', 'aria-label': 'Your name', autocomplete: 'nickname' }) as HTMLInputElement;
-  const form = h(
-    'form.modal.lite-name',
-    {},
-    h('header', {}, h('h2', {}, '👋 Who is it?')),
-    h('div.body', {}, h('p', {}, 'Your teammates see this name on what you type and send.'), input),
-    h('footer', {}, h('button.btn.primary', { type: 'submit' }, 'Come on in')),
-  );
-  const modal = openModal(form, { escCloses: false, backdropCloses: false });
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = input.value.trim();
-    if (!name) return input.focus();
-    modal.close();
-    done(name);
-  });
-  setTimeout(() => input.focus(), 30);
-}
-
 void (async () => {
   try {
     const res = await fetch('/api/whoami', { cache: 'no-store' });
@@ -464,7 +444,7 @@ void (async () => {
   if (saved || store.me.account) return net.connect();
   askName((name) => {
     store.profile.name = name;
-    // No look: the 3D office still has you pick a character the first time you go in.
+    // No look: the 3D office deals one the first time you go in.
     saveProfile({ name, color: store.profile.color });
     net.connect();
   });

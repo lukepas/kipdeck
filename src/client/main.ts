@@ -1,11 +1,12 @@
 import './style.css';
 import { Net } from './net';
 import { DesktopNotifier } from './notify';
-import { store, loadProfile, loadSettings } from './state';
+import { AVATAR_COLORS, store, loadProfile, loadSettings, saveProfile } from './state';
+import { randomLook } from '../shared/avatar';
 import { PlayerController } from './player';
 import { Voice } from './voice';
 import { $ } from './ui/dom';
-import { openCharacter } from './ui/character';
+import { askName } from './ui/name';
 import { elevatorPanelOpen } from './ui/elevator';
 import { onModelsProgress, preloadModels } from './world/models';
 import { loadingScreen } from './ui/loading';
@@ -154,8 +155,7 @@ void whoami().then(() => {
   if (saved && store.me.account) saved.name = store.me.account.name;
   if (store.me.account) store.profile.name = store.me.account.name;
   store.emit('me');
-  if (saved?.look) {
-    store.profile = { ...saved, look: saved.look };
+  const enter = () => {
     parts.you.showMyProfile(store.profile);
     boot();
     // In as soon as the floor you're on is here, so its workers don't pop in after.
@@ -168,18 +168,28 @@ void whoami().then(() => {
     loading.until([
       { say: 'Knocking on the door', done: welcomed },
     ]);
-  } else {
-    // Pick a character first (people from before there was a choice keep their name and color).
-    if (saved) Object.assign(store.profile, { name: saved.name, color: saved.color });
-    // Render the office behind the character select screen.
-    requestAnimationFrame(frame);
-    openCharacter(true, (p) => {
-      parts.you.showMyProfile(p);
-      parts.net.connect();
-    });
-    // No floor comes before you pick, so only the office behind the character select is waited for.
-    loading.until([]);
+  };
+  if (saved?.look) {
+    store.profile = { ...saved, look: saved.look };
+    return enter();
   }
+  // New here: no character to pick before you see the office. A look and a shirt are dealt at
+  // random (Settings > Your character changes them), and only a name is asked for: none with an
+  // account, or when the 2D view already has one.
+  store.profile = {
+    name: saved?.name ?? store.profile.name,
+    color: saved?.color ?? AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
+    look: randomLook(),
+  };
+  if (saved || store.me.account) {
+    saveProfile(store.profile);
+    return enter();
+  }
+  askName((name) => {
+    store.profile.name = name;
+    saveProfile(store.profile);
+    enter();
+  });
 });
 
 // Debug handle for quick checks from the console / headless screenshots.
