@@ -92,8 +92,10 @@ test('without an origin, or offline, it branches from HEAD as before', async (t)
   const f = fixture(t);
   f.merge('fix.txt');
   f.git('remote', 'set-url', 'origin', path.join(f.root, 'nowhere.git'));
+  const warn = t.mock.method(console, 'warn', () => {});
   const trees = new Worktrees(f.dir);
   await trees.fetch();
+  assert.match(String(warn.mock.calls[0]?.arguments[0]), /couldn't fetch origin\/main/, 'it says why it starts from what is here');
   const made = trees.create('rex-4');
   assert.ok(typeof made !== 'string', String(made));
   assert.equal(made.base, f.git('rev-parse', 'HEAD'));
