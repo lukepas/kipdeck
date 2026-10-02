@@ -1,19 +1,17 @@
 /**
  * Office sounds, synthesized with Web Audio so there are no audio files to ship: the room's air,
- * workers typing while they work, footsteps, the odd rustle or phone and the gong, and the dings when a worker needs you.
+ * workers typing while they work, footsteps, the odd rustle or phone, and the dings when a worker needs you.
  *
  * Everything goes through one master gain that Settings turns down or mutes. Voice chat doesn't.
  *
  * OfficeSound is all the rest of the office sees. What every sound shares (the context, the buses,
  * where your ears are, what runs every frame) is AudioCore in core.ts; each sound is a recipe in a
  * file of its own, beside this one (steps.ts, typing.ts and so on) or in its feature's folder
- * (features/gong/sound.ts and so on), and this class only hands them the core.
+ * (alerts.ts and so on), and this class only hands them the core.
  */
-import type { GongWhy } from '../../shared/protocol';
 import { deskPhones, startRoomTone } from './ambience';
 import { ding } from './alerts';
 import { AudioCore, type Listener } from './core';
-import { gong } from '../features/gong/sound';
 import { pageTurn, paper, step, stepAt } from './steps';
 import { fidgeting, Typing } from './typing';
 
@@ -90,11 +88,7 @@ export class OfficeSound {
     stepAt(this.a, x, z, y);
   }
 
-  // ---- The gong, the dings --------------------------------------
-
-  gong(why: GongWhy) {
-    gong(this.a, why);
-  }
+  // ---- The dings --------------------------------------
 
   ding(kind: 'done' | 'needs_input') {
     ding(this.a, kind);

@@ -5,7 +5,7 @@
  */
 import * as THREE from 'three';
 import { OFFICE_PLAN } from '../../../shared/plan';
-import { FLOOR, WING, beanbagsOut, deskBuilt, vacantSeats, wingMinZ, wingRowZ } from '../../../shared/layout';
+import { FLOOR, WING, beanbagsOut, deskBuilt, vacantSeats, wingMinZ } from '../../../shared/layout';
 import { MEETING_PATTERNS } from '../../../shared/meetings';
 import type { WorkerInfo, WorkerTask } from '../../../shared/protocol';
 import { workerPr } from '../../../shared/status';
@@ -53,7 +53,7 @@ export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'noti
  * the queue, and what's been spent (see the order below), and the workers' own tick.
  */
 export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
-  const { scene, sound, player, camera, office, confetti, net } = ctx;
+  const { scene, sound, player, camera, office, net } = ctx;
   const { groundHere, officeWing } = parts.worlds;
 
   const workerViews = new Map<string, WorkerView>();
@@ -106,11 +106,8 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
           sound.ding(w.status);
           parts.notifier.alert(w);
         }
-        // Finished what it was on: a little spin and a puff of confetti.
-        if (w.status === 'done' && (v.status === 'working' || v.status === 'needs_input')) {
-          v.model.celebrate();
-          burstOver(w.deskId, 40);
-        }
+        // Finished what it was on: a little spin and a hop.
+        if (w.status === 'done' && (v.status === 'working' || v.status === 'needs_input')) v.model.celebrate();
         v.status = w.status;
         v.acked = w.acked;
         v.model.setStatus(w.status, waitingOnSomeone(w));
@@ -220,11 +217,7 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     office.signs.set(fp.labels, (d) => deskBuilt(d, level));
     player.wing = level;
     arrangeSeats();
-    if (was.floor === store.floor && level > was.wing) {
-      const at = { x: (WING.minX + WING.maxX) / 2, z: wingRowZ(level) };
-      confetti.burst(at.x, 2.4, at.z, 140, 0.8);
-      sound.step('land');
-    }
+    if (was.floor === store.floor && level > was.wing) sound.step('land');
   }
   store.on('floorPlan', syncPlan);
   ctx.interactions.define('expand', {
@@ -255,12 +248,6 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
   setInterval(renderLimits, 30_000);
   $('limits').addEventListener('click', () => net.send({ t: 'limits.refresh' }));
 
-  /** Where confetti comes from over a desk: above the worker's head. */
-  function burstOver(deskId: string, n: number) {
-    const d = OFFICE_PLAN.byId.get(deskId);
-    if (d) confetti.burst(d.x, 2.3, d.z, n);
-  }
-
   return {
     /** The workers on this floor, as they're drawn at their desks. */
     workerViews,
@@ -274,6 +261,5 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
       seatedAlready = false;
       sentHome.clear();
     },
-    burstOver,
   };
 }

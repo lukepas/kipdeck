@@ -63,9 +63,6 @@ export function createCtx(parts: Parts): { ctx: Ctx; core: CoreState } {
     get settings() {
       return parts.settings;
     },
-    get confetti() {
-      return parts.confetti;
-    },
     get reduceMotion() {
       return parts.reduceMotion;
     },

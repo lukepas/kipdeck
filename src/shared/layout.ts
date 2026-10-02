@@ -54,10 +54,10 @@ function buildDesks(): DeskDef[] {
 export const DESKS: DeskDef[] = buildDesks();
 
 /**
- * The back office: a bay knocked through the north wall between the gong and the east wall, for a
+ * The back office: a bay knocked through the north wall between the elevator and the east wall, for a
  * floor that needs more desks than the room has. Each time someone expands the floor (see
  * shared/floorplan.ts), its back wall goes another `row` meters north, with two more desks back to
- * back in the middle, up to `rows` times. It runs from `minX` (the gong keeps its bit of wall) to the east wall,
+ * back in the middle, up to `rows` times. It runs from `minX` (a bit of wall stays by the elevator) to the east wall,
  * and from the old north wall back to wingMinZ.
  */
 export const WING = { minX: 13.4, maxX: FLOOR.maxX, row: 4.6, rows: 2 } as const;
@@ -112,8 +112,8 @@ export function builtDesks(level: number): DeskDef[] {
  */
 export const BEANBAGS: DeskDef[] = (
   [
-    // Out in the north-east corner past the gong, and between the PR board and the elevator, clear of
-    // the gong's front and the elevator doors.
+    // Out in the north-east corner past the elevator, and between the PR board and the elevator, clear
+    // of the elevator doors.
     [15, -9.8, 0],
     [5.4, -9.8, 0],
     [-16.1, -9, Math.PI / 2],
@@ -256,8 +256,6 @@ export const BOOKSHELF = { x: -6.5, z: FLOOR.maxZ - 0.21, width: 1.7, depth: 0.4
 
 export const SPAWN = { x: 8, z: 7 } as const;
 
-/** The gong: on the north wall just past the elevator from the PR board, facing into the room. It rings when a PR merges. */
-export const GONG = { x: 11.8, z: FLOOR.minZ + 0.75, width: 1.9, height: 2.45 } as const;
 
 /** Potted plants around the room: where each stands, and how big it is. */
 export const PLANTS: readonly (readonly [x: number, z: number, scale: number])[] = [
@@ -271,7 +269,7 @@ export const PLANTS: readonly (readonly [x: number, z: number, scale: number])[]
   [8.5, 5, 1.1],
 ];
 
-/** A plant by the north wall east of the gong, in the way into the back office: put away once it's built. */
+/** A plant by the north wall east of the elevator, in the way into the back office: put away once it's built. */
 export function plantByWing([x, z]: readonly [number, number, number]): boolean {
   return x > WING.minX && z < FLOOR.minZ + 1.5;
 }
@@ -387,7 +385,7 @@ export function seatAt(key: string): SeatPlace | undefined {
 }
 
 /**
- * The elevator: a shaft against the north wall, between the PR board and the gong, with its
+ * The elevator: a shaft against the north wall, east of the PR board, with its
  * doors facing into the room. Every floor has it in the same spot, so you step out where you got in.
  */
 export const ELEVATOR = { x: 8.5, width: 2.6, depth: 2.4, wall: 0.14, doorWidth: 1.4, doorHeight: 2.4 } as const;

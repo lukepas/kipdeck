@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import type { FloorPalette } from '../../../shared/floors';
 import { toon, toonUnique } from '../toon';
 import { elevator } from '../elevator';
-import { gong } from '../../features/gong/world';
 import { bookshelf } from '../../features/bookshelf/world';
 import { whiteboard } from '../../features/whiteboard/world';
 import { stack } from '../stack';
@@ -43,7 +42,6 @@ function floorPlan() {
     signs,
     meetingRoom,
     elevator,
-    gong,
     whiteboard,
   ] as const;
 }

@@ -2,6 +2,5 @@
 // little Worker at a desk, what they hold, and the timing of how they move.
 export { Person, type Pose } from './person';
 export { Worker } from './worker';
-export type { Stage } from './worker-dance';
 export { REACH_TIME, reachCurve } from './curves';
 export { boxOfStuff, coffeeMug } from './props';

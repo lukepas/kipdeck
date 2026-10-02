@@ -9,7 +9,6 @@ import { meetingHandlers, meetingView } from './meetings.js';
 import { planHandlers, planView } from './plan.js';
 import { presenceHandlers } from './presence.js';
 import { queueHandlers, queueView } from './queue.js';
-import { rooftopHandlers } from './rooftop.js';
 import { servicesView, settingsHandlers } from './settings.js';
 import { signinsHandlers } from './signins.js';
 import { teamHandlers } from './team.js';
@@ -28,7 +27,6 @@ export const handlers: HandlerMap<ClientMsg> = {
   ...planHandlers,
   ...presenceHandlers,
   ...queueHandlers,
-  ...rooftopHandlers,
   ...settingsHandlers,
   ...signinsHandlers,
   ...teamHandlers,

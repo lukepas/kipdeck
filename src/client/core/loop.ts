@@ -88,13 +88,12 @@ export function installLoop(ctx: Ctx, parts: Pick<Parts, 'stage' | 'peers' | 'vi
     }
   }
 
-  /** The building and what's in it: its doors, its floors and the confetti. */
+  /** The building and what's in it: its doors and its floors. */
   function updateWorld({ dt, t }: Frame) {
     const { player } = ctx;
     const { remotes } = parts.peers;
     const { arrivals } = parts.views;
     ctx.world().update(t, dt, [player.pos, ...[...remotes.values()].map((r) => r.person.root.position), ...arrivals.positions()]);
-    ctx.confetti.update(dt);
   }
 
   /** The scene, toon outlines and all. */

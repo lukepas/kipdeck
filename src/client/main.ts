@@ -2,8 +2,7 @@ import './style.css';
 import { Net } from './net';
 import { DesktopNotifier } from './notify';
 import { store, loadProfile, loadSettings } from './state';
-import { PlayerController, groundAt } from './player';
-import { Confetti } from './world/confetti';
+import { PlayerController } from './player';
 import { Voice } from './voice';
 import { $ } from './ui/dom';
 import { openCharacter } from './ui/character';
@@ -29,7 +28,7 @@ import { installBoards } from './features/boards';
 import { installBookshelf } from './features/bookshelf';
 import { installCarrying } from './features/carrying';
 import { installChat } from './features/chat';
-import { installGong } from './features/gong';
+import { installMilestones } from './features/milestones';
 import { installHud } from './features/hud';
 import { installMeeting } from './features/meeting';
 import { installPalette } from './features/palette';
@@ -74,8 +73,6 @@ parts.worlds = createWorlds(ctx);
 parts.boards = installBoards(ctx, { aimedNote: () => parts.pointer.aimedNote(), pickUp: (it) => parts.cards.pickUp(it), boardActions: () => parts.actions.boardActions(), showQueue: () => parts.waiting.showQueue() });
 installWhiteboard(ctx);
 // Onto whatever you're walking on: the office's floor and furniture.
-parts.confetti = new Confetti((x, z, y) => groundAt(ctx.player.colliders, x, z, y, false));
-ctx.scene.add(parts.confetti.mesh);
 parts.tv = installTv(ctx, { shares: () => parts.talk.currentShares(), watch: () => parts.talk.watchShare() });
 
 // You, and how you talk to the office.
@@ -118,7 +115,7 @@ parts.cards = installCarrying(ctx, {
   showMeeting: parts.meeting.showMeeting,
 });
 parts.seating = installSeating(ctx, { shares: () => parts.talk.currentShares(), watchShare: () => parts.talk.watchShare(), usable: () => parts.pointer.usable() });
-installGong(ctx, { burstOver: parts.views.burstOver, workerViews: parts.views.workerViews, idleAgents: () => parts.worlds.idleAgents() });
+installMilestones(ctx, { notifier: parts.notifier });
 
 parts.hintbar = installHintBar(ctx, core, parts);
 installKeyboard(ctx, parts);
@@ -185,7 +182,7 @@ void whoami().then(() => {
 
 // Debug handle for quick checks from the console / headless screenshots.
 const { worlds, views } = parts;
-(window as any).__office = { world: () => worlds.world(), store, player: parts.player, camera: ctx.camera, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, office: ctx.office, ride: parts.travel.ride, switchFloor: parts.travel.switchFloor, elevatorPanelOpen, confetti: parts.confetti, carried: () => core.carrying };
+(window as any).__office = { world: () => worlds.world(), store, player: parts.player, camera: ctx.camera, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, office: ctx.office, ride: parts.travel.ride, switchFloor: parts.travel.switchFloor, elevatorPanelOpen, carried: () => core.carrying };
 (window as any).__voice = parts.voice;
 (window as any).__sound = parts.sound;
 (window as any).__notify = parts.notifier;

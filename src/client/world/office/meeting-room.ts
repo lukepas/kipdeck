@@ -25,14 +25,10 @@ function buildMeetingSeat(def: DeskDef, index: number): DeskView {
   const ch = chair(['#2b2d42', '#ef476f', '#118ab2', '#06d6a0', '#ffd166'][index % 5]);
   ch.position.set(0, 0, 0.85);
   group.add(ch);
-  // A merge's dance party: up on its chair rather than the table, where the laptops are close together.
-  const stage = new THREE.Object3D();
-  stage.position.set(0, 0.48, 0.85);
-  group.add(stage);
   // Nobody is hired here from the floor, so there's no '+' over a free chair: a meeting fills them.
   const vacancy = new THREE.Group();
   group.add(vacancy);
-  return { def, group, laptopAnchor, seatAnchor, stage, chair: ch, vacancy, vacancyY: 0 };
+  return { def, group, laptopAnchor, seatAnchor, chair: ch, vacancy, vacancyY: 0 };
 }
 
 /**

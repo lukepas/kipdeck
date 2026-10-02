@@ -117,7 +117,7 @@ export class Floor {
   /** Settles once the workers whose terminals outlived the last office are picked back up, and the rest woken. */
   readonly ready: Promise<void>;
   private timer: NodeJS.Timeout;
-  /** Pull requests merging, to ring the gong for. */
+  /** Pull requests merging, to tell the floor about once each. */
   private merges = new MergeWatch();
   /** A look for workers whose pull request merged, due shortly (see sendLandedHome). */
   private landedTimer?: NodeJS.Timeout;
@@ -207,7 +207,7 @@ export class Floor {
       room: () => ctx.capacity.room(),
       emptied: () => {
         ctx.toast(this, '📋 The queue is empty: every task is done 🎉');
-        ctx.emit(this, { t: 'gong', why: 'queue' });
+        ctx.emit(this, { t: 'milestone', kind: 'queue' });
       },
       worktreeNote: () => officePrompt(ctx.prompts, 'queue.worktree'),
     });
@@ -281,9 +281,9 @@ export class Floor {
     }, REFRESH_MS);
   }
 
-  /** Pull request `n` merged (`by` someone, from the PR window): the gong rings, once per PR. */
+  /** Pull request `n` merged (`by` someone, from the PR window): the floor hears so, once per PR. */
   merged(n: number, by?: string) {
-    if (this.merges.ring(n)) this.ctx.emit(this, { t: 'gong', why: 'merged', pr: n, by });
+    if (this.merges.ring(n)) this.ctx.emit(this, { t: 'milestone', kind: 'merged', pr: n, by });
   }
 
   /**

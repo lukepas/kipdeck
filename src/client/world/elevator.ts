@@ -216,7 +216,7 @@ declare module './types' {
   }
 }
 
-/** The elevator to the other floors, against the north wall between the PR board and the gong. */
+/** The elevator to the other floors, against the north wall east of the PR board. */
 export const elevator: Fixture<'elevator' | 'setProjectName'> = () => {
   const built = buildElevator();
   return {

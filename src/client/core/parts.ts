@@ -12,7 +12,6 @@ import type { OfficeSound } from '../sound';
 import type { Settings } from '../state';
 import type { Voice } from '../voice';
 import type { Person } from '../world/character';
-import type { Confetti } from '../world/confetti';
 import type { installBoards } from '../features/boards';
 import type { installBookshelf } from '../features/bookshelf';
 import type { installCarrying } from '../features/carrying';
@@ -53,8 +52,6 @@ export interface Parts {
   /** The system asks for less motion: no shaking the view, no swaying. */
   reduceMotion: MediaQueryList;
   sound: OfficeSound;
-  /** Confetti for merges, landing on whatever it falls on. */
-  confetti: Confetti;
   notifier: DesktopNotifier;
 
   // ---- The office's own parts ----------------------------------------------------------------------

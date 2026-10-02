@@ -1,4 +1,4 @@
-import { FLOOR, GONG, WINDOWS as OPENINGS } from '../../shared/layout';
+import { FLOOR, WINDOWS as OPENINGS } from '../../shared/layout';
 
 /** A point in the office, where a sound comes from or where you hear it. */
 export type Pos = { x: number; y: number; z: number };
@@ -9,5 +9,3 @@ export const WINDOWS: Pos[] = OPENINGS.filter((o) => o.y0 < 2).map((o) =>
     ? { x: o.u, y: 2.4, z: o.wall === 'south' ? FLOOR.maxZ + 1.5 : FLOOR.minZ - 1.5 }
     : { x: o.wall === 'west' ? FLOOR.minX - 1.5 : FLOOR.maxX + 1.5, y: 2.4, z: o.u },
 );
-/** The middle of the gong's disc. */
-export const GONG_AT: Pos = { x: GONG.x, y: GONG.height - 1.36, z: GONG.z };

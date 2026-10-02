@@ -7,14 +7,13 @@ import { ease, popIn } from './curves';
 import { ACT_MIN, DESPAIR_MIN, TWIRL_TIME, WAIT_CYCLE, WAIT_HOPS, blendStance, type Act, type Stance } from './worker-stance';
 import { STATUS_BULB, bubbleFor } from './worker-badges';
 import { globe, papers } from './worker-props';
-import { DANCE, groove, type Dancing, type Stage } from './worker-dance';
 import { packUp, waddle, type Leaving } from './worker-leave';
 
 /** The little Claude worker that sits at a desk. Forward is +z. */
 export class Worker {
   readonly root = new THREE.Group();
   private body = new THREE.Group();
-  /** Its moving parts, for what poses them from the other files here (a dance, packing up). */
+  /** Its moving parts, for what poses them from the other files here (packing up). */
   private rig: WorkerRig;
   private bulb: THREE.MeshToonMaterial;
   private bulbMesh: THREE.Mesh;
@@ -38,10 +37,8 @@ export class Worker {
   held = false;
   private bounceT = 0;
   private spawnT = 0;
-  /** Seconds left jumping for joy (its pull request just merged). */
+  /** Seconds left jumping for joy (it just finished). */
   private cheerT = 0;
-  /** Up on its desk dancing (a pull request merged): where, and how many seconds in. */
-  private dancing: Dancing | null = null;
   private pupils: THREE.Mesh[] = [];
   private feet: THREE.Mesh[] = [];
   /** Sent home: the box of its things in its arms, and how far into its waddle it is. */
@@ -161,7 +158,7 @@ export class Worker {
   setStatus(status: WorkerStatus, bounce: boolean) {
     this.status = status;
     this.bouncing = bounce;
-    if (!this.dancing) this.paintBulb();
+    this.paintBulb();
     this.drawBubble();
   }
 
@@ -174,30 +171,6 @@ export class Worker {
   /** Jumps for joy, arms up, for a few seconds. */
   cheer(seconds = 3) {
     this.cheerT = seconds;
-  }
-
-  /**
-   * Hops up on to `stage` (its desk), dances for a few seconds with its light flashing like a disco
-   * ball, and hops back down into its seat. Asked again mid-dance, it stays up and dances on.
-   */
-  dance(stage: Stage) {
-    if (this.leaving) return;
-    const d = this.dancing;
-    if (!d) {
-      this.dancing = { stage, t: 0 };
-      // The dance has a twirl of its own, so a finishing spin it cut into doesn't play after it.
-      this.twirlT = -1;
-    } else if (d.t > DANCE.up + DANCE.moves) {
-      // On its way down: back up from wherever it is in the air.
-      d.t = DANCE.up * (1 - (d.t - DANCE.up - DANCE.moves) / DANCE.down);
-    } else d.t = Math.min(d.t, DANCE.up);
-  }
-
-  /** Back in its seat at once, mid-dance or not (it's being sent home). */
-  stopDancing() {
-    if (!this.dancing) return;
-    this.dancing = null;
-    this.settle();
   }
 
   /** What it's working on, shown on a card over its head in place of the status bubble. */
@@ -272,7 +245,6 @@ export class Worker {
 
   update(dt: number, t: number) {
     if (this.leaving) return this.carry(this.leaving, dt, t);
-    if (this.dancing) return this.boogie(this.dancing, dt, t);
     this.cheerT = Math.max(0, this.cheerT - dt);
     // Waiting on you: a couple of seconds of jumping, then arms crossed and a tapping foot, and round again.
     this.waitT = this.status === 'needs_input' ? this.waitT + dt : 0;
@@ -377,34 +349,6 @@ export class Worker {
     this.blink(dt);
     if (this.bubble) this.bubble.position.y = 1.95 + Math.sin(t * 3) * 0.03;
     if (this.nameTag) this.nameTag.position.y = 1.55;
-  }
-
-  /** Up on the desk dancing: hop up, groove side to side, twirl, jump twice, hop back down. */
-  private boogie(d: NonNullable<Worker['dancing']>, dt: number, t: number): void {
-    d.t += dt;
-    const { up, moves, down } = DANCE;
-    if (d.t >= up + moves + down) {
-      this.dancing = null;
-      this.settle();
-      return this.update(0, t);
-    }
-    const lift = groove(this.rig, d, dt, t);
-    this.blink(dt);
-    if (this.bubble) this.bubble.position.y = (this.bubbleIsCard ? 1.74 : 1.95) + lift + Math.sin(t * 3) * 0.03;
-    if (this.nameTag) this.nameTag.position.y = 1.55 + lift;
-  }
-
-  /** Back in its seat, standing straight, its light showing its status again. */
-  private settle() {
-    this.root.position.set(0, 0, 0);
-    this.root.rotation.set(0, 0, 0);
-    this.body.position.set(0, 0, 0);
-    this.body.rotation.set(0, 0, 0);
-    this.body.scale.setScalar(1);
-    for (const a of [this.armL, this.armR]) a.rotation.z = 0;
-    for (const f of this.feet) f.position.set(f.position.x, 0.2, 0.05);
-    this.bulbMesh.scale.setScalar(1);
-    this.paintBulb();
   }
 
   /** `lid` narrows the eyes (1 = wide open) between blinks. */

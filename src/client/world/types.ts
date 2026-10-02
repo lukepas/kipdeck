@@ -13,7 +13,7 @@ export interface Collider {
   top: number;
   /** Underside, for things you walk beneath (the meeting room's roof). Defaults to the floor. */
   bottom?: number;
-  /** Only there to keep people out: its top isn't anything to land on, so confetti falls through it. */
+  /** Only there to keep people out: its top isn't anything to land on.  */
   fence?: boolean;
 }
 
@@ -55,8 +55,6 @@ export interface DeskView {
   laptopAnchor: THREE.Object3D;
   /** The worker goes in here, the same way. */
   seatAnchor: THREE.Object3D;
-  /** Where the worker gets up to dance when a pull request merges: its feet, and the way it faces. */
-  stage: THREE.Object3D;
   chair: THREE.Group;
   /** Shown while nobody is there: the "+" over a free seat, or the board agent waiting to be asked. */
   vacancy: THREE.Group;

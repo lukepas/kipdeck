@@ -11,7 +11,7 @@ import type { GitHubClientMsg, GitHubServerMsg } from './protocol/github.js';
 import type { MeetingClientMsg, MeetingServerMsg } from './protocol/meetings.js';
 import type { PresenceClientMsg, PresenceServerMsg } from './protocol/presence.js';
 import type { QueueClientMsg, QueueServerMsg } from './protocol/queue.js';
-import type { RooftopClientMsg, RooftopServerMsg } from './protocol/rooftop.js';
+import type { MilestoneServerMsg } from './protocol/milestones.js';
 import type { SettingsClientMsg, SettingsServerMsg } from './protocol/settings.js';
 import type { ToysServerMsg, WhiteboardClientMsg } from './protocol/toys.js';
 import type { UsageClientMsg, UsageServerMsg } from './protocol/usage.js';
@@ -23,9 +23,9 @@ export * from './protocol/changes.js';
 export * from './protocol/floors.js';
 export * from './protocol/github.js';
 export * from './protocol/meetings.js';
+export * from './protocol/milestones.js';
 export * from './protocol/presence.js';
 export * from './protocol/queue.js';
-export * from './protocol/rooftop.js';
 export * from './protocol/settings.js';
 export * from './protocol/toys.js';
 export * from './protocol/usage.js';
@@ -33,7 +33,6 @@ export * from './protocol/workers.js';
 
 export type ClientMsg =
   | PresenceClientMsg
-  | RooftopClientMsg
   | WorkerClientMsg
   | GitHubClientMsg
   | QueueClientMsg
@@ -50,7 +49,7 @@ export type ClientMsg =
 
 export type ServerMsg =
   | PresenceServerMsg
-  | RooftopServerMsg
+  | MilestoneServerMsg
   | WorkerServerMsg
   | GitHubServerMsg
   | QueueServerMsg

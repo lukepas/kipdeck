@@ -326,7 +326,7 @@ test('welcomes a browser and dispatches what it sends', async () => {
   await a.close();
 });
 
-test('the toys on a floor, and letting go of them on leaving the floor or the office', async () => {
+test('milestones and the whiteboard on a floor, and letting go of it on leaving the floor or the office', async () => {
   const floor = office.floors()[0];
   const a = await Browser.open('?name=Cy');
   const cy = (await a.take('welcome')).you;
@@ -334,11 +334,16 @@ test('the toys on a floor, and letting go of them on leaving the floor or the of
   await b.take('welcome');
   await a.take('peer.join');
 
-  // The gong once, not twice in a row; a reach is passed on.
-  a.send({ t: 'gong' });
-  a.send({ t: 'gong' });
+  // A reach is passed on.
   a.send({ t: 'act' });
-  assert.deepEqual(await b.next(2), ['gong', 'peer.act']);
+  assert.deepEqual(await b.next(1), ['peer.act']);
+  // A pull request merging is a milestone the whole floor hears about, once.
+  floor.merged(7, 'Cy');
+  floor.merged(7, 'Cy');
+  assert.deepEqual(await b.take('milestone'), { t: 'milestone', kind: 'merged', pr: 7, by: 'Cy' });
+  b.send({ t: 'ping', at: 1 });
+  await b.take('pong');
+  assert.deepEqual(b.pending('milestone'), []);
 
   a.send({ t: 'wb.open' });
   assert.deepEqual((await b.take('wb.people')).people, [cy]);

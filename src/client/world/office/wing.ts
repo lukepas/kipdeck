@@ -62,7 +62,7 @@ function paintGrowSign(c: HTMLCanvasElement, level: number) {
 }
 
 /**
- * The back office: the bit of north wall between the gong and the east wall, which comes down when
+ * The back office: the bit of north wall between the elevator and the east wall, which comes down when
  * the floor's built out, and behind it the bay, a row deeper each time, with a pair of desks down the
  * middle of each row, a rug under them, a lamp over them and a window in the east wall. The sign that
  * says there's room to grow hangs on whichever wall is at the back.
@@ -228,7 +228,7 @@ declare module '../types' {
   }
 }
 
-/** The back office through the north wall past the gong, walled up until the floor's built out. */
+/** The back office through the north wall past the elevator, walled up until the floor's built out. */
 export const wing: Fixture<'wing' | 'setWing'> = (site) => {
   const built = buildWing(site.group, site.colliders, site.interactables, site.desks, site.looks, site.looks.trim, site.planks, site.get('stack').ceiling);
   const setWing = (level: number) => {

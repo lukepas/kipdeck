@@ -13,7 +13,6 @@ import type { Settings } from '../state';
 import type { Hud } from '../ui/menu';
 import type { Voice } from '../voice';
 import type { Person } from '../world/character';
-import type { Confetti } from '../world/confetti';
 import type { Interactable, Office } from '../world/types';
 import type { World } from '../world/world';
 import type { Activities, Hooks, Interactions, Keys, Messages, Ticks, Usables } from './registry';
@@ -72,7 +71,6 @@ export interface Ctx {
   readonly voice: Voice;
   readonly sound: OfficeSound;
   readonly settings: Settings;
-  readonly confetti: Confetti;
   /** The system asks for less motion: no shaking the view, no swaying. */
   readonly reduceMotion: MediaQueryList;
   readonly hud: Hud;

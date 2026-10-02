@@ -1,10 +1,8 @@
 import type * as THREE from 'three';
 import type { FloorPalette } from '../../shared/floors';
-import { WALL_HEIGHT, FLOOR, MEETING_ROOM, type DeskDef } from '../../shared/layout';
+import type { DeskDef } from '../../shared/layout';
 import type { BoardKey } from '../../shared/plan';
 import { officeNav, wayIn, type NavGrid, type Pt } from '../../shared/nav';
-import type { Area } from './confetti';
-import type { Gong } from '../features/gong/world';
 import type { Collider, DeskView, Interactable, Office } from './types';
 
 /*
@@ -30,12 +28,8 @@ export interface World {
   /** The meeting's output as it's written, and how the meeting's going, where the map shows them. */
   meetingBoard?: THREE.Mesh;
   meetingSign?: THREE.Mesh;
-  /** The gong a merged pull request rings. */
-  gong: Gong;
   nav: NavGrid;
   ways: Ways;
-  /** Where confetti rains when a pull request merges, and from how high over each spot. */
-  rain: { area: Area; top: (x: number, z: number) => number }[];
   /** Brings out the overflow seats in `out` and puts the rest away: the colliders of the ones that just came out. */
   setBeanbags(out: Set<string>): Collider[];
   /** Paints it in a floor's colors, so each project looks like itself. */
@@ -43,12 +37,6 @@ export interface World {
   setProjectName(name: string): void;
   /** Animates it; doors open for anyone in `people` who comes up to them. */
   update(t: number, dt: number, people: Iterable<{ x: number; y: number; z: number }>): void;
-}
-
-/** Where confetti rains from over (x, z) in the office: the meeting room's roof, or the ceiling. */
-function ceilingOver(x: number, z: number): number {
-  const inMeeting = x > MEETING_ROOM.minX && x < MEETING_ROOM.maxX && z > MEETING_ROOM.minZ && z < MEETING_ROOM.maxZ;
-  return inMeeting ? MEETING_ROOM.height - 0.1 : WALL_HEIGHT - 0.1;
 }
 
 /** The office as a world. `wing` is how many rows its back office is built out (see WING). */
@@ -62,16 +50,12 @@ export function officeWorld(office: Office, wing: () => number): World {
     boardMeshes: office.boardMeshes,
     meetingBoard: office.meetingBoard,
     meetingSign: office.meetingSign,
-    gong: office.gong,
     get nav() {
       return officeNav(wing());
     },
     ways: {
       in: (seat) => wayIn(seat, wing()),
     },
-    rain: [
-      { area: FLOOR, top: ceilingOver },
-    ],
     setBeanbags: (out) => office.setBeanbags(out),
     setLook: (p) => office.setLook(p),
     setProjectName: (name) => office.setProjectName(name),

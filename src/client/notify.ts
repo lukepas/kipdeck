@@ -1,5 +1,6 @@
 // Getting your attention when the office isn't the tab you're looking at: desktop notifications
-// for workers that need input or finish (the tab title counts them too, see main.ts).
+// for workers that need input or finish (the tab title counts them too, see main.ts), and for the
+// floor's milestones (a pull request merged, the task queue done).
 
 import type { WorkerInfo } from '../shared/protocol';
 import { alertDetail } from '../shared/status';
@@ -69,6 +70,18 @@ export class DesktopNotifier {
       n.close();
       this.shown.delete(id);
     }
+  }
+
+  /** A milestone on your floor (see features/milestones), while you're in another tab. */
+  milestone(title: string, body: string) {
+    if (!this.enabled() || notifyPermission() !== 'granted') return;
+    if (!document.hidden && document.hasFocus()) return;
+    const n = this.show(title, { body, tag: `milestone-${title}` });
+    if (!n) return;
+    n.onclick = () => {
+      window.focus();
+      n.close();
+    };
   }
 
   /** What one looks like, from ⚙️ Settings. */
