@@ -14,7 +14,6 @@ export const HELP_ROWS: readonly (readonly [string, string])[] = [
   ['📝', 'The whiteboard on wheels between the desks and the lounge: press E to draw on it with everyone on your floor, live. What you draw stays up on the board'],
   ['✅', 'Whenever a pull request merges or the task queue finishes, everyone on the floor gets a toast and a ding, and a desktop notification when the office is in another tab'],
   ['N', "Next worker that needs you: go to whoever has waited longest (needs input, or done and nobody's looked), and again for the next one. Arrows at the edge of the screen point to the ones out of sight"],
-  ['🏎️', "The Lambos and Ferraris in the garage: E at one gets you behind the wheel, or beside whoever's driving it. W is the gas, S brakes and reverses, A and D steer, Space brakes, H honks and E gets you out. Everyone on your floor sees you drive by"],
   ['Drag / wheel', 'Orbit and zoom the camera in third person'],
   ['P', 'Prompt: give a task to a new or existing worker at the desk you face'],
   ['C', 'Changes: what the worker at the desk you face changed — files and diff, commit, discard, open a PR'],

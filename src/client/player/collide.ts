@@ -94,7 +94,7 @@ function touches(c: Collider, x: number, z: number, r: number): boolean {
 
 /**
  * The floor under someone standing at (x, z) with their feet at `y`: the highest top they're on or
- * above (out of doors, the street's). Without `fences`, what's there only to keep people out doesn't count.
+ * above. Without `fences`, what's there only to keep people out doesn't count.
  */
 export function groundAt(colliders: Collider[], x: number, z: number, y: number, fences = true): number {
   let g = -Infinity;

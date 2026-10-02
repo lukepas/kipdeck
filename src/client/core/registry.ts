@@ -366,7 +366,7 @@ export class Hooks {
 export interface UsableSource<I, O> {
   /** What there is to use of it right now. */
   usable(): readonly I[];
-  /** What the aim can land on that isn't in the building itself (the dog walks about on its own), if anything. */
+  /** What the aim can land on that isn't in the building itself (something that walks about on its own), if anything. */
   pickable?(): O;
 }
 

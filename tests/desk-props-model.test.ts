@@ -7,7 +7,7 @@ import { openModel } from './glb';
 // desk_props.glb (exported by blender/scripts/build_desk_props.py) against what world/office/props.ts counts on:
 // the mug and each arrangement of books by name, each a root of its own standing on the desk at its origin,
 // the materials it paints, and the old code-built knick-knacks' footprints, which keep them clear of the
-// laptop, the holiday present and whoever dances on the desk.
+// laptop and the front of the desk.
 
 const props = openModel('desk_props');
 const { gltf, nodes, byName } = props;
@@ -99,7 +99,7 @@ test('every arrangement of books fits the old books\' footprint, centred on its 
   }
 });
 
-test('where buildDesk puts them they stay in the desk\'s back corner, clear of the laptop, the stage and the holiday spot', () => {
+test('where buildDesk puts them they stay in the desk\'s back corner, clear of the laptop and the front of the desk', () => {
   const top = { x: DESK_SIZE.width / 2 - 0.03, z: DESK_SIZE.depth / 2 - 0.02 };
   const placed = (name: string, at: { x: number; z: number }) => {
     const box = boundsOf(name);
@@ -109,10 +109,10 @@ test('where buildDesk puts them they stay in the desk\'s back corner, clear of t
     const p = placed(name, at);
     const where = `${name} runs x ${p.minX.toFixed(3)} to ${p.maxX.toFixed(3)}, z ${p.minZ.toFixed(3)} to ${p.maxZ.toFixed(3)}`;
     assert.ok(p.maxX < top.x && p.minZ > -top.z, `${where}: on the desk`);
-    // The laptop (0.78 wide at 1.3 times, in the middle) and the holiday present (at x -0.78 on these desks).
+    // The laptop (0.78 wide at 1.3 times, in the middle).
     assert.ok(p.minX > 0.51 + 0.05, `${where}: clear of the laptop`);
-    // Whoever dances on the desk stands at (0.72, 0.18), up front.
-    assert.ok(p.maxZ < 0.18 - 0.2, `${where}: behind the stage`);
+    // The front of the desk, by the chair, stays clear from z 0.18 - 0.2 on.
+    assert.ok(p.maxZ < 0.18 - 0.2, `${where}: at the back of the desk`);
   }
   // The books keep the old boxes' edges: from width/2 - 0.39 to width/2 - 0.13, z -0.39 to -0.21.
   for (const name of BOOKS) {

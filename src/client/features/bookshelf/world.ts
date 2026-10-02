@@ -119,7 +119,7 @@ export function buildBookshelf(): BookshelfModel {
   return { group, collider, interactable };
 }
 
-/** The bookshelf of the project's docs, on the south wall between the middle window and the balcony doors. */
+/** The bookshelf of the project's docs, on the south wall by the middle window. */
 export const bookshelf: Fixture = () => {
   const built = buildBookshelf();
   return { group: built.group, colliders: [built.collider], interactables: [built.interactable] };

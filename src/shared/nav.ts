@@ -9,7 +9,7 @@ import { BEANBAGS, BOOKSHELF, DESK_SIZE, ELEVATOR, ELEVATOR_FRONT, FLOOR, KIOSK,
 export type Pt = [number, number];
 
 const CELL = 0.5;
-/** Half the width of whoever walks it (the dog, a worker), plus a little room: how far they keep from things. */
+/** Half the width of whoever walks it (a worker), plus a little room: how far they keep from things. */
 const R = 0.3;
 
 export type Rect = [number, number, number, number]; // minX, maxX, minZ, maxZ

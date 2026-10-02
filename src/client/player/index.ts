@@ -50,7 +50,7 @@ export class PlayerController extends PlayerInput {
   constructor(
     private camera: THREE.PerspectiveCamera,
     dom: HTMLElement,
-    /** What you bump into and stand on: the office's, or the roof's up there. */
+    /** What you bump into and stand on: the office's. */
     public colliders: Collider[],
   ) {
     super(dom);

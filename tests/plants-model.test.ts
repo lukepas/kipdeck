@@ -5,8 +5,8 @@ import { openModel } from './glb';
 
 // plants.glb (exported by blender/scripts/build_plants.py) against what world/office/props.ts counts on: each
 // species by name, its pot a root standing on the floor at the origin with its leaves hung under it as
-// `<species>_leaves` (Christmas hides those, see holiday.ts), the materials it paints, and the old
-// code-built pot's footprint, which the plants' colliders, nav circles and Christmas trees are placed by.
+// `<species>_leaves`, the materials it paints, and the old code-built pot's footprint, which the
+// plants' colliders and nav circles are placed by.
 
 const plants = openModel('plants');
 const { gltf, nodes, byName } = plants;
@@ -68,13 +68,13 @@ test('its materials are the ones world/office/props.ts paints, the pot and soil 
     const pot = primitives(species).map(materialOf);
     assert.equal(pot.filter((m) => POTS.includes(m)).length, 1, `${species}'s pot is one pot material (${pot})`);
     assert.ok(pot.includes('Soil') && pot.length === 2, `${species}'s pot holds its soil and nothing else (${pot})`);
-    // Hiding the leaves at Christmas leaves the whole pot, and only the pot, for the tree to stand in.
+    // The leaves are only what grows: the pot is all in the pot's own node.
     const leaves = primitives(`${species}_leaves`).map(materialOf);
     assert.ok(leaves.length && leaves.every((m) => !POTS.includes(m) && m !== 'Soil'), `${species}_leaves is only what grows (${leaves})`);
   }
 });
 
-test('the floor pots are the old pot\'s size, standing on the floor, their soil where the Christmas tree stands', () => {
+test('the floor pots are the old pot\'s size, standing on the floor, their soil just under the rim', () => {
   for (const species of FLOOR) {
     const pot = boundsOf(species, POTS);
     assert.ok(near(pot.min.y, 0, 1e-3), `${species}'s pot stands on the floor (${pot.min.y.toFixed(3)})`);
@@ -90,8 +90,8 @@ test('the floor pots are the old pot\'s size, standing on the floor, their soil 
 
 test('the floor plants grow out of their pots, under 1.5 m tall and clear of the walls where they stand', () => {
   // PLANTS stand 0.8 m from the walls at up to 1.4 times this size for the monstera (world/office/props.ts takes
-  // turns with the species), and the snake plant and the ficus go by the balcony rail and in the loft's
-  // corners, about 0.5 m in at up to 1.2 times.
+  // turns with the species), and the snake plant and the ficus go in corners, about 0.5 m in at up to
+  // 1.2 times.
   const most: Record<string, number> = { monstera: 0.8 / 1.4, snake_plant: 0.5 / 1.2, ficus: 0.5 / 1.1 };
   for (const species of FLOOR) {
     const leaves = boundsOf(`${species}_leaves`);

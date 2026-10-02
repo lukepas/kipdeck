@@ -150,69 +150,69 @@ function activity(id: string, log: string[], opts: { on?: boolean; stopsFor?: Wh
 
 test('activities keep their declared order whatever order they were added in', () => {
   const log: string[] = [];
-  const acts = new Activities<Why, string>(['hanger', 'climber', 'golf']);
-  const golf = activity('golf', log, { on: true, key: 'KeyE' });
+  const acts = new Activities<Why, string>(['first', 'second', 'third']);
+  const third = activity('third', log, { on: true, key: 'KeyE' });
   const extra = activity('extra', log, { on: true });
-  const hanger = activity('hanger', log, { on: true, key: 'Escape' });
-  acts.add(golf);
+  const first = activity('first', log, { on: true, key: 'Escape' });
+  acts.add(third);
   acts.add(extra);
-  acts.add(hanger);
-  acts.add(activity('climber', log));
+  acts.add(first);
+  acts.add(activity('second', log));
   assert.deepEqual(
     acts.all().map((a) => a.id),
-    ['hanger', 'climber', 'golf', 'extra'],
+    ['first', 'second', 'third', 'extra'],
   );
-  assert.equal(acts.current()?.id, 'hanger');
+  assert.equal(acts.current()?.id, 'first');
   assert.equal(acts.busy(), true);
-  assert.equal(acts.running('golf'), true);
-  assert.equal(acts.running('climber'), false);
+  assert.equal(acts.running('third'), true);
+  assert.equal(acts.running('second'), false);
   // Keys go to what's going on, in order, until one takes it.
   assert.equal(acts.key('KeyE'), true);
-  assert.deepEqual(log, ['hanger key KeyE', 'golf key KeyE']);
-  assert.throws(() => acts.add(activity('golf', log)));
+  assert.deepEqual(log, ['first key KeyE', 'third key KeyE']);
+  assert.throws(() => acts.add(activity('third', log)));
 });
 
 test('stopAll stops what is going on in order, but what is excepted or does not stop for that', () => {
   const log: string[] = [];
-  const acts = new Activities<Why>(['hanger', 'climber', 'driver', 'golf']);
-  const hanger = activity('hanger', log, { on: true, stopsFor: ['trip'] });
-  const climber = activity('climber', log);
-  const driver = activity('driver', log, { on: true });
-  const golf = activity('golf', log, { on: true });
-  for (const a of [golf, driver, climber, hanger]) acts.add(a);
+  const acts = new Activities<Why>(['first', 'second', 'fourth', 'third']);
+  const first = activity('first', log, { on: true, stopsFor: ['trip'] });
+  const second = activity('second', log);
+  const fourth = activity('fourth', log, { on: true });
+  const third = activity('third', log, { on: true });
+  for (const a of [third, fourth, second, first]) acts.add(a);
   acts.stopAll('walk');
-  assert.deepEqual(log, ['driver stops for walk', 'golf stops for walk']);
-  assert.equal(hanger.on, true);
+  assert.deepEqual(log, ['fourth stops for walk', 'third stops for walk']);
+  assert.equal(first.on, true);
   log.length = 0;
-  driver.on = golf.on = true;
-  acts.stopAll('trip', ['golf']);
-  assert.deepEqual(log, ['hanger stops for trip', 'driver stops for trip']);
-  assert.equal(golf.on, true);
+  fourth.on = third.on = true;
+  acts.stopAll('trip', ['third']);
+  assert.deepEqual(log, ['first stops for trip', 'fourth stops for trip']);
+  assert.equal(third.on, true);
   log.length = 0;
   acts.stopAll('trip');
-  assert.deepEqual(log, ['golf stops for trip']);
+  assert.deepEqual(log, ['third stops for trip']);
   assert.equal(acts.busy(), false);
   assert.equal(acts.current(), undefined);
 });
 
 test('stop stops one activity alone, only while it is going on, and it decides whether that stops it', () => {
   const log: string[] = [];
-  const acts = new Activities<Why>(['hanger', 'driver']);
-  const hanger = activity('hanger', log, { on: true });
-  const driver = activity('driver', log, { stopsFor: ['trip'] });
-  acts.add(hanger);
-  acts.add(driver);
-  acts.stop('driver', 'trip');
+  const acts = new Activities<Why>(['first', 'fourth']);
+  const first = activity('first', log, { on: true });
+  const fourth = activity('fourth', log, { stopsFor: ['trip'] });
+  acts.add(first);
+  acts.add(fourth);
+  acts.stop('fourth', 'trip');
   assert.deepEqual(log, []);
-  driver.on = true;
-  acts.stop('driver', 'walk');
+  fourth.on = true;
+  acts.stop('fourth', 'walk');
   assert.deepEqual(log, []);
-  acts.stop('driver', 'trip');
-  assert.deepEqual(log, ['driver stops for trip']);
-  assert.equal(hanger.on, true);
+  acts.stop('fourth', 'trip');
+  assert.deepEqual(log, ['fourth stops for trip']);
+  assert.equal(first.on, true);
   // Nothing registered by that id: nothing happens.
-  acts.stop('golf', 'trip');
-  assert.deepEqual(log, ['driver stops for trip']);
+  acts.stop('third', 'trip');
+  assert.deepEqual(log, ['fourth stops for trip']);
 });
 
 test('an activity taken out is gone from the order', () => {
@@ -255,19 +255,19 @@ test('a hook added while the hooks run runs from the next time on', () => {
 });
 
 test('usables: each source a list, in the order they were added, read when asked, and only the pickables there are', () => {
-  const pictures = ['frame'];
-  let dogAt = 'kitchen';
+  const signs = ['frame'];
+  let walkerAt = 'lounge';
   const usables = new Usables<string, string>();
-  usables.add({ usable: () => pictures });
-  const offDog = usables.add({ usable: () => [`dog in the ${dogAt}`], pickable: () => 'dog' });
-  usables.add({ usable: () => ['ball'] });
-  assert.deepEqual(usables.lists(), [['frame'], ['dog in the kitchen'], ['ball']]);
-  assert.deepEqual(usables.pickables(), ['dog']);
-  pictures.push('poster');
-  dogAt = 'lounge';
-  assert.deepEqual(usables.lists(), [['frame', 'poster'], ['dog in the lounge'], ['ball']]);
-  offDog();
-  assert.deepEqual(usables.lists(), [['frame', 'poster'], ['ball']]);
+  usables.add({ usable: () => signs });
+  const offWalker = usables.add({ usable: () => [`walker in the ${walkerAt}`], pickable: () => 'walker' });
+  usables.add({ usable: () => ['board'] });
+  assert.deepEqual(usables.lists(), [['frame'], ['walker in the lounge'], ['board']]);
+  assert.deepEqual(usables.pickables(), ['walker']);
+  signs.push('poster');
+  walkerAt = 'meeting room';
+  assert.deepEqual(usables.lists(), [['frame', 'poster'], ['walker in the meeting room'], ['board']]);
+  offWalker();
+  assert.deepEqual(usables.lists(), [['frame', 'poster'], ['board']]);
   assert.deepEqual(usables.pickables(), []);
 });
 
