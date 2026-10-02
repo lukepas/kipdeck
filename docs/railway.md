@@ -27,13 +27,13 @@ What `up` does, in about five minutes the first time:
 6. Signs the GitHub CLI in with your local `gh auth token` (kept on the volume), and gives git your name and email.
 7. Opens an SSH tunnel and your browser at `http://localhost:4600`. **The first page shows the office password once. Write it down.** The office then keeps only a hash of it.
 
-The office listens on `127.0.0.1:4600` inside its container, and everyone reaches it through the tunnel. `localhost` counts as a secure origin, so voice and screen sharing work, with no certificates to manage. Your key logs in as `agentoffice`, the user that runs the office (`deploy/railway.sh ssh` gives you its shell). The office starts with no floors: ride the elevator and pick one of the repositories your GitHub token can see.
+The office listens on `127.0.0.1:4600` inside its container, and everyone reaches it through the tunnel. `localhost` counts as a secure origin, so voice and screen sharing work, with no certificates to manage. Your key logs in as `agentoffice`, the user that runs the office (`deploy/railway.sh ssh` gives you its shell). The office starts with no floors: open Floors (it opens by itself) and pick one of the repositories your GitHub token can see.
 
 **What survives a restart.** Railway replaces the container on every restart and redeploy; the volume stays. On it:
 
 | On the volume | What it holds |
 | --- | --- |
-| `/data/home/agent-office` | The office's own data: the password hash, accounts and invites, floors, chat, settings, arcade scores, each account's own Claude and GitHub sign-ins |
+| `/data/home/agent-office` | The office's own data: the password hash, accounts and invites, floors, chat, settings, each account's own Claude and GitHub sign-ins |
 | `/data/home/workspace` | The projects, cloned as `<owner>/<repo>`, with the workers' worktrees |
 | `/data/home/.local`, `.claude`, `.claude.json` | Claude Code itself, its sign-in, and the sessions workers resume |
 | `/data/home/.config/gh`, `.gitconfig` | The GitHub CLI's sign-in and git's name and email |
@@ -69,7 +69,7 @@ deploy/railway.sh ssh | logs           # a shell in the container / follow the o
 
 **GitHub.** By default your local `gh auth token` signs the GitHub CLI in, in the office. Anyone who can use the office can use that token, so pass `--github-token <fine-grained token>` or `--no-github-token` if that's too much. Codex and OpenCode aren't in the image: add them to `deploy/container/Dockerfile` if you use them.
 
-**Other settings.** The office reads the same environment variables as anywhere else ([configuration](configuration.md)). Set them on the service from `~/.config/agent-office/railway/<name>/`, which is linked to it: `cd ~/.config/agent-office/railway/agent-office && railway variable set AGENT_OFFICE_CITY="Portland, Oregon"`. Setting a variable redeploys the office.
+**Other settings.** The office reads the same environment variables as anywhere else ([configuration](configuration.md)). Set them on the service from `~/.config/agent-office/railway/<name>/`, which is linked to it: `cd ~/.config/agent-office/railway/agent-office && railway variable set AGENT_OFFICE_MAX_WORKERS=8`. Setting a variable redeploys the office.
 
 **Cost.** Railway bills the container's CPU and memory while it runs, plus the volume. Nothing pauses by itself: `deploy/railway.sh destroy` is how to stop paying. It deletes the project with the volume and everything on it; the office stops at once, and Railway purges the project a couple of days later.
 

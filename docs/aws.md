@@ -78,7 +78,7 @@ An office created before the SSH tunnel served HTTPS on port 443 with a self-sig
 
 Useful options for `up`:
 
-- `--project owner/repo` also clones that repo as the office's first floor. Without it, you pick projects in the elevator. (Before, the office was started in the GitHub origin of the directory you ran `up` from, which is usually agent-office itself. An office set up that way keeps its data in that checkout after `up`, and you can take agent-office off the building in the elevator.)
+- `--project owner/repo` also clones that repo as the office's first floor. Without it, you pick projects in the Floors window. (Before, the office was started in the GitHub origin of the directory you ran `up` from, which is usually agent-office itself. An office set up that way keeps its data in that checkout after `up`, and you can take agent-office off the building in the Floors window.)
 - `--instance-type`, `--disk` and `--region` set the machine size, disk size and region.
 - `--allow <ip>` lets more IPs reach SSH from the start.
 - `--name <name>` runs several offices side by side.

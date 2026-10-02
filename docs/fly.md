@@ -27,13 +27,13 @@ What `up` does, in a few minutes the first time:
 6. Signs the GitHub CLI in with your local `gh auth token` (kept on the volume), and gives git your name and email.
 7. Opens an SSH tunnel and your browser at `http://localhost:4600`. **The first page shows the office password once. Write it down.** The office then keeps only a hash of it.
 
-The office listens on `127.0.0.1:4600` in its machine, and everyone reaches it through the tunnel. `localhost` counts as a secure origin, so voice and screen sharing work, with no certificates to manage. Your key logs in as `agentoffice`, the user that runs the office (`deploy/fly.sh ssh` gives you its shell). If the office's sshd is ever down, `fly ssh console -a <app>` still gets you a root shell through Fly's own SSH, which keeps port 22 in the machine (the office's sshd listens on 2222 there, and the app's public port leads to it). The office starts with no floors: ride the elevator and pick one of the repositories your GitHub token can see.
+The office listens on `127.0.0.1:4600` in its machine, and everyone reaches it through the tunnel. `localhost` counts as a secure origin, so voice and screen sharing work, with no certificates to manage. Your key logs in as `agentoffice`, the user that runs the office (`deploy/fly.sh ssh` gives you its shell). If the office's sshd is ever down, `fly ssh console -a <app>` still gets you a root shell through Fly's own SSH, which keeps port 22 in the machine (the office's sshd listens on 2222 there, and the app's public port leads to it). The office starts with no floors: open Floors (it opens by itself) and pick one of the repositories your GitHub token can see.
 
 **What survives a restart.** A restart, a redeploy or a resize restarts the machine from a fresh copy of the image; the volume stays. On it:
 
 | On the volume | What it holds |
 | --- | --- |
-| `/data/home/agent-office` | The office's own data: the password hash, accounts and invites, floors, chat, settings, arcade scores, each account's own Claude and GitHub sign-ins |
+| `/data/home/agent-office` | The office's own data: the password hash, accounts and invites, floors, chat, settings, each account's own Claude and GitHub sign-ins |
 | `/data/home/workspace` | The projects, cloned as `<owner>/<repo>`, with the workers' worktrees |
 | `/data/home/.local`, `.claude`, `.claude.json` | Claude Code itself, its sign-in, and the sessions workers resume |
 | `/data/home/.config/gh`, `.gitconfig` | The GitHub CLI's sign-in and git's name and email |
@@ -76,7 +76,7 @@ deploy/fly.sh ssh | logs              # a shell in the machine / follow the offi
 
 **GitHub.** By default your local `gh auth token` signs the GitHub CLI in, in the office. Anyone who can use the office can use that token, so pass `--github-token <fine-grained token>` or `--no-github-token` if that's too much. Codex and OpenCode aren't in the image: add them to `deploy/container/Dockerfile` if you use them.
 
-**Other settings.** The office reads the same environment variables as anywhere else ([configuration](configuration.md)). Set them as secrets on the app: `fly secrets set -a <app> AGENT_OFFICE_CITY="Portland, Oregon"`. That restarts the machine. Don't edit the `fly.toml` in `~/.config/agent-office/fly/<name>/`, because `deploy/fly.sh` writes it again before every deploy.
+**Other settings.** The office reads the same environment variables as anywhere else ([configuration](configuration.md)). Set them as secrets on the app: `fly secrets set -a <app> AGENT_OFFICE_MAX_WORKERS=8`. That restarts the machine. Don't edit the `fly.toml` in `~/.config/agent-office/fly/<name>/`, because `deploy/fly.sh` writes it again before every deploy.
 
 **Cost.** Fly bills the machine by the second while it runs, plus the volume, the dedicated IPv4 address and the volume's snapshots. Nothing pauses by itself: `deploy/fly.sh pause` stops the machine's share, and `deploy/fly.sh destroy` stops all of it. Destroying deletes the app with its machine, volume and address, and everything on them.
 

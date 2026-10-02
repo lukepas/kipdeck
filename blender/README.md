@@ -55,7 +55,7 @@ These are what the office's code counts on. A model that breaks one looks wrong 
    to what the prop needs (each is a draw call).
 8. **Smooth, not faceted.** Shapes that should read as one soft form melt together with `aokit.fuse`
    (a voxel remesh, smoothing, then even quads), and coloured patches on them are cut in with
-   `aokit.paint` along smooth edges. Hard-edged things (cabinets, counters, cars' panels) stay as
+   `aokit.paint` along smooth edges. Hard-edged things (desks, shelves, frames) stay as
    bevelled boxes and outlines, shaded flat or smooth as suits them.
 
 ## Checking it
