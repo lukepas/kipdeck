@@ -4,7 +4,7 @@ Back to the [README](../README.md).
 
 Every new worker starts on the office's **Default worker**: a provider, model and effort an admin picks in ⚙️ Settings → **🤖 Workers** (the `--agent` with its own default model until someone does). The hire, ask, queue, issue and meeting windows show it on one line; click **✏️ Edit** there to pick **Claude Code**, **OpenCode**, **Codex**, **Grok**, **Muse**, **DeepSeek Harness**, **Pi** or **Cursor**, a model and an effort for just that worker or task, and **↺ Use the default** to go back. Board agents and tasks the Queue agent adds, which nobody picks for, start on the default too. Existing workers keep their provider when prompted or resumed, and queued tasks keep their choice when retried or restored after a restart.
 
-Every harness takes both a **Model** and an **Effort**, each optional: leave one on **Default** and the harness uses its own settings.
+Most harnesses take a **Model** and an **Effort**, each optional (Cursor takes the effort inside its model id, and Custom takes neither): leave one on **Default** and the harness uses its own settings.
 
 | Harness | Model | Effort |
 | --- | --- | --- |
