@@ -160,6 +160,15 @@ test("a WebSocket opens only from the office's own page, whatever the Host says"
   ok.ws!.close();
 });
 
+test("only an admin can send a test message to the team's channel", async () => {
+  const cookie = await login(member);
+  const open = await socket({ cookie, ...own() });
+  assert.ok(open.ws);
+  open.ws!.send(JSON.stringify({ t: 'notify.test' }));
+  assert.equal((await until(open.messages, (m) => m.t === 'toast' && m.level === 'warn')).text, 'Only admins can send a test to team notifications');
+  open.ws!.close();
+});
+
 test('signing out ends the session on the server: a copied cookie stops working, and its socket closes', async () => {
   const cookie = await login();
   const other = await login();

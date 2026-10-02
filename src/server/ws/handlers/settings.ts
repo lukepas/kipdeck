@@ -22,6 +22,8 @@ export const settingsHandlers = {
   },
   'notify.test'(ctx, c) {
     const who = c.peer.name;
+    // It posts to the team's channel: an admin's button, like the rest of team notifications.
+    if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can send a test to team notifications');
     void ctx.webhook.test(who).then((err) => ctx.sendTo(c, { t: 'toast', text: err ?? '📣 Sent a test message', level: err ? 'warn' : 'info' }));
   },
   'machine.limit'(ctx, c, msg) {

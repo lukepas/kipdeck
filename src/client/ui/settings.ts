@@ -207,6 +207,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     const admin = store.me.admin;
     hookRow.classList.toggle('hidden', !admin);
     hookRemove.classList.toggle('hidden', !admin);
+    hookTest.classList.toggle('hidden', !admin);
     hookActions.classList.toggle('hidden', !webhook);
     hookSave.textContent = webhook ? 'Replace' : 'Save';
     hookStatus.classList.toggle('bad', !!error);
