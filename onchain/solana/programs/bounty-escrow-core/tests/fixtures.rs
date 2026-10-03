@@ -121,7 +121,7 @@ fn transitions_match_the_shared_table() {
                 }
                 "cancel" => {
                     let b = bounty.as_mut().expect("opened first");
-                    machine::cancel(b, &named(step, "approver", "nobody"), 0, now).map(|c| {
+                    machine::cancel(b, step["creator_signed"].as_bool().unwrap_or(false), &named(step, "approver", "nobody"), 0, now).map(|c| {
                         cancelled = Some(c);
                         None
                     })

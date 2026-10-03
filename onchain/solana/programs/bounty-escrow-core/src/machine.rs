@@ -205,9 +205,15 @@ pub enum Cancel {
     Refunds,
 }
 
-/// Calls a bounty off. `approver` is who signed as the approver (NO_KEY if nobody did).
-pub fn cancel(b: &mut Bounty, approver: &Key, vault_balance: u64, now: i64) -> Result<Cancel, EscrowError> {
+/// Calls a bounty off. `creator_signed` is whether the bounty's creator signed; `approver` is who
+/// signed as the approver (NO_KEY if nobody did). An empty bounty is closed by its creator or the
+/// approver; a funded one only by the approver, before a claim.
+pub fn cancel(b: &mut Bounty, creator_signed: bool, approver: &Key, vault_balance: u64, now: i64) -> Result<Cancel, EscrowError> {
+    let by_approver = approver == &b.approver;
     if b.total == 0 {
+        if !creator_signed && !by_approver {
+            return Err(EscrowError::Unauthorized);
+        }
         if !matches!(b.state, BountyState::Open | BountyState::Claimed) {
             return Err(EscrowError::WrongState);
         }
@@ -219,7 +225,7 @@ pub fn cancel(b: &mut Bounty, approver: &Key, vault_balance: u64, now: i64) -> R
         b.settled_at = now;
         return Ok(Cancel::Close);
     }
-    if approver != &b.approver {
+    if !by_approver {
         return Err(EscrowError::Unauthorized);
     }
     if b.state != BountyState::Open {

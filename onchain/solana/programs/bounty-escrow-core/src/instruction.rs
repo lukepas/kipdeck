@@ -43,12 +43,12 @@ pub enum EscrowInstruction {
     /// account (writable), mint, token program.
     Refund,
 
-    /// Calls a bounty off. Empty (nothing funded): its accounts are closed and the rent goes back to
-    /// its creator. Funded but not yet claimed: the approver signs, and the funders get their money
-    /// back through Refund.
+    /// Calls a bounty off. Empty (nothing funded): its creator or the approver signs, its accounts
+    /// are closed and the rent goes back to the creator. Funded but not yet claimed: the approver
+    /// signs, and the funders get their money back through Refund.
     ///
-    /// Accounts: bounty (writable), vault (writable), creator (writable), token program, and the
-    /// approver (signer) when anything was funded.
+    /// Accounts: bounty (writable), vault (writable), creator (writable; a signer when the creator
+    /// calls it off), token program, and the approver (signer) when the approver calls it off.
     Cancel,
 }
 

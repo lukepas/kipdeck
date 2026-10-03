@@ -18,7 +18,8 @@ fn vectors() -> Map<String, Value> {
     let program = Pubkey::new_from_array([0x11; 32]);
     let repo = "webdevcody/agent-office";
     let repo_hash = hash(repo.as_bytes()).to_bytes();
-    let (bounty, bounty_bump) = Pubkey::find_program_address(&[BOUNTY_SEED, &repo_hash, &12u64.to_le_bytes(), &[3]], &program);
+    let (attester, approver) = (Pubkey::new_from_array([2; 32]), Pubkey::new_from_array([3; 32]));
+    let (bounty, bounty_bump) = Pubkey::find_program_address(&[BOUNTY_SEED, &repo_hash, &12u64.to_le_bytes(), &[3], attester.as_ref(), approver.as_ref()], &program);
     let funder = Pubkey::new_from_array([1; 32]);
     let (contribution, contribution_bump) = Pubkey::find_program_address(&[CONTRIB_SEED, bounty.as_ref(), funder.as_ref()], &program);
     let mint = Pubkey::new_from_array([9; 32]);
@@ -28,7 +29,7 @@ fn vectors() -> Map<String, Value> {
     m.insert("pda.programId".into(), json!(program.to_string()));
     m.insert("pda.repo".into(), json!(repo));
     m.insert("pda.repoHash".into(), json!(hex(&repo_hash)));
-    m.insert("pda.bounty12n3".into(), json!({ "address": bounty.to_string(), "bump": bounty_bump, "issue": 12, "nonce": 3 }));
+    m.insert("pda.bounty12n3".into(), json!({ "address": bounty.to_string(), "bump": bounty_bump, "issue": 12, "nonce": 3, "attester": attester.to_string(), "approver": approver.to_string() }));
     m.insert("pda.funder".into(), json!(funder.to_string()));
     m.insert("pda.contribution".into(), json!({ "address": contribution.to_string(), "bump": contribution_bump }));
     m.insert("pda.vault".into(), json!({ "mint": mint.to_string(), "address": vault.to_string() }));

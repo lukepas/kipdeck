@@ -79,8 +79,8 @@ fn now() -> Result<i64, ProgramError> {
     Ok(Clock::get()?.unix_timestamp)
 }
 
-fn bounty_seeds<'a>(b: &'a Bounty, issue_le: &'a [u8; 8], nonce: &'a [u8; 1], bump: &'a [u8; 1]) -> [&'a [u8]; 5] {
-    [BOUNTY_SEED, &b.repo_hash, issue_le, nonce, bump]
+fn bounty_seeds<'a>(b: &'a Bounty, issue_le: &'a [u8; 8], nonce: &'a [u8; 1], bump: &'a [u8; 1]) -> [&'a [u8]; 7] {
+    [BOUNTY_SEED, &b.repo_hash, issue_le, nonce, &b.attester, &b.approver, bump]
 }
 
 /// A bounty account of this program's, at the address its seeds and bump give.
@@ -89,7 +89,7 @@ fn load_bounty(program_id: &Pubkey, info: &AccountInfo) -> Result<Bounty, Progra
         return Err(fail(EscrowError::WrongAccount));
     }
     let b = Bounty::unpack(&info.try_borrow_data()?).map_err(fail)?;
-    let at = Pubkey::create_program_address(&[BOUNTY_SEED, &b.repo_hash, &b.issue.to_le_bytes(), &[b.nonce], &[b.bump]], program_id).map_err(|_| fail(EscrowError::WrongAccount))?;
+    let at = Pubkey::create_program_address(&[BOUNTY_SEED, &b.repo_hash, &b.issue.to_le_bytes(), &[b.nonce], &b.attester, &b.approver, &[b.bump]], program_id).map_err(|_| fail(EscrowError::WrongAccount))?;
     expect(info, &at)?;
     Ok(b)
 }
@@ -156,7 +156,8 @@ fn init_bounty(program_id: &Pubkey, accounts: &[AccountInfo], repo_hash: Key, is
     expect(ata_program, &ASSOCIATED_TOKEN_PROGRAM_ID)?;
     cpi::mint_decimals(mint)?;
     let issue_le = issue.to_le_bytes();
-    let (bounty_at, bump) = Pubkey::find_program_address(&[BOUNTY_SEED, &repo_hash, &issue_le, &[nonce]], program_id);
+    // The attester and the approver are in the seeds: a bounty opened with other keys sits elsewhere.
+    let (bounty_at, bump) = Pubkey::find_program_address(&[BOUNTY_SEED, &repo_hash, &issue_le, &[nonce], &attester, &approver], program_id);
     expect(bounty_info, &bounty_at)?;
     if !bounty_info.data_is_empty() || bounty_info.owner == program_id {
         return Err(fail(EscrowError::AlreadyInitialized));
@@ -164,7 +165,7 @@ fn init_bounty(program_id: &Pubkey, accounts: &[AccountInfo], repo_hash: Key, is
     let vault_at = cpi::associated_token_address(&bounty_at, mint.key);
     expect(vault, &vault_at)?;
     let bounty = machine::init(InitArgs { repo_hash, issue, nonce, mint: key(mint), vault: vault_at.to_bytes(), expiry_ts, attester, approver, creator, bump }, now()?).map_err(fail)?;
-    cpi::create_pda(payer, bounty_info, system, Bounty::LEN, program_id, &[BOUNTY_SEED, &repo_hash, &issue_le, &[nonce], &[bump]], &Rent::get()?)?;
+    cpi::create_pda(payer, bounty_info, system, Bounty::LEN, program_id, &[BOUNTY_SEED, &repo_hash, &issue_le, &[nonce], &attester, &approver, &[bump]], &Rent::get()?)?;
     cpi::create_ata_idempotent(payer, vault, bounty_info, mint, system, token, ata_program)?;
     // Whoever made the vault, it must be the bounty's own token account for this mint.
     load_vault(vault, bounty_info, &bounty)?;
@@ -312,11 +313,12 @@ fn cancel(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let vault = next_account_info(it)?;
     let creator = next_account_info(it)?;
     let token = next_account_info(it)?;
-    // The approver is optional: only a funded bounty needs it.
+    // The approver is optional: an empty bounty's creator may sign instead.
     let approver_key = match it.next() {
         Some(a) => signer(a)?,
         None => NO_KEY,
     };
+    let creator_signed = creator.is_signer;
     for w in [bounty_info, vault, creator] {
         writable(w)?;
     }
@@ -326,7 +328,7 @@ fn cancel(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let held = load_vault(vault, bounty_info, &bounty)?;
     let total = bounty.total;
     let bounty_key = key(bounty_info);
-    match machine::cancel(&mut bounty, &approver_key, held, now()?).map_err(fail)? {
+    match machine::cancel(&mut bounty, creator_signed, &approver_key, held, now()?).map_err(fail)? {
         Cancel::Close => {
             let (issue_le, nonce, bump) = (bounty.issue.to_le_bytes(), [bounty.nonce], [bounty.bump]);
             let seeds = bounty_seeds(&bounty, &issue_le, &nonce, &bump);

@@ -1,5 +1,5 @@
 {
-  "about": "Every case is run by the Rust state machine (programs/bounty-escrow-core/tests/fixtures.rs) and by the SDK's machine (sdk/tests/fixtures.test.ts), so both refuse the same steps with the same errors. Keys are names: a number stands for 32 copies of that byte, a string for the hex of a real key. 'nobody' is the all-zero key. A bounty is opened for issue 12 of repo hash 'repo' with nonce 0 by 'creator', in 'usdc' unless the step says another mint, with the 'attester' and 'approver' unless the step says otherwise. Amounts are strings, as a u64 can be bigger than a JSON number holds exactly. Add a case by hand: both sides pick it up.",
+  "about": "Every case is run by the Rust state machine (programs/bounty-escrow-core/tests/fixtures.rs) and by the SDK's machine (sdk/tests/fixtures.test.ts), so both refuse the same steps with the same errors. Keys are names: a number stands for 32 copies of that byte, a string for the hex of a real key. 'nobody' is the all-zero key. A bounty is opened for issue 12 of repo hash 'repo' with nonce 0 by 'creator', in 'usdc' unless the step says another mint, with the 'attester' and 'approver' unless the step says otherwise. Amounts are strings, as a u64 can be bigger than a JSON number holds exactly. A cancel step names who signed in the approver's slot ('approver') and whether the creator signed ('creator_signed', default false). Add a case by hand: both sides pick it up.",
   "maxDurationSecs": 31622400,
   "keys": {
     "nobody": 0,
@@ -620,7 +620,7 @@
       ]
     },
     {
-      "name": "an empty bounty cancels without anyone, closing it",
+      "name": "an empty bounty cancels only by its creator or the approver, closing it",
       "steps": [
         {
           "op": "init",
@@ -631,6 +631,60 @@
         {
           "op": "cancel",
           "approver": "nobody",
+          "now": 1600,
+          "expect": "Unauthorized",
+          "state": "open"
+        },
+        {
+          "op": "cancel",
+          "approver": "stranger",
+          "now": 1600,
+          "expect": "Unauthorized"
+        },
+        {
+          "op": "cancel",
+          "approver": "attester",
+          "now": 1600,
+          "expect": "Unauthorized"
+        },
+        {
+          "op": "cancel",
+          "approver": "nobody",
+          "creator_signed": true,
+          "now": 1600,
+          "expect": "ok",
+          "result": "close",
+          "state": "cancelled"
+        }
+      ]
+    },
+    {
+      "name": "an empty claimed bounty cancels by the approver, closing it",
+      "steps": [
+        {
+          "op": "init",
+          "now": 1000,
+          "expiry": 5000,
+          "expect": "ok"
+        },
+        {
+          "op": "claim",
+          "signer": "attester",
+          "pr": 7,
+          "wallet": "agent",
+          "now": 1500,
+          "expect": "ok"
+        },
+        {
+          "op": "cancel",
+          "approver": "stranger",
+          "now": 1600,
+          "expect": "Unauthorized",
+          "state": "claimed"
+        },
+        {
+          "op": "cancel",
+          "approver": "approver",
           "now": 1600,
           "expect": "ok",
           "result": "close",

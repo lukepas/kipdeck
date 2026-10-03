@@ -28,7 +28,9 @@ pub type Key = [u8; 32];
 pub const NO_KEY: Key = [0; 32];
 
 /// Seed prefix of a bounty account: then sha256 of the lowercased "owner/name", the issue number
-/// (u64 LE) and a one-byte nonce, so an issue can get a fresh bounty after one was settled.
+/// (u64 LE), a one-byte nonce (so an issue can get a fresh bounty after one was settled), and the
+/// attester's and the approver's keys. With the keys in the seeds, nobody can open a bounty at the
+/// address an office's bounty for that issue would have, with keys the office doesn't hold.
 pub const BOUNTY_SEED: &[u8] = b"bounty";
 /// Seed prefix of a contribution account: then the bounty's address and the funder's.
 pub const CONTRIB_SEED: &[u8] = b"contrib";

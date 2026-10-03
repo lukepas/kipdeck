@@ -56,7 +56,11 @@ impl Office {
     }
 
     fn bounty_key(&self) -> Pubkey {
-        Pubkey::find_program_address(&[BOUNTY_SEED, &self.repo_hash, &self.issue.to_le_bytes(), &[self.nonce]], &self.l.program_id).0
+        self.bounty_key_for(self.attester, self.approver)
+    }
+
+    fn bounty_key_for(&self, attester: Pubkey, approver: Pubkey) -> Pubkey {
+        Pubkey::find_program_address(&[BOUNTY_SEED, &self.repo_hash, &self.issue.to_le_bytes(), &[self.nonce], attester.as_ref(), approver.as_ref()], &self.l.program_id).0
     }
 
     fn vault(&self) -> Pubkey {
@@ -69,7 +73,7 @@ impl Office {
 
     fn init_with(&mut self, mint: Pubkey, token: Pubkey, attester: Pubkey, approver: Pubkey, expiry_ts: i64) -> Result<(), ProgramError> {
         let ix = EscrowInstruction::InitBounty { repo_hash: self.repo_hash, issue: self.issue, nonce: self.nonce, expiry_ts, attester: attester.to_bytes(), approver: approver.to_bytes() }.pack();
-        let bounty = self.bounty_key();
+        let bounty = self.bounty_key_for(attester, approver);
         let vault = Ledger::ata(&bounty, &mint);
         let metas = [signer(self.payer), writable(bounty), writable(vault), readonly(mint), readonly(SYSTEM_PROGRAM_ID), readonly(token), readonly(ASSOCIATED_TOKEN_PROGRAM_ID)];
         self.l.run(&metas, &ix).0
@@ -135,7 +139,13 @@ impl Office {
     }
 
     fn cancel(&mut self, approver: Option<Pubkey>) -> (Result<(), ProgramError>, Vec<Vec<u8>>) {
-        let mut metas = vec![writable(self.bounty_key()), writable(self.vault()), writable(self.payer), readonly(TOKEN_PROGRAM_ID)];
+        self.cancel_as(false, approver)
+    }
+
+    /// Cancel, with the creator (the payer who opened it) signing or not, and maybe a signer in the approver's slot.
+    fn cancel_as(&mut self, creator_signs: bool, approver: Option<Pubkey>) -> (Result<(), ProgramError>, Vec<Vec<u8>>) {
+        let creator = if creator_signs { Meta(self.payer, true, true) } else { writable(self.payer) };
+        let mut metas = vec![writable(self.bounty_key()), writable(self.vault()), creator, readonly(TOKEN_PROGRAM_ID)];
         if let Some(a) = approver {
             metas.push(sign_as(a));
         }
@@ -347,11 +357,19 @@ fn tokens_sent_straight_to_the_vault_are_paid_out_with_the_bounty() {
 }
 
 #[test]
-fn an_empty_bounty_cancels_and_its_rent_goes_back_to_its_creator() {
+fn an_empty_bounty_cancels_only_by_its_creator_or_the_approver() {
     let mut o = Office::new();
     o.init().unwrap();
+    // Nobody, or a stranger in the approver's slot: refused, so an office's empty bounty can't be griefed.
+    assert_eq!(o.cancel(None).0, Err(err(EscrowError::Unauthorized)));
+    assert_eq!(o.cancel(Some(o.funders[0])).0, Err(err(EscrowError::Unauthorized)));
+    assert_eq!(o.cancel(Some(o.attester)).0, Err(err(EscrowError::Unauthorized)));
+    let mut a = Office::new();
+    a.init().unwrap();
+    a.cancel(Some(a.approver)).0.unwrap();
+    assert_eq!(a.l.get(&a.bounty_key()).owner, SYSTEM_PROGRAM_ID);
     let before = o.l.get(&o.payer).lamports;
-    let (r, logs) = o.cancel(None);
+    let (r, logs) = o.cancel_as(true, None);
     r.unwrap();
     assert_eq!(tags(&logs), [EVENT_CANCELLED]);
     assert!(o.l.get(&o.payer).lamports > before);
@@ -402,4 +420,24 @@ fn a_bounty_owned_by_another_program_is_not_read_as_one() {
     forged.owner = key(42);
     o.l.put(bounty, forged);
     assert_eq!(o.release(77).0, Err(err(EscrowError::WrongAccount)));
+}
+
+#[test]
+fn a_bounty_opened_with_other_keys_sits_elsewhere_and_cant_take_the_offices_address() {
+    let mut o = Office::new();
+    let (mint, stranger, accomplice) = (o.mint, o.funders[0], o.funders[1]);
+    // Someone opens issue 12 (nonce 0) with keys they hold: it lands at its own address...
+    o.init_with(mint, TOKEN_PROGRAM_ID, stranger, accomplice, 5000).unwrap();
+    let squatted = o.bounty_key_for(stranger, accomplice);
+    assert_ne!(squatted, o.bounty_key());
+    assert_eq!(Bounty::unpack(&o.l.get(&squatted).data).unwrap().attester, stranger.to_bytes());
+    // ...and the office's own bounty for the same issue and nonce still opens at its address.
+    o.init().unwrap();
+    assert_eq!(o.bounty().attester, o.attester.to_bytes());
+    // Passing the office's address with the stranger's keys is refused.
+    let ix = EscrowInstruction::InitBounty { repo_hash: o.repo_hash, issue: o.issue, nonce: 1, expiry_ts: 5000, attester: stranger.to_bytes(), approver: accomplice.to_bytes() }.pack();
+    o.nonce = 1;
+    let wrong = o.bounty_key();
+    let metas = [signer(o.payer), writable(wrong), writable(Ledger::ata(&wrong, &mint)), readonly(mint), readonly(SYSTEM_PROGRAM_ID), readonly(TOKEN_PROGRAM_ID), readonly(ASSOCIATED_TOKEN_PROGRAM_ID)];
+    assert_eq!(o.l.run(&metas, &ix).0, Err(err(EscrowError::WrongAccount)));
 }
