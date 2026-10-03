@@ -88,5 +88,5 @@ With `--attest`, the merge that pays a bounty is also attested on Base Sepolia, 
 
 - The program, the SDK and the office side pass their tests: 27 Rust host tests, 48 SDK tests (7 of them litesvm runs of the built program), and the office's bounty tests in `npm test`.
 - One bounty ran end to end (open, fund, claim, release) on a local `solana-test-validator`, signatures in `onchain/solana/deployments/localnet.json`.
-- Devnet: see `onchain/solana/deployments/devnet.json`. The deploy waits on devnet SOL for the deployer when the CLI faucet is rate limited.
+- Devnet: the program is deployed (`JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`) and one demo bounty ran open, fund, claim and release there on 2026-10-03, with no GitHub merge behind it; signatures in `onchain/solana/deployments/devnet.json`.
 - Not audited. Testnet only.

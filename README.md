@@ -1,3 +1,52 @@
+# What this fork adds: Proof of Merge
+
+> **Upstream credit.** This is a fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) by webdevcody / AgentSystemLabs, MIT-licensed (see [LICENSE](LICENSE), copyright notice unchanged). The office, desks, terminals, voice, boards and deploy scripts below are theirs. This fork is not run by the upstream authors. What is ours is listed, commit by commit, in [launch/chain/disclosure.md](launch/chain/disclosure.md).
+
+![Testnet only](https://img.shields.io/badge/chain-testnet%20only-orange?style=flat-square) Solana devnet and Base Sepolia. No mainnet, no token, no NFT, no points.
+
+**Your AI agents get paid, and earn reputation, only when a human merges their work.** Escrowed bounties on Solana, proof-of-merge on Base, and a public leaderboard of which coding agents actually ship.
+
+- **Mission control** for teams running many agents: what needs a person now, a review inbox, goals and milestones, a timeline ([docs](docs/mission-control.md)).
+- **Bounties** in devnet USDC on GitHub issues, from the board or a "Fund this issue" Blink. A release needs two signatures: the attester's (a person with write access merged the office's own, non-fork PR) and the approver's (an office admin approved it in the review inbox) ([docs](docs/bounties.md)).
+- **Proof of merge**: an EAS attestation on Base Sepolia for every office PR a person merges, reverts or closes, and ERC-8004 feedback for the agent ([docs](docs/proof-of-merge.md), [reputation](docs/reputation.md)).
+- **Paid tasks over x402**: an outsider hires a worker for one task with test USDC; it waits, held, for an admin ([docs](docs/x402.md)).
+- **A public board** at `/pom/`, rebuilt from chain data alone, with an explorer link on every row ([docs](docs/showcase.md)).
+
+### Quickstart in 60 seconds
+
+Every chain feature is off by default; without them this is the office plus mission control.
+
+```bash
+git clone <this fork's URL> agent-office-pom && cd agent-office-pom
+npm install                 # also builds the client and server
+node bin/agent-office.js    # opens the office; chain features off
+```
+
+To try the chain side on testnets, build the on-chain packages the office loads (`cd onchain/solana && npm install && npm run build`, the same in `onchain/attest`), then turn bounties on in Settings, Bounties, and start the office with `--attest`, `--reputation` or `--x402`. The deployed testnet addresses are in `onchain/*/deployments/`.
+
+### How it fits together
+
+```text
+ GitHub issue --Fund (board or Blink)--> Solana devnet escrow program
+      |                                         ^
+ office worker (Claude Code, Codex, Cursor, Pi) |  Release: attester + approver sign
+      |                                         |
+ office PR (never a fork) --person merges--> office checks GitHub --admin approves in review inbox
+                                                 |
+                                                 +--> EAS attestation + ERC-8004 feedback (Base Sepolia)
+                                                 |
+ onchain/indexer (chain data only) --> leaderboard.json --> /pom/ public board
+```
+
+### Security notes
+
+- Keys live in files under `~/.config/agent-office-chain`, mode 0600, and are never logged. Workers don't get the office's chain variables, but they run as the same OS user and could read those files. **Use dedicated testnet keys only, with nothing of value on them.**
+- Payouts are admin-only, and the approver key is read to sign only after the admin check.
+- RPC and facilitator calls go through the office's network guard (public testnet endpoints only, no redirects, capped answers); state is written through `safefs.ts`; the public routes keep the host check and their own rate limits and CSP. See [docs/security.md](docs/security.md).
+- Nothing here is audited. Mainnet waits on an audit.
+
+Hackathon and grant drafts, the build-in-public calendar and the disclosure are in [launch/chain](launch/chain/README.md).
+
 > [!WARNING]
 > **Work in progress.** Agent Office is built for one person's workflow — mine — and it changes fast as I iterate on it.
 > Expect breaking changes between releases: keys that move, screens that get redrawn, features that come and go
@@ -376,6 +425,7 @@ Every change to the app that lands on `main` is published as a GitHub release by
 - [Proof of merge on Base Sepolia](docs/proof-of-merge.md): an EAS attestation for every office PR a person merges, reverts or closes, and a leaderboard rebuilt from chain data alone (testnet only, `--attest`)
 - [Agent reputation from merges](docs/reputation.md): ERC-8004 identities for the office's agents, feedback only for what a person did with their pull requests, a public leaderboard and a read-only MCP tool (testnet only, `--reputation`)
 - [The public showcase](docs/showcase.md): a shareable, read-only page at `/pom/` (and on GitHub Pages) showing which coding agents' PRs people actually merge, from chain data, with an explorer link on every row (testnet only, off until an admin turns it on)
+- [The launch kit and its tools](docs/launch.md): submission drafts, posts and the calendar in `launch/chain`, and the checks that keep their numbers, links and limits honest
 - [Paid tasks over x402](docs/x402.md): outsiders pay test USDC to queue one task, held until an admin approves it (testnet only, `--x402`)
 - [Agents](docs/agents.md): every harness the office runs (Claude Code, Codex, OpenCode, Grok, Muse, DeepSeek Harness, Pi, Cursor), models and effort, and the office's prompts
 - [Configuration](docs/configuration.md): every command-line option, and where the office keeps its data
