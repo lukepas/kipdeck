@@ -170,7 +170,7 @@ export class TaskQueue {
     this.pump();
   }
 
-  /** Puts a finished task back at the end of the queue. */
+  /** Puts a finished task back at the end of the queue (a paid one held for an admin again). */
   retry(taskId: string): string | undefined {
     const t = this.tasks.find((x) => x.id === taskId);
     if (!t) return 'No such task';
@@ -178,7 +178,10 @@ export class TaskQueue {
     if (t.outcome === 'rejected') return 'That task was turned down';
     if (t.issue !== undefined && this.tasks.some((x) => x !== t && x.issue === t.issue && x.status !== 'done')) return `Issue #${t.issue} is already on the queue`;
     this.tasks.splice(this.tasks.indexOf(t), 1);
-    const fresh: QueueTask = { id: t.id, provider: t.provider, model: t.model, effort: t.effort, issue: t.issue, ...(t.goal ? { goal: t.goal } : {}), ...(t.paid ? { paid: t.paid } : {}), title: t.title, prompt: t.prompt, addedBy: t.addedBy, owner: t.owner, addedAt: Date.now(), status: 'queued' };
+    // A paid task's prompt came from outside the office: running it again takes an admin's approval
+    // again (and the checkout checks that come with it), on that admin's sign-ins, not the last one's.
+    const again = t.paid ? { paid: t.paid, held: true as const } : { owner: t.owner };
+    const fresh: QueueTask = { id: t.id, provider: t.provider, model: t.model, effort: t.effort, issue: t.issue, ...(t.goal ? { goal: t.goal } : {}), ...again, title: t.title, prompt: t.prompt, addedBy: t.addedBy, addedAt: Date.now(), status: 'queued' };
     this.tasks.push(fresh);
     this.changed();
     this.pump();
@@ -190,7 +193,7 @@ export class TaskQueue {
     const t = this.tasks.find((x) => x.id === taskId);
     if (!t) return 'No such task';
     if (!t.held) return 'That task is not waiting for approval';
-    if (t.paid && !t.paid.tx) return 'Its payment is still settling';
+    if (t.paid && !t.paid.tx) return t.paid.settlement === 'unknown' ? "Nobody knows yet whether its payment settled: check the payer's authorization on chain, then record the settlement's transaction or turn the task down" : 'Its payment is still settling';
     t.held = undefined;
     if (owner) t.owner = owner;
     else delete t.owner;
@@ -218,6 +221,17 @@ export class TaskQueue {
     if (!t) return;
     t.paid = { ...paid };
     this.changed();
+  }
+
+  /** Records the settlement an admin found on chain for a paid task whose settlement was unknown. */
+  settled(taskId: string, tx: string, explorer?: string): string | undefined {
+    const t = this.tasks.find((x) => x.id === taskId);
+    if (!t?.paid) return 'No such paid task';
+    if (t.paid.tx || t.paid.settlement !== 'unknown') return 'Its settlement is known already';
+    const { settlement: _, ...paid } = t.paid;
+    t.paid = { ...paid, tx, ...(explorer ? { explorer } : {}) };
+    this.changed();
+    return undefined;
   }
 
   /** Takes a held task whose payment never settled off the queue (nobody paid for it). */

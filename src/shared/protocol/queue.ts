@@ -18,6 +18,12 @@ export interface QueuePayment {
   /** A paid task an admin turned down is refunded by hand from the office's wallet: that transaction, once recorded. */
   refundTx?: string;
   refundExplorer?: string;
+  /**
+   * 'unknown': the facilitator never said whether it settled (it timed out, or the office stopped
+   * mid-way). An admin checks the payer's authorization on chain, then records the settlement's
+   * transaction (queue.settled) or turns the task down.
+   */
+  settlement?: 'unknown';
 }
 
 /** A task on the 📋 queue whiteboard: a GitHub issue or free text, seated to a worker by itself. */
@@ -78,7 +84,9 @@ export type QueueClientMsg =
   /** Admins: turn a held task down. A paid one is then owed a refund, sent by hand. */
   | { t: 'queue.reject'; taskId: string }
   /** Admins: record the refund sent for a rejected paid task (its transaction). */
-  | { t: 'queue.refunded'; taskId: string; tx: string };
+  | { t: 'queue.refunded'; taskId: string; tx: string }
+  /** Admins: the settlement transaction of a paid task whose settlement was unknown, found on chain. */
+  | { t: 'queue.settled'; taskId: string; tx: string };
 
 export type QueueServerMsg =
   | { t: 'queue'; state: QueueState };

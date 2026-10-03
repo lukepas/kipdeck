@@ -95,4 +95,16 @@ export const queueHandlers = {
     if (task?.paid && !link) return ctx.warn(c, 'That is not a transaction on the network it was paid on');
     ctx.warn(c, floor.queue.refunded(id, tx, link));
   },
+  'queue.settled'(ctx, c, msg) {
+    const floor = here(ctx, c);
+    if (!floor || !admin(ctx, c, 'record a settlement')) return;
+    const id = str(msg.taskId, 32);
+    const task = floor.queue.state().tasks.find((t) => t.id === id);
+    const tx = str(msg.tx, 100).trim();
+    const link = task?.paid ? refundLink(task.paid.network, tx) : undefined;
+    if (task?.paid && !link) return ctx.warn(c, 'That is not a transaction on the network it was paid on');
+    const err = floor.queue.settled(id, tx, link);
+    if (err) return ctx.warn(c, err);
+    ctx.x402?.settledByHand(floor.id, id, tx);
+  },
 } satisfies HandlerMap<QueueClientMsg>;

@@ -102,6 +102,8 @@ export interface GatewayDeps {
   facilitator: Facilitator;
   /** A paid task while it's still on its floor's queue. */
   liveTask(floorId: string, taskId: string): QueueTask | undefined;
+  /** A floor's queue, to flag a task whose settlement became unknown in a restart. */
+  queueOf?(floorId: string): PaidQueue | undefined;
   /** The agents paid tasks may ask for (the default floor's), for the offer. */
   harnesses?(): readonly string[];
   /** Seconds since the epoch. */
@@ -126,6 +128,11 @@ interface LedgerEntry {
   title: string;
   /** sha256 of the payment and the request: a repeat only gets the task back with the very same request. */
   binding: string;
+  /**
+   * Written before the facilitator is asked to settle ('pending'), so a payment is never taken without
+   * a record. 'unknown': the facilitator didn't answer, or the office stopped before it did.
+   */
+  settling?: 'pending' | 'unknown';
   last?: Pick<QueueTask, 'status' | 'outcome' | 'workerName' | 'branch' | 'pr' | 'held'>;
 }
 
@@ -137,7 +144,7 @@ export interface TaskStatusView {
   worker?: string;
   branch?: string;
   pr?: { number: number; url: string; state: string };
-  payment: { payer: string; amount: string; network: string; transaction: string; explorer?: string; refund?: string };
+  payment: { payer: string; amount: string; network: string; transaction: string; explorer?: string; refund?: string; settlement?: 'settling' | 'unknown' };
 }
 
 const CORS = { 'access-control-allow-origin': '*', 'access-control-expose-headers': `${HEADER_REQUIRED}, ${HEADER_RESPONSE}, ${HEADER_LEGACY_RESPONSE}` };
@@ -251,7 +258,10 @@ export class X402Gateway {
     const text = paidPrompt(repo, issue, prompt);
     const refused = await floor.promptProblem(text);
     if (refused) return reply(400, { error: refused });
-    if (issue !== undefined && floor.queue.state().tasks.some((t) => t.issue === issue && t.status !== 'done')) return reply(409, { error: `Issue #${issue} is already on the queue` });
+    const busy = issue !== undefined && floor.queue.state().tasks.some((t) => t.issue === issue && t.status !== 'done');
+    const onQueue = () => reply(409, { error: `Issue #${issue} is already on the queue` });
+    // With a payment along, it may be this very payment's task: that's checked against the ledger first.
+    if (busy && readPayment(req.headers) === undefined) return onQueue();
 
     const offers = await this.offers();
     const taskUrl = `${origin}/api/x402/task`;
@@ -274,6 +284,7 @@ export class X402Gateway {
       if (earlier.binding !== binding) return reply(409, { error: 'That payment has already paid for a task' });
       return reply(202, { taskId: earlier.taskId, status: 'held', statusUrl: this.statusUrl(origin, earlier.taskId), duplicate: true });
     }
+    if (busy) return onQueue();
     if (this.inFlight.has(key)) return reply(409, { error: 'That payment is already being settled' });
     this.inFlight.add(key);
     try {
@@ -292,19 +303,31 @@ export class X402Gateway {
       const err = floor.queue.add(text, `${shortAddress(payer)} (x402)`, title, issue, harness as AgentProvider | undefined, undefined, undefined, undefined, undefined, { held: true, paid: info });
       if (err) return reply(409, { error: err });
       const queued = floor.queue.state().tasks.at(-1)!;
+      // In the ledger before settling: whatever happens next, the payment has a record.
+      const entry: LedgerEntry = { taskId: queued.id, floor: floor.id, key, payer, amount: this.settings.amount, network: net.caip2, transaction: '', at: Date.now(), title: queued.title, binding, settling: 'pending' };
+      this.ledger.push(entry);
+      this.persist();
       let settled;
       try {
         settled = await this.deps.facilitator.settle(payment, requirements);
       } catch (e) {
-        floor.queue.unpay(queued.id);
-        return reply(502, { error: `Could not settle the payment: ${(e as Error).message}` });
+        // A timeout may still have settled, and the authorization's nonce may be spent: the task stays,
+        // held, for an admin to check on chain, and the payer's status link says so.
+        entry.settling = 'unknown';
+        this.persist();
+        floor.queue.setPaid(queued.id, { ...info, settlement: 'unknown' });
+        this.deps.toast(floor.id, `💰 A payment for ${queued.title} may or may not have settled (${(e as Error).message}): an admin checks it on chain before approving`);
+        return reply(202, { taskId: queued.id, status: 'held', settlement: 'unknown', statusUrl: this.statusUrl(origin, queued.id) });
       }
       if (!settled.success || !net.tx.test(settled.transaction)) {
+        this.ledger.splice(this.ledger.indexOf(entry), 1);
+        this.persist();
         floor.queue.unpay(queued.id);
         return ask(settled.errorReason ?? 'Settlement failed', { [HEADER_RESPONSE]: encodeHeader(settled), [HEADER_LEGACY_RESPONSE]: encodeHeader(settled) });
       }
       floor.queue.setPaid(queued.id, { ...info, tx: settled.transaction, explorer: net.explorer(settled.transaction) });
-      this.ledger.push({ taskId: queued.id, floor: floor.id, key, payer, amount: this.settings.amount, network: net.caip2, transaction: settled.transaction, at: Date.now(), title: queued.title, binding });
+      entry.transaction = settled.transaction;
+      delete entry.settling;
       this.persist();
       this.deps.toast(floor.id, `💰 ${shortAddress(payer)} paid ${this.settings.price} test USDC for ${queued.title}: it waits on the 📋 queue for an admin`);
       const header = encodeHeader(settled);
@@ -314,6 +337,15 @@ export class X402Gateway {
     }
   }
 
+  /** An admin found a payment whose settlement was unknown on chain and recorded its transaction. */
+  settledByHand(floorId: string, taskId: string, tx: string) {
+    const e = this.ledger.find((x) => x.floor === floorId && x.taskId === taskId && x.settling);
+    if (!e) return;
+    e.transaction = tx;
+    delete e.settling;
+    this.persist();
+  }
+
   /** A floor's queue changed: remember how its paid tasks look, for their status links once they're gone from it. */
   onQueue(floorId: string, state: QueueState) {
     let changed = false;
@@ -321,6 +353,8 @@ export class X402Gateway {
     for (const e of this.ledger) {
       const t = e.floor === floorId ? byId.get(e.taskId) : undefined;
       if (!t) continue;
+      // Settling when the office stopped: nobody knows whether it went through. Flag it for an admin.
+      if (e.settling === 'unknown' && t.paid && !t.paid.tx && t.paid.settlement !== 'unknown') this.deps.queueOf?.(floorId)?.setPaid(t.id, { ...t.paid, settlement: 'unknown' });
       const last = snapshot(t);
       if (JSON.stringify(last) === JSON.stringify(e.last)) continue;
       e.last = last;
@@ -355,7 +389,7 @@ export class X402Gateway {
       ...(t?.workerName ? { worker: t.workerName } : {}),
       ...(t?.branch ? { branch: t.branch } : {}),
       ...(t?.pr ? { pr: { number: t.pr.number, url: t.pr.url, state: t.pr.state } } : {}),
-      payment: { payer: e.payer, amount: formatPrice(e.amount), network: e.network, transaction: e.transaction, ...(net ? { explorer: net.explorer(e.transaction) } : {}), ...(live?.paid?.refundExplorer ? { refund: live.paid.refundExplorer } : {}) },
+      payment: { payer: e.payer, amount: formatPrice(e.amount), network: e.network, transaction: e.transaction, ...(e.settling ? { settlement: e.settling === 'pending' ? 'settling' : 'unknown' } : {}), ...(net ? { explorer: net.explorer(e.transaction) } : {}), ...(live?.paid?.refundExplorer ? { refund: live.paid.refundExplorer } : {}) },
     };
   }
 
@@ -383,6 +417,8 @@ export class X402Gateway {
     try {
       const saved = readStateJson(this.ledgerPath) as { payments?: LedgerEntry[] } | undefined;
       this.ledger = (saved?.payments ?? []).filter((e) => typeof e?.taskId === 'string' && typeof e.key === 'string' && typeof e.floor === 'string' && typeof e.binding === 'string');
+      // One that was settling when the office stopped: whether it settled is unknown now.
+      for (const e of this.ledger) if (e.settling === 'pending') e.settling = 'unknown';
     } catch {
       // a broken ledger: older status links stop working, new payments still do
     }

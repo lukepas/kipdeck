@@ -30,15 +30,18 @@ const NOW = 1_800_000_000;
 function fakeFacilitator() {
   const calls = { verify: 0, settle: 0 };
   let settleFails = false;
-  const f: Facilitator & { calls: typeof calls; failSettle(): void } = {
+  let settleThrows: (() => Promise<never>) | undefined;
+  const f: Facilitator & { calls: typeof calls; failSettle(): void; throwSettle(fn: () => Promise<never>): void } = {
     calls,
     failSettle: () => void (settleFails = true),
+    throwSettle: (fn) => void (settleThrows = fn),
     async verify(p) {
       calls.verify++;
       return (p.payload as { signature: string }).signature === GOOD ? { isValid: true, payer: PAYER } : { isValid: false, invalidReason: 'invalid_exact_evm_payload_signature', payer: PAYER };
     },
     async settle(p) {
       calls.settle++;
+      if (settleThrows) return settleThrows();
       if (settleFails) return { success: false, errorReason: 'insufficient_funds', transaction: '', network: p.accepted.network };
       return { success: true, payer: PAYER, transaction: TX, network: p.accepted.network, amount: p.accepted.amount };
     },
@@ -76,6 +79,7 @@ function fixture(opts: { refuse?: string } = {}) {
     facilitator,
     floorOfRepo: async (repo) => (repo === 'acme/app' ? floor : undefined),
     liveTask: (_f, id) => queue.state().tasks.find((t) => t.id === id),
+    queueOf: () => queue,
     toast: (_f, text) => toasts.push(text),
     now: () => NOW,
   });
@@ -84,7 +88,8 @@ function fixture(opts: { refuse?: string } = {}) {
     const req = { method, headers: Object.fromEntries(Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v])) } as unknown as http.IncomingMessage;
     return gateway.handle(req, new URL(`http://office.test${p}`), 'http://office.test', from, async () => JSON.stringify(body ?? {}));
   };
-  return { dir, queue, workers, facilitator, gateway, toasts, call, close() { queue.shutdown(); rmSync(dir, { recursive: true, force: true }); } };
+  const restart = () => new X402Gateway({ settings, dataDir: dir, secret: 'test-secret', facilitator, floorOfRepo: async (repo) => (repo === 'acme/app' ? floor : undefined), liveTask: (_f, id) => queue.state().tasks.find((t) => t.id === id), queueOf: () => queue, toast: (_f, text) => toasts.push(text), now: () => NOW });
+  return { dir, queue, workers, facilitator, gateway, toasts, call, restart, close() { queue.shutdown(); rmSync(dir, { recursive: true, force: true }); } };
 }
 
 function pay(req: PaymentRequirements, signature = GOOD, nonce = '01'): Record<string, string> {
@@ -286,4 +291,66 @@ test('an event links only to the testnet explorers', () => {
 test("workers never get the chain tooling's variables", () => {
   const env = childEnv({ ...CLEAN_ENV, allow: ['CHAIN_*', 'X402_*'] }, { PATH: '/bin', CHAIN_KEY_DIR: '/k', X402_PAYER_KEY_FILE: '/k/p.json', AGENT_OFFICE_ATTEST_KEY_FILE: '/k/a.json' });
   assert.deepEqual(Object.keys(env), ['PATH']);
+});
+
+test('a settle that times out keeps the task held as "settlement unknown", with a ledger record, until an admin records the transaction', async (t) => {
+  const s = await (async () => {
+    const f = fixture(); t.after(() => f.close());
+    f.facilitator.throwSettle(async () => { throw new Error('The operation was aborted due to timeout'); });
+    return f;
+  })();
+  const [req] = decode((await s.call('POST', '/api/x402/task', { repo: 'acme/app', issue: 4 })).headers!['PAYMENT-REQUIRED']).accepts;
+  const r = await s.call('POST', '/api/x402/task', { repo: 'acme/app', issue: 4 }, pay(req));
+  assert.equal(r.status, 202);
+  assert.equal((r.body as any).settlement, 'unknown');
+  const [task] = s.queue.state().tasks;
+  assert.deepEqual([task.held, task.paid?.tx, task.paid?.settlement], [true, '', 'unknown']);
+  // The payer's retry with the same payment gets the same task back, not a second one.
+  const again = await s.call('POST', '/api/x402/task', { repo: 'acme/app', issue: 4 }, pay(req));
+  assert.deepEqual([again.status, (again.body as any).taskId, (again.body as any).duplicate], [202, task.id, true]);
+  const status = await s.call('GET', new URL((r.body as any).statusUrl).pathname + new URL((r.body as any).statusUrl).search);
+  assert.equal((status.body as any).payment.settlement, 'unknown');
+  // Nobody approves it before the settlement is known.
+  assert.match(s.queue.approve(task.id, 'acc-1')!, /Nobody knows yet whether its payment settled/);
+  const warned: string[] = [];
+  let admin = false;
+  const floor = { id: 'f1', queue: s.queue };
+  const ctx: any = { meOf: () => ({ admin }), warn: (_c: unknown, e?: string) => e && warned.push(e), floorOf: () => floor, floors: new Map([['f1', floor]]), x402: s.gateway };
+  const c: any = { accountId: 'acc-1', peer: { name: 'Ana', floor: 'f1' } };
+  queueHandlers['queue.settled'](ctx, c, { t: 'queue.settled', taskId: task.id, tx: TX });
+  assert.deepEqual(warned, ['Only admins can record a settlement']);
+  admin = true;
+  queueHandlers['queue.settled'](ctx, c, { t: 'queue.settled', taskId: task.id, tx: 'nope' });
+  assert.match(warned.at(-1)!, /not a transaction/);
+  queueHandlers['queue.settled'](ctx, c, { t: 'queue.settled', taskId: task.id, tx: TX });
+  const [after] = s.queue.state().tasks;
+  assert.deepEqual([after.paid?.tx, after.paid?.settlement], [TX, undefined]);
+  assert.equal(s.queue.approve(task.id, 'acc-1'), undefined);
+  const final = await s.call('GET', new URL((r.body as any).statusUrl).pathname + new URL((r.body as any).statusUrl).search);
+  assert.equal((final.body as any).payment.transaction, TX);
+});
+
+test('an office that stops while a payment settles flags its task "settlement unknown" when it comes back', async (t) => {
+  const f = fixture(); t.after(() => f.close());
+  f.facilitator.throwSettle(() => new Promise<never>(() => {}));
+  const [req] = decode((await f.call('POST', '/api/x402/task', { repo: 'acme/app', issue: 5 })).headers!['PAYMENT-REQUIRED']).accepts;
+  void f.call('POST', '/api/x402/task', { repo: 'acme/app', issue: 5 }, pay(req));
+  await new Promise((r) => setTimeout(r, 20));
+  // Settling, never answered: the office restarts and reads its ledger back.
+  const back = f.restart();
+  back.onQueue('f1', f.queue.state());
+  const [task] = f.queue.state().tasks;
+  assert.deepEqual([task.held, task.paid?.tx, task.paid?.settlement], [true, '', 'unknown']);
+});
+
+test("a paid task run again goes back to an admin, held, rather than on the last approver's sign-ins", async (t) => {
+  const s = await held(t);
+  s.setAdmin(true);
+  queueHandlers['queue.approve'](s.ctx, s.c, { t: 'queue.approve', taskId: s.taskId });
+  const q = s.f.queue as any;
+  const t0 = q.tasks.find((x: any) => x.id === s.taskId);
+  Object.assign(t0, { status: 'done', outcome: 'done', finishedAt: Date.now() });
+  assert.equal(s.f.queue.retry(s.taskId), undefined);
+  const again = s.f.queue.state().tasks.find((x) => x.id === s.taskId)!;
+  assert.deepEqual([again.status, again.held, again.owner, !!again.paid], ['queued', true, undefined, true]);
 });
