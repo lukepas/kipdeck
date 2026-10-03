@@ -6,6 +6,9 @@ import { EscrowError } from './layout.js';
 
 export const DEVNET_RPC = 'https://api.devnet.solana.com';
 
+const RATE_LIMIT_RETRIES = 6;
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 export type Commitment = 'processed' | 'confirmed' | 'finalized';
 
 export interface AccountData {
@@ -68,7 +71,14 @@ export class Rpc {
     let res: Response;
     let body: { result?: T; error?: { code: number; message: string; data?: { logs?: string[]; err?: unknown } } };
     try {
-      res = await this.fetchImpl(this.url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: ++this.id, method, params }), signal: AbortSignal.timeout(this.timeoutMs) });
+      // Public RPCs (devnet's above all) answer 429 under load. Back off and try again a few times
+      // instead of failing a transaction that has already been sent.
+      for (let attempt = 0; ; attempt++) {
+        res = await this.fetchImpl(this.url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: ++this.id, method, params }), signal: AbortSignal.timeout(this.timeoutMs) });
+        if (res.status !== 429 || attempt >= RATE_LIMIT_RETRIES) break;
+        const after = Number(res.headers.get('retry-after'));
+        await sleep(after > 0 ? Math.min(after * 1000, 30_000) : Math.min(500 * 2 ** attempt, 8_000));
+      }
       if (!res.ok) throw new RpcError(`the Solana RPC answered ${res.status} to ${method}`);
       body = (await res.json()) as typeof body;
     } catch (err) {

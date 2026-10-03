@@ -82,3 +82,21 @@ test('reads go through the fetch the office injects', async () => {
   assert.deepEqual(await escrow.list('o/r'), []);
   assert.deepEqual(seen, ['getProgramAccounts']);
 });
+
+test('a 429 from a busy public RPC is retried with back-off instead of failing the call', async () => {
+  let calls = 0;
+  const busy = (async () => {
+    calls++;
+    if (calls < 3) return new Response('slow down', { status: 429, headers: { 'retry-after': '0' } });
+    return new Response(JSON.stringify({ jsonrpc: '2.0', id: calls, result: 'ok' }), { status: 200 });
+  }) as typeof fetch;
+  assert.equal(await new Rpc('https://api.devnet.solana.com', busy).call<string>('getHealth', []), 'ok');
+  assert.equal(calls, 3);
+});
+
+test('an RPC that keeps answering 429 still fails, naming the method', async () => {
+  let calls = 0;
+  const shut = (async () => { calls++; return new Response('no', { status: 429, headers: { 'retry-after': '0' } }); }) as typeof fetch;
+  await assert.rejects(new Rpc('https://api.devnet.solana.com', shut).call('getHealth', []), /answered 429 to getHealth/);
+  assert.equal(calls, 7);
+});
