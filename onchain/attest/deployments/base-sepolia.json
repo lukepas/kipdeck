@@ -1,0 +1,11 @@
+{
+  "chainId": 84532,
+  "schemaRegistry": "0x4200000000000000000000000000000000000020",
+  "schema": "string repo, uint64 pr, bytes20 mergeSha, bytes32 mergedByHash, string harness, uint256 agentId, uint8 outcome, string solanaTx, uint64 mergedAt, uint64 openedAt",
+  "schemaUid": "0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900",
+  "registerTx": "0x57045f814359c8e0c0f6d4b5543198ed1609570c4875e0cd84bf3f13336a83a8",
+  "fromBlock": 47642649,
+  "attester": "0x83dAa5252b68D98F25CbB089CCeE4edc7C083403",
+  "at": "2026-10-03T18:53:20.111Z",
+  "mergeAttestor": "0x278f441b635ebf4aca971184c0cab60b893f34fc"
+}

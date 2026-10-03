@@ -44,6 +44,19 @@ export interface Attestor {
   revoke(uid: Hex): Promise<{ tx: Hex }>;
 }
 
+const EAS_NOT_FOUND = '0xc5723b51';
+
+export async function retryWhileNotFound<T>(send: () => Promise<T>, tries = 6): Promise<T> {
+  for (let i = 0; ; i++) {
+    try {
+      return await send();
+    } catch (err) {
+      if (i >= tries - 1 || !String((err as Error).message).includes(EAS_NOT_FOUND)) throw err;
+      await new Promise((resolve) => setTimeout(resolve, 2_000 * (i + 1)));
+    }
+  }
+}
+
 export function createAttestor(o: AttestorOptions): Attestor {
   const mode = o.mode ?? 'eas';
   if (mode === 'eas' && !o.schemaUid) throw new Error('EAS attestations need the schema UID (deployments/base-sepolia.json, or register it first)');
@@ -67,12 +80,15 @@ export function createAttestor(o: AttestorOptions): Attestor {
       const data = encodeMerge(record);
       await checkChain();
       if (mode === 'eas') {
-        const hash = await wallet.writeContract({
+        const send = () => wallet.writeContract({
           address: eas,
           abi: EAS_ABI,
           functionName: 'attest',
           args: [{ schema: o.schemaUid!, data: { recipient: '0x0000000000000000000000000000000000000000', expirationTime: 0n, revocable: true, refUID: refUid, data, value: 0n } }],
         });
+        // A public RPC is several nodes behind one address: the one that simulates this call may not
+        // have seen the attestation refUID points at yet, and EAS answers NotFound(). Give it a moment.
+        const hash = refUid === ZERO32 ? await send() : await retryWhileNotFound(send);
         const receipt = await pub.waitForTransactionReceipt({ hash, timeout });
         if (receipt.status !== 'success') throw new Error(`The attestation transaction failed: ${hash}`);
         for (const log of receipt.logs) {

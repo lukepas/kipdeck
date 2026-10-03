@@ -26,8 +26,16 @@ const merged = await at.attest({ ...base, outcome: OUTCOME.merged });
 console.log(`merged:   ${show(merged)}`);
 const reverted = await at.attest({ ...base, pr: 2, outcome: OUTCOME.reverted, mergedAt: now + 1 }, merged.uid);
 console.log(`reverted: ${show(reverted)}`);
-const list = await readAttestations({ rpcUrl: rpc, mode, schemaUid: d.schemaUid, ...(d.eas ? { eas: d.eas } : {}), ...(d.mergeAttestor ? { mergeAttestor: d.mergeAttestor } : {}), attesters: [account.address], fromBlock: BigInt(d.fromBlock ?? 0) });
-const row = leaderboard(list.filter((x) => x.uid === merged.uid || x.uid === reverted.uid)).find((r) => r.harness === 'smoke');
+// A public RPC's log index can trail the block that just landed: poll for a little while.
+const readBack = async () => {
+  const list = await readAttestations({ rpcUrl: rpc, mode, schemaUid: d.schemaUid, ...(d.eas ? { eas: d.eas } : {}), ...(d.mergeAttestor ? { mergeAttestor: d.mergeAttestor } : {}), attesters: [account.address], fromBlock: BigInt(d.fromBlock ?? 0) });
+  return leaderboard(list.filter((x) => x.uid === merged.uid || x.uid === reverted.uid)).find((r) => r.harness === 'smoke');
+};
+let row = await readBack();
+for (let i = 0; i < 10 && !(row && row.merged === 1 && row.reverted === 1); i++) {
+  await new Promise((resolve) => setTimeout(resolve, 3_000));
+  row = await readBack();
+}
 if (!row || row.merged !== 1 || row.reverted !== 1) throw new Error(`The leaderboard did not read back the smoke test: ${JSON.stringify(row)}`);
 console.log(`read back: merged ${row.merged}, reverted ${row.reverted}, revert rate ${row.revertRate}`);
 await at.revoke(reverted.uid);
