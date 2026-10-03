@@ -1,0 +1,97 @@
+{
+  "note": "Every outside link the launch/chain docs cite, and how it was checked. The linter fails on a link that is not here; add one only after opening it.",
+  "links": [
+    {
+      "url": "https://colosseum.com/worldsfair",
+      "checked": "HTTP 200 on 2026-10-03; tracks, dates and prizes read"
+    },
+    {
+      "url": "https://colosseum.com/hackathon",
+      "checked": "HTTP 200 on 2026-10-03; form fields, videos, prior work and one product per team read"
+    },
+    {
+      "url": "https://colosseum.com/legal/Crypto%20World%27s%20Fair%20Hackathon%20Rules.pdf",
+      "checked": "HTTP 200 on 2026-10-03 (application/pdf); sections 5 to 9 and 14 read"
+    },
+    {
+      "url": "https://arena.colosseum.org",
+      "checked": "HTTP 200 on 2026-10-03"
+    },
+    {
+      "url": "https://solana.org/grants-funding",
+      "checked": "HTTP 200 on 2026-10-03; grant types, criteria and timeline read"
+    },
+    {
+      "url": "https://share.hsforms.com/1GE1hYdApQGaDiCgaiWMXHA5lohw",
+      "checked": "HTTP 200 on 2026-10-03; linked from the grants page"
+    },
+    {
+      "url": "https://paragraph.com/@grants.base.eth/calling-based-builders",
+      "checked": "HTTP 200 on 2026-10-03; amounts, criteria and the form link read"
+    },
+    {
+      "url": "https://docs.google.com/forms/d/e/1FAIpQLSfXuEzmiAzRhie_z9raFCF1BXweXgVt18o-DvBuRRgyTygL2A/viewform",
+      "checked": "HTTP 200 on 2026-10-03; linked from the Base grants post"
+    },
+    {
+      "url": "https://arbitrum-dubai.hackquest.io/",
+      "checked": "HTTP 200 on 2026-10-03; prize pool, format and countdown read; no rules published"
+    },
+    {
+      "url": "https://tempo.xyz/developers/docs/quickstart/connection-details",
+      "checked": "HTTP 200 on 2026-10-03; chain id and RPC read"
+    },
+    {
+      "url": "https://rpc.moderato.tempo.xyz",
+      "checked": "eth_chainId answered 42431 on 2026-10-03"
+    },
+    {
+      "url": "https://www.x402.org/facilitator/supported",
+      "checked": "HTTP 200 on 2026-10-03; lists eip155:84532 and Solana devnet"
+    },
+    {
+      "url": "https://faucet.circle.com",
+      "checked": "HTTP 200 on 2026-10-03"
+    },
+    {
+      "url": "https://faucet.solana.com",
+      "checked": "HTTP 200 on 2026-10-03"
+    },
+    {
+      "url": "https://github.com/AgentSystemLabs/agent-office",
+      "checked": "HTTP 200 on 2026-10-03"
+    },
+    {
+      "url": "https://github.com/AgentSystemLabs/agent-office/commit/665aeec571bc03f76cbd16de8d628dd169a48874",
+      "checked": "HTTP 200 on 2026-10-03"
+    },
+    {
+      "url": "https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet",
+      "checked": "explorer answers 429 to scripts; getAccountInfo on api.devnet.solana.com: executable, owner BPFLoaderUpgradeable, 2026-10-03"
+    },
+    {
+      "url": "https://explorer.solana.com/tx/2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc?cluster=devnet",
+      "checked": "explorer answers 429 to scripts; getSignatureStatuses on api.devnet.solana.com: finalized, no error, 2026-10-03"
+    },
+    {
+      "url": "https://base-sepolia.easscan.org/schema/view/0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900",
+      "checked": "HTTP 200 on 2026-10-03; SchemaRegistry.getSchema on sepolia.base.org returns the schema, revocable, no resolver"
+    },
+    {
+      "url": "https://sepolia.basescan.org/tx/0x57045f814359c8e0c0f6d4b5543198ed1609570c4875e0cd84bf3f13336a83a8",
+      "checked": "basescan answers 403 to scripts; eth_getTransactionReceipt on sepolia.base.org: status 1, 2026-10-03"
+    },
+    {
+      "url": "https://sepolia.basescan.org/address/0x278f441b635ebf4aca971184c0cab60b893f34fc",
+      "checked": "basescan answers 403 to scripts; eth_getCode on sepolia.base.org: contract code present, 2026-10-03"
+    },
+    {
+      "url": "https://sepolia.basescan.org/address/0x8004A818BFB912233c491871b3d84c89A494BD9e",
+      "checked": "basescan answers 403 to scripts; eth_getCode on sepolia.base.org: proxy code present, 2026-10-03"
+    },
+    {
+      "url": "https://sepolia.basescan.org/address/0x8004B663056A597Dffe9eCcC1965A193B7388713",
+      "checked": "basescan answers 403 to scripts; eth_getCode on sepolia.base.org: proxy code present, 2026-10-03"
+    }
+  ]
+}

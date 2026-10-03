@@ -1,0 +1,475 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//agent-office fork//proof of merge launch//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Proof of Merge: chain launch
+BEGIN:VEVENT
+UID:bip-day-1@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261002
+DTEND;VALUE=DATE:20261003
+SUMMARY:Build in public\, day 1: the fork\, credit to upstream\, rule one
+DESCRIPTION:Kit: launch/chain/build-in-public.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Build in public\, day 1: the fork\, credit to upstream\, rule o
+ ne
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:colosseum-multitrack-question@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261002
+DTEND;VALUE=DATE:20261003
+SUMMARY:Ask in the Colosseum Discord whether one project can be judged in t
+ he Solana and Base tracks\; paste the answer into judge-qa.md [unverified]
+DESCRIPTION:Not confirmed by the organizer yet: check the official page bef
+ ore relying on it.\nKit: launch/chain/judge-qa.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Ask in the Colosseum Discord whether one project can be judged 
+ in the Solana and Base tracks\; paste the answer into judge-qa.md [unverif
+ ied]
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:bip-day-2@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261003
+DTEND;VALUE=DATE:20261004
+SUMMARY:Build in public\, day 2: the escrow state machine and why two keys 
+ sign
+DESCRIPTION:Kit: launch/chain/build-in-public.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Build in public\, day 2: the escrow state machine and why two k
+ eys sign
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:bip-day-3@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261004
+DTEND;VALUE=DATE:20261005
+SUMMARY:Build in public\, day 3: the escrow program on devnet\, with the Ex
+ plorer link
+DESCRIPTION:Kit: launch/chain/build-in-public.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Build in public\, day 3: the escrow program on devnet\, with th
+ e Explorer link
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:fund-testnet-wallets@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261004
+DTEND;VALUE=DATE:20261005
+SUMMARY:Fund the Base Sepolia registrar (browser faucet) and the x402 payer
+  (Circle test USDC)
+DESCRIPTION:Kit: launch/chain/README.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Fund the Base Sepolia registrar (browser faucet) and the x402 p
+ ayer (Circle test USDC)
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:weekly-video-1@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261004
+DTEND;VALUE=DATE:20261005
+SUMMARY:Weekly update video 1
+DESCRIPTION:Kit: launch/chain/video-scripts.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Weekly update video 1
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:bip-day-4@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261005
+DTEND;VALUE=DATE:20261006
+SUMMARY:Build in public\, day 4: the first bounty funded from the board
+DESCRIPTION:Kit: launch/chain/build-in-public.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Build in public\, day 4: the first bounty funded from the board
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:bip-day-5@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261006
+DTEND;VALUE=DATE:20261007
+SUMMARY:Build in public\, day 5: the Fund this issue Blink\, and five issue
+ s to point agents at
+DESCRIPTION:Kit: launch/chain/build-in-public.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Build in public\, day 5: the Fund this issue Blink\, and five i
+ ssues to point agents at
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:tempo-decision@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261006
+DTEND;VALUE=DATE:20261007
+SUMMARY:Tempo track (stretch): go or no-go on a Moderato port
+DESCRIPTION:Kit: launch/chain/tempo-track.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Tempo track (stretch): go or no-go on a Moderato port
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:bip-day-6@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261007
+DTEND;VALUE=DATE:20261008
+SUMMARY:Build in public\, day 6: hire a worker with one HTTP request (x402)
+DESCRIPTION:Kit: launch/chain/build-in-public.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Build in public\, day 6: hire a worker with one HTTP request (x
+ 402)
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:bip-day-7@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261008
+DTEND;VALUE=DATE:20261009
+SUMMARY:Build in public\, day 7: the first leaderboard numbers\, real n
+DESCRIPTION:Kit: launch/chain/build-in-public.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Build in public\, day 7: the first leaderboard numbers\, real n
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:weekly-video-2@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261008
+DTEND;VALUE=DATE:20261009
+SUMMARY:Weekly update video 2
+DESCRIPTION:Kit: launch/chain/video-scripts.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Weekly update video 2
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:bip-day-8@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261009
+DTEND;VALUE=DATE:20261010
+SUMMARY:Build in public\, day 8: merge to payout on a public repo in 30 sec
+ onds
+DESCRIPTION:Kit: launch/chain/build-in-public.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Build in public\, day 8: merge to payout on a public repo in 30
+  seconds
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:colosseum-videos@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261009
+DTEND;VALUE=DATE:20261010
+SUMMARY:Colosseum: freeze the build\, record the pitch and the technical de
+ mo
+DESCRIPTION:Kit: launch/chain/colosseum-worlds-fair.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Colosseum: freeze the build\, record the pitch and the technica
+ l demo
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:bip-day-9@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261010
+DTEND;VALUE=DATE:20261011
+SUMMARY:Build in public\, day 9: verify it yourself\, rebuild the board fro
+ m chain
+DESCRIPTION:Kit: launch/chain/build-in-public.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Build in public\, day 9: verify it yourself\, rebuild the board
+  from chain
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:bip-day-10@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261011
+DTEND;VALUE=DATE:20261012
+SUMMARY:Build in public\, day 10: submitted\, links\, thanks\, what comes n
+ ext
+DESCRIPTION:Kit: launch/chain/build-in-public.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Build in public\, day 10: submitted\, links\, thanks\, what com
+ es next
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:colosseum-submit-target@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261011
+DTEND;VALUE=DATE:20261012
+SUMMARY:Colosseum: submit a day early
+DESCRIPTION:Kit: launch/chain/colosseum-worlds-fair.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Colosseum: submit a day early
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:disclosure-regenerate@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261011
+DTEND;VALUE=DATE:20261012
+SUMMARY:Regenerate the disclosure from git (whats-new.ts) and paste it
+DESCRIPTION:Kit: launch/chain/disclosure.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Regenerate the disclosure from git (whats-new.ts) and paste it
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:colosseum-deadline@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART:20261013T055900Z
+DTEND:20261013T065900Z
+SUMMARY:DEADLINE: Colosseum Crypto World's Fair: registration and submissio
+ n close
+DESCRIPTION:Closes 23:59 PT (PDT\, UTC-7): 2026-10-12 23:59 PT\, 2026-10-13
+  09:59 Europe/Vilnius\, 2026-10-13 06:59 UTC.\nKit: launch/chain/colosseum
+ -worlds-fair.md\nhttps://colosseum.com/worldsfair
+URL:https://colosseum.com/worldsfair
+CATEGORIES:DEADLINE
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Colosseum Crypto World's Fair: registration and submi
+ ssion close
+TRIGGER:-P7D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Colosseum Crypto World's Fair: registration and submi
+ ssion close
+TRIGGER:-P2D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Colosseum Crypto World's Fair: registration and submi
+ ssion close
+TRIGGER:-PT5H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:solana-grant@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261014
+DTEND;VALUE=DATE:20261015
+SUMMARY:Solana Foundation grant: apply (rolling)
+DESCRIPTION:Kit: launch/chain/solana-foundation-grant.md\nhttps://solana.or
+ g/grants-funding
+URL:https://solana.org/grants-funding
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Solana Foundation grant: apply (rolling)
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:leaderboard-friday-1@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261016
+DTEND;VALUE=DATE:20261017
+SUMMARY:Weekly leaderboard post
+DESCRIPTION:Kit: launch/chain/build-in-public.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Weekly leaderboard post
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:leaderboard-friday-2@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261023
+DTEND;VALUE=DATE:20261024
+SUMMARY:Weekly leaderboard post
+DESCRIPTION:Kit: launch/chain/build-in-public.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Weekly leaderboard post
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:arbitrum-dubai-register@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261030
+DTEND;VALUE=DATE:20261031
+SUMMARY:DEADLINE: Arbitrum Open House Dubai: registration countdown ends (p
+ age showed 27 days left on 2026-10-03) [unverified]
+DESCRIPTION:Not confirmed by the organizer yet: check the official page bef
+ ore relying on it.\nKit: launch/chain/arbitrum-dubai.md\nhttps://arbitrum-
+ dubai.hackquest.io/
+URL:https://arbitrum-dubai.hackquest.io/
+CATEGORIES:DEADLINE
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Arbitrum Open House Dubai: registration countdown end
+ s (page showed 27 days left on 2026-10-03) [unverified]
+TRIGGER:-P7D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Arbitrum Open House Dubai: registration countdown end
+ s (page showed 27 days left on 2026-10-03) [unverified]
+TRIGGER:-P2D
+END:VALARM
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:DEADLINE: Arbitrum Open House Dubai: registration countdown end
+ s (page showed 27 days left on 2026-10-03) [unverified]
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:leaderboard-friday-3@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261030
+DTEND;VALUE=DATE:20261031
+SUMMARY:Weekly leaderboard post
+DESCRIPTION:Kit: launch/chain/build-in-public.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Weekly leaderboard post
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:arbitrum-dubai-buildathon@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261031
+DTEND;VALUE=DATE:20261122
+SUMMARY:Arbitrum Open House Dubai: online buildathon (three weeks) [unverif
+ ied]
+DESCRIPTION:Not confirmed by the organizer yet: check the official page bef
+ ore relying on it.\nKit: launch/chain/arbitrum-dubai.md\nhttps://arbitrum-
+ dubai.hackquest.io/
+URL:https://arbitrum-dubai.hackquest.io/
+CATEGORIES:EVENT
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Arbitrum Open House Dubai: online buildathon (three weeks) [unv
+ erified]
+TRIGGER:-P1D
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:base-builder-revisit@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261102
+DTEND;VALUE=DATE:20261103
+SUMMARY:Base Builder Grants: revisit only after a mainnet decision\; do not
+  nominate testnet work
+DESCRIPTION:Kit: launch/chain/base-builder.md
+CATEGORIES:TASK
+TRANSP:TRANSPARENT
+BEGIN:VALARM
+ACTION:DISPLAY
+DESCRIPTION:Base Builder Grants: revisit only after a mainnet decision\; do
+  not nominate testnet work
+TRIGGER:PT9H
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:colosseum-results@agent-office-chain-launch
+DTSTAMP:20261003T000000Z
+DTSTART;VALUE=DATE:20261205
+DTEND;VALUE=DATE:20261206
+SUMMARY:Results: Colosseum Crypto World's Fair winners announced (by this d
+ ate)
+DESCRIPTION:Kit: launch/chain/colosseum-worlds-fair.md\nhttps://colosseum.c
+ om/worldsfair
+URL:https://colosseum.com/worldsfair
+CATEGORIES:RESULT
+TRANSP:TRANSPARENT
+END:VEVENT
+END:VCALENDAR

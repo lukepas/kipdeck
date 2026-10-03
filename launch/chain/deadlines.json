@@ -1,0 +1,50 @@
+{
+  "calendar": {
+    "name": "Proof of Merge: chain launch",
+    "stamp": "2026-10-03T00:00:00Z",
+    "from": "2026-10-02",
+    "home": "Europe/Vilnius"
+  },
+  "upstream": {
+    "repo": "https://github.com/AgentSystemLabs/agent-office",
+    "license": "MIT",
+    "copyright": "Copyright (c) 2026 AgentSystemLabs",
+    "author": "webdevcody (Web Dev Cody), AgentSystemLabs",
+    "firstCommit": "2026-09-25",
+    "baseline": "665aeec571bc03f76cbd16de8d628dd169a48874",
+    "baselineDate": "2026-09-30"
+  },
+  "fork": {
+    "name": "Proof of Merge",
+    "authors": ["Žygimantas Bagdzevičius"]
+  },
+  "events": [
+    { "id": "bip-day-1", "date": "2026-10-02", "kind": "task", "title": "Build in public, day 1: the fork, credit to upstream, rule one", "kit": "build-in-public.md", "verified": true },
+    { "id": "colosseum-multitrack-question", "date": "2026-10-02", "kind": "task", "title": "Ask in the Colosseum Discord whether one project can be judged in the Solana and Base tracks; paste the answer into judge-qa.md", "kit": "judge-qa.md", "verified": false },
+    { "id": "bip-day-2", "date": "2026-10-03", "kind": "task", "title": "Build in public, day 2: the escrow state machine and why two keys sign", "kit": "build-in-public.md", "verified": true },
+    { "id": "bip-day-3", "date": "2026-10-04", "kind": "task", "title": "Build in public, day 3: the escrow program on devnet, with the Explorer link", "kit": "build-in-public.md", "verified": true },
+    { "id": "weekly-video-1", "date": "2026-10-04", "kind": "task", "title": "Weekly update video 1", "kit": "video-scripts.md", "verified": true },
+    { "id": "fund-testnet-wallets", "date": "2026-10-04", "kind": "task", "title": "Fund the Base Sepolia registrar (browser faucet) and the x402 payer (Circle test USDC)", "kit": "README.md", "verified": true },
+    { "id": "bip-day-4", "date": "2026-10-05", "kind": "task", "title": "Build in public, day 4: the first bounty funded from the board", "kit": "build-in-public.md", "verified": true },
+    { "id": "bip-day-5", "date": "2026-10-06", "kind": "task", "title": "Build in public, day 5: the Fund this issue Blink, and five issues to point agents at", "kit": "build-in-public.md", "verified": true },
+    { "id": "tempo-decision", "date": "2026-10-06", "kind": "task", "title": "Tempo track (stretch): go or no-go on a Moderato port", "kit": "tempo-track.md", "verified": true },
+    { "id": "bip-day-6", "date": "2026-10-07", "kind": "task", "title": "Build in public, day 6: hire a worker with one HTTP request (x402)", "kit": "build-in-public.md", "verified": true },
+    { "id": "bip-day-7", "date": "2026-10-08", "kind": "task", "title": "Build in public, day 7: the first leaderboard numbers, real n", "kit": "build-in-public.md", "verified": true },
+    { "id": "weekly-video-2", "date": "2026-10-08", "kind": "task", "title": "Weekly update video 2", "kit": "video-scripts.md", "verified": true },
+    { "id": "bip-day-8", "date": "2026-10-09", "kind": "task", "title": "Build in public, day 8: merge to payout on a public repo in 30 seconds", "kit": "build-in-public.md", "verified": true },
+    { "id": "colosseum-videos", "date": "2026-10-09", "kind": "task", "title": "Colosseum: freeze the build, record the pitch and the technical demo", "kit": "colosseum-worlds-fair.md", "verified": true },
+    { "id": "bip-day-9", "date": "2026-10-10", "kind": "task", "title": "Build in public, day 9: verify it yourself, rebuild the board from chain", "kit": "build-in-public.md", "verified": true },
+    { "id": "disclosure-regenerate", "date": "2026-10-11", "kind": "task", "title": "Regenerate the disclosure from git (whats-new.ts) and paste it", "kit": "disclosure.md", "verified": true },
+    { "id": "colosseum-submit-target", "date": "2026-10-11", "kind": "task", "title": "Colosseum: submit a day early", "kit": "colosseum-worlds-fair.md", "verified": true },
+    { "id": "bip-day-10", "date": "2026-10-11", "kind": "task", "title": "Build in public, day 10: submitted, links, thanks, what comes next", "kit": "build-in-public.md", "verified": true },
+    { "id": "colosseum-deadline", "at": "2026-10-12T23:59:00-07:00", "zone": "PT (PDT, UTC-7)", "kind": "deadline", "title": "Colosseum Crypto World's Fair: registration and submission close", "kit": "colosseum-worlds-fair.md", "url": "https://colosseum.com/worldsfair", "verified": true },
+    { "id": "solana-grant", "date": "2026-10-14", "kind": "task", "title": "Solana Foundation grant: apply (rolling)", "kit": "solana-foundation-grant.md", "url": "https://solana.org/grants-funding", "verified": true },
+    { "id": "leaderboard-friday-1", "date": "2026-10-16", "kind": "task", "title": "Weekly leaderboard post", "kit": "build-in-public.md", "verified": true },
+    { "id": "leaderboard-friday-2", "date": "2026-10-23", "kind": "task", "title": "Weekly leaderboard post", "kit": "build-in-public.md", "verified": true },
+    { "id": "arbitrum-dubai-register", "date": "2026-10-30", "kind": "deadline", "title": "Arbitrum Open House Dubai: registration countdown ends (page showed 27 days left on 2026-10-03)", "kit": "arbitrum-dubai.md", "url": "https://arbitrum-dubai.hackquest.io/", "verified": false },
+    { "id": "leaderboard-friday-3", "date": "2026-10-30", "kind": "task", "title": "Weekly leaderboard post", "kit": "build-in-public.md", "verified": true },
+    { "id": "arbitrum-dubai-buildathon", "date": "2026-10-31", "end": "2026-11-21", "kind": "event", "title": "Arbitrum Open House Dubai: online buildathon (three weeks)", "kit": "arbitrum-dubai.md", "url": "https://arbitrum-dubai.hackquest.io/", "verified": false },
+    { "id": "base-builder-revisit", "date": "2026-11-02", "kind": "task", "title": "Base Builder Grants: revisit only after a mainnet decision; do not nominate testnet work", "kit": "base-builder.md", "verified": true },
+    { "id": "colosseum-results", "date": "2026-12-05", "kind": "result", "title": "Colosseum Crypto World's Fair winners announced (by this date)", "kit": "colosseum-worlds-fair.md", "url": "https://colosseum.com/worldsfair", "verified": true }
+  ]
+}
