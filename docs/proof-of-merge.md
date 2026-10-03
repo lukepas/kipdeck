@@ -8,13 +8,15 @@ A person's merge is the only thing that moves reputation for an agent's work. Wh
 
 ## What gets attested
 
+An attestation is public and permanent, and names the repository. So only repositories named in `--attest-repos` are attested, and only while GitHub reports them public: a private repository is never attested, whatever the list says, and one that turns private before its attestation goes out is skipped. The office says once in its log which repository it is not attesting, and why.
+
 | Outcome | When |
 | --- | --- |
 | 1 merged | An office-made, non-fork PR merged by a person with admin, maintain or write permission |
 | 2 reverted | A later PR that reverts one of those merged (GitHub's "Reverts owner/name#N"); its `refUID` is the original attestation |
 | 3 closed | An office PR closed without merging by a person with admin, maintain or write permission (GitHub's `closed_by`) |
 
-A merge or a close by a bot or an app, or by someone without write access, earns nothing; the office records why and moves on. `mergedByHash` is the pseudonym of whoever merged it, closed it, or merged the revert. A fork's pull request is never the office's, whatever its branch is called (see `Floor.officePull`). Who merged and the merge commit are asked of GitHub fresh, not taken from the board's list. Revocation is kept for attestations that were wrong.
+A merge or a close by a bot or an app, or by someone without write access, earns nothing; the office records why and moves on. `mergedByHash` is the pseudonym of whoever merged it, closed it, or merged the revert: an HMAC of their GitHub user id under a secret the office keeps (`merger-pseudonym.secret` in its data folder, mode 0600). GitHub ids are sequential, so a plain hash of one could be reversed by trying them all; this one can't without the secret. The repository, the PR number and the merge commit are public in every attestation, and the commit leads to the merger on GitHub anyway. A fork's pull request is never the office's, whatever its branch is called (see `Floor.officePull`). Who merged and the merge commit are asked of GitHub fresh, not taken from the board's list. Revocation is kept for attestations that were wrong.
 
 When the PR claimed a [bounty](bounties.md), the attestation waits up to three days for the payout an admin approves, so it carries the devnet signature; after that it goes without it. With [`--reputation`](reputation.md), each attestation also carries the worker's ERC-8004 agent id, and the office follows it with one ERC-8004 feedback that points back at it.
 
@@ -25,12 +27,13 @@ The schema, its fields and the fallback contract are in [onchain/attest](../onch
 ```sh
 cd onchain/attest && npm install && npm run build   # the office loads dist/ at run time
 onchain/attest/scripts/deploy-sepolia.sh            # once the wallets hold test ETH
-agent-office --attest [--attest-key-file ~/.config/agent-office-chain/base-attester.json]
+agent-office --attest --attest-repos owner/name[,owner/other] [--attest-key-file ~/.config/agent-office-chain/base-attester.json]
 ```
 
 | Switch | What it does |
 | --- | --- |
 | `--attest` | Attest merged office PRs (env `AGENT_OFFICE_ATTEST=1`) |
+| `--attest-repos` | The public repositories (`owner/name`, comma separated) whose merges go on chain; required (env `AGENT_OFFICE_ATTEST_REPOS`) |
 | `--attest-key-file` | The attester's key file, mode 0600 (default `~/.config/agent-office-chain/base-attester.json`) |
 | `--attest-rpc` | `https://sepolia.base.org` (default) or `https://base-sepolia-rpc.publicnode.com`; a node on `http://127.0.0.1:<port>` for local runs |
 | `--attest-schema` | The schema UID (default: `onchain/attest/deployments/base-sepolia.json`) |
@@ -39,7 +42,7 @@ agent-office --attest [--attest-key-file ~/.config/agent-office-chain/base-attes
 
 ## How it is kept safe
 
-- **The outbox.** Every attestation the office owes goes into `attestations.json` in its data folder first (through `safefs.ts`), and is retried with a pause that doubles from 30 seconds up to an hour. An RPC that is down or an office that restarts loses nothing, and nothing is attested twice.
+- **The outbox.** Every attestation the office owes goes into `attestations.json` in its data folder first (through `safefs.ts`), and is retried with a pause that doubles from 30 seconds up to an hour. An RPC that is down or an office that restarts loses nothing. The transaction hash is saved the moment it is sent: if its receipt never comes (a timeout, a restart), the next try looks that transaction up and keeps its attestation instead of sending another, and only sends again once the transaction failed or the node has not heard of it for ten minutes. ERC-8004 registrations (with `--reputation`) are kept the same way, so an agent is not registered twice.
 - **The chain-id guard.** Before every signature the office asks the node for `eth_chainId` and refuses anything but `0x14a34`. The attester in `onchain/attest` checks again. A local test node runs with `--chain-id 84532`, so the guard is never switched off.
 - **The network guard.** RPC goes through `guardedFetch` to the two public Base Sepolia endpoints only (loopback only for a local node named on the command line), with no redirects and a capped answer.
 - **The key.** The attester's key file is read by `onchain/attest`, whose errors name the file and never its bytes. Workers never get `CHAIN_*`, `X402_*` or `AGENT_OFFICE_*` variables, but they run as the same OS user and could read the file, so it must be a dedicated testnet key.

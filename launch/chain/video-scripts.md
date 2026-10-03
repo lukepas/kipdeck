@@ -49,7 +49,7 @@ Record each step on its own first, the day before, so a slow RPC on recording da
 | Blink on dial.to | The office reachable over HTTPS (a tunnel); the repository opted in for the public Action; a funder wallet with devnet SOL and devnet USDC or the test mint | The board's Fund window signing the same transaction in Phantom |
 | Worker takes the issue | A public demo repository with the issue open; a worker with its sign-in | The 2026-10-08 dry-run recording |
 | PR and merge | A second GitHub account with write access to merge (the operator's own merge would show as `self`) | Dry-run recording |
-| Approve payout | Bounties on in Settings, devnet chosen, attester and approver key paths set, the operator's payout wallet set | Dry-run recording |
+| Approve payout | Bounties on in Settings, devnet chosen, the attester key path and the approver wallet set (the admin's Phantom, with a little devnet SOL for the fee), the operator's payout wallet set; the wallet popup at the payout is the shot | Dry-run recording |
 | Payout on Explorer | Devnet SOL on the attester for fees | The released demo bounty: https://explorer.solana.com/tx/2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc?cluster=devnet (say it is the demo bounty) |
 | EAS and ERC-8004 | `--attest --reputation`; the registrar funded with Base Sepolia ETH (a manual faucet step) | The schema page: https://base-sepolia.easscan.org/schema/view/0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900 |
 | Leaderboard | The showcase turned on in Settings, or the static export | The indexer on the command line (`npm run index` in onchain/indexer) |

@@ -15,8 +15,22 @@ This is part of the Proof of Merge fork of [agent-office](https://github.com/Age
 | Open and fund | anyone, from the board's **Fund** button or the public "Fund this issue" Action | the repository is a floor (or, for the Action, one an admin opted in); the amount is at most 100,000 |
 | Claim | the office's attester key | the PR is the office's own (`Floor.officePull`: made by an office worker on the repository itself, never a fork) and it closes the issue; the worker's owner has a payout wallet |
 | Waiting for approval | the office, on every look at the floor's PRs | GitHub is asked again who merged it: a `User` (not a `Bot` or an app) with `write`, `maintain` or `admin` permission; the PR still closes the issue and still isn't from a fork |
-| Release | the attester and the approver key together | an office admin pressed **Approve payout** in the review inbox; the approver key is loaded to sign only after that admin check |
-| Refund | anyone, after the expiry | nothing is released; each funder's contribution goes back to them, one per transaction |
+| Release | the attester and the approver together | an office admin pressed **Approve payout** in the review inbox, before the bounty's expiry; GitHub is asked once more. With an approver wallet the attester signs and the admin's browser wallet adds the approver's signature; with an approver key file, that key is loaded to sign only after the admin check |
+| Refund | after the expiry, an admin from the office (the attester pays the fees), or anyone with the CLI | nothing is released; each funder's contribution goes back to them, one per transaction |
+| Cancel | an empty bounty's creator or the approver; a funded, unclaimed one only the approver | the program refuses anyone else |
+
+A payout has to be approved before the bounty expires: after that the program refuses the release and opens the refunds, whatever merged. The review inbox row shows the time left, and the office warns admins a day before.
+
+The office only ever deals with its own bounties: ones opened with its attester and approver, in its mint. Both keys are part of a bounty's address (its seeds are the repository's hash, the issue, a nonce, the attester and the approver), so someone who opens a bounty for the same issue with keys of their own gets a different address, and the office neither shows it, funds it nor follows it. A bounty past its expiry takes no more money: funding then opens the next one (a new nonce), and the old one can still be refunded. While a merge waits for approval, or is blocked or being paid, the issue takes no new funding, from the office or the Blink.
+
+Things that can go wrong on the way, and what the office does:
+
+- A release that lands after the office stopped waiting for it (a confirm that timed out, a restart, an approver wallet that sent it) is read off the chain on the next look and recorded as paid, with its signature, on the timeline.
+- A payout that never landed (the office stopped between *paying* and the release) goes back to *awaiting approval*, with a note.
+- Two admins approving at once: only one release goes out.
+- GitHub failing while the office checks who merged keeps the bounty claimed, to be checked again; it is never blocked for that. A blocked merge is looked at again every ten minutes while the chain still holds the bounty.
+- If another office PR for the issue merges while the claimed one is still open, the claim moves to the merged one.
+- A merged PR that has dropped off the board's list (it only holds the last 30) can still be approved.
 
 With no payout wallet set, the bounty stays unclaimed and the review inbox shows *Set your payout wallet*. A merge that fails a check (a bot merged it, or someone without write access, or the PR doesn't close the issue) never reaches the inbox, approved or not.
 
@@ -26,8 +40,8 @@ Every step is a transaction, and its signature goes on the floor's timeline: *bo
 
 - **Issue cards** on the board show a bounty's amount, phase and time left, and a **Fund** button. It opens a window where a Wallet Standard wallet (Phantom, Backpack, Solflare) signs the transaction the office built, or copies the Blink link (dial.to, devnet).
 - **Desks**: a worker holding a claimed bounty shows its amount on its card.
-- **Review inbox** (Mission control, **3**): *Approve payout of N USDC to <worker> for PR #x* for admins, and *Set your payout wallet* for whoever's worker claimed without one.
-- **Settings > Bounties**: everyone sets their own payout wallet (an address, never a key). Admins turn bounties on, choose Solana devnet or the mock, and set the program id, the mint, the attester and approver key paths, the repositories the public Action may fund, how many days a new bounty runs, and whether the public Action shows issue titles (off by default, for private repositories).
+- **Review inbox** (Mission control, **3**): *Approve payout of N USDC to <worker> for PR #x*, with the time left before the bounty expires, for admins, and *Set your payout wallet* for whoever's worker claimed without one.
+- **Settings > Bounties**: everyone sets their own payout wallet (an address, never a key). Admins turn bounties on, choose Solana devnet or the mock, and set the program id, the mint, the attester key path, the approver (a wallet address, recommended, or a key path), the repositories the public Action may fund, how many days a new bounty runs, and whether the public Action shows issue titles (off by default, for private repositories).
 
 Settings are kept in `chain.json` and each floor's bounties in `bounties.json` in the office's data folder, both written through the office's state-file helpers (`safefs.ts`).
 
@@ -59,11 +73,14 @@ The office talks to `api.devnet.solana.com` and nowhere else for bounties. RPC c
 | Key | Where (default) | Used for |
 | --- | --- | --- |
 | Attester | `~/.config/agent-office-chain/solana-attester.json` | signs claims and vouches for merges; read when bounties are turned on |
-| Approver | `~/.config/agent-office-chain/solana-approver.json` | the second signature on a release; only its address is kept when bounties are turned on, and the key is read again to sign only after an admin approves |
+| Approver wallet (recommended) | an admin's browser wallet (Phantom, Backpack, Solflare), its address in Settings | the second signature on a release: **Approve payout** hands the admin's wallet a release the attester already signed, and the wallet signs, pays the fee and sends it |
+| Approver key (instead) | `~/.config/agent-office-chain/solana-approver.json` | the same signature from a file; only its address is kept when bounties are turned on, and the key is read again to sign only after an admin approves |
 
-Both files must be mode 0600 or the SDK refuses them, and no key bytes go in a log or an error. The program needs both signatures for a release, so a stolen attester key alone can't pay anyone.
+Key files must be mode 0600 or the SDK refuses them, and no key bytes go in a log or an error. The program needs both signatures for a release.
 
-Workers run as the same OS user as the office, so a worker could read these files: environment scrubbing (`workers/env.ts`) doesn't protect files on disk. Use dedicated testnet keys with nothing of value on them. Moving the approver key to a separate machine or a hardware wallet would close that gap and is not done yet.
+Workers run as the same OS user as the office, so a worker could read key files in that folder: environment scrubbing (`workers/env.ts`) doesn't protect files on disk. With an approver key file, both release keys sit on that one machine, and an agent that is tricked into reading them could claim a bounty for its own wallet and release it, around the admin's approval. With an approver wallet, the approver's key never touches the office's machine, so a payout always needs an admin's wallet to sign. Use an approver wallet, and dedicated testnet keys with nothing of value on them.
+
+Who merged goes into the Release event as a pseudonym: an HMAC of the GitHub user id under a secret the office keeps in its data folder (`merger-pseudonym.secret`, mode 0600), the same value its attestations on Base Sepolia use. GitHub ids are sequential, so a plain hash of one could be reversed by trying them all; this one can't without the secret.
 
 ## The same merge on Base Sepolia
 
@@ -74,19 +91,22 @@ With `--attest`, the merge that pays a bounty is also attested on Base Sepolia, 
 | Piece | File |
 | --- | --- |
 | Program and SDK | `onchain/solana/` |
-| Office service (claims, merge checks, payouts, the Action's payloads) | `src/server/bounties.ts` |
+| Office service (claims, merge checks, payouts) | `src/server/bounties.ts` |
+| Funding and the Action's payloads | `src/server/chain/funding.ts` |
+| The merger pseudonym and its secret | `src/server/chain/pseudonym.ts` |
 | Loading the SDK, the guarded RPC fetch | `src/server/chain/sdk.ts` |
 | Who merged, asked fresh from GitHub | `src/server/chain/merge-proof.ts` |
 | Settings and per-floor state | `src/server/chain/settings.ts`, `src/server/chain/store.ts` |
 | Public Action routes | `src/server/http/routes/actions.ts` |
-| Messages (`bounty.list`, `bounty.fund.prepare`, `bounty.approve`, `bounty.refund`, ...) | `src/shared/protocol/bounties.ts`, handled in `src/server/ws/handlers/bounties.ts` |
+| Messages (`bounty.list`, `bounty.fund.prepare`, `bounty.approve`, `bounty.release.sent`, `bounty.refund`, ...) | `src/shared/protocol/bounties.ts`, handled in `src/server/ws/handlers/bounties.ts` |
 | Review inbox rows | `src/shared/review.ts` |
 | Board chips, Fund window, wallet, settings pane | `src/client/ui/bounty.ts`, `wallet.ts`, `bounty-settings.ts` |
 | Tests | `tests/bounties.test.ts`, plus the package's own in `onchain/solana` |
 
 ## Status
 
-- The program, the SDK and the office side pass their tests: 27 Rust host tests, 48 SDK tests (7 of them litesvm runs of the built program), and the office's bounty tests in `npm test`.
+- The program, the SDK and the office side pass their tests: Rust host tests, SDK tests (some of them litesvm runs of the built program), and the office's bounty tests in `npm test`.
 - One bounty ran end to end (open, fund, claim, release) on a local `solana-test-validator`, signatures in `onchain/solana/deployments/localnet.json`.
-- Devnet: the program is deployed (`JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`) and one demo bounty ran open, fund, claim and release there on 2026-10-03, with no GitHub merge behind it; signatures in `onchain/solana/deployments/devnet.json`.
+- Devnet: the program is deployed (`JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`) and was upgraded in place on 2026-10-03 to put the attester and approver in a bounty's seeds. Demo bounties ran open, fund, claim and release there before and after the upgrade, one of them paid through the approver-wallet path, all with no GitHub merge behind them; signatures in `onchain/solana/deployments/devnet.json`.
+- The devnet upgrade authority is a single key, so whoever holds it could replace the program: this deployment is not custody-free. A mainnet deployment would need a multisig upgrade authority first, then none.
 - Not audited. Testnet only.

@@ -23,11 +23,11 @@ Testnets only. The SDK has no mainnet cluster option, checks the RPC's genesis h
 ## Build and test
 
 ```bash
-cargo test --workspace          # 27 tests: state machine table, layouts, the processor on the host harness
+cargo test --workspace          # state machine table, layouts, the processor on the host harness
 npm install                     # dev dependencies only (TypeScript, tsx, litesvm, web3.js for cross-checks)
 npm run build:program           # cargo build-sbf --features test-mint -> target/deploy/bounty_escrow.so
 npm run typecheck
-npm test                        # 48 SDK tests, 7 of them litesvm runs of the .so
+npm test                        # SDK tests, some of them litesvm runs of the .so
 npm run build                   # sdk/dist, which the office loads
 ```
 
@@ -39,11 +39,11 @@ npm run build                   # sdk/dist, which the office loads
 
 | Account | Seeds | Holds |
 | --- | --- | --- |
-| Bounty | `"bounty"`, sha256 of `owner/name` lowercased, issue number (u64 LE), nonce (u8) | state, mint, vault, repo hash, issue, attester, approver, creator, created and expiry times, total, funder count, refunded count, claimant wallet and PR number (`Option`s), merge commit, merged-by hash, amount paid, when settled: 351 bytes |
+| Bounty | `"bounty"`, sha256 of `owner/name` lowercased, issue number (u64 LE), nonce (u8), attester, approver | state, mint, vault, repo hash, issue, attester, approver, creator, created and expiry times, total, funder count, refunded count, claimant wallet and PR number (`Option`s), merge commit, merged-by hash, amount paid, when settled: 351 bytes |
 | Vault | the bounty's associated token account for the mint | the funds; owned by the bounty PDA |
 | Contribution | `"contrib"`, bounty, funder | amount, refunded flag: 76 bytes. This is what gives each funder their own refund |
 
-The nonce lets an issue get a fresh bounty after one settled. Opening uses CreateIdempotent for the vault, so creating the vault address first can't block a bounty.
+The nonce lets an issue get a fresh bounty after one settled. The attester and approver are in the seeds so that nobody can open a bounty at the address an office's bounty for that issue would have, with keys the office doesn't hold; a bounty opened with other keys sits at its own address, and `activeBounty` (given the office's keys and mint) never picks it. Bounties opened on devnet before the 2026-10-03 upgrade used the first four seeds only. Opening uses CreateIdempotent for the vault, so creating the vault address first can't block a bounty.
 
 ### Instructions
 
@@ -56,7 +56,7 @@ A tag byte, then the fields little-endian. Account order is documented on `Escro
 | 2 | `Claim { pr_number, claimant_wallet }` | the attester | open or claimed, not expired; binds the office PR and the wallet to pay; may bind again (a re-opened PR) until released |
 | 3 | `Release { merge_sha, merged_by_hash, pr_number }` | the attester and the approver, and a payer | claimed, not expired, `pr_number` equal to the claimed one; pays the whole vault to the claimant's associated token account, creating it with the payer covering rent |
 | 4 | `Refund` | anyone | after the expiry (or once cancelled), not released; pays one contribution back to its funder's token account and marks it refunded; the last one makes the bounty `Refunded` |
-| 5 | `Cancel` | anyone if empty, else the approver | empty: closes the bounty and its vault, rent back to the creator. Funded and not yet claimed: the approver calls it off and the refund crank opens at once |
+| 5 | `Cancel` | the creator or the approver if empty, else the approver | empty: closes the bounty and its vault, rent back to the creator. Funded and not yet claimed: the approver calls it off and the refund crank opens at once |
 
 What the two signatures mean is decided off chain. The attester (the office's server key) signs a claim only for a PR an office worker opened on the repository itself (never a fork) that closes the issue, and signs a release only after GitHub reports it merged by a `User` account (not a `Bot`) with write access or more. The approver (a separate key) signs only after an office admin approved the payout in the review inbox. `sdk/src/attester.ts` holds those checks.
 
@@ -89,7 +89,7 @@ for k in deployer program attester approver test-mint funder operator; do
 done
 ```
 
-`--silent` keeps the seed phrase off the terminal. `readKeypair` refuses a key file others can read, and never puts key bytes in an error. The office loads the attester key at start and the approver key only when an admin approves a payout.
+`--silent` keeps the seed phrase off the terminal. `readKeypair` refuses a key file others can read, and never puts key bytes in an error. The office loads the attester key at start. The approver is best an admin's browser wallet: `Attester.prepareRelease` (or `SolanaEscrow.prepareRelease`) builds a release the attester signs and the wallet co-signs, pays for and sends. With an approver key file instead, the office reads it only when an admin approves a payout.
 
 Workers run as the same OS user as the office, so a worker could read these files: environment scrubbing doesn't protect files. Use dedicated testnet keys with nothing of value on them, never a key that holds real funds.
 
@@ -120,10 +120,12 @@ ao-bounty show     --repo <owner/name> [--issue <n>]
 ao-bounty open     --repo --issue [--days <n>] --attester <a> --approver <a>
 ao-bounty fund     --repo --issue --amount <usdc>
 ao-bounty claim    --repo --issue --pr <n> --wallet <a>
-ao-bounty release  --repo --issue --pr <n> --approver-key <file> [--merge-sha <sha>] [--merged-by-id <n>]
+ao-bounty release  --repo --issue --pr <n> --approver-key <file> [--merge-sha <sha>] [--merged-by-hash <hex>]
 ao-bounty refund   --repo --issue [--funder <a>]
 ao-bounty cancel   --repo --issue [--approver-key <file>]
-ao-bounty address  --repo --issue
+ao-bounty address  --repo --issue --attester <a> --approver <a>
+# --attester/--approver on any command name the keys a bounty was opened with, when another
+# bounty on the issue has the same nonce under other keys. --merged-by-hash is mergedByHash(id, secret).
 
   --backend solana-devnet|solana-localnet|mock   --program <id>   --rpc <url>   --keypair <file>
   --mint <address>|test   --nonce <n>   --mock-file <file>

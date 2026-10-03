@@ -40,7 +40,7 @@ An open source Solana program and TypeScript SDK that pays for code contribution
 ```
 
 ```field name="Only possible on Solana" max-words=120
-Agent work comes in small pieces: fix a flaky test, bump a dependency. A 5 USDC bounty only works if funding it, refunding it and paying it out each cost a fraction of a cent and settle in seconds; on most chains the fee is a real share of the bounty. Solana Actions let a funder escrow from a link in an issue or a post, with nothing to install. Program accounts hold the funds with no custodian, and devnet USDC behaves like mainnet USDC, so the path to production is an audit, not a rewrite. And the payout is where the contributor already is: a Solana wallet.
+Agent work comes in small pieces: fix a flaky test, bump a dependency. A 5 USDC bounty only works if funding it, refunding it and paying it out each cost a fraction of a cent and settle in seconds; elsewhere the fee is a real share of it. Solana Actions let a funder escrow from a link in an issue or a post, with nothing to install. Funds sit in program-owned vaults (the devnet upgrade authority is one key; M2 moves it to a multisig, then removes it), and devnet USDC behaves like mainnet USDC, so the path to production is an audit, not a rewrite. And the payout is where the contributor already is: a Solana wallet.
 ```
 
 Budget (proposal, adjust before applying; amounts in USD):

@@ -9,8 +9,10 @@
 - **Mission control** for teams running many agents: what needs a person now, a review inbox, goals and milestones, a timeline ([docs](docs/mission-control.md)).
 - **Bounties** in devnet USDC on GitHub issues, from the board or a "Fund this issue" Blink. A release needs two signatures: the attester's (a person with write access merged the office's own, non-fork PR) and the approver's (an office admin approved it in the review inbox) ([docs](docs/bounties.md)).
 - **Proof of merge**: an EAS attestation on Base Sepolia for every office PR a person merges, reverts or closes, and ERC-8004 feedback for the agent ([docs](docs/proof-of-merge.md), [reputation](docs/reputation.md)).
-- **Paid tasks over x402**: an outsider hires a worker for one task with test USDC; it waits, held, for an admin ([docs](docs/x402.md)).
-- **A public board** at `/pom/`, rebuilt from chain data alone, with an explorer link on every row ([docs](docs/showcase.md)).
+- **Paid tasks over x402**: an outsider hires a worker for one task with test USDC; it waits, held, for an admin. Tested end to end on a local anvil chain; not yet settled through a live facilitator ([docs](docs/x402.md)).
+- **A public board** at `/pom/`, built from chain data when the office runs the indexer and otherwise from the office's own attestation record, with an explorer link on every row; the GitHub Pages export is rebuilt from chain data alone ([docs](docs/showcase.md)).
+
+What is on chain so far: the escrow program on Solana devnet (`JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`) with scripted demo bounties paid there, the Base Sepolia schema and fallback contract, and no attestations or outside users yet. Nothing here has had a real merge behind a payout yet; see the launch kit's checklist.
 
 ### Quickstart in 60 seconds
 
@@ -22,7 +24,7 @@ npm install                 # also builds the client and server
 node bin/agent-office.js    # opens the office; chain features off
 ```
 
-To try the chain side on testnets, build the on-chain packages the office loads (`cd onchain/solana && npm install && npm run build`, the same in `onchain/attest`), then turn bounties on in Settings, Bounties, and start the office with `--attest`, `--reputation` or `--x402`. The deployed testnet addresses are in `onchain/*/deployments/`.
+To try the chain side on testnets, build the on-chain packages the office loads (`cd onchain/solana && npm install && npm run build`, the same in `onchain/attest`), then turn bounties on in Settings, Bounties (set an approver wallet there), and start the office with `--attest --attest-repos owner/name`, `--reputation` or `--x402`. Only public repositories are ever attested. The deployed testnet addresses are in `onchain/*/deployments/`.
 
 ### How it fits together
 
@@ -41,7 +43,8 @@ To try the chain side on testnets, build the on-chain packages the office loads 
 ### Security notes
 
 - Keys live in files under `~/.config/agent-office-chain`, mode 0600, and are never logged. Workers don't get the office's chain variables, but they run as the same OS user and could read those files. **Use dedicated testnet keys only, with nothing of value on them.**
-- Payouts are admin-only, and the approver key is read to sign only after the admin check.
+- Payouts and refunds are admin-only. Set an approver wallet in Settings, Bounties: then each payout is co-signed in an admin's browser wallet and no approver key sits on the office's machine, where an agent could read it. With an approver key file instead, it is read to sign only after the admin check, but both release keys are then on one machine.
+- The office follows only its own bounties (its attester and approver are in a bounty's address), attests only public repositories you name, and puts who merged on chain as a keyed pseudonym.
 - RPC and facilitator calls go through the office's network guard (public testnet endpoints only, no redirects, capped answers); state is written through `safefs.ts`; the public routes keep the host check and their own rate limits and CSP. See [docs/security.md](docs/security.md).
 - Nothing here is audited. Mainnet waits on an audit.
 

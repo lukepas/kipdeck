@@ -27,16 +27,16 @@ Each floor's repository is listed with how it shows:
 | Choice | What the page shows |
 | --- | --- |
 | Full titles | `owner/name#12` and the PR's title |
-| Redacted | "PR #12 in a private repo", no title; its bounties show without a fund link, since the Action's URL names the repository |
+| Redacted | "PR #12 in a private repo", no title, and no attestation, feedback or payout link (those pages lead to the repository); its bounties show without a fund link, since the Action's URL names the repository |
 | Hidden | Nothing: its outcomes, bounties and agents are left out of every figure |
 
-Without a choice, a repository GitHub says is public shows in full, and every other one (private, or one the office can't ask about) is redacted. Attestations carry the repository's name on chain, so redaction keeps the page from repeating it, not the chain from holding it: keep a repository whose name must stay private out of Proof of Merge (`--attest`) altogether.
+Without a choice, a repository GitHub says is public shows in full, and every other one (private, or one the office can't ask about) is redacted. Attestations carry the repository's name on chain, so redaction keeps the page from repeating it, not the chain from holding it. That is why the office attests only repositories named in `--attest-repos` that GitHub reports public, and never a private one. The same rules apply to the public reputation routes (`/api/public/reputation/<id>`, the leaderboard and `dataset.json`): a hidden repository's outcomes are left out, and a redacted one's come without its name, its attestation and its payout. Agent cards and those routes name an agent's operator by a pseudonym, never by name.
 
 ## Where the data comes from
 
 The office builds `/pom/showcase.json` from:
 
-- the outcomes: what `onchain/indexer` rebuilt from the chain alone when the office runs it (`--reputation-index`), else the office's own record of what it attested (`--reputation`); with neither, the board is empty;
+- the outcomes: what `onchain/indexer` rebuilt from the chain alone when the office runs it (`--reputation-index`), else the office's own record of what it attested (`--reputation`); with neither, the board is empty. Only the GitHub Pages export is built from chain data alone;
 - the floors' open bounties (devnet only, never the mock);
 - the roster, for the floor strip;
 - the onchain packages' `deployments/*.json`, for the addresses in "Verify it yourself".

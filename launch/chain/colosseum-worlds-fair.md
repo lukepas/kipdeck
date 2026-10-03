@@ -27,7 +27,7 @@ What is deployed on testnets (every link below was checked on 2026-10-03; the ex
 | What | Where |
 | --- | --- |
 | Escrow program, Solana devnet | https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet |
-| One demo bounty released on devnet (no GitHub merge behind it) | https://explorer.solana.com/tx/2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc?cluster=devnet |
+| A demo bounty released on devnet (no GitHub merge behind it); two more after the 2026-10-03 upgrade, signatures in `onchain/solana/deployments/devnet.json` | https://explorer.solana.com/tx/2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc?cluster=devnet |
 | Proof-of-merge schema, EAS on Base Sepolia | https://base-sepolia.easscan.org/schema/view/0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900 |
 | Its registration transaction | https://sepolia.basescan.org/tx/0x57045f814359c8e0c0f6d4b5543198ed1609570c4875e0cd84bf3f13336a83a8 |
 | MergeAttestor fallback contract | https://sepolia.basescan.org/address/0x278f441b635ebf4aca971184c0cab60b893f34fc |
@@ -70,15 +70,15 @@ Teams now run many coding agents at once: Claude Code, Codex, Cursor, Pi. Their 
 ```field name="Solution" max-words=200
 Proof of Merge is mission control for teams running many AI coding agents, with one rule: a person's merge is the only thing that moves money or reputation for an agent's work.
 
-A maintainer escrows devnet USDC against a GitHub issue, from the office's board or a Fund this issue Blink. Any worker in the office (Claude Code, Codex, Cursor, Pi) can take it. When someone with write access merges the worker's pull request, made by the office on the repository itself and never from a fork, and an office admin approves the payout in the review inbox, the Solana program releases the escrow to the operator's wallet. It needs two signatures: the attester's and the approver's.
+A maintainer escrows devnet USDC against a GitHub issue, from the office's board or a Fund this issue Blink. Any office worker can take it. When someone with write access merges the worker's pull request, made by the office on the repository itself and never from a fork, and an office admin approves the payout in the review inbox, the Solana program releases the escrow to the operator's wallet. It needs two signatures: the attester's and the approver's, which the admin gives from a browser wallet.
 
-The same merge writes an EAS proof-of-merge attestation and ERC-8004 feedback on Base Sepolia. Reverts and closes are attested too. A public, read-only page rebuilds the leaderboard (merge rate, time to merge and revert rate per agent and per harness) from chain data alone, with an explorer link on every row. Outsiders can hire a worker for one task over x402; the task is held until an admin approves it.
+The same merge writes an EAS proof-of-merge attestation and ERC-8004 feedback on Base Sepolia. Reverts and closes are attested too. A public, read-only page shows the leaderboard (merge rate, time to merge and revert rate per agent and harness), rebuildable from chain data, with explorer links. Outsiders can hire a worker for one task over x402 (tested on a local chain so far); the task is held until an admin approves it.
 
 No token, no NFT, no points. Testnets only.
 ```
 
 ```field name="Why Solana" max-words=90
-Agent work comes in small pieces: fix a flaky test, bump a dependency. A 5 USDC bounty only makes sense when the payout costs a fraction of a cent, settles in seconds, and can be funded from a link (a Blink) with nothing to install. The program holds the money with no custodian: anyone can crank each funder's refund after expiry, and a release needs both the attester's and the approver's signature. Every step is an event anyone can count.
+Agent work comes in small pieces: fix a flaky test, bump a dependency. A 5 USDC bounty only makes sense when the payout costs a fraction of a cent, settles in seconds, and can be funded from a link (a Blink) with nothing to install. Program-owned vaults hold the money (the devnet upgrade key is one key; mainnet gets a multisig): anyone can crank each funder's refund after expiry, and a release needs both signatures. Every step is an event anyone can count.
 ```
 
 ```field name="Why Base" max-words=80
@@ -86,7 +86,7 @@ Reputation should outlive one office and be readable by any tool. EAS on Base Se
 ```
 
 ```field name="Blockchains and tools" max-chars=400
-Solana devnet: native Rust program on solana-program (no Anchor), TypeScript SDK, Solana Actions (Blink on dial.to), Wallet Standard. Base Sepolia: EAS (schema plus a fallback contract), ERC-8004 Identity and Reputation registries, x402 (USDC, EIP-3009, x402.org facilitator; Solana devnet too), viem. Built on agent-office (TypeScript, three.js, Node).
+Solana devnet: native Rust program on solana-program (no Anchor), TypeScript SDK, Solana Actions (Blink on dial.to), Wallet Standard. Base Sepolia: EAS (schema plus a fallback contract), ERC-8004 Identity and Reputation registries, x402 (USDC, EIP-3009; tested on local anvil), viem. Built on agent-office (TypeScript, three.js, Node).
 ```
 
 ```field name="Go-to-market" max-words=150
@@ -98,7 +98,7 @@ Business: open core. A hosted mission control seat fee for teams, and later a 1 
 ```
 
 ```field name="Demand validation" max-words=80 sources="merged_by_others,agents_ranked,devnet_bounties_released,devnet_test_usdc_released"
-Counted from chain data on the submission day, not estimated. Merged agent PRs attested on Base Sepolia: 0. Agents on the board: 0. Bounties released on Solana devnet: 1, a demo of 25 test USDC with no GitHub merge behind it. We will refresh these numbers before submitting.
+Counted from chain data on the submission day, not estimated. Merged agent PRs attested on Base Sepolia: 0. Agents on the board: 0. Bounties released on Solana devnet: 3, scripted demos of 55 test USDC in all, with no GitHub merge behind them. We will refresh these numbers before submitting.
 ```
 
 ```field name="Team" max-words=80
@@ -115,9 +115,9 @@ The six criteria from the rules (section 8), no published weights.
 
 | Criterion | Our answer |
 | --- | --- |
-| Functionality | Program deployed on devnet and run end to end; schema registered on Base Sepolia; Rust host tests, SDK tests with litesvm runs of the built program, the office's tests, local validator and anvil end to end runs |
+| Functionality | Program deployed on devnet; demo bounties run open to release there without a real merge; no attestations on Base Sepolia yet (schema registered); Rust host tests, SDK tests with litesvm runs of the built program, the office's tests, local validator and anvil end to end runs |
 | Potential impact | Every team running agent fleets; the board answers a question the whole field argues about, from data anyone can check |
-| Novelty | Money and reputation move only on a person's merge, with two signatures and an admin in the loop; reputation that is attested, not self-reported |
+| Novelty | Which agents' pull requests get merged, as a public, checkable dataset per agent and harness; money and reputation move only on a person's merge, with two signatures and an admin in the loop |
 | UX | Fund from the board or a Blink; approve in the review inbox you already use; a payout toast with an explorer link |
 | Open source | MIT; the escrow program and SDK know nothing about the office; the board is CC0 data rebuilt by one command |
 | Business plan | Open core: hosted mission control seats, a small bounty fee after an audit and mainnet |

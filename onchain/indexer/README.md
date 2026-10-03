@@ -9,7 +9,7 @@ It reads:
 - the proof-of-merge attestations on Base Sepolia ([onchain/attest](../attest/README.md)), from EAS `Attested` logs by schema UID, made by the attesters you trust (anyone can attest with a public schema);
 - the ERC-8004 feedback the same attester gave ([onchain/reputation](../reputation/README.md)), whose tag says when the merger was the agent's own operator (`self`);
 - the identities the office's registrar registered, with their agent card URLs;
-- the bounty payouts on Solana devnet ([onchain/solana](../solana/README.md)): `getSignaturesForAddress` on the escrow program, each transaction's logs decoded by the escrow SDK. A `Released` event names its bounty and PR; the bounty's `BountyCreated` event names the repository's hash. A payout is joined to its attestation by repository and PR number.
+- the bounty payouts on Solana devnet ([onchain/solana](../solana/README.md)): `getSignaturesForAddress` on the escrow program, each transaction's logs decoded by the escrow SDK. A `Released` event names its bounty and PR; the bounty's `BountyCreated` event names the repository's hash. Anyone can open a bounty on the program with keys of their own and pay it to themselves for any repository and PR, so only payouts released by the attester you trust count (`--solana-attester`, default the one in `onchain/solana/deployments/<cluster>.json`), in devnet USDC or the deployment's test mint. A payout is joined to the attestation that names its transaction (`solanaTx`), or else to the one with the same repository, PR and merge commit.
 
 It writes two files, both [CC0](https://creativecommons.org/publicdomain/zero/1.0/):
 
@@ -31,7 +31,7 @@ npm run index -- --network localnet --rpc http://127.0.0.1:8545 --solana-rpc htt
 npm run index -- --attester 0x... --registrar 0x... --from-block N --no-solana --chunk 1000
 ```
 
-Addresses come from the onchain packages' `deployments/<network>.json` unless given. Only Base Sepolia's public RPCs, Solana devnet's public RPC or local nodes are accepted. Logs are read 1,000 blocks at a time on public RPCs (`--chunk` to change it): sepolia.base.org refuses a wider `eth_getLogs` range.
+Addresses come from the onchain packages' `deployments/<network>.json` unless given (`--solana-attester <address>` for whose payouts count). Only Base Sepolia's public RPCs, Solana devnet's public RPC or local nodes are accepted. Logs are read 1,000 blocks at a time on public RPCs (`--chunk` to change it): sepolia.base.org refuses a wider `eth_getLogs` range.
 
 `--record tape.json` keeps every JSON-RPC answer the run got, and `--replay tape.json` runs from the tape alone (a call not on it is an error, never a network request).
 

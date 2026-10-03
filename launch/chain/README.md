@@ -10,8 +10,8 @@ Last checked: 2026-10-03
 | --- | --- |
 | [colosseum-worlds-fair.md](colosseum-worlds-fair.md) | The main entry: every form field drafted, closes 2026-10-12 23:59 PT |
 | [solana-foundation-grant.md](solana-foundation-grant.md) | Rolling grant: summary, "only possible on Solana", three milestones |
-| [arbitrum-dubai.md](arbitrum-dubai.md) | Arbitrum Open House Dubai, a later entry; nothing built for it yet |
-| [tempo-track.md](tempo-track.md) | Colosseum's Tempo track, a stretch with a go or no-go date |
+| [arbitrum-dubai.md](arbitrum-dubai.md) | Arbitrum Open House Dubai, a later entry; nothing built for it yet. Frozen until after 2026-10-12 |
+| [tempo-track.md](tempo-track.md) | Colosseum's Tempo track, a stretch with a go or no-go date. Frozen until after 2026-10-12 |
 | [base-builder.md](base-builder.md) | Base Builder Grants, only after a mainnet decision; do not submit testnet |
 | [disclosure.md](disclosure.md) | What is upstream's and what is ours, the form text, and every third-party license |
 | [judge-qa.md](judge-qa.md) | Answers for judges |
@@ -24,12 +24,14 @@ Last checked: 2026-10-03
 
 ## What is live on testnets
 
-As of 2026-10-03, checked over RPC that day (the explorers block scripted requests):
+As of 2026-10-03, checked over RPC that day (the explorers block scripted requests). None of the demo bounties has a GitHub merge behind it, and the devnet upgrade authority is a single key (`TyQidKVXFC52NRtsais3yaFbBkJksBeU5Y68TSwb1zE`), so the deployment is not custody-free:
 
 | What | Network | Address or transaction |
 | --- | --- | --- |
 | Bounty escrow program (executable, upgradeable) | Solana devnet | `JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6` |
 | One demo bounty, open, fund, claim, release (all finalized) | Solana devnet | release `2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc`, the rest in `onchain/solana/deployments/devnet.json` |
+| The program upgraded in place: attester and approver in the bounty seeds, Cancel signed by the creator or the approver | Solana devnet | upgrade `5y64MPvVR8cKgtrwwatH3XRd4pPmtpbKgUZkRCd7NYGAphXN6Ynz8qYz4zzuMFwDhZtBeHAoysm9Tjhdr69BE8f8` (slot 507133664) |
+| Two more demo bounties on the upgraded program, one paid through the approver-wallet path | Solana devnet | releases `2BXByMAyR1QqzHE1A4brif8TFhmqyypaqVJKBs2totcoZGma6EHRCD9iXxZfpPrrtfhGV4jHNBe2zQedARM314Bu` and `2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r` |
 | Proof-of-merge schema on EAS | Base Sepolia | `0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900`, registered in `0x57045f814359c8e0c0f6d4b5543198ed1609570c4875e0cd84bf3f13336a83a8` (status 1) |
 | MergeAttestor fallback contract | Base Sepolia | `0x278f441b635ebf4aca971184c0cab60b893f34fc` |
 | ERC-8004 registries we write to (not ours, version 2.0.0) | Base Sepolia | Identity `0x8004A818BFB912233c491871b3d84c89A494BD9e`, Reputation `0x8004B663056A597Dffe9eCcC1965A193B7388713` |
@@ -38,7 +40,13 @@ Explorer links for each are in [colosseum-worlds-fair.md](colosseum-worlds-fair.
 
 ## Manual steps
 
-These need a browser, a person or a decision, and no script does them:
+These need a browser, a person or a decision, and no script does them. Until 2026-10-12 every hour goes to the first two, not to another chain: the Colosseum entry is Solana-led, and Base is where the reputation record lives.
+
+- **One real merge to payout on a public demo repository**: fund about five issues from the board, let two or three harnesses take them, have a second GitHub account with write access merge, approve from the admin's approver wallet, and let `--attest --attest-repos <demo repo> --reputation` write the EAS attestation and the ERC-8004 feedback. Then refresh `data/counts.json` and re-record the pitch's counts beat with the real numbers.
+- **Outside users**: invite three to five maintainers or agent operators to fund or claim an issue, so `merged_by_others` counts distinct maintainers who are not us.
+- **A reachable demo**: one always-on office over HTTPS for the demo repository, so the Blink works on `dial.to?cluster=devnet` for judges, and the Pages export run once real outcomes exist; pin the first real run's Explorer, easscan and PR links at the top of the README.
+- **The approver wallet**: in Settings, Bounties, set the admin's Phantom address as the approver wallet and send it a little devnet SOL (the approver `55vgpiASBFv3r31ePiPSEGzMomdiRBtjPM1ay7Bx5ypN` key file stays only for the scripted demos).
+- **One live x402 payment**: once the payer holds Circle test USDC, settle one 0.10 USDC Base Sepolia payment through x402.org and record its transaction; until then the forms say x402 was tested on a local chain.
 
 - Fund the Base Sepolia registrar `0x7c2C45a17A432CF890E514f1AaB67D941ec58314` with a little test ETH from a browser faucet, so the office can register its agents on ERC-8004. The attester `0x83dAa5252b68D98F25CbB089CCeE4edc7C083403` already holds some.
 - Get Circle test USDC for the x402 payer from https://faucet.circle.com (Base Sepolia), for day 6's post and the demo.

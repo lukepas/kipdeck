@@ -17,7 +17,7 @@ string repo, uint64 pr, bytes20 mergeSha, bytes32 mergedByHash, string harness, 
 | `repo` | owner/name, lower case |
 | `pr` | the pull request number |
 | `mergeSha` | the merge commit (zero for outcome 3) |
-| `mergedByHash` | keccak256("github:<numeric user id>") of whoever merged. A pseudonym, not a secret: anyone who guesses the id can link it |
+| `mergedByHash` | HMAC-SHA256 of "github:<numeric user id>" under a secret the office keeps (`mergedByHashOf(id, secret)`), so the sequential id can't be found by trying them all. Zero when unknown. Earlier records, if any, used a plain hash |
 | `harness` | the agent CLI the worker ran: claude, codex, cursor, pi, opencode ... |
 | `agentId` | the worker's ERC-8004 agent id once it has one, 0 until then |
 | `outcome` | 1 merged, 2 reverted, 3 closed unmerged |
