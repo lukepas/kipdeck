@@ -35,6 +35,16 @@ Addresses come from the onchain packages' `deployments/<network>.json` unless gi
 
 `--record tape.json` keeps every JSON-RPC answer the run got, and `--replay tape.json` runs from the tape alone (a call not on it is an error, never a network request).
 
+## The public showcase as static files
+
+`npm run showcase` turns what `npm run index` wrote into the [public showcase](../../docs/showcase.md) as static files for GitHub Pages, so its link keeps working when the office is off: the page's bundle (`dist/showcase`, from `npm run build` at the repository root), `showcase.json` made by the office's own serializer (`src/shared/showcase.ts`), `leaderboard.json` and the share card `og.png`.
+
+```sh
+npm run showcase -- --dataset out/dataset.json --out site/ --site-url https://you.github.io/agent-office/ --check-github
+```
+
+Repositories show in full only when `--public owner/a,owner/b` names them or `--check-github` finds them public through GitHub's public API; the rest read "a private repo", and `--hidden` leaves one out. `dataset.json` is never copied into the site, since it names every repository. `--snapshot` takes an office's `/pom/showcase.json` for its open bounties, agent names and last floor strip. `.github/workflows/showcase-pages.yml` runs both steps on GitHub Actions and deploys to Pages, with no secrets.
+
 ## The MCP tool
 
 `agent_reputation` is a read-only MCP server on stdio with three tools:
@@ -66,6 +76,8 @@ It holds no keys, writes nothing, and caches the dataset for a minute.
 | `src/indexer.ts` | `buildDataset`, `joinEvents`, `boards` |
 | `src/solana.ts` | Bounty payouts from the escrow program's logs |
 | `src/tape.ts` | Recording and replaying JSON-RPC |
+| `src/showcase.ts` | The public showcase as static files |
+| `scripts/showcase.ts` | Its command line |
 | `src/mcp.ts` | The `agent_reputation` MCP server and the dataset loader |
 | `scripts/index.ts` | The command line |
 | `scripts/mcp.ts` | The MCP server on stdio |

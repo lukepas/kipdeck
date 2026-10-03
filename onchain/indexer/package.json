@@ -7,11 +7,13 @@
   "license": "MIT",
   "bin": {
     "pom-index": "scripts/index.ts",
-    "pom-reputation-mcp": "scripts/mcp.ts"
+    "pom-reputation-mcp": "scripts/mcp.ts",
+    "pom-showcase": "scripts/showcase.ts"
   },
   "scripts": {
     "index": "tsx scripts/index.ts",
     "mcp": "tsx scripts/mcp.ts",
+    "showcase": "tsx scripts/showcase.ts",
     "scenario": "tsx scripts/scenario.ts",
     "test": "node --import tsx --test test/*.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
