@@ -16,10 +16,9 @@ on:
         required: false
         default: ''
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+# Nothing by default: each job gets what it needs. The build runs third-party install code, so it
+# only reads the repository; only the deploy job, which runs no npm code, can publish the site.
+permissions: {}
 
 concurrency:
   group: showcase-pages
@@ -28,6 +27,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -40,7 +41,7 @@ jobs:
           npx vite build -c vite.showcase.config.ts
       - name: Install the onchain packages the indexer reads through
         run: |
-          for p in attest reputation indexer; do (cd onchain/$p && npm ci); done
+          for p in attest reputation indexer; do (cd onchain/$p && npm ci --ignore-scripts); done
       - name: Rebuild the board from the chain (testnets only)
         working-directory: onchain/indexer
         run: npm run index -- --network base-sepolia --out out/
@@ -57,6 +58,9 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
