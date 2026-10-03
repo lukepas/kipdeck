@@ -25,7 +25,7 @@ export interface EvmSource {
   /** Whose identities are the office's agents. */
   registrars?: Address[];
   fromBlock?: bigint;
-  /** Blocks per getLogs; 10,000 suits the public Base Sepolia RPCs. */
+  /** Blocks per getLogs; sepolia.base.org takes at most 1,000. */
   chunk?: bigint;
 }
 

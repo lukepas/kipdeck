@@ -17,7 +17,7 @@ export interface ReadOptions {
   /** Only these attesters count (lower or mixed case). */
   attesters: readonly Address[];
   fromBlock?: bigint;
-  /** Blocks per getLogs (default: the whole range at once). Public RPCs cap the range; 10,000 is safe. */
+  /** Blocks per getLogs (default: the whole range at once). Public RPCs cap the range: sepolia.base.org at 1,000. */
   chunk?: bigint;
   fetchFn?: typeof fetch;
 }

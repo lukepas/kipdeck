@@ -11,7 +11,7 @@ export interface ReadOptions {
   identity?: Address;
   reputation?: Address;
   fromBlock?: bigint;
-  /** Blocks per getLogs (default 10,000; a local node takes the whole range at once). */
+  /** Blocks per getLogs (default 1,000: sepolia.base.org refuses a wider range). */
   chunk?: bigint;
   fetchFn?: typeof fetch;
 }
@@ -51,7 +51,7 @@ type Pub = PublicClient;
 /** Runs `read` over [from, latest] in ranges of `chunk` blocks, oldest first. */
 export async function inRanges<T>(pub: Pub, from: bigint, chunk: bigint | undefined, read: (from: bigint, to: bigint) => Promise<T[]>): Promise<T[]> {
   const latest = await pub.getBlockNumber();
-  const step = chunk ?? 10_000n;
+  const step = chunk ?? 1_000n;
   const out: T[] = [];
   for (let a = from; a <= latest; a += step) {
     const b = a + step - 1n < latest ? a + step - 1n : latest;

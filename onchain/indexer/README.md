@@ -28,10 +28,10 @@ The sibling packages it reads through need their dependencies: `npm install` in 
 npm install
 npm run index -- --network base-sepolia --out out/          # Base Sepolia + Solana devnet
 npm run index -- --network localnet --rpc http://127.0.0.1:8545 --solana-rpc http://127.0.0.1:8899
-npm run index -- --attester 0x... --registrar 0x... --from-block N --no-solana
+npm run index -- --attester 0x... --registrar 0x... --from-block N --no-solana --chunk 1000
 ```
 
-Addresses come from the onchain packages' `deployments/<network>.json` unless given. Only Base Sepolia's public RPCs, Solana devnet's public RPC or local nodes are accepted. Logs are read 10,000 blocks at a time on public RPCs.
+Addresses come from the onchain packages' `deployments/<network>.json` unless given. Only Base Sepolia's public RPCs, Solana devnet's public RPC or local nodes are accepted. Logs are read 1,000 blocks at a time on public RPCs (`--chunk` to change it): sepolia.base.org refuses a wider `eth_getLogs` range.
 
 `--record tape.json` keeps every JSON-RPC answer the run got, and `--replay tape.json` runs from the tape alone (a call not on it is an error, never a network request).
 

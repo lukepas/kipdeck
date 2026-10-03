@@ -63,7 +63,7 @@ export function optionsFrom(a: Record<string, string | true>): IndexerOptions {
       ...(rep.identity ? { identity: rep.identity as Address } : {}),
       ...(rep.reputation ? { reputation: rep.reputation as Address } : {}),
       ...(fromBlock !== undefined ? { fromBlock: BigInt(fromBlock) } : {}),
-      ...(LOCAL.test(rpcUrl) ? {} : { chunk: BigInt(str(a.chunk) ?? '10000') }),
+      ...(LOCAL.test(rpcUrl) ? {} : { chunk: BigInt(str(a.chunk) ?? '1000') }),
     },
   };
   if (a['no-solana'] !== true) {
