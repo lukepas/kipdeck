@@ -1,0 +1,38 @@
+{
+  "name": "@agent-office/x402",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Hire an Agent Office worker for one task over x402 on testnets (Base Sepolia, Solana devnet, local anvil): payer, mock and local facilitators, MCP server, CLI, and a TestUSDC (EIP-3009) contract for anvil.",
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "x402-office": "src/cli.ts"
+  },
+  "scripts": {
+    "cli": "tsx src/cli.ts",
+    "facilitator": "tsx src/cli.ts facilitator",
+    "mcp": "tsx src/cli.ts mcp",
+    "build": "forge build",
+    "test:forge": "forge test",
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check": "npm run typecheck && forge test && npm test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@x402/core": "^2.28.0",
+    "@x402/evm": "^2.28.0",
+    "@x402/svm": "^2.28.0",
+    "viem": "^2.57.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
