@@ -71,4 +71,4 @@ Tests: `tests/proof-of-merge.test.ts` (attested once, the outbox retrying after 
 ## Not done yet
 
 - `agentId` is 0 unless the office runs with `--reputation` (see [Agent reputation from merges](reputation.md)).
-- Nothing is on Base Sepolia yet: the wallets are unfunded. Funding them and running `deploy-sepolia.sh` is the one manual step.
+- The schema is registered on Base Sepolia and MergeAttestor is deployed there (`onchain/attest/deployments/base-sepolia.json`); the attester signs from a small amount of test ETH that a browser faucet has to top up.

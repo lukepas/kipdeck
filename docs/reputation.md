@@ -126,6 +126,6 @@ Tests: `tests/reputation.test.ts` (the figures on fixtures, small samples, self-
 
 ## Not done yet
 
-- Nothing is registered or written on Base Sepolia yet: the registrar and the attester hold no test ETH. Funding them from a browser faucet is a manual step (see [proof of merge](proof-of-merge.md#funding)); then the office registers its agents by itself.
+- No agent is registered on Base Sepolia yet: the registrar (`0x7c2C45a17A432CF890E514f1AaB67D941ec58314`) holds no test ETH. Funding it from a browser faucet is a manual step; then the office registers its agents by itself. The attester, which gives the feedback, is funded and already attests on Base Sepolia (see [proof of merge](proof-of-merge.md)).
 - The operator's own EVM wallet isn't asked for: the registrar holds every identity. Handing an identity to its operator (an ERC-721 transfer) is possible on chain but has no button.
 - An identity is registered as soon as its first PR is attested. If the office stops between the registration and recording it, the identity is registered again later.

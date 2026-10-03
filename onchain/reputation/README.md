@@ -70,4 +70,4 @@ REPUTATION_FORK_TEST=1 npm test   # also the live registries on a local fork (re
 npm run check:sepolia  # read only
 ```
 
-Nothing has been written to Base Sepolia yet. The registrar and the attester each need a little Base Sepolia ETH from a browser faucet first; after that the office registers its agents itself (see [docs/reputation.md](../../docs/reputation.md)).
+Nothing of this package has been written to Base Sepolia yet. The registrar (`0x7c2C45a17A432CF890E514f1AaB67D941ec58314`) needs a little Base Sepolia ETH from a browser faucet first; the attester already has some. After that the office registers its agents itself (see [docs/reputation.md](../../docs/reputation.md)).
