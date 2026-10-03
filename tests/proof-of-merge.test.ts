@@ -68,12 +68,12 @@ function fixture(opts: { chainId?: string; mergedBy?: { login: string; id: numbe
 test('a merged office PR is attested once, with who merged it, the merge commit, the harness and the bounty payout', async (t) => {
   const f = fixture(); t.after(() => f.close());
   const proofs = f.make();
-  f.pulls.push(pull(7));
+  f.pulls.push(pull(7, { createdAt: new Date(1_799_996_400_000).toISOString() }));
   proofs.merged(f.floor, 7);
   await new Promise((r) => setImmediate(r));
   await proofs.flush();
   assert.equal(f.sent.length, 1);
-  assert.deepEqual(f.sent[0].record, { repo: 'acme/app', pr: 7, mergeSha: SHA, mergedByHash: `0x${(4242).toString(16).padStart(64, '0')}`, harness: 'codex', agentId: 0n, outcome: 1, solanaTx: '5'.repeat(88), mergedAt: 1_800_000_000 });
+  assert.deepEqual(f.sent[0].record, { repo: 'acme/app', pr: 7, mergeSha: SHA, mergedByHash: `0x${(4242).toString(16).padStart(64, '0')}`, harness: 'codex', agentId: 0n, outcome: 1, solanaTx: '5'.repeat(88), mergedAt: 1_800_000_000, openedAt: 1_799_996_400 });
   assert.equal(f.attested.length, 1);
   assert.match(f.attested[0].link!, /^https:\/\/base-sepolia\.easscan\.org\/attestation\/view\/0x/);
   assert.match(f.attested[0].text, /PR #7 merged, by Juno \(codex\)/);

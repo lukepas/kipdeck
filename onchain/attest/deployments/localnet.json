@@ -2,11 +2,11 @@
   "chainId": 84532,
   "eas": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
   "schemaRegistry": "0x5fbdb2315678afecb367f032d93f642f64180aa3",
-  "schema": "string repo, uint64 pr, bytes20 mergeSha, bytes32 mergedByHash, string harness, uint256 agentId, uint8 outcome, string solanaTx, uint64 mergedAt",
-  "schemaUid": "0x092d53f306595ebb43131f65a7f73a8b2a0e12416be3e29e6e75c1071f646cd2",
+  "schema": "string repo, uint64 pr, bytes20 mergeSha, bytes32 mergedByHash, string harness, uint256 agentId, uint8 outcome, string solanaTx, uint64 mergedAt, uint64 openedAt",
+  "schemaUid": "0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900",
   "fromBlock": 0,
   "mergeAttestor": "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9",
   "attester": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-  "registerTx": "0x94e2bafb46197de717e9adfbb413b1a8c6c929cdcf0324108f526d72816b17d9",
-  "at": "2026-10-03T18:10:11.492Z"
+  "registerTx": "0x6b953789fb0e3f78a237f309c7a84851fd5f190ccf6b224f9b51cbd9a7eed171",
+  "at": "2026-10-03T18:20:00.130Z"
 }

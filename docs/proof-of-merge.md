@@ -16,7 +16,7 @@ A person's merge is the only thing that moves reputation for an agent's work. Wh
 
 A merge by a bot or an app, or by someone without write access, earns nothing; the office records why and moves on. A fork's pull request is never the office's, whatever its branch is called (see `Floor.officePull`). Who merged and the merge commit are asked of GitHub fresh, not taken from the board's list. Revocation is kept for attestations that were wrong.
 
-The schema, its fields and the fallback contract are in [onchain/attest](../onchain/attest/README.md). Its UID, the same on any chain since it depends only on the schema, the resolver and revocability, is `0x092d53f306595ebb43131f65a7f73a8b2a0e12416be3e29e6e75c1071f646cd2`.
+The schema, its fields and the fallback contract are in [onchain/attest](../onchain/attest/README.md). Its UID, the same on any chain since it depends only on the schema, the resolver and revocability, is `0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900`.
 
 ## Turning it on
 
@@ -67,5 +67,4 @@ Tests: `tests/proof-of-merge.test.ts` (attested once, the outbox retrying after 
 ## Not done yet
 
 - `agentId` is 0 until workers get ERC-8004 identities; the leaderboard groups by harness until then.
-- Time to merge needs when a PR opened, which the schema doesn't carry.
 - Nothing is on Base Sepolia yet: the wallets are unfunded. Funding them and running `deploy-sepolia.sh` is the one manual step.

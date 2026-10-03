@@ -7,7 +7,7 @@
 
 import { decodeAbiParameters, encodeAbiParameters, encodePacked, keccak256, parseAbiParameters, toBytes, zeroAddress, type Hex } from 'viem';
 
-export const SCHEMA = 'string repo, uint64 pr, bytes20 mergeSha, bytes32 mergedByHash, string harness, uint256 agentId, uint8 outcome, string solanaTx, uint64 mergedAt';
+export const SCHEMA = 'string repo, uint64 pr, bytes20 mergeSha, bytes32 mergedByHash, string harness, uint256 agentId, uint8 outcome, string solanaTx, uint64 mergedAt, uint64 openedAt';
 export const SCHEMA_REVOCABLE = true;
 export const SCHEMA_RESOLVER = zeroAddress;
 
@@ -31,8 +31,10 @@ export interface MergeRecord {
   outcome: Outcome;
   /** The Solana devnet signature of the bounty payout, when there was one. */
   solanaTx: string;
-  /** Seconds since the epoch. */
+  /** Seconds since the epoch: when it merged (or closed, for outcome 3). */
   mergedAt: number;
+  /** Seconds since the epoch: when the pull request was opened (time to merge is mergedAt - openedAt); 0 when unknown. */
+  openedAt: number;
 }
 
 const PARAMS = parseAbiParameters(SCHEMA);
@@ -67,6 +69,7 @@ export function recordProblem(r: MergeRecord): string | undefined {
   if (r.outcome !== 1 && r.outcome !== 2 && r.outcome !== 3) return 'outcome is 1, 2 or 3';
   if (!SOL_SIG.test(r.solanaTx)) return 'solanaTx is a base58 signature or empty';
   if (!Number.isSafeInteger(r.mergedAt) || r.mergedAt <= 0) return 'mergedAt is seconds since the epoch';
+  if (!Number.isSafeInteger(r.openedAt) || r.openedAt < 0 || r.openedAt > r.mergedAt) return 'openedAt is seconds since the epoch, no later than mergedAt (0 when unknown)';
   return undefined;
 }
 
@@ -74,14 +77,14 @@ export function recordProblem(r: MergeRecord): string | undefined {
 export function encodeMerge(r: MergeRecord): Hex {
   const bad = recordProblem(r);
   if (bad) throw new Error(`Not a merge record: ${bad}`);
-  return encodeAbiParameters(PARAMS, [r.repo, BigInt(r.pr), `0x${r.mergeSha}`, r.mergedByHash, r.harness, r.agentId, r.outcome, r.solanaTx, BigInt(r.mergedAt)]);
+  return encodeAbiParameters(PARAMS, [r.repo, BigInt(r.pr), `0x${r.mergeSha}`, r.mergedByHash, r.harness, r.agentId, r.outcome, r.solanaTx, BigInt(r.mergedAt), BigInt(r.openedAt)]);
 }
 
 /** Attestation data back as a record; undefined when it isn't one (anyone can attest with a public schema). */
 export function decodeMerge(data: Hex): MergeRecord | undefined {
   try {
-    const [repo, pr, sha, by, harness, agentId, outcome, solanaTx, mergedAt] = decodeAbiParameters(PARAMS, data);
-    const r: MergeRecord = { repo, pr: Number(pr), mergeSha: sha.slice(2).toLowerCase(), mergedByHash: by, harness, agentId, outcome: outcome as Outcome, solanaTx, mergedAt: Number(mergedAt) };
+    const [repo, pr, sha, by, harness, agentId, outcome, solanaTx, mergedAt, openedAt] = decodeAbiParameters(PARAMS, data);
+    const r: MergeRecord = { repo, pr: Number(pr), mergeSha: sha.slice(2).toLowerCase(), mergedByHash: by, harness, agentId, outcome: outcome as Outcome, solanaTx, mergedAt: Number(mergedAt), openedAt: Number(openedAt) };
     return recordProblem(r) ? undefined : r;
   } catch {
     return undefined;

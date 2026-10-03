@@ -33,6 +33,7 @@ export interface MergeRecord {
   outcome: Outcome;
   solanaTx: string;
   mergedAt: number;
+  openedAt: number;
 }
 export interface Attestor {
   readonly address: string;
@@ -92,6 +93,12 @@ export function revertedPr(p: GhPull, repo: string): number | undefined {
   return m && m[1].toLowerCase() === repo ? Number(m[2]) : undefined;
 }
 
+/** When GitHub says a pull request was opened (ms), when it says. */
+function openedAt(p: GhPull): { openedAt?: number } {
+  const t = Date.parse(p.createdAt);
+  return Number.isFinite(t) && t > 0 ? { openedAt: t } : {};
+}
+
 /** The agent CLI behind an office PR: its worker's, else its queue task's. */
 function harnessOf(f: ProofFloor, p: GhPull): { harness: string; worker?: string; name?: string } {
   const w = f.workers().find((x) => x.pr?.number === p.number || x.worktree?.branch === p.headRefName);
@@ -139,10 +146,10 @@ export class MergeProofs {
     const reverts = revertedPr(p, repo);
     const original = reverts !== undefined ? this.outbox.get(`${repo}#${reverts}:1`) : undefined;
     if (original) {
-      this.outbox.add({ key: `${repo}#${n}:2`, floor: floor.id, repo, pr: n, outcome: 2, harness: original.harness, ...(original.worker ? { worker: original.worker } : {}), ...(original.name ? { name: original.name } : {}), ref: original.key, mergedAt: now }, now);
+      this.outbox.add({ key: `${repo}#${n}:2`, floor: floor.id, repo, pr: n, outcome: 2, harness: original.harness, ...(original.worker ? { worker: original.worker } : {}), ...(original.name ? { name: original.name } : {}), ref: original.key, mergedAt: now, ...openedAt(p) }, now);
     } else if (floor.officePull(p)) {
       const solanaTx = this.deps.solanaTx?.(floor.id, n);
-      this.outbox.add({ key: `${repo}#${n}:1`, floor: floor.id, repo, pr: n, outcome: 1, ...harnessOf(floor, p), mergedAt: now, ...(solanaTx ? { solanaTx } : {}) }, now);
+      this.outbox.add({ key: `${repo}#${n}:1`, floor: floor.id, repo, pr: n, outcome: 1, ...harnessOf(floor, p), mergedAt: now, ...openedAt(p), ...(solanaTx ? { solanaTx } : {}) }, now);
     } else return;
     void this.flush();
   }
@@ -158,7 +165,7 @@ export class MergeProofs {
     const repo = await floor.repo();
     if (!repo) return;
     const now = this.now();
-    for (const p of closed) this.outbox.add({ key: `${repo}#${p.number}:3`, floor: floor.id, repo, pr: p.number, outcome: 3, ...harnessOf(floor, p), mergedAt: now }, now);
+    for (const p of closed) this.outbox.add({ key: `${repo}#${p.number}:3`, floor: floor.id, repo, pr: p.number, outcome: 3, ...harnessOf(floor, p), mergedAt: now, ...openedAt(p) }, now);
     void this.flush();
   }
 
@@ -236,6 +243,7 @@ export class MergeProofs {
       outcome: item.outcome,
       solanaTx: item.solanaTx ?? '',
       mergedAt: Math.floor(item.mergedAt / 1000),
+      openedAt: Math.min(Math.floor((item.openedAt ?? 0) / 1000), Math.floor(item.mergedAt / 1000)),
     };
     const r = await attestor.attest(record, ref?.uid);
     this.outbox.done(item, r);

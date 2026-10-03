@@ -9,7 +9,7 @@ When a person with write access merges a pull request the office's own worker op
 Registered once on Base Sepolia's SchemaRegistry predeploy (`0x4200000000000000000000000000000000000020`), revocable, no resolver:
 
 ```
-string repo, uint64 pr, bytes20 mergeSha, bytes32 mergedByHash, string harness, uint256 agentId, uint8 outcome, string solanaTx, uint64 mergedAt
+string repo, uint64 pr, bytes20 mergeSha, bytes32 mergedByHash, string harness, uint256 agentId, uint8 outcome, string solanaTx, uint64 mergedAt, uint64 openedAt
 ```
 
 | Field | What it holds |
@@ -22,7 +22,8 @@ string repo, uint64 pr, bytes20 mergeSha, bytes32 mergedByHash, string harness, 
 | `agentId` | the worker's ERC-8004 agent id once it has one, 0 until then |
 | `outcome` | 1 merged, 2 reverted, 3 closed unmerged |
 | `solanaTx` | the devnet signature of the bounty payout, when one was paid before the attestation |
-| `mergedAt` | seconds since the epoch |
+| `mergedAt` | seconds since the epoch: when it merged (or closed, for outcome 3) |
+| `openedAt` | seconds since the epoch: when the pull request was opened, so time to merge comes from the chain alone; 0 when unknown |
 
 Its UID (`schemaUid()` in `src/schema.ts`) is checked against the EAS SDK's own `SchemaRegistry.getSchemaUID`, and the encoded data against the SDK's `SchemaEncoder`, byte for byte.
 

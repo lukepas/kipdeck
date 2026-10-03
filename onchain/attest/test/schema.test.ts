@@ -7,7 +7,7 @@ import { sdkSchemaUid } from '../scripts/lib.js';
 
 const sdk = createRequire(import.meta.url)('@ethereum-attestation-service/eas-sdk') as { SchemaEncoder: new (s: string) => { encodeData(items: { name: string; type: string; value: unknown }[]): string } };
 
-const rec: MergeRecord = { repo: 'acme/app', pr: 42, mergeSha: 'ab'.repeat(20), mergedByHash: mergedByHashOf(583231), harness: 'claude', agentId: 7n, outcome: OUTCOME.merged, solanaTx: '5'.repeat(88), mergedAt: 1_790_000_000 };
+const rec: MergeRecord = { repo: 'acme/app', pr: 42, mergeSha: 'ab'.repeat(20), mergedByHash: mergedByHashOf(583231), harness: 'claude', agentId: 7n, outcome: OUTCOME.merged, solanaTx: '5'.repeat(88), mergedAt: 1_790_000_000, openedAt: 1_789_990_000 };
 
 test('the schema UID is the one the EAS SDK computes', () => {
   assert.equal(schemaUid().toLowerCase(), sdkSchemaUid().toLowerCase());
@@ -25,6 +25,7 @@ test('attestation data is byte for byte what the EAS SDK encodes', () => {
     { name: 'outcome', type: 'uint8', value: rec.outcome },
     { name: 'solanaTx', type: 'string', value: rec.solanaTx },
     { name: 'mergedAt', type: 'uint64', value: BigInt(rec.mergedAt) },
+    { name: 'openedAt', type: 'uint64', value: BigInt(rec.openedAt) },
   ]);
   assert.equal(encodeMerge(rec), theirs);
 });
@@ -39,6 +40,7 @@ test('records that are not merges are refused', () => {
   assert.match(recordProblem({ ...rec, outcome: 4 as 1 }) ?? '', /outcome/);
   assert.match(recordProblem({ ...rec, mergeSha: 'xyz' }) ?? '', /mergeSha/);
   assert.match(recordProblem({ ...rec, solanaTx: 'not base58!' }) ?? '', /solanaTx/);
+  assert.match(recordProblem({ ...rec, openedAt: rec.mergedAt + 1 }) ?? '', /openedAt/);
   assert.throws(() => encodeMerge({ ...rec, pr: 0 }), /pr is/);
 });
 

@@ -22,7 +22,7 @@ const OFFICE = privateKeyToAccount(ANVIL_DEV_KEY);
 
 let node: Anvil;
 let d: Deployment;
-const rec = (pr: number, harness: string, outcome: MergeRecord['outcome'], at = 1_790_000_000 + pr): MergeRecord => ({ repo: 'acme/app', pr, mergeSha: outcome === 3 ? '0'.repeat(40) : pr.toString(16).padStart(40, 'a'), mergedByHash: mergedByHashOf(99), harness, agentId: 0n, outcome, solanaTx: '', mergedAt: at });
+const rec = (pr: number, harness: string, outcome: MergeRecord['outcome'], at = 1_790_000_000 + pr): MergeRecord => ({ repo: 'acme/app', pr, mergeSha: outcome === 3 ? '0'.repeat(40) : pr.toString(16).padStart(40, 'a'), mergedByHash: mergedByHashOf(99), harness, agentId: 0n, outcome, solanaTx: '', mergedAt: at, openedAt: at - 3600 });
 
 before(async () => {
   node = await startAnvil(84532);

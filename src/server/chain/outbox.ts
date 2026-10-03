@@ -23,6 +23,8 @@ export interface OutboxItem {
   mergeSha?: string;
   mergedById?: number;
   mergedAt: number;
+  /** When the pull request was opened (ms), for time to merge. */
+  openedAt?: number;
   solanaTx?: string;
   tries: number;
   nextAt: number;
@@ -53,6 +55,8 @@ function clean(raw: unknown): OutboxItem | undefined {
   }
   const by = int(r.mergedById);
   if (by) out.mergedById = by;
+  const opened = int(r.openedAt);
+  if (opened) out.openedAt = opened;
   return out;
 }
 
