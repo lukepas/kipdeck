@@ -49,6 +49,27 @@ export class Showcase {
     return this.settings.get().enabled;
   }
 
+  /**
+   * Outcomes as any public route may show them, by the showcase's rules: none from a hidden
+   * repository, and a redacted one's without its name, its attestation (whose page decodes the name),
+   * its feedback, or its payout's transaction.
+   */
+  async publicEvents(events: readonly RepEvent[]): Promise<RepEvent[]> {
+    const repos = await this.repos();
+    const visibility = this.settings.get().repos;
+    const out: RepEvent[] = [];
+    for (const e of events) {
+      const v = visibilityOf(e.repo, { repos, visibility });
+      if (v === 'hidden') continue;
+      if (v === 'full') out.push(e);
+      else {
+        const { uid: _, paid, ...rest } = e;
+        out.push({ ...rest, repo: '', links: {}, ...(paid ? { paid: { amount: paid.amount, decimals: paid.decimals, tx: '' } } : {}) });
+      }
+    }
+    return out;
+  }
+
   /** Settings changed: the next request builds again. */
   invalidate() {
     this.cache = undefined;

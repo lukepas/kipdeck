@@ -236,9 +236,11 @@ function eventOf(e: RepEvent, repoShown: string | null, title: string | null, in
   if (typeof e.maintainer === 'string' && /^0x[0-9a-fA-F]{10,}/.test(e.maintainer) && !/^0x0*$/.test(e.maintainer)) out.maintainer = e.maintainer.slice(0, 12).toLowerCase();
   if (e.paid && /^\d{1,20}$/.test(e.paid.amount) && int(e.paid.decimals) !== undefined && e.paid.decimals <= 18) {
     out.paid = { amount: e.paid.amount, decimals: e.paid.decimals };
-    if (input.solana === 'devnet' && SIG.test(e.paid.tx)) out.links.solana = EXPLORERS.solanaTx(e.paid.tx);
+    if (repoShown && input.solana === 'devnet' && SIG.test(e.paid.tx)) out.links.solana = EXPLORERS.solanaTx(e.paid.tx);
   }
-  if (input.base === 'base-sepolia') {
+  // A redacted repository gets no links: the attestation's page decodes the repository's name, and
+  // the feedback and the payout lead to it as well.
+  if (repoShown && input.base === 'base-sepolia') {
     if (typeof e.uid === 'string' && HEX32.test(e.uid)) out.links.attestation = EXPLORERS.easAttestation(e.uid.toLowerCase());
     const fb = baseTxOf(e.links?.feedback);
     if (fb) out.links.feedback = EXPLORERS.baseTx(fb.toLowerCase());

@@ -9,6 +9,8 @@
 // JSON with an ETag (a matching If-None-Match gets 304) and a minute's caching, readable from any
 // site (no cookies are read or set). Off (404) unless the office runs with --reputation. The host
 // check (hosts.ts) runs first, as for every route. Nothing here takes a key or writes anything.
+// Outcomes go through the showcase's repository rules (a hidden one's left out, a redacted one's
+// name and links dropped), and an agent's operator shows as a pseudonym, never their name.
 import { createHash } from 'node:crypto';
 import { inWindow, leaderboard, parseWindow, reputationOf } from '../../../shared/reputation.js';
 import { send } from '../util.js';
@@ -45,7 +47,7 @@ export const reputationRoutes = {
     method: 'GET',
     prefix: '/api/public/reputation/',
     auth: 'public',
-    handle(ctx, r) {
+    async handle(ctx, r) {
       const rep = ctx.reputation;
       if (!rep) return off(r);
       const id = r.path.slice('/api/public/reputation/'.length);
@@ -54,10 +56,10 @@ export const reputationRoutes = {
       if (w === 'bad') return send(r.res, 400, { error: 'window is 7d, 30d, 90d or all' });
       const a = rep.identities.byAgentId(id);
       if (!a) return send(r.res, 404, { error: 'No such agent' });
-      const events = inWindow(rep.events(), w, nowS()).filter((e) => e.agentId === id);
+      const events = inWindow(await ctx.showcase.publicEvents(rep.events()), w, nowS()).filter((e) => e.agentId === id);
       sendPublic(r, {
         agentId: id,
-        agent: a.key,
+        agent: rep.publicName(a),
         harness: a.harness,
         card: `${baseOf(ctx, r)}/agents/${id}.json`,
         ...(a.tx ? { registered: `https://sepolia.basescan.org/tx/${a.tx}` } : {}),
@@ -72,7 +74,7 @@ export const reputationRoutes = {
     method: 'GET',
     path: '/api/public/leaderboard',
     auth: 'public',
-    handle(ctx, r) {
+    async handle(ctx, r) {
       const rep = ctx.reputation;
       if (!rep) return off(r);
       const by = r.url.searchParams.get('by') ?? 'harness';
@@ -88,7 +90,7 @@ export const reputationRoutes = {
         return sendPublic(r, { source: 'chain', by, window, asOf: built?.asOf, rows: board.rows });
       }
       const now = nowS();
-      sendPublic(r, { source: 'office', by, window, asOf: now, rows: leaderboard(inWindow(rep.events(), w, now), by) });
+      sendPublic(r, { source: 'office', by, window, asOf: now, rows: leaderboard(inWindow(await ctx.showcase.publicEvents(rep.events()), w, now), by) });
     },
   },
   /** GET /api/public/dataset.json */
@@ -108,7 +110,7 @@ export const reputationRoutes = {
           .list()
           .filter((a) => a.agentId)
           .map((a) => ({ agentId: a.agentId!, uri: a.uri ?? `${baseOf(ctx, r)}/agents/${a.agentId}.json`, tx: a.tx ?? '' })),
-        events: rep.events(),
+        events: await ctx.showcase.publicEvents(rep.events()),
       });
     },
   },

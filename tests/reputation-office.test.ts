@@ -14,16 +14,16 @@ import { backoff } from '../src/server/chain/outbox.js';
 import { Reputation, eventsOf, type RepSdk } from '../src/server/chain/reputation.js';
 import { ReputationIndex } from '../src/server/chain/rep-index.js';
 import { chainFlagsFromEnv, type ChainFlags } from '../src/server/chain/flags.js';
+import { Showcase } from '../src/server/showcase/service.js';
 import { reputationRoutes } from '../src/server/http/routes/reputation.js';
 import type { GhPull } from '../src/shared/protocol.js';
 
 const SHA = 'ab'.repeat(20);
 const pull = (number: number, extra: Partial<GhPull> = {}): GhPull => ({ number, title: `PR ${number}`, state: 'MERGED', isDraft: false, url: '', author: 'office-bot', labels: [], reviewDecision: '', headRefName: `office/w${number}`, baseRefName: 'main', createdAt: '2027-01-15T08:00:00Z', updatedAt: '', additions: 1, deletions: 0, checks: 'pass', body: '', closes: [], ...extra });
-const hash = (id: number) => `0x${id.toString(16).padStart(64, '0')}`;
 
 function flags(dir: string): ChainFlags {
   const f = chainFlagsFromEnv({});
-  f.attest = { ...f.attest, enabled: true, keyFile: path.join(dir, 'attester.json'), schema: `0x${'5c'.repeat(32)}` };
+  f.attest = { ...f.attest, enabled: true, repos: ['acme/app'], keyFile: path.join(dir, 'attester.json'), schema: `0x${'5c'.repeat(32)}` };
   f.reputation = { ...f.reputation, enabled: true, registrarKeyFile: path.join(dir, 'registrar.json'), cardBase: 'https://office.example' };
   return f;
 }
@@ -48,7 +48,6 @@ function fixture(opts: { mergedBy?: { login: string; id: number; type: string };
         return { uid, tx: `0x${'ee'.repeat(32)}`, link: `https://base-sepolia.easscan.org/attestation/view/${uid}` };
       },
     }),
-    mergedByHashOf: (id) => (id ? hash(id) : `0x${'0'.repeat(64)}`),
     readDeployment: () => undefined,
   };
   let nextId = 1n;
@@ -62,6 +61,9 @@ function fixture(opts: { mergedBy?: { login: string; id: number; type: string };
         }
         registered.push(o.keyFile);
         return { agentId: nextId++, tx: `0x${'12'.repeat(32)}`, link: '' };
+      },
+      async registered() {
+        return 'missing' as const;
       },
       async setAgentURI(agentId, uri) {
         uris.push([agentId, uri]);
@@ -93,6 +95,7 @@ function fixture(opts: { mergedBy?: { login: string; id: number; type: string };
     workers: () => [{ id: 'w7', name: 'Backend 1', provider: 'codex', pr: { number: 7, url: '' }, worktree: { path: '', branch: 'office/w8', base: 'main' } } as any],
     tasks: () => [],
     repo: async () => 'acme/app',
+    isPublic: async () => true,
     attested: () => {},
     operatorOf: () => ({ name: 'Ana', ...(opts.operatorLogin ? { login: opts.operatorLogin } : {}) }),
   };
@@ -229,7 +232,10 @@ test('the agent card names the agent, its wallets and its registration, and noth
   await f.settle();
   const card = (await f.rep.card('1', 'https://office.example')) as Record<string, any>;
   assert.equal(card.type, 'https://eips.ethereum.org/EIPS/eip-8004#registration-v1');
-  assert.equal(card.name, 'codex/ana/backend-1');
+  // The operator is a pseudonym on the card, never their name.
+  assert.match(card.name, /^codex\/op-[0-9a-f]{10}\/backend-1$/);
+  assert.equal(card.operator, card.name.split('/')[1]);
+  assert.doesNotMatch(JSON.stringify(card), /"Ana"|\/ana\/|by ana/i);
   assert.deepEqual(card.registrations, [{ agentId: 1, agentRegistry: 'eip155:84532:0x8004a818bfb912233c491871b3d84c89a494bd9e' }]);
   assert.ok(card.services.some((s: { name: string; endpoint: string }) => s.name === 'payoutWallet' && s.endpoint === 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1:FU7ER8xsCunDEWzFsgwiNRsouuTeGo4myzADf5myCQAz'));
   assert.ok(card.services.some((s: { name: string; endpoint: string }) => s.name === 'agentWallet' && s.endpoint === 'eip155:84532:0x7c2c45a17a432cf890e514f1aab67d941ec58314'));
@@ -271,7 +277,11 @@ test('the public routes: records and the board as JSON with an ETag, a 304 when 
   f.pulls.push(pull(7));
   f.proofs.merged(f.floor, 7);
   await f.settle();
-  const ctx = { reputation: f.rep, cfg: { chain: flags(f.dir), port: 4600, tls: undefined, trustProxy: false }, hosts: { requestHost: () => 'office.example' } };
+  // The showcase's repository rules apply to the public routes: acme/app is public here.
+  let isPrivate = false;
+  const floors = new Map([['f1', { github: { repoInfo: async () => ({ nameWithOwner: 'acme/app', private: isPrivate }) } }]]);
+  const showcase = new Showcase({ cfg: { dataDir: f.dir }, floors } as never);
+  const ctx = { reputation: f.rep, showcase, floors, cfg: { chain: flags(f.dir), port: 4600, tls: undefined, trustProxy: false }, hosts: { requestHost: () => 'office.example' } };
   const board = await call(reputationRoutes.leaderboard, ctx, '/api/public/leaderboard?by=agent&window=all');
   assert.equal(board.status, 200);
   assert.equal(board.body.rows[0].key, '1');
@@ -283,12 +293,20 @@ test('the public routes: records and the board as JSON with an ETag, a 304 when 
   assert.equal((await call(reputationRoutes.leaderboard, ctx, '/api/public/leaderboard?window=forever')).status, 400);
   assert.equal((await call(reputationRoutes.leaderboard, ctx, '/api/public/leaderboard?source=chain')).status, 404);
   const agent = await call(reputationRoutes.agent, ctx, '/api/public/reputation/1');
-  assert.deepEqual([agent.status, agent.body.agent, agent.body.stats.merged, agent.body.events.length], [200, 'codex/ana/backend-1', 1, 1]);
+  assert.deepEqual([agent.status, agent.body.stats.merged, agent.body.events.length, agent.body.events[0].repo], [200, 1, 1, 'acme/app']);
+  assert.match(agent.body.agent, /^codex\/op-[0-9a-f]{10}\/backend-1$/);
   assert.match(agent.body.events[0].links.attestation, /easscan/);
+  // A private repository's outcomes come without its name or the links that lead to it.
+  isPrivate = true;
+  const hidden = await call(reputationRoutes.agent, ctx, '/api/public/reputation/1');
+  assert.deepEqual([hidden.body.events[0].repo, hidden.body.events[0].links, hidden.body.events[0].uid], ['', {}, undefined]);
+  const dsPrivate = await call(reputationRoutes.dataset, ctx, '/api/public/dataset.json');
+  assert.doesNotMatch(JSON.stringify(dsPrivate.body.events), /acme|easscan/);
+  isPrivate = false;
   assert.equal((await call(reputationRoutes.agent, ctx, '/api/public/reputation/2')).status, 404);
   assert.equal((await call(reputationRoutes.agent, ctx, '/api/public/reputation/..%2Fx')).status, 404);
   const card = await call(reputationRoutes.card, ctx, '/agents/1.json');
-  assert.equal(card.body.name, 'codex/ana/backend-1');
+  assert.match(card.body.name, /^codex\/op-[0-9a-f]{10}\/backend-1$/);
   assert.equal((await call(reputationRoutes.card, ctx, '/agents/1.json.bak')).status, 404);
   const ds = await call(reputationRoutes.dataset, ctx, '/api/public/dataset.json');
   assert.deepEqual([ds.body.license, ds.body.events.length, ds.body.agents[0].uri], ['CC0-1.0', 1, 'https://office.example/agents/1.json']);

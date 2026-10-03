@@ -69,6 +69,9 @@ test('redaction: public repositories in full, private ones redacted, hidden ones
   const priv = doc.events.filter((e) => e.repo === null);
   assert.deepEqual(priv.map((e) => e.pr).sort(), [10, 11, 9]);
   assert.ok(priv.every((e) => e.title === null));
+  // ...and with no links: the attestation's page decodes the repository's name, and the feedback and the payout lead to it.
+  assert.ok(priv.every((e) => Object.keys(e.links).length === 0));
+  assert.ok(doc.events.some((e) => e.repo && e.links.attestation));
   assert.equal(doc.events.find((e) => e.pr === 5)?.title, 'Fix the login redirect loop');
   assert.equal(doc.counters.merged, 7);
   // A redacted bounty shows, with no repository and no fund link (the Action's URL would name it).
