@@ -126,9 +126,9 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
       ctx.rosterChanged();
       // A worker's PR may claim a bounty now, or have merged (made after the floors open, hence the ?).
       ctx.bounties?.pulls(floor);
-      if (ctx.proofs) void ctx.proofs.pulls(proofFloor(floor));
+      if (ctx.proofs) void ctx.proofs.pulls(proofFloor(floor, ctx));
     },
-    merged: (floor, n) => ctx.proofs?.merged(proofFloor(floor), n),
+    merged: (floor, n) => ctx.proofs?.merged(proofFloor(floor, ctx), n),
     queueChanged: (floor, state) => ctx.x402?.onQueue(floor.id, state),
     lent: (floor) => [...floors.values()].some((f) => f !== floor && worksIn(f, floor)),
     runAs: ctx.signins,

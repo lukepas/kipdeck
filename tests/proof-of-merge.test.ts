@@ -17,7 +17,7 @@ const SHA = 'ab'.repeat(20);
 
 const pull = (number: number, extra: Partial<GhPull> = {}): GhPull => ({ number, title: `PR ${number}`, state: 'MERGED', isDraft: false, url: `https://github.com/acme/app/pull/${number}`, author: 'office-bot', labels: [], reviewDecision: '', headRefName: `office/w${number}`, baseRefName: 'main', createdAt: '', updatedAt: '', additions: 1, deletions: 0, checks: 'pass', body: '', closes: [], ...extra });
 
-function fixture(opts: { chainId?: string; mergedBy?: { login: string; id: number; type: string }; permission?: string } = {}) {
+function fixture(opts: { chainId?: string; mergedBy?: { login: string; id: number; type: string }; closedBy?: { login: string; id: number; type: string }; permission?: string } = {}) {
   const dir = mkdtempSync(path.join(tmpdir(), 'office-pom-'));
   let now = 1_800_000_000_000;
   const sent: { record: MergeRecord; ref?: string }[] = [];
@@ -49,6 +49,7 @@ function fixture(opts: { chainId?: string; mergedBy?: { login: string; id: numbe
   const gh = async (args: string[]) => {
     if (args[0] === 'pr') return '[]';
     if (args[1].includes('/permission')) return `${opts.permission ?? 'write'}\n`;
+    if (args[1].includes('/issues/')) return JSON.stringify({ merged: false, by: opts.closedBy ?? by });
     return JSON.stringify({ merged: true, sha: SHA, by, head: 'acme/app', base: 'acme/app' });
   };
   const floor: ProofFloor = {
@@ -61,7 +62,7 @@ function fixture(opts: { chainId?: string; mergedBy?: { login: string; id: numbe
     repo: async () => 'acme/app',
     attested: (e) => attested.push(e),
   };
-  const make = () => new MergeProofs({ dataDir: dir, flags: FLAGS, floor: (id) => (id === 'f1' ? floor : undefined), loadSdk: async () => sdk, gh, fetch: fetchImpl, now: () => now, timer: false, solanaTx: (_f, pr) => (pr === 7 ? '5'.repeat(88) : undefined) });
+  const make = () => new MergeProofs({ dataDir: dir, flags: FLAGS, floor: (id) => (id === 'f1' ? floor : undefined), loadSdk: async () => sdk, gh, fetch: fetchImpl, now: () => now, timer: false, payout: (_f, pr) => (pr === 7 ? { tx: '5'.repeat(88), amount: '25000000', decimals: 6 } : undefined) });
   return { dir, pulls, sent, attested, chainCalls, floor, make, failNext: (n: number) => void (failures = n), tick: (ms: number) => void (now += ms), close: () => rmSync(dir, { recursive: true, force: true }) };
 }
 
@@ -179,7 +180,22 @@ test('an office PR closed without merging gets outcome 3', async (t) => {
   await proofs.pulls(f.floor);
   await proofs.flush();
   assert.equal(f.sent.length, 1);
-  assert.deepEqual([f.sent[0].record.outcome, f.sent[0].record.mergeSha, f.sent[0].record.mergedByHash], [3, '0'.repeat(40), `0x${'0'.repeat(64)}`]);
+  // Who closed it is a person with write access, asked of GitHub: their pseudonym goes in mergedByHash.
+  assert.deepEqual([f.sent[0].record.outcome, f.sent[0].record.mergeSha, f.sent[0].record.mergedByHash], [3, '0'.repeat(40), `0x${(4242).toString(16).padStart(64, '0')}`]);
+});
+
+test("an office PR closed by a bot, or by someone without write access, earns nothing", async (t) => {
+  for (const o of [{ closedBy: { login: 'stale[bot]', id: 77, type: 'Bot' } }, { permission: 'read' }]) {
+    const f = fixture(o); t.after(() => f.close());
+    const proofs = f.make();
+    f.pulls.push(pull(7, { state: 'OPEN' }));
+    await proofs.pulls(f.floor);
+    f.pulls[0] = pull(7, { state: 'CLOSED' });
+    await proofs.pulls(f.floor);
+    await proofs.flush();
+    assert.equal(f.sent.length, 0);
+    assert.match(new Outbox(f.dir).get('acme/app#7:3')!.skipped!, /closed by .*not a person with write access/);
+  }
 });
 
 test('attestations only go through Base Sepolia\'s public RPCs (or a local node named on the command line)', () => {

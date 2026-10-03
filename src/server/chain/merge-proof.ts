@@ -40,3 +40,26 @@ export async function pullFacts(dir: string, repo: string, n: number, issue: num
   }
   return facts;
 }
+
+/** Who closed a pull request without merging it, and their permission: a person with write access counts. */
+export interface CloseFacts {
+  merged: boolean;
+  closedBy?: { login: string; id: number; type: string };
+  closerPermission?: PullFacts['mergerPermission'];
+}
+
+/** What GitHub says about pull request `n` closed unmerged: who closed it (issues API's closed_by) and their permission. */
+export async function closeFacts(dir: string, n: number, run: GhRun = (a, c) => gh(a, c)): Promise<CloseFacts> {
+  const jq = '{merged: (.pull_request.merged_at != null), by: (if .closed_by then {login: .closed_by.login, id: .closed_by.id, type: .closed_by.type} else null end)}';
+  const p = JSON.parse(await run(['api', `repos/{owner}/{repo}/issues/${n}`, '--jq', jq], dir)) as { merged?: boolean; by?: { login?: string; id?: number; type?: string } | null };
+  const facts: CloseFacts = { merged: p.merged === true };
+  const by = p.by;
+  if (by && typeof by.login === 'string' && LOGIN.test(by.login) && Number.isSafeInteger(by.id)) {
+    facts.closedBy = { login: by.login, id: by.id as number, type: String(by.type ?? '') };
+    if (facts.closedBy.type === 'User') {
+      const perm = (await run(['api', `repos/{owner}/{repo}/collaborators/${by.login}/permission`, '--jq', '.permission'], dir).catch(() => 'none')).trim();
+      facts.closerPermission = (PERMISSIONS.has(perm) ? perm : 'none') as PullFacts['mergerPermission'];
+    }
+  }
+  return facts;
+}

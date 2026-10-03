@@ -193,11 +193,16 @@ export class Bounties {
     this.deps.broadcast({ t: 'bounties', floor: floor.id, state: this.state(floor) });
   }
 
-  /** The devnet signature of the bounty paid for PR `pr` on a floor, when one was (proof of merge carries it). */
-  paidTx(floorId: string, pr: number): string | undefined {
+  /** The bounty paid for PR `pr` on a floor, when one was: its devnet signature and amount (proof of merge carries it). */
+  payout(floorId: string, pr: number): { tx: string; amount: string; decimals: number } | undefined {
     const b = this.stores.get(floorId)?.list().find((x) => x.claimPr === pr);
     const sig = b?.txs.filter((t) => t.kind === 'paid').at(-1)?.sig;
-    return sig && /^[1-9A-HJ-NP-Za-km-z]{32,90}$/.test(sig) ? sig : undefined;
+    return b && sig && /^[1-9A-HJ-NP-Za-km-z]{32,90}$/.test(sig) ? { tx: sig, amount: b.amount, decimals: this.token.decimals } : undefined;
+  }
+
+  /** Whether a bounty claimed by PR `pr` still waits to be paid: merged and waiting for an admin, or being paid. */
+  payoutPending(floorId: string, pr: number): boolean {
+    return !!this.stores.get(floorId)?.list().some((x) => x.claimPr === pr && (x.phase === 'claimed' || x.phase === 'awaiting-approval' || x.phase === 'paying'));
   }
 
   /** The floor's pull requests came back from GitHub: look at its bounties again. */

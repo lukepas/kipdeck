@@ -22,6 +22,22 @@ export interface OutboxItem {
   /** Filled in when the office looked at GitHub (outcome 3 needs none of it). */
   mergeSha?: string;
   mergedById?: number;
+  /** The GitHub login of whoever merged it (or closed it, or merged the revert). */
+  mergerLogin?: string;
+  /** Who runs the agent (an account name, or the office), and their GitHub login when known. */
+  operator?: string;
+  operatorLogin?: string;
+  /** Who opened the pull request on GitHub. */
+  author?: string;
+  /** The merger is the agent's own operator, or opened the PR: a self-merge. */
+  self?: boolean;
+  /** The worker's ERC-8004 agent id, in decimal (with --reputation). */
+  agentId?: string;
+  /** mergedByHash as attested: a pseudonym of the person. */
+  maintainer?: string;
+  /** The bounty paid for it: amount in the token's smallest units, and its decimals. */
+  paidAmount?: string;
+  paidDecimals?: number;
   mergedAt: number;
   /** When the pull request was opened (ms), for time to merge. */
   openedAt?: number;
@@ -49,7 +65,7 @@ function clean(raw: unknown): OutboxItem | undefined {
   const pr = int(r.pr);
   if (!key || !floor || !repo || !harness || !pr || (r.outcome !== 1 && r.outcome !== 2 && r.outcome !== 3)) return undefined;
   const out: OutboxItem = { key, floor, repo, pr, outcome: r.outcome, harness, mergedAt: int(r.mergedAt) ?? 0, tries: int(r.tries) ?? 0, nextAt: int(r.nextAt) ?? 0 };
-  for (const k of ['worker', 'name', 'ref', 'mergeSha', 'solanaTx', 'error', 'skipped', 'uid', 'tx', 'link'] as const) {
+  for (const k of ['worker', 'name', 'ref', 'mergeSha', 'solanaTx', 'error', 'skipped', 'uid', 'tx', 'link', 'mergerLogin', 'operator', 'operatorLogin', 'author', 'maintainer'] as const) {
     const v = str(r[k], 300);
     if (v) out[k] = v;
   }
@@ -57,6 +73,11 @@ function clean(raw: unknown): OutboxItem | undefined {
   if (by) out.mergedById = by;
   const opened = int(r.openedAt);
   if (opened) out.openedAt = opened;
+  if (r.self === true) out.self = true;
+  if (typeof r.agentId === 'string' && /^\d{1,78}$/.test(r.agentId)) out.agentId = r.agentId;
+  if (typeof r.paidAmount === 'string' && /^\d{1,30}$/.test(r.paidAmount)) out.paidAmount = r.paidAmount;
+  const decimals = int(r.paidDecimals);
+  if (decimals !== undefined && decimals <= 18) out.paidDecimals = decimals;
   return out;
 }
 
@@ -99,6 +120,11 @@ export class Outbox {
   /** The ones owed and due now, oldest first. */
   due(now = Date.now()): OutboxItem[] {
     return [...this.items.values()].filter((i) => !i.uid && !i.skipped && i.nextAt <= now);
+  }
+
+  /** Every one, in the order they were owed. */
+  all(): OutboxItem[] {
+    return [...this.items.values()];
   }
 
   /** The ones still owed. */

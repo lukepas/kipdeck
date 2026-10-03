@@ -7,18 +7,25 @@
 // attester's key file is read by onchain/attest (loaded from its build at run time, as the escrow SDK
 // is), RPC goes through the network guard to Base Sepolia's public endpoints only, and before every
 // signature the node is asked for its chain id: anything but 0x14a34 (84532) is refused.
+//
+// With --reputation, each attestation carries the worker's ERC-8004 agent id (registered on first
+// use, see reputation.ts), notes when the person who merged or closed it was the agent's own operator
+// (a self-merge), and waits a while for a bounty claimed by the PR to be paid, so that the
+// attestation and its feedback say so. Who closed a PR unmerged is checked with GitHub like a merger.
 import { existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import type { GhPull, QueueTask, WorkerInfo } from '../../shared/protocol.js';
 import type { AttestFlags } from './flags.js';
 import { BASE_SEPOLIA_RPCS } from './flags.js';
-import { pullFacts, type GhRun } from './merge-proof.js';
+import { closeFacts, pullFacts, type GhRun } from './merge-proof.js';
 import { Outbox, type OutboxItem, type Outcome } from './outbox.js';
 import { guardedRpcFetch, sdkCandidates, type PullFacts } from './sdk.js';
 
 export const CHAIN_ID_HEX = '0x14a34';
 const ATTEST_BUILD = ['onchain', 'attest', 'dist', 'index.js'];
 const FLUSH_MS = 30_000;
+/** How long an attestation waits for the bounty its PR claimed to be paid, before going without it. */
+export const PAYOUT_WAIT_MS = 3 * 24 * 60 * 60_000;
 /** Who may merge for it to count: a person with at least write access. */
 const WRITERS = new Set(['admin', 'maintain', 'write']);
 
@@ -55,14 +62,29 @@ export interface ProofFloor {
   tasks(): readonly QueueTask[];
   repo(): Promise<string | undefined>;
   attested(e: { pr: number; text: string; link?: string; worker?: string; name?: string }): void;
+  /** Who runs a worker (its owner's account name, and their own GitHub login when they signed in to GitHub); the office's own otherwise. */
+  operatorOf?(workerId: string | undefined): { name: string; login?: string };
+}
+
+/** A bounty paid on Solana devnet for a PR: the release signature and the amount in the token's smallest units. */
+export interface Payout {
+  tx: string;
+  amount: string;
+  decimals: number;
 }
 
 export interface ProofDeps {
   dataDir: string;
   flags: AttestFlags;
   floor(id: string): ProofFloor | undefined;
-  /** The devnet signature of the bounty paid for PR `pr`, when there was one (see Bounties.paidTx). */
-  solanaTx?(floorId: string, pr: number): string | undefined;
+  /** The bounty paid for PR `pr`, when there was one (see Bounties.payout). */
+  payout?(floorId: string, pr: number): Payout | undefined;
+  /** Whether a bounty claimed by PR `pr` still waits to be paid (see Bounties.payoutPending). */
+  payoutPending?(floorId: string, pr: number): boolean;
+  /** --reputation: the worker's ERC-8004 agent id, registering it first if it has none (see Reputation.agentIdFor). */
+  agentIdFor?(item: OutboxItem): Promise<bigint>;
+  /** An attestation is on chain (its feedback is owed next). */
+  onAttested?(item: OutboxItem): void;
   toast?(floorId: string, text: string): void;
   /** Tests: the SDK, an attestor, how gh runs, the RPC fetch, the clock, and no timer. */
   loadSdk?: () => Promise<AttestSdk>;
@@ -99,13 +121,16 @@ function openedAt(p: GhPull): { openedAt?: number } {
   return Number.isFinite(t) && t > 0 ? { openedAt: t } : {};
 }
 
-/** The agent CLI behind an office PR: its worker's, else its queue task's. */
-function harnessOf(f: ProofFloor, p: GhPull): { harness: string; worker?: string; name?: string } {
+/** The agent CLI behind an office PR, and who runs it: its worker's, else its queue task's. */
+function harnessOf(f: ProofFloor, p: GhPull): { harness: string; worker?: string; name?: string; operator?: string; operatorLogin?: string; author?: string } {
   const w = f.workers().find((x) => x.pr?.number === p.number || x.worktree?.branch === p.headRefName);
-  if (w?.provider) return { harness: w.provider, worker: w.id, name: w.name };
-  const t = f.tasks().find((x) => x.pr?.number === p.number);
-  return { harness: t?.provider ?? 'unknown', ...(t?.workerId ? { worker: t.workerId } : {}), ...(t?.workerName ? { name: t.workerName } : {}) };
+  const t = w?.provider ? undefined : f.tasks().find((x) => x.pr?.number === p.number);
+  const who = w?.provider ? { harness: w.provider, worker: w.id, name: w.name } : { harness: t?.provider ?? 'unknown', ...(t?.workerId ? { worker: t.workerId } : {}), ...(t?.workerName ? { name: t.workerName } : {}) };
+  const op = f.operatorOf?.(who.worker);
+  return { ...who, ...(op ? { operator: op.name } : {}), ...(op?.login ? { operatorLogin: op.login } : {}), ...(p.author ? { author: p.author } : {}) };
 }
+
+const sameLogin = (a: string | undefined, b: string | undefined) => !!a && !!b && a.toLowerCase() === b.toLowerCase();
 
 export class MergeProofs {
   readonly outbox: Outbox;
@@ -146,12 +171,18 @@ export class MergeProofs {
     const reverts = revertedPr(p, repo);
     const original = reverts !== undefined ? this.outbox.get(`${repo}#${reverts}:1`) : undefined;
     if (original) {
-      this.outbox.add({ key: `${repo}#${n}:2`, floor: floor.id, repo, pr: n, outcome: 2, harness: original.harness, ...(original.worker ? { worker: original.worker } : {}), ...(original.name ? { name: original.name } : {}), ref: original.key, mergedAt: now, ...openedAt(p) }, now);
+      const { worker, name, operator, operatorLogin, agentId } = original;
+      this.outbox.add({ key: `${repo}#${n}:2`, floor: floor.id, repo, pr: n, outcome: 2, harness: original.harness, ...(worker ? { worker } : {}), ...(name ? { name } : {}), ...(operator ? { operator } : {}), ...(operatorLogin ? { operatorLogin } : {}), ...(agentId ? { agentId } : {}), ref: original.key, mergedAt: now, ...openedAt(p) }, now);
     } else if (floor.officePull(p)) {
-      const solanaTx = this.deps.solanaTx?.(floor.id, n);
-      this.outbox.add({ key: `${repo}#${n}:1`, floor: floor.id, repo, pr: n, outcome: 1, ...harnessOf(floor, p), mergedAt: now, ...openedAt(p), ...(solanaTx ? { solanaTx } : {}) }, now);
+      this.outbox.add({ key: `${repo}#${n}:1`, floor: floor.id, repo, pr: n, outcome: 1, ...harnessOf(floor, p), mergedAt: now, ...openedAt(p), ...this.paid(floor.id, n) }, now);
     } else return;
     void this.flush();
+  }
+
+  /** The payout of PR `pr`'s bounty, as outbox fields. */
+  private paid(floorId: string, pr: number): Pick<OutboxItem, 'solanaTx' | 'paidAmount' | 'paidDecimals'> {
+    const p = this.deps.payout?.(floorId, pr);
+    return p ? { solanaTx: p.tx, paidAmount: p.amount, paidDecimals: p.decimals } : {};
   }
 
   /** A fresh list of a floor's pull requests: an office PR that closed without merging owes outcome 3. */
@@ -215,6 +246,20 @@ export class MergeProofs {
     return pullFacts(floor.dir, item.repo, item.pr, 0, true, !!p?.fork, this.deps.gh);
   }
 
+  /** Who closed an office PR unmerged (outcome 3), once: only a person with write access counts. Returns why not, if not. */
+  private async closer(item: OutboxItem): Promise<string | undefined> {
+    if (item.outcome !== 3 || item.mergedById) return undefined;
+    const floor = this.deps.floor(item.floor);
+    if (!floor) throw new Error('its floor is closed');
+    const c = await closeFacts(floor.dir, item.pr, this.deps.gh);
+    if (c.merged) return 'GitHub says it merged';
+    if (c.closedBy?.type !== 'User' || !WRITERS.has(c.closerPermission ?? 'none')) return `closed by ${c.closedBy?.login ?? 'someone unknown'}, not a person with write access`;
+    item.mergedById = c.closedBy.id;
+    item.mergerLogin = c.closedBy.login;
+    this.outbox.save();
+    return undefined;
+  }
+
   private async send(item: OutboxItem) {
     const facts = await this.facts(item);
     if (facts) {
@@ -223,6 +268,19 @@ export class MergeProofs {
       if (!facts.mergeSha) throw new Error('GitHub has not said which commit merged it yet');
       item.mergeSha = facts.mergeSha;
       item.mergedById = facts.mergedBy.id;
+      item.mergerLogin = facts.mergedBy.login;
+      this.outbox.save();
+    }
+    const notByAPerson = await this.closer(item);
+    if (notByAPerson) return this.outbox.skip(item, notByAPerson);
+    // A self-merge: the person who merged (or closed, or reverted) it runs the agent, or opened the PR.
+    item.self = sameLogin(item.mergerLogin, item.operatorLogin) || (item.outcome !== 2 && sameLogin(item.mergerLogin, item.author));
+    if (item.outcome === 1 && !item.solanaTx) {
+      Object.assign(item, this.paid(item.floor, item.pr));
+      if (!item.solanaTx && this.deps.payoutPending?.(item.floor, item.pr) && this.now() - item.mergedAt < PAYOUT_WAIT_MS) throw new Error('waiting for its bounty to be paid, so the attestation says so');
+    }
+    if (this.deps.agentIdFor && item.agentId === undefined) {
+      item.agentId = (await this.deps.agentIdFor(item)).toString();
       this.outbox.save();
     }
     const ref = item.ref ? this.outbox.get(item.ref) : undefined;
@@ -237,16 +295,18 @@ export class MergeProofs {
       repo: item.repo,
       pr: item.pr,
       mergeSha: item.outcome === 3 ? '0'.repeat(40) : (item.mergeSha ?? ''),
-      mergedByHash: sdk.mergedByHashOf(item.outcome === 3 ? undefined : item.mergedById),
+      mergedByHash: sdk.mergedByHashOf(item.mergedById),
       harness: /^[a-z0-9_-]{1,32}$/.test(item.harness) ? item.harness : 'unknown',
-      agentId: 0n,
+      agentId: BigInt(item.agentId ?? 0),
       outcome: item.outcome,
       solanaTx: item.solanaTx ?? '',
       mergedAt: Math.floor(item.mergedAt / 1000),
       openedAt: Math.min(Math.floor((item.openedAt ?? 0) / 1000), Math.floor(item.mergedAt / 1000)),
     };
     const r = await attestor.attest(record, ref?.uid);
+    item.maintainer = record.mergedByHash;
     this.outbox.done(item, r);
+    this.deps.onAttested?.(item);
     const what = item.outcome === 1 ? 'merged' : item.outcome === 2 ? `reverted (it reverts #${ref?.pr})` : 'closed without merging';
     const text = `Proof of merge on Base Sepolia: PR #${item.pr} ${what}, by ${item.name ?? 'a worker'} (${item.harness})`;
     this.deps.floor(item.floor)?.attested({ pr: item.pr, text, link: r.link, ...(item.worker ? { worker: item.worker } : {}), ...(item.name ? { name: item.name } : {}) });

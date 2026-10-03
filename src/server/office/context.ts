@@ -23,6 +23,8 @@ import type { LeaveOnMerge } from '../leave-on-merge.js';
 import type { ChatLog } from '../history.js';
 import type { Bounties } from '../bounties.js';
 import type { X402Gateway } from '../x402/gateway.js';
+import type { Reputation } from '../chain/reputation.js';
+import type { ReputationIndex } from '../chain/rep-index.js';
 import type { MergeProofs } from '../chain/attest.js';
 import type { AgentProvider, FloorInfo, Me, Reminder, ReminderSnooze, ReviewPull, RosterEntry, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
 import type { Client } from './client.js';
@@ -90,6 +92,10 @@ export interface LateServices {
   x402?: X402Gateway;
   /** Proof-of-merge attestations on Base Sepolia, with --attest (see chain/attest.ts). */
   proofs?: MergeProofs;
+  /** ERC-8004 identities and merge feedback, with --reputation (see chain/reputation.ts). */
+  reputation?: Reputation;
+  /** The board rebuilt from the chain alone by onchain/indexer, with --reputation-index (see chain/rep-index.ts). */
+  reputationIndex?: ReputationIndex;
 }
 
 /** Sending to browsers (office/messaging.ts). */

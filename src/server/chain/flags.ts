@@ -4,6 +4,8 @@
 //                 floor's queue, held for an admin (see server/x402/)
 //   --attest ...  proof-of-merge attestations on Base Sepolia for every office PR a person merged
 //                 (see chain/attest.ts)
+//   --reputation  ERC-8004 identities for the office's agents and feedback for each attested outcome
+//                 (see chain/reputation.ts); needs --attest, whose key gives the feedback
 //
 // Testnets only: Base Sepolia and Solana devnet. Keys are named by file path, never passed as values.
 import path from 'node:path';
@@ -37,9 +39,23 @@ export interface AttestFlags {
   eas?: string;
 }
 
+export interface ReputationFlags {
+  enabled: boolean;
+  /** Registers the office's agents and owns their identities (never the key that gives feedback). */
+  registrarKeyFile: string;
+  /** The registries, when not the live ERC-8004 ones on Base Sepolia (a local test chain). */
+  identity?: string;
+  registry?: string;
+  /** Where agent cards are served from (https://office.example): each identity's agentURI is <base>/agents/<id>.json. */
+  cardBase?: string;
+  /** Minutes between runs of onchain/indexer rebuilding the board from the chain (0: never). */
+  indexMinutes: number;
+}
+
 export interface ChainFlags {
   x402: X402Flags;
   attest: AttestFlags;
+  reputation: ReputationFlags;
 }
 
 export const X402_FACILITATOR = 'https://x402.org/facilitator';
@@ -69,6 +85,12 @@ export function chainFlagsFromEnv(env: NodeJS.ProcessEnv = process.env): ChainFl
       mode: env.AGENT_OFFICE_ATTEST_MODE === 'event' ? 'event' : 'eas',
       ...(env.AGENT_OFFICE_ATTEST_CONTRACT ? { contract: env.AGENT_OFFICE_ATTEST_CONTRACT } : {}),
     },
+    reputation: {
+      enabled: on(env.AGENT_OFFICE_REPUTATION),
+      registrarKeyFile: env.AGENT_OFFICE_REPUTATION_REGISTRAR_KEY_FILE || path.join(KEY_DIR, 'base-registrar.json'),
+      ...(env.AGENT_OFFICE_REPUTATION_CARD_BASE ? { cardBase: env.AGENT_OFFICE_REPUTATION_CARD_BASE } : {}),
+      indexMinutes: Number(env.AGENT_OFFICE_REPUTATION_INDEX_MINUTES) || 0,
+    },
   };
 }
 
@@ -86,6 +108,11 @@ const VALUED: Record<string, (f: ChainFlags, v: string) => void> = {
   '--attest-mode': (f, v) => void (f.attest.mode = v === 'event' ? 'event' : 'eas'),
   '--attest-contract': (f, v) => void (f.attest.contract = v),
   '--attest-eas': (f, v) => void (f.attest.eas = v),
+  '--reputation-registrar-key-file': (f, v) => void (f.reputation.registrarKeyFile = v),
+  '--reputation-identity': (f, v) => void (f.reputation.identity = v),
+  '--reputation-registry': (f, v) => void (f.reputation.registry = v),
+  '--reputation-card-base': (f, v) => void (f.reputation.cardBase = v),
+  '--reputation-index': (f, v) => void (f.reputation.indexMinutes = Number(v)),
 };
 
 /**
@@ -96,6 +123,7 @@ export function takeChainFlag(f: ChainFlags, argv: string[], i: number): number 
   const a = argv[i];
   if (a === '--x402') return (f.x402.enabled = true), 1;
   if (a === '--attest') return (f.attest.enabled = true), 1;
+  if (a === '--reputation') return (f.reputation.enabled = true), 1;
   const set = VALUED[a];
   if (!set) return 0;
   const v = argv[i + 1];
@@ -128,4 +156,19 @@ export const CHAIN_HELP = `      --x402              Take paid tasks over x402 (
                           The schema UID (default: onchain/attest/deployments)
       --attest-mode eas|event, --attest-contract <0x>
                           The MergeAttestor fallback instead of EAS
+      --reputation        ERC-8004 identities for the office's agents, and
+                          feedback for every attested merge, revert or close
+                          (needs --attest; env AGENT_OFFICE_REPUTATION=1)
+      --reputation-registrar-key-file <path>
+                          Owns the identities (default
+                          ~/.config/agent-office-chain/base-registrar.json)
+      --reputation-card-base <https url>
+                          Where this office is reached: agent cards are
+                          <url>/agents/<id>.json
+      --reputation-identity <0x>, --reputation-registry <0x>
+                          Registries on a local node (default: the live
+                          ERC-8004 ones on Base Sepolia)
+      --reputation-index <minutes>
+                          Rebuild the public board from the chain alone with
+                          onchain/indexer every so often (default never)
 `;
