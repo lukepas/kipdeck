@@ -80,6 +80,8 @@ export interface ChainSettingsState {
   /** Key files on the office's machine (never the keys themselves). */
   attesterKey: string;
   approverKey: string;
+  /** The approver as an admin's browser wallet (no approver key on the office's machine): releases are signed there. */
+  approverWallet?: string;
   /** The attester's and approver's public addresses, once their key files read. */
   attester?: string;
   approver?: string;
@@ -102,12 +104,14 @@ export type BountiesClientMsg =
   | { t: 'bounty.fund.prepare'; issue: number; amount: string; wallet: string }
   /** Admins: approve the payout of a bounty waiting for approval. Answered with `bounty.approved`. */
   | { t: 'bounty.approve'; issue: number; floor?: string }
-  /** Crank an expired bounty's contributions back to their funders (anyone). */
+  /** Admins: the approver's wallet sent the release `bounty.approved` handed it; look at the chain again. */
+  | { t: 'bounty.release.sent'; issue: number; floor?: string; sig?: string }
+  /** Admins: crank an expired bounty's contributions back to their funders (the attester pays the fees). */
   | { t: 'bounty.refund'; issue: number; floor?: string }
   /** Your payout wallet, for bounties your workers' PRs earn (null: forget it). */
   | { t: 'bounty.wallet'; address: string | null }
   /** Admins: change the bounty settings. */
-  | { t: 'bounty.settings'; patch: Partial<Pick<ChainSettingsState, 'enabled' | 'backend' | 'programId' | 'mint' | 'attesterKey' | 'approverKey' | 'actionRepos' | 'actionTitles' | 'expiryDays'>> }
+  | { t: 'bounty.settings'; patch: Partial<Pick<ChainSettingsState, 'enabled' | 'backend' | 'programId' | 'mint' | 'attesterKey' | 'approverKey' | 'approverWallet' | 'actionRepos' | 'actionTitles' | 'expiryDays'>> }
   /** The settings, for ⚙️ Settings (answered with `bounty.settings`). */
   | { t: 'bounty.settings.get' };
 
@@ -115,8 +119,11 @@ export type BountiesServerMsg =
   | { t: 'bounties'; floor: string; state: BountiesState }
   /** To whoever asked: the base64 transaction for their wallet, the Blink link, or why not. */
   | { t: 'bounty.prepared'; issue: number; tx?: string; blink?: string; error?: string }
-  /** To whoever approved: the payout's signature and link, or why it didn't go. */
-  | { t: 'bounty.approved'; issue: number; sig?: string; url?: string; error?: string }
+  /**
+   * To whoever approved: the payout's signature and link, or why it didn't go. With an approver
+   * wallet, `tx` instead: the release the attester signed, for that wallet (`approver`) to sign and send.
+   */
+  | { t: 'bounty.approved'; issue: number; floor?: string; sig?: string; url?: string; error?: string; tx?: string; approver?: string }
   /** To everyone on the floor: a bounty paid out. */
   | { t: 'bounty.paid'; floor: string; issue: number; pr: number; amount: string; symbol: string; workerName?: string; url?: string }
   | { t: 'bounty.settings'; state: ChainSettingsState };

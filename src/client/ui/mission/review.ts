@@ -53,7 +53,9 @@ function pullRow(deps: MissionDeps, i: ReviewItem, now: number, showFloor: boole
 /** A bounty waiting for a person: a payout to approve, or a payout wallet to set. */
 function payoutRow(deps: MissionDeps, i: ReviewItem, now: number, showFloor: boolean): HTMLElement {
   const p = i.payout!;
-  const sub = [showFloor ? p.floorName : '', `issue #${p.issue}`, p.amount].filter(Boolean).join(' · ');
+  // A payout must be approved before the bounty expires: the escrow refuses it after that.
+  const left = p.kind === 'approve' && p.expiry ? (p.expiry > now ? `expires in ${duration(p.expiry - now)}` : 'expired') : '';
+  const sub = [showFloor ? p.floorName : '', `issue #${p.issue}`, p.amount, left].filter(Boolean).join(' · ');
   return h(
     'li.mc-row.review',
     { tabindex: '-1', 'data-id': i.key },

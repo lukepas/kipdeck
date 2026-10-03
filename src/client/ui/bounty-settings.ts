@@ -25,6 +25,7 @@ export function bountySettings(net: Net): { nodes: Node[]; off: () => void } {
   const mint = text('Mint (default devnet USDC)');
   const attester = text('Attester key file');
   const approver = text('Approver key file');
+  const approverWallet = text('Approver wallet address (recommended: no approver key on this machine)');
   const repos = text('owner/name, owner/other');
   const days = h('input', { type: 'number', min: '1', max: '365', style: 'width:6em' }) as HTMLInputElement;
   const titles = h('input', { type: 'checkbox' }) as HTMLInputElement;
@@ -38,6 +39,7 @@ export function bountySettings(net: Net): { nodes: Node[]; off: () => void } {
           mint: mint.value.trim() || null,
           attesterKey: attester.value.trim() || undefined,
           approverKey: approver.value.trim() || undefined,
+          approverWallet: approverWallet.value.trim() || null,
           actionRepos: repos.value.split(/[\s,]+/).filter(Boolean),
           expiryDays: Number(days.value) || undefined,
           actionTitles: titles.checked,
@@ -46,7 +48,7 @@ export function bountySettings(net: Net): { nodes: Node[]; off: () => void } {
     'Save',
   );
   const keysNote = h('p.setting-note');
-  const adminBox = h('div', {}, onRow, backendRow, field('Program', program), field('Mint', mint), field('Attester key (signs claims, vouches for merges)', attester), field('Approver key (read only when an admin approves a payout)', approver), field('Repositories the public Action funds', repos), field('Days a new bounty runs', days), h('label', {}, titles, ' Show issue titles on the public Action'), h('div.seg', { style: 'margin-top:8px' }, save), keysNote);
+  const adminBox = h('div', {}, onRow, backendRow, field('Program', program), field('Mint', mint), field('Attester key (signs claims, vouches for merges)', attester), field('Approver wallet (an admin signs each payout in this browser wallet)', approverWallet), field('Approver key (only without an approver wallet; read when an admin approves)', approver), field('Repositories the public Action funds', repos), field('Days a new bounty runs', days), h('label', {}, titles, ' Show issue titles on the public Action'), h('div.seg', { style: 'margin-top:8px' }, save), keysNote);
   const paint = () => {
     const st = s();
     wallet.value = st?.myWallet ?? '';
@@ -56,10 +58,11 @@ export function bountySettings(net: Net): { nodes: Node[]; off: () => void } {
     mint.value = st.mint ?? '';
     attester.value = st.attesterKey;
     approver.value = st.approverKey;
+    approverWallet.value = st.approverWallet ?? '';
     repos.value = st.actionRepos.join(', ');
     days.value = String(st.expiryDays);
     titles.checked = st.actionTitles;
-    keysNote.textContent = `Testnet only: devnet, or the mock. ${st.attester ? `Attester ${st.attester}.` : 'The attester key isn\'t read yet.'} ${st.approver ? `Approver ${st.approver}.` : ''} Workers run as the same user as the office and could read these files: use dedicated testnet keys with nothing of value on them.`;
+    keysNote.textContent = `Testnet only: devnet, or the mock. ${st.attester ? `Attester ${st.attester}.` : 'The attester key isn\'t read yet.'} ${st.approver ? `Approver ${st.approver}.` : ''} Workers run as the same user as the office and could read these files: use dedicated testnet keys with nothing of value on them, and set an approver wallet so no file here can pay anyone.`;
   };
   paint();
   const offs = [store.on('bountySettings', paint), store.on('me', paint)];

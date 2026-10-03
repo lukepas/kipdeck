@@ -18,6 +18,8 @@ export interface ReviewPayout {
   workerName?: string;
   kind: 'approve' | 'wallet';
   note?: string;
+  /** When the bounty expires (ms): a payout must be approved before then, or the escrow refuses it. */
+  expiry?: number;
 }
 
 export interface ReviewItem {
@@ -122,7 +124,7 @@ export function bountyPayouts(floor: { id: string; name: string }, state: Bounti
     const since = b.txs.length ? b.txs[b.txs.length - 1].at : 0;
     const amount = `${tokenAmount(b.amount, b.decimals)} ${b.symbol}`;
     const base = { floor: floor.id, floorName: floor.name, issue: b.issue, amount, since, ...(b.claimPr ? { pr: b.claimPr } : {}), ...(b.workerName ? { workerName: b.workerName } : {}) };
-    if (b.phase === 'awaiting-approval') out.push({ ...base, kind: 'approve' });
+    if (b.phase === 'awaiting-approval') out.push({ ...base, kind: 'approve', expiry: b.expiry, ...(b.note ? { note: b.note } : {}) });
     else if (b.phase === 'open' && b.note && /payout wallet/.test(b.note)) out.push({ ...base, kind: 'wallet', note: b.note });
   }
   return out;

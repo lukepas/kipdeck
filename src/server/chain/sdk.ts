@@ -15,6 +15,9 @@ export interface BountyRef {
   repo: string;
   issue: number;
   nonce?: number;
+  /** The keys the bounty was opened with: both are in its address. The office always names its own. */
+  attester?: Address;
+  approver?: Address;
 }
 
 /** A bounty account, as the SDK decodes it (the fields the office reads). */
@@ -82,6 +85,8 @@ export interface AttesterApi {
   readonly address: Address;
   claim(ref: BountyRef, facts: PullFacts, wallet: Address): Promise<Receipt>;
   release(ref: BountyRef, facts: PullFacts, approver: Signer): Promise<Receipt>;
+  /** A release the attester signed, for the approver's browser wallet to sign and send (base64). */
+  prepareRelease(ref: BountyRef, facts: PullFacts, approver: Address): Promise<string>;
 }
 
 export interface FundTxParams {
@@ -92,22 +97,24 @@ export interface FundTxParams {
   nonce: number;
   amount: bigint;
   mint: Address;
-  open?: { attester: Address; approver: Address; expiryTs: number };
+  attester: Address;
+  approver: Address;
+  open?: { expiryTs: number };
   recentBlockhash: string;
 }
 
 /** The SDK's exports the office uses. */
 export interface EscrowSdk {
   createEscrow(o: { backend: 'mock' | 'solana-devnet'; programId?: Address; rpc?: string; mint?: Address; testMint?: boolean; fetch?: typeof fetch }): Escrow;
-  Attester: new (escrow: Escrow, key: Signer) => AttesterApi;
+  Attester: new (escrow: Escrow, key: Signer, opts?: { pseudonym?: (githubUserId: number) => string }) => AttesterApi;
   checkClaim(f: PullFacts): Verdict;
   checkRelease(f: PullFacts): Verdict;
   readKeypair(file: string): Signer & { secretKey: Uint8Array };
   isAddress(a: string): boolean;
   parseAmount(text: string, decimals: number): bigint;
   formatAmount(amount: bigint, decimals: number): string;
-  findBountyPda(programId: Address, repo: string, issue: number, nonce?: number): { address: Address; bump: number };
-  activeBounty(bounties: ChainBounty[], issue: number): { nonce: number; bounty?: ChainBounty };
+  findBountyPda(programId: Address, repo: string, issue: number, nonce: number, keys: { attester: Address; approver: Address }): { address: Address; bump: number };
+  activeBounty(bounties: readonly ChainBounty[], issue: number, o?: { attester?: Address; approver?: Address; mint?: Address; now?: number }): { nonce: number; bounty?: ChainBounty };
   buildFundTransaction(p: FundTxParams): string;
   fundActionGet(p: { baseUrl: string; repo: string; issue: number; issueTitle?: string; icon: string; total: bigint; decimals: number; symbol: string; closed?: string }): unknown;
   actionsJson(): unknown;

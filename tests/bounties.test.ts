@@ -342,3 +342,212 @@ test('a local validator is reached only when the guard is told to let loopback t
   const rpc = new sdkSrc.Rpc(`http://${host}`, f);
   assert.equal(await rpc.call('getHealth', []), 'ok');
 });
+
+/** The office's keys, as setup() reads them, and a ref at the office's own bounty address. */
+const ATT = sdkSrc.mockAddress('solana-attester.json');
+const APP = sdkSrc.mockAddress('solana-approver.json');
+const own = (nonce = 0) => ({ repo: REPO, issue: 12, nonce, attester: ATT, approver: APP });
+
+/** Claims PR 77 and merges it, so the bounty waits for an admin. */
+async function toApproval(s: Awaited<ReturnType<typeof setup>>) {
+  s.b.settings.setWallet('acct1', OPERATOR, () => true);
+  await s.fund(20_000_000n);
+  s.floor.github.pulls.items = [pull(77)];
+  await s.b.sync(s.floor as any);
+  s.floor.github.pulls.items = [pull(77, { state: 'MERGED' })];
+  await s.b.sync(s.floor as any);
+  assert.equal(item(s.b, s.floor).phase, 'awaiting-approval');
+}
+
+test("a stranger's bounty on the same issue, with keys of their own, is never shown, funded or followed", async (t) => {
+  const s = await setup();
+  t.after(s.cleanup);
+  const [squatter, accomplice] = [sdkSrc.mockAddress('squatter'), sdkSrc.mockAddress('accomplice')];
+  const theirs = { repo: REPO, issue: 12, nonce: 0, attester: squatter, approver: accomplice };
+  await s.mock.open(theirs, { expiryTs: 1_800_086_400, attester: squatter, approver: accomplice }, { publicKey: squatter });
+  await s.mock.fund(theirs, 1n, { publicKey: squatter });
+  await s.b.sync(s.floor as any);
+  assert.deepEqual(s.b.state(s.floor as any).items, []);
+  // Funding from the office (and so the Blink) opens the office's own bounty, at its own address.
+  assert.deepEqual(await s.b.prepareFund(s.floor as any, 12, '7', FUNDER), {});
+  const mine = (await s.mock.get(own()))!;
+  assert.equal(mine.total, 7_000_000n);
+  assert.notEqual(mine.address, (await s.mock.get(theirs))!.address);
+  assert.equal((await s.mock.get(theirs))!.total, 1n);
+  assert.equal(item(s.b, s.floor).pda, mine.address);
+  assert.equal(((await s.b.actionGet(REPO, 12, 'https://office.example')).body as any).description.includes('7 USDC'), true);
+});
+
+test('past its expiry a bounty takes no more funds: the next one opens, and the old one is still cranked back', async (t) => {
+  const s = await setup();
+  t.after(s.cleanup);
+  await s.fund(3_000_000n);
+  await s.b.sync(s.floor as any);
+  s.tick(86_401);
+  await s.b.sync(s.floor as any);
+  assert.equal(item(s.b, s.floor).phase, 'expired');
+  assert.deepEqual(await s.b.prepareFund(s.floor as any, 12, '2', FUNDER), {});
+  assert.equal((await s.mock.get(own(1)))!.total, 2_000_000n);
+  assert.equal(item(s.b, s.floor).nonce, 1);
+  // Nonce 0 expired unrefunded: an admin's refund still sends it back.
+  assert.equal(await s.b.refund(s.floor as any, 12), undefined);
+  assert.equal((await s.mock.get(own(0)))!.state, 'refunded');
+});
+
+test('no funding while a merge waits for approval, from the office or the Blink', async (t) => {
+  const s = await setup();
+  t.after(s.cleanup);
+  await toApproval(s);
+  assert.match((await s.b.prepareFund(s.floor as any, 12, '5', FUNDER)).error!, /awaiting approval: nothing more can go in/);
+  assert.equal(((await s.b.actionGet(REPO, 12, 'https://office.example')).body as any).disabled, true);
+});
+
+test('two admins approving at once pay once, and the bounty ends released', async (t) => {
+  const s = await setup();
+  t.after(s.cleanup);
+  await toApproval(s);
+  const [a, b] = await Promise.all([s.b.approve(s.floor as any, 12, 'Grace'), s.b.approve(s.floor as any, 12, 'Ada')]);
+  assert.equal([a, b].filter((r) => r.sig).length, 1);
+  assert.match([a, b].find((r) => r.error)!.error!, /already being approved|Nothing waits/);
+  assert.equal(item(s.b, s.floor).phase, 'released');
+  assert.equal(s.mock.balance(OPERATOR), 20_000_000n);
+});
+
+test("a payout that never landed (the office stopped mid-way) goes back before an admin instead of sticking at 'paying'", async (t) => {
+  const s = await setup();
+  t.after(s.cleanup);
+  await toApproval(s);
+  const store = (s.b as any).store(s.floor);
+  store.put({ ...store.get(12), phase: 'paying' });
+  await s.b.sync(s.floor as any);
+  const v = item(s.b, s.floor);
+  assert.equal(v.phase, 'awaiting-approval');
+  assert.match(v.note!, /didn't land/);
+  assert.match((await s.b.approve(s.floor as any, 12, 'Grace')).sig!, /^mock-tx-/);
+});
+
+test('a release that landed without the office seeing it (a confirm timeout, a wallet) is recorded as paid from the chain', async (t) => {
+  const s = await setup();
+  t.after(s.cleanup);
+  await toApproval(s);
+  const r = await s.mock.release(own(), { prNumber: 77, mergeSha: 'ab'.repeat(20) }, { publicKey: ATT }, { publicKey: APP });
+  await s.b.sync(s.floor as any);
+  assert.equal(item(s.b, s.floor).phase, 'released');
+  const paid = s.timeline.find((x) => x.kind === 'bounty-paid')!;
+  assert.equal(paid.e.tx, r.signature);
+  assert.ok(s.sent.some((m) => m.t === 'bounty.paid'));
+  assert.equal(s.b.payout('f1', 77)?.tx, undefined, 'a mock signature is not a devnet one');
+  assert.equal(s.b.payoutPending('f1', 77), false);
+});
+
+test('a second office PR for the issue that merged while the claimed one is still open takes the claim, and is paid', async (t) => {
+  const s = await setup();
+  t.after(s.cleanup);
+  s.b.settings.setWallet('acct1', OPERATOR, () => true);
+  s.b.settings.setWallet(undefined, FUNDER, () => true);
+  await s.fund(20_000_000n);
+  s.floor.github.pulls.items = [pull(77)];
+  await s.b.sync(s.floor as any);
+  assert.equal((await s.mock.get(own()))!.prNumber, 77);
+  // PR 78 (no worker stands for it: the office's wallet) merges first; 77 stays open.
+  s.floor.github.pulls.items = [pull(77), pull(78, { state: 'MERGED' })];
+  await s.b.sync(s.floor as any);
+  assert.equal((await s.mock.get(own()))!.prNumber, 78);
+  assert.equal(item(s.b, s.floor).phase, 'awaiting-approval');
+  assert.match((await s.b.approve(s.floor as any, 12, 'Grace')).sig!, /^mock-tx-/);
+  assert.equal(s.mock.balance(FUNDER), 20_000_000n);
+});
+
+test('a GitHub hiccup on the permission check leaves the bounty claimed, to be checked again, never blocked', async (t) => {
+  let down = true;
+  const ok = ghFor('User');
+  const s = await setup(async (args: string[]) => {
+    if (down && args[0] === 'api' && /permission$/.test(args[1])) throw new Error('HTTP 502');
+    return ok(args);
+  });
+  t.after(s.cleanup);
+  s.b.settings.setWallet('acct1', OPERATOR, () => true);
+  await s.fund(20_000_000n);
+  s.floor.github.pulls.items = [pull(77)];
+  await s.b.sync(s.floor as any);
+  s.floor.github.pulls.items = [pull(77, { state: 'MERGED' })];
+  await s.b.sync(s.floor as any);
+  assert.equal(item(s.b, s.floor).phase, 'claimed');
+  assert.match(item(s.b, s.floor).note!, /couldn't check the merge/);
+  down = false;
+  await s.b.sync(s.floor as any);
+  assert.equal(item(s.b, s.floor).phase, 'awaiting-approval');
+});
+
+test('a merged PR that has dropped off the board is still approved and paid', async (t) => {
+  const s = await setup();
+  t.after(s.cleanup);
+  await toApproval(s);
+  s.floor.github.pulls.items = [];
+  assert.match((await s.b.approve(s.floor as any, 12, 'Grace')).sig!, /^mock-tx-/);
+  assert.equal(s.mock.balance(OPERATOR), 20_000_000n);
+});
+
+test('an admin is warned a day before a payout waiting for approval expires, and the inbox row says how long is left', async (t) => {
+  const s = await setup();
+  t.after(s.cleanup);
+  // A three-day bounty: nothing to warn about when it merges.
+  await s.mock.open(own(), { expiryTs: 1_800_000_000 + 3 * 86_400, attester: ATT, approver: APP }, { publicKey: FUNDER });
+  await toApproval(s);
+  const [row] = bountyPayouts({ id: 'f1', name: 'Office' }, s.b.state(s.floor as any));
+  assert.equal(row.expiry, item(s.b, s.floor).expiry);
+  assert.ok(!s.toasts.some((x) => /expires in about/.test(x)));
+  s.tick(3 * 86_400 - 3 * 3600);
+  await s.b.sync(s.floor as any);
+  assert.ok(s.toasts.some((x) => /#12's 20 USDC bounty expires in about 3 h: approve the payout for PR #77/.test(x)));
+  await s.b.sync(s.floor as any);
+  assert.equal(s.toasts.filter((x) => /expires in about/.test(x)).length, 1);
+});
+
+test("with an approver wallet no approver key is read: the admin's wallet gets the release the attester signed", async (t) => {
+  const s = await setup();
+  t.after(s.cleanup);
+  const wallet = sdkSrc.mockAddress('admin wallet');
+  const prepared: unknown[] = [];
+  // The mock standing in for devnet, with what SolanaEscrow adds for a wallet approver.
+  (s.mock as any).prepareRelease = async (ref: unknown, params: unknown, att: { publicKey: string }, approver: string) => (prepared.push({ ref, params, att: att.publicKey, approver }), 'BASE64TX');
+  s.b.settings.set({ backend: 'solana-devnet', programId: sdkSrc.MOCK_PROGRAM_ID, approverWallet: wallet }, 'admin');
+  await s.b.ready();
+  s.keysRead.length = 0;
+  s.b.settings.setWallet('acct1', OPERATOR, () => true);
+  const ref = { repo: REPO, issue: 12, nonce: 0, attester: ATT, approver: wallet };
+  await s.mock.open(ref, { expiryTs: 1_800_086_400, attester: ATT, approver: wallet }, { publicKey: FUNDER });
+  await s.mock.fund(ref, 9_000_000n, { publicKey: FUNDER });
+  s.floor.github.pulls.items = [pull(77)];
+  await s.b.sync(s.floor as any);
+  s.floor.github.pulls.items = [pull(77, { state: 'MERGED' })];
+  await s.b.sync(s.floor as any);
+  const r = await s.b.approve(s.floor as any, 12, 'Grace');
+  assert.deepEqual([r.tx, r.approver], ['BASE64TX', wallet]);
+  assert.equal((prepared[0] as any).approver, wallet);
+  assert.ok(!s.keysRead.includes('solana-approver.json'));
+  // The wallet signs and sends it; the office reads the payout off the chain.
+  await s.mock.release(ref, { prNumber: 77 }, { publicKey: ATT }, { publicKey: wallet });
+  await s.b.sync(s.floor as any);
+  assert.equal(item(s.b, s.floor).phase, 'released');
+  assert.ok(s.timeline.some((x) => x.kind === 'bounty-paid'));
+});
+
+test('refunds and a sent release are for admins only', async () => {
+  let refunds = 0;
+  let syncs = 0;
+  const warned: string[] = [];
+  const floor = { id: 'f1', def: { name: 'Office' } };
+  const ctx: any = { meOf: () => ({ admin: false }), floors: new Map([['f1', floor]]), floorOf: () => floor, warn: (_c: unknown, e: string) => warned.push(e), sendTo: () => {}, bounties: { refund: async () => (refunds++, undefined), sync: async () => void syncs++ } };
+  const c: any = { peer: { name: 'Mallory', floor: 'f1' }, accountId: 'acct2' };
+  bountiesHandlers['bounty.refund'](ctx, c, { t: 'bounty.refund', issue: 12, floor: 'f1' });
+  bountiesHandlers['bounty.release.sent'](ctx, c, { t: 'bounty.release.sent', issue: 12, floor: 'f1' });
+  await new Promise((r) => setTimeout(r, 10));
+  assert.deepEqual([refunds, syncs], [0, 0]);
+  assert.deepEqual(warned, ['Only admins can crank bounty refunds', 'Only admins can approve bounty payouts']);
+  ctx.meOf = () => ({ admin: true });
+  bountiesHandlers['bounty.refund'](ctx, c, { t: 'bounty.refund', issue: 12, floor: 'f1' });
+  bountiesHandlers['bounty.release.sent'](ctx, c, { t: 'bounty.release.sent', issue: 12, floor: 'f1' });
+  await new Promise((r) => setTimeout(r, 10));
+  assert.deepEqual([refunds, syncs], [1, 1]);
+});

@@ -86,6 +86,27 @@ export async function prepared(m: { issue: number; tx?: string; error?: string }
   }
 }
 
+/**
+ * An admin approved a payout and the office answered with the release its attester signed: the
+ * approver's wallet (the address the office named) adds its signature, pays the fee and sends it.
+ * The office then looks at the chain, which says whether it paid.
+ */
+export async function approved(m: { issue: number; floor?: string; tx?: string; approver?: string }, net: Net) {
+  if (!m.tx || !m.approver) return;
+  const wallets = solanaWallets();
+  const w = wallets.find((x) => x.accounts.some((a) => a.address === m.approver)) ?? wallets[0];
+  if (!w) return void toast(`💰 #${m.issue}: no Solana wallet in this browser to sign as the approver (${m.approver})`, 'warn');
+  try {
+    const account = w.accounts.find((a) => a.address === m.approver) ?? (await connect(w));
+    if (account.address !== m.approver) return void toast(`💰 #${m.issue}: ${w.name} is on ${account.address}, not the approver wallet ${m.approver}`, 'warn');
+    const sig = await signAndSend(w, account, m.tx);
+    net.send({ t: 'bounty.release.sent', issue: m.issue, ...(m.floor ? { floor: m.floor } : {}), sig });
+    toast(`💸 Payout of #${m.issue}'s bounty sent: https://explorer.solana.com/tx/${sig}?cluster=devnet`);
+  } catch (err) {
+    toast(`💰 ${w.name} didn't send the payout: ${(err as Error).message}`, 'warn');
+  }
+}
+
 export function openFund(issue: number, net: Net) {
   const s = floorBounties();
   if (!s) return;

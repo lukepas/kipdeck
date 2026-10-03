@@ -1,5 +1,6 @@
 // Proof of Merge bounties (see server/bounties.ts): funding from a browser wallet, approving payouts
-// (admins only: the approver key signs only after that check), cranking refunds, payout wallets and
+// (admins only: the approver key signs, or the admin's approver wallet is handed the release, only
+// after that check), cranking refunds (admins only: the attester pays their fees), payout wallets and
 // the bounty settings (admins only).
 import type { BountiesClientMsg } from '../../../shared/protocol.js';
 import type { Ctx } from '../../office/context.js';
@@ -39,13 +40,20 @@ export const bountiesHandlers = {
     if (!admin(ctx, c, 'approve bounty payouts')) return ctx.sendTo(c, { t: 'bounty.approved', issue: Number(msg.issue) || 0, error: 'Only admins can approve bounty payouts' });
     const who = c.peer.name;
     void ctx.bounties.approve(floor, msg.issue, who).then((r) => {
-      ctx.sendTo(c, { t: 'bounty.approved', issue: Number(msg.issue) || 0, ...r });
+      ctx.sendTo(c, { t: 'bounty.approved', issue: Number(msg.issue) || 0, floor: floor.id, ...r });
       if (r.sig) console.log(`  ${who} approved the payout of #${msg.issue}'s bounty on ${floor.def.name}`);
     });
   },
+  'bounty.release.sent'(ctx, c, msg) {
+    const floor = onFloor(ctx, c, msg.floor);
+    if (!floor || !admin(ctx, c, 'approve bounty payouts')) return;
+    // Nothing is taken on trust from the message: the chain says whether it was paid.
+    void ctx.bounties.sync(floor);
+  },
   'bounty.refund'(ctx, c, msg) {
     const floor = onFloor(ctx, c, msg.floor);
-    if (!floor) return;
+    // The attester's key signs and pays for each refund: an admin's call.
+    if (!floor || !admin(ctx, c, 'crank bounty refunds')) return;
     void ctx.bounties.refund(floor, msg.issue).then((err) => (err ? ctx.warn(c, err) : ctx.sendTo(c, { t: 'toast', text: `↩️ #${msg.issue}'s bounty went back to its funders`, level: 'info' })));
   },
   'bounty.wallet'(ctx, c, msg) {

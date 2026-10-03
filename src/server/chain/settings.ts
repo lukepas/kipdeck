@@ -22,6 +22,11 @@ export interface ChainSaved {
   mint?: string;
   attesterKey: string;
   approverKey: string;
+  /**
+   * The approver as a browser wallet's address: an admin signs each payout in that wallet, and no
+   * approver key sits on this machine, where an agent could read it. Takes the place of approverKey.
+   */
+  approverWallet?: string;
   actionRepos: string[];
   /** Whether the public Action shows the issue's title (off: just owner/name#N, for a private repository's issues). */
   actionTitles: boolean;
@@ -48,7 +53,7 @@ export function cleanChain(raw: unknown, base: ChainSaved = defaultChain()): Cha
   if (typeof r.enabled === 'boolean') out.enabled = r.enabled;
   if (typeof r.actionTitles === 'boolean') out.actionTitles = r.actionTitles;
   if (r.backend === 'mock' || r.backend === 'solana-devnet') out.backend = r.backend;
-  for (const k of ['programId', 'mint'] as const) {
+  for (const k of ['programId', 'mint', 'approverWallet'] as const) {
     if (r[k] === null || r[k] === '') delete out[k];
     else if (typeof r[k] === 'string' && BASE58.test(r[k] as string)) out[k] = r[k] as string;
   }
@@ -99,6 +104,7 @@ export class ChainSettings {
       ...(s.mint ? { mint: s.mint } : {}),
       attesterKey: s.attesterKey,
       approverKey: s.approverKey,
+      ...(s.approverWallet ? { approverWallet: s.approverWallet } : {}),
       ...keys,
       actionRepos: [...s.actionRepos],
       actionTitles: s.actionTitles,

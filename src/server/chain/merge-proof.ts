@@ -34,7 +34,9 @@ export async function pullFacts(dir: string, repo: string, n: number, issue: num
     facts.mergedBy = { login: by.login, id: by.id as number, type: String(by.type ?? '') };
     // Only a person's permission matters; a bot's merge doesn't pay whatever it may do.
     if (facts.mergedBy.type === 'User') {
-      const perm = (await run(['api', `repos/{owner}/{repo}/collaborators/${by.login}/permission`, '--jq', '.permission'], dir).catch(() => 'none')).trim();
+      // A failed lookup throws, so the bounty or attestation is checked again later: a GitHub
+      // hiccup must not read as "no write access" and block a payout for good.
+      const perm = (await run(['api', `repos/{owner}/{repo}/collaborators/${by.login}/permission`, '--jq', '.permission'], dir)).trim();
       facts.mergerPermission = (PERMISSIONS.has(perm) ? perm : 'none') as PullFacts['mergerPermission'];
     }
   }
@@ -57,7 +59,7 @@ export async function closeFacts(dir: string, n: number, run: GhRun = (a, c) => 
   if (by && typeof by.login === 'string' && LOGIN.test(by.login) && Number.isSafeInteger(by.id)) {
     facts.closedBy = { login: by.login, id: by.id as number, type: String(by.type ?? '') };
     if (facts.closedBy.type === 'User') {
-      const perm = (await run(['api', `repos/{owner}/{repo}/collaborators/${by.login}/permission`, '--jq', '.permission'], dir).catch(() => 'none')).trim();
+      const perm = (await run(['api', `repos/{owner}/{repo}/collaborators/${by.login}/permission`, '--jq', '.permission'], dir)).trim();
       facts.closerPermission = (PERMISSIONS.has(perm) ? perm : 'none') as PullFacts['mergerPermission'];
     }
   }

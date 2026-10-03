@@ -21,6 +21,10 @@ export interface StoredBounty {
   note?: string;
   /** The facts the attester checked once the claimed PR merged (awaiting-approval). */
   facts?: PullFacts;
+  /** When a blocked merge was last checked with GitHub again (ms). */
+  checkedAt?: number;
+  /** An admin was warned that its expiry is near while it waited for approval. */
+  warned?: boolean;
   txs: BountyTx[];
 }
 
@@ -65,6 +69,8 @@ function clean(raw: unknown): StoredBounty | undefined {
   if (note) b.note = note;
   const facts = cleanFacts(r.facts);
   if (facts) b.facts = facts;
+  if (int(r.checkedAt)) b.checkedAt = r.checkedAt as number;
+  if (r.warned === true) b.warned = true;
   return b;
 }
 
