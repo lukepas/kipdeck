@@ -41,3 +41,22 @@ export function send(res: http.ServerResponse, status: number, body: unknown, he
   res.writeHead(status, { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', ...headers });
   res.end(json);
 }
+
+/**
+ * A per-client rate limit for a public route: the function it returns says whether `key` (a client
+ * address) may ask again now, at most `limit` times in a minute's window. Old windows are forgotten
+ * as it goes, so a crowd of addresses can't grow it without end.
+ */
+export function perMinute(limit: number): (key: string, now?: number) => boolean {
+  const hits = new Map<string, { at: number; n: number }>();
+  return (key, now = Date.now()) => {
+    if (hits.size > 10_000) for (const [k, v] of hits) if (now - v.at >= 60_000) hits.delete(k);
+    const h = hits.get(key);
+    if (!h || now - h.at >= 60_000) {
+      hits.set(key, { at: now, n: 1 });
+      return true;
+    }
+    h.n++;
+    return h.n <= limit;
+  };
+}

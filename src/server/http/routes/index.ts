@@ -11,6 +11,7 @@ import { pageRoutes } from './pages.js';
 import { reputationRoutes } from './reputation.js';
 import { searchRoutes } from './search.js';
 import { serviceRoutes } from './services.js';
+import { showcaseRoutes } from './showcase.js';
 import { x402Routes } from './x402.js';
 
 export const routes: readonly Route[] = [
@@ -41,6 +42,9 @@ export const routes: readonly Route[] = [
   reputationRoutes.leaderboard,
   reputationRoutes.dataset,
   reputationRoutes.card,
+  // The public showcase (/pom/), once an admin turns it on: read only, GET only.
+  showcaseRoutes.page,
+  showcaseRoutes.files,
   // Signed in.
   authRoutes.whoami,
   agentRoutes.models,

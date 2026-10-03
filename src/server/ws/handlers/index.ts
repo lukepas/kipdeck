@@ -13,6 +13,7 @@ import { presenceHandlers } from './presence.js';
 import { queueHandlers, queueView } from './queue.js';
 import { reputationHandlers } from './reputation.js';
 import { servicesView, settingsHandlers } from './settings.js';
+import { showcaseHandlers } from './showcase.js';
 import { signinsHandlers } from './signins.js';
 import { teamHandlers } from './team.js';
 import { timelineHandlers } from './timeline.js';
@@ -35,6 +36,7 @@ export const handlers: HandlerMap<ClientMsg> = {
   ...queueHandlers,
   ...reputationHandlers,
   ...settingsHandlers,
+  ...showcaseHandlers,
   ...signinsHandlers,
   ...teamHandlers,
   ...timelineHandlers,

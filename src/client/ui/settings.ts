@@ -9,6 +9,7 @@ import { agentFields, choiceLabel, officeChoice } from './provider';
 import { openPromptEditor, rewrittenPrompts } from './prompts';
 import { choiceRow } from './settings-rows';
 import { bountySettings } from './bounty-settings';
+import { showcaseSettings } from './showcase-settings';
 
 const VIEWS: [ViewMode, string, string][] = [
   ['first', '👀 First person', 'See through your own eyes. Click the office to look around with the mouse and click things to use them. Esc frees the mouse.'],
@@ -387,6 +388,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     pwSave.disabled = false;
   });
   const bounty = bountySettings(net);
+  const pom = showcaseSettings(net);
   const panes: Record<SettingsPane, Node[]> = {
     you: [
       setting('Your character', null, character),
@@ -412,7 +414,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       setting('Workers whose pull request merged', 'office', leaveRow, leaveNote),
       setting('Prompts', 'office', promptsOpen, promptsNote),
     ],
-    bounties: [setting('Proof of Merge bounties', 'office', ...bounty.nodes)],
+    bounties: [setting('Proof of Merge bounties', 'office', ...bounty.nodes), setting('Public showcase', 'office', ...pom.nodes)],
   };
 
   // The categories down the side, the one picked on the right.
@@ -463,6 +465,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       offDir.forEach((off) => off());
       offPrompts.forEach((off) => off());
       bounty.off();
+      pom.off();
     },
   });
   show(first ?? lastPane);

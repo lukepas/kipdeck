@@ -16,6 +16,7 @@ import type { ReputationClientMsg, ReputationServerMsg } from './protocol/reputa
 import type { LandedServerMsg } from './protocol/landed.js';
 import type { MissionClientMsg, MissionServerMsg } from './protocol/mission.js';
 import type { SettingsClientMsg, SettingsServerMsg } from './protocol/settings.js';
+import type { ShowcaseClientMsg, ShowcaseServerMsg } from './protocol/showcase.js';
 import type { TimelineClientMsg, TimelineServerMsg } from './protocol/timeline.js';
 import type { WhiteboardClientMsg, WhiteboardServerMsg } from './protocol/whiteboard.js';
 import type { UsageClientMsg, UsageServerMsg } from './protocol/usage.js';
@@ -34,6 +35,7 @@ export * from './protocol/presence.js';
 export * from './protocol/queue.js';
 export * from './protocol/reputation.js';
 export * from './protocol/settings.js';
+export * from './protocol/showcase.js';
 export * from './protocol/timeline.js';
 export * from './protocol/whiteboard.js';
 export * from './protocol/usage.js';
@@ -57,7 +59,8 @@ export type ClientMsg =
   | MissionClientMsg
   | TimelineClientMsg
   | BountiesClientMsg
-  | ReputationClientMsg;
+  | ReputationClientMsg
+  | ShowcaseClientMsg;
 
 export type ServerMsg =
   | PresenceServerMsg
@@ -75,4 +78,5 @@ export type ServerMsg =
   | MissionServerMsg
   | TimelineServerMsg
   | BountiesServerMsg
-  | ReputationServerMsg;
+  | ReputationServerMsg
+  | ShowcaseServerMsg;

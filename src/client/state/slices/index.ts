@@ -20,6 +20,7 @@ import { notify } from './notify';
 import { prompts } from './prompts';
 import { reputation } from './reputation';
 import { services } from './services';
+import { showcase } from './showcase';
 import { signins } from './signins';
 import { team } from './team';
 import { timeline } from './timeline';
@@ -49,4 +50,5 @@ export const SLICES: readonly Slice[] = [
   timeline,
   bounties,
   reputation,
+  showcase,
 ];

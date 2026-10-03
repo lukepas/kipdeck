@@ -26,6 +26,7 @@ import type { X402Gateway } from '../x402/gateway.js';
 import type { Reputation } from '../chain/reputation.js';
 import type { ReputationIndex } from '../chain/rep-index.js';
 import type { MergeProofs } from '../chain/attest.js';
+import type { Showcase } from '../showcase/service.js';
 import type { AgentProvider, FloorInfo, Me, Reminder, ReminderSnooze, ReviewPull, RosterEntry, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
 import type { Client } from './client.js';
 import type { Spot } from './input.js';
@@ -96,6 +97,8 @@ export interface LateServices {
   reputation?: Reputation;
   /** The board rebuilt from the chain alone by onchain/indexer, with --reputation-index (see chain/rep-index.ts). */
   reputationIndex?: ReputationIndex;
+  /** The public showcase at /pom/, off until an admin turns it on (see showcase/service.ts). */
+  showcase: Showcase;
 }
 
 /** Sending to browsers (office/messaging.ts). */

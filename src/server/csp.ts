@@ -34,3 +34,27 @@ export function contentSecurityPolicy(host?: string): string {
     "manifest-src 'self'",
   ].join('; ');
 }
+
+/** The public JSON-RPC endpoints the showcase page may ask to check a record itself (testnets only). */
+export const SHOWCASE_RPCS = ['https://sepolia.base.org', 'https://api.devnet.solana.com'];
+
+/**
+ * The policy on the public showcase (/pom/): stricter than the office's own pages, since anyone can
+ * open it. Its own scripts and stylesheet only (no inline anything, no eval, no WebAssembly), no
+ * frames, no forms, and it talks to nobody but the office and the public testnet RPCs above.
+ */
+export function showcaseContentSecurityPolicy(): string {
+  return [
+    "default-src 'none'",
+    "script-src 'self'",
+    "style-src 'self'",
+    "img-src 'self' data:",
+    "font-src 'self'",
+    `connect-src 'self' ${SHOWCASE_RPCS.join(' ')}`,
+    "manifest-src 'self'",
+    "base-uri 'none'",
+    "form-action 'none'",
+    "frame-ancestors 'none'",
+    "object-src 'none'",
+  ].join('; ');
+}

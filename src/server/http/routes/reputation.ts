@@ -20,7 +20,7 @@ const AGENT_ID = /^\d{1,30}$/;
 const EVENTS_SHOWN = 100;
 
 /** Sends `body` as cacheable public JSON, or 304 when the browser has it already. */
-function sendPublic(r: RouteRequest, body: unknown) {
+export function sendPublic(r: RouteRequest, body: unknown) {
   const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('base64url').slice(0, 27)}"`;
   const headers = { etag, 'cache-control': 'public, max-age=60', 'access-control-allow-origin': '*', vary: 'Origin' };
   if (r.req.headers['if-none-match'] === etag) return void r.res.writeHead(304, headers).end();
@@ -28,7 +28,7 @@ function sendPublic(r: RouteRequest, body: unknown) {
 }
 
 /** Where browsers reach this office: the card base when one was given, else the request's own host. */
-function baseOf(ctx: Ctx, r: RouteRequest): string {
+export function baseOf(ctx: Ctx, r: RouteRequest): string {
   const given = ctx.cfg.chain.reputation.cardBase;
   if (given) return given.replace(/\/+$/, '');
   const host = ctx.hosts.requestHost(r.req) ?? `localhost:${ctx.cfg.port}`;
