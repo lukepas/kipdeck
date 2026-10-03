@@ -8,6 +8,7 @@ import type { MissionMilestone } from '../../../shared/protocol';
 import { store } from '../../state';
 import { h, timeAgo } from '../dom';
 import { money, type MissionDeps } from './act';
+import { renderAgents } from './rep';
 
 /** Marks the text box being edited, so Esc cancels the edit instead of closing the window (see index.ts). */
 export const EDITING = 'mc-edit';
@@ -148,5 +149,6 @@ export function renderGoals(deps: MissionDeps): HTMLElement {
     lost.length ? h('section.mc-unlinked', {}, h('h3', {}, `Unlinked: ${lost.length}`), h('p.mc-note', {}, 'Workers with no milestone and no issue: link each one, so the reason it is here is not lost.'), h('ul', {}, ...lost.map((e) => linkRow(e.id, e.name)))) : null,
     noTarget ? h('p.mc-note.mc-link-hint', {}, 'Add a milestone to link workers to it.') : null,
     tellBox(deps),
+    renderAgents(),
   );
 }

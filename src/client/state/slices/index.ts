@@ -18,6 +18,7 @@ import { meeting } from './meeting';
 import { mission } from './mission';
 import { notify } from './notify';
 import { prompts } from './prompts';
+import { reputation } from './reputation';
 import { services } from './services';
 import { signins } from './signins';
 import { team } from './team';
@@ -47,4 +48,5 @@ export const SLICES: readonly Slice[] = [
   mission,
   timeline,
   bounties,
+  reputation,
 ];

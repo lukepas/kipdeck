@@ -6,6 +6,7 @@ import { store } from '../../state';
 import { h } from '../dom';
 import { linkLabel } from '../../../shared/mission';
 import { doingLabel, money, runAction, snooze, snoozeLabel, type MissionDeps } from './act';
+import { repBits } from './rep';
 
 /** The rows whose "..." menu is open, kept while Mission control draws itself again. */
 const expanded = new Set<string>();
@@ -77,6 +78,7 @@ export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { sho
         doing ? h('span.mc-doing', { title: doing }, doing) : null,
         snoozed ? h('span.mc-snoozed', {}, snoozed) : null,
         ...(opts.extra ?? []),
+        ...repBits(e.id),
       ),
       h('span.mc-time', { title: 'Time in this state' }, duration(now - r.att.since)),
       h('span.mc-cost', { title: 'Spent so far' }, cost),

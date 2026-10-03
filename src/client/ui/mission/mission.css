@@ -136,3 +136,13 @@
   .tl-floor { display: none; }
   .mc-row.reminder .mc-who { grid-column: 2; }
 }
+
+/* Merge-based reputation (rep.ts): a quiet chip on a worker's row, a hint, and the Agents table. */
+.mc-rep { font-size: 12px; font-weight: 800; color: #3d5a80; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; }
+a.mc-rep:hover { text-decoration: underline; }
+.mc-rep-hint { font-size: 12px; font-weight: 800; color: #b5651d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mc-agents { margin-top: 14px; }
+.mc-agent-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.mc-agent-table th { text-align: left; font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); padding: 4px 6px; border-bottom: 2px solid var(--ink); }
+.mc-agent-table td { padding: 5px 6px; border-bottom: 1px solid #e9ecef; font-weight: 700; vertical-align: middle; }
+.mc-agent-table .mc-links { display: flex; gap: 8px; }

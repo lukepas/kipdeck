@@ -127,7 +127,7 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
     }
   }
 
-  const topics: Topic[] = ['roster', 'mission', 'issues', 'pulls', 'workers', 'floor', 'me', 'reminders', 'timeline', 'signins', 'bounties'];
+  const topics: Topic[] = ['roster', 'mission', 'issues', 'pulls', 'workers', 'floor', 'me', 'reminders', 'timeline', 'signins', 'bounties', 'reputation'];
   const offs = topics.map((t) => store.on(t, render));
   // "12 min" moves on by itself, and a worker goes silent by not changing.
   const timer = window.setInterval(render, 30_000);
@@ -145,6 +145,8 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
   });
   window.addEventListener('keydown', onKey, true);
   open = { modal, show };
+  // The agents' merge records: asked for as it opens, then kept up to date by the server.
+  deps.net.send({ t: 'reputation.get' });
   show(tab);
   setTimeout(() => (body.querySelector<HTMLElement>('.mc-row') ?? body.querySelector<HTMLElement>('button'))?.focus({ preventScroll: true }), 30);
 }
