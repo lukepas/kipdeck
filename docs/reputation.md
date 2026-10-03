@@ -54,7 +54,7 @@ Payout approval stays where it was: an office admin approves each bounty payout 
 
 ## The public API
 
-Read only and open to anyone (no sign-in), after the host check. JSON with an `ETag` (a matching `If-None-Match` gets `304`), `Cache-Control: public, max-age=60` and `Access-Control-Allow-Origin: *`, so a showcase page elsewhere can read it. No cookies are read or set. Off (`404`) without `--reputation`.
+Read only and open to anyone (no sign-in), after the host check. JSON with an `ETag` (a matching `If-None-Match` gets `304`), `Cache-Control: public, max-age=60` and `Access-Control-Allow-Origin: *`, so a showcase page elsewhere can read it. The office's own [public showcase](showcase.md) at `/pom/` shows the same board. No cookies are read or set. Off (`404`) without `--reputation`.
 
 | Route | What it answers |
 | --- | --- |
