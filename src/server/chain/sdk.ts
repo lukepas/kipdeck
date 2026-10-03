@@ -119,15 +119,18 @@ export interface EscrowSdk {
   DEVNET_RPC: string;
 }
 
+/** Where the bounty escrow SDK's build is, from the repository root. */
+export const ESCROW_BUILD = ['onchain', 'solana', 'sdk', 'dist', 'index.js'];
+
 /**
- * Where the SDK's build may be: onchain/solana/sdk/dist from the repository root, which is a few
- * folders up from here both in src/server/chain and in dist/server/server/chain.
+ * Where an onchain package's build may be (`build`, from the repository root: the escrow SDK's by
+ * default), which is a few folders up from here both in src/server/chain and in dist/server/server/chain.
  */
-export function sdkCandidates(from = path.dirname(fileURLToPath(import.meta.url))): string[] {
+export function sdkCandidates(from = path.dirname(fileURLToPath(import.meta.url)), build: readonly string[] = ESCROW_BUILD): string[] {
   const out: string[] = [];
   let dir = from;
   for (let i = 0; i < 6; i++) {
-    out.push(path.join(dir, 'onchain', 'solana', 'sdk', 'dist', 'index.js'));
+    out.push(path.join(dir, ...build));
     const up = path.dirname(dir);
     if (up === dir) break;
     dir = up;
@@ -161,10 +164,10 @@ const RPC_MAX_BYTES = 8 * 1024 * 1024;
 export function guardedRpcFetch(allowHosts: readonly string[] = [DEVNET_RPC_HOST], guard: GuardOptions = {}): typeof fetch {
   return (async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(typeof input === 'string' || input instanceof URL ? input : input.url);
-    if (!allowHosts.includes(url.host)) throw new Error(`the office only talks to ${allowHosts.join(', ')} for bounties, not ${url.host}`);
+    if (!allowHosts.includes(url.host)) throw new Error(`the office only talks to ${allowHosts.join(', ')} here, not ${url.host}`);
     const res = await guardedFetch(url, { method: init?.method ?? 'POST', headers: { 'content-type': 'application/json' }, body: typeof init?.body === 'string' ? init.body : undefined, timeoutMs: 30_000, protocols: url.hostname === '127.0.0.1' ? ['http:', 'https:'] : ['https:'] }, guard);
     const body = await readLimited(res.body, RPC_MAX_BYTES);
-    if (body === undefined) throw new Error('the Solana RPC answered with more than the office reads');
+    if (body === undefined) throw new Error('the RPC answered with more than the office reads');
     return new Response(new Uint8Array(body), { status: res.status, statusText: res.statusText, headers: { 'content-type': String(res.headers['content-type'] ?? 'application/json') } });
   }) as typeof fetch;
 }

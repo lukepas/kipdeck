@@ -193,6 +193,13 @@ export class Bounties {
     this.deps.broadcast({ t: 'bounties', floor: floor.id, state: this.state(floor) });
   }
 
+  /** The devnet signature of the bounty paid for PR `pr` on a floor, when one was (proof of merge carries it). */
+  paidTx(floorId: string, pr: number): string | undefined {
+    const b = this.stores.get(floorId)?.list().find((x) => x.claimPr === pr);
+    const sig = b?.txs.filter((t) => t.kind === 'paid').at(-1)?.sig;
+    return sig && /^[1-9A-HJ-NP-Za-km-z]{32,90}$/.test(sig) ? sig : undefined;
+  }
+
   /** The floor's pull requests came back from GitHub: look at its bounties again. */
   pulls(floor: Floor) {
     if (this.enabled) void this.sync(floor);
