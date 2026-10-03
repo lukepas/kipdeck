@@ -1,0 +1,38 @@
+{
+  "name": "@agent-office/attest",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Proof of Merge attestations on Base Sepolia: an EAS schema (and a MergeAttestor fallback contract) recording each office-made pull request a person merged, reverted or closed, and a leaderboard read back from chain data alone. Testnet only.",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./src": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && forge build",
+    "register-schema": "tsx scripts/register-schema.ts",
+    "deploy:local": "tsx scripts/deploy-local.ts",
+    "deploy:fallback": "tsx scripts/deploy-fallback.ts",
+    "smoke": "tsx scripts/smoke.ts",
+    "leaderboard": "tsx scripts/leaderboard.ts",
+    "test:forge": "forge test",
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check": "npm run typecheck && forge test && npm test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@ethereum-attestation-service/eas-sdk": "^2.10.0",
+    "viem": "^2.57.2"
+  },
+  "devDependencies": {
+    "@ethereum-attestation-service/eas-contracts": "^1.7.1",
+    "@types/node": "^26.6.4",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
