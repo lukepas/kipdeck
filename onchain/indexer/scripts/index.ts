@@ -5,7 +5,7 @@
 //
 //   tsx scripts/index.ts [--network base-sepolia|localnet] [--out out/] [--as-of <unix seconds>]
 //       [--rpc <url>] [--attester 0x...] [--registrar 0x...] [--from-block N]
-//       [--solana-rpc <url> --program <id> --cluster devnet|localnet | --no-solana]
+//       [--solana-rpc <url> --program <id> --solana-attester <addr> --cluster devnet|localnet | --no-solana]
 //       [--record tape.json | --replay tape.json]
 //
 // Addresses default to the onchain packages' deployments/*.json for the network.
@@ -73,7 +73,11 @@ export function optionsFrom(a: Record<string, string | true>): IndexerOptions {
     const solRpc = str(a['solana-rpc']) ?? (cluster === 'localnet' ? 'http://127.0.0.1:8899' : DEVNET_RPC);
     if (cluster === 'devnet' ? solRpc !== DEVNET_RPC : !LOCAL.test(solRpc)) throw new Error(`--solana-rpc is ${cluster === 'devnet' ? DEVNET_RPC : 'a local validator'}`);
     const programId = str(a.program) ?? sol.programId;
-    if (programId) opts.solana = { rpcUrl: solRpc, programId, cluster };
+    // Only the office's own payouts: its attester's, in the deployment's mints (devnet USDC and the test mint).
+    const attesters = [str(a['solana-attester']) ?? sol.attester].filter((x): x is string => typeof x === 'string');
+    if (programId && !attesters.length) throw new Error('--solana-attester is needed: whose payouts count');
+    const mints = ['4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU', ...(sol.testMint ? [sol.testMint] : [])];
+    if (programId) opts.solana = { rpcUrl: solRpc, programId, cluster, attesters, mints };
   }
   return opts;
 }

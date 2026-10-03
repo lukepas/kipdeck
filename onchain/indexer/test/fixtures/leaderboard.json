@@ -25,7 +25,7 @@
           "bountiesPaid": 1,
           "samples": 6,
           "enough": true,
-          "latest": "https://base-sepolia.easscan.org/attestation/view/0x2a32bdc6d31a8e94c578059932782f659306625d77124a58f4cee420458d033b",
+          "latest": "https://base-sepolia.easscan.org/attestation/view/0x78fc0c6964ffa67e3c985aee1626281376e8a59ba894df211d46ed898d1db155",
           "latestAt": 1790259200
         },
         {
@@ -45,7 +45,7 @@
           "bountiesPaid": 0,
           "samples": 2,
           "enough": false,
-          "latest": "https://base-sepolia.easscan.org/attestation/view/0xb9c27ffed5323b5e3affe3805b320d043a3dd7c72d89831d0f1ea4b7bbdc5494",
+          "latest": "https://base-sepolia.easscan.org/attestation/view/0xad2624f2ea3b7a9b678747c4ab994e83fb226ef500bc5e1e7b498d808de0f94e",
           "latestAt": 1790005000
         },
         {
@@ -65,7 +65,7 @@
           "bountiesPaid": 0,
           "samples": 1,
           "enough": false,
-          "latest": "https://base-sepolia.easscan.org/attestation/view/0xe2cb4bc55b78272836e1bd7932a70e9e8a6d3a0ac0491c68fc96e2e172092402",
+          "latest": "https://base-sepolia.easscan.org/attestation/view/0xb8c055b8ef5fd976dc9b9422d7419e956726244766eecdbe23342a10feef8284",
           "latestAt": 1790009200
         }
       ]
@@ -92,7 +92,7 @@
           "bountiesPaid": 1,
           "samples": 6,
           "enough": true,
-          "latest": "https://base-sepolia.easscan.org/attestation/view/0x2a32bdc6d31a8e94c578059932782f659306625d77124a58f4cee420458d033b",
+          "latest": "https://base-sepolia.easscan.org/attestation/view/0x78fc0c6964ffa67e3c985aee1626281376e8a59ba894df211d46ed898d1db155",
           "latestAt": 1790259200
         },
         {
@@ -112,7 +112,7 @@
           "bountiesPaid": 0,
           "samples": 2,
           "enough": false,
-          "latest": "https://base-sepolia.easscan.org/attestation/view/0xb9c27ffed5323b5e3affe3805b320d043a3dd7c72d89831d0f1ea4b7bbdc5494",
+          "latest": "https://base-sepolia.easscan.org/attestation/view/0xad2624f2ea3b7a9b678747c4ab994e83fb226ef500bc5e1e7b498d808de0f94e",
           "latestAt": 1790005000
         },
         {
@@ -132,7 +132,7 @@
           "bountiesPaid": 0,
           "samples": 1,
           "enough": false,
-          "latest": "https://base-sepolia.easscan.org/attestation/view/0xe2cb4bc55b78272836e1bd7932a70e9e8a6d3a0ac0491c68fc96e2e172092402",
+          "latest": "https://base-sepolia.easscan.org/attestation/view/0xb8c055b8ef5fd976dc9b9422d7419e956726244766eecdbe23342a10feef8284",
           "latestAt": 1790009200
         }
       ]
@@ -159,7 +159,7 @@
           "bountiesPaid": 1,
           "samples": 7,
           "enough": true,
-          "latest": "https://base-sepolia.easscan.org/attestation/view/0x2a32bdc6d31a8e94c578059932782f659306625d77124a58f4cee420458d033b",
+          "latest": "https://base-sepolia.easscan.org/attestation/view/0x78fc0c6964ffa67e3c985aee1626281376e8a59ba894df211d46ed898d1db155",
           "latestAt": 1790259200
         },
         {
@@ -179,7 +179,7 @@
           "bountiesPaid": 0,
           "samples": 2,
           "enough": false,
-          "latest": "https://base-sepolia.easscan.org/attestation/view/0xb9c27ffed5323b5e3affe3805b320d043a3dd7c72d89831d0f1ea4b7bbdc5494",
+          "latest": "https://base-sepolia.easscan.org/attestation/view/0xad2624f2ea3b7a9b678747c4ab994e83fb226ef500bc5e1e7b498d808de0f94e",
           "latestAt": 1790005000
         },
         {
@@ -199,7 +199,7 @@
           "bountiesPaid": 0,
           "samples": 1,
           "enough": false,
-          "latest": "https://base-sepolia.easscan.org/attestation/view/0xe2cb4bc55b78272836e1bd7932a70e9e8a6d3a0ac0491c68fc96e2e172092402",
+          "latest": "https://base-sepolia.easscan.org/attestation/view/0xb8c055b8ef5fd976dc9b9422d7419e956726244766eecdbe23342a10feef8284",
           "latestAt": 1790009200
         }
       ]
@@ -226,7 +226,7 @@
           "bountiesPaid": 1,
           "samples": 7,
           "enough": true,
-          "latest": "https://base-sepolia.easscan.org/attestation/view/0x2a32bdc6d31a8e94c578059932782f659306625d77124a58f4cee420458d033b",
+          "latest": "https://base-sepolia.easscan.org/attestation/view/0x78fc0c6964ffa67e3c985aee1626281376e8a59ba894df211d46ed898d1db155",
           "latestAt": 1790259200
         },
         {
@@ -246,7 +246,7 @@
           "bountiesPaid": 0,
           "samples": 2,
           "enough": false,
-          "latest": "https://base-sepolia.easscan.org/attestation/view/0xb9c27ffed5323b5e3affe3805b320d043a3dd7c72d89831d0f1ea4b7bbdc5494",
+          "latest": "https://base-sepolia.easscan.org/attestation/view/0xad2624f2ea3b7a9b678747c4ab994e83fb226ef500bc5e1e7b498d808de0f94e",
           "latestAt": 1790005000
         },
         {
@@ -266,7 +266,7 @@
           "bountiesPaid": 0,
           "samples": 1,
           "enough": false,
-          "latest": "https://base-sepolia.easscan.org/attestation/view/0xe2cb4bc55b78272836e1bd7932a70e9e8a6d3a0ac0491c68fc96e2e172092402",
+          "latest": "https://base-sepolia.easscan.org/attestation/view/0xb8c055b8ef5fd976dc9b9422d7419e956726244766eecdbe23342a10feef8284",
           "latestAt": 1790009200
         }
       ]

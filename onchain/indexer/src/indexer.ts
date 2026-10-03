@@ -60,8 +60,11 @@ export function joinEvents(atts: readonly ReadAttestation[], feedback: readonly 
   const byUid = new Map(live.map((a) => [a.uid.toLowerCase(), a]));
   const fbOf = new Map<string, FeedbackLog>();
   for (const f of feedback) if (!f.revoked) fbOf.set(f.feedbackHash.toLowerCase(), f);
+  // A payout counts for an attestation that names its transaction, or else for the same repository,
+  // PR and merge commit. readPayouts keeps only the trusted attester's payouts.
+  const bySig = new Map(payouts.map((p) => [p.signature, p]));
   const paidOf = new Map<string, Payout>();
-  for (const p of payouts) paidOf.set(`${p.repoHash}#${p.pr}`, p);
+  for (const p of payouts) paidOf.set(`${p.repoHash}#${p.pr}#${p.mergeSha}`, p);
   const out: RepEvent[] = [];
   for (const a of live) {
     const fb = fbOf.get(a.uid.toLowerCase());
@@ -69,7 +72,7 @@ export function joinEvents(atts: readonly ReadAttestation[], feedback: readonly 
     const links = { attestation: a.link, ...(fb ? { feedback: fb.link } : {}) };
     if (a.outcome === 1) {
       // Paid only when the payout is there on Solana: a 'paid' feedback tag alone doesn't make it so.
-      const p = paidOf.get(`${repoKey(a.repo)}#${a.pr}`);
+      const p = a.solanaTx ? bySig.get(a.solanaTx) : paidOf.get(`${repoKey(a.repo)}#${a.pr}#${a.mergeSha}`);
       out.push({ ...base, pr: a.pr, outcome: 'merged', at: a.mergedAt, ...(a.openedAt ? { openedAt: a.openedAt } : {}), ...(p ? { paid: { amount: p.amount.toString(), decimals: p.decimals, tx: p.signature } } : {}), links: { ...links, ...(p ? { solana: p.link } : {}) } });
     } else if (a.outcome === 2) {
       const original = byUid.get(a.refUid.toLowerCase());

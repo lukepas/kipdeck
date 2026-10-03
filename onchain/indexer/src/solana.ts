@@ -3,6 +3,10 @@
 // by the escrow SDK's decodeEvents). A payout is joined to its pull request by repository and PR
 // number: the Released event names the bounty and the PR, the bounty's BountyCreated event names
 // the repository's hash.
+//
+// Anyone can open a bounty on the program with keys of their own and release it to themselves, for
+// any repository and PR. So only payouts signed by the attester you trust (and the approver, when you
+// name one), in a mint you allow, count: anything else is somebody else's, never the office's.
 
 import { decodeEvents, hexOf, repoHash, type EscrowEvent } from '../../solana/sdk/src/layout.js';
 
@@ -13,6 +17,12 @@ export interface SolanaSource {
   cluster: 'devnet' | 'localnet';
   /** Signatures per page (default 1000, the RPC's most). */
   pageSize?: number;
+  /** The attesters whose payouts count (the office's Solana attester, deployments/<cluster>.json). Required. */
+  attesters: readonly string[];
+  /** The approvers whose payouts count; any approver when left out (an admin's wallet may change). */
+  approvers?: readonly string[];
+  /** The mints payouts count in; any when left out. */
+  mints?: readonly string[];
 }
 
 export interface Payout {
@@ -62,6 +72,7 @@ export async function readPayouts(src: SolanaSource, fetchFn: typeof fetch = fet
     if (!tx || tx.meta?.err) continue;
     for (const e of decodeEvents(tx.meta?.logMessages ?? [], src.programId)) events.push({ e, signature: s.signature, ...(tx.blockTime ? { blockTime: tx.blockTime } : {}) });
   }
+  if (!src.attesters.length) throw new Error('name the attester whose payouts count: anyone can release a bounty of their own');
   const created = new Map<string, { repoHash: string; mint: string }>();
   for (const { e } of events) if (e.kind === 'BountyCreated') created.set(e.bounty, { repoHash: e.repoHash, mint: e.mint });
   const decimals = new Map<string, number>();
@@ -70,6 +81,8 @@ export async function readPayouts(src: SolanaSource, fetchFn: typeof fetch = fet
     if (e.kind !== 'Released') continue;
     const c = created.get(e.bounty);
     if (!c) continue;
+    // Somebody else's escrow: not signed by the trusted keys, or in another mint.
+    if (!src.attesters.includes(e.attester) || (src.approvers && !src.approvers.includes(e.approver)) || (src.mints && !src.mints.includes(c.mint))) continue;
     if (!decimals.has(c.mint)) {
       const acc = await call<{ value?: { data?: { parsed?: { info?: { decimals?: number } } } } }>(src, fetchFn, 'getAccountInfo', [c.mint, { encoding: 'jsonParsed', commitment: 'confirmed' }]);
       decimals.set(c.mint, acc.value?.data?.parsed?.info?.decimals ?? 6);

@@ -3,7 +3,7 @@
   "asOf": 1790864000,
   "options": {
     "evm": {
-      "rpcUrl": "http://127.0.0.1:57240",
+      "rpcUrl": "http://127.0.0.1:61823",
       "mode": "eas",
       "schemaUid": "0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900",
       "eas": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
@@ -19,10 +19,13 @@
       "chunk": "5"
     },
     "solana": {
-      "rpcUrl": "http://127.0.0.1:57245",
+      "rpcUrl": "http://127.0.0.1:61828",
       "programId": "CJfRUQxyonG6B5mnztsNUqxknbFT89DJdrdrzV9F96mU",
-      "cluster": "localnet"
+      "cluster": "localnet",
+      "attesters": [
+        "AKnL4NNf3DGWZJS6cPknBuEGnVsV4A4m5tgebLHaRSZ9"
+      ]
     }
   },
-  "bountyRelease": "4wJTpq2k4hMcAS15SdMqPQUw4PjpQHaEaVLAKpiVQ31Lcmrnj9mghxy1kRTBKpzv8RLB5NPUHJ274dAYvojdVshG"
+  "bountyRelease": "5DvhPHYEbDkBLmGygjrASJz9Ydm8AEVuS95m527FMrXU66K1aUDwkdgk6yoAbgpaYjBCLpRgtAzMBfErzgDRsm8w"
 }

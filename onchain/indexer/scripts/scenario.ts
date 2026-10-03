@@ -29,6 +29,9 @@ import { SolanaEscrow } from '../../solana/sdk/src/solana.js';
 import { SYSTEM_PROGRAM_ID, TEST_MINT, TOKEN_PROGRAM_ID, associatedTokenAddress, keypairFromSeed } from '../../solana/sdk/src/keys.js';
 import { decodeBase58 } from '../../solana/sdk/src/base58.js';
 import { hexOf, mergedByHash } from '../../solana/sdk/src/layout.js';
+
+/** The scenario office's merger-pseudonym secret (a fixture, not a real one). */
+const SECRET = 'scenario pseudonym secret, not a real one';
 import { feedbackFor, type RepEvent } from '../../../src/shared/reputation.js';
 import { boards, buildDataset, stableJson, type IndexerOptions } from '../src/indexer.js';
 import { recordingFetch, type Tape } from '../src/tape.js';
@@ -111,6 +114,8 @@ async function main() {
     // Solana side: one bounty on acme/app issue 30, paid for PR 3.
     const programId = kp(99).publicKey;
     const [attesterSol, approverSol, payer, funder, operator] = [kp(1), kp(2), kp(3), kp(4), kp(5)];
+    // Someone else, with escrow keys of their own: their payouts must never show on the board.
+    const [squatter, accomplice] = [kp(6), kp(7)];
     const mint = new Uint8Array(82);
     mint[44] = 6;
     mint[45] = 1;
@@ -123,7 +128,7 @@ async function main() {
     const preload: [string, string][] = [
       [TEST_MINT, accountFile(dir, 'mint', TEST_MINT, TOKEN_PROGRAM_ID, mint, 1_461_600)],
       [funderAta, accountFile(dir, 'funder-ata', funderAta, TOKEN_PROGRAM_ID, ata, 2_039_280)],
-      ...[attesterSol, approverSol, payer, funder, operator].map((k, i): [string, string] => [k.publicKey, accountFile(dir, `sol-${i}`, k.publicKey, SYSTEM_PROGRAM_ID, new Uint8Array(0), 10_000_000_000)]),
+      ...[attesterSol, approverSol, payer, funder, operator, squatter, accomplice].map((k, i): [string, string] => [k.publicKey, accountFile(dir, `sol-${i}`, k.publicKey, SYSTEM_PROGRAM_ID, new Uint8Array(0), 10_000_000_000)]),
     ];
     validator = await startValidator(dir, programId, preload);
     const escrow = new SolanaEscrow({ programId, rpc: validator.rpc, cluster: 'localnet', mint: TEST_MINT });
@@ -132,10 +137,19 @@ async function main() {
     await escrow.open(ref, { expiryTs: now + 7 * 86_400, attester: attesterSol.publicKey, approver: approverSol.publicKey }, payer);
     await escrow.fund(ref, 25_000_000n, funder);
     await escrow.claim(ref, { prNumber: 3, wallet: operator.publicKey }, attesterSol);
-    const paid = await escrow.release(ref, { prNumber: 3, mergeSha: '3'.repeat(40), mergedByHash: hexOf(mergedByHash(1001)) }, attesterSol, approverSol);
+    const paid = await escrow.release(ref, { prNumber: 3, mergeSha: '3'.repeat(40), mergedByHash: hexOf(mergedByHash(1001, SECRET)) }, attesterSol, approverSol);
+    // The squatter opens their own bounties on the same repository, funds them a little and pays
+    // themselves "for" PR 3 (which the office paid) and PR 1 (which it didn't), with the real merge commit.
+    for (const [issue, pr, sha] of [[30, 3, '3'.repeat(40)], [31, 1, (1).toString(16).padStart(40, 'c')]] as const) {
+      const theirs = { repo: 'acme/app', issue, attester: squatter.publicKey, approver: accomplice.publicKey };
+      await escrow.open(theirs, { expiryTs: now + 7 * 86_400, attester: squatter.publicKey, approver: accomplice.publicKey }, squatter);
+      await escrow.fund(theirs, 1n, funder);
+      await escrow.claim(theirs, { prNumber: pr, wallet: squatter.publicKey }, squatter);
+      await escrow.release(theirs, { prNumber: pr, mergeSha: sha }, squatter, accomplice);
+    }
 
     // The office's history, attested and reviewed as the office would.
-    const m = (id: number) => mergedByHashOf(id);
+    const m = (id: number) => mergedByHashOf(id, SECRET);
     const story: (Partial<MergeRecord> & { pr: number; outcome: MergeRecord['outcome']; agent: number; harness: string; self?: boolean; ref?: number })[] = [
       { pr: 1, outcome: OUTCOME.merged, agent: 0, harness: 'claude', mergedByHash: m(1001), openedAt: T - 7200, mergedAt: T + 100 },
       { pr: 2, outcome: OUTCOME.merged, agent: 0, harness: 'claude', mergedByHash: m(1002), openedAt: T - 3600, mergedAt: T + 200 },
@@ -167,7 +181,7 @@ async function main() {
     // Index it, recording every answer.
     const opts: IndexerOptions = {
       evm: { rpcUrl: anvil.rpc, mode: 'eas', schemaUid: att.schemaUid, eas: att.eas, attesters: [office.address], identity: reg.identity, reputation: reg.reputation, registrars: [registrarAcc.address], fromBlock: 0n, chunk: 5n },
-      solana: { rpcUrl: validator.rpc, programId, cluster: 'localnet' },
+      solana: { rpcUrl: validator.rpc, programId, cluster: 'localnet', attesters: [attesterSol.publicKey] },
     };
     const tape: Tape = { calls: {} };
     const ds = await buildDataset({ ...opts, fetchFn: recordingFetch(fetch, tape) });

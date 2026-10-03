@@ -45,7 +45,7 @@ before(async () => {
   const r = await deployRegistries(node.rpc, dir);
   deployed = { eas: a.eas, schemaUid: a.schemaUid, identity: r.identity, reputation: r.reputation };
   flags = chainFlagsFromEnv({});
-  flags.attest = { ...flags.attest, enabled: true, keyFile: keyFile('base-attester.json', ANVIL_KEYS[0], attester.address), rpc: node.rpc, schema: a.schemaUid, mode: 'eas', eas: a.eas };
+  flags.attest = { ...flags.attest, enabled: true, repos: ['acme/app'], keyFile: keyFile('base-attester.json', ANVIL_KEYS[0], attester.address), rpc: node.rpc, schema: a.schemaUid, mode: 'eas', eas: a.eas };
   flags.reputation = { ...flags.reputation, enabled: true, registrarKeyFile: keyFile('base-registrar.json', ANVIL_KEYS[1], registrar.address), identity: r.identity, registry: r.reputation, cardBase: 'https://office.example' };
 });
 after(async () => {
@@ -84,6 +84,7 @@ test("the office's merges, self-merge, close and revert land on chain, and the i
     workers: () => pulls.filter((p) => p.headRefName.startsWith('office/')).map((p) => { const id = p.headRefName.split('/')[1].split('-')[0] as 'w1' | 'w2'; return { id, ...workers[id], pr: { number: p.number, url: '' } } as never; }),
     tasks: () => [],
     repo: async () => 'acme/app',
+    isPublic: async () => true,
     attested: () => {},
     operatorOf: (id) => (id === 'w1' ? { name: 'Ana', login: 'ana-gh' } : { name: 'Ben', login: 'ben-gh' }),
   };

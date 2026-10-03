@@ -45,7 +45,11 @@ test('the board says what happened: merges by people, the revert, the close, the
   assert.equal(ds.events.some((e) => e.pr === 98 || e.pr === 99), false);
   // Every row carries a link to check it; the paid merge links its Solana payout.
   assert.ok(ds.events.every((e) => /^https:\/\/base-sepolia\.easscan\.org\/attestation\/view\/0x[0-9a-f]{64}$/.test(e.links.attestation ?? '') && /^https:\/\/sepolia\.basescan\.org\/tx\//.test(e.links.feedback ?? '')));
-  const paid = ds.events.find((e) => e.paid)!;
+  // Only the office's payout counts: the squatter's own bounties, paid to themselves "for" PR 3 and
+  // PR 1 with the real merge commits, neither replace it nor add one.
+  const paidAll = ds.events.filter((e) => e.paid);
+  assert.equal(paidAll.length, 1);
+  const paid = paidAll[0];
   assert.deepEqual([paid.pr, paid.paid!.tx, paid.paid!.amount], [3, scenario.bountyRelease, '25000000']);
   assert.match(paid.links.solana!, /^https:\/\/explorer\.solana\.com\/tx\//);
   assert.deepEqual(ds.agents.map((a) => a.uri), ['https://office.example/agents/1.json', 'https://office.example/agents/2.json', 'https://office.example/agents/3.json']);
