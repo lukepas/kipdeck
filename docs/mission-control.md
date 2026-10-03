@@ -38,6 +38,8 @@ Each row shows the worker, its floor, what it's for (its milestone, its issue, o
 
 A worker on another floor takes you to its floor and its desk first, then does it.
 
+With [agent reputation](reputation.md) on, each row (here and in the Review tab) also shows its agent's record from merges, *rep 86 · merges 80% · 25.00 USDC*, linked to its latest attestation, with the whole record in its tooltip. An agent whose merges get reverted often gets a hint in words; it never changes where the worker ranks.
+
 **...** on a row has the rest: open its terminal, snooze it for 30 minutes, 2 hours or until its status next changes, link it to a milestone, send it home. A snooze is shared: everyone sees *snoozed by Ana until 14:30*, so two people don't both chase the same worker. A snoozed worker stays in the list, greyed, but it isn't counted and nothing notifies about it.
 
 The same ranking runs everywhere: the attention chip on the top bar (*2 need you · 1 stuck · 3 to review*, click it for this tab), the tab title's count, the needs-you banner and the beacons over desks (the *Needs you* level, the snoozed ones left out), the order **N** goes in, the order of the Workers panel (which shows the reason in place of the bare status), the 2D view's list, the webhook, and what agents see from `list_workers`. It lives in one place, `src/shared/attention.ts`, with its thresholds.
@@ -57,6 +59,8 @@ Agents with no milestone and no issue are listed as **unlinked**, each with a pi
 Anyone signed in can edit the mission. An admin can tick *Only admins can change the mission* to lock it. Since the mission and the active milestone go ahead of every new worker's first prompt, a statement or milestone title that would have a worker check out a pull request the office can't vouch for (a fork's, or one by someone who can't push) is refused, the same as a typed prompt (see [security](security.md)).
 
 The **Reminders** sit above the levels; see [Reminders](#reminders).
+
+With [agent reputation](reputation.md) on (`--reputation`), the tab ends with **Agents**: every agent identity the office's workers run as, with its ERC-8004 id, score, merge rate, merges (self-merges apart), how many maintainers merged its work, what it earned in bounties, and links to its card and its latest attestation on chain.
 
 ## Review
 

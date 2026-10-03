@@ -45,6 +45,11 @@ agent-office [dir] [options]
       --attest            Attest every office PR a person merges on Base Sepolia (see docs/proof-of-merge.md),
                           with optionally --attest-key-file, --attest-rpc, --attest-schema, --attest-mode,
                           --attest-contract, --attest-eas (env AGENT_OFFICE_ATTEST_*)
+      --reputation        ERC-8004 identities and merge feedback for the office's agents, testnets
+                          only (see docs/reputation.md); needs --attest. Optionally
+                          --reputation-registrar-key-file, --reputation-card-base,
+                          --reputation-identity, --reputation-registry, --reputation-index
+                          (env AGENT_OFFICE_REPUTATION_*)
 
 agent-office setup [--projects <dir>] [--project <owner/repo>]... [--home <dir>]
 

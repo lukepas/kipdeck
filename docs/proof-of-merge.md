@@ -12,9 +12,11 @@ A person's merge is the only thing that moves reputation for an agent's work. Wh
 | --- | --- |
 | 1 merged | An office-made, non-fork PR merged by a person with admin, maintain or write permission |
 | 2 reverted | A later PR that reverts one of those merged (GitHub's "Reverts owner/name#N"); its `refUID` is the original attestation |
-| 3 closed | An office PR closed without merging |
+| 3 closed | An office PR closed without merging by a person with admin, maintain or write permission (GitHub's `closed_by`) |
 
-A merge by a bot or an app, or by someone without write access, earns nothing; the office records why and moves on. A fork's pull request is never the office's, whatever its branch is called (see `Floor.officePull`). Who merged and the merge commit are asked of GitHub fresh, not taken from the board's list. Revocation is kept for attestations that were wrong.
+A merge or a close by a bot or an app, or by someone without write access, earns nothing; the office records why and moves on. `mergedByHash` is the pseudonym of whoever merged it, closed it, or merged the revert. A fork's pull request is never the office's, whatever its branch is called (see `Floor.officePull`). Who merged and the merge commit are asked of GitHub fresh, not taken from the board's list. Revocation is kept for attestations that were wrong.
+
+When the PR claimed a [bounty](bounties.md), the attestation waits up to three days for the payout an admin approves, so it carries the devnet signature; after that it goes without it. With [`--reputation`](reputation.md), each attestation also carries the worker's ERC-8004 agent id, and the office follows it with one ERC-8004 feedback that points back at it.
 
 The schema, its fields and the fallback contract are in [onchain/attest](../onchain/attest/README.md). Its UID, the same on any chain since it depends only on the schema, the resolver and revocability, is `0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900`.
 
@@ -48,9 +50,11 @@ Each attestation goes on the floor's timeline as `merge-attested`, with a link t
 
 `onchain/attest/scripts/leaderboard.ts` reads every attestation of the schema made by the office's attester (anyone can attest with a public schema, so only trusted attesters count) and prints, per harness, merged, closed and reverted PRs, merge rate and revert rate, each row with a link to its latest attestation. The same `readAttestations` and `leaderboard` functions are what a public showcase page builds on.
 
+The full board (per agent and per harness, with time to merge, maintainers, self-merges and bounty earnings) is rebuilt by [onchain/indexer](../onchain/indexer/README.md), from the chain alone.
+
 ## Funding
 
-Nothing here calls a faucet. The deployer (registers the schema) and the attester (signs attestations) need a little Base Sepolia ETH from a browser faucet. `deploy-sepolia.sh` checks their balances first and prints the addresses to fund when they're short.
+Nothing here calls a faucet. The deployer (registers the schema) and the attester (signs attestations) need a little Base Sepolia ETH from a browser faucet. `deploy-sepolia.sh` checks their balances first and prints the addresses to fund when they're short. With `--reputation`, the registrar (`base-registrar.json`, which registers the agents) needs a little too; its public address is in `onchain/reputation/deployments/base-sepolia.json`.
 
 ## Code
 
@@ -58,13 +62,13 @@ Nothing here calls a faucet. The deployer (registers the schema) and the atteste
 | --- | --- |
 | `src/server/chain/attest.ts` | `MergeProofs`: what is owed on a merge, a revert or a close, the facts from GitHub, the chain-id guard, sending |
 | `src/server/chain/outbox.ts` | The persistent outbox and its backoff |
-| `src/server/chain/flags.ts` | `--attest` and `--x402` |
-| `src/server/office/chain.ts` | Making both services, and a floor as they see it |
+| `src/server/chain/flags.ts` | `--attest`, `--reputation` and `--x402` |
+| `src/server/office/chain.ts` | Making the services, and a floor as they see it |
 | `onchain/attest/` | The schema, the attestor, the reader, the fallback contract, scripts |
 
 Tests: `tests/proof-of-merge.test.ts` (attested once, the outbox retrying after an RPC failure and across a restart, the chain-id guard, bots and forks earning nothing, reverts and closes), and `onchain/attest/test/office.test.ts` (this service against a real EAS on anvil, read back into the leaderboard).
 
 ## Not done yet
 
-- `agentId` is 0 until workers get ERC-8004 identities; the leaderboard groups by harness until then.
+- `agentId` is 0 unless the office runs with `--reputation` (see [Agent reputation from merges](reputation.md)).
 - Nothing is on Base Sepolia yet: the wallets are unfunded. Funding them and running `deploy-sepolia.sh` is the one manual step.

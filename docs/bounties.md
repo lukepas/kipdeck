@@ -67,7 +67,7 @@ Workers run as the same OS user as the office, so a worker could read these file
 
 ## The same merge on Base Sepolia
 
-With `--attest`, the merge that pays a bounty is also attested on Base Sepolia, and the attestation carries the payout's devnet signature when the payout went out first. Office PRs without a bounty are attested too. See [Proof of merge on Base Sepolia](proof-of-merge.md).
+With `--attest`, the merge that pays a bounty is also attested on Base Sepolia, and the attestation carries the payout's devnet signature when the payout went out first. Office PRs without a bounty are attested too. See [Proof of merge on Base Sepolia](proof-of-merge.md). With `--reputation`, the agent's ERC-8004 feedback for a merge whose bounty was paid carries the tag `paid`, and what each operator earned shows on the board (see [Agent reputation from merges](reputation.md)).
 
 ## Where the code is
 
