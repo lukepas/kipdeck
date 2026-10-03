@@ -12,6 +12,7 @@ import type { GitHubClientMsg, GitHubServerMsg } from './protocol/github.js';
 import type { MeetingClientMsg, MeetingServerMsg } from './protocol/meetings.js';
 import type { PresenceClientMsg, PresenceServerMsg } from './protocol/presence.js';
 import type { QueueClientMsg, QueueServerMsg } from './protocol/queue.js';
+import type { ReputationClientMsg, ReputationServerMsg } from './protocol/reputation.js';
 import type { LandedServerMsg } from './protocol/landed.js';
 import type { MissionClientMsg, MissionServerMsg } from './protocol/mission.js';
 import type { SettingsClientMsg, SettingsServerMsg } from './protocol/settings.js';
@@ -31,6 +32,7 @@ export * from './protocol/landed.js';
 export * from './protocol/mission.js';
 export * from './protocol/presence.js';
 export * from './protocol/queue.js';
+export * from './protocol/reputation.js';
 export * from './protocol/settings.js';
 export * from './protocol/timeline.js';
 export * from './protocol/whiteboard.js';
@@ -54,7 +56,8 @@ export type ClientMsg =
   | WhiteboardClientMsg
   | MissionClientMsg
   | TimelineClientMsg
-  | BountiesClientMsg;
+  | BountiesClientMsg
+  | ReputationClientMsg;
 
 export type ServerMsg =
   | PresenceServerMsg
@@ -71,4 +74,5 @@ export type ServerMsg =
   | WhiteboardServerMsg
   | MissionServerMsg
   | TimelineServerMsg
-  | BountiesServerMsg;
+  | BountiesServerMsg
+  | ReputationServerMsg;

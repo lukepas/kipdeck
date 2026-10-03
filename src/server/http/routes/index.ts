@@ -8,6 +8,7 @@ import { authRoutes } from './auth.js';
 import { fileRoutes } from './files.js';
 import { githubRoutes } from './github.js';
 import { pageRoutes } from './pages.js';
+import { reputationRoutes } from './reputation.js';
 import { searchRoutes } from './search.js';
 import { serviceRoutes } from './services.js';
 import { x402Routes } from './x402.js';
@@ -35,6 +36,11 @@ export const routes: readonly Route[] = [
   // Paid tasks over x402 (testnets, --x402 only): the payment is what lets the payer in.
   x402Routes.offer,
   x402Routes.task,
+  // Merge-based agent reputation (--reputation): read only, for anyone.
+  reputationRoutes.agent,
+  reputationRoutes.leaderboard,
+  reputationRoutes.dataset,
+  reputationRoutes.card,
   // Signed in.
   authRoutes.whoami,
   agentRoutes.models,
