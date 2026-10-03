@@ -20,6 +20,9 @@ export interface AgentIdentity {
   tx?: string;
   /** The agentURI it was pointed at, once it was. */
   uri?: string;
+  /** A registration sent, its receipt not seen yet: looked up before anything is sent again. */
+  pendingTx?: string;
+  pendingAt?: number;
   createdAt: number;
 }
 
@@ -40,6 +43,11 @@ function clean(raw: unknown): AgentIdentity | undefined {
   if (tx && /^0x[0-9a-f]{64}$/i.test(tx)) out.tx = tx;
   const uri = str(r.uri, 300);
   if (uri && /^https:\/\//.test(uri)) out.uri = uri;
+  const pending = str(r.pendingTx, 80);
+  if (pending && /^0x[0-9a-f]{64}$/i.test(pending)) {
+    out.pendingTx = pending;
+    out.pendingAt = Number.isSafeInteger(r.pendingAt) ? (r.pendingAt as number) : 0;
+  }
   return out;
 }
 

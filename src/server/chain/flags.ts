@@ -28,6 +28,12 @@ export interface X402Flags {
 
 export interface AttestFlags {
   enabled: boolean;
+  /**
+   * The repositories (owner/name, lower case) whose merges may be attested. An attestation puts the
+   * repository's name on a public chain for good, so nothing is attested unless named here, and a
+   * private repository never is.
+   */
+  repos: string[];
   keyFile: string;
   rpc: string;
   /** The schema UID (default: onchain/attest/deployments/base-sepolia.json). */
@@ -79,6 +85,7 @@ export function chainFlagsFromEnv(env: NodeJS.ProcessEnv = process.env): ChainFl
     },
     attest: {
       enabled: on(env.AGENT_OFFICE_ATTEST),
+      repos: list(env.AGENT_OFFICE_ATTEST_REPOS).map((r) => r.toLowerCase()),
       keyFile: env.AGENT_OFFICE_ATTEST_KEY_FILE || path.join(KEY_DIR, 'base-attester.json'),
       rpc: env.AGENT_OFFICE_ATTEST_RPC || BASE_SEPOLIA_RPCS[0],
       ...(env.AGENT_OFFICE_ATTEST_SCHEMA ? { schema: env.AGENT_OFFICE_ATTEST_SCHEMA } : {}),
@@ -102,6 +109,7 @@ const VALUED: Record<string, (f: ChainFlags, v: string) => void> = {
   '--x402-repos': (f, v) => void f.x402.repos.push(...list(v)),
   '--x402-facilitator': (f, v) => void (f.x402.facilitator = v),
   '--x402-asset': (f, v) => void (f.x402.asset = v),
+  '--attest-repos': (f, v) => void f.attest.repos.push(...list(v).map((r) => r.toLowerCase())),
   '--attest-key-file': (f, v) => void (f.attest.keyFile = v),
   '--attest-rpc': (f, v) => void (f.attest.rpc = v),
   '--attest-schema': (f, v) => void (f.attest.schema = v),
@@ -145,6 +153,10 @@ export const CHAIN_HELP = `      --x402              Take paid tasks over x402 (
       --x402-asset <0x>   A test token standing in for Circle's Base Sepolia USDC
       --attest            Attest every office PR a person merges on Base Sepolia
                           (EAS; env AGENT_OFFICE_ATTEST=1)
+      --attest-repos <list>
+                          owner/name public repositories to attest (required:
+                          a repository's name goes on chain for good, and a
+                          private one is never attested)
       --attest-key-file <path>
                           The attester's key file (default
                           ~/.config/agent-office-chain/base-attester.json)

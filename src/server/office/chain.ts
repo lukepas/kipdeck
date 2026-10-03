@@ -36,6 +36,7 @@ export function proofFloor(f: Floor, ctx?: Ctx): ProofFloor {
     workers: () => f.workers.list(),
     tasks: () => f.queue.state().tasks,
     repo: () => f.github.repoInfo().then((r) => r.nameWithOwner.toLowerCase(), () => undefined),
+    isPublic: () => f.github.repoInfo().then((r) => (r.private === undefined ? undefined : !r.private), () => undefined),
     attested: (e) => f.watch.attested(e),
     ...(ctx ? { operatorOf: (workerId: string | undefined) => operatorOf(ctx, f, workerId) } : {}),
   };
@@ -57,6 +58,7 @@ export function createChainServices(ctx: Ctx, bounties: Bounties): { x402?: X402
         return f && { id: f.id, queue: f.queue, providers: f.project.agentProviders, promptProblem: (prompt: string) => f.github.checkoutProblem(prompt) };
       },
       liveTask: (floorId, taskId) => ctx.floors.get(floorId)?.queue.state().tasks.find((t) => t.id === taskId),
+      queueOf: (floorId) => ctx.floors.get(floorId)?.queue,
       harnesses: () => [...(ctx.floors.values().next().value?.project.agentProviders ?? [])],
       toast: (floorId, text) => ctx.toastFloor(ctx.floors.get(floorId), text),
     });
@@ -75,6 +77,10 @@ export function createChainServices(ctx: Ctx, bounties: Bounties): { x402?: X402
   if (cfg.chain.attest.enabled) {
     const bad = rpcProblem(cfg.chain.attest.rpc);
     if (bad) refuse(bad);
+    const repos = cfg.chain.attest.repos;
+    if (!repos.length) refuse('--attest needs --attest-repos: the public repositories (owner/name) whose merges go on chain');
+    const odd = repos.find((x) => !/^[\w.-]+\/[\w.-]+$/.test(x));
+    if (odd) refuse(`--attest-repos: ${odd} isn't owner/name`);
     let pending: NodeJS.Timeout | undefined;
     const changed = () => {
       pending ??= setTimeout(() => {
@@ -114,7 +120,7 @@ export function createChainServices(ctx: Ctx, bounties: Bounties): { x402?: X402
       toast: (floorId, text) => ctx.toastFloor(ctx.floors.get(floorId), text),
       ...(r ? { agentIdFor: (item) => r.agentIdFor(item), onAttested: (item) => r.attested(item) } : {}),
     });
-    console.log(`  proof of merge: attesting merged office PRs on Base Sepolia (${cfg.chain.attest.mode === 'event' ? 'MergeAttestor' : 'EAS'})`);
+    console.log(`  proof of merge: attesting merged office PRs on Base Sepolia (${cfg.chain.attest.mode === 'event' ? 'MergeAttestor' : 'EAS'}) for ${repos.join(', ')}, public repositories only`);
     if (r) console.log(`  reputation: ERC-8004 identities and merge feedback on Base Sepolia${rep.indexMinutes ? `, the board rebuilt from the chain every ${rep.indexMinutes} min` : ''}`);
   }
   return { x402, proofs, reputation, reputationIndex };

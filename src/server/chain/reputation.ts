@@ -17,7 +17,8 @@ import { pathToFileURL } from 'node:url';
 import type { AgentRepView, ReputationState } from '../../shared/protocol.js';
 import { agentKey, feedbackFor, leaderboard, reputationOf, type RepEvent } from '../../shared/reputation.js';
 import { readStateJson, writeState } from '../safefs.js';
-import { checkChain, rpcProblem } from './attest.js';
+import { DROPPED_AFTER_MS, checkChain, rpcProblem } from './attest.js';
+import { operatorPseudonym, pseudonymSecret, publicAgentName } from './pseudonym.js';
 import type { ChainFlags } from './flags.js';
 import { Identities, type AgentIdentity } from './identities.js';
 import { backoff, type OutboxItem } from './outbox.js';
@@ -32,7 +33,8 @@ export const SOLANA_DEVNET = 'solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1';
 /** The part of onchain/reputation's build the office calls. */
 export interface RepRegistry {
   readonly address: string;
-  register(agentURI?: string): Promise<{ agentId: bigint; tx: string; link: string }>;
+  register(agentURI?: string, onSent?: (hash: string) => void): Promise<{ agentId: bigint; tx: string; link: string }>;
+  registered(hash: string): Promise<{ agentId: bigint; tx: string; link: string } | 'pending' | 'missing' | 'failed'>;
   setAgentURI(agentId: bigint, uri: string): Promise<{ tx: string }>;
   giveFeedback(f: { agentId: bigint; value: number; tag1: string; tag2: string; feedbackURI: string; feedbackHash: string }): Promise<{ tx: string; index: bigint; link: string }>;
 }
@@ -135,6 +137,7 @@ export class Reputation {
   private flushing?: Promise<void>;
   private timer?: NodeJS.Timeout;
   private rpcFetch: typeof fetch;
+  private secret?: Buffer;
   private now: () => number;
 
   constructor(private deps: ReputationDeps) {
@@ -199,6 +202,11 @@ export class Reputation {
     return agentKey(item.harness, item.operator ?? 'office', item.name ?? item.worker ?? 'agent');
   }
 
+  /** An identity's name on public pages and its card: the operator as a pseudonym, never their name. */
+  publicName(a: Pick<AgentIdentity, 'key' | 'operator'>): string {
+    return publicAgentName((this.secret ??= pseudonymSecret(this.deps.dataDir)), a.key, a.operator);
+  }
+
   /** Where an identity's card is: the office's /agents/<id>.json. */
   cardUrl(agentId: string): string {
     return `${(this.deps.flags.reputation.cardBase ?? '').replace(/\/+$/, '')}/agents/${agentId}.json`;
@@ -216,9 +224,19 @@ export class Reputation {
       if (!a.agentId) {
         const { registrar } = await this.clients();
         await checkChain(this.deps.flags.attest.rpc, this.rpcFetch);
-        const r = await registrar.register();
+        // A registration sent before whose receipt never came: looked up, so no second identity is made.
+        let r = a.pendingTx ? await registrar.registered(a.pendingTx) : 'missing';
+        if (r === 'pending' || (r === 'missing' && a.pendingTx && this.now() - (a.pendingAt ?? 0) < DROPPED_AFTER_MS)) throw new Error(`waiting for its registration ${a.pendingTx} to be mined`);
+        if (typeof r !== 'object')
+          r = await registrar.register(undefined, (hash) => {
+            a.pendingTx = hash;
+            a.pendingAt = this.now();
+            this.identities.save();
+          });
         a.agentId = r.agentId.toString();
         a.tx = r.tx;
+        delete a.pendingTx;
+        delete a.pendingAt;
         this.identities.save();
         this.deps.changed?.();
       }
@@ -361,15 +379,15 @@ export class Reputation {
     ];
     return {
       type: 'https://eips.ethereum.org/EIPS/eip-8004#registration-v1',
-      name: a.key,
-      description: `A coding agent run in an Agent Office: ${a.harness}, operated by ${a.operator}. Its reputation comes only from pull requests a person merged, reverted or closed (Proof of Merge, testnets only). Built on agent-office (MIT, webdevcody / AgentSystemLabs).`,
+      name: this.publicName(a),
+      description: `A coding agent run in an Agent Office: ${a.harness}, operated by ${operatorPseudonym((this.secret ??= pseudonymSecret(this.deps.dataDir)), a.operator)} (a pseudonym). Its reputation comes only from pull requests a person merged, reverted or closed (Proof of Merge, testnets only). Built on agent-office (MIT, webdevcody / AgentSystemLabs).`,
       services,
       x402Support: !!this.deps.x402?.(),
       active: true,
       registrations: src.identity ? [{ agentId: Number(agentId), agentRegistry: `eip155:84532:${src.identity}` }] : [],
       supportedTrust: ['reputation'],
       harness: a.harness,
-      operator: a.operator,
+      operator: operatorPseudonym(this.secret!, a.operator),
     };
   }
 }

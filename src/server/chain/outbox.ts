@@ -1,7 +1,8 @@
 // The proof-of-merge outbox: every attestation the office owes, kept in its data folder (attestations.json,
 // through the state-file helpers) until it's on chain, so a merge is never lost to an RPC that's down
 // or an office that restarts. Each waits for its next try with a growing pause; the ones on chain stay,
-// for a later revert to refer to and so nothing is attested twice.
+// for a later revert to refer to and so nothing is attested twice. A transaction's hash is kept the
+// moment it's sent, so a receipt that never came is looked up rather than sent again.
 import path from 'node:path';
 import { readStateJson, writeState } from '../safefs.js';
 
@@ -50,6 +51,9 @@ export interface OutboxItem {
   uid?: string;
   tx?: string;
   link?: string;
+  /** Sent, receipt not seen yet: the transaction hash and when (ms). Looked up before anything is sent again. */
+  pendingTx?: string;
+  pendingAt?: number;
 }
 
 const KEPT = 5000;
@@ -73,6 +77,10 @@ function clean(raw: unknown): OutboxItem | undefined {
   if (by) out.mergedById = by;
   const opened = int(r.openedAt);
   if (opened) out.openedAt = opened;
+  if (typeof r.pendingTx === 'string' && /^0x[0-9a-f]{64}$/i.test(r.pendingTx)) {
+    out.pendingTx = r.pendingTx;
+    out.pendingAt = int(r.pendingAt) ?? 0;
+  }
   if (r.self === true) out.self = true;
   if (typeof r.agentId === 'string' && /^\d{1,78}$/.test(r.agentId)) out.agentId = r.agentId;
   if (typeof r.paidAmount === 'string' && /^\d{1,30}$/.test(r.paidAmount)) out.paidAmount = r.paidAmount;
@@ -139,9 +147,25 @@ export class Outbox {
     this.save();
   }
 
+  /** Its transaction went out: kept before the receipt is awaited, so nothing is sent twice. */
+  sent(item: OutboxItem, hash: string, now = Date.now()) {
+    item.pendingTx = hash;
+    item.pendingAt = now;
+    this.save();
+  }
+
+  /** Its transaction failed or was dropped: it may be sent again. */
+  unsent(item: OutboxItem) {
+    delete item.pendingTx;
+    delete item.pendingAt;
+    this.save();
+  }
+
   done(item: OutboxItem, r: { uid: string; tx: string; link: string }) {
     Object.assign(item, r);
     delete item.error;
+    delete item.pendingTx;
+    delete item.pendingAt;
     this.save();
   }
 

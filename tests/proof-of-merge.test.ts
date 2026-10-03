@@ -10,34 +10,48 @@ import path from 'node:path';
 import { MergeProofs, checkChain, revertedPr, rpcProblem, type AttestSdk, type MergeRecord, type ProofFloor } from '../src/server/chain/attest.js';
 import { Outbox, backoff } from '../src/server/chain/outbox.js';
 import type { AttestFlags } from '../src/server/chain/flags.js';
+import { mergerPseudonym, pseudonymSecret } from '../src/server/chain/pseudonym.js';
 import type { GhPull } from '../src/shared/protocol.js';
 
-const FLAGS: AttestFlags = { enabled: true, keyFile: '/keys/base-attester.json', rpc: 'https://sepolia.base.org', schema: `0x${'5c'.repeat(32)}`, mode: 'eas' };
+const FLAGS: AttestFlags = { enabled: true, repos: ['acme/app'], keyFile: '/keys/base-attester.json', rpc: 'https://sepolia.base.org', schema: `0x${'5c'.repeat(32)}`, mode: 'eas' };
 const SHA = 'ab'.repeat(20);
 
 const pull = (number: number, extra: Partial<GhPull> = {}): GhPull => ({ number, title: `PR ${number}`, state: 'MERGED', isDraft: false, url: `https://github.com/acme/app/pull/${number}`, author: 'office-bot', labels: [], reviewDecision: '', headRefName: `office/w${number}`, baseRefName: 'main', createdAt: '', updatedAt: '', additions: 1, deletions: 0, checks: 'pass', body: '', closes: [], ...extra });
 
-function fixture(opts: { chainId?: string; mergedBy?: { login: string; id: number; type: string }; closedBy?: { login: string; id: number; type: string }; permission?: string } = {}) {
+function fixture(opts: { chainId?: string; mergedBy?: { login: string; id: number; type: string }; closedBy?: { login: string; id: number; type: string }; permission?: string; isPublic?: boolean; flags?: AttestFlags; log?: (line: string) => void } = {}) {
   const dir = mkdtempSync(path.join(tmpdir(), 'office-pom-'));
   let now = 1_800_000_000_000;
   const sent: { record: MergeRecord; ref?: string }[] = [];
   let failures = 0;
+  /** Sends that go out and then lose their receipt (a timeout): the next try must look them up. */
+  let lostReceipts = 0;
+  const mined = new Map<string, { uid: string; tx: string; link: string }>();
   const attested: { pr: number; text: string; link?: string }[] = [];
   const pulls: GhPull[] = [];
   const sdk: AttestSdk = {
     createAttestor: () => ({
       address: '0x83dAa5252b68D98F25CbB089CCeE4edc7C083403',
-      async attest(record, ref) {
+      async attest(record, ref, onSent) {
         if (failures > 0) {
           failures--;
           throw new Error('fetch failed: sepolia.base.org is down');
         }
         sent.push({ record, ...(ref ? { ref } : {}) });
         const uid = `0x${String(sent.length).padStart(64, '0')}`;
-        return { uid, tx: `0x${'ee'.repeat(32)}`, link: `https://base-sepolia.easscan.org/attestation/view/${uid}` };
+        const tx = `0x${String(sent.length).padStart(2, '0').repeat(32)}`;
+        const r = { uid, tx, link: `https://base-sepolia.easscan.org/attestation/view/${uid}` };
+        mined.set(tx, r);
+        onSent?.(tx);
+        if (lostReceipts > 0) {
+          lostReceipts--;
+          throw new Error('Timed out while waiting for transaction to be confirmed');
+        }
+        return r;
+      },
+      async lookup(hash) {
+        return mined.get(hash) ?? 'missing';
       },
     }),
-    mergedByHashOf: (id) => (id ? `0x${id.toString(16).padStart(64, '0')}` : `0x${'0'.repeat(64)}`),
     readDeployment: () => undefined,
   };
   const chainCalls: string[] = [];
@@ -60,10 +74,11 @@ function fixture(opts: { chainId?: string; mergedBy?: { login: string; id: numbe
     workers: () => [{ id: 'w7', name: 'Juno', provider: 'codex', pr: { number: 7, url: '' } } as any],
     tasks: () => [],
     repo: async () => 'acme/app',
+    isPublic: async () => opts.isPublic ?? true,
     attested: (e) => attested.push(e),
   };
-  const make = () => new MergeProofs({ dataDir: dir, flags: FLAGS, floor: (id) => (id === 'f1' ? floor : undefined), loadSdk: async () => sdk, gh, fetch: fetchImpl, now: () => now, timer: false, payout: (_f, pr) => (pr === 7 ? { tx: '5'.repeat(88), amount: '25000000', decimals: 6 } : undefined) });
-  return { dir, pulls, sent, attested, chainCalls, floor, make, failNext: (n: number) => void (failures = n), tick: (ms: number) => void (now += ms), close: () => rmSync(dir, { recursive: true, force: true }) };
+  const make = () => new MergeProofs({ dataDir: dir, flags: opts.flags ?? FLAGS, floor: (id) => (id === 'f1' ? floor : undefined), loadSdk: async () => sdk, gh, fetch: fetchImpl, now: () => now, timer: false, ...(opts.log ? { log: opts.log } : {}), payout: (_f, pr) => (pr === 7 ? { tx: '5'.repeat(88), amount: '25000000', decimals: 6 } : undefined) });
+  return { dir, pulls, sent, attested, chainCalls, floor, make, loseReceipts: (n: number) => void (lostReceipts = n), failNext: (n: number) => void (failures = n), tick: (ms: number) => void (now += ms), close: () => rmSync(dir, { recursive: true, force: true }) };
 }
 
 test('a merged office PR is attested once, with who merged it, the merge commit, the harness and the bounty payout', async (t) => {
@@ -74,7 +89,7 @@ test('a merged office PR is attested once, with who merged it, the merge commit,
   await new Promise((r) => setImmediate(r));
   await proofs.flush();
   assert.equal(f.sent.length, 1);
-  assert.deepEqual(f.sent[0].record, { repo: 'acme/app', pr: 7, mergeSha: SHA, mergedByHash: `0x${(4242).toString(16).padStart(64, '0')}`, harness: 'codex', agentId: 0n, outcome: 1, solanaTx: '5'.repeat(88), mergedAt: 1_800_000_000, openedAt: 1_799_996_400 });
+  assert.deepEqual(f.sent[0].record, { repo: 'acme/app', pr: 7, mergeSha: SHA, mergedByHash: `0x${mergerPseudonym(pseudonymSecret(f.dir), 4242)}`, harness: 'codex', agentId: 0n, outcome: 1, solanaTx: '5'.repeat(88), mergedAt: 1_800_000_000, openedAt: 1_799_996_400 });
   assert.equal(f.attested.length, 1);
   assert.match(f.attested[0].link!, /^https:\/\/base-sepolia\.easscan\.org\/attestation\/view\/0x/);
   assert.match(f.attested[0].text, /PR #7 merged, by Juno \(codex\)/);
@@ -181,7 +196,7 @@ test('an office PR closed without merging gets outcome 3', async (t) => {
   await proofs.flush();
   assert.equal(f.sent.length, 1);
   // Who closed it is a person with write access, asked of GitHub: their pseudonym goes in mergedByHash.
-  assert.deepEqual([f.sent[0].record.outcome, f.sent[0].record.mergeSha, f.sent[0].record.mergedByHash], [3, '0'.repeat(40), `0x${(4242).toString(16).padStart(64, '0')}`]);
+  assert.deepEqual([f.sent[0].record.outcome, f.sent[0].record.mergeSha, f.sent[0].record.mergedByHash], [3, '0'.repeat(40), `0x${mergerPseudonym(pseudonymSecret(f.dir), 4242)}`]);
 });
 
 test("an office PR closed by a bot, or by someone without write access, earns nothing", async (t) => {
@@ -204,4 +219,60 @@ test('attestations only go through Base Sepolia\'s public RPCs (or a local node 
   assert.equal(rpcProblem('http://127.0.0.1:8545'), undefined);
   assert.match(rpcProblem('https://mainnet.base.org') ?? '', /--attest-rpc/);
   assert.match(rpcProblem('http://10.0.0.5:8545') ?? '', /--attest-rpc/);
+});
+
+test("a private repository, or one not named in --attest-repos, is never attested: its name would be public on chain for good", async (t) => {
+  const lines: string[] = [];
+  for (const opts of [{ isPublic: false }, { flags: { ...FLAGS, repos: ['acme/other'] } }]) {
+    const f = fixture({ ...opts, log: (l) => lines.push(l) });
+    t.after(() => f.close());
+    const proofs = f.make();
+    f.pulls.push(pull(7));
+    proofs.merged(f.floor, 7);
+    await new Promise((r) => setImmediate(r));
+    await proofs.flush();
+    assert.equal(f.sent.length, 0);
+    assert.equal(proofs.outbox.all().length, 0);
+  }
+  assert.deepEqual(lines, ['  proof of merge: not attesting acme/app: acme/app is private: its name and pull requests would be public on chain', "  proof of merge: not attesting acme/app: acme/app isn't in --attest-repos"]);
+});
+
+test('an item owed from before a repository went private is skipped when it would go out', async (t) => {
+  let open = true;
+  const f = fixture();
+  t.after(() => f.close());
+  f.floor.isPublic = async () => open;
+  const proofs = f.make();
+  f.pulls.push(pull(7));
+  f.failNext(1);
+  proofs.merged(f.floor, 7);
+  await new Promise((r) => setImmediate(r));
+  await proofs.flush();
+  open = false;
+  f.tick(backoff(0));
+  await proofs.flush();
+  assert.equal(f.sent.length, 0);
+  assert.match(proofs.outbox.get('acme/app#7:1')!.skipped!, /private/);
+});
+
+test('a receipt that never came is looked up on the next try, and the attestation is not sent twice', async (t) => {
+  const f = fixture();
+  t.after(() => f.close());
+  const proofs = f.make();
+  f.pulls.push(pull(7));
+  f.loseReceipts(1);
+  proofs.merged(f.floor, 7);
+  await new Promise((r) => setImmediate(r));
+  await proofs.flush();
+  const item = proofs.outbox.get('acme/app#7:1')!;
+  assert.match(item.pendingTx!, /^0x[0-9a-f]{64}$/);
+  assert.equal(item.uid, undefined);
+  // The office restarts and tries again: it finds the attestation the lost receipt was for.
+  const again = f.make();
+  f.tick(backoff(0));
+  await again.flush();
+  assert.equal(f.sent.length, 1);
+  const done = again.outbox.get('acme/app#7:1')!;
+  assert.match(done.uid!, /^0x0+1$/);
+  assert.equal(done.pendingTx, undefined);
 });

@@ -1,5 +1,6 @@
 // Proof of merge on Base Sepolia, off unless the office is started with --attest: every office-made,
-// non-fork pull request a person with write access merges gets one EAS attestation (outcome 1), with
+// non-fork pull request a person with write access merges, in a repository named in --attest-repos
+// that GitHub reports public, gets one EAS attestation (outcome 1), with
 // or without a bounty on it; a later revert of it that merges gets another (outcome 2, refUID the
 // first); an office PR closed without merging gets outcome 3. A bot's merge earns nothing.
 //
@@ -12,6 +13,12 @@
 // use, see reputation.ts), notes when the person who merged or closed it was the agent's own operator
 // (a self-merge), and waits a while for a bounty claimed by the PR to be paid, so that the
 // attestation and its feedback say so. Who closed a PR unmerged is checked with GitHub like a merger.
+//
+// An attestation is public and permanent: the repository's name, the PR number and the merge commit
+// are readable by anyone, so a private repository is never attested, whatever --attest-repos says.
+// Who merged is a keyed pseudonym (pseudonym.ts), never the GitHub id itself. The transaction hash is
+// kept in the outbox as soon as it's sent, so a receipt that times out, or an office that restarts
+// mid-send, looks the transaction up again instead of attesting twice.
 import { existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import type { GhPull, QueueTask, WorkerInfo } from '../../shared/protocol.js';
@@ -19,6 +26,7 @@ import type { AttestFlags } from './flags.js';
 import { BASE_SEPOLIA_RPCS } from './flags.js';
 import { closeFacts, pullFacts, type GhRun } from './merge-proof.js';
 import { Outbox, type OutboxItem, type Outcome } from './outbox.js';
+import { mergerPseudonym, pseudonymSecret } from './pseudonym.js';
 import { guardedRpcFetch, sdkCandidates, type PullFacts } from './sdk.js';
 
 export const CHAIN_ID_HEX = '0x14a34';
@@ -44,13 +52,17 @@ export interface MergeRecord {
 }
 export interface Attestor {
   readonly address: string;
-  attest(record: MergeRecord, refUid?: string): Promise<{ uid: string; tx: string; link: string }>;
+  attest(record: MergeRecord, refUid?: string, onSent?: (hash: string) => void): Promise<{ uid: string; tx: string; link: string }>;
+  lookup(hash: string): Promise<{ uid: string; tx: string; link: string } | 'pending' | 'missing' | 'failed'>;
 }
 export interface AttestSdk {
   createAttestor(o: { rpcUrl: string; keyFile: string; mode: 'eas' | 'event'; schemaUid?: string; eas?: string; mergeAttestor?: string; fetchFn?: typeof fetch }): Attestor;
-  mergedByHashOf(githubUserId: number | undefined): string;
   readDeployment(name?: string): { schemaUid: string; mergeAttestor?: string } | undefined;
 }
+
+const ZERO32 = `0x${'0'.repeat(64)}`;
+/** How long a sent attestation the node has never heard of is waited for before it is sent again. */
+export const DROPPED_AFTER_MS = 10 * 60_000;
 
 /** What the service needs of a floor (see Floor). */
 export interface ProofFloor {
@@ -61,6 +73,8 @@ export interface ProofFloor {
   workers(): readonly WorkerInfo[];
   tasks(): readonly QueueTask[];
   repo(): Promise<string | undefined>;
+  /** Whether GitHub reports the repository public (undefined when it hasn't said). Only a public one is attested. */
+  isPublic?(): Promise<boolean | undefined>;
   attested(e: { pr: number; text: string; link?: string; worker?: string; name?: string }): void;
   /** Who runs a worker (its owner's account name, and their own GitHub login when they signed in to GitHub); the office's own otherwise. */
   operatorOf?(workerId: string | undefined): { name: string; login?: string };
@@ -86,6 +100,8 @@ export interface ProofDeps {
   /** An attestation is on chain (its feedback is owed next). */
   onAttested?(item: OutboxItem): void;
   toast?(floorId: string, text: string): void;
+  /** Where a line about a repository that isn't attested goes (default the console). */
+  log?(line: string): void;
   /** Tests: the SDK, an attestor, how gh runs, the RPC fetch, the clock, and no timer. */
   loadSdk?: () => Promise<AttestSdk>;
   gh?: GhRun;
@@ -141,6 +157,8 @@ export class MergeProofs {
   private open = new Map<string, Set<number>>();
   private rpcFetch: typeof fetch;
   private now: () => number;
+  private secret?: Buffer;
+  private told = new Set<string>();
 
   constructor(private deps: ProofDeps) {
     this.outbox = new Outbox(deps.dataDir);
@@ -158,6 +176,24 @@ export class MergeProofs {
     clearInterval(this.timer);
   }
 
+  /** Why `repo` on `floor` may not be attested (it isn't opted in, or GitHub doesn't report it public), or undefined. */
+  async refusal(floor: ProofFloor, repo: string): Promise<string | undefined> {
+    if (!this.deps.flags.repos.includes(repo)) return `${repo} isn't in --attest-repos`;
+    const open = await floor.isPublic?.();
+    if (open !== true) return open === false ? `${repo} is private: its name and pull requests would be public on chain` : `GitHub hasn't said ${repo} is public`;
+    return undefined;
+  }
+
+  /** Whether `repo` may be attested; says why not once per repository. */
+  private async allowed(floor: ProofFloor, repo: string): Promise<boolean> {
+    const why = await this.refusal(floor, repo);
+    if (why && !this.told.has(repo)) {
+      this.told.add(repo);
+      (this.deps.log ?? console.log)(`  proof of merge: not attesting ${repo}: ${why}`);
+    }
+    return !why;
+  }
+
   /** Pull request `n` merged on `floor` (Floor.merged): owe an attestation if it's the office's own, or reverts one. */
   merged(floor: ProofFloor, n: number) {
     void this.mergedNow(floor, n).catch((err) => console.error(`agent-office: proof of merge for PR #${n}: ${(err as Error).message}`));
@@ -166,7 +202,7 @@ export class MergeProofs {
   private async mergedNow(floor: ProofFloor, n: number) {
     const p = floor.pulls().find((x) => x.number === n);
     const repo = await floor.repo();
-    if (!p || !repo || p.fork) return;
+    if (!p || !repo || p.fork || !(await this.allowed(floor, repo))) return;
     const now = this.now();
     const reverts = revertedPr(p, repo);
     const original = reverts !== undefined ? this.outbox.get(`${repo}#${reverts}:1`) : undefined;
@@ -194,7 +230,7 @@ export class MergeProofs {
     const closed = items.filter((p) => p.state === 'CLOSED' && before.has(p.number) && floor.officePull(p));
     if (!closed.length) return;
     const repo = await floor.repo();
-    if (!repo) return;
+    if (!repo || !(await this.allowed(floor, repo))) return;
     const now = this.now();
     for (const p of closed) this.outbox.add({ key: `${repo}#${p.number}:3`, floor: floor.id, repo, pr: p.number, outcome: 3, ...harnessOf(floor, p), mergedAt: now, ...openedAt(p) }, now);
     void this.flush();
@@ -261,6 +297,12 @@ export class MergeProofs {
   }
 
   private async send(item: OutboxItem) {
+    // Checked again when it goes out: an item owed from before the rule, or a repository made private since.
+    const floor = this.deps.floor(item.floor);
+    if (!floor) throw new Error('its floor is closed');
+    const refused = await this.refusal(floor, item.repo);
+    if (refused) return this.outbox.skip(item, refused);
+    if (item.pendingTx && (await this.resume(item))) return;
     const facts = await this.facts(item);
     if (facts) {
       if (!facts.merged || facts.fork) return this.outbox.skip(item, facts.fork ? 'a fork\'s pull request' : 'GitHub says it did not merge');
@@ -295,7 +337,7 @@ export class MergeProofs {
       repo: item.repo,
       pr: item.pr,
       mergeSha: item.outcome === 3 ? '0'.repeat(40) : (item.mergeSha ?? ''),
-      mergedByHash: sdk.mergedByHashOf(item.mergedById),
+      mergedByHash: item.mergedById ? `0x${mergerPseudonym((this.secret ??= pseudonymSecret(this.deps.dataDir)), item.mergedById)}` : ZERO32,
       harness: /^[a-z0-9_-]{1,32}$/.test(item.harness) ? item.harness : 'unknown',
       agentId: BigInt(item.agentId ?? 0),
       outcome: item.outcome,
@@ -303,10 +345,35 @@ export class MergeProofs {
       mergedAt: Math.floor(item.mergedAt / 1000),
       openedAt: Math.min(Math.floor((item.openedAt ?? 0) / 1000), Math.floor(item.mergedAt / 1000)),
     };
-    const r = await attestor.attest(record, ref?.uid);
     item.maintainer = record.mergedByHash;
+    const r = await attestor.attest(record, ref?.uid, (hash) => this.outbox.sent(item, hash, this.now()));
+    this.finish(item, r);
+  }
+
+  /**
+   * An attestation sent before (its hash in the outbox), looked up instead of sent again. Returns
+   * whether it's settled: on chain, or still on its way (throws, to be tried later). Sent again only
+   * when it failed, or the node never heard of it for DROPPED_AFTER_MS.
+   */
+  private async resume(item: OutboxItem): Promise<boolean> {
+    const sdk = await (this.sdk ??= this.load().catch((e) => {
+      this.sdk = undefined;
+      throw e;
+    }));
+    const found = await (await this.attestorFor(sdk)).lookup(item.pendingTx!);
+    if (typeof found === 'object') {
+      this.finish(item, found);
+      return true;
+    }
+    if (found === 'pending' || (found === 'missing' && this.now() - (item.pendingAt ?? 0) < DROPPED_AFTER_MS)) throw new Error(`waiting for its transaction ${item.pendingTx} to be mined`);
+    this.outbox.unsent(item);
+    return false;
+  }
+
+  private finish(item: OutboxItem, r: { uid: string; tx: string; link: string }) {
     this.outbox.done(item, r);
     this.deps.onAttested?.(item);
+    const ref = item.ref ? this.outbox.get(item.ref) : undefined;
     const what = item.outcome === 1 ? 'merged' : item.outcome === 2 ? `reverted (it reverts #${ref?.pr})` : 'closed without merging';
     const text = `Proof of merge on Base Sepolia: PR #${item.pr} ${what}, by ${item.name ?? 'a worker'} (${item.harness})`;
     this.deps.floor(item.floor)?.attested({ pr: item.pr, text, link: r.link, ...(item.worker ? { worker: item.worker } : {}), ...(item.name ? { name: item.name } : {}) });
