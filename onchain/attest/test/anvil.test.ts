@@ -22,7 +22,7 @@ const OFFICE = privateKeyToAccount(ANVIL_DEV_KEY);
 
 let node: Anvil;
 let d: Deployment;
-const rec = (pr: number, harness: string, outcome: MergeRecord['outcome'], at = 1_790_000_000 + pr): MergeRecord => ({ repo: 'acme/app', pr, mergeSha: outcome === 3 ? '0'.repeat(40) : pr.toString(16).padStart(40, 'a'), mergedByHash: mergedByHashOf(99), harness, agentId: 0n, outcome, solanaTx: '', mergedAt: at, openedAt: at - 3600 });
+const rec = (pr: number, harness: string, outcome: MergeRecord['outcome'], at = 1_790_000_000 + pr): MergeRecord => ({ repo: 'acme/app', pr, mergeSha: outcome === 3 ? '0'.repeat(40) : pr.toString(16).padStart(40, 'a'), mergedByHash: mergedByHashOf(99, 'an anvil test secret, long enough'), harness, agentId: 0n, outcome, solanaTx: '', mergedAt: at, openedAt: at - 3600 });
 
 before(async () => {
   node = await startAnvil(84532);
@@ -76,3 +76,16 @@ test('the chain-id guard refuses a node that is not Base Sepolia, before sending
     await other.stop();
   }
 });
+
+for (const mode of ['eas', 'event'] as const) {
+  test(`${mode}: an attestation's hash is handed over as soon as it's sent, and looked up again instead of sending twice`, async () => {
+    const opts = { rpcUrl: node.rpc, mode, schemaUid: d.schemaUid, eas: d.eas, mergeAttestor: d.mergeAttestor };
+    const office = createAttestor({ ...opts, account: OFFICE });
+    let sent: `0x${string}` | undefined;
+    const r = await office.attest(rec(40, 'claude', OUTCOME.merged), undefined, (hash) => (sent = hash));
+    assert.equal(sent, r.tx);
+    // What a retry after a lost receipt does: the same attestation back, nothing new on chain.
+    assert.deepEqual(await office.lookup(r.tx), r);
+    assert.equal(await office.lookup(`0x${'ab'.repeat(32)}`), 'missing');
+  });
+}

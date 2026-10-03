@@ -5,7 +5,8 @@
 //
 // The MergeAttestor fallback contract emits the very same bytes, so one decoder reads both.
 
-import { decodeAbiParameters, encodeAbiParameters, encodePacked, keccak256, parseAbiParameters, toBytes, zeroAddress, type Hex } from 'viem';
+import { createHmac } from 'node:crypto';
+import { decodeAbiParameters, encodeAbiParameters, encodePacked, keccak256, parseAbiParameters, zeroAddress, type Hex } from 'viem';
 
 export const SCHEMA = 'string repo, uint64 pr, bytes20 mergeSha, bytes32 mergedByHash, string harness, uint256 agentId, uint8 outcome, string solanaTx, uint64 mergedAt, uint64 openedAt';
 export const SCHEMA_REVOCABLE = true;
@@ -51,11 +52,18 @@ export function schemaUid(schema = SCHEMA, resolver: Hex = SCHEMA_RESOLVER, revo
   return keccak256(encodePacked(['string', 'address', 'bool'], [schema, resolver, revocable]));
 }
 
-/** A pseudonym for a GitHub account: keccak256("github:<numeric id>"). Linkable to the account by anyone who guesses the id. */
-export function mergedByHashOf(githubUserId: number | undefined): Hex {
+/**
+ * A pseudonym for a GitHub account: HMAC-SHA256 of "github:<numeric id>" under a secret the office
+ * keeps (at least 16 bytes). GitHub ids are sequential, so a plain hash of one is reversed by trying
+ * them all; without the secret this one can't be. The Solana escrow's Release records the same value.
+ * Zero when unknown.
+ */
+export function mergedByHashOf(githubUserId: number | undefined, secret: Uint8Array | string): Hex {
   if (githubUserId === undefined) return ZERO32;
   if (!Number.isSafeInteger(githubUserId) || githubUserId <= 0) throw new Error('A GitHub user id is a positive whole number');
-  return keccak256(toBytes(`github:${githubUserId}`));
+  const key = typeof secret === 'string' ? new TextEncoder().encode(secret) : secret;
+  if (key.length < 16) throw new Error('The merger pseudonym needs a secret of at least 16 bytes');
+  return `0x${createHmac('sha256', key).update(`github:${githubUserId}`).digest('hex')}`;
 }
 
 /** Why a record can't be attested, or undefined when it can. */

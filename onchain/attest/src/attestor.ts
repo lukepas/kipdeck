@@ -3,7 +3,7 @@
 // Before every transaction the node is asked for its chain id, and anything but Base Sepolia is
 // refused (see chain.ts).
 
-import { createPublicClient, createWalletClient, decodeEventLog, http, type Address, type Hex, type PrivateKeyAccount } from 'viem';
+import { createPublicClient, createWalletClient, decodeEventLog, http, type Address, type Hex, type PrivateKeyAccount, type TransactionReceipt } from 'viem';
 import { EAS_ABI, MERGE_ATTESTOR_ABI } from './abi.js';
 import { EAS_ADDRESS, assertBaseSepolia, chainAt, easLink, txLink } from './chain.js';
 import { readEvmKey } from './keyfile.js';
@@ -35,12 +35,21 @@ export interface Attested {
   link: string;
 }
 
+/** Called with the transaction hash as soon as it is sent, before its receipt: keep it, so a retry looks it up instead of attesting twice. */
+export type OnSent = (hash: Hex) => void;
+
 export interface Attestor {
   readonly address: Address;
   readonly mode: 'eas' | 'event';
   /** Throws WrongChainError unless the node is on Base Sepolia. */
   checkChain(): Promise<void>;
-  attest(record: MergeRecord, refUid?: Hex): Promise<Attested>;
+  attest(record: MergeRecord, refUid?: Hex, onSent?: OnSent): Promise<Attested>;
+  /**
+   * An attestation sent earlier (`hash`), looked up again: what it attested, 'pending' while the
+   * node knows the transaction but it isn't mined, 'missing' when the node has never heard of it
+   * (dropped), 'failed' when it reverted.
+   */
+  lookup(hash: Hex): Promise<Attested | 'pending' | 'missing' | 'failed'>;
   revoke(uid: Hex): Promise<{ tx: Hex }>;
 }
 
@@ -72,13 +81,34 @@ export function createAttestor(o: AttestorOptions): Attestor {
 
   const checkChain = async () => assertBaseSepolia(await pub.getChainId());
 
+  /** The attestation a mined transaction made. */
+  const attestedIn = (hash: Hex, receipt: TransactionReceipt): Attested => {
+    if (receipt.status !== 'success') throw new Error(`The attestation transaction failed: ${hash}`);
+    for (const log of receipt.logs) {
+      try {
+        if (mode === 'eas') {
+          if (log.address.toLowerCase() !== eas.toLowerCase()) continue;
+          const ev = decodeEventLog({ abi: EAS_ABI, data: log.data, topics: log.topics });
+          if (ev.eventName === 'Attested') return { uid: ev.args.uid, tx: hash, link: easLink(ev.args.uid) };
+        } else {
+          const ev = decodeEventLog({ abi: MERGE_ATTESTOR_ABI, data: log.data, topics: log.topics });
+          if (ev.eventName === 'MergeAttested') return { uid: ev.args.uid, tx: hash, link: txLink(hash) };
+        }
+      } catch {
+        // another event
+      }
+    }
+    throw new Error(`No ${mode === 'eas' ? 'Attested' : 'MergeAttested'} event in ${hash}`);
+  };
+
   return {
     address: account.address,
     mode,
     checkChain,
-    async attest(record, refUid = ZERO32) {
+    async attest(record, refUid = ZERO32, onSent) {
       const data = encodeMerge(record);
       await checkChain();
+      let hash: Hex;
       if (mode === 'eas') {
         const send = () => wallet.writeContract({
           address: eas,
@@ -88,32 +118,21 @@ export function createAttestor(o: AttestorOptions): Attestor {
         });
         // A public RPC is several nodes behind one address: the one that simulates this call may not
         // have seen the attestation refUID points at yet, and EAS answers NotFound(). Give it a moment.
-        const hash = refUid === ZERO32 ? await send() : await retryWhileNotFound(send);
-        const receipt = await pub.waitForTransactionReceipt({ hash, timeout });
-        if (receipt.status !== 'success') throw new Error(`The attestation transaction failed: ${hash}`);
-        for (const log of receipt.logs) {
-          if (log.address.toLowerCase() !== eas.toLowerCase()) continue;
-          try {
-            const ev = decodeEventLog({ abi: EAS_ABI, data: log.data, topics: log.topics });
-            if (ev.eventName === 'Attested') return { uid: ev.args.uid, tx: hash, link: easLink(ev.args.uid) };
-          } catch {
-            // another event
-          }
-        }
-        throw new Error(`No Attested event in ${hash}`);
+        hash = refUid === ZERO32 ? await send() : await retryWhileNotFound(send);
+      } else {
+        hash = await wallet.writeContract({ address: o.mergeAttestor!, abi: MERGE_ATTESTOR_ABI, functionName: 'attest', args: [data, refUid] });
       }
-      const hash = await wallet.writeContract({ address: o.mergeAttestor!, abi: MERGE_ATTESTOR_ABI, functionName: 'attest', args: [data, refUid] });
-      const receipt = await pub.waitForTransactionReceipt({ hash, timeout });
-      if (receipt.status !== 'success') throw new Error(`The attestation transaction failed: ${hash}`);
-      for (const log of receipt.logs) {
-        try {
-          const ev = decodeEventLog({ abi: MERGE_ATTESTOR_ABI, data: log.data, topics: log.topics });
-          if (ev.eventName === 'MergeAttested') return { uid: ev.args.uid, tx: hash, link: txLink(hash) };
-        } catch {
-          // another event
-        }
+      onSent?.(hash);
+      return attestedIn(hash, await pub.waitForTransactionReceipt({ hash, timeout }));
+    },
+    async lookup(hash) {
+      const receipt = await pub.getTransactionReceipt({ hash }).catch(() => undefined);
+      if (receipt) {
+        if (receipt.status !== 'success') return 'failed';
+        return attestedIn(hash, receipt);
       }
-      throw new Error(`No MergeAttested event in ${hash}`);
+      const tx = await pub.getTransaction({ hash }).catch(() => undefined);
+      return tx ? 'pending' : 'missing';
     },
     async revoke(uid) {
       await checkChain();

@@ -74,3 +74,12 @@ test('the live registries on a local fork of Base Sepolia (REPUTATION_FORK_TEST=
   const r = await forkCheck('https://sepolia.base.org');
   assert.equal(r.ok, true);
 });
+
+test("a registration's hash is handed over when it's sent, and looked up again instead of registering twice", async () => {
+  const registrar = createRegistry({ rpcUrl: node.rpc, account: privateKeyToAccount(ANVIL_KEYS[1]), identity: d.identity, reputation: d.reputation });
+  let sent: string | undefined;
+  const r = await registrar.register(undefined, (hash) => (sent = hash));
+  assert.equal(sent, r.tx);
+  assert.deepEqual(await registrar.registered(r.tx), r);
+  assert.equal(await registrar.registered(`0x${'ab'.repeat(32)}`), 'missing');
+});

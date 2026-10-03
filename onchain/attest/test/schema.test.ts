@@ -2,12 +2,14 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import test from 'node:test';
 import { OUTCOME, SCHEMA, ZERO32, decodeMerge, encodeMerge, mergedByHashOf, recordProblem, schemaUid, type MergeRecord } from '../src/schema.js';
+
+const SECRET = 'a schema test secret, long enough';
 import { assertBaseSepolia, WrongChainError } from '../src/chain.js';
 import { sdkSchemaUid } from '../scripts/lib.js';
 
 const sdk = createRequire(import.meta.url)('@ethereum-attestation-service/eas-sdk') as { SchemaEncoder: new (s: string) => { encodeData(items: { name: string; type: string; value: unknown }[]): string } };
 
-const rec: MergeRecord = { repo: 'acme/app', pr: 42, mergeSha: 'ab'.repeat(20), mergedByHash: mergedByHashOf(583231), harness: 'claude', agentId: 7n, outcome: OUTCOME.merged, solanaTx: '5'.repeat(88), mergedAt: 1_790_000_000, openedAt: 1_789_990_000 };
+const rec: MergeRecord = { repo: 'acme/app', pr: 42, mergeSha: 'ab'.repeat(20), mergedByHash: mergedByHashOf(583231, SECRET), harness: 'claude', agentId: 7n, outcome: OUTCOME.merged, solanaTx: '5'.repeat(88), mergedAt: 1_790_000_000, openedAt: 1_789_990_000 };
 
 test('the schema UID is the one the EAS SDK computes', () => {
   assert.equal(schemaUid().toLowerCase(), sdkSchemaUid().toLowerCase());
@@ -44,10 +46,13 @@ test('records that are not merges are refused', () => {
   assert.throws(() => encodeMerge({ ...rec, pr: 0 }), /pr is/);
 });
 
-test('who merged is a hash of their GitHub id, zero when unknown', () => {
-  assert.equal(mergedByHashOf(undefined), ZERO32);
-  assert.notEqual(mergedByHashOf(1), mergedByHashOf(2));
-  assert.throws(() => mergedByHashOf(-1));
+test("who merged is a keyed hash of their GitHub id, zero when unknown, and can't be found without the secret", () => {
+  assert.equal(mergedByHashOf(undefined, SECRET), ZERO32);
+  assert.notEqual(mergedByHashOf(1, SECRET), mergedByHashOf(2, SECRET));
+  assert.notEqual(mergedByHashOf(1, SECRET), mergedByHashOf(1, `${SECRET}x`));
+  assert.match(mergedByHashOf(1, SECRET), /^0x[0-9a-f]{64}$/);
+  assert.throws(() => mergedByHashOf(-1, SECRET));
+  assert.throws(() => mergedByHashOf(1, 'short'), /at least 16 bytes/);
 });
 
 test('the chain-id guard takes Base Sepolia only', () => {

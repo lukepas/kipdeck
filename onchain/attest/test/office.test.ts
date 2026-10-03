@@ -9,6 +9,7 @@ import path from 'node:path';
 import { after, before, test } from 'node:test';
 import { privateKeyToAccount } from 'viem/accounts';
 import { MergeProofs, type AttestSdk, type ProofFloor } from '../../../src/server/chain/attest.js';
+import { mergerPseudonym, pseudonymSecret } from '../../../src/server/chain/pseudonym.js';
 import type { GhPull } from '../../../src/shared/protocol.js';
 import * as sdk from '../src/index.js';
 import { ANVIL_DEV_KEY } from '../scripts/lib.js';
@@ -36,7 +37,7 @@ test('a merged office PR is attested on chain through the office outbox and read
   chmodSync(keyFile, 0o600);
   const pr: GhPull = { number: 7, title: 'Fix login', state: 'MERGED', isDraft: false, url: '', author: 'office', labels: [], reviewDecision: '', headRefName: 'office/w7', baseRefName: 'main', createdAt: '', updatedAt: '', additions: 1, deletions: 0, checks: 'pass', body: '', closes: [] };
   const attested: { link?: string }[] = [];
-  const floor: ProofFloor = { id: 'f1', dir, pulls: () => [pr], officePull: () => true, workers: () => [{ id: 'w7', name: 'Juno', provider: 'claude', pr: { number: 7, url: '' } } as never], tasks: () => [], repo: async () => 'acme/app', attested: (e) => attested.push(e) };
+  const floor: ProofFloor = { id: 'f1', dir, pulls: () => [pr], officePull: () => true, workers: () => [{ id: 'w7', name: 'Juno', provider: 'claude', pr: { number: 7, url: '' } } as never], tasks: () => [], repo: async () => 'acme/app', isPublic: async () => true, attested: (e) => attested.push(e) };
   const gh = async (args: string[]) => {
     if (args[0] === 'pr') return '[]';
     if (args[1].includes('/permission')) return 'write';
@@ -44,7 +45,7 @@ test('a merged office PR is attested on chain through the office outbox and read
   };
   const proofs = new MergeProofs({
     dataDir: dir,
-    flags: { enabled: true, keyFile, rpc: node.rpc, schema: d.schemaUid, mode: 'eas', eas: d.eas },
+    flags: { enabled: true, repos: ['acme/app'], keyFile, rpc: node.rpc, schema: d.schemaUid, mode: 'eas', eas: d.eas },
     floor: () => floor,
     loadSdk: async () => sdk as unknown as AttestSdk,
     gh,
@@ -57,6 +58,8 @@ test('a merged office PR is attested on chain through the office outbox and read
   assert.match(attested[0]?.link ?? '', /easscan\.org\/attestation\/view\/0x[0-9a-f]{64}$/);
   const list = await sdk.readAttestations({ rpcUrl: node.rpc, schemaUid: d.schemaUid, eas: d.eas, attesters: [office.address] });
   assert.equal(list.length, 1);
-  assert.deepEqual([list[0].repo, list[0].pr, list[0].harness, list[0].outcome, list[0].mergedByHash], ['acme/app', 7, 'claude', 1, sdk.mergedByHashOf(4242)]);
+  assert.deepEqual([list[0].repo, list[0].pr, list[0].harness, list[0].outcome, list[0].mergedByHash], ['acme/app', 7, 'claude', 1, `0x${mergerPseudonym(pseudonymSecret(dir), 4242)}`]);
+  // The office's pseudonym is the package's keyed hash under the office's secret: one person, one pseudonym.
+  assert.equal(list[0].mergedByHash, sdk.mergedByHashOf(4242, pseudonymSecret(dir)));
   assert.equal(sdk.leaderboard(list)[0].merged, 1);
 });

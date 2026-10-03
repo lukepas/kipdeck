@@ -4,7 +4,7 @@
 // Reputation Registry refuses feedback from an agent's own owner or operator. Every write asks the
 // node for its chain id first, and anything but Base Sepolia is refused (see chain.ts).
 
-import { createPublicClient, createWalletClient, decodeEventLog, http, type Address, type Hex, type PrivateKeyAccount } from 'viem';
+import { createPublicClient, createWalletClient, decodeEventLog, http, type Address, type Hex, type PrivateKeyAccount, type TransactionReceipt } from 'viem';
 import { IDENTITY_ABI, REPUTATION_ABI } from './abi.js';
 import { IDENTITY_REGISTRY, REPUTATION_REGISTRY, assertBaseSepolia, chainAt, txLink } from './chain.js';
 import { readEvmKey } from './keyfile.js';
@@ -43,7 +43,10 @@ export interface Registry {
   readonly identity: Address;
   readonly reputation: Address;
   checkChain(): Promise<void>;
-  register(agentURI?: string): Promise<{ agentId: bigint; tx: Hex; link: string }>;
+  /** `onSent` gets the hash as soon as it's sent, to keep: a retry then looks it up (registered()) rather than registering again. */
+  register(agentURI?: string, onSent?: (hash: Hex) => void): Promise<{ agentId: bigint; tx: Hex; link: string }>;
+  /** A registration sent earlier, looked up again: its agent id, 'pending' while not mined, 'missing' when the node never heard of it, 'failed' when it reverted. */
+  registered(hash: Hex): Promise<{ agentId: bigint; tx: Hex; link: string } | 'pending' | 'missing' | 'failed'>;
   setAgentURI(agentId: bigint, uri: string): Promise<{ tx: Hex }>;
   giveFeedback(f: Feedback): Promise<{ tx: Hex; index: bigint; link: string }>;
 }
@@ -80,27 +83,37 @@ export function createRegistry(o: RegistryOptions): Registry {
     return receipt;
   };
 
+  /** The agent id a mined registration made. */
+  const registeredIn = (hash: Hex, receipt: TransactionReceipt) => {
+    for (const log of receipt.logs) {
+      if (log.address.toLowerCase() !== identity.toLowerCase()) continue;
+      try {
+        const ev = decodeEventLog({ abi: IDENTITY_ABI, data: log.data, topics: log.topics });
+        if (ev.eventName === 'Registered') return { agentId: ev.args.agentId, tx: hash, link: txLink(hash) };
+      } catch {
+        // a Transfer or MetadataSet
+      }
+    }
+    throw new Error(`No Registered event in ${hash}`);
+  };
+
   return {
     address: account.address,
     identity,
     reputation,
     checkChain,
-    async register(agentURI) {
+    async register(agentURI, onSent) {
       await checkChain();
       const hash = agentURI
         ? await wallet.writeContract({ address: identity, abi: IDENTITY_ABI, functionName: 'register', args: [agentURI] })
         : await wallet.writeContract({ address: identity, abi: IDENTITY_ABI, functionName: 'register', args: [] });
-      const receipt = await mined(hash);
-      for (const log of receipt.logs) {
-        if (log.address.toLowerCase() !== identity.toLowerCase()) continue;
-        try {
-          const ev = decodeEventLog({ abi: IDENTITY_ABI, data: log.data, topics: log.topics });
-          if (ev.eventName === 'Registered') return { agentId: ev.args.agentId, tx: hash, link: txLink(hash) };
-        } catch {
-          // a Transfer or MetadataSet
-        }
-      }
-      throw new Error(`No Registered event in ${hash}`);
+      onSent?.(hash);
+      return registeredIn(hash, await mined(hash));
+    },
+    async registered(hash) {
+      const receipt = await pub.getTransactionReceipt({ hash }).catch(() => undefined);
+      if (receipt) return receipt.status === 'success' ? registeredIn(hash, receipt) : 'failed';
+      return (await pub.getTransaction({ hash }).catch(() => undefined)) ? 'pending' : 'missing';
     },
     async setAgentURI(agentId, uri) {
       await checkChain();
