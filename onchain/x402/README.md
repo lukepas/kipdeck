@@ -16,6 +16,7 @@ An outside agent (or a person with a shell) pays a small amount of test USDC to 
 | `src/mcp.ts` | MCP server on stdio: `office_price`, `hire_worker`, `task_status` |
 | `src/cli.ts` | `x402-office` CLI |
 | `contracts/TestUSDC.sol` | EIP-3009 token with USDC's EIP-712 domain ("USDC", "2"), for anvil. Refuses to deploy on mainnets |
+| `scripts/deploy-test-usdc.ts` | Deploys TestUSDC to Base Sepolia and mints to the payer, when Circle's test USDC can't be had |
 
 Signing and verification use `viem` 2.57 and `@x402/core`, `@x402/evm`, `@x402/svm` 2.28. Nothing here is hand-rolled crypto.
 
@@ -64,7 +65,7 @@ The second runs `@x402/evm`'s own facilitator against a local anvil node, so `tr
 ## Tests
 
 - `forge test`: TestUSDC's EIP-3009 (one use per nonce, the signature covers amount and payee, the time window, minters only, no mainnet deploy).
-- `npm test`: payments signed with `@x402/evm`, the mock facilitator's refusals, mainnet refusal, the spending limit, key files, the CLI and MCP tools, and a full settle on anvil.
+- `npm test`: payments signed with `@x402/evm`, the mock facilitator's refusals, mainnet refusal, the spending limit, key files, the CLI and MCP tools, a full settle on anvil, and (`test/office.test.ts`) paying the office's own gateway end to end: a held task on a real office queue, and a 402 for a payer who can't cover it.
 
 ## Base Sepolia
 
