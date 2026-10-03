@@ -5,7 +5,7 @@
  * the Attester refuses to sign unless every one holds.
  */
 import type { Address } from './keys.js';
-import { mergedByHash, hexOf } from './layout.js';
+import type { ReleaseParams } from './layout.js';
 import type { BountyEscrow, BountyRef, Receipt, Signer } from './types.js';
 
 export type Permission = 'admin' | 'maintain' | 'write' | 'triage' | 'read' | 'none';
@@ -65,11 +65,20 @@ export class AttestationRefused extends Error {
   }
 }
 
+export interface AttesterOptions {
+  /**
+   * The pseudonym Release records for whoever merged (hex, 32 bytes), from their GitHub user id:
+   * mergedByHash(id, secret) with a secret the office keeps. Without it the merger is left out (zero).
+   */
+  pseudonym?: (githubUserId: number) => string;
+}
+
 /** The escrow, as the office's attester key uses it: every signature checked against GitHub's facts first. */
 export class Attester {
   constructor(
     private escrow: BountyEscrow,
     private key: Signer,
+    private opts: AttesterOptions = {},
   ) {}
 
   get address(): Address {
@@ -83,10 +92,28 @@ export class Attester {
     return this.escrow.claim(ref, { prNumber: facts.number, wallet }, this.key);
   }
 
-  /** Releases with the approver's signature. Refused unless a person with write access merged it. */
-  async release(ref: BountyRef, facts: PullFacts, approver: Signer): Promise<Receipt> {
+  /** What Release records for a merge GitHub vouched for. */
+  releaseParams(facts: PullFacts): ReleaseParams {
     const v = checkRelease(facts);
     if (!v.ok) throw new AttestationRefused(v.reason);
-    return this.escrow.release(ref, { prNumber: facts.number, mergeSha: facts.mergeSha, mergedByHash: hexOf(mergedByHash(facts.mergedBy!.id)) }, this.key, approver);
+    const by = this.opts.pseudonym?.(facts.mergedBy!.id);
+    return { prNumber: facts.number, mergeSha: facts.mergeSha, ...(by ? { mergedByHash: by } : {}) };
+  }
+
+  /** Releases with the approver's signature. Refused unless a person with write access merged it. */
+  async release(ref: BountyRef, facts: PullFacts, approver: Signer): Promise<Receipt> {
+    return this.escrow.release(ref, this.releaseParams(facts), this.key, approver);
+  }
+
+  /**
+   * The Release for an approver who signs in a browser wallet: checked like release(), signed by the
+   * attester, with the approver's slot left for the wallet, which also pays the fee and sends it.
+   * Base64. Only an escrow on a cluster can build one.
+   */
+  async prepareRelease(ref: BountyRef, facts: PullFacts, approver: Address): Promise<string> {
+    const params = this.releaseParams(facts);
+    const e = this.escrow as BountyEscrow & { prepareRelease?: (ref: BountyRef, params: ReleaseParams, attester: Signer, approver: Address) => Promise<string> };
+    if (!e.prepareRelease) throw new Error(`${this.escrow.network} has no wallet to sign a release with`);
+    return e.prepareRelease(ref, params, this.key, approver);
   }
 }

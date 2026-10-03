@@ -51,14 +51,14 @@ test('the CORS headers and chain id are the ones the Actions spec asks for', () 
 
 test('the POST transaction opens the bounty when needed, funds it, and waits for the wallet to sign', () => {
   const blockhash = encodeBase58(new Uint8Array(32).fill(0x42));
-  const tx = decodeTransaction(Buffer.from(buildFundTransaction({ programId, funder, repo: 'a/b', issue: 7, nonce: 0, amount: 5_000_000n, mint: TEST_MINT, open: { attester, approver, expiryTs: 99 }, recentBlockhash: blockhash }), 'base64'));
+  const tx = decodeTransaction(Buffer.from(buildFundTransaction({ programId, funder, repo: 'a/b', issue: 7, nonce: 0, amount: 5_000_000n, mint: TEST_MINT, attester, approver, open: { expiryTs: 99 }, recentBlockhash: blockhash }), 'base64'));
   assert.equal(tx.accounts[0], funder);
   assert.equal(tx.signatures.length, 1);
   assert.ok(tx.signatures[0].every((b) => b === 0));
   assert.deepEqual(tx.instructions.map((i) => i.data[0]), [0, 1]);
   assert.deepEqual([...tx.instructions[1].data], [...ix.fund(5_000_000n)]);
-  assert.equal(tx.instructions[0].accounts[1], findBountyPda(programId, 'a/b', 7, 0).address);
-  const fundOnly = decodeTransaction(Buffer.from(buildFundTransaction({ programId, funder, repo: 'a/b', issue: 7, nonce: 0, amount: 1n, mint: TEST_MINT, recentBlockhash: blockhash }), 'base64'));
+  assert.equal(tx.instructions[0].accounts[1], findBountyPda(programId, 'a/b', 7, 0, { attester, approver }).address);
+  const fundOnly = decodeTransaction(Buffer.from(buildFundTransaction({ programId, funder, repo: 'a/b', issue: 7, nonce: 0, amount: 1n, mint: TEST_MINT, attester, approver, recentBlockhash: blockhash }), 'base64'));
   assert.deepEqual(fundOnly.instructions.map((i) => i.data[0]), [1]);
 });
 
@@ -69,4 +69,20 @@ test('funds go to the live bounty, or a fresh nonce after a settled one', () => 
   assert.deepEqual(activeBounty([b(0, 'released'), b(1, 'refunded')], 4), { nonce: 2 });
   assert.equal(activeBounty([b(0, 'released'), b(1, 'claimed')], 4).nonce, 1);
   assert.throws(() => activeBounty([b(255, 'released')], 4), /every bounty nonce/);
+});
+
+test("a stranger's bounty on the same issue is never chosen, nor an expired one", () => {
+  const mine = { attester, approver, mint: TEST_MINT };
+  const b = (nonce: number, state: Bounty['state'], keys = mine, expiryTs = 1000) => ({ issue: 4, nonce, state, ...keys, expiryTs }) as Bounty;
+  const squat = b(0, 'open', { attester: funder, approver: funder, mint: TEST_MINT });
+  // A squatter's open bounty at nonce 0, with keys the office doesn't hold: the office opens its own.
+  assert.deepEqual(activeBounty([squat], 4, mine), { nonce: 0 });
+  assert.equal(activeBounty([squat, b(0, 'open')], 4, mine).bounty?.attester, attester);
+  // Another mint is someone else's too.
+  assert.deepEqual(activeBounty([b(0, 'open', { ...mine, mint: funder })], 4, mine), { nonce: 0 });
+  // Filling every nonce under other keys blocks nothing.
+  assert.deepEqual(activeBounty(Array.from({ length: 256 }, (_, n) => b(n, 'released', { ...mine, attester: funder })), 4, mine), { nonce: 0 });
+  // Past its expiry a bounty takes no more funds: the next nonce opens.
+  assert.equal(activeBounty([b(0, 'open')], 4, { ...mine, now: 1000 }).nonce, 0);
+  assert.deepEqual(activeBounty([b(0, 'open')], 4, { ...mine, now: 1001 }), { nonce: 1 });
 });

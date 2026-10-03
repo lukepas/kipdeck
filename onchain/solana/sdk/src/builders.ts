@@ -26,7 +26,7 @@ export interface InitBuild extends InitParams {
 }
 
 export function buildInit(p: InitBuild): TxInstruction {
-  const bounty = findBountyPda(p.programId, p.repo, p.issue, p.nonce ?? 0).address;
+  const bounty = findBountyPda(p.programId, p.repo, p.issue, p.nonce ?? 0, p).address;
   return {
     programId: p.programId,
     keys: [w(p.payer, true), w(bounty), w(vaultAddress(bounty, p.mint)), r(p.mint), r(SYSTEM_PROGRAM_ID), r(TOKEN_PROGRAM_ID), r(ASSOCIATED_TOKEN_PROGRAM_ID)],
@@ -126,12 +126,14 @@ export interface CancelBuild {
   bounty: Address;
   mint: Address;
   creator: Address;
-  /** Only when the bounty holds funds. */
+  /** Whether the creator signs (an empty bounty's creator calling it off). */
+  creatorSigns?: boolean;
+  /** When the approver calls it off (always, for a funded bounty). */
   approver?: Address;
 }
 
 export function buildCancel(p: CancelBuild): TxInstruction {
-  const keys = [w(p.bounty), w(vaultAddress(p.bounty, p.mint)), w(p.creator), r(TOKEN_PROGRAM_ID)];
+  const keys = [w(p.bounty), w(vaultAddress(p.bounty, p.mint)), w(p.creator, !!p.creatorSigns), r(TOKEN_PROGRAM_ID)];
   if (p.approver) keys.push(r(p.approver, true));
   return { programId: p.programId, keys, data: ix.cancel() };
 }

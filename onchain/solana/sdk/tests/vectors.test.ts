@@ -100,15 +100,15 @@ test('PDAs and token accounts derive exactly as the program derives them', () =>
   const programId = vectors['pda.programId'];
   assert.equal(hexOf(repoHash(vectors['pda.repo'])), vectors['pda.repoHash']);
   const b = vectors['pda.bounty12n3'];
-  assert.deepEqual(findBountyPda(programId, vectors['pda.repo'], b.issue, b.nonce), { address: b.address, bump: b.bump });
+  assert.deepEqual(findBountyPda(programId, vectors['pda.repo'], b.issue, b.nonce, b), { address: b.address, bump: b.bump });
   assert.deepEqual(findContributionPda(programId, b.address, vectors['pda.funder']), vectors['pda.contribution']);
   assert.equal(vaultAddress(b.address, vectors['pda.vault'].mint), vectors['pda.vault'].address);
   const a = vectors['pda.ata'];
   assert.equal(associatedTokenAddress(a.owner, a.mint), a.address);
   // Repositories are case-insensitive, from a name or a URL; issue numbers and nonces are checked.
   assert.equal(normalizeRepo('https://github.com/WebDevCody/Agent-Office.git'), 'webdevcody/agent-office');
-  assert.throws(() => findBountyPda(programId, 'o/r', 0), /not an issue number/);
-  assert.throws(() => findBountyPda(programId, 'o/r', 1, 256), /a nonce is a byte/);
+  assert.throws(() => findBountyPda(programId, 'o/r', 0, 0, b), /not an issue number/);
+  assert.throws(() => findBountyPda(programId, 'o/r', 1, 256, b), /a nonce is a byte/);
 });
 
 test('error codes match the program, by name', () => {

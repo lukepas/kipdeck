@@ -11,6 +11,7 @@ import {
   RpcError,
   SolanaEscrow,
   TEST_MINT,
+  buildCancel,
   buildFundTransaction,
   buildInit,
   buildRelease,
@@ -72,7 +73,7 @@ test('a bounty is opened, funded by two people, claimed and paid once both keys 
   assert.equal(b.funderCount, 2);
   assert.equal((await escrow.contributions(ref)).find((c) => c.funder === alice.publicKey)!.amount, usdc('35'));
   await escrow.claim(ref, { prNumber: 77, wallet: operator.publicKey }, attester);
-  const paid = await escrow.release(ref, { prNumber: 77, mergeSha: 'ab'.repeat(20), mergedByHash: hexOf(mergedByHash(4242)) }, attester, approver);
+  const paid = await escrow.release(ref, { prNumber: 77, mergeSha: 'ab'.repeat(20), mergedByHash: hexOf(mergedByHash(4242, 'a litesvm test secret, long enough')) }, attester, approver);
   assert.deepEqual(paid.events.map((e) => e.kind), ['Released']);
   assert.equal(paid.bounty!.state, 'released');
   assert.equal(paid.bounty!.paid, usdc('55'));
@@ -85,7 +86,7 @@ test('a bounty is opened, funded by two people, claimed and paid once both keys 
 test('the program refuses a release without the approver, or with the wrong one', { skip }, async () => {
   const { escrow, raw } = await funded();
   await escrow.claim(ref, { prNumber: 77, wallet: operator.publicKey }, attester);
-  const bounty = findBountyPda(programId, ref.repo, ref.issue).address;
+  const bounty = findBountyPda(programId, ref.repo, ref.issue, 0, { attester: attester.publicKey, approver: approver.publicKey }).address;
   const ixWith = (approverKey: string, signs = true) => {
     const i = buildRelease({ programId, payer: attester.publicKey, attester: attester.publicKey, approver: approverKey, bounty, mint: TEST_MINT, wallet: operator.publicKey, prNumber: 77 });
     if (!signs) i.keys[2] = { ...i.keys[2], isSigner: false };
@@ -105,7 +106,7 @@ test('the program refuses a release without the approver, or with the wrong one'
 test('the program refuses a release for another PR than the claimed one', { skip }, async () => {
   const { escrow, raw } = await funded();
   await escrow.claim(ref, { prNumber: 77, wallet: operator.publicKey }, attester);
-  const bounty = findBountyPda(programId, ref.repo, ref.issue).address;
+  const bounty = findBountyPda(programId, ref.repo, ref.issue, 0, { attester: attester.publicKey, approver: approver.publicKey }).address;
   const i = buildRelease({ programId, payer: attester.publicKey, attester: attester.publicKey, approver: approver.publicKey, bounty, mint: TEST_MINT, wallet: operator.publicKey, prNumber: 78 });
   await assert.rejects(raw([i], [attester, approver]), (e: Error) => e instanceof EscrowError && e.reason === 'PullRequestMismatch');
   // Only the attester binds a PR.
@@ -146,10 +147,14 @@ test('after the expiry each funder is cranked back their own contribution, by an
   assert.equal(await escrow.balance(bob.publicKey), usdc('100'));
 });
 
-test('an empty bounty cancels and is gone; a funded one only by the approver, then refunds at once', { skip }, async () => {
+test('an empty bounty cancels by its creator and is gone; a funded one only by the approver, then refunds at once', { skip }, async () => {
   const s = setup();
   await s.escrow.open(ref, { expiryTs: NOW + 3_600, attester: attester.publicKey, approver: approver.publicKey }, payer);
-  const gone = await s.escrow.cancel(ref, bob);
+  // Anyone else is refused, by the SDK before a fee and by the program itself.
+  await assert.rejects(s.escrow.cancel(ref, bob), /Unauthorized/);
+  const b = (await s.escrow.get(ref))!;
+  await assert.rejects(s.raw([buildCancel({ programId, bounty: b.address, mint: TEST_MINT, creator: payer.publicKey })], [bob]), (e: Error) => e instanceof EscrowError && e.reason === 'Unauthorized');
+  const gone = await s.escrow.cancel(ref, payer);
   assert.deepEqual(gone.events.map((e) => [e.kind, (e as any).closed]), [['Cancelled', true]]);
   assert.equal(await s.escrow.get(ref), undefined);
   const { escrow } = await funded();
@@ -163,7 +168,7 @@ test('an empty bounty cancels and is gone; a funded one only by the approver, th
 test("the Blink's transaction opens and funds a bounty once the funder's wallet signs it", { skip }, async () => {
   const { rpc, escrow } = setup();
   const { blockhash } = await rpc.latestBlockhash();
-  const b64 = buildFundTransaction({ programId, funder: alice.publicKey, repo: ref.repo, issue: 5, nonce: 0, amount: usdc('20'), mint: TEST_MINT, open: { attester: attester.publicKey, approver: approver.publicKey, expiryTs: NOW + 86_400 }, recentBlockhash: blockhash });
+  const b64 = buildFundTransaction({ programId, funder: alice.publicKey, repo: ref.repo, issue: 5, nonce: 0, amount: usdc('20'), mint: TEST_MINT, attester: attester.publicKey, approver: approver.publicKey, open: { expiryTs: NOW + 86_400 }, recentBlockhash: blockhash });
   // What a wallet does: sign the message, put the signature in the empty slot, send.
   const wire = new Uint8Array(Buffer.from(b64, 'base64'));
   const { message } = decodeTransaction(wire);
@@ -174,4 +179,22 @@ test("the Blink's transaction opens and funds a bounty once the funder's wallet 
   assert.equal(b.total, usdc('20'));
   assert.equal(b.creator, alice.publicKey);
   assert.equal(b.attester, attester.publicKey);
+});
+
+test("a release for the approver's browser wallet: the attester signs, the wallet adds its signature, pays and sends", { skip }, async () => {
+  const { escrow, rpc } = await funded();
+  await escrow.claim(ref, { prNumber: 77, wallet: operator.publicKey }, attester);
+  const b64 = await escrow.prepareRelease(ref, { prNumber: 77, mergeSha: 'ab'.repeat(20) }, attester, approver.publicKey);
+  const wire = new Uint8Array(Buffer.from(b64, 'base64'));
+  const { message, accounts, signatures } = decodeTransaction(wire);
+  // The approver's wallet pays the fee: it is the first signer, its slot still empty; the attester's is filled.
+  assert.equal(accounts[0], approver.publicKey);
+  assert.ok(signatures[0].every((x) => x === 0));
+  assert.ok(signatures[accounts.indexOf(attester.publicKey)].some((x) => x !== 0));
+  wire.set(signBytes(approver, message), 1);
+  await rpc.send(wire);
+  assert.equal((await escrow.get(ref))!.state, 'released');
+  assert.equal(await escrow.balance(operator.publicKey), usdc('50'));
+  // The SDK refuses to prepare one the program would refuse.
+  await assert.rejects(escrow.prepareRelease(ref, { prNumber: 77 }, attester, approver.publicKey), /WrongState/);
 });

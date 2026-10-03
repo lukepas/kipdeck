@@ -81,7 +81,7 @@ CLAIM=$(cli claim --pr 1 --wallet "$OPERATOR" --keypair "$KEYS/solana-attester.j
 RELEASE=$(cli release --pr 1 --keypair "$KEYS/solana-attester.json" --approver-key "$KEYS/solana-approver.json" | sig released)
 SHOW=$(cli show)
 echo "$SHOW"
-BOUNTY=$(cli address)
+BOUNTY=$(cli address --attester "$ATTESTER" --approver "$APPROVER")
 
 OUT="$HERE/deployments/$CLUSTER.json"
 node -e '
@@ -90,7 +90,8 @@ const fs = require("fs");
 const prev = fs.existsSync(out) ? JSON.parse(fs.readFileSync(out, "utf8")) : {};
 const doc = {
   cluster, programId: program, upgradeAuthority: deployer, deployedAt: new Date().toISOString(),
-  note: "Testnet only. The program was built with the test-mint feature, so it accepts devnet USDC and the test mint below. The upgrade authority is kept so devnet redeploys stay possible.",
+  note: "Testnet only. The program was built with the test-mint feature, so it accepts devnet USDC and the test mint below. The upgrade authority is a single devnet key, kept so devnet redeploys stay possible: whoever holds it could replace the program, so this deployment is not custody-free. A mainnet deployment would need a multisig authority, then none.",
+  seeds: "bounty, sha256(repo), issue (u64 LE), nonce, attester, approver (since 2026-10-04; bounties opened before then used the first four only)",
   testMint: mint, attester, approver,
   e2e: [...(prev.e2e ?? []), { at: new Date().toISOString(), repo, issue: Number(issue), bounty, funder, operator, amount: "25", note: "Demo bounty: no GitHub merge behind it; the attester checks run in the office and SDK tests.", signatures: { open, fund, claim, release } }].slice(-5),
 };

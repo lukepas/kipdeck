@@ -8,7 +8,7 @@ import { readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { TEST_MINT, allowedMints, isAddress, sha256, toAddress, type Address } from './keys.js';
 import * as machine from './machine.js';
 import { EscrowError, findBountyPda, findContributionPda, hexOf, normalizeRepo, repoHash, vaultAddress, type BountyAccount, type ContributionAccount, type EscrowEvent, type ReleaseParams } from './layout.js';
-import type { Bounty, BountyEscrow, BountyRef, ClaimParams, Contribution, OpenParams, Receipt, Signer, TokenInfo } from './types.js';
+import { pickRef, type Bounty, type BountyEscrow, type BountyRef, type ClaimParams, type Contribution, type OpenParams, type Receipt, type Signer, type TokenInfo } from './types.js';
 
 /** A made-up address from a name, so mock keys read like real ones. */
 export function mockAddress(name: string): Address {
@@ -79,7 +79,7 @@ export class MockEscrow implements BountyEscrow {
       for (const event of events) this.s.events.push({ signature, event });
       if (this.s.events.length > 500) this.s.events.splice(0, this.s.events.length - 500);
       this.save();
-      const address = ref ? this.addressOf(ref) : undefined;
+      const address = ref ? this.addressOf(ref, events) : undefined;
       return { signature, events, bounty: address && this.s.bounties[address] ? this.view(address) : undefined };
     } catch (err) {
       this.s = before;
@@ -87,8 +87,18 @@ export class MockEscrow implements BountyEscrow {
     }
   }
 
-  private addressOf(ref: BountyRef): Address {
-    return findBountyPda(MOCK_PROGRAM_ID, ref.repo, ref.issue, ref.nonce ?? 0).address;
+  /** Where `ref`'s bounty is: at its address when the ref names both keys, else the one bounty that matches (or the bounty a step's events name). */
+  private addressOf(ref: BountyRef, events?: EscrowEvent[]): Address | undefined {
+    if (ref.attester && ref.approver) return findBountyPda(MOCK_PROGRAM_ID, ref.repo, ref.issue, ref.nonce ?? 0, { attester: ref.attester, approver: ref.approver }).address;
+    const named = events?.map((e) => e.bounty).find((a) => this.s.bounties[a]);
+    if (named) return named;
+    const name = normalizeRepo(ref.repo);
+    return pickRef(
+      Object.keys(this.s.bounties)
+        .filter((a) => this.s.bounties[a].repo === name)
+        .map((a) => this.view(a)),
+      ref,
+    )?.address;
   }
 
   private view(address: string): Bounty {
@@ -97,8 +107,8 @@ export class MockEscrow implements BountyEscrow {
 
   private find(ref: BountyRef): { address: Address; b: Stored } {
     const address = this.addressOf(ref);
-    const b = this.s.bounties[address];
-    if (!b) throw new Error(`no bounty for ${normalizeRepo(ref.repo)}#${ref.issue}${ref.nonce ? ` (nonce ${ref.nonce})` : ''}`);
+    const b = address ? this.s.bounties[address] : undefined;
+    if (!address || !b) throw new Error(`no bounty for ${normalizeRepo(ref.repo)}#${ref.issue}${ref.nonce ? ` (nonce ${ref.nonce})` : ''}`);
     return { address, b };
   }
 
@@ -132,7 +142,7 @@ export class MockEscrow implements BountyEscrow {
   async get(ref: BountyRef): Promise<Bounty | undefined> {
     this.load();
     const address = this.addressOf(ref);
-    return this.s.bounties[address] ? this.view(address) : undefined;
+    return address && this.s.bounties[address] ? this.view(address) : undefined;
   }
 
   async list(repo: string): Promise<Bounty[]> {
@@ -147,6 +157,7 @@ export class MockEscrow implements BountyEscrow {
   async contributions(ref: BountyRef): Promise<Contribution[]> {
     this.load();
     const bounty = this.addressOf(ref);
+    if (!bounty) return [];
     return Object.entries(this.s.contributions)
       .filter(([, c]) => c.bounty === bounty)
       .map(([address, c]) => ({ ...structuredClone(c), address }));
@@ -156,7 +167,7 @@ export class MockEscrow implements BountyEscrow {
     return this.step((s) => {
       const repo = normalizeRepo(ref.repo);
       const nonce = ref.nonce ?? 0;
-      const { address, bump } = findBountyPda(MOCK_PROGRAM_ID, repo, ref.issue, nonce);
+      const { address, bump } = findBountyPda(MOCK_PROGRAM_ID, repo, ref.issue, nonce, params);
       if (s.bounties[address]) throw new EscrowError('AlreadyInitialized');
       const mint = params.mint ?? this.tokenInfo.mint;
       const b = machine.init(
@@ -222,11 +233,11 @@ export class MockEscrow implements BountyEscrow {
     }, ref);
   }
 
-  async cancel(ref: BountyRef, _payer: Signer, approver?: Signer): Promise<Receipt> {
+  async cancel(ref: BountyRef, payer: Signer, approver?: Signer): Promise<Receipt> {
     return this.step((s) => {
       const { address, b } = this.find(ref);
       const total = b.total;
-      const result = machine.cancel(b, approver?.publicKey ?? machine.NOBODY, 0n, this.clock());
+      const result = machine.cancel(b, payer.publicKey === b.creator, approver?.publicKey ?? machine.NOBODY, 0n, this.clock());
       if (result === 'close') delete s.bounties[address];
       return [{ kind: 'Cancelled', bounty: address, total, closed: result === 'close' }];
     }, ref);

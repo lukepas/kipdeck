@@ -61,7 +61,7 @@ test('the shared table runs the same on the TypeScript machine as on the Rust on
             return;
           }
           case 'cancel':
-            cancelled = machine.cancel(b!, named(step, 'approver', 'nobody'), 0n, step.now);
+            cancelled = machine.cancel(b!, step.creator_signed === true, named(step, 'approver', 'nobody'), 0n, step.now);
             return;
           default:
             throw new Error(`unknown op ${step.op}`);

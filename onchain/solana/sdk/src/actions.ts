@@ -90,13 +90,30 @@ export function fundActionGet(p: FundActionParams): ActionGetResponse {
   return out;
 }
 
+/** Whose bounties count, and when it is. */
+export interface ActiveOptions {
+  /** Only bounties opened with this attester and approver, in this mint: the office's own. */
+  attester?: Address;
+  approver?: Address;
+  mint?: Address;
+  /** The cluster's clock (unix seconds): a bounty past its expiry takes no more funds, so it isn't live. */
+  now?: number;
+}
+
+/** The bounties of `issue` among `bounties` that `o` counts: opened with its keys, in its mint. */
+export function ownBounties(bounties: readonly Bounty[], issue: number, o: ActiveOptions = {}): Bounty[] {
+  return bounties.filter((b) => b.issue === issue && (!o.attester || b.attester === o.attester) && (!o.approver || b.approver === o.approver) && (!o.mint || b.mint === o.mint)).sort((a, b) => a.nonce - b.nonce);
+}
+
 /**
- * The bounty an issue's funds go to now: its open or claimed one, else a fresh nonce after the last
- * settled one. `exists` false means the transaction must open it first.
+ * The bounty an issue's funds go to now: its open or claimed one that hasn't expired, else a fresh
+ * nonce after the last one. No `bounty` means the transaction must open it first. Bounties opened
+ * with other keys or in another mint are someone else's and never chosen, so a stranger's bounty for
+ * the same issue can't catch the office's funding.
  */
-export function activeBounty(bounties: Bounty[], issue: number): { nonce: number; bounty?: Bounty } {
-  const mine = bounties.filter((b) => b.issue === issue).sort((a, b) => a.nonce - b.nonce);
-  const live = mine.find((b) => b.state === 'open' || b.state === 'claimed');
+export function activeBounty(bounties: readonly Bounty[], issue: number, o: ActiveOptions = {}): { nonce: number; bounty?: Bounty } {
+  const mine = ownBounties(bounties, issue, o);
+  const live = mine.find((b) => (b.state === 'open' || b.state === 'claimed') && (o.now === undefined || o.now <= b.expiryTs));
   if (live) return { nonce: live.nonce, bounty: live };
   const last = mine[mine.length - 1];
   if (last && last.nonce >= 255) throw new Error(`${issue} has used every bounty nonce`);
@@ -112,16 +129,19 @@ export interface FundTxParams {
   nonce: number;
   amount: bigint;
   mint: Address;
-  /** When the bounty has to be opened first: who attests, who approves and when it expires. */
-  open?: { attester: Address; approver: Address; expiryTs: number };
+  /** Who attests and who approves: the bounty's address depends on both. */
+  attester: Address;
+  approver: Address;
+  /** When the bounty has to be opened first: when it expires. */
+  open?: { expiryTs: number };
   recentBlockhash: string;
 }
 
 /** The POST answer's transaction: base64, every signature slot empty, for the funder's wallet to sign. */
 export function buildFundTransaction(p: FundTxParams): string {
-  const bounty = findBountyPda(p.programId, p.repo, p.issue, p.nonce).address;
+  const bounty = findBountyPda(p.programId, p.repo, p.issue, p.nonce, p).address;
   const ixs = [];
-  if (p.open) ixs.push(buildInit({ programId: p.programId, payer: p.funder, repo: p.repo, issue: p.issue, nonce: p.nonce, mint: p.mint, ...p.open }));
+  if (p.open) ixs.push(buildInit({ programId: p.programId, payer: p.funder, repo: p.repo, issue: p.issue, nonce: p.nonce, mint: p.mint, attester: p.attester, approver: p.approver, expiryTs: p.open.expiryTs }));
   ixs.push(buildFund({ programId: p.programId, funder: p.funder, bounty, mint: p.mint, amount: p.amount }));
   return Buffer.from(unsignedTransaction(compileMessage(p.funder, ixs, p.recentBlockhash))).toString('base64');
 }

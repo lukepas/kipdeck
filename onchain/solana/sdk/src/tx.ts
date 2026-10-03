@@ -108,6 +108,19 @@ export function signTransaction(message: Uint8Array, signers: Keypair[]): { wire
 }
 
 /**
+ * A transaction signed by `signers` with the other signature slots left zero, for a wallet to add
+ * its own and send: the office's attester signs a Release, and the admin's wallet signs as the
+ * approver and pays the fee.
+ */
+export function partiallySignedTransaction(message: Uint8Array, signers: Keypair[]): Uint8Array {
+  const sigs = messageSigners(message).map((who) => {
+    const kp = signers.find((s) => s.publicKey === who);
+    return kp ? signBytes(kp, message) : new Uint8Array(64);
+  });
+  return Uint8Array.from([...compactU16(sigs.length), ...sigs.flatMap((s) => [...s]), ...message]);
+}
+
+/**
  * A transaction for someone else's wallet to sign: every signature slot left zero, as the Actions
  * spec and wallets expect (they fill in their own and send it).
  */

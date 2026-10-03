@@ -1,11 +1,26 @@
 import type { Address, Keypair } from './keys.js';
 import type { BountyAccount, ContributionAccount, EscrowEvent, ReleaseParams } from './layout.js';
 
-/** A bounty, by repository ("owner/name"), issue number and nonce (0 unless reopened after settling). */
+/**
+ * A bounty, by repository ("owner/name"), issue number, nonce (0 unless reopened after settling),
+ * and the attester and approver it was opened with (both are part of its address). Without the two
+ * keys the escrow looks the bounty up by repository, issue and nonce, and refuses when more than one
+ * bounty matches: the office always names its own keys.
+ */
 export interface BountyRef {
   repo: string;
   issue: number;
   nonce?: number;
+  attester?: Address;
+  approver?: Address;
+}
+
+/** The bounty among `found` (a repository's) that `ref` means, or why none. */
+export function pickRef(found: readonly Bounty[], ref: BountyRef): Bounty | undefined {
+  const nonce = ref.nonce ?? 0;
+  const same = found.filter((b) => b.issue === ref.issue && b.nonce === nonce && (!ref.attester || b.attester === ref.attester) && (!ref.approver || b.approver === ref.approver));
+  if (same.length > 1) throw new Error(`#${ref.issue} has ${same.length} bounties with nonce ${nonce} under different keys: say which attester and approver`);
+  return same[0];
 }
 
 /** A bounty, with where it lives. */
@@ -77,7 +92,7 @@ export interface BountyEscrow {
   release(ref: BountyRef, params: ReleaseParams, attester: Signer, approver: Signer): Promise<Receipt>;
   /** Pays one funder's contribution back; anyone may crank it. */
   refund(ref: BountyRef, funder: Address, cranker: Signer): Promise<Receipt>;
-  /** `approver` only when the bounty holds funds. `payer` pays the fee. */
+  /** `payer` pays the fee, and counts as the creator when it is the one who opened it. An empty bounty needs its creator or `approver`; a funded one needs `approver`. */
   cancel(ref: BountyRef, payer: Signer, approver?: Signer): Promise<Receipt>;
   /** A link to a transaction or account in an explorer; undefined for the mock. */
   explorer(signatureOrAddress: string, kind?: 'tx' | 'address'): string | undefined;

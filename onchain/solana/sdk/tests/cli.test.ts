@@ -29,10 +29,11 @@ test('the CLI opens, funds, claims, releases and shows bounties on the mock', as
   assert.match((await run('open', '--repo', 'O/R', '--issue', '7', '--attester', att.address, '--approver', app.address, '--keypair', funder.file, ...mock))[0], /^opened: mock-tx-1$/);
   await run('fund', '--repo', 'o/r', '--issue', '7', '--amount', '12.5', '--keypair', funder.file, ...mock);
   await run('claim', '--repo', 'o/r', '--issue', '7', '--pr', '3', '--wallet', op.address, '--keypair', att.file, ...mock);
-  await run('release', '--repo', 'o/r', '--issue', '7', '--pr', '3', '--keypair', att.file, '--approver-key', app.file, '--merged-by-id', '99', ...mock);
+  await run('release', '--repo', 'o/r', '--issue', '7', '--pr', '3', '--keypair', att.file, '--approver-key', app.file, '--merged-by-hash', 'cd'.repeat(32), ...mock);
   const [line] = await run('show', '--repo', 'o/r', ...mock);
   assert.match(line, new RegExp(`^#7 {2}12\\.5 USDC {2}released {2}expires \\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d {2}1 funder {2}PR #3 -> ${op.address} {2}paid 12\\.5`));
-  assert.deepEqual(await run('address', '--repo', 'o/r', '--issue', '7', ...mock), [findBountyPda(MOCK_PROGRAM_ID, 'o/r', 7).address]);
+  assert.deepEqual(await run('address', '--repo', 'o/r', '--issue', '7', '--attester', att.address, '--approver', app.address, ...mock), [findBountyPda(MOCK_PROGRAM_ID, 'o/r', 7, 0, { attester: att.address, approver: app.address }).address]);
+  await assert.rejects(run('address', '--repo', 'o/r', '--issue', '7', ...mock), /--attester is needed/);
 });
 
 test('the CLI says what is missing or wrong, and has no mainnet backend', async (t) => {

@@ -36,7 +36,7 @@ const someone = (n: number) => encodeBase58(new Uint8Array(32).fill(n));
 const blockhash = encodeBase58(new Uint8Array(32).fill(0x42));
 
 function release(): TxInstruction[] {
-  const bounty = findBountyPda(programId, 'webdevcody/agent-office', 12).address;
+  const bounty = findBountyPda(programId, 'webdevcody/agent-office', 12, 0, { attester: attester.publicKey, approver: approver.publicKey }).address;
   return [buildRelease({ programId, payer: attester.publicKey, attester: attester.publicKey, approver: approver.publicKey, bounty, mint: someone(9), wallet: someone(4), prNumber: 77, mergeSha: 'ab'.repeat(20) })];
 }
 
@@ -87,8 +87,8 @@ test('bounty, contribution and token account addresses match @solana/web3.js', {
     const issueLe = Buffer.alloc(8);
     issueLe.writeBigUInt64LE(BigInt(issue));
     const nonce = issue % 4;
-    const [theirs, bump] = PublicKey.findProgramAddressSync([Buffer.from('bounty'), Buffer.from(repoHash('some/repo')), issueLe, Buffer.of(nonce)], new PublicKey(programId));
-    assert.deepEqual(findBountyPda(programId, 'some/repo', issue, nonce), { address: theirs.toBase58(), bump }, `issue ${issue}`);
+    const [theirs, bump] = PublicKey.findProgramAddressSync([Buffer.from('bounty'), Buffer.from(repoHash('some/repo')), issueLe, Buffer.of(nonce), new PublicKey(attester.publicKey).toBuffer(), new PublicKey(approver.publicKey).toBuffer()], new PublicKey(programId));
+    assert.deepEqual(findBountyPda(programId, 'some/repo', issue, nonce, { attester: attester.publicKey, approver: approver.publicKey }), { address: theirs.toBase58(), bump }, `issue ${issue}`);
     const funder = keypairFromSeed(randomBytes(32)).publicKey;
     const [c, cb] = PublicKey.findProgramAddressSync([Buffer.from('contrib'), theirs.toBuffer(), new PublicKey(funder).toBuffer()], new PublicKey(programId));
     assert.deepEqual(findContributionPda(programId, theirs.toBase58(), funder), { address: c.toBase58(), bump: cb });

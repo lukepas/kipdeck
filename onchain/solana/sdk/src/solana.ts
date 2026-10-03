@@ -27,8 +27,8 @@ import {
 import { buildCancel, buildClaim, buildCreateAta, buildFund, buildInit, buildRefund, buildRelease } from './builders.js';
 import { encodeBase58 } from './base58.js';
 import { DEVNET_RPC, Rpc, RpcError, escrowErrorOf } from './rpc.js';
-import { compileMessage, signTransaction, type TxInstruction } from './tx.js';
-import type { Bounty, BountyEscrow, BountyRef, ClaimParams, Contribution, OpenParams, Receipt, Signer, TokenInfo } from './types.js';
+import { compileMessage, partiallySignedTransaction, signTransaction, type TxInstruction } from './tx.js';
+import { pickRef, type Bounty, type BountyEscrow, type BountyRef, type ClaimParams, type Contribution, type OpenParams, type Receipt, type Signer, type TokenInfo } from './types.js';
 
 const CLOCK_SYSVAR = 'SysvarC1ock11111111111111111111111111111111';
 
@@ -64,9 +64,13 @@ function isLoopback(url: string): boolean {
   }
 }
 
-/** A bounty account read from the cluster, checked to be this program's. */
+/**
+ * A bounty account read from the cluster, checked to be this program's. With the ref's attester and
+ * approver it is read at its address; without them it is looked up among the repository's.
+ */
 export async function fetchBounty(rpc: Rpc, programId: Address, ref: BountyRef): Promise<Bounty | undefined> {
-  const address = findBountyPda(programId, ref.repo, ref.issue, ref.nonce ?? 0).address;
+  if (!ref.attester || !ref.approver) return pickRef(await listBountiesByRepo(rpc, programId, ref.repo), ref);
+  const address = findBountyPda(programId, ref.repo, ref.issue, ref.nonce ?? 0, { attester: ref.attester, approver: ref.approver }).address;
   const account = await rpc.account(address);
   if (!account || account.owner !== programId || account.data.length !== BOUNTY_LEN) return undefined;
   return { ...decodeBounty(account.data), address, repo: normalizeRepo(ref.repo) };
@@ -143,7 +147,9 @@ export class SolanaEscrow implements BountyEscrow {
   }
 
   async contributions(ref: BountyRef): Promise<Contribution[]> {
-    const bounty = findBountyPda(this.programId, ref.repo, ref.issue, ref.nonce ?? 0).address;
+    const b = await this.get(ref);
+    if (!b) return [];
+    const bounty = b.address;
     const found = await this.rpc.programAccounts(this.programId, [{ dataSize: CONTRIBUTION_LEN }, { memcmp: { offset: CONTRIBUTION_BOUNTY_OFFSET, bytes: bounty } }]);
     return found.filter((x) => x.account.owner === this.programId).map(({ address, account }) => ({ ...decodeContribution(account.data), address }));
   }
@@ -187,11 +193,12 @@ export class SolanaEscrow implements BountyEscrow {
     const kp = this.keypair(payer, 'payer');
     const mint = params.mint ?? this.mint;
     const nonce = ref.nonce ?? 0;
-    const pda = findBountyPda(this.programId, ref.repo, ref.issue, nonce);
-    if (await this.get(ref)) throw new EscrowError('AlreadyInitialized', `${normalizeRepo(ref.repo)}#${ref.issue} already has a bounty with nonce ${nonce}`);
+    const pda = findBountyPda(this.programId, ref.repo, ref.issue, nonce, params);
+    const at = { ...ref, attester: params.attester, approver: params.approver };
+    if (await this.get(at)) throw new EscrowError('AlreadyInitialized', `${normalizeRepo(ref.repo)}#${ref.issue} already has a bounty with nonce ${nonce}`);
     machine.init({ repoHash: hexOf(repoHash(ref.repo)), issue: ref.issue, nonce, mint, vault: vaultAddress(pda.address, mint), expiryTs: params.expiryTs, attester: params.attester, approver: params.approver, creator: kp.publicKey, allowedMints: this.allowedMints }, await this.now());
     const sent = await this.submit(kp, [], [buildInit({ programId: this.programId, payer: kp.publicKey, repo: ref.repo, issue: ref.issue, nonce, mint, expiryTs: params.expiryTs, attester: params.attester, approver: params.approver })]);
-    return { ...sent, bounty: await this.get(ref) };
+    return { ...sent, bounty: await this.get(at) };
   }
 
   async fund(ref: BountyRef, amount: bigint, funder: Signer): Promise<Receipt> {
@@ -200,7 +207,7 @@ export class SolanaEscrow implements BountyEscrow {
     const contribution = await this.rpc.account(findContributionPda(this.programId, b.address, kp.publicKey).address);
     machine.fund({ ...b }, contribution?.owner === this.programId ? decodeContribution(contribution.data) : undefined, kp.publicKey, amount, b.address, now);
     const sent = await this.submit(kp, [], [buildFund({ programId: this.programId, funder: kp.publicKey, bounty: b.address, mint: b.mint, amount })]);
-    return { ...sent, bounty: await this.get(ref) };
+    return { ...sent, bounty: await this.get({ ...ref, attester: b.attester, approver: b.approver }) };
   }
 
   async claim(ref: BountyRef, params: ClaimParams, attester: Signer): Promise<Receipt> {
@@ -208,7 +215,7 @@ export class SolanaEscrow implements BountyEscrow {
     const [b, now] = await Promise.all([this.must(ref), this.now()]);
     machine.claim({ ...b }, kp.publicKey, params.prNumber, params.wallet, now);
     const sent = await this.submit(kp, [], [buildClaim({ programId: this.programId, attester: kp.publicKey, bounty: b.address, prNumber: params.prNumber, wallet: params.wallet })]);
-    return { ...sent, bounty: await this.get(ref) };
+    return { ...sent, bounty: await this.get({ ...ref, attester: b.attester, approver: b.approver }) };
   }
 
   async release(ref: BountyRef, params: ReleaseParams, attester: Signer, approver: Signer): Promise<Receipt> {
@@ -220,7 +227,23 @@ export class SolanaEscrow implements BountyEscrow {
     machine.release({ ...b }, { attester: att.publicKey, approver: app.publicKey, prNumber: params.prNumber, mergeSha: params.mergeSha, mergedByHash: params.mergedByHash, vault: held }, now);
     const ixn = buildRelease({ programId: this.programId, payer: att.publicKey, attester: att.publicKey, approver: app.publicKey, bounty: b.address, mint: b.mint, wallet: b.claimantWallet!, ...params });
     const sent = await this.submit(att, [app], [ixn]);
-    return { ...sent, bounty: await this.get(ref) };
+    return { ...sent, bounty: await this.get({ ...ref, attester: b.attester, approver: b.approver }) };
+  }
+
+  /**
+   * A Release signed by the attester, for an approver's wallet to sign, pay for and send (base64):
+   * the approver key never has to sit on the office's machine. Checked with the program's rules first.
+   */
+  async prepareRelease(ref: BountyRef, params: ReleaseParams, attester: Signer, approver: Address): Promise<string> {
+    const att = this.keypair(attester, 'attester');
+    await this.assertCluster();
+    const [b, now] = await Promise.all([this.must(ref), this.now()]);
+    const vault = await this.rpc.account(b.vault);
+    const held = vault && vault.data.length === 165 ? new DataView(vault.data.buffer, vault.data.byteOffset).getBigUint64(64, true) : 0n;
+    machine.release({ ...b }, { attester: att.publicKey, approver, prNumber: params.prNumber, mergeSha: params.mergeSha, mergedByHash: params.mergedByHash, vault: held }, now);
+    const ixn = buildRelease({ programId: this.programId, payer: approver, attester: att.publicKey, approver, bounty: b.address, mint: b.mint, wallet: b.claimantWallet!, ...params });
+    const { blockhash } = await this.rpc.latestBlockhash();
+    return Buffer.from(partiallySignedTransaction(compileMessage(approver, [ixn], blockhash), [att])).toString('base64');
   }
 
   async refund(ref: BountyRef, funder: Address, cranker: Signer): Promise<Receipt> {
@@ -231,7 +254,7 @@ export class SolanaEscrow implements BountyEscrow {
     machine.refund({ ...b }, decodeContribution(c.data), b.address, now);
     // The funder may have closed their token account since: it's made again, paid by the cranker.
     const sent = await this.submit(kp, [], [buildCreateAta(kp.publicKey, funder, b.mint), buildRefund({ programId: this.programId, bounty: b.address, mint: b.mint, funder })]);
-    return { ...sent, bounty: await this.get(ref) };
+    return { ...sent, bounty: await this.get({ ...ref, attester: b.attester, approver: b.approver }) };
   }
 
   /** Cranks every contribution not yet paid back, one transaction each. */
@@ -245,9 +268,10 @@ export class SolanaEscrow implements BountyEscrow {
     const kp = this.keypair(payer, 'payer');
     const app = approver ? this.keypair(approver, 'approver') : undefined;
     const [b, now] = await Promise.all([this.must(ref), this.now()]);
-    machine.cancel({ ...b }, app?.publicKey ?? machine.NOBODY, 0n, now);
-    const sent = await this.submit(kp, app ? [app] : [], [buildCancel({ programId: this.programId, bounty: b.address, mint: b.mint, creator: b.creator, approver: app?.publicKey })]);
-    return { ...sent, bounty: await this.get(ref) };
+    const creatorSigns = kp.publicKey === b.creator;
+    machine.cancel({ ...b }, creatorSigns, app?.publicKey ?? machine.NOBODY, 0n, now);
+    const sent = await this.submit(kp, app ? [app] : [], [buildCancel({ programId: this.programId, bounty: b.address, mint: b.mint, creator: b.creator, creatorSigns, approver: app?.publicKey })]);
+    return { ...sent, bounty: await this.get({ ...ref, attester: b.attester, approver: b.approver }) };
   }
 
   /** A wallet's balance of the escrow's mint (0 when it has no token account). */

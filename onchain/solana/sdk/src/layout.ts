@@ -3,6 +3,7 @@
  * events, seeds and error codes. fixtures/vectors.json holds one of each, and both sides are tested
  * against it.
  */
+import { createHmac } from 'node:crypto';
 import { addressBytes, associatedTokenAddress, findProgramAddress, sha256, toAddress, type Address } from './keys.js';
 
 export const BOUNTY_SEED = new TextEncoder().encode('bounty');
@@ -99,11 +100,18 @@ export function repoHash(repo: string): Uint8Array {
   return sha256(normalizeRepo(repo));
 }
 
-/** sha256 of a GitHub user's numeric id in decimal: who merged, kept on chain without the name. */
-export function mergedByHash(githubUserId: number | string): Uint8Array {
+/**
+ * Who merged, kept on chain without the name: HMAC-SHA256 of "github:<numeric user id>" under a
+ * secret the office keeps (at least 16 bytes). GitHub ids are sequential, so a plain hash of one is
+ * reversed by trying them all; without the secret this one can't be. The same function names the
+ * merger on Base Sepolia (onchain/attest), so one person is one pseudonym on both chains.
+ */
+export function mergedByHash(githubUserId: number | string, secret: Uint8Array | string): Uint8Array {
   const id = String(githubUserId);
-  if (!/^\d+$/.test(id)) throw new Error(`not a GitHub user id: ${id}`);
-  return sha256(id);
+  if (!/^\d+$/.test(id) || id === '0') throw new Error(`not a GitHub user id: ${id}`);
+  const key = typeof secret === 'string' ? new TextEncoder().encode(secret) : secret;
+  if (key.length < 16) throw new Error('the merger pseudonym needs a secret of at least 16 bytes');
+  return new Uint8Array(createHmac('sha256', key).update(`github:${id}`).digest());
 }
 
 export function u64le(n: bigint | number): Uint8Array {
@@ -156,11 +164,20 @@ function hash32(hex?: string): Uint8Array {
   return bytesOfHex(hex);
 }
 
-/** One bounty on an issue: the repository, the issue number and a nonce (0 unless a settled one is reopened). */
-export function findBountyPda(programId: Address, repo: string, issue: number, nonce = 0) {
+/** The two keys a bounty is opened with. Both are in its address, so nobody can take an office's bounty address with keys of their own. */
+export interface Authorities {
+  attester: Address;
+  approver: Address;
+}
+
+/**
+ * One bounty on an issue: the repository, the issue number, a nonce (0 unless a settled one is
+ * reopened), and the attester and approver it was opened with.
+ */
+export function findBountyPda(programId: Address, repo: string, issue: number, nonce: number, keys: Authorities) {
   if (!Number.isSafeInteger(issue) || issue <= 0) throw new Error(`not an issue number: ${issue}`);
   if (!Number.isInteger(nonce) || nonce < 0 || nonce > 255) throw new Error(`a nonce is a byte, not ${nonce}`);
-  return findProgramAddress([BOUNTY_SEED, repoHash(repo), u64le(issue), Uint8Array.of(nonce)], programId);
+  return findProgramAddress([BOUNTY_SEED, repoHash(repo), u64le(issue), Uint8Array.of(nonce), addressBytes(keys.attester), addressBytes(keys.approver)], programId);
 }
 
 /** What one funder put into one bounty. */
@@ -187,7 +204,7 @@ export interface ReleaseParams {
   prNumber: number;
   /** The merge commit, 40 hex digits. */
   mergeSha?: string;
-  /** mergedByHash() of the merging user's GitHub id, hex. */
+  /** mergedByHash() of the merging user's GitHub id, hex (left zero when the merger isn't recorded). */
   mergedByHash?: string;
 }
 

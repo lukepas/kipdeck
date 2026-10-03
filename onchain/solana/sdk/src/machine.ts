@@ -130,16 +130,21 @@ export function refund(b: BountyAccount, c: ContributionAccount, bounty: Address
 
 export type CancelResult = 'close' | 'refunds';
 
-/** `approver` is who signed as the approver (NOBODY if nobody did). */
-export function cancel(b: BountyAccount, approver: Address, vaultBalance: bigint, now: number): CancelResult {
+/**
+ * `creatorSigned`: the bounty's creator signed. `approver` is who signed as the approver (NOBODY if
+ * nobody did). An empty bounty: its creator or the approver; a funded one: the approver alone.
+ */
+export function cancel(b: BountyAccount, creatorSigned: boolean, approver: Address, vaultBalance: bigint, now: number): CancelResult {
+  const byApprover = approver === b.approver;
   if (b.total === 0n) {
+    if (!creatorSigned && !byApprover) throw new EscrowError('Unauthorized');
     if (b.state !== 'open' && b.state !== 'claimed') throw new EscrowError('WrongState');
     if (vaultBalance !== 0n) throw new EscrowError('InvalidData');
     b.state = 'cancelled';
     b.settledAt = now;
     return 'close';
   }
-  if (approver !== b.approver) throw new EscrowError('Unauthorized');
+  if (!byApprover) throw new EscrowError('Unauthorized');
   if (b.state !== 'open') throw new EscrowError('WrongState');
   b.state = 'cancelled';
   return 'refunds';

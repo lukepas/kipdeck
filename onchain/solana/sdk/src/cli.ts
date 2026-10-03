@@ -9,7 +9,7 @@ import { pathToFileURL } from 'node:url';
 import { DEVNET_USDC_MINT, TEST_MINT, isAddress, readKeypair } from './keys.js';
 import { MockEscrow } from './mock.js';
 import { SolanaEscrow } from './solana.js';
-import { findBountyPda, mergedByHash, hexOf, normalizeRepo } from './layout.js';
+import { findBountyPda, normalizeRepo } from './layout.js';
 import { DEVNET_RPC } from './rpc.js';
 import { formatAmount, parseAmount, type Bounty, type BountyEscrow, type BountyRef, type Receipt, type Signer } from './types.js';
 
@@ -26,11 +26,12 @@ Commands:
                                                       Open a bounty (default 30 days)
   fund     --repo --issue --amount <usdc>             Put money into an open bounty
   claim    --repo --issue --pr <n> --wallet <a>       Bind a PR and the wallet to pay (attester)
-  release  --repo --issue --pr <n> --approver-key <file> [--merge-sha <sha>] [--merged-by-id <n>]
+  release  --repo --issue --pr <n> --approver-key <file> [--merge-sha <sha>] [--merged-by-hash <hex>]
                                                       Pay out (attester's key plus approver's key)
   refund   --repo --issue [--funder <a>]              Crank contributions back after expiry
-  cancel   --repo --issue [--approver-key <file>]     Call a bounty off
-  address  --repo --issue                             Print a bounty's account address
+  cancel   --repo --issue [--approver-key <file>]     Call a bounty off (its creator, or the approver)
+  address  --repo --issue --attester <a> --approver <a>
+                                                      Print a bounty's account address
 
 Options:
   --backend <b>    solana-devnet (default), solana-localnet or mock
@@ -39,6 +40,9 @@ Options:
   --keypair <file> Key to sign and pay with (env SOLANA_KEYPAIR, default ${path.join(KEY_DIR, 'solana-attester.json')})
   --mint <a>       The token (default devnet USDC; "test" for the test mint ${TEST_MINT})
   --nonce <n>      Which bounty on the issue (default 0)
+  --attester <a>, --approver <a>
+                   Which keys the bounty was opened with (both are in its address); needed when
+                   another bounty on the issue has the same nonce under other keys
   --mock-file <f>  The mock's state file
 `;
 
@@ -99,7 +103,8 @@ function signer(flags: Flags, escrow: BountyEscrow, name = 'keypair', fallback =
 }
 
 function refOf(flags: Flags): BountyRef {
-  return { repo: normalizeRepo(need(flags, 'repo')), issue: int(flags, 'issue'), nonce: flags.nonce ? Number(flags.nonce) : 0 };
+  const keys = flags.attester || flags.approver ? { attester: address(flags, 'attester'), approver: address(flags, 'approver') } : {};
+  return { repo: normalizeRepo(need(flags, 'repo')), issue: int(flags, 'issue'), nonce: flags.nonce ? Number(flags.nonce) : 0, ...keys };
 }
 
 function describe(b: Bounty, decimals: number, symbol: string): string {
@@ -134,7 +139,7 @@ export async function main(argv: string[], out: (line: string) => void = console
     }
     case 'address': {
       const ref = refOf(flags);
-      out(findBountyPda(escrow.programId, ref.repo, ref.issue, ref.nonce).address);
+      out(findBountyPda(escrow.programId, ref.repo, ref.issue, ref.nonce ?? 0, { attester: address(flags, 'attester'), approver: address(flags, 'approver') }).address);
       return 0;
     }
     case 'open': {
@@ -156,7 +161,9 @@ export async function main(argv: string[], out: (line: string) => void = console
     }
     case 'release': {
       const approver = signer(flags, escrow, 'approver-key', path.join(KEY_DIR, 'solana-approver.json'));
-      const params = { prNumber: int(flags, 'pr'), mergeSha: flags['merge-sha'], mergedByHash: flags['merged-by-id'] ? hexOf(mergedByHash(flags['merged-by-id'])) : undefined };
+      const by = flags['merged-by-hash'];
+      if (by !== undefined && !/^[0-9a-f]{64}$/i.test(by)) throw new Error('--merged-by-hash is 32 bytes of hex (mergedByHash(id, secret))');
+      const params = { prNumber: int(flags, 'pr'), mergeSha: flags['merge-sha'], mergedByHash: by };
       done('released', await escrow.release(refOf(flags), params, signer(flags, escrow), approver));
       return 0;
     }
