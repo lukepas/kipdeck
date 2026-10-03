@@ -2,8 +2,27 @@
   "cluster": "devnet",
   "programId": "JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6",
   "upgradeAuthority": "TyQidKVXFC52NRtsais3yaFbBkJksBeU5Y68TSwb1zE",
-  "status": "not deployed yet: the devnet faucet refused CLI airdrops (daily rate limit). Fund the upgrade authority with 2 devnet SOL and run scripts/e2e.sh devnet, which deploys and rewrites this file with the end-to-end signatures.",
+  "deployedAt": "2026-10-03T18:18:52.328Z",
+  "note": "Testnet only. The program was built with the test-mint feature, so it accepts devnet USDC and the test mint below. The upgrade authority is kept so devnet redeploys stay possible.",
   "testMint": "9CL3xM1UNUQk7XqKz8JHbYhPNH9iwZF4mU67sjSEzbMz",
   "attester": "3VFTNzfonYmnqXxuw4aADLc5GCHqNEa1wHzok4yvZFHk",
-  "approver": "55vgpiASBFv3r31ePiPSEGzMomdiRBtjPM1ay7Bx5ypN"
+  "approver": "55vgpiASBFv3r31ePiPSEGzMomdiRBtjPM1ay7Bx5ypN",
+  "e2e": [
+    {
+      "at": "2026-10-03T18:18:52.329Z",
+      "repo": "proof-of-merge/devnet-demo",
+      "issue": 1791051515,
+      "bounty": "p8cTvJgvyQ21qa7BNMaQ3Zyhkd2zah4wF5w5NZuRnKM",
+      "funder": "Fr5n1zC3nTLvMESM1KoR6D7qNtLgyaNb5GCdK5CcAus",
+      "operator": "FU7ER8xsCunDEWzFsgwiNRsouuTeGo4myzADf5myCQAz",
+      "amount": "25",
+      "note": "Demo bounty: no GitHub merge behind it; the attester checks run in the office and SDK tests.",
+      "signatures": {
+        "open": "33tyqhDZfoDP5vhrNWsiAi27XTxS6px2xenMwkARKa3kL6Vdiqo15uaP6oo2R4Ms7cM1ZYSfmUogxrEya4FnJDkZ",
+        "fund": "5uU7WqozvdboKwX6cCdEGdiLdsw8ocr6u2kLRQwMQrkxph2yswFf56F44jVkizmhbstyR3zwK6wK17Lr4j9ZnftL",
+        "claim": "4GLtfKQUVdgLsgxJ69bhmEvebog1HRmN8RC4QmdGUMjtnu1TsY6mEG1QqF599suZYUSqqaoZwqfWvp1sLdJHvqXD",
+        "release": "2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc"
+      }
+    }
+  ]
 }
