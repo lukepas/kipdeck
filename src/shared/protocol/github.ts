@@ -70,6 +70,8 @@ export type GhCloseReason = 'completed' | 'not planned';
 export interface GhRepoInfo {
   nameWithOwner: string;
   methods: GhMergeMethod[];
+  /** Whether GitHub says the repository is private (the public showcase redacts private ones). */
+  private?: boolean;
 }
 
 /** A comment on an issue or on a PR's conversation, or a submitted review. */

@@ -195,10 +195,10 @@ export class GitHub {
 
   /** The repository's full name and how it lets PRs merge. Asked once (again after a failure). */
   repoInfo(): Promise<GhRepoInfo> {
-    this.repo ??= gh(['repo', 'view', '--json', 'nameWithOwner,squashMergeAllowed,mergeCommitAllowed,rebaseMergeAllowed'], this.dir).then((out) => {
+    this.repo ??= gh(['repo', 'view', '--json', 'nameWithOwner,isPrivate,squashMergeAllowed,mergeCommitAllowed,rebaseMergeAllowed'], this.dir).then((out) => {
       const r = JSON.parse(out);
       const methods = (['squash', 'merge', 'rebase'] as const).filter((m) => r[{ squash: 'squashMergeAllowed', merge: 'mergeCommitAllowed', rebase: 'rebaseMergeAllowed' }[m]]);
-      return { nameWithOwner: String(r.nameWithOwner), methods: methods.length ? methods : ['squash', 'merge', 'rebase'] };
+      return { nameWithOwner: String(r.nameWithOwner), methods: methods.length ? methods : ['squash', 'merge', 'rebase'], ...(typeof r.isPrivate === 'boolean' ? { private: r.isPrivate } : {}) };
     });
     this.repo.catch(() => (this.repo = undefined));
     return this.repo;
