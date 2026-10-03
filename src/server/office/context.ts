@@ -22,6 +22,8 @@ import type { OfficePrompts } from '../prompts.js';
 import type { LeaveOnMerge } from '../leave-on-merge.js';
 import type { ChatLog } from '../history.js';
 import type { Bounties } from '../bounties.js';
+import type { X402Gateway } from '../x402/gateway.js';
+import type { MergeProofs } from '../chain/attest.js';
 import type { AgentProvider, FloorInfo, Me, Reminder, ReminderSnooze, ReviewPull, RosterEntry, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
 import type { Client } from './client.js';
 import type { Spot } from './input.js';
@@ -84,6 +86,10 @@ export interface LateServices {
   servicesState(floor: Floor | undefined, items?: ServiceInfo[]): ServicesState;
   /** Proof of Merge bounties on every floor's issues (see bounties.ts). */
   bounties: Bounties;
+  /** Paid tasks over x402, with --x402 (see x402/gateway.ts). */
+  x402?: X402Gateway;
+  /** Proof-of-merge attestations on Base Sepolia, with --attest (see chain/attest.ts). */
+  proofs?: MergeProofs;
 }
 
 /** Sending to browsers (office/messaging.ts). */

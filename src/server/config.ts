@@ -8,6 +8,7 @@ import { MAX_WORKER_LIMIT, parseWorkerLimit } from './machine.js';
 import { parseAllowedHosts } from './hosts.js';
 import { splitEnvNames, validEnvPattern, type WorkerEnvConfig } from './worker-env.js';
 import { readStateJson, stateDirProblem, untrustedState, writeState } from './safefs.js';
+import { CHAIN_HELP, chainFlagsFromEnv, takeChainFlag, type ChainFlags } from './chain/flags.js';
 
 export interface Config {
   /** The office's own folder: the building's data lives in its .agent-office. */
@@ -61,6 +62,8 @@ export interface Config {
   maxWorkers?: number;
   /** Slack / Discord webhook to post to when a worker needs input, finishes or gets stuck ('' turns it off). */
   webhook?: string;
+  /** Paid tasks over x402 and proof-of-merge attestations, testnets only (see chain/flags.ts). */
+  chain: ChainFlags;
 }
 
 export interface RTCIceServerLike {
@@ -162,7 +165,7 @@ Options:
       --webhook <url>     Post to this Slack or Discord webhook when a worker
                           needs input, finishes or gets stuck (env AGENT_OFFICE_WEBHOOK).
                           Also settable from ⚙️ Settings in the office; "" turns it off
-  -h, --help              Show this help
+${CHAIN_HELP}  -h, --help              Show this help
 
 Started in a terminal, the office opens in your browser already signed in, with
 a link that works once. Only this machine can reach it unless you pass --host.
@@ -242,6 +245,7 @@ export function loadConfig(argv: string[]): Config {
   let budgetPause = !!process.env.AGENT_OFFICE_BUDGET_PAUSE && process.env.AGENT_OFFICE_BUDGET_PAUSE !== '0';
   let maxWorkers = process.env.AGENT_OFFICE_MAX_WORKERS || '';
   let webhook = process.env.AGENT_OFFICE_WEBHOOK;
+  const chain = chainFlagsFromEnv();
   const iceServers: RTCIceServerLike[] = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
   // A container can't take --turn (deploy/container/compose.yaml), so the TURN servers come from the environment too.
   for (const url of (process.env.AGENT_OFFICE_TURN ?? '').split(/\s+/).filter(Boolean)) iceServers.push(parseTurn(url));
@@ -327,13 +331,23 @@ export function loadConfig(argv: string[]): Config {
       case '--projects':
         projects = path.resolve(takeValue(argv, i++, a));
         break;
-      default:
+      default: {
+        const used = takeChainFlag(chain, argv, i);
+        if (typeof used === 'string') {
+          console.error(`agent-office: ${used}`);
+          process.exit(2);
+        }
+        if (used) {
+          i += used - 1;
+          break;
+        }
         if (a.startsWith('-')) {
           console.error(`agent-office: unknown option ${a}\n`);
           process.stderr.write(HELP);
           process.exit(2);
         }
         project = path.resolve(a);
+      }
     }
   }
 
@@ -476,6 +490,7 @@ export function loadConfig(argv: string[]): Config {
     budgetPause,
     maxWorkers: workerLimit,
     webhook,
+    chain,
   };
 }
 

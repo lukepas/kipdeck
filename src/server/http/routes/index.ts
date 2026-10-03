@@ -10,6 +10,7 @@ import { githubRoutes } from './github.js';
 import { pageRoutes } from './pages.js';
 import { searchRoutes } from './search.js';
 import { serviceRoutes } from './services.js';
+import { x402Routes } from './x402.js';
 
 export const routes: readonly Route[] = [
   // Anyone.
@@ -31,6 +32,9 @@ export const routes: readonly Route[] = [
   actionRoutes.manifest,
   actionRoutes.icon,
   actionRoutes.fund,
+  // Paid tasks over x402 (testnets, --x402 only): the payment is what lets the payer in.
+  x402Routes.offer,
+  x402Routes.task,
   // Signed in.
   authRoutes.whoami,
   agentRoutes.models,

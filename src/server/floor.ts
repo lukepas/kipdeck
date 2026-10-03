@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
-import type { ChangesState, FloorInfo, GhPull, Mission, ProjectInfo, ServerMsg, TimelineEvent, WorkerInfo } from '../shared/protocol.js';
+import type { ChangesState, FloorInfo, GhPull, Mission, ProjectInfo, QueueState, ServerMsg, TimelineEvent, WorkerInfo } from '../shared/protocol.js';
 import { isBusy } from '../shared/status.js';
 import { DESK_BY_ID } from '../shared/layout.js';
 import type { FloorDef } from './building.js';
@@ -70,6 +70,10 @@ export interface FloorContext {
   floor(id: string): Floor | undefined;
   /** This floor's pull requests came back: a worker on another floor with a repository here may have landed. */
   pullsChanged(floor: Floor): void;
+  /** Pull request `n` merged on this floor (once per PR). */
+  merged?(floor: Floor, n: number): void;
+  /** This floor's queue changed. */
+  queueChanged?(floor: Floor, state: QueueState): void;
   /** Whether a worker on another floor works in this floor's project too. */
   lent(floor: Floor): boolean;
 }
@@ -249,6 +253,7 @@ export class Floor {
       update: (state) => {
         ctx.emit(this, { t: 'queue', state });
         this.watch.queue(state);
+        ctx.queueChanged?.(this, state);
         // A task's pull request may just have been linked (or merged).
         this.sendLandedHome();
       },
@@ -350,6 +355,7 @@ export class Floor {
     if (!this.merges.ring(n)) return;
     this.ctx.emit(this, { t: 'landed', kind: 'merged', pr: n, by });
     this.watch.merged(n, this.github.pulls.items.find((p) => p.number === n)?.title, by);
+    this.ctx.merged?.(this, n);
   }
 
   /**

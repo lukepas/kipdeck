@@ -5,6 +5,7 @@ import { Floor, type FloorContext } from '../floor.js';
 import type { FloorInfo, ServerMsg } from '../../shared/protocol.js';
 import type { Ctx, FloorHelpers, FloorsOpen } from './context.js';
 import { SLOW_CLIENT_BYTES, type Client } from './client.js';
+import { proofFloor } from './chain.js';
 
 /** Finding floors, the elevator's list of them, and taking one off the building. */
 export function floorHelpers(ctx: Ctx): FloorHelpers {
@@ -125,7 +126,10 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
       ctx.rosterChanged();
       // A worker's PR may claim a bounty now, or have merged (made after the floors open, hence the ?).
       ctx.bounties?.pulls(floor);
+      if (ctx.proofs) void ctx.proofs.pulls(proofFloor(floor));
     },
+    merged: (floor, n) => ctx.proofs?.merged(proofFloor(floor), n),
+    queueChanged: (floor, state) => ctx.x402?.onQueue(floor.id, state),
     lent: (floor) => [...floors.values()].some((f) => f !== floor && worksIn(f, floor)),
     runAs: ctx.signins,
     ghAs: (owner) => (owner ? ctx.signins.ghAs(owner) : undefined),

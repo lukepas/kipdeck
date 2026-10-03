@@ -13,6 +13,7 @@ import type { Floor } from '../floor.js';
 import { OfficePrompts } from '../prompts.js';
 import { LeaveOnMerge } from '../leave-on-merge.js';
 import { Bounties } from '../bounties.js';
+import { createChainServices } from './chain.js';
 import type { ServiceInfo, ServicesState } from '../../shared/protocol.js';
 import type { BuildingServices, Ctx, LateServices } from './context.js';
 import type { Client } from './client.js';
@@ -150,5 +151,5 @@ export function createLateServices(ctx: Ctx): LateServices {
       process.kill(process.pid, 'SIGTERM');
     },
   );
-  return { team, tailnet, services, upgrader, servicesState, bounties };
+  return { team, tailnet, services, upgrader, servicesState, bounties, ...createChainServices(ctx, bounties) };
 }
