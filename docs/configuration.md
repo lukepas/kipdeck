@@ -4,7 +4,7 @@ Back to the [README](../README.md).
 
 ## Where the office keeps things
 
-The office keeps its data in `~/agent-office` (`--home` or `AGENT_OFFICE_HOME` to move it) and clones projects next to it, as `~/agent-office/<owner>/<repo>`. To clone them somewhere else, like `~/Workspace`, an admin picks the **Workspace folder** in ⚙️ Settings → **🏢 Building** (or start with `--projects` or `AGENT_OFFICE_PROJECTS`). Floors you already have stay where they are, and a checkout of the same repository that's already in the new folder is used as it is. The list of floors is `~/agent-office/.agent-office/floors.json`, and each account's own Claude and GitHub sign-ins are in `~/agent-office/.agent-office/homes/<account>/` (revoking the account deletes them). Each floor keeps its workers, queue, whiteboard, mission (`mission.json`, with the reminders someone snoozed or dismissed), timeline (`timeline.jsonl`, the last 2000 events) and worktrees in its own checkout's `.agent-office/`. Files an older office kept for features that are gone (`map.json`, `maps/`, `theme.json`, `arcade.json`, and per floor `decor.json`, `dog.json`, `jail.json`, `jukebox.json`) are left where they are and no longer read.
+The office keeps its data in `~/agent-office` (`--home` or `AGENT_OFFICE_HOME` to move it) and clones projects next to it, as `~/agent-office/<owner>/<repo>`. To clone them somewhere else, like `~/Workspace`, an admin picks the **Workspace folder** in ⚙️ Settings → **🏢 Building** (or start with `--projects` or `AGENT_OFFICE_PROJECTS`). Floors you already have stay where they are, and a checkout of the same repository that's already in the new folder is used as it is. The list of floors is `~/agent-office/.agent-office/floors.json`, and each account's own Claude and GitHub sign-ins are in `~/agent-office/.agent-office/homes/<account>/` (revoking the account deletes them). With `--x402` or `--attest` the office also keeps its paid task ledger (`x402.json`) and its proof-of-merge outbox (`attestations.json`) in `~/agent-office/.agent-office/`. Each floor keeps its workers, queue, whiteboard, mission (`mission.json`, with the reminders someone snoozed or dismissed), timeline (`timeline.jsonl`, the last 2000 events) and worktrees in its own checkout's `.agent-office/`. Files an older office kept for features that are gone (`map.json`, `maps/`, `theme.json`, `arcade.json`, and per floor `decor.json`, `dog.json`, `jail.json`, `jukebox.json`) are left where they are and no longer read.
 
 Already have a checkout? Pick its repository anyway: a checkout of it that's already where the workspace folder would clone it is used as it is. You can still start the office in a project, `agent-office ~/code/my-project`: that project becomes a floor, and the office keeps its data in `~/code/my-project/.agent-office` as it did before there were floors. An office that already ran in a project carries on in it when you start `agent-office` there again. An admin can take that project off the building in the Floors window like any other floor.
 
@@ -39,6 +39,12 @@ agent-office [dir] [options]
       --budget-pause      ...and nobody can hire a new worker until the next day
       --max-workers <n>   Run at most n workers at once, across every floor (env AGENT_OFFICE_MAX_WORKERS)
       --webhook <url>     Post to this Slack / Discord webhook when a worker needs input, finishes or gets stuck
+      --x402              Take paid tasks over x402, testnets only (see docs/x402.md), with
+                          --x402-pay-to <0x>, --x402-repos <owner/name,...> and optionally --x402-price,
+                          --x402-pay-to-solana, --x402-facilitator, --x402-asset (env AGENT_OFFICE_X402_*)
+      --attest            Attest every office PR a person merges on Base Sepolia (see docs/proof-of-merge.md),
+                          with optionally --attest-key-file, --attest-rpc, --attest-schema, --attest-mode,
+                          --attest-contract, --attest-eas (env AGENT_OFFICE_ATTEST_*)
 
 agent-office setup [--projects <dir>] [--project <owner/repo>]... [--home <dir>]
 

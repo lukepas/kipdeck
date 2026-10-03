@@ -81,6 +81,12 @@ Changing the team webhook, upgrading the office, editing the office's prompts, t
 
 [Proof of Merge bounties](bounties.md) are off until an admin turns them on, and only reach Solana devnet. Approving a payout and changing bounty settings need an admin; the approver key signs only after that check, and a release needs both the attester's and the approver's signature on chain. RPC calls go through the network guard to `api.devnet.solana.com` only. The public "Fund this issue" routes under `/api/actions/` serve only repositories an admin opted into, after the host check, rate-limited per client address, and answer with unsigned transactions the funder's own wallet signs. The key files sit in `~/.config/agent-office-chain` (mode 0700, files 0600), but workers run as the same OS user and could read them, so they must be dedicated testnet keys.
 
+## Paid tasks and proof of merge (testnet only)
+
+[Paid tasks over x402](x402.md) are off unless the office starts with `--x402`. Its routes under `/api/x402` are public, after the host check: they take tasks only for the repositories `--x402-repos` names, check the request and the office's prompt guards before anyone pays, allow 20 tries a minute per client address, and cap the body at 16 KB and a prompt at 4000 characters. The office holds no key for them: a facilitator verifies and settles, reached through the network guard (its own host, https, no redirects). Every paid task is held until an admin approves it, its worker then runs on the approver's sign-ins, and the payer's words reach it framed as an untrusted outsider's. A turned-down task is refunded by hand and the refund recorded by an admin.
+
+[Proof of merge](proof-of-merge.md) is off unless the office starts with `--attest`. It signs only on Base Sepolia: before every signature the node must answer `eth_chainId` with `0x14a34`, and RPC goes through the network guard to `sepolia.base.org` or `base-sepolia-rpc.publicnode.com` only. A merge by a bot, or by someone without write access, or a fork's pull request, earns nothing. The attester's key file, like the bounty keys, is in `~/.config/agent-office-chain` and readable by workers running as the same OS user, so it must be a dedicated testnet key. Workers never get `CHAIN_*`, `X402_*` or `AGENT_OFFICE_*` variables. Timeline events link only to the testnet explorers (`explorerLink` in `shared/protocol/timeline.ts`).
+
 ## Sessions
 
 - A sign-in lasts 7 days (it was 14). `AGENT_OFFICE_SESSION_DAYS` sets it, from 1 to 90.

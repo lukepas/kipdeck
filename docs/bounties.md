@@ -65,6 +65,10 @@ Both files must be mode 0600 or the SDK refuses them, and no key bytes go in a l
 
 Workers run as the same OS user as the office, so a worker could read these files: environment scrubbing (`workers/env.ts`) doesn't protect files on disk. Use dedicated testnet keys with nothing of value on them. Moving the approver key to a separate machine or a hardware wallet would close that gap and is not done yet.
 
+## The same merge on Base Sepolia
+
+With `--attest`, the merge that pays a bounty is also attested on Base Sepolia, and the attestation carries the payout's devnet signature when the payout went out first. Office PRs without a bounty are attested too. See [Proof of merge on Base Sepolia](proof-of-merge.md).
+
 ## Where the code is
 
 | Piece | File |
