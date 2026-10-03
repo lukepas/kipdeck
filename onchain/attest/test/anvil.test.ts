@@ -54,6 +54,9 @@ for (const mode of ['eas', 'event'] as const) {
     assert.ok(list.every((a) => a.attester.toLowerCase() === OFFICE.address.toLowerCase()));
     assert.equal(list.find((a) => a.uid === rv.uid)?.refUid, m1.uid);
     assert.equal(list.find((a) => a.uid === wrong.uid)?.revoked, true);
+    // Read a few blocks at a time, as a public RPC wants: the same list.
+    const chunked = await readAttestations({ ...opts, attesters: [OFFICE.address], chunk: 2n });
+    assert.deepEqual(chunked.map((a) => a.uid), list.map((a) => a.uid));
     const board = leaderboard(list.filter((a) => a.repo === 'acme/app'));
     const claude = board.find((r) => r.harness === 'claude')!;
     const codex = board.find((r) => r.harness === 'codex')!;

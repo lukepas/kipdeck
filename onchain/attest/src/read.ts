@@ -17,7 +17,17 @@ export interface ReadOptions {
   /** Only these attesters count (lower or mixed case). */
   attesters: readonly Address[];
   fromBlock?: bigint;
+  /** Blocks per getLogs (default: the whole range at once). Public RPCs cap the range; 10,000 is safe. */
+  chunk?: bigint;
   fetchFn?: typeof fetch;
+}
+
+/** Runs `read` over [from, latest] in ranges of `chunk` blocks (one range without a chunk), oldest first. */
+async function inRanges<T>(latest: bigint, from: bigint, chunk: bigint | undefined, read: (from: bigint, to: bigint) => Promise<T[]>): Promise<T[]> {
+  if (!chunk) return read(from, latest);
+  const out: T[] = [];
+  for (let a = from; a <= latest; a += chunk) out.push(...(await read(a, a + chunk - 1n < latest ? a + chunk - 1n : latest)));
+  return out;
 }
 
 export interface ReadAttestation extends MergeRecord {
@@ -37,7 +47,8 @@ export async function readAttestations(o: ReadOptions): Promise<ReadAttestation[
   if (mode === 'eas') {
     if (!o.schemaUid) throw new Error('Reading EAS needs the schema UID');
     const eas = o.eas ?? EAS_ADDRESS;
-    const logs = await pub.getContractEvents({ address: eas, abi: EAS_ABI, eventName: 'Attested', args: { schemaUID: o.schemaUid }, fromBlock: o.fromBlock ?? 0n, toBlock: 'latest' });
+    const latest = await pub.getBlockNumber();
+    const logs = await inRanges(latest, o.fromBlock ?? 0n, o.chunk, (fromBlock, toBlock) => pub.getContractEvents({ address: eas, abi: EAS_ABI, eventName: 'Attested', args: { schemaUID: o.schemaUid }, fromBlock, toBlock }));
     for (const log of logs) {
       if (!log.args.attester || !trusted.has(log.args.attester.toLowerCase()) || !log.args.uid) continue;
       const a = await pub.readContract({ address: eas, abi: EAS_ABI, functionName: 'getAttestation', args: [log.args.uid] });
@@ -48,9 +59,11 @@ export async function readAttestations(o: ReadOptions): Promise<ReadAttestation[
     return out;
   }
   if (!o.mergeAttestor) throw new Error('Reading the fallback needs the MergeAttestor address');
+  const latest = await pub.getBlockNumber();
+  const at = o.mergeAttestor;
   const [made, revoked] = await Promise.all([
-    pub.getContractEvents({ address: o.mergeAttestor, abi: MERGE_ATTESTOR_ABI, eventName: 'MergeAttested', fromBlock: o.fromBlock ?? 0n, toBlock: 'latest' }),
-    pub.getContractEvents({ address: o.mergeAttestor, abi: MERGE_ATTESTOR_ABI, eventName: 'MergeRevoked', fromBlock: o.fromBlock ?? 0n, toBlock: 'latest' }),
+    inRanges(latest, o.fromBlock ?? 0n, o.chunk, (fromBlock, toBlock) => pub.getContractEvents({ address: at, abi: MERGE_ATTESTOR_ABI, eventName: 'MergeAttested', fromBlock, toBlock })),
+    inRanges(latest, o.fromBlock ?? 0n, o.chunk, (fromBlock, toBlock) => pub.getContractEvents({ address: at, abi: MERGE_ATTESTOR_ABI, eventName: 'MergeRevoked', fromBlock, toBlock })),
   ]);
   const gone = new Set(revoked.map((l) => l.args.uid));
   for (const log of made) {
