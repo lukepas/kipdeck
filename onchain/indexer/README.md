@@ -57,6 +57,8 @@ It holds no keys, writes nothing, and caches the dataset for a minute.
 
 `npm test` replays `test/fixtures/tape.json` and checks the dataset and the board come out byte for byte as recorded, and what the board says against the story, then runs the MCP tools over the recorded dataset. `npm run scenario` recorded the fixtures: it plays a small office history onto a local anvil (`--chain-id 84532`, EAS, the schema and the fallback ERC-8004 registries) and a `solana-test-validator` (the built escrow program, the test mint and funded accounts preloaded, and one bounty opened, funded, claimed and released), then indexes it with a recording fetch. Only anvil's published dev keys and keypairs made from fixed seeds sign anything there.
 
+`test/office-e2e.test.ts` runs the office's own proof-of-merge and reputation services (`src/server/chain/attest.ts` and `reputation.ts`) against a local anvil standing in for Base Sepolia, signing with key files through the office's guarded RPC fetch: three merges by three maintainers, a self-merge, a bot's merge (which earns nothing), a close and a revert. It then checks the Reputation Registry's own `getSummary`, and that this indexer, reading the chain alone, comes to exactly the board the office shows.
+
 ## What is here
 
 | Path | What it does |
