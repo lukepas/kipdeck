@@ -1,0 +1,13 @@
+{
+  "chainId": 84532,
+  "kind": "erc-8004",
+  "identity": "0x8004A818BFB912233c491871b3d84c89A494BD9e",
+  "reputation": "0x8004B663056A597Dffe9eCcC1965A193B7388713",
+  "version": "2.0.0",
+  "fromBlock": 47642024,
+  "registrar": "0x7c2C45a17A432CF890E514f1AaB67D941ec58314",
+  "reviewer": "0x83dAa5252b68D98F25CbB089CCeE4edc7C083403",
+  "checked": "2026-10-03T18:32:16.861Z",
+  "note": "The live ERC-8004 registries (erc-8004/erc-8004-contracts testnet addresses, version 2.0.0): code at both, and the Reputation Registry points at the Identity Registry. fromBlock is the block this check ran at; nothing of the office is registered before it.",
+  "forkCheck": "2026-10-03T18:32:58.877Z: passed (register, setAgentURI, giveFeedback, self-feedback refused, readAgents and readFeedback against the live 2.0.0 contracts on a local fork; agent 9486 existed only on the fork)"
+}

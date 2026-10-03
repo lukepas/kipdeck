@@ -1,0 +1,35 @@
+{
+  "name": "@agent-office/reputation",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ERC-8004 agent identity and merge-based reputation on Base Sepolia for Agent Office workers: register each worker identity in the live Identity Registry, give feedback only for outcomes a person caused, read both back. Fallback AgentRegistry and ReputationLog contracts with the same signatures for local chains. Testnet only.",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./src": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && forge build",
+    "deploy:local": "tsx scripts/deploy-local.ts",
+    "check:sepolia": "tsx scripts/check-sepolia.ts",
+    "fork-check": "tsx scripts/fork-check.ts",
+    "new-key": "tsx scripts/new-key.ts",
+    "test:forge": "forge test",
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check": "npm run typecheck && forge test && npm test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "viem": "^2.57.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

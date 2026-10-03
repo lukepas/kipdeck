@@ -1,0 +1,9 @@
+{
+  "chainId": 84532,
+  "kind": "fallback",
+  "identity": "0x5fbdb2315678afecb367f032d93f642f64180aa3",
+  "reputation": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+  "fromBlock": 1,
+  "version": "fallback-2.0.0",
+  "note": "AgentRegistry and ReputationLog from contracts/, on a local anvil (--chain-id 84532). Addresses repeat, since it is anvil's dev account."
+}
