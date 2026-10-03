@@ -25,7 +25,14 @@ export type TimelineKind =
   | 'bounty-funded'
   | 'bounty-claimed'
   | 'bounty-paid'
-  | 'bounty-refunded';
+  | 'bounty-refunded'
+  /** Paid tasks over x402 (see server/x402/): paid and held, approved, turned down (a refund owed), refunded by hand. */
+  | 'task-paid'
+  | 'task-approved'
+  | 'task-rejected'
+  | 'task-refunded'
+  /** A proof-of-merge attestation went on Base Sepolia for an office PR (see server/chain/attest.ts). */
+  | 'merge-attested';
 
 /**
  * One thing that happened on a floor. Written by the server from state changes only, never from text
@@ -55,6 +62,18 @@ export interface TimelineEvent {
   workedMs?: number;
   /** 'bounty-*': the transaction's signature (base58 on devnet, mock-tx-N on the mock). */
   tx?: string;
+  /** A testnet explorer page about it (an attestation, a payment, a refund): one of EXPLORER_LINKS. */
+  link?: string;
+}
+
+/** The only places an event's `link` may point: testnet explorers. */
+export const EXPLORER_LINKS: readonly string[] = ['https://base-sepolia.easscan.org/attestation/view/', 'https://sepolia.basescan.org/tx/', 'https://explorer.solana.com/tx/'];
+
+/** Whether `url` is a link an event may carry: an explorer above, then nothing but a hash or signature (and devnet's cluster). */
+export function explorerLink(url: unknown): url is string {
+  if (typeof url !== 'string' || url.length > 200) return false;
+  const base = EXPLORER_LINKS.find((p) => url.startsWith(p));
+  return !!base && /^[0-9A-Za-z]{32,90}(\?cluster=devnet)?$/.test(url.slice(base.length).replace(/^0x/, ''));
 }
 
 /** Characters in an event's text. */

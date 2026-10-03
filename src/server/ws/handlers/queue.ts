@@ -1,9 +1,20 @@
-// The floor's task queue: adding, moving and retrying tasks, and how many workers it keeps busy.
+// The floor's task queue: adding, moving and retrying tasks, how many workers it keeps busy, and
+// (admins only) approving or turning down the held tasks someone outside paid for over x402.
 import { isAgentEffort, isAgentProvider, type QueueClientMsg } from '../../../shared/protocol.js';
+import type { Ctx } from '../../office/context.js';
+import type { Client } from '../../office/client.js';
+import { refundLink } from '../../x402/protocol.js';
 import { OPEN_CODE_MODEL_MAX } from '../../../shared/providers.js';
 import { num, str } from '../../office/input.js';
 import { here } from './common.js';
 import type { HandlerMap, ViewPieces } from './types.js';
+
+/** Whether `c` is an admin; if not, they're told so. */
+const admin = (ctx: Ctx, c: Client, what: string): boolean => {
+  if (ctx.meOf(c.accountId).admin) return true;
+  ctx.warn(c, `Only admins can ${what}`);
+  return false;
+};
 
 export const queueView: ViewPieces['queue'] = (_ctx, floor) => floor?.queue.state() ?? { tasks: [], maxWorkers: 0 };
 
@@ -46,5 +57,42 @@ export const queueHandlers = {
   },
   'queue.limit'(ctx, c, msg) {
     ctx.floorOf(c)?.queue.setLimit(num(msg.maxWorkers));
+  },
+  'queue.approve'(ctx, c, msg) {
+    const floor = here(ctx, c);
+    if (!floor || !admin(ctx, c, 'approve a held task')) return;
+    const id = str(msg.taskId, 32);
+    const task = floor.queue.state().tasks.find((t) => t.id === id);
+    if (!task) return ctx.warn(c, 'No such task');
+    const who = c.peer.name;
+    // Its worker runs on the approver's sign-ins, so they need one for its agent; and a stranger's
+    // prompt goes through the same checks as one typed here (never a fork's PR to check out and run).
+    floor.github.guardCheckout(
+      task.prompt,
+      () =>
+        ctx.withSignIn(c, ctx.claudeFor(task.provider ?? floor.workers.officeDefault.provider), () => {
+          const err = floor.queue.approve(id, c.accountId);
+          if (err) return ctx.warn(c, err);
+          ctx.toastFloor(floor, `📋 ${who} approved the paid task ${task.title}`);
+        }),
+      (why) => ctx.warn(c, why),
+    );
+  },
+  'queue.reject'(ctx, c, msg) {
+    const floor = here(ctx, c);
+    if (!floor || !admin(ctx, c, 'turn down a held task')) return;
+    const err = floor.queue.reject(str(msg.taskId, 32));
+    if (err) return ctx.warn(c, err);
+    ctx.toastFloor(floor, `📋 ${c.peer.name} turned down a paid task: refund it from the office's wallet and record the transaction`);
+  },
+  'queue.refunded'(ctx, c, msg) {
+    const floor = here(ctx, c);
+    if (!floor || !admin(ctx, c, 'record a refund')) return;
+    const id = str(msg.taskId, 32);
+    const task = floor.queue.state().tasks.find((t) => t.id === id);
+    const tx = str(msg.tx, 100).trim();
+    const link = task?.paid ? refundLink(task.paid.network, tx) : undefined;
+    if (task?.paid && !link) return ctx.warn(c, 'That is not a transaction on the network it was paid on');
+    ctx.warn(c, floor.queue.refunded(id, tx, link));
   },
 } satisfies HandlerMap<QueueClientMsg>;

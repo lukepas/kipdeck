@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
-import { isAgentProvider, type AgentChoice, type AgentEffort, type AgentProvider, type GhPull, type QueueState, type QueueTask, type WorkerInfo, type WorkerStatus } from '../shared/protocol.js';
+import { isAgentProvider, type AgentChoice, type AgentEffort, type AgentProvider, type GhPull, type QueuePayment, type QueueState, type QueueTask, type WorkerInfo, type WorkerStatus } from '../shared/protocol.js';
 import { DESK_BY_ID, SEATS, nextFreeSeat } from '../shared/layout.js';
 import { validateWorkerEffort, validateWorkerModel } from './agents.js';
 import { savedEffort, savedModel, takesEffort, takesModel } from '../shared/providers.js';
@@ -98,9 +98,12 @@ export class TaskQueue {
     return this.maxWorkers;
   }
 
-  /** Queues a task. With no `provider`, it runs on the office's default worker, model and effort included. */
-  /** Queues a task; `owner` is the account adding it, whose sign-ins its worker will run on, and `goal` the milestone it serves. */
-  add(prompt: string, by: string, title?: string, issue?: number, provider?: AgentProvider, model?: string, effort?: AgentEffort, owner?: string, goal?: string): string | undefined {
+  /**
+   * Queues a task; `owner` is the account adding it, whose sign-ins its worker will run on, and `goal`
+   * the milestone it serves. With no `provider`, it runs on the office's default worker, model and
+   * effort included. A `held` one (paid from outside, `paid`) waits for an admin's approve().
+   */
+  add(prompt: string, by: string, title?: string, issue?: number, provider?: AgentProvider, model?: string, effort?: AgentEffort, owner?: string, goal?: string, extra: { held?: boolean; paid?: QueuePayment } = {}): string | undefined {
     if (provider === undefined) ({ provider, model, effort } = this.workers.officeDefault ?? { provider: this.workers.defaultProvider });
     if (!isAgentProvider(provider) || (provider === 'custom' && this.workers.defaultProvider !== 'custom')) return 'Unknown agent provider';
     const modelError = validateWorkerModel('agent', provider, model);
@@ -118,6 +121,8 @@ export class TaskQueue {
       effort: takesEffort(provider) ? effort : undefined,
       issue,
       ...(goal ? { goal } : {}),
+      ...(extra.held ? { held: true } : {}),
+      ...(extra.paid ? { paid: { ...extra.paid } } : {}),
       title: (title?.trim() || firstLine(clean)).slice(0, 120),
       prompt: clean,
       addedBy: by,
@@ -135,6 +140,8 @@ export class TaskQueue {
     const t = this.tasks.find((x) => x.id === taskId);
     if (!t) return 'No such task';
     if (t.status === 'running') return `${t.workerName ?? 'Its worker'} is on it — send the worker home to stop it`;
+    if (t.paid && t.held) return 'Someone paid for that task: an admin approves it or turns it down';
+    if (t.paid && t.outcome === 'rejected' && !t.paid.refundTx) return 'Record its refund first';
     this.tasks.splice(this.tasks.indexOf(t), 1);
     this.changed();
     this.pump();
@@ -168,19 +175,74 @@ export class TaskQueue {
     const t = this.tasks.find((x) => x.id === taskId);
     if (!t) return 'No such task';
     if (t.status !== 'done') return 'That task is still on the queue';
+    if (t.outcome === 'rejected') return 'That task was turned down';
     if (t.issue !== undefined && this.tasks.some((x) => x !== t && x.issue === t.issue && x.status !== 'done')) return `Issue #${t.issue} is already on the queue`;
     this.tasks.splice(this.tasks.indexOf(t), 1);
-    const fresh: QueueTask = { id: t.id, provider: t.provider, model: t.model, effort: t.effort, issue: t.issue, ...(t.goal ? { goal: t.goal } : {}), title: t.title, prompt: t.prompt, addedBy: t.addedBy, owner: t.owner, addedAt: Date.now(), status: 'queued' };
+    const fresh: QueueTask = { id: t.id, provider: t.provider, model: t.model, effort: t.effort, issue: t.issue, ...(t.goal ? { goal: t.goal } : {}), ...(t.paid ? { paid: t.paid } : {}), title: t.title, prompt: t.prompt, addedBy: t.addedBy, owner: t.owner, addedAt: Date.now(), status: 'queued' };
     this.tasks.push(fresh);
     this.changed();
     this.pump();
     return undefined;
   }
 
-  /** Forgets the finished tasks. */
+  /** Lets a held task start, on `owner`'s sign-ins (the admin who approved it). */
+  approve(taskId: string, owner?: string): string | undefined {
+    const t = this.tasks.find((x) => x.id === taskId);
+    if (!t) return 'No such task';
+    if (!t.held) return 'That task is not waiting for approval';
+    if (t.paid && !t.paid.tx) return 'Its payment is still settling';
+    t.held = undefined;
+    if (owner) t.owner = owner;
+    else delete t.owner;
+    this.changed();
+    this.pump();
+    return undefined;
+  }
+
+  /** Turns a held task down: it's done, and a paid one is owed a refund (sent by hand, see refunded()). */
+  reject(taskId: string): string | undefined {
+    const t = this.tasks.find((x) => x.id === taskId);
+    if (!t) return 'No such task';
+    if (!t.held) return 'Only a task waiting for approval can be turned down';
+    t.held = undefined;
+    t.status = 'done';
+    t.outcome = 'rejected';
+    t.finishedAt = Date.now();
+    this.changed();
+    return undefined;
+  }
+
+  /** The settlement of a held task's payment (the task was queued before it settled, so it can't start unpaid). */
+  setPaid(taskId: string, paid: QueuePayment) {
+    const t = this.tasks.find((x) => x.id === taskId);
+    if (!t) return;
+    t.paid = { ...paid };
+    this.changed();
+  }
+
+  /** Takes a held task whose payment never settled off the queue (nobody paid for it). */
+  unpay(taskId: string) {
+    const i = this.tasks.findIndex((x) => x.id === taskId && x.held && x.paid && !x.paid.tx);
+    if (i < 0) return;
+    this.tasks.splice(i, 1);
+    this.changed();
+  }
+
+  /** Records the refund sent by hand for a turned-down paid task. */
+  refunded(taskId: string, tx: string, explorer?: string): string | undefined {
+    const t = this.tasks.find((x) => x.id === taskId);
+    if (!t?.paid) return 'No such paid task';
+    if (t.outcome !== 'rejected') return 'Only a turned-down paid task is refunded';
+    if (t.paid.refundTx) return 'Its refund is recorded already';
+    t.paid = { ...t.paid, refundTx: tx, ...(explorer ? { refundExplorer: explorer } : {}) };
+    this.changed();
+    return undefined;
+  }
+
+  /** Forgets the finished tasks (a turned-down paid one only once its refund is recorded). */
   clear() {
     const before = this.tasks.length;
-    this.tasks = this.tasks.filter((t) => t.status !== 'done');
+    this.tasks = this.tasks.filter((t) => t.status !== 'done' || (t.outcome === 'rejected' && t.paid && !t.paid.refundTx));
     if (this.tasks.length !== before) this.changed();
   }
 
@@ -330,7 +392,8 @@ export class TaskQueue {
   private seat() {
     let changed = false;
     for (const t of this.tasks) {
-      if (t.status !== 'queued') continue;
+      // A held task waits for an admin; the ones after it go ahead.
+      if (t.status !== 'queued' || t.held) continue;
       if (this.busy() >= this.maxWorkers) break;
       // A spent budget holds the queue instead of failing every task; the pump seats them once hiring resumes.
       if (this.events.hiringPaused()) break;
@@ -407,6 +470,8 @@ export class TaskQueue {
           effort: savedEffort(provider, s.effort),
           issue: typeof s.issue === 'number' ? s.issue : undefined,
           ...(typeof s.goal === 'string' && /^[a-z0-9]{1,16}$/.test(s.goal) ? { goal: s.goal } : {}),
+          ...(s.held === true ? { held: true } : {}),
+          ...(cleanPayment(s.paid) ? { paid: cleanPayment(s.paid) } : {}),
           title: s.title,
           prompt: s.prompt,
           addedBy: s.addedBy ?? '?',
@@ -437,6 +502,23 @@ export class TaskQueue {
       // corrupt state file: start with an empty queue
     }
   }
+}
+
+/** A saved payment, if it holds together. */
+function cleanPayment(raw: unknown): QueuePayment | undefined {
+  const p = (raw ?? {}) as Record<string, unknown>;
+  const s = (v: unknown, max: number) => (typeof v === 'string' && v.length <= max && !/[\0-\x1f]/.test(v) ? v : undefined);
+  const network = s(p.network, 80);
+  const payer = s(p.payer, 64);
+  const amount = s(p.amount, 24);
+  const tx = s(p.tx, 100);
+  if (!network || !payer || !amount || tx === undefined) return undefined;
+  const out: QueuePayment = { network, payer, amount, tx };
+  for (const k of ['explorer', 'refundTx', 'refundExplorer'] as const) {
+    const v = s(p[k], 200);
+    if (v) out[k] = v;
+  }
+  return out;
 }
 
 function label(t: QueueTask): string {

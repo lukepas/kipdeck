@@ -8,6 +8,7 @@ import { goalPicker } from './mission/goalpick';
 import { providerPicker, providerLabel, providerUsageState, providerWaitingLabel, resolvedProvider, modelBadge } from './provider';
 import { officeFull } from '../../shared/machine';
 import { dictateField } from './dictate';
+import { paidParts } from './paid-task';
 
 export interface QueueActions {
   openTerminal(workerId: string): void;
@@ -31,6 +32,8 @@ function outcome(t: QueueTask): string {
       return 'sent home';
     case 'failed':
       return `couldn't start: ${t.error ?? 'unknown error'}`;
+    case 'rejected':
+      return 'turned down';
     default:
       return '';
   }
@@ -99,6 +102,7 @@ export function openQueue(net: Net, actions: QueueActions) {
       return waiting ? ` · ${waiting}` : '';
     };
     let pos: string | null = null;
+    const paid = paidParts(t, net);
     if (t.status === 'running') {
       const selectedProvider = providerLabel(t.provider ?? w?.provider, store.project);
       meta.push(`⚙️ ${selectedProvider}${model}${usageSuffix(t.provider ?? w?.provider, w?.usage)}`);
@@ -124,7 +128,7 @@ export function openQueue(net: Net, actions: QueueActions) {
       meta.push(`added by ${t.addedBy} ${timeAgo(t.addedAt)}`);
       buttons.push(h('button.btn', { type: 'button', title: 'Move up', 'aria-label': 'Move up', disabled: i === 0, onclick: () => net.send({ t: 'queue.move', taskId: t.id, delta: -1 }) }, '↑'));
       buttons.push(h('button.btn', { type: 'button', title: 'Move down', 'aria-label': 'Move down', disabled: i === queued.length - 1, onclick: () => net.send({ t: 'queue.move', taskId: t.id, delta: 1 }) }, '↓'));
-      buttons.push(h('button.btn', { type: 'button', title: 'Remove from the queue', 'aria-label': 'Remove', onclick: () => net.send({ t: 'queue.remove', taskId: t.id }) }, '✕'));
+      if (!(t.held && t.paid)) buttons.push(h('button.btn', { type: 'button', title: 'Remove from the queue', 'aria-label': 'Remove', onclick: () => net.send({ t: 'queue.remove', taskId: t.id }) }, '✕'));
     } else {
       meta.push(`⚙️ ${providerLabel(t.provider, store.project)}${model}${usageSuffix(t.provider, w?.usage)}`);
       meta.push(outcome(t));
@@ -133,12 +137,14 @@ export function openQueue(net: Net, actions: QueueActions) {
       if (t.finishedAt) meta.push(timeAgo(t.finishedAt));
       if (t.pr) buttons.push(h('a.btn', { href: t.pr.url, target: '_blank', rel: 'noopener', title: t.pr.title }, `🔀 PR #${t.pr.number}${t.pr.state === 'MERGED' ? ' ✓' : t.pr.state === 'DRAFT' ? ' (draft)' : ''}`));
       if (w) buttons.push(h('button.btn', { type: 'button', onclick: () => actions.openTerminal(w.id) }, '🖥️ Terminal'));
-      buttons.push(h('button.btn', { type: 'button', title: 'Put it back on the queue', onclick: () => net.send({ t: 'queue.retry', taskId: t.id }) }, '↻ Requeue'));
-      buttons.push(h('button.btn', { type: 'button', title: 'Forget it', 'aria-label': 'Remove', onclick: () => net.send({ t: 'queue.remove', taskId: t.id }) }, '✕'));
+      if (t.outcome !== 'rejected') buttons.push(h('button.btn', { type: 'button', title: 'Put it back on the queue', onclick: () => net.send({ t: 'queue.retry', taskId: t.id }) }, '↻ Requeue'));
+      if (!(t.outcome === 'rejected' && t.paid && !t.paid.refundTx)) buttons.push(h('button.btn', { type: 'button', title: 'Forget it', 'aria-label': 'Remove', onclick: () => net.send({ t: 'queue.remove', taskId: t.id }) }, '✕'));
     }
+    meta.push(...paid.meta);
+    buttons.unshift(...paid.buttons);
     return h(
       'li',
-      { class: t.status },
+      { class: `${t.status}${t.held ? ' held' : ''}` },
       pos ? h('span.pos', {}, pos) : null,
       h('div.queue-main', {}, taskTitle(t), h('div.queue-meta', {}, meta.join(' · '))),
       h('div.queue-actions', {}, ...buttons),

@@ -3,7 +3,7 @@
 // are written here from state changes only (TimelineWatch), never from what a browser sent.
 import path from 'node:path';
 import type { GhIssue, GhPull, MeetingState, Mission, QueueState, RosterEntry, TaskStatus, TimelineEvent, TimelineKind, WorkerInfo, WorkerStatus } from '../shared/protocol.js';
-import { TIMELINE_TEXT } from '../shared/protocol.js';
+import { TIMELINE_TEXT, explorerLink } from '../shared/protocol.js';
 import { cleanText } from '../shared/mission.js';
 import { duration } from '../shared/attention.js';
 import { appendState, readState, writeState } from './safefs.js';
@@ -13,7 +13,7 @@ import { onRoster } from './roster.js';
 /** How many events a floor keeps, across restarts. */
 export const TIMELINE_KEEP = 2000;
 
-const KINDS = new Set<TimelineKind>(['hired', 'needs-input', 'done', 'stuck', 'resumed', 'sent-home', 'pr-opened', 'pr-merged', 'pr-closed', 'task-started', 'task-done', 'task-failed', 'meeting-started', 'meeting-ended', 'mission', 'milestone', 'milestone-done', 'progress', 'bounty-funded', 'bounty-claimed', 'bounty-paid', 'bounty-refunded']);
+const KINDS = new Set<TimelineKind>(['hired', 'needs-input', 'done', 'stuck', 'resumed', 'sent-home', 'pr-opened', 'pr-merged', 'pr-closed', 'task-started', 'task-done', 'task-failed', 'meeting-started', 'meeting-ended', 'mission', 'milestone', 'milestone-done', 'progress', 'bounty-funded', 'bounty-claimed', 'bounty-paid', 'bounty-refunded', 'task-paid', 'task-approved', 'task-rejected', 'task-refunded', 'merge-attested']);
 
 /** What a new event says; the timeline stamps the rest. */
 export type NewEvent = Omit<TimelineEvent, 'id' | 'at' | 'floor'> & { at?: number };
@@ -46,6 +46,7 @@ function made(e: NewEvent & { at: number }, floor: string, id: string): Timeline
   for (const k of ['from', 'to', 'of', 'usd', 'workedMs'] as const) if (num(e[k]) !== undefined) out[k] = e[k];
   // A transaction signature: base58 on devnet, mock-tx-N on the mock.
   if (typeof e.tx === 'string' && /^[1-9A-HJ-NP-Za-km-z]{32,90}$|^mock-tx-\d{1,12}$/.test(e.tx)) out.tx = e.tx;
+  if (explorerLink(e.link)) out.link = e.link;
   return out;
 }
 
@@ -161,10 +162,17 @@ export interface WatchFloor {
  * (a worker's update, a fresh list of pull requests, the queue...), and it says what changed.
  * The first look at anything only takes note, so a restart writes nothing.
  */
+type PaidStage = 'held' | 'approved' | 'rejected' | 'refunded';
+
+/** 0x1234...abcd, or the start and end of a Solana address. */
+const shortAddress = (a: string) => (a.length > 12 ? `${a.slice(0, 6)}...${a.slice(-4)}` : a);
+
 export class TimelineWatch {
   private status = new Map<string, WorkerStatus>();
   private openPulls?: Map<number, GhPull>;
   private tasks?: Map<string, TaskStatus | 'failed'>;
+  /** Where each paid task stands, to note it paying, being approved, turned down and refunded once each. */
+  private paidTasks = new Map<string, PaidStage>();
   /** null: no meeting in the room; undefined: not looked at yet. */
   private meeting?: { id: string; status: string } | null;
   private mission?: Mission;
@@ -252,8 +260,9 @@ export class TimelineWatch {
     for (const p of items) if (p.state === 'CLOSED' && before.has(p.number) && this.floor.officePull(p)) this.add({ kind: 'pr-closed', pr: p.number, text: `PR #${p.number} closed without merging: ${p.title}` });
   }
 
-  /** The queue's state: tasks that started, finished or failed. */
+  /** The queue's state: tasks that started, finished or failed, and paid ones moving along. */
   queue(state: QueueState) {
+    this.paid(state, !this.tasks);
     const next = new Map(state.tasks.map((t) => [t.id, t.outcome === 'failed' ? ('failed' as const) : t.status]));
     const before = this.tasks;
     this.tasks = next;
@@ -267,6 +276,31 @@ export class TimelineWatch {
       else if (now === 'failed') this.add({ kind: 'task-failed', ...base, text: `The queue task ${t.title} failed${t.error ? `: ${t.error}` : ''}` });
       else if (now === 'done' && was === 'running') this.add({ kind: 'task-done', ...base, text: `The queue task ${t.title} ended (${t.outcome ?? 'done'})` });
     }
+  }
+
+  /** Paid tasks (see server/x402/): each stage they reach goes on the timeline once, with its explorer link. */
+  private paid(state: QueueState, first: boolean) {
+    for (const t of state.tasks) {
+      const p = t.paid;
+      if (!p?.tx) continue;
+      const stage: PaidStage = p.refundTx ? 'refunded' : t.outcome === 'rejected' ? 'rejected' : t.held ? 'held' : 'approved';
+      const was = this.paidTasks.get(t.id);
+      if (was === stage) continue;
+      this.paidTasks.set(t.id, stage);
+      // What the queue was like when the office started has happened already.
+      if (first) continue;
+      const base = { ...(t.issue ? { issue: t.issue } : {}), ...(t.goal ? { goal: t.goal } : {}) };
+      const who = shortAddress(p.payer);
+      if (!was) this.add({ kind: 'task-paid', ...base, ...(p.explorer ? { link: p.explorer } : {}), text: `${who} paid ${p.amount} test USDC for the task ${t.title}: it waits for an admin` });
+      if (stage === 'approved') this.add({ kind: 'task-approved', ...base, text: `The paid task ${t.title} was approved and is on the queue` });
+      else if (stage === 'rejected') this.add({ kind: 'task-rejected', ...base, text: `The paid task ${t.title} was turned down: ${p.amount} test USDC is owed back to ${who}, sent by hand from the office's wallet` });
+      else if (stage === 'refunded') this.add({ kind: 'task-refunded', ...base, ...(p.refundExplorer ? { link: p.refundExplorer } : {}), text: `Refunded ${p.amount} test USDC to ${who} for the turned-down task ${t.title}` });
+    }
+  }
+
+  /** A proof-of-merge attestation went on chain for PR `pr` (see server/chain/attest.ts). */
+  attested(e: { pr: number; text: string; link?: string; worker?: string; name?: string }) {
+    this.add({ kind: 'merge-attested', pr: e.pr, ...(e.worker ? { worker: e.worker } : {}), ...(e.name ? { name: e.name } : {}), ...(e.link ? { link: e.link } : {}), text: e.text });
   }
 
   /** The meeting room's state. */

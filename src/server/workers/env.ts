@@ -10,7 +10,8 @@ const SCRUB_ENV = new Set([
   ...Object.values(PROVIDERS).flatMap((p) => p.scrubEnv ?? []),
   'NO_COLOR', 'FORCE_COLOR', 'VSCODE_INJECTION', 'TERM_PROGRAM', 'TERM_PROGRAM_VERSION',
 ]);
-const SCRUB_PREFIXES = [...Object.values(PROVIDERS).flatMap((p) => p.scrubPrefixes ?? []), 'NEBULA_', 'AGENT_OFFICE_'];
+// CHAIN_ and X402_: the testnet chain tooling's own settings and key file paths, never a worker's business.
+const SCRUB_PREFIXES = [...Object.values(PROVIDERS).flatMap((p) => p.scrubPrefixes ?? []), 'NEBULA_', 'AGENT_OFFICE_', 'CHAIN_', 'X402_'];
 const scrubbed = (k: string) => SCRUB_ENV.has(k) || SCRUB_PREFIXES.some((p) => k.startsWith(p));
 
 /** Which of the office's variables workers get: the allowlist, unless the office was told otherwise. */
