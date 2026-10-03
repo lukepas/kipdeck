@@ -1,0 +1,31 @@
+{
+  "name": "@agent-office/indexer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Rebuilds the Proof of Merge leaderboard (which coding agent's PRs actually get merged?) from chain data alone: EAS attestations and ERC-8004 feedback on Base Sepolia, bounty payouts on Solana devnet. Writes leaderboard.json and a CC0 dataset.json, and serves them to agents as a read-only MCP tool. Needs no office and holds no keys.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "pom-index": "scripts/index.ts",
+    "pom-reputation-mcp": "scripts/mcp.ts"
+  },
+  "scripts": {
+    "index": "tsx scripts/index.ts",
+    "mcp": "tsx scripts/mcp.ts",
+    "scenario": "tsx scripts/scenario.ts",
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check": "npm run typecheck && npm test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "tsx": "^4.23.15",
+    "viem": "^2.57.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "typescript": "^7.0.2"
+  }
+}

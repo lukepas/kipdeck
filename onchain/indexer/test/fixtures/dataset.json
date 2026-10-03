@@ -1,0 +1,243 @@
+{
+  "schema": "agent-office/proof-of-merge-dataset@1",
+  "license": "CC0-1.0",
+  "sources": {
+    "chainId": 84532,
+    "attesters": [
+      "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+    ],
+    "schemaUid": "0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900",
+    "eas": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+    "identity": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
+    "reputation": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
+    "registrars": [
+      "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
+    ],
+    "solana": {
+      "cluster": "localnet",
+      "programId": "CJfRUQxyonG6B5mnztsNUqxknbFT89DJdrdrzV9F96mU"
+    }
+  },
+  "agents": [
+    {
+      "agentId": "1",
+      "uri": "https://office.example/agents/1.json",
+      "tx": "0x4a090cfa739523e19a9ae9dda046ee8203e82ea80a5b0d741678dc34a3320111"
+    },
+    {
+      "agentId": "2",
+      "uri": "https://office.example/agents/2.json",
+      "tx": "0x448cc8f371bb711efe30d10a820f09aa689dfebd4e51e319a35a10d6c5e56ed8"
+    },
+    {
+      "agentId": "3",
+      "uri": "https://office.example/agents/3.json",
+      "tx": "0xa462bde1938538bf305b39cecfda41d0dfb5b8d2786c63bff9ae3f6ecb6bc9e3"
+    }
+  ],
+  "events": [
+    {
+      "agentId": "1",
+      "harness": "claude",
+      "repo": "acme/app",
+      "uid": "0x5e7276c2b92aba8b8d1f2f0cdb3ee0e77412032820ddfad8184ce0c6662a95d4",
+      "maintainer": "0x15a2dae246512208989449537f1e3d3f6f2d8faa159c7c51df01a6d09efdd05e",
+      "pr": 12,
+      "outcome": "merged",
+      "at": 1786630400,
+      "openedAt": 1786544000,
+      "links": {
+        "attestation": "https://base-sepolia.easscan.org/attestation/view/0x5e7276c2b92aba8b8d1f2f0cdb3ee0e77412032820ddfad8184ce0c6662a95d4",
+        "feedback": "https://sepolia.basescan.org/tx/0x34c8ee641d9917220df13f7491ab54b8db50c35997c2193dadd96a2468a759f0"
+      }
+    },
+    {
+      "agentId": "1",
+      "harness": "claude",
+      "repo": "acme/app",
+      "uid": "0xde9ce529cd949058cf51aac4d164b95ff09751b913d77866480b5cb052027aed",
+      "maintainer": "0x15a2dae246512208989449537f1e3d3f6f2d8faa159c7c51df01a6d09efdd05e",
+      "pr": 1,
+      "outcome": "merged",
+      "at": 1790000100,
+      "openedAt": 1789992800,
+      "links": {
+        "attestation": "https://base-sepolia.easscan.org/attestation/view/0xde9ce529cd949058cf51aac4d164b95ff09751b913d77866480b5cb052027aed",
+        "feedback": "https://sepolia.basescan.org/tx/0xe458bf30cdde83ccf12b458b3436582c84a31c1ebc3f0bfe7a1d473ddf5a73a8"
+      }
+    },
+    {
+      "agentId": "1",
+      "harness": "claude",
+      "repo": "acme/app",
+      "uid": "0x77021b2ca85ab05e2c7e7cee3cbfb48ab6970e95c5ca9074f950a7d86257b992",
+      "maintainer": "0x30ff475d54f0db9c97754b9c6012150469b1dfd6d86c298669479b7dea5dec72",
+      "pr": 2,
+      "outcome": "merged",
+      "at": 1790000200,
+      "openedAt": 1789996400,
+      "links": {
+        "attestation": "https://base-sepolia.easscan.org/attestation/view/0x77021b2ca85ab05e2c7e7cee3cbfb48ab6970e95c5ca9074f950a7d86257b992",
+        "feedback": "https://sepolia.basescan.org/tx/0x0a48844f92c4db320f844dca6c573670274ad1e5bea4d33e346e3ab47ccec44f"
+      }
+    },
+    {
+      "agentId": "1",
+      "harness": "claude",
+      "repo": "acme/app",
+      "uid": "0x63b506953c99e0625adaa0767a60eb1682c15c42a8119a1980aec812d0281d26",
+      "maintainer": "0x15a2dae246512208989449537f1e3d3f6f2d8faa159c7c51df01a6d09efdd05e",
+      "pr": 3,
+      "outcome": "merged",
+      "at": 1790000300,
+      "openedAt": 1789998200,
+      "paid": {
+        "amount": "25000000",
+        "decimals": 6,
+        "tx": "4wJTpq2k4hMcAS15SdMqPQUw4PjpQHaEaVLAKpiVQ31Lcmrnj9mghxy1kRTBKpzv8RLB5NPUHJ274dAYvojdVshG"
+      },
+      "links": {
+        "attestation": "https://base-sepolia.easscan.org/attestation/view/0x63b506953c99e0625adaa0767a60eb1682c15c42a8119a1980aec812d0281d26",
+        "feedback": "https://sepolia.basescan.org/tx/0x12943fcab12766fea7babdfb385873a082f9300985e4bb2d42723338f6e2f234",
+        "solana": "https://explorer.solana.com/tx/4wJTpq2k4hMcAS15SdMqPQUw4PjpQHaEaVLAKpiVQ31Lcmrnj9mghxy1kRTBKpzv8RLB5NPUHJ274dAYvojdVshG?cluster=custom&customUrl=http%3A%2F%2F127.0.0.1%3A57245"
+      }
+    },
+    {
+      "agentId": "1",
+      "harness": "claude",
+      "repo": "acme/app",
+      "uid": "0xb47514e0c984ac3a8a2d9408bda14370763986403077424395ebef499ed7996c",
+      "maintainer": "0x265b6cbe25abe3e6d55f8e781647c8dfcebf695195d3aee05eb5b2768461ca57",
+      "pr": 4,
+      "outcome": "merged",
+      "at": 1790000400,
+      "openedAt": 1789999100,
+      "links": {
+        "attestation": "https://base-sepolia.easscan.org/attestation/view/0xb47514e0c984ac3a8a2d9408bda14370763986403077424395ebef499ed7996c",
+        "feedback": "https://sepolia.basescan.org/tx/0xe9adf271172b897758e6dc17c678b1b7d90ced6618405d537614ca1dc74d40c7"
+      }
+    },
+    {
+      "agentId": "1",
+      "harness": "claude",
+      "repo": "acme/app",
+      "uid": "0xcf3c23193aa1167e83a176d098263a77b295520d6c9bb3b815ec39b312f69cbe",
+      "maintainer": "0x974d28fb968e56a2e41455597d6b266ba4dc7e8219a2e8187085e7338130f032",
+      "pr": 5,
+      "outcome": "merged",
+      "at": 1790000500,
+      "openedAt": 1789999400,
+      "links": {
+        "attestation": "https://base-sepolia.easscan.org/attestation/view/0xcf3c23193aa1167e83a176d098263a77b295520d6c9bb3b815ec39b312f69cbe",
+        "feedback": "https://sepolia.basescan.org/tx/0x8f3dfcd09178fb7020c3d75d6231b857f4dee7826336e40fdb4e6a6c68e04cf3"
+      }
+    },
+    {
+      "agentId": "1",
+      "harness": "claude",
+      "repo": "acme/app",
+      "uid": "0xe15c109f940fcbd88350967f054817d14f89f478cf4e8036723b4fc542c00d25",
+      "maintainer": "0x15a2dae246512208989449537f1e3d3f6f2d8faa159c7c51df01a6d09efdd05e",
+      "pr": 6,
+      "outcome": "closed",
+      "at": 1790000600,
+      "openedAt": 1789999500,
+      "links": {
+        "attestation": "https://base-sepolia.easscan.org/attestation/view/0xe15c109f940fcbd88350967f054817d14f89f478cf4e8036723b4fc542c00d25",
+        "feedback": "https://sepolia.basescan.org/tx/0x041d3e168732dc976a2348a1411ed0819b54b4d6cec64f6e0c42b657ded33ac7"
+      }
+    },
+    {
+      "agentId": "2",
+      "harness": "codex",
+      "repo": "acme/app",
+      "uid": "0x06c22a882defc5d7239035b1876933227aec04172be263029e2fd7b101e69940",
+      "maintainer": "0x0f00b325271b4a9630ee5f73415ebf6cbd59ac02f2656e10894c1c2e282e1ba6",
+      "self": true,
+      "pr": 7,
+      "outcome": "merged",
+      "at": 1790001100,
+      "openedAt": 1790001000,
+      "links": {
+        "attestation": "https://base-sepolia.easscan.org/attestation/view/0x06c22a882defc5d7239035b1876933227aec04172be263029e2fd7b101e69940",
+        "feedback": "https://sepolia.basescan.org/tx/0xa01b6758f5ebdd6be671db6e46e6b07a283310a7c625a2be8faa8e8bd271a103"
+      }
+    },
+    {
+      "agentId": "2",
+      "harness": "codex",
+      "repo": "acme/app",
+      "uid": "0xf0b3596814fa07673ea76177f7a21c0a13bebc1365413eb831a42d141fd7d541",
+      "maintainer": "0x0f00b325271b4a9630ee5f73415ebf6cbd59ac02f2656e10894c1c2e282e1ba6",
+      "self": true,
+      "pr": 8,
+      "outcome": "merged",
+      "at": 1790001300,
+      "openedAt": 1790001200,
+      "links": {
+        "attestation": "https://base-sepolia.easscan.org/attestation/view/0xf0b3596814fa07673ea76177f7a21c0a13bebc1365413eb831a42d141fd7d541",
+        "feedback": "https://sepolia.basescan.org/tx/0xbda224d97b9c615440fe16a147b7c958abc08c58b59aa7d0de7c5b97e0c89926"
+      }
+    },
+    {
+      "agentId": "2",
+      "harness": "codex",
+      "repo": "acme/app",
+      "uid": "0x95d210ac895cc4dca1b2465503f4b9baa6a5d4e0987a967831a50c5bede0591a",
+      "maintainer": "0x15a2dae246512208989449537f1e3d3f6f2d8faa159c7c51df01a6d09efdd05e",
+      "pr": 10,
+      "outcome": "closed",
+      "at": 1790001600,
+      "openedAt": 1790001500,
+      "links": {
+        "attestation": "https://base-sepolia.easscan.org/attestation/view/0x95d210ac895cc4dca1b2465503f4b9baa6a5d4e0987a967831a50c5bede0591a",
+        "feedback": "https://sepolia.basescan.org/tx/0xccfc6d00694a2e2c6360b34277fc8a9e922b96ff8c3ce6fd25fc2db8e7c75f81"
+      }
+    },
+    {
+      "agentId": "2",
+      "harness": "codex",
+      "repo": "acme/app",
+      "uid": "0xb9c27ffed5323b5e3affe3805b320d043a3dd7c72d89831d0f1ea4b7bbdc5494",
+      "maintainer": "0x265b6cbe25abe3e6d55f8e781647c8dfcebf695195d3aee05eb5b2768461ca57",
+      "pr": 9,
+      "outcome": "merged",
+      "at": 1790005000,
+      "openedAt": 1790001400,
+      "links": {
+        "attestation": "https://base-sepolia.easscan.org/attestation/view/0xb9c27ffed5323b5e3affe3805b320d043a3dd7c72d89831d0f1ea4b7bbdc5494",
+        "feedback": "https://sepolia.basescan.org/tx/0x70901949a073bf7084cc117f4a0c91b47f3467eb8c7a16c83a1e79807f0f6a3f"
+      }
+    },
+    {
+      "agentId": "3",
+      "harness": "pi",
+      "repo": "acme/app",
+      "uid": "0xe2cb4bc55b78272836e1bd7932a70e9e8a6d3a0ac0491c68fc96e2e172092402",
+      "maintainer": "0x974d28fb968e56a2e41455597d6b266ba4dc7e8219a2e8187085e7338130f032",
+      "pr": 11,
+      "outcome": "merged",
+      "at": 1790009200,
+      "openedAt": 1790002000,
+      "links": {
+        "attestation": "https://base-sepolia.easscan.org/attestation/view/0xe2cb4bc55b78272836e1bd7932a70e9e8a6d3a0ac0491c68fc96e2e172092402",
+        "feedback": "https://sepolia.basescan.org/tx/0x4129bf69a58d9e9d41bb4570e8fecd351db9e373e65e7431e0bced33598308c6"
+      }
+    },
+    {
+      "agentId": "1",
+      "harness": "claude",
+      "repo": "acme/app",
+      "uid": "0x2a32bdc6d31a8e94c578059932782f659306625d77124a58f4cee420458d033b",
+      "maintainer": "0x30ff475d54f0db9c97754b9c6012150469b1dfd6d86c298669479b7dea5dec72",
+      "pr": 2,
+      "outcome": "reverted",
+      "at": 1790259200,
+      "mergedAt": 1790000200,
+      "links": {
+        "attestation": "https://base-sepolia.easscan.org/attestation/view/0x2a32bdc6d31a8e94c578059932782f659306625d77124a58f4cee420458d033b",
+        "feedback": "https://sepolia.basescan.org/tx/0x50cfb409ac3c456ff9a0b04286d40195b989da8c0f0a7baedd679a6230771fa4"
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "note": "Written by scripts/scenario.ts on local chains (anvil --chain-id 84532, solana-test-validator). Public data only.",
+  "asOf": 1790864000,
+  "options": {
+    "evm": {
+      "rpcUrl": "http://127.0.0.1:57240",
+      "mode": "eas",
+      "schemaUid": "0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900",
+      "eas": "0xe7f1725e7734ce288f8367e1bb143e90bb3f0512",
+      "attesters": [
+        "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+      ],
+      "identity": "0xdc64a140aa3e981100a9beca4e685f962f0cf6c9",
+      "reputation": "0x5fc8d32690cc91d4c39d9d3abcbd16989f875707",
+      "registrars": [
+        "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
+      ],
+      "fromBlock": "0",
+      "chunk": "5"
+    },
+    "solana": {
+      "rpcUrl": "http://127.0.0.1:57245",
+      "programId": "CJfRUQxyonG6B5mnztsNUqxknbFT89DJdrdrzV9F96mU",
+      "cluster": "localnet"
+    }
+  },
+  "bountyRelease": "4wJTpq2k4hMcAS15SdMqPQUw4PjpQHaEaVLAKpiVQ31Lcmrnj9mghxy1kRTBKpzv8RLB5NPUHJ274dAYvojdVshG"
+}
