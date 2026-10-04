@@ -27,6 +27,7 @@ uniform float uSort;        // 0..1 streak length
 uniform float uThresh;      // pixel-sort threshold (0.9 calm .. 0.4 chaos)
 uniform float uSortCols;    // streak column width in px
 uniform float uSortPolarity; // 0 = ink streaks on paper, 1 = paper streaks on ink
+uniform float uSortCover;   // 0..1 share of streaking columns (1 = all)
 uniform float uSeed;
 uniform vec2 uRipC;         // ripple centre, px from top-left
 uniform float uRipR;        // ripple radius, px (<0 = off)
@@ -61,25 +62,33 @@ void main() {
 
   // Pixel-sort smear: ink pixels above bleed downward as monochrome streaks.
   // With uSortPolarity = 1 (ink background) the bright pixels streak instead.
+  // uSortCover picks the share of columns that streak at all; lengths are
+  // skewed short so a few long streaks read against many short ones. Pixels
+  // no streak reaches keep their colour, so status pips stay red and amber.
   if (uSort > 0.001) {
     float colId = floor(px.x / uSortCols);
-    float len = uSort * uRes.y * (0.15 + 0.85 * hash(colId)) * 0.35;
-    float l = luma(col);
-    if (uSortPolarity > 0.5) l = 1.0 - l;
+    float onCol = step(hash(colId * 1.731 + 7.0), uSortCover);
+    float hl = hash(colId);
+    float len = onCol * uSort * uRes.y * (0.06 + 0.94 * hl * hl) * 0.42;
+    float l0 = luma(col);
+    if (uSortPolarity > 0.5) l0 = 1.0 - l0;
+    float l = l0;
     const int N = 40;
     for (int i = 1; i <= N; i++) {
       float fi = float(i) / float(N);
       vec2 suv = uv + vec2(0.0, fi * len / uRes.y);
-      if (suv.y > 1.0) break;
+      if (suv.y > 1.0 || len < 1.0) break;
       float sl = luma(texture2D(uTex, suv).rgb);
       if (uSortPolarity > 0.5) sl = 1.0 - sl;
       if (sl < 1.0 - uThresh) {
-        float streak = mix(sl, l, fi * fi);   // streak fades toward its tail
+        float streak = mix(sl, l0, fi * fi);  // streak fades toward its tail
         l = min(l, streak);
       }
     }
-    if (uSortPolarity > 0.5) l = 1.0 - l;
-    col = vec3(l);                             // monochrome: no RGB split
+    if (l < l0 - 0.004) {
+      if (uSortPolarity > 0.5) l = 1.0 - l;
+      col = vec3(l);                           // monochrome: no RGB split
+    }
   }
 
   // Colour remap at the ripple front: invert inside the band.
@@ -135,7 +144,7 @@ export function createPost(glCanvas, sourceCanvas, design) {
     uniforms: {
       uTex: { value: srcTex },
       uRes: { value: new THREE.Vector2(design.w, design.h) },
-      uSort: { value: 0 }, uThresh: { value: 0.9 }, uSortCols: { value: 4 * design.u }, uSortPolarity: { value: 0 }, uSeed: { value: 0 },
+      uSort: { value: 0 }, uThresh: { value: 0.9 }, uSortCols: { value: 4 * design.u }, uSortPolarity: { value: 0 }, uSortCover: { value: 1 }, uSeed: { value: 0 },
       uRipC: { value: new THREE.Vector2() }, uRipR: { value: -1 }, uRipW: { value: 40 }, uRipAmp: { value: 0 },
       uRipRemap: { value: 0 }, uInvert: { value: 0 }, uFlash: { value: 0 },
       uPaper: { value: new THREE.Vector3(paper.r, paper.g, paper.b) },
@@ -166,6 +175,7 @@ export function createPost(glCanvas, sourceCanvas, design) {
     u.uSort.value = fx.sort || 0;
     u.uThresh.value = fx.threshold ?? 0.9;
     u.uSortPolarity.value = fx.sortPolarity || 0;
+    u.uSortCover.value = fx.sortCover ?? 1;
     u.uSeed.value = fx.seed || 0;
     if (fx.ripple) {
       u.uRipC.value.set(fx.ripple.x, fx.ripple.y);
