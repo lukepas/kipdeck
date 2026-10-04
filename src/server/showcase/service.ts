@@ -4,6 +4,7 @@
 // roster Mission control ranks. Everything goes through publicShowcase (shared/showcase.ts), which
 // is what decides what is public; this file only gathers. Built at most every CACHE_MS, so a crowd
 // opening the link from a post costs the office one build.
+import { callSign } from '../../shared/callsign.js';
 import { existsSync, readFileSync } from 'node:fs';
 import { attention, type AttentionLevel } from '../../shared/attention.js';
 import type { RepEvent } from '../../shared/reputation.js';
@@ -150,7 +151,7 @@ export class Showcase {
       const f = ctx.floors.get(e.floor);
       const r = f && floors.get(f);
       if (!f || !r || shows(r.repo) === 'hidden') continue;
-      floor.push({ name: e.name, color: e.color, harness: f.workers.get(e.id)?.provider, state: STATE_OF[attention(e, nowMs).level] });
+      floor.push({ name: e.name, sign: callSign(e.deskId) || undefined, color: e.color, harness: f.workers.get(e.id)?.provider, state: STATE_OF[attention(e, nowMs).level] });
     }
 
     // The outcomes: from the chain when the office rebuilds the board from it, else its own record.

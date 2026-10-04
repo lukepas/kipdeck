@@ -2,7 +2,7 @@
 
 /** "2 h 5 min", "3 days", "40 s". */
 export function span(seconds: number | null | undefined): string {
-  if (seconds === null || seconds === undefined || !Number.isFinite(seconds)) return '--';
+  if (seconds === null || seconds === undefined || !Number.isFinite(seconds)) return 'not yet';
   const s = Math.max(0, Math.round(seconds));
   if (s < 60) return `${s} s`;
   const min = Math.round(s / 60);
@@ -25,7 +25,7 @@ export { tokenUnits as units } from '../../shared/money';
 /** 0x1234...abcd. */
 export const short = (s: string, head = 6, tail = 4) => (s.length > head + tail + 3 ? `${s.slice(0, head)}...${s.slice(-tail)}` : s);
 
-export const pct = (r: number | null) => (r === null ? '--' : `${Math.round(r * 100)}%`);
+export const pct = (r: number | null) => (r === null ? 'not yet' : `${Math.round(r * 100)}%`);
 
 /** A date and time in the reader's own locale. */
 export const when = (atSeconds: number) => new Date(atSeconds * 1000).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });

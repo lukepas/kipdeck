@@ -39,7 +39,9 @@ function rateCell(rate: number | null, good: boolean): HTMLElement {
   const fill = bar.firstElementChild as HTMLElement;
   fill.style.setProperty('--w', rate === null ? '0%' : `${Math.round(rate * 100)}%`);
   if (!good) fill.classList.add('bad');
-  return h('span.rate', { title: rate === null ? 'Not enough data yet: fewer than five outcomes' : '' }, h('b', {}, pct(rate)), bar);
+  // Too few outcomes for a rate: say what it needs rather than draw an empty bar.
+  if (rate === null) return h('span.rate.thin', { title: 'A rate shows once there are five outcomes' }, 'needs 5 outcomes');
+  return h('span.rate', {}, h('b', {}, pct(rate)), bar);
 }
 
 /** One row as a list item: a table on a wide screen, a card on a phone (showcase.css). */

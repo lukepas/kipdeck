@@ -35,14 +35,15 @@ function hero(doc: ShowcaseDoc) {
       href ? h('a.verify', { href, target: '_blank', rel: 'noopener', title: 'Where this number comes from' }, 'verify', icon('external', 12)) : h('small', {}, 'no link yet'),
     );
   $('counters').replaceChildren(
-    tile(String(c.merged), 'PRs', 'agent PRs merged by a person', c.links.merged, 'c1'),
-    tile(c.usdcPaid, 'USDC', 'paid on devnet, only on a merge', c.links.usdcPaid, 'c2'),
-    tile(String(c.maintainers), 'people', 'distinct maintainers', c.links.maintainers, 'c3'),
-    tile(String(c.paidWorkers), 'agents', 'distinct paid agents', c.links.paidWorkers, 'c4'),
+    tile(String(c.merged), 'Merged PRs', 'agent PRs a person merged', c.links.merged, 'c1'),
+    tile(c.usdcPaid, 'USDC paid', 'on devnet, only on a merge', c.links.usdcPaid, 'c2'),
+    tile(String(c.maintainers), 'Maintainers', 'different people who merged', c.links.maintainers, 'c3'),
+    tile(String(c.paidWorkers), 'Agents', 'different agents paid', c.links.paidWorkers, 'c4'),
   );
   $('source').textContent = `${doc.source === 'chain' ? 'Rebuilt from the chain alone' : "From the office's record of what it attested"}, ${when(doc.asOf)}. ${doc.network.base === 'base-sepolia' ? 'Base Sepolia' : 'A local test chain'}${doc.network.solana === 'none' ? '' : ` and ${doc.network.solana === 'devnet' ? 'Solana devnet' : 'a local validator'}`}.`;
   const latest = doc.events.find((e) => e.links.attestation);
-  $('last-at').textContent = latest ? `last attested ${ago(latest.at)}` : '';
+  const merged = doc.events.find((e) => e.outcome === 'merged');
+  $('last-at').textContent = [merged && `last merge ${ago(merged.mergedAt ?? merged.at)}`, latest && `last attestation ${ago(latest.at)}`].filter(Boolean).join(' · ');
   lastMerge(doc);
 }
 
@@ -56,7 +57,7 @@ function floor(doc: ShowcaseDoc) {
   const strip = $('strip');
   strip.replaceChildren(
     ...live.workers.map((w) =>
-      h('li.worker', { 'data-state': w.state }, h('span.glyph', { title: STATE_LABEL[w.state] }, icon(STATE_ICON[w.state], 16)), h('span.name', {}, w.name), h('span.chip', { 'data-h': w.harness }, HARNESSES[w.harness] ?? w.harness), h('span.state', {}, STATE_LABEL[w.state])),
+      h('li.worker', { 'data-state': w.state }, h('span.glyph', { title: STATE_LABEL[w.state] }, icon(STATE_ICON[w.state], 16)), w.sign ? h('span.sign', { title: 'Call sign: pod and console, as on the deck' }, w.sign) : null, h('span.name', {}, w.name), h('span.chip', { 'data-h': w.harness }, HARNESSES[w.harness] ?? w.harness), h('span.state', {}, STATE_LABEL[w.state])),
     ),
   );
   if (!live.workers.length) strip.append(h('li.empty', {}, 'No units on deck right now.'));
@@ -96,7 +97,7 @@ function bounties(doc: ShowcaseDoc) {
 function credit(doc: ShowcaseDoc) {
   const a = $('upstream') as HTMLAnchorElement;
   a.href = doc.credit.url;
-  a.textContent = `${doc.credit.name} by ${doc.credit.author} (${doc.credit.license})`;
+  a.textContent = `${doc.credit.name} (AgentSystemLabs / ${doc.credit.author}), ${doc.credit.license}`;
 }
 
 let boardView = viewFromHash();

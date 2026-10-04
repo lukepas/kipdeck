@@ -66,7 +66,7 @@ main { max-width: 1232px; margin: 0 auto; padding: 0 16px 24px; }
 .counter:nth-child(2n) { border-right: 0; }
 .counter:nth-child(n+3) { border-bottom: 0; }
 .counter b { font-family: var(--font-display); font-stretch: 125%; font-weight: 600; font-size: clamp(30px, 4vw, 42px); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.01em; overflow: hidden; text-overflow: ellipsis; }
-.counter .unit { order: -1; margin-bottom: 4px; font: 500 11px var(--font-mono); font-style: normal; color: var(--muted); }
+.counter .unit { order: -1; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .08em; font: 500 11px var(--font-mono); font-style: normal; color: var(--muted); }
 .counter span { margin-top: 6px; font-size: 13px; color: var(--muted); }
 .counter .verify, .counter small { display: inline-flex; align-self: flex-start; align-items: center; gap: 4px; margin-top: auto; padding-top: 10px; font: 500 11px var(--font-mono); color: var(--proof); text-decoration: none; }
 .counter small { color: var(--faint); }
@@ -171,6 +171,11 @@ main { max-width: 1232px; margin: 0 auto; padding: 0 16px 24px; }
 /* ---------- Ledger ---------- */
 .feed { list-style: none; margin: 0; padding: 0; }
 .item { border-bottom: 1px solid var(--line); }
+.item[data-self] > .row-line { opacity: .55; }
+.ledger-legend { margin: 10px 0 0; color: var(--muted); }
+.item .who-merged code { font: 500 11px var(--font-mono); color: var(--faint); }
+.rate.thin { font: 400 12px var(--font-mono); color: var(--faint); }
+.worker .sign { font: 500 11px var(--font-mono); color: var(--muted); border: 1px solid var(--line-strong); border-radius: var(--radius-chip); padding: 0 4px; }
 .row-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 0 0 0 0; }
 .row-open {
   flex: 1 1 520px; min-width: 0; display: grid; grid-template-columns: 112px minmax(0, 1fr) auto auto; align-items: center; gap: 4px 14px;
@@ -210,7 +215,7 @@ main { max-width: 1232px; margin: 0 auto; padding: 0 16px 24px; }
 .seg button { font: inherit; font-size: 12.5px; font-weight: 500; color: var(--muted); padding: 0 12px; min-height: 32px; border: 0; border-right: 1px solid var(--line-strong); background: transparent; cursor: pointer; }
 .seg button:last-child { border-right: 0; }
 .seg button:hover { color: var(--text); background: var(--surface-2); }
-.seg button.on { background: var(--surface-3); color: var(--text); }
+.seg button.on { background: var(--proof-tint); color: var(--text); font-weight: 600; box-shadow: inset 0 -2px 0 var(--proof); }
 .toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
 .toggle input { width: 16px; height: 16px; margin: 0; accent-color: var(--proof); }
 

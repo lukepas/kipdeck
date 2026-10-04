@@ -6,6 +6,7 @@
 //
 // Pure, with no Node imports: the office's route, the showcase page and onchain/indexer's static
 // export all load this file as it is, so the three never disagree on what is public.
+import { DATA_COLORS } from './datacolors.js';
 import { sumUnits as sumMoney, tokenUnits } from './money.js';
 import type { RepEvent, RepOutcome } from './reputation.js';
 
@@ -57,6 +58,8 @@ export interface ShowcaseInputBounty {
 
 export interface ShowcaseInputWorker {
   name: string;
+  /** Its call sign on the deck ("A-03", shared/callsign.ts), so the ledger names units as the office does. */
+  sign?: string;
   color: string;
   harness?: string;
   state: ShowcaseWorkerState;
@@ -144,6 +147,8 @@ export interface ShowcaseBounty {
 
 export interface ShowcaseWorker {
   name: string;
+  /** Its call sign, when it has one: a letter, a dash and two digits. */
+  sign?: string;
   color: string;
   harness: string;
   state: ShowcaseWorkerState;
@@ -268,7 +273,8 @@ function bountyOf(b: ShowcaseInputBounty, vis: RepoVisibility, input: ShowcaseIn
 function workerOf(w: ShowcaseInputWorker): ShowcaseWorker | undefined {
   const name = plain(w.name, 40);
   if (!name || !STATES.has(w.state)) return undefined;
-  return { name, color: typeof w.color === 'string' && COLOR.test(w.color) ? w.color.toLowerCase() : '#ff8a5b', harness: harnessGroup(plain(w.harness, 20)), state: w.state };
+  const sign = typeof w.sign === 'string' && /^[A-Z]-\d{2}$/.test(w.sign) ? w.sign : undefined;
+  return { name, ...(sign ? { sign } : {}), color: typeof w.color === 'string' && COLOR.test(w.color) ? w.color.toLowerCase() : DATA_COLORS[0].toLowerCase(), harness: harnessGroup(plain(w.harness, 20)), state: w.state };
 }
 
 /** Whole tokens from base units, summed over amounts that may differ in decimals: "25.00". */

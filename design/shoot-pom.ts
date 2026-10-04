@@ -42,7 +42,7 @@ try {
       ['desktop', { width: 1440, height: 900 }],
       ['phone', { width: 390, height: 844 }],
     ] as const) {
-      const context = await browser.newContext({ viewport, colorScheme: scheme, deviceScaleFactor: name === 'phone' ? 2 : 1 });
+      const context = await browser.newContext({ viewport, colorScheme: scheme, deviceScaleFactor: name === 'phone' ? 2 : 1, bypassCSP: true });
       const page = await context.newPage();
       page.on('pageerror', (e) => console.log('page error:', e.message));
       page.on('console', (m) => m.type() === 'error' && console.log('console:', m.text()));
@@ -51,6 +51,8 @@ try {
       await page.waitForTimeout(400);
       await page.screenshot({ path: path.join(OUT, `pom-${scheme}-${name}-top.png`) });
       await page.locator('#feed .row-open').nth(9).click();
+      // The bar stays put for the full-page shot instead of landing in the middle of the ledger.
+      await page.addStyleTag({ content: '.top { position: static !important; }' });
       await page.waitForTimeout(200);
       await page.screenshot({ path: path.join(OUT, `pom-${scheme}-${name}.png`), fullPage: true });
       await context.close();

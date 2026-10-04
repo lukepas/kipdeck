@@ -55,7 +55,7 @@ export function steps(doc: ShowcaseDoc, e: ShowcaseEvent): Step[] {
     {
       label: merged ? 'Human merged' : e.outcome === 'reverted' ? 'Merged, then reverted' : 'Closed unmerged',
       done: merged,
-      detail: e.maintainer ? `${e.self ? 'by its own operator' : 'by'} ${e.maintainer.slice(0, 10)}` : merged ? 'by a maintainer' : 'no merge, no payout',
+      detail: e.maintainer ? `${e.self ? 'by its own operator' : 'by a maintainer'} (${e.maintainer.slice(0, 10)}, a keyed pseudonym)` : merged ? 'by a maintainer' : 'no merge, no payout',
       at: e.mergedAt ?? (merged ? e.at : undefined),
     },
     {
@@ -102,7 +102,7 @@ export function ledgerRow(doc: ShowcaseDoc, e: ShowcaseEvent): HTMLElement {
     'button.row-open',
     { type: 'button', 'aria-expanded': 'false', title: 'Show its money path' },
     h('span.badge', { 'data-o': e.outcome }, e.outcome === 'merged' ? icon('merged', 14) : icon(e.outcome === 'reverted' ? 'stuck' : 'close', 14), outcome),
-    h('span.body', {}, h('span.title', {}, h('b', {}, what), e.title ? ` ${e.title}` : ''), h('span.meta', {}, h('span.chip', { 'data-h': e.harness }, HARNESSES[e.harness] ?? e.harness), ` ${agentName(doc, e.agentId)}`, e.maintainer ? ` - ${e.outcome} by ${e.maintainer.slice(0, 10)}` : '')),
+    h('span.body', {}, h('span.title', {}, h('b', {}, what), e.title ? ` ${e.title}` : ''), h('span.meta', {}, h('span.chip', { 'data-h': e.harness }, HARNESSES[e.harness] ?? e.harness), ` ${agentName(doc, e.agentId)}`, e.maintainer ? h('span.who-merged', { title: 'Who merged, as a keyed pseudonym: the chain never holds their GitHub account' }, ` - ${e.outcome} by a maintainer `, h('code', {}, e.maintainer.slice(0, 10))) : '')),
     h('span.paid', {}, e.paid ? `${units(e.paid.amount, e.paid.decimals)} USDC` : ''),
     h('span.age', {}, ago(e.at)),
   );
@@ -112,7 +112,7 @@ export function ledgerRow(doc: ShowcaseDoc, e: ShowcaseEvent): HTMLElement {
     path.hidden = !open;
     toggle.setAttribute('aria-expanded', String(open));
   });
-  return h('li.item', { 'data-outcome': e.outcome }, h('div.row-line', {}, toggle, proofChips(e)), path);
+  return h('li.item', { 'data-outcome': e.outcome, 'data-self': e.self ? '1' : undefined, title: e.self ? 'Merged by the agent\'s own operator: shown, but it does not count toward the rates' : undefined }, h('div.row-line', {}, toggle, proofChips(e)), path);
 }
 
 /** The proof rail: a segment per merge, lit up to `n`, in at least `min` segments. */

@@ -29,7 +29,7 @@ const ALLOWED: Record<string, readonly string[]> = {
   counters: ['merged', 'usdcPaid', 'maintainers', 'paidWorkers', 'links'],
   'counters.links': ['merged', 'usdcPaid', 'maintainers', 'paidWorkers'],
   live: ['at', 'workers'],
-  'live.workers[]': ['name', 'color', 'harness', 'state'],
+  'live.workers[]': ['name', 'sign', 'color', 'harness', 'state'],
   'events[]': ['agentId', 'harness', 'repo', 'pr', 'title', 'outcome', 'at', 'openedAt', 'mergedAt', 'maintainer', 'self', 'paid', 'links'],
   'events[].paid': ['amount', 'decimals'],
   'events[].links': ['attestation', 'feedback', 'solana'],
@@ -113,7 +113,7 @@ test('names and titles are one plain line, cut to length', () => {
   assert.equal(doc.live?.workers.length, 1);
   assert.ok(!/[‮\n]/.test(doc.live!.workers[0].name));
   assert.ok(doc.live!.workers[0].name.length <= 40);
-  assert.equal(doc.live!.workers[0].color, '#ff8a5b');
+  assert.equal(doc.live!.workers[0].color, '#6e8fb3');
 });
 
 test('the page ranks as the office does: self-merges out unless counted', () => {
