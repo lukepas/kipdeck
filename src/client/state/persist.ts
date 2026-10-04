@@ -44,8 +44,8 @@ export type HudPanel = 'mission' | 'workers' | 'people' | 'spend' | 'limits' | '
 export const HUD_DEFAULTS: Record<HudPanel, boolean> = { mission: true, workers: true, people: false, spend: false, limits: false, chat: true, floor: false };
 
 /** Mission control's tabs (see ui/mission). */
-export type MissionTab = 'attention' | 'goals' | 'review' | 'timeline';
-export const MISSION_TABS: readonly MissionTab[] = ['attention', 'goals', 'review', 'timeline'];
+export type MissionTab = 'attention' | 'goals' | 'review' | 'timeline' | 'crew';
+export const MISSION_TABS: readonly MissionTab[] = ['attention', 'goals', 'review', 'timeline', 'crew'];
 
 /** How the office rings when a worker needs you: not at all, once, or again and again until someone's at its terminal. */
 export const NEEDS_YOU_SOUNDS = ['off', 'once', 'remind'] as const;
@@ -68,9 +68,16 @@ export const BRIGHTNESS_STEPS = 2;
  */
 export const LIFE_LEVELS = ['full', 'calm', 'silent'] as const;
 export type LifeLevel = (typeof LIFE_LEVELS)[number];
-/** The parts of the bridge's world that each have a switch of their own under Life. */
-export const LIFE_PARTS = ['destination', 'fleet', 'sorties'] as const;
+/**
+ * The parts of the bridge's world that each have a switch of their own under Life. The droid ships
+ * off (LIFE_PART_DEFAULTS) until the captain signs it off, as it brings back a moving companion.
+ */
+export const LIFE_PARTS = ['destination', 'fleet', 'sorties', 'epithets', 'droid'] as const;
 export type LifePart = (typeof LIFE_PARTS)[number];
+export const LIFE_PART_DEFAULTS: Readonly<Record<LifePart, boolean>> = { destination: true, fleet: true, sorties: true, epithets: true, droid: false };
+/** Settings > Bridge > Ship's voice (VESPER, features/vesper): with humour, plain status lines only, or silent. */
+export const VOICE_MODES = ['on', 'plain', 'off'] as const;
+export type VoiceMode = (typeof VOICE_MODES)[number];
 
 export interface Settings {
   view: ViewMode;
@@ -102,6 +109,8 @@ export interface Settings {
   life: LifeLevel;
   /** Settings > Bridge > Life: each part of the world outside on or off. */
   lifeParts: Record<LifePart, boolean>;
+  /** Settings > Bridge > Ship's voice: On, Plain only or Off. */
+  voice: VoiceMode;
 }
 
 const SETTINGS_KEY = 'agent-office.settings';
@@ -186,7 +195,7 @@ export function rememberSpot(s: Spot) {
 }
 
 export function loadSettings(): Settings {
-  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { destination: true, fleet: true, sorties: true } };
+  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { ...LIFE_PART_DEFAULTS }, voice: 'on' };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null');
     if (saved?.view === 'first' || saved?.view === 'third') s.view = saved.view;
@@ -204,6 +213,7 @@ export function loadSettings(): Settings {
     if (Number.isInteger(saved?.brightness)) s.brightness = Math.max(-BRIGHTNESS_STEPS, Math.min(BRIGHTNESS_STEPS, saved.brightness));
     if (LIFE_LEVELS.includes(saved?.life)) s.life = saved.life;
     for (const k of LIFE_PARTS) if (typeof saved?.lifeParts?.[k] === 'boolean') s.lifeParts[k] = saved.lifeParts[k];
+    if (VOICE_MODES.includes(saved?.voice)) s.voice = saved.voice;
   } catch {
     // storage blocked
   }
