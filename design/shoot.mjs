@@ -43,6 +43,7 @@ case "$last" in
   *"[ask]"*) post PreToolUse '{"tool_name":"AskUserQuestion","tool_input":{}}' ;;
   *"[perm]"*) post PermissionRequest '{"tool_name":"Bash","tool_input":{"command":"npm publish"}}' ;;
   *"[done]"*) post PreToolUse '{"tool_name":"Edit","tool_input":{"file_path":"src/a.ts"}}'; sleep 1; post Stop '{}' ;;
+  *"[crash]"*) echo "error: toolchain mismatch"; sleep 2; exit 3 ;;
   *) post PreToolUse '{"tool_name":"Bash","tool_input":{"command":"npm test"}}' ;;
 esac
 i=0
@@ -59,6 +60,7 @@ const TASKS = [
   ['desk-6', '[done] Fix flaky checkout e2e'],
   ['desk-9', 'Add rate limits to the public API'],
   ['desk-10', 'Write the onboarding docs for devnet bounties'],
+  ['desk-11', '[crash] Bump the Anchor toolchain'],
   ['desk-13', '[done] Tighten the CSP for the showcase'],
 ];
 
@@ -184,6 +186,11 @@ async function main() {
       'deck-east': [[7.5, 2.6, 0.5], [18, 2.3, 0]],
       'deck-bay': [[6, 3.2, 3.5], [14, 0.8, 10.5]],
       'deck-table': [[6.5, 2.4, 6.5], [-1, 0.6, -1]],
+      // Close on the units: pod A (two need you), pod B (working, done), pod C (working, crashed).
+      'units-a': [[-1.6, 2.1, -1.2], [-5.6, 0.8, -5.2]],
+      'units-b': [[1.4, 2.1, -1.4], [5.4, 0.8, -5.6]],
+      'units-c': [[1.2, 2.3, 1.6], [5.4, 0.8, 5.4]],
+      'units-near': [[0.3, 1.8, -0.2], [-3.6, 0.9, -3.8]],
     };
     for (const [name, [from, to]] of Object.entries(VANTAGES)) {
       if (!want(name)) continue;
@@ -239,16 +246,24 @@ async function main() {
       await page.keyboard.press('Escape');
       await wait(300);
     }
-    if (want('menu') || want('settings')) {
+    if (want('menu') || want('settings') || want('operator')) {
       await page.locator('#dock .dock-menu').click();
       await page.locator('.hud-menu').waitFor({ timeout: 10_000 });
       await wait(300);
       if (want('menu')) await page.screenshot({ path: path.join(OUT, 'menu.png') });
-      if (want('settings')) {
+      if (want('settings') || want('operator')) {
         await page.locator('.hud-menu .menu-item', { hasText: 'Settings' }).click();
         await page.locator('.modal.settings').waitFor({ timeout: 10_000 });
         await wait(400);
         await page.screenshot({ path: path.join(OUT, 'settings.png') });
+        if (want('operator')) {
+          await page.locator('.modal.settings button', { hasText: 'Change your look' }).click();
+          await page.locator('.modal.charsel').waitFor({ timeout: 10_000 });
+          await wait(1500);
+          await page.screenshot({ path: path.join(OUT, 'operator.png') });
+          await page.keyboard.press('Escape');
+          await wait(300);
+        }
       }
       await page.keyboard.press('Escape');
       await wait(300);

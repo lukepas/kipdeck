@@ -41,13 +41,13 @@ Each hue also has a `-tint` (12% over the surface) for a row or chip background.
 | State | Glyph | Hue | Where it shows |
 | --- | --- | --- | --- |
 | Needs you | solid diamond | `--signal` | counters, alert row, Mission control, unit band and ring, edge chevrons, favicon |
-| Stuck | hollow triangle with a bar | `--stuck` | counters, Mission control, unit band (blinks 0.5 Hz) |
-| To review | hollow circle with a center dot | `--review` | counters, Review tab, status chips |
+| Stuck | hollow triangle with a bar | `--stuck` | counters, Mission control, unit band (blinks 0.5 Hz), hatched ring, slumped unit |
+| To review | hollow circle with a center dot | `--review` | counters, Review tab, status chips, unit band and ring |
 | Working | short steel bar | `--working` | counters, chips; no glyph on the 3D unit |
 | Parked | dim dot | `--muted` | chips |
-| Merged | check in a square | `--proof` | proof counter, proof toasts, PR state |
+| Merged | check in a square | `--proof` | proof counter, proof toasts, PR state, the unit for 6 s after its PR merges |
 
-The glyphs are in `src/client/ui/icons.ts` (`LEVEL_ICON`), and as CSS masks in `styles/base.css` (`.g-needs-you` and friends) for markup that only has a class.
+The glyphs are in `src/client/ui/icons.ts` (`LEVEL_ICON`), drawn on canvas for the 3D deck by `src/client/world/glyphs.ts` (the units' glyphs and callouts and the Attention board), and as CSS masks in `styles/base.css` (`.g-needs-you` and friends) for markup that only has a class.
 
 ## Type
 

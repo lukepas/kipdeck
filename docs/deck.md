@@ -12,7 +12,7 @@ The deck is 36 by 26 m. North is the Main board's wall, and the Deck lift you ar
 | --- | --- | --- |
 | Mission table | the middle | The floor's mission on its top: the statement in the middle, a wedge per milestone round it (filled once done, ruled brighter while it's the one you're on) and a tick on the rim for each. Every console faces it. |
 | Pods A to D | four arcs of four consoles, 7.5 m out: A north-west, B north-east, C south-east, D south-west | Where units sit, one per console (`desk-1` to `desk-16`, four to a pod). Each pod's floor plate, past its arc, names the goal most of its units work toward. |
-| Ready line | a painted orange double stripe in front of each pod, 1.4 m out from the table, with numbered ticks | Where units that need you will stand, tick 1 for whoever has waited longest. |
+| Ready line | a painted orange double stripe in front of each pod, 1.4 m out from the table, with numbered ticks | Where units that need you stand, tick 1 for whoever has waited longest (see [Units](#units)). |
 | Main board | the north wall | Three panels edge to edge: Issues, Queue and Pull requests, each with its board agent's lectern at its west end. |
 | Attention board | the east wall | The floor's units ranked by who needs someone most, in the top bar's order, each with its glyph, its cell, why and for how long. While someone shares their screen, it shows that instead. The operator bench faces it. |
 | Proof corner | the west wall | The capacity panel (CPU, memory, units against the limit), then the violet attestation rail with a lit segment per merge paid out on devnet, the escrow vault (its seam glows while a bounty is held, and its lid lifts as one is released), and the ERC-8004 plinth with a lit step per unit with a reputation record. |
@@ -34,6 +34,27 @@ A pod takes on the goal most of the units at its consoles work toward. The task 
 ### The sightline rule
 
 Nothing taller than 1.1 m stands between the mission table and the consoles, and the south wall is only a 0.4 m curb, so a person at the table (or the Overview) sees every unit. `tests/layout.test.ts` checks it, along with every seat id, that every seat can be walked to from the lift, and that the ready line has a walkable tick for each unit that needs someone.
+
+## Units
+
+A unit is one agent at its console: a faceless figure about 1.3 m tall on a hover base, with a flat head plate, a dark visor strip that flickers as its terminal prints, and a band round its chest. Nothing about it is decoration: its state shows four ways at once, all read from the building's one ranking (`src/shared/attention.ts`), so it agrees with the top bar, the alert strip, the Attention board and Mission control.
+
+| State | Band | Ring on the floor | Glyph over it | Where it is |
+| --- | --- | --- | --- | --- |
+| Needs you | Signal orange | orange, a pulse spreading from it every 1.2 s | solid diamond | on its pod's ready line, facing the table, with a faint orange shaft over it |
+| Stuck | red, blinking at 0.5 Hz | red, with a hatched band inside it | hollow triangle with a bar | at its console, darker and slumped forward |
+| To review | amber | amber outline | hollow circle with a dot | at its console, turned toward the Review bay |
+| Working | steel, breathing | faint steel | none | at its console |
+| Parked | dark | none | none | at its console or on the Standby bench; dimmer still when its process is asleep |
+| Merged | violet, for 6 s once its pull request merges | violet | check in a square | at its console |
+
+Over each unit is a callout with its **call sign**, the seat it holds: `A-03` is the third console of pod A, `O-` the overflow bay, `S-` the Standby bench, `L-` a board agent's lectern and `R-` a chair in the Review bay (`src/shared/callsign.ts`, which the Units list and the Attention board use too). From across the deck the callout is one line, the call sign and the unit's name; near (or from twice as far for one that needs you or is stuck) it adds its task and how long it has been in its state. The glyph stays the same size on screen however far off it is, in Walk and in the Overview alike. The provider's letter is on the visor (C Claude Code, X Codex, P Pi, CU Cursor) and a muted stripe in the provider's tint runs down its back.
+
+The ready line keeps its order: a unit on it keeps its tick when the ranking moves, a new one takes the lowest free tick on its pod, a fifth one on a pod starts a second row, and a unit that has been answered holds its tick for 8 s before it glides back, so a state that flips back and forth doesn't send it to and fro (its ring changes color at once). Four lights hang over the four units most in need on the deck, orange or red: never one light per unit. `src/client/features/readyline/` does both, and `tests/units.test.ts` checks the ticks and the call signs.
+
+A new unit builds up from its hover base in half a second, and one stood down goes dark, lifts off its pad and folds away into a line of light. Units glide, leaning a couple of degrees into the move; nothing hops, walks or bobs. Under reduced motion, glides and the build-up are cuts, the pulse is a still ring and the stuck blink is a steady band.
+
+The people on the deck are **operators**: the same family at 1.75 m, with a narrow head plate and a visor slit, a light steel shell (so a person never reads as a unit) and a shoulder yoke in their own color, the one place it shows. While they talk the yoke's edge brightens and a mic tick lights beside their mono name plate. Settings > Your operator picks the shell's tone, the head plate and its tone, and the yoke.
 
 ## Walk and Overview
 
