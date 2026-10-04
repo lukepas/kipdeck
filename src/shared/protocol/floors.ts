@@ -75,7 +75,7 @@ export interface CloneProgress {
 export interface ProjectsDirState {
   /** For showing people: under the home folder it's ~/…. */
   dir: string;
-  /** Set from ⚙️ Settings or --projects, rather than the office's default. */
+  /** Set from Settings or --projects, rather than the office's default. */
   custom: boolean;
   by?: string;
   at?: number;

@@ -1,4 +1,4 @@
-// ⚙️ Settings for Proof of Merge bounties: on or off (off until an admin turns it on), the mock or
+// Settings for Proof of Merge bounties: on or off (off until an admin turns it on), the mock or
 // Solana devnet (there is no other cluster), the program, the mint, where the attester's and the
 // approver's key files are, which repositories the public "Fund this issue" Action may fund, and
 // each person's payout wallet. Kept in the office's data folder through the state-file helpers.
@@ -92,7 +92,7 @@ export class ChainSettings {
     return structuredClone(this.saved);
   }
 
-  /** What ⚙️ Settings shows `accountId`: everything but the other people's wallets. */
+  /** What Settings shows `accountId`: everything but the other people's wallets. */
   state(accountId: string | undefined, keys: { attester?: string; approver?: string } = {}): ChainSettingsState {
     const s = this.saved;
     const mine = s.wallets[accountId ?? OFFICE_WALLET];

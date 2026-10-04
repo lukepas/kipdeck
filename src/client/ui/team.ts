@@ -29,7 +29,7 @@ export function tunnelCommand(t: TeamState, os: Os): string {
 function inviteMessage(t: TeamState, os: Os): string {
   const project = store.project?.name ?? 'our';
   return [
-    `You're invited to the ${project} Agent Office. Run this in a terminal (${OS_LABEL[os]}):`,
+    `You're invited to the ${project} deck on UGC Army. Run this in a terminal (${OS_LABEL[os]}):`,
     '',
     tunnelCommand(t, os),
     '',
@@ -45,7 +45,7 @@ function inviteMessage(t: TeamState, os: Os): string {
 function tailnetMessage(t: TeamState): string {
   const project = store.project?.name ?? 'our';
   return [
-    `You're invited to the ${project} Agent Office: https://${t.tailnet}`,
+    `You're invited to the ${project} deck on UGC Army: https://${t.tailnet}`,
     '',
     "It's on our Tailscale network. If you aren't on it yet: install Tailscale (https://tailscale.com/download), sign in, and accept the invite I send you from Tailscale. Then open the link and sign in with the office password, or the account link you get from me.",
   ].join('\n');
@@ -90,7 +90,7 @@ export function openTeam(net: Net) {
   const body = h('div.body.team');
   const close = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
   const message = (t: TeamState) => (t.tailnet ? tailnetMessage(t) : inviteMessage(t, os));
-  const copyMsg = copyButton('✉️ Copy invite message', () => (store.team ? message(store.team) : ''), 'primary');
+  const copyMsg = copyButton('Copy invite message', () => (store.team ? message(store.team) : ''), 'primary');
   const footer = h('footer', {}, h('span.grow', {}, 'Invited people still need to sign in: the office password, or an account from Accounts.'), copyMsg);
   const el = h('div.modal', { role: 'dialog', 'aria-label': 'Invite teammates', style: 'width:min(680px,100%)' }, h('header', {}, h('h2', {}, 'Invite teammates'), close), body, footer);
 

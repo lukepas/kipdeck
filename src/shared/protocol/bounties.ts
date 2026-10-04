@@ -56,7 +56,7 @@ export interface BountyView {
 
 /** What a floor's bounties look like to the people on it. */
 export interface BountiesState {
-  /** chain.enabled in ⚙️ Settings: off until an admin turns it on. */
+  /** chain.enabled in Settings: off until an admin turns it on. */
   enabled: boolean;
   /** "solana-devnet" or "mock". Never a mainnet. */
   network: string;
@@ -69,7 +69,7 @@ export interface BountiesState {
   error?: string;
 }
 
-/** ⚙️ Settings for bounties (admins): kept in the office's data folder. */
+/** Settings for bounties (admins): kept in the office's data folder. */
 export interface ChainSettingsState {
   enabled: boolean;
   backend: 'mock' | 'solana-devnet';
@@ -112,7 +112,7 @@ export type BountiesClientMsg =
   | { t: 'bounty.wallet'; address: string | null }
   /** Admins: change the bounty settings. */
   | { t: 'bounty.settings'; patch: Partial<Pick<ChainSettingsState, 'enabled' | 'backend' | 'programId' | 'mint' | 'attesterKey' | 'approverKey' | 'approverWallet' | 'actionRepos' | 'actionTitles' | 'expiryDays'>> }
-  /** The settings, for ⚙️ Settings (answered with `bounty.settings`). */
+  /** The settings, for Settings (answered with `bounty.settings`). */
   | { t: 'bounty.settings.get' };
 
 export type BountiesServerMsg =

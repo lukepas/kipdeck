@@ -3,7 +3,7 @@ import type { Slice } from '../store';
 
 declare module '../store' {
   interface Store {
-    /** The office's prompts as rewritten in ⚙️ Settings, and the worker everyone starts on: the same on every floor. */
+    /** The office's prompts as rewritten in Settings, and the worker everyone starts on: the same on every floor. */
     prompts: PromptsState;
   }
   interface Topics {

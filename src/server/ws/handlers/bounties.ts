@@ -54,7 +54,7 @@ export const bountiesHandlers = {
     const floor = onFloor(ctx, c, msg.floor);
     // The attester's key signs and pays for each refund: an admin's call.
     if (!floor || !admin(ctx, c, 'crank bounty refunds')) return;
-    void ctx.bounties.refund(floor, msg.issue).then((err) => (err ? ctx.warn(c, err) : ctx.sendTo(c, { t: 'toast', text: `↩️ #${msg.issue}'s bounty went back to its funders`, level: 'info' })));
+    void ctx.bounties.refund(floor, msg.issue).then((err) => (err ? ctx.warn(c, err) : ctx.sendTo(c, { t: 'toast', text: `#${msg.issue}'s bounty went back to its funders`, level: 'info' })));
   },
   'bounty.wallet'(ctx, c, msg) {
     const err = ctx.bounties.settings.setWallet(c.accountId, msg.address === null ? null : String(msg.address ?? '').trim(), (a) => ctx.bounties.isAddress(a));
@@ -68,7 +68,7 @@ export const bountiesHandlers = {
     const who = c.peer.name;
     const was = ctx.bounties.enabled;
     ctx.bounties.settings.set(msg.patch, who);
-    if (was !== ctx.bounties.enabled) ctx.toastAll(ctx.bounties.enabled ? `💰 ${who} turned on Proof of Merge bounties (${ctx.bounties.network}, testnet only)` : `${who} turned off bounties`);
+    if (was !== ctx.bounties.enabled) ctx.toastAll(ctx.bounties.enabled ? `${who} turned on Proof of Merge bounties (${ctx.bounties.network}, testnet only)` : `${who} turned off bounties`);
     void ctx.bounties.ready().then(() => {
       for (const o of ctx.clients.values()) if (ctx.meOf(o.accountId).admin || o === c) ctx.sendTo(o, settingsFor(ctx, o));
     });

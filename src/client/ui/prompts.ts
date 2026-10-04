@@ -52,7 +52,7 @@ export function openPromptEditor(net: Net, first: PromptId = PROMPT_IDS[0]) {
   const ta = h('textarea.prompt-text', { spellcheck: 'false', 'aria-label': 'Prompt', maxlength: PROMPT_MAX }) as HTMLTextAreaElement;
   const vars = h('div.prompt-vars');
   const warnings = h('div.prompt-warnings');
-  const reset = h('button.btn', { type: 'button', title: 'Put the office’s own wording back in the box (then Save)' }, '↺ Default');
+  const reset = h('button.btn', { type: 'button', title: 'Put the office’s own wording back in the box (then Save)' }, 'Default');
   const undo = h('button.btn', { type: 'button', title: 'Back to what’s saved' }, 'Undo changes');
   const save = h('button.btn.primary', { type: 'button' }, 'Save');
   const note = h('span.grow');
@@ -71,7 +71,7 @@ export function openPromptEditor(net: Net, first: PromptId = PROMPT_IDS[0]) {
       b.setAttribute('aria-current', String(id === current));
       const mark = b.querySelector('.prompt-mark')!;
       const edited = !!store.prompts.custom[id];
-      mark.textContent = dirty(id) ? '●' : edited ? '✎' : '';
+      mark.textContent = dirty(id) ? '●' : edited ? '○' : '';
       b.title = dirty(id) ? 'Not saved yet' : edited ? 'Rewritten' : 'The default';
     }
   };
@@ -91,7 +91,7 @@ export function openPromptEditor(net: Net, first: PromptId = PROMPT_IDS[0]) {
     const admin = store.me.admin;
     const edit = store.prompts.custom[current];
     heading.textContent = def.label;
-    status.textContent = dirty(current) ? '● Not saved yet' : edit ? `✎ Rewritten by ${edit.by} ${timeAgo(edit.at)}` : 'The default';
+    status.textContent = dirty(current) ? '● Not saved yet' : edit ? `Rewritten by ${edit.by} ${timeAgo(edit.at)}` : 'The default';
     status.classList.toggle('dirty', dirty(current));
     used.textContent = def.used + (def.optional ? ' Leave it empty to send nothing.' : '');
     ta.readOnly = !admin;

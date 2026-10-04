@@ -5,7 +5,7 @@ import { isBusy, workerPr, type WorkerPr } from '../shared/status.js';
 import { readStateJson, writeState } from './safefs.js';
 
 /**
- * Whether a worker whose pull request merged goes home by itself, picked in ⚙️ Settings by anyone
+ * Whether a worker whose pull request merged goes home by itself, picked in Settings by anyone
  * and kept in .agent-office/leave-on-merge.json. The same on every floor; off until someone turns it on.
  */
 export class LeaveOnMerge {

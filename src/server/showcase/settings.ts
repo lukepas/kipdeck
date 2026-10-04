@@ -1,4 +1,4 @@
-// ⚙️ Settings for the public showcase (/pom/): off until an admin turns it on, and an admin's choice
+// Settings for the public showcase (/pom/): off until an admin turns it on, and an admin's choice
 // of how each repository shows there (full, redacted or hidden) over the defaults (see
 // shared/showcase.ts: public ones in full, everything else redacted). Kept in the office's data
 // folder through the state-file helpers.

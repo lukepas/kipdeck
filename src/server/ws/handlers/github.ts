@@ -25,7 +25,7 @@ export const githubHandlers = {
         void floor.github.merge(n, method, msg.deleteBranch === true, msg.auto === true, as).then((error) => {
           ctx.sendTo(c, { t: 'gh.merged', number: n, error });
           if (error) return;
-          ctx.toastFloor(floor, msg.auto ? `${who} set PR #${n} to merge once its checks pass` : `🎉 ${who} merged PR #${n}`);
+          ctx.toastFloor(floor, msg.auto ? `${who} set PR #${n} to merge once its checks pass` : `${who} merged PR #${n}`);
           // An auto-merge rings once GitHub gets round to it and the boards see it merged.
           if (!msg.auto) floor.merged(n, who);
         }),
@@ -50,7 +50,7 @@ export const githubHandlers = {
       (as) =>
         void floor.github.comment(kind, n, body, as).then((r) => {
           ctx.sendTo(c, { t: 'gh.commented', kind, number: n, ...r });
-          if (r.comment) ctx.toastFloor(floor, `💬 ${who} commented on ${kind === 'pull' ? 'PR' : 'issue'} #${n}`);
+          if (r.comment) ctx.toastFloor(floor, `${who} commented on ${kind === 'pull' ? 'PR' : 'issue'} #${n}`);
         }),
       (error) => ctx.sendTo(c, { t: 'gh.commented', kind, number: n, error }),
     );
@@ -94,7 +94,7 @@ export const githubHandlers = {
       (as) =>
         void floor.github.setLabels(kind, n, add, remove, as).then((r) => {
           ctx.sendTo(c, { t: 'gh.labeled', kind, number: n, ...r });
-          if (r.labels) ctx.toastFloor(floor, `🏷️ ${who} labeled ${kind === 'pull' ? 'PR' : 'issue'} #${n}: ${[...add.map((l) => `+${l}`), ...remove.map((l) => `−${l}`)].join(' ')}`);
+          if (r.labels) ctx.toastFloor(floor, `${who} labeled ${kind === 'pull' ? 'PR' : 'issue'} #${n}: ${[...add.map((l) => `+${l}`), ...remove.map((l) => `−${l}`)].join(' ')}`);
         }),
       (error) => ctx.sendTo(c, { t: 'gh.labeled', kind, number: n, error }),
     );

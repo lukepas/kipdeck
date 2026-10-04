@@ -6,6 +6,7 @@ import { providerPicker, type ProviderPicker } from './provider';
 import { repoPicker } from './prompt';
 import { goalPicker } from './mission/goalpick';
 import { dictateField } from './dictate';
+import { unitSign } from './unitsign';
 
 // Send a prompt about an issue or PR to a worker: a new one at a free desk, or one already sitting
 // at a desk (it lands in their input box, queued if they're busy).
@@ -13,7 +14,8 @@ import { dictateField } from './dictate';
 export interface AskWorker {
   id: string;
   name: string;
-  color: string;
+  /** Its seat, for its call sign. */
+  deskId: string;
   status: WorkerStatus;
 }
 
@@ -69,7 +71,7 @@ export function openAsk(opts: AskOptions) {
   };
   if (opts.newDesk) choices.append(h('button.btn', { type: 'button', 'data-to': '', onclick: () => pick(null) }, `New worker · ${opts.newDesk}`));
   for (const w of opts.workers) {
-    choices.append(h('button.btn', { type: 'button', 'data-to': w.id, title: `Type it into ${w.name}'s prompt`, onclick: () => pick(w.id) }, h('span.dot', { style: `background:${w.color}` }), w.name, h('small', {}, STATUS_LABEL[w.status] ?? w.status)));
+    choices.append(h('button.btn', { type: 'button', 'data-to': w.id, title: `Type it into ${w.name}'s prompt`, onclick: () => pick(w.id) }, unitSign(w.deskId), w.name, h('small', {}, STATUS_LABEL[w.status] ?? w.status)));
   }
 
   const cancel = h('button.btn', { type: 'button' }, 'Cancel');

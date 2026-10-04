@@ -72,7 +72,7 @@ export function openElevator(opts: ElevatorOptions): void {
   const listEl = h('div.repo-list', { role: 'listbox', 'aria-label': 'Repositories' });
   const statusEl = h('div');
   const addBtn = h('button.btn.primary', { type: 'button' }, 'Add floor');
-  const refreshBtn = h('button.btn', { type: 'button', title: 'Ask GitHub for the list again' }, '↻');
+  const refreshBtn = h('button.btn', { type: 'button', title: 'Ask GitHub for the list again', 'aria-label': 'Refresh the list' }, icon('refresh', 16));
   const close = h('button.btn.close', { type: 'button', 'aria-label': 'Close', title: 'Close (Esc)' }, icon('close', 16));
 
   // Where clones go. Admins can move it right here: the first project is when it matters.
@@ -204,7 +204,7 @@ export function openElevator(opts: ElevatorOptions): void {
 
   const renderAdd = () => {
     if (!showAdd) {
-      const open = h('button.btn', { type: 'button' }, '➕ Add a project');
+      const open = h('button.btn', { type: 'button' }, 'Add a project');
       open.addEventListener('click', () => {
         showAdd = true;
         needRepos();
@@ -248,7 +248,7 @@ export function openElevator(opts: ElevatorOptions): void {
     if (!built) {
       built = true;
       addEl.replaceChildren(
-        h('h3', {}, setup && !store.floors.length ? 'Pick your first project' : '➕ Add a project'),
+        h('h3', {}, setup && !store.floors.length ? 'Pick your first project' : 'Add a project'),
         h('div.repo-search', {}, input, refreshBtn),
         listEl,
         statusEl,
@@ -344,7 +344,7 @@ export function openElevator(opts: ElevatorOptions): void {
   const el = h(
     'div.modal.elevator',
     { role: 'dialog', 'aria-label': 'Elevator' },
-    h('header', {}, h('h2', {}, setup ? 'Welcome to Agent Office' : 'Elevator'), close),
+    h('header', {}, h('h2', {}, setup ? 'Welcome to UGC Army' : 'Deck lift'), close),
     h('div.body', {}, intro, floorsEl, addEl),
     h('footer', {}, h('span.grow', {}, setup ? 'Your office, one floor per project · Esc to look around first' : 'Pick a floor · Esc to stay here'), addBtn),
   );

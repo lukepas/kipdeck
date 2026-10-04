@@ -2,7 +2,7 @@
 // data, see showcase/service.ts), /pom/og.png (its share card) and /pom/assets/* (its bundle, built
 // from src/client/showcase/ into dist/showcase). Public, before the sign-in check, so it never reads
 // or sets a cookie and holds nothing of anyone's session; the host check (hosts.ts) still runs first.
-// Off (404) until an admin turns it on in ⚙️ Settings. Only GET; rate limited per client address;
+// Off (404) until an admin turns it on in Settings. Only GET; rate limited per client address;
 // its pages go out with their own strict policy (csp.ts).
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';

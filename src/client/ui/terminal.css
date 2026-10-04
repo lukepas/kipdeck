@@ -14,7 +14,7 @@
 .viewers { display: flex; align-items: center; gap: 4px; }
 .avatar { position: relative; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--line-strong); display: grid; place-items: center; flex: none; font-size: 10px; font-weight: 600; letter-spacing: -.02em; color: var(--text); cursor: default; }
 .avatar.typing { margin-right: 4px; box-shadow: 0 0 0 1px var(--void), 0 0 0 2px var(--text); }
-.avatar.typing::after { content: '✎'; position: absolute; right: -9px; bottom: -7px; width: 11px; height: 11px; border-radius: 50%; background: var(--surface-1); border: 1px solid var(--line-strong); font-size: 7px; line-height: 11px; text-align: center; }
+.avatar.typing::after { content: ''; position: absolute; right: -4px; bottom: -4px; width: 7px; height: 7px; border-radius: 50%; background: var(--text); border: 2px solid var(--surface-1); }
 .modal.term header .typed.now { color: var(--text); }
 .modal.term header .cost { font: 500 12px var(--font-mono); color: var(--muted); white-space: nowrap; }
 /* A narrow window: the name and ✕ keep the top row and the rest wraps under them, rather than pushing ✕ off the edge. */

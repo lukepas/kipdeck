@@ -1,7 +1,7 @@
 // Proof of Merge bounties, building-wide: devnet USDC escrowed against GitHub issues (the Solana
 // program in onchain/solana), claimed for the office PR a worker opened for the issue, and paid to
 // the worker's owner's wallet only after a person with write access merged it and an office admin
-// approved. Off until an admin turns it on in ⚙️ Settings.
+// approved. Off until an admin turns it on in Settings.
 //
 // The chain holds the money and its rules; this keeps each floor in step with it on every look at
 // the floor's pull requests: what was funded, which PR claims what (never a fork's: Floor.officePull),
@@ -90,7 +90,7 @@ export class Bounties {
     if (!s.enabled) return;
     try {
       const sdk = (this.sdk = await (this.deps.loadSdk ?? loadEscrow)());
-      if (s.backend === 'solana-devnet' && !this.deps.escrow && !s.programId) throw new Error('set the escrow program id in ⚙️ Settings (onchain/solana/deployments/devnet.json has it)');
+      if (s.backend === 'solana-devnet' && !this.deps.escrow && !s.programId) throw new Error('set the escrow program id in Settings (onchain/solana/deployments/devnet.json has it)');
       const mint = s.mint ?? (s.backend === 'mock' ? sdk.TEST_MINT : sdk.DEVNET_USDC_MINT);
       const escrow = this.deps.escrow?.(sdk) ?? sdk.createEscrow({ backend: s.backend, programId: s.programId, mint, testMint: mint === sdk.TEST_MINT, fetch: guardedRpcFetch() });
       const read = this.keyReader(sdk, s.backend);
@@ -379,7 +379,7 @@ export class Bounties {
     b.workerId = w?.id;
     b.workerName = w?.name;
     if (!wallet) {
-      b.note = `set a payout wallet (⚙️ Settings, Bounties) for ${w ? `${w.name}'s owner` : 'the office'} to claim it with PR #${p.number}`;
+      b.note = `set a payout wallet (Settings, Bounties) for ${w ? `${w.name}'s owner` : 'the office'} to claim it with PR #${p.number}`;
       return store.put(b);
     }
     try {
@@ -586,7 +586,7 @@ export class Bounties {
     return typeof p === 'string' ? NO_ACTION : actionPost(p, repo, issue, amount, account);
   }
 
-  /** Public addresses of the keys, for ⚙️ Settings. */
+  /** Public addresses of the keys, for Settings. */
   keys(): { attester?: string; approver?: string } {
     return { ...(this.attester ? { attester: this.attester.address } : {}), ...(this.approverAddress ? { approver: this.approverAddress } : {}) };
   }

@@ -12,7 +12,7 @@ import { readStateJson, writeState } from './safefs.js';
 /** What the queue needs from the worker manager. Narrow on purpose, so a smoke test can fake it. */
 export interface QueueWorkers {
   readonly defaultProvider: AgentProvider;
-  /** What a task starts on when whoever queued it didn't pick (⚙️ Settings); the default provider without it. */
+  /** What a task starts on when whoever queued it didn't pick (Settings); the default provider without it. */
   readonly officeDefault?: AgentChoice;
   list(): WorkerInfo[];
   deskOccupied(deskId: string): boolean;

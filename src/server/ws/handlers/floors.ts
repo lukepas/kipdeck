@@ -26,7 +26,7 @@ export const floorHandlers = {
         who,
         (def) => {
           ctx.floorsChanged();
-          ctx.toastAll(`🛗 ${who} is adding a floor for ${def.repo ?? def.name}…`);
+          ctx.toastAll(`${who} is adding a floor for ${def.repo ?? def.name}…`);
         },
         c.accountId,
         // Opening a checkout runs what it ships past the office's checks: members only add the office's own repositories.
@@ -38,7 +38,7 @@ export const floorHandlers = {
         const floor = ctx.openFloor(r);
         if (!floor) return ctx.sendTo(c, { t: 'floor.added', repo, error: `Cloned ${r.repo}, but couldn't open its floor — see the office's log` });
         console.log(`  ${who} added a floor for ${r.repo} (${r.dir})`);
-        ctx.toastAll(`🛗 New floor: ${r.name}, added by ${who}`);
+        ctx.toastAll(`New floor: ${r.name}, added by ${who}`);
         ctx.sendTo(c, { t: 'floor.added', repo, floor: floor.id });
       });
   },
@@ -49,7 +49,7 @@ export const floorHandlers = {
     const def = ctx.building.pending().find((d) => d.id === id);
     const err = ctx.building.cancel(id, `${who} stopped the clone`, (owner) => admin || (!!owner && owner === c.accountId));
     if (err) ctx.warn(c, err);
-    else ctx.toastAll(`🛗 ${who} stopped cloning ${def?.repo ?? def?.name ?? 'a floor'}`);
+    else ctx.toastAll(`${who} stopped cloning ${def?.repo ?? def?.name ?? 'a floor'}`);
   },
   'floor.remove'(ctx, c, msg) {
     const who = c.peer.name;
@@ -71,6 +71,6 @@ export const floorHandlers = {
     if (err) return;
     const state = ctx.building.projectsDirState();
     ctx.broadcast({ t: 'projectsDir', state });
-    ctx.toastAll(state.custom ? `📁 ${who} moved the workspace folder to ${state.dir}` : `📁 ${who} put the workspace folder back to ${state.dir}`);
+    ctx.toastAll(state.custom ? `${who} moved the workspace folder to ${state.dir}` : `${who} put the workspace folder back to ${state.dir}`);
   },
 } satisfies HandlerMap<FloorClientMsg>;

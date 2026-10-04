@@ -38,7 +38,7 @@ export function paidParts(t: QueueTask, net: Net): { meta: string[]; buttons: HT
       if (r) buttons.push(r);
     } else {
       meta.push(`a refund of ${p.amount} test USDC is owed`);
-      if (admin) buttons.push(h('button.btn', { type: 'button', title: 'Record the refund you sent from the office wallet', onclick: () => openPrompt({ title: 'Record the refund', subtitle: `The transaction that sent ${p.amount} test USDC back to ${p.payer} on ${NETWORK[p.network] ?? p.network}.`, placeholder: p.network.startsWith('eip155') ? '0x... transaction hash' : 'Transaction signature', submitLabel: 'Record', onSubmit: (tx) => net.send({ t: 'queue.refunded', taskId: t.id, tx: tx.trim() }) }) }, '↩️ Record refund'));
+      if (admin) buttons.push(h('button.btn', { type: 'button', title: 'Record the refund you sent from the office wallet', onclick: () => openPrompt({ title: 'Record the refund', subtitle: `The transaction that sent ${p.amount} test USDC back to ${p.payer} on ${NETWORK[p.network] ?? p.network}.`, placeholder: p.network.startsWith('eip155') ? '0x... transaction hash' : 'Transaction signature', submitLabel: 'Record', onSubmit: (tx) => net.send({ t: 'queue.refunded', taskId: t.id, tx: tx.trim() }) }) }, 'Record refund'));
     }
   }
   return { meta, buttons };

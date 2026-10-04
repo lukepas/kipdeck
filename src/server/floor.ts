@@ -41,7 +41,7 @@ export interface FloorContext {
   ledger: Ledger;
   /** The office's worker limit, across every floor. */
   capacity: Capacity;
-  /** The office's prompts and the worker everyone starts on, as set in ⚙️ Settings. */
+  /** The office's prompts and the worker everyone starts on, as set in Settings. */
   prompts: PromptSource;
   /** Workers hired by an account run on its own sign-ins (see signins.ts). */
   runAs?: RunAs;
@@ -64,7 +64,7 @@ export interface FloorContext {
   workChanged(): void;
   /** How many people are on this floor right now. */
   people(floor: Floor): number;
-  /** ⚙️ Settings: a worker whose pull request merged goes home by itself. */
+  /** Settings: a worker whose pull request merged goes home by itself. */
   leaveOnMerge(): boolean;
   /** Another floor of the building: a worker across repositories works in its project too (see WorkerInfo.repos). */
   floor(id: string): Floor | undefined;
@@ -372,7 +372,7 @@ export class Floor {
   }
 
   /**
-   * With ⚙️ Settings' *go home once merged* on, sends home every worker whose pull request merged,
+   * With Settings' *go home once merged* on, sends home every worker whose pull request merged,
    * once it's at rest and nobody has its terminal open, deleting its worktree and branch unless they
    * hold work that isn't on GitHub. Called whenever that might have changed; it looks a moment later,
    * once for a burst of calls, and not from inside the event that prompted it.

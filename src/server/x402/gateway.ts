@@ -316,7 +316,7 @@ export class X402Gateway {
         entry.settling = 'unknown';
         this.persist();
         floor.queue.setPaid(queued.id, { ...info, settlement: 'unknown' });
-        this.deps.toast(floor.id, `💰 A payment for ${queued.title} may or may not have settled (${(e as Error).message}): an admin checks it on chain before approving`);
+        this.deps.toast(floor.id, `A payment for ${queued.title} may or may not have settled (${(e as Error).message}): an admin checks it on chain before approving`);
         return reply(202, { taskId: queued.id, status: 'held', settlement: 'unknown', statusUrl: this.statusUrl(origin, queued.id) });
       }
       if (!settled.success || !net.tx.test(settled.transaction)) {
@@ -329,7 +329,7 @@ export class X402Gateway {
       entry.transaction = settled.transaction;
       delete entry.settling;
       this.persist();
-      this.deps.toast(floor.id, `💰 ${shortAddress(payer)} paid ${this.settings.price} test USDC for ${queued.title}: it waits on the 📋 queue for an admin`);
+      this.deps.toast(floor.id, `${shortAddress(payer)} paid ${this.settings.price} test USDC for ${queued.title}: it waits on the queue for an admin`);
       const header = encodeHeader(settled);
       return reply(202, { taskId: queued.id, status: 'held', statusUrl: this.statusUrl(origin, queued.id) }, { [HEADER_RESPONSE]: header, [HEADER_LEGACY_RESPONSE]: header });
     } finally {

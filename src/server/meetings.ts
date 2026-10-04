@@ -18,7 +18,7 @@ const execFileP = promisify(execFile);
 /** What the meeting room needs from the worker manager. Narrow on purpose, so a test can fake it. */
 export interface MeetingWorkers {
   readonly defaultProvider: AgentProvider;
-  /** What a meeting seats when whoever calls it doesn't pick (⚙️ Settings); the default provider without it. */
+  /** What a meeting seats when whoever calls it doesn't pick (Settings); the default provider without it. */
   readonly officeDefault?: AgentChoice;
   list(): WorkerInfo[];
   /** Seats an agent at a chair of the meeting table, for meeting `meeting`, in its worktree when it has one. */
@@ -44,7 +44,7 @@ export interface MeetingEvents {
   hiringPaused(): string | undefined;
   /** Posts the review panel's review on its pull request. Resolves to the review's URL. */
   postReview(pr: number, file: string, owner?: string): Promise<string>;
-  /** One of the office's prompts as it has it now (rewritten in ⚙️ Settings, or the default). */
+  /** One of the office's prompts as it has it now (rewritten in Settings, or the default). */
   prompt?(id: PromptId): string;
 }
 

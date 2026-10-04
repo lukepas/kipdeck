@@ -41,7 +41,7 @@ export function openIssue(first: GhIssue, net: Net, actions: BoardActions) {
   };
   const queue = h('button.btn', { type: 'button', onclick: addIssueToQueue }) as HTMLButtonElement;
   const carry = actions.pickUp;
-  const pickUp = carry ? h('button.btn', { type: 'button', title: 'Carry its card to an empty desk, a worker or the queue board, and press E there', onclick: () => carry(it) }, '✋ Pick it up') : null;
+  const pickUp = carry ? h('button.btn', { type: 'button', title: 'Carry its card to an empty desk, a worker or the queue board, and press E there', onclick: () => carry(it) }, 'Pick up card') : null;
   const meta = h('div.gh-meta');
   const el = h(
     'div.modal.gh-window.issue',

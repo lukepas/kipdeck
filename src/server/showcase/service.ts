@@ -87,7 +87,7 @@ export class Showcase {
     return doc;
   }
 
-  /** What ⚙️ Settings shows an admin: the choices, and every floor's repository with how it shows now. */
+  /** What Settings shows an admin: the choices, and every floor's repository with how it shows now. */
   async state(): Promise<ShowcaseSettingsState> {
     const s = this.settings.get();
     const repos = await this.repos();

@@ -65,7 +65,7 @@ function availableMemory(): Promise<number> {
 /**
  * The machine the office runs on: how busy its CPU and memory are (for the monitor on the wall, and
  * a warning before hiring while it's under pressure), and the most workers the office runs at once,
- * across every floor. That limit comes from --max-workers, or from ⚙️ Settings (kept in
+ * across every floor. That limit comes from --max-workers, or from Settings (kept in
  * .agent-office/machine.json), which can lower it but never raise it past --max-workers.
  */
 export class Machine implements Capacity {
@@ -138,7 +138,7 @@ export class Machine implements Capacity {
     };
   }
 
-  /** Sets the limit from ⚙️ Settings (undefined takes it off). Returns why it can't, if it can't. */
+  /** Sets the limit from Settings (undefined takes it off). Returns why it can't, if it can't. */
   setLimit(limit: number | undefined, by: string): string | undefined {
     if (limit !== undefined && this.ceiling !== undefined && limit > this.ceiling) {
       return `The office was started with --max-workers ${this.ceiling}, so the limit can't go above ${this.ceiling}`;

@@ -16,6 +16,7 @@ import { naturalKey } from './termkeys';
 import { termTabs } from './termtabs';
 import { dictateField, dictation } from './dictate';
 import { icon } from './icons';
+import { unitSign } from './unitsign';
 
 /** A line to scroll to once the terminal has loaded: a search hit (see search.ts). */
 export interface TerminalFind {
@@ -108,7 +109,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
   const info = store.workers.get(workerId);
   if (!info) return;
 
-  const dot = h('span.dot', { style: `background:${info.color}` });
+  const dot = unitSign(info.deskId);
   const title = h('h2', {}, info.kind === 'agent' ? `${engineLabel(info, store.project)} · ${info.name}` : info.name);
   const pill = h('span.pill', {}, '');
   const cost = h('span.cost', {});
@@ -216,7 +217,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
       typed.textContent = `${typingLine(typists)}`;
       typed.title = '';
     } else {
-      typed.textContent = w.lastInput ? `⌨️ ${w.lastInput.by}` : '';
+      typed.textContent = w.lastInput ? `Typed by ${w.lastInput.by}` : '';
       typed.title = w.lastInput ? `${w.lastInput.by} typed here last, ${timeAgo(w.lastInput.at)}` : '';
     }
   };

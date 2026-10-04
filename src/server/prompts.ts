@@ -7,7 +7,7 @@ import { readStateJson, writeState } from './safefs.js';
 /** What the floors read: a prompt as the office has it now, and what workers start on. */
 export interface PromptSource {
   text(id: PromptId): string;
-  /** The worker picked in ⚙️ Settings, when one was. */
+  /** The worker picked in Settings, when one was. */
   agent(): AgentChoice | undefined;
 }
 
@@ -18,7 +18,7 @@ export function officePrompt(source: PromptSource | undefined, id: PromptId, var
 
 /**
  * The prompts the office writes for workers by itself (shared/prompts.ts), as rewritten in
- * ⚙️ Settings, and the provider, model and effort every worker starts on unless whoever starts it
+ * Settings, and the provider, model and effort every worker starts on unless whoever starts it
  * picks others. The same for the whole building, kept in .agent-office/prompts.json; admins change them.
  */
 export class OfficePrompts implements PromptSource {

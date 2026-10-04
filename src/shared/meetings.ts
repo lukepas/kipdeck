@@ -4,7 +4,6 @@
 import { fmtCost, fmtTokens, type Meeting, type MeetingPattern, type MeetingRecord } from './protocol.js';
 
 export interface PatternDef {
-  icon: string;
   label: string;
   /** What happens, in a line. */
   blurb: string;
@@ -26,7 +25,6 @@ export interface PatternDef {
 
 export const MEETING_PATTERNS: Record<MeetingPattern, PatternDef> = {
   debate: {
-    icon: '🗣️',
     label: 'Debate',
     blurb: 'Each worker proposes, then critiques the others; in the last round the head of the table writes the decision.',
     roles: ['Chair', 'Pragmatist', 'Skeptic', 'Simplifier', 'User advocate'],
@@ -36,7 +34,6 @@ export const MEETING_PATTERNS: Record<MeetingPattern, PatternDef> = {
     output: (slug) => `docs/decisions/${slug}.md`,
   },
   lead: {
-    icon: '🧭',
     label: 'Lead & team',
     blurb: 'The lead splits the task into parts, the team each do one, and the lead merges their work and writes it up.',
     roles: ['Lead', 'Engineer', 'Engineer', 'Engineer', 'Engineer'],
@@ -46,7 +43,6 @@ export const MEETING_PATTERNS: Record<MeetingPattern, PatternDef> = {
     output: (slug) => `docs/meetings/${slug}.md`,
   },
   mapreduce: {
-    icon: '🗂️',
     label: 'Map-reduce',
     blurb: 'The same task over each part (files, modules, issues) in parallel; the head of the table combines the results.',
     roles: ['Reducer', 'Mapper', 'Mapper', 'Mapper', 'Mapper'],
@@ -57,7 +53,6 @@ export const MEETING_PATTERNS: Record<MeetingPattern, PatternDef> = {
     needs: 'parts',
   },
   redblue: {
-    icon: '🛡️',
     label: 'Red / blue',
     blurb: 'Red attacks the change (bugs, security), blue fixes what holds up, round after round; blue writes it up.',
     roles: ['Blue team', 'Red team'],
@@ -67,7 +62,6 @@ export const MEETING_PATTERNS: Record<MeetingPattern, PatternDef> = {
     output: (slug) => `docs/reviews/${slug}.md`,
   },
   review: {
-    icon: '🔍',
     label: 'Review panel',
     blurb: 'Reviewers read a pull request through their own lens; the head of the table merges them into one review, posted on the PR.',
     roles: ['Correctness', 'Security', 'Performance & simplicity', 'Tests', 'API design'],
@@ -154,11 +148,11 @@ export function meetingStage(m: Meeting): string {
 export function meetingSummary(m: Meeting): string {
   const p = MEETING_PATTERNS[m.pattern];
   const ran = m.status === 'done' ? rounds(m.round) : `${m.status === 'stopped' ? 'in ' : ''}round ${m.round} of ${m.rounds}`;
-  const head = `${p.icon} ${p.label} · ${ran} · ${meetingSpend(m)}`;
-  if (m.status === 'stopped') return `${head} · ⛔ ${m.reason ?? 'stopped'}`;
+  const head = `${p.label} · ${ran} · ${meetingSpend(m)}`;
+  if (m.status === 'stopped') return `${head} · stopped: ${m.reason ?? 'by hand'}`;
   if (m.status === 'running') return head;
   const where = m.review?.url ? ' · posted on the PR' : m.review?.error ? ` · couldn't post it: ${m.review.error}` : m.commit ? ` on ${m.worktree?.branch}` : m.worktree ? ` in ${m.worktree.branch}'s worktree` : '';
-  return `${head} · ✅ ${m.output}${where}`;
+  return `${head} · wrote ${m.output}${where}`;
 }
 
 export function meetingRecord(m: Meeting): MeetingRecord {

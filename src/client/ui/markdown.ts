@@ -24,7 +24,7 @@ purify.addHook('afterSanitizeAttributes', (node) => {
   }
 });
 
-const ALERTS: Record<string, string> = { NOTE: 'Note', TIP: 'Tip', IMPORTANT: '❗ Important', WARNING: 'Warning', CAUTION: 'Caution' };
+const ALERTS: Record<string, string> = { NOTE: 'Note', TIP: 'Tip', IMPORTANT: 'Important', WARNING: 'Warning', CAUTION: 'Caution' };
 
 /** `> [!NOTE]` blockquotes become callouts, as on GitHub. */
 function alerts(root: HTMLElement) {

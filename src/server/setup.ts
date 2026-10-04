@@ -31,7 +31,7 @@ into, signing the GitHub CLI in, and picking repositories to clone as floors. Gi
 --projects or --project it does just that and asks nothing, for scripts.
 
 A new office runs this by itself the first time it starts in a terminal. Run it
-while the office is stopped; while it runs, use its elevator and ⚙️ Settings.
+while the office is stopped; while it runs, use its elevator and Settings.
 
 Options:
       --home <dir>        The office to set up (default ~/agent-office, env AGENT_OFFICE_HOME)
@@ -56,7 +56,7 @@ export async function welcome(cfg: Config): Promise<void> {
   // --projects is the answer to the first question (the office applies it again as it starts).
   const folderGiven = !!cfg.projects && !building.setProjectsDir(cfg.projects, 'the command line');
   console.log(`
-  👋 Welcome to Agent Office!
+  Welcome to UGC Army.
 
   Every project is a floor of the building, and this one doesn't have any yet.
   Let's add your first: pick one of your GitHub repositories and the office
@@ -105,7 +105,7 @@ export async function setupCommand(argv: string[]): Promise<number> {
   const dataDir = path.join(dir, '.agent-office');
   mkdirSync(dataDir, { recursive: true, mode: 0o700 });
   if (await officeRunning(dataDir)) {
-    console.error(`agent-office setup: the office in ${tildify(dir)} is running. Add projects from its elevator, and pick the workspace folder in ⚙️ Settings.`);
+    console.error(`agent-office setup: the office in ${tildify(dir)} is running. Add projects from its elevator, and pick the workspace folder in Settings.`);
     return 1;
   }
   const building = new Building(dataDir, inProject ? path.join(os.homedir(), 'agent-office') : dir, { terminal: true });
@@ -159,7 +159,7 @@ async function pickFolder(building: Building) {
     if (!err) break;
     console.log(`     ✗ ${err}`);
   }
-  console.log(`     ✓ ${building.projectsDirState().dir}/<owner>/<repo> (admins can change it in ⚙️ Settings)`);
+  console.log(`     ✓ ${building.projectsDirState().dir}/<owner>/<repo> (admins can change it in Settings)`);
 }
 
 /** Where to suggest cloning projects: a code folder that's already in the home folder, else `fallback`. */

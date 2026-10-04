@@ -1,6 +1,6 @@
 // "Fund this issue" as a Solana Action (a Blink), on devnet: GET /actions.json, and GET and POST
 // /api/actions/fund?repo=owner/name&issue=N. Public (a wallet or dial.to asks without a session),
-// so only for repositories an admin opted into (⚙️ Settings, Bounties), rate-limited per client
+// so only for repositories an admin opted into (Settings, Bounties), rate-limited per client
 // address, and the host check (hosts.ts) still applies first. The transaction it answers with is
 // unsigned: the funder's wallet signs it, and it can only move the funder's own tokens.
 import { clientIp, readBody, send } from '../util.js';

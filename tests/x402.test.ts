@@ -163,7 +163,7 @@ test('a good payment: 202, a held task that no worker starts, its status link, a
   assert.deepEqual(task.paid, { network: 'eip155:84532', payer: PAYER, amount: '0.10', tx: TX, explorer: `https://sepolia.basescan.org/tx/${TX}` });
   assert.match(task.prompt, /untrusted outsider/);
   assert.equal(f.workers.length, 0, 'held: no worker starts on it');
-  assert.match(f.toasts.join('\n'), /waits on the 📋 queue for an admin/);
+  assert.match(f.toasts.join('\n'), /waits on the queue for an admin/);
 
   const status = await f.call('GET', new URL(body.statusUrl).pathname + new URL(body.statusUrl).search);
   assert.equal(status.status, 200);

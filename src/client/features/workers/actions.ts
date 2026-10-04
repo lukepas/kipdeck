@@ -426,7 +426,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
       title,
       ...text,
       newDesk: desk ? OFFICE_PLAN.byId.get(desk)!.label : undefined,
-      workers: awake.map((w) => ({ id: w.id, name: w.name, color: w.color, status: w.status })),
+      workers: awake.map((w) => ({ id: w.id, name: w.name, deskId: w.deskId, status: w.status })),
       worktreeOption: !!store.project?.branch,
       providerOption: true,
       repoOptions: repoChoices(),

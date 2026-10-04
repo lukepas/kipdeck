@@ -39,7 +39,7 @@ function issueColumns(items: GhIssue[]): Column<GhIssue>[] {
 function pullColumns(items: GhPull[]): Column<GhPull>[] {
   const open = items.filter((p) => p.state === 'OPEN');
   return [
-    { key: 'draft', title: '✏️ Draft', items: open.filter((p) => p.isDraft) },
+    { key: 'draft', title: 'Draft', items: open.filter((p) => p.isDraft) },
     { key: 'review', title: 'In review', items: open.filter((p) => !p.isDraft && p.reviewDecision !== 'APPROVED') },
     { key: 'approved', title: 'Approved', items: open.filter((p) => !p.isDraft && p.reviewDecision === 'APPROVED') },
     { key: 'merged', title: 'Merged', items: items.filter((p) => p.state === 'MERGED').sort(byUpdated), max: 30 },

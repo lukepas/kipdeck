@@ -26,7 +26,7 @@ export interface QueuePayment {
   settlement?: 'unknown';
 }
 
-/** A task on the 📋 queue whiteboard: a GitHub issue or free text, seated to a worker by itself. */
+/** A task on the queue whiteboard: a GitHub issue or free text, seated to a worker by itself. */
 export interface QueueTask {
   id: string;
   provider?: AgentProvider;

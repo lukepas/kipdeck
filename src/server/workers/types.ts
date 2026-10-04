@@ -172,7 +172,7 @@ export interface WorkerContext {
   readonly trees: Worktrees;
   readonly workers: Map<string, Worker>;
   readonly events: WorkerEvents;
-  /** The office's prompts, as set in ⚙️ Settings (see prompts.ts). */
+  /** The office's prompts, as set in Settings (see prompts.ts). */
   readonly prompts?: PromptSource;
   /** The office is shutting down: workers exiting now are being stopped, not failing. */
   readonly closing: boolean;

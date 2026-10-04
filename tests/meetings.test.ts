@@ -153,7 +153,7 @@ test('a meeting has no token limit: what its workers use is added up and shown, 
   m = f.room.state().current!;
   assert.equal(m.status, 'done');
   assert.equal(f.room.clear('Ada'), undefined);
-  assert.match(f.room.state().past[0].summary, /Debate · 2 rounds · 60\.5M tokens · \$31\.50 · ✅ decision\.md/);
+  assert.match(f.room.state().past[0].summary, /Debate · 2 rounds · 60\.5M tokens · \$31\.50 · wrote decision\.md/);
 });
 
 test('a worker that ends its part without writing the file is reminded once, then the meeting stops', (t) => {
@@ -265,7 +265,7 @@ test('in a git project the output is committed on the meeting branch, which outl
   assert.ok(!existsSync(path.join(f.dir, m.worktree!.path)));
   assert.equal(git('rev-parse', '--abbrev-ref', m.worktree!.branch), m.worktree!.branch);
   assert.equal(f.room.state().current, null);
-  assert.match(f.room.state().past[0].summary, /Debate · 2 rounds · 0 tokens · \$0\.00 · ✅ docs\/decision\.md on office\/meeting-pick-a-cache-/);
+  assert.match(f.room.state().past[0].summary, /Debate · 2 rounds · 0 tokens · \$0\.00 · wrote docs\/decision\.md on office\/meeting-pick-a-cache-/);
 });
 
 test('Pi meetings retain the chosen model and thinking level for every seat', (t) => {

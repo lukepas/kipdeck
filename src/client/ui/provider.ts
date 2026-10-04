@@ -283,7 +283,7 @@ export function agentFields(project: ProjectInfo | null, id: string, initial: Ag
 }
 
 /**
- * Which worker to start: the office's default (Settings), shown as a line, with an ✏️ Edit button
+ * Which worker to start: the office's default (Settings), shown as a line, with an Edit button
  * that opens the provider, model and effort fields to pick another for this one.
  */
 export function providerPicker(project: ProjectInfo | null, id: string, label = 'Worker'): ProviderPicker {
@@ -298,7 +298,7 @@ export function providerPicker(project: ProjectInfo | null, id: string, label = 
     current.textContent = choiceLabel(def);
     current.title = store.prompts.agent ? 'The office’s default worker, set in Settings' : 'The office’s default worker (its --agent); an admin can pick another in Settings';
     current.classList.toggle('hidden', editing);
-    edit.textContent = editing ? '↺ Use the default' : '✏️ Edit';
+    edit.textContent = editing ? 'Use the default' : 'Edit';
     edit.title = editing ? `Back to ${choiceLabel(def)}` : 'Pick another provider, model or effort for this one';
     edit.setAttribute('aria-expanded', String(editing));
     fields.element.classList.toggle('hidden', !editing);

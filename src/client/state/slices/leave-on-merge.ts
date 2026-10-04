@@ -3,7 +3,7 @@ import type { Slice } from '../store';
 
 declare module '../store' {
   interface Store {
-    /** Whether workers whose pull request merged go home by themselves (⚙️ Settings). */
+    /** Whether workers whose pull request merged go home by themselves (Settings). */
     leaveOnMerge: LeaveOnMergeState;
   }
   interface Topics {

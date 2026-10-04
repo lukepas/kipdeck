@@ -138,7 +138,7 @@ export function openQueue(net: Net, actions: QueueActions) {
       if (t.finishedAt) meta.push(timeAgo(t.finishedAt));
       if (t.pr) buttons.push(h('a.btn', { href: t.pr.url, target: '_blank', rel: 'noopener', title: t.pr.title }, `PR #${t.pr.number}${t.pr.state === 'MERGED' ? ' ✓' : t.pr.state === 'DRAFT' ? ' (draft)' : ''}`));
       if (w) buttons.push(h('button.btn', { type: 'button', onclick: () => actions.openTerminal(w.id) }, 'Terminal'));
-      if (t.outcome !== 'rejected') buttons.push(h('button.btn', { type: 'button', title: 'Put it back on the queue', onclick: () => net.send({ t: 'queue.retry', taskId: t.id }) }, '↻ Requeue'));
+      if (t.outcome !== 'rejected') buttons.push(h('button.btn', { type: 'button', title: 'Put it back on the queue', onclick: () => net.send({ t: 'queue.retry', taskId: t.id }) }, 'Requeue'));
       if (!(t.outcome === 'rejected' && t.paid && !t.paid.refundTx)) buttons.push(h('button.btn', { type: 'button', title: 'Forget it', 'aria-label': 'Remove', onclick: () => net.send({ t: 'queue.remove', taskId: t.id }) }, icon('close', 16)));
     }
     meta.push(...paid.meta);

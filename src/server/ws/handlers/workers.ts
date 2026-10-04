@@ -98,7 +98,7 @@ export const workerHandlers = {
       }
       if (!names.length) return;
       const whose = names.length === 1 ? `${names[0]}'s worktree` : `the worktrees of ${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
-      ctx.toastFloor(floor, `🌿 ${who} rebuilt ${whose}${notes.length ? ` — ${notes.join('; ')}` : ''}`);
+      ctx.toastFloor(floor, `${who} rebuilt ${whose}${notes.length ? ` — ${notes.join('; ')}` : ''}`);
     })();
   },
   'worker.attach'(ctx, c, msg) {

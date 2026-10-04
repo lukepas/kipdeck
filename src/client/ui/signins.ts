@@ -75,7 +75,7 @@ export function openSignIns(net: Net, why?: string) {
         : s.status === 'busy'
           ? h('span.signin-who', {}, 'Signing in…')
           : h('span.signin-who.none', {}, 'Not signed in');
-    const head = h('div.team-head', {}, h('h4', {}, which === 'claude' ? '✳️ Claude' : 'GitHub'), status);
+    const head = h('div.team-head', {}, h('h4', {}, which === 'claude' ? 'Claude' : 'GitHub'), status);
     const body = h('div.signin-body');
     const box = h('section.signin', { class: s.status }, head, body);
     if (s.error) body.append(h('p.team-status.error', {}, s.error));

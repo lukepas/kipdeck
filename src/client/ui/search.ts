@@ -5,6 +5,7 @@ import { store } from '../state';
 import { h, openModal, timeAgo } from './dom';
 import type { TerminalFind } from './terminal';
 import { icon } from './icons';
+import { unitSign } from './unitsign';
 
 // The window: words in the office chat and in every worker's terminal, including what was said
 // and shown before the office last restarted. A terminal line opens that terminal right at it.
@@ -141,7 +142,7 @@ export function openSearch(openTerminal: (workerId: string, find: TerminalFind) 
         h(
           'section.search-group',
           {},
-          h('h4', {}, h('span.dot', { style: `background:${w.color}` }), [w.name, w.worktree && `${w.worktree.branch}`].filter(Boolean).join(' · ')),
+          h('h4', {}, unitSign(w.deskId), [w.name, w.worktree && `${w.worktree.branch}`].filter(Boolean).join(' · ')),
           h('ul', {}, ...hits.map((hit) => termRow(hit, needle))),
         ),
       );

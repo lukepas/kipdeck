@@ -85,7 +85,7 @@ export class WorkerManager {
     private ledger: Ledger,
     /** The office's worker limit, across every floor (see machine.ts). */
     private capacity?: Capacity,
-    /** The office's prompts and the worker everyone starts on, as set in ⚙️ Settings (see prompts.ts). */
+    /** The office's prompts and the worker everyone starts on, as set in Settings (see prompts.ts). */
     private prompts?: PromptSource,
     /** Everyone's own sign-ins, for workers hired by an account. */
     private runAs?: RunAs,
@@ -173,7 +173,7 @@ export class WorkerManager {
     return this.agentPath;
   }
 
-  /** What an agent starts on when whoever starts it doesn't pick: the one set in ⚙️ Settings, or the office's --agent. */
+  /** What an agent starts on when whoever starts it doesn't pick: the one set in Settings, or the office's --agent. */
   get officeDefault(): AgentChoice {
     const picked = this.prompts?.agent();
     if (picked && (picked.provider !== 'custom' || this.defaultProvider === 'custom')) return picked;
@@ -273,11 +273,11 @@ export class WorkerManager {
       if (typeof made === 'string') return made;
       if ('repos' in made) {
         ({ worktree: wt, repos: others } = made);
-        for (const note of made.notes) this.events.toast(`🌿 ${name}'s worktree of ${note}`, 'info');
+        for (const note of made.notes) this.events.toast(`${name}'s worktree of ${note}`, 'info');
       } else {
         const { note, ...ref } = made;
         wt = ref;
-        if (note) this.events.toast(`🌿 ${name}'s worktree ${note}`, 'info');
+        if (note) this.events.toast(`${name}'s worktree ${note}`, 'info');
       }
     }
     const info: WorkerInfo = {

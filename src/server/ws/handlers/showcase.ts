@@ -1,4 +1,4 @@
-// ⚙️ Settings for the public showcase (/pom/): whether it is on and how each repository shows there.
+// Settings for the public showcase (/pom/): whether it is on and how each repository shows there.
 // Admins only, both ways: the list names every floor's repository, private ones too.
 import type { ShowcaseClientMsg } from '../../../shared/protocol.js';
 import type { Ctx } from '../../office/context.js';
@@ -18,7 +18,7 @@ export const showcaseHandlers = {
     const was = ctx.showcase.enabled;
     ctx.showcase.settings.set(msg.patch, who);
     ctx.showcase.invalidate();
-    if (was !== ctx.showcase.enabled) ctx.toastAll(ctx.showcase.enabled ? `🌐 ${who} turned on the public showcase at /pom/ (read only, testnet data)` : `${who} turned off the public showcase`);
+    if (was !== ctx.showcase.enabled) ctx.toastAll(ctx.showcase.enabled ? `${who} turned on the public showcase at /pom/ (read only, testnet data)` : `${who} turned off the public showcase`);
     for (const o of ctx.clients.values()) if (ctx.meOf(o.accountId).admin) sendState(ctx, o);
   },
 } satisfies HandlerMap<ShowcaseClientMsg>;

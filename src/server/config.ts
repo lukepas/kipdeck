@@ -16,7 +16,7 @@ export interface Config {
   dataDir: string;
   /** Where new floors are cloned by default, as <projectsDir>/<owner>/<repo>. */
   projectsDir: string;
-  /** --projects / AGENT_OFFICE_PROJECTS: picks the projects folder, as ⚙️ Settings in the office does. */
+  /** --projects / AGENT_OFFICE_PROJECTS: picks the projects folder, as Settings in the office does. */
   projects?: string;
   /** Started as `agent-office <dir>`: that checkout is a floor of its own (it's also `dir`). */
   project?: string;
@@ -58,7 +58,7 @@ export interface Config {
   budget?: number;
   /** Refuse new hires for the rest of the day once the budget is spent. */
   budgetPause: boolean;
-  /** The most workers the office runs at once, across every floor; ⚙️ Settings can't go past it. */
+  /** The most workers the office runs at once, across every floor; Settings can't go past it. */
   maxWorkers?: number;
   /** Slack / Discord webhook to post to when a worker needs input, finishes or gets stuck ('' turns it off). */
   webhook?: string;
@@ -113,7 +113,7 @@ Options:
                           (default ~/agent-office, env AGENT_OFFICE_HOME)
       --projects <dir>    Where new floors are cloned, as <dir>/<owner>/<repo>
                           (default ~/agent-office, env AGENT_OFFICE_PROJECTS).
-                          Also settable from ⚙️ Settings in the office
+                          Also settable from Settings in the office
   -p, --port <n>          Port to listen on (default 4600, env PORT)
   -H, --host <addr>       Address to bind (default 127.0.0.1: only this machine).
                           0.0.0.0 lets other computers on your network in
@@ -164,7 +164,7 @@ Options:
                           Settings, but not raise it past this
       --webhook <url>     Post to this Slack or Discord webhook when a worker
                           needs input, finishes or gets stuck (env AGENT_OFFICE_WEBHOOK).
-                          Also settable from ⚙️ Settings in the office; "" turns it off
+                          Also settable from Settings in the office; "" turns it off
 ${CHAIN_HELP}  -h, --help              Show this help
 
 Started in a terminal, the office opens in your browser already signed in, with

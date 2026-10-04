@@ -1,6 +1,6 @@
-// Every prompt the office writes for a worker by itself: what 🤖 Hand to a worker, 🔍 Review and the
+// Every prompt the office writes for a worker by itself: what Hand to a worker, Review and the
 // boards' other buttons send, what the queue adds to a task, the board agents' briefs, the meeting
-// room's parts and the sign-writer's instructions. Each can be rewritten in ⚙️ Settings (kept by
+// room's parts and the sign-writer's instructions. Each can be rewritten in Settings (kept by
 // server/prompts.ts, for the whole building); these are the defaults, which "Default" goes back to.
 // A {{name}} in one is filled in by the office when it's sent.
 
@@ -10,14 +10,14 @@ export type PromptGroup = 'mission' | 'issues' | 'pulls' | 'queue' | 'repos' | '
 
 /** The editor's sections, in order. */
 export const PROMPT_GROUPS: Record<PromptGroup, string> = {
-  mission: '🎯 Mission',
-  issues: '📌 Issues board',
-  pulls: '🔀 Pull requests board',
-  queue: '📋 Task queue',
-  repos: '🗂️ Across repositories',
-  stations: '🧑‍💼 Board agents',
-  meetings: '🤝 Meeting room',
-  office: '🏷️ Worker signs',
+  mission: 'Mission',
+  issues: 'Issues board',
+  pulls: 'Pull requests board',
+  queue: 'Task queue',
+  repos: 'Across repositories',
+  stations: 'Board agents',
+  meetings: 'Meeting room',
+  office: 'Worker signs',
 };
 
 export interface PromptDef {
@@ -38,9 +38,9 @@ export interface PromptDef {
 // --- Board agents ---------------------------------------------------------------------------------
 
 const BOARD: Record<StationKind, string> = {
-  issues: 'the 📌 Issues board',
-  pulls: 'the 🔀 Pull Requests board',
-  queue: 'the 📋 task queue',
+  issues: 'the Issues board',
+  pulls: 'the Pull Requests board',
+  queue: 'the task queue',
 };
 
 const JOB: Record<StationKind, string> = {
@@ -90,41 +90,41 @@ const FILE_NOTE = 'The note this part is written to, which the meeting waits for
 const OUTPUT_NOTE = "The meeting's output file, which ends it";
 
 const DEFS = {
-  // --- 📌 Issues board ---
+  // --- Issues board ---
   'issue.work': {
     group: 'issues',
-    label: '🤖 Hand to a worker',
-    used: 'The task a worker gets for an issue: 🤖 Hand to a worker, 📋 Add to queue, and a card carried to a desk or the queue.',
+    label: 'Hand to a worker',
+    used: 'The task a worker gets for an issue: Hand to a worker, Add to queue, and a card carried to a desk or the queue.',
     vars: ISSUE_VARS,
     text: 'Work on GitHub issue #{{number}}: "{{title}}".\n\nRead it first with `gh issue view {{number}} --comments`. Create a new branch, implement the change, verify it, then open a pull request that closes #{{number}}.',
   },
   'issue.ask': {
     group: 'issues',
-    label: '✍️ Ask a worker (context)',
-    used: 'Told to the worker ahead of your own words when you ✍️ Ask a worker about an issue.',
+    label: 'Ask a worker (context)',
+    used: 'Told to the worker ahead of your own words when you Ask a worker about an issue.',
     vars: ISSUE_VARS,
     optional: true,
     text: 'This is about GitHub issue #{{number}} "{{title}}" ({{url}}). Read it with `gh issue view {{number}} --comments`.',
   },
   'issue.meeting': {
     group: 'issues',
-    label: '🤝 Meeting about it',
-    used: 'What a 🤝 Meeting about an issue is about, to start with: the meeting form opens with it filled in.',
+    label: 'Meeting about it',
+    used: 'What a Meeting about an issue is about, to start with: the meeting form opens with it filled in.',
     vars: ISSUE_VARS,
     text: 'GitHub issue #{{number}}: “{{title}}”. Read it first with gh issue view {{number}} --comments.',
   },
 
-  // --- 🔀 Pull requests board ---
+  // --- Pull requests board ---
   'pull.review': {
     group: 'pulls',
-    label: '🔍 Review',
-    used: 'What 🔍 Review on an open pull request sends a worker.',
+    label: 'Review',
+    used: 'What Review on an open pull request sends a worker.',
     vars: PULL_VARS,
     text: "Review pull request #{{number}}: \"{{title}}\".\n\nUse `gh pr view {{number}} --comments` and `gh pr diff {{number}}`. Look for bugs, risky changes and missing tests, then give me a short summary with concrete suggestions. Don't push any commits.",
   },
   'pull.fixMerge': {
     group: 'pulls',
-    label: '🤖 Fix up & merge',
+    label: 'Fix up & merge',
     used: 'What the merge dialog\'s "hand it to a worker" sends when the pull request has no conflicts: address the feedback, get the checks green, merge.',
     vars: MERGE_VARS,
     text: [
@@ -140,7 +140,7 @@ const DEFS = {
   },
   'pull.fixConflicts': {
     group: 'pulls',
-    label: '🤖 Fix conflicts & merge',
+    label: 'Fix conflicts & merge',
     used: 'What the merge dialog\'s "hand it to a worker" sends when the pull request conflicts with its base.',
     vars: MERGE_VARS,
     text: [
@@ -156,21 +156,21 @@ const DEFS = {
   },
   'pull.ask': {
     group: 'pulls',
-    label: '✍️ Ask a worker (context)',
-    used: 'Told to the worker ahead of your own words when you ✍️ Ask a worker about a pull request.',
+    label: 'Ask a worker (context)',
+    used: 'Told to the worker ahead of your own words when you Ask a worker about a pull request.',
     vars: PULL_VARS,
     optional: true,
     text: 'This is about pull request #{{number}} "{{title}}" ({{url}}), branch `{{branch}}` into `{{base}}`. Read it with `gh pr view {{number}} --comments` and see its changes with `gh pr diff {{number}}`.',
   },
   'pull.panel': {
     group: 'pulls',
-    label: '🤝 Review panel',
-    used: 'What a 🤝 Review panel is about, to start with: the meeting form opens with it filled in.',
+    label: 'Review panel',
+    used: 'What a Review panel is about, to start with: the meeting form opens with it filled in.',
     vars: PULL_VARS,
     text: 'Review pull request #{{number}}: “{{title}}”.',
   },
 
-  // --- 🎯 Mission ---
+  // --- Mission ---
   'worker.mission': {
     group: 'mission',
     label: 'Team context',
@@ -189,20 +189,20 @@ const DEFS = {
     ].join('\n'),
   },
 
-  // --- 📋 Task queue ---
+  // --- Task queue ---
   'queue.worktree': {
     group: 'queue',
-    label: '🌿 Worktree note',
+    label: 'Worktree note',
     used: 'Added after every task the queue starts in its own git worktree.',
     vars: {},
     optional: true,
     text: "You're in your own git worktree, on a fresh branch made for this task. Commit there, push it, and open the pull request from it.",
   },
 
-  // --- 🗂️ Across repositories ---
+  // --- Across repositories ---
   'worker.repos': {
     group: 'repos',
-    label: '🗂️ Workspace brief',
+    label: 'Workspace brief',
     used: "Written into the workspace of a worker hired across several floors' repositories, as its CLAUDE.md and AGENTS.md, which the agent reads when it starts.",
     vars: {
       branch: 'The branch every worktree in the workspace is on',
@@ -227,7 +227,7 @@ const DEFS = {
   'station.pulls': station('pulls'),
   'station.queue': station('queue'),
 
-  // --- 🤝 Meeting room ---
+  // --- Meeting room ---
   'meeting.brief': {
     group: 'meetings',
     label: 'Sitting down',
@@ -378,7 +378,7 @@ const DEFS = {
     text: `Read every reviewer's findings ({{findings}}). Drop the duplicates, keeping the clearest wording, and write one combined review to {{output}} in Markdown: a short summary with your verdict first, then the findings, the most serious first, each tagged with the lens it came from in bold brackets like **[{{exampleRole}}]**, with its file:line. Don't post it: the office posts it on the pull request once the file is written. ${OUTPUT}`,
   },
 
-  // --- 🏷️ Worker signs ---
+  // --- Worker signs ---
   'office.namer': {
     group: 'office',
     label: 'Sign writer',
@@ -439,7 +439,7 @@ export function placeholders(template: string): string[] {
   return [...new Set([...template.matchAll(PLACEHOLDER)].map((m) => m[1]))];
 }
 
-/** A prompt's text as the office has it now: rewritten in ⚙️ Settings, or the default. */
+/** A prompt's text as the office has it now: rewritten in Settings, or the default. */
 export function promptText(custom: Partial<Record<PromptId, { text: string }>> | undefined, id: PromptId): string {
   return custom?.[id]?.text ?? PROMPTS[id].text;
 }

@@ -5,6 +5,7 @@ import { store } from '../state';
 import { h, openModal, type Modal } from './dom';
 import { confirmDialog, openPrompt } from './prompt';
 import { icon } from './icons';
+import { unitSign } from './unitsign';
 
 // The Changes window at a desk: the files a worker changed and their diff against the branch the
 // office was opened on, refreshed while the worker works, with commit / discard / open-a-PR.
@@ -123,10 +124,10 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
   let requestedSig = '';
   let loading = false;
 
-  const dot = h('span.dot', { style: `background:${info.color}` });
+  const dot = unitSign(info.deskId);
   const title = h('h2', {}, `${info.name} · changes`);
   const branch = h('span.branch');
-  const terminalBtn = h('button.btn', { type: 'button', title: 'Open the terminal instead' }, '⌨️ Terminal');
+  const terminalBtn = h('button.btn', { type: 'button', title: 'Open the terminal instead' }, 'Open terminal');
   const closeBtn = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
   const filesHead = h('h4', {}, 'Changed files');
   const list = h('ul', { role: 'listbox', 'aria-label': 'Changed files' });
@@ -208,7 +209,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
   const renderDiffHead = () => {
     const f = state?.files.find((x) => x.path === selected);
     if (!f) return diffHead.replaceChildren();
-    const discardOne = h('button.btn', { type: 'button', title: 'Throw away the uncommitted changes to this file' }, '↩︎ Discard');
+    const discardOne = h('button.btn', { type: 'button', title: 'Throw away the uncommitted changes to this file' }, 'Discard');
     discardOne.addEventListener('click', () =>
       confirmDialog(`Discard the changes to ${f.path.split('/').pop()}?`, `This puts ${f.path} back to the last commit in ${where()}. ${f.status === '?' ? 'The file is deleted.' : 'Committed changes stay.'}`, 'Discard', () =>
         net.send({ t: 'changes.discard', workerId, path: f.path, repo }),

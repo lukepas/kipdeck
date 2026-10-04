@@ -36,7 +36,7 @@ export const queueHandlers = {
       const goal = floor.mission.goalFor(str(msg.goal, 32) || undefined, issue);
       const err = floor.queue.add(prompt, who, str(msg.title, 200), issue, msg.provider, model, effort, c.accountId, goal);
       if (err) ctx.warn(c, err);
-      else ctx.toastFloor(floor, `📋 ${who} queued ${issue !== undefined ? `issue #${issue}` : 'a task'}`);
+      else ctx.toastFloor(floor, `${who} queued ${issue !== undefined ? `issue #${issue}` : 'a task'}`);
     };
     // Never a fork's or an outsider's PR to check out and run (see shared/pulltrust.ts).
     floor.github.guardCheckout(prompt, () => ctx.withSignIn(c, ctx.claudeFor(msg.provider ?? floor.workers.officeDefault.provider), add), (why) => ctx.warn(c, why));
@@ -73,7 +73,7 @@ export const queueHandlers = {
         ctx.withSignIn(c, ctx.claudeFor(task.provider ?? floor.workers.officeDefault.provider), () => {
           const err = floor.queue.approve(id, c.accountId);
           if (err) return ctx.warn(c, err);
-          ctx.toastFloor(floor, `📋 ${who} approved the paid task ${task.title}`);
+          ctx.toastFloor(floor, `${who} approved the paid task ${task.title}`);
         }),
       (why) => ctx.warn(c, why),
     );
@@ -83,7 +83,7 @@ export const queueHandlers = {
     if (!floor || !admin(ctx, c, 'turn down a held task')) return;
     const err = floor.queue.reject(str(msg.taskId, 32));
     if (err) return ctx.warn(c, err);
-    ctx.toastFloor(floor, `📋 ${c.peer.name} turned down a paid task: refund it from the office's wallet and record the transaction`);
+    ctx.toastFloor(floor, `${c.peer.name} turned down a paid task: refund it from the office's wallet and record the transaction`);
   },
   'queue.refunded'(ctx, c, msg) {
     const floor = here(ctx, c);

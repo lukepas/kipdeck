@@ -19,13 +19,13 @@ import type { ServiceInfo, ServicesState } from '../../shared/protocol.js';
 import type { BuildingServices, Ctx, LateServices } from './context.js';
 import type { Client } from './client.js';
 
-/** What the whole building shares, made before any floor opens: ⚙️ Settings, spend, sign-ins, limits. */
+/** What the whole building shares, made before any floor opens: Settings, spend, sign-ins, limits. */
 export function createServices(ctx: Ctx): BuildingServices {
   const { cfg, accounts, clients, floors } = ctx;
-  // The prompts the office writes for workers by itself, and the worker everyone starts on (⚙️ Settings).
+  // The prompts the office writes for workers by itself, and the worker everyone starts on (Settings).
   const configured = configuredProvider(cfg.agentCmd);
   const prompts = new OfficePrompts(cfg.dataDir, { list: agentProviders(configured), configured }, (state) => ctx.broadcast({ t: 'prompts', state }));
-  // Whether a worker whose pull request merged goes home by itself, on every floor (⚙️ Settings).
+  // Whether a worker whose pull request merged goes home by itself, on every floor (Settings).
   const leaveOnMerge = new LeaveOnMerge(cfg.dataDir, (state) => ctx.broadcast({ t: 'leaveOnMerge', state }));
 
   // What the workers spend, all time and today, with the optional daily budget.
@@ -85,7 +85,7 @@ export function createServices(ctx: Ctx): BuildingServices {
     return a.reader;
   };
 
-  // Slack / Discord pings for workers that need input or finish (set from ⚙️ Settings or --webhook).
+  // Slack / Discord pings for workers that need input or finish (set from Settings or --webhook).
   const webhook = new Webhook(cfg.dataDir, (workerId) => (workerId && ctx.workerFloor(workerId)?.def.name) || ctx.officeName, (state) => ctx.broadcast({ t: 'notify', state }));
   if (cfg.webhook !== undefined) {
     const err = webhook.set(cfg.webhook, 'the command line');
@@ -93,7 +93,7 @@ export function createServices(ctx: Ctx): BuildingServices {
   }
 
   // The machine's CPU and memory, for the monitor on the wall and a warning before hiring, and the
-  // most workers the office runs at once, across every floor (--max-workers, or ⚙️ Settings).
+  // most workers the office runs at once, across every floor (--max-workers, or Settings).
   const machine = new Machine(
     cfg.dataDir,
     cfg.maxWorkers,
@@ -141,7 +141,7 @@ export function createLateServices(ctx: Ctx): LateServices {
   );
 
 
-  // Proof of Merge bounties: off until an admin turns them on in ⚙️ Settings.
+  // Proof of Merge bounties: off until an admin turns them on in Settings.
   const bounties = new Bounties({ dataDir: cfg.dataDir, floors: () => floors.values(), broadcast: (msg) => ctx.broadcast(msg), toastFloor: (f, text, level) => ctx.toastFloor(f, text, level) });
 
   const upgrader = new Upgrader(
@@ -152,7 +152,7 @@ export function createLateServices(ctx: Ctx): LateServices {
       process.kill(process.pid, 'SIGTERM');
     },
   );
-  // The public showcase (/pom/): off until an admin turns it on in ⚙️ Settings.
+  // The public showcase (/pom/): off until an admin turns it on in Settings.
   const showcase = new Showcase(ctx);
   return { team, tailnet, services, upgrader, servicesState, bounties, showcase, ...createChainServices(ctx, bounties) };
 }

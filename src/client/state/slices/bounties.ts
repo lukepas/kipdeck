@@ -5,7 +5,7 @@ declare module '../store' {
   interface Store {
     /** Proof of Merge bounties, by floor id (every floor: the review inbox spans them). */
     bounties: Record<string, BountiesState>;
-    /** The bounty settings, once ⚙️ Settings asked for them (see protocol/bounties.ts). */
+    /** The bounty settings, once Settings asked for them (see protocol/bounties.ts). */
     bountySettings?: ChainSettingsState;
   }
   interface Topics {

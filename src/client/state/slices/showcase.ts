@@ -3,7 +3,7 @@ import type { Slice } from '../store';
 
 declare module '../store' {
   interface Store {
-    /** The public showcase's settings, once ⚙️ Settings asked for them (admins only; see protocol/showcase.ts). */
+    /** The public showcase's settings, once Settings asked for them (admins only; see protocol/showcase.ts). */
     showcaseSettings?: ShowcaseSettingsState;
   }
   interface Topics {

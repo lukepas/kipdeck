@@ -10,6 +10,7 @@ import { officePrompt } from './prompts';
 import { issueVars } from './github/prompts';
 import { dictateField } from './dictate';
 import { icon } from './icons';
+import { unitSign } from './unitsign';
 
 /** What a meeting called from an issue, a PR or a task starts out with. */
 export interface MeetingPreset {
@@ -87,7 +88,7 @@ function renderStatus(m: Meeting, body: HTMLElement, foot: HTMLElement, net: Net
       return h(
         'li',
         {},
-        h('span.dot', { style: `background:${w?.color ?? '#adb5bd'}` }),
+        unitSign(w?.deskId),
         h('b', {}, s.role),
         h('span.muted', {}, `${i === 0 ? 'head of the table · ' : ''}${s.workerName ?? '…'}`),
         w ? h('span.pill', { class: w.status }, STATUS_LABEL[w.status]) : h('span.pill.exited', {}, 'gone home'),

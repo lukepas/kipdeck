@@ -1,4 +1,4 @@
-// ⚙️ Settings: team notifications, the worker limit, upgrades, the office's prompts and default worker, and whether merged workers go home by themselves.
+// Settings: team notifications, the worker limit, upgrades, the office's prompts and default worker, and whether merged workers go home by themselves.
 import path from 'node:path';
 import { OPEN_CODE_MODEL_MAX } from '../../../shared/providers.js';
 import { MAX_WORKER_LIMIT, parseWorkerLimit } from '../../machine.js';
@@ -18,13 +18,13 @@ export const settingsHandlers = {
     const url = str(msg.url, 4096).trim();
     const err = ctx.webhook.set(url, who);
     ctx.warn(c, err);
-    if (!err) ctx.toastAll(url ? `📣 ${who} set up team notifications` : `${who} turned off team notifications`);
+    if (!err) ctx.toastAll(url ? `${who} set up team notifications` : `${who} turned off team notifications`);
   },
   'notify.test'(ctx, c) {
     const who = c.peer.name;
     // It posts to the team's channel: an admin's button, like the rest of team notifications.
     if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can send a test to team notifications');
-    void ctx.webhook.test(who).then((err) => ctx.sendTo(c, { t: 'toast', text: err ?? '📣 Sent a test message', level: err ? 'warn' : 'info' }));
+    void ctx.webhook.test(who).then((err) => ctx.sendTo(c, { t: 'toast', text: err ?? 'Sent a test message', level: err ? 'warn' : 'info' }));
   },
   'machine.limit'(ctx, c, msg) {
     const who = c.peer.name;
@@ -34,7 +34,7 @@ export const settingsHandlers = {
     const err = ctx.machine.setLimit(limit, who);
     if (err) return ctx.warn(c, err);
     const now = ctx.machine.limit;
-    ctx.toastAll(limit !== undefined ? `⚙️ ${who} set the worker limit to ${now}` : now === undefined ? `⚙️ ${who} took the worker limit off` : `⚙️ ${who} put the worker limit back to ${now} (--max-workers)`);
+    ctx.toastAll(limit !== undefined ? `${who} set the worker limit to ${now}` : now === undefined ? `${who} took the worker limit off` : `${who} put the worker limit back to ${now} (--max-workers)`);
     ctx.pumpQueues();
   },
   'upgrade.check'(ctx) {
@@ -54,7 +54,7 @@ export const settingsHandlers = {
     const on = msg.on === true;
     if (on === ctx.leaveOnMerge.on) return;
     ctx.leaveOnMerge.set(on, who);
-    ctx.toastAll(on ? `🏠 ${who} set workers to go home by themselves once their pull request merges` : `🪑 ${who} set workers whose pull request merged to stay until they're sent home`);
+    ctx.toastAll(on ? `${who} set workers to go home by themselves once their pull request merges` : `${who} set workers whose pull request merged to stay until they're sent home`);
     // The ones already merged go now.
     if (on) for (const f of ctx.floors.values()) f.sendLandedHome();
   },
@@ -67,8 +67,8 @@ export const settingsHandlers = {
     if (err) return ctx.warn(c, err);
     const now = !!ctx.prompts.state().custom[msg.id];
     const { label } = PROMPTS[msg.id];
-    if (now) ctx.toastAll(`📝 ${who} rewrote the “${label}” prompt`);
-    else if (custom) ctx.toastAll(`📝 ${who} put the default “${label}” prompt back`);
+    if (now) ctx.toastAll(`${who} rewrote the “${label}” prompt`);
+    else if (custom) ctx.toastAll(`${who} put the default “${label}” prompt back`);
   },
   'prompts.agent'(ctx, c, msg) {
     const who = c.peer.name;
@@ -82,6 +82,6 @@ export const settingsHandlers = {
     };
     const err = ctx.prompts.setAgent(choice, who);
     if (err) return ctx.warn(c, err);
-    ctx.toastAll(choice ? `🤖 ${who} set the office’s default worker` : `🤖 ${who} put the office’s default worker back to ${path.basename(ctx.cfg.agentCmd)}`);
+    ctx.toastAll(choice ? `${who} set the office’s default worker` : `${who} put the office’s default worker back to ${path.basename(ctx.cfg.agentCmd)}`);
   },
 } satisfies HandlerMap<SettingsClientMsg>;

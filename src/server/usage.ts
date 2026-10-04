@@ -324,7 +324,7 @@ export class Ledger {
     if (this.opts.budget !== undefined && this.overBudget && this.warnedDay !== day) {
       this.warnedDay = day;
       const spent = fmtUsd(this.days[day].cost);
-      this.toast(`💸 Today's spend passed the ${fmtUsd(this.opts.budget)} budget (${spent})${this.opts.pauseHiring ? ' — no new hires until tomorrow' : ''}`, 'warn');
+      this.toast(`Today's spend passed the ${fmtUsd(this.opts.budget)} budget (${spent})${this.opts.pauseHiring ? ' — no new hires until tomorrow' : ''}`, 'warn');
     }
   }
 

@@ -321,7 +321,7 @@ function sendToWorker(title: string, text: { context?: string; initial?: string 
     title,
     ...text,
     newDesk: desk ? DESK_BY_ID.get(desk)!.label : undefined,
-    workers: awake.map((w) => ({ id: w.id, name: w.name, color: w.color, status: w.status })),
+    workers: awake.map((w) => ({ id: w.id, name: w.name, deskId: w.deskId, status: w.status })),
     worktreeOption: !!store.project.branch,
     providerOption: true,
     repoOptions: repoChoices(),

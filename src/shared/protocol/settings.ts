@@ -1,11 +1,11 @@
-// ⚙️ Settings and the building's services: notifications, the machine, upgrades, prompts.
+// Settings and the building's services: notifications, the machine, upgrades, prompts.
 
 import type { PromptId } from '../prompts.js';
 import type { AgentChoice } from './agents.js';
 
 /**
  * The prompts the office writes for workers by itself (shared/prompts.ts) and the worker everyone
- * starts on, as set in ⚙️ Settings: the same on every floor.
+ * starts on, as set in Settings: the same on every floor.
  */
 export interface PromptsState {
   /** Prompts someone rewrote, by id; the rest are the defaults. */
@@ -50,7 +50,7 @@ export interface MachineState {
   limit?: number;
   /** --max-workers: the limit can't be set any higher from the office. */
   ceiling?: number;
-  /** The limit someone set in ⚙️ Settings, when there is one. */
+  /** The limit someone set in Settings, when there is one. */
   set?: { limit: number; by: string; at: number };
 }
 
@@ -110,7 +110,7 @@ export interface UpgradeState {
 }
 
 /**
- * Whether a worker whose pull request merged goes home by itself (⚙️ Settings), for every floor:
+ * Whether a worker whose pull request merged goes home by itself (Settings), for every floor:
  * once it's at rest and nobody has its terminal open, it leaves and its worktree and branch are deleted.
  */
 export interface LeaveOnMergeState {

@@ -69,6 +69,7 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 
 /* Status dots and pills, empty lists, key caps, toasts and the reconnecting banner: the office's HUD
    and windows show them, and so does the 2D view. A pill is a chip: its glyph, then the word. */
+.unit-sign { display: inline-block; flex: none; min-width: 34px; padding: 0 4px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); color: var(--muted); font: 500 11px/16px var(--font-mono); font-variant-numeric: tabular-nums; text-align: center; letter-spacing: .02em; }
 .dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgb(0 0 0 / .4); flex: none; }
 .pill { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; line-height: 16px; padding: 1px 6px; border-radius: var(--radius-chip); border: 1px solid var(--line-strong); white-space: nowrap; color: var(--muted); background: var(--surface-2); --g: var(--g-parked); }
 .pill.starting, .pill.idle { color: var(--muted); }
@@ -142,7 +143,8 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 .svc-list li:hover { background: var(--surface-2); }
 .svc-list li.on { background: var(--surface-3); box-shadow: inset 2px 0 0 var(--signal); }
 .svc-list li:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
-.svc-list .dot { width: 10px; height: 10px; }
+.svc-list .unit-sign { display: inline-block; flex: none; min-width: 34px; padding: 0 4px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); color: var(--muted); font: 500 11px/16px var(--font-mono); font-variant-numeric: tabular-nums; text-align: center; letter-spacing: .02em; }
+.dot { width: 10px; height: 10px; }
 .svc-main { flex: 1; min-width: 0; }
 .svc-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .svc-meta { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
