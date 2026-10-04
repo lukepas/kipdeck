@@ -2,8 +2,16 @@
    it down. The mark's chevrons fill from the bottom up over 900 ms, then hold; the thin bar says how far
    along it is. Still under reduced motion. */
 #loading { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: var(--void); transition: opacity .35s ease; }
+/* The deck's 1 m grid behind it, fading out from the middle, as the slab floats in the void. */
+#loading::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 32px 32px; background-position: center;
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0, transparent 360px); mask-image: radial-gradient(circle at 50% 50%, #000 0, transparent 360px); opacity: .6;
+}
+.loading-card { position: relative; }
 #loading.gone { opacity: 0; pointer-events: none; }
-.loading-card { width: min(260px, 100%); display: flex; flex-direction: column; align-items: center; text-align: center; }
+.loading-card { padding: 28px 24px 22px; background: var(--void); border: 1px solid var(--line); border-radius: var(--radius); width: min(300px, 100%); display: flex; flex-direction: column; align-items: center; text-align: center; }
 .loading-mark { display: block; width: 56px; height: 56px; color: var(--text); }
 .loading-mark .c { opacity: .18; animation: loading-fill .3s var(--ease) forwards; }
 .loading-mark .c3 { animation-delay: 0s; }

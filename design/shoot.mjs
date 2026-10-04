@@ -122,7 +122,7 @@ async function main() {
   const browser = await launch();
   try {
     const viewport = { width: 1440, height: 900 };
-    const fresh = await browser.newContext({ viewport, deviceScaleFactor: 1 });
+    const fresh = await browser.newContext({ viewport, deviceScaleFactor: 1, colorScheme: 'dark' });
     const lp = await fresh.newPage();
     if (want('login')) {
       await lp.goto(`${base}/login`);
@@ -131,7 +131,7 @@ async function main() {
     }
     await fresh.close();
 
-    const context = await browser.newContext({ viewport });
+    const context = await browser.newContext({ viewport, colorScheme: 'dark' });
     await context.addInitScript(() => {
       try {
         // Headless software rendering is slow: no offer of the 2D view over the shots.
@@ -147,9 +147,10 @@ async function main() {
     await page.goto(`${base}/login`);
     const status = await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD);
     if (status !== 200) throw new Error('login failed ' + status);
-    await page.goto(`${base}/`);
+    await page.goto(`${base}/`, { waitUntil: 'commit' });
     if (want('loading')) {
-      await wait(150);
+      await page.locator('#loading').waitFor({ timeout: 10_000 });
+      await wait(700);
       await page.screenshot({ path: path.join(OUT, 'loading.png') });
     }
     await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
@@ -225,6 +226,18 @@ async function main() {
       await page.keyboard.press('g');
       await wait(600);
     }
+    if (want('render')) {
+      // The deck alone from the Overview, no HUD: the render the /pom/ page shows (src/client/showcase/deck.webp).
+      await page.locator('#scene').focus();
+      await page.keyboard.press('g');
+      await wait(1500);
+      await page.addStyleTag({ content: 'body *:not(#scene):not(:has(#scene)) { visibility: hidden !important; }' });
+      await wait(600);
+      await page.screenshot({ path: path.join(OUT, 'render.png'), clip: { x: 200, y: 70, width: 1040, height: 760 } });
+      await page.evaluate(() => document.querySelectorAll('style').forEach((s) => s.textContent?.includes('visibility: hidden !important') && s.remove()));
+      await page.keyboard.press('g');
+      await wait(600);
+    }
     await page.locator('#scene').focus();
     if (want('mission')) {
       await page.keyboard.press('i');
@@ -295,6 +308,18 @@ async function main() {
       await wait(2500);
       await phone.screenshot({ path: path.join(OUT, 'lite-phone.png') });
       await phone.close();
+      // The light whiteprint: what the system's light setting (or the print toggle) gives.
+      await page.emulateMedia({ colorScheme: 'light' });
+      await page.reload();
+      await wait(2500);
+      await page.screenshot({ path: path.join(OUT, 'lite-print.png') });
+      await page.emulateMedia({ colorScheme: 'dark' });
+      const mid = await context.newPage();
+      await mid.setViewportSize({ width: 900, height: 1000 });
+      await mid.goto(`${base}/lite`);
+      await wait(2500);
+      await mid.screenshot({ path: path.join(OUT, 'lite-tablet.png') });
+      await mid.close();
     }
     if (want('pom')) {
       await page.goto(`${base}/pom/`);
