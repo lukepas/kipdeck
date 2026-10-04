@@ -56,11 +56,16 @@ function layout(design) {
       dropKeep: { x: 0, y: Y(1.3), w: design.w, h: Y(7.4) - Y(1.3) },
     };
   }
+  // 1:1 gives the inbox a quarter column more so PR #1's bounty clears its
+  // Merge button, and ends the timeline a quarter column earlier.
+  const sq = design.square;
+  const inX = sq ? 8.75 : 9;
   return {
     header: { x: X(0), y: Y(0) + ls * 0.95 },
-    goal: { label: Y(1.0), line: Y(2.5), x0: X(0), x1: X(8.5), axis: Y(3.6), weeks: 8 },
-    inbox: { x: X(9), w: X(12) - X(9), head: Y(0) + ls * 0.95, bottom: Y(7.65), cardH: G.ch * 1.15, gap: 8 * u },
-    tlType: { mode: 'stack', base: Y(7.55), size: design.size('l') },
+    goal: { label: Y(1.0), line: Y(2.5), x0: X(0), x1: X(sq ? 8.25 : 8.5), axis: Y(3.6), weeks: 8 },
+    inbox: { x: X(inX), w: X(12) - X(inX), head: Y(0) + ls * 0.95, bottom: Y(7.65), cardH: G.ch * 1.15, gap: 8 * u },
+    // 1:1 sets it one size down so 'Review inbox.' clears the inbox at col 10.
+    tlType: { mode: 'stack', base: Y(7.55), size: design.size(design.square ? 'm' : 'l') },
     // Snapped to the grid (cols 7-12, rows E-G) with a paper margin, so the
     // merged cells it covers read as deliberately masked.
     // In 1:1 the columns are narrow, so the card takes cols 4-12 to keep the
