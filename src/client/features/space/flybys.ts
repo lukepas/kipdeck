@@ -45,7 +45,9 @@ void main() {
     col = mix(col, uB, smoothstep(0.62, 0.75, fbm(o * 6.0 + uSeed, 4)) * step(0.5, f));
     col = mix(col, uB * 1.15, smoothstep(0.82, 0.92, abs(o.y)));
   }
-  gl_FragColor = vec4(col, 1.0);
+  // Clouds in the alpha: wisps stretched along the latitudes, drawn over the surface as it turns.
+  float cloud = smoothstep(0.52, 0.78, fbm(vec3(o.x * 3.0, o.y * 7.0, o.z * 3.0) + uSeed * 1.7 + 4.0, 5));
+  gl_FragColor = vec4(col, cloud);
 }`;
 
 const PLANET_VERT = /* glsl */ `
@@ -70,11 +72,52 @@ varying vec2 vUv;
 varying vec3 vView;
 void main() {
   vec3 col = texture2D(uMap, vec2(vUv.x + uSpin, vUv.y)).rgb;
+  // The cloud layer drifts a little faster than the ground under it.
+  float cloud = texture2D(uMap, vec2(vUv.x + uSpin * 1.35 + 0.37, vUv.y)).a;
+  col = mix(col, vec3(0.86, 0.9, 0.94), cloud * 0.75);
   vec3 n = normalize(vN);
-  float lit = smoothstep(-0.08, 0.5, dot(n, uSun));
-  float rim = pow(1.0 - max(dot(n, normalize(vView)), 0.0), 3.0);
-  vec3 outc = col * (0.025 + 0.975 * lit) + uAtmo * rim * 0.25 * (0.25 + 0.75 * lit);
+  float ndl = dot(n, uSun);
+  // A soft terminator: the day side fades into night over a broad band, the atmosphere tinting it.
+  float lit = smoothstep(-0.18, 0.42, ndl);
+  float dusk = smoothstep(-0.25, 0.05, ndl) * (1.0 - smoothstep(0.05, 0.35, ndl));
+  float rim = pow(1.0 - max(dot(n, normalize(vView)), 0.0), 2.5);
+  vec3 outc = col * (0.02 + 0.98 * lit) + uAtmo * dusk * 0.12 + uAtmo * rim * 0.6 * (0.15 + 0.85 * lit);
   gl_FragColor = vec4(outc * uGain, 1.0);
+  #include <colorspace_fragment>
+}`;
+
+/** The atmosphere's glow past the planet's limb: a shell a little bigger, lit at its edge on the day side. */
+const HALO_FRAG = /* glsl */ `
+uniform vec3 uAtmo, uSun;
+uniform float uGain;
+varying vec3 vN;
+varying vec2 vUv;
+varying vec3 vView;
+void main() {
+  vec3 n = normalize(vN);
+  float edge = 1.0 - abs(dot(n, normalize(vView)));
+  float glow = pow(edge, 4.0) * smoothstep(-0.3, 0.4, dot(n, uSun));
+  gl_FragColor = vec4(uAtmo * glow * 0.9 * uGain, 1.0);
+  #include <colorspace_fragment>
+}`;
+
+/** A ring round a gas giant: bands of dust by radius, lit by the same sun, fading at both edges. */
+const RING_VERT = /* glsl */ `
+varying float vR;
+void main() {
+  vR = length(position.xy);
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}`;
+const RING_FRAG = /* glsl */ `
+uniform vec3 uA, uB;
+uniform float uGain;
+varying float vR;
+${NOISE}
+void main() {
+  float k = (vR - 1.35) / (2.3 - 1.35);
+  float bands = 0.55 + 0.45 * sin(k * 52.0 + vnoise(vec3(k * 30.0, 0.0, 0.0)) * 4.0);
+  float a = smoothstep(0.0, 0.08, k) * (1.0 - smoothstep(0.85, 1.0, k)) * bands * (1.0 - 0.6 * smoothstep(0.42, 0.47, k) * (1.0 - smoothstep(0.47, 0.52, k)));
+  gl_FragColor = vec4(mix(uA, uB, k) * a * 0.55 * uGain, 1.0);
   #include <colorspace_fragment>
 }`;
 
@@ -117,6 +160,7 @@ export class Flybys {
   private readonly comet = new THREE.Group();
   private readonly cometHead: THREE.Sprite;
   private readonly cometTail: THREE.Points;
+  private readonly cometIon: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   private readonly rocks: THREE.InstancedMesh;
   private readonly rockMat: THREE.MeshLambertMaterial;
   private readonly rockSpots: { x: number; y: number; z: number; s: number; ax: THREE.Vector3; spin: number }[] = [];
@@ -125,7 +169,12 @@ export class Flybys {
   private readonly v = new THREE.Vector3();
   private readonly sc = new THREE.Vector3();
 
-  private readonly surface = new THREE.WebGLRenderTarget(SURFACE.w, SURFACE.h, { type: THREE.HalfFloatType, wrapS: THREE.RepeatWrapping, generateMipmaps: false });
+  /** Mipmapped, so a small, turning planet doesn't shimmer as it shrinks. */
+  private readonly surface = new THREE.WebGLRenderTarget(SURFACE.w, SURFACE.h, { type: THREE.HalfFloatType, wrapS: THREE.RepeatWrapping, generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter });
+  private readonly halo: THREE.Mesh;
+  private readonly haloMat: THREE.ShaderMaterial;
+  private readonly ring: THREE.Mesh;
+  private readonly ringMat: THREE.ShaderMaterial;
   private readonly bakeMat: THREE.ShaderMaterial;
   private readonly bakeScene = new THREE.Scene();
   private readonly bakeCamera = new THREE.Camera();
@@ -171,27 +220,79 @@ export class Flybys {
     this.planet.onBeforeRender = follow;
     this.planet.visible = false;
     this.far.add(this.planet);
+    // Its atmosphere's glow past the limb, and (for a gas giant) a ring; both ride on the planet.
+    this.haloMat = new THREE.ShaderMaterial({
+      vertexShader: PLANET_VERT,
+      fragmentShader: HALO_FRAG,
+      fog: false,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.BackSide,
+      uniforms: { uAtmo: this.planetMat.uniforms.uAtmo, uSun: this.planetMat.uniforms.uSun, uGain: this.planetMat.uniforms.uGain },
+    });
+    this.halo = new THREE.Mesh(new THREE.SphereGeometry(1.06, 48, 24), this.haloMat);
+    this.planet.add(this.halo);
+    this.ringMat = new THREE.ShaderMaterial({
+      vertexShader: RING_VERT,
+      fragmentShader: RING_FRAG,
+      fog: false,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      uniforms: { uA: { value: new THREE.Color(SPACE_COLORS.planetB) }, uB: { value: new THREE.Color(SPACE_COLORS.planetA) }, uGain: this.planetMat.uniforms.uGain },
+    });
+    this.ring = new THREE.Mesh(new THREE.RingGeometry(1.35, 2.3, 128, 1), this.ringMat);
+    this.ring.rotation.set(-Math.PI / 2 + 0.38, 0.2, 0);
+    this.planet.add(this.ring);
 
     // The comet: a head and a 300-point tail streaming away from the galaxy's core.
     this.cometHead = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture(), color: SPACE_COLORS.comet, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, toneMapped: false }));
-    this.cometHead.scale.setScalar(2.4);
+    this.cometHead.scale.setScalar(5);
     this.cometHead.onBeforeRender = follow;
-    const tail = new Float32Array(300 * 3);
-    const tailMag = new Float32Array(300);
+    // The dust tail, 32 m long at 92 m off: about 20 degrees of sky.
+    const TAIL = { n: 700, len: 32 } as const;
+    const tail = new Float32Array(TAIL.n * 3);
+    const tailMag = new Float32Array(TAIL.n);
     const deal = seeded(0xc0e7);
-    for (let i = 0; i < 300; i++) {
-      const k = Math.pow(deal(), 1.6);
-      const spread = 0.08 + k * 1.6;
-      tail[i * 3] = k * 18;
-      tail[i * 3 + 1] = (deal() - 0.5) * spread + k * k * 3;
+    for (let i = 0; i < TAIL.n; i++) {
+      const k = Math.pow(deal(), 1.4);
+      const spread = 0.12 + k * 2.6;
+      tail[i * 3] = k * TAIL.len;
+      tail[i * 3 + 1] = (deal() - 0.5) * spread + k * k * 4;
       tail[i * 3 + 2] = (deal() - 0.5) * spread;
       tailMag[i] = (1 - k) * (0.5 + 0.5 * deal());
     }
     const tgeo = new THREE.BufferGeometry();
     tgeo.setAttribute('position', new THREE.BufferAttribute(tail, 3));
-    tgeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(300 * 3).map((_, i) => tailMag[Math.floor(i / 3)] * 0.55), 3));
-    this.cometTail = new THREE.Points(tgeo, new THREE.PointsMaterial({ size: 2.2, sizeAttenuation: false, vertexColors: true, color: SPACE_COLORS.comet, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, toneMapped: false }));
+    tgeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(TAIL.n * 3).map((_, i) => tailMag[Math.floor(i / 3)] * 0.9), 3));
+    this.cometTail = new THREE.Points(tgeo, new THREE.PointsMaterial({ size: 3, sizeAttenuation: false, vertexColors: true, color: SPACE_COLORS.comet, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, toneMapped: false }));
     this.cometTail.onBeforeRender = follow;
+    // The ion tail: a straight, soft streak of light along the dust.
+    const ion = document.createElement('canvas');
+    ion.width = 128;
+    ion.height = 16;
+    const ig = ion.getContext('2d')!;
+    const along = ig.createLinearGradient(0, 0, 128, 0);
+    along.addColorStop(0, 'rgba(255,255,255,0.9)');
+    along.addColorStop(0.3, 'rgba(255,255,255,0.35)');
+    along.addColorStop(1, 'rgba(255,255,255,0)');
+    ig.fillStyle = along;
+    ig.fillRect(0, 0, 128, 16);
+    ig.globalCompositeOperation = 'destination-in';
+    const across = ig.createLinearGradient(0, 0, 0, 16);
+    across.addColorStop(0, 'rgba(255,255,255,0)');
+    across.addColorStop(0.5, 'rgba(255,255,255,1)');
+    across.addColorStop(1, 'rgba(255,255,255,0)');
+    ig.fillStyle = across;
+    ig.fillRect(0, 0, 128, 16);
+    this.cometIon = new THREE.Mesh(
+      new THREE.PlaneGeometry(TAIL.len * 1.1, 2.2).translate((TAIL.len * 1.1) / 2, 0.4, 0),
+      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(ion), color: SPACE_COLORS.comet, transparent: true, opacity: 0.7, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, toneMapped: false, side: THREE.DoubleSide }),
+    );
+    this.cometIon.onBeforeRender = follow;
+    this.cometTail.add(this.cometIon);
     this.comet.add(this.cometHead, this.cometTail);
     this.comet.visible = false;
     this.far.add(this.comet);
@@ -228,6 +329,8 @@ export class Flybys {
     if (kind === 'planet') {
       const u = this.bakeMat.uniforms;
       u.uBands.value = r[2] < 0.55 ? 1 : 0;
+      // A gas giant wears a ring; a rocky world doesn't.
+      this.ring.visible = u.uBands.value > 0.5;
       u.uSeed.value.set(r[3] * 50, r[4] * 50, r[5] * 50);
       const was = this.renderer.getRenderTarget();
       this.renderer.setRenderTarget(this.surface);
@@ -256,6 +359,7 @@ export class Flybys {
     this.planetMat.uniforms.uGain.value = k;
     (this.cometHead.material as THREE.SpriteMaterial).opacity = k;
     (this.cometTail.material as THREE.PointsMaterial).opacity = k;
+    this.cometIon.material.opacity = 0.7 * k;
     this.rockMat.color.set(SPACE_COLORS.rock).multiplyScalar(0.4 + 0.6 * k);
   }
 
@@ -285,7 +389,8 @@ export class Flybys {
     } else if (p.kind === 'comet') {
       // High across the top of the forward glass, from one side to the other.
       const az = THREE.MathUtils.degToRad(p.side * (-55 + 110 * k));
-      const elev = THREE.MathUtils.degToRad(30 + p.r[7] * 8);
+      // Low enough to cross the forward glass and the canopy's lower ring, clear of the halo overhead.
+      const elev = THREE.MathUtils.degToRad(18 + p.r[7] * 8);
       this.cometHead.position.set(Math.sin(az) * Math.cos(elev) * FAR_AT, Math.sin(elev) * FAR_AT, -Math.cos(az) * Math.cos(elev) * FAR_AT);
       this.cometTail.position.copy(this.cometHead.position);
       // The tail points away from the core (behind and above the way it goes).

@@ -326,7 +326,7 @@ async function main() {
     const FLYBYS = {
       'space-planet': ['planet', 0.5, -1, [6, 2.2, 1], [-16, 4.6, 2]],
       'space-asteroids': ['asteroids', 0.5, -1, [2, 2.05, 9], [-16, 3.2, -4]],
-      'space-comet': ['comet', 0.5, 1, [0, 2.05, 11.4], [0, 9.5, -12]],
+      'space-comet': ['comet', 0.32, 1, [0, 2.05, 11.4], [-6, 7.2, -12]],
     };
     for (const [name, [kind, at, side, from, to]] of Object.entries(FLYBYS)) {
       if (!want(name)) continue;

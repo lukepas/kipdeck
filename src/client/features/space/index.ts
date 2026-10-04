@@ -24,6 +24,7 @@ import { FOV } from '../../core/scene';
 import { DUCK_MS, FIRST_FLYBY_MS, FLYBY_GAP_MS, JUMP_FOV, JUMP_MS, JUMP_STRETCH, MERGE_WINDOW_MS, SPACE_COLORS, SURGE, SURGE_GAP_MS, SURGE_MS, between, cruiseSpeed, flashPeak, jumpAt, jumpsNow, motionScale, pickFlyby, seeded, surgeAt, surgeGlint, surgesNow, type FlybyKind } from './logic';
 import { Sky } from './sky';
 import { Starfield } from './stars';
+import { Meteors } from './meteors';
 
 /** The fog in Walk: none inside the bridge, only what's far outside fades into space before the far plane. */
 const FOG = { near: 70, far: 118 } as const;
@@ -63,6 +64,8 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   VIEWPORT_GLASS.emissiveIntensity = 0;
 
   const rand = seeded(0xf1b5);
+  const meteors = new Meteors(seeded(0x3e7e));
+  scene.add(meteors.group);
   /** Space's own clock (ms): it only runs while frames do, so a hidden tab pauses everything. */
   let clock = 0;
   let cruise = cruiseSpeed(0, false);
@@ -196,6 +199,7 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
         jump.swapped = true;
         sky.show(1);
         flybys.clear();
+        meteors.clear();
       }
       if (clock - jump.at >= JUMP_MS) jump = null;
     }
@@ -221,6 +225,10 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
     VIEWPORT_GLASS.emissiveIntensity = 0.3 * glint;
     const breath = k === 0 ? 1 : 1 + BREATH.depth * Math.sin((clock / BREATH.ms) * Math.PI * 2);
     ctx.office.drive.set((cruise / 0.4) * 0.6 * breath * Math.sqrt(mul));
+
+    // A meteor now and then, at Full only, never while a flourish plays or a unit has just started needing you.
+    if (k === 1) meteors.step(ms, clock >= duckUntil && !jump && sinceSurge >= SURGE_MS);
+    else meteors.clear();
 
     // The flybys: one at a time, in Full only, never while a flourish plays or a unit has just started needing you.
     duck += ((clock < duckUntil ? 0.4 : 1) - duck) * Math.min(1, dt * 3);
