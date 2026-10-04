@@ -19,6 +19,5 @@ export function installBounties(ctx: Ctx) {
     const floor = store.floors.find((f) => f.id === m.floor)?.name;
     const decimals = store.bounties[m.floor]?.items.find((b) => b.issue === m.issue)?.decimals ?? 6;
     toast(`Paid ${tokenAmount(m.amount, decimals)} ${m.symbol} to ${m.workerName ?? 'the office'} for PR #${m.pr}${floor ? ` on ${floor}` : ''}${m.url ? `: ${m.url}` : ''}`);
-    ctx.sound.ding('done');
   });
 }

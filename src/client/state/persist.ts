@@ -36,7 +36,7 @@ export function saveProfile(p: Omit<Profile, 'look'> & { look?: Look }) {
 
 export type ViewMode = 'first' | 'third';
 
-/** The panels you can show or hide on screen, from the ☰ menu. */
+/** The panels you can show or hide on screen, from the menu. */
 export type HudPanel = 'mission' | 'workers' | 'people' | 'spend' | 'limits' | 'chat' | 'floor';
 /** Out of the way by default: the mission, the workers and the chat show until you turn the rest on. */
 export const HUD_DEFAULTS: Record<HudPanel, boolean> = { mission: true, workers: true, people: false, spend: false, limits: false, chat: true, floor: false };
@@ -51,8 +51,9 @@ export type NeedsYouSound = (typeof NEEDS_YOU_SOUNDS)[number];
 
 export interface Settings {
   view: ViewMode;
-  /** Office sounds, 0–1. */
+  /** The sound cues' level, 0-1 (sound/alerts.ts). */
   volume: number;
+  /** Sound cues off: the default, until you turn them on in Settings. */
   muted: boolean;
   /** Voice chat starts muted and V is held down to talk, instead of an open mic. */
   pushToTalk: boolean;
@@ -62,7 +63,7 @@ export interface Settings {
   needsYouSound: NeedsYouSound;
   /** Which panels show on screen. */
   hud: Record<HudPanel, boolean>;
-  /** The ☰ menu's actions you pinned to the top bar, by id. */
+  /** The menu's actions you pinned to the top bar, by id. */
   pins: string[];
   /** The Mission control tab you had open last. */
   missionTab: MissionTab;
@@ -152,7 +153,7 @@ export function rememberSpot(s: Spot) {
 }
 
 export function loadSettings(): Settings {
-  const s: Settings = { view: 'first', volume: 0.7, muted: false, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false };
+  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null');
     if (saved?.view === 'first' || saved?.view === 'third') s.view = saved.view;

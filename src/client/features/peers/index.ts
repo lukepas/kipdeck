@@ -24,13 +24,11 @@ export interface RemotePeer {
   label: string;
   look: PeerInfo['look'];
   bubble?: { sprite: THREE.Sprite; until: number };
-  /** Seconds walked since their last footstep. */
-  stepT: number;
 }
 
 /** Registers what follows the people in the office (store 'peers'), their ticks, and chat and peer.act. */
 export function installPeers(ctx: Ctx, parts: Pick<Parts, 'walking' | 'talk' | 'hud'>) {
-  const { scene, voice, sound, player } = ctx;
+  const { scene, voice, player } = ctx;
   const remotes = new Map<string, RemotePeer>();
   const editProfile = () => parts.hud.editProfile();
   const walkTo = (id: string) => parts.walking.walkTo(id);
@@ -44,7 +42,7 @@ export function installPeers(ctx: Ctx, parts: Pick<Parts, 'walking' | 'talk' | '
         const person = new Person(peer.name, peer.color, peer.look);
         person.root.position.set(peer.x, peer.y, peer.z);
         scene.add(person.root);
-        r = { person, target: new THREE.Vector3(peer.x, peer.y, peer.z), rotY: peer.rotY, moving: false, label: '', look: { ...peer.look }, stepT: 0 };
+        r = { person, target: new THREE.Vector3(peer.x, peer.y, peer.z), rotY: peer.rotY, moving: false, label: '', look: { ...peer.look } };
         remotes.set(id, r);
       }
       const label = `${peer.name}|${peer.voice ? (peer.muted ? 'm' : 'v') : '-'}|${peer.color}`;
@@ -91,12 +89,6 @@ export function installPeers(ctx: Ctx, parts: Pick<Parts, 'walking' | 'talk' | '
       const airborne = !sat && p.y > ground + 0.05;
       const walking = !sat && p.moving && !airborne;
       r.person.update(dt, t, walking, airborne && Math.abs(pos.y - r.target.y) > 0.01);
-      // Their walk cycle takes a step every π/11 seconds.
-      r.stepT = walking ? r.stepT + dt : 0.2;
-      if (r.stepT >= Math.PI / 11) {
-        r.stepT -= Math.PI / 11;
-        sound.stepAt(pos.x, pos.z);
-      }
       r.person.setVoiceLevel(p.voice && !p.muted ? voice.levelOf(id) : 0);
       if (r.bubble && now > r.bubble.until) {
         r.person.root.remove(r.bubble.sprite);

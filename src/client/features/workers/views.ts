@@ -112,7 +112,7 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
         if (waitingOnSomeone(w) && v.status !== '' && w.status !== v.status) {
           // Snoozed in the ranking: "not now", so no ding or notification for it either.
           const snoozed = !unsnoozed([w], store.ranked(store.floor)).length;
-          if (w.status === 'done' && !snoozed) sound.ding('done');
+          if (w.status === 'done' && !snoozed) sound.cue('review');
           if (!snoozed) parts.notifier.alert(w);
         }
         v.status = w.status;
@@ -126,9 +126,6 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
       const bounty = workerBounty(w.id);
       const card = meetingCard(w) ?? w.task;
       v.model.setTask(bounty ? { name: card ? `${bounty}  ${card.name}` : bounty, summary: card?.summary ?? 'Its PR claims a bounty' } : card);
-      const deskDef = OFFICE_PLAN.byId.get(w.deskId);
-      // Keys clack while it types, not while it reads, watches its tests or browses.
-      if (deskDef) sound.setTyping(w.id, deskDef.x, deskDef.z, w.status === 'working' && (!w.action || w.action === 'edit'));
       const again = w.kind === 'shell' ? 'restart' : 'resume';
       v.laptop.setPlaceholder(w.lost ? `Worktree deleted. Press E to fix it` : w.status === 'offline' ? `Offline. Press R to ${again}` : w.status === 'exited' ? `${w.name} exited` : 'booting...');
     }
@@ -145,7 +142,6 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
         v.model.dispose();
         v.laptop.dispose();
       }
-      sound.removeTypist(id);
       workerViews.delete(id);
     }
     arrangeSeats();
@@ -261,7 +257,6 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     office.signs.set(fp.labels, (d) => deskBuilt(d, level));
     player.wing = level;
     arrangeSeats();
-    if (was.floor === store.floor && level > was.wing) sound.step('land');
   }
   store.on('floorPlan', syncPlan);
   ctx.interactions.define('expand', {

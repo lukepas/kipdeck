@@ -1,6 +1,6 @@
 import './settings.css';
 import type { Net } from '../net';
-import type { OfficeSound } from '../sound';
+import type { DeckSound } from '../sound';
 import { store, type NeedsYouSound, type Settings, type ViewMode } from '../state';
 import { askNotifyPermission, notifyPermission, type DesktopNotifier } from '../notify';
 import type { WebhookKind } from '../../shared/protocol';
@@ -48,7 +48,7 @@ const setting = (title: string, scope: Scope | null, ...body: Node[]) =>
 let lastPane: SettingsPane = 'you';
 
 /** `first` opens on that category instead of the last one. */
-export function openSettings(net: Net, settings: Settings, onChange: (s: Settings) => void, onCharacter: () => void, sound: Pick<OfficeSound, 'ding' | 'needsYou'>, notifier: DesktopNotifier, onSignOut: () => void, first?: SettingsPane) {
+export function openSettings(net: Net, settings: Settings, onChange: (s: Settings) => void, onCharacter: () => void, sound: Pick<DeckSound, 'cue'>, notifier: DesktopNotifier, onSignOut: () => void, first?: SettingsPane) {
   const seg = h('div.seg', { role: 'radiogroup', 'aria-label': 'Camera view' });
   const note = h('p.setting-note');
   const paint = () => {
@@ -86,10 +86,10 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       const v = Math.round(settings[level] * 100);
       slider.value = String(v);
       slider.style.setProperty('--fill', `${v}%`);
-      pct.textContent = settings[muted] ? 'Muted' : `${v}%`;
-      mute.textContent = settings[muted] ? 'Unmute' : 'Mute';
+      pct.textContent = settings[muted] ? 'Off' : `${v}%`;
+      mute.textContent = settings[muted] ? 'Turn on' : 'Turn off';
       mute.setAttribute('aria-pressed', String(settings[muted]));
-      mute.classList.toggle('danger', settings[muted]);
+      mute.classList.toggle('primary', settings[muted]);
       row.classList.toggle('muted', settings[muted]);
     };
     paint();
@@ -107,7 +107,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     });
     return row;
   };
-  const soundRow = volumeRow('Office sounds volume', 'volume', 'muted', () => sound.ding('done'));
+  const soundRow = volumeRow('Sound cues volume', 'volume', 'muted', () => sound.cue('review'));
 
   /** Changes some of your own settings, and has the office take them up. */
   const change = (some: Partial<Settings>) => {
@@ -115,11 +115,11 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     onChange(settings);
   };
   // Voice chat: an open mic, or muted until you hold V.
-  const talkRow = choiceRow('Voice chat', [[false, 'Open mic'], [true, '✋ Push to talk']], () => settings.pushToTalk, (pushToTalk) => change({ pushToTalk }));
+  const talkRow = choiceRow('Voice chat', [[false, 'Open mic'], [true, 'Push to talk']], () => settings.pushToTalk, (pushToTalk) => change({ pushToTalk }));
   // The alarm when a worker stops to ask you something; picking one plays it.
-  const alarmRow = choiceRow<NeedsYouSound>('When a worker needs you', [['once', 'Ring once'], ['remind', 'Keep reminding me'], ['off', 'Off']], () => settings.needsYouSound, (needsYouSound) => {
+  const alarmRow = choiceRow<NeedsYouSound>('When a unit needs you', [['once', 'Once'], ['remind', 'Keep reminding me'], ['off', 'Off']], () => settings.needsYouSound, (needsYouSound) => {
     change({ needsYouSound });
-    if (needsYouSound !== 'off') sound.needsYou();
+    if (needsYouSound !== 'off') sound.cue('needs-you');
   });
 
   // Desktop notifications: this browser's permission, then your own on/off.
@@ -242,7 +242,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     agentBack.textContent = `Back to ${store.project?.agentCmd.split(' ')[0].split(/[\\/]/).pop() ?? 'the --agent'}`;
     if (!agentTouched) agent.set(now);
     agentNote.textContent =
-      'Every worker starts on this: hired at a desk, handed an issue or a pull request from the boards, taken off the queue, the board agents and meetings. Where you start one, ✏️ Edit picks another just for it.' +
+      'Every worker starts on this: hired at a desk, handed an issue or a pull request from the boards, taken off the queue, the board agents and meetings. Where you start one, Edit picks another just for it.' +
       (picked ? ` Set by ${picked.by} ${timeAgo(picked.at)}.` : ' It’s the agent the office was started with, on its own default model.') +
       (admin ? '' : ' Admins can change it.');
   };
@@ -398,8 +398,8 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       ...(account ? [setting('Password', null, h('div.webhook', {}, pwCurrent, pwNew, pwSave), pwNote)] : []),
     ],
     sound: [
-      setting('Office sounds', 'you', soundRow, h('p.setting-note', {}, 'Workers typing, footsteps, the ding when a worker is done and the alarm when one needs you. Voice chat isn’t affected.')),
-      setting('When a worker needs you', 'you', alarmRow, h('p.setting-note', {}, 'An alarm the moment a worker on your floor stops to ask you something or wants a permission. Keep reminding me rings it again, softly, every 30 seconds until someone opens that worker’s terminal. A worker you snoozed in Mission control stays quiet. It’s as loud as the office sounds are.')),
+      setting('Sound cues', 'you', soundRow, h('p.setting-note', {}, 'Off until you turn them on. Four short cues, one per change worth hearing from another tab: a unit needs you (two rising notes), a unit is stuck (two low ticks), a unit is ready for review (one soft tone) and a merge is proven on chain (a low thunk and a tick). The deck makes no other sound, and voice chat has its own level.')),
+      setting('When a unit needs you', 'you', alarmRow, h('p.setting-note', {}, 'The needs-you cue the moment a unit on your deck stops to ask you something or wants a permission. Keep reminding me plays it again, softly, every 30 seconds until someone opens the terminal of that unit. A unit you snoozed in Mission control stays quiet. It plays only while sound cues are on.')),
       setting('Voice chat', 'you', talkRow, h('p.setting-note', {}, 'Either way, V joins voice, holding V talks and you’re muted once you let go, and M mutes or unmutes. With push to talk you join muted. Leave voice from the menu.')),
     ],
     notify: [

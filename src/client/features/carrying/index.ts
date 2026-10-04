@@ -1,5 +1,5 @@
 /**
- * Carrying an issue card: off the issues board (or its window's ✋) into your hands, and E with it at
+ * Carrying an issue card: off the issues board (or its window's Pick up card) into your hands, and E with it at
  * an empty desk, a worker, the queue or the meeting room hands it over; Q puts it back.
  * Which card you hold is the office's (ctx.carrying), since so much else looks at it.
  */
@@ -44,15 +44,14 @@ export function installCarrying(ctx: Ctx, deps: CarryingDeps) {
     ctx.hint.invalidate();
   }
 
-  /** ✋ in an issue's window, or E at its note on the board: its card comes off the board and into your hands. */
+  /** Pick up card in an issue's window, or E at its note on the board: its card comes off the board and into your hands. */
   function pickUp(it: GhIssue) {
     closeAllModals();
     const carrying = ctx.carrying();
     if (carrying?.issue === it.number) return;
     if (carrying) toast(`#${carrying.issue} went back on the board`);
     setCarrying({ issue: it.number, title: it.title });
-    ctx.sound.paper();
-    toast(`✋ You took #${it.number} off the board: take it to an empty desk, a worker or the queue and press E`);
+    toast(`You took #${it.number} off the board: take it to an empty desk, a worker or the queue and press E`);
   }
 
   /** Q, or E at the issues board: the card goes back where it came from. */
@@ -61,7 +60,6 @@ export function installCarrying(ctx: Ctx, deps: CarryingDeps) {
     if (!carrying) return;
     toast(`#${carrying.issue} is back on the board`);
     setCarrying(null);
-    ctx.sound.paper();
   }
   ctx.keys.bind({
     code: 'KeyQ',
@@ -118,7 +116,6 @@ export function installCarrying(ctx: Ctx, deps: CarryingDeps) {
   /** The card left your hands for a desk or the queue (the office says who took it). */
   function putDown() {
     setCarrying(null);
-    ctx.sound.paper();
   }
 
   function onQueue(issue: number): boolean {

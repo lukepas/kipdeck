@@ -56,7 +56,7 @@ export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'views' | 'waiting'
     if (fresh.take(store.ranked(store.floor)).length) {
       banner.flash();
       if (settings.needsYouSound !== 'off') {
-        sound.needsYou();
+        sound.cue('needs-you');
         reminders.rang(performance.now());
       }
     }
@@ -85,7 +85,7 @@ export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'views' | 'waiting'
   // How long it has waited ticks on, and the reminder comes round, whether or not a frame is drawn.
   setInterval(() => {
     if (asking().length) paintBanner();
-    if (reminders.due(askingHere(), performance.now()) && settings.needsYouSound === 'remind') sound.needsYou(true);
+    if (reminders.due(askingHere(), performance.now()) && settings.needsYouSound === 'remind') sound.cue('needs-you-again');
   }, 1000);
 
   const at = new THREE.Vector3();

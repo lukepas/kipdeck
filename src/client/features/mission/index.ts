@@ -72,9 +72,9 @@ export function installMission(ctx: Ctx, parts: MissionParts) {
     },
   });
 
-  // Stuck anywhere: a desktop notification while you're away; a ding when it's on your floor.
+  // Stuck anywhere: a desktop notification while you're away; the stuck cue when it's on your deck.
   watchStuck((e, reason) => {
-    if (e.floor === store.floor) sound.ding('needs_input');
+    if (e.floor === store.floor) sound.cue('stuck');
     parts.notifier.stuck(e, reason, () => runAction(deps, e, 'look'));
   });
 

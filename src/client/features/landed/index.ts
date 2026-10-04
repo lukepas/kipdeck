@@ -1,6 +1,7 @@
 /**
- * Work landing on your floor: a pull request merged, or the task queue finished. Each is a toast, a
- * ding, and a desktop notification while you're in another tab, so nobody misses the work landing.
+ * Work landing on your deck: a pull request merged, or the task queue finished. Each is a toast and
+ * a desktop notification while you're in another tab, so nobody misses the work landing. A merge also
+ * starts the merge beat (features/beats); the merged cue waits for the proof on chain.
  */
 import type { Ctx } from '../../core/context';
 import type { DesktopNotifier } from '../../notify';
@@ -18,7 +19,6 @@ export function installLanded(ctx: Ctx, deps: LandedDeps) {
     const text = landedText(msg.kind, msg.pr, msg.by, pull?.title);
     // The queue's own toast already says so (the office sends it with this).
     if (msg.kind === 'merged') toast(`${text.title}${text.body ? `: ${text.body}` : ''}`);
-    ctx.sound.ding('done');
-    deps.notifier.landed(`${store.currentFloor()?.name ?? 'Agent Office'}: ${text.title}`, text.body);
+    deps.notifier.landed(`${store.currentFloor()?.name ?? 'UGC Army'}: ${text.title}`, text.body);
   });
 }

@@ -1,49 +1,21 @@
 /**
- * Office sounds, synthesized with Web Audio so there are no audio files to ship: the room's air,
- * workers typing while they work, footsteps, the odd rustle or phone, and the dings when a worker needs you.
+ * The deck's sound: four short cues for changes of state (alerts.ts), synthesized with Web Audio so
+ * there are no audio files to ship, and off until you turn sound on in Settings. There is no room
+ * tone, typing or footsteps: motion and sound only mark a change of state (DESIGN.md).
  *
  * Everything goes through one master gain that Settings turns down or mutes. Voice chat doesn't.
- *
- * OfficeSound is all the rest of the office sees. What every sound shares (the context, the buses,
- * where your ears are, what runs every frame) is AudioCore in core.ts; each sound is a recipe in a
- * file of its own, beside this one (steps.ts, typing.ts and so on) or in its feature's folder
- * (alerts.ts and so on), and this class only hands them the core.
  */
-import { deskPhones, startRoomTone } from './ambience';
-import { ding } from './alerts';
-import { needsYou } from '../features/needsyou/sound';
-import { AudioCore, type Listener } from './core';
-import { paper, step, stepAt } from './steps';
-import { fidgeting, Typing } from './typing';
+import { playCue, type Cue } from './alerts';
+import { AudioCore } from './core';
 
-export class OfficeSound {
-  private readonly a: AudioCore = new AudioCore({ start: (ctx) => this.start(ctx) });
-  private readonly typing = new Typing(this.a);
-  private readonly phones = deskPhones(this.a);
-  private readonly fidgets = fidgeting(this.typing);
-  /** How many of each sound have played, for quick checks from the console. */
+export type { Cue } from './alerts';
+
+export class DeckSound {
+  private readonly a = new AudioCore();
+  /** How many of each cue have played, for quick checks from the console. */
   readonly played: Record<string, number> = this.a.played;
 
-  constructor() {
-    // What the room does every frame, in this order (it's the order the random numbers are drawn in).
-    this.a.every((now) => this.typing.scheduleTyping(now));
-    this.a.every((now) => this.phones.tick(now));
-    this.a.every((now) => this.fidgets.tick(now));
-  }
-
-  /** Audio has just started (see AudioCore.unlock): the room starts up. */
-  private start(ctx: AudioContext) {
-    this.a.applyVolume();
-    this.a.applyVisibility();
-    startRoomTone(this.a);
-    const now = ctx.currentTime;
-    this.phones.start(now);
-    this.fidgets.start(now);
-  }
-
-  // ---- The room and you ---------------------------------------------------------------------------
-
-  /** Volume is 0–1; muted silences everything without losing the level. */
+  /** Volume is 0-1; muted silences everything without losing the level. */
   setVolume(volume: number, muted: boolean) {
     this.a.setVolume(volume, muted);
   }
@@ -57,42 +29,8 @@ export class OfficeSound {
     return this.a.state;
   }
 
-  /** Moves your ears and schedules whatever the room does next. */
-  update(l: Listener) {
-    this.a.update(l);
-  }
-
-  // ---- Workers, footsteps and paper (typing.ts, steps.ts) ---------------------------------------
-
-  /** The worker at desk (x, z) types while `on`. */
-  setTyping(id: string, x: number, z: number, on: boolean) {
-    this.typing.setTyping(id, x, z, on);
-  }
-
-  removeTypist(id: string) {
-    this.typing.removeTypist(id);
-  }
-
-  step(kind: 'walk' | 'land' = 'walk') {
-    step(this.a, kind);
-  }
-
-  paper() {
-    paper(this.a);
-  }
-
-  stepAt(x: number, z: number, y = 0) {
-    stepAt(this.a, x, z, y);
-  }
-
-  // ---- The dings --------------------------------------
-
-  ding(kind: 'done' | 'needs_input') {
-    ding(this.a, kind);
-  }
-
-  /** The alarm for a worker that needs you, or (`again`) the soft reminder while it still does. */
-  needsYou(again = false) {
-    needsYou(this.a, again);
+  /** Plays one of the four cues (see alerts.ts). */
+  cue(cue: Cue) {
+    playCue(this.a, cue);
   }
 }

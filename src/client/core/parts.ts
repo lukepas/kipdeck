@@ -8,7 +8,7 @@
 import type { Net } from '../net';
 import type { DesktopNotifier } from '../notify';
 import type { PlayerController } from '../player';
-import type { OfficeSound } from '../sound';
+import type { DeckSound } from '../sound';
 import type { Settings } from '../state';
 import type { Voice } from '../voice';
 import type { Person } from '../world/character';
@@ -54,7 +54,7 @@ export interface Parts {
   player: PlayerController;
   /** The system asks for less motion: no shaking the view, no swaying. */
   reduceMotion: MediaQueryList;
-  sound: OfficeSound;
+  sound: DeckSound;
   notifier: DesktopNotifier;
 
   // ---- The office's own parts ----------------------------------------------------------------------

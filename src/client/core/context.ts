@@ -8,7 +8,7 @@ import type { CarriedIssue, GhIssue, ServerMsg } from '../../shared/protocol';
 import type { DeskKey } from '../interaction';
 import type { Net } from '../net';
 import type { PlayerController } from '../player';
-import type { OfficeSound } from '../sound';
+import type { DeckSound } from '../sound';
 import type { Settings } from '../state';
 import type { Hud } from '../ui/menu';
 import type { Voice } from '../voice';
@@ -65,7 +65,7 @@ export interface Ctx {
   readonly me: Person;
   readonly net: Net;
   readonly voice: Voice;
-  readonly sound: OfficeSound;
+  readonly sound: DeckSound;
   readonly settings: Settings;
   /** The system asks for less motion: no shaking the view, no swaying. */
   readonly reduceMotion: MediaQueryList;

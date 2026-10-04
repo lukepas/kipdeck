@@ -1,7 +1,7 @@
 /**
  * You: your character as everyone else sees it, what you hear, and reaching out to use something.
  */
-import { OfficeSound } from '../sound';
+import { DeckSound } from '../sound';
 import { store, type Profile, type Settings } from '../state';
 import { Person } from '../world/character';
 import type { Ctx } from './context';
@@ -15,8 +15,8 @@ export function makeMe(ctx: Ctx): Person {
 }
 
 /** What you hear, as loud as your settings have it. */
-export function makeSound(settings: Settings): OfficeSound {
-  const sound = new OfficeSound();
+export function makeSound(settings: Settings): DeckSound {
+  const sound = new DeckSound();
   sound.setVolume(settings.volume, settings.muted);
   return sound;
 }
