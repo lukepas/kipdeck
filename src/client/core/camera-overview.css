@@ -1,0 +1,26 @@
+/* The Overview (core/camera-overview.ts): the walk-mode helpers step aside, and a legend of its keys sits over the canvas. */
+body.overview #hint,
+body.overview #crosshair,
+body.overview #compass { display: none !important; }
+.overview-legend {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--hud-fill);
+  box-shadow: var(--hud-shadow);
+  color: var(--muted);
+  font: 500 12px var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  z-index: 5;
+}
+.overview-legend.hidden { display: none; }
+.overview-legend b { color: var(--text); font: 600 11px var(--font-display); font-stretch: var(--stretch-display); letter-spacing: 0.08em; }
+.overview-legend kbd { display: inline-block; min-width: 18px; padding: 0 4px; margin-right: 2px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); color: var(--text); font: inherit; text-align: center; }

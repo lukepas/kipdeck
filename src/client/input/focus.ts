@@ -10,7 +10,7 @@ import { isTyping } from '../player';
 import { $, doingNow, modalOpen, onDoingChange, onModalChange, readingNow } from '../ui/dom';
 
 /** Listens for windows opening and closing, what they say you're doing, the mouse and keys (captured) and pointer lock. */
-export function installFocus(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'walking'>) {
+export function installFocus(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'walking' | 'overview'>) {
   const { player, canvas, net } = ctx;
   /** A mouse you point with (not a finger on a touch screen). */
   const finePointer = window.matchMedia('(pointer: fine)').matches;
@@ -74,6 +74,11 @@ export function installFocus(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'walk
   /** Once the last window is closed, the game has the keyboard again and, in first person, the mouse. */
   function backToGame() {
     if (modalOpen()) return;
+    // Up in the Overview, closing a window goes back to it: there's no mouse-look to take back.
+    if (parts.overview.active()) {
+      if (!isTyping()) canvas.focus({ preventScroll: true });
+      return;
+    }
     if (!isTyping()) canvas.focus({ preventScroll: true });
     if (!player.canLock || player.hasMouse) return;
     // The browser lets a page re-capture the mouse it let go of itself (see yieldMouse), even on Esc

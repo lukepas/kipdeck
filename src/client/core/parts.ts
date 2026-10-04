@@ -30,6 +30,7 @@ import type { installWorkerViews } from '../features/workers/views';
 import type { installFocus } from '../input/focus';
 import type { installPointer } from '../input/pointer';
 import type { installArrival } from './arrival';
+import type { installOverview } from './camera-overview';
 import type { installHintBar } from './hintbar';
 import type { installFloorWatch } from './floorwatch';
 import type { installPlace } from './place';
@@ -65,6 +66,8 @@ export interface Parts {
   hintbar: Made<typeof installHintBar>;
   focus: Made<typeof installFocus>;
   pointer: Made<typeof installPointer>;
+  /** The Overview camera over the whole deck (see core/camera-overview.ts). */
+  overview: Made<typeof installOverview>;
 
   // ---- Features ------------------------------------------------------------------------------------
   boards: Made<typeof installBoards>;
