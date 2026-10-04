@@ -24,6 +24,10 @@ import { conn } from '../../features/bridge/conn';
 import { holo } from '../../features/bridge/holo';
 import { displays } from '../../features/bridge/displays';
 import { stations } from '../../features/bridge/stations';
+import { panels } from '../../features/life/panels';
+import { pulses } from '../../features/life/pulses';
+import { heading } from '../../features/life/heading';
+import { ticker } from '../../features/life/ticker';
 
 // The deck, put together from its fixtures (see fixture.ts): the slab and its walls, the paint on its
 // floor, the bridge's hull round it, the mission table and the pods of consoles facing it, the
@@ -44,8 +48,12 @@ function floorPlan() {
     inlay,
     missionTable,
     holo,
+    heading,
     desks,
     stations,
+    // The stations' screens and the data pulses from them to the holo table (features/life).
+    panels,
+    pulses,
     podPlates,
     beanbags,
     kiosks,
@@ -55,6 +63,7 @@ function floorPlan() {
     boards,
     tv,
     displays,
+    ticker,
     machineMonitor,
     proofCorner,
     lounge,

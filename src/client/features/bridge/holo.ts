@@ -16,6 +16,8 @@ export interface Holo {
   setCourse(course: Course): void;
   /** Turns the plot slowly round the table (0.5 turns a minute); the bridge's tick calls it unless motion is reduced. */
   turn(dt: number): void;
+  /** Runs the dashes along the course toward the ship, `dt` seconds at `k` times their pace (features/life). */
+  flow(dt: number, k: number): void;
 }
 
 declare module '../../world/types' {
@@ -99,6 +101,15 @@ export const holo: Fixture<'holo'> = (site) => {
   (chevron.material as THREE.MeshBasicMaterial).side = THREE.DoubleSide;
   plot.add(chevron);
 
+  // Dashes of light running along the course from the start to the ship: the course being made good.
+  const DASHES = 9;
+  const dashes = new THREE.InstancedMesh(new THREE.SphereGeometry(0.022, 6, 4), light(0.5, '#DDEFF5'), DASHES);
+  dashes.frustumCulled = false;
+  plot.add(dashes);
+  let shipAt = 0.04;
+  let flowT = 0;
+  const dash = new THREE.Object3D();
+
   const at = new THREE.Vector3();
   const ahead = new THREE.Vector3();
   const setCourse = (course: Course) => {
@@ -122,6 +133,7 @@ export const holo: Fixture<'holo'> = (site) => {
     // Between the last waypoint passed and the next (at the start with none passed, or no course).
     const done = ms.filter((m) => m.done).length;
     const t = n ? Math.min(0.98, (done + 0.5) / (n + 0.4)) : 0.04;
+    shipAt = t;
     curve.getPointAt(t, at);
     curve.getPointAt(Math.min(1, t + 0.02), ahead);
     chevron.position.copy(at).setY(at.y + 0.03);
@@ -137,5 +149,20 @@ export const holo: Fixture<'holo'> = (site) => {
   const turn = (dt: number) => {
     plot.rotation.y += TURN * dt;
   };
-  return { handle: { holo: { setCourse, turn } } };
+  const flow = (dt: number, k: number) => {
+    // One lap of the course to the ship every 5 s; each dash a ninth behind the one before.
+    flowT = (flowT + (dt * k) / 5) % 1;
+    for (let i = 0; i < DASHES; i++) {
+      const u = (flowT + i / DASHES) % 1;
+      curve.getPointAt(u * shipAt, at);
+      dash.position.copy(at);
+      // Small as they leave the start, full size on their way, shrinking into the ship.
+      dash.scale.setScalar(Math.sin(u * Math.PI) * 0.8 + 0.2);
+      dash.updateMatrix();
+      dashes.setMatrixAt(i, dash.matrix);
+    }
+    dashes.instanceMatrix.needsUpdate = true;
+  };
+  flow(0, 0);
+  return { handle: { holo: { setCourse, turn, flow } } };
 };

@@ -47,6 +47,14 @@ const tmp = new THREE.Vector3();
 export type CalloutMode = 'full' | 'compact' | 'hidden';
 const VISOR_DARK = new THREE.Color('#0E151C');
 const VISOR_LIT = new THREE.Color('#7F95A9');
+/** A working unit's band and the glow under it lean this far toward ship-cyan as it gets busy (features/life). */
+const BUSY_TINT = { band: 0.65, under: 0.85 } as const;
+const STEEL = new THREE.Color(DECK.working);
+const SHIP = new THREE.Color(DECK.ship);
+/** Its hands at the console while it's busy: how far they reach forward (radians), how much they work, how fast (Hz). */
+const TYPING = { reach: 0.55, tap: 0.07, hz: 5.5 } as const;
+/** At work, a slow turn of the head and shoulders now and then (radians, about 0.4 degrees; seconds a sway). */
+const SWAY = { yaw: 0.007, period: [6, 9] } as const;
 
 /**
  * A unit: one agent at its console. A faceless figure on a hover base (unit-body.ts), its state shown
@@ -107,6 +115,11 @@ export class Worker {
   private hatchT = 0;
   /** 1 the moment its terminal prints, falling away: the visor's flicker. */
   private flick = 0;
+  /** How busy its station is (0-1, see setBusy), and how far its hands are at the console now. */
+  private busy = 0;
+  private hands = 0;
+  /** Its own phase and period for the slow sway, so no two units move in step. */
+  private seed = Math.random();
   private target: Spot | null = null;
   private facing: number | null = null;
   private leaving: string | null = null;
@@ -196,6 +209,11 @@ export class Worker {
     this.flick = 1;
   }
 
+  /** How busy its station is (0-1, features/life): a working unit's hands work the console and its band leans toward ship-cyan. */
+  setBusy(k: number) {
+    this.busy = Math.max(0, Math.min(1, k));
+  }
+
   /** Glides to `spot` (in its seat's space), or back to its seat (null). */
   goTo(spot: Spot | null) {
     this.target = spot;
@@ -270,6 +288,11 @@ export class Worker {
   say(text: string) {
     this.said = text;
     this.paint();
+  }
+
+  /** What it shows now (its band, ring and glyph): its level, or merged or stuck while those hold; parked once it's standing down. */
+  get showing(): GlyphKind {
+    return this.leaving !== null ? 'parked' : this.kind();
   }
 
   /** It needs you, or it's stuck: its callout says so from further off. */
@@ -407,16 +430,19 @@ export class Worker {
     const asleep = isAsleep(this.status) && kind === 'parked';
     let k = 1;
     if (kind === 'stuck') k = calm ? 0.4 : Math.sin(t * Math.PI) > 0 ? 1 : 0.22;
-    else if (kind === 'working') k = calm ? 0.6 : 0.5 + 0.18 * Math.sin(t * 1.4);
+    else if (kind === 'working') k = calm ? 0.7 : 0.62 + 0.14 * Math.sin(t * 1.4);
     else if (kind === 'parked') k = 0;
     if (gone) k = 0;
+    const working = kind === 'working' && !gone;
     if (k <= 0) band.color.set('#232B34');
+    else if (working) band.color.copy(STEEL).lerp(SHIP, BUSY_TINT.band * this.busy).multiplyScalar(k);
     else band.color.set(GLYPH_HUE[kind]).multiplyScalar(k);
     // The visor: dark, lit for a moment each time its terminal prints.
     const lit = gone || asleep ? 0 : 0.12 + this.flick * 0.55 * (0.7 + 0.3 * Math.sin(t * 40));
     visor.color.set(VISOR_DARK).lerp(VISOR_LIT, lit);
     under.opacity = gone ? Math.max(0, 0.55 - this.leaveT) : asleep ? 0.12 : 0.5;
-    under.color.set(kind === 'needs-you' || kind === 'stuck' ? GLYPH_HUE[kind] : DECK.working);
+    if (kind === 'needs-you' || kind === 'stuck') under.color.set(GLYPH_HUE[kind]);
+    else under.color.copy(STEEL).lerp(SHIP, working ? BUSY_TINT.under * Math.max(0.35, this.busy) : 0);
   }
 
   private paintRing(kind: GlyphKind, t: number, calm: boolean) {
@@ -448,6 +474,16 @@ export class Worker {
     const droop = kind === 'stuck' ? 0.04 : 0.12;
     this.body.armL.rotation.z += (-droop - this.body.armL.rotation.z) * Math.min(1, dt * 6);
     this.body.armR.rotation.z += (droop - this.body.armR.rotation.z) * Math.min(1, dt * 6);
+    // At work and busy: its hands go to the console and work it, left and right out of step; a slow
+    // sway of the shoulders now and then. Nothing of it under reduced motion, or in any other state.
+    const atWork = kind === 'working' && this.leaving === null && !this.walking && !Worker.calm;
+    this.hands += ((atWork ? this.busy : 0) - this.hands) * Math.min(1, dt * 3);
+    const now = performance.now() / 1000;
+    const tap = (phase: number) => TYPING.tap * this.hands * Math.max(0, Math.sin((now + this.seed * 3) * TYPING.hz * Math.PI * 2 + phase));
+    this.body.armL.rotation.x = -TYPING.reach * this.hands - tap(0);
+    this.body.armR.rotation.x = -TYPING.reach * this.hands - tap(Math.PI * 0.8);
+    const period = SWAY.period[0] + (SWAY.period[1] - SWAY.period[0]) * this.seed;
+    f.rotation.y = atWork ? SWAY.yaw * Math.sin(((now + this.seed * 20) / period) * Math.PI * 2) : 0;
     const e = this.spawnT * this.spawnT * (3 - 2 * this.spawnT);
     f.scale.set(1, Math.max(0.02, e), 1);
     if (this.leaving !== null) {
