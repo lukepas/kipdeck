@@ -25,7 +25,7 @@ import { DECK, VIEWPORT_GLASS } from '../../world/office/materials';
 import { debugHandle } from '../giveway';
 import { HailStrip } from './hail';
 import { BRIDGE_AT, DRIVES, NAME_AT, NameAtlas, beaconTexture, hullGeometry, hullMaterial, nameMaterial, plumeTexture } from './hulls';
-import { DROP_FROM, HAIL_MS, HULL, HULL_CLASSES, MAX_SHIPS, SLIP, SURGE_GAP_MS, aheadAt, bobAt, built, dropAt, formation, hullClass, litPorts, saluteAt, slotFor, throttle, type HullClass } from './logic';
+import { DROP_FROM, FLYBY, HAIL_MS, HULL, HULL_CLASSES, MAX_SHIPS, SLIP, SURGE_GAP_MS, aheadAt, bobAt, built, dropAt, flybyAt, leaveAt, formation, hullClass, litPorts, saluteAt, slotFor, throttle, type HullClass } from './logic';
 
 /** One escort as the fleet keeps it between frames. */
 interface Ship {
@@ -35,6 +35,9 @@ interface Ship {
   mergedAt: number;
   salutedAt: number;
   droppedAt: number;
+  /** When it streaked away into the ship's jump (until it drops back), and when its fly-by started. */
+  leftAt: number;
+  flybyAt: number;
   wasCloning: boolean;
 }
 
@@ -46,6 +49,12 @@ export interface Fleet {
   ships(): { id: string; cls: HullClass; x: number; y: number; z: number }[];
   /** Plays a sister deck's merge, waypoint or finished clone as if it just happened (the shots). */
   play(id: string, what: 'merge' | 'salute' | 'drop'): void;
+  /** The ship jumps (features/space): each escort streaks away, `stagger` ms after the one before. */
+  jumpOut(stagger: number): void;
+  /** Out of the jump: each drops back into its slot, `stagger` ms apart; 0 puts them straight back. */
+  rejoin(stagger: number): void;
+  /** The mission complete (features/moments): a slow fly-by ahead of the bow and back. */
+  flyBy(): void;
 }
 
 export function installFleet(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'travel' | 'stage'>): Fleet {
@@ -139,7 +148,7 @@ export function installFleet(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'travel' |
     for (const fl of shown) {
       seen.add(fl.id);
       let ship = ships.get(fl.id);
-      if (!ship) ships.set(fl.id, (ship = { id: fl.id, cls: hullClass(fl.workers), mergedAt: -Infinity, salutedAt: -Infinity, droppedAt: -Infinity, wasCloning: !!fl.cloning }));
+      if (!ship) ships.set(fl.id, (ship = { id: fl.id, cls: hullClass(fl.workers), mergedAt: -Infinity, salutedAt: -Infinity, droppedAt: -Infinity, leftAt: -Infinity, flybyAt: -Infinity, wasCloning: !!fl.cloning }));
       ship.cls = hullClass(fl.workers);
       // The clone is done: it drops out of hyperspace into its slot (only where motion plays, in view).
       if (ship.wasCloning && !fl.cloning && quietOk('ambient')) ship.droppedAt = clock;
@@ -202,11 +211,22 @@ export function installFleet(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'travel' |
           stretch = drop.stretch;
         }
         p.z -= aheadAt(clock - ship.mergedAt) * len;
+        p.z -= flybyAt(clock - ship.flybyAt) * len;
+        if (ship.leftAt !== -Infinity) {
+          const leave = leaveAt(clock - ship.leftAt);
+          p.z -= leave.ahead * DROP_FROM;
+          stretch = leave.stretch;
+          // Gone into the jump: nothing of it drawn until it drops back.
+          if (leave.gone) stretch = 0;
+        }
+        // Not yet its turn to drop back in.
+        if (clock < ship.droppedAt) stretch = 0;
       }
       const bob = bobAt(bobT, id);
       p.y += bob.y;
       q.setFromEuler(e.set(0, 0, bob.roll));
-      s.set(1, 1, stretch);
+      if (stretch > 0) s.set(1, 1, stretch);
+      else s.set(0, 0, 0);
       m4.compose(p, q, s);
       const k = counts[cls]++;
       const mesh = meshes[cls];
@@ -219,7 +239,7 @@ export function installFleet(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'travel' |
       a.iGain.setX(k, fl ? 1 : 0.6);
       placed.set(id, { cls, index: k, at: p.clone() });
       // Its plumes, aft of each drive, as long as it pushes.
-      const push = fl && !fl.cloning ? throttle(fl.busy, fl.workers) : 0;
+      const push = fl && !fl.cloning && stretch > 0 ? throttle(fl.busy, fl.workers) : 0;
       if (push > 0.01) {
         for (const [dx, dy, dz, r] of DRIVES[cls]) {
           local.compose(v.set(dx, dy, dz + r * 0.8), q.identity(), s.set(r * 1.5, r * 1.5, r * (3 + 7 * push)));
@@ -233,7 +253,7 @@ export function installFleet(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'travel' |
       names.setMatrixAt(i, local.premultiply(m4));
       rows.setX(i, i);
       // Its beacon, while a unit on that deck waits on someone.
-      if (fl && fl.waiting > 0) {
+      if (fl && fl.waiting > 0 && stretch > 0) {
         const b = BRIDGE_AT[cls];
         v.set(b[0], b[1] + 1.1, b[2]).applyMatrix4(m4);
         beaconPos.set([v.x, v.y, v.z], beacon++ * 3);
@@ -279,6 +299,9 @@ export function installFleet(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'travel' |
     clicked(ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1));
   });
 
+  /** The escorts in view, nearest slot first. */
+  const order = () => shown.map((fl) => fl.id).filter((id) => ships.has(id));
+
   readFloors();
   const fleet: Fleet = {
     ships: () => [...placed].map(([id, x]) => ({ id, cls: x.cls, x: x.at.x, y: x.at.y, z: x.at.z })),
@@ -292,6 +315,23 @@ export function installFleet(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'travel' |
         strip.hail(hailLine(fl ? hullName(fl.name, fl.repo) : id, 'Stripe v2'), HAIL_MS);
       }
       if (what === 'drop') ship.droppedAt = clock;
+    },
+    jumpOut: (stagger) => {
+      let i = 0;
+      for (const id of order()) ships.get(id)!.leftAt = clock + stagger * i++;
+    },
+    rejoin: (stagger) => {
+      let i = 0;
+      for (const id of order()) {
+        const ship = ships.get(id)!;
+        if (ship.leftAt === -Infinity) continue;
+        ship.leftAt = -Infinity;
+        ship.droppedAt = stagger > 0 ? clock + stagger * i++ : -Infinity;
+      }
+    },
+    flyBy: () => {
+      let i = 0;
+      for (const id of order()) ships.get(id)!.flybyAt = clock + FLYBY.stagger * i++;
     },
   };
   debugHandle('fleet', fleet);

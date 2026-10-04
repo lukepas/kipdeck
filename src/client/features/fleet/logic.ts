@@ -124,6 +124,33 @@ export function dropAt(ms: number): { ahead: number; stretch: number } {
 export const DROP_FROM = 240;
 
 /**
+ * An escort streaking away into the ship's jump `ms` after it set off (features/space): it pulls ahead,
+ * faster and longer each moment, and is gone after LEAVE_MS until it drops back into its slot.
+ */
+export const LEAVE_MS = 600;
+export function leaveAt(ms: number): { ahead: number; stretch: number; gone: boolean } {
+  if (ms <= 0) return { ahead: 0, stretch: 1, gone: false };
+  if (ms >= LEAVE_MS) return { ahead: 1, stretch: 8, gone: true };
+  const k = ms / LEAVE_MS;
+  return { ahead: k * k * k, stretch: 1 + 7 * k * k, gone: false };
+}
+
+/**
+ * The fleet's slow fly-by on the mission complete (Tier 4): each escort eases ahead of its slot by
+ * FLYBY.lengths of its own length over FLYBY.out, holds there, and drifts back over FLYBY.back.
+ * Returns how many lengths ahead it is `ms` in.
+ */
+export const FLYBY = { out: 6000, hold: 6000, back: 12_000, lengths: 5, stagger: 400 } as const;
+export const FLYBY_MS = FLYBY.out + FLYBY.hold + FLYBY.back;
+export function flybyAt(ms: number): number {
+  if (ms <= 0 || ms >= FLYBY_MS) return 0;
+  const ease = (k: number) => k * k * (3 - 2 * k);
+  if (ms < FLYBY.out) return FLYBY.lengths * ease(ms / FLYBY.out);
+  if (ms < FLYBY.out + FLYBY.hold) return FLYBY.lengths;
+  return FLYBY.lengths * (1 - ease((ms - FLYBY.out - FLYBY.hold) / FLYBY.back));
+}
+
+/**
  * The escorts' colours: graphite plate and its seams, the ports' light, the running lights. Neutrals
  * only (the drives are the ship's own cyan, the beacon the deck's needs-you diamond on instrument black).
  */

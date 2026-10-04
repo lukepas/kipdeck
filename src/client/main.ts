@@ -158,7 +158,7 @@ parts.lights = installLights(ctx, parts);
 installLife(ctx, parts);
 parts.giveWay = installGiveWay(ctx);
 installDestination(ctx, parts);
-installFleet(ctx, parts);
+parts.fleet = installFleet(ctx, parts);
 installSorties(ctx, parts);
 parts.vesper = installVesper(ctx, parts);
 parts.crew = installCrew(ctx, parts);

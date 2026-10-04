@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { BEAT_MS, along, beatAt, beatMs, dispatchPhases, hashOf, railSegment, rimToward, toRailPhases, toTablePhases } from '../src/client/features/beats/logic.js';
 import { stack } from '../src/client/features/workers/declutter.js';
 import { CUES } from '../src/client/sound/alerts.js';
-import { FLASH_RISE, JUMP, JUMP_FOV, JUMP_MS, JUMP_STRETCH, SURGE, SURGE_GAP_MS, SURGE_MS, flashPeak, jumpAt, jumpsNow, surgeAt, surgeGlint, surgesNow } from '../src/client/features/space/logic.js';
+import { BANNER_MS, COUNTDOWN_MS, FLASH_RISE, FLEET_STAGGER_MS, JUMP, JUMP_FOV, JUMP_HOLD_MS, JUMP_MS, JUMP_STRETCH, SURGE, SURGE_GAP_MS, SURGE_HARD, SURGE_MS, countdownLeft, flashPeak, jumpAt, jumpsNow, surgeAt, surgeGlint, surgesNow } from '../src/client/features/space/logic.js';
 import { DESKS, FLOOR, MISSION_TABLE, PROOF_CORNER } from '../src/shared/layout.js';
 
 const close = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps;
@@ -125,34 +125,62 @@ test('the surge runs 1.4 s: up to 12x in 300 ms, held 200 ms, back over 900 ms',
   assert.equal(SURGE_GAP_MS, 20_000);
 });
 
-test('the jump runs 2.4 s: a stretch, a 300 ms flash eased up and down over the new sky, then back to cruise', () => {
-  assert.equal(JUMP_MS, 2400);
+test('the jump runs 3.9 s: a stretch, a 300 ms flash as the tunnel opens, 1.5 s in the tunnel, then back to cruise', () => {
+  assert.equal(JUMP_MS, 3900);
   assert.equal(JUMP.flash, 300);
+  assert.equal(JUMP.tunnel, 1500);
   const before = jumpAt(0);
-  assert.deepEqual(before, { speed: 1, streak: 0, flash: 0, swapped: false, fov: 0, tint: 0 });
+  assert.deepEqual(before, { speed: 1, streak: 0, flash: 0, swapped: false, fov: 0, tint: 0, tunnel: 0 });
   // The stretch toward the bow: the streaks grow, no flash yet, still the old sky; the view widens, the light goes cool.
   const mid = jumpAt(400);
-  assert.ok(mid.streak > 0 && mid.streak < 1 && mid.flash === 0 && !mid.swapped);
+  assert.ok(mid.streak > 0 && mid.streak < 1 && mid.flash === 0 && !mid.swapped && mid.tunnel === 0);
   assert.ok(mid.fov > 0.5 && mid.tint < 0);
   // The flash is only inside its 300 ms, comes up in 90 ms and eases off slower than it rose; the sky swaps at its height.
   let prev = 0;
-  for (let ms = 0; ms <= 2400; ms += 10) {
+  let prevTunnel = 0;
+  for (let ms = 0; ms <= JUMP_MS; ms += 10) {
     const f = jumpAt(ms);
     if (ms < JUMP.stretch || ms >= JUMP.stretch + JUMP.flash) assert.equal(f.flash, 0, `no flash at ${ms} ms`);
-    assert.ok(f.flash <= 1 && f.streak <= 1 && f.speed >= 1 && f.fov <= 1 && Math.abs(f.tint) <= 1);
-    // Never a step of more than a third of it in 10 ms: no hard edge.
+    assert.ok(f.flash <= 1 && f.streak <= 1 && f.speed >= 1 && f.fov <= 1 && Math.abs(f.tint) <= 1 && f.tunnel >= 0 && f.tunnel <= 1);
+    // Never a step of more than a third of it in 10 ms: no hard edge, for the flash or the tunnel.
     assert.ok(Math.abs(f.flash - prev) < 0.34, `the flash eases at ${ms} ms`);
+    assert.ok(Math.abs(f.tunnel - prevTunnel) < 0.34, `the tunnel eases at ${ms} ms`);
     prev = f.flash;
+    prevTunnel = f.tunnel;
   }
   assert.ok(jumpAt(JUMP.stretch + FLASH_RISE).flash > 0.99, 'at its height after the rise');
   assert.ok(jumpAt(JUMP.stretch + 200).flash > 0.2, 'still easing off well after the rise');
   assert.ok(!jumpAt(805).swapped && jumpAt(JUMP.stretch + FLASH_RISE).swapped, 'the sky swaps under the flash');
-  // Coming out, the light leans warm, then back as it was.
-  assert.ok(jumpAt(JUMP.stretch + JUMP.flash + 100).tint > 0.5);
+  // In the tunnel: open, the light cool; it closes at its end as the light turns warm.
+  const inside = jumpAt(JUMP.stretch + JUMP.flash + 600);
+  assert.equal(inside.tunnel, 1);
+  assert.equal(inside.tint, -1);
+  assert.ok(jumpAt(JUMP.stretch + JUMP.flash + JUMP.tunnel + 100).tint > 0.5);
+  assert.equal(jumpAt(JUMP.stretch + JUMP.flash + JUMP.tunnel + 100).tunnel, 0, 'closed once out');
   // Back to cruise by its end, on the new region.
-  assert.deepEqual(jumpAt(2400), { speed: 1, streak: 0, flash: 0, swapped: true, fov: 0, tint: 0 });
+  assert.deepEqual(jumpAt(JUMP_MS), { speed: 1, streak: 0, flash: 0, swapped: true, fov: 0, tint: 0, tunnel: 0 });
   assert.equal(JUMP_STRETCH, 60);
   assert.ok(JUMP_FOV >= 3 && JUMP_FOV <= 5, 'a few degrees, no more');
+});
+
+test('a jump counts down 3, 2, 1 first, and waits two minutes at most for the captain', () => {
+  assert.equal(COUNTDOWN_MS, 3000);
+  assert.equal(countdownLeft(0), 3);
+  assert.equal(countdownLeft(999), 3);
+  assert.equal(countdownLeft(1000), 2);
+  assert.equal(countdownLeft(2500), 1);
+  assert.equal(countdownLeft(3000), 0);
+  assert.equal(JUMP_HOLD_MS, 120_000);
+  assert.equal(FLEET_STAGGER_MS, 150);
+  assert.equal(BANNER_MS, 3000);
+  assert.equal(jumpsNow('full', true, 'silent'), false, 'Silent running crossfades');
+  assert.equal(jumpsNow('full', true, 'calm'), true);
+});
+
+test("a streak's surge runs the same curve, harder", () => {
+  assert.ok(SURGE_HARD > SURGE.peak);
+  assert.ok(close(surgeAt(400, SURGE_HARD), SURGE_HARD));
+  assert.equal(surgeAt(SURGE_MS, SURGE_HARD), 1);
 });
 
 test("the jump's flash is a glint by night: a third at most, half by day, none at Calm or with motion off", () => {

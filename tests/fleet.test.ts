@@ -126,3 +126,22 @@ test("a sister deck's beacon is the deck's own needs-you diamond on instrument b
 test('the escorts keep to neutrals and ship-cyan: no hue of a state on them', () => {
   for (const c of [...Object.values(HULL_COLORS), DECK.ship]) assert.ok(ambientSafe(c), c);
 });
+
+test("into the ship's jump the escorts streak away, and on the mission complete they fly by slowly", async () => {
+  const { FLYBY, FLYBY_MS, LEAVE_MS, flybyAt, leaveAt } = await import('../src/client/features/fleet/logic.js');
+  assert.deepEqual(leaveAt(0), { ahead: 0, stretch: 1, gone: false });
+  const mid = leaveAt(LEAVE_MS / 2);
+  assert.ok(mid.ahead > 0 && mid.ahead < 0.5 && mid.stretch > 1, 'pulling ahead, faster each moment');
+  assert.equal(leaveAt(LEAVE_MS).gone, true);
+  assert.equal(flybyAt(0), 0);
+  assert.equal(flybyAt(FLYBY.out + 1), FLYBY.lengths);
+  assert.ok(flybyAt(FLYBY.out + FLYBY.hold + FLYBY.back / 2) < FLYBY.lengths);
+  assert.equal(flybyAt(FLYBY_MS), 0);
+  assert.ok(FLYBY_MS >= 20_000, 'slow: the whole pass takes twenty seconds or more');
+  // No step: a hundredth of the pass moves it less than half a length.
+  let prev = 0;
+  for (let ms = 0; ms <= FLYBY_MS; ms += FLYBY_MS / 100) {
+    assert.ok(Math.abs(flybyAt(ms) - prev) < 0.5, `eases at ${ms}`);
+    prev = flybyAt(ms);
+  }
+});

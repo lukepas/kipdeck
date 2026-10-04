@@ -2,7 +2,7 @@
 // fast the ship makes way, the surge on a merge and the jump on a waypoint, the flybys' schedule, and
 // the seeded random every region of sky and every flyby is dealt from.
 
-import type { ShipMotion } from '../../state/persist';
+import type { LifeLevel, ShipMotion } from '../../state/persist';
 
 /** A small, fast seeded random (mulberry32): the same seed deals the same sky and the same flybys. */
 export function seeded(seed: number): () => number {
@@ -44,11 +44,13 @@ export const SURGE = { peak: 12, rise: 300, hold: 200, fall: 900 } as const;
 export const SURGE_MS = SURGE.rise + SURGE.hold + SURGE.fall;
 /** At most one surge in this long (ms); merges inside it fold into the one already flown. */
 export const SURGE_GAP_MS = 20_000;
+/** A streak's surge (Tier 2, features/beats/tiers.ts): the same curve, harder. */
+export const SURGE_HARD = 20;
 
-/** The surge's speed multiplier `ms` after it starts: 1 before and after it. */
-export function surgeAt(ms: number): number {
+/** The surge's speed multiplier `ms` after it starts, up to `peak`: 1 before and after it. */
+export function surgeAt(ms: number, peak: number = SURGE.peak): number {
   if (ms <= 0 || ms >= SURGE_MS) return 1;
-  const { peak, rise, hold, fall } = SURGE;
+  const { rise, hold, fall } = SURGE;
   if (ms < rise) return 1 + (peak - 1) * smooth(ms / rise);
   if (ms < rise + hold) return peak;
   return 1 + (peak - 1) * (1 - smooth((ms - rise - hold) / fall));
@@ -64,20 +66,32 @@ export function surgeGlint(ms: number): number {
 }
 
 /**
- * The jump when a waypoint is reached, 2.4 s in four steps: the stars stretch toward the bow for
- * 800 ms, a white-cyan flash comes up over the glass in 90 ms and eases off over 210 ms (the sky is
- * swapped for a new region at its height), then the stars come back to cruise over 1.1 s, and a last
- * 200 ms settles. The flash is added to the sky, never painted over it, and how bright it gets is
- * flashPeak's: a glint by night, never a white-out.
+ * The jump when a waypoint is reached, 3.9 s in five steps once its 3 s countdown is done: the stars
+ * stretch toward the bow for 800 ms, a white-cyan flash comes up over the glass in 90 ms and eases off
+ * over 210 ms (the sky is swapped for a new region at its height) as the tunnel opens, the ship runs
+ * through the tunnel for 1.5 s with the room's light cool, comes out as the light leans warm, the
+ * stars come back to cruise over 1.1 s, and a last 200 ms settles. The flash and the tunnel are added
+ * to the sky, never painted over it, and how bright they get is flashPeak's: a glint by night, never
+ * a white-out.
  */
-export const JUMP = { stretch: 800, flash: 300, settle: 1100, tail: 200 } as const;
-export const JUMP_MS = JUMP.stretch + JUMP.flash + JUMP.settle + JUMP.tail;
+export const JUMP = { stretch: 800, flash: 300, tunnel: 1500, settle: 1100, tail: 200 } as const;
+export const JUMP_MS = JUMP.stretch + JUMP.flash + JUMP.tunnel + JUMP.settle + JUMP.tail;
 /** How long the flash takes to come up (ms); the rest of JUMP.flash it eases off. */
 export const FLASH_RISE = 90;
+/** How long the tunnel takes to close at its end (ms), as the light turns warm. */
+export const TUNNEL_CLOSE = 300;
 /** How far the stars streak at the jump's height, against their cruise length. */
 export const JUMP_STRETCH = 60;
 /** How far the view widens at the jump's height (degrees), and eases back. */
 export const JUMP_FOV = 4;
+/** The countdown before a jump (ms): 3, 2, 1 on the band under the overhead strip. */
+export const COUNTDOWN_MS = 3000;
+/** How long a jump waits for the captain before it gives up and crossfades with a card (ms). */
+export const JUMP_HOLD_MS = 2 * 60_000;
+/** How far apart the escorts streak away into the jump, and drop back after it (ms). */
+export const FLEET_STAGGER_MS = 150;
+/** How long the waypoint's name stays across the forward glass after the jump (ms). */
+export const BANNER_MS = 3000;
 
 export interface JumpFrame {
   /** Speed multiplier on the star layers. */
@@ -92,28 +106,41 @@ export interface JumpFrame {
   fov: number;
   /** The light in the room: toward cool going in (-1), toward warm coming out (+1), 0 as it was. */
   tint: number;
+  /** How far the tunnel is open round the ship, 0-1 of its peak (flashPeak again). */
+  tunnel: number;
 }
 
 const easeOut = (k: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
 
-/** The jump `ms` after it starts. */
+/** The jump `ms` after it starts (its countdown done). */
 export function jumpAt(ms: number): JumpFrame {
-  const { stretch, flash, settle } = JUMP;
-  if (ms <= 0) return { speed: 1, streak: 0, flash: 0, swapped: false, fov: 0, tint: 0 };
+  const { stretch, flash, tunnel, settle } = JUMP;
+  if (ms <= 0) return { speed: 1, streak: 0, flash: 0, swapped: false, fov: 0, tint: 0, tunnel: 0 };
   if (ms < stretch) {
     const k = smooth(ms / stretch);
-    return { speed: 1 + 39 * k * k, streak: k, flash: 0, swapped: false, fov: easeOut(ms / stretch), tint: -k };
+    return { speed: 1 + 39 * k * k, streak: k, flash: 0, swapped: false, fov: easeOut(ms / stretch), tint: -k, tunnel: 0 };
   }
   if (ms < stretch + flash) {
     const t = ms - stretch;
     const f = t < FLASH_RISE ? smooth(t / FLASH_RISE) : 1 - smooth((t - FLASH_RISE) / (flash - FLASH_RISE));
-    return { speed: 40, streak: 1, flash: f, swapped: t >= FLASH_RISE, fov: 1, tint: -1 + 2 * smooth(t / flash) };
+    return { speed: 40, streak: 1, flash: f, swapped: t >= FLASH_RISE, fov: 1, tint: -1, tunnel: t < FLASH_RISE ? 0 : smooth((t - FLASH_RISE) / (flash - FLASH_RISE)) };
   }
-  if (ms < stretch + flash + settle) {
-    const k = smooth((ms - stretch - flash) / settle);
-    return { speed: 1 + 39 * (1 - k), streak: 1 - k, flash: 0, swapped: true, fov: 1 - easeOut((ms - stretch - flash) / settle), tint: 1 - k };
+  if (ms < stretch + flash + tunnel) {
+    const t = ms - stretch - flash;
+    const close = smooth((t - (tunnel - TUNNEL_CLOSE)) / TUNNEL_CLOSE);
+    return { speed: 40, streak: 1, flash: 0, swapped: true, fov: 1, tint: -1 + 2 * close, tunnel: 1 - close };
   }
-  return { speed: 1, streak: 0, flash: 0, swapped: true, fov: 0, tint: 0 };
+  if (ms < stretch + flash + tunnel + settle) {
+    const k = smooth((ms - stretch - flash - tunnel) / settle);
+    return { speed: 1 + 39 * (1 - k), streak: 1 - k, flash: 0, swapped: true, fov: 1 - easeOut((ms - stretch - flash - tunnel) / settle), tint: 1 - k, tunnel: 0 };
+  }
+  return { speed: 1, streak: 0, flash: 0, swapped: true, fov: 0, tint: 0, tunnel: 0 };
+}
+
+/** The seconds left on the countdown `ms` after it started (3, 2, 1), or 0 once it is done. */
+export function countdownLeft(ms: number): number {
+  if (ms >= COUNTDOWN_MS) return 0;
+  return Math.ceil((COUNTDOWN_MS - Math.max(0, ms)) / 1000);
 }
 
 /**
@@ -128,10 +155,10 @@ export function flashPeak(mode: 'night' | 'day', ship: ShipMotion): number {
 /**
  * Whether a waypoint reached now jumps the ship (true) or only crossfades the view: only at Full ship
  * motion, and only while the page is in view (a jump that came in while the tab was hidden would play
- * out of nowhere the moment you came back).
+ * out of nowhere the moment you came back), and not under Silent running (Settings > Bridge > Life).
  */
-export function jumpsNow(ship: ShipMotion, visible: boolean): boolean {
-  return ship === 'full' && visible;
+export function jumpsNow(ship: ShipMotion, visible: boolean, life: LifeLevel = 'full'): boolean {
+  return ship === 'full' && visible && life !== 'silent';
 }
 
 /** Whether a merge now surges the ship: not with motion off, and not while the page is hidden. */
