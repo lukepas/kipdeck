@@ -25,6 +25,7 @@ import { DUCK_MS, FIRST_FLYBY_MS, FLYBY_GAP_MS, JUMP_FOV, JUMP_MS, JUMP_STRETCH,
 import { Sky } from './sky';
 import { Starfield } from './stars';
 import { Meteors } from './meteors';
+import { starScale } from '../giveway/logic';
 
 /** The fog in Walk: none inside the bridge, only what's far outside fades into space before the far plane. */
 const FOG = { near: 70, far: 118 } as const;
@@ -98,7 +99,8 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   const was = new THREE.Vector3();
   let moving = false;
 
-  const scale = () => motionScale(ctx.reduceMotion.ship);
+  // Silent running (Settings > Bridge > Life) slows space to a crawl: no streaks, flybys or meteors.
+  const scale = () => motionScale(ctx.reduceMotion.ship) * starScale(ctx.settings.life);
   const visible = () => typeof document === 'undefined' || document.visibilityState !== 'hidden';
 
   function surge() {

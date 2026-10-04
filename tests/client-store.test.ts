@@ -160,7 +160,7 @@ test('what the browser remembers keeps its keys and shapes', () => {
   assert.deepEqual(state.lastSpot(), { floor: 'f1', name: 'F', x: 1, y: 2, z: 3, facing: 4 });
   assert.ok(storage.has('agent-office.spot'));
   const settings = state.loadSettings();
-  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: state.HUD_DEFAULTS, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0 });
+  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: state.HUD_DEFAULTS, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { destination: true, fleet: true, sorties: true } });
   // Mission control's last tab is one of its tabs.
   storage.set('agent-office.settings', JSON.stringify({ missionTab: 'goals', allFloors: true }));
   assert.deepEqual([state.loadSettings().missionTab, state.loadSettings().allFloors], ['goals', true]);
@@ -189,6 +189,11 @@ test('what the browser remembers keeps its keys and shapes', () => {
   assert.deepEqual([state.loadSettings().lighting, state.loadSettings().brightness], ['auto', 2]);
   state.saveSettings({ ...settings, brightness: 0.5 });
   assert.equal(state.loadSettings().brightness, 0);
+  // Life is Full, Calm or Silent running, and each part of the world outside is on or off on its own.
+  state.saveSettings({ ...settings, life: 'silent', lifeParts: { destination: true, fleet: false, sorties: true } });
+  assert.deepEqual([state.loadSettings().life, state.loadSettings().lifeParts], ['silent', { destination: true, fleet: false, sorties: true }]);
+  state.saveSettings({ ...settings, life: 'party' as never, lifeParts: { fleet: 'no' } as never });
+  assert.deepEqual([state.loadSettings().life, state.loadSettings().lifeParts], ['full', { destination: true, fleet: true, sorties: true }]);
   store.apply(welcome());
   assert.equal(state.lastFloor(), 'f1');
 });

@@ -61,6 +61,17 @@ export type Lighting = (typeof LIGHTINGS)[number];
 /** How far Brightness steps either way from the mode's own level (each step is 12% of exposure). */
 export const BRIGHTNESS_STEPS = 2;
 
+/**
+ * Settings > Bridge > Life: how much the bridge's life moves. Full as is; Calm drops the gestures
+ * (salutes, hails, idle tricks); Silent running stops all ambient life and slows the stars to a crawl,
+ * while every attention state keeps its full strength (features/giveway).
+ */
+export const LIFE_LEVELS = ['full', 'calm', 'silent'] as const;
+export type LifeLevel = (typeof LIFE_LEVELS)[number];
+/** The parts of the bridge's world that each have a switch of their own under Life. */
+export const LIFE_PARTS = ['destination', 'fleet', 'sorties'] as const;
+export type LifePart = (typeof LIFE_PARTS)[number];
+
 export interface Settings {
   view: ViewMode;
   /** The sound cues' level, 0-1 (sound/alerts.ts). */
@@ -87,6 +98,10 @@ export interface Settings {
   lighting: Lighting;
   /** Settings > Bridge: Brightness, a whole step from -BRIGHTNESS_STEPS to BRIGHTNESS_STEPS on top of the lights' mode. */
   brightness: number;
+  /** Settings > Bridge > Life: Full, Calm or Silent running. */
+  life: LifeLevel;
+  /** Settings > Bridge > Life: each part of the world outside on or off. */
+  lifeParts: Record<LifePart, boolean>;
 }
 
 const SETTINGS_KEY = 'agent-office.settings';
@@ -171,7 +186,7 @@ export function rememberSpot(s: Spot) {
 }
 
 export function loadSettings(): Settings {
-  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0 };
+  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { destination: true, fleet: true, sorties: true } };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null');
     if (saved?.view === 'first' || saved?.view === 'third') s.view = saved.view;
@@ -187,6 +202,8 @@ export function loadSettings(): Settings {
     if (SHIP_MOTIONS.includes(saved?.shipMotion)) s.shipMotion = saved.shipMotion;
     if (LIGHTINGS.includes(saved?.lighting)) s.lighting = saved.lighting;
     if (Number.isInteger(saved?.brightness)) s.brightness = Math.max(-BRIGHTNESS_STEPS, Math.min(BRIGHTNESS_STEPS, saved.brightness));
+    if (LIFE_LEVELS.includes(saved?.life)) s.life = saved.life;
+    for (const k of LIFE_PARTS) if (typeof saved?.lifeParts?.[k] === 'boolean') s.lifeParts[k] = saved.lifeParts[k];
   } catch {
     // storage blocked
   }

@@ -18,6 +18,7 @@ import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { store } from '../../state';
 import { seeded } from '../space/logic';
+import { ambientGain } from '../giveway/logic';
 import { GIVE_WAY, bump, decay, headingPhrases, lifeScale, panelMode, percentTo, pulseGap, shipTime, shownActivity, stationGain, tickerItems, underWayText, type Heading } from './logic';
 
 /** How bright a station's hood trace is in each state (0 dark, 1 full ship-cyan); a working one goes by how busy it is. */
@@ -99,7 +100,8 @@ export function installLife(ctx: Ctx, parts: Pick<Parts, 'views'>) {
       readAt = clock;
       readDeck();
     }
-    const scale = lifeScale(ctx.reduceMotion.ship);
+    // Silent running (Settings > Bridge > Life) stills it as Ship motion at Off does: the screens still read.
+    const scale = lifeScale(ctx.reduceMotion.ship) * ambientGain(ctx.settings.life);
     const ducking = clock < duckUntil;
     duck += ((ducking ? GIVE_WAY.duck : 1) - duck) * Math.min(1, dt * 3);
     const deckGain = duck * (anyWaiting ? GIVE_WAY.waiting : 1);

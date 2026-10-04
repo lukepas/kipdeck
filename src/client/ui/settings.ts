@@ -11,6 +11,7 @@ import { choiceRow } from './settings-rows';
 import { bountySettings } from './bounty-settings';
 import { showcaseSettings } from './showcase-settings';
 import { brightnessSettings, bridgeSettings, lightSettings } from './bridge-settings';
+import { lifeSettings } from './life-settings';
 import { icon, type IconName } from './icons';
 
 const VIEWS: [ViewMode, string, string][] = [
@@ -26,7 +27,7 @@ export type SettingsPane = 'you' | 'bridge' | 'sound' | 'notify' | 'building' | 
 
 const PANES: { id: SettingsPane; icon: IconName; label: string; blurb: string }[] = [
   { id: 'you', icon: 'operator', label: 'You', blurb: 'How you look, how you see the office, and how you\'re signed in.' },
-  { id: 'bridge', icon: 'ship', label: 'Bridge', blurb: 'The lights on the bridge, and how space moves outside the glass.' },
+  { id: 'bridge', icon: 'ship', label: 'Bridge', blurb: 'The lights on the bridge, how space moves outside the glass, and how much the bridge lives.' },
   { id: 'sound', icon: 'volume', label: 'Sound & voice', blurb: 'How loud the office is for you, and how voice chat works.' },
   { id: 'notify', icon: 'bell', label: 'Notifications', blurb: 'Hear about a unit that needs someone, or finished, while you\'re somewhere else.' },
   { id: 'building', icon: 'decks', label: 'Decks', blurb: 'Where new decks are cloned.' },
@@ -403,6 +404,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       setting('Bridge lights', 'you', ...lightSettings(() => settings, change)),
       setting('Brightness', 'you', ...brightnessSettings(() => settings, change)),
       setting('Ship motion', 'you', ...bridgeSettings(() => settings, change)),
+      setting('Life', 'you', ...lifeSettings(() => settings, change)),
     ],
     sound: [
       setting('Sound cues', 'you', soundRow, h('p.setting-note', {}, 'Off until you turn them on. Four short cues, one per change worth hearing from another tab: a unit needs you (two rising notes), a unit is stuck (two low ticks), a unit is ready for review (one soft tone) and a merge is proven on chain (a low thunk and a tick). The deck makes no other sound, and voice chat has its own level.')),
