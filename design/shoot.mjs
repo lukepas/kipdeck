@@ -282,6 +282,50 @@ async function main() {
       await shot(page, name);
     }
     await UNVIEW();
+    // Space outside the glass: each flyby caught halfway, then the surge and the jump on their way,
+    // space's clock slowed (timeScale) so software rendering can catch them.
+    const SPACE = (fn, ...args) => page.evaluate(([fn, args]) => window.__office.space[fn](...args), [fn, args]);
+    const FLYBYS = {
+      'space-planet': ['planet', 0.5, -1, [6, 2.2, 1], [-16, 4.6, 2]],
+      'space-asteroids': ['asteroids', 0.5, -1, [2, 2.05, 9], [-16, 3.2, -4]],
+      'space-comet': ['comet', 0.5, 1, [0, 2.05, 11.4], [0, 9.5, -12]],
+    };
+    for (const [name, [kind, at, side, from, to]] of Object.entries(FLYBYS)) {
+      if (!want(name)) continue;
+      await VIEW(from, to);
+      await SPACE('timeScale', 0);
+      await SPACE('flyby', kind, at, side);
+      await wait(1500);
+      await shot(page, name);
+      await SPACE('timeScale', 1);
+    }
+    for (const [name, fn, marks] of [
+      ['space-surge', 'surge', [[1, 350], [2, 700], [3, 1300]]],
+      ['space-jump', 'jump', [[1, 500], [2, 860], [3, 1500], [4, 2600]]],
+    ]) {
+      if (!want(name)) continue;
+      await VIEW([0, 2.05, 11.4], [0, 3.4, -12]);
+      await wait(800);
+      await SPACE('timeScale', 0);
+      await SPACE(fn);
+      // Space's clock steps to each mark (in quarter-time steps, fine enough for the jump's 120 ms
+      // flash) and holds there for the shot.
+      const start = await SPACE('clock');
+      for (const [i, ms] of marks) {
+        await page.evaluate((until) => {
+          const s = window.__office.space;
+          s.timeScale(0.25);
+          return new Promise((resolve) => {
+            const tick = () => (s.clock() >= until ? (s.timeScale(0), resolve()) : requestAnimationFrame(tick));
+            requestAnimationFrame(tick);
+          });
+        }, start + ms);
+        await wait(900);
+        await page.screenshot({ path: path.join(OUT, `${name}-${i}.png`) });
+      }
+      await SPACE('timeScale', 1);
+    }
+    await UNVIEW();
     if (want('deck-overview')) {
       await page.locator('#scene').focus();
       await page.keyboard.press('g');
@@ -412,17 +456,28 @@ async function main() {
       await page.keyboard.press('Escape');
       await wait(300);
     }
-    if (want('menu') || want('settings') || want('operator')) {
+    if (want('menu') || want('settings') || want('settings-bridge') || want('operator')) {
       await page.locator('#dock .dock-menu').click();
       await page.locator('.hud-menu').waitFor({ timeout: 10_000 });
       // Software rendering draws slowly: give the menu's 120 ms rise time to land.
       await wait(1200);
       await shot(page, 'menu');
-      if (want('settings') || want('operator')) {
+      if (want('settings') || want('settings-bridge') || want('operator')) {
         await page.locator('.hud-menu .menu-item', { hasText: 'Settings' }).click();
         await page.locator('.modal.settings').waitFor({ timeout: 10_000 });
         await wait(400);
         await shot(page, 'settings');
+        if (want('settings-bridge')) {
+          // Settings > Bridge, with Ship motion turned Off: space and the deck hold still.
+          await page.locator('.modal.settings .settings-tab', { hasText: 'Bridge' }).click();
+          await page.locator('.modal.settings button', { hasText: /^Off$/ }).first().click();
+          await wait(1200);
+          console.log('ship motion off', JSON.stringify(await page.evaluate(() => ({ motion: document.documentElement.dataset.motion ?? null, speed: window.__office.space.speed() }))));
+          await shot(page, 'settings-bridge');
+          await page.locator('.modal.settings button', { hasText: /^Full$/ }).first().click();
+          await wait(800);
+          console.log('ship motion full', JSON.stringify(await page.evaluate(() => ({ motion: document.documentElement.dataset.motion ?? null, speed: window.__office.space.speed() }))));
+        }
         if (want('operator')) {
           await page.locator('.modal.settings button', { hasText: /look|operator/i }).first().click();
           await page.locator('.modal.charsel').waitFor({ timeout: 10_000 });

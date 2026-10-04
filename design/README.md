@@ -141,3 +141,28 @@ The captain asked for the deck as a starship's bridge, with windows to see space
 | ![](shots/bridge-shell/after/bridge-up.png) | ![](shots/bridge-shell/after/bridge-aft.png) | ![](shots/bridge-shell/after/bridge-captain.png) |
 
 Frame time at 1440x900 with nine seeded units, before and after: on the GPU (Apple M3 Pro through ANGLE Metal) the frame stays on vsync at 16.7 ms and a forced render takes 6.6 ms against 7.0 ms before; draw calls went from 1086 to 948, because the walls round the viewports are now drawn as one mesh per paint. On SwiftShader, which the stills use, a frame takes about 185 ms against 167 ms before, mostly from the canopy's glass over the whole frame.
+
+## The bridge: space
+
+The viewports now look out on space. A sky is baked once at load into a cube: a deep blue-black, the galactic band crossing the forward viewport on a slant and climbing into the canopy with dust lanes along its middle, and a teal and indigo nebula just right of the bow. Stars are drawn over it per pixel, so they stay a pixel or two wide in Walk and in the Overview. Three layers of stars stream aft past the glass as the ship makes way north, the near ones fast enough to read as parallax in the side ports. Every six to ten minutes something goes by: a planet or moon across a side port, an asteroid field tumbling past, or a comet high across the forward glass. A merge surges the ship for 1.4 s; a milestone done jumps it to a new region of space behind a 120 ms flash on the glass. All of it keeps to neutrals, blues, teals and ship-cyan (a test checks every colour against the states' hues), stays outside the glass, and never moves the camera.
+
+Speed is the one tie to the deck: 0.4x cruise with no merges in the last hour, a quarter more for each, at most 1.6x, and 0.15x holding station when no unit is deployed. The nacelles' drive glow follows it. Settings has a new Bridge pane: Ship motion at Full, Calm (half speed, no flybys) or Off, which stills the whole deck as the system's reduce-motion setting does, CSS included.
+
+`shoot.mjs bridge-space/after` takes the stills again from a built office (the `space-*` shots and `settings-bridge` are new; the flybys and flourishes are driven through `window.__office.space`). The clip `shots/bridge-space/after/space-motion.mp4` is rendered on the GPU: cruise from the conn, a surge, a jump, an asteroid field, then a planet past the west ports at six times speed.
+
+| Before | After |
+| --- | --- |
+| ![](shots/bridge-space/before/office.png) | ![](shots/bridge-space/after/office.png) |
+| ![](shots/bridge-space/before/bridge-conn.png) | ![](shots/bridge-space/after/bridge-conn.png) |
+| ![](shots/bridge-space/before/bridge-up.png) | ![](shots/bridge-space/after/bridge-up.png) |
+| ![](shots/bridge-space/before/deck-overview.png) | ![](shots/bridge-space/after/deck-overview.png) |
+
+| A planet past the ports | An asteroid field | A comet over the canopy |
+| --- | --- | --- |
+| ![](shots/bridge-space/after/space-planet.png) | ![](shots/bridge-space/after/space-asteroids.png) | ![](shots/bridge-space/after/space-comet.png) |
+
+| The surge | The jump, stretching | The jump's flash | New space |
+| --- | --- | --- | --- |
+| ![](shots/bridge-space/after/space-surge-2.png) | ![](shots/bridge-space/after/space-jump-1.png) | ![](shots/bridge-space/after/space-jump-2.png) | ![](shots/bridge-space/after/space-jump-4.png) |
+
+Frame time at 1440x900 with nine seeded units, measured by hiding space and showing it again in the same session: on the GPU (Apple M3 Pro through ANGLE Metal) the frame stays on vsync at 16.7 ms, p95 16.8 ms, and a forced render takes 6.3 to 8.3 ms either way (the run-to-run spread is wider than space's share). Space adds four draw calls (the sky and three star layers, 8,900 points) and one more while something passes; the planet's surface is baked into a small map when it comes up, so it draws as one texture read. On SwiftShader, which the stills use, a forced render takes about 180 to 210 ms against 150 to 160 ms without space, most of it the sky's per-pixel stars over the whole frame.
