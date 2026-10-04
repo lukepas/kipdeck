@@ -1,10 +1,19 @@
 @import '@xterm/xterm/css/xterm.css';
 
 /* Terminal modal */
-.modal.term { width: min(1200px, 100%); height: min(820px, calc(100vh - 32px)); background: var(--void); }
+.modal.term { width: min(1200px, 100%); height: min(820px, calc(100vh - 32px)); background: var(--void); display: grid; grid-template-columns: 210px minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr) auto; }
+/* A unit console: the header, the tabs and the reply bar across, the unit's column beside its terminal. */
+.modal.term > header, .modal.term > .term-tabbar, .modal.term > .term-keypad { grid-column: 1 / -1; }
+.modal.term > .term-meta { grid-column: 1; grid-row: 3; }
+.modal.term > .term-host, .modal.term > .term-webhost { grid-column: 2; grid-row: 3; }
+@media (max-width: 860px) {
+  .modal.term { grid-template-columns: minmax(0, 1fr); }
+  .modal.term > .term-meta { display: none; }
+  .modal.term > .term-host, .modal.term > .term-webhost { grid-column: 1; }
+}
 .modal.term .xterm-viewport { scrollbar-color: var(--line-strong) transparent; }
 .modal.term header { background: var(--surface-1); }
-.modal.term .term-host { flex: 1; min-height: 0; padding: 8px 4px 4px 10px; background: var(--void); }
+.modal.term .term-host { flex: 1; min-height: 0; padding: 14px 12px 10px 16px; background: var(--void); }
 .modal.term .term-host .xterm { height: 100%; }
 /* Files dragged over a terminal, and on their way to the office: they go in where its cursor is. */
 .modal.term .term-host { position: relative; }
@@ -25,8 +34,17 @@
 }
 /* Under a terminal on the 2D view (TerminalOptions.keypad): the keys a phone's keyboard hasn't got, and a prompt box. */
 .term-keypad { display: flex; flex-direction: column; gap: 8px; padding: 8px 10px; padding-bottom: max(8px, env(safe-area-inset-bottom)); background: var(--surface-1); border-top: 1px solid var(--line-strong); }
-.term-keys { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 3px; }
-.term-keys .btn { flex: 1 1 0; min-width: 34px; height: 42px; padding: 0 4px; justify-content: center; border-radius: var(--radius); font-variant-numeric: tabular-nums; }
+/* The quick keys: one compact segmented control in the reply bar. Arrows, Enter and Tab only on touch. */
+.term-keys { display: inline-flex; flex: none; border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; }
+.term-keys .btn { height: 34px; min-width: 34px; padding: 0 8px; border: 0; border-right: 1px solid var(--line-strong); border-radius: 0; background: var(--surface-2); font: 500 12px var(--font-mono); font-variant-numeric: tabular-nums; }
+.term-keys .btn:last-child { border-right: 0; }
+.term-keys .btn.touch-only { display: none; }
+@media (pointer: coarse) {
+  .term-keypad .term-say { flex-wrap: wrap; }
+  .term-keys { flex-basis: 100%; overflow-x: auto; }
+  .term-keys .btn { flex: 1 0 auto; height: 40px; }
+  .term-keys .btn.touch-only { display: inline-flex; }
+}
 .term-say { display: flex; gap: 8px; }
 .modal .term-say input[type=text] { flex: 1; min-width: 0; padding: 8px 10px; }
 .modal.term header .typed { font-size: 12px; font-weight: 400; color: var(--muted); white-space: nowrap; }

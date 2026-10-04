@@ -1,4 +1,5 @@
 import './terminal.css';
+import { termMeta } from './term-meta';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
@@ -76,16 +77,17 @@ export interface TerminalOptions {
 }
 
 /** The keypad's keys: what each types, or a function of the terminal for the ones that depend on its mode. */
-const KEYPAD: { label: string; title: string; keys: string | ((term: Terminal) => string) }[] = [
-  { label: '1', title: 'Pick 1 (yes, in a permission prompt)', keys: '1' },
-  { label: '2', title: 'Pick 2', keys: '2' },
-  { label: '3', title: 'Pick 3', keys: '3' },
-  { label: '↑', title: 'Up', keys: (t) => (t.modes.applicationCursorKeysMode ? '\x1bOA' : '\x1b[A') },
-  { label: '↓', title: 'Down', keys: (t) => (t.modes.applicationCursorKeysMode ? '\x1bOB' : '\x1b[B') },
-  { label: '⏎', title: 'Enter', keys: '\r' },
-  { label: '⇥', title: 'Tab', keys: '\t' },
+const KEYPAD: { label: string; title: string; keys: string | ((term: Terminal) => string); touch?: boolean }[] = [
+  { label: '1', title: 'Answer 1 (yes, in a permission prompt)', keys: '1' },
+  { label: '2', title: 'Answer 2', keys: '2' },
+  { label: '3', title: 'Answer 3', keys: '3' },
   { label: 'Esc', title: 'Esc: close a menu, or interrupt the agent', keys: '\x1b' },
   { label: '^C', title: 'Ctrl+C', keys: '\x03' },
+  // The keys a phone's keyboard hasn't got: only on a touch screen.
+  { label: 'Up', title: 'Up', keys: (t) => (t.modes.applicationCursorKeysMode ? '\x1bOA' : '\x1b[A'), touch: true },
+  { label: 'Down', title: 'Down', keys: (t) => (t.modes.applicationCursorKeysMode ? '\x1bOB' : '\x1b[B'), touch: true },
+  { label: 'Enter', title: 'Enter', keys: '\r', touch: true },
+  { label: 'Tab', title: 'Tab', keys: '\t', touch: true },
 ];
 
 let current: { workerId: string; modal: Modal; find(f: TerminalFind): void } | null = null;
@@ -126,15 +128,17 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
     type: 'button',
     title: 'Send Esc to the terminal (Ctrl+[): closes a menu like /skills, or interrupts the agent. The Esc key on its own leaves the terminal',
     'aria-label': 'Send Esc to the terminal',
-  }, '⎋ Esc');
+  }, 'Esc');
   const changesBtn = h('button.btn', { type: 'button', title: 'What this worker changed: files, diff, commit, open a PR (C at the desk)' }, 'Changes');
-  const closeBtn = h('button.btn.close', { title: 'Leave terminal (Esc or Ctrl+]) · ⎋ Esc or Ctrl+[ sends Esc to the terminal', 'aria-label': 'Close' }, icon('close', 16));
+  const closeBtn = h('button.btn.close', { title: 'Leave the console (Esc or Ctrl+]) · the Esc button or Ctrl+[ sends Esc to the terminal', 'aria-label': 'Close' }, icon('close', 16));
   const host = h('div.term-host', { 'data-drop': 'Drop screenshots or files here to put them in the terminal' });
   const keys = h('div.term-keys', { role: 'group', 'aria-label': 'Keys' });
   const say = h('input', { type: 'text', placeholder: 'Reply, or tell it what to do next...', 'aria-label': 'Prompt', enterkeyhint: 'send', autocomplete: 'off' }) as HTMLInputElement;
   const sayBtn = h('button.btn.primary', { type: 'submit' }, 'Send');
-  const sayForm = h('form.term-say', {}, dictateField(say), sayBtn);
-  const keypad = opts.keypad ? h('div.term-keypad', {}, keys, sayForm) : null;
+  // The quick keys sit in the reply bar as one compact segmented control, before the box.
+  const sayForm = h('form.term-say', {}, keys, dictateField(say), sayBtn);
+  const keypad = opts.keypad ? h('div.term-keypad', {}, sayForm) : null;
+  const meta = termMeta();
   const tabs = termTabs(workerId, { host, keypad, focusTerm: () => term.focus() });
   // What you say is typed in at the terminal's cursor, as a paste, for you to read over and send (see dictate.ts).
   const mic = dictation(
@@ -150,7 +154,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
   );
   host.append(mic.live);
   // The keypad has an Esc of its own, and a on its prompt box.
-  const el = h('div.modal.term', { role: 'dialog', 'aria-label': `${info.name} terminal` }, h('header', {}, dot, title, pill, cost, viewers, typed, modelsBtn, keypad ? null : mic.button, keypad ? null : escBtn, onChanges ? changesBtn : null, closeBtn), tabs.bar, host, tabs.pages, keypad);
+  const el = h('div.modal.term', { role: 'dialog', 'aria-label': `${info.name} console` }, h('header', {}, dot, title, pill, cost, viewers, typed, modelsBtn, keypad ? null : mic.button, keypad ? null : escBtn, onChanges ? changesBtn : null, closeBtn), tabs.bar, meta.el, host, tabs.pages, keypad);
 
   const term = new Terminal({
     fontFamily: '"JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
@@ -263,6 +267,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
     cost.textContent = w.kind !== 'agent' ? '' : usageState === 'tracked' && w.usage ? usageLabel(w.usage, workerProvider) : waiting ? waiting : usageState === 'untracked' ? 'usage untracked' : '';
     cost.title = w.kind === 'agent' && w.usage ? usageTitle(w.usage, workerProvider) : w.kind === 'agent' ? providerUsageNote(workerProvider!) : '';
     renderPresence(w);
+    meta.paint(w);
     const openCode = w.kind === 'agent' && resolvedProvider(w.provider, store.project) === 'opencode';
     modelsBtn.classList.toggle('hidden', !openCode);
     modelsBtn.toggleAttribute('disabled', !openCode || !ready || isAsleep(w.status));
@@ -340,7 +345,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
     doing: `in ${info.name}'s terminal`,
     onClose: (byEsc) => {
       // Leaving with Esc while the program wanted one (you were in /skills, say): say how to send it one.
-      if (byEsc && ready && screenMentionsEsc(term)) toast(`Esc left the terminal. To send ${store.workers.get(workerId)?.name ?? info.name} an Esc (to close a menu), use ⎋ Esc at the top or Ctrl+[`);
+      if (byEsc && ready && screenMentionsEsc(term)) toast(`Esc left the terminal. To send ${store.workers.get(workerId)?.name ?? info.name} an Esc (to close a menu), use the Esc button at the top or Ctrl+[`);
       listeners.delete(onMsg);
       unsub();
       unsubPeers();
@@ -474,7 +479,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
     term.focus();
   });
   for (const k of KEYPAD) {
-    const b = h('button.btn', { type: 'button', title: k.title, 'aria-label': k.title }, k.label);
+    const b = h('button.btn', { type: 'button', title: k.title, 'aria-label': k.title, class: k.touch ? 'touch-only' : '' }, k.label);
     // Not the terminal's focus: a key from here shouldn't bring up the phone's keyboard.
     b.addEventListener('pointerdown', (e) => e.preventDefault());
     b.addEventListener('click', () => {

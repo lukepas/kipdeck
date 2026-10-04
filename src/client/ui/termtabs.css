@@ -8,8 +8,8 @@
 .term-tab.on .term-tab-label, .term-tab-label:hover { color: var(--text); }
 .term-tab-close { width: 20px; height: 20px; margin-right: 2px; padding: 0; border: none; background: none; border-radius: var(--radius-chip); display: grid; place-items: center; color: var(--muted); cursor: pointer; }
 .term-tab-close:hover { background: var(--surface-3); color: var(--text); }
-.term-tab-add { flex: none; height: 24px; padding: 0 8px; font: inherit; font-size: 12px; font-weight: 500; color: var(--muted); background: none; border: 1px dashed var(--line-strong); border-radius: var(--radius); cursor: pointer; white-space: nowrap; }
-.term-tab-add:hover { color: var(--text); border-color: var(--muted); }
+.term-tab-add { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 33px; padding: 0 10px; font: inherit; font-size: 12px; font-weight: 500; color: var(--muted); background: none; border: 0; border-bottom: 2px solid transparent; border-radius: 0; cursor: pointer; white-space: nowrap; }
+.term-tab-add:hover { color: var(--text); background: var(--surface-2); }
 .term-tab-out { flex: none; font-size: 12px; font-weight: 500; color: var(--text); white-space: nowrap; }
 .term-tab-form { display: flex; gap: 6px; flex-wrap: wrap; flex-basis: 100%; padding: 6px 0 8px; }
 .term-tab-form input { height: 28px; padding: 0 8px; border: 1px solid var(--line-strong); border-radius: var(--radius); font: inherit; font-size: 13px; color: var(--text); background: var(--void); }

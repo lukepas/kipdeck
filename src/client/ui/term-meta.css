@@ -1,0 +1,17 @@
+/* The unit console's left column (ui/term-meta.ts): the call sign large, then the unit's facts as
+   small mono labels over their values. */
+.term-meta { display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: auto; padding: 16px 14px; background: var(--surface-1); border-right: 1px solid var(--line); }
+.tm-sign { font: 600 28px var(--font-mono); letter-spacing: .02em; color: var(--text); line-height: 1; }
+.tm-name { font-weight: 600; font-size: 15px; display: flex; flex-direction: column; gap: 2px; }
+.tm-name small { font: 400 11px var(--font-mono); color: var(--muted); }
+.tm-state { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 6px 8px; border-radius: var(--radius); background: var(--surface-2); box-shadow: inset 2px 0 0 var(--line-strong); font-size: 12px; }
+.tm-state small { font: 400 11px var(--font-mono); color: var(--muted); }
+.tm-state.needs-you { box-shadow: inset 2px 0 0 var(--signal); color: var(--signal); }
+.tm-state.stuck { box-shadow: inset 2px 0 0 var(--stuck); color: var(--stuck); }
+.tm-state.review { box-shadow: inset 2px 0 0 var(--review); }
+.tm-line { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tm-k { font: 500 10px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--faint); }
+.tm-v { font: 400 12px var(--font-mono); color: var(--text); overflow-wrap: anywhere; }
+.tm-v a { display: inline-flex; align-items: center; gap: 4px; }
+.tm-proof { color: var(--proof); display: flex; flex-direction: column; }
+.tm-proof small { color: var(--muted); font-size: 11px; }

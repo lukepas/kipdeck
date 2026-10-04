@@ -1,6 +1,7 @@
 // Tabs on a worker's terminal: the terminal itself, plus any web pages pinned open beside it (a
 // linked chat, docs for the task). They're this browser's own: nothing goes to the office or to
 // anyone else, and they're kept per worker until the page reloads.
+import { icon } from './icons';
 import './termtabs.css';
 import { clip, h, toast } from './dom';
 import { WEB_TAB_SANDBOX, webTabUrl } from '../../shared/webtabs';
@@ -30,7 +31,7 @@ export function termTabs(workerId: string, opts: TermTabsOptions): { bar: HTMLEl
   const tabUrl = h('input', { type: 'url', placeholder: 'https://...', 'aria-label': 'Web page address', autocomplete: 'off' }) as HTMLInputElement;
   const cancelBtn = h('button.btn', { type: 'button' }, 'Cancel');
   const form = h('form.term-tab-form.hidden', {}, tabName, tabUrl, h('button.btn.primary', { type: 'submit' }, 'Add'), cancelBtn);
-  const addBtn = h('button.term-tab-add', { type: 'button', title: 'Pin a web page open beside this terminal (a linked chat, docs, anything with an address)' }, '+ Web page');
+  const addBtn = h('button.term-tab-add', { type: 'button', title: 'Pin a web page open beside this console (a linked chat, docs, anything with an address)' }, icon('link', 12), 'Pin a link');
   // Plenty of sites won't show inside another page (chatgpt.com doesn't): this opens the one showing in a tab of its own.
   const openOut = h('a.term-tab-out.hidden', { target: '_blank', rel: 'noopener noreferrer', title: "Open this page in a browser tab of its own (for a site that won't show here)" }, 'New tab') as HTMLAnchorElement;
   const bar = h('div.term-tabbar', {}, tabsBar, openOut, addBtn, form);
@@ -42,7 +43,7 @@ export function termTabs(workerId: string, opts: TermTabsOptions): { bar: HTMLEl
   let active = 'main';
 
   const render = () => {
-    const mainTab = h('div.term-tab', { class: active === 'main' ? 'on' : '' }, h('button.term-tab-label', { type: 'button', role: 'tab', 'aria-selected': String(active === 'main'), onclick: () => show('main') }, 'Terminal'));
+    const mainTab = h('div.term-tab', { class: active === 'main' ? 'on' : '' }, h('button.term-tab-label', { type: 'button', role: 'tab', 'aria-selected': String(active === 'main'), onclick: () => show('main') }, 'Console'));
     tabsBar.replaceChildren(
       mainTab,
       ...tabs.map((t) =>
