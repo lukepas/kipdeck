@@ -1,0 +1,72 @@
+/* The Plot (shared/plot.ts): the deck as a plan in hairlines. Plan units are meters, so every stroke
+   width here is in meters too (.04 is about a pixel at the 2D view's size). Hue only for exceptions:
+   Signal for needs you, red for stuck, amber for review, violet for the Proof corner. */
+.plot { display: block; width: 100%; height: 100%; font-family: var(--font-mono); }
+.plot text { stroke: none; }
+.plot .p-grid line { stroke-width: .025; }
+.plot .p-grid .minor { stroke: color-mix(in oklab, var(--line) 55%, transparent); }
+.plot .p-grid .major { stroke: var(--line); }
+.plot .p-slab { fill: none; stroke: var(--line-strong); stroke-width: .08; }
+.plot .p-curb { stroke: var(--line-strong); stroke-width: .1; stroke-dasharray: .5 .3; }
+.plot .p-col { stroke: var(--line); stroke-width: .03; stroke-dasharray: .3 .3; }
+.plot .p-bubble { fill: var(--void); stroke: var(--line-strong); stroke-width: .05; }
+.plot .p-bubble-t { fill: var(--muted); font: 600 .62px var(--font-mono); text-anchor: middle; }
+
+.plot .p-table-edge { fill: var(--surface-1); stroke: var(--line-strong); stroke-width: .08; }
+.plot .p-wedge { fill: none; stroke: var(--line-strong); stroke-width: .04; }
+.plot .p-wedge.done { fill: color-mix(in oklab, var(--working) 22%, transparent); }
+.plot .p-wedge.active { stroke: var(--text); stroke-width: .06; }
+.plot .p-mark-lead { fill: var(--muted); }
+.plot .p-mark-trail { fill: none; stroke: var(--muted); stroke-width: 2.5; }
+
+.plot .p-consoles rect { fill: var(--surface-2); stroke: var(--line-strong); stroke-width: .05; }
+.plot .p-pod { fill: var(--muted); font: 700 1.25px var(--font-display); font-stretch: var(--stretch-display); text-anchor: middle; }
+.plot .p-pod-goal { fill: var(--faint); font: 500 .5px var(--font-ui); text-anchor: middle; }
+.plot .p-stripe { fill: none; stroke: var(--line-strong); stroke-width: .05; }
+.plot .p-tick { stroke: var(--line-strong); stroke-width: .05; }
+.plot .p-tick-t { fill: var(--faint); font: 500 .42px var(--font-mono); text-anchor: middle; }
+
+.plot .p-zone-t { fill: var(--faint); font: 600 .5px var(--font-display); font-stretch: var(--stretch-display); letter-spacing: .06px; }
+.plot .p-zone-t.attention { fill: var(--muted); }
+.plot .p-zone-t.proof { fill: var(--proof); }
+.plot .p-board { stroke: var(--line-strong); stroke-width: .2; }
+.plot .p-board.attention { stroke: var(--muted); }
+.plot .p-proof { fill: var(--proof); }
+.plot .p-proof-line { fill: none; stroke: var(--proof); stroke-width: .05; opacity: .8; }
+.plot .p-glass { fill: none; stroke: var(--muted); stroke-width: .05; stroke-dasharray: .12 .1; }
+.plot .p-furniture { fill: none; stroke: var(--line-strong); stroke-width: .04; }
+.plot .p-lift { fill: var(--surface-1); stroke: var(--line-strong); stroke-width: .05; }
+
+.plot .p-block-box { fill: var(--void); stroke: var(--line-strong); stroke-width: .05; }
+.plot .p-block-rule { stroke: var(--line); stroke-width: .04; }
+.plot .p-block-brand { fill: var(--text); font: 700 .34px var(--font-display); font-stretch: var(--stretch-display); letter-spacing: .03px; }
+.plot .p-block-deck { fill: var(--muted); font: 600 .34px var(--font-display); font-stretch: var(--stretch-display); letter-spacing: .03px; }
+.plot .p-block-small { fill: var(--faint); font: 400 .26px var(--font-mono); }
+
+/* Units: glyph first, then the call sign in mono. */
+.plot .p-unit { cursor: default; }
+.plot .p-unit[role=button] { cursor: pointer; }
+.plot .p-unit:focus { outline: none; }
+.plot .p-unit:focus-visible .p-sign, .plot .p-unit:hover .p-sign { fill: var(--text); }
+.plot .p-sign { fill: var(--muted); font: 500 .58px var(--font-mono); paint-order: stroke; stroke: var(--void); stroke-width: .18px; stroke-linejoin: round; }
+.plot .l-needs-you .p-g { fill: var(--signal); stroke: var(--void); stroke-width: .06; }
+.plot .l-needs-you .p-ring { fill: none; stroke: var(--signal); stroke-width: .06; opacity: .6; transform-box: fill-box; transform-origin: center; animation: plot-pulse 1.2s var(--ease) infinite; }
+.plot .l-needs-you .p-sign { fill: var(--signal); }
+.plot .l-stuck .p-g { fill: none; stroke: var(--stuck); stroke-width: .1; stroke-linejoin: miter; }
+.plot .l-stuck .p-g-bar { stroke: var(--stuck); stroke-width: .1; }
+.plot .l-stuck .p-hatch { fill: url(#plot-hatch); stroke: var(--stuck); stroke-width: .04; opacity: .7; }
+.plot .p-hatch-line { stroke: var(--stuck); stroke-width: .05; }
+.plot .l-stuck .p-sign { fill: var(--stuck); }
+.plot .l-review .p-g { fill: none; stroke: var(--review); stroke-width: .1; }
+.plot .l-review .p-g-dot { fill: var(--review); }
+.plot .l-working .p-g { fill: var(--working); opacity: .8; }
+.plot .l-parked .p-g { fill: var(--faint); }
+.plot .l-parked .p-sign { fill: var(--faint); }
+.plot .l-merged .p-g { fill: var(--proof-tint); stroke: var(--proof); stroke-width: .08; }
+.plot .l-merged .p-g-check { fill: none; stroke: var(--proof); stroke-width: .1; }
+@keyframes plot-pulse { from { transform: scale(1); opacity: .9; } to { transform: scale(1.35); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .plot .l-needs-you .p-ring { animation: none; } }
+
+/* The art behind the sign-in pages: the same drawing, quieter. */
+.plot-art .p-grid .minor { stroke: color-mix(in oklab, var(--line) 35%, transparent); }
+.plot-art .p-grid .major { stroke: color-mix(in oklab, var(--line) 70%, transparent); }

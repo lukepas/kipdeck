@@ -21,6 +21,27 @@ body.lite { min-height: 100dvh; background: var(--void); -webkit-tap-highlight-c
 .lite-bar .counters { margin: 0; }
 
 .lite-main { width: 100%; max-width: 760px; margin: 0 auto; padding: 14px 12px calc(96px + env(safe-area-inset-bottom)); }
+/* The deck plan (shared/plot.ts) beside the list on a wide window, above it on a middling one, and
+   folded away on a phone, where the ranked list is the whole page. */
+.lite-plot-panel { display: none; }
+.lite-plot { aspect-ratio: 39.2 / 29.4; width: 100%; background: var(--void); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.lite-legend { display: inline-flex; flex-wrap: wrap; gap: 4px 14px; margin-left: auto; font: 400 11px var(--font-ui); text-transform: none; letter-spacing: 0; font-stretch: 100%; color: var(--muted); }
+.lite-key { display: inline-flex; align-items: center; gap: 5px; }
+.lite-key.l-needs-you .ico { color: var(--signal); }
+.lite-key.l-stuck .ico { color: var(--stuck); }
+.lite-key.l-review .ico { color: var(--review); }
+.lite-key.l-working .ico { color: var(--working); }
+.lite-key.l-parked .ico { color: var(--faint); }
+@media (min-width: 720px) {
+  .lite-main { max-width: 1440px; padding-left: 20px; padding-right: 20px; }
+  .lite-plot-panel { display: block; margin-bottom: 18px; }
+  .lite-plot { max-height: 52vh; margin: 0 auto; }
+}
+@media (min-width: 1100px) {
+  .lite-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(420px, 520px); gap: 24px; align-items: start; }
+  .lite-plot-panel { position: sticky; top: 66px; margin: 0; }
+  .lite-plot { max-height: calc(100dvh - 150px); }
+}
 .lite-meta { margin: 0 0 12px; font: 400 11px var(--font-mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lite-meta:empty { display: none; }
 .lite-elsewhere { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
@@ -55,9 +76,15 @@ body.lite { min-height: 100dvh; background: var(--void); -webkit-tap-highlight-c
 .lite-card:hover { background: var(--surface-2); }
 .lite-card:active { background: var(--surface-3); }
 .lite-card:focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--signal); }
-.lite-card .dot { flex: none; width: 10px; height: 10px; margin-top: 5px; }
+.lite-glyph { flex: none; display: grid; place-items: center; width: 20px; height: 20px; color: var(--muted); }
+.lite-glyph.l-needs-you { color: var(--signal); }
+.lite-glyph.l-stuck { color: var(--stuck); }
+.lite-glyph.l-review { color: var(--review); }
+.lite-glyph.l-working { color: var(--working); }
+.lite-glyph.l-parked { color: var(--faint); }
+.lite-addr { margin-left: 8px; font: 500 11px var(--font-mono); color: var(--muted); letter-spacing: .02em; }
 .lite-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.lite-name { font-size: 14px; font-weight: 600; }
+.lite-name { display: flex; align-items: baseline; flex-wrap: wrap; font-size: 14px; font-weight: 600; }
 .lite-task { font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
 .lite-now { font: 400 12px/1.45 var(--font-mono); color: var(--muted); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .lite-worker.needs_input .lite-now { color: var(--text); }
@@ -75,7 +102,11 @@ body.lite { min-height: 100dvh; background: var(--void); -webkit-tap-highlight-c
 .lite-nav .n { min-width: 18px; padding: 0 4px; border-radius: var(--radius-chip); background: var(--surface-3); color: var(--text); font: 500 11px/16px var(--font-mono); }
 .lite-nav .btn.primary .n { background: rgb(13 19 26 / .2); color: var(--on-signal); }
 /* A wide window: the bars line up with the list. */
-@media (min-width: 761px) { .lite-nav { padding-left: calc(50% - 368px); padding-right: calc(50% - 368px); } }
+@media (min-width: 720px) and (max-width: 1099px) { .lite-nav { padding-left: max(20px, calc(50% - 700px)); padding-right: max(20px, calc(50% - 700px)); } }
+@media (min-width: 1100px) { .lite-nav { left: auto; width: min(560px, 100%); right: max(0px, calc(50% - 720px)); padding-right: 20px; border-left: 1px solid var(--line); } }
+.lite-icon { width: 36px; padding: 0; justify-content: center; }
+.lite-icon[aria-pressed=true] { background: var(--surface-3); }
+@media print { .lite-bar, .lite-nav, #toasts, .conn { display: none; } .lite-plot-panel { position: static; } }
 @media (max-width: 760px) { .lite-bar .counters { display: none; } }
 @media (max-width: 420px) { .lite-bar .brand-word { display: none; } .lite-bar .brand { padding-right: 8px; } }
 

@@ -97,6 +97,7 @@ export const ICONS = {
   draft: '<path d="M6 4.5h9l3.5 3.5v11.5H6Z"/><path d="M9.5 12h5M9.5 15.5h3" stroke-dasharray="2 2"/>',
   phone: '<path d="M7 3.5h10v17H7Z"/><path d="M11 17.5h2"/>',
   home: '<path d="M4 11 12 4l8 7"/><path d="M6.5 9v11h11V9"/>',
+  contrast: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor" stroke="none"/>',
   logout: '<path d="M14 4.5H4.5v15H14"/><path d="M10 12h10M16.5 8.5 20 12l-3.5 3.5"/>',
 } as const;
 

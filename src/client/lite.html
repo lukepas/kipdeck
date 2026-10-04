@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="auto">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -21,14 +21,21 @@
       </label>
       <div id="lite-counters" class="counters" role="group" aria-label="Units by state"></div>
       <button id="btn-mission" class="btn" type="button" title="Mission control: what needs someone, on every deck, and the deck's goals">Mission <span class="n"></span></button>
+      <button id="btn-print" class="btn lite-icon" type="button" aria-pressed="false" title="Light print view, for reading on white or printing" aria-label="Light print view"></button>
       <a id="to-3d" class="btn" href="/?3d=1" title="The 3D deck, where you walk around">3D</a>
     </header>
     <main class="lite-main">
+      <section class="lite-plot-panel" aria-labelledby="plot-h">
+        <h2 id="plot-h" class="lite-h">Deck plan <span class="lite-legend" id="legend"></span></h2>
+        <div id="plot" class="lite-plot"></div>
+      </section>
+      <div class="lite-list">
       <p id="floor-meta" class="lite-meta"></p>
       <div id="mission-strip" class="lite-mission"></div>
       <div id="elsewhere" class="lite-elsewhere hidden"></div>
       <h2 class="lite-h">Units <span id="waiting-now" class="lite-waiting"></span><button id="btn-digest" class="btn lite-all" type="button" title="While you were away: what happened since you were last here">Catch up</button><button id="all-floors" class="btn lite-all" type="button" aria-pressed="false" title="Show the units on every deck, not just this one">All decks</button></h2>
-      <ul id="workers" class="lite-workers"></ul>
+      <ol id="workers" class="lite-workers" aria-label="Units, most in need of you first"></ol>
+      </div>
     </main>
     <nav class="lite-nav" aria-label="Deck">
       <button id="btn-issues" class="btn" type="button" data-icon="issue">Issues <span class="n"></span></button>

@@ -35,7 +35,11 @@ import { repoChoices } from './shared/hiring';
 // The tab title counts the workers waiting on someone, on every floor, as the 3D office's does.
 import { renderTitle } from './shared/title';
 import { mountCounters } from './ui/counters';
-import { icon, isIcon, type IconName } from './ui/icons';
+import { icon, isIcon, LEVEL_ICON, type IconName } from './ui/icons';
+import { address } from '../shared/callsign';
+import { LEVEL_LABEL, type AttentionLevel } from '../shared/attention';
+import { mountLitePlot } from './lite-plot';
+import { mountThemeToggle } from './lite-theme';
 
 // Sent here because this browser can't draw the 3D office (see noWebGL in core/scene.ts).
 if (new URLSearchParams(location.search).get('why') === 'webgl') {
@@ -101,14 +105,14 @@ function renderFloors() {
   floorSelect.disabled = store.floors.length < 2;
   const p = store.project;
   const f = store.currentFloor();
-  $('floor-meta').textContent = p ? [p.branch && `⎇ ${p.branch}`, f?.repo ?? p.dir, f && `${f.people} here`].filter(Boolean).join(' · ') : store.floors.length ? '' : 'Add a project from Floors in the 3D office.';
+  $('floor-meta').textContent = p ? [p.branch && `branch ${p.branch}`, f?.repo ?? p.dir, f && `${f.people} here`].filter(Boolean).join(' · ') : store.floors.length ? '' : 'Add a project from Floors in the 3D office.';
   // Someone waiting on another floor: a way straight there.
   const elsewhere = store.floors.filter((o) => o.id !== store.floor && o.waiting > 0 && !o.cloning);
   const box = $('elsewhere');
   box.classList.toggle('hidden', !elsewhere.length);
   box.replaceChildren(
     ...elsewhere.map((o) =>
-      h('button.btn.lite-go', { type: 'button', onclick: () => net.send({ t: 'floor.go', floor: o.id }) }, `${o.waiting} waiting on ${o.name}`, h('span', { 'aria-hidden': 'true' }, '→')),
+      h('button.btn.lite-go', { type: 'button', onclick: () => net.send({ t: 'floor.go', floor: o.id }) }, `${o.waiting} waiting on ${o.name}`, icon('next', 14)),
     ),
   );
   renderTitle();
@@ -140,7 +144,7 @@ function renderWorkers() {
   for (const w of [...store.workers.values()].sort((a, b) => a.createdAt - b.createdAt)) if (!listed.has(w.id)) cards.push(workerCard(w));
   const ul = $('workers');
   ul.replaceChildren(...(digest ? [digest] : []), ...cards);
-  if (!cards.length) ul.append(h('li.lite-empty', {}, store.project ? 'Nobody is working on this floor. New task hires someone.' : 'No workers here.'));
+  if (!cards.length) ul.append(h('li.lite-empty', {}, store.project ? 'No units on this deck yet. New task deploys one.' : 'No units here.'));
   const chip = attentionChip();
   $('waiting-now').textContent = chip.text;
   $('btn-mission').querySelector('.n')!.textContent = chip.total ? String(chip.total) : '';
@@ -150,6 +154,20 @@ function renderWorkers() {
   all.setAttribute('aria-pressed', String(settings.allFloors));
   all.classList.toggle('hidden', store.floors.length < 2);
   renderTitle();
+}
+
+/** A unit's state as its glyph (ui/icons.ts), the shape first and the hue second, as on the deck. */
+function stateGlyph(level: AttentionLevel): HTMLElement {
+  return h('span.lite-glyph', { class: `l-${level}`, title: LEVEL_LABEL[level] }, icon(LEVEL_ICON[level], 16, LEVEL_LABEL[level]));
+}
+
+/** Whether one line already says what the other does (a task and the reason quoting it). */
+function sameText(a: string | undefined, b: string | undefined): boolean {
+  if (!a || !b) return false;
+  const norm = (s: string) => s.toLowerCase().replace(/^\[[a-z]+\]\s*/, '').replace(/\W+/g, ' ').trim();
+  const x = norm(a);
+  const y = norm(b);
+  return !!x && !!y && (x.includes(y) || y.includes(x));
 }
 
 /** Why it needs someone, for its card, when it does. */
@@ -167,8 +185,8 @@ function elsewhereCard(e: RosterEntry, att: Attention): HTMLElement {
     h(
       'button.lite-card',
       { type: 'button', onclick: () => runAction(missionDeps, e, att.action), 'aria-label': `${e.name} on ${e.floorName}: ${att.reason ?? STATUS_LABEL[e.status] ?? e.status}` },
-      h('span.dot', { style: `background:${e.color}` }),
-      h('span.lite-info', {}, h('span.lite-name', {}, e.name), whyLine(att), doing ? h('span.lite-now', {}, doing) : null, h('span.lite-sub', {}, h('b', {}, e.floorName), linkLabel(e) ? ` · ${linkLabel(e)}` : '')),
+      stateGlyph(att.level),
+      h('span.lite-info', {}, h('span.lite-name', {}, e.name, h('span.lite-addr', {}, address(e.deskId))), whyLine(att), doing ? h('span.lite-now', {}, doing) : null, h('span.lite-sub', {}, h('b', {}, e.floorName), linkLabel(e) ? ` · ${linkLabel(e)}` : '')),
       h('span.lite-state', {}, h('span.pill', { class: e.status }, STATUS_LABEL[e.status] ?? e.status)),
     ),
   );
@@ -192,10 +210,10 @@ function workerCard(w: WorkerInfo, att?: Attention): HTMLElement {
           : (w.task?.summary ?? w.activity);
   const sub = [
     w.kind === 'agent' ? `${providerLabel(w.provider, store.project)}${badge ? ` · ${badge}` : ''}` : 'shell',
-    desk && (desk.station ? `${desk.label}` : desk.label),
+    desk?.station ? desk.label : undefined,
     w.worktree && `${w.worktree.branch}`,
     w.pr && `PR #${w.pr.number}`,
-    w.lastInput && `⌨️ ${w.lastInput.by} ${timeAgo(w.lastInput.at)}`,
+    w.lastInput && `typed by ${w.lastInput.by} ${timeAgo(w.lastInput.at)}`,
     store.rosterEntry(w.id) && linkLabel(store.rosterEntry(w.id)!),
   ].filter(Boolean);
   return h(
@@ -204,14 +222,14 @@ function workerCard(w: WorkerInfo, att?: Attention): HTMLElement {
     h(
       'button.lite-card',
       { type: 'button', onclick: () => openWorker(w.id), 'aria-label': `${w.name}, ${STATUS_LABEL[w.status] ?? w.status}: open its terminal` },
-      h('span.dot', { style: `background:${w.color}` }),
+      stateGlyph(att?.level ?? (waiting ? 'needs-you' : asleep ? 'parked' : 'working')),
       h(
         'span.lite-info',
         {},
-        h('span.lite-name', {}, w.name),
+        h('span.lite-name', {}, w.name, h('span.lite-addr', {}, address(w.deskId))),
         whyLine(att),
-        task ? h('span.lite-task', {}, task) : null,
-        now ? h('span.lite-now', {}, now) : null,
+        task && !sameText(task, att?.reason) ? h('span.lite-task', {}, task) : null,
+        now && !sameText(now, task) && !sameText(now, att?.reason) ? h('span.lite-now', {}, now) : null,
         h('span.lite-sub', {}, sub.join(' · ')),
       ),
       h('span.lite-state', {}, h('span.pill', { class: w.status }, STATUS_LABEL[w.status] ?? w.status), waiting && w.waitingSince ? h('small', {}, timeAgo(w.waitingSince)) : null),
@@ -249,7 +267,7 @@ function openWorker(id: string) {
   if (!w) return;
   if (w.lost) return fixLostWorktree(w);
   if (isAsleep(w.status)) {
-    if (!w.sessionId && w.kind !== 'shell') toast(`${w.name} has no saved session — starting a fresh one`, 'warn');
+    if (!w.sessionId && w.kind !== 'shell') toast(`${w.name} has no saved session: starting a fresh one`, 'warn');
     net.send({ t: 'worker.resume', workerId: id });
   }
   openTerminal(net, id, () => openChanges(net, id, () => openWorker(id)), undefined, { keypad: true });
@@ -268,7 +286,7 @@ function fixLostWorktree(w: WorkerInfo) {
     others: others.map((o) => o.name),
     openTerminal: isAsleep(w.status) ? undefined : () => openTerminal(net, w.id, () => openChanges(net, w.id, () => openWorker(w.id)), undefined, { keypad: true }),
     rebuild: (all) => {
-      toast(all ? `Rebuilding ${others.length + 1} worktrees…` : `Rebuilding ${w.name}'s worktree…`);
+      toast(all ? `Rebuilding ${others.length + 1} worktrees...` : `Rebuilding ${w.name}'s worktree...`);
       net.send({ t: 'worker.rebuild', workerId: w.id, all });
     },
     sendHome: () => confirmSendHome(net, w),
@@ -298,7 +316,7 @@ function sendToWorker(title: string, text: { context?: string; initial?: string 
   // The back office's desks too, as far as the floor's built out (see WING).
   const desk = nextFreeSeat((id) => !!store.workerAtDesk(id), store.floorPlan.wing)?.id;
   const awake = [...store.workers.values()].filter((w) => w.kind === 'agent' && !isAsleep(w.status));
-  if (!desk && !awake.length) return toast('Every desk and bean bag is taken — send a worker home first', 'warn');
+  if (!desk && !awake.length) return toast('Every console and Standby seat is taken: stand a unit down first', 'warn');
   openAsk({
     title,
     ...text,
@@ -393,6 +411,16 @@ watchStuck((e, reason) => {
 // The nav's glyphs (ui/icons.ts), and the counters the 3D office's top bar has too.
 for (const b of document.querySelectorAll<HTMLElement>('.lite-nav [data-icon]')) if (isIcon(b.dataset.icon ?? '')) b.prepend(icon(b.dataset.icon as IconName, 16));
 mountCounters($('lite-counters'), (tab) => showMission(tab));
+// The deck plan beside the list (shared/plot.ts), and the key to its glyphs.
+mountLitePlot($('plot'), (id) => {
+  const e = store.rosterEntry(id);
+  if (store.workers.has(id)) openWorker(id);
+  else if (e) runAction(missionDeps, e, 'look');
+});
+$('legend').replaceChildren(
+  ...(['needs-you', 'stuck', 'review', 'working', 'parked'] as const).map((l) => h('span.lite-key', { class: `l-${l}` }, icon(LEVEL_ICON[l], 12), l === 'parked' ? 'Parked' : LEVEL_LABEL[l])),
+);
+mountThemeToggle($('btn-print'));
 
 $('btn-issues').addEventListener('click', () => openBoard('issues', net, boardActions()));
 $('btn-pulls').addEventListener('click', () => openBoard('pulls', net, boardActions()));
