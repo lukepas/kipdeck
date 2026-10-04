@@ -82,6 +82,18 @@ Workers run as the same OS user as the office, so a worker could read key files 
 
 Who merged goes into the Release event as a pseudonym: an HMAC of the GitHub user id under a secret the office keeps in its data folder (`merger-pseudonym.secret`, mode 0600), the same value its attestations on Base Sepolia use. GitHub ids are sequential, so a plain hash of one could be reversed by trying them all; this one can't without the secret.
 
+## Without the office: the GitHub Action
+
+A repository can use the escrow without running an office at all. [onchain/action](../onchain/action/README.md) is a JavaScript action a maintainer adds to a workflow on `pull_request` closed. When a pull request from the repository itself (never a fork) is merged by a person with write access, it finds the live bounty of each issue the pull request closes (`Closes #N`), opened with the repository's attester and approver, and signs the claim for the author's wallet, taken from a reviewed `.github/bounty-wallets.json` or a `Bounty-Wallet:` line in the pull request. The checks are the SDK's, the same the office runs.
+
+The release still needs the approver, in one of three ways the action's README weighs against each other:
+
+- **Manual** (recommended): the action prepares the release on the approver's durable nonce account and posts it on the pull request; the approver checks and co-signs it on their own machine with `ao-bounty cosign`. The approver key never enters GitHub.
+- **Gated**: the approver key is an environment secret behind required reviewers, and a release job waits for one of them to approve.
+- **Automatic**: the approver key is a repository secret and the same run pays, which leaves no second pair of eyes against anyone with write access.
+
+The action can also write the Base Sepolia attestation for the merge. Keys reach it only as GitHub encrypted secrets.
+
 ## The same merge on Base Sepolia
 
 With `--attest`, the merge that pays a bounty is also attested on Base Sepolia, and the attestation carries the payout's devnet signature when the payout went out first. Office PRs without a bounty are attested too. See [Proof of merge on Base Sepolia](proof-of-merge.md). With `--reputation`, the agent's ERC-8004 feedback for a merge whose bounty was paid carries the tag `paid`, and what each operator earned shows on the board (see [Agent reputation from merges](reputation.md)).
@@ -91,6 +103,7 @@ With `--attest`, the merge that pays a bounty is also attested on Base Sepolia, 
 | Piece | File |
 | --- | --- |
 | Program and SDK | `onchain/solana/` |
+| The GitHub Action (no office needed) | `onchain/action/` |
 | Office service (claims, merge checks, payouts) | `src/server/bounties.ts` |
 | Funding and the Action's payloads | `src/server/chain/funding.ts` |
 | The merger pseudonym and its secret | `src/server/chain/pseudonym.ts` |
@@ -108,5 +121,6 @@ With `--attest`, the merge that pays a bounty is also attested on Base Sepolia, 
 - The program, the SDK and the office side pass their tests: Rust host tests, SDK tests (some of them litesvm runs of the built program), and the office's bounty tests in `npm test`.
 - One bounty ran end to end (open, fund, claim, release) on a local `solana-test-validator`, signatures in `onchain/solana/deployments/localnet.json`.
 - Devnet: the program is deployed (`JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`) and was upgraded in place on 2026-10-03 to put the attester and approver in a bounty's seeds. Demo bounties ran open, fund, claim and release there before and after the upgrade, one of them paid through the approver-wallet path, all with no GitHub merge behind them; signatures in `onchain/solana/deployments/devnet.json`.
+- The GitHub Action passed its unit tests and an end-to-end run against `solana-test-validator`, and ran once live on devnet against a fake GitHub API: claim, a release prepared on the approver's durable nonce, and the approver's cosign. It has not run from a real repository's workflow yet (see [onchain/action](../onchain/action/README.md#status)).
 - The devnet upgrade authority is a single key, so whoever holds it could replace the program: this deployment is not custody-free. A mainnet deployment would need a multisig upgrade authority first, then none.
 - Not audited. Testnet only.
