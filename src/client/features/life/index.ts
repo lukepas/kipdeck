@@ -23,7 +23,7 @@ import { GIVE_WAY, bump, decay, headingPhrases, lifeScale, panelMode, percentTo,
 const TRACE = { empty: 0.08, parked: 0.15, review: 0.3, 'needs-you': 0.1, stuck: 0, merged: 0.3 } as const;
 
 export function installLife(ctx: Ctx, parts: Pick<Parts, 'views'>) {
-  const { panels, pulses, heading, ticker, holo, stations } = ctx.office;
+  const { panels, pulses, motes, heading, ticker, holo, stations } = ctx.office;
 
   /** Each unit's activity (0-1) and the screen version it last saw, by worker id. */
   const activity = new Map<string, { a: number; printed: number; nextPulse: number }>();
@@ -124,6 +124,8 @@ export function installLife(ctx: Ctx, parts: Pick<Parts, 'views'>) {
       const gain = stationGain({ ducking: false, podHushed: hushed.has(podOf(v.deskId) ?? v.deskId), anyWaiting }) * duck;
       v.model.setBusy(busy * (0.4 + 0.6 * gain));
       panels.set(v.deskId, panelMode(kind), busy, gain);
+      // Motes off its console: a few for a quiet unit at work, more the busier it is.
+      motes.set(v.deskId, kind === 'working' ? (0.3 + 0.7 * busy) * gain : 0);
       const trace = kind === 'working' ? (0.3 + 0.7 * busy) * (0.35 + 0.65 * gain) : TRACE[kind];
       if (Math.abs((traced.get(v.deskId) ?? -1) - trace) > 0.02) {
         traced.set(v.deskId, trace);
@@ -140,6 +142,7 @@ export function installLife(ctx: Ctx, parts: Pick<Parts, 'views'>) {
     for (const deskId of shown) {
       if (seen.has(deskId)) continue;
       panels.set(deskId, panelMode('empty'), 0, 1);
+      motes.set(deskId, 0);
       traced.set(deskId, TRACE.empty);
       stations.trace(deskId, TRACE.empty);
     }
@@ -147,6 +150,7 @@ export function installLife(ctx: Ctx, parts: Pick<Parts, 'views'>) {
     for (const d of seen) shown.add(d);
     for (const id of activity.keys()) if (!views.has(id)) activity.delete(id);
 
+    motes.step(dt * scale);
     if (scale > 0) pulses.step(dt * scale);
     else pulses.clear();
     holo.flow(dt, scale * deckGain);

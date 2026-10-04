@@ -26,6 +26,7 @@ import { displays } from '../../features/bridge/displays';
 import { stations } from '../../features/bridge/stations';
 import { panels } from '../../features/life/panels';
 import { pulses } from '../../features/life/pulses';
+import { motes } from '../../features/life/motes';
 import { heading } from '../../features/life/heading';
 import { ticker } from '../../features/life/ticker';
 
@@ -51,9 +52,10 @@ function floorPlan() {
     heading,
     desks,
     stations,
-    // The stations' screens and the data pulses from them to the holo table (features/life).
+    // The stations' screens, the data pulses from them to the holo table and the motes off them (features/life).
     panels,
     pulses,
+    motes,
     podPlates,
     beanbags,
     kiosks,

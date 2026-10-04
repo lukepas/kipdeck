@@ -10,8 +10,11 @@ import { UNIT, buildUnit, paintShell, setGlyph, type Shell, type UnitBody } from
 import { calloutSprite, clip, type CalloutText } from './unit-callout';
 import { GLYPH_SCREEN, GroundRing, glyphSprite, setGlyphKind } from './unit-marks';
 
-/** The smallest a callout gets on screen: this much of the view's height. */
+/** The smallest a callout gets on screen, and the tallest a full one gets up close: this much of the view's height. */
 const CALLOUT_MIN = 0.02;
+const CALLOUT_MAX = 0.075;
+/** How far (m) a callout is lifted before a leader line ties it back to its unit's head. */
+const LEADER_FROM = 0.12;
 /** How long the violet check stays over a unit once its pull request has merged (s). */
 const MERGED_SHOW = 6;
 /** The needs-you ring's pulse: one every this many seconds, out to this much bigger. */
@@ -47,10 +50,17 @@ const tmp = new THREE.Vector3();
 export type CalloutMode = 'full' | 'compact' | 'hidden';
 const VISOR_DARK = new THREE.Color('#0E151C');
 const VISOR_LIT = new THREE.Color('#7F95A9');
-/** A working unit's band and the glow under it lean this far toward ship-cyan as it gets busy (features/life). */
-const BUSY_TINT = { band: 0.65, under: 0.85 } as const;
+/**
+ * A working unit wears ship-cyan: its band, its visor and a soft halo on the floor under it, at least
+ * this much of the way from steel to cyan however quiet it is, all the way as it gets busy (features/life).
+ */
+const WORK_TINT = { band: 0.7, under: 0.85, visor: 0.4 } as const;
 const STEEL = new THREE.Color(DECK.working);
 const SHIP = new THREE.Color(DECK.ship);
+/** At work, its head bobs with its typing (m) and it breathes (Hz). */
+const BOB = { lift: 0.012, hz: 0.45 } as const;
+/** Even a quiet unit's hands stay at its console, working it a little: this much of a busy one's. */
+const IDLE_HANDS = 0.35;
 /** Its hands at the console while it's busy: how far they reach forward (radians), how much they work, how fast (Hz). */
 const TYPING = { reach: 0.55, tap: 0.07, hz: 5.5 } as const;
 /** At work, a slow turn of the head and shoulders now and then (radians, about 0.4 degrees; seconds a sway). */
@@ -73,6 +83,8 @@ export class Worker {
   private shadow: THREE.Mesh;
   private glyph = glyphSprite();
   private callout: THREE.Sprite | null = null;
+  /** A hairline from its head up to its callout, while the callout is lifted off it. */
+  private leader: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>;
   /** The same callout shrunk to its glyph and call sign, for where callouts crowd. */
   private compact: THREE.Sprite | null = null;
   private calloutKey = '';
@@ -134,6 +146,11 @@ export class Worker {
     this.mover.add(this.body.figure, this.ring.root, this.glyph);
     this.shadow = contactShadow(0.8, 0.8, 0, 0, 0, 0.006);
     this.mover.add(this.shadow);
+    this.leader = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, 1, 0)]), new THREE.LineBasicMaterial({ color: DECK.steelLight, transparent: true, opacity: 0.7, depthTest: false, depthWrite: false }));
+    this.leader.renderOrder = 9;
+    this.leader.visible = false;
+    this.leader.frustumCulled = false;
+    this.mover.add(this.leader);
     if (Worker.calm) this.spawnT = 1;
     this.paint();
   }
@@ -270,6 +287,14 @@ export class Worker {
     return kind === 'needs-you' || kind === 'stuck' ? 0 : kind === 'review' || kind === 'merged' ? 1 : 2;
   }
 
+  /**
+   * Slides the callout sideways on screen by `frac` of its own width (positive to the right), so it
+   * stays inside the view. Both the full callout and the call sign's.
+   */
+  setNudge(frac: number) {
+    for (const c of [this.callout, this.compact]) if (c) c.center.x = 0.5 - frac;
+  }
+
   /** Lifts the callout (and the glyph over it) `meters` straight up off its place, in the world's meters; it eases there. */
   setLift(meters: number) {
     this.liftTo = meters / (this.mover.getWorldScale(tmp).y || 1);
@@ -388,7 +413,9 @@ export class Worker {
     for (const c of [this.callout, this.compact]) {
       if (!c) continue;
       const base = c.userData.base as THREE.Vector3;
-      const k = Math.max(Worker.weight, (CALLOUT_MIN * Worker.weight * span) / base.y);
+      // Never smaller than CALLOUT_MIN of the view, never taller than CALLOUT_MAX of it up close.
+      const lo = Math.max(Worker.weight, (CALLOUT_MIN * Worker.weight * span) / base.y);
+      const k = Math.min(lo, (CALLOUT_MAX * Worker.weight * span) / Math.max(base.y, (this.callout.userData.base as THREE.Vector3).y));
       c.scale.set(base.x * k, base.y * k, 1);
     }
   }
@@ -435,22 +462,26 @@ export class Worker {
     if (gone) k = 0;
     const working = kind === 'working' && !gone;
     if (k <= 0) band.color.set('#232B34');
-    else if (working) band.color.copy(STEEL).lerp(SHIP, BUSY_TINT.band * this.busy).multiplyScalar(k);
+    else if (working) band.color.copy(STEEL).lerp(SHIP, WORK_TINT.band + (1 - WORK_TINT.band) * this.busy).multiplyScalar(0.75 + 0.35 * this.busy + (k - 0.62) * 0.5);
     else band.color.set(GLYPH_HUE[kind]).multiplyScalar(k);
     // The visor: dark, lit for a moment each time its terminal prints.
     const lit = gone || asleep ? 0 : 0.12 + this.flick * 0.55 * (0.7 + 0.3 * Math.sin(t * 40));
-    visor.color.set(VISOR_DARK).lerp(VISOR_LIT, lit);
+    visor.color.set(VISOR_DARK).lerp(working ? SHIP : VISOR_LIT, working ? Math.min(1, WORK_TINT.visor + 0.4 * this.busy + this.flick * 0.4) : lit);
     under.opacity = gone ? Math.max(0, 0.55 - this.leaveT) : asleep ? 0.12 : 0.5;
     if (kind === 'needs-you' || kind === 'stuck') under.color.set(GLYPH_HUE[kind]);
-    else under.color.copy(STEEL).lerp(SHIP, working ? BUSY_TINT.under * Math.max(0.35, this.busy) : 0);
+    else under.color.copy(STEEL).lerp(SHIP, working ? WORK_TINT.under : 0);
   }
 
   private paintRing(kind: GlyphKind, t: number, calm: boolean) {
     const { ring, pulse, band } = this.ring;
     const gone = this.leaving !== null;
     const hue = GLYPH_HUE[kind];
-    for (const m of [ring, pulse, band]) m.material.color.set(hue);
-    const strength: Record<GlyphKind, number> = { 'needs-you': 0.95, stuck: 0.9, review: 0.9, working: 0.16, parked: 0, merged: 0.85 };
+    const working = kind === 'working' && !gone;
+    for (const m of [ring, pulse, band]) m.material.color.set(working ? DECK.ship : hue);
+    const strength: Record<GlyphKind, number> = { 'needs-you': 0.95, stuck: 0.9, review: 0.9, working: 0.38, parked: 0, merged: 0.85 };
+    // At work: a soft cyan halo on the floor that breathes with how busy it is.
+    const breath = calm ? 0.5 : 0.5 + 0.5 * Math.sin(t * (1.2 + 2.2 * this.busy) + this.seed * 6.28);
+    this.ring.setHalo(working ? (0.22 + 0.5 * this.busy) * (0.7 + 0.3 * breath) * Math.min(1, this.spawnT * 2) : 0);
     ring.material.opacity = gone ? 0 : strength[kind] * Math.min(1, this.spawnT * 2);
     ring.visible = ring.material.opacity > 0;
     // Needs you: a ring spreading out from it, one every PULSE.every seconds.
@@ -477,7 +508,7 @@ export class Worker {
     // At work and busy: its hands go to the console and work it, left and right out of step; a slow
     // sway of the shoulders now and then. Nothing of it under reduced motion, or in any other state.
     const atWork = kind === 'working' && this.leaving === null && !this.walking && !Worker.calm;
-    this.hands += ((atWork ? this.busy : 0) - this.hands) * Math.min(1, dt * 3);
+    this.hands += ((atWork ? IDLE_HANDS + (1 - IDLE_HANDS) * this.busy : 0) - this.hands) * Math.min(1, dt * 3);
     const now = performance.now() / 1000;
     const tap = (phase: number) => TYPING.tap * this.hands * Math.max(0, Math.sin((now + this.seed * 3) * TYPING.hz * Math.PI * 2 + phase));
     this.body.armL.rotation.x = -TYPING.reach * this.hands - tap(0);
@@ -489,15 +520,24 @@ export class Worker {
     if (this.leaving !== null) {
       this.leaveT = Math.min(1.5, this.leaveT + dt);
       f.position.y = Math.min(1, this.leaveT / 1.2) * 0.15;
-    } else f.position.y = 0;
+    } else f.position.y = atWork ? BOB.lift * (0.5 + 0.5 * Math.sin((now + this.seed * 9) * BOB.hz * Math.PI * 2)) * (0.5 + this.hands) : 0;
     if (this.callout) {
-      this.callout.position.y = UNIT.top * e + 0.14 + f.position.y;
+      this.callout.position.y = UNIT.top * e + 0.14 + f.position.y + this.lift;
       if (this.compact) this.compact.position.y = this.callout.position.y;
-      this.glyph.position.y = this.callout.position.y;
+      this.glyph.position.y = this.callout.position.y - this.lift;
+      // Lifted off its head: a hairline ties it back.
+      const from = UNIT.top * e + 0.04 + f.position.y;
+      this.leader.visible = this.mode !== 'hidden' && this.lift > LEADER_FROM;
+      if (this.leader.visible) {
+        this.leader.position.y = from;
+        this.leader.scale.y = this.callout.position.y - from;
+      }
     }
   }
 
   dispose() {
+    this.leader.geometry.dispose();
+    this.leader.material.dispose();
     if (this.callout) disposeSprite(this.callout);
     if (this.compact) disposeSprite(this.compact);
     setGlyph(this.body, '');

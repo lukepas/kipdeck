@@ -12,6 +12,24 @@ let bandShape: THREE.RingGeometry | undefined;
 let inlayShape: THREE.CircleGeometry | undefined;
 let inlayMat: THREE.MeshBasicMaterial | undefined;
 let hatchTex: THREE.CanvasTexture | undefined;
+let haloShape: THREE.CircleGeometry | undefined;
+let haloTex: THREE.CanvasTexture | undefined;
+
+/** A soft disc, white in the middle fading to nothing at its rim, for the halo under a working unit. */
+function haloTexture(): THREE.CanvasTexture {
+  if (haloTex) return haloTex;
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d')!;
+  const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+  grad.addColorStop(0.45, 'rgba(255,255,255,0.45)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 128, 128);
+  haloTex = new THREE.CanvasTexture(c);
+  return haloTex;
+}
 
 /** Diagonal stripes at 45 degrees, for the band round a stuck unit. */
 function hatch(): THREE.CanvasTexture {
@@ -42,6 +60,8 @@ export class GroundRing {
   readonly ring: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>;
   readonly pulse: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>;
   readonly band: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>;
+  /** The soft ship-cyan light on the floor round a working unit (see setHalo). */
+  readonly halo: THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>;
 
   constructor() {
     ringShape ??= new THREE.RingGeometry(0.46, 0.5, 48).rotateX(-Math.PI / 2);
@@ -55,11 +75,21 @@ export class GroundRing {
     inlayMat ??= new THREE.MeshBasicMaterial({ color: RING_INLAY, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
     this.inlay = new THREE.Mesh(inlayShape, inlayMat);
     this.inlay.renderOrder = 2;
-    this.root.add(this.inlay, this.band, this.ring, this.pulse);
+    haloShape ??= new THREE.CircleGeometry(1.05, 40).rotateX(-Math.PI / 2);
+    this.halo = new THREE.Mesh(haloShape, new THREE.MeshBasicMaterial({ color: DECK.ship, map: haloTexture(), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -1 }));
+    this.halo.renderOrder = 1;
+    this.halo.visible = false;
+    this.root.add(this.halo, this.inlay, this.band, this.ring, this.pulse);
+  }
+
+  /** How strong the working halo is (0 takes it away). */
+  setHalo(k: number) {
+    this.halo.visible = k > 0.01;
+    this.halo.material.opacity = Math.min(1, k);
   }
 
   dispose() {
-    for (const m of [this.ring, this.pulse, this.band]) m.material.dispose();
+    for (const m of [this.ring, this.pulse, this.band, this.halo]) m.material.dispose();
   }
 }
 
