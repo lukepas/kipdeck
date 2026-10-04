@@ -17,7 +17,7 @@ Back to the [README](../README.md).
 | L | Stencil a tag on the floor by the console you face (*Operations*, *Code cleanup*), in one of seven colors; again to change it or take it up |
 | O | Open a pull request for a worker on its own branch, or see the one it has (a worker across several projects gets one in each) |
 | I | Mission control: the reminders, then what needs someone on every floor, ranked, with why and one next step; the floor's mission and milestones; everything waiting for a review; the timeline of what happened. Inside, 1 2 3 4 switch tabs, the arrows pick a row and Enter does its step (see [Mission control](mission-control.md)) |
-| N | Go to the next worker waiting on someone, the ones that need you first and then the ones that are done, longest-waiting first; again for the next one, and after the last one on your floor, on to the next floor's (one that needs you on another floor comes before one here that's only done; snoozed ones are skipped) |
+| N | Go to the next unit waiting on someone (the view flies there; from the Overview it pans onto it), the ones that need you first and then the ones that are done, longest-waiting first; again for the next one, and after the last one on your floor, on to the next floor's (one that needs you on another floor comes before one here that's only done; snoozed ones are skipped) |
 | Q | Put back the issue card you're carrying |
 | H | These controls |
 | T / Enter | Chat |
@@ -25,12 +25,14 @@ Back to the [README](../README.md).
 | Ctrl + K (⌘K on a Mac) | Command palette: find a worker, issue, PR, service, board, teammate or action; Enter opens it, Shift+Enter walks you there first |
 | V | Join voice; in voice, hold to talk (you're muted when you let go) |
 | M | Mute / unmute in voice |
-| Ctrl + Space | Dictate, in a worker's terminal or a prompt box: hold it and talk, and what you said is typed in when you let go. A quick tap leaves it listening until the next tap. The **🎤** does the same |
+| Ctrl + Space | Dictate, in a worker's terminal or a prompt box: hold it and talk, and what you said is typed in when you let go. A quick tap leaves it listening until the next tap. The mic button does the same |
 | Tab | The menu (top right of the top bar): every window, and what shows on screen |
 | Esc | Close any window (a terminal too) and get back to looking around, or to the Overview if you opened it there |
-| Ctrl + [ | Send Esc to a terminal instead, to close a menu like Claude's `/skills` or interrupt Claude. **⎋ Esc** in the terminal's header does the same |
+| Ctrl + [ | Send Esc to a terminal instead, to close a menu like Claude's `/skills` or interrupt Claude. **Esc** in the terminal's header does the same |
 
-You can also click a nearby desk to interact with it, or click a worker in the Workers panel (**🤖 Workers**, on screen from the start) to open its terminal. To change floors, click the project name in the top-left corner.
+You can also click a nearby desk to interact with it, or click a unit in the Units panel (on screen from the start) to open its terminal. To change floors, click the project name in the top-left corner.
+
+For a screen share, a projector or a recording, open the deck with `?demo=1`: bigger type and callouts, the alert strip pinned, and the Overview turning slowly round the mission table until you press a key, drag or scroll (see [the design system](design.md#demo-mode)).
 
 On a phone, use the 2D view at `/lite` instead: a terminal there has a row of keys under it (**1** **2** **3**, the arrows, Enter, Tab, Esc, Ctrl+C) and a box to send a prompt. See [Features](features.md).
 
@@ -41,7 +43,7 @@ The prompt edits the way it does in your own terminal (iTerm2's *Natural Text Ed
 | Key | Action |
 | --- | --- |
 | Shift + Enter | A new line in an agent's prompt, without sending it (in a shell it runs the line, like Enter) |
-| Ctrl + Space | Dictate: hold it and talk, and what you said is typed in at the cursor when you let go (see [Features](features.md)). **🎤 Dictate** in the terminal's header does the same |
+| Ctrl + Space | Dictate: hold it and talk, and what you said is typed in at the cursor when you let go (see [Features](features.md)). **Dictate** in the terminal's header does the same |
 | Ctrl + ⌫ / ⌥ + ⌫ | Delete the word before the cursor |
 | ⌘ + ⌫ | Delete to the start of the line (Mac) |
 | ⌘ + ⌦ | Delete to the end of the line (Mac) |

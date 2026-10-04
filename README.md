@@ -63,7 +63,7 @@ Hackathon and grant drafts, the build-in-public calendar and the disclosure are 
 
 **Mission control for your AI agents. Proof of every merge.**
 
-**A 3D operations deck your team shares with its coding agents: one place to see which unit needs you, hand out work, review what comes back and stay on the mission.** The look, the status colors and the rules behind them are in [DESIGN.md](DESIGN.md).
+**A 3D operations deck your team shares with its coding agents: one place to see which unit needs you, hand out work, review what comes back and stay on the mission.** The look, the status colors and the rules behind them are in [DESIGN.md](DESIGN.md); the system on screen, how it moves and sounds, and demo mode are in [docs/design.md](docs/design.md).
 
 Sit **Claude Code**, **Codex**, **OpenCode**, **Grok**, **Muse**, **DeepSeek Harness**, **Pi** and **Cursor** workers at desks, watch each one's terminal on the laptop in front of it,
 and jump into any of them together. Every GitHub repo is a floor of the building.
@@ -82,16 +82,23 @@ curl -fsSL https://raw.githubusercontent.com/AgentSystemLabs/agent-office/main/i
 
 </div>
 
----
+![The deck from the Overview: four pods of consoles round the mission table, two units on the ready line under orange light, one stuck unit with a red triangle](docs/img/deck-overview.png)
+
+| | |
+| --- | --- |
+| ![The merge beat landed: a new lit segment on the Proof corner's rail, the vault lid up and a violet toast with the devnet transaction](docs/img/beat-landed.png) | ![Mission control: units ranked by who needs you, each with its call sign and one next step](docs/img/mission.png) |
+| The merge beat: a merged PR's pulse climbs the Proof corner's rail and parks as a new segment, and the toast shows the devnet tx. | Mission control: every unit ranked by who needs a person, why, and one next step. |
+| ![The 2D view: the deck drawn as a plan beside the ranked list](docs/img/lite.png) | ![Demo mode: bigger chrome and callouts, the Overview turning round the table](docs/img/demo.png) |
+| The 2D view at `/lite`, for phones and machines without WebGL. | Demo mode (`?demo=1`) for a screen share or a recording. |
 
 ## What it is
 
 - **A floor per project.** Open **Floors**, pick one of your GitHub repos, and the office clones it (showing how far along it is) and opens a floor for it. Every worker, board and queue on that floor works in that checkout.
 - **Workers at desks.** Walk up to an empty desk, press **E**, and pick Claude Code, Codex, OpenCode, Grok, Muse, DeepSeek Harness, Pi or Cursor, with its model (and reasoning effort where the harness has one). The agent's live terminal shows on its laptop, and anyone can open it and type.
 - **Mission control.** Press **I** for what needs a person right now, on every floor: each worker ranked (needs you, stuck, to review), with why in plain words (*working but silent for 12 min*, *done 40 min ago, nobody looked*) and one button for the next step. Each floor has a mission and milestones, shown under its name and given to new workers as context, and every worker is linked to a goal or an issue, with progress and spend per goal. A Review inbox holds everything waiting for a person's decision (finished work, pull requests to merge or hand back, reviews requested of you), a Timeline says what happened on every floor, reminders catch what would otherwise be forgotten, and coming back after a while you get a short *While you were away*. See [docs/mission-control.md](docs/mission-control.md).
-- **Talk instead of typing.** Hold **Ctrl+Space** (or the **🎤**) in a worker's terminal or a prompt box and say what you want: it's typed in for you to send. Your browser does the listening, so there's nothing to install.
-- **You can't miss who needs you.** A worker that stops to ask you something lights a red beacon over its desk, puts a banner on your screen saying who and what for (on any floor), and sounds an alarm. One that has finished or gets stuck dings. The attention chip on the top bar counts them across every floor, and a desktop notification finds you in another tab. Press **N** to go straight to whoever is waiting, the ones that need you first, then on to the next floor's.
-- **Milestones you don't miss.** A merged pull request or a finished task queue is a toast, a ding and a desktop notification for everyone on the floor.
+- **Talk instead of typing.** Hold **Ctrl+Space** (or the mic button) in a worker's terminal or a prompt box and say what you want: it's typed in for you to send. Your browser does the listening, so there's nothing to install.
+- **You can't miss who needs you.** A unit that stops to ask you something steps onto its pod's ready line under a shaft of orange light, its ring pulsing, and a strip under the top bar says who and what for (on any floor). The counters on the top bar count every state across every floor, the tab's icon turns orange, and a desktop notification finds you in another tab. Press **N** to go straight to whoever is waiting (the view flies there), the ones that need you first, then on to the next floor's. Sound is four short cues, off until you turn them on in Settings.
+- **Merges you see land.** A merged pull request sends a violet pulse from its unit to the mission table; a bounty paid on devnet carries it up the Proof corner's rail as a new lit segment, with a toast that shows the transaction. A finished task queue is a toast and a desktop notification for everyone on the floor.
 - **From your phone, too.** `/lite` is the office in 2D: the deck plan drawn from the same layout as the 3D deck, every worker (on your floor or all of them) ranked by what needs you and why, Mission control, its terminal with the keys a phone keyboard lacks, and the boards. The 3D office offers it on a phone or a slow computer.
 - **GitHub on the walls.** Issues, the task queue and pull requests are the three panels of the Main board. Hand an issue to a worker, queue tasks, give a worker its own git worktree and open its PR with one key (if one gets deleted behind the office's back, the worker waits at its desk until you rebuild it). One task can span several projects: the worker gets a worktree of each, and a PR in each that links the others.
 - **Agents that manage agents.** Every worker can list, hire, message and send home the others, through an `agent-office` MCP server (Claude Code, Codex, OpenCode) or the `office-workers` command. Ask one to "send everyone whose PR merged home" and it does, deleting their worktrees and branches unless they hold unpushed work. A worker that opens its pull request itself (`gh pr create`) shows it at its desk, and one the office missed can be told which is its own (`office-workers pr`).
@@ -392,19 +399,19 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 | P | Give a task to a new worker, or to the one at this desk |
 | C | See a worker's changes: diff, commit, open a PR |
 | I | Mission control: reminders and what needs someone on every floor, the floor's goals, the review inbox and the timeline |
-| N | Go to the next worker that's waiting on you, then the next floor's |
+| N | Go to the next unit that's waiting on you (the view flies there), then the next floor's |
 | X | Send a worker home |
 | L | Stencil a tag by a console ("Operations", "Code cleanup") |
 | G | The Overview: the whole deck from above (Q / E turn it, G walks again) |
 | T / Enter | Chat |
 | V | Join voice; then hold V to talk |
 | M | Mute / unmute in voice |
-| Ctrl + Space | Dictate into a terminal or a prompt box: hold it and talk (or hold the **🎤**) |
-| Tab | The ☰ menu: every window |
+| Ctrl + Space | Dictate into a terminal or a prompt box: hold it and talk (or hold the mic button) |
+| Tab | The menu: every window |
 | Esc | Close any window |
-| Ctrl + [ | Send Esc to a terminal, to close a menu like Claude's `/skills` or interrupt Claude (or **⎋ Esc** in its header) |
+| Ctrl + [ | Send Esc to a terminal, to close a menu like Claude's `/skills` or interrupt Claude (or **Esc** in its header) |
 
-The full list is in [docs/controls.md](docs/controls.md).
+The full list is in [docs/controls.md](docs/controls.md). Add `?demo=1` to the address for demo mode: bigger type and callouts, and the Overview turning slowly round the table.
 
 ## Development
 
@@ -426,6 +433,7 @@ Every change to the app that lands on `main` is published as a GitHub release by
 ## More
 
 - [Features](docs/features.md): seeing what every agent does, handing out work, reviewing it and staying on mission
+- [Design system](docs/design.md): each surface on screen, the motion and sound that mark a change of state, demo mode, and how to check a design change with `design/shoot.mjs`
 - [The deck](docs/deck.md): what's where on the 3D deck (the mission table, the pods, the ready line, the boards, the Proof corner), cell addresses, and the Overview camera
 - [Mission control](docs/mission-control.md): the attention ranking, the floor's mission and milestones, linking work to goals, the review inbox, the timeline, reminders and the digest
 - [Proof of Merge bounties](docs/bounties.md): devnet USDC escrowed against an issue, paid only when a person merges the office's pull request and an admin approves (testnet only, off by default)

@@ -238,6 +238,58 @@ async function main() {
       await page.keyboard.press('g');
       await wait(600);
     }
+    if (want('beat')) {
+      // The merge beat: a bounty state with six releases and one being paid (so the top bar shows its
+      // violet counter and the vault is armed), then a merge and its payout sent in as the office
+      // would. Software rendering draws a frame far slower than the beat runs, so the page's clock runs
+      // at a tenth of real time while the pulse is caught on its way, then catches up.
+      await page.evaluate(() => {
+        const o = window.__office;
+        const s = o.store;
+        const item = (issue, phase) => ({ issue, nonce: 1, pda: 'pda' + issue, amount: '500000000', decimals: 9, symbol: 'SOL', funders: 1, expiry: Date.now() + 864e5, phase, txs: [] });
+        s.bounties[s.floor] = { enabled: true, network: 'solana-devnet', blink: false, items: [1, 2, 3, 4, 5, 6].map((n) => item(n, 'released')).concat([item(7, 'paying')]) };
+        s.emit('bounties');
+        const p = o.player;
+        p.__update ??= p.update;
+        p.update = (dt) => {
+          p.__update.call(p, dt);
+          o.camera.position.set(-1.5, 4.2, 6.5);
+          o.camera.lookAt(-11, 1.2, -4);
+        };
+      });
+      await wait(1500);
+      await page.evaluate(() => {
+        const o = window.__office;
+        const s = o.store;
+        const real = performance.now.bind(performance);
+        const t0 = real();
+        window.__realNow = real;
+        performance.now = () => t0 + (real() - t0) / 10;
+        const w = [...s.workers.values()].find((x) => x.deskId === 'desk-13') ?? [...s.workers.values()][0];
+        w.pr = { number: 77, url: 'https://github.com/example/repo/pull/77' };
+        const send = (m) => o.net.handlers.forEach((h) => h(m));
+        send({ t: 'landed', kind: 'merged', pr: 77, by: 'Tess' });
+        setTimeout(() => {
+          s.bounties[s.floor].items[6].phase = 'released';
+          send({ t: 'bounty.paid', floor: s.floor, issue: 7, pr: 77, amount: '500000000', symbol: 'SOL', workerName: w.name, url: 'https://explorer.solana.com/tx/4kQmZ1beT7Vh2mXo9xPa?cluster=devnet' });
+          s.emit('bounties');
+        }, 300);
+      });
+      const started = Date.now();
+      for (const [i, at] of [[1, 1500], [2, 4300], [3, 6400], [4, 7800]]) {
+        await wait(Math.max(0, at - (Date.now() - started)));
+        await page.screenshot({ path: path.join(OUT, `beat-${i}.png`) });
+      }
+      await page.evaluate(() => {
+        if (window.__realNow) performance.now = window.__realNow;
+      });
+      await wait(1500);
+      await page.screenshot({ path: path.join(OUT, 'beat-landed.png') });
+      await page.evaluate(() => {
+        const p = window.__office.player;
+        if (p.__update) p.update = p.__update;
+      });
+    }
     await page.locator('#scene').focus();
     if (want('mission')) {
       await page.keyboard.press('i');
@@ -284,16 +336,28 @@ async function main() {
     if (want('toasts')) {
       // The toast stack as the office draws it (ui/dom.ts toast()), one of each level.
       await page.evaluate(() => {
-        const add = (cls, text) => {
+        const add = (cls, text, proof) => {
           const el = document.createElement('div');
           el.className = `toast ${cls}`;
-          el.textContent = text;
+          const t = document.createElement('span');
+          t.className = 'toast-text';
+          t.textContent = text;
+          const at = document.createElement('time');
+          at.className = 'toast-at';
+          at.textContent = '14:02';
+          el.append(t, at);
+          if (proof) {
+            const trail = document.createElement('span');
+            trail.className = 'toast-proof';
+            trail.innerHTML = '<code>4kQm...9xPa</code><span class="settled">settled on devnet</span><a href="#">View</a>';
+            el.append(trail);
+          }
           document.getElementById('toasts').append(el);
         };
-        add('info', 'Widget at C4 finished: Fix flaky checkout e2e');
+        add('info', 'Widget (B-02 at F2) finished: Fix flaky checkout e2e');
         add('warn', 'Reminder: the queue on project has been paused 30 min');
-        add('error', 'Bolt at F2 is stuck: npm test has failed 3 times');
-        add('proof', 'PR #77 merged by Tess: 0.5 SOL released on devnet, tx 4kQm...9xPa');
+        add('error', 'Bolt (C-02 at F4) is stuck: npm test has failed 3 times');
+        add('proof', 'PR #77 merged: 0.5 SOL released to Widget (B-02 at F2)', true);
       });
       await wait(400);
       await page.screenshot({ path: path.join(OUT, 'toasts.png') });
@@ -330,6 +394,34 @@ async function main() {
   } finally {
     await browser.close();
   }
+  if (want('demo')) {
+    // Demo mode in a browser of its own (the first has used up the software GPU): the bigger chrome,
+    // the Overview turning round the table, and the bloom.
+    const b3 = await launch();
+    try {
+      const ctx3 = await b3.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+      await ctx3.addInitScript(() => {
+        try {
+          localStorage.setItem('agent-office.lite-declined', '1');
+          localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4f86f7', look: { skin: 0, hair: 0, style: 0 } }));
+        } catch {
+          // storage blocked
+        }
+      });
+      const dp = await ctx3.newPage();
+      dp.on('pageerror', (e) => console.log('demo page error:', e.message));
+      await dp.goto(`${base}/login`);
+      await dp.evaluate(async (password) => fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) }), PASSWORD);
+      await dp.goto(`${base}/?demo=1`, { waitUntil: 'commit' });
+      await dp.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
+      await wait(6000);
+      await dp.screenshot({ path: path.join(OUT, 'demo.png') });
+      await wait(4000);
+      await dp.screenshot({ path: path.join(OUT, 'demo-later.png') });
+    } finally {
+      await b3.close();
+    }
+  }
   if (want('terminal')) {
     // A browser of its own: the one that drew the 3D office has used up the software GPU.
     const { chromium } = await import('playwright-core');
@@ -364,7 +456,7 @@ async function main() {
 const timer = setTimeout(() => {
   console.error('timed out');
   process.exit(2);
-}, 240_000);
+}, 360_000);
 main()
   .then(() => console.log('shots in ' + OUT))
   .catch((e) => {

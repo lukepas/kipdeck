@@ -4,11 +4,11 @@ Back to the [README](README.md).
 
 UGC Army is an operations deck for teams running many AI coding agents. The screen is calm by default and only an exception carries color, so the eye goes straight to what needs a person. This page is the contract for every surface: the 3D deck, the 2D view at `/lite`, the sign-in pages and the `/pom/` showcase.
 
-The tokens live in `src/client/styles/tokens.css`. Every sheet uses them by name; a hex value in a module sheet is a bug.
+The tokens live in `src/client/styles/tokens.css`. Every sheet uses them by name; a hex value in a module sheet is a bug. [docs/design.md](docs/design.md) shows the system on screen: each surface, the full motion table, the sound cues, demo mode and how to check a change.
 
 ## Rules
 
-1. **Motion only marks a change of state.** Nothing idles for decoration: no bobbing, hopping, confetti, staggered list fades or press-down buttons. A ring pulse says "needs you", a 120 ms fade plus 4px rise says "this just opened". Under `prefers-reduced-motion` every pulse becomes a still outline and every glide a cut.
+1. **Motion only marks a change of state.** Nothing idles for decoration: no bobbing, hopping, confetti, staggered list fades or press-down buttons. A ring pulse says "needs you", a 120 ms fade plus 4px rise says "this just opened", a violet pulse up the Proof corner's rail says "a merge was paid". Under `prefers-reduced-motion` every pulse becomes a still outline, every glide and flight a cut, and every CSS animation is stopped by one rule at the end of `tokens.css`. The same goes for sound: four short cues, one per change worth hearing, off until you turn them on.
 2. **Hue is for exceptions.** The floor is slate and steel. Signal orange means a person is needed, red means stuck, amber means waiting for review, violet means on-chain proof. Working units stay achromatic.
 3. **Shape carries every state on its own.** Each state has a glyph (below), so the screen still reads in grayscale, for color-blind people and in compressed video.
 4. **One ranking.** `src/shared/attention.ts` decides who needs someone. The top-bar counters, the alert row, Mission control, the 2D view, the tab title and the favicon all read it, so they never disagree.
@@ -70,7 +70,8 @@ Upstream credit stays where it was and is added to the sign-in footer: "Built on
 - **Top bar** (44px): mark and wordmark, the deck name (click for decks), the counters (each a button into Mission control), the violet proof counter once bounties are on, then Mission control and the actions you pinned, and the menu.
 - **Alert row**: under the bar while a unit needs you, one sentence, `N` to go there, a ✕ to put it away.
 - **Modals**: a sharp card on `--surface-1` with a 1px line; a 2px Signal rule on top only when it blocks. A ✕ top right with a 28px hit area. Esc or ✕ returns straight to mouse-look.
-- **Toasts**: bottom right, a 3px stripe in the state's color and its glyph, one sentence.
+- **Toasts**: bottom right, a 3px stripe in the state's color and its glyph, one sentence naming the unit by its address, and the time in mono. A proof toast adds the hash in a violet chip, a settled tick and an explorer link.
+- **Units in lists**: named by their call sign in a mono chip (`ui/unitsign.ts`), never by a color.
 - **Buttons**: primary is filled Signal with void text, one per view; secondary is a 1px outline; hover is one tone step. Focus is a 2px Signal ring with a 2px offset.
 - **Terminal**: xterm on `--void`, flat 32px tabs with a 2px underline, the status hues as ANSI colors, Signal only for the cursor.
 
@@ -80,6 +81,10 @@ Upstream credit stays where it was and is added to the sign-in footer: "Built on
 - **Sign-in pages** (login, join, claim): the void, the Plot drawn once on the right with one unit lit Signal orange on the ready line, a 360px card with the mark, one field and *Enter deck*, and the credit in the footer.
 - **Loading**: the chevrons fill from the bottom over 900 ms in a ruled card over the deck's grid.
 - **`/pom/`, the Proof ledger**: violet is the only accent. Totals in Archivo at 125% width, each with a *verify* link; the *Last merge* panel with the proof rail and the four-step money path; a render of the real deck; dense ruled rows with violet proof chips (short hash, settled tick). The share card (`og.png`) is the same title block, drawn in a pixel font with no dependencies.
+
+## Demo mode
+
+`?demo=1` makes the chrome a fifth bigger (about 15px at the smallest), callouts and glyphs a quarter bigger, pins the alert strip, turns the Overview slowly round the table and adds a light bloom. See [docs/design.md](docs/design.md#demo-mode).
 
 ## Voice
 

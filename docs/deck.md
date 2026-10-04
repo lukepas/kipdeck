@@ -67,7 +67,11 @@ You arrive in **Walk**: first person, as before (third person is in Settings). P
 | Wheel | Zoom |
 | G / Esc | Back to Walk |
 
-A window opened from the Overview closes back to it with no extra click; one opened from Walk closes straight back to mouse-look. Under reduced motion, the turn and any flight to a unit are cuts. `flyTo(x, z)` on the Overview (`src/client/core/camera-overview.ts`) is where a click on an alert will land.
+A window opened from the Overview closes back to it with no extra click; one opened from Walk closes straight back to mouse-look. Going to a unit (N, a click on the alert strip, a search result) flies the view there in a 700 ms arc in Walk (`src/client/core/flight.ts`), or pans and zooms the Overview onto it in 300 ms (`flyTo` in `src/client/core/camera-overview.ts`). Under reduced motion, the turn and every flight are cuts. In demo mode (`?demo=1`) the Overview turns slowly round the table until you take over; see [docs/design.md](design.md#demo-mode).
+
+## The merge beat
+
+A merge is the one moment the deck celebrates, and it does it with light, not confetti. When a person merges a unit's pull request, a violet pulse runs from the unit's console to the mission table and its rim lights. When the bounty for it is released on devnet, the pulse runs on across the floor to the Proof corner and up the attestation rail, and parks as the rail's new lit segment; the vault's lid lifts with a violet glow, the top bar's violet counter rolls, and a proof toast shows the devnet transaction in mono with a settled tick and an explorer link. An attestation landing on Base Sepolia plays the merged cue (when sound is on) and a toast of its own, and a unit's first ERC-8004 record makes the plinth glow as its step lights. A unit deployed to a console gets a shorter beat of its own: a steel trace from the table out to it. The camera never moves for a beat, and under reduced motion there is no traveling light: the rail and the lid change at once and the toast says the rest (`src/client/features/beats/`).
 
 ## Light and materials
 
