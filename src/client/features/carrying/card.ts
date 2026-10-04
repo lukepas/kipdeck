@@ -19,7 +19,7 @@ function issueCard(card: CarriedIssue, width: number): THREE.Mesh {
   const color = NOTE_COLORS[card.issue % NOTE_COLORS.length];
   g.fillStyle = color;
   g.fillRect(0, 0, W, H);
-  g.fillStyle = '#2b2d42';
+  g.fillStyle = '#0D131A';
   g.font = `900 52px ${FONT}`;
   g.fillText(`#${card.issue}`, 22, 84);
   g.font = `700 28px ${FONT}`;
@@ -29,7 +29,7 @@ function issueCard(card: CarriedIssue, width: number): THREE.Mesh {
   g.fillStyle = PINS[card.issue % PINS.length];
   g.fill();
   g.lineWidth = 3;
-  g.strokeStyle = '#2b2d42';
+  g.strokeStyle = '#0D131A';
   g.stroke();
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;

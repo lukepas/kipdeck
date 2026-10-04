@@ -1,6 +1,7 @@
 // What this browser remembers between visits, in localStorage: your profile, your settings, the floor
 // you were last on and the spot you were standing in. Every read and write shrugs off blocked storage.
 
+import { DATA_COLORS, remapColor } from '../../shared/datacolors';
 import { randomLook, sanitizeLook, type Look } from '../../shared/avatar';
 
 export interface Profile {
@@ -10,14 +11,15 @@ export interface Profile {
 }
 
 const PROFILE_KEY = 'agent-office.profile';
-export const AVATAR_COLORS = ['#ff8a5b', '#4f86f7', '#06d6a0', '#ef476f', '#ffd166', '#9d4edd', '#00b4d8', '#f77f00'];
+/** The yokes an operator can wear: the deck's data palette (shared/datacolors.ts). */
+export const AVATAR_COLORS: readonly string[] = DATA_COLORS;
 
 /** Your saved profile. `look` is missing when only the 2D view (or an office from before looks) saved it. */
 export function loadProfile(): (Omit<Profile, 'look'> & { look?: Look }) | null {
   try {
     const p = JSON.parse(localStorage.getItem(PROFILE_KEY) ?? 'null');
     if (p && typeof p.name === 'string' && typeof p.color === 'string') {
-      return { name: p.name, color: p.color, look: p.look ? sanitizeLook(p.look, randomLook()) : undefined };
+      return { name: p.name, color: remapColor(p.color), look: p.look ? sanitizeLook(p.look, randomLook()) : undefined };
     }
   } catch {
     // storage blocked

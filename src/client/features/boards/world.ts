@@ -1,10 +1,12 @@
+import { DATA_COLORS } from '../../../shared/datacolors';
 import * as THREE from 'three';
 import { OFFICE_PLAN } from '../../../shared/plan';
 import type { GhIssue, GhPull, GhState, QueueState, QueueTask, ServiceInfo, WorkerInfo } from '../../../shared/protocol';
 import { workerForPull } from '../../state';
 
-export const NOTE_COLORS = ['#fff7b0', '#ffd6e0', '#caffbf', '#bde0fe', '#ffe5b4'];
-export const PINS = ['#ef476f', '#118ab2', '#06d6a0', '#ffd166'];
+/** An issue's card on the wall: a light slate card, its pin from the data palette (shared/datacolors.ts). */
+export const NOTE_COLORS = ['#C9D2DC', '#BCC6D1', '#D3DAE1', '#C2CCD6', '#CDD5DD'];
+export const PINS: readonly string[] = DATA_COLORS;
 
 export function wrap(ctx: CanvasRenderingContext2D, text: string, maxW: number, maxLines: number): string[] {
   const words = text.split(/\s+/);

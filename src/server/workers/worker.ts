@@ -1,5 +1,6 @@
 // A worker's record as the manager keeps it (see Worker in types.ts): what a new one is called, its
 // colour, and the record itself, fresh from hiring or from workers.json.
+import { DATA_COLORS } from '../../shared/datacolors.js';
 import { randomBytes } from 'node:crypto';
 import type { WorkerInfo } from '../../shared/protocol.js';
 import { providerAdapter } from '../providers/index.js';
@@ -11,7 +12,8 @@ export const NAMES = [
   'Fizz', 'Glitch', 'Hopper', 'Jinx', 'Kilo', 'Lumen', 'Mochi', 'Noodle', 'Orbit', 'Pip',
   'Quark', 'Rivet', 'Sparky', 'Tofu', 'Uno', 'Volt', 'Waffle', 'Zippy',
 ];
-export const COLORS = ['#ff8a5b', '#5bc0eb', '#9bc53d', '#fde74c', '#c3423f', '#b388eb', '#f7aef8', '#72ddf7', '#ffb400', '#00a6a6'];
+/** A new worker's color: the deck's data palette (shared/datacolors.ts). */
+export const COLORS: readonly string[] = DATA_COLORS;
 
 export function newWorker(info: WorkerInfo, tracker: UsageTracker, hookToken = randomBytes(16).toString('hex')): Worker {
   return {

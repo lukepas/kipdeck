@@ -1,6 +1,7 @@
 // A floor's own layout on top of the office everyone shares: the signs hung over its desks, and how
 // far its back office is built out (see WING in layout.ts). Saved by server/floorplan.ts.
 
+import { DATA_COLORS, DATA_INK, remapColor } from './datacolors.js';
 import { DESKS, WING, WING_DESKS, wingLevel } from './layout.js';
 
 /** A sign hanging from the ceiling over a desk, naming what it's for ("Operations", "Code cleanup"). */
@@ -26,13 +27,13 @@ export const MAX_LABEL = 32;
 
 /** What a sign can be painted: its board, and the ink its letters are in. */
 export const SIGN_COLORS = [
-  { color: '#2b2d42', ink: '#fffaf3', name: 'Navy' },
-  { color: '#ef476f', ink: '#fffaf3', name: 'Pink' },
-  { color: '#f78c6b', ink: '#2b2d42', name: 'Orange' },
-  { color: '#ffd166', ink: '#2b2d42', name: 'Yellow' },
-  { color: '#06d6a0', ink: '#2b2d42', name: 'Green' },
-  { color: '#118ab2', ink: '#fffaf3', name: 'Blue' },
-  { color: '#9b5de5', ink: '#fffaf3', name: 'Purple' },
+  { color: DATA_COLORS[0], ink: DATA_INK, name: 'Steel' },
+  { color: DATA_COLORS[1], ink: DATA_INK, name: 'Teal' },
+  { color: DATA_COLORS[2], ink: DATA_INK, name: 'Sage' },
+  { color: DATA_COLORS[3], ink: DATA_INK, name: 'Sand' },
+  { color: DATA_COLORS[4], ink: DATA_INK, name: 'Clay' },
+  { color: DATA_COLORS[5], ink: DATA_INK, name: 'Rose' },
+  { color: DATA_COLORS[6], ink: DATA_INK, name: 'Sky' },
 ] as const;
 
 /** A few to start from, in the label window. */
@@ -54,12 +55,12 @@ export function cleanLabel(text: unknown): string {
 
 /** The paint a sign asked for, or the first one when it's none of SIGN_COLORS. */
 export function signColor(color: unknown): string {
-  return SIGN_COLORS.find((c) => c.color === color)?.color ?? SIGN_COLORS[0].color;
+  return SIGN_COLORS.find((c) => c.color === color || (typeof color === 'string' && c.color === remapColor(color)))?.color ?? SIGN_COLORS[0].color;
 }
 
 /** The ink for letters on a board painted `color`. */
 export function signInk(color: string): string {
-  return SIGN_COLORS.find((c) => c.color === color)?.ink ?? SIGN_COLORS[0].ink;
+  return SIGN_COLORS.find((c) => c.color === color || c.color === remapColor(color))?.ink ?? SIGN_COLORS[0].ink;
 }
 
 /** A plan read back from disk (or anywhere else it can't be trusted): what's valid of it. */

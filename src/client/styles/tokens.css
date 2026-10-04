@@ -57,6 +57,9 @@
   --working: #c9d2dc;
   --proof: #a68bff;
   --settled: #3ddc97;
+  /* The data palette: telling things apart (a yoke, a sign, a pin), never a state (shared/datacolors.ts). */
+  --data-1: #6e8fb3; --data-2: #4fa3a5; --data-3: #7fa58a; --data-4: #b8a07a;
+  --data-5: #b07d6e; --data-6: #b07a92; --data-7: #6fa9c4; --data-8: #9aa36a;
   /* Text on a filled Signal button. */
   --on-signal: #0d131a;
 

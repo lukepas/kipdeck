@@ -1,4 +1,5 @@
 // workers.json: every worker as the office last saw it, to pick them all back up after a restart.
+import { remapColor } from '../../shared/datacolors.js';
 import type { AgentProvider, Snooze, WorkerInfo, WorkerStatus, WorkerTask } from '../../shared/protocol.js';
 import { DESK_BY_ID } from '../../shared/layout.js';
 import { isAgentProvider, savedEffort, savedModel } from '../../shared/providers.js';
@@ -103,7 +104,7 @@ export function restoreWorkers(file: string, dir: string, workers: Map<string, W
         effort: savedEffort(provider, s.effort),
         deskId: s.deskId,
         name: s.name ?? 'Worker',
-        color: s.color ?? COLORS[0],
+        color: s.color ? remapColor(s.color) : COLORS[0],
         status: 'offline',
         acked: true,
         createdBy: s.createdBy ?? '?',

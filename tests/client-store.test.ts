@@ -192,7 +192,7 @@ test('a new store starts every field where it always has', async () => {
   const s = new Store(SLICES);
   const { profile, subs, ...rest } = Object.fromEntries(Object.entries(s));
   void subs;
-  assert.deepEqual({ name: profile.name, color: profile.color }, { name: 'Guest', color: '#4f86f7' });
+  assert.deepEqual({ name: profile.name, color: profile.color }, { name: 'Guest', color: '#4FA3A5' });
   assert.deepEqual(
     JSON.parse(JSON.stringify(rest, (_k, v) => (v instanceof Map ? [...v] : v === undefined ? '<undefined>' : v))),
     {
