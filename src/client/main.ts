@@ -67,6 +67,7 @@ import { installFleet } from './features/fleet';
 import { installSorties } from './features/sorties';
 import { installVesper } from './features/vesper';
 import { installCrew } from './features/crew';
+import { installDroid } from './features/droid';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -160,6 +161,7 @@ installFleet(ctx, parts);
 installSorties(ctx, parts);
 parts.vesper = installVesper(ctx, parts);
 parts.crew = installCrew(ctx, parts);
+parts.droid = installDroid(ctx, parts);
 
 parts.hintbar = installHintBar(ctx, core, parts);
 installKeyboard(ctx, parts);

@@ -28,6 +28,7 @@ import type { installLights } from '../features/lights';
 import type { installGiveWay } from '../features/giveway';
 import type { installVesper } from '../features/vesper';
 import type { installCrew } from '../features/crew';
+import type { installDroid } from '../features/droid';
 import type { installTv } from '../features/tv';
 import type { installVoice } from '../features/voice';
 import type { installWaiting } from '../features/waiting';
@@ -109,4 +110,6 @@ export interface Parts {
   vesper: Made<typeof installVesper>;
   /** Crew dossiers on the deck: epithets, chevrons and the unit of the watch (see features/crew). */
   crew: Made<typeof installCrew>;
+  /** Bolt, the bridge droid (see features/droid). */
+  droid: Made<typeof installDroid>;
 }

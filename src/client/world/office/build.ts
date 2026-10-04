@@ -31,6 +31,7 @@ import { motes } from '../../features/life/motes';
 import { heading } from '../../features/life/heading';
 import { ticker } from '../../features/life/ticker';
 import { watchPlinth } from '../../features/crew/world';
+import { droid } from '../../features/droid/world';
 
 // The deck, put together from its fixtures (see fixture.ts): the slab and its walls, the paint on its
 // floor, the bridge's hull round it, the mission table and the pods of consoles facing it, the
@@ -82,6 +83,8 @@ function floorPlan() {
     meetingRoom,
     elevator,
     whiteboard,
+    // Bolt, the bridge droid, and its charger on the west wall (features/droid).
+    droid,
   ] as const;
 }
 
