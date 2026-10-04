@@ -26,6 +26,7 @@ import type { installSeating } from '../features/seating';
 import type { installSpace } from '../features/space';
 import type { installLights } from '../features/lights';
 import type { installGiveWay } from '../features/giveway';
+import type { installVesper } from '../features/vesper';
 import type { installCrew } from '../features/crew';
 import type { installTv } from '../features/tv';
 import type { installVoice } from '../features/voice';
@@ -104,6 +105,8 @@ export interface Parts {
   lights: Made<typeof installLights>;
   /** Life giving way to attention, and Settings > Bridge > Life (see features/giveway). */
   giveWay: Made<typeof installGiveWay>;
+  /** VESPER, the ship's mind: its lines for the ticker and the caption, and for a card's subtitle (see features/vesper). */
+  vesper: Made<typeof installVesper>;
   /** Crew dossiers on the deck: epithets, chevrons and the unit of the watch (see features/crew). */
   crew: Made<typeof installCrew>;
 }

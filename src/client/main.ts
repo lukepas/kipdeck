@@ -65,6 +65,7 @@ import { installGiveWay } from './features/giveway';
 import { installDestination } from './features/destination';
 import { installFleet } from './features/fleet';
 import { installSorties } from './features/sorties';
+import { installVesper } from './features/vesper';
 import { installCrew } from './features/crew';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
@@ -157,6 +158,7 @@ parts.giveWay = installGiveWay(ctx);
 installDestination(ctx, parts);
 installFleet(ctx, parts);
 installSorties(ctx, parts);
+parts.vesper = installVesper(ctx, parts);
 parts.crew = installCrew(ctx, parts);
 
 parts.hintbar = installHintBar(ctx, core, parts);
