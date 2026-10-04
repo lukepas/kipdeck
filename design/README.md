@@ -271,3 +271,11 @@ Settings > Bridge > **Bridge lights** sets Night (low light, for watching in a d
 - Frame time was not measured on a GPU in this round; the stills and the clip are software rendered. The renderer now draws at most 1.5 pixels per CSS pixel, which bounds the Retina case, but the draw calls (about a thousand) and the lights per fragment are as they were.
 - The radial streak tunnel through the forward glass during a jump, warm task lights over occupied stations, and a bigger count band on the situation wall from the conn were not done.
 - The Overview still frames the deck rather than the whole ship; zoom out (wheel) to see the nacelles.
+
+## Black frames at the mission table
+
+At Night, near the holo table, a whole frame sometimes went black for one frame. The holo's cone of light raised `1.0 - vY` to a power, and `vY` (the cylinder's `uv.y`) comes out a hair over 1.0 along the top rim when the rim crosses the screen at a slant. `pow()` of a negative number is NaN on Apple GPUs (ANGLE Metal), and the bloom blurs that one NaN pixel through its mip chain over the whole screen, which the output pass shows as black. Day has no bloom, so the pixel stayed invisible there; SwiftShader never produced the NaN, so the stills never showed it.
+
+Every `pow()` in the office's shaders now keeps its base at zero or above (`max(..., 0.0)`), including the needs-you beacon, the viewport glass, the planet's rim and halo and the sky's stars, which had the same pattern. `tests/shader-pow.test.ts` fails on a new one that doesn't.
+
+`node design/flicker-check.mjs [metal|swiftshader] [frames]` checks it for real: it starts the built office on a spare port (`FLICKER_PORT`, default 4697), sweeps the camera round, over and past the table in Night and Day, reads back every frame and the bloom's input, and fails on a black frame or a NaN pixel. On an M3 Pro with Metal, 900 frames per mode: before the fix 3 bad frames at Night (each with a NaN pixel, two 99% black and one fully black), after it none in 2000. It skips when there's no build or no browser.
