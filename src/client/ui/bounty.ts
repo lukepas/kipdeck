@@ -8,6 +8,7 @@ import type { Net } from '../net';
 import { store } from '../state';
 import { h, openModal, toast } from './dom';
 import { connect, signAndSend, solanaWallets, type StdAccount, type StdWallet } from './wallet';
+import { icon } from './icons';
 
 const PHASE_LABEL: Record<BountyPhase, string> = {
   open: 'open',
@@ -48,18 +49,18 @@ export function bountyChip(issue: number, net: Net): HTMLElement | '' {
   const b = s.items.find((x) => x.issue === issue);
   const live = !b || b.phase === 'open' || b.phase === 'claimed';
   const fund = live
-    ? h('button.bounty-fund', { type: 'button', title: 'Put devnet USDC on this issue', onclick: ((e: Event) => (e.stopPropagation(), openFund(issue, net))) as EventListener }, b ? '+ Fund' : '💰 Fund')
+    ? h('button.bounty-fund', { type: 'button', title: 'Put devnet USDC on this issue', onclick: ((e: Event) => (e.stopPropagation(), openFund(issue, net))) as EventListener }, b ? '+ Fund' : 'Fund')
     : null;
   if (!b) return h('span.bounty-chip.none', {}, fund);
   const left = b.phase === 'open' || b.phase === 'claimed' ? ` · ${timeLeft(b.expiry)}` : '';
   const pr = b.claimPr ? ` · PR #${b.claimPr}` : '';
-  return h('span.bounty-chip', { class: b.phase, title: b.note ?? `${amountOf(b)} in escrow on ${s.network}` }, `💰 ${amountOf(b)} · ${PHASE_LABEL[b.phase]}${pr}${left}`, fund);
+  return h('span.bounty-chip', { class: b.phase, title: b.note ?? `${amountOf(b)} in escrow on ${s.network}` }, `${amountOf(b)} · ${PHASE_LABEL[b.phase]}${pr}${left}`, fund);
 }
 
 /** The badge over a worker holding a claimed bounty on your floor, or undefined. */
 export function workerBounty(workerId: string): string | undefined {
   const b = floorBounties()?.items.find((x) => x.workerId === workerId && (x.phase === 'claimed' || x.phase === 'awaiting-approval' || x.phase === 'paying'));
-  return b ? `💰 ${amountOf(b)}` : undefined;
+  return b ? `${amountOf(b)}` : undefined;
 }
 
 /** The public Action's URL for an issue, and a dial.to link that renders it on devnet. */
@@ -75,14 +76,14 @@ const pending = new Map<number, { wallet: StdWallet; account: StdAccount; amount
 export async function prepared(m: { issue: number; tx?: string; error?: string }) {
   const p = pending.get(m.issue);
   pending.delete(m.issue);
-  if (m.error) return void toast(`💰 ${m.error}`, 'warn');
-  if (!m.tx) return void toast(`💰 Funded #${m.issue} on the mock`);
+  if (m.error) return void toast(`${m.error}`, 'warn');
+  if (!m.tx) return void toast(`Funded #${m.issue} on the mock`);
   if (!p) return;
   try {
     const sig = await signAndSend(p.wallet, p.account, m.tx);
-    toast(`💰 Sent ${p.amount} to #${m.issue}'s bounty: https://explorer.solana.com/tx/${sig}?cluster=devnet`);
+    toast(`Sent ${p.amount} to #${m.issue}'s bounty: https://explorer.solana.com/tx/${sig}?cluster=devnet`);
   } catch (err) {
-    toast(`💰 ${p.wallet.name} didn't send it: ${(err as Error).message}`, 'warn');
+    toast(`${p.wallet.name} didn't send it: ${(err as Error).message}`, 'warn');
   }
 }
 
@@ -95,15 +96,15 @@ export async function approved(m: { issue: number; floor?: string; tx?: string; 
   if (!m.tx || !m.approver) return;
   const wallets = solanaWallets();
   const w = wallets.find((x) => x.accounts.some((a) => a.address === m.approver)) ?? wallets[0];
-  if (!w) return void toast(`💰 #${m.issue}: no Solana wallet in this browser to sign as the approver (${m.approver})`, 'warn');
+  if (!w) return void toast(`#${m.issue}: no Solana wallet in this browser to sign as the approver (${m.approver})`, 'warn');
   try {
     const account = w.accounts.find((a) => a.address === m.approver) ?? (await connect(w));
-    if (account.address !== m.approver) return void toast(`💰 #${m.issue}: ${w.name} is on ${account.address}, not the approver wallet ${m.approver}`, 'warn');
+    if (account.address !== m.approver) return void toast(`#${m.issue}: ${w.name} is on ${account.address}, not the approver wallet ${m.approver}`, 'warn');
     const sig = await signAndSend(w, account, m.tx);
     net.send({ t: 'bounty.release.sent', issue: m.issue, ...(m.floor ? { floor: m.floor } : {}), sig });
-    toast(`💸 Payout of #${m.issue}'s bounty sent: https://explorer.solana.com/tx/${sig}?cluster=devnet`);
+    toast(`Payout of #${m.issue}'s bounty sent: https://explorer.solana.com/tx/${sig}?cluster=devnet`);
   } catch (err) {
-    toast(`💰 ${w.name} didn't send the payout: ${(err as Error).message}`, 'warn');
+    toast(`${w.name} didn't send the payout: ${(err as Error).message}`, 'warn');
   }
 }
 
@@ -134,16 +135,16 @@ export function openFund(issue: number, net: Net) {
     }
   };
   const wallets = solanaWallets();
-  if (mock) list.append(h('button.btn.primary', { type: 'button', onclick: () => void fundWith(undefined) }, '💰 Fund on the mock'));
+  if (mock) list.append(h('button.btn.primary', { type: 'button', onclick: () => void fundWith(undefined) }, 'Fund on the mock'));
   else for (const w of wallets) list.append(h('button.btn.primary', { type: 'button', onclick: () => void fundWith(w) }, h('img', { src: w.icon, alt: '', width: '18', height: '18' }), ` ${w.name}`));
   if (!mock && !wallets.length) list.append(h('p.setting-note', {}, 'No Solana wallet in this browser (Phantom, Backpack or Solflare, set to devnet). Share the Blink below instead.'));
   const links = s.blink && s.repo ? blinkLinks(s.repo, issue) : undefined;
   const copy = (text: string, what: string) => () => void navigator.clipboard?.writeText(text).then(() => toast(`Copied the ${what}`), () => toast(text));
-  const close = h('button.btn.close', { 'aria-label': 'Close' }, '✕');
+  const close = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
   const el = h(
     'div.modal.bounty-modal',
     { role: 'dialog', 'aria-label': `Fund issue #${issue}` },
-    h('header', {}, h('h2', {}, `💰 Fund #${issue}`), close),
+    h('header', {}, h('h2', {}, `Fund #${issue}`), close),
     h(
       'div.bounty-body',
       {},
@@ -153,10 +154,10 @@ export function openFund(issue: number, net: Net) {
       presets,
       list,
       note,
-      links ? h('div.seg', {}, h('button.btn', { type: 'button', onclick: copy(links.dial, 'Blink (dial.to) link') }, '🔗 Copy the Blink'), h('button.btn', { type: 'button', onclick: copy(links.action, 'Action URL') }, 'Copy the Action URL')) : null,
+      links ? h('div.seg', {}, h('button.btn', { type: 'button', onclick: copy(links.dial, 'Blink (dial.to) link') }, 'Copy the Blink'), h('button.btn', { type: 'button', onclick: copy(links.action, 'Action URL') }, 'Copy the Action URL')) : null,
     ),
   );
-  const modal = openModal(el, { doing: '💰 funding a bounty' });
+  const modal = openModal(el, { doing: 'funding a bounty' });
   close.addEventListener('click', () => modal.close());
   amount.focus();
   amount.select();

@@ -48,7 +48,7 @@ export class DesktopNotifier {
   alert(w: WorkerInfo & { status: 'needs_input' | 'done' }) {
     if (!this.enabled() || notifyPermission() !== 'granted') return;
     if (!document.hidden && document.hasFocus()) return;
-    const title = w.status === 'done' ? `✅ ${w.name} is done` : `🙋 ${w.name} needs you`;
+    const title = w.status === 'done' ? `${w.name} is done` : `${w.name} needs you`;
     const body = [w.task?.name, alertDetail(w)].filter(Boolean).join('\n');
     this.shown.get(w.id)?.close();
     // Needs input blocks the worker, so that one stays up until you deal with it.
@@ -108,9 +108,9 @@ export class DesktopNotifier {
     };
   }
 
-  /** What one looks like, from ⚙️ Settings. */
+  /** What one looks like, from Settings. */
   sample() {
-    const n = this.show('🔔 Notifications are on', { body: 'This is how a worker that needs you, is done or gets stuck gets your attention while you are in another tab. Click one to go straight to that worker.' });
+    const n = this.show('Notifications are on', { body: 'This is how a worker that needs you, is done or gets stuck gets your attention while you are in another tab. Click one to go straight to that worker.' });
     if (!n) return;
     n.onclick = () => {
       window.focus();

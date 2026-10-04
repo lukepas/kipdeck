@@ -3,6 +3,7 @@ import { cloneLabel, floorPalette } from '../../shared/floors';
 import type { FloorInfo } from '../../shared/protocol';
 import { store } from '../state';
 import { h } from './dom';
+import { icon } from './icons';
 
 // The floor list that drops down from the project in the corner: every floor of the building, top
 // floor first. Picking one takes you straight there, to the same spot in the office you're standing
@@ -34,14 +35,14 @@ export function toggleFloorMenu(anchor: HTMLElement, opts: FloorMenuOptions): vo
     const isHere = f.id === store.floor;
     const p = floorPalette(f.palette);
     const n = Math.abs(i - here);
-    const where = isHere ? 'you are here' : here < 0 ? '' : `${i > here ? '⬆' : '⬇'} ${n} floor${n === 1 ? '' : 's'} ${i > here ? 'up' : 'down'}`;
+    const where = isHere ? 'you are here' : here < 0 ? '' : `${n} deck${n === 1 ? '' : 's'} ${i > here ? 'up' : 'down'}`;
     const stats: HTMLElement[] = [];
     if (f.cloning) stats.push(h('span', { title: f.clone?.detail ?? 'Being cloned' }, cloneLabel(f.clone)));
     else {
-      if (f.waiting) stats.push(h('span.waiting', { title: 'Workers waiting on someone' }, `🙋 ${f.waiting}`));
-      if (f.busy) stats.push(h('span', { title: 'Working' }, `👷 ${f.busy}`));
-      stats.push(h('span', { title: 'Workers at desks' }, `💻 ${f.workers}`));
-      if (f.people) stats.push(h('span', { title: 'People on this floor' }, `🧑 ${f.people}`));
+      if (f.waiting) stats.push(h('span.waiting', { title: 'Workers waiting on someone' }, `${f.waiting}`));
+      if (f.busy) stats.push(h('span', { title: 'Working' }, `${f.busy}`));
+      stats.push(h('span', { title: 'Workers at desks' }, `${f.workers}`));
+      if (f.people) stats.push(h('span', { title: 'People on this floor' }, `${f.people}`));
     }
     const btn = h(
       'button.floor-item',
@@ -61,14 +62,14 @@ export function toggleFloorMenu(anchor: HTMLElement, opts: FloorMenuOptions): vo
   const render = () => {
     const floors = store.floors;
     const here = floors.findIndex((f) => f.id === store.floor);
-    const add = h('button.floor-item.add', { type: 'button', role: 'menuitem', title: 'The Floors window: add another project as a floor' }, h('span.floor-no', {}, '🛗'), h('span.floor-text', {}, h('span.floor-name', {}, 'Floors'), h('span.floor-sub', {}, 'Add a project…')));
+    const add = h('button.floor-item.add', { type: 'button', role: 'menuitem', title: 'The Floors window: add another project as a floor' }, h('span.floor-no', {}, icon('plus', 14)), h('span.floor-text', {}, h('span.floor-name', {}, 'Floors'), h('span.floor-sub', {}, 'Add a project…')));
     add.addEventListener('click', () => {
       close();
       opts.floors();
     });
     // Top floor first, the way a building's directory reads.
     const items = floors.map((f, i) => item(f, i, here)).reverse();
-    el.replaceChildren(h('div.floor-menu-head', {}, `🏢 ${floors.length} floor${floors.length === 1 ? '' : 's'}`), ...items, add);
+    el.replaceChildren(h('div.floor-menu-head', {}, `${floors.length} floor${floors.length === 1 ? '' : 's'}`), ...items, add);
   };
 
   const place = () => {

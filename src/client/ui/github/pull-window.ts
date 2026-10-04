@@ -14,6 +14,7 @@ import { avatar, commentCard, errorBox, nodes, REVIEW_BADGE, spinnerRow, stateOf
 import { FILES_KEY, mergePref, pref, savePref, TAB_KEY } from './prefs';
 import { fixAndMergePrompt, fixConflictsPrompt, pullContext, pullVars, reviewPrompt, type BoardActions } from './prompts';
 import { buildTree, looksGenerated, parseDiff, renderFileDiff, renderThread, repliesOf, Reviewed, STATUS_WORD, treeOrder, type DiffFile, type TreeDir } from './pulldiff';
+import { icon } from '../icons';
 
 // The window behind a card on the PR board. A PR opens on its conversation (description, comments,
 // reviews, line comments, checks) with a Files tab for the diff, where you tick files off as
@@ -21,7 +22,7 @@ import { buildTree, looksGenerated, parseDiff, renderFileDiff, renderThread, rep
 
 /**
  * What to do once the window has loaded, for Mission control's Review tab: open the Merge dialog, or
- * hand the PR back to a worker with the review comments (as 🤖 Fix comments & merge does).
+ * hand the PR back to a worker with the review comments (as Fix comments & merge does).
  */
 export type PullThen = 'merge' | 'hand-back';
 
@@ -46,8 +47,8 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
   // --- Frame
   const pill = h('span.pill');
   const title = h('h2');
-  const reload = h('button.btn', { type: 'button', title: 'Reload from GitHub' }, '🔄');
-  const close = h('button.btn.close', { 'aria-label': 'Close' }, '✕');
+  const reload = h('button.btn', { type: 'button', title: 'Reload from GitHub', 'aria-label': 'Reload' }, icon('refresh', 16));
+  const close = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
   const meta = h('div.gh-meta');
   const tabConv = h('button.gh-tab', { type: 'button', role: 'tab' });
   const tabFiles = h('button.gh-tab', { type: 'button', role: 'tab' });
@@ -71,7 +72,7 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
     meta,
     h('nav.gh-tabs', { role: 'tablist' }, tabConv, tabFiles),
     h('div.gh-body', {}, conv, filesPane),
-    h('footer', {}, h('a.grow', { href: it.url, target: '_blank', rel: 'noopener noreferrer' }, 'Open on GitHub ↗'), footBtns),
+    h('footer', {}, h('a.grow', { href: it.url, target: '_blank', rel: 'noopener noreferrer' }, 'Open on GitHub'), footBtns),
   );
 
   const handToWorker = () => {
@@ -106,8 +107,8 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
       ),
     );
     const done = files ? files.filter((f) => reviewed.mark(f) === 'reviewed').length : 0;
-    tabConv.replaceChildren(...nodes('💬 Conversation', detail ? h('span.gh-count', {}, String(detail.comments.length + detail.reviews.length + detail.reviewComments.filter((c) => !c.replyTo).length)) : null));
-    tabFiles.replaceChildren(...nodes('📄 Files changed', files ? h('span.gh-count', {}, String(files.length)) : null, files?.length ? h('span.gh-progress', { class: done === files.length ? 'all' : '' }, `✓ ${done}/${files.length}`) : null));
+    tabConv.replaceChildren(...nodes('Conversation', detail ? h('span.gh-count', {}, String(detail.comments.length + detail.reviews.length + detail.reviewComments.filter((c) => !c.replyTo).length)) : null));
+    tabFiles.replaceChildren(...nodes('Files changed', files ? h('span.gh-count', {}, String(files.length)) : null, files?.length ? h('span.gh-progress', { class: done === files.length ? 'all' : '' }, `✓ ${done}/${files.length}`) : null));
     tabConv.classList.toggle('on', tab === 'conversation');
     tabFiles.classList.toggle('on', tab === 'files');
     tabConv.setAttribute('aria-selected', String(tab === 'conversation'));
@@ -117,23 +118,23 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
 
     const isOpen = it.state === 'OPEN';
     const conflicts = !!detail && conflicted(detail);
-    const merge = h(conflicts ? 'button.btn' : 'button.btn.primary', { type: 'button', disabled: !detail, title: detail ? 'Merge this pull request' : 'Loading…' }, '🔀 Merge…');
+    const merge = h(conflicts ? 'button.btn' : 'button.btn.primary', { type: 'button', disabled: !detail, title: detail ? 'Merge this pull request' : 'Loading…' }, 'Merge…');
     merge.addEventListener('click', () => detail && openMerge(it, detail, net, handToWorker, loadAll));
     const w = workerForPull(store.workers.values(), it);
     footBtns.replaceChildren(
       ...nodes(
-      w ? h('button.btn', { type: 'button', onclick: () => actions.goToDesk(w.deskId) }, `🪑 Go to ${w.name}'s desk`) : null,
-      h('button.btn', { type: 'button', title: 'Send a worker your own prompt about this PR', onclick: () => actions.ask(pullContext(it), `Ask about PR #${it.number}`) }, '✍️ Ask a worker…'),
-      isOpen ? h('button.btn', { type: 'button', onclick: () => actions.assign(reviewPrompt(it), `Review PR #${it.number}`) }, '🔍 Review') : null,
+      w ? h('button.btn', { type: 'button', onclick: () => actions.goToDesk(w.deskId) }, `Go to ${w.name}'s desk`) : null,
+      h('button.btn', { type: 'button', title: 'Send a worker your own prompt about this PR', onclick: () => actions.ask(pullContext(it), `Ask about PR #${it.number}`) }, 'Ask a worker…'),
+      isOpen ? h('button.btn', { type: 'button', onclick: () => actions.assign(reviewPrompt(it), `Review PR #${it.number}`) }, 'Review') : null,
       isOpen
-        ? h('button.btn', { type: 'button', title: 'A few workers review it in the meeting room, each through its own lens, and the office posts one combined review', onclick: () => actions.meeting({ pattern: 'review', pr: it.number, title: `Review of PR #${it.number}`, prompt: officePrompt('pull.panel', pullVars(it)) }) }, '🤝 Review panel…')
+        ? h('button.btn', { type: 'button', title: 'A few workers review it in the meeting room, each through its own lens, and the office posts one combined review', onclick: () => actions.meeting({ pattern: 'review', pr: it.number, title: `Review of PR #${it.number}`, prompt: officePrompt('pull.panel', pullVars(it)) }) }, 'Review panel…')
         : null,
       conflicts
-        ? h('button.btn.primary', { type: 'button', title: 'A new worker merges the base in, resolves the conflicts, gets the checks green, then merges', onclick: handToWorker }, '✨ Fix conflicts & merge')
+        ? h('button.btn.primary', { type: 'button', title: 'A new worker merges the base in, resolves the conflicts, gets the checks green, then merges', onclick: handToWorker }, 'Fix conflicts & merge')
         : isOpen
-          ? h('button.btn', { type: 'button', title: 'A worker addresses the review comments, gets the checks green, then merges', onclick: handToWorker }, '🤖 Fix comments & merge')
+          ? h('button.btn', { type: 'button', title: 'A worker addresses the review comments, gets the checks green, then merges', onclick: handToWorker }, 'Fix comments & merge')
           : null,
-      isOpen ? h('button.btn', { type: 'button', title: 'Close this pull request without merging it', onclick: () => openClose('pull', it, net, loadAll) }, '🚫 Close PR…') : null,
+      isOpen ? h('button.btn', { type: 'button', title: 'Close this pull request without merging it', onclick: () => openClose('pull', it, net, loadAll) }, 'Close PR…') : null,
       isOpen ? merge : null,
       ),
     );
@@ -164,7 +165,7 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
             h(
               'header',
               {},
-              h('span', {}, '💬'),
+              h('span', {}, icon('chat', 14)),
               h('code', { title: c.path }, `${c.path}${c.line ? `:${c.line}` : ''}`),
               c.line == null ? h('span.gh-badge.muted', {}, 'outdated') : null,
               h('span.grow'),
@@ -179,10 +180,10 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
 
     const st = mergeStatus(d);
     const box = h('section.gh-mergebox', { class: st.cls }, h('div.gh-status', { class: st.cls }, h('span', {}, st.icon), st.text), d.checks.length ? checksList(d.checks) : null);
-    if (it.state === 'OPEN' && !d.trust.trusted) box.append(h('div.gh-status.warn.gh-untrusted', {}, h('span', {}, '⚠️'), `${d.trust.reason} Workers won't check it out or build it from here.`));
-    if (it.state === 'OPEN' && st.can) box.append(h('div.gh-mergebox-go', {}, h('button.btn.primary', { type: 'button', onclick: () => openMerge(it, d, net, handToWorker, loadAll) }, '🔀 Merge…')));
-    if (conflicted(d)) box.append(h('div.gh-mergebox-go', {}, h('button.btn.primary', { type: 'button', onclick: handToWorker }, '✨ New worker: fix conflicts & merge')));
-    else if (it.state === 'OPEN' && !st.can && !d.isDraft) box.append(h('div.gh-mergebox-go', {}, h('button.btn', { type: 'button', onclick: handToWorker }, '🤖 Have a worker fix it & merge')));
+    if (it.state === 'OPEN' && !d.trust.trusted) box.append(h('div.gh-status.warn.gh-untrusted', {}, h('span', {}, icon('warning', 16)), `${d.trust.reason} Workers won't check it out or build it from here.`));
+    if (it.state === 'OPEN' && st.can) box.append(h('div.gh-mergebox-go', {}, h('button.btn.primary', { type: 'button', onclick: () => openMerge(it, d, net, handToWorker, loadAll) }, 'Merge…')));
+    if (conflicted(d)) box.append(h('div.gh-mergebox-go', {}, h('button.btn.primary', { type: 'button', onclick: handToWorker }, 'New worker: fix conflicts & merge')));
+    else if (it.state === 'OPEN' && !st.can && !d.isDraft) box.append(h('div.gh-mergebox-go', {}, h('button.btn', { type: 'button', onclick: handToWorker }, 'Have a worker fix it & merge')));
     thread.append(box);
   };
 
@@ -319,7 +320,7 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
       h('span.pd-st', { class: f.status, title: STATUS_WORD[f.status] }, f.status),
       // The name first and its folder after, so a narrow sidebar cuts the folder, not the name.
       h('span.pd-path', {}, f.path.slice(slash + 1), mode === 'list' && slash >= 0 ? h('span.dir', {}, ` ${f.path.slice(0, slash)}`) : null),
-      n ? h('span.pd-c', { title: `${n} comment${n > 1 ? 's' : ''}` }, `💬${n}`) : null,
+      n ? h('span.pd-c', { title: `${n} comment${n > 1 ? 's' : ''}` }, `${n}`) : null,
       h('span.gh-pm', {}, f.binary ? h('span.bin', {}, 'bin') : h('span', {}, h('span.add', {}, `+${f.additions}`), ' ', h('span.del', {}, `−${f.deletions}`))),
     );
   };
@@ -345,7 +346,7 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
             },
           },
           h('span.pd-caret', {}, shut ? '▸' : '▾'),
-          h('span', {}, '📁'),
+          h('span', {}, icon('docs', 14)),
           h('span.pd-path', {}, sub.name),
           all ? h('span.pd-done', { title: 'Everything in here is reviewed' }, '✓') : null,
         ),
@@ -400,7 +401,7 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
         label,
       );
     side.replaceChildren(
-      h('div.pd-side-head', {}, h('div.seg.pd-mode', {}, modeBtn('tree', '🌲 Tree'), modeBtn('list', '☰ List')), h('div.pd-bar', {}, h('i')), h('div.pd-done-txt')),
+      h('div.pd-side-head', {}, h('div.seg.pd-mode', {}, modeBtn('tree', 'Tree'), modeBtn('list', 'List')), h('div.pd-bar', {}, h('i')), h('div.pd-done-txt')),
       filterInput,
       fileList,
       h('div.pd-keys', {}, h('span.key', {}, 'J'), h('span.key', {}, 'K'), 'next / previous file · ', h('span.key', {}, 'V'), 'reviewed'),
@@ -424,7 +425,7 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
           h('span.pd-st', { class: f.status, title: STATUS_WORD[f.status] }, f.status),
           h('span.pd-fpath', { title: f.path }, f.status === 'R' && f.oldPath ? `${f.oldPath} → ${f.path}` : f.path),
           h('span.gh-pm', {}, f.binary ? h('span.bin', {}, 'binary') : h('span', {}, h('span.add', {}, `+${f.additions}`), ' ', h('span.del', {}, `−${f.deletions}`))),
-          n ? h('span.pd-c', {}, `💬 ${n}`) : null,
+          n ? h('span.pd-c', {}, `${n}`) : null,
           h('span.pd-stale.hidden', { title: 'The file changed after you marked it reviewed' }, 'changed since review'),
           h('label.pd-viewed', { title: 'Mark as reviewed (V)' }, box, 'Reviewed'),
         ),
@@ -525,7 +526,7 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
     renderFrame();
   });
   const modal: Modal = openModal(el, {
-    doing: `🔀 reading PR #${it.number}`,
+    doing: `reading PR #${it.number}`,
     onClose: () => {
       unsub();
       comment.dispose();

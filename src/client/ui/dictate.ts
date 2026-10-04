@@ -1,11 +1,12 @@
-// Dictation: a 🎤 on a prompt box and in a worker's terminal. Hold it (or Ctrl+Space) and talk, and
+// Dictation: a on a prompt box and in a worker's terminal. Hold it (or Ctrl+Space) and talk, and
 // what you said is typed in where the cursor is once you let go; a quick tap leaves it listening,
 // hands free, until the next one. Nothing is sent for you: you read it over and press Enter yourself.
-// The listening is the browser's own (see speech.ts), so where a browser has none there's no 🎤.
+// The listening is the browser's own (see speech.ts), so where a browser has none there's no .
 
 import './dictate.css';
 import { h, onModalChange, toast } from './dom';
 import { checkOnDevice, listen, PushToTalk, speechSupport, spliceSpoken, type Listening } from './speech';
+import { icon } from './icons';
 
 export interface DictateTarget {
   /** Puts a phrase where the cursor is. */
@@ -15,7 +16,7 @@ export interface DictateTarget {
 }
 
 export interface Dictation {
-  /** The 🎤, or null where the browser can't listen. */
+  /** The , or null where the browser can't listen. */
   button: HTMLButtonElement | null;
   /** The words as they're heard, to put over whatever is being dictated into. Hidden until it listens. */
   live: HTMLElement;
@@ -27,7 +28,7 @@ export interface Dictation {
 
 const TITLE = 'Dictate: hold to talk (or hold Ctrl+Space) and let go, and what you said is typed in. A quick click leaves it listening until you click again. Your browser does the listening: the office never gets the audio, but Chrome and Edge send it to their speech service unless they have an on-device model for your language';
 
-/** The one that's listening now: there's one microphone, so a second 🎤 cuts off the first. */
+/** The one that's listening now: there's one microphone, so a second cuts off the first. */
 let active: { button: HTMLElement; abort(): void } | null = null;
 const watchers = new Set<(on: boolean) => void>();
 
@@ -36,7 +37,7 @@ export function onDictating(fn: (on: boolean) => void) {
   watchers.add(fn);
 }
 
-// A window that closes takes its 🎤 with it.
+// A window that closes takes its with it.
 onModalChange(() => {
   if (active && !active.button.isConnected) active.abort();
 });
@@ -51,14 +52,14 @@ export function dictation(target: DictateTarget, opts: { label?: string } = {}):
   if (speechSupport() === 'none') return { button: null, live, key: () => false, drop() {} };
   checkOnDevice();
 
-  const button = h('button.btn.dictate-mic', { type: 'button', title: TITLE, 'aria-label': 'Dictate', 'aria-pressed': 'false' }, opts.label ? `🎤 ${opts.label}` : '🎤');
+  const button = h('button.btn.dictate-mic', { type: 'button', title: TITLE, 'aria-label': 'Dictate', 'aria-pressed': 'false' }, icon('mic', 16), opts.label ? ` ${opts.label}` : null);
   let listening: Listening | null = null;
   const paint = (interim = '') => {
     const on = !!listening;
     button.classList.toggle('live', on);
     button.setAttribute('aria-pressed', String(on));
     live.classList.toggle('hidden', !on);
-    live.textContent = !on ? '' : interim ? `🎙️ ${tail(interim)}` : '🎙️ Listening…';
+    live.textContent = !on ? '' : interim ? tail(interim) : 'Listening...';
   };
 
   const start = () => {
@@ -153,7 +154,7 @@ export function dictation(target: DictateTarget, opts: { label?: string } = {}):
 }
 
 /**
- * A text box you can dictate into: the box with a 🎤 in its corner, to put where the box would go.
+ * A text box you can dictate into: the box with a in its corner, to put where the box would go.
  * What you say goes in where its cursor is. Where the browser can't listen, it's the box as it was.
  */
 export function dictateField(field: HTMLTextAreaElement | HTMLInputElement): HTMLElement {

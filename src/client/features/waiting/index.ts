@@ -45,15 +45,15 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     if (!w || !goToWorker(w.id)) {
       // Building-wide: after the last one here, the one on another floor that has waited longest.
       if (!other) {
-        nextToast = toast('👍 Nobody is waiting on you');
+        nextToast = toast('Nobody is waiting on you');
         return;
       }
-      nextToast = toast(other.status === 'needs_input' ? `🛗 ${other.name} needs you: over to ${other.floorName}` : `🛗 Nobody's waiting on this floor: over to ${other.name} on ${other.floorName}`);
+      nextToast = toast(other.status === 'needs_input' ? `${other.name} needs you: over to ${other.floorName}` : `Nobody's waiting on this floor: over to ${other.name} on ${other.floorName}`);
       parts.mission.missionDeps.goTo(other.floor, other.deskId);
       return;
     }
     const of = waiting.length > 1 ? ` (${waiting.findIndex((x) => x.id === w.id) + 1} of ${waiting.length})` : '';
-    nextToast = toast(`${w.status === 'needs_input' ? `🙋 ${w.name} needs you` : `✅ ${w.name} is done`}${of}. E opens its terminal`);
+    nextToast = toast(`${w.status === 'needs_input' ? `${w.name} needs you` : `${w.name} is done`}${of}. E opens its terminal`);
   }
 
   /** Puts you behind worker `id` on this floor, looking over its shoulder, with any window closed. False when there's no getting there (you're between floors, or it's gone). */
@@ -145,7 +145,7 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     openTerminal(net, id, () => openWorkerChanges(id), find);
   }
 
-  /** 🔎 the chat and every terminal; a terminal line opens that terminal right at it. */
+  /** the chat and every terminal; a terminal line opens that terminal right at it. */
   function showSearch() {
     openSearch(openWorkerTerminal);
   }

@@ -5,33 +5,34 @@ import { store } from '../state';
 import { h, openModal, type Modal } from './dom';
 import { confirmDialog } from './prompt';
 import { copyButton } from './team';
+import { icon } from './icons';
 
 const NAMES: Record<SignInKind, string> = { claude: 'Claude', github: 'GitHub' };
 
 let open: { modal: Modal; say(why?: string): void } | null = null;
 
 /**
- * 🔐 Your sign-ins: the Claude plan your workers run on and the GitHub account the office acts as
+ * Your sign-ins: the Claude plan your workers run on and the GitHub account the office acts as
  * for you, both your own (see server/signins.ts). The office runs the sign-in itself and hands you
  * the page to open; or paste a token; admins may use the office machine's own instead.
  * `why` says what sent you here (hiring a worker before signing in, say).
  */
 export function openSignIns(net: Net, why?: string) {
   if (open) return open.say(why);
-  const close = h('button.btn.close', { 'aria-label': 'Close' }, '✕');
+  const close = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
   const banner = h('p.team-status', { hidden: true });
   const cards = h('div.signins');
   const el = h(
     'div.modal',
     { role: 'dialog', 'aria-label': 'Your sign-ins', style: 'width:min(640px,100%)' },
-    h('header', {}, h('h2', {}, '🔐 Your sign-ins'), close),
+    h('header', {}, h('h2', {}, 'Your sign-ins'), close),
     h(
       'div.body.team',
       {},
       h('p.note.lead', {}, 'Your workers run on your own Claude plan, and the office acts on GitHub as you: comments, merges and pull requests show up under your name. Only your workers use them.'),
       banner,
       cards,
-      h('p.note', {}, 'Or open a 🐚 shell at any desk: it runs as you, so ', h('code', {}, 'claude auth login'), ' and ', h('code', {}, 'gh auth login'), ' typed there sign you in too.'),
+      h('p.note', {}, 'Or open a shell at any desk: it runs as you, so ', h('code', {}, 'claude auth login'), ' and ', h('code', {}, 'gh auth login'), ' typed there sign you in too.'),
     ),
   );
 
@@ -70,11 +71,11 @@ export function openSignIns(net: Net, why?: string) {
   const card = (which: SignInKind, s: SignInState, office: boolean) => {
     const status =
       s.status === 'ok'
-        ? h('span.signin-who.ok', {}, '✅ ', s.how === 'office' ? `The office’s own${s.who ? ` (${s.who})` : ''}` : (s.who ?? 'Signed in'))
+        ? h('span.signin-who.ok', {}, icon('check', 14), ' ', s.how === 'office' ? `The office’s own${s.who ? ` (${s.who})` : ''}` : (s.who ?? 'Signed in'))
         : s.status === 'busy'
-          ? h('span.signin-who', {}, '⏳ Signing in…')
+          ? h('span.signin-who', {}, 'Signing in…')
           : h('span.signin-who.none', {}, 'Not signed in');
-    const head = h('div.team-head', {}, h('h4', {}, which === 'claude' ? '✳️ Claude' : '🐙 GitHub'), status);
+    const head = h('div.team-head', {}, h('h4', {}, which === 'claude' ? '✳️ Claude' : 'GitHub'), status);
     const body = h('div.signin-body');
     const box = h('section.signin', { class: s.status }, head, body);
     if (s.error) body.append(h('p.team-status.error', {}, s.error));
@@ -95,7 +96,7 @@ export function openSignIns(net: Net, why?: string) {
           inputs.code.value = '';
         });
         body.append(
-          h('ol.signin-steps', {}, h('li', {}, h('a.btn.primary', { href: url, target: '_blank', rel: 'noopener noreferrer' }, 'Open Claude’s sign-in page ↗'), ' and sign in with your own account.'), h('li', {}, 'It shows you a code. Paste it here:', form)),
+          h('ol.signin-steps', {}, h('li', {}, h('a.btn.primary', { href: url, target: '_blank', rel: 'noopener noreferrer' }, 'Open Claude’s sign-in page'), ' and sign in with your own account.'), h('li', {}, 'It shows you a code. Paste it here:', form)),
         );
       } else {
         const code = s.pending.code ?? '';
@@ -104,7 +105,7 @@ export function openSignIns(net: Net, why?: string) {
             'ol.signin-steps',
             {},
             h('li', {}, 'Copy your one-time code:', h('div.cmd', {}, h('pre.signin-code', {}, code), copyButton('Copy', () => code))),
-            h('li', {}, h('a.btn.primary', { href: url, target: '_blank', rel: 'noopener noreferrer' }, 'Open github.com/login/device ↗'), ' and enter it there.'),
+            h('li', {}, h('a.btn.primary', { href: url, target: '_blank', rel: 'noopener noreferrer' }, 'Open github.com/login/device'), ' and enter it there.'),
             h('li', {}, 'This updates by itself once GitHub says yes.'),
           ),
         );

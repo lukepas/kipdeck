@@ -4,19 +4,20 @@ import type { Net } from '../net';
 import { isAsleep } from '../../shared/status';
 import { store } from '../state';
 import { closeAllModals, h, openModal, timeAgo, type Modal } from './dom';
+import { icon } from './icons';
 
 const version = (v: VersionInfo) => h('span.version', {}, h('code', {}, v.sha), ' ', v.subject, h('small', {}, ` · ${timeAgo(v.date)}`));
 
-/** The ⬆️ panel: what's running, what's new upstream, and the button to upgrade. */
+/** The panel: what's running, what's new upstream, and the button to upgrade. */
 export function openUpgrade(net: Net) {
   const body = h('div.body.upgrade');
-  const close = h('button.btn.close', { 'aria-label': 'Close' }, '✕');
-  const recheck = h('button.btn', { type: 'button', onclick: () => net.send({ t: 'upgrade.check' }) }, '🔄 Check again');
-  const go = h('button.btn.primary', { type: 'button', onclick: () => net.send({ t: 'upgrade.start' }) }, '⬆️ Upgrade now');
+  const close = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
+  const recheck = h('button.btn', { type: 'button', onclick: () => net.send({ t: 'upgrade.check' }) }, 'Check again');
+  const go = h('button.btn.primary', { type: 'button', onclick: () => net.send({ t: 'upgrade.start' }) }, 'Upgrade now');
   const el = h(
     'div.modal',
     { role: 'dialog', 'aria-label': 'Upgrade the office', style: 'width:min(620px,100%)' },
-    h('header', {}, h('h2', {}, '⬆️ Upgrade the office'), close),
+    h('header', {}, h('h2', {}, 'Upgrade the office'), close),
     body,
     h('footer', {}, h('span.grow', {}), recheck, go),
   );
@@ -38,7 +39,7 @@ export function openUpgrade(net: Net) {
     }
     if (u.checking) body.append(h('p.upgrade-status.busy', {}, h('span.spinner'), 'Checking GitHub for changes…'));
     else if (u.error && u.phase !== 'failed') body.append(h('p.upgrade-status.error', {}, u.error));
-    else if (!u.latest && u.checkedAt) body.append(h('p.upgrade-status.ok', {}, `✅ Up to date (checked ${timeAgo(u.checkedAt)})`));
+    else if (!u.latest && u.checkedAt) body.append(h('p.upgrade-status.ok', {}, `Up to date (checked ${timeAgo(u.checkedAt)})`));
 
     if (u.latest) {
       const n = u.behind ?? u.changes?.length ?? 0;
@@ -108,8 +109,8 @@ export function showRestarting(u: UpgradeState, net: Net) {
   net.expectRestart();
   restartPending = true;
   restartDialog(
-    '🛠️ Upgrading the office',
-    h('div.restart-art', {}, '🏗️'),
+    'Upgrading the office',
+    h('div.restart-art', {}, icon('upgrade', 40)),
     h('p', {}, `${u.by ? `${u.by} is upgrading` : 'Upgrading'} the office${u.latest ? ` to ${u.latest.sha}: “${u.latest.subject}”` : ''}.`),
     h('p.upgrade-status.busy', {}, h('span.spinner'), 'Restarting… you’ll be back in a few seconds. No need to do anything.'),
   );
@@ -128,8 +129,8 @@ export function showUpgraded(u: UpgradeState) {
   clearTimeout(slowTimer);
   const v = u.current;
   restartDialog(
-    '✨ The office has been upgraded',
-    h('div.restart-art', {}, '🎉'),
+    'The office has been upgraded',
+    h('div.restart-art', {}, icon('check', 40)),
     v ? h('p', {}, 'Now running ', h('code', {}, v.sha), `: “${v.subject}”`) : h('p', {}, 'A new version is running.'),
     h('p.upgrade-status.ok', {}, h('span.spinner'), 'Loading the new version…'),
   );

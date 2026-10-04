@@ -87,7 +87,7 @@ export function providerUsageNote(provider: AgentProvider): string {
 }
 
 /**
- * The worker a new one starts on unless someone picks another: the one set in ⚙️ Settings, or the
+ * The worker a new one starts on unless someone picks another: the one set in Settings, or the
  * office's --agent on its own default model.
  */
 export function officeChoice(project: ProjectInfo | null): AgentChoice {
@@ -261,7 +261,7 @@ export function agentFields(project: ProjectInfo | null, id: string, initial: Ag
     modelInput.setCustomValidity('');
     paintEffort();
   });
-  // Fields put on their provider before anyone could see them (in ⚙️ Settings) ask once they're on the page, or once they're used.
+  // Fields put on their provider before anyone could see them (in Settings) ask once they're on the page, or once they're used.
   setTimeout(load, 0);
   fields.addEventListener('focusin', load);
   const model = () => (chosen && meta().validModel?.(chosen) ? chosen : undefined);
@@ -283,7 +283,7 @@ export function agentFields(project: ProjectInfo | null, id: string, initial: Ag
 }
 
 /**
- * Which worker to start: the office's default (⚙️ Settings), shown as a line, with an ✏️ Edit button
+ * Which worker to start: the office's default (Settings), shown as a line, with an ✏️ Edit button
  * that opens the provider, model and effort fields to pick another for this one.
  */
 export function providerPicker(project: ProjectInfo | null, id: string, label = 'Worker'): ProviderPicker {
@@ -296,7 +296,7 @@ export function providerPicker(project: ProjectInfo | null, id: string, label = 
   const paint = () => {
     const def = officeChoice(project);
     current.textContent = choiceLabel(def);
-    current.title = store.prompts.agent ? 'The office’s default worker, set in ⚙️ Settings' : 'The office’s default worker (its --agent); an admin can pick another in ⚙️ Settings';
+    current.title = store.prompts.agent ? 'The office’s default worker, set in Settings' : 'The office’s default worker (its --agent); an admin can pick another in Settings';
     current.classList.toggle('hidden', editing);
     edit.textContent = editing ? '↺ Use the default' : '✏️ Edit';
     edit.title = editing ? `Back to ${choiceLabel(def)}` : 'Pick another provider, model or effort for this one';

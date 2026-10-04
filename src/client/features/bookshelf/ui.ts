@@ -158,7 +158,7 @@ export function openBookshelf(deps: ShelfDeps) {
   const el = h(
     'div.modal.bookshelf',
     { role: 'dialog', 'aria-label': 'Bookshelf' },
-    h('header', {}, h('h2', {}, '📚 Bookshelf', deps.project ? h('span.bs-project', {}, ` · ${deps.project}`) : '')),
+    h('header', {}, h('h2', {}, 'Bookshelf', deps.project ? h('span.bs-project', {}, ` · ${deps.project}`) : '')),
     h(
       'div.body',
       {},
@@ -178,7 +178,7 @@ export function openBookshelf(deps: ShelfDeps) {
   let opening = 0;
   /** Where the page was last time it turned (see the scroll listener). */
 
-  const modal = openModal(el, { doing: '📚 at the bookshelf', reading: true });
+  const modal = openModal(el, { doing: 'at the bookshelf', reading: true });
 
   const renderList = () => {
     count.textContent = !files.length ? '' : filter.value.trim() ? `${shown.length} of ${files.length} docs` : `${files.length} doc${files.length === 1 ? '' : 's'}`;
@@ -280,7 +280,7 @@ export function openBookshelf(deps: ShelfDeps) {
       const to = resolveDocLink(path, img.getAttribute('src') ?? '');
       if (to) img.src = `/api/docs/picture?${q({ path: to.path })}`;
     }
-    toc.replaceChildren(h('option', { value: '' }, '☰ Contents'), ...heads.map((x) => h('option', { value: x.anchor }, `${' '.repeat(x.level - 1)}${clip(x.text, 60)}`)));
+    toc.replaceChildren(h('option', { value: '' }, 'Contents'), ...heads.map((x) => h('option', { value: x.anchor }, `${' '.repeat(x.level - 1)}${clip(x.text, 60)}`)));
     toc.hidden = heads.length < 3;
   };
 
@@ -292,7 +292,7 @@ export function openBookshelf(deps: ShelfDeps) {
       doc = await getJson<DocText>(`/api/docs/file?${q({ path })}`);
     } catch (err) {
       if (mine !== opening) return;
-      toast(`📚 Couldn't open ${nameOf(path)}: ${(err as Error).message}`, 'warn');
+      toast(`Couldn't open ${nameOf(path)}: ${(err as Error).message}`, 'warn');
       if (!current) page.replaceChildren(h('div.bs-empty', {}, `Couldn't open ${path}.`));
       return;
     }
@@ -309,11 +309,11 @@ export function openBookshelf(deps: ShelfDeps) {
     const words = doc.text.split(/\s+/).filter(Boolean).length;
     meta.replaceChildren(
       [`${Math.max(1, Math.round(words / 220))} min read`, info ? size(info.size) : '', info ? `updated ${timeAgo(info.mtime)}` : ''].filter(Boolean).join(' · '),
-      repoUrl ? h('a', { href: `${repoUrl}/blob/HEAD/${path.split('/').map(encodeURIComponent).join('/')}`, target: '_blank', rel: 'noopener noreferrer', title: 'Open it on GitHub' }, 'GitHub ↗') : '',
+      repoUrl ? h('a', { href: `${repoUrl}/blob/HEAD/${path.split('/').map(encodeURIComponent).join('/')}`, target: '_blank', rel: 'noopener noreferrer', title: 'Open it on GitHub' }, 'GitHub') : '',
     );
     jump(hash);
     renderList();
-    setDoing(modal, `📚 reading ${info?.title ?? nameOf(path)}`);
+    setDoing(modal, `reading ${info?.title ?? nameOf(path)}`);
   };
 
   page.addEventListener('click', (e) => {
@@ -337,7 +337,7 @@ export function openBookshelf(deps: ShelfDeps) {
       if (r.more) count.textContent += ` (the first ${files.length})`;
       const start = [lastRead(floor), ...shelfOrder(files).map((f) => f.path)].find((p) => p && files.some((f) => f.path === p));
       if (start) void openDoc(start);
-      else page.replaceChildren(h('div.bs-empty', {}, '📭 Nothing to read here: this project has no Markdown files yet.'));
+      else page.replaceChildren(h('div.bs-empty', {}, 'Nothing to read here: this project has no Markdown files yet.'));
     })
     .catch((err: Error) => {
       if (!el.isConnected) return;

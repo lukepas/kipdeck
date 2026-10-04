@@ -17,9 +17,9 @@ export function when(iso: string, url?: string) {
 }
 
 export const REVIEW_BADGE: Record<string, [string, string]> = {
-  APPROVED: ['✅ approved', 'ok'],
-  CHANGES_REQUESTED: ['🛠 requested changes', 'bad'],
-  COMMENTED: ['💬 reviewed', ''],
+  APPROVED: ['approved', 'ok'],
+  CHANGES_REQUESTED: ['requested changes', 'bad'],
+  COMMENTED: ['reviewed', ''],
   DISMISSED: ['review dismissed', 'muted'],
 };
 

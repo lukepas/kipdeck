@@ -1,5 +1,5 @@
 import './ui.css';
-// The 📝 whiteboard window, and the drawing on the whiteboard in the office. Excalidraw itself is in
+// The whiteboard window, and the drawing on the whiteboard in the office. Excalidraw itself is in
 // whiteboard-app.ts, loaded the first time either needs it.
 
 import type { ServerMsg } from '../../../shared/protocol';
@@ -8,6 +8,7 @@ import type { Net } from '../../net';
 import { store } from '../../state';
 import { h, openModal, toast, type Modal } from '../../ui/dom';
 import type { WhiteboardApp } from './whiteboard-app';
+import { icon } from '../../ui/icons';
 
 declare const __EXCALIDRAW_ASSETS__: string;
 
@@ -41,9 +42,9 @@ export function openWhiteboard(net: Net) {
   const floor = store.floor;
   if (!floor) return toast('Go to a floor first', 'warn');
   const people = h('div.wb-people');
-  const close = h('button.btn.close', { 'aria-label': 'Close', title: 'Close (Esc)' }, '✕');
+  const close = h('button.btn.close', { 'aria-label': 'Close', title: 'Close (Esc)' }, icon('close', 16));
   const host = h('div.wb-host', {}, h('div.wb-loading', {}, '✏️ Getting the markers out…'));
-  const el = h('div.wb-window', { role: 'dialog', 'aria-label': 'Whiteboard' }, h('header', {}, h('h2', {}, '📝 Whiteboard'), people, close), host);
+  const el = h('div.wb-window', { role: 'dialog', 'aria-label': 'Whiteboard' }, h('header', {}, h('h2', {}, 'Whiteboard'), people, close), host);
   // Esc first gets you out of whatever you're doing in Excalidraw (typing, drawing, a menu, a tool),
   // then lets go of what's selected, and once there's nothing left, closes the window.
   const onKey = (e: KeyboardEvent) => {
@@ -58,7 +59,7 @@ export function openWhiteboard(net: Net) {
     people,
     modal: openModal(el, {
       escCloses: false,
-      doing: '🖍️ at the whiteboard',
+      doing: 'at the whiteboard',
       onClose: () => {
         window.removeEventListener('keydown', onKey, true);
         unsubscribe.forEach((off) => off());

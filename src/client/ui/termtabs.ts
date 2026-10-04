@@ -32,7 +32,7 @@ export function termTabs(workerId: string, opts: TermTabsOptions): { bar: HTMLEl
   const form = h('form.term-tab-form.hidden', {}, tabName, tabUrl, h('button.btn.primary', { type: 'submit' }, 'Add'), cancelBtn);
   const addBtn = h('button.term-tab-add', { type: 'button', title: 'Pin a web page open beside this terminal (a linked chat, docs, anything with an address)' }, '+ Web page');
   // Plenty of sites won't show inside another page (chatgpt.com doesn't): this opens the one showing in a tab of its own.
-  const openOut = h('a.term-tab-out.hidden', { target: '_blank', rel: 'noopener noreferrer', title: "Open this page in a browser tab of its own (for a site that won't show here)" }, '↗ New tab') as HTMLAnchorElement;
+  const openOut = h('a.term-tab-out.hidden', { target: '_blank', rel: 'noopener noreferrer', title: "Open this page in a browser tab of its own (for a site that won't show here)" }, 'New tab') as HTMLAnchorElement;
   const bar = h('div.term-tabbar', {}, tabsBar, openOut, addBtn, form);
   const pages = h('div.term-webhost.hidden');
 
@@ -42,14 +42,14 @@ export function termTabs(workerId: string, opts: TermTabsOptions): { bar: HTMLEl
   let active = 'main';
 
   const render = () => {
-    const mainTab = h('div.term-tab', { class: active === 'main' ? 'on' : '' }, h('button.term-tab-label', { type: 'button', role: 'tab', 'aria-selected': String(active === 'main'), onclick: () => show('main') }, '💻 Terminal'));
+    const mainTab = h('div.term-tab', { class: active === 'main' ? 'on' : '' }, h('button.term-tab-label', { type: 'button', role: 'tab', 'aria-selected': String(active === 'main'), onclick: () => show('main') }, 'Terminal'));
     tabsBar.replaceChildren(
       mainTab,
       ...tabs.map((t) =>
         h(
           'div.term-tab',
           { class: active === t.id ? 'on' : '' },
-          h('button.term-tab-label', { type: 'button', role: 'tab', 'aria-selected': String(active === t.id), title: t.url, onclick: () => show(t.id) }, `🌐 ${clip(t.title, 18)}`),
+          h('button.term-tab-label', { type: 'button', role: 'tab', 'aria-selected': String(active === t.id), title: t.url, onclick: () => show(t.id) }, `${clip(t.title, 18)}`),
           h(
             'button.term-tab-close',
             {

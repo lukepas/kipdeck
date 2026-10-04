@@ -100,7 +100,7 @@ export class BoardTexture {
     const open = (state.items as (GhIssue | GhPull)[]).filter((i) => i.state === 'OPEN');
     if (!open.length) {
       const note = state.error ? `⚠️ ${state.error}` : state.loading && !state.fetchedAt ? 'Loading…' : this.kind === 'issues' ? 'No open issues 🎉' : 'No open PRs';
-      g.font = '800 40px Nunito, ui-rounded, system-ui, sans-serif';
+      g.font = '800 40px Archivo, system-ui, sans-serif';
       const lines = wrap(g, note.replace(/`/g, ''), 760, 4);
       const boxH = 60 + lines.length * 50;
       g.fillStyle = '#fffaf3';
@@ -150,9 +150,9 @@ export class BoardTexture {
       const fs = Math.round(22 * Math.min(scale, nh / 164));
       const w = this.kind === 'pulls' && workers ? workerForPull(workers.values(), it as GhPull) : undefined;
       const footer = w ? fs * 1.3 : 0;
-      g.font = `900 ${Math.round(fs * 1.35)}px Nunito, ui-rounded, system-ui, sans-serif`;
+      g.font = `900 ${Math.round(fs * 1.35)}px Archivo, system-ui, sans-serif`;
       g.fillText(`#${it.number}`, -nw / 2 + 14, -nh / 2 + fs * 2);
-      g.font = `700 ${fs}px Nunito, ui-rounded, system-ui, sans-serif`;
+      g.font = `700 ${fs}px Archivo, system-ui, sans-serif`;
       wrap(g, it.title, nw - 28, Math.max(2, Math.floor((nh - fs * 3 - footer) / (fs * 1.1)))).forEach((line, li) => g.fillText(line, -nw / 2 + 14, -nh / 2 + fs * 3.4 + li * fs * 1.1));
       if (w) {
         // A dot in the worker's color and its desk, so you can tell whose PR it is from across the room.
@@ -166,7 +166,7 @@ export class BoardTexture {
         g.strokeStyle = '#2b2d42';
         g.stroke();
         g.fillStyle = '#5c5f73';
-        g.font = `800 ${Math.round(fs * 0.78)}px Nunito, ui-rounded, system-ui, sans-serif`;
+        g.font = `800 ${Math.round(fs * 0.78)}px Archivo, system-ui, sans-serif`;
         g.fillText(clip(g, `${w.name} · ${OFFICE_PLAN.byId.get(w.deskId)?.label ?? 'desk'}`, nw - 28 - r * 2 - 8), -nw / 2 + 14 + r * 2 + 8, y + fs * 0.28);
       }
       g.beginPath();
@@ -180,7 +180,7 @@ export class BoardTexture {
     });
     if (open.length > cols * rows) {
       g.fillStyle = '#2b2d42';
-      g.font = '800 26px Nunito, ui-rounded, system-ui, sans-serif';
+      g.font = '800 26px Archivo, system-ui, sans-serif';
       g.textAlign = 'right';
       g.fillText(`+${open.length - cols * rows} more`, W - 20, H - 16);
       g.textAlign = 'left';
@@ -225,10 +225,10 @@ export class ServicesBoardTexture {
     if (!rows.length) {
       g.textAlign = 'center';
       g.fillStyle = '#e9ecef';
-      g.font = '900 52px Nunito, ui-rounded, system-ui, sans-serif';
+      g.font = '900 52px Archivo, system-ui, sans-serif';
       g.fillText('No web servers running', W / 2, H / 2 - 20);
       g.fillStyle = 'rgba(233,236,239,.6)';
-      g.font = '700 32px Nunito, ui-rounded, system-ui, sans-serif';
+      g.font = '700 32px Archivo, system-ui, sans-serif';
       g.fillText('When a worker starts one, it shows up here', W / 2, H / 2 + 36);
       g.textAlign = 'left';
       this.texture.needsUpdate = true;
@@ -255,15 +255,15 @@ export class ServicesBoardTexture {
       g.textAlign = 'left';
       const textW = W - 120 - 50 - g.measureText(`:${r.port}`).width - 30;
       g.fillStyle = '#f8f9fa';
-      g.font = `800 ${fs}px Nunito, ui-rounded, system-ui, sans-serif`;
+      g.font = `800 ${fs}px Archivo, system-ui, sans-serif`;
       g.fillText(clip(g, r.title, textW), 110, y + rowH / 2 - fs * 0.08);
       g.fillStyle = 'rgba(233,236,239,.65)';
-      g.font = `700 ${Math.round(fs * 0.62)}px Nunito, ui-rounded, system-ui, sans-serif`;
+      g.font = `700 ${Math.round(fs * 0.62)}px Archivo, system-ui, sans-serif`;
       g.fillText(clip(g, r.who, textW), 110, y + rowH / 2 + fs * 0.72);
     });
     if (rows.length > shown.length) {
       g.fillStyle = '#e9ecef';
-      g.font = '800 26px Nunito, ui-rounded, system-ui, sans-serif';
+      g.font = '800 26px Archivo, system-ui, sans-serif';
       g.textAlign = 'right';
       g.fillText(`+${rows.length - shown.length} more`, W - 24, H - 10);
       g.textAlign = 'left';
@@ -328,7 +328,7 @@ export class QueueBoardTexture {
       g.fillStyle = c;
       g.fillRect(W - 300 + i * 62, H - 30, 48, 14);
     });
-    const font = 'Nunito, ui-rounded, system-ui, sans-serif';
+    const font = 'Archivo, system-ui, sans-serif';
     g.textBaseline = 'alphabetic';
     g.textAlign = 'left';
     g.fillStyle = '#1f5fbf';

@@ -137,7 +137,7 @@ export function installPeers(ctx: Ctx, parts: Pick<Parts, 'walking' | 'talk' | '
       r.person.root.remove(r.bubble.sprite);
       disposeSprite(r.bubble.sprite);
     }
-    const sprite = textSprite(`💬 ${clip(text, 60)}`, { bg: '#ffffff', size: 34 });
+    const sprite = textSprite(`${clip(text, 60)}`, { bg: '#ffffff', size: 34 });
     sprite.position.y = r.person.bubbleY;
     r.person.root.add(sprite);
     r.bubble = { sprite, until: performance.now() + 6000 };

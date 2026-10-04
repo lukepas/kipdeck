@@ -16,7 +16,7 @@ const GONE = 0.6;
 /** Seconds for a shut laptop to shrink away. */
 const LAPTOP_GONE = 0.3;
 
-const FAREWELLS = ['😢 bye, everyone', '🥲 it was fun', '📦 welp', '😞 cleaning out my desk', '🥺 but my PR…'];
+const FAREWELLS = ['bye, everyone', 'it was fun', 'welp', 'cleaning out my desk', 'but my PR…'];
 
 interface Leaver {
   model: Worker;

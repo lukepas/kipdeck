@@ -1,4 +1,4 @@
-// ⚙️ Settings > Bounties: your payout wallet (anyone), and for admins whether Proof of Merge bounties
+// Settings > Bounties: your payout wallet (anyone), and for admins whether Proof of Merge bounties
 // are on, the mock or Solana devnet (never a mainnet), the program, the mint, where the key files
 // are, and which repositories the public "Fund this issue" Action takes funds for.
 import type { ChainSettingsState } from '../../shared/protocol';
@@ -19,7 +19,7 @@ export function bountySettings(net: Net): { nodes: Node[]; off: () => void } {
 
   const s = (): ChainSettingsState | undefined => store.bountySettings;
   const patch = (p: Record<string, unknown>) => net.send({ t: 'bounty.settings', patch: p });
-  const onRow = choiceRow('Bounties', [[true, '💰 On'], [false, 'Off']] as const, () => !!s()?.enabled, (v) => patch({ enabled: v }));
+  const onRow = choiceRow('Bounties', [[true, 'On'], [false, 'Off']] as const, () => !!s()?.enabled, (v) => patch({ enabled: v }));
   const backendRow = choiceRow('Where', [['solana-devnet', 'Solana devnet'], ['mock', 'Mock (no chain)']] as const, () => s()?.backend ?? 'solana-devnet', (v) => patch({ backend: v }));
   const program = text('Program id (deployments/devnet.json)');
   const mint = text('Mint (default devnet USDC)');

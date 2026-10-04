@@ -63,7 +63,7 @@ function payoutRow(deps: MissionDeps, i: ReviewItem, now: number, showFloor: boo
       'div.mc-main',
       {},
       h('span.dot.mc-pr-dot', { 'aria-hidden': 'true' }),
-      h('div.mc-who', {}, h('span.mc-name', {}, `💰 Bounty #${p.issue}`), h('span.mc-sub', {}, sub)),
+      h('div.mc-who', {}, h('span.mc-name', {}, `Bounty #${p.issue}`), h('span.mc-sub', {}, sub)),
       h('div.mc-what', {}, h('span.mc-reason', {}, i.reason)),
       h('span.mc-time', { title: 'Waiting this long' }, i.since ? duration(now - i.since) : ''),
       h('span.mc-cost'),

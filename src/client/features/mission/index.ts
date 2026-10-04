@@ -1,5 +1,5 @@
 /**
- * Mission control in the 3D office: I (or the attention chip, the ☰ menu, the palette) opens it, the
+ * Mission control in the 3D office: I (or the attention chip, the menu, the palette) opens it, the
  * mission strip sits under the floor's name, a worker that gets stuck anywhere in the building dings
  * on your floor and notifies you while you're in another tab, and back after a while away the
  * "While you were away" digest opens once. The windows themselves are ui/mission, which the 2D view

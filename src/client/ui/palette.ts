@@ -1,13 +1,14 @@
 import './palette.css';
 import { rankItems, type PaletteItem, type PaletteMatch } from '../../shared/palette';
 import { h, openModal, type Modal } from './dom';
+import { icon, type IconName } from './icons';
 
 // The command palette (Ctrl+K, ⌘K on a Mac): a few letters find a worker, an issue, a pull request,
 // a board, a teammate or an action, and Enter opens it the way clicking it in the office does.
 // Shift+Enter walks you over to it first. What there is to find comes from main.ts.
 
 export interface PaletteEntry extends PaletteItem {
-  icon: string;
+  icon: IconName;
   /** What kind of thing it is, shown on the right: "Worker", "PR", "Action". */
   kind: string;
   /** Opens it, as clicking it (or E in front of it) in the office does. */
@@ -77,7 +78,7 @@ export function togglePalette(entries: () => PaletteEntry[]) {
         const row = h(
           'li.palette-row',
           { id: `palette-${i}`, role: 'option', 'aria-selected': 'false', title: e.walk ? 'Enter opens it · Shift+Enter walks you there first' : 'Enter opens it' },
-          h('span.palette-icon', {}, e.icon),
+          h('span.palette-icon', {}, icon(e.icon, 16)),
           h('span.palette-text', {}, h('span.palette-title', {}, ...marked(e.title, m.field === 'title' ? m.hits : [])), e.detail ? h('span.palette-detail', {}, ...marked(e.detail, m.field === 'detail' ? m.hits : [])) : null),
           h('span.palette-kind', {}, e.kind),
         );

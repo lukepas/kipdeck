@@ -4,6 +4,7 @@ import type { Net } from '../net';
 import { store } from '../state';
 import { h, openModal, type Modal } from './dom';
 import { confirmDialog, openPrompt } from './prompt';
+import { icon } from './icons';
 
 // The Changes window at a desk: the files a worker changed and their diff against the branch the
 // office was opened on, refreshed while the worker works, with commit / discard / open-a-PR.
@@ -126,7 +127,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
   const title = h('h2', {}, `${info.name} · changes`);
   const branch = h('span.branch');
   const terminalBtn = h('button.btn', { type: 'button', title: 'Open the terminal instead' }, '⌨️ Terminal');
-  const closeBtn = h('button.btn.close', { 'aria-label': 'Close' }, '✕');
+  const closeBtn = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
   const filesHead = h('h4', {}, 'Changed files');
   const list = h('ul', { role: 'listbox', 'aria-label': 'Changed files' });
   const files = h('aside.changes-files', {}, filesHead, list);
@@ -134,8 +135,8 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
   const diffBody = h('div.diff-scroll');
   const diff = h('section.changes-diff', {}, diffHead, diffBody);
   const summary = h('span.grow');
-  const discardBtn = h('button.btn', { type: 'button', title: 'Throw away every uncommitted change in this checkout' }, '🗑️ Discard all');
-  const commitBtn = h('button.btn', { type: 'button', title: 'git add -A && git commit' }, '✅ Commit…');
+  const discardBtn = h('button.btn', { type: 'button', title: 'Throw away every uncommitted change in this checkout' }, 'Discard all');
+  const commitBtn = h('button.btn', { type: 'button', title: 'git add -A && git commit' }, 'Commit…');
   const prSlot = h('span.pr-slot');
   const tabs = h('nav.changes-tabs', { role: 'tablist', 'aria-label': 'Repositories' });
   const el = h(
@@ -171,12 +172,12 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
   const renderEmpty = () => {
     diffHead.replaceChildren();
     if (!state) return diffBody.replaceChildren(h('div.changes-empty', {}, h('div.spinner')));
-    if (state.error) return diffBody.replaceChildren(h('div.changes-empty', {}, h('div.big', {}, '🚧'), h('p', {}, `Couldn't read ${where()}: ${state.error}`)));
+    if (state.error) return diffBody.replaceChildren(h('div.changes-empty', {}, h('div.big', {}, icon('warning', 32)), h('p', {}, `Couldn't read ${where()}: ${state.error}`)));
     diffBody.replaceChildren(
       h(
         'div.changes-empty',
         {},
-        h('div.big', {}, '🌱'),
+        h('div.big', {}, icon('branch', 32)),
         h('p', {}, state.base === 'HEAD' ? `Nothing uncommitted in ${where()}.` : `${info.name} hasn't changed anything since ${state.base} yet.`),
         h('p.note', {}, 'This window follows the checkout as the worker works, so changes show up here as they are made.'),
       ),
@@ -235,27 +236,27 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
       if (s.files.length) bits.push(plusMinus(adds, dels));
       bits.push(uncommitted ? `${uncommitted} uncommitted` : s.files.length ? 'all committed' : '');
       if (s.ahead) bits.push(`${s.ahead} commit${s.ahead > 1 ? 's' : ''} ahead of ${s.base}`);
-      if (!s.dir) bits.push(h('span', { title: "This worker works in the project folder itself, so this is everything uncommitted there — everyone's edits, not just its own." }, '📁 shared project folder'));
-      else bits.push(h('span', { title: `Its own worktree at ${s.dir}` }, `📁 ${s.dir}`));
+      if (!s.dir) bits.push(h('span', { title: "This worker works in the project folder itself, so this is everything uncommitted there — everyone's edits, not just its own." }, 'shared project folder'));
+      else bits.push(h('span', { title: `Its own worktree at ${s.dir}` }, `${s.dir}`));
       summary.append(...bits.filter(Boolean).map((b) => (typeof b === 'string' ? h('span', {}, b) : b)));
     }
     discardBtn.disabled = busy || !uncommitted;
     commitBtn.disabled = busy || !uncommitted;
-    commitBtn.textContent = uncommitted ? `✅ Commit ${uncommitted} file${uncommitted > 1 ? 's' : ''}…` : '✅ Commit…';
+    commitBtn.textContent = uncommitted ? `Commit ${uncommitted} file${uncommitted > 1 ? 's' : ''}…` : 'Commit…';
     prSlot.replaceChildren();
     if (!s) return;
-    if (s.pr) prSlot.append(h('a.btn.primary', { href: s.pr.url, target: '_blank', rel: 'noopener', title: 'Open on GitHub' }, `🔀 PR #${s.pr.number} ↗`));
+    if (s.pr) prSlot.append(h('a.btn.primary', { href: s.pr.url, target: '_blank', rel: 'noopener', title: 'Open on GitHub' }, `PR #${s.pr.number}`));
     else if (s.prBase) {
       const why = busy ? '' : uncommitted ? 'Commit first' : !s.ahead ? `Nothing on ${s.branch} that ${s.prBase} lacks yet` : '';
-      const pr = h('button.btn.primary', { type: 'button', title: why || `Push ${s.branch} and open a pull request against ${s.prBase}` }, '🔀 Open PR…');
+      const pr = h('button.btn.primary', { type: 'button', title: why || `Push ${s.branch} and open a pull request against ${s.prBase}` }, 'Open PR…');
       pr.disabled = busy || !!why;
       pr.addEventListener('click', () =>
         openPrompt({
-          title: '🔀 Open a pull request',
+          title: 'Open a pull request',
           subtitle: `Pushes ${s.branch} to origin and opens a PR against ${s.prBase}. The first line is the title; the rest is the description.`,
           initial: s.subject ?? '',
           placeholder: 'Title',
-          submitLabel: 'Open PR ↗',
+          submitLabel: 'Open PR',
           onSubmit: (text) => {
             const [first, ...rest] = text.split('\n');
             net.send({ t: 'changes.pr', workerId, title: first.trim(), body: rest.join('\n').trim(), repo });
@@ -271,7 +272,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
     if (w) title.textContent = `${w.name} · changes`;
     const s = state;
     if (!s || s.error) branch.textContent = '';
-    else branch.textContent = s.base === 'HEAD' ? `🌿 ${s.branch} · uncommitted changes` : `🌿 ${s.branch} · vs ${s.base}`;
+    else branch.textContent = s.base === 'HEAD' ? `${s.branch} · uncommitted changes` : `${s.branch} · vs ${s.base}`;
   };
 
   const onState = (s: ChangesState) => {
@@ -333,7 +334,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
   commitBtn.addEventListener('click', () => {
     const n = state?.files.filter((f) => f.uncommitted).length ?? 0;
     openPrompt({
-      title: `✅ Commit ${n} file${n === 1 ? '' : 's'}`,
+      title: `Commit ${n} file${n === 1 ? '' : 's'}`,
       subtitle: `Stages everything in ${where()} and commits it${state?.branch ? ` on ${state.branch}` : ''}.`,
       placeholder: 'What changed, and why',
       submitLabel: 'Commit',
@@ -357,7 +358,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
         h(
           'button.btn',
           { type: 'button', role: 'tab', class: t.id === repo ? 'on' : '', 'aria-selected': t.id === repo ? 'true' : 'false', title: t.id ? `Its worktree of ${t.name}` : `Its worktree of this floor's project, ${t.name}`, onclick: () => show(t.id) },
-          `📁 ${t.name}`,
+          `${t.name}`,
           t.pr ? h('small', {}, ` · #${t.pr.number}`) : null,
         ),
       ),
@@ -390,7 +391,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
     }
   });
   const modal = openModal(el, {
-    doing: `🌿 looking over ${info.name}'s changes`,
+    doing: `looking over ${info.name}'s changes`,
     onClose: () => {
       listeners.delete(onMsg);
       unsub();

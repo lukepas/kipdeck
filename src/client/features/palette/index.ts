@@ -73,8 +73,8 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
       const spot = desk && deskSpot(desk);
       const open = () => waiting.openWorkerTerminal(w.id);
       out.push({
-        icon: desk?.station ? STATION_INFO[desk.station].icon : w.kind === 'shell' ? '🐚' : '🧑‍💻',
-        kind: 'Worker',
+        icon: desk?.station ? STATION_INFO[desk.station].icon : w.kind === 'shell' ? 'shell' : 'unit',
+        kind: 'Unit',
         title: w.name,
         detail: [w.task?.name, desk?.label, STATUS_LABEL[w.status]].filter(Boolean).join(' · '),
         keywords: [w.title, w.worktree?.branch],
@@ -85,39 +85,39 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
 
     // Mission control first among the actions: what needs someone, across every floor.
     const chip = attentionChip();
-    out.push({ icon: '🎯', kind: 'Action', title: 'Mission control', detail: chip.text || 'Nobody needs you right now', keywords: ['attention', 'stuck', 'waiting', 'needs you', 'review', 'roster'], open: () => parts.mission.showMission('attention') });
-    out.push({ icon: '🎯', kind: 'Action', title: 'Edit the mission', detail: store.mission.statement ? 'What this floor is for, and its milestones' : 'This floor has no mission yet', keywords: ['goals', 'milestones', 'mission statement'], open: () => parts.mission.showMission('goals') });
-    out.push({ icon: '🎯', kind: 'Action', title: 'Review finished work', detail: 'Done work, pull requests to see to and reviews requested of you, oldest first', keywords: ['review', 'done', 'inbox', 'merge'], open: () => parts.mission.showMission('review') });
-    out.push({ icon: '🎯', kind: 'Action', title: 'Timeline', detail: 'What happened on every floor, newest first', keywords: ['activity', 'history', 'log', 'events'], open: () => parts.mission.showMission('timeline') });
-    out.push({ icon: '🎯', kind: 'Action', title: 'While you were away', detail: 'What happened since you were last here', keywords: ['digest', 'catch up', 'missed', 'away'], open: () => parts.mission.showDigest() });
+    out.push({ icon: 'mission', kind: 'Action', title: 'Mission control', detail: chip.text || 'Nobody needs you right now', keywords: ['attention', 'stuck', 'waiting', 'needs you', 'review', 'roster'], open: () => parts.mission.showMission('attention') });
+    out.push({ icon: 'mission', kind: 'Action', title: 'Edit the mission', detail: store.mission.statement ? 'What this floor is for, and its milestones' : 'This floor has no mission yet', keywords: ['goals', 'milestones', 'mission statement'], open: () => parts.mission.showMission('goals') });
+    out.push({ icon: 'review', kind: 'Action', title: 'Review finished work', detail: 'Done work, pull requests to see to and reviews requested of you, oldest first', keywords: ['review', 'done', 'inbox', 'merge'], open: () => parts.mission.showMission('review') });
+    out.push({ icon: 'clock', kind: 'Action', title: 'Timeline', detail: 'What happened on every floor, newest first', keywords: ['activity', 'history', 'log', 'events'], open: () => parts.mission.showMission('timeline') });
+    out.push({ icon: 'reminder', kind: 'Action', title: 'While you were away', detail: 'What happened since you were last here', keywords: ['digest', 'catch up', 'missed', 'away'], open: () => parts.mission.showDigest() });
 
     const free = nearestFreeDesk();
     const hireAt = (d: DeskDef) => () => actions.hireAtDesk(d.id);
     out.push({
-      icon: '✨',
+      icon: 'plus',
       kind: 'Action',
-      title: 'Hire a worker',
+      title: 'Deploy a unit',
       detail: free ? `At ${free.label}, the free desk nearest you` : 'Every desk is taken',
-      keywords: ['new worker', 'spawn an agent'],
+      keywords: ['new worker', 'hire a worker', 'spawn an agent', 'new unit'],
       open: free ? hireAt(free) : () => toast('Every desk on this floor is taken', 'warn'),
       walk: free ? () => walkThen(deskSpot(free)!, free.label, hireAt(free), free) : undefined,
     });
-    out.push(at('queue', 'the task queue', { icon: '📋', kind: 'Action', title: 'Open the task queue', detail: 'Issues and tasks waiting for a worker', keywords: ['backlog', 'tasks'], open: showQueue }));
-    out.push({ icon: '⚙️', kind: 'Action', title: 'Settings', keywords: ['preferences', 'options'], open: () => parts.hud.showSettings() });
-    if (store.invites) out.push({ icon: '👥', kind: 'Action', title: 'Invite teammates', keywords: ['team', 'add people'], open: () => openTeam(net) });
-    else if (store.me.admin) out.push({ icon: '👥', kind: 'Action', title: 'Invite people', detail: 'Accounts', keywords: ['invite teammates', 'accounts', 'team'], open: () => openAccounts(net) });
-    out.push({ icon: '🔎', kind: 'Action', title: 'Search the chat and every terminal', keywords: ['find'], open: showSearch });
+    out.push(at('queue', 'the task queue', { icon: 'queue', kind: 'Action', title: 'Open the task queue', detail: 'Issues and tasks waiting for a unit', keywords: ['backlog', 'tasks'], open: showQueue }));
+    out.push({ icon: 'settings', kind: 'Action', title: 'Settings', keywords: ['preferences', 'options'], open: () => parts.hud.showSettings() });
+    if (store.invites) out.push({ icon: 'invite', kind: 'Action', title: 'Invite teammates', keywords: ['team', 'add people'], open: () => openTeam(net) });
+    else if (store.me.admin) out.push({ icon: 'key', kind: 'Action', title: 'Invite people', detail: 'Accounts', keywords: ['invite teammates', 'accounts', 'team'], open: () => openAccounts(net) });
+    out.push({ icon: 'search', kind: 'Action', title: 'Search the chat and every terminal', keywords: ['find'], open: showSearch });
 
-    out.push(at('issues', 'the Issues board', { icon: '📌', kind: 'Board', title: 'Issues board', open: () => openBoard('issues', net, actions.boardActions()) }));
-    out.push(at('pulls', 'the PR board', { icon: '🔀', kind: 'Board', title: 'PR board', keywords: ['pull requests'], open: () => openBoard('pulls', net, actions.boardActions()) }));
-    out.push(at('services', 'the Services board', { icon: '🌐', kind: 'Board', title: 'Services board', detail: 'Web servers the workers are running', open: () => openServices() }));
-    out.push(at('whiteboard', 'the whiteboard', { icon: '📝', kind: 'Board', title: 'Whiteboard', open: () => openWhiteboard(net) }));
-    out.push(at('meeting', 'the meeting room', { icon: '🤝', kind: 'Board', title: 'Meeting room', keywords: ['call a meeting'], open: () => meeting.showMeeting() }));
+    out.push(at('issues', 'the Issues board', { icon: 'issue', kind: 'Board', title: 'Issues board', open: () => openBoard('issues', net, actions.boardActions()) }));
+    out.push(at('pulls', 'the PR board', { icon: 'pull', kind: 'Board', title: 'PR board', keywords: ['pull requests'], open: () => openBoard('pulls', net, actions.boardActions()) }));
+    out.push(at('services', 'the Services board', { icon: 'services', kind: 'Board', title: 'Services board', detail: 'Web servers the units are running', open: () => openServices() }));
+    out.push(at('whiteboard', 'the whiteboard', { icon: 'board', kind: 'Board', title: 'Whiteboard', open: () => openWhiteboard(net) }));
+    out.push(at('meeting', 'the meeting room', { icon: 'meeting', kind: 'Board', title: 'Meeting room', keywords: ['call a meeting'], open: () => meeting.showMeeting() }));
 
     for (const pr of store.pulls.items) {
       out.push(
         at('pulls', 'the PR board', {
-          icon: '🔀',
+          icon: 'pull',
           kind: 'PR',
           title: `#${pr.number} ${pr.title}`,
           detail: [pr.isDraft ? 'Draft' : pr.state.toLowerCase(), pr.headRefName, pr.author].join(' · '),
@@ -128,7 +128,7 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
     for (const issue of store.issues.items) {
       out.push(
         at('issues', 'the Issues board', {
-          icon: '📌',
+          icon: 'issue',
           kind: 'Issue',
           title: `#${issue.number} ${issue.title}`,
           detail: [issue.state.toLowerCase(), ...issue.labels.map((l) => l.name), issue.author].join(' · '),
@@ -139,12 +139,12 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
     for (const svc of store.services.items) {
       const board = spotOf('services');
       out.push({
-        icon: '🌐',
+        icon: 'services',
         kind: 'Service',
         title: svc.title || svc.command,
         detail: [`:${svc.port}`, svc.title && svc.command, store.workers.get(svc.workerId)?.name].filter(Boolean).join(' · '),
         keywords: [String(svc.port)],
-        // As its Open ↗ button does. A new tab needs the key press itself, so walking there shows the board instead.
+        // As its Open button does. A new tab needs the key press itself, so walking there shows the board instead.
         open: () => window.open(serviceUrl(svc.port), '_blank', 'noopener'),
         walk: board ? () => walkThen(board, 'the Services board', () => openServices()) : undefined,
       });
@@ -153,7 +153,7 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
       if (p.id === store.you) continue;
       const floor = store.onMyFloor(p) ? 'On this floor' : `On the ${store.floors.find((f) => f.id === p.floor)?.name ?? 'other'} floor`;
       // As clicking them under "In the office" does: over to them, on their floor if need be.
-      out.push({ icon: '🙂', kind: 'Teammate', title: p.name, detail: floor, open: () => parts.walking.walkTo(p.id) });
+      out.push({ icon: 'operator', kind: 'Operator', title: p.name, detail: floor, open: () => parts.walking.walkTo(p.id) });
     }
     return out;
   }

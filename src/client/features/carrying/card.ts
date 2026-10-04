@@ -5,7 +5,7 @@ import { toon, toonUnique } from '../../world/toon';
 
 const W = 320;
 const H = 240;
-const FONT = 'Nunito, ui-rounded, system-ui, sans-serif';
+const FONT = 'Archivo, system-ui, sans-serif';
 
 /**
  * An issue's sticky note, taken off the issues board: a thin card in the note's color, with the pin,

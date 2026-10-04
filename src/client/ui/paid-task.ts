@@ -16,16 +16,16 @@ const NETWORK: Record<string, string> = { 'eip155:84532': 'Base Sepolia', 'solan
 export function paidParts(t: QueueTask, net: Net): { meta: string[]; buttons: HTMLElement[] } {
   const p = t.paid;
   if (!p) return { meta: [], buttons: [] };
-  const meta = [`💰 ${short(p.payer)} paid ${p.amount} test USDC on ${NETWORK[p.network] ?? p.network}${p.tx ? '' : p.settlement === 'unknown' ? ' (settlement unknown: check it on chain)' : ' (settling)'}`];
+  const meta = [`${short(p.payer)} paid ${p.amount} test USDC on ${NETWORK[p.network] ?? p.network}${p.tx ? '' : p.settlement === 'unknown' ? ' (settlement unknown: check it on chain)' : ' (settling)'}`];
   const buttons: HTMLElement[] = [];
   const link = (href: string | undefined, text: string) => (explorerLink(href) ? h('a.btn', { href, target: '_blank', rel: 'noopener noreferrer' }, text) : null);
-  const paidLink = link(p.explorer, '🔗 Payment');
+  const paidLink = link(p.explorer, 'Payment');
   if (paidLink) buttons.push(paidLink);
   const admin = store.me.admin;
   if (t.held) {
     meta.push(admin ? 'waits for you to approve it' : 'waits for an admin to approve it');
     if (admin && !p.tx && p.settlement === 'unknown') {
-      buttons.push(h('button.btn', { type: 'button', title: "The facilitator never said whether it settled: look up the payer's transfer on the explorer, then record it", onclick: () => openPrompt({ title: 'Record the settlement', subtitle: `Look on ${NETWORK[p.network] ?? p.network} for ${p.amount} test USDC from ${p.payer} to the office. If it isn't there, turn the task down instead (nothing is owed back then).`, placeholder: p.network.startsWith('eip155') ? '0x... transaction hash' : 'Transaction signature', submitLabel: 'Record', onSubmit: (tx) => net.send({ t: 'queue.settled', taskId: t.id, tx: tx.trim() }) }) }, '🔎 Record settlement'));
+      buttons.push(h('button.btn', { type: 'button', title: "The facilitator never said whether it settled: look up the payer's transfer on the explorer, then record it", onclick: () => openPrompt({ title: 'Record the settlement', subtitle: `Look on ${NETWORK[p.network] ?? p.network} for ${p.amount} test USDC from ${p.payer} to the office. If it isn't there, turn the task down instead (nothing is owed back then).`, placeholder: p.network.startsWith('eip155') ? '0x... transaction hash' : 'Transaction signature', submitLabel: 'Record', onSubmit: (tx) => net.send({ t: 'queue.settled', taskId: t.id, tx: tx.trim() }) }) }, 'Record settlement'));
     }
     if (admin && p.tx) {
       buttons.push(h('button.btn.primary', { type: 'button', title: 'Let a worker start on it, on your sign-ins', onclick: () => confirmDialog('Approve this paid task?', `A worker will run this prompt from someone outside the office, on your sign-ins:\n\n${t.prompt.slice(0, 600)}`, 'Approve', () => net.send({ t: 'queue.approve', taskId: t.id })) }, '✓ Approve'));
@@ -34,7 +34,7 @@ export function paidParts(t: QueueTask, net: Net): { meta: string[]; buttons: HT
   } else if (t.outcome === 'rejected') {
     if (p.refundTx) {
       meta.push('refunded');
-      const r = link(p.refundExplorer, '🔗 Refund');
+      const r = link(p.refundExplorer, 'Refund');
       if (r) buttons.push(r);
     } else {
       meta.push(`a refund of ${p.amount} test USDC is owed`);

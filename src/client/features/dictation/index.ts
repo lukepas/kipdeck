@@ -1,5 +1,5 @@
 /**
- * Dictating a prompt (the 🎤 in ui/dictate.ts) while you're in voice with an open mic: the office
+ * Dictating a prompt (the in ui/dictate.ts) while you're in voice with an open mic: the office
  * mutes you for as long as it listens, so the others don't hear you talk to a worker.
  */
 import type { Ctx } from '../../core/context';

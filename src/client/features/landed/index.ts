@@ -17,7 +17,7 @@ export function installLanded(ctx: Ctx, deps: LandedDeps) {
     const pull = msg.pr === undefined ? undefined : store.pulls.items.find((p) => p.number === msg.pr);
     const text = landedText(msg.kind, msg.pr, msg.by, pull?.title);
     // The queue's own toast already says so (the office sends it with this).
-    if (msg.kind === 'merged') toast(`✅ ${text.title}${text.body ? `: ${text.body}` : ''}`);
+    if (msg.kind === 'merged') toast(`${text.title}${text.body ? `: ${text.body}` : ''}`);
     ctx.sound.ding('done');
     deps.notifier.landed(`${store.currentFloor()?.name ?? 'Agent Office'}: ${text.title}`, text.body);
   });

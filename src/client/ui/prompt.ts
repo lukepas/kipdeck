@@ -52,7 +52,7 @@ export function repoPicker(options: { id: string; name: string }[] | undefined, 
     if (!wtBox.checked) for (const p of picks) p.box.checked = false;
   });
   return {
-    element: h('div.repo-picks', { role: 'group', 'aria-label': 'Other projects to work in' }, h('span', {}, '🗂️ Also work in'), ...picks.map((p) => p.el)),
+    element: h('div.repo-picks', { role: 'group', 'aria-label': 'Other projects to work in' }, h('span', {}, 'Also work in'), ...picks.map((p) => p.el)),
     value: () => picks.filter((p) => p.box.checked).map((p) => p.id),
   };
 }
@@ -67,13 +67,13 @@ export function openPrompt(opts: PromptOptions) {
         'label',
         { for: 'wt-toggle', style: 'display:flex;gap:8px;align-items:center;margin:10px 0 0;font-weight:700;cursor:pointer', title: 'Isolate this worker on its own branch so parallel workers never collide' },
         wtBox,
-        '🌿 Work in its own git worktree & branch',
+        'Work in its own git worktree & branch',
     )
     : null;
   const repos = repoPicker(opts.worktreeOption ? opts.repoOptions : undefined, wtBox);
   const provider: ProviderPicker | null = opts.providerOption ? providerPicker(store.project, 'prompt-provider') : null;
   const goal = opts.goalOption ? goalPicker() : null;
-  const submit = h('button.btn.primary', { type: 'submit' }, opts.submitLabel ?? 'Send ✨');
+  const submit = h('button.btn.primary', { type: 'submit' }, opts.submitLabel ?? 'Send');
   const cancel = h('button.btn', { type: 'button' }, 'Cancel');
   const form = h(
     'form.modal',
@@ -225,7 +225,7 @@ export function sendHomeDialog(opts: SendHomeOptions) {
     h(
       'div.body',
       {},
-      h('p', { style: 'margin:0 0 12px;font-weight:700' }, `This stops the session at ${opts.where} for everyone and frees the desk. ${opts.name} worked ${across ? `in worktrees of ${across.join(', ')}, each` : 'in its own worktree'} on 🌿 ${branch}:`),
+      h('p', { style: 'margin:0 0 12px;font-weight:700' }, `This stops the session at ${opts.where} for everyone and frees the desk. ${opts.name} worked ${across ? `in worktrees of ${across.join(', ')}, each` : 'in its own worktree'} on ${branch}:`),
       list,
       status,
     ),
@@ -277,11 +277,11 @@ export function lostWorktreeDialog(opts: LostWorktreeOptions) {
   const { name, others } = opts;
   const { branch } = opts.worktree;
   const folder = opts.workspace ?? opts.worktree.path;
-  const title = `🌿 ${name}'s worktree was deleted`;
+  const title = `${name}'s worktree was deleted`;
   const what = {
-    here: `Its branch 🌿 ${branch} is still here. Rebuilding checks it out again in the same place, and ${name} carries on its conversation; only uncommitted changes went with the folder.`,
-    origin: `Its branch 🌿 ${branch} was deleted too, but it had been pushed: rebuilding checks origin's copy out again in the same place, and ${name} carries on its conversation.`,
-    gone: `Its branch 🌿 ${branch} was deleted too and was never pushed, so the work on it is gone. Rebuilding makes the branch again from where it started, and ${name} carries on its conversation.`,
+    here: `Its branch ${branch} is still here. Rebuilding checks it out again in the same place, and ${name} carries on its conversation; only uncommitted changes went with the folder.`,
+    origin: `Its branch ${branch} was deleted too, but it had been pushed: rebuilding checks origin's copy out again in the same place, and ${name} carries on its conversation.`,
+    gone: `Its branch ${branch} was deleted too and was never pushed, so the work on it is gone. Rebuilding makes the branch again from where it started, and ${name} carries on its conversation.`,
   }[opts.lost.branch];
   const one = h('button.btn.primary', { type: 'button' }, 'Rebuild worktree');
   const all = others.length ? h('button.btn', { type: 'button' }, `Rebuild all ${others.length + 1}`) : null;
@@ -319,11 +319,11 @@ function describeState(s: WorktreeState, branch: string, prefix = ''): { lines: 
   let risky = false;
   if (!s.exists) lines.push(`${prefix}The worktree folder is already gone.`);
   if (s.dirty) {
-    lines.push(`⚠️ ${prefix}${plural(s.dirty, 'uncommitted change')} in the worktree — deleting it loses them.`);
+    lines.push(`${prefix}${plural(s.dirty, 'uncommitted change')} in the worktree — deleting it loses them.`);
     risky = true;
   }
   if (s.unpushed) {
-    lines.push(`⚠️ ${prefix}${plural(s.unpushed, 'commit')} on ${branch} that no remote has — deleting the branch loses them.`);
+    lines.push(`${prefix}${plural(s.unpushed, 'commit')} on ${branch} that no remote has — deleting the branch loses them.`);
     risky = true;
   } else if (s.ahead) lines.push(`${prefix}${plural(s.ahead, 'commit')} on ${branch}, all pushed or merged.`);
   if (!lines.length) lines.push(`${prefix}Nothing on the branch yet and a clean worktree: safe to delete.`);

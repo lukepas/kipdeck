@@ -4,6 +4,7 @@ import type { Net } from '../net';
 import { store } from '../state';
 import { h, openModal } from './dom';
 import { confirmDialog } from './prompt';
+import { icon } from './icons';
 
 export type Os = 'mac' | 'linux' | 'windows';
 export const OS_LABEL: Record<Os, string> = { mac: 'macOS', linux: 'Linux', windows: 'Windows' };
@@ -87,11 +88,11 @@ export function openTeam(net: Net) {
   let os = guessOs();
   let status: HTMLElement | null = null;
   const body = h('div.body.team');
-  const close = h('button.btn.close', { 'aria-label': 'Close' }, '✕');
+  const close = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
   const message = (t: TeamState) => (t.tailnet ? tailnetMessage(t) : inviteMessage(t, os));
   const copyMsg = copyButton('✉️ Copy invite message', () => (store.team ? message(store.team) : ''), 'primary');
-  const footer = h('footer', {}, h('span.grow', {}, 'Invited people still need to sign in: the office password, or an account from 🔑 Accounts.'), copyMsg);
-  const el = h('div.modal', { role: 'dialog', 'aria-label': 'Invite teammates', style: 'width:min(680px,100%)' }, h('header', {}, h('h2', {}, '👥 Invite teammates'), close), body, footer);
+  const footer = h('footer', {}, h('span.grow', {}, 'Invited people still need to sign in: the office password, or an account from Accounts.'), copyMsg);
+  const el = h('div.modal', { role: 'dialog', 'aria-label': 'Invite teammates', style: 'width:min(680px,100%)' }, h('header', {}, h('h2', {}, 'Invite teammates'), close), body, footer);
 
   const input = h('input', { type: 'text', maxlength: 40, placeholder: 'GitHub username', 'aria-label': 'GitHub username', autocomplete: 'off', spellcheck: 'false' }) as HTMLInputElement;
   const inviteBtn = h('button.btn.primary', { type: 'submit' }, 'Invite');
@@ -204,7 +205,7 @@ export function openTeam(net: Net) {
     inviteBtn.disabled = false;
     if (msg.error) return setStatus(msg.error, 'error');
     input.value = '';
-    setStatus(`✅ ${msg.name} is invited (${msg.keys} key${msg.keys === 1 ? '' : 's'}). Send them the command below.`, 'ok');
+    setStatus(`${msg.name} is invited (${msg.keys} key${msg.keys === 1 ? '' : 's'}). Send them the command below.`, 'ok');
   };
   const unsub = store.on('team', render);
   const modal = openModal(el, {

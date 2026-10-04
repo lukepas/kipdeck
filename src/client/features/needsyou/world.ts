@@ -45,7 +45,7 @@ function pinPicture(): THREE.CanvasTexture {
   c.strokeStyle = INK;
   c.stroke();
   c.fillStyle = '#ffffff';
-  c.font = '900 150px Nunito, ui-rounded, system-ui, sans-serif';
+  c.font = '900 150px Archivo, system-ui, sans-serif';
   c.textAlign = 'center';
   c.textBaseline = 'middle';
   c.fillText('!', cx, cy + 8);

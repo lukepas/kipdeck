@@ -11,9 +11,8 @@ import type { BoardActions } from './github/prompts';
 import { openPull } from './github/pull-window';
 import { providerLabel } from './provider';
 import { bountyChip } from './bounty';
+import { icon, checkIcon } from './icons';
 
-const TILTS = ['-1.2deg', '0.8deg', '-0.4deg', '1.4deg', '0deg', '-0.9deg'];
-const NOTE_COLORS = ['#fff7b0', '#ffd6e0', '#caffbf', '#bde0fe', '#ffe5b4'];
 
 interface Column<T> {
   /** Names the column in your saved label filters. */
@@ -31,9 +30,9 @@ function issueColumns(items: GhIssue[]): Column<GhIssue>[] {
   const started = open.filter((i) => inProgress(i, store.taskForIssue(i.number)));
   const todo = open.filter((i) => !started.includes(i));
   return [
-    { key: 'open', title: '📥 Open', items: todo },
-    { key: 'progress', title: '🚧 In progress', items: started },
-    { key: 'closed', title: '✅ Closed', items: items.filter((i) => i.state !== 'OPEN').sort(byUpdated), max: 40 },
+    { key: 'open', title: 'Open', items: todo },
+    { key: 'progress', title: 'In progress', items: started },
+    { key: 'closed', title: 'Closed', items: items.filter((i) => i.state !== 'OPEN').sort(byUpdated), max: 40 },
   ];
 }
 
@@ -41,10 +40,10 @@ function pullColumns(items: GhPull[]): Column<GhPull>[] {
   const open = items.filter((p) => p.state === 'OPEN');
   return [
     { key: 'draft', title: '✏️ Draft', items: open.filter((p) => p.isDraft) },
-    { key: 'review', title: '👀 In review', items: open.filter((p) => !p.isDraft && p.reviewDecision !== 'APPROVED') },
-    { key: 'approved', title: '👍 Approved', items: open.filter((p) => !p.isDraft && p.reviewDecision === 'APPROVED') },
-    { key: 'merged', title: '🎉 Merged', items: items.filter((p) => p.state === 'MERGED').sort(byUpdated), max: 30 },
-    { key: 'closed', title: '🗑️ Closed', items: items.filter((p) => p.state === 'CLOSED').sort(byUpdated), max: 20 },
+    { key: 'review', title: 'In review', items: open.filter((p) => !p.isDraft && p.reviewDecision !== 'APPROVED') },
+    { key: 'approved', title: 'Approved', items: open.filter((p) => !p.isDraft && p.reviewDecision === 'APPROVED') },
+    { key: 'merged', title: 'Merged', items: items.filter((p) => p.state === 'MERGED').sort(byUpdated), max: 30 },
+    { key: 'closed', title: 'Closed', items: items.filter((p) => p.state === 'CLOSED').sort(byUpdated), max: 20 },
   ];
 }
 
@@ -87,11 +86,10 @@ function labelChips(labels: GhLabel[]) {
   return labels.slice(0, 4).map(labelChip);
 }
 
-const CHECK_ICON: Record<GhPull['checks'], string> = { pass: '🟢', fail: '🔴', pending: '🟡', none: '' };
 
 /** A chip naming a worker and desk, color-coded to match the worker back on the floor. */
 function workerChip(w: WorkerInfo, title: string) {
-  return h('span.desk-link', { style: `--dot:${w.color}`, title }, `🪑 ${w.name} · ${OFFICE_PLAN.byId.get(w.deskId)?.label ?? 'a desk'}`);
+  return h('span.desk-link', { style: `--dot:${w.color}`, title }, `${w.name} · ${OFFICE_PLAN.byId.get(w.deskId)?.label ?? 'a console'}`);
 }
 
 /** A chip naming the worker and desk a pull request came from. */
@@ -99,30 +97,29 @@ function deskChip(w: WorkerInfo) {
   return workerChip(w, `Opened from ${w.name}'s desk (${w.worktree?.branch ?? 'its branch'})`);
 }
 
-/** Where an issue stands on the 📋 queue, for its card. */
+/** Where an issue stands on the queue, for its card. */
 function queueChip(issue: number): Node | '' {
   const t = store.taskForIssue(issue);
   if (!t) return '';
   const provider = providerLabel(t.provider, store.project);
-  if (t.status === 'queued') return h('span.qchip', {}, `${store.queue.tasks.find((x) => x.status === 'queued') === t ? '📋 up next' : '📋 queued'} · ${provider}`);
+  if (t.status === 'queued') return h('span.qchip', {}, `${store.queue.tasks.find((x) => x.status === 'queued') === t ? 'up next' : 'queued'} · ${provider}`);
   if (t.status === 'running') {
     const w = t.workerId ? store.workers.get(t.workerId) : undefined;
     if (w) return workerChip(w, `${w.name} is working on this at ${OFFICE_PLAN.byId.get(w.deskId)?.label ?? 'a desk'} · ${provider}`);
-    return h('span.qchip.running', {}, `🤖 ${t.workerName ?? 'a worker'} · ${provider}`);
+    return h('span.qchip.running', {}, `${t.workerName ?? 'a worker'} · ${provider}`);
   }
-  return t.pr ? h('span.qchip.done', {}, `🔀 PR #${t.pr.number} · ${provider}`) : '';
+  return t.pr ? h('span.qchip.done', {}, `PR #${t.pr.number} · ${provider}`) : '';
 }
 
 function card(n: number, title: string, meta: (Node | string)[], i: number, onclick: () => void, onLabels: () => void) {
   return h(
     'li.card',
     {
-      style: `--tilt:${TILTS[n % TILTS.length]};background:${NOTE_COLORS[n % NOTE_COLORS.length]};--pin:${['#ef476f', '#118ab2', '#06d6a0', '#ffd166'][i % 4]}`,
       tabindex: 0,
       onclick,
       onkeydown: ((e: KeyboardEvent) => e.key === 'Enter' && e.target === e.currentTarget && onclick()) as EventListener,
     },
-    h('button.card-labels', { type: 'button', title: 'Change the labels', 'aria-label': `Change the labels on #${n}`, onclick: ((e: Event) => (e.stopPropagation(), onLabels())) as EventListener }, '🏷️'),
+    h('button.card-labels', { type: 'button', title: 'Change the labels', 'aria-label': `Change the labels on #${n}`, onclick: ((e: Event) => (e.stopPropagation(), onLabels())) as EventListener }, icon('edit', 14)),
     h('div.num', {}, `#${n}`),
     h('div.ttl', {}, title),
     h('div.meta', {}, ...meta.filter((m) => m !== '').map((m) => (typeof m === 'string' ? h('span', {}, m) : m))),
@@ -132,9 +129,9 @@ function card(n: number, title: string, meta: (Node | string)[], i: number, oncl
 export function openBoard(kind: 'issues' | 'pulls', net: Net, actions: BoardActions) {
   const body = h('div.body');
   const status = h('span.board-status');
-  const refresh = h('button.btn', { title: 'Refresh from GitHub', onclick: () => net.send({ t: 'gh.refresh' }) }, '🔄 Refresh');
-  const close = h('button.btn.close', { 'aria-label': 'Close' }, '✕');
-  const el = h('div.modal.board', { role: 'dialog', 'aria-label': kind === 'issues' ? 'Issues board' : 'Pull requests board' }, h('header', {}, h('h2', {}, kind === 'issues' ? '📌 Issues' : '🔀 Pull Requests'), status, refresh, close), body);
+  const refresh = h('button.btn', { title: 'Refresh from GitHub', onclick: () => net.send({ t: 'gh.refresh' }) }, 'Refresh');
+  const close = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
+  const el = h('div.modal.board', { role: 'dialog', 'aria-label': kind === 'issues' ? 'Issues board' : 'Pull requests board' }, h('header', {}, h('h2', {}, kind === 'issues' ? 'Issues' : 'Pull Requests'), status, refresh, close), body);
 
   const filters = loadFilters(kind);
   /** What each column's filter box holds (column key → text), for as long as the board is open. */
@@ -185,7 +182,7 @@ export function openBoard(kind: 'issues' | 'pulls', net: Net, actions: BoardActi
       spellcheck: 'false',
       autocomplete: 'off',
     }) as HTMLInputElement;
-    const clear = h('button.col-search-clear', { type: 'button', 'aria-label': 'Clear the title filter', title: 'Clear' }, '✕');
+    const clear = h('button.col-search-clear', { type: 'button', 'aria-label': 'Clear the title filter', title: 'Clear' }, icon('close', 16));
     const section = h('section.column');
     /** Deals the cards that match both filters. Typing only redoes this column, so the box keeps focus. */
     const fill = () => {
@@ -232,7 +229,7 @@ export function openBoard(kind: 'issues' | 'pulls', net: Net, actions: BoardActi
           'div.col-active',
           {},
           ...picked.map((name) => labelChip({ name, color: all.get(name) ?? '#dddddd' })),
-          h('button.col-clear', { type: 'button', 'aria-label': 'Clear label filter', title: 'Show every card', onclick: () => setFilter(col.key, []) }, '✕'),
+          h('button.col-clear', { type: 'button', 'aria-label': 'Clear label filter', title: 'Show every card', onclick: () => setFilter(col.key, []) }, icon('close', 16)),
         ),
       );
     }
@@ -261,7 +258,7 @@ export function openBoard(kind: 'issues' | 'pulls', net: Net, actions: BoardActi
       for (const col of issueColumns(store.issues.items)) {
         body.append(
           column(col, all, (it, i) =>
-            card(it.number, it.title, [...labelChips(it.labels), bountyChip(it.number, net), queueChip(it.number), it.assignees.length ? `👤 ${it.assignees.join(', ')}` : it.taken ? '🤖 handed to a worker' : `by ${it.author}`, it.comments ? `💬 ${it.comments}` : '', timeAgo(it.updatedAt)], i, () => openIssue(it, net, actions), () => openLabels('issue', it, net)),
+            card(it.number, it.title, [...labelChips(it.labels), bountyChip(it.number, net), queueChip(it.number), it.assignees.length ? `${it.assignees.join(', ')}` : it.taken ? 'handed to a worker' : `by ${it.author}`, it.comments ? `${it.comments}` : '', timeAgo(it.updatedAt)], i, () => openIssue(it, net, actions), () => openLabels('issue', it, net)),
           ),
         );
       }
@@ -277,10 +274,10 @@ export function openBoard(kind: 'issues' | 'pulls', net: Net, actions: BoardActi
                 w ? deskChip(w) : '',
                 ...labelChips(it.labels),
                 `by ${it.author}`,
-                it.reviewDecision === 'CHANGES_REQUESTED' ? '🛠 changes requested' : '',
-                CHECK_ICON[it.checks],
-                h('span', { style: 'color:#2a9d4b' }, `+${it.additions}`),
-                h('span', { style: 'color:#c3423f' }, `-${it.deletions}`),
+                it.reviewDecision === 'CHANGES_REQUESTED' ? 'changes requested' : '',
+                checkIcon(it.checks) ?? '',
+                h('span.ck-pass', {}, `+${it.additions}`),
+                h('span.ck-fail', {}, `-${it.deletions}`),
                 timeAgo(it.updatedAt),
               ],
               i,
@@ -309,7 +306,7 @@ export function openBoard(kind: 'issues' | 'pulls', net: Net, actions: BoardActi
     status.textContent = st.loading ? 'Refreshing…' : st.fetchedAt ? `Updated ${timeAgo(st.fetchedAt)}` : '';
   }, 15000);
   const modal = openModal(el, {
-    doing: kind === 'issues' ? '📋 at the issues board' : '🔀 at the PR board',
+    doing: kind === 'issues' ? 'at the issues board' : 'at the PR board',
     onClose: () => {
       unsubs.forEach((u) => u());
       clearInterval(timer);

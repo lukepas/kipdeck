@@ -2,6 +2,7 @@ import { store } from '../state';
 import type { Voice } from '../voice';
 import { $, h } from './dom';
 import { whereabouts } from './whereabouts';
+import { icon } from './icons';
 
 /** What the people list last showed, so it's only drawn again when something in it changed. */
 let peopleKey = '';
@@ -18,7 +19,7 @@ export function renderPeople(voice: Voice, onEditProfile: () => void, onWalkTo: 
   ul.replaceChildren();
   peers.forEach((p, i) => {
     const you = p.id === store.you;
-    const mic = !p.voice ? '' : p.muted ? '🔇' : '🎙️';
+    const mic = !p.voice ? null : icon(p.muted ? 'mic-off' : 'mic', 13);
     const sub = doing[i];
     const li = h(
       'li',
@@ -28,8 +29,8 @@ export function renderPeople(voice: Voice, onEditProfile: () => void, onWalkTo: 
       p.account ? h('span.acct', { title: `Signed in with ${you ? 'your' : 'their'} own account` }, '✓') : null,
       you ? h('span.you', {}, '(you)') : null,
       // Somewhere else in the building: which floor.
-      !you && !store.onMyFloor(p) ? h('span.where', { title: 'On another floor' }, `🛗 ${store.floors.find((f) => f.id === p.floor)?.name ?? 'lobby'}`) : null,
-      p.sharing ? h('span', { title: 'Sharing screen' }, '🖥️') : null,
+      !you && !store.onMyFloor(p) ? h('span.where', { title: 'On another floor' }, store.floors.find((f) => f.id === p.floor)?.name ?? 'lobby') : null,
+      p.sharing ? h('span.mic', { title: 'Sharing screen' }, icon('screen', 13)) : null,
       h('span.mic', {}, mic),
     );
     li.addEventListener('click', () => (you ? onEditProfile() : onWalkTo(p.id)));

@@ -4,7 +4,7 @@ import './litesuggest.css';
 
 import { h } from './dom';
 
-/** Said to stay in 3D: this browser isn't offered the 2D view again (it's in the ☰ menu). */
+/** Said to stay in 3D: this browser isn't offered the 2D view again (it's in the menu). */
 const DECLINED_KEY = 'agent-office.lite-declined';
 
 /** A touch screen and no mouse: a phone or a tablet, which can't walk around the office anyway. */
@@ -28,8 +28,8 @@ export function offerLite(why: 'touch' | 'slow') {
   offered = true;
   const say =
     why === 'touch'
-      ? '📱 On a phone? The 2D view is made for it: every worker and how it’s doing, its terminal, and the boards.'
-      : '🐢 The 3D office is running slowly on this computer. The 2D view has the workers, their terminals and the boards, without the 3D.';
+      ? 'On a phone? The 2D view is made for it: every worker and how it’s doing, its terminal, and the boards.'
+      : 'The 3D office is running slowly on this computer. The 2D view has the workers, their terminals and the boards, without the 3D.';
   const stay = h('button.btn', { type: 'button' }, 'Stay in 3D');
   const el = h(
     'div.lite-offer.panel',

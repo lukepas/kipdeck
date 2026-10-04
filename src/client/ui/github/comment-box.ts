@@ -31,7 +31,7 @@ export function commentBox(kind: 'issue' | 'pull', number: number, itemUrl: stri
   const write = h('button.btn.on', { type: 'button' }, 'Write');
   const preview = h('button.btn', { type: 'button' }, 'Preview');
   const who = h('span.grow', {}, "Posts to GitHub as the office's gh account");
-  const post = h('button.btn.primary', { type: 'button' }, '💬 Comment');
+  const post = h('button.btn.primary', { type: 'button' }, 'Comment');
   const result = h('div.gh-merge-result.error.hidden');
   const el = h(
     'article.gh-card.gh-compose',
@@ -45,7 +45,7 @@ export function commentBox(kind: 'issue' | 'pull', number: number, itemUrl: stri
   const sync = () => {
     post.disabled = busy || !ta.value.trim();
     ta.readOnly = busy;
-    post.textContent = busy ? 'Posting…' : '💬 Comment';
+    post.textContent = busy ? 'Posting…' : 'Comment';
   };
   const saveDraft = () => {
     if (ta.value) savePref(draftKey, ta.value);

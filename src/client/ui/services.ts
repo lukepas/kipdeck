@@ -3,6 +3,7 @@ import type { ServiceInfo, ServicesState } from '../../shared/protocol';
 import { store } from '../state';
 import { h, openModal, timeAgo } from './dom';
 import { copy, copyButton, guessOs, openCommand, OS_LABEL, type Os } from './team';
+import { icon } from './icons';
 
 /** Whether this page came over the office's Tailscale network, where every server has its own link. */
 function onTailnet(s: ServicesState): boolean {
@@ -48,13 +49,13 @@ export function openServices() {
   let picked: number | null = null;
   let copied: number | null = null;
   const body = h('div.body.team.services');
-  const close = h('button.btn.close', { 'aria-label': 'Close' }, '✕');
+  const close = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
   const tabs = h('div.os-tabs');
   const footer = h('footer', {}, h('span.grow', {}, 'Tunnels go through the office, so the office password still guards every page. Keep the terminal open while you look.'));
   const el = h(
     'div.modal',
     { role: 'dialog', 'aria-label': 'Services', style: 'width:min(760px,100%)' },
-    h('header', {}, h('h2', {}, '🌐 Services'), tabs, close),
+    h('header', {}, h('h2', {}, 'Services'), tabs, close),
     body,
     footer,
   );
@@ -91,7 +92,7 @@ export function openServices() {
         h(
           'div.svc-auto',
           {},
-          h('p', {}, '⚡ Open them all, by themselves'),
+          h('p', {}, 'Open them all, by themselves'),
           h(
             'p.note',
             {},
@@ -121,7 +122,7 @@ export function openServices() {
       const { who, color, branch } = describe(svc);
       const on = picked === svc.port;
       const title = direct ? `Open ${serviceUrl(svc.port)}` : `Open ${serviceUrl(svc.port)} (needs the tunnel, unless the office runs on this computer)`;
-      const open = h('a.btn', { href: serviceUrl(svc.port), target: '_blank', rel: 'noopener', title }, 'Open ↗');
+      const open = h('a.btn', { href: serviceUrl(svc.port), target: '_blank', rel: 'noopener', title }, 'Open');
       open.addEventListener('click', (e) => e.stopPropagation());
       const li = h(
         'li',
@@ -131,7 +132,7 @@ export function openServices() {
           'div.svc-main',
           {},
           h('div.svc-title', {}, svc.title || svc.command),
-          h('div.svc-meta', {}, [who, branch ? `🌿 ${branch}` : '', svc.title ? svc.command : '', `started ${timeAgo(svc.since)}`].filter(Boolean).join(' · ')),
+          h('div.svc-meta', {}, [who, branch ? `${branch}` : '', svc.title ? svc.command : '', `started ${timeAgo(svc.since)}`].filter(Boolean).join(' · ')),
         ),
         h('span.svc-port', {}, `:${svc.port}`),
         open,
@@ -151,14 +152,14 @@ export function openServices() {
     if (svc && direct) {
       body.append(
         copied === svc.port
-          ? h('p.team-status.ok', {}, `✅ Copied ${serviceUrl(svc.port)}. Anyone on the network who's signed in to the office can open it.`)
+          ? h('p.team-status.ok', {}, `Copied ${serviceUrl(svc.port)}. Anyone on the network who's signed in to the office can open it.`)
           : h('p.team-status', {}, `The link for :${svc.port}: ${serviceUrl(svc.port)}`),
       );
     } else if (svc) {
       const cmd = serviceTunnel(s, svc.port, os);
       body.append(
         copied === svc.port
-          ? h('p.team-status.ok', {}, `✅ Copied. Paste it in a terminal: it opens ${serviceUrl(svc.port)} once the tunnel is up.`)
+          ? h('p.team-status.ok', {}, `Copied. Paste it in a terminal: it opens ${serviceUrl(svc.port)} once the tunnel is up.`)
           : h('p.team-status', {}, `The command for :${svc.port} — run it in a terminal, and it opens ${serviceUrl(svc.port)}.`),
         h('div.cmd', {}, h('pre', {}, cmd), copyButton('Copy', () => cmd)),
       );
@@ -177,7 +178,7 @@ export function openServices() {
   // Keeps "up 5m" fresh.
   const tick = setInterval(render, 30_000);
   const modal = openModal(el, {
-    doing: '🌐 at the services board',
+    doing: 'at the services board',
     onClose: () => {
       unsubs.forEach((u) => u());
       clearInterval(tick);

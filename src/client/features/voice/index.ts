@@ -5,6 +5,7 @@
 import type { Ctx } from '../../core/context';
 import { store } from '../../state';
 import { $, h, openModal, toast } from '../../ui/dom';
+import { icon } from '../../ui/icons';
 
 export interface VoiceDeps {
   /** The office TV, which shows a screen someone's sharing (see features/tv). */
@@ -23,7 +24,7 @@ export function installVoice(ctx: Ctx, deps: VoiceDeps) {
   async function joinVoice() {
     const err = await voice.joinVoice(ctx.settings.pushToTalk);
     if (err) toast(err, 'warn');
-    else if (ctx.settings.pushToTalk && voice.inVoice) toast('🎙️ In voice, muted: hold V to talk');
+    else if (ctx.settings.pushToTalk && voice.inVoice) toast('In voice, muted: hold V to talk');
   }
   ctx.keys.bind({
     code: 'KeyV',
@@ -79,7 +80,7 @@ export function installVoice(ctx: Ctx, deps: VoiceDeps) {
         .map(([who, s]) => {
           const v = h('video', { autoplay: true, playsinline: true, muted: true }) as HTMLVideoElement;
           v.srcObject = s;
-          return h('div.share-thumb', { onclick: () => watchShare(), title: 'Watch full screen' }, v, h('span.who', {}, `🖥️ ${who}`));
+          return h('div.share-thumb', { onclick: () => watchShare(), title: 'Watch full screen' }, v, h('span.who', {}, `${who}`));
         }),
     );
     ctx.hint.invalidate();
@@ -96,9 +97,9 @@ export function installVoice(ctx: Ctx, deps: VoiceDeps) {
     // What's on the TV: someone else's screen before your own.
     const [who, stream] = streams.find(([name]) => name !== 'You') ?? streams[0];
     video.srcObject = stream;
-    const close = h('button.btn.close', { 'aria-label': 'Close' }, '✕');
-    const el = h('div.modal.viewer', { role: 'dialog', 'aria-label': 'Screen share' }, h('header', {}, h('h2', {}, `🖥️ ${who}'s screen`), close), video);
-    const modal = openModal(el, { doing: `🖥️ watching ${who}'s screen`, onClose: () => (video.srcObject = null) });
+    const close = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
+    const el = h('div.modal.viewer', { role: 'dialog', 'aria-label': 'Screen share' }, h('header', {}, h('h2', {}, `${who}'s screen`), close), video);
+    const modal = openModal(el, { doing: `watching ${who}'s screen`, onClose: () => (video.srcObject = null) });
     close.addEventListener('click', () => modal.close());
   }
 
@@ -112,7 +113,7 @@ export function installVoice(ctx: Ctx, deps: VoiceDeps) {
     if (unreachable.has(id)) return;
     unreachable.add(id);
     const who = store.peers.get(id)?.name ?? 'someone';
-    toast(`🎙️ Can't connect voice with ${who}: a network between you blocks direct calls. The office needs a TURN server (see self-hosting docs).`, 'warn');
+    toast(`Can't connect voice with ${who}: a network between you blocks direct calls. The office needs a TURN server (see self-hosting docs).`, 'warn');
   });
   ctx.messages.on('peer.join', () => voice.syncPeers());
   ctx.messages.on('peer.leave', () => voice.syncPeers());

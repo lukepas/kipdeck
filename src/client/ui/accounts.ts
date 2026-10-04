@@ -5,6 +5,7 @@ import { store } from '../state';
 import { h, openModal, timeAgo } from './dom';
 import { confirmDialog } from './prompt';
 import { copyButton } from './team';
+import { icon } from './icons';
 
 export const inviteLink = (v: AccountInvite) => `${location.origin}/join#${v.token}`;
 
@@ -19,18 +20,18 @@ export function routeAccountsMessage(msg: ServerMsg) {
   if (msg.t === 'accounts.invited') onInvited?.(msg);
 }
 
-/** 🔑 Accounts, for admins: invite people by link, list them, change their role or revoke them. */
+/** Accounts, for admins: invite people by link, list them, change their role or revoke them. */
 export function openAccounts(net: Net) {
   let status: HTMLElement | null = null;
   /** The invite just made, shown big until the next one. */
   let fresh: AccountInvite | null = null;
   const body = h('div.body.team.accounts');
-  const close = h('button.btn.close', { 'aria-label': 'Close' }, '✕');
+  const close = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
   const signedInAs = h('span.grow');
   const el = h(
     'div.modal',
     { role: 'dialog', 'aria-label': 'Accounts', style: 'width:min(680px,100%)' },
-    h('header', {}, h('h2', {}, '🔑 Accounts'), close),
+    h('header', {}, h('h2', {}, 'Accounts'), close),
     body,
     h('footer', {}, signedInAs),
   );
@@ -63,7 +64,7 @@ export function openAccounts(net: Net) {
       const v = fresh;
       body.append(h('div.cmd', {}, h('pre', {}, inviteLink(v)), copyButton('Copy', () => inviteLink(v))));
     }
-    if (store.invites) body.append(h('p.note', {}, 'On this office they also need a way in first: see 👥 Invite teammates.'));
+    if (store.invites) body.append(h('p.note', {}, 'On this office they also need a way in first: see Invite teammates.'));
 
     const list = h('ul.team-list');
     for (const a of s.accounts) {
@@ -154,7 +155,7 @@ export function openAccounts(net: Net) {
     }
     fresh = msg.invite;
     nameInput.value = '';
-    status = h('p.team-status.ok', {}, `✅ Send this link to ${msg.invite.name ?? 'them'}. It works once and expires after 7 days.`);
+    status = h('p.team-status.ok', {}, `Send this link to ${msg.invite.name ?? 'them'}. It works once and expires after 7 days.`);
     render();
   };
   // No longer an admin (someone changed your role): the list isn't yours to see any more.

@@ -22,7 +22,7 @@ for (const d of [...DESKS, ...WING_DESKS]) {
   const p = [...DESKS, ...WING_DESKS].find((e) => e !== d && Math.abs(e.x - d.x) < 0.01 && Math.abs(Math.abs(e.z - d.z) - DESK_SIZE.depth) < 0.01 && Math.abs(Math.cos(e.rotY) + Math.cos(d.rotY)) < 0.01);
   if (p) PARTNER.set(d.id, p.id);
 }
-const FONT = (size: number) => `800 ${size}px Nunito, ui-rounded, system-ui, sans-serif`;
+const FONT = (size: number) => `800 ${size}px Archivo, system-ui, sans-serif`;
 
 /** The text, as large as fits on one line, else on two. */
 function fit(ctx: CanvasRenderingContext2D, text: string, maxW: number, maxH: number): { lines: string[]; size: number } {

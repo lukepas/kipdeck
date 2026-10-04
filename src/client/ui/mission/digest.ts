@@ -10,6 +10,7 @@ import { stampHere, store } from '../../state';
 import { h, modalOpen, onModalChange, openModal, type Modal } from '../dom';
 import type { MissionDeps } from './act';
 import { eventRow } from './timeline';
+import { icon } from '../icons';
 
 /** The digest of what happened since `store.away.since`, once the server has answered. */
 export function awayDigest(): (Digest & { since: number }) | undefined {
@@ -109,7 +110,7 @@ export function digestCard(deps: MissionDeps, showAttention: () => void, dismiss
   return h(
     'li.lite-digest',
     {},
-    h('div.dg-head', {}, h('b', {}, 'While you were away'), h('button.btn.small', { type: 'button', 'aria-label': 'Dismiss', onclick: dismiss }, '✕')),
+    h('div.dg-head', {}, h('b', {}, 'While you were away'), h('button.btn.small', { type: 'button', 'aria-label': 'Dismiss', onclick: dismiss }, icon('close', 16))),
     ...digestBody(deps, d, store.floors.length > 1).slice(0, 2),
     h('button.btn.primary.small', { type: 'button', onclick: showAttention }, 'Show what needs me'),
   );

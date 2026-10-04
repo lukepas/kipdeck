@@ -73,7 +73,7 @@ function textTexture(text: string, opts: TextOpts) {
   const size = opts.size ?? 48;
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d')!;
-  const font = `800 ${size}px Nunito, ui-rounded, system-ui, sans-serif`;
+  const font = `800 ${size}px Archivo, system-ui, sans-serif`;
   ctx.font = font;
   const w = Math.ceil(ctx.measureText(text).width) + size;
   const h = Math.ceil(size * 1.6);
@@ -132,7 +132,7 @@ export interface CardOpts {
 /** Cards are drawn at twice the pixels of other labels so their smaller text stays crisp up close. */
 const CARD_RES = 2;
 const INK = '#2b2d42';
-const FONT = 'Nunito, ui-rounded, system-ui, sans-serif';
+const FONT = 'Archivo, system-ui, sans-serif';
 
 /**
  * A speech-bubble card: status pill, bold title (up to 2 lines) and a smaller body (up to 3), with a

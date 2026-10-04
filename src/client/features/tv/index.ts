@@ -40,9 +40,9 @@ export function installTv(ctx: Ctx, deps: TvDeps) {
     g.fillRect(0, 0, 1280, 720);
     g.fillStyle = '#fff';
     g.textAlign = 'center';
-    g.font = '900 88px Nunito, ui-rounded, system-ui, sans-serif';
+    g.font = '900 88px Archivo, system-ui, sans-serif';
     g.fillText('📺 Office TV', 640, 330);
-    g.font = '700 44px Nunito, ui-rounded, system-ui, sans-serif';
+    g.font = '700 44px Archivo, system-ui, sans-serif';
     g.fillText('Click “Share screen” to put something up here', 640, 420);
     const t = new THREE.CanvasTexture(c);
     t.colorSpace = THREE.SRGBColorSpace;

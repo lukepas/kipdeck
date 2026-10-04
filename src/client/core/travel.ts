@@ -51,7 +51,7 @@ export function installTravel(ctx: Ctx, core: CoreState, parts: TravelParts) {
     hint: () => {
       const f = store.currentFloor();
       const n = store.floors.length;
-      return { k: `${f?.name}|${n}`, parts: [hintTitle('🛗 Floors'), f ? aside(`${f.name} · ${n} floor${n === 1 ? '' : 's'}`) : '', key('E', n > 1 ? 'Choose a floor' : 'Floors & projects')] };
+      return { k: `${f?.name}|${n}`, parts: [hintTitle('Floors'), f ? aside(`${f.name} · ${n} floor${n === 1 ? '' : 's'}`) : '', key('E', n > 1 ? 'Choose a floor' : 'Floors & projects')] };
     },
     use: onE(() => showElevator()),
   });

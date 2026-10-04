@@ -73,7 +73,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
   function officeIsFull(): boolean {
     const m = store.machine;
     if (!officeFull(m)) return false;
-    toast(`🚫 The office is at its limit of ${m.limit} worker${m.limit === 1 ? '' : 's'} — send one home before hiring another`, 'warn');
+    toast(`The office is at its limit of ${m.limit} worker${m.limit === 1 ? '' : 's'} — send one home before hiring another`, 'warn');
     return true;
   }
 
@@ -97,7 +97,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
     if (!w) {
       if (officeIsFull()) return;
       openPrompt({
-        title: `✨ New task at ${desk.label}`,
+        title: `New task at ${desk.label}`,
         subtitle: 'A fresh worker will sit down and start on this right away.',
         warning: pressureNote(store.machine),
         submitLabel: 'Hire & start',
@@ -113,14 +113,14 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
       toast(`${w.name} is asleep — press R to resume first`, 'warn');
     } else if (w.kind === 'shell') {
       openPrompt({
-        title: `🐚 Run in ${w.name}`,
+        title: `Run in ${w.name}`,
         placeholder: 'npm run dev',
         submitLabel: 'Run ▶',
         onSubmit: (text) => net.send({ t: 'worker.prompt', workerId: w.id, prompt: text }),
       });
     } else {
       openPrompt({
-        title: `💬 Prompt ${w.name}`,
+        title: `Prompt ${w.name}`,
         subtitle: w.status === 'working' ? `${w.name} is busy — your message will be queued in their input box.` : undefined,
         onSubmit: (text) => net.send({ t: 'worker.prompt', workerId: w.id, prompt: text }),
       });
@@ -132,7 +132,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
     const desk = OFFICE_PLAN.byId.get(deskId)!;
     if (officeIsFull()) return;
     openPrompt({
-      title: `✨ Hire a worker at ${desk.label}`,
+      title: `Hire a worker at ${desk.label}`,
       subtitle: 'You can start with an empty prompt and send work later.',
       warning: pressureNote(store.machine),
       placeholder: 'Optional first task…',
@@ -174,10 +174,10 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
           ? `The ${name} is busy. Your prompt waits in its input box until it's done.`
           : undefined;
     openPrompt({
-      title: `${info.icon} Ask the ${name}`,
+      title: `Ask the ${name}`,
       subtitle,
       placeholder: `e.g. ${info.example}`,
-      submitLabel: 'Send ✨',
+      submitLabel: 'Send',
       warning: w ? undefined : pressureNote(store.machine),
       onSubmit: (text) => net.send({ t: 'station.prompt', deskId, prompt: text }),
     });
@@ -286,11 +286,11 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
 
   function deskHint(deskId: string): Hint {
     const w = store.workerAtDesk(deskId);
-    if (!w && OFFICE_PLAN.byId.get(deskId)?.room) return { k: 'room', parts: [h('span.title', {}, `🤝 ${OFFICE_PLAN.byId.get(deskId)!.label} · free`), key('E', 'Call a meeting')] };
+    if (!w && OFFICE_PLAN.byId.get(deskId)?.room) return { k: 'room', parts: [h('span.title', {}, `${OFFICE_PLAN.byId.get(deskId)!.label} · free`), key('E', 'Call a meeting')] };
     // The sign over it, if it has one, and L to hang one (or change it).
     const sign = store.floorPlan.labels[deskId]?.text;
     const labelKey = canLabel(deskId) ? key('L', sign ? 'Sign' : 'Label') : '';
-    const deskName = `${sign ? `🪧 ${sign} · ` : ''}${OFFICE_PLAN.byId.get(deskId)!.label}`;
+    const deskName = `${sign ? `${sign} · ` : ''}${OFFICE_PLAN.byId.get(deskId)!.label}`;
     if (!w) {
       const paused = hiringPaused();
       const m = store.machine;
@@ -300,10 +300,10 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
         parts: [
           h('span.title', {}, `${deskName} · empty`),
           ...(full
-            ? [h('span.cost', {}, `🚫 Office full · ${m.workers} of ${m.limit} workers`)]
+            ? [h('span.cost', {}, `Office full · ${m.workers} of ${m.limit} workers`)]
             : [
-                m.pressure ? h('span.cost', { title: `This machine is under pressure: ${m.pressure}` }, '⚠️ Machine under pressure') : '',
-                ...(paused ? [h('span.cost', {}, '💸 Budget spent — hiring resumes tomorrow')] : [key('E', 'Hire a worker'), key('P', 'Hire with a task')]),
+                m.pressure ? h('span.cost', { title: `This machine is under pressure: ${m.pressure}` }, 'Machine under pressure') : '',
+                ...(paused ? [h('span.cost', {}, 'Budget spent — hiring resumes tomorrow')] : [key('E', 'Hire a worker'), key('P', 'Hire with a task')]),
                 key('B', 'Shell'),
               ]),
           labelKey,
@@ -314,7 +314,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
       return {
         k: `lost|${w.id}|${w.lost.branch}|${sign}`,
         parts: [
-          h('span.title', {}, `${sign ? `🪧 ${sign} · ` : ''}${w.name} · 🌿 worktree deleted`),
+          h('span.title', {}, `${sign ? `${sign} · ` : ''}${w.name} · worktree deleted`),
           aside('deleted outside agent-office'),
           key('E', 'Fix it'),
           key('X', 'Send home'),
@@ -329,13 +329,13 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
     return {
       k: w.status + w.id + (w.pr?.number ?? '') + (w.repos?.map((r) => r.pr?.number ?? '-').join() ?? '') + (w.prOpening ? '!' : '') + doing + spent + (sign ?? ''),
       parts: [
-        h('span.title', {}, `${sign ? `🪧 ${sign} · ` : ''}${w.name} · ${STATUS_LABEL[w.status]}`),
+        h('span.title', {}, `${sign ? `${sign} · ` : ''}${w.name} · ${STATUS_LABEL[w.status]}`),
         doing ? aside(doing) : '',
         spent ? h('span.cost', { title: usageTitle(w.usage!, workerProvider) }, spent) : '',
         key('E', 'Open terminal'),
         key('C', 'Changes'),
         isAsleep(w.status) ? key('R', shell ? 'Restart' : 'Resume') : key('P', shell ? 'Run command' : 'Prompt'),
-        w.repos?.length ? reposKey(w) : w.pr ? key('O', `PR #${w.pr.number}`) : w.prOpening ? aside('⏳ Opening PR…') : prReady(w) ? key('O', 'Open PR') : '',
+        w.repos?.length ? reposKey(w) : w.pr ? key('O', `PR #${w.pr.number}`) : w.prOpening ? aside('Opening PR…') : prReady(w) ? key('O', 'Open PR') : '',
         key('X', 'Send home'),
         labelKey,
       ],
@@ -346,7 +346,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
   function reposKey(w: WorkerInfo) {
     const repos = workerRepos(w);
     const prs = repos.filter((r) => r.pr).length;
-    if (w.prOpening) return aside('⏳ Opening PRs…');
+    if (w.prOpening) return aside('Opening PRs…');
     if (prs) return key('O', `${prs} of ${repos.length} PRs`);
     return prReady(w) ? key('O', `Open PRs (${repos.length} repos)`) : '';
   }
@@ -362,9 +362,9 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
       return {
         k: `${full}|${m.workers}|${m.limit}`,
         parts: [
-          h('span.title', {}, `${info.icon} ${STATION_AGENT[kind].name}`),
+          h('span.title', {}, STATION_AGENT[kind].name),
           aside(info.offer.replace(/^Ask me /, '')),
-          full ? h('span.cost', {}, `🚫 Office full · ${m.workers} of ${m.limit} workers`) : key('E', 'Prompt'),
+          full ? h('span.cost', {}, `Deck full · ${m.workers} of ${m.limit} units`) : key('E', 'Prompt'),
         ],
       };
     }
@@ -374,7 +374,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
     return {
       k: w.status + w.id + doing + spent,
       parts: [
-        h('span.title', {}, `${info.icon} ${w.name} · ${STATUS_LABEL[w.status]}`),
+        h('span.title', {}, `${w.name} · ${STATUS_LABEL[w.status]}`),
         doing ? aside(doing) : '',
         spent ? h('span.cost', { title: usageTitle(w.usage!, provider) }, spent) : '',
         key('E', isAsleep(w.status) ? 'Wake with a prompt' : 'Prompt'),
@@ -441,8 +441,8 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
   function boardActions() {
     return {
       queue: (prompt: string, title: string, issue: number, provider?: AgentProvider, model?: string, effort?: AgentEffort) => net.send({ t: 'queue.add', prompt, title, issue, provider, model, effort }),
-      assign: (prompt: string, title: string, issue?: number) => sendToWorker(`🤖 ${title}`, { initial: prompt }, issue),
-      ask: (context: string, title: string) => sendToWorker(`✍️ ${title}`, { context }),
+      assign: (prompt: string, title: string, issue?: number) => sendToWorker(`${title}`, { initial: prompt }, issue),
+      ask: (context: string, title: string) => sendToWorker(`${title}`, { context }),
       meeting: (preset: MeetingPreset) => parts.meeting.showMeeting(preset),
       goToDesk,
       pickUp: parts.cards.pickUp,

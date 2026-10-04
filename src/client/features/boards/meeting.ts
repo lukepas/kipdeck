@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { MEETING_PATTERNS, meetingSpend, meetingStage, meetingSummary } from '../../../shared/meetings';
 import type { Meeting, MeetingState } from '../../../shared/protocol';
 
-const FONT = 'Nunito, ui-rounded, system-ui, sans-serif';
+const FONT = 'Archivo, system-ui, sans-serif';
 const MONO = 'ui-monospace, SFMono-Regular, Menlo, monospace';
 const INK = '#2b2d42';
 

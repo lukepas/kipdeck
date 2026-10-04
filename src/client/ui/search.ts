@@ -4,8 +4,9 @@ import { SEARCH_MAX, SEARCH_MIN, searchKey } from '../../shared/search';
 import { store } from '../state';
 import { h, openModal, timeAgo } from './dom';
 import type { TerminalFind } from './terminal';
+import { icon } from './icons';
 
-// The 🔎 window: words in the office chat and in every worker's terminal, including what was said
+// The window: words in the office chat and in every worker's terminal, including what was said
 // and shown before the office last restarted. A terminal line opens that terminal right at it.
 
 /** What was searched last, so the window opens where you left it. */
@@ -47,11 +48,11 @@ export function openSearch(openTerminal: (workerId: string, find: TerminalFind) 
   input.value = lastQuery;
   const status = h('p.note.search-status');
   const results = h('div.search-results');
-  const close = h('button.btn.close', { 'aria-label': 'Close' }, '✕');
+  const close = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
   const el = h(
     'div.modal.search',
     { role: 'dialog', 'aria-label': 'Search' },
-    h('header', {}, h('h2', {}, '🔎 Search'), close),
+    h('header', {}, h('h2', {}, 'Search'), close),
     h('div.body', {}, input, status, results),
   );
 
@@ -133,14 +134,14 @@ export function openSearch(openTerminal: (workerId: string, find: TerminalFind) 
       ? `Nothing in the chat or any terminal matches “${found.q.trim()}”.`
       : `${count} ${count === 1 ? 'line' : 'lines'}, newest first${found.more ? ' (only the newest are shown; add words to narrow it down)' : ''}.`;
     const groups: HTMLElement[] = [];
-    if (found.chat.length) groups.push(h('section.search-group', {}, h('h4', {}, '💬 Chat'), h('ul', {}, ...found.chat.map((c) => chatRow(c, needle)))));
+    if (found.chat.length) groups.push(h('section.search-group', {}, h('h4', {}, 'Chat'), h('ul', {}, ...found.chat.map((c) => chatRow(c, needle)))));
     for (const [workerId, hits] of byWorker) {
       const w = store.workers.get(workerId)!;
       groups.push(
         h(
           'section.search-group',
           {},
-          h('h4', {}, h('span.dot', { style: `background:${w.color}` }), [w.name, w.worktree && `🌿 ${w.worktree.branch}`].filter(Boolean).join(' · ')),
+          h('h4', {}, h('span.dot', { style: `background:${w.color}` }), [w.name, w.worktree && `${w.worktree.branch}`].filter(Boolean).join(' · ')),
           h('ul', {}, ...hits.map((hit) => termRow(hit, needle))),
         ),
       );
@@ -174,7 +175,7 @@ export function openSearch(openTerminal: (workerId: string, find: TerminalFind) 
     (next ?? (e.key === 'ArrowUp' ? input : at)).focus();
   });
 
-  const modal = openModal(el, { doing: '🔎 searching the office', onClose: () => clearTimeout(timer) });
+  const modal = openModal(el, { doing: 'searching the office', onClose: () => clearTimeout(timer) });
   close.addEventListener('click', () => modal.close());
   render();
   void run();

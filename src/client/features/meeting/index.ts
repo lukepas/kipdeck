@@ -1,4 +1,4 @@
-/** The meeting room: E there (or 🤝 in the menu) opens its window, how the meeting's going or the form to call one. */
+/** The meeting room: E there (or in the menu) opens its window, how the meeting's going or the form to call one. */
 import { MEETING_PATTERNS, meetingStage } from '../../../shared/meetings';
 import type { Ctx } from '../../core/context';
 import { aside, hintTitle, key, onE } from '../../core/hint';
@@ -35,8 +35,8 @@ export function installMeeting(ctx: Ctx, parts: Pick<Parts, 'waiting' | 'actions
     hint: () => {
       const m = store.meeting.current;
       const p = m && MEETING_PATTERNS[m.pattern];
-      const what = !m || !p ? 'free' : m.status === 'running' ? `${p.icon} ${p.label} · ${meetingStage(m)}` : `${p.icon} ${p.label} ${m.status === 'done' ? 'done ✅' : 'stopped ⛔'}`;
-      return { k: what, parts: [hintTitle('🤝 Meeting room'), aside(clip(what, 50)), key('E', m?.status === 'running' ? 'See how it’s going' : m ? 'See it / call a meeting' : 'Call a meeting')] };
+      const what = !m || !p ? 'free' : m.status === 'running' ? `${p.label} · ${meetingStage(m)}` : `${p.label} ${m.status === 'done' ? 'done' : 'stopped'}`;
+      return { k: what, parts: [hintTitle('Meeting room'), aside(clip(what, 50)), key('E', m?.status === 'running' ? 'See how it’s going' : m ? 'See it / call a meeting' : 'Call a meeting')] };
     },
     use: onE(() => showMeeting()),
   });

@@ -26,15 +26,15 @@ export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
   function walkTo(id: string) {
     const p = store.peers.get(id);
     if (!p || id === store.you) return;
-    if (p.lite) return void toast(`📱 ${p.name} is on the 2D view, not anywhere in the office itself`);
+    if (p.lite) return void toast(`${p.name} is on the 2D view, not anywhere in the office itself`);
     if (!store.onMyFloor(p) && !p.floor) return;
     if (player.seat) parts.seating.standUp();
     ctx.activities.stopAll('walk');
     errand = null;
     walkingTo = { id, replanAt: 0 };
-    if (store.onMyFloor(p)) toast(`🚶 Walking over to ${p.name}`);
+    if (store.onMyFloor(p)) toast(`Walking over to ${p.name}`);
     else {
-      toast(`🛗 Over to ${p.name}, on the ${store.floors.find((f) => f.id === p.floor)?.name ?? 'other'} floor`);
+      toast(`Over to ${p.name}, on the ${store.floors.find((f) => f.id === p.floor)?.name ?? 'other'} floor`);
       parts.travel.switchFloor(p.floor!, true);
     }
   }
@@ -92,7 +92,7 @@ export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     // As near as the way goes (they're behind a desk, or on the couch): that'll do.
     if (Math.hypot(at.x - player.pos.x, at.z - player.pos.z) < 3) return arrivedAt(at);
     if (why === 'stuck') {
-      toast(`🚧 Couldn't find a way over to ${p.name}`, 'warn');
+      toast(`Couldn't find a way over to ${p.name}`, 'warn');
       stopWalking();
     } else walkingTo.replanAt = 0;
   };
@@ -113,7 +113,7 @@ export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     ctx.activities.stopAll('errand');
     if (walkingTo) stopWalking();
     errand = { at, what, face, then };
-    toast(`🚶 Walking over to ${what}`);
+    toast(`Walking over to ${what}`);
     const to = { x: at.x, y: at.y ?? 0, z: at.z };
     // As walkTick does: round the office's rooms (and its back office).
     player.walkPath(wayTo(player.pos, to, officeWing()));
@@ -123,7 +123,7 @@ export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     const e = errand!;
     errand = null;
     if (why === 'cancelled') return;
-    if (why === 'stuck') toast(`🚧 Couldn't find a way over to ${e.what}, so here it is from where you are`, 'warn');
+    if (why === 'stuck') toast(`Couldn't find a way over to ${e.what}, so here it is from where you are`, 'warn');
     else if (e.face) arrivedAt(e.face);
     else stopWalking();
     e.then();

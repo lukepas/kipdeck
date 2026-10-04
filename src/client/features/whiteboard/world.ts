@@ -13,7 +13,7 @@ const INK = '#2b2d42';
 const PX = 512;
 /** Clear space around a drawing on the face, in pixels. */
 const PAD = 40;
-const FONT = 'Nunito, ui-rounded, system-ui, sans-serif';
+const FONT = 'Archivo, system-ui, sans-serif';
 
 export interface WhiteboardStand {
   group: THREE.Group;
@@ -79,7 +79,7 @@ export function buildWhiteboard(): WhiteboardStand {
   const eraserFelt = mesh(new THREE.BoxGeometry(0.19, 0.015, 0.075), toon('#6c757d'), 0.62, trayY + 0.015, 0.09, false);
   group.add(eraserFelt);
 
-  const plaque = textPlane('📝 Whiteboard', { bg: '#fffaf3', size: 48 });
+  const plaque = textPlane('Whiteboard', { bg: '#fffaf3', size: 48 });
   plaque.scale.multiplyScalar(0.55);
   plaque.position.set(0, bottom + height + 0.2, 0.05);
   group.add(plaque);

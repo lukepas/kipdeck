@@ -49,17 +49,17 @@ export function installCarrying(ctx: Ctx, deps: CarryingDeps) {
     closeAllModals();
     const carrying = ctx.carrying();
     if (carrying?.issue === it.number) return;
-    if (carrying) toast(`📌 #${carrying.issue} went back on the board`);
+    if (carrying) toast(`#${carrying.issue} went back on the board`);
     setCarrying({ issue: it.number, title: it.title });
     ctx.sound.paper();
-    toast(`✋ You took #${it.number} off the board: take it to an empty desk, a worker or the 📋 queue and press E`);
+    toast(`✋ You took #${it.number} off the board: take it to an empty desk, a worker or the queue and press E`);
   }
 
   /** Q, or E at the issues board: the card goes back where it came from. */
   function putBack() {
     const carrying = ctx.carrying();
     if (!carrying) return;
-    toast(`📌 #${carrying.issue} is back on the board`);
+    toast(`#${carrying.issue} is back on the board`);
     setCarrying(null);
     ctx.sound.paper();
   }
@@ -73,7 +73,7 @@ export function installCarrying(ctx: Ctx, deps: CarryingDeps) {
   });
 
   /**
-   * E with a card in your hands: an empty desk hires a worker for the issue (with the prompt 🤖 Hand
+   * E with a card in your hands: an empty desk hires a worker for the issue (with the prompt Hand
    * to a worker uses), an agent at a desk gets it as its next prompt, the queue board queues it, and
    * the issues board takes it back (or swaps it for the `note` you point at there). False when it's none
    * of those, so E does what it always does there.
@@ -102,7 +102,7 @@ export function installCarrying(ctx: Ctx, deps: CarryingDeps) {
     }
     if (it.kind !== 'desk' || !it.deskId) return false;
     const w = store.workerAtDesk(it.deskId);
-    const why = w ? cantTakeCard(w) : hiringPaused() ? '💸 Budget spent — hiring resumes tomorrow' : '';
+    const why = w ? cantTakeCard(w) : hiringPaused() ? 'Budget spent — hiring resumes tomorrow' : '';
     if (why) toast(why, 'warn');
     else if (w) {
       ctx.net.send({ t: 'worker.prompt', workerId: w.id, prompt, issue: card.issue });
@@ -137,7 +137,7 @@ export function installCarrying(ctx: Ctx, deps: CarryingDeps) {
 
   /** With an issue card in your hands: what E does with it here, and how to put it back. */
   function carryHint(card: CarriedIssue, it: Interactable | null): Hint {
-    const parts = (...mid: (HTMLElement | string)[]) => [h('span.title', {}, `🗂️ #${card.issue} in hand`), ...mid, key('Q', 'Put it back')];
+    const parts = (...mid: (HTMLElement | string)[]) => [h('span.title', {}, `#${card.issue} in hand`), ...mid, key('Q', 'Put it back')];
     const aimedNote = deps.aimedNote();
     if (it?.kind === 'issues') return aimedNote ? { k: String(aimedNote.number), parts: parts(key('E', `Swap it for #${aimedNote.number}`)) } : { k: '', parts: parts(key('E', 'Pin it back up')) };
     if (it?.kind === 'queue') {
@@ -151,7 +151,7 @@ export function installCarrying(ctx: Ctx, deps: CarryingDeps) {
       const w = store.workerAtDesk(it.deskId);
       if (!w) {
         const paused = hiringPaused();
-        return { k: String(paused), parts: parts(paused ? h('span.cost', {}, '💸 Budget spent — hiring resumes tomorrow') : key('E', 'Hire a worker for it')) };
+        return { k: String(paused), parts: parts(paused ? h('span.cost', {}, 'Budget spent — hiring resumes tomorrow') : key('E', 'Hire a worker for it')) };
       }
       const why = cantTakeCard(w);
       return { k: w.id + w.status + why, parts: parts(why ? aside(why) : key('E', `Hand it to ${w.name}`)) };
@@ -161,7 +161,7 @@ export function installCarrying(ctx: Ctx, deps: CarryingDeps) {
       const rest = ctx.interactions.hint(it);
       return { k: rest.k, parts: parts(...rest.parts) };
     }
-    return { k: '', parts: parts(aside('take it to an empty desk, a worker or the 📋 queue')) };
+    return { k: '', parts: parts(aside('take it to an empty desk, a worker or the queue')) };
   }
 
   return { setCarrying, pickUp, dropCard, carryHint };

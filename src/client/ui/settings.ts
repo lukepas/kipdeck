@@ -10,25 +10,26 @@ import { openPromptEditor, rewrittenPrompts } from './prompts';
 import { choiceRow } from './settings-rows';
 import { bountySettings } from './bounty-settings';
 import { showcaseSettings } from './showcase-settings';
+import { icon, type IconName } from './icons';
 
 const VIEWS: [ViewMode, string, string][] = [
-  ['first', '👀 First person', 'See through your own eyes. Click the office to look around with the mouse and click things to use them. Esc frees the mouse.'],
-  ['third', '🎥 Third person', 'Follow your character from behind. Drag to orbit the camera, scroll to zoom, and click things to use them.'],
+  ['first', 'First person', 'See through your own eyes. Click the office to look around with the mouse and click things to use them. Esc frees the mouse.'],
+  ['third', 'Third person', 'Follow your character from behind. Drag to orbit the camera, scroll to zoom, and click things to use them.'],
 ];
 
 
 const WEBHOOK_NAME: Record<WebhookKind, string> = { slack: 'Slack', discord: 'Discord', other: 'a webhook' };
 
-/** The categories down the side of ⚙️ Settings. */
+/** The categories down the side of Settings. */
 export type SettingsPane = 'you' | 'sound' | 'notify' | 'building' | 'workers' | 'bounties';
 
-const PANES: { id: SettingsPane; icon: string; label: string; blurb: string }[] = [
-  { id: 'you', icon: '🧍', label: 'You', blurb: 'How you look, how you see the office, and how you’re signed in.' },
-  { id: 'sound', icon: '🔊', label: 'Sound & voice', blurb: 'How loud the office is for you, and how voice chat works.' },
-  { id: 'notify', icon: '🔔', label: 'Notifications', blurb: 'Hear about a worker that needs someone, or finished, while you’re somewhere else.' },
-  { id: 'building', icon: '🏢', label: 'Building', blurb: 'Where new floors are cloned.' },
-  { id: 'workers', icon: '🤖', label: 'Workers', blurb: 'What workers start on, how many run at once, when they go home and what the office tells them.' },
-  { id: 'bounties', icon: '💰', label: 'Bounties', blurb: 'Proof of Merge: devnet USDC on issues, paid only when a person merges the office\'s pull request.' },
+const PANES: { id: SettingsPane; icon: IconName; label: string; blurb: string }[] = [
+  { id: 'you', icon: 'operator', label: 'You', blurb: 'How you look, how you see the office, and how you’re signed in.' },
+  { id: 'sound', icon: 'volume', label: 'Sound & voice', blurb: 'How loud the office is for you, and how voice chat works.' },
+  { id: 'notify', icon: 'bell', label: 'Notifications', blurb: 'Hear about a unit that needs someone, or finished, while you’re somewhere else.' },
+  { id: 'building', icon: 'decks', label: 'Decks', blurb: 'Where new decks are cloned.' },
+  { id: 'workers', icon: 'units', label: 'Units', blurb: 'What units start on, how many run at once, when they stand down and what the deck tells them.' },
+  { id: 'bounties', icon: 'proof', label: 'Bounties', blurb: 'Proof of Merge: devnet USDC on issues, paid only when a person merges the office\'s pull request.' },
 ];
 
 /** Who a setting is for, shown by its name: some are yours alone, some the whole office's. */
@@ -43,7 +44,7 @@ const SCOPE: Record<Scope, [label: string, title: string]> = {
 const setting = (title: string, scope: Scope | null, ...body: Node[]) =>
   h('div.setting', {}, h('div.setting-head', {}, h('h4', {}, title), scope && h('span.scope', { class: scope, title: SCOPE[scope][1] }, SCOPE[scope][0])), ...body);
 
-/** Where ⚙️ Settings was last, so it opens there again. */
+/** Where Settings was last, so it opens there again. */
 let lastPane: SettingsPane = 'you';
 
 /** `first` opens on that category instead of the last one. */
@@ -86,7 +87,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       slider.value = String(v);
       slider.style.setProperty('--fill', `${v}%`);
       pct.textContent = settings[muted] ? 'Muted' : `${v}%`;
-      mute.textContent = settings[muted] ? '🔊 Unmute' : '🔇 Mute';
+      mute.textContent = settings[muted] ? 'Unmute' : 'Mute';
       mute.setAttribute('aria-pressed', String(settings[muted]));
       mute.classList.toggle('danger', settings[muted]);
       row.classList.toggle('muted', settings[muted]);
@@ -114,9 +115,9 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     onChange(settings);
   };
   // Voice chat: an open mic, or muted until you hold V.
-  const talkRow = choiceRow('Voice chat', [[false, '🎙️ Open mic'], [true, '✋ Push to talk']], () => settings.pushToTalk, (pushToTalk) => change({ pushToTalk }));
+  const talkRow = choiceRow('Voice chat', [[false, 'Open mic'], [true, '✋ Push to talk']], () => settings.pushToTalk, (pushToTalk) => change({ pushToTalk }));
   // The alarm when a worker stops to ask you something; picking one plays it.
-  const alarmRow = choiceRow<NeedsYouSound>('When a worker needs you', [['once', '🔔 Ring once'], ['remind', '🔁 Keep reminding me'], ['off', '🔕 Off']], () => settings.needsYouSound, (needsYouSound) => {
+  const alarmRow = choiceRow<NeedsYouSound>('When a worker needs you', [['once', 'Ring once'], ['remind', 'Keep reminding me'], ['off', 'Off']], () => settings.needsYouSound, (needsYouSound) => {
     change({ needsYouSound });
     if (needsYouSound !== 'off') sound.needsYou();
   });
@@ -143,13 +144,13 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
               paintNotify();
             },
           },
-          '🔔 Turn on notifications',
+          'Turn on notifications',
         ),
       );
     } else if (perm === 'granted') {
       for (const [value, label] of [
-        [true, '🔔 On'],
-        [false, '🔕 Off'],
+        [true, 'On'],
+        [false, 'Off'],
       ] as const) {
         notifyRow.append(
           h(
@@ -201,8 +202,8 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     hookStatus.textContent = !webhook
       ? 'Paste an incoming https webhook from Slack or Discord, and the office posts to that channel when a worker needs input, finishes or gets stuck and nobody has its terminal open. It’s for everyone in the office.'
       : error
-        ? `⚠️ Posting to ${WEBHOOK_NAME[webhook.kind]} (${webhook.hint}) failed: ${error}`
-        : `📣 Posting to ${WEBHOOK_NAME[webhook.kind]} (${webhook.hint}), set by ${webhook.by} ${timeAgo(webhook.at)}${lastSentAt ? ` · last message ${timeAgo(lastSentAt)}` : ''}.`;
+        ? `Posting to ${WEBHOOK_NAME[webhook.kind]} (${webhook.hint}) failed: ${error}`
+        : `Posting to ${WEBHOOK_NAME[webhook.kind]} (${webhook.hint}), set by ${webhook.by} ${timeAgo(webhook.at)}${lastSentAt ? ` · last message ${timeAgo(lastSentAt)}` : ''}.`;
     if (!admin) hookStatus.textContent += ' Admins can change it.';
   };
   paintHook();
@@ -261,9 +262,9 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
   const promptsNote = h('p.setting-note');
   const paintPrompts = () => {
     const n = rewrittenPrompts();
-    promptsOpen.textContent = store.me.admin ? '📝 Edit the prompts…' : '📝 Read the prompts…';
+    promptsOpen.textContent = store.me.admin ? 'Edit the prompts…' : 'Read the prompts…';
     promptsNote.textContent =
-      'What 🤖 Hand to a worker, 🔍 Review and the boards’ other buttons tell a worker, the note the queue adds to a task, the board agents’ briefs, the meeting room’s parts and the sign writer’s instructions. ' +
+      'What Hand to a worker, Review and the boards’ other buttons tell a worker, the note the queue adds to a task, the board agents’ briefs, the meeting room’s parts and the sign writer’s instructions. ' +
       (n ? `${n} of them rewritten.` : 'All as the office wrote them.') +
       (store.me.admin ? '' : ' Admins can rewrite them.');
   };
@@ -310,8 +311,8 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     const { on, by, at } = store.leaveOnMerge;
     leaveRow.replaceChildren(
       ...([
-        [true, '🏠 Go home by themselves'],
-        [false, '🪑 Stay until sent home'],
+        [true, 'Go home by themselves'],
+        [false, 'Stay until sent home'],
       ] as const).map(([value, label]) =>
         h(
           'button.btn',
@@ -366,9 +367,9 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
   dirDefault.addEventListener('click', () => net.send({ t: 'floor.projectsDir', dir: '' }));
 
   const account = store.me.account;
-  const signOut = h('button.btn', { type: 'button' }, '🚪 Sign out');
+  const signOut = h('button.btn', { type: 'button' }, 'Sign out');
   signOut.addEventListener('click', onSignOut);
-  const character = h('button.btn', { type: 'button' }, account ? '🧍 Change your look' : '🧍 Change your look & name');
+  const character = h('button.btn', { type: 'button' }, account ? 'Change your look' : 'Change your look & name');
   // Your own account's password: a new one signs out every other browser it's in (the office does it).
   const pwCurrent = h('input', { type: 'password', placeholder: 'Current password', 'aria-label': 'Current password', autocomplete: 'current-password' }) as HTMLInputElement;
   const pwNew = h('input', { type: 'password', placeholder: 'New password', 'aria-label': 'New password', autocomplete: 'new-password' }) as HTMLInputElement;
@@ -399,7 +400,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     sound: [
       setting('Office sounds', 'you', soundRow, h('p.setting-note', {}, 'Workers typing, footsteps, the ding when a worker is done and the alarm when one needs you. Voice chat isn’t affected.')),
       setting('When a worker needs you', 'you', alarmRow, h('p.setting-note', {}, 'An alarm the moment a worker on your floor stops to ask you something or wants a permission. Keep reminding me rings it again, softly, every 30 seconds until someone opens that worker’s terminal. A worker you snoozed in Mission control stays quiet. It’s as loud as the office sounds are.')),
-      setting('Voice chat', 'you', talkRow, h('p.setting-note', {}, 'Either way, V joins voice, holding V talks and you’re muted once you let go, and M mutes or unmutes. With push to talk you join muted. Leave voice from the ☰ menu.')),
+      setting('Voice chat', 'you', talkRow, h('p.setting-note', {}, 'Either way, V joins voice, holding V talks and you’re muted once you let go, and M mutes or unmutes. With push to talk you join muted. Leave voice from the menu.')),
     ],
     notify: [
       setting('Desktop notifications', 'you', notifyRow, notifyNote),
@@ -422,10 +423,10 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
   const tabs = new Map<SettingsPane, HTMLButtonElement>();
   const bodies = new Map<SettingsPane, HTMLElement>();
   for (const p of PANES) {
-    const tab = h('button.settings-tab', { type: 'button', role: 'tab', onclick: () => show(p.id) }, h('span.icon', { 'aria-hidden': 'true' }, p.icon), h('span', {}, p.label)) as HTMLButtonElement;
+    const tab = h('button.settings-tab', { type: 'button', role: 'tab', onclick: () => show(p.id) }, h('span.icon', { 'aria-hidden': 'true' }, icon(p.icon, 16)), h('span', {}, p.label)) as HTMLButtonElement;
     tabs.set(p.id, tab);
     nav.append(tab);
-    bodies.set(p.id, h('section.settings-pane', { role: 'tabpanel', 'aria-label': p.label }, h('div.settings-head', {}, h('h3', {}, `${p.icon} ${p.label}`), h('p', {}, p.blurb)), ...panes[p.id]));
+    bodies.set(p.id, h('section.settings-pane', { role: 'tabpanel', 'aria-label': p.label }, h('div.settings-head', {}, h('h3', {}, p.label), h('p', {}, p.blurb)), ...panes[p.id]));
   }
   const show = (id: SettingsPane) => {
     lastPane = id;
@@ -449,15 +450,15 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     tabs.get(next)!.focus();
   });
 
-  const close = h('button.btn.close', { 'aria-label': 'Close' }, '✕');
-  const el = h('div.modal.settings', { role: 'dialog', 'aria-label': 'Settings' }, h('header', {}, h('h2', {}, '⚙️ Settings'), close), h('div.settings-body', {}, nav, ...bodies.values()));
+  const close = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
+  const el = h('div.modal.settings', { role: 'dialog', 'aria-label': 'Settings' }, h('header', {}, h('h2', {}, 'Settings'), close), h('div.settings-body', {}, nav, ...bodies.values()));
   const offNotify = store.on('notify', paintHook);
   const offLeave = store.on('leaveOnMerge', paintLeave);
   const offLimit = [store.on('machine', paintLimit), store.on('me', paintLimit)];
   const offDir = [store.on('projectsDir', paintDir), store.on('me', paintDir)];
   const offPrompts = [store.on('prompts', paintAgent), store.on('prompts', paintPrompts), store.on('me', paintAgent), store.on('me', paintPrompts)];
   const modal = openModal(el, {
-    doing: '⚙️ in settings',
+    doing: 'in settings',
     onClose: () => {
       offNotify();
       offLeave();

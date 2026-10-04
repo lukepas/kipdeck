@@ -120,7 +120,7 @@ export function runPull(deps: MissionDeps, p: ReviewPull, action: NextAction) {
 export function runPayout(deps: MissionDeps, p: ReviewPayout, action: NextAction) {
   if (action === 'approve-payout') {
     deps.net.send({ t: 'bounty.approve', issue: p.issue, floor: p.floor });
-    return toast(`💰 Approving the payout of ${p.amount} for PR #${p.pr}...`);
+    return toast(`Approving the payout of ${p.amount} for PR #${p.pr}...`);
   }
   openPrompt({
     title: 'Your payout wallet',

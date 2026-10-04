@@ -1,4 +1,4 @@
-// The pieces ⚙️ Settings' rows are made of (see settings.ts).
+// The pieces Settings' rows are made of (see settings.ts).
 
 import { h } from './dom';
 
