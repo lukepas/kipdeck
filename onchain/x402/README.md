@@ -70,3 +70,5 @@ The second runs `@x402/evm`'s own facilitator against a local anvil node, so `tr
 ## Base Sepolia
 
 `../attest/scripts/deploy-sepolia.sh` does the Sepolia side of Proof of Merge in one command once the wallets are funded. For x402 on Sepolia the office uses Circle's test USDC (`0x036CbD53842c5426634e7929541eC2318f3dCF7e`) from [faucet.circle.com](https://faucet.circle.com), settled by `https://x402.org/facilitator`. TestUSDC is only deployed there if real test USDC can't be had.
+
+One payment has been settled that way: 0.10 test USDC from this CLI to an office started with `--x402`, on 2026-10-04, in [0x4908...26dc](https://sepolia.basescan.org/tx/0x490896509be59e45e7d14afbaa3ec24c18db5292f4ea1c71cf79533670d126dc). `deployments/base-sepolia.json` has the addresses, the amounts and how it was run, and [docs/x402.md](../../docs/x402.md#live-on-base-sepolia) how to repeat it.
