@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { DECK, flat, matte, practical } from '../office/materials';
+import { DECK, flat, matte, matteUnique, practical } from '../office/materials';
 import { mesh, textPlane } from '../toon';
 import { drawMark } from '../office/floorpaint';
 
@@ -19,10 +19,28 @@ export const UNIT = {
   shoulder: 0.93,
 } as const;
 
-/** The body's shell in its three tones: at work, stuck (30% darker) and asleep (darker still). */
+/**
+ * A unit's shell with a cool rim light: its edges, where they turn away from you, catch a little
+ * cold light, so a unit holds its silhouette against the dark walls and consoles behind it.
+ */
+function rimmed(color: string, rim: number): THREE.MeshStandardMaterial {
+  const m = matteUnique(color, { flat: true });
+  m.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <emissivemap_fragment>',
+      `#include <emissivemap_fragment>
+      totalEmissiveRadiance += vec3(0.42, 0.62, 0.72) * ${rim.toFixed(3)} * pow(1.0 - clamp(abs(dot(normal, normalize(vViewPosition))), 0.0, 1.0), 2.5);`,
+    );
+  };
+  m.customProgramCacheKey = () => `unit-rim-${rim}`;
+  return m;
+}
+
+const shells: Partial<Record<'live' | 'stuck' | 'asleep', THREE.MeshStandardMaterial>> = {};
+/** The body's shell in its three tones: at work, stuck (30% darker) and asleep (darker still); the rim dims with it. */
 const SHELL = {
-  live: () => flat(DECK.unit),
-  stuck: () => flat('#1E242B'),
+  live: () => (shells.live ??= rimmed(DECK.unit, 0.16)),
+  stuck: () => (shells.stuck ??= rimmed('#1E242B', 0.1)),
   asleep: () => flat('#191E24'),
 } as const;
 export type Shell = keyof typeof SHELL;

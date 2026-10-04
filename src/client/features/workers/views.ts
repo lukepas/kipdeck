@@ -212,6 +212,8 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     const ov = parts.overview;
     const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
     Worker.screen = (at) => (ov?.active() ? ov.camera.top - ov.camera.bottom : 2 * Math.tan(halfFov) * camera.position.distanceTo(at));
+    // From the Overview the units that need you or are stuck are tagged half again as big.
+    Worker.urgentBoost = ov?.active() ? 1.5 : 1;
     for (const [id, v] of workerViews) {
       const desk = OFFICE_PLAN.byId.get(v.deskId)!;
       // Near enough to read: its callout shows its task and how long it has been this way.

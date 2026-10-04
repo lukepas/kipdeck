@@ -110,6 +110,8 @@ export class Worker {
   static screen: ((at: THREE.Vector3) => number) | null = null;
   /** How much bigger glyphs and callouts are drawn: 1.25 in demo mode (features/demo), else 1. */
   static weight = 1;
+  /** How much bigger still a unit that needs you or is stuck is tagged: 1.5 from the Overview, else 1. */
+  static urgentBoost = 1;
 
   private name: string;
   private sign = '';
@@ -415,7 +417,8 @@ export class Worker {
       const base = c.userData.base as THREE.Vector3;
       // Never smaller than CALLOUT_MIN of the view, never taller than CALLOUT_MAX of it up close.
       const lo = Math.max(Worker.weight, (CALLOUT_MIN * Worker.weight * span) / base.y);
-      const k = Math.min(lo, (CALLOUT_MAX * Worker.weight * span) / Math.max(base.y, (this.callout.userData.base as THREE.Vector3).y));
+      const boost = this.urgent ? Worker.urgentBoost : 1;
+      const k = Math.min(lo, (CALLOUT_MAX * Worker.weight * span) / Math.max(base.y, (this.callout.userData.base as THREE.Vector3).y)) * boost;
       c.scale.set(base.x * k, base.y * k, 1);
     }
   }
