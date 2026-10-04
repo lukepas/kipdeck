@@ -3,7 +3,7 @@
 // An office floor built out into the back office (see WING) has more of it to get round: the office's
 // helpers take how many rows it's built out (`wing`), and each level gets a grid of its own.
 
-import { BEANBAGS, BOARDS, BOOKSHELF, DESK_SIZE, ELEVATOR, ELEVATOR_BACK, ELEVATOR_FRONT, FLOOR, KIOSK, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, MISSION_TABLE, PROOF_CORNER, SEATING, STATIONS, TV, WHITEBOARD, WING, builtDesks, plantsAt, wingLevel, wingMinZ, type DeskDef } from './layout.js';
+import { BEANBAGS, BOARDS, BOOKSHELF, CONN, DESK_SIZE, ELEVATOR, ELEVATOR_BACK, ELEVATOR_FRONT, FLOOR, KIOSK, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, MISSION_TABLE, PROOF_CORNER, SEATING, STATIONS, TV, WHITEBOARD, WING, builtDesks, plantsAt, wingLevel, wingMinZ, type DeskDef } from './layout.js';
 
 
 export type Pt = [number, number];
@@ -64,6 +64,8 @@ function obstacles(wing: number): Obstacles {
   }
   // The mission table.
   circles.push([MISSION_TABLE.x, MISSION_TABLE.z, MISSION_TABLE.r]);
+  // The conn, the captain's dais north of the lift.
+  circles.push([CONN.x, CONN.z, CONN.r + 0.1]);
   // The operator bench and its stools, facing the Attention board.
   for (const seat of SEATING) {
     if (seat.places.length > 1) {

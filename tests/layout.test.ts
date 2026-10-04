@@ -4,6 +4,7 @@ import {
   BEANBAGS,
   BOARDS,
   BOOKSHELF,
+  CONN,
   DESKS,
   DESK_BY_ID,
   DESK_SIZE,
@@ -11,6 +12,9 @@ import {
   ELEVATOR_BACK,
   ELEVATOR_FRONT,
   FLOOR,
+  HULL_FRAMES,
+  MACHINE_MONITOR,
+  MEETING_BOARD,
   MEETING_ROOM,
   MEETING_SEATS,
   MISSION_TABLE,
@@ -20,9 +24,12 @@ import {
   READY_LINE,
   SEATING,
   SIGHTLINE,
+  SITUATION,
   STATIONS,
   TITLE_BLOCK,
+  WALL_HEIGHT,
   WHITEBOARD,
+  WINDOWS,
   WING,
   WING_DESKS,
   cellOf,
@@ -60,7 +67,7 @@ test('every seat keeps its id', () => {
   );
   assert.deepEqual(
     SEATING.map((s) => s.id),
-    ['couch', 'lounge-beanbag-1', 'lounge-beanbag-2'],
+    ['couch', 'lounge-beanbag-1', 'lounge-beanbag-2', 'conn'],
   );
 });
 
@@ -163,4 +170,52 @@ test('nothing above 1.1 m stands between the table and the consoles', () => {
   for (const p of [PROOF_CORNER.vault, PROOF_CORNER.plinth]) assert.ok(dist(p.x, p.z) > inner + 1);
   assert.ok(MISSION_TABLE.h <= SIGHTLINE && DESK_SIZE.height <= SIGHTLINE);
   assert.ok(PROOF_CORNER.vault.height <= SIGHTLINE && PROOF_CORNER.plinth.steps * PROOF_CORNER.plinth.rise <= SIGHTLINE);
+});
+
+test('the viewports sit in the hull between its frames, clear of what hangs on the walls', () => {
+  for (const o of WINDOWS) {
+    const [a, b] = [o.u - o.width / 2, o.u + o.width / 2];
+    assert.ok(o.y0 > 0 && o.y1 < WALL_HEIGHT, `the ${o.wall} viewport at ${o.u} is a window, not a door`);
+    assert.ok(a > FLOOR.minX && b < (o.wall === 'north' ? WING.minX : FLOOR.maxZ), `the ${o.wall} viewport at ${o.u} is on its wall`);
+    for (const f of HULL_FRAMES) assert.ok(f < a - 0.2 || f > b + 0.2, `the ${o.wall} viewport at ${o.u} keeps off the frame at ${f}`);
+  }
+  // Nothing of the west wall's (the Review bay's board, the capacity panel, the violet rail) is behind glass.
+  const west = WINDOWS.filter((o) => o.wall === 'west');
+  const clear = (z0: number, z1: number, what: string) => {
+    for (const o of west) assert.ok(o.u + o.width / 2 < z0 || o.u - o.width / 2 > z1, `${what} is clear of the port at ${o.u}`);
+  };
+  clear(MEETING_ROOM.minZ, MEETING_ROOM.maxZ, 'the Review bay');
+  clear(MEETING_BOARD.z - MEETING_BOARD.width / 2, MEETING_BOARD.z + MEETING_BOARD.width / 2, 'the Review bay board');
+  clear(MACHINE_MONITOR.z - MACHINE_MONITOR.width / 2, MACHINE_MONITOR.z + MACHINE_MONITOR.width / 2, 'the capacity panel');
+  clear(PROOF_CORNER.rail.z - PROOF_CORNER.rail.width / 2 - 0.5, PROOF_CORNER.rail.z + PROOF_CORNER.rail.width / 2 + 0.5, 'the attestation rail');
+  // The vault and the plinth are low: a port's sill is over them.
+  for (const o of west) assert.ok(o.y0 > PROOF_CORNER.vault.height && o.y0 > PROOF_CORNER.plinth.steps * PROOF_CORNER.plinth.rise);
+  // The docs rack on the east wall.
+  for (const o of WINDOWS.filter((w) => w.wall === 'east')) {
+    assert.ok(o.u + o.width / 2 < BOOKSHELF.z - BOOKSHELF.width / 2 || o.u - o.width / 2 > BOOKSHELF.z + BOOKSHELF.width / 2, 'the docs rack is clear of the ports');
+  }
+  // The forward viewport shows over the situation wall: from the conn, its sill is behind the wall's
+  // panels, so space frames the boards and never sits behind their text.
+  const eye = CONN.h + 1.6;
+  const atHull = SITUATION.top + ((SITUATION.top - eye) * (-FLOOR.minZ - SITUATION.r)) / (CONN.z + SITUATION.r);
+  for (const o of WINDOWS.filter((w) => w.wall === 'north')) {
+    assert.ok(o.y0 > BOARDS.issues.y - BOARDS.issues.height / 2, 'the sill is above the boards\' feet');
+    assert.ok(o.y0 < atHull && o.y1 > atHull + 1, 'from the conn, the glass starts just over the situation wall');
+  }
+});
+
+test("the conn stands on the table's axis between the lift and the consoles, low, and can be walked onto", () => {
+  assert.equal(CONN.x, MISSION_TABLE.x);
+  assert.ok(CONN.z - CONN.r > POD_RADIUS - DESK_SIZE.depth + 1, 'outside the ring of consoles');
+  assert.ok(CONN.z + CONN.r < ELEVATOR_FRONT - 1, "a step clear of the lift's doors");
+  assert.ok(CONN.h + CONN.rail <= SIGHTLINE, 'its rail is no taller than the sightline');
+  assert.ok(CONN.h <= 0.3, 'a step up, no more');
+  // Nobody's way to a seat goes over it, and its rails leave a gap toward the lift to step up through.
+  assert.ok(!walkable(CONN.x, CONN.z));
+  const lift: Pt = [ELEVATOR.x, ELEVATOR_FRONT - 0.6];
+  const foot: Pt = [CONN.x, CONN.z + CONN.r + 0.4];
+  const pts = route(lift, foot);
+  assert.ok(Math.hypot(pts[pts.length - 1][0] - foot[0], pts[pts.length - 1][1] - foot[1]) < 0.8, 'the foot of the conn can be walked to from the lift');
+  const chair = SEATING.find((s) => s.id === 'conn')!;
+  assert.ok(Math.hypot(chair.x - CONN.x, chair.z - CONN.z) < CONN.r - 0.6 && chair.y === CONN.h, "the captain's chair is on the dais");
 });

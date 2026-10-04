@@ -428,8 +428,36 @@ export interface Opening {
   y1: number;
 }
 
-/** Windows you can see out of: none, the deck floats in the void. */
-export const WINDOWS: Opening[] = [];
+/**
+ * Where the hull's frames land on the north, east and west walls (along each wall, from its middle):
+ * one under each rib of the canopy. The viewports sit in the bays between them.
+ */
+export const HULL_FRAMES = [-6.63, 0, 6.63] as const;
+
+/**
+ * The bridge's viewports. The forward band runs along the north wall over the situation wall, in the
+ * four bays between the hull's frames (the bit of wall by the overflow bay stays solid). The side
+ * ports are tall slots in the east and west walls, one a bay, kept clear of the Review bay, the
+ * capacity panel, the violet rail and the docs rack. The south curb is open already.
+ */
+const FORWARD = { y0: 3.2, y1: 6.3 } as const;
+const PORT = { width: 1.4, y0: 1.0, y1: 5.6 } as const;
+export const WINDOWS: Opening[] = [
+  { wall: 'north', u: -11.3, width: 8.2, ...FORWARD },
+  { wall: 'north', u: -3.3, width: 5.8, ...FORWARD },
+  { wall: 'north', u: 3.3, width: 5.8, ...FORWARD },
+  { wall: 'north', u: 9.05, width: 3.7, ...FORWARD },
+  ...[-11.3, -3.3, 4.4, 11.3].map((u): Opening => ({ wall: 'east', u, ...PORT })),
+  ...[-3.3, 3.3, 11.3].map((u): Opening => ({ wall: 'west', u, ...PORT })),
+];
+
+/**
+ * The conn: the captain's dais just north of the Deck lift, on the axis of the table and the Attention
+ * board. A low drum `h` high and `r` across with a rail either side (open to the north and to the lift),
+ * the captain's chair in the middle, and the armrest panels at the rails' north ends. All of it stays
+ * outside the ring of consoles, so the sightline rule holds.
+ */
+export const CONN = { x: 0, z: 10.4, r: 1.6, h: 0.25, rail: 0.85 } as const;
 
 /**
  * Something to sit on, standing at x, z on the floor at `y`. You
@@ -457,14 +485,16 @@ export interface SeatDef {
 
 /**
  * Where people can sit: the operator bench and its stools (buildOffice puts them there), due north of
- * the table between pods A and B, facing the Attention board. Units have their own seats, the consoles
- * and the Standby bench in SEATS.
+ * the table between pods A and B, facing the Attention board, and the captain's chair on the conn,
+ * facing the same way from the south. Units have their own seats, the consoles and the Standby bench in SEATS.
  */
 export const SEATING: SeatDef[] = [
   { id: 'couch', label: 'Operator bench', x: 0, y: 0, z: -8.9, rotY: Math.PI, places: [-1.2, 0, 1.2], hips: 0.5, depth: -0.05, out: 0.9, tv: true },
   // A stool either side of it, turned to the board.
   { id: 'lounge-beanbag-1', label: 'Stool', x: -3.3, y: 0, z: -9.2, rotY: Math.atan2(TV.x + 3.3, TV.z + 9.2), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
   { id: 'lounge-beanbag-2', label: 'Stool', x: 3.3, y: 0, z: -9.2, rotY: Math.atan2(TV.x - 3.3, TV.z + 9.2), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
+  // On the conn, a little south of its middle, so getting up leaves you on the dais facing the bow.
+  { id: 'conn', label: "Captain's chair", x: CONN.x, y: CONN.h, z: CONN.z + 0.25, rotY: Math.PI, places: [0], hips: 0.48, depth: -0.05, out: 0.8 },
 ];
 export const SEATING_BY_ID = new Map(SEATING.map((s) => [s.id, s]));
 
