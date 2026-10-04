@@ -228,3 +228,46 @@ The captain found the deck a bit dead: nothing moved unless a state changed, and
 | ![](shots/bridge-life/after/life-heading.png) | ![](shots/bridge-life/after/life-ticker.png) | ![](shots/bridge-life/day/units-c.png) |
 
 Frame time at 1440x900 by night on the GPU (Apple M3 Pro through ANGLE Metal), twelve busy units, from the conn, a forced render timed over 30 frames with `gl.finish`, in one session with the life's meshes shown, hidden and shown again: 2.92, 2.74 and 2.78 ms, rAF p50 and p95 16.7 ms throughout (on vsync). The life adds seven draw calls (the screens, the pulses, the heading band, its track and arc, the clock and the log) and two light ticks of work a frame; the screens animate in their shader, the ticker scrolls by texture offset, and the clock repaints a small canvas once a second.
+
+## The bridge: final round
+
+The review of the bridge (`shots/bridge-review/`) found the needs-you beacon a cheap opaque slab, the ship from outside a house with double-hung windows, the side ports near-black slits, working units still grey, callouts colliding, the merge with no moment on the deck, and a jump flash that whited out the canopy at night. This round fixes those and gives the bridge more life and light. Everything is still built in code: shaders, geometry and canvas textures, no images or models.
+
+- **The needs-you beacon** is light now: an additive column that fades toward its edges and its top, with slow scanlines climbing it and a wave spreading across the floor from the unit. It stops at about one and a half units, so it no longer runs up through the Issues and Queue boards, and it drops to a third with the camera close.
+- **Working units wear ship-cyan** on the band, the visor and a soft floor halo that breathes faster the busier they are; their hands stay at the console, their heads bob a little, and motes rise off their screens. Every unit's shell catches a cool rim light, so it holds its silhouette against the dark.
+- **Callouts** draw over the boards rather than being cut by them, never grow past 7.5% of the view's height up close, slide back in when they would run off the side or under the Units rail, and keep a hairline to their unit when lifted. From the Overview, the tags of units that need you or are stuck are half again as big. The edge marks now point to stuck units too, in the order needs you, stuck, to review.
+- **Windows.** Each side bay has a wide, low port at a seated eye's height with rounded ends and a slim strip over it, the forward band has rounded corners, and no mullions cross the glass. A bezel with a cyan line inside and a brighter one outside lines every port, and the glass thickens to a cold tint at a slant. The galaxy's band is tilted and brighter, so it crosses the side ports as well as the canopy. (The walls had been building a column of wall per opening, which filled a port with wall once a strip stood over it.)
+- **The ship from outside**: plated walls and plate, a sloped skirt rising at the bow into a glacis, an armoured brow along the tops of the walls, rounded lit ports, hot cores in the plumes, and running lights. The red and green are drawn for the Overview's camera only, so a state's red never shows through a port.
+- **The merge is the bridge's moment**: a ring of violet light sweeps out from the holo table, the Pull requests board flashes green, a ring rises off the unit's console and every lit line on the bridge swells, 1.2 s. With motion off it is a steady colour for the same moment.
+- **The holo** has a volume: a small spiral galaxy turning over the course plot in a cone of scanlined light, with a glow where the ship is.
+- **Space**: planets with drifting clouds, a lit limb and a ring round a gas giant; a comet you can see, lower and twice as bright, with a 20 degree tail; a meteor every 20 to 40 s. The jump widens the view 4 degrees, leans the room's light cool going in and warm coming out, and its flash is a glint added over the sky, a third by Night and half by Day. Stars are never drawn under two pixels, as soft dots, so they no longer crawl.
+- **Light.** Night has a darker floor, a cyan cove where the walls meet the canopy, and the units' rim light. Day is a cool mid-grey ship with the exposure lifted, not a white room; the consoles' hoods stay instrument black, so the call signs on them read (they were about 1.9:1), and the print set's orange is darker for text.
+
+### The lighting setting and the motion toggle
+
+Settings > Bridge > **Bridge lights** sets Night (low light, for watching in a dark room), Day (high light) or Auto, which follows the system; **Brightness** steps every light 12% either way, two steps. Settings > Bridge > **Ship motion** is the in-app motion toggle: Full; Calm, which halves space and drops its streaks, flybys and meteors, and turns a waypoint into a crossfade; and Off, which stills the whole deck as the system's reduce-motion setting does. Under either, the beacon is a still column with one still ring, the merge is a colour flash, and the running lights hold steady. Nothing in space plays while the tab is hidden.
+
+### Before and after
+
+`SHOOT_LIGHT=night` and `SHOOT_LIGHT=day node design/shoot.mjs bridge-final/<mode> ...` took the stills from a built office; `bridge-window` and `bridge-window-e` are new vantages out of the side ports. `shoot.mjs bridge-final clip` made `shots/bridge-final/bridge.mp4`, 10 s on a clock of its own (one frame each thirtieth of a second, so software rendering gives smooth motion): a push in from the conn past the holo, a merge landing, meteors, a turn to the west ports and back to the bow for a jump. Stills of the merge and the jump from it are in `shots/bridge-final/sequence/`.
+
+| Before | Night | Day |
+| --- | --- | --- |
+| ![](shots/bridge-review/night/units-a.png) | ![](shots/bridge-final/night/units-a.png) | ![](shots/bridge-final/day/units-a.png) |
+| ![](shots/bridge-review/night/deck-overview.png) | ![](shots/bridge-final/night/deck-overview.png) | ![](shots/bridge-final/day/deck-overview.png) |
+| ![](shots/bridge-review/night/bridge-port.png) | ![](shots/bridge-final/night/bridge-port.png) | ![](shots/bridge-final/day/bridge-port.png) |
+| ![](shots/bridge-review/night/units-c.png) | ![](shots/bridge-final/night/units-c.png) | ![](shots/bridge-final/day/units-c.png) |
+| ![](shots/bridge-review/night/bridge-conn.png) | ![](shots/bridge-final/night/bridge-conn.png) | ![](shots/bridge-final/day/bridge-conn.png) |
+| ![](shots/bridge-review/night/bridge-holo.png) | ![](shots/bridge-final/night/bridge-holo.png) | ![](shots/bridge-final/day/bridge-holo.png) |
+| ![](shots/bridge-review/night/space-planet.png) | ![](shots/bridge-final/night/space-planet.png) | ![](shots/bridge-final/day/space-planet.png) |
+| ![](shots/bridge-review/night/space-comet.png) | ![](shots/bridge-final/night/space-comet.png) | ![](shots/bridge-final/day/space-comet.png) |
+
+| Out of a side port | The merge's sweep | The jump's glint |
+| --- | --- | --- |
+| ![](shots/bridge-final/night/bridge-window.png) | ![](shots/bridge-final/sequence/merge-02-500ms.png) | ![](shots/bridge-final/sequence/warp-04-967ms.png) |
+
+### Left for later
+
+- Frame time was not measured on a GPU in this round; the stills and the clip are software rendered. The renderer now draws at most 1.5 pixels per CSS pixel, which bounds the Retina case, but the draw calls (about a thousand) and the lights per fragment are as they were.
+- The radial streak tunnel through the forward glass during a jump, warm task lights over occupied stations, and a bigger count band on the situation wall from the conn were not done.
+- The Overview still frames the deck rather than the whole ship; zoom out (wheel) to see the nacelles.
