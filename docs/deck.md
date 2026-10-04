@@ -2,15 +2,16 @@
 
 Back to the [README](../README.md).
 
-Every project is a deck: one operations floor floating in a slate void, the same on every project. It is built so that a glance from anywhere on it (or from the Overview above it) tells you which units need a person, which are stuck and which are only at work. The plan is `src/shared/layout.ts`, which the server checks seats against and the 2D view reads too, so the 3D deck and the rest never drift apart.
+Every project is a deck, and the room on it is the bridge of a ship under way: one operations floor inside a hull, the same on every project. It is built so that a glance from anywhere on it (or from the Overview above it) tells you which units need a person, which are stuck and which are only at work. The plan is `src/shared/layout.ts`, which the server checks seats against and the 2D view reads too, so the 3D deck and the rest never drift apart.
 
 ## What's where
 
-The deck is a 32 m square. North is the situation wall's side; the Deck lift you arrive in stands in the middle of the south curb, its portal facing north, so you step out looking across the mission table at the Attention board with pods C and D either side of you.
+The deck is a 32 m square. North is the bow and the situation wall's side; the Deck lift stands in the middle of the south curb, its portal facing north. You arrive on the conn just north of it, behind the captain's chair, looking across the mission table at the Attention board and the forward viewport, with pods C and D either side of you.
 
 | Place | Where | What it's for |
 | --- | --- | --- |
-| Mission table | the middle | The deck's mission on its top: the statement in the middle, a wedge per milestone round it (filled once done, ruled brighter while it's the one you're on) and a tick on the rim for each. Every console faces it. |
+| Conn | on the table's axis, just north of the lift | The captain's dais: a step up, a rail either side (open toward the bow and the lift), the captain's chair facing the bow (E to sit), and an armrest panel either side of it. The left one shows the top bar's counts, glyph and number; the right one the course (the mission's statement) and the waypoint the ship is making for, *WP 2 OF 4*, with its title. All of it is under the sightline. |
+| Mission table | the middle | The deck's mission on its top: the statement in the middle, a wedge per milestone round it (filled once done, ruled brighter while it's the one you're on) and a tick on the rim for each. Every console faces it. Over it floats the holo course plot: a curved course line with a waypoint per milestone (solid once passed, ringed for the one you're on, hollow after), and the ship's chevron between the last one passed and the next. It is additive light at a third of full strength, so it never hides the top. |
 | Pods A to D | four arcs of four consoles, 7.5 m out: A north-west, B north-east, C south-east, D south-west | Where units sit, one per console (`desk-1` to `desk-16`, four to a pod). Each pod's floor plate, past its arc, names the goal most of its units work toward. |
 | Ready line | a painted orange double stripe in front of each pod, 1.4 m out from the table, with numbered ticks | Where units that need you stand, tick 1 for whoever has waited longest (see [Units](#units)). |
 | Situation wall | five standing panels in an arc 12.2 m out round the north of the table, each turned to face it | West to east: Issues, Queue, Attention (wider, due north), Pull requests and Services. Each work board has its board agent's lectern at its left end. The Attention board ranks the deck's units by who needs someone most, in the top bar's order; while someone shares their screen, it shows that instead. The operator bench faces it from between pods A and B. |
@@ -73,6 +74,22 @@ A window opened from the Overview closes back to it with no extra click; one ope
 
 A merge is the one moment the deck celebrates, and it does it with light, not confetti. When a person merges a unit's pull request, a violet pulse runs from the unit's console to the mission table and its rim lights. When the bounty for it is released on devnet, the pulse runs on across the floor to the Proof corner and up the attestation rail, and parks as the rail's new lit segment; the vault's lid lifts with a violet glow, the top bar's violet counter rolls, and a proof toast shows the devnet transaction in mono with a settled tick and an explorer link. An attestation landing on Base Sepolia plays the merged cue (when sound is on) and a toast of its own, and a unit's first ERC-8004 record makes the plinth glow as its step lights. A unit deployed to a console gets a shorter beat of its own: a steel trace from the table out to it. The camera never moves for a beat, and under reduced motion there is no traveling light: the rail and the lid change at once and the toast says the rest (`src/client/features/beats/`).
 
+## The bridge
+
+The room is the bridge of a starship, built round the same plan (`src/client/features/bridge/`, fixtures on the floor's plan like every other):
+
+- **Viewports.** The forward viewport runs along the north wall in four bays, its sill just over the situation wall as seen from the conn, so space frames the boards and never sits behind their text. Tall ports cut the east and west walls, one a bay, clear of the Review bay, the capacity panel, the violet rail and the docs rack. Over the south curb is the aft glass. The openings are `WINDOWS` in `src/shared/layout.ts`; `tests/layout.test.ts` keeps them clear of what hangs on the walls.
+- **The hull.** A frame up the walls under every rib of the canopy, each with a ship-cyan line down its face, a ship-cyan cove along the foot of the walls, and seams at the viewports' sills and heads.
+- **The canopy.** Sixteen ribs from a halo ring 9 m over the table out to the tops of the walls, two rings of purlins, and dark glass between them.
+- **Outside.** The ship the bridge is part of: a chamfered hull under the slab with its bow to the north, a lit edge round it, and two nacelles aft with their drive glow, seen through the aft glass and from the Overview.
+- **Forward displays.** Each board of the situation wall sits in a graphite bezel with a ship-cyan hairline over and under it, and the overhead strip hangs from the canopy over the middle of the wall, repeating the top bar's counts in glyphs big enough to read from anywhere.
+- **Stations.** Each console has a hull fin at either end and a ship-cyan trace along the edge of its top where its unit's hands rest.
+- **The deck.** A ship-cyan ring round the pods, four lanes out from the table between them, and the runway from the conn with chevrons pointing to the bow.
+
+The canopy, the aft glass and the overhead strip are on a layer of their own that the walk camera sees and the Overview's doesn't, so the Overview still looks straight down into the room; nothing on that layer can be clicked. The holo plot turns slowly round the table (half a turn a minute) and stands still under reduced motion.
+
+Ship-cyan (`#6FC3DF`, `#2C5E70` for anything that glows over an area) is the instruments' own color and never a state: hairlines, small type and the holo. A state's hue only ever shows on a unit, its ring and glyph, its callout, the ready line and the counts.
+
 ## Light and materials
 
-The deck is lit like a control room at night: a cool fill from above and the slate below, one cool key from high in the north-west that throws the only shadows, a spot over each pod and one over the table. Every surface is matte (`src/client/world/office/materials.ts`), consoles and units flat-shaded, with soft contact shadows under what stands on the floor and lit hairlines along the edges that have to read in a dark frame: the slab, the walls' tops, the table's rim, the lift's portal. There are no outlines, no windows, no plants and no model files; everything is built in code. The colors are DESIGN.md's 3D row.
+The deck is lit like a control room at night: a cool fill from above and the slate below, one cool key from high in the north-west that throws the only shadows, a spot over each pod and one over the table. Every surface is matte (`src/client/world/office/materials.ts`), consoles and units flat-shaded, with soft contact shadows under what stands on the floor and lit hairlines along the edges that have to read in a dark frame: the slab, the walls' tops, the table's rim, the lift's portal, the hull's frames and the viewports. The viewport glass is almost clear. There are no outlines, no plants and no model files; everything is built in code. The colors are DESIGN.md's 3D row.

@@ -235,7 +235,7 @@ async function main() {
     // A mission on the table and a few merges on the rail, painted straight onto them for the shots.
     await page.evaluate(() => {
       const o = window.__office.office;
-      o.missionTable.setMission({
+      const course = {
         statement: 'Ship the auth rewrite and the devnet bounty flow',
         milestones: [
           { title: 'Session store picked', done: true, active: false },
@@ -243,7 +243,11 @@ async function main() {
           { title: 'Payments webhook', done: false, active: false },
           { title: 'Devnet bounties live', done: false, active: false },
         ],
-      });
+      };
+      o.missionTable.setMission(course);
+      // The bridge reads the same course: the holo over the table and the conn's right panel.
+      o.holo?.setCourse(course);
+      o.conn?.setCourse(course);
       o.proof.setTally(6);
       o.proof.setReputation(2);
       o.proof.setArmed(true);
@@ -262,6 +266,14 @@ async function main() {
       'units-b': [[1.4, 2.1, -1.4], [5.4, 0.8, -5.6]],
       'units-c': [[1.2, 2.3, 1.6], [5.4, 0.8, 5.4]],
       'units-near': [[0.3, 1.8, -0.2], [-3.6, 0.9, -3.8]],
+      // The bridge: from the conn to the bow, up into the canopy, aft to the nacelles, out a side port, a station.
+      'bridge-conn': [[0, 2.05, 11.4], [0, 2.4, -12]],
+      'bridge-captain': [[0, 1.6, 11.0], [0, 0.9, 9.6]],
+      'bridge-up': [[0, 1.7, 7], [0, 8.5, -7]],
+      'bridge-aft': [[0, 2.4, 3], [0, 0.6, 30]],
+      'bridge-port': [[6, 2.2, 1], [-16, 3.2, 1]],
+      'bridge-station': [[3.4, 1.6, -2.6], [6.6, 0.8, -6.4]],
+      'bridge-holo': [[0, 2.1, 5.6], [0, 1.1, 0]],
     };
     for (const [name, [from, to]] of Object.entries(VANTAGES)) {
       if (!want(name)) continue;

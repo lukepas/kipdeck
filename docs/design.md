@@ -32,7 +32,7 @@ Toasts stack top right under the bar, all one card: a glyph column and a stripe 
 
 ## Motion
 
-Motion only marks a change of state. Nothing bobs, idles or celebrates for decoration, and every motion has a reduced-motion form. The UI uses one curve, `--ease` (`cubic-bezier(.2, 0, 0, 1)`), and three lengths in `tokens.css`: `--t-ui` 120 ms, `--t-pulse` 1.2 s and `--t-flight` 700 ms.
+Motion marks a change of state, and hue and the attention cadences belong to state alone. Nothing bobs, idles or celebrates for decoration; the bridge's ambient life is achromatic or ship-cyan, slow and stops under reduced motion (DESIGN.md, rule 1). Every motion has a reduced-motion form. The UI uses one curve, `--ease` (`cubic-bezier(.2, 0, 0, 1)`), and three lengths in `tokens.css`: `--t-ui` 120 ms, `--t-pulse` 1.2 s and `--t-flight` 700 ms.
 
 | Moment | What moves | How long | Under reduced motion |
 | --- | --- | --- | --- |
@@ -47,6 +47,7 @@ Motion only marks a change of state. Nothing bobs, idles or celebrates for decor
 | A unit gets an ERC-8004 record | the plinth glows violet as its step lights | 1.2 s | the step lights |
 | You go to a unit (N, a toast, search) | in Walk the view flies there in an arc; in the Overview it pans and zooms | 700 ms; 300 ms | a cut |
 | The Overview turns (Q / E) | a quarter turn | 280 ms | a cut |
+| The bridge, always | the holo course plot turns over the mission table, in ship-cyan | half a turn a minute | still |
 
 ![The merge beat on its way: the violet pulse at the foot of the Proof corner's rail](img/beat-climb.png)
 

@@ -122,3 +122,22 @@ The four totals share one uppercase label style, and the header names the last m
 - The installers and deploy scripts still fetch upstream releases, until the fork publishes its own.
 - The `/pom/` ledger shows who merged as a keyed pseudonym, not a GitHub login, because the chain does not hold accounts.
 - The ledger shots still use fixture data from `acme/app`. Before submission, take them from real devnet data on a public repository.
+
+## The bridge: shell
+
+The captain asked for the deck as a starship's bridge, with windows to see space through. This stage builds the shell round the same plan: viewports in the hull, a canopy, the conn where you arrive, the holo course plot over the table, bezels and an overhead strip on the forward displays, station fins and traces, deck inlays, and the ship outside. Nothing in the plan moved but the new conn, and units sit a little bigger (0.95 of full size instead of 0.82). Space through the glass and the light rig are the next stages, so the viewports still show the slate void here.
+
+`shoot.mjs bridge-shell/after` takes the stills again from a built office (the `bridge-*` vantages are new). The clip `shots/bridge-shell/after/bridge-walk.mp4` is a camera move from the conn toward the west ports, rendered on the GPU.
+
+| Before | After |
+| --- | --- |
+| ![](shots/bridge-shell/before/office.png) | ![](shots/bridge-shell/after/office.png) |
+| ![](shots/bridge-shell/before/deck-overview.png) | ![](shots/bridge-shell/after/deck-overview.png) |
+| ![](shots/bridge-shell/before/deck-table.png) | ![](shots/bridge-shell/after/bridge-holo.png) |
+| ![](shots/bridge-shell/before/units-a.png) | ![](shots/bridge-shell/after/units-a.png) |
+
+| The canopy | Aft, the nacelles | The captain's panel |
+| --- | --- | --- |
+| ![](shots/bridge-shell/after/bridge-up.png) | ![](shots/bridge-shell/after/bridge-aft.png) | ![](shots/bridge-shell/after/bridge-captain.png) |
+
+Frame time at 1440x900 with nine seeded units, before and after: on the GPU (Apple M3 Pro through ANGLE Metal) the frame stays on vsync at 16.7 ms and a forced render takes 6.6 ms against 7.0 ms before; draw calls went from 1086 to 948, because the walls round the viewports are now drawn as one mesh per paint. On SwiftShader, which the stills use, a frame takes about 185 ms against 167 ms before, mostly from the canopy's glass over the whole frame.
