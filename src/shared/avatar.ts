@@ -1,10 +1,15 @@
-// What a person looks like in the office: dealt at random, and changed under Settings > Your character.
-// Server and client share these lists so a look is just three small indexes on the wire.
+// What an operator looks like on the deck: dealt at random, and changed under Settings > Your operator.
+// Server and client share these lists so a look is just three small indexes on the wire. The fields
+// keep their first names (skin, hair, style) so looks saved before still load: `skin` is the shell's
+// tone, `hair` the head plate's and `style` what sits on the plate.
 
-export const SKIN_TONES = ['#ffe3cc', '#ffd7b5', '#f1c27d', '#e0ac69', '#c68642', '#a0663a', '#8d5524', '#5c3a21'];
-export const HAIR_COLORS = ['#2b2d42', '#4a3222', '#6f4e37', '#e9c46a', '#c1440e', '#d9d9d9', '#d62828', '#ff8fab', '#9d4edd', '#264653'];
-export const HAIR_COLOR_NAMES = ['Black', 'Dark brown', 'Brown', 'Blonde', 'Ginger', 'Silver', 'Red', 'Pink', 'Purple', 'Teal'];
-export const HAIR_STYLES = ['Short', 'Long', 'Bun', 'Spiky', 'Curly', 'Ponytail', 'Bald'];
+/** The shell's tones, mid steel first: lighter than the units' slate, so a person never reads as one. */
+export const SKIN_TONES = ['#6A7684', '#7C8896', '#8E99A6', '#A3ADB8', '#5A6673', '#4A5562', '#3E4957', '#B6BFC8'];
+/** The head plate's tones: the steel ramp, and a few desaturated tints. */
+export const HAIR_COLORS = ['#C9D2DC', '#9AA5B0', '#6D7884', '#4A5562', '#2E3843', '#1A222C', '#7D7466', '#66707D', '#5E6B63', '#6E6478'];
+export const HAIR_COLOR_NAMES = ['Silver', 'Ash', 'Gunmetal', 'Steel', 'Slate', 'Graphite', 'Bronze', 'Blue steel', 'Moss', 'Plum'];
+/** What sits on the head plate (see world/character/person-head.ts). */
+export const HAIR_STYLES = ['Plate', 'Crest', 'Twin fins', 'Hood', 'Brow', 'Visor bar', 'Bare'];
 
 export interface Look {
   skin: number;

@@ -14,7 +14,7 @@ import { icon, type IconName } from './icons';
 
 const VIEWS: [ViewMode, string, string][] = [
   ['first', 'First person', 'See through your own eyes. Click the office to look around with the mouse and click things to use them. Esc frees the mouse.'],
-  ['third', 'Third person', 'Follow your character from behind. Drag to orbit the camera, scroll to zoom, and click things to use them.'],
+  ['third', 'Third person', 'Follow your operator from behind. Drag to orbit the camera, scroll to zoom, and click things to use them.'],
 ];
 
 
@@ -392,7 +392,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
   const pom = showcaseSettings(net);
   const panes: Record<SettingsPane, Node[]> = {
     you: [
-      setting('Your character', null, character),
+      setting('Your operator', null, character),
       setting('Camera view', 'you', seg, note),
       setting('Signed in', null, h('div.volume', {}, signOut), h('p.setting-note', {}, account ? `As ${account.name}, with your own account (${account.role}).` : 'With the shared office password.')),
       ...(account ? [setting('Password', null, h('div.webhook', {}, pwCurrent, pwNew, pwSave), pwNote)] : []),

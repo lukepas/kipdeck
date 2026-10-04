@@ -18,7 +18,6 @@ class Preview {
   private yaw = 0.5;
   private dragging = false;
   private lastDrag = -Infinity;
-  private hopT = -1;
 
   constructor(
     private canvas: HTMLCanvasElement,
@@ -48,7 +47,7 @@ class Preview {
     this.person = new Person(p.name, p.color, p.look);
     this.person.showLabel(false);
     this.scene.add(this.person.root);
-    this.camera.position.set(0, 1.35, 4.6);
+    this.camera.position.set(0, 1.45, 5.2);
     this.camera.lookAt(0, 0.95, 0);
 
     this.resize = new ResizeObserver(() => this.fit());
@@ -81,9 +80,8 @@ class Preview {
     this.raf = requestAnimationFrame(frame);
   }
 
-  /** A little hop and wave, to show a change landed. */
+  /** A reach of the hand, to show a change landed. */
   cheer() {
-    this.hopT = 0;
     this.person.reach();
   }
 
@@ -97,20 +95,13 @@ class Preview {
   }
 
   private tick(dt: number, t: number) {
-    // Left alone, the character sways from side to side so you see the hair from every angle.
+    // Left alone, the operator turns from side to side so you see the head plate from every angle.
     if (!this.dragging && performance.now() - this.lastDrag > 1500) {
       const want = Math.sin(t * 0.6) * 1.1;
       this.yaw += (want - this.yaw) * Math.min(1, dt * 1.5);
     }
     this.person.root.rotation.y = this.yaw;
-    let y = 0;
-    if (this.hopT >= 0) {
-      this.hopT += dt * 3.2;
-      y = Math.sin(Math.min(1, this.hopT) * Math.PI) * 0.18;
-      if (this.hopT >= 1) this.hopT = -1;
-    }
-    this.person.root.position.y = y;
-    this.person.update(dt, t, false, y > 0.01);
+    this.person.update(dt, t, false, false);
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -126,12 +117,12 @@ class Preview {
 }
 
 /**
- * Your character, from Settings or the People panel: your name, skin tone, hair and shirt, with a
- * live preview. Nobody has to see it to come in: a new browser gets a look dealt at random (main.ts).
+ * Your operator, from Settings or the People panel: your name, the shell's tone, the head plate and
+ * its tone, and the yoke's color (the one place your color shows), with a live preview. Nobody has to see it to come in: a new browser gets a look dealt at random (main.ts).
  */
 export function openCharacter(onSave: (p: Profile) => void) {
   const pick: Profile = { ...store.profile, look: { ...store.profile.look } };
-  const canvas = h('canvas', { 'aria-label': 'Your character, drag to spin' }) as HTMLCanvasElement;
+  const canvas = h('canvas', { 'aria-label': 'Your operator, drag to turn' }) as HTMLCanvasElement;
   const preview = new Preview(canvas, pick);
 
   // Leave the name blank (or skip this) and you go by the made-up one in the box; deals another.
@@ -153,10 +144,10 @@ export function openCharacter(onSave: (p: Profile) => void) {
     input.title = 'Your account name';
   }
 
-  const skinRow = h('div.swatches', { role: 'radiogroup', 'aria-label': 'Skin tone' });
-  const styleRow = h('div.seg', { role: 'radiogroup', 'aria-label': 'Hair style' });
-  const hairRow = h('div.swatches', { role: 'radiogroup', 'aria-label': 'Hair color' });
-  const shirtRow = h('div.swatches', { role: 'radiogroup', 'aria-label': 'Shirt color' });
+  const skinRow = h('div.swatches', { role: 'radiogroup', 'aria-label': 'Shell tone' });
+  const styleRow = h('div.seg', { role: 'radiogroup', 'aria-label': 'Head plate' });
+  const hairRow = h('div.swatches', { role: 'radiogroup', 'aria-label': 'Plate tone' });
+  const shirtRow = h('div.swatches', { role: 'radiogroup', 'aria-label': 'Yoke color' });
 
   const swatch = (color: string, label: string, on: boolean, choose: () => void) =>
     h('button.swatch', { type: 'button', role: 'radio', 'aria-checked': String(on), style: `background:${color}`, class: on ? 'sel' : '', 'aria-label': label, title: label, onclick: choose });
@@ -172,43 +163,43 @@ export function openCharacter(onSave: (p: Profile) => void) {
 
   const paint = () => {
     const { skin, hair, style } = pick.look;
-    skinRow.replaceChildren(...SKIN_TONES.map((c, i) => swatch(c, `Skin tone ${i + 1} of ${SKIN_TONES.length}`, i === skin, () => change({ skin: i }))));
+    skinRow.replaceChildren(...SKIN_TONES.map((c, i) => swatch(c, `Shell tone ${i + 1} of ${SKIN_TONES.length}`, i === skin, () => change({ skin: i }))));
     styleRow.replaceChildren(
       ...HAIR_STYLES.map((name, i) =>
         h('button.btn', { type: 'button', role: 'radio', 'aria-checked': String(i === style), class: i === style ? 'on' : '', onclick: () => change({ style: i }) }, name),
       ),
     );
     hairRow.replaceChildren(...HAIR_COLORS.map((c, i) => swatch(c, HAIR_COLOR_NAMES[i], i === hair, () => change({ hair: i }))));
-    shirtRow.replaceChildren(...AVATAR_COLORS.map((c) => swatch(c, `Shirt ${c}`, c === pick.color, () => change({}, c))));
+    shirtRow.replaceChildren(...AVATAR_COLORS.map((c) => swatch(c, `Yoke ${c}`, c === pick.color, () => change({}, c))));
   };
   paint();
 
-  const surprise = h('button.btn', { type: 'button', title: 'Random look' }, 'Surprise me');
+  const surprise = h('button.btn', { type: 'button', title: 'Random look' }, 'Random look');
   surprise.addEventListener('click', () => change(randomLook(), AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)]));
   const save = h('button.btn.primary', { type: 'submit' }, 'Save');
   const close = h('button.btn.close', { type: 'button', 'aria-label': 'Close', title: 'Close (Esc)' }, icon('close', 16));
 
   const form = h(
     'form.modal.charsel',
-    { role: 'dialog', 'aria-label': 'Pick your character' },
-    h('header', {}, h('h2', {}, 'Your character'), close),
+    { role: 'dialog', 'aria-label': 'Your operator' },
+    h('header', {}, h('h2', {}, 'Your operator'), close),
     h(
       'div.body',
       {},
-      h('div.charsel-stage', {}, canvas, h('span.tip', {}, 'Drag to spin')),
+      h('div.charsel-stage', {}, canvas, h('span.tip', {}, 'Drag to turn')),
       h(
         'div.charsel-opts',
         {},
         h('label', {}, 'Your name'),
         account ? input : h('div.webhook', {}, input, reroll),
         account ? h('p.setting-note', {}, `Signed in as ${account.name}, so that's your name here.`) : null,
-        h('label', {}, 'Skin tone'),
+        h('label', {}, 'Shell'),
         skinRow,
-        h('label', {}, 'Hair'),
+        h('label', {}, 'Head plate'),
         styleRow,
-        h('label', {}, 'Hair color'),
+        h('label', {}, 'Plate tone'),
         hairRow,
-        h('label', {}, 'Shirt'),
+        h('label', {}, 'Yoke'),
         shirtRow,
       ),
     ),
