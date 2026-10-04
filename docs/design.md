@@ -12,7 +12,7 @@ The deck is calm by default. Floors, consoles and units are slate and steel, and
 
 ![The whole deck from the Overview: pods round the mission table, two units on the ready line with orange light over them](img/deck-overview.png)
 
-The Overview (G) is the demo shot: the whole deck from above with no perspective. Units that need you stand on their pod's ready line with a shaft of orange light over them; a stuck unit has a red triangle and a hatched ring; units at work have no glyph at all. Callouts that would cover each other stack clear, the units that need someone placed first.
+The Overview (G) is the demo shot: the whole deck from above with no perspective. Units that need you stand on their pod's ready line with a soft column of orange light over them and a wave spreading across the floor from them; a stuck unit has a red triangle and a hatched ring; units at work wear ship-cyan (band, visor and a halo on the floor) and have no glyph. From the Overview, the callouts of units that need you or are stuck are drawn half again as big. Callouts that would cover each other stack clear, the units that need someone placed first, with a hairline back to the unit when one is lifted, and a callout that would run off the side of the view or under the Units rail slides back in. Arrows at the edge of the screen point to units out of view that need you, are stuck or are to review, in that order; a crowded edge drops the ones to review first.
 
 ![Close on pod A in Walk: two units that need you, each with its callout, ring and band](img/units-a.png)
 
@@ -26,7 +26,7 @@ Mission control (I) lists units by the same ranking, each row with its call sign
 
 The 2D view at `/lite` draws the deck as a plan from the same layout file as the 3D deck, beside the ranked list. Below 720px wide the plan folds away and the list is the page.
 
-Settings > Bridge > Bridge lights sets Night (low light) or Day (high light) for the 3D deck, or Auto to follow the system. The same setting paints the HUD (the dark set by night, the print set by day), the 2D view, whose contrast button flips it, and the sign-in pages, so every surface of the office agrees. Brightness steps the 3D deck's lights two steps either way. See [the deck](deck.md#light-and-materials).
+Settings > Bridge > Bridge lights sets Night (low light, for watching in a dark room) or Day (high light, a cool mid-grey ship rather than a white room) for the 3D deck, or Auto to follow the system. The same setting paints the HUD (the dark set by night, the print set by day), the 2D view, whose contrast button flips it, and the sign-in pages, so every surface of the office agrees. Brightness steps the 3D deck's lights two steps either way. See [the deck](deck.md#light-and-materials).
 
 ![Toasts: a violet proof toast with its transaction hash and a settled tick, then stuck, review and plain ones](img/toasts.png)
 
@@ -34,7 +34,7 @@ Toasts stack top right under the bar, all one card: a glyph column and a stripe 
 
 ## Motion
 
-Motion marks a change of state, and hue and the attention cadences belong to state alone. Nothing bobs, idles or celebrates for decoration; the bridge's ambient life is achromatic or ship-cyan, slow, keeps off to the side of what you read, gives way when a unit needs you or is stuck, and stops under reduced motion or Ship motion at Off (DESIGN.md, rule 1). Every motion has a reduced-motion form. The UI uses one curve, `--ease` (`cubic-bezier(.2, 0, 0, 1)`), and three lengths in `tokens.css`: `--t-ui` 120 ms, `--t-pulse` 1.2 s and `--t-flight` 700 ms.
+Motion marks a change of state, and hue and the attention cadences belong to state alone. The bridge's ambient life (the units' work, the stations, the holo, space outside) is achromatic or ship-cyan, slow, keeps off to the side of what you read, gives way when a unit needs you or is stuck, and stops under reduced motion or Ship motion at Off (DESIGN.md, rule 1). Every motion has a reduced-motion form, and Settings > Bridge > Ship motion (Full, Calm, Off) is the in-app switch: Calm halves space and drops its streaks, flybys and meteors, Off stills everything as the system's reduce-motion setting does. Nothing in space plays while the tab is hidden, so coming back is never met by a flourish out of nowhere. The UI uses one curve, `--ease` (`cubic-bezier(.2, 0, 0, 1)`), and three lengths in `tokens.css`: `--t-ui` 120 ms, `--t-pulse` 1.2 s and `--t-flight` 700 ms.
 
 | Moment | What moves | How long | Under reduced motion |
 | --- | --- | --- | --- |
@@ -44,23 +44,26 @@ Motion marks a change of state, and hue and the attention cadences belong to sta
 | A unit is stuck | its band blinks, its hatch fades in | 0.5 Hz, 200 ms | a steady band |
 | A unit works | its visor brightens as its terminal prints | follows the output | the same: it is a reading, not a decoration |
 | A unit is deployed | a light runs from the mission table out to its console | 400 ms | nothing runs; the unit appears |
-| A pull request merges (the merge beat) | a violet pulse from the unit's console to the table, whose rim lights | 300 ms, rim 800 ms | nothing runs |
+| A pull request merges (the merge beat) | a violet pulse from the unit's console to the table, whose rim lights; then a ring of violet light sweeps out across the floor, the Pull requests board flashes green, a ring rises off the unit's console and every lit line on the bridge swells | 300 ms, rim 800 ms, the sweep 1.2 s | the board and the lines hold a colour for 1.2 s |
 | A bounty is released on devnet | the pulse runs on to the Proof corner and up the rail, parks as the new lit segment, the vault lid lifts, then the proof toast | 600 ms, lid 2.4 s | the segment and lid change at once, then the toast |
 | A unit gets an ERC-8004 record | the plinth glows violet as its step lights | 1.2 s | the step lights |
 | You go to a unit (N, a toast, search) | in Walk the view flies there in an arc; in the Overview it pans and zooms | 700 ms; 300 ms | a cut |
 | The Overview turns (Q / E) | a quarter turn | 280 ms | a cut |
-| The bridge, always | the holo course plot turns over the mission table, in ship-cyan, dashes run along its course to the ship, and its heading band turns the other way; the ticker over the strip runs the deck's log and its clock ticks | half a turn a minute; a dash's run 5 s; the band a turn in 150 s; the log its width in 70 s; the clock each second | still (the clock still tells the time) |
-| A unit works, at its station | its hands work the console while its terminal prints, its band leans toward ship-cyan as it gets busier; its station's bars scroll and grow with the output, a scan line passes, three blinkers twinkle | follows the output; the scan every 6 s; blinkers every 4.3, 6.1 and 8.9 s | the hands rest; the bars hold still at their height |
+| The bridge, always | the holo course plot turns over the mission table, in ship-cyan, with a small star map turning over it in a cone of scanlined light, dashes run along its course to the ship, and its heading band turns the other way; the ticker over the strip runs the deck's log and its clock ticks | half a turn a minute; a dash's run 5 s; the band a turn in 150 s; the log its width in 70 s; the clock each second | still (the clock still tells the time) |
+| A unit works, at its station | its hands stay at the console and work it harder while its terminal prints, its head bobs a little, its ship-cyan halo breathes faster as it gets busier, motes of cyan rise off its screen; its station's bars scroll and grow with the output, a scan line passes, three blinkers twinkle | follows the output; the scan every 6 s; blinkers every 4.3, 6.1 and 8.9 s | the hands rest; the bars hold still at their height |
 | A busy station | a data pulse in a low ship-cyan arc from its hood to the holo table | 1.6 s, every 1.8 to 6 s by how busy | none |
+| A unit needs you | a soft column of orange light over it with scanlines climbing it, a wave spreading on the floor; a third as strong with the camera close | scanlines 0.9 Hz, a wave every 1.6 s | a still column and one still ring |
 | A unit starts needing you or gets stuck | the bridge's ambient life dims to 40%; that pod's stations stay hushed while it lasts; a quarter quieter everywhere while anyone waits on you | 3 s, then for as long as it lasts | (already still) |
 | Space, always | three layers of stars stream past the glass, the sky turns, the drive glow breathes | the ship's speed (0.4x to 1.6x by merges in the last hour, 0.15x holding station), the sky 0.6 degrees a minute, the glow every 8 s | still |
-| Now and then | a planet or moon across a side port, an asteroid field tumbling past, or a comet high across the forward glass; never during a beat, waiting while a unit has just started needing you | every 6 to 10 minutes; 90 to 180 s, 40 s, 25 s | none (Calm has none either) |
-| A pull request merges | the surge: the stars speed up to 12x and streak, the glass glints ship-cyan | 1.4 s, at most one in 20 s | nothing |
-| A milestone is done (a waypoint) | the jump: the stars stretch toward the bow, a white-cyan flash fills the glass, and the ship comes out in new space | 2.4 s, flash 120 ms | the new space crossfades in over 400 ms |
+| Now and then | a planet or moon (clouds, a lit limb, a ring round a gas giant) across a side port, an asteroid field tumbling past, or a comet across the forward glass; never during a beat, waiting while a unit has just started needing you | every 6 to 10 minutes; 90 to 180 s, 40 s, 25 s | none (Calm has none either) |
+| Often | a meteor streaks across the sky | every 20 to 40 s, 0.7 s each | none (Calm has none either) |
+| A pull request merges | the surge: the stars speed up to 12x and streak (half that while you walk), the glass glints ship-cyan | 1.4 s, at most one in 20 s | nothing; Calm keeps only the glint |
+| A milestone is done (a waypoint) | the jump: the stars stretch toward the bow, the view widens 4 degrees, the room's light leans cool, a white-cyan glint comes up over the glass (a third by Night, half by Day, added to the sky so its stars still show), the ship comes out in new space and the light leans warm before settling | 2.4 s; the glint up in 90 ms and off over 210 ms | the new space crossfades in over 400 ms, Calm too |
+| The hull, from outside | red and green running lights breathe, white strobes double-flash at the bow and the nacelles | 2.4 s; every 1.8 s | steady |
 
 ![The merge beat on its way: the violet pulse at the foot of the Proof corner's rail](img/beat-climb.png)
 
-The merge beat is the one celebration, and the moment to record for a video: the pulse leaves the table, crosses to the west wall and climbs the rail.
+The merge beat is the one celebration, and the moment to record for a video: the bridge marks the merge across the deck, then the pulse leaves the table, crosses to the west wall and climbs the rail.
 
 ![The merge beat landed: a new lit segment on the rail, the vault lid up and the proof toast](img/beat-landed.png)
 
