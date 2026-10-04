@@ -15,7 +15,7 @@
 import { clamp, lerp, expoOut, expoIn, cubicIn, cubicBezier, curves } from '../engine/ease.js';
 import { rand01 } from '../engine/prng.js';
 import { scramble, fixed2 } from '../engine/kinetic.js';
-import { bg, gridLines, text, tag } from './common.js';
+import { bg, gridLines, text, tag, baseOf, display, mix } from './common.js';
 import { grid as swissGrid } from './act1.js';
 
 // Real, checkable values (see storyboard truth rules).
@@ -30,32 +30,6 @@ const br = { br: true };
 const FPS = 60;
 
 // ----------------------------------------------------------- helpers ----
-
-// Archivo's baseline sits this far below the top of a line box, in em, for a
-// given line height (ascender 0.878, descender 0.21, half-leading split).
-const baseOf = (lh) => (lh - 1.088) / 2 + 0.878;
-
-// Right edge display type may reach: the grid in 16:9, and in 9:16 never past
-// the feed's right-hand action rail.
-const rightEdge = (design) => (design.vertical
-  ? design.w * (1 - design.safe.title.right)
-  : design.grid.x + design.grid.w);
-
-// Display type set by its first baseline.
-function display(S, { spans, x, base, size, lineHeight = 0.92, ...rest }) {
-  const y = base - size * baseOf(lineHeight);
-  S.type.text({ spans, x, y, size, lineHeight, fit: rightEdge(S.design) - x, ...rest });
-  return y;
-}
-
-function hex(c) {
-  const n = parseInt(c.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-}
-function mix(a, b, k) {
-  const A = hex(a), B = hex(b);
-  return `rgb(${A.map((v, i) => Math.round(lerp(v, B[i], clamp(k)))).join(',')})`;
-}
 
 const since = (t, t0) => t - t0;
 const frames = (t, t0) => (t - t0) * FPS;

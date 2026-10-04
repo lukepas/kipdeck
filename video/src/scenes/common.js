@@ -1,8 +1,35 @@
 // Shared drawing helpers for scenes. A scene gets S = { t, frame, ctx, design,
 // tl, type, svg, fx, primary } and draws the whole frame from S.t alone.
 
-import { clamp, expoOut, curves } from '../engine/ease.js';
+import { clamp, lerp, expoOut, curves } from '../engine/ease.js';
 import { rand01 } from '../engine/prng.js';
+
+// Archivo's baseline sits this far below the top of a line box, in em, for a
+// given line height (ascender 0.878, descender 0.21, half-leading split).
+export const baseOf = (lh) => (lh - 1.088) / 2 + 0.878;
+
+// Right edge display type may reach: the grid in 16:9, and in 9:16 never past
+// the feed's right-hand action rail.
+export const rightEdge = (design) => (design.vertical
+  ? design.w * (1 - design.safe.title.right)
+  : design.grid.x + design.grid.w);
+
+// Display type set by its first baseline.
+export function display(S, { spans, x, base, size, lineHeight = 0.92, ...rest }) {
+  const y = base - size * baseOf(lineHeight);
+  S.type.text({ spans, x, y, size, lineHeight, fit: rightEdge(S.design) - x, ...rest });
+  return y;
+}
+
+function hex(c) {
+  const n = parseInt(c.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+// Blend two #rrggbb colours, k = 0..1.
+export function mix(a, b, k) {
+  const A = hex(a), B = hex(b);
+  return `rgb(${A.map((v, i) => Math.round(lerp(v, B[i], clamp(k)))).join(',')})`;
+}
 
 export function bg(S, color) {
   const { ctx, design } = S;
