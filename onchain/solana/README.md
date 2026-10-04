@@ -15,7 +15,7 @@ Testnets only. The SDK has no mainnet cluster option, checks the RPC's genesis h
 | `programs/bounty-escrow/tests` | The processor end to end on a host harness that stands in for the System, Token and Associated Token programs |
 | `fixtures/transitions.json` | The table of cases both the Rust and the TypeScript state machines must agree on |
 | `fixtures/vectors.json` | One of each account, instruction and event as bytes, plus PDAs for a fixed program id: both sides are tested against it |
-| `sdk/src` | TypeScript SDK with no runtime dependencies: `SolanaEscrow`, `MockEscrow` (same rules, in memory), builders, `decodeEvents`, the `Attester` checks, the Action (Blink) payloads, the `ao-bounty` CLI |
+| `sdk/src` | TypeScript SDK with no runtime dependencies: `SolanaEscrow`, `MockEscrow` (same rules, in memory), builders, `decodeEvents`, the `Attester` checks, the Action (Blink) payloads, durable-nonce releases and `cosignRelease`, the `ao-bounty` CLI |
 | `sdk/tests` | SDK tests, including litesvm runs of the built `.so` |
 | `scripts/e2e.sh` | Deploy, make the test mint and run one bounty end to end on localnet or devnet, recording the signatures |
 | `deployments/` | Program ids and recorded end-to-end runs per cluster |
@@ -110,7 +110,8 @@ The deployer keeps the upgrade authority, so devnet redeploys stay possible. The
 
 - `cargo test`, the SDK tests and the litesvm runs of the built `.so` pass.
 - `scripts/e2e.sh localnet` ran on `solana-test-validator` (Agave 4.3) three times, the last on 2026-10-03 at the current commit: see `deployments/localnet.json` for the signatures (those ledgers were local and are gone). The office's guarded RPC fetch read the released bounty back from that validator (loopback allowed explicitly), and refused it with the default guard.
-- Devnet: not deployed yet. The devnet faucet refused CLI airdrops for the day (rate limit), and faucet.solana.com needs a browser sign-in. Fund the deployer `TyQidKVXFC52NRtsais3yaFbBkJksBeU5Y68TSwb1zE` with 2 devnet SOL, then run `scripts/e2e.sh devnet`. The program id will be `JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`.
+- Devnet: deployed as `JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6` by `scripts/e2e.sh devnet`, and upgraded in place on 2026-10-03 (slot 507133664) to put the attester and approver in a bounty's seeds. The upgrade authority is the deployer `TyQidKVXFC52NRtsais3yaFbBkJksBeU5Y68TSwb1zE`, a single key, so the deployment is not custody-free.
+- Five demo bounties ran open, fund, claim and release there, 77 test USDC in all, none with a GitHub merge behind it: the first before the upgrade, then one right after it, one through the approver-wallet path (`prepareRelease`, then the approver's signature), one after the review fixes, and on 2026-10-04 one claimed by the [GitHub Action](../action/README.md#status) and released by `ao-bounty cosign` on the approver's durable nonce. Every signature is in `deployments/devnet.json`.
 - The program is not audited.
 
 ## The CLI
@@ -124,6 +125,7 @@ ao-bounty release  --repo --issue --pr <n> --approver-key <file> [--merge-sha <s
 ao-bounty refund   --repo --issue [--funder <a>]
 ao-bounty cancel   --repo --issue [--approver-key <file>]
 ao-bounty address  --repo --issue --attester <a> --approver <a>
+ao-bounty cosign   --tx <base64|@file> --approver-key <file> [--repo <owner/name>] [--yes true]
 # --attester/--approver on any command name the keys a bounty was opened with, when another
 # bounty on the issue has the same nonce under other keys. --merged-by-hash is mergedByHash(id, secret).
 
@@ -143,5 +145,7 @@ const attester = new Attester(escrow, readKeypair(`${keys}/solana-attester.json`
 await attester.claim(ref, pullFacts, operatorWallet);                       // refuses forks
 await attester.release(ref, pullFacts, readKeypair(`${keys}/solana-approver.json`)); // refuses bot merges
 ```
+
+A release can also wait on a durable nonce: `prepareRelease(ref, params, attester, approver, { nonceAccount })` builds it on a nonce account the approver is the authority of, so it stays valid until that nonce moves instead of for the minute a blockhash lasts. `inspectPreparedRelease` reads one back and refuses anything but the exact Release the bounty on chain calls for, signed by its attester; `cosignRelease` (and `ao-bounty cosign`) then signs it as the approver and sends it. The GitHub Action in [onchain/action](../action/README.md) prepares releases this way.
 
 `MockEscrow` takes the same calls in memory for tests. `fundActionGet` and `buildFundTransaction` build the "Fund this issue" Action payloads; the office serves them under `/api/actions/`.

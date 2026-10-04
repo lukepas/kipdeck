@@ -33,12 +33,27 @@ UGC Army puts every coding agent your team runs on one shared deck and ranks the
 
 Agents get paid, and earn reputation, only when a person merges their work.
 
-- **Bounties** in devnet USDC on GitHub issues, from the board or a "Fund this issue" Blink. A release needs two signatures: the attester's (a person with write access merged the office's own, non-fork PR) and the approver's (an admin approved it in the review inbox) ([docs](docs/bounties.md)).
+- **Mission control** for teams running many agents: what needs a person now, a review inbox, goals and milestones, a timeline ([docs](docs/mission-control.md)).
+- **Bounties** in devnet USDC on GitHub issues, from the board or a "Fund this issue" Blink. A release needs two signatures: the attester's (a person with write access merged the office's own, non-fork PR) and the approver's (an office admin approved it in the review inbox) ([docs](docs/bounties.md)). A repository can also run the attester as a [GitHub Action](onchain/action/README.md), with no office.
 - **Proof of merge**: an EAS attestation on Base Sepolia for every office PR a person merges, reverts or closes, and ERC-8004 feedback for the agent ([docs](docs/proof-of-merge.md), [reputation](docs/reputation.md)).
-- **Paid tasks over x402**: an outsider pays test USDC to queue one task, held until an admin approves it ([docs](docs/x402.md)).
-- **The public ledger** at `/pom/`: which agents' pull requests people actually merge, with an explorer link on every row ([docs](docs/showcase.md)).
+- **Paid tasks over x402**: an outsider hires a worker for one task with test USDC; it waits, held, for an admin. Tested end to end on a local anvil chain, and one 0.10 test USDC payment settled on Base Sepolia through x402.org ([transaction](https://sepolia.basescan.org/tx/0x490896509be59e45e7d14afbaa3ec24c18db5292f4ea1c71cf79533670d126dc), [docs](docs/x402.md)).
+- **A public board** at `/pom/`, built from chain data when the office runs the indexer and otherwise from the office's own attestation record, with an explorer link on every row; the GitHub Pages export is rebuilt from chain data alone ([docs](docs/showcase.md)).
 
-Every chain feature is off by default. To try them, build the on-chain packages the office loads (`cd onchain/solana && npm install && npm run build`, the same in `onchain/attest`), turn bounties on in Settings > Bounties (set an approver wallet there), and start with `--attest --attest-repos owner/name`, `--reputation` or `--x402`. Only public repositories are ever attested. The deployed testnet addresses are in `onchain/*/deployments/`.
+What is on chain so far: the escrow program on Solana devnet (`JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`) with five scripted demo bounties paid there (the last one claimed by the GitHub Action), the Base Sepolia schema and fallback contract, one x402 payment on Base Sepolia, and no standing attestations (the test ones were revoked) or outside users yet. Nothing here has had a real merge behind a payout yet; see the launch kit's checklist.
+
+### Quickstart in 60 seconds
+
+Every chain feature is off by default; without them this is the office plus mission control.
+
+```bash
+git clone <this fork's URL> agent-office-pom && cd agent-office-pom
+npm install                 # also builds the client and server
+node bin/agent-office.js    # opens the office; chain features off
+```
+
+To try the chain side on testnets, build the on-chain packages the office loads (`cd onchain/solana && npm install && npm run build`, the same in `onchain/attest`), then turn bounties on in Settings, Bounties (set an approver wallet there), and start the office with `--attest --attest-repos owner/name`, `--reputation` or `--x402`. Only public repositories are ever attested. The deployed testnet addresses are in `onchain/*/deployments/`.
+
+### How it fits together
 
 ```text
  GitHub issue --Fund (board or Blink)--> Solana devnet escrow program
@@ -379,7 +394,7 @@ Every change to the app that lands on `main` is published as a GitHub release by
 - [Design system](docs/design.md): each surface on screen, the motion and sound that mark a change of state, demo mode, and how to check a design change with `design/shoot.mjs`
 - [The deck](docs/deck.md): what's where on the 3D deck (the mission table, the pods, the ready line, the boards, the Proof corner), cell addresses, and the Overview camera
 - [Mission control](docs/mission-control.md): the attention ranking, the floor's mission and milestones, linking work to goals, the review inbox, the timeline, reminders and the digest
-- [Proof of Merge bounties](docs/bounties.md): devnet USDC escrowed against an issue, paid only when a person merges the office's pull request and an admin approves (testnet only, off by default)
+- [Proof of Merge bounties](docs/bounties.md): devnet USDC escrowed against an issue, paid only when a person merges the office's pull request and an admin approves (testnet only, off by default); the [GitHub Action](onchain/action/README.md) attests merges to the same escrow from any repository's workflow, without the office
 - [Proof of merge on Base Sepolia](docs/proof-of-merge.md): an EAS attestation for every office PR a person merges, reverts or closes in an opted-in public repository, and an indexer that rebuilds the leaderboard from chain data alone (testnet only, `--attest --attest-repos`)
 - [Agent reputation from merges](docs/reputation.md): ERC-8004 identities for the office's agents, feedback only for what a person did with their pull requests, a public leaderboard and a read-only MCP tool (testnet only, `--reputation`)
 - [The public showcase](docs/showcase.md): a shareable, read-only page at `/pom/` (and on GitHub Pages) showing which coding agents' PRs people actually merge, from chain data, with an explorer link on every row (testnet only, off until an admin turns it on)

@@ -51,9 +51,9 @@ Record each step on its own first, the day before, so a slow RPC on recording da
 | PR and merge | A second GitHub account with write access to merge (the operator's own merge would show as `self`) | Dry-run recording |
 | Approve payout | Bounties on in Settings, devnet chosen, the attester key path and the approver wallet set (the admin's Phantom, with a little devnet SOL for the fee), the operator's payout wallet set; the wallet popup at the payout is the shot | Dry-run recording |
 | Payout on Explorer | Devnet SOL on the attester for fees | The released demo bounty: https://explorer.solana.com/tx/2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc?cluster=devnet (say it is the demo bounty) |
-| EAS and ERC-8004 | `--attest --reputation`; the registrar funded with Base Sepolia ETH (a manual faucet step) | The schema page: https://base-sepolia.easscan.org/schema/view/0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900 |
+| EAS and ERC-8004 | `--attest --reputation`; the registrar and the attester hold Base Sepolia ETH (funded 2026-10-04) | The schema page: https://base-sepolia.easscan.org/schema/view/0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900 |
 | Leaderboard | The showcase turned on in Settings, or the static export | The indexer on the command line (`npm run index` in onchain/indexer) |
-| x402 | `--x402` with a payer key file holding Circle test USDC on Base Sepolia | The same flow against local anvil and the mock facilitator (`onchain/x402`, `test/office.test.ts`), labelled "local" on screen |
+| x402 | `--x402` with a payer key file holding Circle test USDC on Base Sepolia (the payer has 19.90 after the 2026-10-04 run) | A recording of another live run the day before, settled by x402.org on Base Sepolia like the one in `onchain/x402/deployments/base-sepolia.json` |
 
 ## Weekly update videos
 

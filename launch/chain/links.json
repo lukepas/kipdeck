@@ -92,6 +92,14 @@
     {
       "url": "https://sepolia.basescan.org/address/0x8004B663056A597Dffe9eCcC1965A193B7388713",
       "checked": "basescan answers 403 to scripts; eth_getCode on sepolia.base.org: proxy code present, 2026-10-03"
+    },
+    {
+      "url": "https://sepolia.basescan.org/tx/0x490896509be59e45e7d14afbaa3ec24c18db5292f4ea1c71cf79533670d126dc",
+      "checked": "basescan answers 403 to scripts; eth_getTransactionReceipt on sepolia.base.org: status 1, block 47664887, one USDC Transfer of 100000 from the x402 payer to the office, 2026-10-04"
+    },
+    {
+      "url": "https://explorer.solana.com/tx/4PYnNQZAi23BGUQ84EqDJfgSZABjqqKxPeyan6frLG25H6jWY8F6qrLGyRituXNXeHujZd29uWPXhoDN7MSdYsUe?cluster=devnet",
+      "checked": "explorer answers 429 to scripts; getTransaction on api.devnet.solana.com: finalized, no error, slot 507291328, 12 test tokens from the bounty vault to the operator, 2026-10-04"
     }
   ]
 }

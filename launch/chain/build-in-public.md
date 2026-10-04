@@ -20,7 +20,7 @@ Ten days, 2026-10-02 to 2026-10-11, one X thread and one Farcaster cast a day, t
 | 3 | 2026-10-04 | The program on devnet, with the Explorer link; weekly update 1 | ready |
 | 4 | 2026-10-05 | The first bounty funded from the board | needs a bounty funded from the board on devnet |
 | 5 | 2026-10-06 | The Fund this issue Blink; five issues to point agents at | needs the office on HTTPS and five funded issues |
-| 6 | 2026-10-07 | Hire a worker with one HTTP request (x402) | needs the payer funded with test USDC on Base Sepolia |
+| 6 | 2026-10-07 | Hire a worker with one HTTP request (x402) | needs the screenshot; one payment settled live on Base Sepolia on 2026-10-04 |
 | 7 | 2026-10-08 | The first leaderboard numbers, real n; weekly update 2 | needs counts refreshed on the day |
 | 8 | 2026-10-09 | Merge to payout on a public repo, 30 seconds | needs the full run on a public repo |
 | 9 | 2026-10-10 | Verify it yourself: rebuild the board from chain | ready |

@@ -2,7 +2,7 @@
 
 Submission drafts, the disclosure, video scripts, landing copy, ten days of build-in-public posts and the calendar for the chain side of this fork. Proof of Merge is a fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs); every kit credits it. Testnets only: Solana devnet and Base Sepolia.
 
-Last checked: 2026-10-03
+Last checked: 2026-10-04
 
 ## What is in here
 
@@ -24,7 +24,7 @@ Last checked: 2026-10-03
 
 ## What is live on testnets
 
-As of 2026-10-03, checked over RPC that day (the explorers block scripted requests). None of the demo bounties has a GitHub merge behind it, and the devnet upgrade authority is a single key (`TyQidKVXFC52NRtsais3yaFbBkJksBeU5Y68TSwb1zE`), so the deployment is not custody-free:
+As of 2026-10-04 (the program and the first bounties 2026-10-03), checked over RPC (the explorers block scripted requests). None of the demo bounties has a GitHub merge behind it, and the devnet upgrade authority is a single key (`TyQidKVXFC52NRtsais3yaFbBkJksBeU5Y68TSwb1zE`), so the deployment is not custody-free:
 
 | What | Network | Address or transaction |
 | --- | --- | --- |
@@ -33,9 +33,11 @@ As of 2026-10-03, checked over RPC that day (the explorers block scripted reques
 | The program upgraded in place: attester and approver in the bounty seeds, Cancel signed by the creator or the approver | Solana devnet | upgrade `5y64MPvVR8cKgtrwwatH3XRd4pPmtpbKgUZkRCd7NYGAphXN6Ynz8qYz4zzuMFwDhZtBeHAoysm9Tjhdr69BE8f8` (slot 507133664) |
 | Two more demo bounties on the upgraded program, one paid through the approver-wallet path | Solana devnet | releases `2BXByMAyR1QqzHE1A4brif8TFhmqyypaqVJKBs2totcoZGma6EHRCD9iXxZfpPrrtfhGV4jHNBe2zQedARM314Bu` and `2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r` |
 | A fourth demo bounty after the review fixes (2026-10-04), same program | Solana devnet | release `2sWD8aUJ6Wd5xEQcTxGK2tRarfr6TuzjYLgppmTrTtxBxwo6T3XP42EoYCypq9oXFQQ3Zj6TthXEMxoUNuVZCgNF` |
+| A fifth demo bounty (2026-10-04) claimed by the GitHub Action (`onchain/action`, bundled `dist/`) against a fake GitHub API on loopback, so no real merge, and released by `ao-bounty cosign` on the approver's durable nonce `FhtqxkPwxKVuoGgDViKyvDKVc1xXyb1dQNzq7f9d4Ybe`; the Base Sepolia attestation it wrote was revoked | Solana devnet | release `4PYnNQZAi23BGUQ84EqDJfgSZABjqqKxPeyan6frLG25H6jWY8F6qrLGyRituXNXeHujZd29uWPXhoDN7MSdYsUe` |
 | Proof-of-merge schema on EAS | Base Sepolia | `0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900`, registered in `0x57045f814359c8e0c0f6d4b5543198ed1609570c4875e0cd84bf3f13336a83a8` (status 1) |
 | MergeAttestor fallback contract | Base Sepolia | `0x278f441b635ebf4aca971184c0cab60b893f34fc` |
 | ERC-8004 registries we write to (not ours, version 2.0.0) | Base Sepolia | Identity `0x8004A818BFB912233c491871b3d84c89A494BD9e`, Reputation `0x8004B663056A597Dffe9eCcC1965A193B7388713` |
+| One x402 paid task (2026-10-04): 0.10 Circle test USDC from the payer `0x9C3259D51662a05E1E8dD0109cd2189345818F5D` to the office `0x2522fAd50CA1e545D8Bd8593763432bAB0dcDe9b`, settled by x402.org, the task held for an admin | Base Sepolia | `0x490896509be59e45e7d14afbaa3ec24c18db5292f4ea1c71cf79533670d126dc` (status 1), in `onchain/x402/deployments/base-sepolia.json` |
 
 Explorer links for each are in [colosseum-worlds-fair.md](colosseum-worlds-fair.md#links). The board itself is empty so far: no office PR has been merged and attested on Base Sepolia yet (see [data/counts.json](data/counts.json)).
 
@@ -43,14 +45,12 @@ Explorer links for each are in [colosseum-worlds-fair.md](colosseum-worlds-fair.
 
 These need a browser, a person or a decision, and no script does them. Until 2026-10-12 every hour goes to the first two, not to another chain: the Colosseum entry is Solana-led, and Base is where the reputation record lives.
 
-- **One real merge to payout on a public demo repository**: fund about five issues from the board, let two or three harnesses take them, have a second GitHub account with write access merge, approve from the admin's approver wallet, and let `--attest --attest-repos <demo repo> --reputation` write the EAS attestation and the ERC-8004 feedback. Then refresh `data/counts.json` and re-record the pitch's counts beat with the real numbers.
+- **One real merge to payout on a public demo repository**: fund about five issues from the board, let two or three harnesses take them, have a second GitHub account with write access merge, approve from the admin's approver wallet, and let `--attest --attest-repos <demo repo> --reputation` write the EAS attestation and the ERC-8004 feedback. Then refresh `data/counts.json` and re-record the pitch's counts beat with the real numbers. Add the [GitHub Action](../../onchain/action/README.md) workflow to the same repository so it runs once from a real workflow; so far it has only run against a fake GitHub API.
 - **Outside users**: invite three to five maintainers or agent operators to fund or claim an issue, so `merged_by_others` counts distinct maintainers who are not us.
 - **A reachable demo**: one always-on office over HTTPS for the demo repository, so the Blink works on `dial.to?cluster=devnet` for judges, and the Pages export run once real outcomes exist; pin the first real run's Explorer, easscan and PR links at the top of the README.
 - **The approver wallet**: in Settings, Bounties, set the admin's Phantom address as the approver wallet and send it a little devnet SOL (the approver `55vgpiASBFv3r31ePiPSEGzMomdiRBtjPM1ay7Bx5ypN` key file stays only for the scripted demos).
-- **One live x402 payment**: once the payer holds Circle test USDC, settle one 0.10 USDC Base Sepolia payment through x402.org and record its transaction; until then the forms say x402 was tested on a local chain.
 
-- Fund the Base Sepolia registrar `0x7c2C45a17A432CF890E514f1AaB67D941ec58314` with a little test ETH from a browser faucet, so the office can register its agents on ERC-8004. The attester `0x83dAa5252b68D98F25CbB089CCeE4edc7C083403` already holds some.
-- Get Circle test USDC for the x402 payer from https://faucet.circle.com (Base Sepolia), for day 6's post and the demo.
+- The Base Sepolia wallets hold test ETH: the registrar `0x7c2C45a17A432CF890E514f1AaB67D941ec58314` (no agent registered yet; the office registers an agent on ERC-8004 when its first PR is attested with `--reputation`) and the attester `0x83dAa5252b68D98F25CbB089CCeE4edc7C083403`. Top them up from a browser faucet if a run says they are short.
 - Devnet SOL from https://faucet.solana.com if `solana airdrop` is rate limited, for the funder wallet used on recording day.
 - Publish the fork and the showcase (GitHub Pages export), then fill in `{{FORK_URL}}`, `{{SHOWCASE_URL}}`, `{{DIFF_URL}}` and `{{HEAD_SHA}}`.
 - Ask the multi-track question in the Colosseum Discord and paste the answer into [judge-qa.md](judge-qa.md).
@@ -79,7 +79,6 @@ Times are shown in PT and in Vilnius. All-day entries are the same date in both.
 | 2026-10-02 | Ask in the Colosseum Discord whether one project can be judged in the Solana and Base tracks; paste the answer into judge-qa.md | all day | all day | [judge-qa.md](judge-qa.md) | our target [unverified] |
 | 2026-10-03 | Build in public, day 2: the escrow state machine and why two keys sign | all day | all day | [build-in-public.md](build-in-public.md) | our target |
 | 2026-10-04 | Build in public, day 3: the escrow program on devnet, with the Explorer link | all day | all day | [build-in-public.md](build-in-public.md) | our target |
-| 2026-10-04 | Fund the Base Sepolia registrar (browser faucet) and the x402 payer (Circle test USDC) | all day | all day | this page | our target |
 | 2026-10-04 | Weekly update video 1 | all day | all day | [video-scripts.md](video-scripts.md) | our target |
 | 2026-10-05 | Build in public, day 4: the first bounty funded from the board | all day | all day | [build-in-public.md](build-in-public.md) | our target |
 | 2026-10-06 | Build in public, day 5: the Fund this issue Blink, and five issues to point agents at | all day | all day | [build-in-public.md](build-in-public.md) | our target |

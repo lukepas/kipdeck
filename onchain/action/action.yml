@@ -1,0 +1,89 @@
+name: Proof of Merge bounty attester
+description: >-
+  When a pull request from this repository (never a fork) is merged by a person with write access,
+  claim the Solana devnet bounty of each issue it closes for the author's wallet, and optionally
+  release it or prepare the release for the approver, and attest the merge on Base Sepolia.
+  Testnets only.
+author: agent-office Proof of Merge fork
+branding:
+  icon: check-circle
+  color: green
+
+inputs:
+  github-token:
+    description: Token for the GitHub API (reads the pull request, the merger's permission and the wallets file; writes the comment).
+    default: ${{ github.token }}
+  approver:
+    description: The approver's Solana address (public). It is part of every bounty's address, so the action needs it even to find them.
+    required: true
+  attester-key:
+    description: The attester's Solana keypair, from an encrypted secret (the JSON array solana-keygen writes, or 64 bytes in base58). Only read once a merge has passed every check.
+    required: true
+  approver-key:
+    description: Optional. The approver's keypair, from an encrypted secret. With it the action releases the bounty in the same run; see the README for what that gives up.
+    required: false
+  approver-nonce-account:
+    description: Optional. A durable nonce account whose authority is the approver. Without approver-key, the action prepares a release on it that the approver co-signs later with ao-bounty cosign.
+    required: false
+  mode:
+    description: "auto (claim, then release with approver-key or prepare a release on approver-nonce-account), claim (claim only, plus a prepared release if a nonce account is set) or release (claim if needed, then release: approver-key required)."
+    default: auto
+  program-id:
+    description: The bounty escrow program. Defaults to the devnet deployment in onchain/solana/deployments/devnet.json.
+    required: false
+  cluster:
+    description: devnet, or localnet for tests against a local validator. There is no mainnet option.
+    default: devnet
+  rpc-url:
+    description: Solana RPC endpoint. Defaults to devnet's public one. Put a provider URL with an API key in a secret.
+    required: false
+  mint:
+    description: Optional. Only bounties in this mint count (the program takes devnet USDC, and the test mint in test builds).
+    required: false
+  wallets-file:
+    description: A JSON file in the repository mapping GitHub logins to Solana wallets, read at the pull request's base commit.
+    default: .github/bounty-wallets.json
+  wallet-from-body:
+    description: Whether a "Bounty-Wallet <address>" line (with a colon after Wallet) in the pull request body may name the wallet when the author isn't in the wallets file.
+    default: "true"
+  merged-by-secret:
+    description: Optional secret (16 bytes or more). Records who merged as HMAC-SHA256 of their GitHub id under it, on both chains. Without it the merger is left out.
+    required: false
+  pr-number:
+    description: For workflow_dispatch re-runs, the pull request to look at again.
+    required: false
+  comment:
+    description: Comment on the pull request with what was claimed, paid or prepared (needs pull-requests write).
+    default: "true"
+  base-attester-key:
+    description: Optional. An EVM key (hex) from an encrypted secret. With it the merge is also attested on Base Sepolia with the Proof of Merge EAS schema.
+    required: false
+  base-rpc-url:
+    description: Base Sepolia RPC endpoint.
+    default: https://sepolia.base.org
+  base-schema-uid:
+    description: The Proof of Merge schema UID. Defaults to the one in onchain/attest/deployments/base-sepolia.json.
+    required: false
+  harness:
+    description: What the attestation records as the agent harness (a short lower-case name).
+    default: unknown
+
+outputs:
+  status:
+    description: done, skipped (nothing to do) or refused (the merge failed a check).
+  pr:
+    description: The pull request number.
+  claimed:
+    description: How many bounties this run claimed.
+  released:
+    description: How many bounties this run released.
+  prepared-release:
+    description: The first release prepared for the approver (base64), if any.
+  attestation-uid:
+    description: The Base Sepolia attestation UID, if one was written.
+  result:
+    description: Everything above, per issue, as JSON.
+
+runs:
+  using: node24
+  main: dist/index.mjs

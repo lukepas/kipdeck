@@ -74,23 +74,6 @@ TRIGGER:PT9H
 END:VALARM
 END:VEVENT
 BEGIN:VEVENT
-UID:fund-testnet-wallets@agent-office-chain-launch
-DTSTAMP:20261003T000000Z
-DTSTART;VALUE=DATE:20261004
-DTEND;VALUE=DATE:20261005
-SUMMARY:Fund the Base Sepolia registrar (browser faucet) and the x402 payer
-  (Circle test USDC)
-DESCRIPTION:Kit: launch/chain/README.md
-CATEGORIES:TASK
-TRANSP:TRANSPARENT
-BEGIN:VALARM
-ACTION:DISPLAY
-DESCRIPTION:Fund the Base Sepolia registrar (browser faucet) and the x402 p
- ayer (Circle test USDC)
-TRIGGER:PT9H
-END:VALARM
-END:VEVENT
-BEGIN:VEVENT
 UID:weekly-video-1@agent-office-chain-launch
 DTSTAMP:20261003T000000Z
 DTSTART;VALUE=DATE:20261004

@@ -1,0 +1,30 @@
+{
+  "chainId": 84532,
+  "network": "eip155:84532",
+  "asset": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+  "assetName": "USDC (Circle test USDC, Base Sepolia)",
+  "facilitator": "https://x402.org/facilitator",
+  "facilitatorSigner": "0xd407e409E34E0b9afb99EcCeb609bDbcD5e7f1bf",
+  "payTo": "0x2522fAd50CA1e545D8Bd8593763432bAB0dcDe9b",
+  "liveRuns": [
+    {
+      "at": "2026-10-04T07:14:22Z",
+      "officeCommit": "6821add",
+      "transaction": "0x490896509be59e45e7d14afbaa3ec24c18db5292f4ea1c71cf79533670d126dc",
+      "explorer": "https://sepolia.basescan.org/tx/0x490896509be59e45e7d14afbaa3ec24c18db5292f4ea1c71cf79533670d126dc",
+      "block": 47664887,
+      "status": "success",
+      "gasUsed": 102832,
+      "scheme": "exact",
+      "x402Version": 2,
+      "payer": "0x9C3259D51662a05E1E8dD0109cd2189345818F5D",
+      "payTo": "0x2522fAd50CA1e545D8Bd8593763432bAB0dcDe9b",
+      "amount": "100000",
+      "amountUsdc": "0.10",
+      "transfer": "Transfer(0x9C3259D51662a05E1E8dD0109cd2189345818F5D -> 0x2522fAd50CA1e545D8Bd8593763432bAB0dcDe9b, 100000) on the USDC contract, sent by the facilitator signer through transferWithAuthorization",
+      "balancesAfter": { "payer": "19.90", "payTo": "0.10" },
+      "task": { "id": "f8cae9cea8f4", "kind": "prompt", "status": "awaiting-approval", "held": true },
+      "how": "The built office (node bin/agent-office.js) on 127.0.0.1 with --x402 and --x402-pay-to above, a throwaway password and HOME, and one floor on a local git repository with no remote. A stand-in gh on PATH named that repository local/x402-demo and refused everything else, so GitHub was never reached. Paid with onchain/x402's CLI (x402-office pay --repo local/x402-demo --prompt ... --max 0.10) from the payer key file; the office verified and settled through x402.org on the first try. The task showed held on the queue, awaiting approval in its status link, and as task-paid on the floor's timeline with the basescan link; the office was then stopped without approving it."
+    }
+  ]
+}
