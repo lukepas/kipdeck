@@ -1,14 +1,13 @@
 import * as THREE from 'three';
 import { BEANBAGS, DESKS, DESK_SIZE, FLOOR, KIOSK, SEATING_BY_ID, STATIONS, STATION_AGENT, deskSeat, type DeskDef, type StationKind } from '../../../shared/layout';
 import { deskPoint } from '../../../shared/nav';
-import { mesh, roundedBox, textPlane, toon } from '../toon';
+import { mesh, textPlane } from '../toon';
 import type { Collider, DeskView, Interactable } from '../types';
 import type { Fixture } from './fixture';
-import { PALETTE, box } from './materials';
-import { deskBooks, deskMug, plant } from './props';
+import { DECK, box, contactShadow, flat, matte, practical } from './materials';
 
-// Where people sit: the seats you use (see SEATING), and the desks, bean bags and board agents' kiosks
-// that workers sit (or stand) at, with the "+" over a free one.
+// Where people sit: the seats you use (see SEATING), and the consoles, the Standby bench and the board
+// agents' lecterns that units sit (or stand) at, with the plus over a free one.
 
 /** Makes `obj` somewhere to sit (see SEATING): walk up to it, or look at it, and press E. */
 export function seatable(obj: THREE.Object3D, seatId: string, radius: number, interactables: Interactable[]) {
@@ -18,118 +17,101 @@ export function seatable(obj: THREE.Object3D, seatId: string, radius: number, in
   obj.userData.interact = it;
 }
 
-export function chair(color: string): THREE.Group {
+/** A unit's stool at its console: a round seat on a post, on a disc. `color` is its seat's. */
+export function chair(color: string = DECK.consoleTop): THREE.Group {
   const g = new THREE.Group();
-  const mat = toon(color);
-  g.add(mesh(roundedBox(0.62, 0.1, 0.58, 0.12), mat, 0, 0.5, 0));
-  const back = mesh(roundedBox(0.62, 0.1, 0.6, 0.12), mat, 0, 0.86, 0.27);
-  back.rotation.x = Math.PI / 2 - 0.12;
-  g.add(back);
-  g.add(mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.42, 8), toon(PALETTE.deskLeg), 0, 0.26, 0));
-  for (let i = 0; i < 5; i++) {
-    const a = (i / 5) * Math.PI * 2;
-    const leg = mesh(box(0.05, 0.04, 0.32), toon(PALETTE.deskLeg), Math.sin(a) * 0.15, 0.05, Math.cos(a) * 0.15);
-    leg.rotation.y = a;
-    g.add(leg);
-  }
+  const steel = matte(DECK.steel, { metalness: 0.3, roughness: 0.6 });
+  g.add(mesh(new THREE.CylinderGeometry(0.24, 0.22, 0.07, 18), flat(color), 0, 0.47, 0));
+  g.add(mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.42, 8), steel, 0, 0.24, 0));
+  g.add(mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.03, 18), steel, 0, 0.015, 0, false));
   return g;
 }
 
 /**
- * The `index`th desk (of DESKS) at `def`: its top, legs and modesty panel (in `trimMat`), its knick-knack,
- * its chair, and the anchors its worker and laptop go in.
+ * The `index`th console (of DESKS) at `def`: a low pedestal under a flat top, and on the table's side
+ * a hood that stands no higher than the sightline with a lit hairline along its edge; a stool on the
+ * outer side; and the anchors its unit and its screen (the laptop) go in. `trimMat` paints the hood.
  */
 export function buildDesk(def: DeskDef, index: number, trimMat: THREE.Material): DeskView {
   const group = new THREE.Group();
   group.position.set(def.x, 0, def.z);
   group.rotation.y = def.rotY;
   const { width, depth, height } = DESK_SIZE;
-  group.add(mesh(roundedBox(width - 0.06, 0.08, depth - 0.04, 0.08), toon(PALETTE.desk), 0, height - 0.04, 0));
-  const legMat = toon('#8d99ae');
-  for (const sx of [-1, 1]) {
-    for (const sz of [-1, 1]) {
-      group.add(mesh(new THREE.CylinderGeometry(0.035, 0.035, height - 0.08, 8), legMat, sx * (width / 2 - 0.14), (height - 0.08) / 2, sz * (depth / 2 - 0.12)));
-    }
-  }
-  // Modesty panel facing away from the worker
-  group.add(mesh(box(width - 0.3, 0.32, 0.03), trimMat, 0, height - 0.26, -depth / 2 + 0.06));
-  // Little desk decorations, which desk gets which by its place in the room.
-  const deco = index % 3;
-  if (deco === 0) {
-    // In the chair's color.
-    const mug = deskMug(PALETTE.chairs[index % 6]);
-    mug.position.set(width / 2 - 0.25, height, -0.2);
-    group.add(mug);
-  } else if (deco === 1) {
-    const p = plant('succulent');
-    p.position.set(-width / 2 + 0.25, height, -0.25);
-    group.add(p);
-  } else {
-    // Where the old three boxes stood, the desks with books taking turns with the arrangements.
-    const books = deskBooks(Math.floor(index / 3));
-    books.position.set(width / 2 - 0.26, height, -0.3);
-    group.add(books);
-  }
+  const body = flat(DECK.console);
+  const top = flat(DECK.consoleTop);
+  // The pedestal, set back toward the table, and a plinth it stands on.
+  group.add(mesh(box(width - 0.36, height - 0.08, depth - 0.34), body, 0, (height - 0.08) / 2, -0.1));
+  group.add(mesh(box(width - 0.2, 0.05, depth - 0.2), matte(DECK.wallReveal), 0, 0.025, -0.06, false));
+  // The top, and its front edge rounded off where the unit's hands rest.
+  group.add(mesh(box(width, 0.06, depth), top, 0, height - 0.03, 0));
+  group.add(mesh(new THREE.CylinderGeometry(0.03, 0.03, width, 8).rotateZ(Math.PI / 2), top, 0, height - 0.03, depth / 2, false));
+  // The hood on the table's side, leaning back, its top under the sightline.
+  const hood = mesh(box(width - 0.08, 0.3, 0.05), trimMat, 0, height + 0.13, -depth / 2 + 0.04);
+  hood.rotation.x = -0.22;
+  group.add(hood);
+  // A hairline of light along the hood's top edge, facing the table: the console is live.
+  const edge = mesh(box(width - 0.16, 0.012, 0.012), practical(DECK.gridMajor), 0, height + 0.28, -depth / 2 + 0.005, false);
+  group.add(edge);
+  // Its number, stencilled small on the hood's face toward the table.
+  const tag = textPlane(def.label.replace(/^Console /, ''), { face: 'mono', size: 40, color: DECK.muted });
+  tag.scale.multiplyScalar(0.55);
+  tag.position.set(0, height + 0.13, -depth / 2 + 0.005);
+  tag.rotation.set(0.22, Math.PI, 0);
+  group.add(tag);
+  group.add(contactShadow(width + 0.5, depth + 1.4, 0, 0.35));
 
   const laptopAnchor = new THREE.Object3D();
   laptopAnchor.position.set(0, height, -0.06);
   laptopAnchor.scale.setScalar(1.3);
   group.add(laptopAnchor);
 
-  // On the chair, facing the desk.
+  // On the stool, facing the console and the table past it.
   const seatAnchor = new THREE.Object3D();
   seatAnchor.position.set(0, 0.4, 0.93);
   seatAnchor.rotation.y = Math.PI;
   seatAnchor.scale.setScalar(0.82);
   group.add(seatAnchor);
 
-  // Up on the desk beside the laptop, clear of the mug or books at the back, facing the chair.
-
-  const ch = chair(PALETTE.chairs[index % PALETTE.chairs.length]);
+  const ch = chair();
   ch.position.set(0, 0, 0.9);
   group.add(ch);
 
-  const vacancyY = height + 0.55;
+  const vacancyY = height + 0.5;
   const vacancy = vacancyMarker(vacancyY);
   group.add(vacancy);
+  void index;
 
   return { def, group, laptopAnchor, seatAnchor, chair: ch, vacancy, vacancyY };
 }
 
-/** The floating green "+" over an empty seat. */
+/** The open-seat mark over a free console: a slim steel plus, lit, turning slowly. */
 export function vacancyMarker(y: number): THREE.Group {
   const vacancy = new THREE.Group();
-  const plusMat = toon('#7cf29a', { emissive: '#1f7a3a' });
-  vacancy.add(mesh(box(0.28, 0.08, 0.08), plusMat, 0, 0, 0, false));
-  vacancy.add(mesh(box(0.08, 0.28, 0.08), plusMat, 0, 0, 0, false));
+  const lit = practical(DECK.steelLight);
+  vacancy.add(mesh(box(0.2, 0.03, 0.03), lit, 0, 0, 0, false));
+  vacancy.add(mesh(box(0.03, 0.2, 0.03), lit, 0, 0, 0, false));
   vacancy.position.set(0, y, 0);
   return vacancy;
 }
 
-const BEANBAG_COLORS = ['#ff6b6b', '#4ecdc4', '#9b5de5', '#ffd166', '#f15bb5', '#00bbf9', '#06d6a0', '#fb8500'];
-/** A bean bag's footprint, with the lap desk in front of it (-z). */
+/** A Standby bench seat's footprint, with the stand in front of it (-z). */
 export const BEANBAG_BOX = { minX: -0.62, maxX: 0.62, minZ: -1.1, maxZ: 0.64, top: 0.62 } as const;
 
-/** An overflow seat: a squashy bean bag, and a low lap desk in front of it for the laptop. */
+/** A seat on the Standby bench: a low pad with a back, and a low stand in front of it for the screen. */
 export function buildBeanbag(def: DeskDef, index: number): DeskView {
   const group = new THREE.Group();
   group.position.set(def.x, 0, def.z);
   group.rotation.y = def.rotY;
   const bag = new THREE.Group();
-  const cloth = toon(BEANBAG_COLORS[index % BEANBAG_COLORS.length]);
-  const seat = mesh(new THREE.SphereGeometry(0.62, 20, 14), cloth, 0, 0.3, 0);
-  seat.scale.set(1, 0.52, 1);
-  bag.add(seat);
-  // Slumped up behind the worker, like a back rest.
-  const back = mesh(new THREE.SphereGeometry(0.5, 18, 12), cloth, 0, 0.6, 0.32);
-  back.scale.set(1.05, 0.95, 0.7);
-  bag.add(back);
+  bag.add(mesh(box(1.1, 0.34, 0.7), flat(DECK.console), 0, 0.17, 0.1));
+  bag.add(mesh(box(1.04, 0.06, 0.64), flat(DECK.consoleTop), 0, 0.37, 0.1));
+  bag.add(mesh(box(1.1, 0.34, 0.12), flat(DECK.console), 0, 0.55, 0.42));
   group.add(bag);
+  group.add(contactShadow(1.6, 2.2, 0, -0.25));
 
   const tray = new THREE.Group();
-  const wood = toon(PALETTE.wood);
-  tray.add(mesh(roundedBox(0.95, 0.05, 0.6, 0.05), wood, 0, 0.42, 0));
-  for (const sx of [-1, 1]) tray.add(mesh(box(0.05, 0.4, 0.5), toon('#8a5a3b'), sx * 0.4, 0.2, 0));
+  tray.add(mesh(box(0.8, 0.04, 0.42), flat(DECK.consoleTop), 0, 0.42, 0));
+  tray.add(mesh(box(0.1, 0.4, 0.24), flat(DECK.console), 0, 0.2, 0));
   tray.position.z = -0.8;
   group.add(tray);
 
@@ -138,28 +120,27 @@ export function buildBeanbag(def: DeskDef, index: number): DeskView {
   laptopAnchor.scale.setScalar(1.05);
   group.add(laptopAnchor);
 
-  // Sunk into the bag, facing the lap desk.
+  // On the pad, facing the stand.
   const seatAnchor = new THREE.Object3D();
-  seatAnchor.position.set(0, 0.32, 0.04);
+  seatAnchor.position.set(0, 0.34, 0.04);
   seatAnchor.rotation.y = Math.PI;
   seatAnchor.scale.setScalar(0.82);
   group.add(seatAnchor);
 
-  // Standing up on the bag, sunk in a little.
-
   const vacancyY = 1.25;
   const vacancy = vacancyMarker(vacancyY);
   group.add(vacancy);
+  void index;
 
   return { def, group, laptopAnchor, seatAnchor, chair: bag, vacancy, vacancyY };
 }
 
-const KIOSK_SIGN: Record<StationKind, string> = { issues: '📌 Ask me', pulls: '🔀 Ask me', queue: '📋 Ask me' };
+const KIOSK_SIGN: Record<StationKind, string> = { issues: 'ASK  ISSUES', pulls: 'ASK  PRS', queue: 'ASK  QUEUE' };
 
 /**
- * A board agent's kiosk: a little counter in its color with a sign on the front, and the agent standing
- * behind it. Its `vacancy` is where the agent waits before anyone has asked it anything (main.ts puts
- * one there), in the same spot and pose as the one who gets hired.
+ * A board agent's lectern: a slim column on a plate with a slanted top, its sign on the front, and
+ * the agent standing behind it. Its `vacancy` is where the agent waits before anyone has asked it
+ * anything (main.ts puts one there), in the same spot and pose as the one who gets hired.
  */
 export function buildKiosk(def: DeskDef): DeskView {
   const kind = def.station!;
@@ -167,24 +148,27 @@ export function buildKiosk(def: DeskDef): DeskView {
   group.position.set(def.x, 0, def.z);
   group.rotation.y = def.rotY;
   const { width, depth, height } = KIOSK;
-  const color = toon(STATION_AGENT[kind].color);
-  // Narrower at the foot, like a lectern, with a lip round the top.
-  group.add(mesh(roundedBox(width - 0.16, height - 0.1, depth - 0.12, 0.06), color, 0, (height - 0.1) / 2 + 0.04, 0));
-  group.add(mesh(roundedBox(width - 0.02, 0.06, depth + 0.02, 0.05), toon(PALETTE.ink), 0, 0.03, 0));
-  group.add(mesh(roundedBox(width, 0.06, depth, 0.05), toon(PALETTE.desk), 0, height - 0.03, 0));
-  const sign = textPlane(KIOSK_SIGN[kind], { bg: '#fffaf3', size: 56 });
-  sign.scale.multiplyScalar(0.62);
-  sign.position.set(0, height * 0.55, -(depth - 0.12) / 2 - 0.012);
+  group.add(mesh(box(width - 0.1, 0.04, depth), matte(DECK.wallReveal), 0, 0.02, 0, false));
+  group.add(mesh(box(0.18, height - 0.08, 0.18), flat(DECK.console), 0, (height - 0.08) / 2 + 0.04, 0));
+  const topPlate = mesh(box(width, 0.04, depth), flat(DECK.consoleTop), 0, height - 0.02, 0);
+  topPlate.rotation.x = 0.12;
+  group.add(topPlate);
+  // Its agent's stripe along the front edge, desaturated like the units' provider stripes.
+  group.add(mesh(box(width, 0.015, 0.015), practical(STATION_AGENT[kind].color), 0, height - 0.04, -depth / 2 - 0.01, false));
+  const sign = textPlane(KIOSK_SIGN[kind], { face: 'mono', size: 44, color: DECK.text, bg: DECK.console, border: DECK.line });
+  sign.scale.multiplyScalar(0.5);
+  sign.position.set(0, height * 0.55, -0.1);
   sign.rotation.y = Math.PI;
   group.add(sign);
+  group.add(contactShadow(width + 0.4, depth + 1.2, 0, 0.3));
 
-  // No laptop: its lid would hide the agent's face from whoever walks up, and its screen would face
-  // the wall. The agent's terminal is a key press away (O).
+  // No screen: it would hide the agent's face from whoever walks up, and face the wall. The agent's
+  // terminal is a key press away (O).
   const laptopAnchor = new THREE.Object3D();
   laptopAnchor.visible = false;
   group.add(laptopAnchor);
 
-  // On its feet behind the kiosk, facing it and the room beyond.
+  // On its feet behind the lectern, facing it and the deck beyond.
   const stand = new THREE.Object3D();
   stand.position.set(0, -0.07 * 1.1, KIOSK.stand);
   stand.rotation.y = Math.PI;
@@ -194,7 +178,6 @@ export function buildKiosk(def: DeskDef): DeskView {
   const vacancy = new THREE.Group();
   vacancy.add(stand);
   group.add(vacancy);
-  // Up on the counter, facing the room.
 
   return { def, group, laptopAnchor, seatAnchor, chair: new THREE.Group(), vacancy, vacancyY: 0 };
 }
@@ -209,15 +192,26 @@ declare module '../types' {
   }
 }
 
-/** The desks, each with its chair, and what's on it. */
+/**
+ * What you bump into at a console turned any way: three small boxes along its width rather than one
+ * box round the whole of it turned, which would take in its stool.
+ */
+export function consoleColliders(def: DeskDef): Collider[] {
+  const hw = DESK_SIZE.width / 2 - 0.05;
+  const r = DESK_SIZE.depth / 2 - 0.08;
+  return [-hw + r, 0, hw - r].map((t) => {
+    const [x, z] = deskPoint(def, t, 0);
+    return { minX: x - r, maxX: x + r, minZ: z - r, maxZ: z + r, top: DESK_SIZE.height };
+  });
+}
+
+/** The consoles, each with its stool, in their pods round the table. */
 export const desks: Fixture = (site) => {
   DESKS.forEach((def, i) => {
     const view = buildDesk(def, i, site.looks.trim);
     site.group.add(view.group);
     site.desks.set(def.id, view);
-    const hw = DESK_SIZE.width / 2 - 0.05;
-    const hd = DESK_SIZE.depth / 2 - 0.02;
-    site.colliders.push({ minX: def.x - hw, maxX: def.x + hw, minZ: def.z - hd, maxZ: def.z + hd, top: DESK_SIZE.height });
+    site.colliders.push(...consoleColliders(def));
     const seat = deskSeat(def, 1.25);
     const it: Interactable = { kind: 'desk', deskId: def.id, x: seat.x, z: seat.z, radius: 1.3 };
     site.interactables.push(it);
@@ -226,7 +220,7 @@ export const desks: Fixture = (site) => {
   return {};
 };
 
-/** Bean bags, put away until every desk is taken. */
+/** The Standby bench's seats, put away until every console is taken. */
 export const beanbags: Fixture<'setBeanbags'> = (site) => {
   const bags = new Map<string, { view: DeskView; it: Interactable; collider: Collider }>();
   BEANBAGS.forEach((def, i) => {
@@ -262,13 +256,13 @@ export const beanbags: Fixture<'setBeanbags'> = (site) => {
   return { handle: { setBeanbags } };
 };
 
-/** The board agents' kiosks, each just west of its board. */
+/** The board agents' lecterns, each at the west end of its panel of the Main board. */
 export const kiosks: Fixture = (site) => {
   for (const def of STATIONS) {
     const view = buildKiosk(def);
     site.group.add(view.group);
     site.desks.set(def.id, view);
-    // The kiosk and the agent behind it, back to the wall (they all stand by the north wall) so
+    // The lectern and the agent behind it, back to the wall (they all stand by the north wall) so
     // nobody squeezes in behind, and up over the agent's head so nobody hops on it.
     const corners = [-1, 1].flatMap((t) => [-KIOSK.depth / 2, KIOSK.stand + 0.35].map((sz) => deskPoint(def, (t * KIOSK.width) / 2, sz)));
     const xs = corners.map(([x]) => x);

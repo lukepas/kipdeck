@@ -80,7 +80,6 @@ function beamPicture(): THREE.CanvasTexture {
 /** A see-through red that's drawn over the room without hiding what's behind it, and never inked round. */
 function glow(map?: THREE.Texture): THREE.MeshBasicMaterial {
   const mat = new THREE.MeshBasicMaterial({ color: LIGHT, map, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide });
-  mat.userData.outlineParameters = { visible: false };
   return mat;
 }
 

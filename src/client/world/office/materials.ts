@@ -1,83 +1,113 @@
 import * as THREE from 'three';
 import { FLOOR, WALL_T, type Side } from '../../../shared/layout';
-import { FLOOR_PALETTES, type FloorPalette } from '../../../shared/floors';
-import { mesh } from '../toon';
 
-// What the office is painted and glazed with, the planks of its floors, and where on an outside wall a
-// window or a door goes.
+// What the deck is made of: one family of matte, slightly rough materials on a slate ramp, the
+// emissive practicals that light it, the floor's grid, the contact shadows that ground everything,
+// and smoked glass. world/toon.ts hands these out under its old names, so most call sites stay as
+// they were. Every color here is in DESIGN.md's 3D row.
 
+/** The deck's 3D palette: slate and steel, with hue kept for state and proof. */
+export const DECK = {
+  void: '#0D131A',
+  floor: '#18202A',
+  gridMinor: '#222B36',
+  gridMajor: '#2E3B4A',
+  wall: '#151D26',
+  wallReveal: '#0A0F15',
+  console: '#1A222C',
+  consoleTop: '#212A35',
+  steel: '#3A4756',
+  steelLight: '#8A97A5',
+  unit: '#2A323C',
+  text: '#E8ECEF',
+  muted: '#8A97A5',
+  line: '#26313D',
+  signal: '#FF6A1A',
+  stuck: '#FF4D5E',
+  review: '#F5C542',
+  working: '#C9D2DC',
+  proof: '#A68BFF',
+  settled: '#3DDC97',
+} as const;
+
+/**
+ * Old names some fixtures still paint with (the back office's desks, the meeting room's chairs), all
+ * mapped onto the slate ramp: nothing on the deck is pastel any more.
+ */
 export const PALETTE = {
-  floor: FLOOR_PALETTES[0].floor,
-  floorAlt: FLOOR_PALETTES[0].floorAlt,
-  wall: FLOOR_PALETTES[0].wall,
-  wallTrim: FLOOR_PALETTES[0].trim,
-  desk: '#f7f3ea',
-  deskLeg: '#3d405b',
-  wood: '#c98b5a',
-  cork: '#d8a86a',
-  chairs: ['#ff8a5b', '#5bc0eb', '#9bc53d', '#b388eb', '#ffb400', '#f7aef8'],
-  rugs: ['#bde0fe', '#ffd6a5', '#caffbf', '#ffc6ff'],
-  plant: '#5fb760',
-  plantDark: '#3f8f45',
-  pot: '#e76f51',
-  ink: '#2b2d42',
-  /** The building's outside paint. */
-  exterior: '#e07a5f',
+  desk: DECK.consoleTop,
+  deskLeg: DECK.steel,
+  wood: DECK.console,
+  ink: DECK.wallReveal,
+  wall: DECK.wall,
+  wallTrim: DECK.wallReveal,
+  chairs: [DECK.unit],
 };
 
-/** Window glass: faintly blue and see-through. */
-export const GLASS = new THREE.MeshBasicMaterial({ color: '#d6f1ff', transparent: true, opacity: 0.14, depthWrite: false, side: THREE.DoubleSide });
-const SHINE = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide });
+interface MatOpts {
+  emissive?: THREE.ColorRepresentation;
+  emissiveIntensity?: number;
+  transparent?: boolean;
+  opacity?: number;
+  flat?: boolean;
+  roughness?: number;
+  metalness?: number;
+}
 
-/** A sheet of glass `w` by `h`, centered, with a couple of cartoon glints so it reads as glass. */
+const cache = new Map<string, THREE.MeshStandardMaterial>();
+
+/** A shared matte material: roughness 0.85, almost no metal, the same object for the same recipe. */
+export function matte(color: THREE.ColorRepresentation, opts: MatOpts = {}): THREE.MeshStandardMaterial {
+  const key = `${new THREE.Color(color).getHexString()}|${opts.emissive ?? ''}|${opts.emissiveIntensity ?? 1}|${opts.opacity ?? 1}|${opts.flat ? 1 : 0}|${opts.roughness ?? ''}|${opts.metalness ?? ''}`;
+  const hit = cache.get(key);
+  if (hit) return hit;
+  const m = matteUnique(color, opts);
+  cache.set(key, m);
+  return m;
+}
+
+/** A material of its own (uncached), for something whose color changes. */
+export function matteUnique(color: THREE.ColorRepresentation, opts: MatOpts = {}): THREE.MeshStandardMaterial {
+  const m = new THREE.MeshStandardMaterial({ color, roughness: opts.roughness ?? 0.85, metalness: opts.metalness ?? 0.05, flatShading: !!opts.flat });
+  if (opts.emissive !== undefined) {
+    m.emissive = new THREE.Color(opts.emissive);
+    m.emissiveIntensity = opts.emissiveIntensity ?? 1;
+  }
+  if (opts.transparent || (opts.opacity ?? 1) < 1) {
+    m.transparent = true;
+    m.opacity = opts.opacity ?? 1;
+  }
+  return m;
+}
+
+/** Flat-shaded matte, for consoles and units: crisp facets that read at any distance. */
+export const flat = (color: THREE.ColorRepresentation) => matte(color, { flat: true });
+
+const glow = new Map<string, THREE.MeshBasicMaterial>();
+/**
+ * A practical: something that gives light rather than takes it (a light bar, a lit edge, a screen's
+ * glow). Unlit and untouched by tone mapping, so it holds its color in the dark.
+ */
+export function practical(color: THREE.ColorRepresentation, opacity = 1): THREE.MeshBasicMaterial {
+  const key = `${new THREE.Color(color).getHexString()}|${opacity}`;
+  let m = glow.get(key);
+  if (!m) {
+    m = new THREE.MeshBasicMaterial({ color, toneMapped: false, transparent: opacity < 1, opacity, depthWrite: opacity >= 1 });
+    glow.set(key, m);
+  }
+  return m;
+}
+
+/** Smoked glass: dark, a little see-through, for the Review bay. */
+export const GLASS = new THREE.MeshStandardMaterial({ color: '#1B2733', roughness: 0.15, metalness: 0.2, transparent: true, opacity: 0.38, depthWrite: false, side: THREE.DoubleSide });
+
+/** A sheet of smoked glass `w` by `h`, centered, facing +z. */
 export function glassPane(w: number, h: number): THREE.Group {
   const g = new THREE.Group();
-  g.add(mesh(new THREE.PlaneGeometry(w, h), GLASS, 0, 0, 0, false));
-  // Each streak is a slanted strip trimmed to the pane, so on a narrow pane its ends stop at the
-  // frame instead of running out over it.
-  const edgeX = w / 2 - 0.02;
-  const edgeY = h / 2 - 0.02;
-  for (const [gx, gw] of [
-    [-w * 0.2, 0.18],
-    [-w * 0.2 + 0.32, 0.08],
-  ]) {
-    const outline = clipToBox(slantedStrip(gx, h * 0.07, gw, h * 0.55, -0.5), edgeX, edgeY);
-    if (outline.length < 3) continue;
-    const glint = mesh(new THREE.ShapeGeometry(new THREE.Shape(outline)), SHINE, 0, 0, 0.01, false);
-    g.add(glint);
-  }
+  const pane = new THREE.Mesh(new THREE.PlaneGeometry(w, h), GLASS);
+  pane.renderOrder = 2;
+  g.add(pane);
   return g;
-}
-
-/** The corners of a `w` by `len` strip centered on (x, y), turned `angle` radians. */
-function slantedStrip(x: number, y: number, w: number, len: number, angle: number): THREE.Vector2[] {
-  const c = Math.cos(angle);
-  const s = Math.sin(angle);
-  return [
-    [-w / 2, -len / 2],
-    [w / 2, -len / 2],
-    [w / 2, len / 2],
-    [-w / 2, len / 2],
-  ].map(([u, v]) => new THREE.Vector2(x + u * c - v * s, y + u * s + v * c));
-}
-
-/** A convex outline cut down to the box from (-ex, -ey) to (ex, ey) (Sutherland–Hodgman). */
-function clipToBox(points: THREE.Vector2[], ex: number, ey: number): THREE.Vector2[] {
-  const edges: ((p: THREE.Vector2) => number)[] = [(p) => ex - p.x, (p) => p.x + ex, (p) => ey - p.y, (p) => p.y + ey];
-  let out = points;
-  for (const inside of edges) {
-    const next: THREE.Vector2[] = [];
-    out.forEach((p, i) => {
-      const q = out[(i + 1) % out.length];
-      const dp = inside(p);
-      const dq = inside(q);
-      if (dp >= 0) next.push(p);
-      if (dp >= 0 !== dq >= 0) next.push(p.clone().lerp(q, dp / (dp - dq)));
-    });
-    out = next;
-    if (out.length < 3) return [];
-  }
-  return out;
 }
 
 /** The middle of an outside wall at `u` along it, and the turn that makes local +z point outdoors. */
@@ -94,43 +124,90 @@ export function onWall(side: Side, u: number): { x: number; z: number; rotY: num
   }
 }
 
-/** Chunky planks in a floor's colors. */
-export function paintPlanks(c: HTMLCanvasElement, p: FloorPalette) {
+/** Pixels per meter of the floor's grid texture, and how many meters one tile of it covers. */
+const GRID_PX = 128;
+const GRID_TILE = 5;
+
+/** The deck's floor: graphite, a fine line every meter and a stronger one every five. */
+export function paintGrid(c: HTMLCanvasElement) {
+  const size = GRID_PX * GRID_TILE;
+  c.width = c.height = size;
   const g = c.getContext('2d')!;
-  g.fillStyle = p.floor;
-  g.fillRect(0, 0, 512, 512);
-  for (let row = 0; row < 8; row++) {
-    const offset = (row % 2) * 128;
-    for (let col = -1; col < 3; col++) {
-      const x = col * 256 + offset;
-      g.fillStyle = (row + col) % 3 === 0 ? p.floorAlt : p.floor;
-      g.fillRect(x + 2, row * 64 + 2, 252, 60);
-    }
-    g.fillStyle = p.seam;
-    g.fillRect(0, row * 64, 512, 3);
+  g.fillStyle = DECK.floor;
+  g.fillRect(0, 0, size, size);
+  g.fillStyle = DECK.gridMinor;
+  for (let i = 1; i < GRID_TILE; i++) {
+    g.fillRect(i * GRID_PX - 1, 0, 2, size);
+    g.fillRect(0, i * GRID_PX - 1, size, 2);
   }
+  // The major line sits on the tile's edge, half on each side, so tiles meet in one line.
+  g.fillStyle = DECK.gridMajor;
+  g.fillRect(0, 0, 2, size);
+  g.fillRect(size - 2, 0, 2, size);
+  g.fillRect(0, 0, size, 2);
+  g.fillRect(0, size - 2, size, 2);
 }
 
-export function floorTexture(width = FLOOR.maxX - FLOOR.minX, depth = FLOOR.maxZ - FLOOR.minZ): THREE.CanvasTexture {
+/**
+ * The floor's grid as a texture, lined up with the world's meters (uvs in meters / GRID_TILE), so the
+ * room, the back office and the apron round the slab all share one grid.
+ */
+export function floorTexture(): THREE.CanvasTexture {
   const c = document.createElement('canvas');
-  c.width = 512;
-  c.height = 512;
-  paintPlanks(c, FLOOR_PALETTES[0]);
+  paintGrid(c);
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(width / 6, depth / 6);
   t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = 8;
   return t;
+}
+
+/** Gives a horizontal plane's uvs in world meters over the grid's tile (see floorTexture). */
+export function worldUv(geo: THREE.BufferGeometry, ox = 0, oz = 0) {
+  const uv = geo.getAttribute('uv');
+  const pos = geo.getAttribute('position');
+  for (let i = 0; i < pos.count; i++) uv.setXY(i, (pos.getX(i) + ox) / GRID_TILE, -(pos.getZ(i) + oz) / GRID_TILE);
+  uv.needsUpdate = true;
+}
+
+let shadowTex: THREE.CanvasTexture | null = null;
+/** A soft dark blot, darkest in the middle: the shadow a thing casts straight down. */
+function contactTexture(): THREE.CanvasTexture {
+  if (shadowTex) return shadowTex;
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d')!;
+  const grad = g.createRadialGradient(64, 64, 4, 64, 64, 64);
+  grad.addColorStop(0, 'rgba(0,0,0,0.75)');
+  grad.addColorStop(0.5, 'rgba(0,0,0,0.38)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 128, 128);
+  shadowTex = new THREE.CanvasTexture(c);
+  return shadowTex;
+}
+
+let shadowMat: THREE.MeshBasicMaterial | null = null;
+/**
+ * A contact shadow `w` by `d` under something standing on the floor at (x, z), turned `rotY`: what
+ * grounds it when the key light's shadow is soft or falls elsewhere.
+ */
+export function contactShadow(w: number, d: number, x = 0, z = 0, rotY = 0, y = 0.004): THREE.Mesh {
+  shadowMat ??= new THREE.MeshBasicMaterial({ map: contactTexture(), transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2 });
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2), shadowMat);
+  m.position.set(x, y, z);
+  m.rotation.y = rotY;
+  m.renderOrder = 1;
+  return m;
 }
 
 export function box(w: number, h: number, d: number) {
   return new THREE.BoxGeometry(w, h, d);
 }
 
-/** The materials and textures a floor paints in its own colors. */
+/** The materials and textures a floor paints in its own colors. On the deck every floor is the same slate. */
 export interface Looks {
-  wall: THREE.MeshToonMaterial;
-  trim: THREE.MeshToonMaterial;
+  wall: THREE.MeshStandardMaterial;
+  trim: THREE.MeshStandardMaterial;
   planks: THREE.CanvasTexture[];
 }

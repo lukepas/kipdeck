@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from 'vite';
 import { createReadStream, existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 // The whiteboard's fonts (Excalidraw's hand-drawn Virgil/Excalifont and friends), served by the
 // office itself rather than a CDN. Excalidraw looks for them under window.EXCALIDRAW_ASSET_PATH;
@@ -34,12 +35,22 @@ function excalidrawFonts(): Plugin {
   };
 }
 
+/** The build's revision, the short SHA it was built from, for the title block on the deck's floor. */
+function revision(): string {
+  try {
+    return execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: import.meta.dirname, encoding: 'utf8', timeout: 5000 }).trim() || 'dev';
+  } catch {
+    return 'dev';
+  }
+}
+
 export default defineConfig({
   root: resolve(import.meta.dirname, 'src/client'),
   publicDir: resolve(import.meta.dirname, 'src/client/public'),
   plugins: [excalidrawFonts()],
   define: {
     __EXCALIDRAW_ASSETS__: JSON.stringify(EXCALIDRAW_ASSETS),
+    __REVISION__: JSON.stringify(revision()),
   },
   build: {
     outDir: resolve(import.meta.dirname, 'dist/public'),

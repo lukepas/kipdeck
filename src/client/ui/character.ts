@@ -1,6 +1,5 @@
 import './character.css';
 import * as THREE from 'three';
-import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 import { HAIR_COLOR_NAMES, HAIR_COLORS, HAIR_STYLES, SKIN_TONES, randomLook, randomName, type Look } from '../../shared/avatar';
 import { AVATAR_COLORS, saveProfile, store, type Profile } from '../state';
 import { Person } from '../world/character';
@@ -12,7 +11,6 @@ import { icon } from './icons';
 class Preview {
   readonly person: Person;
   private renderer: THREE.WebGLRenderer;
-  private effect: OutlineEffect;
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(28, 1, 0.1, 20);
   private raf = 0;
@@ -30,11 +28,11 @@ class Preview {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.shadowMap.enabled = true;
-    this.effect = new OutlineEffect(this.renderer, { defaultThickness: 0.0045, defaultColor: [0.17, 0.18, 0.26] });
+    this.renderer.toneMapping = THREE.NeutralToneMapping;
 
-    this.scene.add(new THREE.HemisphereLight('#fff5e6', '#c9a27a', 1.5));
-    this.scene.add(new THREE.AmbientLight('#ffffff', 0.5));
-    const sun = new THREE.DirectionalLight('#fff1d6', 2.2);
+    // The deck's light: a cool fill from above and the slate below, and one cool key.
+    this.scene.add(new THREE.HemisphereLight('#AEB8C4', '#0D131A', 1.6));
+    const sun = new THREE.DirectionalLight('#DCE3EA', 2.4);
     sun.position.set(-3, 6, 5);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
@@ -42,10 +40,9 @@ class Preview {
     sun.shadow.normalBias = 0.02;
     Object.assign(sun.shadow.camera, { left: -2, right: 2, top: 2, bottom: -2, near: 0.5, far: 20 });
     this.scene.add(sun);
-    const rug = new THREE.Mesh(new THREE.CircleGeometry(0.9, 40), toonUnique('#ffd6a5'));
+    const rug = new THREE.Mesh(new THREE.CircleGeometry(0.9, 40), toonUnique('#1A222C'));
     rug.rotation.x = -Math.PI / 2;
     rug.receiveShadow = true;
-    rug.material.userData.outlineParameters = { visible: false };
     this.scene.add(rug);
 
     this.person = new Person(p.name, p.color, p.look);
@@ -114,7 +111,7 @@ class Preview {
     }
     this.person.root.position.y = y;
     this.person.update(dt, t, false, y > 0.01);
-    this.effect.render(this.scene, this.camera);
+    this.renderer.render(this.scene, this.camera);
   }
 
   dispose() {

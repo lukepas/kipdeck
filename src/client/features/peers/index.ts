@@ -7,7 +7,6 @@ import { seatAt } from '../../../shared/layout';
 import { sameLook } from '../../../shared/avatar';
 import type { PeerInfo } from '../../../shared/protocol';
 import type { Ctx } from '../../core/context';
-import { noOutline } from '../../core/outline';
 import type { Parts } from '../../core/parts';
 import { groundAt } from '../../player';
 import { store } from '../../state';
@@ -45,7 +44,6 @@ export function installPeers(ctx: Ctx, parts: Pick<Parts, 'walking' | 'talk' | '
         const person = new Person(peer.name, peer.color, peer.look);
         person.root.position.set(peer.x, peer.y, peer.z);
         scene.add(person.root);
-        noOutline(person.root);
         r = { person, target: new THREE.Vector3(peer.x, peer.y, peer.z), rotY: peer.rotY, moving: false, label: '', look: { ...peer.look }, stepT: 0 };
         remotes.set(id, r);
       }
@@ -54,12 +52,10 @@ export function installPeers(ctx: Ctx, parts: Pick<Parts, 'walking' | 'talk' | '
         r.label = label;
         r.person.setLabel(peer.name, peer.voice ? peer.muted : null);
         r.person.setColor(peer.color);
-        noOutline(r.person.root);
       }
       if (!sameLook(peer.look, r.look)) {
         r.look = { ...peer.look };
         r.person.setLook(peer.look);
-        noOutline(r.person.root);
       }
       r.person.carry(peer.carrying);
       r.person.sit(peer.seat ? (seatAt(peer.seat)?.hips ?? null) : null);

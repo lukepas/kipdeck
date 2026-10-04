@@ -96,9 +96,9 @@ export function installLoop(ctx: Ctx, parts: Pick<Parts, 'stage' | 'peers' | 'vi
     ctx.world().update(t, dt, [player.pos, ...[...remotes.values()].map((r) => r.person.root.position), ...arrivals.positions()]);
   }
 
-  /** The scene, toon outlines and all. */
+  /** The scene, from the Overview's camera while it's up, else from your eyes. */
   function drawScene() {
-    parts.stage.effect.render(parts.stage.scene, ctx.camera);
+    ctx.renderer.render(parts.stage.scene, parts.stage.view ?? ctx.camera);
   }
 }
 

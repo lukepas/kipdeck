@@ -15,7 +15,7 @@ export class Worker {
   private body = new THREE.Group();
   /** Its moving parts, for what poses them from the other files here (packing up). */
   private rig: WorkerRig;
-  private bulb: THREE.MeshToonMaterial;
+  private bulb: THREE.MeshStandardMaterial;
   private bulbMesh: THREE.Mesh;
   private armL: THREE.Object3D;
   private armR: THREE.Object3D;
@@ -63,7 +63,7 @@ export class Worker {
   private globe: ReturnType<typeof globe>;
   /** Beside its laptop, where the globe floats (see setPropSpot). */
   private spot = new THREE.Vector3(-1, 1.1, 1.3);
-  private skin: THREE.MeshToonMaterial;
+  private skin: THREE.MeshStandardMaterial;
   /** How far through its stride it is, walking in. */
   private stride = 0;
 

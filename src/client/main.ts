@@ -32,6 +32,8 @@ import { installChat } from './features/chat';
 import { installCounters } from './features/counters';
 import { installLanded } from './features/landed';
 import { installBounties } from './features/bounties';
+import { installPods } from './features/pods';
+import { installProofCorner } from './features/proofcorner';
 import { installDictation } from './features/dictation';
 import { installHud } from './features/hud';
 import { installMeeting } from './features/meeting';
@@ -126,6 +128,8 @@ parts.cards = installCarrying(ctx, {
 parts.seating = installSeating(ctx, { shares: () => parts.talk.currentShares(), watchShare: () => parts.talk.watchShare(), usable: () => parts.pointer.usable() });
 installLanded(ctx, { notifier: parts.notifier });
 installBounties(ctx);
+installPods(ctx);
+installProofCorner(ctx);
 
 parts.hintbar = installHintBar(ctx, core, parts);
 installKeyboard(ctx, parts);

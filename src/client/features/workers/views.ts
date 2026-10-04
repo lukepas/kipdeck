@@ -12,7 +12,6 @@ import { workerPr } from '../../../shared/status';
 import type { Ctx } from '../../core/context';
 import { pastTheWing, seatBuilt } from '../../core/floors';
 import { aside, hintTitle, key, onE } from '../../core/hint';
-import { noOutline } from '../../core/outline';
 import type { Parts } from '../../core/parts';
 import { unsnoozed } from '../../nextup';
 import { waitingOnSomeone } from '../../notify';
@@ -97,7 +96,6 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
         if (desk.def.room && !seatedAlready) arrivals.add(model, desk);
         const laptop = new Laptop();
         desk.laptopAnchor.add(laptop.root);
-        noOutline(desk.group);
         desk.chair.rotation.y = 0;
         v = { model, laptop, deskId: w.deskId, status: '', acked: true };
         workerViews.set(w.id, v);
@@ -115,7 +113,6 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
         v.status = w.status;
         v.acked = w.acked;
         v.model.setStatus(w.status, waitingOnSomeone(w));
-        noOutline(v.model.root);
       }
       v.model.setAction(w.action);
       v.model.setPr(workerPr(w, store.pulls.items, store.queue.tasks));

@@ -47,7 +47,7 @@ export interface Interactable {
   off?: boolean;
 }
 
-/** A desk, a bean bag, a board agent's kiosk or a chair at the meeting table: somewhere a worker sits (or stands). */
+/** A console, a Standby bench seat, a board agent's lectern or a chair in the Review bay: somewhere a unit sits (or stands). */
 export interface DeskView {
   def: DeskDef;
   group: THREE.Group;
@@ -83,8 +83,10 @@ export interface Office extends OfficeHandles {
   interactables: Interactable[];
   /** Every seat by id: the desks, the bean bags and the board agents' kiosks. */
   desks: Map<string, DeskView>;
-  /** Paints the walls, their trim and the floor in a floor's colors, so each project looks like itself. */
+  /** Was: paints the deck in a floor's colors. Every deck is the same slate now, so it does nothing. */
   setLook(p: FloorPalette): void;
+  /** Names the deck on the Deck lift's portal and in the title block: its project, its number and who's looking. */
+  setProjectName(name: string, deck?: { n?: number; operator?: string }): void;
   /** Animates the office; doors open for anyone in `people` who comes up to them. */
   update(t: number, dt: number, people: Iterable<{ x: number; y: number; z: number }>): void;
 }

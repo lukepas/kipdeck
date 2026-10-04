@@ -5,14 +5,12 @@ import { OfficeSound } from '../sound';
 import { store, type Profile, type Settings } from '../state';
 import { Person } from '../world/character';
 import type { Ctx } from './context';
-import { noOutline } from './outline';
 
 /** Your own character, as everyone else sees it (no name tag over your own head). */
 export function makeMe(ctx: Ctx): Person {
   const me = new Person(store.profile.name, store.profile.color, store.profile.look);
   me.showLabel(false);
   ctx.scene.add(me.root);
-  noOutline(me.root);
   return me;
 }
 

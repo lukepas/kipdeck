@@ -1,19 +1,12 @@
 import * as THREE from 'three';
 import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import deskPropsUrl from '../models/desk_props.glb?url';
-import loungeUrl from '../models/lounge.glb?url';
-import plantsUrl from '../models/plants.glb?url';
-import { toon } from './toon';
+import { fontsReady, toon } from './toon';
 
-// The things in the world modelled in Blender rather than built in code. Each .glb is exported by a
-// script in blender/scripts/ (blender/README.md has the conventions they keep); add it here by name.
-// They're all loaded before the world is built, for builders that take theirs with model().
-const MODELS = {
-  desk_props: deskPropsUrl,
-  lounge: loungeUrl,
-  plants: plantsUrl,
-} satisfies Record<string, string>;
+// Model files (.glb) for things in the world that aren't built in code, loaded before the world is
+// built, for builders that take theirs with model(). The deck is built in code from first to last,
+// so there are none today: add one here by name, as `name: url` from `import url from '…glb?url'`.
+const MODELS = {} satisfies Record<string, string>;
 
 export type ModelName = keyof typeof MODELS;
 
@@ -86,7 +79,8 @@ const copy = (gltf: GLTF): Model => ({ scene: clone(gltf.scene), clips: gltf.ani
  */
 export async function preloadModels(): Promise<void> {
   const names = Object.keys(MODELS) as ModelName[];
-  await Promise.all(names.map((name) => fetchModel(name).catch((err: unknown) => console.error(`${name}.glb didn't load`, err))));
+  // The type too: every label and board on the deck is painted on a canvas, in it.
+  await Promise.all([fontsReady(), ...names.map((name) => fetchModel(name).catch((err: unknown) => console.error(`${name}.glb didn't load`, err)))]);
 }
 
 /** A copy of a model (see preloadModels()), or null if it couldn't be loaded. */
@@ -123,7 +117,7 @@ export function paintModel(root: THREE.Object3D, paint: (name: string) => THREE.
 }
 
 /**
- * The usual `paint`: a toon material of the palette's color for each name. A name the palette has no
+ * The usual `paint`: a matte material of the palette's color for each name. A name the palette has no
  * color for comes out magenta, so a part the script and the code disagree on shows at a glance.
  */
 export function palette(colors: Record<string, string>): (name: string) => THREE.Material {

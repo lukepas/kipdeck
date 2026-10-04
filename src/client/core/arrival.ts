@@ -150,14 +150,14 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
       $('project-meta').textContent = store.floors.length ? 'Pick a deck' : 'No decks yet: add a project in Decks';
       // Where to go next, so it shows even with the floor details turned off.
       $('project-meta').classList.add('lobby');
-      ctx.world().setProjectName(store.floors.length ? 'Pick a floor' : 'Lobby');
+      ctx.world().setProjectName(store.floors.length ? 'Pick a deck' : 'Lobby');
       return;
     }
     const n = store.floors.findIndex((f) => f.id === store.floor);
     $('project-meta').classList.remove('lobby');
     $('project-name').textContent = p.name;
     $('project-meta').textContent = [n >= 0 && `deck ${n + 1}/${store.floors.length}`, p.branch && p.branch, p.dir, `default: ${providerLabel(p.defaultProvider, p)}`].filter(Boolean).join(' · ');
-    ctx.world().setProjectName(p.name);
+    ctx.world().setProjectName(p.name, { n: n >= 0 ? n + 1 : undefined, operator: store.profile.name });
   }
   store.on('floors', renderProject);
   store.on('project', renderProject);

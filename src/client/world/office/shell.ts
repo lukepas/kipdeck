@@ -1,11 +1,13 @@
 import * as THREE from 'three';
-import { FLOOR, WALL_HEIGHT, WALL_T, WINDOWS, WING, type Opening, type Side } from '../../../shared/layout';
-import { mergeByMaterial, mesh, toon } from '../toon';
+import { FLOOR, GRID, SOUTH_CURB, WALL_HEIGHT, WALL_T, WINDOWS, WING, type Opening, type Side } from '../../../shared/layout';
+import { mergeByMaterial, mesh } from '../toon';
 import type { Collider } from '../types';
 import type { Fixture } from './fixture';
-import { PALETTE, box, glassPane, onWall, type Looks } from './materials';
+import { DECK, box, glassPane, matte, onWall, practical, type Looks } from './materials';
 
-// The office's shell: its outside walls and the windows in them.
+// The deck's shell: its outside walls, full height on the north, east and west where the boards hang,
+// and only a curb on the south, so the Overview sees every unit over it. No windows: the deck floats
+// in the void.
 
 /** A door that opens by itself when someone comes up to it, and closes behind them. */
 export interface Door {
@@ -20,7 +22,7 @@ export interface Door {
 /** A window filling its hole in an outside wall: a frame lining the hole, a mullion, sills and real glass. */
 export function windowIn(o: Opening): THREE.Group {
   const g = new THREE.Group();
-  const frame = toon('#ffffff');
+  const frame = matte(DECK.steel);
   const w = o.width;
   const h = o.y1 - o.y0;
   const F = 0.09;
@@ -45,18 +47,18 @@ export function windowIn(o: Opening): THREE.Group {
 const SHADE_HEIGHT = 4.2;
 
 /**
- * The four outside walls, built in pieces around their windows. Each is painted inside in
- * the floor's colors and outside in the building's.
+ * The four outside walls, built in pieces round any openings: matte slate inside, a shade darker
+ * outside, with a 2 cm reveal at each column line of the grid and a lit hairline along the top.
  */
 export function buildWalls(group: THREE.Group, colliders: Collider[], openings: Opening[], looks: Looks) {
   const inside = looks.wall;
-  const outside = toon(PALETTE.exterior);
+  const outside = matte(DECK.wallReveal);
   const trimMat = looks.trim;
   const T = WALL_T;
   const walls: { side: Side; at: number; spans: [number, number, number][] }[] = [
     // The north wall stops at the back office, whose own bit of wall (buildWing's plug) comes down for it.
     { side: 'north', at: FLOOR.minZ - T / 2, spans: [[FLOOR.minX - T, WING.minX, WALL_HEIGHT]] },
-    { side: 'south', at: FLOOR.maxZ + T / 2, spans: [[FLOOR.minX - T, FLOOR.maxX + T, WALL_HEIGHT]] },
+    { side: 'south', at: FLOOR.maxZ + T / 2, spans: [[FLOOR.minX - T, FLOOR.maxX + T, SOUTH_CURB]] },
     { side: 'west', at: FLOOR.minX - T / 2, spans: [[FLOOR.minZ, FLOOR.maxZ, WALL_HEIGHT]] },
     { side: 'east', at: FLOOR.maxX + T / 2, spans: [[FLOOR.minZ, FLOOR.maxZ, WALL_HEIGHT]] },
   ];
@@ -111,6 +113,18 @@ export function buildWalls(group: THREE.Group, colliders: Collider[], openings: 
       }
       piece(u, b, 0, top);
       run(floorU, b);
+      // The lit hairline along the top, and a reveal at each column line on the inside face.
+      const inward = w.side === 'north' || w.side === 'west' ? 1 : -1;
+      const cap = at((a + b) / 2, top + 0.006);
+      group.add(mesh(alongX ? box(b - a, 0.012, 0.03) : box(0.03, 0.012, b - a), practical(top > 1 ? DECK.line : DECK.gridMajor), cap.x, cap.y, cap.z, false));
+      if (top < 1) continue;
+      const first = alongX ? FLOOR.minX : FLOOR.minZ;
+      for (let r = first + GRID.step; r < b - 0.01; r += GRID.step) {
+        if (r <= a + 0.01) continue;
+        const p = at(r, top / 2);
+        const off = inward * (T / 2 + 0.002);
+        group.add(mesh(alongX ? box(0.02, top, 0.004) : box(0.004, top, 0.02), matte(DECK.wallReveal), alongX ? p.x : p.x + off, p.y, alongX ? p.z + off : p.z, false));
+      }
     }
   }
 }
@@ -123,7 +137,7 @@ export function buildWalls(group: THREE.Group, colliders: Collider[], openings: 
  */
 export function wallRun(into: THREE.Group, cols: Collider[], axis: 'x' | 'z', at: number, u0: number, u1: number, out: 1 | -1, holes: Opening[], looks: Looks, endsOut: [boolean, boolean]) {
   const T = WALL_T;
-  const outside = toon(PALETTE.exterior);
+  const outside = matte(DECK.wallReveal);
   // A box's faces go +x, -x, +y, -y, +z, -z.
   const outFace = axis === 'x' ? (out > 0 ? 4 : 5) : out > 0 ? 0 : 1;
   const endFaces = axis === 'x' ? [1, 0] : [5, 4];
@@ -156,7 +170,7 @@ export function wallRun(into: THREE.Group, cols: Collider[], axis: 'x' | 'z', at
   cols.push(axis === 'x' ? { minX: u0, maxX: u1, minZ: at - T / 2, maxZ: at + T / 2, top: 99 } : { minX: at - T / 2, maxX: at + T / 2, minZ: u0, maxZ: u1, top: 99 });
 }
 
-/** Outside walls, with real windows you see out of. */
+/** The outside walls (and any windows in them: none on the deck). */
 export const walls: Fixture = (site) => {
   buildWalls(site.group, site.colliders, WINDOWS, site.looks);
   const glazing = new THREE.Group();

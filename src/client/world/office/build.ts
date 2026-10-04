@@ -1,22 +1,26 @@
 import * as THREE from 'three';
 import type { FloorPalette } from '../../../shared/floors';
-import { toon, toonUnique } from '../toon';
 import { elevator } from '../elevator';
 import { bookshelf } from '../../features/bookshelf/world';
 import { whiteboard } from '../../features/whiteboard/world';
 import { stack } from '../stack';
 import { signs } from '../desksigns';
 import type { Collider, DeskView, Interactable, Office, OfficeHandles } from '../types';
-import { PALETTE, floorTexture, paintPlanks, type Looks } from './materials';
-import { boards, lamps, lounge, machineMonitor, plants, rugs, tv } from './room';
+import { DECK, floorTexture, matteUnique, type Looks } from './materials';
+import { boards, lamps, lounge, machineMonitor, tv } from './room';
+import { floorPaint } from './floorpaint';
+import { missionTable } from './table';
+import { proofCorner } from '../../features/proofcorner/world';
+import { podPlates } from '../../features/pods/world';
 import { walls, type Door } from './shell';
 import { wing } from './wing';
 import { beanbags, desks, kiosks } from './seats';
 import { meetingRoom } from './meeting-room';
 import type { Fixture, Gives, Site } from './fixture';
 
-// The office floor, put together from its fixtures (see fixture.ts): the room and its walls, the desks
-// and everything else in it, the meeting room, and the back office.
+// The deck, put together from its fixtures (see fixture.ts): the slab and its walls, the paint on its
+// floor, the mission table and the pods of consoles facing it, the boards, the Proof corner, the Review
+// bay, the Deck lift and the overflow bay.
 
 /**
  * The office floor's fixtures, in the order they're built: which is the order everything in the floor
@@ -25,18 +29,20 @@ import type { Fixture, Gives, Site } from './fixture';
 function floorPlan() {
   return [
     stack,
-    rugs,
+    floorPaint,
     walls,
+    missionTable,
     desks,
+    podPlates,
     beanbags,
     kiosks,
     boards,
-    // The lounge: the TV, the couch and its table and poufs, 
+    // The east wall's Attention board, and the operator bench facing it.
     tv,
     machineMonitor,
+    proofCorner,
     lounge,
     bookshelf,
-    plants,
     lamps,
     wing,
     signs,
@@ -54,12 +60,12 @@ export function buildOffice(): Office {
   const group = new THREE.Group();
   const colliders: Collider[] = [];
   const interactables: Interactable[] = [];
-  // What each floor paints its own way (see setLook): the walls, their trim, the planks.
-  const looks: Looks = { wall: toonUnique(PALETTE.wall), trim: toonUnique(PALETTE.wallTrim), planks: [] };
-  // The floor's planks, which the stack lays the floor with (and the back office its own).
+  // The walls, their trim and the floor's grid: one slate palette on every deck (see setLook).
+  const looks: Looks = { wall: matteUnique(DECK.wall), trim: matteUnique(DECK.wallReveal), planks: [] };
+  // The floor's grid, which the stack lays the floor with (and the overflow bay its own).
   const floorTex = floorTexture();
   looks.planks.push(floorTex);
-  const planks = new THREE.MeshToonMaterial({ map: floorTex, gradientMap: (toon('#fff') as THREE.MeshToonMaterial).gradientMap });
+  const planks = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.92, metalness: 0 });
   const desks = new Map<string, DeskView>();
   const doors: Door[] = [];
   /** What the fixtures built so far give the office. */
@@ -94,13 +100,13 @@ export function buildOffice(): Office {
     if (built.update) updates.push(built.update);
   }
 
-  const setLook = (p: FloorPalette) => {
-    looks.wall.color.set(p.wall);
-    looks.trim.color.set(p.trim);
-    for (const t of looks.planks) {
-      paintPlanks(t.image as HTMLCanvasElement, p);
-      t.needsUpdate = true;
-    }
+  // Every deck is the same slate: a floor's palette no longer paints it (its number on the lift and in
+  // the title block tells decks apart).
+  const setLook = (p: FloorPalette) => void p;
+
+  const setProjectName = (name: string, deck?: { n?: number; operator?: string }) => {
+    given.setLiftSign?.(name, deck?.n);
+    given.titleBlock?.set({ deck: name, n: deck?.n, operator: deck?.operator });
   };
 
   const update = (t: number, dt: number, people: Iterable<{ x: number; y: number; z: number }>) => {
@@ -121,5 +127,5 @@ export function buildOffice(): Office {
     for (const u of updates) u(t, dt);
   };
 
-  return { ...(given as OfficeHandles), group, colliders, interactables, desks, setLook, update };
+  return { ...(given as OfficeHandles), group, colliders, interactables, desks, setLook, setProjectName, update };
 }

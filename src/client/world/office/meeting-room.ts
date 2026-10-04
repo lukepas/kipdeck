@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { MEETING_BOARD, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, deskSeat, type DeskDef } from '../../../shared/layout';
-import { mesh, roundedBox, textPlane, toon } from '../toon';
+import { mesh, textPlane } from '../toon';
 import type { Collider, DeskView, Interactable } from '../types';
 import type { Fixture } from './fixture';
-import { PALETTE, box, glassPane } from './materials';
+import { DECK, box, contactShadow, flat, glassPane, matte, practical } from './materials';
 import { wallBoard } from './props';
 import { chair } from './seats';
 import type { Door } from './shell';
@@ -22,7 +22,8 @@ function buildMeetingSeat(def: DeskDef, index: number): DeskView {
   seatAnchor.rotation.y = Math.PI;
   seatAnchor.scale.setScalar(0.82);
   group.add(seatAnchor);
-  const ch = chair(['#2b2d42', '#ef476f', '#118ab2', '#06d6a0', '#ffd166'][index % 5]);
+  const ch = chair();
+  void index;
   ch.position.set(0, 0, 0.85);
   group.add(ch);
   // Nobody is hired here from the floor, so there's no '+' over a free chair: a meeting fills them.
@@ -32,15 +33,16 @@ function buildMeetingSeat(def: DeskDef, index: number): DeskView {
 }
 
 /**
- * The meeting room: glass walls in the south-east corner round to the outside walls under a flat roof, a
- * sliding glass door facing the lounge, a long table with its chairs (MEETING_SEATS), a board on the
- * back wall for the meeting's output and a sign by the door for how it's going.
+ * The Review bay (the meeting room): smoked glass in the south-east corner round to the outside walls,
+ * open to the sky so the Overview sees in, a sliding glass door facing the deck, a small table with its
+ * stools (MEETING_SEATS) and pull requests stacked on it as lit sheets, a board on the east wall for the
+ * review's output and a panel by the door for how it's going.
  */
 export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], interactables: Interactable[], desks: Map<string, DeskView>, doors: Door[]): { board: THREE.Mesh; sign: THREE.Mesh } {
   const R = MEETING_ROOM;
   const H = R.height;
   const T = 0.1;
-  const frameMat = toon('#ffffff');
+  const frameMat = matte(DECK.steel, { metalness: 0.3, roughness: 0.6 });
   const walls = new THREE.Group();
   const bar = (w: number, h: number, d: number, x: number, y: number, z: number) => walls.add(mesh(box(w, h, d), frameMat, x, y, z, false));
   /** A run of glass along x (north wall) or z (west wall), from a to b, in panes about `pane` wide. */
@@ -74,19 +76,14 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
   // Over the door, up to the roof.
   bar(R.door.x1 - R.door.x0, 0.1, T + 0.06, (R.door.x0 + R.door.x1) / 2, 2.3, R.minZ);
   group.add(walls);
-  // The roof, its trim facing the room, and on top of it nothing but the ceiling far above.
+  // No roof: the Overview looks straight in. Nobody climbs over the glass, though.
   const roofT = 0.25;
-  const roofW = R.maxX - R.minX + T;
-  const roofD = R.maxZ - R.minZ + T;
-  const roof = mesh(box(roofW, roofT, roofD), frameMat, (R.minX + R.maxX - T) / 2, H + roofT / 2, (R.minZ + R.maxZ - T) / 2);
-  roof.receiveShadow = true;
-  group.add(roof);
   colliders.push({ minX: R.minX - T / 2, maxX: R.maxX, minZ: R.minZ - T / 2, maxZ: R.maxZ, bottom: H, top: H + roofT });
 
   // The door: two glass leaves that slide apart over the glass on either side when someone comes up.
   const dx = (R.door.x0 + R.door.x1) / 2;
   const half = (R.door.x1 - R.door.x0) / 2;
-  const alu = toon('#aab4be');
+  const alu = frameMat;
   const leaves: [THREE.Group, number][] = [];
   for (const side of [-1, 1]) {
     const leaf = new THREE.Group();
@@ -96,7 +93,7 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
     const pane = glassPane(half - 0.12, h - 0.14);
     pane.position.y = h / 2;
     leaf.add(pane);
-    leaf.add(mesh(box(0.03, 0.4, 0.07), toon(PALETTE.ink), -side * (half / 2 - 0.1), 1.05, 0, false));
+    leaf.add(mesh(box(0.03, 0.4, 0.07), matte(DECK.wallReveal), -side * (half / 2 - 0.1), 1.05, 0, false));
     const x0 = dx + (side * half) / 2;
     leaf.position.set(x0, 0, R.minZ - T / 2 - 0.04);
     group.add(leaf);
@@ -112,7 +109,7 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
       for (const [leaf, x0] of leaves) leaf.position.x = x0 + Math.sign(x0 - dx) * e * (half - 0.06);
     },
   });
-  const label = textPlane('🤝 Meeting room', { bg: '#2b2d42', color: '#fffaf3', size: 56, border: '#fffaf3' });
+  const label = textPlane('REVIEW BAY', { face: 'display', size: 56, color: DECK.text, track: 0.08 });
   label.scale.multiplyScalar(0.62);
   // In front of the glass wall's frame (out to R.minZ - 0.08) and the sliding leaves (to R.minZ - 0.11),
   // which it runs across once its text is wider than the door.
@@ -120,14 +117,23 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
   label.rotation.y = Math.PI;
   group.add(label);
 
-  // The table, on two pedestals, and its chairs.
+  // The table, in the consoles' language: a slate top with a lit edge on two pedestals, and the
+  // pull requests waiting for review stacked on it as lit sheets.
   const table = new THREE.Group();
   const top = MEETING_TABLE;
-  table.add(mesh(roundedBox(top.width, 0.08, top.depth, 0.1), toon(PALETTE.wood), 0, top.height - 0.04, 0));
+  table.add(mesh(box(top.width, 0.07, top.depth), flat(DECK.consoleTop), 0, top.height - 0.035, 0));
+  table.add(mesh(box(top.width + 0.01, 0.01, 0.01), practical(DECK.line), 0, top.height, top.depth / 2));
+  table.add(mesh(box(top.width + 0.01, 0.01, 0.01), practical(DECK.line), 0, top.height, -top.depth / 2));
   for (const sx of [-1, 1]) {
-    table.add(mesh(new THREE.CylinderGeometry(0.1, 0.12, top.height - 0.08, 10), toon(PALETTE.deskLeg), sx * (top.width / 2 - 0.7), (top.height - 0.08) / 2, 0));
-    table.add(mesh(roundedBox(0.9, 0.05, 0.6, 0.05), toon(PALETTE.deskLeg), sx * (top.width / 2 - 0.7), 0.025, 0));
+    table.add(mesh(box(0.5, top.height - 0.07, 0.4), flat(DECK.console), sx * (top.width / 2 - 0.7), (top.height - 0.07) / 2, 0));
   }
+  const sheet = new THREE.MeshBasicMaterial({ color: DECK.review, toneMapped: false, transparent: true, opacity: 0.55 });
+  for (let i = 0; i < 3; i++) {
+    const card = mesh(box(0.42, 0.006, 0.3), i === 2 ? sheet : matte(DECK.steelLight), 0.3 + i * 0.015, top.height + 0.006 + i * 0.008, 0.02 - i * 0.01, false);
+    card.rotation.y = 0.12 - i * 0.07;
+    table.add(card);
+  }
+  table.add(contactShadow(top.width + 1.4, top.depth + 2.2));
   table.position.set(top.x, 0, top.z);
   group.add(table);
   colliders.push({ minX: top.x - top.width / 2, maxX: top.x + top.width / 2, minZ: top.z - top.depth / 2, maxZ: top.z + top.depth / 2, top: top.height });
@@ -144,13 +150,13 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
     view.group.userData.interact = it;
   });
 
-  // The board on the back wall: the meeting's output file as it's being written.
+  // The board on the east wall: the review's output file as it's being written.
   const b = MEETING_BOARD;
-  const { group: frame, face } = wallBoard(b.width, b.height, '#aab4be');
-  frame.position.set(b.x, b.y, b.z);
-  frame.rotation.y = Math.PI;
+  const { group: frame, face } = wallBoard(b.width, b.height);
+  frame.position.set(b.x - 0.03, b.y, b.z);
+  frame.rotation.y = b.rotY;
   group.add(frame);
-  const read: Interactable = { kind: 'meeting', x: b.x, z: b.z - 1.4, radius: 2.4 };
+  const read: Interactable = { kind: 'meeting', x: b.x + Math.sin(b.rotY) * 1.4, z: b.z + Math.cos(b.rotY) * 1.4, radius: 2.4 };
   interactables.push(read);
   frame.userData.interact = read;
 
@@ -162,17 +168,16 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
   sign.position.set((R.minX + R.door.x0) / 2 + 0.01, 1.45, R.minZ + T / 2 + 0.03);
   sign.rotation.y = Math.PI;
   group.add(sign);
-  const plate = mesh(roundedBox(0.66, 1.03, 0.03, 0.03), toon(PALETTE.ink), sign.position.x, sign.position.y, R.minZ + T / 2 + 0.05, false);
+  const plate = mesh(box(0.66, 1.03, 0.03), matte(DECK.wallReveal), sign.position.x, sign.position.y, R.minZ + T / 2 + 0.05, false);
   group.add(plate);
   const door: Interactable = { kind: 'meeting', x: sign.position.x, z: R.minZ - 1.2, radius: 1.8 };
   interactables.push(door);
   sign.userData.interact = door;
   plate.userData.interact = door;
 
-  // Flat lights set in the roof over the table: a hanging lamp would be in front of the board.
-  for (const dx of [-0.95, 0.95]) {
-    group.add(mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.04, 20), toon('#fff7d6', { emissive: '#ffe08a' }), top.x + dx, H - 0.02, top.z, false));
-  }
+  // A lit rule along the top of the glass, so the bay's outline reads from across the deck.
+  group.add(mesh(box(R.maxX - R.minX, 0.012, 0.012), practical(DECK.line), (R.minX + R.maxX) / 2, H + 0.01, R.minZ));
+  group.add(mesh(box(0.012, 0.012, R.maxZ - R.minZ), practical(DECK.line), R.minX, H + 0.01, (R.minZ + R.maxZ) / 2));
   return { board: face, sign };
 }
 
@@ -184,7 +189,7 @@ declare module '../types' {
   }
 }
 
-/** The meeting room, in the south-east corner. */
+/** The Review bay, in the south-east corner. */
 export const meetingRoom: Fixture<'meetingBoard' | 'meetingSign'> = (site) => {
   const built = buildMeetingRoom(site.group, site.colliders, site.interactables, site.desks, site.doors);
   return { handle: { meetingBoard: built.board, meetingSign: built.sign } };

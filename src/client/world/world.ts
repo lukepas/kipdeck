@@ -34,7 +34,8 @@ export interface World {
   setBeanbags(out: Set<string>): Collider[];
   /** Paints it in a floor's colors, so each project looks like itself. */
   setLook(p: FloorPalette): void;
-  setProjectName(name: string): void;
+  /** Names the deck on the lift and in the title block (see Office.setProjectName). */
+  setProjectName(name: string, deck?: { n?: number; operator?: string }): void;
   /** Animates it; doors open for anyone in `people` who comes up to them. */
   update(t: number, dt: number, people: Iterable<{ x: number; y: number; z: number }>): void;
 }
@@ -58,7 +59,7 @@ export function officeWorld(office: Office, wing: () => number): World {
     },
     setBeanbags: (out) => office.setBeanbags(out),
     setLook: (p) => office.setLook(p),
-    setProjectName: (name) => office.setProjectName(name),
+    setProjectName: (name, deck) => office.setProjectName(name, deck),
     update: (t, dt, people) => office.update(t, dt, people),
   };
 }

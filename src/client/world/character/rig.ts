@@ -10,12 +10,12 @@ export const HIPS = 0.42;
 export interface WorkerRig {
   root: THREE.Group;
   body: THREE.Group;
-  skin: THREE.MeshToonMaterial;
+  skin: THREE.MeshStandardMaterial;
   armL: THREE.Object3D;
   armR: THREE.Object3D;
   feet: THREE.Mesh[];
   pupils: THREE.Mesh[];
-  bulb: THREE.MeshToonMaterial;
+  bulb: THREE.MeshStandardMaterial;
   bulbMesh: THREE.Mesh;
   /** What it acts out with: the papers in its hands and the globe beside its laptop (see worker-props.ts). */
   props: THREE.Object3D[];

@@ -25,9 +25,9 @@ export class Person {
   private legR: THREE.Object3D;
   private armL: THREE.Object3D;
   private armR: THREE.Object3D;
-  private shirt: THREE.MeshToonMaterial;
-  private skin: THREE.MeshToonMaterial;
-  private hairMat: THREE.MeshToonMaterial;
+  private shirt: THREE.MeshStandardMaterial;
+  private skin: THREE.MeshStandardMaterial;
+  private hairMat: THREE.MeshStandardMaterial;
   private hair = new THREE.Group();
   private look: Look;
   private label: THREE.Sprite | null = null;

@@ -4,7 +4,6 @@ import { OFFICE_PLAN } from '../../shared/plan';
 import { Worker } from '../world/character';
 import type { DeskView } from '../world/types';
 import type { World } from '../world/world';
-import { noOutline } from './outline';
 import type { IconName } from '../ui/icons';
 
 /** What each board agent is for: its board's icon, what it offers on the card over its head, and an example ask. */
@@ -30,7 +29,6 @@ export function idleAgentsIn(w: World): IdleAgent[] {
     model.setTask({ name: STATION_INFO[kind].offer, summary: STATION_INFO[kind].does });
     const view = w.desks.get(def.id)!;
     view.vacancy.children[0].add(model.root);
-    noOutline(model.root);
     return { model, view };
   });
 }

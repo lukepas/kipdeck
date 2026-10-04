@@ -3,11 +3,10 @@
  * camera and the office building.
  */
 import * as THREE from 'three';
-import { OutlineEffect } from 'three/examples/jsm/effects/OutlineEffect.js';
 import { buildOffice } from '../world/office';
 import type { Office } from '../world/types';
 import type { Ctx } from './context';
-import { noOutline } from './outline';
+import { DECK } from '../world/office/materials';
 
 /** How far the camera sees: the whole floor and the back office, corner to corner. */
 export const FAR = 120;
@@ -18,10 +17,10 @@ export const FOV = 55;
 export interface Stage {
   readonly canvas: HTMLCanvasElement;
   readonly renderer: THREE.WebGLRenderer;
-  /** Draws the scene with the toon outline (see drawScene in core/loop.ts). */
-  readonly effect: OutlineEffect;
   readonly scene: THREE.Scene;
   readonly camera: THREE.PerspectiveCamera;
+  /** The camera the frame is drawn with instead of `camera`, while one is set (the Overview, see core/camera-overview.ts). */
+  view: THREE.Camera | null;
   readonly office: Office;
 }
 
@@ -40,37 +39,47 @@ export function noWebGL(): Promise<never> {
   return new Promise(() => {});
 }
 
+/** The slate void round the deck, and how far off the fog starts and ends, so the slab fades at its edges. */
+export const VOID = { color: DECK.void, fogNear: 30, fogFar: 70 } as const;
+
 /**
- * Sets up the renderer on `canvas`, and builds the scene: the office, the camera, and a fixed rig of
- * lights that keeps every corner evenly lit, all day.
+ * Sets up the renderer on `canvas`, and builds the scene: the deck floating in a slate void, a cool
+ * sky-and-ground fill, one key light from high in the north-west that throws the only shadows, and
+ * the office (world/office).
  */
 export function createScene(canvas: HTMLCanvasElement, renderer: THREE.WebGLRenderer): Stage {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
-  const effect = new OutlineEffect(renderer, { defaultThickness: 0.0032, defaultColor: [0.17, 0.18, 0.26] });
+  renderer.toneMapping = THREE.NeutralToneMapping;
+  renderer.toneMappingExposure = 1.4;
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color('#bfe3ff');
+  scene.background = new THREE.Color(VOID.color);
+  scene.fog = new THREE.Fog(VOID.color, VOID.fogNear, VOID.fogFar);
   const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, FAR);
 
-  scene.add(new THREE.HemisphereLight('#fff5e6', '#c9a27a', 1.5), new THREE.AmbientLight('#ffffff', 0.5));
-  // Light from high over the room, for the shadows under the desks and the people.
-  const sun = new THREE.DirectionalLight('#fff1d6', 2.2);
-  sun.position.set(-8, 18, 10);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  // Wide enough for the office and its back office.
-  Object.assign(sun.shadow.camera, { left: -24, right: 24, top: 24, bottom: -24, near: 1, far: 60 });
-  sun.shadow.bias = -0.0008;
-  sun.shadow.normalBias = 0.03;
-  scene.add(sun);
+  scene.add(new THREE.HemisphereLight('#AEB8C4', '#3A4756', 2.4));
+  // The key: cool, from high over the north-west corner, the one light that casts shadows. Its
+  // shadow map covers the slab and the back office, no more.
+  const key = new THREE.DirectionalLight('#DCE3EA', 2.6);
+  key.position.set(-14, 22, -10);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  Object.assign(key.shadow.camera, { left: -26, right: 26, top: 24, bottom: -24, near: 1, far: 70 });
+  key.shadow.bias = -0.0006;
+  key.shadow.normalBias = 0.03;
+  key.shadow.radius = 3;
+  scene.add(key);
+  // A faint counter from the south-east, so the faces the key can't reach aren't lost in the slate.
+  const fill = new THREE.DirectionalLight('#8FA3B9', 0.7);
+  fill.position.set(12, 9, 16);
+  scene.add(fill);
 
   const office = buildOffice();
   scene.add(office.group);
-  noOutline(office.group);
-  return { canvas, renderer, effect, scene, camera, office };
+  return { canvas, renderer, scene, camera, view: null, office };
 }
 
 /** The canvas and the camera fit the window, and keep fitting it. */

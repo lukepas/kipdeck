@@ -2,13 +2,11 @@ import * as THREE from 'three';
 import type { MachineState } from '../../../shared/protocol';
 import { officeFull } from '../../../shared/machine';
 
-const FONT = 'Archivo, system-ui, sans-serif';
-const INK = '#1b1d2e';
-const MUTED = '#9aa0b8';
+import { MONO_FONT, PANEL, UI_FONT, panelGround } from './world';
 
-/** Green while there's room, amber when it's getting full, red from where hiring gets a warning. */
+/** Steel while there's room, amber when it's getting full, red from where deploying gets a warning. */
 export function loadColor(pct: number): string {
-  return pct >= 90 ? '#ef476f' : pct >= 70 ? '#ffd166' : '#06d6a0';
+  return pct >= 90 ? PANEL.stuck : pct >= 70 ? PANEL.review : PANEL.working;
 }
 
 export function fmtGb(bytes: number): string {
@@ -17,8 +15,8 @@ export function fmtGb(bytes: number): string {
 }
 
 /**
- * The machine monitor on the west wall: how busy the CPU and memory are, with the last few minutes
- * of each, and how many workers the office runs of the most it takes.
+ * The capacity panel at the head of the Proof corner: how busy the CPU and memory are, with the last
+ * few minutes of each, and how many units the office runs of the most it takes.
  */
 export class MachineTexture {
   readonly texture: THREE.CanvasTexture;
@@ -27,7 +25,7 @@ export class MachineTexture {
   private drawn = '';
 
   constructor() {
-    // The screen's own shape (MACHINE_MONITOR is 2.3 × 1.3 m).
+    // The panel's own shape (MACHINE_MONITOR is 2.6 by 1.5 m).
     this.canvas.width = 920;
     this.canvas.height = 520;
     this.ctx = this.canvas.getContext('2d')!;
@@ -43,45 +41,43 @@ export class MachineTexture {
     const g = this.ctx;
     const W = this.canvas.width;
     const H = this.canvas.height;
-    g.fillStyle = INK;
-    g.fillRect(0, 0, W, H);
+    panelGround(g, W, H);
     g.textBaseline = 'alphabetic';
 
-    // Header: what this is, and whether there's room for another worker.
+    // Header: whether there's room for another unit, as a state glyph and a word.
     g.textAlign = 'left';
-    g.fillStyle = '#ffffff';
-    g.font = `900 40px ${FONT}`;
-    g.fillText('🖥️ This machine', 30, 62);
     const full = officeFull(s);
-    const status = !s.memTotal ? ['…', MUTED] : s.pressure ? ['⚠️ Under pressure', '#ef476f'] : full ? ['🚫 Office full', '#ffd166'] : ['✅ Room to hire', '#06d6a0'];
-    g.font = `800 30px ${FONT}`;
-    const tw = g.measureText(status[0]).width;
+    const status: [string, string] = !s.memTotal ? ['reading', PANEL.muted] : s.pressure ? ['under pressure', PANEL.stuck] : full ? ['at its limit', PANEL.review] : ['room to deploy', PANEL.settled];
     g.fillStyle = status[1];
-    roundRect(g, W - 30 - tw - 32, 24, tw + 32, 50, 25);
-    g.fill();
-    g.fillStyle = INK;
-    g.textAlign = 'center';
-    g.fillText(status[0], W - 30 - (tw + 32) / 2, 60);
+    g.fillRect(30, 40, 16, 16);
+    g.fillStyle = PANEL.text;
+    g.font = UI_FONT(600, 32);
+    g.fillText(status[0], 60, 58);
 
     const memPct = s.memTotal ? Math.round((s.memUsed / s.memTotal) * 100) : 0;
-    this.panel(30, 100, 415, 'CPU', s.cpu, s.cores ? `${s.cores} core${s.cores === 1 ? '' : 's'}` : '', s.history.map(([c]) => c));
-    this.panel(475, 100, 415, 'Memory', memPct, s.memTotal ? `${fmtGb(s.memUsed)} of ${fmtGb(s.memTotal)}` : '', s.history.map(([, m]) => m));
+    this.panel(30, 90, 415, 'CPU', s.cpu, s.cores ? `${s.cores} core${s.cores === 1 ? '' : 's'}` : '', s.history.map(([c]) => c));
+    this.panel(475, 90, 415, 'MEMORY', memPct, s.memTotal ? `${fmtGb(s.memUsed)} of ${fmtGb(s.memTotal)}` : '', s.history.map(([, m]) => m));
 
-    // Footer: the workers, one pip each, against the limit.
-    const y = 440;
+    // Footer: the units, a square each, against the limit.
+    const y = 450;
     g.textAlign = 'left';
-    g.font = `800 32px ${FONT}`;
-    g.fillStyle = '#ffffff';
-    const label = s.limit === undefined ? `👷 ${s.workers} worker${s.workers === 1 ? '' : 's'} · no limit` : `👷 ${s.workers} of ${s.limit} workers`;
+    g.font = MONO_FONT(28);
+    g.fillStyle = PANEL.text;
+    const label = s.limit === undefined ? `${s.workers} unit${s.workers === 1 ? '' : 's'}  no limit` : `${s.workers}/${s.limit} units`;
     g.fillText(label, 30, y + 12);
     if (s.limit !== undefined) {
       const x0 = 30 + g.measureText(label).width + 28;
       const room = W - 30 - x0;
-      const pip = Math.min(34, room / Math.max(s.limit, s.workers));
+      const pip = Math.min(30, room / Math.max(s.limit, s.workers));
       for (let i = 0; i < Math.max(s.limit, s.workers); i++) {
-        g.fillStyle = i >= s.limit ? '#ef476f' : i < s.workers ? (full ? '#ffd166' : '#06d6a0') : '#3a3d55';
-        roundRect(g, x0 + i * pip, y - 14, Math.max(2, pip - 6), 30, Math.min(8, pip / 3));
-        g.fill();
+        const used = i < s.workers;
+        g.fillStyle = i >= s.limit ? PANEL.stuck : used ? (full ? PANEL.review : PANEL.working) : PANEL.card;
+        g.fillRect(x0 + i * pip, y - 12, Math.max(2, pip - 6), 26);
+        if (!used) {
+          g.strokeStyle = PANEL.lineStrong;
+          g.lineWidth = 2;
+          g.strokeRect(x0 + i * pip + 1, y - 11, Math.max(2, pip - 6) - 2, 24);
+        }
       }
     }
     this.texture.needsUpdate = true;
@@ -91,31 +87,37 @@ export class MachineTexture {
   private panel(x: number, y: number, w: number, name: string, pct: number, sub: string, history: number[]) {
     const g = this.ctx;
     const color = loadColor(pct);
-    g.fillStyle = '#25283d';
-    roundRect(g, x, y, w, 300, 18);
-    g.fill();
+    g.fillStyle = PANEL.card;
+    g.fillRect(x, y, w, 320);
+    g.strokeStyle = PANEL.line;
+    g.lineWidth = 2;
+    g.strokeRect(x + 1, y + 1, w - 2, 318);
     g.textAlign = 'left';
-    g.fillStyle = MUTED;
-    g.font = `800 28px ${FONT}`;
+    g.fillStyle = PANEL.muted;
+    g.font = UI_FONT(600, 24);
+    g.letterSpacing = '3px';
     g.fillText(name, x + 20, y + 42);
+    g.letterSpacing = '0px';
     g.fillStyle = color;
-    g.font = `900 84px ${FONT}`;
+    g.font = MONO_FONT(80);
     g.fillText(`${pct}%`, x + 20, y + 124);
-    g.fillStyle = MUTED;
-    g.font = `700 24px ${FONT}`;
-    g.fillText(sub, x + 20, y + 160);
+    g.fillStyle = PANEL.muted;
+    g.font = MONO_FONT(22);
+    g.fillText(sub, x + 20, y + 162);
     // The graph: 0-100%, the newest reading on the right.
     const gx = x + 20;
-    const gy = y + 180;
+    const gy = y + 196;
     const gw = w - 40;
     const gh = 100;
     // The 90% line: past it, hiring comes with a warning.
-    g.strokeStyle = '#3a3d55';
+    g.strokeStyle = PANEL.lineStrong;
     g.lineWidth = 2;
+    g.setLineDash([6, 6]);
     g.beginPath();
     g.moveTo(gx, gy + gh * 0.1);
     g.lineTo(gx + gw, gy + gh * 0.1);
     g.stroke();
+    g.setLineDash([]);
     if (history.length < 2) return;
     const step = gw / (history.length - 1);
     const at = (i: number) => [gx + i * step, gy + gh - (Math.max(0, Math.min(100, history[i])) / 100) * gh] as const;
@@ -124,19 +126,15 @@ export class MachineTexture {
     for (let i = 0; i < history.length; i++) g.lineTo(...at(i));
     g.lineTo(gx + gw, gy + gh);
     g.closePath();
-    g.globalAlpha = 0.28;
+    g.globalAlpha = 0.18;
     g.fillStyle = color;
     g.fill();
     g.globalAlpha = 1;
     g.beginPath();
     for (let i = 0; i < history.length; i++) (i ? g.lineTo : g.moveTo).call(g, ...at(i));
     g.strokeStyle = color;
-    g.lineWidth = 4;
+    g.lineWidth = 3;
     g.stroke();
   }
 }
 
-function roundRect(g: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
-  g.beginPath();
-  g.roundRect(x, y, w, h, r);
-}

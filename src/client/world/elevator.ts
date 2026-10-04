@@ -1,29 +1,54 @@
 import * as THREE from 'three';
-import { ELEVATOR, ELEVATOR_CAR, ELEVATOR_FRONT, FLOOR, WALL_HEIGHT } from '../../shared/layout';
-import { mesh, roundedBox, textPlane, toon } from './toon';
+import { ELEVATOR, ELEVATOR_CAR, ELEVATOR_FRONT, FLOOR } from '../../shared/layout';
+import { mesh, stretch } from './toon';
 import type { Collider, Interactable } from './types';
 import type { Fixture } from './office/fixture';
+import { DECK, box, contactShadow, flat, matte, practical } from './office/materials';
+import { drawMark } from './office/floorpaint';
 
-// The elevator: a steel car against the north wall, open to the room. Every floor has it in the
-// same place: it's where you arrive, and E there opens the Floors window.
+// The Deck lift (the elevator): a slate housing against the north wall, open to the deck through a
+// portal with a lit frame, the Formation mark and the deck's number over it. Every deck has it in the
+// same place: it's where you arrive, and E there opens the Decks window.
 
-const STEEL = '#b8c1cc';
-const STEEL_DARK = '#8d99ae';
-const BRASS = '#e9b949';
+/** How tall the housing stands: the lift's walls go on up out of reach, past what's drawn. */
+const HOUSING = 3.6;
 
 export interface Elevator {
   group: THREE.Group;
-  /** What stops you walking out through shut doors. Part of the office's colliders. */
+  /** What stops you walking out through the sides. Part of the office's colliders. */
   colliders: Collider[];
   /** Step in, or up to it, and press E. */
   interactable: Interactable;
-  /** The sign over the doorway: which floor this is. */
-  setSign(text: string): void;
+  /** The sign over the portal: which deck this is, and its number. */
+  setSign(text: string, n?: number): void;
 }
 
-/** The elevator, the office's full height: its walls go on up out of reach. */
+/** The sign's face, pixels across and down. */
+const SIGN_PX = { w: 1024, h: 256 };
+
+function paintSign(g: CanvasRenderingContext2D, text: string, n?: number) {
+  const { w, h } = SIGN_PX;
+  g.clearRect(0, 0, w, h);
+  g.fillStyle = DECK.wall;
+  g.fillRect(0, 0, w, h);
+  drawMark(g, 22, 24, 8.5, DECK.text, DECK.muted);
+  g.textBaseline = 'alphabetic';
+  g.fillStyle = DECK.muted;
+  g.font = '700 46px Archivo, system-ui, sans-serif';
+  stretch(g, true);
+  g.letterSpacing = '6px';
+  g.fillText(n ? `DECK ${String(n).padStart(2, '0')}` : 'DECK', 250, 104);
+  g.letterSpacing = '0px';
+  stretch(g, false);
+  g.fillStyle = DECK.text;
+  g.font = '500 62px "JetBrains Mono", ui-monospace, monospace';
+  let t = text;
+  while (t.length > 3 && g.measureText(t).width > w - 280) t = `${t.slice(0, -2)}.`;
+  g.fillText(t, 250, 196);
+}
+
+/** The Deck lift. */
 export function buildElevator(): Elevator {
-  const height = WALL_HEIGHT;
   const { x, width, depth, wall, doorWidth, doorHeight } = ELEVATOR;
   const group = new THREE.Group();
   const colliders: Collider[] = [];
@@ -32,89 +57,66 @@ export function buildElevator(): Elevator {
   const back = FLOOR.minZ;
   const front = ELEVATOR_FRONT;
   const midZ = (back + front) / 2;
-  const steel = toon(STEEL);
-  const steelDark = toon(STEEL_DARK);
-  const brass = toon(BRASS);
+  const slate = flat(DECK.wall);
+  const lit = practical(DECK.working);
 
-  // Side walls, the whole height of the room.
+  // Side walls: the colliders go on up, the housing stops at HOUSING.
   for (const sx of [minX + wall / 2, maxX - wall / 2]) {
-    group.add(mesh(new THREE.BoxGeometry(wall, height, depth), steel, sx, height / 2, midZ));
+    group.add(mesh(box(wall, HOUSING, depth), slate, sx, HOUSING / 2, midZ));
     colliders.push({ minX: sx - wall / 2, maxX: sx + wall / 2, minZ: back, maxZ: front, bottom: 0, top: 99 });
   }
-  // The front: a pillar either side of the doorway, and a header over it up to the ceiling line.
-  const pillar = (width - doorWidth) / 2;
+  // The front: a pillar either side of the portal, and a lintel over it.
   for (const [x0, x1] of [
     [minX, x - doorWidth / 2],
     [x + doorWidth / 2, maxX],
   ]) {
-    group.add(mesh(new THREE.BoxGeometry(pillar, height, wall), steel, (x0 + x1) / 2, height / 2, front - wall / 2));
+    group.add(mesh(box(x1 - x0, HOUSING, wall), slate, (x0 + x1) / 2, HOUSING / 2, front - wall / 2));
     colliders.push({ minX: x0, maxX: x1, minZ: front - wall, maxZ: front, bottom: 0, top: 99 });
   }
-  const header = height - doorHeight;
-  group.add(mesh(new THREE.BoxGeometry(doorWidth, header, wall), steel, x, doorHeight + header / 2, front - wall / 2));
-  // A brass frame round the doorway, and a kick plate along the bottom of the shaft.
-  const frameT = 0.08;
-  group.add(mesh(new THREE.BoxGeometry(doorWidth + frameT * 2, frameT, 0.05), brass, x, doorHeight + frameT / 2, front + 0.02, false));
-  for (const sx of [-1, 1]) group.add(mesh(new THREE.BoxGeometry(frameT, doorHeight, 0.05), brass, x + sx * (doorWidth / 2 + frameT / 2), doorHeight / 2, front + 0.02, false));
-  group.add(mesh(new THREE.BoxGeometry(width + 0.02, 0.25, wall + 0.04), steelDark, x, 0.125, front - wall / 2, false));
+  group.add(mesh(box(doorWidth, HOUSING - doorHeight, wall), slate, x, doorHeight + (HOUSING - doorHeight) / 2, front - wall / 2));
+  // The roof of the housing, and a lit hairline round its top.
+  group.add(mesh(box(width, 0.06, depth), slate, x, HOUSING + 0.03, midZ, false));
+  group.add(mesh(box(width, 0.012, 0.012), practical(DECK.line), x, HOUSING + 0.066, front, false));
+  // The portal's lit frame.
+  const F = 0.035;
+  group.add(mesh(box(doorWidth + 2 * F, F, 0.02), lit, x, doorHeight + F / 2, front + 0.011, false));
+  for (const sx of [-1, 1]) group.add(mesh(box(F, doorHeight, 0.02), lit, x + sx * (doorWidth / 2 + F / 2), doorHeight / 2, front + 0.011, false));
 
-  // Inside: a dark floor, a mirror on the back wall, handrails, a strip light over the doors.
+  // Inside: a dark floor with a lit threshold, and a strip light over the portal.
   const inW = ELEVATOR_CAR.maxX - ELEVATOR_CAR.minX;
   const inD = ELEVATOR_CAR.maxZ - ELEVATOR_CAR.minZ;
-  const carFloor = mesh(new THREE.BoxGeometry(inW, 0.02, inD), toon('#3d405b'), x, 0.012, (ELEVATOR_CAR.minZ + ELEVATOR_CAR.maxZ) / 2, false);
-  group.add(carFloor);
-  for (let i = 1; i < 4; i++) group.add(mesh(new THREE.BoxGeometry(inW, 0.024, 0.03), toon('#565a75'), x, 0.013, ELEVATOR_CAR.minZ + (i * inD) / 4, false));
-  const mirror = mesh(new THREE.PlaneGeometry(inW - 0.3, 1.5), new THREE.MeshBasicMaterial({ color: '#cfe8f5' }), x, 1.55, back + 0.02, false);
-  group.add(mirror);
-  for (const [gx, gw] of [
-    [-0.4, 0.14],
-    [-0.15, 0.06],
-  ]) {
-    const glint = mesh(new THREE.PlaneGeometry(gw, 1.1), new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.5 }), x + gx, 1.6, back + 0.03, false);
-    glint.rotation.z = -0.45;
-    group.add(glint);
-  }
-  const rail = (len: number, px: number, pz: number, alongX: boolean) => {
-    const r = mesh(new THREE.CylinderGeometry(0.025, 0.025, len, 8), brass, px, 0.95, pz, false);
-    r.rotation.z = alongX ? Math.PI / 2 : 0;
-    r.rotation.x = alongX ? 0 : Math.PI / 2;
-    group.add(r);
-  };
-  rail(inW - 0.2, x, back + 0.08, true);
-  rail(inD - 0.5, ELEVATOR_CAR.minX + 0.06, midZ - 0.1, false);
-  rail(inD - 0.5, ELEVATOR_CAR.maxX - 0.06, midZ - 0.1, false);
-  group.add(mesh(new THREE.BoxGeometry(inW - 0.2, 0.06, 0.16), toon('#fff7d6', { emissive: '#ffe08a' }), x, doorHeight + 0.35, front - wall - 0.1, false));
+  group.add(mesh(box(inW, 0.02, inD), matte(DECK.wallReveal), x, 0.012, (ELEVATOR_CAR.minZ + ELEVATOR_CAR.maxZ) / 2, false));
+  group.add(mesh(box(doorWidth, 0.022, 0.04), lit, x, 0.013, front - wall / 2, false));
+  group.add(mesh(box(inW - 0.2, 0.03, 0.1), lit, x, doorHeight - 0.04, front - wall - 0.08, false));
+  // The back wall of the car: the mark stencilled big, faint.
+  const markCanvas = document.createElement('canvas');
+  markCanvas.width = markCanvas.height = 256;
+  drawMark(markCanvas.getContext('2d')!, 8, 8, 10, DECK.steel, DECK.line);
+  const markTex = new THREE.CanvasTexture(markCanvas);
+  markTex.colorSpace = THREE.SRGBColorSpace;
+  const mark = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1), new THREE.MeshBasicMaterial({ map: markTex, transparent: true, toneMapped: false }));
+  mark.position.set(x, 1.5, back + 0.02);
+  group.add(mark);
+  group.add(contactShadow(width + 0.8, 1.0, x, front + 0.2));
 
-  // The button panel inside, by the doors on the right as you face out (the west wall).
-  const panelIn = new THREE.Group();
-  panelIn.add(mesh(roundedBox(0.04, 0.7, 0.32, 0.02), steelDark, 0, 0, 0, false));
-  for (let row = 0; row < 4; row++) {
-    for (const col of [-1, 1]) {
-      const b = mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.02, 12), toon('#fff7d6', { emissive: row === 0 && col === 1 ? '#ffb400' : '#6c7288' }), -0.03, 0.22 - row * 0.15, col * 0.07, false);
-      b.rotation.z = Math.PI / 2;
-      panelIn.add(b);
-    }
-  }
-  panelIn.position.set(ELEVATOR_CAR.minX + 0.03, 1.25, front - wall - 0.35);
-  panelIn.rotation.y = Math.PI;
-  group.add(panelIn);
-
-  // What floor this is: a sign over the doorway, facing the room.
-  let sign: ReturnType<typeof textPlane> | null = null;
-  const setSign = (text: string) => {
-    if (sign) {
-      group.remove(sign);
-      sign.material.map?.dispose();
-      sign.material.dispose();
-      sign.geometry.dispose();
-    }
-    sign = textPlane(text, { bg: '#2b2d42', color: '#fffaf3', size: 64, border: '#fffaf3' });
-    const { width: sw, height: sh } = sign.geometry.parameters;
-    // As big as fits over the doorway.
-    sign.scale.multiplyScalar(Math.min(1.6, (width + 0.6) / sw, (header - 0.2) / sh));
-    sign.position.set(x, doorHeight + Math.min(0.75, header / 2), front + 0.03);
-    group.add(sign);
+  // Which deck this is: a sign over the portal, facing the deck.
+  const canvas = document.createElement('canvas');
+  canvas.width = SIGN_PX.w;
+  canvas.height = SIGN_PX.h;
+  const g = canvas.getContext('2d')!;
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  const signH = HOUSING - doorHeight - 0.2;
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(signH * (SIGN_PX.w / SIGN_PX.h), signH), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+  sign.scale.setScalar(Math.min(1, (width - 0.1) / (signH * (SIGN_PX.w / SIGN_PX.h))));
+  sign.position.set(x, doorHeight + (HOUSING - doorHeight) / 2, front + 0.004);
+  group.add(sign);
+  const setSign = (text: string, n?: number) => {
+    paintSign(g, text, n);
+    tex.needsUpdate = true;
   };
+  setSign('Lobby');
 
   const interactable: Interactable = { kind: 'elevator', x, z: front - 0.4, radius: 1.9 };
   group.userData.interact = interactable;
@@ -123,18 +125,18 @@ export function buildElevator(): Elevator {
 
 declare module './types' {
   interface OfficeHandles {
-    /** The sign over the elevator's doorway: which floor you're on. */
-    setProjectName(name: string): void;
+    /** The sign over the Deck lift's portal: which deck you're on (see Office.setProjectName). */
+    setLiftSign(name: string, n?: number): void;
   }
 }
 
-/** The elevator to the other floors, against the north wall east of the PR board. */
-export const elevator: Fixture<'setProjectName'> = () => {
+/** The Deck lift to the other decks, against the north wall east of the Main board. */
+export const elevator: Fixture<'setLiftSign'> = () => {
   const built = buildElevator();
   return {
     group: built.group,
     colliders: built.colliders,
     interactables: [built.interactable],
-    handle: { setProjectName: (name) => built.setSign(`🛗 ${name}`) },
+    handle: { setLiftSign: (name, n) => built.setSign(name, n) },
   };
 };
