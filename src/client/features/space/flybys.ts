@@ -10,18 +10,18 @@ import { FLYBY_MS, SPACE_COLORS, between, seeded, type FlybyKind } from './logic
 /** How far out the far flybys are drawn (m): inside the walk camera's far plane. */
 const FAR_AT = 92;
 
-// The planet's surface is baked once per flyby into a small map (longitude by latitude), so drawing
+// The planet's surface is baked once per flyby (the destination ahead bakes its world with the same shaders) into a small map (longitude by latitude), so drawing
 // it is one texture read and a little light, not noise per pixel.
 const SURFACE = { w: 512, h: 256 } as const;
 
-const BAKE_VERT = /* glsl */ `
+export const BAKE_VERT = /* glsl */ `
 varying vec2 vUv;
 void main() {
   vUv = uv;
   gl_Position = vec4(position.xy, 0.0, 1.0);
 }`;
 
-const BAKE_FRAG = /* glsl */ `
+export const BAKE_FRAG = /* glsl */ `
 uniform vec3 uA, uB, uC, uSeed;
 uniform float uBands;
 varying vec2 vUv;
@@ -50,7 +50,7 @@ void main() {
   gl_FragColor = vec4(col, cloud);
 }`;
 
-const PLANET_VERT = /* glsl */ `
+export const PLANET_VERT = /* glsl */ `
 varying vec3 vN;
 varying vec2 vUv;
 varying vec3 vView;
@@ -62,7 +62,7 @@ void main() {
   gl_Position = projectionMatrix * viewMatrix * world;
 }`;
 
-const PLANET_FRAG = /* glsl */ `
+export const PLANET_FRAG = /* glsl */ `
 uniform sampler2D uMap;
 uniform vec3 uAtmo, uSun;
 uniform float uSpin;
@@ -87,7 +87,7 @@ void main() {
 }`;
 
 /** The atmosphere's glow past the planet's limb: a shell a little bigger, lit at its edge on the day side. */
-const HALO_FRAG = /* glsl */ `
+export const HALO_FRAG = /* glsl */ `
 uniform vec3 uAtmo, uSun;
 uniform float uGain;
 varying vec3 vN;
@@ -102,13 +102,13 @@ void main() {
 }`;
 
 /** A ring round a gas giant: bands of dust by radius, lit by the same sun, fading at both edges. */
-const RING_VERT = /* glsl */ `
+export const RING_VERT = /* glsl */ `
 varying float vR;
 void main() {
   vR = length(position.xy);
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }`;
-const RING_FRAG = /* glsl */ `
+export const RING_FRAG = /* glsl */ `
 uniform vec3 uA, uB;
 uniform float uGain;
 varying float vR;
@@ -122,7 +122,7 @@ void main() {
 }`;
 
 /** A soft round glow, for the comet's head. */
-function glowTexture(): THREE.CanvasTexture {
+export function glowTexture(): THREE.CanvasTexture {
   const c = document.createElement('canvas');
   c.width = c.height = 64;
   const g = c.getContext('2d')!;

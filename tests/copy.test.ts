@@ -111,3 +111,14 @@ test('the scanner sees strings, not comments or regexes', () => {
     ['plain', "x ${'—'} y"],
   );
 });
+
+test("the bridge's world speaks calmly: no exclamation marks, no war words, no emoji (src/shared/shiplog.ts)", () => {
+  const src = readFileSync(path.join(root, 'src/shared/shiplog.ts'), 'utf8');
+  const words = literals(src).map((l) => l.text);
+  assert.ok(words.length > 10, 'the phrasebook has its words');
+  for (const w of words) {
+    assert.ok(!w.includes('!'), `an exclamation mark in ${JSON.stringify(w)}`);
+    assert.ok(!/\b(war|attack|kill|troops?|battle|enemy|fire|destroy|weapon|strike)\b/i.test(w), `a war word in ${JSON.stringify(w)}`);
+    assert.ok(/^[\x20-\x7e]*$/.test(w), `not plain ASCII: ${JSON.stringify(w)}`);
+  }
+});

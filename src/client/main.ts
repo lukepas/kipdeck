@@ -62,6 +62,7 @@ import { makeMotion } from './motion';
 import { installLights } from './features/lights';
 import { installLife } from './features/life';
 import { installGiveWay } from './features/giveway';
+import { installDestination } from './features/destination';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -150,6 +151,7 @@ parts.space = installSpace(ctx, parts);
 parts.lights = installLights(ctx, parts);
 installLife(ctx, parts);
 parts.giveWay = installGiveWay(ctx);
+installDestination(ctx, parts);
 
 parts.hintbar = installHintBar(ctx, core, parts);
 installKeyboard(ctx, parts);
