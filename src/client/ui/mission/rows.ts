@@ -10,6 +10,7 @@ import { h } from '../dom';
 import { linkLabel } from '../../../shared/mission';
 import { doingLabel, money, runAction, snooze, snoozeLabel, type MissionDeps } from './act';
 import { repBits } from './rep';
+import { crewBits } from './crew';
 import { unitSign } from '../unitsign';
 
 /** The rows whose "..." menu is open, kept while Mission control draws itself again. */
@@ -72,7 +73,7 @@ export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { sho
       'div.mc-main',
       {},
       unitSign(e.deskId),
-      h('div.mc-who', {}, h('span.mc-name', {}, e.name), sub ? h('span.mc-sub', {}, sub) : null),
+      h('div.mc-who', {}, h('span.mc-name', {}, e.name, ...crewBits(e.id)), sub ? h('span.mc-sub', {}, sub) : null),
       h(
         'div.mc-what',
         {},

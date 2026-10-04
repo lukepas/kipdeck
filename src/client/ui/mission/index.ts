@@ -1,6 +1,6 @@
 // Mission control: one window for what needs a person right now, across every floor. Attention (the
 // reminders, then who needs you, ranked), Goals (what the floor is for), Review (everything waiting
-// for a person's decision), Timeline (what happened). The same module serves the 3D office and the
+// for a person's decision), Timeline (what happened), Crew (each unit's record). The same module serves the 3D office and the
 // 2D view, so it imports no three.js and nothing of the 3D office's (tests/client-structure.test.ts checks).
 import './mission.css';
 import { attentionLabel, chipTab, needingSomeone } from '../../../shared/attention';
@@ -12,13 +12,14 @@ import { EDITING, renderGoals } from './goals';
 import { openReminders } from './reminders';
 import { renderReview } from './review';
 import { renderTimeline } from './timeline';
+import { renderCrew } from './crew';
 
 export type { MissionDeps } from './act';
 export { runAction } from './act';
 export { renderStrip } from './strip';
 export { digestCard, openDigest, recallDigest, watchAway } from './digest';
 
-const TAB_LABEL: Record<MissionTab, string> = { attention: 'Attention', goals: 'Goals', review: 'Review', timeline: 'Timeline' };
+const TAB_LABEL: Record<MissionTab, string> = { attention: 'Attention', goals: 'Goals', review: 'Review', timeline: 'Timeline', crew: 'Crew' };
 
 /** Where the last tab is remembered (the view's Settings). */
 export interface MissionPrefs {
@@ -50,7 +51,7 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
 
   function paintTabs() {
     const counts = store.counts();
-    const badge: Record<MissionTab, number> = { attention: counts['needs-you'] + counts.stuck + openReminders().length, goals: 0, review: counts.review, timeline: 0 };
+    const badge: Record<MissionTab, number> = { attention: counts['needs-you'] + counts.stuck + openReminders().length, goals: 0, review: counts.review, timeline: 0, crew: 0 };
     for (const [t, b] of tabs) {
       b.setAttribute('aria-selected', String(t === current));
       b.replaceChildren(TAB_LABEL[t], badge[t] ? h('span.mc-n', {}, String(badge[t])) : '');
@@ -77,7 +78,7 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
     const scroll = body.scrollTop;
     const now = Date.now();
     const ranked = store.ranked();
-    body.replaceChildren(current === 'attention' ? renderAttention(deps, ranked, now) : current === 'review' ? renderReview(deps, ranked, now) : current === 'timeline' ? renderTimeline(deps, deps.net) : renderGoals(deps));
+    body.replaceChildren(current === 'attention' ? renderAttention(deps, ranked, now) : current === 'review' ? renderReview(deps, ranked, now) : current === 'timeline' ? renderTimeline(deps, deps.net) : current === 'crew' ? renderCrew(deps) : renderGoals(deps));
     body.scrollTop = scroll;
     if (focused) body.querySelector<HTMLElement>(`.mc-row[data-id="${CSS.escape(focused)}"]`)?.focus();
     const again = keep ? body.querySelector<HTMLInputElement>(`[data-keep="${CSS.escape(keep)}"]`) : null;
@@ -95,7 +96,7 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
     render();
   }
 
-  /** ↑↓ walk the rows, Enter does the row's action, 1-4 switch tabs, Esc cancels an edit or closes. */
+  /** ↑↓ walk the rows, Enter does the row's action, 1-5 switch tabs, Esc cancels an edit or closes. */
   function onKey(e: KeyboardEvent) {
     const top = document.querySelector('#modal-root > .backdrop:last-child');
     if (!top?.contains(el)) return;

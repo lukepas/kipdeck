@@ -139,6 +139,7 @@ export class Worker {
   private leaving: string | null = null;
   private leaveT = 0;
   private said: string | null = null;
+  private epithet = '';
   private lastDraw = 0;
 
   constructor(name: string, _color?: string) {
@@ -171,6 +172,18 @@ export class Worker {
   setCallSign(sign: string) {
     this.sign = sign;
     this.paint();
+  }
+
+  /** The epithet it earned from its record ('' for none), on its callout up close (features/crew). */
+  setEpithet(text: string) {
+    if (text === this.epithet) return;
+    this.epithet = text;
+    this.paint();
+  }
+
+  /** What moves as its body (leans, slumps, turns): where its shoulder marks hang from (features/crew). */
+  get figure(): THREE.Object3D {
+    return this.body.figure;
   }
 
   /** The provider's letters on its visor and the stripe down its back. */
@@ -356,6 +369,7 @@ export class Worker {
       near: !leaving && (this.near || !!this.said),
       task: this.said ?? (this.task?.name ? splitTag(this.task.name).text : undefined),
       status: leaving ? undefined : this.statusLine(kind),
+      ...(this.epithet && !leaving && !this.said ? { epithet: this.epithet } : {}),
     };
     if (leaving) text.name = `${this.name}  ${this.leaving}`;
     const key = JSON.stringify(text);

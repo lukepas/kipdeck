@@ -18,6 +18,8 @@ export interface CalloutText {
   task?: string;
   /** The line under the task: "NEEDS YOU  4m", "PR #12 OPEN". */
   status?: string;
+  /** Up close, the epithet it earned ("the Mechanic", features/crew), muted, under its name. */
+  epithet?: string;
   /** Just the glyph and the call sign: what a callout shrinks to where callouts crowd (features/workers/declutter.ts). */
   compact?: boolean;
 }
@@ -53,9 +55,12 @@ export function calloutSprite(o: CalloutText): THREE.Sprite {
   const status = o.near && !o.compact ? (o.status ?? '') : '';
   ctx.font = MONO(16);
   const statusW = status ? ctx.measureText(status).width : 0;
+  const epithet = o.near && !o.compact ? (o.epithet ?? '') : '';
+  ctx.font = UI(17, 400);
+  const epithetW = epithet ? ctx.measureText(epithet).width : 0;
   const lineH = 30 * R;
-  const lines = 1 + (task ? 1 : 0) + (status ? 1 : 0);
-  const w = Math.ceil(Math.max(headW, taskW, statusW) + pad * 2 + stripe);
+  const lines = 1 + (epithet ? 1 : 0) + (task ? 1 : 0) + (status ? 1 : 0);
+  const w = Math.ceil(Math.max(headW, epithetW, taskW, statusW) + pad * 2 + stripe);
   const h = Math.ceil(lines * lineH + pad * 0.8);
   const c = ctx.canvas;
   c.width = w;
@@ -92,6 +97,12 @@ export function calloutSprite(o: CalloutText): THREE.Sprite {
     }
     ctx.fillStyle = DECK.text;
     ctx.fillText(o.name.toUpperCase(), x, y);
+  }
+  if (epithet) {
+    y += lineH * 0.9;
+    ctx.font = `italic ${UI(17, 400)}`;
+    ctx.fillStyle = DECK.muted;
+    ctx.fillText(epithet, stripe + pad, y);
   }
   if (task) {
     y += lineH;

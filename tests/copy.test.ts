@@ -112,8 +112,9 @@ test('the scanner sees strings, not comments or regexes', () => {
   );
 });
 
-test("the bridge's world speaks calmly: no exclamation marks, no war words, no emoji (src/shared/shiplog.ts)", () => {
-  const src = readFileSync(path.join(root, 'src/shared/shiplog.ts'), 'utf8');
+for (const file of ['src/shared/shiplog.ts', 'src/shared/epithet.ts', 'src/shared/commendations.ts'])
+test(`the bridge's world speaks calmly: no exclamation marks, no war words, no emoji (${file})`, () => {
+  const src = readFileSync(path.join(root, file), 'utf8');
   const words = literals(src).map((l) => l.text);
   assert.ok(words.length > 10, 'the phrasebook has its words');
   for (const w of words) {
