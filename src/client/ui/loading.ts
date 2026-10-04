@@ -1,4 +1,5 @@
 import type { ModelsProgress } from '../world/models';
+import { stillNow } from '../motion';
 
 /**
  * The loading screen: the card in index.html, up from the page's first paint while the code downloads,
@@ -115,7 +116,7 @@ export function loadingScreen(watchModels: (fn: (p: ModelsProgress) => void) => 
     requestAnimationFrame(() => {
       screen.classList.add('gone');
       const remove = () => screen.remove();
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return remove();
+      if (stillNow()) return remove();
       // Its own fade's end, not the bar's filling up.
       screen.addEventListener('transitionend', (e) => e.target === screen && remove());
       setTimeout(remove, FADE_MS);

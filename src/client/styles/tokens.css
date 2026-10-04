@@ -188,7 +188,9 @@
 
 /* Less motion, asked for by the system: every CSS animation and transition is a cut, and what pulsed
    or blinked holds still at its resting look (a steady outline, a steady band). The 3D deck reads the
-   same query (ctx.reduceMotion) for its glides, flights and beats. */
+   same query (ctx.reduceMotion) for its glides, flights and beats. Ship motion at Off in Settings
+   asks the same of this page (data-motion="reduce" on the root, see motion.ts), so each rule for the
+   query below has the attribute beside it. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 1ms !important;
@@ -198,4 +200,12 @@
     transition-delay: 0s !important;
     scroll-behavior: auto !important;
   }
+}
+:root[data-motion=reduce] *, :root[data-motion=reduce] *::before, :root[data-motion=reduce] *::after {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  animation-delay: 0s !important;
+  transition-duration: 1ms !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
 }

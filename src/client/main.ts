@@ -57,6 +57,7 @@ import { installWorkerViews } from './features/workers/views';
 import { installDeclutter } from './features/workers/declutter';
 import { installDemo } from './features/demo';
 import { installBottomBar } from './features/bottombar';
+import { makeMotion } from './motion';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -103,7 +104,7 @@ parts.place = installPlace(ctx, core, parts);
 parts.place.placeOnConn();
 parts.player.view = parts.settings.view;
 parts.you = installYou(ctx);
-parts.reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+parts.reduceMotion = makeMotion(() => parts.settings.shipMotion);
 parts.sound = makeSound(parts.settings);
 
 parts.notifier = new DesktopNotifier(() => parts.settings.notify, (id) => parts.waiting.answerWorker(id));

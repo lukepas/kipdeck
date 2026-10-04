@@ -10,6 +10,7 @@ import { openPromptEditor, rewrittenPrompts } from './prompts';
 import { choiceRow } from './settings-rows';
 import { bountySettings } from './bounty-settings';
 import { showcaseSettings } from './showcase-settings';
+import { bridgeSettings } from './bridge-settings';
 import { icon, type IconName } from './icons';
 
 const VIEWS: [ViewMode, string, string][] = [
@@ -21,10 +22,11 @@ const VIEWS: [ViewMode, string, string][] = [
 const WEBHOOK_NAME: Record<WebhookKind, string> = { slack: 'Slack', discord: 'Discord', other: 'a webhook' };
 
 /** The categories down the side of Settings. */
-export type SettingsPane = 'you' | 'sound' | 'notify' | 'building' | 'workers' | 'bounties';
+export type SettingsPane = 'you' | 'bridge' | 'sound' | 'notify' | 'building' | 'workers' | 'bounties';
 
 const PANES: { id: SettingsPane; icon: IconName; label: string; blurb: string }[] = [
   { id: 'you', icon: 'operator', label: 'You', blurb: 'How you look, how you see the office, and how you\'re signed in.' },
+  { id: 'bridge', icon: 'ship', label: 'Bridge', blurb: 'How space moves outside the glass.' },
   { id: 'sound', icon: 'volume', label: 'Sound & voice', blurb: 'How loud the office is for you, and how voice chat works.' },
   { id: 'notify', icon: 'bell', label: 'Notifications', blurb: 'Hear about a unit that needs someone, or finished, while you\'re somewhere else.' },
   { id: 'building', icon: 'decks', label: 'Decks', blurb: 'Where new decks are cloned.' },
@@ -397,6 +399,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       setting('Signed in', null, h('div.volume', {}, signOut), h('p.setting-note', {}, account ? `As ${account.name}, with your own account (${account.role}).` : 'With the shared office password.')),
       ...(account ? [setting('Password', null, h('div.webhook', {}, pwCurrent, pwNew, pwSave), pwNote)] : []),
     ],
+    bridge: [setting('Ship motion', 'you', ...bridgeSettings(() => settings, change))],
     sound: [
       setting('Sound cues', 'you', soundRow, h('p.setting-note', {}, 'Off until you turn them on. Four short cues, one per change worth hearing from another tab: a unit needs you (two rising notes), a unit is stuck (two low ticks), a unit is ready for review (one soft tone) and a merge is proven on chain (a low thunk and a tick). The deck makes no other sound, and voice chat has its own level.')),
       setting('When a unit needs you', 'you', alarmRow, h('p.setting-note', {}, 'The needs-you cue the moment a unit on your deck stops to ask you something or wants a permission. Keep reminding me plays it again, softly, every 30 seconds until someone opens the terminal of that unit. A unit you snoozed in Mission control stays quiet. It plays only while sound cues are on.')),

@@ -10,3 +10,5 @@
   #counters .counter.c-needs-you.pulse { animation: none; outline: 2px solid var(--signal); outline-offset: 2px; }
   .needs-you-flash.on { animation: none; }
 }
+:root[data-motion=reduce] #counters .counter.c-needs-you.pulse { animation: none; outline: 2px solid var(--signal); outline-offset: 2px; }
+:root[data-motion=reduce] .needs-you-flash.on { animation: none; }

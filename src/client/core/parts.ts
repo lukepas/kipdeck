@@ -10,6 +10,7 @@ import type { DesktopNotifier } from '../notify';
 import type { PlayerController } from '../player';
 import type { DeckSound } from '../sound';
 import type { Settings } from '../state';
+import type { Motion } from '../motion';
 import type { Voice } from '../voice';
 import type { Person } from '../world/character';
 import type { installBoards } from '../features/boards';
@@ -55,7 +56,7 @@ export interface Parts {
   settings: Settings;
   player: PlayerController;
   /** The system asks for less motion: no shaking the view, no swaying. */
-  reduceMotion: MediaQueryList;
+  reduceMotion: Motion;
   sound: DeckSound;
   notifier: DesktopNotifier;
 

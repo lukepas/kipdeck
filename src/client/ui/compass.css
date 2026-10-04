@@ -9,3 +9,4 @@
 .compass-mark.needs_input .compass-arrow { animation: pulse 1.2s infinite; }
 .compass-who { position: absolute; top: 24px; left: 0; transform: translateX(-50%); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 1px 6px; border-radius: var(--radius-chip); background: var(--hud-fill); border: 1px solid var(--line); color: var(--text); font: 500 11px var(--font-mono); }
 @media (prefers-reduced-motion: reduce) { .compass-mark.needs_input .compass-arrow { animation: none; } }
+:root[data-motion=reduce] .compass-mark.needs_input .compass-arrow { animation: none; }

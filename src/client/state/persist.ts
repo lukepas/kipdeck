@@ -51,6 +51,10 @@ export const MISSION_TABS: readonly MissionTab[] = ['attention', 'goals', 'revie
 export const NEEDS_YOU_SOUNDS = ['off', 'once', 'remind'] as const;
 export type NeedsYouSound = (typeof NEEDS_YOU_SOUNDS)[number];
 
+/** How space moves outside the bridge's glass: as is, at half speed with no flybys, or not at all (with the rest of the office). */
+export const SHIP_MOTIONS = ['full', 'calm', 'off'] as const;
+export type ShipMotion = (typeof SHIP_MOTIONS)[number];
+
 export interface Settings {
   view: ViewMode;
   /** The sound cues' level, 0-1 (sound/alerts.ts). */
@@ -71,6 +75,8 @@ export interface Settings {
   missionTab: MissionTab;
   /** The 2D view lists the workers on every floor, not just yours. */
   allFloors: boolean;
+  /** Settings > Bridge: how space moves outside (Off stills the whole office, as the system's reduce-motion setting does). */
+  shipMotion: ShipMotion;
 }
 
 const SETTINGS_KEY = 'agent-office.settings';
@@ -155,7 +161,7 @@ export function rememberSpot(s: Spot) {
 }
 
 export function loadSettings(): Settings {
-  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false };
+  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full' };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null');
     if (saved?.view === 'first' || saved?.view === 'third') s.view = saved.view;
@@ -168,6 +174,7 @@ export function loadSettings(): Settings {
     if (Array.isArray(saved?.pins)) s.pins = saved.pins.filter((p: unknown): p is string => typeof p === 'string').slice(0, 30);
     if (MISSION_TABS.includes(saved?.missionTab)) s.missionTab = saved.missionTab;
     if (typeof saved?.allFloors === 'boolean') s.allFloors = saved.allFloors;
+    if (SHIP_MOTIONS.includes(saved?.shipMotion)) s.shipMotion = saved.shipMotion;
   } catch {
     // storage blocked
   }

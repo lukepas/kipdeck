@@ -10,6 +10,7 @@ import type { Net } from '../net';
 import type { PlayerController } from '../player';
 import type { DeckSound } from '../sound';
 import type { Settings } from '../state';
+import type { Motion } from '../motion';
 import type { Hud } from '../ui/menu';
 import type { Voice } from '../voice';
 import type { Person } from '../world/character';
@@ -67,8 +68,8 @@ export interface Ctx {
   readonly voice: Voice;
   readonly sound: DeckSound;
   readonly settings: Settings;
-  /** The system asks for less motion: no shaking the view, no swaying. */
-  readonly reduceMotion: MediaQueryList;
+  /** Less motion, asked for by the system or by Ship motion at Off: no shaking the view, no swaying (see motion.ts). */
+  readonly reduceMotion: Motion;
   readonly hud: Hud;
 
   /** The office as the workers know it: its seats, its boards, how they walk in and out. */

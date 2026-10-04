@@ -27,3 +27,5 @@
   .loading-mark .c { animation: none; opacity: 1; }
   #loading, .loading-fill { transition: none; }
 }
+:root[data-motion=reduce] .loading-mark .c { animation: none; opacity: 1; }
+:root[data-motion=reduce] #loading, :root[data-motion=reduce] .loading-fill { transition: none; }

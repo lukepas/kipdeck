@@ -66,6 +66,7 @@
 .plot .l-merged .p-g-check { fill: none; stroke: var(--proof); stroke-width: .1; }
 @keyframes plot-pulse { from { transform: scale(1); opacity: .9; } to { transform: scale(1.35); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .plot .l-needs-you .p-ring { animation: none; } }
+:root[data-motion=reduce] .plot .l-needs-you .p-ring { animation: none; }
 
 /* The art behind the sign-in pages: the same drawing, quieter. */
 .plot-art .p-grid .minor { stroke: color-mix(in oklab, var(--line) 35%, transparent); }

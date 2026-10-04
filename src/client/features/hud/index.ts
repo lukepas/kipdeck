@@ -7,6 +7,7 @@ import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { attentionChip } from '../../ui/mission';
 import { saveSettings, store } from '../../state';
+import { markMotion } from '../../motion';
 import { openAccounts } from '../../ui/accounts';
 import { openBoard } from '../../ui/boards';
 import { openCharacter } from '../../ui/character';
@@ -153,6 +154,7 @@ export function installHud(ctx: Ctx, parts: HudParts) {
         }
         player.setView(settings.view);
         sound.setVolume(settings.volume, settings.muted);
+        markMotion(settings.shipMotion);
       },
       editProfile,
       sound,

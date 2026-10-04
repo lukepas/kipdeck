@@ -177,6 +177,7 @@ a.when:hover { text-decoration: underline; }
   /* A spinner is the one loop left: slower, and never a cut (tokens.css would stop it dead). */
   .spinner { animation-duration: 2.4s !important; animation-iteration-count: infinite !important; }
 }
+:root[data-motion=reduce] .spinner { animation-duration: 2.4s !important; animation-iteration-count: infinite !important; }
 
 /* Window pieces that restyle the frame's labels, text boxes and buttons with selectors no stronger than
    the frame's own. Those win by coming later, and a window's sheet loads in no fixed order against
