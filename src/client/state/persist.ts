@@ -55,6 +55,12 @@ export type NeedsYouSound = (typeof NEEDS_YOU_SOUNDS)[number];
 export const SHIP_MOTIONS = ['full', 'calm', 'off'] as const;
 export type ShipMotion = (typeof SHIP_MOTIONS)[number];
 
+/** The bridge's lights: Night (low light), Day (high light), or Auto, which follows the system's dark or light setting. */
+export const LIGHTINGS = ['auto', 'night', 'day'] as const;
+export type Lighting = (typeof LIGHTINGS)[number];
+/** How far Brightness steps either way from the mode's own level (each step is 12% of exposure). */
+export const BRIGHTNESS_STEPS = 2;
+
 export interface Settings {
   view: ViewMode;
   /** The sound cues' level, 0-1 (sound/alerts.ts). */
@@ -77,6 +83,10 @@ export interface Settings {
   allFloors: boolean;
   /** Settings > Bridge: how space moves outside (Off stills the whole office, as the system's reduce-motion setting does). */
   shipMotion: ShipMotion;
+  /** Settings > Bridge: the bridge's lights, and the page's colors with them (see lighting.ts). */
+  lighting: Lighting;
+  /** Settings > Bridge: Brightness, a whole step from -BRIGHTNESS_STEPS to BRIGHTNESS_STEPS on top of the lights' mode. */
+  brightness: number;
 }
 
 const SETTINGS_KEY = 'agent-office.settings';
@@ -161,7 +171,7 @@ export function rememberSpot(s: Spot) {
 }
 
 export function loadSettings(): Settings {
-  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full' };
+  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0 };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null');
     if (saved?.view === 'first' || saved?.view === 'third') s.view = saved.view;
@@ -175,6 +185,8 @@ export function loadSettings(): Settings {
     if (MISSION_TABS.includes(saved?.missionTab)) s.missionTab = saved.missionTab;
     if (typeof saved?.allFloors === 'boolean') s.allFloors = saved.allFloors;
     if (SHIP_MOTIONS.includes(saved?.shipMotion)) s.shipMotion = saved.shipMotion;
+    if (LIGHTINGS.includes(saved?.lighting)) s.lighting = saved.lighting;
+    if (Number.isInteger(saved?.brightness)) s.brightness = Math.max(-BRIGHTNESS_STEPS, Math.min(BRIGHTNESS_STEPS, saved.brightness));
   } catch {
     // storage blocked
   }

@@ -1,7 +1,9 @@
 // What the sign-in pages (login, join, claim) share besides their sheet: the deck plan behind the
 // card, drawn by the same Plot the 2D view uses (shared/plot.ts), with a few units at their consoles
-// and one lit Signal orange on the ready line; and the credit in the footer. Static, drawn once.
+// and one lit Signal orange on the ready line; the credit in the footer; and the colors the bridge's
+// lights were last set to in this browser (lighting.ts). Static, drawn once.
 import { UPSTREAM_CREDIT } from '../shared/copy';
+import { markPageLight, savedLighting } from './lighting';
 import { Plot } from './shared/plot';
 
 /** The deck plan as the sign-in pages show it. */
@@ -20,8 +22,9 @@ export function deckPlan(): SVGSVGElement {
   return plot.el;
 }
 
-/** Puts the deck plan behind the page, and the credit under it. */
+/** Puts the deck plan behind the page, and the credit under it, in the bridge lights' colors. */
 export function mountSigninArt() {
+  markPageLight(savedLighting());
   document.body.prepend(deckPlan());
   const foot = document.createElement('footer');
   foot.className = 'credit';

@@ -160,7 +160,7 @@ test('what the browser remembers keeps its keys and shapes', () => {
   assert.deepEqual(state.lastSpot(), { floor: 'f1', name: 'F', x: 1, y: 2, z: 3, facing: 4 });
   assert.ok(storage.has('agent-office.spot'));
   const settings = state.loadSettings();
-  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: state.HUD_DEFAULTS, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full' });
+  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: state.HUD_DEFAULTS, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0 });
   // Mission control's last tab is one of its tabs.
   storage.set('agent-office.settings', JSON.stringify({ missionTab: 'goals', allFloors: true }));
   assert.deepEqual([state.loadSettings().missionTab, state.loadSettings().allFloors], ['goals', true]);
@@ -182,6 +182,13 @@ test('what the browser remembers keeps its keys and shapes', () => {
   assert.equal(state.loadSettings().shipMotion, 'calm');
   state.saveSettings({ ...settings, shipMotion: 'warp' as never });
   assert.equal(state.loadSettings().shipMotion, 'full');
+  // The bridge's lights are Night, Day or Auto; Brightness a whole step, at most two either way.
+  state.saveSettings({ ...settings, lighting: 'day', brightness: 1 });
+  assert.deepEqual([state.loadSettings().lighting, state.loadSettings().brightness], ['day', 1]);
+  state.saveSettings({ ...settings, lighting: 'disco' as never, brightness: 9 });
+  assert.deepEqual([state.loadSettings().lighting, state.loadSettings().brightness], ['auto', 2]);
+  state.saveSettings({ ...settings, brightness: 0.5 });
+  assert.equal(state.loadSettings().brightness, 0);
   store.apply(welcome());
   assert.equal(state.lastFloor(), 'f1');
 });

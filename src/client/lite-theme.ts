@@ -1,41 +1,36 @@
-// The 2D view's print toggle: the light whiteprint (tokens.css, [data-theme=print]) for reading on
-// white or printing, or the slate deck. Until someone picks, the page follows the system's light or
-// dark setting ([data-theme=auto]). The pick is this browser's only, kept in its storage.
+// The 2D view's light toggle: the light whiteprint (tokens.css, [data-theme=print]) for reading on
+// white or printing, or the slate deck. It is the bridge's lights (Settings > Bridge in the 3D
+// office, lighting.ts): Day is the whiteprint, Night the slate, and Auto, until someone picks,
+// follows the system's light or dark setting. The pick is this browser's, kept with its settings.
+import { lightModeOf, markPageLight, saveLighting, savedLighting } from './lighting';
 import { icon } from './ui/icons';
 
-const KEY = 'agent-office.lite-theme';
-type Theme = 'print' | 'dark';
+/** Where the 2D view kept its own pick before it shared the bridge's lights. */
+const OLD_KEY = 'agent-office.lite-theme';
 
-function saved(): Theme | undefined {
+/** An older pick of the 2D view's own carries over to the bridge's lights, once. */
+function carryOver() {
   try {
-    const v = localStorage.getItem(KEY);
-    return v === 'print' || v === 'dark' ? v : undefined;
+    const old = localStorage.getItem(OLD_KEY);
+    if (old === 'print' || old === 'dark') saveLighting(old === 'print' ? 'day' : 'night');
+    localStorage.removeItem(OLD_KEY);
   } catch {
-    return undefined;
+    // storage blocked: nothing kept to carry
   }
 }
 
-/** Whether the page shows light now: picked, or by the system while nothing is. */
-function isLight(): boolean {
-  const t = document.documentElement.dataset.theme;
-  return t === 'print' || (t === 'auto' && matchMedia('(prefers-color-scheme: light)').matches);
-}
-
 export function mountThemeToggle(button: HTMLElement) {
-  const root = document.documentElement;
-  const apply = (t: Theme | undefined) => {
-    root.dataset.theme = t ?? 'auto';
-    button.setAttribute('aria-pressed', String(isLight()));
+  const apply = () => {
+    const setting = savedLighting();
+    markPageLight(setting);
+    button.setAttribute('aria-pressed', String(lightModeOf(setting) === 'day'));
   };
+  carryOver();
   button.replaceChildren(icon('contrast', 16));
-  apply(saved());
+  apply();
+  matchMedia('(prefers-color-scheme: light)').addEventListener('change', apply);
   button.addEventListener('click', () => {
-    const next: Theme = isLight() ? 'dark' : 'print';
-    try {
-      localStorage.setItem(KEY, next);
-    } catch {
-      // storage blocked: it holds for this visit
-    }
-    apply(next);
+    saveLighting(lightModeOf(savedLighting()) === 'day' ? 'night' : 'day');
+    apply();
   });
 }
