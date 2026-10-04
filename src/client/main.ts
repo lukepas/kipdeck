@@ -144,7 +144,7 @@ installPods(ctx);
 parts.proofCorner = installProofCorner(ctx);
 installBeats(ctx, parts);
 installReadyLine(ctx, parts);
-installBridge(ctx);
+installBridge(ctx, parts);
 parts.space = installSpace(ctx, parts);
 parts.lights = installLights(ctx, parts);
 installLife(ctx, parts);

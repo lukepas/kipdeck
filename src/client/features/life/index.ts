@@ -17,6 +17,7 @@ import { milestoneOf, milestoneProgress } from '../../../shared/mission';
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { store } from '../../state';
+import { seeded } from '../space/logic';
 import { GIVE_WAY, bump, decay, headingPhrases, lifeScale, panelMode, percentTo, pulseGap, shipTime, shownActivity, stationGain, tickerItems, underWayText, type Heading } from './logic';
 
 /** How bright a station's hood trace is in each state (0 dark, 1 full ship-cyan); a working one goes by how busy it is. */
@@ -36,6 +37,11 @@ export function installLife(ctx: Ctx, parts: Pick<Parts, 'views'>) {
   let last = { needs: 0, stuck: 0 };
   let anyWaiting = false;
   let readAt = -Infinity;
+  /** The pulses' timing, dealt from a seed, so a clip of the deck plays the same each take. */
+  const rand = seeded(0x11fe);
+  /** Kept between frames and cleared, not made anew sixty times a second. */
+  const hushed = new Set<string>();
+  const seen = new Set<string>();
   for (const d of DESKS) stations.trace(d.id, TRACE.empty);
 
   function readHeading() {
@@ -102,17 +108,17 @@ export function installLife(ctx: Ctx, parts: Pick<Parts, 'views'>) {
 
     const views = parts.views.workerViews;
     // The pods with a unit that needs you or is stuck: hushed round it.
-    const hushed = new Set<string>();
+    hushed.clear();
     for (const v of views.values()) {
       const k = v.model.showing;
       if (k === 'needs-you' || k === 'stuck') hushed.add(podOf(v.deskId) ?? v.deskId);
     }
-    const seen = new Set<string>();
+    seen.clear();
     for (const [id, v] of views) {
       seen.add(v.deskId);
       const version = store.screens.get(id)?.version ?? -1;
       let s = activity.get(id);
-      if (!s) activity.set(id, (s = { a: 0, printed: version, nextPulse: clock + 1500 + Math.random() * 3000 }));
+      if (!s) activity.set(id, (s = { a: 0, printed: version, nextPulse: clock + 1500 + rand() * 3000 }));
       s.a = decay(s.a, dt);
       if (version !== s.printed) {
         s.printed = version;
@@ -133,7 +139,7 @@ export function installLife(ctx: Ctx, parts: Pick<Parts, 'views'>) {
       }
       // A busy station files its work into the course plot now and then.
       if (kind === 'working' && clock >= s.nextPulse) {
-        const gap = pulseGap(busy, gain, scale, Math.random());
+        const gap = pulseGap(busy, gain, scale, rand());
         if (Number.isFinite(gap)) pulses.emit(v.deskId);
         s.nextPulse = clock + (Number.isFinite(gap) ? gap * 1000 : 2000);
       }

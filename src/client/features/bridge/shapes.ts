@@ -11,6 +11,13 @@ import { FLOOR } from '../../../shared/layout';
  */
 export const BRIDGE_LAYER = 2;
 
+/**
+ * The layer for what only the Overview's camera sees: the red and green running lights on the hull,
+ * which the walk camera would otherwise catch through a port looking down, a state's red at the edge
+ * of the room. installBridge turns it on for the Overview's camera.
+ */
+export const OUTSIDE_LAYER = 3;
+
 /** Puts `obj` and everything under it on the bridge layer only. */
 export function onBridgeLayer<T extends THREE.Object3D>(obj: T): T {
   obj.traverse((o) => o.layers.set(BRIDGE_LAYER));

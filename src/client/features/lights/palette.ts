@@ -3,13 +3,14 @@ import type { LightMode } from '../../lighting';
 import { DECK, FLOOR_GRIDS, paintGrid } from '../../world/office/materials';
 import { DAY_INK, DAY_PALETTE } from './modes';
 
-/** What a repainted material remembers: its Night color, and the color it was last given here. */
+/** What a repainted material remembers: its Night color, and the color it was last given here (as numbers, so a pass allocates nothing). */
 interface Repaint {
   night: string;
-  given: string;
+  given: number;
 }
 
 const KEY = 'lightsRepaint';
+const SKIP = 'lightsNotNeutral';
 
 /** The deck's neutrals in `mode`: Night's as they are, Day's from DAY_PALETTE. */
 function colorIn(night: string, mode: LightMode): string {
@@ -39,22 +40,28 @@ export function repaint(root: THREE.Object3D, mode: LightMode) {
         continue;
       }
       if (!(m instanceof THREE.MeshStandardMaterial)) continue;
-      const now = `#${m.color.getHexString()}`;
+      const now = m.color.getHex();
       let r = m.userData[KEY] as Repaint | undefined;
       if (r && r.given !== now) {
-        // Changed by someone else since: its own color from now on.
+        // Changed by someone else since (a state's tint): its own color from now on.
         delete m.userData[KEY];
         r = undefined;
       }
       if (!r) {
-        if (!(now in DAY_PALETTE)) continue;
-        r = { night: now, given: now };
+        // Not one of the neutrals, at this color: looked at once, not again until it changes.
+        if (m.userData[SKIP] === now) continue;
+        const night = `#${m.color.getHexString()}`;
+        if (!(night in DAY_PALETTE)) {
+          m.userData[SKIP] = now;
+          continue;
+        }
+        r = { night, given: now };
         m.userData[KEY] = r;
       }
-      const want = colorIn(r.night, mode);
+      const want = hex.set(colorIn(r.night, mode)).getHex();
       if (want !== r.given) {
-        m.color.set(hex.set(want));
-        r.given = `#${m.color.getHexString()}`;
+        m.color.setHex(want);
+        r.given = m.color.getHex();
       }
     }
   });

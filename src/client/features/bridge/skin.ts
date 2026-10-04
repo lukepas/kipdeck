@@ -3,13 +3,14 @@ import { FLOOR, WALL_HEIGHT, WALL_T, WING } from '../../../shared/layout';
 import type { Fixture } from '../../world/office/fixture';
 import { DECK, hullPanels, matteUnique } from '../../world/office/materials';
 import { OUTLINE } from './hull';
+import { OUTSIDE_LAYER } from './shapes';
 
 // The ship's skin round the bridge, seen from outside (the Overview, the aft glass): a sloped skirt
 // of plating from the foot of the walls down and out to the hull's edge all round, rising at the bow
 // into a glacis under the forward viewport; an armoured brow along the top of the walls, chamfered
 // back; and running lights at the hull's extremities, red to port and green to starboard as ships
-// have them, with a white strobe at the bow and on the nacelles. The lights are on the hull only,
-// never on the deck, so no state's hue is ever in the room.
+// have them, with a white strobe at the bow and on the nacelles. The red and green are drawn for the
+// Overview's camera only (OUTSIDE_LAYER), so no state's hue is ever seen from the deck.
 
 /** The running lights, which blink while the ship moves and hold steady when motion is off. */
 export interface RunningLights {
@@ -133,12 +134,13 @@ export const skin: Fixture<'runningLights'> = (site) => {
   const put = (color: string, x: number, y: number, z: number, size: number, strobe: boolean, phase: number) => {
     const l = light(color, size);
     l.root.position.set(x, y, z);
+    // Red and green only from outside (the Overview): never seen from the deck through a port.
+    if (!strobe) l.root.traverse((o) => o.layers.set(OUTSIDE_LAYER));
     g.add(l.root);
     (strobe ? strobes : steady).push({ glow: l.glow, bead: l.bead, phase });
   };
-  // Under the hull's edge, where the skirt hides them from the ports: seen from outside only.
-  put(RUNNING.port, -20.4, -0.55, 1, 1.4, false, 0);
-  put(RUNNING.starboard, 20.4, -0.55, 1, 1.4, false, 0);
+  put(RUNNING.port, -20.4, -0.2, 1, 1.4, false, 0);
+  put(RUNNING.starboard, 20.4, -0.2, 1, 1.4, false, 0);
   put(RUNNING.port, -OUT - BROW.out, WALL_HEIGHT - 0.2, -OUT, 1, false, 0.5);
   put(RUNNING.starboard, OUT + BROW.out, WALL_HEIGHT - 0.2, -OUT, 1, false, 0.5);
   put(RUNNING.strobe, 0, 0.15, -29.8, 1.2, true, 0);

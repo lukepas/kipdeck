@@ -8,13 +8,14 @@
  */
 import type { Ctx } from '../../core/context';
 import { store } from '../../state';
-import { BRIDGE_LAYER } from './shapes';
+import { BRIDGE_LAYER, OUTSIDE_LAYER } from './shapes';
+import type { Parts } from '../../core/parts';
 import type { Course } from './readouts';
 
 /** How often the counts are read again (s): the ranking moves by the second at most. */
 const COUNT_EVERY = 1;
 
-export function installBridge(ctx: Ctx) {
+export function installBridge(ctx: Ctx, parts: Pick<Parts, 'overview'>) {
   const { conn, holo, overhead, runningLights } = ctx.office;
   ctx.camera.layers.enable(BRIDGE_LAYER);
 
@@ -32,6 +33,7 @@ export function installBridge(ctx: Ctx) {
   ctx.ticks.add('world', ({ dt, now }) => {
     if (!ctx.reduceMotion.matches) holo.turn(dt);
     runningLights.still(ctx.reduceMotion.matches);
+    parts.overview?.camera.layers.enable(OUTSIDE_LAYER);
     if (now - readAt < COUNT_EVERY * 1000) return;
     readAt = now;
     const counts = store.counts();

@@ -50,7 +50,7 @@ export const LIGHT_MODES: Record<LightMode, Rig> = {
   },
   day: {
     exposure: 1.22,
-    hemi: { sky: '#E4EDF6', ground: '#8C98A6', i: 1.75 },
+    hemi: { sky: '#E4EDF6', ground: '#8C98A6', i: 1.55 },
     key: { color: '#FFF6EA', i: 2.3 },
     fill: { color: '#DCE6F0', i: 0.8 },
     rim: { color: '#FFFFFF', i: 0.45 },
