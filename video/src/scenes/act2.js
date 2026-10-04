@@ -16,7 +16,7 @@
 import { clamp, lerp, expoOut, expoIn, cubicIn, cubicBezier, curves } from '../engine/ease.js';
 import { rand01 } from '../engine/prng.js';
 import { scrambleParts, glyphLocks, fixed2, BASE58 } from '../engine/kinetic.js';
-import { bg, gridLines, text, tag, baseOf, display, mix, typeIn, typeFrom, whipCamera, rightEdge } from './common.js';
+import { bg, gridLines, text, tag, baseOf, display, mix, whipCamera, rightEdge, revealAt, revealStart } from './common.js';
 import { grid as swissGrid } from './act1.js';
 
 // Real, checkable values (see storyboard truth rules).
@@ -47,7 +47,7 @@ function layout(design) {
     const cardW = X(3.6) - X(0);
     return {
       header: { x: X(0), y: Y(0.5) + ls * 0.95 },
-      goal: { label: Y(1.75), line: Y(2.95), x0: X(0), x1: X(3.6), axis: Y(3.6), weeks: 8 },
+      goal: { label: Y(1.75), line: Y(2.95), x0: X(0), x1: X(3.6), axis: Y(3.85), weeks: 8 },
       inbox: { x: X(0), w: cardW, head: Y(4.35) + ls * 0.95, bottom: Y(8.05), cardH: G.ch * 0.85, gap: 8 * u },
       tlType: { mode: 'roll', base: Y(11.45), size: design.size('m') },
       card: { x: X(0), y: Y(7.6), w: cardW, h: Y(10.2) - Y(7.6) },
@@ -58,10 +58,12 @@ function layout(design) {
   }
   return {
     header: { x: X(0), y: Y(0) + ls * 0.95 },
-    goal: { label: Y(1.0), line: Y(2.5), x0: X(0), x1: X(8.5), axis: Y(3.2), weeks: 8 },
+    goal: { label: Y(1.0), line: Y(2.5), x0: X(0), x1: X(8.5), axis: Y(3.6), weeks: 8 },
     inbox: { x: X(9), w: X(12) - X(9), head: Y(0) + ls * 0.95, bottom: Y(7.65), cardH: G.ch * 1.15, gap: 8 * u },
-    tlType: { mode: 'stack', bases: [Y(6), Y(7), Y(8)], size: design.size('m') },
-    card: { x: X(5.5), y: Y(4.4), w: X(11.5) - X(5.5), h: Y(7.4) - Y(4.4) },
+    tlType: { mode: 'stack', base: Y(7.55), size: design.size('l') },
+    // Snapped to the grid (cols 7-12, rows E-G) with a paper margin, so the
+    // merged cells it covers read as deliberately masked.
+    card: { x: X(6) + 10 * u, y: Y(4) + 10 * u, w: X(12) - X(6) - 20 * u, h: Y(7) - Y(4) - 20 * u },
     ask: { x: X(0), bases: [Y(1.75), Y(3.5)], size: design.size('xl') },
     dropType: { x: X(0), base: Y(1.25), pitch: design.size('l') * 0.92, size: design.size('l') },
     dropKeep: { x: 0, y: 0, w: design.w, h: Y(2.85) },
@@ -228,7 +230,7 @@ function drawTimelineWorld(S, t, L, { hidePR1 = false } = {}) {
   const P = design.palette;
   const u = design.u;
   const ls = design.size('labelS');
-  const tg = design.size('tag');
+  const tg = design.size('tag') * 1.3; // the timeline reads at phone size
 
   // App header, as act 1 left it.
   const w = text(S, 'UGC Army', L.header.x, L.header.y, { size: ls, color: P.ink });
@@ -250,7 +252,7 @@ function drawTimelineWorld(S, t, L, { hidePR1 = false } = {}) {
   const ph = g.x0 + (g.x1 - g.x0) * playhead(tl, t);
   ctx.save();
   ctx.strokeStyle = P.grey;
-  ctx.lineWidth = Math.max(1, u);
+  ctx.lineWidth = Math.max(1, 2 * u);
   ctx.beginPath(); ctx.moveTo(g.x0, g.line); ctx.lineTo(g.x1, g.line); ctx.stroke();
   // Week ticks: hairlines that turn ink as the playhead passes.
   for (let k = 0; k <= g.weeks; k++) {
@@ -264,7 +266,7 @@ function drawTimelineWorld(S, t, L, { hidePR1 = false } = {}) {
   }
   // The red playhead draws the goal line.
   ctx.fillStyle = P.signal;
-  ctx.fillRect(g.x0, g.line - 1.5 * u, ph - g.x0, 3 * u);
+  ctx.fillRect(g.x0, g.line - 3 * u, ph - g.x0, 6 * u);
   ctx.fillRect(ph - 1 * u, g.line - 46 * u, 2 * u, 70 * u);
   ctx.fillRect(ph - 6 * u, g.line - 52 * u, 12 * u, 12 * u);
   ctx.restore();
@@ -273,7 +275,7 @@ function drawTimelineWorld(S, t, L, { hidePR1 = false } = {}) {
   msHits.forEach((h, i) => {
     const x = g.x0 + (g.x1 - g.x0) * MS_FRAC[i];
     const y = g.line;
-    const s0 = 26 * u;
+    const s0 = 38 * u;
     const f = frames(t, h.t);
     ctx.save();
     ctx.translate(x, y);
@@ -298,8 +300,8 @@ function drawTimelineWorld(S, t, L, { hidePR1 = false } = {}) {
     }
     ctx.restore();
     const on = f >= 0;
-    text(S, MILESTONES[i].id, x, y + 50 * u, { kind: 'mono', size: tg, weight: 700, align: 'center', color: on ? P.ink : P.grey });
-    text(S, MILESTONES[i].name, x, y + 50 * u + tg * 1.3, { size: tg * 0.9, align: 'center', color: P.grey });
+    text(S, MILESTONES[i].id, x, y + 62 * u, { kind: 'mono', size: tg, weight: 700, align: 'center', color: on ? P.ink : P.grey });
+    text(S, MILESTONES[i].name, x, y + 62 * u + tg * 1.3, { size: tg * 0.9, align: 'center', color: P.grey });
   });
   tag(S, 'demo data', { x: g.x0, y: g.label, w: g.x1 - g.x0, h: g.axis + tg * 1.6 - g.label }, null, { below: true });
 
@@ -307,12 +309,20 @@ function drawTimelineWorld(S, t, L, { hidePR1 = false } = {}) {
   const ib = L.inbox;
   const cards = tl.prefixed('pr-card.');
   const landed = cards.filter((h) => h.t <= t + 1e-9).length;
-  text(S, 'Review inbox', ib.x, ib.head, { size: ls, color: P.ink });
-  const nextCard = cards[landed] ? cards[landed].t : Infinity;
-  const cnt = frames(nextCard, t) <= 3 ? `0${Math.floor(rand01('ibf', S.frame) * 10)}` : `0${landed}`;
-  text(S, cnt, ib.x + ib.w, ib.head, { kind: 'mono', size: ls, weight: 700, color: P.ink, align: 'right' });
-  ctx.fillStyle = P.ink;
-  ctx.fillRect(ib.x, ib.head + ls * 0.5, ib.w, Math.max(1, 1.5 * u));
+  // The inbox header opens just before the first card drops, so the whip-pan
+  // never parks it half off the frame's edge.
+  const headW = curves.snap(clamp(frames(t, cards[0].t - 0.3) / 10));
+  if (headW > 0) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(ib.x - 4 * u, ib.head - ls * 1.4, (ib.w + 8 * u) * headW, ls * 2.4); ctx.clip();
+    text(S, 'Review inbox', ib.x, ib.head, { size: ls, color: P.ink });
+    const nextCard = cards[landed] ? cards[landed].t : Infinity;
+    const cnt = frames(nextCard, t) <= 3 ? `0${Math.floor(rand01('ibf', S.frame) * 10)}` : `0${landed}`;
+    text(S, cnt, ib.x + ib.w, ib.head, { kind: 'mono', size: ls, weight: 700, color: P.ink, align: 'right' });
+    ctx.fillStyle = P.ink;
+    ctx.fillRect(ib.x, ib.head + ls * 0.5, ib.w, Math.max(1, 1.5 * u));
+    ctx.restore();
+  }
   cards.forEach((h, i) => {
     if (hidePR1 && PRS[i].bounty) return;
     // Later landings press the pile down a few px (follow-through).
@@ -349,40 +359,26 @@ const timeline = {
     drawTimelineWorld(S, t, L);
     ctx.restore();
 
-    // One phrase per beat, each locked to its grid row.
+    // One phrase per beat, in one slot: each rises on its hit and the one
+    // before it sinks away just ahead of it, so each word owns its beat and
+    // the timeline above is what builds.
     const T = L.tlType;
     const hits = ['text.goals', 'text.milestones', 'text.review-inbox'].map((n) => tl.hit(n));
-    const out = tl.at('riser.start') - 6 / 60;
-    if (T.mode === 'stack') {
-      hits.forEach((h, k) => {
-        if (t < typeFrom(h.t)) return;
-        let wipe = typeIn(t, h.t);
-        if (t >= out) wipe = 1 - expoIn(frames(t, out) / 6);
-        display(S, { spans: h.text, x: design.grid.x + panX, base: T.bases[k], size: T.size, wipe, wdth: 100 - 12 * tl.sidechain(t) });
+    const out = tl.at('riser.start') - 10 / 60;
+    const lines = T.mode === 'stack'
+      ? [[{ text: 'Goals.' }], [{ text: 'Milestones.' }], [{ text: 'Review inbox.' }]]
+      : [[{ text: 'Goals.' }], [{ text: 'Milestones.' }], [{ text: 'Review' }, br, { text: 'inbox.' }]];
+    const pitch = T.size * 0.92;
+    hits.forEach((h, k) => {
+      const next = k < 2 ? revealStart(hits[k + 1].t, lines[k + 1]) - 7 / 60 : out;
+      const reveal = revealAt(t, h.t, lines[k], { exit: next });
+      if (!reveal) return;
+      const n = 1 + lines[k].filter((sp) => sp.br).length;
+      display(S, {
+        spans: lines[k], reveal, x: design.grid.x + panX, base: T.base - (n - 1) * pitch, size: T.size,
+        lineHeight: pitch / T.size, wdth: 100 - 12 * tl.sidechain(t), fitWdthMin: 88,
       });
-    } else {
-      // 9:16: one slot. Each phrase rolls up out of it as the next rolls in.
-      const lines = [[{ text: 'Goals.' }], [{ text: 'Milestones.' }], [{ text: 'Review' }, br, { text: 'inbox.' }]];
-      const pitch = T.size * 0.92;
-      hits.forEach((h, k) => {
-        if (t < typeFrom(h.t)) return;
-        // The outgoing phrase clears in the 3 frames before the next one's hit.
-        const next = k < 2 ? typeFrom(hits[k + 1].t) : out;
-        const n = k === 2 ? 2 : 1;
-        let wipe = typeIn(t, h.t, 8, curves.snap);
-        let dy = (1 - wipe) * T.size * 0.4;
-        if (t >= next) {
-          const q = expoIn(frames(t, next) / 3);
-          if (q >= 1) return;
-          wipe = 1 - q;
-          dy = -q * T.size * 0.5;
-        }
-        display(S, {
-          spans: lines[k], x: design.grid.x + panX, base: T.base - (n - 1) * pitch + dy, size: T.size,
-          wipe, wipeDir: 'up', wdth: 100 - 12 * tl.sidechain(t),
-        });
-      });
-    }
+    });
   },
 };
 
@@ -543,11 +539,16 @@ const build = {
     // 'Who gets paid?' breathing on the width axis, both lines together.
     const A = L.ask;
     const h = tl.hit('text.who-gets-paid');
-    display(S, {
-      spans: [{ text: 'Who gets' }, br, { text: 'paid?' }],
-      x: A.x, base: A.bases[0], size: A.size, wipe: typeIn(t, h.t), wdth: paidWidth(tl, t),
-      lineHeight: (A.bases[1] - A.bases[0]) / A.size,
-    });
+    // A question: its words drop in from above (the answers rise).
+    const askSpans = [{ text: 'Who gets' }, br, { text: 'paid?' }];
+    const reveal = revealAt(t, h.t, askSpans, { mode: 'drop' });
+    if (reveal) {
+      display(S, {
+        spans: askSpans, reveal,
+        x: A.x, base: A.bases[0], size: A.size, wdth: paidWidth(tl, t),
+        lineHeight: (A.bases[1] - A.bases[0]) / A.size,
+      });
+    }
   },
 };
 
@@ -583,6 +584,10 @@ const drop = {
       for (let rr = 0; rr < grid.rows; rr++) {
         const cell = grid.rect(c, rr);
         if (cell.y < keep.y + keep.h && cell.y + cell.h > keep.y) continue;
+        // Cells under PR #1 stay paper: the card sits in a clean hole.
+        const m = 10 * u;
+        const ccx = cell.x + cell.w / 2, ccy = cell.y + cell.h / 2;
+        if (ccx > card.x - m && ccx < card.x + card.w + m && ccy > card.y - m && ccy < card.y + card.h + m) continue;
         const cx = cell.x + cell.w / 2, cy = cell.y + cell.h / 2;
         const d = Math.hypot(cx - o.x, cy - o.y);
         const f = (t - click - d / speed) * FPS;
@@ -754,7 +759,7 @@ const escrow = {
     const E = escrowLayout(design);
     const t0 = tl.at('state.open');
     bg(S, P.ink);
-    swissGrid(S, { alpha: 0.22 * expoOut(frames(t, t0) / 10) });
+    swissGrid(S, { alpha: 0.22 }); // constant for the whole scene
 
     // Top rule: the chain and the real program id, with a live dot that
     // ticks on the escrow hook.
@@ -858,13 +863,16 @@ const escrow = {
     const figW = text(S, fixed2(isFunded ? CHAIN.bounty : 0), 0, 0, { kind: 'mono', size: C.size, weight: 700, color: figColor, tracking: -0.02 });
     ctx.restore();
     if (isFunded) padlock(S, C.x + figW * cs + C.size * 0.12, C.base - C.size * 0.7, C.size * 0.34, isReleased ? P.solana : P.paper, isReleased ? curves.snap(lf / 6) : 0);
-    // Unit label and the value bar under the figure.
-    const unitW = typeIn(t, tl.at('text.25-test-usdc'));
-    ctx.save();
-    ctx.beginPath(); ctx.rect(E.bar.x - 2 * u, E.unit - ls * 1.5, E.bar.w * unitW + 4 * u, ls * 2.4); ctx.clip();
-    const uw = text(S, 'Test USDC', E.bar.x, E.unit + ls * 0.9, { size: design.size('label'), color: P.paper });
-    text(S, isReleased ? 'released' : isFunded ? 'in escrow' : 'bounty posted', E.bar.x + uw + ls, E.unit + ls * 0.9, { size: design.size('label'), weight: 500, color: isReleased ? P.solana : P.grey });
-    ctx.restore();
+    // Unit label under the figure: the posted amount is there in words on
+    // the OPEN hit, then the state, then the chain, as large as the state.
+    {
+      const lab = design.size('label');
+      const y = E.unit + ls * 0.9;
+      let x = E.bar.x;
+      x += text(S, isFunded ? 'Test USDC' : '25 Test USDC', x, y, { size: lab, color: P.paper }) + ls;
+      x += text(S, isReleased ? 'released' : isFunded ? 'in escrow' : 'bounty posted', x, y, { size: lab, weight: 500, color: isReleased ? P.solana : P.grey }) + ls;
+      text(S, '- Solana devnet', x, y, { size: lab, color: P.solana });
+    }
     ctx.fillStyle = P.grey;
     ctx.globalAlpha = 0.5;
     ctx.fillRect(E.bar.x, E.bar.y, E.bar.w, Math.max(1, u));
@@ -888,6 +896,9 @@ const escrow = {
       const done = t >= settle;
       const tw = decodeText(S, parts, X.x, X.base, { size: X.size, color: P.paper });
       const ul = curves.snap(frames(t, settle) / 8);
+      // The program that holds the escrow, at label size beside the tx.
+      if (X.tagRight) text(S, `Program ${CHAIN.program}`, design.grid.x + design.grid.w * 0.9, X.label, { kind: 'mono', size: design.size('labelS'), weight: 700, color: P.grey, align: 'right' });
+      else text(S, `Program ${CHAIN.program}`, X.x, X.base + X.size * 0.22 + design.size('tag') * 3.4, { kind: 'mono', size: design.size('labelS'), weight: 700, color: P.grey });
       if (done) {
         // A small chip: this one is live on devnet, unlike the demo rows.
         text(S, 'Live on devnet', X.x + lw + ls * 0.8, X.label, { size: design.size('labelS'), color: P.solana, alpha: ul });
@@ -907,16 +918,18 @@ const escrow = {
     const feedEnd = tl.section(t).to - 1 / 60;
     const fp = clamp((t - feed0) / (feedEnd - feed0));
     const edge = design.h * cubicIn(fp);
-    if (t >= typeFrom(hh.t)) {
+    {
       const spans = H.two ? [{ text: 'Released' }, br, { text: 'on merge.' }] : hh.text;
       const y = H.bases[0] - H.size * baseOf(0.92);
       const cut = Math.max(0, edge - y);
-      display(S, {
-        spans, x: H.x, base: H.bases[0], size: H.size, color: P.paper,
-        wdth: clamp(100 - 12 * tl.sidechain(t), 62, 125),
-        wipe: typeIn(t, hh.t),
-        clip: fp > 0 ? `inset(${cut}px -10% -10% -10%)` : null,
-      });
+      const reveal = revealAt(t, hh.t, spans);
+      if (reveal) {
+        display(S, {
+          spans, reveal, x: H.x, base: H.bases[0], size: H.size, color: P.paper,
+          wdth: clamp(100 - 12 * tl.sidechain(t), 62, 125),
+          clip: fp > 0 ? `inset(${cut}px -10% -10% -10%)` : null,
+        });
+      }
     }
     if (fp > 0) {
       frag += `<rect x="0" y="0" width="${design.w}" height="${f(edge)}" fill="${P.paper}"/>`;

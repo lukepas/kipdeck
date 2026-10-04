@@ -12,7 +12,7 @@
 
 import { clamp, lerp, expoOut, expoIn, cubicIn, cubicBezier, curves } from '../engine/ease.js';
 import { rand01, rng } from '../engine/prng.js';
-import { bg, gridLines, text, tag, typeIn, typeFrom, whipCamera, AGENT_TOOLS } from './common.js';
+import { bg, gridLines, text, tag, typeIn, typeFrom, whipCamera, AGENT_TOOLS, revealAt, baseOf, DESC } from './common.js';
 
 const N = 8;                       // tiles per side at the full split
 const TOOL_CODE = { 'Claude Code': 'CC', Codex: 'CX', Cursor: 'CU', OpenCode: 'OC', Pi: 'PI' };
@@ -318,20 +318,20 @@ function readout(S, { value, prev = value, label, sub, flap = 0, lockBar = 0, ji
 // line that lands on its own hit); bottomPad keeps room under the block.
 function moduleHeadline(S, {
   spans, lines, enter, exit = Infinity, size, panX = 0, jx = 0, wdth = 100, breathe = 0,
-  lineOffset = 0, bottomPad = 0, scale = 1, color,
+  lineOffset = 0, bottomPad = 0, scale = 1, color, mode = 'rise', reveal: ro = {}, blend,
 }) {
   const { t, tl, design } = S;
-  if (t < typeFrom(enter, tl.fps)) return;
-  const fr = tl.fps;
-  let wipe = typeIn(t, enter, 8, expoOut, fr);
-  if (t >= exit) wipe = Math.min(wipe, 1 - expoIn((t - exit) * fr / 6));
-  if (wipe <= 0) return;
+  const reveal = revealAt(t, enter, spans, { mode, exit, ...ro }, tl.fps);
+  if (!reveal) return;
   const z = typeBlock(design);
   const lh = 0.9;
-  const y = z.y + z.h - lines * size * lh - size * 0.04 - bottomPad + lineOffset * size * lh;
+  // Descender rule: the last line's descender (0.21em) sits on the module's
+  // bottom edge, so nothing hangs past the bottom rule.
+  const lastBase = z.y + z.h - DESC * size - bottomPad + lineOffset * size * lh;
+  const y = lastBase - (lines - 1) * size * lh - size * baseOf(lh);
   const sc = breathe ? tl.sidechain(t) : 0;
   S.type.text({
-    spans, x: z.x + panX + jx, y, size, wipe, lineHeight: lh, scale,
+    spans, x: z.x + panX + jx, y, size, reveal, lineHeight: lh, scale, blend,
     wdth: clamp(wdth - breathe * sc, 62, 125), wght: 900, color: color || design.palette.ink,
     fit: typeFit(design, z),
   });
@@ -361,13 +361,10 @@ const oneAgent = {
     grid(S, { reveal: hairlineReveal(tl, t) });
     const R = tileRegion(design);
     const full = insetRect(R, gapOf(design));
-    // The agent starts as a cursor; its terminal opens out of it on the
-    // first beat (width leads height by 3 frames, both snap).
-    const fill = tl.at('cell.fill');
-    const pw = curves.snap(clamp((t - fill) / 0.32));
-    const ph = curves.snap(clamp((t - fill - 3 / 60) / 0.32));
-    const fs1080 = 22;
-    const r = { x: full.x, y: full.y, w: Math.max(26 * u, full.w * pw), h: Math.max(40 * u, full.h * ph) };
+    // Frame 0 is the thumbnail: the Claude Code terminal already fills the
+    // tile region, its first line mid-type, at a size a phone can read.
+    const fs1080 = design.vertical ? 30 : 34;
+    const r = { x: full.x, y: full.y, w: full.w, h: full.h };
     // Anticipation: from the pickup the terminal trembles, and the split's
     // cross pre-draws in paper hairlines from the centre outward.
     const pick = tl.at('pickup.start');
@@ -378,16 +375,10 @@ const oneAgent = {
     // Lines type in on the hook notes (one per note, 7 frames of typing).
     const hooks = tl.prefixed('hook.intro.');
     let lines = 0;
-    for (const h of hooks) if (t >= h.t) lines = Math.floor(lines) + Math.min(1, ((t - h.t) * 60) / 7);
+    for (const h of hooks) if (t >= h.t) lines = Math.floor(lines) + Math.min(1, ((t - h.t) * 60 + 3) / 7);
     lines = Math.max(0, lines);
     const blinkOn = tl.sinceLast(tl.kind('blink'), t) < tl.beatSec / 2;
-    if (pw < 0.02) {
-      // Frame 0: only the cursor, ink on paper.
-      ctx.fillStyle = P.ink;
-      ctx.fillRect(full.x, full.y, fs1080 * 0.62 * u, fs1080 * 1.15 * u);
-    } else {
-      terminal(S, rr, { agent: 0, fs1080, lines: pw >= 1 ? lines : 0, cursorOn: blinkOn || lines % 1 > 0, name: 'Claude Code' });
-    }
+    terminal(S, rr, { agent: 0, fs1080, lines, cursorOn: blinkOn || lines % 1 > 0, name: 'Claude Code' });
     if (k > 0) {
       const c = { x: rr.x + rr.w / 2, y: rr.y + rr.h / 2 };
       const e = expoOut(k * 1.4);
@@ -406,11 +397,11 @@ const oneAgent = {
     // Frame 0 is the poster: the '1' is already set at headline size, and
     // 'agent.' lands under it on its hit.
     moduleHeadline(S, {
-      spans: '1', lines: 2, enter: -1, exit: split - 6 / 60, size: design.size('l'),
+      spans: '1', lines: 2, enter: -1, exit: split - 12 / 60, size: design.size('l'),
     });
     moduleHeadline(S, {
       spans: 'agent.', lines: 2, lineOffset: 1,
-      enter: tl.at('text.one-agent'), exit: split - 6 / 60, size: design.size('l'),
+      enter: tl.at('text.one-agent'), exit: split - 12 / 60, size: design.size('l'),
     });
   },
 };
@@ -439,7 +430,7 @@ function bornAt(tl, rank) {
   return tl.at('counter.lock');
 }
 
-const FS_LEVEL = [22, 15, 10, 9];
+const FS_LEVEL = [34, 15, 10, 9];
 
 // Draws the 4^level terminals of the split grid. opts.chaos drives overload.
 function drawSplitGrid(S, level, p, opts = {}) {
@@ -462,7 +453,7 @@ function drawSplitGrid(S, level, p, opts = {}) {
     // Lines print one per 16th after boot (faster in overload); the first
     // agent arrives with its four opening lines already printed.
     // (it starts printing again from the first split).
-    const base = agent === 0 ? OPENING.length : 0;
+    const base = agent === 0 ? OPENING.length : 1; // a new agent boots with its prompt typed
     const from = agent === 0 ? tl.at('split.1') : born;
     let lines = base + Math.max(0, ((opts.freezeAt ?? t) - from) * rate);
     let overflow = 0, flash = 0;
@@ -475,7 +466,7 @@ function drawSplitGrid(S, level, p, opts = {}) {
     }
     // A booting terminal flashes paper for 2 frames.
     // Small tiles flash for 2 frames, the big level-1 ones softer and for 1.
-    if (isOn && rank > 0 && since >= 0 && since < (level >= 2 ? 2 : 1) / 60) flash = level >= 2 ? 0.85 : 0.3;
+    if (isOn && rank > 0 && level >= 2 && since >= 0 && since < 2 / 60) flash = 0.85;
     terminal(S, r, {
       agent, fs1080: FS_LEVEL[level], lines, online: isOn, cursorOn: blinkOn,
       overflow, flash, ghost: opts.ghost, name: opts.names ? opts.names(agent) : undefined,
@@ -603,25 +594,21 @@ const overload = {
       return;
     }
 
-    // ---- 5.5: one frame of the overloaded frame inverted, then silence:
-    // an ink frame, the smear frozen in light glyphs, and the headline.
-    const invertFrame = t < cut + 1 / 60 - 1e-6;
+    // ---- 5.5: the hard cut to ink on the silence, and the question.
     const q = clamp((t - unsort) / (lock - unsort));
     // The un-sort is the smear's expo-out played backwards: the streaks hold,
     // then snap up into their tiles exactly on the 6.0 kick.
     const back = expoOut(1 - q);
-    if (invertFrame) {
-      bg(S, P.paper);
-      const jitterStep = Math.floor(S.frame / 3);
-      drawSplitGrid(S, 3, 1, { chaos: 1, jitterStep, rate: 40 });
-      if (fx) { fx.sort = 1; fx.threshold = 0.4; fx.sortCover = 0.92; fx.invert = true; fx.seed = 7.7; }
-      // The question lands on the cut itself, set in difference so it reads
-      // on the dark frame and on the white smear alike.
-      whoNeedsYou(S, { color: P.paper, blend: 'difference' });
-      return;
-    }
+    // The cut is clean: full-frame ink and the question in paper, held still
+    // for 8 frames so it can be read. Only then do the ghosted tiles come back
+    // as streaks and snap up into mission control on the 6.0 kick.
+    const clean = t < cut + 8 / 60 - 1e-6;
     bg(S, P.ink);
     grid(S, { alpha: 0.18 });
+    if (clean) {
+      whoNeedsYou(S, { color: P.paper });
+      return;
+    }
     const freezeStep = Math.floor((cut * 60) / 3);
     drawSplitGrid(S, 3, 1, {
       chaos: back, jitterStep: freezeStep, freezeAt: cut, ghost: true, online: 64, rate: 40,
@@ -634,7 +621,7 @@ const overload = {
       fx.sortPolarity = 1;
       fx.seed = 7.7;
     }
-    whoNeedsYou(S, { color: P.paper, blend: 'difference' });
+    whoNeedsYou(S, { color: P.paper });
   },
 };
 
@@ -932,28 +919,39 @@ const missionControl = {
     }
     tag(S, 'demo data', R, null, { below: true });
 
+    // Under the name the board dims for half a second, so 'UGC Army.' lands
+    // against settled, readable state rather than the busiest frame of the sort.
+    const veil = t < ugc - 4 / 60 ? 0 : t < ugc + 0.4 ? 1 : 1 - clamp((t - ugc - 0.4) * 60 / 8);
+    if (veil > 0) {
+      ctx.fillStyle = P.paper;
+      ctx.globalAlpha = 0.42 * veil * clamp((t - ugc + 4 / 60) * 60 / 3);
+      ctx.fillRect(R.x - 4 * u, R.y - 4 * u, R.w + 8 * u, R.h + 8 * u);
+      ctx.globalAlpha = 1;
+    }
+
     // The readout becomes the app header once the name has been said (7.0).
     readout(S, { value: 64, sub: 'Agents', header: expoOut((t - ugc - tl.beatSec) * 60 / 10) });
     ctx.restore();
 
     // 'Who needs you?' carries over the 6.0 cut into the type module, beside
-    // the board that answers it (NEEDS YOU lit red), and retracts before the
-    // name lands.
+    // the board that answers it (NEEDS YOU lit red), and sinks away before the
+    // name rises.
     moduleHeadline(S, {
       spans: design.vertical ? [{ text: 'Who needs' }, br, { text: 'you?' }] : [{ text: 'Who' }, br, { text: 'needs' }, br, { text: 'you?' }],
-      lines: design.vertical ? 2 : 3, enter: lock - 1, exit: ugc - 0.2, size: design.size('l'), wdth: 75,
+      lines: design.vertical ? 2 : 3, enter: lock - 1, exit: ugc - 0.36, size: design.size('l'), wdth: 75,
     });
 
     // 'UGC Army.' slams on 6.5 as the largest type of the act (wdth 125 to
-    // 100 over a beat, a scale stamp after the hit), with the one-line
-    // kicker that says what it is under it on 7.0. 'See every agent.' pushes
-    // both out on 8.0.
-    const size = design.vertical ? design.size('l') : design.size('xl');
-    const ks = (design.vertical ? 32 : 34) * u;
-    const kLines = design.vertical ? 1 : 2;
-    const kickerH = kLines * ks * 1.2;
-    const gap = ks * 0.9;
-    const outAt = see - 9 / 60;
+    // 100 over a beat, a scale stamp after the hit). On 7.0 the descriptor
+    // lands on its own lines at a readable size, with the harnesses it runs
+    // named under it. 'See every agent.' replaces all of it on 8.0.
+    const size = design.vertical ? 164 * u : design.size('xl');
+    const ks = (design.vertical ? 36 : 58) * u;
+    const kLines = design.vertical ? 2 : 3;
+    const tick = (design.vertical ? 19 : 19) * u;
+    const kickerH = kLines * ks * 1.04 + tick * 2.2;
+    const gap = ks * 0.5;
+    const outAt = see - 24 / 60;
     const slam = curves.slam(clamp((t - ugc) / tl.beatSec));
     const stamp = 1 + 0.06 * (1 - expoOut(Math.max(0, t - ugc) * 60 / 6));
     moduleHeadline(S, {
@@ -961,17 +959,25 @@ const missionControl = {
       wdth: lerp(125, 100, slam), bottomPad: kickerH + gap, scale: stamp,
     });
     const kick = ugc + tl.beatSec;
-    if (t >= typeFrom(kick)) {
-      const z = typeBlock(design);
-      let wipe = typeIn(t, kick, 10);
-      if (t >= outAt) wipe = Math.min(wipe, 1 - expoIn((t - outAt) * 60 / 6));
+    const kSpans = design.vertical
+      ? [{ text: 'Mission control for' }, br, { text: 'your AI coding agents.' }]
+      : [{ text: 'Mission control' }, br, { text: 'for your AI' }, br, { text: 'coding agents.' }];
+    const kr = revealAt(t, kick, kSpans, { unit: 'line', stagger: 3, exit: outAt }, tl.fps);
+    const z = typeBlock(design);
+    if (kr) {
+      const lh = 1.04;
+      const y = z.y + z.h - kickerH - ks * (baseOf(lh) - 0.78);
       S.type.text({
-        spans: design.vertical
-          ? 'Mission control for your AI coding agents.'
-          : [{ text: 'Mission control for' }, br, { text: 'your AI coding agents.' }],
-        x: z.x + panX, y: z.y + z.h - kickerH - ks * 0.1, size: ks, family: design.fonts.ui, wght: 500,
-        tracking: -0.005, lineHeight: 1.2, wipe, color: P.ink, fit: typeFit(design, z),
+        spans: kSpans, reveal: kr, x: z.x + panX, y, size: ks, wght: 800,
+        lineHeight: lh, color: P.ink, fit: typeFit(design, z), fitWdthMin: 88,
       });
+    }
+    // The harnesses, as a ticker line under the descriptor.
+    if (t >= kick - 4 / 60 && t < outAt + 6 / 60) {
+      const tools = AGENT_TOOLS.join('  -  ');
+      const n = Math.ceil(tools.length * clamp((t - kick + 4 / 60) * 60 / 10));
+      const a = t >= outAt ? 1 - clamp((t - outAt) * 60 / 6) : 1;
+      text(S, tools.slice(0, n), z.x + panX, z.y + z.h - tick * 0.4, { kind: 'mono', size: tick, weight: 700, color: P.grey, alpha: a });
     }
     moduleHeadline(S, {
       spans: design.vertical ? [{ text: 'See every' }, br, { text: 'agent.' }] : [{ text: 'See' }, br, { text: 'every' }, br, { text: 'agent.' }],
