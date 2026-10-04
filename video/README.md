@@ -113,7 +113,7 @@ The grid is 12x8 in 16:9 with 5% / 7.4% margins, and 4x14 in 9:16. 16:9 uses bro
 
 ## Status
 
-The engine and pipeline are complete. Every scene in `src/scenes/act*.js` is a placeholder: the timings follow the beatmap and the layout follows the grid, but the art direction is still to come. Each placeholder carries an `act N / scene / placeholder` chip in the top-left corner, and final scenes drop it. The real on-chain values the film shows are in `CHAIN` in `act2.js`: program `JAH6Zi...yVQs6`, release tx `2rPSWQ...ZtUc` and EAS schema `0x368e90...a900`.
+The engine and pipeline are complete. Act 1 (`act1.js`, 0-10 s) is final: the opening agent is the whole 8x8 tile region, the quadtree cuts it into the 64 cells, the overload smears them (`fx.sortCover` sets the share of streaking columns), and mission control sorts the same 64 tiles into columns built on those cells. Each tile waits on a cell that empties before a sorted tile lands there. Act 1 ends with a whip-pan left (expo-in over 9.5-10.0 s) whose end speed matches act 2's pan in from the right. The other scenes are still placeholders: the timings follow the beatmap and the layout follows the grid, but the art direction is still to come. Each placeholder carries an `act N / scene / placeholder` chip in the top-left corner, and final scenes drop it. The real on-chain values the film shows are in `CHAIN` in `act2.js`: program `JAH6Zi...yVQs6`, release tx `2rPSWQ...ZtUc` and EAS schema `0x368e90...a900`.
 
 ## Fonts and licences
 
