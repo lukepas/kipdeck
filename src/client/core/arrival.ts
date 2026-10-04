@@ -114,7 +114,7 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     // The card belongs to the other floor's board: the office already put it back there.
     const carrying = core.carrying;
     if (carrying) {
-      toast(`📌 #${carrying.issue} stayed behind on the other floor's board`);
+      toast(`#${carrying.issue} stayed behind on the other floor's board`);
       parts.cards.setCarrying(null);
     }
     travel.arrive();
@@ -133,7 +133,7 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     const u = store.upgrade;
     const banner = $('upgrade-banner');
     banner.classList.toggle('hidden', u.phase !== 'building');
-    banner.textContent = `🛠️ ${u.by ?? 'Someone'} is upgrading the office. It restarts on the new version in a minute or two.`;
+    banner.textContent = `${u.by ?? 'Someone'} is upgrading UGC Army. It restarts on the new version in a minute or two.`;
   }
   store.on('upgrade', renderUpgrade);
   ctx.messages.on('upgrade', (msg) => {
@@ -146,8 +146,8 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     const p = store.project;
     renderTitle();
     if (!p) {
-      $('project-name').textContent = '🏢 Agent Office';
-      $('project-meta').textContent = store.floors.length ? '🛗 Pick a floor' : '🛗 No floors yet: add a project in Floors';
+      $('project-name').textContent = 'No deck';
+      $('project-meta').textContent = store.floors.length ? 'Pick a deck' : 'No decks yet: add a project in Decks';
       // Where to go next, so it shows even with the floor details turned off.
       $('project-meta').classList.add('lobby');
       ctx.world().setProjectName(store.floors.length ? 'Pick a floor' : 'Lobby');
@@ -155,8 +155,8 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     }
     const n = store.floors.findIndex((f) => f.id === store.floor);
     $('project-meta').classList.remove('lobby');
-    $('project-name').textContent = `🏢 ${p.name}`;
-    $('project-meta').textContent = [n >= 0 && `🛗 floor ${n + 1} of ${store.floors.length}`, p.branch && `⎇ ${p.branch}`, p.dir, `default: ${providerLabel(p.defaultProvider, p)}`].filter(Boolean).join(' · ');
+    $('project-name').textContent = p.name;
+    $('project-meta').textContent = [n >= 0 && `deck ${n + 1}/${store.floors.length}`, p.branch && p.branch, p.dir, `default: ${providerLabel(p.defaultProvider, p)}`].filter(Boolean).join(' · ');
     ctx.world().setProjectName(p.name);
   }
   store.on('floors', renderProject);
@@ -173,7 +173,7 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     const saved = lastSpot();
     const name = saved?.floor === was && saved.name ? saved.name : 'Your floor';
     const now = store.currentFloor()?.name;
-    toast(now ? `🛗 ${name} isn't in the building any more, so you're on ${now} now` : `🛗 ${name} isn't in the building any more`, 'warn');
+    toast(now ? `${name} isn't in the building any more, so you're on ${now} now` : `${name} isn't in the building any more`, 'warn');
   }
 
   return { renderProject, whereNow };

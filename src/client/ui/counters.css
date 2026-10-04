@@ -1,0 +1,23 @@
+/* The counters on the top bar (ui/counters.ts): glyph, mono number, word. A zero stays quiet; a live
+   count takes its state's hue, and only needs you gets the Signal fill. */
+.counters { display: flex; align-items: center; gap: 2px; min-width: 0; margin-left: 6px; }
+.counter { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; border: 1px solid transparent; border-radius: var(--radius); background: none; color: var(--faint); font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.counter:hover { background: var(--surface-3); color: var(--muted); }
+.counter b { font: 500 13px var(--font-mono); color: var(--muted); }
+.counter .cw { color: inherit; }
+.counter.live { color: var(--muted); }
+.counter.live b { color: var(--text); }
+.counter.c-needs-you.live { color: var(--signal); border-color: rgb(255 106 26 / .45); background: var(--signal-tint); }
+.counter.c-needs-you.live b { color: var(--signal); }
+.counter.c-stuck.live { color: var(--stuck); }
+.counter.c-stuck.live b { color: var(--stuck); }
+.counter.c-review.live .ico { color: var(--review); }
+.counter.c-working.live .ico { color: var(--working); }
+.counter-sep { width: 1px; height: 20px; margin: 0 6px; background: var(--line); flex: none; }
+.counter.c-proof { color: var(--proof); }
+.counter.c-proof b { color: var(--proof); }
+.counter.c-proof .amt { font: 500 12px var(--font-mono); }
+.counter.c-proof .amt::before { content: '/'; margin-right: 6px; color: var(--faint); }
+.counter.c-proof .net { font: 500 10px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border: 1px solid var(--line-strong); border-radius: var(--radius-chip); padding: 0 4px; line-height: 15px; }
+@media (max-width: 1280px) { .counter .cw { display: none; } }
+@media (max-width: 700px) { .counter.c-working, .counter-sep, .counter.c-proof { display: none; } }

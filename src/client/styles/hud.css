@@ -1,173 +1,193 @@
-/* The HUD over the 3D office (index.html's #hud, filled by the features: features/hud and the rest): the floor's name and
-   the dock, the side panels, the chat, hints and meters. Only the
-   office loads it, through style.css. */
+/* The HUD over the 3D office (index.html's #hud, filled by the features: features/hud and the rest):
+   the 44px top bar (mark, deck, counters, actions), the side panels, the chat, hints and meters. Only
+   the office loads it, through style.css. Pieces floating over the canvas get the 85% fill and the one
+   soft shadow; everything else is flat. */
 
 #app { position: fixed; inset: 0; }
 #scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
-#hud { position: absolute; inset: 0; pointer-events: none; }
+#hud { position: absolute; inset: 0; pointer-events: none; --bar: 44px; }
 #hud > * { pointer-events: auto; }
 
-.topbar { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; gap: 12px; justify-content: space-between; align-items: flex-start; pointer-events: none; }
+/* ---- The top bar ---- */
+.topbar { position: absolute; top: 0; left: 0; right: 0; height: var(--bar); display: flex; gap: 6px; align-items: center; padding: 0 8px 0 14px; background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); z-index: 3; }
 .topbar > * { pointer-events: auto; }
-.project { padding: 8px 14px; min-width: 0; max-width: 40vw; cursor: pointer; }
-.project-name { display: flex; align-items: center; }
+.topbar .brand { padding-right: 14px; margin-right: 2px; border-right: 1px solid var(--line); height: 24px; }
+.project { display: flex; align-items: baseline; gap: 8px; min-width: 0; max-width: 30vw; height: 32px; padding: 0 8px; border-radius: var(--radius); cursor: pointer; align-items: center; }
+.project:hover { background: var(--surface-3); }
+.project-name { display: flex; align-items: center; gap: 6px; min-width: 0; font-family: var(--font-display); font-stretch: var(--stretch-display); font-weight: 600; font-size: 13px; letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .project-name #project-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.project:hover { background: var(--paper-2); }
-.project-name { font-weight: 900; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.project-meta { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-/* The dock: what you pinned, what needs you now, the workers, and the ☰ menu (ui/menu.ts). */
-.dock { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 100%; }
-.dock-btn { height: 44px; padding: 0 12px; font-size: 17px; gap: 6px; }
-.dock-btn .lbl { font-size: 14px; }
-.dock-btn .n { font-size: 14px; font-variant-numeric: tabular-nums; }
-.dock-btn .svc-count { margin-left: 0; }
-/* Mission control's reminders: something can wait, but not forever. */
-.dock-dot { width: 9px; height: 9px; border-radius: 50%; background: #e9a23b; box-shadow: 0 0 0 2px #fff; flex: none; }
-.dock-btn.dim, .menu-item.dim { opacity: .5; }
-/* A panel that's showing: its button stays pressed in. */
-.dock-panel[aria-pressed=true] { background: var(--paper-2); transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
-.dock-menu { width: 44px; padding: 0; justify-content: center; }
-.dock-menu[aria-expanded=true] { background: var(--paper-2); }
-.burger { display: flex; flex-direction: column; gap: 3px; }
-.burger i { display: block; width: 18px; height: 3px; border-radius: 2px; background: var(--ink); }
+.project-name::after { content: ''; flex: none; width: 8px; height: 8px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: translateY(-2px) rotate(45deg); margin-left: 2px; }
+.project-meta { font-family: var(--font-mono); font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.topbar .spacer { flex: 1; }
 
-/* Panels you turned off from the ☰ menu. The chat still shows while you type in it. */
+/* The dock: the actions, icon buttons unless a state puts words on one (ui/menu.ts). */
+.dock { display: flex; gap: 2px; align-items: center; justify-content: flex-end; flex-shrink: 0; max-width: 100%; }
+.dock-btn { height: 32px; min-width: 32px; padding: 0 8px; gap: 6px; background: transparent; border-color: transparent; color: var(--muted); }
+.dock-btn:hover { background: var(--surface-3); color: var(--text); }
+.dock-btn .lbl { font-size: 13px; font-weight: 500; color: var(--text); }
+.dock-btn .n { font: 500 12px var(--font-mono); color: var(--text); }
+.dock-btn .svc-count { margin-left: 0; }
+.dock-btn.on { color: var(--text); background: var(--surface-3); border-color: var(--line-strong); }
+.dock-btn.primary { color: var(--on-signal); }
+.dock-btn.danger { color: var(--stuck); }
+.dock-btn.danger .lbl { color: var(--stuck); }
+/* Mission control has its words always: the one labelled way in. */
+.dock-btn[data-action=mission] { border-color: var(--line-strong); color: var(--text); margin-right: 6px; }
+/* Mission control's reminders: something can wait, but not forever. */
+.dock-dot { width: 6px; height: 6px; background: var(--review); flex: none; transform: rotate(45deg); }
+.dock-btn.dim, .menu-item.dim { opacity: .45; }
+/* A panel that's showing: its button stays lit. */
+.dock-panel[aria-pressed=true] { color: var(--text); background: var(--surface-3); }
+.dock-menu { width: 32px; padding: 0; }
+.dock-menu[aria-expanded=true] { background: var(--surface-3); color: var(--text); }
+
+/* Panels you turned off from the menu. The chat still shows while you type in it. */
 .hud-off { display: none !important; }
 .chat.hud-off.peek { display: flex !important; }
 .project-meta.hud-off.lobby { display: block !important; }
-.panel-x { flex: none; margin-left: auto; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 7px; background: none; color: var(--muted); font: 900 12px/1 var(--font); cursor: pointer; opacity: 0; transition: opacity .12s; align-self: center; }
+.panel-x { flex: none; margin-left: auto; width: 20px; height: 20px; padding: 0; border: 0; border-radius: var(--radius-chip); background: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; opacity: 0; transition: opacity var(--t-ui) var(--ease); align-self: center; }
 .side h3 :is(.cost, .plan) ~ .panel-x { margin-left: 2px; }
 .side section:hover .panel-x, .panel-x:focus-visible { opacity: 1; }
-.panel-x:hover { background: var(--paper-2); color: var(--ink); }
+.panel-x:hover { background: var(--surface-3); color: var(--text); }
 @media (hover: none) { .panel-x { opacity: .6; } }
 
-/* Under the floor's name, top left: one line of what the floor is for (ui/mission/strip.ts). */
-.mission-strip { position: absolute; top: 72px; left: 12px; width: min(440px, 40vw); padding: 0; overflow: hidden; }
+/* Floating panels over the canvas. */
+#hud .side .panel, #hud .mission-strip.panel { background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: var(--hud-shadow); }
+
+/* Under the bar, top left: one line of what the floor is for (ui/mission/strip.ts). */
+.mission-strip { position: absolute; top: calc(var(--bar) + 10px); left: 12px; width: min(440px, 40vw); padding: 0; overflow: hidden; }
 .mission-strip:empty { display: none; }
 
-.side { position: absolute; top: 72px; right: 12px; width: 250px; display: flex; flex-direction: column; gap: 12px; max-height: calc(100vh - 90px); pointer-events: none; }
+.side { position: absolute; top: calc(var(--bar) + 10px); right: 12px; width: 264px; display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - var(--bar) - 24px); pointer-events: none; }
 .side > * { pointer-events: auto; }
-.side h3 { margin: 0 0 6px; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: baseline; gap: 5px; }
-.side .count { color: var(--muted); font-weight: 700; }
-.side section { padding: 10px 12px; overflow: auto; }
-.side ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
-.people li, .workers li { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; padding: 3px 4px; border-radius: 8px; }
+.side h3 { margin: 0 0 8px; font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); display: flex; align-items: baseline; gap: 6px; }
+.side .count { color: var(--text); font: 500 11px var(--font-mono); letter-spacing: 0; }
+.side section { padding: 10px 10px 8px; overflow: auto; }
+.side ul { list-style: none; margin: 0 -4px; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.people li, .workers li { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; padding: 4px 6px; border-radius: var(--radius); }
 .workers li { cursor: pointer; }
-.workers li:hover { background: var(--paper-2); }
-.people .you { color: var(--muted); font-weight: 600; }
-.people .mic { margin-left: auto; font-size: 12px; }
+.workers li:hover { background: var(--surface-3); }
+.people .you { color: var(--muted); font-weight: 400; }
+.people .mic { margin-left: auto; font-size: 12px; color: var(--muted); }
 .people li.walk { cursor: pointer; }
-.people li.walk:hover { background: var(--paper-2); }
+.people li.walk:hover { background: var(--surface-3); }
 .people .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.people .sub { display: block; font-size: 11px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.people .speaking { color: var(--good); }
+.people .sub { display: block; font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.people .speaking { color: var(--settled); }
 .workers .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.workers .sub { display: block; font-size: 11px; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.workers h3 .cost { margin-left: auto; font-size: 12px; text-transform: none; letter-spacing: 0; }
-.workers .cost { font-size: 11px; font-weight: 800; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.workers .sub { display: block; font-size: 11px; font-weight: 400; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.workers h3 .cost { margin-left: auto; font: 500 11px var(--font-mono); text-transform: none; letter-spacing: 0; }
+.workers .cost { font: 500 11px var(--font-mono); color: var(--muted); white-space: nowrap; }
 .workers .name .cost { display: block; white-space: normal; overflow-wrap: anywhere; }
 /* Spend: today, the budget and all time. Its panel only shows once there's something to say. */
 .side .spend { flex: none; }
 .spend:has(> .usage.hidden) { display: none; }
-.usage { font-size: 12px; font-weight: 700; display: flex; flex-direction: column; gap: 5px; }
+.usage { font-size: 12px; display: flex; flex-direction: column; gap: 6px; }
 .usage .row { display: flex; align-items: baseline; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .usage .row.muted { display: block; white-space: normal; overflow: visible; overflow-wrap: anywhere; }
-.usage .row b { font-weight: 900; font-variant-numeric: tabular-nums; }
-.usage .muted { color: var(--muted); font-weight: 600; }
-.usage.over .row b { color: var(--bad); }
-.budget, .meter { height: 10px; border: 2px solid var(--ink); border-radius: 999px; background: #fff; overflow: hidden; }
-.budget .fill, .meter .fill { height: 100%; background: var(--good); transition: width .3s; }
-.budget.near .fill, .meter.near .fill { background: var(--warn); }
-.budget.over .fill, .meter.over .fill { background: var(--bad); }
+.usage .row b { font: 500 12px var(--font-mono); }
+.usage .muted { color: var(--muted); }
+.usage.over .row b { color: var(--stuck); }
+/* Meters are segmented: ten ticks, filled in steel, amber when near, red when over. */
+.budget, .meter { height: 6px; border-radius: 0; background: repeating-linear-gradient(90deg, var(--surface-3) 0 calc(10% - 2px), transparent calc(10% - 2px) 10%); overflow: hidden; -webkit-mask: repeating-linear-gradient(90deg, #000 0 calc(10% - 2px), transparent calc(10% - 2px) 10%); mask: repeating-linear-gradient(90deg, #000 0 calc(10% - 2px), transparent calc(10% - 2px) 10%); }
+.budget .fill, .meter .fill { height: 100%; background: var(--working); transition: width .3s var(--ease); }
+.budget.near .fill, .meter.near .fill { background: var(--review); }
+.budget.over .fill, .meter.over .fill { background: var(--stuck); }
 /* Claude plan limits: the 5-hour session and the week */
-.side .limits { flex: none; cursor: pointer; font-size: 12px; font-weight: 700; display: flex; flex-direction: column; gap: 4px; }
+.side .limits { flex: none; cursor: pointer; font-size: 12px; display: flex; flex-direction: column; gap: 4px; }
 .limits h3 { margin-bottom: 2px; }
-.limits .plan { margin-left: auto; font-size: 12px; text-transform: none; letter-spacing: 0; color: var(--muted); font-weight: 800; }
+.limits .plan { margin-left: auto; font-size: 11px; text-transform: none; letter-spacing: 0; color: var(--muted); }
 .limits .row { display: flex; align-items: baseline; gap: 5px; white-space: nowrap; }
 .limits .what { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.limits .row b { font-weight: 900; font-variant-numeric: tabular-nums; }
-.limits .row b.over { color: var(--bad); }
-.limits .reset { margin-left: auto; font-size: 11px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.limits .row b { font: 500 12px var(--font-mono); }
+.limits .row b.over { color: var(--stuck); }
+.limits .reset { margin-left: auto; font: 400 11px var(--font-mono); color: var(--muted); }
 .limits .meter + .row { margin-top: 3px; }
-.limits .muted { color: var(--muted); font-weight: 600; }
+.limits .muted { color: var(--muted); }
 
-/* Workers waiting on you: a count in the Workers panel (click or N to go to them) and arrows at the edge of the screen. */
-#waiting { display: flex; align-items: center; gap: 6px; width: 100%; margin: 0 0 8px; padding: 5px 8px; border: 2px solid var(--ink); border-radius: 10px; background: #ffe3ea; color: var(--ink); font: inherit; font-size: 13px; font-weight: 900; text-align: left; cursor: pointer; }
-#waiting:hover { background: #ffd0dc; }
-/* Someone on the floor needs you (features/needsyou pulses it): the count in red, and that worker's row in red too. */
-#waiting.needs-you-now { background: var(--bad); color: #fff; }
-#waiting.needs-you-now:hover { background: #e23a62; }
-.workers.needs-you-panel { border-color: var(--bad); }
-.workers li.needs-you-row { flex-wrap: wrap; row-gap: 3px; padding: 6px 6px 6px 12px; border: 2px solid var(--bad); background: #ffe3ea; box-shadow: inset 5px 0 0 var(--bad); }
-.workers li.needs-you-row:hover { background: #ffd0dc; }
-.workers li.needs-you-row .name { font-weight: 900; }
+/* Workers waiting on you: a count in the Workers panel (click or N to go to them). */
+#waiting { display: flex; align-items: center; gap: 8px; width: 100%; margin: 0 0 8px; padding: 6px 8px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface-2); color: var(--text); font: inherit; font-size: 12px; font-weight: 600; text-align: left; cursor: pointer; }
+#waiting:hover { background: var(--surface-3); }
+/* Someone on the floor needs you: the count in Signal, and that worker's row with a Signal stripe. */
+#waiting.needs-you-now { border-color: var(--signal); background: var(--signal-tint); color: var(--signal); }
+#waiting.needs-you-now:hover { background: rgb(255 106 26 / .2); }
+.workers.needs-you-panel { border-color: rgb(255 106 26 / .5); }
+.workers li.needs-you-row { flex-wrap: wrap; row-gap: 4px; padding: 6px 6px 6px 10px; background: var(--signal-tint); box-shadow: inset 2px 0 0 var(--signal); border-radius: 0 var(--radius) var(--radius) 0; }
+.workers li.needs-you-row:hover { background: rgb(255 106 26 / .18); }
+.workers li.needs-you-row .name { font-weight: 600; }
 /* Its reason (what it's asking, and for how long: the ranking's) on a line of its own, in full. */
-.workers li.needs-you-row .pill.reason { flex: 0 0 auto; max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; }
-#waiting.all-done { background: #d8f5e3; }
-#waiting.all-done:hover { background: #c3efd5; }
-#waiting .key { margin: 0 0 0 auto; background: var(--ink); color: var(--paper); box-shadow: none; }
+.workers li.needs-you-row .pill.reason { flex: 0 0 auto; max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; align-items: flex-start; border: 0; background: none; padding: 0; font-size: 12px; font-weight: 500; line-height: 1.35; }
+.workers li.needs-you-row .pill.reason::before { margin-top: 3px; }
+#waiting.all-done { border-color: rgb(245 197 66 / .5); color: var(--review); }
+#waiting.all-done:hover { background: var(--review-tint); }
+#waiting .key { margin: 0 0 0 auto; }
 
 /* The chat: lines float up and fade after a while; hover it or press T to read back. */
 .chat { position: absolute; left: 12px; bottom: 12px; width: 330px; max-width: calc(100vw - 24px); display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 #hud > .chat { pointer-events: none; }
 #chat-log { list-style: none; margin: 0; padding: 0 0 3px; max-height: 190px; width: 100%; overflow: auto; font-size: 13px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; scrollbar-width: none; }
 #chat-log:empty { display: none; }
-#chat-log li { max-width: 100%; padding: 3px 9px; background: rgba(255, 250, 243, .94); border: 2px solid var(--ink); border-radius: 10px; box-shadow: 0 2px 0 var(--ink); overflow-wrap: anywhere; animation: chat-out .6s ease-in forwards; }
+#chat-log li { max-width: 100%; padding: 4px 9px; background: var(--hud-fill); border: 1px solid var(--line); border-radius: var(--radius); overflow-wrap: anywhere; animation: chat-out .6s ease-in forwards; }
 @keyframes chat-out { to { opacity: 0; visibility: hidden; } }
 .chat:is(:hover, :focus-within) #chat-log { pointer-events: auto; scrollbar-width: thin; }
 .chat:is(:hover, :focus-within) #chat-log li { animation: none; }
-#chat-log b { font-weight: 900; }
-#chat-log .sys { color: var(--muted); font-style: italic; }
-#chat-input { pointer-events: auto; width: 180px; border: 2px solid var(--ink); border-radius: 10px; padding: 7px 10px; font: inherit; font-size: 14px; background: rgba(255, 255, 255, .92); box-shadow: 0 2px 0 var(--ink); outline: none; transition: width .15s; }
-#chat-input:focus { width: 100%; border-color: var(--accent); background: #fff; }
+#chat-log b { font-weight: 600; }
+#chat-log .sys { color: var(--muted); }
+#chat-input { pointer-events: auto; width: 180px; height: 32px; border: 1px solid var(--line); border-radius: var(--radius); padding: 0 10px; font: inherit; font-size: 13px; color: var(--text); background: var(--hud-fill); outline: none; transition: width var(--t-ui) var(--ease); }
+#chat-input::placeholder { color: var(--muted); }
+#chat-input:focus { width: 100%; border-color: var(--signal); background: var(--surface-1); }
 
 .hint {
-  position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%);
-  background: var(--ink); color: var(--paper); border: 3px solid var(--paper); border-radius: 14px;
-  padding: 10px 16px; font-weight: 800; font-size: 15px; box-shadow: 0 4px 0 rgba(0,0,0,.35);
+  position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
+  background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 8px 14px; font-weight: 500; font-size: 13px; box-shadow: var(--hud-shadow);
   display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center; max-width: min(720px, calc(100vw - 380px));
   pointer-events: none !important;
 }
-.hint .title { color: #ffd166; }
-.hint .cost { color: #a5ecfb; font-weight: 700; }
+.hint .title { color: var(--text); font-weight: 600; }
+.hint .cost { color: var(--muted); font-family: var(--font-mono); }
+/* Where you aim: a small dot, never a reticle. */
 .crosshair {
-  position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px;
-  border-radius: 50%; background: var(--paper); border: 2px solid var(--ink); opacity: .85;
-  transition: transform .1s, background .1s; pointer-events: none !important;
+  position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px;
+  border-radius: 50%; background: var(--text); box-shadow: 0 0 0 1px rgb(0 0 0 / .5); opacity: .8;
+  transition: transform var(--t-ui) var(--ease), background var(--t-ui) var(--ease); pointer-events: none !important;
 }
-.crosshair.on { transform: scale(1.6); background: var(--accent); opacity: 1; }
+.crosshair.on { transform: scale(1.5); background: var(--signal); opacity: 1; }
 .crosshair .look-hint {
-  display: none; position: absolute; top: 18px; left: 50%; transform: translateX(-50%); white-space: nowrap;
-  background: var(--ink); color: var(--paper); border-radius: 10px; padding: 4px 10px; font-size: 13px; font-weight: 800;
+  display: none; position: absolute; top: 16px; left: 50%; transform: translateX(-50%); white-space: nowrap;
+  background: var(--hud-fill); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 10px; font-size: 12px; font-weight: 500;
 }
 .crosshair.free .look-hint { display: block; }
-.crosshair.on .look-hint { transform: translateX(-50%) scale(.625); transform-origin: top center; }
+.crosshair.on .look-hint { transform: translateX(-50%) scale(.667); transform-origin: top center; }
 
-#shares { position: absolute; left: 12px; top: 72px; display: flex; flex-direction: column; gap: 8px; }
-/* The floor details make the name taller: what's under it moves down. */
-#hud:has(#project-meta:not(.hud-off)) #shares { translate: 0 16px; }
-.share-thumb { width: 220px; border: 3px solid var(--ink); border-radius: 12px; overflow: hidden; background: #000; box-shadow: var(--shadow); cursor: pointer; position: relative; }
-.share-thumb video { width: 100%; display: block; aspect-ratio: 16/9; object-fit: contain; background: #111; }
-.share-thumb .who { position: absolute; left: 6px; bottom: 6px; background: var(--paper); border: 2px solid var(--ink); border-radius: 8px; padding: 1px 6px; font-size: 12px; font-weight: 800; }
+#shares { position: absolute; left: 12px; top: calc(var(--bar) + 10px); display: flex; flex-direction: column; gap: 8px; }
+#hud:has(#mission-strip:not(:empty):not(.hud-off)) #shares { translate: 0 52px; }
+.share-thumb { width: 220px; border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; background: #000; box-shadow: var(--hud-shadow); cursor: pointer; position: relative; }
+.share-thumb video { width: 100%; display: block; aspect-ratio: 16/9; object-fit: contain; background: #000; }
+.share-thumb .who { position: absolute; left: 6px; bottom: 6px; background: var(--hud-fill); border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 1px 6px; font: 500 11px var(--font-mono); }
 
 /* Screen share viewer */
-.modal.viewer { width: min(1400px, 100%); background: #111; }
-.modal.viewer video { width: 100%; max-height: calc(100vh - 120px); background: #111; display: block; }
+.modal.viewer { width: min(1400px, 100%); background: #000; }
+.modal.viewer video { width: 100%; max-height: calc(100vh - 120px); background: #000; display: block; }
 
+@media (max-width: 1100px) {
+  .project-meta { display: none; }
+}
 @media (max-width: 800px) {
-  .side { width: min(250px, calc(100vw - 24px)); max-height: calc(100vh - 290px); }
+  .topbar .brand-word { display: none; }
+  .topbar .brand { padding-right: 8px; }
+  .side { width: min(264px, calc(100vw - 24px)); max-height: calc(100vh - 290px); }
   .dock-btn .lbl { display: none; }
   .hint { max-width: calc(100vw - 24px); bottom: 190px; }
   .chat { width: calc(100vw - 24px); }
 }
 
 /* A teammate with their own account, in the people panel. */
-.acct { font-size: 11px; color: var(--good); font-weight: 900; }
-/* A count on a dock button or a ☰ menu item, and by the floor's name the floors waiting on you. */
-.svc-count { margin-left: 6px; background: var(--accent); color: #fff; border-radius: 999px; padding: 0 7px; font-size: 12px; }
-
+.acct { font-size: 11px; color: var(--muted); font-weight: 500; }
+/* A count on a dock button or a menu item, and by the floor's name the floors waiting on you. */
+.svc-count { margin-left: 6px; min-width: 18px; height: 18px; padding: 0 5px; display: inline-grid; place-items: center; background: var(--surface-3); color: var(--text); border-radius: var(--radius-chip); font: 500 11px var(--font-mono); }
 
 /* The lights going down on the way to another floor, and where each person is in the people panel. */
-#fade { position: fixed; inset: 0; background: #1b1d2e; opacity: 0; pointer-events: none; transition: opacity .16s ease; z-index: 40; }
+#fade { position: fixed; inset: 0; background: var(--void); opacity: 0; pointer-events: none; transition: opacity .16s ease; z-index: 40; }
 #fade.on { opacity: 1; }
-.people .where { font-size: 11px; font-weight: 800; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.people .where { font: 400 11px var(--font-mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

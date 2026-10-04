@@ -1,6 +1,7 @@
 /** The tab's title, the same in the 3D office and the 2D view (/lite). No three.js here: the 2D view imports it. */
 import { needingSomeone } from '../../shared/attention';
 import { store } from '../state';
+import { setFaviconAlert } from '../ui/brand';
 
 /**
  * The tab title counts what needs someone, on every floor (the building's one ranking, see
@@ -8,8 +9,11 @@ import { store } from '../state';
  */
 export function renderTitle() {
   const name = store.project?.name;
-  const waiting = needingSomeone(store.counts());
-  document.title = `${waiting ? `(${waiting}) ` : ''}${name ? `${name} · ` : ''}Agent Office`;
+  const counts = store.counts();
+  const waiting = needingSomeone(counts);
+  // The tab's mark lights its lead chevron in Signal while a unit needs you, on any floor.
+  setFaviconAlert(counts['needs-you'] > 0);
+  document.title = `${waiting ? `(${waiting}) ` : ''}${name ? `${name} · ` : ''}UGC Army`;
 }
 
 // The roster changes without your floor's workers changing (another floor, a snooze).

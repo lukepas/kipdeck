@@ -1,3 +1,5 @@
+import { icon } from './icons';
+
 type Attrs = Record<string, string | number | boolean | EventListener | undefined | null>;
 type Child = Node | string | number | null | undefined | false;
 
@@ -113,6 +115,8 @@ export function openModal(content: HTMLElement, opts: { escCloses?: boolean; onC
     if (e.target === backdrop && opts.backdropCloses !== false) modal.close();
   });
   if (opts.closeButton ?? opts.escCloses !== false) addCloseButton(content, () => modal.close());
+  // A window you have to answer (neither Esc nor a ✕ puts it away) carries the Signal rule on top.
+  if (opts.escCloses === false && !opts.closeButton && content.classList.contains('modal')) content.classList.add('blocking');
   window.addEventListener('keydown', onKey, true);
   stack.push(modal);
   listeners.forEach((fn) => fn(true));
@@ -122,7 +126,7 @@ export function openModal(content: HTMLElement, opts: { escCloses?: boolean; onC
 /** The ✕ for a window that didn't bring its own: at the end of its header, or else on its top right corner. */
 function addCloseButton(content: HTMLElement, close: () => void) {
   if (content.querySelector('.close')) return;
-  const x = h('button.btn.close', { type: 'button', 'aria-label': 'Close', title: 'Close (Esc)', onclick: close }, '✕');
+  const x = h('button.btn.close', { type: 'button', 'aria-label': 'Close', title: 'Close (Esc)', onclick: close }, icon('close', 16));
   const header = content.querySelector(':scope > header');
   if (header) return header.append(x);
   x.classList.add('corner');
@@ -133,7 +137,7 @@ export function closeAllModals() {
   while (stack.length) stack[stack.length - 1].close();
 }
 
-export function toast(text: string, level: 'info' | 'warn' | 'error' = 'info'): HTMLElement {
+export function toast(text: string, level: 'info' | 'warn' | 'error' | 'proof' = 'info'): HTMLElement {
   const el = h('div.toast', { class: level }, text);
   document.getElementById('toasts')!.append(el);
   setTimeout(() => {

@@ -2,6 +2,7 @@ import './compass.css';
 import * as THREE from 'three';
 import type { WorkerStatus } from '../../shared/protocol';
 import { h } from './dom';
+import { icon } from './icons';
 
 /** A worker waiting on you: who, what for, and where its head is. */
 export interface Bearing {
@@ -28,7 +29,7 @@ interface Mark {
 
 /**
  * An arrow at the edge of the screen for each worker waiting on you that's out of view, pointing the
- * way to turn to see it: red for needs input, green for done. They keep inside the HUD's panels.
+ * way to turn to see it: a Signal diamond for needs input, an amber circle for done. They keep inside the HUD's panels.
  */
 export class Compass {
   private readonly marks = new Map<string, Mark>();
@@ -115,7 +116,7 @@ export class Compass {
     if (m.status !== b.status) {
       m.status = b.status;
       m.el.className = `compass-mark ${b.status}`;
-      m.dial.textContent = b.status === 'needs_input' ? '🙋' : '✅';
+      m.dial.replaceChildren(icon(b.status === 'needs_input' ? 'needs-you' : 'review', 14));
     }
     if (m.who.textContent !== b.name) m.who.textContent = b.name;
     return m;

@@ -1,5 +1,5 @@
 /**
- * The HUD: a few buttons on the top bar, everything else in the ☰ menu (Tab), with H for the controls;
+ * The HUD: a few buttons on the top bar, everything else in the menu (Tab), with H for the controls;
  * the project in the corner (click it for the floors); Settings, and your
  * character.
  */
@@ -39,7 +39,7 @@ export function installHud(ctx: Ctx, parts: HudParts) {
     toggleFloorMenu($('project'), { go: (id) => travel.switchFloor(id), floors: travel.showElevator });
   });
 
-  // ---- The HUD: a few buttons on the top bar, everything else in the ☰ menu ----------------------------
+  // ---- The HUD: a few buttons on the top bar, everything else in the menu ----------------------------
   const noMedia = () => (window.isSecureContext ? undefined : 'Voice and screen sharing need HTTPS or localhost — use a TLS proxy, --self-signed, or an SSH tunnel');
   const hud = mountHud(
     [
@@ -47,42 +47,42 @@ export function installHud(ctx: Ctx, parts: HudParts) {
       // on any floor, needs someone, and a quiet "Mission control" while nobody does.
       {
         id: 'mission',
-        icon: '🎯',
+        icon: 'mission',
         label: 'Mission control',
         section: 'Open',
         key: 'I',
         status: () => true,
-        chip: () => attentionChip().text || (attentionChip().reminders ? `${attentionChip().reminders} reminder${attentionChip().reminders === 1 ? '' : 's'}` : 'Mission control'),
+        // The counters beside the deck's name carry the numbers; this is the one labelled way in.
+        chip: () => 'Mission control',
         dot: () => attentionChip().reminders > 0,
-        tone: () => (attentionChip().tone === 'danger' ? 'danger' : attentionChip().tone === 'warn' ? 'primary' : undefined),
-        title: () => `Mission control: what needs someone, on every floor, and the floor's goals (I)${attentionChip().text ? ` · ${attentionChip().text}` : ''}${attentionChip().reminders ? ` · reminders open: ${attentionChip().reminders}` : ''}`,
+                title: () => `Mission control: what needs someone, on every floor, and the floor's goals (I)${attentionChip().text ? ` · ${attentionChip().text}` : ''}${attentionChip().reminders ? ` · reminders open: ${attentionChip().reminders}` : ''}`,
         run: () => parts.mission.showMission(attentionChip().tab),
       },
-      { id: 'issues', icon: '📌', label: 'Issues', section: 'Open', count: () => store.issues.items.filter((i) => i.state === 'OPEN').length, run: () => openBoard('issues', net, actions.boardActions()) },
-      { id: 'pulls', icon: '🔀', label: 'Pull requests', section: 'Open', count: () => store.pulls.items.filter((p) => p.state === 'OPEN').length, run: () => openBoard('pulls', net, actions.boardActions()) },
-      { id: 'queue', icon: '📋', label: 'Task queue', section: 'Open', count: () => store.queue.tasks.filter((t) => t.status !== 'done').length, title: () => 'Issues and tasks waiting for a worker', run: waiting.showQueue },
-      { id: 'services', icon: '🌐', label: 'Services', section: 'Open', count: () => store.services.items.length, title: () => 'Web servers the workers are running', run: () => openServices() },
-      { id: 'whiteboard', icon: '📝', label: 'Whiteboard', section: 'Open', title: () => 'Draw together, live', run: () => openWhiteboard(net) },
+      { id: 'issues', icon: 'issue', label: 'Issues', section: 'Open', count: () => store.issues.items.filter((i) => i.state === 'OPEN').length, run: () => openBoard('issues', net, actions.boardActions()) },
+      { id: 'pulls', icon: 'pull', label: 'Pull requests', section: 'Open', count: () => store.pulls.items.filter((p) => p.state === 'OPEN').length, run: () => openBoard('pulls', net, actions.boardActions()) },
+      { id: 'queue', icon: 'queue', label: 'Task queue', section: 'Open', count: () => store.queue.tasks.filter((t) => t.status !== 'done').length, title: () => 'Issues and tasks waiting for a unit', run: waiting.showQueue },
+      { id: 'services', icon: 'services', label: 'Services', section: 'Open', count: () => store.services.items.length, title: () => 'Web servers the units are running', run: () => openServices() },
+      { id: 'whiteboard', icon: 'board', label: 'Whiteboard', section: 'Open', title: () => 'Draw together, live', run: () => openWhiteboard(net) },
       // Up on the top bar while a meeting is on: what's being worked through in the meeting room.
       {
         id: 'meeting',
-        icon: '🤝',
-        label: 'Meeting room',
+        icon: 'meeting',
+        label: 'Review bay',
         section: 'Open',
         status: () => store.meeting.current?.status === 'running',
         chip: () => 'In a meeting',
-        title: () => 'Call a meeting: workers work through a question or a task together',
+        title: () => 'Call a meeting: units work through a question or a task together',
         run: () => parts.meeting.showMeeting(),
       },
-      { id: 'search', icon: '🔎', label: 'Search', section: 'Open', key: '/', title: () => 'Search the chat and every terminal', run: waiting.showSearch },
-      { id: 'docs', icon: '📚', label: 'Docs', section: 'Open', title: () => 'Read the project’s docs', run: parts.bookshelf.showBookshelf },
-      { id: 'elevator', icon: '🛗', label: 'Floors', section: 'Open', count: () => store.floors.reduce((n, f) => n + (f.id === store.floor ? 0 : f.waiting), 0), title: () => 'Go to another project, or add one', run: travel.showElevator },
+      { id: 'search', icon: 'search', label: 'Search', section: 'Open', key: '/', title: () => 'Search the chat and every terminal', run: waiting.showSearch },
+      { id: 'docs', icon: 'docs', label: 'Docs', section: 'Open', title: () => 'Read the project’s docs', run: parts.bookshelf.showBookshelf },
+      { id: 'elevator', icon: 'decks', label: 'Decks', section: 'Open', count: () => store.floors.reduce((n, f) => n + (f.id === store.floor ? 0 : f.waiting), 0), title: () => 'Go to another project, or add one', run: travel.showElevator },
       // In voice, V is push to talk, so leaving is only from here.
-      { id: 'voice', icon: '🎙️', label: () => (voice.inVoice ? 'Leave voice' : 'Join voice'), section: 'Together', key: () => (voice.inVoice ? undefined : 'V'), on: () => voice.inVoice, blocked: noMedia, run: () => void talk.toggleVoice() },
+      { id: 'voice', icon: 'mic', label: () => (voice.inVoice ? 'Leave voice' : 'Join voice'), section: 'Together', key: () => (voice.inVoice ? undefined : 'V'), on: () => voice.inVoice, blocked: noMedia, run: () => void talk.toggleVoice() },
       // While you're in voice, the top bar keeps the mute button handy. Muted is the usual with push to talk, so it doesn't stand out then.
       {
         id: 'mute',
-        icon: () => (voice.muted ? '🔇' : '🎙️'),
+        icon: () => (voice.muted ? 'mic-off' : 'mic'),
         label: () => (voice.muted ? 'Unmute' : 'Mute'),
         section: 'Together',
         key: 'M',
@@ -93,24 +93,24 @@ export function installHud(ctx: Ctx, parts: HudParts) {
         title: () => (voice.muted ? 'Muted: hold V to talk, or M to unmute' : 'Mute (M) · hold V to talk'),
         run: () => voice.toggleMute(),
       },
-      { id: 'share', icon: '🖥️', label: () => (voice.sharing ? 'Stop sharing' : 'Share screen'), section: 'Together', on: () => voice.sharing, status: () => voice.sharing, chip: () => 'Sharing', blocked: noMedia, run: () => void talk.toggleShare() },
-      { id: 'team', icon: '👥', label: 'Invite teammates', section: 'Together', shown: () => store.invites, run: () => openTeam(net) },
-      { id: 'accounts', icon: '🔑', label: 'Accounts', section: 'Together', shown: () => store.me.admin, title: () => 'Invite people, see who has an account, revoke them', run: () => openAccounts(net) },
-      { id: 'signins', icon: '🔐', label: 'Your sign-ins', section: 'Together', shown: () => !!store.me.account, tone: () => (needsSigningIn() ? 'danger' : undefined), status: needsSigningIn, chip: () => 'Sign in to Claude', title: () => 'The Claude plan and GitHub account your workers run on: your own', run: () => openSignIns(net) },
-      { id: 'settings', icon: '⚙️', label: 'Settings', section: 'Office', run: showSettings },
-      { id: 'help', icon: '❓', label: 'Controls', section: 'Office', key: 'H', run: openHelp },
-      { id: 'lite', icon: '📱', label: '2D view', section: 'Office', title: () => 'The workers, their terminals and the boards without the 3D: for a phone or a slow computer', run: () => location.assign('/lite') },
+      { id: 'share', icon: 'screen', label: () => (voice.sharing ? 'Stop sharing' : 'Share screen'), section: 'Together', on: () => voice.sharing, status: () => voice.sharing, chip: () => 'Sharing', blocked: noMedia, run: () => void talk.toggleShare() },
+      { id: 'team', icon: 'invite', label: 'Invite teammates', section: 'Together', shown: () => store.invites, run: () => openTeam(net) },
+      { id: 'accounts', icon: 'key', label: 'Accounts', section: 'Together', shown: () => store.me.admin, title: () => 'Invite people, see who has an account, revoke them', run: () => openAccounts(net) },
+      { id: 'signins', icon: 'lock', label: 'Your sign-ins', section: 'Together', shown: () => !!store.me.account, tone: () => (needsSigningIn() ? 'danger' : undefined), status: needsSigningIn, chip: () => 'Sign in to Claude', title: () => 'The Claude plan and GitHub account your units run on: your own', run: () => openSignIns(net) },
+      { id: 'settings', icon: 'settings', label: 'Settings', section: 'Office', run: showSettings },
+      { id: 'help', icon: 'keyboard', label: 'Controls', section: 'Office', key: 'H', run: openHelp },
+      { id: 'lite', icon: 'plot', label: '2D view', section: 'Office', title: () => 'The units, their terminals and the boards without the 3D: for a phone or a slow computer', run: () => location.assign('/lite') },
       {
         id: 'upgrade',
-        icon: '⬆️',
-        label: () => (store.upgrade.phase === 'building' ? 'Upgrading…' : store.upgrade.latest ? 'Update the office' : 'Upgrade the office'),
+        icon: 'upgrade',
+        label: () => (store.upgrade.phase === 'building' ? 'Upgrading…' : store.upgrade.latest ? 'Update UGC Army' : 'Upgrade UGC Army'),
         section: 'Office',
         shown: () => store.upgrade.available,
         // A new version, or one being built, gets a place on the top bar until it's in.
         status: () => !!store.upgrade.latest || store.upgrade.phase === 'building',
         chip: () => (store.upgrade.phase === 'building' ? 'Upgrading…' : 'Update'),
         tone: () => (store.upgrade.latest && store.upgrade.phase !== 'building' ? 'primary' : undefined),
-        title: () => (store.upgrade.latest ? `New version: ${store.upgrade.latest.subject}` : 'Upgrade the office'),
+        title: () => (store.upgrade.latest ? `New version: ${store.upgrade.latest.subject}` : 'Upgrade UGC Army'),
         run: () => openUpgrade(net),
       },
     ],

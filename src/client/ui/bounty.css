@@ -1,41 +1,60 @@
-/* Proof of Merge bounties: the chip on issue cards and the Fund window (see bounty.ts). */
+/* Proof of Merge bounties: the chip on issue cards and the Fund window (see bounty.ts). Violet is kept
+   for on-chain proof; the settled tick is the one place green shows. */
 .bounty-chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 1px 6px;
-  border-radius: 8px;
-  background: #fff3c4;
-  color: #5a4300;
-  font-weight: 600;
+  padding: 0 6px;
+  border: 1px solid rgb(166 139 255 / .5);
+  border-radius: var(--radius-chip);
+  background: var(--proof-tint);
+  color: var(--proof);
+  font: 500 11px/16px var(--font-mono);
 }
 .bounty-chip.none {
+  border: 0;
   background: transparent;
   padding: 0;
 }
 .bounty-chip.awaiting-approval,
 .bounty-chip.paying {
-  background: #ffe08a;
+  border-color: var(--signal);
+  background: var(--signal-tint);
+  color: var(--signal);
 }
 .bounty-chip.released {
-  background: #c7f0d2;
-  color: #12502a;
+  border-color: var(--proof);
+  color: var(--proof);
+}
+.bounty-chip.released::after {
+  content: '';
+  width: 9px;
+  height: 9px;
+  background: var(--settled);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 .bounty-chip.blocked,
 .bounty-chip.expired,
 .bounty-chip.refunded,
 .bounty-chip.cancelled {
-  background: #eee;
-  color: #555;
+  border-color: var(--line-strong);
+  background: var(--surface-2);
+  color: var(--muted);
 }
 .bounty-fund {
-  border: 1px solid #b8860b;
-  background: #fff;
-  color: #5a4300;
-  border-radius: 6px;
-  padding: 0 5px;
+  height: 20px;
+  border: 1px solid rgb(166 139 255 / .5);
+  background: transparent;
+  color: var(--proof);
+  border-radius: var(--radius-chip);
+  padding: 0 6px;
   font: inherit;
+  font-size: 11px;
   cursor: pointer;
+}
+.bounty-fund:hover {
+  background: var(--proof-tint);
 }
 .bounty-modal .bounty-body {
   display: flex;

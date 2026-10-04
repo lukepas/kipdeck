@@ -29,6 +29,7 @@ import { installBoards } from './features/boards';
 import { installBookshelf } from './features/bookshelf';
 import { installCarrying } from './features/carrying';
 import { installChat } from './features/chat';
+import { installCounters } from './features/counters';
 import { installLanded } from './features/landed';
 import { installBounties } from './features/bounties';
 import { installDictation } from './features/dictation';
@@ -49,7 +50,7 @@ import { installWorkerViews } from './features/workers/views';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
-// Came here from the 2D view's 🏢 3D button: it isn't offered straight back.
+// Came here from the 2D view's 3D button: it isn't offered straight back.
 const chose3d = new URLSearchParams(location.search).has('3d');
 if (chose3d) history.replaceState(null, '', location.pathname);
 /** Offers the 2D view (/lite) where the 3D is hard going. */
@@ -108,6 +109,7 @@ parts.actions = installWorkerActions(ctx, parts);
 parts.waiting = installWaiting(ctx, core, parts);
 parts.mission = installMission(ctx, parts);
 parts.needsYou = installNeedsYou(ctx, parts);
+installCounters(ctx, parts);
 installPalette(ctx, parts);
 parts.meeting = installMeeting(ctx, parts);
 parts.bookshelf = installBookshelf(ctx);
@@ -172,7 +174,7 @@ void whoami().then(() => {
       });
     });
     loading.until([
-      { say: 'Knocking on the door', done: welcomed },
+      { say: 'Signing in', done: welcomed },
     ]);
   };
   if (saved?.look) {

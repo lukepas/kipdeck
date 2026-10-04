@@ -1,18 +1,17 @@
 /* ---- The floor list under the project in the corner ------------------------------------------ */
-.project.open { background: var(--paper-2); }
-.floor-menu { position: fixed; z-index: 30; width: min(380px, calc(100vw - 24px)); max-height: calc(100vh - 110px); overflow: auto; padding: 8px; display: grid; gap: 6px; animation: floor-menu-in .12s ease-out; }
-@keyframes floor-menu-in { from { opacity: 0; transform: translateY(-6px); } }
-.floor-menu-head { font-size: 12px; font-weight: 900; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; padding: 2px 6px 0; }
-.floor-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; text-align: left; padding: 7px 10px; font: inherit; color: var(--ink); background: #fff; border: 3px solid var(--ink); border-radius: 12px; box-shadow: 0 3px 0 var(--ink); cursor: pointer; transition: transform .05s; }
-.floor-item:hover:not(:disabled) { background: var(--paper-2); }
-.floor-item:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+.project.open { background: var(--surface-3); }
+.floor-menu { position: fixed; z-index: 30; width: min(380px, calc(100vw - 24px)); max-height: calc(100vh - 110px); overflow: auto; padding: 8px; display: grid; gap: 6px; animation: rise var(--t-ui) var(--ease); background: var(--surface-1); box-shadow: var(--hud-shadow); }
+.floor-menu-head { font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 10px; font-weight: 600; color: var(--faint); text-transform: uppercase; letter-spacing: .1em; padding: 4px 6px 2px; }
+.floor-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; width: 100%; text-align: left; padding: 7px 10px; font: inherit; color: var(--text); background: var(--surface-1); border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; }
+.floor-item:hover:not(:disabled) { background: var(--surface-3); }
 .floor-item:disabled { cursor: default; }
-.floor-item.here { background: var(--paper-2); box-shadow: none; transform: translateY(2px); }
-.floor-item.add { background: var(--paper); border-style: dashed; box-shadow: none; }
-.floor-item .floor-no { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--ink); display: grid; place-items: center; font-weight: 900; font-size: 14px; color: #fff; text-shadow: 0 1px 0 rgba(0, 0, 0, .35); }
-.floor-item.add .floor-no { background: #fff; text-shadow: none; }
+.floor-item.here { background: var(--surface-2); border-color: var(--line-strong); box-shadow: inset 2px 0 0 var(--text); }
+.floor-item.add { background: var(--surface-1); border-style: dashed; box-shadow: none; }
+.floor-item .floor-no { width: 28px; height: 28px; border-radius: var(--radius-chip); border: 1px solid var(--line-strong); display: grid; place-items: center; font: 500 13px var(--font-mono); color: var(--text); background: var(--surface-2) !important; }
+.floor-item.add .floor-no { background: var(--surface-2); text-shadow: none; }
 .floor-item .floor-text { display: flex; flex-direction: column; min-width: 0; }
-.floor-item .floor-name { font-weight: 900; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.floor-item .floor-sub { font-size: 12px; font-weight: 700; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.floor-item .floor-stats { display: flex; gap: 6px; font-size: 12px; font-weight: 800; white-space: nowrap; }
-.floor-item .floor-stats .waiting { color: var(--bad); }
+.floor-item .floor-name { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.floor-item .floor-sub { font-size: 12px; font-weight: 400; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.floor-item .floor-stats { display: flex; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.floor-item .floor-stats { font: 500 12px var(--font-mono); }
+.floor-item .floor-stats .waiting { color: var(--signal); }

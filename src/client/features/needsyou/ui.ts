@@ -1,6 +1,7 @@
 import './ui.css';
 import { h } from '../../ui/dom';
 import type { BannerText } from './logic';
+import { icon } from '../../ui/icons';
 
 export interface BannerHooks {
   /** To that worker's desk, on whichever floor it is. */
@@ -24,8 +25,8 @@ export class Banner {
     hooks: BannerHooks,
   ) {
     this.go = h('button.needs-you-go', { type: 'button', onclick: () => this.shown && hooks.go(this.shown) });
-    const x = h('button.needs-you-x', { type: 'button', 'aria-label': 'Hide', title: 'Hide until another worker needs you', onclick: () => hooks.hide() }, '✕');
-    this.el = h('div.needs-you.hidden', { role: 'status', 'aria-live': 'polite' }, this.go, x);
+    const x = h('button.needs-you-x', { type: 'button', 'aria-label': 'Hide', title: 'Hide until another unit needs you', onclick: () => hooks.hide() }, icon('close', 16));
+    this.el = h('div.needs-you-alert.hidden', { role: 'status', 'aria-live': 'polite' }, this.go, x);
     this.edge = h('div.needs-you-flash', { 'aria-hidden': 'true' });
     this.edge.addEventListener('animationend', () => this.edge.classList.remove('on'));
     hud.append(this.el, this.edge);
@@ -40,7 +41,7 @@ export class Banner {
     if (!text) return;
     this.go.title = `Go to ${text.title.replace(/ needs you$/, '')}'s desk`;
     this.go.replaceChildren(
-      h('span.needs-you-icon', { 'aria-hidden': 'true' }, '🙋'),
+      h('span.needs-you-icon', { 'aria-hidden': 'true' }, icon('needs-you', 16)),
       h('span.needs-you-text', {}, h('strong', {}, text.title), text.detail ? h('span.needs-you-ask', {}, text.detail) : null),
       ...(text.more ? [h('span.needs-you-more', {}, text.more)] : []),
       h('span.key', {}, 'N'),
