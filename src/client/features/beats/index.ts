@@ -4,13 +4,15 @@
  *
  * - Dispatch: a unit deployed to a console gets a 400 ms trace from the mission table out to it.
  * - The merge beat, the one celebration: a merged pull request sends a violet pulse from its unit's
- *   console to the table, whose rim lights; a bounty released on devnet carries it on to the Proof
+ *   console to the table, whose rim lights, and the bridge marks it for 1.2 s (celebrate.ts): a ring of
+ *   light sweeps out across the floor, the Pull requests board flashes green, a ring rises off the
+ *   unit's console and every lit line on the bridge swells; a bounty released on devnet carries it on to the Proof
  *   corner and up the rail, where it parks as the rail's new lit segment and the vault's lid lifts
  *   (features/proofcorner); then a violet toast with the transaction in mono. An attestation landing
  *   plays the merged cue and its own toast.
  *
- * Under reduced motion there is no traveling light: the rail and the lid change at once and the
- * toasts say the rest. The camera never moves for a beat.
+ * Under reduced motion there is no traveling light: the rail and the lid change at once, the board
+ * and the lines only hold a colour for a moment, and the toasts say the rest. The camera never moves for a beat.
  */
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
@@ -24,6 +26,7 @@ import { tokenAmount } from '../../../shared/review';
 import { DECK } from '../../world/office/materials';
 import { beatAt, dispatchPhases, hashOf, toRailPhases, toTablePhases, type Phase } from './logic';
 import { Trace } from './world';
+import { Celebration } from './celebrate';
 
 /** A beat waiting its turn: one trace runs them one after another. */
 interface Beat {
@@ -41,6 +44,8 @@ const RIM_S = 0.8;
 export function installBeats(ctx: Ctx, parts: Pick<Parts, 'views' | 'proofCorner'>) {
   const trace = new Trace();
   ctx.scene.add(trace.root);
+  const party = new Celebration();
+  ctx.scene.add(party.root);
   const queue: Beat[] = [];
   let rimT = Infinity;
   const still = () => ctx.reduceMotion.matches;
@@ -88,8 +93,16 @@ export function installBeats(ctx: Ctx, parts: Pick<Parts, 'views' | 'proofCorner
     if (m.kind !== 'merged' || m.pr === undefined) return;
     const owner = [...store.workers.values()].find((w) => w.pr?.number === m.pr || (w.pastPrs ?? []).includes(m.pr!) || store.queue.tasks.some((t) => t.workerId === w.id && t.pr?.number === m.pr));
     const from = owner && unitAt(owner.id);
-    if (!from) return;
-    run({ phases: toTablePhases(from.x, from.z), color: DECK.proof, done: () => (rimT = 0) });
+    const celebrate = () => party.start(from ? new THREE.Vector3(from.x, 0, from.z) : null, still());
+    if (!from) return celebrate();
+    run({
+      phases: toTablePhases(from.x, from.z),
+      color: DECK.proof,
+      done: () => {
+        rimT = 0;
+        celebrate();
+      },
+    });
   });
 
   ctx.messages.on('bounty.paid', (m) => {
@@ -126,6 +139,7 @@ export function installBeats(ctx: Ctx, parts: Pick<Parts, 'views' | 'proofCorner
 
   // ---- Each frame ------------------------------------------------------------------------------------
   ctx.ticks.add('world', ({ dt, now, t }) => {
+    party.step(dt);
     if (rimT !== Infinity) {
       rimT += dt;
       ctx.office.missionTable.pulse(Math.max(0, 1 - rimT / RIM_S));
@@ -143,5 +157,5 @@ export function installBeats(ctx: Ctx, parts: Pick<Parts, 'views' | 'proofCorner
     b.done?.();
   });
 
-  return { trace };
+  return { trace, party };
 }
