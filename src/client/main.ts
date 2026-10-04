@@ -64,6 +64,7 @@ import { installLife } from './features/life';
 import { installGiveWay } from './features/giveway';
 import { installDestination } from './features/destination';
 import { installFleet } from './features/fleet';
+import { installSorties } from './features/sorties';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -154,6 +155,7 @@ installLife(ctx, parts);
 parts.giveWay = installGiveWay(ctx);
 installDestination(ctx, parts);
 installFleet(ctx, parts);
+installSorties(ctx, parts);
 
 parts.hintbar = installHintBar(ctx, core, parts);
 installKeyboard(ctx, parts);
