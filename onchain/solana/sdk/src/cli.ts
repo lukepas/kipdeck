@@ -192,8 +192,9 @@ export async function main(argv: string[], out: (line: string) => void = console
       const b64 = tx.startsWith('@') ? readFileSync(tx.slice(1), 'utf8') : tx;
       const repo = flags.repo ? normalizeRepo(flags.repo) : undefined;
       const r = await inspectPreparedRelease(escrow, b64, { repo });
-      const { decimals, symbol } = await escrow.token();
-      out(`pays ${formatAmount(r.amount, decimals)} ${symbol} to ${r.claimant} for PR #${r.prNumber}${repo ? ` on ${repo}` : ''}, issue #${r.bounty.issue}`);
+      // The program takes devnet USDC and the test mint, both with 6 decimals.
+      const symbol = r.bounty.mint === TEST_MINT ? 'test USDC' : r.bounty.mint === DEVNET_USDC_MINT ? 'USDC' : `(mint ${r.bounty.mint})`;
+      out(`pays ${formatAmount(r.amount, 6)} ${symbol} to ${r.claimant} for PR #${r.prNumber}${repo ? ` on ${repo}` : ''}, issue #${r.bounty.issue}`);
       out(`bounty ${r.bounty.address}, merge ${r.mergeSha ?? 'not recorded'}${r.nonceAccount ? `, durable nonce ${r.nonceAccount}` : ''}`);
       if (flags.yes !== 'true') {
         out('not sent: add --yes true to sign it as the approver and send it');
