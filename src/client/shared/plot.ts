@@ -4,6 +4,7 @@
 // the Review bay, the Standby bench, the Deck lift and the title block. Units are their state glyphs
 // with their call signs, and a unit that needs you stands on its pod's ready line in ranking order,
 // as it does on the deck. No three.js: the 2D view draws it live and the sign-in pages draw it once.
+import { UPSTREAM_CREDIT } from '../../shared/copy';
 import './plot.css';
 import {
   BEANBAGS,
@@ -174,7 +175,7 @@ export class Plot {
       text(minX + 0.25, minZ + 0.62, 'p-block-brand', 'UGC ARMY'),
       text(minX + 3.15, minZ + 0.62, 'p-block-deck', clip(deck, 14).toUpperCase()),
       text(minX + 0.25, mid + 0.55, 'p-block-small', revision ? `REV ${revision}` : 'MISSION CONTROL FOR AI AGENTS'),
-      text(minX + 0.25, maxZ - 0.3, 'p-block-small', 'Built on agent-office by webdevcody - MIT'),
+      text(minX + 0.25, maxZ - 0.3, 'p-block-small', UPSTREAM_CREDIT),
     );
   }
 

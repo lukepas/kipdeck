@@ -192,8 +192,8 @@ export interface ProviderMeta {
 export function modelHint(m: Pick<ProviderMeta, 'label' | 'models'>, catalogue?: { request?: unknown; failed?: boolean }): string {
   const field = m.models;
   if (!field) return '';
-  if (field.catalog && catalogue?.request) return `Loading ${m.label} models…`;
-  if (field.catalog && catalogue?.failed) return [`${m.label}’s models couldn’t be listed: leave it empty for its default, or type a model id.`, field.syntax].filter(Boolean).join(' ');
+  if (field.catalog && catalogue?.request) return `Loading ${m.label} models...`;
+  if (field.catalog && catalogue?.failed) return [`${m.label}'s models couldn't be listed: leave it empty for its default, or type a model id.`, field.syntax].filter(Boolean).join(' ');
   return field.hint;
 }
 

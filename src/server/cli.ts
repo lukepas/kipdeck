@@ -56,15 +56,15 @@ const agent = office.resolvedAgent;
 function floorsLine() {
   const floors = office.floors();
   const where = `new ones are cloned into ${tildify(office.projectsDir())}`;
-  if (!floors.length) return `🛗 no floors yet — open Floors in the office to add a project (${where})`;
-  return `🛗 ${floors.length} floor${floors.length === 1 ? '' : 's'}: ${floors.map((f) => f.def.name).join(', ')} (${where})`;
+  if (!floors.length) return `no decks yet - open Decks in the office to add a project (${where})`;
+  return `${floors.length} deck${floors.length === 1 ? '' : 's'}: ${floors.map((f) => f.def.name).join(', ')} (${where})`;
 }
 
 function passwordLine() {
-  if (!office.accounts.sharedPassword) return 'off — everyone signs in with their own account (agent-office accounts)';
+  if (!office.accounts.sharedPassword) return 'off - everyone signs in with their own account (agent-office accounts)';
   if (!cfg.passwordGenerated) return '(from --password / AGENT_OFFICE_PASSWORD)';
-  if (cfg.claimToken && !cfg.claimed) return 'shown exactly once to whoever opens the claim link (/claim?t=…)';
-  if (cfg.claimed || !cfg.password) return '(already claimed — never shown again; reset with --reset-password)';
+  if (cfg.claimToken && !cfg.claimed) return 'shown exactly once to whoever opens the claim link (/claim?t=...)';
+  if (cfg.claimed || !cfg.password) return '(already claimed - never shown again; reset with --reset-password)';
   return cfg.password;
 }
 
@@ -81,7 +81,7 @@ if (atTerminal && office.accounts.sharedPassword && !cfg.claimToken) {
 // Started in a project that's still one of the floors (it can be taken off like any other).
 const local = cfg.project && office.floors().some((f) => path.resolve(f.def.dir) === cfg.project);
 console.log(`
-  🏢  agent-office is open${local ? ` for ${cfg.project}` : ''}
+  UGC Army is open${local ? ` for ${cfg.project}` : ''}
 
   ${floorsLine()}
 
@@ -90,7 +90,7 @@ ${signIn ? `\n  sign in: ${signIn}\n           ${opened ? 'opened in your browse
   password: ${passwordLine()}
   default agent: ${[agent ?? `${cfg.agentCmd} (via login shell)`, ...cfg.agentArgs].join(' ')}
   choose a provider (including Pi and Cursor) when hiring or queueing a task
-${cfg.tls || loopback ? '' : '\n  tip: voice & screen share need https off localhost — use a reverse proxy or --self-signed\n'}`);
+${cfg.tls || loopback ? '' : '\n  tip: voice & screen share need https off localhost - use a reverse proxy or --self-signed\n'}`);
 
 let closing = false;
 // SIGTERM is a restart (tsx watch reloading, a plain `kill`, systemd): workers keep running in their
@@ -101,7 +101,7 @@ const stop = (signal: NodeJS.Signals) => {
   if (closing) process.exit(1);
   closing = true;
   const keep = signal === 'SIGTERM';
-  console.log(keep ? '\n  closing the office — workers keep running for the next one…' : '\n  closing the office…');
+  console.log(keep ? '\n  closing the office - workers keep running for the next one...' : '\n  closing the office...');
   office.shutdown(keep);
   setTimeout(() => process.exit(0), 300);
 };

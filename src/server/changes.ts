@@ -285,17 +285,17 @@ export class Changes {
   async commit(workerId: string, message: string, who: string, env?: Record<string, string>, repo?: string): Promise<string | undefined> {
     const msg = message.trim();
     if (!msg) return 'The commit needs a message';
-    return this.action(workerId, repo, 'Committing…', async (t) => {
+    return this.action(workerId, repo, 'Committing...', async (t) => {
       await git(['add', '-A'], t.cwd);
       await git(['commit', '-q', '-m', msg], t.cwd, 120_000, env);
       const subject = msg.split('\n')[0];
-      this.events.toast(`${who} committed “${subject.length > 60 ? `${subject.slice(0, 59)}…` : subject}” at ${t.name}'s desk`, 'info');
+      this.events.toast(`${who} committed "${subject.length > 60 ? `${subject.slice(0, 57)}...` : subject}" at ${t.name}'s desk`, 'info');
     });
   }
 
   /** Throws away uncommitted changes: one file's, or every one in the checkout. */
   async discard(workerId: string, filePath: string | undefined, who: string, repo?: string): Promise<string | undefined> {
-    return this.action(workerId, repo, 'Discarding…', async (t, w) => {
+    return this.action(workerId, repo, 'Discarding...', async (t, w) => {
       if (filePath !== undefined) {
         const file = w.last?.files.find((f) => f.path === filePath);
         if (!file?.uncommitted) return 'That file has no uncommitted changes';
@@ -315,7 +315,7 @@ export class Changes {
   /** Pushes the branch and opens a pull request for it with `gh`; with `env`, as whoever pressed the button. */
   async pullRequest(workerId: string, title: string, body: string, who: string, env?: Record<string, string>, repo?: string): Promise<string | undefined> {
     if (!title.trim()) return 'The pull request needs a title';
-    return this.action(workerId, repo, 'Pushing the branch and opening a pull request…', async (t, w) => {
+    return this.action(workerId, repo, 'Pushing the branch and opening a pull request...', async (t, w) => {
       const s = w.last ?? (await this.compute(w, t));
       if (!s.branch || !s.prBase) return "This checkout isn't on a branch of its own";
       if (s.pr) return `There's already a pull request for ${s.branch}: ${s.pr.url}`;
@@ -377,7 +377,7 @@ export class Changes {
     if (!t) return 'No such worker';
     const key = watchKey(workerId, repo);
     const w = this.entry(workerId, repo);
-    if (w.busy) return `Hold on — still ${w.busy.toLowerCase().replace(/…$/, '')}`;
+    if (w.busy) return `Hold on - still ${w.busy.toLowerCase().replace(/...$/, '')}`;
     w.busy = label;
     if (w.last) this.push(w, { ...w.last, busy: label });
     let error: string | undefined;

@@ -11,7 +11,7 @@ import { readStateJson, writeState } from './safefs.js';
  * `usage` (input, output, cache write, cache read) and the model, so tokens are exact and the cost
  * is priced here from PRICES. Subagents (the Agent tool) log to <session>/subagents/*.jsonl next to
  * it; those are read too. When a session ends, Claude Code appends a `cost-state` line with its own
- * tally — that also covers calls that never reach the transcript (titles, summaries) — and the
+ * tally - that also covers calls that never reach the transcript (titles, summaries) - and the
  * worker's figures snap to it; anything logged after (a resume) is estimated on top again.
  *
  * The transcript format is Claude Code's own and may change: everything below is defensive, and a
@@ -34,7 +34,7 @@ export function addUsage(a: Usage, b: Usage, sign = 1): Usage {
 const isZero = (u: Usage) => !u.input && !u.output && !u.cacheWrite && !u.cacheRead && !u.cost && !u.calls;
 
 /**
- * USD per million tokens — [input, output, cache read] — from the Claude pricing page, checked
+ * USD per million tokens - [input, output, cache read] - from the Claude pricing page, checked
  * 2026-09-26. A 5-minute cache write costs 1.25x input, a 1-hour write 2x. First match wins, so
  * newer generations come before the family they belong to. A model not listed gets Opus rates:
  * a budget warning that comes early beats one that comes late.
@@ -310,7 +310,7 @@ export class Ledger {
   /** Why a new agent can't be hired right now, when it can't. */
   get hiringPaused(): string | undefined {
     if (!this.opts.pauseHiring || !this.overBudget) return undefined;
-    return `Today's ${fmtUsd(this.opts.budget!)} budget is spent — no new hires until tomorrow`;
+    return `Today's ${fmtUsd(this.opts.budget!)} budget is spent: no new units deploy until tomorrow`;
   }
 
   add(delta: Usage) {
@@ -324,7 +324,7 @@ export class Ledger {
     if (this.opts.budget !== undefined && this.overBudget && this.warnedDay !== day) {
       this.warnedDay = day;
       const spent = fmtUsd(this.days[day].cost);
-      this.toast(`Today's spend passed the ${fmtUsd(this.opts.budget)} budget (${spent})${this.opts.pauseHiring ? ' — no new hires until tomorrow' : ''}`, 'warn');
+      this.toast(`Today's spend passed the ${fmtUsd(this.opts.budget)} budget (${spent})${this.opts.pauseHiring ? ': no new units deploy until tomorrow' : ''}`, 'warn');
     }
   }
 

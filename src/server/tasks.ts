@@ -184,7 +184,7 @@ function parse(out: string): WorkerTask | null {
 
 function clip(s: string, n: number) {
   const one = s.replace(/\s+/g, ' ').trim();
-  return one.length > n ? `${one.slice(0, n - 1).trimEnd()}…` : one;
+  return one.length > n ? `${one.slice(0, n - 1).trimEnd()}...` : one;
 }
 
 function cap(s: string) {

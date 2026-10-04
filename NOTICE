@@ -1,0 +1,28 @@
+UGC Army
+Copyright (c) 2026 UGC Army contributors
+
+This product is a fork of agent-office (https://github.com/AgentSystemLabs/agent-office),
+Copyright (c) 2026 AgentSystemLabs, created by webdevcody, released under the MIT License.
+The full license text and both copyright notices are in LICENSE.
+
+What this fork replaced
+- Visual identity: the name, the Formation mark and wordmark, the color and type tokens
+  (src/client/styles/tokens.css), the icon set (src/client/ui/icons.ts), the fonts' selection
+  (Archivo and JetBrains Mono, OFL, with their licenses in src/client/styles/fonts/).
+- The 3D scene: the deck's plan (src/shared/layout.ts), its materials and light, the units and
+  operators, the boards' look, the Proof corner and the merge beat.
+- The interface: the top bar and its counters, the Units rail, the mission strip, Mission control,
+  the menu's grouping, the toasts, the 2D view's Plot, the sign-in pages, the loading card and the
+  /pom/ Proof ledger with its share card.
+- The copy: product wording, the deck's verbs (deploy, stand down) and server messages.
+- New features: mission control (attention ranking, goals and milestones, review inbox, timeline,
+  reminders) and Proof of Merge on testnets (Solana devnet bounty escrow, Base Sepolia EAS
+  attestations, ERC-8004 reputation, x402 paid tasks, the public showcase).
+
+What remains from upstream
+- The server's architecture: floors (decks), workers and their terminals, git worktrees, the
+  provider adapters, the task queue, meetings (the Review bay), voice and screen sharing, the
+  whiteboard, accounts and sign-ins, the tunnel and the installers.
+- The client's architecture: the registries, the state store and its slices, the player and its
+  camera, the navigation grid and the modal frame.
+- The package name and the agent-office command, kept so upstream changes can still be merged.

@@ -83,12 +83,12 @@ export class Team {
     try {
       const res = await fetch(`https://github.com/${user}.keys`, { signal: AbortSignal.timeout(10_000) });
       if (res.status === 404) return { error: `There's no GitHub user called ${user}` };
-      if (!res.ok) return { error: `GitHub answered ${res.status} for ${user}'s keys — try again` };
+      if (!res.ok) return { error: `GitHub answered ${res.status} for ${user}'s keys - try again` };
       text = (await res.text()).slice(0, 64 * 1024);
     } catch (err) {
       return { error: `Couldn't reach GitHub: ${(err as Error).message}` };
     }
-    if (!text.trim()) return { error: `${user} has no SSH keys on GitHub — they can add one at github.com/settings/keys` };
+    if (!text.trim()) return { error: `${user} has no SSH keys on GitHub - they can add one at github.com/settings/keys` };
     const r = await helper(['add', user], text);
     if (r.code === 65) return { error: `None of ${user}'s GitHub keys are a type SSH accepts here` };
     if (r.code) return { error: `Couldn't add ${user}'s keys: ${r.err}` };

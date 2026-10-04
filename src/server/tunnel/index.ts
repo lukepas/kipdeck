@@ -1,4 +1,5 @@
 import { openBrowser } from '../browser.js';
+import { NAV } from '../../shared/copy.js';
 import { Forwarder } from './forwarder.js';
 import { Office } from './office.js';
 import { forget, signIn, type Credentials } from './session.js';
@@ -25,7 +26,7 @@ http://localhost:5173 on this computer is the worker's localhost:5173. It closes
 again when the worker stops the server. No command per server, nothing to restart.
 
 Where the office is:
-  office@203.0.113.7      An SSH address (the one 👥 Invite teammates shows, also
+  office@203.0.113.7      An SSH address (the one Invite teammates shows, also
   ssh://office@host:2222  as ssh://, or a Host from your ssh config). Opens the
                           tunnel to the office as well, and the office in your
                           browser, and opens the tunnel again when it drops
@@ -183,7 +184,7 @@ export async function tunnelCommand(argv: string[]): Promise<number> {
   }
 
   async function run(): Promise<number> {
-    say(`\n  🔌 agent-office tunnel\n`);
+    say(`\n  agent-office tunnel\n`);
     if (overSsh) {
       // A tunnel that's already open (this command running twice, or the one from 👥 Invite teammates) will do.
       if (await office.up()) say(`  the office is already open at ${office.origin}: using that tunnel`);
@@ -191,7 +192,7 @@ export async function tunnelCommand(argv: string[]): Promise<number> {
         say(`  opening the tunnel to ${o.where}...`);
         ssh = new SshTunnel(sshArgs(o.where, office.port, o.officePort, o.ssh), office, {
           dropped: () => say('  ... the tunnel dropped: opening it again'),
-          back: () => say('  ✓ the tunnel is open again'),
+          back: () => say('  the tunnel is open again'),
         });
         const err = await ssh.open();
         if (err) return fail(`${err}. Is localhost:${office.port} free on this computer (--port picks another), and is your SSH key invited to the office?`);
@@ -219,7 +220,7 @@ export async function tunnelCommand(argv: string[]): Promise<number> {
         if (reachable) say("  ... the office isn't answering: still trying");
         reachable = false;
       } else if (list === 'old') {
-        return fail("this office is a version from before it could list its workers' servers. Upgrade it (⬆️ Upgrade the office in its menu, or the deploy script's update), then run this again.");
+        return fail("this office is a version from before it could list its workers' servers. Upgrade it (${NAV.upgrade}, or the deploy script's update), then run this again.");
       } else if (list === 'signed-out') {
         forget(office, key);
         say('  ... signed out of the office (the password changed, or the session ran out)');
@@ -227,7 +228,7 @@ export async function tunnelCommand(argv: string[]): Promise<number> {
         if (err) return fail(err);
         continue;
       } else {
-        if (!reachable) say('  ✓ the office is answering again');
+        if (!reachable) say('  the office is answering again');
         reachable = true;
         await forwarder.sync(list.items);
         if (first && !list.items.length) say('  No worker is running a web server yet. Ask one to start its dev server and it shows up here.');

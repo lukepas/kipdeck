@@ -67,6 +67,45 @@ export function panelEmpty(g: CanvasRenderingContext2D, W: number, H: number, ti
   g.textBaseline = 'alphabetic';
 }
 
+/**
+ * A board that can't reach GitHub: its own name large and muted, a link glyph, and one short line.
+ * The full fix (which command to run where) is in the board's window, not painted on the wall.
+ */
+export function panelOffline(g: CanvasRenderingContext2D, W: number, H: number, title: string, sub: string) {
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  // The link glyph (ui/icons.ts 'link'), drawn in hairline steel.
+  const r = 30;
+  g.save();
+  g.translate(W / 2, H / 2 - 120);
+  g.strokeStyle = PANEL.muted;
+  g.lineWidth = 7;
+  g.lineCap = 'square';
+  for (const k of [-1, 1]) {
+    g.save();
+    g.translate(k * r * 0.62, -k * r * 0.62);
+    g.rotate(-Math.PI / 4);
+    g.strokeRect(-r * 0.95, -r * 0.48, r * 1.9, r * 0.96);
+    g.restore();
+  }
+  g.restore();
+  g.fillStyle = PANEL.lineStrong;
+  g.font = `600 112px Archivo, system-ui, sans-serif`;
+  g.fillText(title.toUpperCase(), W / 2, H / 2 + 6, W - 120);
+  g.fillStyle = PANEL.muted;
+  g.font = UI_FONT(500, 34);
+  g.fillText(sub, W / 2, H / 2 + 104);
+  g.textAlign = 'left';
+  g.textBaseline = 'alphabetic';
+}
+
+/** What a board that has an error says on the wall: never the error itself, which is for its window. */
+export function offlineLine(error: string): string {
+  if (/sign|auth|token|log ?in/i.test(error)) return 'Connect GitHub to see it here';
+  if (/not installed|ENOENT|gh\b/i.test(error)) return 'Install the GitHub CLI to see it here';
+  return 'GitHub is out of reach for now';
+}
+
 /** A note as it was last drawn: its middle, size and tilt on the canvas. */
 interface DrawnNote {
   number: number;
@@ -135,8 +174,8 @@ export class BoardTexture {
     panelGround(g, W, H);
     const open = (state.items as (GhIssue | GhPull)[]).filter((i) => i.state === 'OPEN');
     if (!open.length) {
-      const note = state.error ? state.error.replace(/`/g, '') : state.loading && !state.fetchedAt ? 'Loading' : this.kind === 'issues' ? 'No open issues' : 'No open pull requests';
-      panelEmpty(g, W, H, note, state.error ? undefined : this.kind === 'issues' ? 'New issues land here first' : 'A unit\'s PR lands here when it opens one');
+      if (state.error) panelOffline(g, W, H, this.kind === 'issues' ? 'Issues' : 'Pull requests', offlineLine(state.error));
+      else panelEmpty(g, W, H, state.loading && !state.fetchedAt ? 'Loading' : this.kind === 'issues' ? 'No open issues' : 'No open pull requests', this.kind === 'issues' ? 'New issues land here first' : "A unit's PR lands here when it opens one");
       this.texture.needsUpdate = true;
       return;
     }

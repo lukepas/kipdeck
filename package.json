@@ -4,6 +4,7 @@
   "description": "UGC Army: mission control for teams running many AI coding agents, with proof of every merge on testnets. Built on agent-office by webdevcody (MIT).",
   "type": "module",
   "bin": {
+    "ugc-army": "bin/agent-office.js",
     "agent-office": "bin/agent-office.js"
   },
   "imports": {

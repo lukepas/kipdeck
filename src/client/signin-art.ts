@@ -1,6 +1,7 @@
 // What the sign-in pages (login, join, claim) share besides their sheet: the deck plan behind the
 // card, drawn by the same Plot the 2D view uses (shared/plot.ts), with a few units at their consoles
 // and one lit Signal orange on the ready line; and the credit in the footer. Static, drawn once.
+import { UPSTREAM_CREDIT } from '../shared/copy';
 import { Plot } from './shared/plot';
 
 /** The deck plan as the sign-in pages show it. */
@@ -28,7 +29,7 @@ export function mountSigninArt() {
   a.href = 'https://github.com/AgentSystemLabs/agent-office';
   a.target = '_blank';
   a.rel = 'noopener noreferrer';
-  a.textContent = 'Built on agent-office by webdevcody - MIT';
+  a.textContent = UPSTREAM_CREDIT;
   foot.append(a);
   document.body.append(foot);
 }

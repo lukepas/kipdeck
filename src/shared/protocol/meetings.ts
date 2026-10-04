@@ -36,7 +36,7 @@ export interface MeetingTurn {
 export type MeetingStatus = 'running' | 'done' | 'stopped';
 
 /**
- * A meeting in the meeting room: 2–5 workers on one question or task, in rounds, following a pattern.
+ * A meeting in the meeting room: 2-5 workers on one question or task, in rounds, following a pattern.
  * It ends when its output file is written, or stops at its round limit and says why.
  */
 export interface Meeting {

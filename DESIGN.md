@@ -63,7 +63,7 @@ The glyphs are in `src/client/ui/icons.ts` (`LEVEL_ICON`), drawn on canvas for t
 
 The Formation mark is three chevrons in an upward V: the lead one solid with a 2px alignment notch, the two trailing ones 2.5px outlines. The wordmark is "UGC ARMY" in Archivo at 118% width, 600, +6% tracking, with ARMY muted. The favicon is the mark in light on void; its lead chevron turns Signal orange while anything needs you (`setFaviconAlert` in `ui/brand.ts`). The `/pom/` variant has a violet lead chevron.
 
-Upstream credit stays where it was and is added to the sign-in footer: "Built on agent-office by webdevcody - MIT".
+Upstream credit stays where it was and is added to the sign-in footer: "Built on agent-office (AgentSystemLabs / webdevcody), MIT", the party the LICENSE names first.
 
 ## Components
 

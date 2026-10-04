@@ -1,4 +1,5 @@
 import { execFile, spawn } from 'node:child_process';
+import { NAV, PRODUCT } from '../shared/copy.js';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -34,13 +35,13 @@ const FLOW_MS = 15 * 60_000;
 /** Someone's sign-ins are looked at again at most this often, unless they ask. */
 const LOOK_GAP_MS = 20_000;
 const LOOK_TIMEOUT_MS = 30_000;
-/** From `claude setup-token` (sk-ant-oat01-…), or an Anthropic API key (sk-ant-api03-…). */
+/** From `claude setup-token` (sk-ant-oat01-...), or an Anthropic API key (sk-ant-api03-...). */
 const CLAUDE_TOKEN = /^sk-ant-[a-z]+\d*-[A-Za-z0-9_-]{20,}$/;
 const API_KEY = /^sk-ant-api/;
-/** ghp_…, github_pat_…, gho_… and the like. */
+/** ghp_..., github_pat_..., gho_... and the like. */
 const GITHUB_TOKEN = /^[A-Za-z0-9_]{20,255}$/;
 const ACCOUNT_ID = /^[A-Za-z0-9]{6,64}$/;
-const HELP_WHERE = '☰ → 🔐 Your sign-ins';
+const HELP_WHERE = NAV.signins;
 
 interface Saved {
   /** Unset: its own login, in its folder. A token pasted from `claude setup-token` (or an API key). The office machine's own (admins). */
@@ -204,7 +205,7 @@ export class SignIns {
     const token = raw.trim();
     this.stop(id, which);
     if (which === 'claude') {
-      if (!CLAUDE_TOKEN.test(token)) return "That isn't a token from `claude setup-token` (sk-ant-oat01-…) or an Anthropic API key (sk-ant-api03-…)";
+      if (!CLAUDE_TOKEN.test(token)) return "That isn't a token from `claude setup-token` (sk-ant-oat01-...) or an Anthropic API key (sk-ant-api03-...)";
       const s = this.load(id);
       s.claude = { use: 'token', token };
       this.save(id, s);
@@ -220,7 +221,7 @@ export class SignIns {
       return undefined;
     }
     if (!this.gh) return "The GitHub CLI (gh) isn't installed on the office's machine";
-    if (!GITHUB_TOKEN.test(token)) return "That doesn't look like a GitHub token (ghp_…, github_pat_…)";
+    if (!GITHUB_TOKEN.test(token)) return "That doesn't look like a GitHub token (ghp_..., github_pat_...)";
     const s = this.load(id);
     delete s.github;
     this.save(id, s);
@@ -375,7 +376,7 @@ export class SignIns {
   }
 
   private startClaude(id: string): string | undefined {
-    if (!this.claude) return "Claude Code isn't installed where the office can run it — paste a token from `claude setup-token` instead";
+    if (!this.claude) return "Claude Code isn't installed where the office can run it - paste a token from `claude setup-token` instead";
     this.stop(id, 'claude');
     const l = this.get(id);
     // BROWSER=true: Claude "opens" the page with the `true` command and just prints it, for the browser to show.
@@ -418,7 +419,7 @@ export class SignIns {
         // Still running after complaining: the code didn't take, and it waits for another.
         const said = lastWords(out.slice(sentAt));
         sentAt = -1;
-        l.claude = { status: 'busy', pending: { url: l.claude.pending.url }, error: said || "That code didn't work — copy it again, or start over" };
+        l.claude = { status: 'busy', pending: { url: l.claude.pending.url }, error: said || "That code didn't work - copy it again, or start over" };
         this.onChange(id);
       }
     });
@@ -602,7 +603,7 @@ export class SignIns {
     const base = this.base();
     const xdg = base.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
     const includes = base.GIT_CONFIG_GLOBAL ? [base.GIT_CONFIG_GLOBAL] : [path.join(xdg, 'git', 'config'), path.join(os.homedir(), '.gitconfig')];
-    const lines = ['# Written by Agent Office: git for this account, on top of the office machine’s own settings.', '[include]', ...includes.map((p) => `\tpath = ${quote(p)}`)];
+    const lines = [`# Written by ${PRODUCT}: git for this account, on top of the office machine's own settings.`, '[include]', ...includes.map((p) => `\tpath = ${quote(p)}`)];
     if (this.gh) {
       for (const host of ['https://github.com', 'https://gist.github.com']) {
         lines.push(`[credential ${quote(host)}]`, '\thelper =', `\thelper = ${quote(`!'${this.gh.replace(/'/g, `'\\''`)}' auth git-credential`)}`);

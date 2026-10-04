@@ -87,7 +87,7 @@ export function cleanMission(raw: unknown): Mission {
 export function missionLine(m: Mission): string | undefined {
   const line = m.statement.replace(/\s+/g, ' ').trim();
   if (!line) return undefined;
-  return line.length > MISSION_LIMITS.line ? `${line.slice(0, MISSION_LIMITS.line - 1)}…` : line;
+  return line.length > MISSION_LIMITS.line ? `${line.slice(0, MISSION_LIMITS.line - 3)}...` : line;
 }
 
 export function milestoneOf(m: Mission, id: string | undefined): MissionMilestone | undefined {

@@ -63,9 +63,9 @@ export interface FloorInfo {
 
 /** How far a new floor's clone has got, from git's progress. */
 export interface CloneProgress {
-  /** What it's doing, in words: "Downloading", "Checking out files"… */
+  /** What it's doing, in words: "Downloading", "Checking out files"... */
   step: string;
-  /** How far through that step, 0–100, when git says. */
+  /** How far through that step, 0-100, when git says. */
   percent?: number;
   /** How much has come down and how fast, like "231.4 MiB · 1.5 MiB/s". */
   detail?: string;
@@ -73,7 +73,7 @@ export interface CloneProgress {
 
 /** Where the elevator's "add a project" clones to: <dir>/<owner>/<repo> on the office's machine. */
 export interface ProjectsDirState {
-  /** For showing people: under the home folder it's ~/…. */
+  /** For showing people: under the home folder it's ~/.... */
   dir: string;
   /** Set from Settings or --projects, rather than the office's default. */
   custom: boolean;

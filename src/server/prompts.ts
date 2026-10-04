@@ -54,7 +54,7 @@ export class OfficePrompts implements PromptSource {
     const def = PROMPTS[id];
     const clean = text === null ? null : text.replace(/\r\n?/g, '\n').trim();
     if (clean !== null && clean.length > PROMPT_MAX) return `A prompt can be ${PROMPT_MAX.toLocaleString('en-US')} characters at most`;
-    if (clean === '' && !def.optional) return 'That prompt can’t be empty: write something, or put the default back';
+    if (clean === '' && !def.optional) return 'That prompt can\'t be empty: write something, or put the default back';
     if (clean === null || clean === def.text) delete this.saved.custom[id];
     else this.saved.custom[id] = { text: clean, by, at: Date.now() };
     this.changed();

@@ -8,7 +8,7 @@ export { AGENT_EFFORTS, CLAUDE_MODELS, isAgentEffort, isAgentProvider, isClaudeM
 /** Which agent a worker runs: its provider, and optionally the model and the reasoning effort (see PROVIDER_META for which each takes). */
 export interface AgentChoice {
   provider: AgentProvider;
-  /** A model id its provider takes (a Claude model alias, an OpenCode provider/model, a Codex model id…); unset for the provider's own default. */
+  /** A model id its provider takes (a Claude model alias, an OpenCode provider/model, a Codex model id...); unset for the provider's own default. */
   model?: string;
   effort?: AgentEffort;
 }

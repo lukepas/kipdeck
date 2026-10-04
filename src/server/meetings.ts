@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { PRODUCT } from '../shared/copy.js';
 import { randomBytes } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
 import path from 'node:path';
@@ -75,7 +76,7 @@ interface Part {
 }
 
 /**
- * The meeting room. A meeting seats 2–5 agents round the table, each with a role, and runs them
+ * The meeting room. A meeting seats 2-5 agents round the table, each with a role, and runs them
  * through the rounds of its pattern (shared/meetings.ts): in each step every worker with a part gets
  * it as a prompt, and the step is over when each of them has ended its turn with its part written to
  * the file it names. Checking the files, not the talk, is what moves a meeting on. It ends when the
@@ -120,7 +121,7 @@ export class MeetingRoom {
   /** Calls a meeting. Returns why it couldn't, or undefined once everyone is sitting down. */
   /** `owner` is the account calling it: the workers run on its sign-ins, and a review panel's review is posted as it. */
   start(req: MeetingRequest, by: string, owner?: string): string | undefined {
-    if (this.current?.status === 'running') return `The meeting room is busy with “${this.current.title}”: stop that meeting first`;
+    if (this.current?.status === 'running') return `The meeting room is busy with "${this.current.title}": stop that meeting first`;
     if (!isMeetingPattern(req.pattern)) return 'Unknown meeting pattern';
     const pattern = MEETING_PATTERNS[req.pattern];
     const paused = this.events.hiringPaused();
@@ -168,7 +169,7 @@ export class MeetingRoom {
       if (typeof made === 'string') return made;
       const { note, ...ref } = made;
       worktree = ref;
-      if (note) this.events.toast(`🌿 The meeting's worktree ${note}`, 'info');
+      if (note) this.events.toast(`The meeting's worktree ${note}`, 'info');
     }
     const m: Meeting = {
       id,
@@ -217,7 +218,7 @@ export class MeetingRoom {
     if (last) this.archive(last);
     this.current = m;
     this.changed();
-    this.events.toast(`🤝 ${by} called a ${pattern.label} meeting: “${title}” (${count} workers, ${rounds} round${rounds === 1 ? '' : 's'} at most)`, 'info');
+    this.events.toast(`${by} called a ${pattern.label} meeting: "${title}" (${count} workers, ${rounds} round${rounds === 1 ? '' : 's'} at most)`, 'info');
     return undefined;
   }
 
@@ -234,7 +235,7 @@ export class MeetingRoom {
     const m = this.current;
     if (!m) return 'Nobody is in the meeting room';
     if (m.status === 'running') return 'The meeting is still on: stop it first';
-    this.events.toast(`🤝 ${by} cleared the meeting room`, 'info');
+    this.events.toast(`${by} cleared the meeting room`, 'info');
     void this.dismiss(m);
     this.archive(m);
     this.current = null;
@@ -405,14 +406,14 @@ export class MeetingRoom {
     this.readPreview(m);
     this.keepNotes(m);
     const p = MEETING_PATTERNS[m.pattern];
-    this.events.toast(`🤝 The ${p.label} meeting on “${m.title}” is done: it wrote ${m.output}`, 'info');
+    this.events.toast(`The ${p.label} meeting on "${m.title}" is done: it wrote ${m.output}`, 'info');
     const cwd = meetingCwd(this.dir, m);
     if (m.pattern === 'review' && m.pr !== undefined) {
       const pr = m.pr;
       void this.events.postReview(pr, path.join(cwd, m.output), m.owner).then(
         (url) => {
           m.review = { url };
-          this.events.toast(`🔍 Posted the panel's review on PR #${pr}`, 'info');
+          this.events.toast(`Posted the panel's review on PR #${pr}`, 'info');
           this.changed();
         },
         (err) => {
@@ -422,7 +423,7 @@ export class MeetingRoom {
         },
       );
     } else if (m.worktree) {
-      void commitAll(cwd, `${m.title}\n\n${p.label} meeting in Agent Office, called by ${m.calledBy}. Output: ${m.output}`, m.notes).then(
+      void commitAll(cwd, `${m.title}\n\n${p.label} meeting in ${PRODUCT}, called by ${m.calledBy}. Output: ${m.output}`, m.notes).then(
         (sha) => {
           m.commit = sha;
           this.changed();
@@ -445,7 +446,7 @@ export class MeetingRoom {
     for (const s of m.seats) if (s.workerId && busy.has(s.workerId)) this.workers.write(s.workerId, '\x1b', BY);
     this.readPreview(m);
     this.keepNotes(m);
-    this.events.toast(`⛔ The meeting on “${m.title}” stopped in round ${m.round}: ${reason}`, 'warn');
+    this.events.toast(`The meeting on "${m.title}" stopped in round ${m.round}: ${reason}`, 'warn');
     this.changed();
   }
 
@@ -471,7 +472,7 @@ export class MeetingRoom {
     }
     const state = await this.trees.inspect(wt);
     if (state.error || state.dirty) {
-      this.events.toast(`Kept the “${m.title}” meeting's worktree and branch ${wt.branch}: ${state.error ?? `${state.dirty} uncommitted change${state.dirty === 1 ? '' : 's'}`}`, 'info');
+      this.events.toast(`Kept the "${m.title}" meeting's worktree and branch ${wt.branch}: ${state.error ?? `${state.dirty} uncommitted change${state.dirty === 1 ? '' : 's'}`}`, 'info');
     } else {
       const err = await this.trees.remove(wt, state.ahead ? 'worktree' : 'all');
       if (err) this.events.toast(`Couldn't tidy away the meeting's worktree: ${err}`, 'warn');

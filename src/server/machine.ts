@@ -119,7 +119,7 @@ export class Machine implements Capacity {
   full(): string | undefined {
     const limit = this.limit;
     if (limit === undefined || this.count() < limit) return undefined;
-    return `The office is at its limit of ${limit} worker${limit === 1 ? '' : 's'} on this machine — send one home before hiring another`;
+    return `The office is at its limit of ${limit} worker${limit === 1 ? '' : 's'} on this machine - send one home before hiring another`;
   }
 
   state(): MachineState {

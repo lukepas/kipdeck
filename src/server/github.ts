@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { NAV } from '../shared/copy.js';
 import type { GhCheck, GhCloseReason, GhComment, GhIssue, GhIssueDetail, GhLabel, GhMergeMethod, GhPull, GhPullDetail, GhRepoInfo, GhReviewComment, GhState } from '../shared/protocol.js';
 import type { GhAs } from './signins.js';
 import { checkedOutPulls, pullTrust, type GhPullTrust, type PullRef } from '../shared/pulltrust.js';
@@ -13,7 +14,7 @@ const LABELS_MS = 60_000;
 function friendly(raw: string): string {
   if (/no git remotes found|none of the git remotes/i.test(raw)) return 'This project has no GitHub remote yet. Push it to GitHub (git remote add origin <url>) to fill the boards.';
   if (/not a git repository/i.test(raw)) return "This folder isn't a git repository";
-  if (/auth login|not logged in|authentication/i.test(raw)) return "gh isn't signed in to GitHub on the office's machine — run `gh auth login` there";
+  if (/auth login|not logged in|authentication/i.test(raw)) return "gh isn't signed in to GitHub on the office's machine - run `gh auth login` there";
   if (/could not resolve to a repository|not found/i.test(raw)) return "gh can't find this repository on GitHub (check the remote and access)";
   return raw;
 }
@@ -25,7 +26,7 @@ export function gh(args: string[], cwd: string, timeout = 30_000, env?: Record<s
       if (err) {
         const msg = (stderr || err.message || '').trim().split('\n').slice(-2).join(' ');
         const signedOut = env && /auth login|not logged in|authentication/i.test(msg);
-        reject(new Error((err as NodeJS.ErrnoException).code === 'ENOENT' ? 'GitHub CLI (gh) is not installed on the server' : signedOut ? 'Your GitHub sign-in stopped working — sign in again (☰ → 🔐 Your sign-ins)' : friendly(msg)));
+        reject(new Error((err as NodeJS.ErrnoException).code === 'ENOENT' ? 'GitHub CLI (gh) is not installed on the server' : signedOut ? `Your GitHub sign-in stopped working - sign in again (${NAV.signins})` : friendly(msg)));
       } else resolve(stdout);
     });
   });
@@ -438,7 +439,7 @@ export class GitHub {
     const jq = '[.[] | {name, color}]';
     let now: GhLabel[] | undefined;
     try {
-      // -f labels[]=… sends a JSON array of plain strings: no @file reading, no {owner} filling in.
+      // -f labels[]=... sends a JSON array of plain strings: no @file reading, no {owner} filling in.
       if (add.length) now = labels(JSON.parse(await gh(['api', '--method', 'POST', path, ...add.flatMap((l) => ['-f', `labels[]=${l}`]), '--jq', jq], this.dir, undefined, as?.env)));
       for (const l of remove) {
         try {

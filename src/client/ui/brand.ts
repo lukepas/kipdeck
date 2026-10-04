@@ -3,12 +3,13 @@
  * wordmark and the lockup, plus the favicon that turns its lead chevron Signal orange while anything
  * needs someone. No three.js here: the 2D view and the sign-in pages use it too.
  */
+import { UPSTREAM_CREDIT } from '../../shared/copy';
 import { h } from './dom';
 
 export const PRODUCT = 'UGC Army';
 export const TAGLINE = 'Mission control for your AI agents. Proof of every merge.';
-export const CREDIT = 'Built on agent-office by webdevcody - MIT';
-export const CREDIT_URL = 'https://github.com/webdevcody/agent-office';
+export const CREDIT = UPSTREAM_CREDIT;
+export const CREDIT_URL = 'https://github.com/AgentSystemLabs/agent-office';
 
 /** The lead chevron (with its alignment notch) and the two trailing outlines, on a 24 grid. */
 const LEAD = 'M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z';

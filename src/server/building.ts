@@ -135,7 +135,7 @@ export class Building {
       if (why) return why;
       // Cloning into a project would nest checkouts inside its git tree.
       const inside = this.defs.find((d) => within(dir, path.resolve(d.dir)));
-      if (inside) return `${tildify(dir)} is inside ${inside.name}'s checkout — pick a folder outside every project`;
+      if (inside) return `${tildify(dir)} is inside ${inside.name}'s checkout - pick a folder outside every project`;
     }
     this.picked = dir === this.defaultProjectsDir ? undefined : { dir, by, at: Date.now() };
     try {
@@ -173,7 +173,7 @@ export class Building {
     const p = this.pendingFloor(id);
     if (!p) return this.defs.some((d) => d.id === id) ? 'That floor is already there' : 'No such floor';
     if (!may(p.owner)) return 'Only admins, or whoever added it, can stop a floor on its way';
-    if (!p.run) return "There's no clone to stop yet — try again in a moment";
+    if (!p.run) return "There's no clone to stop yet - try again in a moment";
     p.run.stop(why);
     return undefined;
   }
@@ -196,7 +196,7 @@ export class Building {
       if (!run) {
         dropLog(s.log);
         if (checkoutAt(def.dir, repo, pending.empty) !== 'ok') {
-          done(`Cloning ${repo} stopped when the office restarted — add it again`);
+          done(`Cloning ${repo} stopped when the office restarted - add it again`);
           continue;
         }
         this.defs.push(def);
@@ -267,7 +267,7 @@ export class Building {
    */
   remove(id: string, by = '?'): FloorDef | string {
     const def = this.defs.find((d) => d.id === id);
-    if (!def) return this.pendingFloor(id) ? "That floor is still being cloned — stop it, or take it off once it's there" : 'No such floor';
+    if (!def) return this.pendingFloor(id) ? "That floor is still being cloned - stop it, or take it off once it's there" : 'No such floor';
     this.defs = this.defs.filter((d) => d !== def);
     if (this.isLocal(id)) {
       this.localId = undefined;
@@ -487,7 +487,7 @@ export class Building {
   }
 }
 
-/** A path under the home folder as ~/…, for showing people. */
+/** A path under the home folder as ~/..., for showing people. */
 export function tildify(p: string): string {
   const home = os.homedir();
   return p === home || p.startsWith(home + path.sep) ? `~${p.slice(home.length)}` : p;
@@ -534,8 +534,8 @@ function checkoutAt(dest: string, repo: string, empty: boolean): 'none' | 'ok' |
   if (!existsSync(dest)) return 'none';
   if (!statSync(dest).isDirectory()) return `${dest} is already there and isn't a folder`;
   if (!readdirSync(dest).length) return 'none';
-  if (!sameRepo(originRepo(dest), repo)) return `${dest} already exists and isn't a checkout of ${repo} — move it out of the way first`;
-  if (!empty && !hasCommit(dest)) return `${dest} is a clone of ${repo} that didn't finish — delete that folder and add the floor again`;
+  if (!sameRepo(originRepo(dest), repo)) return `${dest} already exists and isn't a checkout of ${repo} - move it out of the way first`;
+  if (!empty && !hasCommit(dest)) return `${dest} is a clone of ${repo} that didn't finish - delete that folder and add the floor again`;
   return 'ok';
 }
 

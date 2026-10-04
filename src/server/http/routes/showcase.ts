@@ -2,12 +2,13 @@
 // data, see showcase/service.ts), /pom/og.png (its share card) and /pom/assets/* (its bundle, built
 // from src/client/showcase/ into dist/showcase). Public, before the sign-in check, so it never reads
 // or sets a cookie and holds nothing of anyone's session; the host check (hosts.ts) still runs first.
-// Off (404) until an admin turns it on in Settings. Only GET; rate limited per client address;
+// Off (404, with a page that says how to turn it on) until an admin turns it on in Settings. Only GET; rate limited per client address;
 // its pages go out with their own strict policy (csp.ts).
 import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { showcaseContentSecurityPolicy } from '../../csp.js';
 import { ogImage } from '../../showcase/og.js';
+import { showcaseOffPage } from '../../showcase/off.js';
 import type { ShowcaseDoc } from '../../../shared/showcase.js';
 import { publicFile, serveFile } from '../static.js';
 import { clientIp, perMinute } from '../util.js';
@@ -27,6 +28,14 @@ export function showcaseDir(publicDir: string): string {
 
 const plainText = (r: RouteRequest, status: number, text: string, headers: Record<string, string> = {}) =>
   void r.res.writeHead(status, { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', ...headers }).end(text);
+
+/** /pom/ while the showcase is off: still a 404, but the product's page saying how to turn it on. */
+function off(r: RouteRequest) {
+  if (r.path !== '/pom' && r.path !== '/pom/' && r.path !== '/pom/index.html') return plainText(r, 404, 'Not found');
+  const { html, csp } = showcaseOffPage();
+  r.res.writeHead(404, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer', 'content-security-policy': csp });
+  r.res.end(html);
+}
 
 /** The share card, drawn once per document. */
 let og: { doc: ShowcaseDoc; png: Buffer } | undefined;
@@ -54,7 +63,7 @@ async function showcase(ctx: Ctx, r: RouteRequest) {
     r.req.resume();
     return plainText(r, 405, 'Only GET', { allow: 'GET', connection: 'close' });
   }
-  if (!ctx.showcase.enabled) return plainText(r, 404, 'Not found');
+  if (!ctx.showcase.enabled) return off(r);
   if (!allow(clientIp(r.req, ctx.cfg.trustProxy))) return plainText(r, 429, 'Too many requests: try again in a minute', { 'retry-after': '60' });
   if (r.path === '/pom') return void r.res.writeHead(301, { location: '/pom/', 'cache-control': 'no-store' }).end();
   const dir = showcaseDir(ctx.publicDir);

@@ -35,17 +35,17 @@ export function webhookProblem(url: URL): string | undefined {
   return undefined;
 }
 
-/** Where the webhook goes, without the secret part of its path: "hooks.slack.com/…/x7Qe". */
+/** Where the webhook goes, without the secret part of its path: "hooks.slack.com/.../x7Qe". */
 function hint(url: URL): string {
   const tail = url.pathname.replace(/\/+$/, '').slice(-4);
-  return `${url.host}/…${tail}`;
+  return `${url.host}/...${tail}`;
 }
 
 /** Slack reads <, > and & as markup; escaping them keeps a worker's text from pinging <!channel>. */
 const slackEscape = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const oneLine = (s: string, max: number) => {
   const t = s.replace(/\s+/g, ' ').trim();
-  return t.length > max ? `${t.slice(0, max - 1)}…` : t;
+  return t.length > max ? `${t.slice(0, max - 3)}...` : t;
 };
 
 /**
@@ -147,8 +147,8 @@ export class Webhook {
       this.stuckPending.delete(e.id);
       const why = still();
       if (!why) return;
-      const task = e.task?.name ? ` — ${oneLine(e.task.name, 80)}` : '';
-      void this.post({ kind: 'stuck', title: `⚠️ ${e.name} looks stuck in ${e.floorName}${task}`, detail: oneLine(why || reason, 300), worker: this.latest.get(e.id) });
+      const task = e.task?.name ? ` - ${oneLine(e.task.name, 80)}` : '';
+      void this.post({ kind: 'stuck', title: `${e.name} looks stuck in ${e.floorName}${task}`, detail: oneLine(why || reason, 300), worker: this.latest.get(e.id) });
     }, this.stuckSettleMs);
     timer.unref();
     this.stuckPending.set(e.id, timer);
@@ -162,7 +162,7 @@ export class Webhook {
   /** Posts a test message. Resolves to an error message if it didn't get through. */
   test(by: string): Promise<string | undefined> {
     if (!this.saved) return Promise.resolve('No webhook is set');
-    return this.post({ kind: 'test', title: `🔔 ${by} connected ${this.project()} to this channel`, detail: 'Workers that need input, finish or get stuck will show up here.' });
+    return this.post({ kind: 'test', title: `${by} connected ${this.project()} to this channel`, detail: 'Workers that need input, finish or get stuck will show up here.' });
   }
 
   stop() {
@@ -179,8 +179,8 @@ export class Webhook {
   }
 
   private alert(w: WorkerInfo, status: Alert) {
-    const what = status === 'needs_input' ? `🙋 ${w.name} needs input` : `✅ ${w.name} is done`;
-    const task = w.task?.name ? ` — ${oneLine(w.task.name, 80)}` : '';
+    const what = status === 'needs_input' ? `${w.name} needs input` : `${w.name} is done`;
+    const task = w.task?.name ? ` - ${oneLine(w.task.name, 80)}` : '';
     const detail = alertDetail(w);
     return this.post({ kind: status, title: `${what} in ${this.project(w.id)}${task}`, detail: detail ? oneLine(detail, 300) : undefined, worker: w });
   }

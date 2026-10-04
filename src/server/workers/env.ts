@@ -4,7 +4,7 @@ import { PROVIDERS } from '../providers/index.js';
 import { CLEAN_ENV, pickEnv, type WorkerEnvConfig } from '../worker-env.js';
 
 // Env vars from a parent agent session (e.g. starting the office from inside Claude Code) that
-// would make a worker think it is a child session — that silently turns off transcript saving,
+// would make a worker think it is a child session - that silently turns off transcript saving,
 // which breaks resume. Each provider names its own (see ProviderAdapter.scrubEnv).
 const SCRUB_ENV = new Set([
   ...Object.values(PROVIDERS).flatMap((p) => p.scrubEnv ?? []),

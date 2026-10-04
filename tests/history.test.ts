@@ -90,7 +90,7 @@ test('snippets cut long lines down around the match', () => {
   const long = `${'a '.repeat(200)}NEEDLE${' b'.repeat(200)}`;
   const s = snippet(long, 'needle', 60);
   assert.ok(s.includes('NEEDLE'));
-  assert.ok(s.startsWith('…') && s.endsWith('…'));
+  assert.ok(s.startsWith('...') && s.endsWith('...'));
   assert.ok(s.length <= 62);
 });
 

@@ -61,7 +61,7 @@ export interface Landed {
   head?: string;
   /** A worker across repositories: the head of each other repository's merged PR, by floor. */
   heads?: Record<string, string | undefined>;
-  /** …and every PR of its that merged, as "api #7". */
+  /** ...and every PR of its that merged, as "api #7". */
   prs?: string[];
 }
 

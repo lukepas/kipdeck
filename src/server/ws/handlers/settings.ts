@@ -46,7 +46,7 @@ export const settingsHandlers = {
     if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can upgrade the office');
     void ctx.upgrader.start(who).then((err) => {
       if (err) ctx.warn(c, err);
-      else ctx.toastAll(`${who} is upgrading the office — it restarts when the new version is built`);
+      else ctx.toastAll(`${who} is upgrading the office - it restarts when the new version is built`);
     });
   },
   'leaveOnMerge.set'(ctx, c, msg) {
@@ -60,19 +60,19 @@ export const settingsHandlers = {
   },
   'prompts.set'(ctx, c, msg) {
     const who = c.peer.name;
-    if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can change the office’s prompts');
+    if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can change the office\'s prompts');
     if (!isPromptId(msg.id) || (msg.text !== null && typeof msg.text !== 'string')) return;
     const custom = !!ctx.prompts.state().custom[msg.id];
     const err = ctx.prompts.setPrompt(msg.id, msg.text === null ? null : str(msg.text, PROMPT_MAX + 1), who);
     if (err) return ctx.warn(c, err);
     const now = !!ctx.prompts.state().custom[msg.id];
     const { label } = PROMPTS[msg.id];
-    if (now) ctx.toastAll(`${who} rewrote the “${label}” prompt`);
-    else if (custom) ctx.toastAll(`${who} put the default “${label}” prompt back`);
+    if (now) ctx.toastAll(`${who} rewrote the "${label}" prompt`);
+    else if (custom) ctx.toastAll(`${who} put the default "${label}" prompt back`);
   },
   'prompts.agent'(ctx, c, msg) {
     const who = c.peer.name;
-    if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can pick the office’s default worker');
+    if (!ctx.meOf(c.accountId).admin) return ctx.warn(c, 'Only admins can pick the office\'s default worker');
     const ch = msg.choice;
     if (ch !== null && (!ch || typeof ch !== 'object')) return;
     const choice = ch && {
@@ -82,6 +82,6 @@ export const settingsHandlers = {
     };
     const err = ctx.prompts.setAgent(choice, who);
     if (err) return ctx.warn(c, err);
-    ctx.toastAll(choice ? `${who} set the office’s default worker` : `${who} put the office’s default worker back to ${path.basename(ctx.cfg.agentCmd)}`);
+    ctx.toastAll(choice ? `${who} set the office's default worker` : `${who} put the office's default worker back to ${path.basename(ctx.cfg.agentCmd)}`);
   },
 } satisfies HandlerMap<SettingsClientMsg>;

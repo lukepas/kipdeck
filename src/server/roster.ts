@@ -18,7 +18,7 @@ export interface RosterFloor {
 
 const line = (s: string | undefined, max: number) => {
   const t = s?.replace(/\s+/g, ' ').trim();
-  return t ? (t.length > max ? `${t.slice(0, max - 1)}…` : t) : undefined;
+  return t ? (t.length > max ? `${t.slice(0, max - 3)}...` : t) : undefined;
 };
 
 /** Whether the roster lists a worker: hired onto a desk, a bean bag or the meeting table, not a board agent. */

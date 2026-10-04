@@ -67,7 +67,7 @@ const LINE = 160;
 
 const clip = (s: string | undefined): string | undefined => {
   const t = s?.replace(/\s+/g, ' ').trim();
-  return t ? (t.length > LINE ? `${t.slice(0, LINE - 1)}…` : t) : undefined;
+  return t ? (t.length > LINE ? `${t.slice(0, LINE - 3)}...` : t) : undefined;
 };
 
 /** `att`: what the attention ranking says about it, and its milestone's title. */
@@ -115,7 +115,7 @@ export function findWorker(workers: WorkerInfo[], key: string): WorkerInfo | str
   if (!k) return 'Say which worker: its name or id';
   const byId = workers.find((w) => w.id === k);
   if (byId) return byId;
-  const plain = (name: string) => name.replace(/\s*🐚$/u, '').trim().toLowerCase();
+  const plain = (name: string) => name.replace(/\s*$/u, '').trim().toLowerCase();
   const named = workers.filter((w) => plain(w.name) === plain(k));
   if (named.length === 1) return named[0];
   if (named.length > 1) return `More than one worker is called ${k}: use an id (${named.map((w) => w.id).join(', ')})`;

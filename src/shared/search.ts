@@ -53,6 +53,6 @@ export function snippet(text: string, needle: string, width = 180): string {
   if (flat.length <= width) return flat;
   const at = flat.toLowerCase().indexOf(needle);
   const start = Math.max(0, Math.min(at - Math.floor((width - needle.length) / 3), flat.length - width));
-  const end = start + width;
-  return `${start > 0 ? '…' : ''}${flat.slice(start, end).trim()}${end < flat.length ? '…' : ''}`;
+  const end = start + width - 4;
+  return `${start > 0 ? '...' : ''}${flat.slice(start + (start > 0 ? 2 : 0), end).trim()}${end < flat.length ? '...' : ''}`;
 }

@@ -93,11 +93,11 @@ export const authRoutes = {
       const password = cfg.password!;
       cfg.markClaimed();
       auth.recordSuccess(guess.ip);
-      console.log('  the office password was claimed — it will not be shown again');
+      console.log('  the office password was claimed - it will not be shown again');
       return send(res, 200, { password }, signedIn(ctx, req));
     },
   },
-  // A sign-in link the office printed in its terminal (/login#key=…), traded for a session once.
+  // A sign-in link the office printed in its terminal (/login#key=...), traded for a session once.
   link: {
     method: 'POST',
     path: '/api/link',

@@ -5,7 +5,7 @@ import path from 'node:path';
 import { WORKSPACE_FILES, WORKTREES_DIR, Worktrees, describeWork, gitError } from './worktrees.js';
 import { readStateJson, realWithin, stateDirProblem, within } from './safefs.js';
 
-const HELP = `agent-office prune — remove leftover worker worktrees and branches
+const HELP = `agent-office prune - remove leftover worker worktrees and branches
 
 Usage:
   agent-office prune [dir] [options]
@@ -88,7 +88,7 @@ export async function prune(argv: string[]): Promise<number> {
   // A symlinked .agent-office or worktrees folder would point the deletes below somewhere else entirely.
   const unsafe = stateDirProblem(dir);
   if (unsafe) {
-    console.error(`agent-office prune: ${unsafe} — not touching anything`);
+    console.error(`agent-office prune: ${unsafe} - not touching anything`);
     return 1;
   }
   const home = path.join(dir, WORKTREES_DIR);
@@ -129,7 +129,7 @@ export async function prune(argv: string[]): Promise<number> {
     }
   };
 
-  console.log(`\n  agent-office prune — ${dir}${dryRun ? ' (dry run)' : ''}\n`);
+  console.log(`\n  agent-office prune - ${dir}${dryRun ? ' (dry run)' : ''}\n`);
   const withWorktree = new Set<string>();
   for (const wt of worktrees) {
     if (wt.branch) withWorktree.add(wt.branch);
@@ -137,12 +137,12 @@ export async function prune(argv: string[]): Promise<number> {
     const label = wt.branch ?? `${wt.path} (detached)`;
     const owner = (wt.branch && ownerOfBranch.get(wt.branch)) || ownerOfPath.get(path.normalize(wt.path));
     if (owner) {
-      keep(label, `${owner}'s — send ${owner} home from the office to clean it up`);
+      keep(label, `${owner}'s - send ${owner} home from the office to clean it up`);
       continue;
     }
     const work = describeWork(await trees.inspect(ref));
     if (work && !force) {
-      keep(label, `${work} — --force removes it anyway`);
+      keep(label, `${work} - --force removes it anyway`);
       continue;
     }
     await drop(label, work ? `${work} (forced)` : 'clean, nothing unpushed', () => trees.remove(ref, wt.branch ? 'all' : 'worktree'));
@@ -160,13 +160,13 @@ export async function prune(argv: string[]): Promise<number> {
     const owner = savedWorkers(office).find((w) => w.worktree?.branch === branch || w.repos?.some((r) => r.branch === branch));
     if (owner) {
       const name = owner.name ?? 'a worker';
-      keep(branch, `${name}'s, in ${abs} — send ${name} home from the office there to clean it up`);
+      keep(branch, `${name}'s, in ${abs} - send ${name} home from the office there to clean it up`);
       continue;
     }
     const ref = { path: path.relative(dir, abs), branch };
     const work = describeWork(await trees.inspect(ref));
     if (work && !force) {
-      keep(branch, `${work}, in ${abs} — --force removes it anyway`);
+      keep(branch, `${work}, in ${abs} - --force removes it anyway`);
       continue;
     }
     await drop(branch, `${work ? `${work} (forced)` : 'clean, nothing unpushed'}, in ${abs}`, () => trees.remove(ref, 'all'));
@@ -175,12 +175,12 @@ export async function prune(argv: string[]): Promise<number> {
     if (withWorktree.has(branch)) continue;
     const owner = ownerOfBranch.get(branch);
     if (owner) {
-      keep(branch, `${owner}'s — its worktree is gone, but the office still lists the worker`);
+      keep(branch, `${owner}'s - its worktree is gone, but the office still lists the worker`);
       continue;
     }
     const work = describeWork(await trees.inspect({ branch }));
     if (work && !force) {
-      keep(branch, `${work} — --force removes it anyway`);
+      keep(branch, `${work} - --force removes it anyway`);
       continue;
     }
     await drop(branch, work ? `${work} (forced); its worktree was already gone` : 'branch only, its worktree was already gone', () => trees.remove({ branch }, 'all'));
@@ -194,11 +194,11 @@ export async function prune(argv: string[]): Promise<number> {
     const left = workspaceLeft(path.join(dir, rel));
     if (Array.isArray(left)) {
       // Worktrees of other projects: pruning those projects takes them out, with their own checks.
-      keep(rel, `a workspace with worktrees of other projects in it (${left.join(', ')}) — run agent-office prune in those projects`);
+      keep(rel, `a workspace with worktrees of other projects in it (${left.join(', ')}) - run agent-office prune in those projects`);
       continue;
     }
     if (!deletable(rel)) {
-      keep(rel, 'it leads outside the worktrees folder (a symlink?) — not deleting it');
+      keep(rel, 'it leads outside the worktrees folder (a symlink?) - not deleting it');
       continue;
     }
     if (left === 'empty') {
@@ -213,7 +213,7 @@ export async function prune(argv: string[]): Promise<number> {
       continue;
     }
     if (!force) {
-      keep(rel, 'a folder git does not list as a worktree — --force deletes it');
+      keep(rel, 'a folder git does not list as a worktree - --force deletes it');
       continue;
     }
     await drop(rel, 'a folder git did not list as a worktree (forced)', async () => {
@@ -225,7 +225,7 @@ export async function prune(argv: string[]): Promise<number> {
       }
     });
   }
-  if (!worktrees.length && !branches.length && !strays.length && !elsewhere.size) console.log(`  nothing under ${WORKTREES_DIR}/ and no office/* branches — all clean`);
+  if (!worktrees.length && !branches.length && !strays.length && !elsewhere.size) console.log(`  nothing under ${WORKTREES_DIR}/ and no office/* branches - all clean`);
   console.log(`\n  ${removed} ${dryRun ? 'to remove' : 'removed'}, ${kept} kept.\n`);
   return 0;
 }

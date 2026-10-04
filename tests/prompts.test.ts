@@ -69,7 +69,7 @@ test('a rewritten prompt is kept, used, and put back to the default', (t) => {
   assert.equal(book.text('pull.review'), PROMPTS['pull.review'].text);
 
   // Empty only where empty means "send nothing"; never too long, never an unknown prompt.
-  assert.match(book.setPrompt('issue.work', '  ', 'Ada') ?? '', /can’t be empty/);
+  assert.match(book.setPrompt('issue.work', '  ', 'Ada') ?? '', /can't be empty/);
   assert.equal(book.setPrompt('queue.worktree', '', 'Ada'), undefined);
   assert.equal(book.text('queue.worktree'), '');
   assert.match(book.setPrompt('issue.work', 'x'.repeat(PROMPT_MAX + 1), 'Ada') ?? '', /at most/);

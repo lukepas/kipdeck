@@ -50,7 +50,7 @@ export function newTerm(w: Worker, on: { progress?(busy: boolean): void; title(t
   return term;
 }
 
-/** Full screens for every running worker — sent to people as they walk in. */
+/** Full screens for every running worker - sent to people as they walk in. */
 export function fullScreens(workers: Iterable<Worker>) {
   const out: { workerId: string; frame: NonNullable<ReturnType<typeof snapshotScreen>> }[] = [];
   for (const w of workers) {

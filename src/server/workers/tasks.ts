@@ -17,7 +17,7 @@ const TASK_REFRESH_MS = 90_000;
  * host was replaced or died) is resumed with when it was in the middle of something, so it carries on
  * by itself instead of waiting at every desk for someone to type "continue".
  */
-export const CARRY_ON_PROMPT = 'continue — the office restarted and interrupted you. Pick up where you left off; if you were waiting on an answer or a permission, ask again.';
+export const CARRY_ON_PROMPT = 'continue - the office restarted and interrupted you. Pick up where you left off; if you were waiting on an answer or a permission, ask again.';
 
 export class WorkerTasks {
   private namer: TaskNamer;

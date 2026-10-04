@@ -319,7 +319,7 @@ test('welcomes a browser and dispatches what it sends', async () => {
   // A sign over a desk: the floor sees the plan change and hears who hung it.
   a.send({ t: 'desk.label', deskId: 'desk-1', text: 'Payments' });
   assert.equal((await b.take('plan')).plan.labels['desk-1']?.text, 'Payments');
-  for (const who of [a, b]) assert.equal((await who.take('toast', (m) => m.text.includes('Payments'))).text, 'Ada L hung a sign over Console A-01: “Payments”');
+  for (const who of [a, b]) assert.equal((await who.take('toast', (m) => m.text.includes('Payments'))).text, 'Ada L hung a sign over Console A-01: "Payments"');
 
   a.send({ t: 'leaveOnMerge.set', on: true });
   for (const who of [a, b]) {
@@ -521,7 +521,7 @@ test('settings, accounts, sign-ins and the boards answer as before', async () =>
   assert.equal(await told('Eve set the worker limit'), 'Eve set the worker limit to 3');
   a.send({ t: 'prompts.set', id: 'nope', text: 'x' });
   a.send({ t: 'prompts.agent', choice: null });
-  assert.equal(await told('Eve put the office’s default worker'), 'Eve put the office’s default worker back to claude');
+  assert.equal(await told("Eve put the office's default worker"), "Eve put the office's default worker back to claude");
   a.send({ t: 'notify.webhook', url: 'not a url' });
   assert.match((await a.take('toast', (m) => m.level === 'warn')).text, /./);
   a.send({ t: 'upgrade.check' });

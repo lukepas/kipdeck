@@ -50,8 +50,8 @@ export function floorHelpers(ctx: Ctx): FloorHelpers {
       if (c.peer.floor === floor.id) {
         if (next) ctx.goToFloor(c, next);
         else ctx.toLobby(c);
-        ctx.sendTo(c, { t: 'toast', text: next ? `🛗 ${who} took ${name} off the building, so you're on ${next.def.name} now` : `🛗 ${who} took ${name}, the last floor, off the building`, level: 'warn' });
-      } else ctx.sendTo(c, { t: 'toast', text: `🛗 ${who} took ${name} off the building`, level: 'info' });
+        ctx.sendTo(c, { t: 'toast', text: next ? `${who} took ${name} off the building, so you're on ${next.def.name} now` : `${who} took ${name}, the last floor, off the building`, level: 'warn' });
+      } else ctx.sendTo(c, { t: 'toast', text: `${who} took ${name} off the building`, level: 'info' });
     }
     ctx.floors.delete(floor.id);
     floor.shutdown();
@@ -138,7 +138,7 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
   const worksIn = (from: Floor, on: Floor) => from.workers.list().some((w) => w.repos?.some((r) => r.floor === on.id));
   const openFloor = (def: FloorDef): Floor | undefined => {
     if (!existsSync(def.dir)) {
-      console.error(`agent-office: the ${def.name} floor's checkout is gone (${def.dir}) — it stays closed until it's back`);
+      console.error(`agent-office: the ${def.name} floor's checkout is gone (${def.dir}) - it stays closed until it's back`);
       return undefined;
     }
     try {
@@ -159,11 +159,11 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
     ctx.floorsChanged();
     if (typeof r === 'string') {
       console.error(`agent-office: ${r}`);
-      return ctx.toastAll(`🛗 ${r}`, 'warn');
+      return ctx.toastAll(`${r}`, 'warn');
     }
     if (!openFloor(r)) return;
     console.log(`  the ${r.name} floor's clone finished (${r.dir})`);
-    ctx.toastAll(`🛗 New floor: ${r.name}, added by ${r.addedBy}`);
+    ctx.toastAll(`New floor: ${r.name}, added by ${r.addedBy}`);
   });
   // Workers still running from the last office are back at their desks before anyone walks in.
   await Promise.all([...floors.values()].map((f) => f.ready));

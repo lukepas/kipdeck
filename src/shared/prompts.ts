@@ -4,6 +4,7 @@
 // server/prompts.ts, for the whole building); these are the defaults, which "Default" goes back to.
 // A {{name}} in one is filled in by the office when it's sent.
 
+import { PRODUCT } from './copy.js';
 import { STATION_AGENT, type StationKind } from './layout.js';
 
 export type PromptGroup = 'mission' | 'issues' | 'pulls' | 'queue' | 'repos' | 'stations' | 'meetings' | 'office';
@@ -54,7 +55,7 @@ const QUEUE_API = `The task queue gives each task a fresh worker in its own git 
 - See it: office-queue list (each task's id, status, title, worker and pull request)
 - Add a task: office-queue add --title "Short title" [--issue <number>], with the task's prompt on stdin in a quoted heredoc so nothing in it gets expanded. It prints the new task's id. With --issue the task is linked to that GitHub issue, which is assigned when the task starts.
   office-queue add --title "Fix the login redirect" <<'EOF'
-  …the full prompt…
+  ...the full prompt...
   EOF
 - Take a waiting task off: office-queue remove <id>`;
 
@@ -62,7 +63,7 @@ const QUEUE_API = `The task queue gives each task a fresh worker in its own git 
 function stationDefault(kind: StationKind): string {
   const queue = kind === 'queue';
   return [
-    `You're the ${STATION_AGENT[kind].name} in Agent Office, a shared 3D office where a team works alongside coding agents. You stand at a kiosk by ${BOARD[kind]}, and whoever walks up types you a request. The first one is at the end of this message.`,
+    `You're the ${STATION_AGENT[kind].name} in ${PRODUCT}, mission control where a team runs many coding agents on a shared deck. You stand at a kiosk by ${BOARD[kind]}, and whoever walks up types you a request. The first one is at the end of this message.`,
     JOB[kind],
     `You're in the project's main checkout, which other people and workers use too: don't switch branches, commit, or leave edits in it. Work that needs code changed goes on the task queue, ${queue ? 'always' : 'unless the person asks you for something else'}.`,
     QUEUE_API,
@@ -111,7 +112,7 @@ const DEFS = {
     label: 'Meeting about it',
     used: 'What a Meeting about an issue is about, to start with: the meeting form opens with it filled in.',
     vars: ISSUE_VARS,
-    text: 'GitHub issue #{{number}}: “{{title}}”. Read it first with gh issue view {{number}} --comments.',
+    text: 'GitHub issue #{{number}}: "{{title}}". Read it first with gh issue view {{number}} --comments.',
   },
 
   // --- Pull requests board ---
@@ -167,7 +168,7 @@ const DEFS = {
     label: 'Review panel',
     used: 'What a Review panel is about, to start with: the meeting form opens with it filled in.',
     vars: PULL_VARS,
-    text: 'Review pull request #{{number}}: “{{title}}”.',
+    text: 'Review pull request #{{number}}: "{{title}}".',
   },
 
   // --- Mission ---
@@ -235,7 +236,7 @@ const DEFS = {
     vars: {
       title: "The meeting's title",
       role: 'Their role at the table',
-      pattern: 'The kind of meeting: Debate, Lead & team…',
+      pattern: 'The kind of meeting: Debate, Lead & team...',
       others: 'The other roles at the table',
       how: 'How the rounds of this kind of meeting go',
       about: 'What the meeting is about, as it was called',
@@ -250,7 +251,7 @@ const DEFS = {
     },
     text: [
       '{{title}}',
-      "You're the {{role}} in a {{pattern}} meeting in Agent Office's meeting room, round the table with {{others}}. {{how}}",
+      `You're the {{role}} in a {{pattern}} meeting in the ${PRODUCT} Review bay, round the table with {{others}}. {{how}}`,
       'What the meeting is about:\n{{about}}',
       '{{pullRequest}}',
       '{{issue}}',
@@ -365,7 +366,7 @@ const DEFS = {
     group: 'meetings',
     label: 'Review panel · review',
     used: 'Round 1 of a Review panel, for each reviewer. A note that says just NO FINDINGS counts as nothing found.',
-    vars: { pr: 'The pull request number', role: 'Their lens: Security, Performance…', file: FILE_NOTE },
+    vars: { pr: 'The pull request number', role: 'Their lens: Security, Performance...', file: FILE_NOTE },
     needs: ['file'],
     text: "Review pull request #{{pr}} through your lens, {{role}}, and nothing else. Read it with gh pr view {{pr}} and gh pr diff {{pr}}; don't check it out or change any files. Write your findings to {{file}}, one per bullet: the file:line, what's wrong and what to do about it, the most serious first. If you find nothing, write just NO FINDINGS. Then end your turn.",
   },

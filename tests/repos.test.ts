@@ -220,7 +220,7 @@ test('sending a worker across repositories home checks every worktree, and delet
   assert.equal(state?.dirty, 1);
   // Nobody said what to do, and api holds work: everything stays.
   const kept = await workers.kill(w.id);
-  assert.match(kept.note ?? '', /Kept .*worktrees and branch office\/\S+ in web, api — api has 1 uncommitted change/);
+  assert.match(kept.note ?? '', /Kept .*worktrees and branch office\/\S+ in web, api - api has 1 uncommitted change/);
   assert.ok(existsSync(path.join(ws, 'api', 'server.js')));
 
   const w2 = hire();

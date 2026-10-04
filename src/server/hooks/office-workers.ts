@@ -1,4 +1,5 @@
 import type http from 'node:http';
+import { stoodDown } from '../../shared/copy.js';
 import { notLeaving } from '../leave-on-merge.js';
 import { findWorker, readHireRequest, readHomeRequest, readPrRequest, workerRow, type PullsView } from '../office-workers.js';
 import { gh } from '../github.js';
@@ -133,7 +134,7 @@ export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: ht
         results.push({ worker: w.name, id: w.id, skipped: 'it had already gone' });
         continue;
       }
-      ctx.toastFloor(floor, why ? `🏠 ${who} sent ${w.name} home: ${why}` : `${who} sent ${w.name} home`);
+      ctx.toastFloor(floor, stoodDown(w.name, why, who));
       const { note, error } = await floor.sendHome(w.id, ask.cleanup);
       if (note) ctx.toastFloor(floor, note);
       if (error) ctx.toastFloor(floor, error, 'warn');

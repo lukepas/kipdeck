@@ -87,7 +87,7 @@ export function relayRequest(req: http.IncomingMessage, res: http.ServerResponse
     ur.pipe(res);
   });
   up.on('error', () => {
-    if (!res.headersSent) page(res, 502, 'Not answering', `The server on port ${svc.port} (<code>${esc(svc.command)}</code>) didn't answer. It may be restarting — try again in a moment.`);
+    if (!res.headersSent) page(res, 502, 'Not answering', `The server on port ${svc.port} (<code>${esc(svc.command)}</code>) didn't answer. It may be restarting - try again in a moment.`);
     else res.destroy();
   });
   res.on('close', () => up.destroy());
@@ -148,7 +148,7 @@ export function signInPage(res: http.ServerResponse, port: number, opts: { accou
   page(
     res,
     401,
-    '🔒 Sign in to the office',
+    'Sign in to the office',
     `<p>This is a worker's server on port ${port}, reached through the office. Sign in with ${how} to see it.</p>
 <form id="f">${askName ? `<input id="name" placeholder="${opts.shared ? 'Your name (optional)' : 'Your name'}" autocomplete="username"${opts.shared ? '' : ' required'} autofocus>` : ''}<input id="pw" type="password" placeholder="${askName ? 'Password' : 'Office password'}" autocomplete="current-password"${askName ? '' : ' autofocus'}><button>Sign in</button></form><p class="err" id="err"></p>`,
     `document.getElementById('f').addEventListener('submit',async(e)=>{e.preventDefault();const err=document.getElementById('err');err.textContent='';const n=document.getElementById('name');
@@ -168,5 +168,5 @@ export function tunnelSignedOutPage(res: http.ServerResponse, port: number) {
 }
 
 export function stoppedPage(res: http.ServerResponse, port: number) {
-  page(res, 503, '💤 Not running', `<p>Nothing is serving port ${port} right now. The worker may have stopped its server — check the 🌐 Services board in the office, or ask the worker to start it again.</p>`);
+  page(res, 503, 'Not running', `<p>Nothing is serving port ${port} right now. The worker may have stopped its server - check the Services board in the office, or ask the worker to start it again.</p>`);
 }

@@ -51,7 +51,7 @@ export function commandAction(command: string): 'test' | 'read' | undefined {
     const words = normalize(part);
     if (!words.length) continue;
     if (isCheck(words)) return 'test';
-    // Moving around first (`cd app && grep …`) doesn't decide it; the first real command does.
+    // Moving around first (`cd app && grep ...`) doesn't decide it; the first real command does.
     if (!leading || /^(?:cd|pushd|export|source|set|\.)$/.test(words[0])) continue;
     leading = false;
     if (READ.test(words[0]) || READ_SUB.test(words.join(' '))) first = 'read';

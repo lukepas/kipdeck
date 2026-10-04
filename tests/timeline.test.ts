@@ -112,7 +112,7 @@ test('the watch writes what changed, never what was already so', () => {
       'Mochi wants permission to use Bash',
       'Mochi finished: Fix login',
       'Mochi woke up and is working again',
-      'Mochi went home after 25 min on task, $1.50',
+      'Mochi stood down after 25 min on task, $1.50',
       'Pip got stuck: working but silent for 12 min',
       'PR #3 opened: PR 3',
       'PR #1 closed without merging: PR 1',
@@ -153,7 +153,7 @@ test('the digest says what happened while you were away in one line', () => {
   ];
   assert.equal(digest(events, ranked).summary, '3 PRs merged, 2 workers finished and wait for review, 1 got stuck, Auth rewrite moved from 3/7 to 5/7');
   const more = digest([ev({ kind: 'done', worker: 'a' }), ev({ kind: 'done', worker: 'c' }), ev({ kind: 'needs-input', worker: 'd' }), ev({ kind: 'hired', worker: 'e' }), ev({ kind: 'sent-home', worker: 'f' }), ev({ kind: 'task-failed' }), ev({ kind: 'milestone-done', name: 'Docs' })], ranked);
-  assert.equal(more.summary, '2 workers finished (1 still waits for review), 1 waits on an answer, 1 queue task failed, 1 worker hired, 1 went home, Docs completed');
+  assert.equal(more.summary, '2 workers finished (1 still waits for review), 1 waits on an answer, 1 queue task failed, 1 worker hired, 1 stood down, Docs completed');
   assert.equal(digest([], ranked).summary, 'Nothing much happened');
   assert.equal(digest([ev({ kind: 'mission' }), ev({ kind: 'milestone' }), ev({ kind: 'pr-opened' }), ev({ kind: 'meeting-ended' })], ranked).summary, '1 PR opened, 1 meeting ended, the mission changed, 1 milestone change');
   assert.equal(digest([ev({ kind: 'resumed', worker: 'a' })], ranked).summary, '1 small thing happened');

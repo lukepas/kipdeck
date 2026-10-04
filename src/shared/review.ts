@@ -138,7 +138,7 @@ export function reviewPull(floor: { id: string; name: string }, p: GhPull, offic
     floor: floor.id,
     floorName: floor.name,
     number: p.number,
-    title: title.length > 120 ? `${title.slice(0, 119)}…` : title,
+    title: title.length > 120 ? `${title.slice(0, 117)}...` : title,
     url: /^https:\/\//.test(p.url) ? p.url : '',
     author: p.author.slice(0, 40),
     checks: p.checks,

@@ -47,7 +47,7 @@ export function normalizeRepo(value: unknown): string | undefined {
   s = s.replace(/^(?:https?:\/\/|ssh:\/\/)?(?:[\w.-]+@)?github\.com[/:]/i, '');
   s = s.replace(/[?#].*$/, '').replace(/\/+$/, '').replace(/\.git$/i, '');
   const parts = s.split('/');
-  // A URL may go on past the repository (…/owner/repo/issues/12).
+  // A URL may go on past the repository (.../owner/repo/issues/12).
   if (parts.length < 2) return undefined;
   const [owner, repo] = parts;
   if (!/^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/.test(owner)) return undefined;
@@ -61,10 +61,10 @@ export function sameRepo(a: string | undefined, b: string | undefined): boolean 
 
 /** What a floor's clone is doing: "Downloading 64%". */
 export function cloneStep(p: CloneProgress | undefined): string {
-  return `${p?.step ?? 'Cloning'}${p?.percent !== undefined ? ` ${p.percent}%` : '…'}`;
+  return `${p?.step ?? 'Cloning'}${p?.percent !== undefined ? ` ${p.percent}%` : '...'}`;
 }
 
 /** A floor's clone in a few words, for the floor lists: "⏳ Downloading 64%". */
 export function cloneLabel(p: CloneProgress | undefined): string {
-  return `⏳ ${cloneStep(p)}`;
+  return `${cloneStep(p)}`;
 }

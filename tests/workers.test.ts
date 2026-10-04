@@ -1526,19 +1526,19 @@ test("the office's branch keeps a worker's commits once it has moved on: the dia
   // Deleting the worktree and branch anyway: release isn't the office's, and the office's has the commit.
   const sent = await workers.kill(a.w.id, 'all');
   assert.equal(sent.error, undefined);
-  assert.equal(sent.note, `Deleted ${a.w.name}'s worktree and kept branch ${a.office} — it has 1 unpushed commit`);
+  assert.equal(sent.note, `Deleted ${a.w.name}'s worktree and kept branch ${a.office} - it has 1 unpushed commit`);
   assert.ok(!existsSync(a.cwd));
   assert.equal(tip(a.office), 'work at desk-1');
   assert.equal(tip('release'), 'init');
   // Sent home with no choice (the queue recycling its desk, leave-on-merge): nothing goes.
   const b = hire('desk-2', 'release');
-  assert.equal((await workers.kill(b.w.id)).note, `Kept ${b.w.name}'s worktree and branch release — it has 1 unpushed commit`);
+  assert.equal((await workers.kill(b.w.id)).note, `Kept ${b.w.name}'s worktree and branch release - it has 1 unpushed commit`);
   assert.ok(existsSync(b.cwd));
   assert.equal(tip(b.office), 'work at desk-2');
   // A branch of its own, cut from main without that commit: it goes, the office's stays.
   const c = hire('desk-3', '-b', 'fix-z', 'main');
   const own = await workers.kill(c.w.id, 'all');
-  assert.equal(own.note, `Deleted ${c.w.name}'s worktree and branch fix-z, and kept branch ${c.office} — it has 1 unpushed commit`);
+  assert.equal(own.note, `Deleted ${c.w.name}'s worktree and branch fix-z, and kept branch ${c.office} - it has 1 unpushed commit`);
   assert.equal(git(f.root, 'branch', '--list', 'fix-z'), '');
   assert.equal(tip(c.office), 'work at desk-3');
 });
@@ -1665,7 +1665,7 @@ test("a worker whose worktree was deleted outside the office waits, marked lost,
   assert.deepEqual(after.get(kept.id)?.lost, { branch: 'here' });
   assert.deepEqual(after.get(gone.id)?.lost, { branch: 'gone' });
   assert.equal(after.get(kept.id)?.status, 'offline');
-  assert.match(after.resume(kept.id) ?? '', /worktree .* was deleted outside agent-office/);
+  assert.match(after.resume(kept.id) ?? '', /worktree .* was deleted outside UGC Army/);
   assert.equal(launches(f).length, launched);
 
   // Put back on its own branch, work and all, and it carries on its conversation.

@@ -1,4 +1,4 @@
-// The meeting room's patterns: how 2–5 workers at the table work on one question or task together.
+// The meeting room's patterns: how 2-5 workers at the table work on one question or task together.
 // The server runs them (server/meetings.ts); the client offers them when a meeting is called.
 
 import { fmtCost, fmtTokens, type Meeting, type MeetingPattern, type MeetingRecord } from './protocol.js';
@@ -76,7 +76,7 @@ export const MEETING_PATTERNS: Record<MeetingPattern, PatternDef> = {
 export const MEETING_PATTERN_IDS = Object.keys(MEETING_PATTERNS) as MeetingPattern[];
 
 export function isMeetingPattern(v: unknown): v is MeetingPattern {
-  // Own keys only: `in` would also take the prototype's (constructor, toString…), and those crash the server.
+  // Own keys only: `in` would also take the prototype's (constructor, toString...), and those crash the server.
   return typeof v === 'string' && Object.hasOwn(MEETING_PATTERNS, v);
 }
 
@@ -109,8 +109,8 @@ export function outputProblem(p: string): string | undefined {
   if (p.length > 200) return 'That output path is too long';
   if (/^[/\\]|^[a-zA-Z]:/.test(p)) return 'The output file goes inside the project: give a path relative to it';
   const parts = p.split(/[/\\]/);
-  if (parts.some((x) => x === '..' || x === '.' || x === '')) return 'The output path can’t have empty, . or .. parts';
-  if (parts[0] === '.git' || parts[0] === '.agent-office' || parts[0] === MEETING_NOTES_DIR) return `The output can’t go in ${parts[0]}/`;
+  if (parts.some((x) => x === '..' || x === '.' || x === '')) return 'The output path can\'t have empty, . or .. parts';
+  if (parts[0] === '.git' || parts[0] === '.agent-office' || parts[0] === MEETING_NOTES_DIR) return `The output can't go in ${parts[0]}/`;
   if (/[\0-\x1f]/.test(p)) return 'The output path has control characters in it';
   return undefined;
 }
@@ -127,7 +127,7 @@ export function fixedRounds(p: PatternDef): { line: string; stages: string; why:
   if (p.rounds.min !== p.rounds.max) return undefined;
   const n = rounds(p.rounds.max);
   const stages = (p.stages ?? []).join(' → ');
-  return { line: `${n} · fixed by the ${p.label} workflow`, stages, why: `${p.label} always runs ${n}${stages ? `: ${stages}` : ''}. Each one is a step of the pattern, so there’s none to add or take away.` };
+  return { line: `${n} · fixed by the ${p.label} workflow`, stages, why: `${p.label} always runs ${n}${stages ? `: ${stages}` : ''}. Each one is a step of the pattern, so there's none to add or take away.` };
 }
 
 /** The spend, e.g. "1.2M tokens · $2.40" (or without the cost when a provider doesn't report it). */

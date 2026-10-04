@@ -129,7 +129,7 @@ function shortCommand(args: string): string {
   const words = parts.map((p, i) => (p.includes('/') && !p.startsWith('--') && (i === 0 || !p.includes('=')) ? path.basename(p) : p));
   if (words.length > 1 && /^(node|nodejs|bun|deno|tsx|ts-node)$/.test(words[0])) words.shift();
   const s = words.join(' ');
-  return s.length > 80 ? `${s.slice(0, 79)}…` : s;
+  return s.length > 80 ? `${s.slice(0, 77)}...` : s;
 }
 
 function inside(dir: string, child: string): boolean {

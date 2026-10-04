@@ -258,11 +258,11 @@ test("the hire dialog's model hints are plain text, and Cursor's effort syntax s
   }
   const cursor = PROVIDER_META.cursor;
   assert.equal(modelHint(cursor), cursor.models!.hint);
-  assert.equal(modelHint(cursor, { request: {} }), 'Loading Cursor models…');
+  assert.equal(modelHint(cursor, { request: {} }), 'Loading Cursor models...');
   // Not signed in yet (a common first run): it says so, and still how an effort goes in, since Cursor has no Effort field.
   assert.equal(cursor.takesEffort, undefined);
   const failed = modelHint(cursor, { failed: true });
-  assert.match(failed, /couldn’t be listed/);
+  assert.match(failed, /couldn't be listed/);
   assert.match(failed, /model\[effort=high\]/);
   // One with an Effort field of its own needs nothing more.
   assert.doesNotMatch(modelHint(PROVIDER_META.opencode, { failed: true }), /\[effort/);

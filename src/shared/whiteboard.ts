@@ -4,7 +4,7 @@
 
 /**
  * An Excalidraw element, as far as the office needs to know: what it takes to merge two copies.
- * Everything else about it (its shape, points, text, colors…) rides along untouched.
+ * Everything else about it (its shape, points, text, colors...) rides along untouched.
  */
 export interface WbElement {
   id: string;
@@ -88,7 +88,7 @@ export function checkFile(raw: unknown): WbFile | string {
   if (!raw || typeof raw !== 'object') return 'Bad picture';
   const f = raw as Record<string, unknown>;
   if (typeof f.id !== 'string' || !ID_RE.test(f.id)) return 'Bad picture id';
-  if (typeof f.mimeType !== 'string' || !WB_IMAGE_TYPES.includes(f.mimeType)) return 'The whiteboard only takes pictures (PNG, JPEG, GIF, WebP, SVG…)';
+  if (typeof f.mimeType !== 'string' || !WB_IMAGE_TYPES.includes(f.mimeType)) return 'The whiteboard only takes pictures (PNG, JPEG, GIF, WebP, SVG...)';
   if (typeof f.dataURL !== 'string' || !f.dataURL.startsWith(`data:${f.mimeType}`)) return 'Bad picture data';
   if (f.dataURL.length > WB_MAX_FILE_BYTES) return `That picture is too big for the whiteboard (over ${WB_MAX_FILE_BYTES / 1024 / 1024} MB)`;
   const created = typeof f.created === 'number' && Number.isFinite(f.created) ? f.created : Date.now();

@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { NAV } from '../../shared/copy.js';
 import path from 'node:path';
 import type { AgentChoice, AgentEffort, AgentProvider, TerminalHit, WorkerInfo, WorkerKind, WorkerRepo, WorkerStatus } from '../../shared/protocol.js';
 import { AGENT_PROVIDERS, takesEffort, takesModel } from '../../shared/providers.js';
@@ -125,7 +126,7 @@ export class WorkerManager {
     this.tasks = new WorkerTasks(this.ctx, claude, childEnv());
     this.worktrees = new WorkerTrees(this.ctx);
     this.prs = new WorkerPrs(this.ctx);
-    this.host = new PtyHost(dataDir, () => this.events.toast("The workers' terminal host stopped — resuming them", 'warn'));
+    this.host = new PtyHost(dataDir, () => this.events.toast("The workers' terminal host stopped - resuming them", 'warn'));
     this.scrollback = new ScrollbackStore(dataDir);
     this.drops = new DropStore(dataDir);
     restoreWorkers(this.statePath, this.dir, this.workers, this.defaultProvider, (deskId) => this.deskOccupied(deskId));
@@ -262,7 +263,7 @@ export class WorkerManager {
     if (owner && signIn && this.runAs && !this.runAs.claudeReady(owner)) return this.runAs.why(signIn);
     const full = this.capacity?.full();
     if (full) return full;
-    const used = new Set([...this.workers.values()].map((w) => w.info.name.replace(/ 🐚$/, '')));
+    const used = new Set([...this.workers.values()].map((w) => w.info.name.replace(/ (?:\u{1F41A}|\(shell\))$/u, '')));
     const agent = seat.station && STATION_AGENT[seat.station];
     const name = agent ? agent.name : (NAMES.find((n) => !used.has(n)) ?? `Worker ${this.workers.size + 1}`);
     const id = randomBytes(6).toString('hex');
@@ -288,7 +289,7 @@ export class WorkerManager {
       model: takesModel(selectedProvider) ? model : undefined,
       effort: takesEffort(selectedProvider) ? effort : undefined,
       deskId,
-      name: kind === 'shell' ? `${name} 🐚` : name,
+      name: kind === 'shell' ? `${name} (shell)` : name,
       color: kind === 'shell' ? '#8d99ae' : agent ? agent.color : COLORS[Math.floor(Math.random() * COLORS.length)],
       status: 'starting',
       acked: true,
@@ -375,8 +376,7 @@ export class WorkerManager {
     return (w?.pty || w?.dsh) && token && safeEq(token, w.hookToken) ? w.info : undefined;
   }
 
-  /** Starts every worker that isn't running, but a crashed one stays stuck until a person resumes it (isCrashed). */
-  wakeAll() {
+  wakeAll() { // every worker that isn't running wakes; a crashed one stays stuck for a person (isCrashed)
     for (const w of this.workers.values()) if (!w.pty && !w.dsh && !isCrashed(w.info)) this.resume(w.info.id);
   }
 
@@ -708,7 +708,7 @@ export class WorkerManager {
     if (info.repos?.length) env.GIT_CEILING_DIRECTORIES = [path.dirname(cwd), env.GIT_CEILING_DIRECTORIES].filter(Boolean).join(path.delimiter);
     if (w.owner && this.runAs) {
       if (adapter?.signIn && !this.runAs.claudeReady(w.owner)) {
-        this.startFailed(w, `whoever hired ${info.name} (${info.createdBy}) isn't signed in to Claude — they can sign in under ☰ → 🔐 Your sign-ins, then press R here`);
+        this.startFailed(w, `whoever hired ${info.name} (${info.createdBy}) isn't signed in to Claude - they can sign in under ${NAV.signins}, then press R here`);
         return;
       }
       this.runAs.apply(w.owner, env, [this.dir, cwd]);
@@ -831,14 +831,14 @@ export class WorkerManager {
       // Resuming a conversation Claude no longer has ("No conversation found") exits before Claude
       // ever starts. Start a fresh one rather than leave the worker asleep.
       if (adapter?.freshIfResumeFails && resumeSessionId && info.status === 'starting' && !this.closing) {
-        this.events.toast(`${info.name}'s last conversation couldn't be resumed — starting a fresh one`, 'warn');
+        this.events.toast(`${info.name}'s last conversation couldn't be resumed - starting a fresh one`, 'warn');
         this.launch(w, undefined, undefined);
         return;
       }
       info.exitCode = exitCode;
       clockWork(info, 'exited');
       info.status = 'exited';
-      const hint = info.kind === 'shell' ? ' — press R to restart' : info.sessionId ? ' — press R to resume' : '';
+      const hint = info.kind === 'shell' ? ' - press R to restart' : info.sessionId ? ' - press R to resume' : '';
       const msg = `\r\n\x1b[2m[${info.name} exited with code ${exitCode}${hint}]\x1b[0m\r\n`;
       term.write(msg);
       if (w.viewers.size) this.events.data(info.id, msg, [...w.viewers.keys()]);
@@ -973,7 +973,7 @@ export class WorkerManager {
     });
   }
 
-  /** Full screens for every running worker — sent to people as they walk in. */
+  /** Full screens for every running worker - sent to people as they walk in. */
   fullScreens() {
     return fullScreens(this.workers.values());
   }

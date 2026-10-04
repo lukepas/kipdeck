@@ -358,7 +358,7 @@ export class Bounties {
     b.warned = true;
     store.put(b);
     const hours = Math.max(1, Math.round((b.expiry - nowMs) / 3_600_000));
-    this.deps.toastFloor(floor, `⏳ #${b.issue}'s ${this.money(BigInt(b.amount))} bounty expires in about ${hours} h: approve the payout for PR #${b.claimPr} before then, or it goes back to its funders`, 'warn');
+    this.deps.toastFloor(floor, `#${b.issue}'s ${this.money(BigInt(b.amount))} bounty expires in about ${hours} h: approve the payout for PR #${b.claimPr} before then, or it goes back to its funders`, 'warn');
   }
 
   /** A worker's office PR closes the issue: the attester binds it, and its owner's wallet. */
@@ -408,7 +408,7 @@ export class Bounties {
         b.phase = 'awaiting-approval';
         delete b.note;
         delete b.warned;
-        this.deps.toastFloor(floor, `💰 PR #${p.number} merged: its ${this.money(BigInt(b.amount))} bounty waits for an admin to approve the payout`);
+        this.deps.toastFloor(floor, `PR #${p.number} merged: its ${this.money(BigInt(b.amount))} bounty waits for an admin to approve the payout`);
       } else {
         b.phase = 'blocked';
         b.note = v.reason;

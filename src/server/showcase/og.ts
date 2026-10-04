@@ -4,6 +4,7 @@
 // straight into a PNG. No browser, no canvas and no
 // dependencies (node:zlib only), so the office can draw it on request and onchain/indexer's static
 // export can draw it at build time, from the same public document the page shows.
+import { UPSTREAM_CREDIT } from '../../shared/copy.js';
 import { deflateSync } from 'node:zlib';
 import { HARNESSES, type ShowcaseDoc } from '../../shared/showcase.js';
 
@@ -288,7 +289,7 @@ export function ogImage(doc: ShowcaseDoc): Buffer {
 
   // The foot: testnet only, and the credit.
   r.text(L, FOOT + 17, 2, 'TESTNET ONLY: NO REAL FUNDS.', FAINT);
-  const credit = 'Built on agent-office by webdevcody - MIT';
+  const credit = UPSTREAM_CREDIT;
   r.text(X + BW - 32 - textWidth(credit, 2), FOOT + 17, 2, credit, MUTED);
   return encodePng(r);
 }

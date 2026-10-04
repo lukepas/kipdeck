@@ -126,7 +126,7 @@ function draftPr(info: WorkerInfo, commits: string[], by: string, other?: { home
   const title = truncate(issue?.[2] || firstLine.replace(/[.:;,]+$/, '') || commits[0]?.replace(/^\S+\s+/, '') || info.worktree?.branch || info.name, PR_TITLE_MAX);
   const closes = /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\b[^\n]{0,40}?#(\d+)/i.exec(task)?.[1] ?? issue?.[1];
   const parts: string[] = [];
-  if (task) parts.push(`## Task\n\n${task.length > PR_TASK_MAX ? `${task.slice(0, PR_TASK_MAX)}…` : task}`);
+  if (task) parts.push(`## Task\n\n${task.length > PR_TASK_MAX ? `${task.slice(0, PR_TASK_MAX)}...` : task}`);
   parts.push(`## Commits\n\n${commits.map((c) => `- \`${c.slice(0, c.indexOf(' '))}\` ${c.slice(c.indexOf(' ') + 1)}`).join('\n')}`);
   if (closes && !other) parts.push(`Closes #${closes}`);
   else if (closes && other?.home) parts.push(`Part of ${other.home}#${closes}`);
@@ -201,10 +201,10 @@ export class WorkerPrs {
     if (!w) return 'No such worker';
     const { info } = w;
     const wt = info.worktree;
-    if (!wt) return `${info.name} works in the main checkout — only workers with their own worktree can open a PR`;
+    if (!wt) return `${info.name} works in the main checkout - only workers with their own worktree can open a PR`;
     if (info.prOpening) return `${info.name}'s pull request is already being opened`;
     if (isBusy(info.status)) {
-      return `${info.name} is still ${info.status === 'needs_input' ? 'waiting on input' : info.status} — wait until it's done`;
+      return `${info.name} is still ${info.status === 'needs_input' ? 'waiting on input' : info.status} - wait until it's done`;
     }
     if (info.repos?.length) return this.openPrs(w, by, as);
     const cwd = path.join(this.ctx.dir, wt.path);
@@ -217,7 +217,7 @@ export class WorkerPrs {
       const branch = info.worktree?.branch ?? wt.branch;
       const commits = (await run('git', ['log', '--reverse', '--format=%h %s', `${wt.base}..${branch}`], cwd)).split('\n').filter(Boolean);
       const dirty = (await run('git', ['status', '--porcelain'], cwd)) !== '';
-      if (!commits.length) return dirty ? `${info.name} hasn't committed anything yet — ask it to commit first` : `${info.name} has no commits on ${branch} yet`;
+      if (!commits.length) return dirty ? `${info.name} hasn't committed anything yet - ask it to commit first` : `${info.name} has no commits on ${branch} yet`;
       const open = await findOpenPr(branch, cwd);
       if (open) {
         info.pr = open;
@@ -290,7 +290,7 @@ export class WorkerPrs {
       }
       if (!prs.length) {
         if (failed.length) return failed.join('; ');
-        return uncommitted.length ? `${info.name} hasn't committed anything yet in ${uncommitted.join(', ')} — ask it to commit first` : `${info.name} has no commits on ${wt.branch} yet in any of its repositories`;
+        return uncommitted.length ? `${info.name} hasn't committed anything yet in ${uncommitted.join(', ')} - ask it to commit first` : `${info.name} has no commits on ${wt.branch} yet in any of its repositories`;
       }
       if (prs.length > 1 && prs.some((p) => !p.existed)) {
         for (const p of prs) {

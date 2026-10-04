@@ -377,7 +377,7 @@ export class MergeProofs {
     const what = item.outcome === 1 ? 'merged' : item.outcome === 2 ? `reverted (it reverts #${ref?.pr})` : 'closed without merging';
     const text = `Proof of merge on Base Sepolia: PR #${item.pr} ${what}, by ${item.name ?? 'a worker'} (${item.harness})`;
     this.deps.floor(item.floor)?.attested({ pr: item.pr, text, link: r.link, ...(item.worker ? { worker: item.worker } : {}), ...(item.name ? { name: item.name } : {}) });
-    this.deps.toast?.(item.floor, `🔏 ${text}`);
+    this.deps.toast?.(item.floor, `${text}`);
   }
 }
 

@@ -16,7 +16,7 @@ export function webTabUrl(raw: string, office: string): URL | string {
   try {
     url = new URL(raw.trim());
   } catch {
-    return 'That doesn’t look like a web address';
+    return 'That doesn\'t look like a web address';
   }
   if (url.protocol !== 'https:') return 'Only https:// addresses can open in a tab';
   if (url.username || url.password) return "A tab's address can't have a user name or password in it";

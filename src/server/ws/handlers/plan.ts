@@ -27,8 +27,8 @@ export const planHandlers = {
     if (!r.label && !r.old) return;
     planChanged(ctx, floor);
     const desk = DESK_BY_ID.get(deskId)?.label ?? 'a desk';
-    if (r.label && r.label.text !== r.old?.text) ctx.toastFloor(floor, `${who} hung a sign over ${desk}: “${r.label.text}”`);
-    else if (!r.label) ctx.toastFloor(floor, `${who} took the “${r.old!.text}” sign down from ${desk}`);
+    if (r.label && r.label.text !== r.old?.text) ctx.toastFloor(floor, `${who} hung a sign over ${desk}: "${r.label.text}"`);
+    else if (!r.label) ctx.toastFloor(floor, `${who} took the "${r.old!.text}" sign down from ${desk}`);
   },
   'floor.expand'(ctx, c) {
     const who = c.peer.name;

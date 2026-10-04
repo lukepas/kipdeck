@@ -11,6 +11,7 @@
 // onchain/reputation's build, loaded at run time as the other onchain SDKs are. RPC goes through the
 // network guard, and the node must say it is Base Sepolia before anything is signed. Owed feedback
 // waits in feedback.json (safefs) and is retried like attestations. Nothing here moves money.
+import { PRODUCT } from '../../shared/copy.js';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -380,7 +381,7 @@ export class Reputation {
     return {
       type: 'https://eips.ethereum.org/EIPS/eip-8004#registration-v1',
       name: this.publicName(a),
-      description: `A coding agent run in an Agent Office: ${a.harness}, operated by ${operatorPseudonym((this.secret ??= pseudonymSecret(this.deps.dataDir)), a.operator)} (a pseudonym). Its reputation comes only from pull requests a person merged, reverted or closed (Proof of Merge, testnets only). Built on agent-office (MIT, webdevcody / AgentSystemLabs).`,
+      description: `A coding agent run on ${PRODUCT}: ${a.harness}, operated by ${operatorPseudonym((this.secret ??= pseudonymSecret(this.deps.dataDir)), a.operator)} (a pseudonym). Its reputation comes only from pull requests a person merged, reverted or closed (Proof of Merge, testnets only). Built on agent-office (MIT, webdevcody / AgentSystemLabs).`,
       services,
       x402Support: !!this.deps.x402?.(),
       active: true,

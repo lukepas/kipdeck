@@ -1,5 +1,6 @@
 // Starting things for the workers: which shell, where a command is, how to run one without
 // blocking the office, and the install's own bin/ scripts and the commands that run them.
+import { PRODUCT } from '../../shared/copy.js';
 import { accessSync, chmodSync, constants, existsSync, mkdirSync } from 'node:fs';
 import { writeState } from '../safefs.js';
 import { execFile, execFileSync } from 'node:child_process';
@@ -88,7 +89,7 @@ export function shq(s: string) {
 export function writeOfficeCommands(dataDir: string): string | undefined {
   const dir = path.join(dataDir, 'bin');
   let wrote = false;
-  for (const [name, what] of [['office-queue', "Agent Office's task queue, for the board agents"], ['office-workers', "Agent Office's workers, for every worker"]]) {
+  for (const [name, what] of [['office-queue', `${PRODUCT}'s task queue, for the board agents`], ['office-workers', `${PRODUCT}'s units, for every unit`]]) {
     const script = binScript(`${name}.js`);
     if (!script) continue;
     mkdirSync(dir, { recursive: true, mode: 0o700 });

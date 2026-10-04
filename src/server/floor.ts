@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { stoodDown } from '../shared/copy.js';
 import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import type { ChangesState, FloorInfo, GhPull, Mission, ProjectInfo, QueueState, ServerMsg, TimelineEvent, WorkerInfo } from '../shared/protocol.js';
@@ -236,7 +237,7 @@ export class Floor {
         // A worker may have opened one from a branch it made itself, mid-turn or from a shell.
         void this.workers.syncBranches();
         for (const p of this.merges.look(state.items)) {
-          ctx.toast(this, `🎉 PR #${p.number} merged: ${p.title}`);
+          ctx.toast(this, `PR #${p.number} merged: ${p.title}`);
           this.merged(p.number);
         }
         this.watch.pulls(state.items);
@@ -266,7 +267,7 @@ export class Floor {
       hiringPaused: () => ctx.ledger.hiringPaused,
       room: () => ctx.capacity.room(),
       emptied: () => {
-        ctx.toast(this, '📋 The queue is empty: every task is done 🎉');
+        ctx.toast(this, 'The queue is empty: every task is done ');
         ctx.emit(this, { t: 'landed', kind: 'queue' });
       },
       worktreeNote: () => officePrompt(ctx.prompts, 'queue.worktree'),
@@ -422,7 +423,7 @@ export class Floor {
 
   private goHome(worker: WorkerInfo, why: string, head?: string, heads?: Record<string, string | undefined>) {
     const done = this.workers.kill(worker.id, undefined, head, heads);
-    this.ctx.toast(this, `🏠 ${worker.name} went home: ${why}`);
+    this.ctx.toast(this, stoodDown(worker.name, why));
     void done.then(({ note, error }) => {
       if (note) this.ctx.toast(this, note);
       if (error) this.ctx.toast(this, error, 'warn');

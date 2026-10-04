@@ -232,7 +232,7 @@ export class TimelineWatch {
     const worked = workedMs(w);
     const usd = w.usage?.cost;
     const tail = [worked && `${duration(worked)} on task`, money(usd)].filter(Boolean).join(', ');
-    this.add({ kind: 'sent-home', ...this.who(w), ...(usd ? { usd } : {}), ...(worked ? { workedMs: worked } : {}), text: `${w.name} went home${tail ? ` after ${tail}` : ''}` });
+    this.add({ kind: 'sent-home', ...this.who(w), ...(usd ? { usd } : {}), ...(worked ? { workedMs: worked } : {}), text: `${w.name} stood down${tail ? ` after ${tail}` : ''}` });
   }
 
   /** The roster saw a worker get stuck. */

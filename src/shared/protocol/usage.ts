@@ -78,7 +78,7 @@ export interface PlanWindow {
  * /usage shows them (see server/limits.ts). One account for the whole building.
  */
 export interface PlanLimits {
-  /** 'pro', 'max', 'team', 'enterprise'…, when known. */
+  /** 'pro', 'max', 'team', 'enterprise'..., when known. */
   plan?: string;
   /** The 5-hour session first, then the week, then per-model weeks. Empty until first read, or when there is no plan. */
   windows: PlanWindow[];

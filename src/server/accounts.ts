@@ -122,7 +122,7 @@ export class Accounts {
       const taken = this.nameTaken(n);
       if (taken) return taken;
     }
-    if (this.data.invites.length >= MAX_INVITES) return 'Too many open invites — cancel some first';
+    if (this.data.invites.length >= MAX_INVITES) return 'Too many open invites - cancel some first';
     const now = Date.now();
     const invite: AccountInvite = {
       id: randomBytes(5).toString('hex'),
@@ -301,7 +301,7 @@ export class Accounts {
 
   private save() {
     if (this.unreadable) {
-      console.error(`agent-office: not saving accounts over ${this.file}, which couldn't be read — fix or move it`);
+      console.error(`agent-office: not saving accounts over ${this.file}, which couldn't be read - fix or move it`);
       return;
     }
     // Written whole and renamed into place, so the office and the `accounts` command never read half a file.
@@ -320,7 +320,7 @@ export class Accounts {
   }
 }
 
-const HELP = `agent-office accounts — who can sign in to the office
+const HELP = `agent-office accounts - who can sign in to the office
 
 Usage:
   agent-office accounts [list]                 Accounts, open invites, and the shared password
@@ -364,11 +364,11 @@ export function accountsCommand(argv: string[]): number {
   try {
     statSync(dataDir);
   } catch {
-    console.error(`agent-office accounts: no office has run in ${dir} yet — start it once with \`agent-office\` there`);
+    console.error(`agent-office accounts: no office has run in ${dir} yet - start it once with \`agent-office\` there`);
     return 1;
   }
   const accounts = new Accounts(dataDir);
-  if (accounts.unreadableFile) return fail(`${accounts.unreadableFile} couldn't be read (see above) — fix or move it first`);
+  if (accounts.unreadableFile) return fail(`${accounts.unreadableFile} couldn't be read (see above) - fix or move it first`);
   const [cmd = 'list', arg, arg2] = args;
   switch (cmd) {
     case 'list': {

@@ -56,7 +56,7 @@ export function digest(events: readonly TimelineEvent[], ranked: readonly Ranked
   const hired = workers(sorted, 'hired').size;
   if (hired) parts.push(`${n(hired, 'worker')} hired`);
   const home = workers(sorted, 'sent-home').size;
-  if (home) parts.push(`${home} went home`);
+  if (home) parts.push(`${home} stood down`);
   const opened = sorted.filter((e) => e.kind === 'pr-opened').length;
   if (opened) parts.push(`${n(opened, 'PR')} opened`);
   const meetings = sorted.filter((e) => e.kind === 'meeting-ended').length;

@@ -32,7 +32,7 @@ export async function officeQueue(ctx: Ctx, req: http.IncomingMessage, res: http
   try {
     body = JSON.parse(await readBody(req));
   } catch {
-    return send(res, 400, { error: 'Send JSON: {"title": "…", "prompt": "…", "issue": 12}' });
+    return send(res, 400, { error: 'Send JSON: {"title": "...", "prompt": "...", "issue": 12}' });
   }
   const prompt = str(body?.prompt, 20000);
   // A PR's text can talk the board agent into queueing its own checkout: never a fork's or an outsider's.
@@ -44,6 +44,6 @@ export async function officeQueue(ctx: Ctx, req: http.IncomingMessage, res: http
   const err = floor.queue.add(prompt, agent.name, str(body?.title, 200) || undefined, issue, undefined, undefined, undefined, floor.workers.ownerOf(agent.id), floor.mission.goalFor(undefined, issue));
   if (err) return send(res, 400, { error: err });
   const task = floor.queue.state().tasks.at(-1)!;
-  ctx.toastFloor(floor, `📋 The ${agent.name} queued ${issue !== undefined ? `issue #${issue}` : `“${task.title}”`}`);
+  ctx.toastFloor(floor, `The ${agent.name} queued ${issue !== undefined ? `issue #${issue}` : `"${task.title}"`}`);
   send(res, 200, { ok: true, task: { id: task.id, title: task.title, status: task.status } });
 }

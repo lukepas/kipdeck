@@ -323,7 +323,7 @@ test('a pattern with a set number of rounds says so, and names them; a range is 
   assert.deepEqual(fixedRounds(MEETING_PATTERNS.lead), {
     line: '3 rounds · fixed by the Lead & team workflow',
     stages: 'Planning → Execution → Merge',
-    why: 'Lead & team always runs 3 rounds: Planning → Execution → Merge. Each one is a step of the pattern, so there’s none to add or take away.',
+    why: 'Lead & team always runs 3 rounds: Planning → Execution → Merge. Each one is a step of the pattern, so there\'s none to add or take away.',
   });
   for (const id of MEETING_PATTERN_IDS) {
     const p = MEETING_PATTERNS[id];

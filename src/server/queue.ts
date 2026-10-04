@@ -140,7 +140,7 @@ export class TaskQueue {
   remove(taskId: string): string | undefined {
     const t = this.tasks.find((x) => x.id === taskId);
     if (!t) return 'No such task';
-    if (t.status === 'running') return `${t.workerName ?? 'Its worker'} is on it — send the worker home to stop it`;
+    if (t.status === 'running') return `${t.workerName ?? 'Its worker'} is on it - send the worker home to stop it`;
     if (t.paid && t.held) return 'Someone paid for that task: an admin approves it or turns it down';
     if (t.paid && t.outcome === 'rejected' && !t.paid.refundTx) return 'Record its refund first';
     this.tasks.splice(this.tasks.indexOf(t), 1);
@@ -356,10 +356,10 @@ export class TaskQueue {
     t.finishedAt = Date.now();
     const who = t.workerName ?? 'Its worker';
     if (outcome === 'done') {
-      this.events.toast(`📋 ${who} finished ${label(t)}`, 'info');
+      this.events.toast(`${who} finished ${label(t)}`, 'info');
       // The worker most likely just opened the PR; go and link it.
       this.events.refreshGitHub();
-    } else if (outcome === 'exited') this.events.toast(`📋 ${who} stopped before finishing ${label(t)} — requeue it from the queue board`, 'warn');
+    } else if (outcome === 'exited') this.events.toast(`${who} stopped before finishing ${label(t)} - requeue it from the queue board`, 'warn');
     return outcome === 'done';
   }
 
@@ -382,14 +382,14 @@ export class TaskQueue {
 
   /**
    * No desk or bean bag is free: send home a worker the queue hired whose task is finished (nobody
-   * is looking at its terminal), and return its seat. Workers with a linked PR go first — their work
+   * is looking at its terminal), and return its seat. Workers with a linked PR go first - their work
    * is delivered.
    */
   private recycleDesk(): string | undefined {
     const pick = this.recyclable();
     if (!pick) return undefined;
     const done = this.workers.kill(pick.w.id);
-    this.events.toast(`📋 ${pick.w.name} went home after ${label(pick.t)} to make room for the next task`, 'info');
+    this.events.toast(`${pick.w.name} stood down after ${label(pick.t)} to make room for the next task`, 'info');
     void done.then(({ note, error }) => {
       if (note) this.events.toast(note, 'info');
       if (error) this.events.toast(error, 'warn');
@@ -438,7 +438,7 @@ export class TaskQueue {
         t.outcome = 'failed';
         t.error = r;
         t.finishedAt = Date.now();
-        this.events.toast(`📋 Couldn't start ${label(t)}: ${r}`, 'error');
+        this.events.toast(`Couldn't start ${label(t)}: ${r}`, 'error');
         continue;
       }
       t.status = 'running';
@@ -448,7 +448,7 @@ export class TaskQueue {
       t.startedAt = Date.now();
       t.error = undefined;
       this.lastStatus.set(r.id, r.status);
-      this.events.toast(`📋 ${r.name} sat down at ${DESK_BY_ID.get(desk)?.label ?? 'a desk'} to work on ${label(t)}`, 'info');
+      this.events.toast(`${r.name} sat down at ${DESK_BY_ID.get(desk)?.label ?? 'a desk'} to work on ${label(t)}`, 'info');
       if (t.issue !== undefined) {
         const issue = t.issue;
         void this.events.claimIssue(issue, t.owner).then((err) => {
@@ -540,7 +540,7 @@ function cleanPayment(raw: unknown): QueuePayment | undefined {
 }
 
 function label(t: QueueTask): string {
-  return t.issue !== undefined ? `#${t.issue}` : `“${t.title.length > 40 ? `${t.title.slice(0, 39)}…` : t.title}”`;
+  return t.issue !== undefined ? `#${t.issue}` : `"${t.title.length > 40 ? `${t.title.slice(0, 37)}...` : t.title}"`;
 }
 
 function firstLine(s: string): string {

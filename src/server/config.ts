@@ -72,7 +72,8 @@ export interface RTCIceServerLike {
   credential?: string;
 }
 
-const HELP = `agent-office — a 3D office for your team and its ${AGENT_PROVIDERS.filter((p) => p !== 'custom').map((p) => PROVIDER_META[p].name).join(' / ')} workers
+const HELP = `ugc-army - UGC Army: mission control for your team's ${AGENT_PROVIDERS.filter((p) => p !== 'custom').map((p) => PROVIDER_META[p].name).join(' / ')} agents, with proof of every merge on testnets.
+(Built on agent-office, MIT. The agent-office command still works.)
 
 Usage:
   agent-office [options]
@@ -160,7 +161,7 @@ Options:
                           day (env AGENT_OFFICE_BUDGET_PAUSE=1)
       --max-workers <n>   Run at most this many workers at once, across every
                           floor (env AGENT_OFFICE_MAX_WORKERS). Hiring past it
-                          is refused. Admins can lower the limit from ⚙️
+                          is refused. Admins can lower the limit from 
                           Settings, but not raise it past this
       --webhook <url>     Post to this Slack or Discord webhook when a worker
                           needs input, finishes or gets stuck (env AGENT_OFFICE_WEBHOOK).
@@ -417,7 +418,7 @@ export function loadConfig(argv: string[]): Config {
     delete stored.verifier;
     delete stored.claimedAt;
     save();
-    console.log('agent-office: password forgotten — a new one is generated on the next start');
+    console.log('agent-office: password forgotten - a new one is generated on the next start');
     process.exit(0);
   }
 

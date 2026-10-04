@@ -46,7 +46,7 @@ test('says what is wrong with a bad command line', () => {
 
 test('needs the office address, its worker id and its token from the environment', () => {
   assert.deepEqual(officeEnv({ ...ENV, AGENT_OFFICE_HOOK_URL: 'http://127.0.0.1:4455/' }), { url: 'http://127.0.0.1:4455', worker: 'w1 &x', token: 'tok' });
-  assert.throws(() => officeEnv({}), /AGENT_OFFICE_HOOK_URL, AGENT_OFFICE_WORKER_ID, AGENT_OFFICE_HOOK_TOKEN aren't set.*inside Agent Office/);
+  assert.throws(() => officeEnv({}), /AGENT_OFFICE_HOOK_URL, AGENT_OFFICE_WORKER_ID, AGENT_OFFICE_HOOK_TOKEN aren't set.*inside UGC Army/);
   assert.throws(() => officeEnv({ ...ENV, AGENT_OFFICE_HOOK_TOKEN: '' }), /^Error: AGENT_OFFICE_HOOK_TOKEN isn't set/);
 });
 

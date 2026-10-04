@@ -8,7 +8,7 @@ export const projectView: ViewPieces['project'] = (_ctx, floor) => floor?.projec
 export const floorHandlers = {
   'floor.go'(ctx, c, msg) {
     const floor = ctx.floors.get(str(msg.floor, 64));
-    if (!floor) ctx.warn(c, ctx.building.pending().some((d) => d.id === msg.floor) ? "That floor is still being cloned — it'll be ready in a moment" : 'No such floor');
+    if (!floor) ctx.warn(c, ctx.building.pending().some((d) => d.id === msg.floor) ? "That floor is still being cloned - it'll be ready in a moment" : 'No such floor');
     else ctx.goToFloor(c, floor, arrivalSpot(msg.at));
   },
   'floor.repos'(ctx, c, msg) {
@@ -26,7 +26,7 @@ export const floorHandlers = {
         who,
         (def) => {
           ctx.floorsChanged();
-          ctx.toastAll(`${who} is adding a floor for ${def.repo ?? def.name}…`);
+          ctx.toastAll(`${who} is adding a floor for ${def.repo ?? def.name}...`);
         },
         c.accountId,
         // Opening a checkout runs what it ships past the office's checks: members only add the office's own repositories.
@@ -36,7 +36,7 @@ export const floorHandlers = {
         ctx.floorsChanged();
         if (typeof r === 'string') return ctx.sendTo(c, { t: 'floor.added', repo, error: r });
         const floor = ctx.openFloor(r);
-        if (!floor) return ctx.sendTo(c, { t: 'floor.added', repo, error: `Cloned ${r.repo}, but couldn't open its floor — see the office's log` });
+        if (!floor) return ctx.sendTo(c, { t: 'floor.added', repo, error: `Cloned ${r.repo}, but couldn't open its floor - see the office's log` });
         console.log(`  ${who} added a floor for ${r.repo} (${r.dir})`);
         ctx.toastAll(`New floor: ${r.name}, added by ${who}`);
         ctx.sendTo(c, { t: 'floor.added', repo, floor: floor.id });
