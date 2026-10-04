@@ -11084,6 +11084,22 @@ var devnet_default = {
         claim: "5QUMnnjNivrjU3ydbFqVVt6ppJujaRquejA5B1nSuqMqV3vrSAoUbDePn74w7JkhjhiAdmiSqwiSGqqzbfqNZ8Ki",
         release: "2sWD8aUJ6Wd5xEQcTxGK2tRarfr6TuzjYLgppmTrTtxBxwo6T3XP42EoYCypq9oXFQQ3Zj6TthXEMxoUNuVZCgNF"
       }
+    },
+    {
+      at: "2026-10-04T07:43:33.000Z",
+      repo: "proof-of-merge/devnet-demo",
+      issue: 1791099790,
+      bounty: "4wfQyc5QSZv2CdQmYfjhZoztXy7M3EibFyow4Ywc9hox",
+      funder: "Fr5n1zC3nTLvMESM1KoR6D7qNtLgyaNb5GCdK5CcAus",
+      operator: "FU7ER8xsCunDEWzFsgwiNRsouuTeGo4myzADf5myCQAz",
+      amount: "12",
+      note: "GitHub Action run (onchain/action, bundled dist): the action claimed it and prepared the release on the approver's durable nonce account FhtqxkPwxKVuoGgDViKyvDKVc1xXyb1dQNzq7f9d4Ybe, and ao-bounty cosign checked it and sent it as the approver. A fake GitHub API on loopback stood in for the merged pull request, so no GitHub merge is behind it; its Base Sepolia attestation was revoked.",
+      signatures: {
+        open: "3pvCptBTDzWd6NBs6uyHEwrf5C2zp45PPczoDSmTx5Mr8DKcKyAJFrLezuq4Rizjg4cNMtdQ4iY7k4j7Rb8Sdm8r",
+        fund: "4Q3iunaL8MkWyPrMVSvWUAYCywbhxYcPasnLCAi6eetQ3h5CkX81Q5PRe1GSC8FCncTh6FMwJ1fHgE9jf3tz2v3A",
+        claim: "4repr32vr1VfTj5AuH9hhKPc447swwbBKVScSuWjQPpDLXQQ9zkkC4VxSgb2rpPtALioq4J55fiMUbBLm4kkUdZx",
+        release: "4PYnNQZAi23BGUQ84EqDJfgSZABjqqKxPeyan6frLG25H6jWY8F6qrLGyRituXNXeHujZd29uWPXhoDN7MSdYsUe"
+      }
     }
   ]
 };

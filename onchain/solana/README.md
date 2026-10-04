@@ -110,7 +110,8 @@ The deployer keeps the upgrade authority, so devnet redeploys stay possible. The
 
 - `cargo test`, the SDK tests and the litesvm runs of the built `.so` pass.
 - `scripts/e2e.sh localnet` ran on `solana-test-validator` (Agave 4.3) three times, the last on 2026-10-03 at the current commit: see `deployments/localnet.json` for the signatures (those ledgers were local and are gone). The office's guarded RPC fetch read the released bounty back from that validator (loopback allowed explicitly), and refused it with the default guard.
-- Devnet: not deployed yet. The devnet faucet refused CLI airdrops for the day (rate limit), and faucet.solana.com needs a browser sign-in. Fund the deployer `TyQidKVXFC52NRtsais3yaFbBkJksBeU5Y68TSwb1zE` with 2 devnet SOL, then run `scripts/e2e.sh devnet`. The program id will be `JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`.
+- Devnet: deployed as `JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6` by `scripts/e2e.sh devnet`, and upgraded in place on 2026-10-03 (slot 507133664) to put the attester and approver in a bounty's seeds. The upgrade authority is the deployer `TyQidKVXFC52NRtsais3yaFbBkJksBeU5Y68TSwb1zE`, a single key, so the deployment is not custody-free.
+- Five demo bounties ran open, fund, claim and release there, 77 test USDC in all, none with a GitHub merge behind it: the first before the upgrade, then one right after it, one through the approver-wallet path (`prepareRelease`, then the approver's signature), one after the review fixes, and on 2026-10-04 one claimed by the [GitHub Action](../action/README.md#status) and released by `ao-bounty cosign` on the approver's durable nonce. Every signature is in `deployments/devnet.json`.
 - The program is not audited.
 
 ## The CLI
