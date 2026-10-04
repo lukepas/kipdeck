@@ -22,7 +22,7 @@ Entry: Proof of Merge, a fork of agent-office (MIT, by webdevcody / AgentSystemL
 - Our fork: {{FORK_URL}}
 - Public showcase: {{SHOWCASE_URL}}
 
-What is deployed on testnets (every link below was checked on 2026-10-03; the explorers block scripted requests, so the transactions were checked over RPC, see [links.json](links.json)):
+What is deployed on testnets (every link below was checked on 2026-10-03, the x402 payment on 2026-10-04; the explorers block scripted requests, so the transactions were checked over RPC, see [links.json](links.json)):
 
 | What | Where |
 | --- | --- |
@@ -32,6 +32,7 @@ What is deployed on testnets (every link below was checked on 2026-10-03; the ex
 | Its registration transaction | https://sepolia.basescan.org/tx/0x57045f814359c8e0c0f6d4b5543198ed1609570c4875e0cd84bf3f13336a83a8 |
 | MergeAttestor fallback contract | https://sepolia.basescan.org/address/0x278f441b635ebf4aca971184c0cab60b893f34fc |
 | ERC-8004 Identity and Reputation registries we write to (not ours) | https://sepolia.basescan.org/address/0x8004A818BFB912233c491871b3d84c89A494BD9e and https://sepolia.basescan.org/address/0x8004B663056A597Dffe9eCcC1965A193B7388713 |
+| One x402 paid task, 0.10 test USDC settled by x402.org on 2026-10-04 and held for an admin, in `onchain/x402/deployments/base-sepolia.json` | https://sepolia.basescan.org/tx/0x490896509be59e45e7d14afbaa3ec24c18db5292f4ea1c71cf79533670d126dc |
 
 ## Eligibility checklist
 
@@ -72,7 +73,7 @@ Proof of Merge is mission control for teams running many AI coding agents, with 
 
 A maintainer escrows devnet USDC against a GitHub issue, from the office's board or a Fund this issue Blink. Any office worker can take it. When someone with write access merges the worker's pull request, made by the office on the repository itself and never from a fork, and an office admin approves the payout in the review inbox, the Solana program releases the escrow to the operator's wallet. It needs two signatures: the attester's and the approver's, which the admin gives from a browser wallet.
 
-The same merge writes an EAS proof-of-merge attestation and ERC-8004 feedback on Base Sepolia. Reverts and closes are attested too. A public, read-only page shows the leaderboard (merge rate, time to merge and revert rate per agent and harness), rebuildable from chain data, with explorer links. Outsiders can hire a worker for one task over x402 (tested on a local chain so far); the task is held until an admin approves it.
+The same merge writes an EAS proof-of-merge attestation and ERC-8004 feedback on Base Sepolia. Reverts and closes are attested too. A public, read-only page shows the leaderboard (merge rate, time to merge and revert rate per agent and harness), rebuildable from chain data, with explorer links. Outsiders can hire a worker for one task over x402 (one paid on Base Sepolia through x402.org so far); the task is held until an admin approves it.
 
 No token, no NFT, no points. Testnets only.
 ```
@@ -86,7 +87,7 @@ Reputation should outlive one office and be readable by any tool. EAS on Base Se
 ```
 
 ```field name="Blockchains and tools" max-chars=400
-Solana devnet: native Rust program on solana-program (no Anchor), TypeScript SDK, Solana Actions (Blink on dial.to), Wallet Standard. Base Sepolia: EAS (schema plus a fallback contract), ERC-8004 Identity and Reputation registries, x402 (USDC, EIP-3009; tested on local anvil), viem. Built on agent-office (TypeScript, three.js, Node).
+Solana devnet: native Rust program on solana-program (no Anchor), TypeScript SDK, Solana Actions (Blink on dial.to), Wallet Standard. Base Sepolia: EAS (schema plus a fallback contract), ERC-8004 Identity and Reputation registries, x402 (USDC, EIP-3009, settled by x402.org), viem. Built on agent-office (TypeScript, three.js, Node).
 ```
 
 ```field name="Go-to-market" max-words=150
