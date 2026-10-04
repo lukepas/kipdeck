@@ -1,0 +1,181 @@
+/* UGC Army design tokens: the one source of color, type, line, radius and motion for every page (the
+   3D office, the 2D view, login/join/claim and the /pom/ showcase). DESIGN.md explains the rules
+   behind them. Values are written as hex first (every browser) and again as OKLCH where supported;
+   the two describe the same color.
+
+   The calm floor is achromatic slate. Hue only marks an exception, and each state has a shape too:
+     needs you  --signal  solid diamond       stuck   --stuck  hollow triangle with a bar
+     to review  --review  hollow circle, dot  working --working steel, no glyph
+     proof      --proof   violet, on-chain only (escrow, EAS, ERC-8004, x402, /pom/)
+     settled    --settled the small "settled on devnet" tick only, never a fill */
+
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  src: url('./fonts/archivo-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-display: swap;
+  src: url('./fonts/archivo-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('./fonts/jetbrains-mono-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces step by tone: void (page and scene), then panels, raised, hover/selected. */
+  --void: #0d131a;
+  --surface-1: #141b23;
+  --surface-2: #1a222c;
+  --surface-3: #212a35;
+  --line: #26313d;
+  --line-strong: #3a4756;
+  --text: #e8ecef;
+  --muted: #8a97a5;
+  --faint: #5f6c7a;
+
+  /* State hues, each always paired with its glyph (ui/icons.ts). */
+  --signal: #ff6a1a;
+  --stuck: #ff4d5e;
+  --review: #f5c542;
+  --working: #c9d2dc;
+  --proof: #a68bff;
+  --settled: #3ddc97;
+  /* Text on a filled Signal button. */
+  --on-signal: #0d131a;
+
+  /* Faint fills behind a state (a row, a chip): the hue at low strength over the surface. */
+  --signal-tint: rgb(255 106 26 / .12);
+  --stuck-tint: rgb(255 77 94 / .12);
+  --review-tint: rgb(245 197 66 / .10);
+  --proof-tint: rgb(166 139 255 / .12);
+  --working-tint: rgb(201 210 220 / .06);
+
+  /* Type: Archivo for display and UI (one family keeps the bundle small), JetBrains Mono for real data only. */
+  --font-ui: 'Archivo', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --stretch-display: 118%;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Line and shape: 1px hairlines, 4px corners (2px on chips), no shadows on dense panels. */
+  --radius: 4px;
+  --radius-chip: 2px;
+  --focus: 0 0 0 2px var(--void), 0 0 0 4px var(--signal);
+
+  /* Only HUD pieces floating over the 3D canvas get a fill you can half see through, and one soft shadow. */
+  --hud-fill: rgb(20 27 35 / .85);
+  --hud-shadow: 0 6px 24px rgb(0 0 0 / .35);
+  --scrim: rgb(5 8 12 / .62);
+
+  /* Motion marks a change of state, never decoration (DESIGN.md). */
+  --ease: cubic-bezier(.2, 0, 0, 1);
+  --t-ui: 120ms;
+
+  /* The names the office's older sheets used, pointed at the new tokens. New rules use the names above. */
+  --ink: var(--text);
+  --paper: var(--surface-1);
+  --paper-2: var(--surface-2);
+  --accent: var(--signal);
+  --accent-ink: var(--on-signal);
+  --good: var(--settled);
+  --warn: var(--review);
+  --bad: var(--stuck);
+  --info: var(--working);
+  --shadow: none;
+  --font: var(--font-ui);
+}
+
+@supports (color: oklch(0% 0 0)) {
+  :root {
+    --void: oklch(18.4% 0.017 252.6);
+    --surface-1: oklch(21.9% 0.019 252.1);
+    --surface-2: oklch(24.9% 0.022 254.2);
+    --surface-3: oklch(28.1% 0.024 253.7);
+    --line: oklch(30.8% 0.026 250.9);
+    --line-strong: oklch(39.3% 0.031 252.2);
+    --text: oklch(94.1% 0.006 239.8);
+    --muted: oklch(67.1% 0.026 250.2);
+    --signal: oklch(70.2% 0.199 43);
+    --stuck: oklch(67.6% 0.213 19.8);
+    --review: oklch(84.4% 0.151 87.9);
+    --working: oklch(86% 0.017 250.9);
+    --proof: oklch(71.1% 0.166 292.4);
+    --settled: oklch(79.7% 0.164 159.7);
+  }
+}
+
+/* The light "print" set: the 2D view's print toggle, /pom/ for judges reading on white, and anything a
+   person prints. Not for the 3D scene. A page opts in with [data-theme=print] on <html>, or follows
+   the system with [data-theme=auto]. */
+:root[data-theme='print'] {
+  color-scheme: light;
+  --void: #f4f6f8;
+  --surface-1: #ffffff;
+  --surface-2: #eef1f4;
+  --surface-3: #e3e8ed;
+  --line: #d5dbe1;
+  --line-strong: #b4bec8;
+  --text: #0d131a;
+  --muted: #56616d;
+  --faint: #8a97a5;
+  --signal: #c2410c;
+  --stuck: #c01f33;
+  --review: #8a5a00;
+  --working: #56616d;
+  --proof: #5b3fd1;
+  --settled: #0f7a4f;
+  --on-signal: #ffffff;
+  --signal-tint: rgb(194 65 12 / .08);
+  --stuck-tint: rgb(192 31 51 / .08);
+  --review-tint: rgb(138 90 0 / .08);
+  --proof-tint: rgb(91 63 209 / .08);
+  --working-tint: rgb(13 19 26 / .04);
+  --hud-fill: rgb(255 255 255 / .9);
+  --hud-shadow: 0 6px 24px rgb(13 19 26 / .12);
+  --scrim: rgb(13 19 26 / .35);
+}
+@media (prefers-color-scheme: light) {
+  :root[data-theme='auto'] {
+    color-scheme: light;
+    --void: #f4f6f8;
+    --surface-1: #ffffff;
+    --surface-2: #eef1f4;
+    --surface-3: #e3e8ed;
+    --line: #d5dbe1;
+    --line-strong: #b4bec8;
+    --text: #0d131a;
+    --muted: #56616d;
+    --faint: #8a97a5;
+    --signal: #c2410c;
+    --stuck: #c01f33;
+    --review: #8a5a00;
+    --working: #56616d;
+    --proof: #5b3fd1;
+    --settled: #0f7a4f;
+    --on-signal: #ffffff;
+    --signal-tint: rgb(194 65 12 / .08);
+    --stuck-tint: rgb(192 31 51 / .08);
+    --review-tint: rgb(138 90 0 / .08);
+    --proof-tint: rgb(91 63 209 / .08);
+    --working-tint: rgb(13 19 26 / .04);
+    --hud-fill: rgb(255 255 255 / .9);
+    --hud-shadow: 0 6px 24px rgb(13 19 26 / .12);
+    --scrim: rgb(13 19 26 / .35);
+  }
+}
