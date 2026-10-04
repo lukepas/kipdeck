@@ -186,6 +186,11 @@ export class Worker {
     return this.body.figure;
   }
 
+  /** Its arms, left and right: a celebration's gesture is laid over their pose for a moment (features/moments). */
+  get arms(): readonly [THREE.Object3D, THREE.Object3D] {
+    return [this.body.armL, this.body.armR];
+  }
+
   /** The provider's letters on its visor and the stripe down its back. */
   setProvider(letters: string, stripe: string) {
     setGlyph(this.body, letters);
