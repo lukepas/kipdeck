@@ -40,9 +40,9 @@ varying float vY;
 varying float vFacing;
 void main() {
   // Brightest looking straight through the middle, nothing at the silhouette (a fresnel the other way round).
-  float body = pow(vFacing, 1.6);
+  float body = pow(max(vFacing, 0.0), 1.6);
   // Up from the floor, strongest at about the unit's chest, gone by the top.
-  float rise = smoothstep(0.0, 0.12, vY) * pow(1.0 - vY, 1.4);
+  float rise = smoothstep(0.0, 0.12, vY) * pow(max(1.0 - vY, 0.0), 1.4);
   // Soft scanlines climbing it, a line every 18 cm.
   float scan = 0.72 + 0.28 * sin((vY * uHeight / 0.18 - uTime * 0.9) * 6.2831853);
   float a = uStrength * body * rise * scan;

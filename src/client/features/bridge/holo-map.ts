@@ -54,9 +54,11 @@ varying float vY;
 varying float vFacing;
 void main() {
   // Brightest at the emitter, gone at the top, soft at the silhouette; thin scanlines climbing it.
-  float rise = pow(1.0 - vY, 1.6);
+  // Every pow() base is kept off zero's wrong side: vY overshoots 1.0 a hair along the top rim, pow() of a
+  // negative is NaN on Apple GPUs, and the bloom blurs one NaN pixel over the whole frame (a black flash).
+  float rise = pow(max(1.0 - vY, 0.0), 1.6);
   float scan = 0.55 + 0.45 * smoothstep(0.6, 1.0, sin((vY * 40.0 - uTime * 1.3) * 6.2831853));
-  float a = 0.07 * rise * scan * (0.4 + 0.6 * pow(vFacing, 0.7)) * uGain;
+  float a = 0.07 * rise * scan * (0.4 + 0.6 * pow(max(vFacing, 0.0), 0.7)) * uGain;
   gl_FragColor = vec4(uColor, a);
   #include <colorspace_fragment>
 }`;

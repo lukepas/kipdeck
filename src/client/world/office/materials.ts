@@ -132,7 +132,7 @@ VIEWPORT_GLASS.onBeforeCompile = (shader) => {
   shader.fragmentShader = shader.fragmentShader.replace(
     '#include <opaque_fragment>',
     `{
-      float fres = pow(1.0 - abs(dot(normalize(normal), normalize(vViewPosition))), 3.0);
+      float fres = pow(max(1.0 - abs(dot(normalize(normal), normalize(vViewPosition))), 0.0), 3.0);
       // Thicker and bluer at a slant, and a soft sheen from the room's light down the pane.
       diffuseColor.a = mix(diffuseColor.a, 0.55, fres);
       outgoingLight += vec3(0.03, 0.065, 0.085) * (0.1 + fres) + vec3(0.008, 0.014, 0.018) * smoothstep(-1.0, 1.0, normalize(vViewPosition).y);

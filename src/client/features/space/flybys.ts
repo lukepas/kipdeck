@@ -80,7 +80,7 @@ void main() {
   // A soft terminator: the day side fades into night over a broad band, the atmosphere tinting it.
   float lit = smoothstep(-0.18, 0.42, ndl);
   float dusk = smoothstep(-0.25, 0.05, ndl) * (1.0 - smoothstep(0.05, 0.35, ndl));
-  float rim = pow(1.0 - max(dot(n, normalize(vView)), 0.0), 2.5);
+  float rim = pow(max(1.0 - max(dot(n, normalize(vView)), 0.0), 0.0), 2.5);
   vec3 outc = col * (0.02 + 0.98 * lit) + uAtmo * dusk * 0.12 + uAtmo * rim * 0.6 * (0.15 + 0.85 * lit);
   gl_FragColor = vec4(outc * uGain, 1.0);
   #include <colorspace_fragment>
@@ -96,7 +96,7 @@ varying vec3 vView;
 void main() {
   vec3 n = normalize(vN);
   float edge = 1.0 - abs(dot(n, normalize(vView)));
-  float glow = pow(edge, 4.0) * smoothstep(-0.3, 0.4, dot(n, uSun));
+  float glow = pow(max(edge, 0.0), 4.0) * smoothstep(-0.3, 0.4, dot(n, uSun));
   gl_FragColor = vec4(uAtmo * glow * 0.9 * uGain, 1.0);
   #include <colorspace_fragment>
 }`;

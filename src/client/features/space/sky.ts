@@ -96,7 +96,7 @@ vec3 stars(vec3 d, float n, float prob, float gain, float sizePx, float density)
   // A pixel's size in cells, from the direction (smooth across the cube's seams), not from g (which jumps there).
   float px = max(length(fwidth(d)) * n * 0.5, 1e-4);
   float dist = length(g - at) / px;
-  float mag = pow(hash13(vec3(cell * 1.7, face + n * 3.0)), 5.0);
+  float mag = pow(max(hash13(vec3(cell * 1.7, face + n * 3.0)), 0.0), 5.0);
   // At least a pixel and a half across, a soft gaussian core: a star never shrinks under a pixel and crawls.
   float size = max(1.5, sizePx * (0.7 + 1.1 * mag));
   float core = exp(-(dist * dist) / (size * size * 0.36));
