@@ -2,6 +2,30 @@
 
 The launch film, drawn frame by frame in code. One page (`src/index.html`) renders any frame from a time value. `render.mjs` steps through the frames in headless Chromium and encodes them with the soundtrack. The film has no stock footage, no bitmaps and no AI imagery. The fonts are OFL and the music is synthesized in `audio/`.
 
+## Video
+
+The delivery set lives in `out/final/` (git-ignored, so it is rebuilt from source and never committed):
+
+| File | What it is |
+|------|------------|
+| `ugc-army-30s-16x9.mp4` | 1920x1080, 60 fps, 30.000 s, H.264 High + AAC 320k, -14 LUFS |
+| `ugc-army-30s-9x16.mp4` | 1080x1920, 60 fps. Its own 4x14 layout that respects the feed's safe areas, not a crop |
+| `ugc-army-30s-1x1.mp4` | 1080x1080, 60 fps. The 16:9 grid at a smaller unit, with the colliding modules re-placed |
+| `ugc-army-poster-<format>.png` | The poster frame at 14.9 s: the thesis over the merged grid |
+| `ugc-army-teaser-6s.webm`, `.gif` | The merge drop, 12.0-18.0 s, muted and looping (the seam is a cut on the downbeat) |
+| `CREDITS.md` | Fonts and their licences, the upstream project, the tools (copied from `assets/CREDITS.md`) |
+
+To rebuild it (about 15 minutes per film on an M-series Mac):
+
+```sh
+node render.mjs --format 16x9 --out out/final/ugc-army-30s-16x9.mp4
+node render.mjs --format 9x16 --out out/final/ugc-army-30s-9x16.mp4
+node render.mjs --format 1x1  --out out/final/ugc-army-30s-1x1.mp4
+python3 tools/deliver.py      # posters, teaser, then checks every film
+```
+
+`deliver.py` exits non-zero unless each film is H.264 High yuv420p at its size, 60 fps, 1800 frames and 30.000 s, carries AAC audio, and measures -14 +/- 1 LUFS integrated with a true peak at or below -1 dBTP. Run `tools/verify.py` on a film for the deeper sync and type checks.
+
 ## Quick start
 
 All commands run from `video/`. Node 22, `ffmpeg`/`ffprobe` (Homebrew's are picked up from `/opt/homebrew/bin`) and a Chromium for `playwright-core` are needed. The repo's root `node_modules` provides `three` and `playwright-core`, so nothing needs installing here.
@@ -11,6 +35,7 @@ npm run preview            # whole film, 640x360 @ 30 fps, ~35 s -> out/ugc-army
 npm run preview:vertical   # same in 9:16 (360x640)
 npm run render             # final 1920x1080 @ 60 fps, ~10 min -> out/ugc-army-16x9.mp4
 npm run render:vertical    # final 1080x1920 @ 60 fps
+npm run render:square      # final 1080x1080 @ 60 fps (preview:square for a quick look)
 npm run poster             # the end card's last frame as a PNG poster -> out/stills/16x9-29.500.png
 npm test                   # engine unit tests (easing, PRNG, decode, timeline, grid, word space)
 npm run audio              # re-synthesize the soundtrack and beatmap (see audio/)
@@ -22,8 +47,8 @@ If no browser is found, run `npx playwright-core install chromium` once.
 
 | Flag | Default | Meaning |
 |------|---------|---------|
-| `--format 16x9\|9x16` | `16x9` | Picks the grid (12x8 or 4x14) and the default size |
-| `--w N`, `--h N` | 1920x1080 or 1080x1920 | Frame size in px (must be even for yuv420p) |
+| `--format 16x9\|9x16\|1x1` | `16x9` | Picks the grid (12x8, 4x14, or 12x8 at a 0.75 unit) and the default size |
+| `--w N`, `--h N` | 1920x1080, 1080x1920 or 1080x1080 | Frame size in px (must be even for yuv420p) |
 | `--fps N` | 60 (30 with `--preview`) | Frame rate. Every frame is `t = from + i / fps` |
 | `--from S`, `--to S` | `0`, `30` | Render a slice. The audio is cut to the same window |
 | `--preview` | off | 1/3 size, 30 fps, JPEG frames, at most 2 motion-blur samples, x264 `veryfast` |
@@ -106,6 +131,7 @@ video/
   audio/                  the synth that writes soundtrack.wav and beatmap.json
   test/                   node:test unit tests for the pure engine modules
   tools/contact.py        contact sheet of stills, for quick visual review
+  tools/deliver.py        posters, teaser and the checks for out/final
 ```
 
 ## Writing a scene
@@ -139,6 +165,8 @@ The colours reach the frame unchanged. The Three.js pass works on display values
 Type uses Archivo for display (wght 100-900, wdth 62-125, -0.04em tracking), Inter Tight 500/700 for UI labels (caps, +0.08em), and JetBrains Mono 400/700 for data. At 1080p the type scale is `xxl 300, xl 220, l 160, m 120, data 64, label 28, tag 20`. In 9:16, display sizes start at 196 px so they stay above 18% of the frame width. Hashes are never set below 64 px at 1080p.
 
 The grid is 12x8 in 16:9 with 5% / 7.4% margins, and 4x14 in 9:16. 16:9 uses broadcast action-safe (93%) and title-safe (90%). 9:16 keeps titles out of the top 14%, the bottom 20% and the right 12%, which is where feed UI sits.
+
+1:1 (`design.square`) keeps the 16:9 grid and every 16:9 placement, with the unit `u` scaled by `SQUARE_U` (0.75) because its columns are 56% as wide. Scenes branch on `design.square` only where the 16:9 composition still collides: PR #1 and the agent-07 card take more columns, the escrow's release tx and the EAS schema UID move out of the column beside the counter and the ledger, the x402 flaps shrink so the response keeps its column, and the end-card repo URL breaks after the org. The 9:16 layout is not used for 1:1, because its 4x14 grid squeezed into a square stacks type on top of the modules.
 
 ## Status
 
