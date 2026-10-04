@@ -26,6 +26,7 @@ import {
 } from './layout.js';
 import { buildCancel, buildClaim, buildCreateAta, buildFund, buildInit, buildRefund, buildRelease } from './builders.js';
 import { encodeBase58 } from './base58.js';
+import { buildAdvanceNonce, readNonceAccount } from './nonce.js';
 import { DEVNET_RPC, Rpc, RpcError, escrowErrorOf } from './rpc.js';
 import { compileMessage, partiallySignedTransaction, signTransaction, type TxInstruction } from './tx.js';
 import { pickRef, type Bounty, type BountyEscrow, type BountyRef, type ClaimParams, type Contribution, type OpenParams, type Receipt, type Signer, type TokenInfo } from './types.js';
@@ -84,6 +85,11 @@ export async function listBountiesByRepo(rpc: Rpc, programId: Address, repo: str
     .filter((x) => x.account.owner === programId)
     .map(({ address, account }) => ({ ...decodeBounty(account.data), address, repo: name }))
     .sort((a, b) => a.issue - b.issue || a.nonce - b.nonce);
+}
+
+export interface PrepareReleaseOptions {
+  /** A durable nonce account whose authority is the approver: the release then waits as long as needed. */
+  nonceAccount?: Address;
 }
 
 export class SolanaEscrow implements BountyEscrow {
@@ -171,13 +177,23 @@ export class SolanaEscrow implements BountyEscrow {
     const { blockhash, lastValidBlockHeight } = await this.rpc.latestBlockhash();
     const signers = [feePayer, ...others.filter((k) => k.publicKey !== feePayer.publicKey)];
     const { wire, signature } = signTransaction(compileMessage(feePayer.publicKey, instructions, blockhash), signers);
+    return this.sendSigned(wire, signature, lastValidBlockHeight);
+  }
+
+  /**
+   * Sends a transaction that is already fully signed and waits for it: its signature and the escrow
+   * events it logged. Without `lastValidBlockHeight` (a durable-nonce transaction has none) only the
+   * confirm timeout bounds the wait.
+   */
+  async sendSigned(wire: Uint8Array, signature: string, lastValidBlockHeight?: number): Promise<{ signature: string; events: EscrowEvent[] }> {
+    await this.assertCluster();
     await this.rpc.send(wire);
     const deadline = Date.now() + (this.opts.confirmMs ?? 60_000);
     for (;;) {
       const status = await this.rpc.signatureStatus(signature);
       if (status?.err) throw escrowErrorOf(status.err) ?? new RpcError(`transaction ${signature} failed: ${JSON.stringify(status.err)}`);
       if (status?.confirmationStatus === 'confirmed' || status?.confirmationStatus === 'finalized') break;
-      if (Date.now() > deadline || (await this.rpc.blockHeight()) > lastValidBlockHeight) throw new RpcError(`transaction ${signature} wasn't confirmed in time`);
+      if (Date.now() > deadline || (lastValidBlockHeight !== undefined && (await this.rpc.blockHeight()) > lastValidBlockHeight)) throw new RpcError(`transaction ${signature} wasn't confirmed in time`);
       await new Promise((ok) => setTimeout(ok, this.opts.pollMs ?? 500));
     }
     let events: EscrowEvent[] = [];
@@ -233,8 +249,10 @@ export class SolanaEscrow implements BountyEscrow {
   /**
    * A Release signed by the attester, for an approver's wallet to sign, pay for and send (base64):
    * the approver key never has to sit on the office's machine. Checked with the program's rules first.
+   * With `nonceAccount` (a durable nonce the approver is the authority of) it doesn't expire after a
+   * minute or so: it stays good until that nonce is advanced, so the approver can sign it much later.
    */
-  async prepareRelease(ref: BountyRef, params: ReleaseParams, attester: Signer, approver: Address): Promise<string> {
+  async prepareRelease(ref: BountyRef, params: ReleaseParams, attester: Signer, approver: Address, opts: PrepareReleaseOptions = {}): Promise<string> {
     const att = this.keypair(attester, 'attester');
     await this.assertCluster();
     const [b, now] = await Promise.all([this.must(ref), this.now()]);
@@ -242,6 +260,12 @@ export class SolanaEscrow implements BountyEscrow {
     const held = vault && vault.data.length === 165 ? new DataView(vault.data.buffer, vault.data.byteOffset).getBigUint64(64, true) : 0n;
     machine.release({ ...b }, { attester: att.publicKey, approver, prNumber: params.prNumber, mergeSha: params.mergeSha, mergedByHash: params.mergedByHash, vault: held }, now);
     const ixn = buildRelease({ programId: this.programId, payer: approver, attester: att.publicKey, approver, bounty: b.address, mint: b.mint, wallet: b.claimantWallet!, ...params });
+    if (opts.nonceAccount) {
+      const nonce = await readNonceAccount(this.rpc, opts.nonceAccount);
+      if (nonce.authority !== approver) throw new Error(`the nonce account ${opts.nonceAccount} is advanced by ${nonce.authority}, not the approver ${approver}`);
+      const message = compileMessage(approver, [buildAdvanceNonce(opts.nonceAccount, approver), ixn], nonce.nonce);
+      return Buffer.from(partiallySignedTransaction(message, [att])).toString('base64');
+    }
     const { blockhash } = await this.rpc.latestBlockhash();
     return Buffer.from(partiallySignedTransaction(compileMessage(approver, [ixn], blockhash), [att])).toString('base64');
   }

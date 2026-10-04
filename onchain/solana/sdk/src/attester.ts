@@ -108,12 +108,13 @@ export class Attester {
   /**
    * The Release for an approver who signs in a browser wallet: checked like release(), signed by the
    * attester, with the approver's slot left for the wallet, which also pays the fee and sends it.
-   * Base64. Only an escrow on a cluster can build one.
+   * Base64. Only an escrow on a cluster can build one. With `nonceAccount` it waits on a durable
+   * nonce instead of expiring with its blockhash (see nonce.ts).
    */
-  async prepareRelease(ref: BountyRef, facts: PullFacts, approver: Address): Promise<string> {
+  async prepareRelease(ref: BountyRef, facts: PullFacts, approver: Address, opts: { nonceAccount?: Address } = {}): Promise<string> {
     const params = this.releaseParams(facts);
-    const e = this.escrow as BountyEscrow & { prepareRelease?: (ref: BountyRef, params: ReleaseParams, attester: Signer, approver: Address) => Promise<string> };
+    const e = this.escrow as BountyEscrow & { prepareRelease?: (ref: BountyRef, params: ReleaseParams, attester: Signer, approver: Address, opts?: { nonceAccount?: Address }) => Promise<string> };
     if (!e.prepareRelease) throw new Error(`${this.escrow.network} has no wallet to sign a release with`);
-    return e.prepareRelease(ref, params, this.key, approver);
+    return e.prepareRelease(ref, params, this.key, approver, opts);
   }
 }

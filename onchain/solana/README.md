@@ -15,7 +15,7 @@ Testnets only. The SDK has no mainnet cluster option, checks the RPC's genesis h
 | `programs/bounty-escrow/tests` | The processor end to end on a host harness that stands in for the System, Token and Associated Token programs |
 | `fixtures/transitions.json` | The table of cases both the Rust and the TypeScript state machines must agree on |
 | `fixtures/vectors.json` | One of each account, instruction and event as bytes, plus PDAs for a fixed program id: both sides are tested against it |
-| `sdk/src` | TypeScript SDK with no runtime dependencies: `SolanaEscrow`, `MockEscrow` (same rules, in memory), builders, `decodeEvents`, the `Attester` checks, the Action (Blink) payloads, the `ao-bounty` CLI |
+| `sdk/src` | TypeScript SDK with no runtime dependencies: `SolanaEscrow`, `MockEscrow` (same rules, in memory), builders, `decodeEvents`, the `Attester` checks, the Action (Blink) payloads, durable-nonce releases and `cosignRelease`, the `ao-bounty` CLI |
 | `sdk/tests` | SDK tests, including litesvm runs of the built `.so` |
 | `scripts/e2e.sh` | Deploy, make the test mint and run one bounty end to end on localnet or devnet, recording the signatures |
 | `deployments/` | Program ids and recorded end-to-end runs per cluster |
@@ -124,6 +124,7 @@ ao-bounty release  --repo --issue --pr <n> --approver-key <file> [--merge-sha <s
 ao-bounty refund   --repo --issue [--funder <a>]
 ao-bounty cancel   --repo --issue [--approver-key <file>]
 ao-bounty address  --repo --issue --attester <a> --approver <a>
+ao-bounty cosign   --tx <base64|@file> --approver-key <file> [--repo <owner/name>] [--yes true]
 # --attester/--approver on any command name the keys a bounty was opened with, when another
 # bounty on the issue has the same nonce under other keys. --merged-by-hash is mergedByHash(id, secret).
 
@@ -143,5 +144,7 @@ const attester = new Attester(escrow, readKeypair(`${keys}/solana-attester.json`
 await attester.claim(ref, pullFacts, operatorWallet);                       // refuses forks
 await attester.release(ref, pullFacts, readKeypair(`${keys}/solana-approver.json`)); // refuses bot merges
 ```
+
+A release can also wait on a durable nonce: `prepareRelease(ref, params, attester, approver, { nonceAccount })` builds it on a nonce account the approver is the authority of, so it stays valid until that nonce moves instead of for the minute a blockhash lasts. `inspectPreparedRelease` reads one back and refuses anything but the exact Release the bounty on chain calls for, signed by its attester; `cosignRelease` (and `ao-bounty cosign`) then signs it as the approver and sends it. The GitHub Action in [onchain/action](../action/README.md) prepares releases this way.
 
 `MockEscrow` takes the same calls in memory for tests. `fundActionGet` and `buildFundTransaction` build the "Fund this issue" Action payloads; the office serves them under `/api/actions/`.

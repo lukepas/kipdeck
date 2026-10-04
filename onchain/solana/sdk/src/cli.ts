@@ -3,10 +3,12 @@
  * ao-bounty: open, fund, inspect, claim, release and refund bounties from a terminal, on devnet, a
  * local validator, or the mock. `ao-bounty help` lists the commands. Keys are read from files only.
  */
+import { readFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { DEVNET_USDC_MINT, TEST_MINT, isAddress, readKeypair } from './keys.js';
+import { cosignRelease, inspectPreparedRelease } from './cosign.js';
+import { DEVNET_USDC_MINT, TEST_MINT, isAddress, readKeypair, type Keypair } from './keys.js';
 import { MockEscrow } from './mock.js';
 import { SolanaEscrow } from './solana.js';
 import { findBountyPda, normalizeRepo } from './layout.js';
@@ -32,6 +34,10 @@ Commands:
   cancel   --repo --issue [--approver-key <file>]     Call a bounty off (its creator, or the approver)
   address  --repo --issue --attester <a> --approver <a>
                                                       Print a bounty's account address
+  cosign   --tx <base64|@file> --approver-key <file> [--repo <owner/name>] [--yes true]
+                                                      Check a release the attester prepared (the
+                                                      GitHub Action does), then sign and send it as
+                                                      the approver; without --yes it only shows it
 
 Options:
   --backend <b>    solana-devnet (default), solana-localnet or mock
@@ -178,6 +184,23 @@ export async function main(argv: string[], out: (line: string) => void = console
     case 'cancel': {
       const approver = flags['approver-key'] ? signer(flags, escrow, 'approver-key') : undefined;
       done('cancelled', await escrow.cancel(refOf(flags), signer(flags, escrow), approver));
+      return 0;
+    }
+    case 'cosign': {
+      if (!(escrow instanceof SolanaEscrow)) throw new Error('cosign needs a cluster (solana-devnet or solana-localnet)');
+      const tx = need(flags, 'tx');
+      const b64 = tx.startsWith('@') ? readFileSync(tx.slice(1), 'utf8') : tx;
+      const repo = flags.repo ? normalizeRepo(flags.repo) : undefined;
+      const r = await inspectPreparedRelease(escrow, b64, { repo });
+      const { decimals, symbol } = await escrow.token();
+      out(`pays ${formatAmount(r.amount, decimals)} ${symbol} to ${r.claimant} for PR #${r.prNumber}${repo ? ` on ${repo}` : ''}, issue #${r.bounty.issue}`);
+      out(`bounty ${r.bounty.address}, merge ${r.mergeSha ?? 'not recorded'}${r.nonceAccount ? `, durable nonce ${r.nonceAccount}` : ''}`);
+      if (flags.yes !== 'true') {
+        out('not sent: add --yes true to sign it as the approver and send it');
+        return 0;
+      }
+      const approver = signer(flags, escrow, 'approver-key', path.join(KEY_DIR, 'solana-approver.json')) as Keypair;
+      done('released', await cosignRelease(escrow, b64, approver, { repo }));
       return 0;
     }
     default:
