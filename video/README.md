@@ -37,6 +37,26 @@ The encode settings are H.264 High, yuv420p tagged BT.709 limited range, CRF 16 
 
 `out/` is git-ignored.
 
+## Reviewing a render
+
+Three Python tools (Pillow plus Homebrew's `ffmpeg`) check a finished film. Run `hits.py` straight after a full render, because the next render clears `out/frames/`.
+
+```sh
+python3 tools/hits.py out/review-r1/hits                        # the PNG frame at every beatmap hit
+python3 tools/sheet.py out/ugc-army-r1.mp4 out/review-r1/sheet-16x9.png   # one frame every 0.5 s, timestamped
+python3 tools/sheet.py out/ugc-army-9x16-preview.mp4 out/review-r1/sheet-9x16.png --cols 12 --width 240
+python3 tools/verify.py out/ugc-army-r1.mp4                     # streams, sync and loudness
+```
+
+`hits.py` writes one still per hit frame, named `<t>s-f<frame>-<hit names>.png`. Hits that share a frame share a file. `sheet.py` pulls frames by index (every 30th at 60 fps), so each cell is exactly `t = k * 0.5`.
+
+`verify.py` exits non-zero when a check fails. It checks:
+
+- the streams: codecs, size, colour tags, frame count and both durations against the beatmap's 30 s
+- picture sync: the mean colour of the frames around each `flash` hit. `flash.white` has to be paper on frame `round(t * fps)` and not before, and `invert` has to change the frame on its own frame
+- audio sync: the sharpest attack within 50 ms of each impact, drop, flash and stamp hit in the mp4's own audio. Hits whose attack is under 10 dB (masked by a riser) are listed but not scored. It also cross-correlates the mp4's audio with `soundtrack.wav`, so an AAC priming offset shows up as a non-zero lag
+- loudness: EBU R128 integrated loudness against the master, and true peak at or below -1 dBTP
+
 ## How a frame is made
 
 The rendering contract is that `await window.__ready` resolves once fonts, beatmap and GPU are ready. After that, `await window.__render(t)` draws exactly the frame at `t` seconds. The page has no `requestAnimationFrame` clock, no wall-clock time and no `Math.random`. Rendering the same `t` twice gives byte-identical PNGs, in any order. The page also takes URL params (`w`, `h`, `fps`, `format`, `guides`, `grain`, `blur`, `t`), so `src/index.html?t=14` opened through any static server shows one frame.
