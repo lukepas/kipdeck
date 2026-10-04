@@ -22,12 +22,13 @@ Entry: Proof of Merge, a fork of agent-office (MIT, by webdevcody / AgentSystemL
 - Our fork: {{FORK_URL}}
 - Public showcase: {{SHOWCASE_URL}}
 
-What is deployed on testnets (every link below was checked on 2026-10-03, the x402 payment on 2026-10-04; the explorers block scripted requests, so the transactions were checked over RPC, see [links.json](links.json)):
+What is deployed on testnets (every link below was checked on 2026-10-03, the x402 payment and the fifth bounty on 2026-10-04; the explorers block scripted requests, so the transactions were checked over RPC, see [links.json](links.json)):
 
 | What | Where |
 | --- | --- |
 | Escrow program, Solana devnet | https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet |
-| A demo bounty released on devnet (no GitHub merge behind it); three more after the 2026-10-03 upgrade, one paid through the approver-wallet path (release `2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r`), the latest on 2026-10-04 (release `2sWD8aUJ6Wd5xEQcTxGK2tRarfr6TuzjYLgppmTrTtxBxwo6T3XP42EoYCypq9oXFQQ3Zj6TthXEMxoUNuVZCgNF`), all in `onchain/solana/deployments/devnet.json` | https://explorer.solana.com/tx/2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc?cluster=devnet |
+| A demo bounty released on devnet (no GitHub merge behind it); three more after the 2026-10-03 upgrade, one paid through the approver-wallet path (release `2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r`), one after the review fixes on 2026-10-04 (release `2sWD8aUJ6Wd5xEQcTxGK2tRarfr6TuzjYLgppmTrTtxBxwo6T3XP42EoYCypq9oXFQQ3Zj6TthXEMxoUNuVZCgNF`), all in `onchain/solana/deployments/devnet.json` | https://explorer.solana.com/tx/2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc?cluster=devnet |
+| A fifth demo bounty on 2026-10-04, claimed by the GitHub Action (`onchain/action`) against a fake GitHub API, so no real merge, and released by the approver's `ao-bounty cosign` on a durable nonce; the Base Sepolia attestation that run wrote was revoked | https://explorer.solana.com/tx/4PYnNQZAi23BGUQ84EqDJfgSZABjqqKxPeyan6frLG25H6jWY8F6qrLGyRituXNXeHujZd29uWPXhoDN7MSdYsUe?cluster=devnet |
 | Proof-of-merge schema, EAS on Base Sepolia | https://base-sepolia.easscan.org/schema/view/0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900 |
 | Its registration transaction | https://sepolia.basescan.org/tx/0x57045f814359c8e0c0f6d4b5543198ed1609570c4875e0cd84bf3f13336a83a8 |
 | MergeAttestor fallback contract | https://sepolia.basescan.org/address/0x278f441b635ebf4aca971184c0cab60b893f34fc |
@@ -49,7 +50,7 @@ What is deployed on testnets (every link below was checked on 2026-10-03, the x4
 Paste into the prior work question, or "anything else judges should know". It is the same text as [disclosure.md](disclosure.md), where the commit list and the third-party license table are.
 
 ```field name="Prior work disclosure" max-chars=1500
-Proof of Merge is a fork of agent-office (github.com/AgentSystemLabs/agent-office), MIT, created by webdevcody / AgentSystemLabs with community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D multiplayer office, desks where coding agent CLIs run in shared live terminals, voice, the GitHub issue and PR boards and the deploy scripts. Everything up to upstream commit 665aeec (2026-09-30) is theirs, and so are 16 later upstream pull requests that our branch carries because it is rebased on upstream. Ours, all written during the contest (our first commit is 2026-10-01): mission control (attention ranking, goals and milestones, review inbox, timeline, reminders), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and everything on-chain: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, x402 paid tasks, EAS proof-of-merge attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are exactly the ones by our authors in 665aeec..{{HEAD_SHA}}; the list is generated from git in launch/chain/disclosure.md. Testnets only. Diff: {{DIFF_URL}}
+Proof of Merge is a fork of agent-office (github.com/AgentSystemLabs/agent-office), MIT, created by webdevcody / AgentSystemLabs with community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D multiplayer office, desks where coding agent CLIs run in shared live terminals, voice, the GitHub issue and PR boards and the deploy scripts. Everything up to upstream commit 665aeec (2026-09-30) is theirs, and so are 16 later upstream pull requests that our branch carries because it is rebased on upstream. Ours, all written during the contest (our first commit is 2026-10-01): mission control (attention ranking, goals and milestones, review inbox, timeline, reminders), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and everything on-chain: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS proof-of-merge attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are exactly the ones by our authors in 665aeec..{{HEAD_SHA}}; the list is generated from git in launch/chain/disclosure.md. Testnets only. Diff: {{DIFF_URL}}
 ```
 
 ## Project description
@@ -71,9 +72,9 @@ Teams now run many coding agents at once: Claude Code, Codex, Cursor, Pi. Their 
 ```field name="Solution" max-words=200
 Proof of Merge is mission control for teams running many AI coding agents, with one rule: a person's merge is the only thing that moves money or reputation for an agent's work.
 
-A maintainer escrows devnet USDC against a GitHub issue, from the office's board or a Fund this issue Blink. Any office worker can take it. When someone with write access merges the worker's pull request, made by the office on the repository itself and never from a fork, and an office admin approves the payout in the review inbox, the Solana program releases the escrow to the operator's wallet. It needs two signatures: the attester's and the approver's, which the admin gives from a browser wallet.
+A maintainer escrows devnet USDC against a GitHub issue, from the office's board or a Fund this issue Blink. Any office worker can take it. When someone with write access merges the worker's pull request, made by the office on the repository itself and never from a fork, and an office admin approves the payout in the review inbox, the Solana program releases the escrow to the operator's wallet. It needs two signatures: the attester's and the approver's, which the admin gives from a browser wallet. Repositories can also run the attester as a GitHub Action.
 
-The same merge writes an EAS proof-of-merge attestation and ERC-8004 feedback on Base Sepolia. Reverts and closes are attested too. A public, read-only page shows the leaderboard (merge rate, time to merge and revert rate per agent and harness), rebuildable from chain data, with explorer links. Outsiders can hire a worker for one task over x402 (one paid on Base Sepolia through x402.org so far); the task is held until an admin approves it.
+The same merge writes an EAS proof-of-merge attestation and ERC-8004 feedback on Base Sepolia. Reverts and closes are attested too. A public page shows the leaderboard (merge rate, time to merge, revert rate per agent and harness), rebuilt from chain data. Outsiders can hire a worker for one task over x402 (one paid on Base Sepolia so far), held until an admin approves it.
 
 No token, no NFT, no points. Testnets only.
 ```
@@ -99,7 +100,7 @@ Business: open core. A hosted mission control seat fee for teams, and later a 1 
 ```
 
 ```field name="Demand validation" max-words=80 sources="merged_by_others,agents_ranked,devnet_bounties_released,devnet_test_usdc_released"
-Counted from chain data on the submission day, not estimated. Merged agent PRs attested on Base Sepolia: 0. Agents on the board: 0. Bounties released on Solana devnet: 4, scripted demos of 65 test USDC in all, with no GitHub merge behind them. We will refresh these numbers before submitting.
+Counted from chain data on the submission day, not estimated. Merged agent PRs attested on Base Sepolia: 0. Agents on the board: 0. Bounties released on Solana devnet: 5, scripted demos of 77 test USDC in all, with no GitHub merge behind them. We will refresh these numbers before submitting.
 ```
 
 ```field name="Team" max-words=80
@@ -116,7 +117,7 @@ The six criteria from the rules (section 8), no published weights.
 
 | Criterion | Our answer |
 | --- | --- |
-| Functionality | Program deployed on devnet; demo bounties run open to release there without a real merge; no attestations on Base Sepolia yet (schema registered); Rust host tests, SDK tests with litesvm runs of the built program, the office's tests, local validator and anvil end to end runs |
+| Functionality | Program deployed on devnet; demo bounties run open to release there without a real merge, one claimed by the GitHub Action; one x402 paid task settled on Base Sepolia; no standing attestations on Base Sepolia yet (schema registered, test attestations revoked); Rust host tests, SDK tests with litesvm runs of the built program, the office's tests, local validator and anvil end to end runs |
 | Potential impact | Every team running agent fleets; the board answers a question the whole field argues about, from data anyone can check |
 | Novelty | Which agents' pull requests get merged, as a public, checkable dataset per agent and harness; money and reputation move only on a person's merge, with two signatures and an admin in the loop |
 | UX | Fund from the board or a Blink; approve in the review inbox you already use; a payout toast with an explorer link |

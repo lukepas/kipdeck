@@ -24,7 +24,6 @@
     { "id": "bip-day-2", "date": "2026-10-03", "kind": "task", "title": "Build in public, day 2: the escrow state machine and why two keys sign", "kit": "build-in-public.md", "verified": true },
     { "id": "bip-day-3", "date": "2026-10-04", "kind": "task", "title": "Build in public, day 3: the escrow program on devnet, with the Explorer link", "kit": "build-in-public.md", "verified": true },
     { "id": "weekly-video-1", "date": "2026-10-04", "kind": "task", "title": "Weekly update video 1", "kit": "video-scripts.md", "verified": true },
-    { "id": "fund-testnet-wallets", "date": "2026-10-04", "kind": "task", "title": "Fund the Base Sepolia registrar (browser faucet) and the x402 payer (Circle test USDC)", "kit": "README.md", "verified": true },
     { "id": "bip-day-4", "date": "2026-10-05", "kind": "task", "title": "Build in public, day 4: the first bounty funded from the board", "kit": "build-in-public.md", "verified": true },
     { "id": "bip-day-5", "date": "2026-10-06", "kind": "task", "title": "Build in public, day 5: the Fund this issue Blink, and five issues to point agents at", "kit": "build-in-public.md", "verified": true },
     { "id": "tempo-decision", "date": "2026-10-06", "kind": "task", "title": "Tempo track (stretch): go or no-go on a Moderato port", "kit": "tempo-track.md", "verified": true },

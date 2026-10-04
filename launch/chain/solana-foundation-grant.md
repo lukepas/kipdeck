@@ -30,7 +30,7 @@ Ask: a milestone-based grant (or a convertible grant, if the Foundation prefers 
 ## Pre-existing code disclosure
 
 ```field name="Prior work" max-chars=900
-The escrow program, its SDK and CLI are ours, written from 2026-10-01 during the Colosseum Crypto World's Fair, and deployed on Solana devnet. The first product that uses them is our fork of agent-office, an MIT-licensed open source office for coding agents created by webdevcody / AgentSystemLabs (github.com/AgentSystemLabs/agent-office, first commit 2026-09-25); the office is their work, and this grant does not fund it. The grant funds the program, the SDK, an audit, a GitHub Action and docs, none of which depend on agent-office. Our commits are listed in launch/chain/disclosure.md. Diff: {{DIFF_URL}}
+The escrow program, its SDK and CLI are ours, written from 2026-10-01 during the Colosseum Crypto World's Fair, and deployed on Solana devnet. The first product that uses them is our fork of agent-office, an MIT-licensed open source office for coding agents created by webdevcody / AgentSystemLabs (github.com/AgentSystemLabs/agent-office, first commit 2026-09-25); the office is their work, and this grant does not fund it. The grant funds the program, the SDK, an audit, the GitHub Action (a first version that attests merges and claims bounties is built and ran once on devnet) and docs, none of which depend on agent-office. Our commits are listed in launch/chain/disclosure.md. Diff: {{DIFF_URL}}
 ```
 
 ## Project description
@@ -49,7 +49,7 @@ Budget (proposal, adjust before applying; amounts in USD):
 | --- | --- | --- | --- |
 | M1, month 1 | Multiple attesters (m of n) and a GitHub App attester, so no single office key is the trust point; SDK and CLI 1.0; docs site | Program and SDK released with the shared test vectors; any repository can run the GitHub App attester; devnet bounties paid on 5 public repositories we don't own | {{BUDGET_M1}} |
 | M2, month 2 | Independent security review of the program and fixes; mainnet deployment with the upgrade authority in a multisig | Audit report published; program verified on mainnet; a bug bounty open | {{BUDGET_M2}} |
-| M3, month 3 | Integrations: a GitHub Action that funds and releases, the agent-office fork, and one other agent framework or bounty board | 3 integrations shipped; 50 bounties released on mainnet across 10 repositories; the public board rebuilt from chain data | {{BUDGET_M3}} |
+| M3, month 3 | Integrations: the GitHub Action at 1.0, funding as well as claiming, the agent-office fork, and one other agent framework or bounty board | 3 integrations shipped; 50 bounties released on mainnet across 10 repositories; the public board rebuilt from chain data | {{BUDGET_M3}} |
 
 ## Judging criteria
 

@@ -20,7 +20,7 @@ Every program in this folder asks what existed before and what we built. This pa
 The Colosseum form's prior work answer, at most 1,500 characters:
 
 ```field name="Disclosure (Colosseum)" max-chars=1500
-Proof of Merge is a fork of agent-office (github.com/AgentSystemLabs/agent-office), MIT, created by webdevcody / AgentSystemLabs with community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D multiplayer office, desks where coding agent CLIs run in shared live terminals, voice, the GitHub issue and PR boards and the deploy scripts. Everything up to upstream commit 665aeec (2026-09-30) is theirs, and so are 16 later upstream pull requests that our branch carries because it is rebased on upstream. Ours, all written during the contest (our first commit is 2026-10-01): mission control (attention ranking, goals and milestones, review inbox, timeline, reminders), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and everything on-chain: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, x402 paid tasks, EAS proof-of-merge attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are exactly the ones by our authors in 665aeec..{{HEAD_SHA}}; the list is generated from git in launch/chain/disclosure.md. Testnets only. Diff: {{DIFF_URL}}
+Proof of Merge is a fork of agent-office (github.com/AgentSystemLabs/agent-office), MIT, created by webdevcody / AgentSystemLabs with community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D multiplayer office, desks where coding agent CLIs run in shared live terminals, voice, the GitHub issue and PR boards and the deploy scripts. Everything up to upstream commit 665aeec (2026-09-30) is theirs, and so are 16 later upstream pull requests that our branch carries because it is rebased on upstream. Ours, all written during the contest (our first commit is 2026-10-01): mission control (attention ranking, goals and milestones, review inbox, timeline, reminders), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and everything on-chain: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS proof-of-merge attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are exactly the ones by our authors in 665aeec..{{HEAD_SHA}}; the list is generated from git in launch/chain/disclosure.md. Testnets only. Diff: {{DIFF_URL}}
 ```
 
 A short form, where a field is tiny:
@@ -48,6 +48,7 @@ Where each part lives:
 | Security layer | ours | `src/server/safefs.ts`, `netguard.ts`, `hosts.ts`, `csp.ts`, the environment allowlist in `src/server/workers/env.ts` (a file upstream's refactor created), `src/shared/pulltrust.ts`, `docs/security.md` |
 | Bounties in the office, Blink routes | ours | `src/server/bounties.ts`, `src/server/chain/`, `src/server/http/routes/actions.ts`, `docs/bounties.md` |
 | Solana escrow program and SDK | ours | `onchain/solana/` |
+| GitHub Action attester | ours | `onchain/action/` |
 | x402 paid tasks | ours | `src/server/x402/`, `onchain/x402/`, `docs/x402.md` |
 | Proof of merge, reputation | ours | `src/server/chain/attest.ts`, `onchain/attest/`, `onchain/reputation/`, `docs/proof-of-merge.md`, `docs/reputation.md` |
 | Indexer and public showcase | ours | `onchain/indexer/`, `src/client/showcase/`, `src/shared/showcase.ts`, `docs/showcase.md` |
@@ -75,7 +76,8 @@ The rules ask for the status and ownership of open-source and third-party code (
 | serde_json (Rust crate) | 1.x | MIT OR Apache-2.0 | `onchain/solana` tests |
 | @solana/web3.js, @solana/kit | 1.99.0, 8.4.0 | MIT | `onchain/solana` SDK tests |
 | litesvm | 1.5.0 | MIT | `onchain/solana` tests |
-| viem | 2.57.2 | MIT | `onchain/x402`, `attest`, `reputation`, `indexer` |
+| viem | 2.57.2 | MIT | `onchain/x402`, `attest`, `reputation`, `indexer`, `action` |
+| esbuild | 0.28.2 | MIT | `onchain/action` build (bundles `dist/`) |
 | @x402/core, @x402/evm, @x402/svm | 2.28.0 | Apache-2.0 | `onchain/x402` |
 | @ethereum-attestation-service/eas-sdk | 2.10.0 | MIT | `onchain/attest` |
 | @ethereum-attestation-service/eas-contracts | 1.7.1 | MIT | `onchain/attest` tests |

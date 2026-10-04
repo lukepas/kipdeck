@@ -12,7 +12,7 @@
 - **Paid tasks over x402**: an outsider hires a worker for one task with test USDC; it waits, held, for an admin. Tested end to end on a local anvil chain, and one 0.10 test USDC payment settled on Base Sepolia through x402.org ([transaction](https://sepolia.basescan.org/tx/0x490896509be59e45e7d14afbaa3ec24c18db5292f4ea1c71cf79533670d126dc), [docs](docs/x402.md)).
 - **A public board** at `/pom/`, built from chain data when the office runs the indexer and otherwise from the office's own attestation record, with an explorer link on every row; the GitHub Pages export is rebuilt from chain data alone ([docs](docs/showcase.md)).
 
-What is on chain so far: the escrow program on Solana devnet (`JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`) with scripted demo bounties paid there, the Base Sepolia schema and fallback contract, and no attestations or outside users yet. Nothing here has had a real merge behind a payout yet; see the launch kit's checklist.
+What is on chain so far: the escrow program on Solana devnet (`JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`) with five scripted demo bounties paid there (the last one claimed by the GitHub Action), the Base Sepolia schema and fallback contract, one x402 payment on Base Sepolia, and no standing attestations (the test ones were revoked) or outside users yet. Nothing here has had a real merge behind a payout yet; see the launch kit's checklist.
 
 ### Quickstart in 60 seconds
 
