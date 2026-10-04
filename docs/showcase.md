@@ -16,11 +16,13 @@ The showcase is one public, read-only page that answers "which coding agent's pu
 - **Verify it yourself.** The program id, schema UID, EAS and ERC-8004 registry addresses, the trusted attester, the command that rebuilds the board with no office and no keys, and a "Check on chain now" button that asks `sepolia.base.org` and `api.devnet.solana.com` straight from the reader's browser whether the latest attestation is valid and the escrow program is deployed.
 - **The footer.** "Built on agent-office by webdevcody (MIT)" with a link, the testnet-only notice and a disclosure.
 
-A share card (`og.png`, 1200 x 630) is drawn from the same document: the hero line, the counters and the top three harnesses, in the office's pixel style. Sites that unfurl links show it.
+The page is the Proof ledger, in UGC Army's look ([DESIGN.md](../DESIGN.md)) with violet as its only accent: dark by default, and a light whiteprint when the reader's system asks for light. Its top is the thesis and four totals, each with a *verify* link, beside a *Last merge* panel: the newest merge that shows the whole path, as four steps (the unit's PR, the person's merge, the escrow released, the attestation), next to the proof rail with a lit segment per merge. Under it is a render of the deck from the running office (`src/client/showcase/deck.webp`, taken by `design/shoot.mjs`'s `render` shot), the units on deck now, each as its state's glyph, and the ledger itself: one ruled row per outcome, its proof as violet chips with a short hash and a settled tick (the payout on Solana devnet, the attestation on EAS, the ERC-8004 feedback). Open a row for its money path.
+
+A share card (`og.png`, 1200 x 630) is drawn from the same document: a title block on the deck's grid with the mark, the latest fully proven merge (its PR, its bounty in large type, and the four steps with their short hashes), the totals and the credit. Sites that unfurl links show it.
 
 ## Turning it on
 
-In the office: ⚙️ Settings, Bounties, Public showcase (admins only). Turn it on, then open `/pom/` on the office's address.
+In the office: Settings, Bounties, Public showcase (admins only). Turn it on, then open `/pom/` on the office's address.
 
 Each floor's repository is listed with how it shows:
 
@@ -77,11 +79,11 @@ It writes `index.html`, the bundle, `showcase.json`, `leaderboard.json` and `og.
 | `src/shared/showcase.ts` | `publicShowcase`, the whitelist serializer, and how a repository shows |
 | `src/server/showcase/service.ts` | Gathers the office's data for it |
 | `src/server/showcase/settings.ts` | The admin's settings (`showcase.json` in the data folder) |
-| `src/server/showcase/og.ts` | The share card: a 5 x 7 pixel font drawn straight into a PNG |
+| `src/server/showcase/og.ts` | The share card: a title block in a 5 x 7 pixel font, drawn straight into a PNG |
 | `src/server/http/routes/showcase.ts` | The `/pom/` routes |
 | `src/server/ws/handlers/showcase.ts` | The settings messages, admins only |
-| `src/client/showcase/` | The page, built by `vite.showcase.config.ts` into `dist/showcase` |
-| `src/client/ui/showcase-settings.ts` | Its pane in ⚙️ Settings |
+| `src/client/showcase/` | The page, built by `vite.showcase.config.ts` into `dist/showcase`: `main.ts` (the hero, the strip, the bounties), `ledger.ts` (the ledger rows, the money path and the last merge), `board.ts` (the leaderboard) and `verify.ts` |
+| `src/client/ui/showcase-settings.ts` | Its pane in Settings |
 | `onchain/indexer/src/showcase.ts`, `scripts/showcase.ts` | The static export |
 
 Tests: `tests/showcase.test.ts` (the whitelist, redaction, links, settings, the card, admin-only settings, and the routes: public, GET only, the policy, off by default, rate limited) and `tests/showcase-e2e.test.ts` (the page in a headless browser on a phone and a desktop, from fixture data, through the office's routes; set `SHOWCASE_SHOTS=<dir>` to keep its screenshots). `onchain/indexer/test/showcase.test.ts` covers the export.

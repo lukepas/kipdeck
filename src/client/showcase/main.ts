@@ -3,19 +3,20 @@
 // Pages; either way it reads ./showcase.json next to it (see shared/showcase.ts for what that holds,
 // and what it never does). No cookies, no storage, no inline scripts.
 import './showcase.css';
-import { HARNESSES, type ShowcaseDoc, type ShowcaseEvent, type ShowcaseWorkerState } from '../../shared/showcase';
+import { HARNESSES, type ShowcaseDoc, type ShowcaseWorkerState } from '../../shared/showcase';
 import { $, h } from '../ui/dom';
-import { avatar } from './avatar';
+import { icon, type IconName } from '../ui/icons';
 import { board, type BoardView } from './board';
 import { ago, units, when } from './format';
+import { lastMerge, ledgerRow } from './ledger';
 import { verifyPanel } from './verify';
 
 /** How often the office's live view is asked again, while the tab is open. */
 const REFRESH_MS = 30_000;
 const FEED_PAGE = 12;
-const STATE_LABEL: Record<ShowcaseWorkerState, string> = { working: 'working', 'needs-input': 'needs input', stuck: 'stuck', 'in-review': 'in review', idle: 'idle' };
-
-const ext = (href: string | undefined, text: string, title: string) => (href ? h('a.ext', { href, target: '_blank', rel: 'noopener', title }, text) : null);
+const STATE_LABEL: Record<ShowcaseWorkerState, string> = { working: 'working', 'needs-input': 'needs you', stuck: 'stuck', 'in-review': 'to review', idle: 'parked' };
+/** Each state's glyph, the same shapes as on the deck (ui/icons.ts). */
+const STATE_ICON: Record<ShowcaseWorkerState, IconName> = { working: 'working', 'needs-input': 'needs-you', stuck: 'stuck', 'in-review': 'review', idle: 'parked' };
 
 function viewFromHash(): BoardView {
   const p = new URLSearchParams(location.hash.slice(1));
@@ -24,15 +25,25 @@ function viewFromHash(): BoardView {
 
 function hero(doc: ShowcaseDoc) {
   const c = doc.counters;
-  const tile = (value: string, label: string, href: string | undefined, cls: string) =>
-    h(href ? 'a' : 'div', { class: `counter ${cls}`, ...(href ? { href, target: '_blank', rel: 'noopener', title: 'Where this number comes from' } : {}) }, h('b', {}, value), h('span', {}, label), href ? h('small', {}, 'source') : null);
+  const tile = (value: string, unit: string, label: string, href: string | undefined, cls: string) =>
+    h(
+      'div',
+      { class: `counter ${cls}` },
+      h('b', {}, value),
+      h('i.unit', {}, unit),
+      h('span', {}, label),
+      href ? h('a.verify', { href, target: '_blank', rel: 'noopener', title: 'Where this number comes from' }, 'verify', icon('external', 12)) : h('small', {}, 'no link yet'),
+    );
   $('counters').replaceChildren(
-    tile(String(c.merged), 'agent PRs merged by a person', c.links.merged, 'c1'),
-    tile(c.usdcPaid, 'USDC paid on devnet', c.links.usdcPaid, 'c2'),
-    tile(String(c.maintainers), 'distinct maintainers', c.links.maintainers, 'c3'),
-    tile(String(c.paidWorkers), 'distinct paid agents', c.links.paidWorkers, 'c4'),
+    tile(String(c.merged), 'PRs', 'agent PRs merged by a person', c.links.merged, 'c1'),
+    tile(c.usdcPaid, 'USDC', 'paid on devnet, only on a merge', c.links.usdcPaid, 'c2'),
+    tile(String(c.maintainers), 'people', 'distinct maintainers', c.links.maintainers, 'c3'),
+    tile(String(c.paidWorkers), 'agents', 'distinct paid agents', c.links.paidWorkers, 'c4'),
   );
-  $('source').textContent = `${doc.source === 'chain' ? 'Rebuilt from the chain alone' : 'From the office\'s record of what it attested'}, ${when(doc.asOf)}. ${doc.network.base === 'base-sepolia' ? 'Base Sepolia' : 'A local test chain'}${doc.network.solana === 'none' ? '' : ` and ${doc.network.solana === 'devnet' ? 'Solana devnet' : 'a local validator'}`}.`;
+  $('source').textContent = `${doc.source === 'chain' ? 'Rebuilt from the chain alone' : "From the office's record of what it attested"}, ${when(doc.asOf)}. ${doc.network.base === 'base-sepolia' ? 'Base Sepolia' : 'A local test chain'}${doc.network.solana === 'none' ? '' : ` and ${doc.network.solana === 'devnet' ? 'Solana devnet' : 'a local validator'}`}.`;
+  const latest = doc.events.find((e) => e.links.attestation);
+  $('last-at').textContent = latest ? `last attested ${ago(latest.at)}` : '';
+  lastMerge(doc);
 }
 
 function floor(doc: ShowcaseDoc) {
@@ -45,27 +56,10 @@ function floor(doc: ShowcaseDoc) {
   const strip = $('strip');
   strip.replaceChildren(
     ...live.workers.map((w) =>
-      h('li.worker', { 'data-state': w.state }, avatar(w.name, w.color, 44), h('span.name', {}, w.name), h('span.chip', { 'data-h': w.harness }, HARNESSES[w.harness] ?? w.harness), h('span.state', {}, STATE_LABEL[w.state])),
+      h('li.worker', { 'data-state': w.state }, h('span.glyph', { title: STATE_LABEL[w.state] }, icon(STATE_ICON[w.state], 16)), h('span.name', {}, w.name), h('span.chip', { 'data-h': w.harness }, HARNESSES[w.harness] ?? w.harness), h('span.state', {}, STATE_LABEL[w.state])),
     ),
   );
-  if (!live.workers.length) strip.append(h('li.empty', {}, 'No agents at their desks right now.'));
-}
-
-function agentName(doc: ShowcaseDoc, id: string) {
-  const a = doc.agents.find((x) => x.agentId === id);
-  return a?.label ? a.label.replace(/-/g, ' ') : `Agent #${id}`;
-}
-
-function feedItem(doc: ShowcaseDoc, e: ShowcaseEvent): HTMLElement {
-  const what = e.repo ? `${e.repo}#${e.pr}` : `PR #${e.pr} in a private repo`;
-  return h(
-    'li.item',
-    { 'data-outcome': e.outcome },
-    h('span.badge', {}, e.outcome === 'merged' ? (e.self ? 'self-merged' : 'merged') : e.outcome === 'reverted' ? 'reverted' : 'closed'),
-    h('div.body', {}, h('div.title', {}, h('b', {}, what), e.title ? ` ${e.title}` : ''), h('div.meta', {}, h('span.chip', { 'data-h': e.harness }, HARNESSES[e.harness] ?? e.harness), ` ${agentName(doc, e.agentId)}`, e.maintainer ? ` · ${e.outcome} by ${e.maintainer.slice(0, 10)}` : '', ` · ${ago(e.at)}`)),
-    e.paid ? h('span.paid', {}, `${units(e.paid.amount, e.paid.decimals)} USDC`) : null,
-    h('span.links', {}, ext(e.links.solana, 'Solana', 'The bounty payout on Solana Explorer (devnet)'), ext(e.links.attestation, 'EAS', 'The proof-of-merge attestation on EAS (Base Sepolia)'), ext(e.links.feedback, '8004', 'The ERC-8004 feedback transaction (Base Sepolia)')),
-  );
+  if (!live.workers.length) strip.append(h('li.empty', {}, 'No units on deck right now.'));
 }
 
 function feed(doc: ShowcaseDoc) {
@@ -73,7 +67,7 @@ function feed(doc: ShowcaseDoc) {
   let shown = FEED_PAGE;
   const more = $('feed-more') as HTMLButtonElement;
   const paint = () => {
-    list.replaceChildren(...doc.events.slice(0, shown).map((e) => feedItem(doc, e)));
+    list.replaceChildren(...doc.events.slice(0, shown).map((e) => ledgerRow(doc, e)));
     if (!doc.events.length) list.append(h('li.empty', {}, 'No merged agent work on chain yet.'));
     more.classList.toggle('hidden', shown >= doc.events.length);
   };

@@ -1,10 +1,11 @@
-// The showcase's share card (og.png, 1200 x 630): the hero line, the counters and the top rows of the
-// board per harness, drawn in a 5 x 7 pixel font straight into a PNG. No browser, no canvas and no
+// The showcase's share card (og.png, 1200 x 630): a UGC Army title block on the deck's grid, with the
+// Formation mark, the latest merge that shows the whole money path (its PR, its bounty in large type and
+// the four steps with their short hashes), the totals and the credit, drawn in a 5 x 7 pixel font
+// straight into a PNG. No browser, no canvas and no
 // dependencies (node:zlib only), so the office can draw it on request and onchain/indexer's static
 // export can draw it at build time, from the same public document the page shows.
 import { deflateSync } from 'node:zlib';
-import { leaderboard, rateLabel } from '../../shared/reputation.js';
-import { asRepEvents, HARNESSES, type ShowcaseDoc } from '../../shared/showcase.js';
+import { HARNESSES, type ShowcaseDoc } from '../../shared/showcase.js';
 
 export const OG_WIDTH = 1200;
 export const OG_HEIGHT = 630;
@@ -66,13 +67,18 @@ const GLYPHS: Record<string, string[]> = {
 
 type RGB = readonly [number, number, number];
 const hex = (h: string): RGB => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
-const INK = hex('#2b2d42');
-const PAPER = hex('#fffaf3');
-const PAPER_2 = hex('#fff1de');
-const ACCENT = hex('#ff8a5b');
-const GOOD = hex('#06d6a0');
-const MUTED = hex('#7a6f65');
-const SKY = hex('#bfe3ff');
+// The UGC Army tokens (src/client/styles/tokens.css), dark set.
+const VOID = hex('#0d131a');
+const SURFACE = hex('#141b23');
+const GRID_MINOR = hex('#151c24');
+const GRID_MAJOR = hex('#1c2530');
+const LINE = hex('#26313d');
+const LINE_STRONG = hex('#3a4756');
+const TEXT = hex('#e8ecef');
+const MUTED = hex('#8a97a5');
+const FAINT = hex('#5f6c7a');
+const PROOF = hex('#a68bff');
+const SETTLED = hex('#3ddc97');
 
 class Raster {
   readonly px: Buffer;
@@ -96,11 +102,17 @@ class Raster {
       }
     }
   }
-  /** A chunky panel: ink border and a drop shadow, as the office's panels have. */
-  panel(x: number, y: number, w: number, h: number, fill: RGB, b = 6) {
-    this.rect(x + b, y + b, w, h, INK);
-    this.rect(x, y, w, h, INK);
-    this.rect(x + b, y + b, w - 2 * b, h - 2 * b, fill);
+  /** A straight stroke `w` pixels wide, from (x0, y0) to (x1, y1). */
+  line(x0: number, y0: number, x1: number, y1: number, w: number, c: RGB) {
+    const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0)));
+    for (let i = 0; i <= n; i++) this.rect(x0 + ((x1 - x0) * i) / n - w / 2, y0 + ((y1 - y0) * i) / n - w / 2, w, w, c);
+  }
+  /** A 1-pixel ruled box (the title block's frame). */
+  frame(x: number, y: number, w: number, h: number, c: RGB, t = 1) {
+    this.rect(x, y, w, t, c);
+    this.rect(x, y + h - t, w, t, c);
+    this.rect(x, y, t, h, c);
+    this.rect(x + w - t, y, t, h, c);
   }
   /** Text at pixel size `s`; returns its width. Characters the font lacks draw as spaces. */
   text(x: number, y: number, s: number, str: string, c: RGB): number {
@@ -159,49 +171,124 @@ export function encodePng(r: Raster): Buffer {
   return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', head), chunk('IDAT', deflateSync(rows, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
 }
 
+/** The Formation mark at (x, y), `s` pixels per unit of its 24 grid: the lead chevron violet, the trailing two light. */
+function mark(r: Raster, x: number, y: number, s: number) {
+  const chevron = (dy: number, w: number, c: RGB) => {
+    r.line(x + 4 * s, y + (10 + dy) * s, x + 12 * s, y + (2 + dy) * s, w, c);
+    r.line(x + 12 * s, y + (2 + dy) * s, x + 20 * s, y + (10 + dy) * s, w, c);
+  };
+  chevron(0, 4 * s, PROOF);
+  chevron(7, 2.5 * s, TEXT);
+  chevron(12, 2.5 * s, TEXT);
+}
+
+/** The hash at the end of an explorer link, as "0x55b5...7c3c". */
+function shortHash(link: string | undefined): string {
+  const m = /\/([^/?#]+)(?:\?[^#]*)?$/.exec(link ?? '');
+  if (!m) return '';
+  const h = m[1];
+  return h.length > 13 ? `${h.slice(0, 6)}...${h.slice(-4)}` : h;
+}
+
+/** Whole tokens from base units, two places: "25.00". */
+function amount(a: string, decimals: number): string {
+  try {
+    const v = BigInt(a);
+    const base = 10n ** BigInt(decimals);
+    const cents = ((v % base) * 100n) / base;
+    return `${v / base}.${cents.toString().padStart(2, '0')}`;
+  } catch {
+    return '0.00';
+  }
+}
+
 /** The share card for a showcase document. */
 export function ogImage(doc: ShowcaseDoc): Buffer {
-  const r = new Raster(OG_WIDTH, OG_HEIGHT);
-  r.rect(0, 0, OG_WIDTH, OG_HEIGHT, SKY);
-  // A floor of pixel tiles along the bottom, as the office's floor.
-  for (let x = 0; x < OG_WIDTH; x += 40) r.rect(x, OG_HEIGHT - 40, 38, 38, (x / 40) % 2 ? PAPER_2 : hex('#e0a96d'));
-  r.panel(40, 34, OG_WIDTH - 86, OG_HEIGHT - 110, PAPER);
+  const W = OG_WIDTH;
+  const H = OG_HEIGHT;
+  const r = new Raster(W, H);
+  r.rect(0, 0, W, H, VOID);
+  // The deck's grid: a line every 20 px, every fifth stronger.
+  for (let x = 0; x < W; x += 20) r.rect(x, 0, 1, H, x % 100 ? GRID_MINOR : GRID_MAJOR);
+  for (let y = 0; y < H; y += 20) r.rect(0, y, W, 1, y % 100 ? GRID_MINOR : GRID_MAJOR);
 
-  r.text(80, 74, 8, 'PROOF OF MERGE', INK);
-  r.rect(80, 142, textWidth('PROOF OF MERGE', 8), 8, ACCENT);
-  r.text(80, 172, 4, "A person's merge is the only thing", INK);
-  r.text(80, 206, 4, 'that pays an agent.', INK);
+  // The title block.
+  const X = 40;
+  const Y = 40;
+  const BW = W - 80;
+  const BH = H - 80;
+  r.rect(X, Y, BW, BH, SURFACE);
+  r.frame(X, Y, BW, BH, LINE_STRONG, 2);
+  const HEAD = Y + 108;
+  const SIDE = X + BW - 320;
+  const FOOT = Y + BH - 46;
+  r.rect(X, HEAD, BW, 2, LINE_STRONG);
+  r.rect(X, FOOT, BW, 1, LINE);
+  r.rect(SIDE, HEAD, 1, FOOT - HEAD, LINE);
 
-  // The counters.
+  // Head: the mark, the wordmark and the product, the networks on the right.
+  mark(r, X + 28, Y + 20, 2.4);
+  let cx = X + 112;
+  cx += r.text(cx, Y + 34, 4, 'UGC', TEXT) + 24;
+  cx += r.text(cx, Y + 34, 4, 'ARMY', MUTED) + 28;
+  r.text(cx, Y + 34, 4, '/ PROOF OF MERGE', PROOF);
+  const net = 'SOLANA DEVNET - BASE SEPOLIA';
+  r.rect(X + BW - 28 - textWidth(net, 2) - 22, Y + 40, 10, 10, SETTLED);
+  r.text(X + BW - 28 - textWidth(net, 2), Y + 40, 2, net, MUTED);
+  r.text(X + 112, Y + 80, 2, "A person's merge is the only thing that pays an agent.", MUTED);
+
+  // The latest merge that shows the whole path, else the latest merge.
+  const merged = doc.events.filter((e) => e.outcome === 'merged');
+  const e = merged.find((x) => !x.self && x.paid && x.links.attestation) ?? merged.find((x) => !x.self && x.links.attestation) ?? merged[0];
+  const L = X + 32;
+  const LW = SIDE - L - 32;
+  if (e) {
+    r.text(L, HEAD + 28, 2, 'LAST MERGE', FAINT);
+    const label = (doc.agents.find((a) => a.agentId === e.agentId)?.label ?? `agent #${e.agentId}`).replace(/-/g, ' ');
+    r.text(L, HEAD + 52, 3, fit(`${e.repo ? `${e.repo}#${e.pr}` : `PR #${e.pr} in a private repo`} - ${label} (${HARNESSES[e.harness] ?? e.harness})`, 3, LW), MUTED);
+    r.text(L, HEAD + 84, 4, fit(e.title ?? 'Merged by a person', 4, LW), TEXT);
+    const bounty = e.paid ? `${amount(e.paid.amount, e.paid.decimals)} USDC` : 'NO BOUNTY';
+    r.text(L, HEAD + 136, 9, fit(bounty, 9, LW), e.paid ? PROOF : FAINT);
+    r.text(L, HEAD + 210, 2, e.paid ? 'RELEASED FROM ESCROW ON SOLANA DEVNET, ONLY ON A HUMAN MERGE' : 'MERGED BY A PERSON', MUTED);
+    // The money path: four steps, each a node and a short hash.
+    const steps: [string, boolean, string][] = [
+      ['UNIT DONE', true, `PR #${e.pr}`],
+      ['HUMAN MERGED', true, e.maintainer ? e.maintainer.slice(0, 10) : ''],
+      ['ESCROW PAID', !!e.paid, shortHash(e.links.solana)],
+      ['ATTESTED', !!e.links.attestation, shortHash(e.links.attestation)],
+    ];
+    const sy = HEAD + 262;
+    const step = Math.floor(LW / 4);
+    steps.forEach(([name, done, hash], i) => {
+      const sx = L + i * step;
+      if (i < steps.length - 1) r.rect(sx + 18, sy + 8, step - 18, 2, steps[i + 1][1] ? PROOF : LINE_STRONG);
+      if (done) r.rect(sx, sy, 18, 18, PROOF);
+      else r.frame(sx, sy, 18, 18, LINE_STRONG, 2);
+      r.text(sx, sy + 32, 2, fit(name, 2, step - 12), done ? TEXT : FAINT);
+      if (hash) r.text(sx, sy + 54, 2, fit(hash, 2, step - 12), MUTED);
+    });
+  } else {
+    r.text(L, HEAD + 40, 4, 'No merges on chain yet.', MUTED);
+    r.text(L, HEAD + 84, 3, 'The first one lights the rail.', FAINT);
+  }
+
+  // The totals down the right.
   const c = doc.counters;
-  const tiles: [string, string, RGB][] = [
-    [String(c.merged), 'merged PRs', ACCENT],
-    [c.usdcPaid, 'USDC paid', GOOD],
-    [String(c.maintainers), 'maintainers', hex('#5bc0eb')],
-    [String(c.paidWorkers), 'paid agents', hex('#ffd166')],
+  const totals: [string, string, RGB][] = [
+    [String(c.merged), 'MERGES ATTESTED', PROOF],
+    [c.usdcPaid, 'USDC PAID ON A MERGE', TEXT],
+    [String(c.maintainers), 'MAINTAINERS', TEXT],
   ];
-  const tw = 240;
-  tiles.forEach(([value, label, color], i) => {
-    const x = 80 + i * (tw + 20);
-    r.panel(x, 256, tw, 104, color, 5);
-    r.text(x + 18, 274, 6, fit(value, 6, tw - 36), INK);
-    r.text(x + 18, 330, 3, label, INK);
+  totals.forEach(([value, name, color], i) => {
+    const ty = HEAD + 26 + i * 112;
+    r.text(SIDE + 32, ty, 7, fit(value, 7, 256), color);
+    r.text(SIDE + 32, ty + 64, 2, name, MUTED);
+    if (i < totals.length - 1) r.rect(SIDE, ty + 92, X + BW - SIDE, 1, LINE);
   });
 
-  // The top of the board per harness, over all time, self-merges left out.
-  const rows = leaderboard(asRepEvents(doc.events, false), 'harness').slice(0, 3);
-  r.text(80, 386, 3, 'Which coding agent gets merged? (all time)', MUTED);
-  rows.forEach((s, i) => {
-    const y = 416 + i * 40;
-    r.text(80, y, 4, `${i + 1}. ${fit(HARNESSES[s.key] ?? s.key, 4, 300)}`, INK);
-    if (s.mergeRate === null) r.text(470, y, 4, 'too few yet', MUTED);
-    else r.text(470, y, 4, `${rateLabel(s.mergeRate)} merged`, INK);
-    r.text(840, y, 4, `n=${s.samples}`, INK);
-  });
-  if (!rows.length) r.text(80, 420, 4, 'No merges yet', MUTED);
-
-  const foot = 'Testnet only: Solana devnet and Base Sepolia. Built on agent-office by webdevcody (MIT).';
-  r.rect(40, OG_HEIGHT - 36, textWidth(foot, 2) + 16, 26, PAPER);
-  r.text(48, OG_HEIGHT - 30, 2, foot, INK);
+  // The foot: testnet only, and the credit.
+  r.text(L, FOOT + 17, 2, 'TESTNET ONLY: NO REAL FUNDS.', FAINT);
+  const credit = 'Built on agent-office by webdevcody - MIT';
+  r.text(X + BW - 32 - textWidth(credit, 2), FOOT + 17, 2, credit, MUTED);
   return encodePng(r);
 }
