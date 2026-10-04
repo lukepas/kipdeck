@@ -124,9 +124,10 @@ export const conn: Fixture<'conn'> = (site) => {
   cols.push({ minX: seat.x - 0.34, maxX: seat.x + 0.34, minZ: seat.z - 0.34, maxZ: seat.z + 0.34, top: seat.y + 0.52 });
   seatable(chair, 'conn', 1.5, site.interactables);
 
-  // The panels either side of the chair, a little ahead of it, turned in toward whoever sits there.
-  const left = panel(seat.x - 0.78, seat.z - 0.3, 0.38);
-  const right = panel(seat.x + 0.78, seat.z - 0.3, -0.38);
+  // The panels either side of the chair, ahead of it, turned in toward whoever sits there: far enough
+  // forward that from the arrival view they sit clear of the hint bar along the bottom of the screen.
+  const left = panel(seat.x - 0.7, seat.z - 0.62, 0.38);
+  const right = panel(seat.x + 0.7, seat.z - 0.62, -0.38);
   group.add(left.group, right.group);
   for (const p of [left, right]) {
     const { x, z } = p.group.position;

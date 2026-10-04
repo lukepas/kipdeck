@@ -3,13 +3,15 @@ import { MISSION_TABLE } from '../../../shared/layout';
 import type { Fixture } from '../../world/office/fixture';
 import { DECK } from '../../world/office/materials';
 import type { Course } from './readouts';
+import { starMap } from './holo-map';
 
 // The holo course plot over the mission table: in a band under half a meter over its top, a curved
 // course line rising gently from the stern side of the table toward the bow, a waypoint on it for
 // each milestone (solid once passed, ringed for the one the ship is making for, hollow for the ones
 // after), and the ship's chevron on the line between the last waypoint passed and the next. It is light,
 // not furniture: additive ship-cyan at a third of full strength at most, writing no depth, so it never
-// hides the table's top or a unit behind it, and nothing collides with it.
+// hides the table's top or a unit behind it, and nothing collides with it. Over it floats a small star
+// map in a cone of projected light, turning slowly, with a glow where the ship is (holo-map.ts).
 
 export interface Holo {
   /** Plots `course`: a waypoint per milestone, the chevron between the last one passed and the next. */
@@ -68,6 +70,10 @@ export const holo: Fixture<'holo'> = (site) => {
   const emitter = new THREE.Mesh(new THREE.RingGeometry(BAND.reach + 0.2, BAND.reach + 0.27, 96).rotateX(-Math.PI / 2), light(0.3));
   emitter.position.y = 0.012;
   root.add(emitter);
+
+  // The star map over it all, in its cone of light from the emitter.
+  const map = starMap(BAND.reach + 0.22);
+  plot.add(map.group);
 
   // The course: a gentle S from the stern side of the table to the bow side, rising as it goes.
   const R = BAND.reach;
@@ -137,6 +143,7 @@ export const holo: Fixture<'holo'> = (site) => {
     curve.getPointAt(t, at);
     curve.getPointAt(Math.min(1, t + 0.02), ahead);
     chevron.position.copy(at).setY(at.y + 0.03);
+    map.ship(chevron.position);
     chevron.rotation.y = Math.atan2(ahead.x - at.x, ahead.z - at.z) + Math.PI;
   };
   setCourse({ statement: '', milestones: [] });
@@ -152,6 +159,7 @@ export const holo: Fixture<'holo'> = (site) => {
   const flow = (dt: number, k: number) => {
     // One lap of the course to the ship every 5 s; each dash a ninth behind the one before.
     flowT = (flowT + (dt * k) / 5) % 1;
+    map.step(dt, k);
     for (let i = 0; i < DASHES; i++) {
       const u = (flowT + i / DASHES) % 1;
       curve.getPointAt(u * shipAt, at);
