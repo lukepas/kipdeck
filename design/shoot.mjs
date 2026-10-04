@@ -339,7 +339,7 @@ async function main() {
     }
     for (const [name, fn, marks] of [
       ['space-surge', 'surge', [[1, 350], [2, 700], [3, 1300]]],
-      ['space-jump', 'jump', [[1, 500], [2, 860], [3, 1500], [4, 2600]]],
+      ['space-jump', 'jump', [[1, 500], [2, 890], [3, 1500], [4, 2600]]],
     ]) {
       if (!want(name)) continue;
       await VIEW([0, 2.05, 11.4], [0, 3.4, -12]);
@@ -364,6 +364,103 @@ async function main() {
       await SPACE('timeScale', 1);
     }
     await UNVIEW();
+    if (want('clip')) {
+      // A 10 s clip of the bridge on a clock of its own: the page's frames run only when the script
+      // steps them, 1/30 s at a time, so software rendering still gives smooth motion. The camera
+      // pushes in from the conn past the holo, turns to the west ports, and back to the bow; on the
+      // way a merge lands (the bridge's moment), meteors cross, and the ship jumps to a new region.
+      // Frames go to a temporary folder and ffmpeg makes them an mp4; a few are kept as stills of
+      // the merge and the jump (sequence/).
+      const FPS = 30;
+      const SECONDS = 10;
+      const frames = path.join(tmp, 'clip');
+      mkdirSync(frames, { recursive: true });
+      const seqDir = path.join(OUT, 'sequence');
+      mkdirSync(seqDir, { recursive: true });
+      const KEYS = [
+        [0, [0, 2.05, 11.4], [0, 2.0, -12]],
+        [3, [0, 2.0, 8.2], [-2, 1.6, -12]],
+        [5.5, [-4, 1.8, 6.5], [-16, 2.2, 3]],
+        [7.4, [-1.5, 2.1, 8.6], [0, 3.3, -12]],
+        [10, [0, 2.1, 9.6], [0, 3.6, -12]],
+      ];
+      const camAt = (t) => {
+        let i = 0;
+        while (i < KEYS.length - 2 && t > KEYS[i + 1][0]) i++;
+        const [t0, f0, l0] = KEYS[i];
+        const [t1, f1, l1] = KEYS[i + 1];
+        const k0 = Math.min(1, Math.max(0, (t - t0) / (t1 - t0)));
+        const k = k0 * k0 * (3 - 2 * k0);
+        const mix = (a, b) => a.map((v, j) => v + (b[j] - v) * k);
+        return [mix(f0, f1), mix(l0, l1)];
+      };
+      await page.evaluate(() => {
+        const o = window.__office;
+        const p = o.player;
+        p.__update ??= p.update;
+        p.update = (dt) => {
+          p.__update.call(p, dt);
+          const c = window.__clipCam;
+          if (!c) return;
+          o.camera.position.set(...c[0]);
+          o.camera.lookAt(...c[1]);
+        };
+        // The page's own clock: frames only when stepped.
+        const realRaf = window.requestAnimationFrame.bind(window);
+        const realNow = performance.now.bind(performance);
+        const pending = [];
+        window.__clip = { realRaf, realNow, pending, now: realNow() };
+        window.requestAnimationFrame = (cb) => (pending.push(cb), pending.length);
+        performance.now = () => window.__clip.now;
+        window.__stepClip = (ms) => {
+          const c = window.__clip;
+          c.now += ms;
+          const cbs = c.pending.splice(0);
+          for (const cb of cbs) cb(c.now);
+        };
+      });
+      const events = [
+        [1.2, () => window.__office.space.meteor()],
+        [
+          3.2,
+          () => {
+            const o = window.__office;
+            const s = o.store;
+            const w = [...s.workers.values()].find((x) => x.deskId === 'desk-2') ?? [...s.workers.values()][0];
+            w.pr = { number: 78, url: 'https://github.com/example/repo/pull/78' };
+            o.net.handlers.forEach((h) => h({ t: 'landed', kind: 'merged', pr: 78, by: 'Tess' }));
+          },
+        ],
+        [5.0, () => window.__office.space.meteor()],
+        [7.6, () => window.__office.space.jump()],
+      ];
+      // On frame boundaries (whole thirtieths of a second).
+      const stills = { merge: [3.5, 3.7, 3.9, 4.1, 4.4], warp: [7.9, 8.3, 254 / 30, 257 / 30, 262 / 30, 9.2, 9.9] };
+      const wantStill = (t) => Object.entries(stills).flatMap(([name, ts]) => ts.map((x, i) => [name, x, i])).find(([, x]) => Math.abs(x - t) < 0.5 / FPS);
+      let fired = 0;
+      for (let f = 0; f < FPS * SECONDS; f++) {
+        const t = f / FPS;
+        while (fired < events.length && t >= events[fired][0]) {
+          await page.evaluate(events[fired][1]);
+          fired++;
+        }
+        await page.evaluate((c) => (window.__clipCam = c), camAt(t));
+        await page.evaluate((ms) => window.__stepClip(ms), 1000 / FPS);
+        await page.screenshot({ path: path.join(frames, `f${String(f).padStart(4, '0')}.jpg`), type: 'jpeg', quality: 92 });
+        const still = wantStill(t);
+        if (still) await page.screenshot({ path: path.join(seqDir, `${still[0]}-${String(still[2] + 1).padStart(2, '0')}-${Math.round((t - (still[0] === 'merge' ? 3.2 : 7.6)) * 1000)}ms.png`) });
+      }
+      execFileSync(process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', path.join(frames, 'f%04d.jpg'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-movflags', '+faststart', path.join(OUT, 'bridge.mp4')]);
+      // The page's own clock again.
+      await page.evaluate(() => {
+        const c = window.__clip;
+        window.requestAnimationFrame = c.realRaf;
+        performance.now = c.realNow;
+        window.__clipCam = null;
+        for (const cb of c.pending.splice(0)) c.realRaf(cb);
+      });
+      await UNVIEW();
+    }
     if (want('deck-overview')) {
       await page.locator('#scene').focus();
       await page.keyboard.press('g');
@@ -570,6 +667,15 @@ async function main() {
     if (want('lite')) {
       await page.goto(`${base}/lite`);
       await wait(2500);
+      // The same boards as the 3D shots, so the 2D view counts the same issues.
+      await page.evaluate((fx) => {
+        const s = window.__lite.store;
+        s.issues = { items: fx.issues, fetchedAt: Date.now(), loading: false };
+        s.pulls = { items: fx.pulls, fetchedAt: Date.now(), loading: false };
+        s.emit('issues');
+        s.emit('pulls');
+      }, BOARD_FIXTURE);
+      await wait(600);
       console.log('lite counts', JSON.stringify(await page.evaluate(() => ({ counts: window.__lite.store.counts(), roster: window.__lite.store.roster.map((e) => [e.name, e.status, e.exitCode]) }))));
       await shot(page, 'lite');
       const phone = await context.newPage();
@@ -643,9 +749,11 @@ async function main() {
     const { chromium } = await import('playwright-core');
     const b2 = await chromium.launch({ headless: true, args: ['--disable-gpu'] }).catch(() => launch());
     try {
-      const ctx2 = await b2.newContext({ viewport: { width: 1440, height: 900 } });
-      await ctx2.addInitScript(() => {
+      // Under the same lights as the rest of the set (SHOOT_LIGHT), as the 2D view's contrast follows them.
+      const ctx2 = await b2.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: SCHEME });
+      await ctx2.addInitScript((light) => {
         try {
+          if (light) localStorage.setItem('agent-office.settings', JSON.stringify({ ...JSON.parse(localStorage.getItem('agent-office.settings') ?? '{}'), lighting: light }));
           localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4FA3A5', look: { skin: 0, hair: 0, style: 0 } }));
           // Headless Chromium's speech recognition takes the page down when the terminal asks about it.
           delete window.SpeechRecognition;
@@ -653,7 +761,7 @@ async function main() {
         } catch {
           // storage blocked
         }
-      });
+      }, LIGHT);
       const tp = await ctx2.newPage();
       tp.on('console', (m) => m.type() === 'error' && console.log('console:', m.text()));
       await signIn(tp);
