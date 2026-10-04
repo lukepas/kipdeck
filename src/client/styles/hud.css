@@ -186,3 +186,5 @@ body.overview .bb-keys { visibility: hidden; }
 #fade { position: fixed; inset: 0; background: var(--void); opacity: 0; pointer-events: none; transition: opacity .16s ease; z-index: 40; }
 #fade.on { opacity: 1; }
 .people .where { font: 400 11px var(--font-mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* A phone: the mission strip keeps the statement alone. */
+@media (max-width: 640px) { .bottombar :is(.ms-milestone, .ms-unlinked) { display: none; } }

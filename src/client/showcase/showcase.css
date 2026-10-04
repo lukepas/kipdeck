@@ -192,7 +192,7 @@ main { max-width: 1232px; margin: 0 auto; padding: 0 16px 24px; }
 .item .meta { font-size: 12px; color: var(--muted); }
 .item .meta .chip { margin-right: 2px; }
 .item .paid { font: 500 13px var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
-.item .paid:empty::before { content: '--'; color: var(--faint); }
+.item .paid:empty::before { content: 'no bounty'; font-size: 11px; color: var(--faint); }
 .item .age { font: 400 11px var(--font-mono); color: var(--faint); white-space: nowrap; min-width: 84px; text-align: right; }
 .links { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; padding-right: 8px; }
 .proof-chip {
