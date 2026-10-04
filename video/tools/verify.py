@@ -9,8 +9,12 @@ Reports:
     beatmap time, and the lag between the mp4's audio and soundtrack.wav
     (AAC priming must be compensated, so this should be 0 samples)
   - loudness: EBU R128 integrated, LRA and true peak of the mp4's audio
+  - type sync: display type is never late. For every text hit, the display
+    type layer (rendered alone by render.mjs --typesync) must carry at least
+    85% of its settled ink on the hit frame. Hits whose type is drawn on the
+    canvas (no DOM type to measure) are listed, not scored. --no-type skips it.
 
-usage: python3 tools/verify.py film.mp4 [--from 0]
+usage: python3 tools/verify.py film.mp4 [--from 0] [--no-type]
 Exits non-zero if a check fails.
 """
 import json
@@ -25,6 +29,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.join(HERE, "..")
 SR = 48000
 PAPER = (0xF2, 0xF0, 0xEB)
+INK = (0x0B, 0x0B, 0x0C)
+# The colour each full-frame flash must show on its own frame.
+FLASH_COLOUR = {"flash.white": PAPER, "flash.ink": INK}
+TYPE_MIN = 0.85
 
 
 def tool(name):
@@ -126,6 +134,36 @@ def loudness(film):
     }
 
 
+def ink(path):
+    """Summed alpha of a type-layer capture (0..255 per pixel)."""
+    from PIL import Image
+    a = Image.open(path).convert("RGBA").getchannel("A")
+    return sum(i * c for i, c in enumerate(a.histogram()))
+
+
+def type_sync(w, h, fails):
+    fmt = "9x16" if h > w else "16x9"
+    pw, ph = (w // 3) // 2 * 2, (h // 3) // 2 * 2
+    out = os.path.join(ROOT, "out", "typesync", fmt)
+    sh(["node", os.path.join(ROOT, "render.mjs"), "--format", fmt, "--w", str(pw), "--h", str(ph),
+        "--fps", "60", "--typesync", out], timeout=900)
+    with open(os.path.join(out, "manifest.json")) as f:
+        man = json.load(f)
+    floor = pw * ph * 255 * 0.0005  # less than this is no DOM type at all
+    print(f"\ntype sync ({fmt}: display-type ink on the hit frame vs settled, need >= {TYPE_MIN:.0%})")
+    for hit in man["hits"]:
+        vals = {f["offset"]: ink(os.path.join(out, f["file"])) for f in hit["files"]}
+        settled = max(v for k, v in vals.items() if k > 0) if len(vals) > 1 else vals.get(0, 0)
+        if settled < floor:
+            print(f"  {hit['t']:6.3f}s f{hit['frame']:<5} {hit['name']:<24} canvas type, not scored")
+            continue
+        ratio = vals.get(0, 0) / settled
+        ok = ratio >= TYPE_MIN
+        print(f"  {hit['t']:6.3f}s f{hit['frame']:<5} {hit['name']:<24} {ratio:6.1%}{'' if ok else '  LATE'}")
+        if not ok:
+            fails.append(f"{hit['name']} is {ratio:.0%} formed on frame {hit['frame']} (display type must lead its hit)")
+
+
 def main(argv):
     film = argv[0]
     start = float(argv[argv.index("--from") + 1]) if "--from" in argv else 0.0
@@ -167,13 +205,16 @@ def main(argv):
             continue
         row = "  ".join(f"f{k}:{'#%02X%02X%02X' % means[k]}" for k in (n - 1, n, n + 1, n + 2))
         print(f"  {h['t']:6.3f}s {h['name']:<12} {row}")
-        if h["name"] == "flash.white":
-            d = max(abs(c - p) for c, p in zip(means[n], PAPER))
-            before = max(abs(c - p) for c, p in zip(means[n - 1], PAPER))
-            if d > 3:
-                fails.append(f"{h['name']} frame {n} is {means[n]}, not paper")
-            if before <= 3:
-                fails.append(f"{h['name']} is already paper on frame {n - 1} (early)")
+        if h["name"] in FLASH_COLOUR:
+            want = FLASH_COLOUR[h["name"]]
+            d = max(abs(c - p) for c, p in zip(means[n], want))
+            before = max(abs(c - p) for c, p in zip(means[n - 1], want))
+            # Grain (overlay) pulls pure ink a few levels darker; paper barely moves.
+            tol = 8 if want == INK else 3
+            if d > tol:
+                fails.append(f"{h['name']} frame {n} is {means[n]}, not {'#%02X%02X%02X' % want}")
+            if before <= tol:
+                fails.append(f"{h['name']} already shows its colour on frame {n - 1} (early)")
         else:
             jump = sum(abs(x - y) for x, y in zip(means[n], means[n - 1]))
             if jump < 60:
@@ -226,6 +267,9 @@ def main(argv):
         fails.append(f"true peak {L['TP']} dBTP is above -1 dBTP")
     if ref.get("integratedLUFS") is not None and abs(L["I"] - ref["integratedLUFS"]) > 0.5:
         fails.append(f"integrated loudness {L['I']} drifts from the master {ref['integratedLUFS']}")
+
+    if "--no-type" not in argv:
+        type_sync(v["width"], v["height"], fails)
 
     print()
     if fails:
