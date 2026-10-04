@@ -6,7 +6,7 @@ UGC Army looks and behaves the same on every surface: the 3D deck, the 2D view a
 
 ## The idea in one paragraph
 
-The deck is calm by default. Floors, consoles and units are slate and steel, and only an exception carries hue: Signal orange when a unit needs a person, red when it is stuck, amber when its work waits for review, violet for proof on chain. Every state also has its own shape (a solid diamond, a hollow triangle with a bar, a hollow circle with a dot), so the screen still reads in grayscale, for color-blind people and in compressed video. One ranking, `src/shared/attention.ts`, decides who needs someone, and everything that counts or orders units reads it: the top bar, the alert strip, the Attention board, the units list, the 2D plan, the favicon and the lights over the units.
+The deck is calm by default. Floors, consoles and units are slate and steel, and only an exception carries hue: Signal orange when a unit needs a person, red when it is stuck, amber when its work waits for review, violet for proof on chain. Every state also has its own shape (a solid diamond, a hollow triangle with a bar, a hollow circle with a dot), so the screen still reads in grayscale, for color-blind people and in compressed video. One ranking, `src/shared/attention.ts`, decides who needs someone, and everything that counts or orders units reads it: the top bar, the toasts, the Attention board, the Units rail, the 2D plan, the favicon and the lights over the units.
 
 ## The surfaces
 
@@ -28,7 +28,7 @@ The 2D view at `/lite` draws the deck as a plan from the same layout file as the
 
 ![Toasts: a violet proof toast with its transaction hash and a settled tick, then stuck, review and plain ones](img/toasts.png)
 
-Toasts sit bottom right: a stripe and glyph in the state's color, one sentence that names the unit by its address (`Widget (B-02 at F2)`), and the time in mono. A proof toast adds the transaction or attestation id in a violet chip, a green settled tick and a link to the testnet explorer, and stays up longer so there is time to click it.
+Toasts stack top right under the bar, all one card: a glyph column and a stripe in the state's color, one sentence that names the unit by its address (`Widget (B-02 at F2)`), and the time in mono from the deck's one clock. A unit that starts asking is a toast too, which folds into the top bar's needs-you counter after a few seconds. A proof toast adds the transaction or attestation id in a violet chip, a green settled tick and a link to the testnet explorer, and stays up longer so there is time to click it.
 
 ## Motion
 
@@ -45,7 +45,7 @@ Motion only marks a change of state. Nothing bobs, idles or celebrates for decor
 | A pull request merges (the merge beat) | a violet pulse from the unit's console to the table, whose rim lights | 300 ms, rim 800 ms | nothing runs |
 | A bounty is released on devnet | the pulse runs on to the Proof corner and up the rail, parks as the new lit segment, the vault lid lifts, then the proof toast | 600 ms, lid 2.4 s | the segment and lid change at once, then the toast |
 | A unit gets an ERC-8004 record | the plinth glows violet as its step lights | 1.2 s | the step lights |
-| You go to a unit (N, an alert, search) | in Walk the view flies there in an arc; in the Overview it pans and zooms | 700 ms; 300 ms | a cut |
+| You go to a unit (N, a toast, search) | in Walk the view flies there in an arc; in the Overview it pans and zooms | 700 ms; 300 ms | a cut |
 | The Overview turns (Q / E) | a quarter turn | 280 ms | a cut |
 
 ![The merge beat on its way: the violet pulse at the foot of the Proof corner's rail](img/beat-climb.png)
@@ -76,7 +76,7 @@ Open the deck with `?demo=1` for a screen share, a projector or a recording. It 
 ![Demo mode: bigger chrome and callouts, the Overview turning round the table](img/demo.png)
 
 - The chrome is a fifth bigger, so the smallest type is about 15px, and unit callouts and glyphs are a quarter bigger.
-- The alert strip can't be put away.
+- The needs-you toast stays up while anyone needs you.
 - Once you're in, the Overview turns slowly round the mission table. Any key, drag or wheel takes over.
 - Lit edges, screens and state lights bloom a little (0.4), so they survive video compression. The bloom is loaded only in demo mode.
 

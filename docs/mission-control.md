@@ -33,7 +33,7 @@ Each row shows the worker, its floor, what it's for (its milestone, its issue, o
 | Hand back | Opens its pull request's window and hands it back to a worker with the review comments (its **Fix comments & merge**, or **Fix conflicts & merge**) |
 | Resume | Starts it again |
 | Rebuild | Puts its deleted worktree back, or sends it home |
-| Send home | Sends it home, asking what to do with its worktree |
+| Stand down | Stands it down, asking what to do with its worktree |
 | Give it a task | Types it a first prompt |
 
 A worker on another floor takes you to its floor and its desk first, then does it.
@@ -70,7 +70,7 @@ Everything on every floor that waits for a person's decision, oldest first:
 - workers with commits on their branch and no pull request (**Open PR**);
 - pull requests by state: waiting for a review, approved and ready to merge (**Merge**), checks failing, merge conflicts or changes requested (**Hand back**), with the checks' state beside them;
 - pull requests the office made that no worker at a desk stands for any more (from an `office/` branch, a worker's branch or a queue task; a branch counts only in the repository itself, never a fork's, since a fork can name a branch anything), and pull requests your review is requested on (yours by your own GitHub sign-in, or the office's on the shared password);
-- workers whose pull request merged (**Send home**).
+- units whose pull request merged (**Stand down**).
 
 Each row says what it is, its floor, its goal, the checks, the diff size and how long it has waited. Opening a finished worker's work from here (reviewing its changes, its pull request, sending it home) marks it seen, as opening its terminal does. The attention chip's *to review* counts this whole list.
 

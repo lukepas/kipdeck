@@ -37,7 +37,7 @@ Nothing taller than 1.1 m stands between the mission table and the consoles, and
 
 ## Units
 
-A unit is one agent at its console: a faceless figure about 1.3 m tall on a hover base, with a flat head plate, a dark visor strip that flickers as its terminal prints, and a band round its chest. Nothing about it is decoration: its state shows four ways at once, all read from the building's one ranking (`src/shared/attention.ts`), so it agrees with the top bar, the alert strip, the Attention board and Mission control.
+A unit is one agent at its console: a faceless figure about 1.3 m tall on a hover base, with a flat head plate, a dark visor strip that flickers as its terminal prints, and a band round its chest. Nothing about it is decoration: its state shows four ways at once, all read from the building's one ranking (`src/shared/attention.ts`), so it agrees with the top bar, the Units rail, the Attention board and Mission control.
 
 | State | Band | Ring on the floor | Glyph over it | Where it is |
 | --- | --- | --- | --- | --- |
@@ -48,7 +48,7 @@ A unit is one agent at its console: a faceless figure about 1.3 m tall on a hove
 | Parked | dark | none | none | at its console or on the Standby bench; dimmer still when its process is asleep |
 | Merged | violet, for 6 s once its pull request merges | violet | check in a square | at its console |
 
-Over each unit is a callout with its **call sign**, the seat it holds: `A-03` is the third console of pod A, `O-` the overflow bay, `S-` the Standby bench, `L-` a board agent's lectern and `R-` a chair in the Review bay (`src/shared/callsign.ts`, which the Units list and the Attention board use too). From across the deck the callout is one line, the call sign and the unit's name; near (or from twice as far for one that needs you or is stuck) it adds its task and how long it has been in its state. The glyph stays the same size on screen however far off it is, in Walk and in the Overview alike. The provider's letter is on the visor (C Claude Code, X Codex, P Pi, CU Cursor) and a muted stripe in the provider's tint runs down its back.
+Over each unit is a callout with its **call sign**, the seat it holds: `A-03` is the third console of pod A, `O-` the overflow bay, `S-` the Standby bench, `L-` a board agent's lectern and `R-` a chair in the Review bay (`src/shared/callsign.ts`, which the Units list and the Attention board use too). From across the deck the callout is one line, its state glyph, the call sign and the unit's name; near (or from twice as far for one that needs you or is stuck) it adds its task (its [tag] dropped, cut at a whole word) and how long it has been in its state. Callouts never cover each other (`src/client/features/workers/declutter.ts`): they are placed in the ranking's order, one in the way lifts a little, then shrinks to its call sign, and a working unit's with no room at all hides, while one that needs someone always shows. A unit whose callout is hidden shows its glyph alone, the same size on screen however far off it is. The provider's letter is on the visor (C Claude Code, X Codex, P Pi, CU Cursor) and a muted stripe in the provider's tint runs down its back.
 
 The ready line keeps its order: a unit on it keeps its tick when the ranking moves, a new one takes the lowest free tick on its pod, a fifth one on a pod starts a second row, and a unit that has been answered holds its tick for 8 s before it glides back, so a state that flips back and forth doesn't send it to and fro (its ring changes color at once). Four lights hang over the four units most in need on the deck, orange or red: never one light per unit. `src/client/features/readyline/` does both, and `tests/units.test.ts` checks the ticks and the call signs.
 
@@ -67,7 +67,7 @@ You arrive in **Walk**: first person, as before (third person is in Settings). P
 | Wheel | Zoom |
 | G / Esc | Back to Walk |
 
-A window opened from the Overview closes back to it with no extra click; one opened from Walk closes straight back to mouse-look. Going to a unit (N, a click on the alert strip, a search result) flies the view there in a 700 ms arc in Walk (`src/client/core/flight.ts`), or pans and zooms the Overview onto it in 300 ms (`flyTo` in `src/client/core/camera-overview.ts`). Under reduced motion, the turn and every flight are cuts. In demo mode (`?demo=1`) the Overview turns slowly round the table until you take over; see [docs/design.md](design.md#demo-mode).
+A window opened from the Overview closes back to it with no extra click; one opened from Walk closes straight back to mouse-look. Going to a unit (N, a click on its toast, a search result) flies the view there in a 700 ms arc in Walk (`src/client/core/flight.ts`), or pans and zooms the Overview onto it in 300 ms (`flyTo` in `src/client/core/camera-overview.ts`). Under reduced motion, the turn and every flight are cuts. In demo mode (`?demo=1`) the Overview turns slowly round the table until you take over; see [docs/design.md](design.md#demo-mode).
 
 ## The merge beat
 

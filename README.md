@@ -1,110 +1,63 @@
-# What this fork adds: Proof of Merge
+# UGC Army
 
-> **Upstream credit.** This is a fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) by webdevcody / AgentSystemLabs, MIT-licensed (see [LICENSE](LICENSE), copyright notice unchanged). The office, desks, terminals, voice, boards and deploy scripts below are theirs. This fork is not run by the upstream authors. What is ours is listed, commit by commit, in [launch/chain/disclosure.md](launch/chain/disclosure.md).
+**Mission control for teams running many AI coding agents. Proof of every merge.**
+
+UGC Army puts every coding agent your team runs on one shared deck and ranks them by who needs a person right now: the units waiting on an answer first, then the stuck ones, then finished work waiting for review. You answer, unblock and review from one place instead of hunting through terminals. When a person merges a unit's pull request, the merge is proven on testnets: a devnet USDC bounty is released from escrow, an EAS attestation lands on Base Sepolia, and the agent's ERC-8004 reputation grows, all visible on a public ledger at `/pom/`.
+
+![The deck from the Overview: the mission table in the middle, four pods of consoles, the curved situation wall to the north, units that need you on the ready line](docs/img/deck-overview.png)
+
+[**Run it**](#run-locally) · [**What it does**](#what-it-does) · [**Proof of Merge**](#proof-of-merge-on-testnets) · [**Deploy**](#deploy-to-aws-ec2) · [**Controls**](#controls) · [**Design system**](DESIGN.md) · [**Docs**](docs/features.md)
+
+| | |
+| --- | --- |
+| ![Mission control: every unit ranked by who needs a person, one title, one status, one time and one next step](docs/img/mission.png) | ![The 2D view: the deck plan beside the ranked list of units](docs/img/lite.png) |
+| Mission control (I): every unit on every deck, ranked, with the one thing to do next. | The 2D view at `/lite`, the phone's deck, for machines without WebGL too. |
+| ![The merge beat: a new lit segment on the Proof corner's rail and a violet toast with the devnet transaction](docs/img/beat-landed.png) | ![Demo mode: bigger type and callouts, the Overview turning round the table](docs/img/demo.png) |
+| A merge, paid on devnet: the pulse climbs the Proof corner's rail and the toast shows the transaction. | Demo mode (`?demo=1`) for a screen share or a recording. |
+
+## What it does
+
+- **One ranking of who needs you.** `src/shared/attention.ts` ranks every unit on every deck: needs you (a question or a permission), stuck (crashed, silent, failing, never given a task), to review (done, a PR to merge or hand back), working, parked. The top bar's counters, the Units rail, Mission control, the 2D view, the tab title, the favicon and the wall's Attention board all read it, so they never disagree. A crashed unit stays stuck until a person resumes it.
+- **Mission control.** Press **I**. Attention, Goals, Review and Timeline tabs: what needs someone with one next step per row, the deck's mission and milestones (given to new units as context), a review inbox of finished work, pull requests and payouts to approve, and what happened while you were away. Reminders catch what would otherwise be forgotten. See [docs/mission-control.md](docs/mission-control.md).
+- **A deck per project.** Each GitHub repository is a deck: the mission table in the middle, four pods of consoles facing it, the situation wall curving round its north side with Issues, Queue, Attention, Pull requests and Services, the Proof corner on the west wall and the Review bay in the north-west corner ([the deck](docs/deck.md)).
+- **Units at consoles.** Deploy Claude Code, Codex, OpenCode, Grok, Muse, DeepSeek Harness, Pi or Cursor at a free console, with its model and effort. Each runs in its own git worktree; its live terminal is one click away, for anyone on the deck. A unit that needs you steps onto its pod's ready line under orange light; **N** takes you to the next one.
+- **Agents that manage agents.** Every unit can list, deploy, message and stand down the others through the `ugc-army` MCP server or the `office-workers` command, and board agents at the situation wall triage issues and pull requests for whoever walks up.
+- **The 2D view.** `/lite` is the deck as a plan beside the ranked list, with terminals, the keys a phone lacks and the boards. Phones go there by default.
+- **Calm by design.** Hue only for exceptions, a glyph for every state, motion only for a change of state, four optional sound cues ([DESIGN.md](DESIGN.md), [docs/design.md](docs/design.md)).
+
+## Proof of Merge on testnets
 
 ![Testnet only](https://img.shields.io/badge/chain-testnet%20only-orange?style=flat-square) Solana devnet and Base Sepolia. No mainnet, no token, no NFT, no points.
 
-**Your AI agents get paid, and earn reputation, only when a human merges their work.** Escrowed bounties on Solana, proof-of-merge on Base, and a public leaderboard of which coding agents actually ship.
+Agents get paid, and earn reputation, only when a person merges their work.
 
-- **Mission control** for teams running many agents: what needs a person now, a review inbox, goals and milestones, a timeline ([docs](docs/mission-control.md)).
-- **Bounties** in devnet USDC on GitHub issues, from the board or a "Fund this issue" Blink. A release needs two signatures: the attester's (a person with write access merged the office's own, non-fork PR) and the approver's (an office admin approved it in the review inbox) ([docs](docs/bounties.md)).
+- **Bounties** in devnet USDC on GitHub issues, from the board or a "Fund this issue" Blink. A release needs two signatures: the attester's (a person with write access merged the office's own, non-fork PR) and the approver's (an admin approved it in the review inbox) ([docs](docs/bounties.md)).
 - **Proof of merge**: an EAS attestation on Base Sepolia for every office PR a person merges, reverts or closes, and ERC-8004 feedback for the agent ([docs](docs/proof-of-merge.md), [reputation](docs/reputation.md)).
-- **Paid tasks over x402**: an outsider hires a worker for one task with test USDC; it waits, held, for an admin. Tested end to end on a local anvil chain; not yet settled through a live facilitator ([docs](docs/x402.md)).
-- **A public board** at `/pom/`, built from chain data when the office runs the indexer and otherwise from the office's own attestation record, with an explorer link on every row; the GitHub Pages export is rebuilt from chain data alone ([docs](docs/showcase.md)).
+- **Paid tasks over x402**: an outsider pays test USDC to queue one task, held until an admin approves it ([docs](docs/x402.md)).
+- **The public ledger** at `/pom/`: which agents' pull requests people actually merge, with an explorer link on every row ([docs](docs/showcase.md)).
 
-What is on chain so far: the escrow program on Solana devnet (`JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`) with scripted demo bounties paid there, the Base Sepolia schema and fallback contract, and no attestations or outside users yet. Nothing here has had a real merge behind a payout yet; see the launch kit's checklist.
-
-### Quickstart in 60 seconds
-
-Every chain feature is off by default; without them this is the office plus mission control.
-
-```bash
-git clone <this fork's URL> agent-office-pom && cd agent-office-pom
-npm install                 # also builds the client and server
-node bin/agent-office.js    # opens the office; chain features off
-```
-
-To try the chain side on testnets, build the on-chain packages the office loads (`cd onchain/solana && npm install && npm run build`, the same in `onchain/attest`), then turn bounties on in Settings, Bounties (set an approver wallet there), and start the office with `--attest --attest-repos owner/name`, `--reputation` or `--x402`. Only public repositories are ever attested. The deployed testnet addresses are in `onchain/*/deployments/`.
-
-### How it fits together
+Every chain feature is off by default. To try them, build the on-chain packages the office loads (`cd onchain/solana && npm install && npm run build`, the same in `onchain/attest`), turn bounties on in Settings > Bounties (set an approver wallet there), and start with `--attest --attest-repos owner/name`, `--reputation` or `--x402`. Only public repositories are ever attested. The deployed testnet addresses are in `onchain/*/deployments/`.
 
 ```text
  GitHub issue --Fund (board or Blink)--> Solana devnet escrow program
       |                                         ^
- office worker (Claude Code, Codex, Cursor, Pi) |  Release: attester + approver sign
+ unit (Claude Code, Codex, Cursor, Pi)          |  Release: attester + approver sign
       |                                         |
  office PR (never a fork) --person merges--> office checks GitHub --admin approves in review inbox
                                                  |
                                                  +--> EAS attestation + ERC-8004 feedback (Base Sepolia)
                                                  |
- onchain/indexer (chain data only) --> leaderboard.json --> /pom/ public board
+ onchain/indexer (chain data only) --> leaderboard.json --> /pom/ public ledger
 ```
 
-### Security notes
-
-- Keys live in files under `~/.config/agent-office-chain`, mode 0600, and are never logged. Workers don't get the office's chain variables, but they run as the same OS user and could read those files. **Use dedicated testnet keys only, with nothing of value on them.**
-- Payouts and refunds are admin-only. Set an approver wallet in Settings, Bounties: then each payout is co-signed in an admin's browser wallet and no approver key sits on the office's machine, where an agent could read it. With an approver key file instead, it is read to sign only after the admin check, but both release keys are then on one machine.
-- The office follows only its own bounties (its attester and approver are in a bounty's address), attests only public repositories you name, and puts who merged on chain as a keyed pseudonym.
-- RPC and facilitator calls go through the office's network guard (public testnet endpoints only, no redirects, capped answers); state is written through `safefs.ts`; the public routes keep the host check and their own rate limits and CSP. See [docs/security.md](docs/security.md).
-- Nothing here is audited. Mainnet waits on an audit.
-
-Hackathon and grant drafts, the build-in-public calendar and the disclosure are in [launch/chain](launch/chain/README.md).
+Security: keys live in files under `~/.config/agent-office-chain` (mode 0600, never logged); use dedicated testnet keys with nothing of value on them. Payouts and refunds are admin-only and can be co-signed in the admin's browser wallet. RPC calls go through the network guard. Nothing here is audited, and mainnet waits on an audit. See [docs/security.md](docs/security.md). Hackathon and grant drafts are in [launch/chain](launch/chain/README.md).
 
 > [!WARNING]
-> **Work in progress.** UGC Army, built on agent-office, changes fast as we iterate on it.
-> Expect breaking changes between releases: keys that move, screens that get redrawn, features that come and go
-> without notice. If it's close to what you want, fork or clone it and bend it into what you need it to be.
+> **Work in progress.** UGC Army changes fast: keys that move, screens that get redrawn, features that come and go.
 
-<div align="center">
+## Upstream credit
 
-*"Whatever you do, work heartily, as for the Lord and not for men."* — Colossians 3:23 (ESV)
-
-# UGC Army
-
-**Mission control for your AI agents. Proof of every merge.**
-
-**A 3D operations deck your team shares with its coding agents: one place to see which unit needs you, hand out work, review what comes back and stay on the mission.** The look, the status colors and the rules behind them are in [DESIGN.md](DESIGN.md); the system on screen, how it moves and sounds, and demo mode are in [docs/design.md](docs/design.md).
-
-Sit **Claude Code**, **Codex**, **OpenCode**, **Grok**, **Muse**, **DeepSeek Harness**, **Pi** and **Cursor** workers at desks, watch each one's terminal on the laptop in front of it,
-and jump into any of them together. Every GitHub repo is a floor of the building.
-
-[![Release](https://img.shields.io/github/v/release/AgentSystemLabs/agent-office?style=flat-square&color=e8c547&label=release)](https://github.com/AgentSystemLabs/agent-office/releases)
-[![Build](https://img.shields.io/github/actions/workflow/status/AgentSystemLabs/agent-office/release.yml?style=flat-square&label=build)](https://github.com/AgentSystemLabs/agent-office/actions)
-[![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux%20%7C%20Windows-lightgrey?style=flat-square)](#run-locally)
-[![Built with TypeScript](https://img.shields.io/badge/built%20with-TypeScript-3178c6?style=flat-square)](https://www.typescriptlang.org)
-
-[**Run locally**](#run-locally) · [**Deploy to AWS**](#deploy-to-aws-ec2) · [**Azure**](#deploy-to-azure) · [**Railway**](#deploy-to-railway) · [**Fly.io**](#deploy-to-flyio) · [**Dokploy**](#deploy-to-dokploy) · [**Any server**](#deploy-to-any-ubuntu-or-debian-server) · [**Add users**](#add-users) · [**Controls**](#controls) · [**Features**](docs/features.md) · [**How it works**](docs/how-it-works.md)
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/AgentSystemLabs/agent-office/main/install.sh | bash
-```
-
-</div>
-
-![The deck from the Overview: four pods of consoles round the mission table, two units on the ready line under orange light, one stuck unit with a red triangle](docs/img/deck-overview.png)
-
-| | |
-| --- | --- |
-| ![The merge beat landed: a new lit segment on the Proof corner's rail, the vault lid up and a violet toast with the devnet transaction](docs/img/beat-landed.png) | ![Mission control: units ranked by who needs you, each with its call sign and one next step](docs/img/mission.png) |
-| The merge beat: a merged PR's pulse climbs the Proof corner's rail and parks as a new segment, and the toast shows the devnet tx. | Mission control: every unit ranked by who needs a person, why, and one next step. |
-| ![The 2D view: the deck drawn as a plan beside the ranked list](docs/img/lite.png) | ![Demo mode: bigger chrome and callouts, the Overview turning round the table](docs/img/demo.png) |
-| The 2D view at `/lite`, for phones and machines without WebGL. | Demo mode (`?demo=1`) for a screen share or a recording. |
-
-## What it is
-
-- **A floor per project.** Open **Floors**, pick one of your GitHub repos, and the office clones it (showing how far along it is) and opens a floor for it. Every worker, board and queue on that floor works in that checkout.
-- **Workers at desks.** Walk up to an empty desk, press **E**, and pick Claude Code, Codex, OpenCode, Grok, Muse, DeepSeek Harness, Pi or Cursor, with its model (and reasoning effort where the harness has one). The agent's live terminal shows on its laptop, and anyone can open it and type.
-- **Mission control.** Press **I** for what needs a person right now, on every floor: each worker ranked (needs you, stuck, to review), with why in plain words (*working but silent for 12 min*, *done 40 min ago, nobody looked*) and one button for the next step. Each floor has a mission and milestones, shown under its name and given to new workers as context, and every worker is linked to a goal or an issue, with progress and spend per goal. A Review inbox holds everything waiting for a person's decision (finished work, pull requests to merge or hand back, reviews requested of you), a Timeline says what happened on every floor, reminders catch what would otherwise be forgotten, and coming back after a while you get a short *While you were away*. See [docs/mission-control.md](docs/mission-control.md).
-- **Talk instead of typing.** Hold **Ctrl+Space** (or the mic button) in a worker's terminal or a prompt box and say what you want: it's typed in for you to send. Your browser does the listening, so there's nothing to install.
-- **You can't miss who needs you.** A unit that stops to ask you something steps onto its pod's ready line under a shaft of orange light, its ring pulsing, and a strip under the top bar says who and what for (on any floor). The counters on the top bar count every state across every floor, the tab's icon turns orange, and a desktop notification finds you in another tab. Press **N** to go straight to whoever is waiting (the view flies there), the ones that need you first, then on to the next floor's. Sound is four short cues, off until you turn them on in Settings.
-- **Merges you see land.** A merged pull request sends a violet pulse from its unit to the mission table; a bounty paid on devnet carries it up the Proof corner's rail as a new lit segment, with a toast that shows the transaction. A finished task queue is a toast and a desktop notification for everyone on the floor.
-- **From your phone, too.** `/lite` is the office in 2D: the deck plan drawn from the same layout as the 3D deck, every worker (on your floor or all of them) ranked by what needs you and why, Mission control, its terminal with the keys a phone keyboard lacks, and the boards. The 3D office offers it on a phone or a slow computer.
-- **GitHub on the walls.** Issues, the task queue and pull requests are the three panels of the Main board. Hand an issue to a worker, queue tasks, give a worker its own git worktree and open its PR with one key (if one gets deleted behind the office's back, the worker waits at its desk until you rebuild it). One task can span several projects: the worker gets a worktree of each, and a PR in each that links the others.
-- **Agents that manage agents.** Every worker can list, hire, message and send home the others, through an `agent-office` MCP server (Claude Code, Codex, OpenCode) or the `office-workers` command. Ask one to "send everyone whose PR merged home" and it does, deleting their worktrees and branches unless they hold unpushed work. A worker that opens its pull request itself (`gh pr create`) shows it at its desk, and one the office missed can be told which is its own (`office-workers pr`).
-- **On mission.** A mission table every console faces, an Attention board, a Proof corner, an Overview of the whole deck (**G**), the project's docs on the docs rack, a shared whiteboard to plan on, voice, chat and screen sharing ([the deck](docs/deck.md)).
-
-The rest is in [docs/features.md](docs/features.md). The office used to have a lot of games and scenery around the work (a castle map, a rooftop bar, cars, an office dog and more); they're gone, so it stays about the agents and the mission.
+UGC Army is a fork of [agent-office](https://github.com/AgentSystemLabs/agent-office), created by webdevcody, Copyright (c) 2026 AgentSystemLabs, released under the MIT License. The server's architecture (decks as floors, workers and their terminals, worktrees, provider adapters, the queue, meetings, voice, accounts, the tunnel and the deploy scripts) is upstream's; [NOTICE](NOTICE) lists what this fork replaced and what remains, and [launch/chain/disclosure.md](launch/chain/disclosure.md) lists our changes commit by commit. This fork is not run by the upstream authors. The package and the `agent-office` command keep their upstream names so upstream changes can still be merged; `ugc-army` is the same command.
 
 ## Requirements
 
@@ -116,29 +69,26 @@ On the machine that runs the office:
 
 ## Run locally
 
-Install the latest release and start the office:
+From a clone of this repository:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AgentSystemLabs/agent-office/main/install.sh | bash
+git clone <this repository's URL> ugc-army && cd ugc-army
+npm install          # also builds the client and server
+npm install -g .     # puts `ugc-army` (and `agent-office`) on your PATH
+ugc-army
 ```
 
-On Windows, in PowerShell:
-
-```powershell
-irm https://raw.githubusercontent.com/AgentSystemLabs/agent-office/main/install.ps1 | iex
-```
-
-This puts an `agent-office` command on your PATH, so next time just run `agent-office`. Run the install line again to update. The installer's settings (a particular release, install without starting) are listed at the top of [`install.sh`](install.sh) and [`install.ps1`](install.ps1).
+The deploy scripts below and `install.sh` / `install.ps1` still install upstream agent-office from its releases; until this fork publishes its own, run it from a clone as above.
 
 The first time it starts, it walks you through setting up, right in the terminal:
 
-1. **Where to clone your projects.** It suggests a code folder you already have (`~/Workspace`, `~/code`…), else `~/agent-office`. Each project goes in `<folder>/<owner>/<repo>`.
+1. **Where to clone your projects.** It suggests a code folder you already have (`~/Workspace`, `~/code`...), else `~/agent-office`. Each project goes in `<folder>/<owner>/<repo>`.
 2. **GitHub.** If the GitHub CLI isn't signed in, it offers to run `gh auth login` for you.
 3. **Your first project.** Pick one of your repos by number, or type `owner/name`, and the office clones it as the first floor.
 
 Press Enter to skip a step: the elevator in the office asks for your first project too. Then the office opens in your browser, **already signed in**, with a link that works once. The terminal also prints the office password, for signing in from another browser (it's saved in `~/agent-office/.agent-office/config.json`).
 
-Walk to an empty desk, press **E** and hire a worker.
+Walk to a free console, press **E** and deploy a unit.
 
 Common options:
 
@@ -152,15 +102,6 @@ agent-office setup                          # the first-start walkthrough again 
 ```
 
 Every option is in [docs/configuration.md](docs/configuration.md). Choosing models and providers per worker is in [docs/agents.md](docs/agents.md).
-
-To run it from a clone instead:
-
-```bash
-git clone https://github.com/AgentSystemLabs/agent-office && cd agent-office
-npm install          # also builds the client and server
-npm install -g .     # puts `agent-office` on your PATH
-agent-office
-```
 
 > Only your computer can reach the office: it listens on `127.0.0.1`. `--host 0.0.0.0` lets your network in, but over plain http, where voice and screen sharing don't work. To share the office with a team, put it on a server: [AWS](#deploy-to-aws-ec2), [Azure](#deploy-to-azure), [Railway](#deploy-to-railway), [Fly.io](#deploy-to-flyio), [Dokploy](#deploy-to-dokploy) or [any Ubuntu or Debian machine](#deploy-to-any-ubuntu-or-debian-server).
 
@@ -192,7 +133,7 @@ In about two minutes, `up`:
 deploy/aws.sh up --tailscale --project your-org/your-repo --claude-token "$(claude setup-token)"
 ```
 
-The machine joins your tailnet, and Tailscale Serve puts the office on `https://agent-office.<your-tailnet>.ts.net` with a real certificate. Anyone on your tailnet just opens that link: no terminal to keep open, no SSH keys, no IPs to allow, and voice and screen sharing work. `up` opens Tailscale's page to add the machine (or pass `--tailscale-auth-key tskey-auth-…`) and, the first time, the page that turns on HTTPS for your tailnet. SSH stays open to your IP only, for `deploy/aws.sh` itself. More in [docs/aws.md](docs/aws.md#tailscale).
+The machine joins your tailnet, and Tailscale Serve puts the office on `https://agent-office.<your-tailnet>.ts.net` with a real certificate. Anyone on your tailnet just opens that link: no terminal to keep open, no SSH keys, no IPs to allow, and voice and screen sharing work. `up` opens Tailscale's page to add the machine (or pass `--tailscale-auth-key tskey-auth-...`) and, the first time, the page that turns on HTTPS for your tailnet. SSH stays open to your IP only, for `deploy/aws.sh` itself. More in [docs/aws.md](docs/aws.md#tailscale).
 
 Day to day:
 
@@ -208,7 +149,7 @@ deploy/aws.sh resume              # start it again and open it
 deploy/aws.sh destroy             # delete everything it created (asks first)
 ```
 
-You can also upgrade from inside the office: **☰ → ⬆️ Upgrade the office**. Other flags (`--region`, `--instance-type`, `--disk`, `--name` for several offices) are in `deploy/aws.sh help`, and the details are in [docs/aws.md](docs/aws.md).
+You can also upgrade from inside the office: **Menu > Deck > Update UGC Army**. Other flags (`--region`, `--instance-type`, `--disk`, `--name` for several offices) are in `deploy/aws.sh help`, and the details are in [docs/aws.md](docs/aws.md).
 
 **The workers' dev servers, on your computer.** The office runs on the server, so a worker's `npm run dev` listens there. Run this on your own computer and leave it running, and every web server a worker starts opens on the same port on yours, by itself (`http://localhost:5173` is the worker's), and closes when the worker stops it:
 
@@ -338,9 +279,9 @@ For HTTPS on your own domain, point a DNS record at the server and add `bash -s 
 
 Everyone gets their own account, so their name is on their operator, in chat and on every terminal they type into.
 
-**1. On a server, let them in first.** On a [Tailscale](docs/aws.md#tailscale) office, everyone on your tailnet can already open it. For someone who isn't, share the machine with them from Tailscale's Machines page: **☰ → 👥 Invite teammates** says how. Skip to step 2.
+**1. On a server, let them in first.** On a [Tailscale](docs/aws.md#tailscale) office, everyone on your tailnet can already open it. For someone who isn't, share the machine with them from Tailscale's Machines page: **Menu > Deck > Invite teammates** says how. Skip to step 2.
 
-Otherwise the office is only reachable through an SSH tunnel, so a teammate needs their SSH key on the machine. In the office, open **☰ → 👥 Invite teammates** and type their GitHub username. On AWS, Railway, Fly.io or Dokploy you can also do it from your terminal:
+Otherwise the office is only reachable through an SSH tunnel, so a teammate needs their SSH key on the machine. In the office, open **Menu > Deck > Invite teammates** and type their GitHub username. On AWS, Railway, Fly.io or Dokploy you can also do it from your terminal:
 
 ```bash
 deploy/aws.sh invite octocat        # installs the keys from github.com/octocat.keys
@@ -362,13 +303,13 @@ Their key logs in as a locked-down `office` user that can only forward to the of
 
 A teammate with the `agent-office` command on their computer can run `agent-office tunnel office@<your-office-ip>` instead of the `ssh` line: it opens the same tunnel, and every web server a worker starts opens on their computer too ([docs/tunnel.md](docs/tunnel.md)).
 
-**2. Make them an account.** Open **☰ → 🔑 Accounts** and make an invite link. Name it (or let them pick) and make them a *Member* or an *Admin*. The link works once, for 7 days, and they choose their own password. Make one for yourself too, as an admin.
+**2. Make them an account.** Open **Menu > Deck > Accounts** and make an invite link. Name it (or let them pick) and make them a *Member* or an *Admin*. The link works once, for 7 days, and they choose their own password. Make one for yourself too, as an admin.
 
 The same works from a terminal on the office's machine, even while it runs:
 
 ```bash
 agent-office accounts                      # accounts and open invites
-agent-office accounts invite ada --admin   # prints a single-use /join#… link
+agent-office accounts invite ada --admin   # prints a single-use /join#... link
 agent-office accounts role ada member
 agent-office accounts revoke ada           # signed out within seconds
 ```
@@ -382,11 +323,11 @@ deploy/fly.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invite ad
 deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invite ada'   # on Dokploy
 ```
 
-**Their own Claude and GitHub.** With accounts, everyone's workers run on their own Claude plan, and the office acts on GitHub as them: comments, merges, labels, pushes and pull requests show up under their name. The first time someone comes in, **🔐 Your sign-ins** opens (it's in the **☰** menu too). *Sign in with Claude* gives them Claude's sign-in page and takes back the code it shows. *Sign in with GitHub* shows a one-time code for github.com/login/device. They can paste a token from `claude setup-token`, or a GitHub token, instead. A 🐚 shell they open at a desk runs as them, so `claude auth login` and `gh auth login` typed there work too. Admins can use the office machine's own sign-ins instead. Each account's sign-ins live in `.agent-office/homes/<account>/`, and revoking the account deletes them. The boards are read with the machine's own `gh`, so that account needs read access to the repos. Running it just for yourself, with no accounts, none of this applies.
+**Their own Claude and GitHub.** With accounts, everyone's workers run on their own Claude plan, and the office acts on GitHub as them: comments, merges, labels, pushes and pull requests show up under their name. The first time someone comes in, **Your sign-ins** opens (it's under Menu > Deck too). *Sign in with Claude* gives them Claude's sign-in page and takes back the code it shows. *Sign in with GitHub* shows a one-time code for github.com/login/device. They can paste a token from `claude setup-token`, or a GitHub token, instead. A shell they open at a console runs as them, so `claude auth login` and `gh auth login` typed there work too. Admins can use the office machine's own sign-ins instead. Each account's sign-ins live in `.agent-office/homes/<account>/`, and revoking the account deletes them. The boards are read with the machine's own `gh`, so that account needs read access to the repos. Running it just for yourself, with no accounts, none of this applies.
 
-**3. Turn off the shared password.** Until you do, anyone who knows the office password can get in, as an admin. Once everyone has an account, switch it off in **🔑 Accounts** (signed in with your own admin account), or `agent-office accounts password off`.
+**3. Turn off the shared password.** Until you do, anyone who knows the office password can get in, as an admin. Once everyone has an account, switch it off in **Accounts** (signed in with your own admin account), or `agent-office accounts password off`.
 
-**Removing someone.** Revoke their account in **🔑 Accounts** (or `agent-office accounts revoke <name>`), and on a server also remove them in **👥 Invite teammates** (on AWS, `deploy/aws.sh uninvite <name>`; on Railway, `deploy/railway.sh uninvite <name>`; on Fly.io, `deploy/fly.sh uninvite <name>`; on Dokploy, `deploy/dokploy.sh uninvite <name>`) to take away their SSH keys and drop open tunnels (other teammates just reconnect). If the shared password is still on, change it with `deploy/aws.sh reset-password` (or `deploy/railway.sh reset-password`, `deploy/fly.sh reset-password` or `deploy/dokploy.sh reset-password`).
+**Removing someone.** Revoke their account in **Accounts** (or `agent-office accounts revoke <name>`), and on a server also remove them in **Invite teammates** (on AWS, `deploy/aws.sh uninvite <name>`; on Railway, `deploy/railway.sh uninvite <name>`; on Fly.io, `deploy/fly.sh uninvite <name>`; on Dokploy, `deploy/dokploy.sh uninvite <name>`) to take away their SSH keys and drop open tunnels (other teammates just reconnect). If the shared password is still on, change it with `deploy/aws.sh reset-password` (or `deploy/railway.sh reset-password`, `deploy/fly.sh reset-password` or `deploy/dokploy.sh reset-password`).
 
 ## Controls
 
@@ -395,19 +336,19 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 | W A S D | Walk (hold Shift to run) |
 | Space | Jump |
 | Mouse drag / wheel | Orbit / zoom the camera |
-| E | Interact: hire a worker, open its terminal, read a board, sit down, open Floors at the elevator |
-| P | Give a task to a new worker, or to the one at this desk |
-| C | See a worker's changes: diff, commit, open a PR |
-| I | Mission control: reminders and what needs someone on every floor, the floor's goals, the review inbox and the timeline |
-| N | Go to the next unit that's waiting on you (the view flies there), then the next floor's |
-| X | Send a worker home |
+| E | Interact: deploy a unit, open its terminal, read a board, sit down, open Decks at the Deck lift |
+| P | Give a task to a new unit, or to the one at this console |
+| C | See a unit's changes: diff, commit, open a PR |
+| I | Mission control: reminders and what needs someone on every deck, the deck's goals, the review inbox and the timeline |
+| N | Go to the next unit that's waiting on you (the view flies there), then the next deck's |
+| X | Stand a unit down |
 | L | Stencil a tag by a console ("Operations", "Code cleanup") |
 | G | The Overview: the whole deck from above (Q / E turn it, G walks again) |
 | T / Enter | Chat |
 | V | Join voice; then hold V to talk |
 | M | Mute / unmute in voice |
 | Ctrl + Space | Dictate into a terminal or a prompt box: hold it and talk (or hold the mic button) |
-| Tab | The menu: every window |
+| Tab | The menu: Command, Work, Proof, Deck and Comms |
 | Esc | Close any window |
 | Ctrl + [ | Send Esc to a terminal, to close a menu like Claude's `/skills` or interrupt Claude (or **Esc** in its header) |
 

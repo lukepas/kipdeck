@@ -30,9 +30,9 @@ Back to the [README](../README.md).
 | Esc | Close any window (a terminal too) and get back to looking around, or to the Overview if you opened it there |
 | Ctrl + [ | Send Esc to a terminal instead, to close a menu like Claude's `/skills` or interrupt Claude. **Esc** in the terminal's header does the same |
 
-You can also click a nearby desk to interact with it, or click a unit in the Units panel (on screen from the start) to open its terminal. To change floors, click the project name in the top-left corner.
+You can also click a nearby console to interact with it, or click a unit in the Units rail down the left to open its terminal. To change decks, click the deck name in the top-left corner.
 
-For a screen share, a projector or a recording, open the deck with `?demo=1`: bigger type and callouts, the alert strip pinned, and the Overview turning slowly round the mission table until you press a key, drag or scroll (see [the design system](design.md#demo-mode)).
+For a screen share, a projector or a recording, open the deck with `?demo=1`: bigger type and callouts, the needs-you toast kept up, and the Overview turning slowly round the mission table until you press a key, drag or scroll (see [the design system](design.md#demo-mode)).
 
 On a phone, use the 2D view at `/lite` instead: a terminal there has a row of keys under it (**1** **2** **3**, the arrows, Enter, Tab, Esc, Ctrl+C) and a box to send a prompt. See [Features](features.md).
 

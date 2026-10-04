@@ -11,7 +11,7 @@ The tokens live in `src/client/styles/tokens.css`. Every sheet uses them by name
 1. **Motion only marks a change of state.** Nothing idles for decoration: no bobbing, hopping, confetti, staggered list fades or press-down buttons. A ring pulse says "needs you", a 120 ms fade plus 4px rise says "this just opened", a violet pulse up the Proof corner's rail says "a merge was paid". Under `prefers-reduced-motion` every pulse becomes a still outline, every glide and flight a cut, and every CSS animation is stopped by one rule at the end of `tokens.css`. The same goes for sound: four short cues, one per change worth hearing, off until you turn them on.
 2. **Hue is for exceptions.** The floor is slate and steel. Signal orange means a person is needed, red means stuck, amber means waiting for review, violet means on-chain proof. Working units stay achromatic.
 3. **Shape carries every state on its own.** Each state has a glyph (below), so the screen still reads in grayscale, for color-blind people and in compressed video.
-4. **One ranking.** `src/shared/attention.ts` decides who needs someone. The top-bar counters, the alert row, Mission control, the 2D view, the tab title and the favicon all read it, so they never disagree.
+4. **One ranking.** `src/shared/attention.ts` decides who needs someone. The top-bar counters, the Units rail, Mission control, the 2D view, the Attention board, the tab title and the favicon all read it, so they never disagree. Rows say it the same way everywhere (`src/shared/rowtext.ts`): one title with its [tag] as a chip, one status phrase with no time in it, and one relative time ('<1m', '4m', '2h').
 5. **Lines, not boxes of shadow.** 1px hairlines, 4px corners (2px on chips), surfaces that step by tone. Only HUD pieces floating over the 3D canvas get the 85% fill and one soft shadow.
 6. **Data is mono.** Counts, timers, call signs, hashes, amounts, branch names and keys are JetBrains Mono with tabular numerals. Words are Archivo.
 
@@ -40,7 +40,7 @@ Each hue also has a `-tint` (12% over the surface) for a row or chip background.
 
 | State | Glyph | Hue | Where it shows |
 | --- | --- | --- | --- |
-| Needs you | solid diamond | `--signal` | counters, alert row, Mission control, unit band and ring, edge chevrons, favicon |
+| Needs you | solid diamond | `--signal` | counters, toasts, Units rail, Mission control, unit band and ring, edge chevrons, favicon |
 | Stuck | hollow triangle with a bar | `--stuck` | counters, Mission control, unit band (blinks 0.5 Hz), hatched ring, slumped unit |
 | To review | hollow circle with a center dot | `--review` | counters, Review tab, status chips, unit band and ring |
 | Working | short steel bar | `--working` | counters, chips; no glyph on the 3D unit |
@@ -67,10 +67,12 @@ Upstream credit stays where it was and is added to the sign-in footer: "Built on
 
 ## Components
 
-- **Top bar** (44px): mark and wordmark, the deck name (click for decks), the counters (each a button into Mission control), the violet proof counter once bounties are on, then Mission control and the actions you pinned, and the menu.
-- **Alert row**: under the bar while a unit needs you, one sentence, `N` to go there, a ✕ to put it away.
+- **Top bar** (44px): the one attention surface. Mark and wordmark, the deck name (click for decks), the counters in fixed widths (each a button into Mission control; the needs-you one pulses three times when a toast folds into it), the violet proof counter once bounties are on, then Mission control, the actions you pinned, the Units button and the menu.
+- **Units rail**: full height down the left, the units grouped by state (needs you, stuck and to review open; working, ready and the board agents folded), each row a call sign, a name, one status phrase and one time, its state a 2px rule. It folds to a 56px strip of call signs and glyphs, and folds by itself for a merge beat. On a phone it is a bottom sheet.
+- **Bottom bar**: the mission strip (a target and *Set the mission* while there is none, else the statement and the milestone's ten ticks), the keys worth knowing (*Click to look around* only while a click would take the view, N, G, Tab) and the chat folded to a *T Chat* chip.
+- **Menu**: grouped by the deck's jobs: Command, Work, Proof and Deck, with Comms (voice, screen, the planning board, the Review bay) folded at the bottom and the HUD layers as chips.
 - **Modals**: a sharp card on `--surface-1` with a 1px line; a 2px Signal rule on top only when it blocks. A ✕ top right with a 28px hit area. Esc or ✕ returns straight to mouse-look.
-- **Toasts**: bottom right, a 3px stripe in the state's color and its glyph, one sentence naming the unit by its address, and the time in mono. A proof toast adds the hash in a violet chip, a settled tick and an explorer link.
+- **Toasts**: one stack, top right under the bar, one card: a glyph column, a 3px stripe in the state's color, one sentence naming the unit by its address, and the time in mono from the shared clock. A unit that starts asking is a toast that folds into the needs-you counter after a few seconds. A proof toast adds the hash in a violet chip, a settled tick and an explorer link.
 - **Units in lists**: named by their call sign in a mono chip (`ui/unitsign.ts`), never by a color.
 - **Buttons**: primary is filled Signal with void text, one per view; secondary is a 1px outline; hover is one tone step. Focus is a 2px Signal ring with a 2px offset.
 - **Terminal**: xterm on `--void`, flat 32px tabs with a 2px underline, the status hues as ANSI colors, Signal only for the cursor.
@@ -84,7 +86,7 @@ Upstream credit stays where it was and is added to the sign-in footer: "Built on
 
 ## Demo mode
 
-`?demo=1` makes the chrome a fifth bigger (about 15px at the smallest), callouts and glyphs a quarter bigger, pins the alert strip, turns the Overview slowly round the table and adds a light bloom. See [docs/design.md](docs/design.md#demo-mode).
+`?demo=1` makes the chrome a fifth bigger (about 15px at the smallest), callouts and glyphs a quarter bigger, keeps the needs-you toast up, turns the Overview slowly round the table and adds a light bloom. See [docs/design.md](docs/design.md#demo-mode).
 
 ## Voice
 
