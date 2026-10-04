@@ -32,6 +32,7 @@ As of 2026-10-03, checked over RPC that day (the explorers block scripted reques
 | One demo bounty, open, fund, claim, release (all finalized) | Solana devnet | release `2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc`, the rest in `onchain/solana/deployments/devnet.json` |
 | The program upgraded in place: attester and approver in the bounty seeds, Cancel signed by the creator or the approver | Solana devnet | upgrade `5y64MPvVR8cKgtrwwatH3XRd4pPmtpbKgUZkRCd7NYGAphXN6Ynz8qYz4zzuMFwDhZtBeHAoysm9Tjhdr69BE8f8` (slot 507133664) |
 | Two more demo bounties on the upgraded program, one paid through the approver-wallet path | Solana devnet | releases `2BXByMAyR1QqzHE1A4brif8TFhmqyypaqVJKBs2totcoZGma6EHRCD9iXxZfpPrrtfhGV4jHNBe2zQedARM314Bu` and `2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r` |
+| A fourth demo bounty after the review fixes (2026-10-04), same program | Solana devnet | release `2sWD8aUJ6Wd5xEQcTxGK2tRarfr6TuzjYLgppmTrTtxBxwo6T3XP42EoYCypq9oXFQQ3Zj6TthXEMxoUNuVZCgNF` |
 | Proof-of-merge schema on EAS | Base Sepolia | `0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900`, registered in `0x57045f814359c8e0c0f6d4b5543198ed1609570c4875e0cd84bf3f13336a83a8` (status 1) |
 | MergeAttestor fallback contract | Base Sepolia | `0x278f441b635ebf4aca971184c0cab60b893f34fc` |
 | ERC-8004 registries we write to (not ours, version 2.0.0) | Base Sepolia | Identity `0x8004A818BFB912233c491871b3d84c89A494BD9e`, Reputation `0x8004B663056A597Dffe9eCcC1965A193B7388713` |

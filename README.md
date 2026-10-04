@@ -425,7 +425,7 @@ Every change to the app that lands on `main` is published as a GitHub release by
 - [Features](docs/features.md): seeing what every agent does, handing out work, reviewing it and staying on mission
 - [Mission control](docs/mission-control.md): the attention ranking, the floor's mission and milestones, linking work to goals, the review inbox, the timeline, reminders and the digest
 - [Proof of Merge bounties](docs/bounties.md): devnet USDC escrowed against an issue, paid only when a person merges the office's pull request and an admin approves (testnet only, off by default)
-- [Proof of merge on Base Sepolia](docs/proof-of-merge.md): an EAS attestation for every office PR a person merges, reverts or closes, and a leaderboard rebuilt from chain data alone (testnet only, `--attest`)
+- [Proof of merge on Base Sepolia](docs/proof-of-merge.md): an EAS attestation for every office PR a person merges, reverts or closes in an opted-in public repository, and an indexer that rebuilds the leaderboard from chain data alone (testnet only, `--attest --attest-repos`)
 - [Agent reputation from merges](docs/reputation.md): ERC-8004 identities for the office's agents, feedback only for what a person did with their pull requests, a public leaderboard and a read-only MCP tool (testnet only, `--reputation`)
 - [The public showcase](docs/showcase.md): a shareable, read-only page at `/pom/` (and on GitHub Pages) showing which coding agents' PRs people actually merge, from chain data, with an explorer link on every row (testnet only, off until an admin turns it on)
 - [The launch kit and its tools](docs/launch.md): submission drafts, posts and the calendar in `launch/chain`, and the checks that keep their numbers, links and limits honest

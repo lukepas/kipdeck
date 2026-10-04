@@ -64,6 +64,22 @@
         "claim": "3padCLGkgk8L5RRLWrmE4kiAhUzuDDkvsFFxxzkU9CvTTnmZnCFNWavpPd4TDx2m6ZUoDS98FEfZL1YJKWTZkiEN",
         "release": "2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r"
       }
+    },
+    {
+      "at": "2026-10-04T05:17:12.000Z",
+      "repo": "proof-of-merge/devnet-demo",
+      "issue": 1791091032,
+      "bounty": "7unWtdjUvKGEQwHmWxhLe57kPEy2fZFFmd9H9t53LF6x",
+      "funder": "Fr5n1zC3nTLvMESM1KoR6D7qNtLgyaNb5GCdK5CcAus",
+      "operator": "FU7ER8xsCunDEWzFsgwiNRsouuTeGo4myzADf5myCQAz",
+      "amount": "10",
+      "note": "Final check after the review fixes, on the unchanged program: attester and approver keys, keyed seeds. No GitHub merge behind it.",
+      "signatures": {
+        "open": "3ED9EU4Smxb35Wj7ZaMbqZWcunquVmB42tv7ZsNCJ9aMfCsChcefDuENDXKtBGNb2vAB65GTtMao275tE5TGDoY1",
+        "fund": "6M56Gr8GeHgEtLP8odazQarkYrEWn8qDBF2868PR4kZtEnJ7rpHC1B7pEqAJkCtWNpfX3KNaAK9pcDcay1PjkLz",
+        "claim": "5QUMnnjNivrjU3ydbFqVVt6ppJujaRquejA5B1nSuqMqV3vrSAoUbDePn74w7JkhjhiAdmiSqwiSGqqzbfqNZ8Ki",
+        "release": "2sWD8aUJ6Wd5xEQcTxGK2tRarfr6TuzjYLgppmTrTtxBxwo6T3XP42EoYCypq9oXFQQ3Zj6TthXEMxoUNuVZCgNF"
+      }
     }
   ]
 }
