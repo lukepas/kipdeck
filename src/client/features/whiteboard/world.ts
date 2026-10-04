@@ -3,7 +3,7 @@ import { WHITEBOARD } from '../../../shared/layout';
 import { mesh, textPlane } from '../../world/toon';
 import type { Collider, Interactable } from '../../world/types';
 import type { Fixture } from '../../world/office/fixture';
-import { DECK, box, contactShadow, matte } from '../../world/office/materials';
+import { DECK, box, contactShadow, ink as wallInk, matte } from '../../world/office/materials';
 
 // The whiteboard: a slim board on casters out on the open floor in the east aisle. Its face shows
 // whatever everyone has drawn on it (see ui.ts), live, drawn light on the deck's slate.
@@ -66,6 +66,7 @@ export function buildWhiteboard(): WhiteboardStand {
 
   const plaque = textPlane('PLANNING BOARD', { face: 'display', size: 48, color: DECK.muted, track: 0.08 });
   plaque.scale.multiplyScalar(0.55);
+  wallInk(plaque.material);
   plaque.position.set(-width / 2 + 0.5, bottom + height + 0.2, 0.05);
   group.add(plaque);
 

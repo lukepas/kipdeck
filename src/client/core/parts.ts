@@ -24,6 +24,7 @@ import type { installPeers } from '../features/peers';
 import type { installProofCorner } from '../features/proofcorner';
 import type { installSeating } from '../features/seating';
 import type { installSpace } from '../features/space';
+import type { installLights } from '../features/lights';
 import type { installTv } from '../features/tv';
 import type { installVoice } from '../features/voice';
 import type { installWaiting } from '../features/waiting';
@@ -97,4 +98,6 @@ export interface Parts {
   proofCorner: Made<typeof installProofCorner>;
   /** Space outside the glass: the sky, the stars, the flybys, the surge and the jump (see features/space). */
   space: Made<typeof installSpace>;
+  /** The bridge's lights: Night, Day or Auto, and Brightness (see features/lights). */
+  lights: Made<typeof installLights>;
 }

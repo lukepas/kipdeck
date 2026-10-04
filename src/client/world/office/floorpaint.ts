@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { BEANBAGS, FLOOR, GRID, MISSION_TABLE, PODS, POD_LETTERS, READY_LINE, TITLE_BLOCK, readySpot } from '../../../shared/layout';
 import { fontsReady, stretch } from '../toon';
 import type { Fixture } from './fixture';
-import { DECK } from './materials';
+import { DECK, ink } from './materials';
 
 // What's painted on the deck's floor: the structural grid's column bubbles round its edge (so every
 // spot has a cell address, see cellOf), each pod's ready line with its numbered ticks, the Standby
@@ -12,7 +12,7 @@ import { DECK } from './materials';
 
 /** Paint just above the floor, lit like it, drawn after it without fighting it. */
 function paintMat(map: THREE.Texture, opacity = 1): THREE.MeshStandardMaterial {
-  return new THREE.MeshStandardMaterial({ map, transparent: true, opacity, roughness: 0.9, metalness: 0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 });
+  return ink(new THREE.MeshStandardMaterial({ map, transparent: true, opacity, roughness: 0.9, metalness: 0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 }));
 }
 
 const solid = (color: string, opacity = 1) =>

@@ -4,7 +4,7 @@ import { deskPoint } from '../../../shared/nav';
 import { mergeByMaterial, mesh, textPlane } from '../../world/toon';
 import type { Collider, Interactable } from '../../world/types';
 import type { Fixture } from '../../world/office/fixture';
-import { DECK, contactShadow, flat, matte } from '../../world/office/materials';
+import { DECK, contactShadow, flat, ink, matte } from '../../world/office/materials';
 
 // The docs rack against the north wall: a steel case, five shelves of binders in the slate ramp
 // (a few leaning over, a stack lying flat), and a "DOCS" stencil over it. E at it opens the project's
@@ -93,6 +93,7 @@ export function buildBookshelf(): BookshelfModel {
   // A stencil over the crown.
   const sign = textPlane('DOCS', { face: 'display', size: 44, color: DECK.muted, track: 0.1 });
   sign.scale.multiplyScalar(0.7);
+  ink(sign.material);
   sign.position.set(0, H + 0.28, 0.02);
   group.add(sign);
   group.add(contactShadow(W + 0.6, D + 0.9, 0, 0.2));

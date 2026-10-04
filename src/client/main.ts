@@ -59,6 +59,7 @@ import { installDeclutter } from './features/workers/declutter';
 import { installDemo } from './features/demo';
 import { installBottomBar } from './features/bottombar';
 import { makeMotion } from './motion';
+import { installLights } from './features/lights';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -144,6 +145,7 @@ installBeats(ctx, parts);
 installReadyLine(ctx, parts);
 installBridge(ctx);
 parts.space = installSpace(ctx, parts);
+parts.lights = installLights(ctx, parts);
 
 parts.hintbar = installHintBar(ctx, core, parts);
 installKeyboard(ctx, parts);
@@ -225,7 +227,7 @@ void whoami().then(() => {
 
 // Debug handle for quick checks from the console / headless screenshots.
 const { worlds, views } = parts;
-(window as any).__office = { world: () => worlds.world(), store, player: parts.player, camera: ctx.camera, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, office: ctx.office, overview: parts.overview, space: parts.space, switchFloor: parts.travel.switchFloor, elevatorPanelOpen, carried: () => core.carrying };
+(window as any).__office = { world: () => worlds.world(), store, player: parts.player, camera: ctx.camera, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, office: ctx.office, overview: parts.overview, space: parts.space, lights: parts.lights, stage: parts.stage, switchFloor: parts.travel.switchFloor, elevatorPanelOpen, carried: () => core.carrying };
 (window as any).__voice = parts.voice;
 (window as any).__sound = parts.sound;
 (window as any).__notify = parts.notifier;

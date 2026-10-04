@@ -6,19 +6,23 @@ import { FLOOR, WALL_T, type Side } from '../../../shared/layout';
 // and smoked glass. world/toon.ts hands these out under its old names, so most call sites stay as
 // they were. Every color here is in DESIGN.md's 3D row.
 
-/** The deck's 3D palette: slate and steel, with hue kept for state and proof. */
+/**
+ * The deck's 3D palette by Night (low light): slate and steel, with hue kept for state and proof. Day
+ * (high light) swaps the neutrals for its own (DAY_PALETTE in features/lights/modes.ts) on the same
+ * materials; the hues and the instrument black under every mark stay.
+ */
 export const DECK = {
   void: '#0D131A',
-  floor: '#18202A',
-  gridMinor: '#222B36',
-  gridMajor: '#2E3B4A',
-  wall: '#151D26',
+  floor: '#222C38',
+  gridMinor: '#2C3744',
+  gridMajor: '#3A4858',
+  wall: '#1C2530',
   wallReveal: '#0A0F15',
-  console: '#1A222C',
-  consoleTop: '#212A35',
+  console: '#26303C',
+  consoleTop: '#2E3946',
   steel: '#3A4756',
   steelLight: '#8A97A5',
-  unit: '#2A323C',
+  unit: '#333D49',
   text: '#E8ECEF',
   muted: '#8A97A5',
   line: '#26313D',
@@ -62,6 +66,16 @@ interface MatOpts {
 }
 
 const cache = new Map<string, THREE.MeshStandardMaterial>();
+
+/**
+ * Marks `m` as lettering or paint on a wall or the floor: light on Night's dark surfaces, it would
+ * wash out on Day's light ones, so Day darkens it (features/lights/palette.ts). Not for type on a
+ * screen or a console, which stay dark in both modes.
+ */
+export function ink<M extends THREE.Material>(m: M): M {
+  m.userData.ink = true;
+  return m;
+}
 
 /** A shared matte material: roughness 0.85, almost no metal, the same object for the same recipe. */
 export function matte(color: THREE.ColorRepresentation, opts: MatOpts = {}): THREE.MeshStandardMaterial {
@@ -142,19 +156,19 @@ const GRID_PX = 128;
 const GRID_TILE = 5;
 
 /** The deck's floor: graphite, a fine line every meter and a stronger one every five. */
-export function paintGrid(c: HTMLCanvasElement) {
+export function paintGrid(c: HTMLCanvasElement, colors: { floor: string; gridMinor: string; gridMajor: string } = DECK) {
   const size = GRID_PX * GRID_TILE;
   c.width = c.height = size;
   const g = c.getContext('2d')!;
-  g.fillStyle = DECK.floor;
+  g.fillStyle = colors.floor;
   g.fillRect(0, 0, size, size);
-  g.fillStyle = DECK.gridMinor;
+  g.fillStyle = colors.gridMinor;
   for (let i = 1; i < GRID_TILE; i++) {
     g.fillRect(i * GRID_PX - 1, 0, 2, size);
     g.fillRect(0, i * GRID_PX - 1, size, 2);
   }
   // The major line sits on the tile's edge, half on each side, so tiles meet in one line.
-  g.fillStyle = DECK.gridMajor;
+  g.fillStyle = colors.gridMajor;
   g.fillRect(0, 0, 2, size);
   g.fillRect(size - 2, 0, 2, size);
   g.fillRect(0, 0, size, 2);
@@ -165,10 +179,14 @@ export function paintGrid(c: HTMLCanvasElement) {
  * The floor's grid as a texture, lined up with the world's meters (uvs in meters / GRID_TILE), so the
  * room, the back office and the apron round the slab all share one grid.
  */
+/** Every floor grid made, for the lights to paint again in Day's colors (features/lights). */
+export const FLOOR_GRIDS: THREE.CanvasTexture[] = [];
+
 export function floorTexture(): THREE.CanvasTexture {
   const c = document.createElement('canvas');
   paintGrid(c);
   const t = new THREE.CanvasTexture(c);
+  FLOOR_GRIDS.push(t);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = 8;

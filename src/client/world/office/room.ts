@@ -1,16 +1,16 @@
 import * as THREE from 'three';
-import { BOARDS, MACHINE_MONITOR, MISSION_TABLE, PODS, POD_RADIUS, SEATING_BY_ID, SITUATION, TV } from '../../../shared/layout';
+import { BOARDS, MACHINE_MONITOR, SEATING_BY_ID, SITUATION, TV } from '../../../shared/layout';
 import { mesh, textPlane } from '../toon';
 import type { Interactable } from '../types';
 import type { Fixture } from './fixture';
-import { DECK, box, contactShadow, flat, practical } from './materials';
+import { DECK, box, contactShadow, flat, ink, practical } from './materials';
 import { wallBoard } from './props';
 import { chair, seatable } from './seats';
 
 // The deck past its walls and its seats: the situation wall curving round the north of the mission
 // table (its standing panels, with Issues, Queue, Attention, Pull requests and Services on them), the
-// capacity panel at the head of the Proof corner, the operator bench, and the light: a halo over the
-// mission table and a bar over each pod.
+// capacity panel at the head of the Proof corner and the operator bench. The lamps over the pods and the
+// table are the lights' (features/lights/rig.ts).
 
 declare module '../types' {
   interface OfficeHandles {
@@ -25,6 +25,7 @@ declare module '../types' {
 function header(text: string, size = 64): ReturnType<typeof textPlane> {
   const label = textPlane(text.toUpperCase(), { face: 'display', size, color: DECK.muted, track: 0.08 });
   label.scale.multiplyScalar(0.9);
+  ink(label.material);
   return label;
 }
 
@@ -150,30 +151,5 @@ export const lounge: Fixture = (site) => {
     site.colliders.push({ minX: s.x - 0.3, maxX: s.x + 0.3, minZ: s.z - 0.3, maxZ: s.z + 0.3, top: 0.42 });
     seatable(stool, id, 1.4, site.interactables);
   }
-  return {};
-};
-
-/** How high the pods' spots hang over the deck. */
-const LIGHT_Y = 5.2;
-
-/**
- * The deck's pooled light: a spot over each pod, down onto its arc of consoles, and a soft one over
- * the mission table. They throw no shadows (the key light does, see core/scene.ts), and nothing
- * is drawn for them: the light is the fitting.
- */
-export const lamps: Fixture = (site) => {
-  for (const pod of PODS) {
-    const r = POD_RADIUS - 0.4;
-    const x = MISSION_TABLE.x + Math.cos(pod.angle) * r;
-    const z = MISSION_TABLE.z + Math.sin(pod.angle) * r;
-    const spot = new THREE.SpotLight('#DCE3EA', 90, 13, 0.6, 0.65, 1.3);
-    spot.position.set(x, LIGHT_Y, z);
-    spot.target.position.set(x, 0, z);
-    site.group.add(spot, spot.target);
-  }
-  const table = new THREE.SpotLight('#C9D2DC', 60, 11, 0.5, 0.7, 1.3);
-  table.position.set(MISSION_TABLE.x, LIGHT_Y + 0.6, MISSION_TABLE.z);
-  table.target.position.set(MISSION_TABLE.x, 0, MISSION_TABLE.z);
-  site.group.add(table, table.target);
   return {};
 };

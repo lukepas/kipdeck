@@ -3,7 +3,7 @@ import { MEETING_BOARD, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, deskSeat, ty
 import { mesh, textPlane } from '../toon';
 import type { Collider, DeskView, Interactable } from '../types';
 import type { Fixture } from './fixture';
-import { DECK, box, contactShadow, flat, glassPane, matte, practical } from './materials';
+import { DECK, box, contactShadow, flat, glassPane, ink, matte, practical } from './materials';
 import { wallBoard } from './props';
 import { UNIT_SEATED, chair } from './seats';
 import type { Door } from './shell';
@@ -114,6 +114,7 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
     },
   });
   const label = textPlane('REVIEW BAY', { face: 'display', size: 56, color: DECK.text, track: 0.08 });
+  ink(label.material);
   label.scale.multiplyScalar(0.62);
   // In front of the glass wall's frame (out 0.08 toward the deck) and the sliding leaves (out 0.11),
   // which it runs across once its text is wider than the door.

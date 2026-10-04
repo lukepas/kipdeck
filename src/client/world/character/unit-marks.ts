@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { DECK } from '../office/materials';
 import { drawGlyph, type GlyphKind } from '../glyphs';
+import { RING_INLAY } from '../../features/lights/modes';
 
 // What marks a unit's state round and over it: the ring on the floor under it (a pulse spreading
 // from it while it needs you, a hatched band while it's stuck), and its state glyph over its head,
@@ -8,6 +9,8 @@ import { drawGlyph, type GlyphKind } from '../glyphs';
 
 let ringShape: THREE.RingGeometry | undefined;
 let bandShape: THREE.RingGeometry | undefined;
+let inlayShape: THREE.CircleGeometry | undefined;
+let inlayMat: THREE.MeshBasicMaterial | undefined;
 let hatchTex: THREE.CanvasTexture | undefined;
 
 /** Diagonal stripes at 45 degrees, for the band round a stuck unit. */
@@ -32,9 +35,10 @@ function hatch(): THREE.CanvasTexture {
 const flatMat = (map?: THREE.Texture) =>
   new THREE.MeshBasicMaterial({ color: DECK.working, map, transparent: true, opacity: 0, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -3 });
 
-/** The marks on the floor under a unit: its ring, the pulse spreading from it, and the hatched band inside it. */
+/** The marks on the floor under a unit: its inlay, its ring, the pulse spreading from it, and the hatched band inside it. */
 export class GroundRing {
   readonly root = new THREE.Group();
+  readonly inlay: THREE.Mesh;
   readonly ring: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>;
   readonly pulse: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>;
   readonly band: THREE.Mesh<THREE.RingGeometry, THREE.MeshBasicMaterial>;
@@ -46,7 +50,12 @@ export class GroundRing {
     this.pulse = new THREE.Mesh(ringShape, flatMat());
     this.band = new THREE.Mesh(bandShape, flatMat(hatch()));
     for (const m of [this.ring, this.pulse, this.band]) m.renderOrder = 3;
-    this.root.add(this.band, this.ring, this.pulse);
+    // The instrument black the marks sit on, 6 cm past the ring (see RING_INLAY).
+    inlayShape ??= new THREE.CircleGeometry(0.56, 48).rotateX(-Math.PI / 2);
+    inlayMat ??= new THREE.MeshBasicMaterial({ color: RING_INLAY, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
+    this.inlay = new THREE.Mesh(inlayShape, inlayMat);
+    this.inlay.renderOrder = 2;
+    this.root.add(this.inlay, this.band, this.ring, this.pulse);
   }
 
   dispose() {

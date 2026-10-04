@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { DECK } from '../office/materials';
 import { drawGlyph, GLYPH_HUE, type GlyphKind } from '../glyphs';
+import { CALLOUT_CHIP } from '../../features/lights/modes';
 
 // The callout over a unit's head: who it is and, up close, what it's on. From across the deck it's
 // one mono line, its state glyph and its call sign with its name ("A-03  PIXEL"). Near, selected or
@@ -60,7 +61,7 @@ export function calloutSprite(o: CalloutText): THREE.Sprite {
   c.width = w;
   c.height = h;
   // The plate, its hairline, and the state's stripe down the left.
-  ctx.fillStyle = 'rgba(13, 19, 26, 0.86)';
+  ctx.fillStyle = `rgba(${CALLOUT_CHIP.rgb.join(', ')}, ${CALLOUT_CHIP.alpha})`;
   ctx.fillRect(0, 0, w, h);
   ctx.strokeStyle = DECK.steel;
   ctx.lineWidth = 2 * R;
