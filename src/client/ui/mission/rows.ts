@@ -73,7 +73,7 @@ export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { sho
       'div.mc-main',
       {},
       unitSign(e.deskId),
-      h('div.mc-who', {}, h('span.mc-name', {}, e.name, ...crewBits(e.id)), sub ? h('span.mc-sub', {}, sub) : null),
+      h('div.mc-who', {}, h('span.mc-name', {}, e.name, ...crewBits(e.id, r.att.level)), sub ? h('span.mc-sub', {}, sub) : null),
       h(
         'div.mc-what',
         {},

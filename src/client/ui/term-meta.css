@@ -16,3 +16,4 @@
 .tm-proof { color: var(--proof); display: flex; flex-direction: column; }
 .tm-proof small { color: var(--muted); font-size: 11px; }
 .tm-epithet { font: italic 400 12px/1.3 var(--font-ui); color: var(--muted); margin-top: -4px; }
+.tm-v .crew-chevs { margin-left: 8px; }

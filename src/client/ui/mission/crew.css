@@ -2,13 +2,14 @@
    marks only: an epithet is muted text, a chevron a hairline of white, and the one violet chevron is
    proof on chain, as violet is everywhere. No other hue: a unit's record is never a state. */
 .crew-epithet { font: italic 400 12px/1.3 var(--font-ui); color: var(--muted); white-space: nowrap; }
-.crew-chevs { display: inline-flex; flex-direction: column; align-items: center; gap: 0; vertical-align: middle; padding-top: 3px; }
+.crew-chevs { display: inline-flex; align-items: center; gap: 3px; vertical-align: middle; padding-top: 4px; }
 /* A chevron: two hairlines meeting at a point, the corner of a rotated square. */
-.crew-chev { display: block; width: 6px; height: 6px; margin-bottom: -2px; border-top: 1.5px solid var(--text); border-left: 1.5px solid var(--text); transform: rotate(45deg); opacity: .85; }
+.crew-chev { display: block; width: 6px; height: 6px; border-top: 1.5px solid var(--text); border-left: 1.5px solid var(--text); transform: rotate(45deg); opacity: .85; }
 .crew-chev.violet { border-color: var(--proof); opacity: 1; }
 .crew-line { font: 400 13px/1.35 var(--font-mono); color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .crew-watch { font: 500 11px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text); border: 1px solid var(--line-strong); border-radius: 2px; padding: 3px 6px; white-space: nowrap; }
 .crew-watch-line { margin: 0 0 10px; color: var(--muted); }
 .mc-crew .mc-what { flex-direction: row; align-items: center; gap: 10px; }
+.crew-row .mc-main { grid-template-columns: auto minmax(110px, 1fr) minmax(0, 3fr) auto; }
 .mc-what > .crew-epithet, .mc-what > .crew-chevs { align-self: flex-start; }
 .mc-name .crew-epithet { margin-left: 6px; } .mc-name .crew-chevs { margin-left: 4px; }

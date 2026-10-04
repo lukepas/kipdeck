@@ -22,9 +22,9 @@ export function chevronMarks(c: Chevrons): HTMLElement | null {
   return h('span.crew-chevs', { title: c.reasons.join('\n'), 'aria-label': `${n} ${n === 1 ? 'chevron' : 'chevrons'}: ${c.reasons.join(', ')}` }, ...marks);
 }
 
-/** A row's epithet and chevrons, after its call sign, or nothing with epithets off. */
-export function crewBits(id: string): HTMLElement[] {
-  if (!crewOn()) return [];
+/** A row's epithet and chevrons, after its call sign: nothing with epithets off, or on a unit that needs you or is stuck (its row says that and only that). */
+export function crewBits(id: string, level?: string): HTMLElement[] {
+  if (!crewOn() || level === 'needs-you' || level === 'stuck') return [];
   const e = epithetOf(id);
   const marks = chevronMarks(crewBook().chevrons(id));
   return [e ? h('span.crew-epithet', { title: e.why }, e.title) : null, marks].filter((x): x is HTMLElement => !!x);
