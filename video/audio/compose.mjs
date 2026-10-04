@@ -5,7 +5,7 @@
 //   node audio/compose.mjs --no-master   (skip the loudness loop; quick listen at unity gain)
 //
 // Everything is synthesized here (see instruments.mjs) from oscillators and seeded noise, so two
-// runs produce the same file. Mastering targets -14 LUFS integrated and a true peak below -1 dBTP:
+// runs produce the same file. Mastering targets -14 LUFS integrated and a true peak at or below -2 dBTP (so the AAC encode stays under -1):
 // a 4x-oversampled look-ahead limiter in this script, with ffmpeg's ebur128 meter as the judge.
 
 import { spawnSync } from 'node:child_process';
@@ -15,7 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { SR, OnePoleHP, dbToLin } from './dsp.mjs';
 import {
   compose, mixdown, sidechainAt, BPM, BEAT, BAR, S16, FPS, DURATION, N, COLUMNS, HOOK,
-  MERGE_SILENCE, CUT_T, UNSORT_T,
+  MERGE_SILENCE, CUT_T, UNSORT_T, PRE_GAPS,
 } from './score.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -26,7 +26,7 @@ const TMP = join(root, 'out/audio');
 const FFMPEG = existsSync('/opt/homebrew/bin/ffmpeg') ? '/opt/homebrew/bin/ffmpeg' : 'ffmpeg';
 
 const TARGET_LUFS = -14;
-const CEILING_DBTP = -1.4; // internal limiter ceiling; ffmpeg must read below -1.0
+const CEILING_DBTP = -2.4; // internal limiter ceiling; ffmpeg must read at or below -2.0 (and the AAC encode below -1.0)
 const args = new Set(process.argv.slice(2));
 
 function log(...a) {
@@ -196,6 +196,23 @@ log(`mixed in ${Date.now() - t0} ms`);
   }
 }
 
+// Pre-impact gaps (score.PRE_GAPS): a short duck of the whole pre-master that
+// ramps down over 6 ms, holds, and comes back over the 2 ms before the hit (a
+// hard step would make the AAC encode overshoot the true-peak ceiling).
+for (const g of PRE_GAPS) {
+  const end = Math.round(g.t * SR);
+  const start = end - Math.round(g.dur * SR);
+  const down = Math.round(0.006 * SR);
+  const up = Math.round(0.002 * SR);
+  const floor = dbToLin(g.db);
+  for (let i = start; i < end; i++) {
+    const k = Math.min(1, (i - start) / down, (end - i) / up);
+    const gain = 1 + (floor - 1) * k;
+    pre.L[i] *= gain;
+    pre.R[i] *= gain;
+  }
+}
+
 mkdirSync(TMP, { recursive: true });
 mkdirSync(dirname(WAV), { recursive: true });
 mkdirSync(dirname(BEATMAP), { recursive: true });
@@ -241,10 +258,10 @@ if (args.has('--no-master')) {
     writeFileSync(probe, wav24(master.L, master.R));
     meter = ebur128(probe);
     log(`pass ${pass}: gain ${gainDb.toFixed(2)} dB -> I ${meter.I} LUFS, TP ${meter.TP} dBTP, max GR ${master.maxGrDb.toFixed(2)} dB`);
-    if (Math.abs(meter.I - TARGET_LUFS) <= 0.1 && meter.TP < -1.0) break;
+    if (Math.abs(meter.I - TARGET_LUFS) <= 0.1 && meter.TP <= -2.0) break;
     gainDb += TARGET_LUFS - meter.I;
   }
-  if (!(meter.TP < -1.0)) throw new Error(`true peak ${meter.TP} dBTP is not under -1 dBTP`);
+  if (!(meter.TP <= -2.0)) throw new Error(`true peak ${meter.TP} dBTP is not at or under -2 dBTP`);
   if (Math.abs(meter.I - TARGET_LUFS) > 0.5) throw new Error(`integrated ${meter.I} LUFS missed ${TARGET_LUFS}`);
   writeFileSync(WAV, wav24(master.L, master.R));
 }

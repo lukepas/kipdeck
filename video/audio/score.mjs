@@ -37,6 +37,18 @@ const HOOK_RHYTHM = [0, 0.375, 0.75, 1.0]; // dotted-eighth push, lands on beat 
 
 const r3 = (x) => Math.round(x * 1e6) / 1e6;
 
+// Pre-impact gaps: the whole mix ducks for a few tens of ms before these hits
+// and comes back on the hit, so each one has an attack of its own instead of
+// being masked by the riser, swell or bass running into it.
+export const PRE_GAPS = [
+  { t: CUT_T, dur: 0.03, db: -14 }, // the hard cut's dry stamp, after the overload swell
+  { t: UNSORT_T, dur: 0.035, db: -14 }, // un-sort lock, under the reversed swell
+  ...[10.75, 11.25, 11.75].map((t) => ({ t, dur: 0.025, db: -10 })), // PR cards, after their swish
+  { t: 24.0, dur: 0.03, db: -14 }, // the denied buzz
+  { t: 27.0, dur: 0.04, db: -18 }, // end-card impact, after the reverse cymbal
+  { t: 27.5, dur: 0.03, db: -14 }, // wordmark slam
+];
+
 export function compose() {
   const bus = {
     drums: new Stereo(N),
@@ -156,9 +168,11 @@ export function compose() {
     }
   });
   playStamp(3.0, { gain: 0.4 });
-  hit(3.0, 'text.sixty-four', 'text', 'sixty-four', { text: '64 agents.' });
+  // '64 agents.' lands with the counter lock, so the number and the headline agree.
   playFlap(3.5, 0.35, 0, 0.8);
+  playStamp(3.5, { gain: 0.38 });
   hit(3.5, 'counter.lock', 'lock', 'sixty-four', { value: 64 });
+  hit(3.5, 'text.sixty-four', 'text', 'sixty-four', { text: '64 agents.' });
 
   // ---- 4.0-5.5  overload  glitch bed, off-grid hats, pips, first reversed swell -----------------
   hit(4.0, 'overload.start', 'event', 'overload', { note: 'pixel-sort threshold ramps 0.9 -> 0.4' });
@@ -211,8 +225,10 @@ export function compose() {
     addMono(bus.drums, t, I.clap({ seed: nextSeed() }), 0.28, -0.1);
     hit(t, 'backbeat', 'backbeat', 'timeline');
   }
-  // 64 tiles land on 32nds from 6.0625 to 10.0 (8 per beat). Within each beat the tiles are taken
-  // in ascending pitch, so every beat is a rising arpeggio and the last tile lands on 10.0.
+  // 64 tiles land every 3/64 s from 6.046875 to 9.0, in eight groups of eight (one group per
+  // dotted 16th-triplet span of 0.375 s). Within each group the tiles are taken in ascending
+  // pitch, so every group is a rising arpeggio. The last tile lands on 9.0 and the sorted board
+  // holds for two beats before the pan.
   const tileLandings = [];
   {
     const seq = [];
@@ -236,7 +252,7 @@ export function compose() {
       const group = seq.slice(g * 8, g * 8 + 8).sort((a, b) => COL[a].midi - COL[b].midi);
       group.forEach((col, j) => {
         const i = g * 8 + j;
-        const t = 6.0 + (i + 1) * S32;
+        const t = 6.0 + ((i + 1) * 3) / 64;
         const row = filled[col]++;
         const prevSame = j > 0 && group[j - 1] === col;
         const midi = COL[col].midi + (prevSame && row % 2 ? 12 : 0);
@@ -262,7 +278,8 @@ export function compose() {
   });
   [10.75, 11.25, 11.75].forEach((t, k) => {
     addStereo(bus.fx, t - 0.12, I.swish(0.18, { fFrom: 2500, fTo: 900, q: 1, panFrom: 0.6, panTo: 0.2, seed: nextSeed(), level: 0.5, peakAt: 0.7 }), 1);
-    addMono(bus.fx, t, I.stamp({ seed: nextSeed() }), 0.18, 0.3);
+    addMono(bus.fx, t, I.stamp({ seed: nextSeed() }), 0.32, 0.3);
+    addMono(bus.fx, t, I.tick({ freq: 2400, tau: 0.004 }), 0.14, 0.3);
     hit(t, `pr-card.${k + 1}`, 'drop', 'timeline', { note: '2-frame squash on landing' });
   });
 
@@ -289,10 +306,10 @@ export function compose() {
   addMono(bus.fx, MERGE_T, I.boom({ seed: 1415, dur: 1.2, level: 0.9 }), 0.9);
   playChord(MERGE_T, [45, 52, 55, 59, 60, 64], { dur: 2.0, tau: 0.6, cutFrom: 7000, cutTo: 500, cutTau: 0.35 }, 1.15, 0.45); // Am9
   hit(MERGE_T, 'merge.click', 'impact', 'drop', { note: 'biggest hit in the track: sub, kick, click' });
-  hit(MERGE_T, 'flash.white', 'flash', 'drop', { frames: 2 });
+  hit(MERGE_T, 'flash.ink', 'flash', 'drop', { frames: 2, note: 'one ink frame, one signal-red frame' });
   hit(MERGE_T, 'ripple.start', 'event', 'drop', { note: '1 grid cell per 2 frames' });
   hit(MERGE_T, 'pr1.merged', 'stamp', 'drop');
-  hit(MERGE_T, 'text.paid-only-when', 'text', 'drop', { text: 'Paid only when a' });
+  hit(MERGE_T, 'text.paid-only-when', 'text', 'drop', { text: 'Paid only when a human merges.', note: 'the whole line lands on the first frame after the flash' });
   // Each ripple ring turning tiles to merged ink is a flap, fading as it crosses the frame.
   for (let k = 0; k < 12; k++) {
     const t = MERGE_T + (k + 1) * 2 * FRAME;
@@ -302,7 +319,7 @@ export function compose() {
   addStereo(bus.fx, MERGE_T, I.swish(0.45, { fFrom: 9000, fTo: 600, panFrom: 0, panTo: 0, q: 0.8, seed: 1416, level: 0.5, peakAt: 0.05 }), 1);
   playPluck(14.5, 76, 0.2, 0, { decay: 0.4, index: 3.5 });
   playStamp(14.5, { gain: 0.5 });
-  hit(14.5, 'text.human', 'text', 'drop', { text: 'human merges.', note: "'human' in signal red on the ripple edge" });
+  hit(14.5, 'text.human', 'text', 'drop', { text: 'human', note: "'human' punches in signal red on the backbeat" });
   // Full groove returns.
   for (let t = 14.5; t < 24.0 - 1e-9; t += BEAT) playKick(t, { gain: 0.85 });
   hatsRange(14.0, 24.0, { gain: 0.14, openOffbeats: true });
@@ -323,28 +340,29 @@ export function compose() {
     hit(t, `state.${['open', 'funded', 'claimed'][k]}`, 'stamp', 'escrow', { weight: 'light' });
   });
   hit(16.0, 'text.25-test-usdc', 'text', 'escrow', { text: '25 test USDC.' });
-  for (let t = 16.0; t < 17.5 - 1e-9; t += S32) {
-    const v = ((t - 16.0 + S32) / 1.5) * 25;
+  // The bounty is funded in one lump: four flap ticks fill the escrow bar into FUNDED (16.5),
+  // where 25.00 locks and holds unchanged until RELEASED.
+  for (let t = 16.25; t < 16.5 - 1e-9; t += S32) {
     playFlap(t, 0.09, 0.3, 1.1);
-    hit(t, 'counter.roll', 'flap', 'escrow', { value: Math.round(v * 100) / 100 });
+    hit(t, 'escrow.fill', 'flap', 'escrow');
   }
   playStamp(17.5, { heavy: true, gain: 0.7, wet: 0.2 });
   playChord(17.5, [48, 55, 59, 62, 64], { dur: 1.0, tau: 0.3, cutFrom: 6000, cutTo: 600 }, 0.5); // Cmaj9
   hit(17.5, 'state.released', 'impact', 'escrow', { weight: 'heavy', note: 'RELEASED fills green; dot travels the path' });
   hit(17.5, 'counter.lock', 'lock', 'escrow', { value: 25.0 });
   hit(17.5, 'text.released-on-merge', 'text', 'escrow', { text: 'Released on merge.' });
-  // The release tx decodes: glyphs cycle on 32nds, one glyph locks per 16th, settles on 18.5.
-  for (let t = 17.25; t < 18.5 - 1e-9; t += S32) {
+  // The release tx decodes over CLAIMED -> RELEASED: glyphs cycle on 32nds and lock in pairs from
+  // both ends inward on 32nds, so the hash settles on RELEASED (17.5).
+  for (let t = 17.0; t < 17.5 - 1e-9; t += S32) {
     playFlap(t, 0.07, -0.3, 1.4);
   }
-  for (let k = 0; k < 10; k++) {
-    const t = 17.375 + k * S16;
-    const last = k === 9;
-    addMono(bus.fx, t, I.tick({ freq: last ? 1900 : 3600, tau: last ? 0.02 : 0.006 }), last ? 0.25 : 0.1, 0);
-    if (last) playStamp(t, { gain: 0.45 });
-    hit(t, last ? 'tx.settle' : 'tx.glyph-lock', last ? 'lock' : 'decode', 'escrow', { glyph: k, value: last ? '2rPSWQ...ZtUc' : undefined });
+  for (let k = 0; k < 5; k++) {
+    const t = 17.25 + k * S32;
+    const last = k === 4;
+    addMono(bus.fx, t, I.tick({ freq: last ? 1900 : 3600, tau: last ? 0.02 : 0.006 }), last ? 0.2 : 0.1, 0);
+    hit(t, last ? 'tx.settle' : 'tx.glyph-lock', last ? 'lock' : 'decode', 'escrow', { glyphs: [k, 9 - k], value: last ? '2rPSWQ...ZtUc' : undefined });
   }
-  hit(17.25, 'tx.decode-start', 'event', 'escrow');
+  hit(17.0, 'tx.decode-start', 'event', 'escrow');
 
   // ---- 19.0-21.5  Base Sepolia attestation ledger ---------------------------------------------
   addStereo(bus.fx, 18.75, I.swish(0.25, { fFrom: 800, fTo: 6000, panFrom: -0.5, panTo: 0.5, seed: 1919, level: 0.35 }), 1);
@@ -356,12 +374,13 @@ export function compose() {
   playChord(20.0, [41, 48, 52, 55, 57], { dur: 1.0, tau: 0.3, cutFrom: 5000, cutTo: 500 }, 0.45); // Fmaj9
   hit(20.0, 'stamp.attested', 'impact', 'attest', { note: 'scale 1.3 -> 1.0, rotate 0 -> -4 deg over 4 frames' });
   hit(20.5, 'schema.decode-start', 'event', 'attest');
-  for (let t = 20.5; t < 21.125 - 1e-9; t += S32) playFlap(t, 0.07, 0.3, 1.4);
-  for (let k = 0; k < 5; k++) {
+  for (let t = 20.5; t < 21.0 - 1e-9; t += S32) playFlap(t, 0.07, 0.3, 1.4);
+  for (let k = 0; k < 4; k++) {
     const t = 20.625 + k * S16;
-    const last = k === 4;
+    const last = k === 3;
     addMono(bus.fx, t, I.tick({ freq: last ? 1900 : 3600, tau: last ? 0.02 : 0.006 }), last ? 0.22 : 0.1, 0);
-    hit(t, last ? 'schema.settle' : 'schema.glyph-lock', last ? 'lock' : 'decode', 'attest', { glyphs: [k * 2, k * 2 + 1], value: last ? '0x368e90...a900' : undefined });
+    const glyphs = last ? [6, 7, 8, 9] : [k * 2, k * 2 + 1];
+    hit(t, last ? 'schema.settle' : 'schema.glyph-lock', last ? 'lock' : 'decode', 'attest', { glyphs, value: last ? '0x368e90...a900' : undefined });
   }
 
   // ---- 21.5-24.0  reputation card and leaderboard ---------------------------------------------
@@ -395,10 +414,10 @@ export function compose() {
   }
   addMono(bus.fx, 24.5, I.mouseClick({ seed: 2450, level: 0.8 }), 0.6);
   playStamp(24.5, { gain: 0.55 });
-  hit(24.5, 'text.200-ok', 'lock', 'x402', { text: '200 OK', note: "'Payment Required' strikes through" });
+  hit(24.5, 'text.202-accepted', 'lock', 'x402', { text: '202 Accepted', note: "'Payment Required' strikes through; the task is held until an admin approves" });
   addStereo(bus.fx, 24.9, I.swish(0.6, { fFrom: 700, fTo: 9000, panFrom: -0.6, panTo: 0.6, seed: 2500, level: 0.4, peakAt: 0.95 }), 1);
   playChord(24.5, [40, 47, 52, 56], { dur: 1.0, tau: 2, cutFrom: 900, cutTo: 2400, cutTau: 0.5, att: 0.05 }, 0.5, 0.3); // E, the V that wants Am
-  hit(24.5, 'pad.dominant', 'event', 'x402', { note: 'E chord holds under 200 OK until the recap' });
+  hit(24.5, 'pad.dominant', 'event', 'x402', { note: 'E chord holds under 202 until the recap' });
   hit(25.0, 'text.x402', 'text', 'x402', { text: 'Pay per task: x402.' });
   hatsRange(24.0, 25.5, { gain: 0.14 });
   bassOffbeats(24.0, 25.5, 28, 0.36); // E1
@@ -419,14 +438,16 @@ export function compose() {
     for (let t = 26.75; t < 27.0 - 1e-9; t += S32) roll.push(t);
     roll.forEach((t, k) => addMono(bus.drums, t, I.snare({ seed: nextSeed(), level: 0.5 + 0.5 * (k / roll.length) }), 0.3, 0.1));
   }
-  addMono(bus.fx, 26.0, I.revCymbal(1.0, { seed: 2600 }), 0.45);
+  addMono(bus.fx, 26.0, I.revCymbal(0.985, { seed: 2600 }), 0.4); // stops hard at 26.985
   hit(27.0, 'revcymbal.peak', 'riser-peak', 'recap', { note: 'quadrants collapse to a point' });
 
   // ---- 27.0-30.0  end card: resolve on A --------------------------------------------------------
   playKick(27.0, { gain: 0.9, decay: 0.34, weight: 1.1 });
   playSub(27.0, 33, 2.4, 0.45, { glideFrom: midiHz(40), glideTau: 0.04 });
   playChord(27.0, [45, 52, 57, 60, 64, 71], { dur: 2.95, tau: 1.4, cutFrom: 5000, cutTo: 1200, cutTau: 0.8, att: 0.004 }, 0.45, 0.5); // Am(add9)
-  hit(27.0, 'endcard.impact', 'impact', 'endcard', { note: 'point expands into the 3x3 mark' });
+  addMono(bus.fx, 27.0, I.boom({ seed: 2700, dur: 0.5, level: 0.8, fc: 420 }), 0.55);
+  addMono(bus.fx, 27.0, I.mouseClick({ seed: 2701, level: 0.9 }), 0.5);
+  hit(27.0, 'endcard.impact', 'impact', 'endcard', { note: 'the mark opens at full size' });
   const markNotes = [69, 72, 76, 79, 81, 79, 76, 72, 69];
   markNotes.forEach((m, k) => {
     const t = 27.0 + k * S16;
@@ -435,6 +456,8 @@ export function compose() {
     hit(t, `mark.cell.${k + 1}`, 'cell', 'endcard', { index: k, center: k === 4 });
   });
   playStamp(27.5, { heavy: true, gain: 0.85, wet: 0.3 });
+  addMono(bus.fx, 27.5, I.mouseClick({ seed: 2750, level: 1 }), 0.6);
+  addMono(bus.fx, 27.5, I.boom({ seed: 2751, dur: 0.35, level: 0.7, fc: 260 }), 0.45);
   hit(27.5, 'mark.center.red', 'stamp', 'endcard', { note: 'centre cell turns signal red' });
   hit(27.5, 'wordmark.slam', 'text', 'endcard', { text: 'UGC ARMY', note: 'wdth 125 settles to 100 by 28.0' });
   [27.5, 28.0, 28.5, 29.0].forEach((t, k) => playKick(t, { gain: 0.62 - k * 0.06, weight: 0.6 }));
@@ -443,14 +466,14 @@ export function compose() {
   addMono(bus.drums, 27.5, I.clap({ seed: nextSeed() }), 0.25);
   addMono(bus.drums, 28.5, I.clap({ seed: nextSeed() }), 0.22);
   addStereo(bus.fx, 27.8, I.swish(0.3, { fFrom: 600, fTo: 3500, panFrom: -0.7, panTo: 0.4, seed: 2800, level: 0.3 }), 1);
-  hit(28.0, 'text.promise', 'text', 'endcard', { text: 'An army of AI agents working for you. Paid only when you merge.' });
+  hit(28.0, 'text.promise', 'text', 'endcard', { text: 'An army of AI agents working for you. Your agents get paid only when you merge.' });
   addMono(bus.fx, 28.5, I.tick({ freq: 1200, tau: 0.03 }), 0.06);
   hit(28.5, 'smallprint.fade', 'text', 'endcard', { note: 'testnet disclosure fades up and holds' });
   hit(28.5, 'outro.filter.start', 'event', 'endcard', { note: 'groove low-passes out over 2 beats' });
   hit(29.5, 'outro.filter.end', 'event', 'endcard');
   addMono(bus.hatTail, 29.5, I.hat({ seed: 2950, decay: 0.035 }), 0.2, 0);
   addMono(bus.hatTail, 29.5, I.tick({ freq: 2800, level: 1 }), 0.08);
-  hit(29.5, 'bookend.blink', 'blink', 'endcard', { note: 'red centre cell blinks once; last sound in the film' });
+  hit(29.5, 'bookend.blink', 'blink', 'endcard', { note: 'red centre cell blinks off just before and is back on with the tick; last sound in the film' });
 
   // ---- mix ------------------------------------------------------------------------------------
   return { bus, hits, kicks, tileLandings };

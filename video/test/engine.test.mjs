@@ -6,7 +6,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { cubicBezier, spring, bounce, expoOut, curves } from '../src/engine/ease.js';
 import { rng, rand01, hash32 } from '../src/engine/prng.js';
-import { scramble, lockSchedule, splitFlap, shortHash } from '../src/engine/kinetic.js';
+import { scramble, scrambleParts, lockSchedule, splitFlap, shortHash, glyphLocks, HEX, BASE58 } from '../src/engine/kinetic.js';
+import { wordSpacingFor, WORD_SPACE_EM } from '../src/engine/typeLayer.js';
 import { createTimeline } from '../src/engine/timeline.js';
 import { createDesign } from '../src/engine/design.js';
 
@@ -58,7 +59,7 @@ test('scramble-decode settles on the exact final string at the lock time', () =>
   assert.equal(scramble(tx, 18.5, { start: 17.1, lockTimes: locks }), tx);
   const schema = '0x368e90...a900';
   const sl = lockSchedule(schema, 20.5, 0.125, 2);
-  assert.equal(Math.max(...sl.filter(Number.isFinite)), 21.125, 'schema settles on 21.125 like the score');
+  assert.equal(Math.max(...sl.filter(Number.isFinite)), 21.125);
   assert.equal(shortHash('abcdefghijklmnop'), 'abcdef...mnop');
   assert.equal(splitFlap(200, 25, 24, 24.5), '200');
 });
@@ -93,4 +94,46 @@ test('design: grids reflow per format and display type obeys the minimums', () =
   assert.equal(r.x, v.grid.colX(1));
   const preview = createDesign(640, 360, '16x9');
   assert.ok(Math.abs(preview.size('m') - 120 / 3) < 1e-9, 'sizes scale with the short side');
+});
+
+test('decodes settle on their beats from the beatmap and only ever show glyphs the value could hold', () => {
+  const tl = createTimeline(beatmap);
+  const tx = '2rPSWQ...ZtUc';
+  const schema = '0x368e90...a900';
+  const txLocks = glyphLocks(tx, tl.prefixed('tx.'));
+  const scLocks = glyphLocks(schema, tl.prefixed('schema.'));
+  assert.equal(Math.max(...txLocks.filter(Number.isFinite)), tl.at('state.released'), 'tx settles on RELEASED');
+  assert.equal(Math.max(...scLocks.filter(Number.isFinite)), tl.at('hook.attest.4'), 'schema settles on the fourth attest hook');
+  assert.ok(txLocks.filter(Number.isFinite).every((x) => x >= tl.at('tx.decode-start')));
+  for (let f = 0; f < 40; f++) {
+    const t = tl.at('tx.decode-start') + f / 60;
+    for (const g of scrambleParts(tx, t, { start: tl.at('tx.decode-start'), lockTimes: txLocks, alphabet: BASE58 })) {
+      assert.ok(g.ch === '.' || BASE58.includes(g.ch), `tx glyph ${g.ch} is base58`);
+    }
+    const ts = tl.at('schema.decode-start') + f / 60;
+    for (const g of scrambleParts(schema, ts, { start: tl.at('schema.decode-start'), lockTimes: scLocks, alphabet: HEX })) {
+      assert.ok(g.locked || HEX.includes(g.ch), `schema glyph ${g.ch} is hex`);
+    }
+  }
+  assert.equal(scramble(tx, tl.at('state.released'), { start: tl.at('tx.decode-start'), lockTimes: txLocks }), tx);
+  assert.equal(scramble(schema, 21.0, { start: 20.5, lockTimes: scLocks }), schema);
+});
+
+test('the beatmap carries the picture fixes: landings end on 9.0, 64 agents lands on the lock, the merge flash is ink', () => {
+  const tl = createTimeline(beatmap);
+  const last = Math.max(...tl.tileLandings.map((l) => l.t));
+  assert.equal(last, 9.0, 'the sorted board holds for two beats before the pan');
+  assert.equal(tl.at('text.sixty-four'), tl.at('counter.lock'));
+  assert.equal(tl.hit('flash.ink').frames, 2);
+  assert.equal(tl.hit('text.202-accepted').text, '202 Accepted');
+  assert.ok(beatmap.loudness.truePeakDBTP <= -2.0, 'master true peak at or below -2 dBTP');
+});
+
+test('display word space is the same at every width-axis value', () => {
+  for (const w of [62, 70, 88, 100, 118, 125]) {
+    const spacing = wordSpacingFor(w, -0.04);
+    assert.ok(spacing > -0.2 && spacing < 0.25, `word-spacing ${spacing} at wdth ${w}`);
+  }
+  // At the widest setting the font's own space is already the target width.
+  assert.ok(Math.abs(wordSpacingFor(125, 0) - (WORD_SPACE_EM - 0.29)) < 1e-9);
 });

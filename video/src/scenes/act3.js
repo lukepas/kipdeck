@@ -21,10 +21,10 @@
 
 import { clamp, lerp, expoOut, expoIn, cubicIn, backOut, curves, spring } from '../engine/ease.js';
 import { rand01, rng } from '../engine/prng.js';
-import { scramble } from '../engine/kinetic.js';
-import { bg, text, display, mix, baseOf } from './common.js';
+import { scrambleParts, glyphLocks, HEX } from '../engine/kinetic.js';
+import { bg, text, display, mix, baseOf, typeIn, typeFrom, rightEdge } from './common.js';
 import { grid as swissGrid } from './act1.js';
-import { CHAIN } from './act2.js';
+import { CHAIN, decodeText } from './act2.js';
 
 const FPS = 60;
 const br = { br: true };
@@ -42,8 +42,10 @@ function layout(design) {
     V, X, Y, u, ls,
     header: { x: X(0), y: (V ? Y(0.5) : Y(0)) + ls * 0.95, right: X(V ? 4 : 12) },
     // The act's headline slot: act 2's escrow headline baseline.
+    // In 9:16 the slot is anchored by its last baseline (Y 11.45, above the
+    // feed's caption band), so a three-line break grows upward.
     head: V
-      ? { x: X(0), base: Y(9.95), size: design.size('m'), pitch: design.size('m') * 0.92 }
+      ? { x: X(0), base: Y(9.95), last: Y(11.45), size: design.size('m'), pitch: design.size('m') * 0.92 }
       : { x: X(0), base: Y(7.55), size: design.size('l'), pitch: design.size('l') * 0.92 },
   };
   L.ledger = V
@@ -51,7 +53,7 @@ function layout(design) {
     : { x: X(0), y: Y(0.75), w: X(7) - X(0), hdr: G.ch * 0.45, row: G.ch * 0.92, fs: 34 * u, cols: [0, 0.19, 0.42, 0.6] };
   // Where act 2 decoded the release tx, the schema UID decodes.
   L.schema = V
-    ? { x: X(0), label: Y(6.5), base: Y(7.15), size: design.size('data') }
+    ? { x: X(0), label: Y(5.8), base: Y(6.4), size: design.size('data') }
     : { x: X(7.5), label: Y(3.6), base: Y(4.4), size: 72 * u };
   const lg = L.ledger;
   L.card = { x: lg.x, y: lg.y, w: lg.w, h: lg.hdr + 2 * lg.row };
@@ -87,16 +89,20 @@ function header(S, L, section, { right, rightColor, dot, alpha = 1, wipe = 1 } =
 
 // A headline in the act's slot. Wipes in over 8 frames from its hit and
 // retracts to the left over 6 frames (expo-in) ending on `exit`.
+// The entrance is pre-rolled (common.typeIn): on its hit frame the line is
+// already ~93% wiped in.
 function slotHeadline(S, L, hitName, spans, { exit = Infinity, color, wipeFrames = 8 } = {}) {
   const { t, tl, design } = S;
   const hit = tl.hit(hitName);
-  if (t < hit.t || t >= exit) return;
-  let wipe = ramp(t, hit.t, wipeFrames);
+  if (t < typeFrom(hit.t) || t >= exit) return;
+  let wipe = typeIn(t, hit.t, wipeFrames);
   const out = exit - 6 / FPS;
   if (t >= out) wipe = Math.min(wipe, 1 - expoIn(frames(t, out) / 6));
   if (wipe <= 0) return;
+  const lines = typeof spans === 'string' ? 1 : 1 + spans.filter((sp) => sp.br).length;
+  const base = L.head.last != null ? L.head.last - (lines - 1) * L.head.pitch : L.head.base;
   display(S, {
-    spans, x: L.head.x, base: L.head.base, size: L.head.size, wipe,
+    spans, x: L.head.x, base, size: L.head.size, wipe, lineHeight: L.head.pitch / L.head.size,
     color: color || design.palette.ink, wdth: clamp(100 - 12 * tl.sidechain(t), 62, 125),
   });
 }
@@ -122,8 +128,12 @@ const rowRect = (lg, i) => ({ x: lg.x, y: lg.y + lg.hdr + i * lg.row, w: lg.w, h
 // Times the scene derives from the beatmap.
 function proofTimes(tl) {
   const accept = tl.prefixed('block.merged.').map((h) => h.t);
+  const rows = tl.prefixed('ledger.row.').map((h) => h.t);
+  // Row 1 and the header are already printed on 19.0: they arrive with act
+  // 2's paper feed, so the section opens on a ledger, not a blank sheet.
+  rows[0] -= 0.5;
   return {
-    rows: tl.prefixed('ledger.row.').map((h) => h.t),
+    rows,
     stamp: tl.at('stamp.attested'),
     accept,
     reject: [tl.at('block.rejected'), tl.at('block.rejected.bounce.1'), tl.at('block.rejected.bounce.2')],
@@ -135,15 +145,8 @@ function proofTimes(tl) {
 }
 
 // Schema UID lock times from the beatmap: glyph g is the g-th hex digit after
-// '0x' (the dots never scramble).
-function schemaLocks(tl) {
-  const at = [];
-  for (const h of tl.prefixed('schema.')) if (h.glyphs) for (const g of h.glyphs) at[g] = h.t;
-  const out = [];
-  let g = 0;
-  [...CHAIN.schema].forEach((ch, i) => { out.push(i < 2 || ch === '.' ? -Infinity : at[g++]); });
-  return out;
-}
+// '0x' (the '0x' and the dots never scramble).
+const schemaLocks = (tl) => glyphLocks(CHAIN.schema, tl.prefixed('schema.'));
 
 // One ledger cell printed by the dot-matrix head: characters type on over
 // 4 frames from the cell's 16th. Returns the x where the head sits.
@@ -267,7 +270,8 @@ function drawStamp(S, L, T, lift = 0) {
   // It lands in the attestation column at the row's right end and
   // overhangs the ledger edge, as a rubber stamp would.
   const w = r.w * (L.V ? 0.27 : 0.3), h = r.h * 0.92;
-  const cx = r.x + r.w * (L.V ? 0.93 : 0.93), cy = r.y + r.h * 0.45;
+  // Its right edge stays inside the ledger.
+  const cx = r.x + r.w * (L.V ? 0.84 : 0.83), cy = r.y + r.h * 0.45;
   const sc = lerp(1.3, 1, p) * (1 + 0.12 * lift);
   ctx.save();
   ctx.globalAlpha = clamp(f / 2) * (1 - lift);
@@ -306,21 +310,33 @@ function drawStamp(S, L, T, lift = 0) {
   }
 }
 
+// The EAS schema block: its label and an empty underline are there from the
+// start of the section, the UID decodes into them from 20.5 (hex glyphs only,
+// still-cycling ones dimmed) and settles on 21.0.
 function drawSchema(S, L, T, alpha = 1) {
   const { t, tl, ctx, design } = S;
   const P = design.palette;
   const u = L.u;
-  const start = tl.at('schema.decode-start');
-  if (t < start || alpha <= 0) return;
+  if (t < T.rows[0] || alpha <= 0) return;
   const Z = L.schema;
+  const start = tl.at('schema.decode-start');
   const settle = tl.at('schema.settle');
-  const reveal = ramp(t, start, 8);
   ctx.save();
   ctx.globalAlpha = alpha;
-  ctx.beginPath(); ctx.rect(Z.x - 4 * u, Z.label - L.ls * 1.4, 1200 * u * reveal, Z.size * 3); ctx.clip();
   text(S, 'EAS schema', Z.x, Z.label, { size: L.ls, color: P.grey });
-  const uid = scramble(CHAIN.schema, t, { start, lockTimes: schemaLocks(tl), fps: tl.fps, seed: 'schema' });
-  const tw = text(S, uid, Z.x, Z.base, { kind: 'mono', size: Z.size, weight: 700, color: P.ink, tracking: -0.02 });
+  // The slot: an empty grey rule the width the UID will take.
+  ctx.font = design.font(design.fonts.mono, 700, Z.size);
+  ctx.letterSpacing = `${-0.02 * Z.size}px`;
+  const slotW = ctx.measureText(CHAIN.schema).width;
+  ctx.fillStyle = P.grey;
+  ctx.globalAlpha = alpha * 0.6;
+  ctx.fillRect(Z.x, Z.base + Z.size * 0.2, slotW, Math.max(1, 1.5 * u));
+  ctx.globalAlpha = alpha;
+  let tw = slotW;
+  if (t >= start) {
+    const parts = scrambleParts(CHAIN.schema, t, { start, lockTimes: schemaLocks(tl), fps: tl.fps, seed: 'schema', alphabet: HEX });
+    tw = decodeText(S, parts, Z.x, Z.base, { size: Z.size, color: P.ink, tracking: -0.02 });
+  }
   ctx.restore();
   if (t >= settle) {
     const ul = curves.snap(clamp(frames(t, settle) / 8));
@@ -329,9 +345,11 @@ function drawSchema(S, L, T, alpha = 1) {
     ctx.fillStyle = P.base;
     ctx.fillRect(Z.x, Z.base + Z.size * 0.2, tw * ul, Math.max(2, 4 * u));
     const y = Z.base + Z.size * 0.2 + L.ls * 1.75;
-    ctx.beginPath(); ctx.rect(Z.x - 2 * u, y - L.ls * 1.2, tw * ul + 4 * u, L.ls * 2); ctx.clip();
-    const w = text(S, 'Base Sepolia', Z.x, y, { size: L.ls, color: P.base });
-    text(S, 'schema, not a single attestation', Z.x + w + L.ls * 0.8, y, { size: design.size('tag'), weight: 500, color: P.grey, tracking: 0.02 });
+    ctx.beginPath(); ctx.rect(Z.x - 2 * u, y - L.ls * 1.2, (design.w - Z.x) * ul, L.ls * 3.6); ctx.clip();
+    const w = text(S, 'Live on Base Sepolia', Z.x, y, { size: L.ls, color: P.base });
+    // 9:16 has no room beside it, so the qualifier takes its own line.
+    const qx = L.V ? Z.x : Z.x + w + L.ls * 0.8, qy = L.V ? y + L.ls * 1.5 : y;
+    text(S, 'a schema, not one attestation', qx, qy, { size: design.size('tag'), weight: 500, color: P.grey, tracking: 0.02 });
     ctx.restore();
   }
 }
@@ -380,7 +398,7 @@ function drawCardBody(S, L, T, { clipW = 1, contentA = 1 } = {}) {
       const n = Math.ceil(8 * clamp(frames(t, nameT) / 5));
       text(S, 'agent-07'.slice(0, n), r.x + C.pad, yb, { kind: 'mono', size: big, weight: 700, color: P.paper, alpha: contentA });
     }
-    text(S, 'ERC-8004 identity  #7', r.x + r.w - C.pad, r.y + C.pad + L.ls * 0.9, { size: L.ls, color: P.grey, align: 'right', alpha: contentA });
+    text(S, 'ERC-8004 identity (demo)', r.x + r.w - C.pad, r.y + C.pad + L.ls * 0.9, { size: L.ls, color: P.grey, align: 'right', alpha: contentA });
     text(S, 'Reputation: human-approved merges', C.barX, C.sy - L.ls * 0.7, { size: design.size('tag'), color: P.grey, alpha: contentA });
     // Empty slots, then the history fills on 1-frame steps.
     for (let k = 0; k < SLOTS; k++) {
@@ -390,12 +408,14 @@ function drawCardBody(S, L, T, { clipW = 1, contentA = 1 } = {}) {
       ctx.lineWidth = Math.max(1, u);
       ctx.strokeRect(s.x + 0.5, s.y + 0.5, s.w - 1, s.h - 1);
       if (k < HISTORY) {
+        // Earned merges: solid paper blocks with a check, as on the leaderboard.
         const ft = T.cardIn + (6 + k) / FPS;
         if (t >= ft) {
           const p = curves.snap(clamp(frames(t, ft) / 5));
           ctx.globalAlpha = contentA;
-          ctx.fillStyle = P.grey;
+          ctx.fillStyle = P.paper;
           ctx.fillRect(s.x, s.y + s.h * (1 - p), s.w, s.h * p);
+          if (p >= 1) check(ctx, s, P.ink, u, 1);
         }
       }
     }
@@ -414,9 +434,12 @@ function drawCardBody(S, L, T, { clipW = 1, contentA = 1 } = {}) {
       text(S, shown, 0, 0, { kind: 'mono', size: C.sh * 1.05, weight: 700, color: P.paper, align: 'right', alpha: contentA });
       ctx.restore();
     }
-    text(S, 'testnet demo data', r.x + r.w - C.pad, C.sy - L.ls * 0.7, { size: design.size('tag'), color: P.grey, align: 'right', alpha: contentA });
   }
   ctx.restore();
+  // Demo tag under the card, bottom-right, clear of the falling block's label.
+  if (contentA > 0 && clipW >= 1) {
+    text(S, 'testnet demo data', r.x + r.w, r.y + r.h + design.size('tag') * 1.4, { size: design.size('tag'), color: P.grey, align: 'right', alpha: contentA });
+  }
 }
 
 // A merged row in flight: it leaves the ledger, shrinks into a block that
@@ -545,7 +568,8 @@ function boardGeom(L) {
   const u = L.u;
   const pitchY = B.h / 8;
   const tilesX = B.x + B.handleW;
-  const pitchX = (B.w - B.handleW - B.countW) / 12;
+  // 16:9: each check cell is half a grid column, so the bars snap to the grid.
+  const pitchX = L.V ? (B.w - B.handleW - B.countW) / 12 : (L.X(1) - L.X(0)) / 2;
   const tile = (row, k) => ({ x: tilesX + k * pitchX + 2 * u, y: B.y + row * pitchY + pitchY * 0.12, w: pitchX - 4 * u, h: pitchY * 0.76 });
   // The 8x8 army, square cells, right-aligned in the module.
   const gp = B.h / 8;
@@ -602,12 +626,18 @@ function check(ctx, r, color, u, p = 1) {
   void u;
 }
 
-// Row y for a handle: stale order until 23.5, then a FLIP to the ranked order.
+// Row y for a handle: stale order, then a FLIP to the ranked order that
+// starts 12 frames early and lands exactly on the 23.5 backbeat.
+const RERANK_LEAD = 12 / FPS;
 function rowOf(T, hd, t) {
   const a = STALE.indexOf(hd), b = RANKED.indexOf(hd);
-  const p = curves.flip(clamp((t - T.rerank[1]) / 0.32));
+  const p = curves.flip(clamp((t - (T.rerank[1] - RERANK_LEAD)) / RERANK_LEAD));
   return lerp(a, b, p);
 }
+// The tiles fly from the army into the bars from 23.0: a short stagger per
+// slot and row, 12 frames each, all landed before the re-rank starts.
+const tileDelay = (k, row) => (k * 0.5 + row * 0.4) / FPS;
+const TILE_FLIGHT = 12 / FPS;
 
 function drawBoard(S, L, T) {
   const { t, ctx, design } = S;
@@ -616,6 +646,16 @@ function drawBoard(S, L, T) {
   const { G, tiles } = boardTiles(L);
   const B = G.B;
   const r1 = T.rerank[0];
+  // agent-07's row, as it rises to the top: a shade band behind it.
+  if (t >= T.rerank[1] - RERANK_LEAD) {
+    const y = B.y + rowOf(T, 'agent-07', t) * G.pitchY;
+    ctx.fillStyle = P.shade;
+    ctx.globalAlpha = ramp(t, T.rerank[1] - RERANK_LEAD, 10);
+    ctx.fillRect(B.x - 8 * u, y, B.w + 16 * u, G.pitchY);
+    ctx.fillStyle = P.ink;
+    ctx.fillRect(B.x - 8 * u, y, 5 * u, G.pitchY);
+    ctx.globalAlpha = 1;
+  }
   // Rank numbers own the positions; the rows move past them.
   for (let k = 0; k < 8; k++) {
     const y = B.y + k * G.pitchY + G.pitchY * 0.62;
@@ -632,12 +672,12 @@ function drawBoard(S, L, T) {
     const is07 = hd === 'agent-07';
     const n = Math.ceil(hd.length * clamp(frames(t, ht) / 5));
     text(S, hd.slice(0, n), B.x + B.fs * 1.7, y + G.pitchY * 0.62, { kind: 'mono', size: B.fs, weight: is07 ? 700 : 400, color: is07 ? P.ink : mix(P.grey, P.ink, 0.45) });
-    const lastLand = r1 + (6 + BOARD[hd] * 1.1 + STALE.indexOf(hd) * 0.8 + 18) / FPS;
+    const lastLand = r1 + tileDelay(BOARD[hd] - 1, STALE.indexOf(hd)) + TILE_FLIGHT;
     if (t >= lastLand) {
       const cx = G.tilesX + BOARD[hd] * G.pitchX + 10 * u;
       const w = text(S, String(BOARD[hd]).padStart(2, '0'), cx, y + G.pitchY * 0.66, { kind: 'mono', size: B.fs * 1.15, weight: 700, color: P.ink, alpha: ramp(t, lastLand, 4) });
-      if (is07 && t >= T.rerank[1]) {
-        const p = ramp(t, T.rerank[1] + 8 / FPS, 8);
+      if (is07 && t >= T.rerank[1] - 3 / FPS) {
+        const p = ramp(t, T.rerank[1] - 3 / FPS, 6);
         const tx = cx + w + 12 * u, ty = y + G.pitchY * 0.5;
         const s = B.fs * 0.32;
         ctx.save();
@@ -652,15 +692,16 @@ function drawBoard(S, L, T) {
   // Tiles: FLIP from the 8x8 army into the bars on 23.0.
   for (const tile of tiles) {
     const row = STALE.indexOf(tile.hd);
-    const delay = (tile.k * 1.1 + row * 0.8) / FPS;
-    const p = curves.flip(clamp((t - r1 - delay) / (18 / FPS)));
+    const delay = tileDelay(tile.k, row);
+    const p = curves.flip(clamp((t - r1 - delay) / TILE_FLIGHT));
     const a = G.cell(tile.cell);
     const ry = rowOf(T, tile.hd, t);
     const b = G.tile(0, tile.k);
     b.y += ry * G.pitchY;
     const arc = Math.sin(Math.PI * p) * (tile.k % 2 ? 1 : -1) * 14 * u;
     const r = { x: lerp(a.x, b.x, p), y: lerp(a.y, b.y, p) + arc, w: lerp(a.w, b.w, p), h: lerp(a.h, b.h, p) };
-    const lift = tile.hd === 'agent-07' && t >= T.rerank[1] && t < T.rerank[1] + 0.32 ? Math.sin(Math.PI * clamp((t - T.rerank[1]) / 0.32)) : 0;
+    const r0 = T.rerank[1] - RERANK_LEAD;
+    const lift = tile.hd === 'agent-07' && t >= r0 && t < T.rerank[1] ? Math.sin(Math.PI * clamp((t - r0) / RERANK_LEAD)) : 0;
     if (lift > 0) { r.x -= 2 * u * lift; r.y -= 4 * u * lift; }
     ctx.fillStyle = P.ink;
     ctx.fillRect(r.x, r.y, r.w, r.h);
@@ -779,13 +820,13 @@ const proof = {
     // Headlines in the act's slot.
     slotHeadline(S, L, 'text.proof-of-merge', L.V ? [{ text: 'Proof of' }, br, { text: 'Merge.' }] : 'Proof of Merge.', { exit: rep });
     slotHeadline(S, L, 'text.which-agents-ship', L.V
-      ? [{ text: 'Which agents' }, br, { text: 'actually ship.' }]
+      ? [{ text: 'Which agents' }, br, { text: 'actually' }, br, { text: 'ship.' }]
       : 'Which agents actually ship.');
   },
   blur(t) {
     if (t >= 21.2 && t < 22.1) return 3;
     if (t >= 22.5 && t < 23.0) return 4;
-    if ((t >= 23.0 && t < 23.45) || (t >= 23.5 && t < 23.85)) return 3;
+    if (t >= 23.0 && t < 23.5) return 3;
     return 1;
   },
 };
@@ -795,27 +836,35 @@ const reputation = { id: 'reputation', draw: proof.draw, blur: proof.blur };
 
 // ========================================================= 24-25.5 x402 ==
 
+// The real flow (launch/chain/video-scripts.md): an outsider hires a worker
+// for one task. POST /api/x402/task answers 402; the client retries with an
+// X-PAYMENT header (0.10 test USDC on Base Sepolia); the office answers 202
+// and holds the task until an admin approves it.
 function x402Layout(L) {
   const { X, Y, u, V } = L;
   if (V) {
-    const size = 340 * u;
+    const size = 300 * u;
     return {
-      req: { x: X(0), label: Y(1.5), base: Y(2.05), size: 56 * u, pay: Y(2.55) },
-      digits: { x: X(0), y: Y(2.95), size, cw: size * 0.76, ch: size * 0.96, gap: 12 * u },
-      resp: { x: X(0), label: Y(5.85), line: Y(6.35), status: Y(6.95), lsz: 34 * u, ssz: 40 * u },
+      req: { x: X(0), label: Y(1.45), base: Y(2.0), size: 50 * u },
+      pay: { x: X(0), label: Y(2.5), base: Y(2.95), size: 34 * u },
+      digits: { x: X(0), y: Y(3.35), size, cw: size * 0.76, ch: size * 0.96, gap: 12 * u },
+      resp: { x: X(0), label: Y(6.05), line: Y(6.55), status: Y(7.1), ok: Y(7.6), note: Y(8.05), lsz: 40 * u, ssz: 40 * u },
     };
   }
   const size = 500 * u;
   return {
-    req: { x: X(0), label: Y(0.8), base: Y(1.4), size: 64 * u, pay: Y(1.4), payX: X(3.2) },
+    req: { x: X(0), label: Y(0.8), base: Y(1.4), size: 64 * u },
+    pay: { x: X(8), label: Y(0.8), base: Y(1.4), size: 32 * u },
     digits: { x: X(0), y: Y(1.85), size, cw: size * 0.72, ch: size * 0.9, gap: 16 * u },
-    resp: { x: X(8), label: Y(2.6), line: Y(3.25), status: Y(4.05), lsz: 44 * u, ssz: 52 * u },
+    resp: { x: X(8), label: Y(2.45), line: Y(3.05), status: Y(3.75), ok: Y(4.45), note: Y(5.0), lsz: 44 * u, ssz: 52 * u },
   };
 }
 
 // One split-flap cell: a falling top flap uncovers the next glyph, and the
-// next glyph's lower half swings down after it. p = 0..1 over the flip.
-function flapCell(S, r, prev, next, p, color, size) {
+// next glyph's lower half swings down after it. p = 0..1 over the flip. The
+// cell is a filled card (amber while payment is required, paper once
+// accepted) with ink digits, and the hinge gap is clipped to the card.
+function flapCell(S, r, prev, next, p, fill, size) {
   const { ctx, design } = S;
   const P = design.palette;
   const u = design.u;
@@ -829,12 +878,14 @@ function flapCell(S, r, prev, next, p, color, size) {
     ctx.translate(0, mid);
     ctx.scale(1, sy);
     ctx.translate(0, -mid);
-    text(S, ch, r.x + r.w / 2, mid + size * 0.37, { kind: 'mono', size, weight: 700, color, align: 'center' });
+    text(S, ch, r.x + r.w / 2, mid + size * 0.37, { kind: 'mono', size, weight: 700, color: P.ink, align: 'center' });
     ctx.restore();
   };
-  ctx.strokeStyle = P.grey;
-  ctx.lineWidth = Math.max(1, u);
-  ctx.strokeRect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
+  ctx.fillStyle = fill;
+  ctx.fillRect(r.x, r.y, r.w, r.h);
+  ctx.strokeStyle = P.ink;
+  ctx.lineWidth = Math.max(1, 1.5 * u);
+  ctx.strokeRect(r.x + 0.75, r.y + 0.75, r.w - 1.5, r.h - 1.5);
   if (p >= 1 || prev === next) {
     glyph(next, 'top', 1); glyph(next, 'bottom', 1);
   } else {
@@ -843,9 +894,9 @@ function flapCell(S, r, prev, next, p, color, size) {
     if (p < 0.5) glyph(prev, 'top', 1 - p * 2);
     else glyph(next, 'bottom', (p - 0.5) * 2);
   }
-  // The split: a paper gap through the middle of every cell.
+  // The split: a gap through the middle of the card, inside its border.
   ctx.fillStyle = P.paper;
-  ctx.fillRect(r.x, mid - 2.5 * u, r.w, 5 * u);
+  ctx.fillRect(r.x + 2 * u, mid - 2.5 * u, r.w - 4 * u, 5 * u);
 }
 
 const x402 = {
@@ -858,39 +909,50 @@ const x402 = {
     const u = L.u;
     bg(S, P.paper);
     swissGrid(S, { alpha: 0.5 });
-    header(S, L, 'Pay per task', { right: 'HTTP 402 - x402' });
+    header(S, L, 'Pay per task', { right: 'HTTP 402 - x402 - Base Sepolia' });
     const t0 = tl.at('text.402');
-    const ok = tl.at('text.200-ok');
+    const ok = tl.at('text.202-accepted');
     const flaps = tl.prefixed('flap.402').map((h) => h.t).filter((ft) => ft >= t0 + 0.24);
 
-    // Request.
+    // Request: who asks, and for what.
     const R = X4.req;
-    text(S, 'Request', R.x, R.label, { size: L.ls, color: P.grey });
-    text(S, 'GET /task', R.x, R.base, { kind: 'mono', size: R.size, weight: 700, color: P.ink });
+    text(S, 'Request - hire a worker for one task', R.x, R.label, { size: L.ls, color: P.grey });
+    text(S, 'POST /api/x402/task', R.x, R.base, { kind: 'mono', size: R.size, weight: 700, color: P.ink });
+    // The retry carries the payment.
     const payT = flaps[0];
     if (t >= payT) {
-      const n = Math.ceil(19 * clamp(frames(t, payT) / 6));
-      const px = R.payX ?? R.x;
-      const py = R.payX ? R.base : R.pay;
-      text(S, '+ X-PAYMENT header'.slice(0, n), px, py, { kind: 'mono', size: R.payX ? R.size * 0.5 : L.ls * 1.1, weight: 700, color: P.ink });
+      const Y = X4.pay;
+      const lab = 'Retry with payment';
+      const pay = 'X-PAYMENT: 0.10 test USDC';
+      const n = Math.ceil(pay.length * clamp(frames(t, payT) / 6));
+      text(S, lab, Y.x, Y.label, { size: L.ls, color: P.grey, alpha: ramp(t, payT, 4) });
+      text(S, pay.slice(0, n), Y.x, Y.base, { kind: 'mono', size: Y.size, weight: 700, color: P.ink });
     }
 
-    // The status code: 402 in amber, a head-shake on the denied buzz, the
-    // flaps on 16ths, then 200 in ink locks on 24.5.
+    // The status code: 402 on amber cards with a head-shake on the denied
+    // buzz. The flaps rattle on 32nds from 24.25 and lock one digit at a time
+    // (2, 0, 2 on the last three 32nds), so 202 is whole before 24.5; on 24.5
+    // the cards turn paper and the code stamps.
     const D = X4.digits;
-    const seq = ['402'];
-    flaps.forEach((_, i) => seq.push(Array.from({ length: 3 }, (__, k) => String(Math.floor(rand01('x402', i, k) * 10))).join('')));
-    seq.push('200');
-    const times = [t0, ...flaps, ok];
-    let idx = 0;
-    for (let i = 0; i < times.length; i++) if (t >= times[i]) idx = i;
-    const cur = seq[idx], prev = seq[Math.max(0, idx - 1)];
-    const p = idx === 0 ? 1 : clamp(frames(t, times[idx]) / 3);
-    const locked = t >= ok;
+    const finalCode = '202';
+    const lockAt = [flaps.length - 3, flaps.length - 2, flaps.length - 1].map((i) => flaps[i]);
+    const digitAt = (k, tt) => {
+      if (tt < t0) return '4';
+      if (tt >= lockAt[k]) return finalCode[k];
+      let idx = -1;
+      for (let i = 0; i < flaps.length; i++) if (tt >= flaps[i]) idx = i;
+      if (idx < 0) return '402'[k];
+      return String(Math.floor(rand01('x402', idx, k) * 10));
+    };
+    const changeAt = (k, tt) => {
+      let last = t0;
+      for (const ft of flaps) if (ft <= tt && ft <= lockAt[k]) last = ft;
+      return last;
+    };
+    const accepted = t >= ok;
     const df = frames(t, t0);
     const shakeX = df < 14 ? Math.sin(df * 1.6) * 14 * u * (1 - df / 14) : 0;
-    const lockS = locked ? lerp(1.05, 1, curves.slam(frames(t, ok) / 8)) : 1;
-    const color = locked ? P.ink : P.amber;
+    const lockS = accepted ? lerp(1.05, 1, curves.slam(frames(t, ok) / 8)) : 1;
     ctx.save();
     const tw = D.cw * 3 + D.gap * 2;
     ctx.translate(D.x + shakeX + tw / 2, D.y + D.ch / 2);
@@ -898,32 +960,44 @@ const x402 = {
     ctx.translate(-(D.x + tw / 2), -(D.y + D.ch / 2));
     for (let k = 0; k < 3; k++) {
       const r = { x: D.x + k * (D.cw + D.gap), y: D.y, w: D.cw, h: D.ch };
-      flapCell(S, r, prev[k], cur[k], p, color, D.size);
+      const c = changeAt(k, t);
+      const cur = digitAt(k, t);
+      const prev = digitAt(k, c - 1e-4);
+      const p = clamp(frames(t, c) / 3);
+      flapCell(S, r, prev, cur, c === t0 ? 1 : p, accepted ? P.paper : P.amber, D.size);
     }
     ctx.restore();
 
-    // Response line and reason phrase: Payment Required strikes through
-    // and becomes OK.
+    // Response: Payment Required strikes through; Accepted lands on its own
+    // line, with what that means here.
     const Q = X4.resp;
     text(S, 'Response', Q.x, Q.label, { size: L.ls, color: P.grey });
-    text(S, `HTTP/1.1 ${locked ? '200' : '402'}`, Q.x, Q.line, { kind: 'mono', size: Q.lsz, weight: 700, color: locked ? P.ink : P.amber });
-    const strike = locked ? curves.snap(clamp(frames(t, ok) / 6)) : 0;
-    const w = text(S, 'Payment Required', Q.x, Q.status, { size: Q.ssz, color: locked ? P.grey : P.ink, tracking: 0.02 });
+    const lw = text(S, 'HTTP/1.1 ', Q.x, Q.line, { kind: 'mono', size: Q.lsz, weight: 700, color: P.ink });
+    const code = accepted ? '202' : '402';
+    const cw = text(S, code, Q.x + lw, Q.line, { kind: 'mono', size: Q.lsz, weight: 700, color: P.ink });
+    if (!accepted) {
+      // An amber underline marks the denied state (amber text on paper is too pale).
+      ctx.fillStyle = P.amber;
+      ctx.fillRect(Q.x + lw, Q.line + Q.lsz * 0.18, cw, 6 * u);
+    }
+    const strike = accepted ? curves.snap(clamp(frames(t, ok) / 6)) : 0;
+    const w = text(S, 'Payment Required', Q.x, Q.status, { size: Q.ssz, color: accepted ? P.grey : P.ink, tracking: 0.02 });
     if (strike > 0) {
       ctx.fillStyle = P.ink;
       ctx.fillRect(Q.x - 4 * u, Q.status - Q.ssz * 0.36, (w + 8 * u) * strike, 4 * u);
     }
-    if (t >= ok + 4 / FPS) {
-      const n = ramp(t, ok + 4 / FPS, 5);
+    if (accepted) {
+      const n = ramp(t, ok, 5);
       ctx.save();
-      ctx.beginPath(); ctx.rect(Q.x + w + 20 * u, Q.status - Q.ssz, Q.ssz * 2.4 * n, Q.ssz * 1.4); ctx.clip();
-      text(S, 'OK', Q.x + w + 24 * u, Q.status, { size: Q.ssz, color: P.ink, tracking: 0.02 });
+      ctx.beginPath(); ctx.rect(Q.x - 4 * u, Q.ok - Q.ssz, (w + 8 * u) * n, Q.ssz * 1.4); ctx.clip();
+      text(S, 'Accepted', Q.x, Q.ok, { size: Q.ssz, color: P.ink, tracking: 0.02 });
       ctx.restore();
+      text(S, 'held until an admin approves', Q.x, Q.note, { size: design.size('labelS'), weight: 500, color: P.grey, alpha: ramp(t, ok + 4 / FPS, 6) });
     }
-    const tagY = L.V ? Q.status + design.size('tag') * 2.2 : D.y + D.ch;
-    text(S, 'testnet demo', L.V ? Q.x : L.header.right, tagY, { size: design.size('tag'), color: P.grey, align: L.V ? 'left' : 'right' });
+    const tagY = L.V ? Q.note + design.size('tag') * 2.2 : D.y + D.ch + design.size('tag') * 1.4;
+    text(S, 'testnet demo', L.V ? Q.x : D.x + tw, tagY, { size: design.size('tag'), color: P.grey, align: L.V ? 'left' : 'right' });
 
-    slotHeadline(S, L, 'text.x402', L.V ? [{ text: 'Pay per task:' }, br, { text: 'x402.' }] : 'Pay per task: x402.', { wipeFrames: 12 });
+    slotHeadline(S, L, 'text.x402', L.V ? [{ text: 'Pay per task:' }, br, { text: 'x402.' }] : 'Pay per task: x402.');
   },
 };
 
@@ -931,24 +1005,24 @@ const x402 = {
 
 // End-card geometry, shared so the recap collapses into the exact point the
 // mark grows from.
+// A stacked lockup, flush-left: the mark (a third of the frame height in
+// 16:9) over the wordmark, the promise, and the small print with the chains
+// and the ids a viewer can check.
 function endLayout(L, design) {
   const { X, Y, u, V } = L;
   if (V) {
-    const M = 230 * u;
     return {
-      mark: { x: X(0), y: Y(1.7), s: M },
-      word: { x: X(0), base: Y(5.35), size: design.size('xl'), lines: 2 },
-      promise: { x: X(0), base: Y(8.2), size: 40 * u },
-      small: { x: X(0), base: Y(10.55), size: 22 * u },
+      mark: { x: X(0), y: Y(1.5), s: 276 * u },
+      word: { x: X(0), base: Y(5.9), size: 288 * u, lines: 2 },
+      promise: { x: X(0), base: Y(8.8), size: 40 * u },
+      small: { x: X(0), base: Y(9.85), size: 28 * u },
     };
   }
-  const size = 260 * u;
-  const M = size * 0.688;
   return {
-    mark: { x: X(0), y: Y(4.3) - M, s: M },
-    word: { x: X(0) + M * 1.3, base: Y(4.3), size, lines: 1 },
-    promise: { x: X(0), base: Y(5.45), size: 46 * u },
-    small: { x: X(0), base: Y(7.75), size: 22 * u },
+    mark: { x: X(0), y: Y(0.45), s: 360 * u },
+    word: { x: X(0), base: Y(5.65), size: 270 * u, lines: 1 },
+    promise: { x: X(0), base: Y(6.45), size: 42 * u },
+    small: { x: X(0), base: Y(7.4), size: 24 * u },
   };
 }
 
@@ -1066,19 +1140,28 @@ function quadMerge(S, r, lt, u) {
   }
 }
 
+// Panel 04: before its word, the bounty held (ink 0.00 on paper); on 'Get
+// paid.' the panel turns ink and 25.00 lands green, released, on that frame.
 function quadPaid(S, r, lt, u) {
   const { ctx, design } = S;
   const P = design.palette;
   const pad = r.w * 0.08;
+  const bh = r.h * 0.2;
+  if (lt < 0) {
+    ctx.strokeStyle = P.grey;
+    ctx.lineWidth = 1.5 * u;
+    ctx.strokeRect(r.x + pad, r.y + pad, r.w - pad * 2, bh);
+    text(S, 'In escrow', r.x + pad * 1.5, r.y + pad + bh * 0.64, { size: bh * 0.34, color: P.grey });
+    text(S, '0.00', r.x + pad, r.y + r.h * 0.72, { kind: 'mono', size: r.h * 0.26, weight: 700, color: P.ink, tracking: -0.02 });
+    text(S, 'Test USDC  -  Solana devnet', r.x + pad, r.y + r.h - pad, { size: 13 * u, color: P.grey });
+    return;
+  }
   ctx.fillStyle = P.ink;
   ctx.fillRect(r.x, r.y, r.w, r.h);
-  const bh = r.h * 0.2;
-  const fill = curves.snap(clamp(lt * FPS / 6));
   ctx.fillStyle = P.solana;
-  ctx.fillRect(r.x + pad, r.y + pad, (r.w - pad * 2) * fill, bh);
+  ctx.fillRect(r.x + pad, r.y + pad, r.w - pad * 2, bh);
   text(S, 'Released', r.x + pad * 1.5, r.y + pad + bh * 0.64, { size: bh * 0.34, color: P.ink });
-  const v = 25 * curves.snap(clamp(lt * FPS / 10));
-  text(S, v.toFixed(2), r.x + pad, r.y + r.h * 0.72, { kind: 'mono', size: r.h * 0.26, weight: 700, color: P.solana, tracking: -0.02 });
+  text(S, '25.00', r.x + pad, r.y + r.h * 0.72, { kind: 'mono', size: r.h * 0.26, weight: 700, color: P.solana, tracking: -0.02 });
   text(S, 'Test USDC  -  Solana devnet', r.x + pad, r.y + r.h - pad, { size: 13 * u, color: P.paper });
 }
 
@@ -1086,7 +1169,9 @@ const QUADS = [quadSee, quadReview, quadMerge, quadPaid];
 
 const recap = {
   id: 'recap',
-  blur: (t) => (t >= 26.75 ? 6 : 1),
+  // Blur starts the frame after 'Get paid.', so the hit frame shows the
+  // released panel clean rather than mixed with the frame before it.
+  blur: (t) => (t >= 26.75 + 1 / 60 ? 6 : 1),
   draw(S) {
     const { t, tl, design, ctx } = S;
     const P = design.palette;
@@ -1106,7 +1191,8 @@ const recap = {
     ctx.translate(pt.x, pt.y); ctx.scale(k, k); ctx.translate(-pt.x, -pt.y);
     R.quads.forEach((q, i) => {
       const s0 = tl.at('text.see');
-      const frameIn = ramp(t, s0 + i * 2 / FPS, 8);
+      // All four frames are in on 25.5 (staggered over the frames before it).
+      const frameIn = ramp(t, s0 - 8 / FPS + i / FPS, 5);
       const on = t >= hits[i];
       const lt = t - hits[i];
       ctx.strokeStyle = on ? P.ink : P.grey;
@@ -1114,7 +1200,18 @@ const recap = {
       const fw = q.w * frameIn, fh = q.h * frameIn;
       ctx.strokeRect(q.x + 0.5, q.y + 0.5, fw, fh);
       text(S, String(i + 1).padStart(2, '0'), q.x + 8 * u, q.y + 22 * u, { kind: 'mono', size: 16 * u, color: P.grey, alpha: frameIn });
-      if (!on) return;
+      if (!on) {
+        // Waiting panels show their settled 'before' state at low contrast.
+        if (frameIn <= 0) return;
+        const S2 = { ...S, ctx: fadedCtx(ctx, 0.28 * frameIn) };
+        ctx.save();
+        ctx.beginPath(); ctx.rect(q.x, q.y, q.w, q.h); ctx.clip();
+        S2.ctx.globalAlpha = 1;
+        QUADS[i](S2, q, [0.6, 0.6, 0, -1][i], u);
+        ctx.restore();
+        ctx.globalAlpha = 1;
+        return;
+      }
       // Cut-in: content pushes from 1.08 to 1.0 with a snap.
       const sc = lerp(1.08, 1, curves.snap(clamp(frames(t, hits[i]) / 7)));
       ctx.save();
@@ -1132,13 +1229,16 @@ const recap = {
     const W = R.word;
     const size = W.size;
     const gapY = size * 1.12;
-    const roll = (t0) => curves.snap(clamp(frames(t, t0) / 8));
+    // Pre-rolled by 6 frames, so each word is whole in the window on its hit.
+    const PRE = 6;
+    const roll = (t0) => curves.snap(clamp((frames(t, t0) + PRE) / 8));
     const winTop = W.base - size * 0.98, winBot = W.base + size * 0.26;
     WORDS.forEach((w, i) => {
       const t0 = hits[i];
       const t1 = i < 3 ? hits[i + 1] : Infinity;
-      if (t < t0 || t >= t1 + 8 / FPS) return;
-      const dy = t >= t1 ? -roll(t1) * gapY : (1 - roll(t0)) * gapY;
+      // The outgoing word is gone on the incoming word's hit frame.
+      if (t < t0 - PRE / FPS || t >= t1) return;
+      const dy = t >= t1 - PRE / FPS ? -roll(t1) * gapY : (1 - roll(t0)) * gapY;
       const y = W.base - size * baseOf(1) + dy;
       const top = winTop - y, bottom = y + size - winBot;
       S.type.text({
@@ -1171,9 +1271,10 @@ const endcard = {
     const impact = tl.at('endcard.impact');
     const red = tl.at('mark.center.red');
     const cx = M.x + M.s / 2, cy = M.y + M.s / 2;
-    // The point opens into the mark's frame, which retires once the mark
-    // is complete.
-    const open = ramp(t, impact, 9);
+    // The recap's point opens into the mark's frame at full size on the
+    // impact (pre-rolled 3 frames), and the frame retires once the mark is
+    // complete.
+    const open = expoOut(clamp((frames(t, impact) + 3) / 6));
     const full = tl.prefixed('mark.cell.').slice(-1)[0].t;
     const frameA = 1 - ramp(t, full + 4 / FPS, 10);
     if (frameA > 0) {
@@ -1181,29 +1282,29 @@ const endcard = {
       ctx.save();
       ctx.globalAlpha = frameA;
       ctx.strokeStyle = P.ink;
-      ctx.lineWidth = 1.5 * u;
+      ctx.lineWidth = 2 * u;
       ctx.strokeRect(cx - s / 2, cy - s / 2, s, s);
-      if (frames(t, impact) < 3) { ctx.fillStyle = P.ink; ctx.fillRect(cx - 6 * u, cy - 6 * u, 12 * u, 12 * u); }
       ctx.restore();
     }
-    // Cells pop in on 16ths with overshoot; the centre lands red with a
-    // stamp. Bookend: the red centre blinks once on 29.5 like the opening's
-    // cursor (off for half a beat, then back for the last frames).
+    // Cells pop in on 16ths with overshoot, each one already formed on its
+    // hit. The centre is the exact cell module, red from its stamp, with a
+    // ring kicking out. Bookend: the red centre blinks off for the 8 frames
+    // before 29.5 and is back on with the last tick, so the film ends lit.
     const cell = M.s / 3;
     const gap = cell * 0.09;
     const blink = tl.at('bookend.blink');
-    const blinkOff = t >= blink && t < blink + tl.beatSec / 2;
+    const blinkOff = t >= blink - 8 / FPS && t < blink;
     tl.prefixed('mark.cell.').forEach((h, i) => {
-      if (t < h.t) return;
+      const f = frames(t, h.t);
+      if (f < -2) return;
       const centre = i === 4;
       if (centre && blinkOff) return;
-      const f = frames(t, h.t);
-      const s = centre ? lerp(1.45, 1, curves.slam(clamp(f / 7))) : backOut(clamp(f / 7), 2.2);
+      const s = centre ? clamp((f + 2) / 2) : backOut(clamp((f + 2) / 7), 2.2);
       const x = M.x + (i % 3) * cell + cell / 2, y = M.y + Math.floor(i / 3) * cell + cell / 2;
       const side = (cell - gap) * s;
-      ctx.fillStyle = centre && t >= red ? P.signal : P.ink;
+      ctx.fillStyle = centre && t >= red - 2 / FPS ? P.signal : P.ink;
       ctx.fillRect(x - side / 2, y - side / 2, side, side);
-      if (centre && f < 14) {
+      if (centre && f >= 0 && f < 14) {
         const k = f / 14;
         const g = side / 2 + cell * 0.5 * expoOut(k);
         ctx.strokeStyle = P.signal;
@@ -1214,41 +1315,52 @@ const endcard = {
       }
     });
 
-    // Wordmark: slams in at wdth 125 and settles to 100 by 28.0.
+    // Wordmark: wipes in over the 3 frames before the slam, lands on it with
+    // a 2-frame overshoot, and settles from wdth 125 to 100 by 28.0. It stays
+    // inside the grid.
     const wm = tl.at('wordmark.slam');
     const settle = tl.at('text.promise');
-    if (t >= wm) {
+    if (t >= typeFrom(wm)) {
       const p = curves.slam(clamp((t - wm) / (settle - wm)));
+      const fw = frames(t, wm);
+      const over = fw >= 0 && fw < 2 ? 1.04 : 1;
       const Wd = E.word;
       display(S, {
         spans: Wd.lines === 2 ? [{ text: 'UGC' }, br, { text: 'ARMY' }] : 'UGC ARMY',
         x: Wd.x, base: Wd.base, size: Wd.size, lineHeight: 0.86,
-        wdth: lerp(125, 100, p), wght: 900, tracking: -0.02, wipe: ramp(t, wm, 5),
-        // The slam may run past the grid to the frame edge; it is back
-        // inside the grid within a few frames.
-        fit: design.w - Wd.x,
+        wdth: lerp(125, 100, p), wght: 900, tracking: -0.02, wipe: typeIn(t, wm, 5), scale: over,
+        fit: (rightEdge(design) - Wd.x) / over,
       });
     }
     // Promise: mask-wipes on 28.0.
     const pr = tl.hit('text.promise');
-    if (t >= pr.t) {
+    if (t >= typeFrom(pr.t)) {
       const Pm = E.promise;
       const lh = 1.18;
       S.type.text({
-        spans: [{ text: 'An army of AI agents working for you.' }, br, { text: 'Paid only when you merge.' }],
+        spans: [{ text: 'An army of AI agents working for you.' }, br, { text: 'Your agents get paid only when you merge.' }],
         x: Pm.x, y: Pm.base - Pm.size * 0.95, size: Pm.size, family: design.fonts.ui, wght: 500, tracking: -0.005,
-        lineHeight: lh, wipe: ramp(t, pr.t, 12),
+        lineHeight: lh, wipe: typeIn(t, pr.t), fit: rightEdge(design) - Pm.x,
       });
     }
-    // Small print: fades up on 28.5 and holds still.
+    // Small print: fades up on 28.5 and holds still. The first lines name the
+    // chains and the ids anyone can look up; the last are the disclosure.
     const sp = tl.at('smallprint.fade');
     const fade = clamp((t - sp) / 0.5);
     if (fade > 0) {
       const Sm = E.small;
+      const verify = `Verify: devnet tx ${CHAIN.releaseTx}`;
+      const schema = `EAS schema ${CHAIN.schema}`;
       const lines = L.V
-        ? ['Testnet only: Solana devnet, Base Sepolia, test USDC.', 'No real funds. Built on agent-office (MIT) by webdevcody.']
-        : ['Testnet only: Solana devnet, Base Sepolia, test USDC. No real funds. Built on agent-office (MIT) by webdevcody.'];
-      lines.forEach((l, i) => text(S, l, Sm.x, Sm.base + i * Sm.size * 1.5, { kind: 'ui', weight: 500, size: Sm.size, color: P.grey, alpha: fade, tracking: 0.01 }));
+        ? [
+          ['Solana devnet - Base Sepolia', P.ink], [verify, P.ink], [schema, P.ink],
+          ['Testnet only: test USDC, no real funds.', P.grey], ['Built on agent-office (MIT) by webdevcody.', P.grey],
+        ]
+        : [
+          [`Solana devnet - Base Sepolia.   ${verify}   ${schema}`, P.ink],
+          ['Testnet only: test USDC, no real funds. Built on agent-office (MIT) by webdevcody.', P.grey],
+        ];
+      lines.forEach(([l, c], i) => text(S, l, Sm.x, Sm.base + i * Sm.size * 1.5, { kind: 'ui', weight: 500, size: Sm.size, color: c, alpha: fade, tracking: 0.01 }));
     }
   },
 };

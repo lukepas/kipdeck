@@ -6,12 +6,13 @@
 // display type; a small head block above the type holds the live readout. The
 // opening agent is the whole region, the quadtree splits it into the 64 cells,
 // the overload smears those cells, and mission control sorts the same 64 tiles
-// into four status columns that live on the same cells. At 9.5 s the whole
-// layout whip-pans left so act 2's pan-in from the right reads as one move.
+// into four status columns that live on the same cells. The last tile lands
+// on 9.0 and the sorted board holds for two beats; from 9.6 s the layout
+// whip-pans left in one camera move with act 2's pan-in, cut mid-move on 10.0.
 
 import { clamp, lerp, expoOut, expoIn, cubicIn, cubicBezier, curves } from '../engine/ease.js';
 import { rand01, rng } from '../engine/prng.js';
-import { bg, gridLines, text, tag, AGENT_TOOLS } from './common.js';
+import { bg, gridLines, text, tag, typeIn, typeFrom, whipCamera, AGENT_TOOLS } from './common.js';
 
 const N = 8;                       // tiles per side at the full split
 const TOOL_CODE = { 'Claude Code': 'CC', Codex: 'CX', Cursor: 'CU', OpenCode: 'OC', Pi: 'PI' };
@@ -242,7 +243,7 @@ export function grid(S, { alpha = 1, reveal = null, color } = {}) {
       text(S, String(idx + 1).padStart(2, '0'), ln.x1 + 5 * u, G.y - 9 * u,
         { kind: 'mono', size: design.size('tag') * 0.8, color: P.grey, alpha: a });
     } else if (!vertical && idx < G.rows) {
-      text(S, String.fromCharCode(65 + idx), G.x - 9 * u, ln.y1 + 18 * u,
+      text(S, String.fromCharCode(65 + idx), G.x - 20 * u, ln.y1 + 18 * u,
         { kind: 'mono', size: design.size('tag') * 0.8, color: P.grey, alpha: a, align: 'right' });
     }
   });
@@ -305,9 +306,6 @@ function readout(S, { value, prev = value, label, sub, flap = 0, lockBar = 0, ji
     S.ctx.fillRect(x, y + ds * 0.18, w * lockBar, Math.max(2, 4 * u));
     S.ctx.globalAlpha = 1;
   }
-  if (alpha > 0.5) {
-    text(S, 'demo data', x, y + ds * 0.18 + ls * 1.7, { size: design.size('tag'), weight: 700, color: P.grey });
-  }
 }
 
 // ------------------------------------------------------------ type ------
@@ -315,20 +313,26 @@ function readout(S, { value, prev = value, label, sub, flap = 0, lockBar = 0, ji
 // A headline in the type module, bottom-aligned, flush-left. enter/exit are
 // beatmap times; it wipes in from the left over 8 frames and retracts to the
 // left over 6 frames (expo-in) on exit.
-function moduleHeadline(S, { spans, lines, enter, exit = Infinity, size, panX = 0, jx = 0, wdth = 100, breathe = 0 }) {
+// The entrance is pre-rolled (common.typeIn), so the type is ~93% formed on
+// its hit frame. lineOffset pushes the block down by whole lines (a second
+// line that lands on its own hit); bottomPad keeps room under the block.
+function moduleHeadline(S, {
+  spans, lines, enter, exit = Infinity, size, panX = 0, jx = 0, wdth = 100, breathe = 0,
+  lineOffset = 0, bottomPad = 0, scale = 1, color,
+}) {
   const { t, tl, design } = S;
-  if (t < enter) return;
+  if (t < typeFrom(enter, tl.fps)) return;
   const fr = tl.fps;
-  let wipe = expoOut((t - enter) * fr / 8);
-  if (t >= exit) wipe = 1 - expoIn((t - exit) * fr / 6);
+  let wipe = typeIn(t, enter, 8, expoOut, fr);
+  if (t >= exit) wipe = Math.min(wipe, 1 - expoIn((t - exit) * fr / 6));
   if (wipe <= 0) return;
   const z = typeBlock(design);
   const lh = 0.9;
-  const y = z.y + z.h - lines * size * lh - size * 0.04;
+  const y = z.y + z.h - lines * size * lh - size * 0.04 - bottomPad + lineOffset * size * lh;
   const sc = breathe ? tl.sidechain(t) : 0;
   S.type.text({
-    spans, x: z.x + panX + jx, y, size, wipe, lineHeight: lh,
-    wdth: clamp(wdth - breathe * sc, 62, 125), wght: 900, color: design.palette.ink,
+    spans, x: z.x + panX + jx, y, size, wipe, lineHeight: lh, scale,
+    wdth: clamp(wdth - breathe * sc, 62, 125), wght: 900, color: color || design.palette.ink,
     fit: typeFit(design, z),
   });
 }
@@ -341,7 +345,8 @@ function hairlineReveal(tl, t) {
   const hits = tl.prefixed('hairline.');
   return (k, n) => {
     const h = hits[Math.min(hits.length - 1, Math.floor((k * hits.length) / n))];
-    return expoOut((t - h.t) / 0.4);
+    // Pre-rolled by 0.14 s: frame 0 already shows the first hairline drawn.
+    return expoOut((t - h.t) / 0.4 + 0.35);
   };
 }
 
@@ -396,10 +401,15 @@ const oneAgent = {
       ctx.stroke();
       ctx.restore();
     }
-    if (pw > 0.5) tag(S, 'demo data', R);
-    readout(S, { value: 1, label: 'Agents online', alpha: clamp((t - 0.25) * 4) * (pw > 0.5 ? 1 : 0) });
+    tag(S, 'demo data', R, null, { below: true });
+    readout(S, { value: 1, label: 'Agents online' });
+    // Frame 0 is the poster: the '1' is already set at headline size, and
+    // 'agent.' lands under it on its hit.
     moduleHeadline(S, {
-      spans: [{ text: '1' }, br, { text: 'agent.' }], lines: 2,
+      spans: '1', lines: 2, enter: -1, exit: split - 6 / 60, size: design.size('l'),
+    });
+    moduleHeadline(S, {
+      spans: 'agent.', lines: 2, lineOffset: 1,
       enter: tl.at('text.one-agent'), exit: split - 6 / 60, size: design.size('l'),
     });
   },
@@ -525,7 +535,7 @@ const sixtyFour = {
     // Anticipation for the next split: the last 16th before it.
     const pre = tl.beatmap.sixteenthSec;
     if (next < Infinity) splitCrosses(S, level, clamp((t - (next - pre)) / pre));
-    tag(S, 'demo data', tileRegion(design));
+    tag(S, 'demo data', tileRegion(design), null, { below: true });
     counterReadout(S);
     moduleHeadline(S, {
       spans: [{ text: '64' }, br, { text: 'agents.' }], lines: 2,
@@ -574,9 +584,10 @@ const overload = {
           S.ctx.fillRect(r.x + r.w - s - 4 * u, r.y + 4 * u, s, s);
         }
       }
-      tag(S, 'demo data', R);
+      tag(S, 'demo data', R, null, { below: true });
       const jx = (rand01('hj', jitterStep) - 0.5) * c * 14 * u;
-      counterReadout(S, { jitter: jx, value: rand01('cg', jitterStep) < c * 0.35 ? Math.floor(rand01('cv', jitterStep) * 99) : 64 });
+      // The count stays 64 (it agrees with the headline); only its position shakes.
+      counterReadout(S, { jitter: jx, value: 64 });
       // The headline holds, but stutters on the width axis as the load rises.
       const stutter = rand01('ws', jitterStep) < c * 0.6 ? lerp(100, 66, rand01('wv', jitterStep)) : 100;
       moduleHeadline(S, {
@@ -604,6 +615,9 @@ const overload = {
       const jitterStep = Math.floor(S.frame / 3);
       drawSplitGrid(S, 3, 1, { chaos: 1, jitterStep, rate: 40 });
       if (fx) { fx.sort = 1; fx.threshold = 0.4; fx.sortCover = 0.92; fx.invert = true; fx.seed = 7.7; }
+      // The question lands on the cut itself, set in difference so it reads
+      // on the dark frame and on the white smear alike.
+      whoNeedsYou(S, { color: P.paper, blend: 'difference' });
       return;
     }
     bg(S, P.ink);
@@ -612,7 +626,7 @@ const overload = {
     drawSplitGrid(S, 3, 1, {
       chaos: back, jitterStep: freezeStep, freezeAt: cut, ghost: true, online: 64, rate: 40,
     });
-    tag(S, 'demo data', R);
+    tag(S, 'demo data', R, null, { below: true });
     if (fx) {
       fx.sort = back;
       fx.threshold = 0.22;
@@ -620,22 +634,28 @@ const overload = {
       fx.sortPolarity = 1;
       fx.seed = 7.7;
     }
-    // Headline: slams in at wdth 125 / wght 900 and compresses to 75 over one
-    // beat, with a 4-frame scale stamp.
-    const s0 = cut + 1 / 60;
-    const p = curves.slam(clamp((t - s0) / tl.beatSec));
-    const stamp = 1 + 0.06 * (1 - expoOut((t - s0) * 60 / 4));
-    const size = design.vertical ? design.size('l') : design.size('xl');
-    const z = design.place({ h: [0, 2.15, 12, 4], v: [0, 3.9, 4, 6] });
-    S.type.text({
-      spans: design.vertical
-        ? [{ text: 'Who' }, br, { text: 'needs' }, br, { text: 'you?' }]
-        : [{ text: 'Who needs' }, br, { text: 'you?' }],
-      x: z.x, y: z.y, size, color: P.paper, wdth: lerp(125, 75, p), wght: 900, lineHeight: 0.9,
-      scale: stamp, fit: design.vertical ? typeFit(design, z) : design.grid.w,
-    });
+    whoNeedsYou(S, { color: P.paper, blend: 'difference' });
   },
 };
+
+// 'Who needs you?': lands on the 5.5 cut at wdth 125 / wght 900 and
+// compresses to 75 over one beat, with a 4-frame scale stamp. Mission control
+// carries it on in its type module until the name lands.
+function whoNeedsYou(S, { color, blend = 'normal', wipe = 1 }) {
+  const { t, tl, design } = S;
+  const s0 = tl.at('text.who-needs-you');
+  const p = curves.slam(clamp((t - s0) / tl.beatSec));
+  const stamp = 1 + 0.06 * (1 - expoOut((t - s0) * 60 / 4));
+  const size = design.vertical ? design.size('l') : design.size('xl');
+  const z = design.place({ h: [0, 2.15, 12, 4], v: [0, 3.9, 4, 6] });
+  S.type.text({
+    spans: design.vertical
+      ? [{ text: 'Who' }, br, { text: 'needs' }, br, { text: 'you?' }]
+      : [{ text: 'Who needs' }, br, { text: 'you?' }],
+    x: z.x, y: z.y, size, color, blend, wipe, wdth: lerp(125, 75, p), wght: 900, lineHeight: 0.9,
+    scale: stamp, fit: design.vertical ? typeFit(design, z) : design.grid.w,
+  });
+}
 
 // ================================================= 6-10 mission control ==
 
@@ -749,48 +769,58 @@ function mini(S, r, column, agent, { alpha = 1 } = {}) {
 const missionControl = {
   id: 'mission-control',
   blur: () => 6,
+  // A 90-degree shutter while the tiles fly keeps their trails to about half
+  // a tile; the whip-pan gets the full 180 degrees.
+  shutter: (t) => (t >= 9.55 ? 1 : 0.5),
   draw(S) {
     const { t, tl, design, ctx } = S;
     const P = design.palette;
     const u = design.u;
     const lock = tl.at('unsort.lock');
+    const ugc = tl.at('text.ugc-army');
+    const see = tl.at('text.see-every-agent');
     const L = missionLayout(design);
     const { start, dep, clears } = starts(tl, design);
     const R = L.R;
     bg(S, P.paper);
 
-    // Exit: a whip-pan left over the last beat (expo-in). Its end velocity
-    // matches act 2's expo-out pan-in from the right over 0.5 s, so the cut at
-    // 10.0 reads as one camera move.
-    const exitAt = tl.at('pan.timeline') - 0.5;
-    const panX = -expoIn(clamp((t - exitAt) / 0.5)) * design.w;
+    // Exit: the whip-pan left. It is one camera move with act 2's pan-in
+    // (common.whipCamera), so the cut on 10.0 lands mid-move. The grid is the
+    // shared paper and stays put; the content moves over it.
+    const panX = -whipCamera(tl, t) * design.w;
+    grid(S, { alpha: lerp(0.45, 0.6, clamp((t - lock) / 3)) });
     ctx.save();
     ctx.translate(panX, 0);
-    grid(S, { alpha: lerp(0.45, 0.6, clamp((t - lock) / 3)) });
 
     // Column headers wipe in as soon as the cells under them have emptied,
-    // then roll their counts on each landing.
+    // then roll their counts on each landing. NEEDS YOU opens on the 6.0 kick,
+    // lit red, as the answer to 'Who needs you?', and pulses on the backbeats.
     const pulseHits = tl.prefixed('needs-you.pulse');
     const pulse = Math.max(0, 1 - tl.sinceLast(pulseHits, t) / 0.35);
-    const pulseA = pulse > 0 ? expoOut(pulse) : 0;
+    const pulseA = Math.max(pulse > 0 ? expoOut(pulse) : 0, t < ugc ? 1 : 0);
     const ls = design.size('labelS');
-    for (const c of tl.columns) {
+    const drawHead = (c) => {
       const col = L.column(c.id);
-      let open = 0;
-      for (let k = 0; k < col.n; k++) open = Math.max(open, clears[col.c0 + k] + 0.12);
-      const w = expoOut((t - open) * 60 / 10);
-      if (w <= 0) continue;
       const isNeeds = c.id === 'NEEDS_YOU';
+      let open = isNeeds ? lock : 0;
+      if (!isNeeds) for (let k = 0; k < col.n; k++) open = Math.max(open, clears[col.c0 + k] + 0.12);
+      const w = expoOut((t - open) * 60 / 10);
+      if (w <= 0) return;
       const head = { x: col.x + gapOf(design), y: R.y + gapOf(design), w: col.w - gapOf(design) * 2, h: L.ch - gapOf(design) * 2 };
       ctx.save();
       ctx.beginPath();
       ctx.rect(head.x, head.y - 2 * u, head.w * w, head.h + 6 * u);
       ctx.clip();
-      if (isNeeds && pulseA > 0) {
-        ctx.globalAlpha = pulseA;
-        ctx.fillStyle = P.signal;
+      if (isNeeds) {
+        // Paper under the header: it is set over any terminal still waiting there.
+        ctx.fillStyle = P.paper;
         ctx.fillRect(head.x, head.y, head.w, head.h);
-        ctx.globalAlpha = 1;
+        if (pulseA > 0) {
+          ctx.globalAlpha = pulseA;
+          ctx.fillStyle = P.signal;
+          ctx.fillRect(head.x, head.y, head.w, head.h);
+          ctx.globalAlpha = 1;
+        }
       }
       const colr = isNeeds ? (pulseA > 0.45 ? P.paper : P.signal) : P.ink;
       const pad = 8 * u;
@@ -816,7 +846,8 @@ const missionControl = {
       ctx.fillStyle = isNeeds ? P.signal : P.ink;
       ctx.fillRect(col.x, R.y + L.ch - Math.max(1, 1.5 * u), col.w, Math.max(2, 3 * u));
       ctx.restore();
-    }
+    };
+    for (const c of tl.columns) if (c.id !== 'NEEDS_YOU') drawHead(c);
 
     // Tiles: waiting on their start cell, flying, or sorted in a column.
     const blinkOn = tl.beatPhase(t) < 0.5;
@@ -848,10 +879,10 @@ const missionControl = {
         ctx.globalAlpha = 1;
       }
       // NEEDS YOU tiles answer the backbeat pulse with a red ring.
-      if (land.column === 'NEEDS_YOU' && pulseA > 0) {
+      if (land.column === 'NEEDS_YOU' && pulse > 0) {
         const grow = (1 - pulse) * 6 * u;
         ctx.strokeStyle = P.signal;
-        ctx.globalAlpha = pulseA;
+        ctx.globalAlpha = expoOut(pulse);
         ctx.lineWidth = Math.max(1, 2 * u);
         ctx.strokeRect(r.x - grow, r.y - grow, r.w + grow * 2, r.h + grow * 2);
         ctx.globalAlpha = 1;
@@ -882,6 +913,7 @@ const missionControl = {
       else mini(S, r, land.column, agentFor(i));
       ctx.restore();
     }
+    drawHead(tl.columns.find((c) => c.id === 'NEEDS_YOU'));
 
     // Column dividers, drawn once the header above has opened.
     ctx.strokeStyle = P.grey;
@@ -898,23 +930,52 @@ const missionControl = {
       ctx.stroke();
       ctx.globalAlpha = 1;
     }
-    tag(S, 'demo data', R);
+    tag(S, 'demo data', R, null, { below: true });
 
-    // The readout becomes the app header on the kick.
-    readout(S, { value: 64, sub: 'Agents', header: expoOut((t - lock) * 60 / 10) });
+    // The readout becomes the app header once the name has been said (7.0).
+    readout(S, { value: 64, sub: 'Agents', header: expoOut((t - ugc - tl.beatSec) * 60 / 10) });
     ctx.restore();
 
-    // Display type: 'UGC Army.' on 6.5, pushed out by 'See every agent.' on 8.0.
-    const ugc = tl.at('text.ugc-army');
-    const see = tl.at('text.see-every-agent');
-    const size = design.size('l');
+    // 'Who needs you?' carries over the 6.0 cut into the type module, beside
+    // the board that answers it (NEEDS YOU lit red), and retracts before the
+    // name lands.
     moduleHeadline(S, {
-      spans: design.vertical ? [{ text: 'UGC Army.' }] : [{ text: 'UGC' }, br, { text: 'Army.' }],
-      lines: design.vertical ? 1 : 2, enter: ugc, exit: see - 6 / 60, size, panX, breathe: 10,
+      spans: design.vertical ? [{ text: 'Who needs' }, br, { text: 'you?' }] : [{ text: 'Who' }, br, { text: 'needs' }, br, { text: 'you?' }],
+      lines: design.vertical ? 2 : 3, enter: lock - 1, exit: ugc - 0.2, size: design.size('l'), wdth: 75,
     });
+
+    // 'UGC Army.' slams on 6.5 as the largest type of the act (wdth 125 to
+    // 100 over a beat, a scale stamp after the hit), with the one-line
+    // kicker that says what it is under it on 7.0. 'See every agent.' pushes
+    // both out on 8.0.
+    const size = design.vertical ? design.size('l') : design.size('xl');
+    const ks = (design.vertical ? 32 : 34) * u;
+    const kLines = design.vertical ? 1 : 2;
+    const kickerH = kLines * ks * 1.2;
+    const gap = ks * 0.9;
+    const outAt = see - 9 / 60;
+    const slam = curves.slam(clamp((t - ugc) / tl.beatSec));
+    const stamp = 1 + 0.06 * (1 - expoOut(Math.max(0, t - ugc) * 60 / 6));
+    moduleHeadline(S, {
+      spans: [{ text: 'UGC' }, br, { text: 'Army.' }], lines: 2, enter: ugc, exit: outAt, size, panX,
+      wdth: lerp(125, 100, slam), bottomPad: kickerH + gap, scale: stamp,
+    });
+    const kick = ugc + tl.beatSec;
+    if (t >= typeFrom(kick)) {
+      const z = typeBlock(design);
+      let wipe = typeIn(t, kick, 10);
+      if (t >= outAt) wipe = Math.min(wipe, 1 - expoIn((t - outAt) * 60 / 6));
+      S.type.text({
+        spans: design.vertical
+          ? 'Mission control for your AI coding agents.'
+          : [{ text: 'Mission control for' }, br, { text: 'your AI coding agents.' }],
+        x: z.x + panX, y: z.y + z.h - kickerH - ks * 0.1, size: ks, family: design.fonts.ui, wght: 500,
+        tracking: -0.005, lineHeight: 1.2, wipe, color: P.ink, fit: typeFit(design, z),
+      });
+    }
     moduleHeadline(S, {
       spans: design.vertical ? [{ text: 'See every' }, br, { text: 'agent.' }] : [{ text: 'See' }, br, { text: 'every' }, br, { text: 'agent.' }],
-      lines: design.vertical ? 2 : 3, enter: see, size, panX, breathe: 10,
+      lines: design.vertical ? 2 : 3, enter: see, size: design.size('l'), panX, breathe: 10,
     });
   },
 };

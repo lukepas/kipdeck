@@ -1,8 +1,29 @@
 // Shared drawing helpers for scenes. A scene gets S = { t, frame, ctx, design,
 // tl, type, svg, fx, primary } and draws the whole frame from S.t alone.
 
-import { clamp, lerp, expoOut, curves } from '../engine/ease.js';
+import { clamp, lerp, expoOut, cubicInOut, curves } from '../engine/ease.js';
 import { rand01 } from '../engine/prng.js';
+
+// Display type is never late. Every in-animation starts TYPE_PRE frames
+// before its beatmap hit, so on the hit frame the type is already about 93%
+// formed (expoOut(3/8)); the settle happens after the hit. tools/verify.py
+// checks this for every text hit.
+export const TYPE_PRE = 3;
+export function typeIn(t, hitT, frames = 8, ease = expoOut, fps = 60) {
+  return ease(clamp(((t - hitT) * fps + TYPE_PRE) / frames));
+}
+// First time a pre-rolled headline may draw.
+export const typeFrom = (hitT, fps = 60) => hitT - TYPE_PRE / fps;
+
+// The act 1 -> act 2 whip-pan is one camera move across the cut on
+// pan.timeline. whipCamera returns how far it has travelled in frame widths
+// (0..1): act 1's content sits at -c * w and the timeline at (1 - c) * w. The
+// cut lands with the move about 77% done, so the timeline's first frame
+// already shows the goal line, M1 and 'Goals.' sliding in.
+export function whipCamera(tl, t) {
+  const cut = tl.at('pan.timeline');
+  return cubicInOut(clamp((t - (cut - 0.4)) / 0.65));
+}
 
 // Archivo's baseline sits this far below the top of a line box, in em, for a
 // given line height (ascender 0.878, descender 0.21, half-leading split).
@@ -99,10 +120,12 @@ export function text(S, str, x, y, {
 
 // Demo-data tag: Inter Tight 700, 20 px at 1080p, grid grey, bottom-right of
 // the module rect it labels. Truth rule: every illustrative module gets one.
-export function tag(S, str, rect, color) {
+export function tag(S, str, rect, color, { below = false } = {}) {
   const { design } = S;
   const pad = 10 * design.u;
-  text(S, str, rect.x + rect.w - pad, rect.y + rect.h - pad, {
+  // below: in the gutter under the module, never over its content.
+  const y = below ? rect.y + rect.h + design.size('tag') * 1.25 : rect.y + rect.h - pad;
+  text(S, str, rect.x + rect.w - (below ? 0 : pad), y, {
     kind: 'label', size: design.size('tag'), weight: 700, color: color || design.palette.grey, align: 'right',
   });
 }
@@ -126,8 +149,8 @@ export function headline(S, hitName, {
 } = {}) {
   const { t, tl, type, design } = S;
   const hit = tl.hit(hitName);
-  if (t < hit.t || t >= until) return null;
-  const wipe = expoOut((t - hit.t) * tl.fps / wipeFrames);
+  if (t < typeFrom(hit.t, tl.fps) || t >= until) return null;
+  const wipe = typeIn(t, hit.t, wipeFrames, expoOut, tl.fps);
   const sc = tl.sidechain(t);
   type.text({
     spans: spans || override || hit.text,

@@ -9,13 +9,14 @@
 // the last beat, so act 3's receipt ledger starts on paper with the grid
 // already in place.
 //
-// Hand-offs: act 1 whip-pans left (expo-in) over 9.5-10.0; the timeline pans
-// in from the right (expo-out) over 10.0-10.5 with the same speed at the cut.
+// Hand-offs: act 1's whip-pan and the timeline's pan-in are one camera move
+// (common.whipCamera) cut mid-move on 10.0, so the first timeline frame
+// already shows the goal line, M1 and 'Goals.'.
 
 import { clamp, lerp, expoOut, expoIn, cubicIn, cubicBezier, curves } from '../engine/ease.js';
 import { rand01 } from '../engine/prng.js';
-import { scramble, fixed2 } from '../engine/kinetic.js';
-import { bg, gridLines, text, tag, baseOf, display, mix } from './common.js';
+import { scrambleParts, glyphLocks, fixed2, BASE58 } from '../engine/kinetic.js';
+import { bg, gridLines, text, tag, baseOf, display, mix, typeIn, typeFrom, whipCamera, rightEdge } from './common.js';
 import { grid as swissGrid } from './act1.js';
 
 // Real, checkable values (see storyboard truth rules).
@@ -51,7 +52,7 @@ function layout(design) {
       tlType: { mode: 'roll', base: Y(11.45), size: design.size('m') },
       card: { x: X(0), y: Y(7.6), w: cardW, h: Y(10.2) - Y(7.6) },
       ask: { x: X(0), bases: [Y(3.0), Y(4.5)], size: design.size('l') },
-      dropType: { x: X(0), bases: [Y(2.55), Y(5.47)], pitch: design.size('m') * 0.92, size: design.size('m') },
+      dropType: { x: X(0), base: Y(2.55), pitch: design.size('m') * 0.92, size: design.size('m') },
       dropKeep: { x: 0, y: Y(1.3), w: design.w, h: Y(7.4) - Y(1.3) },
     };
   }
@@ -62,7 +63,7 @@ function layout(design) {
     tlType: { mode: 'stack', bases: [Y(6), Y(7), Y(8)], size: design.size('m') },
     card: { x: X(5.5), y: Y(4.4), w: X(11.5) - X(5.5), h: Y(7.4) - Y(4.4) },
     ask: { x: X(0), bases: [Y(1.75), Y(3.5)], size: design.size('xl') },
-    dropType: { x: X(0), bases: [Y(1.25), Y(1.25) + design.size('l') * 0.92], pitch: design.size('l') * 0.92, size: design.size('l') },
+    dropType: { x: X(0), base: Y(1.25), pitch: design.size('l') * 0.92, size: design.size('l') },
     dropKeep: { x: 0, y: 0, w: design.w, h: Y(2.85) },
   };
 }
@@ -113,22 +114,23 @@ function drawCard(S, r, pr, { merged = 0, hover = 0, press = 0, shadow = 0, alph
 
   const big = H * 0.25;
   text(S, `PR ${pr.pr}`, r.x + pad, r.y + pad + big * 0.78, { kind: 'mono', size: big, weight: 700, color: P.ink, alpha });
-  // Status pill, top-right: IN REVIEW, stamped to MERGED after the click.
+  // Status pill, top-right: IN REVIEW. On the bounty card it goes on the
+  // merge: the button says MERGED once, with a check.
   const isMerged = merged >= 0.5;
   const ps = H * 0.085;
-  const pillTxt = isMerged ? 'MERGED' : 'IN REVIEW';
-  ctx.font = design.font(design.fonts.ui, 700, ps);
-  ctx.letterSpacing = `${0.08 * ps}px`;
-  const pw = ctx.measureText(pillTxt).width + ps * 1.4;
-  const ph = ps * 2;
-  const pillStamp = isMerged ? 1 + 0.25 * (1 - expoOut((merged - 0.5) * 4)) : 1;
-  ctx.save();
-  ctx.translate(r.x + r.w - pad - pw / 2, r.y + pad + ph / 2);
-  ctx.scale(pillStamp, pillStamp);
-  ctx.lineWidth = Math.max(1, 1.5 * u * Math.min(1.5, H / (110 * u)));
-  if (isMerged) { ctx.fillStyle = P.ink; ctx.fillRect(-pw / 2, -ph / 2, pw, ph); } else { ctx.strokeStyle = P.ink; ctx.strokeRect(-pw / 2, -ph / 2, pw, ph); }
-  ctx.restore();
-  text(S, pillTxt, r.x + r.w - pad - pw / 2, r.y + pad + ph / 2 + ps * 0.36, { size: ps, color: isMerged ? P.paper : P.ink, align: 'center', alpha });
+  if (!(pr.bounty && isMerged)) {
+    const pillTxt = 'IN REVIEW';
+    ctx.font = design.font(design.fonts.ui, 700, ps);
+    ctx.letterSpacing = `${0.08 * ps}px`;
+    const pw = ctx.measureText(pillTxt).width + ps * 1.4;
+    const ph = ps * 2;
+    ctx.save();
+    ctx.translate(r.x + r.w - pad - pw / 2, r.y + pad + ph / 2);
+    ctx.lineWidth = Math.max(1, 1.5 * u * Math.min(1.5, H / (110 * u)));
+    ctx.strokeStyle = P.ink; ctx.strokeRect(-pw / 2, -ph / 2, pw, ph);
+    ctx.restore();
+    text(S, pillTxt, r.x + r.w - pad - pw / 2, r.y + pad + ph / 2 + ps * 0.36, { size: ps, color: P.ink, align: 'center', alpha });
+  }
 
   if (pr.bounty) {
     text(S, 'Bounty', r.x + pad, r.y + H * 0.56, { size: H * 0.075, color: P.grey, alpha });
@@ -153,7 +155,27 @@ function drawCard(S, r, pr, { merged = 0, hover = 0, press = 0, shadow = 0, alph
     ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h);
     ctx.restore();
     const bs = H * 0.085;
-    text(S, isMerged ? 'Merged' : 'Merge', b.x + b.w / 2, b.y + b.h / 2 + bs * 0.36, { size: bs, color: P.paper, align: 'center', alpha: alpha * flip });
+    if (isMerged) {
+      // Check + MERGED, centred as one group.
+      ctx.font = design.font(design.fonts.ui, 700, bs);
+      ctx.letterSpacing = `${0.08 * bs}px`;
+      const tw = ctx.measureText('MERGED').width;
+      const ck = bs * 1.1, gap = bs * 0.5;
+      const x0 = b.x + b.w / 2 - (ck + gap + tw) / 2;
+      const cy = b.y + b.h / 2;
+      ctx.save();
+      ctx.globalAlpha = alpha * flip;
+      ctx.strokeStyle = P.paper;
+      ctx.lineWidth = Math.max(1.5, bs * 0.18);
+      ctx.lineCap = 'square';
+      ctx.beginPath();
+      ctx.moveTo(x0, cy); ctx.lineTo(x0 + ck * 0.36, cy + ck * 0.34); ctx.lineTo(x0 + ck, cy - ck * 0.4);
+      ctx.stroke();
+      ctx.restore();
+      text(S, 'Merged', x0 + ck + gap, cy + bs * 0.36, { size: bs, color: P.paper, alpha: alpha * flip });
+    } else {
+      text(S, 'Merge', b.x + b.w / 2, b.y + b.h / 2 + bs * 0.36, { size: bs, color: P.paper, align: 'center', alpha: alpha * flip });
+    }
   } else {
     text(S, pr.title, r.x + pad, r.y + H * 0.66, { kind: 'mono', size: H * 0.12, color: P.ink, alpha });
     text(S, pr.agent, r.x + pad, r.y + H - pad, { kind: 'mono', size: H * 0.09, color: P.grey, alpha });
@@ -218,9 +240,10 @@ function drawTimelineWorld(S, t, L, { hidePR1 = false } = {}) {
   const stamped = msHits.filter((h) => h.t <= t + 1e-9).length;
   text(S, 'Goal', g.x0, g.label, { size: tg, color: P.grey });
   text(S, 'ship auth v2', g.x0, g.label + ls * 1.25, { kind: 'mono', size: ls * 1.05, weight: 700, color: P.ink });
-  // Milestone count, flapping on each stamp.
-  const lastMs = stamped ? msHits[stamped - 1].t : -Infinity;
-  const flap = frames(t, lastMs) < 3 ? String(Math.floor(rand01('msf', S.frame) * 10)) : String(stamped);
+  // Milestone count: it flaps over the 3 frames before each stamp and reads
+  // the new value on the stamp itself.
+  const nextMs = msHits[stamped] ? msHits[stamped].t : Infinity;
+  const flap = frames(nextMs, t) <= 3 ? String(Math.floor(rand01('msf', S.frame) * 10)) : String(stamped);
   text(S, `${flap}/4`, g.x1, g.label + ls * 1.25, { kind: 'mono', size: ls * 1.05, weight: 700, color: P.ink, align: 'right' });
   text(S, 'Milestones', g.x1, g.label, { size: tg, color: P.grey, align: 'right' });
 
@@ -242,7 +265,7 @@ function drawTimelineWorld(S, t, L, { hidePR1 = false } = {}) {
   // The red playhead draws the goal line.
   ctx.fillStyle = P.signal;
   ctx.fillRect(g.x0, g.line - 1.5 * u, ph - g.x0, 3 * u);
-  ctx.fillRect(ph - 1 * u, g.line - 46 * u, 2 * u, 92 * u);
+  ctx.fillRect(ph - 1 * u, g.line - 46 * u, 2 * u, 70 * u);
   ctx.fillRect(ph - 6 * u, g.line - 52 * u, 12 * u, 12 * u);
   ctx.restore();
 
@@ -278,15 +301,15 @@ function drawTimelineWorld(S, t, L, { hidePR1 = false } = {}) {
     text(S, MILESTONES[i].id, x, y + 50 * u, { kind: 'mono', size: tg, weight: 700, align: 'center', color: on ? P.ink : P.grey });
     text(S, MILESTONES[i].name, x, y + 50 * u + tg * 1.3, { size: tg * 0.9, align: 'center', color: P.grey });
   });
-  tag(S, 'demo data', { x: g.x0, y: g.label, w: g.x1 - g.x0, h: g.axis + tg * 2.4 - g.label });
+  tag(S, 'demo data', { x: g.x0, y: g.label, w: g.x1 - g.x0, h: g.axis + tg * 1.6 - g.label }, null, { below: true });
 
   // Review inbox: header, count, and the pile.
   const ib = L.inbox;
   const cards = tl.prefixed('pr-card.');
   const landed = cards.filter((h) => h.t <= t + 1e-9).length;
   text(S, 'Review inbox', ib.x, ib.head, { size: ls, color: P.ink });
-  const lastCard = landed ? cards[landed - 1].t : -Infinity;
-  const cnt = frames(t, lastCard) < 3 ? `0${Math.floor(rand01('ibf', S.frame) * 10)}` : `0${landed}`;
+  const nextCard = cards[landed] ? cards[landed].t : Infinity;
+  const cnt = frames(nextCard, t) <= 3 ? `0${Math.floor(rand01('ibf', S.frame) * 10)}` : `0${landed}`;
   text(S, cnt, ib.x + ib.w, ib.head, { kind: 'mono', size: ls, weight: 700, color: P.ink, align: 'right' });
   ctx.fillStyle = P.ink;
   ctx.fillRect(ib.x, ib.head + ls * 0.5, ib.w, Math.max(1, 1.5 * u));
@@ -317,12 +340,12 @@ const timeline = {
     const P = design.palette;
     const L = layout(design);
     bg(S, P.paper);
-    // Orthographic pan in from the right: expo-out, the mirror of act 1's
-    // expo-in exit, so the speed is continuous across the cut.
-    const panX = (1 - expoOut((t - tl.at('pan.timeline')) / 0.5)) * design.w;
+    // Orthographic pan in from the right, the second half of act 1's whip.
+    // The grid is the shared paper and stays put.
+    const panX = (1 - whipCamera(tl, t)) * design.w;
+    swissGrid(S, { alpha: 0.5 });
     ctx.save();
     ctx.translate(panX, 0);
-    swissGrid(S, { alpha: 0.5 });
     drawTimelineWorld(S, t, L);
     ctx.restore();
 
@@ -332,8 +355,8 @@ const timeline = {
     const out = tl.at('riser.start') - 6 / 60;
     if (T.mode === 'stack') {
       hits.forEach((h, k) => {
-        if (t < h.t) return;
-        let wipe = expoOut(frames(t, h.t) / 8);
+        if (t < typeFrom(h.t)) return;
+        let wipe = typeIn(t, h.t);
         if (t >= out) wipe = 1 - expoIn(frames(t, out) / 6);
         display(S, { spans: h.text, x: design.grid.x + panX, base: T.bases[k], size: T.size, wipe, wdth: 100 - 12 * tl.sidechain(t) });
       });
@@ -342,13 +365,14 @@ const timeline = {
       const lines = [[{ text: 'Goals.' }], [{ text: 'Milestones.' }], [{ text: 'Review' }, br, { text: 'inbox.' }]];
       const pitch = T.size * 0.92;
       hits.forEach((h, k) => {
-        if (t < h.t) return;
-        const next = k < 2 ? hits[k + 1].t : out;
+        if (t < typeFrom(h.t)) return;
+        // The outgoing phrase clears in the 3 frames before the next one's hit.
+        const next = k < 2 ? typeFrom(hits[k + 1].t) : out;
         const n = k === 2 ? 2 : 1;
-        let wipe = curves.snap(frames(t, h.t) / 8);
+        let wipe = typeIn(t, h.t, 8, curves.snap);
         let dy = (1 - wipe) * T.size * 0.4;
         if (t >= next) {
-          const q = expoIn(frames(t, next) / 6);
+          const q = expoIn(frames(t, next) / 3);
           if (q >= 1) return;
           wipe = 1 - q;
           dy = -q * T.size * 0.5;
@@ -378,9 +402,11 @@ function convergence(tl, t) {
   return v;
 }
 
+// The cursor arrives on the button on the fourth breath (13.5) and holds
+// there, still, until the click: the one near-static beat before the drop.
 function cursorPos(design, b, tl, t) {
-  const arrive = tl.at('merge.click');
-  const start = arrive - 1.25;
+  const arrive = tl.at('paid.breath.4');
+  const start = arrive - 1.0;
   const q = curves.glide(clamp((t - start) / (arrive - start)));
   // A gentle arc in from off-frame bottom-right.
   const a = { x: design.w * 1.04, y: design.h * (design.vertical ? 0.86 : 1.06) };
@@ -408,8 +434,9 @@ function drawCursor(S, x, y, { scale = 1, alpha = 1 } = {}) {
   ctx.restore();
 }
 
-// 'paid' on the width axis: each breath snaps it open to 125 and lets it
-// close toward 62 before the next one; the gaps shorten, so it speeds up.
+// The headline on the width axis: each breath snaps it open and lets it
+// close before the next one; the gaps shorten, so it speeds up. Both lines
+// take the same value, so the block breathes as one.
 function paidWidth(tl, t) {
   const b = tl.prefixed('paid.breath.');
   const peak = tl.at('riser.peak');
@@ -418,7 +445,7 @@ function paidWidth(tl, t) {
   b.forEach((h, i) => {
     if (tt < h.t) return;
     const end = i < b.length - 1 ? b[i + 1].t : peak;
-    w = lerp(125, 62, curves.swiss((tt - h.t) / (end - h.t)));
+    w = lerp(118, 84, curves.swiss((tt - h.t) / (end - h.t)));
   });
   return w;
 }
@@ -444,9 +471,10 @@ const build = {
     const b = mergeButton(card);
     const bc = centre(b);
 
-    // Far layer: the timeline recedes to grey and drifts back toward the card.
-    const k = curves.swiss(clamp((t - t0) / tl.beatSec));
-    const fade = 1 - curves.swiss(clamp((t - t0 - 0.5) / 1.2));
+    // Far layer: the timeline recedes to grey and drifts back toward the
+    // card, gone within a 16th, so 'Who gets paid?' sits on clean paper.
+    const k = curves.swiss(clamp((t - t0) / tl.beatmap.sixteenthSec));
+    const fade = 1 - curves.swiss(clamp((t - t0) / (tl.beatmap.sixteenthSec * 2)));
     if (fade > 0) {
       ctx.save();
       const cc = centre(L.card);
@@ -485,6 +513,14 @@ const build = {
     });
     ctx.restore();
 
+    // Paper knock-out behind the headline: the hairlines stop at its band.
+    {
+      const A = L.ask;
+      const top = A.bases[0] - A.size * 0.95, bottom = A.bases[1] + A.size * 0.28;
+      ctx.fillStyle = P.paper;
+      ctx.fillRect(0, top, design.w, bottom - top);
+    }
+
     // A ring pulses out of the button on each breath: it is charging.
     for (const h of tl.prefixed('paid.breath.')) {
       const f = frames(t, h.t);
@@ -504,15 +540,13 @@ const build = {
     drawCard(S, card, PRS[2], { shadow: 12 * u * e, hover });
     if (cur.visible) drawCursor(S, cur.x, cur.y);
 
-    // 'Who gets paid?' with 'paid' breathing on the width axis.
+    // 'Who gets paid?' breathing on the width axis, both lines together.
     const A = L.ask;
     const h = tl.hit('text.who-gets-paid');
-    const wipe = expoOut(frames(t, h.t) / 8);
-    const wd = paidWidth(tl, t);
-    const breathe = clamp(100 - 10 * tl.sidechain(t), 62, 125);
     display(S, {
-      spans: [{ text: 'Who gets' }, br, { text: 'paid', wdth: wd }, { text: '?' }],
-      x: A.x, base: A.bases[0], size: A.size, wipe, wdth: breathe, lineHeight: (A.bases[1] - A.bases[0]) / A.size,
+      spans: [{ text: 'Who gets' }, br, { text: 'paid?' }],
+      x: A.x, base: A.bases[0], size: A.size, wipe: typeIn(t, h.t), wdth: paidWidth(tl, t),
+      lineHeight: (A.bases[1] - A.bases[0]) / A.size,
     });
   },
 };
@@ -606,6 +640,16 @@ const drop = {
       ctx.restore();
     }
 
+    // The shockwave: a crisp ink hairline ring, one grid cell per 2 frames.
+    // Inside it the tiles have flipped to merged; outside they have not.
+    if (t >= click + 2 / 60 && r < far) {
+      ctx.save();
+      ctx.strokeStyle = P.ink;
+      ctx.lineWidth = Math.max(2, 3 * u);
+      ctx.beginPath(); ctx.arc(o.x, o.y, r, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
+
     // PR #1 flips to MERGED. On the flood it folds away.
     const merged = clamp(frames(t, tl.at('pr1.merged')) / 8);
     const fold = expoIn(clamp((t - 15.72) / 0.16));
@@ -626,43 +670,42 @@ const drop = {
       ctx.beginPath(); ctx.arc(o.x, o.y, floodR, 0, Math.PI * 2); ctx.fill();
     }
 
-    // Cursor: presses for 3 frames, recoils, then slides off and fades.
+    // Cursor: presses for 3 frames, then fades out over 6 where it is.
     const fc = frames(t, click);
-    const away = expoOut(clamp((t - click - 0.08) / 0.5));
-    const ca = 1 - clamp((t - click - 0.25) / 0.3);
-    if (ca > 0) drawCursor(S, o.x + away * 70 * u, o.y + away * 90 * u, { scale: fc < 3 ? 0.84 : 1, alpha: ca });
+    const ca = 1 - clamp((fc - 3) / 6);
+    if (ca > 0) drawCursor(S, o.x, o.y, { scale: fc < 3 ? 0.84 : 1, alpha: ca });
 
+    // The click: one ink frame, then one signal-red frame (the scene is
+    // already paper, so a paper flash would not read).
+    const flashOn = t >= click && t < click + 2 / 60;
     if (fx) {
-      if (r < far + grid.cw) fx.ripple = { x: o.x, y: o.y, r, width: grid.cw * 0.4, amp: 24 * u, remap: 0.6 };
-      // A single 2-frame paper-white flash on the click.
-      fx.flash = t >= click && t < click + 2 / 60 ? 1 : 0;
+      fx.flash = flashOn ? 1 : 0;
+      fx.flashColor = t < click + 1 / 60 ? P.ink : P.signal;
     }
+    if (flashOn) return;
 
-    // Headline. Line one is uncovered by the shockwave itself; line two by
-    // the red echo ring on the backbeat. Both retract on the flood.
+    // Headline: the whole thesis lands on the first frame after the flash,
+    // with a 4-frame scale stamp; 'human' turns signal red on the backbeat,
+    // with the echo ring. It retracts on the flood.
     const T = L.dropType;
     const outT = flood0;
     const outW = t >= outT ? 1 - expoIn(frames(t, outT) / 7) : 1;
     if (outW <= 0) return;
-    const base1 = T.bases[0];
-    const base2 = design.vertical ? T.bases[1] : T.bases[1];
-    const circle = (rad, x, y) => `circle(${Math.max(0, rad)}px at ${o.x - x}px ${o.y - y}px)`;
-    const y1 = base1 - T.size * baseOf(0.92);
+    const humanC = t >= human ? P.signal : P.ink;
+    const lines = design.vertical
+      ? [[{ text: 'Paid only' }], [{ text: 'when a' }], [{ text: 'human', color: humanC }], [{ text: 'merges.' }]]
+      : [[{ text: 'Paid only when' }], [{ text: 'a ' }, { text: 'human', color: humanC }, { text: ' merges.' }]];
+    const spans = [];
+    lines.forEach((ln, k) => { if (k) spans.push(br); spans.push(...ln); });
+    const land = click + 2 / 60;
+    const stamp = 1 + 0.05 * (1 - expoOut(frames(t, land) / 4));
+    const hb = frames(t, human);
+    const punch = hb >= 0 && hb < 8 ? 1 + 0.03 * (1 - hb / 8) : 1;
     display(S, {
-      spans: design.vertical ? [{ text: 'Paid only' }, br, { text: 'when a' }] : [{ text: 'Paid only when a' }],
-      x: T.x, base: base1, size: T.size, wdth: clamp(100 - 12 * sc, 62, 125),
-      clip: t < outT ? circle(r, T.x, y1) : `inset(-10% ${(1 - outW) * 100}% -10% -10%)`,
+      spans, x: T.x, base: T.base, size: T.size, wdth: clamp(100 - 12 * sc, 62, 125),
+      lineHeight: T.pitch / T.size, scale: stamp * punch,
+      clip: t < outT ? null : `inset(-10% ${(1 - outW) * 100}% -10% -10%)`,
     });
-    if (t >= human) {
-      const y2 = base2 - T.size * baseOf(0.92);
-      display(S, {
-        spans: design.vertical
-          ? [{ text: 'human', color: P.signal }, br, { text: 'merges.' }]
-          : [{ text: 'human', color: P.signal }, { text: ' merges.' }],
-        x: T.x, base: base2, size: T.size, wdth: clamp(100 - 12 * sc, 62, 125),
-        clip: t < outT ? circle(echoR, T.x, y2) : `inset(-10% ${(1 - outW) * 100}% -10% -10%)`,
-      });
-    }
   },
 };
 
@@ -703,7 +746,7 @@ function escrowLayout(design) {
 
 const escrow = {
   id: 'escrow',
-  blur: (t) => (t >= 18.75 ? 4 : t >= 17 && t < 17.45 ? 3 : 1),
+  blur: (t) => (t >= 18.75 ? 4 : 1),
   draw(S) {
     const { t, tl, design, svg, ctx } = S;
     const P = design.palette;
@@ -747,20 +790,21 @@ const escrow = {
           frag += `<line x1="${f(c.x1)}" y1="${f(c.y1)}" x2="${f(lerp(c.x1, c.x2, p))}" y2="${f(lerp(c.y1, c.y2, p))}" stroke="${P.paper}" stroke-opacity="0.7" stroke-width="${f(sw)}"/>`;
         }
       }
-      if (fr < 0) return;
+      // States are pre-rolled by 3 frames: on its stamp a box is drawn and labelled.
+      if (fr < -3) return;
       const released = i === 3;
       const perim = 2 * (bx.w + bx.h);
-      const draw = curves.snap(fr / (released ? 4 : 8));
+      const draw = curves.snap((fr + 3) / (released ? 4 : 8));
       const stamp = released ? lerp(1.14, 1, curves.slam(fr / 6)) : lerp(1.05, 1, curves.snap(fr / 5));
       const cx = bx.x + bx.w / 2, cy = bx.y + bx.h / 2;
       frag += `<g transform="translate(${f(cx)} ${f(cy)}) scale(${stamp.toFixed(4)}) translate(${f(-cx)} ${f(-cy)})">`;
       if (released) {
-        const fill = curves.snap(fr / 6);
+        const fill = curves.snap((fr + 3) / 4);
         frag += `<rect x="${f(bx.x)}" y="${f(bx.y)}" width="${f(bx.w * fill)}" height="${f(bx.h)}" fill="${P.solana}"/>`;
       }
       frag += `<rect x="${f(bx.x)}" y="${f(bx.y)}" width="${f(bx.w)}" height="${f(bx.h)}" fill="none" stroke="${released ? P.solana : P.paper}" stroke-opacity="${released ? 1 : 0.85}" stroke-width="${f(released ? 3 * u : sw)}" stroke-dasharray="${f(perim)}" stroke-dashoffset="${f(perim * (1 - draw))}"/>`;
       const ink = released ? P.ink : P.paper;
-      const op = clamp((fr - 2) / 4);
+      const op = clamp((fr + 3) / 3);
       const pad = 16 * u;
       const num = design.size('tag');
       const lab = design.size('label');
@@ -775,7 +819,7 @@ const escrow = {
       frag += `<text x="${f(noteX)}" y="${f(noteY)}" text-anchor="${design.vertical ? 'end' : 'start'}" font-family="${mono ? 'JetBrains Mono' : 'Inter Tight'}" font-weight="${mono ? 700 : 500}" font-size="${f(noteSize)}" fill="${released ? P.ink : P.paper}" fill-opacity="${released ? 1 : 0.7}" opacity="${op}">${st.note}</text>`;
       // History ticks: a small check on each recap state.
       if (!released) {
-        const ck = clamp((fr - 5) / 5);
+        const ck = clamp((fr - 1) / 5);
         if (ck > 0) {
           const s = 9 * u, x0 = bx.x + bx.w - pad - s * 1.6, y0 = bx.y + pad + s * 0.6;
           frag += `<polyline points="${f(x0)},${f(y0)} ${f(x0 + s * 0.55)},${f(y0 + s * 0.55)} ${f(x0 + s * 1.6)},${f(y0 - s * 0.5)}" fill="none" stroke="${P.grey}" stroke-width="${f(2.5 * u)}" stroke-dasharray="${f(3 * s)}" stroke-dashoffset="${f(3 * s * (1 - ck))}"/>`;
@@ -796,49 +840,57 @@ const escrow = {
       if (q > 0 && q < 1) frag += `<circle cx="${f(lerp(c.x1, c.x2, q))}" cy="${f(lerp(c.y1, c.y2, q))}" r="${f(8 * u)}" fill="${P.solana}"/>`;
     }
 
-    // Counter: rolls with the split-flap hits and locks green on RELEASED.
-    const rolls = tl.prefixed('counter.roll').filter((h) => h.t <= t + 1e-9);
-    const lock = tl.at('counter.lock', 1);
-    const locked = t >= lock - 1e-9;
-    const value = locked ? CHAIN.bounty : rolls.length ? rolls[rolls.length - 1].value : 0;
+    // The bounty is one lump sum: 0.00 at OPEN, the escrow bar fills on the
+    // four ticks into FUNDED, where 25.00 locks behind a padlock and holds,
+    // unchanged, through CLAIMED. On RELEASED only its colour changes: the
+    // figure, the bar and the lock turn Solana green and the lock opens.
+    const funded = tl.at('state.funded');
+    const isFunded = t >= funded - 1e-9;
+    const isReleased = t >= rel - 1e-9;
     const C = E.counter;
-    const lf = frames(t, lock);
-    const cs = locked ? lerp(1.07, 1, curves.slam(lf / 6)) : 1;
+    const stampT = isReleased ? rel : funded;
+    const lf = frames(t, stampT);
+    const cs = isFunded ? lerp(isReleased ? 1.07 : 1.04, 1, curves.slam(lf / 6)) : 1;
+    const figColor = isReleased ? P.solana : isFunded ? P.paper : P.grey;
     ctx.save();
     ctx.translate(C.x, C.base);
     ctx.scale(cs, cs);
-    text(S, fixed2(value), 0, 0, { kind: 'mono', size: C.size, weight: 700, color: locked ? P.solana : P.paper, tracking: -0.02 });
+    const figW = text(S, fixed2(isFunded ? CHAIN.bounty : 0), 0, 0, { kind: 'mono', size: C.size, weight: 700, color: figColor, tracking: -0.02 });
     ctx.restore();
+    if (isFunded) padlock(S, C.x + figW * cs + C.size * 0.12, C.base - C.size * 0.7, C.size * 0.34, isReleased ? P.solana : P.paper, isReleased ? curves.snap(lf / 6) : 0);
     // Unit label and the value bar under the figure.
-    const unitW = expoOut(frames(t, tl.at('text.25-test-usdc')) / 8);
+    const unitW = typeIn(t, tl.at('text.25-test-usdc'));
     ctx.save();
     ctx.beginPath(); ctx.rect(E.bar.x - 2 * u, E.unit - ls * 1.5, E.bar.w * unitW + 4 * u, ls * 2.4); ctx.clip();
     const uw = text(S, 'Test USDC', E.bar.x, E.unit + ls * 0.9, { size: design.size('label'), color: P.paper });
-    text(S, locked ? 'released' : 'in escrow', E.bar.x + uw + ls, E.unit + ls * 0.9, { size: design.size('label'), weight: 500, color: locked ? P.solana : P.grey });
+    text(S, isReleased ? 'released' : isFunded ? 'in escrow' : 'bounty posted', E.bar.x + uw + ls, E.unit + ls * 0.9, { size: design.size('label'), weight: 500, color: isReleased ? P.solana : P.grey });
     ctx.restore();
     ctx.fillStyle = P.grey;
     ctx.globalAlpha = 0.5;
     ctx.fillRect(E.bar.x, E.bar.y, E.bar.w, Math.max(1, u));
     ctx.globalAlpha = 1;
-    ctx.fillStyle = locked ? P.solana : P.paper;
-    ctx.fillRect(E.bar.x, E.bar.y - 2 * u, E.bar.w * (value / CHAIN.bounty), 5 * u);
+    const fills = tl.prefixed('escrow.fill');
+    const filled = isFunded ? 1 : fills.filter((h) => h.t <= t + 1e-9).length / (fills.length + 1);
+    ctx.fillStyle = isReleased ? P.solana : P.paper;
+    ctx.fillRect(E.bar.x, E.bar.y - 2 * u, E.bar.w * filled, 5 * u);
 
-    // The real release tx: scramble-decode, one glyph per 16th, settles 18.5.
-    const locks = tl.prefixed('tx.glyph-lock').map((h) => h.t);
+    // The real release tx decodes over CLAIMED -> RELEASED. Glyphs cycle
+    // through base58 (the only glyphs a Solana signature has) and lock in
+    // pairs from both ends; a glyph still cycling is dimmed, so a paused
+    // frame never shows a plausible but wrong hash. It settles on 17.5.
+    const lockTimes = glyphLocks(CHAIN.releaseTx, tl.prefixed('tx.'));
     const settle = tl.at('tx.settle');
-    locks.push(settle);
-    const lockTimes = [];
-    let k = 0;
-    for (const ch of CHAIN.releaseTx) lockTimes.push(ch === '.' ? -Infinity : locks[Math.min(k++, locks.length - 1)]);
     const start = tl.at('tx.decode-start');
     const X = E.tx;
     if (t >= start) {
-      text(S, 'Release tx', X.x, X.label, { size: design.size('labelS'), color: P.grey });
-      const tx = scramble(CHAIN.releaseTx, t, { start, lockTimes, fps: tl.fps, seed: 'tx' });
+      const lw = text(S, 'Release tx', X.x, X.label, { size: design.size('labelS'), color: P.grey });
+      const parts = scrambleParts(CHAIN.releaseTx, t, { start, lockTimes, fps: tl.fps, seed: 'tx', alphabet: BASE58 });
       const done = t >= settle;
-      const tw = text(S, tx, X.x, X.base, { kind: 'mono', size: X.size, weight: 700, color: P.paper });
+      const tw = decodeText(S, parts, X.x, X.base, { size: X.size, color: P.paper });
       const ul = curves.snap(frames(t, settle) / 8);
       if (done) {
+        // A small chip: this one is live on devnet, unlike the demo rows.
+        text(S, 'Live on devnet', X.x + lw + ls * 0.8, X.label, { size: design.size('labelS'), color: P.solana, alpha: ul });
         ctx.fillStyle = P.paper;
         ctx.fillRect(X.x, X.base + X.size * 0.22, tw * ul, Math.max(2, 3 * u));
         if (X.tagRight) text(S, 'devnet tx', X.x + tw + 16 * u, X.base, { size: design.size('tag'), color: P.grey });
@@ -849,20 +901,20 @@ const escrow = {
     // 'Released on merge.' lands with RELEASED.
     const H = E.head;
     const hh = tl.hit('text.released-on-merge');
-    // Paper feed over the last beat: a sheet rolls down over everything, with
-    // the grid printed on it, so act 3 opens on paper mid-move.
-    const feed0 = settle + tl.beatSec / 2;
+    // Paper feed over the last half beat: a sheet rolls down over everything,
+    // with the grid printed on it, so act 3 opens on paper mid-move.
+    const feed0 = tl.section(t).to - tl.beatSec / 2;
     const feedEnd = tl.section(t).to - 1 / 60;
     const fp = clamp((t - feed0) / (feedEnd - feed0));
     const edge = design.h * cubicIn(fp);
-    if (t >= hh.t) {
+    if (t >= typeFrom(hh.t)) {
       const spans = H.two ? [{ text: 'Released' }, br, { text: 'on merge.' }] : hh.text;
       const y = H.bases[0] - H.size * baseOf(0.92);
       const cut = Math.max(0, edge - y);
       display(S, {
         spans, x: H.x, base: H.bases[0], size: H.size, color: P.paper,
         wdth: clamp(100 - 12 * tl.sidechain(t), 62, 125),
-        wipe: expoOut(frames(t, hh.t) / 8),
+        wipe: typeIn(t, hh.t),
         clip: fp > 0 ? `inset(${cut}px -10% -10% -10%)` : null,
       });
     }
@@ -880,5 +932,39 @@ const escrow = {
     svg.add(frag);
   },
 };
+
+// Mono text from scrambleParts: locked glyphs at full strength, cycling ones
+// at a third. JetBrains Mono is monospaced, so the two passes line up.
+export function decodeText(S, parts, x, y, { size, color, tracking = 0 }) {
+  const locked = parts.map((g) => (g.locked ? g.ch : ' ')).join('');
+  const cycling = parts.map((g) => (g.locked ? ' ' : g.ch)).join('');
+  const w = text(S, locked, x, y, { kind: 'mono', size, weight: 700, color, tracking });
+  if (cycling.trim()) text(S, cycling, x, y, { kind: 'mono', size, weight: 700, color, tracking, alpha: 0.32 });
+  return w;
+}
+
+// A padlock: body plus shackle; open (0..1) lifts the shackle off its right leg.
+function padlock(S, x, y, h, color, open = 0) {
+  const { ctx, design } = S;
+  const u = design.u;
+  const bw = h * 0.8, bh = h * 0.58;
+  const by = y + h - bh;
+  const lw = Math.max(2, h * 0.11);
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.fillRect(x, by, bw, bh);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  const r = bw * 0.3;
+  const cx = x + bw / 2, lift = open * h * 0.22;
+  ctx.beginPath();
+  ctx.moveTo(cx - r, by);
+  ctx.lineTo(cx - r, by - h * 0.18 - lift);
+  ctx.arc(cx, by - h * 0.18 - lift, r, Math.PI, 0);
+  ctx.lineTo(cx + r, by - h * 0.18 - lift + (open > 0 ? h * 0.08 : h * 0.18));
+  ctx.stroke();
+  ctx.restore();
+  void u;
+}
 
 export const ACT2 = [timeline, build, drop, escrow];
