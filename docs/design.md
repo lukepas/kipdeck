@@ -34,7 +34,7 @@ Toasts stack top right under the bar, all one card: a glyph column and a stripe 
 
 ## Motion
 
-Motion marks a change of state, and hue and the attention cadences belong to state alone. Nothing bobs, idles or celebrates for decoration; the bridge's ambient life is achromatic or ship-cyan, slow, stays outside the glass and stops under reduced motion or Ship motion at Off (DESIGN.md, rule 1). Every motion has a reduced-motion form. The UI uses one curve, `--ease` (`cubic-bezier(.2, 0, 0, 1)`), and three lengths in `tokens.css`: `--t-ui` 120 ms, `--t-pulse` 1.2 s and `--t-flight` 700 ms.
+Motion marks a change of state, and hue and the attention cadences belong to state alone. Nothing bobs, idles or celebrates for decoration; the bridge's ambient life is achromatic or ship-cyan, slow, keeps off to the side of what you read, gives way when a unit needs you or is stuck, and stops under reduced motion or Ship motion at Off (DESIGN.md, rule 1). Every motion has a reduced-motion form. The UI uses one curve, `--ease` (`cubic-bezier(.2, 0, 0, 1)`), and three lengths in `tokens.css`: `--t-ui` 120 ms, `--t-pulse` 1.2 s and `--t-flight` 700 ms.
 
 | Moment | What moves | How long | Under reduced motion |
 | --- | --- | --- | --- |
@@ -49,7 +49,10 @@ Motion marks a change of state, and hue and the attention cadences belong to sta
 | A unit gets an ERC-8004 record | the plinth glows violet as its step lights | 1.2 s | the step lights |
 | You go to a unit (N, a toast, search) | in Walk the view flies there in an arc; in the Overview it pans and zooms | 700 ms; 300 ms | a cut |
 | The Overview turns (Q / E) | a quarter turn | 280 ms | a cut |
-| The bridge, always | the holo course plot turns over the mission table, in ship-cyan | half a turn a minute | still |
+| The bridge, always | the holo course plot turns over the mission table, in ship-cyan, dashes run along its course to the ship, and its heading band turns the other way; the ticker over the strip runs the deck's log and its clock ticks | half a turn a minute; a dash's run 5 s; the band a turn in 150 s; the log its width in 70 s; the clock each second | still (the clock still tells the time) |
+| A unit works, at its station | its hands work the console while its terminal prints, its band leans toward ship-cyan as it gets busier; its station's bars scroll and grow with the output, a scan line passes, three blinkers twinkle | follows the output; the scan every 6 s; blinkers every 4.3, 6.1 and 8.9 s | the hands rest; the bars hold still at their height |
+| A busy station | a data pulse in a low ship-cyan arc from its hood to the holo table | 1.6 s, every 1.8 to 6 s by how busy | none |
+| A unit starts needing you or gets stuck | the bridge's ambient life dims to 40%; that pod's stations stay hushed while it lasts; a quarter quieter everywhere while anyone waits on you | 3 s, then for as long as it lasts | (already still) |
 | Space, always | three layers of stars stream past the glass, the sky turns, the drive glow breathes | the ship's speed (0.4x to 1.6x by merges in the last hour, 0.15x holding station), the sky 0.6 degrees a minute, the glow every 8 s | still |
 | Now and then | a planet or moon across a side port, an asteroid field tumbling past, or a comet high across the forward glass; never during a beat, waiting while a unit has just started needing you | every 6 to 10 minutes; 90 to 180 s, 40 s, 25 s | none (Calm has none either) |
 | A pull request merges | the surge: the stars speed up to 12x and streak, the glass glints ship-cyan | 1.4 s, at most one in 20 s | nothing |
@@ -63,7 +66,7 @@ The merge beat is the one celebration, and the moment to record for a video: the
 
 Once it parks, the rail has one more lit segment (the rail is a tally that grows), the vault's lid is up with a violet glow, the top bar's violet counter has rolled, and the proof toast shows the devnet transaction. The camera never moves for a beat.
 
-The beats live in `src/client/features/beats/` (paths and timings in `logic.ts`, tested in `tests/motion.test.ts`), space outside in `src/client/features/space/` (the surge's and the jump's curves, the cruise speed and the flybys' schedule in `logic.ts`, tested in `tests/motion.test.ts` and `tests/space.test.ts`), the flight in `src/client/core/flight.ts`, the callout stacking in `src/client/features/workers/declutter.ts`, and the CSS reduced-motion rule at the end of `src/client/styles/tokens.css`.
+The beats live in `src/client/features/beats/` (paths and timings in `logic.ts`, tested in `tests/motion.test.ts`), the bridge's life in `src/client/features/life/` (its numbers in `logic.ts`, tested in `tests/life.test.ts`), space outside in `src/client/features/space/` (the surge's and the jump's curves, the cruise speed and the flybys' schedule in `logic.ts`, tested in `tests/motion.test.ts` and `tests/space.test.ts`), the flight in `src/client/core/flight.ts`, the callout stacking in `src/client/features/workers/declutter.ts`, and the CSS reduced-motion rule at the end of `src/client/styles/tokens.css`.
 
 ## Sound
 
