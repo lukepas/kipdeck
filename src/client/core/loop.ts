@@ -71,9 +71,12 @@ export function installLoop(ctx: Ctx, parts: Pick<Parts, 'stage' | 'peers' | 'vi
     ctx.world().update(t, dt, [player.pos, ...[...remotes.values()].map((r) => r.person.root.position), ...arrivals.positions()]);
   }
 
-  /** The scene, from the Overview's camera while it's up, else from your eyes. */
+  /** The scene, from the Overview's camera while it's up, else from your eyes; through demo mode's bloom while it's on. */
   function drawScene() {
-    ctx.renderer.render(parts.stage.scene, parts.stage.view ?? ctx.camera);
+    const { stage } = parts;
+    const camera = stage.view ?? ctx.camera;
+    if (stage.draw) stage.draw(camera);
+    else ctx.renderer.render(stage.scene, camera);
   }
 }
 

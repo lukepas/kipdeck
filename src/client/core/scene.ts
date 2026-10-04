@@ -21,6 +21,8 @@ export interface Stage {
   readonly camera: THREE.PerspectiveCamera;
   /** The camera the frame is drawn with instead of `camera`, while one is set (the Overview, see core/camera-overview.ts). */
   view: THREE.Camera | null;
+  /** Draws the frame through something other than the plain renderer while set (demo mode's bloom, see features/demo). */
+  draw: ((camera: THREE.Camera) => void) | null;
   readonly office: Office;
 }
 
@@ -79,7 +81,7 @@ export function createScene(canvas: HTMLCanvasElement, renderer: THREE.WebGLRend
 
   const office = buildOffice();
   scene.add(office.group);
-  return { canvas, renderer, scene, camera, view: null, office };
+  return { canvas, renderer, scene, camera, view: null, draw: null, office };
 }
 
 /** The canvas and the camera fit the window, and keep fitting it. */

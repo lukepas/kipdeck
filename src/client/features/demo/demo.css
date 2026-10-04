@@ -1,0 +1,6 @@
+/* Demo mode (features/demo): the chrome a fifth bigger, so the smallest type is about 15px on a
+   shared screen or in a compressed recording, and the alert strip stays up. */
+body.demo #hud { zoom: 1.2; }
+body.demo .backdrop { zoom: 1.12; }
+body.demo .needs-you-x { display: none; }
+body.demo .overview-legend { zoom: 1.2; }

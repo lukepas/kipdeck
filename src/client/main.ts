@@ -54,6 +54,7 @@ import { installWhiteboard } from './features/whiteboard';
 import { installWorkerActions } from './features/workers/actions';
 import { installWorkerViews } from './features/workers/views';
 import { installDeclutter } from './features/workers/declutter';
+import { installDemo } from './features/demo';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -145,6 +146,7 @@ parts.pointer = installPointer(ctx, core, parts);
 parts.overview = installOverview(ctx, parts);
 parts.flight = installFlight(ctx);
 installDeclutter(ctx, parts);
+installDemo(ctx, parts);
 installChat(ctx);
 parts.talk = installVoice(ctx, { tv: parts.tv });
 installDictation(ctx);

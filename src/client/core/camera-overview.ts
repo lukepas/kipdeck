@@ -40,6 +40,8 @@ export interface Overview {
   toggle(on?: boolean): void;
   /** Pans and zooms to (x, z) in 300 ms (a cut under reduced motion), going up into the Overview first. */
   flyTo(x: number, z: number): void;
+  /** Turns slowly round the table at `speed` (radians a second) until you turn, pan or zoom yourself; 0 stops it. Demo mode's shot (features/demo). */
+  orbit(speed: number): void;
 }
 
 export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview {
@@ -54,6 +56,8 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
   let fly: { from: THREE.Vector3; to: THREE.Vector3; z0: number; z1: number; at: number } | null = null;
   const held = new Set<string>();
   let walkFog: THREE.Fog | THREE.FogExp2 | null = null;
+  /** The slow turn round the table (radians a second), or 0. */
+  let orbitSpeed = 0;
 
   const legend = h(
     'div.overview-legend.hidden',
@@ -130,6 +134,8 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
   // Keys, ahead of the office's own while up here: the turn, the pan, and the ways back down.
   ctx.keys.add('guard', (e) => {
     if (!on) return false;
+    // Anything you do up here takes over from a slow orbit.
+    if (e.code !== 'KeyG' && e.code !== 'Escape') orbitSpeed = 0;
     if (e.code === 'KeyG' || e.code === 'Escape') {
       toggle(false);
       return true;
@@ -152,7 +158,9 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
   // A drag pans, the wheel zooms.
   let drag: { x: number; y: number } | null = null;
   canvas.addEventListener('pointerdown', (e) => {
-    if (on) drag = { x: e.clientX, y: e.clientY };
+    if (!on) return;
+    drag = { x: e.clientX, y: e.clientY };
+    orbitSpeed = 0;
   });
   window.addEventListener('pointerup', () => (drag = null));
   window.addEventListener('pointermove', (e) => {
@@ -165,6 +173,7 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     'wheel',
     (e) => {
       if (!on) return;
+      orbitSpeed = 0;
       zoom = THREE.MathUtils.clamp(zoom * Math.exp(-e.deltaY * 0.0015), ZOOM.min, ZOOM.max);
     },
     { passive: true },
@@ -179,6 +188,7 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
       yaw = turn.from + (turn.to - turn.from) * ease(k);
       if (k >= 1) turn = null;
     }
+    if (orbitSpeed && !turn && !fly && !ctx.reduceMotion.matches) yaw += orbitSpeed * dt;
     if (fly) {
       const k = Math.min(1, (now - fly.at) / FLY_MS);
       target.lerpVectors(fly.from, fly.to, ease(k));
@@ -200,5 +210,10 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     camera.lookAt(target);
   });
 
-  return { camera, active: () => on, toggle, flyTo };
+  function orbit(speed: number) {
+    orbitSpeed = speed;
+    if (speed) toggle(true);
+  }
+
+  return { camera, active: () => on, toggle, flyTo, orbit };
 }
