@@ -2,7 +2,8 @@ import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { isAgentProvider, type AgentChoice, type AgentEffort, type AgentProvider, type GhPull, type QueuePayment, type QueueState, type QueueTask, type WorkerInfo, type WorkerStatus } from '../shared/protocol.js';
-import { DESK_BY_ID, SEATS, nextFreeSeat } from '../shared/layout.js';
+import { DESK_BY_ID, SEATS } from '../shared/layout.js';
+import { seatForGoal } from '../shared/pods.js';
 import { validateWorkerEffort, validateWorkerModel } from './agents.js';
 import { savedEffort, savedModel, takesEffort, takesModel } from '../shared/providers.js';
 import { PROMPTS } from '../shared/prompts.js';
@@ -371,9 +372,12 @@ export class TaskQueue {
     return this.tasks.filter((t) => t.status === 'running').length;
   }
 
-  /** A free desk (in the back office too, as far as it's built), else a free bean bag. */
-  private freeDesk(): string | undefined {
-    return nextFreeSeat((id) => this.workers.deskOccupied(id), this.workers.wing?.() ?? 0)?.id;
+  /**
+   * A free console (in the pod working toward `goal` first, see shared/pods.ts; in the overflow bay
+   * too, as far as it's built), else a seat on the Standby bench.
+   */
+  private freeDesk(goal?: string): string | undefined {
+    return seatForGoal(goal, (id) => this.workers.deskOccupied(id), this.workers.list(), this.workers.wing?.() ?? 0)?.id;
   }
 
   /**
@@ -415,7 +419,7 @@ export class TaskQueue {
       // workers going home makes room. Over the limit (it was just lowered), it waits for people to send some home.
       const room = this.events.room?.() ?? Infinity;
       if (room < 0) break;
-      const free = room > 0 ? this.freeDesk() : undefined;
+      const free = room > 0 ? this.freeDesk(t.goal) : undefined;
       if (!free && !this.recyclable()) break;
       // Its worktree starts from what's on GitHub now, PRs merged since included: fetch that first,
       // and come back to seat it once it's in.

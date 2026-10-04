@@ -8,9 +8,9 @@ function peer(x: number, z: number, floor?: string, y = 0): PeerInfo {
   return { id: 'p', name: 'P', color: '#fff', look: { skin: 0, hair: 0, style: 0 }, x, y, z, rotY: 0, moving: false, voice: false, muted: false, sharing: false, floor };
 }
 
-test('the meeting room and a seat have their own words, and walking about has none', () => {
-  assert.equal(whereabouts(peer(MEETING_TABLE.x, MEETING_TABLE.z - 1, 'agent-office')), 'in the meeting room');
-  assert.equal(whereabouts({ ...peer(10.5, 0, 'agent-office'), seat: 'couch:1' }), 'on the couch');
+test('the review bay and a seat have their own words, and walking about has none', () => {
+  assert.equal(whereabouts(peer(MEETING_TABLE.x, MEETING_TABLE.z - 1, 'agent-office')), 'in the review bay');
+  assert.equal(whereabouts({ ...peer(10.5, 0, 'agent-office'), seat: 'couch:1' }), 'on the operator bench');
   assert.equal(whereabouts(peer(0, 3, 'agent-office')), undefined);
 });
 

@@ -3,7 +3,7 @@
 // An office floor built out into the back office (see WING) has more of it to get round: the office's
 // helpers take how many rows it's built out (`wing`), and each level gets a grid of its own.
 
-import { BEANBAGS, BOOKSHELF, DESK_SIZE, ELEVATOR, ELEVATOR_FRONT, FLOOR, KIOSK, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, STATIONS, WHITEBOARD, WING, builtDesks, plantsAt, wingLevel, wingMinZ, type DeskDef } from './layout.js';
+import { BEANBAGS, BOOKSHELF, DESK_SIZE, ELEVATOR, ELEVATOR_FRONT, FLOOR, KIOSK, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, MISSION_TABLE, PROOF_CORNER, SEATING, STATIONS, WHITEBOARD, WING, builtDesks, plantsAt, wingLevel, wingMinZ, type DeskDef } from './layout.js';
 
 
 export type Pt = [number, number];
@@ -40,44 +40,54 @@ export function deskPoint(d: DeskDef, t: number, s: number): Pt {
   return [d.x + Math.cos(d.rotY) * t + Math.sin(d.rotY) * s, d.z - Math.sin(d.rotY) * t + Math.cos(d.rotY) * s];
 }
 
-/** What's in the way on the office floor, built out `wing` rows. The lounge and plants are where world/office/room.ts puts them. */
+/** The box round a footprint from `t0` to `t1` along `d`'s width and `s0` to `s1` out to its worker's side. */
+function footprint(d: DeskDef, t0: number, t1: number, s0: number, s1: number): Rect {
+  const corners = [deskPoint(d, t0, s0), deskPoint(d, t1, s0), deskPoint(d, t0, s1), deskPoint(d, t1, s1)];
+  const xs = corners.map(([x]) => x);
+  const zs = corners.map(([, z]) => z);
+  return [Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs)];
+}
+
+/** What's in the way on the office floor, built out `wing` rows, as the fixtures in world/office/ put it. */
 function obstacles(wing: number): Obstacles {
   const rects: Rect[] = [];
   const circles: Circle[] = [];
   const hw = DESK_SIZE.width / 2;
-  const hd = DESK_SIZE.depth / 2;
   for (const d of builtDesks(wing)) {
-    // Desks face ±z, so their tops are axis-aligned.
-    rects.push([d.x - hw, d.x + hw, d.z - hd, d.z + hd]);
+    // A console turns to face the table, so it's two circles along its width rather than a box.
+    for (const t of [-hw / 2, hw / 2]) {
+      const [cx, cz] = deskPoint(d, t, 0);
+      circles.push([cx, cz, DESK_SIZE.depth / 2 + 0.05]);
+    }
     const [cx, cz] = deskPoint(d, 0, 0.9);
-    circles.push([cx, cz, 0.35]); // the chair
+    circles.push([cx, cz, 0.35]); // the stool
   }
-  rects.push([10, 11, -2.2, 2.2]); // couch
-  rects.push([12.2, 13.8, -0.8, 0.8]); // coffee table
-  circles.push([12.5, 3.5, 0.5], [14.5, -3.4, 0.5]); // beanbags
+  // The mission table.
+  circles.push([MISSION_TABLE.x, MISSION_TABLE.z, MISSION_TABLE.r]);
+  // The operator bench and its stools, facing the Attention board.
+  for (const seat of SEATING) {
+    if (seat.places.length > 1) {
+      const half = Math.max(...seat.places.map(Math.abs)) + 0.9;
+      const along = Math.abs(Math.sin(seat.rotY)) > 0.5;
+      rects.push(along ? [seat.x - 0.5, seat.x + 0.5, seat.z - half, seat.z + half] : [seat.x - half, seat.x + half, seat.z - 0.5, seat.z + 0.5]);
+    } else circles.push([seat.x, seat.z, 0.4]);
+  }
+  // The Proof corner's vault and plinth, against the west wall.
+  for (const p of [PROOF_CORNER.vault, PROOF_CORNER.plinth]) rects.push([FLOOR.minX, p.x + p.width / 2, p.z - p.depth / 2, p.z + p.depth / 2]);
   for (const [x, z, s] of plantsAt(wing)) circles.push([x, z, 0.3 * s]);
   // The elevator shaft.
   rects.push([ELEVATOR.x - ELEVATOR.width / 2, ELEVATOR.x + ELEVATOR.width / 2, FLOOR.minZ, ELEVATOR_FRONT]);
-  // The whiteboard on its wheels, as features/whiteboard/world.ts puts it.
+  // The whiteboard on its wheels, as features/whiteboard/world.ts puts it (it turns a half turn at most).
   rects.push([WHITEBOARD.x - WHITEBOARD.width / 2 - 0.2, WHITEBOARD.x + WHITEBOARD.width / 2 + 0.2, WHITEBOARD.z - 0.48, WHITEBOARD.z + 0.48]);
-  // The bookshelf against the south wall, as features/bookshelf/world.ts puts it.
-  rects.push([BOOKSHELF.x - BOOKSHELF.width / 2 - 0.04, BOOKSHELF.x + BOOKSHELF.width / 2 + 0.04, BOOKSHELF.z - BOOKSHELF.depth / 2 - 0.03, FLOOR.maxZ]);
+  // The docs rack against the north wall, as features/bookshelf/world.ts puts it, out to the wall behind it.
+  const shelf = footprint({ id: 'docs', label: '', x: BOOKSHELF.x, z: BOOKSHELF.z, rotY: BOOKSHELF.rotY }, -BOOKSHELF.width / 2 - 0.04, BOOKSHELF.width / 2 + 0.04, -BOOKSHELF.depth / 2 - 0.3, BOOKSHELF.depth / 2 + 0.03);
+  rects.push(shelf);
   // The overflow bean bags and their lap desks. They're only out while every desk is taken, but they
   // always come out in the same spots, so walkers keep off those.
-  for (const b of BEANBAGS) {
-    const corners = [deskPoint(b, -0.62, -1.1), deskPoint(b, 0.62, -1.1), deskPoint(b, -0.62, 0.64), deskPoint(b, 0.62, 0.64)];
-    const xs = corners.map(([x]) => x);
-    const zs = corners.map(([, z]) => z);
-    rects.push([Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs)]);
-  }
+  for (const b of BEANBAGS) rects.push(footprint(b, -0.62, 0.62, -1.1, 0.64));
   // The board agents' kiosks, and the agent standing behind each one.
-  for (const k of STATIONS) {
-    const corners = [deskPoint(k, -KIOSK.width / 2, -KIOSK.depth / 2), deskPoint(k, KIOSK.width / 2, -KIOSK.depth / 2), deskPoint(k, -KIOSK.width / 2, KIOSK.stand + 0.35), deskPoint(k, KIOSK.width / 2, KIOSK.stand + 0.35)];
-    const xs = corners.map(([x]) => x);
-    const zs = corners.map(([, z]) => z);
-    rects.push([Math.min(...xs), Math.max(...xs), Math.min(...zs), Math.max(...zs)]);
-  }
-  // The meeting room: its glass walls, with the doorway in the north one, and the
+  for (const k of STATIONS) rects.push(footprint(k, -KIOSK.width / 2, KIOSK.width / 2, -KIOSK.depth / 2, KIOSK.stand + 0.35));
+  // The Review bay: its glass walls, with the doorway in the north one, and the
   // table with its chairs, as world/office/meeting-room.ts puts them.
   const room = MEETING_ROOM;
   const G = 0.06;

@@ -319,7 +319,7 @@ test('welcomes a browser and dispatches what it sends', async () => {
   // A sign over a desk: the floor sees the plan change and hears who hung it.
   a.send({ t: 'desk.label', deskId: 'desk-1', text: 'Payments' });
   assert.equal((await b.take('plan')).plan.labels['desk-1']?.text, 'Payments');
-  for (const who of [a, b]) assert.equal((await who.take('toast', (m) => m.text.includes('Payments'))).text, '🪧 Ada L hung a sign over Desk 1: “Payments”');
+  for (const who of [a, b]) assert.equal((await who.take('toast', (m) => m.text.includes('Payments'))).text, '🪧 Ada L hung a sign over Console A-01: “Payments”');
 
   a.send({ t: 'leaveOnMerge.set', on: true });
   for (const who of [a, b]) {
@@ -571,10 +571,10 @@ test('settings, accounts, sign-ins and the boards answer as before', async () =>
   a.send({ t: 'term.resize', workerId: 'nope', cols: 80, rows: 24 });
   a.send({ t: 'floor.expand' });
   assert.equal((await a.take('plan')).plan.wing, 1);
-  assert.match(await told('🔨'), /^🔨 Eve knocked out the back wall: Desk \d+ and Desk \d+ are ready for workers$/);
+  assert.match(await told('🔨'), /^🔨 Eve knocked out the back wall: Overflow \d+ and Overflow \d+ are ready for workers$/);
   a.send({ t: 'floor.shrink' });
   assert.equal((await a.take('plan')).plan.wing, 0);
-  assert.match(await told('🧱'), /^🧱 Eve walled the back office back up, and Desk \d+ and Desk \d+ went with it$/);
+  assert.match(await told('🧱'), /^🧱 Eve walled the back office back up, and Overflow \d+ and Overflow \d+ went with it$/);
   a.send({ t: 'floor.projectsDir', dir: 'relative/dir' });
   await warned('Use a full path, like ~/Workspace');
   a.send({ t: 'floor.remove', floor: 'nope' });

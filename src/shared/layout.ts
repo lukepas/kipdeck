@@ -22,36 +22,113 @@ export interface DeskDef {
   wing?: number;
 }
 
-const DESK_WIDTH = 2.2;
-const DESK_DEPTH = 1.1;
-export const DESK_SIZE = { width: DESK_WIDTH, depth: DESK_DEPTH, height: 0.78 } as const;
+/**
+ * A console: low and angled, with the worker on its outer side facing the mission table. Its width
+ * runs along the pod's arc.
+ */
+const DESK_WIDTH = 1.5;
+const DESK_DEPTH = 0.8;
+export const DESK_SIZE = { width: DESK_WIDTH, depth: DESK_DEPTH, height: 0.76 } as const;
 
+/**
+ * The mission table in the middle of the deck. Every console faces it; its top shows the floor's
+ * goals as wedges and their milestones as tick rings. `r` is its radius, `h` its height.
+ */
+export const MISSION_TABLE = { x: 0, z: 0, r: 3.2, h: 0.95 } as const;
+
+/** The pods' letters, round the table from the north-west, clockwise as seen from above (north is -z). */
+export const POD_LETTERS = ['A', 'B', 'C', 'D'] as const;
+export type PodLetter = (typeof POD_LETTERS)[number];
+
+/**
+ * The four pods: arcs of four consoles each, `radius` out from the table's middle, centred on
+ * `angle` (radians round the table from +x toward +z). A north-west, B north-east, C south-east,
+ * D south-west.
+ */
+export const PODS: readonly { letter: PodLetter; angle: number }[] = [
+  { letter: 'A', angle: (-3 * Math.PI) / 4 },
+  { letter: 'B', angle: -Math.PI / 4 },
+  { letter: 'C', angle: Math.PI / 4 },
+  { letter: 'D', angle: (3 * Math.PI) / 4 },
+];
+/** How far the consoles are from the table's middle, and the angle between neighbours in a pod. */
+export const POD_RADIUS = 7.5;
+export const CONSOLES_PER_POD = 4;
+const CONSOLE_STEP = (13 * Math.PI) / 180;
+
+/** The turn that has someone at (x, z) facing the mission table: at 0 they face -z. */
+export function facingTable(x: number, z: number): number {
+  return Math.atan2(x - MISSION_TABLE.x, z - MISSION_TABLE.z);
+}
+
+/** The 16 consoles, four to a pod, each turned so its worker faces the table across it. */
 function buildDesks(): DeskDef[] {
   const desks: DeskDef[] = [];
-  const clusterX = [-10.5, -1.5];
-  // Each pod is two back-to-back rows; the far row faces +z (rotY = PI).
-  const pods = [
-    { back: -4.55, front: -3.45 },
-    { back: 3.45, front: 4.55 },
-  ];
   let n = 1;
-  for (const pod of pods) {
-    for (const cx of clusterX) {
-      for (const [z, rotY] of [
-        [pod.back, Math.PI],
-        [pod.front, 0],
-      ] as const) {
-        for (const dx of [-DESK_WIDTH / 2, DESK_WIDTH / 2]) {
-          desks.push({ id: `desk-${n}`, x: cx + dx, z, rotY, label: `Desk ${n}` });
-          n++;
-        }
-      }
+  for (const pod of PODS) {
+    for (let k = 0; k < CONSOLES_PER_POD; k++) {
+      const a = pod.angle + (k - (CONSOLES_PER_POD - 1) / 2) * CONSOLE_STEP;
+      const x = round(MISSION_TABLE.x + Math.cos(a) * POD_RADIUS);
+      const z = round(MISSION_TABLE.z + Math.sin(a) * POD_RADIUS);
+      desks.push({ id: `desk-${n}`, x, z, rotY: facingTable(x, z), label: `Console ${pod.letter}-${String(k + 1).padStart(2, '0')}` });
+      n++;
     }
   }
   return desks;
 }
 
+/** To the millimetre, so the plan reads the same everywhere. */
+function round(v: number): number {
+  return Math.round(v * 1000) / 1000;
+}
+
 export const DESKS: DeskDef[] = buildDesks();
+
+/** The pod a desk of the room belongs to (desk-1..4 are A, and so on), or undefined for any other seat. */
+export function podOf(deskId: string): PodLetter | undefined {
+  const i = DESKS.findIndex((d) => d.id === deskId);
+  return i < 0 ? undefined : POD_LETTERS[Math.floor(i / CONSOLES_PER_POD)];
+}
+
+/** A pod's consoles, in order along its arc. */
+export function podDesks(letter: PodLetter): DeskDef[] {
+  const i = POD_LETTERS.indexOf(letter);
+  return DESKS.slice(i * CONSOLES_PER_POD, (i + 1) * CONSOLES_PER_POD);
+}
+
+/**
+ * The ready line: a painted double stripe on each pod's inner edge, 1.4 m out from the table, with a
+ * numbered tick for each unit that needs someone. Tick 1 is whoever has waited longest. A fifth one
+ * on a pod starts a second row of ticks, `row` further out.
+ */
+export const READY_LINE = { r: MISSION_TABLE.r + 1.4, row: 0.6, ticks: 4, spacing: 1.0 } as const;
+
+/** Where a unit stands on its pod's ready line at tick `tick` (1 is the first), facing the table. */
+export function readySpot(letter: PodLetter, tick: number): { x: number; z: number; rotY: number } {
+  const pod = PODS[POD_LETTERS.indexOf(letter)];
+  const i = Math.max(0, Math.floor(tick) - 1);
+  const row = Math.floor(i / READY_LINE.ticks);
+  const k = i % READY_LINE.ticks;
+  const r = READY_LINE.r + row * READY_LINE.row;
+  const a = pod.angle + (k - (READY_LINE.ticks - 1) / 2) * (READY_LINE.spacing / r);
+  const x = round(MISSION_TABLE.x + Math.cos(a) * r);
+  const z = round(MISSION_TABLE.z + Math.sin(a) * r);
+  return { x, z, rotY: facingTable(x, z) };
+}
+
+/**
+ * The structural grid stencilled on the slab's edge: a column line every `step` meters from the
+ * north-west corner, lettered A to H across (west to east) and numbered 1 to 6 down (north to south),
+ * so every spot on the deck has a cell address, like "C4".
+ */
+export const GRID = { step: 4.5, cols: 'ABCDEFGH', rows: 6 } as const;
+
+/** The cell (x, z) is in: its column's letter and its row's number. Off the deck it's the nearest cell. */
+export function cellOf(x: number, z: number): string {
+  const col = Math.max(0, Math.min(GRID.cols.length - 1, Math.floor((x - FLOOR.minX) / GRID.step)));
+  const row = Math.max(0, Math.min(GRID.rows - 1, Math.floor((z - FLOOR.minZ) / GRID.step)));
+  return `${GRID.cols[col]}${row + 1}`;
+}
 
 /**
  * The back office: a bay knocked through the north wall between the elevator and the east wall, for a
@@ -91,8 +168,8 @@ export const WING_DESKS: DeskDef[] = Array.from({ length: WING.rows }, (_, i) =>
   const x = (WING.minX + WING.maxX) / 2;
   const n = DESKS.length + 2 * i + 1;
   return [
-    { id: `desk-${n}`, x, z: z - DESK_DEPTH / 2, rotY: Math.PI, label: `Desk ${n}`, wing: i + 1 },
-    { id: `desk-${n + 1}`, x, z: z + DESK_DEPTH / 2, rotY: 0, label: `Desk ${n + 1}`, wing: i + 1 },
+    { id: `desk-${n}`, x, z: z - DESK_DEPTH / 2, rotY: Math.PI, label: `Overflow ${2 * i + 1}`, wing: i + 1 },
+    { id: `desk-${n + 1}`, x, z: z + DESK_DEPTH / 2, rotY: 0, label: `Overflow ${2 * i + 2}`, wing: i + 1 },
   ];
 }).flat();
 
@@ -107,28 +184,18 @@ export function builtDesks(level: number): DeskDef[] {
 }
 
 /**
- * Overflow seats: once every desk is taken, bean bags come out around the room, one at a time in
- * this order. Each faces a window or a wall, with open floor behind it to walk up to.
+ * Overflow seats: the Standby bench along the south curb. Once every console is taken its seats come
+ * out one at a time in this order, west to east, each facing into the deck (-z) with a low stand in
+ * front of it and a walkway behind it along the curb. A parked unit waits here, dimmed.
  */
-export const BEANBAGS: DeskDef[] = (
-  [
-    // Out in the north-east corner past the elevator, and between the PR board and the elevator, clear
-    // of the elevator doors.
-    [15, -9.8, 0],
-    [5.4, -9.8, 0],
-    [-16.1, -9, Math.PI / 2],
-    [-16.1, -3, Math.PI / 2],
-    [-8.8, 10.2, Math.PI],
-    [0.8, 10.2, Math.PI],
-    [12.2, -5.6, -Math.PI / 2],
-    [12.2, 5.6, -Math.PI / 2],
-    [-16.1, 3, Math.PI / 2],
-    // Clear of the board agents' kiosks, and of the floor in front of them.
-    [-13.2, -9.8, 0],
-    [-12.6, 9.2, Math.PI / 2],
-    [-5.4, -9.8, 0],
-  ] as const
-).map(([x, z, rotY], i) => ({ id: `beanbag-${i + 1}`, x, z, rotY, label: `Bean bag ${i + 1}`, beanbag: true }));
+export const BEANBAGS: DeskDef[] = Array.from({ length: 12 }, (_, i) => ({
+  id: `beanbag-${i + 1}`,
+  x: round(-16.4 + i * 1.4),
+  z: FLOOR.maxZ - 2.5,
+  rotY: 0,
+  label: `Standby ${i + 1}`,
+  beanbag: true,
+}));
 
 /** Everywhere a worker can sit: the desks, the back office's once it's built out (see deskBuilt), then the bean bags. */
 export const SEATS: DeskDef[] = [...DESKS, ...WING_DESKS, ...BEANBAGS];
@@ -137,31 +204,29 @@ export const SEATS: DeskDef[] = [...DESKS, ...WING_DESKS, ...BEANBAGS];
 export type StationKind = 'issues' | 'pulls' | 'queue';
 
 /**
- * The board agents: a worker standing behind a little kiosk just west of each of those boards (see
- * BOARDS), there for anyone to prompt about it. (x, z) is the kiosk. They face into the room, so at
- * rotY PI the worker stands on the wall side of it. Nobody hires them from the desks or the queue.
+ * The board agents: a worker standing behind a slim lectern at the west end of each panel of the Main
+ * board (see BOARDS), there for anyone to prompt about it. (x, z) is the lectern. They face into the
+ * deck, so at rotY PI the worker stands on the wall side of it. Nobody hires them from the consoles or
+ * the queue.
  */
 export const STATIONS: DeskDef[] = [
-  // Between the plant in the north-west corner and the Issues board.
-  { id: 'station-issues', station: 'issues', x: -15.6, z: FLOOR.minZ + 1.3, rotY: Math.PI, label: 'Issues board' },
-  // Between the task queue and the PR board.
-  { id: 'station-pulls', station: 'pulls', x: 0, z: FLOOR.minZ + 1.3, rotY: Math.PI, label: 'PR board' },
-  // Between the Issues board and the task queue.
-  { id: 'station-queue', station: 'queue', x: -7.8, z: FLOOR.minZ + 1.3, rotY: Math.PI, label: 'Task queue' },
+  { id: 'station-issues', station: 'issues', x: -11.8, z: FLOOR.minZ + 1.3, rotY: Math.PI, label: 'Issues board' },
+  { id: 'station-pulls', station: 'pulls', x: 1.0, z: FLOOR.minZ + 1.3, rotY: Math.PI, label: 'PR board' },
+  { id: 'station-queue', station: 'queue', x: -5.4, z: FLOOR.minZ + 1.3, rotY: Math.PI, label: 'Task queue' },
 ];
 /** A board agent's kiosk: its top, and how far behind its middle (toward the wall) the agent stands. */
 export const KIOSK = { width: 0.8, depth: 0.5, height: 0.55, stand: 0.55 } as const;
 /** Each board agent's name and its color, the same whenever it's hired. */
 export const STATION_AGENT: Record<StationKind, { name: string; color: string }> = {
-  issues: { name: 'Issues agent', color: '#ef476f' },
-  pulls: { name: 'PR agent', color: '#118ab2' },
-  queue: { name: 'Queue agent', color: '#06d6a0' },
+  issues: { name: 'Issues agent', color: '#8FA3B9' },
+  pulls: { name: 'PR agent', color: '#A98FB9' },
+  queue: { name: 'Queue agent', color: '#9FB98F' },
 };
 
 /**
- * The meeting room: glass walls in the south-east corner, out to the outside walls, under a flat roof,
- * with a long table in the middle. Workers called to a meeting sit round it (see MEETING_SEATS and
- * server/meetings.ts). The door is in the north wall, facing the lounge.
+ * The Review bay (the meeting room): smoked glass in the south-east corner, out to the outside walls,
+ * with a small table in the middle. Units called to a review sit round it (see MEETING_SEATS and
+ * server/meetings.ts). The door is in the north glass, facing the deck.
  */
 export const MEETING_ROOM = { minX: 9.15, maxX: FLOOR.maxX, minZ: 8.15, maxZ: FLOOR.maxZ, height: 2.75, door: { x0: 10, x1: 11.4 } } as const;
 export const MEETING_TABLE = { x: 13.7, z: 10.55, width: 3.6, depth: 1.2, height: 0.76 } as const;
@@ -179,8 +244,11 @@ export const MEETING_SEATS: DeskDef[] = (
     [MEETING_TABLE.x + 1.1, MEETING_TABLE.z + MEETING_TABLE.depth / 2 - 0.35, 0],
   ] as const
 ).map(([x, z, rotY], i) => ({ id: `meeting-${i + 1}`, x, z, rotY, label: i === 0 ? 'Head of the table' : `Meeting chair ${i + 1}`, room: true }));
-/** The board on the meeting room's back (south) wall that shows the meeting's output file as it's written. */
-export const MEETING_BOARD = { x: MEETING_TABLE.x, y: 1.95, z: FLOOR.maxZ - 0.08, width: 3.6, height: 1.2 } as const;
+/**
+ * The board in the Review bay that shows the review's output file as it's written: on the east wall
+ * (the south side is only a curb), facing the head of the table. `rotY` is the way it faces.
+ */
+export const MEETING_BOARD = { x: FLOOR.maxX - 0.08, y: 1.75, z: MEETING_TABLE.z, rotY: -Math.PI / 2, width: 3.6, height: 1.6 } as const;
 
 /** Any place a worker can be by id: the seats (the back office's included), the board agents' kiosks and the meeting room's chairs. */
 export const DESK_BY_ID = new Map([...SEATS, ...STATIONS, ...MEETING_SEATS].map((d) => [d.id, d]));
@@ -229,45 +297,60 @@ export function deskSeat(desk: DeskDef, offset = 0.85): { x: number; z: number }
 
 /** Wall boards. `rotY` is the way the board faces (0 = +z, like the north-wall boards). */
 export const BOARDS = {
-  // Side by side along the north wall, the way work goes: an issue goes on the task queue (the
-  // whiteboard in the middle), and its worker's pull request comes out the other side. Each has its
-  // board agent's kiosk just west of it (see STATIONS).
-  issues: { x: -11.7, y: 2.1, z: FLOOR.minZ + 0.08, rotY: 0, width: 6, height: 3, label: 'Issues' },
-  queue: { x: -3.9, y: 2.1, z: FLOOR.minZ + 0.08, rotY: 0, width: 6, height: 3, label: '📋 Task queue' },
-  pulls: { x: 3.9, y: 2.1, z: FLOOR.minZ + 0.08, rotY: 0, width: 6, height: 3, label: 'Pull Requests' },
-  // East wall, north of the lounge TV.
-  services: { x: FLOOR.maxX - 0.08, y: 2.1, z: -8.2, rotY: -Math.PI / 2, width: 6, height: 3, label: '🌐 Services' },
+  // The Main board: three panels edge to edge along the north wall, the way work goes: an issue goes
+  // on the task queue, and its unit's pull request comes out the other side. Each has its board
+  // agent's lectern at its west end (see STATIONS).
+  issues: { x: -9.4, y: 2.45, z: FLOOR.minZ + 0.08, rotY: 0, width: 6.2, height: 2.9, label: 'Issues' },
+  queue: { x: -3.2, y: 2.45, z: FLOOR.minZ + 0.08, rotY: 0, width: 6.2, height: 2.9, label: 'Queue' },
+  pulls: { x: 3.0, y: 2.45, z: FLOOR.minZ + 0.08, rotY: 0, width: 6.2, height: 2.9, label: 'Pull requests' },
+  // East wall, north of the Attention board.
+  services: { x: FLOOR.maxX - 0.08, y: 2.45, z: -8.6, rotY: -Math.PI / 2, width: 6, height: 2.9, label: 'Services' },
 } as const;
 
-/** The big TV on the east wall that shows whoever is screen sharing. */
-export const TV = { x: FLOOR.maxX - 0.1, y: 2.2, z: 0, width: 6.4, height: 3.6 } as const;
 /**
- * The monitor on the west wall, between the first two windows from the north, facing the desks: how busy the office's machine is, and how many
- * workers it runs of the most it takes.
+ * The Attention board on the east wall (the TV's slot): the live ranked list, in the order of the top
+ * bar's strip, and whatever someone shares while they share it.
  */
-export const MACHINE_MONITOR = { x: FLOOR.minX, y: 2.2, z: -6, width: 2.3, height: 1.3 } as const;
+export const TV = { x: FLOOR.maxX - 0.1, y: 2.45, z: 0, width: 6.4, height: 3.6 } as const;
+/**
+ * The capacity panel at the head of the Proof corner on the west wall, facing the deck: how busy the
+ * office's machine is, and how many units it runs of the most it takes.
+ */
+export const MACHINE_MONITOR = { x: FLOOR.minX, y: 2.3, z: -9.2, width: 2.6, height: 1.5 } as const;
 
 /**
- * The bookshelf of the project's docs (every Markdown file in it, see shared/docs.ts): against the
- * south wall by the middle window, facing into the room (-z). `width`
- * runs along the wall.
+ * The Proof corner along the west wall, south of the capacity panel: the violet attestation rail on
+ * the wall (one lit segment per merge, a growing tally), the escrow vault console with its hinged lid,
+ * and the stepped ERC-8004 reputation plinth. All of it is lower than 1.1 m but the rail.
  */
-export const BOOKSHELF = { x: -6.5, z: FLOOR.maxZ - 0.21, width: 1.7, depth: 0.42, height: 2.3 } as const;
+export const PROOF_CORNER = {
+  rail: { z: -6.3, y0: 0.45, y1: 4.65, width: 0.32, segments: 16 },
+  vault: { x: FLOOR.minX + 1.25, z: -4.1, width: 1.4, depth: 0.9, height: 0.82 },
+  plinth: { x: FLOOR.minX + 1.25, z: -1.7, width: 1.3, depth: 1.3, steps: 4, rise: 0.18 },
+} as const;
+
+/**
+ * The docs rack (every Markdown file in the project, see shared/docs.ts): against the north wall
+ * west of the Main board, facing into the deck. `width` runs along the wall, `rotY` is the way it faces.
+ */
+export const BOOKSHELF = { x: -15.6, z: FLOOR.minZ + 0.21, rotY: 0, width: 1.7, depth: 0.42, height: 2.3 } as const;
 
 export const SPAWN = { x: 8, z: 7 } as const;
 
+/**
+ * The title block stencilled on the floor in the south-east, west of the Review bay: a ruled
+ * rectangle with the deck's name, its revision, its operator and the credit to agent-office.
+ */
+export const TITLE_BLOCK = { minX: 1.4, maxX: 8.4, minZ: 10.3, maxZ: 12.6 } as const;
 
-/** Potted plants around the room: where each stands, and how big it is. */
-export const PLANTS: readonly (readonly [x: number, z: number, scale: number])[] = [
-  [-17.2, -12.2, 1.4],
-  [17.2, -12.2, 1.5],
-  [17.2, 12.2, 1.3],
-  [-17.2, 8.5, 1.2],
-  [14.2, -12.2, 1.1],
-  [-6, 0, 1],
-  [3.5, 0, 0.9],
-  [8.5, 5, 1.1],
-];
+/** How high the south wall stands: only a curb, so the Overview sees every unit over it. */
+export const SOUTH_CURB = 0.4;
+
+/** The tallest anything may stand between the mission table and any console (see tests/layout.test.ts). */
+export const SIGHTLINE = 1.1;
+
+/** Potted plants round the room: none on the deck. */
+export const PLANTS: readonly (readonly [x: number, z: number, scale: number])[] = [];
 
 /** A plant by the north wall east of the elevator, in the way into the back office: put away once it's built. */
 export function plantByWing([x, z]: readonly [number, number, number]): boolean {
@@ -280,11 +363,11 @@ export function plantsAt(level: number): readonly (readonly [x: number, z: numbe
 }
 
 /**
- * The whiteboard on wheels everyone draws on together, out on the open floor between the desks and
- * the lounge, facing into the room (+z). `width` and `height` are its writing surface, whose bottom
- * edge is `bottom` above the floor.
+ * The whiteboard on wheels everyone draws on together, out on the open floor in the east aisle,
+ * facing north toward the operator bench (`rotY` PI faces -z). `width` and `height` are its writing
+ * surface, whose bottom edge is `bottom` above the floor.
  */
-export const WHITEBOARD = { x: 5.4, z: -5.4, width: 4, height: 2.2, bottom: 0.5 } as const;
+export const WHITEBOARD = { x: 14.2, z: 6.3, rotY: Math.PI, width: 4, height: 2.2, bottom: 0.5 } as const;
 
 /** The office's floor slab: it runs from -SLAB up to 0. */
 export const SLAB = 0.3;
@@ -305,11 +388,8 @@ export interface Opening {
   y1: number;
 }
 
-/** Windows you can see out of. */
-export const WINDOWS: Opening[] = [
-  ...[-14, -9, 1].map((u) => ({ wall: 'south' as const, u, width: 3, y0: 1.1, y1: 3.3 })),
-  ...[-9, -3, 3].map((u) => ({ wall: 'west' as const, u, width: 3, y0: 1.1, y1: 3.3 })),
-];
+/** Windows you can see out of: none, the deck floats in the void. */
+export const WINDOWS: Opening[] = [];
 
 /**
  * Something to sit on, standing at x, z on the floor at `y`. You
@@ -336,14 +416,14 @@ export interface SeatDef {
 }
 
 /**
- * Where people can sit: the office's couches, beanbags and chairs (buildOffice puts them there). Workers have their own seats, the desks and bean bags in SEATS.
+ * Where people can sit: the operator bench and its stools (buildOffice puts them there). Units have their own seats, the consoles and the Standby bench in SEATS.
  */
 export const SEATING: SeatDef[] = [
-  // The lounge couch, its back to the room, facing the TV.
-  { id: 'couch', label: '🛋️ Couch', x: 10.5, y: 0, z: 0, rotY: Math.PI / 2, places: [-1.2, 0, 1.2], hips: 0.5, depth: -0.05, out: 0.9, tv: true },
-  // Beanbags either side of the lounge, turned to the TV.
-  { id: 'lounge-beanbag-1', label: '🫘 Beanbag', x: 12.5, y: 0, z: 3.5, rotY: Math.atan2(TV.x - 12.5, TV.z - 3.5), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
-  { id: 'lounge-beanbag-2', label: '🫘 Beanbag', x: 14.5, y: 0, z: -3.4, rotY: Math.atan2(TV.x - 14.5, TV.z + 3.4), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
+  // The operator bench in the east aisle, facing the Attention board.
+  { id: 'couch', label: 'Operator bench', x: 11.6, y: 0, z: 0, rotY: Math.PI / 2, places: [-1.2, 0, 1.2], hips: 0.5, depth: -0.05, out: 0.9, tv: true },
+  // A stool either side of it, turned to the board.
+  { id: 'lounge-beanbag-1', label: 'Stool', x: 13.4, y: 0, z: 3.2, rotY: Math.atan2(TV.x - 13.4, TV.z - 3.2), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
+  { id: 'lounge-beanbag-2', label: 'Stool', x: 13.4, y: 0, z: -3.2, rotY: Math.atan2(TV.x - 13.4, TV.z + 3.2), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
 ];
 export const SEATING_BY_ID = new Map(SEATING.map((s) => [s.id, s]));
 
@@ -385,8 +465,8 @@ export function seatAt(key: string): SeatPlace | undefined {
 }
 
 /**
- * The elevator: a shaft against the north wall, east of the PR board, with its
- * doors facing into the room. Every floor has it in the same spot, so you step out where you got in.
+ * The Deck lift (the elevator): a flush portal in the north wall, east of the Main board, opening into
+ * the deck. Every deck has it in the same spot, so you step out where you got in.
  */
 export const ELEVATOR = { x: 8.5, width: 2.6, depth: 2.4, wall: 0.14, doorWidth: 1.4, doorHeight: 2.4 } as const;
 /** Where the doors are: the front of the shaft. */
