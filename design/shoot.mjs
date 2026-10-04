@@ -261,6 +261,29 @@ async function main() {
       o.proof.setReputation(2);
       o.proof.setArmed(true);
     });
+    // The same course set for real (SHOOT_MISSION=0 leaves it unset), with issues linked to the
+    // active waypoint, so the holo's heading band, the strip and the ticker read it.
+    if (process.env.SHOOT_MISSION !== '0') {
+      await page.evaluate(() => {
+        const net = window.__office.net;
+        net.send({ t: 'mission.set', statement: 'Ship the auth rewrite and the devnet bounty flow' });
+        for (const title of ['Session store picked', 'Auth rewrite', 'Payments webhook', 'Devnet bounties live']) net.send({ t: 'mission.milestone', op: 'add', title });
+      });
+      await wait(900);
+      await page.evaluate(() => {
+        const o = window.__office;
+        const net = o.net;
+        const ms = o.store.mission.milestones;
+        if (ms[0]) net.send({ t: 'mission.milestone', op: 'update', id: ms[0].id, done: true });
+        if (ms[1]) net.send({ t: 'mission.milestone', op: 'update', id: ms[1].id, issues: [41, 42, 43, 44, 45] });
+        if (ms[1]) net.send({ t: 'mission.milestone', op: 'activate', id: ms[1].id });
+        // Two of the five issues closed: 40% of the way.
+        const s = o.store;
+        s.issues = { ...s.issues, items: s.issues.items.map((i) => (i.number === 41 || i.number === 45 ? { ...i, state: 'CLOSED' } : i)) };
+        s.emit('issues');
+      });
+      await wait(900);
+    }
     // The room from fixed cameras: the player's update is wrapped so the camera lands where asked.
     const VANTAGES = {
       'deck-high': [[16, 17, 19], [0, 0, 0]],
@@ -283,6 +306,9 @@ async function main() {
       'bridge-port': [[6, 2.2, 1], [-16, 3.2, 1]],
       'bridge-station': [[3.4, 1.6, -2.6], [6.6, 0.8, -6.4]],
       'bridge-holo': [[0, 2.1, 5.6], [0, 1.1, 0]],
+      // The bridge's life: the pods' station screens from the table, the heading band, the clock and the log.
+      'life-heading': [[2.4, 1.9, 4.6], [0, 1.3, 0]],
+      'life-ticker': [[0, 3.4, 1], [0, 5.2, -11.4]],
     };
     for (const [name, [from, to]] of Object.entries(VANTAGES)) {
       if (!want(name)) continue;

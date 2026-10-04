@@ -202,3 +202,29 @@ Mean lightness (CIE L*) of the 3D view past the rail and the top bar, space thro
 Pure black (L* under 5) inside the frame fell from 20 to 44% of it before to 3 to 25% by night; what is left is space through the glass and the boards' faces.
 
 Frame time at 1440x900 with nine seeded units on the GPU (Apple M3 Pro through ANGLE Metal), the same probe on a build of the stage before and on this one, a forced render timed over 30 frames with `gl.finish`: before, 2.2 ms (2.4 ms at device pixel ratio 2) with rAF at 16.7 ms, p95 16.8 ms. Now by night, with the glow, 2.4 to 2.7 ms, p95 16.8 ms; by day 2.2 ms. The unit inlays add one draw call per unit; the rim lights and the holo uplight are three more lights, set up at load and never added or removed.
+
+## The bridge: life
+
+The captain found the deck a bit dead: nothing moved unless a state changed, and working units were grey. This stage gives a healthy, busy bridge visible life and keeps it out of the way of what needs you (`src/client/features/life/`, its numbers in `logic.ts`, tested in `tests/life.test.ts`).
+
+- **Station screens.** The face of every console's pedestal, toward the table, is a screen. On its left the unit's state glyph in its own hue and shape (a dash at work); on its right a working station runs ship-cyan bars that scroll and grow with its terminal's output, a scan line passes every 6 s, and three blinkers twinkle on slow periods of their own (4.3, 6.1, 8.9 s). Stuck shows still red hatching, to review a steady amber line, standing by a dim dash. All sixteen are one instanced mesh with one shader.
+- **Busy units.** A working unit's hands go to its console and work it while its terminal prints, a slow sway of the shoulders now and then, and its band and the glow under it lean toward ship-cyan the busier it is. The console's hood trace brightens with it.
+- **Data pulses.** A busy station now and then sends a point of ship-cyan light in a low arc to the holo table, every 1.8 to 6 s by how busy it is. Dashes run along the holo's course to the ship.
+- **The heading.** A band of light lettering turns round the holo plot: "CAPTAIN, WE ARE 40% OF THE WAY TO AUTH REWRITE" (issues closed of those linked to the active milestone; with none linked it only says where the ship is making for), the waypoint, the issues out, the units on it and the course. A ring on the tabletop shows the same fraction.
+- **The ticker.** Over the overhead strip: the ship's clock ticking by the second, how long the deck has been under way, and the deck's log (the timeline's latest events) running right to left.
+- **Giving way.** For 3 s after a unit starts needing you or gets stuck, everything ambient dims to 40%; a pod with such a unit stays hushed (bars at 30%, no pulses, no blinkers) while it lasts; and the bridge runs a quarter quieter while anyone waits on you. Ship motion at Calm halves it, Off or reduced motion stills it (the screens still read).
+
+`shoot.mjs` now sets a real course with issues on the active waypoint (`SHOOT_MISSION=0` skips it), so the holo, the strip and the ticker read it, and has two new shots, `life-heading` and `life-ticker`. `bridge-life/before` is the stage before this one, `after` this one by night and `day` by day. The clip `shots/bridge-life/after/bridge-life.mp4` is recorded in real time on the GPU with twelve units whose terminals print a few lines a second, as real agents do: pod C's stations from the table (C-03 stuck, so its pod is hushed), pod B, the holo with its pulses and heading, and up to the ticker.
+
+| Before | After |
+| --- | --- |
+| ![](shots/bridge-life/before/units-c.png) | ![](shots/bridge-life/after/units-c.png) |
+| ![](shots/bridge-life/before/units-b.png) | ![](shots/bridge-life/after/units-b.png) |
+| ![](shots/bridge-life/before/bridge-holo.png) | ![](shots/bridge-life/after/bridge-holo.png) |
+| ![](shots/bridge-life/before/office.png) | ![](shots/bridge-life/after/office.png) |
+
+| The heading band | The clock and the log | By day |
+| --- | --- | --- |
+| ![](shots/bridge-life/after/life-heading.png) | ![](shots/bridge-life/after/life-ticker.png) | ![](shots/bridge-life/day/units-c.png) |
+
+Frame time at 1440x900 by night on the GPU (Apple M3 Pro through ANGLE Metal), twelve busy units, from the conn, a forced render timed over 30 frames with `gl.finish`, in one session with the life's meshes shown, hidden and shown again: 2.92, 2.74 and 2.78 ms, rAF p50 and p95 16.7 ms throughout (on vsync). The life adds seven draw calls (the screens, the pulses, the heading band, its track and arc, the clock and the log) and two light ticks of work a frame; the screens animate in their shader, the ticker scrolls by texture offset, and the clock repaints a small canvas once a second.
