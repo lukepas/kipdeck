@@ -197,17 +197,29 @@ async function typesync(page, a, dir) {
     // +5..+8: settled, and still clear of the next hit's pre-roll (hits are >= 15 frames apart).
     const offsets = [0, 5, 6, 7, 8];
     const files = [];
+    // The settled frames count only the blocks on the hit frame. A block that
+    // starts its reveal inside the settle window belongs to the next hit (the
+    // recap rolls 'Get paid.' into the slot 15 frames after 'Merge.'), and its
+    // ink would make this hit look late.
+    let onHit = null;
     for (const k of offsets) {
       if ((n + k) / a.fps >= beatmap.duration) continue;
       await page.evaluate((tt) => window.__render(tt), (n + k) / a.fps);
       // How formed each visible display-type block is (1 = every word set,
       // no partial wipe): typeLayer writes it to data-formed.
-      const formed = await page.evaluate(() => [...document.querySelectorAll('#type .type')]
-        .filter((el) => el.style.display !== 'none')
-        .map((el) => ({ text: el.textContent.slice(0, 40), formed: Number(el.dataset.formed ?? 1) })));
+      const formed = await page.evaluate((keep) => {
+        const shown = [...document.querySelectorAll('#type .type')].filter((el) => el.style.display !== 'none');
+        for (const el of shown) if (keep && !keep.includes(el.textContent)) el.style.visibility = 'hidden';
+        return shown.filter((el) => el.style.visibility !== 'hidden')
+          .map((el) => ({ text: el.textContent.slice(0, 40), full: el.textContent, formed: Number(el.dataset.formed ?? 1) }));
+      }, onHit);
+      // Nothing on the hit frame means the type is late (or canvas type), so
+      // the settled frames then count every block and the check still fails it.
+      if (k === 0) onHit = formed.length ? formed.map((b) => b.full) : null;
       const file = `${h.name}@${k}.png`;
       await page.screenshot({ path: path.join(dir, file), type: 'png', omitBackground: true });
-      files.push({ offset: k, file, formed });
+      await page.evaluate(() => { for (const el of document.querySelectorAll('#type .type')) el.style.visibility = ''; });
+      files.push({ offset: k, file, formed: formed.map(({ text, formed: f }) => ({ text, formed: f })) });
     }
     manifest.push({ name: h.name, t: h.t, frame: n, files });
   }
