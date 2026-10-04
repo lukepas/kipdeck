@@ -14,8 +14,8 @@
 // motion-blur samples), --out path.mp4, --keep-frames (skip the encode).
 
 import { createServer } from 'node:http';
-import { readFile, writeFile, mkdir, readdir, rm, stat } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { readFile, writeFile, mkdir, readdir, rm, stat, rename } from 'node:fs/promises';
+import { existsSync, readFileSync, writeFileSync, rmSync, appendFileSync, mkdirSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,6 +26,38 @@ const require = createRequire(import.meta.url);
 const THREE_BUILD = path.dirname(require.resolve('three'));
 const OUT = path.join(ROOT, 'out');
 const FRAMES = path.join(OUT, 'frames');
+const LOCK = path.join(FRAMES, '.render.lock');
+const RUN_ID = `${new Date().toISOString().replace(/[-:]/g, '').replace(/\..*/, '')}-${process.pid}`;
+
+// One render owns out/frames at a time. A second one fails fast instead of
+// interleaving frames; a lock left by a dead process is cleared.
+function takeLock() {
+  mkdirSync(FRAMES, { recursive: true });
+  if (existsSync(LOCK)) {
+    let held = null;
+    try { held = JSON.parse(readFileSync(LOCK, 'utf8')); } catch { /* unreadable: stale */ }
+    let alive = false;
+    if (held && held.pid) { try { process.kill(held.pid, 0); alive = true; } catch { alive = false; } }
+    if (alive) throw new Error(`out/frames is locked by render ${held.runId} (pid ${held.pid}); wait for it or stop it`);
+    rmSync(LOCK, { force: true });
+  }
+  writeFileSync(LOCK, JSON.stringify({ pid: process.pid, runId: RUN_ID, started: new Date().toISOString(), argv: process.argv.slice(2) }));
+  const release = () => { try { if (JSON.parse(readFileSync(LOCK, 'utf8')).pid === process.pid) rmSync(LOCK, { force: true }); } catch { /* gone */ } };
+  process.on('exit', release);
+  for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => { release(); process.exit(130); });
+}
+
+// Each run logs to out/logs/render-<run id>.log as well as the terminal.
+function startLog() {
+  const dir = path.join(OUT, 'logs');
+  mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, `render-${RUN_ID}.log`);
+  const write = (lvl, args) => { try { appendFileSync(file, `${lvl}${args.map(String).join(' ')}\n`); } catch { /* best effort */ } };
+  const log = console.log, err = console.error;
+  console.log = (...args) => { write('', args); log(...args); };
+  console.error = (...args) => { write('ERROR ', args); err(...args); };
+  console.log(`run ${RUN_ID}: node render.mjs ${process.argv.slice(2).join(' ')}`);
+}
 
 function parseArgs(argv) {
   const a = { format: '16x9', preview: false, guides: false, grain: true, keepFrames: false };
@@ -166,9 +198,14 @@ async function typesync(page, a, dir) {
     for (const k of offsets) {
       if ((n + k) / a.fps >= beatmap.duration) continue;
       await page.evaluate((tt) => window.__render(tt), (n + k) / a.fps);
+      // How formed each visible display-type block is (1 = every word set,
+      // no partial wipe): typeLayer writes it to data-formed.
+      const formed = await page.evaluate(() => [...document.querySelectorAll('#type .type')]
+        .filter((el) => el.style.display !== 'none')
+        .map((el) => ({ text: el.textContent.slice(0, 40), formed: Number(el.dataset.formed ?? 1) })));
       const file = `${h.name}@${k}.png`;
       await page.screenshot({ path: path.join(dir, file), type: 'png', omitBackground: true });
-      files.push({ offset: k, file });
+      files.push({ offset: k, file, formed });
     }
     manifest.push({ name: h.name, t: h.t, frame: n, files });
   }
@@ -227,6 +264,8 @@ async function main() {
     if (!(to > from) || from < 0 || to > info.duration + 1e-9) throw new Error(`bad range ${from}..${to} (film is ${info.duration}s)`);
     const n = Math.round((to - from) * a.fps);
     const ext = a.preview ? 'jpg' : 'png';
+    takeLock();
+    startLog();
     await clearFrames();
     console.log(`rendering ${n} frames ${from}s..${to}s at ${a.w}x${a.h} ${a.fps} fps (${a.format}${a.preview ? ', preview' : ''})`);
     const t0 = Date.now();
@@ -252,6 +291,10 @@ async function main() {
     const slice = a.from != null || a.to != null ? `-${from}-${to}` : '';
     const out = a.out ? path.resolve(a.out) : path.join(OUT, `ugc-army-${a.format}${a.preview ? '-preview' : ''}${slice}.mp4`);
     await mkdir(path.dirname(out), { recursive: true });
+    // Encode to a temp name and move it into place only once ffprobe confirms
+    // the frame count, so a failed run can never leave a short film behind.
+    const finalOut = out;
+    const tmpOut = `${finalOut.replace(/\.mp4$/, '')}.tmp-${RUN_ID}.mp4`;
     console.log('encoding...');
     await run(bin('ffmpeg'), [
       '-y', '-hide_banner', '-loglevel', 'error',
@@ -265,9 +308,15 @@ async function main() {
       '-c:v', 'libx264', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-crf', '16',
       '-preset', a.preview ? 'veryfast' : 'slow', '-r', String(a.fps),
       '-c:a', 'aac', '-b:a', '320k', '-ar', '48000',
-      '-t', dur, '-movflags', '+faststart', out,
+      '-t', dur, '-movflags', '+faststart', tmpOut,
     ]);
-    const probe = JSON.parse(await run(bin('ffprobe'), ['-v', 'error', '-show_entries', 'stream=codec_type,codec_name,profile,width,height,pix_fmt,duration,nb_frames,sample_rate,bit_rate', '-of', 'json', out]));
+    const probe = JSON.parse(await run(bin('ffprobe'), ['-v', 'error', '-show_entries', 'stream=codec_type,codec_name,profile,width,height,pix_fmt,duration,nb_frames,sample_rate,bit_rate', '-of', 'json', tmpOut]));
+    const vs = probe.streams.find((st) => st.codec_type === 'video');
+    if (!vs || Number(vs.nb_frames) !== n) {
+      await rm(tmpOut, { force: true });
+      throw new Error(`encode has ${vs ? vs.nb_frames : 'no'} video frames, expected ${n}; nothing written`);
+    }
+    await rename(tmpOut, finalOut);
     for (const s of probe.streams) {
       console.log(s.codec_type === 'video'
         ? `  video ${s.codec_name} ${s.profile} ${s.width}x${s.height} ${s.pix_fmt} ${Number(s.duration).toFixed(3)}s ${s.nb_frames} frames`
