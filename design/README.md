@@ -318,3 +318,38 @@ Frame time at 1440x900 by night on the GPU (Apple M3 Pro through ANGLE Metal), t
 - The droid companion, VESPER, celebration tiers and the debrief are later stages; this one is the world outside.
 - The destination's band sits in the clear glass between the canopy's lower rings as seen from the conn; from elsewhere on the deck a rib can cross it.
 - Clicking an escort opens the Decks lift; it doesn't yet pick that deck in it.
+
+## The bridge: crew
+
+The captain asked for more life and the feeling that this is something big. The world outside already moves with the work; this stage gives the bridge a crew with a record and a ship with a mind, and all of it speaks only of what really happened.
+
+- **VESPER, the ship's mind** (`src/client/features/vesper/`, phrasebook `src/shared/shipvoice.ts`): a dry line now and then, as a caption under the view and at the head of the ticker. Seeded by the event, so every viewer reads the same line; one in 90 s at most; one plain sentence the moment a unit needs you, then silence.
+- **Crew dossiers** (`src/client/features/crew/`, rules `src/shared/epithet.ts` and `src/shared/commendations.ts`): epithets earned from the record (the Mechanic, the Anchor, the Comeback, the Night Owl, the Quick Study, the Steady Hand, the Rookie), chevrons on the shoulder, the unit of the watch on the Proof corner's plinth, and a Crew tab in Mission control. Pull requests' timeline events now name the unit they came from, so a merge counts on its unit's record.
+- **Bolt, the bridge droid** (`src/client/features/droid/`): carries a finished unit's work to the Review bay, makes a slow turn by the table for a merge, rounds the busiest pod, and holds still by a pod whose unit needs you. Off until the captain signs it off.
+
+`node design/shoot-crew.mjs life-crew/after` takes the stills from a built office: a healthy crew of stand-in units, a few days of their record painted into the page's timeline (no GitHub here, as the boards' fixture), and live moments (a merge, a unit finishing, a unit that needs you) played in as the server sends them. `SHOOT_ROOT=<a build of the commit before> ... life-crew/before` takes the same views of the build before, `SHOOT_LIGHT=day` the Day set, and `SHOOT_GPU=1 ... crew-clip` the clip `shots/life-crew/after/crew-clip.mp4` (14 s, a frame each thirtieth of a second): Bolt carrying a finished unit's work round the table toward the Review bay, a camera riding behind it, as a merge lands with VESPER's line.
+
+| Before | After |
+| --- | --- |
+| ![](shots/life-crew/before/vesper-merge.png) | ![](shots/life-crew/after/vesper-merge.png) |
+| ![](shots/life-crew/before/crew-shoulder.png) | ![](shots/life-crew/after/crew-shoulder.png) |
+| ![](shots/life-crew/before/crew-plinth.png) | ![](shots/life-crew/after/crew-plinth.png) |
+| ![](shots/life-crew/before/crew-yield-1.png) | ![](shots/life-crew/after/crew-yield-1.png) |
+| ![](shots/life-crew/before/mission-rows.png) | ![](shots/life-crew/after/mission-rows.png) |
+| ![](shots/life-crew/before/console-record.png) | ![](shots/life-crew/after/console-record.png) |
+
+| Bolt picks up the work | Carrying it round the table | Holding by a unit that needs you |
+| --- | --- | --- |
+| ![](shots/life-crew/after/droid-carry-1.png) | ![](shots/life-crew/after/clip-5.png) | ![](shots/life-crew/after/crew-yield-droid.png) |
+
+| The Crew tab | Settings > Bridge > Life | The Overview: none of it | By day |
+| --- | --- | --- | --- |
+| ![](shots/life-crew/after/mission-crew.png) | ![](shots/life-crew/after/settings-life.png) | ![](shots/life-crew/after/crew-overview.png) | ![](shots/life-crew/day/crew-shoulder.png) |
+
+Frame time at 1440x900 by night on the GPU (Apple M3 Pro through ANGLE Metal), with `node design/perf-probe.mjs metal` (twelve units at work, six sister decks, two open pull requests; `PROBE_SETTINGS` turns the droid on): from the conn 2.6 to 2.7 ms against 2.6 ms before, 1057 draw calls both, and out of a side port 0.9 to 1.0 ms against 0.9 to 1.1 ms, 386 both; rAF p50 16.7 ms and p95 16.7 to 16.8 ms throughout, on vsync. Neither vantage sees the crew's pieces, so `shoot-crew.mjs crew-perf` times the one place that sees all of them at once (the plinth with its hologram, cone and plaque, a unit's chevrons, Bolt parked in view): 421 draw calls a frame with the crew on against 412 off (nine more: Bolt's body, cap, lens, shadow and charger, the two layers of chevrons, the plinth's figure, cone and plaque, less what is out of view), rAF p50 16.7 ms either way. `design/flicker-check.mjs metal` passes (no black frame or NaN pixel in 600 frames by Night and by Day).
+
+### Left for later
+
+- Celebration tiers, the start-of-watch card and the debrief are later stages; `Parts.vesper.line()` is there for their subtitles.
+- A unit's record is the deck log as far as the page has loaded it (the server keeps a capped log per deck), and reverts come only from the agents' reputation records, which count per agent identity, not per unit.
+- Bolt waits for the captain's sign-off: it ships off.

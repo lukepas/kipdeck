@@ -183,15 +183,16 @@ async function main() {
   await waitUp();
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, colorScheme: 'dark' });
-    await context.addInitScript(() => {
+    // PROBE_SETTINGS adds to the saved settings, e.g. '{"lifeParts":{"droid":true}}' to time the droid in.
+    await context.addInitScript((extra) => {
       try {
-        localStorage.setItem('agent-office.settings', JSON.stringify({ lighting: 'night' }));
+        localStorage.setItem('agent-office.settings', JSON.stringify({ lighting: 'night', ...extra }));
         localStorage.setItem('agent-office.lite-declined', '1');
         localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4FA3A5', look: { skin: 0, hair: 0, style: 0 } }));
       } catch {
         // fine without
       }
-    });
+    }, JSON.parse(process.env.PROBE_SETTINGS ?? '{}'));
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
