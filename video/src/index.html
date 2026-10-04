@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UGC Army film</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #0B0B0C; overflow: hidden; }
+  #stage { position: relative; overflow: hidden; }
+  #stage > * { position: absolute; left: 0; top: 0; }
+  #scene2d { display: none; }            /* source for the WebGL pass */
+  #svg, #type, #grain, #guides { pointer-events: none; }
+  #type { width: 100%; height: 100%; }
+  #type .type { position: absolute; margin: 0; padding: 0; font-kerning: normal; font-optical-sizing: auto; }
+  #grain { mix-blend-mode: overlay; }
+  body.no-grain #grain { display: none; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "/vendor/three/three.module.js" } }
+</script>
+</head>
+<body>
+<div id="stage">
+  <canvas id="scene2d"></canvas>
+  <canvas id="gl"></canvas>
+  <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div id="type"></div>
+  <canvas id="grain"></canvas>
+  <canvas id="guides"></canvas>
+</div>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
