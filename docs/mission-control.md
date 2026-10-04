@@ -10,7 +10,7 @@ Inside it, **1** **2** **3** **4** switch tabs (Attention, Goals, Review, Timeli
 
 ## Attention
 
-Every worker hired onto a desk, a bean bag or the meeting table, on every floor (the board agents at their kiosks are left out), grouped by level, most urgent first:
+Every worker hired onto a console, the Standby bench or the Review bay's table, on every floor (the board agents at their kiosks are left out), grouped by level, most urgent first:
 
 | Level | What puts a worker there |
 | --- | --- |

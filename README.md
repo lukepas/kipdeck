@@ -93,9 +93,9 @@ curl -fsSL https://raw.githubusercontent.com/AgentSystemLabs/agent-office/main/i
 - **You can't miss who needs you.** A worker that stops to ask you something lights a red beacon over its desk, puts a banner on your screen saying who and what for (on any floor), and sounds an alarm. One that has finished or gets stuck dings. The attention chip on the top bar counts them across every floor, and a desktop notification finds you in another tab. Press **N** to go straight to whoever is waiting, the ones that need you first, then on to the next floor's.
 - **Milestones you don't miss.** A merged pull request or a finished task queue is a toast, a ding and a desktop notification for everyone on the floor.
 - **From your phone, too.** `/lite` is the office in 2D: every worker (on your floor or all of them) ranked by what needs you and why, Mission control, its terminal with the keys a phone keyboard lacks, and the boards. The 3D office offers it on a phone or a slow computer.
-- **GitHub on the walls.** Issues and pull requests hang on cork boards. Hand an issue to a worker, queue tasks, give a worker its own git worktree and open its PR with one key (if one gets deleted behind the office's back, the worker waits at its desk until you rebuild it). One task can span several projects: the worker gets a worktree of each, and a PR in each that links the others.
+- **GitHub on the walls.** Issues, the task queue and pull requests are the three panels of the Main board. Hand an issue to a worker, queue tasks, give a worker its own git worktree and open its PR with one key (if one gets deleted behind the office's back, the worker waits at its desk until you rebuild it). One task can span several projects: the worker gets a worktree of each, and a PR in each that links the others.
 - **Agents that manage agents.** Every worker can list, hire, message and send home the others, through an `agent-office` MCP server (Claude Code, Codex, OpenCode) or the `office-workers` command. Ask one to "send everyone whose PR merged home" and it does, deleting their worktrees and branches unless they hold unpushed work. A worker that opens its pull request itself (`gh pr create`) shows it at its desk, and one the office missed can be told which is its own (`office-workers pr`).
-- **On mission.** The project's docs on the bookshelf, a shared whiteboard to plan on, voice, chat and screen sharing on the lounge TV.
+- **On mission.** A mission table every console faces, an Attention board, a Proof corner, an Overview of the whole deck (**G**), the project's docs on the docs rack, a shared whiteboard to plan on, voice, chat and screen sharing ([the deck](docs/deck.md)).
 
 The rest is in [docs/features.md](docs/features.md). The office used to have a lot of games and scenery around the work (a castle map, a rooftop bar, cars, an office dog and more); they're gone, so it stays about the agents and the mission.
 
@@ -394,7 +394,8 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 | I | Mission control: reminders and what needs someone on every floor, the floor's goals, the review inbox and the timeline |
 | N | Go to the next worker that's waiting on you, then the next floor's |
 | X | Send a worker home |
-| L | Hang a sign over a desk ("Operations", "Code cleanup") |
+| L | Stencil a tag by a console ("Operations", "Code cleanup") |
+| G | The Overview: the whole deck from above (Q / E turn it, G walks again) |
 | T / Enter | Chat |
 | V | Join voice; then hold V to talk |
 | M | Mute / unmute in voice |
@@ -425,6 +426,7 @@ Every change to the app that lands on `main` is published as a GitHub release by
 ## More
 
 - [Features](docs/features.md): seeing what every agent does, handing out work, reviewing it and staying on mission
+- [The deck](docs/deck.md): what's where on the 3D deck (the mission table, the pods, the ready line, the boards, the Proof corner), cell addresses, and the Overview camera
 - [Mission control](docs/mission-control.md): the attention ranking, the floor's mission and milestones, linking work to goals, the review inbox, the timeline, reminders and the digest
 - [Proof of Merge bounties](docs/bounties.md): devnet USDC escrowed against an issue, paid only when a person merges the office's pull request and an admin approves (testnet only, off by default)
 - [Proof of merge on Base Sepolia](docs/proof-of-merge.md): an EAS attestation for every office PR a person merges, reverts or closes in an opted-in public repository, and an indexer that rebuilds the leaderboard from chain data alone (testnet only, `--attest --attest-repos`)

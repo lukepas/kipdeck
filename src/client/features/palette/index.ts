@@ -112,7 +112,7 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
     out.push(at('pulls', 'the PR board', { icon: 'pull', kind: 'Board', title: 'PR board', keywords: ['pull requests'], open: () => openBoard('pulls', net, actions.boardActions()) }));
     out.push(at('services', 'the Services board', { icon: 'services', kind: 'Board', title: 'Services board', detail: 'Web servers the units are running', open: () => openServices() }));
     out.push(at('whiteboard', 'the whiteboard', { icon: 'board', kind: 'Board', title: 'Whiteboard', open: () => openWhiteboard(net) }));
-    out.push(at('meeting', 'the meeting room', { icon: 'meeting', kind: 'Board', title: 'Meeting room', keywords: ['call a meeting'], open: () => meeting.showMeeting() }));
+    out.push(at('meeting', 'the Review bay', { icon: 'meeting', kind: 'Board', title: 'Review bay', keywords: ['call a meeting', 'call a review', 'meeting room'], open: () => meeting.showMeeting() }));
 
     for (const pr of store.pulls.items) {
       out.push(

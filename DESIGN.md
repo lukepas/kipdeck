@@ -32,6 +32,8 @@ The tokens live in `src/client/styles/tokens.css`. Every sheet uses them by name
 | `--proof` | `#A68BFF` | `#5B3FD1` | escrow, EAS, ERC-8004, x402, `/pom/` only |
 | `--settled` | `#3DDC97` | `#0F7A4F` | the small "settled on devnet" tick, never a fill |
 
+The 3D deck uses the same ramp (`DECK` in `src/client/world/office/materials.ts`): floor `#18202A` with grid lines `#222B36` every meter and `#2E3B4A` every five, walls `#151D26`, consoles `#1A222C` with tops `#212A35`, units `#2A323C`. Every surface is matte (roughness about 0.85, almost no metal), flat-shaded on consoles, with contact shadows under what stands on the floor and lit hairlines on the edges that carry a silhouette in a dark frame. The canvases on the boards use the same tokens (`PANEL` in `features/boards/world.ts`). Where things are on the deck is [docs/deck.md](docs/deck.md).
+
 Each hue also has a `-tint` (12% over the surface) for a row or chip background. Every state color passes WCAG AA for text on `--void` and `--surface-1`; `--stuck` on `--surface-3` is 4.47:1, so stuck text sits on the lower surfaces.
 
 ## Status language

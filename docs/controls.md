@@ -5,15 +5,16 @@ Back to the [README](../README.md).
 | Key | Action |
 | --- | --- |
 | W A S D / arrows | Walk (hold Shift to run) |
-| Space | Jump (you can land on desks and couches) |
+| Space | Jump (you can land on consoles and the operator bench) |
 | Mouse drag / wheel | Orbit / zoom the camera |
-| E | Interact: hire a worker, open its terminal, read a board, take an issue's note off the board, prompt a board agent, call a meeting in the meeting room, draw on the whiteboard, read the docs at the bookshelf, watch the TV, sit down (or get up), open the Floors window at the elevator, knock through the north wall past the elevator for 2 more desks (at the **🚧 Room to grow** sign) |
+| G | The Overview: the whole deck from above. In it, Q / E turn it a quarter, W A S D, the arrows or a drag pan, the wheel zooms, and G or Esc walks again (see [The deck](deck.md#walk-and-overview)) |
+| E | Interact: hire a worker, open its terminal, read a board, take an issue's note off the board, prompt a board agent, call a review in the Review bay, draw on the whiteboard, read the docs at the docs rack, watch the Attention board, sit down (or get up), open the Floors window at the Deck lift, open the overflow bay past the lift for 2 more consoles (at the **Room to grow** sign) |
 | P | Prompt: give a task to a new worker, or to the one at this desk |
 | C | Changes: the files the worker at this desk changed and their diff; commit, discard or open a PR |
 | B | Open a shared shell at an empty desk |
 | R | Resume a sleeping worker (or restart a shell) |
 | X | Send a worker home (frees the desk; a worker with its own worktree asks what to do with it) |
-| L | Hang a big sign over the desk you face (*Operations*, *Code cleanup*), in one of seven colors; again to change it or take it down |
+| L | Stencil a tag on the floor by the console you face (*Operations*, *Code cleanup*), in one of seven colors; again to change it or take it up |
 | O | Open a pull request for a worker on its own branch, or see the one it has (a worker across several projects gets one in each) |
 | I | Mission control: the reminders, then what needs someone on every floor, ranked, with why and one next step; the floor's mission and milestones; everything waiting for a review; the timeline of what happened. Inside, 1 2 3 4 switch tabs, the arrows pick a row and Enter does its step (see [Mission control](mission-control.md)) |
 | N | Go to the next worker waiting on someone, the ones that need you first and then the ones that are done, longest-waiting first; again for the next one, and after the last one on your floor, on to the next floor's (one that needs you on another floor comes before one here that's only done; snoozed ones are skipped) |
@@ -26,7 +27,7 @@ Back to the [README](../README.md).
 | M | Mute / unmute in voice |
 | Ctrl + Space | Dictate, in a worker's terminal or a prompt box: hold it and talk, and what you said is typed in when you let go. A quick tap leaves it listening until the next tap. The **🎤** does the same |
 | Tab | The menu (top right of the top bar): every window, and what shows on screen |
-| Esc | Close any window (a terminal too) and get back to looking around |
+| Esc | Close any window (a terminal too) and get back to looking around, or to the Overview if you opened it there |
 | Ctrl + [ | Send Esc to a terminal instead, to close a menu like Claude's `/skills` or interrupt Claude. **⎋ Esc** in the terminal's header does the same |
 
 You can also click a nearby desk to interact with it, or click a worker in the Workers panel (**🤖 Workers**, on screen from the start) to open its terminal. To change floors, click the project name in the top-left corner.

@@ -157,6 +157,67 @@ async function main() {
     }
     await wait(9000);
     if (want('office')) await page.screenshot({ path: path.join(OUT, 'office.png') });
+    // A mission on the table and a few merges on the rail, painted straight onto them for the shots
+    // (the store would send them from a real deck).
+    await page.evaluate(() => {
+      const o = window.__office.office;
+      o.missionTable.setMission({
+        statement: 'Ship the auth rewrite and the devnet bounty flow',
+        milestones: [
+          { title: 'Session store picked', done: true, active: false },
+          { title: 'Auth rewrite', done: false, active: true },
+          { title: 'Payments webhook', done: false, active: false },
+          { title: 'Devnet bounties live', done: false, active: false },
+        ],
+      });
+      o.proof.setTally(6);
+      o.proof.setReputation(2);
+      o.proof.setArmed(true);
+    });
+    // The room from fixed cameras: the player's update is wrapped so the camera lands where asked
+    // after the player has aimed it, every frame, until it is unwrapped again.
+    const VANTAGES = {
+      'deck-high': [[16, 17, 19], [0, 0, 0]],
+      'deck-north': [[0, 6.5, 12.5], [0, 1.2, -9]],
+      'deck-west': [[-7, 2.6, 1.5], [-18, 1.6, -5.5]],
+      'deck-lift': [[11.5, 2.0, -5.5], [8.5, 1.8, -12]],
+      'deck-east': [[7.5, 2.6, 0.5], [18, 2.3, 0]],
+      'deck-bay': [[6, 3.2, 3.5], [14, 0.8, 10.5]],
+      'deck-table': [[6.5, 2.4, 6.5], [-1, 0.6, -1]],
+    };
+    for (const [name, [from, to]] of Object.entries(VANTAGES)) {
+      if (!want(name)) continue;
+      await page.evaluate(
+        ([from, to]) => {
+          const o = window.__office;
+          const p = o.player;
+          p.__update ??= p.update;
+          p.update = (dt) => {
+            p.__update.call(p, dt);
+            o.camera.position.set(...from);
+            o.camera.lookAt(...to);
+          };
+        },
+        [from, to],
+      );
+      await wait(1200);
+      await page.screenshot({ path: path.join(OUT, `${name}.png`) });
+    }
+    await page.evaluate(() => {
+      const p = window.__office.player;
+      if (p.__update) p.update = p.__update;
+    });
+    if (want('deck-overview')) {
+      await page.locator('#scene').focus();
+      await page.keyboard.press('g');
+      await wait(1500);
+      await page.screenshot({ path: path.join(OUT, 'deck-overview.png') });
+      await page.keyboard.press('e');
+      await wait(900);
+      await page.screenshot({ path: path.join(OUT, 'deck-overview-e.png') });
+      await page.keyboard.press('g');
+      await wait(600);
+    }
     await page.locator('#scene').focus();
     if (want('mission')) {
       await page.keyboard.press('i');
