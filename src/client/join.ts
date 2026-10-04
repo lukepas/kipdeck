@@ -1,4 +1,6 @@
-export {}; // a module, so its names don't clash with the other pages' scripts
+import { mountSigninArt } from './signin-art';
+
+mountSigninArt();
 
 // An invite link, /join#<token>: make your own account, then walk in. The token rides in the
 // fragment, so it never reaches a server log or a Referer header.
@@ -29,7 +31,7 @@ async function peek() {
     const r = await post({ peek: true });
     if (!r.ok) return fail(r.body.error ?? 'This invite link does not work.');
     const { name: invited, role, by, project } = r.body as { name?: string; role: string; by: string; project: string };
-    $('title').textContent = `Join the ${project} office`;
+    $('title').textContent = `Join the ${project} deck`;
     const sub = $('sub');
     sub.replaceChildren(`${by} invited you${role === 'admin' ? ' as an ' : '. '}`);
     if (role === 'admin') {

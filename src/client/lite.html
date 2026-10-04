@@ -3,36 +3,41 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#fff1de" />
-    <title>Agent Office</title>
-    <link rel="icon" href="/favicon.svg" />
+    <meta name="theme-color" content="#0d131a" />
+    <title>UGC Army</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="./lite.css" />
   </head>
   <body class="lite">
-    <!-- The 2D view (lite.ts): the office without the 3D, for a phone or a computer the 3D is too much for. -->
+    <!-- The 2D view (lite.ts): the deck without the 3D, for a phone or a computer the 3D is too much for. -->
     <header class="lite-bar">
-      <label class="lite-floor" title="The floor you're on: pick another to see its workers">
-        <span class="lite-floor-label">Floor</span>
-        <select id="floor" aria-label="Floor"></select>
+      <span class="brand" aria-label="UGC Army">
+        <svg class="brand-mark" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z" fill="currentColor" /><path d="m4 17 8-8 8 8M4 22l8-8 8 8" fill="none" stroke="currentColor" stroke-width="2.5" /></svg>
+        <span class="brand-word" aria-hidden="true"><b>UGC</b> <span>ARMY</span></span>
+      </span>
+      <label class="lite-floor" title="The deck you're on: pick another to see its units">
+        <span class="lite-floor-label">Deck</span>
+        <select id="floor" aria-label="Deck"></select>
       </label>
-      <button id="btn-mission" class="btn" type="button" title="Mission control: what needs someone, on every floor, and the floor's goals">Mission <span class="n"></span></button>
-      <a id="to-3d" class="btn" href="/?3d=1" title="The 3D office, where you walk around">🏢 3D</a>
+      <div id="lite-counters" class="counters" role="group" aria-label="Units by state"></div>
+      <button id="btn-mission" class="btn" type="button" title="Mission control: what needs someone, on every deck, and the deck's goals">Mission <span class="n"></span></button>
+      <a id="to-3d" class="btn" href="/?3d=1" title="The 3D deck, where you walk around">3D</a>
     </header>
     <main class="lite-main">
       <p id="floor-meta" class="lite-meta"></p>
       <div id="mission-strip" class="lite-mission"></div>
       <div id="elsewhere" class="lite-elsewhere hidden"></div>
-      <h2 class="lite-h">Workers <span id="waiting-now" class="lite-waiting"></span><button id="btn-digest" class="btn lite-all" type="button" title="While you were away: what happened since you were last here">Catch up</button><button id="all-floors" class="btn lite-all" type="button" aria-pressed="false" title="Show the workers on every floor, not just this one">All floors</button></h2>
+      <h2 class="lite-h">Units <span id="waiting-now" class="lite-waiting"></span><button id="btn-digest" class="btn lite-all" type="button" title="While you were away: what happened since you were last here">Catch up</button><button id="all-floors" class="btn lite-all" type="button" aria-pressed="false" title="Show the units on every deck, not just this one">All decks</button></h2>
       <ul id="workers" class="lite-workers"></ul>
     </main>
-    <nav class="lite-nav" aria-label="Office">
-      <button id="btn-issues" class="btn" type="button">📌 Issues <span class="n"></span></button>
-      <button id="btn-pulls" class="btn" type="button">🔀 PRs <span class="n"></span></button>
-      <button id="btn-queue" class="btn" type="button">📋 Queue <span class="n"></span></button>
-      <button id="btn-new" class="btn primary" type="button">✨ New task</button>
+    <nav class="lite-nav" aria-label="Deck">
+      <button id="btn-issues" class="btn" type="button" data-icon="issue">Issues <span class="n"></span></button>
+      <button id="btn-pulls" class="btn" type="button" data-icon="pull">PRs <span class="n"></span></button>
+      <button id="btn-queue" class="btn" type="button" data-icon="queue">Queue <span class="n"></span></button>
+      <button id="btn-new" class="btn primary" type="button" data-icon="plus">New task</button>
     </nav>
     <div id="toasts"></div>
-    <div id="conn" class="conn hidden">Reconnecting…</div>
+    <div id="conn" class="conn hidden">Reconnecting...</div>
     <div id="modal-root"></div>
     <script type="module" src="./lite.ts"></script>
   </body>

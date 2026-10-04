@@ -3,25 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Agent Office · Your password</title>
-    <link rel="icon" href="/favicon.svg" />
+    <meta name="theme-color" content="#0d131a" />
+    <title>UGC Army - Your password</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="./login.css" />
   </head>
   <body>
     <main class="card">
-      <div class="logo" aria-hidden="true">
-        <svg viewBox="0 0 64 64" width="72" height="72"><rect x="6" y="30" width="52" height="8" rx="3" fill="#e0a96d"/><rect x="18" y="14" width="28" height="18" rx="3" fill="#2b2d42"/><rect x="21" y="17" width="22" height="12" rx="1" fill="#7cf29a"/><circle cx="32" cy="50" r="9" fill="#ff8a5b"/><circle cx="29" cy="48" r="1.8" fill="#222"/><circle cx="35" cy="48" r="1.8" fill="#222"/></svg>
+      <div class="logo" aria-label="UGC Army">
+        <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z" fill="currentColor" /><path d="m4 17 8-8 8 8M4 22l8-8 8 8" fill="none" stroke="currentColor" stroke-width="2.5" /></svg>
+        <span class="wordmark" aria-hidden="true">UGC <span>ARMY</span></span>
       </div>
-      <h1 id="title">Your office is ready 🎉</h1>
-      <p class="sub" id="sub">Unlocking…</p>
+      <h1 id="title">Your deck is ready</h1>
+      <p class="sub" id="sub">Unlocking...</p>
       <section id="reveal" hidden>
-        <p class="warn"><strong>Write this password down now.</strong> It is shown this one time only — the office keeps just a hash and can never display it again. Share it with teammates you invite.</p>
+        <p class="warn"><strong>Write this password down now.</strong> It is shown this one time only: the deck keeps just a hash and can never display it again. Share it with teammates you invite.</p>
         <div class="secret"><code id="pw"></code><button type="button" id="copy" class="mini">Copy</button></div>
         <label class="check"><input type="checkbox" id="saved" /> I saved it somewhere safe</label>
-        <button type="button" id="enter" disabled>Enter the office</button>
+        <button type="button" id="enter" disabled>Enter deck</button>
       </section>
       <p id="error" class="error" role="alert"></p>
-      <a id="login" href="/login" hidden>Go to sign in →</a>
+      <a id="login" href="/login" hidden>Go to sign in</a>
     </main>
     <script type="module" src="./claim.ts"></script>
   </body>

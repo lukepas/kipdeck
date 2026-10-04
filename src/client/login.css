@@ -1,30 +1,63 @@
-:root { --bg: #ffe8cc; --ink: #2b2d42; --card: #fffaf3; --accent: #ff8a5b; --muted: #7a6f65; --border: #2b2d42; }
+/* The sign-in pages (login, join, claim): a full-bleed void with the deck plan drawn in hairlines
+   behind a 360px card (signin-art.ts), the mark and wordmark, one field and one button. */
+@import './styles/tokens.css';
+
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html, body { margin: 0; height: 100%; }
+html, body { margin: 0; min-height: 100%; }
 body {
-  background: radial-gradient(circle at 20% 20%, #ffd6a5 0, transparent 40%), radial-gradient(circle at 80% 70%, #caffbf 0, transparent 45%), var(--bg);
-  font-family: 'Nunito', ui-rounded, 'SF Pro Rounded', system-ui, sans-serif;
-  color: var(--ink); display: grid; place-items: center; padding: 16px;
+  min-height: 100dvh; background: var(--void); color: var(--text);
+  font-family: var(--font-ui); font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased;
+  display: grid; place-items: center; padding: 16px 16px 56px; position: relative; overflow-x: hidden;
 }
-.card { width: min(380px, 100%); background: var(--card); border: 3px solid var(--border); border-radius: 22px; padding: 28px; box-shadow: 0 8px 0 var(--border); text-align: center; }
-.logo { display: grid; place-items: center; }
-h1 { margin: 8px 0 4px; font-size: 28px; }
-.sub { margin: 0 0 20px; color: var(--muted); }
-label { display: block; text-align: left; font-weight: 700; font-size: 14px; }
-input { width: 100%; margin-top: 6px; padding: 12px 14px; font-size: 16px; border: 3px solid var(--border); border-radius: 12px; background: #fff; color: var(--ink); outline: none; }
-input:focus { border-color: var(--accent); }
-button { margin-top: 16px; width: 100%; padding: 12px; font-size: 16px; font-weight: 800; border: 3px solid var(--border); border-radius: 12px; background: var(--accent); color: #fff; cursor: pointer; box-shadow: 0 4px 0 var(--border); }
-button:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--border); }
-button:disabled { opacity: .6; cursor: default; }
-.error { min-height: 1.2em; color: #c3423f; font-weight: 700; margin: 12px 0 0; }
-.warn { text-align: left; background: #fff3c4; border: 3px solid var(--border); border-radius: 12px; padding: 10px 12px; margin: 0 0 14px; font-size: 14px; }
-.secret { display: flex; gap: 8px; align-items: center; justify-content: center; background: #fff; border: 3px dashed var(--border); border-radius: 12px; padding: 14px; }
-.secret code { font: 800 26px ui-monospace, Menlo, Consolas, monospace; letter-spacing: .04em; word-break: break-all; }
-button.mini { width: auto; margin: 0; padding: 6px 10px; font-size: 13px; box-shadow: 0 2px 0 var(--border); }
-.check { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 14px; font-weight: 800; }
-.check input { width: auto; margin: 0; }
-a { color: var(--ink); font-weight: 800; }
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+/* The deck plan behind the card. */
+.plot-art { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.plot-art .pa-grid line { stroke-width: .03; }
+.plot-art .pa-grid .minor { stroke: #151c24; }
+.plot-art .pa-grid .major { stroke: #1a222c; }
+.plot-art .pa-deck { fill: none; stroke: #2a3644; stroke-width: .06; }
+.plot-art .pa-deck .col { stroke: #1f2832; stroke-dasharray: .3 .3; }
+.plot-art .bubble { fill: var(--void); stroke: #3a4756; }
+.plot-art .bubble-t, .plot-art .pod-t { fill: #5f6c7a; stroke: none; font: 600 .7px var(--font-mono); text-anchor: middle; }
+.plot-art .pod-t { font: 600 1.1px var(--font-display); letter-spacing: .1px; }
+.plot-art .table { stroke: #3a4756; stroke-width: .08; }
+.plot-art .table-in { stroke: #26313d; }
+.plot-art .console { stroke: #3a4756; fill: #111820; }
+.plot-art .ready { stroke: #3a4756; stroke-width: .12; stroke-dasharray: .25 .2; }
+.plot-art .unit-ring { stroke: var(--signal); stroke-width: .08; opacity: .55; }
+.plot-art .unit-needs { fill: var(--signal); stroke: none; }
+/* Fade the drawing out at the edges, so it floats like the deck does. */
+body::before { content: ''; position: fixed; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse 70% 75% at 66% 50%, transparent 55%, var(--void)); }
+/* Wide enough: the card on the left, the plan beside it. */
+@media (min-width: 900px) { body { justify-items: start; padding-left: max(24px, 8vw); } }
+@media (max-width: 899px) { .plot-art { opacity: .5; } }
+
+.card { position: relative; z-index: 2; width: min(360px, 100%); background: var(--surface-1); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 28px 28px 24px; text-align: left; }
+.logo { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; color: var(--text); }
+.logo .wordmark { font-family: var(--font-display); font-stretch: var(--stretch-display); font-weight: 600; font-size: 19px; letter-spacing: .06em; line-height: 1; }
+.logo .wordmark span { color: var(--muted); }
+h1 { margin: 0 0 6px; font-family: var(--font-display); font-stretch: 108%; font-size: 18px; font-weight: 600; letter-spacing: .01em; }
+.sub { margin: 0 0 22px; color: var(--muted); font-size: 13px; }
+label { display: block; text-align: left; font-weight: 500; font-size: 12px; color: var(--muted); }
+input { width: 100%; margin-top: 6px; height: 40px; padding: 0 12px; font: inherit; font-size: 15px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--void); color: var(--text); outline: none; }
+input:focus { border-color: var(--signal); }
+button { margin-top: 16px; width: 100%; height: 40px; padding: 0 12px; font: inherit; font-size: 14px; font-weight: 600; border: 1px solid var(--signal); border-radius: var(--radius); background: var(--signal); color: var(--on-signal); cursor: pointer; }
+button:hover { background: color-mix(in oklab, var(--signal) 88%, white); }
+button:disabled { opacity: .5; cursor: default; }
+.error { min-height: 1.2em; color: var(--stuck); font-size: 13px; margin: 12px 0 0; }
+.warn { text-align: left; background: var(--review-tint); border: 1px solid rgb(245 197 66 / .45); border-radius: var(--radius); padding: 10px 12px; margin: 0 0 14px; font-size: 13px; }
+.secret { display: flex; gap: 8px; align-items: center; justify-content: center; background: var(--void); border: 1px dashed var(--line-strong); border-radius: var(--radius); padding: 14px; }
+.secret code { font: 500 20px var(--font-mono); letter-spacing: .04em; word-break: break-all; }
+button.mini { width: auto; height: 28px; margin: 0; padding: 0 10px; font-size: 12px; background: var(--surface-2); color: var(--text); border-color: var(--line-strong); }
+button.mini:hover { background: var(--surface-3); }
+.check { display: flex; gap: 8px; align-items: center; justify-content: flex-start; margin-top: 14px; font-size: 13px; color: var(--text); }
+.check input { width: 16px; height: 16px; margin: 0; accent-color: var(--signal); }
+a { color: var(--text); text-underline-offset: 2px; text-decoration-color: var(--line-strong); }
 label + label { margin-top: 12px; }
-.note { text-align: left; color: var(--muted); font-size: 13px; margin: 8px 0 0; }
-.role { display: inline-block; background: #fff3c4; border: 2px solid var(--border); border-radius: 999px; padding: 0 8px; font-size: 13px; font-weight: 800; }
+.note { text-align: left; color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+.role { display: inline-block; border: 1px solid rgb(245 197 66 / .5); color: var(--review); border-radius: var(--radius-chip); padding: 0 6px; font: 500 11px/18px var(--font-mono); }
+.credit { position: fixed; left: 0; right: 0; bottom: 14px; z-index: 2; text-align: center; font: 400 11px var(--font-mono); color: var(--faint); }
+.credit a { color: var(--muted); text-decoration: none; }
+.credit a:hover { color: var(--text); }

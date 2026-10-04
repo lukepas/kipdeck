@@ -16,7 +16,7 @@ export function askName(done: (name: string) => void) {
     { role: 'dialog', 'aria-label': 'Your name' },
     h('header', {}, h('h2', {}, 'Who is it?')),
     h('div.body', {}, h('p', {}, 'Your teammates see this name on what you type and send. Leave it blank to go by the one in the box.'), input),
-    h('footer', {}, h('button.btn.primary', { type: 'submit' }, 'Come on in')),
+    h('footer', {}, h('button.btn.primary', { type: 'submit' }, 'Enter deck')),
   ) as HTMLFormElement;
   let sent = false;
   const typed = () => input.value.trim().slice(0, 24) || made;

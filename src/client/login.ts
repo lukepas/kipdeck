@@ -1,4 +1,6 @@
-export {}; // a module, so its names don't clash with the other pages' scripts
+import { mountSigninArt } from './signin-art';
+
+mountSigninArt();
 
 const form = document.getElementById('form') as HTMLFormElement;
 const nameRow = document.getElementById('name-row') as HTMLLabelElement;
@@ -34,7 +36,7 @@ void fetch('/api/login', { cache: 'no-store' })
     nameRow.hidden = false;
     nameInput.required = !shared;
     nameNote.hidden = !shared;
-    sub.textContent = shared ? 'Knock knock. Who is it?' : 'Knock knock. Who is it? Sign in with your own account.';
+    sub.textContent = shared ? 'Sign in with your account, or the shared password.' : 'Sign in with your own account.';
     try {
       nameInput.value = localStorage.getItem(NAME_KEY) ?? '';
     } catch {

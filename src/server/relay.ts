@@ -121,12 +121,12 @@ function esc(s: string): string {
   return s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 }
 
-const STYLE = `body{margin:0;min-height:100vh;display:grid;place-items:center;background:#bfe3ff;font:16px/1.5 Nunito,ui-rounded,system-ui,sans-serif;color:#2b2d42}
-main{background:#fffaf3;border:3px solid #2b2d42;border-radius:18px;box-shadow:0 6px 0 #2b2d42;padding:28px 32px;max-width:440px;margin:16px}
-h1{margin:0 0 8px;font-size:22px}p{margin:0 0 14px}code{background:#f1e7d8;border-radius:6px;padding:1px 5px}
-form{display:flex;flex-wrap:wrap;gap:8px}input{flex:1;min-width:0;font:inherit;padding:8px 12px;border:2px solid #2b2d42;border-radius:10px}
-button{font:inherit;font-weight:800;padding:8px 16px;border:2px solid #2b2d42;border-radius:10px;background:#ffd166;cursor:pointer}
-.err{color:#c1121f;font-weight:700;min-height:1.5em;margin:10px 0 0}`;
+const STYLE = `body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0d131a;font:15px/1.5 Archivo,system-ui,sans-serif;color:#e8ecef}
+main{background:#141b23;border:1px solid #3a4756;border-radius:4px;padding:28px 32px;max-width:440px;margin:16px}
+h1{margin:0 0 8px;font-size:19px;font-weight:600}p{margin:0 0 14px;color:#8a97a5}code{font-family:ui-monospace,Menlo,monospace;background:#212a35;border-radius:2px;padding:1px 5px;color:#e8ecef}
+form{display:flex;flex-wrap:wrap;gap:8px}input{flex:1;min-width:0;font:inherit;padding:8px 12px;border:1px solid #3a4756;border-radius:4px;background:#0d131a;color:#e8ecef}
+button{font:inherit;font-weight:600;padding:8px 16px;border:1px solid #ff6a1a;border-radius:4px;background:#ff6a1a;color:#0d131a;cursor:pointer}
+.err{color:#ff4d5e;min-height:1.5em;margin:10px 0 0}`;
 
 function page(res: http.ServerResponse, status: number, title: string, body: string, script = '') {
   res.writeHead(status, {
