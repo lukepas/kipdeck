@@ -27,7 +27,7 @@ What is deployed on testnets (every link below was checked on 2026-10-03; the ex
 | What | Where |
 | --- | --- |
 | Escrow program, Solana devnet | https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet |
-| A demo bounty released on devnet (no GitHub merge behind it); three more after the 2026-10-03 upgrade, one paid through the approver-wallet path (release `2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r`), all in `onchain/solana/deployments/devnet.json` | https://explorer.solana.com/tx/2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc?cluster=devnet |
+| A demo bounty released on devnet (no GitHub merge behind it); three more after the 2026-10-03 upgrade, one paid through the approver-wallet path (release `2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r`), the latest on 2026-10-04 (release `2sWD8aUJ6Wd5xEQcTxGK2tRarfr6TuzjYLgppmTrTtxBxwo6T3XP42EoYCypq9oXFQQ3Zj6TthXEMxoUNuVZCgNF`), all in `onchain/solana/deployments/devnet.json` | https://explorer.solana.com/tx/2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc?cluster=devnet |
 | Proof-of-merge schema, EAS on Base Sepolia | https://base-sepolia.easscan.org/schema/view/0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900 |
 | Its registration transaction | https://sepolia.basescan.org/tx/0x57045f814359c8e0c0f6d4b5543198ed1609570c4875e0cd84bf3f13336a83a8 |
 | MergeAttestor fallback contract | https://sepolia.basescan.org/address/0x278f441b635ebf4aca971184c0cab60b893f34fc |
