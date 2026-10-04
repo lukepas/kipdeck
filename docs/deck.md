@@ -6,26 +6,26 @@ Every project is a deck: one operations floor floating in a slate void, the same
 
 ## What's where
 
-The deck is 36 by 26 m. North is the Main board's wall, and the Deck lift you arrive in is on it, east of the board.
+The deck is a 32 m square. North is the situation wall's side; the Deck lift you arrive in stands in the middle of the south curb, its portal facing north, so you step out looking across the mission table at the Attention board with pods C and D either side of you.
 
 | Place | Where | What it's for |
 | --- | --- | --- |
-| Mission table | the middle | The floor's mission on its top: the statement in the middle, a wedge per milestone round it (filled once done, ruled brighter while it's the one you're on) and a tick on the rim for each. Every console faces it. |
+| Mission table | the middle | The deck's mission on its top: the statement in the middle, a wedge per milestone round it (filled once done, ruled brighter while it's the one you're on) and a tick on the rim for each. Every console faces it. |
 | Pods A to D | four arcs of four consoles, 7.5 m out: A north-west, B north-east, C south-east, D south-west | Where units sit, one per console (`desk-1` to `desk-16`, four to a pod). Each pod's floor plate, past its arc, names the goal most of its units work toward. |
 | Ready line | a painted orange double stripe in front of each pod, 1.4 m out from the table, with numbered ticks | Where units that need you stand, tick 1 for whoever has waited longest (see [Units](#units)). |
-| Main board | the north wall | Three panels edge to edge: Issues, Queue and Pull requests, each with its board agent's lectern at its west end. |
-| Attention board | the east wall | The floor's units ranked by who needs someone most, in the top bar's order, each with its glyph, its cell, why and for how long. While someone shares their screen, it shows that instead. The operator bench faces it. |
+| Situation wall | five standing panels in an arc 12.2 m out round the north of the table, each turned to face it | West to east: Issues, Queue, Attention (wider, due north), Pull requests and Services. Each work board has its board agent's lectern at its left end. The Attention board ranks the deck's units by who needs someone most, in the top bar's order; while someone shares their screen, it shows that instead. The operator bench faces it from between pods A and B. |
 | Proof corner | the west wall | The capacity panel (CPU, memory, units against the limit), then the violet attestation rail with a lit segment per merge paid out on devnet, the escrow vault (its seam glows while a bounty is held, and its lid lifts as one is released), and the ERC-8004 plinth with a lit step per unit with a reputation record. |
-| Review bay | the south-east corner | Smoked glass, a small table with the pull requests waiting on it as lit sheets, and the review's output on the east wall. Called reviews (meetings) sit here. |
-| Standby bench | along the south curb | The overflow seats, out one at a time once every console is taken (`beanbag-1` to `beanbag-12`). Parked units wait here. |
-| Overflow bay | through the north wall past the lift | Two more consoles a row, up to two rows, at the Room to grow sign (`desk-17` to `desk-20`). |
-| Title block | on the floor in the south-east, west of the Review bay | The deck's name and number, who's looking, the build's revision and the credit to agent-office. |
+| Review bay | the north-west corner | Smoked glass along its south and east sides, the door in the south glass, a small table with the pull requests waiting on it as lit sheets, and the review's output on the west wall. Called reviews (meetings) sit here. |
+| Deck lift | the middle of the south curb | Where you arrive, and where E opens the Decks window. |
+| Standby bench | along the south curb, either side of the lift | The overflow seats, out one at a time once every console is taken (`beanbag-1` to `beanbag-12`, west to east). Parked units wait here. |
+| Overflow bay | through the north wall in the north-east corner | Two more consoles a row, up to two rows, at the Room to grow sign (`desk-17` to `desk-20`). |
+| Title block | on the floor in the south-east corner | The deck's name and number, who's looking, the build's revision and the credit to agent-office. |
 
-The docs rack stands against the north wall west of the Main board, and the whiteboard on wheels in the east aisle.
+The docs rack stands against the east wall, and the planning board on wheels in the east aisle, off the way in from the lift.
 
 ### Cell addresses
 
-A grid of columns every 4.5 m is stencilled round the deck's edge: letters A to H west to east, numbers 1 to 6 north to south. Every spot is in a cell, like `C4`, and the Attention board names each unit's cell. `cellOf(x, z)` in `src/shared/layout.ts` works one out.
+A grid of columns every 4 m is stencilled round the deck's edge: letters A to H west to east, numbers 1 to 8 north to south. Every spot is in a cell, like `C4`, and the Attention board names each unit's cell. `cellOf(x, z)` in `src/shared/layout.ts` works one out.
 
 ### Pods and goals
 

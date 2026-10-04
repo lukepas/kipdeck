@@ -9,6 +9,8 @@ export const PRODUCT = 'UGC Army';
 export const CLI = 'ugc-army';
 /** Where it came from, as the license names it. */
 export const UPSTREAM_CREDIT = 'Built on agent-office (AgentSystemLabs / webdevcody), MIT';
+/** The same where there is only room for a line of small type (the title block on the deck's floor). */
+export const UPSTREAM_CREDIT_SHORT = 'Built on agent-office, MIT';
 
 /** Where things are, as the menu lays them out (src/client/ui/menu.ts). */
 export const NAV = {

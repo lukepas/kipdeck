@@ -111,7 +111,7 @@ export function buildBookshelf(): BookshelfModel {
   return { group, collider, interactable };
 }
 
-/** The docs rack of the project's Markdown, against the north wall west of the Main board. */
+/** The docs rack of the project's Markdown, against the east wall. */
 export const bookshelf: Fixture = () => {
   const built = buildBookshelf();
   return { group: built.group, colliders: [built.collider], interactables: [built.interactable] };

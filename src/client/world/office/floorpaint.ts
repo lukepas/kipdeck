@@ -1,4 +1,4 @@
-import { UPSTREAM_CREDIT } from '../../../shared/copy';
+import { UPSTREAM_CREDIT_SHORT } from '../../../shared/copy';
 import * as THREE from 'three';
 import { BEANBAGS, FLOOR, GRID, MISSION_TABLE, PODS, POD_LETTERS, READY_LINE, TITLE_BLOCK, readySpot } from '../../../shared/layout';
 import { fontsReady, stretch } from '../toon';
@@ -253,7 +253,7 @@ function paintTitle(g: CanvasRenderingContext2D, W: number, H: number, info: Tit
   });
   g.fillStyle = DECK.muted;
   g.font = UI(500, Math.round(H * 0.075));
-  g.fillText(UPSTREAM_CREDIT, 14 * s, H - 12);
+  g.fillText(UPSTREAM_CREDIT_SHORT, 14 * s, H - 12);
 }
 
 /** The title block on the floor: say what it shows with set(). */

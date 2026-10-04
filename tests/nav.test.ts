@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ELEVATOR, ELEVATOR_FRONT, FLOOR, MEETING_ROOM, MEETING_SEATS, WING, wingMinZ } from '../src/shared/layout.js';
+import { ELEVATOR, ELEVATOR_BACK, ELEVATOR_FRONT, FLOOR, MEETING_ROOM, MEETING_SEATS, WING, wingMinZ } from '../src/shared/layout.js';
 import { route, walkable, wayIn, type Pt } from '../src/shared/nav.js';
 
 /** Every step from a to b is on open floor. */
@@ -17,16 +17,21 @@ test('a worker called to a meeting walks from the elevator, in through the meeti
   for (const seat of MEETING_SEATS) {
     const way = wayIn(seat);
     const [x0, z0] = way[0];
-    assert.ok(Math.abs(x0 - ELEVATOR.x) < 0.6 && z0 > ELEVATOR_FRONT && z0 < ELEVATOR_FRONT + 1.2, `${seat.id} steps out of the elevator`);
+    // Out through the portal, on the deck's side of it (the lift faces north, so that's -z).
+    const out = Math.sign(ELEVATOR_FRONT - ELEVATOR_BACK);
+    const past = (z0 - ELEVATOR_FRONT) * out;
+    assert.ok(Math.abs(x0 - ELEVATOR.x) < 0.6 && past > 0 && past < 1.2, `${seat.id} steps out of the elevator`);
     // It ends beside its chair, and gets there on open floor.
     const [ex, ez] = way[way.length - 1];
     assert.ok(Math.hypot(ex - seat.x, ez - seat.z) < 1.3, `${seat.id} ends beside its chair`);
     for (let i = 1; i < way.length - 1; i++) clear(way[i - 1], way[i], seat.id);
-    // Into the room through its doorway, not the glass.
-    const crossing = way.findIndex(([, z], i) => i > 0 && way[i - 1][1] < MEETING_ROOM.minZ && z >= MEETING_ROOM.minZ);
+    // Into the room through its doorway, not the glass: across its front glass, from the deck's side.
+    const fz = MEETING_ROOM.front.z;
+    const deckSide = (z: number) => (z - fz) * MEETING_ROOM.front.out > 0;
+    const crossing = way.findIndex(([, z], i) => i > 0 && deckSide(way[i - 1][1]) && !deckSide(z));
     assert.ok(crossing > 0, `${seat.id} goes into the room`);
     const [[ax, az], [bx, bz]] = [way[crossing - 1], way[crossing]];
-    const x = ax + ((bx - ax) * (MEETING_ROOM.minZ - az)) / (bz - az);
+    const x = ax + ((bx - ax) * (fz - az)) / (bz - az);
     assert.ok(x > MEETING_ROOM.door.x0 && x < MEETING_ROOM.door.x1, `${seat.id} goes in by the door (x ${x.toFixed(2)})`);
   }
 });

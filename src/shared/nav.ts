@@ -3,7 +3,7 @@
 // An office floor built out into the back office (see WING) has more of it to get round: the office's
 // helpers take how many rows it's built out (`wing`), and each level gets a grid of its own.
 
-import { BEANBAGS, BOOKSHELF, DESK_SIZE, ELEVATOR, ELEVATOR_FRONT, FLOOR, KIOSK, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, MISSION_TABLE, PROOF_CORNER, SEATING, STATIONS, WHITEBOARD, WING, builtDesks, plantsAt, wingLevel, wingMinZ, type DeskDef } from './layout.js';
+import { BEANBAGS, BOARDS, BOOKSHELF, DESK_SIZE, ELEVATOR, ELEVATOR_BACK, ELEVATOR_FRONT, FLOOR, KIOSK, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, MISSION_TABLE, PROOF_CORNER, SEATING, STATIONS, TV, WHITEBOARD, WING, builtDesks, plantsAt, wingLevel, wingMinZ, type DeskDef } from './layout.js';
 
 
 export type Pt = [number, number];
@@ -75,8 +75,19 @@ function obstacles(wing: number): Obstacles {
   // The Proof corner's vault and plinth, against the west wall.
   for (const p of [PROOF_CORNER.vault, PROOF_CORNER.plinth]) rects.push([FLOOR.minX, p.x + p.width / 2, p.z - p.depth / 2, p.z + p.depth / 2]);
   for (const [x, z, s] of plantsAt(wing)) circles.push([x, z, 0.3 * s]);
-  // The elevator shaft.
-  rects.push([ELEVATOR.x - ELEVATOR.width / 2, ELEVATOR.x + ELEVATOR.width / 2, FLOOR.minZ, ELEVATOR_FRONT]);
+  // The lift's housing, its car left open: its two side walls and the pillars either side of its portal.
+  const [z0, z1] = [Math.min(ELEVATOR_BACK, ELEVATOR_FRONT), Math.max(ELEVATOR_BACK, ELEVATOR_FRONT)];
+  const lx0 = ELEVATOR.x - ELEVATOR.width / 2;
+  const lx1 = ELEVATOR.x + ELEVATOR.width / 2;
+  rects.push([lx0, lx0 + ELEVATOR.wall, z0, z1], [lx1 - ELEVATOR.wall, lx1, z0, z1]);
+  rects.push([lx0, ELEVATOR.x - ELEVATOR.doorWidth / 2, ELEVATOR_FRONT - 0.07, ELEVATOR_FRONT + 0.07], [ELEVATOR.x + ELEVATOR.doorWidth / 2, lx1, ELEVATOR_FRONT - 0.07, ELEVATOR_FRONT + 0.07]);
+  // The situation wall: each panel stands on the floor, a run of posts along it.
+  for (const b of [BOARDS.issues, BOARDS.queue, TV, BOARDS.pulls, BOARDS.services]) {
+    for (let t = -b.width / 2; t <= b.width / 2 + 1e-6; t += 0.5) {
+      const [cx, cz] = deskPoint({ id: 'wall', label: '', x: b.x, z: b.z, rotY: b.rotY }, t, -0.12);
+      circles.push([cx, cz, 0.18]);
+    }
+  }
   // The whiteboard on its wheels, as features/whiteboard/world.ts puts it (it turns a half turn at most).
   rects.push([WHITEBOARD.x - WHITEBOARD.width / 2 - 0.2, WHITEBOARD.x + WHITEBOARD.width / 2 + 0.2, WHITEBOARD.z - 0.48, WHITEBOARD.z + 0.48]);
   // The docs rack against the north wall, as features/bookshelf/world.ts puts it, out to the wall behind it.
@@ -87,13 +98,15 @@ function obstacles(wing: number): Obstacles {
   for (const b of BEANBAGS) rects.push(footprint(b, -0.62, 0.62, -1.1, 0.64));
   // The board agents' kiosks, and the agent standing behind each one.
   for (const k of STATIONS) rects.push(footprint(k, -KIOSK.width / 2, KIOSK.width / 2, -KIOSK.depth / 2, KIOSK.stand + 0.35));
-  // The Review bay: its glass walls, with the doorway in the north one, and the
+  // The Review bay: its glass walls, with the doorway in the front one, and the
   // table with its chairs, as world/office/meeting-room.ts puts them.
   const room = MEETING_ROOM;
   const G = 0.06;
-  rects.push([room.minX - G, room.minX + G, room.minZ - G, room.maxZ]);
-  rects.push([room.minX - G, room.door.x0, room.minZ - G, room.minZ + G]);
-  rects.push([room.door.x1, room.maxX, room.minZ - G, room.minZ + G]);
+  const fz = room.front.z;
+  const sx = room.side.x;
+  rects.push([sx - G, sx + G, room.minZ - G, room.maxZ + G]);
+  rects.push([room.minX, room.door.x0, fz - G, fz + G]);
+  rects.push([room.door.x1, room.maxX + G, fz - G, fz + G]);
   const t = MEETING_TABLE;
   rects.push([t.x - t.width / 2, t.x + t.width / 2, t.z - t.depth / 2, t.z + t.depth / 2]);
   // Chairs tucked in at the table, a little smaller than a desk's, so there's a way round behind them.
@@ -350,7 +363,7 @@ class Heap {
 // ---- Called to a meeting -----------------------------------------------------------------------
 
 /** Where a worker called to a meeting comes in: out of the elevator. */
-const IN_FROM: Pt = [ELEVATOR.x, ELEVATOR_FRONT + 0.5];
+const IN_FROM: Pt = [ELEVATOR.x, ELEVATOR_FRONT + Math.sign(ELEVATOR_FRONT - ELEVATOR_BACK) * 0.5];
 
 /**
  * A worker's walk in to its seat when it's called to a meeting: out of the elevator and round the

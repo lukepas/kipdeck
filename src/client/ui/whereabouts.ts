@@ -19,7 +19,7 @@ export function whereabouts(p: PeerInfo): string | undefined {
   }
   // Through the north wall in the overflow bay (the back office): nobody gets there unless the floor's built out.
   if (p.y > -1 && inWing(p.x, p.z, WING.rows)) return 'in the overflow bay';
-  if (p.x > MEETING_ROOM.minX && p.z > MEETING_ROOM.minZ) return 'in the review bay';
+  if (p.x > MEETING_ROOM.minX && p.x < MEETING_ROOM.maxX && p.z > MEETING_ROOM.minZ && p.z < MEETING_ROOM.maxZ) return 'in the review bay';
   return undefined;
 }
 

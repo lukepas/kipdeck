@@ -8,6 +8,7 @@ import {
   DESK_BY_ID,
   DESK_SIZE,
   ELEVATOR,
+  ELEVATOR_BACK,
   ELEVATOR_FRONT,
   FLOOR,
   MEETING_ROOM,
@@ -108,7 +109,7 @@ test('no two consoles overlap, and every seat is on the deck', () => {
 });
 
 test('everyone can get from the lift to every seat of the deck', () => {
-  const lift: Pt = [ELEVATOR.x, ELEVATOR_FRONT + 0.6];
+  const lift: Pt = [ELEVATOR.x, ELEVATOR_FRONT + Math.sign(ELEVATOR_FRONT - ELEVATOR_BACK) * 0.6];
   for (const d of [...DESKS, ...BEANBAGS, ...MEETING_SEATS]) {
     // Walked up to from behind, as "go to" does (see features/workers/actions.ts).
     const seat = deskSeat(d, d.room ? 1.2 : d.beanbag ? 1.6 : 1.3);
@@ -142,9 +143,9 @@ test('the ready line has a walkable tick for every unit that needs someone, rank
 
 test('every spot has a cell address', () => {
   assert.equal(cellOf(FLOOR.minX + 0.1, FLOOR.minZ + 0.1), 'A1');
-  assert.equal(cellOf(FLOOR.maxX - 0.1, FLOOR.maxZ - 0.1), 'H6');
-  assert.equal(cellOf(MISSION_TABLE.x + 0.1, MISSION_TABLE.z + 0.1), 'E3');
-  assert.equal(cellOf(-99, 99), 'A6');
+  assert.equal(cellOf(FLOOR.maxX - 0.1, FLOOR.maxZ - 0.1), 'H8');
+  assert.equal(cellOf(MISSION_TABLE.x + 0.1, MISSION_TABLE.z + 0.1), 'E5');
+  assert.equal(cellOf(-99, 99), 'A8');
   const cells = new Set(DESKS.map((d) => cellOf(d.x, d.z)));
   assert.ok(cells.size >= 8, 'the consoles spread over many cells');
 });

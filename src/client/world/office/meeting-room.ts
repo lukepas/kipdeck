@@ -33,10 +33,11 @@ function buildMeetingSeat(def: DeskDef, index: number): DeskView {
 }
 
 /**
- * The Review bay (the meeting room): smoked glass in the south-east corner round to the outside walls,
- * open to the sky so the Overview sees in, a sliding glass door facing the deck, a small table with its
- * stools (MEETING_SEATS) and pull requests stacked on it as lit sheets, a board on the east wall for the
- * review's output and a panel by the door for how it's going.
+ * The Review bay (the meeting room): smoked glass in the north-west corner round to the outside walls,
+ * open to the sky so the Overview sees in, a sliding glass door in its front glass facing the deck, a
+ * small table with its stools (MEETING_SEATS) and pull requests stacked on it as lit sheets, a board on
+ * the west wall for the review's output and a panel by the door for how it's going. Its glass runs along
+ * MEETING_ROOM.front (the door's side) and MEETING_ROOM.side; `out` says which way the deck is.
  */
 export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], interactables: Interactable[], desks: Map<string, DeskView>, doors: Door[]): { board: THREE.Mesh; sign: THREE.Mesh } {
   const R = MEETING_ROOM;
@@ -70,11 +71,14 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
     }
     colliders.push(axis === 'x' ? { minX: a, maxX: b, minZ: at - T / 2, maxZ: at + T / 2, top: H } : { minX: at - T / 2, maxX: at + T / 2, minZ: a, maxZ: b, top: H });
   };
-  run('x', R.minX, R.door.x0, R.minZ);
-  run('x', R.door.x1, R.maxX, R.minZ);
-  run('z', R.minZ, R.maxZ, R.minX);
+  const fz = R.front.z;
+  const fo = R.front.out;
+  const sx = R.side.x;
+  run('x', R.minX, R.door.x0, fz);
+  run('x', R.door.x1, R.maxX, fz);
+  run('z', R.minZ, R.maxZ, sx);
   // Over the door, up to the roof.
-  bar(R.door.x1 - R.door.x0, 0.1, T + 0.06, (R.door.x0 + R.door.x1) / 2, 2.3, R.minZ);
+  bar(R.door.x1 - R.door.x0, 0.1, T + 0.06, (R.door.x0 + R.door.x1) / 2, 2.3, fz);
   group.add(walls);
   // No roof: the Overview looks straight in. Nobody climbs over the glass, though.
   const roofT = 0.25;
@@ -95,14 +99,14 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
     leaf.add(pane);
     leaf.add(mesh(box(0.03, 0.4, 0.07), matte(DECK.wallReveal), -side * (half / 2 - 0.1), 1.05, 0, false));
     const x0 = dx + (side * half) / 2;
-    leaf.position.set(x0, 0, R.minZ - T / 2 - 0.04);
+    leaf.position.set(x0, 0, fz + fo * (T / 2 + 0.04));
     group.add(leaf);
     leaves.push([leaf, x0]);
   }
   doors.push({
     x: dx,
     y: 0,
-    z: R.minZ,
+    z: fz,
     open: 0,
     show: (k) => {
       const e = k * k * (3 - 2 * k);
@@ -111,10 +115,12 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
   });
   const label = textPlane('REVIEW BAY', { face: 'display', size: 56, color: DECK.text, track: 0.08 });
   label.scale.multiplyScalar(0.62);
-  // In front of the glass wall's frame (out to R.minZ - 0.08) and the sliding leaves (to R.minZ - 0.11),
+  // In front of the glass wall's frame (out 0.08 toward the deck) and the sliding leaves (out 0.11),
   // which it runs across once its text is wider than the door.
-  label.position.set(dx, 2.52, R.minZ - 0.13);
-  label.rotation.y = Math.PI;
+  /** Facing the deck from the front glass. */
+  const outward = fo > 0 ? 0 : Math.PI;
+  label.position.set(dx, 2.52, fz + fo * 0.13);
+  label.rotation.y = outward;
   group.add(label);
 
   // The table, in the consoles' language: a slate top with a lit edge on two pedestals, and the
@@ -150,10 +156,10 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
     view.group.userData.interact = it;
   });
 
-  // The board on the east wall: the review's output file as it's being written.
+  // The board on the outside wall: the review's output file as it's being written.
   const b = MEETING_BOARD;
   const { group: frame, face } = wallBoard(b.width, b.height);
-  frame.position.set(b.x - 0.03, b.y, b.z);
+  frame.position.set(b.x + Math.sin(b.rotY) * 0.03, b.y, b.z);
   frame.rotation.y = b.rotY;
   group.add(frame);
   const read: Interactable = { kind: 'meeting', x: b.x + Math.sin(b.rotY) * 1.4, z: b.z + Math.cos(b.rotY) * 1.4, radius: 2.4 };
@@ -163,21 +169,22 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
   // The panel on the glass beside the door, like a room-booking screen: what's on, the round, the
   // tokens, and the summary once it's over. Beside the door rather than past it, so the board shows.
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.96), new THREE.MeshBasicMaterial({ color: '#ffffff' }));
-  // Inside the glass, facing out: the door's left leaf slides across outside it (out to R.minZ - 0.125)
-  // and would cut through a panel on the outer face, its glints flickering with the screen.
-  sign.position.set((R.minX + R.door.x0) / 2 + 0.01, 1.45, R.minZ + T / 2 + 0.03);
-  sign.rotation.y = Math.PI;
+  // Inside the glass, facing out: the door's leaf slides across outside it and would cut through a
+  // panel on the outer face, its glints flickering with the screen. Between the door and the side glass.
+  const near = Math.abs(R.door.x0 - sx) < Math.abs(R.door.x1 - sx) ? R.door.x0 : R.door.x1;
+  sign.position.set((sx + near) / 2, 1.45, fz - fo * (T / 2 + 0.03));
+  sign.rotation.y = outward;
   group.add(sign);
-  const plate = mesh(box(0.66, 1.03, 0.03), matte(DECK.wallReveal), sign.position.x, sign.position.y, R.minZ + T / 2 + 0.05, false);
+  const plate = mesh(box(0.66, 1.03, 0.03), matte(DECK.wallReveal), sign.position.x, sign.position.y, fz - fo * (T / 2 + 0.05), false);
   group.add(plate);
-  const door: Interactable = { kind: 'meeting', x: sign.position.x, z: R.minZ - 1.2, radius: 1.8 };
+  const door: Interactable = { kind: 'meeting', x: sign.position.x, z: fz + fo * 1.2, radius: 1.8 };
   interactables.push(door);
   sign.userData.interact = door;
   plate.userData.interact = door;
 
   // A lit rule along the top of the glass, so the bay's outline reads from across the deck.
-  group.add(mesh(box(R.maxX - R.minX, 0.012, 0.012), practical(DECK.line), (R.minX + R.maxX) / 2, H + 0.01, R.minZ));
-  group.add(mesh(box(0.012, 0.012, R.maxZ - R.minZ), practical(DECK.line), R.minX, H + 0.01, (R.minZ + R.maxZ) / 2));
+  group.add(mesh(box(R.maxX - R.minX, 0.012, 0.012), practical(DECK.line), (R.minX + R.maxX) / 2, H + 0.01, fz));
+  group.add(mesh(box(0.012, 0.012, R.maxZ - R.minZ), practical(DECK.line), sx, H + 0.01, (R.minZ + R.maxZ) / 2));
   return { board: face, sign };
 }
 
@@ -189,7 +196,7 @@ declare module '../types' {
   }
 }
 
-/** The Review bay, in the south-east corner. */
+/** The Review bay, in the north-west corner. */
 export const meetingRoom: Fixture<'meetingBoard' | 'meetingSign'> = (site) => {
   const built = buildMeetingRoom(site.group, site.colliders, site.interactables, site.desks, site.doors);
   return { handle: { meetingBoard: built.board, meetingSign: built.sign } };

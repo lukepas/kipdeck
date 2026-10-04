@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import type { WebSocket } from 'ws';
 import type { Session } from '../auth.js';
 import type { ClientMsg } from '../../shared/protocol.js';
-import { elevatorSpot } from '../../shared/layout.js';
+import { ELEVATOR_YAW, elevatorSpot } from '../../shared/layout.js';
 import { lookFromSeed, sanitizeLook } from '../../shared/avatar.js';
 import { AWAY_MS } from '../../shared/attention.js';
 import type { Ctx } from '../office/context.js';
@@ -26,7 +26,7 @@ export function onConnection(ctx: Ctx, ws: WebSocket, url: URL, session: Session
   const floor = arrivalFloor(wanted);
   // Back where they were standing on it too; anywhere else, they arrive by elevator.
   const back = wanted !== null && floor?.id === wanted;
-  const spot = (back && spotFrom(url.searchParams)) || { ...elevatorSpot(), y: 0, rotY: 0 };
+  const spot = (back && spotFrom(url.searchParams)) || { ...elevatorSpot(), y: 0, rotY: ELEVATOR_YAW };
   const account = session.account;
   // An account's name is its own; on the shared password people pick one.
   const name = account?.name ?? (str(url.searchParams.get('name'), 24).trim() || `Guest ${id.slice(0, 3)}`);

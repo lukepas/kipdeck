@@ -2,7 +2,7 @@
  * Where you are, and putting you somewhere: in the elevator car, or on your feet at a spot; and where
  * you're standing, to come back to.
  */
-import { ELEVATOR, ELEVATOR_CAR, inElevator } from '../../shared/layout';
+import { ELEVATOR, ELEVATOR_CAR, ELEVATOR_YAW, inElevator } from '../../shared/layout';
 import { rememberSpot, store, type Spot } from '../state';
 import type { Ctx } from './context';
 import type { CoreState } from './ctx';
@@ -14,7 +14,7 @@ export function installPlace(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'seat
   /** In the car, facing out through the doors: where you are when you arrive on a floor. */
   function placeInCar(at?: { x: number; z: number }) {
     const spot = at && inElevator(at.x, at.z) ? at : { x: ELEVATOR.x, z: (ELEVATOR_CAR.minZ + ELEVATOR_CAR.maxZ) / 2 };
-    placeAt({ x: spot.x, y: 0, z: spot.z, rotY: 0 });
+    placeAt({ x: spot.x, y: 0, z: spot.z, rotY: ELEVATOR_YAW });
   }
 
   /** On your feet at `at`, facing `rotY` and looking straight ahead. */

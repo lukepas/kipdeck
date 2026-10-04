@@ -1,10 +1,10 @@
 // The Plot: the deck drawn as a plan in hairlines, straight from shared/layout.ts, so it never drifts
 // from the 3D deck. The grid with its column bubbles, the mission table with a wedge per milestone,
-// the four pods of consoles, the ready line with its numbered ticks, the boards, the Proof corner,
-// the Review bay, the Standby bench, the Deck lift and the title block. Units are their state glyphs
+// the four pods of consoles, the ready line with its numbered ticks, the situation wall's panels, the
+// Proof corner, the Review bay, the Standby bench, the Deck lift and the title block. Units are their state glyphs
 // with their call signs, and a unit that needs you stands on its pod's ready line in ranking order,
 // as it does on the deck. No three.js: the 2D view draws it live and the sign-in pages draw it once.
-import { UPSTREAM_CREDIT } from '../../shared/copy';
+import { UPSTREAM_CREDIT_SHORT } from '../../shared/copy';
 import './plot.css';
 import {
   BEANBAGS,
@@ -12,6 +12,8 @@ import {
   DESK_BY_ID,
   DESKS,
   ELEVATOR,
+  ELEVATOR_BACK,
+  ELEVATOR_FRONT,
   FLOOR,
   GRID,
   MACHINE_MONITOR,
@@ -21,6 +23,7 @@ import {
   PODS,
   PROOF_CORNER,
   READY_LINE,
+  SEATING,
   TITLE_BLOCK,
   TV,
   deskSeat,
@@ -175,7 +178,7 @@ export class Plot {
       text(minX + 0.25, minZ + 0.62, 'p-block-brand', 'UGC ARMY'),
       text(minX + 3.15, minZ + 0.62, 'p-block-deck', clip(deck, 14).toUpperCase()),
       text(minX + 0.25, mid + 0.55, 'p-block-small', revision ? `REV ${revision}` : 'MISSION CONTROL FOR AI AGENTS'),
-      text(minX + 0.25, maxZ - 0.3, 'p-block-small', UPSTREAM_CREDIT),
+      text(minX + 0.25, maxZ - 0.3, 'p-block-small', UPSTREAM_CREDIT_SHORT),
     );
   }
 
@@ -309,20 +312,31 @@ function readyLine(): SVGElement {
   return g;
 }
 
-/** The boards, the Proof corner, the Review bay, the Standby bench and the Deck lift. */
+/** The situation wall and its boards, the Proof corner, the Review bay, the Standby bench and the Deck lift. */
 function zones(): SVGElement {
   const g = el('g', { class: 'p-zones' });
   const label = (x: number, y: number, s: string, cls = '', anchor = 'middle') => text(x, y, `p-zone-t ${cls}`.trim(), s, { 'text-anchor': anchor });
-  // The Main board along the north wall, in three panels, and the Services and Attention boards on the east wall.
-  for (const b of [BOARDS.issues, BOARDS.queue, BOARDS.pulls]) {
-    g.append(el('line', { x1: b.x - b.width / 2 + 0.1, y1: FLOOR.minZ + 0.2, x2: b.x + b.width / 2 - 0.1, y2: FLOOR.minZ + 0.2, class: 'p-board' }));
-    g.append(label(b.x, FLOOR.minZ + 1.05, b.label === 'Pull requests' ? 'PRS' : b.label.toUpperCase()));
+  // The situation wall: each panel a line along its face, its name on the table's side of it.
+  const facets: [{ x: number; z: number; rotY: number; width: number }, string, string][] = [
+    [BOARDS.issues, 'ISSUES', ''],
+    [BOARDS.queue, 'QUEUE', ''],
+    [TV, 'ATTENTION', 'attention'],
+    [BOARDS.pulls, 'PRS', ''],
+    [BOARDS.services, 'SERVICES', ''],
+  ];
+  for (const [b, name, cls] of facets) {
+    const tx = Math.cos(b.rotY);
+    const tz = -Math.sin(b.rotY);
+    const nx = Math.sin(b.rotY);
+    const nz = Math.cos(b.rotY);
+    const h = b.width / 2 - 0.1;
+    g.append(el('line', { x1: r(b.x - tx * h), y1: r(b.z - tz * h), x2: r(b.x + tx * h), y2: r(b.z + tz * h), class: `p-board ${cls}`.trim() }));
+    // Its name behind it, in the aisle between the wall and the deck's edge, clear of the pods' letters.
+    g.append(label(b.x - nx * 0.75, b.z - nz * 0.75 + 0.2, name, cls));
   }
-  const s = BOARDS.services;
-  g.append(el('line', { x1: FLOOR.maxX - 0.2, y1: s.z - s.width / 2, x2: FLOOR.maxX - 0.2, y2: s.z + s.width / 2, class: 'p-board' }));
-  g.append(label(FLOOR.maxX - 0.7, s.z + 0.2, 'SERVICES', '', 'end'));
-  g.append(el('line', { x1: FLOOR.maxX - 0.2, y1: TV.z - TV.width / 2, x2: FLOOR.maxX - 0.2, y2: TV.z + TV.width / 2, class: 'p-board attention' }));
-  g.append(label(FLOOR.maxX - 0.7, TV.z + 0.2, 'ATTENTION', 'attention', 'end'));
+  // The operator bench facing the Attention board.
+  const bench = SEATING[0];
+  g.append(el('rect', { x: r(bench.x - 2.1), y: r(bench.z - 0.35), width: 4.2, height: 0.7, class: 'p-furniture' }));
   // The Proof corner on the west wall: the capacity panel, the violet rail, the vault and the plinth.
   const m = MACHINE_MONITOR;
   g.append(el('line', { x1: FLOOR.minX + 0.2, y1: m.z - m.width / 2, x2: FLOOR.minX + 0.2, y2: m.z + m.width / 2, class: 'p-board' }));
@@ -337,18 +351,25 @@ function zones(): SVGElement {
     g.append(el('rect', { x: r(plinth.x - w / 2), y: r(plinth.z - w / 2), width: r(w), height: r(w), class: 'p-proof-line' }));
   }
   g.append(label(plinth.x + 1.05, plinth.z + 0.2, 'ERC-8004', 'proof', 'start'));
-  // The Review bay: smoked glass with its door in the north side, and its table.
+  // The Review bay: smoked glass along its front (the door in it) and its side, and its table.
   const mr = MEETING_ROOM;
-  g.append(el('path', { d: `M${mr.door.x0} ${mr.minZ}H${mr.minX}V${mr.maxZ} M${mr.door.x1} ${mr.minZ}H${mr.maxX}`, class: 'p-glass' }));
+  const fz = mr.front.z;
+  const sx = mr.side.x;
+  const far = Math.abs(mr.door.x0 - sx) > Math.abs(mr.door.x1 - sx) ? mr.door.x0 : mr.door.x1;
+  const nearDoor = far === mr.door.x0 ? mr.door.x1 : mr.door.x0;
+  const wallX = Math.abs(mr.minX - sx) > Math.abs(mr.maxX - sx) ? mr.minX : mr.maxX;
+  const backZ = Math.abs(mr.minZ - fz) > Math.abs(mr.maxZ - fz) ? mr.minZ : mr.maxZ;
+  g.append(el('path', { d: `M${far} ${fz}H${wallX} M${nearDoor} ${fz}H${sx}V${backZ}`, class: 'p-glass' }));
   const t = MEETING_TABLE;
   g.append(el('rect', { x: t.x - t.width / 2, y: t.z - t.depth / 2, width: t.width, height: t.depth, class: 'p-furniture' }));
-  g.append(label((mr.minX + mr.maxX) / 2, mr.minZ + 1.15, 'REVIEW BAY'));
+  g.append(label((mr.minX + mr.maxX) / 2, fz - mr.front.out * 0.8 + 0.2, 'REVIEW BAY'));
   // The Standby bench along the south curb.
   for (const b of BEANBAGS) g.append(el('rect', { x: r(b.x - 0.5), y: r(b.z - 0.3), width: 1, height: 0.6, class: 'p-furniture' }));
-  g.append(label(BEANBAGS[0].x - 0.5, BEANBAGS[0].z + 1.35, 'STANDBY', '', 'start'));
-  // The Deck lift: a flush portal in the north wall.
+  g.append(label(BEANBAGS[0].x - 0.5, BEANBAGS[0].z - 0.9, 'STANDBY', '', 'start'));
+  // The Deck lift: its housing on the south curb, the portal toward the deck.
   const lx = ELEVATOR.x - ELEVATOR.width / 2;
-  g.append(el('rect', { x: lx, y: FLOOR.minZ, width: ELEVATOR.width, height: ELEVATOR.depth, class: 'p-lift' }));
-  g.append(label(ELEVATOR.x, FLOOR.minZ + ELEVATOR.depth + 0.85, 'LIFT'));
+  const lz = Math.min(ELEVATOR_BACK, ELEVATOR_FRONT);
+  g.append(el('rect', { x: lx, y: lz, width: ELEVATOR.width, height: ELEVATOR.depth, class: 'p-lift' }));
+  g.append(label(ELEVATOR.x, ELEVATOR_FRONT + Math.sign(ELEVATOR_FRONT - ELEVATOR_BACK) * 0.75 + 0.2, 'LIFT'));
   return g;
 }

@@ -64,7 +64,7 @@ export function buildWhiteboard(): WhiteboardStand {
   group.add(mesh(box(width * 0.55, 0.03, 0.1), alu, 0, bottom - 0.08, 0.07, false));
   group.add(contactShadow(width + 0.8, 1.6));
 
-  const plaque = textPlane('WHITEBOARD', { face: 'display', size: 48, color: DECK.muted, track: 0.08 });
+  const plaque = textPlane('PLANNING BOARD', { face: 'display', size: 48, color: DECK.muted, track: 0.08 });
   plaque.scale.multiplyScalar(0.55);
   plaque.position.set(-width / 2 + 0.5, bottom + height + 0.2, 0.05);
   group.add(plaque);

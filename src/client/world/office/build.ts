@@ -7,7 +7,7 @@ import { stack } from '../stack';
 import { signs } from '../desksigns';
 import type { Collider, DeskView, Interactable, Office, OfficeHandles } from '../types';
 import { DECK, floorTexture, matteUnique, type Looks } from './materials';
-import { boards, lamps, lounge, machineMonitor, tv } from './room';
+import { boards, lamps, lounge, machineMonitor, situationWall, tv } from './room';
 import { floorPaint } from './floorpaint';
 import { missionTable } from './table';
 import { proofCorner } from '../../features/proofcorner/world';
@@ -19,8 +19,8 @@ import { meetingRoom } from './meeting-room';
 import type { Fixture, Gives, Site } from './fixture';
 
 // The deck, put together from its fixtures (see fixture.ts): the slab and its walls, the paint on its
-// floor, the mission table and the pods of consoles facing it, the boards, the Proof corner, the Review
-// bay, the Deck lift and the overflow bay.
+// floor, the mission table and the pods of consoles facing it, the situation wall and its boards, the
+// Proof corner, the Review bay, the Deck lift and the overflow bay.
 
 /**
  * The office floor's fixtures, in the order they're built: which is the order everything in the floor
@@ -36,8 +36,10 @@ function floorPlan() {
     podPlates,
     beanbags,
     kiosks,
+    // The situation wall round the north of the table, its work boards and its Attention board, and the
+    // operator bench facing that.
+    situationWall,
     boards,
-    // The east wall's Attention board, and the operator bench facing it.
     tv,
     machineMonitor,
     proofCorner,

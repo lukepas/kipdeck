@@ -130,7 +130,7 @@ export function openExpand(net: Net) {
     const last = level > 0 ? rowDesks(level) : [];
     const busy = last.find((d) => store.workerAtDesk(d.id));
     status.replaceChildren(
-      h('p', {}, level === 0 ? 'The office has room to grow through the north wall, between the elevator and the corner.' : `The back office is built out ${level} of ${WING.rows} rows, with ${level * 2} more desks.`),
+      h('p', {}, level === 0 ? 'The deck has room to grow through the north wall, in its north-east corner.' : `The back office is built out ${level} of ${WING.rows} rows, with ${level * 2} more desks.`),
       h('div.expand-rows', {}, ...Array.from({ length: WING.rows }, (_, i) => h('span', { class: i < level ? 'on' : '', title: names(i + 1) }, i < level ? '■ ■' : '· ·'))),
       full ? h('p.setting-note', {}, "It can't go back any further.") : h('p.setting-note', {}, `Knocking through brings ${names(next)}, each with its own sign to hang (press L at a desk).`),
       busy ? h('p.setting-note.bad', {}, `Someone's at ${busy.label}: send them home before walling that row up.`) : '',

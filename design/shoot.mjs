@@ -183,11 +183,11 @@ async function main() {
     // after the player has aimed it, every frame, until it is unwrapped again.
     const VANTAGES = {
       'deck-high': [[16, 17, 19], [0, 0, 0]],
-      'deck-north': [[0, 6.5, 12.5], [0, 1.2, -9]],
-      'deck-west': [[-7, 2.6, 1.5], [-18, 1.6, -5.5]],
-      'deck-lift': [[11.5, 2.0, -5.5], [8.5, 1.8, -12]],
-      'deck-east': [[7.5, 2.6, 0.5], [18, 2.3, 0]],
-      'deck-bay': [[6, 3.2, 3.5], [14, 0.8, 10.5]],
+      'deck-north': [[0, 5.5, 9.5], [0, 1.6, -11]],
+      'deck-west': [[-7, 2.6, 1.5], [-16, 1.6, -5.5]],
+      'deck-lift': [[0, 2.6, 5], [0, 1.6, 15]],
+      'deck-east': [[4, 2.6, -1], [16, 1.8, 6]],
+      'deck-bay': [[-13.2, 3.6, -3.5], [-12.6, 0.8, -13.5]],
       'deck-table': [[6.5, 2.4, 6.5], [-1, 0.6, -1]],
       // Close on the units: pod A (two need you), pod B (working, done), pod C (working, crashed).
       'units-a': [[-1.6, 2.1, -1.2], [-5.6, 0.8, -5.2]],

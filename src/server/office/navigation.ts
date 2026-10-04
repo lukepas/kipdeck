@@ -1,5 +1,5 @@
 import type { Floor } from '../floor.js';
-import { elevatorSpot } from '../../shared/layout.js';
+import { ELEVATOR_YAW, elevatorSpot } from '../../shared/layout.js';
 import { features } from '../ws/handlers/index.js';
 import type { Ctx, Navigation } from './context.js';
 import type { Client } from './client.js';
@@ -38,7 +38,7 @@ export function navigation(ctx: Ctx): Navigation {
     // Each feature lets go of what they had there (see FeatureHooks); some tell that floor once
     // they're off it, in arrived.
     const after = features.map((f) => f.leaving?.(ctx, c, was)).filter((a) => typeof a === 'function');
-    const spot = at ?? { ...elevatorSpot(), y: 0, rotY: 0 };
+    const spot = at ?? { ...elevatorSpot(), y: 0, rotY: ELEVATOR_YAW };
     Object.assign(c.peer, { x: spot.x, y: spot.y, z: spot.z, rotY: spot.rotY, moving: false });
     delete c.peer.seat;
     // An issue card belongs to the board it came off, which is on the floor they left.

@@ -1,4 +1,4 @@
-import { BEANBAGS, BOARDS, DESKS, ELEVATOR, ELEVATOR_CAR, FLOOR, MEETING_SEATS, SEATING, STATIONS, WALL_HEIGHT, WING_DESKS, type DeskDef, type SeatDef } from './layout.js';
+import { BEANBAGS, BOARDS, DESKS, ELEVATOR, ELEVATOR_CAR, ELEVATOR_YAW, FLOOR, MEETING_SEATS, SEATING, STATIONS, WALL_HEIGHT, WING_DESKS, type DeskDef, type SeatDef } from './layout.js';
 import type { Bounds } from './nav.js';
 
 /*
@@ -60,7 +60,7 @@ function officePlan(): OfficePlan {
   return {
     bounds: { ...FLOOR },
     height: WALL_HEIGHT,
-    spawn: { x: ELEVATOR.x, y: 0, z: (ELEVATOR_CAR.minZ + ELEVATOR_CAR.maxZ) / 2, rotY: 0 },
+    spawn: { x: ELEVATOR.x, y: 0, z: (ELEVATOR_CAR.minZ + ELEVATOR_CAR.maxZ) / 2, rotY: ELEVATOR_YAW },
     desks: PLAN_DESKS,
     overflow: BEANBAGS,
     stations: STATIONS,

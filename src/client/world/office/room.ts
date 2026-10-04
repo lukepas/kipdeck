@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BOARDS, MACHINE_MONITOR, MISSION_TABLE, PODS, POD_RADIUS, SEATING_BY_ID, TV } from '../../../shared/layout';
+import { BOARDS, MACHINE_MONITOR, MISSION_TABLE, PODS, POD_RADIUS, SEATING_BY_ID, SITUATION, TV } from '../../../shared/layout';
 import { mesh, textPlane } from '../toon';
 import type { Interactable } from '../types';
 import type { Fixture } from './fixture';
@@ -7,9 +7,10 @@ import { DECK, box, contactShadow, flat, practical } from './materials';
 import { wallBoard } from './props';
 import { chair, seatable } from './seats';
 
-// The deck past its walls and its seats: the Main board's panels and the Services board, the
-// Attention board (the TV's slot), the capacity panel at the head of the Proof corner, the operator
-// bench, and the light: a halo over the mission table and a bar over each pod.
+// The deck past its walls and its seats: the situation wall curving round the north of the mission
+// table (its standing panels, with Issues, Queue, Attention, Pull requests and Services on them), the
+// capacity panel at the head of the Proof corner, the operator bench, and the light: a halo over the
+// mission table and a bar over each pod.
 
 declare module '../types' {
   interface OfficeHandles {
@@ -27,7 +28,7 @@ function header(text: string, size = 64): ReturnType<typeof textPlane> {
   return label;
 }
 
-/** The Main board on the north wall, three panels edge to edge, and the Services board on the east wall. */
+/** The work boards on the situation wall's panels: Issues, Queue, Pull requests and Services. */
 export const boards: Fixture<'boardMeshes'> = (site) => {
   const boardMeshes = {} as Record<keyof typeof BOARDS, THREE.Mesh>;
   for (const key of Object.keys(BOARDS) as (keyof typeof BOARDS)[]) {
@@ -51,27 +52,57 @@ export const boards: Fixture<'boardMeshes'> = (site) => {
     site.interactables.push(it);
     bg.userData.interact = it;
   }
-  // A lit rule under the Main board, the length of its three panels.
-  const main = [BOARDS.issues, BOARDS.queue, BOARDS.pulls];
-  const x0 = Math.min(...main.map((b) => b.x - b.width / 2));
-  const x1 = Math.max(...main.map((b) => b.x + b.width / 2));
-  const y = BOARDS.issues.y - BOARDS.issues.height / 2 - 0.12;
-  site.group.add(mesh(box(x1 - x0, 0.015, 0.02), practical(DECK.gridMajor), (x0 + x1) / 2, y, BOARDS.issues.z + 0.1, false));
   return { handle: { boardMeshes } };
 };
 
-/** The Attention board on the east wall, in the TV's slot: the ranked list, or a shared screen. */
+/**
+ * The situation wall itself: a slate panel standing on the floor behind each board, turned to face the
+ * table, a lit rule along its top and one under its board, so its curve reads from across the deck and
+ * from the Overview. Nobody walks through it.
+ */
+export const situationWall: Fixture = (site) => {
+  const slate = flat(DECK.wall);
+  const rule = practical(DECK.gridMajor);
+  const T = 0.16;
+  for (const b of [BOARDS.issues, BOARDS.queue, TV, BOARDS.pulls, BOARDS.services]) {
+    const nx = Math.sin(b.rotY);
+    const nz = Math.cos(b.rotY);
+    const panel = new THREE.Group();
+    const w = SITUATION.width + 0.32;
+    panel.add(mesh(box(w, SITUATION.top, T), slate, 0, SITUATION.top / 2, -T / 2 - 0.02));
+    panel.add(mesh(box(w, 0.015, 0.03), rule, 0, SITUATION.top + 0.01, 0, false));
+    panel.add(mesh(box(b.width, 0.015, 0.02), rule, 0, b.y - b.height / 2 - 0.12, 0.08, false));
+    panel.add(contactShadow(w + 0.4, 1.0, 0, 0.2));
+    panel.position.set(b.x, 0, b.z);
+    panel.rotation.y = b.rotY;
+    site.group.add(panel);
+    // Its footprint, as short boxes along it (a collider is square to the axes).
+    const tx = Math.cos(b.rotY);
+    const tz = -Math.sin(b.rotY);
+    for (let t = -w / 2 + 0.25; t <= w / 2 - 0.25 + 1e-6; t += 0.5) {
+      const cx = b.x + tx * t - nx * (T / 2 + 0.02);
+      const cz = b.z + tz * t - nz * (T / 2 + 0.02);
+      site.colliders.push({ minX: cx - 0.2, maxX: cx + 0.2, minZ: cz - 0.2, maxZ: cz + 0.2, top: SITUATION.top });
+    }
+  }
+  return {};
+};
+
+/** The Attention board, the middle of the situation wall due north of the table: the ranked list, or a shared screen. */
 export const tv: Fixture<'tvScreen'> = (site) => {
+  const nx = Math.sin(TV.rotY);
+  const nz = Math.cos(TV.rotY);
   const { group: tvGroup, face: tvScreen } = wallBoard(TV.width, TV.height);
-  tvGroup.position.set(TV.x - 0.06, TV.y, TV.z);
-  tvGroup.rotation.y = -Math.PI / 2;
+  tvGroup.position.set(TV.x + nx * 0.06, TV.y, TV.z + nz * 0.06);
+  tvGroup.rotation.y = TV.rotY;
   site.group.add(tvGroup);
   const label = header('Attention');
   const w = (label.geometry.parameters.width * label.scale.x) / 2;
-  label.position.set(TV.x - 0.08, TV.y + TV.height / 2 + 0.32, TV.z + TV.width / 2 - w);
-  label.rotation.y = -Math.PI / 2;
+  const along = -TV.width / 2 + w;
+  label.position.set(TV.x + nx * 0.08 + Math.cos(TV.rotY) * along, TV.y + TV.height / 2 + 0.32, TV.z + nz * 0.08 - Math.sin(TV.rotY) * along);
+  label.rotation.y = TV.rotY;
   site.group.add(label);
-  const it: Interactable = { kind: 'tv', x: TV.x - 4.5, z: TV.z, radius: 3.2 };
+  const it: Interactable = { kind: 'tv', x: TV.x + nx * 3, z: TV.z + nz * 3, radius: 3.2 };
   site.interactables.push(it);
   tvGroup.userData.interact = it;
   return { handle: { tvScreen } };
@@ -91,7 +122,7 @@ export const machineMonitor: Fixture<'machineScreen'> = (site) => {
   return { handle: { machineScreen } };
 };
 
-/** The operator bench in the east aisle, facing the Attention board, and a stool either side of it. */
+/** The operator bench due north of the table, facing the Attention board, and a stool either side of it. */
 export const lounge: Fixture = (site) => {
   const seat = SEATING_BY_ID.get('couch')!;
   const bench = new THREE.Group();
@@ -104,8 +135,9 @@ export const lounge: Fixture = (site) => {
   bench.position.set(seat.x, 0, seat.z);
   bench.rotation.y = seat.rotY;
   site.group.add(bench);
-  // Its top on the seat, so someone standing on the bench stands on it.
-  site.colliders.push({ minX: seat.x - 0.5, maxX: seat.x + 0.5, minZ: seat.z - len / 2, maxZ: seat.z + len / 2, top: 0.46 });
+  // Its top on the seat, so someone standing on the bench stands on it: along x or z, the way it's turned.
+  const alongX = Math.abs(Math.cos(seat.rotY)) > 0.5;
+  site.colliders.push(alongX ? { minX: seat.x - len / 2, maxX: seat.x + len / 2, minZ: seat.z - 0.5, maxZ: seat.z + 0.5, top: 0.46 } : { minX: seat.x - 0.5, maxX: seat.x + 0.5, minZ: seat.z - len / 2, maxZ: seat.z + len / 2, top: 0.46 });
   seatable(bench, 'couch', 2.6, site.interactables);
 
   for (const id of ['lounge-beanbag-1', 'lounge-beanbag-2']) {

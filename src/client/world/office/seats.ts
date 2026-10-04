@@ -256,18 +256,18 @@ export const beanbags: Fixture<'setBeanbags'> = (site) => {
   return { handle: { setBeanbags } };
 };
 
-/** The board agents' lecterns, each at the west end of its panel of the Main board. */
+/** The board agents' lecterns, each at the left end of its panel of the situation wall. */
 export const kiosks: Fixture = (site) => {
   for (const def of STATIONS) {
     const view = buildKiosk(def);
     site.group.add(view.group);
     site.desks.set(def.id, view);
-    // The lectern and the agent behind it, back to the wall (they all stand by the north wall) so
-    // nobody squeezes in behind, and up over the agent's head so nobody hops on it.
+    // The lectern and the agent behind it, back to the situation wall so nobody squeezes in behind,
+    // and up over the agent's head so nobody hops on it.
     const corners = [-1, 1].flatMap((t) => [-KIOSK.depth / 2, KIOSK.stand + 0.35].map((sz) => deskPoint(def, (t * KIOSK.width) / 2, sz)));
     const xs = corners.map(([x]) => x);
     const zs = corners.map(([, z]) => z);
-    site.colliders.push({ minX: Math.min(...xs), maxX: Math.max(...xs), minZ: FLOOR.minZ, maxZ: Math.max(...zs), top: 1.5, fence: true });
+    site.colliders.push({ minX: Math.min(...xs), maxX: Math.max(...xs), minZ: Math.min(...zs), maxZ: Math.max(...zs), top: 1.5, fence: true });
     // Walk up to its front.
     const [fx, fz] = deskPoint(def, 0, -1);
     const it: Interactable = { kind: 'station', deskId: def.id, x: fx, z: fz, radius: 1.3 };
