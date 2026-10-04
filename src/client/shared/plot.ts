@@ -331,8 +331,10 @@ function zones(): SVGElement {
     const nz = Math.cos(b.rotY);
     const h = b.width / 2 - 0.1;
     g.append(el('line', { x1: r(b.x - tx * h), y1: r(b.z - tz * h), x2: r(b.x + tx * h), y2: r(b.z + tz * h), class: `p-board ${cls}`.trim() }));
-    // Its name behind it, in the aisle between the wall and the deck's edge, clear of the pods' letters.
-    g.append(label(b.x - nx * 0.75, b.z - nz * 0.75 + 0.2, name, cls));
+    // Its name behind it, in the aisle between the wall and the deck's edge, running away from the
+    // table so it clears the line and the pods' letters.
+    const anchor = b.x < -1 ? 'end' : b.x > 1 ? 'start' : 'middle';
+    g.append(label(b.x - nx * 0.75, b.z - nz * 0.75 + 0.2, name, cls, anchor));
   }
   // The operator bench facing the Attention board.
   const bench = SEATING[0];

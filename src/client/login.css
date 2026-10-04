@@ -16,7 +16,9 @@ body {
    clear column to its left; behind the card, quieter, on a narrow one. */
 .plot-art { position: fixed; top: 0; left: 34%; width: 64%; height: 100%; z-index: 0; pointer-events: none; overflow: visible; }
 body::before { content: ''; position: fixed; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse 60% 70% at 67% 50%, transparent 60%, var(--void)), linear-gradient(90deg, var(--void) 30%, transparent 46%); }
-@media (min-width: 900px) { body { justify-items: start; padding-left: max(24px, 7vw); } }
+/* On a wide window the card hangs from the plan's row-2 grid line (8.4 of the plan's 35.4 m from its
+   top, see LIVE_BOX in shared/plot.ts), with the credit under it, left-aligned. */
+@media (min-width: 900px) { body { justify-items: start; align-content: start; padding-left: max(24px, 7vw); padding-top: calc(100vh * 8.4 / 35.4); } }
 @media (max-width: 899px) { .plot-art { left: 0; width: 100%; opacity: .35; } body::before { background: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, var(--void)); } }
 
 .card { position: relative; z-index: 2; width: min(360px, 100%); background: var(--surface-1); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 28px 28px 24px; text-align: left; }
@@ -27,7 +29,9 @@ h1 { margin: 0 0 6px; font-family: var(--font-display); font-stretch: 108%; font
 .sub { margin: 0 0 22px; color: var(--muted); font-size: 13px; }
 label { display: block; text-align: left; font-weight: 500; font-size: 12px; color: var(--muted); }
 input { width: 100%; margin-top: 6px; height: 40px; padding: 0 12px; font: inherit; font-size: 15px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--void); color: var(--text); outline: none; }
-input:focus { border-color: var(--signal); }
+/* One ring: the 2px Signal outline with its offset, not a coloured border as well. */
+input:focus { outline: none; }
+input:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
 button { margin-top: 16px; width: 100%; height: 40px; padding: 0 12px; font: inherit; font-size: 14px; font-weight: 600; border: 1px solid var(--signal); border-radius: var(--radius); background: var(--signal); color: var(--on-signal); cursor: pointer; }
 button:hover { background: color-mix(in oklab, var(--signal) 88%, white); }
 button:disabled { opacity: .5; cursor: default; }
@@ -43,6 +47,6 @@ a { color: var(--text); text-underline-offset: 2px; text-decoration-color: var(-
 label + label { margin-top: 12px; }
 .note { text-align: left; color: var(--muted); font-size: 12px; margin: 8px 0 0; }
 .role { display: inline-block; border: 1px solid rgb(245 197 66 / .5); color: var(--review); border-radius: var(--radius-chip); padding: 0 6px; font: 500 11px/18px var(--font-mono); }
-.credit { position: fixed; left: 0; right: 0; bottom: 14px; z-index: 2; text-align: center; font: 400 11px var(--font-mono); color: var(--faint); }
+.credit { position: relative; z-index: 2; width: min(360px, 100%); margin-top: 12px; text-align: left; font: 400 11px var(--font-mono); color: var(--faint); }
 .credit a { color: var(--muted); text-decoration: none; }
 .credit a:hover { color: var(--text); }
