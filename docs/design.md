@@ -32,7 +32,7 @@ Toasts stack top right under the bar, all one card: a glyph column and a stripe 
 
 ## Motion
 
-Motion marks a change of state, and hue and the attention cadences belong to state alone. Nothing bobs, idles or celebrates for decoration; the bridge's ambient life is achromatic or ship-cyan, slow and stops under reduced motion (DESIGN.md, rule 1). Every motion has a reduced-motion form. The UI uses one curve, `--ease` (`cubic-bezier(.2, 0, 0, 1)`), and three lengths in `tokens.css`: `--t-ui` 120 ms, `--t-pulse` 1.2 s and `--t-flight` 700 ms.
+Motion marks a change of state, and hue and the attention cadences belong to state alone. Nothing bobs, idles or celebrates for decoration; the bridge's ambient life is achromatic or ship-cyan, slow, stays outside the glass and stops under reduced motion or Ship motion at Off (DESIGN.md, rule 1). Every motion has a reduced-motion form. The UI uses one curve, `--ease` (`cubic-bezier(.2, 0, 0, 1)`), and three lengths in `tokens.css`: `--t-ui` 120 ms, `--t-pulse` 1.2 s and `--t-flight` 700 ms.
 
 | Moment | What moves | How long | Under reduced motion |
 | --- | --- | --- | --- |
@@ -48,6 +48,10 @@ Motion marks a change of state, and hue and the attention cadences belong to sta
 | You go to a unit (N, a toast, search) | in Walk the view flies there in an arc; in the Overview it pans and zooms | 700 ms; 300 ms | a cut |
 | The Overview turns (Q / E) | a quarter turn | 280 ms | a cut |
 | The bridge, always | the holo course plot turns over the mission table, in ship-cyan | half a turn a minute | still |
+| Space, always | three layers of stars stream past the glass, the sky turns, the drive glow breathes | the ship's speed (0.4x to 1.6x by merges in the last hour, 0.15x holding station), the sky 0.6 degrees a minute, the glow every 8 s | still |
+| Now and then | a planet or moon across a side port, an asteroid field tumbling past, or a comet high across the forward glass; never during a beat, waiting while a unit has just started needing you | every 6 to 10 minutes; 90 to 180 s, 40 s, 25 s | none (Calm has none either) |
+| A pull request merges | the surge: the stars speed up to 12x and streak, the glass glints ship-cyan | 1.4 s, at most one in 20 s | nothing |
+| A milestone is done (a waypoint) | the jump: the stars stretch toward the bow, a white-cyan flash fills the glass, and the ship comes out in new space | 2.4 s, flash 120 ms | the new space crossfades in over 400 ms |
 
 ![The merge beat on its way: the violet pulse at the foot of the Proof corner's rail](img/beat-climb.png)
 
@@ -57,7 +61,7 @@ The merge beat is the one celebration, and the moment to record for a video: the
 
 Once it parks, the rail has one more lit segment (the rail is a tally that grows), the vault's lid is up with a violet glow, the top bar's violet counter has rolled, and the proof toast shows the devnet transaction. The camera never moves for a beat.
 
-The beats live in `src/client/features/beats/` (paths and timings in `logic.ts`, tested in `tests/motion.test.ts`), the flight in `src/client/core/flight.ts`, the callout stacking in `src/client/features/workers/declutter.ts`, and the CSS reduced-motion rule at the end of `src/client/styles/tokens.css`.
+The beats live in `src/client/features/beats/` (paths and timings in `logic.ts`, tested in `tests/motion.test.ts`), space outside in `src/client/features/space/` (the surge's and the jump's curves, the cruise speed and the flybys' schedule in `logic.ts`, tested in `tests/motion.test.ts` and `tests/space.test.ts`), the flight in `src/client/core/flight.ts`, the callout stacking in `src/client/features/workers/declutter.ts`, and the CSS reduced-motion rule at the end of `src/client/styles/tokens.css`.
 
 ## Sound
 
@@ -90,4 +94,4 @@ Every control can be reached by keyboard, and focus is always a 2px Signal ring 
 - `npm run typecheck`, `npm test` and `npm run build` must all pass with clean output.
 - `node design/shoot.mjs <folder> [shot,shot]` (after `npm run build`) starts the office on a spare port with a throwaway home, password and project, deploys a few stand-in units that report fake states, and saves screenshots under `design/shots/<folder>/`: the deck from fixed vantages, the Overview, the merge beat, demo mode, Mission control, the palette, settings, toasts, the 2D view at three widths and in print, and a terminal. It always stops the office afterwards. The before and after shots of each design stage are kept there.
 - Status colors are checked for contrast on `--void` and `--surface-1` (see the table in DESIGN.md), and every state has a shape, so a grayscale or color-blind view still reads.
-- `prefers-reduced-motion` in the browser's dev tools should leave nothing moving except a spinner.
+- `prefers-reduced-motion` in the browser's dev tools, or Settings > Bridge > Ship motion at Off, should leave nothing moving except a spinner.

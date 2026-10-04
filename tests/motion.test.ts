@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { BEAT_MS, along, beatAt, beatMs, dispatchPhases, hashOf, railSegment, rimToward, toRailPhases, toTablePhases } from '../src/client/features/beats/logic.js';
 import { stack } from '../src/client/features/workers/declutter.js';
 import { CUES } from '../src/client/sound/alerts.js';
+import { JUMP, JUMP_MS, JUMP_STRETCH, SURGE, SURGE_GAP_MS, SURGE_MS, jumpAt, surgeAt, surgeGlint } from '../src/client/features/space/logic.js';
 import { DESKS, FLOOR, MISSION_TABLE, PROOF_CORNER } from '../src/shared/layout.js';
 
 const close = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps;
@@ -102,4 +103,44 @@ test('four short cues: needs you rises 880 then 1320 Hz at 60 ms each, stuck is 
   assert.ok(tick.f > 2000 && tick.at > 0, 'then a high tick');
   // None rings for long: a cue marks a change, it doesn't play a tune.
   for (const notes of Object.values(CUES)) assert.ok(Math.max(...notes.map((n) => n.at + n.len)) < 0.4);
+});
+
+// Space's two flourishes (src/client/features/space/logic.ts): the surge on a merge and the jump when a
+// waypoint is reached. They play outside the glass only; the camera never moves for them.
+
+test('the surge runs 1.4 s: up to 12x in 300 ms, held 200 ms, back over 900 ms', () => {
+  assert.equal(SURGE_MS, 1400);
+  assert.equal(surgeAt(0), 1);
+  assert.ok(surgeAt(150) > 1 && surgeAt(150) < SURGE.peak);
+  for (const ms of [300, 400, 500]) assert.ok(close(surgeAt(ms), 12), `held at the peak at ${ms} ms`);
+  assert.ok(surgeAt(900) < 12 && surgeAt(900) > 1, 'easing back down');
+  assert.equal(surgeAt(1400), 1);
+  assert.equal(surgeAt(5000), 1);
+  // It only ever speeds the ship up, and the glass glints with it and is dark again by its end.
+  for (let ms = 0; ms <= 1400; ms += 50) assert.ok(surgeAt(ms) >= 1);
+  assert.equal(surgeGlint(0), 0);
+  assert.equal(surgeGlint(400), 1);
+  assert.equal(surgeGlint(1400), 0);
+  // At most one in 20 s: merges inside that fold into the one already flown.
+  assert.equal(SURGE_GAP_MS, 20_000);
+});
+
+test('the jump runs 2.4 s: a stretch, a 120 ms flash over the new sky, then back to cruise', () => {
+  assert.equal(JUMP_MS, 2400);
+  const before = jumpAt(0);
+  assert.deepEqual(before, { speed: 1, streak: 0, flash: 0, swapped: false });
+  // The stretch toward the bow: the streaks grow, no flash yet, still the old sky.
+  const mid = jumpAt(400);
+  assert.ok(mid.streak > 0 && mid.streak < 1 && mid.flash === 0 && !mid.swapped);
+  // The flash is only inside its 120 ms, and the sky swaps under it.
+  for (let ms = 0; ms <= 2400; ms += 10) {
+    const f = jumpAt(ms);
+    if (ms < JUMP.stretch || ms >= JUMP.stretch + JUMP.flash) assert.equal(f.flash, 0, `no flash at ${ms} ms`);
+    assert.ok(f.flash <= 1 && f.streak <= 1 && f.speed >= 1);
+  }
+  assert.ok(jumpAt(860).flash > 0.9, 'bright at the middle of the flash');
+  assert.ok(!jumpAt(805).swapped && jumpAt(880).swapped, 'the sky swaps under the flash');
+  // Back to cruise by its end, on the new region.
+  assert.deepEqual(jumpAt(2400), { speed: 1, streak: 0, flash: 0, swapped: true });
+  assert.equal(JUMP_STRETCH, 60);
 });

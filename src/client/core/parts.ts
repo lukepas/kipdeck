@@ -23,6 +23,7 @@ import type { installNeedsYou } from '../features/needsyou';
 import type { installPeers } from '../features/peers';
 import type { installProofCorner } from '../features/proofcorner';
 import type { installSeating } from '../features/seating';
+import type { installSpace } from '../features/space';
 import type { installTv } from '../features/tv';
 import type { installVoice } from '../features/voice';
 import type { installWaiting } from '../features/waiting';
@@ -94,4 +95,6 @@ export interface Parts {
   hud: Made<typeof installHud>;
   /** The rail, the vault and the plinth keeping up with the chain (see features/proofcorner). */
   proofCorner: Made<typeof installProofCorner>;
+  /** Space outside the glass: the sky, the stars, the flybys, the surge and the jump (see features/space). */
+  space: Made<typeof installSpace>;
 }

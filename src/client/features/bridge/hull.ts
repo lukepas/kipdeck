@@ -11,6 +11,22 @@ import { CANOPY, beam, canopyPoint, onBridgeLayer } from './shapes';
 // the bridge is part of: a chamfered hull under the slab with its bow to the north and two nacelles aft.
 // All of it is static and merged by material, a handful of draw calls.
 
+/** The drive glow behind the nacelles, which space's speed sets (features/space). */
+export interface Drive {
+  /** How hard the drive is pushing: 0 (holding station) to 1 (cruise) and past it in a surge. */
+  set(throttle: number): void;
+}
+
+declare module '../../world/types' {
+  interface OfficeHandles {
+    /** The nacelles' drive glow (features/bridge/hull.ts). */
+    drive: Drive;
+  }
+}
+
+/** The glow's opacity at cruise. */
+const GLOW = 0.3;
+
 const frameMat = () => matte(DECK.hull, { metalness: 0.35, roughness: 0.55 });
 
 /** The frames up the north, east and west walls (at the corners too), each with a lit line down its face. */
@@ -165,7 +181,7 @@ function plumeFade(): THREE.CanvasTexture {
 }
 
 /** Under the slab: the ship. A chamfered hull plate with ribs across its flanks, a lit edge, and two nacelles aft. */
-function outerHull(): THREE.Group {
+function outerHull(): { group: THREE.Group; drive: Drive } {
   const g = new THREE.Group();
   const plate = matte(DECK.hull, { flat: true, metalness: 0.3, roughness: 0.6 });
   const dark = matte(DECK.wallReveal);
@@ -211,7 +227,7 @@ function outerHull(): THREE.Group {
     o.receiveShadow = true;
   });
   // The drive glow behind each nozzle: additive, so it adds light to space rather than covering it.
-  const glowMat = new THREE.MeshBasicMaterial({ color: DECK.ship, map: plumeFade(), transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
+  const glowMat = new THREE.MeshBasicMaterial({ color: DECK.ship, map: plumeFade(), transparent: true, opacity: GLOW, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
   for (const s of [-1, 1]) {
     for (const [len, r] of [
       [7, 1.05],
@@ -222,17 +238,19 @@ function outerHull(): THREE.Group {
       merged.add(cone);
     }
   }
-  return merged;
+  const drive: Drive = { set: (throttle) => void (glowMat.opacity = GLOW * Math.min(1.8, Math.max(0.3, throttle))) };
+  return { group: merged, drive };
 }
 
 /** The hull round the deck and the ship outside it. */
-export const hull: Fixture = (site) => {
+export const hull: Fixture<'drive'> = (site) => {
   const inside = new THREE.Group();
   wallFrames(inside);
   coves(inside);
   eaves(inside);
+  const outer = outerHull();
   const group = new THREE.Group();
-  group.add(mergeByMaterial(inside), canopy(), aftGlass(), outerHull());
+  group.add(mergeByMaterial(inside), canopy(), aftGlass(), outer.group);
   site.group.add(group);
-  return {};
+  return { handle: { drive: outer.drive } };
 };

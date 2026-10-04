@@ -39,6 +39,7 @@ import { installPods } from './features/pods';
 import { installProofCorner } from './features/proofcorner';
 import { installReadyLine } from './features/readyline';
 import { installBridge } from './features/bridge';
+import { installSpace } from './features/space';
 import { installDictation } from './features/dictation';
 import { installHud } from './features/hud';
 import { installMeeting } from './features/meeting';
@@ -142,6 +143,7 @@ parts.proofCorner = installProofCorner(ctx);
 installBeats(ctx, parts);
 installReadyLine(ctx, parts);
 installBridge(ctx);
+parts.space = installSpace(ctx, parts);
 
 parts.hintbar = installHintBar(ctx, core, parts);
 installKeyboard(ctx, parts);
@@ -223,7 +225,7 @@ void whoami().then(() => {
 
 // Debug handle for quick checks from the console / headless screenshots.
 const { worlds, views } = parts;
-(window as any).__office = { world: () => worlds.world(), store, player: parts.player, camera: ctx.camera, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, office: ctx.office, overview: parts.overview, switchFloor: parts.travel.switchFloor, elevatorPanelOpen, carried: () => core.carrying };
+(window as any).__office = { world: () => worlds.world(), store, player: parts.player, camera: ctx.camera, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, office: ctx.office, overview: parts.overview, space: parts.space, switchFloor: parts.travel.switchFloor, elevatorPanelOpen, carried: () => core.carrying };
 (window as any).__voice = parts.voice;
 (window as any).__sound = parts.sound;
 (window as any).__notify = parts.notifier;
