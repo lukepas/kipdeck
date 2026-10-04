@@ -117,6 +117,38 @@ async function launch() {
 const want = (name) => !only || only.has(name);
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** Issues and pull requests for the wall boards in the shots: a deck whose gh is signed in. */
+const BOARD_FIXTURE = (() => {
+  const at = new Date().toISOString();
+  const issue = (number, title, labels = []) => ({ number, title, state: 'OPEN', url: `https://github.com/acme/app/issues/${number}`, author: 'ana', labels: labels.map((name) => ({ name, color: '6e8fb3' })), assignees: [], createdAt: at, updatedAt: at, body: '', comments: 0 });
+  const pull = (number, title, checks, review = '') => ({ number, title, state: 'OPEN', isDraft: false, url: `https://github.com/acme/app/pull/${number}`, author: 'pixel-bot', labels: [], reviewDecision: review, headRefName: `office/${number}`, baseRefName: 'main', createdAt: at, updatedAt: at, additions: 120, deletions: 18, checks, body: '', closes: [] });
+  return {
+    issues: [issue(41, 'Session store for the auth rewrite', ['auth']), issue(42, 'Payments webhook on the new queue'), issue(43, 'Rate limits on the public API', ['api']), issue(44, 'Devnet bounty onboarding docs', ['docs']), issue(45, 'Flaky checkout e2e')],
+    pulls: [pull(77, 'Tighten the CSP for the showcase', 'pass', 'APPROVED'), pull(78, 'Fix flaky checkout e2e', 'pending'), pull(79, 'Port settings to the form kit', 'fail')],
+  };
+})();
+
+async function shot(page, name, opts = {}) {
+  if (!want(name)) return;
+  await page.screenshot({ path: path.join(OUT, `${name}.png`), ...opts });
+}
+
+async function signIn(page) {
+  await page.goto(`${base}/login`);
+  const status = await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD);
+  if (status !== 200) throw new Error('login failed ' + status);
+}
+
+const PROFILE = () => {
+  try {
+    // Headless software rendering is slow: no offer of the 2D view over the shots.
+    localStorage.setItem('agent-office.lite-declined', '1');
+    if (!localStorage.getItem('agent-office.profile')) localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4FA3A5', look: { skin: 0, hair: 0, style: 0 } }));
+  } catch {
+    // storage blocked
+  }
+};
+
 async function main() {
   await waitUp();
   const browser = await launch();
@@ -127,31 +159,35 @@ async function main() {
     if (want('login')) {
       await lp.goto(`${base}/login`);
       await wait(800);
-      await lp.screenshot({ path: path.join(OUT, 'login.png') });
+      await lp.locator('input').first().focus();
+      await shot(lp, 'login');
+    }
+    if (want('login-phone')) {
+      await lp.setViewportSize({ width: 390, height: 844 });
+      await lp.goto(`${base}/login`);
+      await wait(600);
+      await shot(lp, 'login-phone');
+    }
+    if (want('pom')) {
+      // The office's /pom/ while the showcase is off: its own page, not a bare "Not found".
+      await lp.setViewportSize(viewport);
+      await lp.goto(`${base}/pom/`);
+      await wait(500);
+      await shot(lp, 'pom');
     }
     await fresh.close();
 
     const context = await browser.newContext({ viewport, colorScheme: 'dark' });
-    await context.addInitScript(() => {
-      try {
-        // Headless software rendering is slow: no offer of the 2D view over the shots.
-        localStorage.setItem('agent-office.lite-declined', '1');
-        if (!localStorage.getItem('agent-office.profile')) localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4f86f7', look: { skin: 0, hair: 0, style: 0 } }));
-      } catch {
-        // storage blocked
-      }
-    });
+    await context.addInitScript(PROFILE);
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
-    await page.goto(`${base}/login`);
-    const status = await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD);
-    if (status !== 200) throw new Error('login failed ' + status);
+    await signIn(page);
     await page.goto(`${base}/`, { waitUntil: 'commit' });
     if (want('loading')) {
       await page.locator('#loading').waitFor({ timeout: 10_000 });
       await wait(700);
-      await page.screenshot({ path: path.join(OUT, 'loading.png') });
+      await shot(page, 'loading');
     }
     await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
     for (const [deskId, prompt] of TASKS) {
@@ -159,11 +195,44 @@ async function main() {
       await wait(250);
     }
     await wait(9000);
-    const probe = () => ({ counts: window.__office?.store.counts?.() ?? window.__lite?.store.counts(), roster: (window.__office?.store ?? window.__lite?.store).roster.map((e) => [e.name, e.deskId, e.status, e.exitCode]) });
+    const probe = () => ({ counts: window.__office.store.counts(), roster: window.__office.store.roster.map((e) => [e.name, e.status, e.exitCode]) });
     console.log('3D counts', JSON.stringify(await page.evaluate(probe)));
-    if (want('office')) await page.screenshot({ path: path.join(OUT, 'office.png') });
-    // A mission on the table and a few merges on the rail, painted straight onto them for the shots
-    // (the store would send them from a real deck).
+    // The arrival frame, and the wall boards as a deck whose gh isn't signed in shows them.
+    await shot(page, 'office');
+    const VIEW = (from, to) =>
+      page.evaluate(
+        ([from, to]) => {
+          const o = window.__office;
+          const p = o.player;
+          p.__update ??= p.update;
+          p.update = (dt) => {
+            p.__update.call(p, dt);
+            o.camera.position.set(...from);
+            o.camera.lookAt(...to);
+          };
+        },
+        [from, to],
+      );
+    const UNVIEW = () =>
+      page.evaluate(() => {
+        const p = window.__office.player;
+        if (p.__update) p.update = p.__update;
+      });
+    if (want('boards-offline')) {
+      await VIEW([0, 3.2, -3.5], [0, 2.4, -12]);
+      await wait(1200);
+      await shot(page, 'boards-offline');
+      await UNVIEW();
+    }
+    // From here on the boards show work, as on a deck whose gh is signed in.
+    await page.evaluate((fx) => {
+      const s = window.__office.store;
+      s.issues = { items: fx.issues, fetchedAt: Date.now(), loading: false };
+      s.pulls = { items: fx.pulls, fetchedAt: Date.now(), loading: false };
+      s.emit('issues');
+      s.emit('pulls');
+    }, BOARD_FIXTURE);
+    // A mission on the table and a few merges on the rail, painted straight onto them for the shots.
     await page.evaluate(() => {
       const o = window.__office.office;
       o.missionTable.setMission({
@@ -179,8 +248,7 @@ async function main() {
       o.proof.setReputation(2);
       o.proof.setArmed(true);
     });
-    // The room from fixed cameras: the player's update is wrapped so the camera lands where asked
-    // after the player has aimed it, every frame, until it is unwrapped again.
+    // The room from fixed cameras: the player's update is wrapped so the camera lands where asked.
     const VANTAGES = {
       'deck-high': [[16, 17, 19], [0, 0, 0]],
       'deck-north': [[0, 5.5, 9.5], [0, 1.6, -11]],
@@ -197,34 +265,19 @@ async function main() {
     };
     for (const [name, [from, to]] of Object.entries(VANTAGES)) {
       if (!want(name)) continue;
-      await page.evaluate(
-        ([from, to]) => {
-          const o = window.__office;
-          const p = o.player;
-          p.__update ??= p.update;
-          p.update = (dt) => {
-            p.__update.call(p, dt);
-            o.camera.position.set(...from);
-            o.camera.lookAt(...to);
-          };
-        },
-        [from, to],
-      );
+      await VIEW(from, to);
       await wait(1200);
-      await page.screenshot({ path: path.join(OUT, `${name}.png`) });
+      await shot(page, name);
     }
-    await page.evaluate(() => {
-      const p = window.__office.player;
-      if (p.__update) p.update = p.__update;
-    });
+    await UNVIEW();
     if (want('deck-overview')) {
       await page.locator('#scene').focus();
       await page.keyboard.press('g');
       await wait(1500);
-      await page.screenshot({ path: path.join(OUT, 'deck-overview.png') });
+      await shot(page, 'deck-overview');
       await page.keyboard.press('e');
       await wait(900);
-      await page.screenshot({ path: path.join(OUT, 'deck-overview-e.png') });
+      await shot(page, 'deck-overview-e');
       await page.keyboard.press('g');
       await wait(600);
     }
@@ -241,10 +294,9 @@ async function main() {
       await wait(600);
     }
     if (want('beat')) {
-      // The merge beat: a bounty state with six releases and one being paid (so the top bar shows its
-      // violet counter and the vault is armed), then a merge and its payout sent in as the office
-      // would. Software rendering draws a frame far slower than the beat runs, so the page's clock runs
-      // at a tenth of real time while the pulse is caught on its way, then catches up.
+      // The merge beat: a bounty state with six releases and one being paid, then a merge and its
+      // payout sent in as the office would. The page's clock runs at a tenth of real time while the
+      // pulse is caught on its way, then catches up.
       await page.evaluate(() => {
         const o = window.__office;
         const s = o.store;
@@ -286,48 +338,84 @@ async function main() {
         if (window.__realNow) performance.now = window.__realNow;
       });
       await wait(1500);
-      await page.screenshot({ path: path.join(OUT, 'beat-landed.png') });
+      await shot(page, 'beat-landed');
+      await UNVIEW();
+    }
+    if (want('toasts')) {
+      // A unit that starts asking: its toast in the one stack, before it folds into the counter; and a
+      // proof toast and a stuck one beside it, in the same card.
+      await page.evaluate(() => window.__office.net.send({ t: 'worker.spawn', deskId: 'desk-14', prompt: '[ask] Which queue for the webhook retries', worktree: false }));
+      await wait(4200);
       await page.evaluate(() => {
-        const p = window.__office.player;
-        if (p.__update) p.update = p.__update;
+        const add = (cls, glyph, text, proof) => {
+          const el = document.createElement('div');
+          el.className = `toast ${cls}`;
+          el.innerHTML = `<span class="toast-icon"><svg class="ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">${glyph}</svg></span><span class="toast-text"></span><time class="toast-at">&lt;1m</time>`;
+          el.querySelector('.toast-text').textContent = text;
+          if (proof) el.insertAdjacentHTML('beforeend', '<span class="toast-proof"><code>4kQm...9xPa</code><span class="settled">settled on devnet</span><a href="#">View</a></span>');
+          document.getElementById('toasts').append(el);
+        };
+        add('error', '<path d="M12 4 21 19.5H3Z"/><path d="M12 10v4.5"/>', 'Cosmo (C-03 at F6) is stuck: crashed (exit 3)');
+        add('proof', '<path d="M4 4h16v16H4Z"/><path d="m8 12.5 3 3 5.5-6.5"/>', 'PR #77 merged: 15.00 USDC released to Dot (D-01 at D6)', true);
       });
+      await wait(400);
+      await shot(page, 'toasts');
+      await page.evaluate(() => document.querySelectorAll('#toasts .toast').forEach((t) => t.remove()));
     }
     await page.locator('#scene').focus();
-    if (want('mission')) {
+    if (want('mission') || want('mission-goals-empty') || want('mission-goals')) {
       await page.keyboard.press('i');
-      await page.locator('.modal.mission-control').waitFor({ timeout: 10_000 });
+      const mc = page.locator('.modal.mission-control');
+      await mc.waitFor({ timeout: 10_000 });
       await wait(500);
-      await page.screenshot({ path: path.join(OUT, 'mission.png') });
+      await page.keyboard.press('1');
+      await wait(300);
+      await shot(page, 'mission');
+      await page.keyboard.press('3');
+      await wait(300);
+      await shot(page, 'mission-review');
+      await page.keyboard.press('4');
+      await wait(300);
+      await shot(page, 'mission-timeline');
       await page.keyboard.press('2');
       await wait(300);
-      await page.screenshot({ path: path.join(OUT, 'mission-goals.png') });
+      await shot(page, 'mission-goals-empty');
+      await page.evaluate(() => {
+        const net = window.__office.net;
+        net.send({ t: 'mission.set', statement: 'Ship the auth rewrite and the devnet bounty flow' });
+        for (const title of ['Session store picked', 'Auth rewrite', 'Devnet bounties live']) net.send({ t: 'mission.milestone', op: 'add', title });
+      });
+      await wait(900);
+      await shot(page, 'mission-goals');
       await page.keyboard.press('Escape');
-      await wait(300);
+      await wait(400);
+      await shot(page, 'office-mission');
     }
     if (want('palette')) {
       await page.keyboard.press(process.platform === 'darwin' ? 'Meta+k' : 'Control+k');
       await page.locator('.modal.palette').waitFor({ timeout: 10_000 });
       await page.keyboard.type('se');
       await wait(300);
-      await page.screenshot({ path: path.join(OUT, 'palette.png') });
+      await shot(page, 'palette');
       await page.keyboard.press('Escape');
       await wait(300);
     }
     if (want('menu') || want('settings') || want('operator')) {
       await page.locator('#dock .dock-menu').click();
       await page.locator('.hud-menu').waitFor({ timeout: 10_000 });
-      await wait(300);
-      if (want('menu')) await page.screenshot({ path: path.join(OUT, 'menu.png') });
+      // Software rendering draws slowly: give the menu's 120 ms rise time to land.
+      await wait(1200);
+      await shot(page, 'menu');
       if (want('settings') || want('operator')) {
         await page.locator('.hud-menu .menu-item', { hasText: 'Settings' }).click();
         await page.locator('.modal.settings').waitFor({ timeout: 10_000 });
         await wait(400);
-        await page.screenshot({ path: path.join(OUT, 'settings.png') });
+        await shot(page, 'settings');
         if (want('operator')) {
-          await page.locator('.modal.settings button', { hasText: 'Change your look' }).click();
+          await page.locator('.modal.settings button', { hasText: /look|operator/i }).first().click();
           await page.locator('.modal.charsel').waitFor({ timeout: 10_000 });
           await wait(1500);
-          await page.screenshot({ path: path.join(OUT, 'operator.png') });
+          await shot(page, 'operator');
           await page.keyboard.press('Escape');
           await wait(300);
         }
@@ -335,92 +423,112 @@ async function main() {
       await page.keyboard.press('Escape');
       await wait(300);
     }
-    if (want('toasts')) {
-      // The toast stack as the office draws it (ui/dom.ts toast()), one of each level.
-      await page.evaluate(() => {
-        const add = (cls, text, proof) => {
-          const el = document.createElement('div');
-          el.className = `toast ${cls}`;
-          const t = document.createElement('span');
-          t.className = 'toast-text';
-          t.textContent = text;
-          const at = document.createElement('time');
-          at.className = 'toast-at';
-          at.textContent = '14:02';
-          el.append(t, at);
-          if (proof) {
-            const trail = document.createElement('span');
-            trail.className = 'toast-proof';
-            trail.innerHTML = '<code>4kQm...9xPa</code><span class="settled">settled on devnet</span><a href="#">View</a>';
-            el.append(trail);
-          }
-          document.getElementById('toasts').append(el);
-        };
-        add('info', 'Widget (B-02 at F2) finished: Fix flaky checkout e2e');
-        add('warn', 'Reminder: the queue on project has been paused 30 min');
-        add('error', 'Bolt (C-02 at F4) is stuck: npm test has failed 3 times');
-        add('proof', 'PR #77 merged: 15.00 USDC released to Widget (B-02 at F2)', true);
-      });
+    if (want('floors')) {
+      await page.locator('#dock .dock-menu').click();
+      await page.locator('.hud-menu .menu-item', { hasText: 'Decks' }).click();
+      await page.locator('.modal.elevator').waitFor({ timeout: 10_000 });
       await wait(400);
-      await page.screenshot({ path: path.join(OUT, 'toasts.png') });
+      await page.locator('.modal.elevator .floor-more').first().click().catch(() => {});
+      await wait(200);
+      await shot(page, 'floors');
+      await page.keyboard.press('Escape');
+      await wait(300);
+    }
+    if (want('floor-menu')) {
+      await page.locator('#project').click();
+      await wait(400);
+      await shot(page, 'floor-menu');
+      await page.keyboard.press('Escape');
+      await page.mouse.click(720, 600);
+      await wait(300);
+    }
+    if (want('rail-folded')) {
+      await page.locator('#rail-fold').click();
+      await wait(400);
+      await shot(page, 'rail-folded');
+      await page.locator('#rail-fold').click();
+      await wait(200);
+    }
+    if (want('office-phone')) {
+      // A phone that asked for the 3D deck (the 2D view's 3D button): one surface, the rail a sheet.
+      const phone = await context.newPage();
+      await phone.setViewportSize({ width: 390, height: 844 });
+      await phone.goto(`${base}/?3d=1`, { waitUntil: 'commit' });
+      await phone.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
+      await wait(6000);
+      await shot(phone, 'office-phone');
+      await phone.locator('#dock .dock-panel').last().click();
+      await wait(600);
+      await shot(phone, 'office-phone-sheet');
+      await phone.close();
     }
     if (want('lite')) {
       await page.goto(`${base}/lite`);
       await wait(2500);
-      console.log('lite counts', JSON.stringify(await page.evaluate(() => ({ counts: window.__lite.store.counts(), roster: window.__lite.store.roster.map((e) => [e.name, e.deskId, e.status, e.exitCode]) }))));
-      await page.screenshot({ path: path.join(OUT, 'lite.png') });
+      console.log('lite counts', JSON.stringify(await page.evaluate(() => ({ counts: window.__lite.store.counts(), roster: window.__lite.store.roster.map((e) => [e.name, e.status, e.exitCode]) }))));
+      await shot(page, 'lite');
       const phone = await context.newPage();
       await phone.setViewportSize({ width: 420, height: 860 });
       await phone.goto(`${base}/lite`);
       await wait(2500);
-      await phone.screenshot({ path: path.join(OUT, 'lite-phone.png') });
+      await shot(phone, 'lite-phone');
       await phone.close();
       // The light whiteprint: what the system's light setting (or the print toggle) gives.
       await page.emulateMedia({ colorScheme: 'light' });
       await page.reload();
       await wait(2500);
-      await page.screenshot({ path: path.join(OUT, 'lite-print.png') });
+      await shot(page, 'lite-print');
       await page.emulateMedia({ colorScheme: 'dark' });
       const mid = await context.newPage();
       await mid.setViewportSize({ width: 900, height: 1000 });
       await mid.goto(`${base}/lite`);
       await wait(2500);
-      await mid.screenshot({ path: path.join(OUT, 'lite-tablet.png') });
+      await shot(mid, 'lite-tablet');
       await mid.close();
-    }
-    if (want('pom')) {
-      await page.goto(`${base}/pom/`);
-      await wait(2000);
-      await page.screenshot({ path: path.join(OUT, 'pom.png'), fullPage: true });
     }
     if (errors.length) console.log('page errors:\n' + errors.join('\n'));
   } finally {
     await browser.close();
   }
-  if (want('demo')) {
-    // Demo mode in a browser of its own (the first has used up the software GPU): the bigger chrome,
-    // the Overview turning round the table, and the bloom.
-    const b3 = await launch();
+  if (want('phone-redirect')) {
+    // A phone opening the deck lands on the 2D view.
+    const { chromium } = await import('playwright-core');
+    const b4 = await chromium.launch({ headless: true, args: ['--disable-gpu'] }).catch(() => launch());
     try {
-      const ctx3 = await b3.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
-      await ctx3.addInitScript(() => {
+      const ctx4 = await b4.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2, colorScheme: 'dark' });
+      await ctx4.addInitScript(() => {
         try {
-          localStorage.setItem('agent-office.lite-declined', '1');
-          localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4f86f7', look: { skin: 0, hair: 0, style: 0 } }));
+          localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4FA3A5', look: { skin: 0, hair: 0, style: 0 } }));
         } catch {
           // storage blocked
         }
       });
+      const pp = await ctx4.newPage();
+      await signIn(pp);
+      await pp.goto(`${base}/`);
+      await pp.waitForURL(/\/lite/, { timeout: 30_000 });
+      await wait(2500);
+      console.log('phone landed on', new URL(pp.url()).pathname);
+      await shot(pp, 'phone-redirect');
+    } finally {
+      await b4.close();
+    }
+  }
+  if (want('demo')) {
+    // Demo mode in a browser of its own (the first has used up the software GPU).
+    const b3 = await launch();
+    try {
+      const ctx3 = await b3.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+      await ctx3.addInitScript(PROFILE);
       const dp = await ctx3.newPage();
       dp.on('pageerror', (e) => console.log('demo page error:', e.message));
-      await dp.goto(`${base}/login`);
-      await dp.evaluate(async (password) => fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) }), PASSWORD);
+      await signIn(dp);
       await dp.goto(`${base}/?demo=1`, { waitUntil: 'commit' });
       await dp.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
       await wait(6000);
-      await dp.screenshot({ path: path.join(OUT, 'demo.png') });
+      await shot(dp, 'demo');
       await wait(4000);
-      await dp.screenshot({ path: path.join(OUT, 'demo-later.png') });
+      await shot(dp, 'demo-later');
     } finally {
       await b3.close();
     }
@@ -433,7 +541,7 @@ async function main() {
       const ctx2 = await b2.newContext({ viewport: { width: 1440, height: 900 } });
       await ctx2.addInitScript(() => {
         try {
-          localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4f86f7', look: { skin: 0, hair: 0, style: 0 } }));
+          localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4FA3A5', look: { skin: 0, hair: 0, style: 0 } }));
           // Headless Chromium's speech recognition takes the page down when the terminal asks about it.
           delete window.SpeechRecognition;
           delete window.webkitSpeechRecognition;
@@ -443,13 +551,12 @@ async function main() {
       });
       const tp = await ctx2.newPage();
       tp.on('console', (m) => m.type() === 'error' && console.log('console:', m.text()));
-      await tp.goto(`${base}/login`);
-      await tp.evaluate(async (password) => fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) }), PASSWORD);
+      await signIn(tp);
       await tp.goto(`${base}/lite`);
       await tp.locator('.lite-card').nth(4).click();
       await tp.locator('.modal.term').waitFor({ timeout: 10_000 });
       await wait(1500);
-      await tp.screenshot({ path: path.join(OUT, 'terminal.png') });
+      await shot(tp, 'terminal');
     } finally {
       await b2.close();
     }
@@ -459,7 +566,7 @@ async function main() {
 const timer = setTimeout(() => {
   console.error('timed out');
   process.exit(2);
-}, 360_000);
+}, 540_000);
 main()
   .then(() => console.log('shots in ' + OUT))
   .catch((e) => {

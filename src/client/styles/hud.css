@@ -170,8 +170,11 @@ body.overview .bb-keys { visibility: hidden; }
   .topbar .project, .dock-btn[data-action=mission] { display: none; }
   .dock-panel .lbl { display: none; }
 }
+/* A touch screen has no keys: no look hint, no key caps, and the chat chip just says Chat. */
 @media (pointer: coarse) {
-  .bb-key.look, .bb-key[data-key=T], .bb-key[data-key=Tab] { display: none; }
+  .bb-key.look, .bb-keys .bb-key[data-key=Tab] { display: none; }
+  .bb-key kbd { display: none; }
+  .bb-key { padding-left: 9px; }
 }
 
 /* A teammate with their own account, in the people panel. */
