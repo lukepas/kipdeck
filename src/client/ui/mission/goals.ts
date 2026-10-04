@@ -2,6 +2,7 @@
 // in place (Enter saves, Esc cancels), how far each milestone has got and what it has cost, the
 // workers nobody linked to anything, and telling the workers when the mission changes.
 
+import { icon } from '../icons';
 import { duration } from '../../../shared/attention';
 import { MISSION_LIMITS, milestoneProgress, toLink, unlinked } from '../../../shared/mission';
 import type { MissionMilestone } from '../../../shared/protocol';
@@ -110,6 +111,37 @@ function tellBox(deps: MissionDeps): HTMLElement | null {
   return box;
 }
 
+/** An example, to show what the tab is for before anyone has written one. */
+const EXAMPLE = { statement: 'Ship the auth rewrite and the devnet bounty flow', milestones: ['Session store picked', 'Auth rewrite merged'] };
+
+/**
+ * No mission yet: why it matters (units are given it, and the ranking links their work to it), a
+ * primary button to write one, and an example with its milestones to start from.
+ */
+function emptyMission(deps: MissionDeps, can: boolean, statement: HTMLElement): HTMLElement {
+  const write = () => statement.querySelector<HTMLElement>('.mc-edit-btn')?.click();
+  const use = () => {
+    deps.net.send({ t: 'mission.set', statement: EXAMPLE.statement });
+    for (const title of EXAMPLE.milestones) deps.net.send({ t: 'mission.milestone', op: 'add', title });
+  };
+  return h(
+    'section.mc-empty-mission',
+    {},
+    h('span.mc-empty-icon', { 'aria-hidden': 'true' }, icon('target', 28)),
+    h('h3', {}, 'Give this deck a mission'),
+    h('p', {}, 'Every unit deployed here is told the mission, and Mission control links their work to its milestones, so you see what moves it forward and what does not.'),
+    can ? h('div.mc-empty-btns', {}, h('button.btn.primary', { type: 'button', onclick: write }, 'Write the mission')) : h('p.mc-note', {}, 'Only admins can set the mission on this deck.'),
+    h(
+      'div.mc-example',
+      { 'aria-label': 'An example' },
+      h('span.mc-example-label', {}, 'For example'),
+      h('p.mc-example-text', {}, EXAMPLE.statement),
+      h('ol', {}, ...EXAMPLE.milestones.map((t) => h('li', {}, t))),
+      can ? h('button.btn.small', { type: 'button', onclick: use }, 'Use this example') : null,
+    ),
+  );
+}
+
 export function renderGoals(deps: MissionDeps): HTMLElement {
   const m = store.mission;
   if (!store.floor) return h('p.mc-empty', {}, 'Go to a deck to see its mission.');
@@ -140,9 +172,11 @@ export function renderGoals(deps: MissionDeps): HTMLElement {
     return h('li', {}, h('span', {}, name), select);
   };
   const changed = m.by ? `Changed by ${m.by} ${m.at ? timeAgo(m.at) : ''}`.trim() : '';
+  const empty = !m.statement && !m.milestones.length;
   return h(
     'div.mc-goals',
     {},
+    empty ? emptyMission(deps, can, statement) : null,
     h('section.mc-statement', {}, h('h3', {}, 'Mission'), statement, h('p.mc-note', {}, [changed, m.locked ? 'Locked: only admins can change it' : ''].filter(Boolean).join(' · '))),
     store.me.admin ? h('label.mc-lock', {}, h('input', { type: 'checkbox', checked: !!m.locked, onchange: (e: Event) => deps.net.send({ t: 'mission.lock', locked: (e.target as HTMLInputElement).checked }) }), 'Only admins can change the mission') : null,
     h('section', {}, h('h3', {}, 'Milestones'), m.milestones.length ? h('ol.mc-milestones', {}, ...m.milestones.map((x, i) => milestoneRow(deps, x, i, m.milestones.length, can))) : h('p.mc-empty', {}, 'No milestones yet. Each one is a step of the mission, with the issues it covers.'), can && m.milestones.length < MISSION_LIMITS.milestones ? add : null),

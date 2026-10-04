@@ -5,6 +5,8 @@
 
 import { ACTION_LABEL, type Ranked } from '../../../shared/attention';
 import { ago } from '../../../shared/rowtext';
+import { tokenLabel } from '../../../shared/money';
+import { icon } from '../icons';
 import { diffLabel, type ReviewItem } from '../../../shared/review';
 import type { GhPull } from '../../../shared/protocol';
 import { store } from '../../state';
@@ -24,6 +26,16 @@ function facts(i: ReviewItem): (HTMLElement | null)[] {
   const [word, cls] = i.checks ? CHECKS[i.checks] : ['', ''];
   const diff = i.pull ? diffLabel({ files: 0, additions: i.pull.additions, deletions: i.pull.deletions, ahead: 1 }) : diffLabel(i.work);
   return [word ? h('span.mc-ci', { class: cls, title: 'Its pull request\'s checks' }, word) : null, diff ? h('span.mc-diff', { title: 'What it changed' }, diff) : null];
+}
+
+/** The bounty a unit's work would be paid from on a merge, as a violet chip: the Proof of Merge hook. */
+function bountyChip(e: { floor: string; issue?: number; pr?: { number: number } }): HTMLElement | null {
+  const items = store.bounties?.[e.floor]?.items ?? [];
+  const b = items.find((x) => (e.pr && x.claimPr === e.pr.number) || (e.issue !== undefined && x.issue === e.issue));
+  if (!b || !['open', 'claimed', 'awaiting-approval', 'paying'].includes(b.phase)) return null;
+  const amount = tokenLabel(b.amount, b.decimals, b.symbol);
+  const what = b.phase === 'awaiting-approval' ? 'waits for an admin' : b.phase === 'paying' ? 'paying now' : 'paid on your merge';
+  return h('span.mc-bounty', { title: `Bounty on issue #${b.issue}, escrowed on Solana devnet, released only when a person merges and an admin approves` }, icon('bounty', 12), `bounty ${amount} - ${what}`);
 }
 
 /** A pull request no worker on the roster stands for. */
@@ -79,7 +91,7 @@ export function renderReview(deps: MissionDeps, ranked: Ranked[], now: number): 
   const rows = items.map((i) => {
     const r = i.entry && byId.get(i.entry.id);
     if (!r) return i.pull ? pullRow(deps, i, now, showFloor) : i.payout ? payoutRow(deps, i, now, showFloor) : null;
-    return rosterRow(deps, r, now, { showFloor, extra: facts(i) });
+    return rosterRow(deps, r, now, { showFloor, extra: [...facts(i), bountyChip(r.entry)] });
   });
   return h('div.mc-review', {}, h('p.mc-note', {}, 'Oldest first. Opening a finished worker\'s work marks it seen.'), h('ul.mc-rows', {}, ...rows));
 }

@@ -46,9 +46,12 @@ export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'views' | 'waiting'
 
   function sync() {
     // Only on your floor, and not ones that were asking already when the page first saw them (a reload, a floor you've just arrived on).
-    if (fresh.take(store.ranked(store.floor)).length) {
+    const started = fresh.take(store.ranked(store.floor));
+    if (started.length) {
       banner.flash();
-      banner.announce(bannerText(asking(), Date.now(), store.floor));
+      // The toast names the one that just started asking, and counts the rest.
+      const ids = new Set(started.map((e) => e.id));
+      banner.announce(bannerText([...started, ...asking().filter((e) => !ids.has(e.id))], Date.now(), store.floor));
       if (settings.needsYouSound !== 'off') {
         sound.cue('needs-you');
         reminders.rang(performance.now());
