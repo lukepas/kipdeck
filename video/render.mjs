@@ -1,0 +1,232 @@
+#!/usr/bin/env node
+// Renders the film: loads src/index.html in headless Chromium at the target
+// size, steps t = from + i / fps, screenshots every frame into out/frames and
+// encodes them with the soundtrack (H.264 high, yuv420p, CRF 16, +faststart,
+// AAC 320k).
+//
+//   node render.mjs                       full 16:9, 1920x1080 @ 60 fps
+//   node render.mjs --format 9x16         full 9:16, 1080x1920 @ 60 fps
+//   node render.mjs --preview             fast check: 30 fps, 1/3 size, JPEG frames
+//   node render.mjs --from 12 --to 16     a slice (audio is trimmed to match)
+//   node render.mjs --still 14.0          one PNG to out/stills, no encode
+//
+// Other flags: --fps N, --w N, --h N, --guides, --no-grain, --blur N (max
+// motion-blur samples), --out path.mp4, --keep-frames (skip the encode).
+
+import { createServer } from 'node:http';
+import { readFile, mkdir, readdir, rm, stat } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+
+const ROOT = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+const THREE_BUILD = path.dirname(require.resolve('three'));
+const OUT = path.join(ROOT, 'out');
+const FRAMES = path.join(OUT, 'frames');
+
+function parseArgs(argv) {
+  const a = { format: '16x9', preview: false, guides: false, grain: true, keepFrames: false };
+  for (let i = 0; i < argv.length; i++) {
+    const k = argv[i];
+    const v = () => {
+      const next = argv[++i];
+      if (next == null) throw new Error(`${k} needs a value`);
+      return next;
+    };
+    switch (k) {
+      case '--fps': a.fps = Number(v()); break;
+      case '--w': a.w = Number(v()); break;
+      case '--h': a.h = Number(v()); break;
+      case '--from': a.from = Number(v()); break;
+      case '--to': a.to = Number(v()); break;
+      case '--format': a.format = v(); break;
+      case '--preview': a.preview = true; break;
+      case '--guides': a.guides = true; break;
+      case '--no-grain': a.grain = false; break;
+      case '--blur': a.blur = Number(v()); break;
+      case '--still': a.still = Number(v()); break;
+      case '--out': a.out = v(); break;
+      case '--keep-frames': a.keepFrames = true; break;
+      case '-h': case '--help':
+        console.log(readHelp());
+        process.exit(0);
+        break;
+      default: throw new Error(`unknown flag ${k} (see --help)`);
+    }
+  }
+  if (a.format !== '16x9' && a.format !== '9x16') throw new Error('--format must be 16x9 or 9x16');
+  const full = a.format === '9x16' ? [1080, 1920] : [1920, 1080];
+  const div = a.preview ? 3 : 1;
+  a.w = a.w || Math.round(full[0] / div / 2) * 2;
+  a.h = a.h || Math.round(full[1] / div / 2) * 2;
+  a.fps = a.fps || (a.preview ? 30 : 60);
+  if (a.blur == null && a.preview) a.blur = 2;
+  if (a.w % 2 || a.h % 2) throw new Error(`yuv420p needs even dimensions, got ${a.w}x${a.h}`);
+  if (!(a.fps > 0)) throw new Error('--fps must be positive');
+  return a;
+}
+
+function readHelp() {
+  return `usage: node render.mjs [--format 16x9|9x16] [--preview] [--fps N] [--w N] [--h N]
+       [--from S] [--to S] [--still S] [--guides] [--no-grain] [--blur N] [--out file.mp4] [--keep-frames]`;
+}
+
+const MIME = {
+  '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
+  '.json': 'application/json', '.ttf': 'font/ttf', '.wav': 'audio/wav', '.css': 'text/css', '.png': 'image/png',
+};
+
+// Static server for src/, assets/ and three's build. Bound to localhost on a
+// free port and closed when the render ends.
+function serve() {
+  const server = createServer(async (req, res) => {
+    try {
+      const url = new URL(req.url, 'http://x');
+      const rel = decodeURIComponent(url.pathname);
+      let file;
+      if (rel.startsWith('/vendor/three/')) file = path.join(THREE_BUILD, rel.slice('/vendor/three/'.length));
+      else file = path.join(ROOT, rel);
+      const base = rel.startsWith('/vendor/three/') ? THREE_BUILD : ROOT;
+      if (!path.resolve(file).startsWith(base + path.sep)) { res.writeHead(403).end(); return; }
+      const body = await readFile(file);
+      res.writeHead(200, { 'content-type': MIME[path.extname(file)] || 'application/octet-stream', 'cache-control': 'no-store' });
+      res.end(body);
+    } catch {
+      res.writeHead(404).end();
+    }
+  });
+  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
+}
+
+// Same approach as tests/mission-e2e.test.ts: Playwright's Chromium, else an
+// installed Chrome or Edge, with SwiftShader so WebGL works headless.
+async function launch() {
+  const { chromium } = await import('playwright-core');
+  const errors = [];
+  for (const channel of [undefined, 'chrome', 'msedge']) {
+    try {
+      return await chromium.launch({ headless: true, channel, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+    } catch (e) {
+      errors.push(`${channel || 'playwright chromium'}: ${String(e.message).split('\n')[0]}`);
+    }
+  }
+  throw new Error(`no browser for playwright-core (npx playwright-core install chromium):\n  ${errors.join('\n  ')}`);
+}
+
+function run(cmd, args) {
+  return new Promise((resolve, reject) => {
+    const p = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'] });
+    let out = '', err = '';
+    p.stdout.on('data', (d) => { out += d; });
+    p.stderr.on('data', (d) => { err += d; });
+    p.on('error', reject);
+    p.on('close', (code) => (code === 0 ? resolve(out) : reject(new Error(`${cmd} exited ${code}\n${err.slice(-2000)}`))));
+  });
+}
+
+const bin = (name) => (existsSync(`/opt/homebrew/bin/${name}`) ? `/opt/homebrew/bin/${name}` : name);
+
+async function clearFrames() {
+  await mkdir(FRAMES, { recursive: true });
+  for (const f of await readdir(FRAMES)) if (/\.(png|jpe?g)$/.test(f)) await rm(path.join(FRAMES, f));
+}
+
+async function main() {
+  const a = parseArgs(process.argv.slice(2));
+  const server = await serve();
+  const browser = await launch();
+  const pageErrors = [];
+  try {
+    const page = await browser.newPage({ viewport: { width: a.w, height: a.h }, deviceScaleFactor: 1 });
+    page.on('pageerror', (e) => pageErrors.push(String(e.stack || e)));
+    page.on('console', (m) => {
+      if (m.type() !== 'error' && m.type() !== 'warning') return;
+      // SwiftShader reports the screenshot's pixel readback as a performance
+      // note. It is expected for a frame-by-frame capture and harmless.
+      if (/GL Driver Message .*Performance.*GPU stall due to ReadPixels/.test(m.text())) return;
+      pageErrors.push(`console.${m.type()}: ${m.text()}`);
+    });
+    const q = new URLSearchParams({ w: a.w, h: a.h, fps: a.fps, format: a.format });
+    if (a.guides) q.set('guides', '1');
+    if (!a.grain) q.set('grain', '0');
+    if (a.blur != null) q.set('blur', String(a.blur));
+    const { port } = server.address();
+    await page.goto(`http://127.0.0.1:${port}/src/index.html?${q}`);
+    const info = await page.evaluate(async () => {
+      try { return await window.__ready; } catch (e) { return { error: String(e && e.stack || e) }; }
+    });
+    if (!info || info.error) throw new Error(`page failed to boot: ${info && info.error}\n${pageErrors.join('\n')}`);
+
+    if (a.still != null) {
+      const dir = path.join(OUT, 'stills');
+      await mkdir(dir, { recursive: true });
+      await page.evaluate((t) => window.__render(t), a.still);
+      const file = path.join(dir, `${a.format}-${a.still.toFixed(3)}${a.guides ? '-guides' : ''}.png`);
+      await page.screenshot({ path: file, type: 'png' });
+      if (pageErrors.length) throw new Error(`page reported errors:\n${pageErrors.join('\n')}`);
+      console.log(`still ${a.still}s -> ${path.relative(ROOT, file)}`);
+      return;
+    }
+
+    const from = a.from ?? 0;
+    const to = a.to ?? info.duration;
+    if (!(to > from) || from < 0 || to > info.duration + 1e-9) throw new Error(`bad range ${from}..${to} (film is ${info.duration}s)`);
+    const n = Math.round((to - from) * a.fps);
+    const ext = a.preview ? 'jpg' : 'png';
+    await clearFrames();
+    console.log(`rendering ${n} frames ${from}s..${to}s at ${a.w}x${a.h} ${a.fps} fps (${a.format}${a.preview ? ', preview' : ''})`);
+    const t0 = Date.now();
+    let lastPct = -1;
+    for (let i = 0; i < n; i++) {
+      const t = from + i / a.fps;
+      await page.evaluate((tt) => window.__render(tt), t);
+      const file = path.join(FRAMES, `${String(i).padStart(5, '0')}.${ext}`);
+      await page.screenshot(ext === 'jpg' ? { path: file, type: 'jpeg', quality: 90 } : { path: file, type: 'png' });
+      const pct = Math.floor(((i + 1) / n) * 10);
+      if (pct !== lastPct) {
+        lastPct = pct;
+        const el = (Date.now() - t0) / 1000;
+        console.log(`  ${String(pct * 10).padStart(3)}%  frame ${i + 1}/${n}  ${el.toFixed(1)}s`);
+      }
+    }
+    if (pageErrors.length) throw new Error(`page reported errors:\n${pageErrors.join('\n')}`);
+    if (a.keepFrames) { console.log(`frames in ${path.relative(ROOT, FRAMES)}`); return; }
+
+    const audio = path.join(ROOT, info.audio);
+    await stat(audio);
+    const dur = (n / a.fps).toFixed(6);
+    const slice = a.from != null || a.to != null ? `-${from}-${to}` : '';
+    const out = a.out ? path.resolve(a.out) : path.join(OUT, `ugc-army-${a.format}${a.preview ? '-preview' : ''}${slice}.mp4`);
+    await mkdir(path.dirname(out), { recursive: true });
+    console.log('encoding...');
+    await run(bin('ffmpeg'), [
+      '-y', '-hide_banner', '-loglevel', 'error',
+      '-framerate', String(a.fps), '-i', path.join(FRAMES, `%05d.${ext}`),
+      '-ss', String(from), '-t', dur, '-i', audio,
+      '-map', '0:v:0', '-map', '1:a:0',
+      // Convert RGB frames to limited-range BT.709 and tag it, so players do
+      // not guess (JPEG preview frames would otherwise come out as yuvj420p).
+      '-vf', 'scale=out_color_matrix=bt709:out_range=tv,format=yuv420p',
+      '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv',
+      '-c:v', 'libx264', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-crf', '16',
+      '-preset', a.preview ? 'veryfast' : 'slow', '-r', String(a.fps),
+      '-c:a', 'aac', '-b:a', '320k', '-ar', '48000',
+      '-t', dur, '-movflags', '+faststart', out,
+    ]);
+    const probe = JSON.parse(await run(bin('ffprobe'), ['-v', 'error', '-show_entries', 'stream=codec_type,codec_name,profile,width,height,pix_fmt,duration,nb_frames,sample_rate,bit_rate', '-of', 'json', out]));
+    for (const s of probe.streams) {
+      console.log(s.codec_type === 'video'
+        ? `  video ${s.codec_name} ${s.profile} ${s.width}x${s.height} ${s.pix_fmt} ${Number(s.duration).toFixed(3)}s ${s.nb_frames} frames`
+        : `  audio ${s.codec_name} ${s.sample_rate} Hz ${Math.round(s.bit_rate / 1000)} kb/s ${Number(s.duration).toFixed(3)}s`);
+    }
+    console.log(`wrote ${path.relative(ROOT, out)} in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+}
+
+main().catch((e) => { console.error(e.message || e); process.exit(1); });
