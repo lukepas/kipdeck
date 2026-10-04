@@ -4,7 +4,7 @@ Back to the [README](../README.md).
 
 Mission control answers one question: what needs a person right now, on any floor. It ranks every hired worker in the building by how much it needs someone, says why in plain words, and offers one next step. Next to that it keeps what each floor is for (its mission and milestones), so every worker, task and pull request can be tied back to a goal, an inbox of everything waiting for a review, a timeline of what happened, and reminders for what would otherwise be forgotten.
 
-Open it with **I** anywhere in the office, from the attention chip on the top bar (always there: *2 need you · 1 stuck · 3 to review* while something waits, which opens the Review tab when finished work is all that does, and a quiet *Mission control* while nothing does), from **☰** > **Mission control**, or from the command palette (**Ctrl+K**: *Mission control*, *Edit the mission*, *Review finished work*, *Timeline*, *While you were away*). In the 2D view (`/lite`) it's the **Mission** button in the top bar. It has a ✕ in the top right, and Esc closes it and puts you straight back into looking around. It remembers the tab you had open last.
+Open it with **I** anywhere in the office, from the **Mission control** button on the top bar (always there), from the counters beside the deck's name (each one, *2 need you*, *1 stuck*, *3 to review*, *4 working*, opens the tab for its level: Review for to review, Attention for the rest), from the menu > **Mission control**, or from the command palette (**Ctrl+K**: *Mission control*, *Edit the mission*, *Review finished work*, *Timeline*, *While you were away*). In the 2D view (`/lite`) it's the **Mission** button in the top bar. It has a ✕ in the top right, and Esc closes it and puts you straight back into looking around. It remembers the tab you had open last.
 
 Inside it, **1** **2** **3** **4** switch tabs (Attention, Goals, Review, Timeline), the arrow keys move between rows, and **Enter** does the selected row's next step.
 
@@ -42,7 +42,7 @@ With [agent reputation](reputation.md) on, each row (here and in the Review tab)
 
 **...** on a row has the rest: open its terminal, snooze it for 30 minutes, 2 hours or until its status next changes, link it to a milestone, send it home. A snooze is shared: everyone sees *snoozed by Ana until 14:30*, so two people don't both chase the same worker. A snoozed worker stays in the list, greyed, but it isn't counted and nothing notifies about it.
 
-The same ranking runs everywhere: the attention chip on the top bar (*2 need you · 1 stuck · 3 to review*, click it for this tab), the tab title's count, the needs-you banner and the beacons over desks (the *Needs you* level, the snoozed ones left out), the order **N** goes in, the order of the Workers panel (which shows the reason in place of the bare status), the 2D view's list, the webhook, and what agents see from `list_workers`. It lives in one place, `src/shared/attention.ts`, with its thresholds.
+The same ranking runs everywhere: the counters on the top bar (a glyph and a number per level, click one for its tab), the tab title's count and the favicon (its lead chevron turns orange while anything needs you), the needs-you alert row and the beacons over desks (the *Needs you* level, the snoozed ones left out), the order **N** goes in, the order of the Workers panel (which shows the reason in place of the bare status), the 2D view's list, the webhook, and what agents see from `list_workers`. It lives in one place, `src/shared/attention.ts`, with its thresholds.
 
 **N** goes to the workers waiting on someone in the ranking's order: the ones that need you first, then the ones that are done, longest-waiting first within each. After the last one on your floor it takes you to the next floor's, and one that needs you on another floor comes before one here that's only done. Snoozed ones are skipped.
 
@@ -117,7 +117,7 @@ The office looks once a minute. A reminder shows at the top of the Attention tab
 
 ## The mission strip
 
-One line under the floor's name, top left, in the 3D office (and the first card in the 2D view): the floor's mission, the active milestone with a thin progress bar (*Auth rewrite · 3/7 issues · 2 workers*), and *unlinked: 2* when agents aren't tied to anything and there is an open milestone to tie them to. A milestone with no issues shows no bar, just *no issues linked yet*. With no mission yet it reads *No mission yet. Set one*. Click it for the Goals tab. The **☰** menu's *Mission* switch hides it.
+One line under the top bar, top left, in the 3D office (and the first card in the 2D view): the floor's mission, the active milestone with a thin progress bar (*Auth rewrite · 3/7 issues · 2 workers*), and *unlinked: 2* when agents aren't tied to anything and there is an open milestone to tie them to. A milestone with no issues shows no bar, just *no issues linked yet*. With no mission yet it reads *No mission yet. Set one*. Click it for the Goals tab. The menu's *Mission* switch hides it.
 
 ## Linking work to goals
 

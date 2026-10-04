@@ -51,7 +51,7 @@ To try the chain side on testnets, build the on-chain packages the office loads 
 Hackathon and grant drafts, the build-in-public calendar and the disclosure are in [launch/chain](launch/chain/README.md).
 
 > [!WARNING]
-> **Work in progress.** Agent Office is built for one person's workflow — mine — and it changes fast as I iterate on it.
+> **Work in progress.** UGC Army, built on agent-office, changes fast as we iterate on it.
 > Expect breaking changes between releases: keys that move, screens that get redrawn, features that come and go
 > without notice. If it's close to what you want, fork or clone it and bend it into what you need it to be.
 
@@ -59,9 +59,11 @@ Hackathon and grant drafts, the build-in-public calendar and the disclosure are 
 
 *"Whatever you do, work heartily, as for the Lord and not for men."* — Colossians 3:23 (ESV)
 
-# 🏢 Agent Office
+# UGC Army
 
-**A 3D office your team shares with its coding agents: one place to see what every agent is doing, hand out work, review what comes back and stay on the mission.**
+**Mission control for your AI agents. Proof of every merge.**
+
+**A 3D operations deck your team shares with its coding agents: one place to see which unit needs you, hand out work, review what comes back and stay on the mission.** The look, the status colors and the rules behind them are in [DESIGN.md](DESIGN.md).
 
 Sit **Claude Code**, **Codex**, **OpenCode**, **Grok**, **Muse**, **DeepSeek Harness**, **Pi** and **Cursor** workers at desks, watch each one's terminal on the laptop in front of it,
 and jump into any of them together. Every GitHub repo is a floor of the building.
