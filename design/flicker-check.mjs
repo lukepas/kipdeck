@@ -9,7 +9,9 @@
 //
 // metal (the default on macOS) is the real GPU path, where the NaN showed; swiftshader is the
 // software one CI has. Exits 0 when clean, 1 on a bad frame, and 0 with SKIP when there's no build
-// or no browser playwright-core can start. FLICKER_PORT picks the port (default 4697).
+// or no browser playwright-core can start. FLICKER_PORT picks the port (default 4697). FLICKER_JUMP=1
+// jumps the ship every 420 frames of the sweep, so the countdown, the tunnel and the waypoint's name
+// across the glass are on screen for a good share of it.
 import { spawn, execFileSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -105,8 +107,8 @@ async function waitUp() {
   throw new Error('office did not start:\n' + log);
 }
 
-/** Runs in the page: sweeps the camera for `n` frames and measures each one. */
-async function sweep(n) {
+/** Runs in the page: sweeps the camera for `n` frames and measures each one, jumping the ship now and then with `jump`. */
+async function sweep([n, jump]) {
   const o = window.__office;
   const r = o.renderer;
   const gl = r.getContext();
@@ -174,11 +176,12 @@ async function sweep(n) {
       let i = 0;
       const tick = () => {
         // After the app's own render in this same frame.
-        if (screen) frames.push({ i, ...screen, hdr, pos: cur[0].map((v) => +v.toFixed(2)) });
+        if (screen) frames.push({ i, ...screen, hdr, pos: cur[0].map((v) => +v.toFixed(2)), tunnel: (o.space.tunnelOpen?.() ?? 0) > 0 });
         screen = null;
         hdr = null;
         i++;
         cur = pose(i);
+        if (jump && i % 420 === 1) o.space.jump?.();
         if (i < n) requestAnimationFrame(tick);
         else resolve();
       };
@@ -241,7 +244,8 @@ async function main() {
       await page.goto(`${base}/`, { waitUntil: 'commit' });
       await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
       if (lighting === 'night') {
-        for (const [deskId, prompt] of TASKS) {
+        // Jumping wants nobody waiting on the captain: the units only work then.
+        for (const [deskId, prompt] of process.env.FLICKER_JUMP === '1' ? TASKS.map(([d, p]) => [d, p.replace('[ask] ', '')]) : TASKS) {
           await page.evaluate(([deskId, prompt]) => window.__office.net.send({ t: 'worker.spawn', deskId, prompt, worktree: false }), [deskId, prompt]);
           await wait(200);
         }
@@ -252,10 +256,10 @@ async function main() {
         });
       }
       await wait(6000);
-      const { frames, bloom } = await page.evaluate(sweep, FRAMES);
+      const { frames, bloom } = await page.evaluate(sweep, [FRAMES, process.env.FLICKER_JUMP === '1']);
       const bad = badFrames(frames);
       const means = frames.map((f) => f.mean);
-      console.log(`${BACKEND}/${lighting} (bloom ${bloom ? 'on' : 'off'}): ${frames.length} frames, mean luminance ${Math.min(...means).toFixed(1)}-${Math.max(...means).toFixed(1)}, bad ${bad.length}`);
+      console.log(`${BACKEND}/${lighting} (bloom ${bloom ? 'on' : 'off'}): ${frames.length} frames, mean luminance ${Math.min(...means).toFixed(1)}-${Math.max(...means).toFixed(1)}, bad ${bad.length}${process.env.FLICKER_JUMP === '1' ? `, ${frames.filter((f) => f.tunnel).length} in the tunnel` : ''}`);
       for (const f of bad.slice(0, 10)) console.log('  BAD', JSON.stringify(f));
       if (errors.length) console.log('  page errors:', errors.slice(0, 5).join(' | '));
       if (frames.length < FRAMES * 0.9) {
