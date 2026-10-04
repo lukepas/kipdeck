@@ -28,12 +28,14 @@ export function createTypeLayer(root, design) {
   // x,y: anchor in px (y = baseline-ish top of the line box).
   // align: 'left' | 'right' | 'center'. wipe: 0..1 left-to-right mask reveal.
   // wipeDir: 'right' (default) | 'up' for a vertical mask.
+  // clip: a CSS clip-path in the block's own px space (e.g. a circle that
+  // follows a shockwave). It replaces the wipe mask when given.
   function text(spec) {
     const {
       spans, x, y, size, color = design.palette.ink, family = design.fonts.display,
       wght = 900, wdth = 100, tracking = design.tracking.display, align = 'left',
       wipe = 1, wipeDir = 'right', opacity = 1, lineHeight = 0.92, maxWidth = null,
-      rotate = 0, scale = 1, upper = false, tabular = false, blend = 'normal', fit = null,
+      rotate = 0, scale = 1, upper = false, tabular = false, blend = 'normal', fit = null, clip = null,
     } = spec;
     if (wipe <= 0 || opacity <= 0) return;
     const node = el();
@@ -72,9 +74,9 @@ export function createTypeLayer(root, design) {
     style.transformOrigin = align === 'right' ? '100% 50%' : align === 'center' ? '50% 50%' : '0 50%';
     style.textAlign = align;
     const w = Math.max(0, Math.min(1, wipe));
-    style.clipPath = w >= 1 ? 'none'
+    style.clipPath = clip || (w >= 1 ? 'none'
       : wipeDir === 'up' ? `inset(${(1 - w) * 100}% -10% -10% -10%)`
-        : `inset(-10% ${(1 - w) * 100}% -10% -10%)`;
+        : `inset(-10% ${(1 - w) * 100}% -10% -10%)`);
     if (node.innerHTML !== html) node.innerHTML = html;
     if (fit) fitTo(node, fit, family === design.fonts.display ? wdth : null, wght, size);
   }

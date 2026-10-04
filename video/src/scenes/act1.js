@@ -217,7 +217,7 @@ function terminal(S, r, o) {
 
 // Hairline grid with column numbers and row letters in the margin and
 // registration crosses at the outer corners. reveal(k, n) -> 0..1 per line.
-function grid(S, { alpha = 1, reveal = null, color } = {}) {
+export function grid(S, { alpha = 1, reveal = null, color } = {}) {
   const { ctx, design } = S;
   const { grid: G, u } = design;
   const P = design.palette;
