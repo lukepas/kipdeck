@@ -52,7 +52,22 @@ while [ $i -lt 120 ]; do echo "  ok $i - test passes"; i=$((i+1)); sleep 5; done
 );
 chmodSync(agent, 0o755);
 
-const TASKS = [
+// SHOOT_CREW=busy deploys a healthy crew instead: every unit at work but two done, nobody waiting on
+// you, so the bridge's life plays out in full (the life-* shots and life-clip).
+const BUSY = [
+  ['desk-1', 'Pick the session store for the auth rewrite'],
+  ['desk-2', 'Migrate the payments webhook to the new queue'],
+  ['desk-3', 'Publish the SDK release candidate'],
+  ['desk-5', 'Port the settings page to the new form kit'],
+  ['desk-6', '[done] Fix flaky checkout e2e'],
+  ['desk-9', 'Add rate limits to the public API'],
+  ['desk-10', 'Write the onboarding docs for devnet bounties'],
+  ['desk-11', 'Bump the Anchor toolchain'],
+  ['desk-13', '[done] Tighten the CSP for the showcase'],
+  ['desk-14', 'Cache the reputation index'],
+  ['desk-15', 'Trim the bundle under 300 kB'],
+];
+const DEFAULT_TASKS = [
   ['desk-1', '[ask] Pick the session store for the auth rewrite'],
   ['desk-2', 'Migrate the payments webhook to the new queue'],
   ['desk-3', '[perm] Publish the SDK release candidate'],
@@ -63,6 +78,7 @@ const TASKS = [
   ['desk-11', '[crash] Bump the Anchor toolchain'],
   ['desk-13', '[done] Tighten the CSP for the showcase'],
 ];
+const TASKS = process.env.SHOOT_CREW === 'busy' ? BUSY : DEFAULT_TASKS;
 
 const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--agent', agent, '--home', path.join(home, '.agent-office')], {
   env: { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
@@ -106,7 +122,9 @@ async function launch() {
   const { chromium } = await import('playwright-core');
   for (const channel of [undefined, 'chrome', 'msedge']) {
     try {
-      return await chromium.launch({ headless: true, channel, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+      // SHOOT_GPU=1 renders on the GPU (ANGLE Metal on a Mac), for clips; the stills stay on SwiftShader.
+      const args = process.env.SHOOT_GPU ? ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] : ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'];
+      return await chromium.launch({ headless: true, channel, args });
     } catch {
       // next
     }
@@ -364,6 +382,7 @@ async function main() {
       await SPACE('timeScale', 1);
     }
     await UNVIEW();
+    await lifeShots(page, VIEW, UNVIEW);
     if (want('clip')) {
       // A 10 s clip of the bridge on a clock of its own: the page's frames run only when the script
       // steps them, 1/30 s at a time, so software rendering still gives smooth motion. The camera
@@ -776,10 +795,244 @@ async function main() {
   }
 }
 
+// ---- The bridge's world (features/destination, fleet, sorties) -------------------------------------
+// Sister decks are seeded into the page's store the way the boards' fixture is (a real second deck
+// needs a clone), and kept there as the office's own updates come in; the two units that finished get
+// an open pull request each, so their fighters hold on the picket. Everything else is the office's own.
+const SISTERS = [
+  ['billing-api', 7, 5, 0],
+  ['web-console', 3, 2, 0],
+  ['mobile-app', 11, 8, 0],
+  ['docs-site', 2, 1, 1],
+  ['data-pipeline', 5, 3, 0],
+  ['infra', 1, 1, 0],
+];
+
+function seedWorld(sisters) {
+  const o = window.__office;
+  const s = o.store;
+  const fake = sisters.map(([name, workers, busy, waiting], i) => ({ id: `sister-${i}`, name, repo: `acme/${name}`, dir: `/tmp/${name}`, palette: i, addedBy: 'Tess', addedAt: i, workers, busy, waiting, people: 0, wing: 0 }));
+  // The last one is still being cloned: it is assembled in a slip until it's done.
+  fake[fake.length - 1] = { ...fake[fake.length - 1], cloning: true, clone: { step: 'Receiving objects', percent: 55 }, workers: 0, busy: 0 };
+  window.__sisters = fake;
+  const floors = () => {
+    if (s.floors.some((f) => f.id.startsWith('sister-'))) return;
+    s.floors = [...s.floors, ...window.__sisters];
+    s.emit('floors');
+  };
+  const pulls = () => {
+    let changed = false;
+    for (const e of s.roster) {
+      if (e.floor !== s.floor || e.pr || !['done', 'idle'].includes(e.status)) continue;
+      e.pr = { number: 80 + Number(e.deskId.replace('desk-', '')), state: 'open' };
+      changed = true;
+    }
+    if (changed) s.emit('roster');
+  };
+  s.on('floors', floors);
+  s.on('roster', pulls);
+  floors();
+  pulls();
+}
+
+async function lifeShots(page, VIEW, UNVIEW) {
+  const NAMES = ['life-ahead', 'life-canopy', 'life-fleet-w', 'life-fleet-e', 'life-dark', 'life-picket', 'life-aft', 'life-high', 'life-merge', 'life-salute', 'settings-life', 'life-calm', 'life-silent', 'life-clip', 'life-orbit'];
+  if (!NAMES.some(want)) return;
+  await page.evaluate(seedWorld, SISTERS);
+  await wait(2500);
+  console.log('world', JSON.stringify(await page.evaluate(() => ({ fleet: window.__world.fleet.ships().length, fighters: window.__world.sorties.fighters().map((f) => [f.sortie, Math.round(f.x), Math.round(f.y), Math.round(f.z)]), destination: window.__world.destination.state() }))));
+  const VANTAGES = {
+    'life-ahead': [[0, 2.05, 11.4], [0, 4.6, -12]],
+    'life-picket': [[0, 2.2, 4], [0, 12, -40]],
+    'life-fleet-w': [[-11.4, 1.6, 3.6], [-30, 0.8, 8]],
+    'life-fleet-e': [[11.2, 1.6, -3.4], [30, 1.6, -6]],
+    'life-canopy': [[-4, 1.7, 4], [-30, 14, 22]],
+    'life-dark': [[-11.4, 1.6, -2.6], [-30, 0.6, -7]],
+    'life-aft': [[0, 2.4, 3], [0, 0.4, 30]],
+    'life-high': [[-62, 26, 66], [0, -2, 8]],
+  };
+  for (const [name, [from, to]] of Object.entries(VANTAGES)) {
+    if (!want(name)) continue;
+    await VIEW(from, to);
+    await wait(1500);
+    await shot(page, name);
+  }
+  /** Runs the page's clock at a tenth of real time while `fn` plays, and shoots at `marks` (ms of page time). */
+  const slow = async (name, from, to, fn, marks) => {
+    await VIEW(from, to);
+    await wait(1200);
+    await page.evaluate(() => {
+      const real = performance.now.bind(performance);
+      const t0 = real();
+      window.__realNow = real;
+      performance.now = () => t0 + (real() - t0) / 10;
+    });
+    await page.evaluate(fn);
+    const started = Date.now();
+    for (const [i, ms] of marks) {
+      await wait(Math.max(0, ms * 10 - (Date.now() - started)));
+      await page.screenshot({ path: path.join(OUT, `${name}-${i}.png`) });
+    }
+    await page.evaluate(() => window.__realNow && (performance.now = window.__realNow));
+    await wait(1500);
+  };
+  if (want('life-merge')) {
+    // A unit's pull request merges: its fighter leaves the picket and runs home as the merge beat fires.
+    await slow('life-merge', [0, 2.1, 9.5], [0, 7, -30], () => {
+      const o = window.__office;
+      const e = o.store.roster.find((x) => x.floor === o.store.floor && x.pr?.state === 'open');
+      if (!e) return;
+      o.net.handlers.forEach((h) => h({ t: 'landed', kind: 'merged', pr: e.pr.number, by: 'Tess' }));
+      e.pr = { ...e.pr, state: 'merged' };
+    }, [[1, 80], [2, 200], [3, 400], [4, 900]]);
+  }
+  if (want('life-salute')) {
+    // A sister deck reaches a waypoint (its real timeline event) and merges: a salute, a hail and an ease ahead.
+    await slow('life-salute', [-11.4, 1.6, 3.6], [-30, 1.2, 14], () => {
+      const o = window.__office;
+      const send = (m) => o.net.handlers.forEach((h) => h(m));
+      send({ t: 'timeline.event', event: { id: 'shot-1', at: Date.now(), kind: 'milestone-done', floor: 'sister-0', goal: 'g', name: 'Stripe v2', text: 'Stripe v2 is done' } });
+      send({ t: 'timeline.event', event: { id: 'shot-2', at: Date.now(), kind: 'pr-merged', floor: 'sister-1', pr: 12, text: 'Merged PR #12' } });
+    }, [[1, 120], [2, 700], [3, 1400]]);
+  }
+  if (want('settings-life')) {
+    // Settings > Bridge > Life: the level and a switch for each part of the world outside.
+    await UNVIEW();
+    await page.locator('#dock .dock-menu').click();
+    await page.locator('.hud-menu .menu-item', { hasText: 'Settings' }).click();
+    await page.locator('.modal.settings').waitFor({ timeout: 10_000 });
+    await page.locator('.modal.settings .settings-tab', { hasText: 'Bridge' }).click();
+    await page.locator('.modal.settings .life-part').first().scrollIntoViewIfNeeded();
+    await wait(600);
+    await shot(page, 'settings-life');
+    await page.keyboard.press('Escape');
+    await wait(400);
+  }
+  // Calm and Silent running, set as the Life row would (the settings object is the live one).
+  for (const [name, level, from, to] of [['life-calm', 'calm', [-11.4, 1.6, 3.6], [-30, 0.8, 8]], ['life-silent', 'silent', [0, 2.05, 11.4], [0, 4.6, -12]]]) {
+    if (!want(name)) continue;
+    await page.evaluate((level) => (window.__office.settings.life = level), level);
+    await VIEW(from, to);
+    await wait(2500);
+    await shot(page, name);
+    await page.evaluate(() => (window.__office.settings.life = 'full'));
+  }
+  if (want('life-clip')) await lifeClip(page);
+  if (want('life-orbit')) {
+    // Every waypoint passed: the ship drops into orbit over 30 s, the world filling the canopy.
+    await page.evaluate(() => {
+      const o = window.__office;
+      for (const m of o.store.mission.milestones) if (!m.done) o.net.send({ t: 'mission.milestone', op: 'update', id: m.id, done: true });
+    });
+    await VIEW([0, 2.05, 11.4], [0, 4.6, -12]);
+    const started = Date.now();
+    for (const [i, ms] of [[1, 2000], [2, 12_000], [3, 33_000]]) {
+      await wait(Math.max(0, ms - (Date.now() - started)));
+      await page.screenshot({ path: path.join(OUT, `life-orbit-${i}.png`) });
+    }
+    console.log('orbit', JSON.stringify(await page.evaluate(() => window.__world.destination.state())));
+  }
+  await UNVIEW();
+}
+
+/**
+ * A clip of the bridge's world on a clock of its own (one frame each thirtieth of a second, stepped by
+ * the script): the destination and the picket from the conn, a merge sending a fighter home, a turn to
+ * the west ports past the patrols and the escorts as a sister deck merges and salutes, the east side
+ * as a cloned deck drops into its slot, and back to the bow.
+ */
+async function lifeClip(page) {
+  const FPS = 30;
+  const SECONDS = 16;
+  const frames = path.join(tmp, 'life-clip');
+  mkdirSync(frames, { recursive: true });
+  // The conn, the west ports, then a cut to outside the ship (the whole formation) and round it.
+  const KEYS = [
+    [0, [0, 2.05, 11.4], [0, 4.4, -12]],
+    [3.6, [0, 2.1, 10.2], [0, 6.2, -12]],
+    [6.4, [-11.4, 1.65, 4.2], [-30, 1.0, 10]],
+    [9.2, [-11.0, 1.65, 3.4], [-30, 1.4, 4]],
+    [9.25, [-62, 26, 66], [0, -2, 8]],
+    [13, [-30, 34, 84], [6, -2, 12]],
+    [16, [40, 30, 78], [4, -2, 8]],
+  ];
+  const camAt = (t) => {
+    let i = 0;
+    while (i < KEYS.length - 2 && t > KEYS[i + 1][0]) i++;
+    const [t0, f0, l0] = KEYS[i];
+    const [t1, f1, l1] = KEYS[i + 1];
+    const k0 = Math.min(1, Math.max(0, (t - t0) / (t1 - t0)));
+    const k = k0 * k0 * (3 - 2 * k0);
+    const mix = (a, b) => a.map((v, j) => v + (b[j] - v) * k);
+    return [mix(f0, f1), mix(l0, l1)];
+  };
+  await page.evaluate(() => {
+    const o = window.__office;
+    const p = o.player;
+    p.__update ??= p.update;
+    p.update = (dt) => {
+      p.__update.call(p, dt);
+      const c = window.__clipCam;
+      if (!c) return;
+      o.camera.position.set(...c[0]);
+      o.camera.lookAt(...c[1]);
+    };
+    const realRaf = window.requestAnimationFrame.bind(window);
+    const realNow = performance.now.bind(performance);
+    window.__clip = { realRaf, realNow, pending: [], now: realNow() };
+    window.requestAnimationFrame = (cb) => (window.__clip.pending.push(cb), window.__clip.pending.length);
+    performance.now = () => window.__clip.now;
+    window.__stepClip = (ms) => {
+      const c = window.__clip;
+      c.now += ms;
+      for (const cb of c.pending.splice(0)) cb(c.now);
+    };
+  });
+  const send = (m) => page.evaluate((m) => window.__office.net.handlers.forEach((h) => h(m)), m);
+  const events = [
+    [2.4, async () => page.evaluate(() => {
+      const o = window.__office;
+      const e = o.store.roster.find((x) => x.floor === o.store.floor && x.pr?.state === 'open');
+      if (!e) return;
+      o.net.handlers.forEach((h) => h({ t: 'landed', kind: 'merged', pr: e.pr.number, by: 'Tess' }));
+      e.pr = { ...e.pr, state: 'merged' };
+    })],
+    [7.4, async () => send({ t: 'timeline.event', event: { id: 'clip-1', at: Date.now(), kind: 'pr-merged', floor: 'sister-0', pr: 12, text: 'Merged PR #12' } })],
+    [8.4, async () => send({ t: 'timeline.event', event: { id: 'clip-2', at: Date.now(), kind: 'milestone-done', floor: 'sister-2', goal: 'g', name: 'Offline sync', text: 'Offline sync is done' } })],
+    [11.8, async () => page.evaluate(() => {
+      // The deck being cloned is done: it drops out of hyperspace into its slot.
+      const s = window.__office.store;
+      const last = window.__sisters[window.__sisters.length - 1];
+      window.__sisters[window.__sisters.length - 1] = { ...last, cloning: false, clone: undefined, workers: 2, busy: 2 };
+      s.floors = s.floors.map((f) => (f.id === last.id ? window.__sisters[window.__sisters.length - 1] : f));
+      s.emit('floors');
+    })],
+  ];
+  let fired = 0;
+  for (let f = 0; f < FPS * SECONDS; f++) {
+    const t = f / FPS;
+    while (fired < events.length && t >= events[fired][0]) {
+      await events[fired][1]();
+      fired++;
+    }
+    await page.evaluate((c) => (window.__clipCam = c), camAt(t));
+    await page.evaluate((ms) => window.__stepClip(ms), 1000 / FPS);
+    await page.screenshot({ path: path.join(frames, `f${String(f).padStart(4, '0')}.jpg`), type: 'jpeg', quality: 92 });
+  }
+  execFileSync(process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', path.join(frames, 'f%04d.jpg'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-movflags', '+faststart', path.join(OUT, 'life-world.mp4')]);
+  await page.evaluate(() => {
+    const c = window.__clip;
+    window.requestAnimationFrame = c.realRaf;
+    performance.now = c.realNow;
+    window.__clipCam = null;
+    for (const cb of c.pending.splice(0)) c.realRaf(cb);
+  });
+}
+
 const timer = setTimeout(() => {
   console.error('timed out');
   process.exit(2);
-}, 540_000);
+}, Number(process.env.SHOOT_TIMEOUT ?? 540_000));
 main()
   .then(() => console.log('shots in ' + OUT))
   .catch((e) => {

@@ -279,3 +279,42 @@ At Night, near the holo table, a whole frame sometimes went black for one frame.
 Every `pow()` in the office's shaders now keeps its base at zero or above (`max(..., 0.0)`), including the needs-you beacon, the viewport glass, the planet's rim and halo and the sky's stars, which had the same pattern. `tests/shader-pow.test.ts` fails on a new one that doesn't.
 
 `node design/flicker-check.mjs [metal|swiftshader] [frames]` checks it for real: it starts the built office on a spare port (`FLICKER_PORT`, default 4697), sweeps the camera round, over and past the table in Night and Day, reads back every frame and the bloom's input, and fails on a black frame or a NaN pixel. On an M3 Pro with Metal, 900 frames per mode: before the fix 3 bad frames at Night (each with a NaN pixel, two 99% black and one fully black), after it none in 2000. It skips when there's no build or no browser.
+
+## The bridge: world
+
+The captain still found the bridge lacking life: it should feel like part of something big, moving toward a goal. This stage puts a world round the ship that moves with the work and only with the work, inspired by the feel of a fleet under way rather than by any film's ships or names. Everything is built in code (geometry, shaders, canvas lettering); nothing is downloaded and nothing makes a sound.
+
+- **The destination ahead** (`src/client/features/destination/`). The mission is a world dead ahead in the canopy: a rocky world, a ringed giant or a ring station, the same one for the same mission. It starts as a bright point and grows only with real progress (waypoints passed, plus the open waypoint's issues closed of those linked) toward a third of the forward view, eased over 4 s, still otherwise. A mono band under it says "MAKING FOR AUTH REWRITE - WAYPOINT 2 OF 4 - 35%", and "BEHIND SCHEDULE: 4 DAYS" in plain words while the waypoint is overdue, when the world stops growing. Waypoints passed are markers astern. With every waypoint passed the ship drops into orbit over 30 s and holds there; that waits behind anyone who needs you, and is a crossfade and a card under reduced motion. It is drawn as part of the sky (its depth squeezed to the far end), so the room, the escorts and the fighters always pass in front of it, even in orbit.
+- **The fleet in formation** (`src/client/features/fleet/`). Every other deck is an escort in a V off the side ports, one rank at a seated eye's height and the next high over the walls: a corvette, frigate or cruiser by its units, a port lit per unit at work, drives by the share at work, its repository's name on its flank. A sister's merge eases its ship a length ahead; its waypoint blinks its running lights twice and puts a hail line in the canopy's corner; a deck being cloned is built plate by plate in a slip and drops out of hyperspace into its slot. A deck with a unit that needs you carries the needs-you diamond over its bridge, and clicking the ship opens the Decks lift.
+- **Squadron sorties** (`src/client/features/sorties/`). Each working unit has a fighter patrolling past its pod's side port (8 to 14 s a loop, by how busy its terminal is). An open pull request peels it to the picket ahead of the bow, left and right of the destination, so the review queue is visible from the conn; a merge sends it home over the canopy, trailing ship-cyan, to land in the hangar as the merge beat fires; a unit that needs you or is stuck cuts its engine and drifts dark just outside the glass.
+- **Giving way, and Settings > Bridge > Life** (`src/client/features/giveway/`). One signal the three read: a new needs-you or stuck ducks life for 3 s, that pod's patrols slow to stillness while it lasts, the escorts hold still and their salutes and hails are dropped. Life is Full, Calm (no salutes, hails or patrols) or Silent running (no ambient life, the stars at a crawl, the ticker paused), with a switch for each part. Ship motion at Off and reduced motion still everything.
+
+The words are in `src/shared/shiplog.ts` (`tests/copy.test.ts` keeps them free of exclamation marks, war words and anything but ASCII). The numbers are in each feature's `logic.ts`, tested in `tests/destination.test.ts`, `tests/fleet.test.ts`, `tests/sorties.test.ts` and `tests/giveway.test.ts`.
+
+`node design/shoot.mjs life-world/after <shots>` takes the stills: `SHOOT_CREW=busy` deploys a healthy crew (nobody waiting), `SHOOT_GPU=1` renders on the GPU so the fighters fly at their real pace, and sister decks are seeded into the page as the boards' fixture is. `yield/` is the default crew, with units that need you, and `day/` the Day lights. The clip `shots/life-world/after/life-world.mp4` (16 s, one frame each thirtieth of a second) runs from the conn as a unit's pull request merges and its fighter runs home, to the west ports as a sister deck merges and hails, then outside the ship to the whole formation as a cloned deck drops into its slot.
+
+| Before | After |
+| --- | --- |
+| ![](shots/life-world/before/bridge-conn.png) | ![](shots/life-world/after/bridge-conn.png) |
+| ![](shots/life-world/before/bridge-window.png) | ![](shots/life-world/after/bridge-window.png) |
+| ![](shots/life-world/before/deck-overview.png) | ![](shots/life-world/after/deck-overview.png) |
+
+| The destination and the picket | The formation from outside | Escorts past a side port |
+| --- | --- | --- |
+| ![](shots/life-world/after/life-ahead.png) | ![](shots/life-world/after/life-high.png) | ![](shots/life-world/after/life-fleet-w.png) |
+
+| A merge: the fighter runs home | A sister's hail and salute | In orbit, every waypoint passed |
+| --- | --- | --- |
+| ![](shots/life-world/after/life-merge-2.png) | ![](shots/life-world/after/life-salute-1.png) | ![](shots/life-world/after/life-orbit-3.png) |
+
+| Units need you: fighters drift dark | Silent running | Settings > Bridge > Life | By day |
+| --- | --- | --- | --- |
+| ![](shots/life-world/yield/life-dark.png) | ![](shots/life-world/after/life-silent.png) | ![](shots/life-world/after/settings-life.png) | ![](shots/life-world/day/life-fleet-w.png) |
+
+Frame time at 1440x900 by night on the GPU (Apple M3 Pro through ANGLE Metal), twelve units at work, six sister decks and two open pull requests, a forced render timed over 30 frames with `gl.finish` (`node design/perf-probe.mjs metal`). On the build before this stage: 3.1 ms from the conn (1045 draw calls) and 1.0 ms out of a side port (375). On this one, in one session with the world on, off (Settings > Bridge > Life) and on again: 3.0 to 3.3 ms against 2.9 to 3.2 ms from the conn (1057 draw calls against 1045), and 0.9 to 1.2 ms against 0.9 ms out of the port (386 against 375); rAF p50 16.7 ms and p95 16.8 ms throughout (on vsync). The world adds 12 draw calls and about 4,000 triangles; the fleet is three instanced meshes, the fighters one, their engines and trails one layer of points, and nothing is added or removed while it runs. Some twenty seconds into a session the forced render on this machine rises to 12 to 16 ms, with the world on or off alike and on the build before this stage too (13 ms), while rAF stays on vsync; the comparisons above are the samples before that. The probe holds space's clock so a flyby doesn't land in one sample and not another. `design/flicker-check.mjs metal` passes (no black frame or NaN pixel in 600 frames by Night and by Day).
+
+### Left for later
+
+- The droid companion, VESPER, celebration tiers and the debrief are later stages; this one is the world outside.
+- The destination's band sits in the clear glass between the canopy's lower rings as seen from the conn; from elsewhere on the deck a rib can cross it.
+- Clicking an escort opens the Decks lift; it doesn't yet pick that deck in it.
