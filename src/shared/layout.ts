@@ -436,19 +436,38 @@ export const HULL_FRAMES = [-6.63, 0, 6.63] as const;
 
 /**
  * The bridge's viewports. The forward band runs along the north wall over the situation wall, in the
- * four bays between the hull's frames (the bit of wall by the overflow bay stays solid). The side
- * ports are tall slots in the east and west walls, one a bay, kept clear of the Review bay, the
- * capacity panel, the violet rail and the docs rack. The south curb is open already.
+ * four bays between the hull's frames (the bit of wall by the overflow bay stays solid). Down the east
+ * and west walls, each bay has a wide, low port at a seated eye's height, its ends rounded, and a slim
+ * strip over it, so the stars and the galaxy's band show down both sides; they keep clear of the Review
+ * bay, the capacity panel, the violet rail and the docs rack. The south curb is open already. The low
+ * ports come first on each wall (the wall seams line up with them, features/bridge/inlay.ts).
  */
 const FORWARD = { y0: 3.2, y1: 6.3 } as const;
-const PORT = { width: 1.4, y0: 1.0, y1: 5.6 } as const;
+const PORT = { y0: 0.85, y1: 2.55 } as const;
+const STRIP = { y0: 3.7, y1: 4.45 } as const;
+/** Each side bay's port: where along the wall (from its middle) and how wide. */
+const SIDE_BAYS: Readonly<Record<'east' | 'west', readonly (readonly [u: number, width: number])[]>> = {
+  east: [
+    [-11.3, 5.6],
+    [-3.3, 5.4],
+    [4.45, 3.6],
+    [11.3, 5.6],
+  ],
+  west: [
+    [-3.0, 5.0],
+    [3.3, 5.4],
+    [11.3, 5.6],
+  ],
+};
+const side = (rows: { y0: number; y1: number }) =>
+  (['east', 'west'] as const).flatMap((wall) => SIDE_BAYS[wall].map(([u, width]): Opening => ({ wall, u, width, ...rows })));
 export const WINDOWS: Opening[] = [
   { wall: 'north', u: -11.3, width: 8.2, ...FORWARD },
   { wall: 'north', u: -3.3, width: 5.8, ...FORWARD },
   { wall: 'north', u: 3.3, width: 5.8, ...FORWARD },
   { wall: 'north', u: 9.05, width: 3.7, ...FORWARD },
-  ...[-11.3, -3.3, 4.4, 11.3].map((u): Opening => ({ wall: 'east', u, ...PORT })),
-  ...[-3.3, 3.3, 11.3].map((u): Opening => ({ wall: 'west', u, ...PORT })),
+  ...side(PORT),
+  ...side(STRIP),
 ];
 
 /**

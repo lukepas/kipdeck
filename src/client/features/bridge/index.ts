@@ -15,7 +15,7 @@ import type { Course } from './readouts';
 const COUNT_EVERY = 1;
 
 export function installBridge(ctx: Ctx) {
-  const { conn, holo, overhead } = ctx.office;
+  const { conn, holo, overhead, runningLights } = ctx.office;
   ctx.camera.layers.enable(BRIDGE_LAYER);
 
   function course() {
@@ -31,6 +31,7 @@ export function installBridge(ctx: Ctx) {
   let readAt = -Infinity;
   ctx.ticks.add('world', ({ dt, now }) => {
     if (!ctx.reduceMotion.matches) holo.turn(dt);
+    runningLights.still(ctx.reduceMotion.matches);
     if (now - readAt < COUNT_EVERY * 1000) return;
     readAt = now;
     const counts = store.counts();

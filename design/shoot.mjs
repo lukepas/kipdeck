@@ -306,6 +306,9 @@ async function main() {
       'bridge-port': [[6, 2.2, 1], [-16, 3.2, 1]],
       'bridge-station': [[3.4, 1.6, -2.6], [6.6, 0.8, -6.4]],
       'bridge-holo': [[0, 2.1, 5.6], [0, 1.1, 0]],
+      // Out of the side ports at a seated eye's height: the galaxy's band and the stars streaming past.
+      'bridge-window': [[-11.5, 1.55, 3.6], [-30, 2.6, 0.5]],
+      'bridge-window-e': [[11.2, 1.55, -3.0], [30, 2.4, -6]],
       // The bridge's life: the pods' station screens from the table, the heading band, the clock and the log.
       'life-heading': [[2.4, 1.9, 4.6], [0, 1.3, 0]],
       'life-ticker': [[0, 3.4, 1], [0, 5.2, -11.4]],

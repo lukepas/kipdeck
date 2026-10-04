@@ -13,7 +13,7 @@ import { FLOOR, WALL_T, type Side } from '../../../shared/layout';
  */
 export const DECK = {
   void: '#0D131A',
-  floor: '#222C38',
+  floor: '#1C2430',
   gridMinor: '#2C3744',
   gridMajor: '#3A4858',
   wall: '#1C2530',
@@ -123,10 +123,24 @@ export function practical(color: THREE.ColorRepresentation, opacity = 1): THREE.
 export const GLASS = new THREE.MeshStandardMaterial({ color: '#1B2733', roughness: 0.15, metalness: 0.2, transparent: true, opacity: 0.38, depthWrite: false, side: THREE.DoubleSide });
 
 /**
- * Viewport glass: almost clear, a faint cold tint and a glint, so space reads through it and the
- * frame does the work of saying "window". Drawn after what's outside it (renderOrder 2).
+ * Viewport glass: almost clear looking straight through, with a cold tint that thickens toward
+ * grazing angles (a fresnel) and a faint sheen, so it reads as glass rather than a hole, and space
+ * reads through it. Drawn after what's outside it (renderOrder 2).
  */
-export const VIEWPORT_GLASS = new THREE.MeshStandardMaterial({ color: '#16242F', roughness: 0.08, metalness: 0.6, transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide });
+export const VIEWPORT_GLASS = new THREE.MeshStandardMaterial({ color: '#16242F', roughness: 0.08, metalness: 0.6, transparent: true, opacity: 0.1, depthWrite: false, side: THREE.DoubleSide });
+VIEWPORT_GLASS.onBeforeCompile = (shader) => {
+  shader.fragmentShader = shader.fragmentShader.replace(
+    '#include <opaque_fragment>',
+    `{
+      float fres = pow(1.0 - abs(dot(normalize(normal), normalize(vViewPosition))), 3.0);
+      // Thicker and bluer at a slant, and a soft sheen from the room's light down the pane.
+      diffuseColor.a = mix(diffuseColor.a, 0.55, fres);
+      outgoingLight += vec3(0.03, 0.065, 0.085) * (0.1 + fres) + vec3(0.008, 0.014, 0.018) * smoothstep(-1.0, 1.0, normalize(vViewPosition).y);
+    }
+    #include <opaque_fragment>`,
+  );
+};
+VIEWPORT_GLASS.customProgramCacheKey = () => 'viewport-glass-fresnel';
 
 /** A sheet of glass `w` by `h` (smoked unless `material` says otherwise), centered, facing +z. */
 export function glassPane(w: number, h: number, material: THREE.Material = GLASS): THREE.Group {
@@ -241,4 +255,38 @@ export interface Looks {
   wall: THREE.MeshStandardMaterial;
   trim: THREE.MeshStandardMaterial;
   planks: THREE.CanvasTexture[];
+}
+
+/**
+ * Gives `m` the hull's plating, worked out from where each point is in the world (no texture, no
+ * uvs): panels 2.4 m long and 1.4 m high in staggered rows, a dark seam between them, and each panel a
+ * shade lighter or darker than its neighbors. On walls it runs along the wall; on the plate under the
+ * deck, across it. For the outside of the ship (shell.ts, features/bridge).
+ */
+export function hullPanels<M extends THREE.MeshStandardMaterial>(m: M): M {
+  m.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vHullPos;')
+      .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvHullPos = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    shader.fragmentShader = shader.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vHullPos;').replace(
+      '#include <color_fragment>',
+      `#include <color_fragment>
+      {
+        vec3 fn = normalize(cross(dFdx(vHullPos), dFdy(vHullPos)));
+        vec2 q = abs(fn.y) > 0.6 ? vHullPos.xz : (abs(fn.x) > abs(fn.z) ? vHullPos.zy : vHullPos.xy);
+        vec2 cell = vec2(2.4, 1.4);
+        float row = floor(q.y / cell.y);
+        vec2 p = vec2(q.x / cell.x + 0.5 * mod(row, 2.0), q.y / cell.y);
+        vec2 f = abs(fract(p) - 0.5);
+        vec2 w = fwidth(p) * 1.2 + vec2(0.012 / cell.x, 0.012 / cell.y);
+        float edge = 1.0 - max(smoothstep(0.5 - w.x * 1.5, 0.5, f.x), smoothstep(0.5 - w.y * 1.5, 0.5, f.y));
+        vec2 id = floor(p);
+        float tone = fract(sin(dot(id, vec2(12.9898, 78.233))) * 43758.5453);
+        diffuseColor.rgb *= mix(0.55, 1.0, edge) * (0.9 + 0.18 * tone);
+        diffuseColor.rgb += vec3(0.006, 0.01, 0.014) * step(0.82, tone) * edge;
+      }`,
+    );
+  };
+  m.customProgramCacheKey = () => 'hull-panels';
+  return m;
 }

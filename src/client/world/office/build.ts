@@ -19,6 +19,7 @@ import { beanbags, desks, kiosks } from './seats';
 import { meetingRoom } from './meeting-room';
 import type { Fixture, Gives, Site } from './fixture';
 import { hull } from '../../features/bridge/hull';
+import { skin } from '../../features/bridge/skin';
 import { inlay } from '../../features/bridge/inlay';
 import { conn } from '../../features/bridge/conn';
 import { holo } from '../../features/bridge/holo';
@@ -46,6 +47,7 @@ function floorPlan() {
     walls,
     // The bridge round the deck: the hull's frames, the canopy and the ship outside (features/bridge).
     hull,
+    skin,
     inlay,
     missionTable,
     holo,

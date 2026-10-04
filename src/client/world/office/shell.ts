@@ -4,12 +4,12 @@ import { FLOOR, GRID, SOUTH_CURB, WALL_HEIGHT, WALL_T, WINDOWS, WING, type Openi
 import { mergeByMaterial, mesh } from '../toon';
 import type { Collider } from '../types';
 import type { Fixture } from './fixture';
-import { DECK, VIEWPORT_GLASS, box, glassPane, matte, onWall, practical, type Looks } from './materials';
+import { DECK, VIEWPORT_GLASS, box, hullPanels, matte, matteUnique, onWall, practical, type Looks } from './materials';
 
 // The deck's shell: its outside walls, full height on the north, east and west where the boards hang,
 // and only a curb on the south, so the Overview sees every unit over it. The walls are the bridge's
-// hull: the forward viewport runs along the north wall over the situation wall, and tall ports cut the
-// east and west walls (WINDOWS). The rest of the bridge is features/bridge/.
+// hull: the forward viewport runs along the north wall over the situation wall, and wide, low ports
+// with slim strips over them cut the east and west walls (WINDOWS). The rest of the bridge is features/bridge/.
 
 /** A door that opens by itself when someone comes up to it, and closes behind them. */
 export interface Door {
@@ -21,38 +21,71 @@ export interface Door {
   show(open: number): void;
 }
 
+/** A rounded rectangle `w` by `h` centered on the origin, its corners `r` round (r = h / 2 rounds its ends right off). */
+function roundRect(path: THREE.Path, w: number, h: number, r: number): THREE.Path {
+  const x = -w / 2;
+  const y = -h / 2;
+  const k = Math.min(r, w / 2, h / 2);
+  path.moveTo(x + k, y);
+  path.lineTo(x + w - k, y);
+  path.absarc(x + w - k, y + k, k, -Math.PI / 2, 0, false);
+  path.lineTo(x + w, y + h - k);
+  path.absarc(x + w - k, y + h - k, k, 0, Math.PI / 2, false);
+  path.lineTo(x + k, y + h);
+  path.absarc(x + k, y + h - k, k, Math.PI / 2, Math.PI, false);
+  path.lineTo(x, y + k);
+  path.absarc(x + k, y + k, k, Math.PI, Math.PI * 1.5, false);
+  return path;
+}
+
+/** A flat ring between two rounded rectangles (`w` by `h`, and `t` in from it all round), `depth` thick. */
+function bezel(w: number, h: number, r: number, t: number, depth: number): THREE.ExtrudeGeometry {
+  const outer = roundRect(new THREE.Shape(), w, h, r) as THREE.Shape;
+  outer.holes.push(roundRect(new THREE.Path(), w - 2 * t, h - 2 * t, Math.max(0.01, r - t)));
+  return new THREE.ExtrudeGeometry(outer, { depth, bevelEnabled: false, curveSegments: 10 });
+}
+
+/** How round a viewport's corners are: a low port's ends are half circles, the forward band's corners a softer curve. */
+function cornerOf(w: number, h: number): number {
+  return h < 2.2 ? h / 2 : Math.min(0.75, w / 4);
+}
+
 /**
- * A viewport filling its hole in an outside wall: a hull frame lining the hole, mullions no more than
- * 1.9 m apart (and a transom in a tall slot), a ship-cyan hairline round the inside edge, a sill, and
- * almost clear glass.
+ * A viewport filling its hole in an outside wall, as a ship's: a hull bezel lining the hole and
+ * rounding its corners (a low port's ends right off), a ship-cyan line round the glass inside and a
+ * brighter one outside, so from outside the hull its ports read as lit strips, and one sheet of glass
+ * with no mullions across it. The hole in the wall stays square; the bezel fills its corners.
  */
 export function windowIn(o: Opening): THREE.Group {
   const g = new THREE.Group();
   const frame = matte(DECK.hull, { metalness: 0.35, roughness: 0.55 });
-  const lit = practical(DECK.shipDim);
   const w = o.width;
   const h = o.y1 - o.y0;
   const yMid = (o.y0 + o.y1) / 2;
   const F = 0.14;
   const D = WALL_T + 0.08;
-  // Built along x with the outside toward +z, then turned onto its wall.
-  g.add(mesh(box(w, F, D), frame, 0, o.y1 - F / 2, 0, false));
-  g.add(mesh(box(w, F, D), frame, 0, o.y0 + F / 2, 0, false));
-  for (const sx of [-1, 1]) g.add(mesh(box(F, h, D), frame, sx * (w / 2 - F / 2), yMid, 0, false));
-  const bays = Math.max(1, Math.ceil((w - 2 * F) / 1.9));
-  for (let i = 1; i < bays; i++) g.add(mesh(box(0.1, h - 2 * F, 0.2), frame, -w / 2 + F + ((w - 2 * F) * i) / bays, yMid, -0.02, false));
-  const rows = Math.max(1, Math.ceil((h - 2 * F) / 2.6));
-  for (let i = 1; i < rows; i++) g.add(mesh(box(w - 2 * F, 0.08, 0.16), frame, 0, o.y0 + F + ((h - 2 * F) * i) / rows, -0.02, false));
-  // The hairline round the inside of the frame, a centimetre proud of it.
-  const iz = -D / 2 - 0.006;
-  g.add(mesh(box(w - 2 * F, 0.012, 0.012), lit, 0, o.y1 - F, iz, false));
-  g.add(mesh(box(w - 2 * F, 0.012, 0.012), lit, 0, o.y0 + F, iz, false));
-  for (const sx of [-1, 1]) g.add(mesh(box(0.012, h - 2 * F, 0.012), lit, sx * (w / 2 - F), yMid, iz, false));
-  const pane = glassPane(w - 2 * F, h - 2 * F, VIEWPORT_GLASS);
-  pane.position.y = yMid;
+  const iw = w - 2 * F;
+  const ih = h - 2 * F;
+  const r = cornerOf(iw, ih);
+  // The bezel: square outside (it fills the hole), rounded inside. Built along x with the outside toward +z, then turned onto its wall.
+  const square = new THREE.Shape();
+  square.moveTo(-w / 2, -h / 2);
+  square.lineTo(w / 2, -h / 2);
+  square.lineTo(w / 2, h / 2);
+  square.lineTo(-w / 2, h / 2);
+  square.lineTo(-w / 2, -h / 2);
+  square.holes.push(roundRect(new THREE.Path(), iw, ih, r));
+  g.add(mesh(new THREE.ExtrudeGeometry(square, { depth: D, bevelEnabled: false, curveSegments: 10 }).translate(0, yMid, -D / 2), frame, 0, 0, 0, false));
+  // A lip proud of the wall either side, round the glass, so the port reads from across the deck and from outside.
+  for (const side of [-1, 1]) g.add(mesh(bezel(iw + 0.16, ih + 0.16, r + 0.08, 0.1, 0.05).translate(0, yMid, side > 0 ? D / 2 : -D / 2 - 0.05), frame, 0, 0, 0, false));
+  // The lit lines: a hairline in ship-cyan's dim tone inside, the full tone outside (the hull's running strip).
+  g.add(mesh(bezel(iw + 0.02, ih + 0.02, r + 0.01, 0.022, 0.006).translate(0, yMid, -D / 2 - 0.056), practical(DECK.shipDim), 0, 0, 0, false));
+  g.add(mesh(bezel(iw + 0.05, ih + 0.05, r + 0.025, 0.035, 0.006).translate(0, yMid, D / 2 + 0.05), practical(DECK.ship), 0, 0, 0, false));
+  const pane = new THREE.Mesh(new THREE.ShapeGeometry(roundRect(new THREE.Shape(), iw, ih, r) as THREE.Shape, 10).translate(0, yMid, 0), VIEWPORT_GLASS);
+  pane.renderOrder = 2;
   g.add(pane);
-  g.add(mesh(box(w + 0.2, 0.06, 0.24), frame, 0, o.y0 - 0.03, -(WALL_T / 2 + 0.1)));
-  g.add(mesh(box(w + 0.2, 0.06, 0.16), frame, 0, o.y0 - 0.03, WALL_T / 2 + 0.06));
+  // The sill along a low port, inside.
+  if (o.y0 < 1.5) g.add(mesh(box(iw - 2 * r + 0.4, 0.05, 0.26), frame, 0, o.y0 + F - 0.025, -(D / 2 + 0.13)));
   const at = onWall(o.wall, o.u);
   g.position.set(at.x, 0, at.z);
   g.rotation.y = at.rotY;
@@ -63,12 +96,13 @@ export function windowIn(o: Opening): THREE.Group {
 const SHADE_HEIGHT = 4.2;
 
 /**
- * The four outside walls, built in pieces round any openings: matte slate inside, a shade darker
+ * The four outside walls, built in pieces round any openings: matte slate inside, hull plating
  * outside, with a 2 cm reveal at each column line of the grid and a lit hairline along the top.
  */
 export function buildWalls(group: THREE.Group, colliders: Collider[], openings: Opening[], looks: Looks) {
   const inside = looks.wall;
-  const outside = matte(DECK.wallReveal);
+  // The outside is the ship's hull: plated, a step lighter than the dark of space round it.
+  const outside = hullPanels(matteUnique(DECK.hullSeam, { metalness: 0.3, roughness: 0.62 }));
   const trimMat = looks.trim;
   const T = WALL_T;
   // The walls go round the viewports in many pieces: their faces are gathered by paint (and by
@@ -126,17 +160,30 @@ export function buildWalls(group: THREE.Group, colliders: Collider[], openings: 
     };
     const block = (u0: number, u1: number, bottom?: number) =>
       colliders.push(alongX ? { minX: u0, maxX: u1, minZ: w.at - T / 2, maxZ: w.at + T / 2, top: 99, bottom } : { minX: w.at - T / 2, maxX: w.at + T / 2, minZ: u0, maxZ: u1, top: 99, bottom });
-    const holes = openings.filter((o) => o.wall === w.side).sort((a, b) => a.u - b.u);
+    const holes = openings.filter((o) => o.wall === w.side).sort((a, b) => a.u - b.u || a.y0 - b.y0);
+    // Openings one over another in the same bay (a port and the strip over it) share one column of wall.
+    const columns: Opening[][] = [];
+    for (const o of holes) {
+      const last = columns[columns.length - 1];
+      if (last && last[0].u === o.u && last[0].width === o.width) last.push(o);
+      else columns.push([o]);
+    }
     for (const [a, b, top] of w.spans) {
       let u = a;
       let floorU = a;
-      for (const o of holes) {
+      for (const col of columns) {
+        const o = col[0];
         const h0 = o.u - o.width / 2;
         const h1 = o.u + o.width / 2;
         if (h0 < a || h1 > b) continue;
         piece(u, h0, 0, top);
-        piece(h0, h1, 0, o.y0);
-        piece(h0, h1, o.y1, top);
+        // The wall under the lowest, between each and the next up, and over the highest.
+        let y = 0;
+        for (const hole of col) {
+          piece(h0, h1, y, hole.y0);
+          y = hole.y1;
+        }
+        piece(h0, h1, y, top);
         u = h1;
         if (o.y0 > 0) continue;
         // A door: walk through it, under the wall above.

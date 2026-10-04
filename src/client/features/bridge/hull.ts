@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { FLOOR, HULL_FRAMES, PROOF_CORNER, SOUTH_CURB, WALL_HEIGHT, WALL_T, WING } from '../../../shared/layout';
 import type { Fixture } from '../../world/office/fixture';
-import { DECK, VIEWPORT_GLASS, box, matte, practical } from '../../world/office/materials';
+import { DECK, VIEWPORT_GLASS, box, hullPanels, matte, matteUnique, practical } from '../../world/office/materials';
 import { mergeByMaterial, mesh } from '../../world/toon';
 import { CANOPY, beam, canopyPoint, onBridgeLayer } from './shapes';
 
@@ -119,6 +119,42 @@ function eaves(into: THREE.Group) {
   const at = FLOOR.maxX + WALL_T / 2;
   into.add(mesh(box(2 * at + 0.4, 0.34, 0.5), frame, 0, y, -at, false));
   for (const s of [-1, 1]) into.add(mesh(box(0.5, 0.34, 2 * at), frame, s * at, y, 0, false));
+  // The cove: a ship-cyan line under the eaves' inner edge, where the walls meet the canopy.
+  const cove = practical(DECK.ship);
+  const cy = CANOPY.eaves - 0.08;
+  const inner = at - 0.27;
+  into.add(mesh(box(2 * inner, 0.035, 0.03), cove, 0, cy, -inner, false));
+  for (const s of [-1, 1]) into.add(mesh(box(0.03, 0.035, 2 * inner), cove, s * inner, cy, 0, false));
+}
+
+/** The cove's wash: its light spilling down the top of each wall, fading out a metre and a half down. */
+function coveWash(): THREE.Group {
+  const c = document.createElement('canvas');
+  c.width = 4;
+  c.height = 64;
+  const g = c.getContext('2d')!;
+  const grad = g.createLinearGradient(0, 0, 0, 64);
+  grad.addColorStop(0, 'rgba(255,255,255,0.55)');
+  grad.addColorStop(0.25, 'rgba(255,255,255,0.2)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 4, 64);
+  const mat = new THREE.MeshBasicMaterial({ color: DECK.ship, map: new THREE.CanvasTexture(c), transparent: true, opacity: 0.22, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false });
+  const out = new THREE.Group();
+  const H = 1.5;
+  const at = FLOOR.maxX - 0.012;
+  const y = CANOPY.eaves - 0.1 - H / 2;
+  const north = new THREE.Mesh(new THREE.PlaneGeometry(WING.minX - FLOOR.minX, H), mat);
+  north.position.set((FLOOR.minX + WING.minX) / 2, y, -at);
+  out.add(north);
+  for (const s of [-1, 1]) {
+    const side = new THREE.Mesh(new THREE.PlaneGeometry(FLOOR.maxZ - FLOOR.minZ, H), mat);
+    side.position.set(s * at, y, 0);
+    side.rotation.y = -s * (Math.PI / 2);
+    out.add(side);
+  }
+  out.traverse((o) => (o.renderOrder = 3));
+  return out;
 }
 
 /**
@@ -148,7 +184,7 @@ function aftGlass(): THREE.Group {
 }
 
 /** The hull's outline seen from above (x, z): the bow to the north, the flanks, the stern. */
-const OUTLINE: readonly [number, number][] = [
+export const OUTLINE: readonly [number, number][] = [
   [-16.7, -16.7],
   [-12, -24.5],
   [-5, -29.5],
@@ -183,7 +219,7 @@ function plumeFade(): THREE.CanvasTexture {
 /** Under the slab: the ship. A chamfered hull plate with ribs across its flanks, a lit edge, and two nacelles aft. */
 function outerHull(): { group: THREE.Group; drive: Drive } {
   const g = new THREE.Group();
-  const plate = matte(DECK.hull, { flat: true, metalness: 0.3, roughness: 0.6 });
+  const plate = hullPanels(matteUnique(DECK.hullSeam, { flat: true, metalness: 0.3, roughness: 0.6 }));
   const dark = matte(DECK.wallReveal);
   const lit = practical(DECK.shipDim);
   const shape = new THREE.Shape(OUTLINE.map(([x, z]) => new THREE.Vector2(x, z)));
@@ -238,7 +274,24 @@ function outerHull(): { group: THREE.Group; drive: Drive } {
       merged.add(cone);
     }
   }
-  const drive: Drive = { set: (throttle) => void (glowMat.opacity = GLOW * Math.min(1.8, Math.max(0.3, throttle))) };
+  // A hot core in each plume, white-cyan, and a ring of light round each nozzle's lip.
+  const coreMat = glowMat.clone();
+  coreMat.color.set('#DFF6FF');
+  for (const s of [-1, 1]) {
+    const core = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.5, 4.5, 16, 1, true).rotateX(Math.PI / 2), coreMat);
+    core.position.set(s * 13, 0.5, 33.6 + 2.25);
+    merged.add(core);
+    const lip = new THREE.Mesh(new THREE.TorusGeometry(1.12, 0.06, 8, 40), practical(DECK.ship));
+    lip.position.set(s * 13, 0.5, 33.6);
+    merged.add(lip);
+  }
+  const drive: Drive = {
+    set: (throttle) => {
+      const k = Math.min(1.8, Math.max(0.3, throttle));
+      glowMat.opacity = GLOW * k;
+      coreMat.opacity = Math.min(1, 0.55 * k);
+    },
+  };
   return { group: merged, drive };
 }
 
@@ -250,7 +303,7 @@ export const hull: Fixture<'drive'> = (site) => {
   eaves(inside);
   const outer = outerHull();
   const group = new THREE.Group();
-  group.add(mergeByMaterial(inside), canopy(), aftGlass(), outer.group);
+  group.add(mergeByMaterial(inside), coveWash(), canopy(), aftGlass(), outer.group);
   site.group.add(group);
   return { handle: { drive: outer.drive } };
 };
