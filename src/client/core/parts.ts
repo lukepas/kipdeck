@@ -29,6 +29,7 @@ import type { installGiveWay } from '../features/giveway';
 import type { installVesper } from '../features/vesper';
 import type { installCrew } from '../features/crew';
 import type { installDroid } from '../features/droid';
+import type { installAlert } from '../features/alert';
 import type { installTv } from '../features/tv';
 import type { installVoice } from '../features/voice';
 import type { installWaiting } from '../features/waiting';
@@ -112,4 +113,6 @@ export interface Parts {
   crew: Made<typeof installCrew>;
   /** Bolt, the bridge droid (see features/droid). */
   droid: Made<typeof installDroid>;
+  /** Alert conditions and the band under the overhead strip (see features/alert). */
+  alert: Made<typeof installAlert>;
 }

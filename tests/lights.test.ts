@@ -7,6 +7,8 @@ import path from 'node:path';
 import { BRIGHTNESS_STEP, CALLOUT_CHIP, DAY_INK, DAY_PALETTE, LIGHT_MODES, RING_INLAY, brightnessFactor } from '../src/client/features/lights/modes.js';
 import { lightModeOf } from '../src/client/lighting.js';
 import { DECK } from '../src/client/world/office/materials.js';
+import { DIM, dimRig } from '../src/client/features/alert/logic.js';
+import { ambientSafe } from '../src/client/features/space/logic.js';
 
 /** WCAG relative luminance of `#rrggbb`. */
 function luminance(hex: string): number {
@@ -106,5 +108,27 @@ test('Auto is Day while the system is light, Night while it is dark; a pick hold
   for (const light of [true, false]) {
     assert.equal(lightModeOf('night', light), 'night');
     assert.equal(lightModeOf('day', light), 'day');
+  }
+});
+
+test('on every dimmed rig (alert amber and red), by Night and by Day, every state still reads 4.5:1 on its carrier', () => {
+  // The marks give their own light (unlit, tone mapped at the mode's exposure, which a condition never
+  // changes), so what dims is what is behind a callout chip: the floor, at the room's level.
+  const scale = (hex: string, k: number) => '#' + [0, 2, 4].map((i) => Math.round(parseInt(hex.slice(1 + i, 3 + i), 16) * k).toString(16).padStart(2, '0')).join('');
+  for (const mode of ['night', 'day'] as const) {
+    for (const c of ['amber', 'red'] as const) {
+      const rig = dimRig(LIGHT_MODES[mode], c);
+      // Nothing in the room takes a hue for an alert: every light keeps a near-grey or ship-cyan colour.
+      for (const k of ['key', 'fill', 'rim', 'pods', 'table', 'holo'] as const) assert.ok(ambientSafe(rig[k].color), `${mode} ${c} ${k} ${rig[k].color}`);
+      assert.ok(ambientSafe(rig.hemi.sky) && ambientSafe(rig.hemi.ground));
+      const floor = mode === 'day' ? LIGHTEST : DECK.floor;
+      const chip = over(CALLOUT_CHIP.rgb, CALLOUT_CHIP.alpha, scale(floor, DIM[c].room));
+      for (const [name, hue] of Object.entries(STATES)) {
+        for (const [carrier, bg] of [['ring inlay', RING_INLAY], ['callout chip', chip]] as const) {
+          const ratio = contrast(hue, bg);
+          assert.ok(ratio >= 4.5, `${name} on the ${carrier}, ${mode} at ${c}, is ${ratio.toFixed(2)}:1`);
+        }
+      }
+    }
   }
 });
