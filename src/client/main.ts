@@ -35,6 +35,7 @@ import { installLanded } from './features/landed';
 import { installBounties } from './features/bounties';
 import { installPods } from './features/pods';
 import { installProofCorner } from './features/proofcorner';
+import { installReadyLine } from './features/readyline';
 import { installDictation } from './features/dictation';
 import { installHud } from './features/hud';
 import { installMeeting } from './features/meeting';
@@ -131,6 +132,7 @@ installLanded(ctx, { notifier: parts.notifier });
 installBounties(ctx);
 installPods(ctx);
 installProofCorner(ctx);
+installReadyLine(ctx, parts);
 
 parts.hintbar = installHintBar(ctx, core, parts);
 installKeyboard(ctx, parts);
