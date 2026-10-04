@@ -3,7 +3,12 @@
 .counters { display: flex; align-items: center; gap: 2px; min-width: 0; margin-left: 6px; }
 .counter { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; border: 1px solid transparent; border-radius: var(--radius); background: none; color: var(--faint); font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
 .counter:hover { background: var(--surface-3); color: var(--muted); }
-.counter b { font: 500 13px var(--font-mono); color: var(--muted); }
+.counter b { display: inline-block; font: 500 13px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--muted); }
+/* A number that just changed rolls in once from the way it moved: up from below, down from above. */
+.counter b.roll.up { animation: roll-up var(--t-ui) var(--ease); }
+.counter b.roll.down { animation: roll-down var(--t-ui) var(--ease); }
+@keyframes roll-up { from { transform: translateY(5px); opacity: 0; } }
+@keyframes roll-down { from { transform: translateY(-5px); opacity: 0; } }
 .counter .cw { color: inherit; }
 .counter.live { color: var(--muted); }
 .counter.live b { color: var(--text); }

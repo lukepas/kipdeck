@@ -38,7 +38,7 @@ declare module '../../world/types' {
   }
 }
 
-export type WorkerActionsParts = Pick<Parts, 'seating' | 'walking' | 'waiting' | 'meeting' | 'cards'>;
+export type WorkerActionsParts = Pick<Parts, 'seating' | 'walking' | 'waiting' | 'meeting' | 'cards' | 'flight'>;
 
 /** Registers the worktree answer (worker.worktree), and defines what's done at a desk and at a board agent. */
 export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
@@ -270,9 +270,10 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
     toast(w ? `You're at ${desk.label}, ${w.name}'s desk` : `You're at ${desk.label}`);
   }
 
-  /** Behind the worker, looking over their shoulder at the laptop (or in front of a board agent's kiosk). */
+  /** Behind the worker, looking over their shoulder at the laptop (or in front of a board agent's kiosk). The view flies there (core/flight.ts). */
   function standAt(desk: DeskDef) {
     const { seating } = parts;
+    parts.flight.from();
     if (player.seat) seating.standUp();
     ctx.activities.stopAll('desk');
     parts.walking.stopWalkingTo();

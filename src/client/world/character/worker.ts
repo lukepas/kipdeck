@@ -62,6 +62,9 @@ export class Worker {
   private glyph = glyphSprite();
   private callout: THREE.Sprite | null = null;
   private calloutKey = '';
+  /** How far (its seat's meters) the callout is lifted off its place so it doesn't cover another's, and how far it's headed (see setLift). */
+  private lift = 0;
+  private liftTo = 0;
   /** Something its seat stands on, to find the floor under it wherever it is (see dockOn). */
   private floorRef: THREE.Object3D | null = null;
   private floorY = 0;
@@ -77,6 +80,8 @@ export class Worker {
    * never shrinks below CALLOUT_MIN of it. Set by whoever ticks the units; none leaves them as built.
    */
   static screen: ((at: THREE.Vector3) => number) | null = null;
+  /** How much bigger glyphs and callouts are drawn: 1.25 in demo mode (features/demo), else 1. */
+  static weight = 1;
 
   private name: string;
   private sign = '';
@@ -198,6 +203,39 @@ export class Worker {
     return this.mover.getWorldPosition(out);
   }
 
+  /**
+   * Where its callout's bottom and top edges are in the world, at its own place (lift left out), for
+   * the pass that keeps callouts from covering each other (features/workers/declutter.ts). The
+   * callout is a billboard, so its top is along the camera's `up`, not the world's. False when it has
+   * no callout showing.
+   */
+  calloutEdges(bottom: THREE.Vector3, top: THREE.Vector3, up: THREE.Vector3): boolean {
+    const c = this.callout;
+    if (!c || !this.root.visible) return false;
+    this.mover.localToWorld(bottom.set(0, UNIT.top + 0.14, 0));
+    const scale = this.mover.getWorldScale(tmp).y;
+    top.copy(bottom).addScaledVector(up, this.calloutHeight() * scale);
+    return true;
+  }
+
+  /** The callout's height with the glyph over it, when there is one (its seat's meters). */
+  private calloutHeight(): number {
+    const c = this.callout;
+    if (!c) return 0;
+    return c.scale.y + (this.glyph.visible ? 0.05 + this.glyph.scale.y : 0);
+  }
+
+  /** The callout's width over its height (the glyph's included), as drawn. */
+  calloutAspect(): number {
+    const c = this.callout;
+    return c ? c.scale.x / this.calloutHeight() : 1;
+  }
+
+  /** Lifts the callout (and the glyph over it) `meters` straight up off its place, in the world's meters; it eases there. */
+  setLift(meters: number) {
+    this.liftTo = meters / (this.mover.getWorldScale(tmp).y || 1);
+  }
+
   /** Stood down: its band and visor go dark, and `text` replaces its callout. */
   leave(text: string) {
     if (this.leaving !== null) return;
@@ -260,10 +298,9 @@ export class Worker {
       disposeSprite(this.callout);
     }
     this.callout = calloutSprite(text);
-    this.callout.position.y = UNIT.top + 0.14;
     this.callout.userData.base = this.callout.scale.clone();
     this.mover.add(this.callout);
-    this.glyph.position.y = this.callout.position.y + this.callout.scale.y + 0.05;
+    this.place();
   }
 
   private shell(kind: GlyphKind): Shell {
@@ -282,12 +319,15 @@ export class Worker {
     this.spawnT = calm ? 1 : Math.min(1, this.spawnT + dt / SPAWN);
     this.hatchT = Math.min(1, this.hatchT + dt / HATCH_IN);
     this.flick = Math.max(0, this.flick - dt * 5);
+    // A callout moving out of another's way eases there (a cut for less motion).
+    this.lift = calm ? this.liftTo : this.lift + (this.liftTo - this.lift) * Math.min(1, dt * 10);
     if (this.floorRef) this.floorY = this.root.worldToLocal(this.floorRef.getWorldPosition(tmp)).y;
     this.glide(dt, calm);
     this.paintBand(kind, t, calm);
     this.paintRing(kind, t, calm);
     this.pose(kind, dt);
     this.size();
+    this.place();
   }
 
   /** Keeps the glyph the same size on screen, and the callout from going smaller than CALLOUT_MIN. */
@@ -296,10 +336,17 @@ export class Worker {
     if (!screen || !this.callout) return;
     const scale = this.root.getWorldScale(tmp).y;
     const span = screen(this.mover.getWorldPosition(tmp)) / scale;
-    this.glyph.scale.setScalar(GLYPH_SCREEN * span);
+    this.glyph.scale.setScalar(GLYPH_SCREEN * span * Worker.weight);
     const base = this.callout.userData.base as THREE.Vector3;
-    const k = Math.max(1, (CALLOUT_MIN * span) / base.y);
+    const k = Math.max(Worker.weight, (CALLOUT_MIN * Worker.weight * span) / base.y);
     this.callout.scale.set(base.x * k, base.y * k, 1);
+  }
+
+  /** The callout at its place plus its lift, and the glyph just over it. */
+  private place() {
+    if (!this.callout) return;
+    this.callout.position.y = UNIT.top + 0.14 + this.lift;
+    this.glyph.position.y = this.callout.position.y + this.callout.scale.y + 0.05;
   }
 
   /** Toward its target (or its seat), at a steady pace, leaning into the move. */

@@ -20,6 +20,7 @@ import type { installMeeting } from '../features/meeting';
 import type { installMission } from '../features/mission';
 import type { installNeedsYou } from '../features/needsyou';
 import type { installPeers } from '../features/peers';
+import type { installProofCorner } from '../features/proofcorner';
 import type { installSeating } from '../features/seating';
 import type { installTv } from '../features/tv';
 import type { installVoice } from '../features/voice';
@@ -31,6 +32,7 @@ import type { installFocus } from '../input/focus';
 import type { installPointer } from '../input/pointer';
 import type { installArrival } from './arrival';
 import type { installOverview } from './camera-overview';
+import type { installFlight } from './flight';
 import type { installHintBar } from './hintbar';
 import type { installFloorWatch } from './floorwatch';
 import type { installPlace } from './place';
@@ -68,6 +70,8 @@ export interface Parts {
   pointer: Made<typeof installPointer>;
   /** The Overview camera over the whole deck (see core/camera-overview.ts). */
   overview: Made<typeof installOverview>;
+  /** The view flying to where the office just put you, in Walk (see core/flight.ts). */
+  flight: Made<typeof installFlight>;
 
   // ---- Features ------------------------------------------------------------------------------------
   boards: Made<typeof installBoards>;
@@ -87,4 +91,6 @@ export interface Parts {
   seating: Made<typeof installSeating>;
   talk: Made<typeof installVoice>;
   hud: Made<typeof installHud>;
+  /** The rail, the vault and the plinth keeping up with the chain (see features/proofcorner). */
+  proofCorner: Made<typeof installProofCorner>;
 }

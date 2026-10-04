@@ -42,6 +42,9 @@ const num = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2).repla
  */
 export function mountCounters(el: HTMLElement, open: (tab: MissionTab) => void): () => void {
   let last = '';
+  /** The numbers as last drawn, so a number that changed rolls once (120 ms) toward its new value. */
+  let was: Record<string, number> | null = null;
+  const roll = (key: string, n: number) => (was && was[key] !== undefined && was[key] !== n ? (n > was[key] ? '.roll.up' : '.roll.down') : '');
   function render() {
     const counts = store.counts();
     const proof = proofTally();
@@ -60,7 +63,7 @@ export function mountCounters(el: HTMLElement, open: (tab: MissionTab) => void):
           onclick: () => open(level === 'review' ? 'review' : 'attention'),
         },
         icon(LEVEL_ICON[level], 14),
-        h('b', {}, String(n)),
+        h(`b${roll(level, n)}`, {}, String(n)),
         h('span.cw', {}, WORDS[level]),
       );
     });
@@ -69,13 +72,14 @@ export function mountCounters(el: HTMLElement, open: (tab: MissionTab) => void):
           'button.counter.c-proof',
           { type: 'button', title: `Proof of Merge on ${proof.network}: bounties paid only on a human merge. Open the review inbox`, onclick: () => open('review') },
           icon('merged', 14),
-          h('b', {}, String(proof.released)),
+          h(`b${roll('proof', proof.released)}`, {}, String(proof.released)),
           h('span.cw', {}, 'merged'),
           ...[...proof.amounts].map(([sym, amt]) => h('span.cw.amt', {}, `${num(amt)} ${sym}`)),
           h('span.net', {}, proof.network === 'mock' ? 'mock' : 'devnet'),
         )
       : null;
     el.replaceChildren(...buttons, ...(tally ? [h('span.counter-sep', { 'aria-hidden': 'true' }), tally] : []));
+    was = { ...counts, proof: proof.released };
   }
   const offs = (['roster', 'bounties', 'workers', 'signins', 'floors'] as const).map((t) => store.on(t, render));
   // Times in a state move a unit between levels without a message (working long enough to be stuck).

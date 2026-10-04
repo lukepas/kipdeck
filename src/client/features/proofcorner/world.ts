@@ -18,6 +18,8 @@ export interface ProofCorner {
   setLid(open: number): void;
   /** Lights the plinth's steps from the bottom, one per unit with a reputation record. */
   setReputation(units: number): void;
+  /** The plinth glows violet from above, 0 to 1: a step has just been added (index.ts). */
+  setStepGlow(k: number): void;
 }
 
 declare module '../../world/types' {
@@ -105,6 +107,9 @@ export const proofCorner: Fixture<'proof'> = (site) => {
   plinthCap.rotation.y = Math.PI / 2;
   plinth.add(plinthCap);
   plinth.add(contactShadow(p.width + 0.7, p.depth + 0.7));
+  const plinthGlow = new THREE.PointLight(DECK.proof, 0, 2.6, 2);
+  plinthGlow.position.set(0.3, p.steps * p.rise + 0.4, 0);
+  plinth.add(plinthGlow);
   group.add(plinth);
   site.colliders.push({ minX: FLOOR.minX, maxX: p.x + p.width / 2, minZ: p.z - p.depth / 2, maxZ: p.z + p.depth / 2, top: p.steps * p.rise });
   site.group.add(group);
@@ -133,6 +138,9 @@ export const proofCorner: Fixture<'proof'> = (site) => {
     },
     setReputation(units) {
       edges.forEach((e, i) => (e.material = i < units ? violet : unlit));
+    },
+    setStepGlow(k) {
+      plinthGlow.intensity = Math.max(0, Math.min(1, k)) * 3;
     },
   };
   return { handle: { proof } };

@@ -15,6 +15,7 @@ import { createCtx } from './core/ctx';
 import type { Parts } from './core/parts';
 import { createScene, fitWindow, makeRenderer, noWebGL } from './core/scene';
 import { installOverview } from './core/camera-overview';
+import { installFlight } from './core/flight';
 import { createWorlds } from './core/worlds';
 import { frameLoop, installLoop } from './core/loop';
 import { installPlace } from './core/place';
@@ -33,6 +34,7 @@ import { installChat } from './features/chat';
 import { installCounters } from './features/counters';
 import { installLanded } from './features/landed';
 import { installBounties } from './features/bounties';
+import { installBeats } from './features/beats';
 import { installPods } from './features/pods';
 import { installProofCorner } from './features/proofcorner';
 import { installReadyLine } from './features/readyline';
@@ -51,6 +53,7 @@ import { installWalking } from './features/walking';
 import { installWhiteboard } from './features/whiteboard';
 import { installWorkerActions } from './features/workers/actions';
 import { installWorkerViews } from './features/workers/views';
+import { installDeclutter } from './features/workers/declutter';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -131,7 +134,8 @@ parts.seating = installSeating(ctx, { shares: () => parts.talk.currentShares(), 
 installLanded(ctx, { notifier: parts.notifier });
 installBounties(ctx);
 installPods(ctx);
-installProofCorner(ctx);
+parts.proofCorner = installProofCorner(ctx);
+installBeats(ctx, parts);
 installReadyLine(ctx, parts);
 
 parts.hintbar = installHintBar(ctx, core, parts);
@@ -139,6 +143,8 @@ installKeyboard(ctx, parts);
 parts.focus = installFocus(ctx, core, parts);
 parts.pointer = installPointer(ctx, core, parts);
 parts.overview = installOverview(ctx, parts);
+parts.flight = installFlight(ctx);
+installDeclutter(ctx, parts);
 installChat(ctx);
 parts.talk = installVoice(ctx, { tv: parts.tv });
 installDictation(ctx);

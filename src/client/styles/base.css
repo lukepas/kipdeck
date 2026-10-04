@@ -53,6 +53,7 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
   --g-working: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 10.5h14v3H5Z'/%3E%3C/svg%3E");
   --g-parked: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='3.5'/%3E%3C/svg%3E");
   --g-merged: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cpath d='M4 4h16v16H4Z'/%3E%3Cpath d='m8 12.5 3 3 5.5-6.5'/%3E%3C/svg%3E");
+  --g-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='square'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E");
 }
 .glyph::before, .pill:is(.starting, .idle, .working, .needs_input, .done, .exited, .offline, .lost, .needs-you, .stuck, .review)::before { content: ''; display: inline-block; flex: none; width: 10px; height: 10px; background: currentColor; -webkit-mask: var(--g, var(--g-parked)) center / contain no-repeat; mask: var(--g, var(--g-parked)) center / contain no-repeat; }
 .g-needs-you { --g: var(--g-needs-you); color: var(--signal); }
@@ -101,6 +102,13 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 .toast.error::before { --g: var(--g-stuck); background: var(--stuck); }
 .toast.proof::before { --g: var(--g-merged); background: var(--proof); }
 @keyframes rise { from { transform: translateY(4px); opacity: 0; } }
+.toast { display: grid; grid-template-columns: 1fr auto; column-gap: 12px; align-items: baseline; }
+.toast-at { color: var(--muted); font: 400 11px var(--font-mono); font-variant-numeric: tabular-nums; }
+.toast-proof { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 6px; font-size: 12px; }
+.toast-proof code { padding: 1px 6px; border: 1px solid var(--proof); border-radius: var(--radius-chip); color: var(--proof); background: var(--proof-tint); font: 500 11px/16px var(--font-mono); }
+.toast-proof .settled { color: var(--muted); }
+.toast-proof .settled::before { content: ''; display: inline-block; width: 10px; height: 10px; margin-right: 5px; vertical-align: -1px; background: var(--settled); -webkit-mask: var(--g-check) center / contain no-repeat; mask: var(--g-check) center / contain no-repeat; }
+.toast-proof a { pointer-events: auto; color: var(--proof); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
 
 .conn { position: absolute; top: 52px; left: 50%; transform: translateX(-50%); z-index: 46; display: inline-flex; align-items: center; gap: 8px; background: var(--surface-1); color: var(--text); font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: var(--radius); border: 1px solid var(--stuck); }
 .conn::before { content: ''; width: 9px; height: 9px; background: var(--stuck); -webkit-mask: var(--g-stuck) center / contain no-repeat; mask: var(--g-stuck) center / contain no-repeat; }
@@ -143,8 +151,7 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 .svc-list li:hover { background: var(--surface-2); }
 .svc-list li.on { background: var(--surface-3); box-shadow: inset 2px 0 0 var(--signal); }
 .svc-list li:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
-.svc-list .unit-sign { display: inline-block; flex: none; min-width: 34px; padding: 0 4px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); color: var(--muted); font: 500 11px/16px var(--font-mono); font-variant-numeric: tabular-nums; text-align: center; letter-spacing: .02em; }
-.dot { width: 10px; height: 10px; }
+.svc-list .dot { width: 10px; height: 10px; }
 .svc-main { flex: 1; min-width: 0; }
 .svc-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .svc-meta { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -155,8 +162,8 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 a.when:hover { text-decoration: underline; }
 
 @media (prefers-reduced-motion: reduce) {
-  .modal, .backdrop, .toast { animation: none; }
-  .spinner { animation-duration: 2.4s; }
+  /* A spinner is the one loop left: slower, and never a cut (tokens.css would stop it dead). */
+  .spinner { animation-duration: 2.4s !important; animation-iteration-count: infinite !important; }
 }
 
 /* Window pieces that restyle the frame's labels, text boxes and buttons with selectors no stronger than

@@ -137,14 +137,46 @@ export function closeAllModals() {
   while (stack.length) stack[stack.length - 1].close();
 }
 
-export function toast(text: string, level: 'info' | 'warn' | 'error' | 'proof' = 'info'): HTMLElement {
-  const el = h('div.toast', { class: level }, text);
+/** What a proof toast adds under its sentence: the transaction or attestation in mono, where it settled and a link to see it there. */
+export interface ToastProof {
+  /** The transaction signature or attestation id, shortened here to its ends. */
+  hash?: string;
+  /** Where it settled, after the tick: "devnet", "Base Sepolia". */
+  settled?: string;
+  /** A testnet explorer page for it. */
+  href?: string;
+}
+
+/** A hash cut to its ends, `4kQm...9xPa`, for a mono chip. */
+export const shortHash = (hash: string) => (hash.length > 12 ? `${hash.slice(0, 4)}...${hash.slice(-4)}` : hash);
+
+/**
+ * A toast, bottom right: a stripe and a glyph in its level's color, one sentence, and the time it
+ * came in, in mono. A proof toast (violet) also shows the hash, a settled tick and an explorer link,
+ * and stays up longer so there is time to click it.
+ */
+export function toast(text: string, level: 'info' | 'warn' | 'error' | 'proof' = 'info', proof?: ToastProof): HTMLElement {
+  const now = new Date();
+  const at = h('time.toast-at', { datetime: now.toISOString() }, `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+  const trail = proof
+    ? h(
+        'span.toast-proof',
+        {},
+        proof.hash ? h('code', {}, shortHash(proof.hash)) : null,
+        proof.settled ? h('span.settled', {}, `settled on ${proof.settled}`) : null,
+        proof.href ? h('a', { href: proof.href, target: '_blank', rel: 'noopener noreferrer' }, 'View') : null,
+      )
+    : null;
+  const el = h('div.toast', { class: level }, h('span.toast-text', {}, text), at, trail);
   document.getElementById('toasts')!.append(el);
-  setTimeout(() => {
-    el.style.transition = 'opacity .3s';
-    el.style.opacity = '0';
-    setTimeout(() => el.remove(), 300);
-  }, 3500);
+  setTimeout(
+    () => {
+      el.style.transition = 'opacity .3s';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 300);
+    },
+    proof ? 8000 : 3500,
+  );
   return el;
 }
 

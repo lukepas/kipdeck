@@ -83,9 +83,12 @@
   --hud-shadow: 0 6px 24px rgb(0 0 0 / .35);
   --scrim: rgb(5 8 12 / .62);
 
-  /* Motion marks a change of state, never decoration (DESIGN.md). */
+  /* Motion marks a change of state, never decoration (DESIGN.md, docs/design.md). One curve, three
+     lengths: UI opening and counters rolling, the needs-you pulse, and a camera flight. */
   --ease: cubic-bezier(.2, 0, 0, 1);
   --t-ui: 120ms;
+  --t-pulse: 1.2s;
+  --t-flight: 700ms;
 
   /* The names the office's older sheets used, pointed at the new tokens. New rules use the names above. */
   --ink: var(--text);
@@ -177,5 +180,19 @@
     --hud-fill: rgb(255 255 255 / .9);
     --hud-shadow: 0 6px 24px rgb(13 19 26 / .12);
     --scrim: rgb(13 19 26 / .35);
+  }
+}
+
+/* Less motion, asked for by the system: every CSS animation and transition is a cut, and what pulsed
+   or blinked holds still at its resting look (a steady outline, a steady band). The 3D deck reads the
+   same query (ctx.reduceMotion) for its glides, flights and beats. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: 1ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
   }
 }

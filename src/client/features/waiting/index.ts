@@ -20,7 +20,7 @@ import { openSearch } from '../../ui/search';
 import { openTerminal, type TerminalFind } from '../../ui/terminal';
 
 /** Registers N (and the Workers panel's count), the compass's tick ('render') and / (search). */
-export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worlds' | 'views' | 'actions' | 'mission'>) {
+export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worlds' | 'views' | 'actions' | 'mission' | 'overview'>) {
   const { player, camera, net } = ctx;
   const nextUp = new NextUp();
   const compass = new Compass($('compass'));
@@ -56,12 +56,22 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     nextToast = toast(`${w.status === 'needs_input' ? `${w.name} needs you` : `${w.name} is done`}${of}. E opens its terminal`);
   }
 
-  /** Puts you behind worker `id` on this floor, looking over its shoulder, with any window closed. False when there's no getting there (you're between floors, or it's gone). */
+  /**
+   * Puts you behind worker `id` on this floor, looking over its shoulder, with any window closed; from
+   * the Overview, the Overview pans and zooms onto it instead. False when there's no getting there
+   * (you're between floors, or it's gone).
+   */
   function goToWorker(id: string): boolean {
     const w = store.workers.get(id);
     const desk = w && OFFICE_PLAN.byId.get(w.deskId);
     if (core.trip || !desk) return false;
     closeAllModals();
+    if (parts.overview.active()) {
+      const v = parts.views.workerViews.get(id);
+      const at = v ? v.model.where(workerPos) : workerPos.set(desk.x, 0, desk.z);
+      parts.overview.flyTo(at.x, at.z);
+      return true;
+    }
     parts.actions.standAt(desk);
     return true;
   }

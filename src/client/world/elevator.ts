@@ -77,10 +77,12 @@ export function buildElevator(): Elevator {
   // The roof of the housing, and a lit hairline round its top.
   group.add(mesh(box(width, 0.06, depth), slate, x, HOUSING + 0.03, midZ, false));
   group.add(mesh(box(width, 0.012, 0.012), practical(DECK.line), x, HOUSING + 0.066, front, false));
-  // The portal's lit frame.
+  // The portal's lit frame, set back GAP from the opening's edges so that from inside the car (where
+  // everyone arrives) the pillars hide it, rather than it showing as two bright slivers down the doorway.
   const F = 0.035;
-  group.add(mesh(box(doorWidth + 2 * F, F, 0.02), lit, x, doorHeight + F / 2, front + 0.011, false));
-  for (const sx of [-1, 1]) group.add(mesh(box(F, doorHeight, 0.02), lit, x + sx * (doorWidth / 2 + F / 2), doorHeight / 2, front + 0.011, false));
+  const GAP = 0.04;
+  group.add(mesh(box(doorWidth + 2 * (F + GAP), F, 0.02), lit, x, doorHeight + GAP + F / 2, front + 0.011, false));
+  for (const sx of [-1, 1]) group.add(mesh(box(F, doorHeight + GAP, 0.02), lit, x + sx * (doorWidth / 2 + GAP + F / 2), (doorHeight + GAP) / 2, front + 0.011, false));
 
   // Inside: a dark floor with a lit threshold, and a strip light over the portal.
   const inW = ELEVATOR_CAR.maxX - ELEVATOR_CAR.minX;

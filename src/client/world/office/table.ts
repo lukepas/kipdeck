@@ -138,6 +138,11 @@ function paintTop(g: CanvasRenderingContext2D, m: TableMission) {
 /** The mission table: say what it shows with setMission(). */
 export interface MissionTable {
   setMission(m: TableMission): void;
+  /**
+   * Lights the rim toward `color`, `k` 0 (its own steel) to 1 (all `color`): a pulse arriving at the
+   * table (features/beats). Back to 0 when the pulse has gone.
+   */
+  pulse(k: number, color?: THREE.ColorRepresentation): void;
 }
 
 declare module '../types' {
@@ -156,7 +161,10 @@ export const missionTable: Fixture<'missionTable'> = (site) => {
   group.add(mesh(new THREE.CylinderGeometry(r * 0.82, r * 0.82, 0.04, 32), matte(DECK.wallReveal), 0, 0.02, 0, false));
   group.add(mesh(new THREE.CylinderGeometry(r, r * 0.96, 0.12, 64), flat(DECK.console), 0, h - 0.06, 0));
   // The lit edge: what carries the table's silhouette in a dark frame.
-  const rim = new THREE.Mesh(new THREE.TorusGeometry(r, 0.016, 6, 128), practical('#AEB8C4'));
+  // Its own material (not the shared practical), so a pulse can light it without lighting everything else that's steel.
+  const steel = new THREE.Color('#AEB8C4');
+  const rimMat = practical('#AEB8C4').clone();
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(r, 0.016, 6, 128), rimMat);
   rim.rotation.x = Math.PI / 2;
   rim.position.y = h;
   group.add(rim);
@@ -182,5 +190,13 @@ export const missionTable: Fixture<'missionTable'> = (site) => {
     tex.needsUpdate = true;
   };
   setMission(shown);
-  return { handle: { missionTable: { setMission } } };
+  const lit = new THREE.Color();
+  const pulse = (k: number, color: THREE.ColorRepresentation = DECK.proof) => {
+    const t = Math.max(0, Math.min(1, k));
+    rimMat.color.copy(steel).lerp(lit.set(color), t);
+    // A little thicker while lit, so the pulse reads from the Overview too.
+    rim.scale.setScalar(1);
+    rim.scale.z = 1 + t * 1.5;
+  };
+  return { handle: { missionTable: { setMission, pulse } } };
 };
