@@ -353,3 +353,49 @@ Frame time at 1440x900 by night on the GPU (Apple M3 Pro through ANGLE Metal), w
 - Celebration tiers, the start-of-watch card and the debrief are later stages; `Parts.vesper.line()` is there for their subtitles.
 - A unit's record is the deck log as far as the page has loaded it (the server keeps a capped log per deck), and reverts come only from the agents' reputation records, which count per agent identity, not per unit.
 - Bolt waits for the captain's sign-off: it ships off.
+
+## The bridge: moments
+
+The captain still wanted more life, and the feeling of being part of something big that pushes the team on. This stage gives the bridge moments the crew earns and a way of saying how the deck is doing, in the spirit of a crew bringing a ship home rather than any film's ships, names or sounds. All of it answers real events (a merge, a recovery, a streak, a waypoint, the mission), none of it runs on a timer, and when a unit needs the captain it waits.
+
+- **Earned celebrations, in tiers** (`src/client/features/moments/`, rules in `src/client/features/beats/tiers.ts`): a unit's first merge turns its pod to it with a nod; a unit back from stuck gets a white sweep across its pod and "BOLT (C-01) RECOVERED, 40M STUCK" on the band; three merges inside an hour with nothing stuck put hands up across the ship and run the surge harder; a waypoint brings the jump with the crew standing to face the bow, then the log card with the real numbers; the mission complete brings the arrival, the fleet's slow fly-by and a card naming every unit that merged. One at a time, a higher tier swallowing a lower one, held behind any call and only the card after ten minutes held.
+- **Hyperspace** (`src/client/features/space/tunnel.ts`): 3, 2, 1 on the band and big across the forward glass, the escorts streaking away, a ship-cyan and white tunnel round the ship for 1.5 s, and the next waypoint's name across the glass as the ship comes out and the escorts drop back. It waits for the captain (JUMP READY - AWAITING CAPTAIN) and becomes the crossfade if a call comes in mid-jump.
+- **Alert conditions** (`src/client/features/alert/`): the room steps darker, never orange or red, at amber (a unit waited past five minutes, or a reminder fired) and red (one stuck past ten, or three stuck), the pod lights over the units that wait kept up and the band saying why with the state's glyph; the lights come back up aft to bow when the last call clears.
+- **Settings > Bridge > Moments**: Celebrations (Full, Cards only, Off) and Alert conditions (on or off, amber after 2 to 15 minutes, red after 5 to 30).
+
+The words are in `src/shared/shiplog.ts` (`tests/copy.test.ts`), the numbers in `tests/motion.test.ts` (tiers, gestures, the jump, the countdown), `tests/alert.test.ts` (thresholds, the latch, the dimmer, the stand-down, the band's lines), `tests/lights.test.ts` (every state at 4.5:1 or more on its carrier on the dimmed rigs, Night and Day) and `tests/fleet.test.ts` (the escorts' jump and fly-by).
+
+`node design/shoot-moments.mjs life-moments/after` takes the stills from a built office with the page's clock stepped a frame at a time, so each lands on the same instant every take: a healthy crew of stand-in units, six sister decks, a course of four waypoints; merges and a recovery played in as the server sends them, waypoints marked done for real, and a unit's wait aged in the page. `SHOOT_ROOT=<a build of the commit before> ... life-moments/before` takes the same moments on the build before, `SHOOT_LIGHT=day ... life-moments/day` the Day set, and `... moments-clip` the clip `shots/life-moments/after/moments-clip.mp4` (16 s, a frame each thirtieth of a second, from the conn): a unit's first merge (its pod nods), a streak (hands up, the harder surge), then a waypoint's countdown, the jump through the tunnel, the name across the glass and the log card.
+
+| Before | After |
+| --- | --- |
+| ![](shots/life-moments/before/nod.png) | ![](shots/life-moments/after/nod.png) |
+| ![](shots/life-moments/before/streak.png) | ![](shots/life-moments/after/streak.png) |
+| ![](shots/life-moments/before/recovery.png) | ![](shots/life-moments/after/recovery.png) |
+| ![](shots/life-moments/before/jump-countdown.png) | ![](shots/life-moments/after/jump-countdown.png) |
+| ![](shots/life-moments/before/jump-tunnel.png) | ![](shots/life-moments/after/jump-tunnel.png) |
+| ![](shots/life-moments/before/jump-banner.png) | ![](shots/life-moments/after/jump-banner.png) |
+| ![](shots/life-moments/before/alert-amber.png) | ![](shots/life-moments/after/alert-amber.png) |
+| ![](shots/life-moments/before/alert-red.png) | ![](shots/life-moments/after/alert-red.png) |
+| ![](shots/life-moments/before/stand-down.png) | ![](shots/life-moments/after/stand-down.png) |
+| ![](shots/life-moments/before/mission-card.png) | ![](shots/life-moments/after/mission-card.png) |
+
+| Hands up, close | Standing to face the bow | The log card | The jump held for the captain |
+| --- | --- | --- | --- |
+| ![](shots/life-moments/after/streak-close.png) | ![](shots/life-moments/after/jump-stand.png) | ![](shots/life-moments/after/waypoint-card.png) | ![](shots/life-moments/after/jump-held.png) |
+
+| Condition red on the band | Standing down | The fleet's fly-by, in orbit | Cards only |
+| --- | --- | --- | --- |
+| ![](shots/life-moments/after/alert-red-band.png) | ![](shots/life-moments/after/stand-down-band.png) | ![](shots/life-moments/after/mission-flyby.png) | ![](shots/life-moments/after/card-streak.png) |
+
+| Settings > Bridge > Moments | Day: condition red | Day: the waypoint's name | Day: the recovery |
+| --- | --- | --- | --- |
+| ![](shots/life-moments/after/settings-moments.png) | ![](shots/life-moments/day/alert-red.png) | ![](shots/life-moments/day/jump-banner.png) | ![](shots/life-moments/day/recovery.png) |
+
+Frame time at 1440x900 by night on the GPU (Apple M3 Pro through ANGLE Metal), `node design/perf-probe.mjs metal` (twelve units at work, six sister decks, two open pull requests), the build before and this one run back to back: from the conn 2.9 to 3.1 ms before against 2.7 to 3.0 ms after, 1057 draw calls both; out of a side port 0.9 to 1.0 ms both, 386 draw calls both; rAF p50 16.7 ms and p95 16.7 to 16.8 ms throughout, on vsync. Idle, the moments draw nothing (the band, the sweep, the tunnel and the name are hidden). Mid-jump with the tunnel open, `shoot-moments.mjs perf-jump` times a forced render at 3.6 ms against 3.8 ms idle from the conn (986 draw calls against 966: the 4-degree wider view takes in more of the deck; the tunnel and the name are one draw each). `FLICKER_JUMP=1 node design/flicker-check.mjs metal 900` (new: it jumps the ship every 420 frames of the sweep) passes with 160 frames by Night and 206 by Day inside the tunnel: no black frame, no NaN pixel.
+
+### Left for later
+
+- The holo ring over the mission table doesn't count down with the band and the glass; it keeps its heading.
+- Reverts appear on a waypoint's card only when the reputation index has them, which counts per agent identity, so the card leaves them out for now.
+- The start-of-watch card and the captain's debrief (with the recoveries the waypoint cards count) are later stages.
