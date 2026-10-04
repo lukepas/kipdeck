@@ -12,6 +12,7 @@ import { bountySettings } from './bounty-settings';
 import { showcaseSettings } from './showcase-settings';
 import { brightnessSettings, bridgeSettings, lightSettings } from './bridge-settings';
 import { lifeSettings } from './life-settings';
+import { momentSettings } from './moments-settings';
 import { icon, type IconName } from './icons';
 
 const VIEWS: [ViewMode, string, string][] = [
@@ -405,6 +406,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       setting('Brightness', 'you', ...brightnessSettings(() => settings, change)),
       setting('Ship motion', 'you', ...bridgeSettings(() => settings, change)),
       setting('Life', 'you', ...lifeSettings(() => settings, change)),
+      setting('Moments', 'you', ...momentSettings(() => settings, change)),
     ],
     sound: [
       setting('Sound cues', 'you', soundRow, h('p.setting-note', {}, 'Off until you turn them on. Four short cues, one per change worth hearing from another tab: a unit needs you (two rising notes), a unit is stuck (two low ticks), a unit is ready for review (one soft tone) and a merge is proven on chain (a low thunk and a tick). The deck makes no other sound, and voice chat has its own level.')),

@@ -78,6 +78,18 @@ export const LIFE_PART_DEFAULTS: Readonly<Record<LifePart, boolean>> = { destina
 /** Settings > Bridge > Ship's voice (VESPER, features/vesper): with humour, plain status lines only, or silent. */
 export const VOICE_MODES = ['on', 'plain', 'off'] as const;
 export type VoiceMode = (typeof VOICE_MODES)[number];
+/** Settings > Bridge > Celebrations (features/moments): the tiered moments in full, as cards only, or off (the merge beat and the jump stay). */
+export const CELEBRATION_MODES = ['full', 'cards', 'off'] as const;
+export type CelebrationMode = (typeof CELEBRATION_MODES)[number];
+/** Settings > Bridge > Alert conditions (features/alert): on or off, and the minutes a wait takes to go amber and a stuck unit red. */
+export interface AlertSettings {
+  on: boolean;
+  amberMin: number;
+  redMin: number;
+}
+export const AMBER_MINUTES = [2, 5, 10, 15] as const;
+export const RED_MINUTES = [5, 10, 20, 30] as const;
+export const ALERT_DEFAULTS: Readonly<AlertSettings> = { on: true, amberMin: 5, redMin: 10 };
 
 export interface Settings {
   view: ViewMode;
@@ -111,6 +123,10 @@ export interface Settings {
   lifeParts: Record<LifePart, boolean>;
   /** Settings > Bridge > Ship's voice: On, Plain only or Off. */
   voice: VoiceMode;
+  /** Settings > Bridge > Celebrations: Full, Cards only or Off. */
+  celebrations: CelebrationMode;
+  /** Settings > Bridge > Alert conditions. */
+  alerts: AlertSettings;
 }
 
 const SETTINGS_KEY = 'agent-office.settings';
@@ -195,7 +211,7 @@ export function rememberSpot(s: Spot) {
 }
 
 export function loadSettings(): Settings {
-  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { ...LIFE_PART_DEFAULTS }, voice: 'on' };
+  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { ...LIFE_PART_DEFAULTS }, voice: 'on', celebrations: 'full', alerts: { ...ALERT_DEFAULTS } };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null');
     if (saved?.view === 'first' || saved?.view === 'third') s.view = saved.view;
@@ -214,6 +230,10 @@ export function loadSettings(): Settings {
     if (LIFE_LEVELS.includes(saved?.life)) s.life = saved.life;
     for (const k of LIFE_PARTS) if (typeof saved?.lifeParts?.[k] === 'boolean') s.lifeParts[k] = saved.lifeParts[k];
     if (VOICE_MODES.includes(saved?.voice)) s.voice = saved.voice;
+    if (CELEBRATION_MODES.includes(saved?.celebrations)) s.celebrations = saved.celebrations;
+    if (typeof saved?.alerts?.on === 'boolean') s.alerts.on = saved.alerts.on;
+    if ((AMBER_MINUTES as readonly unknown[]).includes(saved?.alerts?.amberMin)) s.alerts.amberMin = saved.alerts.amberMin;
+    if ((RED_MINUTES as readonly unknown[]).includes(saved?.alerts?.redMin)) s.alerts.redMin = saved.alerts.redMin;
   } catch {
     // storage blocked
   }

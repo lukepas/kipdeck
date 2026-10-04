@@ -160,7 +160,7 @@ test('what the browser remembers keeps its keys and shapes', () => {
   assert.deepEqual(state.lastSpot(), { floor: 'f1', name: 'F', x: 1, y: 2, z: 3, facing: 4 });
   assert.ok(storage.has('agent-office.spot'));
   const settings = state.loadSettings();
-  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: state.HUD_DEFAULTS, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { destination: true, fleet: true, sorties: true, epithets: true, droid: false }, voice: 'on' });
+  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: state.HUD_DEFAULTS, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { destination: true, fleet: true, sorties: true, epithets: true, droid: false }, voice: 'on', celebrations: 'full', alerts: { on: true, amberMin: 5, redMin: 10 } });
   // Mission control's last tab is one of its tabs.
   storage.set('agent-office.settings', JSON.stringify({ missionTab: 'goals', allFloors: true }));
   assert.deepEqual([state.loadSettings().missionTab, state.loadSettings().allFloors], ['goals', true]);
@@ -199,6 +199,11 @@ test('what the browser remembers keeps its keys and shapes', () => {
   assert.equal(state.loadSettings().voice, 'plain');
   state.saveSettings({ ...settings, voice: 'shout' as never });
   assert.equal(state.loadSettings().voice, 'on');
+  // Celebrations are Full, Cards only or Off; alert conditions on or off, their minutes one of the choices.
+  state.saveSettings({ ...settings, celebrations: 'cards', alerts: { on: false, amberMin: 2, redMin: 30 } });
+  assert.deepEqual([state.loadSettings().celebrations, state.loadSettings().alerts], ['cards', { on: false, amberMin: 2, redMin: 30 }]);
+  state.saveSettings({ ...settings, celebrations: 'confetti' as never, alerts: { on: 'yes', amberMin: 7, redMin: -1 } as never });
+  assert.deepEqual([state.loadSettings().celebrations, state.loadSettings().alerts], ['full', { on: true, amberMin: 5, redMin: 10 }]);
   store.apply(welcome());
   assert.equal(state.lastFloor(), 'f1');
 });
