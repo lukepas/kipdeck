@@ -3,6 +3,7 @@
 
 import { clamp, lerp, expoOut, cubicInOut, curves } from '../engine/ease.js';
 import { rand01 } from '../engine/prng.js';
+import { countUnits } from '../engine/typeLayer.js';
 
 // Display type is never late. Every in-animation starts TYPE_PRE frames
 // before its beatmap hit, so on the hit frame the type is already about 93%
@@ -14,6 +15,38 @@ export function typeIn(t, hitT, frames = 8, ease = expoOut, fps = 60) {
 }
 // First time a pre-rolled headline may draw.
 export const typeFrom = (hitT, fps = 60) => hitT - TYPE_PRE / fps;
+
+// Display type reveals per word (engine/typeLayer.js): each word rises out
+// of a mask under its line over REVEAL.dur frames, staggered by
+// REVEAL.stagger, and the last word is set REVEAL.lead frames BEFORE the hit,
+// so the hit frame always holds the complete line. Questions use mode 'drop'
+// (they fall in from above); answers rise.
+export const REVEAL = { dur: 7, stagger: 2, lead: 2 };
+
+export function unitsOf(spans, unit = 'word') {
+  return countUnits(typeof spans === 'string' ? [{ text: spans }] : spans, unit);
+}
+// Frames a reveal of n units takes from its first word to its last set.
+export function revealFrames(n, o = {}) {
+  const r = { ...REVEAL, ...o };
+  return r.at ? Math.max(...r.at) + r.dur : r.dur + Math.max(0, n - 1) * r.stagger;
+}
+// When the reveal for hitT has to start.
+export function revealStart(hitT, spans, o = {}, fps = 60) {
+  const r = { ...REVEAL, ...o };
+  return hitT - (r.lead + revealFrames(unitsOf(spans, r.unit), r)) / fps;
+}
+// The reveal spec for S.type.text at time t, or null before it starts / after
+// it has fully exited. exit: time the words start sinking away.
+export function revealAt(t, hitT, spans, o = {}, fps = 60) {
+  const r = { ...REVEAL, ...o };
+  const t0 = revealStart(hitT, spans, r, fps);
+  if (t < t0) return null;
+  const n = unitsOf(spans, r.unit);
+  const out = r.exit != null && t >= r.exit ? (t - r.exit) * fps : null;
+  if (out != null && out >= (r.outDur ?? 6) + n * (r.outStagger ?? 1)) return null;
+  return { mode: r.mode || 'rise', unit: r.unit || 'word', dur: r.dur, stagger: r.stagger, at: r.at, f: (t - t0) * fps, out, outDur: r.outDur, outStagger: r.outStagger };
+}
 
 // The act 1 -> act 2 whip-pan is one camera move across the cut on
 // pan.timeline. whipCamera returns how far it has travelled in frame widths
@@ -28,6 +61,9 @@ export function whipCamera(tl, t) {
 // Archivo's baseline sits this far below the top of a line box, in em, for a
 // given line height (ascender 0.878, descender 0.21, half-leading split).
 export const baseOf = (lh) => (lh - 1.088) / 2 + 0.878;
+// Archivo's descender depth in em: bottom-anchored headlines keep it above
+// the rule they sit on.
+export const DESC = 0.21;
 
 // Right edge display type may reach: the grid in 16:9, and in 9:16 never past
 // the feed's right-hand action rail.
@@ -149,13 +185,16 @@ export function headline(S, hitName, {
 } = {}) {
   const { t, tl, type, design } = S;
   const hit = tl.hit(hitName);
-  if (t < typeFrom(hit.t, tl.fps) || t >= until) return null;
-  const wipe = typeIn(t, hit.t, wipeFrames, expoOut, tl.fps);
+  const body = spans || override || hit.text;
+  const reveal = t < until ? revealAt(t, hit.t, body, {}, tl.fps) : null;
+  if (!reveal) return null;
+  void wipeFrames;
   const sc = tl.sidechain(t);
   type.text({
-    spans: spans || override || hit.text,
+    reveal,
+    spans: body,
     x, y, size: size ?? design.size('l'), color: color || design.palette.ink,
-    wdth: clamp(wdth - breathe * sc, 62, 125), wght, wipe, align, maxWidth, lineHeight, opacity,
+    wdth: clamp(wdth - breathe * sc, 62, 125), wght, align, maxWidth, lineHeight, opacity,
     fit: fitWidth(design, x, maxWidth),
   });
   return hit;

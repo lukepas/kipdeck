@@ -137,3 +137,36 @@ test('display word space is the same at every width-axis value', () => {
   // At the widest setting the font's own space is already the target width.
   assert.ok(Math.abs(wordSpacingFor(125, 0) - (WORD_SPACE_EM - 0.29)) < 1e-9);
 });
+
+// ---- per-word reveal ----------------------------------------------------
+import { countUnits, revealProgress } from '../src/engine/typeLayer.js';
+import { revealStart, revealAt, REVEAL } from '../src/scenes/common.js';
+
+test('reveal counts words and lines', () => {
+  const spans = [{ text: 'Paid only when' }, { br: true }, { text: 'a ' }, { text: 'human' }, { text: ' merges.' }];
+  assert.equal(countUnits(spans, 'word'), 6);
+  assert.equal(countUnits(spans, 'line'), 2);
+});
+
+test('every word is set REVEAL.lead frames before its hit, never later', () => {
+  for (const spans of ['Goals.', 'Released on merge.', [{ text: 'Who gets' }, { br: true }, { text: 'paid?' }]]) {
+    const list = typeof spans === 'string' ? [{ text: spans }] : spans;
+    const hit = 17.5;
+    const t0 = revealStart(hit, spans);
+    assert.ok(t0 < hit);
+    // Set from hit - lead frames on, and not before the reveal starts.
+    for (let k = REVEAL.lead; k >= 0; k--) {
+      const r = revealAt(hit - k / 60, hit, spans);
+      assert.equal(revealProgress(r, list), 1, `${JSON.stringify(spans)} at hit-${k}f`);
+    }
+    assert.equal(revealAt(t0 - 1 / 60, hit, spans), null);
+    const mid = revealAt(t0 + 2 / 60, hit, spans);
+    assert.ok(revealProgress(mid, list) < 1);
+  }
+});
+
+test('a word on a later hit does not count against the words already set', () => {
+  const spans = 'Pay per task. x402.';
+  const r = revealAt(24.0, 25.0, spans, { at: [0, 2, 4, 66] });
+  assert.equal(revealProgress(r, [{ text: spans }]), 1);
+});

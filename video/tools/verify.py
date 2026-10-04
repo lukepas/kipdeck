@@ -11,7 +11,9 @@ Reports:
   - loudness: EBU R128 integrated, LRA and true peak of the mp4's audio
   - type sync: display type is never late. For every text hit, the display
     type layer (rendered alone by render.mjs --typesync) must carry at least
-    85% of its settled ink on the hit frame. Hits whose type is drawn on the
+    85% of its settled ink on the hit frame, and every display-type block on
+    the hit frame must be fully formed (each word set, no partial wipe; the
+    type layer reports it). Hits whose type is drawn on the
     canvas (no DOM type to measure) are listed, not scored. --no-type skips it.
 
 usage: python3 tools/verify.py film.mp4 [--from 0] [--no-type]
@@ -159,9 +161,14 @@ def type_sync(w, h, fails):
             continue
         ratio = vals.get(0, 0) / settled
         ok = ratio >= TYPE_MIN
-        print(f"  {hit['t']:6.3f}s f{hit['frame']:<5} {hit['name']:<24} {ratio:6.1%}{'' if ok else '  LATE'}")
+        on_hit = next((f for f in hit["files"] if f["offset"] == 0), {})
+        partial = [b for b in on_hit.get("formed", []) if b["formed"] < 0.999]
+        cut = "" if not partial else "  PARTIAL: " + ", ".join(f"'{b['text']}' {b['formed']:.0%}" for b in partial)
+        print(f"  {hit['t']:6.3f}s f{hit['frame']:<5} {hit['name']:<24} {ratio:6.1%}{'' if ok else '  LATE'}{cut}")
         if not ok:
             fails.append(f"{hit['name']} is {ratio:.0%} formed on frame {hit['frame']} (display type must lead its hit)")
+        for b in partial:
+            fails.append(f"{hit['name']}: '{b['text']}' is only {b['formed']:.0%} revealed on its hit frame {hit['frame']}")
 
 
 def main(argv):
