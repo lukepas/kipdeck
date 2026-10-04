@@ -63,7 +63,12 @@ function layout(design) {
     tlType: { mode: 'stack', base: Y(7.55), size: design.size('l') },
     // Snapped to the grid (cols 7-12, rows E-G) with a paper margin, so the
     // merged cells it covers read as deliberately masked.
-    card: { x: X(6) + 10 * u, y: Y(4) + 10 * u, w: X(12) - X(6) - 20 * u, h: Y(7) - Y(4) - 20 * u },
+    // In 1:1 the columns are narrow, so the card takes cols 4-12 to keep the
+    // proportions its contents are drawn in.
+    card: (() => {
+      const c0 = design.square ? 3 : 6;
+      return { x: X(c0) + 10 * u, y: Y(4) + 10 * u, w: X(12) - X(c0) - 20 * u, h: Y(7) - Y(4) - 20 * u };
+    })(),
     ask: { x: X(0), bases: [Y(1.75), Y(3.5)], size: design.size('xl') },
     dropType: { x: X(0), base: Y(1.25), pitch: design.size('l') * 0.92, size: design.size('l') },
     dropKeep: { x: 0, y: 0, w: design.w, h: Y(2.85) },
@@ -744,7 +749,11 @@ function escrowLayout(design) {
     counter: { x: X(0) - 14 * u, base: Y(5.0), size: design.size('xxl') },
     unit: Y(5.55),
     bar: { x: X(0), y: Y(5.2), w: X(7) - X(0) },
-    tx: { x: X(7.5), label: Y(3.6), base: Y(4.4), size: 72 * u },
+    // 1:1 has no room beside the counter, so the tx sits in the band
+    // between the state boxes and the figure.
+    tx: design.square
+      ? { x: X(0), label: Y(2.85), base: Y(3.4), size: 64 * u, tagRight: true }
+      : { x: X(7.5), label: Y(3.6), base: Y(4.4), size: 72 * u },
     head: { x: X(0), bases: [Y(7.55)], size: design.size('l'), two: false },
   };
 }

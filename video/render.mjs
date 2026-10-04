@@ -6,6 +6,7 @@
 //
 //   node render.mjs                       full 16:9, 1920x1080 @ 60 fps
 //   node render.mjs --format 9x16         full 9:16, 1080x1920 @ 60 fps
+//   node render.mjs --format 1x1          full 1:1, 1080x1080 @ 60 fps
 //   node render.mjs --preview             fast check: 30 fps, 1/3 size, JPEG frames
 //   node render.mjs --from 12 --to 16     a slice (audio is trimmed to match)
 //   node render.mjs --still 14.0          one PNG to out/stills, no encode
@@ -91,8 +92,9 @@ function parseArgs(argv) {
       default: throw new Error(`unknown flag ${k} (see --help)`);
     }
   }
-  if (a.format !== '16x9' && a.format !== '9x16') throw new Error('--format must be 16x9 or 9x16');
-  const full = a.format === '9x16' ? [1080, 1920] : [1920, 1080];
+  const FULL = { '16x9': [1920, 1080], '9x16': [1080, 1920], '1x1': [1080, 1080] };
+  if (!FULL[a.format]) throw new Error('--format must be 16x9, 9x16 or 1x1');
+  const full = FULL[a.format];
   const div = a.preview ? 3 : 1;
   a.w = a.w || Math.round(full[0] / div / 2) * 2;
   a.h = a.h || Math.round(full[1] / div / 2) * 2;
@@ -104,7 +106,7 @@ function parseArgs(argv) {
 }
 
 function readHelp() {
-  return `usage: node render.mjs [--format 16x9|9x16] [--preview] [--fps N] [--w N] [--h N]
+  return `usage: node render.mjs [--format 16x9|9x16|1x1] [--preview] [--fps N] [--w N] [--h N]
        [--from S] [--to S] [--still S] [--stills S,S,...] [--guides] [--no-grain] [--blur N] [--out file.mp4] [--keep-frames]
        [--typesync DIR]   display-type layer alone at every text hit (tools/verify.py measures it)`;
 }

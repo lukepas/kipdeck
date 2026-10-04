@@ -144,7 +144,7 @@ def ink(path):
 
 
 def type_sync(w, h, fails):
-    fmt = "9x16" if h > w else "16x9"
+    fmt = "9x16" if h > w else "1x1" if h == w else "16x9"
     pw, ph = (w // 3) // 2 * 2, (h // 3) // 2 * 2
     out = os.path.join(ROOT, "out", "typesync", fmt)
     sh(["node", os.path.join(ROOT, "render.mjs"), "--format", fmt, "--w", str(pw), "--h", str(ph),

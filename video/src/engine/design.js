@@ -46,9 +46,15 @@ const SAFE_9x16 = {
   title: { top: 0.14, right: 0.12, bottom: 0.2, left: 0.0741 },
 };
 
+// 1:1 is the 16:9 layout on the same 12x8 grid, with the unit scaled down so
+// type and strokes fit grid columns that are 56% as wide. Scenes branch on
+// `design.square` only where the 16:9 composition still collides.
+export const SQUARE_U = 0.75;
+
 export function createDesign(w, h, format) {
   const vertical = format === '9x16' || (format == null && h > w);
-  const u = Math.min(w, h) / 1080;
+  const square = !vertical && (format === '1x1' || (format == null && h === w));
+  const u = (Math.min(w, h) / 1080) * (square ? SQUARE_U : 1);
   const scale = vertical ? SCALE_9x16 : SCALE_16x9;
   const gridSpec = vertical ? GRID_9x16 : GRID_16x9;
   const safe = vertical ? SAFE_9x16 : SAFE_16x9;
@@ -82,7 +88,7 @@ export function createDesign(w, h, format) {
   const font = (family, weight, sizePx) => `${weight} ${sizePx}px "${family}"`;
 
   return {
-    w, h, u, vertical, format: vertical ? '9x16' : '16x9',
+    w, h, u, vertical, square, format: vertical ? '9x16' : square ? '1x1' : '16x9',
     palette: PALETTE, fonts: FONTS, tracking: TRACKING,
     size: px, scale, grid, place, safe, font,
     pick: (a, b) => (vertical ? b : a),

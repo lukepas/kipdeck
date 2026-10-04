@@ -39,7 +39,7 @@ function layout(design) {
   const V = design.vertical;
   const ls = design.size('labelS');
   const L = {
-    V, X, Y, u, ls,
+    V, X, Y, u, ls, square: design.square,
     header: { x: X(0), y: (V ? Y(0.5) : Y(0)) + ls * 0.95, right: X(V ? 4 : 12) },
     // The act's headline slot: act 2's escrow headline baseline.
     // In 9:16 the slot is anchored by its last baseline (Y 11.45, above the
@@ -48,15 +48,25 @@ function layout(design) {
       ? { x: X(0), base: Y(9.1), last: Y(10.6), size: design.size('m'), pitch: design.size('m') * 0.92 }
       : { x: X(0), base: Y(7.55), size: design.size('l'), pitch: design.size('l') * 0.92 },
   };
+  // 1:1 widens the ledger to 8 columns (its four columns need the room) and
+  // tightens the rows, so the schema UID can decode under it instead of
+  // beside it.
+  const sq = design.square;
   L.ledger = V
     ? { x: X(0), y: Y(1.6), w: X(3.6) - X(0), hdr: G.ch * 0.42, row: G.ch * 0.72, fs: 26 * u, cols: [0, 0.22, 0.47, 0.63] }
-    : { x: X(0), y: Y(0.75), w: X(7) - X(0), hdr: G.ch * 0.45, row: G.ch * 0.92, fs: 34 * u, cols: [0, 0.19, 0.42, 0.6] };
+    : sq
+      ? { x: X(0), y: Y(0.75), w: X(8) - X(0), hdr: G.ch * 0.45, row: G.ch * 0.8, fs: 34 * u, cols: [0, 0.19, 0.46, 0.62] }
+      : { x: X(0), y: Y(0.75), w: X(7) - X(0), hdr: G.ch * 0.45, row: G.ch * 0.92, fs: 34 * u, cols: [0, 0.19, 0.42, 0.6] };
   // Where act 2 decoded the release tx, the schema UID decodes.
   L.schema = V
     ? { x: X(0), label: Y(5.8), base: Y(6.4), size: design.size('data') }
-    : { x: X(7.5), label: Y(3.6), base: Y(4.4), size: 72 * u };
+    : sq
+      ? { x: X(0), label: Y(5.6), base: Y(6.15), size: design.size('data') }
+      : { x: X(7.5), label: Y(3.6), base: Y(4.4), size: 72 * u };
   const lg = L.ledger;
-  L.card = { x: lg.x, y: lg.y, w: lg.w, h: lg.hdr + 2 * lg.row };
+  // In 1:1 the card runs to col 10 so its twelve reputation slots keep room
+  // for the PR numbers the blocks carry.
+  L.card = { x: lg.x, y: lg.y, w: sq ? X(10) - X(0) : lg.w, h: lg.hdr + 2 * lg.row };
   L.board = V
     ? { x: X(0), y: Y(1.6), w: X(3.6) - X(0), h: Y(7.2) - Y(1.6), handleW: X(0.9) - X(0), countW: 92 * u, fs: 26 * u }
     : { x: X(0), y: Y(0.75), w: X(12) - X(0), h: Y(6.2) - Y(0.75), handleW: X(2) - X(0), countW: 170 * u, fs: 30 * u };
@@ -875,6 +885,16 @@ function x402Layout(L) {
       resp: { x: X(0), label: Y(5.85), a: Y(6.45), b: Y(7.15), note: Y(7.6), csz: 60 * u, ssz: 32 * u },
     };
   }
+  if (L.square) {
+    // 1:1: smaller flaps, so the response keeps its column on the right.
+    const size = 360 * u;
+    return {
+      req: { x: X(0), label: Y(0.8), base: Y(1.4), size: 64 * u },
+      pay: { x: X(7.75), label: Y(0.8), base: Y(1.4), size: 30 * u },
+      digits: { x: X(0), y: Y(2.0), size, cw: size * 0.72, ch: size * 0.9, gap: 12 * u },
+      resp: { x: X(7.75), label: Y(2.6), a: Y(3.3), b: Y(4.05), note: Y(4.6), csz: 48 * u, ssz: 26 * u },
+    };
+  }
   const size = 500 * u;
   return {
     req: { x: X(0), label: Y(0.8), base: Y(1.4), size: 64 * u },
@@ -1057,7 +1077,9 @@ function endLayout(L, design) {
     mark: { x: X(0), y: Y(0.4), s: 360 * u },
     word: { x: X(0), base: Y(5.75), size: 296 * u, lines: 1 },
     promise: { x: X(0), base: Y(6.6), size: 44 * u },
-    cta: { x: X(4), label: Y(0.4) + 26 * u, base: Y(1.2), size: 46 * u },
+    // 1:1: the column is too narrow for the repo on one line, so it breaks
+    // after the org.
+    cta: { x: X(4), label: Y(0.4) + 26 * u, base: Y(1.2), size: 46 * u, split: design.square },
     small: { x: X(0), base: Y(7.75), size: 22 * u },
   };
 }
@@ -1395,16 +1417,18 @@ const endcard = {
     if (t >= ctaT - 2 / FPS) {
       const a = clamp(frames(t, ctaT - 2 / FPS) / 2);
       text(S, 'Try it - verify every id', C.x, C.label, { size: L.ls, color: P.grey, alpha: a });
-      text(S, REPO, C.x, C.base, { kind: 'mono', size: C.size, weight: 700, color: P.ink, alpha: a, tracking: -0.02 });
+      const repoLines = C.split ? [REPO.slice(0, REPO.lastIndexOf('/') + 1), REPO.slice(REPO.lastIndexOf('/') + 1)] : [REPO];
+      repoLines.forEach((l, i) => text(S, l, C.x, C.base + i * C.size * 1.1, { kind: 'mono', size: C.size, weight: 700, color: P.ink, alpha: a, tracking: -0.02 }));
       if (!L.V) {
         const ls = 26 * u;
+        const base = C.base + (repoLines.length - 1) * C.size * 1.1;
         const rows = [
           ['Release tx', `${CHAIN.releaseTx}  Solana devnet`],
           ['Program', `${CHAIN.program}  Solana devnet`],
           ['EAS schema', `${CHAIN.schema}  Base Sepolia`],
         ];
         rows.forEach(([k, v], i) => {
-          const y = C.base + ls * 2.4 + i * ls * 1.55;
+          const y = base + ls * 2.4 + i * ls * 1.55;
           text(S, k, C.x, y, { size: ls * 0.78, color: P.grey, alpha: a });
           text(S, v, C.x + 210 * u, y, { kind: 'mono', size: ls, weight: 700, color: P.ink, alpha: a });
         });

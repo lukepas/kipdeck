@@ -3,7 +3,7 @@
 //   await window.__render(tSeconds) draws exactly that frame
 // There is no clock here. Nothing animates unless __render is called.
 //
-// URL params: w, h, fps, format (16x9|9x16), guides (1), grain (0 to disable),
+// URL params: w, h, fps, format (16x9|9x16|1x1), guides (1), grain (0 to disable),
 // blur (max motion-blur samples, 0/1 disables), t (render this time on load,
 // handy when opening the page by hand).
 
@@ -16,8 +16,8 @@ import { createGrain, createGuides } from './engine/overlays.js';
 import { createDirector } from './scenes/director.js';
 
 const q = new URLSearchParams(location.search);
-const format = q.get('format') === '9x16' ? '9x16' : '16x9';
-const w = Number(q.get('w')) || (format === '9x16' ? 1080 : 1920);
+const format = ['9x16', '1x1'].includes(q.get('format')) ? q.get('format') : '16x9';
+const w = Number(q.get('w')) || (format === '16x9' ? 1920 : 1080);
 const h = Number(q.get('h')) || (format === '9x16' ? 1920 : 1080);
 const fps = Number(q.get('fps')) || 60;
 const guidesOn = q.get('guides') === '1';

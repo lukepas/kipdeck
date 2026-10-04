@@ -9,7 +9,7 @@ import { rng, rand01, hash32 } from '../src/engine/prng.js';
 import { scramble, scrambleParts, lockSchedule, splitFlap, shortHash, glyphLocks, HEX, BASE58 } from '../src/engine/kinetic.js';
 import { wordSpacingFor, WORD_SPACE_EM } from '../src/engine/typeLayer.js';
 import { createTimeline } from '../src/engine/timeline.js';
-import { createDesign } from '../src/engine/design.js';
+import { createDesign, SQUARE_U } from '../src/engine/design.js';
 
 const beatmap = JSON.parse(readFileSync(new URL('../src/beatmap.json', import.meta.url)));
 
@@ -94,6 +94,22 @@ test('design: grids reflow per format and display type obeys the minimums', () =
   assert.equal(r.x, v.grid.colX(1));
   const preview = createDesign(640, 360, '16x9');
   assert.ok(Math.abs(preview.size('m') - 120 / 3) < 1e-9, 'sizes scale with the short side');
+});
+
+test('design: 1:1 keeps the 16:9 grid and placements at a smaller unit', () => {
+  const s = createDesign(1080, 1080, '1x1');
+  assert.equal(s.format, '1x1');
+  assert.equal(s.square, true);
+  assert.equal(s.vertical, false);
+  assert.equal(s.grid.cols, 12); assert.equal(s.grid.rows, 8);
+  assert.equal(s.u, SQUARE_U);
+  const r = s.place({ h: [3, 2, 1, 1], v: [0, 0, 1, 1] });
+  assert.equal(r.x, s.grid.colX(3), 'square takes the 16:9 placement');
+  assert.ok(s.size('data') >= 48, 'hashes stay at least 48 px in 1080x1080');
+  // Inferred from the frame when no format is passed; 16:9 and 9:16 are not square.
+  assert.equal(createDesign(540, 540).format, '1x1');
+  assert.equal(createDesign(1920, 1080, '16x9').square, false);
+  assert.equal(createDesign(1080, 1920, '9x16').square, false);
 });
 
 test('decodes settle on their beats from the beatmap and only ever show glyphs the value could hold', () => {
