@@ -170,6 +170,7 @@ export class Floor {
     this.watch = new TimelineWatch(this.timeline, {
       goalTitle: (id) => this.mission.title(id),
       officePull: (p) => this.officePull(p),
+      workerOfPull: (n, head) => this.workers.list().find((w) => w.pr?.number === n || (!!head && w.worktree?.branch === head)),
     });
     this.mission = new MissionStore(dataDir, (m) => {
       this.watch.missionChanged(m);

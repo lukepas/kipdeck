@@ -155,6 +155,8 @@ export interface WatchFloor {
   goalTitle(id: string | undefined): string | undefined;
   /** Whether a pull request is the office's own (a worker's, or a queue task's): only those get "opened" and "closed". */
   officePull(p: GhPull): boolean;
+  /** The worker a pull request is from (its number, or its branch), so a merge names its unit. */
+  workerOfPull?(n: number, head?: string): WorkerInfo | undefined;
 }
 
 /**
@@ -247,7 +249,14 @@ export class TimelineWatch {
 
   /** Pull request `p` merged (from the PR window `by` someone, or seen on GitHub). */
   merged(n: number, title: string | undefined, by?: string) {
-    this.add({ kind: 'pr-merged', pr: n, text: `${by ? `${by} merged` : 'Merged'} PR #${n}${title ? `: ${title}` : ''}` });
+    const w = this.floor.workerOfPull?.(n);
+    this.add({ kind: 'pr-merged', pr: n, ...(w ? this.who(w) : {}), text: `${by ? `${by} merged` : 'Merged'} PR #${n}${title ? `: ${title}` : ''}` });
+  }
+
+  /** The unit a pull request is from, as an event's fields, or none. */
+  private whoOfPull(p: GhPull) {
+    const w = this.floor.workerOfPull?.(p.number, p.headRefName);
+    return w ? this.who(w) : {};
   }
 
   /** A fresh list of pull requests: the office's own that opened, or closed without merging. */
@@ -256,8 +265,8 @@ export class TimelineWatch {
     const before = this.openPulls;
     this.openPulls = open;
     if (!before) return;
-    for (const p of open.values()) if (!before.has(p.number) && this.floor.officePull(p)) this.add({ kind: 'pr-opened', pr: p.number, text: `PR #${p.number} opened: ${p.title}` });
-    for (const p of items) if (p.state === 'CLOSED' && before.has(p.number) && this.floor.officePull(p)) this.add({ kind: 'pr-closed', pr: p.number, text: `PR #${p.number} closed without merging: ${p.title}` });
+    for (const p of open.values()) if (!before.has(p.number) && this.floor.officePull(p)) this.add({ kind: 'pr-opened', pr: p.number, ...this.whoOfPull(p), text: `PR #${p.number} opened: ${p.title}` });
+    for (const p of items) if (p.state === 'CLOSED' && before.has(p.number) && this.floor.officePull(p)) this.add({ kind: 'pr-closed', pr: p.number, ...this.whoOfPull(p), text: `PR #${p.number} closed without merging: ${p.title}` });
   }
 
   /** The queue's state: tasks that started, finished or failed, and paid ones moving along. */
