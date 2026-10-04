@@ -17,13 +17,13 @@ import { bannerText, Fresh, needingYou, Reminders } from './logic';
 import { Banner } from './ui';
 import { Beacon } from './world';
 
-/** How close (m) the beacon's light is gone altogether, and how far off it's at its brightest. */
+/** How close (m) the camera is for the beacon's light to be at its faintest, and how far off for its brightest. */
 const NEAR = 3;
-const FAR = 6.5;
+const FAR = 7;
 
 /** Follows the roster for the banner, the flash and the alarm, and registers the beacons' tick ('others', after the workers' own). */
-export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'views' | 'waiting' | 'mission'>) {
-  const { scene, sound, settings, player } = ctx;
+export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'views' | 'waiting' | 'mission' | 'stage' | 'lights'>) {
+  const { scene, sound, settings } = ctx;
   const fresh = new Fresh();
   const reminders = new Reminders();
   const beacons = new Map<string, Beacon>();
@@ -87,7 +87,12 @@ export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'views' | 'waiting'
 
   const at = new THREE.Vector3();
   const ground = new THREE.Vector3();
-  ctx.ticks.add('others', () => {
+  const eye = new THREE.Vector3();
+  ctx.ticks.add('others', ({ now }) => {
+    // From wherever the frame is drawn: the walk camera, or the Overview's.
+    (parts.stage.view ?? ctx.camera).getWorldPosition(eye);
+    const motion = ctx.reduceMotion.matches ? 0 : ctx.reduceMotion.ship === 'calm' ? 0.5 : 1;
+    const day = parts.lights?.mode() === 'day';
     for (const [id, b] of beacons) {
       const v = parts.views.workerViews.get(id);
       const root = v?.model.root;
@@ -98,9 +103,9 @@ export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'views' | 'waiting'
       v.model.where(at);
       const desk = ctx.world().desks.get(v.deskId);
       const floor = desk ? desk.group.getWorldPosition(ground).y : at.y;
-      const d = Math.hypot(at.x - player.pos.x, at.z - player.pos.z);
+      const d = eye.distanceTo(at);
       const near = 1 - Math.min(1, Math.max(0, (d - NEAR) / (FAR - NEAR)));
-      b.update(at, floor, near);
+      b.update(at, floor, near, now / 1000, motion, day);
     }
   });
 
