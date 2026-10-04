@@ -1224,6 +1224,9 @@ const endcard = {
         spans: Wd.lines === 2 ? [{ text: 'UGC' }, br, { text: 'ARMY' }] : 'UGC ARMY',
         x: Wd.x, base: Wd.base, size: Wd.size, lineHeight: 0.86,
         wdth: lerp(125, 100, p), wght: 900, tracking: -0.02, wipe: ramp(t, wm, 5),
+        // The slam may run past the grid to the frame edge; it is back
+        // inside the grid within a few frames.
+        fit: design.w - Wd.x,
       });
     }
     // Promise: mask-wipes on 28.0.
