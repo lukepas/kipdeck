@@ -52,6 +52,12 @@ export function noWebGL(): Promise<never> {
   return new Promise(() => {});
 }
 
+/**
+ * The most pixels drawn per CSS pixel: 1.5, not a Retina screen's 2, which would shade almost twice as
+ * many fragments through the lights, the glow and FXAA for little the eye can see past FXAA.
+ */
+export const MAX_PIXEL_RATIO = 1.5;
+
 /** The slate void round the deck, and how far off the fog starts and ends, so the slab fades at its edges. */
 export const VOID = { color: DECK.void, fogNear: 30, fogFar: 70 } as const;
 
@@ -64,7 +70,7 @@ export const VOID = { color: DECK.void, fogNear: 30, fogFar: 70 } as const;
  */
 export function createScene(canvas: HTMLCanvasElement, renderer: THREE.WebGLRenderer): Stage {
   const night = LIGHT_MODES.night;
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;

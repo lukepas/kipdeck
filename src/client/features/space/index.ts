@@ -7,9 +7,12 @@
  *
  * How fast the ship makes way is the one ambient cue tied to the deck: more merges in the last hour,
  * a little faster; no unit deployed, or all parked, and it holds station. Settings > Bridge > Ship
- * motion slows it all to half with no flybys (Calm) or stills it (Off, as reduced motion does), and a
- * waypoint reached then only changes the view, a 400 ms crossfade. While a unit has just started
- * needing you or got stuck, the flybys dim and wait, and no surge plays.
+ * motion slows it all to half with no flybys and no streaks (Calm) or stills it (Off, as reduced
+ * motion does), and a waypoint reached then only changes the view, a 400 ms crossfade. While a unit has
+ * just started needing you or got stuck, the flybys dim and wait, and no surge plays. A jump widens
+ * the view a few degrees and shifts the room's light cool going in and warm coming out; its flash is
+ * a glint over the glass (a third by Night). Nothing plays while the tab is hidden: a merge then
+ * surges nothing, and a waypoint only crossfades, so coming back is never met by a flourish out of nowhere.
  */
 import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
@@ -17,7 +20,8 @@ import type { Parts } from '../../core/parts';
 import { store } from '../../state';
 import { DECK, VIEWPORT_GLASS } from '../../world/office/materials';
 import { Flybys } from './flybys';
-import { DUCK_MS, FIRST_FLYBY_MS, FLYBY_GAP_MS, JUMP_MS, JUMP_STRETCH, MERGE_WINDOW_MS, SPACE_COLORS, SURGE, SURGE_GAP_MS, SURGE_MS, between, cruiseSpeed, jumpAt, motionScale, pickFlyby, seeded, surgeAt, surgeGlint, type FlybyKind } from './logic';
+import { FOV } from '../../core/scene';
+import { DUCK_MS, FIRST_FLYBY_MS, FLYBY_GAP_MS, JUMP_FOV, JUMP_MS, JUMP_STRETCH, MERGE_WINDOW_MS, SPACE_COLORS, SURGE, SURGE_GAP_MS, SURGE_MS, between, cruiseSpeed, flashPeak, jumpAt, jumpsNow, motionScale, pickFlyby, seeded, surgeAt, surgeGlint, surgesNow, type FlybyKind } from './logic';
 import { Sky } from './sky';
 import { Starfield } from './stars';
 
@@ -47,7 +51,7 @@ export interface Space {
   clock(): number;
 }
 
-export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage'>): Space {
+export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | 'player'>): Space {
   const { scene } = parts.stage;
   scene.background = new THREE.Color(SPACE_COLORS.void);
   scene.fog = new THREE.Fog(SPACE_COLORS.void, FOG.near, FOG.far);
@@ -78,11 +82,17 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage'>): Space {
   let forced = false;
   let glint = 0;
   let timeK = 1;
+  /** The view's widening and the room's tint the jump last set, to put back once it's over. */
+  let fovNow = 0;
+  let tintNow = 0;
+  const was = new THREE.Vector3();
+  let moving = false;
 
   const scale = () => motionScale(ctx.reduceMotion.ship);
+  const visible = () => typeof document === 'undefined' || document.visibilityState !== 'hidden';
 
   function surge() {
-    if (jump || scale() === 0) return;
+    if (jump || !surgesNow(ctx.reduceMotion.ship, visible())) return;
     if (clock - surgeFrom < SURGE_GAP_MS) return;
     surgeFrom = clock;
   }
@@ -90,7 +100,7 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage'>): Space {
   function startJump() {
     regionN++;
     sky.prepare(regionN);
-    if (scale() === 0) {
+    if (!jumpsNow(ctx.reduceMotion.ship, visible())) {
       fade = { at: clock };
       return;
     }
@@ -148,6 +158,9 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage'>): Space {
       readDeck();
     }
     const k = scale();
+    // Walking while the stars stream by is the strongest pull on the stomach: a surge runs at half then.
+    moving = parts.player.pos.distanceTo(was) > 0.5 * dt;
+    was.copy(parts.player.pos);
     cruise += (cruiseSpeed(mergesLastHour, underWay) - cruise) * Math.min(1, dt / EASE_S);
     if (jumpWaiting && clock >= duckUntil) {
       jumpWaiting = false;
@@ -159,11 +172,15 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage'>): Space {
     let streak = 0;
     let stretch = 1;
     let flash = 0;
+    let fov = 0;
+    let tint = 0;
     glint = 0;
     const sinceSurge = clock - surgeFrom;
     if (sinceSurge < SURGE_MS) {
       mul = surgeAt(sinceSurge);
-      streak = (mul - 1) / (SURGE.peak - 1);
+      if (moving) mul = 1 + (mul - 1) / 2;
+      // At Calm a surge is only the glint on the glass: no streaks past the side ports.
+      streak = k < 1 ? 0 : (mul - 1) / (SURGE.peak - 1);
       stretch = SURGE_STRETCH;
       glint = surgeGlint(sinceSurge);
     }
@@ -173,6 +190,8 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage'>): Space {
       streak = f.streak;
       stretch = JUMP_STRETCH;
       flash = f.flash;
+      fov = f.fov;
+      tint = f.tint;
       if (f.swapped && !jump.swapped) {
         jump.swapped = true;
         sky.show(1);
@@ -189,7 +208,16 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage'>): Space {
     speedNow = k === 0 ? 0 : cruise * k * mul;
     stars.step(dt, speedNow, k === 0 ? 0 : streak, stretch);
     sky.turn(dt * k);
-    sky.setFlash(flash * 0.85);
+    sky.setFlash(flash * flashPeak(parts.lights?.mode() ?? 'night', ctx.reduceMotion.ship));
+    if (fov !== fovNow) {
+      fovNow = fov;
+      ctx.camera.fov = FOV + JUMP_FOV * fov;
+      ctx.camera.updateProjectionMatrix();
+    }
+    if (tint !== tintNow) {
+      tintNow = tint;
+      parts.lights?.tint(tint);
+    }
     VIEWPORT_GLASS.emissiveIntensity = 0.3 * glint;
     const breath = k === 0 ? 1 : 1 + BREATH.depth * Math.sin((clock / BREATH.ms) * Math.PI * 2);
     ctx.office.drive.set((cruise / 0.4) * 0.6 * breath * Math.sqrt(mul));

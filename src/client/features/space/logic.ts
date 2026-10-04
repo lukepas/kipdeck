@@ -65,42 +65,78 @@ export function surgeGlint(ms: number): number {
 
 /**
  * The jump when a waypoint is reached, 2.4 s in four steps: the stars stretch toward the bow for
- * 800 ms, a white-cyan flash fills the glass for 120 ms (the sky is swapped for a new region under
- * it), then the stars come back to cruise over 1.2 s, and a last 280 ms settles.
+ * 800 ms, a white-cyan flash comes up over the glass in 90 ms and eases off over 210 ms (the sky is
+ * swapped for a new region at its height), then the stars come back to cruise over 1.1 s, and a last
+ * 200 ms settles. The flash is added to the sky, never painted over it, and how bright it gets is
+ * flashPeak's: a glint by night, never a white-out.
  */
-export const JUMP = { stretch: 800, flash: 120, settle: 1200, tail: 280 } as const;
+export const JUMP = { stretch: 800, flash: 300, settle: 1100, tail: 200 } as const;
 export const JUMP_MS = JUMP.stretch + JUMP.flash + JUMP.settle + JUMP.tail;
+/** How long the flash takes to come up (ms); the rest of JUMP.flash it eases off. */
+export const FLASH_RISE = 90;
 /** How far the stars streak at the jump's height, against their cruise length. */
 export const JUMP_STRETCH = 60;
+/** How far the view widens at the jump's height (degrees), and eases back. */
+export const JUMP_FOV = 4;
 
 export interface JumpFrame {
   /** Speed multiplier on the star layers. */
   speed: number;
   /** How long the streaks are, 0 (points) to 1 (the full stretch). */
   streak: number;
-  /** The flash over the sky, 0-1. */
+  /** The flash over the sky, 0-1 of its peak (see flashPeak). */
   flash: number;
   /** Whether the sky has been swapped for the new region yet. */
   swapped: boolean;
+  /** How far the view is widened, 0-1 of JUMP_FOV. */
+  fov: number;
+  /** The light in the room: toward cool going in (-1), toward warm coming out (+1), 0 as it was. */
+  tint: number;
 }
+
+const easeOut = (k: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
 
 /** The jump `ms` after it starts. */
 export function jumpAt(ms: number): JumpFrame {
   const { stretch, flash, settle } = JUMP;
-  if (ms <= 0) return { speed: 1, streak: 0, flash: 0, swapped: false };
+  if (ms <= 0) return { speed: 1, streak: 0, flash: 0, swapped: false, fov: 0, tint: 0 };
   if (ms < stretch) {
     const k = smooth(ms / stretch);
-    return { speed: 1 + 39 * k * k, streak: k, flash: 0, swapped: false };
+    return { speed: 1 + 39 * k * k, streak: k, flash: 0, swapped: false, fov: easeOut(ms / stretch), tint: -k };
   }
   if (ms < stretch + flash) {
-    const k = (ms - stretch) / flash;
-    return { speed: 40, streak: 1, flash: Math.sin(Math.PI * k), swapped: k >= 0.5 };
+    const t = ms - stretch;
+    const f = t < FLASH_RISE ? smooth(t / FLASH_RISE) : 1 - smooth((t - FLASH_RISE) / (flash - FLASH_RISE));
+    return { speed: 40, streak: 1, flash: f, swapped: t >= FLASH_RISE, fov: 1, tint: -1 + 2 * smooth(t / flash) };
   }
   if (ms < stretch + flash + settle) {
     const k = smooth((ms - stretch - flash) / settle);
-    return { speed: 1 + 39 * (1 - k), streak: 1 - k, flash: 0, swapped: true };
+    return { speed: 1 + 39 * (1 - k), streak: 1 - k, flash: 0, swapped: true, fov: 1 - easeOut((ms - stretch - flash) / settle), tint: 1 - k };
   }
-  return { speed: 1, streak: 0, flash: 0, swapped: true };
+  return { speed: 1, streak: 0, flash: 0, swapped: true, fov: 0, tint: 0 };
+}
+
+/**
+ * How bright the jump's flash gets over the sky (0-1): a third by Night (watching in a dark room), half
+ * by Day, and none at Calm or with motion off, where a waypoint only crossfades the view.
+ */
+export function flashPeak(mode: 'night' | 'day', ship: ShipMotion): number {
+  if (ship !== 'full') return 0;
+  return mode === 'night' ? 0.3 : 0.5;
+}
+
+/**
+ * Whether a waypoint reached now jumps the ship (true) or only crossfades the view: only at Full ship
+ * motion, and only while the page is in view (a jump that came in while the tab was hidden would play
+ * out of nowhere the moment you came back).
+ */
+export function jumpsNow(ship: ShipMotion, visible: boolean): boolean {
+  return ship === 'full' && visible;
+}
+
+/** Whether a merge now surges the ship: not with motion off, and not while the page is hidden. */
+export function surgesNow(ship: ShipMotion, visible: boolean): boolean {
+  return ship !== 'off' && visible;
 }
 
 /** The flybys, and how often each comes up when one is due. */

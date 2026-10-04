@@ -9,7 +9,10 @@ import { SPACE_COLORS, seeded } from './logic';
 //
 // The walk camera sees no further than FAR: a star past that is drawn on its own line of sight at
 // just under FAR, so it lands on the same pixel and still sits behind every wall. The Overview's
-// camera is orthographic, so its stars are drawn where they are.
+// camera is orthographic, so its stars are drawn where they are. The stars test depth (they're drawn
+// with the see-through things, after the walls, which must hide them) but write none; the sky's sphere
+// (RADIUS, sky.ts) is nearer than STAR_CLAMP and still behind them only because it neither tests nor
+// writes depth and is drawn first. Glass that wrote depth would hide the stars and not the sky.
 
 interface LayerSpec {
   count: number;
@@ -29,6 +32,9 @@ const LAYERS: readonly LayerSpec[] = [
   { count: 2500, box: [200, 110, 400], size: 1.6, at: 140, speed: 8, gain: 0.8 },
   { count: 400, box: [110, 70, 260], size: 2.4, at: 70, speed: 30, gain: 1.0 },
 ];
+
+/** How far out a star past the walk camera's far plane is drawn, on its own line of sight (see above). */
+export const STAR_CLAMP = FAR * 0.92;
 
 /** The ship's own bulk round the deck (m): stars inside 1.5 times it fade away. */
 const SHIP = new THREE.Vector3(32, 22, 46);
@@ -50,6 +56,8 @@ uniform float uStreak;
 uniform vec3 uShip;
 varying float vAlpha;
 varying float vMag;
+/** The smallest a point is drawn (px): a star never goes under two pixels, which would crawl as it moves. */
+const float MIN_PX = 2.0;
 void main() {
   vec3 p = position;
   p.z = mod(p.z + uTravel + uBoxZ, 2.0 * uBoxZ) - uBoxZ;
@@ -59,9 +67,12 @@ void main() {
   float dist = length(view.xyz);
   if (dist > uClamp) view.xyz *= uClamp / dist;
   gl_Position = projectionMatrix * view;
-  gl_PointSize = uSize * uPixel * clamp(uAt / max(dist, 1.0), 0.75, 1.5);
+  float want = uSize * uPixel * clamp(uAt / max(dist, 1.0), 0.75, 1.5);
+  // Drawn no smaller than MIN_PX, its light spread over the bigger dot so it's just as bright in all.
+  float drawn = max(want, MIN_PX * uPixel);
+  gl_PointSize = drawn;
   float q = length(p / uShip);
-  vAlpha = smoothstep(1.0, 1.6, q) * (1.0 - aTail);
+  vAlpha = smoothstep(1.0, 1.6, q) * (1.0 - aTail) * min(1.0, (want * want) / (drawn * drawn) * 1.6);
   // Fade in from the far end of the box and out at the near end, so the wrap never pops.
   vAlpha *= smoothstep(uBoxZ, uBoxZ * 0.8, abs(p.z));
   vMag = aMag;
@@ -74,8 +85,8 @@ varying float vAlpha;
 varying float vMag;
 void main() {
   vec2 c = gl_PointCoord - 0.5;
-  float r = length(c) * 2.0;
-  float a = (1.0 - smoothstep(0.35, 1.0, r)) * vAlpha;
+  // A gaussian dot, not a hard disc: no edge to snap from pixel to pixel as it drifts.
+  float a = exp(-dot(c, c) * 9.0) * vAlpha;
   vec3 col = mix(uCool, uWarm, fract(vMag * 37.0)) * uGain * (0.25 + 0.75 * vMag);
   gl_FragColor = vec4(col * a, 1.0);
   #include <colorspace_fragment>
@@ -115,7 +126,7 @@ class Layer {
     const shared = (): Record<string, THREE.IUniform> => ({
       uTravel: { value: 0 },
       uBoxZ: { value: bz },
-      uClamp: { value: FAR * 0.92 },
+      uClamp: { value: STAR_CLAMP },
       uSize: { value: spec.size },
       uAt: { value: spec.at },
       uPixel: { value: 1 },
@@ -158,7 +169,7 @@ class Layer {
       o.renderOrder = -1;
       o.onBeforeRender = (renderer, _s, camera) => {
         const u = o === this.points ? this.uniforms : this.lineUniforms;
-        u.uClamp.value = (camera as THREE.OrthographicCamera).isOrthographicCamera ? 1e6 : FAR * 0.92;
+        u.uClamp.value = (camera as THREE.OrthographicCamera).isOrthographicCamera ? 1e6 : STAR_CLAMP;
         u.uPixel.value = renderer.getPixelRatio();
       };
     }

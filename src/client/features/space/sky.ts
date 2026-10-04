@@ -45,9 +45,9 @@ void main() {
   float dust = fbm(d * 3.6 + uSeed * 0.7 + 5.0, 5);
   float lane = mix(1.0, 0.35, smoothstep(0.5, 0.62, dust) * exp(-(h * h) / 0.02));
   float bandL = (0.6 * band * (0.5 + 0.8 * mott) + 0.55 * coreW) * lane;
-  col += uBand * bandL * 0.2;
+  col += uBand * bandL * 0.34;
   // A fine haze of unresolved stars in the band.
-  col += uBand * band * smoothstep(0.5, 0.75, fbm(d * 26.0 + uSeed, 3)) * 0.03;
+  col += uBand * band * smoothstep(0.45, 0.75, fbm(d * 26.0 + uSeed, 3)) * 0.07;
   // The nebula: domain-warped fbm in a soft patch, teal into indigo.
   vec3 q = d * 2.6 + uSeed * 2.1;
   vec3 w = vec3(fbm(q, 4), fbm(q + 3.1, 4), fbm(q + 7.7, 4));
@@ -97,10 +97,12 @@ vec3 stars(vec3 d, float n, float prob, float gain, float sizePx, float density)
   float px = max(length(fwidth(d)) * n * 0.5, 1e-4);
   float dist = length(g - at) / px;
   float mag = pow(hash13(vec3(cell * 1.7, face + n * 3.0)), 5.0);
-  float size = sizePx * (0.7 + 1.1 * mag);
-  float core = 1.0 - smoothstep(size * 0.35, size, dist);
+  // At least a pixel and a half across, a soft gaussian core: a star never shrinks under a pixel and crawls.
+  float size = max(1.5, sizePx * (0.7 + 1.1 * mag));
+  float core = exp(-(dist * dist) / (size * size * 0.36));
   vec3 tint = mix(uCool, uWarm, hash13(vec3(cell, face + 91.0)));
-  return tint * on * core * gain * (0.12 + 0.88 * mag);
+  // The faintest fade out rather than draw as specks.
+  return tint * on * core * gain * smoothstep(0.02, 0.2, mag) * (0.12 + 0.88 * mag);
 }
 
 void main() {
@@ -110,11 +112,12 @@ void main() {
   vec4 sky = mix(a, b, uMix);
   float density = 0.55 + 1.6 * sky.a;
   vec3 col = sky.rgb;
-  col += stars(d, 150.0, 0.10, 0.55, 1.0, density);
+  // The finest layer is the moving far stars' (stars.ts): the sky's own start a step coarser.
   col += stars(d, 60.0, 0.16, 1.0, 1.25, density);
   col += stars(d, 22.0, 0.20, 1.6, 1.6, 1.0);
   col *= uDim;
-  col = mix(col, uFlashColor, uFlash);
+  // The jump's flash: light added over the sky, so its stars and its band still show through it.
+  col += uFlashColor * uFlash;
   gl_FragColor = vec4(col, 1.0);
   #include <colorspace_fragment>
 }`;
@@ -136,10 +139,10 @@ export interface Region {
 export function region(n: number): Region {
   const r = seeded(0x5eed + n * 7919);
   const deg = Math.PI / 180;
-  // The band runs through a point low ahead of the bow and another higher off to one side, so it
-  // crosses the forward viewport on a slant and climbs into the canopy.
-  const ahead = n === 0 ? new THREE.Vector3(0, 0.35, -1) : new THREE.Vector3((r() - 0.5) * 0.8, 0.15 + r() * 0.4, -1);
-  const side = n === 0 ? new THREE.Vector3(1, 0.6, 0) : new THREE.Vector3(r() < 0.5 ? -1 : 1, 0.3 + r() * 0.6, (r() - 0.5) * 0.6);
+  // The band is tilted 20 to 30 degrees off the horizon: it rises over the bow into the canopy and
+  // comes down to about eye level abeam, so it crosses the side ports as well as the forward glass.
+  const ahead = n === 0 ? new THREE.Vector3(0.12, 0.5, -1) : new THREE.Vector3((r() - 0.5) * 0.5, 0.36 + r() * 0.22, -1);
+  const side = n === 0 ? new THREE.Vector3(1, 0.05, 0.12) : new THREE.Vector3(r() < 0.5 ? -1 : 1, (r() - 0.3) * 0.16, (r() - 0.5) * 0.4);
   const bandN = new THREE.Vector3().crossVectors(ahead, side).normalize();
   // Its bright core ahead, a little to one side of the bow.
   const core = n === 0 ? new THREE.Vector3(-0.35, 0.3, -1) : new THREE.Vector3((r() - 0.5) * 1.4, 0.2, -1);

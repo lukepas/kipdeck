@@ -8,7 +8,7 @@
  * The hues of state never change with the mode, and nothing tints the room: every attention mark sits
  * on instrument black of its own (the ring inlay, the callout chip), so it reads the same by day.
  */
-import type * as THREE from 'three';
+import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { lightModeOf, markLight, onSystemLight, systemLight, type LightMode } from '../../lighting';
@@ -25,7 +25,15 @@ const REPAINT_EVERY = 2;
 export interface Lights {
   /** The mode the bridge is lit in now. */
   mode(): LightMode;
+  /**
+   * Shifts the room's light for a jump (features/space): toward cool at -1, toward a warm white at +1,
+   * as the mode has it at 0. Only the fill from above and the key: the state marks give their own light.
+   */
+  tint(k: number): void;
 }
+
+/** What a jump shifts the room's light toward: cool going in, a warm white coming out (near grey, so no state's hue). */
+const JUMP_TINT = { cool: new THREE.Color('#A9D4FF'), warm: new THREE.Color('#FFF1E2'), by: 0.45 } as const;
 
 export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings'>): Lights {
   const { stage } = parts;
@@ -75,6 +83,9 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings'>
     for (const spot of lamps.pods) tune(spot, rig.pods);
     tune(lamps.table, rig.table);
     tune(lamps.holo, rig.holo);
+    base.sky.copy(hemi.color);
+    base.key.copy(key.color);
+    tintNow = 0;
     if (next !== mode) {
       repaint(ctx.scene, next);
       repaintGrids(next);
@@ -83,6 +94,18 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings'>
     mode = next;
     step = nextStep;
     glow();
+  }
+
+  const base = { sky: new THREE.Color(), key: new THREE.Color() };
+  let tintNow = 0;
+  function tint(k: number) {
+    if (k === tintNow) return;
+    tintNow = k;
+    const { hemi, key } = stage.lights;
+    const to = k < 0 ? JUMP_TINT.cool : JUMP_TINT.warm;
+    const by = Math.min(1, Math.abs(k)) * JUMP_TINT.by;
+    hemi.color.copy(base.sky).lerp(to, by);
+    key.color.copy(base.key).lerp(to, by);
   }
 
   let repaintAt = 0;
@@ -98,5 +121,5 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings'>
   });
   apply(lightModeOf(parts.settings.lighting, light), parts.settings.brightness);
 
-  return { mode: () => mode ?? 'night' };
+  return { mode: () => mode ?? 'night', tint };
 }

@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { BEAT_MS, along, beatAt, beatMs, dispatchPhases, hashOf, railSegment, rimToward, toRailPhases, toTablePhases } from '../src/client/features/beats/logic.js';
 import { stack } from '../src/client/features/workers/declutter.js';
 import { CUES } from '../src/client/sound/alerts.js';
-import { JUMP, JUMP_MS, JUMP_STRETCH, SURGE, SURGE_GAP_MS, SURGE_MS, jumpAt, surgeAt, surgeGlint } from '../src/client/features/space/logic.js';
+import { FLASH_RISE, JUMP, JUMP_FOV, JUMP_MS, JUMP_STRETCH, SURGE, SURGE_GAP_MS, SURGE_MS, flashPeak, jumpAt, jumpsNow, surgeAt, surgeGlint, surgesNow } from '../src/client/features/space/logic.js';
 import { DESKS, FLOOR, MISSION_TABLE, PROOF_CORNER } from '../src/shared/layout.js';
 
 const close = (a: number, b: number, eps = 1e-6) => Math.abs(a - b) < eps;
@@ -125,22 +125,56 @@ test('the surge runs 1.4 s: up to 12x in 300 ms, held 200 ms, back over 900 ms',
   assert.equal(SURGE_GAP_MS, 20_000);
 });
 
-test('the jump runs 2.4 s: a stretch, a 120 ms flash over the new sky, then back to cruise', () => {
+test('the jump runs 2.4 s: a stretch, a 300 ms flash eased up and down over the new sky, then back to cruise', () => {
   assert.equal(JUMP_MS, 2400);
+  assert.equal(JUMP.flash, 300);
   const before = jumpAt(0);
-  assert.deepEqual(before, { speed: 1, streak: 0, flash: 0, swapped: false });
-  // The stretch toward the bow: the streaks grow, no flash yet, still the old sky.
+  assert.deepEqual(before, { speed: 1, streak: 0, flash: 0, swapped: false, fov: 0, tint: 0 });
+  // The stretch toward the bow: the streaks grow, no flash yet, still the old sky; the view widens, the light goes cool.
   const mid = jumpAt(400);
   assert.ok(mid.streak > 0 && mid.streak < 1 && mid.flash === 0 && !mid.swapped);
-  // The flash is only inside its 120 ms, and the sky swaps under it.
+  assert.ok(mid.fov > 0.5 && mid.tint < 0);
+  // The flash is only inside its 300 ms, comes up in 90 ms and eases off slower than it rose; the sky swaps at its height.
+  let prev = 0;
   for (let ms = 0; ms <= 2400; ms += 10) {
     const f = jumpAt(ms);
     if (ms < JUMP.stretch || ms >= JUMP.stretch + JUMP.flash) assert.equal(f.flash, 0, `no flash at ${ms} ms`);
-    assert.ok(f.flash <= 1 && f.streak <= 1 && f.speed >= 1);
+    assert.ok(f.flash <= 1 && f.streak <= 1 && f.speed >= 1 && f.fov <= 1 && Math.abs(f.tint) <= 1);
+    // Never a step of more than a third of it in 10 ms: no hard edge.
+    assert.ok(Math.abs(f.flash - prev) < 0.34, `the flash eases at ${ms} ms`);
+    prev = f.flash;
   }
-  assert.ok(jumpAt(860).flash > 0.9, 'bright at the middle of the flash');
-  assert.ok(!jumpAt(805).swapped && jumpAt(880).swapped, 'the sky swaps under the flash');
+  assert.ok(jumpAt(JUMP.stretch + FLASH_RISE).flash > 0.99, 'at its height after the rise');
+  assert.ok(jumpAt(JUMP.stretch + 200).flash > 0.2, 'still easing off well after the rise');
+  assert.ok(!jumpAt(805).swapped && jumpAt(JUMP.stretch + FLASH_RISE).swapped, 'the sky swaps under the flash');
+  // Coming out, the light leans warm, then back as it was.
+  assert.ok(jumpAt(JUMP.stretch + JUMP.flash + 100).tint > 0.5);
   // Back to cruise by its end, on the new region.
-  assert.deepEqual(jumpAt(2400), { speed: 1, streak: 0, flash: 0, swapped: true });
+  assert.deepEqual(jumpAt(2400), { speed: 1, streak: 0, flash: 0, swapped: true, fov: 0, tint: 0 });
   assert.equal(JUMP_STRETCH, 60);
+  assert.ok(JUMP_FOV >= 3 && JUMP_FOV <= 5, 'a few degrees, no more');
+});
+
+test("the jump's flash is a glint by night: a third at most, half by day, none at Calm or with motion off", () => {
+  assert.equal(flashPeak('night', 'full'), 0.3);
+  assert.equal(flashPeak('day', 'full'), 0.5);
+  for (const mode of ['night', 'day'] as const) {
+    assert.equal(flashPeak(mode, 'calm'), 0);
+    assert.equal(flashPeak(mode, 'off'), 0);
+  }
+  // The brightest the sky is ever pushed toward the flash colour, in any mode.
+  let peak = 0;
+  for (let ms = 0; ms <= JUMP_MS; ms += 5) peak = Math.max(peak, jumpAt(ms).flash * flashPeak('night', 'full'));
+  assert.ok(peak <= 0.3 + 1e-9, `peak by night ${peak}`);
+});
+
+test('nothing flies while the tab is hidden, and Calm only crossfades a waypoint', () => {
+  assert.equal(jumpsNow('full', true), true);
+  assert.equal(jumpsNow('full', false), false, 'a waypoint reached while hidden only crossfades');
+  assert.equal(jumpsNow('calm', true), false, 'Calm crossfades');
+  assert.equal(jumpsNow('off', true), false);
+  assert.equal(surgesNow('full', true), true);
+  assert.equal(surgesNow('calm', true), true, 'Calm keeps the glint');
+  assert.equal(surgesNow('full', false), false, 'a merge while hidden surges nothing');
+  assert.equal(surgesNow('off', true), false);
 });
