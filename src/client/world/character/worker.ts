@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { duration, type AttentionLevel } from '../../../shared/attention';
+import type { AttentionLevel } from '../../../shared/attention';
+import { ago, splitTag } from '../../../shared/rowtext';
 import type { WorkerAction, WorkerStatus, WorkerTask } from '../../../shared/protocol';
 import { isAsleep, type WorkerPr } from '../../../shared/status';
 import { contactShadow, DECK } from '../office/materials';
@@ -265,9 +266,9 @@ export class Worker {
   }
 
   private statusLine(kind: GlyphKind): string {
-    const age = duration(Date.now() - this.since).replace('under a minute', '<1 min');
+    const age = ago(Date.now() - this.since);
     if (this.lost) return 'STUCK  worktree deleted';
-    if (kind === 'stuck') return clip(`STUCK  ${this.reason ?? age}`, 34);
+    if (kind === 'stuck') return clip(`STUCK  ${this.reason ?? ''}  ${age}`, 38);
     if (kind === 'merged') return `MERGED  PR #${this.pr?.number ?? ''}`;
     if (kind === 'review' && this.pr) return `PR #${this.pr.number} ${this.pr.state.toUpperCase()}`;
     if (kind === 'parked') return isAsleep(this.status) ? 'OFFLINE' : STATE_WORD.parked;
@@ -283,7 +284,7 @@ export class Worker {
       name: this.name,
       kind: leaving ? null : kind,
       near: !leaving && (this.near || !!this.said),
-      task: this.said ?? this.task?.name,
+      task: this.said ?? (this.task?.name ? splitTag(this.task.name).text : undefined),
       status: leaving ? undefined : this.statusLine(kind),
     };
     if (leaving) text.name = `${this.name}  ${this.leaving}`;

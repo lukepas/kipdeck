@@ -98,6 +98,10 @@ export const ICONS = {
   phone: '<path d="M7 3.5h10v17H7Z"/><path d="M11 17.5h2"/>',
   home: '<path d="M4 11 12 4l8 7"/><path d="M6.5 9v11h11V9"/>',
   contrast: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor" stroke="none"/>',
+  more: '<circle cx="12" cy="5.5" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="18.5" r="1.6" fill="currentColor" stroke="none"/>',
+  target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  rail: '<path d="M4 4.5h16v15H4Z"/><path d="M9.5 4.5v15"/>',
   logout: '<path d="M14 4.5H4.5v15H14"/><path d="M10 12h10M16.5 8.5 20 12l-3.5 3.5"/>',
 } as const;
 

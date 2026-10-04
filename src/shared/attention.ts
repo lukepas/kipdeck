@@ -59,7 +59,7 @@ export const ACTION_LABEL: Record<NextAction, string> = {
   'hand-back': 'Hand back',
   resume: 'Resume',
   rebuild: 'Rebuild',
-  'send-home': 'Send home',
+  'send-home': 'Stand down',
   'give-task': 'Give it a task',
   'approve-payout': 'Approve payout',
   'set-wallet': 'Set payout wallet',
@@ -69,6 +69,11 @@ export interface Attention {
   level: AttentionLevel;
   /** Why, in plain words; none for a worker simply at work or parked. */
   reason?: string;
+  /**
+   * The same in a short phrase with no time in it, for a row or a card: "Needs an answer",
+   * "Crashed (exit 3)". A view puts the time beside it with ago() (shared/rowtext.ts).
+   */
+  label: string;
   /** Since when it has been this way (ms), for "time in state" and the order within a level. */
   since: number;
   action: NextAction;
@@ -101,43 +106,53 @@ function lastSign(e: RosterEntry): number {
 export function attention(e: RosterEntry, now: number): Attention {
   const snoozed = isSnoozed(e, now);
   const waited = e.waitingSince ?? e.createdAt;
-  const at = (level: AttentionLevel, action: NextAction, since: number, reason?: string): Attention => ({ level, action, since, snoozed, ...(reason ? { reason } : {}) });
+  const at = (level: AttentionLevel, action: NextAction, since: number, label: string, reason?: string): Attention => ({ level, action, since, label, snoozed, ...(reason ? { reason } : {}) });
 
-  if (e.lost) return at('stuck', 'rebuild', waited, 'worktree deleted');
+  if (e.lost) return at('stuck', 'rebuild', waited, 'Worktree deleted', 'worktree deleted');
   if (e.status === 'needs_input') {
     const what = e.activity ? `: ${e.activity}` : '';
-    return at('needs-you', 'answer', waited, `needs input for ${duration(now - waited)}${what}`);
+    return at('needs-you', 'answer', waited, e.activity ?? 'Needs an answer', `needs input for ${duration(now - waited)}${what}`);
   }
-  if (e.status === 'exited' && e.exitCode !== undefined && e.exitCode !== 0) return at('stuck', 'resume', waited, `crashed (exit ${e.exitCode})`);
-  if (e.status === 'working' && e.action === 'failing') return at('stuck', 'look', e.workingSince ?? waited, 'tests or build failing repeatedly');
+  if (isCrashed(e)) return at('stuck', 'resume', waited, `Crashed (exit ${e.exitCode})`, `crashed (exit ${e.exitCode})`);
+  if (e.status === 'working' && e.action === 'failing') return at('stuck', 'look', e.workingSince ?? waited, 'Tests or build failing', 'tests or build failing repeatedly');
   if (e.status === 'working') {
     const sign = lastSign(e);
-    if (e.toolOpenSince !== undefined && now - sign >= TOOL_SILENT_MS) return at('stuck', 'look', sign, `silent for ${duration(now - sign)} in the middle of a tool: it may be asking permission in its terminal`);
-    if (now - sign >= SILENT_MS) return at('stuck', 'look', sign, `working but silent for ${duration(now - sign)}`);
+    if (e.toolOpenSince !== undefined && now - sign >= TOOL_SILENT_MS) return at('stuck', 'look', sign, 'Silent mid-tool: may want permission', `silent for ${duration(now - sign)} in the middle of a tool: it may be asking permission in its terminal`);
+    if (now - sign >= SILENT_MS) return at('stuck', 'look', sign, 'Silent', `working but silent for ${duration(now - sign)}`);
   }
-  if (e.taskFailed) return at('stuck', 'look', waited, 'its queue task failed');
-  if (e.kind === 'agent' && e.status === 'idle' && !e.tasked && now - e.createdAt >= IDLE_NO_TASK_MS) return at('stuck', 'give-task', e.createdAt, 'hired but never given a task');
+  if (e.taskFailed) return at('stuck', 'look', waited, 'Queue task failed', 'its queue task failed');
+  if (e.kind === 'agent' && e.status === 'idle' && !e.tasked && now - e.createdAt >= IDLE_NO_TASK_MS) return at('stuck', 'give-task', e.createdAt, 'No task yet', 'hired but never given a task');
   const busy = e.status === 'working' || e.status === 'starting';
   const pr = e.pr;
-  if (pr?.state === 'open' && pr.checks === 'fail' && !busy) return at('review', 'fix-checks', waited, `PR #${pr.number} checks failing`);
+  if (pr?.state === 'open' && pr.checks === 'fail' && !busy) return at('review', 'fix-checks', waited, `PR #${pr.number} checks failing`, `PR #${pr.number} checks failing`);
   if (e.status === 'done' && !e.acked) {
     const ago = now - waited;
-    return at('review', 'review', waited, ago >= FORGOTTEN_MS ? `forgotten: done ${duration(ago)} ago, nobody looked` : `done ${duration(ago)} ago`);
+    const forgotten = ago >= FORGOTTEN_MS;
+    return at('review', 'review', waited, forgotten ? 'Done, nobody looked' : 'Done', forgotten ? `forgotten: done ${duration(ago)} ago, nobody looked` : `done ${duration(ago)} ago`);
   }
-  if (pr?.state === 'merged' && !busy) return at('review', 'send-home', waited, `PR #${pr.number} merged: it can go home`);
+  if (pr?.state === 'merged' && !busy) return at('review', 'send-home', waited, `PR #${pr.number} merged`, `PR #${pr.number} merged: it can stand down`);
   if (pr?.state === 'open' && !busy) {
-    if (pr.conflicting) return at('review', 'hand-back', waited, `PR #${pr.number} has merge conflicts`);
-    if (pr.review === 'changes') return at('review', 'hand-back', waited, `PR #${pr.number}: changes requested`);
-    if (pr.review === 'approved' && pr.checks !== 'pending') return at('review', 'merge', waited, `PR #${pr.number} approved: ready to merge`);
-    return at('review', 'open-pr', waited, `PR #${pr.number} waits for a review`);
+    if (pr.conflicting) return at('review', 'hand-back', waited, `PR #${pr.number} has conflicts`, `PR #${pr.number} has merge conflicts`);
+    if (pr.review === 'changes') return at('review', 'hand-back', waited, `PR #${pr.number}: changes asked`, `PR #${pr.number}: changes requested`);
+    if (pr.review === 'approved' && pr.checks !== 'pending') return at('review', 'merge', waited, `PR #${pr.number} approved`, `PR #${pr.number} approved: ready to merge`);
+    return at('review', 'open-pr', waited, `PR #${pr.number} waits for review`, `PR #${pr.number} waits for a review`);
   }
   // Commits on its branch and no pull request: the work isn't anywhere a person can review it.
   if (!pr && !busy && e.kind === 'agent' && e.work && e.work.ahead > 0) {
-    return at('review', 'open-pr', waited, `${e.work.ahead} commit${e.work.ahead === 1 ? '' : 's'}, no PR yet`);
+    const n = `${e.work.ahead} commit${e.work.ahead === 1 ? '' : 's'}, no PR yet`;
+    return at('review', 'open-pr', waited, n, n);
   }
-  if (busy) return at('working', 'look', e.workingSince ?? waited);
-  if (e.status === 'exited' || e.status === 'offline') return at('parked', 'resume', waited);
-  return at('parked', e.tasked ? 'review' : 'give-task', waited);
+  if (busy) return at('working', 'look', e.workingSince ?? waited, e.status === 'starting' ? 'Starting' : 'Working');
+  if (e.status === 'exited' || e.status === 'offline') return at('parked', 'resume', waited, 'Asleep');
+  return at('parked', e.tasked ? 'review' : 'give-task', waited, 'Ready');
+}
+
+/**
+ * Its process ended with an error. It stays that way (stuck, "Resume") until a person picks it up:
+ * nobody walking in wakes it (server/workers/manager.ts wakeAll), so every view shows the same crash.
+ */
+export function isCrashed(e: Pick<RosterEntry, 'status' | 'exitCode'>): boolean {
+  return e.status === 'exited' && e.exitCode !== undefined && e.exitCode !== 0;
 }
 
 export interface Ranked {

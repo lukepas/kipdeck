@@ -185,7 +185,7 @@ test("a person's merge waits for an admin, whose approval pays the operator and 
   // The review inbox's line for it.
   const payouts = bountyPayouts({ id: 'f1', name: 'Office' }, s.b.state(s.floor as any));
   const inbox = reviewInbox([], [], undefined, payouts);
-  assert.equal(inbox[0].reason, 'Approve payout of 20 USDC to Ada for PR #77');
+  assert.equal(inbox[0].reason, 'Approve payout of 20.00 USDC to Ada for PR #77');
   assert.equal(inbox[0].action, 'approve-payout');
   assert.equal(s.mock.balance(OPERATOR), 0n);
 

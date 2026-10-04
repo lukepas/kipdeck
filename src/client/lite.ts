@@ -38,6 +38,7 @@ import { mountCounters } from './ui/counters';
 import { icon, isIcon, LEVEL_ICON, type IconName } from './ui/icons';
 import { address } from '../shared/callsign';
 import { LEVEL_LABEL, type AttentionLevel } from '../shared/attention';
+import { ago, headline, sameText, shortPath, stateWord, statusPhrase, type Headline } from '../shared/rowtext';
 import { mountLitePlot } from './lite-plot';
 import { mountThemeToggle } from './lite-theme';
 
@@ -95,17 +96,20 @@ net.onMessage((msg) => {
 
 // ---- The floor you're on ------------------------------------------------------------------------
 const floorSelect = $('floor') as HTMLSelectElement;
-const floorLabel = (f: FloorInfo) => `${f.name}${f.cloning ? ` (${cloneLabel(f.clone)})` : f.waiting ? ` · ${f.waiting} waiting` : ''}`;
+// The deck's name only: the counters beside it carry how many wait.
+const floorLabel = (f: FloorInfo) => `${f.name}${f.cloning ? ` (${cloneLabel(f.clone)})` : ''}`;
 
 function renderFloors() {
   const options = store.floors.map((f) => h('option', { value: f.id, disabled: !!f.cloning }, floorLabel(f)));
-  if (!store.floors.length) options.push(h('option', { value: '' }, 'No floors yet'));
+  if (!store.floors.length) options.push(h('option', { value: '' }, 'No decks yet'));
   floorSelect.replaceChildren(...options);
   floorSelect.value = store.floor ?? '';
   floorSelect.disabled = store.floors.length < 2;
   const p = store.project;
   const f = store.currentFloor();
-  $('floor-meta').textContent = p ? [p.branch && `branch ${p.branch}`, f?.repo ?? p.dir, f && `${f.people} here`].filter(Boolean).join(' · ') : store.floors.length ? '' : 'Add a project from Floors in the 3D office.';
+  const dir = f?.repo ?? p?.dir;
+  $('floor-meta').textContent = p ? [p.branch && `branch ${p.branch}`, dir && shortPath(dir), f && `${f.people} here`].filter(Boolean).join(' · ') : store.floors.length ? '' : 'Add a deck from Decks in the 3D view.';
+  $('floor-meta').title = dir ?? '';
   // Someone waiting on another floor: a way straight there.
   const elsewhere = store.floors.filter((o) => o.id !== store.floor && o.waiting > 0 && !o.cloning);
   const box = $('elsewhere');
@@ -161,33 +165,36 @@ function stateGlyph(level: AttentionLevel): HTMLElement {
   return h('span.lite-glyph', { class: `l-${level}`, title: LEVEL_LABEL[level] }, icon(LEVEL_ICON[level], 16, LEVEL_LABEL[level]));
 }
 
-/** Whether one line already says what the other does (a task and the reason quoting it). */
-function sameText(a: string | undefined, b: string | undefined): boolean {
-  if (!a || !b) return false;
-  const norm = (s: string) => s.toLowerCase().replace(/^\[[a-z]+\]\s*/, '').replace(/\W+/g, ' ').trim();
-  const x = norm(a);
-  const y = norm(b);
-  return !!x && !!y && (x.includes(y) || y.includes(x));
+/** Its state as a badge: the glyph and one word, the ranking's phrase in its tooltip. */
+function stateBadge(att: Attention | undefined, fallback: string): HTMLElement {
+  if (!att) return h('span.pill', {}, fallback);
+  return h('span.pill.reason', { class: att.level, title: att.reason ?? att.label }, stateWord(att));
 }
 
-/** Why it needs someone, for its card, when it does. */
-function whyLine(att: Attention | undefined): HTMLElement | null {
-  if (!att?.reason || att.snoozed || (att.level !== 'needs-you' && att.level !== 'stuck' && att.level !== 'review')) return null;
-  return h('span.lite-why', {}, att.reason);
+/** Why it needs someone, for its card, when it does: one phrase, no time in it. */
+function whyLine(att: Attention | undefined, title: string): HTMLElement | null {
+  if (!att || att.snoozed || (att.level !== 'needs-you' && att.level !== 'stuck' && att.level !== 'review')) return null;
+  return h('span.lite-why', { title: att.reason ?? att.label }, statusPhrase(att, title));
+}
+
+/** Its headline: the title, its [tag] as a chip. */
+function titleLine(head: Headline): HTMLElement | null {
+  if (!head.title) return null;
+  return h('span.lite-task', { title: head.detail ? `${head.title}: ${head.detail}` : head.title }, head.tag ? h('span.tag-chip', {}, head.tag) : null, head.title);
 }
 
 /** A worker on another floor (All floors): what it's for and why it needs someone; a tap rides there and opens it. */
 function elsewhereCard(e: RosterEntry, att: Attention): HTMLElement {
-  const doing = doingLabel(e);
+  const head = headline(e.task, doingLabel(e));
   return h(
     'li.lite-worker.elsewhere',
     { class: `${e.status} ${att.level}` },
     h(
       'button.lite-card',
-      { type: 'button', onclick: () => runAction(missionDeps, e, att.action), 'aria-label': `${e.name} on ${e.floorName}: ${att.reason ?? STATUS_LABEL[e.status] ?? e.status}` },
+      { type: 'button', onclick: () => runAction(missionDeps, e, att.action), 'aria-label': `${e.name} on ${e.floorName}: ${att.label}` },
       stateGlyph(att.level),
-      h('span.lite-info', {}, h('span.lite-name', {}, e.name, h('span.lite-addr', {}, address(e.deskId))), whyLine(att), doing ? h('span.lite-now', {}, doing) : null, h('span.lite-sub', {}, h('b', {}, e.floorName), linkLabel(e) ? ` · ${linkLabel(e)}` : '')),
-      h('span.lite-state', {}, h('span.pill', { class: e.status }, STATUS_LABEL[e.status] ?? e.status)),
+      h('span.lite-info', {}, h('span.lite-name', {}, e.name, h('span.lite-addr', {}, address(e.deskId))), titleLine(head), whyLine(att, head.title), h('span.lite-sub', {}, h('b', {}, e.floorName), e.goalTitle || e.issue ? ` · ${linkLabel(e)}` : '')),
+      h('span.lite-state', {}, stateBadge(att, e.status), h('small', {}, ago(Date.now() - att.since))),
     ),
   );
 }
@@ -197,42 +204,36 @@ function workerCard(w: WorkerInfo, att?: Attention): HTMLElement {
   const waiting = waitingOnSomeone(w);
   const asleep = isAsleep(w.status);
   const badge = w.kind === 'agent' ? modelBadge(w.provider, w.model, w.effort, w.usage?.model) : undefined;
-  const task = w.task?.name ?? w.title ?? (w.prompt ? clip(w.prompt, 90) : undefined);
-  // What it's asking, doing or did, in a line.
-  const now = w.lost
-    ? 'Its worktree was deleted outside agent-office: open it to fix it'
-    : w.status === 'needs_input'
-      ? `${w.activity ?? 'Waiting on an answer'}`
-      : asleep
-        ? 'Asleep: open it to wake it up'
-        : w.status === 'done'
-          ? w.task?.summary && `${w.task.summary}`
-          : (w.task?.summary ?? w.activity);
+  const head = headline(w.task ?? (w.title ? { name: w.title } : undefined), w.prompt ?? w.activity);
+  // What it's asking, doing or did, in a line, when the status phrase doesn't say it already.
+  const now = w.lost ? '' : w.status === 'needs_input' ? '' : asleep ? 'Asleep: open it to wake it up' : w.status === 'done' ? (w.task?.summary ?? '') : (w.activity ?? '');
+  const entry = store.rosterEntry(w.id);
   const sub = [
     w.kind === 'agent' ? `${providerLabel(w.provider, store.project)}${badge ? ` · ${badge}` : ''}` : 'shell',
     desk?.station ? desk.label : undefined,
     w.worktree && `${w.worktree.branch}`,
     w.pr && `PR #${w.pr.number}`,
-    w.lastInput && `typed by ${w.lastInput.by} ${timeAgo(w.lastInput.at)}`,
-    store.rosterEntry(w.id) && linkLabel(store.rosterEntry(w.id)!),
+    w.lastInput && `typed by ${w.lastInput.by} ${ago(Date.now() - w.lastInput.at)} ago`,
+    entry && (entry.goalTitle || entry.issue) ? linkLabel(entry) : undefined,
   ].filter(Boolean);
+  const why = whyLine(att, head.title);
   return h(
     'li.lite-worker',
     { class: `${w.status}${waiting ? ' waiting' : ''}${att?.level === 'stuck' && !att.snoozed ? ' stuck' : ''}` },
     h(
       'button.lite-card',
-      { type: 'button', onclick: () => openWorker(w.id), 'aria-label': `${w.name}, ${STATUS_LABEL[w.status] ?? w.status}: open its terminal` },
+      { type: 'button', onclick: () => openWorker(w.id), 'aria-label': `${w.name}, ${att?.label ?? STATUS_LABEL[w.status] ?? w.status}: open its terminal` },
       stateGlyph(att?.level ?? (waiting ? 'needs-you' : asleep ? 'parked' : 'working')),
       h(
         'span.lite-info',
         {},
         h('span.lite-name', {}, w.name, h('span.lite-addr', {}, address(w.deskId))),
-        whyLine(att),
-        task && !sameText(task, att?.reason) ? h('span.lite-task', {}, task) : null,
-        now && !sameText(now, task) && !sameText(now, att?.reason) ? h('span.lite-now', {}, now) : null,
+        titleLine(head),
+        why,
+        now && !why && !sameText(now, head.title) ? h('span.lite-now', {}, now) : null,
         h('span.lite-sub', {}, sub.join(' · ')),
       ),
-      h('span.lite-state', {}, h('span.pill', { class: w.status }, STATUS_LABEL[w.status] ?? w.status), waiting && w.waitingSince ? h('small', {}, timeAgo(w.waitingSince)) : null),
+      h('span.lite-state', {}, stateBadge(att, STATUS_LABEL[w.status] ?? w.status), att ? h('small', {}, ago(Date.now() - att.since)) : null),
     ),
     // One that's asking something is answered in its terminal, where the question is.
     asleep || w.lost || w.status === 'needs_input' ? null : h('button.btn.lite-say', { type: 'button', title: `Send ${w.name} a prompt`, 'aria-label': `Send ${w.name} a prompt`, onclick: () => promptWorker(w.id) }, icon('edit', 16)),

@@ -19,18 +19,8 @@ export function ago(atSeconds: number, nowSeconds = Date.now() / 1000): string {
   return d > 0 ? `${span(d)} ago` : `in ${span(-d)}`;
 }
 
-/** Whole tokens from base units: units('25000000', 6) = "25.00". */
-export function units(amount: string, decimals: number): string {
-  let v: bigint;
-  try {
-    v = BigInt(amount);
-  } catch {
-    return '0.00';
-  }
-  const base = 10n ** BigInt(decimals);
-  const frac = (v % base).toString().padStart(decimals, '0').replace(/0+$/, '');
-  return `${v / base}.${frac.padEnd(2, '0')}`;
-}
+/** Whole tokens from base units: units('25000000', 6) = "25.00" (the deck's one formatter, shared/money.ts). */
+export { tokenUnits as units } from '../../shared/money';
 
 /** 0x1234...abcd. */
 export const short = (s: string, head = 6, tail = 4) => (s.length > head + tail + 3 ? `${s.slice(0, head)}...${s.slice(-tail)}` : s);

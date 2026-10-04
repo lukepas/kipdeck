@@ -159,6 +159,8 @@ async function main() {
       await wait(250);
     }
     await wait(9000);
+    const probe = () => ({ counts: window.__office?.store.counts?.() ?? window.__lite?.store.counts(), roster: (window.__office?.store ?? window.__lite?.store).roster.map((e) => [e.name, e.deskId, e.status, e.exitCode]) });
+    console.log('3D counts', JSON.stringify(await page.evaluate(probe)));
     if (want('office')) await page.screenshot({ path: path.join(OUT, 'office.png') });
     // A mission on the table and a few merges on the rail, painted straight onto them for the shots
     // (the store would send them from a real deck).
@@ -246,7 +248,7 @@ async function main() {
       await page.evaluate(() => {
         const o = window.__office;
         const s = o.store;
-        const item = (issue, phase) => ({ issue, nonce: 1, pda: 'pda' + issue, amount: '500000000', decimals: 9, symbol: 'SOL', funders: 1, expiry: Date.now() + 864e5, phase, txs: [] });
+        const item = (issue, phase) => ({ issue, nonce: 1, pda: 'pda' + issue, amount: '15000000', decimals: 6, symbol: 'USDC', funders: 1, expiry: Date.now() + 864e5, phase, txs: [] });
         s.bounties[s.floor] = { enabled: true, network: 'solana-devnet', blink: false, items: [1, 2, 3, 4, 5, 6].map((n) => item(n, 'released')).concat([item(7, 'paying')]) };
         s.emit('bounties');
         const p = o.player;
@@ -271,7 +273,7 @@ async function main() {
         send({ t: 'landed', kind: 'merged', pr: 77, by: 'Tess' });
         setTimeout(() => {
           s.bounties[s.floor].items[6].phase = 'released';
-          send({ t: 'bounty.paid', floor: s.floor, issue: 7, pr: 77, amount: '500000000', symbol: 'SOL', workerName: w.name, url: 'https://explorer.solana.com/tx/4kQmZ1beT7Vh2mXo9xPa?cluster=devnet' });
+          send({ t: 'bounty.paid', floor: s.floor, issue: 7, pr: 77, amount: '15000000', symbol: 'USDC', workerName: w.name, url: 'https://explorer.solana.com/tx/4kQmZ1beT7Vh2mXo9xPa?cluster=devnet' });
           s.emit('bounties');
         }, 300);
       });
@@ -357,7 +359,7 @@ async function main() {
         add('info', 'Widget (B-02 at F2) finished: Fix flaky checkout e2e');
         add('warn', 'Reminder: the queue on project has been paused 30 min');
         add('error', 'Bolt (C-02 at F4) is stuck: npm test has failed 3 times');
-        add('proof', 'PR #77 merged: 0.5 SOL released to Widget (B-02 at F2)', true);
+        add('proof', 'PR #77 merged: 15.00 USDC released to Widget (B-02 at F2)', true);
       });
       await wait(400);
       await page.screenshot({ path: path.join(OUT, 'toasts.png') });
@@ -365,6 +367,7 @@ async function main() {
     if (want('lite')) {
       await page.goto(`${base}/lite`);
       await wait(2500);
+      console.log('lite counts', JSON.stringify(await page.evaluate(() => ({ counts: window.__lite.store.counts(), roster: window.__lite.store.roster.map((e) => [e.name, e.deskId, e.status, e.exitCode]) }))));
       await page.screenshot({ path: path.join(OUT, 'lite.png') });
       const phone = await context.newPage();
       await phone.setViewportSize({ width: 420, height: 860 });

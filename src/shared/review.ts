@@ -4,6 +4,7 @@
 // made, and ones your review is requested on. Pure, so Mission control's Review tab, the attention
 // chip and /lite count the same things.
 
+import { tokenUnits } from './money.js';
 import type { NextAction, Ranked } from './attention.js';
 import type { BountiesState, GhPull, PullReview, ReviewPull, RosterEntry, WorkSummary } from './protocol.js';
 
@@ -104,14 +105,8 @@ export function reviewInbox(ranked: readonly Ranked[], queue: readonly ReviewPul
   return out.sort((a, b) => Number(a.snoozed) - Number(b.snoozed) || a.since - b.since || a.key.localeCompare(b.key));
 }
 
-/** Base units as a person reads them: "12500000" with 6 decimals is "12.5". */
-export function tokenAmount(units: string, decimals: number): string {
-  if (!/^\d+$/.test(units)) return '0';
-  const s = units.padStart(decimals + 1, '0');
-  const whole = s.slice(0, s.length - decimals).replace(/^0+(?=\d)/, '');
-  const frac = decimals ? s.slice(s.length - decimals).replace(/0+$/, '') : '';
-  return frac ? `${whole}.${frac}` : whole;
-}
+/** Base units as a person reads them (shared/money.ts, the one formatter): "12500000" with 6 decimals is "12.50". */
+export const tokenAmount = tokenUnits;
 
 /**
  * A floor's bounties that wait for a person, for the inbox: a merged PR's payout to approve, and a

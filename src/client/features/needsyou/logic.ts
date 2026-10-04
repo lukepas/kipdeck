@@ -3,7 +3,8 @@
  * see shared/attention.ts), who just started, what the banner says about them, and when to ring again.
  * No three.js and no page here, so the tests run it as it is.
  */
-import { duration, type Ranked } from '../../../shared/attention';
+import type { Ranked } from '../../../shared/attention';
+import { ago, splitTag } from '../../../shared/rowtext';
 import type { RosterEntry } from '../../../shared/protocol';
 import { alertDetail } from '../../../shared/status';
 
@@ -46,10 +47,11 @@ export interface BannerText {
 export function bannerText(asking: readonly RosterEntry[], now: number, here: string | null): BannerText | null {
   const e = asking.find((a) => a.floor === here) ?? asking[0];
   if (!e) return null;
-  const ask = alertDetail(e)?.replace(/\s+/g, ' ').trim();
+  const raw = alertDetail(e)?.replace(/\s+/g, ' ').trim();
+  const ask = raw && splitTag(raw).text;
   const since = e.waitingSince ?? e.createdAt;
   // Nothing for its first minute: "under a minute" would only be noise.
-  const waited = now - since >= 60_000 ? duration(now - since) : '';
+  const waited = now - since >= 60_000 ? ago(now - since) : '';
   const where = e.floor !== here ? `on ${e.floorName}` : '';
   const detail = [ask && (ask.length > 90 ? `${ask.slice(0, 89)}…` : ask), where, waited].filter(Boolean).join(' · ');
   const more = asking.length > 1 ? `+${asking.length - 1} more` : '';

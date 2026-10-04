@@ -6,6 +6,7 @@
 //
 // Pure, with no Node imports: the office's route, the showcase page and onchain/indexer's static
 // export all load this file as it is, so the three never disagree on what is public.
+import { sumUnits as sumMoney, tokenUnits } from './money.js';
 import type { RepEvent, RepOutcome } from './reputation.js';
 
 /** How a repository shows: its name and titles, "a private repo", or not at all. */
@@ -272,11 +273,8 @@ function workerOf(w: ShowcaseInputWorker): ShowcaseWorker | undefined {
 
 /** Whole tokens from base units, summed over amounts that may differ in decimals: "25.00". */
 function sumUnits(items: readonly { amount: string; decimals: number }[]): string {
-  const d = Math.max(6, ...items.map((i) => i.decimals));
-  const total = items.reduce((s, i) => s + BigInt(i.amount) * 10n ** BigInt(d - i.decimals), 0n);
-  const base = 10n ** BigInt(d);
-  const frac = (total % base).toString().padStart(d, '0').replace(/0+$/, '');
-  return `${total / base}.${frac.padEnd(2, '0')}`;
+  const t = sumMoney(items);
+  return tokenUnits(t.units, t.decimals);
 }
 
 const pick = <T extends string>(v: string | undefined, re: RegExp): T | undefined => (v && re.test(v) ? (v as T) : undefined);

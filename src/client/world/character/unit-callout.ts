@@ -27,9 +27,12 @@ const MONO = (px: number, w = 500) => `${w} ${px * R}px "JetBrains Mono", ui-mon
 const UI = (px: number, w = 500) => `${w} ${px * R}px Archivo, system-ui, sans-serif`;
 const TASK_MAX = 28;
 
-/** Cuts `s` to `n` characters, with three dots when it's cut. */
+/** Cuts `s` to at most `n` characters at a word's end, with three dots when it's cut. */
 export function clip(s: string, n: number): string {
-  return s.length <= n ? s : `${s.slice(0, n - 3).trimEnd()}...`;
+  if (s.length <= n) return s;
+  const cut = s.slice(0, n - 3);
+  const space = cut.lastIndexOf(' ');
+  return `${(space > n / 2 ? cut.slice(0, space) : cut).trimEnd()}...`;
 }
 
 /** A callout's sprite, its bottom edge at its position. */

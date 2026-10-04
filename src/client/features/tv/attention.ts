@@ -4,7 +4,8 @@
  * each with its state glyph, its name, where it is ("C4"), why, and for how long.
  */
 import * as THREE from 'three';
-import { duration, type AttentionLevel, type Ranked } from '../../../shared/attention';
+import type { AttentionLevel, Ranked } from '../../../shared/attention';
+import { ago, headline, statusPhrase } from '../../../shared/rowtext';
 import { DESK_BY_ID, cellOf } from '../../../shared/layout';
 import { callSign } from '../../../shared/callsign';
 import { MONO_FONT, PANEL, UI_FONT, clip, panelGround } from '../boards/world';
@@ -72,7 +73,7 @@ export function paintAttention(g: CanvasRenderingContext2D, ranked: Ranked[], no
     g.font = MONO_FONT(22);
     const sign = callSign(r.entry.deskId);
     g.fillText(sign ? `${sign} at ${cell}` : cell ? `at ${cell}` : '', 120, y + 62);
-    const age = duration(now - r.att.since).replace('under a minute', '<1 min');
+    const age = ago(now - r.att.since);
     g.textAlign = 'right';
     g.fillStyle = PANEL.muted;
     g.font = MONO_FONT(26);
@@ -81,7 +82,8 @@ export function paintAttention(g: CanvasRenderingContext2D, ranked: Ranked[], no
     g.textAlign = 'left';
     g.fillStyle = level === 'working' ? PANEL.muted : PANEL.text;
     g.font = UI_FONT(500, 28);
-    const why = r.att.reason ?? r.entry.task?.name ?? r.entry.activity ?? 'at work';
+    const title = headline(r.entry.task, r.entry.activity).title;
+    const why = level === 'working' || level === 'parked' ? title || r.att.label : statusPhrase(r.att, title);
     g.fillText(clip(g, why, W - 64 - ageW - 40 - 380), 380, y + 46);
   });
   const more = live.length - rows.length;

@@ -1,7 +1,10 @@
-// One worker's row in Mission control: who, where, what it's for, what it's doing, why it needs
-// someone, for how long, what it cost, and the one thing to do next, with the rest behind "...".
+// One worker's row in Mission control: its call sign and name (and its milestone when it has one),
+// one title with its [tag] as a chip, one status phrase, one relative time (shared/rowtext.ts, the
+// same in every view), and the one thing to do next, with the rest behind the kebab.
 
-import { ACTION_LABEL, SNOOZE_CHOICES, duration, type Ranked } from '../../../shared/attention';
+import { ACTION_LABEL, SNOOZE_CHOICES, type Ranked } from '../../../shared/attention';
+import { ago, headline, statusPhrase } from '../../../shared/rowtext';
+import { icon } from '../icons';
 import { store } from '../../state';
 import { h } from '../dom';
 import { linkLabel } from '../../../shared/mission';
@@ -23,7 +26,7 @@ function linkPicker(deps: MissionDeps, r: Ranked): HTMLElement {
     ...store.mission.milestones.map((m) => h('option', { value: m.id, selected: m.id === e.goal }, `${m.title}${m.done ? ' (done)' : ''}`)),
   ) as HTMLSelectElement;
   select.addEventListener('change', () => deps.net.send({ t: 'worker.goal', workerId: e.id, goal: select.value || null }));
-  return h('label.mc-link', {}, 'For', select);
+  return h('label.mc-link', {}, icon('link', 14), e.goal ? 'Milestone' : 'Link to a milestone', select);
 }
 
 /** The row's other actions: open its terminal, snooze it, link it, send it home. */
@@ -38,7 +41,7 @@ function moreMenu(deps: MissionDeps, r: Ranked): HTMLElement {
       ? [btn('Wake it up', () => snooze(deps.net, e, null), 'Take the snooze off: it asks for attention again')]
       : [...SNOOZE_CHOICES.map((c) => btn(`Snooze ${c.label}`, () => snooze(deps.net, e, Date.now() + c.ms))), btn('Snooze until it changes', () => snooze(deps.net, e, 'change'))]),
     linkPicker(deps, r),
-    btn('Send home', () => runAction(deps, e, 'send-home')),
+    btn('Stand down', () => runAction(deps, e, 'send-home')),
   );
 }
 
@@ -47,11 +50,13 @@ export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { sho
   const e = r.entry;
   const snoozed = snoozeLabel(e);
   const cost = money(e.usd);
-  const doing = doingLabel(e);
-  const link = linkLabel(e);
+  const head = headline(e.task, doingLabel(e) || e.activity);
+  const status = statusPhrase(r.att, head.title);
+  // The milestone only when there is one: linking is in the kebab menu.
+  const link = e.goalTitle || e.issue ? linkLabel(e) : '';
   const more = moreMenu(deps, r);
   more.hidden = !expanded.has(e.id);
-  const toggle = h('button.btn.small.mc-dots', { type: 'button', 'aria-label': `More for ${e.name}`, 'aria-expanded': String(!more.hidden), title: 'Snooze, link, open the terminal, send home' }, '...');
+  const toggle = h('button.btn.icon.mc-dots', { type: 'button', 'aria-label': `More for ${e.name}`, 'aria-expanded': String(!more.hidden), title: 'Snooze, link to a milestone, open the terminal, stand down' }, icon('more', 16));
   toggle.addEventListener('click', () => {
     more.hidden = !more.hidden;
     if (more.hidden) expanded.delete(e.id);
@@ -59,6 +64,7 @@ export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { sho
     toggle.setAttribute('aria-expanded', String(!more.hidden));
   });
   const primary = h('button.btn.small.mc-act', { type: 'button', class: r.att.level === 'needs-you' ? 'primary' : '', onclick: () => runAction(deps, e, r.att.action) }, ACTION_LABEL[r.att.action]);
+  const sub = [opts.showFloor ? e.floorName : '', link, cost].filter(Boolean).join(' · ');
   return h(
     'li.mc-row',
     { class: `${r.att.level}${r.att.snoozed ? ' snoozed' : ''}`, tabindex: '-1', 'data-id': e.id },
@@ -66,23 +72,17 @@ export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { sho
       'div.mc-main',
       {},
       unitSign(e.deskId),
-      h(
-        'div.mc-who',
-        {},
-        h('span.mc-name', {}, e.name),
-        h('span.mc-sub', {}, [opts.showFloor ? e.floorName : '', link].filter(Boolean).join(' · ')),
-      ),
+      h('div.mc-who', {}, h('span.mc-name', {}, e.name), sub ? h('span.mc-sub', {}, sub) : null),
       h(
         'div.mc-what',
         {},
-        r.att.reason ? h('span.mc-reason', {}, r.att.reason) : null,
-        doing ? h('span.mc-doing', { title: doing }, doing) : null,
+        head.title ? h('span.mc-title', { title: head.detail ? `${head.title}: ${head.detail}` : head.title }, head.tag ? h('span.tag-chip', {}, head.tag) : null, head.title) : null,
+        h('span.mc-reason', { title: r.att.reason ?? status }, status),
         snoozed ? h('span.mc-snoozed', {}, snoozed) : null,
         ...(opts.extra ?? []),
         ...repBits(e.id),
       ),
-      h('span.mc-time', { title: 'Time in this state' }, duration(now - r.att.since)),
-      h('span.mc-cost', { title: 'Spent so far' }, cost),
+      h('span.mc-time', { title: 'Time in this state' }, ago(now - r.att.since)),
       h('div.mc-btns', {}, primary, toggle),
     ),
     more,

@@ -55,13 +55,13 @@ test('the banner names whoever has waited longest (on your floor first), what it
   const a = entry('Byte', 'needs_input', { activity: 'Wants permission: Bash: npm test', waitingSince: NOW - 4 * 60_000 });
   const b = entry('Pixel', 'needs_input', { activity: 'Which one?', waitingSince: NOW - 30_000 });
   const away = entry('Nib', 'needs_input', { floor: 'f2', floorName: 'Docs', activity: 'Which file?', waitingSince: NOW - 65 * 60_000 });
-  assert.deepEqual(bannerText([a], NOW, 'f1'), { id: 'Byte', floor: 'f1', deskId: 'desk-Byte', title: 'Byte needs you', detail: 'Wants permission: Bash: npm test · 4 min', more: '', key: 'Byte|Byte needs you|Wants permission: Bash: npm test · 4 min|' });
+  assert.deepEqual(bannerText([a], NOW, 'f1'), { id: 'Byte', floor: 'f1', deskId: 'desk-Byte', title: 'Byte needs you', detail: 'Wants permission: Bash: npm test · 4m', more: '', key: 'Byte|Byte needs you|Wants permission: Bash: npm test · 4m|' });
   assert.equal(bannerText([a, b], NOW, 'f1')?.more, '+1 more');
   // In its first minute there's no time to give.
   assert.equal(bannerText([b], NOW, 'f1')?.detail, 'Which one?');
   // Someone on your floor comes before a longer wait upstairs, as N goes; with nobody here, the floor's named.
   assert.equal(bannerText([away, b], NOW, 'f1')?.id, 'Pixel');
-  assert.equal(bannerText([away], NOW, 'f1')?.detail, 'Which file? · on Docs · 1 h 5 min');
+  assert.equal(bannerText([away], NOW, 'f1')?.detail, 'Which file? · on Docs · 1h');
   // Nothing known of what it asks: what its task says it's on, or just its name.
   assert.equal(bannerText([entry('Nib', 'needs_input', { waitingSince: NOW })], NOW, 'f1')?.detail, '');
   assert.equal(bannerText([entry('Nib', 'needs_input', { waitingSince: NOW, task: { name: 'Docs', summary: 'Writing the docs' } })], NOW, 'f1')?.detail, 'Writing the docs');

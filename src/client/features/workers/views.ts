@@ -191,7 +191,7 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     const ranked = new Map(store.ranked(store.floor).map((r) => [r.entry.id, r.att]));
     for (const [id, v] of workerViews) {
       const att = ranked.get(id);
-      if (att) v.model.setLevel(att.snoozed && att.level !== 'working' ? 'parked' : att.level, att.since, att.reason);
+      if (att) v.model.setLevel(att.snoozed && att.level !== 'working' ? 'parked' : att.level, att.since, att.label);
       else {
         // Not on the roster yet (it has only just been deployed): its own status says enough.
         const w = store.workers.get(id);

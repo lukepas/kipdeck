@@ -1,7 +1,8 @@
 // The Reminders at the top of Mission control's Attention tab: what nobody has to answer right now
 // but somebody will (shared/reminders.ts), each with the thing to do, and a snooze or a dismiss.
 
-import { SNOOZE_CHOICES, duration } from '../../../shared/attention';
+import { SNOOZE_CHOICES } from '../../../shared/attention';
+import { ago } from '../../../shared/rowtext';
 import { reminderSnoozed } from '../../../shared/reminders';
 import type { Reminder } from '../../../shared/protocol';
 import { store } from '../../state';
@@ -29,8 +30,7 @@ function reminderRow(deps: MissionDeps, r: Reminder, now: number, showFloor: boo
       {},
       h('span.dot.mc-reminder-dot', { 'aria-hidden': 'true' }),
       h('div.mc-who', {}, h('span.mc-name', {}, r.text), h('span.mc-sub', {}, [showFloor ? r.floorName : '', snoozed ? snoozedLabel(r) : ''].filter(Boolean).join(' · '))),
-      h('span.mc-time', { title: 'This way for' }, duration(now - r.since)),
-      h('span.mc-cost'),
+      h('span.mc-time', { title: 'This way for' }, ago(now - r.since)),
       h(
         'div.mc-btns',
         {},

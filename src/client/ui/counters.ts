@@ -9,6 +9,7 @@ import { LEVEL_LABEL, type AttentionLevel } from '../../shared/attention';
 import { store, type MissionTab } from '../state';
 import { h } from './dom';
 import { icon, LEVEL_ICON } from './icons';
+import { sumUnits, tokenUnits } from '../../shared/money';
 
 /** The levels on the bar, most urgent first; parked units are not counted there. */
 const SHOWN: readonly AttentionLevel[] = ['needs-you', 'stuck', 'review', 'working'];
@@ -16,10 +17,10 @@ const SHOWN: readonly AttentionLevel[] = ['needs-you', 'stuck', 'review', 'worki
 /** The words after each number. */
 const WORDS: Record<AttentionLevel, string> = { 'needs-you': 'need you', stuck: 'stuck', review: 'to review', working: 'working', parked: 'parked' };
 
-/** Paid-out bounties on every floor: how many, and how much of each token. */
-export function proofTally(): { released: number; amounts: Map<string, number>; network?: string } {
+/** Paid-out bounties on every floor: how many, and how much of each token (shared/money.ts, as /pom/ writes it). */
+export function proofTally(): { released: number; amounts: Map<string, string>; network?: string } {
   let released = 0;
-  const amounts = new Map<string, number>();
+  const paid = new Map<string, { amount: string; decimals: number }[]>();
   let network: string | undefined;
   for (const b of Object.values(store.bounties ?? {})) {
     if (!b?.enabled) continue;
@@ -27,14 +28,15 @@ export function proofTally(): { released: number; amounts: Map<string, number>; 
     for (const item of b.items) {
       if (item.phase !== 'released') continue;
       released++;
-      const n = Number(item.amount) / 10 ** item.decimals;
-      if (Number.isFinite(n)) amounts.set(item.symbol, (amounts.get(item.symbol) ?? 0) + n);
+      paid.set(item.symbol, [...(paid.get(item.symbol) ?? []), { amount: item.amount, decimals: item.decimals }]);
     }
   }
+  const amounts = new Map([...paid].map(([sym, items]) => {
+    const t = sumUnits(items);
+    return [sym, tokenUnits(t.units, t.decimals)] as const;
+  }));
   return { released, amounts, network };
 }
-
-const num = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0$/, ''));
 
 /**
  * Fills `el` with the counters and keeps them current. `open` takes you to the Mission control tab
@@ -74,7 +76,7 @@ export function mountCounters(el: HTMLElement, open: (tab: MissionTab) => void):
           icon('merged', 14),
           h(`b${roll('proof', proof.released)}`, {}, String(proof.released)),
           h('span.cw', {}, 'merged'),
-          ...[...proof.amounts].map(([sym, amt]) => h('span.cw.amt', {}, `${num(amt)} ${sym}`)),
+          ...[...proof.amounts].map(([sym, amt]) => h('span.cw.amt', {}, `${amt} ${sym}`)),
           h('span.net', {}, proof.network === 'mock' ? 'mock' : 'devnet'),
         )
       : null;

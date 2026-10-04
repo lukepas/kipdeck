@@ -1,9 +1,10 @@
 // Mission control's Review tab: everything on every floor that waits for a person's decision, oldest
 // first (shared/review.ts): finished work nobody looked at, with what it changed; commits with no
 // pull request; the office's pull requests by state; reviews requested of you; merged work whose
-// worker can go home. Each row has the one thing to do about it.
+// unit can stand down. Each row has the one thing to do about it.
 
-import { ACTION_LABEL, duration, type Ranked } from '../../../shared/attention';
+import { ACTION_LABEL, type Ranked } from '../../../shared/attention';
+import { ago } from '../../../shared/rowtext';
 import { diffLabel, type ReviewItem } from '../../../shared/review';
 import type { GhPull } from '../../../shared/protocol';
 import { store } from '../../state';
@@ -38,8 +39,7 @@ function pullRow(deps: MissionDeps, i: ReviewItem, now: number, showFloor: boole
       h('span.dot.mc-pr-dot', { 'aria-hidden': 'true' }),
       h('div.mc-who', {}, h('span.mc-name', { title: p.title }, `#${p.number} ${p.title}`), h('span.mc-sub', {}, sub)),
       h('div.mc-what', {}, h('span.mc-reason', {}, i.reason), ...facts(i)),
-      h('span.mc-time', { title: 'Open this long' }, duration(now - i.since)),
-      h('span.mc-cost'),
+      h('span.mc-time', { title: 'Open this long' }, ago(now - i.since)),
       h(
         'div.mc-btns',
         {},
@@ -54,7 +54,7 @@ function pullRow(deps: MissionDeps, i: ReviewItem, now: number, showFloor: boole
 function payoutRow(deps: MissionDeps, i: ReviewItem, now: number, showFloor: boolean): HTMLElement {
   const p = i.payout!;
   // A payout must be approved before the bounty expires: the escrow refuses it after that.
-  const left = p.kind === 'approve' && p.expiry ? (p.expiry > now ? `expires in ${duration(p.expiry - now)}` : 'expired') : '';
+  const left = p.kind === 'approve' && p.expiry ? (p.expiry > now ? `expires in ${ago(p.expiry - now)}` : 'expired') : '';
   const sub = [showFloor ? p.floorName : '', `issue #${p.issue}`, p.amount, left].filter(Boolean).join(' · ');
   return h(
     'li.mc-row.review',
@@ -65,8 +65,7 @@ function payoutRow(deps: MissionDeps, i: ReviewItem, now: number, showFloor: boo
       h('span.dot.mc-pr-dot', { 'aria-hidden': 'true' }),
       h('div.mc-who', {}, h('span.mc-name', {}, `Bounty #${p.issue}`), h('span.mc-sub', {}, sub)),
       h('div.mc-what', {}, h('span.mc-reason', {}, i.reason)),
-      h('span.mc-time', { title: 'Waiting this long' }, i.since ? duration(now - i.since) : ''),
-      h('span.mc-cost'),
+      h('span.mc-time', { title: 'Waiting this long' }, i.since ? ago(now - i.since) : ''),
       h('div.mc-btns', {}, h('button.btn.small.mc-act', { type: 'button', onclick: () => runPayout(deps, p, i.action) }, ACTION_LABEL[i.action])),
     ),
   );
