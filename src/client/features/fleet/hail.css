@@ -1,0 +1,11 @@
+/* The hail strip (features/fleet/hail.ts): one line of mono lettering in the canopy's top-left corner,
+   past the Units rail, over the 3D view. Muted, no hue: a sister deck's news, never a call for you. */
+.hail-strip {
+  position: absolute; top: calc(var(--bar) + 12px); left: calc(var(--rail) + 16px); max-width: calc(100% - var(--rail) - 420px);
+  display: flex; flex-direction: column; gap: 4px; pointer-events: none;
+  font: 500 11px/1.4 var(--font-mono); letter-spacing: .08em; color: var(--muted);
+}
+.hail-strip > span { padding: 3px 8px; border-left: 1px solid var(--line-strong); background: var(--hud-fill); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hail-strip > .hail { color: var(--text); opacity: 0; transition: opacity var(--t-ui) var(--ease); }
+.hail-strip > .hail.on { opacity: 1; }
+.hail-strip > :empty, .hail-strip[hidden] { display: none; }
