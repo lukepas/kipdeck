@@ -26,6 +26,8 @@ Mission control (I) lists units by the same ranking, each row with its call sign
 
 The 2D view at `/lite` draws the deck as a plan from the same layout file as the 3D deck, beside the ranked list. Below 720px wide the plan folds away and the list is the page.
 
+Settings > Bridge > Bridge lights sets Night (low light) or Day (high light) for the 3D deck, or Auto to follow the system. The same setting paints the HUD (the dark set by night, the print set by day), the 2D view, whose contrast button flips it, and the sign-in pages, so every surface of the office agrees. Brightness steps the 3D deck's lights two steps either way. See [the deck](deck.md#light-and-materials).
+
 ![Toasts: a violet proof toast with its transaction hash and a settled tick, then stuck, review and plain ones](img/toasts.png)
 
 Toasts stack top right under the bar, all one card: a glyph column and a stripe in the state's color, one sentence that names the unit by its address (`Widget (B-02 at F2)`), and the time in mono from the deck's one clock. A unit that starts asking is a toast too, which folds into the top bar's needs-you counter after a few seconds. A proof toast adds the transaction or attestation id in a violet chip, a green settled tick and a link to the testnet explorer, and stays up longer so there is time to click it.
@@ -83,7 +85,7 @@ Open the deck with `?demo=1` for a screen share, a projector or a recording. It 
 - The chrome is a fifth bigger, so the smallest type is about 15px, and unit callouts and glyphs are a quarter bigger.
 - The needs-you toast stays up while anyone needs you.
 - Once you're in, the Overview turns slowly round the mission table. Any key, drag or wheel takes over.
-- Lit edges, screens and state lights bloom a little (0.4), so they survive video compression. The bloom is loaded only in demo mode.
+- Lit edges, screens and state lights bloom a little more than the Night glow (0.4 against 0.32, in Day too), so they survive video compression (`src/client/features/lights/`).
 
 ## Focus and keyboard
 
@@ -93,5 +95,6 @@ Every control can be reached by keyboard, and focus is always a 2px Signal ring 
 
 - `npm run typecheck`, `npm test` and `npm run build` must all pass with clean output.
 - `node design/shoot.mjs <folder> [shot,shot]` (after `npm run build`) starts the office on a spare port with a throwaway home, password and project, deploys a few stand-in units that report fake states, and saves screenshots under `design/shots/<folder>/`: the deck from fixed vantages, the Overview, the merge beat, demo mode, Mission control, the palette, settings, toasts, the 2D view at three widths and in print, and a terminal. It always stops the office afterwards. The before and after shots of each design stage are kept there.
-- Status colors are checked for contrast on `--void` and `--surface-1` (see the table in DESIGN.md), and every state has a shape, so a grayscale or color-blind view still reads.
+- `SHOOT_LIGHT=night` or `SHOOT_LIGHT=day` before `node design/shoot.mjs` takes the shots under those bridge lights (the 3D deck, its HUD, the 2D view and the sign-in page alike).
+- Status colors are checked for contrast on `--void` and `--surface-1` (see the table in DESIGN.md), and on the instrument black they sit on in the 3D deck by night and by day (`tests/lights.test.ts`). Every state has a shape, so a grayscale or color-blind view still reads.
 - `prefers-reduced-motion` in the browser's dev tools, or Settings > Bridge > Ship motion at Off, should leave nothing moving except a spinner.

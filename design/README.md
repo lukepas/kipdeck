@@ -166,3 +166,39 @@ Speed is the one tie to the deck: 0.4x cruise with no merges in the last hour, a
 | ![](shots/bridge-space/after/space-surge-2.png) | ![](shots/bridge-space/after/space-jump-1.png) | ![](shots/bridge-space/after/space-jump-2.png) | ![](shots/bridge-space/after/space-jump-4.png) |
 
 Frame time at 1440x900 with nine seeded units, measured by hiding space and showing it again in the same session: on the GPU (Apple M3 Pro through ANGLE Metal) the frame stays on vsync at 16.7 ms, p95 16.8 ms, and a forced render takes 6.3 to 8.3 ms either way (the run-to-run spread is wider than space's share). Space adds four draw calls (the sky and three star layers, 8,900 points) and one more while something passes; the planet's surface is baked into a small map when it comes up, so it draws as one texture read. On SwiftShader, which the stills use, a forced render takes about 180 to 210 ms against 150 to 160 ms without space, most of it the sky's per-pixel stars over the whole frame.
+
+## The bridge: light
+
+The captain watches at night and found the deck too dark. This stage gives the bridge a light rig of its own and two modes for it, set in Settings > Bridge > Bridge lights: **Night** (low light, comfortable in a dark room yet clearly readable), **Day** (high light, a bright ship interior) and **Auto**, which follows the system's dark or light setting. A **Brightness** step turns every light up or down by 12%, two steps either way. The same setting paints the HUD (the dark set by night, the print set by day), the 2D view, whose contrast button now flips it, and the sign-in pages.
+
+The rig is one table (`LIGHT_MODES`, `src/client/features/lights/modes.ts`) that the scene is built from and the mode retunes: a key through the forward viewport from high over the bow (it was over the north-west corner), a fill from aft, two low rims from east and west that cut units and consoles out of the floor, the pods' and the table's spots, and a new ship-cyan uplight in the holo table. Night keeps the old exposure, so what gives its own light (boards, callouts, a needs-you beam) holds its level, and the lights do the lifting. The night slate is a step lighter (floor `#222C38`, units `#333D49`), and a restrained glow (bloom at threshold 0.86, smoothed by FXAA instead of multisampling, which made one frame in twenty miss vsync on Apple's GPUs) lifts only the brightest things. Day repaints the neutrals on the same materials: a light hull and floor, consoles darker still as graphite blocks, units graphite, lettering on walls and floor dark, and no glow, since the lit floor would pass any threshold.
+
+Attention never depends on the mode. Every unit's marks now sit on a 6 cm disc of instrument black, and every callout on a denser chip (92%, up from 86%: at 86% stuck red was 4.28:1 over Day's lightest wall). `tests/lights.test.ts` runs every state's hue through the WCAG formula on both carriers in both modes, and the print set on its panels: all at 4.5:1 or better.
+
+`SHOOT_LIGHT=night` or `SHOOT_LIGHT=day` before `shoot.mjs` takes the shots under those lights; `bridge-light/before` is the stage before this one. The clip `shots/bridge-light/night-day.mp4` is rendered on the GPU from the conn: Night, Day, Day at -1 and +1, Night at +1 and -1, and back.
+
+| Before | Night | Day |
+| --- | --- | --- |
+| ![](shots/bridge-light/before/office.png) | ![](shots/bridge-light/night/office.png) | ![](shots/bridge-light/day/office.png) |
+| ![](shots/bridge-light/before/deck-high.png) | ![](shots/bridge-light/night/deck-high.png) | ![](shots/bridge-light/day/deck-high.png) |
+| ![](shots/bridge-light/before/units-c.png) | ![](shots/bridge-light/night/units-c.png) | ![](shots/bridge-light/day/units-c.png) |
+| ![](shots/bridge-light/before/bridge-station.png) | ![](shots/bridge-light/night/bridge-station.png) | ![](shots/bridge-light/day/bridge-station.png) |
+| ![](shots/bridge-light/before/deck-overview.png) | ![](shots/bridge-light/night/deck-overview.png) | ![](shots/bridge-light/day/deck-overview.png) |
+| ![](shots/bridge-light/before/settings-bridge.png) | ![](shots/bridge-light/night/settings-bridge.png) | ![](shots/bridge-light/day/settings-bridge.png) |
+| ![](shots/bridge-light/before/lite.png) | ![](shots/bridge-light/night/lite.png) | ![](shots/bridge-light/day/lite.png) |
+| ![](shots/bridge-light/before/login.png) | ![](shots/bridge-light/night/login.png) | ![](shots/bridge-light/day/login.png) |
+
+Mean lightness (CIE L*) of the 3D view past the rail and the top bar, space through the glass included:
+
+| Shot | Before | Night | Day |
+| --- | --- | --- | --- |
+| office (arrival) | 13.9 | 23.6 | 43.4 |
+| deck-high | 10.7 | 21.5 | 51.6 |
+| bridge-conn | 15.5 | 24.0 | 41.5 |
+| units-c | 16.7 | 29.2 | 55.4 |
+| bridge-station | 11.0 | 18.4 | 32.7 |
+| deck-overview | 11.0 | 19.2 | 51.8 |
+
+Pure black (L* under 5) inside the frame fell from 20 to 44% of it before to 3 to 25% by night; what is left is space through the glass and the boards' faces.
+
+Frame time at 1440x900 with nine seeded units on the GPU (Apple M3 Pro through ANGLE Metal), the same probe on a build of the stage before and on this one, a forced render timed over 30 frames with `gl.finish`: before, 2.2 ms (2.4 ms at device pixel ratio 2) with rAF at 16.7 ms, p95 16.8 ms. Now by night, with the glow, 2.4 to 2.7 ms, p95 16.8 ms; by day 2.2 ms. The unit inlays add one draw call per unit; the rim lights and the holo uplight are three more lights, set up at load and never added or removed.

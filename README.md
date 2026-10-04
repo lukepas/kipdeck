@@ -24,6 +24,7 @@ UGC Army puts every coding agent your team runs on one shared deck and ranks the
 - **Agents that manage agents.** Every unit can list, deploy, message and stand down the others through the `ugc-army` MCP server or the `office-workers` command, and board agents at the situation wall triage issues and pull requests for whoever walks up.
 - **The 2D view.** `/lite` is the deck as a plan beside the ranked list, with terminals, the keys a phone lacks and the boards. Phones go there by default.
 - **Calm by design.** Hue only for exceptions, a glyph for every state, motion only for a change of state, four optional sound cues ([DESIGN.md](DESIGN.md), [docs/design.md](docs/design.md)).
+- **Night and Day lights.** Settings > Bridge > Bridge lights: Night for a dark room, Day for a bright one, or Auto to follow your system, with a Brightness step either way. The HUD, the 2D view and the sign-in page follow it ([the deck](docs/deck.md#light-and-materials)).
 
 ## Proof of Merge on testnets
 

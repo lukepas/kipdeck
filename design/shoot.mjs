@@ -139,8 +139,16 @@ async function signIn(page) {
   if (status !== 200) throw new Error('login failed ' + status);
 }
 
-const PROFILE = () => {
+/** The bridge lights to shoot in (SHOOT_LIGHT=night|day|auto), saved as Settings > Bridge would. */
+const LIGHT = process.env.SHOOT_LIGHT ?? '';
+const SCHEME = LIGHT === 'day' ? 'light' : 'dark';
+
+const PROFILE = (light) => {
   try {
+    if (light) {
+      const saved = JSON.parse(localStorage.getItem('agent-office.settings') ?? '{}');
+      if (saved.lighting !== light) localStorage.setItem('agent-office.settings', JSON.stringify({ ...saved, lighting: light }));
+    }
     // Headless software rendering is slow: no offer of the 2D view over the shots.
     localStorage.setItem('agent-office.lite-declined', '1');
     if (!localStorage.getItem('agent-office.profile')) localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4FA3A5', look: { skin: 0, hair: 0, style: 0 } }));
@@ -154,7 +162,8 @@ async function main() {
   const browser = await launch();
   try {
     const viewport = { width: 1440, height: 900 };
-    const fresh = await browser.newContext({ viewport, deviceScaleFactor: 1, colorScheme: 'dark' });
+    const fresh = await browser.newContext({ viewport, deviceScaleFactor: 1, colorScheme: SCHEME });
+    await fresh.addInitScript(PROFILE, LIGHT);
     const lp = await fresh.newPage();
     if (want('login')) {
       await lp.goto(`${base}/login`);
@@ -177,8 +186,8 @@ async function main() {
     }
     await fresh.close();
 
-    const context = await browser.newContext({ viewport, colorScheme: 'dark' });
-    await context.addInitScript(PROFILE);
+    const context = await browser.newContext({ viewport, colorScheme: SCHEME });
+    await context.addInitScript(PROFILE, LIGHT);
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -545,7 +554,7 @@ async function main() {
       await page.reload();
       await wait(2500);
       await shot(page, 'lite-print');
-      await page.emulateMedia({ colorScheme: 'dark' });
+      await page.emulateMedia({ colorScheme: SCHEME });
       const mid = await context.newPage();
       await mid.setViewportSize({ width: 900, height: 1000 });
       await mid.goto(`${base}/lite`);
@@ -586,7 +595,7 @@ async function main() {
     const b3 = await launch();
     try {
       const ctx3 = await b3.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
-      await ctx3.addInitScript(PROFILE);
+      await ctx3.addInitScript(PROFILE, LIGHT);
       const dp = await ctx3.newPage();
       dp.on('pageerror', (e) => console.log('demo page error:', e.message));
       await signIn(dp);
