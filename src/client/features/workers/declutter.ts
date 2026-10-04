@@ -4,7 +4,9 @@
  * and stuck, then to review, then the nearest). One that would overlap a callout already placed is
  * lifted a little; if that isn't enough it shrinks to its glyph and call sign ("C-02"); a unit at work
  * whose call sign still has no room shows no callout at all. One that needs someone always shows, lifted
- * as far as it must be. The placing itself is declutter(), with nothing to draw, so the tests run it.
+ * as far as it must be, a hairline tying it back to its unit. A callout that would run off the side of
+ * the view, or under the Units rail, slides back in. The placing itself is declutter() and nudge(),
+ * with nothing to draw, so the tests run them.
  */
 import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
@@ -100,20 +102,41 @@ export function declutter(labels: readonly Label[]): Placed[] {
   });
 }
 
+/** Pixels kept between a callout and the side of the view (or the rail). */
+const EDGE = 8;
+
+/**
+ * How far (pixels, positive to the right) `b` slides so it sits between `left` and `right`: none when
+ * it fits already; held to the left edge when it's wider than the room.
+ */
+export function nudge(b: LabelBox, left: number, right: number): number {
+  if (b.x < left + EDGE) return left + EDGE - b.x;
+  if (b.x + b.w > right - EDGE) return Math.max(left + EDGE - b.x, right - EDGE - (b.x + b.w));
+  return 0;
+}
+
 export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'overview' | 'stage'>) {
   const bottom = new THREE.Vector3();
   const top = new THREE.Vector3();
   const at = new THREE.Vector3();
   const up = new THREE.Vector3();
   const rise = new THREE.Vector3();
+  /** Where the view starts, past the Units rail when it's open (measured now and then: it folds). */
+  let left = 0;
+  let measured = -Infinity;
   // After the units have moved and sized their callouts ('others'), before the frame is drawn.
-  ctx.ticks.add('hud', () => {
+  ctx.ticks.add('hud', ({ now }) => {
     const camera = parts.stage.view ?? ctx.camera;
+    if (now - measured > 1000) {
+      measured = now;
+      const rail = document.querySelector('.rail')?.getBoundingClientRect();
+      left = rail && rail.width > 0 && rail.top < window.innerHeight / 2 ? rail.right : 0;
+    }
     // Where it is this frame, whatever moved it since the last frame was drawn.
     camera.updateMatrixWorld();
     const W = window.innerWidth;
     const H = window.innerHeight;
-    const shown: { model: { setLift(m: number): void; setMode(m: Placed['mode']): void }; label: Label; rank: number; d: number; pxPerM: number }[] = [];
+    const shown: { model: { setLift(m: number): void; setMode(m: Placed['mode']): void; setNudge(f: number): void }; label: Label; rank: number; d: number; pxPerM: number }[] = [];
     // Callouts face the camera: their height runs along its up, which the frame drawn last left in its matrix.
     up.set(0, 1, 0).applyQuaternion(camera.quaternion);
     /** A callout's box on screen from its edges in the world, or null when it's off the screen. */
@@ -131,6 +154,7 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'overvie
       if (!m.calloutEdges(bottom, top, up)) {
         m.setLift(0);
         m.setMode('full');
+        m.setNudge(0);
         continue;
       }
       const d = camera.position.distanceTo(m.where(at));
@@ -147,6 +171,7 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'overvie
       if (!full || !compact) {
         m.setLift(0);
         m.setMode('full');
+        m.setNudge(0);
         continue;
       }
       shown.push({ model: m, label: { full, compact, keep: m.rank < 2 }, rank: m.rank, d, pxPerM });
@@ -154,8 +179,14 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'overvie
     shown.sort((a, b) => a.rank - b.rank || a.d - b.d);
     const placed = declutter(shown.map((s) => s.label));
     shown.forEach((s, i) => {
-      s.model.setMode(placed[i].mode);
-      s.model.setLift(placed[i].lift / s.pxPerM);
+      const { mode, lift } = placed[i];
+      s.model.setMode(mode);
+      s.model.setLift(lift / s.pxPerM);
+      const b = mode === 'compact' ? s.label.compact : s.label.full;
+      // Only a callout whose unit is in view slides in: one whose unit is off the side, or under the
+      // rail, stays over it (the compass points the way).
+      const anchor = b.x + b.w / 2;
+      s.model.setNudge(mode === 'hidden' || anchor < left || anchor > W ? 0 : nudge(b, left, W) / b.w);
     });
   });
 }

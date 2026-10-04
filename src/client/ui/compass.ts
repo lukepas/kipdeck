@@ -1,19 +1,31 @@
 import './compass.css';
 import * as THREE from 'three';
-import type { WorkerStatus } from '../../shared/protocol';
 import { h } from './dom';
 import { icon } from './icons';
 
-/** A worker waiting on you: who, what for, and where its head is. */
+/** What a mark at the edge points to: one that needs you, one that's stuck, one to review. In this order of importance. */
+export type BearingKind = 'needs-you' | 'stuck' | 'review';
+const PRIORITY: Record<BearingKind, number> = { 'needs-you': 0, stuck: 1, review: 2 };
+
+/** A unit waiting on someone: who, why, and where its head is. */
 export interface Bearing {
   id: string;
   name: string;
-  status: WorkerStatus;
+  kind: BearingKind;
   at: THREE.Vector3;
 }
 
+/**
+ * The marks along one edge, most important first, that fit in `room` pixels at `gap` apart: when an
+ * edge is crowded, the ones to review go before the stuck ones, and the stuck before the ones that need you.
+ */
+export function crowd<T extends { kind: BearingKind }>(marks: readonly T[], room: number, gap: number): T[] {
+  const fits = Math.max(1, Math.floor(room / gap) + 1);
+  return [...marks].sort((a, b) => PRIORITY[a.kind] - PRIORITY[b.kind]).slice(0, fits);
+}
+
 /** From a mark's middle to the edge of the screen, or of the HUD it sits beside, with room for its tip (px). */
-const MARGIN = 46;
+const MARGIN = 34;
 /** How far apart marks on one edge keep: a dial and its name down a side, a name's width along the top or bottom (px). */
 const SPACING = { side: 56, across: 110 };
 
@@ -24,17 +36,20 @@ interface Mark {
   arrow: HTMLElement;
   dial: HTMLElement;
   who: HTMLElement;
-  status: string;
+  kind: string;
 }
 
 /**
- * An arrow at the edge of the screen for each worker waiting on you that's out of view, pointing the
- * way to turn to see it: a Signal diamond for needs input, an amber circle for done. They keep inside the HUD's panels.
+ * An arrow at the edge of the screen for each unit waiting on someone that's out of view, pointing the
+ * way to turn to see it: a Signal diamond for one that needs you, a red triangle for one that's stuck,
+ * an amber circle for one to review. They keep inside the HUD's panels, pinned to the edge.
  */
 export class Compass {
   private readonly marks = new Map<string, Mark>();
   /** Where the marks can go: clear of the top bar, the Units rail, and the bottom bar and hint along the bottom. */
   private box = { top: 0, right: 0, bottom: 0, left: 0 };
+  /** Where the Units rail ends on screen (0 when it's folded away): a unit under it is out of view. */
+  private railRight = 0;
   private measured = -Infinity;
   private readonly cam = new THREE.Vector3();
   private readonly ndc = new THREE.Vector3();
@@ -55,8 +70,9 @@ export class Compass {
       let dy: number;
       if (cam.z < -0.01) {
         const ndc = this.ndc.copy(b.at).project(camera);
-        // In view already, jumping at its desk.
-        if (Math.abs(ndc.x) <= 1 && Math.abs(ndc.y) <= 1) continue;
+        // In view already, jumping at its desk (under the Units rail doesn't count as in view).
+        const px = (ndc.x + 1) * cx;
+        if (px >= this.railRight && Math.abs(ndc.x) <= 1 && Math.abs(ndc.y) <= 1) continue;
         dx = ndc.x * cx;
         dy = -ndc.y * cy;
       } else {
@@ -76,19 +92,27 @@ export class Compass {
       const edge = x <= left + 1 ? 'left' : x >= right - 1 ? 'right' : y <= top + 1 ? 'top' : 'bottom';
       placed.push({ b, x, y, angle: Math.atan2(dy, dx), edge });
     }
-    // Workers at desks side by side land on top of each other: spread them out along their edge.
+    // Workers at desks side by side land on top of each other: spread them out along their edge, and
+    // where there are more than the edge has room for, keep the most important.
+    const kept: typeof placed = [];
     for (const edge of ['left', 'right', 'top', 'bottom'] as const) {
       const side = edge === 'left' || edge === 'right';
       const axis = side ? 'y' : 'x';
       const gap = side ? SPACING.side : SPACING.across;
-      const row = placed.filter((p) => p.edge === edge).sort((a, b) => a[axis] - b[axis]);
+      const fit = crowd(
+        placed.filter((p) => p.edge === edge).map((p) => ({ ...p, kind: p.b.kind })),
+        side ? bottom - top : right - left,
+        gap,
+      );
+      const row = fit.sort((a, b) => a[axis] - b[axis]);
+      kept.push(...row);
       for (let i = 1; i < row.length; i++) row[i][axis] = Math.max(row[i][axis], row[i - 1][axis] + gap);
       // Pushed off the end: back the lot up.
       const over = row.length ? row[row.length - 1][axis] - (side ? bottom : right) : 0;
       if (over > 0) for (const p of row) p[axis] = Math.max(side ? top : left, p[axis] - over);
     }
     const seen = new Set<string>();
-    for (const p of placed) {
+    for (const p of kept) {
       seen.add(p.b.id);
       const m = this.mark(p.b);
       m.el.style.transform = `translate(${Math.round(p.x)}px, ${Math.round(p.y)}px)`;
@@ -110,13 +134,13 @@ export class Compass {
       const who = h('span.compass-who');
       const el = h('div.compass-mark', {}, arrow, dial, who);
       this.root.append(el);
-      m = { el, arrow, dial, who, status: '' };
+      m = { el, arrow, dial, who, kind: '' };
       this.marks.set(b.id, m);
     }
-    if (m.status !== b.status) {
-      m.status = b.status;
-      m.el.className = `compass-mark ${b.status}`;
-      m.dial.replaceChildren(icon(b.status === 'needs_input' ? 'needs-you' : 'review', 14));
+    if (m.kind !== b.kind) {
+      m.kind = b.kind;
+      m.el.className = `compass-mark ${b.kind}`;
+      m.dial.replaceChildren(icon(b.kind, 14));
     }
     if (m.who.textContent !== b.name) m.who.textContent = b.name;
     return m;
@@ -129,12 +153,13 @@ export class Compass {
     const hgt = window.innerHeight;
     const bar = document.querySelector('.topbar')?.getBoundingClientRect();
     const rail = document.querySelector('.rail')?.getBoundingClientRect();
+    this.railRight = rail?.width && rail.top < hgt / 2 ? rail.right : 0;
     // Never so tight the marks crowd the middle of the screen. The rail is on the left; the bottom bar
     // and the hint over it along the bottom.
     this.box = {
       top: Math.min(Math.max(MARGIN, (bar?.bottom ?? 0) + MARGIN), hgt / 2 - 60),
       right: Math.max(w - MARGIN, w / 2 + 60),
-      bottom: Math.max(hgt - 130, hgt / 2 + 60),
+      bottom: Math.max(hgt - 104, hgt / 2 + 60),
       left: Math.min(rail?.width && rail.top < hgt / 2 ? rail.right + MARGIN : MARGIN, w / 2 - 60),
     };
   }

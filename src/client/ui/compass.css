@@ -2,11 +2,11 @@
 #compass { position: absolute; inset: 0; overflow: hidden; pointer-events: none !important; }
 .compass-mark { position: absolute; left: 0; top: 0; width: 0; height: 0; --mark: var(--signal); }
 .compass-mark.stuck { --mark: var(--stuck); }
-.compass-mark.done { --mark: var(--review); }
+.compass-mark.review { --mark: var(--review); }
 /* An edge chevron whose point (its square corner) turns to face the unit, with the state's glyph upright on top. */
 .compass-arrow { position: absolute; left: -15px; top: -15px; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; border: 1px solid var(--mark); background: var(--hud-fill); box-shadow: var(--hud-shadow); }
 .compass-dial { position: absolute; left: -15px; top: -15px; width: 30px; height: 30px; display: grid; place-items: center; color: var(--mark); line-height: 1; }
-.compass-mark.needs_input .compass-arrow { animation: pulse 1.2s infinite; }
+.compass-mark.needs-you .compass-arrow { animation: pulse 1.2s infinite; }
 .compass-who { position: absolute; top: 24px; left: 0; transform: translateX(-50%); max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 1px 6px; border-radius: var(--radius-chip); background: var(--hud-fill); border: 1px solid var(--line); color: var(--text); font: 500 11px var(--font-mono); }
-@media (prefers-reduced-motion: reduce) { .compass-mark.needs_input .compass-arrow { animation: none; } }
-:root[data-motion=reduce] .compass-mark.needs_input .compass-arrow { animation: none; }
+@media (prefers-reduced-motion: reduce) { .compass-mark.needs-you .compass-arrow { animation: none; } }
+:root[data-motion=reduce] .compass-mark.needs-you .compass-arrow { animation: none; }

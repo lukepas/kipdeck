@@ -130,16 +130,18 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
 
   const bearings: Bearing[] = [];
   const heads: THREE.Vector3[] = [];
-  /** Arrows to the waiting workers you can't see from where you're looking. */
+  /** Arrows to the units waiting on someone (needs you, stuck, to review) you can't see from where you're looking. */
   function pointToWaiting(now: number) {
     bearings.length = 0;
     if (!core.trip && !modalOpen()) {
+      // Snoozed ones left out, as N leaves them.
       for (const w of awake()) {
         const v = parts.views.workerViews.get(w.id);
-        if (!v || !waitingOnSomeone(w)) continue;
+        const kind = v?.model.showing;
+        if (!v || (kind !== 'needs-you' && kind !== 'stuck' && kind !== 'review')) continue;
         const at = v.model.root.getWorldPosition((heads[bearings.length] ??= new THREE.Vector3()));
         at.y += 1.2;
-        bearings.push({ id: w.id, name: w.name, status: w.status, at });
+        bearings.push({ id: w.id, name: w.name, kind, at });
       }
     }
     compass.update(camera, bearings, now);

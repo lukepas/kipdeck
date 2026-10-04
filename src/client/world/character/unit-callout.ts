@@ -108,7 +108,9 @@ export function calloutSprite(o: CalloutText): THREE.Sprite {
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 4;
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false, transparent: true }));
+  // Over whatever is behind it: a board, a console or another unit never cuts into a callout (the
+  // declutter pass keeps callouts off each other, features/workers/declutter.ts).
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false, depthTest: false, transparent: true }));
   sprite.scale.set((w / R) * SCALE, (h / R) * SCALE, 1);
   sprite.center.set(0.5, 0);
   sprite.renderOrder = 10;
