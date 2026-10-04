@@ -1,9 +1,9 @@
 /* The counters on the top bar (ui/counters.ts): glyph, mono number, word. A zero stays quiet; a live
    count takes its state's hue, and only needs you gets the Signal fill. */
-.counters { display: flex; align-items: center; gap: 2px; min-width: 0; margin-left: 6px; }
-.counter { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; border: 1px solid transparent; border-radius: var(--radius); background: none; color: var(--faint); font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.counters { display: flex; align-items: center; gap: 2px; min-width: 0; margin-left: 6px; flex: none; }
+.counter { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; border: 1px solid transparent; border-radius: var(--radius); background: none; color: var(--faint); font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
 .counter:hover { background: var(--surface-3); color: var(--muted); }
-.counter b { display: inline-block; font: 500 13px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--muted); }
+.counter b { display: inline-block; min-width: 2ch; text-align: left; font: 500 13px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--muted); }
 /* A number that just changed rolls in once from the way it moved: up from below, down from above. */
 .counter b.roll.up { animation: roll-up var(--t-ui) var(--ease); }
 .counter b.roll.down { animation: roll-down var(--t-ui) var(--ease); }
@@ -26,3 +26,8 @@
 .counter.c-proof .net { font: 500 10px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border: 1px solid var(--line-strong); border-radius: var(--radius-chip); padding: 0 4px; line-height: 15px; }
 @media (max-width: 1280px) { .counter .cw { display: none; } }
 @media (max-width: 700px) { .counter.c-working, .counter-sep, .counter.c-proof { display: none; } }
+/* A phone: glyph and number in fixed widths, so a number can never run into what follows. */
+@media (max-width: 640px) {
+  .counters { margin-left: 0; gap: 0; }
+  .counter { width: 52px; justify-content: center; padding: 0 4px; gap: 5px; }
+}

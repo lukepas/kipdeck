@@ -1,11 +1,14 @@
-/* The HUD over the 3D office (index.html's #hud, filled by the features: features/hud and the rest):
-   the 44px top bar (mark, deck, counters, actions), the side panels, the chat, hints and meters. Only
-   the office loads it, through style.css. Pieces floating over the canvas get the 85% fill and the one
-   soft shadow; everything else is flat. */
+/* The HUD over the 3D deck (index.html's #hud, filled by the features: features/hud and the rest). The
+   frame: the 44px top bar is the one attention surface (mark, deck, counters, actions); the Units rail
+   runs down the left (ui/units-rail.css); the bottom bar holds the mission strip, the keys worth
+   knowing and the chat; toasts stack top right under the bar. Only the office loads it, through
+   style.css. Pieces floating over the canvas get the 85% fill and the one soft shadow. */
 
 #app { position: fixed; inset: 0; }
 #scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
-#hud { position: absolute; inset: 0; pointer-events: none; --bar: 44px; }
+#hud { position: absolute; inset: 0; pointer-events: none; --bar: 44px; --rail: 264px; --bottom: 52px; }
+#hud:has(.rail.folded) { --rail: 56px; }
+#hud:has(.rail.hud-off) { --rail: 0px; }
 #hud > * { pointer-events: auto; }
 
 /* ---- The top bar ---- */
@@ -46,29 +49,13 @@
 .chat.hud-off.peek { display: flex !important; }
 .project-meta.hud-off.lobby { display: block !important; }
 .panel-x { flex: none; margin-left: auto; width: 20px; height: 20px; padding: 0; border: 0; border-radius: var(--radius-chip); background: none; color: var(--muted); display: grid; place-items: center; cursor: pointer; opacity: 0; transition: opacity var(--t-ui) var(--ease); align-self: center; }
-.side h3 :is(.cost, .plan) ~ .panel-x { margin-left: 2px; }
-.side section:hover .panel-x, .panel-x:focus-visible { opacity: 1; }
+.rail h3 :is(.cost, .plan) ~ .panel-x { margin-left: 2px; }
+.rail section:hover .panel-x, .panel-x:focus-visible { opacity: 1; }
 .panel-x:hover { background: var(--surface-3); color: var(--text); }
 @media (hover: none) { .panel-x { opacity: .6; } }
 
-/* Floating panels over the canvas. */
-#hud .side .panel, #hud .mission-strip.panel { background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: var(--hud-shadow); }
-
-/* Under the bar, top left: one line of what the floor is for (ui/mission/strip.ts). */
-.mission-strip { position: absolute; top: calc(var(--bar) + 10px); left: 12px; width: min(440px, 40vw); padding: 0; overflow: hidden; }
-.mission-strip:empty { display: none; }
-
-.side { position: absolute; top: calc(var(--bar) + 10px); right: 12px; width: 264px; display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - var(--bar) - 24px); pointer-events: none; }
-.side > * { pointer-events: auto; }
-.side h3 { margin: 0 0 8px; font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); display: flex; align-items: baseline; gap: 6px; }
-.side .count { color: var(--text); font: 500 11px var(--font-mono); letter-spacing: 0; }
-.side section { padding: 10px 10px 8px; overflow: auto; }
-.side ul { list-style: none; margin: 0 -4px; padding: 0; display: flex; flex-direction: column; gap: 1px; }
-.people li, .workers li { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; padding: 4px 6px; border-radius: var(--radius); }
-.workers li { cursor: pointer; }
-.workers li:hover { background: var(--surface-3); }
-/* Each unit by its call sign (shared/callsign.ts), as the deck stencils it over its head. */
-.workers .callsign { flex: none; width: 34px; font: 500 11px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--muted); }
+/* The panels in the rail. */
+.people li { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; padding: 4px 6px; border-radius: var(--radius); }
 .people .you { color: var(--muted); font-weight: 400; }
 .people .mic { margin-left: auto; font-size: 12px; color: var(--muted); }
 .people li.walk { cursor: pointer; }
@@ -76,13 +63,8 @@
 .people .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .people .sub { display: block; font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .people .speaking { color: var(--settled); }
-.workers .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.workers .sub { display: block; font-size: 11px; font-weight: 400; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.workers h3 .cost { margin-left: auto; font: 500 11px var(--font-mono); text-transform: none; letter-spacing: 0; }
-.workers .cost { font: 500 11px var(--font-mono); color: var(--muted); white-space: nowrap; }
-.workers .name .cost { display: block; white-space: normal; overflow-wrap: anywhere; }
+.rail .people h3 .panel-x, .rail .spend h3 .panel-x { margin-left: auto; }
 /* Spend: today, the budget and all time. Its panel only shows once there's something to say. */
-.side .spend { flex: none; }
 .spend:has(> .usage.hidden) { display: none; }
 .usage { font-size: 12px; display: flex; flex-direction: column; gap: 6px; }
 .usage .row { display: flex; align-items: baseline; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -96,7 +78,7 @@
 .budget.near .fill, .meter.near .fill { background: var(--review); }
 .budget.over .fill, .meter.over .fill { background: var(--stuck); }
 /* Claude plan limits: the 5-hour session and the week */
-.side .limits { flex: none; cursor: pointer; font-size: 12px; display: flex; flex-direction: column; gap: 4px; }
+.limits { cursor: pointer; font-size: 12px; display: flex; flex-direction: column; gap: 4px; }
 .limits h3 { margin-bottom: 2px; }
 .limits .plan { margin-left: auto; font-size: 11px; text-transform: none; letter-spacing: 0; color: var(--muted); }
 .limits .row { display: flex; align-items: baseline; gap: 5px; white-space: nowrap; }
@@ -107,27 +89,22 @@
 .limits .meter + .row { margin-top: 3px; }
 .limits .muted { color: var(--muted); }
 
-/* Workers waiting on you: a count in the Workers panel (click or N to go to them). */
-#waiting { display: flex; align-items: center; gap: 8px; width: 100%; margin: 0 0 8px; padding: 6px 8px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface-2); color: var(--text); font: inherit; font-size: 12px; font-weight: 600; text-align: left; cursor: pointer; }
-#waiting:hover { background: var(--surface-3); }
-/* Someone on the floor needs you: the count in Signal, and that worker's row with a Signal stripe. */
-#waiting.needs-you-now { border-color: var(--signal); background: var(--signal-tint); color: var(--signal); }
-#waiting.needs-you-now:hover { background: rgb(255 106 26 / .2); }
-.workers.needs-you-panel { border-color: rgb(255 106 26 / .5); }
-.workers li.needs-you-row { flex-wrap: wrap; row-gap: 4px; padding: 6px 6px 6px 10px; background: var(--signal-tint); box-shadow: inset 2px 0 0 var(--signal); border-radius: 0 var(--radius) var(--radius) 0; }
-.workers li.needs-you-row:hover { background: rgb(255 106 26 / .18); }
-.workers li.needs-you-row .name { font-weight: 600; }
-/* Its reason (what it's asking, and for how long: the ranking's) on a line of its own, in full. */
-.workers li.needs-you-row .pill.reason { flex: 0 0 auto; max-width: 100%; white-space: normal; overflow-wrap: anywhere; text-align: left; align-items: flex-start; border: 0; background: none; padding: 0; font-size: 12px; font-weight: 500; line-height: 1.35; }
-.workers li.needs-you-row .pill.reason::before { margin-top: 3px; }
-#waiting.all-done { border-color: rgb(245 197 66 / .5); color: var(--review); }
-#waiting.all-done:hover { background: var(--review-tint); }
-#waiting .key { margin: 0 0 0 auto; }
+/* The bottom bar: the mission strip, the keys, the chat. It starts past the rail. */
+.bottombar { position: absolute; left: calc(var(--rail) + 12px); right: 12px; bottom: 10px; height: 40px; z-index: 2; display: flex; align-items: center; gap: 8px; pointer-events: none !important; transition: left var(--t-ui) var(--ease); }
+.bottombar > * { pointer-events: auto; }
+.bottombar .mission-strip { flex: 0 1 460px; min-width: 0; height: 40px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: var(--hud-shadow); }
+.bottombar .mission-strip:empty { visibility: hidden; }
+.bb-keys { flex: 1; min-width: 0; display: flex; justify-content: center; gap: 6px; overflow: hidden; }
+.bb-key { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 9px 0 5px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--hud-fill); color: var(--muted); font-size: 12px; white-space: nowrap; cursor: pointer; }
+.bb-key:hover { color: var(--text); background: var(--surface-3); }
+.bb-key kbd { min-width: 18px; padding: 0 4px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); color: var(--text); font: 500 11px/16px var(--font-mono); text-align: center; }
+.bb-key.look { color: var(--text); border-color: var(--line-strong); cursor: default; }
+.bb-key.look.hidden, .bb-key.hidden { display: none; }
+body.overview .bb-keys { visibility: hidden; }
 
-/* The chat: lines float up and fade after a while; hover it or press T to read back. */
-.chat { position: absolute; left: 12px; bottom: 12px; width: 330px; max-width: calc(100vw - 24px); display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
-#hud > .chat { pointer-events: none; }
-#chat-log { list-style: none; margin: 0; padding: 0 0 3px; max-height: 190px; width: 100%; overflow: auto; font-size: 13px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; scrollbar-width: none; }
+/* The chat: folded to a button on the right of the bar. T opens it; lines float up and fade. */
+.chat { position: relative; flex: none; display: flex; flex-direction: column; align-items: flex-end; }
+#chat-log { position: absolute; right: 0; bottom: 46px; list-style: none; margin: 0; padding: 0 0 3px; width: 330px; max-width: calc(100vw - 24px); max-height: 190px; overflow: auto; font-size: 13px; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; scrollbar-width: none; pointer-events: none; }
 #chat-log:empty { display: none; }
 #chat-log li { max-width: 100%; padding: 4px 9px; background: var(--hud-fill); border: 1px solid var(--line); border-radius: var(--radius); overflow-wrap: anywhere; animation: chat-out .6s ease-in forwards; }
 @keyframes chat-out { to { opacity: 0; visibility: hidden; } }
@@ -135,35 +112,32 @@
 .chat:is(:hover, :focus-within) #chat-log li { animation: none; }
 #chat-log b { font-weight: 600; }
 #chat-log .sys { color: var(--muted); }
-#chat-input { pointer-events: auto; width: 180px; height: 32px; border: 1px solid var(--line); border-radius: var(--radius); padding: 0 10px; font: inherit; font-size: 13px; color: var(--text); background: var(--hud-fill); outline: none; transition: width var(--t-ui) var(--ease); }
+#chat-input { width: 0; height: 28px; padding: 0; border: 1px solid transparent; border-radius: var(--radius); font: inherit; font-size: 13px; color: var(--text); background: var(--surface-1); outline: none; opacity: 0; transition: width var(--t-ui) var(--ease), opacity var(--t-ui) var(--ease); }
 #chat-input::placeholder { color: var(--muted); }
-#chat-input:focus { width: 100%; border-color: var(--signal); background: var(--surface-1); }
+.chat.open #chat-input, #chat-input:focus { width: 300px; padding: 0 10px; border-color: var(--signal); opacity: 1; }
+.chat.open .bb-key.chat-btn, .chat:focus-within .bb-key.chat-btn { display: none; }
+.chat-row { display: flex; align-items: center; gap: 6px; }
 
+/* What you're facing and what its keys do: over the bar, in the middle of the deck past the rail. */
 .hint {
-  position: absolute; left: 50%; bottom: 24px; transform: translateX(-50%);
+  position: absolute; left: calc(var(--rail) + (100vw - var(--rail)) / 2); bottom: calc(var(--bottom) + 10px); transform: translateX(-50%);
   background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 8px 14px; font-weight: 500; font-size: 13px; box-shadow: var(--hud-shadow);
-  display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center; max-width: min(720px, calc(100vw - 380px));
+  display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center; max-width: min(720px, calc(100vw - var(--rail) - 48px));
   pointer-events: none !important;
 }
 .hint .title { color: var(--text); font-weight: 600; }
 .hint .cost { color: var(--muted); font-family: var(--font-mono); }
-/* Where you aim: a small dot, never a reticle. */
+/* Where you aim: a small dot, never a reticle. Its "click to look around" is a key in the bottom bar. */
 .crosshair {
   position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px;
   border-radius: 50%; background: var(--text); box-shadow: 0 0 0 1px rgb(0 0 0 / .5); opacity: .8;
   transition: transform var(--t-ui) var(--ease), background var(--t-ui) var(--ease); pointer-events: none !important;
 }
 .crosshair.on { transform: scale(1.5); background: var(--signal); opacity: 1; }
-.crosshair .look-hint {
-  display: none; position: absolute; top: 16px; left: 50%; transform: translateX(-50%); white-space: nowrap;
-  background: var(--hud-fill); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px 10px; font-size: 12px; font-weight: 500;
-}
-.crosshair.free .look-hint { display: block; }
-.crosshair.on .look-hint { transform: translateX(-50%) scale(.667); transform-origin: top center; }
+.crosshair .look-hint { display: none; }
 
-#shares { position: absolute; left: 12px; top: calc(var(--bar) + 10px); display: flex; flex-direction: column; gap: 8px; }
-#hud:has(#mission-strip:not(:empty):not(.hud-off)) #shares { translate: 0 52px; }
+#shares { position: absolute; right: 12px; bottom: calc(var(--bottom) + 10px); display: flex; flex-direction: column; gap: 8px; }
 .share-thumb { width: 220px; border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; background: #000; box-shadow: var(--hud-shadow); cursor: pointer; position: relative; }
 .share-thumb video { width: 100%; display: block; aspect-ratio: 16/9; object-fit: contain; background: #000; }
 .share-thumb .who { position: absolute; left: 6px; bottom: 6px; background: var(--hud-fill); border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 1px 6px; font: 500 11px var(--font-mono); }
@@ -174,14 +148,34 @@
 
 @media (max-width: 1100px) {
   .project-meta { display: none; }
+  #hud { --rail: 232px; }
 }
 @media (max-width: 800px) {
   .topbar .brand-word { display: none; }
   .topbar .brand { padding-right: 8px; }
-  .side { width: min(264px, calc(100vw - 24px)); max-height: calc(100vh - 290px); }
   .dock-btn .lbl { display: none; }
-  .hint { max-width: calc(100vw - 24px); bottom: 190px; }
-  .chat { width: calc(100vw - 24px); }
+  .bb-key .kw { display: none; }
+}
+/* A phone in the 3D view (most are sent to the 2D view, see ui/litesuggest.ts): one surface. The rail is
+   a bottom sheet the Units button opens, the counters are glyph and number in fixed widths, and nothing
+   floats over the deck but the toasts under the bar. */
+@media (max-width: 640px) {
+  #hud { --rail: 0px; }
+  .rail { top: auto; bottom: 0; left: 0; right: 0; width: auto; max-height: 62vh; border-right: 0; border-top: 1px solid var(--line-strong); border-radius: 8px 8px 0 0; transform: translateY(100%); transition: transform var(--t-ui) var(--ease); }
+  .rail.sheet { transform: none; }
+  .rail.folded { --rail: 0px; }
+  .rail-fold { display: none; }
+  .bottombar { left: 12px; }
+  .bottombar .mission-strip { flex: 1 1 auto; }
+  .bb-keys { display: none; }
+  /* The bar: the mark, the counters, the Units sheet and the menu. The deck and Mission control are in the menu. */
+  .topbar { padding: 0 6px 0 10px; gap: 4px; }
+  .topbar .brand { border-right: 0; padding-right: 2px; }
+  .topbar .project, .dock-btn[data-action=mission] { display: none; }
+  .dock-panel .lbl { display: none; }
+}
+@media (pointer: coarse) {
+  .bb-key.look, .bb-key[data-key=T], .bb-key[data-key=Tab] { display: none; }
 }
 
 /* A teammate with their own account, in the people panel. */

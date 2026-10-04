@@ -15,8 +15,10 @@ export interface CalloutText {
   /** The full callout (task and status line), not just the call sign. */
   near: boolean;
   task?: string;
-  /** The line under the task: "NEEDS YOU  4 min", "PR #12 OPEN". */
+  /** The line under the task: "NEEDS YOU  4m", "PR #12 OPEN". */
   status?: string;
+  /** Just the glyph and the call sign: what a callout shrinks to where callouts crowd (features/workers/declutter.ts). */
+  compact?: boolean;
 }
 
 /** Drawn at twice its pixels, so the small type holds up close. */
@@ -41,13 +43,13 @@ export function calloutSprite(o: CalloutText): THREE.Sprite {
   const stripe = 3 * R;
   const glyphR = 7 * R;
   const ctx = document.createElement('canvas').getContext('2d')!;
-  const head = `${o.sign ? `${o.sign}  ` : ''}${o.name.toUpperCase()}`;
+  const head = o.compact ? o.sign || o.name.toUpperCase() : `${o.sign ? `${o.sign}  ` : ''}${o.name.toUpperCase()}`;
   ctx.font = MONO(22);
   const headW = ctx.measureText(head).width + (o.kind ? glyphR * 2 + 9 * R : 0);
-  const task = o.near && o.task ? clip(o.task, TASK_MAX) : '';
+  const task = o.near && !o.compact && o.task ? clip(o.task, TASK_MAX) : '';
   ctx.font = UI(20);
   const taskW = task ? ctx.measureText(task).width : 0;
-  const status = o.near ? (o.status ?? '') : '';
+  const status = o.near && !o.compact ? (o.status ?? '') : '';
   ctx.font = MONO(16);
   const statusW = status ? ctx.measureText(status).width : 0;
   const lineH = 30 * R;
@@ -78,13 +80,18 @@ export function calloutSprite(o: CalloutText): THREE.Sprite {
     x += glyphR * 2 + 9 * R;
   }
   ctx.font = MONO(22);
-  if (o.sign) {
-    ctx.fillStyle = DECK.muted;
-    ctx.fillText(`${o.sign}  `, x, y);
-    x += ctx.measureText(`${o.sign}  `).width;
+  if (o.compact) {
+    ctx.fillStyle = DECK.text;
+    ctx.fillText(head, x, y);
+  } else {
+    if (o.sign) {
+      ctx.fillStyle = DECK.muted;
+      ctx.fillText(`${o.sign}  `, x, y);
+      x += ctx.measureText(`${o.sign}  `).width;
+    }
+    ctx.fillStyle = DECK.text;
+    ctx.fillText(o.name.toUpperCase(), x, y);
   }
-  ctx.fillStyle = DECK.text;
-  ctx.fillText(o.name.toUpperCase(), x, y);
   if (task) {
     y += lineH;
     ctx.font = UI(20);

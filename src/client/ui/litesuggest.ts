@@ -22,14 +22,26 @@ function declined(): boolean {
 
 let offered = false;
 
-/** Offers the 2D view, at most once a page, unless this browser said to stay in 3D before. */
+/** A phone held either way: too narrow for the deck and its rail side by side. */
+export function phoneSized(): boolean {
+  return Math.min(window.innerWidth, window.innerHeight) <= 640;
+}
+
+/**
+ * Offers the 2D view, at most once a page, unless this browser said to stay in 3D before. A phone goes
+ * straight there: the 2D view is the phone's deck, and its 3D button comes back here.
+ */
 export function offerLite(why: 'touch' | 'slow') {
   if (offered || declined()) return;
+  if (why === 'touch' && phoneSized()) {
+    location.replace('/lite');
+    return;
+  }
   offered = true;
   const say =
     why === 'touch'
-      ? 'On a phone? The 2D view is made for it: every worker and how it’s doing, its terminal, and the boards.'
-      : 'The 3D office is running slowly on this computer. The 2D view has the workers, their terminals and the boards, without the 3D.';
+      ? 'On a tablet? The 2D view is made for touch: every unit ranked by what needs you, its terminal and the boards.'
+      : 'The 3D deck is running slowly on this computer. The 2D view has the units, their terminals and the boards, without the 3D.';
   const stay = h('button.btn', { type: 'button' }, 'Stay in 3D');
   const el = h(
     'div.lite-offer.panel',

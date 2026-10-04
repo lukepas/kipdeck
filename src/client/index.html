@@ -42,28 +42,33 @@
           <!-- Filled by ui/menu.ts: Mission control, pinned actions, and the menu with everything else. -->
           <nav id="dock" class="dock" aria-label="Deck"></nav>
         </header>
-        <!-- The mission strip (ui/mission/strip.ts): the floor's mission and active milestone, under the bar. -->
-        <section id="mission-strip" class="panel mission-strip" aria-label="Mission"></section>
-        <aside class="side">
-          <section id="people-panel" class="panel people">
-            <h3>Operators <span id="people-count" class="count"></span><button class="panel-x" data-hud="people" aria-label="Hide" title="Hide (the menu brings it back)"><svg class="ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button></h3>
-            <ul id="people"></ul>
-          </section>
+        <!-- The Units rail (ui/workers-panel.ts): full height down the left, every unit on the deck in the
+             ranking's order, grouped by state; it folds to a 56px strip of call signs and glyphs. -->
+        <aside id="rail" class="rail" aria-label="Units">
           <section id="workers-panel" class="panel workers">
-            <h3>Units <span id="worker-count" class="count"></span><span id="workers-cost" class="cost" title="Spent by the units at their consoles"></span><button class="panel-x" data-hud="workers" aria-label="Hide" title="Hide (the menu brings it back)"><svg class="ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button></h3>
-            <button id="waiting" class="hidden" title="Go to the next unit waiting on someone: the ones that need you first (N)"></button>
+            <h3><span class="rail-title">Units</span> <span id="worker-count" class="count"></span><span id="workers-cost" class="cost" title="Spent by the units at their consoles"></span><button id="waiting" class="rail-next hidden" type="button" title="Go to the next unit waiting on someone, the ones that need you first (N)"></button><button id="rail-fold" class="rail-fold" type="button" aria-expanded="true" aria-controls="workers" title="Fold the rail to call signs"><svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4 4.5h16v15H4Z"/><path d="M9.5 4.5v15"/></svg></button></h3>
             <ul id="workers"></ul>
           </section>
+          <section id="people-panel" class="panel people">
+            <h3>Operators <span id="people-count" class="count"></span><button class="panel-x" data-hud="people" aria-label="Hide" title="Hide (Menu > HUD layers brings it back)"><svg class="ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button></h3>
+            <ul id="people"></ul>
+          </section>
           <section id="spend" class="panel spend">
-            <h3>Spend<button class="panel-x" data-hud="spend" aria-label="Hide" title="Hide (the menu brings it back)"><svg class="ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button></h3>
+            <h3>Spend<button class="panel-x" data-hud="spend" aria-label="Hide" title="Hide (Menu > HUD layers brings it back)"><svg class="ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button></h3>
             <div id="usage" class="usage hidden"></div>
           </section>
           <section id="limits" class="panel limits hidden" title="Read again now"></section>
         </aside>
-        <section class="chat" id="chat">
-          <ul id="chat-log"></ul>
-          <input id="chat-input" maxlength="500" placeholder="Press T to chat" autocomplete="off" />
-        </section>
+        <!-- The bottom bar: the mission strip (ui/mission/strip.ts) on the left, the keys worth knowing in the
+             middle (features/bottombar), and the chat folded to a button on the right. -->
+        <footer id="bottombar" class="bottombar">
+          <section id="mission-strip" class="mission-strip" aria-label="Mission"></section>
+          <div id="bb-keys" class="bb-keys" aria-label="Keys"></div>
+          <section class="chat" id="chat">
+            <ul id="chat-log"></ul>
+            <input id="chat-input" maxlength="500" placeholder="Say something to the deck" autocomplete="off" aria-label="Chat" />
+          </section>
+        </footer>
         <div id="crosshair" class="crosshair hidden"><span class="look-hint">Click to look around</span></div>
         <div id="hint" class="hint hidden"></div>
         <div id="toasts"></div>

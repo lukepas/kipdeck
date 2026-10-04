@@ -119,7 +119,13 @@ export function mountHud(actions: HudAction[], settings: Settings, save: () => v
     const on = settings.hud[id];
     return h(
       'button.btn.dock-btn.dock-panel',
-      { type: 'button', 'aria-pressed': String(on), title: `${title}${on ? ' · click to hide' : ' · click to show'}`, onclick: () => setPanel(id, !settings.hud[id]) },
+      {
+        type: 'button',
+        'aria-pressed': String(on),
+        title: `${title}${on ? ' · click to hide' : ' · click to show'}`,
+        // On a phone the Units rail is a bottom sheet: the button opens and closes it.
+        onclick: () => (id === 'workers' && matchMedia('(max-width: 640px)').matches ? $('rail').classList.toggle('sheet') : setPanel(id, !settings.hud[id])),
+      },
       icon(glyph, 18),
       h('span.lbl', {}, label),
       n ? h('span.n', {}, String(n)) : null,

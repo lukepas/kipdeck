@@ -1,27 +1,12 @@
-/* A unit needs you (features/needsyou): the alert row under the top bar, and the edge glow when one
-   starts asking. The row is the one thing on screen that keeps saying so: it comes in once (120 ms) and
-   then holds still; the counters only change their numbers. */
-.needs-you-alert { position: absolute; top: calc(var(--bar, 44px) + 8px); left: 50%; transform: translateX(-50%); z-index: 2; display: flex; align-items: stretch; width: min(640px, calc(100vw - 940px)); min-width: 360px; height: 48px; border: 1px solid rgb(255 106 26 / .55); border-radius: var(--radius); background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 3px 0 0 var(--signal), var(--hud-shadow); color: var(--text); animation: needs-you-in var(--t-ui) var(--ease); }
-.needs-you-alert button { border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
-.needs-you-go { flex: 1; display: flex; align-items: center; gap: 12px; min-width: 0; padding: 0 8px 0 16px; text-align: left; }
-.needs-you-go:hover, .needs-you-x:hover { background: var(--signal-tint); }
-.needs-you-icon { flex: none; display: grid; place-items: center; color: var(--signal); }
-.needs-you-text { display: grid; min-width: 0; flex: 1; }
-.needs-you-text strong { font-size: 13px; font-weight: 600; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.needs-you-ask { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.needs-you-more { flex: none; padding: 0 6px; border-radius: var(--radius-chip); border: 1px solid var(--line-strong); color: var(--muted); font: 500 11px/18px var(--font-mono); white-space: nowrap; }
-.needs-you-alert .key { flex: none; margin: 0; }
-.needs-you-x { flex: none; width: 40px; display: grid; place-items: center; color: var(--muted); border-left: 1px solid var(--line) !important; }
-.needs-you-x:hover { color: var(--text); }
-@media (max-width: 1100px) { .needs-you-alert { width: calc(100vw - 24px); min-width: 0; } }
-/* The toasts stay bottom right; nothing to move out of its way. */
-
+/* A unit needs you (features/needsyou): the edge glow when one starts asking, and the top bar's
+   needs-you counter pulsing three times as its toast folds into it. Nothing else holds the screen. */
 .needs-you-flash { position: fixed; inset: 0; z-index: 60; opacity: 0; pointer-events: none !important; box-shadow: inset 0 0 0 2px var(--signal), inset 0 0 120px 20px rgb(255 106 26 / .28); }
 .needs-you-flash.on { animation: needs-you-flash 1.2s var(--ease); }
 
-@keyframes needs-you-in { from { transform: translateX(-50%) translateY(4px); opacity: 0; } }
+#counters .counter.c-needs-you.pulse { animation: needs-you-pill var(--t-pulse) var(--ease) 3; }
+@keyframes needs-you-pill { 0% { box-shadow: 0 0 0 0 rgb(255 106 26 / .6); } 100% { box-shadow: 0 0 0 8px rgb(255 106 26 / 0); } }
 @keyframes needs-you-flash { 0%, 100% { opacity: 0; } 25% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .needs-you-alert { animation: none; }
+  #counters .counter.c-needs-you.pulse { animation: none; outline: 2px solid var(--signal); outline-offset: 2px; }
   .needs-you-flash.on { animation: none; }
 }

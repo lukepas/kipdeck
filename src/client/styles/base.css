@@ -46,7 +46,8 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 /* A square icon button, the same 32px as the rest. */
 .btn.icon { width: 32px; padding: 0; }
 /* Segmented controls: the chosen one is filled, not just outlined, so it reads at a glance (3:1 and more). */
-.btn[aria-pressed=true], .seg .btn.on { background: var(--signal-tint); border-color: var(--signal); color: var(--text); box-shadow: inset 0 -2px 0 var(--signal); }
+.seg .btn.on, .seg .btn[aria-checked=true], .seg .btn[aria-pressed=true] { background: var(--signal-tint); border-color: var(--signal); color: var(--text); font-weight: 600; box-shadow: inset 0 -2px 0 var(--signal); }
+.seg .btn:not(.on):not([aria-checked=true]) { color: var(--muted); }
 /* A work item's [tag] ("ask", "perm"): a small mono chip before its title, never brackets. */
 .tag-chip { display: inline-block; margin-right: 6px; padding: 0 4px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); color: var(--muted); font: 500 10px/15px var(--font-mono); text-transform: lowercase; vertical-align: 1px; }
 .btn:disabled:hover { background: var(--surface-2); }
@@ -94,21 +95,26 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 @keyframes pulse { 50% { opacity: .55; } }
 .key, kbd.key { display: inline-block; min-width: 20px; padding: 0 5px; margin-right: 5px; border-radius: var(--radius-chip); border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--muted); text-align: center; font: 500 11px/18px var(--font-mono); }
 
-/* Toasts: bottom right, a stripe in the state's color, one sentence. */
-#toasts { position: fixed; right: 16px; bottom: 16px; z-index: 45; display: flex; flex-direction: column-reverse; gap: 8px; align-items: flex-end; pointer-events: none !important; max-width: min(420px, calc(100vw - 32px)); }
-.toast { position: relative; padding: 10px 14px 10px 17px; font-size: 13px; font-weight: 500; line-height: 1.4; color: var(--text); background: var(--hud-fill); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--hud-shadow); animation: rise var(--t-ui) var(--ease); overflow-wrap: anywhere; }
+/* Toasts: one stack top right under the bar, one card: a 3px stripe and a glyph in the state's color,
+   one sentence, and the time in mono. A unit that needs you is a toast too, which folds into the top
+   bar's counter after a while (features/needsyou). */
+#toasts { position: fixed; right: 12px; top: 56px; z-index: 45; display: flex; flex-direction: column; gap: 8px; align-items: stretch; width: min(380px, calc(100vw - 24px)); pointer-events: none !important; }
+.toast { position: relative; display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; column-gap: 10px; align-items: baseline; padding: 10px 12px 10px 14px; font-size: 13px; font-weight: 500; line-height: 1.4; color: var(--text); background: var(--hud-fill); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--hud-shadow); animation: rise var(--t-ui) var(--ease); overflow-wrap: anywhere; }
 .toast::after { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; border-radius: var(--radius) 0 0 var(--radius); background: var(--line-strong); }
+.toast-icon { align-self: start; padding-top: 2px; color: var(--muted); }
+.toast-text small { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: var(--muted); }
 .toast.warn::after { background: var(--review); }
+.toast.warn .toast-icon { color: var(--review); }
 .toast.error::after { background: var(--stuck); }
+.toast.error .toast-icon { color: var(--stuck); }
 .toast.proof::after { background: var(--proof); }
-/* A glyph before the sentence, in the stripe's color: review, stuck, proof. */
-.toast:is(.warn, .error, .proof) { padding-left: 38px; }
-.toast:is(.warn, .error, .proof)::before { content: ''; position: absolute; left: 15px; top: 13px; width: 13px; height: 13px; -webkit-mask: var(--g) center / contain no-repeat; mask: var(--g) center / contain no-repeat; }
-.toast.warn::before { --g: var(--g-review); background: var(--review); }
-.toast.error::before { --g: var(--g-stuck); background: var(--stuck); }
-.toast.proof::before { --g: var(--g-merged); background: var(--proof); }
-@keyframes rise { from { transform: translateY(4px); opacity: 0; } }
-.toast { display: grid; grid-template-columns: 1fr auto; column-gap: 12px; align-items: baseline; }
+.toast.proof .toast-icon { color: var(--proof); }
+.toast.needs-you { border-color: rgb(255 106 26 / .5); }
+.toast.needs-you::after { background: var(--signal); }
+.toast.needs-you .toast-icon { color: var(--signal); }
+.toast.go { pointer-events: auto; cursor: pointer; }
+.toast.go:hover { background: var(--surface-2); }
+@keyframes rise { from { transform: translateY(-4px); opacity: 0; } }
 .toast-at { color: var(--muted); font: 400 11px var(--font-mono); font-variant-numeric: tabular-nums; }
 .toast-proof { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 6px; font-size: 12px; }
 .toast-proof code { padding: 1px 6px; border: 1px solid var(--proof); border-radius: var(--radius-chip); color: var(--proof); background: var(--proof-tint); font: 500 11px/16px var(--font-mono); }

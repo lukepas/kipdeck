@@ -1,0 +1,77 @@
+/* The Units rail (ui/workers-panel.ts): a full-height column down the left under the top bar. The
+   units' groups, then the operators, the spend and the plan limits. Folded, it is a 56px strip of call
+   signs and state glyphs. Rows carry their state as a 2px rule and a glyph, never a wide badge. */
+.rail {
+  position: absolute; top: var(--bar); left: 0; bottom: 0; z-index: 2; width: var(--rail, 264px);
+  display: flex; flex-direction: column; gap: 0; pointer-events: auto;
+  background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border-right: 1px solid var(--line); transition: width var(--t-ui) var(--ease);
+}
+.rail > .panel { border: 0; border-radius: 0; background: none; box-shadow: none; padding: 10px 10px 8px; }
+.rail > .panel + .panel { border-top: 1px solid var(--line); }
+.rail > .workers { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.rail > :is(.people, .spend, .limits) { flex: none; max-height: 30vh; overflow: auto; }
+.rail h3 { margin: 0 0 8px; font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); display: flex; align-items: center; gap: 6px; min-height: 24px; }
+.rail .count { color: var(--text); font: 500 11px var(--font-mono); letter-spacing: 0; }
+.rail ul { list-style: none; margin: 0 -4px; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.rail .workers h3 .cost { margin-left: auto; font: 500 11px var(--font-mono); text-transform: none; letter-spacing: 0; color: var(--muted); }
+.rail-next { height: 22px; padding: 0 6px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); background: var(--surface-2); color: var(--text); font: 500 11px var(--font-mono); cursor: pointer; }
+.rail-next:hover { background: var(--surface-3); }
+.rail-next.needs-you-now { border-color: var(--signal); color: var(--signal); background: var(--signal-tint); }
+.workers h3 .cost + .rail-next, .workers h3 .rail-next:first-of-type { margin-left: auto; }
+.rail-fold { flex: none; width: 24px; height: 24px; padding: 0; display: grid; place-items: center; border: 0; border-radius: var(--radius-chip); background: none; color: var(--muted); cursor: pointer; }
+.rail-fold:hover { background: var(--surface-3); color: var(--text); }
+.workers h3 .count ~ .rail-fold { margin-left: auto; }
+.workers h3 .rail-next:not(.hidden) ~ .rail-fold { margin-left: 2px; }
+
+/* A group's head: its glyph, its name, how many, and a chevron. */
+.rail-group { margin-top: 6px; }
+.rail-group:first-child { margin-top: 0; }
+.rail-head { display: flex; align-items: center; gap: 7px; width: 100%; height: 26px; padding: 0 6px; border: 0; border-radius: var(--radius); background: none; color: var(--muted); font: 600 10px var(--font-display); font-stretch: var(--stretch-display); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; text-align: left; }
+.rail-head:hover { background: var(--surface-3); color: var(--text); }
+.rail-n { font: 500 11px var(--font-mono); letter-spacing: 0; color: var(--text); }
+.rail-chev { margin-left: auto; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg) translate(-2px, -2px); transition: transform var(--t-ui) var(--ease); }
+.rail-head[aria-expanded=false] .rail-chev { transform: rotate(-45deg); }
+.rail-group.needs-you .unit-glyph { color: var(--signal); }
+.rail-group.stuck .unit-glyph { color: var(--stuck); }
+.rail-group.review .unit-glyph { color: var(--review); }
+.rail-group.working .unit-glyph { color: var(--working); }
+.rail-group :is(.parked, .agents) .unit-glyph, .rail-group.parked .unit-glyph, .rail-group.agents .unit-glyph { color: var(--muted); }
+
+/* A unit: call sign, name over its one line, and its time; the rule on the left is its state. */
+.unit-row { display: grid; grid-template-columns: 34px minmax(96px, 1fr) auto; align-items: center; gap: 8px; padding: 5px 6px 5px 8px; border-radius: 0 var(--radius) var(--radius) 0; box-shadow: inset 2px 0 0 var(--line); cursor: pointer; font-size: 13px; outline: none; }
+.unit-row:hover, .unit-row:focus-visible { background: var(--surface-3); }
+.unit-row .callsign { font: 500 11px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--muted); }
+.unit-row .unit-glyph { display: none; }
+.unit-row .name-col { display: flex; flex-direction: column; min-width: 0; }
+.unit-row .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.unit-row .sub { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.unit-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; max-width: 76px; }
+.unit-meta .word { font: 500 10px var(--font-mono); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.unit-meta .ago, .unit-meta .cost { font: 400 11px var(--font-mono); color: var(--muted); white-space: nowrap; }
+.unit-row.needs-you { box-shadow: inset 2px 0 0 var(--signal); background: var(--signal-tint); }
+.unit-row.needs-you .sub, .unit-row.needs-you .word { color: var(--signal); }
+.unit-row.stuck { box-shadow: inset 2px 0 0 var(--stuck); }
+.unit-row.stuck .sub, .unit-row.stuck .word { color: var(--stuck); }
+.unit-row.review { box-shadow: inset 2px 0 0 var(--review); }
+.unit-row.review .word { color: var(--review); }
+.unit-row.working { box-shadow: inset 2px 0 0 var(--line-strong); }
+.rail .empty { padding: 6px; font-size: 12px; color: var(--muted); }
+
+/* Folded: 56px of call signs and glyphs, and the groups as a glyph with a count. */
+.rail.folded { --rail: 56px; }
+.rail.folded > :is(.people, .spend, .limits) { display: none; }
+.rail.folded .workers { padding: 8px 4px; }
+.rail.folded h3 { flex-direction: column; gap: 4px; }
+.rail.folded h3 :is(.rail-title, .cost, .rail-next) { display: none; }
+.rail.folded .rail-fold { margin: 0; transform: scaleX(-1); }
+.rail.folded .rail-head { justify-content: center; padding: 0; gap: 3px; }
+.rail.folded .rail-head :is(.rail-label, .rail-chev) { display: none; }
+.rail.folded .unit-row { grid-template-columns: 1fr; justify-items: center; gap: 2px; padding: 5px 2px; }
+.rail.folded .unit-row :is(.name-col, .unit-meta) { display: none; }
+.rail.folded .unit-row .unit-glyph { display: block; }
+.rail.folded .unit-row.needs-you .unit-glyph { color: var(--signal); }
+.rail.folded .unit-row.stuck .unit-glyph { color: var(--stuck); }
+.rail.folded .unit-row.review .unit-glyph { color: var(--review); }
+.rail.folded .unit-row.working .unit-glyph { color: var(--working); }
+.rail.folded .unit-row :is(.parked, .agents) .unit-glyph { color: var(--muted); }

@@ -1,4 +1,5 @@
 import { icon } from './icons';
+import { ago } from '../../shared/rowtext';
 
 type Attrs = Record<string, string | number | boolean | EventListener | undefined | null>;
 type Child = Node | string | number | null | undefined | false;
@@ -150,14 +151,19 @@ export interface ToastProof {
 /** A hash cut to its ends, `4kQm...9xPa`, for a mono chip. */
 export const shortHash = (hash: string) => (hash.length > 12 ? `${hash.slice(0, 4)}...${hash.slice(-4)}` : hash);
 
+/** A toast's level: its stripe, its glyph and its color. */
+export type ToastLevel = 'info' | 'warn' | 'error' | 'proof' | 'needs-you';
+const TOAST_GLYPH = { info: 'info', warn: 'review', error: 'stuck', proof: 'merged', 'needs-you': 'needs-you' } as const;
+
 /**
- * A toast, bottom right: a stripe and a glyph in its level's color, one sentence, and the time it
- * came in, in mono. A proof toast (violet) also shows the hash, a settled tick and an explorer link,
- * and stays up longer so there is time to click it.
+ * A toast, in the one stack top right under the bar: a 3px stripe and a glyph in its level's color,
+ * one sentence, and how long ago in mono from the deck's one clock (shared/rowtext.ts). A proof toast
+ * (violet) also shows the hash, a settled tick and an explorer link, and stays up longer so there is
+ * time to click it. `opts.ms` keeps one up longer, `opts.onclick` makes it a way to go somewhere.
  */
-export function toast(text: string, level: 'info' | 'warn' | 'error' | 'proof' = 'info', proof?: ToastProof): HTMLElement {
-  const now = new Date();
-  const at = h('time.toast-at', { datetime: now.toISOString() }, `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+export function toast(text: string, level: ToastLevel = 'info', proof?: ToastProof, opts: { ms?: number; onclick?: () => void; sub?: string } = {}): HTMLElement {
+  const now = Date.now();
+  const at = h('time.toast-at', { datetime: new Date(now).toISOString() }, ago(0));
   const trail = proof
     ? h(
         'span.toast-proof',
@@ -167,7 +173,15 @@ export function toast(text: string, level: 'info' | 'warn' | 'error' | 'proof' =
         proof.href ? h('a', { href: proof.href, target: '_blank', rel: 'noopener noreferrer' }, 'View') : null,
       )
     : null;
-  const el = h('div.toast', { class: level }, h('span.toast-text', {}, text), at, trail);
+  const el = h(
+    'div.toast',
+    { class: `${level}${opts.onclick ? ' go' : ''}`, role: level === 'error' || level === 'needs-you' ? 'alert' : 'status' },
+    h('span.toast-icon', { 'aria-hidden': 'true' }, icon(TOAST_GLYPH[level], 14)),
+    h('span.toast-text', {}, text, opts.sub ? h('small', {}, opts.sub) : null),
+    at,
+    trail,
+  );
+  if (opts.onclick) el.addEventListener('click', opts.onclick);
   document.getElementById('toasts')!.append(el);
   setTimeout(
     () => {
@@ -175,10 +189,11 @@ export function toast(text: string, level: 'info' | 'warn' | 'error' | 'proof' =
       el.style.opacity = '0';
       setTimeout(() => el.remove(), 300);
     },
-    proof ? 8000 : 3500,
+    opts.ms ?? (proof ? 8000 : 3500),
   );
   return el;
 }
+
 
 export function timeAgo(iso: string | number): string {
   const t = typeof iso === 'number' ? iso : Date.parse(iso);

@@ -47,7 +47,12 @@ export function installHintBar(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'po
     el.classList.toggle('hidden', !show);
     el.classList.toggle('on', !!target);
     el.classList.toggle('free', free);
-    el.querySelector('.look-hint')!.textContent = relookOnKey ? 'Press a key or click to look around' : 'Click to look around';
+    // Said in the bottom bar (features/bottombar), not over the middle of the deck.
+    const look = document.getElementById('bb-look');
+    if (look) {
+      look.classList.toggle('hidden', !free);
+      look.querySelector('kbd')!.textContent = relookOnKey ? 'Key or click' : 'Click';
+    }
   }
 
   return { renderHint, renderCrosshair };

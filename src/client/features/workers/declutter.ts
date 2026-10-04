@@ -1,8 +1,10 @@
 /**
- * Callouts that would cover each other (a pod seen end on, the Overview from far off) stack instead:
- * every frame, each unit's callout is measured on screen, and one that overlaps a callout placed
- * before it is lifted just clear of it. Units that need someone are placed first, so theirs stay put,
- * then the nearest. The stacking itself is stack(), with nothing to draw, so the tests run it.
+ * Callouts never cover each other (a pod seen end on, the Overview from far off): every frame each
+ * unit's callout is measured on screen and placed in the order of who needs someone most (needs you
+ * and stuck, then to review, then the nearest). One that would overlap a callout already placed is
+ * lifted a little; if that isn't enough it shrinks to its glyph and call sign ("C-02"); a unit at work
+ * whose call sign still has no room shows no callout at all. One that needs someone always shows, lifted
+ * as far as it must be. The placing itself is declutter(), with nothing to draw, so the tests run it.
  */
 import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
@@ -42,6 +44,62 @@ export function stack(boxes: readonly LabelBox[]): number[] {
   });
 }
 
+/** A callout to place: its full box, its call-sign box, and whether it may be left out. */
+export interface Label {
+  full: LabelBox;
+  compact: LabelBox;
+  /** Needs someone: it always shows. */
+  keep: boolean;
+}
+
+export interface Placed {
+  mode: 'full' | 'compact' | 'hidden';
+  lift: number;
+}
+
+/** How far (in its own heights) a callout is lifted before it shrinks instead. */
+const SOFT_LIFT = 1.5;
+
+/** The lift that clears `b` of every box placed, or null past `limit` pixels. */
+function clearLift(b: LabelBox, placed: { x: number; top: number; bottom: number; w: number }[], limit: number): number | null {
+  let lift = 0;
+  for (let tries = 0; tries <= placed.length; tries++) {
+    const bottom = b.bottom - lift;
+    const top = bottom - b.h;
+    const hit = placed.find((p) => b.x < p.x + p.w && b.x + b.w > p.x && bottom > p.top && top < p.bottom);
+    if (!hit) return lift <= limit ? lift : null;
+    lift = b.bottom - hit.top + GAP;
+    if (lift > limit) return null;
+  }
+  return null;
+}
+
+/**
+ * Where each of `labels` goes, in the order given (most important first): its full callout if it fits
+ * with a small lift, else its call sign, else (one that needs nobody) nothing. One that must show and
+ * fits nowhere takes its call sign lifted as far as MAX_LIFT allows, as stack() does.
+ */
+export function declutter(labels: readonly Label[]): Placed[] {
+  const placed: { x: number; top: number; bottom: number; w: number }[] = [];
+  const put = (b: LabelBox, lift: number) => placed.push({ x: b.x, top: b.bottom - lift - b.h, bottom: b.bottom - lift, w: b.w });
+  return labels.map((l) => {
+    const full = clearLift(l.full, placed, SOFT_LIFT * l.full.h);
+    if (full !== null) {
+      put(l.full, full);
+      return { mode: 'full', lift: full };
+    }
+    const compact = clearLift(l.compact, placed, SOFT_LIFT * l.compact.h);
+    if (compact !== null) {
+      put(l.compact, compact);
+      return { mode: 'compact', lift: compact };
+    }
+    if (!l.keep) return { mode: 'hidden', lift: 0 };
+    const lift = Math.min(clearLift(l.compact, placed, Infinity) ?? 0, MAX_LIFT * l.compact.h);
+    put(l.compact, lift);
+    return { mode: 'compact', lift };
+  });
+}
+
 export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'overview' | 'stage'>) {
   const bottom = new THREE.Vector3();
   const top = new THREE.Vector3();
@@ -51,15 +109,28 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'overvie
   // After the units have moved and sized their callouts ('others'), before the frame is drawn.
   ctx.ticks.add('hud', () => {
     const camera = parts.stage.view ?? ctx.camera;
+    // Where it is this frame, whatever moved it since the last frame was drawn.
+    camera.updateMatrixWorld();
     const W = window.innerWidth;
     const H = window.innerHeight;
-    const shown: { model: { setLift(m: number): void }; box: LabelBox; urgent: boolean; d: number; pxPerM: number }[] = [];
+    const shown: { model: { setLift(m: number): void; setMode(m: Placed['mode']): void }; label: Label; rank: number; d: number; pxPerM: number }[] = [];
     // Callouts face the camera: their height runs along its up, which the frame drawn last left in its matrix.
     up.set(0, 1, 0).applyQuaternion(camera.quaternion);
+    /** A callout's box on screen from its edges in the world, or null when it's off the screen. */
+    const box = (aspect: number): LabelBox | null => {
+      bottom.project(camera);
+      top.project(camera);
+      if (bottom.z > 1 || bottom.z < -1 || Math.abs(bottom.x) > 1.2 || Math.abs(bottom.y) > 1.2) return null;
+      const h = Math.max(1, Math.hypot(((top.x - bottom.x) / 2) * W, ((top.y - bottom.y) / 2) * H));
+      const w = h * aspect;
+      const cx = ((bottom.x + 1) / 2) * W;
+      return { x: cx - w / 2, bottom: ((1 - bottom.y) / 2) * H, w, h };
+    };
     for (const v of parts.views.workerViews.values()) {
       const m = v.model;
       if (!m.calloutEdges(bottom, top, up)) {
         m.setLift(0);
+        m.setMode('full');
         continue;
       }
       const d = camera.position.distanceTo(m.where(at));
@@ -67,21 +138,24 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'overvie
       // pixels a meter of that is here, to turn a lift on screen back into meters.
       rise.copy(bottom).y += 1;
       rise.project(camera);
-      bottom.project(camera);
-      top.project(camera);
-      // Behind the camera, or off the screen: out of the stacking.
-      if (bottom.z > 1 || bottom.z < -1 || Math.abs(bottom.x) > 1.2 || Math.abs(bottom.y) > 1.2) {
+      const anchor = bottom.clone().project(camera);
+      const pxPerM = Math.max(1, Math.hypot(((rise.x - anchor.x) / 2) * W, ((rise.y - anchor.y) / 2) * H));
+      const full = box(m.calloutAspect());
+      m.calloutEdges(bottom, top, up, true);
+      const compact = box(m.calloutAspect(true));
+      // Behind the camera, or off the screen: out of the placing, shown as it is.
+      if (!full || !compact) {
         m.setLift(0);
+        m.setMode('full');
         continue;
       }
-      const h = Math.max(1, Math.hypot(((top.x - bottom.x) / 2) * W, ((top.y - bottom.y) / 2) * H));
-      const w = h * m.calloutAspect();
-      const cx = ((bottom.x + 1) / 2) * W;
-      const pxPerM = Math.max(1, Math.hypot(((rise.x - bottom.x) / 2) * W, ((rise.y - bottom.y) / 2) * H));
-      shown.push({ model: m, box: { x: cx - w / 2, bottom: ((1 - bottom.y) / 2) * H, w, h }, urgent: m.urgent, d, pxPerM });
+      shown.push({ model: m, label: { full, compact, keep: m.rank < 2 }, rank: m.rank, d, pxPerM });
     }
-    shown.sort((a, b) => Number(b.urgent) - Number(a.urgent) || a.d - b.d);
-    const lifts = stack(shown.map((s) => s.box));
-    shown.forEach((s, i) => s.model.setLift(lifts[i] / s.pxPerM));
+    shown.sort((a, b) => a.rank - b.rank || a.d - b.d);
+    const placed = declutter(shown.map((s) => s.label));
+    shown.forEach((s, i) => {
+      s.model.setMode(placed[i].mode);
+      s.model.setLift(placed[i].lift / s.pxPerM);
+    });
   });
 }

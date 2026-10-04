@@ -33,7 +33,7 @@ interface Mark {
  */
 export class Compass {
   private readonly marks = new Map<string, Mark>();
-  /** Where the marks can go: clear of the top bar, the side panels, and the hint and chat along the bottom. */
+  /** Where the marks can go: clear of the top bar, the Units rail, and the bottom bar and hint along the bottom. */
   private box = { top: 0, right: 0, bottom: 0, left: 0 };
   private measured = -Infinity;
   private readonly cam = new THREE.Vector3();
@@ -128,13 +128,14 @@ export class Compass {
     const w = window.innerWidth;
     const hgt = window.innerHeight;
     const bar = document.querySelector('.topbar')?.getBoundingClientRect();
-    const side = document.querySelector('.side')?.getBoundingClientRect();
-    // Never so tight the marks crowd the middle of the screen.
+    const rail = document.querySelector('.rail')?.getBoundingClientRect();
+    // Never so tight the marks crowd the middle of the screen. The rail is on the left; the bottom bar
+    // and the hint over it along the bottom.
     this.box = {
       top: Math.min(Math.max(MARGIN, (bar?.bottom ?? 0) + MARGIN), hgt / 2 - 60),
-      right: Math.max(side?.width ? side.left - MARGIN : w - MARGIN, w / 2 + 60),
+      right: Math.max(w - MARGIN, w / 2 + 60),
       bottom: Math.max(hgt - 130, hgt / 2 + 60),
-      left: MARGIN,
+      left: Math.min(rail?.width && rail.top < hgt / 2 ? rail.right + MARGIN : MARGIN, w / 2 - 60),
     };
   }
 }

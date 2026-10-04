@@ -1,8 +1,9 @@
 /**
  * A worker that needs you is the one thing in the office that can't wait, so it's the hardest to
- * miss: a shaft of light over it you can see from across the deck, a banner under the top bar saying
- * who and what for (on any floor), a flash round the edge of the screen and an alarm when one on your
- * floor starts asking, and (if you ask for it) a reminder until someone's at its terminal.
+ * miss: a shaft of light over it you can see from across the deck, the top bar's counter, a toast
+ * saying who and what for when one starts asking (it folds into the counter after a few seconds), a
+ * flash round the edge of the screen and an alarm when one on your floor starts asking, and (if you
+ * ask for it) a reminder until someone's at its terminal.
  *
  * Who needs you is the building's one ranking (shared/attention.ts): its needs-you level, the
  * snoozed ones left out, the same workers the attention chip, the tab title and N count first.
@@ -12,7 +13,7 @@ import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { store } from '../../state';
 import { $ } from '../../ui/dom';
-import { bannerText, Fresh, needingYou, Reminders, waitKey } from './logic';
+import { bannerText, Fresh, needingYou, Reminders } from './logic';
 import { Banner } from './ui';
 import { Beacon } from './world';
 
@@ -25,8 +26,6 @@ export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'views' | 'waiting'
   const { scene, sound, settings, player } = ctx;
   const fresh = new Fresh();
   const reminders = new Reminders();
-  /** The waits the banner was put away on (see waitKey): it comes back for anyone else, or when one of these asks again. */
-  const hidden = new Set<string>();
   const beacons = new Map<string, Beacon>();
 
   /** Everyone who needs you, on every floor, longest first. */
@@ -39,22 +38,17 @@ export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'views' | 'waiting'
       if (b.floor === store.floor) parts.waiting.goToWorker(b.id);
       else parts.mission.missionDeps.goTo(b.floor, b.deskId);
     },
-    hide: () => {
-      for (const e of asking()) hidden.add(waitKey(e));
-      paintBanner();
-    },
   });
 
   function paintBanner() {
-    const all = asking();
-    for (const key of hidden) if (!all.some((e) => waitKey(e) === key)) hidden.delete(key);
-    banner.show(bannerText(all.filter((e) => !hidden.has(waitKey(e))), Date.now(), store.floor));
+    banner.show(bannerText(asking(), Date.now(), store.floor));
   }
 
   function sync() {
     // Only on your floor, and not ones that were asking already when the page first saw them (a reload, a floor you've just arrived on).
     if (fresh.take(store.ranked(store.floor)).length) {
       banner.flash();
+      banner.announce(bannerText(asking(), Date.now(), store.floor));
       if (settings.needsYouSound !== 'off') {
         sound.cue('needs-you');
         reminders.rang(performance.now());

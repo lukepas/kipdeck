@@ -108,8 +108,8 @@ test('the 2D view: the strip, Mission control, editing the mission in place, the
   const { page, errors, context } = await signedIn({ width: 420, height: 860 });
   t.after(() => context.close());
   await page.goto(`${base}/lite`);
-  // No mission yet: the strip says so, and opens the Goals tab.
-  await page.locator('#mission-strip .ms-empty', { hasText: 'No mission yet' }).waitFor({ timeout: 15_000 });
+  // No mission yet: the strip is a call to set one, and opens the Goals tab.
+  await page.locator('#mission-strip .ms-cta', { hasText: 'Set the mission' }).waitFor({ timeout: 15_000 });
   await page.locator('#mission-strip .ms-strip').click();
   const modal = page.locator('.modal.mission-control');
   await modal.waitFor();
@@ -173,13 +173,13 @@ test('the 2D view: the strip, Mission control, editing the mission in place, the
   assert.deepEqual(errors, []);
 });
 
-test('the 3D office: the strip under the floor name, I opens Mission control, Esc puts it away', async (t) => {
+test('the 3D office: the strip in the bottom bar, I opens Mission control, Esc puts it away', async (t) => {
   if (why) return t.skip(why);
   const { page, errors, context } = await signedIn();
   t.after(() => context.close());
   await page.goto(`${base}/`);
   await page.waitForFunction(() => !!(window as unknown as { __office?: { store: { floor: string | null } } }).__office?.store.floor, null, { timeout: 60_000 });
-  // The mission from the test before is on the strip, top left.
+  // The mission from the test before is on the strip, bottom left.
   await page.locator('#mission-strip .ms-statement', { hasText: 'Make sign-in boring' }).waitFor({ timeout: 15_000 });
   // Mission control is on the top bar even while nothing needs anyone.
   assert.match(await page.locator('#dock .dock-btn[aria-label="Mission control"]').innerText(), /Mission control/);

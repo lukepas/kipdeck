@@ -42,6 +42,9 @@ export interface Spot {
 }
 
 const tmp = new THREE.Vector3();
+
+/** The full callout, the call sign alone, or neither (the glyph over its head shows then). */
+export type CalloutMode = 'full' | 'compact' | 'hidden';
 const VISOR_DARK = new THREE.Color('#0E151C');
 const VISOR_LIT = new THREE.Color('#7F95A9');
 
@@ -62,7 +65,11 @@ export class Worker {
   private shadow: THREE.Mesh;
   private glyph = glyphSprite();
   private callout: THREE.Sprite | null = null;
+  /** The same callout shrunk to its glyph and call sign, for where callouts crowd. */
+  private compact: THREE.Sprite | null = null;
   private calloutKey = '';
+  /** Which callout shows, as the declutter pass decided this frame (features/workers/declutter.ts). */
+  private mode: CalloutMode = 'full';
   /** How far (its seat's meters) the callout is lifted off its place so it doesn't cover another's, and how far it's headed (see setLift). */
   private lift = 0;
   private liftTo = 0;
@@ -206,30 +213,43 @@ export class Worker {
 
   /**
    * Where its callout's bottom and top edges are in the world, at its own place (lift left out), for
-   * the pass that keeps callouts from covering each other (features/workers/declutter.ts). The
-   * callout is a billboard, so its top is along the camera's `up`, not the world's. False when it has
-   * no callout showing.
+   * the pass that keeps callouts from covering each other (features/workers/declutter.ts): the full
+   * callout's, or with `compact` the call sign's. The callout is a billboard, so its top is along the
+   * camera's `up`, not the world's. False when it has no callout showing.
    */
-  calloutEdges(bottom: THREE.Vector3, top: THREE.Vector3, up: THREE.Vector3): boolean {
-    const c = this.callout;
+  calloutEdges(bottom: THREE.Vector3, top: THREE.Vector3, up: THREE.Vector3, compact = false): boolean {
+    const c = compact ? this.compact : this.callout;
     if (!c || !this.root.visible) return false;
     this.mover.localToWorld(bottom.set(0, UNIT.top + 0.14, 0));
     const scale = this.mover.getWorldScale(tmp).y;
-    top.copy(bottom).addScaledVector(up, this.calloutHeight() * scale);
+    top.copy(bottom).addScaledVector(up, c.scale.y * scale);
     return true;
   }
 
-  /** The callout's height with the glyph over it, when there is one (its seat's meters). */
-  private calloutHeight(): number {
-    const c = this.callout;
-    if (!c) return 0;
-    return c.scale.y + (this.glyph.visible ? 0.05 + this.glyph.scale.y : 0);
+  /** A callout's width over its height, as drawn: the full one's, or the call sign's. */
+  calloutAspect(compact = false): number {
+    const c = compact ? this.compact : this.callout;
+    return c ? c.scale.x / c.scale.y : 1;
   }
 
-  /** The callout's width over its height (the glyph's included), as drawn. */
-  calloutAspect(): number {
-    const c = this.callout;
-    return c ? c.scale.x / this.calloutHeight() : 1;
+  /** Which callout shows; the glyph over its head shows only when neither does. */
+  setMode(mode: CalloutMode) {
+    if (mode === this.mode) return;
+    this.mode = mode;
+    this.showMode();
+  }
+
+  private showMode() {
+    if (this.callout) this.callout.visible = this.mode === 'full';
+    if (this.compact) this.compact.visible = this.mode === 'compact';
+    const kind = this.leaving !== null ? null : this.kind();
+    setGlyphKind(this.glyph, this.mode !== 'hidden' || !kind || kind === 'working' || kind === 'parked' ? null : kind);
+  }
+
+  /** Where it ranks for a place on screen: needs you or stuck first, then to review and merged, then the rest. */
+  get rank(): number {
+    const kind = this.kind();
+    return kind === 'needs-you' || kind === 'stuck' ? 0 : kind === 'review' || kind === 'merged' ? 1 : 2;
   }
 
   /** Lifts the callout (and the glyph over it) `meters` straight up off its place, in the world's meters; it eases there. */
@@ -290,17 +310,21 @@ export class Worker {
     if (leaving) text.name = `${this.name}  ${this.leaving}`;
     const key = JSON.stringify(text);
     this.lastDraw = performance.now();
-    setGlyphKind(this.glyph, leaving || kind === 'working' || kind === 'parked' ? null : kind);
     paintShell(this.body, this.shell(kind));
-    if (key === this.calloutKey) return;
+    if (key === this.calloutKey) return this.showMode();
     this.calloutKey = key;
-    if (this.callout) {
-      this.mover.remove(this.callout);
-      disposeSprite(this.callout);
+    for (const old of [this.callout, this.compact]) {
+      if (!old) continue;
+      this.mover.remove(old);
+      disposeSprite(old);
     }
     this.callout = calloutSprite(text);
-    this.callout.userData.base = this.callout.scale.clone();
-    this.mover.add(this.callout);
+    this.compact = calloutSprite({ ...text, compact: true, near: false });
+    for (const c of [this.callout, this.compact]) {
+      c.userData.base = c.scale.clone();
+      this.mover.add(c);
+    }
+    this.showMode();
     this.place();
   }
 
@@ -338,16 +362,20 @@ export class Worker {
     const scale = this.root.getWorldScale(tmp).y;
     const span = screen(this.mover.getWorldPosition(tmp)) / scale;
     this.glyph.scale.setScalar(GLYPH_SCREEN * span * Worker.weight);
-    const base = this.callout.userData.base as THREE.Vector3;
-    const k = Math.max(Worker.weight, (CALLOUT_MIN * Worker.weight * span) / base.y);
-    this.callout.scale.set(base.x * k, base.y * k, 1);
+    for (const c of [this.callout, this.compact]) {
+      if (!c) continue;
+      const base = c.userData.base as THREE.Vector3;
+      const k = Math.max(Worker.weight, (CALLOUT_MIN * Worker.weight * span) / base.y);
+      c.scale.set(base.x * k, base.y * k, 1);
+    }
   }
 
-  /** The callout at its place plus its lift, and the glyph just over it. */
+  /** The callout at its place plus its lift; the glyph, when it shows, where the callout would be. */
   private place() {
     if (!this.callout) return;
     this.callout.position.y = UNIT.top + 0.14 + this.lift;
-    this.glyph.position.y = this.callout.position.y + this.callout.scale.y + 0.05;
+    if (this.compact) this.compact.position.y = this.callout.position.y;
+    this.glyph.position.y = UNIT.top + 0.14;
   }
 
   /** Toward its target (or its seat), at a steady pace, leaning into the move. */
@@ -428,12 +456,14 @@ export class Worker {
     } else f.position.y = 0;
     if (this.callout) {
       this.callout.position.y = UNIT.top * e + 0.14 + f.position.y;
-      this.glyph.position.y = this.callout.position.y + this.callout.scale.y + 0.05;
+      if (this.compact) this.compact.position.y = this.callout.position.y;
+      this.glyph.position.y = this.callout.position.y;
     }
   }
 
   dispose() {
     if (this.callout) disposeSprite(this.callout);
+    if (this.compact) disposeSprite(this.compact);
     setGlyph(this.body, '');
     this.ring.dispose();
     this.glyph.material.dispose();

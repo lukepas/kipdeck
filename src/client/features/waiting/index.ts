@@ -19,7 +19,7 @@ import { openQueue } from '../../ui/queue';
 import { openSearch } from '../../ui/search';
 import { openTerminal, type TerminalFind } from '../../ui/terminal';
 
-/** Registers N (and the Workers panel's count), the compass's tick ('render') and / (search). */
+/** Registers N (and the Units rail's next button), the compass's tick ('render') and / (search). */
 export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worlds' | 'views' | 'actions' | 'mission' | 'overview'>) {
   const { player, camera, net } = ctx;
   const nextUp = new NextUp();
@@ -114,7 +114,9 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     el.classList.toggle('hidden', !waiting.length);
     el.classList.toggle('all-done', waiting.every((w) => w.status === 'done'));
     el.classList.toggle('needs-you-now', waiting.some((w) => w.status === 'needs_input'));
-    if (waiting.length) el.replaceChildren(h('span', {}, waitingLabel(waiting)), h('span.key', {}, 'N'));
+    // The counts are the top bar's: the rail's button only says there is someone to go to.
+    if (waiting.length) el.replaceChildren('N next');
+    el.title = waiting.length ? `${waitingLabel(waiting)}: go to the next (N)` : '';
   }
   // A snooze is in the roster, not the floor's workers.
   store.on('roster', renderWaiting);
