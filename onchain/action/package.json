@@ -1,0 +1,27 @@
+{
+  "name": "@agent-office/bounty-action",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A GitHub Action that attests merged pull requests to the Solana devnet bounty escrow (and, optionally, to Proof of Merge on Base Sepolia) without running the office. Testnets only.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "node --import tsx --test test/*.test.ts",
+    "test:e2e": "node --import tsx --test --test-timeout=240000 test/e2e/*.test.ts",
+    "check": "npm run typecheck && npm test && npm run test:e2e"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "viem": "^2.57.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}

@@ -1,0 +1,53 @@
+# .github/workflows/bounty.yml, variant: the approver key is a GitHub secret, but only in the
+# "bounty-payout" environment, whose required reviewers must press Approve before the release job
+# starts. Settings > Environments > bounty-payout:
+#   - Required reviewers: the people allowed to approve payouts
+#   - Deployment branches: the default branch only
+#   - Environment secret BOUNTY_APPROVER_KEY (the approver keypair)
+# BOUNTY_ATTESTER_KEY stays a repository secret. See the README for what this trades away compared
+# with the manual flow in bounty.yml. Testnets only.
+name: Bounty attester (gated payout)
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: bounty-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  claim:
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      claimed: ${{ steps.bounty.outputs.claimed }}
+    steps:
+      - id: bounty
+        uses: OWNER/agent-office/onchain/action@FULL_COMMIT_SHA
+        with:
+          mode: claim
+          approver: APPROVER_SOLANA_ADDRESS
+          attester-key: ${{ secrets.BOUNTY_ATTESTER_KEY }}
+          merged-by-secret: ${{ secrets.BOUNTY_MERGED_BY_SECRET }}
+
+  release:
+    needs: claim
+    if: needs.claim.outputs.claimed != '0'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: bounty-payout
+    steps:
+      - uses: OWNER/agent-office/onchain/action@FULL_COMMIT_SHA
+        with:
+          mode: release
+          approver: APPROVER_SOLANA_ADDRESS
+          attester-key: ${{ secrets.BOUNTY_ATTESTER_KEY }}
+          approver-key: ${{ secrets.BOUNTY_APPROVER_KEY }}
+          merged-by-secret: ${{ secrets.BOUNTY_MERGED_BY_SECRET }}
+          base-attester-key: ${{ secrets.BASE_ATTESTER_KEY }}

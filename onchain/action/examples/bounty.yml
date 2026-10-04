@@ -1,0 +1,50 @@
+# .github/workflows/bounty.yml: claim the devnet bounty of each issue a merged pull request closes,
+# and prepare its release for the approver, who signs it on their own machine (the approver key is
+# never in GitHub). Testnets only.
+#
+# Repository settings:
+#   Secrets  BOUNTY_ATTESTER_KEY      the attester keypair (the JSON array solana-keygen writes)
+#            BOUNTY_MERGED_BY_SECRET  optional, 16+ random bytes: records who merged as a keyed hash
+#            BASE_ATTESTER_KEY        optional, an EVM key: also attests the merge on Base Sepolia
+#   File     .github/bounty-wallets.json  {"github-login": "<solana wallet>"}, changed by reviewed PRs
+#
+# Pin the action to a full commit SHA, not a branch: it holds your attester key.
+name: Bounty attester
+
+on:
+  pull_request:
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request to look at again (after a failed run, or to prepare a stale release again)
+        required: true
+
+# The token reads the pull request and the wallets file, and comments on the pull request.
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: bounty-${{ github.event.pull_request.number || inputs.pr }}
+  cancel-in-progress: false
+
+jobs:
+  attest:
+    # Merged, and from a branch of this repository. A fork's run gets no secrets anyway, and the
+    # action refuses forks itself; this only saves starting a job for them.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.pull_request.merged == true && github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - id: bounty
+        uses: OWNER/agent-office/onchain/action@FULL_COMMIT_SHA
+        with:
+          approver: APPROVER_SOLANA_ADDRESS
+          approver-nonce-account: APPROVER_NONCE_ACCOUNT
+          attester-key: ${{ secrets.BOUNTY_ATTESTER_KEY }}
+          merged-by-secret: ${{ secrets.BOUNTY_MERGED_BY_SECRET }}
+          base-attester-key: ${{ secrets.BASE_ATTESTER_KEY }}
+          pr-number: ${{ inputs.pr }}
