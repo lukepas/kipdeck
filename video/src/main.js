@@ -57,8 +57,9 @@ async function boot() {
 
   async function render(t) {
     const frame = Math.round(t * fps);
-    // Trailing 180-degree shutter: sub-times spread over half a frame.
-    const shutter = 0.5 / fps;
+    // Trailing shutter, 180 degrees unless the scene asks for a shorter one:
+    // sub-times spread over that share of a frame.
+    const shutter = (0.5 * director.shutter(t)) / fps;
     const samples = Math.min(maxBlur, director.blurSamples(t, shutter));
     const times = [];
     for (let i = samples - 1; i >= 0; i--) times.push(samples === 1 ? t : t - shutter * (i / (samples - 1)));

@@ -28,6 +28,11 @@ export function createDirector({ tl }) {
       const s = sceneAt(t);
       return s.blur ? s.blur(t) : 1;
     },
+    // Shutter as a share of the 180-degree default (a scene's shutter(t)).
+    shutter(t) {
+      const s = sceneAt(t);
+      return s.shutter ? s.shutter(t) : 1;
+    },
     grainAmount(t) {
       // Grain rises with the track's energy curve, never fully off.
       return 0.7 + 0.6 * tl.energy(t);

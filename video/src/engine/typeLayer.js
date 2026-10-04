@@ -4,6 +4,31 @@
 // font-variation-settings. It is retained-mode per frame: begin(), scenes call
 // text(), end() hides everything not drawn this frame. Same input, same DOM.
 
+// Archivo's space advance (em, untracked) at points on the width axis,
+// measured in Chromium at wght 900. The space narrows with the axis (0.11em at
+// wdth 62, 0.29em at 125), so a headline pushed by the sidechain would lose
+// its word gaps. Display type instead keeps one fixed word space.
+const SPACE_AT = [[62, 0.11], [75, 0.134], [88, 0.158], [100, 0.18], [112, 0.233], [125, 0.29]];
+export const WORD_SPACE_EM = 0.25;
+
+function spaceAdvance(wdth) {
+  const w = Math.max(62, Math.min(125, wdth));
+  for (let i = 1; i < SPACE_AT.length; i++) {
+    const [w1, s1] = SPACE_AT[i];
+    if (w <= w1) {
+      const [w0, s0] = SPACE_AT[i - 1];
+      return s0 + ((s1 - s0) * (w - w0)) / (w1 - w0);
+    }
+  }
+  return SPACE_AT[SPACE_AT.length - 1][1];
+}
+
+// CSS word-spacing (em) that makes a display space exactly WORD_SPACE_EM wide
+// at this width-axis value and tracking.
+export function wordSpacingFor(wdth, tracking) {
+  return WORD_SPACE_EM - (spaceAdvance(wdth) + tracking);
+}
+
 export function createTypeLayer(root, design) {
   const pool = [];
   let used = 0;
@@ -47,6 +72,7 @@ export function createTypeLayer(root, design) {
       if (s.color) st.push(`color:${s.color}`);
       if (s.wdth != null || s.wght != null) {
         st.push(`font-variation-settings:"wdth" ${(s.wdth ?? wdth).toFixed(2)},"wght" ${(s.wght ?? wght).toFixed(1)}`);
+        if (s.wdth != null && family === design.fonts.display) st.push(`word-spacing:${wordSpacingFor(s.wdth, tracking).toFixed(4)}em`);
       }
       if (s.family) st.push(`font-family:"${s.family}"`);
       html += `<span style='${st.join(';')}'>${escapeHtml(s.text)}</span>`;
@@ -65,6 +91,7 @@ export function createTypeLayer(root, design) {
     style.fontVariationSettings = family === design.fonts.display
       ? `"wdth" ${wdth.toFixed(2)}, "wght" ${wght.toFixed(1)}`
       : `"wght" ${wght.toFixed(1)}`;
+    style.wordSpacing = family === design.fonts.display ? `${wordSpacingFor(wdth, tracking).toFixed(4)}em` : 'normal';
     style.fontVariantNumeric = tabular ? 'tabular-nums' : 'normal';
     style.textTransform = upper ? 'uppercase' : 'none';
     style.whiteSpace = maxWidth ? 'normal' : 'pre';
@@ -78,18 +105,19 @@ export function createTypeLayer(root, design) {
       : wipeDir === 'up' ? `inset(${(1 - w) * 100}% -10% -10% -10%)`
         : `inset(-10% ${(1 - w) * 100}% -10% -10%)`);
     if (node.innerHTML !== html) node.innerHTML = html;
-    if (fit) fitTo(node, fit, family === design.fonts.display ? wdth : null, wght, size);
+    if (fit) fitTo(node, fit, family === design.fonts.display ? wdth : null, wght, size, tracking);
   }
 
   // Keep a block inside `fit` px: first compress the Archivo width axis (down
   // to 62), and only then reduce the size. Layout is deterministic, so the
   // measurement gives the same answer for the same frame every time.
-  function fitTo(node, fitPx, wdth, wght, size) {
+  function fitTo(node, fitPx, wdth, wght, size, tracking) {
     let w = node.scrollWidth;
     if (w <= fitPx) return;
     if (wdth != null) {
       const next = Math.max(62, (wdth * fitPx) / w * 0.98);
       node.style.fontVariationSettings = `"wdth" ${next.toFixed(2)}, "wght" ${wght.toFixed(1)}`;
+      node.style.wordSpacing = `${wordSpacingFor(next, tracking).toFixed(4)}em`;
       w = node.scrollWidth;
       if (w <= fitPx) return;
     }

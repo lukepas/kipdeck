@@ -2,8 +2,9 @@
 // texture, optionally accumulated over several sub-frame times (motion blur),
 // then run through a single fragment shader that does the pixel-sort smear,
 // the merge ripple (radial displacement plus colour remap), the 1-frame invert
-// and the paper-white flash. Rendering is explicit: render() is only called
-// from window.__render, never from requestAnimationFrame.
+// and the full-frame flash (paper by default, any palette colour through
+// fx.flashColor). Rendering is explicit: render() is only called from
+// window.__render, never from requestAnimationFrame.
 
 import * as THREE from 'three';
 
@@ -35,8 +36,8 @@ uniform float uRipW;        // ripple band width, px
 uniform float uRipAmp;      // displacement, px
 uniform float uRipRemap;    // colour remap strength at the wavefront
 uniform float uInvert;      // 0/1
-uniform float uFlash;       // 0..1 paper-white flash
-uniform vec3 uPaper;
+uniform float uFlash;       // 0..1 full-frame flash
+uniform vec3 uFlashColor;   // its colour (paper by default)
 varying vec2 vUv;
 
 float hash(float n) { return fract(sin(n * 127.1 + uSeed * 311.7) * 43758.5453); }
@@ -95,7 +96,7 @@ void main() {
   col = mix(col, vec3(1.0) - col, clamp(ring * uRipRemap, 0.0, 1.0));
 
   if (uInvert > 0.5) col = vec3(1.0) - col;
-  col = mix(col, uPaper, uFlash);
+  col = mix(col, uFlashColor, uFlash);
   gl_FragColor = vec4(col, 1.0);
 }
 `;
@@ -136,8 +137,11 @@ export function createPost(glCanvas, sourceCanvas, design) {
   // Raw sRGB components: the pass works on display values end to end (the
   // canvas texture is NoColorSpace and the output is not converted), so the
   // flash colour must not go through THREE.Color's sRGB-to-linear step.
-  const hex = parseInt(design.palette.paper.slice(1), 16);
-  const paper = { r: ((hex >> 16) & 255) / 255, g: ((hex >> 8) & 255) / 255, b: (hex & 255) / 255 };
+  const rgb = (c) => {
+    const n = parseInt(c.slice(1), 16);
+    return { r: ((n >> 16) & 255) / 255, g: ((n >> 8) & 255) / 255, b: (n & 255) / 255 };
+  };
+  const paper = rgb(design.palette.paper);
   const postMat = new THREE.ShaderMaterial({
     vertexShader: VERT, fragmentShader: POST_FRAG,
     depthTest: false, depthWrite: false,
@@ -147,7 +151,7 @@ export function createPost(glCanvas, sourceCanvas, design) {
       uSort: { value: 0 }, uThresh: { value: 0.9 }, uSortCols: { value: 4 * design.u }, uSortPolarity: { value: 0 }, uSortCover: { value: 1 }, uSeed: { value: 0 },
       uRipC: { value: new THREE.Vector2() }, uRipR: { value: -1 }, uRipW: { value: 40 }, uRipAmp: { value: 0 },
       uRipRemap: { value: 0 }, uInvert: { value: 0 }, uFlash: { value: 0 },
-      uPaper: { value: new THREE.Vector3(paper.r, paper.g, paper.b) },
+      uFlashColor: { value: new THREE.Vector3(paper.r, paper.g, paper.b) },
     },
   });
   const postScene = new THREE.Scene();
@@ -189,6 +193,8 @@ export function createPost(glCanvas, sourceCanvas, design) {
     }
     u.uInvert.value = fx.invert ? 1 : 0;
     u.uFlash.value = fx.flash || 0;
+    const fc = fx.flashColor ? rgb(fx.flashColor) : paper;
+    u.uFlashColor.value.set(fc.r, fc.g, fc.b);
     renderer.setRenderTarget(null);
     renderer.clear(true, false, false);
     renderer.render(postScene, camera);

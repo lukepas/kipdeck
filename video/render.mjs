@@ -14,7 +14,7 @@
 // motion-blur samples), --out path.mp4, --keep-frames (skip the encode).
 
 import { createServer } from 'node:http';
-import { readFile, mkdir, readdir, rm, stat } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, readdir, rm, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import path from 'node:path';
@@ -48,8 +48,10 @@ function parseArgs(argv) {
       case '--no-grain': a.grain = false; break;
       case '--blur': a.blur = Number(v()); break;
       case '--still': a.still = Number(v()); break;
+      case '--stills': a.stills = v().split(',').map(Number); break;
       case '--out': a.out = v(); break;
       case '--keep-frames': a.keepFrames = true; break;
+      case '--typesync': a.typesync = v(); break;
       case '-h': case '--help':
         console.log(readHelp());
         process.exit(0);
@@ -71,7 +73,8 @@ function parseArgs(argv) {
 
 function readHelp() {
   return `usage: node render.mjs [--format 16x9|9x16] [--preview] [--fps N] [--w N] [--h N]
-       [--from S] [--to S] [--still S] [--guides] [--no-grain] [--blur N] [--out file.mp4] [--keep-frames]`;
+       [--from S] [--to S] [--still S] [--stills S,S,...] [--guides] [--no-grain] [--blur N] [--out file.mp4] [--keep-frames]
+       [--typesync DIR]   display-type layer alone at every text hit (tools/verify.py measures it)`;
 }
 
 const MIME = {
@@ -134,6 +137,45 @@ async function clearFrames() {
   for (const f of await readdir(FRAMES)) if (/\.(png|jpe?g)$/.test(f)) await rm(path.join(FRAMES, f));
 }
 
+// Type sync: for every text hit, the display-type layer alone (everything
+// else hidden, transparent background) on the hit frame and on the 6 frames
+// after it has settled (+5..+8). A hit that lands under a full-frame flash is
+// measured on the first frame after the flash. tools/verify.py compares the
+// ink on the hit frame with the settled ink.
+async function typesync(page, a, dir) {
+  const beatmap = JSON.parse(await readFile(path.join(ROOT, 'src/beatmap.json'), 'utf8'));
+  await mkdir(dir, { recursive: true });
+  for (const f of await readdir(dir)) if (f.endsWith('.png')) await rm(path.join(dir, f));
+  await page.evaluate(() => {
+    for (const id of ['gl', 'svg', 'grain', 'guides']) document.getElementById(id).style.visibility = 'hidden';
+    document.documentElement.style.background = 'transparent';
+    document.body.style.background = 'transparent';
+  });
+  const flashes = beatmap.hits.filter((h) => h.kind === 'flash' && h.frames > 1);
+  const hits = beatmap.hits.filter((h) => h.name.startsWith('text.') || (h.kind === 'text' && h.text));
+  const manifest = [];
+  for (const h of hits) {
+    let n = Math.round(h.t * a.fps);
+    for (const fl of flashes) {
+      const f0 = Math.round(fl.t * a.fps);
+      if (n >= f0 && n < f0 + fl.frames) n = f0 + fl.frames;
+    }
+    // +5..+8: settled, and still clear of the next hit's pre-roll (hits are >= 15 frames apart).
+    const offsets = [0, 5, 6, 7, 8];
+    const files = [];
+    for (const k of offsets) {
+      if ((n + k) / a.fps >= beatmap.duration) continue;
+      await page.evaluate((tt) => window.__render(tt), (n + k) / a.fps);
+      const file = `${h.name}@${k}.png`;
+      await page.screenshot({ path: path.join(dir, file), type: 'png', omitBackground: true });
+      files.push({ offset: k, file });
+    }
+    manifest.push({ name: h.name, t: h.t, frame: n, files });
+  }
+  await writeFile(path.join(dir, 'manifest.json'), JSON.stringify({ fps: a.fps, w: a.w, h: a.h, format: a.format, hits: manifest }, null, 1));
+  console.log(`typesync: ${manifest.length} text hits -> ${path.relative(ROOT, dir)}`);
+}
+
 async function main() {
   const a = parseArgs(process.argv.slice(2));
   const server = await serve();
@@ -160,14 +202,23 @@ async function main() {
     });
     if (!info || info.error) throw new Error(`page failed to boot: ${info && info.error}\n${pageErrors.join('\n')}`);
 
-    if (a.still != null) {
+    if (a.typesync) {
+      await typesync(page, a, path.resolve(a.typesync));
+      if (pageErrors.length) throw new Error(`page reported errors:\n${pageErrors.join('\n')}`);
+      return;
+    }
+
+    if (a.still != null || a.stills) {
       const dir = path.join(OUT, 'stills');
       await mkdir(dir, { recursive: true });
-      await page.evaluate((t) => window.__render(t), a.still);
-      const file = path.join(dir, `${a.format}-${a.still.toFixed(3)}${a.guides ? '-guides' : ''}.png`);
-      await page.screenshot({ path: file, type: 'png' });
+      for (const t of a.stills || [a.still]) {
+        if (!(t >= 0)) throw new Error(`bad still time ${t}`);
+        await page.evaluate((tt) => window.__render(tt), t);
+        const file = path.join(dir, `${a.format}-${t.toFixed(3)}${a.guides ? '-guides' : ''}.png`);
+        await page.screenshot({ path: file, type: 'png' });
+        console.log(`still ${t}s -> ${path.relative(ROOT, file)}`);
+      }
       if (pageErrors.length) throw new Error(`page reported errors:\n${pageErrors.join('\n')}`);
-      console.log(`still ${a.still}s -> ${path.relative(ROOT, file)}`);
       return;
     }
 
