@@ -38,6 +38,7 @@ import { installBeats } from './features/beats';
 import { installPods } from './features/pods';
 import { installProofCorner } from './features/proofcorner';
 import { installReadyLine } from './features/readyline';
+import { installBridge } from './features/bridge';
 import { installDictation } from './features/dictation';
 import { installHud } from './features/hud';
 import { installMeeting } from './features/meeting';
@@ -98,8 +99,8 @@ parts.settings = loadSettings();
 parts.player = new PlayerController(ctx.camera, canvas, ctx.office.colliders);
 installKeyGuards(ctx, parts);
 parts.place = installPlace(ctx, core, parts);
-// Everyone arrives in the elevator car (the welcome says exactly where).
-parts.place.placeInCar();
+// Everyone arrives on the conn, facing the bow (the welcome says exactly where across it).
+parts.place.placeOnConn();
 parts.player.view = parts.settings.view;
 parts.you = installYou(ctx);
 parts.reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -139,6 +140,7 @@ installPods(ctx);
 parts.proofCorner = installProofCorner(ctx);
 installBeats(ctx, parts);
 installReadyLine(ctx, parts);
+installBridge(ctx);
 
 parts.hintbar = installHintBar(ctx, core, parts);
 installKeyboard(ctx, parts);

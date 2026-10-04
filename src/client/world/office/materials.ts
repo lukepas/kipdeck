@@ -28,6 +28,13 @@ export const DECK = {
   working: '#C9D2DC',
   proof: '#A68BFF',
   settled: '#3DDC97',
+  /** The bridge's hull plating, its seams, and the instrument black under screens and marks. */
+  hull: '#1C2530',
+  hullSeam: '#2A3644',
+  instrument: '#0B1219',
+  /** Ship-cyan: the instruments' own color, never a state. Hairlines and small type only; `shipDim` for lit areas. */
+  ship: '#6FC3DF',
+  shipDim: '#2C5E70',
 } as const;
 
 /**
@@ -101,10 +108,16 @@ export function practical(color: THREE.ColorRepresentation, opacity = 1): THREE.
 /** Smoked glass: dark, a little see-through, for the Review bay. */
 export const GLASS = new THREE.MeshStandardMaterial({ color: '#1B2733', roughness: 0.15, metalness: 0.2, transparent: true, opacity: 0.38, depthWrite: false, side: THREE.DoubleSide });
 
-/** A sheet of smoked glass `w` by `h`, centered, facing +z. */
-export function glassPane(w: number, h: number): THREE.Group {
+/**
+ * Viewport glass: almost clear, a faint cold tint and a glint, so space reads through it and the
+ * frame does the work of saying "window". Drawn after what's outside it (renderOrder 2).
+ */
+export const VIEWPORT_GLASS = new THREE.MeshStandardMaterial({ color: '#16242F', roughness: 0.08, metalness: 0.6, transparent: true, opacity: 0.12, depthWrite: false, side: THREE.DoubleSide });
+
+/** A sheet of glass `w` by `h` (smoked unless `material` says otherwise), centered, facing +z. */
+export function glassPane(w: number, h: number, material: THREE.Material = GLASS): THREE.Group {
   const g = new THREE.Group();
-  const pane = new THREE.Mesh(new THREE.PlaneGeometry(w, h), GLASS);
+  const pane = new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
   pane.renderOrder = 2;
   g.add(pane);
   return g;

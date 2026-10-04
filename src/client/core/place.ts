@@ -1,8 +1,8 @@
 /**
- * Where you are, and putting you somewhere: in the elevator car, or on your feet at a spot; and where
+ * Where you are, and putting you somewhere: on the conn, or on your feet at a spot; and where
  * you're standing, to come back to.
  */
-import { ELEVATOR, ELEVATOR_CAR, ELEVATOR_YAW, inElevator } from '../../shared/layout';
+import { CONN, ELEVATOR, ELEVATOR_YAW, inElevator } from '../../shared/layout';
 import { rememberSpot, store, type Spot } from '../state';
 import type { Ctx } from './context';
 import type { CoreState } from './ctx';
@@ -11,10 +11,14 @@ import type { Parts } from './parts';
 export function installPlace(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'seating'>) {
   const { player } = ctx;
 
-  /** In the car, facing out through the doors: where you are when you arrive on a floor. */
-  function placeInCar(at?: { x: number; z: number }) {
-    const spot = at && inElevator(at.x, at.z) ? at : { x: ELEVATOR.x, z: (ELEVATOR_CAR.minZ + ELEVATOR_CAR.maxZ) / 2 };
-    placeAt({ x: spot.x, y: 0, z: spot.z, rotY: ELEVATOR_YAW });
+  /**
+   * On the conn behind the captain's chair, facing the bow: where you are when you arrive on a floor,
+   * the table, the Attention board and the forward viewport in front of you. The office puts arrivals
+   * in the Deck lift's car, a little apart; that spread is kept across the dais.
+   */
+  function placeOnConn(at?: { x: number; z: number }) {
+    const spread = at && inElevator(at.x, at.z) ? Math.max(-0.5, Math.min(0.5, at.x - ELEVATOR.x)) : 0;
+    placeAt({ x: CONN.x + spread, y: CONN.h, z: CONN.z + CONN.r * 0.72, rotY: ELEVATOR_YAW });
   }
 
   /** On your feet at `at`, facing `rotY` and looking straight ahead. */
@@ -46,5 +50,5 @@ export function installPlace(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'seat
     return { x: player.pos.x, y: player.pos.y, z: player.pos.z, rotY: player.facing };
   }
 
-  return { placeInCar, placeAt, spotHere, saveSpot, standingAt };
+  return { placeOnConn, placeAt, spotHere, saveSpot, standingAt };
 }

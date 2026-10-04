@@ -5,7 +5,7 @@ import type { Collider, DeskView, Interactable } from '../types';
 import type { Fixture } from './fixture';
 import { DECK, box, contactShadow, flat, glassPane, matte, practical } from './materials';
 import { wallBoard } from './props';
-import { chair } from './seats';
+import { UNIT_SEATED, chair } from './seats';
 import type { Door } from './shell';
 
 /** A chair at the meeting table, with its laptop on the table in front of it. */
@@ -20,7 +20,7 @@ function buildMeetingSeat(def: DeskDef, index: number): DeskView {
   const seatAnchor = new THREE.Object3D();
   seatAnchor.position.set(0, 0.4, 0.85);
   seatAnchor.rotation.y = Math.PI;
-  seatAnchor.scale.setScalar(0.82);
+  seatAnchor.scale.setScalar(UNIT_SEATED);
   group.add(seatAnchor);
   const ch = chair();
   void index;

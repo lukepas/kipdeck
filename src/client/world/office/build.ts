@@ -17,10 +17,17 @@ import { wing } from './wing';
 import { beanbags, desks, kiosks } from './seats';
 import { meetingRoom } from './meeting-room';
 import type { Fixture, Gives, Site } from './fixture';
+import { hull } from '../../features/bridge/hull';
+import { inlay } from '../../features/bridge/inlay';
+import { conn } from '../../features/bridge/conn';
+import { holo } from '../../features/bridge/holo';
+import { displays } from '../../features/bridge/displays';
+import { stations } from '../../features/bridge/stations';
 
 // The deck, put together from its fixtures (see fixture.ts): the slab and its walls, the paint on its
-// floor, the mission table and the pods of consoles facing it, the situation wall and its boards, the
-// Proof corner, the Review bay, the Deck lift and the overflow bay.
+// floor, the bridge's hull round it, the mission table and the pods of consoles facing it, the
+// situation wall and its boards, the conn, the Proof corner, the Review bay, the Deck lift and the
+// overflow bay.
 
 /**
  * The office floor's fixtures, in the order they're built: which is the order everything in the floor
@@ -31,8 +38,13 @@ function floorPlan() {
     stack,
     floorPaint,
     walls,
+    // The bridge round the deck: the hull's frames, the canopy and the ship outside (features/bridge).
+    hull,
+    inlay,
     missionTable,
+    holo,
     desks,
+    stations,
     podPlates,
     beanbags,
     kiosks,
@@ -41,9 +53,11 @@ function floorPlan() {
     situationWall,
     boards,
     tv,
+    displays,
     machineMonitor,
     proofCorner,
     lounge,
+    conn,
     bookshelf,
     lamps,
     wing,

@@ -9,6 +9,12 @@ import { DECK, box, contactShadow, flat, matte, practical } from './materials';
 // Where people sit: the seats you use (see SEATING), and the consoles, the Standby bench and the board
 // agents' lecterns that units sit (or stand) at, with the plus over a free one.
 
+/**
+ * How big a unit is at its seat: a little under full size, so it sits right at a console, and big
+ * enough to read as the crew of the bridge rather than figurines on it.
+ */
+export const UNIT_SEATED = 0.95;
+
 /** Makes `obj` somewhere to sit (see SEATING): walk up to it, or look at it, and press E. */
 export function seatable(obj: THREE.Object3D, seatId: string, radius: number, interactables: Interactable[]) {
   const seat = SEATING_BY_ID.get(seatId)!;
@@ -69,7 +75,7 @@ export function buildDesk(def: DeskDef, index: number, trimMat: THREE.Material):
   const seatAnchor = new THREE.Object3D();
   seatAnchor.position.set(0, 0.4, 0.93);
   seatAnchor.rotation.y = Math.PI;
-  seatAnchor.scale.setScalar(0.82);
+  seatAnchor.scale.setScalar(UNIT_SEATED);
   group.add(seatAnchor);
 
   const ch = chair();
@@ -124,7 +130,7 @@ export function buildBeanbag(def: DeskDef, index: number): DeskView {
   const seatAnchor = new THREE.Object3D();
   seatAnchor.position.set(0, 0.34, 0.04);
   seatAnchor.rotation.y = Math.PI;
-  seatAnchor.scale.setScalar(0.82);
+  seatAnchor.scale.setScalar(UNIT_SEATED);
   group.add(seatAnchor);
 
   const vacancyY = 1.25;

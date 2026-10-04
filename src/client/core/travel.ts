@@ -22,14 +22,14 @@ export type TravelParts = Pick<Parts, 'place' | 'walking' | 'seating' | 'floorWa
 /** Registers what follows the building's floors (store 'floors'). */
 export function installTravel(ctx: Ctx, core: CoreState, parts: TravelParts) {
   const { player, net } = ctx;
-  const { placeInCar, standingAt } = parts.place;
+  const { placeOnConn, standingAt } = parts.place;
 
-  /** Not a trip of yours: the office put you on another floor (yours went), in its elevator car. Whatever you were doing stops. */
+  /** Not a trip of yours: the office put you on another floor (yours went), on its conn. Whatever you were doing stops. */
   function takenAway() {
     closeAllModals();
     ctx.activities.stopAll('taken');
     parts.walking.stopWalkingTo();
-    placeInCar();
+    placeOnConn();
   }
 
   // Closing the tab, or reloading: the frame loop saves it every second, and here's the last word.

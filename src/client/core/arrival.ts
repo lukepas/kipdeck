@@ -32,7 +32,7 @@ export type ArrivalParts = Pick<Parts, 'worlds' | 'place' | 'travel' | 'views' |
  */
 export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
   const { net, voice, player } = ctx;
-  const { placeAt, placeInCar } = parts.place;
+  const { placeAt, placeOnConn } = parts.place;
 
   /** Whether the next welcome is this page's first (it puts you back where you were last time). */
   let firstWelcome = true;
@@ -71,14 +71,12 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     const mine = store.peers.get(store.you);
     if (firstWelcome && mine) {
       firstWelcome = false;
-      // Where the office put you: back in the spot you left (if there's still room there), or in the elevator car.
-      // Back to where you were (not in the elevator: that's arriving), if there's still room there.
+      // Back to where you were (not in the elevator: that's arriving), if there's still room there, else on the conn.
       if (lastSpot() && !inElevator(mine.x, mine.z) && !pastTheWing(mine, parts.worlds.officeWing()) && player.fits(mine.x, mine.z, mine.y)) {
         placeAt(mine);
         travel.arrive();
       } else {
-        // The car you were in, or the middle of it.
-        placeInCar(mine);
+        placeOnConn(mine);
         travel.arrive();
       }
       floorWentWhileAway(wasOn);

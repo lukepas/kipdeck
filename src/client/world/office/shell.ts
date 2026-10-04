@@ -1,13 +1,15 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { FLOOR, GRID, SOUTH_CURB, WALL_HEIGHT, WALL_T, WINDOWS, WING, type Opening, type Side } from '../../../shared/layout';
 import { mergeByMaterial, mesh } from '../toon';
 import type { Collider } from '../types';
 import type { Fixture } from './fixture';
-import { DECK, box, glassPane, matte, onWall, practical, type Looks } from './materials';
+import { DECK, VIEWPORT_GLASS, box, glassPane, matte, onWall, practical, type Looks } from './materials';
 
 // The deck's shell: its outside walls, full height on the north, east and west where the boards hang,
-// and only a curb on the south, so the Overview sees every unit over it. No windows: the deck floats
-// in the void.
+// and only a curb on the south, so the Overview sees every unit over it. The walls are the bridge's
+// hull: the forward viewport runs along the north wall over the situation wall, and tall ports cut the
+// east and west walls (WINDOWS). The rest of the bridge is features/bridge/.
 
 /** A door that opens by itself when someone comes up to it, and closes behind them. */
 export interface Door {
@@ -19,23 +21,37 @@ export interface Door {
   show(open: number): void;
 }
 
-/** A window filling its hole in an outside wall: a frame lining the hole, a mullion, sills and real glass. */
+/**
+ * A viewport filling its hole in an outside wall: a hull frame lining the hole, mullions no more than
+ * 1.9 m apart (and a transom in a tall slot), a ship-cyan hairline round the inside edge, a sill, and
+ * almost clear glass.
+ */
 export function windowIn(o: Opening): THREE.Group {
   const g = new THREE.Group();
-  const frame = matte(DECK.steel);
+  const frame = matte(DECK.hull, { metalness: 0.35, roughness: 0.55 });
+  const lit = practical(DECK.shipDim);
   const w = o.width;
   const h = o.y1 - o.y0;
-  const F = 0.09;
-  const D = WALL_T + 0.04;
+  const yMid = (o.y0 + o.y1) / 2;
+  const F = 0.14;
+  const D = WALL_T + 0.08;
   // Built along x with the outside toward +z, then turned onto its wall.
   g.add(mesh(box(w, F, D), frame, 0, o.y1 - F / 2, 0, false));
   g.add(mesh(box(w, F, D), frame, 0, o.y0 + F / 2, 0, false));
-  for (const sx of [-1, 1]) g.add(mesh(box(F, h, D), frame, sx * (w / 2 - F / 2), (o.y0 + o.y1) / 2, 0, false));
-  g.add(mesh(box(F * 0.8, h - 2 * F, 0.08), frame, 0, (o.y0 + o.y1) / 2, 0, false));
-  const pane = glassPane(w - 2 * F, h - 2 * F);
-  pane.position.y = (o.y0 + o.y1) / 2;
+  for (const sx of [-1, 1]) g.add(mesh(box(F, h, D), frame, sx * (w / 2 - F / 2), yMid, 0, false));
+  const bays = Math.max(1, Math.ceil((w - 2 * F) / 1.9));
+  for (let i = 1; i < bays; i++) g.add(mesh(box(0.1, h - 2 * F, 0.2), frame, -w / 2 + F + ((w - 2 * F) * i) / bays, yMid, -0.02, false));
+  const rows = Math.max(1, Math.ceil((h - 2 * F) / 2.6));
+  for (let i = 1; i < rows; i++) g.add(mesh(box(w - 2 * F, 0.08, 0.16), frame, 0, o.y0 + F + ((h - 2 * F) * i) / rows, -0.02, false));
+  // The hairline round the inside of the frame, a centimetre proud of it.
+  const iz = -D / 2 - 0.006;
+  g.add(mesh(box(w - 2 * F, 0.012, 0.012), lit, 0, o.y1 - F, iz, false));
+  g.add(mesh(box(w - 2 * F, 0.012, 0.012), lit, 0, o.y0 + F, iz, false));
+  for (const sx of [-1, 1]) g.add(mesh(box(0.012, h - 2 * F, 0.012), lit, sx * (w / 2 - F), yMid, iz, false));
+  const pane = glassPane(w - 2 * F, h - 2 * F, VIEWPORT_GLASS);
+  pane.position.y = yMid;
   g.add(pane);
-  g.add(mesh(box(w + 0.2, 0.06, 0.2), frame, 0, o.y0 - 0.03, -(WALL_T / 2 + 0.08)));
+  g.add(mesh(box(w + 0.2, 0.06, 0.24), frame, 0, o.y0 - 0.03, -(WALL_T / 2 + 0.1)));
   g.add(mesh(box(w + 0.2, 0.06, 0.16), frame, 0, o.y0 - 0.03, WALL_T / 2 + 0.06));
   const at = onWall(o.wall, o.u);
   g.position.set(at.x, 0, at.z);
@@ -55,6 +71,26 @@ export function buildWalls(group: THREE.Group, colliders: Collider[], openings: 
   const outside = matte(DECK.wallReveal);
   const trimMat = looks.trim;
   const T = WALL_T;
+  // The walls go round the viewports in many pieces: their faces are gathered by paint (and by
+  // whether they throw shade) and drawn as one mesh each, and the trim along them merged the same way.
+  const faces = new Map<string, { mat: THREE.Material; cast: boolean; geos: THREE.BufferGeometry[] }>();
+  const addFaces = (geo: THREE.BufferGeometry, mats: THREE.Material[], at: THREE.Vector3, cast: boolean) => {
+    const flat = geo.toNonIndexed().translate(at.x, at.y, at.z);
+    for (const grp of flat.groups) {
+      const mat = mats[grp.materialIndex ?? 0];
+      const sub = new THREE.BufferGeometry();
+      for (const name of ['position', 'normal'] as const) {
+        const a = flat.getAttribute(name) as THREE.BufferAttribute;
+        sub.setAttribute(name, new THREE.BufferAttribute((a.array as Float32Array).slice(grp.start * 3, (grp.start + grp.count) * 3), 3));
+      }
+      const key = `${mat.uuid}|${cast}`;
+      if (!faces.has(key)) faces.set(key, { mat, cast, geos: [] });
+      faces.get(key)!.geos.push(sub);
+    }
+    geo.dispose();
+    flat.dispose();
+  };
+  const trim = new THREE.Group();
   const walls: { side: Side; at: number; spans: [number, number, number][] }[] = [
     // The north wall stops at the back office, whose own bit of wall (buildWing's plug) comes down for it.
     { side: 'north', at: FLOOR.minZ - T / 2, spans: [[FLOOR.minX - T, WING.minX, WALL_HEIGHT]] },
@@ -78,17 +114,14 @@ export function buildWalls(group: THREE.Group, colliders: Collider[], openings: 
       }
       const ends = alongX ? [u0 <= FLOOR.minX - T + 0.001 ? 1 : -1, u1 >= FLOOR.maxX + T - 0.001 ? 0 : -1] : [];
       const mats = Array.from({ length: 6 }, (_, i) => (i === out || ends.includes(i) ? outside : inside));
-      const m = new THREE.Mesh(alongX ? box(u1 - u0, y1 - y0, T) : box(T, y1 - y0, u1 - u0), mats);
-      m.position.copy(at((u0 + u1) / 2, (y0 + y1) / 2));
-      m.castShadow = y1 <= SHADE_HEIGHT;
-      m.receiveShadow = true;
-      group.add(m);
+      const p = at((u0 + u1) / 2, (y0 + y1) / 2);
+      addFaces(alongX ? box(u1 - u0, y1 - y0, T) : box(T, y1 - y0, u1 - u0), mats, p, y1 <= SHADE_HEIGHT);
     };
     // Baseboard and collider run between the doors.
     const run = (u0: number, u1: number) => {
       if (u1 - u0 < 0.001) return;
       const p = at((u0 + u1) / 2, 0.125);
-      group.add(mesh(alongX ? box(u1 - u0, 0.25, T + 0.04) : box(T + 0.04, 0.25, u1 - u0), trimMat, p.x, p.y, p.z, false));
+      trim.add(mesh(alongX ? box(u1 - u0, 0.25, T + 0.04) : box(T + 0.04, 0.25, u1 - u0), trimMat, p.x, p.y, p.z, false));
       block(u0, u1);
     };
     const block = (u0: number, u1: number, bottom?: number) =>
@@ -116,17 +149,24 @@ export function buildWalls(group: THREE.Group, colliders: Collider[], openings: 
       // The lit hairline along the top, and a reveal at each column line on the inside face.
       const inward = w.side === 'north' || w.side === 'west' ? 1 : -1;
       const cap = at((a + b) / 2, top + 0.006);
-      group.add(mesh(alongX ? box(b - a, 0.012, 0.03) : box(0.03, 0.012, b - a), practical(top > 1 ? DECK.line : DECK.gridMajor), cap.x, cap.y, cap.z, false));
+      trim.add(mesh(alongX ? box(b - a, 0.012, 0.03) : box(0.03, 0.012, b - a), practical(top > 1 ? DECK.line : DECK.gridMajor), cap.x, cap.y, cap.z, false));
       if (top < 1) continue;
       const first = alongX ? FLOOR.minX : FLOOR.minZ;
       for (let r = first + GRID.step; r < b - 0.01; r += GRID.step) {
         if (r <= a + 0.01) continue;
+        // Not across a viewport.
+        if (holes.some((o) => Math.abs(r - o.u) < o.width / 2 + 0.05)) continue;
         const p = at(r, top / 2);
         const off = inward * (T / 2 + 0.002);
-        group.add(mesh(alongX ? box(0.02, top, 0.004) : box(0.004, top, 0.02), matte(DECK.wallReveal), alongX ? p.x : p.x + off, p.y, alongX ? p.z + off : p.z, false));
+        trim.add(mesh(alongX ? box(0.02, top, 0.004) : box(0.004, top, 0.02), matte(DECK.wallReveal), alongX ? p.x : p.x + off, p.y, alongX ? p.z + off : p.z, false));
       }
     }
   }
+  for (const { mat, cast, geos } of faces.values()) {
+    group.add(mesh(mergeGeometries(geos)!, mat, 0, 0, 0, cast));
+    for (const geo of geos) geo.dispose();
+  }
+  group.add(mergeByMaterial(trim));
 }
 
 /**
@@ -170,13 +210,16 @@ export function wallRun(into: THREE.Group, cols: Collider[], axis: 'x' | 'z', at
   cols.push(axis === 'x' ? { minX: u0, maxX: u1, minZ: at - T / 2, maxZ: at + T / 2, top: 99 } : { minX: at - T / 2, maxX: at + T / 2, minZ: u0, maxZ: u1, top: 99 });
 }
 
-/** The outside walls (and any windows in them: none on the deck). */
+/** The outside walls, and the viewports in them. */
 export const walls: Fixture = (site) => {
   buildWalls(site.group, site.colliders, WINDOWS, site.looks);
   const glazing = new THREE.Group();
   for (const o of WINDOWS) {
     glazing.add(windowIn(o));
   }
-  site.group.add(mergeByMaterial(glazing));
+  const merged = mergeByMaterial(glazing);
+  // The glass after everything seen through it.
+  for (const m of merged.children) if ((m as THREE.Mesh).material === VIEWPORT_GLASS) m.renderOrder = 2;
+  site.group.add(merged);
   return {};
 };
