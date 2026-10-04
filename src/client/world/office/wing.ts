@@ -63,7 +63,7 @@ export function buildWing(group: THREE.Group, colliders: Collider[], interactabl
   const rows = Array.from({ length: WING.rows }, (_, i) => {
     const row = i + 1;
     const seats = WING_DESKS.filter((d) => d.wing === row).map((def) => {
-      const view = buildDesk(def, DESKS.length + WING_DESKS.indexOf(def), trimMat);
+      const view = buildDesk(def, DESKS.length + WING_DESKS.indexOf(def));
       view.group.visible = false;
       group.add(view.group);
       desks.set(def.id, view);

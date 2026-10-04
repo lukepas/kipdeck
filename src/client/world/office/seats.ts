@@ -36,9 +36,9 @@ export function chair(color: string = DECK.consoleTop): THREE.Group {
 /**
  * The `index`th console (of DESKS) at `def`: a low pedestal under a flat top, and on the table's side
  * a hood that stands no higher than the sightline with a lit hairline along its edge; a stool on the
- * outer side; and the anchors its unit and its screen (the laptop) go in. `trimMat` paints the hood.
+ * outer side; and the anchors its unit and its screen (the laptop) go in.
  */
-export function buildDesk(def: DeskDef, index: number, trimMat: THREE.Material): DeskView {
+export function buildDesk(def: DeskDef, index: number): DeskView {
   const group = new THREE.Group();
   group.position.set(def.x, 0, def.z);
   group.rotation.y = def.rotY;
@@ -51,8 +51,9 @@ export function buildDesk(def: DeskDef, index: number, trimMat: THREE.Material):
   // The top, and its front edge rounded off where the unit's hands rest.
   group.add(mesh(box(width, 0.06, depth), top, 0, height - 0.03, 0));
   group.add(mesh(new THREE.CylinderGeometry(0.03, 0.03, width, 8).rotateZ(Math.PI / 2), top, 0, height - 0.03, depth / 2, false));
-  // The hood on the table's side, leaning back, its top under the sightline.
-  const hood = mesh(box(width - 0.08, 0.3, 0.05), trimMat, 0, height + 0.13, -depth / 2 + 0.04);
+  // The hood on the table's side, leaning back, its top under the sightline: instrument black in
+  // Night and Day alike, like the screen under it, so the number on it reads in both.
+  const hood = mesh(box(width - 0.08, 0.3, 0.05), matte(DECK.instrument), 0, height + 0.13, -depth / 2 + 0.04);
   hood.rotation.x = -0.22;
   group.add(hood);
   // A hairline of light along the hood's top edge, facing the table: the console is live.
@@ -214,7 +215,7 @@ export function consoleColliders(def: DeskDef): Collider[] {
 /** The consoles, each with its stool, in their pods round the table. */
 export const desks: Fixture = (site) => {
   DESKS.forEach((def, i) => {
-    const view = buildDesk(def, i, site.looks.trim);
+    const view = buildDesk(def, i);
     site.group.add(view.group);
     site.desks.set(def.id, view);
     site.colliders.push(...consoleColliders(def));

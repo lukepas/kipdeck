@@ -49,8 +49,8 @@ export const LIGHT_MODES: Record<LightMode, Rig> = {
     bloom: { strength: 0.32, radius: 0.4, threshold: 0.86 },
   },
   day: {
-    exposure: 1.05,
-    hemi: { sky: '#EAF1F8', ground: '#8C98A6', i: 1.9 },
+    exposure: 1.22,
+    hemi: { sky: '#E4EDF6', ground: '#8C98A6', i: 1.75 },
     key: { color: '#FFF6EA', i: 2.3 },
     fill: { color: '#DCE6F0', i: 0.8 },
     rim: { color: '#FFFFFF', i: 0.45 },
@@ -83,25 +83,26 @@ export function brightnessFactor(step: number): number {
 
 /**
  * Day's colors for the deck's neutrals, by their Night color (DECK in world/office/materials.ts): the
- * floor, walls and hull go light, and the consoles go darker still, graphite instrument blocks that
+ * floor, walls and hull go a cool mid-grey (Day lifts the exposure rather than whitening them, so the
+ * hues of state and the screens stay the strongest things in view), and the consoles go darker still, graphite instrument blocks that
  * stand out of a light floor. Units stay graphite in both, and every attention mark sits on its own
  * instrument-black carrier (the ring inlay, the callout chip), so its hue reads the same by day.
  */
 export const DAY_PALETTE: Readonly<Record<string, string>> = {
-  // floor and its grid (the floor's canvas texture)
-  '#222c38': '#a9b4c0',
-  '#2c3744': '#97a3b0',
-  '#3a4858': '#8693a1',
-  // walls, hull plating and its seams, reveals
-  '#1c2530': '#c4cdd7',
-  '#2a3644': '#aab5c1',
-  '#0a0f15': '#8c98a6',
+  // floor and its grid (the floor's canvas texture): a cool mid-grey, not white
+  '#1c2430': '#959fab',
+  '#2c3744': '#8792a0',
+  '#3a4858': '#77838f',
+  // walls, hull plating and its seams, reveals: mid-grey too (albedo about 0.4), the exposure lifts them
+  '#1c2530': '#a9b3be',
+  '#2a3644': '#98a3af',
+  '#0a0f15': '#7d8997',
   // consoles and their tops: darker than by night, so they read against the light floor
   '#26303c': '#1e2630',
   '#2e3946': '#2a3440',
   // steel and lines
   '#3a4756': '#5f6c7a',
-  '#26313d': '#97a3b0',
+  '#26313d': '#8792a0',
 };
 
 /**
