@@ -275,7 +275,7 @@ export function agentFields(project: ProjectInfo | null, id: string, initial: Ag
     choice: () => ({ provider: value(), ...(model() ? { model: model() } : {}), ...(effort() ? { effort: effort() } : {}) }),
     valid: () => {
       const okay = !chosen || !!meta().validModel?.(chosen);
-      modelInput.setCustomValidity(okay ? '' : (meta().models?.invalid ?? 'That isn’t a model id this provider takes.'));
+      modelInput.setCustomValidity(okay ? '' : (meta().models?.invalid ?? 'That isn\'t a model id this provider takes.'));
       if (!okay) modelInput.reportValidity();
       return okay;
     },
@@ -296,7 +296,7 @@ export function providerPicker(project: ProjectInfo | null, id: string, label = 
   const paint = () => {
     const def = officeChoice(project);
     current.textContent = choiceLabel(def);
-    current.title = store.prompts.agent ? 'The office’s default worker, set in Settings' : 'The office’s default worker (its --agent); an admin can pick another in Settings';
+    current.title = store.prompts.agent ? 'The office\'s default worker, set in Settings' : 'The office\'s default worker (its --agent); an admin can pick another in Settings';
     current.classList.toggle('hidden', editing);
     edit.textContent = editing ? 'Use the default' : 'Edit';
     edit.title = editing ? `Back to ${choiceLabel(def)}` : 'Pick another provider, model or effort for this one';

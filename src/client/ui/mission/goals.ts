@@ -112,11 +112,11 @@ function tellBox(deps: MissionDeps): HTMLElement | null {
 
 export function renderGoals(deps: MissionDeps): HTMLElement {
   const m = store.mission;
-  if (!store.floor) return h('p.mc-empty', {}, 'Go to a floor to see its mission.');
+  if (!store.floor) return h('p.mc-empty', {}, 'Go to a deck to see its mission.');
   const can = !m.locked || store.me.admin;
   const statement = inlineEdit({
     text: m.statement,
-    empty: 'No mission yet. Click to say what this floor is for, in a sentence or two.',
+    empty: 'No mission yet. Click to say what this deck is for, in a sentence or two.',
     label: 'the mission statement',
     max: MISSION_LIMITS.statement,
     multiline: true,

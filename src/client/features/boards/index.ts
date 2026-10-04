@@ -34,7 +34,7 @@ export interface BoardsDeps {
   aimedNote(): GhIssue | null;
   /** Takes an issue's card off the board, into your hands (see features/carrying). */
   pickUp(it: GhIssue): void;
-  /** What a board's buttons do: hand an issue to a worker, call a meeting about it… */
+  /** What a board's buttons do: hand an issue to a worker, call a meeting about it... */
   boardActions(): BoardActions;
   /** The task queue's window. */
   showQueue(): void;

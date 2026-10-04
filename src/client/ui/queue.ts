@@ -30,7 +30,7 @@ function outcome(t: QueueTask): string {
     case 'exited':
       return t.error ? `stopped: ${t.error}` : 'stopped before finishing';
     case 'killed':
-      return 'sent home';
+      return 'stood down';
     case 'failed':
       return `couldn't start: ${t.error ?? 'unknown error'}`;
     case 'rejected':
@@ -54,10 +54,10 @@ export function openQueue(net: Net, actions: QueueActions) {
     { role: 'dialog', 'aria-label': 'Task queue', style: 'width:min(800px,100%)' },
     h('header', {}, h('h2', {}, 'Task queue'), limit, close),
     body,
-    h('footer', {}, h('span.grow', {}, 'The queue keeps going while you are away. Set “workers at once” to 0 to pause it.')),
+    h('footer', {}, h('span.grow', {}, 'The queue keeps going while you are away. Set "workers at once" to 0 to pause it.')),
   );
 
-  const ta = h('textarea', { rows: 2, placeholder: 'Describe a task for the next free worker…', 'aria-label': 'New task' }) as HTMLTextAreaElement;
+  const ta = h('textarea', { rows: 2, placeholder: 'Describe a task for the next free worker...', 'aria-label': 'New task' }) as HTMLTextAreaElement;
   const provider = providerPicker(store.project, 'queue-provider');
   const goal = goalPicker();
   const addBtn = h('button.btn.primary', { type: 'submit' }, 'Add to queue');
@@ -136,7 +136,7 @@ export function openQueue(net: Net, actions: QueueActions) {
       if (t.workerName) meta.push(t.workerName);
       if (t.branch) meta.push(`${t.branch}`);
       if (t.finishedAt) meta.push(timeAgo(t.finishedAt));
-      if (t.pr) buttons.push(h('a.btn', { href: t.pr.url, target: '_blank', rel: 'noopener', title: t.pr.title }, `PR #${t.pr.number}${t.pr.state === 'MERGED' ? ' ✓' : t.pr.state === 'DRAFT' ? ' (draft)' : ''}`));
+      if (t.pr) buttons.push(h('a.btn', { href: t.pr.url, target: '_blank', rel: 'noopener', title: t.pr.title }, `PR #${t.pr.number}${t.pr.state === 'MERGED' ? ' (merged)' : t.pr.state === 'DRAFT' ? ' (draft)' : ''}`));
       if (w) buttons.push(h('button.btn', { type: 'button', onclick: () => actions.openTerminal(w.id) }, 'Terminal'));
       if (t.outcome !== 'rejected') buttons.push(h('button.btn', { type: 'button', title: 'Put it back on the queue', onclick: () => net.send({ t: 'queue.retry', taskId: t.id }) }, 'Requeue'));
       if (!(t.outcome === 'rejected' && t.paid && !t.paid.refundTx)) buttons.push(h('button.btn', { type: 'button', title: 'Forget it', 'aria-label': 'Remove', onclick: () => net.send({ t: 'queue.remove', taskId: t.id }) }, icon('close', 16)));

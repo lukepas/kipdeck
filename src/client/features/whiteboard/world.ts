@@ -94,10 +94,10 @@ export function buildWhiteboard(): WhiteboardStand {
       g.textAlign = 'center';
       g.textBaseline = 'middle';
       g.font = `600 110px ${FONT}`;
-      g.fillText('Draw together', W / 2, H / 2 - 60);
+      g.fillText('Planning board', W / 2, H / 2 - 60);
       g.fillStyle = DECK.muted;
       g.font = `500 56px ${FONT}`;
-      g.fillText('Walk up and press E. Everyone on this deck sees it live', W / 2, H / 2 + 70);
+      g.fillText('Sketch the plan. Everyone on this deck sees it.', W / 2, H / 2 + 70);
     }
     texture.needsUpdate = true;
   };

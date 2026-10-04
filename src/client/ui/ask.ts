@@ -84,7 +84,7 @@ export function openAsk(opts: AskOptions) {
       {},
       h('label', {}, 'Send to'),
       choices,
-      opts.context ? h('details.ask-context', {}, h('summary', {}, 'The worker is told first…'), h('pre', {}, opts.context)) : null,
+      opts.context ? h('details.ask-context', {}, h('summary', {}, 'The worker is told first...'), h('pre', {}, opts.context)) : null,
       h('label', { style: 'margin-top:14px' }, 'Prompt'),
       dictateField(ta),
       provider?.element ?? null,

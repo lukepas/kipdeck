@@ -8,13 +8,21 @@
 .elevator .floor-btn.here { background: var(--surface-2); border-color: var(--line-strong); box-shadow: inset 2px 0 0 var(--text); }
 .elevator .floor-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: stretch; }
 .elevator .floor-off { height: auto; padding: 0 12px; }
+.elevator .floor-menu-col { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.elevator .floor-remove[hidden] { display: none; }
+.elevator .deck-chip { display: inline-flex; align-items: center; gap: 4px; min-width: 36px; padding: 0 2px; font: 500 12px var(--font-mono); color: var(--muted); }
+.elevator .deck-chip.needs-you { color: var(--signal); }
+.elevator .deck-chip.stuck { color: var(--stuck); }
+.elevator .deck-chip.review .ico { color: var(--review); }
+.elevator .floor-stats { display: flex; gap: 6px; align-items: center; }
 .elevator .floor-off:hover { background: var(--stuck-tint); color: var(--stuck); }
 .elevator .floor-no { width: 30px; height: 30px; border-radius: var(--radius-chip); border: 1px solid var(--line-strong); display: grid; place-items: center; font: 500 13px var(--font-mono); color: var(--text); background: var(--surface-2) !important; }
 .elevator .floor-text { display: flex; flex-direction: column; min-width: 0; }
 .elevator .floor-name { font-weight: 600; font-size: 15px; display: flex; gap: 8px; align-items: baseline; }
 .elevator .here-tag { font-size: 11px; font-weight: 600; color: var(--muted); }
-.elevator .floor-sub { font-size: 12px; font-weight: 400; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.elevator .floor-stats { font: 500 12px var(--font-mono); white-space: nowrap; }
+.elevator .floor-sub { font: 400 12px var(--font-mono); color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.elevator .floor-sub.floor-mission { font-family: var(--font-ui); color: var(--muted); }
+.elevator .floor-stats { font: 500 12px var(--font-mono); white-space: nowrap; display: flex; gap: 6px; align-items: center; }
 .elevator .floor-stats .waiting { color: var(--signal); }
 .elevator .clone-bar { display: block; height: 2px; margin-top: 6px; background: var(--line); overflow: hidden; }
 .elevator .clone-bar > span { display: block; height: 100%; background: var(--text); transition: width .6s var(--ease); }

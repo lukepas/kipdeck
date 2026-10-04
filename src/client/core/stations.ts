@@ -10,7 +10,7 @@ import type { IconName } from '../ui/icons';
 /** What each board agent is for: its board's icon, what it offers on the card over its head, and an example ask. */
 export const STATION_INFO: Record<StationKind, { icon: IconName; offer: string; does: string; example: string }> = {
   issues: { icon: 'issue', offer: 'Ask me about issues', does: 'I file, find, triage, label and close them', example: 'File an issue: the queue board shows done tasks twice' },
-  pulls: { icon: 'pull', offer: 'Ask me about PRs', does: 'I sum up, review, comment on and merge them', example: 'Review the newest PR and tell me if it’s ready to merge' },
+  pulls: { icon: 'pull', offer: 'Ask me about PRs', does: 'I sum up, review, comment on and merge them', example: 'Review the newest PR and tell me if it\'s ready to merge' },
   queue: { icon: 'queue', offer: 'Ask me to queue work', does: 'I turn it into tasks for fresh workers', example: 'Queue every open bug issue, most important first' },
 };
 

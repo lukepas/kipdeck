@@ -114,7 +114,7 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     // The card belongs to the other floor's board: the office already put it back there.
     const carrying = core.carrying;
     if (carrying) {
-      toast(`#${carrying.issue} stayed behind on the other floor's board`);
+      toast(`#${carrying.issue} stayed behind on the other deck's board`);
       parts.cards.setCarrying(null);
     }
     travel.arrive();
@@ -171,7 +171,7 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
   function floorWentWhileAway(was: string | null) {
     if (!was || store.floor === was || store.floors.some((f) => f.id === was)) return;
     const saved = lastSpot();
-    const name = saved?.floor === was && saved.name ? saved.name : 'Your floor';
+    const name = saved?.floor === was && saved.name ? saved.name : 'Your deck';
     const now = store.currentFloor()?.name;
     toast(now ? `${name} isn't in the building any more, so you're on ${now} now` : `${name} isn't in the building any more`, 'warn');
   }

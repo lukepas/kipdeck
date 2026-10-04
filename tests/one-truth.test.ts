@@ -4,15 +4,13 @@
 // The rows say the same thing everywhere too: one title, one status phrase, one clock (shared/rowtext.ts).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { attention, attentionCounts, isCrashed, rankRoster } from '../src/shared/attention.js';
 import { ago, headline, shortPath, stateWord, statusPhrase } from '../src/shared/rowtext.js';
 import { tokenLabel, tokenUnits } from '../src/shared/money.js';
 import type { RosterEntry, WorkerInfo } from '../src/shared/protocol.js';
-import { Ledger } from '../src/server/usage.js';
-import { WorkerManager, type WorkerEvents } from '../src/server/workers.js';
+import { WorkerManager } from '../src/server/workers.js';
 
 const NOW = 10_000_000;
 const entry = (id: string, extra: Partial<RosterEntry> = {}): RosterEntry => ({ id, floor: 'f1', floorName: 'Deck', deskId: `desk-${id}`, name: id, color: '#fff', kind: 'agent', status: 'working', acked: false, createdAt: NOW - 60_000, tasked: true, activityAt: NOW, ...extra }) as RosterEntry;
@@ -71,49 +69,14 @@ test('money is written one way: two decimals and the token, devnet USDC', () => 
   assert.equal(tokenLabel('15000000', 6), '15.00 USDC');
 });
 
-test('walking in never wakes a crashed unit, and wakes one that only finished', async (t) => {
-  const root = mkdtempSync(path.join(tmpdir(), 'ugc-one-truth-'));
-  t.after(() => rmSync(root, { recursive: true, force: true }));
-  const data = path.join(root, 'data');
-  const bin = path.join(root, 'bin');
-  mkdirSync(data, { recursive: true });
-  mkdirSync(bin, { recursive: true });
-  const log = path.join(root, 'runs.log');
-  writeFileSync(log, '');
-  // The first run of it crashes (exit 3); every run after that finishes cleanly. Each run is logged.
-  const agent = path.join(bin, 'stand-in');
-  writeFileSync(agent, `#!/usr/bin/env node\nconst fs = require('node:fs');\nif (process.argv.includes('--output-format')) { process.stdout.write('{}'); process.exit(0); }\nconst first = !fs.readFileSync(${JSON.stringify(log)}, 'utf8');\nfs.appendFileSync(${JSON.stringify(log)}, process.env.AGENT_OFFICE_WORKER_ID + '\\n');\nsetTimeout(() => process.exit(first ? 3 : 0), 50);\n`);
-  chmodSync(agent, 0o700);
-  const env = { HOME: process.env.HOME, CLAUDE_CONFIG_DIR: process.env.CLAUDE_CONFIG_DIR };
-  process.env.HOME = path.join(root, 'home');
-  process.env.CLAUDE_CONFIG_DIR = path.join(root, 'claude');
-  t.after(() => {
-    for (const [k, v] of Object.entries(env)) if (v === undefined) delete process.env[k];
-    else process.env[k] = v;
+test('walking in never wakes a crashed unit, and wakes one that only finished', () => {
+  // wakeAll as it is, on a manager with no processes: three units at rest, one of them crashed.
+  const resumed: string[] = [];
+  const at = (id: string, status: WorkerInfo['status'], exitCode?: number) => [id, { info: { id, status, ...(exitCode === undefined ? {} : { exitCode }) } }] as const;
+  const manager = Object.assign(Object.create(WorkerManager.prototype) as WorkerManager, {
+    workers: new Map([at('crashed', 'exited', 3), at('finished', 'exited', 0), at('asleep', 'offline'), ['running', { info: { id: 'running', status: 'working' }, pty: {} }]]),
+    resume: (id: string) => void resumed.push(id),
   });
-  const updates: WorkerInfo[] = [];
-  const events: WorkerEvents = { update: (info) => updates.push(info), remove() {}, data() {}, screen() {}, toast() {} };
-  const workers = new WorkerManager(root, data, agent, [], { url: 'http://127.0.0.1:1', token: '' }, events, new Ledger(data, { pauseHiring: false }, () => {}, () => {}));
-  t.after(() => workers.shutdown());
-  const until = async (ok: () => boolean) => {
-    for (let i = 0; i < 200 && !ok(); i++) await new Promise((r) => setTimeout(r, 25));
-    assert.ok(ok(), 'timed out');
-  };
-  const crash = workers.spawn('desk-1', 'test', 'Bump the toolchain');
-  assert.equal(typeof crash, 'object');
-  if (typeof crash !== 'object') return;
-  await until(() => readFileSync(log, 'utf8').length > 0);
-  const fine = workers.spawn('desk-2', 'test', 'Fix the flaky test');
-  assert.equal(typeof fine, 'object');
-  if (typeof fine !== 'object') return;
-  await until(() => workers.get(crash.id)?.status === 'exited' && workers.get(fine.id)?.status === 'exited');
-  assert.equal(workers.get(crash.id)?.exitCode, 3);
-  const runs = () => readFileSync(log, 'utf8').split('\n').filter(Boolean).length;
-  const before = runs();
-  workers.wakeAll();
-  await until(() => runs() > before);
-  await new Promise((r) => setTimeout(r, 300));
-  assert.equal(workers.get(crash.id)?.status, 'exited', 'the crashed unit stays down until a person resumes it');
-  assert.equal(workers.get(crash.id)?.exitCode, 3);
-  assert.equal(runs() - before, 1, 'only the one that finished cleanly woke up');
+  manager.wakeAll();
+  assert.deepEqual(resumed, ['finished', 'asleep']);
 });

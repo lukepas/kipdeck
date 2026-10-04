@@ -18,7 +18,7 @@ export function confirmSendHome(net: Net, w: WorkerInfo) {
     // The meeting's worktree is the whole table's: it's tidied away once they've all gone.
     const m = store.meeting.current;
     const on = m?.id === w.meeting && m.status === 'running';
-    confirmDialog(`Send ${w.name} home?`, on ? `${w.name} is in the meeting on "${m.title}", which stops without it.` : `${w.name} leaves the meeting room.`, 'Send home', () => net.send({ t: 'worker.kill', workerId: id }));
+    confirmDialog(`Stand ${w.name} down?`, on ? `${w.name} is in the review on "${m.title}", which stops without it.` : `${w.name} leaves the Review bay.`, 'Stand down', () => net.send({ t: 'worker.kill', workerId: id }));
     return;
   }
   if (w.worktree) {
@@ -36,6 +36,6 @@ export function confirmSendHome(net: Net, w: WorkerInfo) {
   }
   const body = desk?.station
     ? `This stops its ${session} for everyone, and it forgets what it was asked. The next prompt at the ${where} starts a fresh one.`
-    : `This stops the ${session} at ${where} for everyone and frees the desk.`;
-  confirmDialog(`Send ${w.name} home?`, body, 'Send home', () => net.send({ t: 'worker.kill', workerId: id }));
+    : `This stops the ${session} at ${where} for everyone and frees the console.`;
+  confirmDialog(`Stand ${w.name} down?`, body, 'Stand down', () => net.send({ t: 'worker.kill', workerId: id }));
 }

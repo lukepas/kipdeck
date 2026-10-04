@@ -166,7 +166,7 @@ export function renderUsage() {
   }
   if (s.budget !== undefined) {
     const pct = Math.min(100, (s.today.cost / s.budget) * 100);
-    const state = over ? (s.pauseHiring ? 'Budget spent — no new hires until tomorrow' : 'Budget spent') : `${Math.round(pct)}% of today's budget`;
+    const state = over ? (s.pauseHiring ? 'Budget spent - no new hires until tomorrow' : 'Budget spent') : `${Math.round(pct)}% of today's budget`;
     rows.push(h('div.budget', { class: over ? 'over' : pct >= 80 ? 'near' : '', title: state, role: 'progressbar', 'aria-valuenow': Math.round(pct) }, h('div.fill', { style: `width:${pct}%` })));
   }
   if (s.total.calls > 0 || s.budget !== undefined) rows.push(h('div.row.muted', { title: usageTitle(s.total, 'claude') }, `Claude Code all time ${displayedCost(s.total)} · ${fmtTokens(tokensOf(s.total))} tokens`));

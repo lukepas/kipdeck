@@ -32,7 +32,7 @@ export function installMission(ctx: Ctx, parts: MissionParts) {
     openPull: (number, then) => {
       const it = store.pulls.items.find((p) => p.number === number);
       if (it) openPull(it, net, parts.actions.boardActions(), then);
-      else toast(`PR #${number} isn't on this floor's board yet`, 'warn');
+      else toast(`PR #${number} isn't on this deck's board yet`, 'warn');
     },
     openQueue: () => parts.waiting.showQueue(),
     showTab: (tab) => showMission(tab),

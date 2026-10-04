@@ -168,9 +168,9 @@ function inspectWorktree(workerId: string, ask: () => void): Promise<WorktreeSta
 }
 
 const CLEANUP_LABEL: Record<WorktreeCleanup, string> = {
-  all: 'Send home & delete both',
-  worktree: 'Send home & delete worktree',
-  keep: 'Send home',
+  all: 'Stand down and remove both',
+  worktree: 'Stand down and remove worktree',
+  keep: 'Stand down',
 };
 
 /**
@@ -216,7 +216,7 @@ export function sendHomeDialog(opts: SendHomeOptions) {
       return h('label.choice', {}, r, h('span', {}, title, h('small', {}, sub)));
     }),
   );
-  const status = h('p.wt-status', {}, `Checking what ${branch} holds…`);
+  const status = h('p.wt-status', {}, `Checking what ${branch} holds...`);
   const no = h('button.btn', { type: 'button' }, 'Never mind');
   const form = h(
     'form.modal',
@@ -285,7 +285,7 @@ export function lostWorktreeDialog(opts: LostWorktreeOptions) {
   }[opts.lost.branch];
   const one = h('button.btn.primary', { type: 'button' }, 'Rebuild worktree');
   const all = others.length ? h('button.btn', { type: 'button' }, `Rebuild all ${others.length + 1}`) : null;
-  const home = h('button.btn.danger', { type: 'button' }, 'Send home…');
+  const home = h('button.btn.danger', { type: 'button' }, 'Stand down...');
   const look = opts.openTerminal ? h('button.btn', { type: 'button' }, 'Open terminal') : null;
   const el = h(
     'div.modal.lost-worktree',
@@ -296,7 +296,7 @@ export function lostWorktreeDialog(opts: LostWorktreeOptions) {
       {},
       h('p', { style: 'margin:0 0 10px;font-weight:700' }, `${folder} was deleted outside agent-office, so ${name} ${opts.openTerminal ? 'is running in a folder that no longer exists' : "can't start there"}.`),
       h('p.wt-status', { style: 'margin:0' }, what),
-      others.length ? h('p.wt-status.warn', {}, `${plural(others.length, 'other worker')} on this floor lost ${others.length === 1 ? 'its worktree' : 'their worktrees'} too: ${others.join(', ')}.`) : null,
+      others.length ? h('p.wt-status.warn', {}, `${plural(others.length, 'other worker')} on this deck lost ${others.length === 1 ? 'its worktree' : 'their worktrees'} too: ${others.join(', ')}.`) : null,
     ),
     h('footer', {}, home, h('span.grow'), look, all, one),
   );
@@ -319,11 +319,11 @@ function describeState(s: WorktreeState, branch: string, prefix = ''): { lines: 
   let risky = false;
   if (!s.exists) lines.push(`${prefix}The worktree folder is already gone.`);
   if (s.dirty) {
-    lines.push(`${prefix}${plural(s.dirty, 'uncommitted change')} in the worktree — deleting it loses them.`);
+    lines.push(`${prefix}${plural(s.dirty, 'uncommitted change')} in the worktree - deleting it loses them.`);
     risky = true;
   }
   if (s.unpushed) {
-    lines.push(`${prefix}${plural(s.unpushed, 'commit')} on ${branch} that no remote has — deleting the branch loses them.`);
+    lines.push(`${prefix}${plural(s.unpushed, 'commit')} on ${branch} that no remote has - deleting the branch loses them.`);
     risky = true;
   } else if (s.ahead) lines.push(`${prefix}${plural(s.ahead, 'commit')} on ${branch}, all pushed or merged.`);
   if (!lines.length) lines.push(`${prefix}Nothing on the branch yet and a clean worktree: safe to delete.`);

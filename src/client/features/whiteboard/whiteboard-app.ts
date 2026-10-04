@@ -305,7 +305,7 @@ export function mountWhiteboard(host: HTMLElement, send: (msg: ClientMsg) => voi
         e(WelcomeScreen.Hints.MenuHint),
         e(WelcomeScreen.Hints.ToolbarHint),
         e(WelcomeScreen.Hints.HelpHint),
-        e(WelcomeScreen.Center, null, e(WelcomeScreen.Center.Heading, null, 'Draw together: everyone on this floor sees it live, and it stays up on the board')),
+        e(WelcomeScreen.Center, null, e(WelcomeScreen.Center.Heading, null, 'Sketch the plan. Everyone on this deck sees it, and it stays up on the board')),
       ),
     ),
   );

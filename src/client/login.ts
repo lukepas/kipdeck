@@ -15,7 +15,7 @@ const NAME_KEY = 'agent-office.login-name';
 /** Where to go once in: the 2D view if that's where you were headed (see loginUrl in net.ts), else the office. */
 const NEXT = new URLSearchParams(location.search).get('next') === '/lite' ? '/lite' : '/';
 
-// A sign-in link from the office's terminal (/login#key=…): it works once, so take it out of the
+// A sign-in link from the office's terminal (/login#key=...): it works once, so take it out of the
 // address bar and trade it for a session. The key is after the #, so it never reaches a server log.
 const linkKey = new URLSearchParams(location.hash.slice(1)).get('key');
 if (linkKey) {

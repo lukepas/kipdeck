@@ -206,7 +206,7 @@ export function timeAgo(iso: string | number): string {
 
 /** `text` cut to at most `max` characters, with an ellipsis when it was longer. */
 export function clip(text: string, max: number): string {
-  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+  return text.length > max ? `${text.slice(0, max - 3)}...` : text;
 }
 
 export const STATUS_LABEL: Record<string, string> = {

@@ -86,9 +86,9 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
     // Mission control first among the actions: what needs someone, across every floor.
     const chip = attentionChip();
     out.push({ icon: 'mission', kind: 'Action', title: 'Mission control', detail: chip.text || 'Nobody needs you right now', keywords: ['attention', 'stuck', 'waiting', 'needs you', 'review', 'roster'], open: () => parts.mission.showMission('attention') });
-    out.push({ icon: 'mission', kind: 'Action', title: 'Edit the mission', detail: store.mission.statement ? 'What this floor is for, and its milestones' : 'This floor has no mission yet', keywords: ['goals', 'milestones', 'mission statement'], open: () => parts.mission.showMission('goals') });
+    out.push({ icon: 'mission', kind: 'Action', title: 'Edit the mission', detail: store.mission.statement ? 'What this deck is for, and its milestones' : 'This deck has no mission yet', keywords: ['goals', 'milestones', 'mission statement'], open: () => parts.mission.showMission('goals') });
     out.push({ icon: 'review', kind: 'Action', title: 'Review finished work', detail: 'Done work, pull requests to see to and reviews requested of you, oldest first', keywords: ['review', 'done', 'inbox', 'merge'], open: () => parts.mission.showMission('review') });
-    out.push({ icon: 'clock', kind: 'Action', title: 'Timeline', detail: 'What happened on every floor, newest first', keywords: ['activity', 'history', 'log', 'events'], open: () => parts.mission.showMission('timeline') });
+    out.push({ icon: 'clock', kind: 'Action', title: 'Timeline', detail: 'What happened on every deck, newest first', keywords: ['activity', 'history', 'log', 'events'], open: () => parts.mission.showMission('timeline') });
     out.push({ icon: 'reminder', kind: 'Action', title: 'While you were away', detail: 'What happened since you were last here', keywords: ['digest', 'catch up', 'missed', 'away'], open: () => parts.mission.showDigest() });
 
     const free = nearestFreeDesk();
@@ -99,7 +99,7 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
       title: 'Deploy a unit',
       detail: free ? `At ${free.label}, the free desk nearest you` : 'Every desk is taken',
       keywords: ['new worker', 'hire a worker', 'spawn an agent', 'new unit'],
-      open: free ? hireAt(free) : () => toast('Every desk on this floor is taken', 'warn'),
+      open: free ? hireAt(free) : () => toast('Every desk on this deck is taken', 'warn'),
       walk: free ? () => walkThen(deskSpot(free)!, free.label, hireAt(free), free) : undefined,
     });
     out.push(at('queue', 'the task queue', { icon: 'queue', kind: 'Action', title: 'Open the task queue', detail: 'Issues and tasks waiting for a unit', keywords: ['backlog', 'tasks'], open: showQueue }));
@@ -151,7 +151,7 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
     }
     for (const p of store.peers.values()) {
       if (p.id === store.you) continue;
-      const floor = store.onMyFloor(p) ? 'On this floor' : `On the ${store.floors.find((f) => f.id === p.floor)?.name ?? 'other'} floor`;
+      const floor = store.onMyFloor(p) ? 'On this deck' : `On the ${store.floors.find((f) => f.id === p.floor)?.name ?? 'other'} deck`;
       // As clicking them under "In the office" does: over to them, on their floor if need be.
       out.push({ icon: 'operator', kind: 'Operator', title: p.name, detail: floor, open: () => parts.walking.walkTo(p.id) });
     }

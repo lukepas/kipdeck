@@ -40,7 +40,7 @@ function highlight(text: string, needle: string): (string | HTMLElement)[] {
 export function openSearch(openTerminal: (workerId: string, find: TerminalFind) => void) {
   const input = h('input', {
     type: 'text',
-    placeholder: 'Search the chat and every terminal…',
+    placeholder: 'Search the chat and every terminal...',
     maxlength: SEARCH_MAX,
     autocomplete: 'off',
     spellcheck: 'false',
@@ -72,7 +72,7 @@ export function openSearch(openTerminal: (workerId: string, find: TerminalFind) 
       error = '';
       return render();
     }
-    status.textContent = 'Searching…';
+    status.textContent = 'Searching...';
     try {
       const r = await search(q);
       if (mine !== seq) return;
@@ -132,7 +132,7 @@ export function openSearch(openTerminal: (workerId: string, find: TerminalFind) 
     }
     const count = found.chat.length + [...byWorker.values()].reduce((n, l) => n + l.length, 0);
     status.textContent = !count
-      ? `Nothing in the chat or any terminal matches “${found.q.trim()}”.`
+      ? `Nothing in the chat or any terminal matches "${found.q.trim()}".`
       : `${count} ${count === 1 ? 'line' : 'lines'}, newest first${found.more ? ' (only the newest are shown; add words to narrow it down)' : ''}.`;
     const groups: HTMLElement[] = [];
     if (found.chat.length) groups.push(h('section.search-group', {}, h('h4', {}, 'Chat'), h('ul', {}, ...found.chat.map((c) => chatRow(c, needle)))));

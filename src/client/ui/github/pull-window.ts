@@ -108,7 +108,7 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
     );
     const done = files ? files.filter((f) => reviewed.mark(f) === 'reviewed').length : 0;
     tabConv.replaceChildren(...nodes('Conversation', detail ? h('span.gh-count', {}, String(detail.comments.length + detail.reviews.length + detail.reviewComments.filter((c) => !c.replyTo).length)) : null));
-    tabFiles.replaceChildren(...nodes('Files changed', files ? h('span.gh-count', {}, String(files.length)) : null, files?.length ? h('span.gh-progress', { class: done === files.length ? 'all' : '' }, `✓ ${done}/${files.length}`) : null));
+    tabFiles.replaceChildren(...nodes('Files changed', files ? h('span.gh-count', {}, String(files.length)) : null, files?.length ? h('span.gh-progress', { class: done === files.length ? 'all' : '', title: 'Files reviewed' }, icon('check', 11), ` ${done}/${files.length}`) : null));
     tabConv.classList.toggle('on', tab === 'conversation');
     tabFiles.classList.toggle('on', tab === 'files');
     tabConv.setAttribute('aria-selected', String(tab === 'conversation'));
@@ -118,23 +118,23 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
 
     const isOpen = it.state === 'OPEN';
     const conflicts = !!detail && conflicted(detail);
-    const merge = h(conflicts ? 'button.btn' : 'button.btn.primary', { type: 'button', disabled: !detail, title: detail ? 'Merge this pull request' : 'Loading…' }, 'Merge…');
+    const merge = h(conflicts ? 'button.btn' : 'button.btn.primary', { type: 'button', disabled: !detail, title: detail ? 'Merge this pull request' : 'Loading...' }, 'Merge...');
     merge.addEventListener('click', () => detail && openMerge(it, detail, net, handToWorker, loadAll));
     const w = workerForPull(store.workers.values(), it);
     footBtns.replaceChildren(
       ...nodes(
       w ? h('button.btn', { type: 'button', onclick: () => actions.goToDesk(w.deskId) }, `Go to ${w.name}'s desk`) : null,
-      h('button.btn', { type: 'button', title: 'Send a worker your own prompt about this PR', onclick: () => actions.ask(pullContext(it), `Ask about PR #${it.number}`) }, 'Ask a worker…'),
+      h('button.btn', { type: 'button', title: 'Send a worker your own prompt about this PR', onclick: () => actions.ask(pullContext(it), `Ask about PR #${it.number}`) }, 'Ask a worker...'),
       isOpen ? h('button.btn', { type: 'button', onclick: () => actions.assign(reviewPrompt(it), `Review PR #${it.number}`) }, 'Review') : null,
       isOpen
-        ? h('button.btn', { type: 'button', title: 'A few workers review it in the meeting room, each through its own lens, and the office posts one combined review', onclick: () => actions.meeting({ pattern: 'review', pr: it.number, title: `Review of PR #${it.number}`, prompt: officePrompt('pull.panel', pullVars(it)) }) }, 'Review panel…')
+        ? h('button.btn', { type: 'button', title: 'A few workers review it in the meeting room, each through its own lens, and the office posts one combined review', onclick: () => actions.meeting({ pattern: 'review', pr: it.number, title: `Review of PR #${it.number}`, prompt: officePrompt('pull.panel', pullVars(it)) }) }, 'Review panel...')
         : null,
       conflicts
         ? h('button.btn.primary', { type: 'button', title: 'A new worker merges the base in, resolves the conflicts, gets the checks green, then merges', onclick: handToWorker }, 'Fix conflicts & merge')
         : isOpen
           ? h('button.btn', { type: 'button', title: 'A worker addresses the review comments, gets the checks green, then merges', onclick: handToWorker }, 'Fix comments & merge')
           : null,
-      isOpen ? h('button.btn', { type: 'button', title: 'Close this pull request without merging it', onclick: () => openClose('pull', it, net, loadAll) }, 'Close PR…') : null,
+      isOpen ? h('button.btn', { type: 'button', title: 'Close this pull request without merging it', onclick: () => openClose('pull', it, net, loadAll) }, 'Close PR...') : null,
       isOpen ? merge : null,
       ),
     );
@@ -149,7 +149,7 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
   const renderConv = () => {
     thread.replaceChildren(commentCard({ id: 'body', author: it.author, body: detail?.body ?? it.body, createdAt: it.createdAt, url: it.url }, itemUrl, 'opened this'));
     if (detailError) return thread.append(errorBox(detailError, loadAll));
-    if (!detail) return thread.append(spinnerRow('Loading the conversation…'));
+    if (!detail) return thread.append(spinnerRow('Loading the conversation...'));
     const d = detail;
     const replies = repliesOf(d.reviewComments);
     const items: { at: string; node: HTMLElement }[] = [
@@ -181,7 +181,7 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
     const st = mergeStatus(d);
     const box = h('section.gh-mergebox', { class: st.cls }, h('div.gh-status', { class: st.cls }, h('span', {}, st.icon), st.text), d.checks.length ? checksList(d.checks) : null);
     if (it.state === 'OPEN' && !d.trust.trusted) box.append(h('div.gh-status.warn.gh-untrusted', {}, h('span', {}, icon('warning', 16)), `${d.trust.reason} Workers won't check it out or build it from here.`));
-    if (it.state === 'OPEN' && st.can) box.append(h('div.gh-mergebox-go', {}, h('button.btn.primary', { type: 'button', onclick: () => openMerge(it, d, net, handToWorker, loadAll) }, 'Merge…')));
+    if (it.state === 'OPEN' && st.can) box.append(h('div.gh-mergebox-go', {}, h('button.btn.primary', { type: 'button', onclick: () => openMerge(it, d, net, handToWorker, loadAll) }, 'Merge...')));
     if (conflicted(d)) box.append(h('div.gh-mergebox-go', {}, h('button.btn.primary', { type: 'button', onclick: handToWorker }, 'New worker: fix conflicts & merge')));
     else if (it.state === 'OPEN' && !st.can && !d.isDraft) box.append(h('div.gh-mergebox-go', {}, h('button.btn', { type: 'button', onclick: handToWorker }, 'Have a worker fix it & merge')));
     thread.append(box);
@@ -219,7 +219,7 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
     // Big files and lock files wait for a click, so a huge PR doesn't lock up the window.
     if (s.big && !open.get(f.path)) {
       s.body.replaceChildren(
-        h('div.pd-big', {}, looksGenerated(f.path) ? 'Generated or lock file — not shown by default.' : `Large diff (${f.lines.length} lines) — not shown by default.`, h('button.btn', { type: 'button', onclick: () => (open.set(f.path, true), buildBody(f)) }, 'Show diff')),
+        h('div.pd-big', {}, looksGenerated(f.path) ? 'Generated or lock file - not shown by default.' : `Large diff (${f.lines.length} lines) - not shown by default.`, h('button.btn', { type: 'button', onclick: () => (open.set(f.path, true), buildBody(f)) }, 'Show diff')),
       );
       return;
     }
@@ -274,7 +274,7 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
 
   const side = h('aside.pd-side');
   const fileList = h('ul.pd-files', { role: 'tree' });
-  const filterInput = h('input', { type: 'text', placeholder: 'Filter files…', 'aria-label': 'Filter files' }) as HTMLInputElement;
+  const filterInput = h('input', { type: 'text', placeholder: 'Filter files...', 'aria-label': 'Filter files' }) as HTMLInputElement;
   filterInput.addEventListener('input', () => {
     filter = filterInput.value;
     renderFiles();
@@ -297,14 +297,14 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
       {
         type: 'button',
         class: mark,
-        title: mark === 'reviewed' ? 'Reviewed — click to unmark' : mark === 'stale' ? 'Changed since you reviewed it' : 'Mark as reviewed',
+        title: mark === 'reviewed' ? 'Reviewed - click to unmark' : mark === 'stale' ? 'Changed since you reviewed it' : 'Mark as reviewed',
         'aria-pressed': String(mark === 'reviewed'),
         onclick: ((e: Event) => {
           e.stopPropagation();
           setReviewed(f, mark !== 'reviewed');
         }) as EventListener,
       },
-      mark === 'reviewed' ? '✓' : mark === 'stale' ? '!' : '',
+      mark === 'reviewed' ? icon('check', 12) : mark === 'stale' ? '!' : '',
     );
   };
 
@@ -348,7 +348,7 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
           h('span.pd-caret', {}, shut ? '▸' : '▾'),
           h('span', {}, icon('docs', 14)),
           h('span.pd-path', {}, sub.name),
-          all ? h('span.pd-done', { title: 'Everything in here is reviewed' }, '✓') : null,
+          all ? h('span.pd-done', { title: 'Everything in here is reviewed' }, icon('check', 12)) : null,
         ),
       );
       if (!shut) dirRows(sub, depth + 1, visible, out);
@@ -384,7 +384,7 @@ export function openPull(first: GhPull, net: Net, actions: BoardActions, then?: 
     filesPane.replaceChildren();
     sections.clear();
     if (diffError) return filesPane.append(errorBox(diffError, loadAll));
-    if (!files) return filesPane.append(spinnerRow('Loading the diff…'));
+    if (!files) return filesPane.append(spinnerRow('Loading the diff...'));
     const modeBtn = (m: 'tree' | 'list', label: string) =>
       h(
         'button.btn',

@@ -193,7 +193,7 @@ export function repliesOf(comments: GhReviewComment[]): Map<number, GhReviewComm
 export function renderFileDiff(f: DiffFile, comments: GhReviewComment[], itemUrl: string): HTMLElement {
   const out = h('div.pd-lines');
   if (f.binary) {
-    out.append(h('div.pd-note', {}, 'Binary file — not shown.'));
+    out.append(h('div.pd-note', {}, 'Binary file - not shown.'));
     return out;
   }
   if (!f.lines.length) {

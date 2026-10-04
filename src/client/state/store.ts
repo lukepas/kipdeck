@@ -23,7 +23,7 @@ export interface ScreenState {
 
 /**
  * What the store fires when something changes, for store.on. These are the core's; each slice adds its
- * own (`declare module '../store' { interface Topics { … } }`).
+ * own (`declare module '../store' { interface Topics { ... } }`).
  */
 export interface Topics {
   peers: true;

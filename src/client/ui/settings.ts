@@ -24,9 +24,9 @@ const WEBHOOK_NAME: Record<WebhookKind, string> = { slack: 'Slack', discord: 'Di
 export type SettingsPane = 'you' | 'sound' | 'notify' | 'building' | 'workers' | 'bounties';
 
 const PANES: { id: SettingsPane; icon: IconName; label: string; blurb: string }[] = [
-  { id: 'you', icon: 'operator', label: 'You', blurb: 'How you look, how you see the office, and how you’re signed in.' },
+  { id: 'you', icon: 'operator', label: 'You', blurb: 'How you look, how you see the office, and how you\'re signed in.' },
   { id: 'sound', icon: 'volume', label: 'Sound & voice', blurb: 'How loud the office is for you, and how voice chat works.' },
-  { id: 'notify', icon: 'bell', label: 'Notifications', blurb: 'Hear about a unit that needs someone, or finished, while you’re somewhere else.' },
+  { id: 'notify', icon: 'bell', label: 'Notifications', blurb: 'Hear about a unit that needs someone, or finished, while you\'re somewhere else.' },
   { id: 'building', icon: 'decks', label: 'Decks', blurb: 'Where new decks are cloned.' },
   { id: 'workers', icon: 'units', label: 'Units', blurb: 'What units start on, how many run at once, when they stand down and what the deck tells them.' },
   { id: 'bounties', icon: 'proof', label: 'Bounties', blurb: 'Proof of Merge: devnet USDC on issues, paid only when a person merges the office\'s pull request.' },
@@ -36,7 +36,7 @@ const PANES: { id: SettingsPane; icon: IconName; label: string; blurb: string }[
 type Scope = 'you' | 'floor' | 'office';
 const SCOPE: Record<Scope, [label: string, title: string]> = {
   you: ['Just you', 'Only for you, kept in this browser'],
-  floor: ['This floor', 'The same for everyone on this floor'],
+  floor: ['This deck', 'The same for everyone on this deck'],
   office: ['Everyone', 'The same for everyone in the building'],
 };
 
@@ -174,16 +174,16 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     }
     notifyNote.textContent =
       perm === 'unsupported'
-        ? 'This browser can’t show notifications from the office here. They need https or localhost (an SSH tunnel counts).'
+        ? 'This browser can\'t show notifications from the office here. They need https or localhost (an SSH tunnel counts).'
         : perm === 'denied'
           ? 'Your browser blocks notifications from the office. Allow them in the site settings (the icon left of the address), then open this again.'
-          : 'When a worker needs you, finishes or gets stuck while you’re in another tab or app, you get a notification. Click it to go straight to that worker; for one that needs you or is done, you’re put at its desk with its terminal open. The tab title counts the workers that need someone either way.';
+          : 'When a worker needs you, finishes or gets stuck while you\'re in another tab or app, you get a notification. Click it to go straight to that worker; for one that needs you or is done, you\'re put at its desk with its terminal open. The tab title counts the workers that need someone either way.';
   };
   paintNotify();
 
   // The office's Slack / Discord webhook, shared by everyone.
   const hookStatus = h('p.setting-note');
-  const hookInput = h('input', { type: 'text', placeholder: 'https://hooks.slack.com/services/…', 'aria-label': 'Slack or Discord webhook URL', spellcheck: 'false', autocomplete: 'off' }) as HTMLInputElement;
+  const hookInput = h('input', { type: 'text', placeholder: 'https://hooks.slack.com/services/...', 'aria-label': 'Slack or Discord webhook URL', spellcheck: 'false', autocomplete: 'off' }) as HTMLInputElement;
   const hookSave = h('button.btn.primary', { type: 'button' }, 'Save');
   const hookTest = h('button.btn', { type: 'button' }, 'Send a test');
   const hookRemove = h('button.btn.danger', { type: 'button' }, 'Remove');
@@ -200,7 +200,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     hookSave.textContent = webhook ? 'Replace' : 'Save';
     hookStatus.classList.toggle('bad', !!error);
     hookStatus.textContent = !webhook
-      ? 'Paste an incoming https webhook from Slack or Discord, and the office posts to that channel when a worker needs input, finishes or gets stuck and nobody has its terminal open. It’s for everyone in the office.'
+      ? 'Paste an incoming https webhook from Slack or Discord, and the office posts to that channel when a worker needs input, finishes or gets stuck and nobody has its terminal open. It\'s for everyone in the office.'
       : error
         ? `Posting to ${WEBHOOK_NAME[webhook.kind]} (${webhook.hint}) failed: ${error}`
         : `Posting to ${WEBHOOK_NAME[webhook.kind]} (${webhook.hint}), set by ${webhook.by} ${timeAgo(webhook.at)}${lastSentAt ? ` · last message ${timeAgo(lastSentAt)}` : ''}.`;
@@ -243,7 +243,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     if (!agentTouched) agent.set(now);
     agentNote.textContent =
       'Every worker starts on this: hired at a desk, handed an issue or a pull request from the boards, taken off the queue, the board agents and meetings. Where you start one, Edit picks another just for it.' +
-      (picked ? ` Set by ${picked.by} ${timeAgo(picked.at)}.` : ' It’s the agent the office was started with, on its own default model.') +
+      (picked ? ` Set by ${picked.by} ${timeAgo(picked.at)}.` : ' It\'s the agent the office was started with, on its own default model.') +
       (admin ? '' : ' Admins can change it.');
   };
   paintAgent();
@@ -262,9 +262,9 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
   const promptsNote = h('p.setting-note');
   const paintPrompts = () => {
     const n = rewrittenPrompts();
-    promptsOpen.textContent = store.me.admin ? 'Edit the prompts…' : 'Read the prompts…';
+    promptsOpen.textContent = store.me.admin ? 'Edit the prompts...' : 'Read the prompts...';
     promptsNote.textContent =
-      'What Hand to a worker, Review and the boards’ other buttons tell a worker, the note the queue adds to a task, the board agents’ briefs, the meeting room’s parts and the sign writer’s instructions. ' +
+      'What Hand to a worker, Review and the boards\' other buttons tell a worker, the note the queue adds to a task, the board agents\' briefs, the meeting room\'s parts and the sign writer\'s instructions. ' +
       (n ? `${n} of them rewritten.` : 'All as the office wrote them.') +
       (store.me.admin ? '' : ' Admins can rewrite them.');
   };
@@ -285,8 +285,8 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     limitClear.classList.toggle('hidden', !m.set);
     const now =
       m.limit === undefined
-        ? `No limit: the office hires a worker for every free seat. ${m.workers} ${m.workers === 1 ? 'is' : 'are'} here now, across every floor.`
-        : `At most ${m.limit} worker${m.limit === 1 ? '' : 's'} at once, across every floor (${m.workers} now), shells and board agents too. Hiring past that is refused.`;
+        ? `No limit: the office hires a worker for every free seat. ${m.workers} ${m.workers === 1 ? 'is' : 'are'} here now, across every deck.`
+        : `At most ${m.limit} worker${m.limit === 1 ? '' : 's'} at once, across every deck (${m.workers} now), shells and board agents too. Hiring past that is refused.`;
     const from = m.set ? ` Set by ${m.set.by} ${timeAgo(m.set.at)}.` : '';
     const cap = m.ceiling ? ` The office was started with --max-workers ${m.ceiling}, so it can't go any higher.` : '';
     limitNote.textContent = now + from + cap + (admin ? '' : ' Admins can change it.');
@@ -305,14 +305,14 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
   limitClear.addEventListener('click', () => net.send({ t: 'machine.limit', limit: null }));
 
   // Whether a worker whose pull request merged goes home by itself, for everyone.
-  const leaveRow = h('div.seg', { role: 'radiogroup', 'aria-label': 'Workers whose pull request merged' });
+  const leaveRow = h('div.seg', { role: 'radiogroup', 'aria-label': 'Units whose pull request merged' });
   const leaveNote = h('p.setting-note');
   const paintLeave = () => {
     const { on, by, at } = store.leaveOnMerge;
     leaveRow.replaceChildren(
       ...([
-        [true, 'Go home by themselves'],
-        [false, 'Stay until sent home'],
+        [true, 'Stand down by themselves'],
+        [false, 'Stay until stood down'],
       ] as const).map(([value, label]) =>
         h(
           'button.btn',
@@ -330,9 +330,9 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       ),
     );
     const now = on
-      ? 'Once a worker’s pull request merges, it goes home as soon as it isn’t working or waiting on you and nobody has its terminal open, and its worktree and branch are deleted. A worktree with uncommitted changes, or commits that aren’t on GitHub, is kept.'
-      : 'A worker whose pull request merged stays at its desk, outlined in purple, until someone sends it home. Turned on, the ones already merged go too.';
-    leaveNote.textContent = `${now} It’s the same for everyone in the building${by ? `, set by ${by}${at ? ` ${timeAgo(at)}` : ''}` : ''}.`;
+      ? "Once a unit's pull request merges, it stands down as soon as it isn't working or waiting on you and nobody has its terminal open, and its worktree and branch are deleted. A worktree with uncommitted changes, or commits that aren't on GitHub, is kept."
+      : 'A unit whose pull request merged stays at its console, outlined in violet, until someone stands it down. Turned on, the ones already merged go too.';
+    leaveNote.textContent = `${now} It's the same for everyone in the building${by ? `, set by ${by}${at ? ` ${timeAgo(at)}` : ''}` : ''}.`;
   };
   paintLeave();
 
@@ -350,9 +350,9 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     dirRow.classList.toggle('hidden', !admin);
     dirActions.classList.toggle('hidden', !admin || !custom);
     dirNote.textContent =
-      `New projects from the elevator are cloned into ${dir}/<owner>/<repo> on the office’s machine.` +
+      `New projects from the elevator are cloned into ${dir}/<owner>/<repo> on the office's machine.` +
       (custom && by && at ? ` Set by ${by} ${timeAgo(at)}.` : '') +
-      (admin ? ' A checkout of the same repository that’s already there is used as it is. Floors you already have stay where they are.' : ' An admin can move it.');
+      (admin ? ' A checkout of the same repository that\'s already there is used as it is. Decks you already have stay where they are.' : ' An admin can move it.');
   };
   paintDir();
   const saveDir = () => {
@@ -400,7 +400,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     sound: [
       setting('Sound cues', 'you', soundRow, h('p.setting-note', {}, 'Off until you turn them on. Four short cues, one per change worth hearing from another tab: a unit needs you (two rising notes), a unit is stuck (two low ticks), a unit is ready for review (one soft tone) and a merge is proven on chain (a low thunk and a tick). The deck makes no other sound, and voice chat has its own level.')),
       setting('When a unit needs you', 'you', alarmRow, h('p.setting-note', {}, 'The needs-you cue the moment a unit on your deck stops to ask you something or wants a permission. Keep reminding me plays it again, softly, every 30 seconds until someone opens the terminal of that unit. A unit you snoozed in Mission control stays quiet. It plays only while sound cues are on.')),
-      setting('Voice chat', 'you', talkRow, h('p.setting-note', {}, 'Either way, V joins voice, holding V talks and you’re muted once you let go, and M mutes or unmutes. With push to talk you join muted. Leave voice from the menu.')),
+      setting('Voice chat', 'you', talkRow, h('p.setting-note', {}, 'Either way, V joins voice, holding V talks and you\'re muted once you let go, and M mutes or unmutes. With push to talk you join muted. Leave voice from the menu.')),
     ],
     notify: [
       setting('Desktop notifications', 'you', notifyRow, notifyNote),
@@ -410,9 +410,9 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       setting('Workspace folder', 'office', dirRow, dirActions, dirNote),
     ],
     workers: [
-      setting('Default worker', 'office', agentNow, agent.element, agentActions, agentNote),
-      setting('Worker limit', 'office', limitRow, limitNote),
-      setting('Workers whose pull request merged', 'office', leaveRow, leaveNote),
+      setting('Default unit', 'office', agentNow, agent.element, agentActions, agentNote),
+      setting('Unit limit', 'office', limitRow, limitNote),
+      setting('Units whose pull request merged', 'office', leaveRow, leaveNote),
       setting('Prompts', 'office', promptsOpen, promptsNote),
     ],
     bounties: [setting('Proof of Merge bounties', 'office', ...bounty.nodes), setting('Public showcase', 'office', ...pom.nodes)],

@@ -7,7 +7,7 @@ import type { Collider, DeskView, Interactable, Office } from './types';
 
 /*
  * The office as the workers know it: where the seats and the boards are, what's in the way, and how
- * workers walk in and out. The office has a great deal more of its own (the elevator, the lounge…).
+ * workers walk in and out. The office has a great deal more of its own (the elevator, the lounge...).
  */
 
 /** The ways a worker walks. */

@@ -88,7 +88,7 @@ export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
         it ??= o.userData.interact as Interactable | undefined;
       }
       if (!shown) continue;
-      if (!it || it.off) return null; // a wall, the floor, a plant… is in the way
+      if (!it || it.off) return null; // a wall, the floor, a plant... is in the way
       // How close you must be to use it is each kind's own (see ctx.interactions).
       return { it, near: hit.point.distanceTo(eye) <= ctx.interactions.reach(it.kind) + slack, hit };
     }

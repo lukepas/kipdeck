@@ -20,7 +20,7 @@ export function goalPicker(): GoalPicker {
     h('option', { value: '', selected: !open.some((m) => m.id === store.mission.active) }, 'No milestone'),
   ) as HTMLSelectElement;
   return {
-    element: h('label.goal-pick', { title: "The milestone of the floor's mission this work serves" }, 'For goal', select),
+    element: h('label.goal-pick', { title: "The milestone of the deck's mission this work serves" }, 'For goal', select),
     value: () => select.value || undefined,
   };
 }

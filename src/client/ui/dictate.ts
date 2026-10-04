@@ -44,7 +44,7 @@ onModalChange(() => {
 
 /** The end of what's being heard, which is the part that's changing. */
 function tail(text: string, max = 90): string {
-  return text.length > max ? `…${text.slice(text.length - max)}` : text;
+  return text.length > max ? `...${text.slice(text.length - max)}` : text;
 }
 
 export function dictation(target: DictateTarget, opts: { label?: string } = {}): Dictation {

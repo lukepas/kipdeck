@@ -104,7 +104,7 @@ export function renderTimeline(deps: MissionDeps, net: Net): HTMLElement {
   const filters = !t.events.length ? null : h(
     'div.mc-filters',
     {},
-    showFloor ? picker('Floor', 'floor', 'All floors', new Map(store.floors.filter((f) => !f.cloning).map((f) => [f.id, f.name]))) : null,
+    showFloor ? picker('Floor', 'floor', 'All decks', new Map(store.floors.filter((f) => !f.cloning).map((f) => [f.id, f.name]))) : null,
     goals.size ? picker('Goal', 'goal', 'Every goal', goals) : null,
     workers.size ? picker('Worker', 'worker', 'Every worker', workers) : null,
   );

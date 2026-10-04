@@ -33,7 +33,7 @@ export function installFocus(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'walk
         if (cut.length + ch.length >= 60) break;
         cut += ch;
       }
-      what = `${cut}…`;
+      what = `${cut}...`;
     }
     if (what === doingSent && reading === readingSent) return;
     doingSent = what;

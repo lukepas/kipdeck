@@ -15,3 +15,9 @@
 .floor-item .floor-stats { display: flex; gap: 6px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .floor-item .floor-stats { font: 500 12px var(--font-mono); }
 .floor-item .floor-stats .waiting { color: var(--signal); }
+/* A deck's units by state, as on the top bar. */
+.floor-menu .deck-chip { display: inline-flex; align-items: center; gap: 4px; min-width: 32px; font: 500 12px var(--font-mono); color: var(--muted); }
+.floor-menu .deck-chip.needs-you { color: var(--signal); }
+.floor-menu .deck-chip.stuck { color: var(--stuck); }
+.floor-menu .deck-chip.review .ico { color: var(--review); }
+.floor-menu .floor-stats { display: flex; gap: 4px; align-items: center; }

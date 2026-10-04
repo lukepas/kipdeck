@@ -45,7 +45,7 @@ export function commentBox(kind: 'issue' | 'pull', number: number, itemUrl: stri
   const sync = () => {
     post.disabled = busy || !ta.value.trim();
     ta.readOnly = busy;
-    post.textContent = busy ? 'Posting…' : 'Comment';
+    post.textContent = busy ? 'Posting...' : 'Comment';
   };
   const saveDraft = () => {
     if (ta.value) savePref(draftKey, ta.value);

@@ -33,7 +33,7 @@ function inviteMessage(t: TeamState, os: Os): string {
     '',
     tunnelCommand(t, os),
     '',
-    `It opens the office at http://localhost:${t.port} — sign in (with the office password, or the account link you get from me) and keep that terminal open while you're in.`,
+    `It opens the office at http://localhost:${t.port} - sign in (with the office password, or the account link you get from me) and keep that terminal open while you're in.`,
     t.fingerprint ? `The first time, ssh asks whether to trust the server. Only say yes if it shows ${t.fingerprint}` : '',
   ]
     .filter((l, i, all) => l || all[i - 1])
@@ -72,7 +72,7 @@ export async function copy(text: string): Promise<boolean> {
 export function copyButton(label: string, text: () => string, cls = '') {
   const btn = h('button.btn', { type: 'button', class: cls }, label);
   btn.addEventListener('click', async () => {
-    btn.textContent = (await copy(text())) ? '✓ Copied' : 'Copy failed';
+    btn.textContent = (await copy(text())) ? 'Copied' : 'Copy failed';
     setTimeout(() => (btn.textContent = label), 1600);
   });
   return btn;
@@ -106,7 +106,7 @@ export function openTeam(net: Net) {
     const github = input.value.trim();
     if (!github) return input.focus();
     inviteBtn.disabled = true;
-    setStatus(`Fetching ${github}'s keys from GitHub…`, 'busy');
+    setStatus(`Fetching ${github}'s keys from GitHub...`, 'busy');
     net.send({ t: 'team.invite', github });
   });
 
@@ -115,7 +115,7 @@ export function openTeam(net: Net) {
     const t = store.team;
     const typing = document.activeElement === input;
     body.replaceChildren();
-    if (!t) return body.append(h('p.empty', {}, 'Loading…'));
+    if (!t) return body.append(h('p.empty', {}, 'Loading...'));
     footer.classList.toggle('hidden', !!t.unavailable);
     if (t.unavailable) return body.append(h('p', { style: 'margin:0;font-weight:700' }, t.unavailable));
     if (t.tailnet) return renderTailnet(t);
@@ -123,7 +123,7 @@ export function openTeam(net: Net) {
     body.append(
       h('label', {}, 'Invite someone by their GitHub username'),
       form,
-      h('p.note', {}, 'Their SSH keys from github.com/<username>.keys can open a tunnel to this office — nothing else: no shell on the machine, no other ports.'),
+      h('p.note', {}, 'Their SSH keys from github.com/<username>.keys can open a tunnel to this office - nothing else: no shell on the machine, no other ports.'),
     );
     if (status) body.append(status);
     if (t.error) body.append(h('p.team-status.error', {}, t.error));
@@ -172,7 +172,7 @@ export function openTeam(net: Net) {
         link('machines', 'Machines'),
         ' page, open ',
         h('code', {}, t.tailnet!.split('.')[0]),
-        ', choose Share… and send them the link. Once they accept, they reach this machine and nothing else of yours. Or add them to your network under ',
+        ', choose Share... and send them the link. Once they accept, they reach this machine and nothing else of yours. Or add them to your network under ',
         link('users', 'Users'),
         '.',
       ),

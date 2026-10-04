@@ -47,7 +47,7 @@ export function openRepoPulls(workerId: string, actions: RepoPullsActions) {
         return h(
           'li',
           {},
-          h('span.name', {}, `${r.name}`, h('small', {}, floor ? `${floor} floor${r.floor ? '' : ' · this one'}` : 'no longer in the building')),
+          h('span.name', {}, `${r.name}`, h('small', {}, floor ? `${floor} deck${r.floor ? '' : ' · this one'}` : 'no longer in the building')),
           pr
             ? h('button.btn', { type: 'button', title: r.floor ? 'Open it on GitHub' : 'Open it', onclick: () => (r.floor ? window.open(pr.url, '_blank', 'noopener') : (modal.close(), actions.openPull(pr.number, pr.url))) }, `#${pr.number}${r.floor ? '' : ''}`)
             : h('span.none', {}, 'No PR yet'),
@@ -58,8 +58,8 @@ export function openRepoPulls(workerId: string, actions: RepoPullsActions) {
     const busy = isBusy(w.status);
     missing.classList.toggle('hidden', repos.every((r) => r.pr));
     missing.disabled = !!w.prOpening || busy;
-    missing.textContent = w.prOpening ? 'Opening…' : 'Open the missing PRs';
-    missing.title = busy ? `${w.name} is still at it — wait until it's done` : 'Pushes the branch in each repository with commits and no pull request yet, and opens one there';
+    missing.textContent = w.prOpening ? 'Opening...' : 'Open the missing PRs';
+    missing.title = busy ? `${w.name} is still at it - wait until it's done` : 'Pushes the branch in each repository with commits and no pull request yet, and opens one there';
   };
 
   const unsub = store.on('workers', () => render());

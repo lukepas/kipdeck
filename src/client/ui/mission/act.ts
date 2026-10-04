@@ -98,7 +98,7 @@ export function runAction(deps: MissionDeps, e: RosterEntry, action: NextAction 
       case 'give-task':
         return openPrompt({
           title: `Give ${w.name} a task`,
-          subtitle: store.mission.statement ? 'It already knows the floor\'s mission; say what to do.' : undefined,
+          subtitle: store.mission.statement ? 'It already knows the deck\'s mission; say what to do.' : undefined,
           onSubmit: (text) => deps.net.send({ t: 'worker.prompt', workerId: w.id, prompt: text }),
         });
     }
@@ -171,7 +171,7 @@ export function snoozeReminder(net: Net, r: Reminder, until: number | 'change' |
 
 /** Clicking an event on the timeline: the worker (when it's still here), its pull request, its milestone, else its floor. */
 export function openEvent(deps: MissionDeps, ev: TimelineEvent) {
-  const floorName = store.floors.find((f) => f.id === ev.floor)?.name ?? 'its floor';
+  const floorName = store.floors.find((f) => f.id === ev.floor)?.name ?? 'its deck';
   const e = ev.worker ? store.rosterEntry(ev.worker) : undefined;
   if (e) return runAction(deps, e, 'terminal');
   onFloor(deps, { floor: ev.floor, floorName, what: ev.name ?? 'what happened' }, () => {

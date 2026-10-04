@@ -1,5 +1,6 @@
 // The chat in the corner: the latest lines, each fading away a while after it came in.
 
+import { icon } from './icons';
 import { store } from '../state';
 import type { ChatLine } from '../../shared/protocol';
 import { $, h } from './dom';
@@ -21,7 +22,7 @@ export function renderChat() {
         'li',
         { style: `animation-delay:${Math.round(CHAT_LINGER - (now - seen))}ms` },
         h('b', { style: `color:${c.color}`, title: c.account ? `${c.name}, signed in with their own account` : undefined }, c.name),
-        c.account ? h('span.acct', {}, ' ✓') : null,
+        c.account ? h('span.acct', { title: 'Signed in with their own account' }, icon('check', 11)) : null,
         ': ',
         c.text,
       );

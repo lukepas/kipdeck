@@ -39,8 +39,8 @@ export function openSignIns(net: Net, why?: string) {
   // Kept across renders, so a half-typed code or token survives the next update.
   const inputs = {
     code: h('input', { type: 'text', placeholder: 'Paste the code here', 'aria-label': 'Code from the sign-in page', autocomplete: 'off', spellcheck: 'false' }) as HTMLInputElement,
-    claude: h('input', { type: 'password', placeholder: 'sk-ant-oat01-…', 'aria-label': 'Claude token', autocomplete: 'off', spellcheck: 'false' }) as HTMLInputElement,
-    github: h('input', { type: 'password', placeholder: 'ghp_… or github_pat_…', 'aria-label': 'GitHub token', autocomplete: 'off', spellcheck: 'false' }) as HTMLInputElement,
+    claude: h('input', { type: 'password', placeholder: 'sk-ant-oat01-...', 'aria-label': 'Claude token', autocomplete: 'off', spellcheck: 'false' }) as HTMLInputElement,
+    github: h('input', { type: 'password', placeholder: 'ghp_... or github_pat_...', 'aria-label': 'GitHub token', autocomplete: 'off', spellcheck: 'false' }) as HTMLInputElement,
   };
 
   const say = (text?: string) => {
@@ -71,9 +71,9 @@ export function openSignIns(net: Net, why?: string) {
   const card = (which: SignInKind, s: SignInState, office: boolean) => {
     const status =
       s.status === 'ok'
-        ? h('span.signin-who.ok', {}, icon('check', 14), ' ', s.how === 'office' ? `The office’s own${s.who ? ` (${s.who})` : ''}` : (s.who ?? 'Signed in'))
+        ? h('span.signin-who.ok', {}, icon('check', 14), ' ', s.how === 'office' ? `The office's own${s.who ? ` (${s.who})` : ''}` : (s.who ?? 'Signed in'))
         : s.status === 'busy'
-          ? h('span.signin-who', {}, 'Signing in…')
+          ? h('span.signin-who', {}, 'Signing in...')
           : h('span.signin-who.none', {}, 'Not signed in');
     const head = h('div.team-head', {}, h('h4', {}, which === 'claude' ? 'Claude' : 'GitHub'), status);
     const body = h('div.signin-body');
@@ -83,9 +83,9 @@ export function openSignIns(net: Net, why?: string) {
     if (s.pending) {
       const url = s.pending.url && /^https:\/\//.test(s.pending.url) ? s.pending.url : undefined;
       if (!url) {
-        body.append(h('p.note', {}, `Starting ${NAMES[which]}’s sign-in…`));
+        body.append(h('p.note', {}, `Starting ${NAMES[which]}'s sign-in...`));
       } else if (which === 'claude') {
-        const send = h('button.btn.primary', { type: 'submit' }, s.pending.sent ? 'Checking…' : 'Send');
+        const send = h('button.btn.primary', { type: 'submit' }, s.pending.sent ? 'Checking...' : 'Send');
         if (s.pending.sent) send.setAttribute('disabled', '');
         const form = h('form.invite-row', {}, inputs.code, send) as HTMLFormElement;
         form.addEventListener('submit', (e) => {
@@ -96,7 +96,7 @@ export function openSignIns(net: Net, why?: string) {
           inputs.code.value = '';
         });
         body.append(
-          h('ol.signin-steps', {}, h('li', {}, h('a.btn.primary', { href: url, target: '_blank', rel: 'noopener noreferrer' }, 'Open Claude’s sign-in page'), ' and sign in with your own account.'), h('li', {}, 'It shows you a code. Paste it here:', form)),
+          h('ol.signin-steps', {}, h('li', {}, h('a.btn.primary', { href: url, target: '_blank', rel: 'noopener noreferrer' }, 'Open Claude\'s sign-in page'), ' and sign in with your own account.'), h('li', {}, 'It shows you a code. Paste it here:', form)),
         );
       } else {
         const code = s.pending.code ?? '';
@@ -126,7 +126,7 @@ export function openSignIns(net: Net, why?: string) {
     // Not signed in (or busy looking): the ways in.
     const start = button(`Sign in with ${NAMES[which]}`, () => net.send({ t: 'signins.start', which }), 'primary');
     const actions = h('div.signin-actions', {}, start);
-    if (office) actions.append(button('Use the office’s own', () => net.send({ t: 'signins.office', which })));
+    if (office) actions.append(button('Use the office\'s own', () => net.send({ t: 'signins.office', which })));
     body.append(
       actions,
       which === 'claude'
@@ -142,7 +142,7 @@ export function openSignIns(net: Net, why?: string) {
     const typing = document.activeElement;
     cards.replaceChildren();
     if (!s) {
-      cards.append(h('p.empty', {}, store.me.account ? 'Loading…' : 'On the shared office password, workers run on the office’s own sign-ins.'));
+      cards.append(h('p.empty', {}, store.me.account ? 'Loading...' : 'On the shared office password, workers run on the office\'s own sign-ins.'));
       return;
     }
     cards.append(card('claude', s.claude, s.office), card('github', s.github, s.office));

@@ -4,16 +4,20 @@ import { DESK_BY_ID } from '../../shared/layout';
 import { $, h, openModal, type Modal } from './dom';
 import { icon, type IconName } from './icons';
 
+/** The menu's groups, in order. */
+export type MenuSection = 'Command' | 'Work' | 'Proof' | 'Deck' | 'Comms';
+
 /** One thing the menu does. Any of them can be pinned to the top bar. */
 export interface HudAction {
   /** Pins are saved by it, so it never changes. */
   id: string;
   icon: IconName | (() => IconName);
   label: string | (() => string);
-  section: 'Open' | 'Together' | 'Office';
+  /** Where it sits in the menu: grouped by the deck's jobs, with Comms folded at the bottom. */
+  section: MenuSection;
   /** Its keyboard shortcut, if it has one (now). */
   key?: string | (() => string | undefined);
-  /** A number worth knowing before you open it: open issues, tasks waiting… */
+  /** A number worth knowing before you open it: open issues, tasks waiting... */
   count?: () => number;
   /** Pressed, like voice while you're in it. */
   on?: () => boolean;
@@ -33,22 +37,23 @@ export interface HudAction {
   run: () => void;
 }
 
+/** The HUD's layers, each one a chip in the menu that shows or hides it. */
 const PANELS: { id: HudPanel; icon: IconName; label: string; what: string }[] = [
-  { id: 'mission', icon: 'mission', label: 'Mission', what: 'What the deck is for, and its milestone' },
-  { id: 'workers', icon: 'units', label: 'Units', what: 'Every console and what it’s up to' },
-  { id: 'people', icon: 'people', label: 'Operators', what: 'Who’s here, on which deck' },
+  { id: 'workers', icon: 'units', label: 'Units rail', what: 'Every unit on this deck, by state' },
+  { id: 'mission', icon: 'target', label: 'Mission strip', what: "This deck's mission and its milestone" },
+  { id: 'people', icon: 'people', label: 'Operators', what: "Who's here, on which deck" },
   { id: 'spend', icon: 'spend', label: 'Spend', what: 'Today, the budget, all time' },
-  { id: 'limits', icon: 'limits', label: 'Claude limits', what: 'The plan’s 5-hour and week' },
+  { id: 'limits', icon: 'limits', label: 'Plan limits', what: "The Claude plan's 5-hour and week" },
   { id: 'chat', icon: 'chat', label: 'Chat', what: 'T opens it either way' },
   { id: 'floor', icon: 'info', label: 'Deck details', what: 'Branch, folder, default agent' },
 ];
 
 /** The element each panel is. */
-const PANEL_EL: Record<HudPanel, string> = { mission: 'mission-strip', workers: 'workers-panel', people: 'people-panel', spend: 'spend', limits: 'limits', chat: 'chat', floor: 'project-meta' };
+const PANEL_EL: Record<HudPanel, string> = { mission: 'mission-strip', workers: 'rail', people: 'people-panel', spend: 'spend', limits: 'limits', chat: 'chat', floor: 'project-meta' };
 
 /** The ✕ in a panel's heading, which hides it until you turn it back on from the menu. */
 export function panelHide(id: HudPanel): HTMLElement {
-  return h('button.panel-x', { type: 'button', 'data-hud': id, 'aria-label': 'Hide', title: 'Hide (the menu brings it back)' }, icon('close', 12));
+  return h('button.panel-x', { type: 'button', 'data-hud': id, 'aria-label': 'Hide', title: 'Hide (Menu > HUD layers brings it back)' }, icon('close', 12));
 }
 
 export interface Hud {
@@ -186,14 +191,9 @@ export function mountHud(actions: HudAction[], settings: Settings, save: () => v
       });
       return h('div.menu-row', {}, item, pin);
     };
+    // A HUD layer: a small chip that shows or hides it.
     const toggle = (p: (typeof PANELS)[number]) => {
-      const item = h(
-        'button.menu-item.menu-toggle',
-        { type: 'button', role: 'menuitemcheckbox' },
-        h('span.mi-icon', {}, icon(p.icon, 18)),
-        h('span.mi-label', {}, p.label, h('small', {}, p.what)),
-        h('span.switch', { 'aria-hidden': 'true' }),
-      );
+      const item = h('button.menu-item.layer-chip', { type: 'button', role: 'menuitemcheckbox', title: p.what }, icon(p.icon, 14), h('span', {}, p.label));
       const paint = () => item.setAttribute('aria-checked', String(settings.hud[p.id]));
       paint();
       item.addEventListener('click', () => {
@@ -203,13 +203,18 @@ export function mountHud(actions: HudAction[], settings: Settings, save: () => v
       return item;
     };
     const section = (name: string, rows: HTMLElement[]) => (rows.length ? [h('div.menu-sec', {}, name), ...rows] : []);
-    const rows = (s: HudAction['section']) => actions.filter((a) => a.section === s && offered(a)).map(row);
+    const rows = (s: MenuSection) => actions.filter((a) => a.section === s && offered(a)).map(row);
+    // Voice, screen sharing, the planning board and the Review bay: folded until you open them.
+    const comms = rows('Comms');
+    const commsOpen = actions.some((a) => a.section === 'Comms' && (a.on?.() || a.status?.()));
     const el = h(
       'div.hud-menu',
       { role: 'menu', 'aria-label': 'Menu' },
-      h('div.menu-col', {}, ...section('Open', rows('Open')), ...section('Together', rows('Together'))),
-      h('div.menu-col', {}, ...section('Show on screen', PANELS.map(toggle)), ...section('Deck', rows('Office'))),
-      h('p.menu-foot', {}, 'Pin what you use most to keep it on the top bar. ', h('kbd', {}, 'Tab'), ' opens and closes this menu.'),
+      h('div.menu-col', {}, ...section('Command', rows('Command')), ...section('Work', rows('Work'))),
+      h('div.menu-col', {}, ...section('Proof', rows('Proof')), ...section('Deck', rows('Deck'))),
+      comms.length ? h('details.menu-comms', { open: commsOpen }, h('summary.menu-sec', {}, 'Comms', h('small', {}, 'voice, screen, planning board, Review bay')), h('div.menu-comms-rows', {}, ...comms)) : null,
+      h('div.menu-layers', {}, h('div.menu-sec', {}, 'HUD layers'), h('div.layer-chips', {}, ...PANELS.map(toggle))),
+      h('p.menu-foot', {}, 'Pinned rows ride on the top bar. ', h('kbd', {}, 'Tab'), ' shows and hides this menu; the arrows move through it.'),
     );
     // On the window, so the keys work wherever focus is while the menu is up.
     const onKey = (e: KeyboardEvent) => menuKey(el, e);

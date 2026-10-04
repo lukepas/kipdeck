@@ -30,7 +30,7 @@ async function claim() {
 $('copy').addEventListener('click', async () => {
   try {
     await navigator.clipboard.writeText($('pw').textContent ?? '');
-    $('copy').textContent = 'Copied ✓';
+    $('copy').textContent = 'Copied';
   } catch {
     getSelection()?.selectAllChildren($('pw'));
   }

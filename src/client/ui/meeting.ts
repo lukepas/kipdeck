@@ -90,7 +90,7 @@ function renderStatus(m: Meeting, body: HTMLElement, foot: HTMLElement, net: Net
         {},
         unitSign(w?.deskId),
         h('b', {}, s.role),
-        h('span.muted', {}, `${i === 0 ? 'head of the table · ' : ''}${s.workerName ?? '…'}`),
+        h('span.muted', {}, `${i === 0 ? 'head of the table · ' : ''}${s.workerName ?? '...'}`),
         w ? h('span.pill', { class: w.status }, STATUS_LABEL[w.status]) : h('span.pill.exited', {}, 'gone home'),
         part ? h('span.meeting-part', { title: t?.file ?? '' }, part) : null,
         s.tokens ? h('span.muted', {}, `${fmtTokens(s.tokens)} tokens`) : null,
@@ -119,7 +119,7 @@ function renderStatus(m: Meeting, body: HTMLElement, foot: HTMLElement, net: Net
     running ? h('button.btn', { type: 'button', onclick: () => confirmDialog('Stop the meeting?', `The workers stop where they are and stay at the table. ${m.output} is only there if it was written.`, 'Stop it', () => net.send({ t: 'meeting.stop' })) }, 'Stop meeting') : null,
     !running && m.commit && head?.worktree ? h('button.btn', { type: 'button', title: `Push ${m.worktree?.branch} and open a pull request`, onclick: () => actions.openPr(head.id) }, head.pr ? `PR #${head.pr.number}` : 'Open PR') : null,
     !running ? h('button.btn', { type: 'button', onclick: () => net.send({ t: 'meeting.clear' }) }, 'Clear the room') : null,
-    !running ? h('button.btn.primary', { type: 'button', onclick: callAnother }, 'Call a meeting…') : null,
+    !running ? h('button.btn.primary', { type: 'button', onclick: callAnother }, 'Call a meeting...') : null,
     ),
   );
 }
@@ -132,7 +132,7 @@ function meetingForm(net: Net, preset: MeetingPreset | undefined, done: () => vo
   let roles: string[] = [];
   let outputTouched = false;
   const patterns = h('div.meeting-patterns', { role: 'radiogroup', 'aria-label': 'Pattern' });
-  const about = h('textarea', { rows: 4, placeholder: 'The question to settle, or the task to do: e.g. “Should the queue retry failed tasks?”', 'aria-label': 'What the meeting is about' }) as HTMLTextAreaElement;
+  const about = h('textarea', { rows: 4, placeholder: 'The question to settle, or the task to do: e.g. "Should the queue retry failed tasks?"', 'aria-label': 'What the meeting is about' }) as HTMLTextAreaElement;
   about.value = preset?.prompt ?? '';
   const titleIn = h('input', { type: 'text', placeholder: 'Title (optional): the first line otherwise', maxlength: 100, 'aria-label': 'Title' }) as HTMLInputElement;
   titleIn.value = preset?.title ?? '';
@@ -161,7 +161,7 @@ function meetingForm(net: Net, preset: MeetingPreset | undefined, done: () => vo
   const syncOutput = () => {
     if (!outputTouched) outputIn.value = def().output(slug(), pr());
     const problem = outputProblem(outputIn.value.trim());
-    outputNote.textContent = problem ? `${problem}` : pattern === 'review' ? 'It ends when this file is written; the office then posts it on the PR as one review.' : store.project?.branch ? 'It ends when this file is written; the office commits it on the meeting’s own branch.' : 'It ends when this file is written.';
+    outputNote.textContent = problem ? `${problem}` : pattern === 'review' ? 'It ends when this file is written; the office then posts it on the PR as one review.' : store.project?.branch ? 'It ends when this file is written; the office commits it on the meeting\'s own branch.' : 'It ends when this file is written.';
     outputNote.classList.toggle('bad', !!problem);
   };
   const renderRoles = () => {
@@ -221,7 +221,7 @@ function meetingForm(net: Net, preset: MeetingPreset | undefined, done: () => vo
     'form.meeting-form',
     {},
     patterns,
-    h('div.meeting-field', {}, h('label', {}, 'What’s it about?'), dictateField(about)),
+    h('div.meeting-field', {}, h('label', {}, 'What\'s it about?'), dictateField(about)),
     h('div.meeting-field', {}, titleIn),
     prRow,
     partsRow,
@@ -282,18 +282,18 @@ function meetingForm(net: Net, preset: MeetingPreset | undefined, done: () => vo
     const key = JSON.stringify(opts);
     if (prSel.dataset.key !== key) {
       prSel.dataset.key = key;
-      prSel.replaceChildren(h('option', { value: '' }, open.length || preset?.pr ? 'Pick a pull request…' : 'No open pull requests'), ...opts.map(([v, label]) => h('option', { value: v }, label.length > 70 ? `${label.slice(0, 69)}…` : label)));
+      prSel.replaceChildren(h('option', { value: '' }, open.length || preset?.pr ? 'Pick a pull request...' : 'No open pull requests'), ...opts.map(([v, label]) => h('option', { value: v }, label.length > 70 ? `${label.slice(0, 67)}...` : label)));
       prSel.value = want;
       syncOutput();
     }
     const m = store.meeting.current;
     const taken = m?.status === 'running';
-    busy.textContent = taken ? `The room is busy with “${m.title}” until it ends or someone stops it.` : m ? `Starting this sends the last meeting’s workers home.` : '';
+    busy.textContent = taken ? `The room is busy with "${m.title}" until it ends or someone stops it.` : m ? `Starting this sends the last meeting's workers home.` : '';
     submit.toggleAttribute('disabled', taken);
   };
   pickPattern(pattern);
   if (preset?.pr) prSel.value = String(preset.pr);
   refresh();
   setTimeout(() => (preset?.prompt ? titleIn : about).focus(), 0);
-  return { body: bodyEl, foot: [h('span.grow', {}, 'Few rounds and a file at the end: that’s what keeps meetings cheap.'), cancel, submit], refresh };
+  return { body: bodyEl, foot: [h('span.grow', {}, 'Few rounds and a file at the end: that\'s what keeps meetings cheap.'), cancel, submit], refresh };
 }

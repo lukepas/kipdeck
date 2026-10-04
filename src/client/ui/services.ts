@@ -84,7 +84,7 @@ export function openServices() {
         { style: 'margin:0 0 12px' },
         direct
           ? 'Web servers the workers are running. Each has its own link on your Tailscale network: open it, or click the row to copy it for someone else on the network.'
-          : 'Web servers the workers are running. Click one to copy a command that opens it on your computer — run it in a terminal and the page opens by itself.',
+          : 'Web servers the workers are running. Click one to copy a command that opens it on your computer - run it in a terminal and the page opens by itself.',
       ),
     );
     if (!direct && elsewhere(s)) {
@@ -112,7 +112,7 @@ export function openServices() {
           'div.svc-empty',
           {},
           h('p', {}, 'Nothing running yet.'),
-          h('p.note', {}, 'When a worker starts a web server — ', h('code', {}, 'npm run dev'), ', a preview build, ', h('code', {}, 'python -m http.server'), ' — it shows up here within a few seconds. Try prompting: “start the dev server in the background so we can review it”.'),
+          h('p.note', {}, 'When a worker starts a web server - ', h('code', {}, 'npm run dev'), ', a preview build, ', h('code', {}, 'python -m http.server'), ' - it shows up here within a few seconds. Try prompting: "start the dev server in the background so we can review it".'),
         ),
       );
       return;
@@ -160,7 +160,7 @@ export function openServices() {
       body.append(
         copied === svc.port
           ? h('p.team-status.ok', {}, `Copied. Paste it in a terminal: it opens ${serviceUrl(svc.port)} once the tunnel is up.`)
-          : h('p.team-status', {}, `The command for :${svc.port} — run it in a terminal, and it opens ${serviceUrl(svc.port)}.`),
+          : h('p.team-status', {}, `The command for :${svc.port} - run it in a terminal, and it opens ${serviceUrl(svc.port)}.`),
         h('div.cmd', {}, h('pre', {}, cmd), copyButton('Copy', () => cmd)),
       );
     } else if (picked !== null) {

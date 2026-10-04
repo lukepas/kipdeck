@@ -37,7 +37,7 @@ export function openUpgrade(net: Net) {
     } else if (u.phase === 'failed' && u.error) {
       body.append(h('pre.upgrade-error', {}, u.error));
     }
-    if (u.checking) body.append(h('p.upgrade-status.busy', {}, h('span.spinner'), 'Checking GitHub for changes…'));
+    if (u.checking) body.append(h('p.upgrade-status.busy', {}, h('span.spinner'), 'Checking GitHub for changes...'));
     else if (u.error && u.phase !== 'failed') body.append(h('p.upgrade-status.error', {}, u.error));
     else if (!u.latest && u.checkedAt) body.append(h('p.upgrade-status.ok', {}, `Up to date (checked ${timeAgo(u.checkedAt)})`));
 
@@ -48,7 +48,7 @@ export function openUpgrade(net: Net) {
         h('label', { style: 'margin-top:14px' }, `New: ${n >= 50 ? '50+' : n} change${n === 1 ? '' : 's'}`),
         h('ul.changes', {}, ...(u.changes ?? []).map((c) => h('li', {}, h('code', {}, c.sha), ' ', c.subject))),
       );
-      if (n > shown) body.append(h('p.note', {}, `…and ${n >= 50 ? 'more' : `${n - shown} more`}`));
+      if (n > shown) body.append(h('p.note', {}, `...and ${n >= 50 ? 'more' : `${n - shown} more`}`));
       if (!busy) {
         const awake = [...store.workers.values()].some((w) => !isAsleep(w.status));
         body.append(
@@ -111,8 +111,8 @@ export function showRestarting(u: UpgradeState, net: Net) {
   restartDialog(
     'Upgrading the office',
     h('div.restart-art', {}, icon('upgrade', 40)),
-    h('p', {}, `${u.by ? `${u.by} is upgrading` : 'Upgrading'} the office${u.latest ? ` to ${u.latest.sha}: “${u.latest.subject}”` : ''}.`),
-    h('p.upgrade-status.busy', {}, h('span.spinner'), 'Restarting… you’ll be back in a few seconds. No need to do anything.'),
+    h('p', {}, `${u.by ? `${u.by} is upgrading` : 'Upgrading'} the office${u.latest ? ` to ${u.latest.sha}: "${u.latest.subject}"` : ''}.`),
+    h('p.upgrade-status.busy', {}, h('span.spinner'), 'Restarting... you\'ll be back in a few seconds. No need to do anything.'),
   );
   clearTimeout(slowTimer);
   slowTimer = setTimeout(
@@ -131,8 +131,8 @@ export function showUpgraded(u: UpgradeState) {
   restartDialog(
     'The office has been upgraded',
     h('div.restart-art', {}, icon('check', 40)),
-    v ? h('p', {}, 'Now running ', h('code', {}, v.sha), `: “${v.subject}”`) : h('p', {}, 'A new version is running.'),
-    h('p.upgrade-status.ok', {}, h('span.spinner'), 'Loading the new version…'),
+    v ? h('p', {}, 'Now running ', h('code', {}, v.sha), `: "${v.subject}"`) : h('p', {}, 'A new version is running.'),
+    h('p.upgrade-status.ok', {}, h('span.spinner'), 'Loading the new version...'),
   );
   setTimeout(() => location.reload(), 2500);
 }

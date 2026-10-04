@@ -32,7 +32,7 @@ export function openLabels(kind: 'issue' | 'pull', it: GhIssue | GhPull, net: Ne
   /** Each row and the text the filter looks in. */
   const rows = new Map<HTMLElement, string>();
 
-  const filter = h('input', { type: 'text', placeholder: 'Filter labels…', 'aria-label': 'Filter labels' }) as HTMLInputElement;
+  const filter = h('input', { type: 'text', placeholder: 'Filter labels...', 'aria-label': 'Filter labels' }) as HTMLInputElement;
   const list = h('ul.gh-labels');
   const none = h('p.gh-quiet.hidden');
   const result = h('div.gh-merge-result.hidden');
@@ -51,7 +51,7 @@ export function openLabels(kind: 'issue' | 'pull', it: GhIssue | GhPull, net: Ne
   const sync = () => {
     const { add, remove } = changes();
     save.disabled = busy || (!add.length && !remove.length);
-    save.textContent = busy ? 'Saving…' : 'Save labels';
+    save.textContent = busy ? 'Saving...' : 'Save labels';
     summary.textContent = add.length || remove.length ? [...add.map((l) => `+${l}`), ...remove.map((l) => `−${l}`)].join('  ') : `${on.size} label${on.size === 1 ? '' : 's'} on it`;
     for (const box of list.querySelectorAll('input')) box.disabled = busy;
   };
@@ -66,7 +66,7 @@ export function openLabels(kind: 'issue' | 'pull', it: GhIssue | GhPull, net: Ne
     const empty = !!repo && !shown;
     none.classList.toggle('hidden', !empty);
     if (empty)
-      none.replaceChildren(q ? `No labels match “${filter.value.trim()}”. ` : 'This repository has no labels yet. ', h('a', { href: manage, target: '_blank', rel: 'noopener noreferrer' }, 'Make one on GitHub'));
+      none.replaceChildren(q ? `No labels match "${filter.value.trim()}". ` : 'This repository has no labels yet. ', h('a', { href: manage, target: '_blank', rel: 'noopener noreferrer' }, 'Make one on GitHub'));
   };
   const row = (l: GhLabel) => {
     const box = h('input', { type: 'checkbox' }) as HTMLInputElement;
@@ -89,7 +89,7 @@ export function openLabels(kind: 'issue' | 'pull', it: GhIssue | GhPull, net: Ne
     const rest = (repo ?? []).filter((l) => !had.has(l.name)).sort(byName);
     list.replaceChildren(...[...mine, ...rest].map(row));
     if (error) list.append(h('li', {}, errorBox(error, load)));
-    else if (!repo) list.append(h('li', {}, spinnerRow("Loading the repo's labels…")));
+    else if (!repo) list.append(h('li', {}, spinnerRow("Loading the repo's labels...")));
     applyFilter();
     sync();
   };
@@ -117,7 +117,7 @@ export function openLabels(kind: 'issue' | 'pull', it: GhIssue | GhPull, net: Ne
     if (busy || (!add.length && !remove.length)) return;
     busy = true;
     result.className = 'gh-merge-result';
-    result.replaceChildren(h('span.spinner'), 'Saving the labels on GitHub…');
+    result.replaceChildren(h('span.spinner'), 'Saving the labels on GitHub...');
     sync();
     labelWaiters.set(key, (msg) => {
       settle();

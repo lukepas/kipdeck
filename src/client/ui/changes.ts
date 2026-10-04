@@ -78,7 +78,7 @@ function renderDiff(text: string, truncated: boolean): HTMLElement {
     }
     out.append(h('div.dl', { class: cls }, h('span.ln', {}, o), h('span.ln', {}, n), h('span.code', {}, code)));
   }
-  if (truncated) out.append(h('div.dl.meta', {}, h('span.ln'), h('span.ln'), h('span.code', {}, '… the rest of this diff is too long to show here')));
+  if (truncated) out.append(h('div.dl.meta', {}, h('span.ln'), h('span.ln'), h('span.code', {}, '... the rest of this diff is too long to show here')));
   return out;
 }
 
@@ -137,7 +137,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
   const diff = h('section.changes-diff', {}, diffHead, diffBody);
   const summary = h('span.grow');
   const discardBtn = h('button.btn', { type: 'button', title: 'Throw away every uncommitted change in this checkout' }, 'Discard all');
-  const commitBtn = h('button.btn', { type: 'button', title: 'git add -A && git commit' }, 'Commit…');
+  const commitBtn = h('button.btn', { type: 'button', title: 'git add -A && git commit' }, 'Commit...');
   const prSlot = h('span.pr-slot');
   const tabs = h('nav.changes-tabs', { role: 'tablist', 'aria-label': 'Repositories' });
   const el = h(
@@ -202,7 +202,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
       );
       list.append(li);
     }
-    if (s.more) list.append(h('li.empty', {}, `…and ${s.more} more`));
+    if (s.more) list.append(h('li.empty', {}, `...and ${s.more} more`));
     list.querySelector('li.on')?.scrollIntoView({ block: 'nearest' });
   };
 
@@ -237,19 +237,19 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
       if (s.files.length) bits.push(plusMinus(adds, dels));
       bits.push(uncommitted ? `${uncommitted} uncommitted` : s.files.length ? 'all committed' : '');
       if (s.ahead) bits.push(`${s.ahead} commit${s.ahead > 1 ? 's' : ''} ahead of ${s.base}`);
-      if (!s.dir) bits.push(h('span', { title: "This worker works in the project folder itself, so this is everything uncommitted there — everyone's edits, not just its own." }, 'shared project folder'));
+      if (!s.dir) bits.push(h('span', { title: "This worker works in the project folder itself, so this is everything uncommitted there - everyone's edits, not just its own." }, 'shared project folder'));
       else bits.push(h('span', { title: `Its own worktree at ${s.dir}` }, `${s.dir}`));
       summary.append(...bits.filter(Boolean).map((b) => (typeof b === 'string' ? h('span', {}, b) : b)));
     }
     discardBtn.disabled = busy || !uncommitted;
     commitBtn.disabled = busy || !uncommitted;
-    commitBtn.textContent = uncommitted ? `Commit ${uncommitted} file${uncommitted > 1 ? 's' : ''}…` : 'Commit…';
+    commitBtn.textContent = uncommitted ? `Commit ${uncommitted} file${uncommitted > 1 ? 's' : ''}...` : 'Commit...';
     prSlot.replaceChildren();
     if (!s) return;
     if (s.pr) prSlot.append(h('a.btn.primary', { href: s.pr.url, target: '_blank', rel: 'noopener', title: 'Open on GitHub' }, `PR #${s.pr.number}`));
     else if (s.prBase) {
       const why = busy ? '' : uncommitted ? 'Commit first' : !s.ahead ? `Nothing on ${s.branch} that ${s.prBase} lacks yet` : '';
-      const pr = h('button.btn.primary', { type: 'button', title: why || `Push ${s.branch} and open a pull request against ${s.prBase}` }, 'Open PR…');
+      const pr = h('button.btn.primary', { type: 'button', title: why || `Push ${s.branch} and open a pull request against ${s.prBase}` }, 'Open PR...');
       pr.disabled = busy || !!why;
       pr.addEventListener('click', () =>
         openPrompt({
@@ -358,7 +358,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
       ...[{ id: undefined as string | undefined, name: own, pr: w.pr }, ...repos.map((r) => ({ id: r.floor as string | undefined, name: r.name, pr: r.pr }))].map((t) =>
         h(
           'button.btn',
-          { type: 'button', role: 'tab', class: t.id === repo ? 'on' : '', 'aria-selected': t.id === repo ? 'true' : 'false', title: t.id ? `Its worktree of ${t.name}` : `Its worktree of this floor's project, ${t.name}`, onclick: () => show(t.id) },
+          { type: 'button', role: 'tab', class: t.id === repo ? 'on' : '', 'aria-selected': t.id === repo ? 'true' : 'false', title: t.id ? `Its worktree of ${t.name}` : `Its worktree of this deck's project, ${t.name}`, onclick: () => show(t.id) },
           `${t.name}`,
           t.pr ? h('small', {}, ` · #${t.pr.number}`) : null,
         ),

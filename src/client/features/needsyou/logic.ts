@@ -53,7 +53,7 @@ export function bannerText(asking: readonly RosterEntry[], now: number, here: st
   // Nothing for its first minute: "under a minute" would only be noise.
   const waited = now - since >= 60_000 ? ago(now - since) : '';
   const where = e.floor !== here ? `on ${e.floorName}` : '';
-  const detail = [ask && (ask.length > 90 ? `${ask.slice(0, 89)}…` : ask), where, waited].filter(Boolean).join(' · ');
+  const detail = [ask && (ask.length > 90 ? `${ask.slice(0, 87)}...` : ask), where, waited].filter(Boolean).join(' · ');
   const more = asking.length > 1 ? `+${asking.length - 1} more` : '';
   const title = `${e.name} needs you`;
   return { id: e.id, floor: e.floor, deskId: e.deskId, title, detail, more, key: `${e.id}|${title}|${detail}|${more}` };

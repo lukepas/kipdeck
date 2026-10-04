@@ -78,7 +78,7 @@ export function spliceSpoken(value: string, start: number, end: number, spoken: 
   if (!text) return { value, caret: start };
   const before = value.slice(0, start);
   const after = value.slice(end);
-  const lead = before && !/[\s([{"'“‘/-]$/.test(before) && !/^[.,!?;:)\]}%]/.test(text) ? ' ' : '';
+  const lead = before && !/[\s([{"'''/-]$/.test(before) && !/^[.,!?;:)\]}%]/.test(text) ? ' ' : '';
   const trail = after && !/^[\s.,!?;:)\]}]/.test(after) ? ' ' : '';
   const put = lead + text + trail;
   return { value: before + put + after, caret: before.length + put.length };

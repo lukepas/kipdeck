@@ -153,7 +153,7 @@ function renderWorkers() {
   $('waiting-now').textContent = chip.text;
   $('btn-mission').querySelector('.n')!.textContent = chip.total ? String(chip.total) : '';
   $('btn-mission').classList.toggle('reminders', chip.reminders > 0);
-  $('btn-mission').title = `Mission control: what needs someone, on every floor, and the floor's goals${chip.reminders ? ` · reminders open: ${chip.reminders}` : ''}`;
+  $('btn-mission').title = `Mission control: what needs someone, on every deck, and the deck's goals${chip.reminders ? ` · reminders open: ${chip.reminders}` : ''}`;
   const all = $('all-floors');
   all.setAttribute('aria-pressed', String(settings.allFloors));
   all.classList.toggle('hidden', store.floors.length < 2);
@@ -313,7 +313,7 @@ function hire(deskId: string, prompt: string, worktree: boolean, provider?: Agen
 
 /** With `issue`, the worker the prompt goes to takes that GitHub issue. */
 function sendToWorker(title: string, text: { context?: string; initial?: string } = {}, issue?: number) {
-  if (!store.project) return toast('Pick a floor first', 'warn');
+  if (!store.project) return toast('Pick a deck first', 'warn');
   // The back office's desks too, as far as the floor's built out (see WING).
   const desk = nextFreeSeat((id) => !!store.workerAtDesk(id), store.floorPlan.wing)?.id;
   const awake = [...store.workers.values()].filter((w) => w.kind === 'agent' && !isAsleep(w.status));
@@ -373,7 +373,7 @@ const missionDeps: MissionDeps = {
   openPull: (number, then) => {
     const it = store.pulls.items.find((p) => p.number === number);
     if (it) openPull(it, net, boardActions(), then);
-    else toast(`PR #${number} isn't on this floor's board yet`, 'warn');
+    else toast(`PR #${number} isn't on this deck's board yet`, 'warn');
   },
   openQueue: () => openQueue(net, { openTerminal: openWorker }),
   showTab: (tab) => showMission(tab),

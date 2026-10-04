@@ -32,7 +32,7 @@ export function openIssue(first: GhIssue, net: Net, actions: BoardActions) {
   conv.append(h('div.gh-col', {}, thread, comment.el));
   // The footer stays put and renderFrame only shows, hides and relabels, so a board refresh never
   // pulls focus out of the provider picker.
-  const closeIssue = h('button.btn', { type: 'button', title: 'Close this issue on GitHub', onclick: () => openClose('issue', it, net, load) }, 'Close issue…');
+  const closeIssue = h('button.btn', { type: 'button', title: 'Close this issue on GitHub', onclick: () => openClose('issue', it, net, load) }, 'Close issue...');
   const queueProvider = providerPicker(store.project, `issue-provider-${it.number}`, 'Queue on');
   const addIssueToQueue = () => {
     if (!queueProvider.valid()) return;
@@ -53,8 +53,8 @@ export function openIssue(first: GhIssue, net: Net, actions: BoardActions) {
       'footer',
       {},
       h('a.grow', { href: it.url, target: '_blank', rel: 'noopener noreferrer' }, 'Open on GitHub'),
-      h('button.btn', { type: 'button', title: 'Send a worker your own prompt about this issue', onclick: () => actions.ask(issueContext(it), `Ask about issue #${it.number}`) }, 'Ask a worker…'),
-      h('button.btn', { type: 'button', title: 'Workers take it on together in the meeting room: a debate, lead & team, map-reduce or red / blue', onclick: () => actions.meeting(issueMeeting(it.number, it.title)) }, 'Meeting…'),
+      h('button.btn', { type: 'button', title: 'Send a worker your own prompt about this issue', onclick: () => actions.ask(issueContext(it), `Ask about issue #${it.number}`) }, 'Ask a worker...'),
+      h('button.btn', { type: 'button', title: 'Workers take it on together in the meeting room: a debate, lead & team, map-reduce or red / blue', onclick: () => actions.meeting(issueMeeting(it.number, it.title)) }, 'Meeting...'),
       closeIssue,
       queueProvider.element,
       queue,
@@ -89,7 +89,7 @@ export function openIssue(first: GhIssue, net: Net, actions: BoardActions) {
   const render = () => {
     thread.replaceChildren(commentCard({ id: 'body', author: it.author, body: detail?.body ?? it.body, createdAt: it.createdAt, url: it.url }, itemUrl, 'opened this'));
     if (error) thread.append(errorBox(error, load));
-    else if (!detail) thread.append(spinnerRow('Loading comments…'));
+    else if (!detail) thread.append(spinnerRow('Loading comments...'));
     else if (!detail.comments.length) thread.append(h('p.gh-quiet', {}, 'No comments yet.'));
     else thread.append(...detail.comments.map((c) => commentCard(c, itemUrl, 'commented')));
   };

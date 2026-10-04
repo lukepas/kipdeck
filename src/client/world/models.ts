@@ -5,7 +5,7 @@ import { fontsReady, toon } from './toon';
 
 // Model files (.glb) for things in the world that aren't built in code, loaded before the world is
 // built, for builders that take theirs with model(). The deck is built in code from first to last,
-// so there are none today: add one here by name, as `name: url` from `import url from '…glb?url'`.
+// so there are none today: add one here by name, as `name: url` from `import url from '...glb?url'`.
 const MODELS = {} satisfies Record<string, string>;
 
 export type ModelName = keyof typeof MODELS;

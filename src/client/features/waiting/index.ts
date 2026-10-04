@@ -48,7 +48,7 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
         nextToast = toast('Nobody is waiting on you');
         return;
       }
-      nextToast = toast(other.status === 'needs_input' ? `${other.name} needs you: over to ${other.floorName}` : `Nobody's waiting on this floor: over to ${other.name} on ${other.floorName}`);
+      nextToast = toast(other.status === 'needs_input' ? `${other.name} needs you: over to ${other.floorName}` : `Nobody's waiting on this deck: over to ${other.name} on ${other.floorName}`);
       parts.mission.missionDeps.goTo(other.floor, other.deskId);
       return;
     }

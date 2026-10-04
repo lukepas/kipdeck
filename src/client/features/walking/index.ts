@@ -34,7 +34,7 @@ export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     walkingTo = { id, replanAt: 0 };
     if (store.onMyFloor(p)) toast(`Walking over to ${p.name}`);
     else {
-      toast(`Over to ${p.name}, on the ${store.floors.find((f) => f.id === p.floor)?.name ?? 'other'} floor`);
+      toast(`Over to ${p.name}, on the ${store.floors.find((f) => f.id === p.floor)?.name ?? 'other'} deck`);
       parts.travel.switchFloor(p.floor!, true);
     }
   }
@@ -69,7 +69,7 @@ export function installWalking(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     if (player.seat) return stopWalking();
     const p = store.peers.get(walkingTo.id);
     if (!p || !store.onMyFloor(p)) {
-      toast(p ? `${p.name} left the floor before you got there` : 'They left the office', 'warn');
+      toast(p ? `${p.name} left the deck before you got there` : 'They left the office', 'warn');
       return stopWalking();
     }
     const at = whereIs(p);

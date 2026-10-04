@@ -149,7 +149,7 @@ export function openMerge(it: GhPull, d: GhPullDetail, net: Net, handToWorker: (
     busy = true;
     go.disabled = true;
     result.className = 'gh-merge-result';
-    result.replaceChildren(h('span.spinner'), auto.checked && st.auto ? 'Asking GitHub to merge it when ready…' : 'Merging…');
+    result.replaceChildren(h('span.spinner'), auto.checked && st.auto ? 'Asking GitHub to merge it when ready...' : 'Merging...');
     mergeWaiters.set(it.number, (msg) => {
       mergeWaiters.delete(it.number);
       busy = false;

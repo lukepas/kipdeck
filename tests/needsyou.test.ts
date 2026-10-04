@@ -68,7 +68,7 @@ test('the banner names whoever has waited longest (on your floor first), what it
   // A long question is cut short, and its line breaks go.
   const long = bannerText([entry('Nib', 'needs_input', { waitingSince: NOW, activity: `Shall I\n${'x'.repeat(200)}` })], NOW, 'f1')!;
   assert.equal(long.detail.length, 90);
-  assert.match(long.detail, /^Shall I x+…$/);
+  assert.match(long.detail, /^Shall I x+\.\.\.$/);
   assert.equal(bannerText([], NOW, 'f1'), null);
 });
 

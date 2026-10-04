@@ -35,7 +35,7 @@ export function openDeskLabel(net: Net, deskId: string) {
     { role: 'dialog', 'aria-label': `Sign over ${desk.label}` },
     h('header', {}, h('h2', {}, `Sign over ${desk.label}`), close),
     h('div.body', {}, preview, h('label', { style: 'margin-top:14px' }, 'What it says'), input, ideas, h('label', { style: 'margin-top:14px' }, 'Color'), swatches),
-    h('footer', {}, h('span.grow', {}, 'It hangs from the ceiling over the desk, for everyone on this floor.'), remove, cancel, submit),
+    h('footer', {}, h('span.grow', {}, 'It hangs from the ceiling over the desk, for everyone on this deck.'), remove, cancel, submit),
   ) as HTMLFormElement;
   form.noValidate = true;
 
@@ -134,7 +134,7 @@ export function openExpand(net: Net) {
       h('div.expand-rows', {}, ...Array.from({ length: WING.rows }, (_, i) => h('span', { class: i < level ? 'on' : '', title: names(i + 1) }, i < level ? '■ ■' : '· ·'))),
       full ? h('p.setting-note', {}, "It can't go back any further.") : h('p.setting-note', {}, `Knocking through brings ${names(next)}, each with its own sign to hang (press L at a desk).`),
       busy ? h('p.setting-note.bad', {}, `Someone's at ${busy.label}: send them home before walling that row up.`) : '',
-      h('p.setting-note', {}, 'It changes the floor for everyone on it, and stays built across restarts.'),
+      h('p.setting-note', {}, 'It changes the deck for everyone on it, and stays built across restarts.'),
     );
     expand.disabled = full;
     expand.textContent = full ? 'Built all the way out' : level === 0 ? 'Knock through (+2 desks)' : 'Another row (+2 desks)';

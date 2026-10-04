@@ -148,8 +148,8 @@ export function openBookshelf(deps: ShelfDeps) {
   const { floor, repoUrl } = deps;
   const q = (params: Record<string, string>) => new URLSearchParams({ floor, ...params }).toString();
 
-  const filter = h('input', { type: 'text', placeholder: 'Filter the docs…', 'aria-label': 'Filter the docs', spellcheck: 'false', autocomplete: 'off' }) as HTMLInputElement;
-  const count = h('div.bs-count', {}, 'Looking along the shelves…');
+  const filter = h('input', { type: 'text', placeholder: 'Filter the docs...', 'aria-label': 'Filter the docs', spellcheck: 'false', autocomplete: 'off' }) as HTMLInputElement;
+  const count = h('div.bs-count', {}, 'Looking along the shelves...');
   const list = h('ul.bs-list', { role: 'listbox', 'aria-label': 'Docs' });
   const crumbs = h('div.bs-crumbs');
   const meta = h('div.bs-meta');

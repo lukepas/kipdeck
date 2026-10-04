@@ -29,11 +29,11 @@ export interface TerminalFind {
 /** How long someone shows as typing after the last word from their keyboard (they send one about every second). */
 const TYPING_SHOWS_MS = 2500;
 
-/** "Sam is typing…", "Sam and Ada are typing…", "Sam and 2 others are typing…". */
+/** "Sam is typing...", "Sam and Ada are typing...", "Sam and 2 others are typing...". */
 function typingLine(names: string[]): string {
-  if (names.length === 1) return `${names[0]} is typing…`;
-  if (names.length === 2) return `${names[0]} and ${names[1]} are typing…`;
-  return `${names[0]} and ${names.length - 1} others are typing…`;
+  if (names.length === 1) return `${names[0]} is typing...`;
+  if (names.length === 2) return `${names[0]} and ${names[1]} are typing...`;
+  return `${names[0]} and ${names.length - 1} others are typing...`;
 }
 
 /**
@@ -131,7 +131,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
   const closeBtn = h('button.btn.close', { title: 'Leave terminal (Esc or Ctrl+]) · ⎋ Esc or Ctrl+[ sends Esc to the terminal', 'aria-label': 'Close' }, icon('close', 16));
   const host = h('div.term-host', { 'data-drop': 'Drop screenshots or files here to put them in the terminal' });
   const keys = h('div.term-keys', { role: 'group', 'aria-label': 'Keys' });
-  const say = h('input', { type: 'text', placeholder: 'Reply, or tell it what to do next…', 'aria-label': 'Prompt', enterkeyhint: 'send', autocomplete: 'off' }) as HTMLInputElement;
+  const say = h('input', { type: 'text', placeholder: 'Reply, or tell it what to do next...', 'aria-label': 'Prompt', enterkeyhint: 'send', autocomplete: 'off' }) as HTMLInputElement;
   const sayBtn = h('button.btn.primary', { type: 'submit' }, 'Send');
   const sayForm = h('form.term-say', {}, dictateField(say), sayBtn);
   const keypad = opts.keypad ? h('div.term-keypad', {}, keys, sayForm) : null;

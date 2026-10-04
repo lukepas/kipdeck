@@ -73,7 +73,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
   function officeIsFull(): boolean {
     const m = store.machine;
     if (!officeFull(m)) return false;
-    toast(`The office is at its limit of ${m.limit} worker${m.limit === 1 ? '' : 's'} — send one home before hiring another`, 'warn');
+    toast(`The office is at its limit of ${m.limit} worker${m.limit === 1 ? '' : 's'} - send one home before hiring another`, 'warn');
     return true;
   }
 
@@ -110,7 +110,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
     } else if (w.lost) {
       fixLostWorktree(w);
     } else if (isAsleep(w.status)) {
-      toast(`${w.name} is asleep — press R to resume first`, 'warn');
+      toast(`${w.name} is asleep - press R to resume first`, 'warn');
     } else if (w.kind === 'shell') {
       openPrompt({
         title: `Run in ${w.name}`,
@@ -121,7 +121,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
     } else {
       openPrompt({
         title: `Prompt ${w.name}`,
-        subtitle: w.status === 'working' ? `${w.name} is busy — your message will be queued in their input box.` : undefined,
+        subtitle: w.status === 'working' ? `${w.name} is busy - your message will be queued in their input box.` : undefined,
         onSubmit: (text) => net.send({ t: 'worker.prompt', workerId: w.id, prompt: text }),
       });
     }
@@ -135,7 +135,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
       title: `Hire a worker at ${desk.label}`,
       subtitle: 'You can start with an empty prompt and send work later.',
       warning: pressureNote(store.machine),
-      placeholder: 'Optional first task…',
+      placeholder: 'Optional first task...',
       submitLabel: 'Hire & start',
       allowEmpty: true,
       providerOption: true,
@@ -161,7 +161,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
     const info = STATION_INFO[kind];
     // A prompt typed into a question it's asking would answer it.
     if (w?.status === 'needs_input') {
-      toast(`The ${name} is waiting on an answer — here's its terminal`, 'warn');
+      toast(`The ${name} is waiting on an answer - here's its terminal`, 'warn');
       return openWorkerTerminal(w.id);
     }
     // Nobody there yet: asking hires the agent.
@@ -185,7 +185,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
 
   function resumeWorker(w: WorkerInfo) {
     if (w.lost) return fixLostWorktree(w);
-    if (!w.sessionId && w.kind !== 'shell') toast(`${w.name} has no saved Claude session — starting a fresh one`, 'warn');
+    if (!w.sessionId && w.kind !== 'shell') toast(`${w.name} has no saved Claude session - starting a fresh one`, 'warn');
     net.send({ t: 'worker.resume', workerId: w.id });
   }
 
@@ -205,7 +205,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
       others: others.map((o) => o.name),
       openTerminal: isAsleep(w.status) ? undefined : () => openTerminal(net, w.id, () => openWorkerChanges(w.id)),
       rebuild: (all) => {
-        toast(all ? `Rebuilding ${others.length + 1} worktrees…` : `Rebuilding ${w.name}'s worktree…`);
+        toast(all ? `Rebuilding ${others.length + 1} worktrees...` : `Rebuilding ${w.name}'s worktree...`);
         net.send({ t: 'worker.rebuild', workerId: w.id, all });
       },
       sendHome: () => killWorker(w.id),
@@ -226,11 +226,11 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
       else window.open(w.pr.url, '_blank', 'noopener');
       return;
     }
-    if (!w.worktree) return toast(`${w.name} works in the main checkout — only workers with their own worktree can open a PR`, 'warn');
+    if (!w.worktree) return toast(`${w.name} works in the main checkout - only workers with their own worktree can open a PR`, 'warn');
     if (w.lost) return fixLostWorktree(w);
     if (w.prOpening) return;
-    if (!prReady(w)) return toast(`${w.name} is still ${STATUS_LABEL[w.status]} — wait until it's done`, 'warn');
-    toast(`Pushing ${w.worktree.branch} and opening a pull request…`);
+    if (!prReady(w)) return toast(`${w.name} is still ${STATUS_LABEL[w.status]} - wait until it's done`, 'warn');
+    toast(`Pushing ${w.worktree.branch} and opening a pull request...`);
     net.send({ t: 'worker.pr', workerId: w.id });
   }
 
@@ -244,8 +244,8 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
       const now = store.workers.get(w.id);
       if (!now || now.prOpening) return;
       if (now.lost) return fixLostWorktree(now);
-      if (!prReady(now)) return toast(`${now.name} is still ${STATUS_LABEL[now.status]} — wait until it's done`, 'warn');
-      toast(`Pushing ${now.worktree?.branch ?? 'its branch'} in each of ${now.name}'s repositories and opening pull requests…`);
+      if (!prReady(now)) return toast(`${now.name} is still ${STATUS_LABEL[now.status]} - wait until it's done`, 'warn');
+      toast(`Pushing ${now.worktree?.branch ?? 'its branch'} in each of ${now.name}'s repositories and opening pull requests...`);
       net.send({ t: 'worker.pr', workerId: now.id });
     };
     if (!workerRepos(w).some((r) => r.pr)) return open();
@@ -304,7 +304,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
             ? [h('span.cost', {}, `Office full · ${m.workers} of ${m.limit} workers`)]
             : [
                 m.pressure ? h('span.cost', { title: `This machine is under pressure: ${m.pressure}` }, 'Machine under pressure') : '',
-                ...(paused ? [h('span.cost', {}, 'Budget spent — hiring resumes tomorrow')] : [key('E', 'Hire a worker'), key('P', 'Hire with a task')]),
+                ...(paused ? [h('span.cost', {}, 'Budget spent - hiring resumes tomorrow')] : [key('E', 'Hire a worker'), key('P', 'Hire with a task')]),
                 key('B', 'Shell'),
               ]),
           labelKey,
@@ -318,7 +318,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
           h('span.title', {}, `${sign ? `${sign} · ` : ''}${w.name} · worktree deleted`),
           aside('deleted outside agent-office'),
           key('E', 'Fix it'),
-          key('X', 'Send home'),
+          key('X', 'Stand down'),
           labelKey,
         ],
       };
@@ -336,8 +336,8 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
         key('E', 'Open terminal'),
         key('C', 'Changes'),
         isAsleep(w.status) ? key('R', shell ? 'Restart' : 'Resume') : key('P', shell ? 'Run command' : 'Prompt'),
-        w.repos?.length ? reposKey(w) : w.pr ? key('O', `PR #${w.pr.number}`) : w.prOpening ? aside('Opening PR…') : prReady(w) ? key('O', 'Open PR') : '',
-        key('X', 'Send home'),
+        w.repos?.length ? reposKey(w) : w.pr ? key('O', `PR #${w.pr.number}`) : w.prOpening ? aside('Opening PR...') : prReady(w) ? key('O', 'Open PR') : '',
+        key('X', 'Stand down'),
         labelKey,
       ],
     };
@@ -347,7 +347,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
   function reposKey(w: WorkerInfo) {
     const repos = workerRepos(w);
     const prs = repos.filter((r) => r.pr).length;
-    if (w.prOpening) return aside('Opening PRs…');
+    if (w.prOpening) return aside('Opening PRs...');
     if (prs) return key('O', `${prs} of ${repos.length} PRs`);
     return prReady(w) ? key('O', `Open PRs (${repos.length} repos)`) : '';
   }
@@ -380,7 +380,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
         spent ? h('span.cost', { title: usageTitle(w.usage!, provider) }, spent) : '',
         key('E', isAsleep(w.status) ? 'Wake with a prompt' : 'Prompt'),
         key('O', 'Terminal'),
-        key('X', 'Send home'),
+        key('X', 'Stand down'),
       ],
     };
   }
@@ -420,7 +420,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
     const desk = freeDesk();
     const awake = [...store.workers.values()].filter((w) => w.kind === 'agent' && !isAsleep(w.status));
     if (!desk && !awake.length) {
-      toast('Every desk and bean bag is taken — send a worker home first', 'warn');
+      toast('Every desk and bean bag is taken - send a worker home first', 'warn');
       return;
     }
     openAsk({

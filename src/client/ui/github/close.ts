@@ -55,7 +55,7 @@ export function openClose(kind: 'issue' | 'pull', it: GhIssue | GhPull, net: Net
     busy = true;
     go.disabled = true;
     result.className = 'gh-merge-result';
-    result.replaceChildren(h('span.spinner'), `Closing the ${noun}…`);
+    result.replaceChildren(h('span.spinner'), `Closing the ${noun}...`);
     closeWaiters.set(key, (msg) => {
       closeWaiters.delete(key);
       busy = false;

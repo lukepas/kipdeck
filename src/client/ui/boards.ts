@@ -176,7 +176,7 @@ export function openBoard(kind: 'issues' | 'pulls', net: Net, actions: BoardActi
     const search = h('input', {
       type: 'text',
       value: queries[col.key] ?? '',
-      placeholder: 'Filter by title…',
+      placeholder: 'Filter by title...',
       'aria-label': `Filter ${name} by title`,
       'data-focus': `search:${col.key}`,
       spellcheck: 'false',
@@ -190,7 +190,7 @@ export function openBoard(kind: 'issues' | 'pulls', net: Net, actions: BoardActi
       const matching = words.length ? labelled.filter((it) => words.every((w) => it.title.toLowerCase().includes(w))) : labelled;
       const shown = matching.slice(0, col.max);
       ul.replaceChildren(...shown.map((it, i) => cardOf(it, i)));
-      if (!shown.length) ul.append(h('li.empty', {}, words.length ? `No titles match “${search.value.trim()}”${picked.length ? ' with those labels' : ''}` : picked.length ? 'Nothing here with those labels' : 'Nothing here'));
+      if (!shown.length) ul.append(h('li.empty', {}, words.length ? `No titles match "${search.value.trim()}"${picked.length ? ' with those labels' : ''}` : picked.length ? 'Nothing here with those labels' : 'Nothing here'));
       count.textContent = picked.length || words.length ? `${shown.length} / ${col.items.slice(0, col.max).length}` : String(shown.length);
       clear.classList.toggle('hidden', !search.value);
       section.classList.toggle('filtered', picked.length > 0 || words.length > 0);
@@ -240,7 +240,7 @@ export function openBoard(kind: 'issues' | 'pulls', net: Net, actions: BoardActi
 
   const render = () => {
     const st = kind === 'issues' ? store.issues : store.pulls;
-    status.textContent = st.loading ? 'Refreshing…' : st.fetchedAt ? `Updated ${timeAgo(st.fetchedAt)}` : '';
+    status.textContent = st.loading ? 'Refreshing...' : st.fetchedAt ? `Updated ${timeAgo(st.fetchedAt)}` : '';
     // Every refresh rebuilds the columns, so note how far each was scrolled and put it back afterwards,
     // and keep focus (and the caret, in a filter box) on the header, label toggle or box it was on.
     const scrolled = [...body.querySelectorAll('.column > ul')].map((ul) => ul.scrollTop);
@@ -250,7 +250,7 @@ export function openBoard(kind: 'issues' | 'pulls', net: Net, actions: BoardActi
     const caret = active instanceof HTMLInputElement ? ([active.selectionStart, active.selectionEnd] as const) : null;
     body.replaceChildren();
     if (st.error && !st.items.length) {
-      body.append(h('div.board-error', {}, `Couldn't load from GitHub: ${st.error}`, h('br'), h('small', {}, 'The server runs `gh` in the project directory — make sure it is installed and authenticated (gh auth login).')));
+      body.append(h('div.board-error', {}, `Couldn't load from GitHub: ${st.error}`, h('br'), h('small', {}, 'The server runs `gh` in the project directory - make sure it is installed and authenticated (gh auth login).')));
       return;
     }
     const all = boardLabels(st.items);
@@ -303,7 +303,7 @@ export function openBoard(kind: 'issues' | 'pulls', net: Net, actions: BoardActi
   if (kind === 'pulls') unsubs.push(store.on('workers', render));
   const timer = setInterval(() => {
     const st = kind === 'issues' ? store.issues : store.pulls;
-    status.textContent = st.loading ? 'Refreshing…' : st.fetchedAt ? `Updated ${timeAgo(st.fetchedAt)}` : '';
+    status.textContent = st.loading ? 'Refreshing...' : st.fetchedAt ? `Updated ${timeAgo(st.fetchedAt)}` : '';
   }, 15000);
   const modal = openModal(el, {
     doing: kind === 'issues' ? 'at the issues board' : 'at the PR board',
