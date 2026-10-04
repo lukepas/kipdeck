@@ -89,6 +89,11 @@ export class Meteors {
     this.t = 0;
   }
 
+  /** Sends one now, whatever the wait (the debug handle and the clips). */
+  fire() {
+    this.launch();
+  }
+
   /** Takes the one in flight off (a jump, motion turned off). */
   clear() {
     this.t = -1;

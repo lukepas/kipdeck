@@ -42,6 +42,8 @@ export interface Space {
   surge(): void;
   /** Plays the waypoint jump now. */
   jump(): void;
+  /** Sends a meteor across the sky now (the debug handle and the clips). */
+  meteor(): void;
   /** Sends a flyby of `kind` by now, `at` (0-1) of the way through its pass, on `side` (-1 west, 1 east) or either. */
   flyby(kind: FlybyKind, at?: number, side?: -1 | 1): void;
   /** How fast the ship is making way now, times cruise. */
@@ -64,6 +66,11 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   VIEWPORT_GLASS.emissiveIntensity = 0;
 
   const rand = seeded(0xf1b5);
+  /** Bakes the next region's sky while nothing else is going on, ready for the next waypoint. */
+  const bakeAhead = () => {
+    const idle = (window as { requestIdleCallback?: (fn: () => void) => void }).requestIdleCallback ?? ((fn: () => void) => setTimeout(fn, 500));
+    idle(() => sky.prepare(regionN + 1));
+  };
   const meteors = new Meteors(seeded(0x3e7e));
   scene.add(meteors.group);
   /** Space's own clock (ms): it only runs while frames do, so a hidden tab pauses everything. */
@@ -201,12 +208,18 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
         flybys.clear();
         meteors.clear();
       }
-      if (clock - jump.at >= JUMP_MS) jump = null;
+      if (clock - jump.at >= JUMP_MS) {
+        jump = null;
+        bakeAhead();
+      }
     }
     if (fade) {
       const f = Math.min(1, (clock - fade.at) / FADE_MS);
       sky.show(f);
-      if (f >= 1) fade = null;
+      if (f >= 1) {
+        fade = null;
+        bakeAhead();
+      }
     }
 
     speedNow = k === 0 ? 0 : cruise * k * mul;
@@ -244,12 +257,15 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
     }
   });
 
+  bakeAhead();
+
   return {
     surge: () => {
       surgeFrom = -Infinity;
       surge();
     },
     jump: startJump,
+    meteor: () => meteors.fire(),
     flyby: (kind, at = 0, side) => {
       forced = true;
       flybys.start(kind, rand, at, side);

@@ -244,16 +244,27 @@ export class Sky {
     this.renderer.setRenderTarget(was);
   }
 
-  /** Makes region `n` ready in the cube that isn't showing, to swap to with `show`. */
+  /** Which region the cube that isn't showing holds, once one has been baked into it. */
+  private ready = -1;
+
+  /**
+   * Makes region `n` ready in the cube that isn't showing, to swap to with `show`. Space bakes the
+   * next region in idle time after each swap, so a jump's own start finds it ready and doesn't stall.
+   */
   prepare(n: number) {
+    if (this.ready === n) return;
     this.bake(n, 1 - this.front);
+    this.ready = n;
   }
 
   /** How far the prepared region has replaced the showing one (0-1); at 1 it is the showing one. */
   show(k: number) {
     const toB = this.front === 0;
     this.material.uniforms.uMix.value = toB ? k : 1 - k;
-    if (k >= 1) this.front = 1 - this.front;
+    if (k >= 1) {
+      this.front = 1 - this.front;
+      this.ready = -1;
+    }
   }
 
   /** Turns the sky `dt` seconds' worth round the ship. */
