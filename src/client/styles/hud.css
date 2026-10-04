@@ -67,6 +67,8 @@
 .people li, .workers li { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; padding: 4px 6px; border-radius: var(--radius); }
 .workers li { cursor: pointer; }
 .workers li:hover { background: var(--surface-3); }
+/* Each unit by its call sign (shared/callsign.ts), as the deck stencils it over its head. */
+.workers .callsign { flex: none; width: 34px; font: 500 11px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--muted); }
 .people .you { color: var(--muted); font-weight: 400; }
 .people .mic { margin-left: auto; font-size: 12px; color: var(--muted); }
 .people li.walk { cursor: pointer; }

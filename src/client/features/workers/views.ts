@@ -21,7 +21,8 @@ import { $ } from '../../ui/dom';
 import { openExpand } from '../../ui/floorplan';
 import { renderWorkers } from '../../ui/workers-panel';
 import { renderLimits } from '../../ui/limits';
-import { modelBadge, providerLabel } from '../../ui/provider';
+import { resolvedProvider } from '../../ui/provider';
+import { PROVIDER_GLYPH, PROVIDER_STRIPE, callSign } from '../../../shared/callsign';
 import { renderUsage } from '../../ui/usage';
 import { workerBounty } from '../../ui/bounty';
 import { Worker } from '../../world/character';
@@ -41,13 +42,19 @@ export interface WorkerView {
   deskId: string;
   status: string;
   acked: boolean;
+  /** Its callout is showing all it has (see NEAR). */
+  near: boolean;
+  /** The screen version its visor last flickered for. */
+  printed: number;
 }
 
-/** How close (meters) you stop a worker jumping, and how far you go before it starts again. */
-const HOLD_NEAR = 4;
-const HOLD_LEAVE = 5;
+/** How close (meters) the camera comes before a unit's callout shows its task, and how far it goes before it's one line again. */
+const NEAR = 6;
+const NEAR_LEAVE = 7.5;
+/** How much further off a unit that needs you, or is stuck, shows all it has. */
+const URGENT_NEAR = 2;
 
-export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'notifier' | 'waiting' | 'peers'>;
+export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'notifier' | 'waiting' | 'peers' | 'overview'>;
 
 /**
  * Registers what follows the workers, the floor plan, the meeting, the pull requests and
@@ -66,7 +73,6 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
   const arrivals = new Arrivals(
     scene,
     groundHere,
-    (x, y, z) => sound.stepAt(x, z, y),
     () => ctx.world().ways,
   );
   /** Set while a floor's workers arrive with it (a welcome, a floor switch): they're in their seats already. */
@@ -86,18 +92,19 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
       if (!desk) continue;
       if (!v) {
         departures.vacate(w.deskId);
-        const model = new Worker(w.name, w.color);
+        const model = new Worker(w.name);
         desk.seatAnchor.add(model.root);
-        // Its globe floats beside the laptop (or the kiosk's counter), out from behind the card over
-        // its head and the back of its chair, so it shows from across the room.
-        const beside = desk.def.station ? new THREE.Vector3(0.62, 0.9, 0) : new THREE.Vector3(0.64, 0.5, -0.1);
-        model.setPropSpot(model.root.worldToLocal(desk.laptopAnchor.localToWorld(beside)));
+        model.dockOn(desk.group);
+        model.setCallSign(callSign(w.deskId));
+        const provider = resolvedProvider(w.provider, store.project);
+        if (w.kind === 'agent') model.setProvider(PROVIDER_GLYPH[provider], PROVIDER_STRIPE[provider]);
+        else model.setProvider('$', PROVIDER_STRIPE.custom);
         // Called to a meeting just now: out of the elevator and over to the table, one after another.
         if (desk.def.room && !seatedAlready) arrivals.add(model, desk);
         const laptop = new Laptop();
         desk.laptopAnchor.add(laptop.root);
         desk.chair.rotation.y = 0;
-        v = { model, laptop, deskId: w.deskId, status: '', acked: true };
+        v = { model, laptop, deskId: w.deskId, status: '', acked: true, near: false, printed: -2 };
         workerViews.set(w.id, v);
       }
       if (v.status !== w.status || v.acked !== w.acked) {
@@ -108,26 +115,24 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
           if (w.status === 'done' && !snoozed) sound.ding('done');
           if (!snoozed) parts.notifier.alert(w);
         }
-        // Finished what it was on: a little spin and a hop.
-        if (w.status === 'done' && (v.status === 'working' || v.status === 'needs_input')) v.model.celebrate();
         v.status = w.status;
         v.acked = w.acked;
-        v.model.setStatus(w.status, waitingOnSomeone(w));
+        v.model.setStatus(w.status);
       }
       v.model.setAction(w.action);
       v.model.setPr(workerPr(w, store.pulls.items, store.queue.tasks));
       v.model.setLost(!!w.lost);
-      const engineBadge = w.kind === 'agent' ? modelBadge(w.provider, w.model, w.effort, w.usage?.model) : undefined;
-      // A worker holding a claimed bounty wears what it's worth on its card.
+      // A unit holding a claimed bounty shows what it's worth ahead of its task.
       const bounty = workerBounty(w.id);
-      const card = meetingCard(w) ?? (w.task && w.kind === 'agent' ? { ...w.task, name: `${providerLabel(w.provider, store.project)}${engineBadge ? ` · ${engineBadge}` : ''} · ${w.task.name}` } : w.task);
-      v.model.setTask(bounty ? { name: card ? `${bounty} · ${card.name}` : bounty, summary: card?.summary ?? 'Its PR claims a bounty' } : card);
+      const card = meetingCard(w) ?? w.task;
+      v.model.setTask(bounty ? { name: card ? `${bounty}  ${card.name}` : bounty, summary: card?.summary ?? 'Its PR claims a bounty' } : card);
       const deskDef = OFFICE_PLAN.byId.get(w.deskId);
       // Keys clack while it types, not while it reads, watches its tests or browses.
       if (deskDef) sound.setTyping(w.id, deskDef.x, deskDef.z, w.status === 'working' && (!w.action || w.action === 'edit'));
       const again = w.kind === 'shell' ? 'restart' : 'resume';
-      v.laptop.setPlaceholder(w.lost ? `${w.name}'s worktree was deleted — press E to fix it` : w.status === 'offline' ? `${w.name} is asleep — press R to ${again}` : w.status === 'exited' ? `${w.name} exited` : 'booting…');
+      v.laptop.setPlaceholder(w.lost ? `Worktree deleted. Press E to fix it` : w.status === 'offline' ? `Offline. Press R to ${again}` : w.status === 'exited' ? `${w.name} exited` : 'booting...');
     }
+    paintLevels();
     for (const [id, v] of workerViews) {
       if (store.workers.has(id)) continue;
       arrivals.forget(v.model);
@@ -181,16 +186,50 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     const p = player.pos;
     for (const c of appeared) if (p.y > -0.1 && p.y < c.top && p.x > c.minX - 0.3 && p.x < c.maxX + 0.3 && p.z > c.minZ - 0.3 && p.z < c.maxZ + 0.3) p.y = c.top;
   }
+  /**
+   * Each unit's state is its place in the building's one ranking (shared/attention.ts): the same
+   * level the top bar counts, the alert strip lists and the Attention board ranks.
+   */
+  function paintLevels() {
+    const now = Date.now();
+    const ranked = new Map(store.ranked(store.floor).map((r) => [r.entry.id, r.att]));
+    for (const [id, v] of workerViews) {
+      const att = ranked.get(id);
+      if (att) v.model.setLevel(att.snoozed && att.level !== 'working' ? 'parked' : att.level, att.since, att.reason);
+      else {
+        // Not on the roster yet (it has only just been deployed): its own status says enough.
+        const w = store.workers.get(id);
+        const level = w?.status === 'needs_input' ? 'needs-you' : w?.status === 'working' || w?.status === 'starting' ? 'working' : 'parked';
+        v.model.setLevel(level, w?.waitingSince ?? now);
+      }
+    }
+  }
   store.on('workers', syncWorkers);
+  store.on('roster', paintLevels);
+  // A unit goes quiet and turns stuck with nothing sent: the ranking is read again every few seconds.
+  setInterval(paintLevels, 5000);
   store.on('bounties', syncWorkers);
   const workerPos = new THREE.Vector3();
   ctx.ticks.add('others', ({ dt, t }) => {
     const camPos = camera.position;
+    Worker.calm = ctx.reduceMotion.matches;
+    const ov = parts.overview;
+    const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
+    Worker.screen = (at) => (ov?.active() ? ov.camera.top - ov.camera.bottom : 2 * Math.tan(halfFov) * camera.position.distanceTo(at));
     for (const [id, v] of workerViews) {
       const desk = OFFICE_PLAN.byId.get(v.deskId)!;
-      // A jumping worker holds still while you're near enough to read its card, and jumps again once you walk away.
-      const d = v.model.root.getWorldPosition(workerPos).distanceTo(player.pos);
-      v.model.held = d < (v.model.held ? HOLD_LEAVE : HOLD_NEAR);
+      // Near enough to read: its callout shows its task and how long it has been this way.
+      const d = v.model.where(workerPos).distanceTo(camPos);
+      // One that needs you, or is stuck, says so from further off; from the Overview each is one line.
+      const reach = (v.model.urgent ? URGENT_NEAR : 1) * (v.near ? NEAR_LEAVE : NEAR);
+      v.near = !parts.overview?.active() && d < reach;
+      v.model.setNear(v.near);
+      // Its visor flickers as its terminal prints.
+      const version = store.screens.get(id)?.version ?? -1;
+      if (version !== v.printed) {
+        if (v.printed !== -2) v.model.output();
+        v.printed = version;
+      }
       v.model.update(dt, t);
       // A board agent's kiosk has no laptop to paint (see buildKiosk).
       if (!desk.station) v.laptop.update(dt, store.screens.get(id), Math.hypot(desk.x - camPos.x, desk.z - camPos.z));

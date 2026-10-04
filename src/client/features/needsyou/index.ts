@@ -1,6 +1,6 @@
 /**
  * A worker that needs you is the one thing in the office that can't wait, so it's the hardest to
- * miss: a beacon over its desk you can see from across the room, a banner under the top bar saying
+ * miss: a shaft of light over it you can see from across the deck, a banner under the top bar saying
  * who and what for (on any floor), a flash round the edge of the screen and an alarm when one on your
  * floor starts asking, and (if you ask for it) a reminder until someone's at its terminal.
  *
@@ -22,7 +22,7 @@ const FAR = 6.5;
 
 /** Follows the roster for the banner, the flash and the alarm, and registers the beacons' tick ('others', after the workers' own). */
 export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'views' | 'waiting' | 'mission'>) {
-  const { scene, camera, sound, settings, player, reduceMotion } = ctx;
+  const { scene, sound, settings, player } = ctx;
   const fresh = new Fresh();
   const reminders = new Reminders();
   /** The waits the banner was put away on (see waitKey): it comes back for anyone else, or when one of these asks again. */
@@ -90,37 +90,24 @@ export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'views' | 'waiting'
 
   const at = new THREE.Vector3();
   const ground = new THREE.Vector3();
-  const size = new THREE.Vector3();
-  ctx.ticks.add('others', ({ t }) => {
+  ctx.ticks.add('others', () => {
     for (const [id, b] of beacons) {
       const v = parts.views.workerViews.get(id);
       const root = v?.model.root;
-      // Not drawn (it's on its way in, or out of sight): neither is its beacon.
+      // Not drawn (it's on its way in, or out of sight): neither is its shaft.
       b.root.visible = !!root && inView(root, scene);
-      if (!root || !b.root.visible) continue;
-      root.getWorldPosition(at);
-      // The floor its desk stands on.
+      if (!v || !b.root.visible) continue;
+      // Wherever it is: at its console, or out on the ready line.
+      v.model.where(at);
       const desk = ctx.world().desks.get(v.deskId);
       const floor = desk ? desk.group.getWorldPosition(ground).y : at.y;
       const d = Math.hypot(at.x - player.pos.x, at.z - player.pos.z);
       const near = 1 - Math.min(1, Math.max(0, (d - NEAR) / (FAR - NEAR)));
-      // A worker is the size its seat makes it, and its card with it.
-      const top = at.y + topOf(root) * root.getWorldScale(size).y;
-      b.update(at, floor, top, camera.position.distanceTo(at), t, near, reduceMotion.matches);
+      b.update(at, floor, near);
     }
   });
 
   return { beacons };
-}
-
-/** How high over a worker's feet the top of what's over its head is: its card or bubble, or its name. */
-function topOf(root: THREE.Object3D): number {
-  let top = 1.7;
-  for (const c of root.children) {
-    const s = c as THREE.Sprite;
-    if (s.isSprite && s.visible) top = Math.max(top, s.position.y + s.scale.y * (1 - s.center.y));
-  }
-  return top;
 }
 
 /** Whether `o` is in the scene and nothing it's inside is hidden. */

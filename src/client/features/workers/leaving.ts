@@ -5,18 +5,17 @@ import type { Laptop } from './laptop';
 import type { DeskView } from '../../world/types';
 import type { Ways } from '../../world/world';
 
-/** Seconds sat at the desk while its things go in the box and the laptop shuts, then holding the box. */
-const PACK = 1.8;
-/** A worker's feet are this far above its origin, so standing on something its origin is this far below the top. */
-const FEET = 0.07;
-/** Seconds hopping up onto a chair. */
-const HOP = 0.55;
-/** Seconds to shrink away once it's packed. */
-const GONE = 0.6;
+/** Seconds it holds at its console, band and visor dark and lifting off its pad, while the screen lies down. */
+const PACK = 1.3;
+/** A unit docks at its origin: on the floor, its origin is the floor. */
+const FEET = 0;
+/** Seconds gliding from beside its seat onto it. */
+const HOP = 0.45;
+/** Seconds to fold away into a line of light once it's lifted. */
+const GONE = 0.5;
 /** Seconds for a shut laptop to shrink away. */
 const LAPTOP_GONE = 0.3;
 
-const FAREWELLS = ['bye, everyone', 'it was fun', 'welp', 'cleaning out my desk', 'but my PR…'];
 
 interface Leaver {
   model: Worker;
@@ -36,11 +35,10 @@ interface Closing {
 }
 
 const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
-const pick = <T>(xs: readonly T[]): T => xs[Math.floor(Math.random() * xs.length)];
 
 /**
- * Workers who've been sent home. Each one packs its things into a cardboard box at its seat while
- * its laptop shuts, says goodbye, and shrinks away where it sits: the seat is free once it's gone.
+ * Units stood down. Each one goes dark at its console and lifts off its pad while its screen lies
+ * down, then folds away into a thin line of light where it was: the seat is free once it's gone.
  */
 export class Departures {
   private leavers: Leaver[] = [];
@@ -61,7 +59,7 @@ export class Departures {
     // On the seat it faces the desk: the seat anchor is turned round from the desk's own rotation.
     model.root.rotation.set(0, desk.def.rotY + Math.PI, 0);
     model.root.scale.setScalar(scale);
-    model.leave(pick(FAREWELLS));
+    model.leave('STANDING DOWN');
     this.leavers.push({ model, deskId: desk.def.id, t: 0, scale, gone: 0 });
     this.laptops.push({ laptop, deskId: desk.def.id, gone: 0 });
   }
@@ -101,8 +99,10 @@ export class Departures {
       l.t += dt;
       l.model.update(dt, t);
       if (l.t < PACK) return true;
+      // Thinner and taller, to a line, then gone.
       l.gone = Math.min(1, l.gone + dt / GONE);
-      l.model.root.scale.setScalar(Math.max(0.001, l.scale * (1 - l.gone * l.gone)));
+      const k = l.gone * l.gone;
+      l.model.root.scale.set(Math.max(0.001, l.scale * (1 - k)), l.scale * (1 + k * 0.6) * (l.gone < 1 ? 1 : 0.001), Math.max(0.001, l.scale * (1 - k)));
       if (l.gone < 1) return true;
       this.drop(l);
       return false;
@@ -130,7 +130,6 @@ interface Arriver {
   /** Seconds before it steps out of the elevator (they come out one after another), then seconds walking. */
   t: number;
   heading: number;
-  stepIn: number;
   /** Where the hop up onto its chair starts, once it's beside it. */
   from?: THREE.Vector3;
   hop: number;
@@ -142,8 +141,8 @@ const IN_PACE = 2.8;
 const IN_SPACING = 0.9;
 
 /**
- * Workers called to a meeting. Each steps out of the elevator, walks round the furniture to its chair
- * at the meeting table (see wayIn), hops up onto it and sits down, and from then on it's an ordinary
+ * Units called to a review. Each comes out of the Deck lift, glides round the furniture to its chair
+ * at the meeting table (see wayIn), glides onto it, and from then on it's an ordinary
  * worker at its seat.
  */
 export class Arrivals {
@@ -155,7 +154,6 @@ export class Arrivals {
     private parent: THREE.Object3D,
     /** The top of whatever is underfoot at (x, z) for feet at `y`. */
     private ground: (x: number, z: number, y: number) => number,
-    private footstep: (x: number, y: number, z: number) => void,
     /** The way in, on the map you're on (see Ways.in). */
     private ways: () => Ways,
   ) {}
@@ -172,7 +170,7 @@ export class Arrivals {
     model.root.rotation.set(0, 0, 0);
     model.root.scale.setScalar(desk.seatAnchor.getWorldScale(new THREE.Vector3()).x);
     model.root.visible = delay <= 0;
-    this.walkers.push({ model, desk, way, next: 1, t: -delay, heading: 0, stepIn: 0, hop: 0 });
+    this.walkers.push({ model, desk, way, next: 1, t: -delay, heading: 0, hop: 0 });
   }
 
   /** Stops walking `model` in: it was sent home before it sat down, or it's gone. */
@@ -214,7 +212,8 @@ export class Arrivals {
       // Up onto the chair in a little arc, turning to face the table.
       w.hop = Math.min(1, w.hop + dt / HOP);
       const seat = w.desk.seatAnchor.getWorldPosition(new THREE.Vector3());
-      pos.set(THREE.MathUtils.lerp(w.from.x, seat.x, w.hop), THREE.MathUtils.lerp(w.from.y, seat.y, w.hop) + Math.sin(w.hop * Math.PI) * 0.35, THREE.MathUtils.lerp(w.from.z, seat.z, w.hop));
+      const e = w.hop * w.hop * (3 - 2 * w.hop);
+      pos.set(THREE.MathUtils.lerp(w.from.x, seat.x, e), THREE.MathUtils.lerp(w.from.y, seat.y, e), THREE.MathUtils.lerp(w.from.z, seat.z, e));
       root.rotation.y += wrap(w.desk.def.rotY + Math.PI - root.rotation.y) * Math.min(1, dt * 9);
       return w.hop < 1;
     }
@@ -240,13 +239,7 @@ export class Arrivals {
     pos.y += (g - pos.y) * Math.min(1, dt * 14);
     root.rotation.y += wrap(w.heading - root.rotation.y) * Math.min(1, dt * 8);
     w.model.walking = w.next < w.way.length;
-    if (w.model.walking) {
-      w.stepIn -= dt;
-      if (w.stepIn <= 0) {
-        w.stepIn += Math.PI / 9;
-        this.footstep(pos.x, pos.y, pos.z);
-      }
-    } else w.from = pos.clone();
+    if (!w.model.walking) w.from = pos.clone();
     return true;
   }
 

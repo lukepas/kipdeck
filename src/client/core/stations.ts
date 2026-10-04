@@ -1,6 +1,7 @@
 /** The board agents: what each is for, and the ones waiting by their boards before anyone has asked them anything. */
 import { STATION_AGENT, type StationKind } from '../../shared/layout';
 import { OFFICE_PLAN } from '../../shared/plan';
+import { callSign } from '../../shared/callsign';
 import { Worker } from '../world/character';
 import type { DeskView } from '../world/types';
 import type { World } from '../world/world';
@@ -25,10 +26,13 @@ export function idleAgentsIn(w: World): IdleAgent[] {
     const kind = def.station!;
     const agent = STATION_AGENT[kind];
     const model = new Worker(agent.name, agent.color);
-    model.setStatus('idle', false);
+    model.setStatus('idle');
+    model.setCallSign(callSign(def.id));
+    model.setProvider('', agent.color);
     model.setTask({ name: STATION_INFO[kind].offer, summary: STATION_INFO[kind].does });
     const view = w.desks.get(def.id)!;
     view.vacancy.children[0].add(model.root);
+    model.dockOn(view.group);
     return { model, view };
   });
 }

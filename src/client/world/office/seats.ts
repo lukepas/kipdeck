@@ -56,7 +56,7 @@ export function buildDesk(def: DeskDef, index: number, trimMat: THREE.Material):
   const tag = textPlane(def.label.replace(/^Console /, ''), { face: 'mono', size: 40, color: DECK.muted });
   tag.scale.multiplyScalar(0.55);
   tag.position.set(0, height + 0.13, -depth / 2 + 0.005);
-  tag.rotation.set(0.22, Math.PI, 0);
+  tag.rotation.set(-0.22, Math.PI, 0);
   group.add(tag);
   group.add(contactShadow(width + 0.5, depth + 1.4, 0, 0.35));
 

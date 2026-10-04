@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { FLAG_BOLD, FLAG_DIM, FLAG_INVERSE, RGB_FLAG, type Run } from '../../../shared/protocol';
-import { mesh, roundedBox, toon } from '../../world/toon';
+import { mesh } from '../../world/toon';
+import { DECK, flat, practical } from '../../world/office/materials';
 import { TERM_THEME } from '../../ui/termtheme';
 import type { ScreenState } from '../../state/store';
 
@@ -66,11 +67,11 @@ export function paintScreen(ctx: CanvasRenderingContext2D, w: number, h: number,
   ctx.fillStyle = TERM_THEME.background;
   ctx.fillRect(0, 0, w, h);
   if (!s) {
-    ctx.fillStyle = '#6c7086';
-    ctx.font = `700 ${Math.round(h / 12)}px ui-monospace, Menlo, monospace`;
+    ctx.fillStyle = DECK.muted;
+    ctx.font = `500 ${Math.round(h / 14)}px "JetBrains Mono", ui-monospace, monospace`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(placeholder ?? 'booting…', w / 2, h / 2);
+    ctx.fillText(placeholder ?? 'booting...', w / 2, h / 2);
     ctx.textAlign = 'left';
     return;
   }
@@ -129,37 +130,29 @@ export class Laptop {
   private drawnVersion = -1;
   private paintedAt = 0;
   private openT = 0;
-  private placeholder = 'booting…';
+  private placeholder = 'booting...';
 
   constructor() {
     this.canvas.width = 1024;
-    this.canvas.height = 680;
+    this.canvas.height = 614;
     this.ctx = this.canvas.getContext('2d')!;
     this.texture = new THREE.CanvasTexture(this.canvas);
     this.texture.colorSpace = THREE.SRGBColorSpace;
     this.texture.anisotropy = 8;
     this.texture.minFilter = THREE.LinearMipmapLinearFilter;
 
-    // Lid, hinged along the back edge
-    this.lid.position.set(0, 0.035, -0.24);
+    // The screen: a slim slab with a dark bezel, hinged on a low plinth at its foot. It lies flat
+    // while the unit comes in and tilts up, leaning well back so the unit shows over it from the table.
+    this.lid.position.set(0, 0.014, -0.05);
     this.root.add(this.lid);
-    const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.72, 0.46), new THREE.MeshBasicMaterial({ map: this.texture, toneMapped: false }));
-    screen.position.set(0, 0.25, 0.014);
+    const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.385, 0.231), new THREE.MeshBasicMaterial({ map: this.texture, toneMapped: false }));
+    screen.position.set(0, 0.1275, 0.0095);
     this.lid.add(screen);
-    const shell = toon('#c9ced6');
-    const dark = toon('#2b2d42');
-    // Base with keyboard
-    this.root.add(mesh(roundedBox(0.78, 0.035, 0.52, 0.04), shell, 0, 0.018, 0.02));
-    this.root.add(mesh(new THREE.BoxGeometry(0.66, 0.006, 0.24), dark, 0, 0.037, 0.0, false));
-    this.root.add(mesh(new THREE.BoxGeometry(0.2, 0.004, 0.11), toon('#aab1bb'), 0, 0.037, 0.19, false));
-    const lidShell = mesh(roundedBox(0.78, 0.025, 0.5, 0.04), shell, 0, 0.25, 0);
-    lidShell.rotation.x = Math.PI / 2;
-    this.lid.add(lidShell);
-    // Sticker on the back of the lid
-    const sticker = mesh(new THREE.CircleGeometry(0.07, 20), toon('#ff8a5b'), 0, 0.27, -0.014, false);
-    sticker.rotation.y = Math.PI;
-    this.lid.add(sticker);
-    this.lid.rotation.x = Math.PI / 2; // closed; animates open
+    this.lid.add(mesh(new THREE.BoxGeometry(0.41, 0.255, 0.018), flat(DECK.console), 0, 0.1275, 0));
+    // A hairline along its foot, lit: the console is live.
+    this.lid.add(mesh(new THREE.BoxGeometry(0.36, 0.004, 0.004), practical(DECK.steel), 0, 0.002, 0.012, false));
+    this.root.add(mesh(new THREE.BoxGeometry(0.3, 0.014, 0.1), flat(DECK.consoleTop), 0, 0.007, -0.05));
+    this.lid.rotation.x = Math.PI / 2; // lying flat; tilts up as it boots
     paintScreen(this.ctx, this.canvas.width, this.canvas.height, undefined, this.placeholder);
     this.texture.needsUpdate = true;
   }
@@ -193,7 +186,7 @@ export class Laptop {
   private setLid(open: number) {
     this.openT = open;
     const e = 1 - Math.pow(1 - open, 3);
-    this.lid.rotation.x = Math.PI / 2 - e * (Math.PI / 2 + 0.22);
+    this.lid.rotation.x = Math.PI / 2 - e * (Math.PI / 2 + 0.55);
   }
 
   dispose() {

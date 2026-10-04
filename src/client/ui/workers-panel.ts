@@ -6,6 +6,7 @@ import { duration } from '../../shared/attention';
 import type { WorkerInfo } from '../../shared/protocol';
 import { store } from '../state';
 import { DESK_BY_ID } from '../../shared/layout';
+import { address, callSign } from '../../shared/callsign';
 import { $, h, STATUS_LABEL } from './dom';
 import { usageLabel, usageTitle } from './usage';
 import { providerLabel, providerUsageState, providerWaitingLabel, resolvedProvider, modelBadge } from './provider';
@@ -39,7 +40,7 @@ export function renderWorkers(onOpen: (id: string) => void) {
       h(
         'li',
         { class: asking ? 'needs-you-row' : '', onclick: () => onOpen(w.id), title: asking ? `${w.name} needs you: open its terminal to answer` : `Open ${w.name}'s terminal` },
-        h('span.dot', { style: `background:${w.color}` }),
+        h('span.callsign', { title: address(w.deskId) }, callSign(w.deskId) || '--'),
         h('span.name', {}, w.name, sub ? h('span.sub', {}, sub) : null,
           usageState === 'tracked' && w.usage ? h('span.cost', { title: usageTitle(w.usage, providerKind) }, usageLabel(w.usage, providerKind)) : null),
         w.lost
@@ -51,7 +52,7 @@ export function renderWorkers(onOpen: (id: string) => void) {
     );
   }
   $('workers-panel').classList.toggle('needs-you-panel', needy);
-  if (!workers.length) ul.append(h('li.empty', {}, 'Walk up to a desk and press E to hire one'));
+  if (!workers.length) ul.append(h('li.empty', {}, 'Walk up to a free console and press E to deploy a unit'));
   // The count is the workers hired onto desks and bean bags (and a meeting's table): the board agents
   // standing at the Issues, PR and queue kiosks are listed but aren't counted.
   const hired = workers.filter((w) => !DESK_BY_ID.get(w.deskId)?.station).length;

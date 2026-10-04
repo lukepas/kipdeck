@@ -1,366 +1,394 @@
 import * as THREE from 'three';
+import { duration, type AttentionLevel } from '../../../shared/attention';
 import type { WorkerAction, WorkerStatus, WorkerTask } from '../../../shared/protocol';
 import { isAsleep, type WorkerPr } from '../../../shared/status';
-import { disposeSprite, mesh, textSprite, toon, toonUnique } from '../toon';
-import type { WorkerRig } from './rig';
-import { ease, popIn } from './curves';
-import { ACT_MIN, DESPAIR_MIN, TWIRL_TIME, WAIT_CYCLE, WAIT_HOPS, blendStance, type Act, type Stance } from './worker-stance';
-import { STATUS_BULB, bubbleFor } from './worker-badges';
-import { globe, papers } from './worker-props';
-import { packUp, waddle, type Leaving } from './worker-leave';
+import { contactShadow, DECK } from '../office/materials';
+import { GLYPH_HUE, type GlyphKind } from '../glyphs';
+import { disposeSprite } from '../toon';
+import { UNIT, buildUnit, paintShell, setGlyph, type Shell, type UnitBody } from './unit-body';
+import { calloutSprite, clip, type CalloutText } from './unit-callout';
+import { GLYPH_SCREEN, GroundRing, glyphSprite, setGlyphKind } from './unit-marks';
 
-/** The little Claude worker that sits at a desk. Forward is +z. */
+/** The smallest a callout gets on screen: this much of the view's height. */
+const CALLOUT_MIN = 0.02;
+/** How long the violet check stays over a unit once its pull request has merged (s). */
+const MERGED_SHOW = 6;
+/** The needs-you ring's pulse: one every this many seconds, out to this much bigger. */
+const PULSE = { every: 1.2, grow: 0.35 } as const;
+/** How fast a unit glides (its seat's meters a second), and how far it leans into it (radians, about 2 degrees). */
+const GLIDE = { speed: 2.4, lean: 0.035 } as const;
+/** How far a stuck unit slumps forward (about 8 degrees). */
+const SLUMP = 0.14;
+/** Seconds to come in at a console (it builds up from its base) and for a stuck unit's hatch to fade in. */
+const SPAWN = 0.5;
+const HATCH_IN = 0.2;
+
+const STATE_WORD: Record<GlyphKind, string> = {
+  'needs-you': 'NEEDS YOU',
+  stuck: 'STUCK',
+  review: 'TO REVIEW',
+  working: 'WORKING',
+  parked: 'ON DECK',
+  merged: 'MERGED',
+};
+
+/** Somewhere a unit glides to, in its seat's space: a spot and which way it faces there. */
+export interface Spot {
+  x: number;
+  y: number;
+  z: number;
+  yaw: number;
+}
+
+const tmp = new THREE.Vector3();
+const VISOR_DARK = new THREE.Color('#0E151C');
+const VISOR_LIT = new THREE.Color('#7F95A9');
+
+/**
+ * A unit: one agent at its console. A faceless figure on a hover base (unit-body.ts), its state shown
+ * four ways at once, the band round its chest, the ring under it, the glyph over it and where it is
+ * (one that needs you glides to its pod's ready line, see features/readyline), and a callout with its
+ * call sign. Its state is the building's one ranking (shared/attention.ts), set by setLevel. Its
+ * root goes in its seat's anchor; everything else hangs off a mover that glides away from the seat
+ * and back. Forward is +z.
+ */
 export class Worker {
   readonly root = new THREE.Group();
-  private body = new THREE.Group();
-  /** Its moving parts, for what poses them from the other files here (packing up). */
-  private rig: WorkerRig;
-  private bulb: THREE.MeshStandardMaterial;
-  private bulbMesh: THREE.Mesh;
-  private armL: THREE.Object3D;
-  private armR: THREE.Object3D;
-  private bubble: THREE.Sprite | null = null;
-  private bubbleKey = '';
-  /** The bubble is a task card: it hangs from its tail instead of floating. */
-  private bubbleIsCard = false;
-  private task: WorkerTask | undefined;
-  /** Its pull request, open or merged: its bubble is outlined (and labelled, while it rests) to match. */
-  private pr: WorkerPr | undefined;
-  /** Its worktree was deleted outside the office (WorkerInfo.lost): its bubble says so until it's fixed. */
-  private lost = false;
-  private nameTag: THREE.Sprite | null = null;
-  private eyes: THREE.Mesh[] = [];
-  private blinkAt = Math.random() * 4;
+  /** Glides between the seat and wherever the unit is sent (see goTo). */
+  private mover = new THREE.Group();
+  private body: UnitBody;
+  private ring = new GroundRing();
+  private shadow: THREE.Mesh;
+  private glyph = glyphSprite();
+  private callout: THREE.Sprite | null = null;
+  private calloutKey = '';
+  /** Something its seat stands on, to find the floor under it wherever it is (see dockOn). */
+  private floorRef: THREE.Object3D | null = null;
+  private floorY = 0;
+
   status: WorkerStatus = 'starting';
-  bouncing = false;
-  /** You're close enough to read its card: it lands the hop it's in and stands still until you walk away. */
-  held = false;
-  private bounceT = 0;
-  private spawnT = 0;
-  /** Seconds left jumping for joy (it just finished). */
-  private cheerT = 0;
-  private pupils: THREE.Mesh[] = [];
-  private feet: THREE.Mesh[] = [];
-  /** Sent home: the box of its things in its arms, and how far into its waddle it is. */
-  private leaving: Leaving | null = null;
-  /** On its way out (sent home) or in (called to a meeting): it waddles along instead of standing. */
+  /** On its way in (called to a review): it glides along and leans into it. */
   walking = false;
-  /** What its latest tool call was (see setAction), and what it's acting out right now. */
-  private nextAction: WorkerAction | undefined;
+  /** Fewer moving parts, for someone who asked for less motion: set by whoever ticks the units. */
+  static calm = false;
+  /**
+   * How many meters the view's full height spans at a point in the world, for whatever camera draws
+   * the frame (Walk's or the Overview's): the glyph keeps its size on screen by it, and the callout
+   * never shrinks below CALLOUT_MIN of it. Set by whoever ticks the units; none leaves them as built.
+   */
+  static screen: ((at: THREE.Vector3) => number) | null = null;
+
+  private name: string;
+  private sign = '';
+  private level: AttentionLevel = 'parked';
+  private since = Date.now();
+  private reason: string | undefined;
+  private task: WorkerTask | undefined;
+  private pr: WorkerPr | undefined;
+  private lost = false;
+  private near = false;
   private action: WorkerAction | undefined;
-  private actionT = 0;
-  /** How much of each act is in its stance right now, blending from one to the next. */
-  private acts = new Map<Act, number>();
-  private stance = {} as Stance;
-  private blend = {} as Stance;
-  /** Seconds it has been waiting on you, for the jump / tap-its-foot cycle. */
-  private waitT = 0;
-  private turnY = 0;
-  /** Seconds into its finishing spin, or -1. */
-  private twirlT = -1;
-  private flipT = 0;
-  private papers: ReturnType<typeof papers>;
-  private globe: ReturnType<typeof globe>;
-  /** Beside its laptop, where the globe floats (see setPropSpot). */
-  private spot = new THREE.Vector3(-1, 1.1, 1.3);
-  private skin: THREE.MeshStandardMaterial;
-  /** How far through its stride it is, walking in. */
-  private stride = 0;
+  /** Seconds left showing the violet check, once its pull request merged. */
+  private mergedT = 0;
+  private spawnT = 0;
+  private hatchT = 0;
+  /** 1 the moment its terminal prints, falling away: the visor's flicker. */
+  private flick = 0;
+  private target: Spot | null = null;
+  private facing: number | null = null;
+  private leaving: string | null = null;
+  private leaveT = 0;
+  private said: string | null = null;
+  private lastDraw = 0;
 
-  constructor(
-    name: string,
-    color: string,
-  ) {
-    const skin = (this.skin = toonUnique(color));
-    const white = toon('#ffffff');
-    const ink = toon('#1d1d1d');
-
-    this.root.add(this.body);
-    // Bean-shaped body
-    const bean = mesh(new THREE.CapsuleGeometry(0.28, 0.3, 8, 16), skin, 0, 0.55, 0);
-    this.body.add(bean);
-    // Big cartoon eyes
-    for (const sx of [-1, 1]) {
-      const eye = mesh(new THREE.SphereGeometry(0.09, 12, 10), white, sx * 0.11, 0.7, 0.23, false);
-      eye.scale.z = 0.6;
-      this.body.add(eye);
-      const pupil = mesh(new THREE.SphereGeometry(0.045, 10, 8), ink, sx * 0.11, 0.7, 0.29, false);
-      this.body.add(pupil);
-      this.eyes.push(eye, pupil);
-      this.pupils.push(pupil);
-    }
-    // Headset: band + mic
-    const band = mesh(new THREE.TorusGeometry(0.29, 0.025, 6, 20, Math.PI), toon('#2b2d42'), 0, 0.72, 0, false);
-    band.rotation.y = Math.PI / 2;
-    this.body.add(band);
-    for (const sx of [-1, 1]) this.body.add(mesh(new THREE.SphereGeometry(0.07, 10, 8), toon('#2b2d42'), sx * 0.29, 0.72, 0, false));
-    // Antenna with status bulb
-    this.body.add(mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.22, 6), toon('#2b2d42'), 0, 1.07, 0, false));
-    this.bulb = toonUnique(STATUS_BULB.starting);
-    this.bulb.emissive = new THREE.Color(STATUS_BULB.starting).multiplyScalar(0.6);
-    this.bulbMesh = mesh(new THREE.SphereGeometry(0.075, 12, 10), this.bulb, 0, 1.2, 0, false);
-    this.body.add(this.bulbMesh);
-
-    const arm = (x: number) => {
-      const pivot = new THREE.Group();
-      pivot.position.set(x, 0.55, 0.05);
-      pivot.add(mesh(new THREE.CapsuleGeometry(0.055, 0.16, 4, 8), skin, 0, -0.12, 0));
-      this.body.add(pivot);
-      return pivot;
-    };
-    this.armL = arm(-0.3);
-    this.armR = arm(0.3);
-    for (const sx of [-1, 1]) {
-      const foot = mesh(new THREE.CapsuleGeometry(0.06, 0.1, 4, 8), skin, sx * 0.12, 0.2, 0.05);
-      this.body.add(foot);
-      this.feet.push(foot);
-    }
-
-    // What it acts out with: papers in its hands, and a globe beside its laptop.
-    this.papers = papers();
-    this.papers.group.position.set(0, 0.86, 0.4);
-    this.papers.group.rotation.x = 0.35;
-    this.body.add(this.papers.group);
-    this.globe = globe();
-    for (const prop of [this.papers.group, this.globe.group]) prop.visible = false;
-    this.root.add(this.globe.group);
-
-    this.rig = { root: this.root, body: this.body, skin: this.skin, armL: this.armL, armR: this.armR, feet: this.feet, pupils: this.pupils, bulb: this.bulb, bulbMesh: this.bulbMesh, props: [this.papers.group, this.globe.group] };
-    this.setName(name);
+  constructor(name: string, _color?: string) {
+    this.name = name;
+    this.body = buildUnit();
+    this.root.add(this.mover);
+    this.mover.add(this.body.figure, this.ring.root, this.glyph);
+    this.shadow = contactShadow(0.8, 0.8, 0, 0, 0, 0.006);
+    this.mover.add(this.shadow);
+    if (Worker.calm) this.spawnT = 1;
+    this.paint();
   }
 
-  /** Where the globe floats, in its own space: beside its laptop, where the card over its head doesn't hide it. */
-  setPropSpot(at: THREE.Vector3) {
-    this.spot.copy(at);
-  }
-
-  /** What its latest tool call was, to act out while it's working. */
-  setAction(action: WorkerAction | undefined) {
-    this.nextAction = action;
-  }
-
-  /** Just finished: a quick spin and a hop. */
-  celebrate() {
-    this.twirlT = 0;
-    this.cheer(1.2);
+  /** The seat it sits at stands on `ref`'s floor: its ring and shadow go there, wherever it moves. */
+  dockOn(ref: THREE.Object3D) {
+    this.floorRef = ref;
   }
 
   setName(name: string) {
-    if (this.nameTag) {
-      this.root.remove(this.nameTag);
-      disposeSprite(this.nameTag);
-    }
-    this.nameTag = textSprite(name, { bg: '#2b2d42', color: '#fffaf3', size: 36, border: '#fffaf3' });
-    this.nameTag.position.y = 1.55;
-    this.root.add(this.nameTag);
+    this.name = name;
+    this.paint();
   }
 
-  setStatus(status: WorkerStatus, bounce: boolean) {
+  /** "A-03": the seat it holds (shared/callsign.ts). */
+  setCallSign(sign: string) {
+    this.sign = sign;
+    this.paint();
+  }
+
+  /** The provider's letters on its visor and the stripe down its back. */
+  setProvider(letters: string, stripe: string) {
+    setGlyph(this.body, letters);
+    this.body.stripe.color.set(stripe);
+    this.body.stripe.emissive.set(stripe).multiplyScalar(0.25);
+  }
+
+  setStatus(status: WorkerStatus) {
     this.status = status;
-    this.bouncing = bounce;
-    this.paintBulb();
-    this.drawBubble();
+    this.paint();
   }
 
-  private paintBulb() {
-    const c = STATUS_BULB[this.status] ?? '#adb5bd';
-    this.bulb.color.set(c);
-    this.bulb.emissive.set(c).multiplyScalar(0.7);
+  /** Where it stands in the ranking (shared/attention.ts): its level, since when, and why. */
+  setLevel(level: AttentionLevel, since = Date.now(), reason?: string) {
+    if (level === 'stuck' && this.level !== 'stuck') this.hatchT = 0;
+    this.level = level;
+    this.since = since;
+    this.reason = reason;
+    this.paint();
   }
 
-  /** Jumps for joy, arms up, for a few seconds. */
-  cheer(seconds = 3) {
-    this.cheerT = seconds;
+  /** What its latest tool call was. */
+  setAction(action: WorkerAction | undefined) {
+    this.action = action;
   }
 
-  /** What it's working on, shown on a card over its head in place of the status bubble. */
   setTask(task: WorkerTask | undefined) {
     this.task = task;
-    this.drawBubble();
+    this.paint();
   }
 
+  /** Its pull request: the moment one it had open merges, the violet check shows for a while. */
   setPr(pr: WorkerPr | undefined) {
+    if (pr?.state === 'merged' && this.pr?.state === 'open') this.mergedT = MERGED_SHOW;
     this.pr = pr;
-    this.drawBubble();
+    this.paint();
   }
 
   setLost(lost: boolean) {
     this.lost = lost;
-    this.drawBubble();
+    this.paint();
   }
 
-  /** Sent home: its light goes out, its face falls, and its things pop into a box in its arms. `farewell` goes over its head. */
-  leave(farewell: string) {
-    if (this.leaving) return;
-    this.bouncing = false;
-    this.cheerT = 0;
-    this.bounceT = 0;
-    this.twirlT = -1;
-    for (const prop of [this.papers.group, this.globe.group]) prop.visible = false;
-    this.armL.position.set(-0.3, 0.55, 0.05);
-    this.armR.position.set(0.3, 0.55, 0.05);
-    this.feet.forEach((f, i) => f.position.set(i ? 0.12 : -0.12, 0.2, 0.05));
-    for (const p of this.pupils) p.position.y = 0.7;
-    this.bulb.color.set(STATUS_BULB.exited);
-    this.bulb.emissive.set('#000000');
-    if (this.bubble) {
-      this.root.remove(this.bubble);
-      disposeSprite(this.bubble);
-    }
-    this.bubbleKey = 'leaving';
-    this.bubbleIsCard = false;
-    this.bubble = textSprite(farewell, { bg: '#e9ecef', size: 34 });
-    this.root.add(this.bubble);
-    this.leaving = { box: packUp(this.rig), boxT: 0, stride: 0 };
+  /** You're close, or it's selected: its callout shows its task and how long it's been this way. */
+  setNear(near: boolean) {
+    if (near === this.near) return;
+    this.near = near;
+    this.paint();
   }
 
-  /** On its way out: says something else over its head in place of its farewell (or whatever was over it, before it packed up). */
+  /** Its terminal printed something: the visor flickers. */
+  output() {
+    this.flick = 1;
+  }
+
+  /** Glides to `spot` (in its seat's space), or back to its seat (null). */
+  goTo(spot: Spot | null) {
+    this.target = spot;
+  }
+
+  /** At its seat, turns to `yaw` (in its seat's space), or back to its console (null). */
+  face(yaw: number | null) {
+    this.facing = yaw;
+  }
+
+  /** Where it is in the world now (its mover's foot). */
+  where(out: THREE.Vector3): THREE.Vector3 {
+    return this.mover.getWorldPosition(out);
+  }
+
+  /** Stood down: its band and visor go dark, and `text` replaces its callout. */
+  leave(text: string) {
+    if (this.leaving !== null) return;
+    this.leaving = text;
+    this.leaveT = 0;
+    this.target = null;
+    this.paint();
+  }
+
+  /** A word over its head in place of its callout. */
   say(text: string) {
-    if (this.bubble) {
-      this.root.remove(this.bubble);
-      disposeSprite(this.bubble);
-    }
-    this.bubbleKey = 'said';
-    this.bubbleIsCard = false;
-    this.bubble = textSprite(text, { bg: '#e9ecef', size: 34 });
-    if (!this.leaving) this.bubble.position.y = 1.95;
-    this.root.add(this.bubble);
+    this.said = text;
+    this.paint();
   }
 
-  private drawBubble() {
-    if (this.leaving) return;
-    const { status, bouncing: bounce, task, pr, lost } = this;
-    const { key, draw } = bubbleFor(status, bounce, task, pr, lost);
-    if (key === this.bubbleKey) return;
-    this.bubbleKey = key;
-    if (this.bubble) {
-      this.root.remove(this.bubble);
-      disposeSprite(this.bubble);
-      this.bubble = null;
+  /** It needs you, or it's stuck: its callout says so from further off. */
+  get urgent(): boolean {
+    const kind = this.kind();
+    return kind === 'needs-you' || kind === 'stuck';
+  }
+
+  /** What it shows: the glyph, band and ring take this, not the level, while its PR has just merged or its worktree is gone. */
+  private kind(): GlyphKind {
+    if (this.mergedT > 0) return 'merged';
+    if (this.lost) return 'stuck';
+    return this.level;
+  }
+
+  private statusLine(kind: GlyphKind): string {
+    const age = duration(Date.now() - this.since).replace('under a minute', '<1 min');
+    if (this.lost) return 'STUCK  worktree deleted';
+    if (kind === 'stuck') return clip(`STUCK  ${this.reason ?? age}`, 34);
+    if (kind === 'merged') return `MERGED  PR #${this.pr?.number ?? ''}`;
+    if (kind === 'review' && this.pr) return `PR #${this.pr.number} ${this.pr.state.toUpperCase()}`;
+    if (kind === 'parked') return isAsleep(this.status) ? 'OFFLINE' : STATE_WORD.parked;
+    return `${STATE_WORD[kind]}  ${age}`;
+  }
+
+  /** Redraws the callout when what it says has changed (its age ticks by the minute). */
+  private paint() {
+    const kind = this.kind();
+    const leaving = this.leaving !== null;
+    const text: CalloutText = {
+      sign: this.sign,
+      name: this.name,
+      kind: leaving ? null : kind,
+      near: !leaving && (this.near || !!this.said),
+      task: this.said ?? this.task?.name,
+      status: leaving ? undefined : this.statusLine(kind),
+    };
+    if (leaving) text.name = `${this.name}  ${this.leaving}`;
+    const key = JSON.stringify(text);
+    this.lastDraw = performance.now();
+    setGlyphKind(this.glyph, leaving || kind === 'working' || kind === 'parked' ? null : kind);
+    paintShell(this.body, this.shell(kind));
+    if (key === this.calloutKey) return;
+    this.calloutKey = key;
+    if (this.callout) {
+      this.mover.remove(this.callout);
+      disposeSprite(this.callout);
     }
-    this.bubbleIsCard = !!task;
-    this.bubble = draw();
-    if (this.bubble) this.root.add(this.bubble);
+    this.callout = calloutSprite(text);
+    this.callout.position.y = UNIT.top + 0.14;
+    this.callout.userData.base = this.callout.scale.clone();
+    this.mover.add(this.callout);
+    this.glyph.position.y = this.callout.position.y + this.callout.scale.y + 0.05;
+  }
+
+  private shell(kind: GlyphKind): Shell {
+    if (this.leaving !== null || isAsleep(this.status)) return 'asleep';
+    return kind === 'stuck' ? 'stuck' : 'live';
   }
 
   update(dt: number, t: number) {
-    if (this.leaving) return this.carry(this.leaving, dt, t);
-    this.cheerT = Math.max(0, this.cheerT - dt);
-    // Waiting on you: a couple of seconds of jumping, then arms crossed and a tapping foot, and round again.
-    this.waitT = this.status === 'needs_input' ? this.waitT + dt : 0;
-    const tapping = this.status === 'needs_input' && (this.held || this.waitT % WAIT_CYCLE >= WAIT_HOPS);
-    // Jump up and down when done / waiting on a human (except while held or tapping), or cheering.
-    if (this.bouncing || this.cheerT > 0) {
-      const landAt = Math.ceil(this.bounceT / Math.PI) * Math.PI;
-      this.bounceT += dt * 7;
-      if ((this.held || tapping) && !this.cheerT && this.bounceT >= landAt) this.bounceT = 0;
-    } else this.bounceT = 0;
-    const hopping = this.bounceT > 0;
-    // Pop-in when hired
-    this.spawnT = Math.min(1, this.spawnT + dt * 2.5);
-    const pop = this.spawnT < 1 ? 1 + Math.sin(this.spawnT * Math.PI) * 0.35 : 1;
-
-    this.actionT += dt;
-    if (this.nextAction !== this.action && this.actionT >= (this.action === 'failing' ? DESPAIR_MIN : ACT_MIN)) {
-      this.action = this.nextAction;
-      this.actionT = 0;
+    const calm = Worker.calm;
+    const kind = this.kind();
+    if (this.mergedT > 0) {
+      this.mergedT = Math.max(0, this.mergedT - dt);
+      if (!this.mergedT) this.paint();
     }
-    const act: Act =
-      hopping || (this.bouncing && this.status === 'done') ? 'up'
-      : this.status === 'needs_input' ? 'waiting'
-      : this.status === 'working' ? (this.action ?? 'type')
-      : 'rest';
-    const s = this.pose(act, dt, t);
-    this.armL.rotation.set(s.armLx, 0, s.armLz);
-    this.armR.rotation.set(s.armRx, 0, s.armRz);
-    this.armL.position.set(-0.3 + s.reach * 0.07, 0.55 - s.drop, 0.05 + s.reach * 0.12);
-    this.armR.position.set(0.3 - s.reach * 0.07, 0.55 - s.drop + s.reach * 0.04, 0.05 + s.reach * 0.14);
-    this.feet.forEach((f, i) => f.position.set(i ? 0.12 : -0.12, 0.2 + (i ? s.tap * 0.07 : 0), 0.05 + s.kick + (i ? s.tap * 0.03 : 0)));
-    for (const p of this.pupils) p.position.y = 0.7 + s.look;
-    this.body.rotation.x = s.lean;
-    let twirl = 0;
-    if (this.twirlT >= 0) {
-      this.twirlT += dt;
-      twirl = ease(Math.min(1, this.twirlT / TWIRL_TIME)) * Math.PI * 2;
-      if (this.twirlT >= TWIRL_TIME) this.twirlT = -1;
-    }
-    if (hopping) {
-      const h = Math.abs(Math.sin(this.bounceT));
-      this.body.position.y = h * 0.55;
-      const squash = h < 0.15 ? 1 - (0.15 - h) * 1.6 : 1;
-      this.body.scale.set(pop * (2 - squash), pop * squash, pop * (2 - squash));
-      this.turnY = Math.sin(this.bounceT * 0.5) * 0.3;
-    } else {
-      this.body.position.y = s.lift;
-      this.body.scale.setScalar(pop);
-      this.turnY += (s.turn - this.turnY) * Math.min(1, dt * 6);
-    }
-    this.body.rotation.y = this.turnY + twirl;
-    this.body.rotation.z = isAsleep(this.status) ? Math.sin(t * 1.5) * 0.08 : s.roll;
-    this.props(dt, t);
-    this.blink(dt, s.lid);
-    this.bulbMesh.scale.setScalar(this.status === 'needs_input' ? 1 + Math.abs(Math.sin(t * 8)) * 0.5 : 1);
-    if (this.bubble) this.bubble.position.y = (this.bubbleIsCard ? 1.74 : 1.95) + (hopping ? this.body.position.y : 0) + Math.sin(t * 3) * 0.03;
-    if (this.nameTag) this.nameTag.position.y = 1.55 + (hopping ? this.body.position.y : 0);
-    // Walking in to a meeting: the same waddle as on the way out, without the box.
-    if (this.walking || this.stride) {
-      this.stride = this.walking ? this.stride + dt * 9 : 0;
-      const s = Math.sin(this.stride);
-      this.feet.forEach((f, i) => {
-        const step = i ? -s : s;
-        f.position.z = 0.05 + step * 0.08;
-        f.position.y = 0.2 + Math.max(0, step) * 0.05;
-      });
-      this.body.position.y += Math.abs(s) * 0.05;
-      this.body.rotation.z = s * 0.1;
-    }
+    if (performance.now() - this.lastDraw > 15_000) this.paint();
+    this.spawnT = calm ? 1 : Math.min(1, this.spawnT + dt / SPAWN);
+    this.hatchT = Math.min(1, this.hatchT + dt / HATCH_IN);
+    this.flick = Math.max(0, this.flick - dt * 5);
+    if (this.floorRef) this.floorY = this.root.worldToLocal(this.floorRef.getWorldPosition(tmp)).y;
+    this.glide(dt, calm);
+    this.paintBand(kind, t, calm);
+    this.paintRing(kind, t, calm);
+    this.pose(kind, dt);
+    this.size();
   }
 
-  /** Eases toward `act`'s stance, out of whatever it was doing before. */
-  private pose(act: Act, dt: number, t: number): Stance {
-    return blendStance(this.acts, act, dt, t, this.stance, this.blend);
+  /** Keeps the glyph the same size on screen, and the callout from going smaller than CALLOUT_MIN. */
+  private size() {
+    const screen = Worker.screen;
+    if (!screen || !this.callout) return;
+    const scale = this.root.getWorldScale(tmp).y;
+    const span = screen(this.mover.getWorldPosition(tmp)) / scale;
+    this.glyph.scale.setScalar(GLYPH_SCREEN * span);
+    const base = this.callout.userData.base as THREE.Vector3;
+    const k = Math.max(1, (CALLOUT_MIN * span) / base.y);
+    this.callout.scale.set(base.x * k, base.y * k, 1);
   }
 
-  /** The papers and the globe come and go with the act they belong to. */
-  private props(dt: number, t: number) {
-    const show = (prop: THREE.Object3D, act: Act) => {
-      const w = this.acts.get(act) ?? 0;
-      prop.visible = w > 0.02;
-      if (prop.visible) prop.scale.setScalar(Math.max(0.001, popIn(w)));
-      return prop.visible;
-    };
-    if (show(this.papers.group, 'read')) {
-      // A page every second or so, flipped up and over the top.
-      this.flipT = (this.flipT + dt) % 1.1;
-      const f = Math.min(1, this.flipT / 0.45);
-      this.papers.page.rotation.x = -ease(f) * Math.PI * 1.1;
-      this.papers.page.visible = f < 1;
+  /** Toward its target (or its seat), at a steady pace, leaning into the move. */
+  private glide(dt: number, calm: boolean) {
+    const m = this.mover;
+    const to = this.target ?? { x: 0, y: 0, z: 0, yaw: this.facing ?? 0 };
+    const dx = to.x - m.position.x;
+    const dy = to.y - m.position.y;
+    const dz = to.z - m.position.z;
+    const d = Math.hypot(dx, dy, dz);
+    const step = calm ? d : Math.min(d, GLIDE.speed * dt);
+    const moving = d > 1e-3 && !calm;
+    if (d > 1e-4) m.position.set(m.position.x + (dx / d) * step, m.position.y + (dy / d) * step, m.position.z + (dz / d) * step);
+    // On the move it turns the way it's going, and once there, the way it's sent to face.
+    const heading = moving && Math.hypot(dx, dz) > 0.25 ? Math.atan2(dx, dz) : to.yaw;
+    const turn = Math.atan2(Math.sin(heading - m.rotation.y), Math.cos(heading - m.rotation.y));
+    m.rotation.y += calm ? turn : turn * Math.min(1, dt * 6);
+    const lean = moving || this.walking ? GLIDE.lean : 0;
+    this.body.figure.userData.lean = lean;
+    // The ring and the shadow stay on the floor under it, wherever its seat holds it up.
+    const floor = this.floorY - m.position.y;
+    this.ring.root.position.y = floor + 0.012;
+    this.shadow.position.y = floor + 0.006;
+  }
+
+  private paintBand(kind: GlyphKind, t: number, calm: boolean) {
+    const { band, visor, under } = this.body;
+    const gone = this.leaving !== null;
+    const asleep = isAsleep(this.status) && kind === 'parked';
+    let k = 1;
+    if (kind === 'stuck') k = calm ? 0.4 : Math.sin(t * Math.PI) > 0 ? 1 : 0.22;
+    else if (kind === 'working') k = calm ? 0.6 : 0.5 + 0.18 * Math.sin(t * 1.4);
+    else if (kind === 'parked') k = 0;
+    if (gone) k = 0;
+    if (k <= 0) band.color.set('#232B34');
+    else band.color.set(GLYPH_HUE[kind]).multiplyScalar(k);
+    // The visor: dark, lit for a moment each time its terminal prints.
+    const lit = gone || asleep ? 0 : 0.12 + this.flick * 0.55 * (0.7 + 0.3 * Math.sin(t * 40));
+    visor.color.set(VISOR_DARK).lerp(VISOR_LIT, lit);
+    under.opacity = gone ? Math.max(0, 0.55 - this.leaveT) : asleep ? 0.12 : 0.5;
+    under.color.set(kind === 'needs-you' || kind === 'stuck' ? GLYPH_HUE[kind] : DECK.working);
+  }
+
+  private paintRing(kind: GlyphKind, t: number, calm: boolean) {
+    const { ring, pulse, band } = this.ring;
+    const gone = this.leaving !== null;
+    const hue = GLYPH_HUE[kind];
+    for (const m of [ring, pulse, band]) m.material.color.set(hue);
+    const strength: Record<GlyphKind, number> = { 'needs-you': 0.95, stuck: 0.9, review: 0.9, working: 0.16, parked: 0, merged: 0.85 };
+    ring.material.opacity = gone ? 0 : strength[kind] * Math.min(1, this.spawnT * 2);
+    ring.visible = ring.material.opacity > 0;
+    // Needs you: a ring spreading out from it, one every PULSE.every seconds.
+    const pulsing = kind === 'needs-you' && !gone && !calm;
+    pulse.visible = pulsing;
+    if (pulsing) {
+      const p = (t / PULSE.every) % 1;
+      pulse.scale.setScalar(1 + PULSE.grow * p);
+      pulse.material.opacity = 0.9 * (1 - p);
     }
-    if (show(this.globe.group, 'web')) {
-      this.globe.group.position.copy(this.spot).y += Math.sin(t * 2) * 0.03;
-      this.globe.ball.rotation.y = t * 2.2;
-      this.globe.ring.rotation.z = t * 0.6;
+    // Stuck: the hatched band inside its ring.
+    band.visible = kind === 'stuck' && !gone;
+    band.material.opacity = 0.6 * this.hatchT;
+  }
+
+  /** Slumped when it's stuck, leaning as it glides, rising as it stands down, built up from its base as it comes in. */
+  private pose(kind: GlyphKind, dt: number) {
+    const f = this.body.figure;
+    const want = (kind === 'stuck' ? SLUMP : 0) + (f.userData.lean as number);
+    f.rotation.x += (want - f.rotation.x) * Math.min(1, dt * 6);
+    const droop = kind === 'stuck' ? 0.04 : 0.12;
+    this.body.armL.rotation.z += (-droop - this.body.armL.rotation.z) * Math.min(1, dt * 6);
+    this.body.armR.rotation.z += (droop - this.body.armR.rotation.z) * Math.min(1, dt * 6);
+    const e = this.spawnT * this.spawnT * (3 - 2 * this.spawnT);
+    f.scale.set(1, Math.max(0.02, e), 1);
+    if (this.leaving !== null) {
+      this.leaveT = Math.min(1.5, this.leaveT + dt);
+      f.position.y = Math.min(1, this.leaveT / 1.2) * 0.15;
+    } else f.position.y = 0;
+    if (this.callout) {
+      this.callout.position.y = UNIT.top * e + 0.14 + f.position.y;
+      this.glyph.position.y = this.callout.position.y + this.callout.scale.y + 0.05;
     }
-  }
-
-  /** Sent home: head hung, the box in its arms, waddling along while `walking`. */
-  private carry(l: NonNullable<Worker['leaving']>, dt: number, t: number) {
-    waddle(this.rig, l, this.walking, dt);
-    this.blink(dt);
-    if (this.bubble) this.bubble.position.y = 1.95 + Math.sin(t * 3) * 0.03;
-    if (this.nameTag) this.nameTag.position.y = 1.55;
-  }
-
-  /** `lid` narrows the eyes (1 = wide open) between blinks. */
-  private blink(dt: number, lid = 1) {
-    this.blinkAt -= dt;
-    const blinking = this.blinkAt < 0.12 && this.blinkAt > 0;
-    if (this.blinkAt < 0) this.blinkAt = 2 + Math.random() * 4;
-    for (const e of this.eyes) e.scale.y = blinking ? 0.1 : lid;
   }
 
   dispose() {
-    if (this.bubble) disposeSprite(this.bubble);
-    if (this.nameTag) disposeSprite(this.nameTag);
+    if (this.callout) disposeSprite(this.callout);
+    setGlyph(this.body, '');
+    this.ring.dispose();
+    this.glyph.material.dispose();
+    for (const m of [this.body.band, this.body.visor, this.body.under, this.body.stripe]) m.dispose();
   }
 }

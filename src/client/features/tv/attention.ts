@@ -6,57 +6,15 @@
 import * as THREE from 'three';
 import { duration, type AttentionLevel, type Ranked } from '../../../shared/attention';
 import { DESK_BY_ID, cellOf } from '../../../shared/layout';
+import { callSign } from '../../../shared/callsign';
 import { MONO_FONT, PANEL, UI_FONT, clip, panelGround } from '../boards/world';
+import { drawGlyph } from '../../world/glyphs';
 
 const W = 1280;
 const H = 720;
 
-/** The state glyphs, as the DOM's are: shape first, hue second. */
-function glyph(g: CanvasRenderingContext2D, level: AttentionLevel, x: number, y: number, r: number) {
-  g.lineJoin = 'miter';
-  g.lineWidth = Math.max(3, r * 0.26);
-  g.beginPath();
-  switch (level) {
-    case 'needs-you':
-      g.moveTo(x, y - r);
-      g.lineTo(x + r, y);
-      g.lineTo(x, y + r);
-      g.lineTo(x - r, y);
-      g.closePath();
-      g.fillStyle = PANEL.signal;
-      g.fill();
-      return;
-    case 'stuck':
-      g.moveTo(x, y - r);
-      g.lineTo(x + r * 1.05, y + r * 0.85);
-      g.lineTo(x - r * 1.05, y + r * 0.85);
-      g.closePath();
-      g.strokeStyle = PANEL.stuck;
-      g.stroke();
-      g.fillStyle = PANEL.stuck;
-      g.fillRect(x - g.lineWidth / 2, y - r * 0.3, g.lineWidth, r * 0.65);
-      return;
-    case 'review':
-      g.arc(x, y, r * 0.85, 0, Math.PI * 2);
-      g.strokeStyle = PANEL.review;
-      g.stroke();
-      g.beginPath();
-      g.arc(x, y, r * 0.22, 0, Math.PI * 2);
-      g.fillStyle = PANEL.review;
-      g.fill();
-      return;
-    case 'working':
-      g.fillStyle = PANEL.working;
-      g.globalAlpha = 0.7;
-      g.fillRect(x - r * 0.9, y - r * 0.22, r * 1.8, r * 0.44);
-      g.globalAlpha = 1;
-      return;
-    default:
-      g.arc(x, y, r * 0.3, 0, Math.PI * 2);
-      g.fillStyle = PANEL.lineStrong;
-      g.fill();
-  }
-}
+/** The state glyphs, as the units and the DOM draw them (world/glyphs.ts). */
+const glyph = (g: CanvasRenderingContext2D, level: AttentionLevel, x: number, y: number, r: number) => drawGlyph(g, level, x, y, r);
 
 const HUE: Record<AttentionLevel, string> = { 'needs-you': PANEL.signal, stuck: PANEL.stuck, review: PANEL.review, working: PANEL.working, parked: PANEL.lineStrong };
 
@@ -112,7 +70,8 @@ export function paintAttention(g: CanvasRenderingContext2D, ranked: Ranked[], no
     g.fillText(clip(g, r.entry.name, 220), 120, y + 34);
     g.fillStyle = PANEL.muted;
     g.font = MONO_FONT(22);
-    g.fillText(cell ? `at ${cell}` : '', 120, y + 62);
+    const sign = callSign(r.entry.deskId);
+    g.fillText(sign ? `${sign} at ${cell}` : cell ? `at ${cell}` : '', 120, y + 62);
     const age = duration(now - r.att.since).replace('under a minute', '<1 min');
     g.textAlign = 'right';
     g.fillStyle = PANEL.muted;
