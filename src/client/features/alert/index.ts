@@ -96,6 +96,13 @@ export function installAlert(ctx: Ctx, parts: Pick<Parts, 'lights' | 'giveWay'>)
       line = { text: conditionLine(c, why), glyph };
     }
   }
+  // Read again the moment the roster or the reminders change, as giving way does: a held jump and the
+  // celebrations see the bridge on its way down in the same frame they see the call clear.
+  for (const topic of ['roster', 'reminders'] as const)
+    store.on(topic, () => {
+      read();
+      readAt = clock;
+    });
   store.on('floor', () => {
     latch.reset();
     standDown = null;

@@ -135,8 +135,10 @@ export class Banner {
     g.fillRect(W / 2 - 220, H * 0.42, 440, 3);
     g.letterSpacing = '6px';
     g.fillStyle = '#E8F1F6';
-    g.font = MONO(104);
-    g.fillText(lines[1] ?? '', W / 2, H * 0.68, W - 80);
+    // A countdown's second is set larger than a waypoint's name.
+    const big = (lines[1] ?? '').length <= 2;
+    g.font = MONO(big ? 170 : 104);
+    g.fillText(lines[1] ?? '', W / 2, H * (big ? 0.72 : 0.68), W - 80);
     this.tex.needsUpdate = true;
   }
 
