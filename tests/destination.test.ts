@@ -4,7 +4,7 @@
 // that a mission always makes for the same world.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { AHEAD_ELEVATION, BRACKET_PX, EASE_MS, FULL_DEG, MARKER_COLOR, MIN_DEG, ORBIT_DEG, SETTLE_MS, behindDays, bracketOf, easedSize, heldSize, markerAt, missionProgress, seedOf, sizeFor, worldOf } from '../src/client/features/destination/logic.js';
+import { AHEAD_AZIMUTH, AHEAD_ELEVATION, BAND_AT, BAND_MAX_DEG, BRACKET_PX, EASE_MS, FULL_DEG, MARKER_COLOR, MIN_DEG, ORBIT_DEG, SETTLE_MS, behindDays, bracketOf, easedSize, heldSize, markerAt, missionProgress, seedOf, sizeFor, worldOf, fitScale, swingAt, SWING } from '../src/client/features/destination/logic.js';
 import { SPACE_COLORS, ambientSafe } from '../src/client/features/space/logic.js';
 import { headingBand, missionCompleteCard, orbitBand } from '../src/shared/shiplog.js';
 
@@ -18,11 +18,14 @@ test('progress counts the waypoints passed and the open one by its issues closed
   assert.equal(missionProgress([{ done: true }, { done: true }], { closed: 3, issues: 4 }), 1, 'every waypoint passed is the whole way');
 });
 
-test('the world grows monotonically from a bright point to a third of the forward view', () => {
-  assert.equal(sizeFor(0), 0, 'a bright point with nothing done');
+test('the world is large from the first waypoint and grows monotonically to a third of the forward view', () => {
+  assert.equal(sizeFor(undefined), 0, 'a bright point with nothing to measure');
   assert.equal(sizeFor(-1), 0);
+  assert.equal(sizeFor(0), MIN_DEG, 'a fresh course already shows its world');
   assert.ok(Math.abs(sizeFor(1) - FULL_DEG) < 1e-9);
   assert.ok(sizeFor(0.01) >= MIN_DEG);
+  // About a quarter of the view's height at 1440x900 (55 degrees) on a fresh course.
+  assert.ok(MIN_DEG >= 55 / 4 - 1 && MIN_DEG <= 55 / 3, `fresh is ${MIN_DEG}`);
   let was = 0;
   for (let p = 0; p <= 1.0001; p += 0.01) {
     const d = sizeFor(p);
@@ -31,9 +34,13 @@ test('the world grows monotonically from a bright point to a third of the forwar
   }
   // A third of the view at 1440x900 (a 55 degree vertical field, so about 80 across).
   const across = (2 * Math.atan(Math.tan((55 / 2) * (Math.PI / 180)) * (1440 / 900)) * 180) / Math.PI;
-  assert.ok(Math.abs(FULL_DEG - across / 3) < 1.5, `full is ${FULL_DEG} against a third of ${across.toFixed(1)}`);
+  assert.ok(Math.abs(FULL_DEG - across / 3) < 2, `full is ${FULL_DEG} against a third of ${across.toFixed(1)}`);
   assert.ok(ORBIT_DEG > FULL_DEG * 2, 'in orbit it fills the canopy');
+  assert.ok(AHEAD_ELEVATION - MIN_DEG / 2 < 9, 'low: its lower limb behind the overhead strip from the conn');
   assert.ok(AHEAD_ELEVATION > 10 && AHEAD_ELEVATION < 25, 'over the situation wall, under the halo');
+  assert.ok(AHEAD_AZIMUTH < 0 && BAND_AT.az > 0, 'the world and its band in the clear panes either side of the middle rib');
+  assert.ok(BAND_AT.el > 8.7 && BAND_AT.el < 12.8, 'the band between the overhead strip and the eaves ring');
+  assert.ok(BAND_MAX_DEG < 16, 'the band never wider than a pane');
 });
 
 test('the surface is baked again only when the size bracket changes', () => {
@@ -68,7 +75,7 @@ test('a late waypoint says how late in plain words, and its world stops growing'
   assert.equal(heldSize(6, 9, true), 6, 'no growth while behind');
   assert.equal(heldSize(6, 4, true), 4, 'follows the measure down if issues reopen');
   assert.equal(heldSize(6, 9, false), 9);
-  assert.deepEqual(headingBand({ title: 'Auth rewrite', n: 3, of: 5, percent: 61.6 }), ['MAKING FOR AUTH REWRITE - WAYPOINT 3 OF 5 - 62%']);
+  assert.deepEqual(headingBand({ title: 'Auth rewrite', n: 3, of: 5, percent: 61.6 }), ['AUTH REWRITE - 3/5 - 62%']);
   assert.deepEqual(headingBand({ title: 'Auth rewrite', n: 3, of: 5, percent: 62, behindDays: 4 })[1], 'BEHIND SCHEDULE: 4 DAYS');
   assert.deepEqual(headingBand({ title: 'x', n: 1, of: 1, percent: 0, behindDays: 1 })[1], 'BEHIND SCHEDULE: 1 DAY');
   assert.equal(orbitBand('')[0], 'MISSION COMPLETE');
@@ -92,4 +99,37 @@ test('waypoints passed sit astern, spread so they never stack', () => {
 
 test('the world keeps to the sky colours: neutrals, blues and teals', () => {
   for (const c of [SPACE_COLORS.planetA, SPACE_COLORS.planetB, SPACE_COLORS.planetC, SPACE_COLORS.atmosphere, SPACE_COLORS.starCool, MARKER_COLOR]) assert.ok(ambientSafe(c), c);
+});
+
+test('the heading band always fits its canvas: a long title steps the font down, never off an edge', () => {
+  const W = 2048;
+  const lh = 96;
+  // A fake measure: mono at 0.6 em a glyph plus the band's letter spacing.
+  const measure = (text: string, px: number) => text.length * (px * 0.6 + px * 0.1);
+  const lines = headingBand({ title: 'Session store picked up by the new cluster', n: 1, of: 4, percent: 25, behindDays: 3 });
+  assert.ok(lines[0].length <= 42, `short enough for a pane: ${lines[0]}`);
+  for (const [i, line] of lines.entries()) {
+    const px = lh * (i ? 0.5 : 0.62);
+    const k = fitScale(measure(line, px), W - lh);
+    assert.ok(measure(line, px * k) <= W - lh + 1e-6, `line ${i} fits`);
+    assert.ok(k <= 1);
+  }
+  const forty = 'X'.repeat(80);
+  const k = fitScale(measure(forty, 60), W - lh);
+  assert.ok(k < 1 && measure(forty, 60 * k) <= W - lh + 1e-6);
+  assert.equal(fitScale(100, W), 1, 'a short line keeps its size');
+});
+
+test('after a jump the new world swings into the glass, settles and holds', () => {
+  const start = swingAt(0);
+  assert.equal(start.az, SWING.az);
+  assert.ok(start.scale > 1, 'a little larger as it comes in');
+  assert.deepEqual(swingAt(SWING.ms), { az: 0, el: 0, scale: 1 });
+  assert.deepEqual(swingAt(-Infinity), { az: 0, el: 0, scale: 1 }, 'never before a jump');
+  let was = Math.abs(start.az);
+  for (let ms = 100; ms <= SWING.ms; ms += 100) {
+    const a = Math.abs(swingAt(ms).az);
+    assert.ok(a <= was + 1e-9, 'it only closes in');
+    was = a;
+  }
 });

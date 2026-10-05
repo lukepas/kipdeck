@@ -2,7 +2,7 @@
  * The destination ahead: the mission as a world dead ahead in the forward glass. It starts as a bright
  * point and grows with real progress only (waypoints passed, and the open waypoint's issues closed of
  * those linked), eased over 4 s when that changes and still otherwise. A mono band beside it says where
- * the ship is making for ("MAKING FOR AUTH REWRITE - WAYPOINT 2 OF 4 - 47%"), and "BEHIND SCHEDULE:
+ * the ship is making for ("AUTH REWRITE - 2/4 - 47%"), and "BEHIND SCHEDULE:
  * 4 DAYS" in plain words, no hue, while that waypoint is overdue, when its growth stops. Waypoints
  * passed are small markers astern. With every waypoint passed the ship drops into orbit (30 s, the
  * world filling the canopy) and holds there until a new mission is set; that arrival waits behind any
@@ -21,7 +21,7 @@ import { toast } from '../../ui/dom';
 import { debugHandle } from '../giveway';
 import { CROSSFADE_MS, HeldPieces, setPieceForm } from '../giveway/logic';
 import { DestinationView } from './world';
-import { EASE_MS, ORBIT_DEG, SETTLE_MS, behindDays, easedSize, heldSize, missionProgress, seedOf, sizeFor, worldOf } from './logic';
+import { EASE_MS, ORBIT_DEG, SETTLE_MS, SPIN_PER_MIN, behindDays, easedSize, heldSize, missionProgress, seedOf, sizeFor, swingAt, worldOf } from './logic';
 
 /** How long after coming aboard (or a new mission) what comes in sets the size outright rather than easing to it (ms). */
 const SETTLE_IN_MS = 5000;
@@ -55,6 +55,9 @@ export function installDestination(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'spa
   const held = new HeldPieces<'play' | 'card'>();
   let lastKey = '';
   let freshAt = -Infinity;
+  /** Out of a jump's tunnel: when, so the new world swings in; and how open the tunnel was last frame. */
+  let swingFrom = -Infinity;
+  let openWas = 0;
 
   function retarget(size: number, ms = EASE_MS) {
     if (Math.abs(size - to) < 1e-4) return;
@@ -113,7 +116,7 @@ export function installDestination(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'spa
     const behind = open ? behindDays(open.due, Date.now()) : 0;
     const n = open ? m.milestones.indexOf(open) + 1 : total;
     view.setLabel(open ? headingBand({ title: milestoneOf(m, open.id)?.title ?? open.title, n, of: total, percent: (progress ?? 0) * 100, behindDays: behind }) : []);
-    const size = fresh ? sizeFor(progress ?? 0) : heldSize(Math.max(shown, to), sizeFor(progress ?? 0), behind > 0);
+    const size = fresh ? sizeFor(progress) : heldSize(Math.max(shown, to), sizeFor(progress), behind > 0);
     if (fresh) shown = from = to = size;
     else retarget(size);
   }
@@ -138,6 +141,14 @@ export function installDestination(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'spa
     if (!on) return;
     const next = held.next(clock, parts.giveWay.attention());
     if (next) arrive(next.card || next.item === 'card');
+    // A slow turn, the world's own: held still with Ship motion Off or reduced motion.
+    if (!parts.giveWay.frozen()) view.spin(dt, SPIN_PER_MIN);
+    // Out of a jump's tunnel (which only opens when the jump plays): the new world swings into the glass.
+    const open = parts.space.tunnelOpen();
+    if (openWas > 0.02 && open <= 0.02 && !parts.giveWay.frozen()) swingFrom = clock;
+    openWas = open;
+    const sw = swingAt(clock - swingFrom);
+    view.aim(sw.az, sw.el, sw.scale);
     if (clock - easeAt < easeMs) shown = easedSize(from, to, clock - easeAt, easeMs);
     else shown = to;
     const fade = Math.min(1, (clock - fadeAt) / CROSSFADE_MS);

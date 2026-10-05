@@ -4,10 +4,13 @@
 
 import type { MissionMilestone } from '../../../shared/protocol';
 
-/** The world's angular diameter (degrees) with the mission all but done: a third of the forward view at 1440x900. */
-export const FULL_DEG = 26;
-/** The smallest disc drawn once there is any progress at all; below it the world is a bright point. */
-export const MIN_DEG = 0.7;
+/** The world's angular diameter (degrees) with the mission all but done: about a third of the forward view at 1440x900. */
+export const FULL_DEG = 28;
+/**
+ * The world's size the moment a course has waypoints, before anything is done: about a quarter of the
+ * forward view's height, so from the conn the destination is always there, large and low in the glass.
+ */
+export const MIN_DEG = 14;
 /** In orbit, the mission complete: the world fills the canopy. */
 export const ORBIT_DEG = 74;
 /** How long the size takes to ease to a new one on progress (ms). */
@@ -15,8 +18,19 @@ export const EASE_MS = 4000;
 /** How long the arrival takes to settle into orbit (ms). */
 export const SETTLE_MS = 30_000;
 
-/** How far up from the horizon, dead ahead, the world sits (degrees): over the situation wall from the conn, in the canopy's glass. */
-export const AHEAD_ELEVATION = 19;
+/**
+ * How far up from the horizon the world sits (degrees): low, its lower limb behind the overhead strip
+ * and the situation wall from the conn, the rest in the canopy's glass.
+ */
+export const AHEAD_ELEVATION = 15;
+/** How far off the bow it sits (degrees, east positive): in the clear pane left of the canopy's middle rib from the conn. */
+export const AHEAD_AZIMUTH = -9;
+/** Where the heading band sits (degrees): in the clear pane right of the middle rib, between the overhead strip and the canopy's eaves ring. */
+export const BAND_AT = { az: 9, el: 10.6 } as const;
+/** The band's widest (degrees across): the clear pane from the conn, so no rib ever cuts its words. */
+export const BAND_MAX_DEG = 14;
+/** How fast the world turns (revolutions a minute): slow enough to read as a world, never as a spinner. */
+export const SPIN_PER_MIN = 0.02;
 
 /**
  * How far the whole mission has come, 0-1: the waypoints passed, plus the open one's issues closed of
@@ -29,11 +43,22 @@ export function missionProgress(milestones: readonly Pick<MissionMilestone, 'don
   return Math.min(1, (done + (done < milestones.length ? part : 0)) / milestones.length);
 }
 
-/** The world's angular diameter (degrees) at progress `p`: 0 (a bright point) at none, growing to FULL_DEG, never shrinking as p grows. */
-export function sizeFor(p: number): number {
-  if (!(p > 0)) return 0;
+/**
+ * The world's angular diameter (degrees) at progress `p`: 0 (a bright point) with nothing to measure,
+ * MIN_DEG on a fresh course, growing to FULL_DEG, never shrinking as p grows.
+ */
+export function sizeFor(p: number | undefined): number {
+  if (p === undefined || !(p >= 0)) return 0;
   const k = Math.min(1, p);
   return MIN_DEG + (FULL_DEG - MIN_DEG) * Math.pow(k, 1.35);
+}
+
+/**
+ * How many of `fit`'s pixels a line of `width` pixels may take: the font steps down (never up) by the
+ * returned factor so the band's longest line always fits its canvas.
+ */
+export function fitScale(width: number, fit: number): number {
+  return width > fit && width > 0 ? fit / width : 1;
 }
 
 /** Which size bracket a diameter is in: the surface is baked again only when this changes (0 small, 1 middle, 2 large). */
@@ -92,3 +117,17 @@ export function markerAt(i: number, n: number): { az: number; el: number } {
 
 /** The markers astern for the waypoints passed: a quiet grey. */
 export const MARKER_COLOR = '#9AA6B2';
+
+/**
+ * The arrival after a jump: the new world swings in from off the bow and settles, a little larger at
+ * first, over SWING.ms. Only after a jump that played; a crossfade simply shows it where it sits.
+ */
+export const SWING = { ms: 2600, az: -24, el: -6, grow: 0.3 } as const;
+
+/** Where the swing is `ms` after the ship comes out of the tunnel: degrees off its place, and its size times. */
+export function swingAt(ms: number): { az: number; el: number; scale: number } {
+  if (!(ms >= 0) || ms >= SWING.ms) return { az: 0, el: 0, scale: 1 };
+  const k = ms / SWING.ms;
+  const e = 1 - Math.pow(1 - k, 3);
+  return { az: SWING.az * (1 - e), el: SWING.el * (1 - e), scale: 1 + SWING.grow * (1 - e) };
+}

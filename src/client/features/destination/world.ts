@@ -3,7 +3,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { DECK } from '../../world/office/materials';
 import { BAKE_FRAG, BAKE_VERT, HALO_FRAG, PLANET_FRAG, PLANET_VERT, RING_FRAG, RING_VERT, glowTexture } from '../space/flybys';
 import { SPACE_COLORS, seeded } from '../space/logic';
-import { AHEAD_ELEVATION, BRACKET_PX, MARKER_COLOR, bracketOf, markerAt, type WorldKind } from './logic';
+import { AHEAD_AZIMUTH, AHEAD_ELEVATION, BAND_AT, BAND_MAX_DEG, BRACKET_PX, MARKER_COLOR, bracketOf, fitScale, markerAt, type WorldKind } from './logic';
 
 // The destination's world as the sky draws it: dead ahead, kept round whichever camera draws it as the
 // sky is, so it never parallaxes and a surge's streaks pass in front of it. A rocky world or a ringed
@@ -16,13 +16,8 @@ import { AHEAD_ELEVATION, BRACKET_PX, MARKER_COLOR, bracketOf, markerAt, type Wo
 const AT = 90;
 /** How far out the band under the world is drawn (m); backdrop() keeps it in front of the world. */
 const LABEL_AT = 82;
-/** The band's height on the sky (degrees) and its canvas. */
-const LABEL = { deg: 1.0, w: 2048, h: 192 } as const;
-/**
- * How far up the band sits (degrees): in the clear glass between the canopy's two lower rings as seen
- * from the conn, across the world's lower edge once it has grown (on a dark backing of its own there).
- */
-const LABEL_EL = 15.2;
+/** The band's height on the sky (degrees, a line) and its canvas. */
+export const LABEL = { deg: 0.9, w: 2048, h: 192 } as const;
 
 const MONO = (size: number) => `500 ${size}px "JetBrains Mono", ui-monospace, monospace`;
 const rad = THREE.MathUtils.degToRad;
@@ -111,6 +106,9 @@ export class DestinationView {
   private labelText = '';
   private labelW = 0;
   private gain = 1;
+  private aimAz = 0;
+  private aimEl = 0;
+  private aimScale = 1;
   private readonly v = new THREE.Vector3();
 
   constructor(private readonly renderer: THREE.WebGLRenderer) {
@@ -120,7 +118,7 @@ export class DestinationView {
       this.group.updateMatrixWorld();
     };
     this.group.add(this.world);
-    this.world.position.copy(toward(0, AHEAD_ELEVATION).multiplyScalar(AT));
+    this.world.position.copy(toward(AHEAD_AZIMUTH, AHEAD_ELEVATION).multiplyScalar(AT));
 
     this.bakeMat = new THREE.ShaderMaterial({
       vertexShader: BAKE_VERT,
@@ -224,14 +222,20 @@ export class DestinationView {
     g.textBaseline = 'middle';
     g.textAlign = 'center';
     const shown = lines.slice(0, 2);
+    // Each line steps its font down until it fits the canvas less a margin: a long title never runs off an edge.
+    const fit = c.width - lh;
+    const scale = shown.map(() => 1);
     const font = (i: number) => {
-      g.font = MONO(Math.round(lh * (i ? 0.5 : 0.62)));
-      g.letterSpacing = `${Math.round(lh * 0.06)}px`;
+      const px = lh * (i ? 0.5 : 0.62) * scale[i];
+      g.font = MONO(Math.round(px));
+      g.letterSpacing = `${Math.round(px * 0.1)}px`;
     };
     let w = 0;
     shown.forEach((line, i) => {
       font(i);
-      w = Math.max(w, g.measureText(line).width + lh);
+      scale[i] = fitScale(g.measureText(line).width, fit);
+      font(i);
+      w = Math.max(w, Math.min(fit, g.measureText(line).width) + lh);
     });
     w = Math.min(c.width, w);
     // A dark backing, so the lettering reads over the world as it grows behind it.
@@ -241,7 +245,7 @@ export class DestinationView {
       font(i);
       // The first line in the instruments' light grey, the second muted: plain words, never a hue.
       g.fillStyle = i ? 'rgba(160,172,184,0.9)' : 'rgba(214,222,230,0.95)';
-      g.fillText(line, w / 2, lh * (i + 0.5));
+      g.fillText(line, w / 2, lh * (i + 0.5), fit);
     });
     g.letterSpacing = '0px';
     this.labelW = Math.min(c.width, w);
@@ -251,6 +255,28 @@ export class DestinationView {
     map.needsUpdate = true;
     this.label.visible = true;
     this.place();
+  }
+
+  /** Puts the world `az` and `el` degrees off its place, `scale` times its size (the arrival's swing). */
+  aim(az: number, el: number, scale: number) {
+    if (az === this.aimAz && el === this.aimEl && scale === this.aimScale) return;
+    this.aimAz = az;
+    this.aimEl = el;
+    this.aimScale = scale;
+    this.world.position.copy(toward(AHEAD_AZIMUTH + az, AHEAD_ELEVATION + el).multiplyScalar(AT));
+    this.place();
+  }
+
+  /** Turns the world a little (`dt` seconds at `perMin` revolutions a minute): it reads as a world, not a picture. */
+  spin(dt: number, perMin: number) {
+    const u = this.planetMat.uniforms.uSpin;
+    u.value = (u.value + (dt * perMin) / 60) % 1;
+    this.station.rotation.z += dt * perMin * ((Math.PI * 2) / 60);
+  }
+
+  /** What the band says now (the shots and the tests). */
+  labelLines(): string {
+    return this.labelText;
   }
 
   /** The waypoints passed, as small markers astern. */
@@ -288,7 +314,7 @@ export class DestinationView {
   }
 
   private place() {
-    const deg = this.deg;
+    const deg = this.deg * this.aimScale;
     const disc = deg > 0;
     if (disc) this.bake();
     // A sphere of radius R at distance AT spans 2 asin(R / AT).
@@ -306,10 +332,11 @@ export class DestinationView {
     this.point.visible = pt > 0;
     this.point.scale.setScalar(AT * rad(1.6));
     (this.point.material as THREE.SpriteMaterial).opacity = pt * this.gain;
-    // The band, centred under the world's middle, in the clear glass from the conn.
-    const h = LABEL_AT * rad(LABEL.deg);
+    // The band, in its own clear pane beside the world from the conn, never wider than that pane.
+    const fitK = Math.min(1, BAND_MAX_DEG / ((LABEL.deg * this.labelW) / (LABEL.h / 2)));
+    const h = LABEL_AT * rad(LABEL.deg) * fitK;
     const w = (h * this.labelW) / (LABEL.h / 2);
-    toward(0, LABEL_EL, this.v).multiplyScalar(LABEL_AT);
+    toward(BAND_AT.az, BAND_AT.el, this.v).multiplyScalar(LABEL_AT);
     this.label.position.copy(this.v);
     this.label.lookAt(0, 0, 0);
     this.label.scale.set(Math.max(w, 0.001), h * 2, 1);

@@ -25,7 +25,7 @@ void main() {
 }`;
 
 const BAKE_FRAG = /* glsl */ `
-uniform vec3 uVoid, uDeep, uBand, uTeal, uIndigo;
+uniform vec3 uVoid, uDeep, uBand, uTeal, uIndigo, uMagenta;
 uniform vec3 uBandN, uCore, uNeb, uSeed;
 uniform float uNebSize;
 varying vec3 vDir;
@@ -45,17 +45,18 @@ void main() {
   float dust = fbm(d * 3.6 + uSeed * 0.7 + 5.0, 5);
   float lane = mix(1.0, 0.35, smoothstep(0.5, 0.62, dust) * exp(-(h * h) / 0.02));
   float bandL = (0.6 * band * (0.5 + 0.8 * mott) + 0.55 * coreW) * lane;
-  col += uBand * bandL * 0.34;
+  col += uBand * bandL * 0.27;
   // A fine haze of unresolved stars in the band.
   col += uBand * band * smoothstep(0.45, 0.75, fbm(d * 26.0 + uSeed, 3)) * 0.07;
-  // The nebula: domain-warped fbm in a soft patch, teal into indigo.
+  // The nebula: domain-warped fbm in a soft patch, teal into indigo, a magenta heart where it is thickest.
   vec3 q = d * 2.6 + uSeed * 2.1;
   vec3 w = vec3(fbm(q, 4), fbm(q + 3.1, 4), fbm(q + 7.7, 4));
   float n = fbm(q * 1.5 + w * 2.4, 5);
   float shape = smoothstep(cos(uNebSize), cos(uNebSize * 0.25), dot(d, uNeb));
   float neb = smoothstep(0.3, 0.62, n) * shape;
   vec3 nebC = mix(uTeal, uIndigo, smoothstep(0.35, 0.65, fbm(q * 0.8 + 11.0, 3)));
-  col += nebC * neb * 0.95;
+  nebC = mix(nebC, uMagenta, smoothstep(0.5, 0.75, fbm(q * 1.1 + 23.0, 3)) * smoothstep(0.42, 0.7, n));
+  col += nebC * neb * 1.25;
   // A filament or two of brighter gas through it.
   col += nebC * smoothstep(0.58, 0.66, n) * shape * 0.3;
   gl_FragColor = vec4(col, clamp(band * 0.8 + coreW + neb * 0.5, 0.0, 1.0));
@@ -182,6 +183,7 @@ export class Sky {
         uBand: { value: linear(SPACE_COLORS.band) },
         uTeal: { value: linear(SPACE_COLORS.nebulaTeal) },
         uIndigo: { value: linear(SPACE_COLORS.nebulaIndigo) },
+        uMagenta: { value: linear(SPACE_COLORS.nebulaMagenta) },
         uBandN: { value: new THREE.Vector3() },
         uCore: { value: new THREE.Vector3() },
         uNeb: { value: new THREE.Vector3() },

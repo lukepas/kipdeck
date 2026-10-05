@@ -231,8 +231,10 @@ export const SPACE_COLORS = {
   void: '#04070C',
   deep: '#0A1018',
   band: '#C8D2DC',
-  nebulaTeal: '#1E5A66',
+  nebulaTeal: '#1F7C88',
   nebulaIndigo: '#24305E',
+  /** The nebula's warm side: a deep magenta, clear of the reserved violet (proof) and red-orange (attention) hues. */
+  nebulaMagenta: '#7A2E6E',
   starCool: '#BFD3FF',
   starWarm: '#FFF4E8',
   flash: '#DDF4FF',
