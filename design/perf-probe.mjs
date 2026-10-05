@@ -3,18 +3,22 @@
 // and seeds what the bridge's world reads (six sister decks, two units with open pull requests) the
 // way the shots do. Then, from the conn and from a side port, it times a forced render over 30 frames
 // with gl.finish, counts the draw calls of one frame, and reads rAF's p50 and p95 over 240 frames.
-// Always stops the office (and its terminals) at the end.
+// Then the worst cases: from the conn through a jump (sampled while its tunnel is open, the countdown
+// and the name on the glass with it) and through the start of watch (sampled while the log is typed),
+// where the build has them; and the conn again with the CPU throttled 4x, to show the margin under
+// 16.7 ms. Always stops the office (and its terminals) at the end.
 //
 //   npm run build && node design/perf-probe.mjs [metal|swiftshader] [label]
 //
-// PROBE_PORT picks the port (default 4692). Prints one JSON line per vantage.
+// PROBE_PORT picks the port (default 4692), PROBE_ROOT another checkout's build to time (a baseline).
+// Prints one JSON line per vantage.
 import { spawn, execFileSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const ROOT = path.resolve(process.env.PROBE_ROOT ?? path.join(path.dirname(fileURLToPath(import.meta.url)), '..'));
 const BACKEND = process.argv[2] ?? (process.platform === 'darwin' ? 'metal' : 'swiftshader');
 const LABEL = process.argv[3] ?? 'probe';
 const PORT = Number(process.env.PROBE_PORT ?? 4692);
@@ -144,12 +148,18 @@ async function measure([from, to]) {
     o.camera.lookAt(...to);
   };
   const frame = () => new Promise((res) => requestAnimationFrame(res));
-  for (let i = 0; i < 60; i++) await frame();
   const draw = () => {
     const cam = o.stage.view ?? o.camera;
     if (o.stage.draw) o.stage.draw(cam);
     else r.render(o.scene, cam);
   };
+  // Warm up with forced renders too: an idle GPU clocks down between samples, and the first forced
+  // renders after a quiet stretch then read several times slower than the frame really costs.
+  for (let i = 0; i < 60; i++) {
+    await frame();
+    draw();
+    gl.finish();
+  }
   r.info.autoReset = false;
   r.info.reset();
   draw();
@@ -175,6 +185,66 @@ async function measure([from, to]) {
   p.update = p.__update;
   const q = (xs, k) => [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.floor(xs.length * k))];
   return { calls, triangles, renderMs: +q(times, 0.5).toFixed(2), renderP95: +q(times, 0.95).toFixed(2), rafP50: +q(gaps, 0.5).toFixed(1), rafP95: +q(gaps, 0.95).toFixed(1) };
+}
+
+/** Runs in the page: from `from` toward `to`, a forced render's time on every frame while `kind` (a jump's tunnel, or the start of watch's log) is up. */
+async function during([[from, to], kind]) {
+  const o = window.__office;
+  const w = window.__world ?? {};
+  const r = o.renderer;
+  const gl = r.getContext();
+  const p = o.player;
+  p.__update ??= p.update;
+  p.update = (dt) => {
+    p.__update.call(p, dt);
+    o.camera.position.set(...from);
+    o.camera.lookAt(...to);
+  };
+  const frame = () => new Promise((res) => requestAnimationFrame(res));
+  const draw = () => {
+    const cam = o.stage.view ?? o.camera;
+    if (o.stage.draw) o.stage.draw(cam);
+    else r.render(o.scene, cam);
+  };
+  let up;
+  if (kind === 'jump') {
+    if (!o.space?.jump || !o.space.phase) return { skipped: 'no jump in this build' };
+    o.space.timeScale(1);
+    o.space.jump({ n: 3, title: 'Billing v2', final: false });
+    up = () => o.space.phase() === 'jump' && o.space.tunnelOpen() > 0.01;
+  } else {
+    if (!w.watch?.play) return { skipped: 'no start of watch in this build' };
+    w.watch.play('launch', 9 * 3600e3);
+    up = () => w.watch.state().crawl;
+  }
+  const times = [];
+  let calls = 0;
+  let triangles = 0;
+  for (let i = 0; i < 900 && times.length < 60; i++) {
+    await frame();
+    if (!up()) {
+      if (times.length) break;
+      continue;
+    }
+    r.info.autoReset = false;
+    r.info.reset();
+    const t0 = performance.now();
+    draw();
+    gl.finish();
+    times.push(performance.now() - t0);
+    calls = Math.max(calls, r.info.render.calls);
+    triangles = Math.max(triangles, r.info.render.triangles);
+    r.info.autoReset = true;
+  }
+  // Let the jump finish before space's clock is held again, so nothing is left frozen half way.
+  if (kind === 'jump') {
+    for (let i = 0; i < 900 && o.space.phase() !== 'idle'; i++) await frame();
+    o.space.timeScale(0);
+  }
+  p.update = p.__update;
+  if (!times.length) return { skipped: `${kind} never came up` };
+  const q = (xs, k) => [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.floor(xs.length * k))];
+  return { calls, triangles, samples: times.length, renderMs: +q(times, 0.5).toFixed(2), renderP95: +q(times, 0.95).toFixed(2) };
 }
 
 async function main() {
@@ -233,6 +303,18 @@ async function main() {
         console.log(JSON.stringify({ label: LABEL, backend: BACKEND, vantage: name, world, ...m }));
       }
     }
+    await parts(true);
+    // The worst cases, from the conn: the jump's tunnel and the start of watch's log, where the build has them.
+    for (const kind of ['jump', 'launch']) {
+      const m = await page.evaluate(during, [VANTAGES.conn, kind]);
+      console.log(JSON.stringify({ label: LABEL, backend: BACKEND, vantage: kind, world: 'on', ...m }));
+    }
+    // The conn with the CPU throttled 4x: what is left under 16.7 ms on a slower machine.
+    const cdp = await context.newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+    const slow = await page.evaluate(measure, VANTAGES.conn);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+    console.log(JSON.stringify({ label: LABEL, backend: BACKEND, vantage: 'conn-cpu4x', world: 'on', ...slow }));
     if (errors.length) console.log('page errors:', errors.slice(0, 5).join(' | '));
   } finally {
     await browser.close();
