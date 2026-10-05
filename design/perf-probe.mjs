@@ -14,7 +14,8 @@
 //
 //   npm run build && node design/perf-probe.mjs [metal|swiftshader] [label]
 //
-// PROBE_PORT picks the port (default 4692), PROBE_ROOT another checkout's build to time (a baseline).
+// PROBE_PORT picks the port (default 4692), PROBE_ROOT another checkout's build to time (a baseline),
+// PROBE_CONN the conn's eye and aim.
 // Prints one JSON line per vantage.
 import { spawn, execFileSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
@@ -356,7 +357,8 @@ async function main() {
     await page.evaluate(seedWorld);
     await wait(3000);
     const VANTAGES = {
-      conn: [[0, 2.05, 11.4], [0, 2.4, -12]],
+      // PROBE_CONN '[[x,y,z],[x,y,z]]' moves the conn's eye (a layout that raises or moves the dais).
+      conn: JSON.parse(process.env.PROBE_CONN ?? 'null') ?? [[0, 2.05, 11.4], [0, 2.4, -12]],
       port: [[-11.5, 1.55, 3.6], [-30, 2.6, 0.5]],
     };
     // Each vantage with the bridge's world on, switched off (Settings > Bridge > Life, where there is

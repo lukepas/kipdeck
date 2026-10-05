@@ -13,6 +13,13 @@
 // baseline). SHOOT_PORT picks the port (default 4694). Names the files <light>-<quality>.png.
 // SHOOT_VANTAGES='{"unit":[[x,y,z],[x,y,z]]}' adds a shot from each named eye toward its target,
 // saved as <light>-<quality>-<name>.png (close-ups to check a change up close).
+// SHOOT_POSE=sit sits you in the captain's chair the way E does and shoots the view the chair gives
+// (its own height, field of view and aim), rather than the pinned eye; it saves <light>-<quality>-sit.png.
+// SHOOT_OVERVIEW=1 adds the Overview (G) as <light>-<quality>-overview.png.
+// SHOOT_MASK=1 checks what stands in front of the situation arc: it paints every board's face (and the
+// capacity strip's) flat magenta, shoots <light>-<quality>-mask.png, and counts the pixels inside each
+// face's rectangle on screen that aren't magenta (anything drawn over a board: a head, a console, the
+// holo, a callout), printed as a JSON line with each face's share covered.
 import { spawn, execFileSync } from 'node:child_process';
 import { chmodSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -31,7 +38,8 @@ const LIGHT = process.env.SHOOT_LIGHT ?? 'night';
 const QUALITY = process.env.SHOOT_QUALITY ?? 'high';
 const CAP = process.env.SHOOT_CAP ?? '';
 const UI = !!process.env.SHOOT_UI;
-const NAME = `${LIGHT}-${QUALITY}${CAP ? `-cap-${CAP}` : ''}`;
+const POSE = process.env.SHOOT_POSE ?? 'pinned';
+const NAME = `${LIGHT}-${QUALITY}${CAP ? `-cap-${CAP}` : ''}${POSE === 'sit' ? '-sit' : ''}`;
 
 const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-interior-'));
 const home = path.join(tmp, 'home');
@@ -136,7 +144,9 @@ const SEATED = [[0, 2.05, 11.4], [0, 2.4, -12]];
 async function main() {
   await waitUp();
   const { chromium } = await import('playwright-core');
-  const browser = await chromium.launch({ headless: true, args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] });
+  // SHOOT_BACKEND=swiftshader draws on the CPU, as the e2e tests' browser does.
+  const args = process.env.SHOOT_BACKEND === 'swiftshader' ? ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] : ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'];
+  const browser = await chromium.launch({ headless: true, args });
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, colorScheme: LIGHT === 'day' ? 'light' : 'dark' });
     await context.addInitScript(
@@ -163,6 +173,7 @@ async function main() {
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
+    if (process.env.SHOOT_CONSOLE) page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
     await page.goto(`${base}/login`);
     const status = await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD);
     if (status !== 200) throw new Error('login failed ' + status);
@@ -179,22 +190,36 @@ async function main() {
       s.pulls = { items: fx.pulls, fetchedAt: Date.now(), loading: false };
       for (const t of ['issues', 'pulls']) s.emit(t);
     }, fixtures());
-    // Pinned at the conn, space's clock held once any jump is over, the toasts closed.
-    await page.evaluate(([from, to]) => {
-      const o = window.__office;
-      const p = o.player;
-      p.__update ??= p.update;
-      p.update = (dt) => {
-        p.__update.call(p, dt);
-        o.camera.position.set(...from);
-        o.camera.lookAt(...to);
-      };
-    }, SEATED);
+    // Pinned at the conn (or sat in its chair), space's clock held once any jump is over, the toasts closed.
+    await page.evaluate(
+      ([from, to, pose]) => {
+        const o = window.__office;
+        const p = o.player;
+        p.__update ??= p.update;
+        if (pose === 'sit') {
+          // The chair as E sits you in it: its place from the office's own seat, facing the bow.
+          const it = o.office.interactables.find((i) => i.kind === 'seat' && i.seatId === 'conn');
+          p.sit({ key: 'conn:0', seatId: 'conn', x: it.x, y: it.y, z: it.z + 0.05, rotY: Math.PI, hips: it.hips ?? 0.48, out: 0.8 });
+          return;
+        }
+        p.update = (dt) => {
+          p.__update.call(p, dt);
+          o.camera.position.set(...from);
+          o.camera.lookAt(...to);
+        };
+      },
+      [...SEATED, POSE],
+    );
     await page.waitForFunction(() => !window.__office.space?.phase || window.__office.space.phase() === 'idle', null, { timeout: 60_000 }).catch(() => {});
     await page.evaluate(() => window.__office.space?.timeScale?.(0));
     await wait(2500);
     const tier = await page.evaluate(() => window.__office.quality?.tier?.() ?? document.documentElement.dataset.quality);
-    await page.evaluate(() => document.getElementById('toasts')?.replaceChildren());
+    await page.evaluate(() => {
+      document.getElementById('toasts')?.replaceChildren();
+      // The waiting-on-you card too (features/launch/debrief.ts): a toast as far as the shot goes.
+      document.querySelector('section.debrief button.close')?.click();
+    });
+    await wait(300);
     await page.screenshot({ path: path.join(OUT, `${NAME}.png`) });
     console.log(JSON.stringify({ shot: `${NAME}.png`, tier, setting: QUALITY, cap: CAP || null }));
     const extra = JSON.parse(process.env.SHOOT_VANTAGES ?? '{}');
@@ -209,6 +234,88 @@ async function main() {
       }, eye);
       await wait(1500);
       await page.screenshot({ path: path.join(OUT, `${NAME}-${key}.png`) });
+    }
+    if (process.env.SHOOT_MASK) {
+      const rects = await page.evaluate(async () => {
+        const o = window.__office;
+        const THREE = o.camera.constructor.prototype.isPerspectiveCamera ? null : null;
+        void THREE;
+        const meshes = { ...o.office.boardMeshes, tv: o.office.tvScreen, capacity: o.office.machineScreen };
+        const out = {};
+        const saved = [];
+        for (const [id, m] of Object.entries(meshes)) {
+          const geo = m.geometry;
+          if (!geo.boundingBox) geo.computeBoundingBox();
+          const b = geo.boundingBox;
+          m.updateWorldMatrix(true, false);
+          const pts = [];
+          for (let i = 0; i < 4; i++) {
+            const v = new o.camera.position.constructor(i & 1 ? b.max.x : b.min.x, i & 2 ? b.max.y : b.min.y, 0).applyMatrix4(m.matrixWorld).project(o.camera);
+            pts.push([((v.x + 1) / 2) * innerWidth, ((1 - v.y) / 2) * innerHeight]);
+          }
+          // The face's inside, a pixel in from its edges.
+          const xs = pts.map((p) => p[0]);
+          const ys = pts.map((p) => p[1]);
+          out[id] = { pts, x0: Math.min(...xs), x1: Math.max(...xs), y0: Math.min(...ys), y1: Math.max(...ys) };
+          saved.push([m, m.material]);
+          m.material = m.material.clone();
+          m.material.map = null;
+          m.material.color.set('#ff00ff');
+          m.material.toneMapped = false;
+          m.material.needsUpdate = true;
+        }
+        window.__maskRestore = () => saved.forEach(([m, mat]) => (m.material = mat));
+        return out;
+      });
+      await wait(800);
+      const maskFile = path.join(OUT, `${NAME}-mask.png`);
+      await page.screenshot({ path: maskFile });
+      await page.evaluate(() => window.__maskRestore?.());
+      // The shot as raw RGB, through ffmpeg (no image library in the repo).
+      const raw = execFileSync(process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg', ['-v', 'error', '-i', maskFile, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { maxBuffer: 64 * 1024 * 1024 });
+      const at = (x, y) => (Math.round(y) * 1440 + Math.round(x)) * 3;
+      const inside = (pts, x, y) => {
+        // Inside the face's quad (its corners in order 0 1 3 2 round it).
+        const q = [pts[0], pts[1], pts[3], pts[2]];
+        let sign = 0;
+        for (let i = 0; i < 4; i++) {
+          const [ax, ay] = q[i];
+          const [bx, by] = q[(i + 1) % 4];
+          const c = (bx - ax) * (y - ay) - (by - ay) * (x - ax);
+          if (c === 0) continue;
+          if (sign === 0) sign = Math.sign(c);
+          else if (Math.sign(c) !== sign) return false;
+        }
+        return true;
+      };
+      const report = {};
+      for (const [id, r] of Object.entries(rects)) {
+        let seen = 0;
+        let covered = 0;
+        for (let y = Math.max(45, Math.ceil(r.y0) + 2); y < Math.min(899, r.y1 - 2); y++) {
+          for (let x = Math.max(264, Math.ceil(r.x0) + 2); x < Math.min(1439, r.x1 - 2); x++) {
+            if (!inside(r.pts, x, y)) continue;
+            seen++;
+            const i = at(x, y);
+            const magenta = raw[i] > 150 && raw[i + 1] < 110 && raw[i + 2] > 150;
+            if (!magenta) covered++;
+          }
+        }
+        report[id] = { pixels: seen, covered, share: seen ? +(covered / seen).toFixed(4) : null };
+      }
+      console.log(JSON.stringify({ mask: report }));
+    }
+    if (process.env.SHOOT_OVERVIEW) {
+      await page.evaluate(() => {
+        const o = window.__office;
+        if (o.player.__update) o.player.update = o.player.__update;
+        o.overview.toggle(true);
+      });
+      await wait(2500);
+      await page.evaluate(() => document.getElementById('toasts')?.replaceChildren());
+      await page.screenshot({ path: path.join(OUT, `${NAME}-overview.png`) });
+      await page.evaluate(() => window.__office.overview.toggle(false));
+      await wait(500);
     }
     if (UI) {
       // Settings > Bridge, the Quality card in view.
