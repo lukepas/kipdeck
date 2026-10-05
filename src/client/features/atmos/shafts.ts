@@ -17,7 +17,9 @@ const VERT = /* glsl */ `
 attribute float aT;
 attribute float aBow;
 attribute vec2 aRound;
+attribute vec3 aAxis;
 uniform float uSet;
+varying vec3 vAxis;
 varying vec3 vWorld;
 varying vec3 vN;
 varying float vT;
@@ -25,6 +27,7 @@ varying vec2 vRound;
 void main() {
   vT = aT;
   vRound = aRound;
+  vAxis = aAxis;
   vWorld = position;
   vN = normal;
   vec4 clip = projectionMatrix * viewMatrix * vec4(position, 1.0);
@@ -42,6 +45,7 @@ varying vec3 vWorld;
 varying vec3 vN;
 varying float vT;
 varying vec2 vRound;
+varying vec3 vAxis;
 ${NOISE}
 ${BOARD_MASK_GLSL}
 ${OVERHEAD_MASK_GLSL}
@@ -51,10 +55,14 @@ void main() {
   vec3 V = normalize(toEye + vec3(1e-4, 2e-4, 1e-4));
   vec3 N = normalize(vN + vec3(1e-5));
   float facing = clamp(abs(dot(N, V)), 0.0, 1.0);
+  // How far the look is off the shaft's axis: seen end on, its surface is edge on to the eye however
+  // thick the light is, so the facing is taken against that, and the light seen down its length counts more.
+  float across = sqrt(clamp(1.0 - dot(V, vAxis) * dot(V, vAxis), 0.0, 1.0));
+  float thick = clamp(facing / max(across, 0.12), 0.0, 1.0);
   // Through its thick middle bright, its silhouette gone.
-  float body = facing * facing * facing;
+  float body = thick * thick * thick * min(1.0 / max(across, 0.5), 1.6);
   // Brightest where the light comes in, thinning toward where it lands, soft at both ends.
-  float along = smoothstep(0.0, 0.12, vT) * (1.0 - smoothstep(0.55, 1.0, vT)) * (1.0 - 0.45 * vT);
+  float along = smoothstep(0.0, 0.06, vT) * (1.0 - smoothstep(0.55, 1.0, vT)) * (1.0 - 0.45 * vT);
   float low = smoothstep(0.05, 1.2, vWorld.y);
   // Rays along the shaft: noise round it, stretched along it, drifting slowly down it.
   float ring = vRound.x * 6.2831853;
@@ -76,6 +84,7 @@ export function shaftGeometry(list: readonly Shaft[]): THREE.BufferGeometry {
   const t: number[] = [];
   const bow: number[] = [];
   const round: number[] = [];
+  const ax: number[] = [];
   const idx: number[] = [];
   const axis = new THREE.Vector3();
   const across = new THREE.Vector3();
@@ -103,6 +112,7 @@ export function shaftGeometry(list: readonly Shaft[]): THREE.BufferGeometry {
         t.push(end);
         bow.push(s.bow ? 1 : 0);
         round.push(i / ROUND, list.indexOf(s));
+        ax.push(axis.x, axis.y, axis.z);
       }
     }
     for (let i = 0; i < ROUND; i++) {
@@ -117,6 +127,7 @@ export function shaftGeometry(list: readonly Shaft[]): THREE.BufferGeometry {
   g.setAttribute('aT', new THREE.Float32BufferAttribute(t, 1));
   g.setAttribute('aBow', new THREE.Float32BufferAttribute(bow, 1));
   g.setAttribute('aRound', new THREE.Float32BufferAttribute(round, 2));
+  g.setAttribute('aAxis', new THREE.Float32BufferAttribute(ax, 3));
   g.setIndex(idx);
   return g;
 }

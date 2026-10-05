@@ -46,14 +46,17 @@ function square(axis: THREE.Vector3, hint: THREE.Vector3): THREE.Vector3 {
 /** Where under the canopy the bow's shafts come through: round from +x toward +z, and how far out from the halo (0-1). */
 const CANOPY_PANES: readonly [deg: number, f: number][] = [
   [-90, 0.42],
-  [-116, 0.56],
-  [-64, 0.5],
+  [-128, 0.5],
+  [-52, 0.5],
+  [172, 0.4],
+  [8, 0.4],
 ];
 
 /**
- * Every shaft, the bow's first: three under the canopy's panes, falling the way the key does, to the
- * deck; the table's spot down onto the holo; each pod's lamp down onto its arc; and one in at each
- * low side port, slanting down onto the floor inside it.
+ * Every shaft, the bow's first: five under the canopy's panes (over the wall, and either side of the
+ * table, where the conn sees them clear of the boards), falling the way the key does, to the deck;
+ * each pod's lamp down onto its arc; and one in at each low side port, slanting down onto the floor
+ * inside it.
  */
 export function shafts(): Shaft[] {
   const out: Shaft[] = [];
@@ -67,8 +70,6 @@ export function shafts(): Shaft[] {
     out.push({ at: v(p), axis: v(fall), across: v(across), len, r0: [1.3, 0.95], r1: [1.7, 1.25], bow: true });
   }
   const down = new THREE.Vector3(0, -1, 0);
-  const tableTop = MISSION_TABLE.h + 0.05;
-  out.push({ at: [MISSION_TABLE.x, 5.7, MISSION_TABLE.z], axis: v(down), across: [1, 0, 0], len: 5.7 - tableTop, r0: [0.35, 0.35], r1: [2.3, 2.3], bow: false });
   for (const pod of PODS) {
     const r = POD_RADIUS - 0.4;
     const x = MISSION_TABLE.x + Math.cos(pod.angle) * r;
@@ -173,7 +174,7 @@ float overheadMask(vec3 w) {
   vec3 h = e + d * t;
   vec2 q = h.xz - vec2(${g(OVERHEAD.x)}, ${g(OVERHEAD.z)});
   float aside = abs(atan(q.x, -q.y));
-  float on = (1.0 - smoothstep(${g(OVERHEAD.half)}, ${g(OVERHEAD.half + 0.08)}, aside))
-    * smoothstep(${g(OVERHEAD.y0 - 0.15)}, ${g(OVERHEAD.y0)}, h.y) * (1.0 - smoothstep(${g(OVERHEAD.y1)}, ${g(OVERHEAD.y1 + 0.15)}, h.y));
+  float on = (1.0 - smoothstep(${g(OVERHEAD.half)}, ${g(OVERHEAD.half + 0.18)}, aside))
+    * smoothstep(${g(OVERHEAD.y0 - 0.4)}, ${g(OVERHEAD.y0)}, h.y) * (1.0 - smoothstep(${g(OVERHEAD.y1)}, ${g(OVERHEAD.y1 + 0.5)}, h.y));
   return 1.0 - on;
 }`;

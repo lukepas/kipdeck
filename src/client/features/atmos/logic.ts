@@ -23,12 +23,12 @@ export function spectacleStep(now: number, attention: boolean, dtMs: number): nu
 
 /**
  * How bright the shafts' light is, linear, added over what's behind them, on the axis where they're
- * thickest and a ray of dust runs through: 0.3 by Night, well under the glow's threshold (0.86) so it
+ * thickest and a ray of dust runs through: 0.2 by Night (up to 1.6 times that seen down its length), well under the glow's threshold (0.86) so it
  * never blooms, and four tenths of that by Day, faint warm light rather than grey haze over a lit
  * room. Each face of a shaft adds half. (0.05 was the first budget: against the Night deck's own
  * light it doesn't show at all.)
  */
-export const SHAFT_LIGHT = { night: 0.3, day: 0.4 } as const;
+export const SHAFT_LIGHT = { night: 0.2, day: 0.4 } as const;
 export function shaftLevel(mode: LightMode): number {
   return mode === 'night' ? SHAFT_LIGHT.night : SHAFT_LIGHT.night * SHAFT_LIGHT.day;
 }
