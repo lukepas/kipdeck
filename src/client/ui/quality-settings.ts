@@ -26,7 +26,7 @@ export function qualityChip(onTry?: () => void): HTMLElement {
     tryHigh();
     onTry?.();
   });
-  const chip = h('div.q-chip', { role: 'status', 'aria-live': 'polite' }, h('span.q-chip-dot'), label, why, btn);
+  const chip = h('div.q-chip', { role: 'status', 'aria-live': 'polite' }, h('span.q-meter', { 'aria-hidden': 'true' }, h('i'), h('i'), h('i')), label, why, btn);
   let shown = false;
   const paint = (s: QualityStatus | null) => {
     // Gone with Settings or the menu: stop listening.

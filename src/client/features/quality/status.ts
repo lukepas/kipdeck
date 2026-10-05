@@ -53,12 +53,22 @@ export function chipText(s: QualityStatus): string {
   return s.setting === 'auto' ? `Auto - running at ${TIER_NAME[s.tier]}` : `${TIER_NAME[s.tier]}, picked by hand`;
 }
 
+/** A wall-clock time as 14:02. */
+function clock(wall: number): string {
+  const d = new Date(wall);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
 /** Auto's last step in words: 'stepped to Medium at 14:02, slow frames', or '' when it hasn't stepped. */
 export function stepText(s: QualityStatus): string {
   if (s.setting !== 'auto' || !s.last) return '';
-  const d = new Date(s.last.wall);
-  const hhmm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  return `stepped ${s.last.dir === 'up' ? 'up ' : ''}to ${TIER_NAME[s.last.to]} at ${hhmm}, ${s.last.why}`;
+  return `stepped ${s.last.dir === 'up' ? 'up ' : ''}to ${TIER_NAME[s.last.to]} at ${clock(s.last.wall)}, ${s.last.why}`;
+}
+
+/** The menu row's shorter words: 'Auto - Medium since 14:02, slow frames' after a step, else the chip's. */
+export function menuText(s: QualityStatus): string {
+  if (s.setting !== 'auto' || !s.last) return chipText(s);
+  return `Auto - ${TIER_NAME[s.tier]} since ${clock(s.last.wall)}, ${s.last.why}`;
 }
 
 /** Whether 'Try High' has anything to do: Auto running under the best these graphics draw. */

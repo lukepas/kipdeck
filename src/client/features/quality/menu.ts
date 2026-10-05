@@ -4,7 +4,7 @@
  * is running under the best these graphics draw, and the row itself opening Settings > Bridge.
  */
 import type { HudAction } from '../../ui/menu';
-import { canTryHigh, chipText, qualityStatus, stepText, tryHigh, TIER_NAME } from './status';
+import { canTryHigh, menuText, qualityStatus, tryHigh, TIER_NAME } from './status';
 
 export function qualityMenuAction(openBridge: () => void): HudAction {
   return {
@@ -14,9 +14,7 @@ export function qualityMenuAction(openBridge: () => void): HudAction {
     section: 'Deck',
     note: () => {
       const s = qualityStatus();
-      if (!s) return '';
-      const step = stepText(s);
-      return step ? `${chipText(s)} · ${step}` : chipText(s);
+      return s ? menuText(s) : '';
     },
     title: () => 'How much the 3D deck draws: Settings > Bridge > Quality',
     extra: () => {

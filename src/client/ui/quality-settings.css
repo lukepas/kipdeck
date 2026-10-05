@@ -1,10 +1,16 @@
-/* Settings > Bridge > Quality: the live chip under the row (ui/quality-settings.ts). The dot is the tier:
-   bright for High, dimmer for Medium, faint for Low, so a step down shows before the words are read. */
+/* Settings > Bridge > Quality: the live chip under the row (ui/quality-settings.ts). The meter is the tier
+   in three neutral bars, filled to the tier drawn now, so a step down shows before the words are read.
+   No state hue: those are kept for what a unit is doing. */
 .q-chip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 10px; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: var(--radius); font-size: 13px; }
 .q-chip[hidden] { display: none; }
-.q-chip-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--settled); box-shadow: 0 0 0 3px rgb(61 220 151 / .18); }
-.q-chip[data-tier=medium] .q-chip-dot { background: var(--review); box-shadow: 0 0 0 3px var(--review-tint); }
-.q-chip[data-tier=low] .q-chip-dot { background: var(--muted); box-shadow: none; }
+.q-meter { flex: none; display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.q-meter i { width: 3px; background: var(--line-strong); }
+.q-meter i:nth-child(1) { height: 5px; }
+.q-meter i:nth-child(2) { height: 8px; }
+.q-meter i:nth-child(3) { height: 12px; }
+.q-chip[data-tier=low] .q-meter i:nth-child(1),
+.q-chip[data-tier=medium] .q-meter i:nth-child(-n+2),
+.q-chip[data-tier=high] .q-meter i { background: var(--text); }
 .q-chip-label { font-weight: 600; }
 .q-chip-why { color: var(--muted); }
 .q-chip-why:empty { display: none; }
