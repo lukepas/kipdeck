@@ -11,7 +11,10 @@
 // software one CI has. Exits 0 when clean, 1 on a bad frame, and 0 with SKIP when there's no build
 // or no browser playwright-core can start. FLICKER_PORT picks the port (default 4697). FLICKER_JUMP=1
 // jumps the ship every 420 frames of the sweep, so the countdown, the tunnel and the waypoint's name
-// across the glass are on screen for a good share of it.
+// across the glass are on screen for a good share of it. FLICKER_RITUALS=1 lights the drive core's
+// rings (a run of seven, today's best nine), plays the start of watch's launch every 420 frames (the
+// crawl into the stars) and runs the pit wall's hairline, and faces aft a third of the time, so the
+// core is in view.
 import { spawn, execFileSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -108,8 +111,13 @@ async function waitUp() {
 }
 
 /** Runs in the page: sweeps the camera for `n` frames and measures each one, jumping the ship now and then with `jump`. */
-async function sweep([n, jump]) {
+async function sweep([n, jump, rituals]) {
   const o = window.__office;
+  if (rituals) {
+    const at = Date.now();
+    const pace = { run: 7, best: 9, week: { merges: 12, issues: 4 }, record: 15, weeks: [3, 5, 8, 6, 9, 15, 11, 12], reply: { today: 180000, median7: 540000, samples: 3 }, review: { today: 900000, median7: 1500000, samples: 2, bars: [600000, 1200000] }, cleared: { reviews: 2, recovered: 1 }, latest: { kind: 'reply', ms: 120000, at }, day: 3 };
+    o.net.handlers.forEach((h) => h({ t: 'pace', floor: o.store.floor, pace }));
+  }
   const r = o.renderer;
   const gl = r.getContext();
   let screen = null;
@@ -146,6 +154,11 @@ async function sweep([n, jump]) {
   // across it; then walks straight past it on both sides, turning as it goes.
   const pose = (k) => {
     const u = k / n;
+    // A third of the frames, facing aft at the drive core over the lift, past the conn.
+    if (rituals && k % 3 === 0) {
+      const t = k / n;
+      return [[Math.sin(t * 9) * 3, 1.7 + 0.4 * Math.sin(t * 13), 4 + 5 * Math.abs(Math.sin(t * 5))], [0, 4.6 + Math.sin(t * 7), 17]];
+    }
     if (u < 0.7) {
       const v = u / 0.7;
       const rad = 2.0 + 4.5 * Math.abs(Math.sin(v * Math.PI * 2));
@@ -182,6 +195,8 @@ async function sweep([n, jump]) {
         i++;
         cur = pose(i);
         if (jump && i % 420 === 1) o.space.jump?.();
+        if (rituals && i % 420 === 2) window.__world?.watch?.play('launch', 9 * 3600000);
+        if (rituals && i % 420 === 300) window.__world?.turnaround?.run();
         if (i < n) requestAnimationFrame(tick);
         else resolve();
       };
@@ -256,7 +271,7 @@ async function main() {
         });
       }
       await wait(6000);
-      const { frames, bloom } = await page.evaluate(sweep, [FRAMES, process.env.FLICKER_JUMP === '1']);
+      const { frames, bloom } = await page.evaluate(sweep, [FRAMES, process.env.FLICKER_JUMP === '1', process.env.FLICKER_RITUALS === '1']);
       const bad = badFrames(frames);
       const means = frames.map((f) => f.mean);
       console.log(`${BACKEND}/${lighting} (bloom ${bloom ? 'on' : 'off'}): ${frames.length} frames, mean luminance ${Math.min(...means).toFixed(1)}-${Math.max(...means).toFixed(1)}, bad ${bad.length}${process.env.FLICKER_JUMP === '1' ? `, ${frames.filter((f) => f.tunnel).length} in the tunnel` : ''}`);
