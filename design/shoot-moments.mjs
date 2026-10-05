@@ -300,6 +300,7 @@ async function main() {
       await until(() => window.__office.space.phase?.() === 'countdown', 8000);
       await run(900);
       await shot('jump-countdown');
+      console.log('cinema', JSON.stringify(await page.evaluate(() => ({ fov: window.__office.camera.fov, ...window.__world.cinema?.state() }))));
       await VIEW(...BOW);
       await run(500);
       await shot('jump-stand');
@@ -307,12 +308,26 @@ async function main() {
       await until(() => window.__office.space.phase?.() === 'jump', 5000);
       await run(1700);
       await shot('jump-tunnel');
+      console.log('cinema', JSON.stringify(await page.evaluate(() => ({ fov: window.__office.camera.fov, ...window.__world.cinema?.state() }))));
       await run(1300);
       await shot('jump-banner');
+      console.log('cinema', JSON.stringify(await page.evaluate(() => ({ fov: window.__office.camera.fov, ...window.__world.cinema?.state() }))));
       await until(() => !!window.__world.moments?.state().card, 10_000);
       await run(500);
       await shot('waypoint-card');
       await run(3000);
+
+      // The cinema's merge frame (features/cinema): from the conn, the view eases toward the Pull
+      // requests board and the escort coming alongside in the canopy's glass over it.
+      if (want('merge-frame')) {
+        await VIEW(...CONN);
+        await run(600);
+        await merge('desk-3', 44);
+        await run(1150);
+        await shot('merge-frame');
+        console.log('cinema', JSON.stringify(await page.evaluate(() => window.__world.cinema?.state())));
+        await run(6000);
+      }
 
       // Alert conditions: a unit asks, waits past five minutes (aged here), then another is stuck past ten.
       await page.evaluate(() => window.__office.net.send({ t: 'worker.spawn', deskId: 'desk-4', prompt: '[ask] Pick the cache eviction policy', worktree: false }));

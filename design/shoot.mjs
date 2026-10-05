@@ -307,6 +307,93 @@ async function main() {
       });
       await wait(900);
     }
+    // The cinema (features/cinema). The arrival shot held at 0, 2.5 and 5 s (the bow outside, the
+    // destination world, the conn), then let run and skipped by a key at 1 s: on the conn the next frame.
+    const CINEMA = (fn, ...args) => page.evaluate(([fn, args]) => window.__world.cinema[fn](...args), [fn, args]);
+    if (want('arrival')) {
+      // The start of watch plays once the arrival has landed: a key skips what's left of it first.
+      await page.evaluate(() => window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ShiftLeft', key: 'Shift' })));
+      await wait(600);
+      for (const [name, ms] of [['arrival-0s', 0], ['arrival-2.5s', 2500], ['arrival-5s', 5000]]) {
+        await CINEMA('hold', ms);
+        await wait(1500);
+        await page.screenshot({ path: path.join(OUT, `${name}.png`) });
+      }
+      await CINEMA('hold', null);
+      await wait(800);
+      await CINEMA('hold', 1000);
+      await wait(600);
+      // Let it run from 1 s, press a key, and read the very next frame.
+      const skip = await page.evaluate(async () => {
+        const o = window.__office;
+        const c = window.__world.cinema;
+        c.hold(null);
+        await new Promise((r) => requestAnimationFrame(r));
+        const before = c.state().arrival;
+        window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ShiftLeft', key: 'Shift' }));
+        await new Promise((r) => requestAnimationFrame(r));
+        const cam = o.camera.position;
+        const p = o.player.pos;
+        return { before, after: c.state().arrival, camToPlayer: +Math.hypot(cam.x - p.x, cam.z - p.z).toFixed(3) };
+      });
+      console.log('arrival-skip', JSON.stringify(skip));
+      await page.screenshot({ path: path.join(OUT, 'arrival-skip.png') });
+    }
+    // Idle breathing: in the captain's chair, no input for 4 s and more; two frames 1.8 s apart differ by
+    // a hair (a tenth of a degree, 2 mm). Then the boards' type from the conn twice, a second apart.
+    if (want('breathe')) {
+      await page.evaluate(() => window.__office.player.sit({ key: 'conn:0', seatId: 'conn', x: 0, y: 0.25, z: 10.65, rotY: Math.PI, hips: 0.48, out: 0.8 }));
+      await wait(8000);
+      const pose = () => page.evaluate(() => {
+        const c = window.__office.camera;
+        return { breath: +window.__world.cinema.state().breath.toFixed(2), pitch: +c.rotation.x.toFixed(5), roll: +c.rotation.z.toFixed(5), y: +c.position.y.toFixed(4) };
+      });
+      console.log('breathe-1', JSON.stringify(await pose()));
+      await page.screenshot({ path: path.join(OUT, 'breathe-1.png') });
+      await wait(1800);
+      console.log('breathe-2', JSON.stringify(await pose()));
+      await page.screenshot({ path: path.join(OUT, 'breathe-2.png') });
+      await page.evaluate(() => void (window.__office.player.seat = null));
+    }
+    if (want('screens-steady')) {
+      // The boards' type with the screens' clock a second apart and the page's own held (a frame of 1 ms
+      // between them, so nothing else on the deck moves): the roll band has slid on, the type hasn't.
+      // Nothing else under way: the start of watch skipped, the lights settled.
+      await page.evaluate(() => window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ShiftLeft', key: 'Shift' })));
+      await VIEW([0, 2.05, 11.4], [0, 2.4, -12]);
+      await wait(3000);
+      console.log('watch', JSON.stringify(await page.evaluate(() => window.__world.watch?.state())));
+      await page.evaluate(() => {
+        const realRaf = window.requestAnimationFrame.bind(window);
+        const realNow = performance.now.bind(performance);
+        window.__hold = { realRaf, realNow, pending: [], now: realNow() };
+        window.requestAnimationFrame = (cb) => (window.__hold.pending.push(cb), window.__hold.pending.length);
+        performance.now = () => window.__hold.now;
+        window.__holdStep = (ms) => {
+          const c = window.__hold;
+          c.now += ms;
+          for (const cb of c.pending.splice(0)) cb(c.now);
+        };
+      });
+      for (const [i, t] of [[1, 10.3], [2, 11.3]]) {
+        await page.evaluate((t) => {
+          window.__world.cinema.screensAt(t);
+          window.__holdStep(1);
+          window.__holdStep(1);
+        }, t);
+        await wait(300);
+        await page.screenshot({ path: path.join(OUT, `screens-${i}.png`) });
+      }
+      console.log('screens', JSON.stringify(await page.evaluate(() => window.__world.cinema.state())));
+      await page.evaluate(() => {
+        window.__world.cinema.screensAt(null);
+        const c = window.__hold;
+        window.requestAnimationFrame = c.realRaf;
+        performance.now = c.realNow;
+        for (const cb of c.pending.splice(0)) c.realRaf(cb);
+      });
+      await UNVIEW();
+    }
     // The room from fixed cameras: the player's update is wrapped so the camera lands where asked.
     const VANTAGES = {
       'deck-high': [[16, 17, 19], [0, 0, 0]],
@@ -833,6 +920,27 @@ async function main() {
       await wait(2500);
       await shot(mid, 'lite-tablet');
       await mid.close();
+    }
+    // A load with a unit already needing the captain, and one with less motion asked for: the arrival
+    // doesn't play, the first frame is the conn.
+    for (const [name, opts] of [['arrival-needs', {}], ['arrival-still', { reducedMotion: 'reduce' }]]) {
+      if (!want(name)) continue;
+      const ctx2 = await browser.newContext({ viewport, colorScheme: SCHEME, ...opts });
+      await ctx2.addInitScript(PROFILE, [LIGHT, QUALITY]);
+      const p2 = await ctx2.newPage();
+      await signIn(p2);
+      await p2.goto(`${base}/`, { waitUntil: 'commit' });
+      await p2.waitForFunction(() => !!window.__world?.cinema?.state().arrival, null, { timeout: 90_000 });
+      const first = await p2.evaluate(() => {
+        const o = window.__office;
+        const cam = o.camera.position;
+        const p = o.player.pos;
+        return { arrival: window.__world.cinema.state().arrival, counts: o.store.counts(), camToPlayer: +Math.hypot(cam.x - p.x, cam.z - p.z).toFixed(3) };
+      });
+      console.log(name, JSON.stringify(first));
+      await wait(2500);
+      await shot(p2, name);
+      await ctx2.close();
     }
     if (errors.length) console.log('page errors:\n' + errors.join('\n'));
   } finally {
