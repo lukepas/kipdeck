@@ -2,7 +2,9 @@ import * as THREE from 'three';
 import type { MachineState } from '../../../shared/protocol';
 import { officeFull } from '../../../shared/machine';
 
-import { MONO_FONT, PANEL, UI_FONT, panelGround } from './world';
+import { MACHINE_MONITOR } from '../../../shared/layout';
+import { MONO_FONT, PANEL, UI_FONT } from './world';
+import { INK, LAYOUT, ground, screen, titleBar } from './screen';
 
 /** Steel while there's room, amber when it's getting full, red from where deploying gets a warning. */
 export function loadColor(pct: number): string {
@@ -20,18 +22,13 @@ export function fmtGb(bytes: number): string {
  */
 export class MachineTexture {
   readonly texture: THREE.CanvasTexture;
-  private canvas = document.createElement('canvas');
-  private ctx: CanvasRenderingContext2D;
+  // The panel's own shape (2.6 by 1.5 m), seen from closer than the wall: 920 canvas units across.
+  private s = screen(MACHINE_MONITOR.width, MACHINE_MONITOR.height, 354);
+  private ctx = this.s.g;
   private drawn = '';
 
   constructor() {
-    // The panel's own shape (MACHINE_MONITOR is 2.6 by 1.5 m).
-    this.canvas.width = 920;
-    this.canvas.height = 520;
-    this.ctx = this.canvas.getContext('2d')!;
-    this.texture = new THREE.CanvasTexture(this.canvas);
-    this.texture.colorSpace = THREE.SRGBColorSpace;
-    this.texture.anisotropy = 8;
+    this.texture = this.s.texture;
   }
 
   render(s: MachineState) {
@@ -39,30 +36,27 @@ export class MachineTexture {
     if (key === this.drawn) return;
     this.drawn = key;
     const g = this.ctx;
-    const W = this.canvas.width;
-    const H = this.canvas.height;
-    panelGround(g, W, H);
+    const { W, H } = this.s;
+    ground(g, W, H);
     g.textBaseline = 'alphabetic';
 
-    // Header: whether there's room for another unit, as a state glyph and a word.
-    g.textAlign = 'left';
+    // The title bar: whether there's room for another unit, as a square in its colour and a word.
     const full = officeFull(s);
     const status: [string, string] = !s.memTotal ? ['reading', PANEL.muted] : s.pressure ? ['under pressure', PANEL.stuck] : full ? ['at its limit', PANEL.review] : ['room to deploy', PANEL.settled];
+    const at = titleBar(g, W, 'Capacity', status[0]);
     g.fillStyle = status[1];
-    g.fillRect(30, 40, 16, 16);
-    g.fillStyle = PANEL.text;
-    g.font = UI_FONT(600, 32);
-    g.fillText(status[0], 60, 58);
+    g.fillRect(at - 34, LAYOUT.titleBase - 30, 20, 20);
 
     const memPct = s.memTotal ? Math.round((s.memUsed / s.memTotal) * 100) : 0;
-    this.panel(30, 90, 415, 'CPU', s.cpu, s.cores ? `${s.cores} core${s.cores === 1 ? '' : 's'}` : '', s.history.map(([c]) => c));
-    this.panel(475, 90, 415, 'MEMORY', memPct, s.memTotal ? `${fmtGb(s.memUsed)} of ${fmtGb(s.memTotal)}` : '', s.history.map(([, m]) => m));
+    const gw = (W - 32 * 2 - 24) / 2;
+    this.panel(32, 122, gw, 'CPU', s.cpu, s.cores ? `${s.cores} core${s.cores === 1 ? '' : 's'}` : '', s.history.map(([c]) => c));
+    this.panel(32 + gw + 24, 122, gw, 'MEMORY', memPct, s.memTotal ? `${fmtGb(s.memUsed)} of ${fmtGb(s.memTotal)}` : '', s.history.map(([, m]) => m));
 
     // Footer: the units, a square each, against the limit.
-    const y = 450;
+    const y = H - 30;
     g.textAlign = 'left';
-    g.font = MONO_FONT(28);
-    g.fillStyle = PANEL.text;
+    g.font = MONO_FONT(30, 600);
+    g.fillStyle = INK.text;
     const label = s.limit === undefined ? `${s.workers} unit${s.workers === 1 ? '' : 's'}  no limit` : `${s.workers}/${s.limit} units`;
     g.fillText(label, 30, y + 12);
     if (s.limit !== undefined) {

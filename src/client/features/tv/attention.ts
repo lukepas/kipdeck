@@ -6,105 +6,61 @@
 import * as THREE from 'three';
 import type { AttentionLevel, Ranked } from '../../../shared/attention';
 import { ago, headline, statusPhrase } from '../../../shared/rowtext';
-import { DESK_BY_ID, cellOf } from '../../../shared/layout';
+import { DESK_BY_ID, TV, cellOf } from '../../../shared/layout';
 import { callSign } from '../../../shared/callsign';
-import { MONO_FONT, PANEL, UI_FONT, clip, panelGround } from '../boards/world';
+import { PANEL } from '../boards/world';
+import { INK, LAYOUT, MONO, emptyBody, ground, more, row, screen, titleBar } from '../boards/screen';
 import { drawGlyph } from '../../world/glyphs';
 
-const W = 1280;
-const H = 720;
-
 /** The state glyphs, as the units and the DOM draw them (world/glyphs.ts). */
-const glyph = (g: CanvasRenderingContext2D, level: AttentionLevel, x: number, y: number, r: number) => drawGlyph(g, level, x, y, r);
+const glyph = (level: AttentionLevel) => (g: CanvasRenderingContext2D, x: number, y: number, r: number) => drawGlyph(g, level, x, y, r);
 
 const HUE: Record<AttentionLevel, string> = { 'needs-you': PANEL.signal, stuck: PANEL.stuck, review: PANEL.review, working: PANEL.working, parked: PANEL.lineStrong };
 
-/** Draws the board for `ranked` (most in need first) at `now`. */
-export function paintAttention(g: CanvasRenderingContext2D, ranked: Ranked[], now: number) {
-  panelGround(g, W, H);
-  g.textBaseline = 'alphabetic';
-  g.textAlign = 'left';
+/** Where a unit's reason starts: past its name and call sign. */
+const WHY_X = 420;
+
+/** Draws the board for `ranked` (most in need first) at `now`, on a board `W` by `H` canvas units. */
+export function paintAttention(g: CanvasRenderingContext2D, W: number, H: number, ranked: Ranked[], now: number) {
+  ground(g, W, H);
   const live = ranked.filter((r) => r.att.level !== 'parked');
   const counts = (['needs-you', 'stuck', 'review', 'working'] as const).map((l) => [l, live.filter((r) => r.att.level === l).length] as const);
-  // Across the top: the counts, as the top bar has them.
-  let x = 40;
-  for (const [level, n] of counts) {
-    glyph(g, level, x + 14, 52, 13);
-    g.fillStyle = n ? PANEL.text : PANEL.muted;
-    g.font = MONO_FONT(34);
-    g.fillText(String(n), x + 40, 64);
+  titleBar(g, W, 'Attention');
+  // In the title bar, right-aligned: each count as its glyph and number, as the top bar has them.
+  g.font = MONO(40, 600);
+  g.textAlign = 'left';
+  g.textBaseline = 'alphabetic';
+  let x = W - LAYOUT.pad;
+  for (const [level, n] of [...counts].reverse()) {
     const w = g.measureText(String(n)).width;
-    g.fillStyle = PANEL.muted;
-    g.font = UI_FONT(500, 26);
-    const word = { 'needs-you': 'need you', stuck: 'stuck', review: 'to review', working: 'working' }[level];
-    g.fillText(word, x + 48 + w, 63);
-    x += 64 + w + g.measureText(word).width + 36;
+    x -= w;
+    g.fillStyle = n ? INK.text : INK.muted;
+    g.fillText(String(n), x, LAYOUT.titleBase - 2);
+    x -= 34;
+    drawGlyph(g, level, x + 10, LAYOUT.titleBase - 16, 16);
+    x -= 36;
   }
-  g.fillStyle = PANEL.line;
-  g.fillRect(40, 92, W - 80, 2);
   if (!live.length || live.every((r) => r.att.level === 'working')) {
-    g.textAlign = 'center';
-    g.fillStyle = PANEL.text;
-    g.font = UI_FONT(600, 46);
-    g.fillText(live.length ? 'All units on task. Nothing needs you.' : 'No units on this deck', W / 2, H / 2 + 20);
-    g.fillStyle = PANEL.muted;
-    g.font = UI_FONT(500, 28);
-    g.fillText(live.length ? `${live.length} working` : 'Deploy one at a free console', W / 2, H / 2 + 70);
-    g.textAlign = 'left';
-    if (!live.length) return;
+    emptyBody(g, W, H, live.length ? 'All units on task. Nothing needs you.' : 'No units on this deck', live.length ? `${live.length} working` : 'Deploy one at a free console');
+    return;
   }
-  const rows = live.filter((r) => r.att.level !== 'working' || live.length <= 7).slice(0, 7);
-  if (!rows.length) return;
-  const rowH = 84;
+  // Most in need first, as the ranking has them; the rest are counted under the rows.
+  const rows = live.slice(0, LAYOUT.rows);
   rows.forEach((r, i) => {
-    const y = 112 + i * rowH;
     const level = r.att.level;
-    g.fillStyle = i === 0 && level !== 'working' ? PANEL.cardHi : PANEL.card;
-    g.fillRect(40, y, W - 80, rowH - 10);
-    g.fillStyle = HUE[level];
-    g.fillRect(40, y, 5, rowH - 10);
-    glyph(g, level, 84, y + (rowH - 10) / 2, 15);
     const desk = DESK_BY_ID.get(r.entry.deskId);
     const cell = desk ? cellOf(desk.x, desk.z) : '';
-    g.fillStyle = PANEL.text;
-    g.font = MONO_FONT(30);
-    g.fillText(clip(g, r.entry.name, 220), 120, y + 34);
-    g.fillStyle = PANEL.muted;
-    g.font = MONO_FONT(22);
     const sign = callSign(r.entry.deskId);
-    g.fillText(sign ? `${sign} at ${cell}` : cell ? `at ${cell}` : '', 120, y + 62);
-    const age = ago(now - r.att.since);
-    g.textAlign = 'right';
-    g.fillStyle = PANEL.muted;
-    g.font = MONO_FONT(26);
-    g.fillText(age, W - 64, y + 46);
-    const ageW = g.measureText(age).width;
-    g.textAlign = 'left';
-    g.fillStyle = level === 'working' ? PANEL.muted : PANEL.text;
-    g.font = UI_FONT(500, 28);
     const title = headline(r.entry.task, r.entry.activity).title;
-    const why = level === 'working' || level === 'parked' ? title || r.att.label : statusPhrase(r.att, title);
-    g.fillText(clip(g, why, W - 64 - ageW - 40 - 380), 380, y + 46);
+    const why = level === 'working' ? title || r.att.label : statusPhrase(r.att, title);
+    row(g, W, i, { hue: HUE[level], mark: glyph(level), text: r.entry.name, detail: why, detailX: WHY_X, side: ago(now - r.att.since), sideMono: true, sub: sign ? `${sign} at ${cell}` : cell ? `at ${cell}` : undefined, quiet: level === 'working' });
   });
-  const more = live.length - rows.length;
-  if (more > 0) {
-    g.fillStyle = PANEL.muted;
-    g.font = MONO_FONT(24);
-    g.textAlign = 'right';
-    g.fillText(`+${more}`, W - 44, H - 20);
-    g.textAlign = 'left';
-  }
+  more(g, W, H, live.length - rows.length);
 }
 
 /** The board's texture, and how to bring it up to date. */
 export function attentionBoard(): { texture: THREE.CanvasTexture; render(ranked: Ranked[], now: number): void } {
-  const canvas = document.createElement('canvas');
-  canvas.width = W;
-  canvas.height = H;
-  const g = canvas.getContext('2d')!;
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 8;
+  const { g, W, H, texture } = screen(TV.width, TV.height);
   let drawn = '';
   return {
     texture,
@@ -113,7 +69,7 @@ export function attentionBoard(): { texture: THREE.CanvasTexture; render(ranked:
       const key = JSON.stringify(ranked.map((r) => [r.entry.id, r.entry.name, r.entry.deskId, r.att.level, r.att.reason, Math.floor((now - r.att.since) / 60_000)]));
       if (key === drawn) return;
       drawn = key;
-      paintAttention(g, ranked, now);
+      paintAttention(g, W, H, ranked, now);
       texture.needsUpdate = true;
     },
   };

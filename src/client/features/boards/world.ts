@@ -1,6 +1,9 @@
 import { DATA_COLORS } from '../../../shared/datacolors';
 import * as THREE from 'three';
 import { OFFICE_PLAN } from '../../../shared/plan';
+import { SITUATION } from '../../../shared/layout';
+import { drawGlyph, type GlyphKind } from '../../world/glyphs';
+import { INK, LAYOUT, emptyBody, ground, more, offlineBody, row, rowTop, screen, titleBar, type Row, type Screen } from './screen';
 import type { GhIssue, GhPull, GhState, QueueState, QueueTask, ServiceInfo, WorkerInfo } from '../../../shared/protocol';
 import { workerForPull } from '../../state';
 
@@ -53,54 +56,6 @@ export function panelGround(g: CanvasRenderingContext2D, W: number, H: number) {
   for (let y = 40; y < H; y += 40) g.fillRect(0, y, W, 1);
 }
 
-/** A quiet line in the middle of an empty panel, and a smaller one under it. */
-export function panelEmpty(g: CanvasRenderingContext2D, W: number, H: number, title: string, sub?: string) {
-  g.textAlign = 'center';
-  g.textBaseline = 'middle';
-  g.fillStyle = PANEL.text;
-  g.font = UI_FONT(600, 44);
-  wrap(g, title, W - 160, 2).forEach((l, i, all) => g.fillText(l, W / 2, H / 2 - (sub ? 24 : 0) + (i - (all.length - 1) / 2) * 52));
-  if (sub) {
-    g.fillStyle = PANEL.muted;
-    g.font = UI_FONT(500, 28);
-    g.fillText(clip(g, sub, W - 160), W / 2, H / 2 + 40);
-  }
-  g.textAlign = 'left';
-  g.textBaseline = 'alphabetic';
-}
-
-/**
- * A board that can't reach GitHub: its own name large and muted, a link glyph, and one short line.
- * The full fix (which command to run where) is in the board's window, not painted on the wall.
- */
-export function panelOffline(g: CanvasRenderingContext2D, W: number, H: number, title: string, sub: string) {
-  g.textAlign = 'center';
-  g.textBaseline = 'middle';
-  // The link glyph (ui/icons.ts 'link'), drawn in hairline steel.
-  const r = 30;
-  g.save();
-  g.translate(W / 2, H / 2 - 120);
-  g.strokeStyle = PANEL.muted;
-  g.lineWidth = 7;
-  g.lineCap = 'square';
-  for (const k of [-1, 1]) {
-    g.save();
-    g.translate(k * r * 0.62, -k * r * 0.62);
-    g.rotate(-Math.PI / 4);
-    g.strokeRect(-r * 0.95, -r * 0.48, r * 1.9, r * 0.96);
-    g.restore();
-  }
-  g.restore();
-  g.fillStyle = PANEL.lineStrong;
-  g.font = `600 112px Archivo, system-ui, sans-serif`;
-  g.fillText(title.toUpperCase(), W / 2, H / 2 + 6, W - 120);
-  g.fillStyle = PANEL.muted;
-  g.font = UI_FONT(500, 34);
-  g.fillText(sub, W / 2, H / 2 + 104);
-  g.textAlign = 'left';
-  g.textBaseline = 'alphabetic';
-}
-
 /** What a board that has an error says on the wall: never the error itself, which is for its window. */
 export function offlineLine(error: string): string {
   if (/sign|auth|token|log ?in/i.test(error)) return 'Connect GitHub to see it here';
@@ -108,33 +63,34 @@ export function offlineLine(error: string): string {
   return 'GitHub is out of reach for now';
 }
 
-/** A note as it was last drawn: its middle, size and tilt on the canvas. */
+
+export { clip } from './screen';
+
+/** A row as it was last drawn: which item it is, and its box on the board (canvas units). */
 interface DrawnNote {
   number: number;
   x: number;
   y: number;
   w: number;
   h: number;
-  tilt: number;
 }
 
-/** Draws the Issues or the Pull requests panel: a card per open item, on the panel's slate. */
+/** Amber for a pull request waiting on review, a quiet steel dot for a draft. */
+const pullMark = (draft: boolean) => (g: CanvasRenderingContext2D, x: number, y: number, r: number) => drawGlyph(g, draft ? 'parked' : 'review', x, y, draft ? r * 1.6 : r);
+/** What a pull request's checks say, in words, and red only when they fail. */
+const CHECKS: Record<GhPull['checks'], [string, string] | null> = { pass: ['checks pass', INK.dim], fail: ['checks failing', PANEL.stuck], pending: ['checks running', INK.dim], none: null };
+
+/** Draws the Issues or the Pull requests board: a row per open item, the oldest first, four at most. */
 export class BoardTexture {
   readonly texture: THREE.CanvasTexture;
-  private canvas = document.createElement('canvas');
-  private ctx: CanvasRenderingContext2D;
+  private s: Screen = screen(SITUATION.width, SITUATION.height);
   private notes: DrawnNote[] = [];
-  /** The card being reached for, drawn with a Signal outline (see lift). */
+  /** The row being reached for, outlined in Signal (see lift). */
   private lifted: number | null = null;
   private last: [GhState<GhIssue> | GhState<GhPull>, Map<string, WorkerInfo> | undefined] | null = null;
 
   constructor(private kind: 'issues' | 'pulls') {
-    this.canvas.width = 1200;
-    this.canvas.height = 600;
-    this.ctx = this.canvas.getContext('2d')!;
-    this.texture = new THREE.CanvasTexture(this.canvas);
-    this.texture.colorSpace = THREE.SRGBColorSpace;
-    this.texture.anisotropy = 8;
+    this.texture = this.s.texture;
   }
 
   /** Whether any notes are up on the board. */
@@ -142,94 +98,51 @@ export class BoardTexture {
     return this.notes.length > 0;
   }
 
-  /** The card at a point on the panel's face (its uv), or undefined over bare panel. */
+  /** The item at a point on the board's face (its uv), or undefined over bare panel. */
   noteAt(uv: THREE.Vector2): number | undefined {
-    const px = uv.x * this.canvas.width;
-    const py = (1 - uv.y) * this.canvas.height;
-    // Topmost first: later notes are drawn over earlier ones.
-    for (let i = this.notes.length - 1; i >= 0; i--) {
-      const n = this.notes[i];
-      // Into the note's own (tilted) frame.
-      const dx = px - n.x;
-      const dy = py - n.y;
-      const c = Math.cos(-n.tilt);
-      const s = Math.sin(-n.tilt);
-      if (Math.abs(dx * c - dy * s) <= n.w / 2 && Math.abs(dx * s + dy * c) <= n.h / 2) return n.number;
-    }
-    return undefined;
+    const px = uv.x * this.s.W;
+    const py = (1 - uv.y) * this.s.H;
+    return this.notes.find((n) => Math.abs(px - n.x) <= n.w / 2 && Math.abs(py - n.y) <= n.h / 2)?.number;
   }
 
-  /** Draws one card outlined, the one you're about to take (null for none). */
+  /** Draws one row outlined, the one you're about to take (null for none). */
   lift(number: number | null) {
     if (number === this.lifted) return;
     this.lifted = number;
     if (this.last) this.render(...this.last);
   }
 
-  /** `workers` lets PR cards name the unit and console they came from. */
+  /** `workers` lets a PR's row name the unit and console it came from. */
   render(state: GhState<GhIssue> | GhState<GhPull>, workers?: Map<string, WorkerInfo>) {
     this.last = [state, workers];
     this.notes = [];
-    const g = this.ctx;
-    const W = this.canvas.width;
-    const H = this.canvas.height;
-    panelGround(g, W, H);
+    const { g, W, H } = this.s;
+    const pulls = this.kind === 'pulls';
+    ground(g, W, H);
     const open = (state.items as (GhIssue | GhPull)[]).filter((i) => i.state === 'OPEN');
+    titleBar(g, W, pulls ? 'Pull requests' : 'Issues', open.length ? `${open.length} open` : undefined);
     if (!open.length) {
-      if (state.error) panelOffline(g, W, H, this.kind === 'issues' ? 'Issues' : 'Pull requests', offlineLine(state.error));
-      else panelEmpty(g, W, H, state.loading && !state.fetchedAt ? 'Loading' : this.kind === 'issues' ? 'No open issues' : 'No open pull requests', this.kind === 'issues' ? 'New issues land here first' : "A unit's PR lands here when it opens one");
+      if (state.error) offlineBody(g, W, H, offlineLine(state.error));
+      else emptyBody(g, W, H, state.loading && !state.fetchedAt ? 'Loading' : pulls ? 'No open pull requests' : 'No open issues', pulls ? "A unit's PR lands here when it opens one" : 'New issues land here first');
       this.texture.needsUpdate = true;
       return;
     }
-    // Fewer cards -> bigger cards, so a quiet board is still readable from across the deck.
-    const n = Math.min(open.length, 15);
-    const cols = n <= 2 ? n : n <= 4 ? 2 : n <= 6 ? 3 : n <= 8 ? 4 : 5;
-    const rows = Math.min(3, Math.ceil(n / cols));
-    const scale = Math.min(2, Math.max(1, 3 / Math.max(cols, rows * 1.3)));
-    const gap = 18;
-    const nw = Math.min(208 * scale, (W - gap) / cols - gap);
-    const nh = Math.min(164 * scale, (H - gap) / rows - gap);
-    const gx = (W - cols * nw) / (cols + 1);
-    const gy = (H - rows * nh) / (rows + 1);
-    open.slice(0, cols * rows).forEach((it, i) => {
-      const c = i % cols;
-      const r = Math.floor(i / cols);
-      const x = gx + c * (nw + gx);
-      const y = gy + r * (nh + gy);
-      this.notes.push({ number: it.number, x: x + nw / 2, y: y + nh / 2, w: nw, h: nh, tilt: 0 });
+    const shown = open.slice(0, LAYOUT.rows);
+    shown.forEach((it, i) => {
       const lifted = it.number === this.lifted;
-      const draft = this.kind === 'pulls' && (it as GhPull).isDraft;
-      g.fillStyle = lifted ? PANEL.cardHi : PANEL.card;
-      g.fillRect(x, y, nw, nh);
-      g.lineWidth = lifted ? 4 : 2;
-      g.strokeStyle = lifted ? PANEL.signal : PANEL.line;
-      g.strokeRect(x + g.lineWidth / 2, y + g.lineWidth / 2, nw - g.lineWidth, nh - g.lineWidth);
-      // A stripe down the left edge: steel for an issue, amber for a PR waiting on review, muted for a draft.
-      g.fillStyle = draft ? PANEL.lineStrong : this.kind === 'pulls' ? PANEL.review : PANEL.working;
-      g.fillRect(x, y, 5, nh);
-      const fs = Math.round(22 * Math.min(scale, nh / 164));
-      const w = this.kind === 'pulls' && workers ? workerForPull(workers.values(), it as GhPull) : undefined;
-      const footer = w ? fs * 1.3 : 0;
-      g.fillStyle = PANEL.muted;
-      g.font = MONO_FONT(Math.round(fs * 1.05));
-      g.fillText(`#${it.number}${draft ? '  draft' : ''}`, x + 18, y + fs * 1.7);
-      g.fillStyle = draft ? PANEL.muted : PANEL.text;
-      g.font = UI_FONT(600, fs);
-      wrap(g, it.title, nw - 34, Math.max(2, Math.floor((nh - fs * 3 - footer) / (fs * 1.2)))).forEach((line, li) => g.fillText(line, x + 18, y + fs * 3.1 + li * fs * 1.2));
-      if (w) {
-        // The unit and its console, so you can tell whose PR it is from across the deck.
-        g.fillStyle = PANEL.muted;
-        g.font = MONO_FONT(Math.round(fs * 0.72));
-        g.fillText(clip(g, `${w.name}  ${OFFICE_PLAN.byId.get(w.deskId)?.label.replace(/^Console /, '') ?? ''}`, nw - 34), x + 18, y + nh - fs * 0.6);
-      }
+      const y = rowTop(i);
+      this.notes.push({ number: it.number, x: W / 2, y: y + LAYOUT.rowH / 2, w: W - LAYOUT.pad * 2, h: LAYOUT.rowH });
+      if (!pulls) return row(g, W, i, { hue: INK.lineStrong, tag: `#${it.number}`, text: it.title, lifted }, 64);
+      const pr = it as GhPull;
+      const w = workers ? workerForPull(workers.values(), pr) : undefined;
+      const checks = pr.isDraft ? null : CHECKS[pr.checks];
+      const side = pr.isDraft ? 'draft' : pr.reviewDecision === 'APPROVED' ? 'approved' : checks?.[0];
+      const sideColor = pr.isDraft || pr.reviewDecision === 'APPROVED' ? INK.dim : checks?.[1];
+      const where = w ? `${w.name}  ${OFFICE_PLAN.byId.get(w.deskId)?.label.replace(/^Console /, '') ?? ''}`.trim() : '';
+      const sub = [where, pr.reviewDecision === 'APPROVED' && checks ? checks[0] : ''].filter(Boolean).join('  ');
+      row(g, W, i, { hue: pr.isDraft ? PANEL.lineStrong : PANEL.review, mark: pullMark(pr.isDraft), tag: `#${pr.number}`, text: pr.title, side, sideColor, sub: sub || undefined, quiet: pr.isDraft, lifted });
     });
-    if (open.length > cols * rows) {
-      g.fillStyle = PANEL.muted;
-      g.font = MONO_FONT(24);
-      g.textAlign = 'right';
-      g.fillText(`+${open.length - cols * rows}`, W - 16, H - 12);
-      g.textAlign = 'left';
-    }
+    more(g, W, H, open.length - shown.length);
     this.texture.needsUpdate = true;
   }
 }
@@ -237,208 +150,108 @@ export class BoardTexture {
 /** The Services board: the web servers units are running, a row each with its port in mono. */
 export class ServicesBoardTexture {
   readonly texture: THREE.CanvasTexture;
-  private canvas = document.createElement('canvas');
-  private ctx: CanvasRenderingContext2D;
+  private s: Screen = screen(SITUATION.width, SITUATION.height);
   private drawn = '';
 
   constructor() {
-    this.canvas.width = 1200;
-    this.canvas.height = 600;
-    this.ctx = this.canvas.getContext('2d')!;
-    this.texture = new THREE.CanvasTexture(this.canvas);
-    this.texture.colorSpace = THREE.SRGBColorSpace;
-    this.texture.anisotropy = 8;
+    this.texture = this.s.texture;
   }
 
   render(items: ServiceInfo[], workers: Map<string, WorkerInfo>) {
     const rows = items.map((s) => {
       const w = workers.get(s.workerId);
-      return { port: s.port, title: s.title || s.command, who: [w?.name ?? 'A unit', w?.worktree?.branch].filter(Boolean).join('  '), color: w?.color ?? '#8A97A5' };
+      return { port: s.port, title: s.title || s.command, who: [w?.name ?? 'A unit', w?.worktree?.branch].filter(Boolean).join('  ') };
     });
     // Worker updates stream in constantly; only redraw when what's shown changes.
     const key = JSON.stringify(rows);
     if (key === this.drawn) return;
     this.drawn = key;
-    const g = this.ctx;
-    const W = this.canvas.width;
-    const H = this.canvas.height;
-    panelGround(g, W, H);
+    const { g, W, H } = this.s;
+    ground(g, W, H);
+    titleBar(g, W, 'Services', rows.length ? `${rows.length} running` : undefined);
     if (!rows.length) {
-      panelEmpty(g, W, H, 'No web servers running', 'When a unit starts one, it shows up here');
+      emptyBody(g, W, H, 'No web servers running', 'When a unit starts one, it shows up here');
       this.texture.needsUpdate = true;
       return;
     }
-    const shown = rows.slice(0, 5);
-    const rowH = Math.min(120, (H - 40) / shown.length);
-    const fs = Math.round(rowH * 0.34);
-    shown.forEach((r, i) => {
-      const y = 20 + i * rowH;
-      g.fillStyle = PANEL.card;
-      g.fillRect(24, y + 6, W - 48, rowH - 12);
-      g.strokeStyle = PANEL.line;
-      g.lineWidth = 2;
-      g.strokeRect(25, y + 7, W - 50, rowH - 14);
+    const up = (g: CanvasRenderingContext2D, x: number, y: number, r: number) => {
       g.fillStyle = PANEL.settled;
-      g.fillRect(24, y + 6, 5, rowH - 12);
-      g.fillStyle = PANEL.text;
-      g.font = MONO_FONT(fs);
-      g.textAlign = 'right';
-      g.fillText(`:${r.port}`, W - 50, y + rowH / 2 + fs * 0.35);
-      g.textAlign = 'left';
-      const textW = W - 60 - 50 - g.measureText(`:${r.port}`).width - 30;
-      g.fillStyle = PANEL.text;
-      g.font = UI_FONT(600, fs);
-      g.fillText(clip(g, r.title, textW), 56, y + rowH / 2 - fs * 0.08);
-      g.fillStyle = PANEL.muted;
-      g.font = MONO_FONT(Math.round(fs * 0.6));
-      g.fillText(clip(g, r.who, textW), 56, y + rowH / 2 + fs * 0.78);
-    });
-    if (rows.length > shown.length) {
-      g.fillStyle = PANEL.muted;
-      g.font = MONO_FONT(24);
-      g.textAlign = 'right';
-      g.fillText(`+${rows.length - shown.length}`, W - 24, H - 10);
-      g.textAlign = 'left';
-    }
+      g.beginPath();
+      g.arc(x, y, r * 0.6, 0, Math.PI * 2);
+      g.fill();
+    };
+    const shown = rows.slice(0, LAYOUT.rows);
+    shown.forEach((r, i) => row(g, W, i, { hue: PANEL.settled, mark: up, text: r.title, side: `:${r.port}`, sideColor: INK.text, sideMono: true, sub: r.who }));
+    more(g, W, H, rows.length - shown.length);
     this.texture.needsUpdate = true;
   }
 }
 
-/** The Queue panel: what's waiting, who is on what, and the PRs that came out of it, a row each. */
+/** The Queue board: who is on what, what's waiting, and the PRs that came out of it, a row each. */
 export class QueueBoardTexture {
   readonly texture: THREE.CanvasTexture;
-  private canvas = document.createElement('canvas');
-  private ctx: CanvasRenderingContext2D;
+  private s: Screen = screen(SITUATION.width, SITUATION.height);
   private drawn = '';
 
   constructor() {
-    this.canvas.width = 1200;
-    this.canvas.height = 600;
-    this.ctx = this.canvas.getContext('2d')!;
-    this.texture = new THREE.CanvasTexture(this.canvas);
-    this.texture.colorSpace = THREE.SRGBColorSpace;
-    this.texture.anisotropy = 8;
+    this.texture = this.s.texture;
   }
 
   render(state: QueueState, workers: Map<string, WorkerInfo>) {
-    const name = (t: QueueTask) => (t.issue !== undefined ? `#${t.issue}  ${t.title.replace(new RegExp(`^#${t.issue}\\s*`), '')}` : t.title);
+    const title = (t: QueueTask) => (t.issue !== undefined ? t.title.replace(new RegExp(`^#${t.issue}\\s*`), '') : t.title);
+    const tag = (t: QueueTask) => (t.issue !== undefined ? `#${t.issue}` : undefined);
     const running = state.tasks.filter((t) => t.status === 'running');
     const queued = state.tasks.filter((t) => t.status === 'queued');
     const done = state.tasks.filter((t) => t.status === 'done').slice(-3).reverse();
-    type Mark = 'working' | 'needs' | 'queued' | 'done' | 'failed';
-    const rows: { mark: Mark; text: string; side: string }[] = [
-      ...running.map((t) => {
+    const rows: Row[] = [
+      ...running.map((t): Row => {
         const w = t.workerId ? workers.get(t.workerId) : undefined;
         const st = { starting: 'starting', idle: 'ready', working: 'working', needs_input: 'needs you', done: 'done', exited: 'stopped', offline: 'asleep' }[w?.status ?? 'working'];
-        return { mark: (w?.status === 'needs_input' ? 'needs' : 'working') as Mark, text: name(t), side: `${t.workerName ?? 'a unit'}  ${st}` };
+        const needs = w?.status === 'needs_input';
+        return { hue: needs ? PANEL.signal : PANEL.working, mark: glyphMark(needs ? 'needs-you' : 'working'), tag: tag(t), text: title(t), side: st, sideColor: needs ? PANEL.signal : INK.dim, sub: t.workerName ?? 'a unit' };
       }),
-      ...queued.map((t, i) => ({ mark: 'queued' as Mark, text: name(t), side: i === 0 ? 'up next' : `${i + 1} in line` })),
-      ...done.map((t) => ({
-        mark: (t.outcome === 'done' ? 'done' : 'failed') as Mark,
-        text: name(t),
-        side: t.pr ? `PR #${t.pr.number}${t.pr.state === 'MERGED' ? '  merged' : ''}` : t.outcome === 'done' ? 'done' : t.outcome === 'failed' ? "didn't start" : t.outcome === 'killed' ? 'stood down' : 'stopped',
-      })),
+      ...queued.map((t, i): Row => ({ hue: PANEL.lineStrong, mark: queuedMark, tag: tag(t), text: title(t), side: i === 0 ? 'up next' : `${i + 1} in line` })),
+      ...done.map((t): Row => {
+        const ok = t.outcome === 'done';
+        const side = t.pr ? `PR #${t.pr.number}${t.pr.state === 'MERGED' ? '  merged' : ''}` : ok ? 'done' : t.outcome === 'failed' ? "didn't start" : t.outcome === 'killed' ? 'stood down' : 'stopped';
+        return { hue: ok ? PANEL.settled : PANEL.stuck, mark: ok ? doneMark : glyphMark('stuck'), tag: tag(t), text: title(t), side, quiet: true };
+      }),
     ];
-    const summary = state.maxWorkers === 0 ? 'paused' : `${running.length} working  ${queued.length} waiting  max ${state.maxWorkers}`;
-    const key = JSON.stringify([rows, summary]);
+    const summary = state.maxWorkers === 0 ? 'paused' : `${running.length} on it  ${queued.length} waiting  max ${state.maxWorkers}`;
+    const key = JSON.stringify([rows.map((r) => [r.hue, r.tag, r.text, r.side, r.sub]), summary]);
     if (key === this.drawn) return;
     this.drawn = key;
-    const g = this.ctx;
-    const W = this.canvas.width;
-    const H = this.canvas.height;
-    panelGround(g, W, H);
-    g.textBaseline = 'alphabetic';
-    g.textAlign = 'right';
-    g.fillStyle = PANEL.muted;
-    g.font = MONO_FONT(24);
-    g.fillText(summary, W - 32, 46);
-    g.textAlign = 'left';
+    const { g, W, H } = this.s;
+    ground(g, W, H);
+    titleBar(g, W, 'Queue', summary);
     if (!rows.length) {
-      panelEmpty(g, W, H, 'Nothing queued', 'Add issues from the Issues panel, or press E here');
+      emptyBody(g, W, H, 'Nothing queued', 'Add issues from the Issues board, or press E here');
       this.texture.needsUpdate = true;
       return;
     }
-    const shown = rows.slice(0, 7);
-    const rowH = Math.min(70, (H - 100) / shown.length);
-    const fs = Math.round(rowH * 0.42);
-    shown.forEach((r, i) => {
-      const y = 70 + i * rowH;
-      const mid = y + rowH / 2;
-      g.fillStyle = r.mark === 'done' || r.mark === 'failed' ? 'rgba(26,34,44,0.5)' : PANEL.card;
-      g.fillRect(24, y + 4, W - 48, rowH - 8);
-      g.strokeStyle = PANEL.line;
-      g.lineWidth = 2;
-      g.strokeRect(25, y + 5, W - 50, rowH - 10);
-      drawMark(g, r.mark, 56, mid, fs * 0.42);
-      g.font = MONO_FONT(Math.round(fs * 0.72));
-      const sideW = g.measureText(r.side).width;
-      g.textAlign = 'right';
-      g.fillStyle = r.mark === 'needs' ? PANEL.signal : PANEL.muted;
-      g.fillText(r.side, W - 44, mid + fs * 0.28);
-      g.textAlign = 'left';
-      g.fillStyle = r.mark === 'done' || r.mark === 'failed' ? PANEL.muted : PANEL.text;
-      g.font = UI_FONT(600, fs);
-      g.fillText(clip(g, r.text, W - 44 - sideW - 30 - 90), 90, mid + fs * 0.34);
-    });
-    if (rows.length > shown.length) {
-      g.fillStyle = PANEL.muted;
-      g.font = MONO_FONT(22);
-      g.textAlign = 'right';
-      g.fillText(`+${rows.length - shown.length}`, W - 44, H - 16);
-      g.textAlign = 'left';
-    }
+    const shown = rows.slice(0, LAYOUT.rows);
+    shown.forEach((r, i) => row(g, W, i, r));
+    more(g, W, H, rows.length - shown.length);
     this.texture.needsUpdate = true;
   }
 }
 
-/**
- * A row's state as a shape, as the status glyphs in the DOM have it: a steel square at work, a solid
- * Signal diamond for one that needs you, a hollow square waiting, a check done, a hollow triangle
- * failed.
- */
-function drawMark(g: CanvasRenderingContext2D, mark: 'working' | 'needs' | 'queued' | 'done' | 'failed', x: number, y: number, r: number) {
-  g.lineWidth = Math.max(2, r * 0.28);
-  g.lineJoin = 'miter';
-  g.beginPath();
-  if (mark === 'needs') {
-    g.moveTo(x, y - r);
-    g.lineTo(x + r, y);
-    g.lineTo(x, y + r);
-    g.lineTo(x - r, y);
-    g.closePath();
-    g.fillStyle = PANEL.signal;
-    g.fill();
-    return;
-  }
-  if (mark === 'working') {
-    g.fillStyle = PANEL.working;
-    g.fillRect(x - r * 0.7, y - r * 0.7, r * 1.4, r * 1.4);
-    return;
-  }
-  if (mark === 'queued') {
-    g.strokeStyle = PANEL.muted;
-    g.strokeRect(x - r * 0.7, y - r * 0.7, r * 1.4, r * 1.4);
-    return;
-  }
-  if (mark === 'done') {
-    g.strokeStyle = PANEL.settled;
-    g.moveTo(x - r * 0.75, y);
-    g.lineTo(x - r * 0.2, y + r * 0.55);
-    g.lineTo(x + r * 0.8, y - r * 0.6);
-    g.stroke();
-    return;
-  }
-  g.strokeStyle = PANEL.stuck;
-  g.moveTo(x, y - r);
-  g.lineTo(x + r, y + r * 0.8);
-  g.lineTo(x - r, y + r * 0.8);
-  g.closePath();
-  g.stroke();
+/** A state's glyph as a row's mark (world/glyphs.ts, the units' and the DOM's shapes). */
+const glyphMark = (kind: GlyphKind) => (g: CanvasRenderingContext2D, x: number, y: number, r: number) => drawGlyph(g, kind, x, y, r);
+/** Waiting its turn: a hollow steel square. */
+function queuedMark(g: CanvasRenderingContext2D, x: number, y: number, r: number) {
+  g.strokeStyle = INK.dim;
+  g.lineWidth = Math.max(3, r * 0.26);
+  g.strokeRect(x - r * 0.7, y - r * 0.7, r * 1.4, r * 1.4);
 }
-
-export function clip(g: CanvasRenderingContext2D, text: string, maxW: number): string {
-  if (g.measureText(text).width <= maxW) return text;
-  let s = text;
-  while (s.length > 1 && g.measureText(`${s}...`).width > maxW) s = s.slice(0, -1);
-  return `${s}...`;
+/** Finished: a check in the settled green. */
+function doneMark(g: CanvasRenderingContext2D, x: number, y: number, r: number) {
+  g.strokeStyle = PANEL.settled;
+  g.lineWidth = Math.max(3, r * 0.3);
+  g.lineCap = 'square';
+  g.beginPath();
+  g.moveTo(x - r * 0.75, y);
+  g.lineTo(x - r * 0.2, y + r * 0.55);
+  g.lineTo(x + r * 0.8, y - r * 0.6);
+  g.stroke();
 }

@@ -1,9 +1,9 @@
 import * as THREE from 'three';
 import { BOARDS, MACHINE_MONITOR, SEATING_BY_ID, SITUATION, TV } from '../../../shared/layout';
-import { mesh, textPlane } from '../toon';
+import { mesh } from '../toon';
 import type { Interactable } from '../types';
 import type { Fixture } from './fixture';
-import { DECK, box, contactShadow, flat, ink, practical } from './materials';
+import { DECK, box, contactShadow, flat, practical } from './materials';
 import { wallBoard } from './props';
 import { chair, seatable } from './seats';
 
@@ -21,14 +21,6 @@ declare module '../types' {
   }
 }
 
-/** A board's header: its name in the wide stencil face, small and muted, over its top edge. */
-function header(text: string, size = 64): ReturnType<typeof textPlane> {
-  const label = textPlane(text.toUpperCase(), { face: 'display', size, color: DECK.muted, track: 0.08 });
-  label.scale.multiplyScalar(0.9);
-  ink(label.material);
-  return label;
-}
-
 /** The work boards on the situation wall's panels: Issues, Queue, Pull requests and Services. */
 export const boards: Fixture<'boardMeshes'> = (site) => {
   const boardMeshes = {} as Record<keyof typeof BOARDS, THREE.Mesh>;
@@ -42,13 +34,8 @@ export const boards: Fixture<'boardMeshes'> = (site) => {
     bg.rotation.y = b.rotY;
     site.group.add(bg);
     boardMeshes[key] = face;
-    const label = header(b.label);
-    // Its left end lined up with the panel's, the way a drawing's title sits.
-    const w = (label.geometry.parameters.width * label.scale.x) / 2;
-    const along = -b.width / 2 + w;
-    label.position.set(b.x + nx * 0.04 + Math.cos(b.rotY) * along, b.y + b.height / 2 + 0.32, b.z + nz * 0.04 - Math.sin(b.rotY) * along);
-    label.rotation.y = b.rotY;
-    site.group.add(label);
+    // Its name is painted in its own title bar (features/boards/screen.ts), not hung over it, where
+    // the overhead strip would hide it from the conn.
     const it: Interactable = { kind: key, x: b.x + nx * 1.6, z: b.z + nz * 1.6, radius: 2.4 };
     site.interactables.push(it);
     bg.userData.interact = it;
@@ -97,12 +84,6 @@ export const tv: Fixture<'tvScreen'> = (site) => {
   tvGroup.position.set(TV.x + nx * 0.06, TV.y, TV.z + nz * 0.06);
   tvGroup.rotation.y = TV.rotY;
   site.group.add(tvGroup);
-  const label = header('Attention');
-  const w = (label.geometry.parameters.width * label.scale.x) / 2;
-  const along = -TV.width / 2 + w;
-  label.position.set(TV.x + nx * 0.08 + Math.cos(TV.rotY) * along, TV.y + TV.height / 2 + 0.32, TV.z + nz * 0.08 - Math.sin(TV.rotY) * along);
-  label.rotation.y = TV.rotY;
-  site.group.add(label);
   const it: Interactable = { kind: 'tv', x: TV.x + nx * 3, z: TV.z + nz * 3, radius: 3.2 };
   site.interactables.push(it);
   tvGroup.userData.interact = it;
@@ -115,11 +96,6 @@ export const machineMonitor: Fixture<'machineScreen'> = (site) => {
   monitor.position.set(MACHINE_MONITOR.x + 0.06, MACHINE_MONITOR.y, MACHINE_MONITOR.z);
   monitor.rotation.y = Math.PI / 2;
   site.group.add(monitor);
-  const label = header('Capacity', 52);
-  const w = (label.geometry.parameters.width * label.scale.x) / 2;
-  label.position.set(MACHINE_MONITOR.x + 0.08, MACHINE_MONITOR.y + MACHINE_MONITOR.height / 2 + 0.28, MACHINE_MONITOR.z - MACHINE_MONITOR.width / 2 + w);
-  label.rotation.y = Math.PI / 2;
-  site.group.add(label);
   return { handle: { machineScreen } };
 };
 
