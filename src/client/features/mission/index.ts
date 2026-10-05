@@ -16,7 +16,7 @@ import { openPull } from '../../ui/pull';
 import { watchStuck } from '../../ui/mission/watch';
 import { renderWorkers } from '../../ui/workers-panel';
 
-export type MissionParts = Pick<Parts, 'waiting' | 'actions' | 'travel' | 'notifier' | 'settings'>;
+export type MissionParts = Pick<Parts, 'waiting' | 'actions' | 'travel' | 'notifier' | 'settings' | 'launch'>;
 
 export function installMission(ctx: Ctx, parts: MissionParts) {
   const { net, sound } = ctx;
@@ -85,7 +85,8 @@ export function installMission(ctx: Ctx, parts: MissionParts) {
     const a = document.activeElement as HTMLElement | null;
     return !!a && (a.matches('input, textarea, select') || a.isContentEditable);
   };
-  watchAway(net, showDigest, () => !!document.getElementById('loading') || modalOpen() || typing());
+  // The start of watch (features/launch) says the same at load, its waiting units first: it takes this one's place then.
+  watchAway(net, () => void (parts.launch.claimsDigest() || showDigest()), () => !!document.getElementById('loading') || modalOpen() || typing());
 
   return { showMission, showDigest: () => recallDigest(showDigest), missionDeps: deps };
 }

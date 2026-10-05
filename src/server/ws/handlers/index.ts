@@ -8,6 +8,7 @@ import { floorHandlers, projectView } from './floors.js';
 import { githubHandlers, issuesView, pullsView } from './github.js';
 import { meetingHandlers, meetingView } from './meetings.js';
 import { missionHandlers, missionView } from './mission.js';
+import { paceHandlers } from './pace.js';
 import { planHandlers, planView } from './plan.js';
 import { presenceHandlers } from './presence.js';
 import { queueHandlers, queueView } from './queue.js';
@@ -31,6 +32,7 @@ export const handlers: HandlerMap<ClientMsg> = {
   ...githubHandlers,
   ...meetingHandlers,
   ...missionHandlers,
+  ...paceHandlers,
   ...planHandlers,
   ...presenceHandlers,
   ...queueHandlers,

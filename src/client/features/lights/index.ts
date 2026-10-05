@@ -30,7 +30,21 @@ export interface Lights {
    * as the mode has it at 0. Only the fill from above and the key: the state marks give their own light.
    */
   tint(k: number): void;
+  /**
+   * Steps the room's light down for an alert condition (features/alert): each light's intensity times
+   * what `k` says for it (by its name, how far aft it stands, z, and which pod it hangs over, or -1),
+   * or as the mode has it with null. Only intensities: never a colour, never the exposure.
+   */
+  dim(k: ((name: LampName, z: number, pod: number) => number) | null): void;
+  /**
+   * The room's light for a jump (features/space), times the mode's and the dimmer's: let down through
+   * the countdown, lit from the glass by the tunnel, 1 as the mode has it.
+   */
+  level(k: number): void;
 }
+
+/** The rig's lights by name, as the dimmer addresses them. */
+export type LampName = 'hemi' | 'key' | 'fill' | 'rim' | 'pods' | 'table' | 'holo';
 
 /** What a jump shifts the room's light toward: cool going in, a warm white coming out (near grey, so no state's hue). */
 const JUMP_TINT = { cool: new THREE.Color('#A9D4FF'), warm: new THREE.Color('#FFF1E2'), by: 0.45 } as const;
@@ -65,18 +79,30 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings'>
     });
   }
 
+  let dimBy: ((name: LampName, z: number, pod: number) => number) | null = null;
+  let jumpLevel = 1;
+  /** Every light's intensity: the mode's, times Brightness, times the alert's dimmer. */
+  function levels() {
+    const rig = LIGHT_MODES[mode ?? 'night'];
+    const k = brightnessFactor(step) * jumpLevel;
+    const f = (name: LampName, z: number, pod = -1) => (dimBy ? dimBy(name, z, pod) : 1);
+    const { hemi, key, fill, rims } = stage.lights;
+    hemi.intensity = rig.hemi.i * k * f('hemi', 0);
+    key.intensity = rig.key.i * k * f('key', key.position.z);
+    fill.intensity = rig.fill.i * k * f('fill', fill.position.z);
+    for (const rim of rims) rim.intensity = rig.rim.i * k * f('rim', rim.position.z);
+    lamps.pods.forEach((spot, i) => (spot.intensity = rig.pods.i * k * f('pods', spot.position.z, i)));
+    lamps.table.intensity = rig.table.i * k * f('table', lamps.table.position.z);
+    lamps.holo.intensity = rig.holo.i * k * f('holo', lamps.holo.position.z);
+  }
+
   function apply(next: LightMode, nextStep: number) {
     const rig = LIGHT_MODES[next];
-    const k = brightnessFactor(nextStep);
     const { hemi, key, fill, rims } = stage.lights;
     ctx.renderer.toneMappingExposure = rig.exposure;
     hemi.color.set(rig.hemi.sky);
     hemi.groundColor.set(rig.hemi.ground);
-    hemi.intensity = rig.hemi.i * k;
-    const tune = (light: THREE.Light, l: { color: string; i: number }) => {
-      light.color.set(l.color);
-      light.intensity = l.i * k;
-    };
+    const tune = (light: THREE.Light, l: { color: string }) => light.color.set(l.color);
     tune(key, rig.key);
     tune(fill, rig.fill);
     for (const rim of rims) tune(rim, rig.rim);
@@ -93,6 +119,7 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings'>
     }
     mode = next;
     step = nextStep;
+    levels();
     glow();
   }
 
@@ -121,5 +148,14 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings'>
   });
   apply(lightModeOf(parts.settings.lighting, light), parts.settings.brightness);
 
-  return { mode: () => mode ?? 'night', tint };
+  const dim = (k: typeof dimBy) => {
+    dimBy = k;
+    levels();
+  };
+  const level = (k: number) => {
+    if (Math.abs(k - jumpLevel) < 1e-3) return;
+    jumpLevel = k;
+    levels();
+  };
+  return { mode: () => mode ?? 'night', tint, dim, level };
 }

@@ -29,6 +29,14 @@ export function installBridge(ctx: Ctx, parts: Pick<Parts, 'overview'>) {
   store.on('floor', course);
   course();
 
+  // The counts repaint from the same store events the alert band reads (features/alert), in the same
+  // frame, so the strip and the band's condition line never disagree; the clock read keeps the minutes moving.
+  const paintCounts = () => {
+    const counts = store.counts();
+    conn.setCounts(counts);
+    overhead.setCounts(counts);
+  };
+  for (const topic of ['roster', 'reminders', 'floor'] as const) store.on(topic, paintCounts);
   let readAt = -Infinity;
   ctx.ticks.add('world', ({ dt, now }) => {
     if (!ctx.reduceMotion.matches) holo.turn(dt);
@@ -36,8 +44,6 @@ export function installBridge(ctx: Ctx, parts: Pick<Parts, 'overview'>) {
     parts.overview?.camera.layers.enable(OUTSIDE_LAYER);
     if (now - readAt < COUNT_EVERY * 1000) return;
     readAt = now;
-    const counts = store.counts();
-    conn.setCounts(counts);
-    overhead.setCounts(counts);
+    paintCounts();
   });
 }

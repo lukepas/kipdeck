@@ -61,6 +61,19 @@ import { installBottomBar } from './features/bottombar';
 import { makeMotion } from './motion';
 import { installLights } from './features/lights';
 import { installLife } from './features/life';
+import { installGiveWay } from './features/giveway';
+import { installDestination } from './features/destination';
+import { installFleet } from './features/fleet';
+import { installSorties } from './features/sorties';
+import { installVesper } from './features/vesper';
+import { installCrew } from './features/crew';
+import { installDroid } from './features/droid';
+import { installAlert } from './features/alert';
+import { installMoments } from './features/moments';
+import { installDrive } from './features/drive';
+import { installTurnaround } from './features/turnaround';
+import { installLaunch } from './features/launch';
+import { installPosture } from './features/posture';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -138,7 +151,7 @@ parts.cards = installCarrying(ctx, {
   showMeeting: parts.meeting.showMeeting,
 });
 parts.seating = installSeating(ctx, { shares: () => parts.talk.currentShares(), watchShare: () => parts.talk.watchShare(), usable: () => parts.pointer.usable() });
-installLanded(ctx, { notifier: parts.notifier });
+installLanded(ctx, { notifier: parts.notifier, ritual: () => parts.launch?.ritual() ?? null });
 installBounties(ctx);
 installPods(ctx);
 parts.proofCorner = installProofCorner(ctx);
@@ -148,6 +161,19 @@ installBridge(ctx, parts);
 parts.space = installSpace(ctx, parts);
 parts.lights = installLights(ctx, parts);
 installLife(ctx, parts);
+parts.giveWay = installGiveWay(ctx);
+installDestination(ctx, parts);
+parts.fleet = installFleet(ctx, parts);
+installSorties(ctx, parts);
+parts.vesper = installVesper(ctx, parts);
+parts.crew = installCrew(ctx, parts);
+parts.droid = installDroid(ctx, parts);
+// Before the moments: its pose comes off first each frame, as it is laid last (after their gestures).
+installPosture(ctx, parts);
+parts.alert = installAlert(ctx, parts);
+installMoments(ctx, parts);
+parts.drive = installDrive(ctx, parts);
+parts.turnaround = installTurnaround(ctx, parts);
 
 parts.hintbar = installHintBar(ctx, core, parts);
 installKeyboard(ctx, parts);
@@ -162,6 +188,7 @@ parts.talk = installVoice(ctx, { tv: parts.tv });
 installDictation(ctx);
 parts.hud = installHud(ctx, parts);
 installBottomBar(ctx, parts);
+parts.launch = installLaunch(ctx, parts);
 
 // ---- Main loop ---------------------------------------------------------------------------------------
 fitWindow(ctx);

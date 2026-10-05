@@ -205,3 +205,22 @@ test("the digest lists the mission's events before the routine ones", () => {
   const events = [ev({ id: 'd1', kind: 'done', at: NOW }), ev({ id: 'm1', kind: 'pr-merged', at: NOW - MIN }), ev({ id: 'n1', kind: 'needs-input', at: NOW - 2 * MIN }), ev({ id: 's1', kind: 'stuck', at: NOW - 3 * MIN })];
   assert.deepEqual(digestShown(events, 3).map((e) => e.id), ['m1', 's1', 'd1']);
 });
+
+test("a pull request's events name the unit it came from, so a merge counts on the unit's record", () => {
+  const dir = tmp();
+  try {
+    const t = new Timeline(dir, 'f1');
+    const mine = worker({ id: 'w7', name: 'Widget', goal: 'm1', pr: { number: 5, url: '' } });
+    const w = new TimelineWatch(t, { goalTitle: () => undefined, officePull: () => true, workerOfPull: (n, head) => (n === 5 || head === 'office/w-6' ? mine : undefined) }, NOW - MIN);
+    w.pulls([]);
+    w.pulls([pull(5, 'OPEN'), pull(6, 'OPEN'), pull(8, 'OPEN')]);
+    w.merged(5, 'PR 5');
+    const byPr = new Map(t.list({ limit: 10 }).events.map((e) => [`${e.kind}:${e.pr}`, e]));
+    assert.equal(byPr.get('pr-merged:5')?.worker, 'w7');
+    assert.equal(byPr.get('pr-merged:5')?.goal, 'm1', 'its waypoint too');
+    assert.equal(byPr.get('pr-opened:6')?.worker, 'w7', 'found by its branch');
+    assert.equal(byPr.get('pr-opened:8')?.worker, undefined, 'nobody claims it');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

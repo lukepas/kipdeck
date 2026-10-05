@@ -3,6 +3,9 @@
 
 import { DATA_COLORS, remapColor } from '../../shared/datacolors';
 import { randomLook, sanitizeLook, type Look } from '../../shared/avatar';
+import type { WatchMode } from '../../shared/launch';
+
+export type { WatchMode };
 
 export interface Profile {
   name: string;
@@ -44,8 +47,8 @@ export type HudPanel = 'mission' | 'workers' | 'people' | 'spend' | 'limits' | '
 export const HUD_DEFAULTS: Record<HudPanel, boolean> = { mission: true, workers: true, people: false, spend: false, limits: false, chat: true, floor: false };
 
 /** Mission control's tabs (see ui/mission). */
-export type MissionTab = 'attention' | 'goals' | 'review' | 'timeline';
-export const MISSION_TABS: readonly MissionTab[] = ['attention', 'goals', 'review', 'timeline'];
+export type MissionTab = 'attention' | 'goals' | 'review' | 'timeline' | 'crew';
+export const MISSION_TABS: readonly MissionTab[] = ['attention', 'goals', 'review', 'timeline', 'crew'];
 
 /** How the office rings when a worker needs you: not at all, once, or again and again until someone's at its terminal. */
 export const NEEDS_YOU_SOUNDS = ['off', 'once', 'remind'] as const;
@@ -60,6 +63,38 @@ export const LIGHTINGS = ['auto', 'night', 'day'] as const;
 export type Lighting = (typeof LIGHTINGS)[number];
 /** How far Brightness steps either way from the mode's own level (each step is 12% of exposure). */
 export const BRIGHTNESS_STEPS = 2;
+
+/**
+ * Settings > Bridge > Life: how much the bridge's life moves. Full as is; Calm drops the gestures
+ * (salutes, hails, idle tricks); Silent running stops all ambient life and slows the stars to a crawl,
+ * while every attention state keeps its full strength (features/giveway).
+ */
+export const LIFE_LEVELS = ['full', 'calm', 'silent'] as const;
+export type LifeLevel = (typeof LIFE_LEVELS)[number];
+/**
+ * The parts of the bridge's world that each have a switch of their own under Life. All ship on; the
+ * droid already docks itself under Ship motion Off, reduced motion and Silent running.
+ */
+export const LIFE_PARTS = ['destination', 'fleet', 'sorties', 'epithets', 'droid'] as const;
+export type LifePart = (typeof LIFE_PARTS)[number];
+export const LIFE_PART_DEFAULTS: Readonly<Record<LifePart, boolean>> = { destination: true, fleet: true, sorties: true, epithets: true, droid: true };
+/** Settings > Bridge > Ship's voice (VESPER, features/vesper): with humour, plain status lines only, or silent. */
+export const VOICE_MODES = ['on', 'plain', 'off'] as const;
+export type VoiceMode = (typeof VOICE_MODES)[number];
+/** Settings > Bridge > Celebrations (features/moments): the tiered moments in full, as cards only, or off (the merge beat and the jump stay). */
+export const CELEBRATION_MODES = ['full', 'cards', 'off'] as const;
+export type CelebrationMode = (typeof CELEBRATION_MODES)[number];
+/** Settings > Bridge > Alert conditions (features/alert): on or off, and the minutes a wait takes to go amber and a stuck unit red. */
+export interface AlertSettings {
+  on: boolean;
+  amberMin: number;
+  redMin: number;
+}
+export const AMBER_MINUTES = [2, 5, 10, 15] as const;
+export const RED_MINUTES = [5, 10, 20, 30] as const;
+export const ALERT_DEFAULTS: Readonly<AlertSettings> = { on: true, amberMin: 5, redMin: 10 };
+/** Settings > Bridge > Start of watch (features/launch): the launch and the debrief, the debrief only, or neither. */
+export const WATCH_MODES = ['full', 'debrief', 'off'] as const;
 
 export interface Settings {
   view: ViewMode;
@@ -87,6 +122,22 @@ export interface Settings {
   lighting: Lighting;
   /** Settings > Bridge: Brightness, a whole step from -BRIGHTNESS_STEPS to BRIGHTNESS_STEPS on top of the lights' mode. */
   brightness: number;
+  /** Settings > Bridge > Life: Full, Calm or Silent running. */
+  life: LifeLevel;
+  /** Settings > Bridge > Life: each part of the world outside on or off. */
+  lifeParts: Record<LifePart, boolean>;
+  /** Settings > Bridge > Ship's voice: On, Plain only or Off. */
+  voice: VoiceMode;
+  /** Settings > Bridge > Celebrations: Full, Cards only or Off. */
+  celebrations: CelebrationMode;
+  /** Settings > Bridge > Alert conditions. */
+  alerts: AlertSettings;
+  /** Settings > Bridge > Start of watch: Full, Debrief only or Off. */
+  watch: WatchMode;
+  /** Settings > Bridge > Momentum display: the drive core and the fleet's log on the ticker (features/drive). */
+  momentum: boolean;
+  /** Settings > Bridge > Turnaround clock: the pit wall in the Review bay (features/turnaround). */
+  turnaround: boolean;
 }
 
 const SETTINGS_KEY = 'agent-office.settings';
@@ -171,7 +222,7 @@ export function rememberSpot(s: Spot) {
 }
 
 export function loadSettings(): Settings {
-  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0 };
+  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { ...LIFE_PART_DEFAULTS }, voice: 'on', celebrations: 'full', alerts: { ...ALERT_DEFAULTS }, watch: 'full', momentum: true, turnaround: true };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null');
     if (saved?.view === 'first' || saved?.view === 'third') s.view = saved.view;
@@ -187,6 +238,16 @@ export function loadSettings(): Settings {
     if (SHIP_MOTIONS.includes(saved?.shipMotion)) s.shipMotion = saved.shipMotion;
     if (LIGHTINGS.includes(saved?.lighting)) s.lighting = saved.lighting;
     if (Number.isInteger(saved?.brightness)) s.brightness = Math.max(-BRIGHTNESS_STEPS, Math.min(BRIGHTNESS_STEPS, saved.brightness));
+    if (LIFE_LEVELS.includes(saved?.life)) s.life = saved.life;
+    for (const k of LIFE_PARTS) if (typeof saved?.lifeParts?.[k] === 'boolean') s.lifeParts[k] = saved.lifeParts[k];
+    if (VOICE_MODES.includes(saved?.voice)) s.voice = saved.voice;
+    if (CELEBRATION_MODES.includes(saved?.celebrations)) s.celebrations = saved.celebrations;
+    if (typeof saved?.alerts?.on === 'boolean') s.alerts.on = saved.alerts.on;
+    if ((AMBER_MINUTES as readonly unknown[]).includes(saved?.alerts?.amberMin)) s.alerts.amberMin = saved.alerts.amberMin;
+    if ((RED_MINUTES as readonly unknown[]).includes(saved?.alerts?.redMin)) s.alerts.redMin = saved.alerts.redMin;
+    if (WATCH_MODES.includes(saved?.watch)) s.watch = saved.watch;
+    if (typeof saved?.momentum === 'boolean') s.momentum = saved.momentum;
+    if (typeof saved?.turnaround === 'boolean') s.turnaround = saved.turnaround;
   } catch {
     // storage blocked
   }

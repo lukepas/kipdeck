@@ -25,6 +25,15 @@ import type { installProofCorner } from '../features/proofcorner';
 import type { installSeating } from '../features/seating';
 import type { installSpace } from '../features/space';
 import type { installLights } from '../features/lights';
+import type { installGiveWay } from '../features/giveway';
+import type { installVesper } from '../features/vesper';
+import type { installCrew } from '../features/crew';
+import type { installDroid } from '../features/droid';
+import type { installFleet } from '../features/fleet';
+import type { installAlert } from '../features/alert';
+import type { installDrive } from '../features/drive';
+import type { installLaunch } from '../features/launch';
+import type { installTurnaround } from '../features/turnaround';
 import type { installTv } from '../features/tv';
 import type { installVoice } from '../features/voice';
 import type { installWaiting } from '../features/waiting';
@@ -100,4 +109,22 @@ export interface Parts {
   space: Made<typeof installSpace>;
   /** The bridge's lights: Night, Day or Auto, and Brightness (see features/lights). */
   lights: Made<typeof installLights>;
+  /** Life giving way to attention, and Settings > Bridge > Life (see features/giveway). */
+  giveWay: Made<typeof installGiveWay>;
+  /** VESPER, the ship's mind: its lines for the ticker and the caption, and for a card's subtitle (see features/vesper). */
+  vesper: Made<typeof installVesper>;
+  /** Crew dossiers on the deck: epithets, chevrons and the unit of the watch (see features/crew). */
+  crew: Made<typeof installCrew>;
+  /** Bolt, the bridge droid (see features/droid). */
+  droid: Made<typeof installDroid>;
+  /** The fleet in formation: every other deck as an escort (see features/fleet). */
+  fleet: Made<typeof installFleet>;
+  /** Alert conditions and the band under the overhead strip (see features/alert). */
+  alert: Made<typeof installAlert>;
+  /** The drive core: the run of merges, the fleet's week and its record (see features/drive). */
+  drive: Made<typeof installDrive>;
+  /** The pit wall: the captain's turnaround clock in the Review bay (see features/turnaround). */
+  turnaround: Made<typeof installTurnaround>;
+  /** The start of watch: the launch and the debrief (see features/launch). */
+  launch: Made<typeof installLaunch>;
 }

@@ -6,7 +6,7 @@ Mission control answers one question: what needs a person right now, on any floo
 
 Open it with **I** anywhere in the office, from the **Mission control** button on the top bar (always there), from the counters beside the deck's name (each one, *2 need you*, *1 stuck*, *3 to review*, *4 working*, opens the tab for its level: Review for to review, Attention for the rest), from the menu > **Mission control**, or from the command palette (**Ctrl+K**: *Mission control*, *Edit the mission*, *Review finished work*, *Timeline*, *While you were away*). In the 2D view (`/lite`) it's the **Mission** button in the top bar. It has a ✕ in the top right, and Esc closes it and puts you straight back into looking around. It remembers the tab you had open last.
 
-Inside it, **1** **2** **3** **4** switch tabs (Attention, Goals, Review, Timeline), the arrow keys move between rows, and **Enter** does the selected row's next step.
+Inside it, **1** to **5** switch tabs (Attention, Goals, Review, Timeline, Crew), the arrow keys move between rows, and **Enter** does the selected row's next step.
 
 ## Attention
 
@@ -85,8 +85,8 @@ What happened on every floor, newest first. The office writes it from what chang
 | Stuck | The ranking first saw it stuck, with why |
 | Resumed | An asleep worker started working again |
 | Went home | A worker went home, with its time on task and what it cost |
-| PR opened, PR closed | One of the office's pull requests opened, or closed without merging |
-| PR merged | Any pull request on the floor merged, and who merged it from the PR window |
+| PR opened, PR closed | One of the office's pull requests opened, or closed without merging, naming the unit it is from when one is |
+| PR merged | Any pull request on the floor merged, who merged it from the PR window, and the unit it came from when it was one of theirs (its record in the Crew tab counts it) |
 | Queue | A queue task started, ended or failed |
 | Meeting | A meeting was called, and when it ended, the file it wrote |
 | Mission, Milestone | The mission statement changed; a milestone was added, renamed, removed, made the active one or done |
@@ -94,11 +94,23 @@ What happened on every floor, newest first. The office writes it from what chang
 
 Pick a floor, a goal or a worker to see only theirs, and **Load older** for more. **Open** on an event goes to what it's about: the worker's terminal (if it's still here), the pull request, the queue or the Goals tab, on its floor.
 
+## Crew
+
+Each unit aboard with its record in one line, from the deck log as far as the page has it: *A-03 the Mechanic: 41 merges, 0 reverts*. It counts outcomes only (pull requests merged and closed unmerged, times stuck, and reverts from its agent's record when the office keeps reputation), never lines of code, tokens or terminal activity, and a slow record is shown as plainly as a quick one. There is no list of people here: it is about units.
+
+- **Epithets** are earned from that record, never handed out at random, and worked out again as it changes: *the Mechanic* (most merges, none reverted), *the Anchor* (its merge closed out a waypoint), *the Comeback* (stuck three times, merged each time), *the Night Owl* (most merges on the night watch, 22:00 to 05:00), *the Quick Study* (the quickest median from opened to merged, over three or more), *the Steady Hand* (five merges, never stuck) and *the Rookie* (its first day aboard). Each goes to the one unit that holds it best, and a unit wears one at most. The epithet also shows on the unit's row in the other tabs, on its callout up close and in its console's column.
+- **Chevrons**: a thin white one for 5 merges, one for a merge rate of 90% or more over 5 outcomes or more, and one for 10 merges with none reverted; one violet chevron when its agent has an ERC-8004 record on chain. Hover them for why.
+- **Unit of the watch**: the unit with the best clean record on the last watch (yesterday: the most merges with no revert against it, ties to the quicker median merge). It is the same unit all day, and it stands on the Proof corner's plinth on the deck.
+
+Settings > Bridge > Life > Crew epithets turns the epithets, chevrons and the unit of the watch off everywhere; the records stay.
+
+At the foot of the tab is the **Captain's log**: the day's entries the start of watch wrote to this deck's timeline (one a day, the first time a captain starts a watch there), newest first, a week of them. Each is the office's own words from real numbers: *Day 14 of the mission. Yesterday the fleet merged 9 pull requests, closed 14 issues and paid 3 bounties on devnet. Waypoint 3, Billing v2, is 60% done. Two units await orders.* The Timeline tab lists them too.
+
 ## While you were away
 
 Back after 15 minutes or more, *While you were away* opens once: a one-line summary and the events since you left, with **Show what needs me** for the Attention tab. Merges, milestones, stuck workers and the like are listed before the routine finishes and questions. The summary is worked out the same way everywhere (`src/shared/digest.ts`): *3 PRs merged, 2 workers finished and wait for review, 1 got stuck, Auth rewrite moved from 3/7 to 5/7*.
 
-With an account, the office remembers when you were last here (when you left, not when you came in, and never while you're still here in another tab). It stamps everyone connected once a minute and as it shuts down, so a restart or a crash doesn't make people who never left look away. On the shared password, this browser does. In the 3D office it's a window that waits until the office has loaded, no other window is open and you aren't typing. In the 2D view it's the first card, and **Catch up** brings it back. From the palette, *While you were away* opens it again (the last hour's, if you weren't away).
+With an account, the office remembers when you were last here (when you left, not when you came in, and never while you're still here in another tab). It stamps everyone connected once a minute and as it shuts down, so a restart or a crash doesn't make people who never left look away. On the shared password, this browser does. In the 3D office it's a window that waits until the office has loaded, no other window is open and you aren't typing; while Settings > Bridge > Rituals > Start of watch is on (the default), the start of watch's debrief takes its place at load, who waits on you listed first, and its **Full log** button opens this window ([docs/design.md](design.md#rituals)). In the 2D view it's the first card, and **Catch up** brings it back. From the palette, *While you were away* opens it again (the last hour's, if you weren't away).
 
 ## Reminders
 

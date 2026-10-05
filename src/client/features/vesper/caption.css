@@ -1,0 +1,18 @@
+/* VESPER's caption (features/vesper/caption.ts): one line like a subtitle, low and centred over the 3D
+   view, above the bottom bar, on a voice plate of its own: a ship-cyan rule down its left edge, a
+   still waveform and its name in small mono, the line in italics on the HUD's own fill. Never a state's hue: when a unit needs you the line is plain words and the toasts and the
+   unit's glyph carry the colour. It fades in and out with the UI's one curve. */
+.vesper {
+  position: absolute; bottom: calc(var(--bottom) + 16px); left: calc(var(--rail) + (100% - var(--rail)) / 2); transform: translateX(-50%);
+  max-width: min(680px, calc(100% - var(--rail) - 48px)); pointer-events: none;
+  display: flex; align-items: baseline; gap: 10px; padding: 7px 14px; border-radius: var(--radius);
+  background: var(--hud-fill); border: 1px solid var(--line); box-shadow: var(--hud-shadow);
+  opacity: 0; transition: opacity 400ms var(--ease);
+}
+.vesper.on { opacity: 1; }
+.vesper { align-items: center; padding-left: 16px; overflow: hidden; }
+.vesper::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: #6fc3df; }
+.vesper-wave { flex: none; fill: #6fc3df; opacity: .85; }
+.vesper-name { font: 500 10px/1 var(--font-mono); letter-spacing: .14em; color: #6fc3df; flex: none; }
+.vesper-line { font: italic 400 15px/1.35 var(--font-ui); color: var(--text); }
+.vesper[hidden] { display: none; }

@@ -1,0 +1,25 @@
+/* The day's log at the start of a watch (features/launch/watchlog.ts): a flat panel high in the
+   middle of the view, as if projected on the forward glass. A scanline wipes down it, then the log is
+   typed line by line in white under a ship-cyan heading. Never a state's hue; it never takes the mouse. */
+.watch-log {
+  position: absolute; top: calc(var(--bar) + 28px); left: calc(var(--rail) + (100% - var(--rail)) / 2); transform: translateX(-50%);
+  width: min(560px, calc(100% - var(--rail) - 48px)); padding: 14px 20px 16px; overflow: hidden; pointer-events: none;
+  background: linear-gradient(rgb(6 12 18 / .78), rgb(6 12 18 / .62));
+  border: 1px solid rgb(111 195 223 / .35); border-radius: var(--radius);
+  box-shadow: var(--hud-shadow);
+  opacity: 0;
+}
+.watch-log[hidden] { display: none; }
+.watch-log::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(transparent 0 2px, rgb(111 195 223 / .045) 2px 3px);
+}
+.watch-head { font: 500 12px/1 var(--font-mono); letter-spacing: .22em; color: #6fc3df; }
+.watch-rule { height: 1px; margin: 9px 0 10px; background: linear-gradient(90deg, #6fc3df, rgb(111 195 223 / 0)); }
+.watch-line { margin: 0 0 6px; min-height: 1.4em; font: 400 15px/1.4 var(--font-ui); color: #eef5f9; }
+.watch-line:last-child { margin-bottom: 0; }
+.watch-line.typing::after { content: ''; display: inline-block; width: .5em; height: 1em; margin-left: 2px; vertical-align: -2px; background: #6fc3df; }
+.watch-scan {
+  position: absolute; left: 0; right: 0; height: 2px; top: 0; pointer-events: none;
+  background: #6fc3df; box-shadow: 0 0 12px 2px rgb(111 195 223 / .6);
+}

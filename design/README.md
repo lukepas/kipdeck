@@ -279,3 +279,217 @@ At Night, near the holo table, a whole frame sometimes went black for one frame.
 Every `pow()` in the office's shaders now keeps its base at zero or above (`max(..., 0.0)`), including the needs-you beacon, the viewport glass, the planet's rim and halo and the sky's stars, which had the same pattern. `tests/shader-pow.test.ts` fails on a new one that doesn't.
 
 `node design/flicker-check.mjs [metal|swiftshader] [frames]` checks it for real: it starts the built office on a spare port (`FLICKER_PORT`, default 4697), sweeps the camera round, over and past the table in Night and Day, reads back every frame and the bloom's input, and fails on a black frame or a NaN pixel. On an M3 Pro with Metal, 900 frames per mode: before the fix 3 bad frames at Night (each with a NaN pixel, two 99% black and one fully black), after it none in 2000. It skips when there's no build or no browser.
+
+## The bridge: world
+
+The captain still found the bridge lacking life: it should feel like part of something big, moving toward a goal. This stage puts a world round the ship that moves with the work and only with the work, inspired by the feel of a fleet under way rather than by any film's ships or names. Everything is built in code (geometry, shaders, canvas lettering); nothing is downloaded and nothing makes a sound.
+
+- **The destination ahead** (`src/client/features/destination/`). The mission is a world dead ahead in the canopy: a rocky world, a ringed giant or a ring station, the same one for the same mission. It starts as a bright point and grows only with real progress (waypoints passed, plus the open waypoint's issues closed of those linked) toward a third of the forward view, eased over 4 s, still otherwise. A mono band under it says "MAKING FOR AUTH REWRITE - WAYPOINT 2 OF 4 - 35%", and "BEHIND SCHEDULE: 4 DAYS" in plain words while the waypoint is overdue, when the world stops growing. Waypoints passed are markers astern. With every waypoint passed the ship drops into orbit over 30 s and holds there; that waits behind anyone who needs you, and is a crossfade and a card under reduced motion. It is drawn as part of the sky (its depth squeezed to the far end), so the room, the escorts and the fighters always pass in front of it, even in orbit.
+- **The fleet in formation** (`src/client/features/fleet/`). Every other deck is an escort in a V off the side ports, one rank at a seated eye's height and the next high over the walls: a corvette, frigate or cruiser by its units, a port lit per unit at work, drives by the share at work, its repository's name on its flank. A sister's merge eases its ship a length ahead; its waypoint blinks its running lights twice and puts a hail line in the canopy's corner; a deck being cloned is built plate by plate in a slip and drops out of hyperspace into its slot. A deck with a unit that needs you carries the needs-you diamond over its bridge, and clicking the ship opens the Decks lift.
+- **Squadron sorties** (`src/client/features/sorties/`). Each working unit has a fighter patrolling past its pod's side port (8 to 14 s a loop, by how busy its terminal is). An open pull request peels it to the picket ahead of the bow, left and right of the destination, so the review queue is visible from the conn; a merge sends it home over the canopy, trailing ship-cyan, to land in the hangar as the merge beat fires; a unit that needs you or is stuck cuts its engine and drifts dark just outside the glass.
+- **Giving way, and Settings > Bridge > Life** (`src/client/features/giveway/`). One signal the three read: a new needs-you or stuck ducks life for 3 s, that pod's patrols slow to stillness while it lasts, the escorts hold still and their salutes and hails are dropped. Life is Full, Calm (no salutes, hails or patrols) or Silent running (no ambient life, the stars at a crawl, the ticker paused), with a switch for each part. Ship motion at Off and reduced motion still everything.
+
+The words are in `src/shared/shiplog.ts` (`tests/copy.test.ts` keeps them free of exclamation marks, war words and anything but ASCII). The numbers are in each feature's `logic.ts`, tested in `tests/destination.test.ts`, `tests/fleet.test.ts`, `tests/sorties.test.ts` and `tests/giveway.test.ts`.
+
+`node design/shoot.mjs life-world/after <shots>` takes the stills: `SHOOT_CREW=busy` deploys a healthy crew (nobody waiting), `SHOOT_GPU=1` renders on the GPU so the fighters fly at their real pace, and sister decks are seeded into the page as the boards' fixture is. `yield/` is the default crew, with units that need you, and `day/` the Day lights. The clip `shots/life-world/after/life-world.mp4` (16 s, one frame each thirtieth of a second) runs from the conn as a unit's pull request merges and its fighter runs home, to the west ports as a sister deck merges and hails, then outside the ship to the whole formation as a cloned deck drops into its slot.
+
+| Before | After |
+| --- | --- |
+| ![](shots/life-world/before/bridge-conn.png) | ![](shots/life-world/after/bridge-conn.png) |
+| ![](shots/life-world/before/bridge-window.png) | ![](shots/life-world/after/bridge-window.png) |
+| ![](shots/life-world/before/deck-overview.png) | ![](shots/life-world/after/deck-overview.png) |
+
+| The destination and the picket | The formation from outside | Escorts past a side port |
+| --- | --- | --- |
+| ![](shots/life-world/after/life-ahead.png) | ![](shots/life-world/after/life-high.png) | ![](shots/life-world/after/life-fleet-w.png) |
+
+| A merge: the fighter runs home | A sister's hail and salute | In orbit, every waypoint passed |
+| --- | --- | --- |
+| ![](shots/life-world/after/life-merge-2.png) | ![](shots/life-world/after/life-salute-1.png) | ![](shots/life-world/after/life-orbit-3.png) |
+
+| Units need you: fighters drift dark | Silent running | Settings > Bridge > Life | By day |
+| --- | --- | --- | --- |
+| ![](shots/life-world/yield/life-dark.png) | ![](shots/life-world/after/life-silent.png) | ![](shots/life-world/after/settings-life.png) | ![](shots/life-world/day/life-fleet-w.png) |
+
+Frame time at 1440x900 by night on the GPU (Apple M3 Pro through ANGLE Metal), twelve units at work, six sister decks and two open pull requests, a forced render timed over 30 frames with `gl.finish` (`node design/perf-probe.mjs metal`). On the build before this stage: 3.1 ms from the conn (1045 draw calls) and 1.0 ms out of a side port (375). On this one, in one session with the world on, off (Settings > Bridge > Life) and on again: 3.0 to 3.3 ms against 2.9 to 3.2 ms from the conn (1057 draw calls against 1045), and 0.9 to 1.2 ms against 0.9 ms out of the port (386 against 375); rAF p50 16.7 ms and p95 16.8 ms throughout (on vsync). The world adds 12 draw calls and about 4,000 triangles; the fleet is three instanced meshes, the fighters one, their engines and trails one layer of points, and nothing is added or removed while it runs. Some twenty seconds into a session the forced render on this machine rises to 12 to 16 ms, with the world on or off alike and on the build before this stage too (13 ms), while rAF stays on vsync; the comparisons above are the samples before that. The probe holds space's clock so a flyby doesn't land in one sample and not another. `design/flicker-check.mjs metal` passes (no black frame or NaN pixel in 600 frames by Night and by Day).
+
+### Left for later
+
+- The droid companion, VESPER, celebration tiers and the debrief are later stages; this one is the world outside.
+- The destination's band sits in the clear glass between the canopy's lower rings as seen from the conn; from elsewhere on the deck a rib can cross it.
+- Clicking an escort opens the Decks lift; it doesn't yet pick that deck in it.
+
+## The bridge: crew
+
+The captain asked for more life and the feeling that this is something big. The world outside already moves with the work; this stage gives the bridge a crew with a record and a ship with a mind, and all of it speaks only of what really happened.
+
+- **VESPER, the ship's mind** (`src/client/features/vesper/`, phrasebook `src/shared/shipvoice.ts`): a dry line now and then, as a caption under the view and at the head of the ticker. Seeded by the event, so every viewer reads the same line; one in 90 s at most; one plain sentence the moment a unit needs you, then silence.
+- **Crew dossiers** (`src/client/features/crew/`, rules `src/shared/epithet.ts` and `src/shared/commendations.ts`): epithets earned from the record (the Mechanic, the Anchor, the Comeback, the Night Owl, the Quick Study, the Steady Hand, the Rookie), chevrons on the shoulder, the unit of the watch on the Proof corner's plinth, and a Crew tab in Mission control. Pull requests' timeline events now name the unit they came from, so a merge counts on its unit's record.
+- **Bolt, the bridge droid** (`src/client/features/droid/`): carries a finished unit's work to the Review bay, makes a slow turn by the table for a merge, rounds the busiest pod, and holds still by a pod whose unit needs you. Off until the captain signs it off.
+
+`node design/shoot-crew.mjs life-crew/after` takes the stills from a built office: a healthy crew of stand-in units, a few days of their record painted into the page's timeline (no GitHub here, as the boards' fixture), and live moments (a merge, a unit finishing, a unit that needs you) played in as the server sends them. `SHOOT_ROOT=<a build of the commit before> ... life-crew/before` takes the same views of the build before, `SHOOT_LIGHT=day` the Day set, and `SHOOT_GPU=1 ... crew-clip` the clip `shots/life-crew/after/crew-clip.mp4` (14 s, a frame each thirtieth of a second): Bolt carrying a finished unit's work round the table toward the Review bay, a camera riding behind it, as a merge lands with VESPER's line.
+
+| Before | After |
+| --- | --- |
+| ![](shots/life-crew/before/vesper-merge.png) | ![](shots/life-crew/after/vesper-merge.png) |
+| ![](shots/life-crew/before/crew-shoulder.png) | ![](shots/life-crew/after/crew-shoulder.png) |
+| ![](shots/life-crew/before/crew-plinth.png) | ![](shots/life-crew/after/crew-plinth.png) |
+| ![](shots/life-crew/before/crew-yield-1.png) | ![](shots/life-crew/after/crew-yield-1.png) |
+| ![](shots/life-crew/before/mission-rows.png) | ![](shots/life-crew/after/mission-rows.png) |
+| ![](shots/life-crew/before/console-record.png) | ![](shots/life-crew/after/console-record.png) |
+
+| Bolt picks up the work | Carrying it round the table | Holding by a unit that needs you |
+| --- | --- | --- |
+| ![](shots/life-crew/after/droid-carry-1.png) | ![](shots/life-crew/after/clip-5.png) | ![](shots/life-crew/after/crew-yield-droid.png) |
+
+| The Crew tab | Settings > Bridge > Life | The Overview: none of it | By day |
+| --- | --- | --- | --- |
+| ![](shots/life-crew/after/mission-crew.png) | ![](shots/life-crew/after/settings-life.png) | ![](shots/life-crew/after/crew-overview.png) | ![](shots/life-crew/day/crew-shoulder.png) |
+
+Frame time at 1440x900 by night on the GPU (Apple M3 Pro through ANGLE Metal), with `node design/perf-probe.mjs metal` (twelve units at work, six sister decks, two open pull requests; `PROBE_SETTINGS` turns the droid on): from the conn 2.6 to 2.7 ms against 2.6 ms before, 1057 draw calls both, and out of a side port 0.9 to 1.0 ms against 0.9 to 1.1 ms, 386 both; rAF p50 16.7 ms and p95 16.7 to 16.8 ms throughout, on vsync. Neither vantage sees the crew's pieces, so `shoot-crew.mjs crew-perf` times the one place that sees all of them at once (the plinth with its hologram, cone and plaque, a unit's chevrons, Bolt parked in view): 421 draw calls a frame with the crew on against 412 off (nine more: Bolt's body, cap, lens, shadow and charger, the two layers of chevrons, the plinth's figure, cone and plaque, less what is out of view), rAF p50 16.7 ms either way. `design/flicker-check.mjs metal` passes (no black frame or NaN pixel in 600 frames by Night and by Day).
+
+### Left for later
+
+- Celebration tiers, the start-of-watch card and the debrief are later stages; `Parts.vesper.line()` is there for their subtitles.
+- A unit's record is the deck log as far as the page has loaded it (the server keeps a capped log per deck), and reverts come only from the agents' reputation records, which count per agent identity, not per unit.
+- Bolt waits for the captain's sign-off: it ships off.
+
+## The bridge: moments
+
+The captain still wanted more life, and the feeling of being part of something big that pushes the team on. This stage gives the bridge moments the crew earns and a way of saying how the deck is doing, in the spirit of a crew bringing a ship home rather than any film's ships, names or sounds. All of it answers real events (a merge, a recovery, a streak, a waypoint, the mission), none of it runs on a timer, and when a unit needs the captain it waits.
+
+- **Earned celebrations, in tiers** (`src/client/features/moments/`, rules in `src/client/features/beats/tiers.ts`): a unit's first merge turns its pod to it with a nod; a unit back from stuck gets a white sweep across its pod and "BOLT (C-01) RECOVERED, 40M STUCK" on the band; three merges inside an hour with nothing stuck put hands up across the ship and run the surge harder; a waypoint brings the jump with the crew standing to face the bow, then the log card with the real numbers; the mission complete brings the arrival, the fleet's slow fly-by and a card naming every unit that merged. One at a time, a higher tier swallowing a lower one, held behind any call and only the card after ten minutes held.
+- **Hyperspace** (`src/client/features/space/tunnel.ts`): 3, 2, 1 on the band and big across the forward glass, the escorts streaking away, a ship-cyan and white tunnel round the ship for 1.5 s, and the next waypoint's name across the glass as the ship comes out and the escorts drop back. It waits for the captain (JUMP READY - AWAITING CAPTAIN) and becomes the crossfade if a call comes in mid-jump.
+- **Alert conditions** (`src/client/features/alert/`): the room steps darker, never orange or red, at amber (a unit waited past five minutes, or a reminder fired) and red (one stuck past ten, or three stuck), the pod lights over the units that wait kept up and the band saying why with the state's glyph; the lights come back up aft to bow when the last call clears.
+- **Settings > Bridge > Moments**: Celebrations (Full, Cards only, Off) and Alert conditions (on or off, amber after 2 to 15 minutes, red after 5 to 30).
+
+The words are in `src/shared/shiplog.ts` (`tests/copy.test.ts`), the numbers in `tests/motion.test.ts` (tiers, gestures, the jump, the countdown), `tests/alert.test.ts` (thresholds, the latch, the dimmer, the stand-down, the band's lines), `tests/lights.test.ts` (every state at 4.5:1 or more on its carrier on the dimmed rigs, Night and Day) and `tests/fleet.test.ts` (the escorts' jump and fly-by).
+
+`node design/shoot-moments.mjs life-moments/after` takes the stills from a built office with the page's clock stepped a frame at a time, so each lands on the same instant every take: a healthy crew of stand-in units, six sister decks, a course of four waypoints; merges and a recovery played in as the server sends them, waypoints marked done for real, and a unit's wait aged in the page. `SHOOT_ROOT=<a build of the commit before> ... life-moments/before` takes the same moments on the build before, `SHOOT_LIGHT=day ... life-moments/day` the Day set, and `... moments-clip` the clip `shots/life-moments/after/moments-clip.mp4` (16 s, a frame each thirtieth of a second, from the conn): a unit's first merge (its pod nods), a streak (hands up, the harder surge), then a waypoint's countdown, the jump through the tunnel, the name across the glass and the log card.
+
+| Before | After |
+| --- | --- |
+| ![](shots/life-moments/before/nod.png) | ![](shots/life-moments/after/nod.png) |
+| ![](shots/life-moments/before/streak.png) | ![](shots/life-moments/after/streak.png) |
+| ![](shots/life-moments/before/recovery.png) | ![](shots/life-moments/after/recovery.png) |
+| ![](shots/life-moments/before/jump-countdown.png) | ![](shots/life-moments/after/jump-countdown.png) |
+| ![](shots/life-moments/before/jump-tunnel.png) | ![](shots/life-moments/after/jump-tunnel.png) |
+| ![](shots/life-moments/before/jump-banner.png) | ![](shots/life-moments/after/jump-banner.png) |
+| ![](shots/life-moments/before/alert-amber.png) | ![](shots/life-moments/after/alert-amber.png) |
+| ![](shots/life-moments/before/alert-red.png) | ![](shots/life-moments/after/alert-red.png) |
+| ![](shots/life-moments/before/stand-down.png) | ![](shots/life-moments/after/stand-down.png) |
+| ![](shots/life-moments/before/mission-card.png) | ![](shots/life-moments/after/mission-card.png) |
+
+| Hands up, close | Standing to face the bow | The log card | The jump held for the captain |
+| --- | --- | --- | --- |
+| ![](shots/life-moments/after/streak-close.png) | ![](shots/life-moments/after/jump-stand.png) | ![](shots/life-moments/after/waypoint-card.png) | ![](shots/life-moments/after/jump-held.png) |
+
+| Condition red on the band | Standing down | The fleet's fly-by, in orbit | Cards only |
+| --- | --- | --- | --- |
+| ![](shots/life-moments/after/alert-red-band.png) | ![](shots/life-moments/after/stand-down-band.png) | ![](shots/life-moments/after/mission-flyby.png) | ![](shots/life-moments/after/card-streak.png) |
+
+| Settings > Bridge > Moments | Day: condition red | Day: the waypoint's name | Day: the recovery |
+| --- | --- | --- | --- |
+| ![](shots/life-moments/after/settings-moments.png) | ![](shots/life-moments/day/alert-red.png) | ![](shots/life-moments/day/jump-banner.png) | ![](shots/life-moments/day/recovery.png) |
+
+Frame time at 1440x900 by night on the GPU (Apple M3 Pro through ANGLE Metal), `node design/perf-probe.mjs metal` (twelve units at work, six sister decks, two open pull requests), the build before and this one run back to back: from the conn 2.9 to 3.1 ms before against 2.7 to 3.0 ms after, 1057 draw calls both; out of a side port 0.9 to 1.0 ms both, 386 draw calls both; rAF p50 16.7 ms and p95 16.7 to 16.8 ms throughout, on vsync. Idle, the moments draw nothing (the band, the sweep, the tunnel and the name are hidden). Mid-jump with the tunnel open, `shoot-moments.mjs perf-jump` times a forced render at 3.6 ms against 3.8 ms idle from the conn (986 draw calls against 966: the 4-degree wider view takes in more of the deck; the tunnel and the name are one draw each). `FLICKER_JUMP=1 node design/flicker-check.mjs metal 900` (new: it jumps the ship every 420 frames of the sweep) passes with 160 frames by Night and 206 by Day inside the tunnel: no black frame, no NaN pixel.
+
+### Left for later
+
+- The holo ring over the mission table doesn't count down with the band and the glass; it keeps its heading.
+- Reverts appear on a waypoint's card only when the reputation index has them, which counts per agent identity, so the card leaves them out for now.
+- The start-of-watch card and the captain's debrief (with the recoveries the waypoint cards count) are later stages.
+
+## The bridge: rituals
+
+The captain still wanted more life, and the feeling of a big thing pushing the team toward its best. This stage gives the bridge a captain's routine, in the spirit of a crew bringing a ship home rather than any film's ships, names or sounds: a start of watch that greets the captain with the day's real log, momentum you can watch build, and the captain's own turnaround on a pit wall. Every figure is an outcome (merges, issues closed, bounties paid, reviews cleared, units recovered), never lines, tokens or terminal time, nothing ranks people, and when a unit needs the captain all of it gives way.
+
+- **Start of watch** (`src/client/features/launch/`): on the first visit of the day the lights come on aft to bow from near dark, the pods one at a time, and the day's captain's log crawls into the stars ahead of the bow, behind the bridge's frames; back after twenty minutes away, the debrief in VESPER's voice, who waits on you first. With a unit waiting at load it is over in 1.2 s and lists them; reduced motion makes it a card.
+- **The drive core** (`src/client/features/drive/`): a reactor column rising out of the Deck lift's roof, a ring lit for each merge in the current run, today's best etched in white, its light running at the ship's cruise speed; the fleet's week on the ticker against its record, an eight-week tally over the Services panel, and one surge when the record falls.
+- **The pit wall** (`src/client/features/turnaround/`): reply and review times today against seven days over the Review bay, a hairline to the drive core when a wait clears fast, the captain's bar in the top bar, and the bay's light a step up when the review queue is long.
+- **Settings > Bridge > Rituals**: Start of watch (Full, Debrief only, Off), Momentum display and Turnaround clock.
+
+The numbers are in `src/shared/pace.ts`, `src/shared/turnaround.ts` and `src/shared/launch.ts`, worked out on the server (`src/server/pace.ts`) and tested in `tests/drive.test.ts`, `tests/turnaround.test.ts` and `tests/launch.test.ts`; the words are checked by `tests/copy.test.ts`.
+
+`node design/shoot-rituals.mjs life-rituals/after` takes the stills from a built office with the page's clock stepped a frame at a time, and the clip `shots/life-rituals/after/rituals-clip.mp4` (12 s, from the conn): the launch, the crawl and the debrief, then the drive core taking two merges. The pace the shots show is played into the page as the server sends it. `SHOOT_ROOT=<a build of the commit before> SHOOT_LOOK=1 ... life-rituals/before` takes the same vantages on the build before, `SHOOT_LIGHT=day ... life-rituals/day` the Day set.
+
+| Before | After |
+| --- | --- |
+| ![](shots/life-rituals/before/conn.png) | ![](shots/life-rituals/after/launch-crawl.png) |
+| ![](shots/life-rituals/before/conn.png) | ![](shots/life-rituals/after/launch-debrief.png) |
+| ![](shots/life-rituals/before/core-close.png) | ![](shots/life-rituals/after/drive-lit-close.png) |
+| ![](shots/life-rituals/before/core.png) | ![](shots/life-rituals/after/drive-lit.png) |
+| ![](shots/life-rituals/before/conn.png) | ![](shots/life-rituals/after/drive-record.png) |
+| ![](shots/life-rituals/before/bay.png) | ![](shots/life-rituals/after/pit-wall.png) |
+| ![](shots/life-rituals/before/high.png) | ![](shots/life-rituals/after/hairline.png) |
+
+| The lights coming up | The pods, one at a time | The crawl going away | Reduced motion: the card |
+| --- | --- | --- | --- |
+| ![](shots/life-rituals/after/launch-wake.png) | ![](shots/life-rituals/after/launch-pods.png) | ![](shots/life-rituals/after/launch-crawl-far.png) | ![](shots/life-rituals/after/launch-still.png) |
+
+| A unit waiting at the start of watch | The log as one line on the band | The debrief alone | A broken run |
+| --- | --- | --- | --- |
+| ![](shots/life-rituals/after/launch-yield.png) | ![](shots/life-rituals/after/launch-yield-band.png) | ![](shots/life-rituals/after/debrief.png) | ![](shots/life-rituals/after/drive-broken.png) |
+
+| The pit wall, close | The captain's log in Goals | Settings > Bridge > Rituals | Day: the crawl |
+| --- | --- | --- | --- |
+| ![](shots/life-rituals/after/pit-wall-close.png) | ![](shots/life-rituals/after/goals-log.png) | ![](shots/life-rituals/after/settings-rituals.png) | ![](shots/life-rituals/day/launch-crawl.png) |
+
+| Day: the drive core | Day: the record | Day: the pit wall | Day: the debrief |
+| --- | --- | --- | --- |
+| ![](shots/life-rituals/day/drive-lit-close.png) | ![](shots/life-rituals/day/drive-record.png) | ![](shots/life-rituals/day/pit-wall-close.png) | ![](shots/life-rituals/day/launch-debrief.png) |
+
+Frame time at 1440x900 by night on the GPU (Apple M3 Pro through ANGLE Metal), `node design/perf-probe.mjs metal` (twelve units at work, six sister decks, two open pull requests), the build before and this one run back to back: from the conn 11.2 ms before against 10.7 ms after for a forced render with `gl.finish` (this machine was busier than at the last stage's probe; the two runs are the comparison), 1057 draw calls against 1060 (the pit wall's two and the tally); out of a side port 0.9 to 1.0 ms both, 386 draw calls both; rAF p50 16.7 ms and p95 16.7 to 16.8 ms throughout, on vsync. The drive core adds five more draws where it is in view, aft; the crawl, the hairline and the bay's wash one each while they show. `FLICKER_RITUALS=1 node design/flicker-check.mjs metal 900` (new: it lights the core, plays the launch every 420 frames, runs the hairline and faces aft a third of the time) passes by Night and by Day: no black frame, no NaN pixel.
+
+### Left for later
+
+- The drive core stands aft, so from the conn facing the bow the run reads on the ticker and the tally rather than on the column; turning round shows it.
+- The fleet's record reaches back only as far as each deck's timeline (2000 events a deck); a long-lived fleet may forget an old record week.
+- Reply times start from this stage: the server notes each answer from now on, so the pit wall's seven-day reply median fills in over a week.
+- `src/client/features/space/stars.ts` calls `smoothstep` with its edges reversed (undefined in GLSL; it happens to work on today's GPUs). The rituals' own shaders keep their edges in order.
+
+## The bridge: life, round two
+
+The captain still found the bridge short of life, and wanted the feeling of something big that pushes the crew on, with Guardians of the Galaxy or Star Wars as a loose inspiration. Three critics (mood, focus and performance) reviewed the life stages from `shots/life-review/`. Their main finding was that most of the new life was text. The crew sat still, the jump played like a screensaver, the destination was out of sight from the conn and the start of watch leaned on a famous film's opening crawl. This round fixed every item they marked must and most of the should and nice ones. Everything is still driven by real events, and when something needs the captain the spectacle yields.
+
+- **The crew move** (`src/client/features/posture/`): every unit carries itself for its real state. It leans in at work and glances across at the next screen now and then. It stands and stretches once when it finishes. Stuck, it slumps and sighs over a slow red breath of light on its desk. Needing the captain, it turns to the conn with a hand up. It is laid over each unit's pose after the celebrations' gestures, so neither disturbs the other.
+- **The jump in three beats** (`src/client/features/space/`): the spool-up lets the lights down through 3, 2, 1 while the view's edges breathe ship-cyan. The punch kicks the view about 8 degrees wider into a bright tunnel that lights the room from the glass. On the arrival the next world swings into the glass. With sound on, the drive spools up and releases (`src/client/sound/jump.ts`, synthesized, off by default).
+- **The destination in sight** (`src/client/features/destination/`): it sits low in the left-hand pane from the conn and fills about a quarter of the view from the first waypoint. It turns slowly and grows to a third. Its band is two short lines under it that fit their pane. The nebula is brighter, teal with a magenta heart.
+- **An original start of watch** (`src/client/features/launch/watchlog.ts`): the receding crawl is gone. A scanline wipes a flat panel onto the forward glass and the day's log is typed onto it a sentence a line. Merge toasts that land meanwhile are held, and merges that land together gather into one toast.
+- **A band that never cries wolf** (`src/client/features/alert/`): the words follow the condition at that moment, and the latch only holds the light. The band says STANDING DOWN the moment nobody waits, and it names the quick answer beside a stuck unit. The strip's counts repaint with it in the same frame. Through the 20 s stuck clip, `shoot-life.mjs` found no frame naming a condition with nobody waiting.
+- **Bolt, redrawn and on by default** (`src/client/features/droid/`): a lopsided tool-drone with one arm and one eye-light, about half as big again, so it belongs to no franchise. It carries the crate in its clamp with a trail behind it and hops as it hands the crate over.
+- **The drive core** shows a pulse up the column for each merge, a darker unlit steel and a RUN and BEST plaque on its collar. **The top bar** no longer opens the day on a row of zeros: once there is something it says what the crew got through. **VESPER** gets a voice plate with a waveform.
+
+`node design/shoot-life.mjs` (after `npm run build`) takes every still and clip below from a built office with the page's clock stepped a frame at a time. `SHOOT_LIGHT=day` takes the Day set, and `SHOOT_OUT` names the folder. The clips are `night-showcase.mp4` (20 s from the conn: a unit finishes, a merge, then a waypoint's jump), `night-busy-bridge.mp4`, `night-merge-milestone.mp4` and `night-stuck-needs-you.mp4`, with a frame a second tiled beside each in `*-frames.png`.
+
+| Before | After |
+| --- | --- |
+| ![](shots/life-review/night-conn.png) | ![](shots/life-final/night-conn.png) |
+| ![](shots/life-review/night-ahead.png) | ![](shots/life-final/night-ahead.png) |
+| ![](shots/life-review/night-launch-crawl.png) | ![](shots/life-final/night-launch-log.png) |
+| ![](shots/life-review/night-stuck-still.png) | ![](shots/life-final/night-stuck-still.png) |
+| ![](shots/life-review/night-droid.png) | ![](shots/life-final/night-droid.png) |
+| ![](shots/life-review/night-drive-core.png) | ![](shots/life-final/night-drive-core.png) |
+
+| The spool-up | The punch | In the tunnel | The arrival |
+| --- | --- | --- | --- |
+| ![](shots/life-final/night-jump-spool.png) | ![](shots/life-final/night-jump-punch.png) | ![](shots/life-final/night-jump-tunnel.png) | ![](shots/life-final/night-jump-arrival.png) |
+
+| Leaning in | Finished: the stretch | Stuck: slumped, the desk's red breath | Needs you: turned to the conn |
+| --- | --- | --- | --- |
+| ![](shots/life-final/night-crew-working.png) | ![](shots/life-final/night-crew-stretch.png) | ![](shots/life-final/night-crew-stuck.png) | ![](shots/life-final/night-crew-asks.png) |
+
+| Day: the conn | Day: the punch | Day: the log on the glass | Day: condition red |
+| --- | --- | --- | --- |
+| ![](shots/life-final/day-conn.png) | ![](shots/life-final/day-jump-punch.png) | ![](shots/life-final/day-launch-log.png) | ![](shots/life-final/day-stuck-still.png) |
+
+Frame time at 1440x900 by Night on the GPU (Apple M3 Pro through ANGLE Metal), `node design/perf-probe.mjs metal` with twelve units at work, six sister decks and two open pull requests, every row in `shots/life-final/perf.txt`. Three builds were timed back to back: `design/ugc-army` at 5d81b96 and the reviewed `design/life` at 2cacf93 (both built from `git archive` and timed through `PROBE_ROOT`), then this round. From the conn a forced render takes 2.5 to 2.8 ms, against 2.5 to 2.6 ms on `design/ugc-army` and 2.6 to 2.7 ms on the reviewed build. That is 1063 draw calls against 1045 and 1060, and 116k triangles against 106k and 110k (the larger world, Bolt and the core's plaque). Out of a side port it is 0.9 to 1.0 ms in all three, 388 draw calls against 375 and 386. rAF p50 is 16.7 ms and p95 16.7 to 16.8 ms throughout, on vsync. The new worst cases measure well under 8 ms. The jump with its tunnel open takes 3.2 ms (p95 3.6 ms, 1152 draw calls as the view kicks wider). The start of watch takes 3.2 ms (p95 3.7 ms) while its log is typed, and the log is a page panel that adds no draw. With the CPU throttled 4x the conn takes 11.5 to 12.1 ms, against 11.0 ms on `design/ugc-army` and 11.5 ms on the reviewed build, still under 16.7 ms. In every build some rows read 8 to 12 ms in one window of a run, at a different place each time and gone in a repeat. That is other work on this machine, not a feature. The 2048x1536 crawl texture (about 16 MB of GPU memory, resident all session) is gone, and the jump's name now uses a 1024-wide canvas. `FLICKER_JUMP=1 FLICKER_RITUALS=1 node design/flicker-check.mjs metal 600` passes, by Night (84 frames in the tunnel) and by Day (103): no black frame, no NaN pixel.
+
+### Left for later
+
+- Unit tags still cover the big title painted on the wall boards from the conn (the half-hidden "UESTS" of PULL REQUESTS). Stopping that needs the tags tested against the boards.
+- The ticker over the strip is still small from the conn. One item at a time, at twice the size, is the next step.
+- The alert condition keeps the documented rule that the room never turns orange or red, so the critics' amber-red rim lights and the hologram tinting toward the stuck unit are not done. The stuck unit's own desk light carries the red.
+- The life features still install from `main.ts`, one line each, as `docs/code-layout.md` asks; no feature registry bundles them.
+- The escorts' hulls in the hangar view are as before.
+- The stuck and needs-you states in the clips are forced into the page's roster; no take drives them through a real server hook yet.

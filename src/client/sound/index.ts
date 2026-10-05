@@ -7,6 +7,7 @@
  */
 import { playCue, type Cue } from './alerts';
 import { AudioCore } from './core';
+import { playJump, type JumpSound } from './jump';
 
 export type { Cue } from './alerts';
 
@@ -27,6 +28,11 @@ export class DeckSound {
 
   get state(): AudioContextState | 'locked' {
     return this.a.state;
+  }
+
+  /** Plays a part of the jump (jump.ts): the drive spooling up, or the release into the tunnel. */
+  jump(part: JumpSound) {
+    playJump(this.a, part);
   }
 
   /** Plays one of the four cues (see alerts.ts). */
