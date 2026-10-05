@@ -115,7 +115,24 @@ float walkway(vec2 p) {
 }`;
 
 /** Gives the floor's material its tiles, walkways and box-projected room reflection. */
+/** The floor's materials, and whether their programs carry the mirror's GLSL (see floorMirror). */
+const worked = new Set<THREE.MeshStandardMaterial>();
+let mirrorBuilt = false;
+
+/**
+ * Whether the floor's program carries the mirror at all. Only the tiers that draw it want its GLSL:
+ * a software renderer compiles every line of it, so Low and Medium leave it out, and the floor is
+ * compiled again (that one program) only when High is picked after load. Off again it stays built,
+ * at no cost with its level at nothing.
+ */
+export function floorMirror(want: boolean) {
+  if (!want || mirrorBuilt) return;
+  mirrorBuilt = true;
+  for (const m of worked) m.needsUpdate = true;
+}
+
 export function workedFloor(m: THREE.MeshStandardMaterial): THREE.MeshStandardMaterial {
+  worked.add(m);
   m.onBeforeCompile = (shader) => {
     shader.uniforms.uGloss = FLOOR_UNIFORMS.uGloss;
     shader.uniforms.uWalkRough = FLOOR_UNIFORMS.uWalkRough;
@@ -168,8 +185,8 @@ export function workedFloor(m: THREE.MeshStandardMaterial): THREE.MeshStandardMa
         `#include <roughnessmap_fragment>
         roughnessFactor = mix(roughnessFactor, uWalkRough, floorWalk * uGloss);`,
       )
-      .replace('#include <opaque_fragment>', `${MIRROR}\n#include <opaque_fragment>`);
+      .replace('#include <opaque_fragment>', `${mirrorBuilt ? MIRROR : ''}\n#include <opaque_fragment>`);
   };
-  m.customProgramCacheKey = () => 'worked-floor';
+  m.customProgramCacheKey = () => (mirrorBuilt ? 'worked-floor-mirror' : 'worked-floor');
   return m;
 }

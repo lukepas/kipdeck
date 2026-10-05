@@ -28,6 +28,7 @@ import { Cookie } from './cookie';
 import { HAZE_COLOR, heightFogChunks } from './fog';
 import { DRIFT, JUMP_FLASH, SPILL, cookieOn, poolLevel, shaftLevel, shaftSet, spectacleStep, SHAFT_COLOR } from './logic';
 import { Mirror, MIRROR_LEVEL } from './mirror';
+import { floorMirror } from '../../world/office/floor';
 import { makeMotes } from './motes';
 import { OutsideLights, SkySample } from './outside';
 import { POOL_SOURCES, pools, shafts } from './plan';
@@ -80,6 +81,7 @@ export function installAtmos(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   let look = parts.quality.look();
   parts.quality.on((_, l) => {
     look = l;
+    floorMirror(l.mirror);
     shaft.uniforms.uSet.value = shaftSet(l.shafts);
     shaft.mesh.visible = l.shafts !== null;
     motes.count(l.shafts === 'all' ? l.motes : Math.min(l.motes, motes.bowN));
