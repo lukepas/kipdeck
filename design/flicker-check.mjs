@@ -141,8 +141,9 @@ async function sweep([n, jump, rituals]) {
         if (l < 2) black++;
       }
       screen = { mean: sum / (b.length / 16), black: black / (b.length / 16) };
-    } else if (scene === o.scene && rt.texture.type === 1016 /* HalfFloat */) {
-      // The scene as the bloom gets it: count halves with every exponent bit set (NaN or Inf).
+    } else if (scene === o.scene && !rt.isWebGLCubeRenderTarget && rt.texture.type === 1016 /* HalfFloat */) {
+      // The scene as the bloom gets it: count halves with every exponent bit set (NaN or Inf). Not the
+      // light probes' cubes (features/ibl), which draw the scene too, a face at a time, after a jump.
       const b = new Uint16Array(rt.width * rt.height * 4);
       r.readRenderTargetPixels(rt, 0, 0, rt.width, rt.height, b);
       let bad = 0;
