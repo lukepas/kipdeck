@@ -1,0 +1,12 @@
+/* Settings > Bridge > Quality: the live chip under the row (ui/quality-settings.ts). The dot is the tier:
+   bright for High, dimmer for Medium, faint for Low, so a step down shows before the words are read. */
+.q-chip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 10px; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: var(--radius); font-size: 13px; }
+.q-chip[hidden] { display: none; }
+.q-chip-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--settled); box-shadow: 0 0 0 3px rgb(61 220 151 / .18); }
+.q-chip[data-tier=medium] .q-chip-dot { background: var(--review); box-shadow: 0 0 0 3px var(--review-tint); }
+.q-chip[data-tier=low] .q-chip-dot { background: var(--muted); box-shadow: none; }
+.q-chip-label { font-weight: 600; }
+.q-chip-why { color: var(--muted); }
+.q-chip-why:empty { display: none; }
+.q-chip-try { margin-left: auto; height: 26px; padding: 0 10px; font-size: 12px; font-weight: 600; color: var(--signal); border-color: var(--signal); }
+.q-chip-try[hidden] { display: none; }

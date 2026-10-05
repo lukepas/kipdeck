@@ -34,6 +34,10 @@ export interface HudAction {
   /** Why it can't work here: it's greyed out and says so. */
   blocked?: () => string | undefined;
   title?: () => string;
+  /** A line under its label in the menu: what it is set to now (Quality: 'Auto - running at High'). */
+  note?: () => string;
+  /** A second button on its menu row, when there is a one-click thing to do (Quality's 'Try High'). */
+  extra?: () => { label: string; title?: string; run: () => void } | undefined;
   run: () => void;
 }
 
@@ -174,10 +178,25 @@ export function mountHud(actions: HudAction[], settings: Settings, save: () => v
           },
         },
         h('span.mi-icon', {}, icon(iconOf(a), 18)),
-        h('span.mi-label', {}, labelOf(a)),
+        h('span.mi-label', {}, labelOf(a), a.note?.() ? h('small', {}, a.note()) : null),
         badge(a.count?.()),
         keyOf(a) ? h('kbd.mi-key', {}, keyOf(a)!) : null,
       );
+      const extra = a.extra?.();
+      const more = extra
+        ? h(
+            'button.btn.menu-extra',
+            {
+              type: 'button',
+              title: extra.title ?? extra.label,
+              onclick: () => {
+                menu?.close();
+                extra.run();
+              },
+            },
+            extra.label,
+          )
+        : null;
       const pin = h('button.menu-pin', { type: 'button' }, icon('pin', 16));
       const paintPin = () => {
         pin.setAttribute('aria-pressed', String(pinned(a)));
@@ -189,7 +208,7 @@ export function mountHud(actions: HudAction[], settings: Settings, save: () => v
         togglePin(a);
         paintPin();
       });
-      return h('div.menu-row', {}, item, pin);
+      return h('div.menu-row', { class: a.note ? 'menu-row-noted' : '' }, item, more, pin);
     };
     // A HUD layer: a small chip that shows or hides it.
     const toggle = (p: (typeof PANELS)[number]) => {
@@ -242,8 +261,9 @@ export function mountHud(actions: HudAction[], settings: Settings, save: () => v
   function menuKey(el: HTMLElement, e: KeyboardEvent) {
     const items = [...el.querySelectorAll<HTMLElement>('.menu-item')];
     const at = document.activeElement as HTMLElement | null;
-    const onPin = !!at?.classList.contains('menu-pin');
-    const i = items.indexOf((onPin ? at!.previousElementSibling : at) as HTMLElement);
+    // On a row's pin or its extra button rather than the row itself.
+    const onPin = !!at && !at.classList.contains('menu-item') && !!at.closest('.menu-row');
+    const i = items.indexOf((onPin ? at!.closest('.menu-row')!.querySelector('.menu-item') : at) as HTMLElement);
     let next: Element | null | undefined;
     switch (e.key) {
       case 'ArrowDown':
@@ -259,7 +279,7 @@ export function mountHud(actions: HudAction[], settings: Settings, save: () => v
         next = items[items.length - 1];
         break;
       case 'ArrowRight':
-        next = onPin ? null : at?.nextElementSibling;
+        next = at?.classList.contains('menu-pin') ? null : at?.nextElementSibling;
         break;
       case 'ArrowLeft':
         next = onPin ? at?.previousElementSibling : null;

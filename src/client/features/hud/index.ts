@@ -21,6 +21,7 @@ import { needsSigningIn, openSignIns } from '../../ui/signins';
 import { openTeam } from '../../ui/team';
 import { openUpgrade } from '../../ui/upgrade';
 import { openWhiteboard } from '../whiteboard/ui';
+import { qualityMenuAction } from '../quality/menu';
 
 export type HudParts = Pick<Parts, 'place' | 'travel' | 'you' | 'actions' | 'waiting' | 'meeting' | 'bookshelf' | 'talk' | 'notifier' | 'mission'>;
 
@@ -74,6 +75,7 @@ export function installHud(ctx: Ctx, parts: HudParts) {
       // ---- Deck: this office --------------------------------------------------------------------------
       { id: 'elevator', icon: 'decks', label: 'Decks', section: 'Deck', count: () => store.floors.reduce((n, f) => n + (f.id === store.floor ? 0 : f.waiting), 0), title: () => 'Go to another project, or add one', run: travel.showElevator },
       { id: 'settings', icon: 'settings', label: 'Settings', section: 'Deck', run: showSettings },
+      qualityMenuAction(() => showSettings('bridge')),
       { id: 'help', icon: 'keyboard', label: 'Controls', section: 'Deck', key: 'H', run: openHelp },
       { id: 'lite', icon: 'plot', label: '2D view', section: 'Deck', title: () => 'The units, their terminals and the boards without the 3D: for a phone or a slow computer', run: () => location.assign('/lite') },
       { id: 'team', icon: 'invite', label: 'Invite teammates', section: 'Deck', shown: () => store.invites, run: () => openTeam(net) },

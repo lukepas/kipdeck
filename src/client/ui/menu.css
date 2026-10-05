@@ -52,3 +52,6 @@
 @media (max-width: 600px) { .hud-menu, .menu-comms-rows { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .hud-menu { animation: none; } }
 :root[data-motion=reduce] .hud-menu { animation: none; }
+/* A row with a line under its label (Quality's tier now), and a one-click button beside it (Try High). */
+.menu-row-noted .menu-item { height: 42px; }
+.menu-extra { flex: none; height: 26px; padding: 0 8px; font-size: 12px; font-weight: 600; color: var(--signal); border-color: var(--signal); }
