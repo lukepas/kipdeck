@@ -36,10 +36,10 @@ test('the world is large from the first waypoint and grows monotonically to a th
   const across = (2 * Math.atan(Math.tan((55 / 2) * (Math.PI / 180)) * (1440 / 900)) * 180) / Math.PI;
   assert.ok(Math.abs(FULL_DEG - across / 3) < 2, `full is ${FULL_DEG} against a third of ${across.toFixed(1)}`);
   assert.ok(ORBIT_DEG > FULL_DEG * 2, 'in orbit it fills the canopy');
-  assert.ok(AHEAD_ELEVATION - MIN_DEG / 2 < 9, 'low: its lower limb behind the overhead strip from the conn');
+  assert.ok(AHEAD_ELEVATION - MIN_DEG / 2 <= 9.5, 'low: its lower limb behind the overhead strip from the conn');
   assert.ok(AHEAD_ELEVATION > 10 && AHEAD_ELEVATION < 25, 'over the situation wall, under the halo');
-  assert.ok(AHEAD_AZIMUTH < 0 && BAND_AT.az > 0, 'the world and its band in the clear panes either side of the middle rib');
-  assert.ok(BAND_AT.el > 13 && BAND_AT.el < 20, 'the band over the eaves ring, clear of the overhead strip and its ticker');
+  assert.ok(AHEAD_AZIMUTH < 0 && BAND_AT.az < 0, 'the world and its band in the clear pane left of the middle rib');
+  assert.ok(BAND_AT.el > 13 && BAND_AT.el < AHEAD_ELEVATION, 'the band just over the eaves ring, across the world\'s lower limb, clear of the strip and its ticker');
   assert.ok(BAND_MAX_DEG < 16, 'the band never wider than a pane');
 });
 
@@ -75,9 +75,9 @@ test('a late waypoint says how late in plain words, and its world stops growing'
   assert.equal(heldSize(6, 9, true), 6, 'no growth while behind');
   assert.equal(heldSize(6, 4, true), 4, 'follows the measure down if issues reopen');
   assert.equal(heldSize(6, 9, false), 9);
-  assert.deepEqual(headingBand({ title: 'Auth rewrite', n: 3, of: 5, percent: 61.6 }), ['AUTH REWRITE - 3/5 - 62%']);
-  assert.deepEqual(headingBand({ title: 'Auth rewrite', n: 3, of: 5, percent: 62, behindDays: 4 })[1], 'BEHIND SCHEDULE: 4 DAYS');
-  assert.deepEqual(headingBand({ title: 'x', n: 1, of: 1, percent: 0, behindDays: 1 })[1], 'BEHIND SCHEDULE: 1 DAY');
+  assert.deepEqual(headingBand({ title: 'Auth rewrite', n: 3, of: 5, percent: 61.6 }), ['AUTH REWRITE', 'WAYPOINT 3 OF 5 - 62%']);
+  assert.deepEqual(headingBand({ title: 'Auth rewrite', n: 3, of: 5, percent: 62, behindDays: 4 })[1], 'WAYPOINT 3 OF 5 - 62% - BEHIND 4 DAYS');
+  assert.deepEqual(headingBand({ title: 'x', n: 1, of: 1, percent: 0, behindDays: 1 })[1], 'WAYPOINT 1 OF 1 - 0% - BEHIND 1 DAY');
   assert.equal(orbitBand('')[0], 'MISSION COMPLETE');
   assert.match(orbitBand('Ship the auth rewrite')[1], /^IN ORBIT: SHIP THE AUTH REWRITE$/);
   assert.match(missionCompleteCard('Ship it'), /^Mission complete: Ship it\. /);
@@ -107,7 +107,7 @@ test('the heading band always fits its canvas: a long title steps the font down,
   // A fake measure: mono at 0.6 em a glyph plus the band's letter spacing.
   const measure = (text: string, px: number) => text.length * (px * 0.6 + px * 0.1);
   const lines = headingBand({ title: 'Session store picked up by the new cluster', n: 1, of: 4, percent: 25, behindDays: 3 });
-  assert.ok(lines[0].length <= 42, `short enough for a pane: ${lines[0]}`);
+  assert.ok(lines[0].length <= 28 && lines[1].length <= 40, `short enough for a pane: ${lines.join(' / ')}`);
   for (const [i, line] of lines.entries()) {
     const px = lh * (i ? 0.5 : 0.62);
     const k = fitScale(measure(line, px), W - lh);

@@ -1,9 +1,11 @@
 /**
- * The destination ahead: the mission as a world dead ahead in the forward glass. It starts as a bright
- * point and grows with real progress only (waypoints passed, and the open waypoint's issues closed of
- * those linked), eased over 4 s when that changes and still otherwise. A mono band beside it says where
- * the ship is making for ("AUTH REWRITE - 2/4 - 47%"), and "BEHIND SCHEDULE:
- * 4 DAYS" in plain words, no hue, while that waypoint is overdue, when its growth stops. Waypoints
+ * The destination ahead: the mission as a world low in the forward glass, turning slowly. With a course
+ * set it is about a quarter of the view from the first waypoint, and it grows with real progress only
+ * (waypoints passed, and the open waypoint's issues closed of those linked), eased over 4 s when that
+ * changes and still otherwise; with nothing to measure it is a bright point. A mono band under it says
+ * where the ship is making for ("AUTH REWRITE", "WAYPOINT 2 OF 4 - 47%"), and "BEHIND 4 DAYS" in plain
+ * words, no hue, while that waypoint is overdue, when its growth stops. After a jump the new world
+ * swings into the glass. Waypoints
  * passed are small markers astern. With every waypoint passed the ship drops into orbit (30 s, the
  * world filling the canopy) and holds there until a new mission is set; that arrival waits behind any
  * unit that needs you or is stuck, and with Ship motion at Off, reduced motion or a hidden tab it is a

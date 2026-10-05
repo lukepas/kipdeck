@@ -21,11 +21,13 @@ export interface HeadingBand {
   behindDays?: number;
 }
 
-/** "AUTH REWRITE - 2/4 - 47%" (short enough for one clear pane of the canopy), then "BEHIND SCHEDULE: 4 DAYS" when it is overdue. */
+/**
+ * The heading band under the destination: the waypoint's name, then "WAYPOINT 2 OF 4 - 47%", with
+ * "BEHIND 4 DAYS" on the end in plain words while it is overdue. Two short lines, so it fits one pane.
+ */
 export function headingBand(b: HeadingBand): string[] {
-  const lines = [`${clip(b.title, 28).toUpperCase()} - ${b.n}/${b.of} - ${Math.round(b.percent)}%`];
-  if (b.behindDays !== undefined && b.behindDays > 0) lines.push(`BEHIND SCHEDULE: ${plural(b.behindDays, 'DAY')}`);
-  return lines;
+  const behind = b.behindDays !== undefined && b.behindDays > 0 ? ` - BEHIND ${plural(b.behindDays, 'DAY')}` : '';
+  return [clip(b.title, 28).toUpperCase(), `WAYPOINT ${b.n} OF ${b.of} - ${Math.round(b.percent)}%${behind}`];
 }
 
 /** Every waypoint passed: the ship is in orbit. */

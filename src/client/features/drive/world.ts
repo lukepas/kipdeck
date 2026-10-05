@@ -150,8 +150,10 @@ export class CoreWorld {
     ptex.colorSpace = THREE.SRGBColorSpace;
     ptex.anisotropy = 4;
     this.plaque = new THREE.Mesh(new THREE.PlaneGeometry(0.96, 0.3), new THREE.MeshBasicMaterial({ map: ptex, toneMapped: false }));
-    this.plaque.position.set(x, base + 0.62, z - RING_R - 0.34);
+    // On the collar under the core, drawn after the halo so its light never washes the count out.
+    this.plaque.position.set(x, base + 0.2, z - RING_R - 0.36);
     this.plaque.rotation.y = Math.PI;
+    this.plaque.renderOrder = 5;
     this.group.add(this.plaque);
 
     onBridgeLayer(this.group);
