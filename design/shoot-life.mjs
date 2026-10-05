@@ -476,6 +476,36 @@ async function main() {
       await run(3500);
     }
 
+    // The showcase: 20 s of the bridge alive from the conn. A unit finishes (it stands and stretches,
+    // Bolt carries its work off), a pull request merges (the beat, a pulse up the drive core), then a
+    // waypoint: the spool-up, the punch into the tunnel and the arrival with the next world ahead.
+    if (want('showcase')) {
+      const fin = await idOf('desk-10');
+      await VIEW([0, 2.1, 10.5], [0, 2.7, -12]);
+      await run(1500);
+      await clip(
+        'showcase',
+        20,
+        path3([
+          [0, [0, 2.1, 10.5], [0, 2.7, -12]],
+          [4.5, [-1.6, 2.4, 7.2], [-4.5, 1.2, -2.5]],
+          [6.5, [0, 2.1, 9.6], [0, 3.6, -12]],
+          [15, [0, 2.1, 9.6], [0, 3.6, -12]],
+          [20, [0, 2.15, 7.8], [-1.5, 4.4, -12]],
+        ]),
+        [
+          [0.6, async () => {
+            await force(fin, { status: 'done' });
+            await done('desk-10', 'C-02 finished: the onboarding docs');
+          }],
+          [3.2, async () => (await merge('desk-2', 81), await send(pace(floor, { run: 5, best: 6, week: 14, record: 15 })))],
+          [6.0, () => milestoneDone(1)],
+        ],
+      );
+      await force(fin, { status: 'working', workingSince: Date.now() });
+      await run(3000);
+    }
+
     // Clip 1: 20 s of a normal busy bridge by night: a slow walk from the conn to the west ports and over
     // the pods toward the Review bay; a unit finishes at 5 s and Bolt carries its work.
     await clip(
