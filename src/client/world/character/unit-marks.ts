@@ -51,7 +51,7 @@ function hatch(): THREE.CanvasTexture {
 }
 
 const flatMat = (map?: THREE.Texture) =>
-  new THREE.MeshBasicMaterial({ color: DECK.working, map, transparent: true, opacity: 0, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -3 });
+  new THREE.MeshBasicMaterial({ color: DECK.working, map, transparent: true, opacity: 0, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -3, fog: false });
 
 /** The marks on the floor under a unit: its inlay, its ring, the pulse spreading from it, and the hatched band inside it. */
 export class GroundRing {
@@ -72,7 +72,7 @@ export class GroundRing {
     for (const m of [this.ring, this.pulse, this.band]) m.renderOrder = 3;
     // The instrument black the marks sit on, 6 cm past the ring (see RING_INLAY).
     inlayShape ??= new THREE.CircleGeometry(0.56, 48).rotateX(-Math.PI / 2);
-    inlayMat ??= new THREE.MeshBasicMaterial({ color: RING_INLAY, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
+    inlayMat ??= new THREE.MeshBasicMaterial({ color: RING_INLAY, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, fog: false });
     this.inlay = new THREE.Mesh(inlayShape, inlayMat);
     this.inlay.renderOrder = 2;
     haloShape ??= new THREE.CircleGeometry(1.05, 40).rotateX(-Math.PI / 2);
@@ -113,7 +113,7 @@ export const GLYPH_SCREEN = 0.032;
 
 /** A state glyph over a unit's head: always facing you, and sized each frame to stay the same on screen. */
 export function glyphSprite(): THREE.Sprite {
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: false, depthTest: false }));
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ transparent: true, depthWrite: false, depthTest: false, fog: false }));
   s.center.set(0.5, 0);
   s.scale.set(0.3, 0.3, 1);
   s.renderOrder = 12;

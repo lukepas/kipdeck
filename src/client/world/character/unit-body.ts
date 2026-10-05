@@ -116,7 +116,7 @@ export function buildUnit(): UnitBody {
   shell.push(add(s.column, body, 0, UNIT.hover + 0.2, 0));
   // The torso, the band round its chest, and the provider stripe down its back.
   shell.push(add(s.torso, body, 0, 0.72, 0));
-  const band = new THREE.MeshBasicMaterial({ color: DECK.working, toneMapped: false, side: THREE.DoubleSide });
+  const band = new THREE.MeshBasicMaterial({ color: DECK.working, toneMapped: false, side: THREE.DoubleSide, fog: false });
   add(s.band, band, 0, UNIT.band, 0, false);
   const stripe = matte(DECK.muted, { flat: true }).clone();
   add(s.stripe, stripe, 0, 0.72, -0.155, false);

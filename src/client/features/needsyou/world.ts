@@ -69,6 +69,8 @@ export class Beacon {
       depthWrite: false,
       blending: THREE.AdditiveBlending,
       side: THREE.DoubleSide,
+      // An attention carrier: never fogged (docs/design.md).
+      fog: false,
     });
     this.shaft = new THREE.Mesh(shaftShape, mat);
     this.shaft.scale.y = SHAFT_HEIGHT;
@@ -76,7 +78,7 @@ export class Beacon {
     this.root.add(this.shaft);
     waveShape ??= new THREE.RingGeometry(0.94, 1, 64).rotateX(-Math.PI / 2);
     for (let i = 0; i < 2; i++) {
-      const m = new THREE.Mesh(waveShape, new THREE.MeshBasicMaterial({ color: DECK.signal, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -4 }));
+      const m = new THREE.Mesh(waveShape, new THREE.MeshBasicMaterial({ color: DECK.signal, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -4, fog: false }));
       m.position.y = 0.014;
       m.renderOrder = 3;
       this.waves.push(m);

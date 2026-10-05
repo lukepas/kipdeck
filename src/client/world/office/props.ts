@@ -13,7 +13,8 @@ export function wallBoard(width: number, height: number): { group: THREE.Group; 
   const group = new THREE.Group();
   group.add(mesh(box(width + 0.08, height + 0.08, 0.05), new THREE.MeshStandardMaterial({ color: DECK.wallReveal, roughness: 0.9 }), 0, 0, 0, false));
   group.add(mesh(box(width + 0.08, 0.012, 0.012), practical(DECK.line), 0, height / 2 + 0.046, 0.03, false));
-  const faceMat = new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false });
+  // An attention carrier: a board's face never takes fog (docs/design.md).
+  const faceMat = new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false, fog: false });
   const face = new THREE.Mesh(new THREE.PlaneGeometry(width, height), faceMat);
   face.position.z = 0.027;
   group.add(face);
