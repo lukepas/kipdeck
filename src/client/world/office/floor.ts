@@ -1,8 +1,9 @@
 import * as THREE from 'three';
-import { CONN, FLOOR, MISSION_TABLE, WALL_HEIGHT } from '../../../shared/layout';
+import { ARC } from '../../../shared/amphitheater';
+import { FLOOR, MISSION_TABLE, WALL_HEIGHT } from '../../../shared/layout';
 
 // The deck's floor, worked: every meter's tile a shade of its own, the walkways where boots go (round
-// the table, the aisles out to the walls, the way down to the conn and the lift) scuffed and polished
+// the table, the aisles out to the walls and north to the situation arc) scuffed and polished
 // smoother than the rest, and that polish reflecting the room. The reflection is the room probe's
 // (features/ibl), box-projected onto the deck's own walls so a board's glow lands on the floor where
 // the board stands, not at infinity. It is the room's emissives only and never the sky, so nothing in
@@ -105,12 +106,12 @@ function boxProjected(): string {
 const WALKWAYS = /* glsl */ `
 float walkway(vec2 p) {
   float r = length(p - vec2(${MISSION_TABLE.x.toFixed(1)}, ${MISSION_TABLE.z.toFixed(1)}));
-  // Between the ready lines (1.4 m off the table) and the consoles: the attention marks keep their own plain floor.
-  float ring = smoothstep(${(MISSION_TABLE.r + 1.8).toFixed(2)}, ${(MISSION_TABLE.r + 2.3).toFixed(2)}, r) * (1.0 - smoothstep(${(MISSION_TABLE.r + 2.9).toFixed(2)}, ${(MISSION_TABLE.r + 3.4).toFixed(2)}, r));
-  // Out along the axes: the way down to the conn and the lift, up to the wall, and out to the side ports.
+  // Round the pit, inside the ready lines (1.4 m off the table): the attention marks keep their own plain floor.
+  float ring = smoothstep(${(MISSION_TABLE.r + 0.2).toFixed(2)}, ${(MISSION_TABLE.r + 0.5).toFixed(2)}, r) * (1.0 - smoothstep(${(MISSION_TABLE.r + 0.9).toFixed(2)}, ${(MISSION_TABLE.r + 1.2).toFixed(2)}, r));
+  // Out along the axes: north from the pit to the situation arc, and out to the side ports.
   float ns = 1.0 - smoothstep(0.7, 1.4, abs(p.x));
   float ew = 1.0 - smoothstep(0.7, 1.4, abs(p.y));
-  float axes = max(ns * step(${(MISSION_TABLE.r).toFixed(1)}, abs(p.y)) * (1.0 - smoothstep(${(CONN.z + 3).toFixed(1)}, ${(CONN.z + 4.5).toFixed(1)}, p.y)), ew * step(${MISSION_TABLE.r.toFixed(1)}, abs(p.x)) * (1.0 - smoothstep(13.5, 15.5, abs(p.x))));
+  float axes = max(ns * step(${MISSION_TABLE.r.toFixed(1)}, -p.y) * (1.0 - smoothstep(${(-ARC.z - 1.5).toFixed(1)}, ${(-ARC.z).toFixed(1)}, -p.y)), ew * step(${MISSION_TABLE.r.toFixed(1)}, abs(p.x)) * (1.0 - smoothstep(13.5, 15.5, abs(p.x))));
   return max(ring, axes);
 }`;
 

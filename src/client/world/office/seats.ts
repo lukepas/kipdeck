@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { BEANBAGS, DESKS, DESK_SIZE, FLOOR, KIOSK, SEATING_BY_ID, STATIONS, STATION_AGENT, deskSeat, type DeskDef, type StationKind } from '../../../shared/layout';
+import { BEANBAGS, DESKS, DESK_SIZE, FLOOR, KIOSK, SEATING_BY_ID, STATIONS, STATION_AGENT, deskSeat, heightAt, type DeskDef, type StationKind } from '../../../shared/layout';
 import { deskPoint } from '../../../shared/nav';
 import { mesh, textPlane } from '../toon';
 import type { Collider, DeskView, Interactable } from '../types';
@@ -41,7 +41,8 @@ export function chair(color: string = DECK.consoleTop): THREE.Group {
  */
 export function buildDesk(def: DeskDef, index: number): DeskView {
   const group = new THREE.Group();
-  group.position.set(def.x, 0, def.z);
+  // On its tier (shared/amphitheater.ts): the unit at it, its screen and its marks all ride with it.
+  group.position.set(def.x, heightAt(def.x, def.z), def.z);
   group.rotation.y = def.rotY;
   const { width, depth, height } = DESK_SIZE;
   const body = flat(DECK.console);
@@ -210,9 +211,10 @@ declare module '../types' {
 export function consoleColliders(def: DeskDef): Collider[] {
   const hw = DESK_SIZE.width / 2 - 0.05;
   const r = DESK_SIZE.depth / 2 - 0.08;
+  const floor = heightAt(def.x, def.z);
   return [-hw + r, 0, hw - r].map((t) => {
     const [x, z] = deskPoint(def, t, 0);
-    return { minX: x - r, maxX: x + r, minZ: z - r, maxZ: z + r, top: DESK_SIZE.height };
+    return { minX: x - r, maxX: x + r, minZ: z - r, maxZ: z + r, top: floor + DESK_SIZE.height };
   });
 }
 
@@ -224,7 +226,7 @@ export const desks: Fixture = (site) => {
     site.desks.set(def.id, view);
     site.colliders.push(...consoleColliders(def));
     const seat = deskSeat(def, 1.25);
-    const it: Interactable = { kind: 'desk', deskId: def.id, x: seat.x, z: seat.z, radius: 1.3 };
+    const it: Interactable = { kind: 'desk', deskId: def.id, x: seat.x, y: heightAt(def.x, def.z), z: seat.z, radius: 1.3 };
     site.interactables.push(it);
     view.group.userData.interact = it;
   });

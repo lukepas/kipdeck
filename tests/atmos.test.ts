@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { FLOOR, MISSION_TABLE, READY_LINE, BOARDS, TV } from '../src/shared/layout.js';
+import { FLOOR, MISSION_TABLE, PODS, READY_LINE, BOARDS, TV } from '../src/shared/layout.js';
 import { GIVE_WAY_LIGHT, JUMP_FLASH, SHAFT_LIGHT, SPILL, cookieOn, easeToward, flashIrradiance, poolLevel, shaftLevel, shaftSet, spectacleStep, spillTint } from '../src/client/features/atmos/logic.js';
 import { MAX_SHAFTS, POOL_SOURCES, keyFall, pools, shafts } from '../src/client/features/atmos/plan.js';
 import { bowMotes } from '../src/client/features/atmos/motes.js';
@@ -123,12 +123,12 @@ test('the pools sit on the deck, keep off the ready lines and the kiosks, and on
     const half = Math.max(p.w, p.d) / 2;
     assert.ok(Math.abs(p.x) <= FLOOR.maxX + 0.01 && Math.abs(p.z) <= FLOOR.maxZ + 0.01, `${p.source} on the deck`);
     if (p.source === 'holo') assert.ok(half <= READY_LINE.r - 0.4, 'the holo pool stops short of the ready lines');
-    if (p.source === 'stations') assert.ok(Math.hypot(p.x - MISSION_TABLE.x, p.z - MISSION_TABLE.z) < 7.5, 'on the table side of the console');
+    if (p.source === 'stations') assert.ok(Math.hypot(p.x - MISSION_TABLE.x, p.z - MISSION_TABLE.z) < Math.max(...PODS.map((q) => q.radius)) - 0.5, 'on the table side of the console');
   }
-  // A board's pool fades out before its board agent's kiosk at the left end (0.7 m in from it).
+  // A pool under each column of the arc, fading out before the board agents' kiosks at the ends (0.7 m in).
   const boardPools = list.filter((p) => p.source === 'boards');
-  assert.equal(boardPools.length, 5);
-  for (const b of [BOARDS.issues, BOARDS.queue, TV, BOARDS.pulls, BOARDS.services]) {
+  assert.equal(boardPools.length, 3);
+  for (const b of [BOARDS.queue, TV, BOARDS.services]) {
     const p = boardPools.find((q) => Math.abs(q.rotY - b.rotY) < 1e-9)!;
     assert.ok(p.w / 2 < b.width / 2 - 0.4);
   }

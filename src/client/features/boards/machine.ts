@@ -16,14 +16,19 @@ export function fmtGb(bytes: number): string {
   return `${gb.toFixed(gb < 10 ? 1 : 0)} GB`;
 }
 
+/** Whether a panel `W` by `H` is a strip (the capacity strip along the arc's foot) rather than a panel. */
+export const isStrip = (W: number, H: number) => W > H * 6;
+
 /**
- * The capacity panel at the head of the Proof corner: how busy the CPU and memory are, with the last
- * few minutes of each, and how many units the office runs of the most it takes.
+ * The capacity strip along the foot of the situation arc (or a panel, at a panel's shape): how busy the
+ * CPU and memory are, and how many units the office runs of the most it takes. As a strip it is one
+ * line, read from the conn: its name and whether there's room, each gauge's percent on a bar, and the
+ * units as a square each against the limit.
  */
 export class MachineTexture {
   readonly texture: THREE.CanvasTexture;
-  // The panel's own shape (2.6 by 1.5 m), seen from closer than the wall: 920 canvas units across.
-  private s = screen(MACHINE_MONITOR.width, MACHINE_MONITOR.height, 354);
+  // The strip's own shape at 260 canvas units a metre: one line of 0.18 m type, a step under the boards'.
+  private s = screen(MACHINE_MONITOR.width, MACHINE_MONITOR.height, isStrip(MACHINE_MONITOR.width, MACHINE_MONITOR.height) ? 260 : 354);
   private ctx = this.s.g;
   private drawn = '';
 
@@ -39,6 +44,11 @@ export class MachineTexture {
     const { W, H } = this.s;
     ground(g, W, H);
     g.textBaseline = 'alphabetic';
+    if (isStrip(W, H)) {
+      this.strip(s, W, H);
+      this.texture.needsUpdate = true;
+      return;
+    }
 
     // The title bar: whether there's room for another unit, as a square in its colour and a word.
     const full = officeFull(s);
@@ -75,6 +85,67 @@ export class MachineTexture {
       }
     }
     this.texture.needsUpdate = true;
+  }
+
+  /** The strip: name and room, CPU and memory each as a percent on a bar, and the units against the limit, along one line. */
+  private strip(s: MachineState, W: number, H: number) {
+    const g = this.ctx;
+    const mid = H / 2;
+    const full = officeFull(s);
+    const status: [string, string] = !s.memTotal ? ['reading', PANEL.muted] : s.pressure ? ['under pressure', PANEL.stuck] : full ? ['at its limit', PANEL.review] : ['room to deploy', PANEL.settled];
+    g.textBaseline = 'middle';
+    g.textAlign = 'left';
+    g.fillStyle = INK.text;
+    g.font = UI_FONT(700, 46);
+    g.letterSpacing = '4px';
+    g.fillText('CAPACITY', 26, mid + 2);
+    let x = 26 + g.measureText('CAPACITY').width + 26;
+    g.letterSpacing = '0px';
+    g.fillStyle = status[1];
+    g.fillRect(x, mid - 9, 18, 18);
+    g.fillStyle = INK.dim;
+    g.font = MONO_FONT(30, 600);
+    g.fillText(status[0], x + 28, mid + 2);
+    x += 28 + g.measureText(status[0]).width + 50;
+    const memPct = s.memTotal ? Math.round((s.memUsed / s.memTotal) * 100) : 0;
+    for (const [name, pct] of [
+      ['CPU', s.cpu],
+      ['MEM', memPct],
+    ] as const) {
+      g.fillStyle = INK.dim;
+      g.font = UI_FONT(600, 28);
+      g.fillText(name, x, mid + 2);
+      x += g.measureText(name).width + 16;
+      const bw = 150;
+      g.fillStyle = PANEL.card;
+      g.fillRect(x, mid - 10, bw, 20);
+      g.fillStyle = loadColor(pct);
+      g.fillRect(x, mid - 10, (bw * Math.max(0, Math.min(100, pct))) / 100, 20);
+      x += bw + 14;
+      g.fillStyle = INK.text;
+      g.font = MONO_FONT(40, 600);
+      g.fillText(`${pct}%`, x, mid + 2);
+      x += g.measureText('100%').width + 40;
+    }
+    // The units, at the right: the count, and a square each against the limit where there is one.
+    g.textAlign = 'right';
+    g.fillStyle = INK.text;
+    g.font = MONO_FONT(40, 600);
+    const label = s.limit === undefined ? `${s.workers} units  no limit` : `${s.workers}/${s.limit} units`;
+    g.fillText(label, W - 26, mid + 2);
+    if (s.limit !== undefined) {
+      const x1 = W - 26 - g.measureText(label).width - 24;
+      const n = Math.max(s.limit, s.workers);
+      const pip = Math.min(26, (x1 - x) / Math.max(1, n));
+      for (let i = 0; i < n; i++) {
+        const px = x1 - (n - i) * pip;
+        const used = i < s.workers;
+        g.fillStyle = i >= s.limit ? PANEL.stuck : used ? (full ? PANEL.review : PANEL.working) : PANEL.card;
+        g.fillRect(px, mid - 11, Math.max(2, pip - 6), 22);
+      }
+    }
+    g.textAlign = 'left';
+    g.textBaseline = 'alphabetic';
   }
 
   /** One gauge: its name, the percent now, a line under it, and the last few minutes as a filled graph. */

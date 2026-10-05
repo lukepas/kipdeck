@@ -29,22 +29,25 @@ const GLOW = 0.3;
 
 const frameMat = () => matte(DECK.hull, { metalness: 0.35, roughness: 0.55 });
 
-/** The frames up the north, east and west walls (at the corners too), each with a lit line down its face. */
+/**
+ * The frames up the north, east and west walls (at the corners too), each with a lit line down its
+ * face. The three across the bow stand heavier, as its ribs, the glass running behind them.
+ */
 function wallFrames(into: THREE.Group) {
   const frame = frameMat();
   const lit = practical(DECK.shipDim);
-  const W = 0.42;
-  const D = 0.24;
-  const inner = FLOOR.maxX - D / 2;
-  const add = (x: number, z: number, alongX: boolean, face: number) => {
-    into.add(mesh(alongX ? box(W, WALL_HEIGHT, D) : box(D, WALL_HEIGHT, W), frame, x, WALL_HEIGHT / 2, z, false));
+  const inner = FLOOR.maxX - 0.24 / 2;
+  const add = (x: number, z: number, alongX: boolean, face: number, heavy = false) => {
+    const W = heavy ? 0.8 : 0.42;
+    const D = heavy ? 0.6 : 0.24;
+    into.add(mesh(alongX ? box(W, WALL_HEIGHT, D) : box(D, WALL_HEIGHT, W), frame, x, WALL_HEIGHT / 2, alongX ? z + face * (D - 0.24) / 2 : z, false));
     // The light line, a centimetre proud of the frame's face, from knee height to just under the eaves.
-    const off = face * (D / 2 + 0.006);
+    const off = face * (heavy ? D - 0.12 + 0.006 : D / 2 + 0.006);
     const h = WALL_HEIGHT - 1.0;
     into.add(mesh(alongX ? box(0.025, h, 0.01) : box(0.01, h, 0.025), lit, alongX ? x : x + off, 0.5 + h / 2, alongX ? z + off : z, false));
   };
   for (const u of HULL_FRAMES) {
-    add(u, -inner, true, 1);
+    add(u, -inner, true, 1, true);
     add(inner, u, false, -1);
     // On the west wall a frame steps aside for the attestation rail and its label.
     add(-inner, Math.abs(u - PROOF_CORNER.rail.z) < 0.9 ? PROOF_CORNER.rail.z - 0.9 : u, false, 1);
@@ -53,7 +56,7 @@ function wallFrames(into: THREE.Group) {
   add(-inner + 0.09, -inner, true, 1);
   add(-inner, inner - 0.2, false, 1);
   add(inner, inner - 0.2, false, -1);
-  add(WING.minX - W / 2, -inner, true, 1);
+  add(WING.minX - 0.42 / 2, -inner, true, 1);
   add(inner, -inner + 0.2, false, -1);
 }
 

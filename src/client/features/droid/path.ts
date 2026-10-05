@@ -4,7 +4,7 @@
 // its idle rounds behind the busiest pod's units, and where it holds while a unit needs you (by the
 // pod's entrance, off the line from the camera to the unit's glyph, never inside its ring).
 
-import { FLOOR, MEETING_ROOM, MEETING_TABLE, MISSION_TABLE, PODS, POD_LETTERS, POD_RADIUS, type PodLetter } from '../../../shared/layout';
+import { FLOOR, MEETING_ROOM, MEETING_TABLE, MISSION_TABLE, PODS, POD_LETTERS, heightAt, type PodLetter } from '../../../shared/layout';
 
 export interface P2 {
   x: number;
@@ -134,11 +134,11 @@ export interface Leg {
   act?: 'pick' | 'drop' | 'spin';
 }
 
-/** Just over a console's front edge, on the table side, low: where it picks the work up. */
+/** Just over a console's front edge, on the table side, low: where it picks the work up (over its tier). */
 export function consoleFront(desk: P2): P3 {
   const d = Math.hypot(desk.x - MISSION_TABLE.x, desk.z - MISSION_TABLE.z) || 1;
   const k = (d - 0.9) / d;
-  return { x: MISSION_TABLE.x + (desk.x - MISSION_TABLE.x) * k, y: DROID.low, z: MISSION_TABLE.z + (desk.z - MISSION_TABLE.z) * k };
+  return { x: MISSION_TABLE.x + (desk.x - MISSION_TABLE.x) * k, y: DROID.low + heightAt(desk.x, desk.z), z: MISSION_TABLE.z + (desk.z - MISSION_TABLE.z) * k };
 }
 
 /** The point on the table's rim nearest `at`, a little out and up: where it turns for a merge. */
@@ -219,8 +219,8 @@ export function idleRound(posts: readonly Post[], seed: string): { to: P3; face:
  * sits between you and the glyph), and at least DROID.keep from the unit.
  */
 export function holdSpot(pod: PodLetter, unit: P2, camera: P2): P3 {
-  const a = PODS[POD_LETTERS.indexOf(pod)].angle;
-  const r = (DROID.ring + POD_RADIUS) / 2 - 0.4;
+  const { angle: a, radius } = PODS[POD_LETTERS.indexOf(pod)];
+  const r = (DROID.ring + radius) / 2 - 0.4;
   const sides = [a - 0.55, a + 0.55].map((t) => ({ x: MISSION_TABLE.x + Math.cos(t) * r, z: MISSION_TABLE.z + Math.sin(t) * r }));
   const spots = sides.map((s) => {
     const d = Math.hypot(s.x - unit.x, s.z - unit.z);
@@ -230,7 +230,7 @@ export function holdSpot(pod: PodLetter, unit: P2, camera: P2): P3 {
     return { x: unit.x + (s.x - unit.x) * k, z: unit.z + (s.z - unit.z) * k };
   });
   const best = spots.sort((p, q) => segmentDistance(camera, unit, q) - segmentDistance(camera, unit, p))[0];
-  return { x: best.x, y: 1.55, z: best.z };
+  return { x: best.x, y: 1.55 + heightAt(best.x, best.z), z: best.z };
 }
 
 /** The turn (radians round y, 0 facing +z) that faces from a toward b. */

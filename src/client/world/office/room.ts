@@ -1,27 +1,25 @@
 import * as THREE from 'three';
-import { BOARDS, MACHINE_MONITOR, SEATING_BY_ID, SITUATION, TV } from '../../../shared/layout';
-import { mergeByMaterial, mesh } from '../toon';
+import { BOARDS, MACHINE_MONITOR, SEATING_BY_ID, TV } from '../../../shared/layout';
+import { mesh } from '../toon';
 import type { Interactable } from '../types';
 import type { Fixture } from './fixture';
-import { DECK, box, contactShadow, flat, practical } from './materials';
+import { DECK, box, contactShadow, flat } from './materials';
 import { wallBoard } from './props';
 import { chair, seatable } from './seats';
 
-// The deck past its walls and its seats: the situation wall curving round the north of the mission
-// table (its standing panels, with Issues, Queue, Attention, Pull requests and Services on them), the
-// capacity panel at the head of the Proof corner and the operator bench. The lamps over the pods and the
+// The deck past its walls and its seats: the boards of the situation arc hung north of the mission
+// table (Issues, Queue, Attention, Pull requests and Services; the arc's own structure is
+// features/amphitheater/arc.ts), the capacity strip under the Attention board and the operator bench. The lamps over the pods and the
 // table are the lights' (features/lights/rig.ts).
 
 declare module '../types' {
   interface OfficeHandles {
     boardMeshes: Record<keyof typeof BOARDS, THREE.Mesh>;
     tvScreen: THREE.Mesh;
-    /** The capacity panel on the west wall: how busy the office's machine is (features/boards/machine.ts). */
+    /** The capacity strip under the Attention board: how busy the office's machine is (features/boards/machine.ts). */
     machineScreen: THREE.Mesh;
   }
 }
-
-const UP = new THREE.Vector3(0, 1, 0);
 
 /** The work boards on the situation wall's panels: Issues, Queue, Pull requests and Services. */
 export const boards: Fixture<'boardMeshes'> = (site) => {
@@ -45,47 +43,6 @@ export const boards: Fixture<'boardMeshes'> = (site) => {
   return { handle: { boardMeshes } };
 };
 
-/**
- * The situation wall itself: a slate panel standing on the floor behind each board, turned to face the
- * table, a lit rule along its top and one under its board, so its curve reads from across the deck and
- * from the Overview. Nobody walks through it.
- */
-export const situationWall: Fixture = (site) => {
-  const slate = flat(DECK.wall);
-  const rule = practical(DECK.gridMajor);
-  const T = 0.16;
-  // The panels and their rules go in as one draw a material (their contact shadows apart: they keep their map).
-  const walls = new THREE.Group();
-  for (const b of [BOARDS.issues, BOARDS.queue, TV, BOARDS.pulls, BOARDS.services]) {
-    const nx = Math.sin(b.rotY);
-    const nz = Math.cos(b.rotY);
-    const panel = new THREE.Group();
-    const w = SITUATION.width + 0.32;
-    // The Attention board's panel stands taller, for its count band (layout.ts SITUATION.band).
-    const top = SITUATION.top + (b === TV ? SITUATION.band : 0);
-    panel.add(mesh(box(w, top, T), slate, 0, top / 2, -T / 2 - 0.02));
-    panel.add(mesh(box(w, 0.015, 0.03), rule, 0, top + 0.01, 0, false));
-    panel.add(mesh(box(b.width, 0.015, 0.02), rule, 0, b.y - b.height / 2 - 0.12, 0.08, false));
-    panel.position.set(b.x, 0, b.z);
-    panel.rotation.y = b.rotY;
-    walls.add(panel);
-    const shadow = contactShadow(w + 0.4, 1.0, 0, 0.2);
-    shadow.position.applyAxisAngle(UP, b.rotY).add(panel.position);
-    shadow.rotation.y = b.rotY;
-    site.group.add(shadow);
-    // Its footprint, as short boxes along it (a collider is square to the axes).
-    const tx = Math.cos(b.rotY);
-    const tz = -Math.sin(b.rotY);
-    for (let t = -w / 2 + 0.25; t <= w / 2 - 0.25 + 1e-6; t += 0.5) {
-      const cx = b.x + tx * t - nx * (T / 2 + 0.02);
-      const cz = b.z + tz * t - nz * (T / 2 + 0.02);
-      site.colliders.push({ minX: cx - 0.2, maxX: cx + 0.2, minZ: cz - 0.2, maxZ: cz + 0.2, top: SITUATION.top });
-    }
-  }
-  site.group.add(mergeByMaterial(walls));
-  return {};
-};
-
 /** The Attention board, the middle of the situation wall due north of the table: the ranked list, or a shared screen. */
 export const tv: Fixture<'tvScreen'> = (site) => {
   const nx = Math.sin(TV.rotY);
@@ -100,11 +57,12 @@ export const tv: Fixture<'tvScreen'> = (site) => {
   return { handle: { tvScreen } };
 };
 
-/** The capacity panel at the head of the Proof corner, on the west wall facing the deck. */
+/** The capacity strip along the foot of the situation arc, under the Attention board, facing the conn. */
 export const machineMonitor: Fixture<'machineScreen'> = (site) => {
   const { group: monitor, face: machineScreen } = wallBoard(MACHINE_MONITOR.width, MACHINE_MONITOR.height);
-  monitor.position.set(MACHINE_MONITOR.x + 0.06, MACHINE_MONITOR.y, MACHINE_MONITOR.z);
-  monitor.rotation.y = Math.PI / 2;
+  const m = MACHINE_MONITOR;
+  monitor.position.set(m.x + Math.sin(m.rotY) * 0.06, m.y, m.z + Math.cos(m.rotY) * 0.06);
+  monitor.rotation.y = m.rotY;
   site.group.add(monitor);
   return { handle: { machineScreen } };
 };

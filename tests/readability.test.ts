@@ -5,11 +5,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { contains, pack, rectOf, toPx } from '../src/client/features/boardfaces/logic.js';
-import { BOARD_SLOTS, OFF_SCREEN, boardMask, boardSlots, coneHeight } from '../src/client/features/bridge/holo-mask.js';
+import { BOARD_SLOTS, HOLO_TOP, OFF_SCREEN, boardMask, boardSlots, coneHeight } from '../src/client/features/bridge/holo-mask.js';
 import { FADED, dock, packRow, type Chip } from '../src/client/features/workers/dock.js';
 import { LEAN, REST, easeInOut, leanDegrees, leanStep, type LeanInput, type LeanState } from '../src/client/features/focuslean/logic.js';
 import { fieldOf, zoomOf } from '../src/client/core/zoom.js';
-import { BOARDS, CONN, DESKS, MISSION_TABLE, SEATING, STATIONS, SITUATION, TV, deskSeat } from '../src/shared/layout.js';
+import { ARC } from '../src/shared/amphitheater.js';
+import { BOARDS, DESKS, MACHINE_MONITOR, MISSION_TABLE, SEATING, STATIONS, SITUATION, TV, deskSeat } from '../src/shared/layout.js';
 import type * as THREE from 'three';
 
 test("a board's rectangle on screen is the box round its corners, and none when a corner is behind the eye", () => {
@@ -48,15 +49,16 @@ test('no holo star shows over a board, and the fade is 4% of its size outside it
   assert.equal(boardMask(-0.541, 0.25, rects), 1, 'past the soft edge');
 });
 
-test("from the conn the holo cone's top stays under the Attention board's bottom bezel", () => {
+test("from the captain's chair the holo cone's top stays under the situation arc's foot", () => {
   const reach = 1.2;
-  const h = coneHeight(1.0, reach);
-  assert.ok(h < 1.0 && h >= 0.12, `cone ${h} m`);
-  const eye = { y: CONN.h + 1.4, z: CONN.z + CONN.r * 0.72 };
+  const h = coneHeight(1.5, reach);
+  assert.ok(h < 1.5 && h >= 0.12 && MISSION_TABLE.h + h <= HOLO_TOP, `cone ${h} m`);
+  const chair = SEATING.find((s) => s.id === 'conn')!;
+  const eye = { y: chair.y + 1.4 + chair.hips - 0.8, z: chair.z + Math.cos(chair.rotY) * chair.depth };
   const top = { y: MISSION_TABLE.h + h, z: MISSION_TABLE.z - reach };
-  // Where the line from the eye over the cone's far top meets the board's plane.
+  // Where the line from the eye over the cone's far top meets the arc's plane.
   const atBoard = eye.y + ((top.y - eye.y) * (eye.z - TV.z)) / (eye.z - top.z);
-  assert.ok(atBoard <= TV.y - TV.height / 2 - 0.1, `the cone's top is seen at ${atBoard.toFixed(2)} m on the board`);
+  assert.ok(atBoard <= ARC.bottom - 0.1, `the cone's top is seen at ${atBoard.toFixed(2)} m on the arc`);
 });
 
 const chip = (x: number, bottom: number, keep = false, w = 120, h = 30): Chip => ({ x, bottom, w, h, anchor: x + w / 2, keep });
@@ -176,11 +178,12 @@ test("the camera's zoom adds every source's say to its base", () => {
   assert.equal(zoomOf(camera), z);
 });
 
-test('the situation wall stands 2 m nearer the conn, clear of the consoles, the board agents and the bench', () => {
-  const eye = CONN.z + CONN.r * 0.72;
-  assert.ok(eye - TV.z < 22 && eye - TV.z > 21, `the Attention board is ${(eye - TV.z).toFixed(1)} m from the conn`);
-  assert.equal(TV.height, SITUATION.height + SITUATION.band, 'the Attention board is taller, for its count band');
-  assert.ok(Math.abs(TV.y - TV.height / 2 - (SITUATION.y - SITUATION.height / 2)) < 1e-9, 'its foot is where the others\' are');
+test('the situation arc hangs about 18 m from the chair, its hero the biggest board, clear of the consoles, the board agents and the bench', () => {
+  const chair = SEATING.find((s) => s.id === 'conn')!;
+  const eye = chair.z + Math.cos(chair.rotY) * chair.depth;
+  assert.ok(eye - TV.z < 18.5 && eye - TV.z > 17, `the Attention board is ${(eye - TV.z).toFixed(1)} m from the chair`);
+  for (const b of Object.values(BOARDS)) assert.ok(TV.width * TV.height > 2 * b.width * b.height, `the Attention board is the hero over ${b.label}`);
+  assert.ok(Math.abs(MACHINE_MONITOR.y - MACHINE_MONITOR.height / 2 - SITUATION.bottom) < 1e-9, 'the capacity strip runs along its foot');
   const units = DESKS.map((d) => deskSeat(d, 0.85));
   const near = (x: number, z: number) => Math.min(...units.map((u) => Math.hypot(u.x - x, u.z - z)));
   for (const b of [...Object.values(BOARDS), TV]) {

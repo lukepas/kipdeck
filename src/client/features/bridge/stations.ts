@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { DESKS, DESK_SIZE } from '../../../shared/layout';
+import { DESKS, DESK_SIZE, heightAt } from '../../../shared/layout';
 import type { Fixture } from '../../world/office/fixture';
 import { DECK, matte } from '../../world/office/materials';
 
@@ -35,7 +35,7 @@ export const stations: Fixture<'stations'> = (site) => {
   const index = new Map<string, number>();
   DESKS.forEach((d, i) => {
     index.set(d.id, i);
-    place.position.set(d.x, 0, d.z);
+    place.position.set(d.x, heightAt(d.x, d.z), d.z);
     place.rotation.set(0, d.rotY, 0);
     for (const [k, s] of [-1, 1].entries()) {
       local.position.set(s * (width / 2 + 0.03), 0.46, -0.06);

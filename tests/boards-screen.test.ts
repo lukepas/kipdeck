@@ -1,9 +1,10 @@
 // The wall boards' shared layout (features/boards/screen.ts) and the Attention board painted with it:
-// text is cut with an ellipsis instead of running off, four rows and the "+N more" line fit on every
-// board, and the Attention board lists the most in need first, four at most, with the rest counted.
+// text is cut with an ellipsis instead of running off, as many rows as each panel takes (two on the
+// arc's wings, three on the Attention board) and the "+N more" line fit on every board, and the
+// Attention board lists the most in need first with the rest counted.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { LAYOUT, UNITS_PER_M, clip, rowTop } from '../src/client/features/boards/screen.js';
+import { LAYOUT, MORE_H, UNITS_PER_M, clip, rowTop, rowsFor } from '../src/client/features/boards/screen.js';
 import { BAND_H, BAND_TILES, bandCounts, paintAttention } from '../src/client/features/tv/attention.js';
 import { SITUATION, TV } from '../src/shared/layout.js';
 import type { Ranked } from '../src/shared/attention.js';
@@ -60,11 +61,14 @@ test('clip keeps text that fits and cuts the rest to fit with an ellipsis', () =
   assert.equal(clip(g, 'Anything', 0), '');
 });
 
-test('four rows and the "+N more" line fit on every board of the situation wall', () => {
-  for (const [name, b] of [['work board', SITUATION], ['Attention', TV]] as const) {
-    const H = Math.round(b.height * UNITS_PER_M);
-    const bottom = rowTop(LAYOUT.rows - 1) + LAYOUT.rowH;
-    assert.ok(bottom <= H - 44, `${name}: rows end at ${bottom}, the board is ${H} tall`);
+test('the rows and the "+N more" line fit on every board of the situation arc', () => {
+  for (const [name, b, band, least] of [['work board', SITUATION, 0, 2], ['Attention', TV, BAND_H, 3]] as const) {
+    const H = Math.round(b.height * UNITS_PER_M) - band;
+    const n = rowsFor(H);
+    assert.ok(n >= least, `${name}: ${n} rows, at least ${least}`);
+    const bottom = rowTop(n - 1) + LAYOUT.rowH;
+    assert.ok(bottom <= H - MORE_H, `${name}: rows end at ${bottom}, the board is ${H} tall`);
+    assert.ok(rowTop(n) + LAYOUT.rowH > H - MORE_H || n === LAYOUT.rows, `${name}: as many as fit`);
     assert.ok(LAYOUT.top > LAYOUT.rule, `${name}: rows start under the title bar`);
   }
 });
@@ -73,7 +77,7 @@ function ranked(level: Ranked['att']['level'], name: string, deskId: string, lab
   return { entry: { id: name, name, deskId, task: { name: label }, activity: undefined } as unknown as Ranked['entry'], att: { level, label, since: Date.now() - 90_000, action: { kind: 'open' } } as unknown as Ranked['att'] };
 }
 
-test('the Attention board shows the four most in need, counts the rest, and runs nothing off its edge', () => {
+test('the Attention board shows the most in need, as many as it takes, counts the rest, and runs nothing off its edge', () => {
   const { g, texts } = canvasSpy();
   const W = Math.round(TV.width * UNITS_PER_M);
   const H = Math.round(TV.height * UNITS_PER_M);
@@ -88,9 +92,11 @@ test('the Attention board shows the four most in need, counts the rest, and runs
   paintAttention(g, W, H, crew, Date.now());
   const said = texts.map((t) => t.text);
   assert.ok(said.includes('ATTENTION'), 'its name in the title bar');
-  for (const name of ['Pixel', 'Nibble', 'Cosmo', 'Widget']) assert.ok(said.includes(name), `${name} is listed`);
-  for (const name of ['Dot', 'Byte']) assert.ok(!said.includes(name), `${name} is counted, not listed`);
-  assert.ok(said.includes('+2 more'));
+  const n = rowsFor(H - BAND_H);
+  const names = crew.map((r) => r.entry.name);
+  for (const name of names.slice(0, n)) assert.ok(said.includes(name), `${name} is listed`);
+  for (const name of names.slice(n)) assert.ok(!said.includes(name), `${name} is counted, not listed`);
+  assert.ok(said.includes(`+${names.length - n} more`));
   for (const t of texts) {
     const left = t.align === 'right' ? t.x - t.width : t.align === 'center' ? t.x - t.width / 2 : t.x;
     assert.ok(left >= 0 && left + t.width <= W - LAYOUT.pad + 1, `"${t.text}" runs off the board`);
@@ -128,5 +134,5 @@ test("the Attention board's count band counts the same list its rows show, with 
   // The numbers come first, in the band's order, before the board's own title.
   const title = said.indexOf('ATTENTION');
   assert.deepEqual(said.slice(0, title).filter((t) => /^\d+$/.test(t)), ['2', '1', '1', '1']);
-  assert.ok(BAND_H >= 170 && BAND_H <= 190, 'about 0.9 m tall');
+  assert.ok(BAND_H >= 140 && BAND_H <= 160, 'about 0.75 m tall');
 });

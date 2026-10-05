@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { heightAt } from '../../../shared/amphitheater';
 import { BOARD_MASK_GLSL } from '../bridge/holo-mask';
 import { POOL_SOURCES, type Pool } from './plan';
 
@@ -86,7 +87,7 @@ export function makePools(list: readonly Pool[], boards: THREE.Vector4[]) {
   const q = new THREE.Quaternion();
   const up = new THREE.Vector3(0, 1, 0);
   list.forEach((p, i) => {
-    m.compose(new THREE.Vector3(p.x, 0.004, p.z), q.setFromAxisAngle(up, p.rotY), new THREE.Vector3(p.w, 1, p.d));
+    m.compose(new THREE.Vector3(p.x, heightAt(p.x, p.z) + 0.004, p.z), q.setFromAxisAngle(up, p.rotY), new THREE.Vector3(p.w, 1, p.d));
     mesh.setMatrixAt(i, m);
   });
   mesh.instanceMatrix.needsUpdate = true;

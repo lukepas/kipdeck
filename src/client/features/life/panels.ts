@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { DESKS } from '../../../shared/layout';
+import { DESKS, heightAt } from '../../../shared/layout';
 import type { Fixture } from '../../world/office/fixture';
 import { DECK } from '../../world/office/materials';
 import { BLINK, PANEL, type PanelMode } from './logic';
@@ -190,7 +190,7 @@ export const panels: Fixture<'panels'> = (site) => {
   const index = new Map<string, number>();
   DESKS.forEach((d, i) => {
     index.set(d.id, i);
-    place.position.set(d.x, 0, d.z);
+    place.position.set(d.x, heightAt(d.x, d.z), d.z);
     place.rotation.set(0, d.rotY, 0);
     place.updateMatrixWorld(true);
     screens.setMatrixAt(i, local.matrixWorld);

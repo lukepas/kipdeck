@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { MISSION_TABLE, PODS, POD_RADIUS } from '../../../shared/layout';
+import { TIERS } from '../../../shared/amphitheater';
+import { MISSION_TABLE, PODS } from '../../../shared/layout';
 import type { Fixture } from '../../world/office/fixture';
 import { LIGHT_MODES } from './modes';
 
@@ -33,12 +34,12 @@ export const lamps: Fixture<'lamps'> = (site) => {
   const night = LIGHT_MODES.night;
   const pods: THREE.SpotLight[] = [];
   for (const pod of PODS) {
-    const r = POD_RADIUS - 0.4;
+    const r = pod.radius - 0.4;
     const x = MISSION_TABLE.x + Math.cos(pod.angle) * r;
     const z = MISSION_TABLE.z + Math.sin(pod.angle) * r;
     const spot = new THREE.SpotLight(night.pods.color, night.pods.i, 13, 0.6, 0.65, 1.3);
     spot.position.set(x, LIGHT_Y, z);
-    spot.target.position.set(x, 0, z);
+    spot.target.position.set(x, TIERS[pod.tier].h, z);
     site.group.add(spot, spot.target);
     pods.push(spot);
   }

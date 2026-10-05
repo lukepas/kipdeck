@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { MISSION_TABLE, PODS, POD_RADIUS, type PodLetter } from '../../../shared/layout';
+import { MISSION_TABLE, PODS, heightAt, type PodLetter } from '../../../shared/layout';
 import { SWEEP_MS } from '../beats/tiers';
 
 // A recovery's sweep: one soft ring of white light running out across a pod's floor from the middle
@@ -42,7 +42,9 @@ export class PodSweep {
   start(letter: PodLetter) {
     const pod = PODS.find((p) => p.letter === letter);
     if (!pod) return;
-    this.mesh.position.set(MISSION_TABLE.x + Math.cos(pod.angle) * POD_RADIUS, 0.025, MISSION_TABLE.z + Math.sin(pod.angle) * POD_RADIUS);
+    const x = MISSION_TABLE.x + Math.cos(pod.angle) * pod.radius;
+    const z = MISSION_TABLE.z + Math.sin(pod.angle) * pod.radius;
+    this.mesh.position.set(x, heightAt(x, z) + 0.025, z);
     this.t = 0;
   }
 

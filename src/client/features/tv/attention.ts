@@ -10,7 +10,7 @@ import { ago, headline, statusPhrase } from '../../../shared/rowtext';
 import { DESK_BY_ID, SITUATION, TV, cellOf } from '../../../shared/layout';
 import { callSign } from '../../../shared/callsign';
 import { PANEL } from '../boards/world';
-import { INK, LAYOUT, MONO, UI, UNITS_PER_M, emptyBody, ground, more, row, screen, titleBar } from '../boards/screen';
+import { INK, LAYOUT, MONO, UI, UNITS_PER_M, emptyBody, ground, more, row, rowsFor, screen, titleBar } from '../boards/screen';
 import { drawGlyph } from '../../world/glyphs';
 
 /** The state glyphs, as the units and the DOM draw them (world/glyphs.ts). */
@@ -59,17 +59,18 @@ function paintBand(g: CanvasRenderingContext2D, W: number, counts: Record<Attent
     g.fillRect(x, y, tileW, h);
     g.fillStyle = n ? HUE[level] : INK.lineStrong;
     g.fillRect(x, y, tileW, 8);
-    drawGlyph(g, level, x + 58, y + 70, 30);
+    // The glyph over the word at the left, the number at the right: laid out on the band's own height.
+    drawGlyph(g, level, x + 52, y + h * 0.38, Math.round(h * 0.2));
     g.textAlign = 'right';
     g.textBaseline = 'alphabetic';
     g.fillStyle = n ? INK.text : INK.muted;
-    g.font = MONO(104, 700);
-    g.fillText(String(n), x + tileW - 24, y + 108);
+    g.font = MONO(Math.round(h * 0.74), 700);
+    g.fillText(String(n), x + tileW - 24, y + h * 0.8);
     g.textAlign = 'left';
     g.fillStyle = n ? INK.dim : INK.muted;
-    g.font = UI(700, 30);
+    g.font = UI(700, Math.round(h * 0.22));
     g.letterSpacing = '3px';
-    g.fillText(word, x + 24, y + h - 20);
+    g.fillText(word, x + 24, y + h - 12);
     g.letterSpacing = '0px';
   });
 }
@@ -96,7 +97,7 @@ function paintBoard(g: CanvasRenderingContext2D, W: number, H: number, live: Ran
     return;
   }
   // Most in need first, as the ranking has them; the rest are counted under the rows.
-  const rows = live.slice(0, LAYOUT.rows);
+  const rows = live.slice(0, rowsFor(H));
   rows.forEach((r, i) => {
     const level = r.att.level;
     const desk = DESK_BY_ID.get(r.entry.deskId);

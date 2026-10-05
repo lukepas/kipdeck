@@ -1,6 +1,6 @@
 /**
- * The wall boards' faces on screen: each frame, before the callouts are placed, the four work boards'
- * and the Attention board's faces (with their bezels) are projected through whichever camera draws the
+ * The wall boards' faces on screen: each frame, before the callouts are placed, the four work boards',
+ * the Attention board's and the capacity strip's faces (with their bezels) are projected through whichever camera draws the
  * frame, and their rectangles go to what has to keep out of their way. The holo over the table fades
  * its stars and its cone where they are (features/bridge/holo-mask.ts); the units' callouts dock under
  * them (features/workers/declutter.ts); the focus lean eases in on the one under the crosshair
@@ -12,8 +12,8 @@ import type { Parts } from '../../core/parts';
 import { OFF_SCREEN } from '../bridge/holo-mask';
 import { contains, pack, rectOf, toPx, type Clip, type PxRect, type Rect } from './logic';
 
-/** The boards whose faces count, west to east along the wall. */
-export const FACE_IDS = ['issues', 'queue', 'tv', 'pulls', 'services'] as const;
+/** The boards whose faces count, port to starboard along the arc, the capacity strip under the Attention board too. */
+export const FACE_IDS = ['issues', 'queue', 'tv', 'capacity', 'pulls', 'services'] as const;
 export type FaceId = (typeof FACE_IDS)[number];
 
 /** A board's face this frame: its rectangle in NDC and in pixels, or null for both when it's off the screen. */
@@ -28,7 +28,7 @@ const BEZEL = 0.16;
 
 export function installBoardFaces(ctx: Ctx, parts: Pick<Parts, 'stage'>) {
   const faces: Face[] = FACE_IDS.map((id) => ({ id, rect: null, px: null }));
-  const meshOf = (id: FaceId): THREE.Mesh => (id === 'tv' ? ctx.office.tvScreen : ctx.office.boardMeshes[id]);
+  const meshOf = (id: FaceId): THREE.Mesh => (id === 'tv' ? ctx.office.tvScreen : id === 'capacity' ? ctx.office.machineScreen : ctx.office.boardMeshes[id]);
   const viewProj = new THREE.Matrix4();
   const v = new THREE.Vector4();
   const corners: Clip[] = Array.from({ length: 4 }, () => ({ x: 0, y: 0, w: 1 }));

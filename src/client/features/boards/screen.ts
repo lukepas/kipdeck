@@ -4,7 +4,8 @@ import { sharp } from '../../world/sharp';
 // What every screen on the situation wall (and the capacity panel) is drawn with, so they read alike
 // and from across the deck: a canvas the panel's own shape, painted at 200 units a metre and backed at
 // 1.5 times that so the text stays crisp up close; a title bar with the board's name big and its count
-// beside it; and rows of one size, four at most, with "+N more" under them. The type is sized for the
+// beside it; and rows of one size, four at most (as many as the panel's height takes, rowsFor), with
+// "+N more" under them. The type is sized for the
 // conn: a board's name and each row's first line read from the captain's place, the second line from
 // halfway in (a row's first line is 0.24 m type, about 9.6 px tall at 1440x900 from the conn, 21.6 m
 // off). Each row's state is a glyph (a shape) and a stripe (its hue), as everywhere else.
@@ -147,6 +148,19 @@ export interface Row {
 
 /** Where the `i`th row's top is. */
 export const rowTop = (i: number) => LAYOUT.top + i * (LAYOUT.rowH + LAYOUT.gap);
+
+/** How much room the "+N more" line takes under the rows (canvas units). */
+export const MORE_H = 44;
+
+/**
+ * How many rows fit on a board `H` canvas units tall with the "+N more" line under them: four at most,
+ * fewer on a short panel (the situation arc's wings are two rows tall, the Attention board three).
+ */
+export function rowsFor(H: number): number {
+  let n = LAYOUT.rows;
+  while (n > 1 && rowTop(n - 1) + LAYOUT.rowH > H - MORE_H) n--;
+  return n;
+}
 
 /**
  * Draws `r` as the `i`th row across a board `W` wide: a card with its state's stripe, its glyph, its

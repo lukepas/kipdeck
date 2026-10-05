@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { OFFICE_PLAN } from '../../../shared/plan';
 import { SITUATION } from '../../../shared/layout';
 import { drawGlyph, type GlyphKind } from '../../world/glyphs';
-import { INK, LAYOUT, emptyBody, ground, more, offlineBody, row, rowTop, screen, titleBar, type Row, type Screen } from './screen';
+import { INK, LAYOUT, emptyBody, ground, more, offlineBody, row, rowTop, rowsFor, screen, titleBar, type Row, type Screen } from './screen';
 import type { GhIssue, GhPull, GhState, QueueState, QueueTask, ServiceInfo, WorkerInfo } from '../../../shared/protocol';
 import { workerForPull } from '../../state';
 
@@ -127,7 +127,7 @@ export class BoardTexture {
       this.texture.needsUpdate = true;
       return;
     }
-    const shown = open.slice(0, LAYOUT.rows);
+    const shown = open.slice(0, rowsFor(H));
     shown.forEach((it, i) => {
       const lifted = it.number === this.lifted;
       const y = rowTop(i);
@@ -180,7 +180,7 @@ export class ServicesBoardTexture {
       g.arc(x, y, r * 0.6, 0, Math.PI * 2);
       g.fill();
     };
-    const shown = rows.slice(0, LAYOUT.rows);
+    const shown = rows.slice(0, rowsFor(H));
     shown.forEach((r, i) => row(g, W, i, { hue: PANEL.settled, mark: up, text: r.title, side: `:${r.port}`, sideColor: INK.text, sideMono: true, sub: r.who }));
     more(g, W, H, rows.length - shown.length);
     this.texture.needsUpdate = true;
@@ -229,7 +229,7 @@ export class QueueBoardTexture {
       this.texture.needsUpdate = true;
       return;
     }
-    const shown = rows.slice(0, LAYOUT.rows);
+    const shown = rows.slice(0, rowsFor(H));
     shown.forEach((r, i) => row(g, W, i, r));
     more(g, W, H, rows.length - shown.length);
     this.texture.needsUpdate = true;

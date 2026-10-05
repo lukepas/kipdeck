@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { DESKS, MISSION_TABLE } from '../../../shared/layout';
+import { DESKS, MISSION_TABLE, heightAt } from '../../../shared/layout';
 import type { Fixture } from '../../world/office/fixture';
 import { DECK } from '../../world/office/materials';
 import { PULSE } from './logic';
@@ -71,7 +71,7 @@ export const pulses: Fixture<'pulses'> = (site) => {
   for (const d of DESKS) {
     const out = new THREE.Vector3(d.x - MISSION_TABLE.x, 0, d.z - MISSION_TABLE.z).normalize();
     // The hood is on the console's table side, 0.4 m in from its middle.
-    from.set(d.id, new THREE.Vector3(d.x - out.x * 0.42, 1.0, d.z - out.z * 0.42));
+    from.set(d.id, new THREE.Vector3(d.x - out.x * 0.42, 1.0 + heightAt(d.x, d.z), d.z - out.z * 0.42));
     to.set(d.id, new THREE.Vector3(MISSION_TABLE.x + out.x * MISSION_TABLE.r * 0.55, MISSION_TABLE.h + 0.18, MISSION_TABLE.z + out.z * MISSION_TABLE.r * 0.55));
   }
   const ship = new THREE.Color(DECK.ship);

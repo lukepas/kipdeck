@@ -12,13 +12,14 @@ export function installPlace(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'seat
   const { player } = ctx;
 
   /**
-   * On the conn behind the captain's chair, facing the bow: where you are when you arrive on a floor,
-   * the table, the Attention board and the forward viewport in front of you. The office puts arrivals
-   * in the Deck lift's car, a little apart; that spread is kept across the dais.
+   * On the conn at the captain's chair's right hand, facing the bow: where you are when you arrive on a
+   * floor, the tiers, the pit and the situation arc in front of you and the chair's high back beside
+   * you, not in your way. The office puts arrivals in the Deck lift's car, a little apart; that spread
+   * is kept along the dais.
    */
   function placeOnConn(at?: { x: number; z: number }) {
-    const spread = at && inElevator(at.x, at.z) ? Math.max(-0.5, Math.min(0.5, at.x - ELEVATOR.x)) : 0;
-    placeAt({ x: CONN.x + spread, y: CONN.h, z: CONN.z + CONN.r * 0.72, rotY: ELEVATOR_YAW });
+    const spread = at && inElevator(at.x, at.z) ? Math.max(-0.4, Math.min(0.4, at.x - ELEVATOR.x)) : 0;
+    placeAt({ x: CONN.x + CONN.r * 0.6, y: CONN.h, z: CONN.z + 0.3 + spread, rotY: ELEVATOR_YAW });
   }
 
   /** On your feet at `at`, facing `rotY` and looking straight ahead. */

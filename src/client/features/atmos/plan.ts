@@ -5,7 +5,8 @@
  * the way the key's shadows do.
  */
 import * as THREE from 'three';
-import { BOARDS, DESKS, FLOOR, MISSION_TABLE, PODS, POD_RADIUS, TV, WINDOWS } from '../../../shared/layout';
+import { TIERS } from '../../../shared/amphitheater';
+import { BOARDS, DESKS, FLOOR, MISSION_TABLE, PODS, TV, WINDOWS } from '../../../shared/layout';
 import { OVER_WALL, canopyPoint } from '../bridge/shapes';
 import { KEY_AT } from '../lights/modes';
 
@@ -71,10 +72,12 @@ export function shafts(): Shaft[] {
   }
   const down = new THREE.Vector3(0, -1, 0);
   for (const pod of PODS) {
-    const r = POD_RADIUS - 0.4;
+    const r = pod.radius - 0.4;
     const x = MISSION_TABLE.x + Math.cos(pod.angle) * r;
     const z = MISSION_TABLE.z + Math.sin(pod.angle) * r;
-    out.push({ at: [x, 5.0, z], axis: v(down), across: [Math.cos(pod.angle), 0, Math.sin(pod.angle)], len: 5.0, r0: [0.3, 0.3], r1: [2.1, 1.7], bow: false });
+    // Down onto the pod's tier: the shaft stops at its floor.
+    const len = 5.0 - TIERS[pod.tier].h;
+    out.push({ at: [x, 5.0, z], axis: v(down), across: [Math.cos(pod.angle), 0, Math.sin(pod.angle)], len, r0: [0.3, 0.3], r1: [2.1, 1.7], bow: false });
   }
   for (const w of WINDOWS) {
     if ((w.wall !== 'east' && w.wall !== 'west') || w.y0 > 1) continue;
@@ -119,7 +122,8 @@ const POOL_COLOR = { board: '#A9C2D8', ship: '#6FC3DF', station: '#4F93A8', port
  */
 export function pools(): Pool[] {
   const out: Pool[] = [];
-  for (const b of [BOARDS.issues, BOARDS.queue, TV, BOARDS.pulls, BOARDS.services]) {
+  // Under the arc's three columns (the wings' boards are stacked), out in front of them.
+  for (const b of [BOARDS.queue, TV, BOARDS.services]) {
     const nx = Math.sin(b.rotY);
     const nz = Math.cos(b.rotY);
     out.push({ x: b.x + nx * 1.0, z: b.z + nz * 1.0, w: b.width * 0.78, d: 2.2, rotY: b.rotY, source: 'boards', color: POOL_COLOR.board, strip: false });
@@ -143,11 +147,11 @@ export function pools(): Pool[] {
 }
 
 /**
- * What hangs over the situation wall (the condition band, the overhead strip, the ticker: features/
- * alert, bridge/displays.ts, life/ticker.ts), as one stretch of a cylinder round the wall's own middle:
+ * What hangs over the situation arc (the ticker and the condition band: life/ticker.ts, features/alert),
+ * as one stretch of a cylinder round the arc's own centre:
  * its radius, how high it runs, and how far round from due north either way (radians).
  */
-export const OVERHEAD = { x: OVER_WALL.x, z: OVER_WALL.z, r: 11.4, y0: 3.96 + OVER_WALL.lift, y1: 5.7 + OVER_WALL.lift, half: 0.6 } as const;
+export const OVERHEAD = { x: OVER_WALL.x, z: OVER_WALL.z, r: OVER_WALL.r, y0: OVER_WALL.ticker, y1: OVER_WALL.band + 0.44, half: 0.26 } as const;
 
 const g = (n: number) => n.toFixed(3);
 

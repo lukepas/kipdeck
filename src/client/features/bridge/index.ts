@@ -1,10 +1,10 @@
 /**
  * The bridge: the deck dressed as a starship's bridge round the same plan. Its fixtures (the hull and
  * its viewports' frames, the canopy, the ship outside, the conn, the holo course plot, the forward
- * displays' bezels and overhead strip, the stations' fins and traces) are built with the rest of the
- * floor (world/office/build.ts); this keeps them current: the counts on the conn and the overhead
- * strip, the course on the conn and the holo, and the holo's slow turn. The walk camera sees the
- * bridge layer (the canopy, the aft glass, the overhead strip); the Overview's doesn't.
+ * displays' bezels, the stations' fins and traces) are built with the rest of the floor
+ * (world/office/build.ts); this keeps them current: the counts and the course on the conn's armrests,
+ * the course on the holo, and the holo's slow turn. The walk camera sees the bridge layer (the canopy,
+ * the aft glass, the ticker and the condition band over the arc); the Overview's doesn't.
  */
 import type { Ctx } from '../../core/context';
 import { store } from '../../state';
@@ -16,7 +16,7 @@ import type { Course } from './readouts';
 const COUNT_EVERY = 1;
 
 export function installBridge(ctx: Ctx, parts: Pick<Parts, 'overview'>) {
-  const { conn, holo, overhead, runningLights } = ctx.office;
+  const { conn, holo, runningLights } = ctx.office;
   ctx.camera.layers.enable(BRIDGE_LAYER);
 
   function course() {
@@ -30,11 +30,9 @@ export function installBridge(ctx: Ctx, parts: Pick<Parts, 'overview'>) {
   course();
 
   // The counts repaint from the same store events the alert band reads (features/alert), in the same
-  // frame, so the strip and the band's condition line never disagree; the clock read keeps the minutes moving.
+  // frame, so the armrest strip and the band's condition line never disagree; the clock read keeps the minutes moving.
   const paintCounts = () => {
-    const counts = store.counts();
-    conn.setCounts(counts);
-    overhead.setCounts(counts);
+    conn.setCounts(store.counts());
   };
   for (const topic of ['roster', 'reminders', 'floor'] as const) store.on(topic, paintCounts);
   let readAt = -Infinity;

@@ -7,7 +7,9 @@ import { stack } from '../stack';
 import { signs } from '../desksigns';
 import type { Collider, DeskView, Interactable, Office, OfficeHandles } from '../types';
 import { DECK, floorTexture, matteUnique, type Looks } from './materials';
-import { boards, lounge, machineMonitor, situationWall, tv } from './room';
+import { boards, lounge, machineMonitor, tv } from './room';
+import { amphitheater } from '../../features/amphitheater/tiers';
+import { situationArc } from '../../features/amphitheater/arc';
 import { lamps } from '../../features/lights/rig';
 import { floorPaint } from './floorpaint';
 import { FLOOR_ROUGH, workedFloor } from './floor';
@@ -55,6 +57,8 @@ function floorPlan() {
     hull,
     skin,
     inlay,
+    // The amphitheatre round the pit: its tiers, the aisle up to the conn and the galleries (features/amphitheater).
+    amphitheater,
     missionTable,
     holo,
     heading,
@@ -67,9 +71,9 @@ function floorPlan() {
     podPlates,
     beanbags,
     kiosks,
-    // The situation wall round the north of the table, its work boards and its Attention board, and the
-    // operator bench facing that.
-    situationWall,
+    // The situation arc hung north of the table (features/amphitheater), its work boards and its
+    // Attention board, and the operator bench facing that.
+    situationArc,
     boards,
     tv,
     displays,

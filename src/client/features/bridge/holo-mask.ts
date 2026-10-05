@@ -1,15 +1,17 @@
 import * as THREE from 'three';
-import { CONN, MISSION_TABLE, TV } from '../../../shared/layout';
+import { ARC } from '../../../shared/amphitheater';
+import { MISSION_TABLE, SEATING_BY_ID, TV } from '../../../shared/layout';
 
 // The holo keeps out of the wall boards' way: every star of its map and every fragment of its cone of
 // light fades to nothing where a board's face is on screen, so no row is ever read through it. The
 // boards' rectangles on screen (in normalized device coordinates) are worked out each frame by
 // features/boardfaces and written into BOARD_SLOTS vec4s the holo's shaders share; a slot not in use
 // holds a rectangle far off the screen. The fade starts 4% of a rectangle's size outside it and is
-// complete at its edge. And the cone is never taller than the line from the conn's eye to the
-// Attention board's bottom bezel, so from the captain's place its top stays under the board.
+// complete at its edge. And the cone is never taller than the line from the captain's seated eye to the
+// situation arc's foot (the capacity strip's bottom bezel), nor than HOLO_TOP over the deck, so from the
+// captain's place its top stays under every board.
 
-/** How many board rectangles the holo's shaders take: the four work boards and Attention, and a spare. */
+/** How many board rectangles the holo's shaders take: the four work boards, Attention and the capacity strip. */
 export const BOARD_SLOTS = 6;
 
 /** Where an unused slot's rectangle sits: well off the screen, so nothing is masked by it. */
@@ -52,10 +54,15 @@ export function boardMask(x: number, y: number, rects: readonly { x: number; y: 
   return m;
 }
 
-/** The captain's eye on the conn, standing (layout.ts CONN, player/camera.ts EYE_HEIGHT): its height and where along z. */
-const CONN_EYE = { y: CONN.h + 1.4, z: CONN.z + CONN.r * 0.72 } as const;
-/** How far under the Attention board's face its bottom bezel reaches (bridge/displays.ts), and a hair more. */
+/** The captain's seated eye in the chair (layout.ts SEATING, player/camera.ts EYE_HEIGHT and the rig's hips): its height and where along z. */
+const CONN_EYE = (() => {
+  const seat = SEATING_BY_ID.get('conn')!;
+  return { y: seat.y + 1.4 + seat.hips - 0.8, z: seat.z + Math.cos(seat.rotY) * seat.depth } as const;
+})();
+/** How far under a board's face its bottom bezel reaches (bridge/displays.ts), and a hair more. */
 const BEZEL = 0.15;
+/** The tallest the holo stands over the deck, anywhere. */
+export const HOLO_TOP = 2.3;
 
 /**
  * The tallest the holo's cone may stand over the tabletop (m) so that, from the conn, its top at the
@@ -63,9 +70,9 @@ const BEZEL = 0.15;
  * bottom bezel; never more than `want`, never less than a collar of 0.12 m.
  */
 export function coneHeight(want: number, reach: number): number {
-  const bottom = TV.y - TV.height / 2 - BEZEL;
+  const bottom = ARC.bottom - BEZEL;
   const farZ = MISSION_TABLE.z - reach;
   const k = (farZ - TV.z) / (CONN_EYE.z - TV.z);
   const lineY = bottom + (CONN_EYE.y - bottom) * k;
-  return Math.max(0.12, Math.min(want, lineY - MISSION_TABLE.h));
+  return Math.max(0.12, Math.min(want, lineY - MISSION_TABLE.h, HOLO_TOP - MISSION_TABLE.h));
 }

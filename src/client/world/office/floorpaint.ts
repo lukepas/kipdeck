@@ -184,7 +184,7 @@ function readyLines(group: THREE.Group, sheet: DecalSheet) {
   for (const [p, pod] of PODS.entries()) {
     const letter = POD_LETTERS[p];
     const half = ((READY_LINE.ticks - 1) / 2 + 0.6) * (READY_LINE.spacing / READY_LINE.r);
-    for (const dr of [-0.022, 0.022]) group.add(arc(READY_LINE.r + dr, 0.016, pod.angle - half, pod.angle + half, stripe));
+    for (const dr of [-0.022, 0.022]) group.add(arc(READY_LINE.r + dr, 0.016, pod.ready - half, pod.ready + half, stripe));
     for (let k = 1; k <= READY_LINE.ticks; k++) {
       const s = readySpot(letter, k);
       const a = Math.atan2(s.z - MISSION_TABLE.z, s.x - MISSION_TABLE.x);

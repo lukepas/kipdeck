@@ -4,6 +4,7 @@ import type { ViewMode } from '../state';
 import type { Collider } from '../world/types';
 import { HIPS } from '../world/character/rig';
 import { PlayerInput, isTyping } from './pointer';
+import { LEDGE } from '../../shared/amphitheater';
 import { HEIGHT, STEP, blockerAt, ceilingAt, groundAt, stepTo } from './collide';
 import { EYE_HEIGHT, aimCamera } from './camera';
 
@@ -183,9 +184,13 @@ export class PlayerController extends PlayerInput {
     if (jump) {
       this.vy = JUMP_V;
       this.grounded = false;
-    } else if (this.grounded && this.pos.y > ground && this.pos.y - ground <= STEP + 0.02) {
-      // Walking down a stair: stay on your feet rather than falling a step.
+    } else if (this.grounded && this.pos.y > ground && this.pos.y - ground <= Math.max(STEP, LEDGE) + 0.02) {
+      // Walking down a stair, a tier's riser or a ramp: stay on your feet rather than falling a step.
       this.stepOffset += this.pos.y - ground;
+      this.pos.y = ground;
+    } else if (this.grounded && ground > this.pos.y && ground - this.pos.y <= LEDGE + 0.02) {
+      // Up a tier's riser or a ramp (the deck's floor, shared/amphitheater.ts): the camera glides up.
+      this.stepOffset -= ground - this.pos.y;
       this.pos.y = ground;
     }
     this.vy -= GRAVITY * dt;

@@ -1,5 +1,6 @@
 /**
- * The Overview: an orthographic camera over the whole deck at 35 degrees, the demo shot and where
+ * The Overview: an orthographic camera over the whole deck at 35 degrees, raised over its starboard
+ * quarter so the dais, the tiers, the pit and the arc read in section; the demo shot and where
  * "fly to unit" lands. G goes up into it and back down to Walk (first person, the default). In it, Q
  * and E turn the deck a quarter at a time (280 ms), W A S D or the arrows or a drag pan, the wheel
  * zooms, and Esc or G walks again. A window opened over it closes back to it, with no extra click.
@@ -10,7 +11,7 @@ import { FLOOR } from '../../shared/layout';
 import { h, modalOpen } from '../ui/dom';
 import type { Ctx } from './context';
 import type { Parts } from './parts';
-import { framePose, framedPoints } from './overview-frame';
+import { SIDE_YAW, framePose, framedPoints } from './overview-frame';
 
 /** How the camera looks down, how far back it stands, and how much of the deck fills the screen's height at zoom 1. */
 const PITCH = (35 * Math.PI) / 180;
@@ -55,12 +56,12 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
   let zoom = 1;
   const framed = framedPoints();
   /**
-   * The framed pose every trip up starts from: looking up the deck from aft, all four boards, the
-   * Attention board and the holo table in the upper two thirds of the screen (core/overview-frame.ts).
+   * The framed pose every trip up starts from: from the starboard quarter, the dais, the tiers, the pit
+   * and every board of the arc in the upper part of the screen (core/overview-frame.ts).
    */
   function frame() {
-    const pose = framePose(framed, PITCH, window.innerWidth / Math.max(1, window.innerHeight), HALF_HEIGHT, ZOOM.max);
-    yaw = 0;
+    const pose = framePose(framed, PITCH, window.innerWidth / Math.max(1, window.innerHeight), HALF_HEIGHT, ZOOM.max, SIDE_YAW);
+    yaw = SIDE_YAW;
     turn = null;
     target.set(pose.x, 0, pose.z);
     zoom = THREE.MathUtils.clamp(pose.zoom, ZOOM.min, ZOOM.max);

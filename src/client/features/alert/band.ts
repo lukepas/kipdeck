@@ -4,14 +4,14 @@ import { DECK } from '../../world/office/materials';
 import { OVER_WALL, onBridgeLayer } from '../bridge/shapes';
 import { sharp } from '../../world/sharp';
 
-// The condition band: one line of mono lettering hung just under the overhead strip, on the bridge
-// layer like the strip (the Overview never sees it). It says what the bridge's condition is while it
+// The condition band: one line of mono lettering hung over the ticker over the situation arc, on the
+// bridge layer like the ticker (the Overview never sees it). It says what the bridge's condition is while it
 // is amber or red ("CONDITION AMBER - 2 UNITS AWAIT ORDERS"), with the glyph of the state that put it
 // there, the stand-down to green, a jump's countdown, and a unit's recovery. Blank and hidden the rest
 // of the time: one draw while it shows, none otherwise. Its lettering is neutral; only the glyph has a hue.
 
-/** Where it hangs: the overhead strip's radius and arc (bridge/displays.ts), under its bottom rim. */
-const BAND = { r: 11.38, arc: 0.78, y: 3.96 + OVER_WALL.lift, h: 0.44 } as const;
+/** Where it hangs: over the ticker, over the arc's middle (bridge/shapes.ts OVER_WALL). */
+const BAND = { r: OVER_WALL.r - 0.02, arc: 0.42, y: OVER_WALL.band, h: 0.44 } as const;
 const MONO = (size: number) => `600 ${size}px "JetBrains Mono", ui-monospace, monospace`;
 
 export type BandGlyph = 'needs-you' | 'stuck' | null;
@@ -26,7 +26,8 @@ export class ConditionBand {
   private want = 0;
 
   constructor() {
-    this.canvas.width = 2560;
+    // About 290 pixels a metre along the band, as its type was drawn.
+    this.canvas.width = Math.round((BAND.arc * BAND.r * 290) / 64) * 64;
     this.canvas.height = 144;
     this.g = this.canvas.getContext('2d')!;
     // Seen from inside, the cylinder's u runs right to left: draw mirrored.

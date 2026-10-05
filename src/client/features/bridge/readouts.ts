@@ -165,3 +165,50 @@ export function paintCourse(g: CanvasRenderingContext2D, W: number, H: number, c
     }
   });
 }
+
+/**
+ * The course on a slim strip (the captain's right armrest): the waypoint the ship is making for, its
+ * title, and a tick per waypoint along the bottom, solid once passed and ringed for the one it's making for.
+ */
+export function paintCourseStrip(g: CanvasRenderingContext2D, W: number, H: number, course: Course) {
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = DECK.instrument;
+  g.fillRect(0, 0, W, H);
+  g.strokeStyle = DECK.shipDim;
+  g.lineWidth = 3;
+  g.strokeRect(1.5, 1.5, W - 3, H - 3);
+  const pad = H * 0.14;
+  const wp = waypoint(course);
+  g.textAlign = 'left';
+  g.textBaseline = 'middle';
+  g.fillStyle = DECK.ship;
+  g.font = MONO(Math.round(H * 0.24));
+  g.letterSpacing = '2px';
+  const tag = wp ? `WP ${wp.n}/${wp.of}` : 'COURSE';
+  g.fillText(tag, pad, H * 0.36);
+  const tw = g.measureText(tag).width;
+  g.letterSpacing = '0px';
+  g.fillStyle = wp || course.statement ? DECK.text : DECK.muted;
+  g.font = UI(600, Math.round(H * 0.3));
+  g.fillText(fit(g, wp ? wp.title : course.statement || 'Set in Mission control', W - tw - pad * 3), pad * 2 + tw, H * 0.37);
+  const n = course.milestones.length;
+  if (!n) return;
+  const x0 = pad + 6;
+  const x1 = W - pad - 6;
+  const y = H * 0.76;
+  g.strokeStyle = DECK.shipDim;
+  g.lineWidth = 3;
+  g.beginPath();
+  g.moveTo(x0, y);
+  g.lineTo(x1, y);
+  g.stroke();
+  course.milestones.forEach((m, i) => {
+    const x = n === 1 ? (x0 + x1) / 2 : x0 + ((x1 - x0) * i) / (n - 1);
+    g.beginPath();
+    g.arc(x, y, H * 0.06, 0, Math.PI * 2);
+    g.fillStyle = m.done ? DECK.ship : DECK.instrument;
+    g.fill();
+    g.strokeStyle = m.done || m.active ? DECK.ship : DECK.shipDim;
+    g.stroke();
+  });
+}

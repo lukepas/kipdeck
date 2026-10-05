@@ -37,11 +37,16 @@ export function beam(a: THREE.Vector3, b: THREE.Vector3, w: number, h: number, m
 }
 
 /**
- * What hangs over the situation wall (the overhead strip, the condition band, the ticker) curves round
- * the wall's own middle, south of the table's, and starts `lift` higher than the work boards' tops so it
- * clears the Attention board's count band (layout.ts SITUATION).
+ * What hangs over the situation arc: the ticker just over the Attention board's top and its spine, and
+ * the condition band over that while there is a condition (features/life, features/alert). Both curve
+ * round the arc's own centre (near the dais, layout.ts SITUATION), `r` out, just in front of the arc's
+ * face, so they face the conn all along; `ticker` and `band` are their feet. `k` scales the widths they
+ * were laid out with at 11.4 m round.
  */
-export const OVER_WALL = { x: MISSION_TABLE.x, z: MISSION_TABLE.z + SITUATION.cz, lift: SITUATION.band } as const;
+export const OVER_WALL = (() => {
+  const r = SITUATION.r - 0.3;
+  return { x: MISSION_TABLE.x, z: SITUATION.cz, r, k: 11.4 / r, ticker: SITUATION.top + 0.36, band: SITUATION.top + 0.76 } as const;
+})();
 
 /** The canopy: a halo ring over the table, ribs out to the tops of the walls. */
 export const CANOPY = { halo: 2, top: 9, eaves: 6.8, ribs: 16 } as const;

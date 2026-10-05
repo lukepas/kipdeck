@@ -61,7 +61,8 @@ export function easeInOut(t: number): number {
   return k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
 }
 
-/** How many degrees the lean takes off the field of view at `t` into it. */
-export function leanDegrees(t: number): number {
-  return (LEAN.fov - LEAN.base) * easeInOut(t);
+/** How many degrees the lean takes off the field of view at `t` into it, from a field of `from` degrees. */
+export function leanDegrees(t: number, from: number = LEAN.base): number {
+  return (LEAN.fov - from) * easeInOut(t);
 }
+

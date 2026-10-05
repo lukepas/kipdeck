@@ -1,7 +1,10 @@
 import * as THREE from 'three';
+import { LEDGE, heightAt } from '../../shared/amphitheater';
 import type { Collider } from '../world/types';
 
-// Bumping into things: where you can stand, what's in your way, and what's over your head.
+// Bumping into things: where you can stand, what's in your way, and what's over your head. The deck's
+// own floor isn't flat (the tiers, the aisle, the galleries and the dais, shared/amphitheater.ts): its
+// height is heightAt's, a rise up to LEDGE is walked up or down, and a taller one stands in your way.
 
 const RADIUS = 0.32;
 /** Top of your head above your feet, for walking under things. */
@@ -18,8 +21,21 @@ export interface Body {
   stepOffset: number;
 }
 
+/** The deck's floor standing in your way: a ledge too tall to step (nothing stands on top of it). */
+export const LEDGE_WALL: Collider = { minX: 0, maxX: 0, minZ: 0, maxZ: 0, top: 1e9 };
+
+/**
+ * Whether the deck's floor at (x, z) is a ledge away from feet at `y`: more than LEDGE over them, or,
+ * on your feet, more than LEDGE under them (the rails keep you off those edges; a jump still lands).
+ */
+export function ledgeAt(x: number, z: number, y: number, grounded: boolean): boolean {
+  const h = heightAt(x, z);
+  return h - y > LEDGE || (grounded && y - h > LEDGE && y - h < 50);
+}
+
 /** What stands in your way at (x, z) with your feet at `y`, or null. */
 export function blockerAt(b: Body, x: number, z: number, y: number, allowEscape = false): Collider | null {
+  if (ledgeAt(x, z, y, b.grounded) && !ledgeAt(b.pos.x, b.pos.z, y, b.grounded)) return LEDGE_WALL;
   let hit: Collider | null = null;
   for (const c of b.colliders) {
     // Stood on top of it, or passing beneath it.
@@ -97,7 +113,8 @@ function touches(c: Collider, x: number, z: number, r: number): boolean {
  * above. Without `fences`, what's there only to keep people out doesn't count.
  */
 export function groundAt(colliders: Collider[], x: number, z: number, y: number, fences = true): number {
-  let g = -Infinity;
+  // The deck's own floor first (the tiers, the aisle, the dais), then whatever stands on it.
+  let g = heightAt(x, z);
   for (const c of colliders) {
     if (c.top > 50 || y < c.top - 0.1 || c.top <= g || (c.fence && !fences)) continue;
     if (touches(c, x, z, RADIUS)) g = c.top;

@@ -2,7 +2,7 @@
  * The ready line and the attention lights: where the ranking puts the units on the deck.
  *
  * A unit that needs you glides off its console to its pod's ready line, the painted stripe on the
- * pod's inner edge, and stands on a numbered tick facing the mission table. Tick 1 is whoever has
+ * pit in front of its pod, and stands on a numbered tick facing the mission table. Tick 1 is whoever has
  * waited longest, in the order of the building's one ranking (shared/attention.ts). Once it's
  * answered it holds its tick for DWELL before it goes back, so a state that flaps doesn't send it
  * back and forth (its ring changes color at once). A unit with work to review turns at its console
@@ -11,7 +11,7 @@
  */
 import * as THREE from 'three';
 import type { Ranked } from '../../../shared/attention';
-import { MEETING_TABLE, MISSION_TABLE, podOf, readySpot, type PodLetter } from '../../../shared/layout';
+import { MEETING_TABLE, MISSION_TABLE, heightAt, podOf, readySpot, type PodLetter } from '../../../shared/layout';
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { store } from '../../state';
@@ -43,9 +43,9 @@ export function installReadyLine(ctx: Ctx, parts: Pick<Parts, 'views'>) {
   const local = new THREE.Vector3();
   const table = new THREE.Vector3();
 
-  /** (x, z) on the floor `ref` stands on, in `root`'s space. */
+  /** (x, z) on the deck's floor there (the pit, a tier: shared/amphitheater.ts), in `root`'s space. */
   function toLocal(root: THREE.Object3D, ref: THREE.Object3D, x: number, z: number, out: THREE.Vector3) {
-    world.set(x, 0, z);
+    world.set(x, heightAt(x, z), z);
     ref.parent?.localToWorld(world);
     return root.worldToLocal(out.copy(world));
   }

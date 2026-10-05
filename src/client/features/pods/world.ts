@@ -1,16 +1,17 @@
-import { MISSION_TABLE, PODS, POD_LETTERS, POD_RADIUS, type PodLetter } from '../../../shared/layout';
+import { TIERS } from '../../../shared/amphitheater';
+import { MISSION_TABLE, PODS, POD_LETTERS, type PodLetter } from '../../../shared/layout';
 import type { PodGoal } from '../../../shared/pods';
 import { stretch } from '../../world/toon';
 import type { Fixture } from '../../world/office/fixture';
 import { floorDecal } from '../../world/office/floorpaint';
 import { DECK } from '../../world/office/materials';
 
-// Each pod's floor plate, out past its arc of consoles: the pod's letter stencilled big, and the goal
-// most of its units work toward (see shared/pods.ts), so you can tell from across the deck, or from
-// the Overview, which corner is on what.
+// Each pod's floor plate, on its tier behind its arc of consoles (on the walkway there): the pod's
+// letter stencilled big, and the goal most of its units work toward (see shared/pods.ts), so you can
+// tell from the conn above it, or from the Overview, which pod is on what.
 
-/** How far out from the table's middle the plates lie, and their size. */
-const PLATE = { r: POD_RADIUS + 2.7, w: 3.2, d: 1.15, px: 170 } as const;
+/** The plates' size, and how far in from the back of its tier each one's middle lies. */
+const PLATE = { w: 3.2, d: 0.78, px: 170, in: 0.48 } as const;
 
 const UI = (weight: number, size: number) => `${weight} ${size}px Archivo, system-ui, sans-serif`;
 const MONO = (size: number) => `500 ${size}px "JetBrains Mono", ui-monospace, monospace`;
@@ -70,8 +71,10 @@ export const podPlates: Fixture<'pods'> = (site) => {
     const letter = POD_LETTERS[i];
     let goal: PodGoal | undefined;
     const decal = floorDecal(PLATE.w, PLATE.d, PLATE.px, (g, W, H) => paintPlate(g, W, H, letter, goal));
-    decal.mesh.position.set(MISSION_TABLE.x + Math.cos(pod.angle) * PLATE.r, 0.006, MISSION_TABLE.z + Math.sin(pod.angle) * PLATE.r);
-    // Its top toward the table: it reads the right way up from behind the pod, looking in.
+    const tier = TIERS[pod.tier];
+    const r = tier.r1 - PLATE.in;
+    decal.mesh.position.set(MISSION_TABLE.x + Math.cos(pod.angle) * r, tier.h + 0.006, MISSION_TABLE.z + Math.sin(pod.angle) * r);
+    // Its top toward the table: it reads the right way up from behind the pod (from the conn), looking in.
     decal.mesh.rotation.y = Math.atan2(Math.cos(pod.angle), Math.sin(pod.angle));
     site.group.add(decal.mesh);
     plates.set(letter, {

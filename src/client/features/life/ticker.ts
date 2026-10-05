@@ -31,8 +31,8 @@ declare module '../../world/types' {
   }
 }
 
-/** Where it hangs: the overhead strip's radius and arc (displays.ts), just over its top rim. */
-const TICK = { r: 11.4, arc: 1.06, y: 5.22 + OVER_WALL.lift, h: 0.32, clock: 0.22 } as const;
+/** Where it hangs: over the arc's middle, just over the Attention board's top (bridge/shapes.ts OVER_WALL). */
+const TICK = { r: OVER_WALL.r, arc: 0.5, y: OVER_WALL.ticker, h: 0.32, clock: 0.24 } as const;
 /** How fast the log runs: its whole width every 70 s. */
 const PACE = 1 / 70;
 
@@ -60,9 +60,11 @@ export const ticker: Fixture<'ticker'> = (site) => {
   const east = Math.PI - TICK.arc / 2;
   const west = Math.PI + TICK.arc / 2;
   const split = west - TICK.arc * TICK.clock;
-  const log = slice(east, split, 4096, 154);
+  // The canvases at the slices' own proportions (about 440 pixels a metre along, as the type was drawn).
+  const along = (a: number) => Math.round(((a * TICK.r) * 440) / 64) * 64;
+  const log = slice(east, split, along(split - east), 154);
   log.texture.wrapS = THREE.RepeatWrapping;
-  const clock = slice(split, west, 1024, 140);
+  const clock = slice(split, west, along(west - split), 140);
   const group = new THREE.Group();
   group.add(log.mesh, clock.mesh);
   group.name = 'life-ticker';

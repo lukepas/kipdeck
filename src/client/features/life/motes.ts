@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { DESKS, MISSION_TABLE } from '../../../shared/layout';
+import { DESKS, MISSION_TABLE, heightAt } from '../../../shared/layout';
 import type { Fixture } from '../../world/office/fixture';
 import { DECK } from '../../world/office/materials';
 
@@ -77,7 +77,7 @@ export const motes: Fixture<'motes'> = (site) => {
       const o = i * MOTES.per + j;
       const s = (Math.sin((o + 1) * 12.9898) * 43758.5453) % 1;
       const r = Math.abs(s);
-      pos.set([x + (r - 0.5) * 0.5, 0.95, z + (((r * 7.1) % 1) - 0.5) * 0.18], o * 3);
+      pos.set([x + (r - 0.5) * 0.5, 0.95 + heightAt(d.x, d.z), z + (((r * 7.1) % 1) - 0.5) * 0.18], o * 3);
       seed[o] = r;
       station[o] = i;
     }
