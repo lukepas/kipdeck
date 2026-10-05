@@ -67,6 +67,9 @@ export function makeBloom(stage: Stage, camera: THREE.Camera, look: BloomLook): 
   const fxaa = new FXAAPass();
   const smaa = new SMAAPass();
   smaa.enabled = false;
+  // Its edges and blend weights as SMAA has them (8 bits a channel), not half floats: half the memory.
+  const smaaTargets = smaa as unknown as Record<'_edgesRT' | '_weightsRT', THREE.WebGLRenderTarget>;
+  for (const rt of [smaaTargets._edgesRT, smaaTargets._weightsRT]) rt.texture.type = THREE.UnsignedByteType;
   composer.addPass(render);
   composer.addPass(pass);
   composer.addPass(new OutputPass());
