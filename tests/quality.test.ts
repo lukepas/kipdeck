@@ -40,6 +40,7 @@ test('each tier draws no more than the one above it', () => {
     assert.ok(down.shadow.size <= up.shadow.size);
     assert.ok(down.starLayers <= up.starLayers);
     assert.ok(!(down.skyLight && !up.skyLight));
+    assert.ok(!(down.roomLight && !up.roomLight));
     assert.ok(!(down.glossFloor && !up.glossFloor));
   }
   // MAX_PIXEL_RATIO in core/scene.ts: no tier draws more than 1.5 pixels per CSS pixel.

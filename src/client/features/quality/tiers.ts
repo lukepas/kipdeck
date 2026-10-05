@@ -20,8 +20,15 @@ export interface TierLook {
   bloom: 'full' | 'half' | null;
   /** The key light's shadow map: its size, and how often it's drawn again (ms; 0 every frame, null only when something moves). */
   shadow: { size: number; everyMs: number | null };
-  /** The hull, the nacelles, the fleet and the world ahead reflect the sky outside (features/ibl). */
+  /** The hull and the nacelles reflect the sky outside (features/ibl). */
   skyLight: boolean;
+  /**
+   * The deck's surfaces reflect the room's screens and strips (features/ibl), and its plating shows the
+   * trim atlas's seams, dirt and wear (world/office/trim.ts). Both are set once at load, but each costs
+   * every pixel a few lookups, which software rendering feels: Low leaves them out (uniforms, so
+   * nothing recompiles either way).
+   */
+  roomLight: boolean;
   /** The floor's glossy walkways reflect the room's screens and strips (world/office/floor.ts). */
   glossFloor: boolean;
   /** How many of the star layers stream past (features/space/stars.ts: far, middle, near). */
@@ -29,9 +36,9 @@ export interface TierLook {
 }
 
 export const TIER_LOOKS: Readonly<Record<Tier, TierLook>> = {
-  high: { pixelRatio: 1.5, bloom: 'full', shadow: { size: 2048, everyMs: 0 }, skyLight: true, glossFloor: true, starLayers: 3 },
-  medium: { pixelRatio: 1.25, bloom: 'half', shadow: { size: 1024, everyMs: 50 }, skyLight: true, glossFloor: true, starLayers: 3 },
-  low: { pixelRatio: 1, bloom: null, shadow: { size: 1024, everyMs: null }, skyLight: false, glossFloor: false, starLayers: 2 },
+  high: { pixelRatio: 1.5, bloom: 'full', shadow: { size: 2048, everyMs: 0 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3 },
+  medium: { pixelRatio: 1.25, bloom: 'half', shadow: { size: 1024, everyMs: 50 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3 },
+  low: { pixelRatio: 1, bloom: null, shadow: { size: 1024, everyMs: null }, skyLight: false, roomLight: false, glossFloor: false, starLayers: 2 },
 };
 
 /**

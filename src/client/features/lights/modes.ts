@@ -34,6 +34,13 @@ export interface Rig {
    * exposure). None by day: the lit floor itself would pass any threshold and haze the room.
    */
   bloom: { strength: number; radius: number; threshold: number } | null;
+  /**
+   * How strongly the deck's surfaces reflect the room's own light, its screens, strips and holo (the
+   * room probe, features/ibl). Its diffuse share is cut to ROOM_DIFFUSE there, so this is mostly the
+   * reflections' strength: the probe holds a dark room with small bright things in it, and the glossy
+   * tops and walkways need it up to show them.
+   */
+  env: number;
 }
 
 export const LIGHT_MODES: Record<LightMode, Rig> = {
@@ -47,6 +54,7 @@ export const LIGHT_MODES: Record<LightMode, Rig> = {
     table: { color: '#C9D2DC', i: 100 },
     holo: { color: '#6FC3DF', i: 30 },
     bloom: { strength: 0.32, radius: 0.4, threshold: 0.86 },
+    env: 1.2,
   },
   day: {
     exposure: 1.22,
@@ -58,6 +66,7 @@ export const LIGHT_MODES: Record<LightMode, Rig> = {
     table: { color: '#C9D2DC', i: 28 },
     holo: { color: '#6FC3DF', i: 6 },
     bloom: null,
+    env: 0.9,
   },
 };
 

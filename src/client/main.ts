@@ -64,6 +64,7 @@ import { makeMotion } from './motion';
 import { installLights } from './features/lights';
 import { installQuality } from './features/quality';
 import { installMerge } from './features/merge';
+import { installIbl } from './features/ibl';
 import { installLife } from './features/life';
 import { installGiveWay } from './features/giveway';
 import { installDestination } from './features/destination';
@@ -177,6 +178,8 @@ parts.droid = installDroid(ctx, parts);
 // Before the moments: its pose comes off first each frame, as it is laid last (after their gestures).
 installPosture(ctx, parts);
 parts.alert = installAlert(ctx, parts);
+// What the deck's surfaces reflect: the room's own light inside, the sky's on the hull.
+installIbl(ctx, parts);
 installMoments(ctx, parts);
 parts.drive = installDrive(ctx, parts);
 parts.turnaround = installTurnaround(ctx, parts);
