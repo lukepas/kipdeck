@@ -24,7 +24,8 @@ void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }`;
 
-const BAKE_FRAG = /* glsl */ `
+/** The sky's bake, by direction (vDir): what features/atmos samples small, for the room's light from outside. */
+export const BAKE_FRAG = /* glsl */ `
 uniform vec3 uVoid, uDeep, uBand, uTeal, uIndigo, uMagenta;
 uniform vec3 uBandN, uCore, uNeb, uSeed;
 uniform float uNebSize;
@@ -166,6 +167,8 @@ export class Sky {
   /** Which of the two cubes is showing (the other takes the next region). */
   private front = 0;
   private angle = 0;
+  /** Which region each cube holds. */
+  private readonly held = [0, -1];
   private readonly rot = new THREE.Matrix4();
 
   constructor(private readonly renderer: THREE.WebGLRenderer) {
@@ -240,6 +243,7 @@ export class Sky {
     u.uNeb.value.copy(r.neb);
     u.uSeed.value.copy(r.seed);
     u.uNebSize.value = r.nebSize;
+    this.held[slot] = n;
     this.cubeCamera.renderTarget = this.targets[slot];
     const was = this.renderer.getRenderTarget();
     this.cubeCamera.update(this.renderer, this.bakeScene);
@@ -267,6 +271,13 @@ export class Sky {
       this.front = 1 - this.front;
       this.ready = -1;
     }
+  }
+
+  /** The region showing now (the one more than half faded in), and how far the sky has turned round the ship (radians). */
+  view(): { region: number; angle: number } {
+    const mix = this.material.uniforms.uMix.value as number;
+    const shown = (this.front === 0 ? mix : 1 - mix) > 0.5 ? 1 - this.front : this.front;
+    return { region: this.held[shown], angle: this.angle };
   }
 
   /** Turns the sky `dt` seconds' worth round the ship. */

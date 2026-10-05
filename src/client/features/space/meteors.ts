@@ -89,6 +89,13 @@ export class Meteors {
     this.t = 0;
   }
 
+  /** The meteor in flight's glint for the room (features/atmos): the way to it into `dir`, and how bright it is now (0 with none). */
+  light(dir: THREE.Vector3): number {
+    if (this.t < 0) return 0;
+    dir.copy(this.streak.position).normalize();
+    return this.streak.material.opacity;
+  }
+
   /** Sends one now, whatever the wait (the debug handle and the clips). */
   fire() {
     this.launch();

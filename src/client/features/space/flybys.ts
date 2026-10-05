@@ -348,6 +348,29 @@ export class Flybys {
     this.place();
   }
 
+  /**
+   * The light the flyby under way throws into the room (features/atmos): a planet's own colour off a
+   * side port, or a comet's white glint over the bow. Writes the way to it from the ship into `dir`
+   * and its colour into `color`, and returns how strong it is (0-1: up and down over its pass, and
+   * ducked as the flyby is), 0 with nothing passing that gives light.
+   */
+  light(dir: THREE.Vector3, color: THREE.Color): number {
+    const p = this.pass;
+    if (!p || p.kind === 'asteroids') return 0;
+    const gain = this.planetMat.uniforms.uGain.value as number;
+    const k = Math.sin(Math.PI * Math.min(1, Math.max(0, p.at))) * gain;
+    if (p.kind === 'planet') {
+      dir.copy(this.planet.position).normalize();
+      const u = this.bakeMat.uniforms;
+      // Its albedo, roughly: a gas giant's two bands, or a rocky world's land and sea.
+      color.copy(u.uBands.value > 0.5 ? u.uA.value : u.uC.value).lerp(u.uB.value, 0.5);
+      return k;
+    }
+    dir.copy(this.cometHead.position).normalize();
+    color.set(SPACE_COLORS.comet);
+    return k;
+  }
+
   /** Ends the flyby under way at once (a jump, say). */
   clear() {
     this.pass = null;

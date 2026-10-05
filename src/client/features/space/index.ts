@@ -48,6 +48,20 @@ export interface Waypoint {
   final: boolean;
 }
 
+/**
+ * The light space throws into the room now (features/atmos): a passing planet's wash off a side port,
+ * a comet's or meteor's glint, each with the way to it from the ship and its colour, and the jump's
+ * flash (0-1, none where the jump's flash doesn't play).
+ */
+export interface OutsideLight {
+  wash: number;
+  washDir: THREE.Vector3;
+  washColor: THREE.Color;
+  glint: number;
+  glintDir: THREE.Vector3;
+  flash: number;
+}
+
 /** Where a jump is: none under way, waiting for the captain, counting down, or jumping. */
 export type JumpPhase = 'idle' | 'held' | 'countdown' | 'jump';
 
@@ -72,6 +86,10 @@ export interface Space {
   timeScale(k: number): void;
   /** Space's own clock (ms), which only runs while frames do. */
   clock(): number;
+  /** The light space throws into the room now: a planet's wash, a comet's or meteor's glint, the jump's flash. */
+  outside(): OutsideLight;
+  /** Which region of sky is showing (sky.ts region()), and how far it has turned round the ship. */
+  sky(): { region: number; angle: number };
 }
 
 export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | 'player' | 'giveWay' | 'alert' | 'fleet' | 'quality'>): Space {
@@ -130,6 +148,9 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   let tintNow = 0;
   const was = new THREE.Vector3();
   let moving = false;
+  let flashNow = 0;
+  const outside: OutsideLight = { wash: 0, washDir: new THREE.Vector3(), washColor: new THREE.Color(), glint: 0, glintDir: new THREE.Vector3(), flash: 0 };
+  const glintColor = new THREE.Color();
 
   // Silent running (Settings > Bridge > Life) slows space to a crawl: no streaks, flybys or meteors.
   const scale = () => motionScale(ctx.reduceMotion.ship) * starScale(ctx.settings.life);
@@ -341,6 +362,7 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
     // The punch lifts the tunnel past the flash's cap for its first 0.6 s, then it settles back.
     tunnel.set(open * peak * (1 + PUNCH_LIFT * punch), dt);
     parts.lights?.level(peak > 0 ? room : 1);
+    flashNow = peak > 0 ? Math.max(flash, punch) : 0;
     glow.set(peak > 0 ? rim : 0);
     // The waypoint's name: up in 300 ms, held, gone over the last 500 ms (a 400 ms crossfade with motion off, as the view's).
     const sinceBanner = clock - bannerAt;
@@ -414,5 +436,17 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
     tunnelOpen: () => openNow,
     timeScale: (k) => void (timeK = Math.max(0, k)),
     clock: () => clock,
+    sky: () => sky.view(),
+    outside: () => {
+      const o = outside;
+      o.flash = flashNow;
+      o.wash = 0;
+      o.glint = 0;
+      const k = flybys.current === 'planet' ? flybys.light(o.washDir, o.washColor) : 0;
+      if (k > 0) o.wash = k;
+      else if (flybys.current === 'comet') o.glint = flybys.light(o.glintDir, glintColor);
+      if (o.glint <= 0) o.glint = meteors.light(o.glintDir);
+      return o;
+    },
   };
 }
