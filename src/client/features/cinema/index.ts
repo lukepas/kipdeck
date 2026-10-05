@@ -160,8 +160,11 @@ export function installCinema(ctx: Ctx, parts: Pick<Parts, 'stage' | 'player' | 
   // ---- Breathing and the ship's roll -----------------------------------------------------------------
   let breath = 0;
   let clock = 0;
-  const sky = () => ctx.scene.getObjectByName('space-sky');
-  const stars = () => ctx.scene.getObjectByName('space-stars');
+  // Found once (a search by name walks the whole scene): space builds both before the cinema installs.
+  let skyObj: THREE.Object3D | undefined;
+  let starsObj: THREE.Object3D | undefined;
+  const sky = () => (skyObj ??= ctx.scene.getObjectByName('space-sky'));
+  const stars = () => (starsObj ??= ctx.scene.getObjectByName('space-stars'));
   function atConn(): boolean {
     const p = parts.player;
     const seated = p.seat?.seatId === 'conn';
@@ -181,9 +184,12 @@ export function installCinema(ctx: Ctx, parts: Pick<Parts, 'stage' | 'player' | 
     camera.position.y += b.lift * breath;
   }
   let rollNow = 0;
+  let rollSet = NaN;
   function roll(dt: number) {
     const want = still() ? rollNow : shipRoll(clock);
     rollNow += (want - rollNow) * Math.min(1, dt * 2);
+    if (rollNow === rollSet) return;
+    rollSet = rollNow;
     const s = sky();
     const st = stars();
     if (s) s.rotation.z = rollNow;

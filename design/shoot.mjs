@@ -339,6 +339,21 @@ async function main() {
       console.log('arrival-skip', JSON.stringify(skip));
       await page.screenshot({ path: path.join(OUT, 'arrival-skip.png') });
     }
+    if (want('arrival-clip')) {
+      // The arrival as a clip: held a thirtieth of a second further each frame, 5 s at 30 fps, then 1 s
+      // on the conn. The rest of the deck runs on in real time while it's shot.
+      const frames = path.join(tmp, 'arrival');
+      mkdirSync(frames, { recursive: true });
+      await page.evaluate(() => window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ShiftLeft', key: 'Shift' })));
+      await wait(600);
+      for (let f = 0; f < 180; f++) {
+        await CINEMA('hold', Math.min(5000, (f * 1000) / 30));
+        await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+        await page.screenshot({ path: path.join(frames, `f${String(f).padStart(4, '0')}.jpg`), type: 'jpeg', quality: 92 });
+      }
+      await CINEMA('hold', null);
+      execFileSync(process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg', ['-y', '-loglevel', 'error', '-framerate', '30', '-i', path.join(frames, 'f%04d.jpg'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-movflags', '+faststart', path.join(OUT, 'arrival.mp4')]);
+    }
     // Idle breathing: in the captain's chair, no input for 4 s and more; two frames 1.8 s apart differ by
     // a hair (a tenth of a degree, 2 mm). Then the boards' type from the conn twice, a second apart.
     if (want('breathe')) {
