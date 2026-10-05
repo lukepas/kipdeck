@@ -160,7 +160,7 @@ test('what the browser remembers keeps its keys and shapes', () => {
   assert.deepEqual(state.lastSpot(), { floor: 'f1', name: 'F', x: 1, y: 2, z: 3, facing: 4 });
   assert.ok(storage.has('agent-office.spot'));
   const settings = state.loadSettings();
-  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: state.HUD_DEFAULTS, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { destination: true, fleet: true, sorties: true, epithets: true, droid: false }, voice: 'on', celebrations: 'full', alerts: { on: true, amberMin: 5, redMin: 10 }, watch: 'full', momentum: true, turnaround: true });
+  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: state.HUD_DEFAULTS, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { destination: true, fleet: true, sorties: true, epithets: true, droid: true }, voice: 'on', celebrations: 'full', alerts: { on: true, amberMin: 5, redMin: 10 }, watch: 'full', momentum: true, turnaround: true });
   // Mission control's last tab is one of its tabs.
   storage.set('agent-office.settings', JSON.stringify({ missionTab: 'goals', allFloors: true }));
   assert.deepEqual([state.loadSettings().missionTab, state.loadSettings().allFloors], ['goals', true]);
@@ -193,7 +193,7 @@ test('what the browser remembers keeps its keys and shapes', () => {
   state.saveSettings({ ...settings, life: 'silent', lifeParts: { destination: true, fleet: false, sorties: true, epithets: false, droid: true } });
   assert.deepEqual([state.loadSettings().life, state.loadSettings().lifeParts], ['silent', { destination: true, fleet: false, sorties: true, epithets: false, droid: true }]);
   state.saveSettings({ ...settings, life: 'party' as never, lifeParts: { fleet: 'no' } as never });
-  assert.deepEqual([state.loadSettings().life, state.loadSettings().lifeParts], ['full', { destination: true, fleet: true, sorties: true, epithets: true, droid: false }], 'the droid ships off');
+  assert.deepEqual([state.loadSettings().life, state.loadSettings().lifeParts], ['full', { destination: true, fleet: true, sorties: true, epithets: true, droid: true }], 'the droid ships on');
   // The ship's voice is On, Plain only or Off.
   state.saveSettings({ ...settings, voice: 'plain' });
   assert.equal(state.loadSettings().voice, 'plain');

@@ -19,7 +19,7 @@ const PARTS: Record<LifePart, [label: string, note: string]> = {
   fleet: ['Fleet in formation', 'Every other deck as an escort ship off the side ports, with a beacon when it needs you.'],
   sorties: ['Squadron sorties', 'A fighter for each working unit, and open pull requests holding on the picket ahead.'],
   epithets: ['Crew epithets', 'Titles and chevrons units earn from their real record (the Mechanic, the Night Owl), the Crew tab and the unit of the watch on the Proof plinth. Words only, never a ranking of people.'],
-  droid: ['Bridge droid', 'Bolt, a small hover droid that carries finished work to the Review bay and waits by a unit that needs you. Off until the captain signs it off.'],
+  droid: ['Bridge droid', 'Bolt, a hovering tool-drone that carries finished work to the Review bay in its arm and waits by a unit that needs you. Docks itself with Ship motion Off or Silent running.'],
 };
 
 const VOICE_NOTE: Record<VoiceMode, string> = {
