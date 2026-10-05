@@ -45,12 +45,19 @@ export interface TierLook {
   cookie: boolean;
   outsideLight: boolean;
   mirror: boolean;
+  /**
+   * Space close by the ship (features/vista): how many layers of dust stream past the side ports (far
+   * first, each nearer one more parallax), and whether the sun's flare is drawn. The big body off one
+   * side is drawn at every tier.
+   */
+  parallax: number;
+  flare: boolean;
 }
 
 export const TIER_LOOKS: Readonly<Record<Tier, TierLook>> = {
-  high: { pixelRatio: 1.5, bloom: 'full', shadow: { size: 2048, everyMs: 0 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'all', motes: 1500, cookie: true, outsideLight: true, mirror: true },
-  medium: { pixelRatio: 1.25, bloom: 'half', shadow: { size: 1024, everyMs: 50 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'bow', motes: 800, cookie: true, outsideLight: true, mirror: false },
-  low: { pixelRatio: 1, bloom: null, shadow: { size: 1024, everyMs: null }, skyLight: false, roomLight: false, glossFloor: false, starLayers: 2, shafts: null, motes: 0, cookie: false, outsideLight: false, mirror: false },
+  high: { pixelRatio: 1.5, bloom: 'full', shadow: { size: 2048, everyMs: 0 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'all', motes: 1500, cookie: true, outsideLight: true, mirror: true, parallax: 4, flare: true },
+  medium: { pixelRatio: 1.25, bloom: 'half', shadow: { size: 1024, everyMs: 50 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'bow', motes: 800, cookie: true, outsideLight: true, mirror: false, parallax: 3, flare: true },
+  low: { pixelRatio: 1, bloom: null, shadow: { size: 1024, everyMs: null }, skyLight: false, roomLight: false, glossFloor: false, starLayers: 2, shafts: null, motes: 0, cookie: false, outsideLight: false, mirror: false, parallax: 1, flare: false },
 };
 
 /**

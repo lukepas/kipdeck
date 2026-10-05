@@ -66,6 +66,7 @@ import { installQuality } from './features/quality';
 import { installMerge } from './features/merge';
 import { installIbl } from './features/ibl';
 import { installAtmos } from './features/atmos';
+import { installVista } from './features/vista';
 import { installLife } from './features/life';
 import { installGiveWay } from './features/giveway';
 import { installDestination } from './features/destination';
@@ -183,6 +184,8 @@ parts.alert = installAlert(ctx, parts);
 installIbl(ctx, parts);
 // The light round the deck: shafts, dust, haze, pools, the canopy's ribs and light from outside.
 installAtmos(ctx, parts);
+// Space close by: dust streaming past the ports, a giant off one side, the sun's flare through the canopy.
+installVista(ctx, parts);
 installMoments(ctx, parts);
 parts.drive = installDrive(ctx, parts);
 parts.turnaround = installTurnaround(ctx, parts);

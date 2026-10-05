@@ -38,7 +38,7 @@ const SKY_ENV = 0.8;
 /** How strongly the viewport glass reflects the room. */
 const GLASS_ENV = 0.55;
 /** What lies outside the ship, and the air's own light (features/atmos), never part of the room's light. */
-const OUTSIDE = new Set(['space-sky', 'space-stars', 'fleet', 'destination', 'sorties', 'drive-core', 'atmos']);
+const OUTSIDE = new Set(['space-sky', 'space-stars', 'space-flybys-far', 'vista', 'fleet', 'destination', 'sorties', 'drive-core', 'atmos']);
 /**
  * How much of the room's light reaches a surface's diffuse colour, against its reflections: the probe
  * holds only what glows (the holo's core is the brightest thing on the deck), and a lamp's worth of
