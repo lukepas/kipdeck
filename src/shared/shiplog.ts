@@ -21,9 +21,9 @@ export interface HeadingBand {
   behindDays?: number;
 }
 
-/** "MAKING FOR AUTH REWRITE - WAYPOINT 2 OF 4 - 47%", then "BEHIND SCHEDULE: 4 DAYS" when it is overdue. */
+/** "AUTH REWRITE - 2/4 - 47%" (short enough for one clear pane of the canopy), then "BEHIND SCHEDULE: 4 DAYS" when it is overdue. */
 export function headingBand(b: HeadingBand): string[] {
-  const lines = [`MAKING FOR ${clip(b.title, 40).toUpperCase()} - WAYPOINT ${b.n} OF ${b.of} - ${Math.round(b.percent)}%`];
+  const lines = [`${clip(b.title, 28).toUpperCase()} - ${b.n}/${b.of} - ${Math.round(b.percent)}%`];
   if (b.behindDays !== undefined && b.behindDays > 0) lines.push(`BEHIND SCHEDULE: ${plural(b.behindDays, 'DAY')}`);
   return lines;
 }
@@ -98,6 +98,8 @@ export interface ConditionWhy {
   top?: { unit: string; min: number; stuck: boolean };
   /** A reminder that fired on this deck (needs-input-long, approved-unmerged, milestone-overdue). */
   reminder?: 'needs-input-long' | 'approved-unmerged' | 'milestone-overdue';
+  /** While the line names a stuck unit: the units that need the captain (quick to answer), the first one's call sign. */
+  asks?: { n: number; unit: string };
 }
 
 const REMINDER_WORDS: Record<NonNullable<ConditionWhy['reminder']>, string> = {
@@ -112,11 +114,20 @@ export function conditionLine(c: ConditionName, why: ConditionWhy, working = 0):
   const head = `CONDITION ${c.toUpperCase()}`;
   if (c === 'red') {
     if (why.stuck > 1) return `${head} - ${plural(why.stuck, 'UNIT')} STUCK`;
-    if (why.top?.stuck) return `${head} - ${why.top.unit} STUCK ${why.top.min} MIN`;
+    if (why.top?.stuck) return `${head} - ${why.top.unit} STUCK ${why.top.min} MIN${asksTail(why)}`;
   }
   if (why.waiting > 0) return `${head} - ${plural(why.waiting, 'UNIT')} ${why.waiting === 1 ? 'AWAITS' : 'AWAIT'} ORDERS`;
   return why.reminder ? `${head} - ${REMINDER_WORDS[why.reminder]}` : head;
 }
+
+/** The quick answer after a stuck unit's line: " - +1 AWAITS ORDERS (A-03)". */
+function asksTail(why: ConditionWhy): string {
+  if (!why.asks?.n) return '';
+  return ` - +${why.asks.n} ${why.asks.n === 1 ? 'AWAITS' : 'AWAIT'} ORDERS (${why.asks.unit})`;
+}
+
+/** What the band says while the latch is still on its way down and nothing waits any more. */
+export const STANDING_DOWN = 'STANDING DOWN - EVERY CALL CLEARED';
 
 /** A unit back from stuck that landed its work: "WIDGET (B-02) RECOVERED, 40M STUCK". */
 export function recoveredLine(name: string, unit: string | undefined, stuckMs: number): string {

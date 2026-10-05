@@ -28,7 +28,7 @@ import { DECK, practical } from '../../world/office/materials';
 import * as THREE from 'three';
 import { debugHandle } from '../giveway';
 import { ConditionBand, type BandGlyph } from './band';
-import { ConditionLatch, DIM, GREEN_SAY_MS, STAND_DOWN_MS, lampLevel, podWake, rawCondition, standDownAt, whyOf, type Condition, type Waiter } from './logic';
+import { ConditionLatch, DIM, GREEN_SAY_MS, bandLine, STAND_DOWN_MS, lampLevel, podWake, rawCondition, standDownAt, whyOf, type Condition, type Waiter } from './logic';
 
 export interface Alert {
   /** The bridge's condition now. */
@@ -87,19 +87,19 @@ export function installAlert(ctx: Ctx, parts: Pick<Parts, 'lights' | 'giveWay'>)
     }
     const reminders: ReminderKind[] = store.reminders.filter((r) => r.floor === store.floor && !reminderSnoozed(r, now)).map((r) => r.kind);
     const was = latch.value;
-    const step = latch.step(rawCondition(waiters, reminders, s), clock);
+    const raw = rawCondition(waiters, reminders, s);
+    const step = latch.step(raw, clock);
     if (step.stoodDown) {
       greenUntil = clock + GREEN_SAY_MS;
       standDown = parts.giveWay.frozen() ? null : { at: clock, from: DIM[was].room, ms: STAND_DOWN_MS, pods: false };
     }
     const c = latch.value;
     greenLine = c === 'green' && clock < greenUntil ? { text: conditionLine('green', whyOf([], []), working), glyph: null } : null;
-    if (c === 'green') line = null;
-    else {
-      const why = whyOf(waiters, reminders);
-      const glyph: BandGlyph = c === 'red' || why.top?.stuck ? 'stuck' : why.waiting ? 'needs-you' : null;
-      line = { text: conditionLine(c, why), glyph };
-    }
+    // The words follow the book's condition now, the light the latch: no AMBER or RED with no cause named.
+    const why = whyOf(waiters, reminders);
+    const text = bandLine(c, raw, why);
+    const glyph: BandGlyph = raw === 'green' ? null : raw === 'red' || why.top?.stuck ? 'stuck' : why.waiting ? 'needs-you' : null;
+    line = text ? { text, glyph } : null;
   }
   // Read again the moment the roster or the reminders change, as giving way does: a held jump and the
   // celebrations see the bridge on its way down in the same frame they see the call clear.

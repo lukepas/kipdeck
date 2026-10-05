@@ -3,10 +3,10 @@
 // bow, and what the band says (src/shared/shiplog.ts).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ConditionLatch, DIM, SEVERAL_STUCK, STAND_DOWN_MS, STEP_DOWN_MS, dimRig, lampLevel, rawCondition, standDownAt, whyOf, type Waiter } from '../src/client/features/alert/logic.js';
+import { ConditionLatch, DIM, SEVERAL_STUCK, bandLine, STAND_DOWN_MS, STEP_DOWN_MS, dimRig, lampLevel, rawCondition, standDownAt, whyOf, type Waiter } from '../src/client/features/alert/logic.js';
 import { LIGHT_MODES } from '../src/client/features/lights/modes.js';
 import { ALERT_DEFAULTS } from '../src/client/state/persist.js';
-import { conditionLine, recoveredLine } from '../src/shared/shiplog.js';
+import { STANDING_DOWN, conditionLine, recoveredLine } from '../src/shared/shiplog.js';
 
 const MIN = 60_000;
 const th = ALERT_DEFAULTS;
@@ -91,4 +91,29 @@ test('the band says why, in plain upper case', () => {
   assert.equal(conditionLine('green', whyOf([], []), 0), 'CONDITION GREEN - ALL CLEAR');
   assert.equal(recoveredLine('Widget', 'B-02', 40 * MIN), 'WIDGET (B-02) RECOVERED, 40M STUCK');
   assert.equal(recoveredLine('Widget', undefined, 125 * MIN), 'WIDGET RECOVERED, 2H 05M STUCK');
+});
+
+test('the band never says AMBER or RED with no cause named: the words follow the book, the latch only the light', () => {
+  const latch = new ConditionLatch();
+  latch.step('red', 0);
+  // Both calls answered: the latch holds red for its step-down, the band does not.
+  const raw = rawCondition([], [], th);
+  latch.step(raw, 100);
+  assert.equal(latch.value, 'red', 'the room light still steps down slowly');
+  const text = bandLine(latch.value, raw, whyOf([], []));
+  assert.equal(text, STANDING_DOWN);
+  assert.doesNotMatch(text ?? '', /\bRED\b|\bAMBER\b/);
+  assert.equal(bandLine('green', 'green', whyOf([], [])), null);
+  // Red latched, the stuck unit back at work and one fresh ask left: amber is the cause now, not red.
+  const left = [w('needs-you', 6, 'A-03')];
+  assert.equal(bandLine('red', rawCondition(left, [], th), whyOf(left, [])), 'CONDITION AMBER - 1 UNIT AWAITS ORDERS');
+  // With no waiters and no reminders, whatever the latch says, the band never carries RED or AMBER.
+  for (const latched of ['green', 'amber', 'red'] as const) assert.doesNotMatch(bandLine(latched, 'green', whyOf([], [])) ?? '', /\bRED\b|\bAMBER\b/);
+});
+
+test("a stuck unit's line names the quick answer too, the freshest ask first", () => {
+  const ws = [w('stuck', 12, 'D-01'), w('needs-you', 9, 'B-01'), w('needs-you', 2, 'A-03')];
+  assert.equal(conditionLine('red', whyOf(ws, [])), 'CONDITION RED - D-01 STUCK 12 MIN - +2 AWAIT ORDERS (A-03)');
+  assert.equal(conditionLine('red', whyOf([w('stuck', 12, 'D-01'), w('needs-you', 2, 'A-03')], [])), 'CONDITION RED - D-01 STUCK 12 MIN - +1 AWAITS ORDERS (A-03)');
+  assert.equal(conditionLine('red', whyOf([w('stuck', 12, 'D-01')], [])), 'CONDITION RED - D-01 STUCK 12 MIN');
 });

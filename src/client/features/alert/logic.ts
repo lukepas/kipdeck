@@ -6,7 +6,7 @@
 // with hysteresis keeps it from flickering, and the stand-down brings the lights up aft to bow.
 
 import type { ReminderKind } from '../../../shared/protocol';
-import type { ConditionName, ConditionWhy } from '../../../shared/shiplog';
+import { STANDING_DOWN, conditionLine, type ConditionName, type ConditionWhy } from '../../../shared/shiplog';
 import type { AlertSettings } from '../../state/persist';
 import type { Rig } from '../lights/modes';
 
@@ -40,12 +40,26 @@ export function rawCondition(waiters: readonly Waiter[], reminders: readonly Rem
 export function whyOf(waiters: readonly Waiter[], reminders: readonly ReminderKind[]): ConditionWhy {
   const longest = [...waiters].sort((a, b) => Number(b.level === 'stuck') - Number(a.level === 'stuck') || b.ms - a.ms)[0];
   const reminder = ALERT_REMINDERS.find((k) => reminders.includes(k)) as ConditionWhy['reminder'];
+  // A unit that needs the captain is a quick answer: named after a stuck one, the freshest ask first.
+  const asks = waiters.filter((w) => w.level === 'needs-you').sort((a, b) => a.ms - b.ms);
   return {
     waiting: waiters.length,
     stuck: waiters.filter((w) => w.level === 'stuck').length,
     ...(longest ? { top: { unit: longest.unit, min: Math.floor(longest.ms / 60_000), stuck: longest.level === 'stuck' } } : {}),
     ...(reminder ? { reminder } : {}),
+    ...(longest?.level === 'stuck' && asks.length ? { asks: { n: asks.length, unit: asks[0].unit } } : {}),
   };
+}
+
+/**
+ * What the band says about the condition: the book's condition now (`raw`) names its cause, never the
+ * latch's, so the band can't say AMBER or RED with nothing behind it. The latch only keeps the room's
+ * light from flickering; while it steps down with nothing waiting the band says it is standing down,
+ * and null once the bridge is green.
+ */
+export function bandLine(latched: Condition, raw: Condition, why: ConditionWhy): string | null {
+  if (raw !== 'green') return conditionLine(raw, why);
+  return latched === 'green' ? null : STANDING_DOWN;
 }
 
 /** How long a lower condition must hold before the latch steps down to it (ms): a unit that blinks back to work for a moment doesn't stand the bridge down. */
