@@ -12,6 +12,7 @@ import { bountySettings } from './bounty-settings';
 import { showcaseSettings } from './showcase-settings';
 import { brightnessSettings, bridgeSettings, lightSettings } from './bridge-settings';
 import { lifeSettings } from './life-settings';
+import { qualitySettings } from './quality-settings';
 import { momentSettings } from './moments-settings';
 import { ritualSettings } from './rituals-settings';
 import { icon, type IconName } from './icons';
@@ -29,7 +30,7 @@ export type SettingsPane = 'you' | 'bridge' | 'sound' | 'notify' | 'building' | 
 
 const PANES: { id: SettingsPane; icon: IconName; label: string; blurb: string }[] = [
   { id: 'you', icon: 'operator', label: 'You', blurb: 'How you look, how you see the office, and how you\'re signed in.' },
-  { id: 'bridge', icon: 'ship', label: 'Bridge', blurb: 'The lights on the bridge, how space moves outside the glass, and how much the bridge lives.' },
+  { id: 'bridge', icon: 'ship', label: 'Bridge', blurb: 'The lights on the bridge, how space moves outside the glass, how much the deck draws, and how much the bridge lives.' },
   { id: 'sound', icon: 'volume', label: 'Sound & voice', blurb: 'How loud the office is for you, and how voice chat works.' },
   { id: 'notify', icon: 'bell', label: 'Notifications', blurb: 'Hear about a unit that needs someone, or finished, while you\'re somewhere else.' },
   { id: 'building', icon: 'decks', label: 'Decks', blurb: 'Where new decks are cloned.' },
@@ -406,6 +407,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       setting('Bridge lights', 'you', ...lightSettings(() => settings, change)),
       setting('Brightness', 'you', ...brightnessSettings(() => settings, change)),
       setting('Ship motion', 'you', ...bridgeSettings(() => settings, change)),
+      setting('Quality', 'you', ...qualitySettings(() => settings, change)),
       setting('Life', 'you', ...lifeSettings(() => settings, change)),
       setting('Moments', 'you', ...momentSettings(() => settings, change)),
       setting('Rituals', 'you', ...ritualSettings(() => settings, change)),

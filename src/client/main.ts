@@ -62,6 +62,7 @@ import { installDemo } from './features/demo';
 import { installBottomBar } from './features/bottombar';
 import { makeMotion } from './motion';
 import { installLights } from './features/lights';
+import { installQuality } from './features/quality';
 import { installLife } from './features/life';
 import { installGiveWay } from './features/giveway';
 import { installDestination } from './features/destination';
@@ -160,6 +161,8 @@ parts.proofCorner = installProofCorner(ctx);
 installBeats(ctx, parts);
 installReadyLine(ctx, parts);
 installBridge(ctx, parts);
+// Before what draws more or less with it (the glow, the sky's light, the floor's gloss, the stars).
+parts.quality = installQuality(ctx, parts);
 parts.space = installSpace(ctx, parts);
 parts.lights = installLights(ctx, parts);
 installLife(ctx, parts);
@@ -260,7 +263,7 @@ void whoami().then(() => {
 
 // Debug handle for quick checks from the console / headless screenshots.
 const { worlds, views } = parts;
-(window as any).__office = { world: () => worlds.world(), store, player: parts.player, camera: ctx.camera, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, office: ctx.office, overview: parts.overview, space: parts.space, lights: parts.lights, stage: parts.stage, switchFloor: parts.travel.switchFloor, elevatorPanelOpen, carried: () => core.carrying };
+(window as any).__office = { world: () => worlds.world(), store, player: parts.player, camera: ctx.camera, workerViews: views.workerViews, departures: views.departures, arrivals: views.arrivals, scene: ctx.scene, net: parts.net, renderer: ctx.renderer, me: parts.me, remotes: parts.peers.remotes, settings: parts.settings, office: ctx.office, overview: parts.overview, space: parts.space, lights: parts.lights, quality: parts.quality, stage: parts.stage, switchFloor: parts.travel.switchFloor, elevatorPanelOpen, carried: () => core.carrying };
 (window as any).__voice = parts.voice;
 (window as any).__sound = parts.sound;
 (window as any).__notify = parts.notifier;

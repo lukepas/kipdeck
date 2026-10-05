@@ -26,6 +26,7 @@ import type { installProofCorner } from '../features/proofcorner';
 import type { installSeating } from '../features/seating';
 import type { installSpace } from '../features/space';
 import type { installLights } from '../features/lights';
+import type { installQuality } from '../features/quality';
 import type { installGiveWay } from '../features/giveway';
 import type { installVesper } from '../features/vesper';
 import type { installCrew } from '../features/crew';
@@ -110,6 +111,8 @@ export interface Parts {
   proofCorner: Made<typeof installProofCorner>;
   /** Space outside the glass: the sky, the stars, the flybys, the surge and the jump (see features/space). */
   space: Made<typeof installSpace>;
+  /** Settings > Bridge > Quality: the tier the deck draws at, Auto's or yours (see features/quality). */
+  quality: Made<typeof installQuality>;
   /** The bridge's lights: Night, Day or Auto, and Brightness (see features/lights). */
   lights: Made<typeof installLights>;
   /** Life giving way to attention, and Settings > Bridge > Life (see features/giveway). */

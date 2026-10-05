@@ -4,8 +4,8 @@
 import { SLICES } from './slices';
 import { Store } from './store';
 
-export { AVATAR_COLORS, HUD_DEFAULTS, MISSION_TABS, BRIGHTNESS_STEPS, LIFE_LEVELS, LIFE_PARTS, LIFE_PART_DEFAULTS, VOICE_MODES, CELEBRATION_MODES, ALERT_DEFAULTS, AMBER_MINUTES, RED_MINUTES, WATCH_MODES, LIGHTINGS, NEEDS_YOU_SOUNDS, SHIP_MOTIONS, lastFloor, lastHere, lastSpot, loadProfile, loadSettings, rememberSpot, saveProfile, saveSettings, stampHere } from './persist';
-export type { AlertSettings, CelebrationMode, HudPanel, LifeLevel, LifePart, Lighting, MissionTab, NeedsYouSound, Profile, Settings, ShipMotion, Spot, ViewMode, VoiceMode, WatchMode } from './persist';
+export { AVATAR_COLORS, HUD_DEFAULTS, MISSION_TABS, BRIGHTNESS_STEPS, LIFE_LEVELS, LIFE_PARTS, LIFE_PART_DEFAULTS, VOICE_MODES, CELEBRATION_MODES, ALERT_DEFAULTS, AMBER_MINUTES, RED_MINUTES, WATCH_MODES, LIGHTINGS, NEEDS_YOU_SOUNDS, QUALITIES, SHIP_MOTIONS, lastFloor, lastHere, lastSpot, loadProfile, loadSettings, rememberSpot, saveProfile, saveSettings, stampHere } from './persist';
+export type { AlertSettings, CelebrationMode, HudPanel, LifeLevel, LifePart, Lighting, MissionTab, NeedsYouSound, Profile, Quality, Settings, ShipMotion, Spot, ViewMode, VoiceMode, WatchMode } from './persist';
 export { workerForPull } from './store';
 export type { ScreenState, Slice, Store, Topic, Topics } from './store';
 

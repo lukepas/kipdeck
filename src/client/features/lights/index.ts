@@ -49,7 +49,7 @@ export type LampName = 'hemi' | 'key' | 'fill' | 'rim' | 'pods' | 'table' | 'hol
 /** What a jump shifts the room's light toward: cool going in, a warm white coming out (near grey, so no state's hue). */
 const JUMP_TINT = { cool: new THREE.Color('#A9D4FF'), warm: new THREE.Color('#FFF1E2'), by: 0.45 } as const;
 
-export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings'>): Lights {
+export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings' | 'quality'>): Lights {
   const { stage } = parts;
   const { lamps } = ctx.office;
   const demo = demoOn();
@@ -61,13 +61,15 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings'>
   let bloom: Bloom | null = null;
   let bloomLoading = false;
 
-  const bloomLook = (): BloomLook | null => (demo ? DEMO_BLOOM : LIGHT_MODES[mode ?? 'night'].bloom);
+  /** The glow as the mode has it, where the Quality tier draws one at all (none at Low). */
+  const bloomLook = (): BloomLook | null => (parts.quality.look().bloom ? (demo ? DEMO_BLOOM : LIGHT_MODES[mode ?? 'night'].bloom) : null);
 
   /** The glow as the mode has it: loaded the first time it's wanted, put away while it isn't. */
   function glow() {
     const look = bloomLook();
     if (bloom) {
       if (look) bloom.set(look);
+      bloom.scale(parts.quality.look().bloom === 'half' ? 0.5 : 1);
       bloom.on(!!look);
       return;
     }
@@ -147,6 +149,8 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings'>
     }
   });
   apply(lightModeOf(parts.settings.lighting, light), parts.settings.brightness);
+  // A tier picked or stepped down to: the glow on, off or at its size, and its targets at the new pixel ratio.
+  parts.quality.on(() => glow());
 
   const dim = (k: typeof dimBy) => {
     dimBy = k;

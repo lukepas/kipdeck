@@ -74,7 +74,7 @@ export interface Space {
   clock(): number;
 }
 
-export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | 'player' | 'giveWay' | 'alert' | 'fleet'>): Space {
+export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | 'player' | 'giveWay' | 'alert' | 'fleet' | 'quality'>): Space {
   const { scene } = parts.stage;
   scene.background = new THREE.Color(SPACE_COLORS.void);
   scene.fog = new THREE.Fog(SPACE_COLORS.void, FOG.near, FOG.far);
@@ -85,6 +85,8 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   const banner = new Banner();
   const glow = new JumpGlow();
   scene.add(sky.mesh, stars.group, flybys.far, flybys.near, tunnel.mesh, banner.mesh);
+  // Settings > Bridge > Quality: Low streams two of the star layers, the others all three.
+  parts.quality.on((_, look) => void (stars.moving = look.starLayers));
   VIEWPORT_GLASS.emissive.set(DECK.ship);
   VIEWPORT_GLASS.emissiveIntensity = 0;
 

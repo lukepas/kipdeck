@@ -61,6 +61,12 @@ export type ShipMotion = (typeof SHIP_MOTIONS)[number];
 /** The bridge's lights: Night (low light), Day (high light), or Auto, which follows the system's dark or light setting. */
 export const LIGHTINGS = ['auto', 'night', 'day'] as const;
 export type Lighting = (typeof LIGHTINGS)[number];
+/**
+ * Settings > Bridge > Quality: how much the 3D deck draws (features/quality). Auto starts from what the
+ * graphics are and steps down by itself when frames fall behind; the others hold where you put them.
+ */
+export const QUALITIES = ['auto', 'low', 'medium', 'high'] as const;
+export type Quality = (typeof QUALITIES)[number];
 /** How far Brightness steps either way from the mode's own level (each step is 12% of exposure). */
 export const BRIGHTNESS_STEPS = 2;
 
@@ -118,6 +124,8 @@ export interface Settings {
   allFloors: boolean;
   /** Settings > Bridge: how space moves outside (Off stills the whole office, as the system's reduce-motion setting does). */
   shipMotion: ShipMotion;
+  /** Settings > Bridge: Quality, how much the 3D deck draws (Auto, Low, Medium or High). */
+  quality: Quality;
   /** Settings > Bridge: the bridge's lights, and the page's colors with them (see lighting.ts). */
   lighting: Lighting;
   /** Settings > Bridge: Brightness, a whole step from -BRIGHTNESS_STEPS to BRIGHTNESS_STEPS on top of the lights' mode. */
@@ -222,7 +230,7 @@ export function rememberSpot(s: Spot) {
 }
 
 export function loadSettings(): Settings {
-  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { ...LIFE_PART_DEFAULTS }, voice: 'on', celebrations: 'full', alerts: { ...ALERT_DEFAULTS }, watch: 'full', momentum: true, turnaround: true };
+  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', quality: 'auto', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { ...LIFE_PART_DEFAULTS }, voice: 'on', celebrations: 'full', alerts: { ...ALERT_DEFAULTS }, watch: 'full', momentum: true, turnaround: true };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null');
     if (saved?.view === 'first' || saved?.view === 'third') s.view = saved.view;
@@ -236,6 +244,7 @@ export function loadSettings(): Settings {
     if (MISSION_TABS.includes(saved?.missionTab)) s.missionTab = saved.missionTab;
     if (typeof saved?.allFloors === 'boolean') s.allFloors = saved.allFloors;
     if (SHIP_MOTIONS.includes(saved?.shipMotion)) s.shipMotion = saved.shipMotion;
+    if (QUALITIES.includes(saved?.quality)) s.quality = saved.quality;
     if (LIGHTINGS.includes(saved?.lighting)) s.lighting = saved.lighting;
     if (Number.isInteger(saved?.brightness)) s.brightness = Math.max(-BRIGHTNESS_STEPS, Math.min(BRIGHTNESS_STEPS, saved.brightness));
     if (LIFE_LEVELS.includes(saved?.life)) s.life = saved.life;

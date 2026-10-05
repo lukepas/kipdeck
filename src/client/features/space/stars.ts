@@ -194,7 +194,7 @@ class Layer {
 export class Starfield {
   readonly group = new THREE.Group();
   private readonly layers: Layer[];
-  /** How many layers move: Settings > Effects at Low leaves only the far one. */
+  /** How many layers show and move, far first: Settings > Bridge > Quality at Low leaves the far two (features/quality). */
   moving = LAYERS.length;
 
   constructor() {
@@ -211,6 +211,7 @@ export class Starfield {
     this.layers.forEach((l, i) => {
       l.points.visible = i < this.moving || i === 0;
       l.step(i < this.moving ? dt : 0, speed, i === 0 ? 0 : streak, stretch);
+      l.streaks.visible &&= l.points.visible;
     });
   }
 
