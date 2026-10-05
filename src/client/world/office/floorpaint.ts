@@ -1,5 +1,6 @@
 import { UPSTREAM_CREDIT_SHORT } from '../../../shared/copy';
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { BEANBAGS, FLOOR, GRID, MISSION_TABLE, PODS, POD_LETTERS, READY_LINE, TITLE_BLOCK, readySpot } from '../../../shared/layout';
 import { fontsReady, stretch } from '../toon';
 import type { Fixture } from './fixture';
@@ -41,12 +42,85 @@ export function floorDecal(w: number, d: number, px: number, paint: (g: CanvasRe
   return { mesh, canvas, texture };
 }
 
+/**
+ * Small decals that never change, painted into one canvas and laid as one mesh: one draw for all of
+ * them where each was a draw (and a texture) of its own. Each keeps its own size and place on the floor.
+ */
+class DecalSheet {
+  private items: { w: number; d: number; W: number; H: number; paint: (g: CanvasRenderingContext2D, W: number, H: number) => void; x: number; z: number; turn: number; cx: number; cy: number }[] = [];
+
+  /** A decal `w` by `d` meters at `px` pixels a meter, painted by `paint`, lying at (x, z) turned `turn` about y. */
+  add(w: number, d: number, px: number, paint: (g: CanvasRenderingContext2D, W: number, H: number) => void, x: number, z: number, turn = 0) {
+    this.items.push({ w, d, W: Math.round(w * px), H: Math.round(d * px), paint, x, z, turn, cx: 0, cy: 0 });
+  }
+
+  /** The sheet as one mesh, or null with nothing on it. */
+  build(): THREE.Mesh | null {
+    if (!this.items.length) return null;
+    // Shelves, tallest first, with a gutter so mipmaps don't bleed one decal into the next.
+    const PAD = 6;
+    const WIDTH = 2048;
+    const order = [...this.items].sort((a, b) => b.H - a.H);
+    let x = 0;
+    let y = 0;
+    let shelf = 0;
+    for (const it of order) {
+      if (x + it.W + PAD > WIDTH) {
+        x = 0;
+        y += shelf + PAD;
+        shelf = 0;
+      }
+      it.cx = x + PAD / 2;
+      it.cy = y + PAD / 2;
+      x += it.W + PAD;
+      shelf = Math.max(shelf, it.H);
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = WIDTH;
+    canvas.height = y + shelf + PAD;
+    const g = canvas.getContext('2d')!;
+    const paintAll = () => {
+      g.clearRect(0, 0, canvas.width, canvas.height);
+      for (const it of this.items) {
+        g.save();
+        g.translate(it.cx, it.cy);
+        g.beginPath();
+        g.rect(0, 0, it.W, it.H);
+        g.clip();
+        it.paint(g, it.W, it.H);
+        g.restore();
+      }
+    };
+    paintAll();
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.anisotropy = 8;
+    void fontsReady().then(() => {
+      paintAll();
+      texture.needsUpdate = true;
+    });
+    const CW = canvas.width;
+    const CH = canvas.height;
+    const geos = this.items.map((it) => {
+      const geo = new THREE.PlaneGeometry(it.w, it.d);
+      const uv = geo.attributes.uv as THREE.BufferAttribute;
+      for (let i = 0; i < uv.count; i++) uv.setXY(i, (it.cx + uv.getX(i) * it.W) / CW, 1 - (it.cy + (1 - uv.getY(i)) * it.H) / CH);
+      return geo.rotateX(-Math.PI / 2).rotateY(it.turn).translate(it.x, 0.006, it.z);
+    });
+    const mesh = new THREE.Mesh(mergeGeometries(geos, false)!, paintMat(texture));
+    for (const geo of geos) geo.dispose();
+    mesh.renderOrder = 1;
+    mesh.receiveShadow = true;
+    return mesh;
+  }
+}
+
 const UI = (weight: number, size: number) => `${weight} ${size}px Archivo, system-ui, sans-serif`;
 const MONO = (size: number) => `500 ${size}px "JetBrains Mono", ui-monospace, monospace`;
 
 /** A column bubble: a ruled circle with its letter or number in the wide stencil face. */
-function bubble(text: string): THREE.Mesh {
-  return floorDecal(0.9, 0.9, 160, (g, W, H) => {
+function bubble(text: string): (g: CanvasRenderingContext2D, W: number, H: number) => void {
+  return (g, W, H) => {
     g.strokeStyle = DECK.steel;
     g.lineWidth = 6;
     g.beginPath();
@@ -58,28 +132,20 @@ function bubble(text: string): THREE.Mesh {
     g.textAlign = 'center';
     g.textBaseline = 'middle';
     g.fillText(text, W / 2, H / 2 + 4);
-  }).mesh;
+  };
 }
 
 /** The column bubbles: letters along the north and south edges, numbers down the west and east, a short tick at each column line. */
-function gridMarks(group: THREE.Group) {
+function gridMarks(group: THREE.Group, sheet: DecalSheet) {
   const inset = 0.75;
   const tickMat = solid(DECK.steel);
   for (let c = 0; c < GRID.cols.length; c++) {
     const x = FLOOR.minX + (c + 0.5) * GRID.step;
-    for (const z of [FLOOR.minZ + inset, FLOOR.maxZ - inset]) {
-      const b = bubble(GRID.cols[c]);
-      b.position.set(x, 0.006, z);
-      group.add(b);
-    }
+    for (const z of [FLOOR.minZ + inset, FLOOR.maxZ - inset]) sheet.add(0.9, 0.9, 160, bubble(GRID.cols[c]), x, z);
   }
   for (let r = 0; r < GRID.rows; r++) {
     const z = Math.min(FLOOR.maxZ - inset, FLOOR.minZ + (r + 0.5) * GRID.step);
-    for (const x of [FLOOR.minX + inset, FLOOR.maxX - inset]) {
-      const b = bubble(String(r + 1));
-      b.position.set(x, 0.006, z);
-      group.add(b);
-    }
+    for (const x of [FLOOR.minX + inset, FLOOR.maxX - inset]) sheet.add(0.9, 0.9, 160, bubble(String(r + 1)), x, z);
   }
   // Where each column line meets the edge: a tick 1.2 m in from the wall.
   for (let x = FLOOR.minX + GRID.step; x < FLOOR.maxX - 0.01; x += GRID.step) {
@@ -112,7 +178,7 @@ function arc(r: number, width: number, a0: number, a1: number, mat: THREE.Materi
  * Each pod's ready line: a 6 cm double stripe on the arc in front of it, a tick across it where each
  * unit that needs someone stands (readySpot), and the tick's number beside it, nearest the table.
  */
-function readyLines(group: THREE.Group) {
+function readyLines(group: THREE.Group, sheet: DecalSheet) {
   const stripe = solid(DECK.signal, 0.42);
   const tick = solid(DECK.signal, 0.7);
   for (const [p, pod] of PODS.entries()) {
@@ -127,16 +193,15 @@ function readyLines(group: THREE.Group) {
       t.rotation.y = -a + Math.PI / 2;
       t.renderOrder = 1;
       group.add(t);
-      const n = floorDecal(0.32, 0.32, 160, (g, W, H) => {
+      const inner = READY_LINE.r - 0.3;
+      const number = (g: CanvasRenderingContext2D, W: number, H: number) => {
         g.fillStyle = DECK.muted;
         g.font = MONO(34);
         g.textAlign = 'center';
         g.textBaseline = 'middle';
         g.fillText(String(k), W / 2, H / 2);
-      }).mesh;
-      const inner = READY_LINE.r - 0.3;
-      n.position.set(MISSION_TABLE.x + Math.cos(a) * inner, 0.006, MISSION_TABLE.z + Math.sin(a) * inner);
-      group.add(n);
+      };
+      sheet.add(0.32, 0.32, 160, number, MISSION_TABLE.x + Math.cos(a) * inner, MISSION_TABLE.z + Math.sin(a) * inner);
     }
   }
 }
@@ -271,8 +336,12 @@ declare module '../types' {
 /** The floor's paint: the grid's bubbles, the ready lines, the bench's stencil and the title block. */
 export const floorPaint: Fixture<'titleBlock'> = (site) => {
   const group = new THREE.Group();
-  gridMarks(group);
-  readyLines(group);
+  // The bubbles and the ready lines' numbers: one sheet, one draw.
+  const sheet = new DecalSheet();
+  gridMarks(group, sheet);
+  readyLines(group, sheet);
+  const marks = sheet.build();
+  if (marks) group.add(marks);
   standby(group);
   const tb = TITLE_BLOCK;
   let info: TitleInfo = { deck: 'Lobby' };

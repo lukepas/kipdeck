@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { DECK, flat, matte, matteUnique, practical } from '../office/materials';
 import { mesh, textPlane } from '../toon';
 import { drawMark } from '../office/floorpaint';
@@ -7,6 +8,11 @@ import { drawMark } from '../office/floorpaint';
 // chest and the Formation mark on its chest plate (the one thing on it that is the brand's own), a flat
 // head plate with a dark visor strip, short tapered arm blades, and a provider stripe down its back plate. Forward is +z, its origin is where it docks (the stool's pad, or the floor),
 // and it stands 1.3 m before its seat scales it. Built once per unit from shared shapes.
+//
+// Drawn in few pieces: the shell (hover column, torso, head plate, its bevel and both arm blades) is
+// one skinned mesh over three bones (the figure, and each arm's pivot), so it is one draw and one
+// shadow draw where it was six and five; the steel (the disc under the column and the neck) is one
+// more. Twelve units on a deck were nearly a third of the frame's draws before.
 
 /** Heights (m, unscaled) the rest of the unit lines up with. */
 export const UNIT = {
@@ -78,14 +84,102 @@ function makeShapes() {
   };
 }
 
+/** Where the arms hang from, and how far out they lean (rad about z). */
+const ARM_X = 0.245;
+const ARM_TILT = 0.12;
+
+/** `geo` moved by `m`, with every vertex bound wholly to bone `bone`. */
+function boneBaked(geo: THREE.BufferGeometry, m: THREE.Matrix4, bone: number): THREE.BufferGeometry {
+  const g = geo.clone().applyMatrix4(m);
+  const n = g.attributes.position.count;
+  const index = new Uint16Array(n * 4);
+  const weight = new Float32Array(n * 4);
+  for (let i = 0; i < n; i++) {
+    index[i * 4] = bone;
+    weight[i * 4] = 1;
+  }
+  g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(index, 4));
+  g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(weight, 4));
+  return g;
+}
+
+const at = (x: number, y: number, z: number) => new THREE.Matrix4().makeTranslation(x, y, z);
+
+let shellGeo: THREE.BufferGeometry | null = null;
+/** The shell's parts in the figure's own space, bone 0 the figure and bones 1 and 2 the arm pivots. Shared by every unit. */
+function shellGeometry(s: ReturnType<typeof makeShapes>): THREE.BufferGeometry {
+  if (shellGeo) return shellGeo;
+  const arm = (side: number, bone: number) =>
+    boneBaked(s.blade, new THREE.Matrix4().makeTranslation(side * ARM_X, UNIT.shoulder, 0).multiply(new THREE.Matrix4().makeRotationZ(side * ARM_TILT)).multiply(at(0, -0.17, 0)), bone);
+  const parts = [
+    boneBaked(s.column, at(0, UNIT.hover + 0.2, 0), 0),
+    boneBaked(s.torso, at(0, 0.72, 0), 0),
+    boneBaked(s.head, at(0, UNIT.head, 0), 0),
+    boneBaked(s.crown, at(0, UNIT.top - 0.015, -0.01), 0),
+    arm(-1, 1),
+    arm(1, 2),
+  ];
+  shellGeo = mergeGeometries(parts, false)!;
+  for (const g of parts) g.dispose();
+  shellGeo.computeBoundingSphere();
+  return shellGeo;
+}
+
+let steelGeo: THREE.BufferGeometry | null = null;
+/** The disc under the column and the neck, as one. */
+function steelGeometry(s: ReturnType<typeof makeShapes>): THREE.BufferGeometry {
+  if (steelGeo) return steelGeo;
+  const parts = [s.disc.clone().applyMatrix4(at(0, UNIT.hover + 0.025, 0)), s.neck.clone().applyMatrix4(at(0, 1.065, 0))];
+  steelGeo = mergeGeometries(parts, false)!;
+  for (const g of parts) g.dispose();
+  return steelGeo;
+}
+
+let lightsGeo: THREE.BufferGeometry | null = null;
+/**
+ * The unit's lights as one: the band round its chest (0), the visor strip (1) and the lit hairline on
+ * the head plate (2), each vertex tagged with which it is (the `part` attribute).
+ */
+function lightsGeometry(s: ReturnType<typeof makeShapes>): THREE.BufferGeometry {
+  if (lightsGeo) return lightsGeo;
+  const tagged = (geo: THREE.BufferGeometry, m: THREE.Matrix4, part: number) => {
+    const g = geo.clone().applyMatrix4(m);
+    g.setAttribute('part', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count).fill(part), 1));
+    return g;
+  };
+  const parts = [tagged(s.band, at(0, UNIT.band, 0), 0), tagged(s.visor, at(0, UNIT.head + 0.005, 0.131), 1), tagged(s.edge, at(0, UNIT.top - 0.001, 0.1), 2)];
+  lightsGeo = mergeGeometries(parts, false)!;
+  for (const g of parts) g.dispose();
+  return lightsGeo;
+}
+
+/**
+ * The material the lights are drawn with: unlit, each part in its own colour, read live from `band`,
+ * `visor` and `edge` (so setting `band.color` repaints the band as before). One program for every unit.
+ */
+function lightsMaterial(band: THREE.Color, visor: THREE.Color, edge: THREE.Color): THREE.MeshBasicMaterial {
+  const m = new THREE.MeshBasicMaterial({ toneMapped: false, side: THREE.DoubleSide, fog: false });
+  m.onBeforeCompile = (shader) => {
+    shader.uniforms.uBand = { value: band };
+    shader.uniforms.uVisor = { value: visor };
+    shader.uniforms.uEdge = { value: edge };
+    shader.vertexShader = shader.vertexShader.replace('#include <common>', 'attribute float part;\nvarying float vPart;\n#include <common>').replace('#include <begin_vertex>', '#include <begin_vertex>\n  vPart = part;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', 'uniform vec3 uBand;\nuniform vec3 uVisor;\nuniform vec3 uEdge;\nvarying float vPart;\n#include <common>')
+      .replace('vec4 diffuseColor = vec4( diffuse, opacity );', 'vec4 diffuseColor = vec4( vPart < 0.5 ? uBand : ( vPart < 1.5 ? uVisor : uEdge ), opacity );');
+  };
+  m.customProgramCacheKey = () => 'unit-lights';
+  return m;
+}
+
 export interface UnitBody {
   /** Everything that moves as the figure: leans, slumps and turns. */
   figure: THREE.Group;
   /** The shell's meshes, to swap between tones (see Shell). */
   shell: THREE.Mesh[];
-  /** The chest band: its color is the unit's state. */
+  /** The chest band: its color is the unit's state. Only its colour is read (the lights are one mesh). */
   band: THREE.MeshBasicMaterial;
-  /** The visor strip: dark, flickering with the unit's terminal output. */
+  /** The visor strip: dark, flickering with the unit's terminal output. Only its colour is read. */
   visor: THREE.MeshBasicMaterial;
   /** The glow under the hover base. */
   under: THREE.MeshBasicMaterial;
@@ -94,6 +188,8 @@ export interface UnitBody {
   armR: THREE.Object3D;
   /** The provider's letters on the visor (see setGlyph). */
   glyphAt: THREE.Group;
+  /** Its small parts, left out from far off (Quality's detail range): the steel, the stripe, the chest mark and the letters. */
+  details: THREE.Object3D[];
 }
 
 /** A unit's body, in neutral steel until its state and provider are set. */
@@ -102,52 +198,65 @@ export function buildUnit(): UnitBody {
   const s = shapes;
   const figure = new THREE.Group();
   const shell: THREE.Mesh[] = [];
-  const add = (geo: THREE.BufferGeometry, mat: THREE.Material, x: number, y: number, z: number, shadow = true, parent: THREE.Object3D = figure) => {
+  const add = (geo: THREE.BufferGeometry, mat: THREE.Material, x: number, y: number, z: number, shadow = true) => {
     const m = mesh(geo, mat, x, y, z, shadow);
-    parent.add(m);
+    figure.add(m);
     return m;
   };
   const body = SHELL.live();
   const steel = matte(DECK.steel, { metalness: 0.15, roughness: 0.7, flat: true });
-  // The hover base: a faceted column on a disc, a glow under it, and the gap below. The small parts
-  // inside the big ones' shadow (the disc under the column, the neck, the crown on the head) cast none
-  // of their own: a shadow draw each, for nothing anyone could see.
-  add(s.disc, steel, 0, UNIT.hover + 0.025, 0, false);
-  const under = new THREE.MeshBasicMaterial({ color: DECK.working, toneMapped: false, transparent: true, opacity: 0.55, depthWrite: false });
-  add(s.glow, under, 0, UNIT.hover - 0.002, 0, false);
-  shell.push(add(s.column, body, 0, UNIT.hover + 0.2, 0));
-  // The torso, the band round its chest, and the provider stripe down its back.
-  shell.push(add(s.torso, body, 0, 0.72, 0));
-  const band = new THREE.MeshBasicMaterial({ color: DECK.working, toneMapped: false, side: THREE.DoubleSide, fog: false });
-  add(s.band, band, 0, UNIT.band, 0, false);
-  const stripe = matte(DECK.muted, { flat: true }).clone();
-  add(s.stripe, stripe, 0, 0.72, -0.155, false);
-  // The Formation mark on the chest plate, above the band.
-  const mark = new THREE.MeshBasicMaterial({ map: chestMark(), transparent: true, toneMapped: false, depthWrite: false });
-  add(s.mark, mark, 0, 0.905, 0.148, false);
-  // The head plate on its neck, a thinner plate on top for the bevel, and the visor across its face.
-  add(s.neck, steel, 0, 1.065, 0, false);
-  shell.push(add(s.head, body, 0, UNIT.head, 0));
-  shell.push(add(s.crown, body, 0, UNIT.top - 0.015, -0.01, false));
-  // A lit hairline along the head plate's top front edge: it holds the silhouette against the slate.
-  add(s.edge, practical(DECK.steel), 0, UNIT.top - 0.001, 0.1, false);
-  const visor = new THREE.MeshBasicMaterial({ color: '#0E151C', toneMapped: false });
-  add(s.visor, visor, 0, UNIT.head + 0.005, 0.131, false);
-  const glyphAt = new THREE.Group();
-  glyphAt.position.set(0.1, UNIT.head + 0.005, 0.139);
-  figure.add(glyphAt);
-  // Arm blades from the shoulders, hanging a little out from the torso.
+  // The shell: the hover column, the torso, the head plate and its bevel, and both arm blades, one
+  // skinned mesh. The figure itself is bone 0 and each arm's pivot a bone, so posture and gestures
+  // turn the arms as before. It casts the figure's one shadow.
+  const root = new THREE.Bone();
   const arm = (x: number) => {
-    const pivot = new THREE.Group();
+    const pivot = new THREE.Bone();
     pivot.position.set(x, UNIT.shoulder, 0);
-    pivot.rotation.z = Math.sign(x) * 0.12;
-    shell.push(add(s.blade, body, 0, -0.17, 0, true, pivot));
+    pivot.rotation.z = Math.sign(x) * ARM_TILT;
     figure.add(pivot);
     return pivot;
   };
-  const armL = arm(-0.245);
-  const armR = arm(0.245);
-  return { figure, shell, band, visor, under, stripe, armL, armR, glyphAt };
+  figure.add(root);
+  const armL = arm(-ARM_X);
+  const armR = arm(ARM_X);
+  const hull = new THREE.SkinnedMesh(shellGeometry(s), body);
+  hull.castShadow = true;
+  hull.receiveShadow = true;
+  figure.add(hull);
+  figure.updateMatrixWorld(true);
+  hull.bind(new THREE.Skeleton([root, armL, armR]));
+  shell.push(hull);
+  // The hover base's disc and the neck in one, the glow under the base, and the gap below. The small
+  // parts inside the shell's shadow cast none of their own: a shadow draw each, for nothing anyone could see.
+  const steelMesh = add(steelGeometry(s), steel, 0, 0, 0, false);
+  const under = new THREE.MeshBasicMaterial({ color: DECK.working, toneMapped: false, transparent: true, opacity: 0.55, depthWrite: false });
+  add(s.glow, under, 0, UNIT.hover - 0.002, 0, false);
+  // The band round its chest, the visor and the lit hairline along the head plate's top front edge
+  // (it holds the silhouette against the slate): one mesh, each part in its own colour.
+  const band = new THREE.MeshBasicMaterial({ color: DECK.working });
+  const visor = new THREE.MeshBasicMaterial({ color: '#0E151C' });
+  const lit = lightsMaterial(band.color, visor.color, practical(DECK.steel).color);
+  add(lightsGeometry(s), lit, 0, 0, 0, false);
+  lights.set(band, lit);
+  // The provider stripe down its back.
+  const stripe = matte(DECK.muted, { flat: true }).clone();
+  const stripeMesh = add(s.stripe, stripe, 0, 0.72, -0.155, false);
+  // The Formation mark on the chest plate, above the band.
+  const mark = new THREE.MeshBasicMaterial({ map: chestMark(), transparent: true, toneMapped: false, depthWrite: false });
+  const markMesh = add(s.mark, mark, 0, 0.905, 0.148, false);
+  const glyphAt = new THREE.Group();
+  glyphAt.position.set(0.1, UNIT.head + 0.005, 0.139);
+  figure.add(glyphAt);
+  return { figure, shell, band, visor, under, stripe, armL, armR, glyphAt, details: [steelMesh, stripeMesh, markMesh, glyphAt] };
+}
+
+/** Each unit's lights material, by its band (what worker.ts holds), to dispose of with it. */
+const lights = new WeakMap<THREE.Material, THREE.Material>();
+
+/** Lets go of the unit's own materials (its band, visor, glow and stripe, and the lights drawn with them). */
+export function disposeUnit(u: UnitBody) {
+  lights.get(u.band)?.dispose();
+  for (const m of [u.band, u.visor, u.under, u.stripe]) m.dispose();
 }
 
 /** Paints the shell in `tone`. */

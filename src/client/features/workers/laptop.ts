@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { FLAG_BOLD, FLAG_DIM, FLAG_INVERSE, RGB_FLAG, type Run } from '../../../shared/protocol';
 import { mesh } from '../../world/toon';
 import { DECK, flat, practical } from '../../world/office/materials';
@@ -122,12 +123,39 @@ export function paintScreen(ctx: CanvasRenderingContext2D, w: number, h: number,
   }
 }
 
+let shellGeo: THREE.BufferGeometry | null = null;
+/**
+ * The laptop's shell in the laptop's own space with the lid open flat (rotation 0): the plinth on
+ * bone 0, the bezel on bone 1 (the lid's hinge, 14 mm up and 5 cm back). Shared by every laptop.
+ */
+function shellGeometry(): THREE.BufferGeometry {
+  if (shellGeo) return shellGeo;
+  const bound = (geo: THREE.BufferGeometry, x: number, y: number, z: number, bone: number) => {
+    const g = geo.translate(x, y, z);
+    const n = g.attributes.position.count;
+    const index = new Uint16Array(n * 4);
+    const weight = new Float32Array(n * 4);
+    for (let i = 0; i < n; i++) {
+      index[i * 4] = bone;
+      weight[i * 4] = 1;
+    }
+    g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(index, 4));
+    g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(weight, 4));
+    return g;
+  };
+  const parts = [bound(new THREE.BoxGeometry(0.3, 0.014, 0.1), 0, 0.007, -0.05, 0), bound(new THREE.BoxGeometry(0.41, 0.255, 0.018), 0, 0.014 + 0.1275, -0.05, 1)];
+  shellGeo = mergeGeometries(parts, false)!;
+  for (const g of parts) g.dispose();
+  return shellGeo;
+}
+
 export class Laptop {
   readonly root = new THREE.Group();
   private canvas = document.createElement('canvas');
   private ctx: CanvasRenderingContext2D;
   private texture: THREE.CanvasTexture;
-  private lid = new THREE.Group();
+  private lid = new THREE.Bone();
+  private hairline: THREE.Mesh;
   private drawnVersion = -1;
   private paintedAt = 0;
   private openT = 0;
@@ -144,18 +172,33 @@ export class Laptop {
 
     // The screen: a slim slab with a dark bezel, hinged on a low plinth at its foot. It lies flat
     // while the unit comes in and tilts up, leaning well back so the unit shows over it from the table.
+    // The bezel and the plinth are one skinned mesh over two bones (the laptop, and the lid's hinge),
+    // so the lid tilts as before and the laptop's shell is one draw and one shadow draw.
     this.lid.position.set(0, 0.014, -0.05);
     this.root.add(this.lid);
     const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.385, 0.231), new THREE.MeshBasicMaterial({ map: this.texture, toneMapped: false }));
     screen.position.set(0, 0.1275, 0.0095);
     this.lid.add(screen);
-    this.lid.add(mesh(new THREE.BoxGeometry(0.41, 0.255, 0.018), flat(DECK.console), 0, 0.1275, 0));
-    // A hairline along its foot, lit: the console is live.
-    this.lid.add(mesh(new THREE.BoxGeometry(0.36, 0.004, 0.004), practical(DECK.steel), 0, 0.002, 0.012, false));
-    this.root.add(mesh(new THREE.BoxGeometry(0.3, 0.014, 0.1), flat(DECK.consoleTop), 0, 0.007, -0.05));
+    const base = new THREE.Bone();
+    this.root.add(base);
+    this.lid.rotation.x = 0;
+    this.root.updateMatrixWorld(true);
+    const shell = new THREE.SkinnedMesh(shellGeometry(), flat(DECK.console));
+    shell.castShadow = true;
+    shell.receiveShadow = true;
+    this.root.add(shell);
+    shell.bind(new THREE.Skeleton([base, this.lid]));
+    // A hairline along its foot, lit: the console is live. Left out from far off (setDetail).
+    this.hairline = mesh(new THREE.BoxGeometry(0.36, 0.004, 0.004), practical(DECK.steel), 0, 0.002, 0.012, false);
+    this.lid.add(this.hairline);
     this.lid.rotation.x = Math.PI / 2; // lying flat; tilts up as it boots
     paintScreen(this.ctx, this.canvas.width, this.canvas.height, undefined, this.placeholder);
     this.texture.needsUpdate = true;
+  }
+
+  /** Whether its small parts are drawn: the hairline is left out from far off (Quality's detail range). */
+  setDetail(on: boolean) {
+    this.hairline.visible = on;
   }
 
   setPlaceholder(text: string) {

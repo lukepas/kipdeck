@@ -61,13 +61,34 @@ export interface TierLook {
   aa: 'smaa' | 'fxaa' | null;
   grade: boolean;
   character: boolean;
+  /**
+   * How far off (m) a unit's small parts are still drawn: the disc and neck under it, the provider
+   * stripe down its back, the mark on its chest, its provider's letters on the visor, its soft contact
+   * shadow (the inlay under its ring still grounds it), and the lit hairline on its laptop. Each is a draw of its own and a few pixels from further off. The marks
+   * that say its state (the band, the ring, the glyph and the callout) are drawn at every distance.
+   */
+  detail: number;
 }
 
 export const TIER_LOOKS: Readonly<Record<Tier, TierLook>> = {
-  high: { pixelRatio: 1.5, bloom: 'full', shadow: { size: 2048, everyMs: 0 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'all', motes: 1500, cookie: true, outsideLight: true, mirror: true, parallax: 4, flare: true, aa: 'smaa', grade: true, character: true },
-  medium: { pixelRatio: 1.25, bloom: 'half', shadow: { size: 1024, everyMs: 50 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'bow', motes: 800, cookie: true, outsideLight: true, mirror: false, parallax: 3, flare: true, aa: 'fxaa', grade: true, character: true },
-  low: { pixelRatio: 1, bloom: null, shadow: { size: 1024, everyMs: null }, skyLight: false, roomLight: false, glossFloor: false, starLayers: 2, shafts: null, motes: 0, cookie: false, outsideLight: false, mirror: false, parallax: 1, flare: false, aa: null, grade: false, character: false },
+  high: { pixelRatio: 1.5, bloom: 'full', shadow: { size: 2048, everyMs: 0 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'all', motes: 1500, cookie: true, outsideLight: true, mirror: true, parallax: 4, flare: true, aa: 'smaa', grade: true, character: true, detail: 20 },
+  medium: { pixelRatio: 1.25, bloom: 'half', shadow: { size: 1024, everyMs: 50 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'bow', motes: 800, cookie: true, outsideLight: true, mirror: false, parallax: 3, flare: true, aa: 'fxaa', grade: true, character: true, detail: 13 },
+  low: { pixelRatio: 1, bloom: null, shadow: { size: 1024, everyMs: null }, skyLight: false, roomLight: false, glossFloor: false, starLayers: 2, shafts: null, motes: 0, cookie: false, outsideLight: false, mirror: false, parallax: 1, flare: false, aa: null, grade: false, character: false, detail: 7 },
 };
+
+/**
+ * The most draw calls a frame from the conn may make at each tier, as design/perf-probe.mjs counts
+ * them (renderer.info over one frame, the shadow pass included where the tier draws it every frame),
+ * with twelve units at work. The probe says whether each run kept to it.
+ */
+export const DRAW_BUDGET: Readonly<Record<Tier, number>> = { high: 400, medium: 330, low: 280 };
+
+/**
+ * The most the motion layer (everything Ship motion turns off) may add to a frame, in ms, at each
+ * tier: measured by the probe as Ship motion on against off, GPU time where the browser can time it
+ * and the frame's CPU time otherwise.
+ */
+export const MOTION_BUDGET_MS: Readonly<Record<Tier, number>> = { high: 0.6, medium: 0.4, low: 0.2 };
 
 /**
  * The tier Auto starts from for the graphics the browser names (WEBGL_debug_renderer_info): Apple's

@@ -6,7 +6,7 @@ import { isAsleep, type WorkerPr } from '../../../shared/status';
 import { contactShadow, DECK } from '../office/materials';
 import { GLYPH_HUE, type GlyphKind } from '../glyphs';
 import { disposeSprite } from '../toon';
-import { UNIT, buildUnit, paintShell, setGlyph, type Shell, type UnitBody } from './unit-body';
+import { UNIT, buildUnit, disposeUnit, paintShell, setGlyph, type Shell, type UnitBody } from './unit-body';
 import { calloutSprite, clip, type CalloutText } from './unit-callout';
 import { CalloutDocking } from './callout-dock';
 import { GLYPH_SCREEN, GroundRing, glyphSprite, setGlyphKind } from './unit-marks';
@@ -190,6 +190,13 @@ export class Worker {
   /** What moves as its body (leans, slumps, turns): where its shoulder marks hang from (features/crew). */
   get figure(): THREE.Object3D {
     return this.body.figure;
+  }
+
+  /** Whether its small parts are drawn (the steel, the stripe, the chest mark, the letters, the contact shadow): not from far off. */
+  setDetail(on: boolean) {
+    for (const d of this.body.details) d.visible = on;
+    // The soft contact shadow too: the inlay under its ring grounds it from further off.
+    this.shadow.visible = on;
   }
 
   /** Its arms, left and right: a celebration's gesture is laid over their pose for a moment (features/moments). */
@@ -566,6 +573,6 @@ export class Worker {
     setGlyph(this.body, '');
     this.ring.dispose();
     this.glyph.material.dispose();
-    for (const m of [this.body.band, this.body.visor, this.body.under, this.body.stripe]) m.dispose();
+    disposeUnit(this.body);
   }
 }

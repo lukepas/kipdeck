@@ -46,6 +46,8 @@ export interface WorkerView {
   near: boolean;
   /** The screen version its visor last flickered for. */
   printed: number;
+  /** Its small parts are drawn: it's within Quality's detail range (see TierLook.detail). */
+  detail: boolean;
 }
 
 /** How close (meters) the camera comes before a unit's callout shows its task, and how far it goes before it's one line again. */
@@ -54,7 +56,7 @@ const NEAR_LEAVE = 7.5;
 /** How much further off a unit that needs you, or is stuck, shows all it has. */
 const URGENT_NEAR = 2;
 
-export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'notifier' | 'waiting' | 'peers' | 'overview'>;
+export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'notifier' | 'waiting' | 'peers' | 'overview' | 'quality'>;
 
 /**
  * Registers what follows the workers, the floor plan, the meeting, the pull requests and
@@ -104,7 +106,7 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
         const laptop = new Laptop();
         desk.laptopAnchor.add(laptop.root);
         desk.chair.rotation.y = 0;
-        v = { model, laptop, deskId: w.deskId, status: '', acked: true, near: false, printed: -2 };
+        v = { model, laptop, deskId: w.deskId, status: '', acked: true, near: false, printed: -2, detail: true };
         workerViews.set(w.id, v);
       }
       if (v.status !== w.status || v.acked !== w.acked) {
@@ -214,6 +216,7 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     Worker.screen = (at) => (ov?.active() ? ov.camera.top - ov.camera.bottom : 2 * Math.tan(halfFov) * camera.position.distanceTo(at));
     // From the Overview the units that need you or are stuck are tagged half again as big.
     Worker.urgentBoost = ov?.active() ? 1.5 : 1;
+    const range = parts.quality.look().detail;
     for (const [id, v] of workerViews) {
       const desk = OFFICE_PLAN.byId.get(v.deskId)!;
       // Near enough to read: its callout shows its task and how long it has been this way.
@@ -222,6 +225,13 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
       const reach = (v.model.urgent ? URGENT_NEAR : 1) * (v.near ? NEAR_LEAVE : NEAR);
       v.near = !parts.overview?.active() && d < reach;
       v.model.setNear(v.near);
+      // Its small parts (and its laptop's) only within Quality's detail range, a little past it to leave.
+      const detail = d < range * (v.detail ? 1.08 : 1);
+      if (detail !== v.detail) {
+        v.detail = detail;
+        v.model.setDetail(detail);
+        v.laptop.setDetail(detail);
+      }
       // Its visor flickers as its terminal prints.
       const version = store.screens.get(id)?.version ?? -1;
       if (version !== v.printed) {
@@ -232,7 +242,11 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
       // A board agent's kiosk has no laptop to paint (see buildKiosk).
       if (!desk.station) v.laptop.update(dt, store.screens.get(id), Math.hypot(desk.x - camPos.x, desk.z - camPos.z));
     }
-    for (const a of parts.worlds.idleAgents()) if (a.view.vacancy.visible) a.model.update(dt, t);
+    for (const a of parts.worlds.idleAgents()) {
+      if (!a.view.vacancy.visible) continue;
+      a.model.setDetail(a.model.where(workerPos).distanceTo(camPos) < range);
+      a.model.update(dt, t);
+    }
     departures.update(dt, t);
     arrivals.update(dt);
   });

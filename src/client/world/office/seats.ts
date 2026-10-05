@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { BEANBAGS, DESKS, DESK_SIZE, FLOOR, KIOSK, SEATING_BY_ID, STATIONS, STATION_AGENT, deskSeat, type DeskDef, type StationKind } from '../../../shared/layout';
 import { deskPoint } from '../../../shared/nav';
 import { mesh, textPlane } from '../toon';
@@ -91,12 +92,15 @@ export function buildDesk(def: DeskDef, index: number): DeskView {
   return { def, group, laptopAnchor, seatAnchor, chair: ch, vacancy, vacancyY };
 }
 
+let plusShape: THREE.BufferGeometry | undefined;
+
 /** The open-seat mark over a free console: a slim steel plus, lit, turning slowly. */
 export function vacancyMarker(y: number): THREE.Group {
   const vacancy = new THREE.Group();
   const lit = practical(DECK.steelLight);
-  vacancy.add(mesh(box(0.2, 0.03, 0.03), lit, 0, 0, 0, false));
-  vacancy.add(mesh(box(0.03, 0.2, 0.03), lit, 0, 0, 0, false));
+  // Both bars as one mesh: a draw for the mark, not one a bar.
+  plusShape ??= mergeGeometries([box(0.2, 0.03, 0.03), box(0.03, 0.2, 0.03)], false)!;
+  vacancy.add(mesh(plusShape, lit, 0, 0, 0, false));
   vacancy.position.set(0, y, 0);
   return vacancy;
 }
