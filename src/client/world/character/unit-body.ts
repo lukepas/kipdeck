@@ -250,6 +250,12 @@ export function buildUnit(): UnitBody {
   return { figure, shell, band, visor, under, stripe, armL, armR, glyphAt, details: [steelMesh, stripeMesh, markMesh, glyphAt] };
 }
 
+/** The shared shell and lights geometries, for tests/unit-body.test.ts. */
+export function unitGeometries(): { shell: THREE.BufferGeometry; lights: THREE.BufferGeometry; steel: THREE.BufferGeometry } {
+  shapes ??= makeShapes();
+  return { shell: shellGeometry(shapes), lights: lightsGeometry(shapes), steel: steelGeometry(shapes) };
+}
+
 /** Each unit's lights material, by its band (what worker.ts holds), to dispose of with it. */
 const lights = new WeakMap<THREE.Material, THREE.Material>();
 

@@ -128,7 +128,7 @@ let shellGeo: THREE.BufferGeometry | null = null;
  * The laptop's shell in the laptop's own space with the lid open flat (rotation 0): the plinth on
  * bone 0, the bezel on bone 1 (the lid's hinge, 14 mm up and 5 cm back). Shared by every laptop.
  */
-function shellGeometry(): THREE.BufferGeometry {
+export function shellGeometry(): THREE.BufferGeometry {
   if (shellGeo) return shellGeo;
   const bound = (geo: THREE.BufferGeometry, x: number, y: number, z: number, bone: number) => {
     const g = geo.translate(x, y, z);
