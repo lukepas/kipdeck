@@ -5,12 +5,14 @@
  * lifted a little; if that isn't enough it shrinks to its glyph and call sign ("C-02"); a unit at work
  * whose call sign still has no room shows no callout at all. One that needs someone always shows, lifted
  * as far as it must be, a hairline tying it back to its unit. A callout that would run off the side of
- * the view, or under the Units rail, slides back in. The placing itself is declutter() and nudge(),
- * with nothing to draw, so the tests run them.
+ * the view, or under the Units rail, slides back in. Then none covers a wall board: one that would docks
+ * under that board's lower bezel, or fades (dock.ts). The placing itself is declutter(), nudge() and
+ * dock(), with nothing to draw, so the tests run them.
  */
 import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
+import { FADED, dock } from './dock';
 
 /** A callout on screen, in pixels from the top left: its left edge, its bottom edge, its size. */
 export interface LabelBox {
@@ -115,7 +117,7 @@ export function nudge(b: LabelBox, left: number, right: number): number {
   return 0;
 }
 
-export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'overview' | 'stage'>) {
+export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds' | 'overview' | 'stage' | 'boardFaces'>) {
   const bottom = new THREE.Vector3();
   const top = new THREE.Vector3();
   const at = new THREE.Vector3();
@@ -125,7 +127,8 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'overvie
   let left = 0;
   let measured = -Infinity;
   // After the units have moved and sized their callouts ('others'), before the frame is drawn.
-  ctx.ticks.add('hud', ({ now }) => {
+  const slot = new THREE.Vector3();
+  ctx.ticks.add('hud', ({ now, dt }) => {
     const camera = parts.stage.view ?? ctx.camera;
     if (now - measured > 1000) {
       measured = now;
@@ -136,7 +139,8 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'overvie
     camera.updateMatrixWorld();
     const W = window.innerWidth;
     const H = window.innerHeight;
-    const shown: { model: { setLift(m: number): void; setMode(m: Placed['mode']): void; setNudge(f: number): void }; label: Label; rank: number; d: number; pxPerM: number }[] = [];
+    type Model = { setLift(m: number): void; setMode(m: Placed['mode']): void; setNudge(f: number): void; dock(at: THREE.Vector3 | null, fade: number, dt: number): void };
+    const shown: { model: Model; label: Label; rank: number; d: number; pxPerM: number; anchorX: number; depth: number }[] = [];
     // Callouts face the camera: their height runs along its up, which the frame drawn last left in its matrix.
     up.set(0, 1, 0).applyQuaternion(camera.quaternion);
     /** A callout's box on screen from its edges in the world, or null when it's off the screen. */
@@ -149,12 +153,15 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'overvie
       const cx = ((bottom.x + 1) / 2) * W;
       return { x: cx - w / 2, bottom: ((1 - bottom.y) / 2) * H, w, h };
     };
-    for (const v of parts.views.workerViews.values()) {
-      const m = v.model;
+    // The floor's units, and the board agents waiting at their kiosks (core/stations.ts).
+    const models = [...parts.views.workerViews.values()].map((v) => v.model);
+    for (const a of parts.worlds.idleAgents()) if (a.view.vacancy.visible) models.push(a.model);
+    for (const m of models) {
       if (!m.calloutEdges(bottom, top, up)) {
         m.setLift(0);
         m.setMode('full');
         m.setNudge(0);
+        m.dock(null, 1, dt);
         continue;
       }
       const d = camera.position.distanceTo(m.where(at));
@@ -172,13 +179,14 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'overvie
         m.setLift(0);
         m.setMode('full');
         m.setNudge(0);
+        m.dock(null, 1, dt);
         continue;
       }
-      shown.push({ model: m, label: { full, compact, keep: m.rank < 2 }, rank: m.rank, d, pxPerM });
+      shown.push({ model: m, label: { full, compact, keep: m.rank < 2 }, rank: m.rank, d, pxPerM, anchorX: ((anchor.x + 1) / 2) * W, depth: anchor.z });
     }
     shown.sort((a, b) => a.rank - b.rank || a.d - b.d);
     const placed = declutter(shown.map((s) => s.label));
-    shown.forEach((s, i) => {
+    const slid = shown.map((s, i) => {
       const { mode, lift } = placed[i];
       s.model.setMode(mode);
       s.model.setLift(lift / s.pxPerM);
@@ -186,7 +194,21 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'overvie
       // Only a callout whose unit is in view slides in: one whose unit is off the side, or under the
       // rail, stays over it (the compass points the way).
       const anchor = b.x + b.w / 2;
-      s.model.setNudge(mode === 'hidden' || anchor < left || anchor > W ? 0 : nudge(b, left, W) / b.w);
+      const by = mode === 'hidden' || anchor < left || anchor > W ? 0 : nudge(b, left, W);
+      return { x: b.x + by, bottom: b.bottom - lift, w: b.w, h: b.h, anchor: s.anchorX, keep: s.label.keep, hidden: mode === 'hidden', by };
+    });
+    // Off the wall boards: docked under a bezel at the unit's own depth, so it's the size it was, or faded.
+    const boards = parts.boardFaces?.faces().flatMap((f) => (f.px ? [f.px] : [])) ?? [];
+    dock(slid, boards, H).forEach((k, i) => {
+      const s = shown[i];
+      const c = slid[i];
+      if (k.kind === 'dock') {
+        s.model.setNudge(0);
+        s.model.dock(slot.set(((k.x + c.w / 2) / W) * 2 - 1, 1 - (k.bottom / H) * 2, s.depth).unproject(camera), 1, dt);
+        return;
+      }
+      s.model.setNudge(c.by / c.w);
+      s.model.dock(null, k.kind === 'fade' ? FADED : 1, dt);
     });
   });
 }

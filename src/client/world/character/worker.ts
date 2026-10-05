@@ -8,6 +8,7 @@ import { GLYPH_HUE, type GlyphKind } from '../glyphs';
 import { disposeSprite } from '../toon';
 import { UNIT, buildUnit, paintShell, setGlyph, type Shell, type UnitBody } from './unit-body';
 import { calloutSprite, clip, type CalloutText } from './unit-callout';
+import { CalloutDocking } from './callout-dock';
 import { GLYPH_SCREEN, GroundRing, glyphSprite, setGlyphKind } from './unit-marks';
 
 /** The smallest a callout gets on screen, and the tallest a full one gets up close: this much of the view's height. */
@@ -83,8 +84,12 @@ export class Worker {
   private shadow: THREE.Mesh;
   private glyph = glyphSprite();
   private callout: THREE.Sprite | null = null;
-  /** A hairline from its head up to its callout, while the callout is lifted off it. */
+  /** A hairline from its head up to its callout, while the callout is lifted off it or docked under a board. */
   private leader: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>;
+  /** Where the callout is drawn: its own place, or docked under a wall board (callout-dock.ts). */
+  private docking: CalloutDocking;
+  /** How high its head is in the mover's space this frame (it builds up as it comes in). */
+  private headY: number = UNIT.top;
   /** The same callout shrunk to its glyph and call sign, for where callouts crowd. */
   private compact: THREE.Sprite | null = null;
   private calloutKey = '';
@@ -154,6 +159,7 @@ export class Worker {
     this.leader.visible = false;
     this.leader.frustumCulled = false;
     this.mover.add(this.leader);
+    this.docking = new CalloutDocking(this.leader);
     if (Worker.calm) this.spawnT = 1;
     this.paint();
   }
@@ -315,6 +321,12 @@ export class Worker {
     for (const c of [this.callout, this.compact]) if (c) c.center.x = 0.5 - frac;
   }
 
+  /** Docks the callout under a wall board at `at` (the world), or home (null), `fade` its strength (features/workers/dock.ts). */
+  dock(at: THREE.Vector3 | null, fade: number, dt: number) {
+    if (at) this.mover.updateWorldMatrix(true, false);
+    this.docking.dock(at ? this.mover.worldToLocal(tmp.copy(at)) : null, fade, dt, Worker.calm, [this.callout, this.compact]);
+  }
+
   /** Lifts the callout (and the glyph over it) `meters` straight up off its place, in the world's meters; it eases there. */
   setLift(meters: number) {
     this.liftTo = meters / (this.mover.getWorldScale(tmp).y || 1);
@@ -442,12 +454,12 @@ export class Worker {
     }
   }
 
-  /** The callout at its place plus its lift; the glyph, when it shows, where the callout would be. */
+  /** The callout at its place plus its lift, unless it's docked; the glyph, when it shows, where the callout would be. */
   private place() {
     if (!this.callout) return;
-    this.callout.position.y = UNIT.top + 0.14 + this.lift;
-    if (this.compact) this.compact.position.y = this.callout.position.y;
-    this.glyph.position.y = UNIT.top + 0.14;
+    this.glyph.position.y = this.headY + 0.14;
+    // Lifted off its head, or docked under a board: a hairline ties it back.
+    this.docking.home(this.headY + 0.14 + this.lift, this.headY + 0.04, this.lift > LEADER_FROM, this.mode !== 'hidden', [this.callout, this.compact]);
   }
 
   /** Toward its target (or its seat), at a steady pace, leaning into the move. */
@@ -543,18 +555,7 @@ export class Worker {
       this.leaveT = Math.min(1.5, this.leaveT + dt);
       f.position.y = Math.min(1, this.leaveT / 1.2) * 0.15;
     } else f.position.y = atWork ? BOB.lift * (0.5 + 0.5 * Math.sin((now + this.seed * 9) * BOB.hz * Math.PI * 2)) * (0.5 + this.hands) : 0;
-    if (this.callout) {
-      this.callout.position.y = UNIT.top * e + 0.14 + f.position.y + this.lift;
-      if (this.compact) this.compact.position.y = this.callout.position.y;
-      this.glyph.position.y = this.callout.position.y - this.lift;
-      // Lifted off its head: a hairline ties it back.
-      const from = UNIT.top * e + 0.04 + f.position.y;
-      this.leader.visible = this.mode !== 'hidden' && this.lift > LEADER_FROM;
-      if (this.leader.visible) {
-        this.leader.position.y = from;
-        this.leader.scale.y = this.callout.position.y - from;
-      }
-    }
+    this.headY = UNIT.top * e;
   }
 
   dispose() {
