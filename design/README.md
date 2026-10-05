@@ -520,3 +520,43 @@ The heights are the bright rows of each name, measured from the stills. The coun
 
 - The wall is 2 m nearer, not 4: a 4 m move puts the end panels and the board agents' lecterns into pods A and B, so the rest of the reach is the focus lean and the larger type.
 - A docked callout eases to its slot at the callouts' own pace; a fast turn of the view can leave one a frame behind its board.
+
+## The bridge: materials
+
+The second stage of making the environment more impressive: the deck stops reading as a grey CAD model. It comes with the Quality tiers that gate every stage after it, and pays for itself by drawing the static deck in a few draws. What it does is in [docs/design.md](../docs/design.md#materials-and-the-quality-tiers) and [the deck](../docs/deck.md#light-and-materials).
+
+### Before and after
+
+The before stills are a `git archive` of 954c6dd built in a scratch folder; the after ones are `SHOOT_QUALITY=high SHOOT_LIGHT=<night|day> node design/shoot.mjs env-materials/after/<night|day> bridge-window,bridge-window-e,bridge-conn,bridge-station,deck-north,bridge-holo,units-c,deck-table,bridge-aft,settings-bridge` (software rendering picks Low by itself, so the stills ask for High). `SHOOT_QUALITY` is new in `shoot.mjs`. `clip/bridge.mp4` is the bridge clip on the GPU at High by Night, with frames at 1, 4, 6 and 9 s in `clip/frames/`.
+
+| | Before | After |
+| --- | --- | --- |
+| West port by day (`bridge-window`) | flat grey walls, a black box in front of the escort | plating with seams, bolt rows and vents, conduits and a tray along the wall's foot, the droid's cradle on the sill under the glass |
+| Consoles (`bridge-station`, `units-c`) | flat boxes | rounded edges, panel seams, a vent and bolts on the pedestal, glossier tops |
+| The conn by night (`bridge-conn`) | the floor flat round the table | the holo's glow and the table's rim reflected soft in the polished walkway; the table's pedestal shows its plating |
+| State marks (`hue-check.txt`) | | identical by day; by night the board's stuck mark is up to 3.5% of the channel range bluer from the glow round it, inside the 4% allowed |
+| Settings > Bridge (`settings-bridge`) | | Quality: Auto, Low, Medium, High |
+
+### Frame time
+
+`node design/perf-probe.mjs metal` at 1440x900 by Night on the M3 Pro, before (`frames-before.jsonl`, Auto, 954c6dd) and after on High (`frames-after.jsonl`, `PROBE_SETTINGS='{"quality":"high"}'`; the probe now draws the shadow map on its forced renders when the tier does every frame).
+
+| | Before | After (High) |
+| --- | --- | --- |
+| Conn draw calls | 1044 | 592 |
+| Conn triangles | 116k | 133k |
+| Conn forced render p50 / p95 | 3.0 / 3.7 to 4.0 ms (one window 9.6) | 2.1 to 2.4 / 2.6 to 3.1 ms |
+| Side port | 382 calls, 1.0 / 1.1 ms | 201 calls, 0.9 / 1.3 to 1.8 ms |
+| Conn, CPU 4x: forced render p50 / p95, rAF p50 | 20.0 / 23.6 ms, 50 ms | 10.3 / 12.1 ms, 16.7 ms |
+| SwiftShader rAF p50 (Auto picks Low) | 267 ms | 267 to 283 ms |
+| Worst frame on the first Night to Day switch | | 33 ms (216 ms before the beat's light was fixed) |
+| Textures and render buffers (counted at the GL calls) | 213 MB | 239 MB |
+
+The CPU 4x numbers move by 2 to 3 ms from run to run on this machine with other offices running; side by side in one sitting the baseline read 11 to 16 ms and this stage 10 to 12 ms p50. Where the time went before: half the CPU was the crosshair's ray testing every triangle of the hull's viewport frames each frame (now capped at the furthest reach, cut into runs, and not cast while the view is still). `node design/flicker-check.mjs metal` passes, 600 frames by Night and 600 by Day.
+
+### Left for later
+
+- The fleet's escorts and the destination world are ShaderMaterials with their own light: the sky probe lights the hull's plating and nacelles only.
+- Hazard chevrons and stencilled deck numbers are not in the atlas: the deck's own floor paint has the numbers, and the chevrons want the step edges of a later stage.
+- Low leaves out the room light and the trim: software rendering paid for every lookup (an Intel laptop at Low loses the most visible part of this stage).
+- The floor's reflection is the probe's, box-projected; the planar emissive reflection is stage 3.

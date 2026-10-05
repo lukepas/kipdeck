@@ -161,13 +161,16 @@ async function signIn(page) {
 
 /** The bridge lights to shoot in (SHOOT_LIGHT=night|day|auto), saved as Settings > Bridge would. */
 const LIGHT = process.env.SHOOT_LIGHT ?? '';
+/** The Quality tier to shoot at (SHOOT_QUALITY=low|medium|high|auto), saved as Settings > Bridge would: software rendering picks Low by itself. */
+const QUALITY = process.env.SHOOT_QUALITY ?? '';
 const SCHEME = LIGHT === 'day' ? 'light' : 'dark';
 
-const PROFILE = (light) => {
+const PROFILE = ([light, quality]) => {
   try {
-    if (light) {
+    if (light || quality) {
       const saved = JSON.parse(localStorage.getItem('agent-office.settings') ?? '{}');
-      if (saved.lighting !== light) localStorage.setItem('agent-office.settings', JSON.stringify({ ...saved, lighting: light }));
+      const want = { ...saved, ...(light ? { lighting: light } : {}), ...(quality ? { quality } : {}) };
+      if (saved.lighting !== want.lighting || saved.quality !== want.quality) localStorage.setItem('agent-office.settings', JSON.stringify(want));
     }
     // Headless software rendering is slow: no offer of the 2D view over the shots.
     localStorage.setItem('agent-office.lite-declined', '1');
@@ -183,7 +186,7 @@ async function main() {
   try {
     const viewport = { width: 1440, height: 900 };
     const fresh = await browser.newContext({ viewport, deviceScaleFactor: 1, colorScheme: SCHEME });
-    await fresh.addInitScript(PROFILE, LIGHT);
+    await fresh.addInitScript(PROFILE, [LIGHT, QUALITY]);
     const lp = await fresh.newPage();
     if (want('login')) {
       await lp.goto(`${base}/login`);
@@ -207,7 +210,7 @@ async function main() {
     await fresh.close();
 
     const context = await browser.newContext({ viewport, colorScheme: SCHEME });
-    await context.addInitScript(PROFILE, LIGHT);
+    await context.addInitScript(PROFILE, [LIGHT, QUALITY]);
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -826,7 +829,7 @@ async function main() {
     const b3 = await launch();
     try {
       const ctx3 = await b3.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
-      await ctx3.addInitScript(PROFILE, LIGHT);
+      await ctx3.addInitScript(PROFILE, [LIGHT, QUALITY]);
       const dp = await ctx3.newPage();
       dp.on('pageerror', (e) => console.log('demo page error:', e.message));
       await signIn(dp);
