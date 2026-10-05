@@ -560,3 +560,51 @@ The CPU 4x numbers move by 2 to 3 ms from run to run on this machine with other 
 - Hazard chevrons and stencilled deck numbers are not in the atlas: the deck's own floor paint has the numbers, and the chevrons want the step edges of a later stage.
 - Low leaves out the room light and the trim: software rendering paid for every lookup (an Intel laptop at Low loses the most visible part of this stage).
 - The floor's reflection is the probe's, box-projected; the planar emissive reflection is stage 3.
+
+## The bridge: space outside
+
+The fourth stage of making the environment more impressive: a look out of a port has depth, a body close by and a sun to squint at, where it showed grey haze before. What it does is in [docs/design.md](../docs/design.md#space-outside-the-glass) and [the deck](../docs/deck.md#the-bridge). The code is the sky's bake in `src/client/features/space/sky.ts` and a new module, `src/client/features/vista/` (the dust, the giant, the flare), installed with one line in `main.ts`.
+
+### Before and after
+
+Every still is on the GPU at High, 1440x900, in `shots/env-space/`. The before ones are a `git archive` of f5aa728 (`baseline-commit.txt`), the after ones `SHOOT_MISSION=0 SHOOT_CREW=busy SHOOT_GPU=1 SHOOT_QUALITY=high SHOOT_LIGHT=<night|day> node design/shoot.mjs env-space/after/<night|day> ...`: a healthy crew and no course set, so nothing needs the captain and no jump moves the ship to another region mid-set. `after-attention/night` is the default crew (two need you, one stuck), with space given way; `after/medium` and `after/low` are those tiers. `bridge-window-port` and `-starboard` are the same cameras as `bridge-window` and `bridge-window-e`, copied under the new names for the before set.
+
+| | Before | After |
+| --- | --- | --- |
+| Port side (`bridge-window-port`) | grey band haze, a few stars | a ringed giant over a third of the port: terminator where the key light comes from, the ring's shadow across its face, a rim on its lit side; teal gas and dark dust in front of it |
+| Starboard (`bridge-window-starboard`) | grey haze | the nebula's starboard lobe: teal filaments, indigo thin gas, dark lanes |
+| Parallax (`space-parallax-1`, `-2`, `-diff`) | | two shots a second apart while the ship makes way: the dust moves across the whole port, the giant only by its turn. With Ship motion Off (`space-parallax-still-diff`) the difference is black |
+| The sun (`bridge-sun`, `bridge-sun-rib`) | | from the conn, looking up: the glow, rays, streak and ghosts through a clear pane; a step to port, a rib cuts the glow and the ghosts go |
+| The canopy (`bridge-up`) | the canopy and stars | the sun at the top edge of the view behind the halo ring, its glow cut by the ring and its streak past it |
+| The conn (`bridge-conn`) | | no knot, flare or dust over a board; the sun is out of view |
+| Day (`after/day`) | | the sky paler and brighter, the giant and the nebula still read; no black or NaN region |
+| Given way (`after-attention/night`) | | knots, dust and ghosts at 35%, the giant's body as it was |
+
+`deck-high` looks down from outside the hull, with the sun behind and over the camera, so it has no flare. The canopy shot and the two sun shots show it instead. `clip/bridge.mp4` (`SHOOT_CLIP=space`, 10 s at 30 fps on the GPU) runs along the port side past the giant with the dust sliding by, turns up into the canopy, and ends on the sun from the conn as a rib crosses it; stills at 1, 2, 3, 6, 8, 9 and 9.9 s are in `clip/sequence/`.
+
+### Frame time
+
+`node design/perf-probe.mjs metal` at 1440x900 by Night on the M3 Pro (ANGLE Metal) with `PROBE_SETTINGS='{"quality":"high"}'`, the baseline (`PROBE_ROOT` at the `git archive`) and this stage back to back, every row in `frames-before.jsonl` and `frames-after.jsonl`. The machine's load average was 15 to 20 during both runs, with other offices on the same GPU.
+
+| | Before (High) | After (High) | Budget |
+| --- | --- | --- | --- |
+| Conn draw calls | 595 | 598 | 602 |
+| Conn forced render p50 / p95 | 2.7 to 3.0 / 3.6 to 4.1 ms | 2.8 to 3.2 / 3.7 to 4.4 ms | p95 6.0 |
+| Side port | 204 calls, 1.0 to 1.2 / 1.8 to 2.3 ms | 207 calls, 0.9 to 1.0 / 1.5 to 2.1 ms | p95 2.0 |
+| Jump, tunnel open | 648 calls, 2.9 / 4.7 ms | 650 calls, 2.8 / 3.9 ms | |
+| Conn, CPU 4x: forced render p50 / p95 | 10.8 / 21.1 ms | 13.3 / 15.9 ms | |
+| Medium: conn, port | | 477 calls 2.4 / 3.0 ms; 86 calls 0.9 / 1.3 ms | p95 5.0 |
+| Low: conn, port | | 459 calls 2.2 / 3.0 ms; 68 calls 0.9 / 1.2 ms | 650 calls |
+| Sky cube bake (six 512 faces), cold / warm | | 8.2 / 6.7 ms (113 ms in SwiftShader) | 300 ms |
+| SwiftShader (Auto picks Low): conn rAF p50 / p95, port | | 433 / 583 ms, 459 calls; 217 / 333 ms, 68 calls | 475 ms |
+
+rAF p50 is 16.7 ms in every row. rAF p95 read 67 to 83 ms on both builds in the High runs, which is this machine's load that day (the Medium and Low runs, a little later, read 16.8 ms). One of three side-port windows reads 2.1 ms p95 against the 2.0 budget; the baseline's same window read 2.3. The bake is timed in the page with a pixel read to wait on the GPU (a fresh copy of the bake's program into a region never baked, then a warm one), and the sky's light probe takes 2 ms more over its next seven frames. The new textures are the giant's face (1024x512 half floats with mips, about 5.6 MB), the dust (512x256 bytes with mips, 0.7 MB) and the flare's atlas (512x256, 0.5 MB): about 7 MB over the last stage's 239 MB.
+
+`FLICKER_QUALITY=high node design/flicker-check.mjs metal` (new: it holds the tier, since Auto stepped down on this busy machine and left the glow out of the check) passes by Night with the glow on and by Day, and again with `FLICKER_JUMP=1` (75 and 105 frames in the tunnel): no black frame and no NaN pixel (`flicker-metal.txt`). `tests/shader-pow.test.ts` reads the new shaders with the rest; every pow() base in them is clamped.
+
+### Left for later
+
+- The giant throws no light into the room. A passing planet's wash swings a rim light round (features/atmos); a body that is always there would hold one rim on it for good, so it waits for a light rig change of its own.
+- The dust in front of the giant lightens its night side a little, as gas in front of it would, so the giant reads less solid there than a body would.
+- The sun's flare is the key light's direction and does not turn with the sky; over an hour the sky turns 36 degrees under it.
+- The band's diffuse light still reads grey on the right of the starboard port, where no lobe of the nebula sits.
