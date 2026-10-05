@@ -493,3 +493,30 @@ Frame time at 1440x900 by Night on the GPU (Apple M3 Pro through ANGLE Metal), `
 - The life features still install from `main.ts`, one line each, as `docs/code-layout.md` asks; no feature registry bundles them.
 - The escorts' hulls in the hangar view are as before.
 - The stuck and needs-you states in the clips are forced into the page's roster; no take drives them through a real server hook yet.
+
+## The bridge: readability
+
+The captain asked for the whole environment to be more impressive, and the first thing in the way was that the wall boards could not be read from the chair: the holo's stars drifted over the Attention board's rows, the units' callouts (PR AGENT, B-01 SPROCKET, A-01 PIXEL) sat in front of the boards, and the wall was 23 m off, its rows 6 px tall. This stage clears the boards and brings them closer, before any of the spectacle that follows. What it does is in [docs/design.md](../docs/design.md#the-wall-boards-from-the-conn).
+
+### Before and after
+
+`node design/shoot.mjs env-readability/<before|after>-<night|day> office,bridge-conn,bridge-holo,deck-north,bridge-lean` (with `SHOOT_LIGHT`) takes the stills; `bridge-lean` sits in the captain's chair and rests the crosshair on the Attention board for 3 s. `SHOOT_CREW=busy SHOOT_NEED=desk-1` gives the busy crew with one unit asking (`after-busy/`, and `after-busy-gpu/` on Metal). `lean-clip` records `clip/lean.mp4` on the page's own clock: the lean coming in on the Attention board, a mouse move letting it go and turning the view to the PR board, and the lean coming in there, with stills of each beat in `clip/lean/`.
+
+| | Before | After |
+| --- | --- | --- |
+| Holo over the Attention rows (`bridge-holo`, `bridge-conn`, `deck-north`) | the star map across Cosmo and Widget | none: stars and cone fade out over every board's face |
+| Callouts over a board (`bridge-conn`, `office`) | PR AGENT on the Attention board's side column, NIBBLE and BYTE on the Queue board, SPROCKET on Pull requests | every one docked under a bezel with its hairline, none faded at the conn |
+| Attention row names from the conn, no lean | 6 px | 9 px (Widget with its descender 11) |
+| The same with the lean held 1 s | | 14 px (13 for Cosmo, which has no ascender) |
+| Busy crew, Pixel needs you | | Pixel docked first in the first row under Queue, full strength |
+
+The heights are the bright rows of each name, measured from the stills. The count band reads 2, 1, 4, 2 (needs you, stuck, running, done) over rows that list the same units.
+
+### Frame time
+
+`node design/perf-probe.mjs metal` at 1440x900 by Night on the M3 Pro (ANGLE Metal), the baseline (`git archive` of 5b8a3ff through `PROBE_ROOT`) and this stage back to back, twice, every row in `shots/env-readability/perf.txt`. From the conn a forced render takes 3.1 and 3.4 ms (p95 3.9 and 4.2) on the baseline and 2.7 to 3.4 ms (p95 3.4 to 4.6) here, 1057 draw calls against 1044: the wall's five slabs and their rules are one draw a material now, which more than pays for the hairlines of the docked callouts. Out of a side port it is 0.9 to 1.0 ms in both, 388 calls against 382. rAF p50 is 16.7 ms throughout. With the CPU throttled 4x both builds miss vsync on this machine today (rAF p50 33.3 ms, a forced render 12.9 to 16.0 ms here against 13.9 to 14.9 ms); that is the CPU budget later stages take on. Some windows of both builds read 8 to 9 ms on a forced render from the conn, in a different window each run, with another office running on the same GPU. `node design/flicker-check.mjs metal` passes, 600 frames by Night and 600 by Day, no black frame and no NaN pixel.
+
+### Left for later
+
+- The wall is 2 m nearer, not 4: a 4 m move puts the end panels and the board agents' lecterns into pods A and B, so the rest of the reach is the focus lean and the larger type.
+- A docked callout eases to its slot at the callouts' own pace; a fast turn of the view can leave one a frame behind its board.
