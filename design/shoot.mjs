@@ -332,6 +332,13 @@ async function main() {
       // Out of the side ports at a seated eye's height: the galaxy's band and the stars streaming past.
       'bridge-window': [[-11.5, 1.55, 3.6], [-30, 2.6, 0.5]],
       'bridge-window-e': [[11.2, 1.55, -3.0], [30, 2.4, -6]],
+      // The same two looks by the names the space stage's checks use: the giant out of the port side.
+      'bridge-window-port': [[-11.5, 1.55, 3.6], [-30, 2.6, 0.5]],
+      'bridge-window-starboard': [[11.2, 1.55, -3.0], [30, 2.4, -6]],
+      // From the captain's place, looking up the way the sun is (features/vista): clear through a pane,
+      // then a step to port where a rib crosses it.
+      'bridge-sun': [[0, 2.05, 11.4], [-1.9, 7.55, 3.2]],
+      'bridge-sun-rib': [[-0.55, 2.05, 11.4], [-2.45, 7.55, 3.2]],
       // The bridge's life: the pods' station screens from the table, the heading band, the clock and the log.
       'life-heading': [[2.4, 1.9, 4.6], [0, 1.3, 0]],
       'life-ticker': [[0, 3.4, 1], [0, 5.2, -11.4]],
@@ -341,6 +348,21 @@ async function main() {
       await VIEW(from, to);
       await wait(1200);
       await shot(page, name);
+    }
+    // Out of a side port twice, a second apart, while the ship makes way: the layers of dust slide past
+    // one another (features/vista). Then the same with Ship motion Off, when they hold still.
+    for (const [name, motion] of [
+      ['space-parallax', 'full'],
+      ['space-parallax-still', 'off'],
+    ]) {
+      if (!want(name)) continue;
+      await page.evaluate((m) => void (window.__office.settings.shipMotion = m), motion);
+      await VIEW([-11.5, 1.55, 3.6], [-30, 2.6, 0.5]);
+      await wait(1500);
+      await page.screenshot({ path: path.join(OUT, `${name}-1.png`) });
+      await wait(1000);
+      await page.screenshot({ path: path.join(OUT, `${name}-2.png`) });
+      await page.evaluate(() => void (window.__office.settings.shipMotion = 'full'));
     }
     if (want('bridge-lean')) {
       // The focus lean (features/focuslean): in the captain's chair, the crosshair resting on the
@@ -356,7 +378,8 @@ async function main() {
     // space's clock slowed (timeScale) so software rendering can catch them.
     const SPACE = (fn, ...args) => page.evaluate(([fn, args]) => window.__office.space[fn](...args), [fn, args]);
     const FLYBYS = {
-      'space-planet': ['planet', 0.5, -1, [6, 2.2, 1], [-16, 4.6, 2]],
+      // A passing planet keeps to the side the region's giant isn't on (starboard, on arrival).
+      'space-planet': ['planet', 0.5, 1, [-6, 2.2, 1], [16, 4.6, 2]],
       'space-asteroids': ['asteroids', 0.5, -1, [2, 2.05, 9], [-16, 3.2, -4]],
       'space-comet': ['comet', 0.32, 1, [0, 2.05, 11.4], [-6, 7.2, -12]],
     };
@@ -410,13 +433,25 @@ async function main() {
       mkdirSync(frames, { recursive: true });
       const seqDir = path.join(OUT, 'sequence');
       mkdirSync(seqDir, { recursive: true });
-      const KEYS = [
-        [0, [0, 2.05, 11.4], [0, 2.0, -12]],
-        [3, [0, 2.0, 8.2], [-2, 1.6, -12]],
-        [5.5, [-4, 1.8, 6.5], [-16, 2.2, 3]],
-        [7.4, [-1.5, 2.1, 8.6], [0, 3.3, -12]],
-        [10, [0, 2.1, 9.6], [0, 3.6, -12]],
-      ];
+      // SHOOT_CLIP=space shoots space close by instead (features/vista): along the west ports past the
+      // giant with the dust sliding by, then up through the canopy to the sun from the conn, and a step
+      // to port so a rib crosses it. No merge and no jump: only a meteor.
+      const SPACE_CLIP = process.env.SHOOT_CLIP === 'space';
+      const KEYS = SPACE_CLIP
+        ? [
+            [0, [-11.0, 1.55, 6.5], [-30, 2.6, 3]],
+            [3.2, [-11.0, 1.55, 0.5], [-30, 2.6, -3]],
+            [5.4, [-3, 1.9, 8.5], [-5, 9, -5]],
+            [7.6, [0, 2.05, 11.4], [-1.9, 7.55, 3.2]],
+            [10, [-0.8, 2.05, 11.4], [-2.7, 7.55, 3.2]],
+          ]
+        : [
+            [0, [0, 2.05, 11.4], [0, 2.0, -12]],
+            [3, [0, 2.0, 8.2], [-2, 1.6, -12]],
+            [5.5, [-4, 1.8, 6.5], [-16, 2.2, 3]],
+            [7.4, [-1.5, 2.1, 8.6], [0, 3.3, -12]],
+            [10, [0, 2.1, 9.6], [0, 3.6, -12]],
+          ];
       const camAt = (t) => {
         let i = 0;
         while (i < KEYS.length - 2 && t > KEYS[i + 1][0]) i++;
@@ -452,7 +487,9 @@ async function main() {
           for (const cb of cbs) cb(c.now);
         };
       });
-      const events = [
+      const events = SPACE_CLIP
+        ? [[1.0, () => window.__office.space.meteor()]]
+        : [
         [1.2, () => window.__office.space.meteor()],
         [
           3.2,
@@ -466,9 +503,10 @@ async function main() {
         ],
         [5.0, () => window.__office.space.meteor()],
         [7.6, () => window.__office.space.jump()],
-      ];
+          ];
       // On frame boundaries (whole thirtieths of a second).
-      const stills = { merge: [3.5, 3.7, 3.9, 4.1, 4.4], warp: [7.9, 8.3, 254 / 30, 257 / 30, 262 / 30, 9.2, 9.9] };
+      const stills = SPACE_CLIP ? { space: [1, 2, 3, 6, 8, 9, 9.9] } : { merge: [3.5, 3.7, 3.9, 4.1, 4.4], warp: [7.9, 8.3, 254 / 30, 257 / 30, 262 / 30, 9.2, 9.9] };
+      const since = { merge: 3.2, warp: 7.6, space: 0 };
       const wantStill = (t) => Object.entries(stills).flatMap(([name, ts]) => ts.map((x, i) => [name, x, i])).find(([, x]) => Math.abs(x - t) < 0.5 / FPS);
       let fired = 0;
       for (let f = 0; f < FPS * SECONDS; f++) {
@@ -481,7 +519,7 @@ async function main() {
         await page.evaluate((ms) => window.__stepClip(ms), 1000 / FPS);
         await page.screenshot({ path: path.join(frames, `f${String(f).padStart(4, '0')}.jpg`), type: 'jpeg', quality: 92 });
         const still = wantStill(t);
-        if (still) await page.screenshot({ path: path.join(seqDir, `${still[0]}-${String(still[2] + 1).padStart(2, '0')}-${Math.round((t - (still[0] === 'merge' ? 3.2 : 7.6)) * 1000)}ms.png`) });
+        if (still) await page.screenshot({ path: path.join(seqDir, `${still[0]}-${String(still[2] + 1).padStart(2, '0')}-${Math.round((t - since[still[0]]) * 1000)}ms.png`) });
       }
       execFileSync(process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', path.join(frames, 'f%04d.jpg'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-movflags', '+faststart', path.join(OUT, 'bridge.mp4')]);
       // The page's own clock again.

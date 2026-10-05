@@ -14,7 +14,8 @@
 // across the glass are on screen for a good share of it. FLICKER_RITUALS=1 lights the drive core's
 // rings (a run of seven, today's best nine), plays the start of watch's launch every 420 frames (the
 // crawl into the stars) and runs the pit wall's hairline, and faces aft a third of the time, so the
-// core is in view.
+// core is in view. FLICKER_QUALITY=high (or medium, low) draws at that tier rather than Auto's, which
+// steps down on a busy machine and would leave the glow out.
 import { spawn, execFileSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -243,15 +244,15 @@ async function main() {
   try {
     for (const lighting of ['night', 'day']) {
       const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, colorScheme: 'dark' });
-      await context.addInitScript((lighting) => {
+      await context.addInitScript(([lighting, quality]) => {
         try {
-          localStorage.setItem('agent-office.settings', JSON.stringify({ lighting }));
+          localStorage.setItem('agent-office.settings', JSON.stringify(quality ? { lighting, quality } : { lighting }));
           localStorage.setItem('agent-office.lite-declined', '1');
           localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4FA3A5', look: { skin: 0, hair: 0, style: 0 } }));
         } catch {
           // fine without
         }
-      }, lighting);
+      }, [lighting, process.env.FLICKER_QUALITY ?? '']);
       const page = await context.newPage();
       const errors = [];
       page.on('pageerror', (e) => errors.push(e.message));
