@@ -6,7 +6,11 @@
 // Then the worst cases: from the conn through a jump (sampled while its tunnel is open, the countdown
 // and the name on the glass with it) and through the start of watch (sampled while the log is typed),
 // where the build has them; and the conn again with the CPU throttled 4x, to show the margin under
-// 16.7 ms. Always stops the office (and its terminals) at the end.
+// 16.7 ms. Then the motion layer's cost: Ship motion on against off, three times each, the frame's GPU time
+// where the browser offers EXT_disjoint_timer_query_webgl2 and its CPU time otherwise. Each conn line
+// says the Quality tier, its draw budget (DRAW_BUDGET in features/quality/tiers.ts) and whether the
+// frame kept to it; the motion line its budget (MOTION_BUDGET_MS). Always stops the office (and its
+// terminals) at the end.
 //
 //   npm run build && node design/perf-probe.mjs [metal|swiftshader] [label]
 //
@@ -186,7 +190,59 @@ async function measure([from, to]) {
   }
   p.update = p.__update;
   const q = (xs, k) => [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.floor(xs.length * k))];
-  return { calls, triangles, renderMs: +q(times, 0.5).toFixed(2), renderP95: +q(times, 0.95).toFixed(2), rafP50: +q(gaps, 0.5).toFixed(1), rafP95: +q(gaps, 0.95).toFixed(1) };
+  const tier = o.quality?.tier?.();
+  const budget = o.quality?.budget?.();
+  return { tier, calls, budget, withinBudget: budget ? calls <= budget : undefined, triangles, renderMs: +q(times, 0.5).toFixed(2), renderP95: +q(times, 0.95).toFixed(2), rafP50: +q(gaps, 0.5).toFixed(1), rafP95: +q(gaps, 0.95).toFixed(1) };
+}
+
+/** Runs in the page: from `from` toward `to`, the frame's cost with Ship motion on and off, three times each, space's clock running. */
+async function motionAB([from, to]) {
+  const o = window.__office;
+  const t = o.quality?.timing;
+  if (!t) return { skipped: 'no frame timing in this build' };
+  const p = o.player;
+  p.__update ??= p.update;
+  p.update = (dt) => {
+    p.__update.call(p, dt);
+    o.camera.position.set(...from);
+    o.camera.lookAt(...to);
+  };
+  const frame = () => new Promise((res) => requestAnimationFrame(res));
+  const was = o.settings.shipMotion;
+  o.space.timeScale(1);
+  const sample = async (ship) => {
+    o.settings.shipMotion = ship;
+    for (let i = 0; i < 60; i++) await frame();
+    t.measure(true);
+    for (let i = 0; i < 240; i++) await frame();
+    // A few frames more for the GPU's answers to come back.
+    for (let i = 0; i < 6; i++) await frame();
+    const r = t.read();
+    t.measure(false);
+    return r;
+  };
+  const runs = { full: [], off: [] };
+  for (let k = 0; k < 3; k++) {
+    runs.full.push(await sample('full'));
+    runs.off.push(await sample('off'));
+  }
+  o.settings.shipMotion = was;
+  o.space.timeScale(0);
+  p.update = p.__update;
+  const mid = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
+  const of = (key, side, stat) => runs[side].map((r) => r[key]?.[stat]).filter((v) => typeof v === 'number');
+  // ANGLE on Metal answers timer queries with the time between them on the wall, frame pacing and all
+  // (tens of ms for a frame drawn in two): a GPU time longer than a 60 Hz frame is not believed.
+  const gpuTimer = runs.full[0].gpuTimer && of('gpu', 'full', 'p50').length > 0 && mid(of('gpu', 'full', 'p50')) < 1000 / 60;
+  const by = gpuTimer ? 'gpu' : 'cpu';
+  const on = mid(of(by, 'full', 'p50'));
+  const off = mid(of(by, 'off', 'p50'));
+  const cpuOn = mid(of('cpu', 'full', 'p50'));
+  const cpuOff = mid(of('cpu', 'off', 'p50'));
+  const tier = o.quality.tier();
+  const budget = o.quality.motionBudget();
+  const cost = +Math.max(0, on - off).toFixed(3);
+  return { tier, by, onMs: on, offMs: off, cost, budget, withinBudget: cost <= budget, cpuOnMs: cpuOn, cpuOffMs: cpuOff, gpuOnMs: mid(of('gpu', 'full', 'p50')) ?? null, gpuOffMs: mid(of('gpu', 'off', 'p50')) ?? null, runs: runs.full.map((r, i) => [r.cpu?.p50, runs.off[i].cpu?.p50]) };
 }
 
 /** Runs in the page: from `from` toward `to`, a forced render's time on every frame while `kind` (a jump's tunnel, or the start of watch's log) is up. */
@@ -313,6 +369,9 @@ async function main() {
       const m = await page.evaluate(during, [VANTAGES.conn, kind]);
       console.log(JSON.stringify({ label: LABEL, backend: BACKEND, vantage: kind, world: 'on', ...m }));
     }
+    // The motion layer: Ship motion on against off, from the conn.
+    const motion = await page.evaluate(motionAB, VANTAGES.conn);
+    console.log(JSON.stringify({ label: LABEL, backend: BACKEND, vantage: 'motion', world: 'on', ...motion }));
     // The conn with the CPU throttled 4x: what is left under 16.7 ms on a slower machine.
     const cdp = await context.newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });

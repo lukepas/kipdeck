@@ -103,6 +103,21 @@ test('30 s at 10 ms steps back up', () => {
   assert.equal(g.tier, 'high');
 });
 
+test('on a 60 Hz display, frames landing on every refresh step back up, and frames missing it do not', () => {
+  const vsync = 1000 / 60;
+  const g = new Governor({ top: 'high', floor: 'medium' });
+  let at = run(g, 0, 6_500, steady(vsync)).at;
+  at = run(g, at, 11_000, steady(25)).at;
+  assert.equal(g.tier, 'medium');
+  // One frame in twelve comes late (25 ms): no room to spare, though not slow enough to go under the floor.
+  const missing = run(g, at, 120_000, (i) => (i % 12 === 0 ? 25 : vsync));
+  assert.deepEqual(missing.steps, []);
+  // Every frame on its refresh: there is.
+  const clean = run(g, missing.at, 36_000, steady(vsync));
+  assert.equal(clean.steps.length, 1);
+  assert.equal(g.tier, 'high');
+});
+
 test('on graphics that start at High, Auto holds at Medium unless frames are very slow', () => {
   assert.equal(floorFor('high'), 'medium');
   assert.equal(floorFor('medium'), 'low');

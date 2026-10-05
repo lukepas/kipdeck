@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TIERS, TIER_LOOKS, autoTier, least, lower, tierOf } from '../src/client/features/quality/tiers.js';
+import { DRAW_BUDGET, MOTION_BUDGET_MS, TIERS, TIER_LOOKS, autoTier, least, lower, tierOf } from '../src/client/features/quality/tiers.js';
 
 // Settings > Bridge > Quality (features/quality): which tier Auto starts from on which graphics, what
 // each tier draws. When Auto steps is tests/quality-governor.test.ts.
@@ -44,7 +44,19 @@ test('each tier draws no more than the one above it', () => {
   }
   // MAX_PIXEL_RATIO in core/scene.ts: no tier draws more than 1.5 pixels per CSS pixel.
   for (const t of TIERS) assert.ok(TIER_LOOKS[t].pixelRatio <= 1.5);
+  for (let i = 1; i < TIERS.length; i++) assert.ok(TIER_LOOKS[TIERS[i]].detail <= TIER_LOOKS[TIERS[i - 1]].detail);
   assert.equal(TIER_LOOKS.low.bloom, null);
   assert.equal(TIER_LOOKS.high.shadow.everyMs, 0);
   assert.equal(TIER_LOOKS.low.shadow.everyMs, null);
+});
+
+test('the draw and motion budgets the perf probe holds each tier to', () => {
+  // design/perf-probe.mjs counts a frame from the conn with twelve units at work: 601 at High and 459
+  // at Low before the unit shells, the laptops, the floor's bubbles and the wall boxes were drawn in fewer pieces.
+  assert.deepEqual(DRAW_BUDGET, { high: 400, medium: 330, low: 280 });
+  assert.deepEqual(MOTION_BUDGET_MS, { high: 0.6, medium: 0.4, low: 0.2 });
+  for (let i = 1; i < TIERS.length; i++) {
+    assert.ok(DRAW_BUDGET[TIERS[i]] <= DRAW_BUDGET[TIERS[i - 1]]);
+    assert.ok(MOTION_BUDGET_MS[TIERS[i]] <= MOTION_BUDGET_MS[TIERS[i - 1]]);
+  }
 });

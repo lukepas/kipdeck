@@ -20,7 +20,8 @@ import type { Off } from '../../core/registry';
 import type { Parts } from '../../core/parts';
 import { MAX_PIXEL_RATIO } from '../../core/scene';
 import { saveSettings } from '../../state';
-import { TIER_LOOKS, autoTier, tierOf, type Tier, type TierLook } from './tiers';
+import { DRAW_BUDGET, MOTION_BUDGET_MS, TIER_LOOKS, autoTier, tierOf, type Tier, type TierLook } from './tiers';
+import { frameTiming, type FrameTiming } from './timing';
 import { Governor, floorFor } from './governor';
 import { clearCap, readCap, sessionId, writeCap, type Store } from './cap';
 import { publishQualityStatus, type QualityStatus } from './status';
@@ -45,6 +46,12 @@ export interface Quality {
   status(): QualityStatus;
   /** Forgets Auto's step downs and draws at the best tier these graphics start at, now. */
   tryHigh(): void;
+  /** The most draw calls a frame at the tier now may make (DRAW_BUDGET), for design/perf-probe.mjs. */
+  budget(): number;
+  /** The most the motion layer may add to a frame at the tier now (MOTION_BUDGET_MS, ms). */
+  motionBudget(): number;
+  /** Frame costs on request (./timing.ts), for design/perf-probe.mjs's motion A/B. */
+  timing: FrameTiming;
 }
 
 /** Storage, where the browser has it (a private window or a sandbox may not). */
@@ -231,5 +238,8 @@ export function installQuality(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings'
     suspend,
     status,
     tryHigh,
+    budget: () => DRAW_BUDGET[tier],
+    motionBudget: () => MOTION_BUDGET_MS[tier],
+    timing: frameTiming(ctx),
   };
 }

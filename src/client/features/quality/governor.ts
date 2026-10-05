@@ -11,8 +11,9 @@
  *   rebuilds something once, and a slow frame then says nothing about the frames after it.
  * - Down one tier only when the 95th percentile of frame gaps stays over DOWN_OVER_MS through a whole
  *   DOWN_SPAN_MS, and never twice within DOWN_EVERY_MS.
- * - Back up one tier after UP_SPAN_MS with the 95th percentile under UP_UNDER_MS, never above the tier
- *   Auto started from (the top). If a tier it climbed back to fails again within UP_HOLD_MS, it stops
+ * - Back up one tier after UP_SPAN_MS with the 95th percentile under UP_UNDER_MS (or, on a display
+ *   whose refresh is slower than that, with frames landing on every refresh: the 95th percentile
+ *   within UP_VSYNC of the median), never above the tier Auto started from (the top). If a tier it climbed back to fails again within UP_HOLD_MS, it stops
  *   climbing for UP_BACKOFF_MS, so the deck can't flip between two tiers every minute.
  * - A floor: on graphics that start at High (Apple silicon, a discrete GPU) Auto holds at Medium, and
  *   goes under it only if the 95th percentile stays over FLOOR_OVER_MS through FLOOR_SPAN_MS.
@@ -30,6 +31,10 @@ export interface GovernorOptions {
   downSpanMs: number;
   downEveryMs: number;
   upUnderMs: number;
+  /** On a 60 Hz display every gap is 16.7 ms: frames with room to spare land on every refresh, the 95th percentile within this much of the median. */
+  upVsync: number;
+  /** The longest refresh that rule trusts (ms): a median slower than 60 Hz is slow frames, not a slow display. */
+  upRefreshMs: number;
   upSpanMs: number;
   upHoldMs: number;
   upBackoffMs: number;
@@ -45,6 +50,8 @@ export const GOVERNOR: GovernorOptions = {
   downSpanMs: 10_000,
   downEveryMs: 60_000,
   upUnderMs: 12,
+  upVsync: 1.15,
+  upRefreshMs: 17.5,
   upSpanMs: 30_000,
   upHoldMs: 120_000,
   upBackoffMs: 600_000,
@@ -62,11 +69,14 @@ export interface Step {
   why: string;
 }
 
+/** The `q` quantile of `xs`, sorted already. */
+const quantile = (xs: number[], q: number) => xs[Math.min(xs.length - 1, Math.floor(xs.length * q))];
+
 /** The 95th percentile of `xs` (sorted in place). */
 export function p95(xs: number[]): number {
   if (!xs.length) return 0;
   xs.sort((a, b) => a - b);
-  return xs[Math.min(xs.length - 1, Math.floor(xs.length * 0.95))];
+  return quantile(xs, 0.95);
 }
 
 const rank = (t: Tier) => TIERS.indexOf(t);
@@ -86,12 +96,13 @@ class Span {
     if (this.start === null) this.start = now - dt;
     this.gaps.push(dt);
   }
-  /** The span's 95th percentile once it is `ms` long (and then it starts over), or null before. */
-  judged(now: number, ms: number): number | null {
+  /** The span's 95th percentile and median once it is `ms` long (and then it starts over), or null before. */
+  judged(now: number, ms: number): { p95: number; p50: number } | null {
     if (this.start === null || now - this.start < ms) return null;
     const p = p95(this.gaps);
+    const out = { p95: p, p50: quantile(this.gaps, 0.5) };
     this.reset();
-    return p;
+    return out;
   }
 }
 
@@ -160,13 +171,14 @@ export class Governor {
     const downSpan = atFloor ? this.o.floorSpanMs : this.o.downSpanMs;
     const downOver = atFloor ? this.o.floorOverMs : this.o.downOverMs;
     const slow = this.down.judged(now, downSpan);
-    if (slow !== null && slow > downOver && this.tier !== 'low' && now - this.downAt >= this.o.downEveryMs) {
+    if (slow !== null && slow.p95 > downOver && this.tier !== 'low' && now - this.downAt >= this.o.downEveryMs) {
       // A tier it had just climbed back to fails again: stop climbing for a while.
       if (this.upTo === this.tier && now - this.upAt < this.o.upHoldMs) this.noUpUntil = now + this.o.upBackoffMs;
       return this.step(now, TIERS[rank(this.tier) + 1], 'down', atFloor ? 'very slow frames' : 'slow frames');
     }
     const fast = this.up.judged(now, this.o.upSpanMs);
-    if (fast !== null && fast < this.o.upUnderMs && rank(this.tier) > rank(this.top) && now >= this.noUpUntil) {
+    const room = fast !== null && (fast.p95 < this.o.upUnderMs || (fast.p50 <= this.o.upRefreshMs && fast.p95 <= fast.p50 * this.o.upVsync));
+    if (room && rank(this.tier) > rank(this.top) && now >= this.noUpUntil) {
       return this.step(now, TIERS[rank(this.tier) - 1], 'up', 'frames to spare');
     }
     return null;
