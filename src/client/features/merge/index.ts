@@ -46,7 +46,7 @@ export function installMerge(ctx: Ctx): { merged(): Merged | null } {
         merged = mergeStatic(root, { skip: movers() }, still);
         still = null;
         due = -1;
-        root.userData.merge = { meshes: merged.meshes.length, merged: merged.merged, ms: +(performance.now() - t0).toFixed(1), live: () => merged?.live() };
+        root.userData.merge = { meshes: merged.meshes.length, merged: merged.merged, ms: +(performance.now() - t0).toFixed(1), live: () => merged?.live(), undo: () => merged?.undo() };
       }
     } else merged?.check();
   });

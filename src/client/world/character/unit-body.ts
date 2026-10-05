@@ -109,8 +109,10 @@ export function buildUnit(): UnitBody {
   };
   const body = SHELL.live();
   const steel = matte(DECK.steel, { metalness: 0.15, roughness: 0.7, flat: true });
-  // The hover base: a faceted column on a disc, a glow under it, and the gap below.
-  add(s.disc, steel, 0, UNIT.hover + 0.025, 0);
+  // The hover base: a faceted column on a disc, a glow under it, and the gap below. The small parts
+  // inside the big ones' shadow (the disc under the column, the neck, the crown on the head) cast none
+  // of their own: a shadow draw each, for nothing anyone could see.
+  add(s.disc, steel, 0, UNIT.hover + 0.025, 0, false);
   const under = new THREE.MeshBasicMaterial({ color: DECK.working, toneMapped: false, transparent: true, opacity: 0.55, depthWrite: false });
   add(s.glow, under, 0, UNIT.hover - 0.002, 0, false);
   shell.push(add(s.column, body, 0, UNIT.hover + 0.2, 0));
@@ -124,9 +126,9 @@ export function buildUnit(): UnitBody {
   const mark = new THREE.MeshBasicMaterial({ map: chestMark(), transparent: true, toneMapped: false, depthWrite: false });
   add(s.mark, mark, 0, 0.905, 0.148, false);
   // The head plate on its neck, a thinner plate on top for the bevel, and the visor across its face.
-  add(s.neck, steel, 0, 1.065, 0);
+  add(s.neck, steel, 0, 1.065, 0, false);
   shell.push(add(s.head, body, 0, UNIT.head, 0));
-  shell.push(add(s.crown, body, 0, UNIT.top - 0.015, -0.01));
+  shell.push(add(s.crown, body, 0, UNIT.top - 0.015, -0.01, false));
   // A lit hairline along the head plate's top front edge: it holds the silhouette against the slate.
   add(s.edge, practical(DECK.steel), 0, UNIT.top - 0.001, 0.1, false);
   const visor = new THREE.MeshBasicMaterial({ color: '#0E151C', toneMapped: false });

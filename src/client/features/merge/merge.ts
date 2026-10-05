@@ -1,6 +1,6 @@
 /**
  * The deck's static meshes drawn as a few: every mesh that stands still, shares its material with
- * others and is opaque goes into one merged mesh per material (and per shadow flags, draw order and
+ * others and is opaque (or is see-through paint flat on the floor) goes into one merged mesh per material (and per shadow flags, draw order and
  * layers), so the frame draws a few hundred meshes fewer, and the shadow pass with it. Nothing about
  * the scene graph changes for the rest of the office: each original stays where it was, on a layer no
  * camera draws (MERGED_LAYER), so code that moves, hides or reads it still finds it, and a click on the
@@ -33,8 +33,11 @@ interface Source {
   geometry: THREE.BufferGeometry;
   version: number;
   cast: boolean;
-  /** Its layers before it was merged. */
+  /** Its layers before it was merged, and whether it worked out its own matrix. */
   mask: number;
+  auto: boolean;
+  /** Where it stood in its parent (position, quaternion, scale): its own matrix is held while it's merged. */
+  local: Float32Array;
   /** Its vertices in the merged geometry. */
   start: number;
   count: number;
@@ -83,7 +86,10 @@ function shownUnder(o: THREE.Object3D, root: THREE.Object3D): boolean {
 export function mergeable(mesh: THREE.Mesh): boolean {
   if (!mesh.isMesh || (mesh as THREE.InstancedMesh).isInstancedMesh || (mesh as THREE.SkinnedMesh).isSkinnedMesh) return false;
   const m = mesh.material;
-  if (!m || Array.isArray(m) || m.transparent || m.userData.noMerge || mesh.userData.noMerge) return false;
+  if (!m || Array.isArray(m) || m.userData.noMerge || mesh.userData.noMerge) return false;
+  // See-through only as paint on the floor (./merge.ts, floorPaint): it writes no depth and nothing of
+  // its own kind overlaps it, so drawing it in one piece changes nothing.
+  if (m.transparent && (m.depthWrite || !onTheFloor(mesh))) return false;
   if (!(m instanceof THREE.MeshStandardMaterial || m instanceof THREE.MeshBasicMaterial || m instanceof THREE.MeshLambertMaterial)) return false;
   if (mesh.onBeforeRender !== baseRender) return false;
   const g = mesh.geometry;
@@ -91,6 +97,15 @@ export function mergeable(mesh: THREE.Mesh): boolean {
   if (!g?.attributes.position || Object.keys(g.morphAttributes).length) return false;
   if (g.drawRange.start !== 0 || g.drawRange.count !== Infinity) return false;
   return true;
+}
+
+const floorBox = new THREE.Box3();
+/** Whether `mesh` lies flat on the deck's floor, as its paint does. */
+function onTheFloor(mesh: THREE.Mesh): boolean {
+  const g = mesh.geometry;
+  g.boundingBox ?? g.computeBoundingBox();
+  floorBox.copy(g.boundingBox!).applyMatrix4(mesh.matrixWorld);
+  return floorBox.max.y < 0.05 && floorBox.max.y - floorBox.min.y < 0.02;
 }
 
 /** The attributes the merged geometry of `material` keeps: position and normal always, uv for a map. */
@@ -173,7 +188,7 @@ export function mergeStatic(root: THREE.Object3D, opts: MergeOptions = {}, still
       const count = g.attributes.position.count;
       const chain: THREE.Object3D[] = [];
       for (let n: THREE.Object3D | null = mesh; n && n !== root.parent; n = n.parent) chain.push(n);
-      sources.push({ mesh, chain, matrix: new Float32Array(mesh.matrixWorld.elements), material: group.material, geometry: mesh.geometry, version: (mesh.geometry.attributes.position as THREE.BufferAttribute).version, cast: mesh.castShadow, mask: mesh.layers.mask, start, count, bucket: null!, live: true, runs: count / 3 >= BIG_MESH ? runsOf(mesh) : null });
+      sources.push({ mesh, chain, matrix: new Float32Array(mesh.matrixWorld.elements), material: group.material, geometry: mesh.geometry, version: (mesh.geometry.attributes.position as THREE.BufferAttribute).version, cast: mesh.castShadow, mask: mesh.layers.mask, auto: mesh.matrixAutoUpdate, local: localOf(mesh), start, count, bucket: null!, live: true, runs: count / 3 >= BIG_MESH ? runsOf(mesh) : null });
       geos.push(g);
       start += count;
     }
@@ -194,6 +209,9 @@ export function mergeStatic(root: THREE.Object3D, opts: MergeOptions = {}, still
     for (const s of sources) {
       s.bucket = bucket;
       s.mesh.layers.set(MERGED_LAYER);
+      // Nothing to work out each frame while it stands still: the check below watches its place instead.
+      s.mesh.updateMatrix();
+      s.mesh.matrixAutoUpdate = false;
     }
     // A ray at the merged mesh is cast at the originals still drawn in it: each tests its own bounding
     // sphere first, as before the merge, so a ray across the deck tests the few it passes, a big one
@@ -226,6 +244,9 @@ export function mergeStatic(root: THREE.Object3D, opts: MergeOptions = {}, still
     pos.addUpdateRange(s.start * 3, s.count * 3);
     pos.needsUpdate = true;
     s.mesh.layers.mask = s.mask;
+    s.mesh.matrixAutoUpdate = s.auto;
+    s.mesh.updateMatrix();
+    s.mesh.updateMatrixWorld();
   }
 
   let left = all.length;
@@ -249,6 +270,7 @@ export function mergeStatic(root: THREE.Object3D, opts: MergeOptions = {}, still
           (mesh.geometry.attributes.position as THREE.BufferAttribute).version !== s.version ||
           mesh.castShadow !== s.cast ||
           !shownUnder(mesh, root) ||
+          !sameLocal(s.local, mesh) ||
           !sameMatrix(s.matrix, mesh.matrixWorld);
         if (!moved) continue;
         split(s);
@@ -258,7 +280,12 @@ export function mergeStatic(root: THREE.Object3D, opts: MergeOptions = {}, still
       return n;
     },
     undo() {
-      for (const s of all) if (s.live) s.mesh.layers.mask = s.mask;
+      for (const s of all) {
+        if (!s.live) continue;
+        s.mesh.layers.mask = s.mask;
+        s.mesh.matrixAutoUpdate = s.auto;
+        s.mesh.updateMatrix();
+      }
       for (const b of buckets) {
         b.mesh.removeFromParent();
         b.mesh.geometry.dispose();
@@ -276,6 +303,23 @@ export function snapshot(root: THREE.Object3D): Map<THREE.Mesh, Float32Array> {
     if ((o as THREE.Mesh).isMesh && shownUnder(o, root)) out.set(o as THREE.Mesh, new Float32Array(o.matrixWorld.elements));
   });
   return out;
+}
+
+/** Where `mesh` stands in its parent, as ten numbers. */
+function localOf(mesh: THREE.Object3D): Float32Array {
+  const p = mesh.position;
+  const q = mesh.quaternion;
+  const k = mesh.scale;
+  return new Float32Array([p.x, p.y, p.z, q.x, q.y, q.z, q.w, k.x, k.y, k.z]);
+}
+
+function sameLocal(a: Float32Array, mesh: THREE.Object3D): boolean {
+  const p = mesh.position;
+  const q = mesh.quaternion;
+  const k = mesh.scale;
+  const b = [p.x, p.y, p.z, q.x, q.y, q.z, q.w, k.x, k.y, k.z];
+  for (let i = 0; i < 10; i++) if (Math.abs(a[i] - b[i]) > 1e-5) return false;
+  return true;
 }
 
 function sameMatrix(a: Float32Array | undefined, b: THREE.Matrix4): boolean {

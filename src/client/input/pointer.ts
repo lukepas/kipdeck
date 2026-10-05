@@ -108,19 +108,38 @@ export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
     return n === undefined ? null : (store.issues.items.find((i) => i.number === n) ?? null);
   }
 
+  /**
+   * What the crosshair lands on, cast again only when the view has moved or turned, or every AIM_AGAIN
+   * ms for what moves into it: a still view (the captain in the chair, watching) costs no ray at all.
+   */
+  const AIM_AGAIN = 150;
+  const lastView = new Float32Array(16);
+  let lastAim: ReturnType<typeof aimedAt> = null;
+  let lastAimAt = -Infinity;
+  function crosshairAim(now: number) {
+    const e = camera.matrixWorld.elements;
+    let same = now - lastAimAt < AIM_AGAIN;
+    for (let i = 0; i < 16 && same; i++) same = Math.abs(e[i] - lastView[i]) < 1e-5;
+    if (same) return lastAim;
+    lastView.set(e);
+    lastAimAt = now;
+    lastAim = aimedAt(CROSSHAIR);
+    return lastAim;
+  }
+
   canvas.addEventListener('pointermove', (e) => {
     const r = canvas.getBoundingClientRect();
     (pointer ??= new THREE.Vector2()).set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   });
   canvas.addEventListener('pointerleave', () => (pointer = null));
   // What you're pointing at (first person) or standing at (third), and what the hint bar says about it.
-  ctx.ticks.add('aim', () => {
+  ctx.ticks.add('aim', ({ now }) => {
     const { seating } = parts;
     const firstPerson = player.view === 'first';
     aimedNote = null;
     if (modalOpen() || ctx.activities.busy()) target = null;
     else if (firstPerson) {
-      const aim = aimedAt(CROSSHAIR);
+      const aim = crosshairAim(now);
       target = aim?.near ? aim.it : seating.mySeat();
       if (aim?.near) aimedNote = noteUnder(aim);
     } else {

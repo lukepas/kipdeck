@@ -57,6 +57,8 @@ test('an original that moves or hides is split back off, drawn on its own again'
   const { root, a, b, c } = deck();
   const m = mergeStatic(root);
   assert.equal(m.check(), 0);
+  // Held still while merged: moving it is seen in its own place, not in a matrix it no longer works out.
+  assert.equal(b.matrixAutoUpdate, false);
   b.position.x = 6;
   c.visible = false;
   root.updateMatrixWorld(true);
@@ -65,6 +67,8 @@ test('an original that moves or hides is split back off, drawn on its own again'
   assert.equal(split, 2);
   assert.equal(m.live(), 1);
   assert.equal(b.layers.mask, 1);
+  assert.equal(b.matrixAutoUpdate, true);
+  assert.ok(Math.abs(b.matrixWorld.elements[12] - 6) < 1e-6);
   assert.equal(c.layers.mask, 1);
   assert.equal(a.layers.mask, 1 << MERGED_LAYER);
   // Its triangles in the merged mesh are collapsed to a point: nothing left there to draw or click.
@@ -139,4 +143,25 @@ test('a big original is tested a run at a time, and hits the same as tested whol
   // Out of reach, nothing.
   ray.far = 5;
   assert.equal(ray.intersectObject(root, true).length, 0);
+});
+
+test('see-through paint flat on the floor merges, anything else see-through does not', () => {
+  const root = new THREE.Group();
+  const paint = new THREE.MeshStandardMaterial({ color: '#ff6a1a', transparent: true, opacity: 0.42, depthWrite: false });
+  const stripe = (x: number) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 0.22).rotateX(-Math.PI / 2), paint);
+    m.position.set(x, 0.006, 0);
+    return m;
+  };
+  root.add(stripe(0), stripe(1));
+  const glass = new THREE.MeshStandardMaterial({ transparent: true, opacity: 0.4, depthWrite: false });
+  const pane = (x: number) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), glass);
+    m.position.set(x, 1, 0);
+    return m;
+  };
+  root.add(pane(0), pane(2));
+  const m = mergeStatic(root);
+  assert.equal(m.meshes.length, 1);
+  assert.equal(m.meshes[0].material, paint);
 });
