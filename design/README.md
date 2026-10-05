@@ -660,3 +660,55 @@ rAF p50 is 16.7 ms in every Metal row. The High rows are two runs after the last
 - The merge's escort is the first starboard one, whichever deck it is; one that just merged on its own deck would make a better story.
 - The jump's tunnel framing lifts the view whatever you look at; from the far side of the table it lifts into the canopy over the wall instead of the bow.
 - `tests/mission-e2e.test.ts`'s debrief case timed out twice on this machine while the GPU probes ran, on the baseline build as well (the start of watch under SwiftShader nears its 60 s wait); it passed in the final full run.
+
+## The interior: quality
+
+The first stage of the interior round (the Dais, with grafts from Halo Conn and the Orrery). The previous round's critics scored the room 6/10, and the captain could not tell what had changed: on his M3 Pro, Auto had been drawing at Low ever since one slow minute, hiding every effect the round added. This stage fixes that first, so the stages after it are seen at the tier they were built for, and buys the frame budget they will spend.
+
+What it does is in [docs/design.md](../docs/design.md#materials-and-the-quality-tiers) (Quality and Draw budgets).
+
+### Root cause
+
+- The first Auto saved its step down under `agent-office.quality-cap` with no expiry and read it back on every load, so a single 5 s window over 18 ms (the warm-up, a Night and Day switch, a jump's re-bake, a burst of terminal output) held a fast machine at Low for good.
+- It judged every frame after 8 s, hitches included, and never stepped back up.
+
+The cap moves to `agent-office.quality-cap.v2` with the graphics, the tier, the time, a version and the browser session; a new session or a day later starts from the top, and the old key is deleted on sight. Auto judges frames through a governor that throws away the warm-up and 4 s after each one-off hitch, steps down only for a p95 over 22 ms through 10 s, climbs back after 30 s with room to spare, and holds at Medium on Apple silicon and discrete GPUs unless frames are very slow.
+
+### Before and after
+
+Every still is on the GPU (ANGLE Metal, M3 Pro) at 1440x900 from the captain's seat at the conn, with a busy crew, desk-2's unit asking a question and the toasts closed, in `shots/interior-quality/`: `SHOOT_LIGHT=<night|day> SHOOT_QUALITY=<high|medium> node design/shoot-interior.mjs interior-quality/<before|after>`, and for the captain's own case `SHOOT_QUALITY=auto SHOOT_CAP=stale SHOOT_UI=1`. The before ones are a `git archive` of ea42a7f (`baseline-commit.txt`) built in a scratch folder.
+
+| | Before | After |
+| --- | --- | --- |
+| Auto, with the old Low cap saved (`night-auto-cap-stale`, side by side in `before-after-auto.png`) | drawn at Low: no glow on the holo or the boards, no haze, no shafts, no grade | drawn at High: the holo's bloom, the haze and shafts, the grade and SMAA |
+| Settings > Bridge (`night-auto-cap-stale-settings`) | "Drawing at Low now." in the note | a live chip: a three-bar meter and *Auto - running at High* |
+| The menu (`night-auto-cap-stale-menu`, `night-auto-stepped-menu`) | no Quality row | *Quality* under Deck with *Auto - running at High* under it; after a step forced by a 20x CPU throttle, *Auto - Medium since 00:44, slow frames* and *Try High*, which drew at High again, cleared the cap and closed the menu |
+| High and Medium, Night and Day (`night-high` and the rest) | | the same picture: the draw cuts change no pixel anyone can find side by side |
+| Up close (`after-close/`) | | a unit's shell, arms and lights; the floor's bubbles and the ready line's numbers from the sheet, as they were |
+
+### Frame time
+
+`node design/perf-probe.mjs metal` at 1440x900 by Night on the M3 Pro, `PROBE_SETTINGS='{"quality":"<tier>"}'`, the baseline (`PROBE_ROOT` at the `git archive`) and this stage alternating, five runs each at High; every row in `frames-before.jsonl` and `frames-after.jsonl`. Medians of the runs, worst run in brackets.
+
+| | Before | After | Budget |
+| --- | --- | --- | --- |
+| High, conn: draw calls | 601 | 378 | 400 |
+| High, conn: forced render p50 / p95 | 2.3 / 2.7 (3.0) ms | 1.9 / 2.4 (2.8) ms | p95 12 |
+| High, conn: rAF p50 / p95 | 16.7 / 16.8 ms | 16.7 / 16.7 ms | |
+| High, side port | 210 calls, 1.4 / 1.6 ms | 127 calls, 1.2 / 1.4 ms | |
+| High, jump with the tunnel open | 702 calls, 2.7 / 3.1 ms | 431 calls, 2.2 / 2.8 ms | |
+| High, conn, CPU 4x: forced render p50 / p95 | 9.7 / 11.6 (12.7) ms | 7.3 / 8.7 (17.1) ms | p95 18 |
+| Medium, conn | 478 calls, 2.1 / 2.7 ms | 291 calls, 1.7 / 2.0 ms | 330 calls |
+| Low, conn | 459 calls, 1.8 / 2.3 ms | 269 calls, 1.5 / 1.7 ms | 280 calls |
+| Motion layer (Ship motion on against off), High / Low | | 0.1 / 0.1 ms (`frames-motion.jsonl`) | 0.6 / 0.2 |
+
+Headless Chrome paces rAF at 60 Hz, so its p95 can't fall under 16.7 ms here; the frame's own cost is the forced render (draw and `gl.finish`). The motion layer is timed by the frame's CPU, at the 0.1 ms the browser's clock gives: ANGLE on Metal answers GPU timer queries with wall time (8 to 22 ms for frames drawn in 2), which the probe now refuses. The CPU 4x worst run (17.1 ms) is one window of five with the machine busy; its median is 8.7 ms.
+
+`node design/soak-quality.mjs 10` (`soak.txt`): ten minutes of Auto on the GPU with the old Low cap saved, twelve terminals attached printing 3,000 lines at once every half minute, Night to Day and back, two jumps. 598 s at High, none at Medium or Low, no step, the chip says *Auto - running at High*, and the old key is gone. `node design/flicker-check.mjs` passes by Night and by Day.
+
+### Left for later
+
+- Give-way still dims the spectacle to 30% in normal use, and the tuning sits under what a person notices (DESIGN.md enforces it): the next stage, look and give-way, is the visible win.
+- The probe's rAF numbers are vsync-bound headless; on the captain's 120 Hz panel the governor's 12 ms rule is the one that applies, on a 60 Hz one the every-frame-on-its-refresh rule.
+- A unit's stripe, chest mark and letters go at 13 m on Medium and 7 m on Low; from the conn on Low that is every unit. The band, ring, glyph and callout stay at every distance.
+- The plinth under a laptop takes the bezel's paint (`#26303C` for `#2E3946`), 14 mm of it.

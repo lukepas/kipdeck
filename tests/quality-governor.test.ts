@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { GOVERNOR, Governor, floorFor, p95, type Step } from '../src/client/features/quality/governor.js';
 import { CAP_KEY, CAP_TTL_MS, OLD_CAP_KEYS, clearCap, readCap, sessionId, writeCap, type Store } from '../src/client/features/quality/cap.js';
-import { canTryHigh, chipText, stepText, type QualityStatus } from '../src/client/features/quality/status.js';
+import { canTryHigh, chipText, menuText, stepText, type QualityStatus } from '../src/client/features/quality/status.js';
 
 // Auto at Settings > Bridge > Quality (features/quality/governor.ts): fed made-up frame streams, it
 // throws away warm-up and hitches, steps down one tier only for sustained slow frames, climbs back
@@ -214,6 +214,8 @@ test("the chip says the tier Auto runs at, the last step and when 'Try High' has
   const down: QualityStatus = { ...s, tier: 'medium', last: { to: 'medium', dir: 'down', at: 1, why: 'slow frames', wall } };
   assert.equal(chipText(down), 'Auto - running at Medium');
   assert.equal(stepText(down), 'stepped to Medium at 14:02, slow frames');
+  assert.equal(menuText(down), 'Auto - Medium since 14:02, slow frames');
+  assert.equal(menuText(s), 'Auto - running at High');
   assert.equal(canTryHigh(down), true);
   assert.equal(chipText({ ...s, setting: 'low', tier: 'low' }), 'Low, picked by hand');
   assert.equal(canTryHigh({ ...s, setting: 'low', tier: 'low' }), false);
