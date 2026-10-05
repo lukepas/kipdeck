@@ -63,6 +63,7 @@ import { installBottomBar } from './features/bottombar';
 import { makeMotion } from './motion';
 import { installLights } from './features/lights';
 import { installQuality } from './features/quality';
+import { installMerge } from './features/merge';
 import { installLife } from './features/life';
 import { installGiveWay } from './features/giveway';
 import { installDestination } from './features/destination';
@@ -196,6 +197,8 @@ installDictation(ctx);
 parts.hud = installHud(ctx, parts);
 installBottomBar(ctx, parts);
 parts.launch = installLaunch(ctx, parts);
+// Last: the deck's static meshes merged into a few draws, once everything above has built its own.
+installMerge(ctx);
 
 // ---- Main loop ---------------------------------------------------------------------------------------
 fitWindow(ctx);
