@@ -4,7 +4,7 @@
 
 UGC Army puts every coding agent your team runs on one shared deck and ranks them by who needs a person right now: the units waiting on an answer first, then the stuck ones, then finished work waiting for review. You answer, unblock and review from one place instead of hunting through terminals. When a person merges a unit's pull request, the merge is proven on testnets: a devnet USDC bounty is released from escrow, an EAS attestation lands on Base Sepolia, and the agent's ERC-8004 reputation grows, all visible on a public ledger at `/pom/`.
 
-![The deck from the Overview: the mission table in the middle, four pods of consoles, the curved situation wall to the north, units that need you on the ready line](docs/img/deck-overview.png)
+![The deck from the Overview: the mission table in a pit in the middle, four pods of consoles on two tiers stepping up to the captain's dais, the situation arc hung to the north, units that need you on the ready line](docs/img/deck-overview.png)
 
 [**Run it**](#run-locally) · [**What it does**](#what-it-does) · [**Proof of Merge**](#proof-of-merge-on-testnets) · [**Deploy**](#deploy-to-aws-ec2) · [**Controls**](#controls) · [**Design system**](DESIGN.md) · [**Docs**](docs/features.md)
 
@@ -19,7 +19,7 @@ UGC Army puts every coding agent your team runs on one shared deck and ranks the
 
 - **One ranking of who needs you.** `src/shared/attention.ts` ranks every unit on every deck: needs you (a question or a permission), stuck (crashed, silent, failing, never given a task), to review (done, a PR to merge or hand back), working, parked. The top bar's counters, the Units rail, Mission control, the 2D view, the tab title, the favicon and the wall's Attention board all read it, so they never disagree. A crashed unit stays stuck until a person resumes it.
 - **Mission control.** Press **I**. Attention, Goals, Review, Timeline and Crew tabs: what needs someone with one next step per row, the deck's mission and milestones (given to new units as context), a review inbox of finished work, pull requests and payouts to approve, and what happened while you were away. Reminders catch what would otherwise be forgotten. See [docs/mission-control.md](docs/mission-control.md).
-- **A deck per project.** Each GitHub repository is a deck: the mission table in the middle, four pods of consoles facing it, the situation wall curving round its north side with Issues, Queue, Attention, Pull requests and Services, the Proof corner on the west wall and the Review bay in the north-west corner ([the deck](docs/deck.md)).
+- **A deck per project.** Each GitHub repository is a deck, built as a command amphitheatre: the mission table in a pit in the middle, four pods of consoles facing it on two tiers that step up south of it to the captain's raised dais, the situation arc hung over the north side (the Attention board in the middle, Issues over Queue and Pull requests over Services on its wings, capacity along its foot), the Proof corner on the west wall and the Review bay in the north-west corner ([the deck](docs/deck.md)). Sitting in the captain's chair frames it all in one look: the bow, the arc, the pit and the crew.
 - **Units at consoles.** Deploy Claude Code, Codex, OpenCode, Grok, Muse, DeepSeek Harness, Pi or Cursor at a free console, with its model and effort. Each runs in its own git worktree; its live terminal is one click away, for anyone on the deck. A unit that needs you steps onto its pod's ready line under orange light; **N** takes you to the next one.
 - **Agents that manage agents.** Every unit can list, deploy, message and stand down the others through the `ugc-army` MCP server or the `office-workers` command, and board agents at the situation wall triage issues and pull requests for whoever walks up.
 - **The 2D view.** `/lite` is the deck as a plan beside the ranked list, with terminals, the keys a phone lacks and the boards. Phones go there by default.
@@ -364,7 +364,7 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 | N | Go to the next unit that's waiting on you (the view flies there), then the next deck's |
 | X | Stand a unit down |
 | L | Stencil a tag by a console ("Operations", "Code cleanup") |
-| G | The Overview: the whole deck from above (Q / E turn it, G walks again) |
+| G | The Overview: the whole deck from above its starboard quarter, in section (Q / E turn it, G walks again) |
 | T / Enter | Chat |
 | V | Join voice; then hold V to talk |
 | M | Mute / unmute in voice |
@@ -396,7 +396,7 @@ Every change to the app that lands on `main` is published as a GitHub release by
 
 - [Features](docs/features.md): seeing what every agent does, handing out work, reviewing it and staying on mission
 - [Design system](docs/design.md): each surface on screen, the motion and sound that mark a change of state, demo mode, and how to check a design change with `design/shoot.mjs`
-- [The deck](docs/deck.md): what's where on the 3D deck (the mission table, the pods, the ready line, the boards, the Proof corner), cell addresses, and the Overview camera
+- [The deck](docs/deck.md): what's where on the 3D deck (the pit and the mission table, the tiers and the pods, the conn's dais, the ready line, the situation arc, the Proof corner), cell addresses, and the Overview camera
 - [Mission control](docs/mission-control.md): the attention ranking, the floor's mission and milestones, linking work to goals, the review inbox, the timeline, reminders and the digest
 - [Proof of Merge bounties](docs/bounties.md): devnet USDC escrowed against an issue, paid only when a person merges the office's pull request and an admin approves (testnet only, off by default); the [GitHub Action](onchain/action/README.md) attests merges to the same escrow from any repository's workflow, without the office
 - [Proof of merge on Base Sepolia](docs/proof-of-merge.md): an EAS attestation for every office PR a person merges, reverts or closes in an opted-in public repository, and an indexer that rebuilds the leaderboard from chain data alone (testnet only, `--attest --attest-repos`)

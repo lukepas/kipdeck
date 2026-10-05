@@ -496,7 +496,7 @@ Frame time at 1440x900 by Night on the GPU (Apple M3 Pro through ANGLE Metal), `
 
 ## The bridge: readability
 
-The captain asked for the whole environment to be more impressive, and the first thing in the way was that the wall boards could not be read from the chair: the holo's stars drifted over the Attention board's rows, the units' callouts (PR AGENT, B-01 SPROCKET, A-01 PIXEL) sat in front of the boards, and the wall was 23 m off, its rows 6 px tall. This stage clears the boards and brings them closer, before any of the spectacle that follows. What it does is in [docs/design.md](../docs/design.md#the-wall-boards-from-the-conn).
+The captain asked for the whole environment to be more impressive, and the first thing in the way was that the wall boards could not be read from the chair: the holo's stars drifted over the Attention board's rows, the units' callouts (PR AGENT, B-01 SPROCKET, A-01 PIXEL) sat in front of the boards, and the wall was 23 m off, its rows 6 px tall. This stage clears the boards and brings them closer, before any of the spectacle that follows. What it does is in [docs/design.md](../docs/design.md#the-bridge-from-the-captains-chair).
 
 ### Before and after
 
@@ -712,3 +712,54 @@ Headless Chrome paces rAF at 60 Hz, so its p95 can't fall under 16.7 ms here; th
 - The probe's rAF numbers are vsync-bound headless; on the captain's 120 Hz panel the governor's 12 ms rule is the one that applies, on a 60 Hz one the every-frame-on-its-refresh rule.
 - A unit's stripe, chest mark and letters go at 13 m on Medium and 7 m on Low; from the conn on Low that is every unit. The band, ring, glyph and callout stay at every distance.
 - The plinth under a laptop takes the bezel's paint (`#26303C` for `#2E3946`), 14 mm of it.
+
+## The interior: layout
+
+The second stage of the interior round: the Dais, the composition fix the jury scored highest. The room had no hierarchy from the chair: a low conn, the boards 21 m off in a ring standing on the deck, the holo over the Attention board and the armrest console filling a third of the frame. The deck is now a command amphitheatre (`src/shared/amphitheater.ts`, `src/client/features/amphitheater/`): the mission table in a pit, two tiers of consoles stepping up south of it to the captain's dais 1.8 m up, and the situation arc hung over the far side of the pit, concave toward the chair. What it is and how it reads is in [docs/deck.md](../docs/deck.md) and [docs/design.md](../docs/design.md#the-bridge-from-the-captains-chair).
+
+### What moved, and what stayed
+
+- The conn is a 3.2 m dais at z 10.7 (the plan said about 11.5; at 11.3 the dais's back closed the walkway out of the lift, so it sits 0.8 m further north), with an aisle of eight steps down to the pit, a gallery ramp either side at 1 in 6.2 from the back tier, a brass rail round its back and a gold lip. The captain's chair is the hero: a high back, gold piping, a gold underlight, the counts and the course on slim armrest strips. Seated, the eye is 2.98 m up and 17.5 m from the Attention board.
+- The tiers: 0.45 m from 5 to 7.8 m out, 0.9 m from 7.8 to 10.5 m (the plan's 7.5 and 10 left no walkway behind a stool), their ends ramped to the deck. A and B on the back tier, C and D on the front, with the same desk ids; each pod's ready line round the pit on its side of the aisle.
+- The arc: the Attention board 7.2 by 3.2 m from 3.0 to 6.2 m, the capacity strip from 2.35 m under it (inside the arc's foot, so the holo and the heads stay under it), the wings' boards 4.6 by 1.8 m (1.6 m held only one row), two to a wing. All of it 0.6 m under the ceiling. The overhead counts strip is gone: it said the Attention board's band again right over it, and took the bow's space; the ticker and the condition band hang over the arc.
+- The seated framing is 50 degrees, not the plan's 60: at 60 the arc is 18% of the frame's height, under the 22% the acceptance asks. It is aimed 30% of the way up the arc so the crew on the tiers stay in frame.
+- Unchanged: the mission table at the origin, the wing, the Standby bench, the Review bay, the lift, every seat id, N, I, G, the Units rail (expanded), the edge pointers and the modals. The arc and the floor are fixtures of their own plus one install line for the framing; nothing in `server.ts`, `protocol.ts` or the store.
+
+### Before and after
+
+On the GPU (ANGLE Metal, M3 Pro) at 1440x900, sat in the captain's chair the way E does (`SHOOT_POSE=sit`), a busy crew with desk-2 asking, the toasts and the waiting card closed, in `shots/interior-layout/`. The before set is the build of 3cc6cd0 from a scratch copy (`SHOOT_ROOT`).
+
+| | Before | After |
+| --- | --- | --- |
+| The chair, Night and Day, High and Medium (`<light>-<quality>-sit.png`) | eye 1.3 m up over the armrest console; the boards a thin band 21 m off, the holo across the Attention board | bow and canopy over the arc (30% of the frame), the arc (25% of the height, two thirds of the width), the pit and the holo, the crew on the tiers; the captain asked for a change visible at a glance: `before-after-sit.png`, and against the interior baseline `before-after-conn.png` |
+| The Overview (`*-overview.png`, `before-after-overview.png`) | from aft, a flat ring of pods | raised over the starboard quarter: the dais, both tiers, the pit, the holo and the arc in section, every callout in view |
+| What covers the boards (`after/*-mask.png`, `after/mask.json`) | | boards painted magenta: nothing of the deck in front of any; the 0.2 to 3% left is the HUD over the canvas (the crosshair dot, an edge marker) |
+
+### Checks
+
+- `tests/sightline.test.ts`: every console's hood, a head on either tier, the holo at 2.3 m and the board agents at least 8 cm under the seated eye's line to the arc's foot; the arc under the ceiling; the framing's bands. `tests/amphitheater.test.ts`: the heights, the 1:6 galleries, the walks from the lift to the dais, into the pit and up each gallery with no ledge.
+- `node design/walk-check.mjs` (`walk-check.txt`): down the aisle and back up it with no step over 0.14 m, up both risers (0.45 m each, the camera easing it) and held at the back tier's edge, up a gallery to the dais, held by the dais's back rail, never off the floor; the chair at 50 degrees from a 2.98 m eye; G, I, Esc and N work, no page errors.
+- `npm run typecheck`, `npm test` (984 pass) and `npm run build` clean; `FLICKER_QUALITY=high node design/flicker-check.mjs metal` passes by Night and by Day.
+
+### Frame time
+
+`node design/perf-probe.mjs metal`, `PROBE_SETTINGS='{"quality":"high"}'`, five runs each; the before from the old conn's eye, the after from the chair (`PROBE_CONN='[[0,2.98,11],[0,3.5,-6.5]]'`). Every row in `frames-before.jsonl` and `frames-after.jsonl`; medians, worst run in brackets.
+
+| | Before | After | Budget |
+| --- | --- | --- | --- |
+| High, conn: draw calls | 378 | 364 | 400 |
+| High, conn: forced render p50 / p95 | 2.0 / 2.4 (3.0) ms | 1.9 / 2.5 (2.6) ms | |
+| High, conn: rAF p95 | 16.8 ms | 16.8 ms | |
+| High, side port | 127 calls, 0.9 / 1.3 ms | 129 calls, 1.0 / 1.3 ms | |
+| High, jump with the tunnel open | 431 calls, 2.0 / 2.7 ms | 403 calls, 1.9 / 2.5 ms | |
+| High, conn, CPU 4x: forced render p50 / p95 | 7.6 / 9.1 (12.9) ms | 7.1 / 8.6 (9.5) ms | |
+| Motion layer (Ship motion on against off) | 0.1 ms | 0.1 ms | 0.6 |
+
+The floor and the arc cost fewer draws than the standing wall and the overhead strip they replace.
+
+### Left for later
+
+- The left wing's outer edge sits under the expanded Units rail at 1440x900; centring the frame on the visible part of the canvas (a view offset) would bring it out, but changes every screen-space test the deck makes.
+- The routes (`nav.ts`) don't use the galleries (a metre wide, with a ledge either side they leave no cell clear); people walk them, units and N's flights go by the aisle.
+- N stands you 2.4 m behind a back-tier console, which is on a gallery: higher than the unit, still looking over its shoulder.
+- `tests/mission-e2e.test.ts`'s debrief case failed once in this stage's runs on the baseline bundle too (SwiftShader nearing its 60 s wait); it passed in the final full run.

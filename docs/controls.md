@@ -7,7 +7,7 @@ Back to the [README](../README.md).
 | W A S D / arrows | Walk (hold Shift to run) |
 | Space | Jump (you can land on consoles and the operator bench) |
 | Mouse drag / wheel | Orbit / zoom the camera |
-| G | The Overview: the whole deck from above. In it, Q / E turn it a quarter, W A S D, the arrows or a drag pan, the wheel zooms, and G or Esc walks again (see [The deck](deck.md#walk-and-overview)) |
+| G | The Overview: the whole deck from above, from its starboard quarter, so the dais, the tiers, the pit and the arc read in section. In it, Q / E turn it a quarter, W A S D, the arrows or a drag pan, the wheel zooms, and G or Esc walks again (see [The deck](deck.md#walk-and-overview)) |
 | E | Interact: hire a worker, open its terminal, read a board, take an issue's note off the board, prompt a board agent, call a review in the Review bay, draw on the whiteboard, read the docs at the docs rack, watch the Attention board, sit down (or get up), open the Floors window at the Deck lift, open the overflow bay past the lift for 2 more consoles (at the **Room to grow** sign) |
 | P | Prompt: give a task to a new worker, or to the one at this desk |
 | C | Changes: the files the worker at this desk changed and their diff; commit, discard or open a PR |
@@ -30,7 +30,7 @@ Back to the [README](../README.md).
 | Esc | Close any window (a terminal too) and get back to looking around, or to the Overview if you opened it there |
 | Ctrl + [ | Send Esc to a terminal instead, to close a menu like Claude's `/skills` or interrupt Claude. **Esc** in the terminal's header does the same |
 
-From the conn (in the captain's chair, or standing on the dais with the mouse captured), rest the crosshair on a wall board for a moment and the view leans in on it, so its rows read without walking up; move the mouse or press a key and it eases back. With reduced motion, or Settings > Bridge > Ship motion at Off, it cuts instead of easing.
+Sitting in the captain's chair (E at it) frames the bridge: a slightly narrower view, aimed low on the situation arc, the bow and the arc over the pit and the crew. From the conn (in the chair, or standing on the dais with the mouse captured), once you've moved the mouse, rest the crosshair on a wall board for a moment and the view leans in on it, so its rows read without walking up; move the mouse or press a key and it eases back. With reduced motion, or Settings > Bridge > Ship motion at Off, it cuts instead of easing.
 
 You can also click a nearby console to interact with it, or click a unit in the Units rail down the left to open its terminal. To change decks, click the deck name in the top-left corner.
 
