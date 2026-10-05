@@ -65,6 +65,7 @@ import { installLights } from './features/lights';
 import { installQuality } from './features/quality';
 import { installMerge } from './features/merge';
 import { installIbl } from './features/ibl';
+import { installAtmos } from './features/atmos';
 import { installLife } from './features/life';
 import { installGiveWay } from './features/giveway';
 import { installDestination } from './features/destination';
@@ -180,6 +181,8 @@ installPosture(ctx, parts);
 parts.alert = installAlert(ctx, parts);
 // What the deck's surfaces reflect: the room's own light inside, the sky's on the hull.
 installIbl(ctx, parts);
+// The light round the deck: shafts, dust, haze, pools, the canopy's ribs and light from outside.
+installAtmos(ctx, parts);
 installMoments(ctx, parts);
 parts.drive = installDrive(ctx, parts);
 parts.turnaround = installTurnaround(ctx, parts);
