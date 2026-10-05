@@ -4,7 +4,7 @@ import { FLOOR, GRID, SOUTH_CURB, WALL_HEIGHT, WALL_T, WINDOWS, WING, type Openi
 import { mergeByMaterial, mesh } from '../toon';
 import type { Collider } from '../types';
 import type { Fixture } from './fixture';
-import { DECK, VIEWPORT_GLASS, box, hullPanels, matte, matteUnique, onWall, practical, type Looks } from './materials';
+import { DECK, VIEWPORT_GLASS, box, hullPanels, matte, matteUnique, onWall, paintedBox, practical, type Looks } from './materials';
 
 // The deck's shell: its outside walls, full height on the north, east and west where the boards hang,
 // and only a curb on the south, so the Overview sees every unit over it. The walls are the bridge's
@@ -236,7 +236,7 @@ export function wallRun(into: THREE.Group, cols: Collider[], axis: 'x' | 'z', at
       piece(a, b, SHADE_HEIGHT, y1);
       return;
     }
-    const m = new THREE.Mesh(axis === 'x' ? box(b - a, y1 - y0, T) : box(T, y1 - y0, b - a), paint);
+    const m = paintedBox(axis === 'x' ? box(b - a, y1 - y0, T) : box(T, y1 - y0, b - a), paint);
     const u = (a + b) / 2;
     m.position.set(axis === 'x' ? u : at, (y0 + y1) / 2, axis === 'x' ? at : u);
     m.castShadow = y1 <= SHADE_HEIGHT;

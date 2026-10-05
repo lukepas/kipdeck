@@ -158,15 +158,18 @@ export function practical(color: THREE.ColorRepresentation, opacity = 1): THREE.
   return m;
 }
 
-/** Smoked glass: dark, a little see-through, for the Review bay. */
-export const GLASS = new THREE.MeshStandardMaterial({ color: '#1B2733', roughness: 0.15, metalness: 0.2, transparent: true, opacity: 0.38, depthWrite: false, side: THREE.DoubleSide });
+/**
+ * Smoked glass: dark, a little see-through, for the Review bay. Its panes are flat, so one pass draws
+ * both sides as two passes would (see-through and double sided is otherwise two draws a pane).
+ */
+export const GLASS = new THREE.MeshStandardMaterial({ color: '#1B2733', roughness: 0.15, metalness: 0.2, transparent: true, opacity: 0.38, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true });
 
 /**
  * Viewport glass: almost clear looking straight through, with a cold tint that thickens toward
  * grazing angles (a fresnel) and a faint sheen, so it reads as glass rather than a hole, and space
- * reads through it. Drawn after what's outside it (renderOrder 2).
+ * reads through it. Drawn after what's outside it (renderOrder 2), in one pass: its panes are flat.
  */
-export const VIEWPORT_GLASS = new THREE.MeshStandardMaterial({ color: '#16242F', roughness: 0.08, metalness: 0.6, transparent: true, opacity: 0.1, depthWrite: false, side: THREE.DoubleSide });
+export const VIEWPORT_GLASS = new THREE.MeshStandardMaterial({ color: '#16242F', roughness: 0.08, metalness: 0.6, transparent: true, opacity: 0.1, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true });
 VIEWPORT_GLASS.onBeforeCompile = (shader) => {
   shader.fragmentShader = shader.fragmentShader.replace(
     '#include <opaque_fragment>',
@@ -287,6 +290,25 @@ export function contactShadow(w: number, d: number, x = 0, z = 0, rotY = 0, y = 
 
 export function box(w: number, h: number, d: number) {
   return new THREE.BoxGeometry(w, h, d);
+}
+
+/**
+ * A box painted face by face, its faces gathered by paint: a box with two paints is two draws (and
+ * two shadow draws), not one per face.
+ */
+export function paintedBox(geo: THREE.BufferGeometry, paint: THREE.Material[]): THREE.Mesh {
+  const index = geo.index!;
+  const mats = [...new Set(paint)];
+  const out: number[] = [];
+  const groups = geo.groups.map((g) => ({ ...g }));
+  geo.clearGroups();
+  for (const [k, mat] of mats.entries()) {
+    const start = out.length;
+    for (const g of groups) if (paint[g.materialIndex ?? 0] === mat) for (let i = g.start; i < g.start + g.count; i++) out.push(index.getX(i));
+    geo.addGroup(start, out.length - start, k);
+  }
+  geo.setIndex(out);
+  return new THREE.Mesh(geo, mats.length === 1 ? mats[0] : mats);
 }
 
 /**

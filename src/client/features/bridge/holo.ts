@@ -72,6 +72,8 @@ export const holo: Fixture<'holo'> = (site) => {
   const skin = new THREE.Mesh(new THREE.CylinderGeometry(BAND.reach + 0.25, BAND.reach + 0.25, BAND.to + 0.05, 64, 1, true), light(0.1));
   (skin.material as THREE.MeshBasicMaterial).map = fadeUp();
   (skin.material as THREE.MeshBasicMaterial).side = THREE.DoubleSide;
+  // Added light is the same in any order: both sides in one pass, one draw.
+  (skin.material as THREE.MeshBasicMaterial).forceSinglePass = true;
   skin.position.y = (BAND.to + 0.05) / 2;
   root.add(skin);
   // The emitter ring on the tabletop that throws it.
@@ -113,6 +115,7 @@ export const holo: Fixture<'holo'> = (site) => {
   const chevShape = new THREE.Shape([new THREE.Vector2(0, 0.14), new THREE.Vector2(0.1, -0.06), new THREE.Vector2(0, -0.01), new THREE.Vector2(-0.1, -0.06)]);
   const chevron = new THREE.Mesh(new THREE.ShapeGeometry(chevShape).rotateX(-Math.PI / 2), light(0.35, '#DDEFF5'));
   (chevron.material as THREE.MeshBasicMaterial).side = THREE.DoubleSide;
+  (chevron.material as THREE.MeshBasicMaterial).forceSinglePass = true;
   plot.add(chevron);
 
   // Dashes of light running along the course from the start to the ship: the course being made good.

@@ -263,7 +263,7 @@ function outerHull(): { group: THREE.Group; drive: Drive } {
     o.receiveShadow = true;
   });
   // The drive glow behind each nozzle: additive, so it adds light to space rather than covering it.
-  const glowMat = new THREE.MeshBasicMaterial({ color: DECK.ship, map: plumeFade(), transparent: true, opacity: GLOW, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
+  const glowMat = new THREE.MeshBasicMaterial({ color: DECK.ship, map: plumeFade(), transparent: true, opacity: GLOW, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide, forceSinglePass: true });
   for (const s of [-1, 1]) {
     for (const [len, r] of [
       [7, 1.05],

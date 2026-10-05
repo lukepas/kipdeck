@@ -3,7 +3,7 @@ import { DESKS, FLOOR, SLAB, WALL_T, WING, WING_DESKS, deskSeat, wingMinZ } from
 import { mesh, stretch } from '../toon';
 import type { Collider, DeskView, Interactable } from '../types';
 import type { Fixture } from './fixture';
-import { DECK, box, matte, worldUv, type Looks } from './materials';
+import { DECK, box, matte, paintedBox, worldUv, type Looks } from './materials';
 import { buildDesk, consoleColliders } from './seats';
 import { wallRun } from './shell';
 
@@ -149,7 +149,7 @@ export function buildWing(group: THREE.Group, colliders: Collider[], interactabl
         floor.receiveShadow = true;
         const edge = matte(DECK.console);
         const under = matte(DECK.wallReveal);
-        const slab = new THREE.Mesh(box(w + 2 * T, SLAB - 0.01, d), [edge, edge, under, under, edge, edge]);
+        const slab = paintedBox(box(w + 2 * T, SLAB - 0.01, d), [edge, edge, under, under, edge, edge]);
         slab.position.set(midX, -SLAB / 2 - 0.005, (back - T + FLOOR.minZ - T) / 2);
         slab.receiveShadow = true;
         take(slab);

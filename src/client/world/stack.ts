@@ -3,7 +3,7 @@ import { FLOOR, SLAB, WALL_HEIGHT, WALL_T } from '../../shared/layout';
 import type { Collider } from './types';
 import type { Fixture } from './office/fixture';
 import { mesh } from './toon';
-import { DECK, matte, practical, worldUv } from './office/materials';
+import { DECK, matte, paintedBox, practical, worldUv } from './office/materials';
 
 // The deck you walk on: a graphite slab, its floor ruled with the grid and its edge lit. Under it and
 // round it is the ship's hull, and over it the canopy (features/bridge/). Every floor of the building
@@ -36,7 +36,7 @@ export function buildStack(colliders: Collider[], planks: THREE.Material): Stack
   const D = d + 2 * WALL_T;
   const edge = matte(DECK.console);
   const under = matte(DECK.wallReveal);
-  const slab = new THREE.Mesh(new THREE.BoxGeometry(W, SLAB - 0.01, D), [edge, edge, under, under, edge, edge]);
+  const slab = paintedBox(new THREE.BoxGeometry(W, SLAB - 0.01, D), [edge, edge, under, under, edge, edge]);
   slab.position.set(cx, -SLAB / 2 - 0.005, cz);
   slab.receiveShadow = true;
   group.add(slab);
