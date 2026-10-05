@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { Fixture } from '../../world/office/fixture';
-import { DECK, contactShadow, flat } from '../../world/office/materials';
+import { DECK, contactShadow, flat, practical } from '../../world/office/materials';
 import { onBridgeLayer } from '../bridge/shapes';
 import { CHARGER } from './path';
 
@@ -11,7 +11,7 @@ import { CHARGER } from './path';
 // whatever Bolt is serving; one articulated arm under its right side, shoulder, forearm and a
 // two-fingered clamp, which folds up in flight and reaches down to carry a small ship-cyan crate of
 // work. A short ship-cyan trail follows the crate so a handoff reads from the conn. Its charger is a
-// bracket on the west wall. No hue of its own beyond the crate's working cyan: it never competes with a
+// cradle on the sill of a west port. No hue of its own beyond the crate's working cyan: it never competes with a
 // state. On the bridge layer, so the Overview never shows it. Eight draws, nine while carrying.
 
 export interface DroidRig {
@@ -66,14 +66,20 @@ export const droid: Fixture<'droid'> = (site) => {
   const group = new THREE.Group();
   group.name = 'droid';
 
-  // The charger: a bracket on the wall with a cradle the droid settles into.
+  // The charger: a cradle on the port's sill the droid settles into, its plate on the wall under the
+  // sill so the glass over it stays clear, steel that takes the room's light by day and by night, and
+  // a ship-cyan seat light along the cradle's lip.
   const charger = new THREE.Group();
   const bracket = mergeGeometries([
-    new THREE.BoxGeometry(0.06, 0.62, 0.46).translate(0, 0, 0),
+    new THREE.BoxGeometry(0.06, 0.24, 0.46).translate(0, -0.39, 0),
     new THREE.BoxGeometry(0.34, 0.04, 0.4).translate(0.17, -0.27, 0),
+    new THREE.BoxGeometry(0.2, 0.1, 0.04).translate(0.1, -0.33, 0),
     new THREE.TorusGeometry(0.15, 0.018, 6, 24).rotateX(Math.PI / 2).translate(0.24, -0.24, 0),
   ])!;
-  charger.add(new THREE.Mesh(bracket, flat(DECK.console)));
+  charger.add(new THREE.Mesh(bracket, flat(DECK.steel)));
+  const lip = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.012, 0.36), practical(DECK.shipDim));
+  lip.position.set(0.345, -0.27, 0);
+  charger.add(lip);
   charger.position.set(CHARGER.x - 0.36, CHARGER.y + 0.02, CHARGER.z);
   group.add(charger);
 
