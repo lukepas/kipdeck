@@ -447,3 +447,49 @@ Frame time at 1440x900 by night on the GPU (Apple M3 Pro through ANGLE Metal), `
 - The fleet's record reaches back only as far as each deck's timeline (2000 events a deck); a long-lived fleet may forget an old record week.
 - Reply times start from this stage: the server notes each answer from now on, so the pit wall's seven-day reply median fills in over a week.
 - `src/client/features/space/stars.ts` calls `smoothstep` with its edges reversed (undefined in GLSL; it happens to work on today's GPUs). The rituals' own shaders keep their edges in order.
+
+## The bridge: life, round two
+
+The captain still found the bridge short of life, and wanted the feeling of something big that pushes the crew on, with Guardians of the Galaxy or Star Wars as a loose inspiration. Three critics (mood, focus and performance) reviewed the life stages from `shots/life-review/`. Their main finding was that most of the new life was text. The crew sat still, the jump played like a screensaver, the destination was out of sight from the conn and the start of watch leaned on a famous film's opening crawl. This round fixed every item they marked must and most of the should and nice ones. Everything is still driven by real events, and when something needs the captain the spectacle yields.
+
+- **The crew move** (`src/client/features/posture/`): every unit carries itself for its real state. It leans in at work and glances across at the next screen now and then. It stands and stretches once when it finishes. Stuck, it slumps and sighs over a slow red breath of light on its desk. Needing the captain, it turns to the conn with a hand up. It is laid over each unit's pose after the celebrations' gestures, so neither disturbs the other.
+- **The jump in three beats** (`src/client/features/space/`): the spool-up lets the lights down through 3, 2, 1 while the view's edges breathe ship-cyan. The punch kicks the view about 8 degrees wider into a bright tunnel that lights the room from the glass. On the arrival the next world swings into the glass. With sound on, the drive spools up and releases (`src/client/sound/jump.ts`, synthesized, off by default).
+- **The destination in sight** (`src/client/features/destination/`): it sits low in the left-hand pane from the conn and fills about a quarter of the view from the first waypoint. It turns slowly and grows to a third. Its band is two short lines under it that fit their pane. The nebula is brighter, teal with a magenta heart.
+- **An original start of watch** (`src/client/features/launch/watchlog.ts`): the receding crawl is gone. A scanline wipes a flat panel onto the forward glass and the day's log is typed onto it a sentence a line. Merge toasts that land meanwhile are held, and merges that land together gather into one toast.
+- **A band that never cries wolf** (`src/client/features/alert/`): the words follow the condition at that moment, and the latch only holds the light. The band says STANDING DOWN the moment nobody waits, and it names the quick answer beside a stuck unit. The strip's counts repaint with it in the same frame. Through the 20 s stuck clip, `shoot-life.mjs` found no frame naming a condition with nobody waiting.
+- **Bolt, redrawn and on by default** (`src/client/features/droid/`): a lopsided tool-drone with one arm and one eye-light, about half as big again, so it belongs to no franchise. It carries the crate in its clamp with a trail behind it and hops as it hands the crate over.
+- **The drive core** shows a pulse up the column for each merge, a darker unlit steel and a RUN and BEST plaque on its collar. **The top bar** no longer opens the day on a row of zeros: once there is something it says what the crew got through. **VESPER** gets a voice plate with a waveform.
+
+`node design/shoot-life.mjs` (after `npm run build`) takes every still and clip below from a built office with the page's clock stepped a frame at a time. `SHOOT_LIGHT=day` takes the Day set, and `SHOOT_OUT` names the folder. The clips are `night-showcase.mp4` (20 s from the conn: a unit finishes, a merge, then a waypoint's jump), `night-busy-bridge.mp4`, `night-merge-milestone.mp4` and `night-stuck-needs-you.mp4`, with a frame a second tiled beside each in `*-frames.png`.
+
+| Before | After |
+| --- | --- |
+| ![](shots/life-review/night-conn.png) | ![](shots/life-final/night-conn.png) |
+| ![](shots/life-review/night-ahead.png) | ![](shots/life-final/night-ahead.png) |
+| ![](shots/life-review/night-launch-crawl.png) | ![](shots/life-final/night-launch-log.png) |
+| ![](shots/life-review/night-stuck-still.png) | ![](shots/life-final/night-stuck-still.png) |
+| ![](shots/life-review/night-droid.png) | ![](shots/life-final/night-droid.png) |
+| ![](shots/life-review/night-drive-core.png) | ![](shots/life-final/night-drive-core.png) |
+
+| The spool-up | The punch | In the tunnel | The arrival |
+| --- | --- | --- | --- |
+| ![](shots/life-final/night-jump-spool.png) | ![](shots/life-final/night-jump-punch.png) | ![](shots/life-final/night-jump-tunnel.png) | ![](shots/life-final/night-jump-arrival.png) |
+
+| Leaning in | Finished: the stretch | Stuck: slumped, the desk's red breath | Needs you: turned to the conn |
+| --- | --- | --- | --- |
+| ![](shots/life-final/night-crew-working.png) | ![](shots/life-final/night-crew-stretch.png) | ![](shots/life-final/night-crew-stuck.png) | ![](shots/life-final/night-crew-asks.png) |
+
+| Day: the conn | Day: the punch | Day: the log on the glass | Day: condition red |
+| --- | --- | --- | --- |
+| ![](shots/life-final/day-conn.png) | ![](shots/life-final/day-jump-punch.png) | ![](shots/life-final/day-launch-log.png) | ![](shots/life-final/day-stuck-still.png) |
+
+Frame time at 1440x900 by Night on the GPU (Apple M3 Pro through ANGLE Metal), `node design/perf-probe.mjs metal` with twelve units at work, six sister decks and two open pull requests, every row in `shots/life-final/perf.txt`. Three builds were timed back to back: `design/ugc-army` at 5d81b96 and the reviewed `design/life` at 2cacf93 (both built from `git archive` and timed through `PROBE_ROOT`), then this round. From the conn a forced render takes 2.5 to 2.8 ms, against 2.5 to 2.6 ms on `design/ugc-army` and 2.6 to 2.7 ms on the reviewed build. That is 1063 draw calls against 1045 and 1060, and 116k triangles against 106k and 110k (the larger world, Bolt and the core's plaque). Out of a side port it is 0.9 to 1.0 ms in all three, 388 draw calls against 375 and 386. rAF p50 is 16.7 ms and p95 16.7 to 16.8 ms throughout, on vsync. The new worst cases measure well under 8 ms. The jump with its tunnel open takes 3.2 ms (p95 3.6 ms, 1152 draw calls as the view kicks wider). The start of watch takes 3.2 ms (p95 3.7 ms) while its log is typed, and the log is a page panel that adds no draw. With the CPU throttled 4x the conn takes 11.5 to 12.1 ms, against 11.0 ms on `design/ugc-army` and 11.5 ms on the reviewed build, still under 16.7 ms. In every build some rows read 8 to 12 ms in one window of a run, at a different place each time and gone in a repeat. That is other work on this machine, not a feature. The 2048x1536 crawl texture (about 16 MB of GPU memory, resident all session) is gone, and the jump's name now uses a 1024-wide canvas. `FLICKER_JUMP=1 FLICKER_RITUALS=1 node design/flicker-check.mjs metal 600` passes, by Night (84 frames in the tunnel) and by Day (103): no black frame, no NaN pixel.
+
+### Left for later
+
+- Unit tags still cover the big title painted on the wall boards from the conn (the half-hidden "UESTS" of PULL REQUESTS). Stopping that needs the tags tested against the boards.
+- The ticker over the strip is still small from the conn. One item at a time, at twice the size, is the next step.
+- The alert condition keeps the documented rule that the room never turns orange or red, so the critics' amber-red rim lights and the hologram tinting toward the stuck unit are not done. The stuck unit's own desk light carries the red.
+- The life features still install from `main.ts`, one line each, as `docs/code-layout.md` asks; no feature registry bundles them.
+- The escorts' hulls in the hangar view are as before.
+- The stuck and needs-you states in the clips are forced into the page's roster; no take drives them through a real server hook yet.
