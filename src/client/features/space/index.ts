@@ -20,7 +20,7 @@ import type { Parts } from '../../core/parts';
 import { store } from '../../state';
 import { DECK, VIEWPORT_GLASS } from '../../world/office/materials';
 import { Flybys } from './flybys';
-import { FOV } from '../../core/scene';
+import { zoomOf } from '../../core/zoom';
 import { BANNER_MS, DUCK_MS, FIRST_FLYBY_MS, FLEET_STAGGER_MS, FLYBY_GAP_MS, JUMP, JUMP_FOV, JUMP_HOLD_MS, JUMP_MS, JUMP_STRETCH, MERGE_WINDOW_MS, PUNCH_LIFT, SPACE_COLORS, SURGE, SURGE_GAP_MS, SURGE_HARD, SURGE_MS, between, countdownLeft, cruiseSpeed, flashPeak, jumpAt, jumpsNow, motionScale, pickFlyby, seeded, surgeAt, surgeGlint, surgesNow, spoolLevel, type FlybyKind } from './logic';
 import { GLOW, JumpGlow, countdownGlow } from './jumpglow';
 import { Banner, Tunnel } from './tunnel';
@@ -361,8 +361,7 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
     sky.setFlash(flash * peak);
     if (fov !== fovNow) {
       fovNow = fov;
-      ctx.camera.fov = FOV + JUMP_FOV * fov;
-      ctx.camera.updateProjectionMatrix();
+      zoomOf(ctx.camera).set('jump', JUMP_FOV * fov);
     }
     if (tint !== tintNow) {
       tintNow = tint;
