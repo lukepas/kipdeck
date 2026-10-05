@@ -67,6 +67,7 @@ import { installMerge } from './features/merge';
 import { installIbl } from './features/ibl';
 import { installAtmos } from './features/atmos';
 import { installVista } from './features/vista';
+import { installCinema } from './features/cinema';
 import { installLife } from './features/life';
 import { installGiveWay } from './features/giveway';
 import { installDestination } from './features/destination';
@@ -186,6 +187,8 @@ installIbl(ctx, parts);
 installAtmos(ctx, parts);
 // Space close by: dust streaming past the ports, a giant off one side, the sun's flare through the canopy.
 installVista(ctx, parts);
+// How the bridge is shot: the arrival, the breathing at the conn, the moments' framing, the screens' character and the grade.
+parts.cinema = installCinema(ctx, parts);
 installMoments(ctx, parts);
 parts.drive = installDrive(ctx, parts);
 parts.turnaround = installTurnaround(ctx, parts);

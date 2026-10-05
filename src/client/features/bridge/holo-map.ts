@@ -108,6 +108,7 @@ export function starMap(coneFrom: number): StarMap {
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   geo.setAttribute('aMag', new THREE.BufferAttribute(mag, 1));
   const mapMat = new THREE.ShaderMaterial({
+    userData: { holo: true },
     vertexShader: MAP_VERT,
     fragmentShader: MAP_FRAG,
     uniforms: { uPixel: { value: 1 }, uTime: { value: 0 }, uColor: { value: new THREE.Color(DECK.ship) }, uCore: { value: new THREE.Color('#E8F6FB') }, uGain: { value: 0.8 }, uBoards: { value: boards } },
@@ -126,6 +127,7 @@ export function starMap(coneFrom: number): StarMap {
 
   // The cone of projected light from the emitter ring up to the map.
   const coneMat = new THREE.ShaderMaterial({
+    userData: { holo: true },
     vertexShader: CONE_VERT,
     fragmentShader: CONE_FRAG,
     uniforms: { uColor: { value: new THREE.Color(DECK.ship) }, uTime: { value: 0 }, uGain: { value: 1 }, uBoards: { value: boards } },
@@ -150,6 +152,7 @@ export function starMap(coneFrom: number): StarMap {
   g.fillStyle = grad;
   g.fillRect(0, 0, 64, 64);
   const glowMat = new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), color: '#E8F6FB', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, opacity: 0.8 });
+  glowMat.userData.holo = true;
   const glow = new THREE.Sprite(glowMat);
   glow.scale.setScalar(0.32);
   group.add(glow);

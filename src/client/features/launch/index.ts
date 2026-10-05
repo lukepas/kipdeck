@@ -73,7 +73,7 @@ export interface Launch {
   play(kind: 'launch' | 'debrief', awayMs: number): void;
 }
 
-export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' | 'focus' | 'mission'>): Launch {
+export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' | 'focus' | 'mission' | 'cinema'>): Launch {
   const crawl = new WatchLog();
   const cards = new MomentCards(() => parts.focus.backToGame());
   const panel = new DebriefPanel({
@@ -247,8 +247,9 @@ export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' |
 
   ctx.ticks.add('world', ({ dt }) => {
     clock += dt * 1000;
-    // At load: once the deck, its crew and its log are here (or after a while regardless).
-    if (pendingLoad && store.floor && !document.getElementById('loading')) {
+    // At load: once the deck, its crew and its log are here (or after a while regardless), and the
+    // arrival shot (features/cinema) has landed on the conn.
+    if (pendingLoad && store.floor && !document.getElementById('loading') && !parts.cinema?.arriving()) {
       const ready = store.timeline.loaded && store.roster.length > 0;
       if (ready || clock > READY_WAIT_MS) {
         const kind = pendingLoad;

@@ -31,6 +31,7 @@ import type { installGiveWay } from '../features/giveway';
 import type { installVesper } from '../features/vesper';
 import type { installCrew } from '../features/crew';
 import type { installDroid } from '../features/droid';
+import type { installCinema } from '../features/cinema';
 import type { installFleet } from '../features/fleet';
 import type { installAlert } from '../features/alert';
 import type { installDrive } from '../features/drive';
@@ -121,6 +122,8 @@ export interface Parts {
   vesper: Made<typeof installVesper>;
   /** Crew dossiers on the deck: epithets, chevrons and the unit of the watch (see features/crew). */
   crew: Made<typeof installCrew>;
+  /** How the bridge is shot: the arrival, the breathing, the moments' framing, the screens and the grade (see features/cinema). */
+  cinema: Made<typeof installCinema>;
   /** Bolt, the bridge droid (see features/droid). */
   droid: Made<typeof installDroid>;
   /** The fleet in formation: every other deck as an escort (see features/fleet). */

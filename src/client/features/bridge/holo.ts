@@ -37,7 +37,13 @@ const TURN = (0.5 * Math.PI * 2) / 60;
 
 /** Additive ship-cyan, `opacity` of full strength: light added over whatever is behind it. */
 function light(opacity: number, color: THREE.ColorRepresentation = DECK.ship): THREE.MeshBasicMaterial {
-  return new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+  return holoMark(new THREE.MeshBasicMaterial({ color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
+}
+
+/** Marks a material as the holo's light, for the screen character laid into it (features/cinema). */
+export function holoMark<M extends THREE.Material>(m: M): M {
+  m.userData.holo = true;
+  return m;
 }
 
 /** A soft vertical fade, bright at the foot: the plot's volume of light over the table. */
@@ -99,7 +105,7 @@ export const holo: Fixture<'holo'> = (site) => {
   const marks = new THREE.Group();
   plot.add(marks);
   const solid = light(0.35);
-  const hollow = new THREE.LineBasicMaterial({ color: DECK.ship, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false });
+  const hollow = holoMark(new THREE.LineBasicMaterial({ color: DECK.ship, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }));
   const octa = new THREE.OctahedronGeometry(0.075, 0);
   const edges = new THREE.EdgesGeometry(octa);
   const ringGeo = new THREE.TorusGeometry(0.15, 0.008, 4, 40);
