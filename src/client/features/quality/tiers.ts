@@ -52,12 +52,21 @@ export interface TierLook {
    */
   parallax: number;
   flare: boolean;
+  /**
+   * The cinema (features/cinema): how the frame's edges are smoothed at the end of the composer (SMAA,
+   * FXAA, or the canvas's own multisampling with no composer at Low), whether the grade (vignette,
+   * grain, a lens's dirt and the mode's colour) is laid over it, and whether the boards' and the holo's
+   * screen character, the arrival shot and the idle breathing at the conn play.
+   */
+  aa: 'smaa' | 'fxaa' | null;
+  grade: boolean;
+  character: boolean;
 }
 
 export const TIER_LOOKS: Readonly<Record<Tier, TierLook>> = {
-  high: { pixelRatio: 1.5, bloom: 'full', shadow: { size: 2048, everyMs: 0 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'all', motes: 1500, cookie: true, outsideLight: true, mirror: true, parallax: 4, flare: true },
-  medium: { pixelRatio: 1.25, bloom: 'half', shadow: { size: 1024, everyMs: 50 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'bow', motes: 800, cookie: true, outsideLight: true, mirror: false, parallax: 3, flare: true },
-  low: { pixelRatio: 1, bloom: null, shadow: { size: 1024, everyMs: null }, skyLight: false, roomLight: false, glossFloor: false, starLayers: 2, shafts: null, motes: 0, cookie: false, outsideLight: false, mirror: false, parallax: 1, flare: false },
+  high: { pixelRatio: 1.5, bloom: 'full', shadow: { size: 2048, everyMs: 0 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'all', motes: 1500, cookie: true, outsideLight: true, mirror: true, parallax: 4, flare: true, aa: 'smaa', grade: true, character: true },
+  medium: { pixelRatio: 1.25, bloom: 'half', shadow: { size: 1024, everyMs: 50 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'bow', motes: 800, cookie: true, outsideLight: true, mirror: false, parallax: 3, flare: true, aa: 'fxaa', grade: true, character: true },
+  low: { pixelRatio: 1, bloom: null, shadow: { size: 1024, everyMs: null }, skyLight: false, roomLight: false, glossFloor: false, starLayers: 2, shafts: null, motes: 0, cookie: false, outsideLight: false, mirror: false, parallax: 1, flare: false, aa: null, grade: false, character: false },
 };
 
 /**

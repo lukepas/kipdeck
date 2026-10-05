@@ -42,6 +42,11 @@ export interface Lights {
    * the countdown, lit from the glass by the tunnel, 1 as the mode has it.
    */
   level(k: number): void;
+  /**
+   * Calls `fn` with the frame's composer once it's loaded (at once if it is), for a part that lays a
+   * pass into it (the grade, features/cinema). There is none at Low.
+   */
+  composer(fn: (bloom: Bloom) => void): void;
 }
 
 /** The rig's lights by name, as the dimmer addresses them. */
@@ -51,12 +56,12 @@ export type LampName = 'hemi' | 'key' | 'fill' | 'rim' | 'pods' | 'table' | 'hol
 const WARM_AFTER = 30;
 
 /**
- * Compiles the deck's shaders for the mode it isn't in, once, after the first floor arrives: Night
- * draws through the glow's target (linear, tone mapped at the end) and Day straight to the screen
- * (tone mapped in each shader), and every material has a program for each. Compiled cold, the first
- * switch held one frame for a quarter of a second; warmed here, in the background where the browser
- * can, a switch only retunes the lights. Not at Low, where software rendering compiles slowly enough
- * that the warming costs more than the one switch it saves.
+ * Compiles the deck's shaders for the way of drawing it isn't using, once, after the first floor
+ * arrives: at Medium and High both modes draw through the composer's target (linear, tone mapped at
+ * the end), at Low straight to the screen (tone mapped in each shader), and every material has a
+ * program for each. Compiled cold, the first switch of tier held one frame for a quarter of a second;
+ * warmed here, in the background where the browser can, it compiles nothing new. Not at Low, where
+ * software rendering compiles slowly enough that the warming costs more than the one switch it saves.
  */
 function warmBothModes(ctx: Ctx, worth: () => boolean) {
   let wait = -1;
@@ -97,23 +102,33 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings' 
   let bloom: Bloom | null = null;
   let bloomLoading = false;
 
-  /** The glow as the mode has it, where the Quality tier draws one at all (none at Low). */
+  /** The glow as the mode has it (Day has none), where the Quality tier draws one at all (none at Low). */
   const bloomLook = (): BloomLook | null => (parts.quality.look().bloom ? (demo ? DEMO_BLOOM : LIGHT_MODES[mode ?? 'night'].bloom) : null);
+  const waiting: ((b: Bloom) => void)[] = [];
 
-  /** The glow as the mode has it: loaded the first time it's wanted, put away while it isn't. */
+  /**
+   * The frame's composer as the tier and the mode have it: at Medium and High it draws every frame,
+   * Night's and Day's alike, with the glow on by Night; at Low it's put away (the plain render). Loaded
+   * the first time it's wanted.
+   */
   function glow() {
+    const tier = parts.quality.look();
     const look = bloomLook();
     if (bloom) {
       if (look) bloom.set(look);
-      bloom.scale(parts.quality.look().bloom === 'half' ? 0.5 : 1);
-      bloom.on(!!look);
+      bloom.glow(!!look);
+      bloom.scale(tier.bloom === 'half' ? 0.5 : 1);
+      bloom.aa(tier.aa === 'smaa' ? 'smaa' : 'fxaa');
+      bloom.on(!!tier.bloom);
       return;
     }
-    if (!look || bloomLoading) return;
+    if (!tier.bloom || bloomLoading) return;
     bloomLoading = true;
     void import('./bloom').then((m) => {
-      bloom = m.makeBloom(stage, ctx.camera, look);
+      const b = m.makeBloom(stage, ctx.camera, look ?? LIGHT_MODES.night.bloom!);
+      bloom = b;
       glow();
+      for (const fn of waiting.splice(0)) fn(b);
     });
   }
 
@@ -198,5 +213,9 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings' 
     jumpLevel = k;
     levels();
   };
-  return { mode: () => mode ?? 'night', tint, dim, level };
+  const composer = (fn: (b: Bloom) => void) => {
+    if (bloom) fn(bloom);
+    else waiting.push(fn);
+  };
+  return { mode: () => mode ?? 'night', tint, dim, level, composer };
 }
