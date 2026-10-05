@@ -4,21 +4,25 @@
  * layers), so the frame draws a few hundred meshes fewer, and the shadow pass with it. Nothing about
  * the scene graph changes for the rest of the office: each original stays where it was, on a layer no
  * camera draws (MERGED_LAYER), so code that moves, hides or reads it still finds it, and a click on the
- * merged mesh lands on the original it came from (its raycast maps each triangle back).
+ * merged mesh lands on the original it came from (its raycast is the originals').
  *
  * A merged original that later moves, hides, changes material or geometry (a door opening, a fixture
- * put away) is split off on the next check: its triangles in the merged mesh are collapsed to nothing
+ * put away) is split off within a few frames: its triangles in the merged mesh are collapsed to nothing
  * and it goes back on its own layers, drawn on its own as before. So merging is always safe, and the
- * worst a mover costs is the frame it moved in.
+ * worst a mover shows is the first few frames of its move.
  */
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { BIG_MESH, raycastRuns, runsOf, type Runs } from './ray';
 
 /** The layer the merged originals sit on: no camera ever turns it on. */
 export const MERGED_LAYER = 7;
 
 /** A part smaller than this (m, its longest side) casts no shadow of its own: a bolt's shadow costs a shadow draw and shows nothing. */
 export const SMALL_PART = 0.3;
+
+/** How many frames a check takes to go round every merged original (a share of them each frame). */
+export const CHECK_FRAMES = 4;
 
 interface Source {
   mesh: THREE.Mesh;
@@ -36,13 +40,13 @@ interface Source {
   count: number;
   bucket: Bucket;
   live: boolean;
+  /** A big one's triangles in runs, each with its box, for the aim to test only the runs it passes (./ray.ts). */
+  runs: Runs | null;
 }
 
 interface Bucket {
   mesh: THREE.Mesh;
   sources: Source[];
-  /** Each source's first vertex, in order, to find the source of a triangle by. */
-  starts: number[];
 }
 
 export interface Merged {
@@ -51,7 +55,7 @@ export interface Merged {
   /** How many originals each merged mesh stands in for, all told, and how many still do. */
   readonly merged: number;
   live(): number;
-  /** Splits off whatever has moved, hidden or changed since it was merged. Returns how many were. */
+  /** Splits off whatever has moved, hidden or changed since it was merged, a share of the originals each call (all of them every CHECK_FRAMES calls). Returns how many were. */
   check(): number;
   /** Puts every original back and takes the merged meshes away. */
   undo(): void;
@@ -169,7 +173,7 @@ export function mergeStatic(root: THREE.Object3D, opts: MergeOptions = {}, still
       const count = g.attributes.position.count;
       const chain: THREE.Object3D[] = [];
       for (let n: THREE.Object3D | null = mesh; n && n !== root.parent; n = n.parent) chain.push(n);
-      sources.push({ mesh, chain, matrix: new Float32Array(mesh.matrixWorld.elements), material: group.material, geometry: mesh.geometry, version: (mesh.geometry.attributes.position as THREE.BufferAttribute).version, cast: mesh.castShadow, mask: mesh.layers.mask, start, count, bucket: null!, live: true });
+      sources.push({ mesh, chain, matrix: new Float32Array(mesh.matrixWorld.elements), material: group.material, geometry: mesh.geometry, version: (mesh.geometry.attributes.position as THREE.BufferAttribute).version, cast: mesh.castShadow, mask: mesh.layers.mask, start, count, bucket: null!, live: true, runs: count / 3 >= BIG_MESH ? runsOf(mesh) : null });
       geos.push(g);
       start += count;
     }
@@ -186,19 +190,19 @@ export function mergeStatic(root: THREE.Object3D, opts: MergeOptions = {}, still
     mesh.layers.mask = group.mask;
     mesh.matrixAutoUpdate = false;
     mesh.userData.noMerge = true;
-    const bucket: Bucket = { mesh, sources, starts: sources.map((s) => s.start) };
+    const bucket: Bucket = { mesh, sources };
     for (const s of sources) {
       s.bucket = bucket;
       s.mesh.layers.set(MERGED_LAYER);
     }
-    // A hit on the merged mesh is a hit on the original whose triangle it is.
+    // A ray at the merged mesh is cast at the originals still drawn in it: each tests its own bounding
+    // sphere first, as before the merge, so a ray across the deck tests the few it passes, a big one
+    // only the runs of it the ray passes, and the hit is on the original, with its own ancestors to say what it is.
     mesh.raycast = (raycaster, hits) => {
-      const from = hits.length;
-      THREE.Mesh.prototype.raycast.call(mesh, raycaster, hits);
-      for (let i = hits.length - 1; i >= from; i--) {
-        const s = sourceAt(bucket, (hits[i].faceIndex ?? 0) * 3);
-        if (s?.live) hits[i].object = s.mesh;
-        else hits.splice(i, 1);
+      for (const s of sources) {
+        if (!s.live) continue;
+        if (s.runs) raycastRuns(s.mesh, s.runs, raycaster, hits);
+        else THREE.Mesh.prototype.raycast.call(s.mesh, raycaster, hits);
       }
     };
     root.add(mesh);
@@ -225,13 +229,18 @@ export function mergeStatic(root: THREE.Object3D, opts: MergeOptions = {}, still
   }
 
   let left = all.length;
+  let turn = 0;
   return {
     meshes: buckets.map((b) => b.mesh),
     merged: all.length,
     live: () => left,
     check() {
+      // A quarter of them each frame, in turn: a mover is split off within four frames of moving.
       let n = 0;
-      for (const s of all) {
+      const step = Math.ceil(all.length / CHECK_FRAMES);
+      const from = (turn++ % CHECK_FRAMES) * step;
+      for (let i = from; i < Math.min(all.length, from + step); i++) {
+        const s = all[i];
         if (!s.live) continue;
         const mesh = s.mesh;
         const moved =
@@ -257,18 +266,6 @@ export function mergeStatic(root: THREE.Object3D, opts: MergeOptions = {}, still
       left = 0;
     },
   };
-}
-
-/** The source whose vertices include `vertex`. */
-function sourceAt(b: Bucket, vertex: number): Source | undefined {
-  let lo = 0;
-  let hi = b.starts.length - 1;
-  while (lo < hi) {
-    const mid = (lo + hi + 1) >> 1;
-    if (b.starts[mid] <= vertex) lo = mid;
-    else hi = mid - 1;
-  }
-  return b.sources[lo];
 }
 
 /** Every mesh under `root` and where it is now, to merge against later (see mergeStatic's `still`). */

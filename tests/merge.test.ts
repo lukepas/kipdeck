@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { MERGED_LAYER, SMALL_PART, mergeStatic, snapshot } from '../src/client/features/merge/merge.js';
+import { CHECK_FRAMES, MERGED_LAYER, SMALL_PART, mergeStatic, snapshot } from '../src/client/features/merge/merge.js';
 
 // The static merge (features/merge): meshes that share an opaque material and stand still are drawn as
 // one, their originals stay in the scene graph on a layer no camera draws, a click on the merged mesh
@@ -60,7 +60,9 @@ test('an original that moves or hides is split back off, drawn on its own again'
   b.position.x = 6;
   c.visible = false;
   root.updateMatrixWorld(true);
-  assert.equal(m.check(), 2);
+  let split = 0;
+  for (let i = 0; i < CHECK_FRAMES; i++) split += m.check();
+  assert.equal(split, 2);
   assert.equal(m.live(), 1);
   assert.equal(b.layers.mask, 1);
   assert.equal(c.layers.mask, 1);
@@ -117,4 +119,24 @@ test('a mirrored original keeps its faces turned outward', () => {
   const face = new THREE.Vector3().subVectors(p[1], p[0]).cross(new THREE.Vector3().subVectors(p[2], p[0])).normalize();
   const n = new THREE.Vector3().fromBufferAttribute(nrm, 36);
   assert.ok(face.dot(n) > 0.99, `winding ${face.toArray()} against normal ${n.toArray()}`);
+});
+
+test('a big original is tested a run at a time, and hits the same as tested whole', () => {
+  const root = new THREE.Group();
+  // A ring of 4,000 triangles round the eye, as the hull's frames are.
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(10, 0.5, 20, 100), steel);
+  ring.rotation.x = Math.PI / 2;
+  const other = new THREE.Mesh(new THREE.BoxGeometry(), steel);
+  other.position.set(0, -5, 0);
+  root.add(ring, other);
+  root.updateMatrixWorld(true);
+  const ray = new THREE.Raycaster(new THREE.Vector3(0, 0, 0), new THREE.Vector3(1, 0, 0));
+  const whole = ray.intersectObject(ring, false).map((h) => +h.distance.toFixed(4));
+  mergeStatic(root);
+  const runs = ray.intersectObject(root, true).filter((h) => h.object === ring).map((h) => +h.distance.toFixed(4));
+  assert.deepEqual(runs, whole);
+  assert.equal(whole.length, 1);
+  // Out of reach, nothing.
+  ray.far = 5;
+  assert.equal(ray.intersectObject(root, true).length, 0);
 });

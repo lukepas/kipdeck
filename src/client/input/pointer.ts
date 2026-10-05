@@ -75,11 +75,17 @@ export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
   const raycaster = new THREE.Raycaster();
   const CROSSHAIR = new THREE.Vector2(0, 0);
   const eye = new THREE.Vector3();
+  /**
+   * The furthest anything can be used from (m): past it a hit could only ever be out of reach, so the
+   * ray stops there and the meshes beyond it are never tested (the aim runs every frame).
+   */
+  const FURTHEST_REACH = 12;
 
   /** What the ray through `ndc` lands on first, whether it is within reach (plus `slack` meters), and where it hit. */
   function aimedAt(ndc: THREE.Vector2, slack = 0): { it: Interactable; near: boolean; hit: THREE.Intersection } | null {
     raycaster.setFromCamera(ndc, camera);
     eye.set(player.pos.x, player.pos.y + EYE_HEIGHT, player.pos.z);
+    raycaster.far = camera.position.distanceTo(eye) + FURTHEST_REACH + slack;
     for (const hit of raycaster.intersectObjects([office.group, ...ctx.usables.pickables()], true)) {
       let it: Interactable | undefined;
       let shown = true;

@@ -150,6 +150,8 @@ async function measure([from, to]) {
   const frame = () => new Promise((res) => requestAnimationFrame(res));
   const draw = () => {
     const cam = o.stage.view ?? o.camera;
+    // The shadow map is drawn on the frames the Quality tier says (every one at High), not by itself.
+    if (!r.shadowMap.autoUpdate && o.quality?.look().shadow.everyMs === 0) r.shadowMap.needsUpdate = true;
     if (o.stage.draw) o.stage.draw(cam);
     else r.render(o.scene, cam);
   };
@@ -203,6 +205,8 @@ async function during([[from, to], kind]) {
   const frame = () => new Promise((res) => requestAnimationFrame(res));
   const draw = () => {
     const cam = o.stage.view ?? o.camera;
+    // The shadow map is drawn on the frames the Quality tier says (every one at High), not by itself.
+    if (!r.shadowMap.autoUpdate && o.quality?.look().shadow.everyMs === 0) r.shadowMap.needsUpdate = true;
     if (o.stage.draw) o.stage.draw(cam);
     else r.render(o.scene, cam);
   };
