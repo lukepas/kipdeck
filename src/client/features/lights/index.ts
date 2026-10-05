@@ -36,6 +36,11 @@ export interface Lights {
    * or as the mode has it with null. Only intensities: never a colour, never the exposure.
    */
   dim(k: ((name: LampName, z: number, pod: number) => number) | null): void;
+  /**
+   * The room's light for a jump (features/space), times the mode's and the dimmer's: let down through
+   * the countdown, lit from the glass by the tunnel, 1 as the mode has it.
+   */
+  level(k: number): void;
 }
 
 /** The rig's lights by name, as the dimmer addresses them. */
@@ -75,10 +80,11 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings'>
   }
 
   let dimBy: ((name: LampName, z: number, pod: number) => number) | null = null;
+  let jumpLevel = 1;
   /** Every light's intensity: the mode's, times Brightness, times the alert's dimmer. */
   function levels() {
     const rig = LIGHT_MODES[mode ?? 'night'];
-    const k = brightnessFactor(step);
+    const k = brightnessFactor(step) * jumpLevel;
     const f = (name: LampName, z: number, pod = -1) => (dimBy ? dimBy(name, z, pod) : 1);
     const { hemi, key, fill, rims } = stage.lights;
     hemi.intensity = rig.hemi.i * k * f('hemi', 0);
@@ -146,5 +152,10 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings'>
     dimBy = k;
     levels();
   };
-  return { mode: () => mode ?? 'night', tint, dim };
+  const level = (k: number) => {
+    if (Math.abs(k - jumpLevel) < 1e-3) return;
+    jumpLevel = k;
+    levels();
+  };
+  return { mode: () => mode ?? 'night', tint, dim, level };
 }

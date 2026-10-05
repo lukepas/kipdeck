@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { BEAT_MS, along, beatAt, beatMs, dispatchPhases, hashOf, railSegment, rimToward, toRailPhases, toTablePhases } from '../src/client/features/beats/logic.js';
 import { stack } from '../src/client/features/workers/declutter.js';
 import { CUES } from '../src/client/sound/alerts.js';
-import { BANNER_MS, COUNTDOWN_MS, FLASH_RISE, FLEET_STAGGER_MS, JUMP, JUMP_FOV, JUMP_HOLD_MS, JUMP_MS, JUMP_STRETCH, SURGE, SURGE_GAP_MS, SURGE_HARD, SURGE_MS, countdownLeft, flashPeak, jumpAt, jumpsNow, surgeAt, surgeGlint, surgesNow } from '../src/client/features/space/logic.js';
+import { PUNCH_LIFT, PUNCH_MS, SPOOL_DIM, TUNNEL_LIGHT, spoolLevel, BANNER_MS, COUNTDOWN_MS, FLASH_RISE, FLEET_STAGGER_MS, JUMP, JUMP_FOV, JUMP_HOLD_MS, JUMP_MS, JUMP_STRETCH, SURGE, SURGE_GAP_MS, SURGE_HARD, SURGE_MS, countdownLeft, flashPeak, jumpAt, jumpsNow, surgeAt, surgeGlint, surgesNow } from '../src/client/features/space/logic.js';
 import { DESKS, FLOOR, MISSION_TABLE, PROOF_CORNER } from '../src/shared/layout.js';
 import { GESTURE_MS, MomentQueue, STREAK, SWEEP_MS, TIER0_GAP_MS, gestureAt, momentForm, recoveryOf, stretchFrom, tallyOf, tierOf, type Moment } from '../src/client/features/beats/tiers.js';
 import type { TimelineEvent } from '../src/shared/protocol.js';
@@ -132,11 +132,11 @@ test('the jump runs 3.9 s: a stretch, a 300 ms flash as the tunnel opens, 1.5 s 
   assert.equal(JUMP.flash, 300);
   assert.equal(JUMP.tunnel, 1500);
   const before = jumpAt(0);
-  assert.deepEqual(before, { speed: 1, streak: 0, flash: 0, swapped: false, fov: 0, tint: 0, tunnel: 0 });
+  assert.deepEqual(before, { speed: 1, streak: 0, flash: 0, swapped: false, fov: 0, tint: 0, tunnel: 0, punch: 0, room: 1 });
   // The stretch toward the bow: the streaks grow, no flash yet, still the old sky; the view widens, the light goes cool.
   const mid = jumpAt(400);
   assert.ok(mid.streak > 0 && mid.streak < 1 && mid.flash === 0 && !mid.swapped && mid.tunnel === 0);
-  assert.ok(mid.fov > 0.5 && mid.tint < 0);
+  assert.ok(mid.fov > 0.2 && mid.fov < 0.5 && mid.tint < 0, 'the view starts to widen; the kick lands with the flash');
   // The flash is only inside its 300 ms, comes up in 90 ms and eases off slower than it rose; the sky swaps at its height.
   let prev = 0;
   let prevTunnel = 0;
@@ -160,9 +160,30 @@ test('the jump runs 3.9 s: a stretch, a 300 ms flash as the tunnel opens, 1.5 s 
   assert.ok(jumpAt(JUMP.stretch + JUMP.flash + JUMP.tunnel + 100).tint > 0.5);
   assert.equal(jumpAt(JUMP.stretch + JUMP.flash + JUMP.tunnel + 100).tunnel, 0, 'closed once out');
   // Back to cruise by its end, on the new region.
-  assert.deepEqual(jumpAt(JUMP_MS), { speed: 1, streak: 0, flash: 0, swapped: true, fov: 0, tint: 0, tunnel: 0 });
+  assert.deepEqual(jumpAt(JUMP_MS), { speed: 1, streak: 0, flash: 0, swapped: true, fov: 0, tint: 0, tunnel: 0, punch: 0, room: 1 });
   assert.equal(JUMP_STRETCH, 60);
-  assert.ok(JUMP_FOV >= 3 && JUMP_FOV <= 5, 'a few degrees, no more');
+  assert.ok(JUMP_FOV >= 6 && JUMP_FOV <= 9, 'a short kick of about eight degrees');
+});
+
+test('the jump in three beats: the spool-up lets the room down, the punch lights it from the glass, the arrival puts it back', () => {
+  assert.equal(spoolLevel(0), 1);
+  assert.ok(Math.abs(spoolLevel(COUNTDOWN_MS) - (1 - SPOOL_DIM)) < 1e-9);
+  for (let ms = 0; ms < COUNTDOWN_MS; ms += 100) assert.ok(spoolLevel(ms + 100) <= spoolLevel(ms) + 1e-9, 'it only goes down through the countdown');
+  // Seamless from the countdown into the stretch.
+  assert.ok(Math.abs(jumpAt(1).room - spoolLevel(COUNTDOWN_MS)) < 1e-9);
+  let top = 0;
+  let prev = jumpAt(1).room;
+  for (let ms = 1; ms <= JUMP_MS; ms += 10) {
+    const f = jumpAt(ms);
+    top = Math.max(top, f.room);
+    assert.ok(Math.abs(f.room - prev) < 0.2, `the room's light eases at ${ms} ms`);
+    assert.ok(f.punch >= 0 && f.punch <= 1);
+    prev = f.room;
+  }
+  assert.ok(Math.abs(top - TUNNEL_LIGHT) < 0.02, 'the tunnel lights the room at its height');
+  assert.equal(jumpAt(JUMP.stretch + JUMP.flash + PUNCH_MS + 400).punch, 0, 'the punch is over well inside the tunnel');
+  // The punch's lift on the tunnel's cap, by Night: brighter for 0.6 s, never a white-out.
+  assert.ok(flashPeak('night', 'full') * (1 + PUNCH_LIFT) < 0.7);
 });
 
 test('a jump counts down 3, 2, 1 first, and waits two minutes at most for the captain', () => {

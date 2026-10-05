@@ -33,14 +33,14 @@ void main() {
   float a = vUv.x * 64.0;
   float s = vUv.y * 18.0 + uTime * 9.0;
   float n = 0.62 * vnoise(vec3(a, s, 0.0)) + 0.38 * vnoise(vec3(a * 2.7, s * 2.1, 3.1));
-  float streak = smoothstep(0.56, 0.92, n);
+  float streak = smoothstep(0.5, 0.86, n);
   // Toward the bow it gathers into a glow: the way out.
   float ahead = clamp((vUv.y - 0.45) / 0.55, 0.0, 1.0);
   ahead = ahead * ahead * ahead;
   // Astern it fades out, so the aft glass sees little of it.
   float aft = clamp(vUv.y / 0.35, 0.0, 1.0);
-  vec3 col = mix(uCyan, uWhite, streak * 0.8 + ahead * 0.5);
-  float k = (0.18 + 0.82 * streak + 0.9 * ahead) * aft * uGain;
+  vec3 col = mix(uCyan, uWhite, clamp(streak * 0.9 + ahead * 0.6, 0.0, 1.0));
+  float k = (0.22 + 1.1 * streak + 1.0 * ahead) * aft * uGain;
   gl_FragColor = vec4(col * clamp(k, 0.0, 1.5), 1.0);
 }`;
 
@@ -90,8 +90,12 @@ export class Tunnel {
 
 const MONO = (size: number) => `500 ${size}px "JetBrains Mono", ui-monospace, monospace`;
 
-/** Where the name hangs: this far out (m), this high on the sky (degrees), this wide (m). */
-const BANNER = { at: 70, el: 21, w: 36, canvas: [2048, 320] as const } as const;
+/**
+ * Where the name and the countdown hang: this far out (m), this far right of the bow and this high on
+ * the sky (degrees), this wide (m). In the clear pane right of the canopy's middle rib from the conn,
+ * over the heading band and clear of the destination's world in the pane to its left.
+ */
+const BANNER = { at: 70, az: 9.5, el: 17.5, w: 19, canvas: [1024, 320] as const } as const;
 
 /** The waypoint's name across the forward glass for a few seconds after the jump. */
 export class Banner {
@@ -113,7 +117,8 @@ export class Banner {
     this.mesh.frustumCulled = false;
     this.mesh.visible = false;
     const el = THREE.MathUtils.degToRad(BANNER.el);
-    this.at.set(0, Math.sin(el) * BANNER.at, -Math.cos(el) * BANNER.at);
+    const az = THREE.MathUtils.degToRad(BANNER.az);
+    this.at.set(Math.sin(az) * Math.cos(el) * BANNER.at, Math.sin(el) * BANNER.at, -Math.cos(az) * Math.cos(el) * BANNER.at);
     this.mesh.onBeforeRender = (_r, _s, camera) => {
       this.mesh.position.copy(camera.position).add(this.at);
       this.mesh.lookAt(camera.position);
@@ -128,17 +133,17 @@ export class Banner {
     g.clearRect(0, 0, W, H);
     g.textAlign = 'center';
     g.textBaseline = 'middle';
-    g.letterSpacing = '10px';
-    g.fillStyle = DECK.ship;
-    g.font = MONO(54);
-    g.fillText(lines[0] ?? '', W / 2, H * 0.24);
-    g.fillRect(W / 2 - 220, H * 0.42, 440, 3);
     g.letterSpacing = '6px';
+    g.fillStyle = DECK.ship;
+    g.font = MONO(42);
+    g.fillText(lines[0] ?? '', W / 2, H * 0.2, W - 40);
+    g.fillRect(W / 2 - 160, H * 0.36, 320, 3);
+    g.letterSpacing = '4px';
     g.fillStyle = '#E8F1F6';
-    // A countdown's second is set larger than a waypoint's name.
+    // A countdown's second is set larger than a waypoint's name; a long name steps down to fit.
     const big = (lines[1] ?? '').length <= 2;
-    g.font = MONO(big ? 170 : 104);
-    g.fillText(lines[1] ?? '', W / 2, H * (big ? 0.72 : 0.68), W - 80);
+    g.font = MONO(big ? 190 : 72);
+    g.fillText(lines[1] ?? '', W / 2, H * (big ? 0.7 : 0.64), W - 40);
     this.tex.needsUpdate = true;
   }
 

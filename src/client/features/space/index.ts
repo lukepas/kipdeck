@@ -21,7 +21,8 @@ import { store } from '../../state';
 import { DECK, VIEWPORT_GLASS } from '../../world/office/materials';
 import { Flybys } from './flybys';
 import { FOV } from '../../core/scene';
-import { BANNER_MS, DUCK_MS, FIRST_FLYBY_MS, FLEET_STAGGER_MS, FLYBY_GAP_MS, JUMP, JUMP_FOV, JUMP_HOLD_MS, JUMP_MS, JUMP_STRETCH, MERGE_WINDOW_MS, SPACE_COLORS, SURGE, SURGE_GAP_MS, SURGE_HARD, SURGE_MS, between, countdownLeft, cruiseSpeed, flashPeak, jumpAt, jumpsNow, motionScale, pickFlyby, seeded, surgeAt, surgeGlint, surgesNow, type FlybyKind } from './logic';
+import { BANNER_MS, DUCK_MS, FIRST_FLYBY_MS, FLEET_STAGGER_MS, FLYBY_GAP_MS, JUMP, JUMP_FOV, JUMP_HOLD_MS, JUMP_MS, JUMP_STRETCH, MERGE_WINDOW_MS, PUNCH_LIFT, SPACE_COLORS, SURGE, SURGE_GAP_MS, SURGE_HARD, SURGE_MS, between, countdownLeft, cruiseSpeed, flashPeak, jumpAt, jumpsNow, motionScale, pickFlyby, seeded, surgeAt, surgeGlint, surgesNow, spoolLevel, type FlybyKind } from './logic';
+import { GLOW, JumpGlow, countdownGlow } from './jumpglow';
 import { Banner, Tunnel } from './tunnel';
 import { JUMP_READY, countdownBanner, jumpCountdown, waypointBanner } from '../../../shared/shiplog';
 import { Sky } from './sky';
@@ -82,6 +83,7 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   const flybys = new Flybys(ctx.renderer);
   const tunnel = new Tunnel();
   const banner = new Banner();
+  const glow = new JumpGlow();
   scene.add(sky.mesh, stars.group, flybys.far, flybys.near, tunnel.mesh, banner.mesh);
   VIEWPORT_GLASS.emissive.set(DECK.ship);
   VIEWPORT_GLASS.emissiveIntensity = 0;
@@ -172,6 +174,7 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
     surgeFrom = -Infinity;
     jump = { at: clock, swapped: false, to, rejoined: false };
     parts.fleet?.jumpOut(FLEET_STAGGER_MS);
+    ctx.sound.jump('release');
   }
 
   /** A waypoint reached: a countdown and the jump where it can play, held while anyone needs the captain; else the crossfade. */
@@ -205,6 +208,8 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
       else return say(JUMP_READY);
     }
     if (calls) return crossfade(pending.to);
+    // The spool-up: the drive's sound (with sound on) once, as the count starts.
+    if (clock - pending.countAt < 1) ctx.sound.jump('spool');
     const left = countdownLeft(clock - pending.countAt);
     if (left > 0) {
       // Across the forward glass too, big: the seconds left.
@@ -285,6 +290,14 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
     glint = 0;
     const sinceSurge = clock - surgeFrom;
     let open = 0;
+    let punch = 0;
+    // The room's light and the HUD's glow through the jump's three beats: spool-up, punch, arrival.
+    let room = 1;
+    let rim = 0;
+    if (pending?.countAt != null) {
+      room = spoolLevel(clock - pending.countAt);
+      rim = countdownGlow(clock - pending.countAt);
+    }
     if (sinceSurge < SURGE_MS) {
       mul = surgeAt(sinceSurge, surgePeak);
       if (moving) mul = 1 + (mul - 1) / 2;
@@ -302,6 +315,9 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
       fov = f.fov;
       tint = f.tint;
       open = f.tunnel;
+      punch = f.punch;
+      room = f.room;
+      rim = GLOW.punch * f.punch;
       // Out of the tunnel: the escorts drop back into their slots, the waypoint's name across the glass.
       if (!jump.rejoined && clock - jump.at >= JUMP.stretch + JUMP.flash + JUMP.tunnel) {
         jump.rejoined = true;
@@ -320,7 +336,10 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
       }
     }
     const peak = flashPeak(parts.lights?.mode() ?? 'night', ctx.reduceMotion.ship);
-    tunnel.set(open * peak, dt);
+    // The punch lifts the tunnel past the flash's cap for its first 0.6 s, then it settles back.
+    tunnel.set(open * peak * (1 + PUNCH_LIFT * punch), dt);
+    parts.lights?.level(peak > 0 ? room : 1);
+    glow.set(peak > 0 ? rim : 0);
     // The waypoint's name: up in 300 ms, held, gone over the last 500 ms (a 400 ms crossfade with motion off, as the view's).
     const sinceBanner = clock - bannerAt;
     const still = ctx.reduceMotion.matches;

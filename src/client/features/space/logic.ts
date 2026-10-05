@@ -82,8 +82,16 @@ export const FLASH_RISE = 90;
 export const TUNNEL_CLOSE = 300;
 /** How far the stars streak at the jump's height, against their cruise length. */
 export const JUMP_STRETCH = 60;
-/** How far the view widens at the jump's height (degrees), and eases back. */
-export const JUMP_FOV = 4;
+/** How far the view kicks wider at the jump's height (degrees), and eases back: the punch, felt more than seen. */
+export const JUMP_FOV = 8;
+/** How far the room's light is let down through the countdown (the spool-up), a fraction of it. */
+export const SPOOL_DIM = 0.35;
+/** How bright the room is lit by the tunnel at its height, times the mode's light (cool, from the glass). */
+export const TUNNEL_LIGHT = 1.3;
+/** How long the punch lifts the tunnel's cap past the flash's (ms into the tunnel, then 300 ms down). */
+export const PUNCH_MS = 600;
+/** How far the punch lifts the tunnel's cap (times flashPeak): only for PUNCH_MS, never a sustained glare. */
+export const PUNCH_LIFT = 1.2;
 /** The countdown before a jump (ms): 3, 2, 1 on the band under the overhead strip. */
 export const COUNTDOWN_MS = 3000;
 /** How long a jump waits for the captain before it gives up and crossfades with a card (ms). */
@@ -108,6 +116,15 @@ export interface JumpFrame {
   tint: number;
   /** How far the tunnel is open round the ship, 0-1 of its peak (flashPeak again). */
   tunnel: number;
+  /** The punch, 0-1: lifts the tunnel's cap by PUNCH_LIFT for its first PUNCH_MS. */
+  punch: number;
+  /** The room's light, times the mode's: let down by the spool-up, lit by the tunnel, back to 1 on arrival. */
+  room: number;
+}
+
+/** The room's light `ms` into the countdown (the spool-up): let down by SPOOL_DIM, smoothly. */
+export function spoolLevel(ms: number): number {
+  return 1 - SPOOL_DIM * smooth(Math.min(1, Math.max(0, ms / COUNTDOWN_MS)));
 }
 
 const easeOut = (k: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
@@ -115,26 +132,30 @@ const easeOut = (k: number) => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3);
 /** The jump `ms` after it starts (its countdown done). */
 export function jumpAt(ms: number): JumpFrame {
   const { stretch, flash, tunnel, settle } = JUMP;
-  if (ms <= 0) return { speed: 1, streak: 0, flash: 0, swapped: false, fov: 0, tint: 0, tunnel: 0 };
+  const low = 1 - SPOOL_DIM;
+  if (ms <= 0) return { speed: 1, streak: 0, flash: 0, swapped: false, fov: 0, tint: 0, tunnel: 0, punch: 0, room: 1 };
   if (ms < stretch) {
     const k = smooth(ms / stretch);
-    return { speed: 1 + 39 * k * k, streak: k, flash: 0, swapped: false, fov: easeOut(ms / stretch), tint: -k, tunnel: 0 };
+    // The spool-up's dim holds through the stretch; the view starts to widen late, so the kick lands with the flash.
+    return { speed: 1 + 39 * k * k, streak: k, flash: 0, swapped: false, fov: 0.35 * easeOut(ms / stretch), tint: -k, tunnel: 0, punch: 0, room: low };
   }
   if (ms < stretch + flash) {
     const t = ms - stretch;
     const f = t < FLASH_RISE ? smooth(t / FLASH_RISE) : 1 - smooth((t - FLASH_RISE) / (flash - FLASH_RISE));
-    return { speed: 40, streak: 1, flash: f, swapped: t >= FLASH_RISE, fov: 1, tint: -1, tunnel: t < FLASH_RISE ? 0 : smooth((t - FLASH_RISE) / (flash - FLASH_RISE)) };
+    const up = smooth(t / flash);
+    return { speed: 40, streak: 1, flash: f, swapped: t >= FLASH_RISE, fov: 0.35 + 0.65 * easeOut(t / flash), tint: -1, tunnel: t < FLASH_RISE ? 0 : smooth((t - FLASH_RISE) / (flash - FLASH_RISE)), punch: up, room: low + (TUNNEL_LIGHT - low) * up };
   }
   if (ms < stretch + flash + tunnel) {
     const t = ms - stretch - flash;
     const close = smooth((t - (tunnel - TUNNEL_CLOSE)) / TUNNEL_CLOSE);
-    return { speed: 40, streak: 1, flash: 0, swapped: true, fov: 1, tint: -1 + 2 * close, tunnel: 1 - close };
+    const punch = 1 - smooth((t - PUNCH_MS) / 300);
+    return { speed: 40, streak: 1, flash: 0, swapped: true, fov: 1, tint: -1 + 2 * close, tunnel: 1 - close, punch, room: TUNNEL_LIGHT - (TUNNEL_LIGHT - 1) * smooth(t / tunnel) };
   }
   if (ms < stretch + flash + tunnel + settle) {
     const k = smooth((ms - stretch - flash - tunnel) / settle);
-    return { speed: 1 + 39 * (1 - k), streak: 1 - k, flash: 0, swapped: true, fov: 1 - easeOut((ms - stretch - flash - tunnel) / settle), tint: 1 - k, tunnel: 0 };
+    return { speed: 1 + 39 * (1 - k), streak: 1 - k, flash: 0, swapped: true, fov: 1 - easeOut((ms - stretch - flash - tunnel) / settle), tint: 1 - k, tunnel: 0, punch: 0, room: 1 };
   }
-  return { speed: 1, streak: 0, flash: 0, swapped: true, fov: 0, tint: 0, tunnel: 0 };
+  return { speed: 1, streak: 0, flash: 0, swapped: true, fov: 0, tint: 0, tunnel: 0, punch: 0, room: 1 };
 }
 
 /** The seconds left on the countdown `ms` after it started (3, 2, 1), or 0 once it is done. */
