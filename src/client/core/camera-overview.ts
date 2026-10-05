@@ -10,6 +10,7 @@ import { FLOOR } from '../../shared/layout';
 import { h, modalOpen } from '../ui/dom';
 import type { Ctx } from './context';
 import type { Parts } from './parts';
+import { framePose, framedPoints } from './overview-frame';
 
 /** How the camera looks down, how far back it stands, and how much of the deck fills the screen's height at zoom 1. */
 const PITCH = (35 * Math.PI) / 180;
@@ -50,8 +51,20 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
   // A little north of the table: the top bar and the alert strip cover the top of the screen.
   const target = new THREE.Vector3(0, 0, -1);
   let on = false;
-  let yaw = Math.PI / 4;
+  let yaw = 0;
   let zoom = 1;
+  const framed = framedPoints();
+  /**
+   * The framed pose every trip up starts from: looking up the deck from aft, all four boards, the
+   * Attention board and the holo table in the upper two thirds of the screen (core/overview-frame.ts).
+   */
+  function frame() {
+    const pose = framePose(framed, PITCH, window.innerWidth / Math.max(1, window.innerHeight), HALF_HEIGHT, ZOOM.max);
+    yaw = 0;
+    turn = null;
+    target.set(pose.x, 0, pose.z);
+    zoom = THREE.MathUtils.clamp(pose.zoom, ZOOM.min, ZOOM.max);
+  }
   let turn: { from: number; to: number; at: number } | null = null;
   let fly: { from: THREE.Vector3; to: THREE.Vector3; z0: number; z1: number; at: number } | null = null;
   const held = new Set<string>();
@@ -75,6 +88,7 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     on = want;
     const scene = parts.stage.scene;
     if (on) {
+      frame();
       parts.stage.view = camera;
       player.unlock();
       player.clearKeys();
