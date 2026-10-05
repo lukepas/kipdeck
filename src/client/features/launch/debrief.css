@@ -1,6 +1,6 @@
 /* The debrief (features/launch/debrief.ts): a conn panel low on the left, over the bottom bar, beside
    the Units rail. Mono title, plain lines, VESPER's closing line in italics. The only hue is the waiting
-   units' own glyphs; a ship-cyan rule down its left edge, the colour the bridge works in. A ✕ top right;
+   units' own glyphs; a ship-cyan rule down its left edge, the colour the bridge works in. A close button top right;
    Esc puts it away too and hands the mouse straight back. It never takes the mouse while it shows. */
 .debrief {
   position: absolute; left: calc(var(--rail, 0px) + 12px); bottom: calc(var(--bottom, 52px) + 62px);

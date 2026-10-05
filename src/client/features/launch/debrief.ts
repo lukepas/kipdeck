@@ -2,7 +2,7 @@
 // since you left. Anyone who needs you or is stuck comes first, a plain sentence each with its glyph
 // and a button to go to them (N goes to the first, as it always does); then what landed (merges, USDC
 // paid, attestations, waypoints, how far the destination came); then one dry closing line. It never
-// takes the mouse. A ✕ top right puts it away, and so does Esc while the mouse is free, which hands the
+// takes the mouse. A close button top right puts it away, and so does Esc while the mouse is free, which hands the
 // mouse straight back to the view. It puts itself away after a while, longer while it lists who waits.
 import './debrief.css';
 import type { Debrief } from '../../../shared/launch';
@@ -68,7 +68,7 @@ export class DebriefPanel {
     this.timer = window.setTimeout(() => this.close(false), ms);
   }
 
-  /** Puts it away; `byHand` (its ✕ or Esc) also gives the view the mouse back. */
+  /** Puts it away; `byHand` (its close button or Esc) also gives the view the mouse back. */
   close(byHand: boolean) {
     if (!this.open) return;
     clearTimeout(this.timer);

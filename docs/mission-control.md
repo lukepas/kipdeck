@@ -104,11 +104,13 @@ Each unit aboard with its record in one line, from the deck log as far as the pa
 
 Settings > Bridge > Life > Crew epithets turns the epithets, chevrons and the unit of the watch off everywhere; the records stay.
 
+At the foot of the tab is the **Captain's log**: the day's entries the start of watch wrote to this deck's timeline (one a day, the first time a captain starts a watch there), newest first, a week of them. Each is the office's own words from real numbers: *Day 14 of the mission. Yesterday the fleet merged 9 pull requests, closed 14 issues and paid 3 bounties on devnet. Waypoint 3, Billing v2, is 60% done. Two units await orders.* The Timeline tab lists them too.
+
 ## While you were away
 
 Back after 15 minutes or more, *While you were away* opens once: a one-line summary and the events since you left, with **Show what needs me** for the Attention tab. Merges, milestones, stuck workers and the like are listed before the routine finishes and questions. The summary is worked out the same way everywhere (`src/shared/digest.ts`): *3 PRs merged, 2 workers finished and wait for review, 1 got stuck, Auth rewrite moved from 3/7 to 5/7*.
 
-With an account, the office remembers when you were last here (when you left, not when you came in, and never while you're still here in another tab). It stamps everyone connected once a minute and as it shuts down, so a restart or a crash doesn't make people who never left look away. On the shared password, this browser does. In the 3D office it's a window that waits until the office has loaded, no other window is open and you aren't typing. In the 2D view it's the first card, and **Catch up** brings it back. From the palette, *While you were away* opens it again (the last hour's, if you weren't away).
+With an account, the office remembers when you were last here (when you left, not when you came in, and never while you're still here in another tab). It stamps everyone connected once a minute and as it shuts down, so a restart or a crash doesn't make people who never left look away. On the shared password, this browser does. In the 3D office it's a window that waits until the office has loaded, no other window is open and you aren't typing; while Settings > Bridge > Rituals > Start of watch is on (the default), the start of watch's debrief takes its place at load, who waits on you listed first, and its **Full log** button opens this window ([docs/design.md](design.md#rituals)). In the 2D view it's the first card, and **Catch up** brings it back. From the palette, *While you were away* opens it again (the last hour's, if you weren't away).
 
 ## Reminders
 

@@ -399,3 +399,51 @@ Frame time at 1440x900 by night on the GPU (Apple M3 Pro through ANGLE Metal), `
 - The holo ring over the mission table doesn't count down with the band and the glass; it keeps its heading.
 - Reverts appear on a waypoint's card only when the reputation index has them, which counts per agent identity, so the card leaves them out for now.
 - The start-of-watch card and the captain's debrief (with the recoveries the waypoint cards count) are later stages.
+
+## The bridge: rituals
+
+The captain still wanted more life, and the feeling of a big thing pushing the team toward its best. This stage gives the bridge a captain's routine, in the spirit of a crew bringing a ship home rather than any film's ships, names or sounds: a start of watch that greets the captain with the day's real log, momentum you can watch build, and the captain's own turnaround on a pit wall. Every figure is an outcome (merges, issues closed, bounties paid, reviews cleared, units recovered), never lines, tokens or terminal time, nothing ranks people, and when a unit needs the captain all of it gives way.
+
+- **Start of watch** (`src/client/features/launch/`): on the first visit of the day the lights come on aft to bow from near dark, the pods one at a time, and the day's captain's log crawls into the stars ahead of the bow, behind the bridge's frames; back after twenty minutes away, the debrief in VESPER's voice, who waits on you first. With a unit waiting at load it is over in 1.2 s and lists them; reduced motion makes it a card.
+- **The drive core** (`src/client/features/drive/`): a reactor column rising out of the Deck lift's roof, a ring lit for each merge in the current run, today's best etched in white, its light running at the ship's cruise speed; the fleet's week on the ticker against its record, an eight-week tally over the Services panel, and one surge when the record falls.
+- **The pit wall** (`src/client/features/turnaround/`): reply and review times today against seven days over the Review bay, a hairline to the drive core when a wait clears fast, the captain's bar in the top bar, and the bay's light a step up when the review queue is long.
+- **Settings > Bridge > Rituals**: Start of watch (Full, Debrief only, Off), Momentum display and Turnaround clock.
+
+The numbers are in `src/shared/pace.ts`, `src/shared/turnaround.ts` and `src/shared/launch.ts`, worked out on the server (`src/server/pace.ts`) and tested in `tests/drive.test.ts`, `tests/turnaround.test.ts` and `tests/launch.test.ts`; the words are checked by `tests/copy.test.ts`.
+
+`node design/shoot-rituals.mjs life-rituals/after` takes the stills from a built office with the page's clock stepped a frame at a time, and the clip `shots/life-rituals/after/rituals-clip.mp4` (12 s, from the conn): the launch, the crawl and the debrief, then the drive core taking two merges. The pace the shots show is played into the page as the server sends it. `SHOOT_ROOT=<a build of the commit before> SHOOT_LOOK=1 ... life-rituals/before` takes the same vantages on the build before, `SHOOT_LIGHT=day ... life-rituals/day` the Day set.
+
+| Before | After |
+| --- | --- |
+| ![](shots/life-rituals/before/conn.png) | ![](shots/life-rituals/after/launch-crawl.png) |
+| ![](shots/life-rituals/before/conn.png) | ![](shots/life-rituals/after/launch-debrief.png) |
+| ![](shots/life-rituals/before/core-close.png) | ![](shots/life-rituals/after/drive-lit-close.png) |
+| ![](shots/life-rituals/before/core.png) | ![](shots/life-rituals/after/drive-lit.png) |
+| ![](shots/life-rituals/before/conn.png) | ![](shots/life-rituals/after/drive-record.png) |
+| ![](shots/life-rituals/before/bay.png) | ![](shots/life-rituals/after/pit-wall.png) |
+| ![](shots/life-rituals/before/high.png) | ![](shots/life-rituals/after/hairline.png) |
+
+| The lights coming up | The pods, one at a time | The crawl going away | Reduced motion: the card |
+| --- | --- | --- | --- |
+| ![](shots/life-rituals/after/launch-wake.png) | ![](shots/life-rituals/after/launch-pods.png) | ![](shots/life-rituals/after/launch-crawl-far.png) | ![](shots/life-rituals/after/launch-still.png) |
+
+| A unit waiting at the start of watch | The log as one line on the band | The debrief alone | A broken run |
+| --- | --- | --- | --- |
+| ![](shots/life-rituals/after/launch-yield.png) | ![](shots/life-rituals/after/launch-yield-band.png) | ![](shots/life-rituals/after/debrief.png) | ![](shots/life-rituals/after/drive-broken.png) |
+
+| The pit wall, close | The captain's log in Goals | Settings > Bridge > Rituals | Day: the crawl |
+| --- | --- | --- | --- |
+| ![](shots/life-rituals/after/pit-wall-close.png) | ![](shots/life-rituals/after/goals-log.png) | ![](shots/life-rituals/after/settings-rituals.png) | ![](shots/life-rituals/day/launch-crawl.png) |
+
+| Day: the drive core | Day: the record | Day: the pit wall | Day: the debrief |
+| --- | --- | --- | --- |
+| ![](shots/life-rituals/day/drive-lit-close.png) | ![](shots/life-rituals/day/drive-record.png) | ![](shots/life-rituals/day/pit-wall-close.png) | ![](shots/life-rituals/day/launch-debrief.png) |
+
+Frame time at 1440x900 by night on the GPU (Apple M3 Pro through ANGLE Metal), `node design/perf-probe.mjs metal` (twelve units at work, six sister decks, two open pull requests), the build before and this one run back to back: from the conn 11.2 ms before against 10.7 ms after for a forced render with `gl.finish` (this machine was busier than at the last stage's probe; the two runs are the comparison), 1057 draw calls against 1060 (the pit wall's two and the tally); out of a side port 0.9 to 1.0 ms both, 386 draw calls both; rAF p50 16.7 ms and p95 16.7 to 16.8 ms throughout, on vsync. The drive core adds five more draws where it is in view, aft; the crawl, the hairline and the bay's wash one each while they show. `FLICKER_RITUALS=1 node design/flicker-check.mjs metal 900` (new: it lights the core, plays the launch every 420 frames, runs the hairline and faces aft a third of the time) passes by Night and by Day: no black frame, no NaN pixel.
+
+### Left for later
+
+- The drive core stands aft, so from the conn facing the bow the run reads on the ticker and the tally rather than on the column; turning round shows it.
+- The fleet's record reaches back only as far as each deck's timeline (2000 events a deck); a long-lived fleet may forget an old record week.
+- Reply times start from this stage: the server notes each answer from now on, so the pit wall's seven-day reply median fills in over a week.
+- `src/client/features/space/stars.ts` calls `smoothstep` with its edges reversed (undefined in GLSL; it happens to work on today's GPUs). The rituals' own shaders keep their edges in order.

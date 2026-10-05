@@ -420,6 +420,58 @@ async function main() {
       await shot('hairline');
       await run(1200);
       await shot('hairline-late');
+      await run(2000);
+
+      // Mission control's Goals tab: the captain's log at its foot.
+      if (want('goals-log')) {
+        await page.evaluate(() => (window.__office.player.update = window.__office.player.__update ?? window.__office.player.update));
+        await page.locator('#scene').focus();
+        await page.keyboard.press('i');
+        await page.locator('.modal.mission-control').waitFor({ timeout: 10_000 });
+        await page.locator('.modal.mission-control .mc-tab', { hasText: 'Goals' }).click();
+        await page.locator('.mc-logbook').scrollIntoViewIfNeeded().catch(() => {});
+        await run(300);
+        await shot('goals-log');
+        await page.keyboard.press('Escape');
+      }
+      if (want('settings-rituals')) {
+        await page.evaluate(() => (window.__office.player.update = window.__office.player.__update ?? window.__office.player.update));
+        await page.locator('#dock .dock-menu').click();
+        await page.locator('.hud-menu .menu-item', { hasText: 'Settings' }).click();
+        await page.locator('.modal.settings').waitFor({ timeout: 10_000 });
+        await page.locator('.modal.settings .settings-tab', { hasText: 'Bridge' }).click();
+        await page.locator('.modal.settings .life-part', { hasText: 'Turnaround clock' }).scrollIntoViewIfNeeded().catch(() => {});
+        await run(300);
+        await shot('settings-rituals');
+        await page.keyboard.press('Escape');
+      }
+    }
+
+    if (want('rituals-clip')) {
+      // 12 s, a frame each thirtieth of a second: the launch from the conn (the lights aft to bow, the pods,
+      // the log crawling into the stars, the debrief), then the drive core taking two merges.
+      const FPS = 30;
+      const SECONDS = 12;
+      const frames = path.join(tmp, 'rituals-clip');
+      mkdirSync(frames, { recursive: true });
+      await send(pace(floor, { run: 2, best: 6, week: 12, record: 15 }));
+      await VIEW(...CONN);
+      await run(1500);
+      const events = [
+        [0.3, () => page.evaluate(() => window.__world.watch.play('launch', 9 * 3600e3))],
+        [8.2, () => VIEW([0.4, 2.0, 7.5], [0, 4.9, 17])],
+        [9.0, () => send(pace(floor, { run: 3, best: 6, week: 13, record: 15 }))],
+        [10.4, () => send(pace(floor, { run: 4, best: 6, week: 14, record: 15 }))],
+      ];
+      for (let f = 0; f < FPS * SECONDS; f++) {
+        const t = f / FPS;
+        while (events.length && events[0][0] <= t) await events.shift()[1]();
+        await page.evaluate(() => window.__step(1000 / 30, 1));
+        await page.screenshot({ path: path.join(frames, `f${String(f).padStart(4, '0')}.png`) });
+      }
+      const out = path.join(OUT, 'rituals-clip.mp4');
+      execFileSync('/opt/homebrew/bin/ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', path.join(frames, 'f%04d.png'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '22', out]);
+      console.log('clip', out);
     }
 
     console.log('errors', JSON.stringify(errors));
