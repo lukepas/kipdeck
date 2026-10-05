@@ -30,6 +30,8 @@ Back to the [README](../README.md).
 | Esc | Close any window (a terminal too) and get back to looking around, or to the Overview if you opened it there |
 | Ctrl + [ | Send Esc to a terminal instead, to close a menu like Claude's `/skills` or interrupt Claude. **Esc** in the terminal's header does the same |
 
+From the conn (in the captain's chair, or standing on the dais with the mouse captured), rest the crosshair on a wall board for a moment and the view leans in on it, so its rows read without walking up; move the mouse or press a key and it eases back. With reduced motion, or Settings > Bridge > Ship motion at Off, it cuts instead of easing.
+
 You can also click a nearby console to interact with it, or click a unit in the Units rail down the left to open its terminal. To change decks, click the deck name in the top-left corner.
 
 For a screen share, a projector or a recording, open the deck with `?demo=1`: bigger type and callouts, the needs-you toast kept up, and the Overview turning slowly round the mission table until you press a key, drag or scroll (see [the design system](design.md#demo-mode)).

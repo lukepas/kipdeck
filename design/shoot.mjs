@@ -78,7 +78,9 @@ const DEFAULT_TASKS = [
   ['desk-11', '[crash] Bump the Anchor toolchain'],
   ['desk-13', '[done] Tighten the CSP for the showcase'],
 ];
-const TASKS = process.env.SHOOT_CREW === 'busy' ? BUSY : DEFAULT_TASKS;
+// SHOOT_NEED=desk-1,desk-4 puts those desks' units on a question (needs you), in either crew.
+const NEED = new Set((process.env.SHOOT_NEED ?? '').split(',').filter(Boolean));
+const TASKS = (process.env.SHOOT_CREW === 'busy' ? BUSY : DEFAULT_TASKS).map(([desk, prompt]) => [desk, NEED.has(desk) && !prompt.startsWith('[') ? `[ask] ${prompt}` : prompt]);
 
 const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--agent', agent, '--home', path.join(home, '.agent-office')], {
   env: { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
@@ -337,6 +339,15 @@ async function main() {
       await wait(1200);
       await shot(page, name);
     }
+    if (want('bridge-lean')) {
+      // The focus lean (features/focuslean): in the captain's chair, the crosshair resting on the
+      // Attention board for over a second, so the view has leant in on it.
+      await page.evaluate(() => window.__office.player.sit({ key: 'conn:0', seatId: 'conn', x: 0, y: 0.25, z: 10.65, rotY: Math.PI, hips: 0.48, out: 0.8 }));
+      await VIEW([0, 2.05, 11.4], [0, 2.4, -12]);
+      await wait(3000);
+      await shot(page, 'bridge-lean');
+      await page.evaluate(() => void (window.__office.player.seat = null));
+    }
     await UNVIEW();
     // Space outside the glass: each flyby caught halfway, then the surge and the jump on their way,
     // space's clock slowed (timeScale) so software rendering can catch them.
@@ -477,6 +488,72 @@ async function main() {
         performance.now = c.realNow;
         window.__clipCam = null;
         for (const cb of c.pending.splice(0)) c.realRaf(cb);
+      });
+      await UNVIEW();
+    }
+    if (want('lean-clip')) {
+      // A 7 s clip of the focus lean on the page's own clock (as the bridge clip is stepped): in the
+      // captain's chair the crosshair rests on the Attention board and the view leans in; the mouse moves,
+      // which lets it go, and turns the view to the PR board; once it rests there it leans in on that one. The
+      // callouts dock under the boards' bezels all the way. Stills of each beat go to lean/.
+      const FPS = 30;
+      const SECONDS = 7;
+      const frames = path.join(tmp, 'lean');
+      mkdirSync(frames, { recursive: true });
+      const seqDir = path.join(OUT, 'lean');
+      mkdirSync(seqDir, { recursive: true });
+      const from = [0, 2.05, 11.4];
+      const att = [0, 2.6, -12];
+      const prs = [6.2, 2.3, -10.4];
+      const lookAt = (t) => {
+        const k0 = Math.min(1, Math.max(0, (t - 3.3) / 1.2));
+        const k = k0 * k0 * (3 - 2 * k0);
+        return att.map((v, j) => v + (prs[j] - v) * k);
+      };
+      await page.evaluate(() => window.__office.player.sit({ key: 'conn:0', seatId: 'conn', x: 0, y: 0.25, z: 10.65, rotY: Math.PI, hips: 0.48, out: 0.8 }));
+      await page.evaluate(() => {
+        const o = window.__office;
+        const p = o.player;
+        p.__update ??= p.update;
+        p.update = (dt) => {
+          p.__update.call(p, dt);
+          const c = window.__clipCam;
+          if (!c) return;
+          o.camera.position.set(...c[0]);
+          o.camera.lookAt(...c[1]);
+        };
+        const realRaf = window.requestAnimationFrame.bind(window);
+        const realNow = performance.now.bind(performance);
+        const pending = [];
+        window.__clip = { realRaf, realNow, pending, now: realNow() };
+        window.requestAnimationFrame = (cb) => (pending.push(cb), pending.length);
+        performance.now = () => window.__clip.now;
+        window.__stepClip = (ms) => {
+          const c = window.__clip;
+          c.now += ms;
+          const cbs = c.pending.splice(0);
+          for (const cb of cbs) cb(c.now);
+        };
+      });
+      const stills = [0.2, 1.2, 3.5, 4.2, 5.0, 6.6];
+      for (let f = 0; f < FPS * SECONDS; f++) {
+        const t = f / FPS;
+        // The mouse moves at 3.2 s and turns the view to the PR board until 4.5 s, as a captain would.
+        if (t >= 3.2 && t <= 4.5) await page.evaluate(() => window.dispatchEvent(new MouseEvent('mousemove', { movementX: 6, movementY: 1 })));
+        await page.evaluate((c) => (window.__clipCam = c), [from, lookAt(t)]);
+        await page.evaluate((ms) => window.__stepClip(ms), 1000 / FPS);
+        await page.screenshot({ path: path.join(frames, `f${String(f).padStart(4, '0')}.jpg`), type: 'jpeg', quality: 92 });
+        const i = stills.findIndex((x) => Math.abs(x - t) < 0.5 / FPS);
+        if (i >= 0) await page.screenshot({ path: path.join(seqDir, `lean-${i + 1}-${Math.round(t * 1000)}ms.png`) });
+      }
+      execFileSync(process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', path.join(frames, 'f%04d.jpg'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', '-movflags', '+faststart', path.join(OUT, 'lean.mp4')]);
+      await page.evaluate(() => {
+        const c = window.__clip;
+        window.requestAnimationFrame = c.realRaf;
+        performance.now = c.realNow;
+        window.__clipCam = null;
+        for (const cb of c.pending.splice(0)) c.realRaf(cb);
+        window.__office.player.seat = null;
       });
       await UNVIEW();
     }
