@@ -15,8 +15,71 @@ const BOX = { min: [FLOOR.minX, 0, FLOOR.minZ], max: [FLOOR.maxX, WALL_HEIGHT, F
 /** Rough off the walkways, smoother on them (the most a walkway polishes it, at its middle). */
 export const FLOOR_ROUGH = { base: 0.92, walk: 0.35 } as const;
 
-/** The floor's own uniforms: how glossy its walkways are (Settings > Bridge > Quality: 0 at Low, 1 above). */
-export const FLOOR_UNIFORMS = { uGloss: { value: 1 }, uWalkRough: { value: FLOOR_ROUGH.walk as number } };
+/** How many boards the floor mirrors (features/atmos/mirror.ts): the situation wall's five. */
+export const MIRROR_BOARDS = 5;
+
+/**
+ * The floor's own uniforms: how glossy its walkways are (Settings > Bridge > Quality: 0 at Low, 1
+ * above), and its mirror of the wall boards (features/atmos, High only): how strong it is (0 skips
+ * it, no lookups), and each board's picture, its inverse world matrix and its face's rectangle in its
+ * own space (min x, min y, max x, max y; empty skips it).
+ */
+export const FLOOR_UNIFORMS = {
+  uGloss: { value: 1 },
+  uWalkRough: { value: FLOOR_ROUGH.walk as number },
+  uMirrorOn: { value: 0 },
+  uMirrorMaps: { value: Array.from({ length: MIRROR_BOARDS }, () => null as THREE.Texture | null) },
+  uMirrorInv: { value: Array.from({ length: MIRROR_BOARDS }, () => new THREE.Matrix4()) },
+  uMirrorBox: { value: Array.from({ length: MIRROR_BOARDS }, () => new THREE.Vector4()) },
+};
+
+/** One board in the mirror: the eye's ray off the floor, into the board's own space, onto its face, and its picture there. */
+const mirrorBoard = (i: number) => /* glsl */ `
+  {
+    vec4 bx = uMirrorBox[${i}];
+    if (bx.z > bx.x) {
+      vec3 p = (uMirrorInv[${i}] * vec4(vFloorPos, 1.0)).xyz;
+      vec3 d = (uMirrorInv[${i}] * vec4(rv, 0.0)).xyz;
+      if (p.z > 0.0 && d.z < -1e-4) {
+        float t = -p.z / d.z;
+        vec2 uv = (p.xy + d.xy * t - bx.xy) / (bx.zw - bx.xy);
+        if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
+          float lod = clamp(1.0 + roughnessFactor * 4.0 + log2(1.0 + t) * 0.8, 0.0, 8.0);
+          float edge = smoothstep(0.0, 0.04, min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y)));
+          seen += textureLod(uMirrorMaps[${i}], uv, lod).rgb * edge * (1.0 - smoothstep(4.0, 9.0, t)) * (1.0 - mirrorBlocked(rv, t));
+        }
+      }
+    }
+  }`;
+
+/**
+ * Whether the ray off the floor at `vFloorPos` along `rv` is stopped by the mission table (a cylinder
+ * round it and its holo) before it has gone `t`: where it passes closest to the table's axis, is it
+ * inside and low enough. The table is what stands between most of the floor and the wall from the conn.
+ */
+const MIRROR_PARS = /* glsl */ `
+float mirrorBlocked(vec3 rv, float t) {
+  vec2 c = vec2(${MISSION_TABLE.x.toFixed(2)}, ${MISSION_TABLE.z.toFixed(2)});
+  vec2 d = rv.xz;
+  float s = clamp(dot(c - vFloorPos.xz, d) / max(dot(d, d), 1e-5), 0.0, t);
+  vec3 at = vFloorPos + rv * s;
+  return step(length(at.xz - c), ${(MISSION_TABLE.r + 0.3).toFixed(2)}) * step(at.y, 1.7);
+}`;
+
+/**
+ * The mirror's GLSL, added to the floor's light where it is on: what the eye sees of each board off
+ * the floor (mirrorBoard), only within 9 m of a board and clear of the table, stronger at a grazing
+ * look and on the polished walkways, blurred by how rough the floor is here and how far the ray went.
+ */
+const MIRROR = /* glsl */ `
+if (uMirrorOn > 0.0) {
+  vec3 eyeDir = normalize(vFloorPos - cameraPosition + vec3(0.0, -1e-4, 0.0));
+  vec3 rv = vec3(eyeDir.x, -eyeDir.y, eyeDir.z);
+  vec3 seen = vec3(0.0);
+  ${Array.from({ length: MIRROR_BOARDS }, (_, i) => mirrorBoard(i)).join('')}
+  float graze = 0.3 + 0.7 * (1.0 - clamp(-eyeDir.y, 0.0, 1.0));
+  outgoingLight += seen * graze * (1.0 - roughnessFactor * 0.85) * uMirrorOn;
+}`;
 
 const v3 = (a: readonly number[]) => `vec3(${a.map((n) => n.toFixed(2)).join(', ')})`;
 
@@ -56,6 +119,10 @@ export function workedFloor(m: THREE.MeshStandardMaterial): THREE.MeshStandardMa
   m.onBeforeCompile = (shader) => {
     shader.uniforms.uGloss = FLOOR_UNIFORMS.uGloss;
     shader.uniforms.uWalkRough = FLOOR_UNIFORMS.uWalkRough;
+    shader.uniforms.uMirrorOn = FLOOR_UNIFORMS.uMirrorOn;
+    shader.uniforms.uMirrorMaps = FLOOR_UNIFORMS.uMirrorMaps;
+    shader.uniforms.uMirrorInv = FLOOR_UNIFORMS.uMirrorInv;
+    shader.uniforms.uMirrorBox = FLOOR_UNIFORMS.uMirrorBox;
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vFloorPos;')
       .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvFloorPos = (modelMatrix * vec4(transformed, 1.0)).xyz;');
@@ -66,6 +133,10 @@ export function workedFloor(m: THREE.MeshStandardMaterial): THREE.MeshStandardMa
         varying vec3 vFloorPos;
         uniform float uGloss;
         uniform float uWalkRough;
+        uniform float uMirrorOn;
+        uniform sampler2D uMirrorMaps[${MIRROR_BOARDS}];
+        uniform mat4 uMirrorInv[${MIRROR_BOARDS}];
+        uniform vec4 uMirrorBox[${MIRROR_BOARDS}];
         float floorWalk = 0.0;
         float floorHash(vec2 c) { return fract(sin(dot(c, vec2(12.9898, 78.233))) * 43758.5453); }
         float floorNoise(vec2 p) {
@@ -74,7 +145,8 @@ export function workedFloor(m: THREE.MeshStandardMaterial): THREE.MeshStandardMa
           vec2 u = f * f * (3.0 - 2.0 * f);
           return mix(mix(floorHash(i), floorHash(i + vec2(1.0, 0.0)), u.x), mix(floorHash(i + vec2(0.0, 1.0)), floorHash(i + vec2(1.0, 1.0)), u.x), u.y);
         }
-        ${WALKWAYS}`,
+        ${WALKWAYS}
+        ${MIRROR_PARS}`,
       )
       .replace('#include <envmap_physical_pars_fragment>', boxProjected())
       .replace(
@@ -95,7 +167,8 @@ export function workedFloor(m: THREE.MeshStandardMaterial): THREE.MeshStandardMa
         '#include <roughnessmap_fragment>',
         `#include <roughnessmap_fragment>
         roughnessFactor = mix(roughnessFactor, uWalkRough, floorWalk * uGloss);`,
-      );
+      )
+      .replace('#include <opaque_fragment>', `${MIRROR}\n#include <opaque_fragment>`);
   };
   m.customProgramCacheKey = () => 'worked-floor';
   return m;
