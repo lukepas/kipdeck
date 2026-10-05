@@ -26,6 +26,6 @@ export function ritualSettings(get: () => Settings, change: (some: Partial<Setti
   return [
     h('div.life-part', {}, h('span.life-part-name', {}, 'Start of watch'), watch, note),
     h('div.life-part', {}, h('span.life-part-name', {}, 'Momentum display'), momentum, h('p.setting-note', {}, 'The drive core aft: a ring lit for each merge in the current run, today\'s best etched on it, its light running at the ship\'s speed. The fleet\'s week on the ticker against its record, and an eight-week tally over the Services panel. Merges and issues closed only, never lines, tokens or time at the terminal.')),
-    h('div.life-part', {}, h('span.life-part-name', {}, 'Turnaround clock'), turnaround, h('p.setting-note', {}, 'The pit wall on the Review bay: your reply and review times today against the last seven days, and today\'s reviews cleared and units recovered in the top bar. A fast clear runs a line of light to the drive core. Slow numbers are only numbers.')),
+    h('div.life-part', {}, h('span.life-part-name', {}, 'Turnaround clock'), turnaround, h('p.setting-note', {}, 'The pit wall on the Review bay: your reply and review times today against the last seven days, and, once there is something, what the crew got through today in the top bar (units back on task, pull requests through review). A fast clear runs a line of light to the drive core. Slow numbers are only numbers.')),
   ];
 }

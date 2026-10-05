@@ -49,6 +49,11 @@ export interface Moments {
   play(kind: Moment['kind'], worker?: string): void;
 }
 
+/** The log card's last line when work waits for review: the next unblock, and where it is. */
+export function reviewHint(n: number): string {
+  return `${n} to review - Mission control (I)`;
+}
+
 export function installMoments(ctx: Ctx, parts: Pick<Parts, 'views' | 'giveWay' | 'alert' | 'space' | 'fleet' | 'vesper' | 'focus'>): Moments {
   const gestures = new Gestures(ctx, parts);
   const sweep = new PodSweep();
@@ -162,7 +167,10 @@ export function installMoments(ctx: Ctx, parts: Pick<Parts, 'views' | 'giveWay' 
     const next = queue.next(clock, hold, Date.now());
     if (next) play(next.m, next.stale);
     if (after && clock >= after.at) {
-      cards.show(after.card, CARD_MS[after.tier], after.voice);
+      // The celebration ends by pointing at the next unblock: work waiting for review, if any.
+      const review = store.ranked(store.floor).filter((r) => r.att.level === 'review' && !r.att.snoozed).length;
+      const card = review ? { ...after.card, lines: [...after.card.lines, reviewHint(review)] } : after.card;
+      cards.show(card, CARD_MS[after.tier], after.voice);
       if (after.flyBy && !parts.giveWay.frozen()) parts.fleet.flyBy();
       after = null;
     }

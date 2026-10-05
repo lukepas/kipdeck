@@ -95,7 +95,7 @@ function fill(t: string, c: VoiceContext): string {
 /** The wit, by kind: the first bucket whose test holds is the one picked from. */
 const WIT: Record<VoiceKind, [test: (c: VoiceContext) => boolean, lines: string[]][]> = {
   merged: [
-    [(c) => (c.mergesThisHour ?? 0) >= 3, ['{n} merges this hour. The engines have noticed.', '{n} merges this hour. I am revising my forecasts upward.', '{n} merges in one hour. Someone tell the navigator to keep up.']],
+    [(c) => (c.mergesThisHour ?? 0) >= 3, ['{n} merges this hour. The engines have noticed.', '{n} merges this hour. I am revising my forecasts upward.', '{n} merges in one hour. Recalculating arrival, again.']],
     [(c) => !!c.comeback, ['{unit} was stuck earlier and landed {pr} anyway. I will be updating its file.', '{unit} came back from stuck and merged. Resilience, logged.', 'From stuck to merged. {unit} does not give up easily.']],
     [(c) => MILESTONE_MERGES.has(c.nth ?? 0), ["{unit}'s {nth} merge. It is becoming a habit.", "That is {unit}'s {nth} merge. I have started keeping a separate shelf.", "{nth} merge for {unit}. Consistency is underrated."]],
     [(c) => !!c.firstOfDay, ['First merge of the day. The watch has officially begun.', 'First merge today. I have logged it with unnecessary ceremony.', 'The day has its first merge. Everything after this is momentum.']],
