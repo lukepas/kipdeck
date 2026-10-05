@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import type { AttentionCounts } from '../../../shared/attention';
-import { BOARDS, MISSION_TABLE, TV } from '../../../shared/layout';
+import { BOARDS, TV } from '../../../shared/layout';
 import type { Fixture } from '../../world/office/fixture';
 import { DECK, box, matte, practical } from '../../world/office/materials';
 import { mergeByMaterial, mesh } from '../../world/toon';
-import { canvasTexture, onBridgeLayer } from './shapes';
+import { OVER_WALL, canvasTexture, onBridgeLayer } from './shapes';
 import { paintCountStrip } from './readouts';
 
 // The situation wall as the bridge's forward displays: each board re-cased in a graphite bezel with a
@@ -25,7 +25,7 @@ declare module '../../world/types' {
 }
 
 /** The strip: radius round the table, angle it spans (radians, centred due north), its bottom and height. */
-const STRIP = { r: 11.4, arc: 1.06, y: 4.5, h: 0.62 } as const;
+const STRIP = { r: 11.4, arc: 1.06, y: 4.5 + OVER_WALL.lift, h: 0.62 } as const;
 
 /** A graphite bezel round a board (`b`: its middle, facing, size), with a lit hairline above and below. */
 function bezel(into: THREE.Group, b: { x: number; y: number; z: number; rotY: number; width: number; height: number }) {
@@ -63,20 +63,20 @@ export const displays: Fixture<'overhead'> = (site) => {
   const start = Math.PI - STRIP.arc / 2;
   const strip = new THREE.Group();
   const face = new THREE.Mesh(new THREE.CylinderGeometry(STRIP.r, STRIP.r, STRIP.h, 48, 1, true, start, STRIP.arc), new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide, toneMapped: false }));
-  face.position.set(MISSION_TABLE.x, STRIP.y + STRIP.h / 2, MISSION_TABLE.z);
+  face.position.set(OVER_WALL.x, STRIP.y + STRIP.h / 2, OVER_WALL.z);
   strip.add(face);
   const rim = matte(DECK.hull, { metalness: 0.35, roughness: 0.55 });
   const parts = new THREE.Group();
   for (const y of [STRIP.y - 0.03, STRIP.y + STRIP.h + 0.03]) {
     const t = new THREE.Mesh(new THREE.TorusGeometry(STRIP.r - 0.02, 0.04, 6, 48, STRIP.arc).rotateX(Math.PI / 2).rotateY(Math.PI / 2 + STRIP.arc / 2), rim);
-    t.position.set(MISSION_TABLE.x, y, MISSION_TABLE.z);
+    t.position.set(OVER_WALL.x, y, OVER_WALL.z);
     parts.add(t);
   }
   // Hung from the canopy on two rods.
   for (const s of [-1, 1]) {
     const a = -Math.PI / 2 + s * (STRIP.arc / 2 - 0.05);
-    const x = MISSION_TABLE.x + Math.cos(a) * STRIP.r;
-    const z = MISSION_TABLE.z + Math.sin(a) * STRIP.r;
+    const x = OVER_WALL.x + Math.cos(a) * STRIP.r;
+    const z = OVER_WALL.z + Math.sin(a) * STRIP.r;
     const top = 7.7;
     parts.add(mesh(new THREE.CylinderGeometry(0.025, 0.025, top - STRIP.y - STRIP.h, 6), rim, x, (top + STRIP.y + STRIP.h) / 2, z, false));
   }

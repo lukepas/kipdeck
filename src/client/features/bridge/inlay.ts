@@ -9,8 +9,8 @@ import { mergeByMaterial, mesh } from '../../world/toon';
 // from the conn, chevrons pointing to the bow), and seams along the walls at the viewports' sills and
 // heads. Paint and trim, never in anyone's way; one draw call per material.
 
-/** The ring round the pods, between their floor plates and the situation wall. */
-const RING = { r: 11.3, seam: 11.55 } as const;
+/** The ring round the pods, between their floor plates and the situation wall (10.2 m out at its nearest). */
+const RING = { r: 9.7, seam: 9.95 } as const;
 /** The lanes: how far either side of the axis their lines run, and from where to where. */
 const LANE = { half: 0.45, from: MISSION_TABLE.r + 1.8, to: RING.r - 0.4 } as const;
 

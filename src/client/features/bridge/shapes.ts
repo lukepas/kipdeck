@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { FLOOR } from '../../../shared/layout';
+import { FLOOR, MISSION_TABLE, SITUATION } from '../../../shared/layout';
 import { sharp } from '../../world/sharp';
 
 // What the bridge's pieces are made with: a beam between two points, the canopy's profile, and the
@@ -35,6 +35,13 @@ export function beam(a: THREE.Vector3, b: THREE.Vector3, w: number, h: number, m
   m.receiveShadow = false;
   return m;
 }
+
+/**
+ * What hangs over the situation wall (the overhead strip, the condition band, the ticker) curves round
+ * the wall's own middle, south of the table's, and starts `lift` higher than the work boards' tops so it
+ * clears the Attention board's count band (layout.ts SITUATION).
+ */
+export const OVER_WALL = { x: MISSION_TABLE.x, z: MISSION_TABLE.z + SITUATION.cz, lift: SITUATION.band } as const;
 
 /** The canopy: a halo ring over the table, ribs out to the tops of the walls. */
 export const CANOPY = { halo: 2, top: 9, eaves: 6.8, ribs: 16 } as const;

@@ -208,18 +208,21 @@ export type StationKind = 'issues' | 'pulls' | 'queue';
 
 /**
  * The situation wall: five flat panels standing on the floor in an arc round the north side of the
- * mission table, `r` out from its middle, each turned to face it. From west to east: Issues, Queue,
- * Attention (the ranked list, or a shared screen) in the middle, Pull requests and Services. `angles`
- * are where each panel's middle is round the table (radians from +x toward +z, so -PI/2 is due north).
+ * mission table, `r` out from a middle `cz` south of the table's, each turned to face that middle. From
+ * west to east: Issues, Queue, Attention (the ranked list, or a shared screen) in the middle, Pull
+ * requests and Services. `angles` are where each panel's middle is round the arc (radians from +x toward
+ * +z, so -PI/2 is due north). The arc's middle sits south of the table so the wall stands 2 m nearer the
+ * conn than a ring round the table would, with the consoles and the board agents still clear of it.
+ * The Attention board is `band` taller than the others, upward, for its count band (features/tv).
  */
-export const SITUATION = { r: 12.2, width: 5.2, height: 2.9, y: 2.45, top: 4.1, angles: [-142, -116, -90, -64, -38].map((d) => (d * Math.PI) / 180) } as const;
+export const SITUATION = { r: 12.2, cz: 2, width: 5.2, height: 2.9, y: 2.45, top: 4.1, band: 0.9, angles: [-142, -116, -90, -64, -38].map((d) => (d * Math.PI) / 180) } as const;
 
 /** A panel of the situation wall: its middle, the way it faces (toward the table), and its size. */
-function facet(i: number, label: string, width: number = SITUATION.width) {
+function facet(i: number, label: string, width: number = SITUATION.width, extra = 0) {
   const a = SITUATION.angles[i];
   const x = round(MISSION_TABLE.x + Math.cos(a) * SITUATION.r);
-  const z = round(MISSION_TABLE.z + Math.sin(a) * SITUATION.r);
-  return { x, y: SITUATION.y, z, rotY: facingTable(x, z) + Math.PI, width, height: SITUATION.height, label };
+  const z = round(MISSION_TABLE.z + SITUATION.cz + Math.sin(a) * SITUATION.r);
+  return { x, y: SITUATION.y + extra / 2, z, rotY: Math.atan2(x - MISSION_TABLE.x, z - MISSION_TABLE.z - SITUATION.cz) + Math.PI, width, height: SITUATION.height + extra, label };
 }
 
 /**
@@ -352,7 +355,7 @@ export const BOARDS = {
  * The Attention board, the middle panel of the situation wall, due north of the table: the live
  * ranked list, in the order of the top bar's counters, and whatever someone shares while they share it.
  */
-export const TV = facet(2, 'Attention', 6);
+export const TV = facet(2, 'Attention', 6, SITUATION.band);
 /**
  * The capacity panel at the head of the Proof corner on the west wall, facing the deck: how busy the
  * office's machine is, and how many units it runs of the most it takes.
@@ -508,10 +511,10 @@ export interface SeatDef {
  * facing the same way from the south. Units have their own seats, the consoles and the Standby bench in SEATS.
  */
 export const SEATING: SeatDef[] = [
-  { id: 'couch', label: 'Operator bench', x: 0, y: 0, z: -8.9, rotY: Math.PI, places: [-1.2, 0, 1.2], hips: 0.5, depth: -0.05, out: 0.9, tv: true },
+  { id: 'couch', label: 'Operator bench', x: 0, y: 0, z: -7.4, rotY: Math.PI, places: [-1, 0, 1], hips: 0.5, depth: -0.05, out: 0.9, tv: true },
   // A stool either side of it, turned to the board.
-  { id: 'lounge-beanbag-1', label: 'Stool', x: -3.3, y: 0, z: -9.2, rotY: Math.atan2(TV.x + 3.3, TV.z + 9.2), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
-  { id: 'lounge-beanbag-2', label: 'Stool', x: 3.3, y: 0, z: -9.2, rotY: Math.atan2(TV.x - 3.3, TV.z + 9.2), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
+  { id: 'lounge-beanbag-1', label: 'Stool', x: -2.45, y: 0, z: -7.6, rotY: Math.atan2(TV.x + 2.45, TV.z + 7.6), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
+  { id: 'lounge-beanbag-2', label: 'Stool', x: 2.45, y: 0, z: -7.6, rotY: Math.atan2(TV.x - 2.45, TV.z + 7.6), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
   // On the conn, a little south of its middle, so getting up leaves you on the dais facing the bow.
   { id: 'conn', label: "Captain's chair", x: CONN.x, y: CONN.h, z: CONN.z + 0.25, rotY: Math.PI, places: [0], hips: 0.48, depth: -0.05, out: 0.8 },
 ];

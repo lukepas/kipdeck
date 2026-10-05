@@ -1,8 +1,7 @@
 import * as THREE from 'three';
-import { MISSION_TABLE } from '../../../shared/layout';
 import type { Fixture } from '../../world/office/fixture';
 import { DECK } from '../../world/office/materials';
-import { onBridgeLayer } from '../bridge/shapes';
+import { OVER_WALL, onBridgeLayer } from '../bridge/shapes';
 import { sharp } from '../../world/sharp';
 
 // The ticker over the overhead strip: on its west end the ship's clock and how long the deck has been
@@ -33,7 +32,7 @@ declare module '../../world/types' {
 }
 
 /** Where it hangs: the overhead strip's radius and arc (displays.ts), just over its top rim. */
-const TICK = { r: 11.4, arc: 1.06, y: 5.22, h: 0.32, clock: 0.22 } as const;
+const TICK = { r: 11.4, arc: 1.06, y: 5.22 + OVER_WALL.lift, h: 0.32, clock: 0.22 } as const;
 /** How fast the log runs: its whole width every 70 s. */
 const PACE = 1 / 70;
 
@@ -52,7 +51,7 @@ function slice(from: number, to: number, w: number, h: number) {
   texture.colorSpace = THREE.SRGBColorSpace;
   sharp(texture);
   const mesh = new THREE.Mesh(new THREE.CylinderGeometry(TICK.r, TICK.r, TICK.h, 40, 1, true, from, to - from), new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide, toneMapped: false }));
-  mesh.position.set(MISSION_TABLE.x, TICK.y + TICK.h / 2, MISSION_TABLE.z);
+  mesh.position.set(OVER_WALL.x, TICK.y + TICK.h / 2, OVER_WALL.z);
   return { canvas, g, texture, mesh };
 }
 

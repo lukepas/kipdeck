@@ -197,7 +197,9 @@ test('the viewports sit in the hull between its frames, clear of what hangs on t
   // The forward viewport shows over the situation wall: from the conn, its sill is behind the wall's
   // panels, so space frames the boards and never sits behind their text.
   const eye = CONN.h + 1.6;
-  const atHull = SITUATION.top + ((SITUATION.top - eye) * (-FLOOR.minZ - SITUATION.r)) / (CONN.z + SITUATION.r);
+  // The wall's arc is centred `cz` south of the table, so its middle stands `r - cz` north of it.
+  const wallZ = MISSION_TABLE.z + SITUATION.cz - SITUATION.r;
+  const atHull = SITUATION.top + ((SITUATION.top - eye) * (wallZ - FLOOR.minZ)) / (CONN.z - wallZ);
   for (const o of WINDOWS.filter((w) => w.wall === 'north')) {
     assert.ok(o.y0 > BOARDS.issues.y - BOARDS.issues.height / 2, 'the sill is above the boards\' feet');
     assert.ok(o.y0 < atHull && o.y1 > atHull + 1, 'from the conn, the glass starts just over the situation wall');

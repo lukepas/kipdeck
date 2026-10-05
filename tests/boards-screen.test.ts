@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { LAYOUT, UNITS_PER_M, clip, rowTop } from '../src/client/features/boards/screen.js';
-import { paintAttention } from '../src/client/features/tv/attention.js';
+import { BAND_H, BAND_TILES, bandCounts, paintAttention } from '../src/client/features/tv/attention.js';
 import { SITUATION, TV } from '../src/shared/layout.js';
 import type { Ranked } from '../src/shared/attention.js';
 
@@ -105,4 +105,28 @@ test('with everyone at work the Attention board says so instead of listing them'
   const said = texts.map((t) => t.text);
   assert.ok(said.includes('All units on task. Nothing needs you.'));
   assert.ok(!said.includes('Byte'));
+});
+
+test("the Attention board's count band counts the same list its rows show, with a word under each number", () => {
+  const { g, texts } = canvasSpy();
+  const W = Math.round(TV.width * UNITS_PER_M);
+  const H = Math.round(TV.height * UNITS_PER_M);
+  const crew = [
+    ranked('needs-you', 'Pixel', 'desk-1', 'Needs an answer'),
+    ranked('needs-you', 'Nibble', 'desk-3', 'Needs an answer'),
+    ranked('stuck', 'Cosmo', 'desk-11', 'Crashed (exit 3)'),
+    ranked('review', 'Widget', 'desk-6', 'Done'),
+    ranked('working', 'Byte', 'desk-2', 'Migrate the payments webhook'),
+    ranked('parked', 'Idle', 'desk-4', 'On deck'),
+  ];
+  paintAttention(g, W, H, crew, Date.now());
+  const counts = bandCounts(crew.filter((r) => r.att.level !== 'parked'));
+  assert.deepEqual([counts['needs-you'], counts.stuck, counts.working, counts.review], [2, 1, 1, 1]);
+  assert.deepEqual(BAND_TILES.map(([, w]) => w), ['NEEDS YOU', 'STUCK', 'RUNNING', 'DONE']);
+  const said = texts.map((t) => t.text);
+  for (const [, word] of BAND_TILES) assert.ok(said.includes(word), `${word} is in the band`);
+  // The numbers come first, in the band's order, before the board's own title.
+  const title = said.indexOf('ATTENTION');
+  assert.deepEqual(said.slice(0, title).filter((t) => /^\d+$/.test(t)), ['2', '1', '1', '1']);
+  assert.ok(BAND_H >= 170 && BAND_H <= 190, 'about 0.9 m tall');
 });

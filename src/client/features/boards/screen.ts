@@ -6,7 +6,8 @@ import { sharp } from '../../world/sharp';
 // 1.5 times that so the text stays crisp up close; a title bar with the board's name big and its count
 // beside it; and rows of one size, four at most, with "+N more" under them. The type is sized for the
 // conn: a board's name and each row's first line read from the captain's place, the second line from
-// halfway in. Each row's state is a glyph (a shape) and a stripe (its hue), as everywhere else.
+// halfway in (a row's first line is 0.24 m type, about 9.6 px tall at 1440x900 from the conn, 21.6 m
+// off). Each row's state is a glyph (a shape) and a stripe (its hue), as everywhere else.
 
 /** Canvas units a metre of panel, and how many pixels back each one. */
 export const UNITS_PER_M = 200;
@@ -140,6 +141,8 @@ export interface Row {
   quiet?: boolean;
   /** Outlined in Signal: the one you're reaching for. */
   lifted?: boolean;
+  /** How much bigger its first line is set (the Attention board's short names read from further off). */
+  k?: number;
 }
 
 /** Where the `i`th row's top is. */
@@ -164,14 +167,15 @@ export function row(g: CanvasRenderingContext2D, W: number, i: number, r: Row, t
   }
   g.fillStyle = r.hue;
   g.fillRect(x0, y, stripe, rowH);
-  const line1 = r.sub ? y + 44 : y + rowH / 2 + 15;
+  const k = r.k ?? 1;
+  const line1 = r.sub ? y + 47 + Math.round((k - 1) * 24) : y + rowH / 2 + 17 + Math.round((k - 1) * 18);
   r.mark?.(g, x0 + glyphX - pad / 2, r.sub ? y + 32 : y + rowH / 2, 17);
   g.textBaseline = 'alphabetic';
   // The side text first, so the main line knows how much room it has.
   let right = x0 + w - 24;
   if (r.side) {
     g.textAlign = 'right';
-    g.font = r.sideMono ? MONO(34, 600) : UI(500, 36);
+    g.font = r.sideMono ? MONO(36, 600) : UI(500, 38);
     g.fillStyle = r.sideColor ?? INK.dim;
     const side = clip(g, r.side, w * 0.32);
     g.fillText(side, right, line1 - 2);
@@ -180,24 +184,24 @@ export function row(g: CanvasRenderingContext2D, W: number, i: number, r: Row, t
   }
   let x = x0 + textX - pad;
   if (r.tag) {
-    g.font = MONO(34, 600);
+    g.font = MONO(36, 600);
     g.fillStyle = INK.dim;
     g.fillText(r.tag, x, line1 - 2);
     x += g.measureText(r.tag).width + 18;
   }
-  g.font = UI(600, 42);
+  g.font = UI(600, Math.round(48 * k));
   g.fillStyle = r.quiet ? INK.dim : INK.text;
   const detailX = r.detail !== undefined && r.detailX !== undefined ? r.detailX : undefined;
   g.fillText(clip(g, r.text, (detailX ?? right) - x - (detailX ? 24 : 0)), x, line1);
   if (r.detail && detailX !== undefined) {
-    g.font = UI(500, 40);
+    g.font = UI(500, Math.round(45 * k));
     g.fillStyle = r.quiet ? INK.dim : INK.text;
     g.fillText(clip(g, r.detail, right - detailX), detailX, line1);
   }
   if (r.sub) {
-    g.font = MONO(26);
+    g.font = MONO(27);
     g.fillStyle = INK.dim;
-    g.fillText(clip(g, r.sub, x0 + w - 24 - (x0 + textX - pad)), x0 + textX - pad, y + 80);
+    g.fillText(clip(g, r.sub, x0 + w - 24 - (x0 + textX - pad)), x0 + textX - pad, y + 84);
   }
 }
 

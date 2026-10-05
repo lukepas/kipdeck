@@ -21,8 +21,8 @@ export const AFT_CORE = { x: ELEVATOR.x, z: round(FLOOR.maxZ - ELEVATOR.depth / 
 export const TALLY = (() => {
   const a = SITUATION.angles[4];
   const x = round(MISSION_TABLE.x + Math.cos(a) * (SITUATION.r - 0.1));
-  const z = round(MISSION_TABLE.z + Math.sin(a) * (SITUATION.r - 0.1));
-  return { x, y: SITUATION.top + 0.75, z, rotY: facingTable(x, z) + Math.PI, width: 3.0, height: 0.9 };
+  const z = round(MISSION_TABLE.z + SITUATION.cz + Math.sin(a) * (SITUATION.r - 0.1));
+  return { x, y: SITUATION.top + 0.75, z, rotY: facingTable(x, z - SITUATION.cz) + Math.PI, width: 3.0, height: 0.9 };
 })();
 
 /**

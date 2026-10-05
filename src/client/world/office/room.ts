@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { BOARDS, MACHINE_MONITOR, SEATING_BY_ID, SITUATION, TV } from '../../../shared/layout';
-import { mesh } from '../toon';
+import { mergeByMaterial, mesh } from '../toon';
 import type { Interactable } from '../types';
 import type { Fixture } from './fixture';
 import { DECK, box, contactShadow, flat, practical } from './materials';
@@ -20,6 +20,8 @@ declare module '../types' {
     machineScreen: THREE.Mesh;
   }
 }
+
+const UP = new THREE.Vector3(0, 1, 0);
 
 /** The work boards on the situation wall's panels: Issues, Queue, Pull requests and Services. */
 export const boards: Fixture<'boardMeshes'> = (site) => {
@@ -52,18 +54,25 @@ export const situationWall: Fixture = (site) => {
   const slate = flat(DECK.wall);
   const rule = practical(DECK.gridMajor);
   const T = 0.16;
+  // The panels and their rules go in as one draw a material (their contact shadows apart: they keep their map).
+  const walls = new THREE.Group();
   for (const b of [BOARDS.issues, BOARDS.queue, TV, BOARDS.pulls, BOARDS.services]) {
     const nx = Math.sin(b.rotY);
     const nz = Math.cos(b.rotY);
     const panel = new THREE.Group();
     const w = SITUATION.width + 0.32;
-    panel.add(mesh(box(w, SITUATION.top, T), slate, 0, SITUATION.top / 2, -T / 2 - 0.02));
-    panel.add(mesh(box(w, 0.015, 0.03), rule, 0, SITUATION.top + 0.01, 0, false));
+    // The Attention board's panel stands taller, for its count band (layout.ts SITUATION.band).
+    const top = SITUATION.top + (b === TV ? SITUATION.band : 0);
+    panel.add(mesh(box(w, top, T), slate, 0, top / 2, -T / 2 - 0.02));
+    panel.add(mesh(box(w, 0.015, 0.03), rule, 0, top + 0.01, 0, false));
     panel.add(mesh(box(b.width, 0.015, 0.02), rule, 0, b.y - b.height / 2 - 0.12, 0.08, false));
-    panel.add(contactShadow(w + 0.4, 1.0, 0, 0.2));
     panel.position.set(b.x, 0, b.z);
     panel.rotation.y = b.rotY;
-    site.group.add(panel);
+    walls.add(panel);
+    const shadow = contactShadow(w + 0.4, 1.0, 0, 0.2);
+    shadow.position.applyAxisAngle(UP, b.rotY).add(panel.position);
+    shadow.rotation.y = b.rotY;
+    site.group.add(shadow);
     // Its footprint, as short boxes along it (a collider is square to the axes).
     const tx = Math.cos(b.rotY);
     const tz = -Math.sin(b.rotY);
@@ -73,6 +82,7 @@ export const situationWall: Fixture = (site) => {
       site.colliders.push({ minX: cx - 0.2, maxX: cx + 0.2, minZ: cz - 0.2, maxZ: cz + 0.2, top: SITUATION.top });
     }
   }
+  site.group.add(mergeByMaterial(walls));
   return {};
 };
 
@@ -104,7 +114,7 @@ export const lounge: Fixture = (site) => {
   const seat = SEATING_BY_ID.get('couch')!;
   const bench = new THREE.Group();
   // Built along x facing +z, then turned to face the board.
-  const len = 4.2;
+  const len = 3.4;
   bench.add(mesh(box(len, 0.4, 0.7), flat(DECK.console), 0, 0.2, 0));
   bench.add(mesh(box(len - 0.06, 0.06, 0.64), flat(DECK.consoleTop), 0, 0.43, 0));
   bench.add(mesh(box(len, 0.36, 0.1), flat(DECK.console), 0, 0.64, -0.32));
