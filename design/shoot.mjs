@@ -310,6 +310,8 @@ async function main() {
     // The cinema (features/cinema). The arrival shot held at 0, 2.5 and 5 s (the bow outside, the
     // destination world, the conn), then let run and skipped by a key at 1 s: on the conn the next frame.
     const CINEMA = (fn, ...args) => page.evaluate(([fn, args]) => window.__world.cinema[fn](...args), [fn, args]);
+    // The arrival's shots wait for the jump the course above set off (its first waypoint is done) to be over.
+    if (want('arrival') || want('arrival-clip')) await page.waitForFunction(() => window.__office.space.phase() === 'idle', null, { timeout: 30_000 }).catch(() => {});
     if (want('arrival')) {
       // The start of watch plays once the arrival has landed: a key skips what's left of it first.
       await page.evaluate(() => window.dispatchEvent(new KeyboardEvent('keydown', { code: 'ShiftLeft', key: 'Shift' })));
