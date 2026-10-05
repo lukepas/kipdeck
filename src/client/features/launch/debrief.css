@@ -1,0 +1,30 @@
+/* The debrief (features/launch/debrief.ts): a conn panel low on the left, over the bottom bar, beside
+   the Units rail. Mono title, plain lines, VESPER's closing line in italics. The only hue is the waiting
+   units' own glyphs; a ship-cyan rule down its left edge, the colour the bridge works in. A ✕ top right;
+   Esc puts it away too and hands the mouse straight back. It never takes the mouse while it shows. */
+.debrief {
+  position: absolute; left: calc(var(--rail, 0px) + 12px); bottom: calc(var(--bottom, 52px) + 62px);
+  z-index: 44; width: min(440px, calc(100vw - var(--rail, 0px) - 24px)); padding: 12px 40px 12px 16px;
+  background: var(--hud-fill); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--hud-shadow);
+  pointer-events: auto; opacity: 0; translate: 0 4px; transition: opacity 400ms var(--ease), translate 400ms var(--ease);
+}
+.debrief::before { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; border-radius: var(--radius) 0 0 var(--radius); background: #6fc3df; }
+.debrief.on { opacity: 1; translate: 0 0; }
+.debrief[hidden] { display: none; }
+.debrief .close { position: absolute; top: 6px; right: 6px; }
+.debrief-title { font: 600 11px/1.3 var(--font-mono); letter-spacing: .12em; color: var(--muted); margin: 0 0 8px; }
+.debrief-waits, .debrief-lines { list-style: none; margin: 0; padding: 0; }
+.debrief-waits { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.debrief-wait { display: grid; grid-template-columns: 16px 1fr auto; gap: 8px; align-items: center; font: 500 14px/1.4 var(--font-ui); color: var(--text); }
+.debrief-wait + .debrief-wait { margin-top: 6px; }
+.debrief-glyph { display: inline-flex; }
+.debrief-glyph.needs-you { color: var(--signal); }
+.debrief-glyph.stuck { color: var(--stuck); }
+.debrief-wait kbd { margin-left: 4px; padding: 0 4px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); font: 500 11px/16px var(--font-mono); }
+.debrief-lines li { font: 500 14px/1.45 var(--font-ui); color: var(--text); }
+.debrief-lines li + li { margin-top: 3px; }
+.debrief-voice { font: italic 400 13px/1.4 var(--font-ui); color: var(--muted); margin: 8px 0 0; }
+.debrief-vesper { font: 600 10px/1 var(--font-mono); font-style: normal; letter-spacing: .12em; color: #6fc3df; }
+.debrief-full { margin-top: 10px; }
+@media (prefers-reduced-motion: reduce) { .debrief { transition: none; translate: 0 0; } }

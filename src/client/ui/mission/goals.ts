@@ -10,6 +10,7 @@ import { store } from '../../state';
 import { h, timeAgo } from '../dom';
 import { money, type MissionDeps } from './act';
 import { renderAgents } from './rep';
+import { renderLogbook } from './logbook';
 
 /** Marks the text box being edited, so Esc cancels the edit instead of closing the window (see index.ts). */
 export const EDITING = 'mc-edit';
@@ -184,5 +185,6 @@ export function renderGoals(deps: MissionDeps): HTMLElement {
     noTarget ? h('p.mc-note.mc-link-hint', {}, 'Add a milestone to link workers to it.') : null,
     tellBox(deps),
     renderAgents(),
+    renderLogbook(),
   );
 }

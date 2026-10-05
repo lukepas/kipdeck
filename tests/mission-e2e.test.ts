@@ -203,7 +203,7 @@ test('the 3D office: the strip in the bottom bar, I opens Mission control, Esc p
   assert.deepEqual(errors, []);
 });
 
-test('back after a while away: the digest is the first card in the 2D view, and a window in the 3D office', async (t) => {
+test('back after a while away: the digest is the first card in the 2D view, and the debrief in the 3D office opens it', async (t) => {
   if (why) return t.skip(why);
   const lite = await signedIn({ width: 420, height: 860 }, 40 * 60_000);
   t.after(() => lite.context.close());
@@ -227,8 +227,14 @@ test('back after a while away: the digest is the first card in the 2D view, and 
   const office = await signedIn(undefined, 40 * 60_000);
   t.after(() => office.context.close());
   await office.page.goto(`${base}/`);
+  // The start of watch takes the window's place at load: the debrief, whose Full log is the window.
+  const debrief = office.page.locator('.debrief.on');
+  await debrief.waitFor({ timeout: 60_000 });
+  assert.match(await debrief.locator('.debrief-title').innerText(), /SINCE YOU LEFT/);
+  assert.equal(await debrief.locator('.close').count(), 1);
+  await debrief.locator('button', { hasText: 'Full log' }).click();
   const digest = office.page.locator('.modal.digest');
-  await digest.waitFor({ timeout: 60_000 });
+  await digest.waitFor({ timeout: 30_000 });
   assert.match(await digest.locator('.dg-summary').innerText(), /./);
   await digest.locator('.tl-row', { hasText: 'Auth rewrite' }).first().waitFor();
   assert.equal(await digest.locator('header .close').count(), 1);

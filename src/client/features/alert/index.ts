@@ -28,7 +28,7 @@ import { DECK, practical } from '../../world/office/materials';
 import * as THREE from 'three';
 import { debugHandle } from '../giveway';
 import { ConditionBand, type BandGlyph } from './band';
-import { ConditionLatch, DIM, GREEN_SAY_MS, STAND_DOWN_MS, lampLevel, rawCondition, standDownAt, whyOf, type Condition, type Waiter } from './logic';
+import { ConditionLatch, DIM, GREEN_SAY_MS, STAND_DOWN_MS, lampLevel, podWake, rawCondition, standDownAt, whyOf, type Condition, type Waiter } from './logic';
 
 export interface Alert {
   /** The bridge's condition now. */
@@ -40,6 +40,11 @@ export interface Alert {
    * a jump held for the captain ('held', under the condition's line), or a notice ('notice', last, for `ms`).
    */
   say(slot: 'jump' | 'held' | 'notice', text: string | null, glyph?: BandGlyph, ms?: number): void;
+  /**
+   * Brings the room's lights up from `from` aft to bow over `ms`, the pods' lamps coming on one pod at a
+   * time (the start of watch, features/launch); null puts them straight up.
+   */
+  wake(from: number | null, ms?: number): void;
 }
 
 export function installAlert(ctx: Ctx, parts: Pick<Parts, 'lights' | 'giveWay'>): Alert {
@@ -57,7 +62,7 @@ export function installAlert(ctx: Ctx, parts: Pick<Parts, 'lights' | 'giveWay'>)
   let notice: { text: string; glyph: BandGlyph; until: number } | null = null;
   let greenUntil = -Infinity;
   /** The stand-down under way: when it started and the room's level it comes up from. */
-  let standDown: { at: number; from: number } | null = null;
+  let standDown: { at: number; from: number; ms: number; pods: boolean } | null = null;
   /** The room's level and the cove's now, eased toward the condition's. */
   let room = 1;
   let coveK = 1;
@@ -85,7 +90,7 @@ export function installAlert(ctx: Ctx, parts: Pick<Parts, 'lights' | 'giveWay'>)
     const step = latch.step(rawCondition(waiters, reminders, s), clock);
     if (step.stoodDown) {
       greenUntil = clock + GREEN_SAY_MS;
-      standDown = parts.giveWay.frozen() ? null : { at: clock, from: DIM[was].room };
+      standDown = parts.giveWay.frozen() ? null : { at: clock, from: DIM[was].room, ms: STAND_DOWN_MS, pods: false };
     }
     const c = latch.value;
     greenLine = c === 'green' && clock < greenUntil ? { text: conditionLine('green', whyOf([], []), working), glyph: null } : null;
@@ -128,7 +133,7 @@ export function installAlert(ctx: Ctx, parts: Pick<Parts, 'lights' | 'giveWay'>)
     let key = `${c}|${room.toFixed(3)}`;
     if (standDown) {
       const ms = clock - standDown.at;
-      if (ms >= STAND_DOWN_MS) standDown = null;
+      if (ms >= standDown.ms) standDown = null;
       else key += `|sd${Math.round(ms / 16)}`;
     }
     for (const p of PODS) key += parts.giveWay.hushed(p.letter) ? p.letter : '';
@@ -139,7 +144,8 @@ export function installAlert(ctx: Ctx, parts: Pick<Parts, 'lights' | 'giveWay'>)
         const sd = standDown;
         parts.lights.dim((name, z, pod) => {
           const over = pod >= 0 && parts.giveWay.hushed(PODS[pod].letter);
-          if (sd) return sd.from + (1 - sd.from) * standDownAt(clock - sd.at, z);
+          if (sd && sd.pods && name === 'pods' && pod >= 0) return sd.from + (1 - sd.from) * podWake(clock - sd.at, sd.ms, pod);
+          if (sd) return sd.from + (1 - sd.from) * standDownAt(((clock - sd.at) * STAND_DOWN_MS) / sd.ms, z);
           if (name === 'pods' && over) return lampLevel(c, name, true);
           return room;
         });
@@ -164,6 +170,10 @@ export function installAlert(ctx: Ctx, parts: Pick<Parts, 'lights' | 'giveWay'>)
       if (slot === 'jump') jumpLine = text ? { text, glyph } : null;
       else if (slot === 'held') heldLine = text ? { text, glyph } : null;
       else notice = text ? { text, glyph, until: clock + ms } : null;
+    },
+    wake(from, ms = STAND_DOWN_MS) {
+      standDown = from === null || parts.giveWay.frozen() ? null : { at: clock, from, ms, pods: true };
+      applied = '';
     },
   };
   debugHandle('alert', { ...alert, line: () => (jumpLine ?? line ?? heldLine ?? greenLine ?? notice)?.text ?? null, room: () => room });

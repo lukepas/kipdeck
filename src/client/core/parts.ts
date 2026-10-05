@@ -32,6 +32,7 @@ import type { installDroid } from '../features/droid';
 import type { installFleet } from '../features/fleet';
 import type { installAlert } from '../features/alert';
 import type { installDrive } from '../features/drive';
+import type { installLaunch } from '../features/launch';
 import type { installTurnaround } from '../features/turnaround';
 import type { installTv } from '../features/tv';
 import type { installVoice } from '../features/voice';
@@ -124,4 +125,6 @@ export interface Parts {
   drive: Made<typeof installDrive>;
   /** The pit wall: the captain's turnaround clock in the Review bay (see features/turnaround). */
   turnaround: Made<typeof installTurnaround>;
+  /** The start of watch: the launch and the debrief (see features/launch). */
+  launch: Made<typeof installLaunch>;
 }

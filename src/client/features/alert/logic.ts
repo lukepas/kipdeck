@@ -117,6 +117,16 @@ export const GREEN_SAY_MS = 4000;
 const LAMP_RISE_MS = 700;
 
 /**
+ * How far up (0-1) pod `pod`'s lamps have come `ms` into a wake of `total` ms (the start of watch): the
+ * room first, then the pods one at a time, A to D, each easing up over a fifth of the wake.
+ */
+export function podWake(ms: number, total: number, pod: number): number {
+  const t = (ms - total * (0.35 + 0.13 * pod)) / (total * 0.2);
+  const x = Math.min(1, Math.max(0, t));
+  return x * x * (3 - 2 * x);
+}
+
+/**
  * How far up (0-1) a light at `z` (the deck's meters, +z aft, -z the bow) has come `ms` into the
  * stand-down: the aft lights first, the bow's last, each easing up over 700 ms, all up by 1.5 s.
  */

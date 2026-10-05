@@ -72,6 +72,7 @@ import { installAlert } from './features/alert';
 import { installMoments } from './features/moments';
 import { installDrive } from './features/drive';
 import { installTurnaround } from './features/turnaround';
+import { installLaunch } from './features/launch';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -184,6 +185,7 @@ parts.talk = installVoice(ctx, { tv: parts.tv });
 installDictation(ctx);
 parts.hud = installHud(ctx, parts);
 installBottomBar(ctx, parts);
+parts.launch = installLaunch(ctx, parts);
 
 // ---- Main loop ---------------------------------------------------------------------------------------
 fitWindow(ctx);
