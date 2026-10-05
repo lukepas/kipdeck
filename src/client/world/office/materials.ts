@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { FLOOR, WALL_T, type Side } from '../../../shared/layout';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { trimShader, type TrimLook } from './trim';
 
 // What the deck is made of: one family of matte, slightly rough materials on a slate ramp, the
 // emissive practicals that light it, the floor's grid, the contact shadows that ground everything,
@@ -63,6 +65,40 @@ interface MatOpts {
   flat?: boolean;
   roughness?: number;
   metalness?: number;
+  /** The trim atlas's seams, dirt and wear (./trim.ts): as its finish has it, or none with false. */
+  trim?: false;
+}
+
+/**
+ * How each of the deck's surfaces is finished, by its Night color: how rough and how metal it is, and
+ * how much of the trim atlas it takes. Brushed steel and the console tops are smooth enough to catch
+ * the room's screens and strips (features/ibl); walls and pedestals stay matte; the units take none,
+ * their bodies are their own. Anything else is matte with a light trim.
+ */
+const FINISH: Readonly<Record<string, { roughness: number; metalness: number; trim: TrimLook | null }>> = {
+  [DECK.steel.slice(1).toLowerCase()]: { roughness: 0.28, metalness: 0.45, trim: { k: 0.8, sheen: 0.18 } },
+  [DECK.steelLight.slice(1).toLowerCase()]: { roughness: 0.34, metalness: 0.65, trim: { k: 0.6, sheen: 0.18 } },
+  [DECK.consoleTop.slice(1).toLowerCase()]: { roughness: 0.3, metalness: 0.15, trim: { k: 0.9, sheen: 0.22 } },
+  [DECK.console.slice(1).toLowerCase()]: { roughness: 0.6, metalness: 0.12, trim: { k: 1, sheen: 0.2 } },
+  [DECK.wall.slice(1).toLowerCase()]: { roughness: 0.66, metalness: 0.18, trim: { k: 1, sheen: 0.2 } },
+  [DECK.hullSeam.slice(1).toLowerCase()]: { roughness: 0.6, metalness: 0.3, trim: { k: 0.4, sheen: 0.2 } },
+  [DECK.wallReveal.slice(1).toLowerCase()]: { roughness: 0.72, metalness: 0.1, trim: { k: 0.7, sheen: 0.12 } },
+  [DECK.instrument.slice(1).toLowerCase()]: { roughness: 0.3, metalness: 0.2, trim: { k: 0.35, sheen: 0.1 } },
+  [DECK.unit.slice(1).toLowerCase()]: { roughness: 0.85, metalness: 0.05, trim: null },
+};
+const PLAIN_TRIM: TrimLook = { k: 0.6, sheen: 0.15 };
+
+/** Gives `m` the trim atlas (see ./trim.ts), on top of whatever its shader already does. */
+export function withTrim<M extends THREE.MeshStandardMaterial>(m: M, look: TrimLook): M {
+  const before = m.onBeforeCompile;
+  const key = m.customProgramCacheKey;
+  m.onBeforeCompile = (shader, renderer) => {
+    before.call(m, shader, renderer);
+    trimShader(shader, look);
+  };
+  m.customProgramCacheKey = () => `${key.call(m)}|trim`;
+  m.userData.trim = look;
+  return m;
 }
 
 const cache = new Map<string, THREE.MeshStandardMaterial>();
@@ -89,7 +125,8 @@ export function matte(color: THREE.ColorRepresentation, opts: MatOpts = {}): THR
 
 /** A material of its own (uncached), for something whose color changes. */
 export function matteUnique(color: THREE.ColorRepresentation, opts: MatOpts = {}): THREE.MeshStandardMaterial {
-  const m = new THREE.MeshStandardMaterial({ color, roughness: opts.roughness ?? 0.85, metalness: opts.metalness ?? 0.05, flatShading: !!opts.flat });
+  const finish = FINISH[new THREE.Color(color).getHexString()];
+  const m = new THREE.MeshStandardMaterial({ color, roughness: opts.roughness ?? finish?.roughness ?? 0.85, metalness: opts.metalness ?? finish?.metalness ?? 0.05, flatShading: !!opts.flat });
   if (opts.emissive !== undefined) {
     m.emissive = new THREE.Color(opts.emissive);
     m.emissiveIntensity = opts.emissiveIntensity ?? 1;
@@ -98,6 +135,8 @@ export function matteUnique(color: THREE.ColorRepresentation, opts: MatOpts = {}
     m.transparent = true;
     m.opacity = opts.opacity ?? 1;
   }
+  const trim = opts.trim === false || m.transparent || opts.emissive !== undefined ? null : finish === undefined ? PLAIN_TRIM : finish.trim;
+  if (trim) withTrim(m, trim);
   return m;
 }
 
@@ -250,6 +289,15 @@ export function box(w: number, h: number, d: number) {
   return new THREE.BoxGeometry(w, h, d);
 }
 
+/**
+ * A box with its edges rounded off by `r` (m) in `segments` steps: a console's or a hood's, whose
+ * edges catch the light as a fitted part's do. It draws the same (the merge makes the consoles one
+ * draw), at about a hundred triangles to a box's twelve with one step.
+ */
+export function rbox(w: number, h: number, d: number, r = 0.025, segments = 1) {
+  return new RoundedBoxGeometry(w, h, d, segments, Math.min(r, w / 2, h / 2, d / 2));
+}
+
 /** The materials and textures a floor paints in its own colors. On the deck every floor is the same slate. */
 export interface Looks {
   wall: THREE.MeshStandardMaterial;
@@ -264,7 +312,11 @@ export interface Looks {
  * deck, across it. For the outside of the ship (shell.ts, features/bridge).
  */
 export function hullPanels<M extends THREE.MeshStandardMaterial>(m: M): M {
-  m.onBeforeCompile = (shader) => {
+  const before = m.onBeforeCompile;
+  const key = m.customProgramCacheKey;
+  // The outside of the ship: it reflects the sky, not the room (features/ibl).
+  m.userData.outside = true;
+  m.onBeforeCompile = (shader, renderer) => {
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', '#include <common>\nvarying vec3 vHullPos;')
       .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvHullPos = (modelMatrix * vec4(transformed, 1.0)).xyz;');
@@ -286,7 +338,9 @@ export function hullPanels<M extends THREE.MeshStandardMaterial>(m: M): M {
         diffuseColor.rgb += vec3(0.006, 0.01, 0.014) * step(0.82, tone) * edge;
       }`,
     );
+    // And the trim it was given (its finish's), over the panels.
+    before.call(m, shader, renderer);
   };
-  m.customProgramCacheKey = () => 'hull-panels';
+  m.customProgramCacheKey = () => `hull-panels|${key.call(m)}`;
   return m;
 }

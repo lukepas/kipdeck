@@ -4,7 +4,7 @@ import { deskPoint } from '../../../shared/nav';
 import { mesh, textPlane } from '../toon';
 import type { Collider, DeskView, Interactable } from '../types';
 import type { Fixture } from './fixture';
-import { DECK, box, contactShadow, flat, matte, practical } from './materials';
+import { DECK, box, contactShadow, flat, matte, practical, rbox } from './materials';
 
 // Where people sit: the seats you use (see SEATING), and the consoles, the Standby bench and the board
 // agents' lecterns that units sit (or stand) at, with the plus over a free one.
@@ -46,14 +46,14 @@ export function buildDesk(def: DeskDef, index: number): DeskView {
   const body = flat(DECK.console);
   const top = flat(DECK.consoleTop);
   // The pedestal, set back toward the table, and a plinth it stands on.
-  group.add(mesh(box(width - 0.36, height - 0.08, depth - 0.34), body, 0, (height - 0.08) / 2, -0.1));
+  group.add(mesh(rbox(width - 0.36, height - 0.08, depth - 0.34, 0.03), body, 0, (height - 0.08) / 2, -0.1));
   group.add(mesh(box(width - 0.2, 0.05, depth - 0.2), matte(DECK.wallReveal), 0, 0.025, -0.06, false));
   // The top, and its front edge rounded off where the unit's hands rest.
-  group.add(mesh(box(width, 0.06, depth), top, 0, height - 0.03, 0));
+  group.add(mesh(rbox(width, 0.06, depth, 0.02), top, 0, height - 0.03, 0));
   group.add(mesh(new THREE.CylinderGeometry(0.03, 0.03, width, 8).rotateZ(Math.PI / 2), top, 0, height - 0.03, depth / 2, false));
   // The hood on the table's side, leaning back, its top under the sightline: instrument black in
   // Night and Day alike, like the screen under it, so the number on it reads in both.
-  const hood = mesh(box(width - 0.08, 0.3, 0.05), matte(DECK.instrument), 0, height + 0.13, -depth / 2 + 0.04);
+  const hood = mesh(rbox(width - 0.08, 0.3, 0.05, 0.018), matte(DECK.instrument), 0, height + 0.13, -depth / 2 + 0.04);
   hood.rotation.x = -0.22;
   group.add(hood);
   // A hairline of light along the hood's top edge, facing the table: the console is live.
@@ -110,9 +110,9 @@ export function buildBeanbag(def: DeskDef, index: number): DeskView {
   group.position.set(def.x, 0, def.z);
   group.rotation.y = def.rotY;
   const bag = new THREE.Group();
-  bag.add(mesh(box(1.1, 0.34, 0.7), flat(DECK.console), 0, 0.17, 0.1));
-  bag.add(mesh(box(1.04, 0.06, 0.64), flat(DECK.consoleTop), 0, 0.37, 0.1));
-  bag.add(mesh(box(1.1, 0.34, 0.12), flat(DECK.console), 0, 0.55, 0.42));
+  bag.add(mesh(rbox(1.1, 0.34, 0.7, 0.04), flat(DECK.console), 0, 0.17, 0.1));
+  bag.add(mesh(rbox(1.04, 0.06, 0.64, 0.025), flat(DECK.consoleTop), 0, 0.37, 0.1));
+  bag.add(mesh(rbox(1.1, 0.34, 0.12, 0.04), flat(DECK.console), 0, 0.55, 0.42));
   group.add(bag);
   group.add(contactShadow(1.6, 2.2, 0, -0.25));
 
@@ -157,7 +157,7 @@ export function buildKiosk(def: DeskDef): DeskView {
   const { width, depth, height } = KIOSK;
   group.add(mesh(box(width - 0.1, 0.04, depth), matte(DECK.wallReveal), 0, 0.02, 0, false));
   group.add(mesh(box(0.18, height - 0.08, 0.18), flat(DECK.console), 0, (height - 0.08) / 2 + 0.04, 0));
-  const topPlate = mesh(box(width, 0.04, depth), flat(DECK.consoleTop), 0, height - 0.02, 0);
+  const topPlate = mesh(rbox(width, 0.04, depth, 0.015), flat(DECK.consoleTop), 0, height - 0.02, 0);
   topPlate.rotation.x = 0.12;
   group.add(topPlate);
   // Its agent's stripe along the front edge, desaturated like the units' provider stripes.

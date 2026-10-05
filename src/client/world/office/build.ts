@@ -10,11 +10,13 @@ import { DECK, floorTexture, matteUnique, type Looks } from './materials';
 import { boards, lounge, machineMonitor, situationWall, tv } from './room';
 import { lamps } from '../../features/lights/rig';
 import { floorPaint } from './floorpaint';
+import { FLOOR_ROUGH, workedFloor } from './floor';
 import { missionTable } from './table';
 import { proofCorner } from '../../features/proofcorner/world';
 import { podPlates } from '../../features/pods/world';
 import { walls, type Door } from './shell';
 import { wing } from './wing';
+import { greebles } from './greebles';
 import { beanbags, desks, kiosks } from './seats';
 import { meetingRoom } from './meeting-room';
 import type { Fixture, Gives, Site } from './fixture';
@@ -47,6 +49,8 @@ function floorPlan() {
     stack,
     floorPaint,
     walls,
+    // The hull's working detail along the walls: trays, conduits, clamps and ribs.
+    greebles,
     // The bridge round the deck: the hull's frames, the canopy and the ship outside (features/bridge).
     hull,
     skin,
@@ -101,7 +105,7 @@ export function buildOffice(): Office {
   // The floor's grid, which the stack lays the floor with (and the overflow bay its own).
   const floorTex = floorTexture();
   looks.planks.push(floorTex);
-  const planks = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.92, metalness: 0 });
+  const planks = workedFloor(new THREE.MeshStandardMaterial({ map: floorTex, roughness: FLOOR_ROUGH.base, metalness: 0 }));
   const desks = new Map<string, DeskView>();
   const doors: Door[] = [];
   /** What the fixtures built so far give the office. */
