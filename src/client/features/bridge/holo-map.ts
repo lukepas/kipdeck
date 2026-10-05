@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import { DECK } from '../../world/office/materials';
+import { BOARD_MASK_GLSL, boardSlots, coneHeight } from './holo-mask';
 
-// The holo's star map: a small spiral of a galaxy floating over the course plot, turning slowly, in a
+// The holo's star map: a small spiral of a galaxy floating over the course plot, turning slowly, over a
 // cone of projected light with scanlines climbing it, and a glow where the ship is on the course. All of
 // it additive ship-cyan and white, writing no depth: light standing over the table, never a thing in
-// the way (features/bridge/holo.ts).
+// the way (features/bridge/holo.ts). Neither the stars nor the cone are drawn over a wall board's face.
 
 /** How high over the tabletop the map floats, how wide it is, and how many stars it has. */
 export const MAP = { y: 0.85, r: 1.25, stars: 900 } as const;
@@ -14,12 +15,14 @@ attribute float aMag;
 uniform float uPixel;
 uniform float uTime;
 varying float vA;
+${BOARD_MASK_GLSL}
 void main() {
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
   gl_Position = projectionMatrix * mv;
-  // A slow twinkle, each star on its own phase.
+  // A slow twinkle, each star on its own phase; none over a wall board's face (holo-mask.ts).
   float tw = 0.75 + 0.25 * sin(uTime * 1.7 + aMag * 91.0);
-  vA = (0.25 + 0.75 * aMag) * tw;
+  float clear = gl_Position.w > 0.0 ? boardMask(gl_Position.xy / gl_Position.w) : 1.0;
+  vA = (0.25 + 0.75 * aMag) * tw * clear;
   gl_PointSize = max(2.0, uPixel * (0.018 + 0.03 * aMag) * 900.0 / max(-mv.z, 0.5));
 }`;
 
@@ -39,11 +42,13 @@ void main() {
 const CONE_VERT = /* glsl */ `
 varying float vY;
 varying float vFacing;
+varying vec4 vClip;
 void main() {
   vY = uv.y;
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
   vFacing = abs(dot(normalize(normalMatrix * normal), normalize(-mv.xyz)));
   gl_Position = projectionMatrix * mv;
+  vClip = gl_Position;
 }`;
 
 const CONE_FRAG = /* glsl */ `
@@ -52,6 +57,8 @@ uniform float uTime;
 uniform float uGain;
 varying float vY;
 varying float vFacing;
+varying vec4 vClip;
+${BOARD_MASK_GLSL}
 void main() {
   // Brightest at the emitter, gone at the top, soft at the silhouette; thin scanlines climbing it.
   // Every pow() base is kept off zero's wrong side: vY overshoots 1.0 a hair along the top rim, pow() of a
@@ -59,12 +66,15 @@ void main() {
   float rise = pow(max(1.0 - vY, 0.0), 1.6);
   float scan = 0.55 + 0.45 * smoothstep(0.6, 1.0, sin((vY * 40.0 - uTime * 1.3) * 6.2831853));
   float a = 0.07 * rise * scan * (0.4 + 0.6 * pow(max(vFacing, 0.0), 0.7)) * uGain;
+  a *= vClip.w > 0.0 ? boardMask(vClip.xy / vClip.w) : 1.0;
   gl_FragColor = vec4(uColor, a);
   #include <colorspace_fragment>
 }`;
 
 export interface StarMap {
   readonly group: THREE.Group;
+  /** The wall boards' rectangles on screen, which the map and its cone keep out of (holo-mask.ts). */
+  readonly boards: THREE.Vector4[];
   /** Moves it on: `dt` seconds of turning and shimmer at `k` times its pace (0 holds it). */
   step(dt: number, k: number): void;
   /** Puts the ship's glow at `at` (in the plot's space). */
@@ -92,6 +102,7 @@ function spiral(n: number, r: number): { pos: Float32Array; mag: Float32Array } 
 
 export function starMap(coneFrom: number): StarMap {
   const group = new THREE.Group();
+  const boards = boardSlots();
   const { pos, mag } = spiral(MAP.stars, MAP.r);
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -99,7 +110,7 @@ export function starMap(coneFrom: number): StarMap {
   const mapMat = new THREE.ShaderMaterial({
     vertexShader: MAP_VERT,
     fragmentShader: MAP_FRAG,
-    uniforms: { uPixel: { value: 1 }, uTime: { value: 0 }, uColor: { value: new THREE.Color(DECK.ship) }, uCore: { value: new THREE.Color('#E8F6FB') }, uGain: { value: 0.8 } },
+    uniforms: { uPixel: { value: 1 }, uTime: { value: 0 }, uColor: { value: new THREE.Color(DECK.ship) }, uCore: { value: new THREE.Color('#E8F6FB') }, uGain: { value: 0.8 }, uBoards: { value: boards } },
     transparent: true,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
@@ -117,13 +128,14 @@ export function starMap(coneFrom: number): StarMap {
   const coneMat = new THREE.ShaderMaterial({
     vertexShader: CONE_VERT,
     fragmentShader: CONE_FRAG,
-    uniforms: { uColor: { value: new THREE.Color(DECK.ship) }, uTime: { value: 0 }, uGain: { value: 1 } },
+    uniforms: { uColor: { value: new THREE.Color(DECK.ship) }, uTime: { value: 0 }, uGain: { value: 1 }, uBoards: { value: boards } },
     transparent: true,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     side: THREE.DoubleSide,
   });
-  const H = MAP.y + 0.15;
+  // No taller than the conn's line to the Attention board's bottom bezel allows (holo-mask.ts).
+  const H = coneHeight(MAP.y + 0.15, MAP.r * 0.95);
   const cone = new THREE.Mesh(new THREE.CylinderGeometry(MAP.r * 0.95, coneFrom, H, 64, 1, true).translate(0, H / 2, 0), coneMat);
   group.add(cone);
 
@@ -145,6 +157,7 @@ export function starMap(coneFrom: number): StarMap {
   let t = 0;
   return {
     group,
+    boards,
     step(dt, k) {
       t += dt * k;
       disc.rotation.y = t * 0.05;

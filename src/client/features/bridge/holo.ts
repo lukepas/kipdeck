@@ -20,6 +20,8 @@ export interface Holo {
   turn(dt: number): void;
   /** Runs the dashes along the course toward the ship, `dt` seconds at `k` times their pace (features/life). */
   flow(dt: number, k: number): void;
+  /** The wall boards' rectangles on screen (NDC x0, y0, x1, y1), which the star map keeps out of (features/boardfaces). */
+  readonly boards: THREE.Vector4[];
 }
 
 declare module '../../world/types' {
@@ -172,5 +174,5 @@ export const holo: Fixture<'holo'> = (site) => {
     dashes.instanceMatrix.needsUpdate = true;
   };
   flow(0, 0);
-  return { handle: { holo: { setCourse, turn, flow } } };
+  return { handle: { holo: { setCourse, turn, flow, boards: map.boards } } };
 };

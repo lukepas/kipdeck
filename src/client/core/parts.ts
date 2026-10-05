@@ -14,6 +14,7 @@ import type { Motion } from '../motion';
 import type { Voice } from '../voice';
 import type { Person } from '../world/character';
 import type { installBoards } from '../features/boards';
+import type { installBoardFaces } from '../features/boardfaces';
 import type { installBookshelf } from '../features/bookshelf';
 import type { installCarrying } from '../features/carrying';
 import type { installHud } from '../features/hud';
@@ -87,6 +88,8 @@ export interface Parts {
 
   // ---- Features ------------------------------------------------------------------------------------
   boards: Made<typeof installBoards>;
+  /** The wall boards' faces on screen each frame, for what keeps out of their way (see features/boardfaces). */
+  boardFaces: Made<typeof installBoardFaces>;
   tv: Made<typeof installTv>;
   peers: Made<typeof installPeers>;
   walking: Made<typeof installWalking>;
