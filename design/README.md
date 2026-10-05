@@ -608,3 +608,55 @@ rAF p50 is 16.7 ms in every row. rAF p95 read 67 to 83 ms on both builds in the 
 - The dust in front of the giant lightens its night side a little, as gas in front of it would, so the giant reads less solid there than a body would.
 - The sun's flare is the key light's direction and does not turn with the sky; over an hour the sky turns 36 degrees under it.
 - The band's diffuse light still reads grey on the right of the starboard port, where no lobe of the nebula sits.
+
+## The bridge: cinema
+
+The fifth stage of making the environment more impressive: how the bridge is shot. An arrival from outside on load, a hair of breathing at the conn, merges and the jump framed, the boards and the holo with a screen's character, a light chase round the trim and one grade over the frame. What it does is in [docs/design.md](../docs/design.md#the-cinema). The code is a new module, `src/client/features/cinema/`, installed with one line in `main.ts`; the post chain's AA choice and its slot for the grade are in `features/lights/bloom.ts`, the Overview's framed pose in `core/overview-frame.ts` and the escort coming alongside in `features/fleet`.
+
+### Before and after
+
+Every still is on the GPU at High, 1440x900, in `shots/env-cinema/`. The before ones are 001fbe6 (`baseline-commit.txt`): `before-night/` and `before-day/` with the default crew (two need you, one stuck), and `moments-before/` from a `git archive` of it through `SHOOT_ROOT`. The after ones: `after-night-busy/` (`SHOOT_CREW=busy`, nobody waiting, so the arrival, the breathing and the screens' roll play), `after-night/` and `after-day/` with the default crew, `after-medium/` and `after-low/` at those tiers, and `moments-after/` from `SHOOT_CREW=busy node design/shoot-moments.mjs`.
+
+| | Before | After |
+| --- | --- | --- |
+| Arrival (`arrival-0s`, `-2.5s`, `-5s`) | the conn from the first frame | outside the bow, high off to starboard, the ship and its escorts; over the bow facing the destination world with its heading band; the conn |
+| Arrival skipped (`arrival-skip`) | | a key at 1 s: the conn on the next frame (the camera on the player, 0.000 m off) |
+| A unit waiting, less motion (`after-night/arrival-needs`, `after-night-busy/arrival-still`) | | no arrival: the first frame is the conn |
+| The conn (`bridge-conn`) | | a vignette into the corners, teal in the darkest tones, scanlines and a faint phosphor on the boards' ground, a cyan hairline round each bezel; the rows' type as it was |
+| Breathing (`breathe-1`, `-2`) | | in the captain's chair after 4 s idle, 1.8 s apart: pitch and roll within a tenth of a degree, lift within 2 mm |
+| The Overview (`deck-overview`) | from the south-east corner, the Services and Pull requests boards at a slant | from aft: the four work boards, the Attention board and the holo table in the upper two thirds, no callout over a board |
+| A merge (`moments-after/merge-frame`) | | the view eased toward the Pull requests board, an escort in the canopy's glass over it |
+| The jump (`jump-countdown`, `-tunnel`, `-banner`) | the countdown, the tunnel and the name at 55 degrees (63 in the tunnel) | the countdown pulled back to 60 degrees, the tunnel 68 degrees and lifted 7 degrees into the canopy, the arrival settled back |
+| Day (`after-day`) | | clean: a light vignette, no teal, nothing on the state marks |
+| Medium, Low (`after-medium`, `after-low`) | | Medium: FXAA and the grade; Low: neither, no screen character |
+
+`after-night-busy/arrival.mp4` is the arrival at 30 fps held a frame at a time (6 s with a second on the conn), and `after-night-busy/bridge.mp4` the bridge clip (a merge at 3.2 s and the jump at 7.6 s) with the merge frame and the jump's framing in it; stills of both moments are in `after-night-busy/sequence/`.
+
+The boards' type with the screens' clock moved a second and the page's own held (`screens-1`, `-2`): of the type pixels (luma 0.3 and over) on the four boards from the conn, 0.1% to 3.4% move, all by one level but one pixel at the Queue board's edge, where the edge smoothing blends the band's ground into a glyph's edge; held at the same clock, two frames differ in 0 to 3 of about 1,700. So the type is not pixel-identical to the letter after SMAA, though the face's shader itself never touches a texel brighter than the ground and the roll band keeps clear of anything near type. With a unit waiting (`after-night/screens-1`, `-2`) the roll and the glitch are still, and 0 to 7 of about 4,500 type pixels move by one level.
+
+### Frame time
+
+`node design/perf-probe.mjs metal` at 1440x900 by Night on the M3 Pro (ANGLE Metal), Auto (High on this GPU) unless named, before (001fbe6) and after back to back in one sitting, every row in `frames-before.txt` and `frames-after.txt`.
+
+| | Before | After | Budget |
+| --- | --- | --- | --- |
+| High, conn: draw calls | 598 | 601 | 800 |
+| High, conn: forced render p50 / p95 | 2.5 / 2.9 to 3.3 ms | 2.3 to 3.1 / 2.9 to 4.2 ms | p95 6.5 |
+| High, side port | 207 calls, 1.1 / 1.4 to 1.8 ms | 210 calls, 0.8 to 1.4 / 1.1 to 2.7 ms | |
+| High, jump with the tunnel open | 650 calls, 2.7 / 3.3 ms | 702 calls, 2.8 to 3.8 / 4.5 to 5.5 ms | |
+| High, conn, CPU 4x: forced render p50 / p95, rAF p50 / p95 | 9.8 / 12.8 ms, 16.7 / 16.8 | 10.2 to 11.2 / 11.9 to 14.1 ms, 16.7 / 16.7 to 33.3 | rAF 16.7 |
+| Medium, conn | 477 calls, 2.2 / 2.5 to 3.1 ms | 478 calls, 2.3 to 3.2 / 3.3 to 5.6 ms | p95 5.0 |
+| Low, conn | 459 calls, 1.9 / 2.4 ms | 459 calls, 1.8 to 2.0 / 2.5 to 4.0 ms | 650 calls |
+| SwiftShader (Auto picks Low), conn rAF p50 / p95 | 450 / 583 ms | 450 / 633 ms | 475 |
+
+rAF p50 is 16.7 ms in every Metal row. The High rows are two runs after the last change, the second one with the machine busier (every number in it a little higher, the side port's last window 2.7 ms p95). The jump draws 52 more calls than before because the framing lifts the view into the canopy, where more of the fleet and the hull show; it stays under 800. One of Medium's three conn windows read 5.6 ms p95 against the 5.0 budget (the first, the other two 3.3 and 3.4); Low's off window read 4.0. The first High run of the stage stepped Auto down to Medium under CPU 4x: the cinema searched the scene by name for the sky and the stars twice a frame, and finds them once now. New memory at High: SMAA's edge and weight targets at the frame's size, 8 bits a channel as SMAA has them (about 12 MB each at 2160x1350, where three.js makes them half floats at twice that), its two lookup textures (under 0.2 MB) and the lens dirt (512x256, 0.5 MB): about 24 MB over the last stage's 246 MB, so about 270 MB, 10 MB past the 260 MB plan.
+
+`FLICKER_QUALITY=high node design/flicker-check.mjs metal` passes by Night and by Day, both through the composer now, and again with `FLICKER_JUMP=1` (90 and 93 frames in the tunnel): no black frame and no NaN pixel (`flicker-metal.txt`).
+
+### Left for later
+
+- SMAA's two full-size targets put High 10 MB past the 260 MB plan; sharing the edges target with the composer's spare buffer would bring it back under.
+- The arrival flies through the hull's light as it stands: no light of its own picks out the bow from outside, so the first second reads dim.
+- The merge's escort is the first starboard one, whichever deck it is; one that just merged on its own deck would make a better story.
+- The jump's tunnel framing lifts the view whatever you look at; from the far side of the table it lifts into the canopy over the wall instead of the bow.
+- `tests/mission-e2e.test.ts`'s debrief case timed out twice on this machine while the GPU probes ran, on the baseline build as well (the start of watch under SwiftShader nears its 60 s wait); it passed in the final full run.
