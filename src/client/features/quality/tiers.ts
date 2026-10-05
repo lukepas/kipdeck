@@ -33,12 +33,24 @@ export interface TierLook {
   glossFloor: boolean;
   /** How many of the star layers stream past (features/space/stars.ts: far, middle, near). */
   starLayers: number;
+  /**
+   * The light round the deck (features/atmos): which shafts of light hang under the glass (all of
+   * them, the bow's under the canopy only, or none), how many dust motes drift in them, whether the
+   * canopy's ribs are cast on the deck by the table's spot, whether light from outside (the sky's
+   * colour, a passing planet, a comet's glint) reaches the room, and whether the floor mirrors what
+   * glows. The height fog and the floor's pools of light are drawn at every tier.
+   */
+  shafts: 'all' | 'bow' | null;
+  motes: number;
+  cookie: boolean;
+  outsideLight: boolean;
+  mirror: boolean;
 }
 
 export const TIER_LOOKS: Readonly<Record<Tier, TierLook>> = {
-  high: { pixelRatio: 1.5, bloom: 'full', shadow: { size: 2048, everyMs: 0 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3 },
-  medium: { pixelRatio: 1.25, bloom: 'half', shadow: { size: 1024, everyMs: 50 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3 },
-  low: { pixelRatio: 1, bloom: null, shadow: { size: 1024, everyMs: null }, skyLight: false, roomLight: false, glossFloor: false, starLayers: 2 },
+  high: { pixelRatio: 1.5, bloom: 'full', shadow: { size: 2048, everyMs: 0 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'all', motes: 1500, cookie: true, outsideLight: true, mirror: true },
+  medium: { pixelRatio: 1.25, bloom: 'half', shadow: { size: 1024, everyMs: 50 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'bow', motes: 800, cookie: true, outsideLight: true, mirror: false },
+  low: { pixelRatio: 1, bloom: null, shadow: { size: 1024, everyMs: null }, skyLight: false, roomLight: false, glossFloor: false, starLayers: 2, shafts: null, motes: 0, cookie: false, outsideLight: false, mirror: false },
 };
 
 /**
