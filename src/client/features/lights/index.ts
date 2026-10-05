@@ -13,6 +13,7 @@ import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { lightModeOf, markLight, onSystemLight, systemLight, type LightMode } from '../../lighting';
 import { demoOn } from '../demo';
+import { store } from '../../state';
 import type { Bloom, BloomLook } from './bloom';
 import { LIGHT_MODES, brightnessFactor } from './modes';
 import { repaint, repaintGrids } from './palette';
@@ -45,6 +46,38 @@ export interface Lights {
 
 /** The rig's lights by name, as the dimmer addresses them. */
 export type LampName = 'hemi' | 'key' | 'fill' | 'rim' | 'pods' | 'table' | 'holo';
+
+/** Frames after a floor arrives before the other mode's shaders are compiled: once the deck has built and merged what it shows. */
+const WARM_AFTER = 30;
+
+/**
+ * Compiles the deck's shaders for the mode it isn't in, once, after the first floor arrives: Night
+ * draws through the glow's target (linear, tone mapped at the end) and Day straight to the screen
+ * (tone mapped in each shader), and every material has a program for each. Compiled cold, the first
+ * switch held one frame for a quarter of a second; warmed here, in the background where the browser
+ * can, a switch only retunes the lights.
+ */
+function warmBothModes(ctx: Ctx) {
+  let wait = -1;
+  const off = store.on('floor', () => {
+    off();
+    wait = WARM_AFTER;
+  });
+  const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType });
+  ctx.ticks.add('pre', () => {
+    if (wait < 0 || --wait > 0) return;
+    wait = -1;
+    const { renderer, scene, camera } = ctx;
+    const was = renderer.getRenderTarget();
+    // Both ways, whichever is showing: the one showing compiles to nothing new. compileAsync makes its
+    // programs at once and only waits for them to link, so the target is put back straight after.
+    const toScreen = renderer.compileAsync(scene, camera);
+    renderer.setRenderTarget(target);
+    const toGlow = renderer.compileAsync(scene, camera);
+    renderer.setRenderTarget(was);
+    void Promise.all([toScreen, toGlow]).finally(() => target.dispose());
+  });
+}
 
 /** What a jump shifts the room's light toward: cool going in, a warm white coming out (near grey, so no state's hue). */
 const JUMP_TINT = { cool: new THREE.Color('#A9D4FF'), warm: new THREE.Color('#FFF1E2'), by: 0.45 } as const;
@@ -151,6 +184,7 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings' 
   apply(lightModeOf(parts.settings.lighting, light), parts.settings.brightness);
   // A tier picked or stepped down to: the glow on, off or at its size, and its targets at the new pixel ratio.
   parts.quality.on(() => glow());
+  warmBothModes(ctx);
 
   const dim = (k: typeof dimBy) => {
     dimBy = k;

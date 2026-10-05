@@ -8,7 +8,9 @@ const TAIL_S = 0.16;
 /**
  * A light running across the deck: a bright head and a tail of beads that thin and fade behind it,
  * additive so it reads as light on the slate, and one point light that it carries so the floor and
- * the consoles it passes catch it. One trace is reused for every beat; hidden while idle.
+ * the consoles it passes catch it. One trace is reused for every beat; its beads hidden while idle.
+ * The light is never hidden, only put at nothing: a light coming and going changes how many the
+ * deck's shaders were compiled for, and every one of them would compile again for the beat.
  */
 export class Trace {
   readonly root = new THREE.Group();
@@ -30,7 +32,7 @@ export class Trace {
     this.beads.renderOrder = 5;
     this.light = new THREE.PointLight('#ffffff', 0, 3.2, 2);
     this.root.add(this.beads, this.light);
-    this.root.visible = false;
+    this.beads.visible = false;
   }
 
   /** The trace's color for the beat it is running. */
@@ -41,7 +43,7 @@ export class Trace {
 
   /** The head is at `at` now (seconds `t`); `fade` 1 is full, 0 gone. */
   move(at: P3, t: number, fade = 1) {
-    this.root.visible = fade > 0;
+    this.beads.visible = fade > 0;
     this.trail.unshift({ p: new THREE.Vector3(at.x, at.y, at.z), t });
     while (this.trail.length > 2 && t - this.trail[this.trail.length - 1].t > TAIL_S) this.trail.pop();
     for (let i = 0; i < BEADS; i++) {
@@ -61,7 +63,7 @@ export class Trace {
 
   /** Puts it away until the next beat. */
   hide() {
-    this.root.visible = false;
+    this.beads.visible = false;
     this.light.intensity = 0;
     this.trail.length = 0;
   }
