@@ -59,7 +59,7 @@ The people on the deck are **operators**: the same family at 1.75 m, with a narr
 
 ## Walk and Overview
 
-You arrive in **Walk**: first person, as before (third person is in Settings). Press **G** for the **Overview**: the whole deck from above at 35 degrees, with no perspective, the shot to show someone the deck in one look.
+You arrive in **Walk**: first person, as before (third person is in Settings). On a page's first load the view comes in from outside: a 5 s arrival shot from ahead of the bow, past the destination world and down through the canopy to the conn; any key, click or mouse move lands you there at once, and it doesn't play with less motion or with a unit already waiting (see [the cinema](design.md#the-cinema)). Press **G** for the **Overview**: the whole deck from above at 35 degrees, with no perspective, the shot to show someone the deck in one look. Each trip up starts from aft with all five boards and the holo table in the upper two thirds of the screen.
 
 | Key | In the Overview |
 | --- | --- |
