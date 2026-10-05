@@ -4,6 +4,7 @@ import { mesh, stretch } from '../toon';
 import type { Fixture } from './fixture';
 import { DECK, contactShadow, flat, matte, practical } from './materials';
 import { drawMark } from './floorpaint';
+import { sharp } from '../sharp';
 
 // The mission table in the middle of the deck: a dark plinth, a lit edge, and a top that shows the
 // floor's mission. Each milestone is a wedge (filled once it's done, ruled brighter while it's the one
@@ -175,7 +176,7 @@ export const missionTable: Fixture<'missionTable'> = (site) => {
   const g = canvas.getContext('2d')!;
   const tex = new THREE.CanvasTexture(canvas);
   tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 8;
+  sharp(tex);
   const top = new THREE.Mesh(new THREE.CircleGeometry(r * 0.985, 96).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: tex, transparent: true, toneMapped: false, depthWrite: false }));
   top.position.y = h + 0.003;
   top.renderOrder = 2;

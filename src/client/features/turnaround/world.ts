@@ -10,6 +10,7 @@ import { clockLine, waitText, type Turnaround } from '../../../shared/turnaround
 import { DECK, matte } from '../../world/office/materials';
 import { mergeByMaterial } from '../../world/toon';
 import { onBridgeLayer } from '../bridge/shapes';
+import { sharp } from '../../world/sharp';
 
 const MONO = (size: number, weight = 500) => `${weight} ${size}px "JetBrains Mono", ui-monospace, monospace`;
 
@@ -25,7 +26,7 @@ export class PitWall {
     this.canvas.height = Math.round((1024 * PIT_WALL.height) / PIT_WALL.width);
     this.texture = new THREE.CanvasTexture(this.canvas);
     this.texture.colorSpace = THREE.SRGBColorSpace;
-    this.texture.anisotropy = 4;
+    sharp(this.texture);
     this.mat = new THREE.MeshBasicMaterial({ map: this.texture, toneMapped: false });
     const face = new THREE.Mesh(new THREE.PlaneGeometry(PIT_WALL.width, PIT_WALL.height), this.mat);
     face.position.z = 0.051;

@@ -3,6 +3,7 @@ import { MISSION_TABLE } from '../../../shared/layout';
 import { drawGlyph } from '../../world/glyphs';
 import { DECK } from '../../world/office/materials';
 import { onBridgeLayer } from '../bridge/shapes';
+import { sharp } from '../../world/sharp';
 
 // The condition band: one line of mono lettering hung just under the overhead strip, on the bridge
 // layer like the strip (the Overview never sees it). It says what the bridge's condition is while it
@@ -33,7 +34,7 @@ export class ConditionBand {
     this.g.setTransform(-1, 0, 0, 1, this.canvas.width, 0);
     this.tex = new THREE.CanvasTexture(this.canvas);
     this.tex.colorSpace = THREE.SRGBColorSpace;
-    this.tex.anisotropy = 4;
+    sharp(this.tex);
     const start = Math.PI - BAND.arc / 2;
     const mat = new THREE.MeshBasicMaterial({ map: this.tex, side: THREE.BackSide, transparent: true, opacity: 0, depthWrite: false, toneMapped: false });
     this.mesh = new THREE.Mesh(new THREE.CylinderGeometry(BAND.r, BAND.r, BAND.h, 32, 1, true, start, BAND.arc), mat);

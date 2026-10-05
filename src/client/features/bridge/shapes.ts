@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { FLOOR } from '../../../shared/layout';
+import { sharp } from '../../world/sharp';
 
 // What the bridge's pieces are made with: a beam between two points, the canopy's profile, and the
 // layer the walk camera sees but the Overview's doesn't.
@@ -62,6 +63,6 @@ export function canvasTexture(w: number, h: number): { canvas: HTMLCanvasElement
   const g = canvas.getContext('2d')!;
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
+  sharp(texture);
   return { canvas, g, texture };
 }

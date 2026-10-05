@@ -5,6 +5,7 @@ import { deskPoint } from '../../shared/nav';
 import type { Fixture } from './office/fixture';
 import { DECK } from './office/materials';
 import { fontsReady } from './toon';
+import { sharp } from './sharp';
 
 // What a console is for ("Operations", "Code cleanup", see shared/floorplan.ts), stencilled on the
 // floor on its table side as a tag: its color as a stripe, its words in the UI face. Paint, not a
@@ -70,7 +71,7 @@ export function buildDeskSigns(): DeskSigns {
     paintFace(canvas, label);
     const tex = new THREE.CanvasTexture(canvas);
     tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = 8;
+    sharp(tex);
     const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: 0.9, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1 });
     const root = new THREE.Mesh(new THREE.PlaneGeometry(SIGN.width, SIGN.depth).rotateX(-Math.PI / 2), mat);
     const [x, z] = deskPoint(desk, 0, -SIGN.inset);

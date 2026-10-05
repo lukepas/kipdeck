@@ -3,6 +3,7 @@ import { MISSION_TABLE } from '../../../shared/layout';
 import type { Fixture } from '../../world/office/fixture';
 import { DECK } from '../../world/office/materials';
 import { onBridgeLayer } from '../bridge/shapes';
+import { sharp } from '../../world/sharp';
 
 // The ticker over the overhead strip: on its west end the ship's clock and how long the deck has been
 // under way, ticking by the second; along the rest the deck's log (the timeline's latest events, in
@@ -49,7 +50,7 @@ function slice(from: number, to: number, w: number, h: number) {
   g.setTransform(-1, 0, 0, 1, w, 0);
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
+  sharp(texture);
   const mesh = new THREE.Mesh(new THREE.CylinderGeometry(TICK.r, TICK.r, TICK.h, 40, 1, true, from, to - from), new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide, toneMapped: false }));
   mesh.position.set(MISSION_TABLE.x, TICK.y + TICK.h / 2, MISSION_TABLE.z);
   return { canvas, g, texture, mesh };

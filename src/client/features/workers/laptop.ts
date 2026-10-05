@@ -4,6 +4,7 @@ import { mesh } from '../../world/toon';
 import { DECK, flat, practical } from '../../world/office/materials';
 import { TERM_THEME } from '../../ui/termtheme';
 import type { ScreenState } from '../../state/store';
+import { sharp } from '../../world/sharp';
 
 const BASE16 = [
   TERM_THEME.black, TERM_THEME.red, TERM_THEME.green, TERM_THEME.yellow, TERM_THEME.blue, TERM_THEME.magenta, TERM_THEME.cyan, TERM_THEME.white,
@@ -138,7 +139,7 @@ export class Laptop {
     this.ctx = this.canvas.getContext('2d')!;
     this.texture = new THREE.CanvasTexture(this.canvas);
     this.texture.colorSpace = THREE.SRGBColorSpace;
-    this.texture.anisotropy = 8;
+    sharp(this.texture);
     this.texture.minFilter = THREE.LinearMipmapLinearFilter;
 
     // The screen: a slim slab with a dark bezel, hinged on a low plinth at its foot. It lies flat

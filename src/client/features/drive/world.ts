@@ -11,6 +11,7 @@ import { DECK, matte } from '../../world/office/materials';
 import { mergeByMaterial } from '../../world/toon';
 import { onBridgeLayer } from '../bridge/shapes';
 import { CORE_RINGS, MERGE_PULSE } from './logic';
+import { sharp } from '../../world/sharp';
 
 const RING_R = AFT_CORE.r;
 const RING_TUBE = 0.06;
@@ -148,7 +149,7 @@ export class CoreWorld {
     this.plaqueCanvas.height = 160;
     const ptex = new THREE.CanvasTexture(this.plaqueCanvas);
     ptex.colorSpace = THREE.SRGBColorSpace;
-    ptex.anisotropy = 4;
+    sharp(ptex);
     this.plaque = new THREE.Mesh(new THREE.PlaneGeometry(0.96, 0.3), new THREE.MeshBasicMaterial({ map: ptex, toneMapped: false }));
     // On the collar under the core, drawn after the halo so its light never washes the count out.
     this.plaque.position.set(x, base + 0.2, z - RING_R - 0.36);
@@ -227,7 +228,7 @@ export class TallyPlaque {
     this.canvas.height = Math.round((1024 * TALLY.height) / TALLY.width);
     this.texture = new THREE.CanvasTexture(this.canvas);
     this.texture.colorSpace = THREE.SRGBColorSpace;
-    this.texture.anisotropy = 4;
+    sharp(this.texture);
     this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(TALLY.width, TALLY.height), new THREE.MeshBasicMaterial({ map: this.texture, toneMapped: false }));
     this.mesh.position.set(TALLY.x, TALLY.y, TALLY.z);
     this.mesh.rotation.y = TALLY.rotY;

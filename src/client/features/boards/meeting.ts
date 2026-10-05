@@ -3,6 +3,7 @@ import { MEETING_PATTERNS, meetingSpend, meetingStage, meetingSummary } from '..
 import type { Meeting, MeetingState } from '../../../shared/protocol';
 
 import { PANEL, panelGround } from './world';
+import { sharp } from '../../world/sharp';
 
 const FONT = 'Archivo, system-ui, sans-serif';
 const MONO = '"JetBrains Mono", ui-monospace, monospace';
@@ -14,7 +15,7 @@ function canvasTexture(w: number, h: number): { canvas: HTMLCanvasElement; g: Ca
   canvas.height = h;
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 8;
+  sharp(texture);
   return { canvas, g: canvas.getContext('2d')!, texture };
 }
 

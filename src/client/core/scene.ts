@@ -8,6 +8,7 @@ import type { Office } from '../world/types';
 import type { Ctx } from './context';
 import { DECK } from '../world/office/materials';
 import { FILL_AT, KEY_AT, LIGHT_MODES, RIMS_AT } from '../features/lights/modes';
+import { sharpenScreens } from '../world/sharp';
 
 /** How far the camera sees: the whole floor and the back office, corner to corner. */
 export const FAR = 120;
@@ -76,6 +77,7 @@ export function createScene(canvas: HTMLCanvasElement, renderer: THREE.WebGLRend
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.toneMappingExposure = night.exposure;
+  sharpenScreens(renderer.capabilities.getMaxAnisotropy());
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(VOID.color);

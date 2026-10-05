@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { MISSION_TABLE } from '../../../shared/layout';
 import type { Fixture } from '../../world/office/fixture';
 import { DECK } from '../../world/office/materials';
+import { sharp } from '../../world/sharp';
 
 // The holo table's heading: a band of light lettering floating round the course plot, turning slowly
 // the other way, that says where the ship is making for and how far it has come ("CAPTAIN, WE ARE 40%
@@ -71,7 +72,7 @@ export const heading: Fixture<'heading'> = (site) => {
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = THREE.RepeatWrapping;
   texture.repeat.x = BAND.repeat;
-  texture.anisotropy = 4;
+  sharp(texture);
   const bandMat = light(0.42);
   bandMat.map = texture;
   // Only the side toward you, so the far side's lettering never shows through backward.

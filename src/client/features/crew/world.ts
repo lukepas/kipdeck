@@ -4,6 +4,7 @@ import { PROOF_CORNER } from '../../../shared/layout';
 import type { Fixture } from '../../world/office/fixture';
 import { DECK } from '../../world/office/materials';
 import { onBridgeLayer } from '../bridge/shapes';
+import { sharp } from '../../world/sharp';
 
 // The unit of the watch on the Proof corner's plinth: a still hologram of a unit in cool white light
 // standing on the top step, a soft cone of key light over it from the ceiling, and a plaque floating
@@ -82,7 +83,7 @@ export const watchPlinth: Fixture<'watch'> = (site) => {
   plaque.height = 240;
   const plaqueTex = new THREE.CanvasTexture(plaque);
   plaqueTex.colorSpace = THREE.SRGBColorSpace;
-  plaqueTex.anisotropy = 4;
+  sharp(plaqueTex);
   // The plaque floats over the plinth's deck side, above the figure's head, facing into the room.
   const board = new THREE.Mesh(new THREE.PlaneGeometry(1.25, 1.25 * (240 / 1024)), new THREE.MeshBasicMaterial({ map: plaqueTex, transparent: true, toneMapped: false, depthWrite: false }));
   board.position.set(p.x + 0.35, top + 1.2, p.z);
