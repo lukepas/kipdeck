@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { SceneLights } from '../../core/scene';
 import { RIMS_AT } from '../lights/modes';
 import { SPACE_COLORS } from '../space/logic';
-import { BAKE_FRAG, region } from '../space/sky';
+import { BAKE_FRAG, bakeUniforms, setRegion } from '../space/sky';
 import type { OutsideLight } from '../space';
 import { FLYBY_LIGHT, SPILL, easeToward, flashIrradiance, spillTint } from './logic';
 
@@ -48,7 +48,6 @@ export class SkySample {
   private readonly d = new THREE.Vector3();
 
   constructor(private readonly renderer: THREE.WebGLRenderer) {
-    const c = (hex: string) => new THREE.Color(hex);
     this.mat = new THREE.ShaderMaterial({
       vertexShader: EQUIRECT_VERT,
       fragmentShader: `uniform float uGain;\n${BAKE_FRAG.replace('gl_FragColor = vec4(col,', 'gl_FragColor = vec4(col * uGain,')}`,
@@ -56,17 +55,7 @@ export class SkySample {
       depthWrite: false,
       uniforms: {
         uGain: { value: SKY_GAIN },
-        uVoid: { value: c(SPACE_COLORS.void) },
-        uDeep: { value: c(SPACE_COLORS.deep) },
-        uBand: { value: c(SPACE_COLORS.band) },
-        uTeal: { value: c(SPACE_COLORS.nebulaTeal) },
-        uIndigo: { value: c(SPACE_COLORS.nebulaIndigo) },
-        uMagenta: { value: c(SPACE_COLORS.nebulaMagenta) },
-        uBandN: { value: new THREE.Vector3() },
-        uCore: { value: new THREE.Vector3() },
-        uNeb: { value: new THREE.Vector3() },
-        uSeed: { value: new THREE.Vector3() },
-        uNebSize: { value: 0.5 },
+        ...bakeUniforms(),
       },
     });
     const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.mat);
@@ -83,13 +72,7 @@ export class SkySample {
    */
   hold(n: number) {
     if (n === this.held || n < 0 || this.reading) return;
-    const reg = region(n);
-    const u = this.mat.uniforms;
-    u.uBandN.value.copy(reg.bandN);
-    u.uCore.value.copy(reg.core);
-    u.uNeb.value.copy(reg.neb);
-    u.uSeed.value.copy(reg.seed);
-    u.uNebSize.value = reg.nebSize;
+    setRegion(this.mat.uniforms, n);
     const r = this.renderer;
     const was = { target: r.getRenderTarget(), face: r.getActiveCubeFace(), mip: r.getActiveMipmapLevel() };
     r.setRenderTarget(this.target);

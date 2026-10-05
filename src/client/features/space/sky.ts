@@ -1,12 +1,17 @@
 import * as THREE from 'three';
 import { NOISE } from './glsl';
+import { BOARD_SLOTS } from '../bridge/holo-mask';
 import { SPACE_COLORS, seeded } from './logic';
 
 // The sky round the ship: a region of space (a deep gradient, the galactic band with its dust lanes,
-// one nebula in teal and indigo) baked once into a cube, and a sphere round whichever camera is
-// drawing that shows it, with crisp stars drawn over it per pixel so they stay a pixel or two wide in
-// Walk and in the Overview alike. The sphere is drawn first and behind everything, so the sky only
-// ever shows through the glass, and a flash or a swap of region on it lights the windows alone.
+// a nebula in teal and indigo ahead with a lobe of it out of each side's ports) baked once into a
+// cube, and a sphere round whichever camera is drawing that shows it, with crisp stars drawn over it
+// per pixel so they stay a pixel or two wide in Walk and in the Overview alike. The nebula's emissive
+// knots are baked apart (in the cube's alpha) and added back live: they dim while something needs the
+// captain and keep well clear of the wall boards' faces. By Day the sky is paler and a little brighter.
+// The sphere is drawn first and behind everything, so the sky only ever shows through the glass, and
+// a flash or a swap of region on it lights the windows alone. A region also says where its giant hangs
+// (features/vista).
 
 /** How far out the sky's sphere is from the camera: inside both cameras' far planes. */
 const RADIUS = 100;
@@ -24,50 +29,93 @@ void main() {
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }`;
 
-/** The sky's bake, by direction (vDir): what features/atmos samples small, for the room's light from outside. */
+/**
+ * The sky's bake, by direction (vDir): what features/atmos samples small, for the room's light from
+ * outside. Its colour is the sky without its knots; its alpha is the nebula's emissive knots, which the
+ * live sky adds back in their own gas's hue (and dims when something needs the captain).
+ *
+ * The galactic band is a soft great circle, mottled, with dark dust lanes cut through its middle. The
+ * nebula is domain-warped fbm twice over in a patch of sky: thin gas indigo, dense gas teal, a deep
+ * magenta heart, ridged filaments lit through it, and lanes of dust dark enough to read against it, so
+ * from a side port it has value contrast and never reads as grey haze.
+ */
 export const BAKE_FRAG = /* glsl */ `
 uniform vec3 uVoid, uDeep, uBand, uTeal, uIndigo, uMagenta;
 uniform vec3 uBandN, uCore, uNeb, uSeed;
 uniform float uNebSize;
+uniform vec3 uLobeA, uLobeB;
+uniform float uLobeSize;
 varying vec3 vDir;
 ${NOISE}
+/** How far inside a soft patch of sky (size in radians) round at the direction d is (0-1). */
+float patchOf(vec3 d, vec3 at, float size) {
+  return smoothstep(cos(size), cos(size * 0.2), dot(d, at));
+}
+/** Ridged fbm (0 to about 1): sharp crests where the noise crosses its middle, for filaments. */
+float ridged(vec3 p, int octaves) {
+  float a = 0.5;
+  float s = 0.0;
+  for (int i = 0; i < 6; i++) {
+    if (i >= octaves) break;
+    float r = 1.0 - abs(2.0 * vnoise(p) - 1.0);
+    s += a * r * r;
+    p = p * 2.03 + vec3(17.1, 9.2, 4.7);
+    a *= 0.5;
+  }
+  return s;
+}
 void main() {
   vec3 d = normalize(vDir);
-  vec3 col = mix(uVoid, uDeep, 0.35 + 0.35 * d.y);
+  vec3 col = mix(uVoid, uDeep, clamp(0.2 + 0.3 * d.y, 0.0, 1.0));
   // The galactic band: a great circle, its edges wobbling, brighter toward the core.
   float h = dot(d, uBandN);
   float wob = fbm(d * 2.2 + uSeed, 3) - 0.5;
-  float x = (h + wob * 0.07) / 0.18;
+  float x = (h + wob * 0.07) / 0.17;
   float band = exp(-x * x);
   float core = pow(max(dot(d, uCore), 0.0), 2.5);
   float coreW = exp(-(h * h) / 0.012) * core;
   float mott = fbm(d * 7.0 + uSeed * 1.3, 4);
-  // Dust lanes along its middle.
-  float dust = fbm(d * 3.6 + uSeed * 0.7 + 5.0, 5);
-  float lane = mix(1.0, 0.35, smoothstep(0.5, 0.62, dust) * exp(-(h * h) / 0.02));
-  float bandL = (0.6 * band * (0.5 + 0.8 * mott) + 0.55 * coreW) * lane;
-  col += uBand * bandL * 0.27;
-  // A fine haze of unresolved stars in the band.
-  col += uBand * band * smoothstep(0.45, 0.75, fbm(d * 26.0 + uSeed, 3)) * 0.07;
-  // The nebula: domain-warped fbm in a soft patch, teal into indigo, a magenta heart where it is thickest.
-  vec3 q = d * 2.6 + uSeed * 2.1;
+  // Dust lanes along its middle: sharp-edged and nearly black where they are thickest.
+  float dust = fbm(d * 3.6 + uSeed * 0.7 + 5.0, 5) + 0.18 * (ridged(d * 11.0 + uSeed, 3) - 0.45);
+  float lane = 1.0 - 0.86 * smoothstep(0.47, 0.6, dust) * exp(-(h * h) / 0.022);
+  float bandL = (0.55 * band * (0.06 + 1.6 * smoothstep(0.42, 0.8, mott)) + 0.7 * coreW) * lane;
+  col += uBand * bandL * 0.16;
+  // A fine haze of unresolved stars in the band, clumped.
+  col += uBand * band * lane * smoothstep(0.5, 0.8, fbm(d * 26.0 + uSeed, 3)) * 0.07;
+  // The nebula: fbm warped by fbm warped by fbm, in a soft patch round uNeb.
+  vec3 q = d * 2.4 + uSeed * 2.1;
   vec3 w = vec3(fbm(q, 4), fbm(q + 3.1, 4), fbm(q + 7.7, 4));
-  float n = fbm(q * 1.5 + w * 2.4, 5);
-  float shape = smoothstep(cos(uNebSize), cos(uNebSize * 0.25), dot(d, uNeb));
-  float neb = smoothstep(0.3, 0.62, n) * shape;
-  vec3 nebC = mix(uTeal, uIndigo, smoothstep(0.35, 0.65, fbm(q * 0.8 + 11.0, 3)));
-  nebC = mix(nebC, uMagenta, smoothstep(0.5, 0.75, fbm(q * 1.1 + 23.0, 3)) * smoothstep(0.42, 0.7, n));
-  col += nebC * neb * 1.25;
-  // A filament or two of brighter gas through it.
-  col += nebC * smoothstep(0.58, 0.66, n) * shape * 0.3;
-  gl_FragColor = vec4(col, clamp(band * 0.8 + coreW + neb * 0.5, 0.0, 1.0));
+  vec3 r = q * 1.7 + w * 3.0;
+  vec3 w2 = vec3(fbm(r + 1.3, 3), fbm(r + 5.9, 3), fbm(r + 9.4, 3));
+  float n = fbm(q * 1.5 + w2 * 2.6, 5);
+  // The nebula proper ahead, and two smaller lobes of it abeam, out of the side ports.
+  float shape = max(patchOf(d, uNeb, uNebSize), max(patchOf(d, uLobeA, uLobeSize), patchOf(d, uLobeB, uLobeSize * 0.85)) * 0.9);
+  float gas = smoothstep(0.34, 0.74, n) * shape;
+  // Filaments: ridges of the warped field, brightest where the gas is.
+  float fil = ridged(q * 3.2 + w2 * 2.2 + 13.0, 4);
+  vec3 nebC = mix(uIndigo, uTeal, smoothstep(0.38, 0.72, n + 0.25 * (fbm(q * 0.8 + 11.0, 3) - 0.5)));
+  nebC = mix(nebC, uMagenta, smoothstep(0.52, 0.78, fbm(q * 1.1 + 23.0, 3)) * smoothstep(0.46, 0.76, n) * 0.85);
+  float emis = gas * gas * (0.45 + 1.7 * fil * fil);
+  col += nebC * emis * 1.15;
+  // A faint wide glow round the whole patch, so its edge falls off into the void rather than stopping.
+  col += mix(uIndigo, uTeal, 0.3) * shape * smoothstep(0.2, 0.6, n) * 0.08;
+  // Lanes of dust across the nebula (and the band behind it), dark and crisp.
+  float dl = fbm(q * 2.2 + w * 1.8 + 31.0, 5);
+  float dark = smoothstep(0.5, 0.6, dl) * smoothstep(0.0, 0.5, shape);
+  col *= 1.0 - 0.85 * dark;
+  // The knots: compact bright cores on the filaments, in the dense gas, off the dust.
+  float blob = vnoise(q * 9.0 + w2 * 3.0 + 41.0);
+  float knot = smoothstep(0.66, 0.92, blob) * smoothstep(0.32, 0.68, fil) * smoothstep(0.25, 0.7, gas) * (1.0 - dark);
+  gl_FragColor = vec4(col, clamp(knot, 0.0, 1.0));
 }`;
 
 const SKY_VERT = /* glsl */ `
 varying vec3 vDir;
+varying vec4 vClip;
 void main() {
   vDir = position;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  vClip = gl_Position;
 }`;
 
 const SKY_FRAG = /* glsl */ `
@@ -77,10 +125,25 @@ uniform float uMix;
 uniform mat3 uRot;
 uniform float uFlash;
 uniform vec3 uFlashColor;
+uniform vec3 uLift;
+const float KNOT = 0.85;
 uniform vec3 uCool, uWarm;
 uniform float uDim;
+uniform float uDay;
 varying vec3 vDir;
+varying vec4 vClip;
 ${NOISE}
+uniform vec4 uBoards[${BOARD_SLOTS}];
+/** 0 on a wall board's face and within 0.12 (NDC) of it, 1 clear of every one. */
+float clearOfBoards(vec2 p) {
+  float m = 1.0;
+  for (int i = 0; i < ${BOARD_SLOTS}; i++) {
+    vec4 r = uBoards[i];
+    vec2 inside = min(p - r.xy, r.zw - p);
+    m *= 1.0 - smoothstep(-0.12, -0.02, inside.x) * smoothstep(-0.12, -0.02, inside.y);
+  }
+  return m;
+}
 
 /** One layer of stars: one at most in each of N x N cells on each face of a cube round the sky. */
 vec3 stars(vec3 d, float n, float prob, float gain, float sizePx, float density) {
@@ -112,12 +175,20 @@ void main() {
   vec4 a = textureCube(uA, d);
   vec4 b = textureCube(uB, d);
   vec4 sky = mix(a, b, uMix);
-  float density = 0.55 + 1.6 * sky.a;
   vec3 col = sky.rgb;
+  // More stars where the sky is brighter (the band, the nebula), fewer in the dust lanes.
+  float density = 0.55 + 1.6 * clamp(dot(col, vec3(0.3, 0.5, 0.2)) * 7.0, 0.0, 1.0);
+  // The knots, in their own gas's hue lifted toward white, dimmed (uDim) while something needs the
+  // captain, and kept off the wall boards' faces (and well clear of them, so they never glow over a row).
+  vec3 hue = col / max(max(col.r, max(col.g, col.b)), 1e-3);
+  vec2 ndc = vClip.xy / max(vClip.w, 1e-4);
+  col += mix(hue, vec3(1.0), 0.4) * sky.a * KNOT * uDim * clearOfBoards(ndc);
   // The finest layer is the moving far stars' (stars.ts): the sky's own start a step coarser.
   col += stars(d, 60.0, 0.16, 1.0, 1.25, density);
   col += stars(d, 22.0, 0.20, 1.6, 1.6, 1.0);
-  col *= uDim;
+  // By Day the sky is paler and brighter: less saturated, lifted toward its own grey.
+  float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
+  col = mix(col, vec3(lum), 0.45 * uDay) * (1.0 + 0.5 * uDay) + uLift * uDay;
   // The jump's flash: light added over the sky, so its stars and its band still show through it.
   col += uFlashColor * uFlash;
   gl_FragColor = vec4(col, 1.0);
@@ -130,7 +201,12 @@ export interface Region {
   core: THREE.Vector3;
   neb: THREE.Vector3;
   nebSize: number;
+  /** The nebula's two lobes abeam, one out of each side's ports, and how big they are (radians). */
+  lobes: [THREE.Vector3, THREE.Vector3];
+  lobeSize: number;
   seed: THREE.Vector3;
+  /** The big body off one side (features/vista): the way to it, how big it looks (radians across its disc), its ring's tilt and its palette. */
+  giant: { dir: THREE.Vector3; size: number; tilt: number; spin: number; palette: number; seed: number };
 }
 
 /**
@@ -154,7 +230,61 @@ export function region(n: number): Region {
   // Ahead is -z; right of the bow, facing it, is +x.
   const neb = new THREE.Vector3(Math.sin(nebAz) * Math.cos(nebUp), Math.sin(nebUp), -Math.cos(nebAz) * Math.cos(nebUp));
   const seed = new THREE.Vector3(r() * 40, r() * 40, r() * 40);
-  return { bandN, core, neb, nebSize: (n === 0 ? 34 : 24 + r() * 16) * deg, seed };
+  // A lobe abeam on each side, a little up, ahead of or behind the beam.
+  const lobe = (side: number, az: number, up: number) => new THREE.Vector3(side * Math.cos(up) * Math.cos(az), Math.sin(up), Math.cos(up) * Math.sin(az));
+  const lobes: [THREE.Vector3, THREE.Vector3] = n === 0 ? [lobe(-1, 0.35, 0.16), lobe(1, -0.3, 0.05)] : [lobe(-1, (r() - 0.5) * 0.9, r() * 0.3), lobe(1, (r() - 0.5) * 0.9, r() * 0.3)];
+  // The big body: out of the port side's ports on arrival, a little aft of the beam and over the eye;
+  // after that on either side, never ahead or astern, so it stays out of the forward glass.
+  const gSide = n === 0 ? -1 : r() < 0.5 ? -1 : 1;
+  const gAz = (n === 0 ? 0 : (r() - 0.4) * 40) * deg;
+  const gUp = (n === 0 ? 2.5 : 2 + r() * 9) * deg;
+  const giant = {
+    dir: new THREE.Vector3(gSide * Math.cos(gUp) * Math.cos(gAz), Math.sin(gUp), Math.cos(gUp) * Math.sin(gAz)),
+    size: (n === 0 ? 12 : 9 + r() * 6) * deg,
+    tilt: (n === 0 ? 0.42 : 0.2 + r() * 0.5) * (r() < 0.5 ? -1 : 1),
+    spin: r(),
+    palette: n === 0 ? 0 : Math.floor(r() * 3),
+    seed: r() * 50,
+  };
+  return { bandN, core, neb, nebSize: (n === 0 ? 34 : 24 + r() * 16) * deg, lobes, lobeSize: (n === 0 ? 28 : 22 + r() * 10) * deg, seed, giant };
+}
+
+/** The side (-1 west, 1 east) clear of region `n`'s giant: where a passing planet goes. */
+export function clearOfGiant(n: number): -1 | 1 {
+  return region(n).giant.dir.x < 0 ? 1 : -1;
+}
+
+/** The bake's uniforms, for a region set with setRegion: the sky's cube and features/atmos's small sky share them. */
+export function bakeUniforms(): Record<string, THREE.IUniform> {
+  return {
+    uVoid: { value: linear(SPACE_COLORS.void) },
+    uDeep: { value: linear(SPACE_COLORS.deep) },
+    uBand: { value: linear(SPACE_COLORS.band) },
+    uTeal: { value: linear(SPACE_COLORS.nebulaTeal) },
+    uIndigo: { value: linear(SPACE_COLORS.nebulaIndigo) },
+    uMagenta: { value: linear(SPACE_COLORS.nebulaMagenta) },
+    uBandN: { value: new THREE.Vector3(0, 1, 0) },
+    uCore: { value: new THREE.Vector3(0, 0, -1) },
+    uNeb: { value: new THREE.Vector3(0, 0, -1) },
+    uSeed: { value: new THREE.Vector3() },
+    uNebSize: { value: 0.5 },
+    uLobeA: { value: new THREE.Vector3(-1, 0, 0) },
+    uLobeB: { value: new THREE.Vector3(1, 0, 0) },
+    uLobeSize: { value: 0.4 },
+  };
+}
+
+/** Sets the bake's uniforms (bakeUniforms) to region `n`. */
+export function setRegion(u: Record<string, THREE.IUniform>, n: number) {
+  const r = region(n);
+  u.uBandN.value.copy(r.bandN);
+  u.uCore.value.copy(r.core);
+  u.uNeb.value.copy(r.neb);
+  u.uSeed.value.copy(r.seed);
+  u.uNebSize.value = r.nebSize;
+  u.uLobeA.value.copy(r.lobes[0]);
+  u.uLobeB.value.copy(r.lobes[1]);
+  u.uLobeSize.value = r.lobeSize;
 }
 
 export class Sky {
@@ -171,7 +301,10 @@ export class Sky {
   private readonly held = [0, -1];
   private readonly rot = new THREE.Matrix4();
 
-  constructor(private readonly renderer: THREE.WebGLRenderer) {
+  constructor(
+    private readonly renderer: THREE.WebGLRenderer,
+    boards: THREE.Vector4[],
+  ) {
     const opts = { type: THREE.HalfFloatType, generateMipmaps: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter };
     this.targets = [new THREE.WebGLCubeRenderTarget(FACE, opts), new THREE.WebGLCubeRenderTarget(FACE, opts)];
     this.bakeMat = new THREE.ShaderMaterial({
@@ -180,19 +313,7 @@ export class Sky {
       side: THREE.BackSide,
       depthTest: false,
       depthWrite: false,
-      uniforms: {
-        uVoid: { value: linear(SPACE_COLORS.void) },
-        uDeep: { value: linear(SPACE_COLORS.deep) },
-        uBand: { value: linear(SPACE_COLORS.band) },
-        uTeal: { value: linear(SPACE_COLORS.nebulaTeal) },
-        uIndigo: { value: linear(SPACE_COLORS.nebulaIndigo) },
-        uMagenta: { value: linear(SPACE_COLORS.nebulaMagenta) },
-        uBandN: { value: new THREE.Vector3() },
-        uCore: { value: new THREE.Vector3() },
-        uNeb: { value: new THREE.Vector3() },
-        uSeed: { value: new THREE.Vector3() },
-        uNebSize: { value: 0.5 },
-      },
+      uniforms: bakeUniforms(),
     });
     this.bakeScene.add(new THREE.Mesh(new THREE.SphereGeometry(10, 32, 16), this.bakeMat));
     this.cubeCamera = new THREE.CubeCamera(0.1, 50, this.targets[0]);
@@ -214,6 +335,9 @@ export class Sky {
         uCool: { value: linear(SPACE_COLORS.starCool) },
         uWarm: { value: linear(SPACE_COLORS.starWarm) },
         uDim: { value: 1 },
+        uDay: { value: 0 },
+        uLift: { value: linear(SPACE_COLORS.dayLift) },
+        uBoards: { value: boards },
       },
     });
     this.mesh = new THREE.Mesh(new THREE.SphereGeometry(RADIUS, 48, 24), this.material);
@@ -236,13 +360,7 @@ export class Sky {
 
   /** Bakes region `n` into cube `slot`. About six draws of a full face each: done once, and again on a jump. */
   private bake(n: number, slot: number) {
-    const r = region(n);
-    const u = this.bakeMat.uniforms;
-    u.uBandN.value.copy(r.bandN);
-    u.uCore.value.copy(r.core);
-    u.uNeb.value.copy(r.neb);
-    u.uSeed.value.copy(r.seed);
-    u.uNebSize.value = r.nebSize;
+    setRegion(this.bakeMat.uniforms, n);
     this.held[slot] = n;
     this.cubeCamera.renderTarget = this.targets[slot];
     const was = this.renderer.getRenderTarget();
@@ -287,11 +405,16 @@ export class Sky {
     this.material.uniforms.uRot.value.setFromMatrix4(this.rot);
   }
 
-  /** The warp's flash over the sky (0-1), and how bright the sky is otherwise (ducked while something needs you). */
+  /** The warp's flash over the sky (0-1). */
   setFlash(k: number) {
     this.material.uniforms.uFlash.value = k;
   }
+  /** How bright the nebula's knots are (1, or less while something needs the captain). */
   setDim(k: number) {
     this.material.uniforms.uDim.value = k;
+  }
+  /** How far toward Day the sky is (0 Night, 1 Day): paler and brighter. */
+  setDay(k: number) {
+    this.material.uniforms.uDay.value = k;
   }
 }

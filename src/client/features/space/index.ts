@@ -21,14 +21,15 @@ import { store } from '../../state';
 import { DECK, VIEWPORT_GLASS } from '../../world/office/materials';
 import { Flybys } from './flybys';
 import { zoomOf } from '../../core/zoom';
-import { BANNER_MS, DUCK_MS, FIRST_FLYBY_MS, FLEET_STAGGER_MS, FLYBY_GAP_MS, JUMP, JUMP_FOV, JUMP_HOLD_MS, JUMP_MS, JUMP_STRETCH, MERGE_WINDOW_MS, PUNCH_LIFT, SPACE_COLORS, SURGE, SURGE_GAP_MS, SURGE_HARD, SURGE_MS, between, countdownLeft, cruiseSpeed, flashPeak, jumpAt, jumpsNow, motionScale, pickFlyby, seeded, surgeAt, surgeGlint, surgesNow, spoolLevel, type FlybyKind } from './logic';
+import { BANNER_MS, DUCK_MS, FIRST_FLYBY_MS, FLEET_STAGGER_MS, FLYBY_GAP_MS, JUMP, JUMP_FOV, JUMP_HOLD_MS, JUMP_MS, JUMP_STRETCH, MERGE_WINDOW_MS, PUNCH_LIFT, SPACE_COLORS, SPACE_GIVE_WAY, SURGE, SURGE_GAP_MS, SURGE_HARD, SURGE_MS, between, countdownLeft, cruiseSpeed, flashPeak, jumpAt, jumpsNow, motionScale, pickFlyby, seeded, surgeAt, surgeGlint, surgesNow, spoolLevel, type FlybyKind } from './logic';
 import { GLOW, JumpGlow, countdownGlow } from './jumpglow';
 import { Banner, Tunnel } from './tunnel';
 import { JUMP_READY, countdownBanner, jumpCountdown, waypointBanner } from '../../../shared/shiplog';
-import { Sky } from './sky';
+import { Sky, clearOfGiant } from './sky';
 import { Starfield } from './stars';
 import { Meteors } from './meteors';
 import { starScale } from '../giveway/logic';
+import { debugHandle } from '../giveway';
 
 /** The fog in Walk: none inside the bridge, only what's far outside fades into space before the far plane. */
 const FOG = { near: 70, far: 118 } as const;
@@ -36,6 +37,8 @@ const FOG = { near: 70, far: 118 } as const;
 const FADE_MS = 400;
 /** How far the stars streak in a surge, against their cruise length (the jump's is JUMP_STRETCH). */
 const SURGE_STRETCH = 8;
+/** How long the sky takes to give way to attention, or to turn to Day (s). */
+const YIELD_S = 0.5;
 /** How long the ship takes to settle on a new cruise speed (s). */
 const EASE_S = 4;
 /** The drive glow's breath: its period (ms) and depth. */
@@ -96,7 +99,7 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   const { scene } = parts.stage;
   scene.background = new THREE.Color(SPACE_COLORS.void);
   scene.fog = new THREE.Fog(SPACE_COLORS.void, FOG.near, FOG.far);
-  const sky = new Sky(ctx.renderer);
+  const sky = new Sky(ctx.renderer, ctx.office.holo.boards);
   const stars = new Starfield();
   const flybys = new Flybys(ctx.renderer);
   const tunnel = new Tunnel();
@@ -149,6 +152,9 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   const was = new THREE.Vector3();
   let moving = false;
   let flashNow = 0;
+  /** How bright the nebula's knots are (1, SPACE_GIVE_WAY while something needs the captain), and how far toward Day the sky is. */
+  let knots = 1;
+  let dayNow = 0;
   const outside: OutsideLight = { wash: 0, washDir: new THREE.Vector3(), washColor: new THREE.Color(), glint: 0, glintDir: new THREE.Vector3(), flash: 0 };
   const glintColor = new THREE.Color();
 
@@ -289,6 +295,12 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   }
 
   ctx.ticks.add('world', (frame) => {
+    // The sky's own give way and its Day, on real time (not space's clock, which the shots hold).
+    const ease = Math.min(1, frame.dt / YIELD_S);
+    knots += ((parts.giveWay?.attention() ? SPACE_GIVE_WAY : 1) - knots) * ease;
+    sky.setDim(knots);
+    dayNow += ((parts.lights?.mode() === 'day' ? 1 : 0) - dayNow) * ease;
+    sky.setDay(dayNow);
     const dt = frame.dt * timeK;
     const ms = dt * 1000;
     clock += ms;
@@ -409,11 +421,15 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
         nextFlyby = clock + between(rand(), FLYBY_GAP_MS);
       }
     } else if (k === 1 && clock >= nextFlyby && clock >= duckUntil && !jump && sinceSurge >= SURGE_MS) {
-      flybys.start(pickFlyby(rand()), rand);
+      // A planet keeps to the side the region's giant isn't on (features/vista).
+      const kind = pickFlyby(rand());
+      flybys.start(kind, rand, 0, kind === 'planet' ? clearOfGiant(regionN) : undefined);
     }
   });
 
   bakeAhead();
+  // For the perf probe: the sky's bake, to time a region's cube cold.
+  debugHandle('sky', sky);
 
   return {
     surge: () => {

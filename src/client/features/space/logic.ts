@@ -247,6 +247,13 @@ export function ambientSafe(hex: string): boolean {
   return !RESERVED_HUES.some(([lo, hi]) => hue >= lo && hue <= hi);
 }
 
+/**
+ * How far space's spectacle falls while a unit needs the captain or is stuck: the nebula's knots, the
+ * dust drifting past the ports and the sun's flare (features/vista), and a big body's rim. The stars,
+ * the band and the body itself stay as they are.
+ */
+export const SPACE_GIVE_WAY = 0.35;
+
 /** Every colour space uses: the sky, the stars, the flybys, the warp's flash. All of them pass ambientSafe. */
 export const SPACE_COLORS = {
   void: '#04070C',
@@ -265,4 +272,13 @@ export const SPACE_COLORS = {
   planetB: '#76838F',
   planetC: '#3E5A66',
   comet: '#E6F6FF',
+  /** The big body's palette (features/vista): deep, mid and pale blue-teal bands, a pale storm. */
+  giantDeep: '#1C3448',
+  giantMid: '#4E7486',
+  giantPale: '#B4C6CE',
+  giantStorm: '#D8E4E8',
+  /** The sun's light and its flare's warm core: a warm white, all but neutral. */
+  sun: '#FFF6EA',
+  /** What Day adds over the whole sky: a pale, cool grey. */
+  dayLift: '#1A2430',
 } as const;
