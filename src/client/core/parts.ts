@@ -31,6 +31,7 @@ import type { installCrew } from '../features/crew';
 import type { installDroid } from '../features/droid';
 import type { installFleet } from '../features/fleet';
 import type { installAlert } from '../features/alert';
+import type { installDrive } from '../features/drive';
 import type { installTv } from '../features/tv';
 import type { installVoice } from '../features/voice';
 import type { installWaiting } from '../features/waiting';
@@ -118,4 +119,6 @@ export interface Parts {
   fleet: Made<typeof installFleet>;
   /** Alert conditions and the band under the overhead strip (see features/alert). */
   alert: Made<typeof installAlert>;
+  /** The drive core: the run of merges, the fleet's week and its record (see features/drive). */
+  drive: Made<typeof installDrive>;
 }

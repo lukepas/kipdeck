@@ -70,6 +70,7 @@ import { installCrew } from './features/crew';
 import { installDroid } from './features/droid';
 import { installAlert } from './features/alert';
 import { installMoments } from './features/moments';
+import { installDrive } from './features/drive';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -166,6 +167,7 @@ parts.crew = installCrew(ctx, parts);
 parts.droid = installDroid(ctx, parts);
 parts.alert = installAlert(ctx, parts);
 installMoments(ctx, parts);
+parts.drive = installDrive(ctx, parts);
 
 parts.hintbar = installHintBar(ctx, core, parts);
 installKeyboard(ctx, parts);

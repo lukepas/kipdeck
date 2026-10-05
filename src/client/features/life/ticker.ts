@@ -16,6 +16,8 @@ export interface Ticker {
   setLog(lines: string[]): void;
   /** A line from the ship's voice (features/vesper), run at the head of the log under its name; null takes it off. */
   setVoice(line: string | null): void;
+  /** A standing segment after the voice, "FLEET LOG: ..." (features/drive): its label up to the colon in mono; null takes it off. */
+  setSegment(line: string | null): void;
   /** The clock's two readings: the time and how long under way (or holding station). */
   setClock(time: string, underWay: string): void;
   /** Runs the log on `dt` seconds at `k` times its pace (0 holds it). */
@@ -67,6 +69,7 @@ export const ticker: Fixture<'ticker'> = (site) => {
   site.group.add(onBridgeLayer(group));
 
   let voice: string | null = null;
+  let segment: string | null = null;
   const paintLog = (lines: string[]) => {
     const { g, canvas } = log;
     const W = canvas.width;
@@ -88,6 +91,21 @@ export const ticker: Fixture<'ticker'> = (site) => {
       g.fillStyle = DECK.text;
       g.fillText(voice, x, H / 2);
       x += g.measureText(voice).width + 60;
+      g.fillStyle = DECK.shipDim;
+      g.fillRect(x - 30, H * 0.25, 3, H * 0.5);
+      x += 30;
+    }
+    if (segment) {
+      const [label, ...rest] = segment.split(': ');
+      g.font = MONO(Math.round(H * 0.36));
+      g.fillStyle = DECK.ship;
+      g.fillText(rest.length ? `${label}:` : '', x, H / 2);
+      x += rest.length ? g.measureText(`${label}:`).width + 24 : 0;
+      g.font = MONO(Math.round(H * 0.42));
+      g.fillStyle = DECK.text;
+      const text = rest.length ? rest.join(': ') : label;
+      g.fillText(text, x, H / 2);
+      x += g.measureText(text).width + 60;
       g.fillStyle = DECK.shipDim;
       g.fillRect(x - 30, H * 0.25, 3, H * 0.5);
       x += 30;
@@ -138,7 +156,7 @@ export const ticker: Fixture<'ticker'> = (site) => {
   let clockKey = '';
   let logLines: string[] = [];
   const setLog = (lines: string[]) => {
-    const k = `${voice}\n${lines.join('\n')}`;
+    const k = `${voice}\n${segment}\n${lines.join('\n')}`;
     if (k === logKey) return;
     logKey = k;
     logLines = lines;
@@ -147,6 +165,10 @@ export const ticker: Fixture<'ticker'> = (site) => {
   };
   const setVoice = (line: string | null) => {
     voice = line;
+    setLog(logLines);
+  };
+  const setSegment = (line: string | null) => {
+    segment = line;
     setLog(logLines);
   };
   const setClock = (time: string, underWay: string) => {
@@ -162,5 +184,5 @@ export const ticker: Fixture<'ticker'> = (site) => {
     // Content moves left on screen: toward the higher u, so the offset falls.
     log.texture.offset.x = (log.texture.offset.x - PACE * dt * k) % 1;
   };
-  return { handle: { ticker: { setLog, setVoice, setClock, run } } };
+  return { handle: { ticker: { setLog, setVoice, setSegment, setClock, run } } };
 };
