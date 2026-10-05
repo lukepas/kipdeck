@@ -13,7 +13,7 @@ import { onRoster } from './roster.js';
 /** How many events a floor keeps, across restarts. */
 export const TIMELINE_KEEP = 2000;
 
-const KINDS = new Set<TimelineKind>(['hired', 'needs-input', 'done', 'stuck', 'resumed', 'sent-home', 'pr-opened', 'pr-merged', 'pr-closed', 'task-started', 'task-done', 'task-failed', 'meeting-started', 'meeting-ended', 'mission', 'milestone', 'milestone-done', 'progress', 'bounty-funded', 'bounty-claimed', 'bounty-paid', 'bounty-refunded', 'task-paid', 'task-approved', 'task-rejected', 'task-refunded', 'merge-attested']);
+const KINDS = new Set<TimelineKind>(['hired', 'needs-input', 'done', 'stuck', 'resumed', 'sent-home', 'pr-opened', 'pr-merged', 'pr-closed', 'task-started', 'task-done', 'task-failed', 'meeting-started', 'meeting-ended', 'mission', 'milestone', 'milestone-done', 'progress', 'bounty-funded', 'bounty-claimed', 'bounty-paid', 'bounty-refunded', 'task-paid', 'task-approved', 'task-rejected', 'task-refunded', 'merge-attested', 'log']);
 
 /** What a new event says; the timeline stamps the rest. */
 export type NewEvent = Omit<TimelineEvent, 'id' | 'at' | 'floor'> & { at?: number };

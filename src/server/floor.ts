@@ -16,6 +16,7 @@ import { Changes } from './changes.js';
 import { FloorPlanStore } from './floorplan.js';
 import { MissionStore } from './mission.js';
 import { Timeline, TimelineWatch } from './timeline.js';
+import { ReplyClock } from './pace.js';
 import { WorkLooks } from './review.js';
 import { BRANCH_PREFIX } from './worktrees.js';
 import { missionLine, missionVars } from '../shared/mission.js';
@@ -130,6 +131,8 @@ export class Floor {
   /** What happened on the floor, kept in timeline.jsonl (see timeline.ts), and what writes it. */
   readonly timeline: Timeline;
   readonly watch: TimelineWatch;
+  /** How long units waited for an answer, for the pit wall (see pace.ts). */
+  readonly replies: ReplyClock;
   /** What each worker at rest changed, for the review inbox (see review.ts). */
   readonly work: WorkLooks;
   /** The whiteboard everyone on the floor draws on together. */
@@ -177,6 +180,7 @@ export class Floor {
       ctx.missionChanged(this, m);
     });
     this.watch.missionChanged(this.mission.state());
+    this.replies = new ReplyClock(dataDir);
 
     this.workers = new WorkerManager(
       def.dir,
@@ -191,6 +195,7 @@ export class Floor {
           this.queue?.onWorker(worker);
           this.meetings?.onWorker(worker);
           this.watch.worker(worker);
+          this.replies?.worker(worker);
           ctx.workerChanged(this, worker);
           // Its turn ended, or whoever had its terminal open closed it: it may be free to go now.
           this.sendLandedHome();
@@ -200,6 +205,7 @@ export class Floor {
           if (info) this.mission.retire(info);
           if (info) this.watch.gone(info);
           this.work?.forget(workerId);
+          this.replies?.forget(workerId);
           this.changes?.forget(workerId);
           ctx.emit(this, { t: 'worker.remove', workerId });
           this.queue?.onWorkerGone(workerId);

@@ -32,7 +32,9 @@ export type TimelineKind =
   | 'task-rejected'
   | 'task-refunded'
   /** A proof-of-merge attestation went on Base Sepolia for an office PR (see server/chain/attest.ts). */
-  | 'merge-attested';
+  | 'merge-attested'
+  /** The captain's log for the day (shared/launch.ts), written by the server once a day per deck when a watch starts. */
+  | 'log';
 
 /**
  * One thing that happened on a floor. Written by the server from state changes only, never from text

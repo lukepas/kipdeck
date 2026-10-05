@@ -37,6 +37,7 @@ export const KIND_LABEL: Record<TimelineKind, string> = {
   'task-rejected': 'Paid task',
   'task-refunded': 'Refund',
   'merge-attested': 'Proof of merge',
+  log: "Captain's log",
 };
 
 /** What the tab is filtered by, kept while the page is open. */

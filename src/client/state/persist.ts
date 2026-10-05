@@ -3,6 +3,9 @@
 
 import { DATA_COLORS, remapColor } from '../../shared/datacolors';
 import { randomLook, sanitizeLook, type Look } from '../../shared/avatar';
+import type { WatchMode } from '../../shared/launch';
+
+export type { WatchMode };
 
 export interface Profile {
   name: string;
@@ -90,6 +93,8 @@ export interface AlertSettings {
 export const AMBER_MINUTES = [2, 5, 10, 15] as const;
 export const RED_MINUTES = [5, 10, 20, 30] as const;
 export const ALERT_DEFAULTS: Readonly<AlertSettings> = { on: true, amberMin: 5, redMin: 10 };
+/** Settings > Bridge > Start of watch (features/launch): the launch and the debrief, the debrief only, or neither. */
+export const WATCH_MODES = ['full', 'debrief', 'off'] as const;
 
 export interface Settings {
   view: ViewMode;
@@ -127,6 +132,12 @@ export interface Settings {
   celebrations: CelebrationMode;
   /** Settings > Bridge > Alert conditions. */
   alerts: AlertSettings;
+  /** Settings > Bridge > Start of watch: Full, Debrief only or Off. */
+  watch: WatchMode;
+  /** Settings > Bridge > Momentum display: the drive core and the fleet's log on the ticker (features/drive). */
+  momentum: boolean;
+  /** Settings > Bridge > Turnaround clock: the pit wall in the Review bay (features/turnaround). */
+  turnaround: boolean;
 }
 
 const SETTINGS_KEY = 'agent-office.settings';
@@ -211,7 +222,7 @@ export function rememberSpot(s: Spot) {
 }
 
 export function loadSettings(): Settings {
-  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { ...LIFE_PART_DEFAULTS }, voice: 'on', celebrations: 'full', alerts: { ...ALERT_DEFAULTS } };
+  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { ...LIFE_PART_DEFAULTS }, voice: 'on', celebrations: 'full', alerts: { ...ALERT_DEFAULTS }, watch: 'full', momentum: true, turnaround: true };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null');
     if (saved?.view === 'first' || saved?.view === 'third') s.view = saved.view;
@@ -234,6 +245,9 @@ export function loadSettings(): Settings {
     if (typeof saved?.alerts?.on === 'boolean') s.alerts.on = saved.alerts.on;
     if ((AMBER_MINUTES as readonly unknown[]).includes(saved?.alerts?.amberMin)) s.alerts.amberMin = saved.alerts.amberMin;
     if ((RED_MINUTES as readonly unknown[]).includes(saved?.alerts?.redMin)) s.alerts.redMin = saved.alerts.redMin;
+    if (WATCH_MODES.includes(saved?.watch)) s.watch = saved.watch;
+    if (typeof saved?.momentum === 'boolean') s.momentum = saved.momentum;
+    if (typeof saved?.turnaround === 'boolean') s.turnaround = saved.turnaround;
   } catch {
     // storage blocked
   }

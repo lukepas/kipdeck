@@ -160,7 +160,7 @@ test('what the browser remembers keeps its keys and shapes', () => {
   assert.deepEqual(state.lastSpot(), { floor: 'f1', name: 'F', x: 1, y: 2, z: 3, facing: 4 });
   assert.ok(storage.has('agent-office.spot'));
   const settings = state.loadSettings();
-  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: state.HUD_DEFAULTS, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { destination: true, fleet: true, sorties: true, epithets: true, droid: false }, voice: 'on', celebrations: 'full', alerts: { on: true, amberMin: 5, redMin: 10 } });
+  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: state.HUD_DEFAULTS, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { destination: true, fleet: true, sorties: true, epithets: true, droid: false }, voice: 'on', celebrations: 'full', alerts: { on: true, amberMin: 5, redMin: 10 }, watch: 'full', momentum: true, turnaround: true });
   // Mission control's last tab is one of its tabs.
   storage.set('agent-office.settings', JSON.stringify({ missionTab: 'goals', allFloors: true }));
   assert.deepEqual([state.loadSettings().missionTab, state.loadSettings().allFloors], ['goals', true]);
@@ -204,13 +204,18 @@ test('what the browser remembers keeps its keys and shapes', () => {
   assert.deepEqual([state.loadSettings().celebrations, state.loadSettings().alerts], ['cards', { on: false, amberMin: 2, redMin: 30 }]);
   state.saveSettings({ ...settings, celebrations: 'confetti' as never, alerts: { on: 'yes', amberMin: 7, redMin: -1 } as never });
   assert.deepEqual([state.loadSettings().celebrations, state.loadSettings().alerts], ['full', { on: true, amberMin: 5, redMin: 10 }]);
+  // The start of watch is Full, Debrief only or Off; the momentum display and the turnaround clock on or off.
+  state.saveSettings({ ...settings, watch: 'debrief', momentum: false, turnaround: false });
+  assert.deepEqual([state.loadSettings().watch, state.loadSettings().momentum, state.loadSettings().turnaround], ['debrief', false, false]);
+  state.saveSettings({ ...settings, watch: 'fanfare' as never, momentum: 'yes' as never });
+  assert.deepEqual([state.loadSettings().watch, state.loadSettings().momentum], ['full', true]);
   store.apply(welcome());
   assert.equal(state.lastFloor(), 'f1');
 });
 
 test("the store's keys are its state, as window.__office shows them", () => {
   // As the office had them before its store was split into slices: methods and the slices aren't among them.
-  assert.deepEqual(Object.keys(store).sort(), ['accounts', 'away', 'bounties', 'bountySettings', 'chat', 'drawing', 'floor', 'floorPlan', 'floors', 'ghViewer', 'ice', 'invites', 'issues', 'leaveOnMerge', 'limits', 'machine', 'me', 'meeting', 'mission', 'notify', 'peers', 'profile', 'project', 'projectsDir', 'prompts', 'pulls', 'queue', 'reminders', 'repos', 'reputation', 'reviewQueue', 'roster', 'screens', 'services', 'showcaseSettings', 'signins', 'subs', 'team', 'timeline', 'upgrade', 'usage', 'whiteboard', 'workers', 'you']);
+  assert.deepEqual(Object.keys(store).sort(), ['accounts', 'away', 'bounties', 'bountySettings', 'chat', 'drawing', 'floor', 'floorPlan', 'floors', 'ghViewer', 'ice', 'invites', 'issues', 'leaveOnMerge', 'limits', 'machine', 'me', 'meeting', 'mission', 'notify', 'pace', 'peers', 'profile', 'project', 'projectsDir', 'prompts', 'pulls', 'queue', 'reminders', 'repos', 'reputation', 'reviewQueue', 'roster', 'screens', 'services', 'showcaseSettings', 'signins', 'subs', 'team', 'timeline', 'upgrade', 'usage', 'whiteboard', 'workers', 'you']);
 });
 
 test('a new store starts every field where it always has', async () => {
@@ -236,6 +241,7 @@ test('a new store starts every field where it always has', async () => {
       roster: [], reviewQueue: [], reminders: [], ghViewer: '<undefined>', mission: { statement: '', milestones: [] },
       timeline: { events: [], loaded: false, more: false }, away: '<undefined>',
       bounties: {}, bountySettings: '<undefined>', reputation: '<undefined>', showcaseSettings: '<undefined>',
+      pace: null,
     },
   );
 });

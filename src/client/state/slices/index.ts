@@ -17,6 +17,7 @@ import { machine } from './machine';
 import { meeting } from './meeting';
 import { mission } from './mission';
 import { notify } from './notify';
+import { pace } from './pace';
 import { prompts } from './prompts';
 import { reputation } from './reputation';
 import { services } from './services';
@@ -51,4 +52,5 @@ export const SLICES: readonly Slice[] = [
   bounties,
   reputation,
   showcase,
+  pace,
 ];
