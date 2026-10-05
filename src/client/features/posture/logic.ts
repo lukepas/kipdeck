@@ -62,9 +62,13 @@ export function stretchAt(ms: number): { rise: number; arms: number; back: numbe
   return { rise: POSTURE.stretch.rise * k, arms: POSTURE.stretch.arms * k, back: POSTURE.stretch.back * k };
 }
 
-/** Whether a change of state is a unit finishing: it was at work, and now its work waits for review or has merged. */
-export function finished(from: GlyphKind | undefined, to: GlyphKind): boolean {
-  return from === 'working' && (to === 'review' || to === 'merged');
+/**
+ * Whether a change of state is a unit finishing: it was at work, and now its work waits for review or
+ * has merged, or (with no pull request to review) it is done and back on deck.
+ */
+export function finished(from: GlyphKind | undefined, to: GlyphKind, status?: string): boolean {
+  if (from !== 'working') return false;
+  return to === 'review' || to === 'merged' || (to === 'parked' && status === 'done');
 }
 
 /** What a unit's state lays over its pose. */
@@ -99,7 +103,7 @@ export function poseFor(o: PoseInput): Pose {
     const g = full && !o.quiet ? o.glance * o.glanceSide * POSTURE.glance.yaw : 0;
     return { lean: POSTURE.workLean, turn: g, rise: 0, armL: 0, armR: 0 };
   }
-  if (full && (o.kind === 'review' || o.kind === 'merged')) {
+  if (full && (o.kind === 'review' || o.kind === 'merged' || o.kind === 'parked')) {
     const s = stretchAt(o.sinceDone);
     if (!s.rise) return { ...STILL };
     return { lean: s.back, turn: 0, rise: s.rise, armL: s.arms, armR: s.arms };

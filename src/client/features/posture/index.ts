@@ -94,7 +94,7 @@ export function installPosture(ctx: Ctx, parts: Pick<Parts, 'views' | 'giveWay'>
       let u = units.get(id);
       if (!u) units.set(id, (u = { cur: { lean: 0, turn: 0, rise: 0, armL: 0, armR: 0 }, kind: undefined, doneAt: -Infinity, glanceAt: -Infinity, nextGlance: clock + 2000 + next() * 8000, side: 1, glow: null }));
       const kind = v.model.showing;
-      if (u.kind !== undefined && finished(u.kind, kind)) u.doneAt = clock;
+      if (u.kind !== undefined && finished(u.kind, kind, v.status)) u.doneAt = clock;
       u.kind = kind;
       const figure = v.model.figure;
       // A glance across at the next screen now and then, while it works and nobody waits.

@@ -50,6 +50,8 @@ test('a unit that finishes stands up and stretches once, then settles; only at F
   assert.ok(finished('working', 'review'));
   assert.ok(finished('working', 'merged'));
   assert.ok(!finished('review', 'merged'));
+  assert.ok(finished('working', 'parked', 'done'), 'done with no pull request: back on deck');
+  assert.ok(!finished('working', 'parked', 'idle'), 'gone idle is not finishing');
   assert.ok(!finished(undefined, 'review'), 'not on first sight: it only plays on a real change');
   assert.ok(!finished('stuck', 'review') === true);
   const mid = poseFor({ ...base, kind: 'review', sinceDone: POSTURE.stretch.ms / 2 });
