@@ -3,8 +3,9 @@
  * while they were away.
  *
  * - The launch, on the captain's first visit of the day or back after more than eight hours: the
- *   room's lights come on aft to bow from near dark, the pods' lights one pod at a time, then the
- *   day's captain's log crawls away into the forward starfield in white and ship-cyan: "DAY 14 OF THE
+ *   room's lights come on aft to bow from near dark, the pods' lights one pod at a time, then a
+ *   scanline wipes a panel onto the forward glass and the day's captain's log is typed onto it a
+ *   sentence a line, in white under a ship-cyan heading: "DAY 14 OF THE
  *   MISSION. Yesterday the fleet merged 9 pull requests, closed 14 issues and paid 3 bounties on
  *   devnet. Waypoint 3, Billing v2, is 60% done. Two units await orders." About 6 s, and any key, click
  *   or Esc skips it. The server writes the same text to the deck's timeline once a day (shared/launch.ts,
@@ -15,7 +16,7 @@
  *   came, then one dry closing line. A launch is followed by its debrief when there is one.
  *
  * Each plays once per captain per trigger, and never for a screen that only watches (demo mode). It
- * gives way: with a unit needing you or stuck at load the launch is over in 1.2 s, the crawl is one line
+ * gives way: with a unit needing you or stuck at load the launch is over in 1.2 s, the log is one line
  * on the band and the debrief lists only who waits; a call mid-launch cuts it short the same way. It
  * never plays a beat or moves the camera. Under reduced motion, Ship motion Off or Silent running it is a
  * still card for 6 s. Settings > Bridge > Start of watch: Full, Debrief only or Off. While it is on, it takes the place
@@ -34,9 +35,9 @@ import { runAction } from '../../ui/mission';
 import { demoOn } from '../demo';
 import { debugHandle } from '../giveway';
 import { MomentCards } from '../moments/card';
-import { Crawl } from './crawl';
+import { WatchLog } from './watchlog';
 import { DebriefPanel } from './debrief';
-import { crawlAt, dayKey, DEBRIEF_MS, DEBRIEF_WAITING_MS, LAUNCH, LAUNCH_MS, LAUNCH_YIELD, LOG_WAIT_MS, STILL_CARD_MS } from './logic';
+import { dayKey, DEBRIEF_MS, DEBRIEF_WAITING_MS, LAUNCH, LAUNCH_MS, LAUNCH_YIELD, LOG_WAIT_MS, STILL_CARD_MS } from './logic';
 
 const WATCH_KEY = 'agent-office.watch';
 /** How long the load's start of watch waits for the deck, its crew and its log to arrive (ms). */
@@ -63,13 +64,17 @@ export interface Launch {
   claimsDigest(): boolean;
   /** What is playing (the shots and the console). */
   state(): { phase: 'idle' | 'launch' | 'yield'; crawl: boolean; debrief: Debrief | null; log: string | null };
+  /**
+   * Whether a ritual is up that already tells the captain what landed (features/landed holds the merge
+   * toasts for it): 'drop' while the debrief shows (it counts the merges), 'hold' while the log plays.
+   */
+  ritual(): 'drop' | 'hold' | null;
   /** Plays the start of watch now, as if back after `awayMs` (the shots). */
   play(kind: 'launch' | 'debrief', awayMs: number): void;
 }
 
 export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' | 'focus' | 'mission'>): Launch {
-  const crawl = new Crawl();
-  ctx.scene.add(crawl.mesh);
+  const crawl = new WatchLog();
   const cards = new MomentCards(() => parts.focus.backToGame());
   const panel = new DebriefPanel({
     goTo: (id) => {
@@ -159,7 +164,7 @@ export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' |
     const was = phase;
     phase = 'idle';
     crawlOn = false;
-    crawl.show(1, 0);
+    crawl.at(-1);
     if (skipped) parts.alert.wake(null);
     if (was === 'launch' && Date.now() - since >= DEBRIEF_AWAY_MS) openDebrief(false);
   }
@@ -194,7 +199,7 @@ export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' |
     }
     phase = 'launch';
     startedAt = clock;
-    logBy = clock + LAUNCH.crawlAt + LOG_WAIT_MS;
+    logBy = clock + LAUNCH.logAt + LOG_WAIT_MS;
     parts.alert.wake(LAUNCH.from, LAUNCH.wake);
     if (log) crawl.write(crawlOf(log.text).head, crawlOf(log.text).body);
   }
@@ -264,16 +269,15 @@ export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' |
     if (parts.giveWay.attention()) {
       phase = 'idle';
       crawlOn = false;
-      crawl.show(1, 0);
+      crawl.at(-1);
       parts.alert.wake(null);
       openDebrief(true);
       return;
     }
     if (!log && clock > logBy) crawlOn = false;
-    else if (log && t >= LAUNCH.crawlAt) {
+    else if (log && t >= LAUNCH.logAt) {
       crawlOn = true;
-      const c = crawlAt(t - LAUNCH.crawlAt);
-      crawl.show(c.k, c.alpha);
+      crawl.at(t - LAUNCH.logAt);
     }
     if (t >= LAUNCH_MS || (!log && clock > logBy && t >= LAUNCH.wake)) endLaunch(false);
   });
@@ -285,6 +289,7 @@ export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' |
       return claimed;
     },
     state: () => ({ phase, crawl: crawlOn, debrief: panel.shown, log: log?.text ?? null }),
+    ritual: () => (panel.shown ? 'drop' : phase === 'launch' ? 'hold' : null),
     play(kind, awayMs) {
       endLaunch(true);
       start(kind, Date.now() - awayMs);

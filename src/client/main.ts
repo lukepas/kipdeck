@@ -150,7 +150,7 @@ parts.cards = installCarrying(ctx, {
   showMeeting: parts.meeting.showMeeting,
 });
 parts.seating = installSeating(ctx, { shares: () => parts.talk.currentShares(), watchShare: () => parts.talk.watchShare(), usable: () => parts.pointer.usable() });
-installLanded(ctx, { notifier: parts.notifier });
+installLanded(ctx, { notifier: parts.notifier, ritual: () => parts.launch?.ritual() ?? null });
 installBounties(ctx);
 installPods(ctx);
 parts.proofCorner = installProofCorner(ctx);

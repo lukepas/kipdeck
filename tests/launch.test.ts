@@ -5,7 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DEBRIEF_AWAY_MS, LAUNCH_AWAY_MS, captainsLog, crawlOf, crewLine, debriefOf, stripLine, watchTrigger, yesterdayLine, type DebriefInput } from '../src/shared/launch.js';
 import { TIMELINE_TEXT } from '../src/shared/protocol.js';
-import { LAUNCH, LAUNCH_MS, LAUNCH_YIELD, STILL_CARD_MS, crawlAt, crawlSlide } from '../src/client/features/launch/logic.js';
+import { LAUNCH, LAUNCH_MS, LAUNCH_YIELD, STILL_CARD_MS, typedAt, logLines, LOG_LINES, TYPE } from '../src/client/features/launch/logic.js';
 import { podWake } from '../src/client/features/alert/logic.js';
 
 test("the captain's log reads like a log, in the timeline's length", () => {
@@ -62,16 +62,33 @@ test('the launch plays on the first visit of the day or after eight hours, the d
   assert.equal(DEBRIEF_AWAY_MS, 20 * 60_000);
 });
 
-test('the launch is about six seconds, a yield under one and a half, the crawl fades in and out, and the pods come up one at a time', () => {
+test('the launch is about six seconds, a yield under one and a half, the log fades in and out, and the pods come up one at a time', () => {
   assert.ok(LAUNCH_MS >= 5500 && LAUNCH_MS <= 6500, `${LAUNCH_MS} ms`);
   assert.ok(LAUNCH_YIELD.wake < 1500);
   assert.equal(STILL_CARD_MS, 6000);
-  assert.equal(crawlAt(0).alpha, 0);
-  assert.equal(crawlAt(LAUNCH.crawl / 2).alpha, 1);
-  assert.equal(crawlAt(LAUNCH.crawl).alpha, 0);
-  assert.ok(crawlSlide(0) === 0 && crawlSlide(0.5) < crawlSlide(1));
+  assert.equal(typedAt(0, [10]).alpha, 0);
+  assert.equal(typedAt(LAUNCH.log / 2, [10]).alpha, 1);
+  assert.equal(typedAt(LAUNCH.log, [10]).alpha, 0);
   const at = LAUNCH.wake * 0.6;
   const pods = [0, 1, 2, 3].map((p) => podWake(at, LAUNCH.wake, p));
   assert.ok(pods[0] > pods[1] && pods[1] >= pods[2] && pods[2] >= pods[3], `A first, then B, C, D: ${pods}`);
   assert.deepEqual([0, 1, 2, 3].map((p) => podWake(LAUNCH.wake, LAUNCH.wake, p)), [1, 1, 1, 1]);
+});
+
+test("the day's log is typed onto the glass a sentence a line after a scanline's wipe, never a crawl", () => {
+  assert.deepEqual(logLines('Yesterday the fleet merged 9 pull requests. Waypoint 3 is 60% done. Two units await orders.'), ['Yesterday the fleet merged 9 pull requests.', 'Waypoint 3 is 60% done.', 'Two units await orders.']);
+  assert.equal(logLines('One. Two. Three. Four.').length, LOG_LINES, 'three lines at most');
+  assert.equal(logLines('One. Two. Three. Four.')[2], 'Three. Four.');
+  assert.deepEqual(logLines('No full stop'), ['No full stop']);
+  assert.deepEqual(logLines('Paid 12.00 USDC on devnet. Done.'), ['Paid 12.00 USDC on devnet.', 'Done.'], 'a decimal point is not a sentence');
+  const lens = [40, 20, 30];
+  assert.deepEqual(typedAt(0, lens).typed, [0, 0, 0], 'nothing typed before the wipe');
+  assert.equal(typedAt(TYPE.wipe, lens).wipe, 1);
+  const mid = typedAt(TYPE.wipe + 800, lens).typed;
+  assert.equal(mid[0], 40, 'line by line: the first is done before the second starts');
+  assert.ok(mid[1] > 0 && mid[2] === 0);
+  // Every word typed and held a while before it fades.
+  const done = TYPE.wipe + (90 / TYPE.cps) * 1000;
+  assert.ok(done < LAUNCH.log - 1500, 'at least a second and a half to read it whole');
+  assert.deepEqual(typedAt(done + 10, lens).typed, lens);
 });
