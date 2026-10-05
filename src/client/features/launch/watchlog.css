@@ -6,7 +6,7 @@
   width: min(560px, calc(100% - var(--rail) - 48px)); padding: 14px 20px 16px; overflow: hidden; pointer-events: none;
   background: linear-gradient(rgb(6 12 18 / .78), rgb(6 12 18 / .62));
   border: 1px solid rgb(111 195 223 / .35); border-radius: var(--radius);
-  box-shadow: 0 0 40px rgb(111 195 223 / .12), var(--hud-shadow);
+  box-shadow: var(--hud-shadow);
   opacity: 0;
 }
 .watch-log[hidden] { display: none; }

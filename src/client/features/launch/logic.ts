@@ -17,7 +17,7 @@ export const STILL_CARD_MS = 6000;
 /** How long the debrief stays up (ms), and how long when it lists who waits on you. */
 export const DEBRIEF_MS = 15_000;
 export const DEBRIEF_WAITING_MS = 30_000;
-/** How long the launch waits for the server's log before it plays without the crawl (ms). */
+/** How long the launch waits for the server's log before it plays without the log on the glass (ms). */
 export const LOG_WAIT_MS = 2500;
 
 /** The log's body as the lines it is typed in: a sentence a line, LOG_LINES at most (the rest joins the last). */

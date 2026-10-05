@@ -71,13 +71,13 @@ export function captainsLog(i: LogInput): string {
   return clip(`${head} ${wp(20)}`, TIMELINE_TEXT);
 }
 
-/** The log as the launch crawls it: its first sentence as a heading, the rest under it. */
+/** The log as the launch types it onto the glass: its first sentence as a heading, the rest under it. */
 export function crawlOf(log: string): { head: string; body: string } {
   const m = /^(Day \d+ of the mission\.)\s*(.*)$/s.exec(log);
   return m ? { head: m[1].replace(/\.$/, '').toUpperCase(), body: m[2] } : { head: 'CAPTAIN\'S LOG', body: log };
 }
 
-/** The launch as one line on the band, when a unit already needs the captain and the crawl gives way. */
+/** The launch as one line on the band, when a unit already needs the captain and the log on the glass gives way. */
 export function stripLine(log: string): string {
   return `${crawlOf(log).head} - THE LOG IS ON THE TICKER`;
 }

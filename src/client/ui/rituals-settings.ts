@@ -7,7 +7,7 @@ import { h } from './dom';
 import { choiceRow } from './settings-rows';
 
 const WATCH_NOTE: Record<WatchMode, string> = {
-  full: 'The first visit of the day (or after eight hours away): the lights come up aft to bow and the day\'s captain\'s log crawls into the stars ahead, about 6 seconds, any key skips it. Back after twenty minutes away: the debrief, with who waits on you first. If a unit needs you, it is over in a second and lists them.',
+  full: 'The first visit of the day (or after eight hours away): the lights come up aft to bow and the day\'s captain\'s log is typed onto the forward glass, about 6 seconds, any key skips it. Back after twenty minutes away: the debrief, with who waits on you first. If a unit needs you, it is over in a second and lists them.',
   debrief: 'No launch: only the debrief after twenty minutes or more away, with who waits on you first. The captain\'s log is still written to the timeline.',
   off: 'Neither. The "While you were away" window opens at load as before.',
 };

@@ -107,7 +107,7 @@ export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' |
   let since = 0;
   let log: TimelineEvent | null = null;
   let crawlOn = false;
-  /** The launch is waiting for the server's log to crawl it; when it gave up. */
+  /** The launch is waiting for the server's log to type it; when it gave up. */
   let logBy = 0;
 
   ctx.messages.on('log', (m) => {
@@ -158,7 +158,7 @@ export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' |
     panel.show(d, d.waiting.length ? DEBRIEF_WAITING_MS : DEBRIEF_MS, attentionOnly);
   }
 
-  /** Ends the launch: the lights all the way up, the crawl away; the debrief after it, if the captain was away long enough. */
+  /** Ends the launch: the lights all the way up, the log off the glass; the debrief after it, if the captain was away long enough. */
   function endLaunch(skipped: boolean) {
     if (phase === 'idle') return;
     const was = phase;
@@ -265,7 +265,7 @@ export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' |
       }
       return;
     }
-    // A call mid-launch: the crawl gives way at once, and the debrief says who waits.
+    // A call mid-launch: the log gives way at once, and the debrief says who waits.
     if (parts.giveWay.attention()) {
       phase = 'idle';
       crawlOn = false;
