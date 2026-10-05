@@ -1,7 +1,11 @@
 // Static deck layout shared by the server (validation) and client (rendering).
-// Units are meters; +y is up. The deck spans FLOOR.minX..maxX / minZ..maxZ at y = 0: a 32 m square
-// round the mission table, with the situation wall curving round its north side, the Review bay in the
-// north-west corner, the Deck lift in the middle of the south curb and the Standby bench either side of it.
+// Units are meters; +y is up. The deck spans FLOOR.minX..maxX / minZ..maxZ: a 32 m square round the
+// mission table, which stands in a pit at deck level. South of it the deck steps up in two tiers to the
+// conn's dais, and the situation arc hangs north of it (shared/amphitheater.ts, with heightAt, the floor's
+// height anywhere). The Review bay is in the north-west corner, the Deck lift in the middle of the south
+// curb and the Standby bench either side of it.
+import { ARC, ARC_CENTRE, DAIS, TIERS, heroPanel, stripPanel, wingPanel } from './amphitheater.js';
+export { heightAt } from './amphitheater.js';
 
 export const FLOOR = { minX: -16, maxX: 16, minZ: -16, maxZ: 16 } as const;
 /** How high the ceiling is, all the way across the room. */
@@ -38,25 +42,29 @@ export const DESK_SIZE = { width: DESK_WIDTH, depth: DESK_DEPTH, height: 0.76 } 
  */
 export const MISSION_TABLE = { x: 0, z: 0, r: 3.2, h: 0.95 } as const;
 
-/** The pods' letters, round the table from the north-west, clockwise as seen from above (north is -z). */
+/** The pods' letters: A and B on the back tier (port, starboard), C and D on the front one (starboard, port). */
 export const POD_LETTERS = ['A', 'B', 'C', 'D'] as const;
 export type PodLetter = (typeof POD_LETTERS)[number];
 
+const DEG = Math.PI / 180;
 /**
- * The four pods: arcs of four consoles each, `radius` out from the table's middle, centred on
- * `angle` (radians round the table from +x toward +z). A north-west, B north-east, C south-east,
- * D south-west.
+ * The four pods: arcs of four consoles each on the tiers south of the table, `radius` out from its
+ * middle on `tier` (shared/amphitheater.ts TIERS), centred on `angle` (radians round the table from +x
+ * toward +z) with `step` between neighbours, clear of the centre aisle. A port and B starboard on the
+ * back tier, C starboard and D port on the front one, every console facing the table and the arc past
+ * it. `ready` is where the pod's ready line is, round the pit.
  */
-export const PODS: readonly { letter: PodLetter; angle: number }[] = [
-  { letter: 'A', angle: (-3 * Math.PI) / 4 },
-  { letter: 'B', angle: -Math.PI / 4 },
-  { letter: 'C', angle: Math.PI / 4 },
-  { letter: 'D', angle: (3 * Math.PI) / 4 },
+export const PODS: readonly { letter: PodLetter; angle: number; radius: number; step: number; tier: number; ready: number }[] = [
+  { letter: 'A', angle: 124.85 * DEG, radius: 8.3, step: 12.5 * DEG, tier: 1, ready: 128 * DEG },
+  { letter: 'B', angle: 55.15 * DEG, radius: 8.3, step: 12.5 * DEG, tier: 1, ready: 52 * DEG },
+  { letter: 'C', angle: 41.3 * DEG, radius: 5.7, step: 17 * DEG, tier: 0, ready: 6 * DEG },
+  { letter: 'D', angle: 138.7 * DEG, radius: 5.7, step: 17 * DEG, tier: 0, ready: 174 * DEG },
 ];
-/** How far the consoles are from the table's middle, and the angle between neighbours in a pod. */
-export const POD_RADIUS = 7.5;
+/** How far the consoles are from the table's middle, on average (each pod has its own, PODS). */
+export const POD_RADIUS = 7;
 export const CONSOLES_PER_POD = 4;
-const CONSOLE_STEP = (13 * Math.PI) / 180;
+/** The height of the tier a pod stands on. */
+export const podFloor = (letter: PodLetter) => TIERS[PODS[POD_LETTERS.indexOf(letter)].tier].h;
 
 /** The turn that has someone at (x, z) facing the mission table: at 0 they face -z. */
 export function facingTable(x: number, z: number): number {
@@ -69,9 +77,9 @@ function buildDesks(): DeskDef[] {
   let n = 1;
   for (const pod of PODS) {
     for (let k = 0; k < CONSOLES_PER_POD; k++) {
-      const a = pod.angle + (k - (CONSOLES_PER_POD - 1) / 2) * CONSOLE_STEP;
-      const x = round(MISSION_TABLE.x + Math.cos(a) * POD_RADIUS);
-      const z = round(MISSION_TABLE.z + Math.sin(a) * POD_RADIUS);
+      const a = pod.angle + (k - (CONSOLES_PER_POD - 1) / 2) * pod.step;
+      const x = round(MISSION_TABLE.x + Math.cos(a) * pod.radius);
+      const z = round(MISSION_TABLE.z + Math.sin(a) * pod.radius);
       desks.push({ id: `desk-${n}`, x, z, rotY: facingTable(x, z), label: `Console ${pod.letter}-${String(k + 1).padStart(2, '0')}` });
       n++;
     }
@@ -99,11 +107,11 @@ export function podDesks(letter: PodLetter): DeskDef[] {
 }
 
 /**
- * The ready line: a painted double stripe on each pod's inner edge, 1.4 m out from the table, with a
- * numbered tick for each unit that needs someone. Tick 1 is whoever has waited longest. A fifth one
- * on a pod starts a second row of ticks, `row` further out.
+ * The ready line: a painted double stripe round the pit in front of each pod (PODS `ready`), 1.4 m out
+ * from the table, with a numbered tick for each unit that needs someone. Tick 1 is whoever has waited
+ * longest. A fifth one on a pod starts a second row of ticks, `row` further in (the tiers start just out).
  */
-export const READY_LINE = { r: MISSION_TABLE.r + 1.4, row: 0.6, ticks: 4, spacing: 1.0 } as const;
+export const READY_LINE = { r: MISSION_TABLE.r + 1.4, row: -0.38, ticks: 4, spacing: 1.0 } as const;
 
 /** Where a unit stands on its pod's ready line at tick `tick` (1 is the first), facing the table. */
 export function readySpot(letter: PodLetter, tick: number): { x: number; z: number; rotY: number } {
@@ -112,7 +120,7 @@ export function readySpot(letter: PodLetter, tick: number): { x: number; z: numb
   const row = Math.floor(i / READY_LINE.ticks);
   const k = i % READY_LINE.ticks;
   const r = READY_LINE.r + row * READY_LINE.row;
-  const a = pod.angle + (k - (READY_LINE.ticks - 1) / 2) * (READY_LINE.spacing / r);
+  const a = pod.ready + (k - (READY_LINE.ticks - 1) / 2) * (READY_LINE.spacing / r);
   const x = round(MISSION_TABLE.x + Math.cos(a) * r);
   const z = round(MISSION_TABLE.z + Math.sin(a) * r);
   return { x, z, rotY: facingTable(x, z) };
@@ -207,49 +215,40 @@ export const SEATS: DeskDef[] = [...DESKS, ...WING_DESKS, ...BEANBAGS];
 export type StationKind = 'issues' | 'pulls' | 'queue';
 
 /**
- * The situation wall: five flat panels standing on the floor in an arc round the north side of the
- * mission table, `r` out from a middle `cz` south of the table's, each turned to face that middle. From
- * west to east: Issues, Queue, Attention (the ranked list, or a shared screen) in the middle, Pull
- * requests and Services. `angles` are where each panel's middle is round the arc (radians from +x toward
- * +z, so -PI/2 is due north). The arc's middle sits south of the table so the wall stands 2 m nearer the
- * conn than a ring round the table would, with the consoles and the board agents still clear of it.
- * The Attention board is `band` taller than the others, upward, for its count band (features/tv).
+ * The situation arc (shared/amphitheater.ts ARC): hung north of the table, concave toward the conn. The
+ * Attention board is the hero in the middle, the capacity strip under it, and a wing either side turned
+ * toward the dais with two panels stacked on it: Issues over Queue to port, Pull requests over Services
+ * to starboard. `r` and `cz` are its centre of curvature (what hangs over it curves round that), `width`
+ * and `height` a wing panel's. The Attention board's count band is `band` of its height (features/tv).
  */
-export const SITUATION = { r: 12.2, cz: 2, width: 5.2, height: 2.9, y: 2.45, top: 4.1, band: 0.9, angles: [-142, -116, -90, -64, -38].map((d) => (d * Math.PI) / 180) } as const;
-
-/** A panel of the situation wall: its middle, the way it faces (toward the table), and its size. */
-function facet(i: number, label: string, width: number = SITUATION.width, extra = 0) {
-  const a = SITUATION.angles[i];
-  const x = round(MISSION_TABLE.x + Math.cos(a) * SITUATION.r);
-  const z = round(MISSION_TABLE.z + SITUATION.cz + Math.sin(a) * SITUATION.r);
-  return { x, y: SITUATION.y + extra / 2, z, rotY: Math.atan2(x - MISSION_TABLE.x, z - MISSION_TABLE.z - SITUATION.cz) + Math.PI, width, height: SITUATION.height + extra, label };
-}
+export const SITUATION = { ...ARC, cz: ARC_CENTRE.z, r: ARC_CENTRE.r, width: ARC.wing.width, height: ARC.wing.height } as const;
 
 /**
- * Where a board agent's kiosk stands: in front of the board's left end as you face it, 1.3 m out,
- * the agent behind it on the board's side.
+ * Where a board agent's kiosk stands: in front of the board's left end as you face it (`end` -1), or its
+ * right end (1), 1.3 m out, the agent behind it on the board's side, on the deck under the arc.
  */
-function kioskAt(b: { x: number; z: number; rotY: number; width: number }) {
+function kioskAt(b: { x: number; z: number; rotY: number; width: number }, end: -1 | 1 = -1) {
   const tx = Math.cos(b.rotY);
   const tz = -Math.sin(b.rotY);
   const nx = Math.sin(b.rotY);
   const nz = Math.cos(b.rotY);
-  const along = -b.width / 2 + 0.7;
+  const along = end * (b.width / 2 - 0.7);
   return { x: round(b.x + tx * along + nx * 1.3), z: round(b.z + tz * along + nz * 1.3), rotY: b.rotY + Math.PI };
 }
 
 /**
- * The board agents: a worker standing behind a slim lectern at the left end of each work panel of
- * the situation wall (see BOARDS), there for anyone to prompt about it. They face into the deck, so
- * the worker stands on the board side. Nobody hires them from the consoles or the queue.
+ * The board agents: a worker standing behind a slim lectern under each work board of the arc (see
+ * BOARDS), there for anyone to prompt about it: Issues at the port wing's outer end, Queue at its inner
+ * end, Pull requests at the starboard wing's inner end. They face into the deck, so the worker stands on
+ * the board side. Nobody hires them from the consoles or the queue.
  */
 export const STATIONS: DeskDef[] = (
   [
-    ['issues', 0, 'Issues board'],
-    ['pulls', 3, 'PR board'],
-    ['queue', 1, 'Task queue'],
+    ['issues', wingPanel(-1, true), -1, 'Issues board'],
+    ['pulls', wingPanel(1, true), -1, 'PR board'],
+    ['queue', wingPanel(-1, false), 1, 'Task queue'],
   ] as const
-).map(([station, i, label]) => ({ id: `station-${station}`, station, ...kioskAt(facet(i, label)), label }));
+).map(([station, b, end, label]) => ({ id: `station-${station}`, station, ...kioskAt(b, end), label }));
 /** A board agent's kiosk: its top, and how far behind its middle (toward the wall) the agent stands. */
 export const KIOSK = { width: 0.8, depth: 0.5, height: 0.55, stand: 0.55 } as const;
 /** Each board agent's name and its color, the same whenever it's hired. */
@@ -341,26 +340,26 @@ export function deskSeat(desk: DeskDef, offset = 0.85): { x: number; z: number }
   };
 }
 
-/** The boards. `rotY` is the way the board faces (0 = +z): every one is a panel of the situation wall. */
+/** The boards. `rotY` is the way the board faces (0 = +z): every one is a panel of the situation arc. */
 export const BOARDS = {
-  // The work, in the order it goes, west to east: an issue goes on the task queue, and its unit's pull
-  // request comes out the other side. Each has its board agent's lectern at its left end (STATIONS).
-  issues: facet(0, 'Issues'),
-  queue: facet(1, 'Queue'),
-  pulls: facet(3, 'Pull requests'),
-  services: facet(4, 'Services'),
+  // The work, in the order it goes, port to starboard: an issue goes on the task queue, and its unit's
+  // pull request comes out the other side. Each but Services has its board agent's lectern (STATIONS).
+  issues: { ...wingPanel(-1, true), label: 'Issues' },
+  queue: { ...wingPanel(-1, false), label: 'Queue' },
+  pulls: { ...wingPanel(1, true), label: 'Pull requests' },
+  services: { ...wingPanel(1, false), label: 'Services' },
 } as const;
 
 /**
- * The Attention board, the middle panel of the situation wall, due north of the table: the live
- * ranked list, in the order of the top bar's counters, and whatever someone shares while they share it.
+ * The Attention board, the hero in the middle of the arc, due north of the table: the live ranked list,
+ * in the order of the top bar's counters, and whatever someone shares while they share it.
  */
-export const TV = facet(2, 'Attention', 6, SITUATION.band);
+export const TV = { ...heroPanel(), label: 'Attention' } as const;
 /**
- * The capacity panel at the head of the Proof corner on the west wall, facing the deck: how busy the
+ * The capacity strip along the foot of the arc under the Attention board, facing the conn: how busy the
  * office's machine is, and how many units it runs of the most it takes.
  */
-export const MACHINE_MONITOR = { x: FLOOR.minX, y: 2.3, z: -9.2, width: 2.6, height: 1.5 } as const;
+export const MACHINE_MONITOR = stripPanel();
 
 /**
  * The Proof corner along the west wall, south of the capacity panel: the violet attestation rail on
@@ -438,14 +437,15 @@ export interface Opening {
 export const HULL_FRAMES = [-6.63, 0, 6.63] as const;
 
 /**
- * The bridge's viewports. The forward band runs along the north wall over the situation wall, in the
- * four bays between the hull's frames (the bit of wall by the overflow bay stays solid). Down the east
+ * The bridge's viewports. The bow is one wide band of glass along the north wall, behind and over the
+ * situation arc, the hull's frames standing across it as heavy ribs (the bit of wall by the overflow bay
+ * stays solid). Down the east
  * and west walls, each bay has a wide, low port at a seated eye's height, its ends rounded, and a slim
  * strip over it, so the stars and the galaxy's band show down both sides; they keep clear of the Review
  * bay, the capacity panel, the violet rail and the docs rack. The south curb is open already. The low
  * ports come first on each wall (the wall seams line up with them, features/bridge/inlay.ts).
  */
-const FORWARD = { y0: 3.2, y1: 6.3 } as const;
+const FORWARD = { y0: 2.2, y1: 6.5 } as const;
 const PORT = { y0: 0.85, y1: 2.55 } as const;
 const STRIP = { y0: 3.7, y1: 4.45 } as const;
 /** Each side bay's port: where along the wall (from its middle) and how wide. */
@@ -465,21 +465,18 @@ const SIDE_BAYS: Readonly<Record<'east' | 'west', readonly (readonly [u: number,
 const side = (rows: { y0: number; y1: number }) =>
   (['east', 'west'] as const).flatMap((wall) => SIDE_BAYS[wall].map(([u, width]): Opening => ({ wall, u, width, ...rows })));
 export const WINDOWS: Opening[] = [
-  { wall: 'north', u: -11.3, width: 8.2, ...FORWARD },
-  { wall: 'north', u: -3.3, width: 5.8, ...FORWARD },
-  { wall: 'north', u: 3.3, width: 5.8, ...FORWARD },
-  { wall: 'north', u: 9.05, width: 3.7, ...FORWARD },
+  { wall: 'north', u: -2.1, width: 26.2, ...FORWARD },
   ...side(PORT),
   ...side(STRIP),
 ];
 
 /**
- * The conn: the captain's dais just north of the Deck lift, on the axis of the table and the Attention
- * board. A low drum `h` high and `r` across with a rail either side (open to the north and to the lift),
- * the captain's chair in the middle, and the armrest panels at the rails' north ends. All of it stays
- * outside the ring of consoles, so the sightline rule holds.
+ * The conn: the captain's raised dais at the back of the tiers, north of the Deck lift, on the axis of
+ * the table and the Attention board (shared/amphitheater.ts DAIS): `r` across its middle and `h` over the
+ * deck, a brass rail `rail` high round its edge but where the aisle and the two gallery ramps come up,
+ * and the captain's chair in the middle, facing the bow.
  */
-export const CONN = { x: 0, z: 10.4, r: 1.6, h: 0.25, rail: 0.85 } as const;
+export const CONN = { x: DAIS.x, z: DAIS.z, r: DAIS.r, h: DAIS.h, rail: 0.95 } as const;
 
 /**
  * Something to sit on, standing at x, z on the floor at `y`. You
@@ -506,17 +503,18 @@ export interface SeatDef {
 }
 
 /**
- * Where people can sit: the operator bench and its stools (buildOffice puts them there), due north of
- * the table between pods A and B, facing the Attention board, and the captain's chair on the conn,
- * facing the same way from the south. Units have their own seats, the consoles and the Standby bench in SEATS.
+ * Where people can sit: the operator bench and its stools (buildOffice puts them there), in the pit
+ * north of the table, facing the Attention board, and the captain's chair on the conn, facing the same
+ * way from the back of the tiers. Units have their own seats, the consoles and the Standby bench in SEATS.
  */
 export const SEATING: SeatDef[] = [
-  { id: 'couch', label: 'Operator bench', x: 0, y: 0, z: -7.4, rotY: Math.PI, places: [-1, 0, 1], hips: 0.5, depth: -0.05, out: 0.9, tv: true },
+  { id: 'couch', label: 'Operator bench', x: 0, y: 0, z: -4.4, rotY: Math.PI, places: [-1, 0, 1], hips: 0.5, depth: -0.05, out: 0.9, tv: true },
   // A stool either side of it, turned to the board.
-  { id: 'lounge-beanbag-1', label: 'Stool', x: -2.45, y: 0, z: -7.6, rotY: Math.atan2(TV.x + 2.45, TV.z + 7.6), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
-  { id: 'lounge-beanbag-2', label: 'Stool', x: 2.45, y: 0, z: -7.6, rotY: Math.atan2(TV.x - 2.45, TV.z + 7.6), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
-  // On the conn, a little south of its middle, so getting up leaves you on the dais facing the bow.
-  { id: 'conn', label: "Captain's chair", x: CONN.x, y: CONN.h, z: CONN.z + 0.25, rotY: Math.PI, places: [0], hips: 0.48, depth: -0.05, out: 0.8 },
+  { id: 'lounge-beanbag-1', label: 'Stool', x: -2.45, y: 0, z: -4.2, rotY: Math.atan2(TV.x + 2.45, TV.z + 4.2), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
+  { id: 'lounge-beanbag-2', label: 'Stool', x: 2.45, y: 0, z: -4.2, rotY: Math.atan2(TV.x - 2.45, TV.z + 4.2), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
+  // On the conn, a little south of its middle, so getting up leaves you on the dais facing the bow; set
+  // high, so the seated eye is about 3 m over the deck, over the tiers and the pit to the arc.
+  { id: 'conn', label: "Captain's chair", x: CONN.x, y: CONN.h, z: CONN.z + 0.25, rotY: Math.PI, places: [0], hips: 0.58, depth: -0.05, out: 0.8 },
 ];
 export const SEATING_BY_ID = new Map(SEATING.map((s) => [s.id, s]));
 

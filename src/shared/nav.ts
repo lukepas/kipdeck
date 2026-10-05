@@ -3,7 +3,8 @@
 // An office floor built out into the back office (see WING) has more of it to get round: the office's
 // helpers take how many rows it's built out (`wing`), and each level gets a grid of its own.
 
-import { BEANBAGS, BOARDS, BOOKSHELF, CONN, DESK_SIZE, ELEVATOR, ELEVATOR_BACK, ELEVATOR_FRONT, FLOOR, KIOSK, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, MISSION_TABLE, PROOF_CORNER, SEATING, STATIONS, TV, WHITEBOARD, WING, builtDesks, plantsAt, wingLevel, wingMinZ, type DeskDef } from './layout.js';
+import { LEDGE } from './amphitheater.js';
+import { BEANBAGS, BOOKSHELF, DESK_SIZE, ELEVATOR, ELEVATOR_BACK, ELEVATOR_FRONT, FLOOR, KIOSK, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, MISSION_TABLE, PROOF_CORNER, SEATING, STATIONS, WHITEBOARD, WING, builtDesks, heightAt, plantsAt, wingLevel, wingMinZ, type DeskDef } from './layout.js';
 
 
 export type Pt = [number, number];
@@ -64,8 +65,6 @@ function obstacles(wing: number): Obstacles {
   }
   // The mission table.
   circles.push([MISSION_TABLE.x, MISSION_TABLE.z, MISSION_TABLE.r]);
-  // The conn, the captain's dais north of the lift.
-  circles.push([CONN.x, CONN.z, CONN.r + 0.1]);
   // The operator bench and its stools, facing the Attention board.
   for (const seat of SEATING) {
     if (seat.places.length > 1) {
@@ -83,13 +82,7 @@ function obstacles(wing: number): Obstacles {
   const lx1 = ELEVATOR.x + ELEVATOR.width / 2;
   rects.push([lx0, lx0 + ELEVATOR.wall, z0, z1], [lx1 - ELEVATOR.wall, lx1, z0, z1]);
   rects.push([lx0, ELEVATOR.x - ELEVATOR.doorWidth / 2, ELEVATOR_FRONT - 0.07, ELEVATOR_FRONT + 0.07], [ELEVATOR.x + ELEVATOR.doorWidth / 2, lx1, ELEVATOR_FRONT - 0.07, ELEVATOR_FRONT + 0.07]);
-  // The situation wall: each panel stands on the floor, a run of posts along it.
-  for (const b of [BOARDS.issues, BOARDS.queue, TV, BOARDS.pulls, BOARDS.services]) {
-    for (let t = -b.width / 2; t <= b.width / 2 + 1e-6; t += 0.5) {
-      const [cx, cz] = deskPoint({ id: 'wall', label: '', x: b.x, z: b.z, rotY: b.rotY }, t, -0.12);
-      circles.push([cx, cz, 0.18]);
-    }
-  }
+  // The situation arc hangs over the deck: nothing of it stands on the floor.
   // The whiteboard on its wheels, as features/whiteboard/world.ts puts it (it turns a half turn at most).
   rects.push([WHITEBOARD.x - WHITEBOARD.width / 2 - 0.2, WHITEBOARD.x + WHITEBOARD.width / 2 + 0.2, WHITEBOARD.z - 0.48, WHITEBOARD.z + 0.48]);
   // The docs rack against the north wall, as features/bookshelf/world.ts puts it, out to the wall behind it.
@@ -119,9 +112,30 @@ function obstacles(wing: number): Obstacles {
   return { rects, circles };
 }
 
+/** How far from a cell's middle a ledge closes it: its walker's room and its corners (the cell's half-diagonal). */
+const LEDGE_REACH = Math.max(R, CELL * Math.SQRT1_2) + 0.05;
+/** Where round a point the ledge test looks: the point, and eight ways out. */
+const LEDGE_PROBE: readonly (readonly [number, number])[] = [[0, 0], ...Array.from({ length: 8 }, (_, i) => [Math.cos((i * Math.PI) / 4), Math.sin((i * Math.PI) / 4)] as const)];
+
+/**
+ * Whether a ledge taller than a step runs within reach of (x, z): the dais's sides, the aisle's and the
+ * galleries' raised edges, the back tier's back (shared/amphitheater.ts). A tier's riser is a step.
+ */
+export function onLedge(x: number, z: number, reach = LEDGE_REACH): boolean {
+  let lo = Infinity;
+  let hi = -Infinity;
+  for (const [dx, dz] of LEDGE_PROBE) {
+    const h = heightAt(x + dx * reach, z + dz * reach);
+    lo = Math.min(lo, h);
+    hi = Math.max(hi, h);
+  }
+  return hi - lo > LEDGE;
+}
+
 /** Whether (x, z) is too close to anything in the way, or to the walls, to stand in. */
 function isBlocked(x: number, z: number, on: Floorplan, o: Obstacles): boolean {
   if (!on(x, z, R)) return true;
+  if (onLedge(x, z)) return true;
   for (const [x0, x1, z0, z1] of o.rects) if (x > x0 - R && x < x1 + R && z > z0 - R && z < z1 + R) return true;
   for (const [cx, cz, r] of o.circles) if (Math.hypot(x - cx, z - cz) < r + R) return true;
   return false;

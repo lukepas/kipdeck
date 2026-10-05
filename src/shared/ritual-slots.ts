@@ -2,7 +2,7 @@
 // layout.ts: the drive core in the aft viewport, the fleet's tally on the situation wall, and the pit
 // wall on the Review bay. Kept out of layout.ts, which is at its size budget.
 
-import { ELEVATOR, FLOOR, MEETING_ROOM, MISSION_TABLE, SITUATION, facingTable } from './layout.js';
+import { BOARDS, ELEVATOR, FLOOR, MEETING_ROOM, MISSION_TABLE, SITUATION } from './layout.js';
 
 const round = (v: number) => Math.round(v * 1000) / 1000;
 
@@ -15,14 +15,13 @@ const round = (v: number) => Math.round(v * 1000) / 1000;
 export const AFT_CORE = { x: ELEVATOR.x, z: round(FLOOR.maxZ - ELEVATOR.depth / 2), r: 0.8, base: 3.6, y0: 4.0, y1: 6.3, top: 6.75 } as const;
 
 /**
- * The fleet's eight-week tally on the situation wall: a slim plaque over the Services panel, the
- * easternmost, facing the table like the panel under it (features/drive).
+ * The fleet's eight-week tally over the situation arc: a slim plaque over its starboard wing (Pull
+ * requests over Services), turned toward the conn like the wing under it (features/drive).
  */
 export const TALLY = (() => {
-  const a = SITUATION.angles[4];
-  const x = round(MISSION_TABLE.x + Math.cos(a) * (SITUATION.r - 0.1));
-  const z = round(MISSION_TABLE.z + SITUATION.cz + Math.sin(a) * (SITUATION.r - 0.1));
-  return { x, y: SITUATION.top + 0.75, z, rotY: facingTable(x, z - SITUATION.cz) + Math.PI, width: 3.0, height: 0.9 };
+  const w = BOARDS.pulls;
+  const back = 0.1;
+  return { x: round(w.x - Math.sin(w.rotY) * back), y: round(SITUATION.top + 0.5), z: round(w.z - Math.cos(w.rotY) * back), rotY: w.rotY, width: 3.0, height: 0.6 };
 })();
 
 /**
