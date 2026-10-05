@@ -39,7 +39,7 @@ test('the world is large from the first waypoint and grows monotonically to a th
   assert.ok(AHEAD_ELEVATION - MIN_DEG / 2 < 9, 'low: its lower limb behind the overhead strip from the conn');
   assert.ok(AHEAD_ELEVATION > 10 && AHEAD_ELEVATION < 25, 'over the situation wall, under the halo');
   assert.ok(AHEAD_AZIMUTH < 0 && BAND_AT.az > 0, 'the world and its band in the clear panes either side of the middle rib');
-  assert.ok(BAND_AT.el > 8.7 && BAND_AT.el < 12.8, 'the band between the overhead strip and the eaves ring');
+  assert.ok(BAND_AT.el > 13 && BAND_AT.el < 20, 'the band over the eaves ring, clear of the overhead strip and its ticker');
   assert.ok(BAND_MAX_DEG < 16, 'the band never wider than a pane');
 });
 

@@ -95,7 +95,7 @@ const MONO = (size: number) => `500 ${size}px "JetBrains Mono", ui-monospace, mo
  * the sky (degrees), this wide (m). In the clear pane right of the canopy's middle rib from the conn,
  * over the heading band and clear of the destination's world in the pane to its left.
  */
-const BANNER = { at: 70, az: 9.5, el: 17.5, w: 19, canvas: [1024, 320] as const } as const;
+const BANNER = { at: 70, az: 9.5, el: 22.5, w: 19, canvas: [1024, 320] as const } as const;
 
 /** The waypoint's name across the forward glass for a few seconds after the jump. */
 export class Banner {

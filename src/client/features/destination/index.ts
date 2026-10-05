@@ -153,8 +153,8 @@ export function installDestination(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'spa
     else shown = to;
     const fade = Math.min(1, (clock - fadeAt) / CROSSFADE_MS);
     const named = !!(store.mission.statement || store.mission.milestones.length);
-    // Behind the jump's tunnel it all but goes: the ship is between places.
-    view.setSize(shown, (named ? 1 : NO_MISSION_GAIN) * fade * Math.max(0.15, 1 - 2.5 * parts.space.tunnelOpen()));
+    // Behind the jump's tunnel it goes: the ship is between places.
+    view.setSize(shown, (named ? 1 : NO_MISSION_GAIN) * fade * Math.max(0, 1 - 3 * parts.space.tunnelOpen()));
   });
 
   const destination: Destination = {

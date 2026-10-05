@@ -327,6 +327,8 @@ export class DestinationView {
     // The station's ring spans what a planet's disc would.
     this.station.scale.setScalar(Math.max(r, 0.001));
     this.planetMat.uniforms.uGain.value = this.gain;
+    // Gone behind a jump's tunnel: a dark disc would only block the streaks.
+    this.world.visible = this.gain > 0.02;
     // The point: bright while there is no disc, fading as the disc takes over.
     const pt = Math.max(0, 1 - deg / 2.2);
     this.point.visible = pt > 0;

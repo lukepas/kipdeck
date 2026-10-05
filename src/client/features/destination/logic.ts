@@ -25,10 +25,10 @@ export const SETTLE_MS = 30_000;
 export const AHEAD_ELEVATION = 15;
 /** How far off the bow it sits (degrees, east positive): in the clear pane left of the canopy's middle rib from the conn. */
 export const AHEAD_AZIMUTH = -9;
-/** Where the heading band sits (degrees): in the clear pane right of the middle rib, between the overhead strip and the canopy's eaves ring. */
-export const BAND_AT = { az: 9, el: 10.6 } as const;
-/** The band's widest (degrees across): the clear pane from the conn, so no rib ever cuts its words. */
-export const BAND_MAX_DEG = 14;
+/** Where the heading band sits (degrees): in the clear pane right of the middle rib, just over the canopy's eaves ring from the conn. */
+export const BAND_AT = { az: 8.5, el: 17 } as const;
+/** The band's widest (degrees across): inside the clear pane from the conn, so no rib ever cuts its words. */
+export const BAND_MAX_DEG = 12;
 /** How fast the world turns (revolutions a minute): slow enough to read as a world, never as a spinner. */
 export const SPIN_PER_MIN = 0.02;
 
