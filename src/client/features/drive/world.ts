@@ -2,14 +2,15 @@
 // A steel collar, cap and two rails, a shader core whose light runs up the column at the ship's cruise
 // speed inside a soft halo, twelve steel rings stacked round it, each lit ship-cyan as the run of
 // merges reaches it, and a thin white line etched at today's best run; and the fleet's eight-week
-// tally over the Services panel. Seven draws in all, on the bridge layer (the Overview never shows
+// tally over the Services panel; a merge sends a bright pulse up the core, and a plaque on the collar
+// says the run's count. Eight draws in all, on the bridge layer (the Overview never shows
 // them). No state's hue: ship-cyan, steel and white only.
 import * as THREE from 'three';
 import { AFT_CORE, TALLY } from '../../../shared/ritual-slots';
 import { DECK, matte } from '../../world/office/materials';
 import { mergeByMaterial } from '../../world/toon';
 import { onBridgeLayer } from '../bridge/shapes';
-import { CORE_RINGS } from './logic';
+import { CORE_RINGS, MERGE_PULSE } from './logic';
 
 const RING_R = AFT_CORE.r;
 const RING_TUBE = 0.06;
@@ -33,6 +34,8 @@ const coreFragment = /* glsl */ `
 uniform float uFlow;
 uniform float uGlow;
 uniform float uLit;
+uniform float uPulseY;
+uniform float uPulseK;
 uniform vec3 uColor;
 uniform vec3 uHot;
 varying vec2 vUv;
@@ -40,6 +43,9 @@ varying vec3 vNormalV;
 varying vec3 vViewDir;
 void main() {
   float y = vUv.y;
+  // A merge's pulse: a bright band climbing the column.
+  float pd = (y - uPulseY) / ${MERGE_PULSE.width.toFixed(3)};
+  float pulse = uPulseK * exp(-pd * pd);
   // Soft bands running up the column; the lit part (the run) is brighter than the rest above it.
   float bands = 0.5 + 0.5 * sin((y * 9.0 - uFlow) * 6.2831);
   bands = bands * bands;
@@ -47,8 +53,8 @@ void main() {
   float edge = clamp(dot(vNormalV, vViewDir), 0.0, 1.0);
   float body = 0.35 + 0.65 * edge;
   float k = uGlow * body * (0.45 + 0.55 * mix(0.35, 1.0, lit)) * (0.7 + 0.3 * bands);
-  vec3 col = mix(uColor, uHot, clamp(k * lit * 0.8, 0.0, 1.0));
-  gl_FragColor = vec4(col * k, 1.0);
+  vec3 col = mix(uColor, uHot, clamp(k * lit * 0.8 + pulse, 0.0, 1.0));
+  gl_FragColor = vec4(col * (k + 1.4 * pulse), 1.0);
 }`;
 
 /** The halo round the core: a soft column of light, faint at its edges, never covering what is behind it. */
@@ -74,8 +80,11 @@ export class CoreWorld {
   private readonly m = new THREE.Matrix4();
   private readonly c = new THREE.Color();
   private readonly ship = new THREE.Color(DECK.ship);
-  /** An unlit ring: the steel of the housing, a little darker. */
-  private readonly steel = new THREE.Color(DECK.steel).multiplyScalar(0.7);
+  /** An unlit ring: the steel of the housing, well darker, so lit and unlit read apart at a glance. */
+  private readonly steel = new THREE.Color(DECK.steel).multiplyScalar(0.38);
+  private readonly plaque: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+  private readonly plaqueCanvas = document.createElement('canvas');
+  private plaqueKey = '';
   private coreBottom = 0;
   private coreH = 1;
 
@@ -101,7 +110,7 @@ export class CoreWorld {
     const h = top - 0.2 - bottom;
     this.coreBottom = bottom;
     this.coreH = h;
-    const uniforms = { uFlow: { value: 0 }, uGlow: { value: 0.3 }, uLit: { value: 0 }, uColor: { value: new THREE.Color(DECK.ship) }, uHot: { value: new THREE.Color('#E6FAFF') } };
+    const uniforms = { uFlow: { value: 0 }, uGlow: { value: 0.3 }, uLit: { value: 0 }, uPulseY: { value: -1 }, uPulseK: { value: 0 }, uColor: { value: new THREE.Color(DECK.ship) }, uHot: { value: new THREE.Color('#E6FAFF') } };
     this.coreMat = new THREE.ShaderMaterial({ uniforms, vertexShader: coreVertex, fragmentShader: coreFragment, toneMapped: false });
     const core = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, h, 24, 1, true), this.coreMat);
     core.position.set(x, bottom + h / 2, z);
@@ -134,13 +143,57 @@ export class CoreWorld {
     this.best = new THREE.Mesh(new THREE.TorusGeometry(RING_R + 0.13, 0.012, 6, 64).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#F4F8FB', transparent: true, opacity: 0.85, toneMapped: false }));
     this.best.visible = false;
     this.group.add(this.best);
+    // The run's count on the collar, facing the bow: "RUN 4 / BEST 6" in ship-cyan and white mono.
+    this.plaqueCanvas.width = 512;
+    this.plaqueCanvas.height = 160;
+    const ptex = new THREE.CanvasTexture(this.plaqueCanvas);
+    ptex.colorSpace = THREE.SRGBColorSpace;
+    ptex.anisotropy = 4;
+    this.plaque = new THREE.Mesh(new THREE.PlaneGeometry(0.96, 0.3), new THREE.MeshBasicMaterial({ map: ptex, toneMapped: false }));
+    this.plaque.position.set(x, base + 0.62, z - RING_R - 0.34);
+    this.plaque.rotation.y = Math.PI;
+    this.group.add(this.plaque);
+
     onBridgeLayer(this.group);
     this.group.name = 'drive-core';
   }
 
+  /** Paints the run's count on the collar's plaque. */
+  count(lines: readonly string[]) {
+    const key = lines.join('|');
+    if (key === this.plaqueKey) return;
+    this.plaqueKey = key;
+    const g = this.plaqueCanvas.getContext('2d')!;
+    const { width: W, height: H } = this.plaqueCanvas;
+    g.fillStyle = DECK.instrument;
+    g.fillRect(0, 0, W, H);
+    g.fillStyle = DECK.shipDim;
+    g.fillRect(0, 0, W, 3);
+    g.fillRect(0, H - 3, W, 3);
+    g.textBaseline = 'middle';
+    g.textAlign = 'center';
+    g.letterSpacing = '6px';
+    g.font = '600 64px "JetBrains Mono", ui-monospace, monospace';
+    g.fillStyle = DECK.ship;
+    g.fillText(lines[0] ?? '', lines[1] ? W * 0.3 : W / 2, H / 2 + 2);
+    if (lines[1]) {
+      g.font = '500 40px "JetBrains Mono", ui-monospace, monospace';
+      g.fillStyle = '#F4F8FB';
+      g.fillText(lines[1], W * 0.74, H / 2 + 2);
+    }
+    g.letterSpacing = '0px';
+    (this.plaque.material.map as THREE.CanvasTexture).needsUpdate = true;
+  }
+
+  /** A merge's pulse climbing the column: where (0-1 of its height) and how bright. */
+  pulse(y: number, k: number) {
+    this.coreMat.uniforms.uPulseY.value = y;
+    this.coreMat.uniforms.uPulseK.value = k;
+  }
+
   /** Each ring's light (0-1, lowest first). */
   rings(levels: readonly number[]) {
-    for (let i = 0; i < levels.length; i++) this.lit.setColorAt(i, this.c.copy(this.steel).lerp(this.ship, Math.min(1, levels[i])).multiplyScalar(1 + 0.6 * levels[i]));
+    for (let i = 0; i < levels.length; i++) this.lit.setColorAt(i, this.c.copy(this.steel).lerp(this.ship, Math.min(1, levels[i])).multiplyScalar(1 + 1.1 * levels[i]));
     if (this.lit.instanceColor) this.lit.instanceColor.needsUpdate = true;
   }
 

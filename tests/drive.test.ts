@@ -117,3 +117,19 @@ test('the record fires once a week, and never on the first look at a deck', () =
   assert.equal(v.check(3, 2, NOW + 7 * D), false, 'a new week is a first look again');
   assert.equal(v.check(4, 2, NOW + 7 * D), false);
 });
+
+test("a merge's pulse climbs the column once, and the plaque says the run", async () => {
+  const { MERGE_PULSE, mergePulse, runPlaque } = await import('../src/client/features/drive/logic.js');
+  assert.deepEqual(mergePulse(-1, 1), { y: -1, k: 0 });
+  assert.deepEqual(mergePulse(100, 0), { y: -1, k: 0 }, 'none with motion off');
+  assert.deepEqual(mergePulse(MERGE_PULSE.ms, 1), { y: -1, k: 0 });
+  let y = -1;
+  for (let ms = 0; ms < MERGE_PULSE.ms; ms += 50) {
+    const p = mergePulse(ms, 1);
+    assert.ok(p.y >= y, 'it only climbs');
+    assert.ok(p.k >= 0 && p.k <= 1);
+    y = p.y;
+  }
+  assert.deepEqual(runPlaque(4, 6), ['RUN 4', 'BEST 6']);
+  assert.deepEqual(runPlaque(1, 1), ['RUN 1']);
+});

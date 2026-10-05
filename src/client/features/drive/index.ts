@@ -4,7 +4,9 @@
  * revert and no pull request closed unmerged between them). Today's best run is a thin white line on
  * the column. The core breathes once every 8 s, glows brighter with every ring lit, and its light runs
  * up the column at the ship's cruise speed, so the speed space already moves at is readable on board.
- * A broken run lets its top ring go dim over 4 s and the count starts again: no flash, no sound.
+ * A merge sends a bright band up the column to the ring it lights, and a plaque on the collar facing
+ * the bow says the count ("RUN 4", "BEST 6"). A broken run lets its top ring go dim over 4 s and the
+ * count starts again: no flash, no sound.
  *
  * The ticker over the overhead strip carries the fleet's week ("FLEET LOG: 12 MERGES, 14 ISSUES THIS
  * WEEK - RECORD 15"), and an eight-week tally hangs over the Services panel. Passing the record fires
@@ -22,7 +24,7 @@ import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { store } from '../../state';
 import { debugHandle } from '../giveway';
-import { coreGlow, corePulse, flowRate, litRings, ringLevels, RecordWatch } from './logic';
+import { coreGlow, corePulse, flowRate, litRings, mergePulse, ringLevels, runPlaque, RecordWatch } from './logic';
 import { CoreWorld, TallyPlaque } from './world';
 
 /** The kinds of event that move the pace: ask the server again when one lands on this deck. */
@@ -93,6 +95,7 @@ export function installDrive(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' | 
     if (!p) return;
     tally.paint(p.weeks, p.record);
     core.bestAt(p.best);
+    core.count(runPlaque(p.run, p.best));
     const next = litRings(p.run);
     if (next < lit) broke = { was: lit, at: clock };
     if (next > lit) {
@@ -128,6 +131,9 @@ export function installDrive(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' | 
     // The ambient part of the glow gives way with the rest of life; the rings' own light does not.
     const ambient = 0.6 + 0.4 * parts.giveWay.gain();
     core.light(coreGlow(lit) * ambient * corePulse(clock, motion, kick), lit, flow);
+    // A merge: a bright band climbs the column to the ring it lit.
+    const mp = mergePulse(clock - risenAt, motion);
+    core.pulse(mp.y, mp.k);
   });
 
   const drive: Drive = {

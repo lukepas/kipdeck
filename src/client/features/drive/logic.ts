@@ -77,3 +77,23 @@ export class RecordWatch {
     return !first;
   }
 }
+
+/** A merge's pulse up the column: how long it takes to climb (ms), and how wide its band is (of the column). */
+export const MERGE_PULSE = { ms: 1400, width: 0.09 } as const;
+
+/**
+ * Where a merge's pulse is `ms` after the merge: a bright band climbing the column from its foot to its
+ * top (y, 0-1 of the core's height) and how bright (0-1), easing out as it reaches the top; none
+ * outside it or with motion off (the ring itself still comes up).
+ */
+export function mergePulse(ms: number, motion: number): { y: number; k: number } {
+  if (motion <= 0 || !(ms >= 0) || ms >= MERGE_PULSE.ms) return { y: -1, k: 0 };
+  const t = ms / MERGE_PULSE.ms;
+  const y = 1 - (1 - t) * (1 - t);
+  return { y: y * 1.05, k: Math.min(1, t * 6) * (1 - t * t) };
+}
+
+/** The run's count on the core's plaque: "RUN 4", and today's best beside it once it is two or more. */
+export function runPlaque(run: number, best: number): string[] {
+  return best >= 2 ? [`RUN ${run}`, `BEST ${best}`] : [`RUN ${run}`];
+}
