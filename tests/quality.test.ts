@@ -1,10 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { StepDown } from '../src/client/framerate.js';
 import { TIERS, TIER_LOOKS, autoTier, least, lower, tierOf } from '../src/client/features/quality/tiers.js';
 
 // Settings > Bridge > Quality (features/quality): which tier Auto starts from on which graphics, what
-// each tier draws, and when Auto steps down (StepDown in framerate.ts).
+// each tier draws. When Auto steps is tests/quality-governor.test.ts.
 
 test('Auto starts high on Apple silicon and discrete GPUs, in the middle on integrated ones, low in software', () => {
   const cases: [string, string][] = [
@@ -48,46 +47,4 @@ test('each tier draws no more than the one above it', () => {
   assert.equal(TIER_LOOKS.low.bloom, null);
   assert.equal(TIER_LOOKS.high.shadow.everyMs, 0);
   assert.equal(TIER_LOOKS.low.shadow.everyMs, null);
-});
-
-/** Frames `dt` ms apart from `from` for `ms`, the gaps from `gap(i)` if given; how many times it said step down, and when it ended. */
-function run(s: StepDown, from: number, ms: number, gap: (i: number) => number): { steps: number; at: number } {
-  let steps = 0;
-  let at = from;
-  for (let i = 0; at < from + ms; i++) {
-    const dt = gap(i);
-    at += dt;
-    if (s.frame(at, dt)) steps++;
-  }
-  return { steps, at };
-}
-
-test('smooth frames, or a few hitches among them, never step down', () => {
-  assert.equal(run(new StepDown(), 0, 120_000, () => 1000 / 60).steps, 0);
-  assert.equal(run(new StepDown(), 0, 120_000, (i) => (i % 40 === 0 ? 34 : 16.7)).steps, 0);
-  assert.equal(run(new StepDown(), 0, 120_000, () => 1000 / 120).steps, 0);
-});
-
-test('frames missing vsync through five seconds step down once the office has warmed up', () => {
-  const s = new StepDown();
-  // Loading: slow, but it doesn't count.
-  assert.equal(run(s, 0, 7_900, () => 33).steps, 0);
-  // Every third frame misses its vsync: the 95th percentile is 33 ms.
-  const { steps } = run(s, 8_000, 5_300, (i) => (i % 3 === 0 ? 33.3 : 16.7));
-  assert.equal(steps, 1);
-});
-
-test('after a step the next tier settles before it is judged, and a hidden tab starts the span over', () => {
-  const s = new StepDown();
-  let { at } = run(s, 0, 8_000, () => 16.7);
-  const first = run(s, at, 5_200, () => 33.3);
-  assert.equal(first.steps, 1);
-  // Three seconds of settling, then a whole span again before the next.
-  const settle = run(s, first.at, 3_000, () => 33.3);
-  assert.equal(settle.steps, 0);
-  at = settle.at;
-  // A gap of a minute (the tab was hidden) in the middle of slow frames: the span starts over after it.
-  const half = run(s, at, 3_000, () => 33.3);
-  assert.equal(s.frame(half.at + 60_000, 60_000), false);
-  assert.equal(run(s, half.at + 60_000, 4_000, () => 33.3).steps, 0);
 });
