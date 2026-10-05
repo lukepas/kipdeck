@@ -155,3 +155,21 @@ export function flybyAt(ms: number): number {
  * only (the drives are the ship's own cyan, the beacon the deck's needs-you diamond on instrument black).
  */
 export const HULL_COLORS = { plate: '#4A5563', seam: '#2E3744', port: '#D8EEF6', run: '#E8ECEF' } as const;
+
+/**
+ * A merge on this deck (features/cinema frames it): the nearest escort on the Pull requests board's side
+ * comes alongside, easing in high in the canopy's glass over that board as seen from the conn, holds
+ * there a moment and drops back to its slot. Where it comes to (m, x for the starboard side; the port
+ * side mirrors it), and how long each part takes (ms).
+ */
+export const ALONGSIDE = { x: 12, y: 16, z: -28, inMs: 1100, holdMs: 2400, outMs: 2600 } as const;
+export const ALONGSIDE_MS = ALONGSIDE.inMs + ALONGSIDE.holdMs + ALONGSIDE.outMs;
+
+/** How far from its slot toward the place alongside an escort is `ms` after a merge here (0-1). */
+export function alongsideAt(ms: number): number {
+  const { inMs, holdMs, outMs } = ALONGSIDE;
+  if (ms <= 0 || ms >= ALONGSIDE_MS) return 0;
+  if (ms < inMs) return smooth(ms / inMs);
+  if (ms < inMs + holdMs) return 1;
+  return 1 - smooth((ms - inMs - holdMs) / outMs);
+}

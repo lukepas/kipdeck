@@ -5,7 +5,9 @@
  * its repository's name on its flank, and a slow bob (6 to 12 s). What happens on that deck shows:
  * a merge eases its ship a length ahead before it drifts back; a waypoint reached blinks its running
  * lights twice (a salute) and puts a hail line in the canopy's corner for 6 s; a deck being cloned is
- * assembled in a slip, plate by plate, and drops out of hyperspace into its slot once it's done. A deck
+ * assembled in a slip, plate by plate, and drops out of hyperspace into its slot once it's done. A merge
+ * on this deck brings the first starboard escort alongside, over the forward glass past the Pull requests
+ * board, for a few seconds (the cinema frames the two together, features/cinema). A deck
  * with a unit that needs you carries the deck's own needs-you diamond over its bridge, and clicking its
  * ship opens the Decks lift. With one deck in the office, one escort holds station captioned "ADD A
  * DECK TO GROW THE FLEET". Eight ships at most; the rest are counted on the hail strip.
@@ -25,7 +27,7 @@ import { DECK, VIEWPORT_GLASS } from '../../world/office/materials';
 import { debugHandle } from '../giveway';
 import { HailStrip } from './hail';
 import { BRIDGE_AT, DRIVES, NAME_AT, NameAtlas, beaconTexture, hullGeometry, hullMaterial, nameMaterial, plumeTexture } from './hulls';
-import { DROP_FROM, FLYBY, HAIL_MS, HULL, HULL_CLASSES, MAX_SHIPS, SLIP, SURGE_GAP_MS, aheadAt, bobAt, built, dropAt, flybyAt, leaveAt, formation, hullClass, litPorts, saluteAt, slotFor, throttle, type HullClass } from './logic';
+import { ALONGSIDE, DROP_FROM, FLYBY, HAIL_MS, HULL, HULL_CLASSES, MAX_SHIPS, SLIP, SURGE_GAP_MS, aheadAt, alongsideAt, bobAt, built, dropAt, flybyAt, leaveAt, formation, hullClass, litPorts, saluteAt, slotFor, throttle, type HullClass } from './logic';
 
 /** One escort as the fleet keeps it between frames. */
 interface Ship {
@@ -55,6 +57,11 @@ export interface Fleet {
   rejoin(stagger: number): void;
   /** The mission complete (features/moments): a slow fly-by ahead of the bow and back. */
   flyBy(): void;
+  /**
+   * A merge here: the escort nearest the Pull requests board's side comes alongside for a moment
+   * (logic.ts ALONGSIDE). Which side it comes up on (1 starboard, -1 port), or 0 when none does.
+   */
+  alongside(): -1 | 0 | 1;
 }
 
 export function installFleet(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'travel' | 'stage'>): Fleet {
@@ -127,6 +134,8 @@ export function installFleet(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'travel' |
   let shown: FloorInfo[] = [];
   let lone = false;
   let clock = 0;
+  /** The escort coming alongside for a merge here, and when it set off. */
+  let along: { id: string; at: number } | null = null;
   /** The fleet's own clock for its bob: it stops while it holds still. */
   let bobT = 0;
   const m4 = new THREE.Matrix4();
@@ -221,6 +230,10 @@ export function installFleet(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'travel' |
         }
         // Not yet its turn to drop back in.
         if (clock < ship.droppedAt) stretch = 0;
+      }
+      if (along?.id === id) {
+        const k = alongsideAt(clock - along.at);
+        if (k > 0) p.lerp(v.set(slot.side * ALONGSIDE.x, ALONGSIDE.y, ALONGSIDE.z), k);
       }
       const bob = bobAt(bobT, id);
       p.y += bob.y;
@@ -332,6 +345,15 @@ export function installFleet(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'travel' |
     flyBy: () => {
       let i = 0;
       for (const id of order()) ships.get(id)!.flybyAt = clock + FLYBY.stagger * i++;
+    },
+    alongside: () => {
+      if (!quietOk('ambient') || !parts.giveWay.wants('fleet')) return 0;
+      // The first starboard slot (odd), else the first: the lone escort when there are no sisters.
+      const ids = lone ? ['lone'] : shown.map((fl) => fl.id);
+      const i = ids.length > 1 ? 1 : 0;
+      if (!ids[i]) return 0;
+      along = { id: ids[i], at: clock };
+      return slotFor(i, ids[i]).side;
     },
   };
   debugHandle('fleet', fleet);
