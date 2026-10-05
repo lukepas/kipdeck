@@ -33,6 +33,8 @@ export interface Vesper {
    * mode Settings asks for, or null with the voice off or while something needs the captain.
    */
   line(kind: VoiceKind, c: VoiceContext, seed: string): string | null;
+  /** Says the line for `kind` when the gate lets it (the pit wall's good day): never while someone waits, at most one line in 90 s. */
+  say(kind: VoiceKind, c: VoiceContext, seed: string): void;
   /** What it last said, and when (the shots and the console). */
   last(): { text: string; at: number } | null;
 }
@@ -186,6 +188,11 @@ export function installVesper(ctx: Ctx, parts: Pick<Parts, 'giveWay'>): Vesper {
     line(kind, c, seed) {
       if (gate.silent) return null;
       return lineFor(kind, c, seed)?.text ?? null;
+    },
+    say(kind, c, seed) {
+      if (gate.silent || parts.giveWay.attention()) return;
+      const line = lineFor(kind, c, seed);
+      if (line) offer(line);
     },
     last: () => said,
   };

@@ -1,0 +1,8 @@
+/* The captain's bar (features/turnaround): today's reviews cleared and units recovered, in small mono at
+   the top bar's corner, before the dock. Neutral: it is a count, not a state. Hidden on narrow screens. */
+.topbar .captains-bar {
+  font: 500 12px/1 var(--font-mono); color: var(--muted); letter-spacing: .02em; white-space: nowrap;
+  padding: 6px 10px; margin-right: 6px; border: 1px solid var(--line); border-radius: var(--radius);
+}
+.topbar .captains-bar[hidden] { display: none; }
+@media (max-width: 1180px) { .topbar .captains-bar { display: none; } }

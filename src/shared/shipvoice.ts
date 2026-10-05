@@ -14,7 +14,7 @@ import type { TimelineEvent } from './protocol.js';
 export type VoiceStyle = 'on' | 'plain';
 
 /** What VESPER can speak about. Each is a real event or a real stretch of state, never a timer. */
-export type VoiceKind = 'merged' | 'milestone-done' | 'mission' | 'bounty-paid' | 'merge-attested' | 'hired' | 'recovered' | 'all-clear' | 'quiet';
+export type VoiceKind = 'merged' | 'milestone-done' | 'mission' | 'bounty-paid' | 'merge-attested' | 'hired' | 'recovered' | 'all-clear' | 'quiet' | 'good-day';
 
 /** What is true around an event: every field is worked out from the timeline and the roster. */
 export interface VoiceContext {
@@ -53,7 +53,7 @@ export interface VoiceLine {
   weight: number;
 }
 
-const WEIGHT: Record<VoiceKind, number> = { 'milestone-done': 4, mission: 3, 'bounty-paid': 2, 'merge-attested': 2, merged: 1, hired: 1, recovered: 1, 'all-clear': 1, quiet: 0 };
+const WEIGHT: Record<VoiceKind, number> = { 'milestone-done': 4, mission: 3, 'bounty-paid': 2, 'merge-attested': 2, merged: 1, hired: 1, recovered: 1, 'all-clear': 1, quiet: 0, 'good-day': 0 };
 
 /** The merge counts worth a remark. */
 const MILESTONE_MERGES = new Set([5, 10, 25, 50, 100, 250]);
@@ -114,6 +114,7 @@ const WIT: Record<VoiceKind, [test: (c: VoiceContext) => boolean, lines: string[
   recovered: [[() => true, ['{unit} is back at work. I never doubted it. Much.', '{unit} is moving again. Crisis handled with minimal drama.', '{unit} is back on task. Thank you, Captain.']]],
   'all-clear': [[() => true, ['All clear. Nobody is waiting on you. Carry on, Captain.', 'Every unit is unblocked. I will go back to being clever now.', 'All clear on deck. That was quick work.']]],
   quiet: [[() => true, ['Nobody has needed you for {m} minutes. This is what good looks like.', '{m} minutes without a single call. The crew has this.', '{m} quiet minutes. The work is flowing and nobody is waiting.']]],
+  'good-day': [[() => true, ['Replies and reviews both quicker than the week. The crew noticed, even if they will not say so.', 'Turnaround is ahead of the seven-day pace today. I have logged it twice, for emphasis.', 'The pit wall is reading fast today. The units barely had time to wait.']]],
 };
 
 /** The plain lines: status only, for Ship's voice at Plain only (and under Silent running). */
@@ -127,6 +128,7 @@ const PLAIN: Record<VoiceKind, string> = {
   recovered: '{unit} is back at work.',
   'all-clear': 'All clear: nobody is waiting on you.',
   quiet: 'No calls for {m} minutes.',
+  'good-day': 'Replies and reviews are faster than the last seven days.',
 };
 
 const chevronWords = (n: number) => (n === 1 ? '1 chevron' : `${n} chevrons`);

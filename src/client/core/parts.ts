@@ -32,6 +32,7 @@ import type { installDroid } from '../features/droid';
 import type { installFleet } from '../features/fleet';
 import type { installAlert } from '../features/alert';
 import type { installDrive } from '../features/drive';
+import type { installTurnaround } from '../features/turnaround';
 import type { installTv } from '../features/tv';
 import type { installVoice } from '../features/voice';
 import type { installWaiting } from '../features/waiting';
@@ -121,4 +122,6 @@ export interface Parts {
   alert: Made<typeof installAlert>;
   /** The drive core: the run of merges, the fleet's week and its record (see features/drive). */
   drive: Made<typeof installDrive>;
+  /** The pit wall: the captain's turnaround clock in the Review bay (see features/turnaround). */
+  turnaround: Made<typeof installTurnaround>;
 }
