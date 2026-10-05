@@ -55,9 +55,10 @@ const WARM_AFTER = 30;
  * draws through the glow's target (linear, tone mapped at the end) and Day straight to the screen
  * (tone mapped in each shader), and every material has a program for each. Compiled cold, the first
  * switch held one frame for a quarter of a second; warmed here, in the background where the browser
- * can, a switch only retunes the lights.
+ * can, a switch only retunes the lights. Not at Low, where software rendering compiles slowly enough
+ * that the warming costs more than the one switch it saves.
  */
-function warmBothModes(ctx: Ctx) {
+function warmBothModes(ctx: Ctx, worth: () => boolean) {
   let wait = -1;
   const off = store.on('floor', () => {
     off();
@@ -67,6 +68,8 @@ function warmBothModes(ctx: Ctx) {
   ctx.ticks.add('pre', () => {
     if (wait < 0 || --wait > 0) return;
     wait = -1;
+    // Not at Low: software rendering compiles slowly enough that warming both ways costs more than the one switch it saves.
+    if (!worth()) return;
     const { renderer, scene, camera } = ctx;
     const was = renderer.getRenderTarget();
     // Both ways, whichever is showing: the one showing compiles to nothing new. compileAsync makes its
@@ -184,7 +187,7 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings' 
   apply(lightModeOf(parts.settings.lighting, light), parts.settings.brightness);
   // A tier picked or stepped down to: the glow on, off or at its size, and its targets at the new pixel ratio.
   parts.quality.on(() => glow());
-  warmBothModes(ctx);
+  warmBothModes(ctx, () => parts.quality.tier() !== 'low');
 
   const dim = (k: typeof dimBy) => {
     dimBy = k;
