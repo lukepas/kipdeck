@@ -232,8 +232,21 @@ async function motionAB([from, to]) {
   const mid = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
   const of = (key, side, stat) => runs[side].map((r) => r[key]?.[stat]).filter((v) => typeof v === 'number');
   // ANGLE on Metal answers timer queries with the time between them on the wall, frame pacing and all
-  // (tens of ms for a frame drawn in two): a GPU time longer than a 60 Hz frame is not believed.
-  const gpuTimer = runs.full[0].gpuTimer && of('gpu', 'full', 'p50').length > 0 && mid(of('gpu', 'full', 'p50')) < 1000 / 60;
+  // (8 to 20 ms for a frame drawn in two): a GPU time longer than the whole frame forced and waited
+  // for (draw and gl.finish, `forced`) is not believed.
+  const r = o.renderer;
+  const gl = r.getContext();
+  const forcedTimes = [];
+  for (let i = 0; i < 20; i++) {
+    const t0 = performance.now();
+    if (o.stage.draw) o.stage.draw(o.stage.view ?? o.camera);
+    else r.render(o.scene, o.camera);
+    gl.finish();
+    forcedTimes.push(performance.now() - t0);
+    await frame();
+  }
+  const forced = mid(forcedTimes);
+  const gpuTimer = runs.full[0].gpuTimer && of('gpu', 'full', 'p50').length > 0 && mid(of('gpu', 'full', 'p50')) <= forced * 1.5;
   const by = gpuTimer ? 'gpu' : 'cpu';
   const on = mid(of(by, 'full', 'p50'));
   const off = mid(of(by, 'off', 'p50'));
@@ -242,7 +255,7 @@ async function motionAB([from, to]) {
   const tier = o.quality.tier();
   const budget = o.quality.motionBudget();
   const cost = +Math.max(0, on - off).toFixed(3);
-  return { tier, by, onMs: on, offMs: off, cost, budget, withinBudget: cost <= budget, cpuOnMs: cpuOn, cpuOffMs: cpuOff, gpuOnMs: mid(of('gpu', 'full', 'p50')) ?? null, gpuOffMs: mid(of('gpu', 'off', 'p50')) ?? null, runs: runs.full.map((r, i) => [r.cpu?.p50, runs.off[i].cpu?.p50]) };
+  return { tier, by, forcedMs: +forced.toFixed(2), onMs: on, offMs: off, cost, budget, withinBudget: cost <= budget, cpuOnMs: cpuOn, cpuOffMs: cpuOff, gpuOnMs: mid(of('gpu', 'full', 'p50')) ?? null, gpuOffMs: mid(of('gpu', 'off', 'p50')) ?? null, runs: runs.full.map((r, i) => [r.cpu?.p50, runs.off[i].cpu?.p50]) };
 }
 
 /** Runs in the page: from `from` toward `to`, a forced render's time on every frame while `kind` (a jump's tunnel, or the start of watch's log) is up. */
