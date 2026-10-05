@@ -40,9 +40,11 @@ float ridged(vec3 p, int octaves) {
   return s;
 }
 void main() {
-  // Round a cylinder in u, so the texture wraps along the ship with no seam.
+  // Round a cylinder in u, so the texture wraps along the ship with no seam; up the sheet about as far
+  // in noise as along it, so on a sheet (a tile of 100 to 220 m along, 75 m up) the gas is not drawn
+  // out into streaks either way.
   float a = vUv.x * 6.2831853;
-  vec3 p = vec3(cos(a) * 1.6, sin(a) * 1.6, vUv.y * 1.6) + uSeed;
+  vec3 p = vec3(cos(a) * 1.6, sin(a) * 1.6, vUv.y * 5.0) + uSeed;
   vec3 w = vec3(fbm(p, 4), fbm(p + 5.2, 4), fbm(p + 9.1, 4));
   float n = fbm(p * 1.8 + w * 2.5, 5);
   float gas = smoothstep(0.42, 0.78, n);

@@ -119,7 +119,7 @@ void main() {
     float mu = max(dot(n, -rd), 0.0);
     // Darker at the limb, and the atmosphere's scattering in a rim of its own colour on the lit side.
     float rim = pow(clamp(1.0 - mu, 0.0, 1.0), 3.0);
-    col = alb * 1.7 * lit * shade * (0.6 + 0.4 * mu);
+    col = alb * 2.2 * lit * shade * (0.6 + 0.4 * mu);
     col += uAtmo * rim * smoothstep(-0.25, 0.45, ndl) * 0.55 * uRim;
     // The night side: faint, with its rim still catching the atmosphere's scattered light.
     col += alb * 0.035 + uAtmo * rim * 0.06 * uRim;

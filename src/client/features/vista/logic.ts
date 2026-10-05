@@ -27,10 +27,10 @@ export interface DustLayer {
 }
 
 export const DUST_LAYERS: readonly DustLayer[] = [
-  { at: 92, speed: 2.5, tile: 260, gain: 1.0, dust: 0.45 },
-  { at: 72, speed: 4.5, tile: 190, gain: 0.8, dust: 0.5 },
-  { at: 54, speed: 7.5, tile: 140, gain: 0.65, dust: 0.55 },
-  { at: 38, speed: 12, tile: 100, gain: 0.5, dust: 0.6 },
+  { at: 92, speed: 2.5, tile: 220, gain: 1.0, dust: 0.3 },
+  { at: 72, speed: 4.5, tile: 170, gain: 0.8, dust: 0.35 },
+  { at: 54, speed: 7.5, tile: 130, gain: 0.65, dust: 0.4 },
+  { at: 38, speed: 12, tile: 100, gain: 0.5, dust: 0.45 },
 ];
 
 /** How far the sheets reach fore and aft of the ship's middle, and down and up from the deck (m). */
