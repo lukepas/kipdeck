@@ -28,6 +28,7 @@ export const routes: readonly Route[] = [
   authRoutes.link,
   // Commands on this computer with the office's local key (mergeline open, attach).
   localRoutes.link,
+  localRoutes.attach,
   authRoutes.logout,
   authRoutes.password,
   pageRoutes.health,
