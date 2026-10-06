@@ -60,10 +60,13 @@ export function segmentDistance(a: P2, b: P2, c: P2): number {
   return Math.hypot(a.x + dx * t - c.x, a.z + dz * t - c.z);
 }
 
-/** From a to b on the deck, round the table on the `ring` the short way when the line would cross it. */
-function aroundTable(a: P2, b: P2): P2[] {
+/**
+ * From a to b on the deck, round the table on `ring` the short way when the line would come nearer its
+ * middle than `clear`. Bolt keeps to its own ring; the bridge mascot (features/mascot) walks the pit lane.
+ */
+export function aroundTable(a: P2, b: P2, ring: number = DROID.ring, clear: number = DROID.clear): P2[] {
   const c = MISSION_TABLE;
-  if (segmentDistance(a, b, c) >= DROID.clear) return [b];
+  if (segmentDistance(a, b, c) >= clear) return [b];
   const a0 = Math.atan2(a.z - c.z, a.x - c.x);
   let d = Math.atan2(b.z - c.z, b.x - c.x) - a0;
   while (d > Math.PI) d -= 2 * Math.PI;
@@ -72,7 +75,7 @@ function aroundTable(a: P2, b: P2): P2[] {
   const out: P2[] = [];
   for (let i = 0; i <= steps; i++) {
     const t = a0 + (d * i) / steps;
-    out.push({ x: c.x + Math.cos(t) * DROID.ring, z: c.z + Math.sin(t) * DROID.ring });
+    out.push({ x: c.x + Math.cos(t) * ring, z: c.z + Math.sin(t) * ring });
   }
   out.push(b);
   return out;
