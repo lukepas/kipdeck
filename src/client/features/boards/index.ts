@@ -142,10 +142,19 @@ export function installBoards(ctx: Ctx, deps: BoardsDeps) {
   const machineTex = new MachineTexture();
   mountBoard(office.machineScreen, machineTex.texture, () => machineTex.render(store.machine), ['machine']);
   // The meeting room: its output as it's written on the back wall, and how it's going on the door.
+  // While it's free, both list what waits for review on this deck (its times move by the minute).
+  const bay = () => ({ state: store.meeting, inbox: store.inbox(), floor: store.floor });
   const meetingBoardTex = new MeetingBoardTexture();
-  mountBoard(office.meetingBoard, meetingBoardTex.texture, () => meetingBoardTex.render(store.meeting), ['meeting']);
+  const renderBayBoard = () => meetingBoardTex.render(bay());
+  mountBoard(office.meetingBoard, meetingBoardTex.texture, renderBayBoard, ['meeting', 'roster', 'bounties', 'floor']);
   const meetingSignTex = new MeetingSignTexture();
-  mountBoard(office.meetingSign, meetingSignTex.texture, () => meetingSignTex.render(store.meeting), ['meeting']);
+  const renderBaySign = () => meetingSignTex.render(bay());
+  mountBoard(office.meetingSign, meetingSignTex.texture, renderBaySign, ['meeting', 'roster', 'bounties', 'floor']);
+  window.setInterval(() => {
+    if (document.hidden) return;
+    renderBayBoard();
+    renderBaySign();
+  }, 60_000);
   /** Puts every board's texture up on `w`'s boards. */
   function dressBoards(w: World) {
     showOn(w.boardMeshes.issues, issuesTex.texture);
