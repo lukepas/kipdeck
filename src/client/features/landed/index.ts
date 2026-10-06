@@ -43,7 +43,7 @@ export function installLanded(ctx: Ctx, deps: LandedDeps) {
   ctx.messages.on('landed', (msg) => {
     const pull = msg.pr === undefined ? undefined : store.pulls.items.find((p) => p.number === msg.pr);
     const text = landedText(msg.kind, msg.pr, msg.by, pull?.title);
-    deps.notifier.landed(`${store.currentFloor()?.name ?? 'UGC Army'}: ${text.title}`, text.body);
+    deps.notifier.landed(`${store.currentFloor()?.name ?? 'Mergeline'}: ${text.title}`, text.body);
     // The queue's own toast already says so (the office sends it with this).
     if (msg.kind !== 'merged') return;
     const note: MergeNote = { pr: msg.pr, by: msg.by };

@@ -131,7 +131,7 @@ export function installArrival(ctx: Ctx, core: CoreState, parts: ArrivalParts) {
     const u = store.upgrade;
     const banner = $('upgrade-banner');
     banner.classList.toggle('hidden', u.phase !== 'building');
-    banner.textContent = `${u.by ?? 'Someone'} is upgrading UGC Army. It restarts on the new version in a minute or two.`;
+    banner.textContent = `${u.by ?? 'Someone'} is upgrading Mergeline. It restarts on the new version in a minute or two.`;
   }
   store.on('upgrade', renderUpgrade);
   ctx.messages.on('upgrade', (msg) => {

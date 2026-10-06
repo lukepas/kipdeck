@@ -75,16 +75,16 @@ export interface RTCIceServerLike {
   credential?: string;
 }
 
-const HELP = `ugc-army - UGC Army: the inbox for your ${AGENT_PROVIDERS.filter((p) => p !== 'custom').map((p) => PROVIDER_META[p].name).join(' / ')} agents.
+const HELP = `mergeline - the inbox for your ${AGENT_PROVIDERS.filter((p) => p !== 'custom').map((p) => PROVIDER_META[p].name).join(' / ')} agents.
 (Built on agent-office, MIT. The agent-office command still works.)
 
 Usage:
-  agent-office [options]
-  agent-office [dir] [options]
-  agent-office setup [--projects <dir>] [--project <owner/repo>]...
-  agent-office prune [dir] [--dry-run] [--force]
-  agent-office accounts [list|invite|revoke|role|password] ...
-  agent-office tunnel [office@address | url]
+  mergeline [options]
+  mergeline [dir] [options]
+  mergeline setup [--projects <dir>] [--project <owner/repo>]...
+  mergeline prune [dir] [--dry-run] [--force]
+  mergeline accounts [list|invite|revoke|role|password] ...
+  mergeline tunnel [office@address | url]
 
 Runs the office. Every project is a floor of the building: open Floors,
 pick one of the repositories your \`gh\` login can see, and the office clones it
