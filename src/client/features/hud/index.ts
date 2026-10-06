@@ -155,7 +155,7 @@ export function installHud(ctx: Ctx, parts: HudParts) {
           hud.refresh();
         }
         player.setView(settings.view);
-        sound.setVolume(settings.volume, settings.muted);
+        sound.apply(settings);
         markMotion(settings.shipMotion);
       },
       editProfile,

@@ -104,13 +104,24 @@ export const HANDS_MODES = ['auto', 'on', 'off'] as const;
 export type HandsMode = (typeof HANDS_MODES)[number];
 /** Settings > Bridge > Start of watch (features/launch): the launch and the debrief, the debrief only, or neither. */
 export const WATCH_MODES = ['full', 'debrief', 'off'] as const;
+/**
+ * Settings > Sound & voice > Mixer (sound/mix.ts): each group of the deck's sound at its own level, 0-1,
+ * under the main volume. UI is clicks and windows, Alerts the state cues, Ship the deck's own effects
+ * (steps, the droid, the jump, a payout) and Ambience the hum of the bridge and the drive.
+ */
+export const SOUND_GROUPS = ['ui', 'alerts', 'ship', 'ambience'] as const;
+export type SoundGroup = (typeof SOUND_GROUPS)[number];
+export type SoundMix = Record<SoundGroup, number>;
+export const MIX_DEFAULTS: Readonly<SoundMix> = { ui: 0.7, alerts: 1, ship: 0.8, ambience: 0.55 };
 
 export interface Settings {
   view: ViewMode;
-  /** The sound cues' level, 0-1 (sound/alerts.ts). */
+  /** The deck's main volume, 0-1 (sound/core.ts). */
   volume: number;
-  /** Sound cues off: the default, until you turn them on in Settings. */
+  /** All of the deck's sound off (Shift+M), without losing the levels. Sound is on by default; it starts with your first click or key. */
   muted: boolean;
+  /** Settings > Sound & voice > Mixer: each group's level under the main volume. */
+  mix: SoundMix;
   /** Voice chat starts muted and V is held down to talk, instead of an open mic. */
   pushToTalk: boolean;
   /** Desktop notifications when a worker needs input or finishes while you're in another tab (once the browser allows them). */
@@ -235,12 +246,15 @@ export function rememberSpot(s: Spot) {
 }
 
 export function loadSettings(): Settings {
-  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', quality: 'auto', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { ...LIFE_PART_DEFAULTS }, voice: 'on', celebrations: 'full', alerts: { ...ALERT_DEFAULTS }, watch: 'full', momentum: true, turnaround: true, hands: 'auto' };
+  const s: Settings = { view: 'first', volume: 0.7, muted: false, mix: { ...MIX_DEFAULTS }, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', quality: 'auto', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { ...LIFE_PART_DEFAULTS }, voice: 'on', celebrations: 'full', alerts: { ...ALERT_DEFAULTS }, watch: 'full', momentum: true, turnaround: true, hands: 'auto' };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null');
     if (saved?.view === 'first' || saved?.view === 'third') s.view = saved.view;
     if (typeof saved?.volume === 'number' && Number.isFinite(saved.volume)) s.volume = Math.max(0, Math.min(1, saved.volume));
-    if (typeof saved?.muted === 'boolean') s.muted = saved.muted;
+    // Before the mixer, sound was off unless you turned it on, and that default was saved with the rest:
+    // a choice to mute only counts from settings saved with a mixer.
+    if (typeof saved?.muted === 'boolean' && saved?.mix) s.muted = saved.muted;
+    for (const g of SOUND_GROUPS) if (typeof saved?.mix?.[g] === 'number' && Number.isFinite(saved.mix[g])) s.mix[g] = Math.max(0, Math.min(1, saved.mix[g]));
     if (typeof saved?.pushToTalk === 'boolean') s.pushToTalk = saved.pushToTalk;
     if (typeof saved?.notify === 'boolean') s.notify = saved.notify;
     if (NEEDS_YOU_SOUNDS.includes(saved?.needsYouSound)) s.needsYouSound = saved.needsYouSound;

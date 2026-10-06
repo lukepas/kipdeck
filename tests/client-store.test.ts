@@ -160,7 +160,7 @@ test('what the browser remembers keeps its keys and shapes', () => {
   assert.deepEqual(state.lastSpot(), { floor: 'f1', name: 'F', x: 1, y: 2, z: 3, facing: 4 });
   assert.ok(storage.has('agent-office.spot'));
   const settings = state.loadSettings();
-  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: state.HUD_DEFAULTS, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', quality: 'auto', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { destination: true, fleet: true, sorties: true, epithets: true, droid: true }, voice: 'on', celebrations: 'full', alerts: { on: true, amberMin: 5, redMin: 10 }, watch: 'full', momentum: true, turnaround: true, hands: 'auto' });
+  assert.deepEqual(settings, { view: 'first', volume: 0.7, muted: false, mix: { ui: 0.7, alerts: 1, ship: 0.8, ambience: 0.55 }, pushToTalk: false, notify: true, needsYouSound: 'once', hud: state.HUD_DEFAULTS, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', quality: 'auto', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { destination: true, fleet: true, sorties: true, epithets: true, droid: true }, voice: 'on', celebrations: 'full', alerts: { on: true, amberMin: 5, redMin: 10 }, watch: 'full', momentum: true, turnaround: true, hands: 'auto' });
   // Mission control's last tab is one of its tabs.
   storage.set('agent-office.settings', JSON.stringify({ missionTab: 'goals', allFloors: true }));
   assert.deepEqual([state.loadSettings().missionTab, state.loadSettings().allFloors], ['goals', true]);
@@ -172,6 +172,12 @@ test('what the browser remembers keeps its keys and shapes', () => {
   state.saveSettings({ ...settings, volume: 2, view: 'third' });
   assert.equal(state.loadSettings().volume, 1);
   assert.equal(state.loadSettings().view, 'third');
+  // Sound is on by default: a mute saved before the mixer (when off was the default) is dropped; one
+  // saved with the mixer is kept, and each group's level is clamped to 0-1.
+  storage.set('agent-office.settings', JSON.stringify({ muted: true, volume: 0.5 }));
+  assert.equal(state.loadSettings().muted, false);
+  state.saveSettings({ ...settings, muted: true, mix: { ui: 2, alerts: -1, ship: 0.3, ambience: 'loud' as never } });
+  assert.deepEqual([state.loadSettings().muted, state.loadSettings().mix], [true, { ui: 1, alerts: 0, ship: 0.3, ambience: 0.55 }]);
   state.saveSettings({ ...settings, needsYouSound: 'remind' });
   assert.equal(state.loadSettings().needsYouSound, 'remind');
   // An alarm setting the office doesn't know goes back to how it starts.

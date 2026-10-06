@@ -18,7 +18,7 @@ export function makeMe(ctx: Ctx): Person {
 /** What you hear, as loud as your settings have it. */
 export function makeSound(settings: Settings): DeckSound {
   const sound = new DeckSound();
-  sound.setVolume(settings.volume, settings.muted);
+  sound.apply(settings);
   return sound;
 }
 
