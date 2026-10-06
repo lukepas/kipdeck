@@ -10,6 +10,7 @@
 import type { Ctx } from '../../core/context';
 import { store } from '../../state';
 import { proofTally } from '../../ui/counters';
+import { ledgerView } from './ledger';
 
 /** How long the vault's lid stays up after a release, and how long it takes to lift or settle (seconds). */
 const LID = { hold: 2.4, ease: 0.25 } as const;
@@ -32,8 +33,19 @@ export function installProofCorner(ctx: Ctx) {
     if (steps >= 0 && n > steps && !ctx.reduceMotion.matches) glowT = 0;
     steps = n;
     proof.setReputation(n);
+    paintLedger();
   }
-  for (const topic of ['bounties', 'reputation', 'floors'] as const) store.on(topic, render);
+  /** The ledger's tables, repainted only when what they say changes (its times move by the minute). */
+  let ledgerKey = '';
+  function paintLedger() {
+    const v = ledgerView(store.floor ? store.bounties?.[store.floor] : undefined, store.reputation);
+    const key = JSON.stringify(v);
+    if (key === ledgerKey) return;
+    ledgerKey = key;
+    proof.setLedger(v);
+  }
+  window.setInterval(() => !document.hidden && paintLedger(), 60_000);
+  for (const topic of ['bounties', 'reputation', 'floors', 'floor'] as const) store.on(topic, render);
   render();
 
   let since = Infinity;
