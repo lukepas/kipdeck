@@ -10,7 +10,7 @@ import { unitSign } from './unitsign';
 // The Changes window at a desk: the files a worker changed and their diff against the branch the
 // office was opened on, refreshed while the worker works, with commit / discard / open-a-PR.
 
-let current: { workerId: string; repo(): string | undefined; show(repo?: string): void; modal: Modal } | null = null;
+let current: { workerId: string; repo(): string | undefined; show(repo?: string): void; modal: Modal; docked: boolean } | null = null;
 const listeners = new Set<(msg: ServerMsg) => void>();
 
 /** Main feeds every server message through here so the open window can pick its own. */
@@ -111,8 +111,9 @@ function renderPreview(workerId: string, repo: string | undefined, f: ChangedFil
  * The Changes window for a worker. A worker across repositories (see WorkerInfo.repos) gets a tab per
  * repository, its own floor's first; `repo` opens on another floor's one.
  */
-export function openChanges(net: Net, workerId: string, onTerminal?: () => void, repo?: string) {
-  if (current?.workerId === workerId) return current.show(repo);
+/** With `dock`, it goes in that pane of the page instead of a window over it (the home page's Changes tab, see dom.ts dockModal). */
+export function openChanges(net: Net, workerId: string, onTerminal?: () => void, repo?: string, opts: { dock?: HTMLElement } = {}) {
+  if (current?.workerId === workerId && current.docked === !!opts.dock) return current.show(repo);
   const info = store.workers.get(workerId);
   if (!info) return;
   const previous = current;
@@ -392,6 +393,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
     }
   });
   const modal = openModal(el, {
+    dock: opts.dock,
     doing: `looking over ${info.name}'s changes`,
     onClose: () => {
       listeners.delete(onMsg);
@@ -400,7 +402,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
       if (current?.modal === modal) current = null;
     },
   });
-  current = { workerId, repo: () => repo, show, modal };
+  current = { workerId, repo: () => repo, show, modal, docked: !!opts.dock };
   previous?.modal.close();
   closeBtn.addEventListener('click', () => modal.close());
   if (repo && !info.repos?.some((r) => r.floor === repo)) repo = undefined;
@@ -409,5 +411,10 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
   renderFooter();
   renderEmpty();
   net.send({ t: 'changes.watch', workerId, repo });
-  setTimeout(() => el.focus(), 30);
+  if (!opts.dock) setTimeout(() => el.focus(), 30);
+}
+
+/** Closes the Changes window that's open, docked or not. */
+export function closeChanges() {
+  current?.modal.close();
 }
