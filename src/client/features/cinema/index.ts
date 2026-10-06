@@ -28,7 +28,7 @@ import { practical, DECK } from '../../world/office/materials';
 import { debugHandle } from '../giveway';
 import { ALONGSIDE } from '../fleet/logic';
 import { ArrivalPath } from './arrival';
-import { ARRIVAL_MS, GLITCH_MS, GRADE, MERGE_FRAME, ROLL_S, arrivalAt, arrivalWhy, breathStep, breathe, chaseAt, CHASE, glitchGap, glitchOn, jumpFrame, mergeFrame, shipRoll, type ArrivalWhy } from './logic';
+import { ARRIVAL_MS, GLITCH_MS, GRADE, MERGE_FRAME, ROLL_S, arrivalAt, arrivalWhy, breathStep, breathe, chaseAt, CHASE, glitchGap, glitchOn, jumpFrame, mergeFrame, overviewLook, shipRoll, type ArrivalWhy } from './logic';
 import { FX, holoLight, screenFace, trimChase } from './screens';
 import type { Grade } from './grade';
 import { FOCUS_NOW } from '../spotlight/focus';
@@ -300,7 +300,7 @@ export function installCinema(ctx: Ctx, parts: Pick<Parts, 'stage' | 'player' | 
         if (!grade) return;
         const mode = parts.lights.mode();
         grade.on(parts.quality.look().grade);
-        grade.look(GRADE[mode], bloom.glowing());
+        grade.look(parts.stage.view ? overviewLook(GRADE[mode]) : GRADE[mode], bloom.glowing());
         if (!still() && screensPinned === null) seed = (seed + 1) % 997;
         grade.frame(seed, bloom.size(), bloom.glowTexture());
       });

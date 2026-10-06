@@ -5,13 +5,23 @@ import { DAIS, TIERS, TIER_SPAN } from '../../shared/amphitheater';
 import { BOARDS, MACHINE_MONITOR, MISSION_TABLE, TV } from '../../shared/layout';
 
 /**
- * Where every trip up looks from (radians round from aft toward starboard): the starboard quarter, so
- * the dais and the tiers stand at the near left, the pit in the middle and the arc beyond, in section.
+ * Where every trip up looks from (radians round from aft toward starboard): a little off the axis on
+ * the starboard side, so the dais and the tiers are at the near side, the pit in the middle and the
+ * arc beyond it facing the camera at about 30 degrees, its boards read rather than seen edge on.
  */
-export const SIDE_YAW = (52 * Math.PI) / 180;
+export const SIDE_YAW = (30 * Math.PI) / 180;
 
-/** Where on the screen the framed things go (NDC, -1 to 1): clear of the rail (left), the bar (top), and in the upper two thirds. */
-export const FRAME_BOX = { left: -0.56, right: 0.92, bottom: -0.3, top: 0.84 } as const;
+/**
+ * How steeply the Overview looks down (radians): steep enough that the pit, the tiers and the dais read
+ * as a plan of rings, shallow enough that the arc's faces still turn toward the camera.
+ */
+export const OVERVIEW_PITCH = (48 * Math.PI) / 180;
+
+/**
+ * Where on the screen the framed things go (NDC, -1 to 1): clear of the rail (left), the bar (top) and
+ * the bottom bar, filling the frame (it used to keep to the upper two thirds and leave the rest empty floor).
+ */
+export const FRAME_BOX = { left: -0.56, right: 0.94, bottom: -0.74, top: 0.84 } as const;
 
 /** A point of the world, x east, y up, z aft. */
 export type P3 = readonly [number, number, number];

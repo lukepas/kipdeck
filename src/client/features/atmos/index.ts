@@ -110,7 +110,8 @@ export function installAtmos(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
 
     // The shafts and their dust.
     shaft.uniforms.uTime.value = clock * DRIFT.shafts;
-    shaft.uniforms.uLevel.value = shaftLevel(mode) * spectacle * gain.shafts;
+    // From the Overview a shaft is a pale band across the deck plan, over the units: a trace of it only.
+    shaft.uniforms.uLevel.value = shaftLevel(mode) * spectacle * gain.shafts * (parts.stage.view ? 0.15 : 1);
     shaft.uniforms.uColor.value.copy(shaftColor.set(SHAFT_COLOR[mode]));
     shaft.uniforms.uRes.value.copy(res);
     motes.uniforms.uTime.value = clock * DRIFT.motes;

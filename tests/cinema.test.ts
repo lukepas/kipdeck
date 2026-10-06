@@ -6,7 +6,7 @@ import { ARRIVAL_MS, BREATHE, GLITCH, GLITCH_MS, GRADE, JUMP_BEATS, JUMP_FRAME, 
 import { ARRIVAL_KEYS, ArrivalPath } from '../src/client/features/cinema/arrival.js';
 import { JUMP } from '../src/client/features/space/logic.js';
 import { AHEAD_AZIMUTH, AHEAD_ELEVATION } from '../src/client/features/destination/logic.js';
-import { FRAME_BOX, framePose, framedPoints } from '../src/client/core/overview-frame.js';
+import { FRAME_BOX, OVERVIEW_PITCH, SIDE_YAW, framePose, framedPoints, turned } from '../src/client/core/overview-frame.js';
 import { ALONGSIDE, ALONGSIDE_MS, alongsideAt } from '../src/client/features/fleet/logic.js';
 import { TIERS, TIER_LOOKS } from '../src/client/features/quality/tiers.js';
 import { DECK } from '../src/client/world/office/materials.js';
@@ -213,21 +213,36 @@ test('Quality: SMAA and the grade at High, FXAA and the grade at Medium, neither
   assert.deepEqual(TIERS.map((t) => TIER_LOOKS[t].character), [true, true, false]);
 });
 
-test("the Overview's framed pose fits every board and the holo table in the upper two thirds, clear of the rail and the bar", () => {
-  const pitch = 35 * DEG;
+test("the Overview's framed pose fits every board, the holo table and the dais in the frame, clear of the rail and the bars, and fills it", () => {
   for (const aspect of [1.6, 16 / 9, 4 / 3, 2.2]) {
     const pts = framedPoints();
-    const pose = framePose(pts, pitch, aspect, 16, 3.2);
+    const pose = framePose(pts, OVERVIEW_PITCH, aspect, 16, 3.2, SIDE_YAW);
     const h = 16 / pose.zoom;
     const w = h * aspect;
-    for (const [x, y, z] of pts) {
-      const u = (x - pose.x) / w;
-      const v = (y * Math.cos(pitch) - (z - pose.z) * Math.sin(pitch)) / h;
+    let v0 = Infinity;
+    let v1 = -Infinity;
+    let u0 = Infinity;
+    let u1 = -Infinity;
+    for (const p of pts) {
+      // Into the camera's frame: across (u) and up (v) the screen, from the target.
+      const { u: across, d } = turned(p, SIDE_YAW);
+      const t = turned([pose.x, 0, pose.z], SIDE_YAW);
+      const u = (across - t.u) / w;
+      const v = (p[1] * Math.cos(OVERVIEW_PITCH) - (d - t.d) * Math.sin(OVERVIEW_PITCH)) / h;
       assert.ok(u >= FRAME_BOX.left - 1e-9 && u <= FRAME_BOX.right + 1e-9, `u ${u} at ${aspect}`);
       assert.ok(v >= FRAME_BOX.bottom - 1e-9 && v <= FRAME_BOX.top + 1e-9, `v ${v} at ${aspect}`);
-      assert.ok(v >= -1 / 3);
+      v0 = Math.min(v0, v);
+      v1 = Math.max(v1, v);
+      u0 = Math.min(u0, u);
+      u1 = Math.max(u1, u);
     }
+    // Tight on the occupied deck: it fills the box one way or the other, never a band of it.
+    const fill = Math.max((v1 - v0) / (FRAME_BOX.top - FRAME_BOX.bottom), (u1 - u0) / (FRAME_BOX.right - FRAME_BOX.left));
+    assert.ok(fill > 0.97, `fills ${(fill * 100).toFixed(0)}% at ${aspect}`);
   }
+  // The arc faces the camera at about 30 degrees, not edge on, and the camera looks down steeply.
+  assert.ok(SIDE_YAW <= 35 * DEG && SIDE_YAW >= 20 * DEG);
+  assert.ok(OVERVIEW_PITCH >= 45 * DEG);
 });
 
 test('a merge here brings an escort alongside over the Pull requests board as the conn sees it, then back to its slot', () => {

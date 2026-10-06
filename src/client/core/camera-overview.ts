@@ -1,6 +1,6 @@
 /**
- * The Overview: an orthographic camera over the whole deck at 35 degrees, raised over its starboard
- * quarter so the dais, the tiers, the pit and the arc read in section; the demo shot and where
+ * The Overview: an orthographic camera over the whole deck at 48 degrees, a little off the axis on its
+ * starboard side so the dais, the tiers, the pit and the arc facing it read as one plan; the demo shot and where
  * "fly to unit" lands. G goes up into it and back down to Walk (first person, the default). In it, Q
  * and E turn the deck a quarter at a time (280 ms), W A S D or the arrows or a drag pan, the wheel
  * zooms, and Esc or G walks again. A window opened over it closes back to it, with no extra click.
@@ -11,10 +11,10 @@ import { FLOOR } from '../../shared/layout';
 import { h, modalOpen } from '../ui/dom';
 import type { Ctx } from './context';
 import type { Parts } from './parts';
-import { SIDE_YAW, framePose, framedPoints } from './overview-frame';
+import { OVERVIEW_PITCH, SIDE_YAW, framePose, framedPoints } from './overview-frame';
 
 /** How the camera looks down, how far back it stands, and how much of the deck fills the screen's height at zoom 1. */
-const PITCH = (35 * Math.PI) / 180;
+const PITCH = OVERVIEW_PITCH;
 const DIST = 80;
 const HALF_HEIGHT = 16;
 const ZOOM = { min: 0.75, max: 3.2, fly: 2 } as const;
