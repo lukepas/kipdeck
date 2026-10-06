@@ -171,7 +171,7 @@ parts.cards = installCarrying(ctx, {
   officeIsFull: parts.actions.officeIsFull,
   showMeeting: parts.meeting.showMeeting,
 });
-parts.seating = installSeating(ctx, { shares: () => parts.talk.currentShares(), watchShare: () => parts.talk.watchShare(), usable: () => parts.pointer.usable() });
+parts.seating = installSeating(ctx, { usable: () => parts.pointer.usable() });
 installLanded(ctx, { notifier: parts.notifier, ritual: () => parts.launch?.ritual() ?? null });
 installBounties(ctx, parts);
 installPods(ctx);

@@ -42,7 +42,7 @@ export interface OfficePlan {
   meeting: DeskDef[];
   /** Everywhere a worker can be, by id. */
   byId: Map<string, DeskDef>;
-  /** Where people can sit (the couch and the beanbags in the lounge). */
+  /** Where people can sit (the captain's chair and the forward lounge's seats). */
   seating: SeatDef[];
   seatingById: Map<string, SeatDef>;
   boards: Record<BoardKey, BoardDef>;

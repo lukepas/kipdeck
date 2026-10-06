@@ -47,7 +47,10 @@ test('a kiosk shows its idle agent again only once the hired one sent home has g
 });
 
 test('you can only sit in a place that is there', () => {
-  assert.ok(seatAt('couch:1'));
+  assert.ok(seatAt('conn:0'));
+  assert.ok(seatAt('view-1:0'));
   assert.equal(seatAt('roof-stool-1:0'), undefined, 'no bar stools any more');
-  assert.equal(seatAt('couch:9'), undefined, 'no such place on the couch');
+  assert.equal(seatAt('couch:1'), undefined, 'no operator bench any more');
+  assert.equal(seatAt('lounge-beanbag-1:0'), undefined, 'nor its stools');
+  assert.equal(seatAt('conn:1'), undefined, 'no such place in the chair');
 });

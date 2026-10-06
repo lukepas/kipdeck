@@ -7,7 +7,7 @@ import { stack } from '../stack';
 import { signs } from '../desksigns';
 import type { Collider, DeskView, Interactable, Office, OfficeHandles } from '../types';
 import { DECK, floorTexture, matteUnique, type Looks } from './materials';
-import { boards, lounge, machineMonitor, tv } from './room';
+import { boards, machineMonitor, tv } from './room';
 import { amphitheater } from '../../features/amphitheater/tiers';
 import { situationArc } from '../../features/amphitheater/arc';
 import { lamps } from '../../features/lights/rig';
@@ -73,7 +73,7 @@ function floorPlan() {
     beanbags,
     kiosks,
     // The situation arc hung north of the table (features/amphitheater), its work boards and its
-    // Attention board, and the operator bench facing that.
+    // Attention board.
     situationArc,
     boards,
     tv,
@@ -84,7 +84,6 @@ function floorPlan() {
     proofCorner,
     // The unit of the watch on the Proof corner's plinth (features/crew).
     watchPlinth,
-    lounge,
     // The viewing balcony at the bow behind the arc, its ladder and its seats (features/lounge).
     forwardLounge,
     conn,

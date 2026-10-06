@@ -70,7 +70,7 @@ test('every seat keeps its id', () => {
   );
   assert.deepEqual(
     SEATING.map((s) => s.id),
-    ['couch', 'lounge-beanbag-1', 'lounge-beanbag-2', 'conn', 'view-1', 'view-2', 'view-3'],
+    ['conn', 'view-1', 'view-2', 'view-3'],
   );
 });
 

@@ -66,7 +66,7 @@ function obstacles(wing: number): Obstacles {
   }
   // The mission table.
   circles.push([MISSION_TABLE.x, MISSION_TABLE.z, MISSION_TABLE.r]);
-  // The operator bench and its stools, facing the Attention board.
+  // Where people sit off the tiers (the captain's chair; the forward lounge's are up on its balcony).
   for (const seat of SEATING) {
     if (seat.places.length > 1) {
       const half = Math.max(...seat.places.map(Math.abs)) + 0.9;

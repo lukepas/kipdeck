@@ -5,7 +5,7 @@ Back to the [README](../README.md).
 | Key | Action |
 | --- | --- |
 | W A S D / arrows | Walk (hold Shift to run) |
-| Space | Jump (you can land on consoles and the operator bench) |
+| Space | Jump (you can land on consoles) |
 | Mouse drag / wheel | Orbit / zoom the camera |
 | G | The Overview: the whole deck from above, a little off the axis on the starboard side, so the dais, the tiers, the pit and the arc facing you read as one plan. In it, Q / E turn it a quarter, W A S D, the arrows or a drag pan, the wheel zooms, and G or Esc walks again (see [The deck](deck.md#walk-and-overview)) |
 | E | Interact: hire a worker, open its terminal, read a board, take an issue's note off the board, prompt a board agent, call a review in the Review bay, sketch on the planning board, read the docs at the docs rack, watch the Attention board, sit down (or get up), climb the forward lounge's ladder up or down, open the Floors window at the Deck lift, open the overflow bay past the lift for 2 more consoles (at the **Room to grow** sign) |

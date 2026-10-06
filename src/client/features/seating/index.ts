@@ -1,6 +1,6 @@
 /**
- * Sitting down: on a chair, a stool, the couch. Sitting there already, E gets you up, or
- * does what the seat's for (the TV from the couch).
+ * Sitting down: the captain's chair, a lounge seat. Sitting there already, E gets you up (a lounge
+ * seat's Esc too). A shared screen is watched with E at the Attention board itself (features/tv).
  */
 import { seatPlace, type SeatDef, type SeatPlace } from '../../../shared/layout';
 import { OFFICE_PLAN } from '../../../shared/plan';
@@ -18,10 +18,6 @@ declare module '../../world/types' {
 }
 
 export interface SeatingDeps {
-  /** The screens shared on this floor, by who's sharing them (see features/voice). */
-  shares(): [string, MediaStream][];
-  /** Watches what's on the TV full screen (see features/voice). */
-  watchShare(): void;
   /** What you can use where you are, and what's in the way of looking at it (see usable in input/pointer.ts). */
   usable(): (readonly Interactable[])[];
 }
@@ -45,19 +41,13 @@ export function installSeating(ctx: Ctx, deps: SeatingDeps) {
     return best;
   }
 
-  /** Someone else's screen is up on the TV. */
-  function tvShowing(): boolean {
-    return deps.shares().some(([who]) => who !== 'You');
-  }
-
-  /** E at a seat: sit down on it. Sitting there already, get up, or on the couch facing the TV, watch it. */
+  /** E at a seat: sit down on it. Sitting there already, get up. */
   function useSeat(seatId: string) {
     const seat = OFFICE_PLAN.seatingById.get(seatId);
     if (!seat) return;
     const player = ctx.player;
     if (player.seat?.seatId === seatId) {
-      if (seat.tv && tvShowing()) deps.watchShare();
-      else standUp();
+      standUp();
       return;
     }
     const place = freePlace(seat);
@@ -68,8 +58,6 @@ export function installSeating(ctx: Ctx, deps: SeatingDeps) {
     player.sit(place);
     ctx.me.sit(place.hips);
     ctx.net.send({ t: 'sit', seat: place.key });
-    // The couch in front of the TV is where you watch whoever's sharing.
-    if (seat.tv && tvShowing()) deps.watchShare();
   }
 
   function standUp() {
@@ -108,14 +96,12 @@ export function installSeating(ctx: Ctx, deps: SeatingDeps) {
       if (!seat) return { k: '', parts: [] };
       if (ctx.player.seat?.seatId === seat.id) {
         if (sat.id !== seat.id) sat = { id: seat.id, at: performance.now() };
-        const tv = !!seat.tv && tvShowing();
-        const use = tv ? 'Watch the TV' : '';
         // In the captain's chair the hint says where you are for 3 s, then only the key to get up: it
         // sat in the middle of the captain's frame the whole time.
         // A lounge seat (for the view out of the bow glass) steps back the same way, and Esc gets you up there too.
         const up = seat.view ? key('Esc', 'Stand up') : key('E', 'Get up');
-        if ((seat.id === 'conn' || seat.view) && !use && performance.now() - sat.at > 3000) return { k: `${seat.id}|sitting|quiet`, parts: [up] };
-        return { k: `${seat.id}|sitting|${tv}`, parts: [hintTitle(seat.label), aside('sitting'), ...(use ? [key('E', use), key('W A S D', 'Get up')] : [up])] };
+        if ((seat.id === 'conn' || seat.view) && performance.now() - sat.at > 3000) return { k: `${seat.id}|sitting|quiet`, parts: [up] };
+        return { k: `${seat.id}|sitting`, parts: [hintTitle(seat.label), aside('sitting'), up] };
       }
       sat = { id: '', at: 0 };
       const full = !freePlace(seat);

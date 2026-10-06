@@ -27,7 +27,7 @@ export interface PeerInfo {
   voice: boolean;
   muted: boolean;
   sharing: boolean;
-  /** Sitting down: the place they're in (see seatAt in layout), like "couch:1". */
+  /** Sitting down: the place they're in (see seatAt in layout), like "conn:0". */
   seat?: string;
   /** An issue card they took off the issues board, on its way to a desk or the queue. */
   carrying?: CarriedIssue;
@@ -78,7 +78,7 @@ export type PresenceClientMsg =
    * You reached out to use something; everyone else sees your character's arm do it.
    */
   | { t: 'act' }
-  /** You sat down in a place on a couch, a beanbag, a chair or the bench (see seatAt in layout), or got up again (no seat). */
+  /** You sat down in a place on a seat: the captain's chair, a lounge seat (see seatAt in layout), or got up again (no seat). */
   | { t: 'sit'; seat?: string }
   /** You picked an issue card up off the board (or put it down again, no issue): everyone sees it in your hands. */
   | { t: 'carry'; issue?: number; title?: string }

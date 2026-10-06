@@ -6,6 +6,7 @@ import type { Ctx } from '../../core/context';
 import { store } from '../../state';
 import { $, h, openModal, toast } from '../../ui/dom';
 import { icon } from '../../ui/icons';
+import { onTv, tvAction } from '../tv/share';
 
 export interface VoiceDeps {
   /** The office TV, which shows a screen someone's sharing (see features/tv). */
@@ -70,7 +71,7 @@ export function installVoice(ctx: Ctx, deps: VoiceDeps) {
   function refreshShares() {
     const shares = currentShares();
     // Remote shares win the TV; your own share is what others see anyway.
-    const pick = shares.find(([who]) => who !== 'You') ?? shares[0];
+    const pick = onTv(shares);
     const stream = pick?.[1] ?? null;
     deps.tv.show(stream);
     const box = $('shares');
@@ -89,13 +90,14 @@ export function installVoice(ctx: Ctx, deps: VoiceDeps) {
   /** Someone's shared screen, full screen: someone else's before your own. With nobody sharing, you share yours. */
   function watchShare() {
     const streams = currentShares();
-    if (!streams.length) {
+    const pick = onTv(streams);
+    if (tvAction(streams) === 'share' || !pick) {
       void toggleShare();
       return;
     }
     const video = h('video', { autoplay: true, playsinline: true, muted: true }) as HTMLVideoElement;
     // What's on the TV: someone else's screen before your own.
-    const [who, stream] = streams.find(([name]) => name !== 'You') ?? streams[0];
+    const [who, stream] = pick;
     video.srcObject = stream;
     const close = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
     const el = h('div.modal.viewer', { role: 'dialog', 'aria-label': 'Screen share' }, h('header', {}, h('h2', {}, `${who}'s screen`), close), video);
