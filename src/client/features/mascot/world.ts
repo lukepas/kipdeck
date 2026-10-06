@@ -53,7 +53,9 @@ function rests(): Record<BoneName, Rest> {
   const lid = (side: number, up: number): Rest => {
     const f = eyeFrame(side);
     const p = f.at.clone().add(new THREE.Vector3(0, up * EYE.r * 1.02, 0.0075).applyQuaternion(f.q));
-    const e = new THREE.Euler().setFromQuaternion(f.q);
+    // The upper lids tip up toward his nose, a soft look rather than a scowl.
+    const q = f.q.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), up > 0 ? -side * 0.24 : 0));
+    const e = new THREE.Euler().setFromQuaternion(q);
     return ['head', [p.x, p.y, p.z], [e.x, e.y, e.z]];
   };
   return {

@@ -553,7 +553,7 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
       look: asleep ? 0 : look,
       lookUp: hold === 'window' || jumping ? 0.35 : mode === 'escort' ? 0.3 : mode === 'greet' ? 0.25 : 0,
       blink: !frozen && !(mode === 'hide' && hold === 'hide'),
-      lids: mode === 'sit' ? 0.25 : mode === 'hide' ? 0.35 : hold === 'window' || jumping ? 0 : mode === 'nest' ? 0.4 : 0.12,
+      lids: mode === 'sit' ? 0.25 : mode === 'hide' ? 0.35 : hold === 'window' || jumping ? 0 : mode === 'nest' ? 0.4 : 0.07,
       still,
       cut: frozen || cut,
       pose,

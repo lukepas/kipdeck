@@ -183,7 +183,7 @@ export class Animator {
     }
 
     // Tail and scarf on damped springs, streaming back with speed.
-    const stream = Math.min(1.3, a.speed * 0.6);
+    const stream = Math.min(1, a.speed * 0.5);
     const fluff = a.fluff ? 1.3 : 1;
     for (const [i, n] of (['tail0', 'tail1', 'tail2'] as const).entries()) {
       const wag = moving ? 0.1 * Math.sin(this.phase + i) : 0;
@@ -195,7 +195,7 @@ export class Animator {
       for (let i = 0; i < 3; i++) {
         const n = `scarf${side}${i}` as BoneName;
         const flutter = a.scarf && a.speed > 0.6 && !a.cut ? 0.12 * Math.sin(t * 9 + i * 1.3 + (side === 'L' ? 0 : 2)) * run : 0;
-        const tx = a.scarf ? this.spring(n, stream * (i === 0 ? 0.9 : 0.35) + flutter + p.flop * -0.6, TRAIL.k, TRAIL.zeta, dt, a.cut, a.cut ? 0 : a.accel * 0.012) : stream * (i === 0 ? 0.8 : 0.3);
+        const tx = a.scarf ? this.spring(n, stream * (i === 0 ? 0.6 : 0.25) + flutter + p.flop * -0.6, TRAIL.k, TRAIL.zeta, dt, a.cut, a.cut ? 0 : a.accel * 0.012) : stream * (i === 0 ? 0.5 : 0.2);
         set(n, tx);
       }
     }
