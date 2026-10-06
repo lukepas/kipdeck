@@ -5,6 +5,7 @@ import { DeckSound } from '../sound';
 import { store, type Profile, type Settings } from '../state';
 import { Person } from '../world/character';
 import type { Ctx } from './context';
+import { Hooks } from './registry';
 
 /** Your own character, as everyone else sees it (no name tag over your own head). */
 export function makeMe(ctx: Ctx): Person {
@@ -24,9 +25,12 @@ export function makeSound(settings: Settings): DeckSound {
 /** Reaching out to use something, and your look changing. */
 export function installYou(ctx: Ctx) {
   let lastActSent = 0;
-  /** Plays the reach on your character, and shows it to everyone else. */
+  /** What else reaches with you: your hands in first person (features/hands). */
+  const reached = new Hooks();
+  /** Plays the reach on your character (and whatever reaches with it), and shows it to everyone else. */
   function reach() {
     ctx.me.reach();
+    reached.run();
     const now = performance.now();
     if (now - lastActSent > 120) {
       lastActSent = now;
@@ -40,5 +44,5 @@ export function installYou(ctx: Ctx) {
     ctx.me.setLook(p.look);
   }
 
-  return { reach, showMyProfile };
+  return { reach, showMyProfile, reached };
 }

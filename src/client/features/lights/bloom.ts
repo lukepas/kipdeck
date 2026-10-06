@@ -37,6 +37,8 @@ export interface Bloom {
   aa(kind: EdgeAa): void;
   /** Lays `pass` in after tone mapping and before the edges are smoothed: it reads display colours. */
   grade(pass: Pass): void;
+  /** Lays `pass` in straight after the scene, before the glow: it draws over the scene (the first-person hands). */
+  overlay(pass: Pass): void;
   /** The glow alone, as last drawn (linear light, at the glow's own size): what a grade weights its lens dirt by. */
   glowTexture(): THREE.Texture;
   /** The frame's size in drawn pixels. */
@@ -111,6 +113,10 @@ export function makeBloom(stage: Stage, camera: THREE.Camera, look: BloomLook): 
     grade(p) {
       // After the OutputPass, before the two edge passes.
       composer.insertPass(p, composer.passes.indexOf(fxaa));
+      fit();
+    },
+    overlay(p) {
+      composer.insertPass(p, composer.passes.indexOf(render) + 1);
       fit();
     },
     glowTexture: () => pass.renderTargetsHorizontal[0].texture,
