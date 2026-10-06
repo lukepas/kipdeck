@@ -5,5 +5,5 @@
     "types": ["node"],
     "lib": ["ES2022"]
   },
-  "include": ["launch/chain/tools/**/*.ts"]
+  "include": ["launch/chain/tools/**/*.ts", "launch/tools/**/*.ts"]
 }

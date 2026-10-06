@@ -21,7 +21,7 @@
     "build:client": "vite build && vite build -c vite.showcase.config.ts",
     "build:server": "tsc -p tsconfig.server.json",
     "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit && tsc -p tsconfig.launch.json",
-    "launch:check": "tsx launch/chain/tools/calendar.ts --check && tsx launch/chain/tools/counts.ts --check && tsx launch/chain/tools/lint.ts",
+    "launch:check": "tsx launch/chain/tools/calendar.ts --check && tsx launch/chain/tools/counts.ts --check && tsx launch/chain/tools/lint.ts && tsx launch/tools/calendar.ts --check && tsx launch/tools/lint.ts",
     "start": "node bin/agent-office.js",
     "prepare": "npm run build"
   },
