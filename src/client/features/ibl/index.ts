@@ -36,7 +36,7 @@ export const SKY_LAYER = 6;
 /** How strong the sky's light is on the hull, against the room's on the inside. */
 const SKY_ENV = 0.8;
 /** How strongly the viewport glass reflects the room. */
-const GLASS_ENV = 0.55;
+const GLASS_ENV = 0.3;
 /** What lies outside the ship, and the air's own light (features/atmos), never part of the room's light. */
 const OUTSIDE = new Set(['space-sky', 'space-stars', 'space-flybys-far', 'vista', 'fleet', 'destination', 'sorties', 'drive-core', 'atmos']);
 /**

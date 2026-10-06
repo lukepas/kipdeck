@@ -29,18 +29,18 @@ export function spectacleStep(now: number, to: number | boolean, dtMs: number): 
 
 /**
  * How bright the shafts' light is, linear, added over what's behind them, on the axis where they're
- * thickest and a ray of dust runs through: 0.2 by Night (up to 1.6 times that seen down its length), well under the glow's threshold (0.86) so it
- * never blooms, and four tenths of that by Day, faint warm light rather than grey haze over a lit
- * room. Each face of a shaft adds half. (0.05 was the first budget: against the Night deck's own
- * light it doesn't show at all.)
+ * thickest and a ray of dust runs through: 0.1 by Night (up to 1.6 times that seen down its length),
+ * well under the glow's threshold so it never blooms, and six tenths of that by Day. Half the first
+ * look's level: a shaft is a tinted streak of sunlight across the dark, never a grey wedge over the
+ * room (the critics' "grey plastic slab" at the ports).
  */
-export const SHAFT_LIGHT = { night: 0.2, day: 0.4 } as const;
+export const SHAFT_LIGHT = { night: 0.1, day: 0.6 } as const;
 export function shaftLevel(mode: LightMode): number {
   return mode === 'night' ? SHAFT_LIGHT.night : SHAFT_LIGHT.night * SHAFT_LIGHT.day;
 }
 
-/** What the shafts' colour is: cool white by Night, a little warm by Day (the key's own Day colour). */
-export const SHAFT_COLOR: Record<LightMode, string> = { night: '#D6E6F5', day: '#FFE9CF' };
+/** What the shafts' colour is: the sun's, warm by Night and by Day (the warm half of the warm and cool key). */
+export const SHAFT_COLOR: Record<LightMode, string> = { night: '#FFD3A0', day: '#FFE3BE' };
 
 /** Which shafts a tier hangs, as the shader's set: -1 none, 0 the bow's under the canopy, 1 all of them. */
 export function shaftSet(shafts: 'all' | 'bow' | null): number {

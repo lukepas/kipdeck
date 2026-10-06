@@ -44,29 +44,36 @@ export interface Rig {
 }
 
 export const LIGHT_MODES: Record<LightMode, Rig> = {
+  // Night: a warm and cool key (each light's colour stays out of the state hues: a cool blue-indigo,
+  // hue about 230, and a warm white of low chroma, tests/lights.test.ts). Cool violet-blue starlight from over the bow and low from either side rims
+  // the tiers and the units; the pods' lamps and the dais's practicals are warm; the fill from the sky
+  // is low, so the hull stays dark (luma 6 to 30) and the stations over it read (40 to 120).
   night: {
     exposure: 1.4,
-    hemi: { sky: '#B8C3CE', ground: '#4A5462', i: 5.5 },
-    key: { color: '#DCE6F0', i: 3.9 },
-    fill: { color: '#A0AEBD', i: 2.3 },
-    rim: { color: '#9ED3E6', i: 1.25 },
-    pods: { color: '#DCE3EA', i: 137 },
-    table: { color: '#C9D2DC', i: 100 },
-    holo: { color: '#6FC3DF', i: 30 },
-    bloom: { strength: 0.32, radius: 0.4, threshold: 0.86 },
-    env: 1.2,
+    hemi: { sky: '#7C8AD8', ground: '#262838', i: 2.6 },
+    key: { color: '#B3BCFF', i: 4.8 },
+    fill: { color: '#EEE2D2', i: 1.5 },
+    rim: { color: '#7F90FF', i: 3.0 },
+    pods: { color: '#EFE3D3', i: 150 },
+    table: { color: '#C9D6E6', i: 38 },
+    holo: { color: '#6FC3DF', i: 26 },
+    bloom: { strength: 0.55, radius: 0.5, threshold: 0.8 },
+    env: 1.3,
   },
+  // Day: high orbit over a sunlit planet. A warm, hard sun key casts the canopy's ribs across the
+  // tiers; the fill is the planet's cool blue; the hull keeps a mid-dark albedo (DAY_PALETTE), so the sun
+  // does the brightening and the boards keep their contrast.
   day: {
-    exposure: 1.22,
-    hemi: { sky: '#E4EDF6', ground: '#8C98A6', i: 1.55 },
-    key: { color: '#FFF6EA', i: 2.3 },
-    fill: { color: '#DCE6F0', i: 0.8 },
-    rim: { color: '#FFFFFF', i: 0.45 },
-    pods: { color: '#DCE3EA', i: 24 },
-    table: { color: '#C9D2DC', i: 28 },
+    exposure: 1.7,
+    hemi: { sky: '#A9C3E6', ground: '#5C564E', i: 1.6 },
+    key: { color: '#FCEFE0', i: 5.6 },
+    fill: { color: '#B9D2F0', i: 0.9 },
+    rim: { color: '#CFE0FF', i: 0.6 },
+    pods: { color: '#EFE3D3', i: 24 },
+    table: { color: '#C9D2DC', i: 22 },
     holo: { color: '#6FC3DF', i: 6 },
     bloom: null,
-    env: 0.9,
+    env: 1.0,
   },
 };
 
@@ -98,20 +105,20 @@ export function brightnessFactor(step: number): number {
  * instrument-black carrier (the ring inlay, the callout chip), so its hue reads the same by day.
  */
 export const DAY_PALETTE: Readonly<Record<string, string>> = {
-  // floor and its grid (the floor's canvas texture): a cool mid-grey, not white
-  '#1c2430': '#959fab',
-  '#2c3744': '#8792a0',
-  '#3a4858': '#77838f',
-  // walls, hull plating and its seams, reveals: mid-grey too (albedo about 0.4), the exposure lifts them
-  '#1c2530': '#a9b3be',
-  '#2a3644': '#98a3af',
-  '#0a0f15': '#7d8997',
-  // consoles and their tops: darker than by night, so they read against the light floor
-  '#26303c': '#1e2630',
-  '#2e3946': '#2a3440',
+  // floor and its grid (the floor's canvas texture): a cool mid-dark deck plate, never near-white
+  '#1c2430': '#7c8794',
+  '#2c3744': '#727d8a',
+  '#3a4858': '#65707d',
+  // walls, hull plating and its seams, reveals: albedo about 0.3 at most, the sun does the lifting
+  '#1c2530': '#8a95a2',
+  '#2a3644': '#7a8592',
+  '#0a0f15': '#59636f',
+  // consoles and their tops: darker than by night, so they read against the deck
+  '#26303c': '#141a22',
+  '#2e3946': '#171e27',
   // steel and lines
-  '#3a4756': '#5f6c7a',
-  '#26313d': '#8792a0',
+  '#3a4756': '#56626f',
+  '#26313d': '#6c7682',
 };
 
 /**

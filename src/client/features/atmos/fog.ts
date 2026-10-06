@@ -11,11 +11,15 @@ import { SPACE_COLORS } from '../space/logic';
 // features/atmos tints from the sky ahead. Only ALU, every tier. Anything that must never be hazed
 // (a board's face, a unit's band, ring, glyph and callout, the needs-you beacon) is fog: false.
 
-/** The haze: how dense at the floor, how fast it thins with height (m), and the most it ever covers. */
-export const HAZE = { density: 0.026, height: 1.4, most: 0.32, outside: 55 } as const;
+/**
+ * The haze: how dense at the floor, how fast it thins with height (m), and the most it ever covers. A
+ * floor fog, held under about a metre (the pit, the deck between the tiers): over that the air is clear,
+ * so the hull reads dark and space reads saturated rather than through a grey veil.
+ */
+export const HAZE = { density: 0.03, height: 0.55, most: 0.22, outside: 55 } as const;
 
 /** The haze's colour by mode, before the sky's tint: a cool slate lit from above by Night, a pale blue-grey by Day. */
-export const HAZE_COLOR: Record<LightMode, string> = { night: '#16212D', day: '#B4C0CC' };
+export const HAZE_COLOR: Record<LightMode, string> = { night: '#141A2E', day: '#9DB0C6' };
 
 const f = (n: number) => n.toFixed(4);
 

@@ -5,7 +5,6 @@
  * the way the key's shadows do.
  */
 import * as THREE from 'three';
-import { TIERS } from '../../../shared/amphitheater';
 import { BOARDS, DESKS, FLOOR, MISSION_TABLE, PODS, TV, WINDOWS } from '../../../shared/layout';
 import { OVER_WALL, canopyPoint } from '../bridge/shapes';
 import { KEY_AT } from '../lights/modes';
@@ -55,9 +54,10 @@ const CANOPY_PANES: readonly [deg: number, f: number][] = [
 
 /**
  * Every shaft, the bow's first: five under the canopy's panes (over the wall, and either side of the
- * table, where the conn sees them clear of the boards), falling the way the key does, to the deck;
- * each pod's lamp down onto its arc; and one in at each low side port, slanting down onto the floor
- * inside it.
+ * table, where the conn sees them clear of the boards), falling the way the key does, to the deck; and
+ * one in at each low side port, slanting down onto the floor inside it. None stands over a station:
+ * the pods' lamps light their consoles without a beam of haze over the units (the critics saw it wash
+ * the stations' state lights out).
  */
 export function shafts(): Shaft[] {
   const out: Shaft[] = [];
@@ -69,15 +69,6 @@ export function shafts(): Shaft[] {
     const len = p.y / -fall.y;
     const across = square(fall, new THREE.Vector3(1, 0, 0));
     out.push({ at: v(p), axis: v(fall), across: v(across), len, r0: [1.3, 0.95], r1: [1.7, 1.25], bow: true });
-  }
-  const down = new THREE.Vector3(0, -1, 0);
-  for (const pod of PODS) {
-    const r = pod.radius - 0.4;
-    const x = MISSION_TABLE.x + Math.cos(pod.angle) * r;
-    const z = MISSION_TABLE.z + Math.sin(pod.angle) * r;
-    // Down onto the pod's tier: the shaft stops at its floor.
-    const len = 5.0 - TIERS[pod.tier].h;
-    out.push({ at: [x, 5.0, z], axis: v(down), across: [Math.cos(pod.angle), 0, Math.sin(pod.angle)], len, r0: [0.3, 0.3], r1: [2.1, 1.7], bow: false });
   }
   for (const w of WINDOWS) {
     if ((w.wall !== 'east' && w.wall !== 'west') || w.y0 > 1) continue;
