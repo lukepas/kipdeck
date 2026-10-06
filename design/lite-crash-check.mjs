@@ -124,7 +124,7 @@ async function run(name, opts, order) {
       const status = await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD);
       if (status !== 200) throw new Error('login failed ' + status);
       if (order === '3d-then-lite') {
-        await page.goto(`${base}/`, { waitUntil: 'commit' });
+        await page.goto(`${base}${process.env.SHOOT_BRIDGE ?? "/bridge"}`, { waitUntil: 'commit' });
         await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 }).catch(() => {});
       }
       await page.goto(`${base}/lite`);
