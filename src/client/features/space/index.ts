@@ -135,7 +135,7 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   const merges: number[] = [];
   let surgeFrom = -Infinity;
   let surgePeak: number = SURGE.peak;
-  let jump: { at: number; swapped: boolean; to: Waypoint; rejoined: boolean } | null = null;
+  let jump: { at: number; swapped: boolean; to: Waypoint; rejoined: boolean; punched: boolean } | null = null;
   /** A waypoint reached that hasn't jumped yet: held for the captain, or counting down from `countAt`. */
   let pending: { to: Waypoint; at: number; countAt: number | null } | null = null;
   let bannerAt = -Infinity;
@@ -174,6 +174,7 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
     if (clock - surgeFrom < SURGE_GAP_MS) return;
     surgeFrom = clock;
     surgePeak = SURGE.peak;
+    ctx.sound.jump('surge');
   }
 
   /**
@@ -209,7 +210,7 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
     sky.prepare(regionN);
     // A jump outranks a surge; whatever was passing is left behind.
     surgeFrom = -Infinity;
-    jump = { at: clock, swapped: false, to, rejoined: false };
+    jump = { at: clock, swapped: false, to, rejoined: false, punched: false };
     parts.fleet?.jumpOut(FLEET_STAGGER_MS);
     ctx.sound.jump('release');
   }
@@ -361,8 +362,14 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
       room = f.room;
       rim = GLOW.punch * f.punch;
       // Out of the tunnel: the escorts drop back into their slots, the waypoint's name across the glass.
+      // The punch lands with the flash (jump.ts).
+      if (!jump.punched && clock - jump.at >= JUMP.stretch) {
+        jump.punched = true;
+        ctx.sound.jump('punch');
+      }
       if (!jump.rejoined && clock - jump.at >= JUMP.stretch + JUMP.flash + JUMP.tunnel) {
         jump.rejoined = true;
+        ctx.sound.jump('arrival');
         parts.fleet?.rejoin(FLEET_STAGGER_MS);
         showBanner(jump.to);
       }

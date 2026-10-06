@@ -15,7 +15,8 @@
  * - A payout: the merge beat's pulse climbs the rail and the lid lifts (features/beats, proofcorner);
  *   then the coins fly out of the vault over the deck to the console of the unit that earned them, and
  *   a receipt floats up there with the amount, the unit and the devnet transaction. The violet toast
- *   says it too.
+ *   says it too. You hear it fly (sound.ts): a tink as each coin leaves, their rush over the deck, a
+ *   tink as each lands and a soft chord when they're in.
  *
  * With less motion (reduced motion, Ship motion Off) nothing flies or drops: the stacks are as they
  * are and the receipt is simply there over the console for its six seconds. Nothing idles: the coins
@@ -34,6 +35,7 @@ import { hashOf } from '../beats/logic';
 import { debugHandle } from '../giveway';
 import { BoardCoins, PayoutFlight, type Receipt } from './flight';
 import { flightCoins, shortSig, vaultView, wholeTokens, type P3, type VaultView } from './logic';
+import { payout } from './sound';
 import { VaultHolo } from './vault';
 
 type Paid = Extract<ServerMsg, { t: 'bounty.paid' }>;
@@ -109,7 +111,10 @@ export function installBounties(ctx: Ctx, parts: Pick<Parts, 'views' | 'boards' 
     const from = vault.mouth(new THREE.Vector3());
     // Nobody on the deck to fly to: the receipt stands over the vault itself.
     const dest = to?.p ?? { x: from.x + 0.6, y: CONSOLE_Y, z: from.z };
-    flight.start({ x: from.x, y: from.y, z: from.z }, dest, to ? flightCoins(wholeTokens(m.amount, decimals)) : 1, receipt, still() || !to);
+    const coins = to ? flightCoins(wholeTokens(m.amount, decimals)) : 1;
+    flight.start({ x: from.x, y: from.y, z: from.z }, dest, coins, receipt, still() || !to);
+    // Heard as it flies (sound.ts): the coins leaving, their rush over the deck, landing, the chord.
+    ctx.sound.play('payout', 'ship', payout({ x: from.x, y: from.y, z: from.z }, dest, coins, still() || !to));
     // Its stack was held for this: the coins are on their way, the vault catches up.
     if (held) apply(held.v);
   }
