@@ -16,6 +16,7 @@
 // SHOOT_POSE=sit sits you in the captain's chair the way E does and shoots the view the chair gives
 // (its own height, field of view and aim), rather than the pinned eye; it saves <light>-<quality>-sit.png.
 // SHOOT_OVERVIEW=1 adds the Overview (G) as <light>-<quality>-overview.png.
+// SHOOT_CLIP=call records a new call from the chair (a unit asking at desk-4), about 12 frames a second for 9 s, as <name>-call.mp4.
 // SHOOT_LEAN=1 adds the focus lean from the chair onto the Attention board as <light>-<quality>-lean.png.
 // SHOOT_MEASURE=1 measures each Attention card's name on the shot: cap height (px) and contrast against its card.
 // SHOOT_MISSION=1 sets a course with four waypoints (the second under way) and units toward them.
@@ -79,7 +80,7 @@ chmodSync(agent, 0o755);
 // A busy crew, every unit at work but two done, and desk-2's asking you (the need fixture).
 // SHOOT_CREW=signals has three asking (desk-2's among them), one crashed (stuck) and two done (to
 // review), the rest at work; SHOOT_CREW=twenty puts 20 units on the deck (the consoles and the
-// Standby bench) with the same signals. The default is the need fixture alone.
+// Standby bench) with the same signals; SHOOT_CREW=calm nobody asking. The default is the need fixture alone.
 const CREW = process.env.SHOOT_CREW ?? 'need';
 const NEED = [
   ['desk-1', 'Pick the session store for the auth rewrite'],
@@ -107,7 +108,10 @@ const TWENTY = [
   ['beanbag-3', 'Write the x402 gateway tests'],
   ['beanbag-9', 'Shrink the hull texture atlas'],
 ];
-const TASKS = CREW === 'twenty' ? TWENTY : CREW === 'signals' ? SIGNALS : NEED;
+// SHOOT_CREW=calm is the need fixture with nobody asking (desk-2 at work too): the same frame with no
+// one waiting, to set beside it (the spectacle's give-way is measured on the pair).
+const CALM = NEED.map(([d, t]) => [d, t.replace('[ask] ', '')]);
+const TASKS = CREW === 'twenty' ? TWENTY : CREW === 'signals' ? SIGNALS : CREW === 'calm' ? CALM : NEED;
 
 const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--agent', agent, '--home', path.join(home, '.agent-office')], {
   env: { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
@@ -420,6 +424,29 @@ async function main() {
         return { id: c.id, kind: c.kind, capPx: cap, contrast: +ratio.toFixed(1) };
       });
       console.log(JSON.stringify({ measure: out }));
+    }
+    // SHOOT_CLIP=call: a clip of a new call from the chair, in real time (a frame as fast as the page
+    // shoots, about 12 a second): a unit at desk-4 is deployed asking a question half a second in, and
+    // the clip runs on for 9 s, through the spectacle's duck and back and the spotlight settling round
+    // it. Saved as <name>-call.mp4, its frames' times in <name>-call.json.
+    if (process.env.SHOOT_CLIP === 'call') {
+      const frames = mkdtempSync(path.join(tmpdir(), 'ugc-clip-'));
+      const times = [];
+      const t0 = Date.now();
+      let sent = false;
+      for (let f = 0; Date.now() - t0 < 9500; f++) {
+        if (!sent && Date.now() - t0 > 500) {
+          sent = true;
+          await page.evaluate(() => window.__office.net.send({ t: 'worker.spawn', deskId: 'desk-4', prompt: '[ask] Split the deploy workflow', worktree: false }));
+        }
+        await page.evaluate(() => document.getElementById('toasts')?.replaceChildren());
+        await page.screenshot({ path: path.join(frames, `f${String(f).padStart(4, '0')}.png`) });
+        times.push(Date.now() - t0);
+      }
+      const fps = Math.max(1, Math.round((times.length - 1) / ((times.at(-1) - times[0]) / 1000)));
+      execFileSync(process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(fps), '-i', path.join(frames, 'f%04d.png'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '22', path.join(OUT, `${NAME}-call.mp4`)]);
+      writeFileSync(path.join(OUT, `${NAME}-call.json`), JSON.stringify({ fps, times }));
+      console.log(JSON.stringify({ clip: `${NAME}-call.mp4`, frames: times.length, fps }));
     }
     if (process.env.SHOOT_OVERVIEW) {
       await page.evaluate(() => {
