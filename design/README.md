@@ -978,3 +978,36 @@ The A/B is CPU time at the browser's 0.1 ms resolution, and the before build's o
 - The wings' rows don't slide in yet: only the Attention board's cards do; a wing's header sweeps instead.
 - The hail's marker leaves a ghost: the holo's own marker for that unit stays on the route while its copy flies to the dais.
 - The beam's climb is easiest to see from a station in view; a unit out of view shows its card's slide and the marker.
+
+## The feel: first-person hands
+
+The captain's gloved hands in first person (`src/client/features/hands/`, [docs/design.md](../docs/design.md#your-hands-in-first-person)). Shots in `shots/feel-hands/`: `before/` is the same build with Settings > Bridge > Hands at Off, `after/` with them on, both Night at High through Metal, and `after/day-high-*` by Day. Each run has the hands at rest beside the captain's chair (`-hands-rest`), mid-walk (`-walk`), at the press of a reach and tap (`-reach`, the reach held by its own clock), at the docs rack tapping it (`-docs-tap`), with Mission control open and the datapad up (`-pad`) and sat in the chair, where they step out of the way (`-sit`). `after/night-high-hands.mp4` is a short walk with a look round, a tap and the datapad up and down.
+
+    npm run build && SHOOT_HANDS=1 SHOOT_HANDS_MODE=off SHOOT_HANDS_CLIP=0 node design/shoot-interior.mjs feel-hands/before
+    npm run build && SHOOT_HANDS=1 node design/shoot-interior.mjs feel-hands/after
+
+`SHOOT_HANDS_STUDIO=1` adds the hands alone over the hidden deck, to judge their shapes.
+
+### Frame times
+
+`node design/perf-probe.mjs metal` with `PROBE_SETTINGS='{"quality":"high","hands":"off"}'` against `'{"quality":"high","hands":"on"}'`, the same build, alternating, two runs each. The probe stands at the conn, so the hands are in its frame.
+
+| | Hands off | Hands on | Budget |
+| --- | --- | --- | --- |
+| Conn draw calls | 378 to 379 | 386 | 400 |
+| Conn, High: forced render | 2.1 to 2.4 ms, p95 2.8 to 3.7 | 1.7 to 2.8 ms, p95 2.5 to 3.7 | |
+| Port draw calls | 139 | 147 | 400 |
+| Jump with the tunnel open | 2.2 ms, 417 to 418 calls | 2.6 to 2.8 ms, 425 calls | |
+| rAF p50 | 16.7 ms | 16.7 ms | |
+
+Eight draws and about 7,500 triangles; the render time moves inside the run-to-run spread. `node design/flicker-check.mjs metal` with `FLICKER_QUALITY=high` passes, Night and Day, 600 frames each.
+
+### Checks
+
+- `tests/hands.test.ts`: when the hands show (tiers, seated, Overview, third person, shots), the slide in and out and the cut under less motion, the lag clamped to a few centimetres, the walk's opposite swing, the reach's jab, straight finger and press, the held reach, the datapad's hold and its four lines. `tests/client-store.test.ts`: the setting's default and parse.
+- `npm run typecheck` and `npm run build` clean; `npm test` all but `mission-e2e`'s debrief test under SwiftShader, which fails the same way with the hands left out of the build (as in the motion round above).
+
+### Left for later
+
+- The datapad sits low in the left of the view, so a tall Mission control window covers most of it; it reads best beside a short one, and as the window opens and closes.
+- The hands take the room's light where you stand only through its sky, key and fill: a pod's lamp or the holo next to you does not light them.

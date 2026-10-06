@@ -95,6 +95,19 @@ Nothing idles: the coins move only when a bounty changes. With reduced motion or
 
 ![A payout: the bounty's coins flying out of the vault over the deck toward the unit that earned them](img/bounty-payout.png)
 
+### Your hands in first person
+
+![Your gloved hands at the bottom of the view on the dais, the right one reaching out to tap, its fingertip lit](img/hands.png)
+
+Walking the deck in first person you see your own gloved forearms at the bottom corners of the view, so you stand on the bridge rather than float over it (`src/client/features/hands/`, after upstream agent-office's first-person hands). They are a flight suit in the units' two tones, a lighter plate along each forearm, a gauntlet cuff with a brushed steel ring, a dark synthetic leather glove with a steel ridge over the knuckles, and fingers in a relaxed curl. Nothing on them takes a state's hue: the one instrument is the right index fingertip, a touch pad that lights ship-cyan as it presses, and a small ship-cyan clock on the left wrist.
+
+- **What they do.** They lag a few centimetres behind a quick turn and catch up, breathe, swing opposite each other as you walk, and lift when you jump. Whenever you use something (E or a click: a board, a station, a seat, a button) the right hand reaches in toward the crosshair, the index finger straightens and taps, and comes back (0.42 s, the same reach your character makes for everyone else). While Mission control is open the left hand holds up a slim datapad low in the left of the view, with the top bar's four counts on its glass, each its glyph, a mono number and its word; it is painted on a change of the counts only.
+- **Where they go.** Out of the way whenever they would be in it: in third person, sat down (the conn's framing, a bean bag's view), in the Overview and while the arrival or taking the conn has the camera. They slide down out of view and back up (a cut with less motion). Their frame is centred on the canvas right of the Units rail, as the seated view is.
+- **How they are drawn.** In a small scene of their own, in the view's frame, drawn after the deck over a cleared depth buffer, so a console or a wall you walk into never cuts through them. Through the bloom composer they are a pass straight after the scene (`overlay` in `features/lights/bloom.ts`), so the glow, the grade and the edge smoothing take them with the room; at Low they are drawn after the plain render. Their light is the room's own, turned into the view's frame each frame (its sky fill, key and fill lights, at whatever Night, Day and Brightness have them, desaturated a little so the glove reads as a glove), with the room's reflections. Each arm is one vertex-coloured mesh plus its steel, about ten draws in all with the datapad, and their programs are compiled once the room's light is there, so the first frame they show never stalls.
+- **Settings.** Settings > Bridge > Hands: Auto (the default) draws them at High and Medium and leaves them out at Low, On draws them at every tier, Off never. With reduced motion or Ship motion Off they hold still at rest: no sway, breath, swing or reach.
+
+![Mission control open in first person: the datapad up in the left hand under the window, with the four counts on its glass](img/hands-datapad.png)
+
 ### The look: value, light and colour
 
 The room reads in three zones of value from the chair, so the eye knows where to go even in a thumbnail: a dark hull, the stations and the crew in the middle, and the information plane (the arc's type and chrome) bright on its own dark backing, with a saturated universe over it.
@@ -209,6 +222,8 @@ Motion marks a change of state, and hue and the attention cadences belong to sta
 | A bounty is funded | its coins drop onto its stack over the vault, one after another, and its row on the Issues board takes the amount | 9 coins a second | the stack is there at once |
 | A bounty is released on devnet | the pulse runs on to the Proof corner and up the rail, parks as the new lit segment, the vault lid lifts, then the proof toast; the bounty's coins fly from the vault to the unit's console and a receipt floats up there with the devnet transaction | 600 ms, lid 2.4 s, the flight 1.5 s plus 90 ms a coin, the receipt 6 s | the segment and lid change at once, the toast, and the receipt is there over the console for 6 s |
 | A unit gets an ERC-8004 record | the plinth glows violet as its step lights | 1.2 s | the step lights |
+| You use something in first person (E or a click) | your right hand reaches in toward the crosshair, its index finger straightens and taps, its fingertip lit ship-cyan at the press | 420 ms | nothing moves |
+| Mission control opens, in first person | your left hand brings a datapad up into the lower left of the view, and takes it down again when the window closes | about 300 ms | it is there, or gone |
 | You go to a unit (N, a toast, search) | in Walk the view flies there in an arc; in the Overview it pans and zooms | 700 ms; 300 ms | a cut |
 | The Overview turns (Q / E) | a quarter turn | 280 ms | a cut |
 | The bridge, always | the holo's route column turns over the mission table, in ship-cyan, a band of light climbing its scan rings, a small star map turning in a cone of scanlined light, dashes running up the course to the ship; the ticker over the strip runs the deck's log and its clock ticks | a turn a minute (6 degrees a second); the scan every 3 s; a dash's run 5 s; the log its width in 70 s; the clock each second | still (the clock still tells the time) |
