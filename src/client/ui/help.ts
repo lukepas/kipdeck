@@ -34,6 +34,7 @@ export const HELP_ROWS: readonly (readonly [string, string])[] = [
   [IS_MAC ? '⌘K' : 'Ctrl+K', 'Command palette: type a few letters to find a worker, issue, PR, service, board, teammate or action. Enter opens it, Shift+Enter walks you over to it first'],
   ['V', 'Join voice. In voice, hold V to talk (push to talk): you\'re muted once you let go. Leave voice from the menu'],
   ['M', 'Mute or unmute your mic in voice. Settings can have you join muted, for push to talk'],
+  ['Shift+M', "Turn all of the deck's sound off, or back on. Settings > Sound & voice has the main volume and a mixer: alerts, interface, ship and ambience"],
   ['Ctrl+Space', 'Dictate: in a worker\'s terminal or a prompt box, hold Ctrl+Space (or the mic button) and talk, and what you said is typed in when you let go, for you to read over and send. A quick tap leaves it listening until you tap again. The browser does the listening (Chrome, Edge and Safari can), so there\'s nothing to install'],
   ['Tab', 'The menu, top right: every window, and what shows on screen. Pin what you use most to the top bar'],
   ['Esc', 'Close any window and get back to looking around'],
