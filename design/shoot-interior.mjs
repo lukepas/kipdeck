@@ -20,6 +20,8 @@
 // SHOOT_LEAN=1 adds the focus lean from the chair onto the Attention board as <light>-<quality>-lean.png.
 // SHOOT_MEASURE=1 measures each Attention card's name on the shot: cap height (px) and contrast against its card.
 // SHOOT_MISSION=1 sets a course with four waypoints (the second under way) and units toward them.
+// SHOOT_MOTION=hail,stuck,done,jump,conn,ambient,complete,iris,reduced shoots the motion layer's beats
+// after the main shot (design/shoot-motion.mjs): held frame sequences and clips, <name>-<beat>-<ms>.png.
 // SHOOT_EVAL='...' runs a probe's code in the page just before the shot and prints what it returns.
 // SHOOT_MASK=1 checks what stands in front of the situation arc: it paints every board's face (and the
 // capacity strip's) flat magenta, shoots <light>-<quality>-mask.png, and counts the pixels inside each
@@ -261,6 +263,10 @@ async function main() {
       },
       [...SEATED, POSE],
     );
+    // Sitting down takes the conn (features/takeconn): the fixed shots are of the room as it stands
+    // after it, so it's skipped (any key would); SHOOT_MOTION=conn shoots it on its way.
+    await wait(400);
+    await page.evaluate(() => window.__world?.takeConn?.skip?.());
     await page.waitForFunction(() => !window.__office.space?.phase || window.__office.space.phase() === 'idle', null, { timeout: 60_000 }).catch(() => {});
     await page.evaluate(() => window.__office.space?.timeScale?.(0));
     await wait(2500);
@@ -298,6 +304,11 @@ async function main() {
       });
     });
     console.log(JSON.stringify({ shot: `${NAME}.png`, tier, setting: QUALITY, cap: CAP || null }));
+    // SHOOT_MOTION: the motion layer's beats, each as a held sequence or a clip (design/shoot-motion.mjs).
+    if (process.env.SHOOT_MOTION) {
+      const { motionShots } = await import('./shoot-motion.mjs');
+      await motionShots(page, { out: OUT, name: NAME, wait, ffmpeg: process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg', which: process.env.SHOOT_MOTION.split(',') });
+    }
     // SHOOT_LEAN=1: the focus lean from the chair (features/focuslean), the mouse moved once to arm it
     // and then still while the crosshair rests on the Attention board, saved as <name>-lean.png.
     if (process.env.SHOOT_LEAN === '1') {

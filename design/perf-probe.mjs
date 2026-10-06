@@ -197,8 +197,16 @@ async function measure([from, to]) {
 }
 
 /** Runs in the page: from `from` toward `to`, the frame's cost with Ship motion on and off, three times each, space's clock running. */
-async function motionAB([from, to]) {
+async function motionAB([from, to, beat]) {
   const o = window.__office;
+  // A beat held mid-way through every sample (the hail: its card's chevrons, its marker flying, its
+  // shockwave), so its cost is in the 'on' frames; with motion off it is the still outline.
+  if (beat === 'hail') {
+    const id = [...o.workerViews.keys()][0];
+    window.__world?.hail?.play(id, 'hail');
+    window.__world?.hail?.hold(700);
+    window.__world?.holoUi?.hold(320);
+  }
   const t = o.quality?.timing;
   if (!t) return { skipped: 'no frame timing in this build' };
   const p = o.player;
@@ -230,6 +238,10 @@ async function motionAB([from, to]) {
   o.settings.shipMotion = was;
   o.space.timeScale(0);
   p.update = p.__update;
+  if (beat) {
+    window.__world?.hail?.hold(null);
+    window.__world?.holoUi?.hold(null);
+  }
   const mid = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
   const of = (key, side, stat) => runs[side].map((r) => r[key]?.[stat]).filter((v) => typeof v === 'number');
   // ANGLE on Metal answers timer queries with the time between them on the wall, frame pacing and all
@@ -256,7 +268,9 @@ async function motionAB([from, to]) {
   const tier = o.quality.tier();
   const budget = o.quality.motionBudget();
   const cost = +Math.max(0, on - off).toFixed(3);
-  return { tier, by, forcedMs: +forced.toFixed(2), onMs: on, offMs: off, cost, budget, withinBudget: cost <= budget, cpuOnMs: cpuOn, cpuOffMs: cpuOff, gpuOnMs: mid(of('gpu', 'full', 'p50')) ?? null, gpuOffMs: mid(of('gpu', 'off', 'p50')) ?? null, runs: runs.full.map((r, i) => [r.cpu?.p50, runs.off[i].cpu?.p50]) };
+  const p95On = mid(of(by, 'full', 'p95'));
+  const p95Off = mid(of(by, 'off', 'p95'));
+  return { tier, by, forcedMs: +forced.toFixed(2), onMs: on, offMs: off, cost, budget, withinBudget: cost <= budget, p95On, p95Off, p95Cost: p95On !== undefined && p95Off !== undefined ? +Math.max(0, p95On - p95Off).toFixed(3) : null, cpuOnMs: cpuOn, cpuOffMs: cpuOff, gpuOnMs: mid(of('gpu', 'full', 'p50')) ?? null, gpuOffMs: mid(of('gpu', 'off', 'p50')) ?? null, runs: runs.full.map((r, i) => [r.cpu?.p50, runs.off[i].cpu?.p50]) };
 }
 
 /** Runs in the page: from `from` toward `to`, a forced render's time on every frame while `kind` (a jump's tunnel, or the start of watch's log) is up. */
@@ -387,6 +401,11 @@ async function main() {
     // The motion layer: Ship motion on against off, from the conn.
     const motion = await page.evaluate(motionAB, VANTAGES.conn);
     console.log(JSON.stringify({ label: LABEL, backend: BACKEND, vantage: 'motion', world: 'on', ...motion }));
+    // And with a hail held mid-beat, where the build has the beats (features/hail).
+    if (await page.evaluate(() => !!window.__world?.hail)) {
+      const hail = await page.evaluate(motionAB, [...VANTAGES.conn, 'hail']);
+      console.log(JSON.stringify({ label: LABEL, backend: BACKEND, vantage: 'motion-hail', world: 'on', ...hail }));
+    }
     // The conn with the CPU throttled 4x: what is left under 16.7 ms on a slower machine.
     const cdp = await context.newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
