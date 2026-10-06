@@ -41,11 +41,13 @@ uniform float uTime;
 uniform float uGain;
 varying float vY;
 void main() {
-  // A steady thread of light, faint at the unit and stronger at the board, with a pulse running up it.
+  // A steady thread of light, faint at the unit and stronger at the board, with a pulse running up it
+  // and dashes of data streaming up it to the card (still with less motion: uTime held).
   float head = fract(uTime / 1.6);
   float d = vY - head;
   float pulse = exp(-d * d * 260.0);
-  float a = (0.22 + 0.25 * vY + 0.9 * pulse) * uGain;
+  float dash = step(0.55, fract(vY * 16.0 - uTime * 2.2));
+  float a = (0.18 + 0.25 * vY + 0.32 * dash + 0.9 * pulse) * uGain;
   gl_FragColor = vec4(uColor * a, 1.0);
   #include <colorspace_fragment>
 }`;
@@ -125,7 +127,8 @@ export class SignalSet {
             // From just under the diamond up to the card's left edge.
             this.p.set(head.x, head.y + MARK.over - MARK.diamond * 1.4, head.z);
             this.dir.subVectors(sg.card, this.p);
-            const len = this.dir.length();
+            // A new call's beam climbs to its card (features/hail): only so much of it is drawn yet.
+            const len = this.dir.length() * Math.max(0.001, sg.reach);
             this.q.setFromUnitVectors(this.up, this.dir.normalize());
             this.m.compose(this.p, this.q, this.s.set(1, len, 1));
             this.beams.setMatrixAt(nb++, this.m);

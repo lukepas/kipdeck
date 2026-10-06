@@ -37,6 +37,8 @@ export interface Signal {
   card: THREE.Vector3 | null;
   /** Its own phase (radians), so no two turn in step. */
   phase: number;
+  /** How far up to its card the beam has climbed (0-1): a new call's beam climbs (features/hail), else 1. */
+  reach: number;
 }
 
 /** The signal a unit's shown state gets: none while it's parked (asleep, ready) or just merged. */

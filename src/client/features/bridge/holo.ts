@@ -19,7 +19,7 @@ import { COLUMN, columnRing, routePoint, unitSlot } from './holo-route';
 export interface Holo {
   /** Plots `course`: a waypoint per milestone, the chevron between the last one passed and the next, its units at their waypoints. */
   setCourse(course: Course): void;
-  /** Turns the plot slowly round the table (0.5 turns a minute); the bridge's tick calls it unless motion is reduced. */
+  /** Turns the plot round the table (6 degrees a second, a turn a minute); the bridge's tick calls it unless motion is reduced. */
   turn(dt: number): void;
   /** Runs the scan up the rings and the dashes along the course, `dt` seconds at `k` times their pace (features/life). */
   flow(dt: number, k: number): void;
@@ -36,7 +36,8 @@ declare module '../../world/types' {
   }
 }
 
-const TURN = (0.5 * Math.PI * 2) / 60;
+/** How fast the plot turns round the table (radians a second): 6 degrees, a turn a minute, so it reads as turning in a glance. */
+export const TURN = (6 * Math.PI) / 180;
 /** The most units the markers draw. */
 const UNITS = 24;
 
@@ -112,8 +113,12 @@ export const holo: Fixture<'holo'> = (site) => {
     const p = routePoint(i / 12);
     return new THREE.Vector3(p.x, p.y, p.z);
   }));
-  plot.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 160, 0.01, 5), light(0.32)));
-  plot.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 160, 0.04, 6), light(0.06)));
+  const course = new THREE.Mesh(new THREE.TubeGeometry(curve, 160, 0.01, 5), light(0.32));
+  const sheath = new THREE.Mesh(new THREE.TubeGeometry(curve, 160, 0.04, 6), light(0.06));
+  // Found by name for the done beat's fill and the mission's gold (features/hail/course.ts).
+  course.name = 'holo-course';
+  sheath.name = 'holo-course-sheath';
+  plot.add(course, sheath);
 
   const marks = new THREE.Group();
   plot.add(marks);

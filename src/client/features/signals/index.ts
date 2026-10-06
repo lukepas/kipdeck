@@ -12,7 +12,7 @@ import { UNIT } from '../../world/character/unit-body';
 import { phaseOf, signalOf, type Signal } from './logic';
 import { SignalSet } from './world';
 
-export function installSignals(ctx: Ctx, parts: Pick<Parts, 'views' | 'tv' | 'stage'>) {
+export function installSignals(ctx: Ctx, parts: Pick<Parts, 'views' | 'tv' | 'stage' | 'hail'>) {
   const set = new SignalSet();
   ctx.scene.add(set.root);
   /** Kept between frames, a set of vectors a unit. */
@@ -29,9 +29,10 @@ export function installSignals(ctx: Ctx, parts: Pick<Parts, 'views' | 'tv' | 'st
       const kind = signalOf(v.model.showing);
       if (!kind || !shown(v.model.root, ctx.scene)) continue;
       const i = signals.length;
-      const sg = (pool[i] ??= { kind, head: new THREE.Vector3(), foot: new THREE.Vector3(), station: new THREE.Vector3(), card: null, phase: 0 });
+      const sg = (pool[i] ??= { kind, head: new THREE.Vector3(), foot: new THREE.Vector3(), station: new THREE.Vector3(), card: null, phase: 0, reach: 1 });
       sg.kind = kind;
       sg.phase = phaseOf(id);
+      sg.reach = kind === 'needs-you' ? (parts.hail?.reach(id) ?? 1) : 1;
       v.model.where(sg.foot);
       const k = v.model.root.getWorldScale(scale).y || 1;
       sg.head.copy(sg.foot).setY(sg.foot.y + UNIT.top * k);
