@@ -2,7 +2,32 @@
 
 Back to the [README](../README.md) and the [design system](../DESIGN.md).
 
-The latest round is first, [the feel pass](#the-feel-pass-tables-bounties-hands-the-lounge-and-sound); the earlier rounds follow it in order.
+The latest round is first, [the fixes round](#the-fixes-round-the-bays-sign-the-planning-board-the-service-monitor-and-the-pit); the earlier rounds follow it in order.
+
+## The fixes round: the bay's sign, the planning board, the service monitor and the pit
+
+Four things the captain asked for. The shots are under `shots/fixes/`: `before/` and `before-boards/` from the build before the round (`design/shoot.mjs` and `shoot-boards.mjs`), and `after-night/`, `after-day/` and `after-low/` from `node design/shoot-fixes.mjs`, which seeds the boards' stand-in crew and runs a real little web server as a unit's dev server, at 1440x900 on the software renderer with Quality forced to High (Low for `after-low/`).
+
+### What changed (check it in under a minute)
+
+1. **The Review bay's sign is a table.** It was a 0.6 m list of facts beside the door, unreadable past a few metres (`before/deck-bay.png`). It is now a 1.8 by 1 m screen in the pane west of the door on the board layout: its name and how many wait, then a row each with the unit, what to review, its state as a chip in the ranking's hue and shape, and its age, four rows and +N more (`after-night/bay-sign.png`, `after-day/bay-sign.png`). From the dais, 25 m off, it shows two counts at 0.44 m (`after-night/seated-port.png`).
+2. **The planning board hangs on the west wall.** It stood on wheels in the east aisle (`before/deck-east.png`). It is flush on the west wall between the Review bay's glass and the hull frame north of the attestation rail, off the port bow from the dais and clear of the line to the arc and the bow glass (`after-night/seated-port.png`, `after-night/planning-board.png`); its tables keep their columns.
+3. **A service monitor on the east wall.** Walk up to it and the live page of a unit's dev server is on the screen, a real sandboxed frame placed by CSS3DRenderer (`after-night/monitor-live.png`); E gives it the mouse (`monitor-use.png`), O opens it full screen (`monitor-modal.png`). At a slant, far off or behind something, the screen's card shows instead (`monitor-slant.png`); with nothing running, a clean card (`monitor-none.png`); at Low quality, an Open button (`after-low/monitor-live.png`). E on a row of the Services board puts that service on it (`services-aim.png`). It loads only the link the Services board already opens; the CSP adds `http://localhost:*` to frame-src only on a page reached on this computer.
+4. **The pit is clear.** The operator bench and its two stools are gone (`before/deck-north.png` against `after-night/seated-bow.png`); E at the Attention board watches a teammate's shared screen full screen, as it already did.
+5. **The debrief end-to-end test passes.** The start of watch timed itself by the frame's capped dt, so at a few frames a second its wait and launch ran several times too long and the debrief came after the test's 60 s. It keeps the wall clock now.
+
+### Frame time
+
+`node design/perf-probe.mjs metal` (M3 Pro, ANGLE Metal), after: the conn at High draws 390 calls (budget 400; 385 after the feel pass), 1.8 to 2.2 ms forced render, rAF p50 and p95 16.7 ms (60 fps); the jump 424 calls, 2.1 ms; Medium with the CPU throttled 4x 328 calls (budget 330). The monitor's live page is drawn by the browser, not the scene, and only while it shows.
+
+### Checks
+
+`npm run typecheck`, `npm test` (all pass, the debrief test included), `npm run build`, `node design/flicker-check.mjs` (Night and Day, 600 frames each, no bad frame).
+
+### Left for later
+
+- The monitor's far face is small from the dais (it is a screen to walk up to); the sign and the planning board are the ones read from there.
+- A page that refuses to be framed (its own X-Frame-Options) shows blank on the monitor; Open in a tab still works.
 
 ## The feel pass: tables, bounties, hands, the lounge and sound
 
