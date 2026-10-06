@@ -1,6 +1,6 @@
 import type { AudioCore } from '../../sound/core';
 
-// Nubbin's voice and the Spark Sprig's sparkle, synthesized on the cue bus like the deck's own cues, and
+// Kip's voice and the Spark Sprig's sparkle, synthesized on the cue bus like the deck's own cues, and
 // off with them until sound is turned on in Settings: two-note marimba chirps (a happy "pip-prrp", a
 // rising "pip?", a single "pip"), one tiny sneeze, a soft breathy snore, and for the Sprig a wind-chime
 // tinkle on a big swing and one bright ping at the top of a twirl. No words, coos or baby sounds, and

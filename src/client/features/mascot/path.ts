@@ -1,15 +1,16 @@
-// Nubbin's ground: where the bridge mascot may go and how, kept free of three.js so the tests can pin
+// Kip's ground: where the bridge mascot may go and how, kept free of three.js so the tests can pin
 // it. He walks; he never flies. So his ways keep to the deck: the pit lane round the holo table (on
 // Bolt's own aroundTable, at a tighter ring), out past the west end of the tiers to his nest under the
 // droid's charger, through the Review bay's door, and up the centre aisle (the only way onto the dais,
-// since a tier's riser is nearly his height). His spots: the nest, the hiding place behind the
-// captain's chair, where he sits while a unit needs you (across the pod's entrance from Bolt, outside
-// the unit's ring, off the line from the camera to its glyph), his twirl spot (across the table from
-// Bolt's turn) and the bow end of the pit where he watches a jump.
+// since a tier's riser is nearly his height). His spots: the nest, the hiding place tucked under the
+// front tier's lip (below the captain's eye line, out of the aisle's mouth and off the line from the
+// camera to the stuck glyph), where he sits while a unit needs you (across the pod's entrance from
+// Bolt, outside the unit's ring, off the line from the camera to its glyph), his twirl spot (across the
+// table from Bolt's turn) and the bow end of the pit where he watches a jump.
 
 import { AISLE, DAIS, PIT, aisleHeight } from '../../../shared/amphitheater';
 import { FLOOR, MISSION_TABLE, PODS, POD_LETTERS, heightAt, type PodLetter } from '../../../shared/layout';
-import { CHARGER, DOOR_IN, DOOR_OUT, aroundTable, inReviewBay, segmentDistance, type P2, type P3 } from '../droid/path';
+import { CHARGER, DOOR_IN, DOOR_OUT, DROID, aroundTable, inReviewBay, segmentDistance, steer, type P2, type P3 } from '../droid/path';
 
 export const MASCOT = {
   /** His paces (m/s): a walk, a run, and Calm's amble. */
@@ -18,8 +19,9 @@ export const MASCOT = {
   calm: 0.6,
   /** How fast he turns to face where he goes (rad/s). */
   turn: 6,
-  /** One step's length (m): the gait's phase moves a step per stride. */
+  /** One step's length (m) at a walk and at a run: the gait's phase moves a step per stride, so a run is 5 to 6 steps a second. */
   stride: 0.22,
+  strideRun: 0.4,
   /** A hop's height (m). */
   hop: 0.12,
   /** The pit lane: the ring he runs round the table, and the nearest any leg comes to its middle (m). */
@@ -33,6 +35,10 @@ export const MASCOT = {
   keepLine: 0.6,
   /** A spot counts as reached within this (m). */
   reach: 0.1,
+  /** How far out from the table he tucks in to hide: right under the front tier's riser (m). */
+  tuck: PIT.r - 0.22,
+  /** How close the camera may come before he steps back (m). */
+  personal: 1.2,
   /** How tall he is to the top of his head, and to his ear tips (m). */
   height: 0.6,
   ears: 0.78,
@@ -55,15 +61,6 @@ export const CHAIR: P2 = { x: DAIS.x, z: DAIS.z + 0.25 };
 const aisleX = (side: number) => MISSION_TABLE.x + side * 0.65;
 const aisleFoot = (side: number): P2 => ({ x: aisleX(side), z: AISLE.z0 - 0.45 });
 const aisleTop = (side: number): P2 => ({ x: aisleX(side), z: AISLE.z1 + 0.25 });
-
-/** Which side of the dais (and the aisle) is away from the camera: +1 east, -1 west. */
-export const awaySide = (camera: P2) => (camera.x > CHAIR.x + 0.02 ? -1 : 1);
-
-/** Where he hides from a stuck alert: crouched behind the captain's chair, on the side the camera isn't. */
-export function hideSpot(camera: P2): P3 {
-  const side = awaySide(camera);
-  return { x: CHAIR.x + side * 0.35, y: DAIS.h, z: CHAIR.z + 0.6 };
-}
 
 /** Round the chair from the aisle's top to behind it, on `side`. */
 function behindChair(side: number): P2[] {
@@ -201,25 +198,101 @@ export function wayCrosses(from: P2, way: readonly P2[], camera: P2, glyph: P2):
   return false;
 }
 
-/**
- * His way to hide from a stuck alert: up the aisle on the side away from the camera, and if that way
- * would cross the line from the camera to the alert's glyph, round the table the other way first.
- */
-export function hideRoute(from: P2, camera: P2, glyph: P2 | null): P2[] {
-  const to = hideSpot(camera);
-  const way = walkRoute(from, to);
-  if (!glyph || !wayCrosses(from, way, camera, glyph)) return way;
-  // Round the far side of the table: out to the lane opposite the glyph, then up.
-  const away = lanePoint(angleOf(glyph) + Math.PI);
-  const round = walkRoute(from, away);
-  const rest = walkRoute(away, to);
-  return [...round, ...rest];
-}
-
 /** At the foot of the aisle, square in the middle of the captain's frame: never somewhere he stays. */
 export function inAisleMouth(p: P2): boolean {
   const d = Math.atan2(Math.sin(angleOf(p) - Math.PI / 2), Math.cos(angleOf(p) - Math.PI / 2));
   return Math.abs(d) < 0.3 && p.z > MISSION_TABLE.z;
+}
+
+/**
+ * One frame along a way at `speed` (m/s), on the droid's steering: he aims past each point so he keeps
+ * his pace through the way and pulls up short at its end. Moves `at` and `vel` on the ground, drops the
+ * points he has passed, and says whether he has reached `goal`.
+ */
+export function stepAlong(at: P3, vel: P3, way: P2[], goal: P2, speed: number, dt: number): boolean {
+  const next = way[0] ?? goal;
+  const dx = next.x - at.x;
+  const dz = next.z - at.z;
+  const n = Math.hypot(dx, dz) || 1;
+  const past = way.length ? 1.6 : 0.45;
+  if (way.length && n < 0.35) way.shift();
+  const ground = { x: at.x, y: 0, z: at.z };
+  steer(ground, vel, { x: next.x + (dx / n) * past, y: 0, z: next.z + (dz / n) * past }, dt, speed / DROID.speed);
+  vel.y = 0;
+  at.x = ground.x;
+  at.z = ground.z;
+  return !way.length && Math.hypot(at.x - goal.x, at.z - goal.z) < MASCOT.reach + 0.05;
+}
+
+/**
+ * Walked up to closer than MASCOT.personal: where he steps back to, straight away from the camera, or
+ * else to one side, on the level he is on and clear of the table; null when he has room, or nowhere will do.
+ */
+export function stepBack(at: P2, camera: P2): P3 | null {
+  const ox = at.x - camera.x;
+  const oz = at.z - camera.z;
+  const d = Math.hypot(ox, oz);
+  if (d >= MASCOT.personal) return null;
+  // Straight away first, then ever further round toward the side, each far enough to be 0.35 m clear of reach.
+  const away = d > 1e-6 ? Math.atan2(oz, ox) : 0;
+  const want = MASCOT.personal + 0.35;
+  const h = groundAt(at.x, at.z);
+  for (const turn of [0, 0.5, -0.5, 1, -1, 1.5, -1.5, 2, -2]) {
+    const ux = Math.cos(away + turn);
+    const uz = Math.sin(away + turn);
+    const b = ox * ux + oz * uz;
+    const k = -b + Math.sqrt(b * b - (d * d - want * want));
+    const to = { x: at.x + ux * k, y: h, z: at.z + uz * k };
+    if (Math.abs(groundAt(to.x, to.z) - h) <= 0.01 && Math.abs(groundAt((at.x + to.x) / 2, (at.z + to.z) / 2) - h) <= 0.01 && Math.hypot(to.x - MISSION_TABLE.x, to.z - MISSION_TABLE.z) >= MASCOT.clear) return to;
+  }
+  return null;
+}
+
+/** His stride (m) at `speed`: longer as he speeds up, so a run is a bouncy 5 to 6 steps a second. */
+export function strideAt(speed: number): number {
+  const k = Math.min(1, Math.max(0, (speed - MASCOT.walk) / (MASCOT.run - MASCOT.walk)));
+  return MASCOT.stride + (MASCOT.strideRun - MASCOT.stride) * k;
+}
+
+/** Whether the way from `from` goes into the aisle's mouth (checked every 10 cm; leaving it, if he starts there, is fine). */
+export function wayInMouth(from: P2, way: readonly P2[]): boolean {
+  let p = from;
+  let out = !inAisleMouth(from);
+  for (const q of way) {
+    const n = Math.max(1, Math.ceil(Math.hypot(q.x - p.x, q.z - p.z) / 0.1));
+    for (let i = 1; i <= n; i++) {
+      const m = inAisleMouth({ x: p.x + ((q.x - p.x) * i) / n, z: p.z + ((q.z - p.z) * i) / n });
+      if (m && out) return true;
+      if (!m) out = true;
+    }
+    p = q;
+  }
+  return false;
+}
+
+/**
+ * Where he hides from a stuck alert, and his way there: crouched at the foot of the front tier, tucked
+ * under its lip so the captain's eye line from the dais passes over all but his ear tips. He never
+ * climbs the dais for it, never crosses the aisle's mouth (square in the captain's frame) and never the
+ * line from the camera to the stuck glyph, and keeps out of the stuck unit's ring. The spot nearest the
+ * aisle on his own side first (the most tucked away from the conn), then the other side; null when
+ * nowhere will do, and he crouches where he is.
+ */
+export function hideSpot(from: P2, camera: P2, glyph: P2 | null): { spot: P3; way: P2[] } | null {
+  const own = from.x >= MISSION_TABLE.x ? 1 : -1;
+  for (const side of [own, -own]) {
+    for (let i = 0; i <= 12; i++) {
+      const a = Math.PI / 2 - side * (0.42 + i * 0.08);
+      const spot = lanePoint(a, MASCOT.tuck);
+      if (inAisleMouth(spot)) continue;
+      if (glyph && (inLine(spot, camera, glyph) || Math.hypot(spot.x - glyph.x, spot.z - glyph.z) < MASCOT.keep)) continue;
+      const way = walkRoute(from, spot);
+      if (wayInMouth(from, way)) continue;
+      if (glyph && wayCrosses(from, way, camera, glyph)) continue;
+      return { spot, way };
+    }
+  }
+  return null;
 }
 
 /**

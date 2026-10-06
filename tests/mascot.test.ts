@@ -1,4 +1,4 @@
-// Nubbin, the bridge mascot (src/client/features/mascot/path.ts and logic.ts): his ways keep clear of
+// Kip, the bridge mascot (src/client/features/mascot/path.ts and logic.ts): his ways keep clear of
 // the holo table and never step more than a ledge; he reaches the dais only by the aisle; where he hides
 // and sits keeps off the line from the camera to the glyph and out of the unit's ring and Bolt's spot;
 // his twirl is across the table from Bolt's; his modes go by priority; his gestures start and end at rest.
@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { AISLE, DAIS, LEDGE, PIT } from '../src/shared/amphitheater.js';
 import { MISSION_TABLE, PODS, POD_LETTERS, readySpot } from '../src/shared/layout.js';
 import { holdSpot, segmentDistance, tableSide, type P2 } from '../src/client/features/droid/path.js';
-import { CHAIR, MASCOT, NEST, WINDOW, angleOf, groundAt, hideRoute, hideSpot, inAisleMouth, inLine, lanePoint, lapPoints, zoomiesLoop, sitSpot, twirlSpot, walkRoute, wayCrosses } from '../src/client/features/mascot/path.js';
+import { CHAIR, MASCOT, NEST, WINDOW, angleOf, groundAt, hideSpot, inAisleMouth, inLine, lanePoint, lapPoints, zoomiesLoop, sitSpot, stepBack, strideAt, twirlSpot, walkRoute, wayCrosses, wayInMouth } from '../src/client/features/mascot/path.js';
 import { GESTURES, Gap, LAPS, NAP_AFTER_MS, REST, SPRIG, atRest, lapDirection, lapStyle, pickMode, poseAt, restMs, springStep, sprigLevel, type Gesture, type ModeInputs } from '../src/client/features/mascot/logic.js';
 
 const table = { x: MISSION_TABLE.x, z: MISSION_TABLE.z };
@@ -26,8 +26,10 @@ function walk(a: P2, way: P2[], step = 0.05): P2[] {
   return out;
 }
 
+/** Spots on the dais behind the captain's chair, either side. */
+const DAIS_SPOTS = [{ x: CHAIR.x + 0.35, z: CHAIR.z + 0.6 }, { x: CHAIR.x - 0.35, z: CHAIR.z + 0.6 }];
 /** The places he goes between, all round the deck. */
-const PLACES: P2[] = [lanePoint(0), lanePoint(Math.PI / 2), lanePoint(Math.PI), lanePoint(-Math.PI / 2), lanePoint(2.3), NEST, WINDOW, hideSpot(camera), hideSpot({ x: 1, z: CHAIR.z }), { x: -13, z: -13 }, ...POD_LETTERS.map((p) => lanePoint(PODS[POD_LETTERS.indexOf(p)].angle, MASCOT.edge))];
+const PLACES: P2[] = [lanePoint(0), lanePoint(Math.PI / 2), lanePoint(Math.PI), lanePoint(-Math.PI / 2), lanePoint(2.3), NEST, WINDOW, ...DAIS_SPOTS, lanePoint(1.0, MASCOT.tuck), lanePoint(2.1, MASCOT.tuck), { x: -13, z: -13 }, ...POD_LETTERS.map((p) => lanePoint(PODS[POD_LETTERS.indexOf(p)].angle, MASCOT.edge))];
 
 test('every way keeps clear of the holo table and never steps more than a ledge', () => {
   for (const a of PLACES) {
@@ -61,7 +63,7 @@ test('the pit lane is inside the pit, round the table', () => {
 
 test('the dais and the tiers are reached only by the aisle', () => {
   for (const a of PLACES.filter((p) => groundAt(p.x, p.z) === 0)) {
-    const to = hideSpot(camera);
+    const to = DAIS_SPOTS[0];
     const pts = walk(a, walkRoute(a, to), 0.05);
     // Every point that is off the deck is on the aisle or the dais: never on a tier.
     for (const p of pts) {
@@ -71,25 +73,29 @@ test('the dais and the tiers are reached only by the aisle', () => {
       const onDais = Math.hypot(p.x - DAIS.x, p.z - DAIS.z) <= DAIS.r;
       assert.ok(onAisle || onDais, `on a tier at ${p.x.toFixed(2)},${p.z.toFixed(2)}`);
     }
-    assert.ok(Math.abs(groundAt(to.x, to.z) - DAIS.h) < 1e-9, 'the hiding place is up on the dais');
+    assert.ok(Math.abs(groundAt(to.x, to.z) - DAIS.h) < 1e-9, 'the spot is up on the dais');
   }
 });
 
-test('he hides behind the chair on the side away from the camera, off the line to the glyph', () => {
-  const left = hideSpot({ x: -0.5, z: CHAIR.z });
-  const right = hideSpot({ x: 0.5, z: CHAIR.z });
-  assert.ok(left.x > CHAIR.x && right.x < CHAIR.x, 'the side the camera is not on');
-  assert.ok(left.z > CHAIR.z && right.z > CHAIR.z, 'behind the chair');
-  // From anywhere on the lane, with a unit stuck in any pod: the way up never crosses the line to its glyph.
+test('he hides on foot under the front tier: never up the dais, never through the aisle mouth or across the line to the glyph', () => {
+  // From anywhere on the lane, with a unit stuck in any pod and the camera at the conn.
   for (const pod of PODS) {
     for (let k = 0; k < 4; k++) {
       const a = pod.angle + (k - 1.5) * pod.step;
       const glyph = { x: Math.cos(a) * pod.radius, z: Math.sin(a) * pod.radius };
       for (let i = 0; i < 12; i++) {
         const from = lanePoint((i / 12) * Math.PI * 2);
-        const way = hideRoute(from, camera, glyph);
-        assert.ok(!wayCrosses(from, way, camera, glyph), `from lane ${i} to hide with ${pod.letter}-${k + 1} stuck`);
-        assert.ok(!inLine(hideSpot(camera), camera, glyph));
+        const h = hideSpot(from, camera, glyph);
+        assert.ok(h, `somewhere to hide from lane ${i} with ${pod.letter}-${k + 1} stuck`);
+        const { spot, way } = h;
+        const tag = `from lane ${i} with ${pod.letter}-${k + 1} stuck`;
+        assert.ok(!wayCrosses(from, way, camera, glyph), `${tag}: off the line to the glyph`);
+        assert.ok(!wayInMouth(from, way), `${tag}: never through the aisle's mouth`);
+        assert.ok(!inLine(spot, camera, glyph), `${tag}: the spot is off the line`);
+        assert.ok(Math.hypot(spot.x - glyph.x, spot.z - glyph.z) >= MASCOT.keep, `${tag}: out of the unit's ring`);
+        assert.equal(groundAt(spot.x, spot.z), 0, `${tag}: on the deck, not the dais`);
+        assert.ok(spot.z > MISSION_TABLE.z && Math.abs(Math.hypot(spot.x, spot.z) - (PIT.r - 0.22)) < 1e-9, `${tag}: tucked under the front tier, on the captain's side`);
+        for (const p of walk(from, way)) assert.equal(groundAt(p.x, p.z), 0, `${tag}: never climbs`);
       }
     }
   }
@@ -154,12 +160,15 @@ test('switched off, Ship motion Off, reduced motion and Silent running park him,
 });
 
 test('laps at Full with three at work and the rest over; Calm ambles; Silent running rests', () => {
-  assert.equal(lapStyle('full', 3, 0), 'run');
-  assert.equal(lapStyle('full', 2, 0), 'rest');
-  assert.equal(lapStyle('full', 5, 1000), 'rest', 'still resting');
-  assert.equal(lapStyle('calm', 5, 0), 'amble');
-  assert.equal(lapStyle('calm', 0, 0), 'rest');
-  assert.equal(lapStyle('silent', 5, 0), 'rest');
+  assert.equal(lapStyle('full', 3, 0, false), 'run');
+  assert.equal(lapStyle('full', 2, 0, false), 'rest');
+  assert.equal(lapStyle('full', 5, 1000, false), 'rest', 'still resting');
+  assert.equal(lapStyle('calm', 5, 0, false), 'amble');
+  assert.equal(lapStyle('calm', 0, 0, false), 'rest');
+  assert.equal(lapStyle('silent', 5, 0, false), 'rest');
+  // Anyone needing the captain (a hail, a snoozed unit): no laps and no ambling, at any level.
+  assert.equal(lapStyle('full', 8, 0, true), 'rest');
+  assert.equal(lapStyle('calm', 8, 0, true), 'rest');
   for (const seed of ['a', 'b', 'c']) {
     const r = restMs(seed);
     assert.ok(r >= LAPS.restMin && r <= LAPS.restMax);
@@ -168,6 +177,28 @@ test('laps at Full with three at work and the rest over; Calm ambles; Silent run
   const dirs = new Set(Array.from({ length: 30 }, (_, i) => lapDirection('evt-1', i)));
   assert.deepEqual([...dirs].sort(), [-1, 1], 'he changes direction every few laps');
   assert.equal(lapDirection('evt-1', 0), lapDirection('evt-1', 2), 'a few laps the same way');
+});
+
+test('walked up to, he steps back out of arm\'s reach, on his own level, never into the table', () => {
+  for (let i = 0; i < 24; i++) {
+    const at = lanePoint((i / 24) * Math.PI * 2);
+    for (const [dx, dz] of [[0.5, 0], [0, -0.8], [-0.3, 0.3], [0, 0]]) {
+      const cam = { x: at.x + dx, z: at.z + dz };
+      const to = stepBack(at, cam);
+      assert.ok(to, 'somewhere to go');
+      assert.ok(Math.hypot(to.x - cam.x, to.z - cam.z) >= MASCOT.personal, 'out of reach');
+      assert.ok(Math.hypot(to.x, to.z) >= MASCOT.clear, 'clear of the table');
+      assert.ok(Math.abs(groundAt(to.x, to.z) - groundAt(at.x, at.z)) <= 0.01, 'on his own level');
+    }
+  }
+  assert.equal(stepBack(lanePoint(1), { x: 0, z: 9 }), null, 'with room, he stays');
+});
+
+test('his run is a bouncy 5 to 6 steps a second; his walk is slower and shorter', () => {
+  const steps = (speed: number) => speed / strideAt(speed);
+  assert.ok(steps(MASCOT.run) >= 5 && steps(MASCOT.run) <= 6, `${steps(MASCOT.run).toFixed(1)} steps a second at a run`);
+  assert.ok(steps(MASCOT.walk) < steps(MASCOT.run) && strideAt(MASCOT.walk) < strideAt(MASCOT.run));
+  assert.equal(strideAt(0.3), MASCOT.stride);
 });
 
 test('every gesture starts and ends at rest, and the twirl goes twice round overhead', () => {
@@ -179,11 +210,11 @@ test('every gesture starts and ends at rest, and the twirl goes twice round over
     assert.equal(keys[keys.length - 1][0], 1);
     for (let i = 1; i < keys.length; i++) assert.ok(keys[i][0] > keys[i - 1][0], `${g}'s keys in order`);
   }
-  assert.equal(GESTURES.twirl.ms, 1200);
   const top = poseAt('twirl', 0.5);
-  assert.ok(top.arm > 0.9 && top.hop > 0.05, 'up on a hop, the Sprig overhead');
+  assert.ok(top.arm > 0.9 && top.hop > 0.1, 'up on a hop, the Sprig overhead');
   assert.equal(poseAt('twirl', 1).twirl, 2);
-  assert.equal(poseAt('twirl', 1).spin, 1);
+  for (let t = 0; t <= 1; t += 0.05) assert.equal(poseAt('twirl', t).spin, 0, 'he keeps facing the captain');
+  assert.ok(GESTURES.wave.ms >= 1200, 'a wave held long enough to see');
   assert.ok(!atRest({ ...REST, twirl: 0.5 }));
 });
 

@@ -28,7 +28,7 @@ export function offerHello(ctx: Ctx, rig: MascotRig, clicked: () => void): Hello
   const none = new THREE.Group();
   ctx.interactions.define('mascot', {
     reach: 7,
-    hint: () => ({ k: 'mascot', parts: [hintTitle('Nubbin'), aside('stowaway deck kit'), key('E', 'Say hi')] }),
+    hint: () => ({ k: 'mascot', parts: [hintTitle('Kip'), aside('stowaway deck kit'), key('E', 'Say hi')] }),
     use: onE(() => clicked()),
   });
   ctx.usables.add({ usable: () => (it.off ? [] : [it]), pickable: () => (it.off ? none : standIn) });

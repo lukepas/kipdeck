@@ -189,7 +189,7 @@ installSorties(ctx, parts);
 parts.vesper = installVesper(ctx, parts);
 parts.crew = installCrew(ctx, parts);
 parts.droid = installDroid(ctx, parts);
-// Nubbin, the bridge mascot: after Bolt, whose errands he follows.
+// Kip, the bridge mascot: after Bolt, whose errands he follows.
 installMascot(ctx, parts);
 // Before the moments: its pose comes off first each frame, as it is laid last (after their gestures).
 installPosture(ctx, parts);

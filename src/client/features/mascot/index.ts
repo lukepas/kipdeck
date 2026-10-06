@@ -1,26 +1,17 @@
 /**
- * Nubbin ("Nub" on the crew roster), the bridge mascot: a stowaway deck kit who adopted the flagship
- * and follows Bolt the droid about, waving the Spark Sprig, a glowing toy wand he found in a parts
- * locker. Everything he does answers something real on the deck:
+ * Kip, the bridge mascot: a stowaway deck kit who adopted the flagship and follows Bolt the droid
+ * about, waving the Spark Sprig, a glowing toy wand he found in a parts locker. Everything he does
+ * answers something real on the deck (docs/design.md has the table): laps while three or more work, an
+ * escort of Bolt's crate, a twirl for a merge, zoomies for a streak, tucking in under the front tier
+ * while a unit is stuck, sitting quietly by one that needs you, watching a jump, a wave when you say
+ * hi, and a nap in his nest when nothing is at work.
  *
- * - three or more units at work (Life at Full): laps of the pit lane, the Sprig trailing motes, a bounce
- *   by the busiest pod after each run, then a rest; Calm has him amble instead;
- * - a unit finishes: he runs to meet Bolt at its console, jogs along beside the crate and waits at the
- *   Review bay's door, hopping as it is set down (one escort a minute);
- * - a merge: a hop and a twirl of the Sprig overhead across the table from Bolt's turn (a bow for a
- *   unit's first ever); a streak: zoomies round the table and a flop on his back;
- * - a unit stuck: he stops, runs up the aisle and hides behind the captain's chair, the Sprig all but
- *   dark, holding completely still until it recovers, then shakes himself off;
- * - a unit that needs you: he walks to its pod, sits facing it outside its ring and off the line from
- *   you to its glyph, the Sprig dimmed across his knees, and chirps once when you answer;
- * - a waypoint's jump: he watches from the bow end of the pit, waving the Sprig, and sneezes on arrival;
- * - you click him or walk up to him: a curious chirp and a wave (a wiggle for a second click);
- * - nothing at work for two minutes: he naps in his nest under Bolt's charger, the Sprig his nightlight.
- *
- * He gives way: while anyone needs you he does no laps, gestures or greetings. Ship motion Off, reduced
- * motion and Silent running park him asleep in his nest, every pose a cut. A hidden tab does no work.
- * Settings > Bridge > Life > Bridge mascot turns him off. He lives on the bridge layer, so the Overview
- * never shows him, and he carries no state shape or state hue.
+ * He gives way: while anyone needs you he does no laps, gestures or greetings. He keeps his own space:
+ * walk up close and he steps back, and the camera never ends up inside him (he dithers out within a
+ * metre and is not drawn closer than half a metre). Ship motion Off, reduced motion and Silent running
+ * park him asleep in his nest, every pose a cut. A hidden tab does no work. Settings > Bridge > Life >
+ * Bridge mascot turns him off. He lives on the bridge layer, so the Overview never shows him, and he
+ * carries no state shape or state hue.
  */
 import * as THREE from 'three';
 import { DESK_BY_ID, type PodLetter } from '../../../shared/layout';
@@ -28,11 +19,11 @@ import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { store } from '../../state';
 import { tierOf } from '../beats/tiers';
-import { DOOR_IN, DOOR_OUT, DROID, holdSpot, steer, type P2, type P3 } from '../droid/path';
+import { DOOR_IN, DOOR_OUT, holdSpot, type P2, type P3 } from '../droid/path';
 import { debugHandle } from '../giveway';
-import { Animator, type AnimInput, type Ears, type Hold, type SprigHold } from './anim';
-import { GAPS, GESTURES, Gap, LAPS, NAP_AFTER_MS, REST, SPRIG, lapDirection, lapStyle, pickMode, poseAt, restMs, sprigLevel, type Gesture, type Mode } from './logic';
-import { CHAIR, MASCOT, NEST, WINDOW, angleOf, faceTo, groundAt, hideRoute, lanePoint, lapPoints, podEdge, podFace, sitSpot, treadAt, twirlSpot, walkRoute, zoomiesLoop } from './path';
+import { Animator, mood, type AnimInput, type Hold } from './anim';
+import { ESCORT_MS, GAPS, GESTURES, Gap, LAPS, NAP_AFTER_MS, REST, SPRIG, lapDirection, lapStyle, pickMode, poseAt, restMs, sprigLevel, type Gesture, type Mode, type Playing } from './logic';
+import { MASCOT, NEST, WINDOW, angleOf, faceTo, groundAt, hideSpot, inLine, lanePoint, lapPoints, podEdge, podFace, sitSpot, stepAlong, stepBack, treadAt, twirlSpot, walkRoute, zoomiesLoop } from './path';
 import type { MascotSound } from './sound';
 import { MOTES, buildMascot } from './world';
 import { readDeck, type DeckRead } from './deck';
@@ -41,29 +32,18 @@ import { offerHello } from './hello';
 
 export interface Mascot {
   /** What he is doing and where (the shots and the console). */
-  state(): { mode: Mode; hold: Hold; x: number; y: number; z: number; yaw: number; asleep: boolean; gesture: Gesture | null; sprig: number; lap: string; ms: number };
+  state(): { mode: Mode; hold: Hold; moving: boolean; x: number; y: number; z: number; yaw: number; asleep: boolean; gesture: Gesture | null; sprig: number; lap: string; ms: number };
   /** Gives him something to do now, as its event would (the shots): a merge, a streak, a click, or a nap as if the deck had been idle. */
   poke(what: 'twirl' | 'first-merge' | 'zoomies' | 'greet' | 'nap' | 'wake'): void;
 }
 
-/** A gesture playing: which, from when (ms on his clock), and what comes after it. */
-interface Playing {
-  g: Gesture;
-  at: number;
-  then?: () => void;
-  /** Whether he stays put while it plays. */
-  still: boolean;
-}
-
-/** The longest an escort runs, from the unit finishing to the crate set down (ms): Bolt may have errands queued. */
-const ESCORT_MS = 75_000;
 const wrap = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
 const d2 = (a: P2, b: P2) => Math.hypot(a.x - b.x, a.z - b.z);
 
 export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' | 'space' | 'alert' | 'droid' | 'quality'>): Mascot {
   const rig = buildMascot();
   ctx.scene.add(rig.group);
-  const anim = new Animator('nubbin');
+  const anim = new Animator('kip');
   const at: P3 = { ...NEST };
   const vel: P3 = { x: 0, y: 0, z: 0 };
   let yaw = Math.PI / 2;
@@ -77,6 +57,9 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
   let pace = 0;
   let face: P2 | null = null;
   let onArrive: (() => void) | null = null;
+  /** What to do once he has turned to face where he faces (a gesture for the captain). */
+  let whenFacing: { then: () => void; at: number } | null = null;
+  let sitCheckAt = 0;
   let arrived = true;
   let legAt = 0;
   let playing: Playing | null = null;
@@ -184,6 +167,10 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
     face = faceAt;
     onArrive = null;
   }
+  /** Turns to the captain first (wherever the view is by then), then does `then` (within a second and a half whatever happens). */
+  function facing(then: () => void) {
+    whenFacing = { then, at: clock };
+  }
   function gesture(g: Gesture, still: boolean, then?: () => void) {
     playing = { g, at: clock, then, still };
   }
@@ -193,6 +180,7 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
     yaw = faceTo(NEST, { x: 0, z: NEST.z });
     stop(null);
     playing = null;
+    whenFacing = null;
     asleep = true;
     hold = 'asleep';
     cut = true;
@@ -207,6 +195,7 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
     cut = false;
     face = null;
     hold = 'stand';
+    whenFacing = null;
     if (was === 'sit') {
       play('pip');
       sitFor = null;
@@ -229,7 +218,7 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
       goTo(spot, runPace(), null, () => {
         face = cam();
         const first = pendingGesture?.first;
-        gesture('twirl', true, () => (first ? gesture('bow', true, endGesture) : endGesture()));
+        facing(() => gesture('twirl', true, () => (first ? gesture('bow', true, endGesture) : endGesture())));
       });
     } else if (next === 'zoomies') {
       const loop = zoomiesLoop(at);
@@ -244,7 +233,8 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
       stop(cam());
       play('curious');
       // After the stretch, if he was asleep.
-      const wave = () => gesture('wave', true);
+      // The wave, then a moment more of looking at you before he goes back to what he was doing.
+      const wave = () => facing(() => gesture('wave', true, () => greetReq && (greetReq.at = clock)));
       if (playing) {
         const then = playing.then;
         playing.then = () => {
@@ -273,18 +263,26 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
     const gw = parts.giveWay;
     const c = cam();
     if (mode === 'hide') {
-      // Stopped dead for a moment, then up the aisle the way that keeps off the line to the glyph.
+      // Stopped dead for a moment, then a quiet walk (never a run across the captain's frame) to tuck
+      // in under the front tier's lip, by a way that keeps out of the aisle's mouth and off the line to the glyph.
       if (clock < hideStopUntil || goal || hold === 'hide') return;
-      const route = hideRoute(at, c, deck.stuck?.at ?? null);
-      const end = route[route.length - 1];
-      follow(route.slice(0, -1), { x: end.x, y: groundAt(end.x, end.z), z: end.z }, MASCOT.run, null, () => {
+      const h = hideSpot(at, c, deck.stuck?.at ?? null);
+      const tuck = () => {
         hold = 'hide';
-        face = { x: CHAIR.x, z: CHAIR.z - 3 };
-      });
+        face = { x: 0, z: 0 };
+      };
+      if (h) follow(h.way.slice(0, -1), h.spot, MASCOT.walk, null, tuck);
+      else tuck();
     } else if (mode === 'sit' && deck.needs) {
-      // Where he sits is picked once for a unit and kept, so he never shuffles as the view moves.
+      // Where he sits is picked once for a unit and kept, so he never shuffles as the view moves; once a
+      // second it is checked against the camera now, and only a spot well inside the line is given up.
       const n = deck.needs;
-      if (!sitFor || sitFor.id !== n.id || d2(sitFor.unit, n.at) > 0.5) {
+      let moved = false;
+      if (sitFor && clock >= sitCheckAt) {
+        sitCheckAt = clock + 1000;
+        moved = inLine(sitFor.spot, c, n.at, MASCOT.keepLine * 0.6);
+      }
+      if (!sitFor || moved || sitFor.id !== n.id || d2(sitFor.unit, n.at) > 0.5) {
         const bolt = gw.wants('droid') && n.pod ? holdSpot(n.pod, n.at, c) : null;
         sitFor = { id: n.id, unit: n.at, spot: n.pod ? sitSpot(n.pod, n.at, c, bolt) : { x: at.x, y: 0, z: at.z } };
         hold = 'stand';
@@ -348,8 +346,14 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
 
   function lapsStep() {
     const gw = parts.giveWay;
-    const style = lapStyle(gw.level(), deck.working, laps.restUntil - clock);
+    const style = lapStyle(gw.level(), deck.working, laps.restUntil - clock, gw.attention());
     if (playing?.still) return;
+    // Someone needs the captain: a run of laps ends where he is, and he walks quietly to the busiest pod.
+    if (style === 'rest' && gw.attention() && laps.phase === 'run') {
+      stop(null);
+      laps.phase = 'rest';
+      laps.idleAt = clock - 4000;
+    }
     if (style === 'run' && laps.phase === 'rest') {
       laps.phase = 'run';
       laps.runAt = clock;
@@ -388,7 +392,7 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
       goTo(spot, MASCOT.calm, podFace(deck.busiest), () => (laps.idleAt = clock));
       return;
     }
-    if (style !== 'amble' && deck.busiest && arrived && !goal && d2(at, podEdge(deck.busiest)) > 1.2 && clock - laps.idleAt > 4000) {
+    if (style !== 'amble' && deck.busiest && arrived && !goal && d2(at, podEdge(deck.busiest)) > 1.2 && d2(cam(), podEdge(deck.busiest)) > MASCOT.personal + 0.3 && clock - laps.idleAt > 4000) {
       const pod = deck.busiest;
       goTo(podEdge(pod), MASCOT.walk, podFace(pod), () => (laps.idleAt = clock));
     }
@@ -398,9 +402,22 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
     goTo(lanePoint(angleOf(at)), MASCOT.run, null, () => follow(pts.slice(0, -1), pts[pts.length - 1], MASCOT.run));
   }
 
+  /** Walked up to close: a few steps back (or aside) on the level he is on, still facing the captain. */
+  function giveSpace() {
+    if (goal || asleep || hold === 'sit' || hold === 'hide' || playing?.still || mode === 'escort' || mode === 'parked' || mode === 'off' || mode === 'hide' || mode === 'sit') return;
+    const c = cam();
+    const to = stepBack(at, c);
+    if (!to) return;
+    if (hold === 'bounce') {
+      laps.phase = 'rest';
+      laps.restUntil = clock + restMs(`${laps.seed}:${laps.count}`);
+    }
+    hold = 'stand';
+    follow([], to, MASCOT.walk, c);
+  }
+
   // ---- Moving --------------------------------------------------------------------------------------
   function move(dt: number, motion: number) {
-    const ground = { x: at.x, y: 0, z: at.z };
     if (!goal || arrived || (playing?.still ?? false) || clock < hideStopUntil) {
       const k = clock < hideStopUntil ? 0 : Math.max(0, 1 - dt * 9);
       vel.x *= k;
@@ -409,32 +426,15 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
       at.z += vel.z * dt;
       return;
     }
-    // Aim past each point, so he keeps his pace through the way and pulls up short at its end.
-    const next = way[0] ?? goal;
-    const dx = next.x - at.x;
-    const dz = next.z - at.z;
-    const n = Math.hypot(dx, dz) || 1;
-    const past = way.length ? 1.6 : 0.45;
-    const target: P3 = { x: next.x + (dx / n) * past, y: 0, z: next.z + (dz / n) * past };
-    if (way.length && n < 0.35) way.shift();
-    steer(ground, vel, target, dt, (pace * motion) / DROID.speed);
-    vel.y = 0;
-    at.x = ground.x;
-    at.z = ground.z;
-    if (!way.length && d2(at, goal) < MASCOT.reach + 0.05) {
-      arrived = true;
-      goal = null;
-      const f = onArrive;
-      onArrive = null;
-      f?.();
-    } else if (clock - legAt > 45_000) {
-      // Never stuck on a way: there after 45 s, whatever happened.
-      Object.assign(at, { x: goal.x, z: goal.z });
-      arrived = true;
-      goal = null;
-      onArrive?.();
-      onArrive = null;
-    }
+    const reached = stepAlong(at, vel, way, goal, pace * motion, dt);
+    // Never stuck on a way: there after 45 s, whatever happened.
+    if (!reached && clock - legAt <= 45_000) return;
+    if (!reached) Object.assign(at, { x: goal.x, z: goal.z });
+    arrived = true;
+    goal = null;
+    const f = onArrive;
+    onArrive = null;
+    f?.();
   }
 
   // ---- The frame ----------------------------------------------------------------------------------------
@@ -495,6 +495,7 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
     const frozen = mode === 'parked';
     if (!frozen) {
       steerMode();
+      giveSpace();
       move(dt, Math.max(0.3, gw.motion()));
     }
     place(dt, frozen, attention);
@@ -520,6 +521,14 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
     yaw = wrap(yaw + step);
     rig.root.position.set(at.x, at.y, at.z);
     rig.root.rotation.y = yaw;
+    // Turned to face the captain: the gesture waiting on it starts.
+    if (whenFacing) face = cam();
+    if (whenFacing && ((Math.abs(turn) < 0.12 && speed < 0.2) || clock - whenFacing.at > 1500)) {
+      const f = whenFacing.then;
+      whenFacing = null;
+      f();
+    }
+    rig.fadeFrom(ctx.camera.getWorldPosition(tmp));
     rig.shadow.position.set(at.x, at.y + 0.006, at.z);
     // The gesture playing, if any.
     if (playing) {
@@ -537,8 +546,7 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
     const lookAt = mode === 'sit' && deck.needs ? deck.needs.at : mode === 'escort' ? parts.droid.state() : mode === 'greet' || windowAfter >= 0 ? cam() : face;
     const look = lookAt ? wrap(faceTo(at, lookAt) - yaw) : 0;
     const jumping = hold === 'windowJump';
-    const ears: Ears = mode === 'hide' ? 'flat' : mode === 'sit' ? 'half' : asleep || mode === 'parked' ? 'droop' : jumping ? 'flat' : mode === 'greet' || mode === 'escort' || hold === 'bounce' || hold === 'window' ? 'perk' : 'relaxed';
-    const sprigHold: SprigHold = mode === 'sit' ? 'knees' : jumping || pose.flop > 0.5 ? 'up' : speed > MASCOT.walk + 0.3 ? 'trail' : 'low';
+    const m = mood(mode, hold, asleep, speed, pose.flop);
     const still = frozen || (mode === 'hide' && hold === 'hide') || (attention && mode !== 'hide' && hold !== 'stand');
     if (flap > 0) {
       pose.shake = Math.sin(flap * Math.PI * 4) * 0.6 * flap;
@@ -549,17 +557,15 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
       accel: frozen ? 0 : accel,
       turn: frozen ? 0 : step / Math.max(dt, 1e-3),
       hold: asleep || frozen ? 'asleep' : hold,
-      ears,
+      ...m,
       look: asleep ? 0 : look,
-      lookUp: hold === 'window' || jumping ? 0.35 : mode === 'escort' ? 0.3 : mode === 'greet' ? 0.25 : 0,
       blink: !frozen && !(mode === 'hide' && hold === 'hide'),
-      lids: mode === 'sit' ? 0.25 : mode === 'hide' ? 0.35 : hold === 'window' || jumping ? 0 : mode === 'nest' ? 0.4 : 0.07,
       still,
       cut: frozen || cut,
       pose,
-      sprig: sprigHold,
       fluff: jumping,
       scarf: parts.quality.tier() !== 'low',
+      springs: parts.quality.tier() !== 'low',
       clock,
     };
     anim.frame(rig, input, frozen ? 0 : dt, frozen ? 0 : speed * dt);
@@ -570,12 +576,12 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
     sprig = frozen ? target : sprig + Math.sign(target - sprig) * Math.min(Math.abs(target - sprig), dt / (target > sprig ? SPRIG.wakeMs / 1000 : 1));
     rig.glow(sprig);
     const tier = parts.quality.tier();
-    trail.step(dt, !frozen && !attention && gw().level() === 'full' && (flourish || (mode === 'laps' && laps.phase === 'run' && speed > 1)), tier === 'high' ? MOTES : tier === 'medium' ? MOTES / 2 : 0);
+    trail.step(dt, !frozen && !attention && hold !== 'windowJump' && gw().level() === 'full' && (flourish || (mode === 'laps' && laps.phase === 'run' && speed > 1)), tier === 'high' ? MOTES : tier === 'medium' ? MOTES / 2 : 0);
   }
   const gw = () => parts.giveWay;
 
   const mascot: Mascot = {
-    state: () => ({ mode, hold, yaw, x: at.x, y: at.y, z: at.z, asleep, gesture: playing?.g ?? null, sprig, lap: laps.phase, ms: +tickMs.toFixed(3) }),
+    state: () => ({ mode, hold, moving: !arrived, yaw, x: at.x, y: at.y, z: at.z, asleep, gesture: playing?.g ?? null, sprig, lap: laps.phase, ms: +tickMs.toFixed(3) }),
     poke(what) {
       if (what === 'nap' || what === 'wake') return void (napping = what === 'nap');
       if (what === 'greet') {

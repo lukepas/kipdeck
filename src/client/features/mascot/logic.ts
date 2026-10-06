@@ -1,4 +1,4 @@
-// Nubbin's rules, kept free of three.js so the tests can pin them: what he does, picked in one priority
+// Kip's rules, kept free of three.js so the tests can pin them: what he does, picked in one priority
 // order from what is true on the deck; how he spends his laps; his gestures as keyframe tables that
 // start and end at rest; the springs his ears, tail and scarf hang on; how bright the Spark Sprig is
 // for what he is doing; and the gaps that keep each behaviour rare.
@@ -59,9 +59,11 @@ export const LAPS = { maxMs: 25_000, restMin: 15_000, restMax: 30_000, bounceMs:
 
 /**
  * How he keeps the crew company: runs laps at Full with three or more at work and his rest over, ambles
- * at Calm, and otherwise rests by the busiest pod (or where he is).
+ * at Calm, and otherwise rests by the busiest pod (or where he is). While anyone needs the captain (a
+ * hail, a snoozed unit, anything the bridge's attention holds) he only rests.
  */
-export function lapStyle(level: LifeLevel, working: number, restLeftMs: number): 'run' | 'amble' | 'rest' {
+export function lapStyle(level: LifeLevel, working: number, restLeftMs: number, attention: boolean): 'run' | 'amble' | 'rest' {
+  if (attention) return 'rest';
   if (level === 'calm') return working > 0 ? 'amble' : 'rest';
   if (level !== 'full') return 'rest';
   return working >= LAPS.crew && restLeftMs <= 0 ? 'run' : 'rest';
@@ -116,10 +118,11 @@ type Key = [t: number, pose: Partial<Pose>];
 
 /** Each gesture: its length (ms) and its keys (t from 0 to 1). All start and end at rest. */
 export const GESTURES: Readonly<Record<Gesture, { ms: number; keys: readonly Key[] }>> = {
-  // A merge: a hop, the Sprig twirled overhead twice while he spins once, happy eyes.
-  twirl: { ms: 1200, keys: [[0, {}], [0.15, { crouch: 0.4, arm: 0.6, happy: 1 }], [0.4, { hop: 0.12, spin: 0.45, arm: 1, twirl: 0.9, happy: 1 }], [0.7, { hop: 0.03, spin: 0.95, arm: 1, twirl: 1.8, happy: 1 }], [0.88, { spin: 1, arm: 0.4, twirl: 2, happy: 1, crouch: 0.15 }], [1, { spin: 1, twirl: 2 }]] },
-  // A greeting: the Sprig waved once, side to side.
-  wave: { ms: 1100, keys: [[0, {}], [0.2, { arm: 0.75, wave: 0.8 }], [0.45, { arm: 0.8, wave: -0.8 }], [0.7, { arm: 0.75, wave: 0.6 }], [1, {}]] },
+  // A merge, facing the captain: a crouch, then a hop with the Sprig straight up overhead, spun twice
+  // round his mitten like a pinwheel at the top of the hop, happy eyes, and down.
+  twirl: { ms: 1400, keys: [[0, {}], [0.14, { crouch: 0.45, arm: 0.5, happy: 1 }], [0.32, { hop: 0.14, arm: 1, twirl: 0.5, happy: 1 }], [0.5, { hop: 0.16, arm: 1, twirl: 1.1, happy: 1 }], [0.68, { hop: 0.04, arm: 1, twirl: 1.75, happy: 1 }], [0.86, { arm: 0.7, twirl: 2, happy: 1, crouch: 0.15 }], [1, { twirl: 2 }]] },
+  // A greeting: the Sprig held up and waved side to side like a wand, held long enough to see.
+  wave: { ms: 1700, keys: [[0, {}], [0.14, { arm: 0.75, wave: 0.8, happy: 0.5 }], [0.32, { arm: 0.8, wave: -0.8, happy: 0.8 }], [0.5, { arm: 0.8, wave: 0.8, happy: 0.8 }], [0.68, { arm: 0.8, wave: -0.7, happy: 0.6 }], [0.84, { arm: 0.7, wave: 0.4 }], [1, {}]] },
   // A second click: a happy wiggle.
   wiggle: { ms: 900, keys: [[0, {}], [0.15, { wiggle: 1, happy: 1 }], [0.38, { wiggle: -1, happy: 1 }], [0.62, { wiggle: 1, happy: 1 }], [0.85, { wiggle: -0.5, happy: 1 }], [1, {}]] },
   // Out from hiding: a quick wet-dog shake of the ears and scarf.
@@ -196,7 +199,15 @@ export const SPRIG = {
   rim: '#F28DB8',
   /** The vertex colours' scale at full light: the core's linear luminance times this stays under the glow's threshold. */
   peak: 0.72,
+  /** The least of its peak it shows lit at all: dimmed, it stays a pale crystal and never goes maroon. */
+  floor: 0.25,
 } as const;
+
+/** How bright the crystal is drawn (a part of its peak) at a light `level` (0 to 1); 0 is off. */
+export function sprigShown(level: number): number {
+  const k = Math.max(0, Math.min(1, level));
+  return k > 0 ? SPRIG.floor + (1 - SPRIG.floor) * k : 0;
+}
 
 export function sprigLevel(mode: Mode, o: { attention: boolean; asleep: boolean; flourish: boolean }): number {
   if (mode === 'off') return 0;
@@ -221,6 +232,18 @@ export class Gap {
     return true;
   }
 }
+
+/** A gesture playing: which, from when (ms on his clock), and what comes after it. */
+export interface Playing {
+  g: Gesture;
+  at: number;
+  then?: () => void;
+  /** Whether he stays put while it plays. */
+  still: boolean;
+}
+
+/** The longest an escort runs, from the unit finishing to the crate set down (ms): Bolt may have errands queued. */
+export const ESCORT_MS = 75_000;
 
 /** The gaps: one escort a minute, a greeting by click every 10 s and by walking up every 2 minutes. */
 export const GAPS = { escortMs: 60_000, clickMs: 10_000, walkByMs: 120_000, againMs: 3000 } as const;
