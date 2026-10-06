@@ -89,6 +89,7 @@ Usage:
   mergeline [options]
   mergeline [dir] [options]
   mergeline open [--print]
+  mergeline attach [--agent claude|codex|cursor] [--session <id>] [--list]
   mergeline setup [--projects <dir>] [--project <owner/repo>]...
   mergeline prune [dir] [--dry-run] [--force]
   mergeline accounts [list|invite|revoke|role|password] ...
@@ -110,6 +111,9 @@ started in a project where an office already ran), it keeps its data in
 Commands:
   open                    Open the running office in your browser, signed in
                           (a new sign-in link; see open --help)
+  attach                  Move an agent you started in a terminal (Claude Code,
+                          Codex, Cursor) into the inbox: its session carries on
+                          as one of the office's agents (see attach --help)
   setup                   Pick the folder projects are cloned into and clone
                           projects as floors: a walkthrough in a terminal, or
                           just --projects / --project for scripts (see setup --help)

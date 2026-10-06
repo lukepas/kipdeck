@@ -28,6 +28,10 @@ if (argv[0] === 'tunnel') {
   const { tunnelCommand } = await import('./tunnel/index.js');
   process.exit(await tunnelCommand(argv.slice(1)));
 }
+if (argv[0] === 'attach') {
+  const { attachCommand } = await import('./attach.js');
+  process.exit(await attachCommand(argv.slice(1)));
+}
 if (argv[0] === 'open') {
   const { openCommand } = await import('./opencmd.js');
   process.exit(await openCommand(argv.slice(1)));

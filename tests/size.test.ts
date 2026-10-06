@@ -21,7 +21,7 @@ const BUDGET = 600;
  */
 const CEILINGS: Readonly<Record<string, number>> = {
   'src/server/dsh.ts': 1148,
-  'src/server/workers/manager.ts': 1014,
+  'src/server/workers/manager.ts': 1011,
   'src/server/meetings.ts': 764,
   'src/server/signins.ts': 660,
 };
