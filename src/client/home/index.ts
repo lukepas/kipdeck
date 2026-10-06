@@ -10,7 +10,7 @@ import { $, h } from '../ui/dom';
 import { icon } from '../ui/icons';
 import { digestCard, recallDigest, watchAway } from '../ui/mission/digest';
 import { askNotifyPermission, notifyPermission } from '../notify';
-import { lightModeOf, saveLighting, savedLighting, markPageLight } from '../lighting';
+import { applyLight, isLight, toggleLight } from '../lite-theme';
 import { createActions, type Actions } from './actions';
 import { installKeys, openKeys } from './keys';
 import { rewatch, routeLazy } from './lazy';
@@ -22,7 +22,6 @@ import { renderChecklist, renderShipped } from './shipped';
 import { home } from './state';
 import './home.css';
 
-export { menuOpen };
 
 /** Feeds the inbox the server's messages it reads itself (after the store has taken them in). */
 export function homeMessage(net: Net, actions: Actions, msg: ServerMsg) {
@@ -72,12 +71,8 @@ export function installHome(net: Net): Actions {
   $('btn-deploy').prepend(icon('plus', 16));
   $('btn-deploy').addEventListener('click', () => actions.deploy());
 
-  const theme = () => {
-    const day = lightModeOf(savedLighting()) === 'day';
-    saveLighting(day ? 'night' : 'day');
-    markPageLight(savedLighting());
-  };
-  markPageLight(savedLighting());
+  const theme = toggleLight;
+  applyLight();
 
   const commands = (): Command[] => [
     { label: 'Deploy agent', hint: 'N', icon: 'plus', run: () => actions.deploy() },
@@ -123,7 +118,7 @@ export function installHome(net: Net): Actions {
               saveSettings(settings);
             },
           },
-      { label: 'Light or dark', icon: 'contrast', note: lightModeOf(savedLighting()) === 'day' ? 'Light' : 'Dark', run: theme },
+      { label: 'Light or dark', icon: 'contrast', note: isLight() ? 'Light' : 'Dark', run: theme },
       { label: 'Keyboard shortcuts', icon: 'keyboard', note: '?', run: openKeys },
       { label: 'Labs', icon: 'labs', run: () => actions.openLabs() },
       store.lab('bridge') ? { label: 'Bridge view', icon: 'ship', run: () => location.assign('/bridge') } : null,
