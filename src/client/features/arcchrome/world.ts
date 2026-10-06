@@ -22,8 +22,15 @@ export interface ArcChrome {
   place(id: ChromeId, box: PanelBox): void;
   /** Colours board `id`'s chrome `hue` at `gain` of its full strength, with the chase round it at `chase` (0 none, 1 full). */
   paint(id: ChromeId, hue: THREE.ColorRepresentation, chase: number, gain?: number): void;
-  /** Runs the chase on to `t` seconds (held still by whoever calls it). */
-  step(t: number): void;
+  /** Runs the chase on to `t` seconds (held still by whoever calls it), the idle edge-light chase at `idle` (0 none, 1 full). */
+  step(t: number, idle?: number): void;
+  /**
+   * How far board `id`'s chrome is drawn (0 none, 1 whole): the take-the-conn build draws it round its
+   * perimeter from the top left, a bright head at the drawing end (features/holoui).
+   */
+  build(id: ChromeId, k: number): void;
+  /** Folds the whole arc's chrome flat toward each board's middle (0 open, 1 a line): the warp (features/holoui). */
+  fold(k: number): void;
   /**
    * The pull toward waiting units off the sides of the view: chevrons past the arc's outer edge on each
    * side in `sides`, in its hue (null for none), stepping outward at `t` seconds (`moving` false holds them).
@@ -33,28 +40,45 @@ export interface ArcChrome {
 
 const VERT = /* glsl */ `
 attribute vec3 aRun;
+attribute vec2 aBoard;
+uniform float uBuild[6];
+uniform float uFold;
 varying vec3 vColor;
 varying float vS;
 varying float vChase;
+varying float vBuild;
 void main() {
   // aRun: where the bar starts round its board's perimeter (0-1), how much of it the bar covers, and the board's chase.
   vS = aRun.x + (position.x + 0.5) * aRun.y;
   vChase = aRun.z;
   vColor = instanceColor;
-  gl_Position = projectionMatrix * modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+  // aBoard: which board the bar is round, and that board's middle height (the warp folds toward it).
+  vBuild = uBuild[int(aBoard.x + 0.5)];
+  vec4 w = instanceMatrix * vec4(position, 1.0);
+  w.y = aBoard.y + (w.y - aBoard.y) * (1.0 - 0.96 * uFold);
+  gl_Position = projectionMatrix * modelViewMatrix * w;
 }`;
 
 const FRAG = /* glsl */ `
 uniform float uTime;
+uniform float uIdle;
 varying vec3 vColor;
 varying float vS;
 varying float vChase;
+varying float vBuild;
 void main() {
+  // The take-the-conn build: drawn round the perimeter up to vBuild, a bright head at the drawing end.
+  if (vBuild < 0.999 && vS > vBuild) discard;
+  float head = vBuild < 0.999 ? exp(-max(vBuild - vS, 0.0) * 40.0) : 0.0;
   // Two heads of light half a lap apart, a lap every 3.2 s, each with a soft tail behind it.
   float d1 = fract(uTime / 3.2 - vS);
   float d2 = fract(uTime / 3.2 + 0.5 - vS);
   float run = exp(-d1 * 18.0) + exp(-d2 * 18.0);
-  gl_FragColor = vec4(vColor * (1.0 + vChase * run * 2.2), 1.0);
+  // The edge-light chase every board gets once every 6 s: one head, a lap in 1.5 s.
+  float p = mod(uTime, 6.0) / 1.5;
+  float idle = p < 1.0 ? exp(-fract(p - vS) * 14.0) : 0.0;
+  vec3 c = vColor * (1.0 + vChase * run * 2.2 + uIdle * idle * 1.4) + vec3(0.55, 0.85, 1.0) * head * 1.4;
+  gl_FragColor = vec4(c, 1.0);
   #include <colorspace_fragment>
 }`;
 
@@ -74,7 +98,10 @@ export const arcChrome: Fixture<'arcChrome'> = (site) => {
   const geo = new THREE.BoxGeometry(1, 1, 1);
   const run = new THREE.InstancedBufferAttribute(new Float32Array(count * 3), 3);
   geo.setAttribute('aRun', run);
-  const mat = new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, uniforms: { uTime: { value: 0 } }, fog: false });
+  const board = new THREE.InstancedBufferAttribute(new Float32Array(count * 2), 2);
+  geo.setAttribute('aBoard', board);
+  const builds = CHROME_IDS.map(() => 1);
+  const mat = new THREE.ShaderMaterial({ vertexShader: VERT, fragmentShader: FRAG, uniforms: { uTime: { value: 0 }, uIdle: { value: 0 }, uBuild: { value: builds }, uFold: { value: 0 } }, fog: false });
   const mesh = new THREE.InstancedMesh(geo, mat, count);
   mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(count * 3), 3);
   mesh.frustumCulled = false;
@@ -89,8 +116,10 @@ export const arcChrome: Fixture<'arcChrome'> = (site) => {
   const size = new THREE.Vector3();
   const c = new THREE.Color();
   const place = (id: ChromeId, box: PanelBox) => {
-    const base = CHROME_IDS.indexOf(id) * per;
+    const index = CHROME_IDS.indexOf(id);
+    const base = index * per;
     chromeBars(box).forEach((b, i) => {
+      board.setXY(base + i, index, box.y);
       // Turned to face the way the board does; an upright bar is a level one turned a quarter in the board's plane first.
       q.setFromAxisAngle(up, box.rotY);
       if (b.vertical) q.multiply(qz);
@@ -100,6 +129,7 @@ export const arcChrome: Fixture<'arcChrome'> = (site) => {
     });
     mesh.instanceMatrix.needsUpdate = true;
     run.needsUpdate = true;
+    board.needsUpdate = true;
   };
   const paint = (id: ChromeId, hue: THREE.ColorRepresentation, chase: number, gain = 1) => {
     const base = CHROME_IDS.indexOf(id) * per;
@@ -160,7 +190,12 @@ export const arcChrome: Fixture<'arcChrome'> = (site) => {
       arcChrome: {
         place,
         paint,
-        step: (t) => void (mat.uniforms.uTime.value = t),
+        step: (t, idle = 0) => {
+          mat.uniforms.uTime.value = t;
+          mat.uniforms.uIdle.value = idle;
+        },
+        build: (id, k) => void (builds[CHROME_IDS.indexOf(id)] = Math.max(0, Math.min(1, k))),
+        fold: (k) => void (mat.uniforms.uFold.value = Math.max(0, Math.min(1, k))),
         pull,
       },
     },

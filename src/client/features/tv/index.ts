@@ -100,5 +100,8 @@ export function installTv(ctx: Ctx, deps: TvDeps) {
     hasCard: (id: string) => !tvStream && board.anchors().some((c) => c.id === id),
     /** The board's most urgent state now (its bezel's colour), or null with nobody on deck or a screen up. */
     top: () => (tvStream ? null : board.top()),
+    /** Where each card is on the board (canvas units, board.size), none while a screen is up: the arc's card effects (features/holoui). */
+    anchors: () => (tvStream ? [] : board.anchors()),
+    size: board.size,
   };
 }

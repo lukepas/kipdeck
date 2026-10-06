@@ -18,6 +18,9 @@ import { CHROME, type ChromeId } from './logic';
 /** No pull either side (the Overview has its own view of the deck). */
 const NO_PULL = { [-1]: null, [1]: null } as Record<-1 | 1, string | null>;
 
+/** How long a bezel takes to crossfade to the hue of a new state (s). */
+const CROSSFADE_S = 0.4;
+
 const HUE = { 'needs-you': PANEL.signal, stuck: PANEL.stuck, review: PANEL.review, working: CHROME.idle, done: CHROME.idle } as const;
 
 export function installArcChrome(ctx: Ctx, parts: Pick<Parts, 'boards' | 'tv' | 'quality' | 'waiting' | 'views' | 'stage'>) {
@@ -39,12 +42,15 @@ export function installArcChrome(ctx: Ctx, parts: Pick<Parts, 'boards' | 'tv' | 
     return out;
   }
   const painted = new Map<ChromeId, string>();
+  /** Each board's hue as shown now, crossfading toward the one it should have (CROSSFADE_S). */
+  const shown = new Map<ChromeId, { now: THREE.Color; from: THREE.Color; to: THREE.Color; k: number; chase: number; gain: number }>();
   const placed = new Map<ChromeId, string>();
   let t = 0;
   ctx.ticks.add('world', ({ dt }) => {
     const still = ctx.reduceMotion.matches || parts.quality?.tier() === 'low';
     if (!still) t += dt;
-    chrome.step(t);
+    // The edge-light chase round every board once every 6 s: part of the motion layer, so still with it.
+    chrome.step(t, still ? 0 : 1);
     // The pull: the arc's outer edge on the side of a waiting unit out of view, chevrons pointing to it.
     const sides = parts.stage.view ? NO_PULL : pullSides();
     chrome.pull(sides, t, !still);
@@ -76,9 +82,24 @@ export function installArcChrome(ctx: Ctx, parts: Pick<Parts, 'boards' | 'tv' | 
       const chase = hero && (level === 'needs-you' || level === 'stuck') ? 1 : 0;
       const gain = hero || pulled || !level ? 1 : CHROME.wingGain;
       const key = `${hue}|${chase}|${gain}`;
-      if (painted.get(id) === key) continue;
-      painted.set(id, key);
-      chrome.paint(id, hue, chase, gain);
+      let s = shown.get(id);
+      if (painted.get(id) !== key) {
+        painted.set(id, key);
+        // A change of state crossfades the bezel to its new hue (at once with less motion, or the first time).
+        if (!s) shown.set(id, (s = { now: new THREE.Color(hue), from: new THREE.Color(hue), to: new THREE.Color(hue), k: 1, chase, gain }));
+        s.from.copy(s.now);
+        s.to.set(hue);
+        s.k = ctx.reduceMotion.matches ? 1 : 0;
+        s.chase = chase;
+        s.gain = gain;
+        if (s.k >= 1) s.now.copy(s.to);
+        chrome.paint(id, s.now, chase, gain);
+        continue;
+      }
+      if (!s || s.k >= 1) continue;
+      s.k = Math.min(1, s.k + dt / CROSSFADE_S);
+      s.now.copy(s.from).lerp(s.to, s.k * s.k * (3 - 2 * s.k));
+      chrome.paint(id, s.now, s.chase, s.gain);
     }
   });
 }
