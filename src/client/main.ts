@@ -62,6 +62,7 @@ import { installDeclutter } from './features/workers/declutter';
 import { installBoardFaces } from './features/boardfaces';
 import { installFocusLean } from './features/focuslean';
 import { installAmphitheater } from './features/amphitheater';
+import { installSeatFrame } from './features/seatframe';
 import { installDemo } from './features/demo';
 import { installBottomBar } from './features/bottombar';
 import { makeMotion } from './motion';
@@ -209,6 +210,7 @@ parts.overview = installOverview(ctx, parts);
 parts.flight = installFlight(ctx);
 parts.boardFaces = installBoardFaces(ctx, parts);
 installAmphitheater(ctx, parts);
+installSeatFrame(ctx, parts);
 installArcChrome(ctx, parts);
 // The diamond, the triangle, the ring and the pip over the units, and the beams up to their cards.
 installSignals(ctx, parts);
