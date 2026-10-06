@@ -6,6 +6,8 @@ import type { FloorInfo, ServerMsg } from '../../shared/protocol.js';
 import type { Ctx, FloorHelpers, FloorsOpen } from './context.js';
 import { SLOW_CLIENT_BYTES, type Client } from './client.js';
 import { proofFloor } from './chain.js';
+import { ownerName } from '../local.js';
+import { CLI } from '../../shared/copy.js';
 
 /** Finding floors, the elevator's list of them, and taking one off the building. */
 export function floorHelpers(ctx: Ctx): FloorHelpers {
@@ -152,6 +154,11 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
   };
   // Started in a project: it's a floor too (the one it has always been).
   if (cfg.project) ctx.building.ensureLocal(cfg.project, 'the office');
+  // A new office started inside a git checkout: that's the project you work in, so it's the first one.
+  if (cfg.startedIn && !ctx.building.list().length) {
+    const r = ctx.building.addFolder(cfg.startedIn, ownerName());
+    if (typeof r === 'string') console.error(`${CLI}: ${r}`);
+  }
   for (const def of ctx.building.list()) openFloor(def);
   // Clones keep the elevator's progress up to date, and ones the last office left running carry on.
   ctx.building.watchClones(ctx.floorsChanged);

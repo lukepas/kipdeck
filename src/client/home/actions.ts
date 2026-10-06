@@ -4,6 +4,7 @@
 
 import { nextUp, type RowAction } from '../../shared/inbox';
 import type { InboxServerMsg, Reminder, RosterEntry } from '../../shared/protocol';
+import type { AgentProvider } from '../../shared/providers';
 import type { Net } from '../net';
 import { loadSettings, MISSION_TABS, saveSettings, store, type MissionTab } from '../state';
 import { toast } from '../ui/dom';
@@ -27,7 +28,8 @@ export interface Actions {
   merging: Set<string>;
   sendBack(e: RosterEntry): void;
   stop(e: RosterEntry, merged?: boolean): void;
-  deploy(prompt?: string): void;
+  /** Opens the Deploy sheet: with `prompt` in its box, and `provider` picked (the setup card's first ready agent). */
+  deploy(prompt?: string, provider?: AgentProvider): void;
   /** The office answered a merge. */
   merged(msg: Extract<InboxServerMsg, { t: 'inbox.merged' }>): void;
   openBoard(kind: 'issues' | 'pulls'): void;
@@ -171,7 +173,7 @@ export function createActions(net: Net): Actions {
     merging,
     sendBack,
     stop,
-    deploy: (prompt) => openDeploy(net, { prompt, started: (at) => (home.deployedAt = at) }),
+    deploy: (prompt, provider) => openDeploy(net, { prompt, provider, started: (at) => (home.deployedAt = at) }),
     merged(msg) {
       merging.delete(msg.workerId);
       if (msg.error) {

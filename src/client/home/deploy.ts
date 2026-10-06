@@ -33,8 +33,8 @@ function lastAgent(): AgentProvider | undefined {
   }
 }
 
-/** Opens the sheet. `prompt` fills the box (the first-run starter task); `started` hears when an agent was asked for. */
-export function openDeploy(net: Net, opts: { prompt?: string; started?(at: number): void } = {}) {
+/** Opens the sheet. `prompt` fills the box (the first-run starter task), `provider` picks the agent; `started` hears when an agent was asked for. */
+export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentProvider; started?(at: number): void } = {}) {
   const floors = store.floors.filter((f) => !f.cloning);
   if (!floors.length) return toast('Add a project first: the office has none open', 'warn');
   const project = h('select', { id: 'deploy-project', 'aria-label': 'Project' }, ...floors.map((f) => h('option', { value: f.id }, f.name))) as HTMLSelectElement;
@@ -42,7 +42,8 @@ export function openDeploy(net: Net, opts: { prompt?: string; started?(at: numbe
 
   const providers = supportedProviders(store.project);
   const def = officeChoice(store.project);
-  let provider: AgentProvider = providers.includes(lastAgent() as AgentProvider) ? (lastAgent() as AgentProvider) : def.provider;
+  const wanted = opts.provider ?? lastAgent();
+  let provider: AgentProvider = wanted && providers.includes(wanted) ? wanted : def.provider;
   // Model and effort: the provider's fields, with their own provider list hidden (the chips pick it).
   const fields = agentFields(store.project, 'deploy-agent', provider === def.provider ? def : { provider });
   fields.element.classList.add('deploy-fields');

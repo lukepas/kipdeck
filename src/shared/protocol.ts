@@ -15,6 +15,7 @@ import type { PresenceClientMsg, PresenceServerMsg } from './protocol/presence.j
 import type { QueueClientMsg, QueueServerMsg } from './protocol/queue.js';
 import type { ReputationClientMsg, ReputationServerMsg } from './protocol/reputation.js';
 import type { LabsClientMsg, LabsServerMsg } from './protocol/labs.js';
+import type { SetupClientMsg, SetupServerMsg } from './protocol/setup.js';
 import type { LandedServerMsg } from './protocol/landed.js';
 import type { MissionClientMsg, MissionServerMsg } from './protocol/mission.js';
 import type { PaceClientMsg, PaceServerMsg } from './protocol/pace.js';
@@ -34,6 +35,7 @@ export * from './protocol/github.js';
 export * from './protocol/inbox.js';
 export * from './protocol/meetings.js';
 export * from './protocol/labs.js';
+export * from './protocol/setup.js';
 export * from './protocol/landed.js';
 export * from './protocol/mission.js';
 export * from './protocol/pace.js';
@@ -69,7 +71,8 @@ export type ClientMsg =
   | ShowcaseClientMsg
   | PaceClientMsg
   | LabsClientMsg
-  | InboxClientMsg;
+  | InboxClientMsg
+  | SetupClientMsg;
 
 export type ServerMsg =
   | PresenceServerMsg
@@ -91,4 +94,5 @@ export type ServerMsg =
   | ShowcaseServerMsg
   | PaceServerMsg
   | LabsServerMsg
-  | InboxServerMsg;
+  | InboxServerMsg
+  | SetupServerMsg;
