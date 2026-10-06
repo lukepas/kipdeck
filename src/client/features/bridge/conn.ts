@@ -32,7 +32,7 @@ declare module '../../world/types' {
 }
 
 /** The conn's own warm accent (its lip, the chair's piping and underlight): command, never a state. */
-export const CONN_GOLD = '#D9B36C';
+export const CONN_GOLD = '#D9C46D';
 
 /** The short way round from `lo` to `hi` (radians), as a [start, span] pair with the span not negative. */
 function arcOf(a: number, b: number): [number, number] {

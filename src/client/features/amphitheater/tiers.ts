@@ -16,7 +16,7 @@ const ARC_SEGS = 48;
 const OUT = 0.012;
 
 /** Brass: the conn's own metal (its rails and the captain's chair's fittings), never a state's hue. */
-export const BRASS = '#9C8255';
+export const BRASS = '#9D8D53';
 
 /** A point round the table at radius `r`, angle `a` (radians from +x toward +z), `y` high. */
 const at = (r: number, a: number, y: number) => new THREE.Vector3(MISSION_TABLE.x + Math.cos(a) * r, y, MISSION_TABLE.z + Math.sin(a) * r);
