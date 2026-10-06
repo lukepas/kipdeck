@@ -1201,3 +1201,27 @@ Shots in `shots/fundable/stage-1/`: `before/` is the pre-fix build of f8c708f fr
 ### Name
 
 Mergeline and Agent Inbox are checked in `business/naming.md`. Agent Inbox is out (LangChain ships one, the npm name and domains are taken). Mergeline's npm name, `.dev` and `.eu` look free, but mergeline.io is a live Git-backed CMS with AI, so the trademark search has to come before the rename.
+
+## Fundable, stage 1: labs and the route split
+
+The home page is the inbox now, and everything that isn't the inbox is a lab, off until someone switches it on ([docs/labs.md](../docs/labs.md)). Shots are in `shots/fundable/stage-2/` (the second build stage of six): `before/` from the build before this stage, where the home was the 2D view at `/lite` and the 3D bridge was `/` (`SHOOT_HOME=/lite SHOOT_BRIDGE=/`), and `after/`, both from `node design/shoot-fundable.mjs stage-2/<before|after>` on a throwaway office with five stand-in agents whose tasks say `(demo)`, at 1440x900 and 390x844.
+
+### What changed (check it in under a minute)
+
+1. **`/` is the home page, `/bridge` is the 3D.** Two Vite entries that share nothing but `src/shared` and the shared UI: the home page loads 800,108 bytes before it draws against the 2D view's 812,503 and no three.js; the bridge loads its own 2.4 MB only when someone opens it (`tests/home-budget.test.ts`). `/lite` redirects home, sign-in comes back to `/bridge` when that's where you were, and a browser without WebGL is sent home. The slow-machine offer of the 2D view, and the phone redirect to it, are gone with `framerate.ts`: there is nothing to offer any more.
+2. **Labs.** Six switches, all off: Bridge view, Goals and timeline, Meetings, Voice, Bridge ambience, Proof of Merge. An admin switches them for everyone from the flask on the home page or Labs in the bridge's menu; `--labs` holds them on, and a chain flag holds Proof of Merge on. Each joins the registry it hides from (a route's `lab`, a menu row's `lab`, a settings pane's `lab`, `store.lab()` elsewhere), not a check in another feature's code.
+3. **Proof of Merge leaves the surface.** Its eleven public routes don't exist while it's off, the bridge menu has no Proof group, the Bounties pane is gone from Settings, payouts never reach the review inbox or its count, and the deck plan draws no Proof corner. The package description and the sign-in page no longer mention testnets.
+4. **A calm home** (`after/home-desktop.png` against `before/home-desktop.png`). One column at most 880px wide; no counters strip (the Mission button and the list's header carry the counts once); the deck plan only with Bridge view on, where its overlapping labels (CAPACITY over PROOF, ISSUES over QUEUE, PRS over SERVICES) are fixed (`after/home-bridge-lab-desktop.png`). An empty project says so and offers **Start an agent**. Mission control shows Attention and Review only, unless Goals and timeline is on (`after/mission-desktop.png`).
+5. **A plain sign-in.** One card on a plain page: *Sign in*, *The inbox for your AI coding agents.*, Password, Sign in. No deck plan behind it, no ESCROW or ERC-8004 (`after/login-desktop.png`).
+6. **A calm bridge.** Without Bridge ambience the bridge starts with every decorative system quiet and the alerts untouched, its menu loses Proof and Comms, and an **Inbox** chip stays on its top bar (`after/bridge-desktop.png`, `after/bridge-menu.png`). The design scripts for the bridge (`design/shoot*.mjs` and the checks) open `/bridge` with `--labs all` (`SHOOT_LABS` to change it), so they shoot what they always did.
+
+### Checks
+
+`npm run typecheck`, `npm run build`, `npm test` (all pass but the four launch-kit disclosure tests that fail on this branch's rewritten history), with `tests/labs.test.ts` (defaults, switches, the command line, admins only, every proof route behind its lab, payouts, the calm bridge) and `tests/home-budget.test.ts` new, and the mission end-to-end test on the home page and `/bridge` with `--labs ops,ambience`.
+
+### Left for later
+
+- The rename to Mergeline waits on the trademark search; the home still says UGC Army, and the rows still say units and decks (stage 2's copy pass).
+- Bridge ambience covers what Settings already had switches for. The lounge's ladder, stencils (L), the jump and carrying cards (Q) are still there in the bridge with it off.
+- Changing any setting in the bridge's Settings while ambience is off saves the calm values with it.
+- Meetings hides the bridge's Review bay and planning board rows and the *Meeting...* and *Review panel...* buttons on issues and pull requests; the Review bay itself still stands in the 3D room.

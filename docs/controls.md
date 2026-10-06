@@ -2,6 +2,8 @@
 
 Back to the [README](../README.md).
 
+The home page (`/`) needs no keys: click or tap a row for its agent's terminal, **New task** to start one, **Mission** for Mission control and the flask for [Labs](labs.md); Esc closes any window, and Ctrl+K opens the command palette in the Bridge view. The keys below are the Bridge view's (`/bridge`).
+
 | Key | Action |
 | --- | --- |
 | W A S D / arrows | Walk (hold Shift to run) |
@@ -45,7 +47,7 @@ You can also click a nearby console to interact with it, or click a unit in the 
 
 For a screen share, a projector or a recording, open the deck with `?demo=1`: bigger type and callouts, the needs-you toast kept up, and the Overview turning slowly round the mission table until you press a key, drag or scroll (see [the design system](design.md#demo-mode)).
 
-On a phone, use the 2D view at `/lite` instead: a terminal there has a row of keys under it (**1** **2** **3**, the arrows, Enter, Tab, Esc, Ctrl+C) and a box to send a prompt. See [Features](features.md).
+On a phone, use the home page at `/`: a terminal there has a row of keys under it (**1** **2** **3**, the arrows, Enter, Tab, Esc, Ctrl+C) and a box to send a prompt. See [Features](features.md).
 
 ## In a terminal
 

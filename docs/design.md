@@ -2,7 +2,7 @@
 
 Back to the [README](../README.md).
 
-UGC Army looks and behaves the same on every surface: the 3D deck, the 2D view at `/lite`, the sign-in pages and the `/pom/` showcase. This page walks through it as it is on screen: what each surface shows, how things move and sound, demo mode, and how to check a change. The rules and tokens themselves (colors, type, the status table, voice) are the short contract in [DESIGN.md](../DESIGN.md); where the deck's places are is [The deck](deck.md).
+UGC Army looks and behaves the same on every surface: the home page at `/`, the 3D Bridge view at `/bridge`, the sign-in pages and the `/pom/` showcase. The Bridge view and the showcase are [Labs](labs.md). This page walks through it as it is on screen: what each surface shows, how things move and sound, demo mode, and how to check a change. The rules and tokens themselves (colors, type, the status table, voice) are the short contract in [DESIGN.md](../DESIGN.md); where the deck's places are is [The deck](deck.md).
 
 ## The idea in one paragraph
 
@@ -24,7 +24,7 @@ Mission control (I) lists units by the same ranking, each row with its call sign
 
 ![The 2D view: the deck plan drawn from the layout beside the ranked list](img/lite.png)
 
-The 2D view at `/lite` draws the deck as a plan from the same layout file as the 3D deck, beside the ranked list. Below 720px wide the plan folds away and the list is the page.
+The home page at `/` is the ranked list in one column. With Bridge view on in [Labs](labs.md) it draws the deck as a plan from the same layout file as the 3D deck, beside the list (above); below 720px wide the plan folds away and the list is the page.
 
 Settings > Bridge > Bridge lights sets Night (low light, for watching in a dark room) or Day (high light, a cool mid-grey ship rather than a white room) for the 3D deck, or Auto to follow the system. The same setting paints the HUD (the dark set by night, the print set by day), the 2D view, whose contrast button flips it, and the sign-in pages, so every surface of the office agrees. Brightness steps the 3D deck's lights two steps either way. See [the deck](deck.md#light-and-materials).
 
