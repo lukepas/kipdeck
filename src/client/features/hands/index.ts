@@ -29,7 +29,7 @@ import { Datapad, PAD } from './datapad';
 import { HandsMotion, handsWanted, type ArmPose } from './pose';
 import { HandsRig } from './rig';
 
-export type HandsParts = Pick<Parts, 'stage' | 'player' | 'settings' | 'quality' | 'lights' | 'cinema' | 'takeConn' | 'you'>;
+export type HandsParts = Pick<Parts, 'stage' | 'player' | 'settings' | 'quality' | 'lights' | 'cinema' | 'takeConn' | 'you' | 'lounge'>;
 
 /** How often the Units rail's width is read (s), to centre the hands on the canvas you can see: layout is never read every frame. */
 const RAIL_POLL = 0.4;
@@ -163,6 +163,7 @@ export function installHands(ctx: Ctx, parts: HandsParts) {
       still: ctx.reduceMotion.matches,
       show: want,
       pad: missionOpen,
+      grip: !!parts.lounge?.gripping(),
     });
     rig.pose(out);
     shown = out.shown > 0;

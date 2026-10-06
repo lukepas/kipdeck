@@ -68,6 +68,8 @@ export interface HandsFrame {
   show: boolean;
   /** Whether the datapad is up (Mission control open). */
   pad: boolean;
+  /** Hands on a ladder's rungs (the forward lounge's, features/lounge): over each other in time with `walkPhase`. */
+  grip?: boolean;
 }
 
 /** The hands this frame: each arm's pose, and the gestures' weights. */
@@ -116,6 +118,7 @@ export class HandsMotion {
   private air = 0;
   private shown = 0;
   private padK = 0;
+  private gripK = 0;
   /** Seconds into a reach, or -1. */
   private reachT = -1;
   /** A reach held at this many seconds in (the shots), or null. */
@@ -162,6 +165,7 @@ export class HandsMotion {
     this.last = { yaw: f.yaw, pitch: f.pitch };
     this.walk = f.still ? 0 : ease(this.walk, f.walking ? 1 : 0, 8, dt);
     this.air = f.still ? 0 : ease(this.air, f.airborne ? 1 : 0, 8, dt);
+    this.gripK = f.still ? (f.grip ? 1 : 0) : ease(this.gripK, f.grip ? 1 : 0, 9, dt);
 
     const breathe = f.still ? 0 : Math.sin(t * 1.7) * 0.0035;
     const swing = Math.sin(f.walkPhase) * this.walk;
@@ -188,6 +192,14 @@ export class HandsMotion {
       return a;
     });
     const [right, left] = arms;
+    // On the rungs: both hands up in front on the ladder, one over the other in time with the climb (no walk swing there).
+    const grip = smooth(this.gripK);
+    if (grip > 0) {
+      for (const [a, side] of [[right, 1], [left, -1]] as const) {
+        const over = f.still ? 0 : Math.sin(f.walkPhase) * side;
+        blend(a, { x: side * 0.2, y: -0.15 + over * 0.055 - drop, z: -0.47 - Math.max(0, over) * 0.03, rx: 0.85 - over * 0.12, ry: side * 0.3, rz: -side * 0.38 }, grip);
+      }
+    }
     // The datapad: the left hand brings it up and in, the right drifts in a little toward it.
     const pad = smooth(this.padK);
     const hold = this.padHold;
