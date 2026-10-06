@@ -20,11 +20,11 @@ export const LOUNGE = { x0: 0.42, x1: 6.21, z0: -15.88, z1: -12.6, top: 2.2, und
 
 /**
  * The ladder up the balcony's south face, `x` along it, `width` between its stringers: while you climb
- * your feet are at `on` (just off its face), you get onto it from `foot` on the deck and step off it onto
+ * your feet are at `on` (an arm's length off its rungs, so your hands on them are in front of your eyes), you get onto it from `foot` on the deck and step off it onto
  * the balcony at `top`. `posts` is how far its stringers stand above the balcony as grab posts, and
  * `rung` the spacing of its rungs.
  */
-export const LADDER = { x: 5.35, width: 0.6, face: LOUNGE.z1, on: round(LOUNGE.z1 + 0.36), foot: round(LOUNGE.z1 + 0.85), top: round(LOUNGE.z1 - 0.62), posts: 1.05, rung: 0.3 } as const;
+export const LADDER = { x: 5.35, width: 0.6, face: LOUNGE.z1, on: round(LOUNGE.z1 + 0.48), foot: round(LOUNGE.z1 + 0.85), top: round(LOUNGE.z1 - 0.62), posts: 1.05, rung: 0.3 } as const;
 
 /** The lounge seats along the glass, a little apart and fanned out to the bow: where each stands. */
 const SEATS = [

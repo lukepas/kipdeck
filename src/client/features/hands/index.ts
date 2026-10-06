@@ -14,7 +14,11 @@
  * whatever Night, Day and Brightness have them), and the room's reflections with it.
  *
  * Out of the way: in third person, sat down (the conn's framing, a bean bag's view), in the Overview,
- * during the arrival and taking the conn, and at Low under Settings > Bridge > Hands at Auto. With less
+ * during the arrival, taking the conn and the jump's tunnel, and at Low under Settings > Bridge > Hands
+ * at Auto. They make way for what you read: aimed at a board or a console and settled a moment (or
+ * still a while), the left drops out of view and the right sinks to its knuckles, ready to tap; a step,
+ * a turn or a reach brings them back. On the lounge's ladder each hand holds its rung where the rung is,
+ * so your body moves past it (features/lounge grips.ts). With less
  * motion (the system's setting, or Ship motion Off) they hold still: no sway, breath, swing or reach,
  * and coming and going are cuts. In a hidden tab nothing is drawn at all.
  */
@@ -29,7 +33,7 @@ import { Datapad, PAD } from './datapad';
 import { HandsMotion, handsWanted, type ArmPose } from './pose';
 import { HandsRig } from './rig';
 
-export type HandsParts = Pick<Parts, 'stage' | 'player' | 'settings' | 'quality' | 'lights' | 'cinema' | 'takeConn' | 'you' | 'lounge'>;
+export type HandsParts = Pick<Parts, 'stage' | 'player' | 'settings' | 'quality' | 'lights' | 'cinema' | 'takeConn' | 'you' | 'lounge' | 'pointer' | 'space'>;
 
 /** How often the Units rail's width is read (s), to centre the hands on the canvas you can see: layout is never read every frame. */
 const RAIL_POLL = 0.4;
@@ -37,6 +41,12 @@ const RAIL_POLL = 0.4;
 const SKY_SHARE = 0.3;
 const KEY_SHARE = 0.85;
 const WHITE = new THREE.Color('#FFFFFF');
+/** How the hands are scaled: a captain's gloves, not mittens filling the corners. */
+const ARM_SCALE = 0.88;
+/** What the crosshair can be on that the hands don't make way for: a seat is sat in, not read. */
+const NOT_READ = new Set(['seat', 'ladder']);
+/** How far into the view a gripping hand is kept (NDC), so a rung over your head still has its hand in the frame. */
+const GRIP_NDC = { x: 0.92, top: 0.9, bottom: -0.95 } as const;
 
 /** Draws the hands into the composer's frame, over the scene, after clearing its depth. */
 class HandsPass extends Pass {
@@ -57,6 +67,7 @@ export function installHands(ctx: Ctx, parts: HandsParts) {
   const motion = new HandsMotion(mountPad(pad.group));
 
   let shown = false;
+  let readK = 0;
   let missionOpen = false;
   let railPx = 0;
   let since = RAIL_POLL;
@@ -67,6 +78,13 @@ export function installHands(ctx: Ctx, parts: HandsParts) {
   const euler = new THREE.Euler(0, 0, 0, 'YXZ');
   const dir = new THREE.Vector3();
   const inverse = new THREE.Quaternion();
+  // Held and reused each frame, so the tick makes no garbage.
+  const onDeck = { x: 0, y: 0, z: 0 };
+  const view = new THREE.Vector3();
+  const grip = { right: { x: 0, y: 0, z: 0 }, left: { x: 0, y: 0, z: 0 } };
+  const frameIn = { dt: 0, t: 0, yaw: 0, pitch: 0, walking: false, walkPhase: 0, airborne: false, still: false, show: false, pad: false, grip: null as typeof grip | null, aimed: false };
+  rig.right.group.scale.setScalar(ARM_SCALE);
+  rig.left.group.scale.setScalar(ARM_SCALE);
 
   onModalChange(() => void (missionOpen = !!document.querySelector('.modal.mission-control')));
   parts.you.reached.add(() => motion.reach(ctx.reduceMotion.matches));
@@ -80,8 +98,30 @@ export function installHands(ctx: Ctx, parts: HandsParts) {
       firstPerson: player.view === 'first',
       overview: !!stage.view,
       seated: !!player.seat,
-      shot: !!parts.cinema?.arriving() || parts.takeConn?.at() != null,
+      shot: !!parts.cinema?.arriving() || parts.takeConn?.at() != null || !!parts.space?.tunnelOpen(),
     });
+  }
+
+  /**
+   * Where the hand on `side` holds the lounge's ladder, turned from the deck into the hands' camera space:
+   * at the same place on screen as the rung, as far off as it is, kept just inside the frame. False off it.
+   */
+  function gripOn(side: 1 | -1, out: { x: number; y: number; z: number }): boolean {
+    if (!parts.lounge?.hand(side, onDeck)) return false;
+    view.set(onDeck.x, onDeck.y, onDeck.z).applyMatrix4(camera.matrixWorldInverse);
+    const depth = Math.max(0.22, Math.min(0.6, -view.z));
+    view.set(onDeck.x, onDeck.y, onDeck.z).project(camera);
+    // Kept clear of the Units rail's panel on the left of the canvas.
+    const left = -1 + (2 * railPx) / Math.max(1, window.innerWidth) + (1 - GRIP_NDC.x);
+    view.x = Math.max(left, Math.min(GRIP_NDC.x, view.x));
+    view.y = Math.max(GRIP_NDC.bottom, Math.min(GRIP_NDC.top, view.y));
+    view.z = 0.5;
+    view.unproject(rig.camera);
+    view.multiplyScalar(depth / Math.max(1e-4, -view.z));
+    out.x = view.x;
+    out.y = view.y;
+    out.z = view.z;
+    return true;
   }
 
   /** The room's light, turned into the view's frame: the hands lit as the deck is where you stand. */
@@ -152,21 +192,24 @@ export function installHands(ctx: Ctx, parts: HandsParts) {
     const p = parts.player;
     const want = wanted();
     euler.setFromQuaternion(camera.quaternion, 'YXZ');
-    const out = motion.step({
-      dt,
-      t,
-      yaw: euler.y,
-      pitch: euler.x,
-      walking: p.moving && p.grounded,
-      walkPhase: p.walkPhase,
-      airborne: !p.grounded,
-      still: ctx.reduceMotion.matches,
-      show: want,
-      pad: missionOpen,
-      grip: !!parts.lounge?.gripping(),
-    });
+    const target = parts.pointer?.target();
+    const f = frameIn;
+    f.dt = dt;
+    f.t = t;
+    f.yaw = euler.y;
+    f.pitch = euler.x;
+    f.walking = p.moving && p.grounded;
+    f.walkPhase = p.walkPhase;
+    f.airborne = !p.grounded && !p.rig;
+    f.still = ctx.reduceMotion.matches;
+    f.show = want;
+    f.pad = missionOpen;
+    f.grip = want && gripOn(1, grip.right) && gripOn(-1, grip.left) ? grip : null;
+    f.aimed = !!target && !NOT_READ.has(target.kind);
+    const out = motion.step(f);
     rig.pose(out);
     shown = out.shown > 0;
+    readK = out.read;
     pad.group.visible = shown && out.padK > 0.12;
     if (pad.group.visible && now - padPaintAt > 500) {
       padPaintAt = now;
@@ -201,8 +244,12 @@ export function installHands(ctx: Ctx, parts: HandsParts) {
   });
 
   const api = {
+    /** The rig, for the shots' probes. */
+    rig,
     /** Whether they're on screen this frame. */
     shown: () => shown,
+    /** How far they've made way for what you're reading (0 to 1). */
+    read: () => readK,
     /** Reach and tap now, as using something does (the shots). */
     reach: () => motion.reach(ctx.reduceMotion.matches),
     /** Holds the reach at `s` seconds in, or lets it go with null (the shots). */

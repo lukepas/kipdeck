@@ -69,24 +69,44 @@ export async function loungeShots(page, { out, name, wait, ffmpeg }) {
   await clear();
   await shot('foot');
   log.foot = await hint();
-  // Up the rungs: a moment into the climb, hands on the ladder.
-  await page.evaluate(() => window.__world.lounge.climb());
-  await wait(1050);
-  await shot('climb');
-  log.climb = { ...(await state()), hint: await hint() };
-  // SHOOT_LOUNGE_ONLY=climb: the climb's frames alone, held at a few points of the hand-over-hand (to tune the grip).
-  if (process.env.SHOOT_LOUNGE_ONLY === 'climb') {
-    await page.evaluate(() => {
+  // Up the rungs: early in the climb, hands on the rungs in front of you, then higher up on the grab posts.
+  // The climb is paused for each still (its rig held), so the hands settle where they hold the ladder.
+  const pause = (on) =>
+    page.evaluate((on) => {
       const p = window.__office.player;
-      p.__rig = p.rig;
-      p.rig = () => true;
+      if (on) {
+        p.__rig = p.rig;
+        p.rig = () => true;
+      } else if (p.__rig) p.rig = p.__rig;
+    }, on);
+  await page.evaluate(() => window.__world.lounge.climb());
+  const stops = process.env.SHOOT_LOUNGE_ONLY === 'climb' ? [350, 250, 250, 250, 250, 250] : [600, 450];
+  for (const [i, ms] of stops.entries()) {
+    await wait(ms);
+    await pause(true);
+    await wait(500);
+    await shot(i === 0 ? 'climb' : i === 1 && stops.length === 2 ? 'climb-high' : `climb-${i}`);
+    if (i === 0) log.climb = { ...(await state()), hint: await hint() };
+    if (process.env.SHOOT_LOUNGE_PROBE) log[`probe${i}`] = await page.evaluate(() => {
+      const o = window.__office;
+      const cam = o.camera ?? o.stage?.camera;
+      const W = window.__world;
+      const V = cam.position.constructor;
+      const out = {};
+      for (const side of [1, -1]) {
+        const p = W.lounge.hand(side, { x: 0, y: 0, z: 0 });
+        if (!p) continue;
+        const v = new V(p.x, p.y, p.z).project(cam);
+        const g = side > 0 ? W.hands.rig.right.group : W.hands.rig.left.group;
+        const h = g.position.clone().project(W.hands.rig.camera);
+        out[side] = { world: [p.x, p.y, p.z].map((n) => +n.toFixed(2)), main: [v.x, v.y].map((n) => +n.toFixed(2)), wrist: [h.x, h.y].map((n) => +n.toFixed(2)), local: [g.position.x, g.position.y, g.position.z].map((n) => +n.toFixed(3)) };
+      }
+      out.cam = { pos: [cam.position.x, cam.position.y, cam.position.z].map((n) => +n.toFixed(2)), fov: cam.fov, off: cam.view?.enabled ?? false, hoff: W.hands.rig.camera.view?.offsetX ?? 0, pitch: o.player.lookPitch };
+      return out;
     });
-    for (const [i, ph] of [0, 1.57, 3.14, 4.71].entries()) {
-      await page.evaluate((ph) => (window.__office.player.walkPhase = ph), ph);
-      await wait(700);
-      await shot(`climb-${i}`);
-    }
-    await page.evaluate(() => (window.__office.player.rig = window.__office.player.__rig));
+    await pause(false);
+  }
+  if (process.env.SHOOT_LOUNGE_ONLY === 'climb') {
     console.log(JSON.stringify({ lounge: log }));
     return;
   }

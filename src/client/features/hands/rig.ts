@@ -6,7 +6,7 @@ import type { ArmPose, HandsOut } from './pose';
 
 // The captain's forearms and gloves, built in code: a flight suit sleeve in the units' two tones (a
 // lighter plate over the forearm), a gauntlet cuff with a brushed steel ring, a glove in dark
-// synthetic leather with a steel guard over the knuckles, and fingers in a relaxed curl. The right
+// synthetic leather with a steel guard over the knuckles, and fingers in a loose fist. The right
 // index finger is its own piece, so it can straighten to tap, and its tip carries a touch pad that
 // lights ship-cyan as it presses (the one instrument on the glove, with the left wrist's readout).
 // They live in a small scene of their own, in the hands' camera space (-z forward), drawn over the
@@ -100,14 +100,15 @@ function buildArm(side: 1 | -1, body: THREE.Material, steel: THREE.Material, tou
   metal.push(loose(new THREE.CapsuleGeometry(0.0048, 0.044, 3, 8)).applyMatrix4(at(side * 0.004, 0.011, -0.088).multiply(M().makeRotationZ(Math.PI / 2))));
   // The thumb, along the inside of the hand and in toward the fingers, curled a little.
   const thumbBase = new THREE.Vector3(-side * 0.036, -0.002, -0.034);
-  geos.push(...finger(thumbBase, 0.011, [0.032, 0.027], 0.28, 0.2, -side * 0.38).parts);
+  geos.push(...finger(thumbBase, 0.011, [0.032, 0.027], 0.42, 0.36, -side * 0.42).parts);
   // The fingers, each in a relaxed curl that deepens toward the little one, fanned a touch.
   let index: THREE.Group | null = null;
   let touch: THREE.MeshBasicMaterial | null = null;
   KNUCKLES.forEach((kx, i) => {
     const base = new THREE.Vector3(side * kx, 0.003, -0.094);
     const r = i === 3 ? 0.0083 : 0.0095;
-    const curl: [number, number] = [0.55 + i * 0.08, 0.72 + i * 0.07];
+    // A loose fist: each finger bent about 55 degrees at the knuckle and as much again at the middle.
+    const curl: [number, number] = [0.92 + i * 0.08, 0.98 + i * 0.07];
     const splay = -base.x * 1.6;
     if (i === 0 && touchMat) {
       // The right index finger on joints of its own, at the knuckle and the middle (see pose), its
@@ -223,8 +224,8 @@ export class HandsRig {
     const index = this.right.index;
     if (index) {
       const k = out.point;
-      index.rotation.set(-0.5 * (1 - k) + 0.08 * k, 0.046 * (1 - k), 0);
-      index.children[1].rotation.set(-0.68 * (1 - k) + 0.04 * k, 0, 0);
+      index.rotation.set(-0.86 * (1 - k) + 0.08 * k, 0.046 * (1 - k), 0);
+      index.children[1].rotation.set(-0.94 * (1 - k) + 0.04 * k, 0, 0);
     }
     if (this.right.touch) this.right.touch.color.set(DECK.instrument).lerp(TOUCH_LIT, Math.min(1, out.touch * 1.2));
   }

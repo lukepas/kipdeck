@@ -3,10 +3,13 @@
 // While a climb is on it has hold of you (PlayerController.rig): it moves your feet and turns your head,
 // and walking, falling and bumping into things wait until you're off. No three.js here. The feel is
 // upstream agent-office's ladder (origin/main src/client/features/climbing/controller.ts, MIT): the
-// eased walk onto it, the rung under your hands every 0.3 m, the smoothstep step off with its little hop
-// and the turn of the head the short way round, retuned for a short ladder up to a balcony.
+// eased walk onto it, a hand planted on a rung while you move past it (grips.ts), the smoothstep step off
+// with its little hop and the turn of the head the short way round, retuned for a short ladder up to a
+// balcony.
 
 import { LADDER, LOUNGE } from '../../../shared/lounge';
+import { EYE_HEIGHT } from '../../player/camera';
+import { FACE_Z, Grips, type P3 } from './grips';
 
 /** How fast you go up and down the ladder (m/s), on average: each pull is quicker than the pause between. */
 export const CLIMB = 1.7;
@@ -15,9 +18,12 @@ export const MOUNT = 0.4;
 export const OVER = 0.55;
 export const ONTO = 0.6;
 export const OFF = 0.45;
-/** How high the hop over the ladder's head goes (m), and where you look up the rungs while you climb (radians, up). */
+/** How high the hop over the ladder's head goes (m), and where you look as you take hold of the ladder (radians, up). */
 const HOP = 0.12;
-const LOOK_UP = 0.16;
+const LOOK_UP = 0.1;
+/** On the rungs your eyes follow your hands: this share of the way toward them, never further than LOOK_RANGE. */
+const LOOK_HANDS = 0.75;
+const LOOK_RANGE = { down: -0.5, up: 0.35 } as const;
 /** Where you look once you're off: a touch under the horizon, as standing does. */
 const LOOK_LEVEL = -0.08;
 
@@ -34,7 +40,7 @@ export interface ClimbBody {
   view: 'first' | 'third';
 }
 
-/** What a frame of climbing heard: a hand on the ladder, a rung under it, your feet onto the balcony or the deck. */
+/** What a frame of climbing heard: hands on the ladder, a hand closing on its next rung, your feet onto the balcony or the deck. */
 export type ClimbEvent = 'grab' | 'rung' | 'top' | 'bottom';
 
 /** Which way the keys ask to go: up (W), down (S), or nothing. */
@@ -62,18 +68,24 @@ export class Climb {
   private t = 0;
   /** Where the timed phase started from. */
   private from: { x: number; y: number; z: number; facing: number; camYaw: number; pitch: number };
-  /** The rung under your hands last (its index up the ladder), for the clank of the next one. */
-  private rung: number;
+  /** Your hands on the rungs, planted while you move past them (grips.ts); null until you take hold. */
+  grips: Grips | null = null;
   done = false;
 
   constructor(
     private readonly body: ClimbBody,
     /** Up from the foot, or down from the balcony. */
     readonly way: 'up' | 'down',
+    /** How high your eyes are over your feet. */
+    private readonly eye = EYE_HEIGHT,
   ) {
     this.phase = way === 'up' ? 'mount' : 'onto';
     this.from = this.snap();
-    this.rung = Math.round(body.pos.y / LADDER.rung);
+  }
+
+  /** Where hand `side` (1 right, -1 left) holds the ladder now, in the deck's metres; null while it doesn't. */
+  hand(side: 1 | -1, out: P3): P3 | null {
+    return this.grips && this.onRungs() ? this.grips.point(side, out) : null;
   }
 
   private snap() {
@@ -119,7 +131,11 @@ export class Climb {
           b.camYaw = this.from.camYaw + turn(this.from.camYaw, CAM_LADDER) * k;
           b.lookPitch = lerp(this.from.pitch, LOOK_UP, k);
         }
-        if (this.t === dt) heard('grab');
+        if (this.t === dt) {
+          heard('grab');
+          // Hands on the rungs in front of you as you square up, where your eyes will be on it.
+          this.grips = new Grips(this.eye);
+        }
         if (still || this.t >= MOUNT) this.next('up');
         return true;
       }
@@ -135,10 +151,13 @@ export class Climb {
         const pull = still ? 1 : 0.35 + 1.3 * Math.sin(b.walkPhase / 2) ** 2;
         b.pos.y = Math.min(LOUNGE.top, Math.max(0, b.pos.y + dir * CLIMB * pull * dt));
         b.walkPhase += dt * 7.5;
-        const rung = Math.round(b.pos.y / LADDER.rung);
-        if (rung !== this.rung) {
-          this.rung = rung;
-          heard('rung');
+        // A hand goes over to the next rung once your body has moved past it; the clank as it lands.
+        const grips = (this.grips ??= new Grips(b.pos.y + this.eye));
+        grips.step(dt, b.pos.y + this.eye, dir, still, () => heard('rung'));
+        // Your eyes on your hands, so they stay in the frame as you go.
+        if (first) {
+          const want = Math.max(LOOK_RANGE.down, Math.min(LOOK_RANGE.up, Math.atan2(grips.middle() - (b.pos.y + this.eye), LADDER.on - FACE_Z) * LOOK_HANDS));
+          b.lookPitch = still ? want : b.lookPitch + (want - b.lookPitch) * Math.min(1, dt * 5);
         }
         if (dir > 0 && b.pos.y >= LOUNGE.top) this.next('over');
         else if (dir < 0 && b.pos.y <= 0) this.next('off');
@@ -163,13 +182,13 @@ export class Climb {
         b.facing = this.from.facing + turn(this.from.facing, FACE_LADDER) * k;
         if (first) {
           b.camYaw = this.from.camYaw + turn(this.from.camYaw, CAM_LADDER) * k;
-          b.lookPitch = lerp(this.from.pitch, 0.05, k);
+          b.lookPitch = lerp(this.from.pitch, -0.2, k);
         }
-        if (this.t === dt) heard('grab');
-        if (still || this.t >= ONTO) {
-          this.next('down');
-          this.rung = Math.round(b.pos.y / LADDER.rung);
+        if (this.t === dt) {
+          heard('grab');
+          this.grips = new Grips(LOUNGE.top - 0.3 + this.eye);
         }
+        if (still || this.t >= ONTO) this.next('down');
         return true;
       }
       case 'off': {

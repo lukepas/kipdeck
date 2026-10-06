@@ -1,8 +1,8 @@
 /**
  * The forward lounge: a viewing balcony at the bow, behind the situation arc under the Attention and
  * Pull requests boards (shared/lounge.ts, built by ./world.ts), for looking out at space. You climb its
- * ladder (E at its foot): you square up to it, go up hand over hand with a rung under your hands every
- * 0.3 m, and step over its head onto the balcony, its gate swinging open for you. E at the gate takes
+ * ladder (E at its foot): you square up to it, go up hand over hand, each hand planted on its rung while
+ * you move past it and going over the other to the next (grips.ts), and step over its head onto the balcony, its gate swinging open for you. E at the gate takes
  * you back down the same way. W and S turn a climb round on the rungs. Up there, three lounge seats face
  * the glass (E to sit): sat in one in first person the view widens by a few degrees and lifts to the
  * stars, and you can look anywhere; Esc, E or a step gets you up.
@@ -24,6 +24,7 @@ import { isTyping } from '../../player';
 import { modalOpen } from '../../ui/dom';
 import { debugHandle } from '../giveway';
 import { Climb, type ClimbEvent } from './climb';
+import type { P3 } from './grips';
 
 // The kinds of thing you can use that this defines (see InteractKinds in world/types.ts).
 declare module '../../world/types' {
@@ -169,6 +170,8 @@ export function installLounge(ctx: Ctx, parts: LoungeParts) {
     phase: () => climb?.phase ?? null,
     /** Whether your hands are on the rungs (features/hands grips them). */
     gripping: () => !!climb?.onRungs(),
+    /** Where hand `side` (1 right, -1 left) holds the ladder, in the deck's metres, into `out`; null off it. */
+    hand: (side: 1 | -1, out: P3): P3 | null => climb?.hand(side, out) ?? null,
     /** Whether you're up on the balcony (on your feet or sat). */
     up: () => overLounge(parts.player.pos.x, parts.player.pos.z) && parts.player.pos.y > LOUNGE.top - 0.3,
     /** Climbs from whichever end you're at (the shots). */

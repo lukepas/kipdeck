@@ -81,7 +81,32 @@ export async function handsShots(page, { out, name, wait, ffmpeg }) {
     await wait(800);
     if (process.env.SHOOT_HANDS_ONLY_STUDIO === '1') return;
   }
+  // At rest: a glance round first (stood still a while, or aimed at a board, the hands make way).
+  const glance = () =>
+    page.evaluate(
+      () =>
+        new Promise((done) => {
+          const p = window.__office.player;
+          const from = p.camYaw;
+          const t0 = performance.now();
+          const tick = () => {
+            const k = Math.min(1, (performance.now() - t0) / 350);
+            p.camYaw = from + Math.sin(Math.PI * k) * 0.18;
+            if (k < 1) requestAnimationFrame(tick);
+            else done();
+          };
+          tick();
+        }),
+    );
+  await glance();
+  await wait(450);
   await shot('rest');
+  // Stood still and reading: the left out of the way, the right down to its knuckles.
+  await wait(2600);
+  await shot('read');
+  log.read = await page.evaluate(() => window.__world.hands?.read?.() ?? null);
+  await glance();
+  await wait(450);
   // A reach and tap, held at the press.
   await page.evaluate(() => window.__world.hands?.holdReach(0.16));
   await wait(400);
@@ -108,6 +133,8 @@ export async function handsShots(page, { out, name, wait, ffmpeg }) {
   await stand(SPOTS.docs);
   await wait(1500);
   await clear();
+  // Aimed at the rack's table, settled: the hands make way for it.
+  await shot('docs-read');
   await page.evaluate(() => window.__world.hands?.holdReach(0.16));
   await wait(400);
   await shot('docs-tap');

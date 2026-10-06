@@ -20,8 +20,26 @@ export interface ArmPose {
   rz: number;
 }
 
-/** At rest: in from the bottom corners of the view, forearms angled in, low enough to leave the arc clear. */
-export const REST: Readonly<ArmPose> = { x: 0.215, y: -0.195, z: -0.5, rx: 0.52, ry: 0.36, rz: -0.48 };
+/**
+ * At rest: low in the bottom corners of the view, forearms angled in and the hands turned a little on
+ * their sides in a loose fist, so only the knuckles and the cuff show and the boards stay clear. The left
+ * sits a touch lower and further back than the right (LEFT_OFF), so the two never read as a mirror.
+ */
+export const REST: Readonly<ArmPose> = { x: 0.24, y: -0.252, z: -0.52, rx: 0.5, ry: 0.3, rz: -0.78 };
+export const LEFT_OFF = { y: -0.014, z: 0.03, rz: 0.06 } as const;
+
+/** Where a gripping hand holds the rung from its wrist, in the arm's own frame (the palm round the bar). */
+export const GRIP_HOLD = { x: 0, y: -0.012, z: -0.088 } as const;
+/** How a gripping arm is turned: forearm up toward the rung, the back of the hand toward you. */
+const GRIP_TURN = { rx: 1.0, ry: 0.12, rz: -0.32 } as const;
+
+/**
+ * When the hands get out of the way of what you're looking at: aimed at something you can use (a board,
+ * a console) and settled for READ_AIMED s, or stood still and not turning for READ_IDLE s. The left drops
+ * out of view; the right sinks to its knuckles, ready to tap. A step, a jump, a turn or a reach brings them
+ * back. `turn` is the turn of the head (rad/s) that counts as moving.
+ */
+export const READ = { aimed: 0.3, idle: 1.5, turn: 0.6, right: 0.085, rate: 5 } as const;
 
 /** The left hand holding the datapad up into the lower left of the view, its face turned to you. */
 export const PAD_HOLD: Readonly<ArmPose> = { x: -0.2, y: -0.16, z: -0.42, rx: 0.95, ry: -0.3, rz: 0.55 };
@@ -68,8 +86,43 @@ export interface HandsFrame {
   show: boolean;
   /** Whether the datapad is up (Mission control open). */
   pad: boolean;
-  /** Hands on a ladder's rungs (the forward lounge's, features/lounge): over each other in time with `walkPhase`. */
-  grip?: boolean;
+  /**
+   * Hands on a ladder's rungs (the forward lounge's, features/lounge): where each holds the ladder, in
+   * the hands' camera space (index.ts turns the rung's place on the deck into it), or null off it.
+   */
+  grip?: { right: P3; left: P3 } | null;
+  /** The crosshair is on something you can use within reach (a board, a console): the hands soon make way. */
+  aimed?: boolean;
+}
+
+export interface P3 {
+  x: number;
+  y: number;
+  z: number;
+}
+
+/** `v` turned by the Euler angles (three's XYZ order: the matrix is Rx Ry Rz), into `out`. */
+export function turnBy(v: P3, rx: number, ry: number, rz: number, out: P3): P3 {
+  const [cx, sx, cy, sy, cz, sz] = [Math.cos(rx), Math.sin(rx), Math.cos(ry), Math.sin(ry), Math.cos(rz), Math.sin(rz)];
+  // Rz, then Ry, then Rx.
+  const x1 = v.x * cz - v.y * sz;
+  const y1 = v.x * sz + v.y * cz;
+  const z1 = v.z;
+  const x2 = x1 * cy + z1 * sy;
+  const z2 = -x1 * sy + z1 * cy;
+  out.x = x2;
+  out.y = y1 * cx - z2 * sx;
+  out.z = y1 * sx + z2 * cx;
+  return out;
+}
+
+/** The arm on `side` whose hand holds `at` (the grip point, in the hands' camera space). */
+export function gripArm(at: P3, side: 1 | -1, scale = 1): ArmPose {
+  const rx = GRIP_TURN.rx;
+  const ry = side * GRIP_TURN.ry;
+  const rz = side * GRIP_TURN.rz;
+  const o = turnBy({ x: GRIP_HOLD.x * side * scale, y: GRIP_HOLD.y * scale, z: GRIP_HOLD.z * scale }, rx, ry, rz, { x: 0, y: 0, z: 0 });
+  return { x: at.x - o.x, y: at.y - o.y, z: at.z - o.z, rx, ry, rz };
 }
 
 /** The hands this frame: each arm's pose, and the gestures' weights. */
@@ -84,6 +137,8 @@ export interface HandsOut {
   point: number;
   /** 0 to 1: the fingertip's touch on whatever it tapped (a short peak at the press). */
   touch: number;
+  /** 0 to 1: how far the hands have made way for what you're reading. */
+  read: number;
 }
 
 const ease = (now: number, want: number, rate: number, dt: number) => now + (want - now) * Math.min(1, dt * rate);
@@ -100,9 +155,10 @@ function blend(a: ArmPose, b: ArmPose, w: number) {
   a.rz += (b.rz - a.rz) * w;
 }
 
-/** The right arm at `side` 1, the left (mirrored across the view) at -1. */
+/** The right arm at `side` 1, the left (mirrored across the view, a touch lower and back: LEFT_OFF) at -1. */
 export function restFor(side: 1 | -1): ArmPose {
-  return { x: REST.x * side, y: REST.y, z: REST.z, rx: REST.rx, ry: REST.ry * side, rz: REST.rz * side };
+  const l = side < 0 ? 1 : 0;
+  return { x: REST.x * side, y: REST.y + LEFT_OFF.y * l, z: REST.z + LEFT_OFF.z * l, rx: REST.rx, ry: REST.ry * side, rz: (REST.rz + LEFT_OFF.rz * l) * side };
 }
 
 /**
@@ -119,6 +175,11 @@ export class HandsMotion {
   private shown = 0;
   private padK = 0;
   private gripK = 0;
+  /** The arms' last grip on the ladder, held while they let go of it. */
+  private gripAt: [ArmPose, ArmPose] | null = null;
+  /** How long you've been settled (no step, jump or turn), and how far the hands have made way (0 to 1). */
+  private settled = 0;
+  private readK = 0;
   /** Seconds into a reach, or -1. */
   private reachT = -1;
   /** A reach held at this many seconds in (the shots), or null. */
@@ -162,10 +223,15 @@ export class HandsMotion {
     } else if (f.still) {
       this.sway.x = this.sway.y = 0;
     }
+    // Settled: no step, no jump, no quick turn of the head. Aimed at something to read, or still a while, the hands make way.
+    const turning = this.last && dt > 0 ? Math.hypot(Math.atan2(Math.sin(f.yaw - this.last.yaw), Math.cos(f.yaw - this.last.yaw)), f.pitch - this.last.pitch) / dt > READ.turn : false;
+    this.settled = f.walking || f.airborne || turning || this.reachT >= 0 ? 0 : this.settled + dt;
+    const read = !f.pad && !f.grip && (this.settled > READ.idle || (!!f.aimed && this.settled > READ.aimed));
+    this.readK = f.still ? (read ? 1 : 0) : ease(this.readK, read ? 1 : 0, READ.rate, dt);
     this.last = { yaw: f.yaw, pitch: f.pitch };
     this.walk = f.still ? 0 : ease(this.walk, f.walking ? 1 : 0, 8, dt);
     this.air = f.still ? 0 : ease(this.air, f.airborne ? 1 : 0, 8, dt);
-    this.gripK = f.still ? (f.grip ? 1 : 0) : ease(this.gripK, f.grip ? 1 : 0, 9, dt);
+    this.gripK = f.still ? (f.grip ? 1 : 0) : ease(this.gripK, f.grip ? 1 : 0, 12, dt);
 
     const breathe = f.still ? 0 : Math.sin(t * 1.7) * 0.0035;
     const swing = Math.sin(f.walkPhase) * this.walk;
@@ -192,13 +258,17 @@ export class HandsMotion {
       return a;
     });
     const [right, left] = arms;
-    // On the rungs: both hands up in front on the ladder, one over the other in time with the climb (no walk swing there).
+    // Making way for what you read: the left out of view, the right down to its knuckles.
+    const rk = smooth(this.readK);
+    left.y -= DROP * rk;
+    left.rx -= 0.4 * rk;
+    right.y -= READ.right * rk;
+    // On the rungs: each hand where it holds the ladder (index.ts tracks the rung on the deck), held there while you move past it.
+    if (f.grip) this.gripAt = [gripArm(f.grip.right, 1), gripArm(f.grip.left, -1)];
     const grip = smooth(this.gripK);
-    if (grip > 0) {
-      for (const [a, side] of [[right, 1], [left, -1]] as const) {
-        const over = f.still ? 0 : Math.sin(f.walkPhase) * side;
-        blend(a, { x: side * 0.2, y: -0.15 + over * 0.055 - drop, z: -0.47 - Math.max(0, over) * 0.03, rx: 0.85 - over * 0.12, ry: side * 0.3, rz: -side * 0.38 }, grip);
-      }
+    if (grip > 0 && this.gripAt) {
+      blend(right, { ...this.gripAt[0], y: this.gripAt[0].y - drop }, grip);
+      blend(left, { ...this.gripAt[1], y: this.gripAt[1].y - drop }, grip);
     }
     // The datapad: the left hand brings it up and in, the right drifts in a little toward it.
     const pad = smooth(this.padK);
@@ -215,7 +285,7 @@ export class HandsMotion {
     right.rz += 0.16 * k;
     left.y -= 0.02 * k * (1 - pad);
     left.z += 0.025 * k * (1 - pad);
-    return { right, left, shown: this.shown, padK: this.padK, point: Math.min(1, k * 1.6), touch: press };
+    return { right, left, shown: this.shown, padK: this.padK, point: Math.min(1, k * 1.6), touch: press, read: rk };
   }
 }
 

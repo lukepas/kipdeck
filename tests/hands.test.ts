@@ -47,14 +47,37 @@ test('they slide up into view and drop away out of it, or cut with less motion',
   assert.equal(still.step(frame(0.02, { still: true, show: false })).shown, 0, 'a cut out');
 });
 
-test('at rest the arms come in from the bottom corners, mirrored across the view', () => {
+test('at rest the arms come in low from the bottom corners, the left a touch lower and back (never a mirror)', () => {
   const r = restFor(1);
   const l = restFor(-1);
   assert.ok(r.x > 0.1 && l.x < -0.1, 'right on the right, left on the left');
   assert.equal(r.x, -l.x);
   assert.equal(r.ry, -l.ry);
-  assert.equal(r.y, l.y);
-  assert.ok(r.y < -0.12 && r.z < -0.3, 'low and out in front, clear of the arc');
+  assert.ok(l.y < r.y && l.z > r.z, 'the left lower and further back');
+  // Low: at the hands' 52 degree view the frame's bottom edge is 0.244 m down at half a metre, so the
+  // wrist sits on it and only the knuckles and the cuff come up into the bottom fifth of the view.
+  const edge = -Math.tan((26 * Math.PI) / 180) * -r.z;
+  assert.ok(r.y < edge + 0.01, `the wrist at the frame's edge (${r.y} against ${edge.toFixed(3)})`);
+  assert.ok(r.y > edge - 0.05, 'but not so low the hand is gone');
+});
+
+test('they make way for what you read: aimed at a board the left drops out and the right sinks; a step brings them back', () => {
+  const m = new HandsMotion();
+  const rest = run(m, 1);
+  const read = run(m, 1.2, { aimed: true }, 1);
+  assert.ok(read.read > 0.95, 'made way');
+  assert.ok(read.left.y < rest.left.y - DROP * 0.9, 'the left out of view');
+  assert.ok(read.right.y < rest.right.y - 0.06 && read.right.y > rest.right.y - DROP / 2, 'the right down to its knuckles, still there to tap');
+  const back = run(m, 0.8, (t) => ({ walking: true, walkPhase: t * 8 }), 2.2);
+  assert.ok(back.read < 0.05, 'walking brings them back');
+  // Not aimed at anything: only after standing still a while.
+  const idle = new HandsMotion();
+  assert.ok(run(idle, 1).read < 0.05, 'not after a moment');
+  assert.ok(run(idle, 2, {}, 1).read > 0.9, 'after a couple of seconds still');
+  // A reach brings the right hand up to tap, and the left with it.
+  idle.reach();
+  const reach = run(idle, 0.25, {}, 3);
+  assert.ok(reach.read < 0.6, 'a reach brings them back');
 });
 
 test('they lag a little behind a quick turn, never far, and not at all under less motion', () => {
@@ -77,8 +100,8 @@ test('walking swings the arms opposite each other', () => {
   run(m, 1);
   const out = run(m, 1, (t) => ({ walking: true, walkPhase: Math.PI / 2, t }), 1);
   // At the top of the swing, one arm is forward and the other back.
-  assert.ok(out.right.z - REST.z > 0.015);
-  assert.ok(out.left.z - REST.z < -0.015);
+  assert.ok(out.right.z - restFor(1).z > 0.015);
+  assert.ok(out.left.z - restFor(-1).z < -0.015);
 });
 
 test('a reach jabs the right hand in toward the crosshair, straightens the finger, taps, and comes back', () => {

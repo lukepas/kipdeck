@@ -103,7 +103,7 @@ function climbAll(player: PlayerController, way: 'up' | 'down', opts: { still?: 
   return { c, heard, ys };
 }
 
-test('up the ladder: onto it at its foot, hand over hand up seven rungs, over its head onto the balcony', (t) => {
+test('up the ladder: onto it at its foot, hand over hand up the rungs, over its head onto the balcony', (t) => {
   const { player, keys, frames } = controller(t);
   player.view = 'first';
   player.pos.set(LADDER.x + 0.3, 0, LADDER.foot + 0.2);
@@ -112,7 +112,8 @@ test('up the ladder: onto it at its foot, hand over hand up seven rungs, over it
   assert.ok(c.done, 'the climb ends');
   assert.equal(heard[0], 'grab');
   assert.equal(heard.at(-1), 'top');
-  assert.equal(heard.filter((e) => e === 'rung').length, 7, 'a rung under your hands every 0.3 m');
+  const rungs = heard.filter((e) => e === 'rung').length;
+  assert.ok(rungs >= 4 && rungs <= 8, `a hand over onto the next rung as you go up (${rungs})`);
   assert.ok(Math.max(...ys) <= LOUNGE.top + 0.13, 'a little hop over its head, no more');
   assert.ok(Math.abs(player.pos.y - LOUNGE.top) < 1e-9 && Math.abs(player.pos.z - LADDER.top) < 1e-9, 'on the balcony at the ladder\'s head');
   assert.ok(Math.abs(Math.atan2(Math.sin(player.camYaw), Math.cos(player.camYaw))) < 1e-6, 'facing the bow');
@@ -215,14 +216,60 @@ test('the units keep off the lounge\'s footprint', () => {
   assert.equal(walkable(3.3, -9), true);
 });
 
-test('on the rungs the hands grip it, over each other in time with the climb', () => {
+test('on the rungs each hand stays planted on its rung while you move past it, then goes over the other', (t) => {
+  const { player } = controller(t);
+  player.view = 'first';
+  player.pos.set(LADDER.x, 0, LADDER.foot);
+  const c = new Climb(player, 'up');
+  const heard: ClimbEvent[] = [];
+  const at = { x: 0, y: 0, z: 0 };
+  const lz = LOUNGE.z1 + 0.08;
+  let planted = 0;
+  let movedPast = 0;
+  let wasY: number | null = null;
+  let wasFeet = 0;
+  player.rig = (dt) => c.step(dt, 0, false, (e) => heard.push(e));
+  for (let i = 0; i < 1200 && !c.done; i++) {
+    player.update(1 / 60);
+    const g = c.grips;
+    if (!g || !c.onRungs()) continue;
+    for (const side of [1, -1] as const) {
+      const p = c.hand(side, at)!;
+      const h = side > 0 ? g.right : g.left;
+      if (h.k < 1) continue;
+      // A planted hand is on a rung: at its height (a multiple of the spacing), on the ladder's face.
+      planted++;
+      const off = Math.abs(p.y / LADDER.rung - Math.round(p.y / LADDER.rung)) * LADDER.rung;
+      assert.ok(off < 0.05 && Math.abs(p.z - lz) < 0.05 && Math.abs(p.x - LADDER.x) <= LADDER.width / 2 + 1e-9, `the ${side > 0 ? 'right' : 'left'} hand on a rung (${p.x.toFixed(2)}, ${p.y.toFixed(2)}, ${p.z.toFixed(2)})`);
+    }
+    // Your body moves while the right hand holds still on its rung.
+    const ry = c.hand(1, at)!.y;
+    if (g.right.k >= 1 && wasY !== null && Math.abs(ry - wasY) < 1e-9 && player.pos.y > wasFeet + 1e-4) movedPast++;
+    wasY = g.right.k >= 1 ? ry : null;
+    wasFeet = player.pos.y;
+  }
+  player.rig = null;
+  assert.ok(c.done && planted > 100, 'hands planted through the climb');
+  assert.ok(movedPast > 20, 'the body rises past a hand that holds still');
+  // A clank only as a hand lands on its next rung: never two in the same frame, never with no move.
+  assert.ok(heard.filter((e) => e === 'rung').length >= 4);
+});
+
+test('the hands hold the rungs where the climb says, and let go of them as it ends', () => {
   const motion = new HandsMotion();
-  const frame = (walkPhase: number, grip: boolean): HandsFrame => ({ dt: 0.05, t: 1, yaw: 0, pitch: 0, walking: false, walkPhase, airborne: false, still: false, show: true, pad: false, grip });
-  for (let i = 0; i < 40; i++) motion.step(frame(0, false));
-  const rest = motion.step(frame(0, false));
-  for (let i = 0; i < 40; i++) motion.step(frame(Math.PI / 2, true));
-  const a = motion.step(frame(Math.PI / 2, true));
-  const b = motion.step(frame(-Math.PI / 2, true));
-  assert.ok(a.right.y > rest.right.y && a.left.y > rest.left.y - 0.02, 'up in front on the ladder');
-  assert.ok(a.right.y > a.left.y && b.right.y < b.left.y, 'one over the other, turn about');
+  // Looking about as you go (a slow turn), so the hands never settle into making way for a board.
+  let yaw = 0;
+  const frame = (grip: HandsFrame['grip']): HandsFrame => ({ dt: 0.05, t: 1, yaw: (yaw += 0.05), pitch: 0, walking: false, walkPhase: 0, airborne: false, still: false, show: true, pad: false, grip });
+  for (let i = 0; i < 40; i++) motion.step(frame(null));
+  const rest = motion.step(frame(null));
+  const high = { right: { x: 0.12, y: 0.1, z: -0.35 }, left: { x: -0.12, y: -0.05, z: -0.35 } };
+  for (let i = 0; i < 40; i++) motion.step(frame(high));
+  const on = motion.step(frame(high));
+  assert.ok(on.right.y > rest.right.y + 0.1 && on.right.y > on.left.y, 'up in front on the ladder, the right over the left');
+  // The palm is where the grip is: the wrist back and under it, a few centimetres away.
+  assert.ok(Math.hypot(on.right.x - high.right.x, on.right.y - high.right.y, on.right.z - high.right.z) < 0.1);
+  assert.ok(on.right.z > high.right.z, 'the wrist nearer you than the rung');
+  for (let i = 0; i < 40; i++) motion.step(frame(null));
+  const off = motion.step(frame(null));
+  assert.ok(Math.abs(off.right.y - rest.right.y) < 0.01, 'back to rest off the ladder');
 });
