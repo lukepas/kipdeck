@@ -1,0 +1,20 @@
+{
+  "name": "ugc-army-video",
+  "private": true,
+  "type": "module",
+  "description": "PROOF OF MERGE - UGC Army, 30 s film rendered from code",
+  "scripts": {
+    "audio": "node audio/compose.mjs",
+    "render": "node render.mjs",
+    "render:vertical": "node render.mjs --format 9x16",
+    "preview": "node render.mjs --preview",
+    "preview:vertical": "node render.mjs --preview --format 9x16",
+    "render:square": "node render.mjs --format 1x1",
+    "preview:square": "node render.mjs --preview --format 1x1",
+    "poster": "node render.mjs --still 29.5",
+    "test": "node --test test/*.test.mjs",
+    "verify": "python3 tools/verify.py",
+    "sheet": "python3 tools/sheet.py",
+    "hits": "python3 tools/hits.py"
+  }
+}
