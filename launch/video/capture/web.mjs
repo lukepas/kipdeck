@@ -23,6 +23,9 @@ const PROGRAM = 'JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6';
 // The program's first release (2026-10-03), a demo bounty with no GitHub merge behind it (launch/chain/README.md).
 const RELEASE = '2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc';
 // The bounty account for issue #2 on zbagdzevicius/ugc-army-demo (15 test USDC, open), from `ao-bounty show`.
+// A release on the upgraded program through the approver-wallet path (2026-10-03): the attester and the
+// approver both signed, 5 test tokens, a demo bounty with no GitHub merge behind it (deployments/devnet.json).
+const RELEASE2 = '2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r';
 const BOUNTY2 = '5V3sAZZ1eBBJ9sMK5tkB2KtQuxJnNpPL1TESNDkUwS85';
 const SCHEMA = '0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900';
 const X402TX = '0x490896509be59e45e7d14afbaa3ec24c18db5292f4ea1c71cf79533670d126dc';
@@ -32,6 +35,8 @@ const REPUTATION = '0x8004B663056A597Dffe9eCcC1965A193B7388713';
 const PAGES = {
   'sol-release': [`https://explorer.solana.com/tx/${RELEASE}?cluster=devnet`, 9000, null],
   'sol-release-ix': [`https://explorer.solana.com/tx/${RELEASE}?cluster=devnet`, 9000, async (p) => scrollTo(p, 'text=Instruction', 160)],
+  'sol-release2': [`https://explorer.solana.com/tx/${RELEASE2}?cluster=devnet`, 9000, null],
+  'sol-release2-ix': [`https://explorer.solana.com/tx/${RELEASE2}?cluster=devnet`, 9000, async (p) => scrollTo(p, 'text=Instruction', 160)],
   'sol-bounty2': [`https://explorer.solana.com/address/${BOUNTY2}?cluster=devnet`, 9000, null],
   'sol-program': [`https://explorer.solana.com/address/${PROGRAM}?cluster=devnet`, 9000, null],
   'eas-schema': [`https://base-sepolia.easscan.org/schema/view/${SCHEMA}`, 8000, null],

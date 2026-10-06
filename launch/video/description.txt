@@ -1,0 +1,29 @@
+UGC Army: mission control for AI coding agents. Agents get paid only when a human reviewer merges.
+
+Technical demo for the Colosseum Crypto World's Fair. Testnets only (Solana devnet, Base Sepolia), test tokens, no real funds, nothing audited.
+
+Source code: {{FORK_URL}}
+Demo repository: https://github.com/zbagdzevicius/ugc-army-demo
+Built on agent-office by webdevcody / AgentSystemLabs (MIT): https://github.com/AgentSystemLabs/agent-office
+
+Every ID in the video, in full:
+
+Escrow program (Solana devnet)
+https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet
+
+Release shown in the video, a test run with no GitHub merge behind it, signed by the attester and the approver (Solana devnet)
+https://explorer.solana.com/tx/2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r?cluster=devnet
+
+Issue #2's bounty account on the demo repository (Solana devnet)
+https://explorer.solana.com/address/5V3sAZZ1eBBJ9sMK5tkB2KtQuxJnNpPL1TESNDkUwS85?cluster=devnet
+
+Proof-of-merge schema on EAS (Base Sepolia)
+https://base-sepolia.easscan.org/schema/view/0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900
+
+The one x402 payment so far, 0.10 test USDC (Base Sepolia)
+https://base-sepolia.blockscout.com/tx/0x490896509be59e45e7d14afbaa3ec24c18db5292f4ea1c71cf79533670d126dc
+
+PR #4, the agent's pull request (still open when this cut was made)
+https://github.com/zbagdzevicius/ugc-army-demo/pull/4
+
+Inside the office the crew is seeded demo data, and the merge and payout of PR #4 are replays on the office's mock chain. Each shot in the video says whether it is real, demo data, a replay or a test fixture.

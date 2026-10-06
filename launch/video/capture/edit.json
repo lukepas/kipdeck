@@ -1,270 +1,183 @@
 {
-  "note": "The edit list for launch/video/out/demo-3min-silent.mp4, demo-3min-captions.srt and demo-60s-9x16.mp4. assemble.mjs reads it; cards.mjs renders the cards, pages and overlays it names. Sources are relative to launch/video/out/. kb is a slow push from one rect to another, [x, y, width] in source pixels (height is width * 9 / 16). cut is the transition into the next segment: 0 for a cut, otherwise a crossfade of that many seconds. noteAt \"low\" puts a note above the chip row instead of at the top. Captions are the voiceover in demo-script.md, word for word, spread over each beat by word count.",
+  "note": "The edit list for launch/video/out/demo-3min-silent.mp4, demo-3min-captions.srt and demo-60s-9x16.mp4. assemble.mjs reads it; cards.mjs renders the cards, pages and overlays it names. Sources are relative to launch/video/out/. kb is a slow push from one rect to another, [x, y, width] in source pixels (height is width * 9 / 16). cut is the transition into the next segment: 0 for a hard cut, otherwise a crossfade of that many seconds. url puts that address in a bar across the top. noteAt \"low\" puts a note above the caption instead of at the top. Captions are the voiceover, one cue per line of at most 42 characters; assemble.mjs refuses a longer cue or one faster than 17 characters a second, spreads each beat's cues over its span by length, and writes the voiceover with its timings to voiceover.txt.",
   "fps": 30,
   "tags": {
-    "demo": [
-      "grey",
-      "DEMO DATA - seeded office crew, nothing on chain"
-    ],
-    "mirror": [
-      "grey",
-      "DEMO DATA - seeded office; the board mirrors the real devnet bounties on ugc-army-demo"
-    ],
-    "replay": [
-      "grey",
-      "DEMO DATA - merge replayed in the office; the real merge of PR #4 happens on recording day"
-    ],
-    "approval": [
-      "grey",
-      "DEMO DATA - seeded office; approving signs with the admin's browser wallet on devnet"
-    ],
-    "payout": [
-      "grey",
-      "DEMO DATA - payout replayed; the toast links the program's first real devnet release"
-    ],
-    "fixture": [
-      "grey",
-      "DEMO DATA - test fixture; the live board is empty until the first real merge is attested"
-    ],
-    "x402task": [
-      "grey",
-      "DEMO DATA - office state; the payment shown is the real 2026-10-04 Base Sepolia one"
-    ],
-    "devnet": [
-      "solana",
-      "REAL - Solana devnet, read-only explorer"
-    ],
-    "base": [
-      "base",
-      "REAL - Base Sepolia, read-only explorer"
-    ],
-    "github": [
-      "ink",
-      "REAL - public GitHub page, github.com/zbagdzevicius/ugc-army-demo"
-    ],
-    "repo": [
-      "ink",
-      "REAL - source in this repository"
-    ],
-    "office402": [
-      "ink",
-      "REAL - the office's own 402 answer, from a local test office"
-    ]
+    "demo": ["grey", "DEMO DATA - seeded office crew, nothing on chain"],
+    "mirror": ["grey", "DEMO DATA - seeded office; the board mirrors the real devnet bounties"],
+    "replay": ["grey", "REPLAY - what happens when PR #4 merges; on GitHub it is still open"],
+    "approval": ["grey", "DEMO DATA - seeded office; on the real run the admin signs in Phantom"],
+    "payout": ["grey", "REPLAY - no transaction sent; the office's mock chain"],
+    "fixture": ["grey", "TEST DATA - fixture; the live board is empty until a real merge"],
+    "devnet": ["solana", "REAL - Solana devnet, read-only explorer"],
+    "base": ["base", "REAL - Base Sepolia, read-only explorer"],
+    "github": ["ink", "REAL - public GitHub page"],
+    "repo": ["ink", "REAL - source in this repository"],
+    "office402": ["ink", "REAL - the office's own 402 answer, from a local test office"]
   },
   "beats": [
-    {
-      "n": 0,
-      "title": "",
-      "captions": []
-    },
+    { "n": 0, "title": "", "captions": [] },
     {
       "n": 1,
-      "title": "The bridge and attention at a glance",
+      "title": "The bridge",
       "captions": [
-        "This is UGC Army, a fork of agent-office. Every coding agent on the team is a unit at a console.",
-        "One function, attention.ts, ranks them: needs you, stuck, to review, working.",
-        "The board, the top bar, the tab title and the 2D view all read that one ranking."
+        "This is UGC Army, a fork of agent-office.",
+        "Every coding agent is a unit at a console.",
+        "The office ranks who needs you first:",
+        "needs you, stuck, to review, working.",
+        "Every screen reads that one ranking."
       ]
     },
     {
       "n": 2,
-      "title": "Hire an agent for a funded issue",
+      "title": "A funded issue",
       "captions": [
-        "Issue two on our public demo repo carries a devnet USDC bounty.",
-        "It sits in a program-owned vault, one per bounty, that the office opened with its attester and approver keys.",
-        "Anyone can fund it from the board, or from a Blink, where only the funder's wallet signs.",
-        "I'll put a Claude Code unit on it. It works in its own git worktree."
+        "Issue two on our public demo repo",
+        "holds 15 test USDC on Solana devnet,",
+        "in a vault only the program can move.",
+        "Anyone can fund it from the board",
+        "or a Blink, signing with their wallet.",
+        "Here a unit is hired for it.",
+        "It works in its own git worktree."
       ]
     },
     {
       "n": 3,
       "title": "The agent's pull request",
       "captions": [
-        "While that runs, here's one an office unit finished earlier, for issue one.",
-        "The office opened it on the repository itself. A pull request from a fork never counts, whatever its branch is called."
+        "The new unit is already at work.",
+        "Here's one a unit finished earlier:",
+        "PR #4, for issue one.",
+        "It was opened on the repo itself.",
+        "A PR from a fork never counts."
       ]
     },
     {
       "n": 4,
-      "title": "The human merge",
+      "title": "When a person merges",
       "captions": [
-        "A person merges it. The office then asks GitHub fresh: was it merged, by a user, not a bot,",
-        "and does that user have write access? A merge by the agent's own operator is labelled self."
+        "When a person merges it, the office",
+        "asks GitHub again: merged by a user,",
+        "not a bot, with write access?",
+        "If the agent's own operator merges,",
+        "it's labelled self and not counted."
       ]
     },
     {
       "n": 5,
-      "title": "Admin approval in the review inbox",
+      "title": "Admin approval",
       "captions": [
-        "Nothing moves yet. The payout waits in the review inbox until an admin approves it,",
-        "and the approval is a signature from the admin's own browser wallet,",
-        "so no key on the office's machine can pay anyone alone."
+        "Even then, nothing pays yet.",
+        "The payout waits in the review inbox",
+        "until an admin approves it",
+        "with a signature from their own wallet,",
+        "so no key on the server pays alone."
       ]
     },
     {
       "n": 6,
-      "title": "The devnet payout and its explorer link",
+      "title": "The payout on Solana devnet",
       "captions": [
-        "The release lands on Solana devnet. The program is native Rust, no Anchor.",
-        "Release checks two signers, the attester who vouched for the merge and the approver,",
-        "then moves the escrow to the operator's wallet.",
-        "If nobody releases it before expiry, anyone can crank the refund back to each funder."
+        "Then the bounty is released on devnet.",
+        "Here's a real release from a test run,",
+        "with no GitHub merge behind it.",
+        "It needed two signatures:",
+        "the attester and the approver.",
+        "The program is native Rust, no Anchor.",
+        "Release fails unless both have signed.",
+        "Both keys are in the bounty's address,",
+        "so a bounty can't swap its signers.",
+        "After expiry, anyone can send a refund,",
+        "and it goes back to each funder."
       ]
     },
     {
       "n": 7,
-      "title": "The Base Sepolia attestation",
+      "title": "Proof of merge on Base Sepolia",
       "captions": [
-        "The same merge is attested on Base Sepolia with EAS: the outcome, the merge commit, the harness, the time to merge.",
-        "Reverts and closes get attested too. And the agent gets ERC-8004 feedback that points back at it."
+        "Paid merges are also attested",
+        "on Base Sepolia with EAS.",
+        "Reputation lives on Base, where",
+        "the ERC-8004 registries are."
       ]
     },
     {
       "n": 8,
-      "title": "The reputation leaderboard",
+      "title": "The public board",
       "captions": [
-        "The public board at slash pom is rebuilt from chain data alone. Every row links to its proof,",
-        "and it only counts attesters you choose to trust, since anyone can write to a public schema."
+        "The board at slash pom is rebuilt",
+        "from chain data alone.",
+        "Every row links to its proof.",
+        "Shown here with test data."
       ]
     },
     {
       "n": 9,
-      "title": "An x402 paid task",
+      "title": "One task over x402",
       "captions": [
-        "An outsider, a person or another agent, can hire a worker for one task over x402.",
-        "The first request gets a 402. The payer signs a USDC authorization, x402.org settles it on Base Sepolia,",
-        "and the task waits, held, until an admin approves."
+        "Outsiders can pay for one task with x402.",
+        "The first request gets a 402.",
+        "This test payment settled on Base Sepolia.",
+        "The task is held until an admin approves."
       ]
     },
     {
       "n": 10,
       "title": "The GitHub Action",
       "captions": [
-        "A repository can skip the office entirely. This GitHub Action runs the same merge checks and signs the claim.",
-        "So far it has run once on devnet, against a test GitHub API. It's pinned to a commit, because it holds a key."
+        "Repos can skip the office entirely:",
+        "this Action runs the same merge checks.",
+        "So far only against a test GitHub API.",
+        "It's pinned to a commit: it holds a key."
       ]
     },
     {
       "n": 11,
-      "title": "Security and open source",
+      "title": "Security and source",
       "captions": [
-        "Keys are dedicated testnet keys in owner-only files, and workers never get them in their environment.",
-        "The clients check the chain before they sign. Nothing is audited yet, so it stays on testnet.",
-        "It's all MIT, built on agent-office by webdevcody. Thanks for watching."
+        "Testnet keys sit in owner-only files,",
+        "and workers never see them.",
+        "Nothing is audited yet: testnet only.",
+        "Everything on chain is new in this fork.",
+        "It's MIT, built on agent-office",
+        "by webdevcody. Thanks for watching."
       ]
     }
   ],
   "segments": [
-    {
-      "beat": 0,
-      "src": "gfx/title.png",
-      "dur": 4.0,
-      "cut": 0.5,
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          24,
-          14,
-          1872
-        ]
-      ]
-    },
-    {
-      "beat": 1,
-      "src": "footage/bridge-overview.mp4",
-      "in": 0.5,
-      "dur": 5.0,
-      "cut": 0,
-      "tag": "demo"
-    },
-    {
-      "beat": 1,
-      "src": "footage/bridge-approach.mp4",
-      "in": 1.6,
-      "dur": 4.4,
-      "cut": 0,
-      "tag": "demo"
-    },
+    { "beat": 0, "src": "gfx/title.png", "dur": 4.0, "cut": 0.4, "kb": [[0, 0, 1920], [24, 14, 1872]] },
+    { "beat": 0, "src": "gfx/problem.png", "dur": 3.0, "cut": 0, "kb": [[0, 0, 1920], [20, 11, 1880]] },
+    { "beat": 1, "src": "footage/bridge-overview.mp4", "in": 0.5, "dur": 5.0, "cut": 0, "tag": "demo" },
+    { "beat": 1, "src": "footage/bridge-approach.mp4", "in": 1.6, "dur": 4.4, "cut": 0, "tag": "demo" },
     {
       "beat": 1,
       "src": "footage/bridge-seated.mp4",
       "in": 0.5,
       "dur": 6.4,
-      "cut": 0.4,
-      "tag": "demo",
-      "note": [
-        0.4,
-        3.4,
-        "TypeScript, three.js, Node. Solana devnet: native Rust program. Base Sepolia: EAS, ERC-8004, x402."
-      ]
-    },
-    {
-      "beat": 2,
-      "src": "footage/issues-board.mp4",
-      "in": 0,
-      "dur": 6.6,
       "cut": 0,
-      "tag": "mirror"
+      "tag": "demo",
+      "note": [0.4, 3.6, "TypeScript, three.js, Node. Solana devnet: native Rust program. Base Sepolia: EAS, ERC-8004, x402."]
     },
+    { "beat": 2, "src": "footage/issues-board.mp4", "in": 0, "dur": 6.6, "cut": 0, "tag": "mirror" },
     {
       "beat": 2,
       "src": "web/sol-bounty2.png",
       "dur": 5.0,
       "cut": 0,
       "tag": "devnet",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          430,
-          60,
-          1060
-        ]
-      ],
-      "note": [
-        0.2,
-        4.8,
-        "Issue #2's bounty account on devnet, owned by the escrow program JAH6Zi...yVQs6 (15 test USDC in its vault)"
-      ]
+      "url": "https://explorer.solana.com/address/5V3sAZZ1eBBJ9sMK5tkB2KtQuxJnNpPL1TESNDkUwS85?cluster=devnet",
+      "kb": [[0, 0, 1920], [430, 60, 1060]],
+      "note": [0.2, 4.8, "Issue #2's bounty account, owned by the escrow program (15 test USDC in its vault)"]
     },
-    {
-      "beat": 2,
-      "src": "footage/hire.mp4",
-      "in": 0.6,
-      "dur": 8.0,
-      "cut": 0.4,
-      "tag": "demo"
-    },
+    { "beat": 2, "src": "footage/hire.mp4", "in": 0.6, "dur": 9.0, "cut": 0, "tag": "demo" },
     {
       "beat": 3,
-      "src": "footage/lite-terminal.png",
+      "src": "footage/unit-terminal.mp4",
+      "in": 0,
+      "crop": [330, 150, 1280],
       "dur": 4.0,
       "cut": 0,
       "tag": "demo",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          330,
-          90,
-          1260
-        ]
-      ],
-      "note": [
-        0.2,
-        3.8,
-        "The 2D view: the unit's terminal"
-      ]
+      "note": [0.2, 3.8, "The 2D view: the new unit's live terminal, working on issue #2"]
     },
     {
       "beat": 3,
@@ -272,556 +185,148 @@
       "dur": 8.0,
       "cut": 0,
       "tag": "github",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          330,
-          190,
-          1120
-        ]
-      ],
-      "note": [
-        0.3,
-        7.7,
-        "PR #4 was opened by an office unit earlier, for issue #1."
-      ],
+      "url": "https://github.com/zbagdzevicius/ugc-army-demo/pull/4",
+      "kb": [[0, 0, 1920], [330, 190, 1120]],
+      "note": [0.3, 7.7, "Units open PRs with the operator's GitHub token, so GitHub shows the operator's account."],
       "noteAt": "low"
     },
-    {
-      "beat": 3,
-      "src": "footage/lite.png",
-      "dur": 4.0,
-      "cut": 0.4,
-      "tag": "demo",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          1060,
-          40,
-          860
-        ]
-      ]
-    },
-    {
-      "beat": 4,
-      "src": "footage/merge.mp4",
-      "in": 0.3,
-      "dur": 7.4,
-      "cut": 0,
-      "tag": "replay"
-    },
-    {
-      "beat": 4,
-      "src": "gfx/page-checks.png",
-      "dur": 5.6,
-      "cut": 0.4,
-      "tag": "repo",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          60,
-          40,
-          1800
-        ]
-      ]
-    },
-    {
-      "beat": 5,
-      "src": "footage/mission-control.png",
-      "dur": 4.0,
-      "cut": 0,
-      "tag": "demo",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          360,
-          330,
-          1200
-        ]
-      ],
-      "note": [
-        0.2,
-        3.8,
-        "Mission control (I): Attention, Goals, Review, Timeline, Crew"
-      ]
-    },
-    {
-      "beat": 5,
-      "src": "footage/review-inbox.png",
-      "dur": 10.5,
-      "cut": 0.4,
-      "tag": "approval",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          380,
-          400,
-          1180
-        ]
-      ]
-    },
+    { "beat": 4, "src": "footage/merge.mp4", "in": 0.3, "dur": 7.4, "cut": 0, "tag": "replay" },
+    { "beat": 4, "src": "gfx/page-checks.png", "dur": 5.6, "cut": 0, "tag": "repo", "kb": [[0, 0, 1920], [60, 40, 1800]] },
+    { "beat": 5, "src": "footage/mission-control.mp4", "in": 0, "dur": 12.0, "cut": 0, "tag": "approval" },
+    { "beat": 6, "src": "footage/payout.mp4", "in": 0.4, "dur": 7.5, "cut": 0, "tag": "payout" },
     {
       "beat": 6,
-      "src": "footage/payout.mp4",
-      "in": 0.4,
-      "dur": 8.6,
-      "cut": 0,
-      "tag": "payout"
-    },
-    {
-      "beat": 6,
-      "src": "web/sol-release.png",
-      "dur": 6.4,
+      "src": "web/sol-release2.png",
+      "dur": 6.0,
       "cut": 0,
       "tag": "devnet",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          440,
-          230,
-          1080
-        ]
-      ],
-      "note": [
-        0.2,
-        6.2,
-        "The escrow program's first release on devnet, 2026-10-03 (a demo bounty, no GitHub merge behind it)"
-      ]
+      "url": "https://explorer.solana.com/tx/2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r?cluster=devnet",
+      "kb": [[0, 0, 1920], [440, 230, 1080]],
+      "note": [0.2, 5.8, "A real release from a test run, 2026-10-03: 5 test tokens, no GitHub merge behind it"]
     },
     {
       "beat": 6,
-      "src": "web/sol-release-ix.png",
-      "dur": 4.4,
+      "src": "web/sol-release2-ix.png",
+      "dur": 5.0,
       "cut": 0,
       "tag": "devnet",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          0,
-          60,
-          1100
-        ]
-      ],
-      "note": [
-        0.2,
-        4.2,
-        "Program JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6 and its signers"
-      ]
+      "url": "https://explorer.solana.com/tx/2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r?cluster=devnet",
+      "kb": [[0, 0, 1920], [0, 110, 1000]],
+      "note": [0.2, 4.8, "\"Unknown Instruction\" is the program's Release. Signers: attester 3VFT...ZFHk and approver 55vg...5ypN"]
     },
-    {
-      "beat": 6,
-      "src": "gfx/page-diagram.png",
-      "dur": 3.6,
-      "cut": 0.4,
-      "tag": "repo",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          40,
-          20,
-          1840
-        ]
-      ]
-    },
+    { "beat": 6, "src": "gfx/page-release.png", "dur": 7.0, "cut": 0, "tag": "repo" },
+    { "beat": 6, "src": "gfx/page-seeds.png", "dur": 5.0, "cut": 0, "tag": "repo" },
+    { "beat": 6, "src": "gfx/page-refund.png", "dur": 6.0, "cut": 0, "tag": "repo" },
     {
       "beat": 7,
       "src": "web/eas-schema.png",
       "dur": 9.0,
       "cut": 0,
       "tag": "base",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          380,
-          150,
-          1180
-        ]
-      ],
-      "note": [
-        0.2,
-        8.8,
-        "The proof-of-merge schema on EAS, Base Sepolia. No real merge is attested yet; these are test runs."
-      ]
+      "url": "https://base-sepolia.easscan.org/schema/view/0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900",
+      "kb": [[0, 0, 1920], [380, 150, 1180]],
+      "note": [0.2, 8.8, "Our proof-of-merge schema. Only test runs so far: no real merge is attested yet."]
     },
-    {
-      "beat": 7,
-      "src": "web/bs-reputation.png",
-      "dur": 6.0,
-      "cut": 0.4,
-      "tag": "base",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          230,
-          40,
-          1300
-        ]
-      ],
-      "note": [
-        0.2,
-        5.8,
-        "The ERC-8004 Reputation registry the office writes feedback to (not ours)"
-      ]
-    },
-    {
-      "beat": 8,
-      "src": "footage/pom-top.png",
-      "dur": 5.0,
-      "cut": 0,
-      "tag": "fixture",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          340,
-          40,
-          1300
-        ]
-      ]
-    },
-    {
-      "beat": 8,
-      "src": "footage/pom-row.png",
-      "dur": 8.0,
-      "cut": 0.4,
-      "tag": "fixture",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          340,
-          380,
-          1240
-        ]
-      ]
-    },
-    {
-      "beat": 9,
-      "src": "gfx/page-term402.png",
-      "dur": 6.4,
-      "cut": 0,
-      "tag": "office402",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          40,
-          20,
-          1840
-        ]
-      ]
-    },
+    { "beat": 8, "src": "footage/pom-top.png", "dur": 4.0, "cut": 0, "tag": "fixture", "kb": [[0, 0, 1920], [340, 40, 1300]] },
+    { "beat": 8, "src": "footage/pom-row.png", "dur": 6.0, "cut": 0, "tag": "fixture", "kb": [[0, 0, 1920], [340, 380, 1240]] },
+    { "beat": 9, "src": "gfx/page-term402.png", "dur": 5.0, "cut": 0, "tag": "office402", "kb": [[0, 0, 1920], [40, 20, 1840]] },
     {
       "beat": 9,
       "src": "web/bs-x402.png",
-      "dur": 6.2,
+      "dur": 6.0,
       "cut": 0,
       "tag": "base",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          260,
-          100,
-          1300
-        ]
-      ],
-      "note": [
-        0.2,
-        6.0,
-        "The one real x402 payment so far: 0.10 test USDC, settled by x402.org, 2026-10-04"
-      ]
+      "url": "https://base-sepolia.blockscout.com/tx/0x490896509be59e45e7d14afbaa3ec24c18db5292f4ea1c71cf79533670d126dc",
+      "kb": [[0, 0, 1920], [260, 100, 1300]],
+      "note": [0.2, 5.8, "The one real x402 payment so far: 0.10 test USDC, settled by x402.org, 2026-10-04"]
     },
-    {
-      "beat": 9,
-      "src": "footage/queue-paid.png",
-      "dur": 5.4,
-      "cut": 0.4,
-      "tag": "x402task",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          520,
-          240,
-          1000
-        ]
-      ]
-    },
-    {
-      "beat": 10,
-      "src": "gfx/page-yml1.png",
-      "dur": 7.0,
-      "cut": 0,
-      "tag": "repo",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          40,
-          20,
-          1840
-        ]
-      ]
-    },
-    {
-      "beat": 10,
-      "src": "gfx/page-yml2.png",
-      "dur": 8.0,
-      "cut": 0.4,
-      "tag": "repo",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          40,
-          20,
-          1840
-        ]
-      ]
-    },
-    {
-      "beat": 11,
-      "src": "gfx/page-security.png",
-      "dur": 4.4,
-      "cut": 0,
-      "tag": "repo",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          40,
-          20,
-          1840
-        ]
-      ]
-    },
-    {
-      "beat": 11,
-      "src": "gfx/page-envts.png",
-      "dur": 4.4,
-      "cut": 0.5,
-      "tag": "repo",
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          40,
-          20,
-          1840
-        ]
-      ]
-    },
-    {
-      "beat": 11,
-      "src": "gfx/end.png",
-      "dur": 7.5,
-      "cut": 0,
-      "kb": [
-        [
-          0,
-          0,
-          1920
-        ],
-        [
-          16,
-          9,
-          1888
-        ]
-      ]
-    }
+    { "beat": 10, "src": "gfx/page-yml1.png", "dur": 6.0, "cut": 0, "tag": "repo" },
+    { "beat": 10, "src": "gfx/page-yml2.png", "dur": 6.0, "cut": 0, "tag": "repo" },
+    { "beat": 11, "src": "gfx/page-security.png", "dur": 5.0, "cut": 0, "tag": "repo" },
+    { "beat": 11, "src": "gfx/fork.png", "dur": 4.5, "cut": 0, "kb": [[0, 0, 1920], [16, 9, 1888]] },
+    { "beat": 11, "src": "gfx/end.png", "dur": 8.0, "cut": 0 }
   ],
   "vertical": {
     "note": "demo-60s-9x16.mp4: 1080x1920. Each segment crops a rect of its source ([x, y, width], height = width * 10 / 9) into the 1080x1200 window under the header; the caption sits under it.",
     "segments": [
-      {
-        "src": "gfx/vtitle.png",
-        "dur": 3.6,
-        "full": true
-      },
+      { "src": "gfx/vtitle.png", "dur": 3.6, "full": true },
       {
         "src": "footage/bridge-overview.mp4",
         "in": 0.15,
         "dur": 5.8,
-        "crop": [
-          420,
-          0,
-          972
-        ],
+        "crop": [420, 0, 972],
         "tag": "demo",
         "title": "Every agent is a unit at a console",
-        "caption": "One function ranks them: needs you, stuck, to review, working."
+        "caption": "The office ranks who needs you first."
       },
       {
         "src": "footage/issues-board.mp4",
         "in": 1.0,
         "dur": 5.8,
-        "crop": [
-          150,
-          0,
-          972
-        ],
+        "crop": [150, 0, 972],
         "tag": "mirror",
         "title": "A funded issue",
-        "caption": "Issue two carries a devnet USDC bounty in a program-owned vault."
+        "caption": "Issue two holds 15 test USDC on Solana devnet."
       },
       {
         "src": "web/gh-pr4.png",
         "dur": 5.8,
-        "crop": [
-          340,
-          190,
-          760
-        ],
+        "crop": [340, 190, 760],
         "tag": "github",
         "title": "The agent's pull request",
-        "caption": "Opened on the repository itself. A fork never counts."
+        "caption": "Opened on the repo itself. A fork never counts."
       },
       {
-        "src": "footage/review-inbox.png",
+        "src": "footage/mission-control.mp4",
+        "in": 6.0,
         "dur": 5.8,
-        "crop": [
-          380,
-          360,
-          640
-        ],
+        "crop": [180, 0, 972],
         "tag": "approval",
         "title": "A human approves",
-        "caption": "The payout waits until an admin signs from their own wallet."
+        "caption": "The payout waits for an admin's own wallet."
       },
       {
         "src": "footage/payout.mp4",
         "in": 1.2,
         "dur": 6.4,
-        "crop": [
-          900,
-          60,
-          900
-        ],
+        "crop": [900, 60, 900],
         "tag": "payout",
-        "title": "Paid on merge",
-        "caption": "Release checks two signers: the attester and the approver."
+        "title": "After the merge, it pays",
+        "caption": "Replayed here: the release PR #4 gets once merged."
       },
       {
-        "src": "web/sol-release.png",
+        "src": "web/sol-release2.png",
         "dur": 5.8,
-        "crop": [
-          470,
-          230,
-          760
-        ],
+        "crop": [470, 230, 760],
         "tag": "devnet",
-        "title": "Every payout is on chain",
-        "caption": "The program's first release on Solana devnet."
+        "title": "Two signers or no payout",
+        "caption": "A real devnet release: attester and approver."
       },
       {
         "src": "web/eas-schema.png",
         "dur": 5.8,
-        "crop": [
-          390,
-          160,
-          620
-        ],
+        "crop": [390, 160, 620],
         "tag": "base",
         "title": "Proof of merge",
-        "caption": "The same merge is attested on Base Sepolia with EAS."
+        "caption": "Paid merges get an EAS attestation. Test runs so far."
       },
       {
         "src": "footage/pom-row.png",
         "dur": 5.8,
-        "crop": [
-          360,
-          400,
-          600
-        ],
+        "crop": [360, 400, 600],
         "tag": "fixture",
         "title": "Reputation from chain data",
-        "caption": "Which coding agents' PRs actually get merged."
+        "caption": "Which agents' PRs actually get merged."
       },
       {
-        "src": "footage/queue-paid.png",
+        "src": "web/bs-x402.png",
         "dur": 5.8,
-        "crop": [
-          560,
-          360,
-          640
-        ],
-        "tag": "x402task",
+        "crop": [260, 100, 760],
+        "tag": "base",
         "title": "Hire one worker over x402",
-        "caption": "Paid in test USDC, held until an admin approves."
+        "caption": "A real 0.10 test USDC payment on Base Sepolia."
       },
-      {
-        "src": "gfx/vend.png",
-        "dur": 6.6,
-        "full": true
-      }
+      { "src": "gfx/vend.png", "dur": 6.6, "full": true }
     ],
     "cut": 0.3
   }

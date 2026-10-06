@@ -1,6 +1,7 @@
 // Cuts the technical demo from edit.json with ffmpeg: launch/video/out/demo-3min-silent.mp4 (1920x1080,
-// 30 fps, H.264, a silent stereo track for the founder's voiceover), demo-3min-captions.srt (the voiceover
-// as captions, on the same clock), and demo-60s-9x16.mp4 (1080x1920, the 60 s highlight).
+// 30 fps, H.264, video only: no audio track until the founder's voiceover is laid on, see
+// launch/video/README.md), demo-3min-captions.srt (the voiceover as captions, on the same clock),
+// capture/voiceover.txt (the lines to read, with when each starts) and demo-60s-9x16.mp4 (1080x1920, 60 s).
 //
 //   node launch/video/capture/office.mjs && node launch/video/capture/web.mjs \
 //     && node --import tsx launch/video/capture/pom.ts && node launch/video/capture/cards.mjs \
@@ -56,7 +57,9 @@ function renderSegment(s, i) {
   let chain;
   if (isClip(s.src)) {
     inputs.push('-ss', String(s.in ?? 0), '-t', String(s.dur), '-i', src(s.src));
-    chain = `[0:v]fps=${FPS},scale=1920:1080:flags=lanczos,setsar=1,trim=end_frame=${n},setpts=PTS-STARTPTS[v0]`;
+    // crop: [x, y, width] of the clip (at 1920x1080), held for the whole shot, so small type reads.
+    const crop = s.crop ? `scale=1920:1080:flags=lanczos,crop=${s.crop[2]}:${Math.round((s.crop[2] * 9) / 16)}:${s.crop[0]}:${s.crop[1]},` : '';
+    chain = `[0:v]fps=${FPS},${crop}scale=1920:1080:flags=lanczos,setsar=1,trim=end_frame=${n},setpts=PTS-STARTPTS[v0]`;
   } else {
     inputs.push('-loop', '1', '-framerate', String(FPS), '-t', String(s.dur), '-i', src(s.src));
     const kb = s.kb ?? [[0, 0, 1920], [0, 0, 1920]];
@@ -64,7 +67,7 @@ function renderSegment(s, i) {
   }
   let last = 'v0';
   let k = 1;
-  if (s.tag) {
+  if (s.tag || s.url) {
     inputs.push('-i', path.join(OUT, 'gfx', `seg-${pad(i)}.png`));
     chain += `;[${last}][${k}:v]overlay=0:0:eof_action=repeat[v${k}]`;
     last = `v${k++}`;
@@ -150,7 +153,10 @@ function main16x9() {
   const { segStart, total } = join(files, cuts, durs, joined, '1920:1080');
   for (let i = 0; i < segs.length; i++) if (Math.abs(probe(files[i]) - durs[i]) > 0.05) throw new Error(`segment ${i} is short: fix its in/dur in edit.json`);
 
-  // Captions: each beat's lines over its span, by word count, with a breath between them.
+  // Captions: each beat's lines over its span, by length, with a breath between them. One line each, at
+  // most 42 characters and 17 a second, so a judge with the sound off can read them.
+  const MAX_CHARS = 42;
+  const MAX_CPS = 17;
   const caps = [];
   let n = 0;
   for (const b of edit.beats) {
@@ -160,17 +166,19 @@ function main16x9() {
     const start = segStart[idx[0]] + 0.45;
     const end = segStart[lastSeg] + segs[lastSeg].dur - (segs[lastSeg].cut > 0 ? segs[lastSeg].cut : 0) - 0.35;
     const gap = 0.25;
-    const words = b.captions.map((c) => c.split(/\s+/).length + 2);
+    for (const c of b.captions) if (c.length > MAX_CHARS) throw new Error(`caption over ${MAX_CHARS} characters (${c.length}): ${c}`);
+    const words = b.captions.map((c) => c.length + 6);
     const sum = words.reduce((a, c) => a + c, 0);
     const span = end - start - gap * (b.captions.length - 1);
     let t = start;
     b.captions.forEach((text, j) => {
       const d = (span * words[j]) / sum;
-      caps.push({ i: n++, text, a: r3(t), b: r3(t + d) });
+      if (text.length / d > MAX_CPS) throw new Error(`caption too fast (${(text.length / d).toFixed(1)} cps), lengthen beat ${b.n}: ${text}`);
+      caps.push({ i: n++, beat: b.n, text, a: r3(t), b: r3(t + d) });
       t += d + gap;
     });
   }
-  const inputs = ['-i', joined, '-f', 'lavfi', '-t', String(total), '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000'];
+  const inputs = ['-i', joined];
   let graph = '[0:v]null[c0]';
   // Each caption is looped only for its own time, shifted to where it plays, and cut to the lower strip
   // it occupies (the full frame, looped for three minutes, runs out of memory).
@@ -178,15 +186,21 @@ function main16x9() {
   caps.forEach((c, j) => {
     const d = r3(c.b - c.a);
     inputs.push('-loop', '1', '-framerate', String(FPS), '-t', String(d), '-i', path.join(OUT, 'gfx', `cap-${pad(c.i)}.png`));
-    graph += `;[${j + 2}:v]crop=1920:${STRIP}:0:${1080 - STRIP},format=rgba,fade=t=in:st=0:d=0.2:alpha=1,fade=t=out:st=${r3(d - 0.2)}:d=0.2:alpha=1,setpts=PTS+${c.a}/TB[k${j}];[c${j}][k${j}]overlay=0:${1080 - STRIP}:eof_action=pass[c${j + 1}]`;
+    graph += `;[${j + 1}:v]crop=1920:${STRIP}:0:${1080 - STRIP},format=rgba,fade=t=in:st=0:d=0.2:alpha=1,fade=t=out:st=${r3(d - 0.2)}:d=0.2:alpha=1,setpts=PTS+${c.a}/TB[k${j}];[c${j}][k${j}]overlay=0:${1080 - STRIP}:eof_action=pass[c${j + 1}]`;
   });
   const final = path.join(OUT, 'demo-3min-silent.mp4');
-  ff([...inputs, '-filter_complex', graph, '-map', `[c${caps.length}]`, '-map', '1:a', ...ENC, '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart', final]);
+  ff([...inputs, '-filter_complex', graph, '-map', `[c${caps.length}]`, ...ENC, '-an', '-t', String(total), '-movflags', '+faststart', final]);
   const srt = caps.map((c, j) => `${j + 1}\n${srtTime(c.a)} --> ${srtTime(c.b)}\n${c.text}\n`).join('\n');
   writeFileSync(path.join(OUT, 'demo-3min-captions.srt'), srt);
   writeFileSync(path.join(HERE, 'demo-3min-captions.srt'), srt);
   // The cut list, for whoever edits the voiceover in: where each beat and segment sits.
   const list = segs.map((s, i) => `${srtTime(segStart[i])}  ${String(s.beat).padStart(2)}  ${s.dur.toFixed(1).padStart(4)}s  ${s.src}${s.tag ? `  [${s.tag}]` : ''}`).join('\n');
+  // The voiceover to read, beat by beat, with where each line starts in the cut.
+  const vo = edit.beats.filter((b) => b.captions.length).map((b) => {
+    const mine = caps.filter((c) => c.beat === b.n);
+    return `Beat ${b.n}, ${b.title} (${srtTime(mine[0].a).slice(3, 8)})\n${mine.map((c) => `  ${srtTime(c.a).slice(3, 11)}  ${c.text}`).join('\n')}`;
+  });
+  writeFileSync(path.join(HERE, 'voiceover.txt'), `The voiceover for demo-3min-silent.mp4, read to picture (generated by assemble.mjs from edit.json).\nEach line shows where its caption starts (mm:ss,ms). About ${caps.reduce((a, c) => a + c.text.split(/\s+/).length, 0)} words over ${total.toFixed(0)} s.\n\n${vo.join('\n\n')}\n`);
   writeFileSync(path.join(HERE, 'cut-list.txt'), `demo-3min-silent.mp4, ${total.toFixed(2)} s (from edit.json by assemble.mjs)\n\nstart         beat  length  source  [tag]\n${list}\n`);
   console.log(`main: ${final} ${probe(final).toFixed(2)} s, ${caps.length} captions`);
 }
@@ -219,7 +233,7 @@ function mainVertical() {
   const joined = path.join(BUILD, 'vjoined.mp4');
   const { total } = join(files, cuts, durs, joined, '1080:1920');
   const final = path.join(OUT, 'demo-60s-9x16.mp4');
-  ff(['-i', joined, '-f', 'lavfi', '-t', String(total), '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000', '-map', '0:v', '-map', '1:a', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart', final]);
+  ff(['-i', joined, '-map', '0:v', '-c:v', 'copy', '-an', '-movflags', '+faststart', final]);
   console.log(`vertical: ${final} ${probe(final).toFixed(2)} s`);
 }
 

@@ -259,13 +259,16 @@ async function main() {
 
     await page.goto(`${base}/?demo=1`, { waitUntil: 'commit' });
     await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 120_000 });
+    // The key hints ("E Get up") and the bottom bar sit where the edit's captions go: off the shots.
+    // Mission control is drawn 1.4x so its rows read at 1080p.
+    await page.addStyleTag({ content: '#hint, #bottombar { visibility: hidden !important; } .modal.mission-control { zoom: 1.4; }' });
     for (const [deskId, prompt] of CREW) {
       await page.evaluate(([deskId, prompt]) => window.__office.net.send({ t: 'worker.spawn', deskId, prompt, worktree: false }), [deskId, prompt]);
       await wait(250);
     }
     await page.evaluate(() => {
       const net = window.__office.net;
-      net.send({ t: 'mission.set', statement: 'Pay agents only for merged work on ugc-army-demo' });
+      net.send({ t: 'mission.set', statement: 'Pay only for merged work' });
       for (const title of ['Bounties funded on devnet', 'First human merge', 'Payout approved', 'Attested on Base Sepolia']) net.send({ t: 'mission.milestone', op: 'add', title });
     });
     await wait(10_000);
@@ -330,6 +333,19 @@ async function main() {
     const still = async (name) => {
       await page.screenshot({ path: path.join(OUT, `${name}.png`) });
       console.log('still', name);
+    };
+    /** Records a page that runs on its own clock, in real time: a frame every 1/fps s, encoded at 30 fps. */
+    const liveClip = async (p, name, seconds, fps) => {
+      const frames = path.join(tmp, name);
+      mkdirSync(frames, { recursive: true });
+      const t0 = Date.now();
+      for (let f = 0; f < fps * seconds; f++) {
+        const due = t0 + (f * 1000) / fps;
+        if (due > Date.now()) await wait(due - Date.now());
+        await p.screenshot({ path: path.join(frames, `f${String(f).padStart(4, '0')}.jpg`), type: 'jpeg', quality: 92 });
+      }
+      execFileSync(FFMPEG, ['-y', '-loglevel', 'error', '-framerate', String(fps), '-i', path.join(frames, 'f%04d.jpg'), '-vf', `fps=${FPS}`, '-c:v', 'libx264', '-preset', 'medium', '-crf', '16', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', path.join(OUT, `${name}.mp4`)]);
+      console.log('live clip', name, seconds + 's');
     };
     /** Records `seconds` of frames at 30 fps; `cam(t)` gives [from, to] or null; `events` are [t, fn]. */
     const clip = async (name, seconds, cam, events = []) => {
@@ -439,9 +455,8 @@ async function main() {
       await run(500);
       await page.keyboard.press('1');
       await run(400);
-      await still('mission-control');
-      await page.keyboard.press('3');
-      await run(400);
+      // Live: the Attention tab for 3 s, then 3 for Review, where the payout waits for an admin.
+      await clip('mission-control', 13, () => null, [[3.0, () => page.keyboard.press('3')]]);
       await still('review-inbox');
       console.log('inbox rows', JSON.stringify(await page.evaluate(() => [...document.querySelectorAll('.modal.mission-control .mc-row, .modal.mission-control [class*=row]')].map((r) => r.textContent.trim().slice(0, 90)).slice(0, 6))));
       await page.keyboard.press('Escape');
@@ -449,9 +464,9 @@ async function main() {
     }
 
     // 6a. The payout: the bounty goes to paying, then released; the coins fly from the vault to the
-    // unit's console and the toast names the devnet transaction (here the program's first real release).
+    // unit's console. PR #4 is not merged, so no transaction stands behind this: it is replayed on the
+    // office's mock chain, with no link, and the toast and receipt say "mock chain".
     if (want('payout')) {
-      const RELEASE = '2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc';
       const cam = await page.evaluate(() => {
         const o = window.__office;
         const V = o.camera.position.constructor;
@@ -467,21 +482,17 @@ async function main() {
         return [[clamp(at.x + along.x * 3.4 + side.x * 2.0), 3.5, clamp(at.z + along.z * 3.4 + side.z * 2.0)], [m.x, 1.4, m.z]];
       });
       const pay = (phase) =>
-        page.evaluate(
-          ([phase, sig]) => {
-            const o = window.__office;
-            const s = o.store;
-            const f = s.floor;
-            const st = s.bounties[f];
-            const b = st.items.find((i) => i.issue === 1);
-            const url = `https://explorer.solana.com/tx/${sig}?cluster=devnet`;
-            const items = st.items.map((i) => (i.issue !== 1 ? i : { ...i, phase, txs: phase === 'released' ? [...i.txs, { kind: 'paid', sig, at: Date.now(), url }] : i.txs }));
-            const replay = window.__world.bounties.replay;
-            replay({ t: 'bounties', floor: f, state: { ...st, items } });
-            if (phase === 'released') replay({ t: 'bounty.paid', floor: f, issue: 1, pr: 4, amount: b.amount, symbol: b.symbol, workerName: b.workerName, url });
-          },
-          [phase, RELEASE],
-        );
+        page.evaluate((phase) => {
+          const o = window.__office;
+          const s = o.store;
+          const f = s.floor;
+          const st = s.bounties[f];
+          const b = st.items.find((i) => i.issue === 1);
+          const items = st.items.map((i) => (i.issue !== 1 ? i : { ...i, phase }));
+          const replay = window.__world.bounties.replay;
+          replay({ t: 'bounties', floor: f, state: { ...st, network: 'mock', items } });
+          if (phase === 'released') replay({ t: 'bounty.paid', floor: f, issue: 1, pr: 4, amount: b.amount, symbol: b.symbol, workerName: b.workerName });
+        }, phase);
       await VIEW(...cam);
       await run(1000);
       await clip('payout', 10, () => null, [
@@ -503,12 +514,15 @@ async function main() {
       await wait(800);
       await lite.screenshot({ path: path.join(OUT, 'lite.png') });
       console.log('still lite');
-      const card = lite.locator('.lite-card', { hasText: 'slugify, strip punctuation' }).first();
+      // The unit hired on camera for issue #2, its terminal live (its output scrolls once a second):
+      // real time at 15 fps, as the 2D view isn't on the stepped clock.
+      const card = lite.locator('.lite-card', { hasText: 'transliterate accented' }).first();
       await (await card.count() ? card : lite.locator('.lite-card').first()).click();
       await lite.locator('.modal.term').waitFor({ timeout: 10_000 });
-      await wait(2500);
+      await wait(1500);
       await lite.screenshot({ path: path.join(OUT, 'lite-terminal.png') });
       console.log('still lite-terminal');
+      await liveClip(lite, 'unit-terminal', 6, 15);
       await lite.keyboard.press('Escape');
       await wait(600);
       // A held paid task, as the office lists the one real x402 payment of 2026-10-04 (Base Sepolia).

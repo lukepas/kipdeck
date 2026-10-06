@@ -2,7 +2,7 @@
 
 For the Colosseum Crypto World's Fair. Screen recording with the founder's voiceover. Target 2:55, hard limit 3:00 (Colosseum: "no more than three minutes").
 
-A silent 2:58 cut of these beats, with the voiceover as captions and a 60 s 9:16 highlight, is made from the real office by the scripts in [capture/](capture/README.md). Inside the office it shows a seeded demo crew and replays the merge and the payout, and each shot is tagged as real or demo data. Use it to rehearse the voiceover, or as the fallback if the day's take fails.
+A 2:56 cut without sound, with its own voiceover as captions and a 60 s 9:16 highlight, is made from the real office by the scripts in [capture/](capture/README.md); [README.md](README.md) says how to lay the voiceover on it. PR #4 is not merged yet, so that cut speaks in the conditional ("when a person merges it") and shows the merge and the payout as replays on the office's mock chain, with no transaction link. Its voiceover is [capture/voiceover.txt](capture/voiceover.txt), not the lines below, which are for the recording-day take after the real merge.
 
 Last checked: 2026-10-07, against Colosseum's hackathon FAQ (https://colosseum.com/hackathon) and their submission guide (https://blog.colosseum.com/perfecting-your-hackathon-submission/).
 
@@ -63,7 +63,7 @@ On screen: the issue row with its devnet amount, the escrow vault on the Proof c
 
 Action: open the new unit's terminal for two seconds to show it working, close it. Then cut to PR #4 on GitHub, which an office unit opened earlier for issue #1. Show the head branch is on the repo itself and the body says "Closes #1". Back in the office, show the unit holding the claim with its amount on its card.
 
-On screen caption: "PR #4 was opened by an office unit earlier, for issue #1."
+On screen caption: "Units open PRs with the operator's GitHub token, so GitHub shows the operator's account." (PR #4 shows `zbagdzevicius wants to merge`.)
 
 > While that runs, here's one an office unit finished earlier, for issue one.
 > The office opened it on the repository itself. A pull request from a fork never counts, whatever its branch is called.
@@ -132,7 +132,7 @@ Action: show `onchain/action/examples/bounty.yml` with `uses: ...@<sha>`, then a
 
 Action: quick cuts: `docs/security.md` headings, the worker environment allowlist in `src/server/workers/env.ts`, then the closing card.
 
-Closing card: "UGC Army. Testnets only: Solana devnet and Base Sepolia. Built on agent-office by webdevcody (MIT). github.com/<fork>"
+Closing card: "UGC Army. Agents get paid only when a human reviewer merges." The source repository URL big, the demo repository, the four IDs in full, "Testnets only", and the agent-office credit (`capture/cards.mjs` renders it with `FORK_URL` set).
 
 > Keys are dedicated testnet keys in owner-only files, and workers never get them in their environment.
 > The clients check the chain before they sign. Nothing is audited yet, so it stays on testnet.
@@ -153,7 +153,7 @@ Record each step on its own during the 2026-10-08 dry run, so a slow RPC on the 
 | 3c | Claim on the unit's card | Hover or walk up to the unit with the amount on its card | 4 s | Dry-run take |
 | 4 | Merge | Reviewer profile: approve, merge PR #4 | 10 s | Cannot be redone: merge only once, on the real take |
 | 5 | Review inbox | I, then 3; Approve payout; Phantom signs on devnet | 12 s | Dry-run take of another bounty |
-| 6a | Toast and coins | Wait for the toast; coins fly to the console | 6 s | Released demo bounty, say so: https://explorer.solana.com/tx/2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc?cluster=devnet |
+| 6a | Toast and coins | Wait for the toast; coins fly to the console | 6 s | Never pair PR #4 with another bounty's transaction. Show the approver-wallet test release on its own, and say it is a test run: https://explorer.solana.com/tx/2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r?cluster=devnet |
 | 6b | Explorer | Click the toast's link | 8 s | Same link as 6a |
 | 6c | Architecture | README "How it fits together" diagram | 3 s | None needed |
 | 7a | easscan | The attestation from the timeline link | 8 s | Schema page: https://base-sepolia.easscan.org/schema/view/0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900 |

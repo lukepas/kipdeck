@@ -8,8 +8,9 @@
 //
 // Fonts: FONTS_DIR (default: the teaser's video/assets/fonts in the sibling video worktree) for the
 // variable Archivo, Inter Tight and JetBrains Mono; this repository's own woff2 files stand in when it is
-// missing. Writes launch/video/out/gfx/ (untracked). FORK_URL (e.g. github.com/you/ugc-army) adds the
-// fork's address to the end cards; without it they name the demo repo and upstream only.
+// missing. Writes launch/video/out/gfx/ (untracked). FORK_URL (e.g. github.com/you/ugc-army) is the source
+// repository on the title and end cards; without it they say SET FORK_URL BEFORE EXPORT in red.
+import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
@@ -50,59 +51,118 @@ const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 const mark = (cell, gap, ink = C.ink) => `<div style="display:grid;grid-template-columns:repeat(3,${cell}px);gap:${gap}px">${Array.from({ length: 9 }, (_, i) => `<div style="width:${cell}px;height:${cell}px;background:${i === 4 ? C.signal : ink}"></div>`).join('')}</div>`;
 
 const PROGRAM = 'JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6';
+// Every ID on the end cards in full, one line each, so a judge can type or search it.
 const IDS = [
-  ['PROGRAM', 'JAH6Zi...yVQs6', 'Solana devnet'],
-  ['RELEASE TX', '2rPSWQ...ZtUc', 'Solana devnet'],
-  ['EAS SCHEMA', '0x368e90...a900', 'Base Sepolia'],
-  ['X402 PAYMENT', '0x490896...26dc', 'Base Sepolia'],
+  ['ESCROW PROGRAM', PROGRAM, 'Solana devnet'],
+  ['RELEASE TX', '2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r', 'Solana devnet'],
+  ['EAS SCHEMA', '0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900', 'Base Sepolia'],
+  ['X402 PAYMENT', '0x490896509be59e45e7d14afbaa3ec24c18db5292f4ea1c71cf79533670d126dc', 'Base Sepolia'],
 ];
+const DEMO_REPO = 'github.com/zbagdzevicius/ugc-army-demo';
+// One line, on every card that carries a line: the product rule.
+const TAGLINE = 'Agents get paid only when a human reviewer merges.';
+// The source repository. Until FORK_URL is set the cards say so in red, so a cut without it is never mistaken for final.
+const sourceLine = (size) =>
+  FORK
+    ? `<span class="mono" style="font-size:${size}px;font-weight:800">${esc(FORK)}</span>`
+    : `<span class="mono" style="font-size:${size}px;font-weight:800;color:${C.signal}">SET FORK_URL BEFORE EXPORT</span>`;
+
+// What this fork added since upstream, from git: commits by the fork's authors (launch/chain/deadlines.json)
+// since upstream's 665aeec, and the lines they added in src, onchain, tests, bin and docs (lock files left out).
+const FORK_BASE = '665aeec';
+const forkStats = (() => {
+  try {
+    const authors = JSON.parse(readFileSync(path.join(ROOT, 'launch/chain/deadlines.json'), 'utf8')).fork.authors;
+    const who = authors.flatMap((a) => ['--author', a]);
+    const git = (...a) => execFileSync('git', a, { cwd: ROOT, maxBuffer: 1 << 28 }).toString();
+    const commits = git('log', '--no-merges', '--format=%H', ...who, `${FORK_BASE}..HEAD`).trim().split('\n').filter(Boolean).length;
+    let added = 0;
+    for (const l of git('log', '--no-merges', '--numstat', '--format=', ...who, `${FORK_BASE}..HEAD`, '--', 'src', 'onchain', 'tests', 'bin', 'docs', ':!*package-lock.json', ':!*.lock').split('\n')) {
+      const n = Number(l.split('\t')[0]);
+      if (Number.isFinite(n) && l.includes('\t')) added += n;
+    }
+    return { commits, added, at: git('log', '-1', '--format=%cs', FORK_BASE).trim() };
+  } catch (e) {
+    console.log('fork stats unavailable:', e.message.split('\n')[0]);
+    return undefined;
+  }
+})();
 
 const jobs = [];
 const add = (name, w, h, html, transparent = false) => jobs.push({ name, w, h, html, transparent });
 
-// ---- Title and end cards ---------------------------------------------------------------------------
+// ---- Title, problem, fork and end cards ------------------------------------------------------------
 add('title', 1920, 1080, `<body style="background:${C.paper};color:${C.ink}">
 <div style="position:absolute;left:96px;top:92px">${mark(52, 8)}</div>
 <div class="mono" style="position:absolute;left:330px;top:100px;font-size:22px;letter-spacing:.08em;color:${C.grey}">TECHNICAL DEMO - HOW IT WORKS</div>
-<div class="mono" style="position:absolute;left:330px;top:140px;font-size:34px;font-weight:700">Solana devnet escrow. Proof of merge on Base Sepolia.</div>
+<div class="mono" style="position:absolute;left:330px;top:140px;font-size:34px;font-weight:700">Mission control for AI coding agents.</div>
 <div class="disp" data-fit="1740" style="position:absolute;left:84px;top:300px;font-size:300px;font-weight:900;font-stretch:125%;letter-spacing:-.01em;line-height:1;white-space:nowrap">UGC ARMY</div>
-<div style="position:absolute;left:96px;top:560px;font-size:50px;font-weight:600;line-height:1.25">Mission control for teams running many AI coding agents.<br>Agents get paid only when a <span style="color:${C.signal}">human</span> merges.</div>
-<div style="position:absolute;left:96px;bottom:70px;font-size:22px;color:${C.grey}">Testnets only: test USDC on Solana devnet and Base Sepolia, no real funds. Built on agent-office (MIT) by webdevcody.</div>
+<div style="position:absolute;left:96px;top:575px;font-size:62px;font-weight:700;line-height:1.15">Agents get paid only when a <span style="color:${C.signal}">human reviewer</span> merges.</div>
+<div style="position:absolute;left:96px;top:735px;display:flex;flex-direction:column;gap:12px">
+  <div style="display:flex;gap:26px;align-items:baseline"><span class="mono" style="width:190px;font-size:20px;font-weight:700;color:${C.grey};letter-spacing:.06em">SOURCE</span>${sourceLine(40)}</div>
+  <div style="display:flex;gap:26px;align-items:baseline"><span class="mono" style="width:190px;font-size:20px;font-weight:700;color:${C.grey};letter-spacing:.06em">DEMO REPO</span><span class="mono" style="font-size:30px;font-weight:700">${DEMO_REPO}</span></div>
+</div>
+<div style="position:absolute;left:96px;bottom:70px;font-size:22px;color:${C.grey}">Solana devnet escrow, proof of merge on Base Sepolia. Testnets only, test USDC, no real funds. Built on agent-office (MIT) by webdevcody.</div>
 </body>`);
 
-const idRows = (size) => IDS.map(([k, v, n]) => `<div style="display:flex;gap:28px;align-items:baseline"><span class="mono" style="width:${size * 9}px;font-size:${size}px;font-weight:700;color:${C.grey};letter-spacing:.06em">${k}</span><span class="mono" style="font-size:${size * 1.25}px;font-weight:700">${v}</span><span class="mono" style="font-size:${size * 1.25}px">${n}</span></div>`).join('');
-add('end', 1920, 1080, `<body style="background:${C.paper};color:${C.ink}">
-<div style="position:absolute;left:96px;top:92px">${mark(80, 10)}</div>
-<div style="position:absolute;left:470px;top:96px;display:flex;flex-direction:column;gap:14px">
-  <div class="mono" style="font-size:22px;letter-spacing:.08em;color:${C.grey};font-weight:700">TRY IT - VERIFY EVERY ID</div>
-  <div class="mono" style="font-size:40px;font-weight:700">github.com/zbagdzevicius/ugc-army-demo</div>
-  ${FORK ? `<div class="mono" style="font-size:30px">source: ${esc(FORK)}</div>` : ''}
-  <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">${idRows(18)}</div>
+add('problem', 1920, 1080, `<body style="background:${C.ink};color:${C.paper}">
+<div style="position:absolute;left:96px;top:92px">${mark(36, 6, C.paper)}</div>
+<div class="disp" style="position:absolute;left:96px;top:300px;font-size:128px;font-weight:900;line-height:1.02;letter-spacing:-.01em">10 agents, 1 human:<br>who needs me now?</div>
+<div style="position:absolute;left:100px;top:640px;font-size:50px;font-weight:600;line-height:1.25">And whose work should get paid?<br>A person's merge is the only thing that <span style="color:${C.signal}">pays an agent</span>.</div>
+</body>`);
+
+const forkLines = forkStats
+  ? `<div class="disp" style="font-size:96px;font-weight:900;line-height:1">${forkStats.commits} commits</div>
+     <div class="disp" style="font-size:96px;font-weight:900;line-height:1;margin-top:10px">+${forkStats.added.toLocaleString('en-US')} lines</div>
+     <div class="mono" style="margin-top:22px;font-size:24px;color:${C.grey}">since the fork from upstream ${FORK_BASE} (${forkStats.at}), in src, onchain, tests, bin and docs; from git</div>`
+  : `<div class="disp" style="font-size:80px;font-weight:900">See launch/chain/disclosure.md</div>`;
+add('fork', 1920, 1080, `<body style="background:${C.paper};color:${C.ink}">
+<div class="mono" style="position:absolute;left:96px;top:92px;font-size:24px;letter-spacing:.08em;color:${C.grey};font-weight:700">WHAT THIS FORK ADDED</div>
+<div style="position:absolute;left:96px;top:150px">${forkLines}</div>
+<div style="position:absolute;left:96px;top:520px;right:96px;display:grid;grid-template-columns:1fr 1fr;gap:16px 60px;font-size:34px;font-weight:600;line-height:1.25">
+  <div>The Solana escrow program and SDK</div><div>Bounties and Fund-this-issue Blinks</div>
+  <div>The GitHub Action attester</div><div>x402 paid tasks</div>
+  <div>EAS attestations and ERC-8004 feedback</div><div>The chain-only indexer and /pom</div>
+  <div>Mission control and the review inbox</div><div>The security layer</div>
 </div>
-<div class="disp" data-fit="1740" style="position:absolute;left:84px;top:420px;font-size:300px;font-weight:900;font-stretch:125%;line-height:1;white-space:nowrap">UGC ARMY</div>
-<div style="position:absolute;left:96px;top:700px;font-size:44px;font-weight:600;line-height:1.25">An army of AI agents working for you.<br>Your agents get paid only when you merge.</div>
-<div style="position:absolute;left:96px;top:850px;font-size:23px;color:${C.grey}">Testnets only: Solana devnet and Base Sepolia, no real funds, nothing audited. Built on agent-office by webdevcody (MIT), github.com/AgentSystemLabs/agent-office.</div>
+<div style="position:absolute;left:96px;top:830px;right:96px;font-size:24px;color:${C.grey};line-height:1.4">Upstream's, not ours: the 3D office, live terminals, voice, the issue and PR boards (agent-office by webdevcody, MIT).</div>
+</body>`);
+
+const idRows = (label, value, size) => IDS.map(([k, v, n]) => `<div style="display:flex;gap:22px;align-items:baseline"><span class="mono" style="width:${label}px;flex:none;font-size:${size * 0.9}px;font-weight:700;color:${C.grey};letter-spacing:.05em">${k}<br><span style="font-weight:400">${n}</span></span><span class="mono" style="font-size:${value}px;font-weight:700;word-break:break-all">${v}</span></div>`).join('');
+add('end', 1920, 1080, `<body style="background:${C.paper};color:${C.ink}">
+<div style="position:absolute;left:96px;top:70px;display:flex;align-items:center;gap:30px">${mark(30, 5)}<span class="disp" style="font-size:84px;font-weight:900;font-stretch:125%;line-height:1">UGC ARMY</span></div>
+<div style="position:absolute;left:96px;top:190px;font-size:52px;font-weight:700">${TAGLINE}</div>
+<div style="position:absolute;left:96px;top:290px;display:flex;flex-direction:column;gap:10px">
+  <div style="display:flex;gap:22px;align-items:baseline"><span class="mono" style="width:250px;font-size:20px;font-weight:700;color:${C.grey};letter-spacing:.05em">SOURCE CODE</span>${sourceLine(48)}</div>
+  <div style="display:flex;gap:22px;align-items:baseline"><span class="mono" style="width:250px;font-size:20px;font-weight:700;color:${C.grey};letter-spacing:.05em">DEMO REPO</span><span class="mono" style="font-size:34px;font-weight:700">${DEMO_REPO}</span></div>
+</div>
+<div class="mono" style="position:absolute;left:96px;top:450px;font-size:20px;letter-spacing:.08em;color:${C.grey};font-weight:700">VERIFY EVERY ID - FULL LINKS IN THE DESCRIPTION</div>
+<div style="position:absolute;left:96px;right:96px;top:494px;display:flex;flex-direction:column;gap:16px">${idRows(250, 25, 20)}</div>
+<div style="position:absolute;left:96px;right:96px;top:850px;font-size:22px;color:${C.grey}">Testnets only: Solana devnet and Base Sepolia, no real funds, nothing audited. Built on agent-office by webdevcody (MIT), github.com/AgentSystemLabs/agent-office.</div>
 </body>`);
 
 add('vtitle', 1080, 1920, `<body style="background:${C.paper};color:${C.ink}">
 <div style="position:absolute;left:72px;top:150px">${mark(70, 9)}</div>
-<div class="disp" style="position:absolute;left:62px;top:480px;font-size:250px;font-weight:900;font-stretch:112%;line-height:.92">UGC<br>ARMY</div>
-<div class="disp" style="position:absolute;left:72px;top:1010px;font-size:96px;font-weight:900;line-height:1.02;letter-spacing:-.01em">Paid only<br>when a <span style="color:${C.signal}">human</span><br>merges.</div>
-<div class="mono" style="position:absolute;left:72px;top:1430px;font-size:30px;line-height:1.5">Mission control for AI coding agents.<br>Solana devnet escrow.<br>Proof of merge on Base Sepolia.</div>
+<div class="disp" style="position:absolute;left:62px;top:440px;font-size:250px;font-weight:900;font-stretch:112%;line-height:.92">UGC<br>ARMY</div>
+<div class="mono" style="position:absolute;left:72px;top:930px;font-size:34px;font-weight:700">Mission control for AI coding agents.</div>
+<div class="disp" style="position:absolute;left:72px;right:60px;top:1030px;font-size:92px;font-weight:900;line-height:1.02;letter-spacing:-.01em">Agents get paid only when a <span style="color:${C.signal}">human reviewer</span> merges.</div>
+<div class="mono" style="position:absolute;left:72px;top:1480px;font-size:30px;line-height:1.5">Solana devnet escrow.<br>Proof of merge on Base Sepolia.</div>
 <div style="position:absolute;left:72px;right:72px;bottom:110px;font-size:26px;color:${C.grey};line-height:1.4">Testnets only, no real funds. Built on agent-office (MIT) by webdevcody.</div>
 </body>`);
 
 add('vend', 1080, 1920, `<body style="background:${C.paper};color:${C.ink}">
-<div style="position:absolute;left:72px;top:150px">${mark(70, 9)}</div>
-<div class="disp" style="position:absolute;left:62px;top:440px;font-size:250px;font-weight:900;font-stretch:112%;line-height:.92">UGC<br>ARMY</div>
-<div style="position:absolute;left:72px;top:960px;font-size:52px;font-weight:600;line-height:1.25">Your agents get paid<br>only when you merge.</div>
-<div style="position:absolute;left:72px;top:1180px;display:flex;flex-direction:column;gap:14px">
-  <div class="mono" style="font-size:24px;letter-spacing:.08em;color:${C.grey};font-weight:700">VERIFY EVERY ID</div>
-  <div class="mono" style="font-size:31px;font-weight:700">github.com/zbagdzevicius/<br>ugc-army-demo</div>
-  ${FORK ? `<div class="mono" style="font-size:28px">${esc(FORK)}</div>` : ''}
-  <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">${IDS.map(([k, v, n]) => `<div class="mono" style="font-size:24px"><b style="color:${C.grey}">${k}</b>&nbsp; <b>${v}</b>&nbsp; ${n}</div>`).join('')}</div>
+<div style="position:absolute;left:72px;top:130px">${mark(56, 8)}</div>
+<div class="disp" style="position:absolute;left:62px;top:380px;font-size:200px;font-weight:900;font-stretch:112%;line-height:.92">UGC<br>ARMY</div>
+<div style="position:absolute;left:72px;right:72px;top:780px;font-size:58px;font-weight:700;line-height:1.15">${TAGLINE}</div>
+<div style="position:absolute;left:72px;right:72px;top:1010px;display:flex;flex-direction:column;gap:12px">
+  <div class="mono" style="font-size:22px;letter-spacing:.08em;color:${C.grey};font-weight:700">SOURCE CODE</div>
+  <div style="word-break:break-all">${sourceLine(34)}</div>
+  <div class="mono" style="font-size:22px;letter-spacing:.08em;color:${C.grey};font-weight:700;margin-top:10px">DEMO REPO</div>
+  <div class="mono" style="font-size:32px;font-weight:700">${DEMO_REPO}</div>
+  <div class="mono" style="font-size:22px;letter-spacing:.08em;color:${C.grey};font-weight:700;margin-top:18px">VERIFY EVERY ID</div>
+  <div style="display:flex;flex-direction:column;gap:10px">${IDS.map(([k, v, n]) => `<div class="mono" style="font-size:16px;line-height:1.35"><b style="color:${C.grey}">${k}, ${n}</b><br><b style="font-size:17px;word-break:break-all">${v}</b></div>`).join('')}</div>
 </div>
-<div style="position:absolute;left:72px;right:72px;bottom:100px;font-size:26px;color:${C.grey};line-height:1.4">Testnets only, nothing audited. Built on agent-office by webdevcody (MIT).</div>
+<div style="position:absolute;left:72px;right:72px;bottom:90px;font-size:24px;color:${C.grey};line-height:1.4">Testnets only, nothing audited. Built on agent-office by webdevcody (MIT).</div>
 </body>`);
 
 // ---- Pages: real files, real line numbers ----------------------------------------------------------
@@ -112,6 +172,7 @@ const PAGE_CSS = `body { background: ${C.ink}; color: ${C.paper}; }
 .bar .what { font-size: 22px; color: ${C.grey}; margin-left: auto; }
 .code { padding: 26px 0; font-size: 24px; line-height: 35px; }
 .ln { display: flex; padding: 0 64px; white-space: pre; }
+.ln > span:last-child { overflow: hidden; text-overflow: ellipsis; }
 .ln .n { width: 70px; color: #55534f; text-align: right; margin-right: 34px; flex: none; }
 .ln.hl { background: #1c1c20; box-shadow: inset 6px 0 0 ${C.paper}; }
 .c { color: ${C.grey}; }
@@ -125,20 +186,32 @@ const colour = (line, ext) => {
   if (/^\s*(\/\/|\/\*|\*)/.test(line)) return `<span class="c">${e}</span>`;
   return e.replace(/(\/\/.*)$/, '<span class="c">$1</span>');
 };
-function codePage(name, file, from, to, hl, what) {
+function codePage(name, file, from, to, hl, what, size = 24) {
   const lines = readFileSync(path.join(ROOT, file), 'utf8').split('\n');
   const ext = file.endsWith('.yml') ? 'yml' : 'ts';
   const rows = lines.slice(from - 1, to).map((l, i) => {
     const n = from + i;
     return `<div class="ln${hl(l, n) ? ' hl' : ''}"><span class="n">${n}</span><span>${colour(l, ext) || ' '}</span></div>`;
   });
-  add(name, 1920, 1080, `<style>${PAGE_CSS}</style><body class="mono"><div class="bar"><span class="file">${esc(file)}</span><span class="what">${esc(what)}</span></div><div class="code">${rows.join('')}</div></body>`);
+  add(name, 1920, 1080, `<style>${PAGE_CSS} .code { font-size: ${size}px; line-height: ${Math.round(size * 1.42)}px; }</style><body class="mono" style="overflow:hidden"><div class="bar"><span class="file">${esc(file)}</span><span class="what">${esc(what)}</span></div><div class="code">${rows.join('')}</div></body>`);
 }
 const yml = 'onchain/action/examples/bounty.yml';
 const ymlLines = readFileSync(path.join(ROOT, yml), 'utf8').split('\n');
 const usesAt = ymlLines.findIndex((l) => /uses:/.test(l)) + 1;
 codePage('page-yml1', yml, 1, 26, (l) => /Pin the action|approver key is|never in GitHub/.test(l), 'the workflow a repository adds');
 codePage('page-yml2', yml, Math.max(1, usesAt - 13), Math.min(ymlLines.length, usesAt + 10), (l) => /uses:|refuses forks|head\.repo\.full_name/.test(l), `lines ${Math.max(1, usesAt - 13)}-${Math.min(ymlLines.length, usesAt + 10)}`);
+// 24 lines a page at most, so nothing runs under the caption.
+// The escrow program (native Rust): Release needs both signers, the bounty's address holds both keys,
+// and Refund takes no signer at all, back to the funder's own token account after expiry.
+const proc = 'onchain/solana/programs/bounty-escrow/src/processor.rs';
+const procLines = readFileSync(path.join(ROOT, proc), 'utf8').split('\n');
+const lineOf = (re) => procLines.findIndex((l) => re.test(l)) + 1;
+const relAt = lineOf(/^fn release\(/);
+codePage('page-release', proc, relAt + 13, relAt + 36, (l) => /Both must sign|signer\(attester\)|signer\(approver\)|machine::release/.test(l), 'Release: two signers or nothing moves', 23);
+const initAt = lineOf(/The attester and the approver are in the seeds/);
+codePage('page-seeds', proc, initAt - 9, initAt + 14, (l) => /are in the seeds|find_program_address|expect\(bounty_info, &bounty_at\)/.test(l), 'InitBounty: the attester and approver are in the address', 23);
+const refAt = lineOf(/^fn refund\(/);
+codePage('page-refund', proc, refAt + 5, refAt + 28, (l) => /whoever cranks|back.owner|machine::refund/.test(l), 'Refund: no signer, only back to the funder, after expiry', 23);
 codePage('page-envts', 'src/server/workers/env.ts', 1, 29, (l) => /SCRUB_PREFIXES =|CHAIN_ and X402_|allowlist/.test(l), 'what workers start with');
 
 // The README's diagram, as it is in the file.
@@ -202,7 +275,7 @@ codePage('page-envts', 'src/server/workers/env.ts', 1, 29, (l) => /SCRUB_PREFIXE
     return JSON.stringify(v);
   };
   const json = esc(pretty(body)).replace(/(&quot;|")(amount|network|payTo|asset|scheme|description)\1/g, '<b style="color:#fff">"$2"</b>');
-  add('page-term402', 1920, 1080, `<style>${PAGE_CSS} .t { padding: 30px 64px; font-size: 22px; line-height: 29px; white-space: pre; } .p { color: ${C.paper}; } .s { color: ${C.amber}; font-weight: 800; } .h { color: ${C.grey}; }</style>
+  add('page-term402', 1920, 1080, `<style>${PAGE_CSS} .t { padding: 26px 64px; font-size: 19px; line-height: 24px; white-space: pre; } .p { color: ${C.paper}; } .s { color: ${C.amber}; font-weight: 800; } .h { color: ${C.grey}; }</style>
 <body class="mono"><div class="bar"><span class="file">terminal</span><span class="what">a local test office with --x402, 2026-10-07</span></div>
 <div class="t"><span class="p">${cmd.map(esc).join('\n')}</span>
 <span class="s">HTTP/1.1 ${r.status} ${esc(r.statusText)}</span>
@@ -217,25 +290,24 @@ const chip = (tag) => {
   const [colour, text] = edit.tags[tag];
   return `<div class="mono" style="display:flex;align-items:center;gap:12px;padding:9px 16px;background:rgba(11,11,12,.86);border:1px solid #3a3a3f;font-size:19px;letter-spacing:.03em;color:${C.paper}"><span style="width:12px;height:12px;border-radius:${colour === 'grey' ? '0' : '50%'};background:${tagColour[colour]}"></span>${esc(text)}</div>`;
 };
+// Three layers at most: a note at the top (or the address bar of a web page), the source tag above the
+// caption, and the caption. The beat number and title are left off; the voiceover says where we are.
+const urlBar = (url) => `<div class="mono" style="position:absolute;left:0;right:0;top:0;height:54px;display:flex;align-items:center;gap:14px;padding:0 28px;background:#1b1b1f;border-bottom:1px solid #3a3a3f;color:${C.paper};font-size:20px;white-space:nowrap;overflow:hidden"><span style="width:12px;height:12px;border-radius:50%;background:${C.grey}"></span>${esc(url)}</div>`;
 edit.segments.forEach((s, i) => {
-  if (!s.tag) return;
-  const beat = edit.beats.find((b) => b.n === s.beat);
+  if (!s.tag && !s.url) return;
   add(`seg-${String(i).padStart(2, '0')}`, 1920, 1080, `<body style="background:transparent">
-<div style="position:absolute;left:0;right:0;bottom:0;height:300px;background:linear-gradient(to bottom, rgba(11,11,12,0), rgba(11,11,12,.62))"></div>
-<div style="position:absolute;left:96px;bottom:212px;display:flex;align-items:center;gap:16px">
-  <div class="mono" style="padding:9px 14px;background:${C.paper};color:${C.ink};font-size:19px;font-weight:800">${String(s.beat).padStart(2, '0')}</div>
-  <div class="mono" style="padding:9px 16px;background:rgba(11,11,12,.86);border:1px solid #3a3a3f;color:${C.paper};font-size:19px;font-weight:700;letter-spacing:.08em">${esc(beat.title.toUpperCase())}</div>
-</div>
-<div style="position:absolute;right:96px;bottom:212px">${chip(s.tag)}</div>
+<div style="position:absolute;left:0;right:0;bottom:0;height:260px;background:linear-gradient(to bottom, rgba(11,11,12,0), rgba(11,11,12,.55))"></div>
+${s.url ? urlBar(s.url) : ''}
+${s.tag ? `<div style="position:absolute;right:96px;bottom:156px">${chip(s.tag)}</div>` : ''}
 </body>`, true);
   if (s.note) {
-    add(`note-${String(i).padStart(2, '0')}`, 1920, 1080, `<body style="background:transparent"><div style="position:absolute;left:0;right:0;${s.noteAt === 'low' ? 'bottom:290px' : 'top:88px'};display:flex;justify-content:center"><div style="max-width:1500px;padding:14px 26px;background:${C.paper};color:${C.ink};font-size:28px;font-weight:600;line-height:1.3;box-shadow:0 6px 0 ${C.ink}">${esc(s.note[2])}</div></div></body>`, true);
+    add(`note-${String(i).padStart(2, '0')}`, 1920, 1080, `<body style="background:transparent"><div style="position:absolute;left:0;right:0;${s.noteAt === 'low' ? 'bottom:220px' : `top:${s.url ? 84 : 88}px`};display:flex;justify-content:center"><div style="max-width:1500px;padding:14px 26px;background:${C.paper};color:${C.ink};font-size:28px;font-weight:600;line-height:1.3;box-shadow:0 6px 0 ${C.ink}">${esc(s.note[2])}</div></div></body>`, true);
   }
 });
 let n = 0;
 for (const b of edit.beats) {
   for (const text of b.captions) {
-    add(`cap-${String(n++).padStart(2, '0')}`, 1920, 1080, `<body style="background:transparent"><div style="position:absolute;left:96px;right:96px;bottom:64px;display:flex"><div style="max-width:1640px;padding:16px 26px 18px;background:rgba(11,11,12,.84);color:${C.paper};font-size:39px;font-weight:500;line-height:1.28;letter-spacing:-.003em">${esc(text)}</div></div></body>`, true);
+    add(`cap-${String(n++).padStart(2, '0')}`, 1920, 1080, `<body style="background:transparent"><div style="position:absolute;left:96px;right:96px;bottom:64px;display:flex"><div style="padding:14px 26px 16px;background:rgba(11,11,12,.84);color:${C.paper};font-size:40px;font-weight:500;line-height:1.25;letter-spacing:-.003em;white-space:nowrap">${esc(text)}</div></div></body>`, true);
   }
 }
 edit.vertical.segments.forEach((s, i) => {
