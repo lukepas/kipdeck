@@ -1,13 +1,15 @@
 import * as THREE from 'three';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { BOARD_MASK_GLSL } from '../bridge/holo-mask';
-import type { GradeLook } from './logic';
+import { FOCUS, type GradeLook } from './logic';
 
 // The grade: one pass over the frame after tone mapping and before its edges are smoothed (features/
 // lights/bloom.ts), in display colour. A vignette, fine film grain in the shadows only, a chromatic
-// fringe at the frame's edges only, a lens's dirt lit where the glow is, and the mode's colour (Night:
-// teal in the darkest tones and the practicals' neutral light a touch warm; Day: clean, a touch cool).
-// The sums are logic.ts's gradePixel, fringeAt and grainAt, which the tests check the state marks by:
+// fringe at the frame's edges only, a lens's dirt lit where the glow is, and the room's value structure:
+// a black point and a film toe that sink the hull, vibrance into what has little colour, the
+// practicals' neutral light a touch warm, and a local vignette round what needs the captain (up to two
+// focus ellipses that features/spotlight sets: the waiting station, the Attention board's rows).
+// The sums are logic.ts's gradePixel, focusDim, fringeAt and grainAt, which the tests check the state marks by:
 // nothing as bright as a board's type takes grain, and the middle of the frame takes no fringe, so the
 // type there reads the same from one frame to the next.
 
@@ -34,6 +36,12 @@ uniform float uShadowEnd;
 uniform vec3 uWarm;
 uniform float uWarmBy;
 uniform float uOn;
+uniform float uBlack;
+uniform float uToe;
+uniform float uPivot;
+uniform float uVibrance;
+uniform vec4 uFocus[2];
+uniform vec2 uFocusK;
 varying vec2 vUv;
 ${BOARD_MASK_GLSL}
 
@@ -54,8 +62,15 @@ void main() {
     col.r = texture2D(tDiffuse, vUv - d).r;
     col.b = texture2D(tDiffuse, vUv + d).b;
   }
-  // The mode's colour: a tint lifted into the darkest tones, neutral highlights pulled warm or cool.
+  // The black point, and the toe under the pivot: the hull sinks, the boards and marks keep their level.
+  col = max(col - vec3(uBlack), vec3(0.0)) / (1.0 - uBlack);
+  float l0 = luma(col);
+  if (l0 < uPivot) col *= uPivot * pow(clamp(l0 / uPivot, 0.0, 1.0), uToe) / max(l0, 1e-4);
+  // Vibrance: saturation into what has little, none added to a state's saturated mark.
   float l = luma(col);
+  float s0 = max(max(col.r, col.g), col.b) - min(min(col.r, col.g), col.b);
+  col = max(vec3(l) + (col - vec3(l)) * (1.0 + uVibrance * (1.0 - smoothstep(0.12, 0.5, s0)) * (1.0 - smoothstep(0.55, 0.8, l))), vec3(0.0));
+  // The mode's colour: a tint lifted into the darkest tones, neutral highlights pulled warm or cool.
   col += uShadow * (1.0 - smoothstep(0.0, uShadowEnd, l));
   float sat = max(max(col.r, col.g), col.b) - min(min(col.r, col.g), col.b);
   float hi = smoothstep(0.45, 0.95, l) * (1.0 - smoothstep(0.04, 0.2, sat)) * uWarmBy;
@@ -66,11 +81,25 @@ void main() {
   col += texture2D(tDirt, vUv).rgb * lit * uDirt;
   // The vignette.
   col *= 1.0 - uVignette * smoothstep(uVignetteFrom, 1.05, r);
+  float onBoard = 1.0 - boardMask(vUv * 2.0 - 1.0);
+  // The local vignette: a dark ring round each focus (logic.ts focusDim), never on a board's face.
+  if (uFocusK.x + uFocusK.y > 0.001) {
+    vec2 ndc = vUv * 2.0 - 1.0;
+    float dim = 0.0;
+    float inside = 0.0;
+    for (int i = 0; i < 2; i++) {
+      vec4 f = uFocus[i];
+      float k = i == 0 ? uFocusK.x : uFocusK.y;
+      float d = length((ndc - f.xy) / max(f.zw, vec2(1e-3)));
+      inside = max(inside, (1.0 - smoothstep(0.9, 1.0, d)) * step(0.001, k));
+      dim = max(dim, min(${FOCUS.max.toFixed(3)}, k * ${FOCUS.max.toFixed(3)}) * smoothstep(1.0, ${FOCUS.ring.toFixed(3)}, d) * (1.0 - smoothstep(${FOCUS.out.toFixed(3)}, ${FOCUS.fade.toFixed(3)}, d)));
+    }
+    col *= 1.0 - dim * (1.0 - inside) * (1.0 - step(0.5, onBoard));
+  }
   // Grain in the shadows only, nothing at or over 0.3 luma, and none on a wall board's face (the
   // rectangles features/boardfaces works out each frame): a board's type never crawls.
   vec2 p = gl_FragCoord.xy + vec2(uSeed * 61.0, uSeed * 37.0);
   float n = fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))) - 0.5;
-  float onBoard = 1.0 - boardMask(vUv * 2.0 - 1.0);
   col += n * uGrain * (1.0 - smoothstep(0.04, 0.3, luma(col))) * (1.0 - step(0.5, onBoard));
   gl_FragColor = vec4(clamp(col, 0.0, 1.0), src.a);
 }`;
@@ -135,8 +164,17 @@ export interface Grade {
   readonly bytes: number;
 }
 
-/** `boards`: the wall boards' rectangles on screen (NDC), as features/boardfaces packs them for the holo. */
-export function makeGrade(boards: THREE.Vector4[]): Grade {
+/** The local vignette's focuses (features/spotlight writes them each frame): each ellipse's middle and radii in NDC, and each one's strength. */
+export interface Focus {
+  points: [THREE.Vector4, THREE.Vector4];
+  k: THREE.Vector2;
+}
+
+/**
+ * `boards`: the wall boards' rectangles on screen (NDC), as features/boardfaces packs them for the holo;
+ * `focus`: the local vignette's focuses, shared live.
+ */
+export function makeGrade(boards: THREE.Vector4[], focus: Focus): Grade {
   const black = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1);
   black.needsUpdate = true;
   const pass = new ShaderPass({
@@ -156,6 +194,12 @@ export function makeGrade(boards: THREE.Vector4[]): Grade {
       uWarm: { value: new THREE.Vector3(1, 1, 1) },
       uWarmBy: { value: 0 },
       uOn: { value: 1 },
+      uBlack: { value: 0 },
+      uToe: { value: 1 },
+      uPivot: { value: 0.3 },
+      uVibrance: { value: 0 },
+      uFocus: { value: focus.points },
+      uFocusK: { value: focus.k },
       uBoards: { value: boards },
     },
     vertexShader: VERT,
@@ -164,11 +208,17 @@ export function makeGrade(boards: THREE.Vector4[]): Grade {
   const u = pass.material.uniforms;
   // ShaderPass clones its uniforms: the boards' rectangles go in as the live array the holo shares.
   u.uBoards.value = boards;
+  u.uFocus.value = focus.points;
+  u.uFocusK.value = focus.k;
   let glowing = false;
   return {
     pass,
     look(g, glow) {
       glowing = glow;
+      u.uBlack.value = g.black;
+      u.uToe.value = g.toe;
+      u.uPivot.value = g.pivot;
+      u.uVibrance.value = g.vibrance;
       u.uVignette.value = g.vignette;
       u.uVignetteFrom.value = g.vignetteFrom;
       u.uGrain.value = g.grain;

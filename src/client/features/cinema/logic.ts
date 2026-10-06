@@ -30,13 +30,14 @@ export type ArrivalWhy = 'plays' | 'still' | 'attention' | 'hidden' | 'tier' | '
 
 /**
  * Whether the arrival shot plays on this load: not with less motion asked for (the system's setting or
- * Ship motion Off), not when a unit already needs the captain or is stuck (it lands on the conn at
- * once), not in a hidden tab, not at a tier without the screen character (Low), and only once a page.
+ * Ship motion Off), not in a hidden tab, not at a tier without the screen character (Low), and only once
+ * a page. A unit that already needs the captain or is stuck doesn't stop it (the look stage: it plays in
+ * every state, and lands on the conn facing the Attention board); `attention` is kept for the reason
+ * the shots print, never to skip.
  */
 export function arrivalWhy(s: { still: boolean; attention: boolean; visible: boolean; character: boolean; played: boolean }): ArrivalWhy {
   if (s.played) return 'seen';
   if (s.still) return 'still';
-  if (s.attention) return 'attention';
   if (!s.visible) return 'hidden';
   if (!s.character) return 'tier';
   return 'plays';
@@ -54,8 +55,12 @@ export function arrivalSettle(k: number): number {
 
 // ---- Idle breathing and the ship's roll ------------------------------------------------------------
 
-/** The idle breathing at the conn: how long with no input before it starts, its reach, and how fast it comes and goes. */
-export const BREATHE = { idleMs: 4000, pitch: 0.1 * DEG, roll: 0.1 * DEG, lift: 0.002, inS: 2.5, outS: 0.25 } as const;
+/**
+ * The idle breathing at the conn: how long with no input before it starts, its reach, and how fast it
+ * comes and goes. A third of a degree and 6 mm: enough to feel the ship under you, where the first
+ * tenth of a degree was below anyone's notice. It plays in every state, a unit waiting or not.
+ */
+export const BREATHE = { idleMs: 4000, pitch: 0.35 * DEG, roll: 0.25 * DEG, lift: 0.006, inS: 2.5, outS: 0.25 } as const;
 /** The breathing's own periods (s): pitch, a second pitch, roll and lift, between 7 and 11 so nothing repeats in step. */
 export const BREATHE_PERIODS = { pitch: 7.3, pitch2: 11, roll: 9.1, lift: 8.2 } as const;
 
@@ -156,15 +161,29 @@ export function chaseAt(t: number): number {
 // ---- The grade -------------------------------------------------------------------------------------
 
 /**
- * The grade per mode, applied in display colour after tone mapping (features/cinema/grade.ts):
+ * The grade per mode, applied in display colour after tone mapping (features/cinema/grade.ts). It sets
+ * the room's value structure (DESIGN.md, three zones): the hull dark, the stations in the middle, the
+ * information plane and space bright, rather than the grey lift of the first grade.
+ * - black: the black point, taken off every channel and the rest stretched back to 1, so the hull's
+ *   darkest tones reach black instead of a slate haze;
+ * - toe and pivot: under `pivot` luma the tones are bent down by the power `toe` (a film toe), so the
+ *   hull sinks and the stations over it separate; at and over `pivot` nothing changes, so a board's type
+ *   and a state's mark keep their level;
+ * - vibrance: the saturation added to what has little (the hull's tints, space's dust and gas, the
+ *   practicals), none to what is already saturated (a state's mark) or a bright neutral (type);
  * - vignette: how dark the corners go, and where it starts (0 at the middle, 1 at a corner);
  * - grain: fine film grain, in the shadows only (none over anything as bright as a board's type);
  * - aberration: a chromatic fringe at the frame's edges only (px at a corner), none in the middle;
  * - dirt: a lens's dirt lit by the glow;
- * - shadows: a tint lifted into the darkest tones (Night's teal), up to `shadowEnd` luma;
+ * - shadow: a tint lifted into the darkest tones, up to `shadowEnd` luma (none now: it was Night's teal
+ *   lift, the grey veil the critics saw over the room);
  * - warm: neutral highlights (the practicals, never a coloured state mark) pulled toward a white.
  */
 export interface GradeLook {
+  black: number;
+  toe: number;
+  pivot: number;
+  vibrance: number;
   vignette: number;
   vignetteFrom: number;
   grain: number;
@@ -177,8 +196,8 @@ export interface GradeLook {
 }
 
 export const GRADE: Readonly<Record<'night' | 'day', GradeLook>> = {
-  night: { vignette: 0.32, vignetteFrom: 0.38, grain: 0.035, aberration: 1.5, dirt: 0.12, shadow: [-0.006, 0.014, 0.018], shadowEnd: 0.22, warm: [1.04, 1.0, 0.94], warmBy: 0.6 },
-  day: { vignette: 0.12, vignetteFrom: 0.55, grain: 0.012, aberration: 0.8, dirt: 0, shadow: [0, 0.002, 0.004], shadowEnd: 0.12, warm: [0.98, 1.0, 1.03], warmBy: 0.45 },
+  night: { black: 0.035, toe: 1.9, pivot: 0.3, vibrance: 1.7, vignette: 0.34, vignetteFrom: 0.38, grain: 0.016, aberration: 1.5, dirt: 0.12, shadow: [0, 0, 0], shadowEnd: 0.22, warm: [1.05, 1.0, 0.92], warmBy: 0.6 },
+  day: { black: 0.025, toe: 1.3, pivot: 0.3, vibrance: 1.0, vignette: 0.16, vignetteFrom: 0.5, grain: 0.012, aberration: 0.8, dirt: 0, shadow: [0, 0, 0], shadowEnd: 0.12, warm: [1.03, 1.0, 0.96], warmBy: 0.45 },
 };
 
 const luma = (c: readonly number[]) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
@@ -188,8 +207,25 @@ const luma = (c: readonly number[]) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * 
  * 1 corner), with no grain, dirt or fringe: the same sums as the shader, for the hue check.
  */
 export function gradePixel(c: readonly [number, number, number], g: GradeLook, r = 0): [number, number, number] {
-  let [R, G, B] = c;
-  const l = luma(c);
+  // The black point.
+  let [R, G, B] = c.map((v) => Math.max(v - g.black, 0) / (1 - g.black)) as [number, number, number];
+  // The toe: luma under the pivot bent down, the colour scaled with it.
+  const l0 = luma([R, G, B]);
+  if (l0 < g.pivot) {
+    const l1 = g.pivot * Math.pow(Math.min(1, Math.max(0, l0 / g.pivot)), g.toe);
+    const k = l1 / Math.max(l0, 1e-4);
+    R *= k;
+    G *= k;
+    B *= k;
+  }
+  // Vibrance: more saturation where there is little, none added to a saturated mark.
+  const l = luma([R, G, B]);
+  const s0 = Math.max(R, G, B) - Math.min(R, G, B);
+  // Never on a bright neutral (a board's type, the working steel): those keep their exact tone.
+  const v = 1 + g.vibrance * (1 - smooth(0.12, 0.5, s0)) * (1 - smooth(0.55, 0.8, l));
+  R = Math.max(0, l + (R - l) * v);
+  G = Math.max(0, l + (G - l) * v);
+  B = Math.max(0, l + (B - l) * v);
   const sh = 1 - smooth(0, g.shadowEnd, l);
   R += g.shadow[0] * sh;
   G += g.shadow[1] * sh;
@@ -200,8 +236,22 @@ export function gradePixel(c: readonly [number, number, number], g: GradeLook, r
   R += (R * g.warm[0] - R) * hi;
   G += (G * g.warm[1] - G) * hi;
   B += (B * g.warm[2] - B) * hi;
-  const v = 1 - g.vignette * smooth(g.vignetteFrom, 1.05, r);
-  return [clamp01(R * v), clamp01(G * v), clamp01(B * v)];
+  const vig = 1 - g.vignette * smooth(g.vignetteFrom, 1.05, r);
+  return [clamp01(R * vig), clamp01(G * vig), clamp01(B * vig)];
+}
+
+/**
+ * The local vignette round what needs the captain (features/spotlight): how dark it goes and over
+ * what. A focus is an ellipse on screen (its radii in NDC): inside it nothing changes, round it a ring
+ * out to `out` times its radius darkens by up to `k` (MAX at the most), and past `fade` times it the
+ * frame is as it was. The wall boards' faces are never darkened.
+ */
+export const FOCUS = { max: 0.32, ring: 1.5, out: 2.6, fade: 4.5 } as const;
+
+/** What a pixel `d` focus radii from a focus's middle is multiplied by, at strength `k` (0-1). */
+export function focusDim(d: number, k: number): number {
+  const ring = smooth(1, FOCUS.ring, d) * (1 - smooth(FOCUS.out, FOCUS.fade, d));
+  return 1 - Math.min(FOCUS.max, Math.max(0, k) * FOCUS.max) * ring;
 }
 
 /** How many pixels the fringe shifts red and blue at `r` from the middle (0 middle, 1 corner): none inside 0.55. */

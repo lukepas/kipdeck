@@ -31,6 +31,7 @@ import { ArrivalPath } from './arrival';
 import { ARRIVAL_MS, GLITCH_MS, GRADE, MERGE_FRAME, ROLL_S, arrivalAt, arrivalWhy, breathStep, breathe, chaseAt, CHASE, glitchGap, glitchOn, jumpFrame, mergeFrame, shipRoll, type ArrivalWhy } from './logic';
 import { FX, holoLight, screenFace, trimChase } from './screens';
 import type { Grade } from './grade';
+import { FOCUS_NOW } from '../spotlight/focus';
 
 export interface Cinema {
   /** What's playing: the arrival (and why it did or didn't), the breathing's strength, a merge's frame. */
@@ -130,8 +131,9 @@ export function installCinema(ctx: Ctx, parts: Pick<Parts, 'stage' | 'player' | 
 
   function arrive(now: number) {
     if (!arrival) return;
-    // Any input, or a unit needing the captain mid-way: straight to the conn.
-    if ((input && held === null) || calls() || still()) {
+    // Any input: straight to the conn. A unit needing the captain doesn't cut it short: the shot ends
+    // on the conn, facing the Attention board, five seconds in (the look stage: it plays in every state).
+    if ((input && held === null) || still()) {
       arrival = null;
       arrivalState = 'skipped';
       occlude(false);
@@ -173,7 +175,7 @@ export function installCinema(ctx: Ctx, parts: Pick<Parts, 'stage' | 'player' | 
   }
   const e = new THREE.Euler(0, 0, 0, 'YXZ');
   function breatheNow(now: number, dt: number) {
-    const allowed = parts.quality.look().character && !still() && !calls() && !arrival && atConn();
+    const allowed = parts.quality.look().character && !still() && !arrival && atConn();
     breath = breathStep(breath, dt, now - inputAt, allowed);
     if (breath <= 0) return;
     const b = breathe(clock);
@@ -292,7 +294,7 @@ export function installCinema(ctx: Ctx, parts: Pick<Parts, 'stage' | 'player' | 
   let seed = 0;
   parts.lights.composer((bloom) => {
     void import('./grade').then((m) => {
-      grade = m.makeGrade(ctx.office.holo.boards);
+      grade = m.makeGrade(ctx.office.holo.boards, FOCUS_NOW);
       bloom.grade(grade.pass);
       ctx.ticks.add('hud', () => {
         if (!grade) return;

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
+import { FOCUS, focusDim } from '../src/client/features/cinema/logic.js';
 import { ARRIVAL_MS, BREATHE, GLITCH, GLITCH_MS, GRADE, JUMP_BEATS, JUMP_FRAME, MERGE_FRAME, SHIP_ROLL, arrivalAt, arrivalSettle, arrivalWhy, breathStep, breathe, chaseAt, fringeAt, glitchGap, glitchOn, gradePixel, grainAt, jumpFrame, mergeFrame, shipRoll } from '../src/client/features/cinema/logic.js';
 import { ARRIVAL_KEYS, ArrivalPath } from '../src/client/features/cinema/arrival.js';
 import { JUMP } from '../src/client/features/space/logic.js';
@@ -20,7 +21,8 @@ test('the arrival shot plays once a page, and never with less motion, a call wai
   const ok = { still: false, attention: false, visible: true, character: true, played: false };
   assert.equal(arrivalWhy(ok), 'plays');
   assert.equal(arrivalWhy({ ...ok, still: true }), 'still');
-  assert.equal(arrivalWhy({ ...ok, attention: true }), 'attention');
+  // A waiting unit no longer stops it: the shot plays in every state and lands on the conn.
+  assert.equal(arrivalWhy({ ...ok, attention: true }), 'plays');
   assert.equal(arrivalWhy({ ...ok, visible: false }), 'hidden');
   assert.equal(arrivalWhy({ ...ok, character: false }), 'tier');
   assert.equal(arrivalWhy({ ...ok, played: true }), 'seen');
@@ -72,13 +74,16 @@ test('the arrival starts outside the bow looking at the ship, faces the destinat
   assert.ok(Math.hypot(glass[0], glass[2]) > 3);
 });
 
-test('the breathing is a tenth of a degree and 2 mm at most, starts after 4 s idle and stops on input', () => {
+test('the breathing is a third of a degree and 6 mm at most (enough to notice), starts after 4 s idle and stops on input', () => {
+  let most = 0;
   for (let t = 0; t < 60; t += 0.37) {
     const b = breathe(t);
-    assert.ok(Math.abs(b.pitch) <= 0.1 * DEG + 1e-12);
-    assert.ok(Math.abs(b.roll) <= 0.1 * DEG + 1e-12);
-    assert.ok(Math.abs(b.lift) <= 0.002 + 1e-12);
+    assert.ok(Math.abs(b.pitch) <= 0.35 * DEG + 1e-12);
+    assert.ok(Math.abs(b.roll) <= 0.25 * DEG + 1e-12);
+    assert.ok(Math.abs(b.lift) <= 0.006 + 1e-12);
+    most = Math.max(most, Math.abs(b.pitch));
   }
+  assert.ok(most > 0.2 * DEG, 'it reaches past a fifth of a degree');
   assert.equal(breathStep(0, 0.1, 3999, true), 0);
   assert.ok(breathStep(0, 0.1, BREATHE.idleMs, true) > 0);
   assert.ok(Math.abs(breathStep(0.5, 0.1, BREATHE.idleMs + 100, false) - 0.1) < 1e-9);
@@ -161,17 +166,34 @@ test('the grade shifts no state mark more than 4% in any channel, and keeps its 
   }
 });
 
-test('Night lifts its shadows toward teal and darkens its corners; Day stays clean', () => {
-  const dark: [number, number, number] = [0.05, 0.05, 0.05];
-  const n = gradePixel(dark, GRADE.night);
-  assert.ok(n[1] > dark[1] && n[2] > dark[2] && n[0] <= dark[0]);
-  const d = gradePixel(dark, GRADE.day);
-  assert.ok(Math.abs(d[1] - dark[1]) < Math.abs(n[1] - dark[1]) / 3);
+test('the grade sinks the hull toward black (no teal lift), keeps a mid grey, and darkens its corners', () => {
+  const dark: [number, number, number] = [0.08, 0.08, 0.09];
+  for (const mode of ['night', 'day'] as const) {
+    const g = gradePixel(dark, GRADE[mode]);
+    // Darker in every channel, and not tinted: the old lift put teal into the hull's darks.
+    for (let i = 0; i < 3; i++) assert.ok(g[i] < dark[i], `${mode} channel ${i}`);
+    assert.deepEqual(GRADE[mode].shadow, [0, 0, 0]);
+  }
+  // Night sinks it further than Day.
+  assert.ok(gradePixel(dark, GRADE.night)[1] < gradePixel(dark, GRADE.day)[1]);
   const grey: [number, number, number] = [0.5, 0.5, 0.5];
   assert.ok(gradePixel(grey, GRADE.night, 1)[1] < 0.5 * 0.75);
-  assert.ok(gradePixel(grey, GRADE.day, 1)[1] > 0.5 * 0.85);
-  // A mid grey in the middle of the frame is all but untouched.
-  for (const v of gradePixel(grey, GRADE.night, 0)) assert.ok(Math.abs(v - 0.5) < 0.002);
+  assert.ok(gradePixel(grey, GRADE.day, 1)[1] > 0.5 * 0.8);
+  // A mid grey in the middle of the frame moves only by the black point's stretch.
+  for (const v of gradePixel(grey, GRADE.night, 0)) assert.ok(Math.abs(v - 0.5) < 0.02);
+  // Vibrance: a dull blue of space gains saturation, a state's saturated mark gains none.
+  const dull: [number, number, number] = [0.3, 0.34, 0.45];
+  const out = gradePixel(dull, GRADE.night);
+  assert.ok(out[2] - out[0] > (dull[2] - dull[0]) * 1.1);
+});
+
+test('the local vignette darkens a ring round a focus, never inside it, and fades out past it', () => {
+  assert.equal(focusDim(0, 1), 1);
+  assert.equal(focusDim(0.99, 1), 1);
+  assert.ok(focusDim(2, 1) < 0.75 && focusDim(2, 1) >= 1 - FOCUS.max - 1e-9);
+  assert.equal(focusDim(FOCUS.fade + 0.1, 1), 1);
+  assert.equal(focusDim(2, 0), 1);
+  assert.ok(focusDim(2, 0.5) > focusDim(2, 1));
 });
 
 test("no grain on anything as bright as a board's type, and no fringe in the middle of the frame", () => {
