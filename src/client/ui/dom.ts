@@ -80,7 +80,8 @@ export function setDoing(modal: Modal, doing: string | undefined) {
  * is what teammates see under your name tag while it's open, like "reading PR #12", and `reading`
  * puts an open book in your character's hands. `onClose` hears whether it was the Esc key.
  */
-export function openModal(content: HTMLElement, opts: { escCloses?: boolean; onClose?: (byEsc: boolean) => void; backdropCloses?: boolean; closeButton?: boolean; doing?: string; reading?: boolean } = {}): Modal {
+export function openModal(content: HTMLElement, opts: { escCloses?: boolean; onClose?: (byEsc: boolean) => void; backdropCloses?: boolean; closeButton?: boolean; doing?: string; reading?: boolean; dock?: HTMLElement } = {}): Modal {
+  if (opts.dock) return dockModal(content, opts.dock, opts);
   const backdrop = h('div.backdrop', {}, content);
   const root = document.getElementById('modal-root')!;
   root.append(backdrop);
@@ -122,6 +123,30 @@ export function openModal(content: HTMLElement, opts: { escCloses?: boolean; onC
   stack.push(modal);
   listeners.forEach((fn) => fn(true));
   return modal;
+}
+
+/**
+ * A window put in a pane of the page (`dock`) instead of over it: the home page's terminal and Changes
+ * tabs. It isn't on the stack of windows, so Esc, closeAllModals() and the windows over it leave it
+ * be; whoever docked it closes it (or docks another in its place) and the pane gives it its frame.
+ */
+function dockModal(content: HTMLElement, dock: HTMLElement, opts: { onClose?: (byEsc: boolean) => void; doing?: string; reading?: boolean }): Modal {
+  const backdrop = h('div.docked', {}, content);
+  content.classList.add('in-dock');
+  dock.replaceChildren(backdrop);
+  let closed = false;
+  return {
+    el: content,
+    backdrop,
+    doing: opts.doing,
+    reading: opts.reading,
+    close() {
+      if (closed) return;
+      closed = true;
+      backdrop.remove();
+      opts.onClose?.(false);
+    },
+  };
 }
 
 /** The ✕ for a window that didn't bring its own: at the end of its header, or else on its top right corner. */

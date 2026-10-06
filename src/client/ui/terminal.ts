@@ -74,6 +74,8 @@ export interface TerminalOptions {
    * take the focus as it opens either, so a phone's keyboard stays down until you tap into it.
    */
   keypad?: boolean;
+  /** Put it in this pane of the page instead of a window over it (the home page's Terminal tab, see dom.ts dockModal). */
+  dock?: HTMLElement;
 }
 
 /** The keypad's keys: what each types, or a function of the terminal for the ones that depend on its mode. */
@@ -90,7 +92,7 @@ const KEYPAD: { label: string; title: string; keys: string | ((term: Terminal) =
   { label: 'Tab', title: 'Tab', keys: '\t', touch: true },
 ];
 
-let current: { workerId: string; modal: Modal; find(f: TerminalFind): void } | null = null;
+let current: { workerId: string; modal: Modal; find(f: TerminalFind): void; reply(): void } | null = null;
 const listeners = new Set<(msg: ServerMsg) => void>();
 
 /** Main feeds every server message through here so open terminals can pick theirs. */
@@ -100,6 +102,16 @@ export function routeTerminalMessage(msg: ServerMsg) {
 
 export function openTerminalFor(): string | null {
   return current?.workerId ?? null;
+}
+
+/** Puts the cursor in the open terminal's reply box (the keypad's), when it's `workerId`'s: answering from the inbox. */
+export function focusTerminalReply(workerId: string) {
+  if (current?.workerId === workerId) current.reply();
+}
+
+/** Closes the terminal that's open, docked or not. */
+export function closeTerminal() {
+  current?.modal.close();
 }
 
 export function openTerminal(net: Net, workerId: string, onChanges?: () => void, find?: TerminalFind, opts: TerminalOptions = {}) {
@@ -341,6 +353,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
   const ro = new ResizeObserver(() => sendSize());
 
   const modal = openModal(el, {
+    dock: opts.dock,
     backdropCloses: true,
     doing: `in ${info.name}'s terminal`,
     onClose: (byEsc) => {
@@ -364,6 +377,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
       if (ready) jumpTo(f);
       else pendingFind = f;
     },
+    reply: () => (keypad ? say.focus() : term.focus()),
   };
   closeBtn.addEventListener('click', () => modal.close());
   changesBtn.addEventListener('click', () => {
