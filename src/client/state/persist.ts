@@ -82,9 +82,9 @@ export type LifeLevel = (typeof LIFE_LEVELS)[number];
  * droid already docks itself under Ship motion Off, reduced motion and Silent running, and the mascot
  * naps in his nest.
  */
-export const LIFE_PARTS = ['destination', 'fleet', 'sorties', 'epithets', 'droid', 'mascot'] as const;
+export const LIFE_PARTS = ['destination', 'fleet', 'sorties', 'epithets', 'droid', 'mascot', 'relay'] as const;
 export type LifePart = (typeof LIFE_PARTS)[number];
-export const LIFE_PART_DEFAULTS: Readonly<Record<LifePart, boolean>> = { destination: true, fleet: true, sorties: true, epithets: true, droid: true, mascot: true };
+export const LIFE_PART_DEFAULTS: Readonly<Record<LifePart, boolean>> = { destination: true, fleet: true, sorties: true, epithets: true, droid: true, mascot: true, relay: true };
 /** Settings > Bridge > Ship's voice (VESPER, features/vesper): with humour, plain status lines only, or silent. */
 export const VOICE_MODES = ['on', 'plain', 'off'] as const;
 export type VoiceMode = (typeof VOICE_MODES)[number];

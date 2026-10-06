@@ -73,6 +73,7 @@ import { installQuality } from './features/quality';
 import { installMerge } from './features/merge';
 import { installIbl } from './features/ibl';
 import { installAtmos } from './features/atmos';
+import { installRelay } from './features/relay';
 import { installVista } from './features/vista';
 import { installCinema } from './features/cinema';
 import { installLife } from './features/life';
@@ -211,6 +212,8 @@ installIbl(ctx, parts);
 installAtmos(ctx, parts);
 // Space close by: dust streaming past the ports, a giant off one side, the sun's flare through the canopy.
 installVista(ctx, parts);
+// The Relay Beacon off the starboard bow: the fleet's relay station, its rings carrying the units at work.
+installRelay(ctx, parts);
 // How the bridge is shot: the arrival, the breathing at the conn, the moments' framing, the screens' character and the grade.
 parts.cinema = installCinema(ctx, parts);
 installMoments(ctx, parts);

@@ -404,11 +404,15 @@ async function main() {
     };
     // Each vantage with the bridge's world on, switched off (Settings > Bridge > Life, where there is
     // one) and on again, in the same session: the run-to-run spread is wider than a feature's share.
+    // PROBE_RELAY=off keeps the Relay Beacon (features/relay) off throughout, to time it against a run with it.
     const parts = (on) =>
-      page.evaluate((on) => {
-        const s = window.__office.settings;
-        if (s.lifeParts) s.lifeParts = { destination: on, fleet: on, sorties: on };
-      }, on);
+      page.evaluate(
+        ([on, relay]) => {
+          const s = window.__office.settings;
+          if (s.lifeParts) s.lifeParts = { destination: on, fleet: on, sorties: on, relay: relay && on };
+        },
+        [on, process.env.PROBE_RELAY !== 'off'],
+      );
     // Space's clock held, so a flyby (every 6 to 10 minutes, the first a minute or so in) can't land in
     // one sample and not the next; PROBE_SPACE=1 leaves it running.
     if (!process.env.PROBE_SPACE) await page.evaluate(() => window.__office.space.timeScale(0));
