@@ -11,6 +11,7 @@ import type { Floor } from '../floor.js';
 import { ChatLog } from '../history.js';
 import { Labs } from '../labs.js';
 import { ShipLog } from '../shiplog.js';
+import { Telemetry } from '../telemetry.js';
 import type { Core, Ctx } from './context.js';
 import type { Client } from './client.js';
 
@@ -42,5 +43,7 @@ export function createCore(ctx: Ctx, cfg: Config, publicDir: string): Core {
   const labs = new Labs(cfg.dataDir, cfg.labs);
   // Every review the inbox ends, merged or sent back, signed and kept on disk.
   const shipped = new ShipLog(cfg.dataDir);
-  return { cfg, publicDir, accounts, auth, hosts, clients, chat, officeName, models, building, floors, labs, shipped };
+  // Anonymous usage numbers: off unless someone turns them on.
+  const telemetry = new Telemetry(cfg.dataDir, cfg.telemetry);
+  return { cfg, publicDir, accounts, auth, hosts, clients, chat, officeName, models, building, floors, labs, shipped, telemetry };
 }

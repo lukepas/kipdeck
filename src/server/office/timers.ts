@@ -2,6 +2,7 @@ import type { Ctx } from './context.js';
 import { SLOW_CLIENT_BYTES } from './client.js';
 import { ROSTER_TICK_MS } from './roster.js';
 import { REMINDER_SWEEP_MS } from './reminders.js';
+import { TELEMETRY_SWEEP_MS } from '../telemetry.js';
 
 /** How often the people in the office are stamped as here (Accounts.seenAll), so a crash loses at most this much of it. */
 export const SEEN_MS = 60_000;
@@ -51,8 +52,11 @@ export function startTimers(ctx: Ctx): () => void {
   const firstSweep = setTimeout(() => ctx.sweepReminders(), 10_000);
   const reminders = setInterval(() => ctx.sweepReminders(), REMINDER_SWEEP_MS);
   const seen = setInterval(() => stampConnected(ctx), SEEN_MS);
+  // Anonymous usage numbers, when someone turned them on: does nothing while they're off.
+  const usage = setInterval(() => ctx.telemetry.on && ctx.telemetry.sweep(ctx.rosterEntries(), ctx.shipped.recent()), TELEMETRY_SWEEP_MS);
 
   return () => {
+    clearInterval(usage);
     clearInterval(seen);
     clearTimeout(firstSweep);
     clearInterval(reminders);
