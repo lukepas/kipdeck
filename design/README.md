@@ -806,3 +806,64 @@ On the GPU (ANGLE Metal, M3 Pro) at 1440x900, sat in the captain's chair, toasts
 - The hint bar ("Captain's chair - Get up") sits over the caption plate in the lean.
 - Review keeps its amber at hue 44; the plan's cooler yellow for review would touch the DOM tokens and every surface, so it waits for a tokens pass.
 - The Attention board's second line (why) is 0.2 m type, about 8 px from the chair: it reads in the lean, not at a glance.
+
+## The interior: the look
+
+The fourth stage of the interior round, and the one meant to show at a glance: the room's value, light and colour. The critics' root causes were that the spectacle was dimmed to 30% whenever anyone waited (most of the time), and that every effect was tuned to sit under notice. Both are gone: the spectacle gives way locally, and the room is built in three zones of value under a saturated sky. What it is and how it moves is in [docs/design.md](../docs/design.md#the-look-value-light-and-colour) and [DESIGN.md](../DESIGN.md) (rules 7 and 8).
+
+### What changed
+
+- **Give-way is local** (`features/giveway`, `features/atmos/logic.ts`, `features/space/logic.ts`): the shafts, dust, ribs and a planet's wash stand at 85% while anyone waits (were 30%), space's knots, dust, flare and the giant's rim at 80% (were 35%); a new call ducks them to 60% for 2.5 s first. The waiting unit is picked out by `features/spotlight`: the grade darkens a ring round it and a lighter one round the Attention board's rows.
+- **The grade** (`features/cinema/grade.ts`, `logic.ts`): Night's teal lift into the darks is gone; a black point, a film toe under 0.3 luma and vibrance (never on a saturated mark or bright type) sink the hull and keep space's colour. The arrival and the breathing play in every state, the breathing a third of a degree.
+- **The rig** (`features/lights/modes.ts`): Night is cool blue-indigo starlight with a low sky fill and warm white pods' lamps; Day is a hard warm sun over a mid-dark plate with a cool fill. Medium's half-size glow is held to half strength (`features/lights/index.ts`), where it had washed the arc.
+- **The air** (`features/atmos`): a floor fog under about a metre, shafts at half the level in the sun's colour and none over a station, a mirror only in the pit and the aisle.
+- **Space** (`features/space/sky.ts`): a bright galaxy band with magenta and teal gas lanes, a larger and vivid nebula, the sky saturated past the tone mapping and sunk to a quarter behind the boards; by Day a sunlit planet seen as a sphere from orbit, its limb across the canopy. The destination world moves to port and its sign to the course strip. The boards' smoked ground is 94% and darker.
+- **Units and stations**: two-tone suits, dark glass visors with an eye stripe in the band's colour, state-coloured rims, no draw added (`world/character/unit-body.ts`); station screens never black, with a standby trace or a waveform (`features/life/panels.ts`); gold footwell practicals (`features/bridge/stations.ts`); four finishes (`world/office/materials.ts`); an instrument-black table top; lit indigo channels on the walls (`world/office/greebles.ts`).
+
+### Before and after
+
+On the GPU (ANGLE Metal, M3 Pro) at 1440x900, sat in the captain's chair (`SHOOT_POSE=sit`), a course set (`SHOOT_MISSION=1`), the desk-2 need fixture, toasts closed, Quality forced, in `shots/interior-look/`. The before set is the diegetic-ui stage's build (a3e30a3 with its uncommitted chip) from a `git archive` in a scratch folder (`SHOOT_ROOT`), shot with the same script. Side by side: `before-after-<light>-<quality>-sit.png`, and close-ups from the pit (`-units-a`, `-units-near`, `-table`, `-aft`, `-window`).
+
+Measured with ffmpeg `signalstats` over the 3D area (x 264 to 1440, y 46 to 846), full range (black 0, white 255):
+
+| Shot | 10th percentile luma | Mean luma | 90th percentile luma | Mean saturation |
+| --- | --- | --- | --- | --- |
+| Night High, before | 20 | 54 | 116 | 19.8 |
+| Night High, after | 14 | 92 | 179 | 29.7 |
+| Night Medium, after | 18 | 86 | 169 | 31.3 |
+| Day High, before | 23 | 76 | 148 | 17.0 |
+| Day High, after | 10 | 89 | 172 | 27.8 |
+| Day Medium, after | 11 | 88 | 171 | 27.7 |
+
+(The plan's baseline of 35 and 111 was the limited-range reading of the same shot; in limited range the night before set reads 33, 62 and 116, so the plan's 14 is read here on the full range.)
+
+- The spectacle's level in the need fixture, read live (`SHOOT_EVAL`): 0.85 with someone waiting and the spotlight on (station 1, board 0.55); the clip `clip/night-high-calm-sit-call.mp4` (`SHOOT_CLIP=call`) shows a unit starting to ask: the duck and the spotlight settling round it.
+- The calm crew (`SHOOT_CREW=calm`, `night-high-calm-sit.png`) isn't the same frame as the need fixture: with nobody waiting the held waypoint jump plays and the sky moves to its next region, so the 85% is read from the code rather than from that pair.
+
+### Frame times
+
+`node design/perf-probe.mjs metal`, five runs each, M3 Pro at 1440x900 (`frames-before.jsonl`, `frames-after.jsonl`; median of the runs' medians, p95 the median of the runs' p95s):
+
+| | Before | After |
+| --- | --- | --- |
+| Conn, High: render | 1.8 ms (p95 2.3, worst 2.6) | 1.9 ms (p95 2.3, worst 2.3) |
+| Conn, High, CPU 4x | 7.6 ms (p95 9.1, worst 12.9) | 7.6 ms (p95 9.3, worst 10.4) |
+| Conn draw calls (budget 400) | 378 | 378 |
+| Jump | 2.0 ms, 431 calls | 2.0 ms, 415 calls |
+| rAF p95 | 16.8 ms | 16.8 ms |
+| Motion layer (budget 0.6 ms) | 0.1 ms | 0.1 ms (worst 0.2) |
+
+The sky's new work is in its bake (once per region); the spotlight is two uniforms and a loop of two in the grade's pass; the faces, rims and screens are in programs that were already drawn. The footwells and wall channels are static meshes the merge folds into their materials' draws.
+
+### Checks
+
+- `tests/atmos.test.ts`: the 85% give-way and the 2.5 s duck. `tests/vista.test.ts`: space at 80%. `tests/cinema.test.ts`: the grade sinks the darks with no tint, no state mark moves over 4%, vibrance, the local vignette's ring, the breathing's reach, the arrival in every state. `tests/lights.test.ts`: the rig's colours clear of the state hues, Day's consoles at 4.5:1 on its floor. `tests/unit-body.test.ts`: the eye stripe proud of the visor. `tests/destination.test.ts`: the world off to port.
+- `npm run typecheck` and `npm run build` clean; `npm test` 1000 of 1001, the one failure `mission-e2e`'s debrief test, which fails the same way on the before build. `node design/flicker-check.mjs` with `FLICKER_QUALITY=high` passes by Night and by Day with the glow on.
+
+### Left for later
+
+- Day's mean luma is about 89, under the plan's 100 to 115: the dark-backed boards and the graphite consoles hold it down, and lifting the plate further made the pit floor read near-white.
+- Night's 90th percentile is 179 and its saturation 29.7, a little under the plan's 185 and 32: brighter gas pushed the canopy to pastel and bloomed over the arc.
+- Day's rib shadows across the tiers: the key's shadow map doesn't take the canopy's ribs as casters yet.
+- Flybys with kitbashed silhouettes (freighter, corvette, fighter wing) were not built in this stage.
+- The calm and need fixtures don't share a frame (the held jump plays when nobody waits): a pinned-region option for the shoot would let the give-way be measured on pixels.

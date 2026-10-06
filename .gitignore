@@ -5,3 +5,6 @@ dist
 .DS_Store
 pw.txt
 __pycache__/
+
+# Leftover shots of a stopped review run, not part of any stage.
+design/shots/env-review/
