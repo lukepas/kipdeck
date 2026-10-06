@@ -54,11 +54,11 @@ test('at rest the arms come in low from the bottom corners, the left a touch low
   assert.equal(r.x, -l.x);
   assert.equal(r.ry, -l.ry);
   assert.ok(l.y < r.y && l.z > r.z, 'the left lower and further back');
-  // Low: at the hands' 52 degree view the frame's bottom edge is 0.244 m down at half a metre, so the
-  // wrist sits on it and only the knuckles and the cuff come up into the bottom fifth of the view.
+  // Low: at the hands' 52 degree view the frame's bottom edge is 0.254 m down at 0.52 m, so the wrist
+  // sits just over it and the fist and the cuff fill the bottom corner, under a fifth of the view.
   const edge = -Math.tan((26 * Math.PI) / 180) * -r.z;
-  assert.ok(r.y < edge + 0.01, `the wrist at the frame's edge (${r.y} against ${edge.toFixed(3)})`);
-  assert.ok(r.y > edge - 0.05, 'but not so low the hand is gone');
+  assert.ok(r.y < edge + 0.04, `the wrist near the frame's edge (${r.y} against ${edge.toFixed(3)})`);
+  assert.ok(r.y > edge, 'but not so low the hand is gone');
 });
 
 test('they make way for what you read: aimed at a board the left drops out and the right sinks; a step brings them back', () => {

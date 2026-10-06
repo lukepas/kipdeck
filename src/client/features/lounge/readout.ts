@@ -19,7 +19,7 @@ export type Readout = { kind: 'call'; name: string; stuck: boolean; more: number
  * The strip's size (m), its canvas units a metre, and its place: centred on the middle seat, on the glass
  * just under a seated eye's horizon, so it sits low in the view and the vista stays clear over it.
  */
-export const READOUT = { width: 0.45, height: 0.06, units: 1733, x: 3.3, y: LOUNGE.top + 0.86, z: LOUNGE.z0 + 0.4 } as const;
+export const READOUT = { width: 0.45, height: 0.06, units: 1733, x: 3.3, y: LOUNGE.top + 0.95, z: LOUNGE.z0 + 0.4 } as const;
 
 /** The strip's line from what calls (units needing you or stuck, most urgent first) and the countdown. Pure. */
 export function readoutLine(calls: readonly { name: string; stuck: boolean }[], countdown: { left: number; to: string } | null): Readout {

@@ -25,7 +25,7 @@ export interface ArmPose {
  * their sides in a loose fist, so only the knuckles and the cuff show and the boards stay clear. The left
  * sits a touch lower and further back than the right (LEFT_OFF), so the two never read as a mirror.
  */
-export const REST: Readonly<ArmPose> = { x: 0.24, y: -0.252, z: -0.52, rx: 0.5, ry: 0.3, rz: -0.78 };
+export const REST: Readonly<ArmPose> = { x: 0.22, y: -0.222, z: -0.52, rx: 0.5, ry: 0.3, rz: -0.78 };
 export const LEFT_OFF = { y: -0.014, z: 0.03, rz: 0.06 } as const;
 
 /** Where a gripping hand holds the rung from its wrist, in the arm's own frame (the palm round the bar). */
