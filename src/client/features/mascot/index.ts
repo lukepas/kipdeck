@@ -32,7 +32,7 @@ import { offerHello } from './hello';
 
 export interface Mascot {
   /** What he is doing and where (the shots and the console). */
-  state(): { mode: Mode; hold: Hold; moving: boolean; x: number; y: number; z: number; yaw: number; asleep: boolean; gesture: Gesture | null; sprig: number; lap: string; ms: number };
+  state(): { mode: Mode; hold: Hold; moving: boolean; x: number; y: number; z: number; yaw: number; asleep: boolean; gesture: Gesture | null; k: number; sprig: number; lap: string; ms: number };
   /** Gives him something to do now, as its event would (the shots): a merge, a streak, a click, or a nap as if the deck had been idle. */
   poke(what: 'twirl' | 'first-merge' | 'zoomies' | 'greet' | 'nap' | 'wake'): void;
 }
@@ -521,8 +521,8 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
     yaw = wrap(yaw + step);
     rig.root.position.set(at.x, at.y, at.z);
     rig.root.rotation.y = yaw;
-    // Turned to face the captain: the gesture waiting on it starts.
-    if (whenFacing) face = cam();
+    // Turned to face the captain: the gesture waiting on it starts, and he keeps facing you through it.
+    if (whenFacing || (playing && (playing.g === 'twirl' || playing.g === 'wave' || playing.g === 'bow'))) face = cam();
     if (whenFacing && ((Math.abs(turn) < 0.12 && speed < 0.2) || clock - whenFacing.at > 1500)) {
       const f = whenFacing.then;
       whenFacing = null;
@@ -581,7 +581,7 @@ export function installMascot(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'views' |
   const gw = () => parts.giveWay;
 
   const mascot: Mascot = {
-    state: () => ({ mode, hold, moving: !arrived, yaw, x: at.x, y: at.y, z: at.z, asleep, gesture: playing?.g ?? null, sprig, lap: laps.phase, ms: +tickMs.toFixed(3) }),
+    state: () => ({ mode, hold, moving: !arrived, yaw, x: at.x, y: at.y, z: at.z, asleep, gesture: playing?.g ?? null, k: playing ? (clock - playing.at) / GESTURES[playing.g].ms : 0, sprig, lap: laps.phase, ms: +tickMs.toFixed(3) }),
     poke(what) {
       if (what === 'nap' || what === 'wake') return void (napping = what === 'nap');
       if (what === 'greet') {

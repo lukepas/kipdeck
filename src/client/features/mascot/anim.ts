@@ -78,7 +78,7 @@ const SPRIG_HOLD: Readonly<Record<SprigHold, { arm: number; out: number; tilt: n
   low: { arm: -0.6, out: -0.4, tilt: -0.05, roll: 0.25 },
   trail: { arm: 0.5, out: -0.2, tilt: -2.65, roll: 0 },
   knees: { arm: -1.05, out: 0.15, tilt: -0.2, roll: 1.5 },
-  up: { arm: -2.75, out: -0.1, tilt: 1.5, roll: 0 },
+  up: { arm: -2.8, out: -0.2, tilt: 1.5, roll: 0 },
 };
 
 /** How he carries himself in a mode and hold: his ears, the Sprig's hold, how open his eyes are, how far he looks up. */
@@ -192,7 +192,7 @@ export class Animator {
     this.sprigArm = a.cut ? want : this.sprigArm + (want - this.sprigArm) * Math.min(1, dt / 0.3 * 2.2);
     const waveZ = p.wave * 0.55 + (a.hold === 'windowJump' && !a.still ? 0.45 * Math.sin((t / 0.55) * TAU) : 0);
     const out = g.out + (SPRIG_HOLD.up.out - g.out) * p.arm;
-    set('armR', this.sprigArm - hide * 0.4, 0, out + waveZ - p.arm * 0.25 + p.stretch * 0.25);
+    set('armR', this.sprigArm - hide * 0.4, 0, out + waveZ + p.stretch * 0.25);
     set('handL');
     set('handR');
     const tilt = g.tilt + (SPRIG_HOLD.up.tilt - g.tilt) * p.arm;
@@ -245,7 +245,7 @@ export class Animator {
     }
     const happy = Math.max(p.happy, 0);
     const upper = Math.max(0.02, Math.min(1, Math.max(a.lids, blink, asleep) * (1 - happy) + happy * 0.04));
-    const lower = Math.max(0.03, happy * 0.74);
+    const lower = Math.max(0.03, happy * 0.84);
     for (const n of ['lidL', 'lidR'] as const) {
       set(n);
       b[n].scale.set(1, upper, 1);
