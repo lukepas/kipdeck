@@ -150,6 +150,8 @@ async function run(name, opts, order) {
         }
       }
       // Open each unit (its live terminal, in the inbox's pane) and close it again, then Mission control, as a person would.
+      // Units with no task yet are Idle, which starts folded.
+      await page.locator('.sec-idle button.sec-h[aria-expanded=false]').click({ timeout: 5000 }).catch(() => {});
       for (let i = 0; i < 3 && !crashes.length; i++) {
         await page.locator('.row .row-main').nth(i).click({ timeout: 5000 }).catch((e) => errors.push('click: ' + String(e.message).split('\n')[0]));
         await wait(1500);

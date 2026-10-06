@@ -3,8 +3,7 @@
 // answered inline), Changes (the diff, its checks and pull request, Merge and Send back) and Log
 // (what happened to it). On a phone the pane covers the list, with a Back button.
 
-import { attention } from '../../shared/attention';
-import { duration } from '../../shared/attention';
+import { attention, duration } from '../../shared/attention';
 import { nextUp, rowAction, sectionOf } from '../../shared/inbox';
 import type { RosterEntry, ServerMsg, TimelineEvent } from '../../shared/protocol';
 import { PROVIDER_META } from '../../shared/providers';

@@ -1,9 +1,8 @@
-// The 2D view's light toggle: the light whiteprint (tokens.css, [data-theme=print]) for reading on
-// white or printing, or the slate deck. It is the bridge's lights (Settings > Bridge in the 3D
-// office, lighting.ts): Day is the whiteprint, Night the slate, and Auto, until someone picks,
-// follows the system's light or dark setting. The pick is this browser's, kept with its settings.
+// The home page's light or dark: the light whiteprint (tokens.css, [data-theme=print]) or the slate
+// deck. It is the bridge's lights (Settings > Bridge in the 3D office, lighting.ts): Day is the
+// whiteprint, Night the slate, and Auto, until someone picks, follows the system's light or dark
+// setting. The pick is this browser's, kept with its settings; the avatar menu and Ctrl+K switch it.
 import { lightModeOf, markPageLight, saveLighting, savedLighting } from './lighting';
-import { icon } from './ui/icons';
 
 /** Where the 2D view kept its own pick before it shared the bridge's lights. */
 const OLD_KEY = 'agent-office.lite-theme';
@@ -19,18 +18,19 @@ function carryOver() {
   }
 }
 
-export function mountThemeToggle(button: HTMLElement) {
-  const apply = () => {
-    const setting = savedLighting();
-    markPageLight(setting);
-    button.setAttribute('aria-pressed', String(lightModeOf(setting) === 'day'));
-  };
+/** Paints the page in the saved light, and again whenever the system's changes (for Auto). */
+export function applyLight() {
   carryOver();
-  button.replaceChildren(icon('contrast', 16));
+  const apply = () => markPageLight(savedLighting());
   apply();
   matchMedia('(prefers-color-scheme: light)').addEventListener('change', apply);
-  button.addEventListener('click', () => {
-    saveLighting(lightModeOf(savedLighting()) === 'day' ? 'night' : 'day');
-    apply();
-  });
+}
+
+/** Light now? */
+export const isLight = () => lightModeOf(savedLighting()) === 'day';
+
+/** Switches between light and dark, and keeps the pick. */
+export function toggleLight() {
+  saveLighting(isLight() ? 'night' : 'day');
+  markPageLight(savedLighting());
 }
