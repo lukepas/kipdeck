@@ -14,8 +14,14 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BUNDLE = path.join(ROOT, 'dist', 'public');
 const stale = bundleWhy(path.join(BUNDLE, 'index.html'), [path.join(ROOT, 'src', 'client'), path.join(ROOT, 'src', 'shared')]);
 
-/** What /lite loaded up front at stage 0 (commit 47fd05b5): the home page's ceiling. */
+/** What /lite loaded up front at stage 0 (commit 47fd05b5): the home page's first ceiling. */
 const LITE_BUDGET_BYTES = 812_503;
+/**
+ * The inbox's own ceiling since stage 2, when the terminal (xterm), the Changes window and the other
+ * windows moved behind home/lazy.ts: it loaded about 175 kB, so 250 kB leaves room to grow without
+ * anything big sliding back in up front.
+ */
+const HOME_BUDGET_BYTES = 250_000;
 
 /** The files a page loads before it draws: its module script, the chunks it preloads, its stylesheets. */
 function eager(page: string): string[] {
@@ -28,6 +34,7 @@ test('the home page loads no more than the 2D view did, and no three.js', { skip
   assert.ok(files.length >= 2, 'the home page loads a script and a stylesheet');
   const bytes = files.reduce((n, f) => n + statSync(f).size, 0);
   assert.ok(bytes <= LITE_BUDGET_BYTES, `the home page loads ${bytes} bytes up front, over the ${LITE_BUDGET_BYTES} budget`);
+  assert.ok(bytes <= HOME_BUDGET_BYTES, `the home page loads ${bytes} bytes up front, over the inbox's ${HOME_BUDGET_BYTES} budget: load big windows through home/lazy.ts`);
   for (const f of files.filter((f) => f.endsWith('.js'))) {
     // three.js's renderer, by a name it always carries.
     assert.doesNotMatch(readFileSync(f, 'utf8'), /WebGLRenderer|THREE\.REVISION|WebGLRenderTarget/, `${path.basename(f)} is part of three.js`);
