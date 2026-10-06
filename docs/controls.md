@@ -8,7 +8,7 @@ Back to the [README](../README.md).
 | Space | Jump (you can land on consoles and the operator bench) |
 | Mouse drag / wheel | Orbit / zoom the camera |
 | G | The Overview: the whole deck from above, a little off the axis on the starboard side, so the dais, the tiers, the pit and the arc facing you read as one plan. In it, Q / E turn it a quarter, W A S D, the arrows or a drag pan, the wheel zooms, and G or Esc walks again (see [The deck](deck.md#walk-and-overview)) |
-| E | Interact: hire a worker, open its terminal, read a board, take an issue's note off the board, prompt a board agent, call a review in the Review bay, sketch on the planning board, read the docs at the docs rack, watch the Attention board, sit down (or get up), open the Floors window at the Deck lift, open the overflow bay past the lift for 2 more consoles (at the **Room to grow** sign) |
+| E | Interact: hire a worker, open its terminal, read a board, take an issue's note off the board, prompt a board agent, call a review in the Review bay, sketch on the planning board, read the docs at the docs rack, watch the Attention board, sit down (or get up), climb the forward lounge's ladder up or down, open the Floors window at the Deck lift, open the overflow bay past the lift for 2 more consoles (at the **Room to grow** sign) |
 | P | Prompt: give a task to a new worker, or to the one at this desk |
 | C | Changes: the files the worker at this desk changed and their diff; commit, discard or open a PR |
 | B | Open a shared shell at an empty desk |
@@ -27,12 +27,14 @@ Back to the [README](../README.md).
 | M | Mute / unmute in voice |
 | Ctrl + Space | Dictate, in a worker's terminal or a prompt box: hold it and talk, and what you said is typed in when you let go. A quick tap leaves it listening until the next tap. The mic button does the same |
 | Tab | The menu (top right of the top bar): every window, and what shows on screen |
-| Esc | Close any window (a terminal too) and get back to looking around, or to the Overview if you opened it there |
+| Esc | Close any window (a terminal too) and get back to looking around, or to the Overview if you opened it there; in a forward lounge seat, stand up |
 | Ctrl + [ | Send Esc to a terminal instead, to close a menu like Claude's `/skills` or interrupt Claude. **Esc** in the terminal's header does the same |
 
 Sitting in the captain's chair (E at it) frames the bridge: a slightly narrower view, aimed low on the situation arc, the bow and the arc over the pit and the crew. From the conn (in the chair, or standing on the dais with the mouse captured), once you've moved the mouse, rest the crosshair on a wall board for a moment and the view leans in on it, so its rows read without walking up; move the mouse or press a key and it eases back. With reduced motion, or Settings > Bridge > Ship motion at Off, it cuts instead of easing.
 
 In first person your gloved hands are at the bottom of the view while you walk: when you press E or click something, the right one reaches out and taps it, and while Mission control is open the left one holds up a datapad with the top bar's counts. They step out of the way when you sit, in third person and in the Overview. Settings > Bridge > Hands turns them on at every Quality tier, or off (Auto leaves them out at Low). See [the design system](design.md#your-hands-in-first-person).
+
+The forward lounge is a balcony at the bow, behind the Attention and Pull requests boards, for looking out at space. Walk round behind the arc to the foot of its ladder and press E: you square up to it, climb hand over hand (W or S turns you round on the rungs) and step over its head onto the balcony as its gate swings open. E at a lounge seat sits you facing the glass, the view a few degrees wider and lifted to the stars, and you can look anywhere; Esc, E or a step gets you up, and E at the gate climbs back down. See [the deck](deck.md#the-forward-lounge).
 
 Bounties need no keys of their own: walk to the Proof corner on the west wall to read the escrow vault's stacks and the ledger over it, or press E at the Issues board, where a funded issue's row carries its amount and a violet coin, to fund one (see [Proof of Merge bounties](bounties.md#in-the-office)).
 

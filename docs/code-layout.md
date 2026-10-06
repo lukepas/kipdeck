@@ -23,7 +23,7 @@ They're in `core/registry.ts`, and each is a field of `ctx`. Every registration 
 | `ctx.messages` | Server messages. `on(type, fn)` runs `fn` once the store has applied the message (`'before'` as a third argument: before it has); `onAny(fn)` runs on every message. |
 | `ctx.keys` | Key presses. `add(stage, fn)` for the stages before the office's own keys (`guard`, `activity`), and `bind({ code, when, run })` for a key of the office's own. |
 | `ctx.ticks` | What runs each frame. `add(phase, fn)`, where the phases run in `TICK_PHASES` order: `pre`, `steer`, `move`, `me`, `others`, `world`, `aim`, `hud`, `render`. Within a phase, ticks run in install order. |
-| `ctx.activities` | Something you're in the middle of that takes over the controls (none of the office's own do today). It gets keys before the office's own, draws the hint bar, and is stopped by `stopAll(why)` when you start something else. Its place among the others is `ACTIVITY_ORDER` in `core/ctx.ts`. |
+| `ctx.activities` | Something you're in the middle of that takes over the controls: climbing the forward lounge's ladder (`features/lounge`), which has hold of you through `PlayerController.rig` while it's on. It gets keys before the office's own, draws the hint bar, and is stopped by `stopAll(why)` when you start something else. Its place among the others is `ACTIVITY_ORDER` in `core/ctx.ts`. |
 | `ctx.interactions` | What each kind of thing you can use does: `define(kind, { reach, hint, use })`, once per kind. |
 | `ctx.windowOpened` | What lets go when a window opens. |
 | `ctx.usables` | Things to use that aren't part of the building and move about (nothing of the office's own today): what each has to use, and what the aim can land on. |
