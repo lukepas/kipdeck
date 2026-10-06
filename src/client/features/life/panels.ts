@@ -81,6 +81,12 @@ void main() {
   vec2 p = vec2(vUv.x * ASPECT, vUv.y);
   int mode = int(vMode + 0.5);
   vec3 col = uInk;
+  // Never a dead black screen: a faint ground in the station's colour (ship-cyan dim standing by or at
+  // work, the state's hue when one waits), with a fine grid over it, so even an empty console glows.
+  vec3 tint = mode == 4 ? uSignal : mode == 5 ? uStuck : mode == 3 ? uReview : mode == 6 ? uProof : uShipDim;
+  col = mix(col, tint, mode >= 3 ? 0.13 : 0.16);
+  vec2 cell = abs(fract(p * vec2(9.0, 7.0)) - 0.5);
+  col = mix(col, tint, line(min(cell.x, cell.y), 0.02) * 0.12);
   // The bezel's hairline round the screen, and a rule between the glyph and the rest.
   float edge = min(min(p.x, ASPECT - p.x), min(p.y, 1.0 - p.y));
   col = mix(col, uShipDim, line(edge, 0.012) * 0.9);
@@ -134,6 +140,16 @@ void main() {
   else if (mode == 6) col = mix(col, uProof, line(abs(ry - 0.5), 0.02) * inR * 0.6);
   else if (mode == 4) col = mix(col, uSignal, line(abs(ry - 0.5), 0.015) * inR * 0.35);
   else if (mode == 1) col = mix(col, uSteel, line(abs(ry - 0.5), 0.01) * step(0.5, fract(rx * 24.0)) * inR * 0.25);
+  // An empty console: a slow standby trace (a soft sine) and a dim "standing by" pip.
+  if (mode == 0) {
+    float wave = 0.5 + 0.18 * sin(rx * 9.0 + uTime * 0.6 + vSeed * 6.0);
+    col = mix(col, uShipDim * 1.6, line(abs(ry - wave), 0.02) * inR * 0.6);
+  }
+  // At work: a waveform over the bars, its swing with the station's output.
+  if (mode == 2) {
+    float wave = 0.62 + (0.1 + 0.18 * vAct) * sin(rx * 17.0 - uTime * (1.2 + 2.0 * vAct) + vSeed * 9.0) * sin(rx * 5.3 + vSeed * 4.0);
+    col = mix(col, mix(uShip, uLed, 0.35), line(abs(ry - wave), 0.018) * inR * (0.5 + 0.5 * gain));
+  }
 
   // Three blinkers at the end: twinkling at work, one steady for standing by, dark otherwise.
   for (int i = 0; i < 3; i++) {

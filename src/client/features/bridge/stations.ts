@@ -2,10 +2,14 @@ import * as THREE from 'three';
 import { DESKS, DESK_SIZE, heightAt } from '../../../shared/layout';
 import type { Fixture } from '../../world/office/fixture';
 import { DECK, matte } from '../../world/office/materials';
+import { CONN_GOLD } from './conn';
 
-// The consoles as bridge stations: a hull fin at each end of every console, under the sightline, and
-// a ship-cyan trace along the edge of its top where its unit's hands rest. Two instanced meshes for all
-// sixteen. A trace's brightness is the station's to set (how busy it is); it starts dim.
+// The consoles as bridge stations: a hull fin at each end of every console, under the sightline, a
+// ship-cyan trace along the edge of its top where its unit's hands rest, and a warm gold practical in
+// its footwell with the soft pool it throws on the deck (the warm half of the room's warm and cool key:
+// the stations glow warm against the cool violet starlight on the hull). Four instanced meshes for all
+// sixteen. A trace's brightness is the station's to set (how busy it is); it starts dim. The footwell
+// light is steady: it is the room's, never a state's.
 
 export interface Stations {
   /** How lit `deskId`'s trace is: 0 dark (a dead station), 1 full ship-cyan. */
@@ -48,6 +52,28 @@ export const stations: Fixture<'stations'> = (site) => {
     traces.setMatrixAt(i, local.matrixWorld);
     traces.setColorAt(i, tint.copy(black).lerp(lit, RESTING));
   });
+  // The footwell: a lit strip under the console's front on the unit's side, and its pool on the deck.
+  const strip = new THREE.InstancedMesh(new THREE.BoxGeometry(width - 0.3, 0.014, 0.014), new THREE.MeshBasicMaterial({ color: new THREE.Color(CONN_GOLD).multiplyScalar(0.9), toneMapped: false, fog: false }), DESKS.length);
+  const pool = new THREE.InstancedMesh(new THREE.PlaneGeometry(width + 0.5, 1.1).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: new THREE.Color(CONN_GOLD).multiplyScalar(0.55), map: poolTexture(), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, fog: false }), DESKS.length);
+  DESKS.forEach((d, i) => {
+    place.position.set(d.x, heightAt(d.x, d.z), d.z);
+    place.rotation.set(0, d.rotY, 0);
+    local.position.set(0, 0.07, depth / 2 + 0.01);
+    local.updateMatrixWorld(true);
+    strip.setMatrixAt(i, local.matrixWorld);
+    local.position.set(0, 0.012, depth / 2 + 0.35);
+    local.updateMatrixWorld(true);
+    pool.setMatrixAt(i, local.matrixWorld);
+  });
+  strip.name = 'station-footwells';
+  pool.name = 'station-footwell-pools';
+  pool.renderOrder = 1;
+  for (const m of [strip, pool]) {
+    m.computeBoundingSphere();
+    m.castShadow = false;
+    m.receiveShadow = false;
+  }
+  site.group.add(strip, pool);
   fins.castShadow = true;
   fins.receiveShadow = true;
   site.group.add(fins, traces);
@@ -59,3 +85,20 @@ export const stations: Fixture<'stations'> = (site) => {
   };
   return { handle: { stations: { trace } } };
 };
+
+/** A soft pool of light, brightest at the console's foot and falling off out onto the deck: drawn once. */
+function poolTexture(): THREE.CanvasTexture {
+  const c = document.createElement('canvas');
+  c.width = 64;
+  c.height = 64;
+  const g = c.getContext('2d')!;
+  const grad = g.createRadialGradient(32, 0, 2, 32, 0, 60);
+  grad.addColorStop(0, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.45, 'rgba(255,255,255,0.35)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 64, 64);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.NoColorSpace;
+  return t;
+}

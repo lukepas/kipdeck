@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 import { FLOOR, WALL_HEIGHT, WINDOWS, WING } from '../../../shared/layout';
 import type { Fixture } from './fixture';
-import { DECK, matte } from './materials';
+import { DECK, matte, practical } from './materials';
 
 // The working detail of a ship's hull, inside: cable trays and two conduits along the foot of the east,
 // west and north walls under the ports' sills, a clamp on them every so often, a conduit round the
 // tops of the east, west and north walls under the canopy's eaves, and a strut rib with lightening holes on each pier
 // between the side ports. Each kind is one instanced draw (four in all), casts no shadow, and takes the
-// trim atlas like the rest of the steel. Nothing here stands in anyone's way: it all hugs the walls.
+// trim atlas like the rest of the steel; and light-strip channels along the walls and up each rib, two
+// more draws. Nothing here stands in anyone's way: it all hugs the walls.
 
 /** How far off a wall's inside face the runs stand (m), and their heights. */
 const RUN = { off: 0.12, tray: { y: 0.16, h: 0.14, d: 0.18 }, pipes: [0.42, 0.53], pipeR: 0.035, top: WALL_HEIGHT - 0.35, topR: 0.06 } as const;
@@ -15,6 +16,9 @@ const RUN = { off: 0.12, tray: { y: 0.16, h: 0.14, d: 0.18 }, pipes: [0.42, 0.53
 const CLAMP_EVERY = 1.6;
 /** The ribs: how wide, how deep, and from and to what height. */
 const RIB = { w: 0.34, d: 0.07, y0: 0.62, y1: 3.55, holes: 4 } as const;
+
+/** The light-strip channels: their heights, the channel's and the line's height, and the line's colour. */
+const STRIP = { high: RIB.y1 + 0.18, low: 0.92, channel: 0.07, line: 0.018, color: '#6474E6' } as const;
 
 /** One straight run along a wall's inside face: from `a` to `b` along it, at `inward` toward the room. */
 interface Run {
@@ -113,12 +117,28 @@ export const greebles: Fixture = (site) => {
   ];
   for (const run of top) pipes.push(along(run, (run.a + run.b) / 2, run.b - run.a, RUN.top, 0.2, RUN.topR * 2, RUN.topR * 2));
 
+  // Light-strip channels: a lit line in a dark channel along the three walls at the ribs' heads and
+  // just over the trays, and up each rib's face, in the starlight's cool indigo (hue about 232, clear of
+  // every state's): the hull's own glow, which picks the walls out of the dark without lifting them.
+  const strips: THREE.Matrix4[] = [];
+  const channels: THREE.Matrix4[] = [];
+  for (const run of runs) {
+    const len = run.b - run.a;
+    const mid = (run.a + run.b) / 2;
+    for (const y of [STRIP.high, STRIP.low]) {
+      channels.push(along(run, mid, len, y, 0.02, STRIP.channel, 0.05));
+      strips.push(along(run, mid, len, y, 0.05, STRIP.line, 0.012));
+    }
+  }
   const ribs: THREE.Matrix4[] = [];
   for (const pier of piers()) {
     const west = pier.side === 'west';
     p.set(west ? FLOOR.minX + 0.005 : FLOOR.maxX - 0.005, RIB.y0, pier.z);
     q.setFromAxisAngle(yAxis, west ? 0 : Math.PI);
     ribs.push(m.compose(p, q, s.set(1, 1, 1)).clone());
+    // A lit line up the rib's face, between its holes and its edge.
+    p.set(west ? FLOOR.minX + RIB.d + 0.02 : FLOOR.maxX - RIB.d - 0.02, (RIB.y0 + RIB.y1) / 2, pier.z + RIB.w * 0.36);
+    strips.push(m.compose(p, q.identity(), s.set(0.012, RIB.y1 - RIB.y0 - 0.2, 0.014)).clone());
   }
 
   const steel = matte(DECK.steel);
@@ -128,6 +148,8 @@ export const greebles: Fixture = (site) => {
     [new THREE.CylinderGeometry(0.5, 0.5, 1, 10, 1).rotateZ(Math.PI / 2), steel, pipes],
     [new THREE.BoxGeometry(1, 1, 1), matte(DECK.steelLight), clamps],
     [ribGeometry(), steel, ribs],
+    [new THREE.BoxGeometry(1, 1, 1), dark, channels],
+    [new THREE.BoxGeometry(1, 1, 1), practical(STRIP.color), strips],
   ];
   for (const [geo, mat, list] of kinds) {
     if (!list.length) continue;

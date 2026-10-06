@@ -422,7 +422,8 @@ export class Worker {
 
   private shell(kind: GlyphKind): Shell {
     if (this.leaving !== null || isAsleep(this.status)) return 'asleep';
-    return kind === 'stuck' ? 'stuck' : 'live';
+    const tones: Record<GlyphKind, Shell> = { stuck: 'stuck', 'needs-you': 'needs', review: 'review', merged: 'merged', working: 'live', parked: 'idle' };
+    return tones[kind];
   }
 
   update(dt: number, t: number) {
@@ -511,7 +512,9 @@ export class Worker {
     else band.color.set(GLYPH_HUE[kind]).multiplyScalar(k);
     // The visor: dark, lit for a moment each time its terminal prints.
     const lit = gone || asleep ? 0 : 0.12 + this.flick * 0.55 * (0.7 + 0.3 * Math.sin(t * 40));
-    visor.color.set(VISOR_DARK).lerp(working ? SHIP : VISOR_LIT, working ? Math.min(1, WORK_TINT.visor + 0.4 * this.busy + this.flick * 0.4) : lit);
+    // The visor stays dark glass (its eye stripe, lit in the band's colour, is the face); it only
+    // brightens a little toward ship-cyan or steel as its terminal prints.
+    visor.color.set(VISOR_DARK).lerp(working ? SHIP : VISOR_LIT, working ? Math.min(0.32, 0.08 + 0.12 * this.busy + this.flick * 0.25) : lit * 0.35);
     under.opacity = gone ? Math.max(0, 0.55 - this.leaveT) : asleep ? 0.12 : 0.5;
     if (kind === 'needs-you' || kind === 'stuck') under.color.set(GLYPH_HUE[kind]);
     else under.color.copy(STEEL).lerp(SHIP, working ? WORK_TINT.under : 0);

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ARC } from '../../../shared/amphitheater';
+import { AISLE, ARC, PIT } from '../../../shared/amphitheater';
 import { FLOOR, MISSION_TABLE, WALL_HEIGHT } from '../../../shared/layout';
 
 // The deck's floor, worked: every meter's tile a shade of its own, the walkways where boots go (round
@@ -79,7 +79,11 @@ if (uMirrorOn > 0.0) {
   vec3 seen = vec3(0.0);
   ${Array.from({ length: MIRROR_BOARDS }, (_, i) => mirrorBoard(i)).join('')}
   float graze = 0.3 + 0.7 * (1.0 - clamp(-eyeDir.y, 0.0, 1.0));
-  outgoingLight += seen * graze * (1.0 - roughnessFactor * 0.85) * uMirrorOn;
+  // Only the pit and the centre aisle are polished enough to mirror (the look stage): the tiers and the
+  // deck round them stay plate, so the mirror reads as one lit floor in the middle, not a wet room.
+  float pit = 1.0 - smoothstep(${(PIT.r - 0.5).toFixed(2)}, ${PIT.r.toFixed(2)}, length(vFloorPos.xz - vec2(${MISSION_TABLE.x.toFixed(2)}, ${MISSION_TABLE.z.toFixed(2)})));
+  float aisle = (1.0 - smoothstep(${(AISLE.half - 0.2).toFixed(2)}, ${AISLE.half.toFixed(2)}, abs(vFloorPos.x))) * step(0.0, vFloorPos.z) * step(vFloorPos.z, ${AISLE.z1.toFixed(2)});
+  outgoingLight += seen * graze * (1.0 - roughnessFactor * 0.85) * uMirrorOn * max(pit, aisle);
 }`;
 
 const v3 = (a: readonly number[]) => `vec3(${a.map((n) => n.toFixed(2)).join(', ')})`;

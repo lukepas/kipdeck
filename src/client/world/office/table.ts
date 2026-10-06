@@ -160,7 +160,9 @@ export const missionTable: Fixture<'missionTable'> = (site) => {
   group.position.set(x, 0, z);
   group.add(mesh(new THREE.CylinderGeometry(r * 0.72, r * 0.8, h - 0.12, 32), flat(DECK.wall), 0, (h - 0.12) / 2, 0));
   group.add(mesh(new THREE.CylinderGeometry(r * 0.82, r * 0.82, 0.04, 32), matte(DECK.wallReveal), 0, 0.02, 0, false));
-  group.add(mesh(new THREE.CylinderGeometry(r, r * 0.96, 0.12, 64), flat(DECK.console), 0, h - 0.06, 0));
+  // The top is instrument-black glass, so the holo and the course read on it rather than a lit grey disc
+  // (the brightest thing in the frame before the look stage).
+  group.add(mesh(new THREE.CylinderGeometry(r, r * 0.96, 0.12, 64), matte(DECK.instrument, { flat: true }), 0, h - 0.06, 0));
   // The lit edge: what carries the table's silhouette in a dark frame.
   // Its own material (not the shared practical), so a pulse can light it without lighting everything else that's steel.
   const steel = new THREE.Color('#AEB8C4');

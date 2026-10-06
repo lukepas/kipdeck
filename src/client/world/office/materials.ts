@@ -71,19 +71,24 @@ interface MatOpts {
 
 /**
  * How each of the deck's surfaces is finished, by its Night color: how rough and how metal it is, and
- * how much of the trim atlas it takes. Brushed steel and the console tops are smooth enough to catch
- * the room's screens and strips (features/ibl); walls and pedestals stay matte; the units take none,
- * their bodies are their own. Anything else is matte with a light trim.
+ * how much of the trim atlas it takes. Four finishes, each one you can tell apart: brushed steel and
+ * rails at 0.35, the consoles' glass tops at 0.1, wall and deck plate at 0.6 with the atlas's seams, and
+ * 0.85 only for rubber. The units' shells are their own (world/character/unit-body.ts). Anything not
+ * listed is plate with a light trim.
  */
 const FINISH: Readonly<Record<string, { roughness: number; metalness: number; trim: TrimLook | null }>> = {
-  [DECK.steel.slice(1).toLowerCase()]: { roughness: 0.28, metalness: 0.45, trim: { k: 0.8, sheen: 0.18 } },
-  [DECK.steelLight.slice(1).toLowerCase()]: { roughness: 0.34, metalness: 0.65, trim: { k: 0.6, sheen: 0.18 } },
-  [DECK.consoleTop.slice(1).toLowerCase()]: { roughness: 0.3, metalness: 0.15, trim: { k: 0.9, sheen: 0.22 } },
-  [DECK.console.slice(1).toLowerCase()]: { roughness: 0.6, metalness: 0.12, trim: { k: 1, sheen: 0.2 } },
-  [DECK.wall.slice(1).toLowerCase()]: { roughness: 0.66, metalness: 0.18, trim: { k: 1, sheen: 0.2 } },
-  [DECK.hullSeam.slice(1).toLowerCase()]: { roughness: 0.6, metalness: 0.3, trim: { k: 0.4, sheen: 0.2 } },
-  [DECK.wallReveal.slice(1).toLowerCase()]: { roughness: 0.72, metalness: 0.1, trim: { k: 0.7, sheen: 0.12 } },
-  [DECK.instrument.slice(1).toLowerCase()]: { roughness: 0.3, metalness: 0.2, trim: { k: 0.35, sheen: 0.1 } },
+  // Brushed steel and rails: 0.35, a metal that catches the room's strips and screens.
+  [DECK.steel.slice(1).toLowerCase()]: { roughness: 0.35, metalness: 0.55, trim: { k: 0.8, sheen: 0.22 } },
+  [DECK.steelLight.slice(1).toLowerCase()]: { roughness: 0.35, metalness: 0.7, trim: { k: 0.6, sheen: 0.22 } },
+  // The console tops are glass over instruments: 0.1, a crisp reflection of the boards and the holo.
+  [DECK.consoleTop.slice(1).toLowerCase()]: { roughness: 0.1, metalness: 0.2, trim: { k: 0.5, sheen: 0.3 } },
+  [DECK.console.slice(1).toLowerCase()]: { roughness: 0.5, metalness: 0.2, trim: { k: 1, sheen: 0.24 } },
+  // Wall and hull plate: 0.6 with the trim atlas's seams.
+  [DECK.wall.slice(1).toLowerCase()]: { roughness: 0.6, metalness: 0.25, trim: { k: 1, sheen: 0.24 } },
+  [DECK.hullSeam.slice(1).toLowerCase()]: { roughness: 0.55, metalness: 0.35, trim: { k: 0.4, sheen: 0.24 } },
+  [DECK.wallReveal.slice(1).toLowerCase()]: { roughness: 0.7, metalness: 0.1, trim: { k: 0.7, sheen: 0.12 } },
+  [DECK.instrument.slice(1).toLowerCase()]: { roughness: 0.25, metalness: 0.2, trim: { k: 0.35, sheen: 0.1 } },
+  // Rubber and the units' old matte: 0.85 is for these only.
   [DECK.unit.slice(1).toLowerCase()]: { roughness: 0.85, metalness: 0.05, trim: null },
 };
 const PLAIN_TRIM: TrimLook = { k: 0.6, sheen: 0.15 };
@@ -126,7 +131,7 @@ export function matte(color: THREE.ColorRepresentation, opts: MatOpts = {}): THR
 /** A material of its own (uncached), for something whose color changes. */
 export function matteUnique(color: THREE.ColorRepresentation, opts: MatOpts = {}): THREE.MeshStandardMaterial {
   const finish = FINISH[new THREE.Color(color).getHexString()];
-  const m = new THREE.MeshStandardMaterial({ color, roughness: opts.roughness ?? finish?.roughness ?? 0.85, metalness: opts.metalness ?? finish?.metalness ?? 0.05, flatShading: !!opts.flat });
+  const m = new THREE.MeshStandardMaterial({ color, roughness: opts.roughness ?? finish?.roughness ?? 0.6, metalness: opts.metalness ?? finish?.metalness ?? 0.1, flatShading: !!opts.flat });
   if (opts.emissive !== undefined) {
     m.emissive = new THREE.Color(opts.emissive);
     m.emissiveIntensity = opts.emissiveIntensity ?? 1;
@@ -176,7 +181,7 @@ VIEWPORT_GLASS.onBeforeCompile = (shader) => {
     `{
       float fres = pow(max(1.0 - abs(dot(normalize(normal), normalize(vViewPosition))), 0.0), 3.0);
       // Thicker and bluer at a slant, and a soft sheen from the room's light down the pane.
-      diffuseColor.a = mix(diffuseColor.a, 0.55, fres);
+      diffuseColor.a = mix(diffuseColor.a, 0.3, fres);
       outgoingLight += vec3(0.03, 0.065, 0.085) * (0.1 + fres) + vec3(0.008, 0.014, 0.018) * smoothstep(-1.0, 1.0, normalize(vViewPosition).y);
     }
     #include <opaque_fragment>`,

@@ -38,13 +38,22 @@ test("a unit's shell is bound to the figure and its two arms, the arms alike", (
   }
 });
 
-test("a unit's lights are one mesh, each vertex tagged band, visor or hairline", () => {
+test("a unit's lights are one mesh, each vertex tagged band, visor, hairline or eye stripe", () => {
   const { lights } = unitGeometries();
   const part = lights.attributes.part;
   assert.ok(part);
   const seen = new Set<number>();
   for (let i = 0; i < part.count; i++) seen.add(part.getX(i));
-  assert.deepEqual([...seen].sort(), [0, 1, 2]);
+  assert.deepEqual([...seen].sort(), [0, 1, 2, 3]);
+  // The eye stripe sits in front of the visor, inside its width: the unit's face.
+  const pos = lights.attributes.position;
+  let eyeZ = -Infinity;
+  let visorZ = -Infinity;
+  for (let i = 0; i < part.count; i++) {
+    if (part.getX(i) === 3) eyeZ = Math.max(eyeZ, pos.getZ(i));
+    if (part.getX(i) === 1) visorZ = Math.max(visorZ, pos.getZ(i));
+  }
+  assert.ok(eyeZ > visorZ, 'the eye stripe is proud of the visor');
 });
 
 test("a laptop's shell is its plinth on the laptop and its bezel on the lid's hinge", () => {
