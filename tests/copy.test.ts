@@ -1,6 +1,6 @@
 // The office's own words in plain ASCII: every string literal in src/server and src/shared (what
 // reaches a toast, a board, a CLI, a commit or an agent's prompt) has no em or en dash, no ellipsis
-// glyph, no curly quotes and no emoji, and names the product UGC Army rather than Agent Office.
+// glyph, no curly quotes and no emoji, and names the product Mergeline rather than Agent Office.
 // Comments and regular expressions are left out (a regex may match what other people type).
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -94,14 +94,15 @@ test('server and shared strings are plain ASCII copy: no em dash, ellipsis glyph
   assert.deepEqual(bad, []);
 });
 
-test('the product calls itself UGC Army wherever agents, tools and commits see it', () => {
+test('the product calls itself Mergeline wherever agents, tools and commits see it', () => {
   const bad: string[] = [];
   for (const f of [...files('src/server'), ...files('src/shared'), 'bin/office-workers.js', 'bin/office-queue.js']) {
     for (const { line, text } of literals(readFileSync(path.join(root, f), 'utf8'))) if (/Agent Office/.test(text)) bad.push(`${f}:${line}`);
   }
   assert.deepEqual(bad, []);
   const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
-  assert.equal(pkg.bin['ugc-army'], pkg.bin['agent-office']);
+  assert.equal(pkg.name, 'mergeline');
+  assert.equal(pkg.bin.mergeline, pkg.bin['agent-office']);
 });
 
 test('the scanner sees strings, not comments or regexes', () => {

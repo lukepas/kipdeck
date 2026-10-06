@@ -87,14 +87,14 @@ export function installHud(ctx: Ctx, parts: HudParts) {
       {
         id: 'upgrade',
         icon: 'upgrade',
-        label: () => (store.upgrade.phase === 'building' ? 'Updating...' : store.upgrade.latest ? 'Update UGC Army' : 'Rebuild UGC Army'),
+        label: () => (store.upgrade.phase === 'building' ? 'Updating...' : store.upgrade.latest ? 'Update Mergeline' : 'Rebuild Mergeline'),
         section: 'Deck',
         shown: () => store.upgrade.available,
         // A new version, or one being built, gets a place on the top bar until it's in.
         status: () => !!store.upgrade.latest || store.upgrade.phase === 'building',
         chip: () => (store.upgrade.phase === 'building' ? 'Updating...' : 'Update'),
         tone: () => (store.upgrade.latest && store.upgrade.phase !== 'building' ? 'primary' : undefined),
-        title: () => (store.upgrade.latest ? `New version: ${store.upgrade.latest.subject}` : 'Rebuild UGC Army'),
+        title: () => (store.upgrade.latest ? `New version: ${store.upgrade.latest.subject}` : 'Rebuild Mergeline'),
         run: () => openUpgrade(net),
       },
       // ---- Comms: talking to the rest of the team (folded in the menu) --------------------------------

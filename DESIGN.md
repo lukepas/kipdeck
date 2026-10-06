@@ -1,8 +1,8 @@
-# UGC Army design system
+# Mergeline design system
 
 Back to the [README](README.md).
 
-UGC Army is an operations deck for teams running many AI coding agents. The screen is calm by default and only an exception carries color, so the eye goes straight to what needs a person. This page is the contract for every surface: the home page at `/`, the 3D Bridge view at `/bridge` (Labs), the sign-in pages and the `/pom/` showcase (Labs).
+Mergeline is an operations deck for teams running many AI coding agents. The screen is calm by default and only an exception carries color, so the eye goes straight to what needs a person. This page is the contract for every surface: the home page at `/`, the 3D Bridge view at `/bridge` (Labs), the sign-in pages and the `/pom/` showcase (Labs).
 
 The tokens live in `src/client/styles/tokens.css`. Every sheet uses them by name; a hex value in a module sheet is a bug. [docs/design.md](docs/design.md) shows the system on screen: each surface, the full motion table, the deck's sound, demo mode and how to check a change.
 

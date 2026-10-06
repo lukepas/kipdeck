@@ -352,7 +352,7 @@ export function openElevator(opts: ElevatorOptions): void {
   const el = h(
     'div.modal.elevator',
     { role: 'dialog', 'aria-label': 'Elevator' },
-    h('header', {}, h('h2', {}, setup ? 'Welcome to UGC Army' : 'Deck lift'), close),
+    h('header', {}, h('h2', {}, setup ? 'Welcome to Mergeline' : 'Deck lift'), close),
     h('div.body', {}, intro, floorsEl, addEl),
     h('footer', {}, h('span.grow', {}, setup ? 'Your office, one deck per project · Esc to look around first' : 'Pick a deck · Esc to stay here'), addBtn),
   );

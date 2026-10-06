@@ -4,9 +4,9 @@
 // checks every string in src/server and src/shared).
 
 /** The product, as people and agents see it. */
-export const PRODUCT = 'UGC Army';
+export const PRODUCT = 'Mergeline';
 /** The command it runs as (agent-office still works, for upstream's scripts). */
-export const CLI = 'ugc-army';
+export const CLI = 'mergeline';
 /** Where it came from, as the license names it. */
 export const UPSTREAM_CREDIT = 'Built on agent-office (AgentSystemLabs / webdevcody), MIT';
 /** The same where there is only room for a line of small type (the title block on the deck's floor). */
@@ -18,7 +18,7 @@ export const NAV = {
   accounts: 'Menu > Deck > Accounts',
   settings: 'Menu > Deck > Settings',
   decks: 'Menu > Deck > Decks',
-  upgrade: 'Menu > Deck > Update UGC Army',
+  upgrade: 'Menu > Deck > Update Mergeline',
 } as const;
 
 /** Taking a unit off its console, in the deck's words. */

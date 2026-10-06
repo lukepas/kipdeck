@@ -1,10 +1,20 @@
 {
-  "name": "agent-office",
+  "name": "mergeline",
   "version": "0.1.0",
-  "description": "UGC Army: the inbox for your AI coding agents (Claude Code, Codex, Cursor and more). See what needs you, review what is ready, merge what shipped. Built on agent-office by webdevcody (MIT).",
+  "description": "Mergeline: the inbox for your AI coding agents (Claude Code, Codex, Cursor and more). See what needs you, review what is ready, merge what shipped. Built on agent-office by webdevcody (MIT).",
+  "keywords": [
+    "ai",
+    "coding-agents",
+    "claude-code",
+    "codex",
+    "cursor",
+    "inbox",
+    "code-review",
+    "worktree"
+  ],
   "type": "module",
   "bin": {
-    "ugc-army": "bin/agent-office.js",
+    "mergeline": "bin/agent-office.js",
     "agent-office": "bin/agent-office.js"
   },
   "imports": {

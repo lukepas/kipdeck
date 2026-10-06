@@ -141,7 +141,7 @@ test('the command reads a prompt from stdin, reports refusals and exits non-zero
   assert.equal(formatLinked({ worker: { name: 'Bolt' } }), 'Bolt has no pull request now.');
   // What the office says is what's shown: there's no such worker, or it's too old to know this call.
   assert.match((await run(['pr', '7', '--worker', 'Nope'], reply(404, { error: 'No worker here is called Nope' }) as typeof fetch)).err, /^office-workers: No worker here is called Nope$/);
-  assert.match((await run(['pr', '7'], reply(405, { error: 'GET /office/workers, or POST' }) as typeof fetch)).err, /older UGC Army than this command/);
+  assert.match((await run(['pr', '7'], reply(405, { error: 'GET /office/workers, or POST' }) as typeof fetch)).err, /older Mergeline than this command/);
 
   const refused = await run(['list'], reply(401, { error: 'bad token' }) as typeof fetch);
   assert.equal(refused.code, 1);
@@ -172,7 +172,7 @@ test('answers MCP: the handshake, its tools, and a call', async () => {
   // A failed call is the tool's error, for the model to read; an unknown tool or method is the protocol's.
   const failed = await handleMcp({ jsonrpc: '2.0', id: 5, method: 'tools/call', params: { name: 'list_workers' } }, { env: {}, fetch: io.fetch });
   assert.equal(failed?.result.isError, true);
-  assert.match(failed?.result.content[0].text, /only works inside UGC Army/);
+  assert.match(failed?.result.content[0].text, /only works inside Mergeline/);
   assert.equal((await handleMcp({ jsonrpc: '2.0', id: 6, method: 'tools/call', params: { name: 'fire_everyone' } }, io))?.error.code, -32602);
   assert.equal((await handleMcp({ jsonrpc: '2.0', id: 7, method: 'resources/list' }, io))?.error.code, -32601);
   for (const t of TOOLS) assert.equal(t.inputSchema.type, 'object', t.name);
@@ -199,7 +199,7 @@ test('office-workers mcp serves a real client over stdio, as the worker', async 
     child.stdin!.write(`${JSON.stringify(msg)}\n`);
     return JSON.parse((await replies.next()).value);
   };
-  assert.equal((await ask({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-11-25' } })).result.serverInfo.name, 'ugc-army');
+  assert.equal((await ask({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2025-11-25' } })).result.serverInfo.name, 'mergeline');
   child.stdin!.write(`${JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' })}\n`);
   const listed = await ask({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'list_workers', arguments: {} } });
   assert.equal(JSON.parse(listed.result.content[0].text).workers[0].name, 'Bolt');
