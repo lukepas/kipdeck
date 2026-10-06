@@ -50,7 +50,6 @@ function tail(text: string, max = 90): string {
 export function dictation(target: DictateTarget, opts: { label?: string } = {}): Dictation {
   const live = h('div.dictate-live.hidden', { role: 'status' });
   if (speechSupport() === 'none') return { button: null, live, key: () => false, drop() {} };
-  checkOnDevice();
 
   const button = h('button.btn.dictate-mic', { type: 'button', title: TITLE, 'aria-label': 'Dictate', 'aria-pressed': 'false' }, icon('mic', 16), opts.label ? ` ${opts.label}` : null);
   let listening: Listening | null = null;
@@ -64,6 +63,7 @@ export function dictation(target: DictateTarget, opts: { label?: string } = {}):
 
   const start = () => {
     if (listening || target.off?.()) return;
+    checkOnDevice();
     if (speechSupport() === 'insecure') {
       toast('Dictation needs HTTPS (or localhost), like voice. Ask whoever runs the office to enable TLS.', 'warn');
       return;
@@ -112,6 +112,9 @@ export function dictation(target: DictateTarget, opts: { label?: string } = {}):
     talk.press();
   });
   button.addEventListener('lostpointercapture', lift);
+  // About to be used: find out now whether the words can stay on this device (see checkOnDevice).
+  button.addEventListener('pointerenter', () => checkOnDevice());
+  button.addEventListener('focus', () => checkOnDevice());
   button.addEventListener('mousedown', (e) => e.preventDefault());
   button.addEventListener('contextmenu', (e) => e.preventDefault());
   // Pressed from the keyboard (Enter or Space on it), there's no letting go to wait for: it turns on, or off.
