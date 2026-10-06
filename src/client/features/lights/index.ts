@@ -106,6 +106,9 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings' 
   const bloomLook = (): BloomLook | null => (parts.quality.look().bloom ? (demo ? DEMO_BLOOM : LIGHT_MODES[mode ?? 'night'].bloom) : null);
   const waiting: ((b: Bloom) => void)[] = [];
 
+  /** How the glow is held at half size (Medium): its strength and its radius, of the mode's own. */
+  const HALF_GLOW = { strength: 0.5, radius: 0.6 } as const;
+
   /**
    * The frame's composer as the tier and the mode have it: at Medium and High it draws every frame,
    * Night's and Day's alike, with the glow on by Night; at Low it's put away (the plain render). Loaded
@@ -115,7 +118,9 @@ export function installLights(ctx: Ctx, parts: Pick<Parts, 'stage' | 'settings' 
     const tier = parts.quality.look();
     const look = bloomLook();
     if (bloom) {
-      if (look) bloom.set(look);
+      // At half size the glow's blur reaches twice as far across the frame: it is held to about half as
+      // strong and a little tighter there, so Medium keeps High's look rather than a haze over the boards.
+      if (look) bloom.set(tier.bloom === 'half' ? { ...look, strength: look.strength * HALF_GLOW.strength, radius: look.radius * HALF_GLOW.radius } : look);
       bloom.glow(!!look);
       bloom.scale(tier.bloom === 'half' ? 0.5 : 1);
       bloom.aa(tier.aa === 'smaa' ? 'smaa' : 'fxaa');

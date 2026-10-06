@@ -57,7 +57,7 @@ export const LIGHT_MODES: Record<LightMode, Rig> = {
     pods: { color: '#EFE3D3', i: 150 },
     table: { color: '#C9D6E6', i: 38 },
     holo: { color: '#6FC3DF', i: 26 },
-    bloom: { strength: 0.55, radius: 0.5, threshold: 0.8 },
+    bloom: { strength: 0.48, radius: 0.45, threshold: 0.85 },
     env: 1.3,
   },
   // Day: high orbit over a sunlit planet. A warm, hard sun key casts the canopy's ribs across the

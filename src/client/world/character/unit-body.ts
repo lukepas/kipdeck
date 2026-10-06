@@ -31,7 +31,9 @@ export const UNIT = {
  * half and the hover column, so a unit reads as a figure with a face and a body from across the deck;
  * its edges, where they turn away from you, catch its state's light (ship-cyan at work, orange when it
  * needs you, red stuck, amber to review, violet just merged, a cool steel standing by), so a unit holds
- * its silhouette against the dark hull and says its state in its outline too. All in the existing
+ * its silhouette against the dark hull and says its state in its outline too. Needing you keeps its
+ * rim faint: orange over the cool starlight on its plates reads as violet, proof's hue, and the
+ * diamond, the beam and the eye stripe already say it. All in the existing
  * material's shader (onBeforeCompile): no draw is added, and every tone shares one program.
  */
 function rimmed(color: string, rim: number, rimColor: string): THREE.MeshStandardMaterial {
@@ -74,10 +76,10 @@ const shells: Partial<Record<Shell, THREE.MeshStandardMaterial>> = {};
 const SHELL_LOOK = {
   live: [DECK.unit, 0.5, DECK.ship],
   idle: [DECK.unit, 0.3, '#8FA0C8'],
-  needs: [DECK.unit, 0.36, DECK.signal],
+  needs: [DECK.unit, 0.1, DECK.signal],
   review: [DECK.unit, 0.42, DECK.review],
   merged: [DECK.unit, 0.45, DECK.proof],
-  stuck: ['#1E242B', 0.5, DECK.stuck],
+  stuck: ['#1E242B', 0.32, DECK.stuck],
 } as const;
 export type Shell = keyof typeof SHELL_LOOK | 'asleep';
 const SHELL = (tone: Shell): THREE.MeshStandardMaterial => {
