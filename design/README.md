@@ -2,7 +2,11 @@
 
 Back to the [README](../README.md) and the [design system](../DESIGN.md).
 
-The latest round is first, [the interior: the hype round](#the-interior-the-hype-round); the earlier rounds follow it in order.
+The latest round is first, [the Relay Beacon](#the-relay-beacon); the earlier rounds follow it in order.
+
+## The Relay Beacon
+
+An original landmark high off the starboard bow, over the arc's starboard wing from the chair: a lattice spire in three turning rings, a node-star on them for each unit at work in the fleet, the crown flaring on a merge and a ledger ring lighting a segment per bounty released ([docs/design.md](../docs/design.md#the-relay-beacon), with the Stellar brand rules it follows). Shots in `shots/stellar/build/` (`node design/shoot-relay.mjs stellar/build`, GPU, 1440x900): `<light>-<quality>-conn.png` from the chair, `-starboard` the chair turned toward it, `-deck-fwd` from the forward starboard glass, `-lounge` from the stool (the arc stands in front of it), `-overview` (it is on the bridge layer, so not there), Night and Day at High and Low from the chair, and `night-high-clip.mp4`, 12 s of a deploy, a merge, a payout and the jump. Frame time (`node design/perf-probe.mjs metal`, `frames-before.jsonl`, `frames-after.jsonl`, `frames-after-relay-off.jsonl`): from the conn 381 draws with it against 379 without (budget 400), the forced render 1.8 to 2.1 ms with it and 1.9 to 2.1 ms without, inside the run-to-run spread, so well under 0.4 ms; rAF holds 16.7 ms. `node design/flicker-check.mjs metal` passes (`flicker.txt`).
 
 ## The interior: the hype round
 
