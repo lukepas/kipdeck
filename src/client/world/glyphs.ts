@@ -98,3 +98,31 @@ export function drawGlyph(g: CanvasRenderingContext2D, kind: GlyphKind, x: numbe
   }
   g.restore();
 }
+
+/**
+ * Done (finished, looked at, ready for more): a check in the settled green, with no box round it (a box
+ * is merged's). Drawn centred on (x, y), `r` from its middle to its tips, keylined like the others.
+ */
+export function drawDone(g: CanvasRenderingContext2D, x: number, y: number, r: number, keyline = false) {
+  const stroke = Math.max(3, r * 0.3);
+  g.save();
+  g.lineJoin = 'miter';
+  g.lineCap = 'square';
+  const path = () => {
+    g.beginPath();
+    g.moveTo(x - r * 0.8, y + r * 0.02);
+    g.lineTo(x - r * 0.22, y + r * 0.6);
+    g.lineTo(x + r * 0.85, y - r * 0.62);
+  };
+  if (keyline) {
+    path();
+    g.strokeStyle = DECK.void;
+    g.lineWidth = stroke + Math.max(3, r * 0.22);
+    g.stroke();
+  }
+  path();
+  g.strokeStyle = DECK.settled;
+  g.lineWidth = stroke;
+  g.stroke();
+  g.restore();
+}

@@ -3,12 +3,13 @@ import { sharp } from '../../world/sharp';
 
 // What every screen on the situation wall (and the capacity panel) is drawn with, so they read alike
 // and from across the deck: a canvas the panel's own shape, painted at 200 units a metre and backed at
-// 1.5 times that so the text stays crisp up close; a title bar with the board's name big and its count
-// beside it; and rows of one size, four at most (as many as the panel's height takes, rowsFor), with
-// "+N more" under them. The type is sized for the
-// conn: a board's name and each row's first line read from the captain's place, the second line from
-// halfway in (a row's first line is 0.24 m type, about 9.6 px tall at 1440x900 from the conn, 21.6 m
-// off). Each row's state is a glyph (a shape) and a stripe (its hue), as everywhere else.
+// 1.5 times that so the text stays crisp up close; a smoked ground the face lets a little of space
+// through (the arc's boards are lit glass, world/office/props.ts); a title bar with the board's name and
+// its count beside it, its rule in the colour of the board's most urgent state; and rows of one size,
+// as many as the panel's height takes (rowsFor), with "+N more" under them. The type is sized for the
+// conn: a row's first line is 0.3 m type (a cap height of about 12 px at 1440x900 from the captain's
+// chair, 17.6 m off), its second line for up close. Each row's state is a glyph (a shape) and a stripe
+// (its hue), as everywhere else. The Attention board has a layout of its own (features/tv/attention.ts).
 
 /** Canvas units a metre of panel, and how many pixels back each one. */
 export const UNITS_PER_M = 200;
@@ -34,13 +35,13 @@ export const MONO = (size: number, weight = 500) => `${weight} ${size}px "JetBra
 export const LAYOUT = {
   pad: 32,
   /** The title bar: the name's baseline, and the rule under it. */
-  titleBase: 74,
-  rule: 104,
+  titleBase: 64,
+  rule: 88,
   /** Where the rows start, how tall each is and the gap between. */
-  top: 120,
-  rowH: 94,
+  top: 100,
+  rowH: 104,
   gap: 8,
-  rows: 4,
+  rows: 6,
   /** The left stripe, and where a row's text starts past its glyph. */
   stripe: 8,
   glyphX: 70,
@@ -79,13 +80,34 @@ export function screen(widthM: number, heightM: number, unitsPerM: number = UNIT
   return { canvas, g, W, H, texture };
 }
 
-/** The panel's ground: flat slate with the faintest 1 m-style grid, kept off the rows. */
+/** The smoked ground every board of the arc paints first: 88% slate, so a frame is never a black rectangle. */
+export const SMOKED = 'rgba(12,18,25,0.88)';
+
+/** The panel's ground: smoked slate with the faintest 1 m-style grid, kept off the rows. */
 export function ground(g: CanvasRenderingContext2D, W: number, H: number) {
-  g.fillStyle = INK.bg;
+  g.clearRect(0, 0, W, H);
+  g.fillStyle = SMOKED;
   g.fillRect(0, 0, W, H);
-  g.fillStyle = 'rgba(43,55,68,0.35)';
+  g.fillStyle = 'rgba(43,55,68,0.3)';
   for (let x = 40; x < W; x += 40) g.fillRect(x, 0, 1, H);
   for (let y = 40; y < H; y += 40) g.fillRect(0, y, W, 1);
+}
+
+/** A soft band of `hue` inside every edge of a W by H board, `depth` deep, `strength` at the edge: the board's glow edge. */
+export function glowEdge(g: CanvasRenderingContext2D, W: number, H: number, hue: string, depth: number, strength: number) {
+  const c = new THREE.Color(hue);
+  const rgba = (a: number) => `rgba(${Math.round(c.r * 255)},${Math.round(c.g * 255)},${Math.round(c.b * 255)},${a})`;
+  const band = (x0: number, y0: number, x1: number, y1: number, x: number, y: number, w: number, h: number) => {
+    const grad = g.createLinearGradient(x0, y0, x1, y1);
+    grad.addColorStop(0, rgba(strength));
+    grad.addColorStop(1, rgba(0));
+    g.fillStyle = grad;
+    g.fillRect(x, y, w, h);
+  };
+  band(0, 0, 0, depth, 0, 0, W, depth);
+  band(0, H, 0, H - depth, 0, H - depth, W, depth);
+  band(0, 0, depth, 0, 0, 0, depth, H);
+  band(W, 0, W - depth, 0, W - depth, 0, depth, H);
 }
 
 /**
@@ -93,14 +115,12 @@ export function ground(g: CanvasRenderingContext2D, W: number, H: number) {
  * in mono) at the right, with a rule under both. Returns where the right-hand text starts, so a
  * board can draw glyphs before it.
  */
-export function titleBar(g: CanvasRenderingContext2D, W: number, title: string, right?: string): number {
+export function titleBar(g: CanvasRenderingContext2D, W: number, title: string, right?: string, ruleHue: string = INK.lineStrong): number {
   const { pad, titleBase, rule } = LAYOUT;
-  g.fillStyle = INK.bg;
-  g.fillRect(0, 0, W, rule);
   g.textBaseline = 'alphabetic';
   g.textAlign = 'left';
   g.fillStyle = INK.text;
-  g.font = UI(700, 58);
+  g.font = UI(700, 52);
   g.letterSpacing = '4px';
   g.fillText(title.toUpperCase(), pad, titleBase);
   const titleW = g.measureText(title.toUpperCase()).width;
@@ -109,14 +129,14 @@ export function titleBar(g: CanvasRenderingContext2D, W: number, title: string, 
   if (right) {
     g.textAlign = 'right';
     g.fillStyle = INK.dim;
-    g.font = MONO(32);
+    g.font = MONO(32, 600);
     const text = clip(g, right, W - pad * 3 - titleW);
-    g.fillText(text, W - pad, titleBase - 4);
+    g.fillText(text, W - pad, titleBase - 2);
     at = W - pad - g.measureText(text).width;
     g.textAlign = 'left';
   }
-  g.fillStyle = INK.lineStrong;
-  g.fillRect(pad, rule - 3, W - pad * 2, 3);
+  g.fillStyle = ruleHue;
+  g.fillRect(pad, rule - 4, W - pad * 2, 4);
   return at;
 }
 
@@ -153,8 +173,8 @@ export const rowTop = (i: number) => LAYOUT.top + i * (LAYOUT.rowH + LAYOUT.gap)
 export const MORE_H = 44;
 
 /**
- * How many rows fit on a board `H` canvas units tall with the "+N more" line under them: four at most,
- * fewer on a short panel (the situation arc's wings are two rows tall, the Attention board three).
+ * How many rows fit on a board `H` canvas units tall with the "+N more" line under them: six at most,
+ * fewer on a short panel (a wing panel is two rows tall, four once the one under it folds to a pill).
  */
 export function rowsFor(H: number): number {
   let n = LAYOUT.rows;
@@ -172,7 +192,7 @@ export function row(g: CanvasRenderingContext2D, W: number, i: number, r: Row, t
   const y = rowTop(i);
   const x0 = pad;
   const w = W - pad * 2;
-  g.fillStyle = r.lifted ? INK.cardHi : r.quiet ? 'rgba(27,35,45,0.6)' : INK.card;
+  g.fillStyle = r.lifted ? INK.cardHi : r.quiet ? 'rgba(27,35,45,0.7)' : INK.card;
   g.fillRect(x0, y, w, rowH);
   if (r.lifted) {
     g.strokeStyle = '#FF6A1A';
@@ -182,8 +202,8 @@ export function row(g: CanvasRenderingContext2D, W: number, i: number, r: Row, t
   g.fillStyle = r.hue;
   g.fillRect(x0, y, stripe, rowH);
   const k = r.k ?? 1;
-  const line1 = r.sub ? y + 47 + Math.round((k - 1) * 24) : y + rowH / 2 + 17 + Math.round((k - 1) * 18);
-  r.mark?.(g, x0 + glyphX - pad / 2, r.sub ? y + 32 : y + rowH / 2, 17);
+  const line1 = r.sub ? y + 60 + Math.round((k - 1) * 24) : y + rowH / 2 + 21 + Math.round((k - 1) * 18);
+  r.mark?.(g, x0 + glyphX - pad / 2, r.sub ? y + 40 : y + rowH / 2, 19);
   g.textBaseline = 'alphabetic';
   // The side text first, so the main line knows how much room it has.
   let right = x0 + w - 24;
@@ -203,19 +223,19 @@ export function row(g: CanvasRenderingContext2D, W: number, i: number, r: Row, t
     g.fillText(r.tag, x, line1 - 2);
     x += g.measureText(r.tag).width + 18;
   }
-  g.font = UI(600, Math.round(48 * k));
+  g.font = UI(650, Math.round(60 * k));
   g.fillStyle = r.quiet ? INK.dim : INK.text;
   const detailX = r.detail !== undefined && r.detailX !== undefined ? r.detailX : undefined;
   g.fillText(clip(g, r.text, (detailX ?? right) - x - (detailX ? 24 : 0)), x, line1);
   if (r.detail && detailX !== undefined) {
-    g.font = UI(500, Math.round(45 * k));
+    g.font = UI(500, Math.round(54 * k));
     g.fillStyle = r.quiet ? INK.dim : INK.text;
     g.fillText(clip(g, r.detail, right - detailX), detailX, line1);
   }
   if (r.sub) {
-    g.font = MONO(27);
+    g.font = MONO(27, 600);
     g.fillStyle = INK.dim;
-    g.fillText(clip(g, r.sub, x0 + w - 24 - (x0 + textX - pad)), x0 + textX - pad, y + 84);
+    g.fillText(clip(g, r.sub, x0 + w - 24 - (x0 + textX - pad)), x0 + textX - pad, y + 94);
   }
 }
 

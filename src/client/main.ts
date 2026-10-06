@@ -49,6 +49,7 @@ import { installPalette } from './features/palette';
 import { installPeers } from './features/peers';
 import { installSeating } from './features/seating';
 import { installTv } from './features/tv';
+import { installArcChrome } from './features/arcchrome';
 import { installVoice } from './features/voice';
 import { installWaiting } from './features/waiting';
 import { installWalking } from './features/walking';
@@ -115,7 +116,7 @@ parts.worlds = createWorlds(ctx);
 parts.boards = installBoards(ctx, { aimedNote: () => parts.pointer.aimedNote(), pickUp: (it) => parts.cards.pickUp(it), boardActions: () => parts.actions.boardActions(), showQueue: () => parts.waiting.showQueue() });
 installWhiteboard(ctx);
 // Onto whatever you're walking on: the office's floor and furniture.
-parts.tv = installTv(ctx, { shares: () => parts.talk.currentShares(), watch: () => parts.talk.watchShare() });
+parts.tv = installTv(ctx, { shares: () => parts.talk.currentShares(), watch: () => parts.talk.watchShare(), jumpReady: () => parts.space?.phase() === 'held' });
 
 // You, and how you talk to the office.
 parts.net = new Net(() => store.profile, () => parts.arrival.whereNow());
@@ -202,6 +203,7 @@ parts.overview = installOverview(ctx, parts);
 parts.flight = installFlight(ctx);
 parts.boardFaces = installBoardFaces(ctx, parts);
 installAmphitheater(ctx, parts);
+installArcChrome(ctx, parts);
 installFocusLean(ctx, parts);
 installDeclutter(ctx, parts);
 installDemo(ctx, parts);

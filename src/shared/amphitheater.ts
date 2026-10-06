@@ -138,6 +138,24 @@ export function wingPanel(side: -1 | 1, upper: boolean): ArcPanel {
   return { x, y, z, rotY: round(-side * turn), width, height };
 }
 
+/** How tall a wing's lower panel is folded to a one-line pill, while it has nothing to show (m). */
+export const PILL = 0.34;
+
+/**
+ * A wing's two panels' heights (m): as built, or with the lower one (Queue, Services) folded to a pill
+ * while it's empty and the upper one (Issues, Pull requests) taking the room it gave up. The upper
+ * keeps its top at ARC.top, the lower its foot at ARC.bottom, the gap between stays.
+ */
+export function wingHeights(lowerFolded: boolean): { upper: number; lower: number } {
+  const { height, gap } = ARC.wing;
+  return lowerFolded ? { upper: round(2 * height + gap - gap - PILL), lower: PILL } : { upper: height, lower: height };
+}
+
+/** The middle (y) of a wing's upper panel `upper` m tall, and of its lower panel `lower` m tall. */
+export function wingMiddles(upper: number, lower: number): { upper: number; lower: number } {
+  return { upper: round(ARC.top - upper / 2), lower: round(ARC.bottom + lower / 2) };
+}
+
 /**
  * The arc's centre of curvature, roughly at the dais: what hangs over the arc (the overhead strip, the
  * ticker) curves round it, `r` out, so it faces the conn all along.

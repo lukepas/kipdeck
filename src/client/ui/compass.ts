@@ -24,6 +24,31 @@ export function crowd<T extends { kind: BearingKind }>(marks: readonly T[], room
   return [...marks].sort((a, b) => PRIORITY[a.kind] - PRIORITY[b.kind]).slice(0, fits);
 }
 
+/** A box on screen (pixels, y down): a wall board's face the marks keep off. */
+export interface Avoid {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+/** How far a mark reaches round its middle down a side (px): its dial over, its name under. */
+const REACH = { x: 34, up: 18, down: 40 } as const;
+
+/**
+ * Where (y) a mark on a side edge at (`x`, `y`) goes to keep off every board in `avoid`: where it is
+ * when it's clear, else the nearest height between `top` and `bottom` where it is, else where it was.
+ */
+export function clearOf(x: number, y: number, avoid: readonly Avoid[], top: number, bottom: number): number {
+  const hits = (yy: number) => avoid.some((a) => x - REACH.x < a.right && x + REACH.x > a.left && yy - REACH.up < a.bottom && yy + REACH.down > a.top);
+  if (!hits(y)) return y;
+  for (let d = 4; d <= bottom - top; d += 4) {
+    if (y - d >= top && !hits(y - d)) return y - d;
+    if (y + d <= bottom && !hits(y + d)) return y + d;
+  }
+  return y;
+}
+
 /** From a mark's middle to the edge of the screen, or of the HUD it sits beside, with room for its tip (px). */
 const MARGIN = 34;
 /** How far apart marks on one edge keep: a dial and its name down a side, a name's width along the top or bottom (px). */
@@ -46,6 +71,8 @@ interface Mark {
  */
 export class Compass {
   private readonly marks = new Map<string, Mark>();
+  /** The units with a mark at the edge after the last update: their callouts stand down (one label a unit, features/workers/declutter.ts). */
+  readonly shown = new Set<string>();
   /** Where the marks can go: clear of the top bar, the Units rail, and the bottom bar and hint along the bottom. */
   private box = { top: 0, right: 0, bottom: 0, left: 0 };
   /** Where the Units rail ends on screen (0 when it's folded away): a unit under it is out of view. */
@@ -56,8 +83,8 @@ export class Compass {
 
   constructor(private readonly root: HTMLElement) {}
 
-  /** Call after rendering, so the camera's matrices are this frame's. */
-  update(camera: THREE.Camera, bearings: readonly Bearing[], now: number) {
+  /** Call after rendering, so the camera's matrices are this frame's; `avoid`, the boards' faces on screen, which the marks keep off. */
+  update(camera: THREE.Camera, bearings: readonly Bearing[], now: number, avoid: readonly Avoid[] = []) {
     if (now - this.measured > 1000) this.measure(now);
     const cx = window.innerWidth / 2;
     const cy = window.innerHeight / 2;
@@ -88,8 +115,10 @@ export class Compass {
       else if (dy < 0) s = Math.min(s, (top - cy) / dy);
       if (!Number.isFinite(s)) continue;
       const x = cx + dx * s;
-      const y = cy + dy * s;
+      let y = cy + dy * s;
       const edge = x <= left + 1 ? 'left' : x >= right - 1 ? 'right' : y <= top + 1 ? 'top' : 'bottom';
+      // Down a side, off any board's face: a mark never sits on a board's words.
+      if (edge === 'left' || edge === 'right') y = clearOf(x, y, avoid, top, bottom);
       placed.push({ b, x, y, angle: Math.atan2(dy, dx), edge });
     }
     // Workers at desks side by side land on top of each other: spread them out along their edge, and
@@ -110,8 +139,18 @@ export class Compass {
       // Pushed off the end: back the lot up.
       const over = row.length ? row[row.length - 1][axis] - (side ? bottom : right) : 0;
       if (over > 0) for (const p of row) p[axis] = Math.max(side ? top : left, p[axis] - over);
+      // Spread along a side, still off the boards' faces: the most important first, each then keeping
+      // off the ones placed before it too.
+      if (side && avoid.length) {
+        const taken: Avoid[] = [];
+        for (const p of [...row].sort((a, b) => PRIORITY[a.kind] - PRIORITY[b.kind])) {
+          p.y = clearOf(p.x, p.y, [...avoid, ...taken], top, bottom);
+          taken.push({ left: p.x - REACH.x, right: p.x + REACH.x, top: p.y - REACH.up, bottom: p.y + REACH.down });
+        }
+      }
     }
-    const seen = new Set<string>();
+    const seen = this.shown;
+    seen.clear();
     for (const p of kept) {
       seen.add(p.b.id);
       const m = this.mark(p.b);

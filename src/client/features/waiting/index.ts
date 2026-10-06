@@ -20,7 +20,7 @@ import { openSearch } from '../../ui/search';
 import { openTerminal, type TerminalFind } from '../../ui/terminal';
 
 /** Registers N (and the Units rail's next button), the compass's tick ('render') and / (search). */
-export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worlds' | 'views' | 'actions' | 'mission' | 'overview'>) {
+export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worlds' | 'views' | 'actions' | 'mission' | 'overview' | 'boardFaces'>) {
   const { player, camera, net } = ctx;
   const nextUp = new NextUp();
   const compass = new Compass($('compass'));
@@ -139,12 +139,13 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
         const v = parts.views.workerViews.get(w.id);
         const kind = v?.model.showing;
         if (!v || (kind !== 'needs-you' && kind !== 'stuck' && kind !== 'review')) continue;
-        const at = v.model.root.getWorldPosition((heads[bearings.length] ??= new THREE.Vector3()));
+        // Where the unit is (its mover: one that needs you stands on its pod's ready line), not its seat.
+        const at = v.model.where((heads[bearings.length] ??= new THREE.Vector3()));
         at.y += 1.2;
         bearings.push({ id: w.id, name: w.name, kind, at });
       }
     }
-    compass.update(camera, bearings, now);
+    compass.update(camera, bearings, now, parts.boardFaces?.faces().flatMap((f) => (f.px ? [f.px] : [])) ?? []);
   }
   // Over the frame once it's drawn (the camera's where it's drawn from).
   ctx.ticks.add('render', ({ now }) => pointToWaiting(now));
@@ -184,5 +185,8 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     openQueue(net, { openTerminal: openWorkerTerminal });
   }
 
-  return { goToNextWaiting, goToWorker, answerWorker, renderWaiting, openWorkerTerminal, openWorkerChanges, showSearch, showQueue };
+  /** The units the compass points to now, at the edge of the view (their callouts give way to it). */
+  const pointed = (): ReadonlySet<string> => compass.shown;
+
+  return { goToNextWaiting, goToWorker, answerWorker, renderWaiting, openWorkerTerminal, openWorkerChanges, showSearch, showQueue, pointed };
 }

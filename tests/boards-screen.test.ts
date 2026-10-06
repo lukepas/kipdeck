@@ -1,12 +1,14 @@
-// The wall boards' shared layout (features/boards/screen.ts) and the Attention board painted with it:
-// text is cut with an ellipsis instead of running off, as many rows as each panel takes (two on the
-// arc's wings, three on the Attention board) and the "+N more" line fit on every board, and the
-// Attention board lists the most in need first with the rest counted.
+// The wall boards' shared layout (features/boards/screen.ts) and the Attention board (features/tv):
+// text is cut with an ellipsis instead of running off, as many rows as each wing panel takes (two as
+// built, four once the panel under it folds) and the "+N more" line fit, and the Attention board
+// shows a card for every unit waiting on someone, the rest counted in chips along its foot.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { LAYOUT, MORE_H, UNITS_PER_M, clip, rowTop, rowsFor } from '../src/client/features/boards/screen.js';
-import { BAND_H, BAND_TILES, bandCounts, paintAttention } from '../src/client/features/tv/attention.js';
+import { HEADER_COUNTS, HERO, paintAttention } from '../src/client/features/tv/attention.js';
+import { GRIDS } from '../src/client/features/tv/plan.js';
 import { SITUATION, TV } from '../src/shared/layout.js';
+import { wingHeights } from '../src/shared/amphitheater.js';
 import type { Ranked } from '../src/shared/attention.js';
 
 /** A canvas stand-in: every glyph 0.55 of the font's size wide, and a record of the text drawn. */
@@ -39,6 +41,8 @@ function canvasSpy() {
     lineTo: noop,
     arc: noop,
     rect: noop,
+    clearRect: noop,
+    createLinearGradient: () => ({ addColorStop: noop }),
     fill: noop,
     stroke: noop,
     save: noop,
@@ -61,9 +65,12 @@ test('clip keeps text that fits and cuts the rest to fit with an ellipsis', () =
   assert.equal(clip(g, 'Anything', 0), '');
 });
 
-test('the rows and the "+N more" line fit on every board of the situation arc', () => {
-  for (const [name, b, band, least] of [['work board', SITUATION, 0, 2], ['Attention', TV, BAND_H, 3]] as const) {
-    const H = Math.round(b.height * UNITS_PER_M) - band;
+test('the rows and the "+N more" line fit on every wing panel, as built and grown', () => {
+  for (const [name, h, least] of [
+    ['wing panel', SITUATION.height, 2],
+    ['grown wing panel', wingHeights(true).upper, 4],
+  ] as const) {
+    const H = Math.round(h * UNITS_PER_M);
     const n = rowsFor(H);
     assert.ok(n >= least, `${name}: ${n} rows, at least ${least}`);
     const bottom = rowTop(n - 1) + LAYOUT.rowH;
@@ -73,11 +80,19 @@ test('the rows and the "+N more" line fit on every board of the situation arc', 
   }
 });
 
-function ranked(level: Ranked['att']['level'], name: string, deskId: string, label: string): Ranked {
-  return { entry: { id: name, name, deskId, task: { name: label }, activity: undefined } as unknown as Ranked['entry'], att: { level, label, since: Date.now() - 90_000, action: { kind: 'open' } } as unknown as Ranked['att'] };
+function ranked(level: Ranked['att']['level'], name: string, deskId: string, label: string, extra: Record<string, unknown> = {}): Ranked {
+  return { entry: { id: name, name, deskId, task: { name: label }, activity: undefined, tasked: true, status: 'working', ...extra } as unknown as Ranked['entry'], att: { level, label, since: Date.now() - 90_000, action: { kind: 'open' }, snoozed: false } as unknown as Ranked['att'] };
 }
 
-test('the Attention board shows the most in need, as many as it takes, counts the rest, and runs nothing off its edge', () => {
+/** Every text drawn lies inside the board. */
+function inside(texts: ReturnType<typeof canvasSpy>['texts'], W: number) {
+  for (const t of texts) {
+    const left = t.align === 'right' ? t.x - t.width : t.align === 'center' ? t.x - t.width / 2 : t.x;
+    assert.ok(left >= 0 && left + t.width <= W - HERO.pad + 1, `"${t.text}" runs off the board`);
+  }
+}
+
+test('the Attention board cards every unit waiting on someone, stuck first, and counts the rest in chips', () => {
   const { g, texts } = canvasSpy();
   const W = Math.round(TV.width * UNITS_PER_M);
   const H = Math.round(TV.height * UNITS_PER_M);
@@ -88,51 +103,53 @@ test('the Attention board shows the most in need, as many as it takes, counts th
     ranked('review', 'Widget', 'desk-6', 'Done'),
     ranked('review', 'Dot', 'desk-13', 'Done'),
     ranked('working', 'Byte', 'desk-2', 'Migrate the payments webhook'),
+    ranked('working', 'Gizmo', 'desk-9', 'Rate limits'),
   ];
-  paintAttention(g, W, H, crew, Date.now());
+  const { plan, anchors } = paintAttention(g, W, H, crew, Date.now());
   const said = texts.map((t) => t.text);
-  assert.ok(said.includes('ATTENTION'), 'its name in the title bar');
-  const n = rowsFor(H - BAND_H);
-  const names = crew.map((r) => r.entry.name);
-  for (const name of names.slice(0, n)) assert.ok(said.includes(name), `${name} is listed`);
-  for (const name of names.slice(n)) assert.ok(!said.includes(name), `${name} is counted, not listed`);
-  assert.ok(said.includes(`+${names.length - n} more`));
-  for (const t of texts) {
-    const left = t.align === 'right' ? t.x - t.width : t.align === 'center' ? t.x - t.width / 2 : t.x;
-    assert.ok(left >= 0 && left + t.width <= W - LAYOUT.pad + 1, `"${t.text}" runs off the board`);
-  }
+  assert.ok(said.includes('ATTENTION'), 'its name in the header');
+  for (const name of ['Cosmo', 'Pixel', 'Nibble', 'Widget', 'Dot']) assert.ok(said.includes(name), `${name} has a card`);
+  // Stuck first, then needs you, then to review.
+  assert.deepEqual(anchors.map((a) => a.id), ['Cosmo', 'Pixel', 'Nibble', 'Widget', 'Dot']);
+  // Two working units, one card left: they don't all fit, so they're one counted chip.
+  assert.ok(!said.includes('Byte') && !said.includes('Gizmo'));
+  assert.ok(said.includes('WORKING 2'));
+  assert.equal(plan.grid.name, 'full');
+  inside(texts, W);
 });
 
-test('with everyone at work the Attention board says so instead of listing them', () => {
+test("the Attention board's header counts what the top bar counts, in its order, and says JUMP READY when a jump waits", () => {
   const { g, texts } = canvasSpy();
   const W = Math.round(TV.width * UNITS_PER_M);
   const H = Math.round(TV.height * UNITS_PER_M);
-  paintAttention(g, W, H, [ranked('working', 'Byte', 'desk-2', 'Migrate'), ranked('working', 'Gizmo', 'desk-9', 'Rate limits')], Date.now());
+  const crew = [ranked('needs-you', 'Pixel', 'desk-1', 'Needs an answer'), ranked('needs-you', 'Nibble', 'desk-3', 'Needs an answer'), ranked('stuck', 'Cosmo', 'desk-11', 'Crashed (exit 3)'), ranked('review', 'Widget', 'desk-6', 'Done'), ranked('working', 'Byte', 'desk-2', 'Migrate')];
+  paintAttention(g, W, H, crew, Date.now(), { jumpReady: true });
   const said = texts.map((t) => t.text);
-  assert.ok(said.includes('All units on task. Nothing needs you.'));
-  assert.ok(!said.includes('Byte'));
-});
-
-test("the Attention board's count band counts the same list its rows show, with a word under each number", () => {
-  const { g, texts } = canvasSpy();
-  const W = Math.round(TV.width * UNITS_PER_M);
-  const H = Math.round(TV.height * UNITS_PER_M);
-  const crew = [
-    ranked('needs-you', 'Pixel', 'desk-1', 'Needs an answer'),
-    ranked('needs-you', 'Nibble', 'desk-3', 'Needs an answer'),
-    ranked('stuck', 'Cosmo', 'desk-11', 'Crashed (exit 3)'),
-    ranked('review', 'Widget', 'desk-6', 'Done'),
-    ranked('working', 'Byte', 'desk-2', 'Migrate the payments webhook'),
-    ranked('parked', 'Idle', 'desk-4', 'On deck'),
-  ];
-  paintAttention(g, W, H, crew, Date.now());
-  const counts = bandCounts(crew.filter((r) => r.att.level !== 'parked'));
-  assert.deepEqual([counts['needs-you'], counts.stuck, counts.working, counts.review], [2, 1, 1, 1]);
-  assert.deepEqual(BAND_TILES.map(([, w]) => w), ['NEEDS YOU', 'STUCK', 'RUNNING', 'DONE']);
-  const said = texts.map((t) => t.text);
-  for (const [, word] of BAND_TILES) assert.ok(said.includes(word), `${word} is in the band`);
-  // The numbers come first, in the band's order, before the board's own title.
+  assert.deepEqual(HEADER_COUNTS.map(([, w]) => w), ['NEED YOU', 'STUCK', 'REVIEW', 'WORKING']);
+  for (const [, word] of HEADER_COUNTS) assert.ok(said.includes(word), `${word} is in the header`);
+  assert.ok(said.includes('JUMP READY'));
+  // The numbers are drawn right to left: working, review, stuck, needs you.
   const title = said.indexOf('ATTENTION');
-  assert.deepEqual(said.slice(0, title).filter((t) => /^\d+$/.test(t)), ['2', '1', '1', '1']);
-  assert.ok(BAND_H >= 140 && BAND_H <= 160, 'about 0.75 m tall');
+  const firstCard = said.indexOf('Cosmo');
+  assert.deepEqual(said.slice(title, firstCard).filter((t) => /^\d+$/.test(t)), ['1', '1', '1', '2']);
+  inside(texts, W);
+});
+
+test("the Attention board's full-size names are set big enough to read from the captain's chair", () => {
+  // 0.5 m type on the full grid: a cap height of about 17 px at 1440x900 from the chair, 17.6 m off at 50 degrees.
+  assert.equal(GRIDS[0].nameM, 0.5);
+  const focal = 450 / Math.tan((25 * Math.PI) / 180);
+  const cap = 0.68 * GRIDS[0].nameM;
+  assert.ok((cap * focal) / 17.6 >= 16, `${((cap * focal) / 17.6).toFixed(1)} px`);
+});
+
+test('with everyone at work the Attention board says so, and lists them when they fit', () => {
+  const W = Math.round(TV.width * UNITS_PER_M);
+  const H = Math.round(TV.height * UNITS_PER_M);
+  const a = canvasSpy();
+  paintAttention(a.g, W, H, [ranked('working', 'Byte', 'desk-2', 'Migrate'), ranked('working', 'Gizmo', 'desk-9', 'Rate limits')], Date.now());
+  assert.ok(a.texts.some((t) => t.text === 'Byte'), 'two working units fit: they get cards');
+  const b = canvasSpy();
+  paintAttention(b.g, W, H, [], Date.now());
+  assert.ok(b.texts.some((t) => t.text === 'No units on this deck'));
 });

@@ -17,6 +17,7 @@ import { openServices } from '../../ui/services';
 import { BoardTexture, QueueBoardTexture, ServicesBoardTexture } from './world';
 import { MachineTexture } from './machine';
 import { MeetingBoardTexture, MeetingSignTexture } from './meeting';
+import { foldWings } from './fold';
 import type { World } from '../../world/world';
 
 // The kinds of thing you can use that this defines (see InteractKinds in world/types.ts).
@@ -100,6 +101,11 @@ export function installBoards(ctx: Ctx, deps: BoardsDeps) {
   const queueTex = new QueueBoardTexture();
   const renderQueueBoard = () => queueTex.render(store.queue, store.workers);
   mountBoard(office.boardMeshes.queue, queueTex.texture, renderQueueBoard, ['queue', 'workers']);
+  // An empty Queue or Services folds to a pill, and Issues or Pull requests over it takes the room (fold.ts).
+  const fold = foldWings(ctx, [
+    { upper: 'issues', lower: 'queue', up: { panel: issuesTex.panel, setHeight: (m) => issuesTex.setHeight(m) }, down: queueTex },
+    { upper: 'pulls', lower: 'services', up: { panel: pullsTex.panel, setHeight: (m) => pullsTex.setHeight(m) }, down: servicesTex },
+  ]);
   ctx.interactions.define('issues', {
     reach: 9,
     hint: () => {
@@ -150,5 +156,8 @@ export function installBoards(ctx: Ctx, deps: BoardsDeps) {
     if (w.meetingSign) showOn(w.meetingSign, meetingSignTex.texture);
   }
 
-  return { issuesTex, renderPullsBoard, renderServicesBoard, renderQueueBoard, dressBoards, cardMoved };
+  /** Each work board's most urgent state now, for the colour of its chrome (features/arcchrome). */
+  const urgency = () => ({ issues: null, pulls: pullsTex.urgency, queue: queueTex.urgency, services: null }) as const;
+
+  return { issuesTex, renderPullsBoard, renderServicesBoard, renderQueueBoard, dressBoards, cardMoved, rects: fold.rects, folded: fold.folded, urgency };
 }

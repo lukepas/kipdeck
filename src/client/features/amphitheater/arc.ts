@@ -7,7 +7,7 @@ import { mergeByMaterial, mesh } from '../../world/toon';
 import { canopyPoint } from '../bridge/shapes';
 
 // The situation arc's own structure (the boards on it are features/boards' and features/tv's, their
-// bezels features/bridge/displays.ts'): a smoked-glass backing pane behind each panel, so the boards
+// chrome features/arcchrome'): a smoked-glass backing pane behind each panel, so the boards
 // read as lit glass hung in front of space rather than slabs; a graphite spine along the arc's top and
 // foot with a ship-cyan hairline; and hangers up to the canopy. Nothing of it stands on the deck.
 

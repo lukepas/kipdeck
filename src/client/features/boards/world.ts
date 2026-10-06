@@ -2,8 +2,9 @@ import { DATA_COLORS } from '../../../shared/datacolors';
 import * as THREE from 'three';
 import { OFFICE_PLAN } from '../../../shared/plan';
 import { SITUATION } from '../../../shared/layout';
+import { PILL, wingHeights } from '../../../shared/amphitheater';
 import { drawGlyph, type GlyphKind } from '../../world/glyphs';
-import { INK, LAYOUT, emptyBody, ground, more, offlineBody, row, rowTop, rowsFor, screen, titleBar, type Row, type Screen } from './screen';
+import { INK, LAYOUT, MONO, UI, UNITS_PER_M, clip as clipText, emptyBody, glowEdge, ground, more, offlineBody, row, rowTop, rowsFor, screen, titleBar, type Row, type Screen } from './screen';
 import type { GhIssue, GhPull, GhState, QueueState, QueueTask, ServiceInfo, WorkerInfo } from '../../../shared/protocol';
 import { workerForPull } from '../../state';
 
@@ -66,6 +67,71 @@ export function offlineLine(error: string): string {
 
 export { clip } from './screen';
 
+/**
+ * A wing panel's canvas: allotted for the tallest the panel gets (an upper one with the panel under it
+ * folded, ./fold.ts), and drawn `h` canvas units tall of it from the top. The texture shows only that
+ * much (its repeat and offset), so the face can grow or shrink without stretching the type.
+ */
+export class Panel {
+  readonly s: Screen;
+  /** How tall the panel is drawn now (canvas units). */
+  h: number;
+  constructor(maxM: number, nowM: number) {
+    this.s = screen(SITUATION.width, maxM);
+    this.h = Math.round(nowM * UNITS_PER_M);
+    this.show(nowM);
+  }
+  /** Draws from now on `m` metres tall; true if that's a change. */
+  setHeight(m: number): boolean {
+    const h = Math.round(m * UNITS_PER_M);
+    if (h === this.h) return false;
+    this.h = h;
+    return true;
+  }
+  /** Shows the top `m` metres of the canvas on the face (as it grows or shrinks). */
+  show(m: number) {
+    const t = this.s.texture;
+    const k = Math.min(1, (m * UNITS_PER_M) / this.s.H);
+    t.repeat.set(1, k);
+    t.offset.set(0, 1 - k);
+  }
+}
+
+/** The colour a board's edges glow in for its most urgent state: none for a board with nothing waiting. */
+export type BoardUrgency = 'needs-you' | 'stuck' | 'review' | null;
+const URGENT_HUE = { 'needs-you': PANEL.signal, stuck: PANEL.stuck, review: PANEL.review } as const;
+/** The glow edge and the title's rule for `u`. */
+function urgentEdge(g: CanvasRenderingContext2D, W: number, H: number, u: BoardUrgency): string {
+  if (!u) return INK.lineStrong;
+  glowEdge(g, W, H, URGENT_HUE[u], 26, u === 'review' ? 0.22 : 0.36);
+  return URGENT_HUE[u];
+}
+
+/**
+ * A folded panel: one line, its name and that it's clear ("QUEUE - clear"), on the smoked ground, with
+ * a ship-cyan hairline at its left, `h` canvas units tall.
+ */
+function paintPill(g: CanvasRenderingContext2D, W: number, h: number, name: string, says: string) {
+  ground(g, W, h);
+  g.fillStyle = '#2C5E70';
+  g.fillRect(0, 0, 8, h);
+  g.textBaseline = 'middle';
+  g.textAlign = 'left';
+  g.fillStyle = INK.text;
+  g.font = UI(700, 40);
+  g.letterSpacing = '4px';
+  g.fillText(name, LAYOUT.pad, h / 2 + 2);
+  const w = g.measureText(name).width;
+  g.letterSpacing = '0px';
+  g.fillStyle = INK.dim;
+  g.font = UI(600, 36);
+  g.fillText(clipText(g, `- ${says}`, W - LAYOUT.pad * 2 - w - 20), LAYOUT.pad + w + 18, h / 2 + 2);
+  g.textBaseline = 'alphabetic';
+}
+
+/** A folded panel's height in canvas units. */
+export const PILL_H = Math.round(PILL * UNITS_PER_M);
+
 /** A row as it was last drawn: which item it is, and its box on the board (canvas units). */
 interface DrawnNote {
   number: number;
@@ -83,8 +149,12 @@ const CHECKS: Record<GhPull['checks'], [string, string] | null> = { pass: ['chec
 /** Draws the Issues or the Pull requests board: a row per open item, the oldest first, four at most. */
 export class BoardTexture {
   readonly texture: THREE.CanvasTexture;
-  private s: Screen = screen(SITUATION.width, SITUATION.height);
+  /** As tall as it gets with the panel under it folded, drawn as tall as it is now (./fold.ts). */
+  readonly panel = new Panel(wingHeights(true).upper, SITUATION.height);
+  private s: Screen = this.panel.s;
   private notes: DrawnNote[] = [];
+  /** Its most urgent state, for its edges: a failing PR's red, one waiting for review's amber. */
+  urgency: BoardUrgency = null;
   /** The row being reached for, outlined in Signal (see lift). */
   private lifted: number | null = null;
   private last: [GhState<GhIssue> | GhState<GhPull>, Map<string, WorkerInfo> | undefined] | null = null;
@@ -101,7 +171,7 @@ export class BoardTexture {
   /** The item at a point on the board's face (its uv), or undefined over bare panel. */
   noteAt(uv: THREE.Vector2): number | undefined {
     const px = uv.x * this.s.W;
-    const py = (1 - uv.y) * this.s.H;
+    const py = (1 - uv.y) * this.panel.h;
     return this.notes.find((n) => Math.abs(px - n.x) <= n.w / 2 && Math.abs(py - n.y) <= n.h / 2)?.number;
   }
 
@@ -113,14 +183,24 @@ export class BoardTexture {
   }
 
   /** `workers` lets a PR's row name the unit and console it came from. */
+  /** Draws it `m` metres tall from now on (./fold.ts), again if that's a change. */
+  setHeight(m: number) {
+    if (this.panel.setHeight(m) && this.last) this.render(...this.last);
+  }
+
   render(state: GhState<GhIssue> | GhState<GhPull>, workers?: Map<string, WorkerInfo>) {
     this.last = [state, workers];
     this.notes = [];
-    const { g, W, H } = this.s;
+    const { g, W } = this.s;
+    const H = this.panel.h;
     const pulls = this.kind === 'pulls';
+    g.clearRect(0, 0, W, this.s.H);
     ground(g, W, H);
     const open = (state.items as (GhIssue | GhPull)[]).filter((i) => i.state === 'OPEN');
-    titleBar(g, W, pulls ? 'Pull requests' : 'Issues', open.length ? `${open.length} open` : undefined);
+    const prs = pulls ? (open as GhPull[]) : [];
+    this.urgency = prs.some((p) => !p.isDraft && p.checks === 'fail') ? 'stuck' : prs.some((p) => !p.isDraft && p.reviewDecision !== 'APPROVED') ? 'review' : null;
+    const rule = urgentEdge(g, W, H, this.urgency);
+    titleBar(g, W, pulls ? 'Pull requests' : 'Issues', open.length ? `${open.length} open` : undefined, rule);
     if (!open.length) {
       if (state.error) offlineBody(g, W, H, offlineLine(state.error));
       else emptyBody(g, W, H, state.loading && !state.fetchedAt ? 'Loading' : pulls ? 'No open pull requests' : 'No open issues', pulls ? "A unit's PR lands here when it opens one" : 'New issues land here first');
@@ -150,8 +230,11 @@ export class BoardTexture {
 /** The Services board: the web servers units are running, a row each with its port in mono. */
 export class ServicesBoardTexture {
   readonly texture: THREE.CanvasTexture;
-  private s: Screen = screen(SITUATION.width, SITUATION.height);
+  readonly panel = new Panel(SITUATION.height, SITUATION.height);
+  private s: Screen = this.panel.s;
   private drawn = '';
+  /** Nothing running: folded to a pill (./fold.ts). */
+  folded = false;
 
   constructor() {
     this.texture = this.s.texture;
@@ -166,14 +249,18 @@ export class ServicesBoardTexture {
     const key = JSON.stringify(rows);
     if (key === this.drawn) return;
     this.drawn = key;
-    const { g, W, H } = this.s;
-    ground(g, W, H);
-    titleBar(g, W, 'Services', rows.length ? `${rows.length} running` : undefined);
-    if (!rows.length) {
-      emptyBody(g, W, H, 'No web servers running', 'When a unit starts one, it shows up here');
+    const { g, W } = this.s;
+    this.folded = !rows.length;
+    this.panel.setHeight(this.folded ? PILL : SITUATION.height);
+    const H = this.panel.h;
+    g.clearRect(0, 0, W, this.s.H);
+    if (this.folded) {
+      paintPill(g, W, H, 'SERVICES', 'none running');
       this.texture.needsUpdate = true;
       return;
     }
+    ground(g, W, H);
+    titleBar(g, W, 'Services', `${rows.length} running`);
     const up = (g: CanvasRenderingContext2D, x: number, y: number, r: number) => {
       g.fillStyle = PANEL.settled;
       g.beginPath();
@@ -190,8 +277,13 @@ export class ServicesBoardTexture {
 /** The Queue board: who is on what, what's waiting, and the PRs that came out of it, a row each. */
 export class QueueBoardTexture {
   readonly texture: THREE.CanvasTexture;
-  private s: Screen = screen(SITUATION.width, SITUATION.height);
+  readonly panel = new Panel(SITUATION.height, SITUATION.height);
+  private s: Screen = this.panel.s;
   private drawn = '';
+  /** Nothing queued, running or lately done: folded to a pill (./fold.ts). */
+  folded = false;
+  /** A unit on one of its tasks needs you: its edges glow orange. */
+  urgency: BoardUrgency = null;
 
   constructor() {
     this.texture = this.s.texture;
@@ -221,14 +313,19 @@ export class QueueBoardTexture {
     const key = JSON.stringify([rows.map((r) => [r.hue, r.tag, r.text, r.side, r.sub]), summary]);
     if (key === this.drawn) return;
     this.drawn = key;
-    const { g, W, H } = this.s;
-    ground(g, W, H);
-    titleBar(g, W, 'Queue', summary);
-    if (!rows.length) {
-      emptyBody(g, W, H, 'Nothing queued', 'Add issues from the Issues board, or press E here');
+    const { g, W } = this.s;
+    this.folded = !rows.length;
+    this.urgency = rows.some((r) => r.hue === PANEL.signal) ? 'needs-you' : null;
+    this.panel.setHeight(this.folded ? PILL : SITUATION.height);
+    const H = this.panel.h;
+    g.clearRect(0, 0, W, this.s.H);
+    if (this.folded) {
+      paintPill(g, W, H, 'QUEUE', state.maxWorkers === 0 ? 'paused' : 'clear');
       this.texture.needsUpdate = true;
       return;
     }
+    ground(g, W, H);
+    titleBar(g, W, 'Queue', summary, urgentEdge(g, W, H, this.urgency));
     const shown = rows.slice(0, rowsFor(H));
     shown.forEach((r, i) => row(g, W, i, r));
     more(g, W, H, rows.length - shown.length);

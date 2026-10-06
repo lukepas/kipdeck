@@ -27,7 +27,7 @@ import { skin } from '../../features/bridge/skin';
 import { inlay } from '../../features/bridge/inlay';
 import { conn } from '../../features/bridge/conn';
 import { holo } from '../../features/bridge/holo';
-import { displays } from '../../features/bridge/displays';
+import { arcChrome } from '../../features/arcchrome/world';
 import { stations } from '../../features/bridge/stations';
 import { panels } from '../../features/life/panels';
 import { pulses } from '../../features/life/pulses';
@@ -76,7 +76,8 @@ function floorPlan() {
     situationArc,
     boards,
     tv,
-    displays,
+    // The lit bezels and corner brackets round the arc's boards (features/arcchrome).
+    arcChrome,
     ticker,
     machineMonitor,
     proofCorner,

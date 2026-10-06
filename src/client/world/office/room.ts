@@ -29,7 +29,7 @@ export const boards: Fixture<'boardMeshes'> = (site) => {
     // Out from the wall, the way the board faces.
     const nx = Math.sin(b.rotY);
     const nz = Math.cos(b.rotY);
-    const { group: bg, face } = wallBoard(b.width, b.height);
+    const { group: bg, face } = wallBoard(b.width, b.height, true);
     bg.position.set(b.x + nx * 0.06, b.y, b.z + nz * 0.06);
     bg.rotation.y = b.rotY;
     site.group.add(bg);
@@ -47,7 +47,7 @@ export const boards: Fixture<'boardMeshes'> = (site) => {
 export const tv: Fixture<'tvScreen'> = (site) => {
   const nx = Math.sin(TV.rotY);
   const nz = Math.cos(TV.rotY);
-  const { group: tvGroup, face: tvScreen } = wallBoard(TV.width, TV.height);
+  const { group: tvGroup, face: tvScreen } = wallBoard(TV.width, TV.height, true);
   tvGroup.position.set(TV.x + nx * 0.06, TV.y, TV.z + nz * 0.06);
   tvGroup.rotation.y = TV.rotY;
   site.group.add(tvGroup);
@@ -59,7 +59,7 @@ export const tv: Fixture<'tvScreen'> = (site) => {
 
 /** The capacity strip along the foot of the situation arc, under the Attention board, facing the conn. */
 export const machineMonitor: Fixture<'machineScreen'> = (site) => {
-  const { group: monitor, face: machineScreen } = wallBoard(MACHINE_MONITOR.width, MACHINE_MONITOR.height);
+  const { group: monitor, face: machineScreen } = wallBoard(MACHINE_MONITOR.width, MACHINE_MONITOR.height, true);
   const m = MACHINE_MONITOR;
   monitor.position.set(m.x + Math.sin(m.rotY) * 0.06, m.y, m.z + Math.cos(m.rotY) * 0.06);
   monitor.rotation.y = m.rotY;

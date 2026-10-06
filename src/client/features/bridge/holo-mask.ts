@@ -59,7 +59,7 @@ const CONN_EYE = (() => {
   const seat = SEATING_BY_ID.get('conn')!;
   return { y: seat.y + 1.4 + seat.hips - 0.8, z: seat.z + Math.cos(seat.rotY) * seat.depth } as const;
 })();
-/** How far under a board's face its bottom bezel reaches (bridge/displays.ts), and a hair more. */
+/** How far under a board's face its bottom bezel reaches (features/arcchrome), and a hair more. */
 const BEZEL = 0.15;
 /** The tallest the holo stands over the deck, anywhere. */
 export const HOLO_TOP = 2.3;

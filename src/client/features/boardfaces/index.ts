@@ -23,8 +23,8 @@ export interface Face {
   px: PxRect | null;
 }
 
-/** How far past the face its bezel and hairlines reach (m, bridge/displays.ts). */
-const BEZEL = 0.16;
+/** How far past the face its bezel and corner brackets reach (m, features/arcchrome/logic.ts). */
+const BEZEL = 0.2;
 
 export function installBoardFaces(ctx: Ctx, parts: Pick<Parts, 'stage'>) {
   const faces: Face[] = FACE_IDS.map((id) => ({ id, rect: null, px: null }));
