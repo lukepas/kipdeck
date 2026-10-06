@@ -2,7 +2,8 @@
 // it stands, how long it has left), the Fund window (a browser wallet signs; or the Blink link to
 // share), and the badge over a worker holding a claimed bounty. Devnet only.
 import './bounty.css';
-import type { BountyPhase, BountyView } from '../../shared/protocol';
+import type { BountyView } from '../../shared/protocol';
+import { PHASE_LABEL, timeLeft } from '../../shared/bounty-text';
 import { tokenAmount } from '../../shared/review';
 import type { Net } from '../net';
 import { store } from '../state';
@@ -10,17 +11,7 @@ import { h, openModal, toast } from './dom';
 import { connect, signAndSend, solanaWallets, type StdAccount, type StdWallet } from './wallet';
 import { icon } from './icons';
 
-const PHASE_LABEL: Record<BountyPhase, string> = {
-  open: 'open',
-  claimed: 'claimed',
-  'awaiting-approval': 'merged: waits for approval',
-  blocked: 'blocked',
-  paying: 'paying out',
-  released: 'paid',
-  refunded: 'refunded',
-  cancelled: 'cancelled',
-  expired: 'expired',
-};
+export { timeLeft };
 
 /** The floor you're on's bounties, when they're on. */
 export function floorBounties() {
@@ -30,14 +21,6 @@ export function floorBounties() {
 
 export function bountyOf(issue: number): BountyView | undefined {
   return floorBounties()?.items.find((b) => b.issue === issue);
-}
-
-/** "3 d left", "5 h left", "expired". */
-export function timeLeft(expiry: number, now = Date.now()): string {
-  const ms = expiry - now;
-  if (ms <= 0) return 'expired';
-  const h = Math.floor(ms / 3_600_000);
-  return h >= 48 ? `${Math.floor(h / 24)} d left` : h >= 1 ? `${h} h left` : `${Math.max(1, Math.floor(ms / 60_000))} min left`;
 }
 
 export const amountOf = (b: BountyView) => `${tokenAmount(b.amount, b.decimals)} ${b.symbol}`;
