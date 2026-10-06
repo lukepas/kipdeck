@@ -60,9 +60,9 @@ export function arrivalSettle(k: number): number {
  * comes and goes. A third of a degree and 6 mm: enough to feel the ship under you, where the first
  * tenth of a degree was below anyone's notice. It plays in every state, a unit waiting or not.
  */
-export const BREATHE = { idleMs: 4000, pitch: 0.35 * DEG, roll: 0.25 * DEG, lift: 0.006, inS: 2.5, outS: 0.25 } as const;
+export const BREATHE = { idleMs: 4000, pitch: 0.6 * DEG, roll: 0.3 * DEG, lift: 0.008, inS: 2.5, outS: 0.25 } as const;
 /** The breathing's own periods (s): pitch, a second pitch, roll and lift, between 7 and 11 so nothing repeats in step. */
-export const BREATHE_PERIODS = { pitch: 7.3, pitch2: 11, roll: 9.1, lift: 8.2 } as const;
+export const BREATHE_PERIODS = { pitch: 7, pitch2: 11, roll: 9.1, lift: 8.2 } as const;
 
 /** The breathing's offsets `t` seconds in, at full strength: a pitch and a roll (radians) and a lift (m). */
 export function breathe(t: number): { pitch: number; roll: number; lift: number } {

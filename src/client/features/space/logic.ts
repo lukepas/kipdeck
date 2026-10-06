@@ -84,8 +84,11 @@ export const TUNNEL_CLOSE = 300;
 export const JUMP_STRETCH = 60;
 /** How far the view kicks wider at the jump's height (degrees), and eases back: the punch, felt more than seen. */
 export const JUMP_FOV = 8;
-/** How far the room's light is let down through the countdown (the spool-up), a fraction of it. */
-export const SPOOL_DIM = 0.35;
+/**
+ * How far the room's light is let down through the countdown (the spool-up), a fraction of it: to 40%,
+ * the bow's shield dropping so the warp owns the frame (the boards and the marks give their own light).
+ */
+export const SPOOL_DIM = 0.6;
 /** How bright the room is lit by the tunnel at its height, times the mode's light (cool, from the glass). */
 export const TUNNEL_LIGHT = 1.3;
 /** How long the punch lifts the tunnel's cap past the flash's (ms into the tunnel, then 300 ms down). */
@@ -192,9 +195,9 @@ export type FlybyKind = 'planet' | 'asteroids' | 'comet';
 export const FLYBY_WEIGHTS: Readonly<Record<FlybyKind, number>> = { planet: 0.45, asteroids: 0.35, comet: 0.2 };
 /** How long each takes to pass (ms), at cruise. */
 export const FLYBY_MS: Readonly<Record<FlybyKind, readonly [number, number]>> = { planet: [90_000, 180_000], asteroids: [40_000, 40_000], comet: [25_000, 25_000] };
-/** The wait between flybys (ms), and before the first one once you're aboard. */
-export const FLYBY_GAP_MS = [6 * 60_000, 10 * 60_000] as const;
-export const FIRST_FLYBY_MS = [45_000, 90_000] as const;
+/** The wait between flybys (ms), and before the first one once you're aboard: something passes every minute or so. */
+export const FLYBY_GAP_MS = [40_000, 90_000] as const;
+export const FIRST_FLYBY_MS = [20_000, 45_000] as const;
 
 /** Which flyby `r` (0-1) picks, by the weights. */
 export function pickFlyby(r: number): FlybyKind {

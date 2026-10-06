@@ -43,7 +43,7 @@ test('flybys: one of each kind by its weight, every 6 to 10 minutes, the first w
   for (const k of kinds) assert.ok(Math.abs(seen[k] / 4000 - FLYBY_WEIGHTS[k]) < 0.03, `${k} comes up about ${FLYBY_WEIGHTS[k] * 100}% of the time`);
   assert.equal(pickFlyby(0), 'planet');
   assert.equal(pickFlyby(0.9999), 'comet');
-  assert.deepEqual(FLYBY_GAP_MS, [360_000, 600_000]);
+  assert.deepEqual(FLYBY_GAP_MS, [40_000, 90_000]);
   assert.ok(FIRST_FLYBY_MS[1] <= 90_000);
   assert.deepEqual(FLYBY_MS.planet, [90_000, 180_000]);
   assert.equal(FLYBY_MS.asteroids[0], 40_000);

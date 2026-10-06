@@ -25,7 +25,7 @@ import { spectacleTarget } from '../giveway/logic';
 import { BANNER_MS, DUCK_MS, FIRST_FLYBY_MS, FLEET_STAGGER_MS, FLYBY_GAP_MS, JUMP, JUMP_FOV, JUMP_HOLD_MS, JUMP_MS, JUMP_STRETCH, MERGE_WINDOW_MS, PUNCH_LIFT, SPACE_COLORS, SPACE_GIVE_WAY, SURGE, SURGE_GAP_MS, SURGE_HARD, SURGE_MS, between, countdownLeft, cruiseSpeed, flashPeak, jumpAt, jumpsNow, motionScale, pickFlyby, seeded, surgeAt, surgeGlint, surgesNow, spoolLevel, type FlybyKind } from './logic';
 import { GLOW, JumpGlow, countdownGlow } from './jumpglow';
 import { Banner, Tunnel } from './tunnel';
-import { JUMP_READY, countdownBanner, jumpCountdown, waypointBanner } from '../../../shared/shiplog';
+import { JUMP_READY, waypointBanner } from '../../../shared/shiplog';
 import { Sky, clearOfGiant } from './sky';
 import { Starfield } from './stars';
 import { Meteors } from './meteors';
@@ -94,6 +94,12 @@ export interface Space {
   outside(): OutsideLight;
   /** Which region of sky is showing (sky.ts region()), and how far it has turned round the ship. */
   sky(): { region: number; angle: number };
+  /** The countdown before a jump while it runs: the seconds left (3, 2, 1) and where to; null otherwise. */
+  countdown(): { left: number; to: Waypoint } | null;
+  /** The waypoint the jump under way (or held) makes for, or null. */
+  heading(): Waypoint | null;
+  /** Lifts the whole sky `k` times (1 at rest): the mission complete. */
+  brighten(k: number): void;
 }
 
 export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | 'player' | 'giveWay' | 'alert' | 'fleet' | 'quality'>): Space {
@@ -243,10 +249,9 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
     if (clock - pending.countAt < 1) ctx.sound.jump('spool');
     const left = countdownLeft(clock - pending.countAt);
     if (left > 0) {
-      // Across the forward glass too, big: the seconds left.
-      if (left !== counting) banner.write(countdownBanner(pending.to, left));
+      // Said once, on the kinetic type plane over the bow (features/kinetic): never on the band or the sky too.
       counting = left;
-      return say(jumpCountdown(pending.to, left));
+      return say(null);
     }
     const to = pending.to;
     pending = null;
@@ -381,7 +386,7 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
     // The waypoint's name: up in 300 ms, held, gone over the last 500 ms (a 400 ms crossfade with motion off, as the view's).
     const sinceBanner = clock - bannerAt;
     const still = ctx.reduceMotion.matches;
-    if (counting) banner.show(1);
+    if (counting) banner.show(0);
     else banner.show(sinceBanner >= BANNER_MS ? 0 : Math.min(1, sinceBanner / (still ? 400 : 300), (BANNER_MS - sinceBanner) / (still ? 400 : 500)));
     openNow = open * peak;
     if (fade) {
@@ -455,6 +460,9 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
     timeScale: (k) => void (timeK = Math.max(0, k)),
     clock: () => clock,
     sky: () => sky.view(),
+    countdown: () => (pending?.countAt != null && counting > 0 ? { left: counting, to: pending.to } : null),
+    heading: () => jump?.to ?? pending?.to ?? null,
+    brighten: (k) => sky.setBoost(k),
     outside: () => {
       const o = outside;
       o.flash = flashNow;

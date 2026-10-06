@@ -74,16 +74,16 @@ test('the arrival starts outside the bow looking at the ship, faces the destinat
   assert.ok(Math.hypot(glass[0], glass[2]) > 3);
 });
 
-test('the breathing is a third of a degree and 6 mm at most (enough to notice), starts after 4 s idle and stops on input', () => {
+test('the breathing is 0.6 of a degree over about 7 s and 8 mm at most (the conn alive), starts after 4 s idle and stops on input', () => {
   let most = 0;
   for (let t = 0; t < 60; t += 0.37) {
     const b = breathe(t);
-    assert.ok(Math.abs(b.pitch) <= 0.35 * DEG + 1e-12);
-    assert.ok(Math.abs(b.roll) <= 0.25 * DEG + 1e-12);
-    assert.ok(Math.abs(b.lift) <= 0.006 + 1e-12);
+    assert.ok(Math.abs(b.pitch) <= 0.6 * DEG + 1e-12);
+    assert.ok(Math.abs(b.roll) <= 0.3 * DEG + 1e-12);
+    assert.ok(Math.abs(b.lift) <= 0.008 + 1e-12);
     most = Math.max(most, Math.abs(b.pitch));
   }
-  assert.ok(most > 0.2 * DEG, 'it reaches past a fifth of a degree');
+  assert.ok(most > 0.4 * DEG, 'it reaches past 0.4 of a degree');
   assert.equal(breathStep(0, 0.1, 3999, true), 0);
   assert.ok(breathStep(0, 0.1, BREATHE.idleMs, true) > 0);
   assert.ok(Math.abs(breathStep(0.5, 0.1, BREATHE.idleMs + 100, false) - 0.1) < 1e-9);

@@ -38,6 +38,9 @@ import type { installDrive } from '../features/drive';
 import type { installLaunch } from '../features/launch';
 import type { installTurnaround } from '../features/turnaround';
 import type { installTv } from '../features/tv';
+import type { installHoloUi } from '../features/holoui';
+import type { installTakeConn } from '../features/takeconn';
+import type { installHail } from '../features/hail';
 import type { installVoice } from '../features/voice';
 import type { installWaiting } from '../features/waiting';
 import type { installWalking } from '../features/walking';
@@ -136,4 +139,10 @@ export interface Parts {
   turnaround: Made<typeof installTurnaround>;
   /** The start of watch: the launch and the debrief (see features/launch). */
   launch: Made<typeof installLaunch>;
+  /** The arc's faces in motion: the build, the scan, the sweeps, the cards' effects, the warp's fold (see features/holoui). */
+  holoUi: Made<typeof installHoloUi>;
+  /** Taking the conn, and the gold chase up the tiers (see features/takeconn). */
+  takeConn: Made<typeof installTakeConn>;
+  /** The attention beats: a hail, a stuck unit, a unit gone to review (see features/hail). */
+  hail: Made<typeof installHail>;
 }

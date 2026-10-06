@@ -27,8 +27,8 @@ export const DAY_PLANET = (() => {
   return { dir: [d.x, d.y, d.z] as [number, number, number], radius: (42 * Math.PI) / 180 };
 })();
 
-/** How fast the sky turns round the ship (radians a second): 0.6 degrees a minute. */
-export const SKY_TURN = (0.6 * Math.PI) / 180 / 60;
+/** How fast the sky turns round the ship (radians a second): 3 degrees a minute. */
+export const SKY_TURN = (3 * Math.PI) / 180 / 60;
 
 const linear = (hex: string) => new THREE.Color(hex);
 
@@ -152,6 +152,8 @@ uniform vec3 uLift;
 const float KNOT = 0.85;
 uniform vec3 uCool, uWarm;
 uniform float uDim;
+uniform float uDrift;
+uniform float uBoost;
 uniform float uDay;
 uniform vec4 uPlanet;
 uniform vec3 uOcean, uLand, uAtmo;
@@ -208,7 +210,11 @@ void main() {
   vec3 hue = col / max(max(col.r, max(col.g, col.b)), 1e-3);
   vec2 ndc = vClip.xy / max(vClip.w, 1e-4);
   float clear = clearOfBoards(ndc);
-  col += mix(hue, vec3(1.0), 0.4) * sky.a * KNOT * uDim * clear;
+  // The knots shimmer as the gas drifts: a slow wave of brightness travelling through them.
+  float drift = 0.72 + 0.28 * sin(dot(d, vec3(9.0, 6.0, 4.0)) + uDrift * 0.9) * sin(dot(d, vec3(-5.0, 8.0, 3.0)) - uDrift * 0.55);
+  col += mix(hue, vec3(1.0), 0.4) * sky.a * KNOT * uDim * clear * drift;
+  // The mission complete: the galaxy brightens for a few seconds (1 at rest).
+  col *= uBoost;
   // Behind the wall boards and just round them the sky sinks to a quarter: the arc always has a dark
   // ground behind its smoked glass, however bright the gas is there, and its type keeps its contrast.
   col *= mix(0.22, 1.0, clear);
@@ -394,6 +400,8 @@ export class Sky {
         uCool: { value: linear(SPACE_COLORS.starCool) },
         uWarm: { value: linear(SPACE_COLORS.starWarm) },
         uDim: { value: 1 },
+        uDrift: { value: 0 },
+        uBoost: { value: 1 },
         uDay: { value: 0 },
         uLift: { value: linear(SPACE_COLORS.dayLift) },
         uPlanet: { value: new THREE.Vector4(...DAY_PLANET.dir, DAY_PLANET.radius) },
@@ -461,9 +469,10 @@ export class Sky {
     return { region: this.held[shown], angle: this.angle };
   }
 
-  /** Turns the sky `dt` seconds' worth round the ship. */
+  /** Turns the sky `dt` seconds' worth round the ship, and drifts the nebula's knots. */
   turn(dt: number) {
     this.angle = (this.angle + SKY_TURN * dt) % (Math.PI * 2);
+    this.material.uniforms.uDrift.value += dt;
     this.rot.makeRotationY(this.angle);
     this.material.uniforms.uRot.value.setFromMatrix4(this.rot);
   }
@@ -475,6 +484,10 @@ export class Sky {
   /** How bright the nebula's knots are (1, or less while something needs the captain). */
   setDim(k: number) {
     this.material.uniforms.uDim.value = k;
+  }
+  /** How bright the whole sky is, times its own (the mission complete lifts it 30%). */
+  setBoost(k: number) {
+    this.material.uniforms.uBoost.value = k;
   }
   /** How far toward Day the sky is (0 Night, 1 Day): paler and brighter. */
   setDay(k: number) {

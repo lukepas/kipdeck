@@ -86,6 +86,10 @@ import { installDrive } from './features/drive';
 import { installTurnaround } from './features/turnaround';
 import { installLaunch } from './features/launch';
 import { installPosture } from './features/posture';
+import { installHoloUi } from './features/holoui';
+import { installTakeConn } from './features/takeconn';
+import { installHail } from './features/hail';
+import { installKinetic } from './features/kinetic';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -209,6 +213,14 @@ installArcChrome(ctx, parts);
 // The diamond, the triangle, the ring and the pip over the units, and the beams up to their cards.
 installSignals(ctx, parts);
 installSpotlight(ctx, parts);
+// The motion layer over the room: the arc's faces in motion (the build, the scan, the sweeps, the
+// cards' effects, the warp's fold); taking the conn (the rise, the tiers lit pit to dais, the arc built
+// in) and the gold chase; the attention beats (a hail, a stuck unit, one gone to review); and the set
+// pieces over the bow (the kinetic type, the mission complete, the Night and Day iris).
+parts.holoUi = installHoloUi(ctx, parts);
+parts.takeConn = installTakeConn(ctx, parts);
+parts.hail = installHail(ctx, parts);
+installKinetic(ctx, parts);
 installFocusLean(ctx, parts);
 installDeclutter(ctx, parts);
 installDemo(ctx, parts);
