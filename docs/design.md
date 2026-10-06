@@ -22,9 +22,9 @@ In Walk (first person, the default) callouts show more as you get closer: from a
 
 Mission control (I) lists units by the same ranking, each row with its call sign in a mono chip, why it is there in plain words and one primary verb. Units are never told apart by color: hue is for state.
 
-![The 2D view: the deck plan drawn from the layout beside the ranked list](img/lite.png)
+![The home page with Bridge view on: the deck plan drawn from the layout fills the pane while no agent is selected](img/lite.png)
 
-The home page at `/` is the ranked list in one column. With Bridge view on in [Labs](labs.md) it draws the deck as a plan from the same layout file as the 3D deck, beside the list (above); below 720px wide the plan folds away and the list is the page.
+The home page at `/` is [the inbox](inbox.md): a light, neutral page with the list on the left (about 40%) and the selected agent on the right. Only Needs you carries Signal (its count, its rows' stripe and button), To review its amber, and the rest stays on the neutral ramp; the one filled button is **Deploy agent**. Rows say one title, one status phrase and one age, as everywhere else. With Bridge view on in [Labs](labs.md) the pane draws the deck as a plan from the same layout file as the 3D deck while no agent is selected (above). Under 900px wide the list is the page and an agent opens over it.
 
 Settings > Bridge > Bridge lights sets Night (low light, for watching in a dark room) or Day (high light, a cool mid-grey ship rather than a white room) for the 3D deck, or Auto to follow the system. The same setting paints the HUD (the dark set by night, the print set by day), the 2D view, whose contrast button flips it, and the sign-in pages, so every surface of the office agrees. Brightness steps the 3D deck's lights two steps either way. See [the deck](deck.md#light-and-materials).
 
