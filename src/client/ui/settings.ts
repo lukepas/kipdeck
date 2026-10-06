@@ -18,6 +18,7 @@ import { handsSettings } from './hands-settings';
 import { momentSettings } from './moments-settings';
 import { ritualSettings } from './rituals-settings';
 import { icon, type IconName } from './icons';
+import type { LabId } from '../../shared/labs';
 
 const VIEWS: [ViewMode, string, string][] = [
   ['first', 'First person', 'See through your own eyes. Click the office to look around with the mouse and click things to use them. Esc frees the mouse.'],
@@ -30,14 +31,14 @@ const WEBHOOK_NAME: Record<WebhookKind, string> = { slack: 'Slack', discord: 'Di
 /** The categories down the side of Settings. */
 export type SettingsPane = 'you' | 'bridge' | 'sound' | 'notify' | 'building' | 'workers' | 'bounties';
 
-const PANES: { id: SettingsPane; icon: IconName; label: string; blurb: string }[] = [
+const PANES: { id: SettingsPane; icon: IconName; label: string; blurb: string; lab?: LabId }[] = [
   { id: 'you', icon: 'operator', label: 'You', blurb: 'How you look, how you see the office, and how you\'re signed in.' },
   { id: 'bridge', icon: 'ship', label: 'Bridge', blurb: 'The lights on the bridge, how space moves outside the glass, how much the deck draws, and how much the bridge lives.' },
   { id: 'sound', icon: 'volume', label: 'Sound & voice', blurb: 'How loud the office is for you, and how voice chat works.' },
   { id: 'notify', icon: 'bell', label: 'Notifications', blurb: 'Hear about a unit that needs someone, or finished, while you\'re somewhere else.' },
   { id: 'building', icon: 'decks', label: 'Decks', blurb: 'Where new decks are cloned.' },
   { id: 'workers', icon: 'units', label: 'Units', blurb: 'What units start on, how many run at once, when they stand down and what the deck tells them.' },
-  { id: 'bounties', icon: 'proof', label: 'Bounties', blurb: 'Proof of Merge: devnet USDC on issues, paid only when a person merges the office\'s pull request.' },
+  { id: 'bounties', icon: 'proof', label: 'Bounties', blurb: 'Proof of Merge: devnet USDC on issues, paid only when a person merges the office\'s pull request.', lab: 'proof' },
 ];
 
 /** Who a setting is for, shown by its name: some are yours alone, some the whole office's. */
@@ -412,7 +413,9 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
   const nav = h('nav.settings-nav', { role: 'tablist', 'aria-orientation': 'vertical', 'aria-label': 'Settings' });
   const tabs = new Map<SettingsPane, HTMLButtonElement>();
   const bodies = new Map<SettingsPane, HTMLElement>();
-  for (const p of PANES) {
+  // A pane of a lab that's off (Bounties, without Proof of Merge) isn't offered.
+  const panesShown = PANES.filter((p) => !p.lab || store.lab(p.lab));
+  for (const p of panesShown) {
     const tab = h('button.settings-tab', { type: 'button', role: 'tab', onclick: () => show(p.id) }, h('span.icon', { 'aria-hidden': 'true' }, icon(p.icon, 16)), h('span', {}, p.label)) as HTMLButtonElement;
     tabs.set(p.id, tab);
     nav.append(tab);
@@ -434,8 +437,8 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
     if (!step) return;
     e.preventDefault();
-    const i = PANES.findIndex((p) => p.id === lastPane);
-    const next = PANES[(i + step + PANES.length) % PANES.length].id;
+    const i = panesShown.findIndex((p) => p.id === lastPane);
+    const next = panesShown[(i + step + panesShown.length) % panesShown.length].id;
     show(next);
     tabs.get(next)!.focus();
   });
@@ -459,7 +462,8 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       pom.off();
     },
   });
-  show(first ?? lastPane);
+  const wanted = first ?? lastPane;
+  show(tabs.has(wanted) ? wanted : 'you');
   close.addEventListener('click', () => modal.close());
   character.addEventListener('click', () => {
     modal.close();

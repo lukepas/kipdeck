@@ -1,0 +1,13 @@
+/* The Labs window (ui/labs.ts): one row per lab, its switch on the right. */
+.labs-modal { width: min(600px, 100%); }
+.labs-intro { margin: 0 0 12px; font-size: 14px; color: var(--muted); line-height: 1.45; }
+.labs-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius); }
+.labs-row { display: flex; align-items: center; gap: 16px; padding: 12px 14px; }
+.labs-row + .labs-row { border-top: 1px solid var(--line); }
+.labs-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.labs-name { font-weight: 600; font-size: 14px; }
+.labs-what { font-size: 13px; color: var(--muted); line-height: 1.4; }
+.labs-link { font-size: 13px; color: var(--text); text-decoration: underline; text-underline-offset: 2px; align-self: flex-start; margin-top: 2px; }
+.labs-toggle { min-width: 56px; height: 30px; justify-content: center; flex: none; }
+.labs-toggle.on { background: var(--text); color: var(--surface-1); border-color: var(--text); }
+.labs-toggle:disabled { opacity: .6; cursor: default; }

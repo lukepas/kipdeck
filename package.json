@@ -1,7 +1,7 @@
 {
   "name": "agent-office",
   "version": "0.1.0",
-  "description": "UGC Army: mission control for teams running many AI coding agents, with proof of every merge on testnets. Built on agent-office by webdevcody (MIT).",
+  "description": "UGC Army: the inbox for your AI coding agents (Claude Code, Codex, Cursor and more). See what needs you, review what is ready, merge what shipped. Built on agent-office by webdevcody (MIT).",
   "type": "module",
   "bin": {
     "ugc-army": "bin/agent-office.js",

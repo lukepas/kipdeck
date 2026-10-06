@@ -42,10 +42,10 @@ test('the 3D top bar, the 2D view and Mission control count one fixture the same
   assert.equal(counts['needs-you'], 2);
   assert.equal(counts.working, 2);
   assert.deepEqual(attentionCounts(rankRoster(store.roster, Date.now())), { ...counts, review: 1 });
-  // Both views draw the top bar from the one mountCounters, which reads store.counts(); neither recounts.
+  // The 3D top bar draws its counters from the one mountCounters, which reads store.counts(); the home
+  // page has no counters strip (its counts are the Mission button's and the list's), and recounts nothing.
   const src = (f: string) => readFileSync(path.join(import.meta.dirname, '..', 'src', 'client', f), 'utf8');
   assert.match(src('ui/counters.ts'), /store\.counts\(\)/);
-  assert.match(src('lite.ts'), /mountCounters\(/);
   assert.match(src('features/counters/index.ts'), /mountCounters\(/);
   assert.doesNotMatch(src('lite.ts'), /attentionCounts\(|status === 'exited'/);
 });

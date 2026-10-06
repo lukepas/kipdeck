@@ -2,11 +2,13 @@
 // what you said is typed in where the cursor is once you let go; a quick tap leaves it listening,
 // hands free, until the next one. Nothing is sent for you: you read it over and press Enter yourself.
 // The listening is the browser's own (see speech.ts), so where a browser has none there's no .
+// It is part of Voice in Labs: with that off, every box is the box as it was.
 
 import './dictate.css';
 import { h, onModalChange, toast } from './dom';
 import { checkOnDevice, listen, PushToTalk, speechSupport, spliceSpoken, type Listening } from './speech';
 import { icon } from './icons';
+import { store } from '../state';
 
 export interface DictateTarget {
   /** Puts a phrase where the cursor is. */
@@ -49,7 +51,7 @@ function tail(text: string, max = 90): string {
 
 export function dictation(target: DictateTarget, opts: { label?: string } = {}): Dictation {
   const live = h('div.dictate-live.hidden', { role: 'status' });
-  if (speechSupport() === 'none') return { button: null, live, key: () => false, drop() {} };
+  if (!store.lab('voice') || speechSupport() === 'none') return { button: null, live, key: () => false, drop() {} };
 
   const button = h('button.btn.dictate-mic', { type: 'button', title: TITLE, 'aria-label': 'Dictate', 'aria-pressed': 'false' }, icon('mic', 16), opts.label ? ` ${opts.label}` : null);
   let listening: Listening | null = null;

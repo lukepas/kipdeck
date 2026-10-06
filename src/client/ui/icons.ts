@@ -98,6 +98,7 @@ export const ICONS = {
   draft: '<path d="M6 4.5h9l3.5 3.5v11.5H6Z"/><path d="M9.5 12h5M9.5 15.5h3" stroke-dasharray="2 2"/>',
   phone: '<path d="M7 3.5h10v17H7Z"/><path d="M11 17.5h2"/>',
   home: '<path d="M4 11 12 4l8 7"/><path d="M6.5 9v11h11V9"/>',
+  labs: '<path d="M9.5 3.5h5M10.5 3.5v6L5 19.5h14L13.5 9.5v-6"/><path d="M7.5 15h9"/>',
   contrast: '<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor" stroke="none"/>',
   more: '<circle cx="12" cy="5.5" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="18.5" r="1.6" fill="currentColor" stroke="none"/>',
   target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/>',

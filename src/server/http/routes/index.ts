@@ -14,6 +14,9 @@ import { serviceRoutes } from './services.js';
 import { showcaseRoutes } from './showcase.js';
 import { x402Routes } from './x402.js';
 
+/** A route that's only there while Proof of Merge is on in Labs (see labs.ts): off, it answers nothing. */
+const proof = (route: Route): Route => ({ ...route, lab: 'proof' });
+
 export const routes: readonly Route[] = [
   // Anyone.
   authRoutes.login,
@@ -30,21 +33,22 @@ export const routes: readonly Route[] = [
   pageRoutes.claim,
   pageRoutes.join,
   pageRoutes.favicon,
+  // Proof of Merge (Labs, testnets), each only while the lab is on.
   // The public "Fund this issue" Action (devnet), for opted-in repositories only.
-  actionRoutes.manifest,
-  actionRoutes.icon,
-  actionRoutes.fund,
+  proof(actionRoutes.manifest),
+  proof(actionRoutes.icon),
+  proof(actionRoutes.fund),
   // Paid tasks over x402 (testnets, --x402 only): the payment is what lets the payer in.
-  x402Routes.offer,
-  x402Routes.task,
+  proof(x402Routes.offer),
+  proof(x402Routes.task),
   // Merge-based agent reputation (--reputation): read only, for anyone.
-  reputationRoutes.agent,
-  reputationRoutes.leaderboard,
-  reputationRoutes.dataset,
-  reputationRoutes.card,
+  proof(reputationRoutes.agent),
+  proof(reputationRoutes.leaderboard),
+  proof(reputationRoutes.dataset),
+  proof(reputationRoutes.card),
   // The public showcase (/pom/), once an admin turns it on: read only, GET only.
-  showcaseRoutes.page,
-  showcaseRoutes.files,
+  proof(showcaseRoutes.page),
+  proof(showcaseRoutes.files),
   // Signed in.
   authRoutes.whoami,
   agentRoutes.models,
@@ -55,7 +59,8 @@ export const routes: readonly Route[] = [
   searchRoutes.search,
   serviceRoutes.forwards,
   githubRoutes.github,
-  pageRoutes.office,
+  pageRoutes.home,
+  pageRoutes.bridge,
   pageRoutes.lite,
   pageRoutes.bundle,
 ];
