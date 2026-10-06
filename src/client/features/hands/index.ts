@@ -45,6 +45,8 @@ const WHITE = new THREE.Color('#FFFFFF');
 const ARM_SCALE = 0.88;
 /** What the crosshair can be on that the hands don't make way for: a seat is sat in, not read. */
 const NOT_READ = new Set(['seat', 'ladder']);
+/** How near (m) something you aim at must be for the hands to make way for it: a board you stand at, not the arc across the deck. */
+const READ_NEAR = 3.2;
 /** How far into the view a gripping hand is kept (NDC), so a rung over your head still has its hand in the frame. */
 const GRIP_NDC = { x: 0.92, top: 0.9, bottom: -0.95 } as const;
 
@@ -205,7 +207,7 @@ export function installHands(ctx: Ctx, parts: HandsParts) {
     f.show = want;
     f.pad = missionOpen;
     f.grip = want && gripOn(1, grip.right) && gripOn(-1, grip.left) ? grip : null;
-    f.aimed = !!target && !NOT_READ.has(target.kind);
+    f.aimed = !!target && !NOT_READ.has(target.kind) && Math.hypot(target.x - p.pos.x, target.z - p.pos.z) < READ_NEAR;
     const out = motion.step(f);
     rig.pose(out);
     shown = out.shown > 0;
