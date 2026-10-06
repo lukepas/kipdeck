@@ -1177,3 +1177,27 @@ No draws: the sound runs on the audio thread. Per frame the page only diffs a fe
 
 - Other people's steps and voices of the units at their consoles are not heard; only you and Bolt make sound on the deck.
 - The ambience does not change with where the ship is (a waypoint's region, the jump's tunnel) beyond the jump's own sounds.
+
+## Fundable, stage 0: safe to build
+
+The fundable direction turns the 2D view (`/lite`) into the new home, so before building on it this stage settles the renderer crash the audit hit there, keeps the MIT attribution from getting lost again, and checks the working name.
+
+### The /lite renderer crash
+
+The audit's headless browser lost its tab on `/lite` with three fresh units. `node design/lite-crash-check.mjs` reproduces it on a throwaway office: three stand-in units (labelled `[demo]`) hired with no task, then each unit's terminal and Mission control opened and closed, at 1440x900 and 390x844, in Playwright's headless shell (software GL and GPU), the full Chromium and the installed Google Chrome, on `/lite` alone and after the 3D office.
+
+It crashed in the headless shell only, the moment a terminal opened. Chrome and the full Chromium never did. The browser's log named it: `Terminating render process for bad Mojo message: No binder found for interface media.mojom.OnDeviceSpeechRecognition`. Every terminal and prompt box with a dictation mic asked `SpeechRecognition.available({ processLocally: true })` as soon as it was built, and a Chromium without Chrome's own layer (the headless shell, Electron) has no service behind that call, so the browser kills the whole tab.
+
+The fix is in `src/client/ui/speech.ts` and `dictate.ts`: the question is asked when the mic is hovered, focused or pressed, never just because a window opened, and never in a browser whose user agent says HeadlessChrome or Electron. Dictation keeps using the on-device model where Chrome has one. This rules the crash out for real browsers (they were never affected) and makes headless shots and tests of the home safe.
+
+Shots in `shots/fundable/stage-1/`: `before/` is the pre-fix build of f8c708f from a `git archive` (`SHOOT_ROOT`), where the headless shell crashed at 1440 so it has no terminal shot; `after/` has the list and an open terminal at both sizes in every browser. `lite-crash-check.txt` in each folder is the run's result.
+
+### Checks
+
+- `tests/dictation.test.ts`: the headless shell and Electron are never asked about the on-device model, a full browser is asked once per language, and a language with the model listens locally.
+- `tests/attribution.test.ts`: LICENSE keeps the MIT text and AgentSystemLabs' copyright, NOTICE names agent-office and webdevcody, and the package ships NOTICE (`package.json` `files`; npm adds LICENSE by itself). LICENSE and NOTICE are unchanged; they were only missing from the main checkout's working tree, never from this branch.
+- `node design/lite-crash-check.mjs`: every browser ok (`CHECK_BROWSERS`, `CHECK_ORDERS` and `SHOOT_OUT` narrow it and save shots).
+
+### Name
+
+Mergeline and Agent Inbox are checked in `business/naming.md`. Agent Inbox is out (LangChain ships one, the npm name and domains are taken). Mergeline's npm name, `.dev` and `.eu` look free, but mergeline.io is a live Git-backed CMS with AI, so the trademark search has to come before the rename.
