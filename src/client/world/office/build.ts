@@ -36,6 +36,7 @@ import { heading } from '../../features/life/heading';
 import { ticker } from '../../features/life/ticker';
 import { watchPlinth } from '../../features/crew/world';
 import { droid } from '../../features/droid/world';
+import { forwardLounge } from '../../features/lounge/world';
 
 // The deck, put together from its fixtures (see fixture.ts): the slab and its walls, the paint on its
 // floor, the bridge's hull round it, the mission table and the pods of consoles facing it, the
@@ -84,6 +85,8 @@ function floorPlan() {
     // The unit of the watch on the Proof corner's plinth (features/crew).
     watchPlinth,
     lounge,
+    // The viewing balcony at the bow behind the arc, its ladder and its seats (features/lounge).
+    forwardLounge,
     conn,
     bookshelf,
     lamps,

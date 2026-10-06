@@ -6,6 +6,7 @@
 // curb and the Standby bench either side of it.
 import { ARC, ARC_CENTRE, DAIS, TIERS, heroPanel, stripPanel, wingPanel } from './amphitheater.js';
 export { heightAt } from './amphitheater.js';
+import { LOUNGE_SEATS } from './lounge.js';
 
 export const FLOOR = { minX: -16, maxX: 16, minZ: -16, maxZ: 16 } as const;
 /** How high the ceiling is, all the way across the room. */
@@ -500,6 +501,8 @@ export interface SeatDef {
   out: number;
   /** It faces the lounge TV: sitting down there puts whatever's being shared up on your screen. */
   tv?: boolean;
+  /** A seat for looking out of the bow glass (the forward lounge, shared/lounge.ts): Esc gets you up too. */
+  view?: boolean;
 }
 
 /**
@@ -515,6 +518,8 @@ export const SEATING: SeatDef[] = [
   // On the conn, a little south of its middle, so getting up leaves you on the dais facing the bow; set
   // high, so the seated eye is about 3 m over the deck, over the tiers and the pit to the arc.
   { id: 'conn', label: "Captain's chair", x: CONN.x, y: CONN.h, z: CONN.z + 0.25, rotY: Math.PI, places: [0], hips: 0.58, depth: -0.05, out: 0.8 },
+  // Up in the forward lounge behind the arc, facing the bow glass.
+  ...LOUNGE_SEATS,
 ];
 export const SEATING_BY_ID = new Map(SEATING.map((s) => [s.id, s]));
 

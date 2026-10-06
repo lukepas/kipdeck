@@ -4,6 +4,7 @@
 // helpers take how many rows it's built out (`wing`), and each level gets a grid of its own.
 
 import { LEDGE } from './amphitheater.js';
+import { loungeFootprint } from './lounge.js';
 import { BEANBAGS, BOOKSHELF, DESK_SIZE, ELEVATOR, ELEVATOR_BACK, ELEVATOR_FRONT, FLOOR, KIOSK, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, MISSION_TABLE, PROOF_CORNER, SEATING, STATIONS, WHITEBOARD, WING, builtDesks, heightAt, plantsAt, wingLevel, wingMinZ, type DeskDef } from './layout.js';
 
 
@@ -73,6 +74,8 @@ function obstacles(wing: number): Obstacles {
       rects.push(along ? [seat.x - 0.5, seat.x + 0.5, seat.z - half, seat.z + half] : [seat.x - half, seat.x + half, seat.z - 0.5, seat.z + 0.5]);
     } else circles.push([seat.x, seat.z, 0.4]);
   }
+  // The forward lounge's balcony and the foot of its ladder (shared/lounge.ts): only climbed by people.
+  rects.push(loungeFootprint());
   // The Proof corner's vault and plinth, against the west wall.
   for (const p of [PROOF_CORNER.vault, PROOF_CORNER.plinth]) rects.push([FLOOR.minX, p.x + p.width / 2, p.z - p.depth / 2, p.z + p.depth / 2]);
   for (const [x, z, s] of plantsAt(wing)) circles.push([x, z, 0.3 * s]);

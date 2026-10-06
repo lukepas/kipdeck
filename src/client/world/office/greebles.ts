@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { FLOOR, WALL_HEIGHT, WINDOWS, WING } from '../../../shared/layout';
+import { FLOOR, HULL_FRAMES, WALL_HEIGHT, WINDOWS, WING } from '../../../shared/layout';
 import type { Fixture } from './fixture';
 import { DECK, matte, practical } from './materials';
 
@@ -16,6 +16,9 @@ const RUN = { off: 0.12, tray: { y: 0.16, h: 0.14, d: 0.18 }, pipes: [0.42, 0.53
 const CLAMP_EVERY = 1.6;
 /** The ribs: how wide, how deep, and from and to what height. */
 const RIB = { w: 0.34, d: 0.07, y0: 0.62, y1: 3.55, holes: 4 } as const;
+
+/** The bow bay the forward lounge looks out of, between the middle hull frames (shared/lounge.ts, layout.ts HULL_FRAMES). */
+const LOUNGE_BAY = [HULL_FRAMES[1], HULL_FRAMES[2]] as const;
 
 /** The light-strip channels: their heights, the channel's and the line's height, and the line's colour. */
 const STRIP = { high: RIB.y1 + 0.18, low: 0.92, channel: 0.07, line: 0.018, color: '#6474E6' } as const;
@@ -123,11 +126,14 @@ export const greebles: Fixture = (site) => {
   const strips: THREE.Matrix4[] = [];
   const channels: THREE.Matrix4[] = [];
   for (const run of runs) {
-    const len = run.b - run.a;
-    const mid = (run.a + run.b) / 2;
     for (const y of [STRIP.high, STRIP.low]) {
-      channels.push(along(run, mid, len, y, 0.02, STRIP.channel, 0.05));
-      strips.push(along(run, mid, len, y, 0.05, STRIP.line, 0.012));
+      // The high one leaves the forward lounge's bay of the bow glass clear (shared/lounge.ts): it would
+      // cross the view from its seats. It stops behind the hull frames either side of the bay.
+      const spans: [number, number][] = run.alongX && y === STRIP.high ? [[run.a, LOUNGE_BAY[0]], [LOUNGE_BAY[1], run.b]] : [[run.a, run.b]];
+      for (const [a, b] of spans) {
+        channels.push(along(run, (a + b) / 2, b - a, y, 0.02, STRIP.channel, 0.05));
+        strips.push(along(run, (a + b) / 2, b - a, y, 0.05, STRIP.line, 0.012));
+      }
     }
   }
   const ribs: THREE.Matrix4[] = [];
