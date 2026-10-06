@@ -4,7 +4,7 @@ Back to the [README](../README.md).
 
 Mission control answers one question: what needs a person right now, on any floor. It ranks every hired worker in the building by how much it needs someone, says why in plain words, and offers one next step. Next to that it keeps what each floor is for (its mission and milestones), so every worker, task and pull request can be tied back to a goal, an inbox of everything waiting for a review, a timeline of what happened, and reminders for what would otherwise be forgotten.
 
-Open it with **I** anywhere in the office, from the **Mission control** button on the top bar (always there), from the counters beside the deck's name (each one, *2 need you*, *1 stuck*, *3 to review*, *4 working*, opens the tab for its level: Review for to review, Attention for the rest), from the menu > **Mission control**, or from the command palette (**Ctrl+K**: *Mission control*, *Edit the mission*, *Review finished work*, *Timeline*, *While you were away*). On the home page (`/`) it's the **Mission** button in the top bar. Attention and Review are always there; Goals, Timeline and Crew come with Goals and timeline on in [Labs](labs.md), and the number keys follow the tabs shown. It has a ✕ in the top right, and Esc closes it and puts you straight back into looking around. It remembers the tab you had open last.
+Open it with **I** anywhere in the office, from the **Mission control** button on the top bar (always there), from the counters beside the deck's name (each one, *2 need you*, *1 stuck*, *3 to review*, *4 working*, opens the tab for its level: Review for to review, Attention for the rest), from the menu > **Mission control**, or from the command palette (**Ctrl+K**: *Mission control*, *Edit the mission*, *Review finished work*, *Timeline*, *While you were away*). On the home page (`/`) it's **Mission control** in the avatar menu, or Ctrl+K there. Attention and Review are always there; Goals, Timeline and Crew come with Goals and timeline on in [Labs](labs.md), and the number keys follow the tabs shown. It has a ✕ in the top right, and Esc closes it and puts you straight back into looking around. It remembers the tab you had open last.
 
 Inside it, **1** to **5** switch tabs (Attention, Goals, Review, Timeline, Crew), the arrow keys move between rows, and **Enter** does the selected row's next step.
 
@@ -129,7 +129,7 @@ The office looks once a minute. A reminder shows at the top of the Attention tab
 
 ## The mission strip
 
-One line under the top bar, top left, in the Bridge view (and the first card on the home page), with Goals and timeline on in Labs: the floor's mission, the active milestone with a thin progress bar (*Auth rewrite · 3/7 issues · 2 workers*), and *unlinked: 2* when agents aren't tied to anything and there is an open milestone to tie them to. A milestone with no issues shows no bar, just *no issues linked yet*. With no mission yet it reads *No mission yet. Set one*. Click it for the Goals tab. The menu's *Mission* switch hides it.
+One line under the top bar, top left, in the Bridge view, with Goals and timeline on in Labs: the floor's mission, the active milestone with a thin progress bar (*Auth rewrite · 3/7 issues · 2 workers*), and *unlinked: 2* when agents aren't tied to anything and there is an open milestone to tie them to. A milestone with no issues shows no bar, just *no issues linked yet*. With no mission yet it reads *No mission yet. Set one*. Click it for the Goals tab. The menu's *Mission* switch hides it.
 
 ## Linking work to goals
 
