@@ -1,19 +1,24 @@
 import * as THREE from 'three';
 import { BOOKSHELF } from '../../../shared/layout';
 import { deskPoint } from '../../../shared/nav';
-import { mergeByMaterial, mesh, textPlane } from '../../world/toon';
+import { mergeByMaterial, mesh } from '../../world/toon';
 import type { Collider, Interactable } from '../../world/types';
 import type { Fixture } from '../../world/office/fixture';
-import { DECK, contactShadow, flat, ink, matte } from '../../world/office/materials';
+import { DECK, contactShadow, flat, matte } from '../../world/office/materials';
+import { wallBoard } from '../../world/office/props';
+import { screen, type Screen } from '../boards/screen';
+import { DOCS_SCREEN } from './index-screen';
 
-// The docs rack against the north wall: a steel case, five shelves of binders in the slate ramp
-// (a few leaning over, a stack lying flat), and a "DOCS" stencil over it. E at it opens the project's
-// Markdown to read (ui.ts).
+// The docs rack against the east wall: a steel case, five shelves of binders in the slate ramp (a few
+// leaning over, a stack lying flat), and over it the index's screen, the project's Markdown as a table
+// (index-screen.ts). E at it opens the project's Markdown to read (ui.ts).
 
 export interface BookshelfModel {
   group: THREE.Group;
   collider: Collider;
   interactable: Interactable;
+  /** The index's screen over the rack (index-screen.ts). */
+  index: Screen;
 }
 
 const SPINES = [DECK.unit, DECK.console, DECK.consoleTop, DECK.steel, DECK.unit, DECK.consoleTop, '#4A5866'];
@@ -90,12 +95,14 @@ export function buildBookshelf(): BookshelfModel {
   const group = new THREE.Group();
   group.add(mergeByMaterial(parts));
 
-  // A stencil over the crown.
-  const sign = textPlane('DOCS', { face: 'display', size: 44, color: DECK.muted, track: 0.1 });
-  sign.scale.multiplyScalar(0.7);
-  ink(sign.material);
-  sign.position.set(0, H + 0.28, 0.02);
-  group.add(sign);
+  // The index over the crown, on the wall: the docs as a table, lit glass like the arc's boards.
+  const index = screen(DOCS_SCREEN.width, DOCS_SCREEN.height, DOCS_SCREEN.units);
+  const { group: frame, face } = wallBoard(DOCS_SCREEN.width, DOCS_SCREEN.height);
+  (face.material as THREE.MeshBasicMaterial).map = index.texture;
+  // Off the wall by 13 cm: the hull rib on the pier behind the rack (world/office/greebles.ts) stands 8.
+  frame.position.set(0, H + 0.2 + DOCS_SCREEN.height / 2, -D / 2 + 0.13);
+  frame.name = 'docs-index';
+  group.add(frame);
   group.add(contactShadow(W + 0.6, D + 0.9, 0, 0.2));
 
   // Built facing +z; it stands against its wall facing into the deck, turned `rotY`.
@@ -109,11 +116,18 @@ export function buildBookshelf(): BookshelfModel {
   const [ix, iz] = deskPoint(def, 0, 1.2);
   const interactable: Interactable = { kind: 'bookshelf', x: ix, z: iz, radius: 1.6 };
   group.userData.interact = interactable;
-  return { group, collider, interactable };
+  return { group, collider, interactable, index };
 }
 
 /** The docs rack of the project's Markdown, against the east wall. */
-export const bookshelf: Fixture = () => {
+export const bookshelf: Fixture<'docsIndex'> = () => {
   const built = buildBookshelf();
-  return { group: built.group, colliders: [built.collider], interactables: [built.interactable] };
+  return { group: built.group, colliders: [built.collider], interactables: [built.interactable], handle: { docsIndex: built.index } };
 };
+
+declare module '../../world/types' {
+  interface OfficeHandles {
+    /** The docs rack's index screen (index-screen.ts), painted by the bookshelf feature. */
+    docsIndex: Screen;
+  }
+}

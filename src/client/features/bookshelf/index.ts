@@ -4,6 +4,11 @@ import { aside, hintTitle, key, onE } from '../../core/hint';
 import { store } from '../../state';
 import { openBookshelf } from './ui';
 import { clip, toast } from '../../ui/dom';
+import type { DocList } from '../../../shared/docs';
+import { docsView, paintDocs } from './index-screen';
+
+/** How often the rack's index looks again while the tab shows (ms): docs change slowly. */
+const INDEX_EVERY = 5 * 60_000;
 
 // The kinds of thing you can use that this defines (see InteractKinds in world/types.ts).
 declare module '../../world/types' {
@@ -19,6 +24,43 @@ function githubUrl(remote?: string): string | undefined {
 }
 
 export function installBookshelf(ctx: Ctx) {
+  // The rack's index: the project's Markdown as a table over the shelves, the latest changed first.
+  let list: DocList | null | Error = null;
+  let drawn = '';
+  const paint = () => {
+    const v = docsView(list);
+    const key = JSON.stringify(v);
+    if (key === drawn) return;
+    drawn = key;
+    paintDocs(ctx.office.docsIndex, v);
+  };
+  let asked = 0;
+  async function look() {
+    const floor = store.floor;
+    if (!floor) return;
+    const ask = ++asked;
+    try {
+      const r = await fetch(`/api/docs?${new URLSearchParams({ floor })}`, { credentials: 'same-origin' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const got = (await r.json()) as DocList;
+      if (ask === asked && store.floor === floor) list = got;
+    } catch (err) {
+      if (ask === asked) list = err instanceof Error ? err : new Error(String(err));
+    }
+    paint();
+  }
+  store.on('floor', () => {
+    list = null;
+    paint();
+    void look();
+  });
+  paint();
+  void look();
+  window.setInterval(() => {
+    if (document.hidden) return;
+    void look();
+  }, INDEX_EVERY);
+
   function showBookshelf() {
     if (!store.floor) return toast('Go to a deck first');
     openBookshelf({
