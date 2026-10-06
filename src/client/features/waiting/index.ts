@@ -5,6 +5,7 @@
  */
 import * as THREE from 'three';
 import { OFFICE_PLAN } from '../../../shared/plan';
+import { SEATING_BY_ID } from '../../../shared/layout';
 import { isAsleep } from '../../../shared/status';
 import type { Ctx } from '../../core/context';
 import type { CoreState } from '../../core/ctx';
@@ -133,12 +134,16 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
   /** Arrows to the units waiting on someone (needs you, stuck, to review) you can't see from where you're looking. */
   function pointToWaiting(now: number) {
     bearings.length = 0;
+    // Sat in a lounge seat watching space: only a unit that needs you or is stuck gets an arrow, so the
+    // view out of the glass is the view (the readout on the glass says who, features/lounge).
+    const watching = !!player.seat && !!SEATING_BY_ID.get(player.seat.seatId)?.view;
     if (!core.trip && !modalOpen()) {
       // Snoozed ones left out, as N leaves them.
       for (const w of awake()) {
         const v = parts.views.workerViews.get(w.id);
         const kind = v?.model.showing;
         if (!v || (kind !== 'needs-you' && kind !== 'stuck' && kind !== 'review')) continue;
+        if (watching && kind === 'review') continue;
         // Where the unit is (its mover: one that needs you stands on its pod's ready line), not its seat.
         const at = v.model.where((heads[bearings.length] ??= new THREE.Vector3()));
         at.y += 1.2;

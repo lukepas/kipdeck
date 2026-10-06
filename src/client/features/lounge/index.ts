@@ -5,7 +5,8 @@
  * you move past it and going over the other to the next (grips.ts), and step over its head onto the balcony, its gate swinging open for you. E at the gate takes
  * you back down the same way. W and S turn a climb round on the rungs. Up there, three lounge seats face
  * the glass (E to sit): sat in one in first person the view widens by a few degrees and lifts to the
- * stars, and you can look anywhere; Esc, E or a step gets you up.
+ * stars, and you can look anywhere; Esc, E or a step gets you up. A readout on the glass in front of the
+ * seats says when a unit needs you (N takes you straight to it) and counts the jump in (readout.ts).
  *
  * The climb has hold of you while it's on (PlayerController.rig) and is an activity (ctx.activities):
  * it draws the hint bar, takes the keys that would do something else, and lets go (you on whichever end
@@ -25,6 +26,8 @@ import { modalOpen } from '../../ui/dom';
 import { debugHandle } from '../giveway';
 import { Climb, type ClimbEvent } from './climb';
 import type { P3 } from './grips';
+import { LoungeReadout, callPulse, readoutLine } from './readout';
+import { store } from '../../state';
 
 // The kinds of thing you can use that this defines (see InteractKinds in world/types.ts).
 declare module '../../world/types' {
@@ -36,14 +39,16 @@ declare module '../../world/types' {
 /** How much wider the view is sat in a lounge seat (degrees), and how fast it widens and narrows (a share a second). */
 export const LOUNGE_FOV = 9;
 const FOV_RATE = 3;
-/** Where you look once sat down up there: a little over the horizon, so the stars fill the frame. */
-const SEATED_PITCH = 0.1;
+/** Where you look once sat down up there: over the horizon, so the stars fill the frame and the deck plate sinks out of it. */
+const SEATED_PITCH = 0.2;
+/** How often the readout on the ledge looks at the deck's calls and the countdown (s). */
+const READOUT_EVERY = 0.25;
 /** How fast the gate swings (a share a second). */
 const GATE_RATE = 6;
 /** Keys a climb takes, so they don't use whatever's in front of you on the way: E, Space and the desk keys. */
 const TAKEN = new Set(['KeyE', 'Space', 'KeyF', ...Object.keys(DESK_KEYS)]);
 
-export type LoungeParts = Pick<Parts, 'player' | 'stage' | 'seating' | 'focus'>;
+export type LoungeParts = Pick<Parts, 'player' | 'stage' | 'seating' | 'focus' | 'space'>;
 
 /** Whether a seat is one of the lounge's (a view seat). */
 export function viewSeat(seatId: string | undefined): boolean {
@@ -141,9 +146,36 @@ export function installLounge(ctx: Ctx, parts: LoungeParts) {
     parts.focus.backToGame();
   });
 
+  // The readout on the glass in front of the seats: a call, or the jump's countdown, while you're up there.
+  const readout = new LoungeReadout();
+  ctx.scene.add(readout.mesh);
+  let readoutT = READOUT_EVERY;
+  let line: ReturnType<typeof readoutLine> = null;
+  let clock = 0;
+  function readOut(dt: number, still: boolean) {
+    clock += dt;
+    readoutT += dt;
+    const p = parts.player;
+    const here = overLounge(p.pos.x, p.pos.z) && p.pos.y > LOUNGE.top - 0.3 && !parts.stage.view;
+    if (readoutT >= READOUT_EVERY) {
+      readoutT = 0;
+      const calls: { name: string; stuck: boolean }[] = [];
+      if (here)
+        for (const r of store.ranked(store.floor)) {
+          if (r.att.snoozed) continue;
+          if (r.att.level !== 'needs-you' && r.att.level !== 'stuck') break;
+          calls.push({ name: r.entry.name, stuck: r.att.level === 'stuck' });
+        }
+      const cd = here ? (parts.space?.countdown() ?? null) : null;
+      line = here ? readoutLine(calls, cd && { left: cd.left, to: cd.to.title }) : null;
+    }
+    readout.show(line, line?.kind === 'call' ? callPulse(clock, still) : 1);
+  }
+
   ctx.ticks.add('world', ({ dt }) => {
     const p = parts.player;
     const still = ctx.reduceMotion.matches;
+    readOut(dt, still);
     // The gate at the ladder's head: open while someone's coming over it, shut behind them.
     const c = climb;
     const want = c && ((c.phase === 'over' || c.phase === 'onto') || ((c.phase === 'up' || c.phase === 'down') && p.pos.y > LOUNGE.top - 0.9)) ? 1 : 0;
@@ -178,6 +210,8 @@ export function installLounge(ctx: Ctx, parts: LoungeParts) {
     climb: start,
     /** Hears what a climb hears: a hand on the ladder, each rung, your feet on the balcony or the deck. */
     heard,
+    /** What the readout on the glass says now (the shots, the tests). */
+    readout: () => line,
   };
   debugHandle('lounge', api);
   return api;

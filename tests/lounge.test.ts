@@ -273,3 +273,19 @@ test('the hands hold the rungs where the climb says, and let go of them as it en
   const off = motion.step(frame(null));
   assert.ok(Math.abs(off.right.y - rest.right.y) < 0.01, 'back to rest off the ladder');
 });
+
+test('the readout on the lounge glass says who needs you before it counts a jump in, and pulses as the Attention card does', async () => {
+  const { readoutLine, callPulse, READOUT } = await import('../src/client/features/lounge/readout.js');
+  assert.equal(readoutLine([], null), null, 'nothing to say: not drawn');
+  assert.deepEqual(readoutLine([], { left: 2.4, to: 'Billing v2' }), { kind: 'jump', left: 3, to: 'Billing v2' });
+  const call = readoutLine([{ name: 'Byte', stuck: false }, { name: 'Dot', stuck: true }], { left: 2, to: 'Billing v2' });
+  assert.deepEqual(call, { kind: 'call', name: 'Byte', stuck: false, more: 1 }, 'a call outranks the jump');
+  assert.equal(callPulse(0.3, true), 1, 'steady with less motion');
+  const ks = Array.from({ length: 32 }, (_, i) => callPulse(i * 0.05, false));
+  assert.ok(Math.min(...ks) >= 0.7 && Math.max(...ks) <= 1 && Math.max(...ks) - Math.min(...ks) > 0.2, 'a breath, never out');
+  // On the glass in front of the middle seat, between a seated eye and the window, low in the view.
+  assert.ok(READOUT.z > LOUNGE.z0 && READOUT.z < LOUNGE_SEATS[1].z && Math.abs(READOUT.x - LOUNGE_SEATS[1].x) < 0.01);
+  const eye = LOUNGE.top + 0.48 + 0.75;
+  const down = Math.atan2(eye - READOUT.y, LOUNGE_SEATS[1].z - READOUT.z);
+  assert.ok(down > 0.05 && down < 0.35, `under the horizon by ${down.toFixed(2)} rad, inside a seated view`);
+});
