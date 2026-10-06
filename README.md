@@ -1,28 +1,47 @@
 # UGC Army
 
-**Mission control for teams running many AI coding agents. Proof of every merge.**
+**The inbox for your AI coding agents.**
 
-UGC Army puts every coding agent your team runs on one shared deck and ranks them by who needs a person right now: the units waiting on an answer first, then the stuck ones, then finished work waiting for review. You answer, unblock and review from one place instead of hunting through terminals. When a person merges a unit's pull request, the merge is proven on testnets: a devnet USDC bounty is released from escrow, an EAS attestation lands on Base Sepolia, and the agent's ERC-8004 reputation grows, all visible on a public ledger at `/pom/`.
+Run Claude Code, Codex, Cursor and the rest side by side, and see on one page which agent needs you, which one has work to review and which ones are busy. Answer, review and merge from there, on your laptop or your phone. It runs on your own machine or your team's dev box; nothing leaves it.
 
-![The deck from the Overview: the mission table in a pit in the middle, four pods of consoles on two tiers stepping up to the captain's dais, the situation arc hung to the north, units that need you on the ready line](docs/img/deck-overview.png)
+![The home page: every agent in one ranked list, the one that needs an answer first, then finished work to review, then the ones at work (demo data)](docs/img/inbox.png)
 
-[**Run it**](#run-locally) · [**What it does**](#what-it-does) · [**Proof of Merge**](#proof-of-merge-on-testnets) · [**Deploy**](#deploy-to-aws-ec2) · [**Controls**](#controls) · [**Design system**](DESIGN.md) · [**Docs**](docs/features.md)
+[**Run it**](#run-locally) · [**What it does**](#what-it-does) · [**Labs**](#labs) · [**Controls**](#controls) · [**Docs**](docs/features.md)
+
+- **One page.** `/` lists every agent, the ones waiting on you first: needs you, stuck, to review, working, idle. Click a row for its live terminal; answer it there.
+- **One ranking.** `src/shared/attention.ts` decides the order everywhere: the list, Mission control (the **Mission** button), the tab title and notifications.
+- **Calm by default.** Everything that isn't the inbox (the 3D Bridge view, goals and the timeline, meetings, voice, Proof of Merge on testnets) is off until someone switches it on in [Labs](#labs).
 
 | | |
 | --- | --- |
-| ![Mission control: every unit ranked by who needs a person, one title, one status, one time and one next step](docs/img/mission.png) | ![The 2D view: the deck plan beside the ranked list of units](docs/img/lite.png) |
-| Mission control (I): every unit on every deck, ranked, with the one thing to do next. | The 2D view at `/lite`, the phone's deck, for machines without WebGL too. |
-| ![The merge beat: a new lit segment on the Proof corner's rail and a violet toast with the devnet transaction](docs/img/beat-landed.png) | ![Demo mode: bigger type and callouts, the Overview turning round the table](docs/img/demo.png) |
-| A merge, paid on devnet: the pulse climbs the Proof corner's rail and the toast shows the transaction. | Demo mode (`?demo=1`) for a screen share or a recording. |
+| ![The home page on a phone: the same ranked list, one column (demo data)](docs/img/inbox-phone.png) | ![The 3D Bridge view, a Labs view of the same agents (demo data)](docs/img/deck-overview.png) |
+| The same page on a phone. | The Bridge view at `/bridge` (Labs): the same agents as a room, for a team's wall screen. |
+
+## Labs
+
+Labs are the parts beyond the inbox. Each is off as the office ships, so a first visit sees the inbox and nothing else. An admin switches them for everyone from the **Labs** button on the home page (the flask icon) or the Bridge view's menu; `--labs bridge,ops` (or `AGENT_OFFICE_LABS`) holds some on from the command line. Turning one off hides it; nothing is deleted.
+
+| Lab | What switching it on brings back |
+| --- | --- |
+| Bridge view | A link to the 3D bridge at `/bridge` on the home page, and the deck plan beside the list. `/bridge` itself always opens. |
+| Goals and timeline | Goals and milestones, the Timeline and Crew tabs in Mission control, the mission strip and the Services board. |
+| Meetings | The Review bay and the planning whiteboard. |
+| Voice | Voice chat, screen sharing and the dictation mic in prompt boxes and terminals. |
+| Bridge ambience | The bridge in full: mascot, ship's voice, hands, celebrations, start of watch, ship motion and the ambience bed. Off, the bridge starts calm. |
+| Proof of Merge (testnets) | Bounties and payouts, attestations, ERC-8004 reputation, x402 paid tasks and `/pom/`. Their HTTP routes don't exist while it's off. Any chain flag (`--x402`, `--attest`, `--reputation`) holds it on. |
+
+More in [docs/labs.md](docs/labs.md).
 
 ## What it does
+
+The home page and the ranking are the product. Most of the rest of this list is the Bridge view and the other labs, each off by default.
 
 - **One ranking of who needs you.** `src/shared/attention.ts` ranks every unit on every deck: needs you (a question or a permission), stuck (crashed, silent, failing, never given a task), to review (done, a PR to merge or hand back), working, parked. The top bar's counters, the Units rail, Mission control, the 2D view, the tab title, the favicon and the wall's Attention board all read it, so they never disagree. A crashed unit stays stuck until a person resumes it.
 - **Mission control.** Press **I**. Attention, Goals, Review, Timeline and Crew tabs: what needs someone with one next step per row, the deck's mission and milestones (given to new units as context), a review inbox of finished work, pull requests and payouts to approve, and what happened while you were away. Reminders catch what would otherwise be forgotten. See [docs/mission-control.md](docs/mission-control.md).
 - **A deck per project.** Each GitHub repository is a deck, built as a command amphitheatre: the mission table in a pit in the middle, four pods of consoles facing it on two tiers that step up south of it to the captain's raised dais, the situation arc hung over the north side (the Attention board in the middle, Issues over Queue and Pull requests over Services on its wings, capacity along its foot), the Proof corner and the planning board on the west wall, the Review bay in the north-west corner and the service monitor on the east wall, where the live page of a unit's dev server shows when you walk up to it (E on its row of the Services board puts it there; [the service monitor](docs/deck.md#the-service-monitor)) ([the deck](docs/deck.md)). Every panel on the deck is a table you can read from where you stand: the planning board's milestones, the Review bay's queue and seats (on its board and on the sign by its door), the Proof corner's escrow ledger and ERC-8004 records, the docs rack's index and the pit wall's clocks. Sitting in the captain's chair frames it all in one look: the bow, the arc, the pit and the crew. Behind the arc, under the Attention and Pull requests boards, a forward lounge hangs at the bow: climb its ladder (E), take one of its three seats facing the glass and watch space go by with a wider view; a readout on the glass names a unit that needs you (N takes you to it) and counts the jump in ([the forward lounge](docs/deck.md#the-forward-lounge)). From across the deck each table shows its headline counts, large enough to read from the dais, and turns back into its table as you walk up. The Attention board in the middle of the arc is the hero: a card for every unit that is stuck, needs you or waits for review (stuck first, names in 0.5 m type, readable from the chair; three or fewer go full width, the first a lit hero card with the N key when it needs you), the working folded into one *WORKING 12* chip, *ALL CLEAR* when nobody waits, and the counts in its header, the only place besides the top bar the room counts. Each board is framed in lit chrome the colour of its most urgent state, an empty Queue or Services folds to a pill so Issues and Pull requests read bigger, and while a waiting unit is out of view the arc's foot on its side points to it ([docs/design.md](docs/design.md#the-bridge-from-the-captains-chair)).
 - **Units at consoles.** Deploy Claude Code, Codex, OpenCode, Grok, Muse, DeepSeek Harness, Pi or Cursor at a free console, with its model and effort. Each runs in its own git worktree; its live terminal is one click away, for anyone on the deck. A unit that needs you steps onto its pod's ready line with an orange diamond turning over it and a beam of light up to its card on the Attention board; a stuck one has a red triangle blinking over it and a red rim round its station, one to review an amber ring at its feet, one at work a small cyan pip. One label a unit: its card while the board is in view, else its callout, else its mark at the edge of the screen. **N** takes you to the next one.
 - **Agents that manage agents.** Every unit can list, deploy, message and stand down the others through the `ugc-army` MCP server or the `office-workers` command, and board agents at the situation wall triage issues and pull requests for whoever walks up.
-- **The 2D view.** `/lite` is the deck as a plan beside the ranked list, with terminals, the keys a phone lacks and the boards. Phones go there by default.
+- **The home page.** `/` is the ranked list of every agent, with terminals, the keys a phone lacks and the boards; it loads no 3D, so it opens fast anywhere. The old `/lite` address goes there. With Bridge view on in Labs, the deck plan sits beside the list.
 - **A bridge that looks alive.** Each console's screen shows its unit's state toward the table, and a working one runs with its terminal's output while the unit's hands work the console; busy stations send pulses to the holo table, whose route column climbs through the mission's waypoints with each unit's marker parked at its own, and whose one caption at the table's lip says how far the ship has come toward the active milestone, and a ticker over the wall carries the clock and the deck's log. Its pod goes quiet round a unit that needs you, a dark ring settles round that unit on screen, and the room's spectacle ducks for a beat and then stays (it no longer greys out while anyone waits); it all stills with Settings > Bridge > Ship motion at Off ([the deck](docs/deck.md#the-bridge)). The room reads in three zones of value: a dark hull, the crew under cool starlight with warm footwell glows, and the arc's type bright on its own dark backing, under a vivid magenta and teal galaxy ([the look](docs/design.md#the-look-value-light-and-colour)). Out of the ports, gas and dust stream past at four depths, a ringed giant hangs off the port side and the sun flares through the canopy. On a page's first load the view arrives from outside the bow and comes down through the canopy to the conn in 5 s (any key lands you there). Sitting in the captain's chair takes the conn: the view rises over the chair's back, the tiers light from the pit to the dais and the arc builds in, the Attention board first (any key skips it). A unit that starts needing you hails: its beam climbs to its card, the card slides in with chevrons and its ship marker flies from the holo to hover by the dais; a stuck card sweeps red, and a jump's countdown (JUMP IN and the digit, a ring wiping round it), a waypoint cleared and the mission complete are said on one type plane over the arc; at rest a wave of light runs down the canopy's ribs every 7 s and, at High, a wake of lit dust streams over the glass ([the motion layer](docs/design.md#the-motion-layer)). Merges and jumps are framed, the boards and the holo have a screen's scanlines, and one grade sets the look by Night and by Day ([the cinema](docs/design.md#the-cinema)). Settings > Bridge > Quality (Auto by default) draws less of the light, detail, space close by and the cinema on slower graphics: High smooths edges with SMAA, Medium with FXAA, and Low leaves out the grade, the screens' character and the arrival. Auto steps down only for frames that keep falling behind and back up when there's room, holds at Medium or better on Apple silicon and discrete GPUs, and says what it runs at in Settings and on the menu's Quality row, with *Try High* to undo a step down ([light and materials](docs/deck.md#light-and-materials)). In first person your own gloved hands are at the bottom of the view: they sway and swing as you look round and walk, reach out and tap whatever you use, hold up a datapad with the counts while Mission control is open, make way when you stop to read a board, and hold each rung of the lounge's ladder as you climb past it (Settings > Bridge > Hands; [your hands](docs/design.md#your-hands-in-first-person)).
 - **The world outside moves with the work.** The mission is a world low in the forward glass, a quarter of the view from the first waypoint, that grows with every waypoint passed and issue closed, until the ship drops into orbit; every other deck flies as an escort off the side ports (its size its units, its lit ports its units at work, a needs-you beacon when it needs you, click it for the Decks lift); and each working unit has a fighter on patrol, its open pull request a fighter on the picket ahead; high off the starboard bow, seen from the captain's chair, the Relay Beacon carries a node-star for every unit at work in the fleet, flares the lamp at the heart of its rings on a merge and lights a ledger segment per bounty released ([the Relay Beacon](docs/design.md#the-relay-beacon)). None of it moves on its own timer, and it all gives way to a unit that needs you. Settings > Bridge > Life: Full, Calm (no salutes, hails or patrols) or Silent running (no ambient life, stars at a crawl), and a switch for each part ([the deck](docs/deck.md#the-bridge), [docs/design.md](docs/design.md#the-world-outside)).
 - **A crew with a record, a ship with a mind.** VESPER, the ship's mind, says a dry line now and then about what the crew really did ("3 merges this hour. The engines have noticed."), on the ticker and as a caption; when a unit needs you it says one plain sentence and goes quiet until that clears. Units earn epithets and chevrons from their real record (*the Mechanic*, *the Night Owl*; a violet chevron for a record on chain), shown up close and in Mission control's Crew tab, and the unit of the watch stands on the Proof corner's plinth. The crew carry themselves by their real state: they lean in at work, stand and stretch when they finish, slump when stuck and turn to the conn with a hand up when they need you. Bolt, a lopsided tool-drone with one arm, carries a finished unit's work to the Review bay with a trail behind it and waits by a unit that needs you. Kip, a small furry stowaway with a glowing toy wand, runs laps of the pit while the crew works, trots after Bolt's handoffs, twirls for a merge, hides behind the captain's chair while a unit is stuck and sits quietly by one that needs you. Settings > Bridge > Life has Ship's voice (On, Plain only, Off), Crew epithets, Bridge droid and Bridge mascot ([docs/design.md](docs/design.md#the-crew)).
@@ -32,6 +51,8 @@ UGC Army puts every coding agent your team runs on one shared deck and ranks the
 - **Night and Day lights.** Settings > Bridge > Bridge lights: Night for a dark room under the galaxy, Day for high orbit over a sunlit planet, or Auto to follow your system, with a Brightness step either way. The HUD, the 2D view and the sign-in page follow it ([the deck](docs/deck.md#light-and-materials)).
 
 ## Proof of Merge on testnets
+
+A lab (Labs > Proof of Merge), off by default: with it off, none of what follows is on the page or on the network.
 
 ![Testnet only](https://img.shields.io/badge/chain-testnet%20only-orange?style=flat-square) Solana devnet and Base Sepolia. No mainnet, no token, no NFT, no points.
 
@@ -109,7 +130,7 @@ The first time it starts, it walks you through setting up, right in the terminal
 
 Press Enter to skip a step: the elevator in the office asks for your first project too. Then the office opens in your browser, **already signed in**, with a link that works once. The terminal also prints the office password, for signing in from another browser (it's saved in `~/agent-office/.agent-office/config.json`).
 
-Walk to a free console, press **E** and deploy a unit.
+Press **New task** on the home page to start an agent. (In the Bridge view at `/bridge`, walk to a free console and press **E**.)
 
 Common options:
 
@@ -352,6 +373,8 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 
 ## Controls
 
+The home page is driven with the mouse or a tap: a row opens its agent, **New task** starts one, **Mission** shows what needs someone, Esc closes any window. The keys below are the Bridge view's (`/bridge`).
+
 | Key | Action |
 | --- | --- |
 | W A S D | Walk (hold Shift to run) |
@@ -369,7 +392,7 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 | V | Join voice; then hold V to talk |
 | M | Mute / unmute in voice |
 | Ctrl + Space | Dictate into a terminal or a prompt box: hold it and talk (or hold the mic button) |
-| Tab | The menu: Command, Work, Proof, Deck and Comms |
+| Tab | The menu: Command, Work and Deck (Proof and Comms with their labs on) |
 | Esc | Close any window |
 | Ctrl + [ | Send Esc to a terminal, to close a menu like Claude's `/skills` or interrupt Claude (or **Esc** in its header) |
 

@@ -2,7 +2,7 @@
 
 Back to the [README](README.md).
 
-UGC Army is an operations deck for teams running many AI coding agents. The screen is calm by default and only an exception carries color, so the eye goes straight to what needs a person. This page is the contract for every surface: the 3D deck, the 2D view at `/lite`, the sign-in pages and the `/pom/` showcase.
+UGC Army is an operations deck for teams running many AI coding agents. The screen is calm by default and only an exception carries color, so the eye goes straight to what needs a person. This page is the contract for every surface: the home page at `/`, the 3D Bridge view at `/bridge` (Labs), the sign-in pages and the `/pom/` showcase (Labs).
 
 The tokens live in `src/client/styles/tokens.css`. Every sheet uses them by name; a hex value in a module sheet is a bug. [docs/design.md](docs/design.md) shows the system on screen: each surface, the full motion table, the deck's sound, demo mode and how to check a change.
 
@@ -85,7 +85,7 @@ Upstream credit stays where it was and is added to the sign-in footer: "Built on
 
 ## Surfaces outside the deck
 
-- **The 2D view** (`/lite`): the same top bar and counters, then the Plot (`src/client/shared/plot.ts`), the deck drawn as a plan in hairlines from `src/shared/layout.ts` so it never drifts from the 3D deck, beside the ranked list of units. Each row leads with its state glyph and its address in mono (*A-03 at C2*). Below 720px the plan folds away and the list is the page. The contrast button gives the light whiteprint; until someone picks, it follows the system.
+- **The home page** (`/`, `lite.ts`): one calm column. The top bar has the project, **Mission**, light or dark and Labs, and nothing that counts twice; then the ranked list of agents. Each row leads with its state glyph and its address in mono (*A-03 at C2*). With Bridge view on in Labs, the Plot (`src/client/shared/plot.ts`, the deck drawn as a plan in hairlines from `src/shared/layout.ts`) sits beside the list on a wide window. The contrast button gives the light whiteprint; until someone picks, it follows the system. The sign-in pages are one card on a plain page.
 - **Sign-in pages** (login, join, claim): the void, the Plot drawn once on the right with one unit lit Signal orange on the ready line, a 360px card with the mark, one field and *Enter deck*, and the credit in the footer.
 - **Loading**: the chevrons fill from the bottom over 900 ms in a ruled card over the deck's grid.
 - **`/pom/`, the Proof ledger**: violet is the only accent. Totals in Archivo at 125% width, each with a *verify* link; the *Last merge* panel with the proof rail and the four-step money path; a render of the real deck; dense ruled rows with violet proof chips (short hash, settled tick). The share card (`og.png`) is the same title block, drawn in a pixel font with no dependencies.
