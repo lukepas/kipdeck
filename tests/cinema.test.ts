@@ -10,6 +10,7 @@ import { FRAME_BOX, OVERVIEW_PITCH, SIDE_YAW, framePose, framedPoints, turned } 
 import { ALONGSIDE, ALONGSIDE_MS, alongsideAt } from '../src/client/features/fleet/logic.js';
 import { TIERS, TIER_LOOKS } from '../src/client/features/quality/tiers.js';
 import { DECK } from '../src/client/world/office/materials.js';
+import { SPRIG } from '../src/client/features/mascot/logic.js';
 import { BOARDS, CONN } from '../src/shared/layout.js';
 
 // The cinema (features/cinema): when the arrival shot plays and where it goes, the breathing and the
@@ -162,6 +163,25 @@ test('the grade shifts no state mark more than 4% in any channel, and keeps its 
       const k = gradePixel(c, GRADE[mode], 1);
       const sum = (v: number[]) => v[0] + v[1] + v[2];
       for (let i = 0; i < 3; i++) assert.ok(Math.abs(k[i] / sum(k) - c[i] / sum(c)) <= 0.04, `${mode} ${name} hue at the corner`);
+    }
+  }
+});
+
+test("the grade keeps the mascot's Sprig rose: an allowed accent, never pushed toward stuck's red", () => {
+  const hue = ([r, g, b]: readonly number[]) => {
+    const max = Math.max(r, g, b);
+    const c = max - Math.min(r, g, b);
+    const h = max === r ? ((g - b) / c) % 6 : max === g ? (b - r) / c + 2 : (r - g) / c + 4;
+    return (h * 60 + 360) % 360;
+  };
+  const rose = display(SPRIG.rim);
+  const stuck = hue(display(DECK.stuck));
+  for (const mode of ['night', 'day'] as const) {
+    for (const corner of [0, 1]) {
+      const g = gradePixel(rose, GRADE[mode], corner);
+      const h = hue(g);
+      assert.ok(Math.abs(h - hue(rose)) <= 6, `${mode} corner ${corner}: ${hue(rose).toFixed(0)} to ${h.toFixed(0)}`);
+      assert.ok(Math.abs(((h - stuck + 540) % 360) - 180) >= 15, `${mode}: still clear of stuck`);
     }
   }
 });

@@ -72,6 +72,44 @@ The reel is `reel-20s.mp4` (with sound, labelled *Seeded demo crew*): 10 s on fo
 - The vault's stacks have no tag of their own: the label above them names each column.
 - The capacity close-up's shoot pose and a hull strut over the lounge's view were not redone.
 
+The latest round is first, [the bridge mascot](#the-bridge-mascot); the earlier rounds follow it in order.
+
+## The bridge mascot
+
+The captain asked for a small creature running round the bridge with a glowing blade. The deck is shown in public, so the mascot is an original character rather than anyone's licensed one: Kip, a cream stowaway deck kit with tall leaf ears, hazel eyes, a slate-blue vest and a striped scarf, waving the Spark Sprig, a toy crystal light-wand with a rose rim. He has no green, robe, hood or sideways ears, no powers, and the Sprig never ignites, hums or clashes. What he does is in [the design system](../docs/design.md#the-crew).
+
+### Shots
+
+In `shots/mascot/final/` (this round) and `shots/mascot/build/` (the first round, under the old working name), Night and Day, Quality High: `<light>-laps-conn`, `-laps-close`, `-laps-close-2`, `-laps-bounce`, `-escort`, `-escort-bay`, `-twirl`, `-twirl-2`, `-zoomies`, `-flop`, `-sit`, `-sit-conn`, `-hide-walk`, `-hide`, `-hide-conn` (he is out of sight under the tier's lip), `-hide-shake`, `-greet`, `-greet-2`, `-portrait`, `-turn-front`, `-turn-side`, `-turn-back` (a turnaround held on one frame), `-window-countdown`, `-window-jump`, `-window-jump-conn`, `-window-sneeze`, `-nest`, `-nest-conn`, `-overview` (he is not in it), and `<light>-clip-10s.mp4`: a camera running round the pit lane ahead of his laps, a merge half a second in, his run to the far side of the table, the hop and the Sprig spun overhead facing you, and back to his laps. Taken with `SHOOT_LIGHT=<night|day> SHOOT_QUALITY=high SHOOT_OUT=mascot/final node design/shoot-mascot.mjs` from a built office; every camera now stays in the open pit (`LANE`, `SIDE`), so no still is a wall or a console.
+
+### What changed after the critique
+
+- Originality: no dark ear tips (plain fur lined in the vest's slate-blue) and no round cheek spots (a few tan freckles); an antenna tuft, big slate-blue mitten paws and a chunky knitted scarf with a knot are his own; ears never splay past 20 degrees, so no wide-set ear view. The working name was a plush toy line's, so he is Kip now (a formal trademark search is still owed before a public title). Nothing in code, docs or commits names any film character or weapon.
+- The camera never ends up inside him: he dithers out from 0.9 m to 0.5 m and is not drawn nearer, and walked up to inside 1.2 m he steps back (`stepBack`, tested).
+- Yielding: while a unit is stuck he walks, never runs, to the foot of the front tier and tucks in under its lip, never up the dais, never through the aisle's mouth or across the line to the glyph (tested from every lane point with every pod's units stuck). While anyone needs you he runs no laps, a hail or a snoozed unit included (tested). His sit spot is rechecked against the camera once a second.
+- The run: the stride grows from 0.22 m to 0.4 m with speed (5.5 steps a second at a run, tested), the bob is up to 7 cm with his feet off the deck mid-stride, an ear flick on each footfall, a 50 ms squash that never runs together, the free arm swinging against the legs.
+- The twirl: he turns to face you first and keeps facing you, crouches, hops 16 cm with the Sprig held up beside his head and spun twice round his paw; the wave is held 1.7 s.
+- The face: lids sit on the eye, barely down when he sits; eyes, lids and freckles are bent to the head so nothing pokes out of the silhouette; the head is 32 by 20, body, paws and feet 16 to 24 segments, round feet.
+- Light: the eyes are in his one lit draw (only the catchlights have a little light of their own); nothing on him sends back more than 0.6, so no pod spot makes him bloom; motes are fainter and only let go as the tip moves, so three stacked on the crystal at a flourish stay under the demo's threshold of 0.82 (tested); the dimmed Sprig stays a pale crystal with a thin rose rim and narrows to a point.
+
+### Cost
+
+- Draw calls: four with him in view (all of him, eyes included, in one skinned mesh, the crystal, his shadow, his nest), five with the motes; `shoot-mascot.mjs perf` counts 127 against 123 by Night and 114 against 110 by Day. Motes are off through a jump.
+- Him alone (only his group drawn, 600 renders each way with `gl.finish`): 0.015 to 0.02 ms over an empty render. His tick on the CPU: 0.04 ms. Together well under the 0.3 ms budget.
+- `node design/perf-probe.mjs metal` at High with him on and off: the conn 378 and 381 calls (budget 400), render p50 1.8 to 2.6 ms either way, rAF p50 and p95 16.7 ms (60 fps); a jump 415 and 418 calls; the motion layer 0 to 0.3 ms against its 0.6 ms budget.
+- `node design/flicker-check.mjs metal` passes by Night and Day at High, and through jumps (`FLICKER_JUMP=1`).
+
+### Checks
+
+`npm run typecheck` and `npm run build` clean. `npm test`: 1042 of 1043; the one failure is `mission-e2e`'s debrief test, the same timeout as on the build before the mascot (its 3D office takes longer than the test's 60 s). New tests this round: the hiding way, stepping back, the stride, no laps under attention, the twirl facing you, three motes on a flourish, the catchlights and the light clamp.
+
+### Left for later
+
+- Low draws his contact shadow the same soft way as High.
+- From the captain's chair he is small (a third of a unit's height), so most of what he does reads best walking about the deck.
+- The Sprig is held like a streamer as he runs; a wand hold with little circles would read even more toy-like.
+- A silhouette check at 64 px against well-known characters needs reference images this kit does not carry.
+
 ## The interior: the hype round
 
 The captain said the room looked poor: no clarity, no readability, no hype, and he could not tell what had changed. Every shot here is on the GPU (ANGLE Metal, M3 Pro) at 1440x900, Quality forced to High unless it says Medium, sat in the captain's chair, captured with a seeded demo crew (desk-2's unit asking, two to review, the rest at work, a course set). The before set is the build of 65a6819 from a `git archive` (`shots/interior-final/baseline-commit.txt`).

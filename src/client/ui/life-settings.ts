@@ -20,6 +20,7 @@ const PARTS: Record<LifePart, [label: string, note: string]> = {
   sorties: ['Squadron sorties', 'A fighter for each working unit, and open pull requests holding on the picket ahead.'],
   epithets: ['Crew epithets', 'Titles and chevrons units earn from their real record (the Mechanic, the Night Owl), the Crew tab and the unit of the watch on the Proof plinth. Words only, never a ranking of people.'],
   droid: ['Bridge droid', 'Bolt, a hovering tool-drone that carries finished work to the Review bay in its arm and waits by a unit that needs you. Docks itself with Ship motion Off or Silent running.'],
+  mascot: ['Bridge mascot', 'Kip, a small furry stowaway with a glowing toy wand, who runs laps while the crew works, twirls for a merge and sits quietly by a unit that needs you. Naps in his nest with Ship motion Off or Silent running.'],
 };
 
 const VOICE_NOTE: Record<VoiceMode, string> = {

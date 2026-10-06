@@ -9,6 +9,9 @@ import { lightModeOf } from '../src/client/lighting.js';
 import { DECK } from '../src/client/world/office/materials.js';
 import { DIM, dimRig } from '../src/client/features/alert/logic.js';
 import { ambientSafe } from '../src/client/features/space/logic.js';
+import { SPRIG, sprigShown } from '../src/client/features/mascot/logic.js';
+import { MOTE } from '../src/client/features/mascot/trail.js';
+import { FUR_ALBEDO, FUR_CLAMP, FUR_GLOW, GLINT, KIP } from '../src/client/features/mascot/world.js';
 
 /** WCAG relative luminance of `#rrggbb`. */
 function luminance(hex: string): number {
@@ -130,5 +133,51 @@ test('on every dimmed rig (alert amber and red), by Night and by Day, every stat
         }
       }
     }
+  }
+});
+
+/** Hue (degrees) and chroma (0-1) of `#rrggbb`. */
+function hueOf(hex: string): { hue: number; chroma: number } {
+  const n = parseInt(hex.slice(1), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => c / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const c = max - min;
+  const h = c === 0 ? 0 : max === r ? ((g - b) / c) % 6 : max === g ? (b - r) / c + 2 : (r - g) / c + 4;
+  return { hue: (h * 60 + 360) % 360, chroma: c };
+}
+const hueGap = (a: number, b: number) => Math.abs(((a - b + 540) % 360) - 180);
+/** Linear luminance of `#rrggbb`. */
+const linLum = (hex: string) => luminance(hex);
+
+test("the mascot's Spark Sprig is a rose accent clear of every state hue, and none of his light ever glows", () => {
+  // Its rim is the only hue on him: about 330, softer than stuck's red and well off proof's violet.
+  const rim = hueOf(SPRIG.rim);
+  assert.ok(Math.abs(rim.hue - 330) <= 8, `the rim's hue is ${rim.hue.toFixed(0)}`);
+  assert.ok(hueGap(rim.hue, hueOf(DECK.stuck).hue) >= 15, 'clear of stuck');
+  assert.ok(hueGap(rim.hue, hueOf(DECK.proof).hue) >= 60, 'clear of proof');
+  assert.ok(rim.chroma < hueOf(DECK.stuck).chroma, 'softer than stuck');
+  for (const state of [DECK.signal, DECK.review, DECK.settled, DECK.ship]) assert.ok(hueGap(rim.hue, hueOf(state).hue) >= 40);
+  // At its brightest (a twirl), the crystal's white core stays under Night's glow threshold; so do the
+  // motes, the catchlights in his eyes and the warmth in his fur's shadows.
+  // The demo's bloom (features/lights/index.ts DEMO_BLOOM) sits a little lower than Night's, at 0.82.
+  const threshold = Math.min(LIGHT_MODES.night.bloom!.threshold, 0.82);
+  const flourish = linLum(SPRIG.core) * SPRIG.peak * sprigShown(SPRIG.flourish);
+  assert.ok(flourish < threshold, 'the Sprig at a flourish');
+  assert.ok(linLum(SPRIG.core) * SPRIG.peak < threshold, 'the Sprig even at full');
+  assert.ok(linLum(SPRIG.core) * MOTE.peak < threshold, 'a mote');
+  // Additive motes stack where the tip lingers: three on top of the crystal at a flourish still stay under.
+  assert.ok(3 * linLum(SPRIG.core) * MOTE.peak + flourish < threshold, 'three motes stacked on the crystal');
+  // The eyes are lit like his fur; the catchlights add a little light of their own, and nothing on him
+  // passes the clamp, whatever spot he stands under.
+  assert.ok(linLum(KIP.glint) * FUR_ALBEDO + GLINT < FUR_CLAMP, 'a catchlight');
+  assert.ok(FUR_CLAMP < threshold - 0.1, 'the clamp on his light');
+  assert.ok(linLum(KIP.belly) * FUR_GLOW < 0.1, "the fur's own glow");
+  // His fur, colours and all, has no green and no state hue: anything with colour to it is warm (the
+  // vest is the deck's own slate-blue, greyed down).
+  for (const c of Object.values(KIP)) {
+    const { hue, chroma } = hueOf(c);
+    if (chroma < 0.16) continue;
+    assert.ok(hue < 75 || hue > 300, `${c} is not green, cyan or violet`);
   }
 });
