@@ -6,6 +6,9 @@
 //   npm run build && SHOOT_LIGHT=night|day SHOOT_PORT=469x node design/shoot-life.mjs [only,these]
 // While the stuck clip runs it checks, every frame, that the band never names a condition with no unit
 // waiting behind it, and prints how many frames broke that (it should be 0).
+// SHOOT_QUALITY=high|medium|low forces the Quality tier (default: the saved setting, Auto). `idle` is
+// 15 s of the bridge from the captain's seated eye with nothing happening; `seatmerge` is the merge and
+// the jump from that eye. SHOOT_SEAT_EYE='[[x,y,z],[x,y,z]]' moves that eye (default the chair's).
 import { spawn, execFileSync } from 'node:child_process';
 import { chmodSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -102,10 +105,10 @@ async function waitUp() {
   throw new Error('office did not start:\n' + log);
 }
 
-const PROFILE = ([light]) => {
+const PROFILE = ([light, quality]) => {
   try {
     const saved = JSON.parse(localStorage.getItem('agent-office.settings') ?? '{}');
-    localStorage.setItem('agent-office.settings', JSON.stringify({ ...saved, lighting: light, lifeParts: { ...(saved.lifeParts ?? {}), droid: true } }));
+    localStorage.setItem('agent-office.settings', JSON.stringify({ ...saved, lighting: light, ...(quality ? { quality } : {}), lifeParts: { ...(saved.lifeParts ?? {}), droid: true } }));
     localStorage.setItem('agent-office.lite-declined', '1');
     localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4FA3A5', look: { skin: 0, hair: 0, style: 0 } }));
     localStorage.setItem('agent-office.seen', String(Date.now()));
@@ -194,7 +197,7 @@ async function main() {
   const browser = await chromium.launch({ headless: true, args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] });
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, colorScheme: SCHEME });
-    await context.addInitScript(PROFILE, [LIGHT]);
+    await context.addInitScript(PROFILE, [LIGHT, process.env.SHOOT_QUALITY ?? ""]);
     const page = await context.newPage();
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
@@ -521,6 +524,23 @@ async function main() {
       [[5, () => done('desk-14', 'D-02 finished: the devnet deploy script')]],
     );
 
+    // Review: 15 s of the idle bridge from the captain's seated eye, nothing happening, at 30 fps.
+    if (want('idle')) {
+      await VIEW(...JSON.parse(process.env.SHOOT_SEAT_EYE ?? "[[0,2.98,11],[0,3.5,-6.5]]"));
+      await run(2500);
+      await clip('idle-bridge', 15, () => null, []);
+    }
+    // Review: the merge and the jump from the seated eye as well.
+    if (want('seatmerge')) {
+      await VIEW(...JSON.parse(process.env.SHOOT_SEAT_EYE ?? "[[0,2.98,11],[0,3.5,-6.5]]"));
+      await run(1500);
+      await clip('seatmerge-milestone', 20, () => null, [
+        [0.5, async () => (await merge('desk-2', 81), await send(pace(floor, { run: 4, best: 6, week: 13, record: 15 })), await force(rev2, { pr: { number: 81, state: 'merged' } }))],
+        [2.6, () => merge('desk-6', 80)],
+        [5.0, () => milestoneDone(0)],
+      ]);
+      await run(4000);
+    }
     // Clip 2: a pull request merges (fighter home, the pod's nod, the drive core ring), then a waypoint
     // completes: the countdown, the jump, the next waypoint's name, the log card.
     await VIEW([0, 2.1, 8.0], [0, 2.9, -12]);

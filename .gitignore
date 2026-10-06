@@ -8,3 +8,7 @@ __pycache__/
 
 # Leftover shots of a stopped review run, not part of any stage.
 design/shots/env-review/
+
+# Review and stage shots of the interior, too big to keep in the repo.
+design/shots/interior-review/
+design/shots/interior-baseline/
