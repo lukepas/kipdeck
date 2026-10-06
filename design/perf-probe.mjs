@@ -70,7 +70,7 @@ while [ $i -lt 600 ]; do echo "  ok $i - test passes"; i=$((i+1)); sleep 0.4; do
 chmodSync(agent, 0o755);
 const DESKS = ['desk-1', 'desk-2', 'desk-3', 'desk-4', 'desk-5', 'desk-6', 'desk-9', 'desk-10', 'desk-11', 'desk-13', 'desk-14', 'desk-15'];
 
-const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--agent', agent, '--home', path.join(home, '.agent-office')], {
+const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--labs', process.env.SHOOT_LABS ?? 'all', '--agent', agent, '--home', path.join(home, '.agent-office')], {
   env: { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
   stdio: ['ignore', 'pipe', 'pipe'],
   detached: true,
@@ -376,7 +376,7 @@ async function main() {
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`${base}/login`);
     await page.evaluate(async (password) => fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) }), PASSWORD);
-    await page.goto(`${base}/`, { waitUntil: 'commit' });
+    await page.goto(`${base}/bridge`, { waitUntil: 'commit' });
     await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
     for (const deskId of DESKS) {
       await page.evaluate((deskId) => window.__office.net.send({ t: 'worker.spawn', deskId, prompt: 'work', worktree: false }), deskId);
