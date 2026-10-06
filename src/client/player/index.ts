@@ -47,6 +47,12 @@ export class PlayerController extends PlayerInput {
   private stuckFor = 0;
   /** A walk along a path ended: at its end, by a key of yours, or up against something. */
   onPathEnd: ((why: 'arrived' | 'cancelled' | 'stuck') => void) | null = null;
+  /**
+   * Something that has hold of you (the forward lounge's ladder, features/lounge): while it's set it
+   * moves you each frame instead of walking, falling and bumping into things, and says whether you're
+   * moving. After upstream agent-office's climbing (origin/main features/climbing, MIT).
+   */
+  rig: ((dt: number) => boolean) | null = null;
 
   constructor(
     private camera: THREE.PerspectiveCamera,
@@ -132,6 +138,16 @@ export class PlayerController extends PlayerInput {
   update(dt: number) {
     dt = Math.min(dt, 0.05);
     const k = this.keys;
+    if (this.rig) {
+      this.path = null;
+      this.moving = this.rig(dt);
+      this.vy = 0;
+      this.grounded = true;
+      this.stepOffset *= Math.exp(-dt * 16);
+      this.bob = 0;
+      this.updateCamera();
+      return;
+    }
     if (this.seat) {
       if (!this.enabled || !GET_UP.some((c) => k.has(c))) {
         this.moving = false;
