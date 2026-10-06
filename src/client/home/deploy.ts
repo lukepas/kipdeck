@@ -9,6 +9,7 @@ import { store } from '../state';
 import { h, openModal, toast } from '../ui/dom';
 import { agentFields, officeChoice, supportedProviders } from '../ui/provider';
 import { agentMark, CERTIFIED } from './list';
+import { agentFound } from './setup';
 import { home } from './state';
 
 const LAST_AGENT = 'mergeline.agent';
@@ -53,15 +54,24 @@ export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentPr
   const others = providers.filter((p) => !CERTIFIED.has(p));
   const other = h('select', { id: 'deploy-other', 'aria-label': 'Other agents (beta)' }, h('option', { value: '' }, 'Pick one...'), ...others.map((p) => h('option', { value: p }, `${PROVIDER_META[p].label} (beta)`))) as HTMLSelectElement;
   other.addEventListener('change', () => other.value && pick(other.value as AgentProvider));
+  // An agent this computer doesn't have says so, and how to get it (the setup card's finding).
+  const missing = (p: AgentProvider) => agentFound(p)?.installed === false;
   const paintChips = () =>
     chips.replaceChildren(
       ...front().map((p) =>
         h(
           'button.btn.deploy-agent',
-          { type: 'button', role: 'radio', 'aria-checked': String(p === provider), class: p === provider ? 'on' : '', onclick: () => pick(p) },
+          {
+            type: 'button',
+            role: 'radio',
+            'aria-checked': String(p === provider),
+            class: `${p === provider ? 'on' : ''}${missing(p) ? ' missing' : ''}`,
+            title: missing(p) ? `Not installed on this computer: ${agentFound(p)?.fix ?? ''}` : undefined,
+            onclick: () => pick(p),
+          },
           agentMark(p),
           PROVIDER_META[p].label,
-          CERTIFIED.has(p) ? null : h('small.beta', {}, 'beta'),
+          missing(p) ? h('small.beta', {}, 'not installed') : CERTIFIED.has(p) ? null : h('small.beta', {}, 'beta'),
         ),
       ),
     );

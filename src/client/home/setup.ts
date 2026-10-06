@@ -41,6 +41,11 @@ export function onSetupChange(fn: () => void) {
 /** An agent that can take a task now: installed, and not known to be signed out. */
 const ready = (a: SetupAgent) => a.installed && a.signedIn !== false;
 
+/** What the setup card found about an agent CLI on this computer, once the office has said. */
+export function agentFound(provider: AgentProvider): SetupAgent | undefined {
+  return state?.agents.find((a) => a.provider === provider);
+}
+
 /** The agent the first deploy picks: the first ready one, certified first. */
 export function firstReadyAgent(): AgentProvider | undefined {
   return state?.agents.find(ready)?.provider;
