@@ -201,12 +201,16 @@ export class AudioCore {
     }
   }
 
-  /** What the deck sounds like, as a stream to record (the design shots' clips); null before audio starts. */
+  private tapped: MediaStreamAudioDestinationNode | null = null;
+
+  /** What the deck sounds like, as a stream to record (the design shots' clips); null before audio starts. One stream, however often it is asked for. */
   tap(): MediaStream | null {
     const ctx = this.ctx;
     if (!ctx) return null;
-    const dest = ctx.createMediaStreamDestination();
-    this.comp.connect(dest);
-    return dest.stream;
+    if (!this.tapped) {
+      this.tapped = ctx.createMediaStreamDestination();
+      this.comp.connect(this.tapped);
+    }
+    return this.tapped.stream;
   }
 }

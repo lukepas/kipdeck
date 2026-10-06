@@ -43,18 +43,18 @@ const CHIME = [
 export const CUES: Readonly<Record<Cue, readonly Note[]>> = {
   'needs-you': [
     { at: 0, f: 2600, to: 1300, len: 0.06, gain: 0.05, wave: 'air' },
-    { at: 0.02, f: 880, len: 0.2, gain: 0.26, wave: 'sine', partials: CHIME },
-    { at: 0.11, f: 1320, len: 0.26, gain: 0.24, wave: 'sine', partials: CHIME },
+    { at: 0.02, f: 880, len: 0.2, gain: 0.3, wave: 'sine', partials: CHIME },
+    { at: 0.11, f: 1320, len: 0.26, gain: 0.28, wave: 'sine', partials: CHIME },
   ],
   'needs-you-again': [
-    { at: 0.02, f: 880, len: 0.18, gain: 0.1, wave: 'sine', partials: CHIME },
-    { at: 0.11, f: 1320, len: 0.22, gain: 0.09, wave: 'sine', partials: CHIME },
+    { at: 0.02, f: 880, len: 0.18, gain: 0.15, wave: 'sine', partials: CHIME },
+    { at: 0.11, f: 1320, len: 0.22, gain: 0.135, wave: 'sine', partials: CHIME },
   ],
   stuck: [
-    { at: 0, f: 330, len: 0.07, gain: 0.3, wave: 'square', lp: 1400 },
-    { at: 0.15, f: 330, len: 0.07, gain: 0.3, wave: 'square', lp: 1400 },
+    { at: 0, f: 330, len: 0.08, gain: 0.36, wave: 'square', lp: 1400 },
+    { at: 0.15, f: 330, len: 0.08, gain: 0.36, wave: 'square', lp: 1400 },
   ],
-  review: [{ at: 0, f: 660, len: 0.3, gain: 0.16, wave: 'sine', partials: [[1.5, 0.22]] }],
+  review: [{ at: 0, f: 660, len: 0.3, gain: 0.24, wave: 'sine', partials: [[1.5, 0.22]] }],
   merged: [
     { at: 0, f: 140, to: 70, len: 0.18, gain: 0.45, wave: 'sine' },
     { at: 0.1, f: 2640, len: 0.035, gain: 0.12, wave: 'triangle' },

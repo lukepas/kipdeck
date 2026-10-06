@@ -10,6 +10,27 @@ import { LOUNGE } from '../src/shared/lounge.js';
 import { JUMP_SOUNDS } from '../src/client/sound/jump.js';
 import { PAID_CHORD } from '../src/client/features/bounties/sound.js';
 import { MIX_ROWS } from '../src/client/ui/sound-settings.js';
+import { BROWN_RMS, env, makeNoise, matchedOffsets } from '../src/client/sound/dsp.js';
+import { FEET, HOLD_GAIN, STEP_JITTER_DB, STEP_LEVEL } from '../src/client/features/soundscape/sfx.js';
+
+/** A seeded random source, so the noise is the same every run. */
+function seeded(seed = 7) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const dB = (x: number) => 20 * Math.log10(x);
+const rmsOf = (d: Float32Array, from: number, n: number) => {
+  let s = 0;
+  for (let i = from; i < from + n; i++) s += d[i] * d[i];
+  return Math.sqrt(s / n);
+};
 
 const calm: MixScene = { hidden: false, life: 'full', attention: false };
 
@@ -110,9 +131,64 @@ test('Bolt beeps when what it does changes, and chatters only now and then with 
 
 test('the jump has four parts and the surge, the payout ends on a soft chord, the mixer has every group', () => {
   assert.deepEqual(Object.keys(JUMP_SOUNDS).sort(), ['arrival', 'punch', 'release', 'spool', 'surge']);
-  // The punch is the deepest thing the ship plays; the surge is a quiet rush.
+  // The punch is the deepest thing the ship plays; the surge is a rush with a pitch under it, loud
+  // enough to hear over the ambience (it was -41 dBFS; design/sound-levels.mjs measures it now).
   assert.ok(JUMP_SOUNDS.punch.sine[1] < JUMP_SOUNDS.release.sine[1] + 10);
-  assert.ok(JUMP_SOUNDS.surge.gain < JUMP_SOUNDS.spool.gain);
+  assert.ok(JUMP_SOUNDS.surge.sine[0] > 0 && JUMP_SOUNDS.surge.sine[1] > JUMP_SOUNDS.surge.sine[0], 'the surge rises in pitch');
+  assert.ok(JUMP_SOUNDS.surge.gain >= 0.15);
   assert.deepEqual([...PAID_CHORD], [1047, 1319, 1568]);
   assert.deepEqual(MIX_ROWS.map(([g]) => g).sort(), Object.keys(MIX_DEFAULTS).sort());
+});
+
+test('an envelope is silent from the moment it is made, so a source starting between samples never clicks', () => {
+  const calls: [string, number, number][] = [];
+  const param = {
+    value: 1,
+    setValueAtTime(v: number, t: number) {
+      calls.push(['set', v, t]);
+    },
+    exponentialRampToValueAtTime(v: number, t: number) {
+      calls.push(['ramp', v, t]);
+    },
+  };
+  const ctx = { currentTime: 3.2, createGain: () => ({ gain: param }) } as unknown as BaseAudioContext;
+  env(ctx, 3.204, 0.3, 0.003, 0.08);
+  // A GainNode starts at 1: one full-level sample got through before t0, the -11 dBFS tick on a walk.
+  assert.equal(param.value, 0);
+  assert.deepEqual(calls[0], ['set', 0, 3.2], 'silent from now, not from t0');
+  assert.ok(calls.every(([, v]) => v <= 0.3), 'never over its peak');
+});
+
+test('brown noise has no slow excursions: 50 bursts in a row are within a couple of dB of each other', () => {
+  const rate = 48_000;
+  const d = makeNoise('brown', rate, seeded());
+  assert.ok(Math.abs(dB(rmsOf(d, 0, d.length)) - dB(BROWN_RMS)) < 1, 'scaled to the level the recipes were tuned at');
+  const starts = matchedOffsets(d, rate);
+  assert.ok(starts.length >= 8, `enough start points to vary (${starts.length})`);
+  // 50 steps: each takes a start point in turn, and 75 ms of it (a step's body).
+  const n = Math.floor(0.075 * rate);
+  const levels = Array.from({ length: 50 }, (_, i) => dB(rmsOf(d, Math.floor(starts[(i * 7) % starts.length] * rate), n)));
+  const spread = Math.max(...levels) - Math.min(...levels);
+  assert.ok(spread < 4, `50 bursts spread ${spread.toFixed(1)} dB`);
+  // Raw offsets, as before, were noise luck: a wider spread than the matched ones.
+  const raw = Array.from({ length: 50 }, (_, i) => dB(rmsOf(d, Math.floor(((i * 0.6180339) % 1) * 1.5 * rate), n)));
+  assert.ok(Math.max(...raw) - Math.min(...raw) > spread, 'matching narrows it');
+});
+
+test('steps wander a little and alternate feet; the levels sit under the alerts', () => {
+  assert.ok(STEP_JITTER_DB > 0 && STEP_JITTER_DB <= 2, 'about +-2 dB, never a jump');
+  assert.ok(STEP_LEVEL < 1, 'a walk sits under the alerts (design/sound-levels.mjs measures it)');
+  assert.equal(FEET.length, 2);
+  assert.ok(FEET[0].pitch < 1 && FEET[1].pitch > 1, 'the left lower, the right higher');
+  assert.ok(FEET[0].pan < 0 && FEET[1].pan > 0 && Math.abs(FEET[0].pan) <= 0.15);
+  // Bolt's hold note goes straight out, not through a band that took most of it: heard, but soft.
+  assert.ok(HOLD_GAIN > 0.02 && HOLD_GAIN < 0.06);
+});
+
+test('footsteps and Bolt make no garbage: the same array back each frame', () => {
+  const f = new Footfalls();
+  const a = f.update(body(), 0.016);
+  const b = f.update(body({ walkPhase: Math.PI + 0.01, moving: true, z: -1.3 }), 0.29);
+  assert.equal(a, b);
+  assert.equal(b.length, 1);
 });

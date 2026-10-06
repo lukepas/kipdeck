@@ -22,10 +22,13 @@ export const HOLO_AT: At = { x: MISSION_TABLE.x, y: 1.5, z: MISSION_TABLE.z };
 /** Each source's level into the Ambience bus. */
 export const AMBIENCE_LEVELS = { rumble: 0.09, hum: 0.026, air: 0.016, drive: 0.08, holo: 0.007, hover: 0.06 } as const;
 
+/** How far Bolt must move (m) before its hum's place is updated. */
+export const HOVER_MOVE = 0.05;
+
 export class Ambience {
   private nodes: AudioScheduledSourceNode[] = [];
   private out: GainNode | null = null;
-  private hover: { panner: PannerNode; gain: GainNode } | null = null;
+  private hover: { panner: PannerNode; gain: GainNode; on: boolean; x: number; y: number; z: number } | null = null;
 
   get on(): boolean {
     return this.out !== null;
@@ -108,7 +111,7 @@ export class Ambience {
     osc(180, 'triangle').connect(gain(0.5)).connect(hoverGain);
     loop('white').connect(fan).connect(hoverGain);
     hoverGain.connect(panner);
-    this.hover = { panner, gain: hoverGain };
+    this.hover = { panner, gain: hoverGain, on: false, x: HOLO_AT.x, y: HOLO_AT.y, z: HOLO_AT.z };
 
     for (const n of this.nodes) {
       if (n instanceof AudioBufferSourceNode) n.start(t0, Math.random() * 1.5);
@@ -116,13 +119,23 @@ export class Ambience {
     }
   }
 
-  /** Bolt's hover hum at `at`, or silent while it is docked or away (null). */
+  /**
+   * Bolt's hover hum at `at`, or silent while it is docked or away (null). Only a change is scheduled:
+   * the level when Bolt wakes or docks, the place once it has moved HOVER_MOVE m, so a still droid costs
+   * the audio thread nothing.
+   */
   droid(ctx: AudioContext, at: At | null) {
     const h = this.hover;
     if (!h) return;
     const now = ctx.currentTime;
-    h.gain.gain.setTargetAtTime(at ? AMBIENCE_LEVELS.hover : 0, now, 0.4);
-    if (!at) return;
+    if (!!at !== h.on) {
+      h.on = !!at;
+      h.gain.gain.setTargetAtTime(at ? AMBIENCE_LEVELS.hover : 0, now, 0.4);
+    }
+    if (!at || Math.hypot(at.x - h.x, at.y - h.y, at.z - h.z) < HOVER_MOVE) return;
+    h.x = at.x;
+    h.y = at.y;
+    h.z = at.z;
     const p = h.panner;
     if (p.positionX) {
       p.positionX.setTargetAtTime(at.x, now, 0.05);

@@ -10,11 +10,12 @@ import { bell, burst, env, noise, tone } from './dsp';
 
 /** What the noise-and-sine parts are made of: their length (s), the noise filter's sweep (Hz), the sine's (Hz) and level. */
 export const JUMP_SOUNDS = {
-  spool: { len: 3, noise: [180, 2400], sine: [55, 110], gain: 0.16 },
-  release: { len: 1.6, noise: [3200, 160], sine: [90, 32], gain: 0.28 },
-  punch: { len: 1.2, noise: [1400, 120], sine: [62, 24], gain: 0.5 },
-  arrival: { len: 1.8, noise: [1900, 220], sine: [74, 52], gain: 0.16 },
-  surge: { len: 1.3, noise: [380, 1700], sine: [0, 0], gain: 0.07 },
+  spool: { len: 3, noise: [180, 2400], sine: [55, 110], gain: 0.16, sineShare: 1 },
+  release: { len: 1.6, noise: [3200, 160], sine: [90, 32], gain: 0.22, sineShare: 1 },
+  punch: { len: 1.2, noise: [1400, 120], sine: [62, 24], gain: 0.22, sineShare: 1 },
+  arrival: { len: 1.8, noise: [1900, 220], sine: [74, 52], gain: 0.16, sineShare: 1 },
+  // A merge's reward: the rush rises with a sine an octave under it, so it has a pitch to hear.
+  surge: { len: 1.3, noise: [380, 1700], sine: [110, 220], gain: 0.2, sineShare: 0.3 },
 } as const;
 
 export type JumpSound = keyof typeof JUMP_SOUNDS;
@@ -40,9 +41,9 @@ export function playJump(a: AudioCore, part: JumpSound) {
   const rise = part === 'spool' ? p.len - 0.05 : part === 'surge' ? 0.3 : part === 'arrival' ? 0.18 : 0.012;
   const ng = env(ctx, t0, part === 'spool' ? p.gain * 0.6 : part === 'punch' ? p.gain * 0.5 : p.gain, rise, p.len);
   src.connect(bp).connect(ng).connect(out);
-  src.start(t0, Math.random());
+  src.start(t0, Math.random() * 1.5);
   src.stop(t1 + 0.05);
-  if (p.sine[0]) tone(ctx, out, t0, { f: p.sine[0], to: p.sine[1], len: p.len, gain: p.gain, attack: rise });
+  if (p.sine[0]) tone(ctx, out, t0, { f: p.sine[0], to: p.sine[1], len: p.len, gain: p.gain * p.sineShare, attack: rise });
   if (part === 'punch') {
     // The crack over the boom, and a hiss of the flash.
     burst(ctx, out, t0, { f: 900, type: 'highpass', len: 0.09, gain: 0.22 });

@@ -245,6 +245,13 @@ export function rememberSpot(s: Spot) {
   }
 }
 
+/**
+ * True when the settings just loaded were saved before the mixer with sound muted (the old default), so
+ * sound came on with this update: the deck says so once (features/soundscape), then saves the settings
+ * with a mixer, and it never says it again.
+ */
+export let soundTurnedOnByUpdate = false;
+
 export function loadSettings(): Settings {
   const s: Settings = { view: 'first', volume: 0.7, muted: false, mix: { ...MIX_DEFAULTS }, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', quality: 'auto', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { ...LIFE_PART_DEFAULTS }, voice: 'on', celebrations: 'full', alerts: { ...ALERT_DEFAULTS }, watch: 'full', momentum: true, turnaround: true, hands: 'auto' };
   try {
@@ -254,6 +261,7 @@ export function loadSettings(): Settings {
     // Before the mixer, sound was off unless you turned it on, and that default was saved with the rest:
     // a choice to mute only counts from settings saved with a mixer.
     if (typeof saved?.muted === 'boolean' && saved?.mix) s.muted = saved.muted;
+    else if (saved?.muted === true) soundTurnedOnByUpdate = true;
     for (const g of SOUND_GROUPS) if (typeof saved?.mix?.[g] === 'number' && Number.isFinite(saved.mix[g])) s.mix[g] = Math.max(0, Math.min(1, saved.mix[g]));
     if (typeof saved?.pushToTalk === 'boolean') s.pushToTalk = saved.pushToTalk;
     if (typeof saved?.notify === 'boolean') s.notify = saved.notify;

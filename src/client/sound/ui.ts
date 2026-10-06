@@ -18,7 +18,7 @@ export function playUi(a: AudioCore, what: UiSound) {
   switch (what) {
     case 'click':
       // A tick and a little body under it.
-      tone(ctx, out, t0, { f: 2100, to: 1700, len: 0.035, gain: 0.22, wave: 'triangle', attack: 0.001, detune: cents });
+      tone(ctx, out, t0, { f: 2100, to: 1700, len: 0.045, gain: 0.3, wave: 'triangle', attack: 0.001, detune: cents });
       burst(ctx, out, t0, { f: 4200, type: 'highpass', len: 0.014, gain: 0.132, attack: 0.001 });
       return;
     case 'open':

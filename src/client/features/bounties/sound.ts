@@ -5,7 +5,7 @@
 // flies, and the chord alone plays at the receipt.
 
 import type { Recipe } from '../../sound';
-import { bell, noise, rand } from '../../sound/dsp';
+import { bell, env, noise, rand } from '../../sound/dsp';
 import { FLIGHT, flightTime, type P3 } from './logic';
 
 /** How near (m) a payout plays at full level: it carries across the deck (the vault is on the west wall, the chair 18 m off). */
@@ -47,10 +47,7 @@ export function payout(from: P3, to: P3, n: number, still: boolean): Recipe {
       bp.frequency.setValueAtTime(700, t0);
       bp.frequency.exponentialRampToValueAtTime(2600, t0 + FLIGHT.s * 0.5);
       bp.frequency.exponentialRampToValueAtTime(900, t0 + end);
-      const g = ctx.createGain();
-      g.gain.setValueAtTime(0.0001, t0);
-      g.gain.exponentialRampToValueAtTime(0.12, t0 + FLIGHT.s * 0.4);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + end);
+      const g = env(ctx, t0, 0.12, FLIGHT.s * 0.4, end);
       src.connect(bp).connect(g).connect(p);
       src.start(t0, Math.random());
       src.stop(t0 + end + 0.05);

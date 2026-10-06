@@ -375,6 +375,8 @@ Everything you hear is synthesized with Web Audio (no audio files): a few filter
 
 The deck's state sets the mix each frame (`src/client/sound/mix.ts`, tested in `tests/sound.test.ts`): while any unit needs you or is stuck the ambience sinks to 40% and the Ship group to 75%; Calm keeps 70% of the ambience and Silent running 30% (and 60% of the Ship group); a hidden tab silences everything but the alerts, and the ambience's sources are torn down after 2 s of silence, so a background tab spends nothing on them. Your ears follow the camera (the Overview's while it's up). Bolt's chatter to itself (every 22 to 50 s on its rounds) only plays at Full with nobody waiting.
 
+The levels are measured, not guessed: `node design/sound-levels.mjs` renders every recipe offline in headless Chromium through the deck's own chain at default settings and fails when a budget breaks. The alerts are the loudest thing on the deck (no Ship or Interface sound beats the quieter of needs-you and stuck, peak or loudest 50 ms); each alert is at least 6 dB over a walk on the plates, and a walk sits about 12 dB under the needs-you hail; 50 steps in a row spread under 6 dB in peak (about 4); and nothing is under -50 dBFS, too quiet to hear. Every envelope is silent from the moment it is made (`sound/dsp.ts` env), so no sound clicks as it starts. A step's thud is a pitched thump with a short click of white noise, so its level is the same every time; each wanders by up to 2 dB, the feet alternate a little in pitch and either side of you, and a walk drops the toe's scuff about one step in four. Settings saved before the mixer had sound off by default; those come in with sound on, and the deck says so once in a toast.
+
 | Sound | When | What you hear |
 | --- | --- | --- |
 | Needs you | a unit on your deck stops to ask something or wants a permission (the hail) | a breath as the comm opens, then two soft chimes rising a fifth, 880 then 1320 Hz; the reminder is the same chimes, softer |
@@ -383,8 +385,8 @@ The deck's state sets the mix each frame (`src/client/sound/mix.ts`, tested in `
 | Merged and proven | a proof-of-merge attestation lands | a low thunk and a high tick |
 | A payout | a bounty's coins fly from the escrow vault to the console of the unit that earned them | a tink as each coin leaves the vault, their rush of air moving across the deck, a brighter tink as each lands, then a soft C major chord at the console |
 | The jump | a waypoint's countdown, then the jump (only where the jump plays) | the spool-up (3 s of noise sweeping up over a climbing sine), the release into the stretch, the punch with the flash (a sub boom and a crack), and the arrival out of the tunnel (a long breath falling to a low swell, and two soft bells as the escorts drop into their slots) |
-| The surge | a merge speeds space up | a short, quiet rush |
-| Steps | each foot coming down while you cover ground | a heel's thud and a toe's scuff, with a plate's short ring, a stair's hollow knock or the grating's bright ring; quicker and brighter at a run |
+| The surge | a merge speeds space up; also the Ship slider's sample | a short rush rising over a sine from 110 to 220 Hz |
+| Steps | each foot coming down while you cover ground | a heel's pitched thud and a toe's scuff, the feet alternating, with a plate's short ring, a stair's hollow knock or the grating's bright ring; quicker and brighter at a run |
 | The ladder | E at the forward lounge's ladder | hands closing on the stringers, a metal clank for every rung, the gate's servo and latch at the head |
 | Bolt | it wakes, docks, picks up a unit's work, hands it over, holds by a unit that needs you, or now and then to itself | quick droid glides: rising, falling, a "bweep", a happy warble and a bell, one low quiet note (never over the cue), a few random blips |
 

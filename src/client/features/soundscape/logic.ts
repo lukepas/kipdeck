@@ -50,6 +50,8 @@ export function surfaceAt(x: number, y: number, z: number, lastY: number): Surfa
 
 /** Your steps, landings and seat, each frame. */
 export class Footfalls {
+  /** What was heard, reused each frame (read it before the next update). */
+  private readonly out: Heard[] = [];
   private half = 0;
   private from = { x: 0, z: 0, y: 0 };
   private lastY = 0;
@@ -59,9 +61,10 @@ export class Footfalls {
   private seat: string | null = null;
   private primed = false;
 
-  /** What was heard this frame, `dt` seconds after the last. */
+  /** What was heard this frame, `dt` seconds after the last: the same array each time, so read it before the next. */
   update(b: Body, dt: number): Heard[] {
-    const out: Heard[] = [];
+    const out = this.out;
+    out.length = 0;
     if (!this.primed) {
       this.primed = true;
       this.reset(b);
@@ -102,14 +105,18 @@ export class Footfalls {
         this.lastY = b.y;
       }
       this.half = half;
-      this.from = { x: b.x, z: b.z, y: b.y };
+      this.from.x = b.x;
+      this.from.z = b.z;
+      this.from.y = b.y;
     }
     return out;
   }
 
   private reset(b: Body) {
     this.half = Math.floor(b.walkPhase / Math.PI);
-    this.from = { x: b.x, z: b.z, y: b.y };
+    this.from.x = b.x;
+    this.from.z = b.z;
+    this.from.y = b.y;
     this.lastY = b.y;
     this.wasGrounded = b.grounded;
     this.seat = b.seat;
@@ -124,12 +131,17 @@ export interface DroidNow {
 
 export type DroidSay = 'wake' | 'dock' | 'pickup' | 'handoff' | 'hold' | 'chatter';
 
+const away = (m: DroidNow['mode']) => m === 'off' || m === 'docked';
+
 /** How long between Bolt's chatter to itself (s), at least and at most, while it goes about its rounds. */
 export const CHATTER = { min: 22, max: 50 } as const;
 
 /** What Bolt says this frame: one word at most, from a change in what it does, or a little chatter now and then. */
 export class DroidVoice {
-  private last: DroidNow | null = null;
+  /** What it did last frame, as two plain fields (no object per frame); `primed` once there is one. */
+  private primed = false;
+  private wasMode: DroidNow['mode'] = 'off';
+  private wasCarrying = false;
   private quiet = 0;
   private next: number;
   constructor(private readonly rand: () => number = Math.random) {
@@ -142,16 +154,19 @@ export class DroidVoice {
 
   /** `chatty` is false while units need you, on Calm or Silent running: no chatter then, only its errands' beeps. */
   update(now: DroidNow, dt: number, chatty: boolean): DroidSay | null {
-    const was = this.last;
-    this.last = { ...now };
-    if (!was) return null;
-    const away = (m: DroidNow['mode']) => m === 'off' || m === 'docked';
+    const wasMode = this.wasMode;
+    const wasCarrying = this.wasCarrying;
+    const primed = this.primed;
+    this.primed = true;
+    this.wasMode = now.mode;
+    this.wasCarrying = now.carrying;
+    if (!primed) return null;
     let say: DroidSay | null = null;
-    if (away(was.mode) && !away(now.mode)) say = 'wake';
-    else if (!away(was.mode) && now.mode === 'docked') say = 'dock';
-    else if (!was.carrying && now.carrying) say = 'pickup';
-    else if (was.carrying && !now.carrying) say = 'handoff';
-    else if (was.mode !== 'hold' && now.mode === 'hold') say = 'hold';
+    if (away(wasMode) && !away(now.mode)) say = 'wake';
+    else if (!away(wasMode) && now.mode === 'docked') say = 'dock';
+    else if (!wasCarrying && now.carrying) say = 'pickup';
+    else if (wasCarrying && !now.carrying) say = 'handoff';
+    else if (wasMode !== 'hold' && now.mode === 'hold') say = 'hold';
     if (say) {
       this.quiet = 0;
       return say;

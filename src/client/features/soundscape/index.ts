@@ -14,6 +14,7 @@ import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { saveSettings } from '../../state';
+import { soundTurnedOnByUpdate } from '../../state/persist';
 import { onModalChange, toast } from '../../ui/dom';
 import { debugHandle } from '../giveway';
 import { Ambience } from './ambience';
@@ -36,12 +37,22 @@ export function installSoundscape(ctx: Ctx, parts: SoundscapeParts) {
   const ambience = new Ambience();
   let silentFor = 0;
   let earT = 0;
+  let boltT = 0;
   const pos = new THREE.Vector3();
   const fwd = new THREE.Vector3();
+  // Held and filled each frame, so the tick makes no garbage.
+  const scene = { hidden: false, life: ctx.settings.life, attention: false };
+  const you = { walkPhase: 0, moving: false, grounded: true, x: 0, y: 0, z: 0, vy: 0, seat: null as string | null, rig: false };
+  const boltAt = { x: 0, y: 0, z: 0 };
 
   const hidden = () => typeof document !== 'undefined' && document.visibilityState === 'hidden';
   const attention = () => parts.giveWay?.attention() ?? false;
-  const followScene = () => sound.scene({ hidden: hidden(), life: ctx.settings.life, attention: attention() });
+  const followScene = () => {
+    scene.hidden = hidden();
+    scene.life = ctx.settings.life;
+    scene.attention = attention();
+    sound.scene(scene);
+  };
   document.addEventListener('visibilitychange', () => {
     followScene();
     // Frames stop in a hidden tab, so the ambience is torn down here rather than by the tick.
@@ -55,7 +66,16 @@ export function installSoundscape(ctx: Ctx, parts: SoundscapeParts) {
   // ---- You: steps, landings, the seat ----------------------------------------------------------------
   function hearYou(dt: number) {
     const p = ctx.player;
-    const heard = steps.update({ walkPhase: p.walkPhase, moving: p.moving, grounded: p.grounded, x: p.pos.x, y: p.pos.y, z: p.pos.z, vy: p.vy, seat: p.seat?.seatId ?? null, rig: !!p.rig }, dt);
+    you.walkPhase = p.walkPhase;
+    you.moving = p.moving;
+    you.grounded = p.grounded;
+    you.x = p.pos.x;
+    you.y = p.pos.y;
+    you.z = p.pos.z;
+    you.vy = p.vy;
+    you.seat = p.seat?.seatId ?? null;
+    you.rig = !!p.rig;
+    const heard = steps.update(you, dt);
     for (const h of heard) {
       if (h.kind === 'step') sound.play(`step-${h.surface}`, 'ship', step(h.surface, h.run));
       else if (h.kind === 'leap') sound.play('leap', 'ship', leap);
@@ -85,8 +105,16 @@ export function installSoundscape(ctx: Ctx, parts: SoundscapeParts) {
     const chatty = ctx.settings.life === 'full' && !attention();
     const say = bolt.update(d, dt, chatty);
     if (say) sound.play(`droid-${say}`, 'ship', droid(say, { x: d.x, y: d.y, z: d.z }));
+    // Its hover hum follows on the ears' cadence, not every frame.
+    boltT += dt;
+    if (boltT < EAR_EVERY) return;
+    boltT = 0;
     const bus = ambience.on ? sound.bus('ambience') : null;
-    if (bus) ambience.droid(bus.ctx, d.mode === 'off' || d.mode === 'docked' ? null : { x: d.x, y: d.y, z: d.z });
+    if (!bus) return;
+    boltAt.x = d.x;
+    boltAt.y = d.y;
+    boltAt.z = d.z;
+    ambience.droid(bus.ctx, d.mode === 'off' || d.mode === 'docked' ? null : boltAt);
   }
 
   // ---- The ambience, started once audio is and torn down while it can't be heard -------------------
@@ -158,6 +186,12 @@ export function installSoundscape(ctx: Ctx, parts: SoundscapeParts) {
     sound.apply(s);
     if (!s.muted) sound.ui('on');
     toast(s.muted ? 'Sound off. Shift+M turns it back on' : 'Sound on', 'info', undefined, { ms: 2200 });
+  }
+
+  // Sound used to be off by default; settings saved back then come in unmuted. Say so, once.
+  if (soundTurnedOnByUpdate && !ctx.settings.muted) {
+    toast('Sound is on now: Shift+M or Settings > Sound & voice turns it off', 'info', undefined, { ms: 8000 });
+    saveSettings(ctx.settings);
   }
 
   const api = { ambience: () => ambience.on, toggleMute };
