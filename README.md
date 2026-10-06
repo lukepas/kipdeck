@@ -1,12 +1,16 @@
-# UGC Army
+# Mergeline
 
-**The inbox for your AI coding agents.**
+The inbox for your AI coding agents: see which agent needs you, review what's ready, and merge what shipped.
 
-Run Claude Code, Codex, Cursor and the rest side by side, and see on one page which agent needs you, which one has work to review and which ones are busy. Answer, review and merge from there, on your laptop or your phone. It runs on your own machine or your team's dev box; nothing leaves it.
+```bash
+npx mergeline
+```
 
 ![The inbox: an agent that needs an answer, one with work to review and three at work on the left, the selected agent on the right (demo data)](docs/img/inbox.png)
 
-[**Run it**](#run-locally) · [**What it does**](#what-it-does) · [**Labs**](#labs) · [**Controls**](#controls) · [**Docs**](docs/features.md)
+Run it inside the repository you work in. It opens in your browser, signed in, with that repository as your first project. Claude Code, Codex and Cursor run side by side (OpenCode, Pi, Grok, Muse and DeepSeek Harness in beta), each on a branch of its own, and you answer, review and merge from one page, on your laptop or your phone. It runs on your machine or your team's dev box, and nothing leaves it.
+
+[**Run it**](#run-it) · [**Attach an agent**](#attach-an-agent-you-already-started) · [**Teams and servers**](docs/self-hosting.md) · [**Labs**](#labs) · [**Docs**](docs/features.md)
 
 - **One loop.** **Deploy agent**, get pinged when it needs you, act on its row (Answer, Review changes, Merge), and it lands in **Shipped today**. Each row has one button; the selected agent's live terminal, diff and log sit beside the list. See [the inbox](docs/inbox.md).
 - **One ranking.** `src/shared/attention.ts` decides the order everywhere: the inbox's sections (Needs you, To review, Working, Idle), Mission control, the tab title and notifications.
@@ -17,6 +21,46 @@ Run Claude Code, Codex, Cursor and the rest side by side, and see on one page wh
 | --- | --- |
 | ![The inbox on a phone: the list alone, an agent opens over it (demo data)](docs/img/inbox-phone.png) | ![The 3D Bridge view, a Labs view of the same agents (demo data)](docs/img/deck-overview.png) |
 | The same inbox on a phone. | The Bridge view at `/bridge` (Labs): the same agents as a room, for a team's wall screen. |
+
+## Run it
+
+You need **Node.js 20+**, **git** and one agent CLI: **Claude Code** (`npm install -g @anthropic-ai/claude-code`), **Codex** (`npm install -g @openai/codex`) or **Cursor** (`cursor-agent`), signed in. The **GitHub CLI** (`gh`) is optional: with it, agents open pull requests and the inbox shows their checks; without it, review reads the local diff and Merge merges on your computer.
+
+In the repository you work in:
+
+```bash
+npx mergeline
+```
+
+1. It starts on `http://localhost:4600` (or the next free port) and opens your browser, **already signed in**. On your own computer there is no password to type: the link it opens works once, and `npx mergeline open` makes a new one if you lose the tab. Only your computer can reach it.
+2. The repository you started it in is your first project. Started somewhere else, the setup card offers to clone one from GitHub.
+3. The **setup card** says which agents it found and whether each is signed in, the project, and GitHub, with the one line to run for anything that isn't ready.
+4. **Deploy your first agent** starts one on a safe task (a 5-line SUMMARY.md on how to run the repository). It shows up under **Working** within seconds and under **To review** when it's done.
+
+Nothing asks you anything in the terminal, and there are no settings to fill in. From a clean machine to the first agent at work takes under two minutes, most of it npm downloading; `design/time-to-first-agent.mjs` times it.
+
+Common options:
+
+```bash
+npx mergeline --port 4700                 # this port or nothing
+npx mergeline ~/code/my-project           # keep the office's data in that project, as agent-office did
+npx mergeline --host 0.0.0.0              # let your network in (then everyone else signs in with a password)
+npx mergeline --password 'correct horse'  # a password, even on this computer
+npx mergeline --no-open                   # print the sign-in link instead of opening a browser
+npx mergeline --telemetry                 # share anonymous usage numbers (off by default)
+```
+
+To have a `mergeline` command instead: `npm install -g mergeline`, or [`install.sh`](install.sh) (macOS and Linux) and [`install.ps1`](install.ps1) (Windows), which install the same package. Every option is in [docs/configuration.md](docs/configuration.md); choosing models and providers per agent is in [docs/agents.md](docs/agents.md).
+
+## Attach an agent you already started
+
+Started Claude Code or Codex in a terminal before Mergeline was running? Quit it there (Ctrl+C or `/exit`), then in the same folder:
+
+```bash
+npx mergeline attach
+```
+
+It finds that folder's newest Claude Code or Codex session in the CLI's own files, and the running Mergeline carries it on as one of its agents: the same conversation, now in the inbox with its terminal, its questions, its changes and the merge. `--list` shows the folder's sessions, `--session <id>` picks one, and Cursor needs `--agent cursor --session <id>` (`cursor-agent ls` lists them).
 
 ## Labs
 
@@ -41,7 +85,7 @@ The home page and the ranking are the product. Most of the rest of this list is 
 - **Mission control.** Press **I**. Attention, Goals, Review, Timeline and Crew tabs: what needs someone with one next step per row, the deck's mission and milestones (given to new units as context), a review inbox of finished work, pull requests and payouts to approve, and what happened while you were away. Reminders catch what would otherwise be forgotten. See [docs/mission-control.md](docs/mission-control.md).
 - **A deck per project.** Each GitHub repository is a deck, built as a command amphitheatre: the mission table in a pit in the middle, four pods of consoles facing it on two tiers that step up south of it to the captain's raised dais, the situation arc hung over the north side (the Attention board in the middle, Issues over Queue and Pull requests over Services on its wings, capacity along its foot), the Proof corner and the planning board on the west wall, the Review bay in the north-west corner and the service monitor on the east wall, where the live page of a unit's dev server shows when you walk up to it (E on its row of the Services board puts it there; [the service monitor](docs/deck.md#the-service-monitor)) ([the deck](docs/deck.md)). Every panel on the deck is a table you can read from where you stand: the planning board's milestones, the Review bay's queue and seats (on its board and on the sign by its door), the Proof corner's escrow ledger and ERC-8004 records, the docs rack's index and the pit wall's clocks. Sitting in the captain's chair frames it all in one look: the bow, the arc, the pit and the crew. Behind the arc, under the Attention and Pull requests boards, a forward lounge hangs at the bow: climb its ladder (E), take one of its three seats facing the glass and watch space go by with a wider view; a readout on the glass names a unit that needs you (N takes you to it) and counts the jump in ([the forward lounge](docs/deck.md#the-forward-lounge)). From across the deck each table shows its headline counts, large enough to read from the dais, and turns back into its table as you walk up. The Attention board in the middle of the arc is the hero: a card for every unit that is stuck, needs you or waits for review (stuck first, names in 0.5 m type, readable from the chair; three or fewer go full width, the first a lit hero card with the N key when it needs you), the working folded into one *WORKING 12* chip, *ALL CLEAR* when nobody waits, and the counts in its header, the only place besides the top bar the room counts. Each board is framed in lit chrome the colour of its most urgent state, an empty Queue or Services folds to a pill so Issues and Pull requests read bigger, and while a waiting unit is out of view the arc's foot on its side points to it ([docs/design.md](docs/design.md#the-bridge-from-the-captains-chair)).
 - **Units at consoles.** Deploy Claude Code, Codex, OpenCode, Grok, Muse, DeepSeek Harness, Pi or Cursor at a free console, with its model and effort. Each runs in its own git worktree; its live terminal is one click away, for anyone on the deck. A unit that needs you steps onto its pod's ready line with an orange diamond turning over it and a beam of light up to its card on the Attention board; a stuck one has a red triangle blinking over it and a red rim round its station, one to review an amber ring at its feet, one at work a small cyan pip. One label a unit: its card while the board is in view, else its callout, else its mark at the edge of the screen. **N** takes you to the next one.
-- **Agents that manage agents.** Every unit can list, deploy, message and stand down the others through the `ugc-army` MCP server or the `office-workers` command, and board agents at the situation wall triage issues and pull requests for whoever walks up.
+- **Agents that manage agents.** Every unit can list, deploy, message and stand down the others through the `mergeline` MCP server or the `office-workers` command, and board agents at the situation wall triage issues and pull requests for whoever walks up.
 - **The home page.** `/` is the inbox: every agent in four sections with one button each, the selected agent's terminal, diff and log beside the list, the Deploy sheet, Shipped today and six keys ([the inbox](docs/inbox.md)). It loads no 3D and opens its windows only when first wanted, so it draws after about 175 kB on any laptop or phone. The old `/lite` address goes there. With Bridge view on in Labs, the deck plan fills the pane while no agent is selected.
 - **A bridge that looks alive.** Each console's screen shows its unit's state toward the table, and a working one runs with its terminal's output while the unit's hands work the console; busy stations send pulses to the holo table, whose route column climbs through the mission's waypoints with each unit's marker parked at its own, and whose one caption at the table's lip says how far the ship has come toward the active milestone, and a ticker over the wall carries the clock and the deck's log. Its pod goes quiet round a unit that needs you, a dark ring settles round that unit on screen, and the room's spectacle ducks for a beat and then stays (it no longer greys out while anyone waits); it all stills with Settings > Bridge > Ship motion at Off ([the deck](docs/deck.md#the-bridge)). The room reads in three zones of value: a dark hull, the crew under cool starlight with warm footwell glows, and the arc's type bright on its own dark backing, under a vivid magenta and teal galaxy ([the look](docs/design.md#the-look-value-light-and-colour)). Out of the ports, gas and dust stream past at four depths, a ringed giant hangs off the port side and the sun flares through the canopy. On a page's first load the view arrives from outside the bow and comes down through the canopy to the conn in 5 s (any key lands you there). Sitting in the captain's chair takes the conn: the view rises over the chair's back, the tiers light from the pit to the dais and the arc builds in, the Attention board first (any key skips it). A unit that starts needing you hails: its beam climbs to its card, the card slides in with chevrons and its ship marker flies from the holo to hover by the dais; a stuck card sweeps red, and a jump's countdown (JUMP IN and the digit, a ring wiping round it), a waypoint cleared and the mission complete are said on one type plane over the arc; at rest a wave of light runs down the canopy's ribs every 7 s and, at High, a wake of lit dust streams over the glass ([the motion layer](docs/design.md#the-motion-layer)). Merges and jumps are framed, the boards and the holo have a screen's scanlines, and one grade sets the look by Night and by Day ([the cinema](docs/design.md#the-cinema)). Settings > Bridge > Quality (Auto by default) draws less of the light, detail, space close by and the cinema on slower graphics: High smooths edges with SMAA, Medium with FXAA, and Low leaves out the grade, the screens' character and the arrival. Auto steps down only for frames that keep falling behind and back up when there's room, holds at Medium or better on Apple silicon and discrete GPUs, and says what it runs at in Settings and on the menu's Quality row, with *Try High* to undo a step down ([light and materials](docs/deck.md#light-and-materials)). In first person your own gloved hands are at the bottom of the view: they sway and swing as you look round and walk, reach out and tap whatever you use, hold up a datapad with the counts while Mission control is open, make way when you stop to read a board, and hold each rung of the lounge's ladder as you climb past it (Settings > Bridge > Hands; [your hands](docs/design.md#your-hands-in-first-person)).
 - **The world outside moves with the work.** The mission is a world low in the forward glass, a quarter of the view from the first waypoint, that grows with every waypoint passed and issue closed, until the ship drops into orbit; every other deck flies as an escort off the side ports (its size its units, its lit ports its units at work, a needs-you beacon when it needs you, click it for the Decks lift); and each working unit has a fighter on patrol, its open pull request a fighter on the picket ahead; high off the starboard bow, seen from the captain's chair, the Relay Beacon carries a node-star for every unit at work in the fleet, flares the lamp at the heart of its rings on a merge and lights a ledger segment per bounty released ([the Relay Beacon](docs/design.md#the-relay-beacon)). None of it moves on its own timer, and it all gives way to a unit that needs you. Settings > Bridge > Life: Full, Calm (no salutes, hails or patrols) or Silent running (no ambient life, stars at a crawl), and a switch for each part ([the deck](docs/deck.md#the-bridge), [docs/design.md](docs/design.md#the-world-outside)).
@@ -51,280 +95,17 @@ The home page and the ranking are the product. Most of the rest of this list is 
 - **Calm by design.** Hue zoned (orange only ever means someone needs you), a glyph for every state, ambient life that gives way to attention, synthesized sound in four groups with a mixer, where the alerts always sit on top ([DESIGN.md](DESIGN.md), [docs/design.md](docs/design.md#sound)).
 - **Night and Day lights.** Settings > Bridge > Bridge lights: Night for a dark room under the galaxy, Day for high orbit over a sunlit planet, or Auto to follow your system, with a Brightness step either way. The HUD, the 2D view and the sign-in page follow it ([the deck](docs/deck.md#light-and-materials)).
 
-## Proof of Merge on testnets
+## Teams and servers
 
-A lab (Labs > Proof of Merge), off by default: with it off, none of what follows is on the page or on the network.
-
-![Testnet only](https://img.shields.io/badge/chain-testnet%20only-orange?style=flat-square) Solana devnet and Base Sepolia. No mainnet, no token, no NFT, no points.
-
-Agents get paid, and earn reputation, only when a person merges their work.
-
-- **Mission control** for teams running many agents: what needs a person now, a review inbox, goals and milestones, a timeline ([docs](docs/mission-control.md)).
-- **Bounties** in devnet USDC on GitHub issues, from the board or a "Fund this issue" Blink. On the deck each one is a stack of violet test-USDC coins over the escrow vault, as tall as its amount and shaped by its state, a funded issue's row on the Issues board carries its amount and a coin, and a payout's coins fly from the vault to the unit that earned it with the devnet transaction on a receipt over its console. A release needs two signatures: the attester's (a person with write access merged the office's own, non-fork PR) and the approver's (an office admin approved it in the review inbox) ([docs](docs/bounties.md)). A repository can also run the attester as a [GitHub Action](onchain/action/README.md), with no office.
-- **Proof of merge**: an EAS attestation on Base Sepolia for every office PR a person merges, reverts or closes, and ERC-8004 feedback for the agent ([docs](docs/proof-of-merge.md), [reputation](docs/reputation.md)).
-- **Paid tasks over x402**: an outsider hires a worker for one task with test USDC; it waits, held, for an admin. Tested end to end on a local anvil chain, and one 0.10 test USDC payment settled on Base Sepolia through x402.org ([transaction](https://sepolia.basescan.org/tx/0x490896509be59e45e7d14afbaa3ec24c18db5292f4ea1c71cf79533670d126dc), [docs](docs/x402.md)).
-- **A public board** at `/pom/`, built from chain data when the office runs the indexer and otherwise from the office's own attestation record, with an explorer link on every row; the GitHub Pages export is rebuilt from chain data alone ([docs](docs/showcase.md)).
-
-What is on chain so far: the escrow program on Solana devnet (`JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`) with five scripted demo bounties paid there (the last one claimed by the GitHub Action), the Base Sepolia schema and fallback contract, one x402 payment on Base Sepolia, and no standing attestations (the test ones were revoked) or outside users yet. Nothing here has had a real merge behind a payout yet; see the launch kit's checklist.
-
-### Quickstart in 60 seconds
-
-Every chain feature is off by default; without them this is the office plus mission control.
-
-```bash
-git clone <this fork's URL> agent-office-pom && cd agent-office-pom
-npm install                 # also builds the client and server
-node bin/agent-office.js    # opens the office; chain features off
-```
-
-To try the chain side on testnets, build the on-chain packages the office loads (`cd onchain/solana && npm install && npm run build`, the same in `onchain/attest`), then turn bounties on in Settings, Bounties (set an approver wallet there), and start the office with `--attest --attest-repos owner/name`, `--reputation` or `--x402`. Only public repositories are ever attested. The deployed testnet addresses are in `onchain/*/deployments/`.
-
-### How it fits together
-
-```text
- GitHub issue --Fund (board or Blink)--> Solana devnet escrow program
-      |                                         ^
- unit (Claude Code, Codex, Cursor, Pi)          |  Release: attester + approver sign
-      |                                         |
- office PR (never a fork) --person merges--> office checks GitHub --admin approves in review inbox
-                                                 |
-                                                 +--> EAS attestation + ERC-8004 feedback (Base Sepolia)
-                                                 |
- onchain/indexer (chain data only) --> leaderboard.json --> /pom/ public ledger
-```
-
-Security: keys live in files under `~/.config/agent-office-chain` (mode 0600, never logged); use dedicated testnet keys with nothing of value on them. Payouts and refunds are admin-only and can be co-signed in the admin's browser wallet. RPC calls go through the network guard. Nothing here is audited, and mainnet waits on an audit. See [docs/security.md](docs/security.md). Hackathon and grant drafts are in [launch/chain](launch/chain/README.md).
-
-> [!WARNING]
-> **Work in progress.** UGC Army changes fast: keys that move, screens that get redrawn, features that come and go.
-
-## Upstream credit
-
-UGC Army is a fork of [agent-office](https://github.com/AgentSystemLabs/agent-office), created by webdevcody, Copyright (c) 2026 AgentSystemLabs, released under the MIT License. The server's architecture (decks as floors, workers and their terminals, worktrees, provider adapters, the queue, meetings, voice, accounts, the tunnel and the deploy scripts) is upstream's; [NOTICE](NOTICE) lists what this fork replaced and what remains, and [launch/chain/disclosure.md](launch/chain/disclosure.md) lists our changes commit by commit. This fork is not run by the upstream authors. The package and the `agent-office` command keep their upstream names so upstream changes can still be merged; `ugc-army` is the same command.
-
-## Requirements
-
-On the machine that runs the office:
-
-- **Node.js 20+**
-- At least one agent CLI, signed in as the user that runs the office: **Claude Code** (`claude`), **Codex** (`codex`), **OpenCode** (`opencode`), **Grok** (`grok`), **Muse** (`muse`), **DeepSeek Harness** (`dsh`), **Pi** (`pi`, 0.87.1+) or the **Cursor** CLI (`cursor-agent`). With [accounts](#add-users), everyone can sign in to their own Claude from the office instead.
-- **git**, and the **GitHub CLI** (`gh auth login`) for cloning repos and the issue and PR boards
-
-## Run locally
-
-From a clone of this repository:
-
-```bash
-git clone <this repository's URL> ugc-army && cd ugc-army
-npm install          # also builds the client and server
-npm install -g .     # puts `ugc-army` (and `agent-office`) on your PATH
-ugc-army
-```
-
-The deploy scripts below and `install.sh` / `install.ps1` still install upstream agent-office from its releases; until this fork publishes its own, run it from a clone as above.
-
-The first time it starts, it walks you through setting up, right in the terminal:
-
-1. **Where to clone your projects.** It suggests a code folder you already have (`~/Workspace`, `~/code`...), else `~/agent-office`. Each project goes in `<folder>/<owner>/<repo>`.
-2. **GitHub.** If the GitHub CLI isn't signed in, it offers to run `gh auth login` for you.
-3. **Your first project.** Pick one of your repos by number, or type `owner/name`, and the office clones it as the first floor.
-
-Press Enter to skip a step: the elevator in the office asks for your first project too. Then the office opens in your browser, **already signed in**, with a link that works once. The terminal also prints the office password, for signing in from another browser (it's saved in `~/agent-office/.agent-office/config.json`).
-
-Press **New task** on the home page to start an agent. (In the Bridge view at `/bridge`, walk to a free console and press **E**.)
-
-Common options:
-
-```bash
-agent-office ~/code/my-project              # use a project you already have as the first floor
-agent-office --password 'correct horse'     # choose the password
-agent-office --port 4700
-agent-office --agent pi                     # default agent: claude, codex, opencode, grok, muse, dsh, pi or cursor-agent
-agent-office --no-open                      # print the sign-in link instead of opening a browser
-agent-office setup                          # the first-start walkthrough again (office stopped)
-```
-
-Every option is in [docs/configuration.md](docs/configuration.md). Choosing models and providers per worker is in [docs/agents.md](docs/agents.md).
-
-> Only your computer can reach the office: it listens on `127.0.0.1`. `--host 0.0.0.0` lets your network in, but over plain http, where voice and screen sharing don't work. To share the office with a team, put it on a server: [AWS](#deploy-to-aws-ec2), [Azure](#deploy-to-azure), [Railway](#deploy-to-railway), [Fly.io](#deploy-to-flyio), [Dokploy](#deploy-to-dokploy) or [any Ubuntu or Debian machine](#deploy-to-any-ubuntu-or-debian-server).
-
-## Deploy to AWS (EC2)
-
-One script, using only the AWS CLI. You need the **AWS CLI signed in** (`aws configure` or `aws sso login`), `ssh`, `curl` and a clone of this repo:
-
-```bash
-git clone https://github.com/AgentSystemLabs/agent-office && cd agent-office
-deploy/aws.sh up --project your-org/your-repo --claude-token "$(claude setup-token)"
-```
-
-In about two minutes, `up`:
-
-1. Launches a **t3.xlarge** (4 vCPU, 16 GiB) Ubuntu 24.04 instance with a 50 GiB disk and a fixed Elastic IP.
-2. Creates a security group that opens **only SSH, only to your IP**. The office listens on `127.0.0.1:4600` on the machine and is never on the internet. Everyone reaches it through an SSH tunnel, so there are no certificates to manage, and voice and screen sharing work.
-3. Runs [`deploy/provision.sh`](deploy/provision.sh) on it: Node 22, git, the GitHub CLI, Claude Code and the office, under systemd, so it comes back after a crash or reboot and workers keep running through a restart.
-4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the office password once. Write it down.**
-
-`--project` is optional: it clones that repo as the first floor. Leave it out and pick projects in the elevator.
-
-**Signing in the agents.** `--claude-token` uses your Claude subscription; `--anthropic-api-key <key>` uses an API key instead. Leave both out and run `/login` in the first worker's terminal. Codex and OpenCode aren't installed by the script: `deploy/aws.sh ssh` and install them yourself.
-
-**GitHub.** Your local `gh auth token` is copied to the machine so the office can clone private repos, show the boards and push PRs. Anyone in the office can use it, so pass `--github-token <fine-grained token>` or `--no-github-token` to limit that.
-
-**On Tailscale, no tunnels.** If your team uses [Tailscale](https://tailscale.com), add `--tailscale`:
-
-```bash
-deploy/aws.sh up --tailscale --project your-org/your-repo --claude-token "$(claude setup-token)"
-```
-
-The machine joins your tailnet, and Tailscale Serve puts the office on `https://agent-office.<your-tailnet>.ts.net` with a real certificate. Anyone on your tailnet just opens that link: no terminal to keep open, no SSH keys, no IPs to allow, and voice and screen sharing work. `up` opens Tailscale's page to add the machine (or pass `--tailscale-auth-key tskey-auth-...`) and, the first time, the page that turns on HTTPS for your tailnet. SSH stays open to your IP only, for `deploy/aws.sh` itself. More in [docs/aws.md](docs/aws.md#tailscale).
-
-Day to day:
-
-```bash
-deploy/aws.sh open                # tunnel + open the office (Ctrl-C closes the tunnel)
-deploy/aws.sh status              # machine, address, is the office up, who's invited
-deploy/aws.sh logs                # follow the office's logs
-deploy/aws.sh ssh                 # a shell on the machine
-deploy/aws.sh update              # install the latest agent-office and restart
-deploy/aws.sh resize t3.2xlarge   # bigger or smaller machine, same address
-deploy/aws.sh pause               # stop the machine; only the disk and IP are billed
-deploy/aws.sh resume              # start it again and open it
-deploy/aws.sh destroy             # delete everything it created (asks first)
-```
-
-You can also upgrade from inside the office: **Menu > Deck > Update UGC Army**. Other flags (`--region`, `--instance-type`, `--disk`, `--name` for several offices) are in `deploy/aws.sh help`, and the details are in [docs/aws.md](docs/aws.md).
-
-**The workers' dev servers, on your computer.** The office runs on the server, so a worker's `npm run dev` listens there. Run this on your own computer and leave it running, and every web server a worker starts opens on the same port on yours, by itself (`http://localhost:5173` is the worker's), and closes when the worker stops it:
-
-```bash
-agent-office tunnel                       # while `deploy/aws.sh open` (or a teammate's ssh command) is running
-agent-office tunnel office@203.0.113.7    # or by itself: it opens the tunnel to the office too
-```
-
-It works with every way of running the office on a server, and needs the `agent-office` command on your computer: [docs/tunnel.md](docs/tunnel.md).
-
-## Deploy to Azure
-
-The same thing on an Azure VM, using only the Azure CLI. You need the **Azure CLI signed in** (`az login`), `ssh`, `curl` and a clone of this repo:
-
-```bash
-git clone https://github.com/AgentSystemLabs/agent-office && cd agent-office
-deploy/azure.sh up --project your-org/your-repo --claude-token "$(claude setup-token)"
-```
-
-`up` puts everything in a resource group of its own, `agent-office`, and launches a **Standard_D4as_v5** VM (4 vCPU and 16 GiB, like the t3.xlarge on AWS, at about the same price) with Ubuntu 24.04, a 64 GiB Premium SSD and a static IP. Its firewall opens **only SSH, only to your IP**. Then it runs the same [`deploy/provision.sh`](deploy/provision.sh) and opens the office through an SSH tunnel at http://localhost:4600. **The first page shows the office password once. Write it down.**
-
-Every command from the AWS script works the same, with `deploy/azure.sh` in its place: `open`, `status`, `logs`, `ssh`, `update`, `invite`, `allow`, `service`, `resize Standard_D8as_v5`, `pause` (deallocates the VM, so only the disk and IP are billed), `resume` and `destroy` (deletes the resource group). One more, `connect`, lets a second computer manage the office. `--location` picks the region (default: your `az` default location, else `eastus`), `--subscription` the subscription and `--size` the VM size. The details are in [docs/azure.md](docs/azure.md).
-
-## Deploy to Railway
-
-No machine to look after: one script, using the Railway CLI. You need the **Railway CLI 5 or newer, logged in** (`railway login`), `ssh`, `curl`, Node.js and a clone of this repo:
-
-```bash
-git clone https://github.com/AgentSystemLabs/agent-office && cd agent-office
-deploy/railway.sh up --claude-token "$(claude setup-token)"
-```
-
-In about five minutes, `up`:
-
-1. Creates a Railway project with one service, built from this checkout with [`deploy/container/Dockerfile`](deploy/container/Dockerfile): Node 22, git, the GitHub CLI and sshd, with Claude Code installed on first start.
-2. Adds a **volume on `/data`** for everything the office keeps: the password, accounts, floors and settings, the projects, Claude's and GitHub's sign-ins, teammates' keys and the SSH host key. Restarts and redeploys replace the container, never the volume.
-3. Puts Railway's **TCP proxy** in front of the container's SSH, and nothing else. The office listens on `127.0.0.1:4600` inside the container and has no public URL: everyone reaches it through an SSH tunnel, as on AWS.
-4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the office password once. Write it down.**
-
-The agents and GitHub sign in as on AWS: `--claude-token`, `--anthropic-api-key`, `--github-token` or `--no-github-token`.
-
-```bash
-deploy/railway.sh open              # tunnel + open the office (Ctrl-C closes the tunnel)
-deploy/railway.sh status            # deployment, SSH address, volume, is the office up, who's invited
-deploy/railway.sh invite octocat    # let a teammate tunnel in with their GitHub SSH keys
-deploy/railway.sh logs              # follow the office's logs (ssh: a shell in the container)
-deploy/railway.sh update            # build this checkout again and redeploy it
-deploy/railway.sh destroy           # delete the project and its volume (asks first)
-```
-
-The details, and what's on the volume, are in [docs/railway.md](docs/railway.md).
-
-## Deploy to Fly.io
-
-The same container on a [Fly.io](https://fly.io) machine, using flyctl. You need **flyctl logged in** (`fly auth login`), `ssh`, `curl`, Node.js and a clone of this repo:
-
-```bash
-git clone https://github.com/AgentSystemLabs/agent-office && cd agent-office
-deploy/fly.sh up --claude-token "$(claude setup-token)"
-```
-
-In a few minutes, `up`:
-
-1. Creates a Fly app with one machine, a `shared-cpu-4x` with 8 GB in the region nearest you, built from this checkout with the same [`deploy/container/Dockerfile`](deploy/container/Dockerfile) as on Railway.
-2. Adds a **volume on `/data`** for everything the office keeps, so restarts, redeploys and resizes lose none of it.
-3. Gives the app a **dedicated IPv4 address** with SSH on a random port, and nothing else. The office listens on `127.0.0.1:4600` inside the machine and has no public URL: everyone reaches it through an SSH tunnel, as on AWS.
-4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the office password once. Write it down.**
-
-The agents and GitHub sign in as on AWS: `--claude-token`, `--anthropic-api-key`, `--github-token` or `--no-github-token`.
-
-```bash
-deploy/fly.sh open                    # tunnel + open the office (Ctrl-C closes the tunnel)
-deploy/fly.sh status                  # machine, SSH address, volume, is the office up, who's invited
-deploy/fly.sh invite octocat          # let a teammate tunnel in with their GitHub SSH keys
-deploy/fly.sh logs                    # follow the office's logs (ssh: a shell in the machine)
-deploy/fly.sh update                  # build this checkout again and redeploy it
-deploy/fly.sh resize performance-2x   # another machine size, same address and volume
-deploy/fly.sh pause                   # stop the machine (resume starts it again)
-deploy/fly.sh destroy                 # delete the app and its volume (asks first)
-```
-
-`--region`, `--org`, `--vm-size`, `--memory`, `--disk` and `--name` (for several offices) are in `deploy/fly.sh help`. The details, and what's on the volume, are in [docs/fly.md](docs/fly.md).
-
-## Deploy to Dokploy
-
-Already run a [Dokploy](https://dokploy.com) server? One script puts the office on it, through Dokploy's API. You need an **API key** (Dokploy: **Settings → Profile → API/CLI Keys**, with rate limiting off), `ssh`, `curl`, `git`, Node.js and a clone of this repo:
-
-```bash
-git clone https://github.com/AgentSystemLabs/agent-office && cd agent-office
-export DOKPLOY_API_KEY=<your key>
-deploy/dokploy.sh up --url https://dokploy.example.com --claude-token "$(claude setup-token)"
-```
-
-In about five minutes, `up`:
-
-1. Creates a Dokploy project with one application, and uploads this checkout for Dokploy to build with [`deploy/container/Dockerfile`](deploy/container/Dockerfile), the same image as on Railway.
-2. Mounts a **Docker volume on `/data`** for everything the office keeps. Deploys and restarts replace the container, never the volume.
-3. Publishes the container's SSH on **port 2222 of the server** (`--ssh-port` picks another), and nothing else: no domain, and the office listens on `127.0.0.1:4600` inside the container. Everyone reaches it through an SSH tunnel, as on AWS. A firewall in front of the server has to let that port through.
-4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the office password once. Write it down.**
-
-The agents and GitHub sign in as on AWS: `--claude-token`, `--anthropic-api-key`, `--github-token` or `--no-github-token`. `--server <name>` runs it on one of Dokploy's remote servers.
-
-```bash
-deploy/dokploy.sh open              # tunnel + open the office (Ctrl-C closes the tunnel)
-deploy/dokploy.sh status            # its page in Dokploy, last deployment, SSH address, who's invited
-deploy/dokploy.sh invite octocat    # let a teammate tunnel in with their GitHub SSH keys
-deploy/dokploy.sh logs              # follow the office's logs (ssh: a shell in the container)
-deploy/dokploy.sh update            # upload this checkout again, build it and redeploy it
-deploy/dokploy.sh destroy           # delete the application and its volume (asks first)
-```
-
-The details, and what's on the volume, are in [docs/dokploy.md](docs/dokploy.md).
-
-## Deploy to any Ubuntu or Debian server
-
-Another cloud, or your own machine? Run one line on the server, as root or as a user with sudo:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/AgentSystemLabs/agent-office/main/deploy/provision.sh | bash
-```
-
-It installs Node 22, git, the GitHub CLI, Claude Code and the office as a systemd service. Run as root, it creates an `agentoffice` user to run the office, so workers never run as root. The office listens on `127.0.0.1:4600` only, and the script ends by printing the SSH tunnel command and a link that shows the office password once. Run the same line again to update.
-
-For HTTPS on your own domain, point a DNS record at the server and add `bash -s -- --domain office.example.com`: it sets up Caddy, which gets the certificate by itself. To put it on your Tailscale network instead, add `bash -s -- --tailscale`. The details, and setting it up by hand behind Caddy or nginx, are in [docs/self-hosting.md](docs/self-hosting.md).
+The same inbox runs on a server for a team: everyone reaches it through an SSH tunnel or Tailscale, with their own account. One script each for [AWS](docs/self-hosting.md#deploy-to-aws-ec2), [Azure](docs/self-hosting.md#deploy-to-azure), [Railway](docs/self-hosting.md#deploy-to-railway), [Fly.io](docs/self-hosting.md#deploy-to-flyio), [Dokploy](docs/self-hosting.md#deploy-to-dokploy) and [any Ubuntu or Debian machine](docs/self-hosting.md#deploy-to-any-ubuntu-or-debian-server), all in [docs/self-hosting.md](docs/self-hosting.md). Off your own computer the office asks for a password or an account, never a sign-in link.
 
 ## Add users
 
 Everyone gets their own account, so their name is on their operator, in chat and on every terminal they type into.
 
-**1. On a server, let them in first.** On a [Tailscale](docs/aws.md#tailscale) office, everyone on your tailnet can already open it. For someone who isn't, share the machine with them from Tailscale's Machines page: **Menu > Deck > Invite teammates** says how. Skip to step 2.
+**1. On a server, let them in first.** On a [Tailscale](docs/aws.md#tailscale) office, everyone on your tailnet can already open it. For someone who isn't, share the machine with them from Tailscale's Machines page: **Invite teammates** (Ctrl+K) says how. Skip to step 2.
 
-Otherwise the office is only reachable through an SSH tunnel, so a teammate needs their SSH key on the machine. In the office, open **Menu > Deck > Invite teammates** and type their GitHub username. On AWS, Railway, Fly.io or Dokploy you can also do it from your terminal:
+Otherwise the office is only reachable through an SSH tunnel, so a teammate needs their SSH key on the machine. In the office, open **Invite teammates** (Ctrl+K) and type their GitHub username. On AWS, Railway, Fly.io or Dokploy you can also do it from your terminal:
 
 ```bash
 deploy/aws.sh invite octocat        # installs the keys from github.com/octocat.keys
@@ -344,17 +125,17 @@ ssh -L 4600:localhost:4600 office@<your-office-ip>
 
 Their key logs in as a locked-down `office` user that can only forward to the office port: no shell, no other ports. Running the office on your own computer, or on your own domain over HTTPS? Skip this step.
 
-A teammate with the `agent-office` command on their computer can run `agent-office tunnel office@<your-office-ip>` instead of the `ssh` line: it opens the same tunnel, and every web server a worker starts opens on their computer too ([docs/tunnel.md](docs/tunnel.md)).
+A teammate with Mergeline on their computer can run `npx mergeline tunnel office@<your-office-ip>` instead of the `ssh` line: it opens the same tunnel, and every web server a worker starts opens on their computer too ([docs/tunnel.md](docs/tunnel.md)).
 
-**2. Make them an account.** Open **Menu > Deck > Accounts** and make an invite link. Name it (or let them pick) and make them a *Member* or an *Admin*. The link works once, for 7 days, and they choose their own password. Make one for yourself too, as an admin.
+**2. Make them an account.** Open **Accounts** (Ctrl+K) and make an invite link. Name it (or let them pick) and make them a *Member* or an *Admin*. The link works once, for 7 days, and they choose their own password. Make one for yourself too, as an admin.
 
 The same works from a terminal on the office's machine, even while it runs:
 
 ```bash
-agent-office accounts                      # accounts and open invites
-agent-office accounts invite ada --admin   # prints a single-use /join#... link
-agent-office accounts role ada member
-agent-office accounts revoke ada           # signed out within seconds
+mergeline accounts                      # accounts and open invites
+mergeline accounts invite ada --admin   # prints a single-use /join#... link
+mergeline accounts role ada member
+mergeline accounts revoke ada           # signed out within seconds
 ```
 
 On the EC2 machine, run it through `deploy/aws.sh ssh` (on Azure, `deploy/azure.sh ssh`):
@@ -368,13 +149,13 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 
 **Their own Claude and GitHub.** With accounts, everyone's workers run on their own Claude plan, and the office acts on GitHub as them: comments, merges, labels, pushes and pull requests show up under their name. The first time someone comes in, **Your sign-ins** opens (it's under Menu > Deck too). *Sign in with Claude* gives them Claude's sign-in page and takes back the code it shows. *Sign in with GitHub* shows a one-time code for github.com/login/device. They can paste a token from `claude setup-token`, or a GitHub token, instead. A shell they open at a console runs as them, so `claude auth login` and `gh auth login` typed there work too. Admins can use the office machine's own sign-ins instead. Each account's sign-ins live in `.agent-office/homes/<account>/`, and revoking the account deletes them. The boards are read with the machine's own `gh`, so that account needs read access to the repos. Running it just for yourself, with no accounts, none of this applies.
 
-**3. Turn off the shared password.** Until you do, anyone who knows the office password can get in, as an admin. Once everyone has an account, switch it off in **Accounts** (signed in with your own admin account), or `agent-office accounts password off`.
+**3. Turn off the shared password.** Until you do, anyone who knows the office password can get in, as an admin. Once everyone has an account, switch it off in **Accounts** (signed in with your own admin account), or `mergeline accounts password off`.
 
-**Removing someone.** Revoke their account in **Accounts** (or `agent-office accounts revoke <name>`), and on a server also remove them in **Invite teammates** (on AWS, `deploy/aws.sh uninvite <name>`; on Railway, `deploy/railway.sh uninvite <name>`; on Fly.io, `deploy/fly.sh uninvite <name>`; on Dokploy, `deploy/dokploy.sh uninvite <name>`) to take away their SSH keys and drop open tunnels (other teammates just reconnect). If the shared password is still on, change it with `deploy/aws.sh reset-password` (or `deploy/railway.sh reset-password`, `deploy/fly.sh reset-password` or `deploy/dokploy.sh reset-password`).
+**Removing someone.** Revoke their account in **Accounts** (or `mergeline accounts revoke <name>`), and on a server also remove them in **Invite teammates** (on AWS, `deploy/aws.sh uninvite <name>`; on Railway, `deploy/railway.sh uninvite <name>`; on Fly.io, `deploy/fly.sh uninvite <name>`; on Dokploy, `deploy/dokploy.sh uninvite <name>`) to take away their SSH keys and drop open tunnels (other teammates just reconnect). If the shared password is still on, change it with `deploy/aws.sh reset-password` (or `deploy/railway.sh reset-password`, `deploy/fly.sh reset-password` or `deploy/dokploy.sh reset-password`).
 
 ## Controls
 
-The home page is driven with the mouse or a tap: a row opens its agent, **New task** starts one, **Mission** shows what needs someone, Esc closes any window. The keys below are the Bridge view's (`/bridge`).
+The home page needs six keys: Ctrl+K (find anything), N (deploy an agent), Enter (the selected agent's next step), Esc, / (search) and ? (the keys); see [the inbox](docs/inbox.md#keys). The keys below are the Bridge view's (`/bridge`, a lab).
 
 | Key | Action |
 | --- | --- |
@@ -416,10 +197,11 @@ Server edits restart the server, not the workers. After changing `ptyhost.ts`, b
 
 The rules for coding agents working on this repository are in [`AGENTS.md`](AGENTS.md), which Codex, OpenCode and most other agent CLIs read. `CLAUDE.md` only imports it for Claude Code, so new rules go in `AGENTS.md`.
 
-Every change to the app that lands on `main` is published as a GitHub release by [`.github/workflows/release.yml`](.github/workflows/release.yml), and `install.sh` installs the newest one. Bump `package.json`'s version to start a new minor.
+The npm package ships the built `dist/` (`files` in `package.json`), so `npx mergeline` builds nothing on the user's machine: run `npm run build` before `npm publish` (`prepare` does it on `npm pack` and `npm publish`). `install.sh` and `install.ps1` install that package.
 
 ## More
 
+- [The inbox](docs/inbox.md): the home page, its loop, the setup card, its keys and the shipped log
 - [Features](docs/features.md): seeing what every agent does, handing out work, reviewing it and staying on mission
 - [Design system](docs/design.md): each surface on screen, the motion and the deck's sound, demo mode, and how to check a design change with `design/shoot.mjs`
 - [The deck](docs/deck.md): what's where on the 3D deck (the pit and the mission table, the tiers and the pods, the conn's dais, the ready line, the situation arc, the Proof corner), cell addresses, and the Overview camera
@@ -432,16 +214,20 @@ Every change to the app that lands on `main` is published as a GitHub release by
 - [Paid tasks over x402](docs/x402.md): outsiders pay test USDC to queue one task, held until an admin approves it (testnet only, `--x402`)
 - [Agents](docs/agents.md): every harness the office runs (Claude Code, Codex, OpenCode, Grok, Muse, DeepSeek Harness, Pi, Cursor), models and effort, and the office's prompts
 - [Configuration](docs/configuration.md): every command-line option, and where the office keeps its data
-- [Workers' servers on your own computer](docs/tunnel.md): `agent-office tunnel`, which opens every worker's web server on your computer by itself
+- [Workers' servers on your own computer](docs/tunnel.md): `mergeline tunnel`, which opens every worker's web server on your computer by itself
 - [AWS reference](docs/aws.md): Tailscale, service tunnels, upgrades, and everything `deploy/aws.sh` does
 - [Railway reference](docs/railway.md): what `deploy/railway.sh` sets up, and what the volume keeps
 - [Fly.io reference](docs/fly.md): what `deploy/fly.sh` sets up, machine sizes, pausing and what the volume keeps
 - [Dokploy reference](docs/dokploy.md): what `deploy/dokploy.sh` sets up on your Dokploy, and what the volume keeps
-- [Your own server](docs/self-hosting.md): the one-line setup for any Ubuntu or Debian server, or by hand behind Caddy or nginx
+- [Teams and servers](docs/self-hosting.md): one script each for AWS, Azure, Railway, Fly.io and Dokploy, the one-line setup for any Ubuntu or Debian server, or by hand behind Caddy or nginx
 - [Azure reference](docs/azure.md): picking a VM size, pausing, and everything `deploy/azure.sh` does
 - [How it works](docs/how-it-works.md): the architecture, and security notes
 - [Security](docs/security.md): the threat model, and what keeps repositories, other sites and stolen cookies out
 - [Code layout](docs/code-layout.md): where the code lives, adding a feature or an agent provider, and the size guard
+
+## Upstream credit
+
+Mergeline is a fork of [agent-office](https://github.com/AgentSystemLabs/agent-office), created by webdevcody, Copyright (c) 2026 AgentSystemLabs, released under the MIT License. The server's architecture (projects as floors, agents and their terminals, worktrees, provider adapters, the queue, meetings, voice, accounts, the tunnel and the deploy scripts) is upstream's; [NOTICE](NOTICE) lists what this fork replaced and what remains, and [launch/chain/disclosure.md](launch/chain/disclosure.md) lists our changes commit by commit. This fork is not run by the upstream authors. The package is `mergeline`; the `agent-office` command it also installs is the same command, so upstream's scripts keep working.
 
 ## License
 

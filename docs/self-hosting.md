@@ -1,6 +1,10 @@
 # Run it on a server for your team
 
-Any Ubuntu or Debian server, with one line, or set up by hand behind Caddy or nginx. Back to the [README](../README.md).
+One script each for [AWS](#deploy-to-aws-ec2), [Azure](#deploy-to-azure), [Railway](#deploy-to-railway), [Fly.io](#deploy-to-flyio) and [Dokploy](#deploy-to-dokploy), the one-line setup for [any Ubuntu or Debian server](#deploy-to-any-ubuntu-or-debian-server), or by hand behind Caddy or nginx. Back to the [README](../README.md).
+
+On your own computer you don't need any of this: `npx mergeline` in your repository. A team office is reached through an SSH tunnel or Tailscale, and everyone signs in with a password or their own account; the terminal's sign-in links only work on the machine the office runs on.
+
+## One line on your own server
 
 Run this on any Ubuntu or Debian server, as root or as a user with sudo:
 
@@ -99,3 +103,173 @@ WantedBy=multi-user.target
 If you don't have a domain, `--self-signed` serves HTTPS directly. Browsers will warn once per person.
 
 **Voice across strict NATs.** Peers connect directly using public STUN. If some teammates can't hear each other (common on corporate networks), run a TURN server such as coturn and pass `--turn turn:user:pass@turn.example.com:3478`, or set `AGENT_OFFICE_TURN` (several separated by spaces), which is how an office in a container (Railway, Fly.io, Dokploy) gets one. When a call can't connect at all, the office says so in a toast instead of leaving people talking to silence. The TURN username and password only go to browsers that have signed in (with the welcome on the office's WebSocket), are never written to the office's logs, and are never passed on to workers (every `AGENT_OFFICE_*` variable is kept out of a worker's environment).
+
+## Deploy to AWS (EC2)
+
+One script, using only the AWS CLI. You need the **AWS CLI signed in** (`aws configure` or `aws sso login`), `ssh`, `curl` and a clone of this repo:
+
+```bash
+git clone https://github.com/AgentSystemLabs/agent-office && cd agent-office
+deploy/aws.sh up --project your-org/your-repo --claude-token "$(claude setup-token)"
+```
+
+In about two minutes, `up`:
+
+1. Launches a **t3.xlarge** (4 vCPU, 16 GiB) Ubuntu 24.04 instance with a 50 GiB disk and a fixed Elastic IP.
+2. Creates a security group that opens **only SSH, only to your IP**. The office listens on `127.0.0.1:4600` on the machine and is never on the internet. Everyone reaches it through an SSH tunnel, so there are no certificates to manage, and voice and screen sharing work.
+3. Runs [`deploy/provision.sh`](../deploy/provision.sh) on it: Node 22, git, the GitHub CLI, Claude Code and the office, under systemd, so it comes back after a crash or reboot and workers keep running through a restart.
+4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the office password once. Write it down.**
+
+`--project` is optional: it clones that repo as the first floor. Leave it out and pick projects in the elevator.
+
+**Signing in the agents.** `--claude-token` uses your Claude subscription; `--anthropic-api-key <key>` uses an API key instead. Leave both out and run `/login` in the first worker's terminal. Codex and OpenCode aren't installed by the script: `deploy/aws.sh ssh` and install them yourself.
+
+**GitHub.** Your local `gh auth token` is copied to the machine so the office can clone private repos, show the boards and push PRs. Anyone in the office can use it, so pass `--github-token <fine-grained token>` or `--no-github-token` to limit that.
+
+**On Tailscale, no tunnels.** If your team uses [Tailscale](https://tailscale.com), add `--tailscale`:
+
+```bash
+deploy/aws.sh up --tailscale --project your-org/your-repo --claude-token "$(claude setup-token)"
+```
+
+The machine joins your tailnet, and Tailscale Serve puts the office on `https://agent-office.<your-tailnet>.ts.net` with a real certificate. Anyone on your tailnet just opens that link: no terminal to keep open, no SSH keys, no IPs to allow, and voice and screen sharing work. `up` opens Tailscale's page to add the machine (or pass `--tailscale-auth-key tskey-auth-...`) and, the first time, the page that turns on HTTPS for your tailnet. SSH stays open to your IP only, for `deploy/aws.sh` itself. More in [docs/aws.md](aws.md#tailscale).
+
+Day to day:
+
+```bash
+deploy/aws.sh open                # tunnel + open the office (Ctrl-C closes the tunnel)
+deploy/aws.sh status              # machine, address, is the office up, who's invited
+deploy/aws.sh logs                # follow the office's logs
+deploy/aws.sh ssh                 # a shell on the machine
+deploy/aws.sh update              # install the latest agent-office and restart
+deploy/aws.sh resize t3.2xlarge   # bigger or smaller machine, same address
+deploy/aws.sh pause               # stop the machine; only the disk and IP are billed
+deploy/aws.sh resume              # start it again and open it
+deploy/aws.sh destroy             # delete everything it created (asks first)
+```
+
+You can also upgrade from inside the office: **Update Mergeline** (Ctrl+K). Other flags (`--region`, `--instance-type`, `--disk`, `--name` for several offices) are in `deploy/aws.sh help`, and the details are in [docs/aws.md](aws.md).
+
+**The workers' dev servers, on your computer.** The office runs on the server, so a worker's `npm run dev` listens there. Run this on your own computer and leave it running, and every web server a worker starts opens on the same port on yours, by itself (`http://localhost:5173` is the worker's), and closes when the worker stops it:
+
+```bash
+agent-office tunnel                       # while `deploy/aws.sh open` (or a teammate's ssh command) is running
+agent-office tunnel office@203.0.113.7    # or by itself: it opens the tunnel to the office too
+```
+
+It works with every way of running the office on a server, and needs the `agent-office` command on your computer: [docs/tunnel.md](tunnel.md).
+
+## Deploy to Azure
+
+The same thing on an Azure VM, using only the Azure CLI. You need the **Azure CLI signed in** (`az login`), `ssh`, `curl` and a clone of this repo:
+
+```bash
+git clone https://github.com/AgentSystemLabs/agent-office && cd agent-office
+deploy/azure.sh up --project your-org/your-repo --claude-token "$(claude setup-token)"
+```
+
+`up` puts everything in a resource group of its own, `agent-office`, and launches a **Standard_D4as_v5** VM (4 vCPU and 16 GiB, like the t3.xlarge on AWS, at about the same price) with Ubuntu 24.04, a 64 GiB Premium SSD and a static IP. Its firewall opens **only SSH, only to your IP**. Then it runs the same [`deploy/provision.sh`](../deploy/provision.sh) and opens the office through an SSH tunnel at http://localhost:4600. **The first page shows the office password once. Write it down.**
+
+Every command from the AWS script works the same, with `deploy/azure.sh` in its place: `open`, `status`, `logs`, `ssh`, `update`, `invite`, `allow`, `service`, `resize Standard_D8as_v5`, `pause` (deallocates the VM, so only the disk and IP are billed), `resume` and `destroy` (deletes the resource group). One more, `connect`, lets a second computer manage the office. `--location` picks the region (default: your `az` default location, else `eastus`), `--subscription` the subscription and `--size` the VM size. The details are in [docs/azure.md](azure.md).
+
+## Deploy to Railway
+
+No machine to look after: one script, using the Railway CLI. You need the **Railway CLI 5 or newer, logged in** (`railway login`), `ssh`, `curl`, Node.js and a clone of this repo:
+
+```bash
+git clone https://github.com/AgentSystemLabs/agent-office && cd agent-office
+deploy/railway.sh up --claude-token "$(claude setup-token)"
+```
+
+In about five minutes, `up`:
+
+1. Creates a Railway project with one service, built from this checkout with [`deploy/container/Dockerfile`](../deploy/container/Dockerfile): Node 22, git, the GitHub CLI and sshd, with Claude Code installed on first start.
+2. Adds a **volume on `/data`** for everything the office keeps: the password, accounts, floors and settings, the projects, Claude's and GitHub's sign-ins, teammates' keys and the SSH host key. Restarts and redeploys replace the container, never the volume.
+3. Puts Railway's **TCP proxy** in front of the container's SSH, and nothing else. The office listens on `127.0.0.1:4600` inside the container and has no public URL: everyone reaches it through an SSH tunnel, as on AWS.
+4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the office password once. Write it down.**
+
+The agents and GitHub sign in as on AWS: `--claude-token`, `--anthropic-api-key`, `--github-token` or `--no-github-token`.
+
+```bash
+deploy/railway.sh open              # tunnel + open the office (Ctrl-C closes the tunnel)
+deploy/railway.sh status            # deployment, SSH address, volume, is the office up, who's invited
+deploy/railway.sh invite octocat    # let a teammate tunnel in with their GitHub SSH keys
+deploy/railway.sh logs              # follow the office's logs (ssh: a shell in the container)
+deploy/railway.sh update            # build this checkout again and redeploy it
+deploy/railway.sh destroy           # delete the project and its volume (asks first)
+```
+
+The details, and what's on the volume, are in [docs/railway.md](railway.md).
+
+## Deploy to Fly.io
+
+The same container on a [Fly.io](https://fly.io) machine, using flyctl. You need **flyctl logged in** (`fly auth login`), `ssh`, `curl`, Node.js and a clone of this repo:
+
+```bash
+git clone https://github.com/AgentSystemLabs/agent-office && cd agent-office
+deploy/fly.sh up --claude-token "$(claude setup-token)"
+```
+
+In a few minutes, `up`:
+
+1. Creates a Fly app with one machine, a `shared-cpu-4x` with 8 GB in the region nearest you, built from this checkout with the same [`deploy/container/Dockerfile`](../deploy/container/Dockerfile) as on Railway.
+2. Adds a **volume on `/data`** for everything the office keeps, so restarts, redeploys and resizes lose none of it.
+3. Gives the app a **dedicated IPv4 address** with SSH on a random port, and nothing else. The office listens on `127.0.0.1:4600` inside the machine and has no public URL: everyone reaches it through an SSH tunnel, as on AWS.
+4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the office password once. Write it down.**
+
+The agents and GitHub sign in as on AWS: `--claude-token`, `--anthropic-api-key`, `--github-token` or `--no-github-token`.
+
+```bash
+deploy/fly.sh open                    # tunnel + open the office (Ctrl-C closes the tunnel)
+deploy/fly.sh status                  # machine, SSH address, volume, is the office up, who's invited
+deploy/fly.sh invite octocat          # let a teammate tunnel in with their GitHub SSH keys
+deploy/fly.sh logs                    # follow the office's logs (ssh: a shell in the machine)
+deploy/fly.sh update                  # build this checkout again and redeploy it
+deploy/fly.sh resize performance-2x   # another machine size, same address and volume
+deploy/fly.sh pause                   # stop the machine (resume starts it again)
+deploy/fly.sh destroy                 # delete the app and its volume (asks first)
+```
+
+`--region`, `--org`, `--vm-size`, `--memory`, `--disk` and `--name` (for several offices) are in `deploy/fly.sh help`. The details, and what's on the volume, are in [docs/fly.md](fly.md).
+
+## Deploy to Dokploy
+
+Already run a [Dokploy](https://dokploy.com) server? One script puts the office on it, through Dokploy's API. You need an **API key** (Dokploy: **Settings → Profile → API/CLI Keys**, with rate limiting off), `ssh`, `curl`, `git`, Node.js and a clone of this repo:
+
+```bash
+git clone https://github.com/AgentSystemLabs/agent-office && cd agent-office
+export DOKPLOY_API_KEY=<your key>
+deploy/dokploy.sh up --url https://dokploy.example.com --claude-token "$(claude setup-token)"
+```
+
+In about five minutes, `up`:
+
+1. Creates a Dokploy project with one application, and uploads this checkout for Dokploy to build with [`deploy/container/Dockerfile`](../deploy/container/Dockerfile), the same image as on Railway.
+2. Mounts a **Docker volume on `/data`** for everything the office keeps. Deploys and restarts replace the container, never the volume.
+3. Publishes the container's SSH on **port 2222 of the server** (`--ssh-port` picks another), and nothing else: no domain, and the office listens on `127.0.0.1:4600` inside the container. Everyone reaches it through an SSH tunnel, as on AWS. A firewall in front of the server has to let that port through.
+4. Opens a tunnel and your browser at http://localhost:4600. **The first page shows the office password once. Write it down.**
+
+The agents and GitHub sign in as on AWS: `--claude-token`, `--anthropic-api-key`, `--github-token` or `--no-github-token`. `--server <name>` runs it on one of Dokploy's remote servers.
+
+```bash
+deploy/dokploy.sh open              # tunnel + open the office (Ctrl-C closes the tunnel)
+deploy/dokploy.sh status            # its page in Dokploy, last deployment, SSH address, who's invited
+deploy/dokploy.sh invite octocat    # let a teammate tunnel in with their GitHub SSH keys
+deploy/dokploy.sh logs              # follow the office's logs (ssh: a shell in the container)
+deploy/dokploy.sh update            # upload this checkout again, build it and redeploy it
+deploy/dokploy.sh destroy           # delete the application and its volume (asks first)
+```
+
+The details, and what's on the volume, are in [docs/dokploy.md](dokploy.md).
+
+## Deploy to any Ubuntu or Debian server
+
+Another cloud, or your own machine? Run one line on the server, as root or as a user with sudo:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/AgentSystemLabs/agent-office/main/deploy/provision.sh | bash
+```
+
+It installs Node 22, git, the GitHub CLI, Claude Code and the office as a systemd service. Run as root, it creates an `agentoffice` user to run the office, so workers never run as root. The office listens on `127.0.0.1:4600` only, and the script ends by printing the SSH tunnel command and a link that shows the office password once. Run the same line again to update.
+
+For HTTPS on your own domain, point a DNS record at the server and add `bash -s -- --domain office.example.com`: it sets up Caddy, which gets the certificate by itself. To put it on your Tailscale network instead, add `bash -s -- --tailscale`. Setting it up by hand behind Caddy or nginx is [at the top of this page](#one-line-on-your-own-server).

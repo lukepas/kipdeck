@@ -1,6 +1,6 @@
 # Security
 
-What Agent Office defends against, what it doesn't, and how each protection works. Back to the [README](../README.md). The day-to-day advice (strong password, HTTPS, a dedicated user) is in [How it works](how-it-works.md#security-notes).
+What Mergeline defends against, what it doesn't, and how each protection works. Back to the [README](../README.md). The day-to-day advice (strong password, HTTPS, a dedicated user) is in [How it works](how-it-works.md#security-notes).
 
 ## Threat model
 
@@ -38,6 +38,25 @@ Opening a floor runs everything above against what its repository ships. Admins 
 The office enforces this on its side too, not only in the PR window. Any prompt that would have a worker check out a pull request (`gh pr checkout <n>`, or fetching `pull/<n>/head`) is refused for an untrusted PR, wherever it comes from. A checkout named by branch (`gh pr checkout patch-1` or `owner:branch`) is looked up on GitHub first, and refused when GitHub can't say which PR it is; one with `--repo` (another repository's PR) is always refused, as is a prompt that checks out more than five. This applies to a desk, the task queue, a prompt typed to a running agent, or a board agent through `office-queue` or `office-workers`. So text in a PR can't talk the PR board's agent into queueing its own checkout. The PR agent's brief says the same, so it explains why and leaves it to a person. A prompt that checks a branch out some other way (plain `git fetch` of a fork's branch) isn't caught: keep that in mind on repositories that take PRs from strangers.
 
 A pull request from a fork is never a worker's either. A worker's pull request is what it opened from its desk, from its own branch, by running `gh pr create` itself (read off its Claude Code hooks), or what an agent said with `office-workers pr` / `link_pr`. The office only keeps one in the floor's own repository, refuses a fork's when an agent names it or prints its URL after `gh pr create` (it asks GitHub first), and leaves a fork's out of where a worker's work stands (`workerPr`), so a stranger's pull request named like a worker's branch, or a URL printed into a worker's terminal, can't send the worker home as landed or put the PR in the review inbox as the office's. Pull request URLs are parsed strictly and stored rebuilt from the repository and number.
+
+## Signing in on your own computer
+
+Started on your own computer, Mergeline listens on `127.0.0.1` and has no password to type. That is safe only because of what lets a browser in, which is a sign-in link that works once, never the address a request comes from: an SSH tunnel, a reverse proxy or a tunnel service all arrive at the office from `127.0.0.1` too.
+
+- **The link.** The terminal prints (and opens) `/login#key=...`. The key is after the `#`, so it never reaches a server log or a `Referer`; the page trades it for a session cookie with `POST /api/link`, once. Only its hash is kept, in memory, at most eight at a time, and a restart forgets them.
+- **This computer only.** `POST /api/link` is refused unless the request comes from a loopback address, names the office by a loopback name (`localhost`, `*.localhost`, `127.x`, `::1`) and carries no proxy or tunnel header (`Forwarded`, `X-Forwarded-*`, `X-Real-IP`, `CF-Connecting-IP`, `True-Client-IP`, the office's own relay headers). A link that leaks to someone reaching the office through a tunnel is useless to them, and stays unused for its owner. The usual Origin check for sign-in POSTs applies on top (see [Other websites](#other-websites)).
+- **`mergeline open` and `mergeline attach`.** A command on this computer asks the running office for a new link, or to carry an agent session on, with the office's local key: an HMAC of its session secret, written with the office's address to `local.json` in its data folder (mode 0600, removed when the office stops). `POST /api/local/link` and `/api/local/attach` want that key in `X-Mergeline-Key`, the same this-computer-only checks as the link, and no `Origin` or `Sec-Fetch-Site` at all, so no page in any browser can use them. Wrong keys count against the address like password guesses.
+- **When there is a password.** With `--password`, a claim link (`deploy/provision.sh`), `--host 0.0.0.0` or any other address, the office is not passwordless: the sign-in page asks for the password or an account, and the terminal prints the password as before. On a passwordless office the password still exists (generated, in `config.json`); the sign-in page offers it one click behind `npx mergeline open`.
+- **Your name.** On a passwordless office, someone on the shared password goes by git's `user.name` on that computer instead of being asked (the old *Who is it?* window is gone). On any other office, a made-up name until they change it.
+
+## Anonymous usage numbers
+
+Off unless someone turns them on: the setup card's switch (admins), `--telemetry` or `MERGELINE_TELEMETRY=1`. `DO_NOT_TRACK=1`, `MERGELINE_TELEMETRY=0` or `--no-telemetry` keep them off for good, and the switch says why. The code is `src/server/telemetry.ts`.
+
+- **What is counted.** Four things only: minutes from the office's first start to its first agent, its first answered question and its first merge (each once), and, for every agent that leaves Needs you, the minutes it sat there before a person acted. An agent stopped while it waited counts as nothing.
+- **What an event holds.** `{ v, id, event, minutes, version, os, day }`: the event's name, minutes to one decimal, a random 16-hex-digit id made when the numbers are turned on (turning them off forgets it; on again makes a new one), the Mergeline version, the OS (`darwin`, `linux`, `win32`) and the UTC day. Never a repository, path, branch, prompt, task, file, name, email, IP address or anything an agent wrote; `tests/telemetry.test.ts` checks a record against all of those.
+- **Where it goes.** Events wait in `telemetry-outbox.jsonl` in the office's data folder (at most 500), where you can read exactly what would leave. They are sent only when `MERGELINE_TELEMETRY_URL` names an https address, through the same guarded fetch as the webhook (public addresses only, checked on every connection), and leave the outbox once it answers 2xx. No address is built in. Turning the numbers off empties the outbox.
+- **Off means off.** While they're off nothing is recorded or sent; the only file is `telemetry.json`, which keeps the switch and the office's first-start time on this computer.
 
 ## Other websites
 
