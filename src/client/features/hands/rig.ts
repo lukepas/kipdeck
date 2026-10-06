@@ -13,19 +13,52 @@ import type { ArmPose, HandsOut } from './pose';
 // deck after its depth is cleared, so they never go through a console or a wall (see index.ts).
 // After upstream agent-office's first-person hands (origin/main src/client/world/hands.ts, MIT).
 
-/** The suit, its plates and the glove: one material, coloured per vertex, so each arm is one draw. */
+/**
+ * The suit, its plates, the glove, its steel and the touch pad: one material, coloured per vertex, so
+ * each arm is one draw (the right index finger's two joints one more each). Each vertex also says how
+ * much of it is steel (its sheen: metal and gloss) and how much is the touch pad (lit as it presses),
+ * read by the material's shader (bodyMaterial).
+ */
 const SUIT = '#36404C';
 const PLATE = '#5A6572';
 const GLOVE = '#2B3138';
+const STEEL = '#9AA4AF';
 
-/** Paints every vertex of `geo` one colour (linear), for the shared vertex-coloured material. */
-function tint(geo: THREE.BufferGeometry, color: THREE.ColorRepresentation): THREE.BufferGeometry {
+/** Paints every vertex of `geo` one colour (linear), `steel` 0 or 1 and `pad` 0 or 1, for the shared material. */
+function tint(geo: THREE.BufferGeometry, color: THREE.ColorRepresentation, steel = 0, pad = 0): THREE.BufferGeometry {
   const c = new THREE.Color(color);
   const n = geo.getAttribute('position').count;
   const a = new Float32Array(n * 3);
-  for (let i = 0; i < n; i++) a.set([c.r, c.g, c.b], i * 3);
+  const k = new Float32Array(n * 2);
+  for (let i = 0; i < n; i++) {
+    a.set([c.r, c.g, c.b], i * 3);
+    k[i * 2] = steel;
+    k[i * 2 + 1] = pad;
+  }
   geo.setAttribute('color', new THREE.BufferAttribute(a, 3));
+  geo.setAttribute('kind', new THREE.BufferAttribute(k, 2));
   return geo;
+}
+
+/**
+ * The arms' one material: the glove's matte and the steel's sheen per vertex (its metalness and
+ * roughness mixed by the `kind` attribute), and the touch pad's light, `touch` (a colour uniform added
+ * to its emission), with no power function in it.
+ */
+function bodyMaterial(): { material: THREE.MeshStandardMaterial; touch: { value: THREE.Color } } {
+  const material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0 });
+  const touch = { value: new THREE.Color(0, 0, 0) };
+  material.onBeforeCompile = (sh) => {
+    sh.uniforms.uTouch = touch;
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 kind;\nvarying vec2 vKind;').replace('#include <begin_vertex>', '#include <begin_vertex>\nvKind = kind;');
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying vec2 vKind;\nuniform vec3 uTouch;')
+      .replace('#include <roughnessmap_fragment>', '#include <roughnessmap_fragment>\nroughnessFactor = mix(roughnessFactor, 0.35, vKind.x);')
+      .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.85, vKind.x);')
+      .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\ntotalEmissiveRadiance += uTouch * vKind.y;\ndiffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.02), vKind.y * 0.8);');
+  };
+  material.customProgramCacheKey = () => 'hands-body';
+  return { material, touch };
 }
 
 /** A capsule along -z (`len` between its caps' centres), centred on the origin. */
@@ -71,46 +104,43 @@ const FINGER_LEN: [number, number][] = [
   [0.03, 0.025],
 ];
 
-/** One arm: its body (one vertex-coloured mesh), its steel, and on the right the tapping finger. */
+/** One arm: its body (one vertex-coloured mesh, its steel in it), and on the right the tapping finger. */
 export interface Arm {
   group: THREE.Group;
   side: 1 | -1;
   /** The right index finger's pivot at its knuckle (null on the left, whose fingers are all one curl). */
   index: THREE.Group | null;
-  /** Its touch pad's material, lit as it presses. */
-  touch: THREE.MeshBasicMaterial | null;
 }
 
-function buildArm(side: 1 | -1, body: THREE.Material, steel: THREE.Material, touchMat: THREE.MeshBasicMaterial | null): Arm {
+function buildArm(side: 1 | -1, body: THREE.Material, tapper: boolean): Arm {
   const group = new THREE.Group();
   const geos: THREE.BufferGeometry[] = [];
-  const metal: THREE.BufferGeometry[] = [];
+  const metal = geos;
   // The sleeve, wider toward the elbow and long enough that its far end is always off screen, and a
   // lighter plate along the top of the forearm.
   geos.push(put(new THREE.CylinderGeometry(0.043, 0.053, 0.52, 20, 1).rotateX(Math.PI / 2), at(0, -0.003, 0.29), SUIT));
   geos.push(put(new RoundedBoxGeometry(0.04, 0.01, 0.12, 2, 0.0045), at(0, 0.041, 0.13).multiply(turnX(-0.04)), PLATE));
   // The gauntlet's cuff, flaring back over the sleeve, with a brushed steel ring at its edge.
   geos.push(put(new THREE.CylinderGeometry(0.039, 0.046, 0.046, 20, 1).rotateX(Math.PI / 2), at(0, 0, 0.02), GLOVE));
-  metal.push(loose(new THREE.TorusGeometry(0.0455, 0.0028, 6, 28)).applyMatrix4(at(0, 0, 0.042)));
+  metal.push(tint(loose(new THREE.TorusGeometry(0.0455, 0.0028, 6, 28)).applyMatrix4(at(0, 0, 0.042)), STEEL, 1));
   // The hand: a rounded, flattened back and palm, narrower at the wrist.
   geos.push(put(new THREE.SphereGeometry(0.05, 20, 12).scale(0.86, 0.34, 1), at(0, 0, -0.052), GLOVE));
   geos.push(put(new THREE.SphereGeometry(0.034, 16, 10).scale(1, 0.55, 0.9), at(0, 0.002, -0.012), GLOVE));
   // A padded panel over the back of the hand, and a steel ridge over the knuckles.
   geos.push(put(new RoundedBoxGeometry(0.042, 0.005, 0.04, 2, 0.002), at(0, 0.0155, -0.05).multiply(turnX(0.06)), PLATE));
-  metal.push(loose(new THREE.CapsuleGeometry(0.0048, 0.044, 3, 8)).applyMatrix4(at(side * 0.004, 0.011, -0.088).multiply(M().makeRotationZ(Math.PI / 2))));
+  metal.push(tint(loose(new THREE.CapsuleGeometry(0.0048, 0.044, 3, 8)).applyMatrix4(at(side * 0.004, 0.011, -0.088).multiply(M().makeRotationZ(Math.PI / 2))), STEEL, 1));
   // The thumb, along the inside of the hand and in toward the fingers, curled a little.
   const thumbBase = new THREE.Vector3(-side * 0.036, -0.002, -0.034);
   geos.push(...finger(thumbBase, 0.011, [0.032, 0.027], 0.42, 0.36, -side * 0.42).parts);
   // The fingers, each in a relaxed curl that deepens toward the little one, fanned a touch.
   let index: THREE.Group | null = null;
-  let touch: THREE.MeshBasicMaterial | null = null;
   KNUCKLES.forEach((kx, i) => {
     const base = new THREE.Vector3(side * kx, 0.003, -0.094);
     const r = i === 3 ? 0.0083 : 0.0095;
     // A loose fist: each finger bent about 55 degrees at the knuckle and as much again at the middle.
     const curl: [number, number] = [0.92 + i * 0.08, 0.98 + i * 0.07];
     const splay = -base.x * 1.6;
-    if (i === 0 && touchMat) {
+    if (i === 0 && tapper) {
       // The right index finger on joints of its own, at the knuckle and the middle (see pose), its
       // touch pad a band round the tip.
       const [l1, l2] = FINGER_LEN[i];
@@ -119,23 +149,20 @@ function buildArm(side: 1 | -1, body: THREE.Material, steel: THREE.Material, tou
       index.add(new THREE.Mesh(tint(capsule(r, l1).translate(0, 0, -l1 / 2), GLOVE), body));
       const joint = new THREE.Group();
       joint.position.z = -l1;
-      joint.add(new THREE.Mesh(tint(capsule(r * 0.93, l2).translate(0, 0, -l2 / 2), GLOVE), body));
-      const pad = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.99, r * 0.99, 0.008, 14, 1, true).rotateX(Math.PI / 2), touchMat);
-      pad.position.z = -l2 + 0.002;
-      joint.add(pad);
+      // The second joint and its touch pad, one mesh.
+      const tip = tint(loose(capsule(r * 0.93, l2).translate(0, 0, -l2 / 2)), GLOVE);
+      const pad = tint(loose(new THREE.CylinderGeometry(r * 0.99, r * 0.99, 0.008, 14, 1, true).rotateX(Math.PI / 2).translate(0, 0, -l2 + 0.002)), GLOVE, 0, 1);
+      joint.add(new THREE.Mesh(mergeGeometries([tip, pad])!, body));
       index.add(joint);
-      touch = touchMat;
       group.add(index);
       return;
     }
     geos.push(...finger(base, r, FINGER_LEN[i], curl[0], curl[1], splay).parts);
   });
   const mesh = new THREE.Mesh(mergeGeometries(geos)!, body);
-  const steelMesh = new THREE.Mesh(mergeGeometries(metal)!, steel);
-  group.add(mesh, steelMesh);
+  group.add(mesh);
   for (const g of geos) g.dispose();
-  for (const g of metal) g.dispose();
-  return { group, side, index, touch };
+  return { group, side, index };
 }
 
 /** The left wrist's readout: the deck's clock in ship-cyan on instrument black, over a hairline. */
@@ -194,14 +221,15 @@ export class HandsRig {
   /** Starlight grazing the tops of the forearms and knuckles from over the bow: their edge against the dark. */
   readonly rim = new THREE.DirectionalLight('#C4CCFF', 1);
   private readonly materials: THREE.Material[] = [];
+  /** The touch pad's light, from dark to ship-cyan as the finger presses. */
+  private readonly touch: { value: THREE.Color };
 
   constructor() {
-    const body = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0 });
-    const steel = new THREE.MeshStandardMaterial({ color: '#9AA4AF', roughness: 0.35, metalness: 0.85 });
-    const touch = new THREE.MeshBasicMaterial({ color: DECK.instrument });
-    this.materials.push(body, steel, touch);
-    this.right = buildArm(1, body, steel, touch);
-    this.left = buildArm(-1, body, steel, null);
+    const { material: body, touch } = bodyMaterial();
+    this.touch = touch;
+    this.materials.push(body);
+    this.right = buildArm(1, body, true);
+    this.left = buildArm(-1, body, false);
     this.left.group.add(this.wrist.mesh);
     this.scene.add(this.right.group, this.left.group, this.hemi, this.key, this.fill, this.front, this.rim);
     this.front.position.set(0.1, 0.6, 1);
@@ -227,7 +255,7 @@ export class HandsRig {
       index.rotation.set(-0.86 * (1 - k) + 0.08 * k, 0.046 * (1 - k), 0);
       index.children[1].rotation.set(-0.94 * (1 - k) + 0.04 * k, 0, 0);
     }
-    if (this.right.touch) this.right.touch.color.set(DECK.instrument).lerp(TOUCH_LIT, Math.min(1, out.touch * 1.2));
+    this.touch.value.copy(TOUCH_DARK).lerp(TOUCH_LIT, Math.min(1, out.touch * 1.2));
   }
 
   /** Every material, to warm their programs up before they're first drawn. */
@@ -237,6 +265,7 @@ export class HandsRig {
 }
 
 const TOUCH_LIT = new THREE.Color(DECK.ship);
+const TOUCH_DARK = new THREE.Color(0, 0, 0);
 
 function place(g: THREE.Group, a: ArmPose) {
   g.position.set(a.x, a.y, a.z);

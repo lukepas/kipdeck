@@ -49,6 +49,7 @@ function ring(radius: number, sides: number, color: string, n: number): THREE.In
   if (sides === 3) geo.rotateY(Math.PI / 2);
   const m = new THREE.InstancedMesh(geo, new THREE.MeshBasicMaterial({ color, toneMapped: false, transparent: true, opacity: 0.95, depthWrite: false }), n);
   m.count = 0;
+  m.visible = false;
   m.renderOrder = 7;
   return m;
 }
@@ -80,6 +81,7 @@ export class VaultHolo {
     const beamGeo = new THREE.CylinderGeometry(COIN.r * K, COIN.r * 0.35, 1, 6, 1, true).translate(0, 0.5, 0);
     this.beams = new THREE.InstancedMesh(beamGeo, beamMaterial(DECK.proof), MAX_STACKS);
     this.beams.count = 0;
+    this.beams.visible = false;
     this.beams.renderOrder = 6;
     const L = HOLO.label;
     this.screen = screen(L.width, L.height, L.units, 1.25);

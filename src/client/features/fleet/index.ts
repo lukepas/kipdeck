@@ -84,6 +84,7 @@ export function installFleet(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'travel' |
     attrs[cls] = a;
     const m = new THREE.InstancedMesh(geo, mat, CAP);
     m.count = 0;
+    m.visible = false;
     m.frustumCulled = false;
     m.name = `fleet-${cls}`;
     meshes[cls] = m;
@@ -110,6 +111,7 @@ export function installFleet(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'travel' |
   plumeTex.rotation = 0;
   const plumes = new THREE.InstancedMesh(plumeAll, new THREE.MeshBasicMaterial({ color: DECK.ship, map: plumeTex, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false, toneMapped: false }), PLUMES);
   plumes.count = 0;
+  plumes.visible = false;
   plumes.frustumCulled = false;
   group.add(plumes);
   // The names on the flanks, a row each of one atlas.
@@ -119,6 +121,7 @@ export function installFleet(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'travel' |
   nameGeo.setAttribute('iRow', rows);
   const names = new THREE.InstancedMesh(nameGeo, nameMaterial(atlas.texture), CAP);
   names.count = 0;
+  names.visible = false;
   names.frustumCulled = false;
   group.add(names);
   // The beacons over the decks that need you: the needs-you diamond on instrument black, a fixed size on screen.
@@ -275,12 +278,15 @@ export function installFleet(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'travel' |
     for (const cls of HULL_CLASSES) {
       const mesh = meshes[cls];
       mesh.count = counts[cls];
+      mesh.visible = counts[cls] > 0;
       mesh.instanceMatrix.needsUpdate = true;
       for (const a of Object.values(attrs[cls])) a.needsUpdate = true;
     }
     plumes.count = plume;
+    plumes.visible = plume > 0;
     plumes.instanceMatrix.needsUpdate = true;
     names.count = list.length;
+    names.visible = list.length > 0;
     names.instanceMatrix.needsUpdate = true;
     rows.needsUpdate = true;
     beaconGeo.setDrawRange(0, beacon);

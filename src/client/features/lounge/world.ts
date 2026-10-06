@@ -114,7 +114,9 @@ export const forwardLounge: Fixture<'forwardLounge'> = (site) => {
   group.add(mesh(box(w, top - under, d), fascia, cx, (top + under) / 2, cz));
   const floorGeo = new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2).translate(cx, top + 0.002, cz);
   worldUv(floorGeo);
-  group.add(new THREE.Mesh(floorGeo, site.planks));
+  const deckTop = new THREE.Mesh(floorGeo, site.planks);
+  deckTop.receiveShadow = true;
+  group.add(deckTop);
   group.add(mesh(box(w, 0.018, 0.03), lip, cx, top - 0.02, z1 + 0.006, false));
   // A beam along its underside at the front, and the downlights in it, each in a dark bezel.
   group.add(mesh(box(w, 0.14, 0.2), fascia, cx, under - 0.07, z1 - 0.12));
@@ -187,6 +189,12 @@ export const forwardLounge: Fixture<'forwardLounge'> = (site) => {
     seatable(seat, s.id, 1.6, site.interactables);
   }
 
+  // None of it casts a shadow: the deck's merge (features/merge) then folds it into a bucket for each of
+  // its few paints with no shadow draws (it sits behind the arc, under its own downlights), where its
+  // shadows cost several draws at the conn for nothing anyone sees.
+  group.traverse((o) => {
+    if ((o as THREE.Mesh).isMesh) o.castShadow = false;
+  });
   site.group.add(group);
   let open = -1;
   const rig: LoungeRig = {

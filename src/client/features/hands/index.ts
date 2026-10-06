@@ -227,7 +227,8 @@ export function installHands(ctx: Ctx, parts: HandsParts) {
 
   /** The hands over whatever's in `target` (the composer's frame, or the screen). */
   function draw(target: THREE.WebGLRenderTarget | null) {
-    if (!shown || parts.stage.view || parts.player.view !== 'first') return;
+    // Not at all through the jump's tunnel: the view stretches and they'd read as a sticker over it.
+    if (!shown || parts.stage.view || parts.player.view !== 'first' || parts.space?.tunnelOpen()) return;
     const auto = renderer.autoClear;
     renderer.autoClear = false;
     renderer.setRenderTarget(target);

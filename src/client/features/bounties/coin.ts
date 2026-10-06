@@ -91,6 +91,8 @@ export function coins(n: number): THREE.InstancedMesh {
   const m = new THREE.InstancedMesh(geometry, materials, n);
   m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   m.count = 0;
+  // Hidden while empty: an instanced mesh with no instances is still a draw call.
+  m.visible = false;
   m.frustumCulled = false;
   m.renderOrder = 7;
   return m;

@@ -69,6 +69,7 @@ export function installSorties(ctx: Ctx, parts: Pick<Parts, 'giveWay'>): Sorties
   const mat = new THREE.MeshLambertMaterial({ color: FIGHTER_COLOR, flatShading: true, fog: false });
   const ships = new THREE.InstancedMesh(fighterGeometry(), mat, MAX_FIGHTERS);
   ships.count = 0;
+  ships.visible = false;
   ships.frustumCulled = false;
   ships.setColorAt(0, new THREE.Color(1, 1, 1));
   const engines = new EngineLayer();
@@ -227,6 +228,7 @@ export function installSorties(ctx: Ctx, parts: Pick<Parts, 'giveWay'>): Sorties
       engines.add(w.copy(ENGINE_AT).applyQuaternion(f.quat).add(f.at), 9 + 6 * glow, glow);
     }
     ships.count = n;
+    ships.visible = n > 0;
     ships.instanceMatrix.needsUpdate = true;
     if (ships.instanceColor) ships.instanceColor.needsUpdate = true;
     // The runs home: a fast arc over the canopy, a cyan trail along the whole run hanging
