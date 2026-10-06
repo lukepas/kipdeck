@@ -3,6 +3,7 @@ import type { FloorPalette } from '../../../shared/floors';
 import { elevator } from '../elevator';
 import { bookshelf } from '../../features/bookshelf/world';
 import { whiteboard } from '../../features/whiteboard/world';
+import { serviceMonitor } from '../../features/monitor/world';
 import { stack } from '../stack';
 import { signs } from '../desksigns';
 import type { Collider, DeskView, Interactable, Office, OfficeHandles } from '../types';
@@ -94,6 +95,8 @@ function floorPlan() {
     meetingRoom,
     elevator,
     whiteboard,
+    // The service monitor flush on the east wall (features/monitor).
+    serviceMonitor,
     // Bolt, the bridge droid, and its charger on the west wall (features/droid).
     droid,
   ] as const;

@@ -56,6 +56,7 @@ import { installVoice } from './features/voice';
 import { installWaiting } from './features/waiting';
 import { installWalking } from './features/walking';
 import { installWhiteboard } from './features/whiteboard';
+import { installMonitor } from './features/monitor';
 import { installWorkerActions } from './features/workers/actions';
 import { installWorkerViews } from './features/workers/views';
 import { installDeclutter } from './features/workers/declutter';
@@ -124,7 +125,14 @@ parts.stage = createScene(canvas, makeRenderer(canvas) ?? (await noWebGL()));
 parts.worlds = createWorlds(ctx);
 
 // ---- The install list ---------------------------------------------------------------------------
-parts.boards = installBoards(ctx, { aimedNote: () => parts.pointer.aimedNote(), pickUp: (it) => parts.cards.pickUp(it), boardActions: () => parts.actions.boardActions(), showQueue: () => parts.waiting.showQueue() });
+parts.boards = installBoards(ctx, {
+  aimedNote: () => parts.pointer.aimedNote(),
+  pickUp: (it) => parts.cards.pickUp(it),
+  boardActions: () => parts.actions.boardActions(),
+  showQueue: () => parts.waiting.showQueue(),
+  aimHit: () => parts.pointer.aimHit(),
+  watchService: (port) => parts.monitor.show(port),
+});
 installWhiteboard(ctx);
 // Onto whatever you're walking on: the office's floor and furniture.
 parts.tv = installTv(ctx, { shares: () => parts.talk.currentShares(), watch: () => parts.talk.watchShare(), jumpReady: () => parts.space?.phase() === 'held' });
@@ -232,6 +240,8 @@ installPulse(ctx, parts);
 installFocusLean(ctx, parts);
 // The forward lounge at the bow: its ladder's climb and its seats' view (features/lounge).
 parts.lounge = installLounge(ctx, parts);
+// The service monitor on the east wall: a unit's web server's live page (features/monitor).
+parts.monitor = installMonitor(ctx, parts);
 // Your gloved hands in first person, drawn over the deck (features/hands).
 installHands(ctx, parts);
 // What you hear besides the cues: your steps, Bolt, the interface and the bridge's ambience (features/soundscape).

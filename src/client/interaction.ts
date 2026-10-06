@@ -39,6 +39,10 @@ export function interactionAvailable(it: Interactable | null, key: DeskKey, stat
   }
 
   if (state.note && it.kind === 'issues') return key === 'E' || key === 'O';
+  // The service monitor: E uses (or opens) its page, O full screen, C the next service, R reloads.
+  if (it.kind === 'monitor') return key === 'E' || key === 'O' || key === 'C' || key === 'R';
+  // The Services board: E on a row puts that service on the monitor, O opens the board's window.
+  if (it.kind === 'services') return key === 'E' || key === 'O';
   if (key !== 'E') return false;
 
   if (it.kind === 'seat') return !!it.seatId;

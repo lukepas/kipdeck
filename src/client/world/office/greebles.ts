@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { FLOOR, HULL_FRAMES, WALL_HEIGHT, WINDOWS, WING } from '../../../shared/layout';
+import { SERVICE_MONITOR } from '../../../shared/wall-screens';
 import type { Fixture } from './fixture';
 import { DECK, matte, practical } from './materials';
 
@@ -43,15 +44,20 @@ function footRuns(): Run[] {
   ];
 }
 
-/** The piers between the side ports: where each wall's ports leave a stretch of wall, its middle. */
-function piers(): { side: 'east' | 'west'; z: number }[] {
+/** Whether a screen hangs over the pier at `z` on that wall: its rib would stand through it (the service monitor). */
+function screened(side: 'east' | 'west', z: number): boolean {
+  return side === 'east' && Math.abs(z - SERVICE_MONITOR.z) < SERVICE_MONITOR.width / 2 + RIB.w;
+}
+
+/** The piers between the side ports: where each wall's ports leave a stretch of wall, its middle (none behind a screen). */
+export function piers(): { side: 'east' | 'west'; z: number }[] {
   const out: { side: 'east' | 'west'; z: number }[] = [];
   for (const side of ['east', 'west'] as const) {
     const ports = WINDOWS.filter((w) => w.wall === side && w.y0 < 1).sort((p, q) => p.u - q.u);
     for (let i = 1; i < ports.length; i++) {
       const from = ports[i - 1].u + ports[i - 1].width / 2;
       const to = ports[i].u - ports[i].width / 2;
-      if (to - from > RIB.w + 0.4) out.push({ side, z: (from + to) / 2 });
+      if (to - from > RIB.w + 0.4 && !screened(side, (from + to) / 2)) out.push({ side, z: (from + to) / 2 });
     }
   }
   return out;

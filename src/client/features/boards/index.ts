@@ -4,6 +4,7 @@
  * and the meeting room's two. What E does at each is defined with it.
  */
 import type * as THREE from 'three';
+import type { ServiceInfo } from '../../../shared/protocol';
 import type { GhIssue } from '../../../shared/protocol';
 import type { Ctx } from '../../core/context';
 import { aside, boardHint, hintTitle, key, onE } from '../../core/hint';
@@ -41,6 +42,10 @@ export interface BoardsDeps {
   boardActions(): BoardActions;
   /** The task queue's window. */
   showQueue(): void;
+  /** Where the crosshair's aim lands on what you can use (see aimHit in input/pointer.ts). */
+  aimHit(): THREE.Intersection | null;
+  /** Puts the service on `port` on the service monitor (features/monitor). */
+  watchService(port: number): void;
 }
 
 export function installBoards(ctx: Ctx, deps: BoardsDeps) {
@@ -129,10 +134,27 @@ export function installBoards(ctx: Ctx, deps: BoardsDeps) {
     hint: () => boardHint('Pull request board'),
     use: onE(() => openBoard('pulls', ctx.net, deps.boardActions())),
   });
+  /** The service whose row on the Services board the crosshair is on, if any. */
+  function aimedService(): ServiceInfo | null {
+    const hit = deps.aimHit();
+    if (!hit?.uv || hit.object !== ctx.world().boardMeshes.services) return null;
+    const port = servicesTex.serviceAt(hit.uv);
+    return store.services.items.find((s) => s.port === port) ?? null;
+  }
+  // The row you point at is outlined: E puts it on the service monitor. O (or E off the rows) opens the window.
+  ctx.ticks.add('hud', () => servicesTex.lift(aimedService()?.port ?? null));
   ctx.interactions.define('services', {
     reach: 9,
-    hint: () => boardHint('Services board'),
-    use: onE(() => openServices()),
+    hint: () => {
+      const s = aimedService();
+      if (!s) return { k: '', parts: [hintTitle('Services board'), key('E', 'Open'), aside('or point at a row to watch it')] };
+      return { k: String(s.port), parts: [hintTitle(clip(`${s.title || s.command} :${s.port}`, 60)), key('E', 'Watch on the monitor'), key('O', 'Open the board')] };
+    },
+    use: (_it, k) => {
+      const s = k === 'E' ? aimedService() : null;
+      if (s) deps.watchService(s.port);
+      else if (k === 'E' || k === 'O') openServices();
+    },
   });
   ctx.interactions.define('queue', {
     reach: 9,

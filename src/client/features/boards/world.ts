@@ -272,22 +272,44 @@ export class ServicesBoardTexture {
   private drawn = '';
   /** Nothing running: folded to a pill (./fold.ts). */
   folded = false;
+  /** The ports of the rows drawn now, top to bottom (serviceAt). */
+  private shown: number[] = [];
+  /** The row outlined: the one you're pointing at, which E puts on the service monitor. */
+  private lifted: number | null = null;
+  private last: [ServiceInfo[], Map<string, WorkerInfo>] | null = null;
 
   constructor() {
     this.texture = this.s.texture;
   }
 
+  /** The port of the service whose row is at `uv` on the face, if any. */
+  serviceAt(uv: THREE.Vector2): number | undefined {
+    if (this.folded) return undefined;
+    const py = (1 - uv.y) * this.panel.h;
+    const i = this.shown.findIndex((_, i) => py >= rowTop(i) && py <= rowTop(i) + LAYOUT.rowH);
+    return i < 0 ? undefined : this.shown[i];
+  }
+
+  /** Outlines the row of the service on `port` (null for none). */
+  lift(port: number | null) {
+    if (port === this.lifted) return;
+    this.lifted = port;
+    if (this.last) this.render(...this.last);
+  }
+
   render(items: ServiceInfo[], workers: Map<string, WorkerInfo>) {
+    this.last = [items, workers];
     const rows = items.map((s) => {
       const w = workers.get(s.workerId);
       return { port: s.port, title: s.title || s.command, who: [w?.name ?? 'A unit', w?.worktree?.branch].filter(Boolean).join('  ') };
     });
     // Worker updates stream in constantly; only redraw when what's shown changes.
-    const key = JSON.stringify(rows);
+    const key = JSON.stringify([rows, this.lifted, this.panel.h]);
     if (key === this.drawn) return;
     this.drawn = key;
     const { g, W } = this.s;
     this.folded = !rows.length;
+    if (this.folded) this.shown = [];
     this.panel.setHeight(this.folded ? PILL : SITUATION.height);
     const H = this.panel.h;
     g.clearRect(0, 0, W, this.s.H);
@@ -305,7 +327,8 @@ export class ServicesBoardTexture {
       g.fill();
     };
     const shown = rows.slice(0, rowsFor(H));
-    shown.forEach((r, i) => row(g, W, i, { hue: PANEL.settled, mark: up, text: r.title, side: `:${r.port}`, sideColor: INK.text, sideMono: true, sub: r.who }));
+    this.shown = shown.map((r) => r.port);
+    shown.forEach((r, i) => row(g, W, i, { hue: PANEL.settled, mark: up, text: r.title, side: `:${r.port}`, sideColor: INK.text, sideMono: true, sub: r.who, lifted: r.port === this.lifted }));
     more(g, W, H, rows.length - shown.length);
     this.texture.needsUpdate = true;
   }

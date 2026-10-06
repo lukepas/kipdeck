@@ -4,6 +4,7 @@ import { store } from '../state';
 import { h, openModal, timeAgo } from './dom';
 import { copy, copyButton, guessOs, openCommand, OS_LABEL, type Os } from './team';
 import { icon } from './icons';
+import { serviceLink } from '../../shared/service-link';
 
 /** Whether this page came over the office's Tailscale network, where every server has its own link. */
 function onTailnet(s: ServicesState): boolean {
@@ -11,10 +12,9 @@ function onTailnet(s: ServicesState): boolean {
 }
 
 export function serviceUrl(port: number, s = store.services): string {
-  // Tailscale Serve points <office>.ts.net:<port> at the office, which relays it by the port.
-  if (onTailnet(s)) return `https://${s.tailnet}:${port}`;
-  // The tunnel lands on the office's own port, so it speaks whatever the office speaks.
-  return `${location.protocol}//localhost:${port}`;
+  // Tailscale Serve points <office>.ts.net:<port> at the office, which relays it by the port; the
+  // tunnel lands on the office's own port, so it speaks whatever the office speaks (shared/service-link.ts).
+  return serviceLink(port, s.tailnet, location);
 }
 
 /**
