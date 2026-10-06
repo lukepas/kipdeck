@@ -9,9 +9,9 @@ import { lightModeOf } from '../src/client/lighting.js';
 import { DECK } from '../src/client/world/office/materials.js';
 import { DIM, dimRig } from '../src/client/features/alert/logic.js';
 import { ambientSafe } from '../src/client/features/space/logic.js';
-import { SPRIG } from '../src/client/features/mascot/logic.js';
+import { SPRIG, sprigShown } from '../src/client/features/mascot/logic.js';
 import { MOTE } from '../src/client/features/mascot/trail.js';
-import { FUR_GLOW, NUB } from '../src/client/features/mascot/world.js';
+import { FUR_ALBEDO, FUR_CLAMP, FUR_GLOW, GLINT, KIP } from '../src/client/features/mascot/world.js';
 
 /** WCAG relative luminance of `#rrggbb`. */
 function luminance(hex: string): number {
@@ -160,15 +160,22 @@ test("the mascot's Spark Sprig is a rose accent clear of every state hue, and no
   for (const state of [DECK.signal, DECK.review, DECK.settled, DECK.ship]) assert.ok(hueGap(rim.hue, hueOf(state).hue) >= 40);
   // At its brightest (a twirl), the crystal's white core stays under Night's glow threshold; so do the
   // motes, the catchlights in his eyes and the warmth in his fur's shadows.
-  const threshold = LIGHT_MODES.night.bloom!.threshold;
-  assert.ok(linLum(SPRIG.core) * SPRIG.peak * SPRIG.flourish < threshold, 'the Sprig at a flourish');
+  // The demo's bloom (features/lights/index.ts DEMO_BLOOM) sits a little lower than Night's, at 0.82.
+  const threshold = Math.min(LIGHT_MODES.night.bloom!.threshold, 0.82);
+  const flourish = linLum(SPRIG.core) * SPRIG.peak * sprigShown(SPRIG.flourish);
+  assert.ok(flourish < threshold, 'the Sprig at a flourish');
   assert.ok(linLum(SPRIG.core) * SPRIG.peak < threshold, 'the Sprig even at full');
   assert.ok(linLum(SPRIG.core) * MOTE.peak < threshold, 'a mote');
-  assert.ok(linLum(NUB.glint) < threshold, 'a catchlight');
-  assert.ok(linLum(NUB.belly) * FUR_GLOW < 0.1, "the fur's own glow");
+  // Additive motes stack where the tip lingers: three on top of the crystal at a flourish still stay under.
+  assert.ok(3 * linLum(SPRIG.core) * MOTE.peak + flourish < threshold, 'three motes stacked on the crystal');
+  // The eyes are lit like his fur; the catchlights add a little light of their own, and nothing on him
+  // passes the clamp, whatever spot he stands under.
+  assert.ok(linLum(KIP.glint) * FUR_ALBEDO + GLINT < FUR_CLAMP, 'a catchlight');
+  assert.ok(FUR_CLAMP < threshold - 0.1, 'the clamp on his light');
+  assert.ok(linLum(KIP.belly) * FUR_GLOW < 0.1, "the fur's own glow");
   // His fur, colours and all, has no green and no state hue: anything with colour to it is warm (the
   // vest is the deck's own slate-blue, greyed down).
-  for (const c of Object.values(NUB)) {
+  for (const c of Object.values(KIP)) {
     const { hue, chroma } = hueOf(c);
     if (chroma < 0.16) continue;
     assert.ok(hue < 75 || hue > 300, `${c} is not green, cyan or violet`);

@@ -4,10 +4,12 @@ import { MOTES, type MascotRig } from './world';
 
 // The Spark Sprig's sparkle trail: a short ribbon of rose-white motes off its tip on a big swing, a
 // twirl or a run of laps, on Bolt's ring-buffer pattern (the newest first). Each fades within 0.4 s,
-// additive and well under the glow's threshold. High keeps 12, Medium 6, Low none.
+// additive and faint enough that three stacked on the crystal at a flourish stay under the glow's
+// threshold; a new one is only let go once the tip has moved `gap` from the last, so a Sprig held still
+// never piles them up. High keeps 12, Medium 6, Low none.
 
-/** How long a mote lasts (s), and its brightest (a part of its colour). */
-export const MOTE = { life: 0.4, peak: 0.55 } as const;
+/** How long a mote lasts (s), its brightest (a part of its colour), and how far the tip moves between two (m). */
+export const MOTE = { life: 0.4, peak: 0.12, gap: 0.03 } as const;
 
 export class SprigTrail {
   private readonly at = new Float32Array(MOTES * 3);
@@ -17,6 +19,7 @@ export class SprigTrail {
   private readonly white = new THREE.Color(SPRIG.core);
   private readonly c = new THREE.Color();
   private readonly tip = new THREE.Vector3();
+  private readonly last = new THREE.Vector3(1e9, 0, 0);
 
   constructor(private readonly rig: MascotRig) {}
 
@@ -27,12 +30,15 @@ export class SprigTrail {
     this.every -= dt;
     if (on && n > 0 && this.every <= 0) {
       this.every = MOTE.life / n;
-      at.copyWithin(3, 0, (MOTES - 1) * 3);
-      age.copyWithin(1, 0, MOTES - 1);
       rig.root.updateMatrixWorld(true);
       rig.crystal.localToWorld(this.tip.set(0, 0.27, 0));
-      at.set([this.tip.x, this.tip.y, this.tip.z], 0);
-      age[0] = 0;
+      if (this.tip.distanceTo(this.last) >= MOTE.gap) {
+        this.last.copy(this.tip);
+        at.copyWithin(3, 0, (MOTES - 1) * 3);
+        age.copyWithin(1, 0, MOTES - 1);
+        at.set([this.tip.x, this.tip.y, this.tip.z], 0);
+        age[0] = 0;
+      }
     }
     let live = 0;
     const pos = rig.motes.geometry.attributes.position as THREE.BufferAttribute;

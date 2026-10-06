@@ -2,26 +2,30 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { contactShadow } from '../../world/office/materials';
 import { onBridgeLayer } from '../bridge/shapes';
-import { SPRIG } from './logic';
+import { SPRIG, sprigShown } from './logic';
 import { NEST } from './path';
 
-// Nubbin, drawn: a stowaway deck kit, two stacked balls of oatmeal-cream fur 0.6 m tall, tall rounded
-// leaf ears with charcoal tips that stand up (0.78 m to the tips), hazel eyes with a big catchlight and
-// fur lids, a small muzzle and a slate button nose, rose cheeks, stubby charcoal-socked legs on big
-// round feet, fingerless mittens, a curled three-puff tail, a slate-blue quilted deck vest with two
-// pockets, a brass toggle and the ship's roundel, and a long cream and slate striped scarf. In his right
-// mitten the Spark Sprig: a flat glowing crystal leaf on a stubby turned-wood grip, white at its core
-// and rose at its rim, the only hue on him. No green, no robe, no hood.
+// Kip, drawn: a stowaway deck kit, two stacked balls of oatmeal-cream fur 0.6 m tall, tall rounded
+// leaf ears of plain fur lined in the vest's slate-blue that stand up (0.78 m to the tips), a curly
+// antenna tuft between them with a little bead at its end, hazel eyes with a big catchlight and fur
+// lids, a small muzzle and a slate button nose, a few tan freckles, stubby charcoal-socked legs on big
+// round feet, big slate-blue mitten paws, a curled three-puff tail, a slate-blue quilted deck vest with
+// two pockets, a brass toggle and the ship's roundel, and a chunky cream and grey-blue knitted scarf
+// knotted at one side, one tail hanging in front and two streaming behind. In his right paw the Spark
+// Sprig: a flat glowing crystal leaf on a stubby turned-wood grip, white at its core and rose at its
+// rim, the only hue on him. No green, no robe, no hood, no dark ear tips, no cheek spots.
 //
-// One draw for all of him: every piece is rigidly bound to one bone of a small pivot hierarchy (a
-// skinned mesh with a single weight per vertex, so each pivot moves its pieces as a group would), with
-// the eyes and the crystal as plain meshes on their pivots. With his trail of motes, his shadow and his
-// nest that is six draws. On the bridge layer, so the Overview never shows him.
+// One draw for all of him: every piece, the eyes too, is rigidly bound to one bone of a small pivot
+// hierarchy (a skinned mesh with a single weight per vertex, so each pivot moves its pieces as a group
+// would), lit like the rest of him, with only the catchlights given a little light of their own. The
+// crystal is a plain mesh on its pivot. With his trail of motes, his shadow and his nest that is five
+// draws. On the bridge layer, so the Overview never shows him. He dithers out as the camera comes
+// within a metre of him and is not drawn nearer than half a metre, so the camera never ends up inside him.
 
 /** His pivots, root first; each one's parent comes before it. */
 export const BONES = [
   'body', 'hips', 'legL', 'legR', 'torso', 'armL', 'handL', 'armR', 'handR', 'sprig', 'neck', 'head',
-  'earL', 'tipL', 'earR', 'tipR', 'lidL', 'lidR', 'lowL', 'lowR', 'tail0', 'tail1', 'tail2',
+  'tuft0', 'tuft1', 'earL', 'tipL', 'earR', 'tipR', 'lidL', 'lidR', 'lowL', 'lowR', 'tail0', 'tail1', 'tail2',
   'scarfL0', 'scarfL1', 'scarfL2', 'scarfR0', 'scarfR1', 'scarfR2',
 ] as const;
 export type BoneName = (typeof BONES)[number];
@@ -53,8 +57,8 @@ function rests(): Record<BoneName, Rest> {
   const lid = (side: number, up: number): Rest => {
     const f = eyeFrame(side);
     const p = f.at.clone().add(new THREE.Vector3(0, up * EYE.r * 1.02, 0.0075).applyQuaternion(f.q));
-    // The upper lids tip up toward his nose, a soft look rather than a scowl.
-    const q = f.q.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), up > 0 ? -side * 0.24 : 0));
+    // The upper lids tip down toward his nose a touch (never up into a worried brow): a soft, bright look.
+    const q = f.q.clone().multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), up > 0 ? side * 0.05 : 0));
     const e = new THREE.Euler().setFromQuaternion(q);
     return ['head', [p.x, p.y, p.z], [e.x, e.y, e.z]];
   };
@@ -71,6 +75,8 @@ function rests(): Record<BoneName, Rest> {
     sprig: ['handR', [0, -0.012, 0.012], [1.25, 0, 0]],
     neck: ['torso', [0, 0.215, 0]],
     head: ['neck', [0, 0.125, 0.004]],
+    tuft0: ['head', [0, 0.125, 0.01], [0.25, 0, 0]],
+    tuft1: ['tuft0', [0, 0.045, 0], [-0.7, 0, 0]],
     earL: ['head', [0.066, 0.104, -0.012], [-0.08, 0, -0.26]],
     tipL: ['earL', [0, 0.132, 0], [0.32, 0, 0]],
     earR: ['head', [-0.066, 0.104, -0.012], [-0.08, 0, 0.26]],
@@ -92,12 +98,15 @@ function rests(): Record<BoneName, Rest> {
 }
 
 /** His colours (DESIGN.md: low saturation, no state hue, no green). */
-export const NUB = {
+export const KIP = {
   fur: '#E9DCC6',
   belly: '#F6EEDF',
   slate: '#3B4350',
-  rose: '#D9A9A6',
+  /** The tan of his freckles and the scarf's knit shadow. */
+  tan: '#B89F82',
   vest: '#4A5A70',
+  /** The scarf's stripe and the ears' lining: the vest's slate-blue, lifted, so it never reads as a dark collar. */
+  knit: '#8592A6',
   vestDark: '#3E4C5F',
   brass: '#B9A86E',
   iris: '#6B4A2B',
@@ -110,6 +119,10 @@ export const NUB = {
 
 /** How much of his colours' light his fur sends back (the vertex colours are scaled by it). */
 export const FUR_ALBEDO = 0.2;
+/** The most light any part of him sends back (linear), whatever spot he stands under: under every glow threshold. */
+export const FUR_CLAMP = 0.6;
+/** The catchlights' own light (linear), added to their lit colour, under FUR_CLAMP. */
+export const GLINT = 0.4;
 /** How much of his own colour he shows in shadow (an emissive by vertex colour), well under the glow's threshold. */
 export const FUR_GLOW = 0.05;
 
@@ -119,101 +132,134 @@ interface Piece {
   geo: THREE.BufferGeometry;
   color: string;
   paint?: (p: THREE.Vector3) => string;
+  /** A catchlight: given a little light of its own. */
+  glint?: boolean;
 }
 
-const sphere = (r: number, w = 10, h = 7) => new THREE.SphereGeometry(r, w, h);
+const sphere = (r: number, w = 16, h = 10) => new THREE.SphereGeometry(r, w, h);
+/** The head's curve near the eyes (m): flat discs on the face are bent to it, so no edge stands off the head. */
+const FACE_R = 0.14;
+/** Bends a flat disc (in the xy plane, facing +z) round a sphere of radius FACE_R about (cx, cy). */
+function bend(g: THREE.BufferGeometry, cx = 0, cy = 0): THREE.BufferGeometry {
+  const pos = g.attributes.position as THREE.BufferAttribute;
+  for (let i = 0; i < pos.count; i++) {
+    const dx = pos.getX(i) - cx;
+    const dy = pos.getY(i) - cy;
+    pos.setZ(i, pos.getZ(i) - (dx * dx + dy * dy) / (2 * FACE_R));
+  }
+  g.computeVertexNormals();
+  return g;
+}
 
 function pieces(): Piece[] {
   const out: Piece[] = [];
   const add = (bone: BoneName, geo: THREE.BufferGeometry, color: string, paint?: Piece['paint']) => out.push({ bone, geo, color, paint });
   // Feet and socks: charcoal, the feet big and round.
   for (const leg of ['legL', 'legR'] as const) {
-    add(leg, new THREE.CapsuleGeometry(0.03, 0.05, 2, 7).translate(0, -0.055, 0), NUB.slate);
-    add(leg, new THREE.SphereGeometry(0.046, 9, 5, 0, Math.PI * 2, 0, Math.PI / 2).scale(0.78, 0.62, 1).translate(0, -0.113, 0.018), NUB.slate);
+    add(leg, new THREE.CapsuleGeometry(0.03, 0.05, 4, 12).translate(0, -0.055, 0), KIP.slate);
+    // A round foot: a squashed ball, its sole flattened onto the deck.
+    const foot = new THREE.SphereGeometry(0.046, 18, 10).scale(0.8, 0.55, 1.05);
+    const fp = foot.attributes.position as THREE.BufferAttribute;
+    for (let i = 0; i < fp.count; i++) fp.setY(i, Math.max(-0.008, fp.getY(i)));
+    foot.computeVertexNormals();
+    add(leg, foot.translate(0, -0.11, 0.02), KIP.slate);
   }
   // The body: a pear of fur, a lighter belly, the vest round it (open at the front), pockets, toggle, roundel.
   const pear = [[0, -0.03], [0.07, -0.025], [0.104, 0.01], [0.112, 0.05], [0.104, 0.1], [0.086, 0.15], [0.062, 0.188], [0.034, 0.214], [0, 0.222]].map(([r, y]) => new THREE.Vector2(r, y));
-  add('torso', new THREE.LatheGeometry(pear, 12), NUB.fur);
-  add('torso', sphere(0.08, 9, 7).scale(0.85, 1, 0.5).translate(0, 0.055, 0.078), NUB.belly);
+  add('torso', new THREE.LatheGeometry(pear, 24), KIP.fur);
+  add('torso', sphere(0.08).scale(0.85, 1, 0.5).translate(0, 0.055, 0.078), KIP.belly);
   const gap = 0.6;
-  add('torso', new THREE.CylinderGeometry(0.1, 0.119, 0.13, 12, 2, true, gap, Math.PI * 2 - gap * 2).translate(0, 0.088, 0), NUB.vest, (p) => (Math.abs(p.y - 0.088) < 0.01 ? NUB.vestDark : NUB.vest));
+  add('torso', new THREE.CylinderGeometry(0.1, 0.119, 0.13, 24, 2, true, gap, Math.PI * 2 - gap * 2).translate(0, 0.088, 0), KIP.vest, (p) => (Math.abs(p.y - 0.088) < 0.01 ? KIP.vestDark : KIP.vest));
   for (const side of [-1, 1]) {
     const a = side * 0.95;
-    add('torso', new THREE.BoxGeometry(0.036, 0.03, 0.008).rotateY(a).translate(Math.sin(a) * 0.118, 0.05, Math.cos(a) * 0.118), NUB.vestDark);
+    add('torso', new THREE.BoxGeometry(0.036, 0.03, 0.008).rotateY(a).translate(Math.sin(a) * 0.118, 0.05, Math.cos(a) * 0.118), KIP.vestDark);
   }
-  add('torso', new THREE.CylinderGeometry(0.008, 0.008, 0.022, 6).rotateZ(Math.PI / 2).rotateY(-0.62).translate(Math.sin(-0.62) * 0.108, 0.125, Math.cos(-0.62) * 0.108), NUB.brass);
-  add('torso', new THREE.CircleGeometry(0.016, 10).rotateY(0.7).translate(Math.sin(0.7) * 0.112, 0.118, Math.cos(0.7) * 0.112), NUB.slate, (p) => (Math.hypot(p.x - Math.sin(0.7) * 0.112, p.y - 0.118, p.z - Math.cos(0.7) * 0.112) > 0.012 ? NUB.brass : NUB.slate));
-  // The scarf round his neck, striped cream and slate, and its two tails behind.
-  const stripe = (p: THREE.Vector3) => (Math.floor(((Math.atan2(p.z, p.x) + Math.PI) / (Math.PI * 2)) * 12) % 2 ? NUB.slate : NUB.belly);
-  add('torso', new THREE.TorusGeometry(0.07, 0.024, 5, 16).rotateX(Math.PI / 2).translate(0, 0.198, 0.004), NUB.belly, stripe);
+  add('torso', new THREE.CylinderGeometry(0.008, 0.008, 0.022, 6).rotateZ(Math.PI / 2).rotateY(-0.62).translate(Math.sin(-0.62) * 0.108, 0.125, Math.cos(-0.62) * 0.108), KIP.brass);
+  add('torso', new THREE.CircleGeometry(0.016, 10).rotateY(0.7).translate(Math.sin(0.7) * 0.112, 0.118, Math.cos(0.7) * 0.112), KIP.slate, (p) => (Math.hypot(p.x - Math.sin(0.7) * 0.112, p.y - 0.118, p.z - Math.cos(0.7) * 0.112) > 0.012 ? KIP.brass : KIP.slate));
+  // The scarf: a chunky knit round his neck in broad cream and grey-blue bands, ribbed (each band has a
+  // tan shadow line), a knot at his left shoulder with one short tail hanging in front, two streaming behind.
+  const band = (a: number) => Math.floor(((a + Math.PI) / (Math.PI * 2)) * 8);
+  const knitAt = (p: THREE.Vector3) => {
+    const a = Math.atan2(p.z, p.x);
+    const f = (((a + Math.PI) / (Math.PI * 2)) * 8) % 1;
+    return f < 0.12 ? KIP.tan : band(a) % 2 ? KIP.knit : KIP.belly;
+  };
+  add('torso', new THREE.TorusGeometry(0.072, 0.027, 8, 28).rotateX(Math.PI / 2).translate(0, 0.196, 0.004), KIP.belly, (p) => knitAt(new THREE.Vector3(p.x, p.y - 0.196, p.z - 0.004)));
+  const knot = { x: 0.062, y: 0.19, z: 0.052 };
+  add('torso', sphere(0.03, 12, 8).scale(1.1, 0.9, 0.9).translate(knot.x, knot.y, knot.z), KIP.knit);
+  add('torso', new THREE.BoxGeometry(0.04, 0.085, 0.014, 1, 3, 1).rotateZ(0.2).rotateX(-0.25).translate(knot.x + 0.012, knot.y - 0.06, knot.z + 0.032), KIP.belly, (p) => (Math.floor((p.y - knot.y + 0.2) / 0.028) % 2 ? KIP.knit : KIP.belly));
   for (const [i, b] of (['scarfL0', 'scarfL1', 'scarfL2', 'scarfR0', 'scarfR1', 'scarfR2'] as const).entries()) {
-    add(b, new THREE.BoxGeometry(0.044, 0.064, 0.012).translate(0, -0.03, 0), i % 2 ? NUB.slate : NUB.belly);
+    add(b, new THREE.BoxGeometry(0.046, 0.064, 0.014).translate(0, -0.03, 0), i % 2 ? KIP.knit : KIP.belly);
   }
-  // Arms and fingerless mittens.
+  // Arms and big slate-blue mitten paws, a cream cuff where the fur meets them.
   for (const [arm, hand] of [['armL', 'handL'], ['armR', 'handR']] as const) {
-    add(arm, new THREE.CapsuleGeometry(0.027, 0.07, 2, 7).translate(0, -0.055, 0), NUB.fur);
-    add(hand, sphere(0.033, 8, 6).scale(1, 1.08, 0.9).translate(0, -0.012, 0), NUB.fur);
+    add(arm, new THREE.CapsuleGeometry(0.027, 0.07, 4, 12).translate(0, -0.055, 0), KIP.fur);
+    add(hand, new THREE.TorusGeometry(0.028, 0.01, 6, 16).rotateX(Math.PI / 2).translate(0, 0.012, 0), KIP.belly);
+    add(hand, sphere(0.043).scale(1, 1.1, 0.9).translate(0, -0.018, 0), KIP.vest);
   }
   // The Sprig's grip: turned biscuit wood with a slate ribbon round it, three beads at the crystal's foot.
-  add('sprig', new THREE.CylinderGeometry(0.012, 0.014, 0.075, 6).translate(0, 0.005, 0), NUB.wood, (p) => (Math.abs(p.y + 0.004) < 0.012 ? NUB.slate : NUB.wood));
+  add('sprig', new THREE.CylinderGeometry(0.012, 0.014, 0.075, 6).translate(0, 0.005, 0), KIP.wood, (p) => (Math.abs(p.y + 0.004) < 0.012 ? KIP.slate : KIP.wood));
   for (let i = 0; i < 3; i++) {
     const a = (i / 3) * Math.PI * 2;
-    add('sprig', new THREE.IcosahedronGeometry(0.009, 0).translate(Math.cos(a) * 0.014, 0.046, Math.sin(a) * 0.006), NUB.wood);
+    add('sprig', new THREE.IcosahedronGeometry(0.009, 0).translate(Math.cos(a) * 0.014, 0.046, Math.sin(a) * 0.006), KIP.wood);
   }
-  // The head: fur, a light muzzle, a slate button nose, rose cheeks.
-  add('head', sphere(HEAD.r, 14, 10).scale(...HEAD.s), NUB.fur);
-  add('head', sphere(0.06, 10, 7).scale(1.15, 0.7, 0.75).translate(0, -0.062, 0.108), NUB.belly);
-  add('head', sphere(0.015, 7, 5).scale(1.35, 0.85, 0.8).translate(0, -0.04, 0.152), NUB.slate);
+  // The head: fur, a light muzzle, a slate button nose, three tan freckles under each eye.
+  add('head', sphere(HEAD.r, 32, 20).scale(...HEAD.s), KIP.fur);
+  add('head', sphere(0.06).scale(1.15, 0.7, 0.75).translate(0, -0.062, 0.108), KIP.belly);
+  add('head', sphere(0.015, 10, 7).scale(1.35, 0.85, 0.8).translate(0, -0.04, 0.152), KIP.slate);
   for (const side of [-1, 1]) {
-    const { at, n } = onHead(side * 0.088, -0.062);
-    const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
-    add('head', new THREE.CircleGeometry(0.02, 10).scale(1.25, 0.8, 1).applyQuaternion(q).translate(at.x + n.x * 0.002, at.y + n.y * 0.002, at.z + n.z * 0.002), NUB.rose);
+    for (const [fx, fy] of [[0.078, -0.058], [0.094, -0.066], [0.084, -0.074]]) {
+      const { at, n } = onHead(side * fx, fy);
+      const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
+      add('head', new THREE.CircleGeometry(0.0045, 8).applyQuaternion(q).translate(at.x + n.x * 0.0015, at.y + n.y * 0.0015, at.z + n.z * 0.0015), KIP.tan);
+    }
   }
-  // Fur lids over the eyes: the upper ones blink and droop, the lower ones rise for happy arcs.
+  // The eyes, bent to the head so no edge stands off it.
+  for (const side of [-1, 1]) for (const l of eyeLayers(side)) out.push(l);
+  // Fur lids over the eyes, bent to the head too: the upper ones blink and droop, the lower ones rise for happy arcs.
   for (const [b, up] of [['lidL', 1], ['lidR', 1], ['lowL', -1], ['lowR', -1]] as const) {
-    add(b, new THREE.CircleGeometry(EYE.r * 1.12, 14).translate(0, -up * EYE.r * 1.12, 0), NUB.fur);
+    add(b, bend(new THREE.CircleGeometry(EYE.r * 1.12, 20).translate(0, -up * EYE.r * 1.12, 0), 0, -up * EYE.r * 1.12), KIP.fur);
   }
-  // Ears: a leaf of fur, its inner rose, its top third (the tip that flops) charcoal.
-  const leaf = (pts: number[][]) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), 10).scale(1.08, 1, 0.3);
+  // The antenna tuft: a curl of fur between the ears, a little bead at its end.
+  add('tuft0', new THREE.CapsuleGeometry(0.011, 0.04, 3, 8).translate(0, 0.022, 0), KIP.fur);
+  add('tuft1', new THREE.CapsuleGeometry(0.009, 0.03, 3, 8).translate(0, 0.016, 0), KIP.fur);
+  add('tuft1', sphere(0.017, 12, 8).translate(0, 0.042, 0), KIP.belly);
+  // Ears: a leaf of plain fur lined with the vest's slate-blue, its top third (the tip that flops) fur too.
+  const leaf = (pts: number[][]) => new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), 18).scale(1.08, 1, 0.3);
   for (const [ear, tip] of [['earL', 'tipL'], ['earR', 'tipR']] as const) {
-    add(ear, leaf([[0, -0.01], [0.032, 0.005], [0.048, 0.05], [0.05, 0.1], [0.045, 0.134], [0, 0.136]]), NUB.fur);
-    add(ear, new THREE.CircleGeometry(0.03, 10).scale(0.72, 1.8, 1).translate(0, 0.066, 0.017), NUB.rose);
-    add(tip, leaf([[0, -0.004], [0.045, 0.002], [0.04, 0.03], [0.026, 0.052], [0, 0.066]]), NUB.slate);
+    add(ear, leaf([[0, -0.01], [0.032, 0.005], [0.048, 0.05], [0.05, 0.1], [0.045, 0.134], [0, 0.136]]), KIP.fur);
+    add(ear, new THREE.CircleGeometry(0.03, 16).scale(0.72, 1.8, 1).translate(0, 0.066, 0.017), KIP.knit);
+    add(tip, leaf([[0, -0.004], [0.045, 0.002], [0.04, 0.03], [0.026, 0.052], [0, 0.066]]), KIP.fur);
   }
   // The tail: three fluffy puffs curling up behind, the last charcoal.
-  add('tail0', new THREE.IcosahedronGeometry(0.05, 1), NUB.fur);
-  add('tail1', new THREE.IcosahedronGeometry(0.046, 1), NUB.fur);
-  add('tail2', new THREE.IcosahedronGeometry(0.038, 1), NUB.slate);
+  add('tail0', new THREE.IcosahedronGeometry(0.05, 2), KIP.fur);
+  add('tail1', new THREE.IcosahedronGeometry(0.046, 2), KIP.fur);
+  add('tail2', new THREE.IcosahedronGeometry(0.038, 2), KIP.belly);
   return out;
 }
 
-/** The eyes: white, hazel iris (lifted, so a sliver of white shows under it), pupil and two catchlights. */
-function eyeGeometry(side: number): THREE.BufferGeometry {
+/** The eyes: white, a big hazel iris sitting a touch low (a soft, open look), pupil and two catchlights, as head pieces. */
+function eyeLayers(side: number): Piece[] {
   const { at, q } = eyeFrame(side);
-  const layer = (r: number, x: number, y: number, z: number, color: string) => {
-    const g = new THREE.CircleGeometry(r, 16).translate(x, y, z).toNonIndexed();
-    const c = new THREE.Color(color);
-    const col = new Float32Array(g.attributes.position.count * 3);
-    for (let i = 0; i < col.length; i += 3) col.set([c.r, c.g, c.b], i);
-    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    g.deleteAttribute('uv');
-    g.deleteAttribute('normal');
-    return g;
-  };
-  const g = mergeGeometries([
-    layer(EYE.r, 0, 0, 0, NUB.white),
-    layer(EYE.r * 0.78, 0, EYE.r * 0.12, 0.0012, NUB.iris),
-    layer(EYE.r * 0.4, 0, EYE.r * 0.14, 0.0024, NUB.pupil),
-    layer(EYE.r * 0.26, -side * EYE.r * 0.26, EYE.r * 0.4, 0.0036, NUB.glint),
-    layer(EYE.r * 0.1, side * EYE.r * 0.22, -EYE.r * 0.12, 0.0036, NUB.glint),
-  ])!;
-  return g.applyQuaternion(q).translate(at.x, at.y, at.z);
+  const layer = (r: number, x: number, y: number, z: number, color: string, glint = false): Piece => ({
+    bone: 'head',
+    geo: bend(new THREE.CircleGeometry(r, 20).translate(x, y, z), 0, 0).applyQuaternion(q).translate(at.x, at.y, at.z),
+    color,
+    glint,
+  });
+  return [
+    layer(EYE.r, 0, 0, 0, KIP.white),
+    layer(EYE.r * 0.8, 0, -EYE.r * 0.04, 0.0012, KIP.iris),
+    layer(EYE.r * 0.44, 0, -EYE.r * 0.04, 0.0024, KIP.pupil),
+    layer(EYE.r * 0.26, -side * EYE.r * 0.26, EYE.r * 0.4, 0.0036, KIP.glint, true),
+    layer(EYE.r * 0.1, side * EYE.r * 0.22, -EYE.r * 0.12, 0.0036, KIP.glint, true),
+  ];
 }
 
-/** The Spark Sprig's crystal: a flat faceted leaf, 0.3 m, widest two thirds up; white core, rose rim. */
+/** The Spark Sprig's crystal: a flat faceted leaf, 0.3 m, widest a little under halfway and narrowing to a point; white core, a thin rose rim. */
 function crystalGeometry(): THREE.BufferGeometry {
-  const prof = [[0, 0], [0.03, 0.03], [0.058, 0.11], [0.066, 0.19], [0.052, 0.25], [0.025, 0.288], [0, 0.3]];
-  const g = new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(r, y)), 8).scale(1, 1, 0.3).translate(0, 0.05, 0).toNonIndexed();
+  const prof = [[0, 0], [0.028, 0.03], [0.052, 0.1], [0.056, 0.15], [0.044, 0.21], [0.024, 0.26], [0.009, 0.29], [0, 0.305]];
+  const g = new THREE.LatheGeometry(prof.map(([r, y]) => new THREE.Vector2(r, y)), 16).scale(1, 1, 0.3).translate(0, 0.05, 0).toNonIndexed();
   const core = new THREE.Color(SPRIG.core);
   const rim = new THREE.Color(SPRIG.rim);
   const pos = g.attributes.position as THREE.BufferAttribute;
@@ -222,14 +268,23 @@ function crystalGeometry(): THREE.BufferGeometry {
   for (let i = 0; i < pos.count; i++) {
     const y = pos.getY(i) - 0.05;
     // How near the rim: out toward the leaf's edge, and toward its foot and tip.
-    const half = Math.max(0.001, 0.066 * Math.sin(Math.PI * Math.min(1, Math.max(0, y / 0.3)) * 0.92 + 0.12));
-    const k = Math.min(1, Math.max(Math.abs(pos.getX(i)) / half, Math.abs(y - 0.17) / 0.14) ** 3);
+    // Only the outermost edge goes rose (a thin rim), so dimmed it still reads as a pale crystal.
+    const half = Math.max(0.001, 0.056 * Math.sin(Math.PI * Math.min(1, Math.max(0, y / 0.305)) * 0.92 + 0.12));
+    const k = Math.min(1, Math.max(Math.abs(pos.getX(i)) / half, Math.abs(y - 0.15) / 0.16) ** 6);
     c.copy(core).lerp(rim, k);
     col.set([c.r, c.g, c.b], i * 3);
   }
   g.setAttribute('color', new THREE.BufferAttribute(col, 3));
   return g;
 }
+
+/** A screen-door dither (interleaved gradient noise): a fragment is dropped when its threshold is over `k`. */
+const DITHER = `uniform float uFade;
+bool dithered(float k) {
+  if (k >= 0.999) return false;
+  float n = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+  return n >= k;
+}`;
 
 /** A soft round dot for the motes. */
 function dotTexture(): THREE.Texture {
@@ -265,6 +320,8 @@ export interface MascotRig {
   nest: THREE.Group;
   /** The Sprig's light, as a part of its peak (0 to 1). */
   glow(k: number): void;
+  /** The camera never ends up inside him: dithered out from 0.9 m to 0.5 m from his middle, not drawn nearer. */
+  fadeFrom(camera: THREE.Vector3): void;
   show(on: boolean): void;
 }
 
@@ -307,6 +364,7 @@ export function buildMascot(): MascotRig {
       col.set([c.r, c.g, c.b], i * 3);
     }
     g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    g.setAttribute('glint', new THREE.BufferAttribute(new Float32Array(n).fill(p.glint ? 1 : 0), 1));
     const bi = index.get(p.bone)!;
     g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(new Array(n * 4).fill(0).map((_, i) => (i % 4 === 0 ? bi : 0)), 4));
     g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(new Array(n * 4).fill(0).map((_, i) => (i % 4 === 0 ? 1 : 0)), 4));
@@ -316,10 +374,21 @@ export function buildMascot(): MascotRig {
   const geo = mergeGeometries(parts)!;
   // His colours are what you see; the deck's lights are tuned for its dark plate, so his albedo is taken
   // down to the deck's own range (DESIGN.md: about 0.3 at most) and he never glows under a pod's spot.
-  const furMat = new THREE.MeshStandardMaterial({ vertexColors: true, color: new THREE.Color().setScalar(FUR_ALBEDO), emissive: new THREE.Color().setScalar(FUR_GLOW), roughness: 0.85, metalness: 0, side: THREE.DoubleSide });
-  // A little of each piece's own colour in its shadows, so the night's blue key never turns his cream to slate.
+  const fade = { value: 1 };
+  const furMat = new THREE.MeshStandardMaterial({ vertexColors: true, color: new THREE.Color().setScalar(FUR_ALBEDO), emissive: new THREE.Color().setScalar(FUR_GLOW), roughness: 0.85, metalness: 0 });
+  // A little of each piece's own colour in its shadows, so the night's blue key never turns his cream to
+  // slate; a little light of their own in the catchlights; never brighter than FUR_CLAMP under any spot;
+  // and dithered out as the camera comes close.
   furMat.onBeforeCompile = (shader) => {
-    shader.fragmentShader = shader.fragmentShader.replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n\ttotalEmissiveRadiance *= vColor.rgb;');
+    shader.uniforms.uFade = fade;
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nattribute float glint;\nvarying float vGlint;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\n\tvGlint = glint;');
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>\nvarying float vGlint;\n${DITHER}`)
+      .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\n\tif (dithered(uFade)) discard;')
+      .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\n\ttotalEmissiveRadiance = totalEmissiveRadiance * vColor.rgb + vec3(vGlint * ${GLINT.toFixed(3)});`)
+      .replace('#include <opaque_fragment>', `outgoingLight = min(outgoingLight, vec3(${FUR_CLAMP.toFixed(3)}));\n#include <opaque_fragment>`);
   };
   furMat.customProgramCacheKey = () => 'mascot-fur';
   const body = new THREE.SkinnedMesh(geo, furMat);
@@ -329,12 +398,14 @@ export function buildMascot(): MascotRig {
   // Culled by a sphere round all of him, wherever his pivots put his pieces.
   body.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0.38, 0), 0.75);
 
-  const eyeMat = new THREE.MeshBasicMaterial({ vertexColors: true });
-  const eyes = new THREE.Mesh(mergeGeometries([eyeGeometry(1), eyeGeometry(-1)])!, eyeMat);
-  eyes.name = 'mascot-eyes';
-  bones.head.add(eyes);
-
   const crystalMat = new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false });
+  crystalMat.onBeforeCompile = (shader) => {
+    shader.uniforms.uFade = fade;
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', `#include <common>\n${DITHER}`)
+      .replace('#include <clipping_planes_fragment>', '#include <clipping_planes_fragment>\n\tif (dithered(uFade)) discard;');
+  };
+  crystalMat.customProgramCacheKey = () => 'mascot-sprig';
   const crystal = new THREE.Mesh(crystalGeometry(), crystalMat);
   crystal.name = 'mascot-sprig';
   bones.sprig.add(crystal);
@@ -368,8 +439,8 @@ export function buildMascot(): MascotRig {
     tray(new THREE.BoxGeometry(0.03, 0.09, 0.72).translate(0.235, 0.045, 0), steel),
     tray(new THREE.BoxGeometry(0.44, 0.09, 0.03).translate(0, 0.045, -0.345), steel),
     tray(new THREE.BoxGeometry(0.44, 0.09, 0.03).translate(0, 0.045, 0.345), steel),
-    tray(new THREE.SphereGeometry(0.21, 10, 5).scale(1, 0.18, 1.5).translate(0, 0.04, 0), NUB.slate),
-    tray(new THREE.BoxGeometry(0.42, 0.03, 0.16).rotateX(0.2).translate(0, 0.07, 0.22), NUB.vest),
+    tray(new THREE.SphereGeometry(0.21, 10, 5).scale(1, 0.18, 1.5).translate(0, 0.04, 0), KIP.slate),
+    tray(new THREE.BoxGeometry(0.42, 0.03, 0.16).rotateX(0.2).translate(0, 0.07, 0.22), KIP.vest),
   ])!;
   nestGeo.computeVertexNormals();
   const nestMesh = new THREE.Mesh(nestGeo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8, metalness: 0.15, flatShading: true }));
@@ -379,7 +450,7 @@ export function buildMascot(): MascotRig {
 
   group.add(motes, shadow, nest);
   onBridgeLayer(group);
-  for (const o of [body, eyes, crystal, nestMesh]) {
+  for (const o of [body, crystal, nestMesh]) {
     o.castShadow = false;
     o.receiveShadow = false;
     o.userData.noMerge = true;
@@ -396,7 +467,13 @@ export function buildMascot(): MascotRig {
     shadow,
     nest,
     glow(k) {
-      crystalMat.color.setScalar(SPRIG.peak * Math.max(0, Math.min(1, k)));
+      crystalMat.color.setScalar(SPRIG.peak * sprigShown(k));
+    },
+    fadeFrom(c) {
+      const p = root.position;
+      const k = Math.min(1, Math.max(0, (Math.hypot(c.x - p.x, c.y - (p.y + 0.38), c.z - p.z) - 0.5) / 0.4));
+      fade.value = k;
+      body.visible = crystal.visible = k > 0.001;
     },
     show(on) {
       group.visible = on;
