@@ -64,13 +64,36 @@ Every panel on the deck that carries data lays it out as a table, the same way (
 | Planning board | the east aisle | The mission's statement under the title; its milestones (state: done, now in ship-cyan, next; issues closed of all; units on it; spent; due, or how many days late); beside them the sketch everyone draws, or the task queue (on it, next, later) while nobody has drawn. |
 | Review bay board | the bay's west wall | Free: the deck's review inbox, oldest first (who, the work, what to do next as Mission control's button says it, checks, waiting). In a review: its seats (part, unit, doing, turn, tokens) beside the outline of the file it writes, its state and spend along the foot. |
 | Review bay door | beside the bay's door | A booking screen: the state as a chip on a band of its hue, the title, then pattern, round, who has the floor, tokens and cost; free, how much waits, the oldest and how many fail their checks. |
-| Proof ledger | the west wall, over the port behind the vault | The bounties (issue, amount, state, unit, next), the ones waiting on an admin's approval and the blocked first, then the live, then the settled; what's held and paid in its header. Beside them the agents' ERC-8004 records by merges (agent, id, merged, merge rate, reverts) and what the office still owes the chain. |
+| Proof ledger | the west wall, over the port behind the vault | The bounties (issue, amount, state, unit, next), the ones waiting on an admin's approval and the blocked first, then the live, then the settled; in its header the network said as a testnet (*devnet test USDC*, or *mock chain*) and what's held and paid in all. Beside them the agents' ERC-8004 records by merges (agent, id, merged, merge rate, reverts) and what the office still owes the chain. |
 | Docs index | over the docs rack | The project's Markdown, the latest changed first: title, folder, edited, size. It looks again every five minutes while the tab shows. |
 | Pit wall | on the Review bay's roof | The two clocks (today, seven-day median, waits counted) beside today's reviews as bars. |
 
 The chips keep each hue to its owner: amber for a payout to approve or a review, red only for a blocked bounty or failing checks, violet for the chain's own steps (claimed, paying, devnet), the settled green tick for paid or passing, and steel for open and waiting. No chip is ever orange.
 
 ![The planning board: the mission's milestones as a table beside the task queue](img/planning-board.png)
+
+### Bounty tokens
+
+![The escrow vault's hologram: a stack of violet coins for each bounty in escrow, its state round it, and a label with each one's issue, amount and state](img/bounty-vault.png)
+
+A bounty is a thing you can see in the room, not only a row (`src/client/features/bounties/`). Every token stands for a real bounty on the deck's issues, worked out from the floor's bounties (`logic.ts`, pinned by `tests/bounty-tokens.test.ts`): nothing is drawn while bounties are off, and no amount is ever made up. The token is a hexagonal coin of proof's violet light, bright at its rim and hollow in the middle, so it reads as a hologram and not a gold piece; every coin on the deck is one instanced mesh of the same coin.
+
+- **The vault.** Over the escrow vault on the Proof corner, a stack of coins for each bounty still in escrow, standing in a narrow cone of light off the lid. A stack is as tall as its amount: one coin for the first 2 USDC, growing with the square root (50 USDC is 5 coins, 250 is 12, never more than 14). Over the stacks, a label with a column for each: the issue, the amount in mono and the state's chip, under a header that says ESCROW, *DEVNET TEST USDC* (or *MOCK CHAIN*) and what's held and paid in all. Six stacks fit; past that the last column counts the rest. A new funding drops its coins onto the stack, one after another.
+- **The Issues board.** A funded issue's row carries its amount in violet mono at its right, and a coin hovers over a faint hex socket past it, out of the glass; the title bar says how many are funded, in test USDC.
+- **A payout.** The merge beat's pulse climbs the rail and the lid lifts (below). The released bounty's stack waits on the vault, paying, until then; then its coins fly out of the vault in an arc over the deck to the console of the unit that earned them, turning over as they go, and a receipt floats up over the console: the amount, the unit and its cell, the pull request and the devnet transaction (its head and tail) beside the settled tick. It holds six seconds and fades. With nobody on the deck to fly to, the receipt stands over the vault.
+
+| State | Its stack | Its chip |
+| --- | --- | --- |
+| Funded (open) | the bare stack | steel, the hollow square |
+| Claimed | clamped by a violet hex ring: a unit has it | violet |
+| Waiting on an admin's approval | in a hollow amber ring with a small one over it, the review glyph laid flat | amber, the review glyph |
+| Blocked | in a hollow red triangle | red, the stuck glyph |
+| Paying out | lifted off its cone of light | violet |
+| Paid | gone from the vault: its coins flew to the unit | the settled tick, on the ledger |
+
+Nothing idles: the coins move only when a bounty changes. With reduced motion or Ship motion Off nothing drops or flies: the stacks are as they are and the receipt is simply there over the console for its six seconds. The vault's meshes are culled with the corner when it is out of view: with four bounties held the conn draws four more calls (the Issues board's coins and what of the corner is in its view), 295 against 291 in the shots.
+
+![A payout: the bounty's coins flying out of the vault over the deck toward the unit that earned them](img/bounty-payout.png)
 
 ### The look: value, light and colour
 
@@ -183,7 +206,8 @@ Motion marks a change of state, and hue and the attention cadences belong to sta
 | A unit works | its visor brightens as its terminal prints | follows the output | the same: it is a reading, not a decoration |
 | A unit is deployed | a light runs from the mission table out to its console | 400 ms | nothing runs; the unit appears |
 | A pull request merges (the merge beat) | a violet pulse from the unit's console to the table, whose rim lights; then a ring of violet light sweeps out across the floor, the Pull requests board flashes green, a ring rises off the unit's console and every lit line on the bridge swells | 300 ms, rim 800 ms, the sweep 1.2 s | the board and the lines hold a colour for 1.2 s |
-| A bounty is released on devnet | the pulse runs on to the Proof corner and up the rail, parks as the new lit segment, the vault lid lifts, then the proof toast | 600 ms, lid 2.4 s | the segment and lid change at once, then the toast |
+| A bounty is funded | its coins drop onto its stack over the vault, one after another, and its row on the Issues board takes the amount | 9 coins a second | the stack is there at once |
+| A bounty is released on devnet | the pulse runs on to the Proof corner and up the rail, parks as the new lit segment, the vault lid lifts, then the proof toast; the bounty's coins fly from the vault to the unit's console and a receipt floats up there with the devnet transaction | 600 ms, lid 2.4 s, the flight 1.5 s plus 90 ms a coin, the receipt 6 s | the segment and lid change at once, the toast, and the receipt is there over the console for 6 s |
 | A unit gets an ERC-8004 record | the plinth glows violet as its step lights | 1.2 s | the step lights |
 | You go to a unit (N, a toast, search) | in Walk the view flies there in an arc; in the Overview it pans and zooms | 700 ms; 300 ms | a cut |
 | The Overview turns (Q / E) | a quarter turn | 280 ms | a cut |

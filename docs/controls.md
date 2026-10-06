@@ -32,6 +32,8 @@ Back to the [README](../README.md).
 
 Sitting in the captain's chair (E at it) frames the bridge: a slightly narrower view, aimed low on the situation arc, the bow and the arc over the pit and the crew. From the conn (in the chair, or standing on the dais with the mouse captured), once you've moved the mouse, rest the crosshair on a wall board for a moment and the view leans in on it, so its rows read without walking up; move the mouse or press a key and it eases back. With reduced motion, or Settings > Bridge > Ship motion at Off, it cuts instead of easing.
 
+Bounties need no keys of their own: walk to the Proof corner on the west wall to read the escrow vault's stacks and the ledger over it, or press E at the Issues board, where a funded issue's row carries its amount and a violet coin, to fund one (see [Proof of Merge bounties](bounties.md#in-the-office)).
+
 You can also click a nearby console to interact with it, or click a unit in the Units rail down the left to open its terminal. To change decks, click the deck name in the top-left corner.
 
 For a screen share, a projector or a recording, open the deck with `?demo=1`: bigger type and callouts, the needs-you toast kept up, and the Overview turning slowly round the mission table until you press a key, drag or scroll (see [the design system](design.md#demo-mode)).
