@@ -19,6 +19,10 @@
 // complete  the mission complete at 900 and 2400 ms
 // iris      a switch of Night and Day: the iris at 300 and 700 ms, and after
 // reduced   Ship motion Off, then a new call: frames at 0, 400 and 1500 ms (nothing travels)
+// hailclip  a new call recorded in real time for 3 s, no clocks held (works on a build without the
+//           beats too, for a before and after): <name>-hailclip.mp4 and the frames nearest 0, 400,
+//           800 and 1500 ms after the unit shows it needs you
+// connclip  standing up and sitting down in the chair, recorded in real time for 3.5 s
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -144,6 +148,7 @@ export async function motionShots(page, { out, name, wait, ffmpeg, which, desk =
       o.player.sit({ key: 'conn:0', seatId: 'conn', x: it.x, y: it.y, z: it.z + 0.05, rotY: Math.PI, hips: it.hips ?? 0.48, out: 0.8 });
     });
     await until(page, () => window.__world.takeConn?.at() !== null, null, 5000);
+    await page.evaluate(() => window.__world.takeConn.play(true));
     for (const ms of [0, 250, 600, 1000, 1600, 2400]) {
       await page.evaluate((m) => window.__world.takeConn.hold(m), ms);
       await wait(300);
@@ -243,6 +248,69 @@ export async function motionShots(page, { out, name, wait, ffmpeg, which, desk =
     await until(page, () => window.__office.space.phase() === 'idle', null, 60_000);
     await page.evaluate(() => window.__office.space.timeScale(0));
     log({ beat: 'jump', counting, places, live });
+  }
+
+  /** Records frames in real time until `ms` after `t0` (or the first call), into a clip; their times. */
+  async function record(file, ms, start) {
+    const frames = mkdtempSync(path.join(tmpdir(), `ugc-${file}-`));
+    const times = [];
+    const t0 = Date.now();
+    let mark = null;
+    for (let f = 0; mark === null || Date.now() - mark < ms; f++) {
+      if (f === 0 && start) await start();
+      if (mark === null && (await page.evaluate(() => window.__shootMark ?? null))) mark = Date.now();
+      if (mark === null && Date.now() - t0 > 40_000) break;
+      await clearToasts(page);
+      await page.screenshot({ path: path.join(frames, `f${String(f).padStart(4, '0')}.png`) });
+      times.push(mark === null ? -1 : Date.now() - mark);
+    }
+    const fps = Math.max(1, Math.round(times.length / Math.max(1, (Date.now() - t0) / 1000)));
+    execFileSync(ffmpeg, ['-y', '-loglevel', 'error', '-framerate', String(fps), '-i', path.join(frames, 'f%04d.png'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-crf', '20', path.join(out, `${name}-${file}.mp4`)]);
+    return { frames, times, fps };
+  }
+  /** Copies the recorded frame nearest each of `at` (ms after the mark) out as <name>-<file>-<ms>.png. */
+  function pick({ frames, times }, file, at) {
+    for (const ms of at) {
+      let best = -1;
+      for (let i = 0; i < times.length; i++) if (times[i] >= 0 && (best < 0 || Math.abs(times[i] - ms) < Math.abs(times[best] - ms))) best = i;
+      if (best >= 0) execFileSync(ffmpeg, ['-y', '-loglevel', 'error', '-i', path.join(frames, `f${String(best).padStart(4, '0')}.png`), path.join(out, `${name}-${file}-${ms}.png`)]);
+    }
+  }
+
+  if (which.includes('hailclip')) {
+    await page.evaluate(() => (window.__shootMark = null));
+    // The mark: the first frame the unit shows it needs you.
+    await page.evaluate((d) => {
+      window.__office.net.send({ t: 'worker.spawn', deskId: d, prompt: '[ask] Split the deploy workflow', worktree: false });
+      const poll = () => {
+        if ([...window.__office.workerViews.values()].some((v) => v.deskId === d && v.model.showing === 'needs-you')) window.__shootMark = performance.now();
+        else requestAnimationFrame(poll);
+      };
+      poll();
+    }, desk);
+    const rec = await record('hailclip', 3000);
+    pick(rec, 'hailclip', [0, 400, 800, 1500]);
+    log({ beat: 'hailclip', frames: rec.times.length, fps: rec.fps, times: rec.times.filter((t) => t >= 0) });
+  }
+
+  if (which.includes('connclip')) {
+    await page.evaluate(() => {
+      window.__shootMark = null;
+      window.__office.player.stand();
+    });
+    await wait(800);
+    const rec = await record('connclip', 3500, () =>
+      page.evaluate(() => {
+        const o = window.__office;
+        const it = o.office.interactables.find((i) => i.kind === 'seat' && i.seatId === 'conn');
+        o.player.sit({ key: 'conn:0', seatId: 'conn', x: it.x, y: it.y, z: it.z + 0.05, rotY: Math.PI, hips: it.hips ?? 0.48, out: 0.8 });
+        // The whole beat, however soon after the last one (a sit inside 20 s of a build only rises).
+        window.__world?.takeConn?.play(true);
+        window.__shootMark = performance.now();
+      }),
+    );
+    pick(rec, 'connclip', [0, 500, 1000, 2000, 3000]);
+    log({ beat: 'connclip', frames: rec.times.length, fps: rec.fps });
   }
 
   if (which.includes('ambient')) {

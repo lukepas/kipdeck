@@ -244,15 +244,16 @@ async function main() {
   try {
     for (const lighting of ['night', 'day']) {
       const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, colorScheme: 'dark' });
-      await context.addInitScript(([lighting, quality]) => {
+      // FLICKER_MOTION=off checks with Ship motion Off (the motion layer's still forms).
+      await context.addInitScript(([lighting, quality, motion]) => {
         try {
-          localStorage.setItem('agent-office.settings', JSON.stringify(quality ? { lighting, quality } : { lighting }));
+          localStorage.setItem('agent-office.settings', JSON.stringify({ lighting, ...(quality ? { quality } : {}), ...(motion ? { shipMotion: motion } : {}) }));
           localStorage.setItem('agent-office.lite-declined', '1');
           localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4FA3A5', look: { skin: 0, hair: 0, style: 0 } }));
         } catch {
           // fine without
         }
-      }, [lighting, process.env.FLICKER_QUALITY ?? '']);
+      }, [lighting, process.env.FLICKER_QUALITY ?? '', process.env.FLICKER_MOTION ?? '']);
       const page = await context.newPage();
       const errors = [];
       page.on('pageerror', (e) => errors.push(e.message));
