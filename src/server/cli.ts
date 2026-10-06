@@ -7,6 +7,9 @@ import { openBrowser } from './browser.js';
 import { CLI, PRODUCT } from '../shared/copy.js';
 import { loopbackName, passwordless, removeLocalFile, writeLocalFile } from './local.js';
 import { freePort } from './port.js';
+import { gitTop, within } from './checkouts.js';
+import { checkAgents } from './firstrun.js';
+import { PROVIDER_META } from '../shared/providers.js';
 
 const argv = process.argv.slice(2);
 if (argv[0] === 'prune') {
@@ -32,6 +35,9 @@ if (argv[0] === 'open') {
 
 const cfg = loadConfig(argv);
 await ensureSelfSigned(cfg);
+// Started inside a git checkout (with no [dir]): that's where you work. The office's own home isn't.
+const top = cfg.project ? undefined : gitTop(process.cwd());
+if (top && !within(cfg.dir, top)) cfg.startedIn = top;
 const { interactive } = await import('./setup.js');
 const atTerminal = interactive();
 // Nobody named a port: 4600, or the next free one, so another office (or anything else) there never
@@ -85,9 +91,17 @@ if (office.accounts.sharedPassword && !cfg.claimToken && (atTerminal || loopback
 const noPassword = passwordless(cfg);
 
 const floors = office.floors();
+const here_ = (dir: string) => [cfg.project, cfg.startedIn].some((d) => d && path.resolve(dir) === path.resolve(d));
 const projectLine = floors.length
-  ? `${floors.map((f) => f.def.name).join(', ')}${cfg.project && floors.some((f) => path.resolve(f.def.dir) === cfg.project) ? ' (this folder)' : ''}`
-  : `none yet - add one in the browser (new ones are cloned into ${tildify(office.projectsDir())})`;
+  ? floors.map((f) => `${f.def.name}${here_(f.def.dir) ? ' (this folder)' : ''}`).join(', ')
+  : `none yet - add one in the browser${cfg.startedIn ? '' : ' (start inside a git repository to use it)'}`;
+const agents = checkAgents();
+const usable = agents.filter((a) => a.installed && a.signedIn !== false);
+const agentsLine = usable.length
+  ? usable.map((a) => PROVIDER_META[a.provider].label).join(', ')
+  : agents.some((a) => a.installed)
+    ? 'found, but not signed in - the browser says how'
+    : `none found - install Claude Code, Codex or Cursor (e.g. ${agents.find((a) => a.provider === 'claude')?.fix ?? 'npm install -g @anthropic-ai/claude-code'})`;
 
 const lines = [
   '',
@@ -96,6 +110,7 @@ const lines = [
   signIn ? `  Lost the tab? Run \`${again} open\` for a new link.` : '',
   '',
   `  project   ${projectLine}`,
+  `  agents    ${agentsLine}`,
   noPassword ? '' : `  password  ${passwordLine()}`,
   '',
   loopback ? '  Only this computer can reach it (--host 0.0.0.0 lets your network in). Ctrl+C stops it.' : '  Ctrl+C stops it.',

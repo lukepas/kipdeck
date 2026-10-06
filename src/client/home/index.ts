@@ -19,6 +19,7 @@ import { closeMenu, menuOpen, toggleMenu, type MenuEntry } from './menu';
 import { installPane, paneMessage } from './pane';
 import { openPalette, type Command } from './palette';
 import { renderChecklist, renderShipped } from './shipped';
+import { askSetup, onSetupChange, setupCard, setupMessage } from './setup';
 import { home } from './state';
 import './home.css';
 
@@ -27,10 +28,12 @@ import './home.css';
 export function homeMessage(net: Net, actions: Actions, msg: ServerMsg) {
   routeLazy(msg);
   paneMessage(msg);
+  setupMessage(msg);
   switch (msg.t) {
     case 'welcome':
       void rewatch(net);
       net.send({ t: 'inbox.log' });
+      askSetup(net);
       break;
     case 'inbox.log':
       home.records = msg.records;
@@ -161,7 +164,7 @@ export function installHome(net: Net): Actions {
       home.saveChecklist();
       return;
     }
-    renderList(inbox, actions);
+    renderList(inbox, actions, () => setupCard(net, (prompt, provider) => actions.deploy(prompt, provider)));
     renderChecklist(checklist, () => actions.deploy(), !!inbox.querySelector('.first-run'));
     // Before the first agent there's nothing to have shipped: the first-run card stands alone.
     shipped.classList.toggle('hidden', !!inbox.querySelector('.first-run') && !home.records.length);
@@ -171,6 +174,7 @@ export function installHome(net: Net): Actions {
     paintAvatar();
   };
   home.on(renderAll);
+  onSetupChange(renderAll);
   for (const t of ['roster', 'reminders', 'floors', 'labs', 'workers'] as const) store.on(t, renderAll);
   // "waiting 3m" moves on by itself.
   setInterval(renderAll, 30_000);

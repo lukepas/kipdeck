@@ -108,29 +108,15 @@ function section(s: InboxSection, view: InboxView, extra: HTMLElement[], deps: L
   return h('section.sec', { class: `sec-${s}${n ? '' : ' empty'}` }, head, body);
 }
 
-/** The first thing anyone sees with no agents yet: one button that starts one, on a safe task. */
-export const STARTER_PROMPT = 'Read this repository and write a SUMMARY.md of at most 5 lines on how to install, run and test it. Change no other file.';
-
-function firstRun(deps: ListDeps): HTMLElement {
-  return h(
-    'div.first-run',
-    {},
-    h('h2', {}, 'Deploy your first agent'),
-    h('p', {}, 'Give it a task and it works in its own branch. When it needs an answer or has something to review, it shows up here.'),
-    h('button.btn.primary.big', { type: 'button', onclick: () => deps.deploy(STARTER_PROMPT) }, icon('plus', 16), 'Deploy your first agent'),
-    h('p.first-hint', {}, 'It starts with a safe task: a 5-line SUMMARY.md on how to run this repo.'),
-  );
-}
-
-/** Draws the inbox into `root`. */
-export function renderList(root: HTMLElement, deps: ListDeps) {
+/** Draws the inbox into `root`; with no agent yet, `firstRun` (the setup card, setup.ts) stands in for it. */
+export function renderList(root: HTMLElement, deps: ListDeps, firstRun: () => HTMLElement) {
   const now = Date.now();
   const view = currentView();
   const listed = new Set(store.roster.map((e) => e.id));
   const loose = looseReminders(store.reminders, listed, now, home.project || undefined).map((r) => reminderRow(r, deps, now));
   const anyAgent = store.roster.some((e) => !home.project || e.floor === home.project);
   if (!anyAgent && !loose.length && !home.query) {
-    root.replaceChildren(firstRun(deps));
+    root.replaceChildren(firstRun());
     return;
   }
   const parts = INBOX_SECTIONS.map((s) => section(s, view, s === 'needs-you' ? loose : [], deps, now)).filter((x): x is HTMLElement => !!x);
