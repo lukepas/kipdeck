@@ -2,12 +2,14 @@
 // home, password and project, deploys a calm crew (everyone at work, nobody asking), flies six sister
 // decks (as design/perf-probe.mjs does) so the rings carry the fleet's units, lights a few of the
 // ledger's segments, and saves the beacon from the captain's chair, from the chair turned to starboard,
-// out of the starboard ports, from the lounge's stool and from the Overview, on the GPU (ANGLE Metal on
-// a Mac). SHOOT_CLIP=1 adds a 12 s clip from the chair turned to starboard: a deploy, a merge, a payout,
-// and the jump (spool, streak away, drop back in), as <name>-clip.mp4. Always stops the office (and its
-// terminals) at the end.
+// out of the forward starboard glass and from the Overview (the side ports and the lounge's stools can't
+// see it: it is over the walls' eaves, and the arc stands in front of it from the pit), on the GPU (ANGLE Metal on a Mac), plus a crop of the beacon from the chair at 3x.
+// SHOOT_CLIP=1 adds a 12 s clip from the chair turned to the beacon and zoomed in (SHOOT_CLIP_FOV,
+// default 30 degrees, so it is about a quarter of the frame): a deploy, a merge, a payout, and the jump
+// (spool, streak away, drop back in), as <name>-clip.mp4. Always stops the office (and its terminals)
+// at the end.
 //
-//   npm run build && SHOOT_LIGHT=night SHOOT_QUALITY=high node design/shoot-relay.mjs stellar/build
+//   npm run build && SHOOT_LIGHT=night SHOOT_QUALITY=high node design/shoot-relay.mjs stellar/final
 //
 // SHOOT_LIGHT night|day (default night). SHOOT_QUALITY high|medium|low (default high). SHOOT_PORT
 // (default 4686). SHOOT_ONLY=conn,starboard,... picks shots. SHOOT_RELAY=off switches the beacon off
@@ -31,6 +33,7 @@ const ONLY = process.env.SHOOT_ONLY ? new Set(process.env.SHOOT_ONLY.split(','))
 const RELAY_ON = process.env.SHOOT_RELAY !== 'off';
 const NAME = `${LIGHT}-${QUALITY}${RELAY_ON ? '' : '-off'}${process.env.SHOOT_GIVEWAY ? '-giveway' : ''}`;
 const FFMPEG = process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg';
+const CLIP_FOV = Number(process.env.SHOOT_CLIP_FOV ?? 30);
 const want = (s) => !ONLY || ONLY.has(s);
 
 const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-relay-'));
@@ -137,17 +140,18 @@ function seedFleet() {
   setInterval(put, 400);
 }
 
-/** The seated eye in the captain's chair, and a point toward the beacon from it (bearing 40 degrees to starboard, 5 up). */
+/** The seated eye in the captain's chair, and a point `bearing` degrees to starboard and `up` degrees up from an eye. */
 const EYE = [0, 2.98, 11];
 const toward = (from, bearing, up) => {
   const b = (bearing * Math.PI) / 180;
   const e = (up * Math.PI) / 180;
   return [from[0] + 100 * Math.sin(b) * Math.cos(e), from[1] + 100 * Math.sin(e), from[2] - 100 * Math.cos(b) * Math.cos(e)];
 };
+/** Where the beacon is from the chair (features/relay/logic.ts RELAY): its bearing, and the middle of its rings. */
+const BEACON = { bearing: 21.75, up: 19 };
 const VANTAGES = {
-  starboard: [EYE, toward(EYE, 24, 14)],
+  starboard: [EYE, toward(EYE, 26, 14)],
   'deck-fwd': [[7.5, 2.4, -1.5], toward([7.5, 2.4, -1.5], 18, 22)],
-  lounge: [[2.45, 1.25, -4.2], toward([2.45, 1.25, -4.2], 26, 30)],
 };
 
 async function main() {
@@ -216,18 +220,26 @@ async function main() {
     await wait(300);
     console.log(JSON.stringify({ relay: await page.evaluate(() => window.__world?.relay?.state()), tier: await page.evaluate(() => window.__office.quality.tier()) }));
     if (process.env.SHOOT_EVAL) console.log(JSON.stringify({ eval: await page.evaluate(process.env.SHOOT_EVAL) }));
-    if (want('conn')) await page.screenshot({ path: path.join(OUT, `${NAME}-conn.png`) });
-    const view = (from, to) =>
+    if (want('conn')) {
+      await page.screenshot({ path: path.join(OUT, `${NAME}-conn.png`) });
+      // The beacon from the chair, cropped and scaled 3x, to judge its lamp, rims and the canopy round it.
+      execFileSync(FFMPEG, ['-y', '-loglevel', 'error', '-i', path.join(OUT, `${NAME}-conn.png`), '-vf', 'crop=300:220:1090:40,scale=900:660:flags=lanczos', path.join(OUT, `${NAME}-conn-crop.png`)]);
+    }
+    const view = (from, to, fov = 0) =>
       page.evaluate(
-        ([from, to]) => {
+        ([from, to, fov]) => {
           const o = window.__office;
           o.player.update = (dt) => {
             o.player.__update.call(o.player, dt);
             o.camera.position.set(...from);
             o.camera.lookAt(...to);
+            if (fov) {
+              o.camera.fov = fov;
+              o.camera.updateProjectionMatrix();
+            }
           };
         },
-        [from, to],
+        [from, to, fov],
       );
     for (const [key, [from, to]] of Object.entries(VANTAGES)) {
       if (!want(key)) continue;
@@ -250,19 +262,19 @@ async function main() {
       await wait(500);
     }
     if (clipDir) {
-      // 12 s from the chair turned to starboard: a deploy, a merge, a payout, then the jump.
-      await view(...VANTAGES.starboard);
+      // 12 s from the chair turned to the beacon and zoomed in: a deploy, a merge, a payout, then the jump.
+      await view(EYE, toward(EYE, BEACON.bearing, BEACON.up), CLIP_FOV);
       await wait(1500);
       await clear();
       const start = Date.now();
       const at = (s) => wait(Math.max(0, start + s * 1000 - Date.now()));
-      await at(0.4);
+      await at(0.3);
       await page.evaluate(() => window.__world.relay.play('deploy'));
-      await at(0.8);
+      await at(0.5);
       await page.evaluate(() => window.__world.relay.play('merge'));
-      await at(1.4);
+      await at(0.9);
       await page.evaluate(() => window.__world.relay.play('payout'));
-      await at(3.2);
+      await at(3.6);
       await page.evaluate(() => window.__office.space.jump({ n: 3, title: 'Payments webhook', final: false }));
       for (let s = 4; s <= 12; s += 1) {
         await at(s);

@@ -14,7 +14,9 @@
 // across the glass are on screen for a good share of it. FLICKER_RITUALS=1 lights the drive core's
 // rings (a run of seven, today's best nine), plays the start of watch's launch every 420 frames (the
 // crawl into the stars) and runs the pit wall's hairline, and faces aft a third of the time, so the
-// core is in view. FLICKER_QUALITY=high (or medium, low) draws at that tier rather than Auto's, which
+// core is in view. FLICKER_RELAY=1 faces the Relay Beacon from the chair's eye a third of the time and
+// plays its merge (the crown's flare at its bloom peak), a payout and a deploy every 200 frames.
+// FLICKER_QUALITY=high (or medium, low) draws at that tier rather than Auto's, which
 // steps down on a busy machine and would leave the glow out.
 import { spawn, execFileSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
@@ -112,7 +114,7 @@ async function waitUp() {
 }
 
 /** Runs in the page: sweeps the camera for `n` frames and measures each one, jumping the ship now and then with `jump`. */
-async function sweep([n, jump, rituals]) {
+async function sweep([n, jump, rituals, relay]) {
   const o = window.__office;
   if (rituals) {
     const at = Date.now();
@@ -156,6 +158,12 @@ async function sweep([n, jump, rituals]) {
   // across it; then walks straight past it on both sides, turning as it goes.
   const pose = (k) => {
     const u = k / n;
+    // A third of the frames, from the chair's eye toward the Relay Beacon (21.75 degrees to starboard, its rings 19 up), swaying a little.
+    if (relay && k % 3 === 1) {
+      const b = ((21.75 + 4 * Math.sin(k / 50)) * Math.PI) / 180;
+      const e = ((19 + 3 * Math.sin(k / 70)) * Math.PI) / 180;
+      return [[0, 2.98, 11], [100 * Math.sin(b) * Math.cos(e), 2.98 + 100 * Math.sin(e), 11 - 100 * Math.cos(b) * Math.cos(e)]];
+    }
     // A third of the frames, facing aft at the drive core over the lift, past the conn.
     if (rituals && k % 3 === 0) {
       const t = k / n;
@@ -199,6 +207,11 @@ async function sweep([n, jump, rituals]) {
         if (jump && i % 420 === 1) o.space.jump?.();
         if (rituals && i % 420 === 2) window.__world?.watch?.play('launch', 9 * 3600000);
         if (rituals && i % 420 === 300) window.__world?.turnaround?.run();
+        if (relay && i % 200 === 5) {
+          window.__world?.relay?.play('merge');
+          window.__world?.relay?.play('payout');
+          window.__world?.relay?.play('deploy');
+        }
         if (i < n) requestAnimationFrame(tick);
         else resolve();
       };
@@ -274,7 +287,7 @@ async function main() {
         });
       }
       await wait(6000);
-      const { frames, bloom } = await page.evaluate(sweep, [FRAMES, process.env.FLICKER_JUMP === '1', process.env.FLICKER_RITUALS === '1']);
+      const { frames, bloom } = await page.evaluate(sweep, [FRAMES, process.env.FLICKER_JUMP === '1', process.env.FLICKER_RITUALS === '1', process.env.FLICKER_RELAY === '1']);
       const bad = badFrames(frames);
       const means = frames.map((f) => f.mean);
       console.log(`${BACKEND}/${lighting} (bloom ${bloom ? 'on' : 'off'}): ${frames.length} frames, mean luminance ${Math.min(...means).toFixed(1)}-${Math.max(...means).toFixed(1)}, bad ${bad.length}${process.env.FLICKER_JUMP === '1' ? `, ${frames.filter((f) => f.tunnel).length} in the tunnel` : ''}`);
