@@ -50,6 +50,42 @@ export function inboxRows(items: readonly ReviewItem[], floor: string | null, no
     });
 }
 
+/** One row of the Review bay's sign: whose it is, what to review, its state as a chip, how long it has waited. */
+export interface SignRow {
+  /** Its unit's call sign, or the pull request's or issue's number. */
+  unit: string;
+  /** What to review: the work's title. */
+  what: string;
+  /** Under it, for up close: what to do next, and its checks. */
+  next: string;
+  /** Its state in the attention ranking's hue and shape: to review, failing checks, or a payout (proof). */
+  state: Chip;
+  /** How long it has waited ("30m"). */
+  age: string;
+}
+
+/** A waiting item's state on the sign: failing checks are stuck (red, the hollow triangle), a payout is the chain's, the rest wait for review (amber, the ringed dot). */
+export function signState(i: Pick<ReviewItem, 'checks' | 'payout'>): Chip {
+  if (i.payout) return { text: 'payout', hue: PANEL.proof, glyph: 'merged' };
+  if (i.checks === 'fail') return { text: 'failing', hue: PANEL.stuck, glyph: 'stuck' };
+  return { text: 'review', hue: PANEL.review, glyph: 'review' };
+}
+
+/** The sign's rows for one floor: the same items as the board's table (inboxRows), oldest first. Pure. */
+export function signRows(items: readonly ReviewItem[], floor: string | null, now = Date.now()): SignRow[] {
+  return items
+    .filter((i) => i.floor === floor && !i.snoozed)
+    .map((i): SignRow => {
+      const age = ago(now - i.since);
+      const checks = i.checks === 'pass' ? 'checks pass' : i.checks === 'fail' ? 'checks failing' : i.checks === 'pending' ? 'checks running' : '';
+      const next = [ACTION_LABEL[i.action], checks].filter(Boolean).join(' - ');
+      if (i.payout) return { unit: `#${i.payout.issue}`, what: `Payout ${i.payout.amount}`, next, state: signState(i), age };
+      if (i.pull) return { unit: `#${i.pull.number}`, what: i.pull.title, next, state: signState(i), age };
+      const e = i.entry;
+      return { unit: e ? callSign(e.deskId) || e.name : '--', what: e ? headline(e.task, e.activity).title || e.name : i.reason, next, state: signState(i), age };
+    });
+}
+
 /** A turn's state as a chip. */
 function turnChip(state: 'waiting' | 'sent' | 'working' | 'done' | undefined): Chip {
   switch (state) {
@@ -73,6 +109,21 @@ export function seatRows(m: Meeting): TableRow[] {
     return {
       quiet: m.status === 'running' && !turn,
       cells: [s.role, s.workerName ?? '--', turn?.doing ?? (m.status === 'running' ? 'next round' : '--'), { chip: turnChip(state) }, { text: s.tokens ? fmtTokens(s.tokens) : '--', mono: true }],
+    };
+  });
+}
+
+/** A meeting's seats as the sign's rows: the unit, its part, what it's doing, its turn and its tokens (in the age column). Pure. */
+export function meetingSignRows(m: Meeting): SignRow[] {
+  return m.seats.map((s, i): SignRow => {
+    const turn = m.turns.find((t) => t.seat === i);
+    const state = turn?.state ?? (m.status === 'running' ? 'waiting' : 'done');
+    return {
+      unit: (s.deskId && callSign(s.deskId)) || s.workerName || '--',
+      what: s.role,
+      next: [s.workerName, turn?.doing ?? (m.status === 'running' ? 'next round' : '')].filter(Boolean).join(' - '),
+      state: turnChip(state),
+      age: s.tokens ? fmtTokens(s.tokens) : '--',
     };
   });
 }

@@ -8,10 +8,13 @@ import assert from 'node:assert/strict';
 import { columnsAt, headH, moreH, rowsThatFit, table, withAlpha, type Column } from '../src/client/features/boards/table.js';
 import { LEDGER_UNITS, ledgerFar, ledgerView, paintLedger, phaseChip } from '../src/client/features/proofcorner/ledger.js';
 import { FAR, farCountSize, farFrom, paintFar, type FarSpec } from '../src/client/features/boards/far.js';
-import { bayFar } from '../src/client/features/boards/meeting.js';
+import { SIGN_UNITS, bayFar, paintSign, signFar } from '../src/client/features/boards/meeting.js';
+import { rowsFor } from '../src/client/features/boards/screen.js';
+import { SEATING_BY_ID, WHITEBOARD } from '../src/shared/layout.js';
+import { BAY_SIGN } from '../src/shared/wall-screens.js';
 import { DOCS_SCREEN, docsFar } from '../src/client/features/bookshelf/index-screen.js';
 import { FACE_UNITS, planFar } from '../src/client/features/whiteboard/face.js';
-import { checksChip, inboxRows, outline, seatRows } from '../src/client/features/boards/review-rows.js';
+import { checksChip, inboxRows, meetingSignRows, outline, seatRows, signRows } from '../src/client/features/boards/review-rows.js';
 import { planView } from '../src/client/features/whiteboard/face.js';
 import { docsView, sizeText } from '../src/client/features/bookshelf/index-screen.js';
 import { PANEL } from '../src/client/features/boards/world.js';
@@ -306,8 +309,64 @@ test('from the dais every table shows its headline counts, big enough to read th
   assert.ok(docs.metres >= FAR.minM && docs.said.includes('DOCS') && docs.said.includes('2'));
   const bay = farFace(bayFar(null, [{ hue: PANEL.stuck, cells: ['a', 'b', 'c', null, { text: '2h', mono: true }] }, { hue: PANEL.review, cells: ['a', 'b', 'c', null, { text: '5m', mono: true }] }]), 3.6, 1.6, 400);
   assert.ok(bay.metres >= FAR.minM && bay.said.includes('TO REVIEW') && bay.said.includes('FAILING') && bay.said.includes('2h'), bay.said.join('|'));
-  const plan = farFace(planFar({ statement: 's', done: 1, total: 4, milestones: [], queue: [], queued: 2 }), 4, 2.2, FACE_UNITS);
+  const plan = farFace(planFar({ statement: 's', done: 1, total: 4, milestones: [], queue: [], queued: 2 }), WHITEBOARD.width, WHITEBOARD.height, FACE_UNITS);
   assert.ok(plan.metres >= FAR.minM && plan.said.includes('1/4'));
   // The pit wall's face is 1.48 m at 240 a metre: its count still makes the size.
   assert.ok(farCountSize(1.48 * 240, 240) >= FAR.minM * 240);
+});
+
+test("the Review bay's sign is a table like the wall boards: unit, what to review, its state as a chip, its age", () => {
+  const entry = { id: 'w1', deskId: 'desk-6', name: 'Widget', task: { name: 'Fix flaky checkout e2e', summary: '' } } as unknown as ReviewItem['entry'];
+  const items = [
+    item({ key: 'w:w1', entry, checks: 'fail', since: NOW - 2 * H }),
+    item({ key: 'pr', pull: { number: 79, title: 'Port settings to the form kit' } as ReviewItem['pull'], action: 'merge', checks: 'pass' }),
+    item({ key: 'b', payout: { floor: 'deck', floorName: 'Deck', issue: 44, amount: '50.00 USDC', kind: 'approve' }, action: 'approve-payout' }),
+    item({ key: 'other', floor: 'other' }),
+    item({ key: 'snoozed', snoozed: true }),
+  ];
+  const rows = signRows(items, 'deck', NOW);
+  assert.equal(rows.length, 3, 'the same items as the board: this deck, none snoozed');
+  assert.deepEqual(rows.map((r) => r.unit), ['B-02', '#79', '#44']);
+  assert.equal(rows[0].what, 'Fix flaky checkout e2e');
+  assert.equal(rows[0].age, '2h');
+  assert.match(rows[0].next, /checks failing/);
+  // The state chip carries the ranking's hue and its shape, never a hue alone.
+  assert.deepEqual(rows.map((r) => [r.state.hue, r.state.glyph]), [
+    [PANEL.stuck, 'stuck'],
+    [PANEL.review, 'review'],
+    [PANEL.proof, 'merged'],
+  ]);
+  // Painted on the sign: four rows at most with "+N more", nothing off its edges, its chip words there.
+  const W = Math.round(BAY_SIGN.width * SIGN_UNITS);
+  const Hs = Math.round(BAY_SIGN.height * SIGN_UNITS);
+  assert.ok(rowsFor(Hs) >= 4 && rowsFor(Hs) <= 6, `${rowsFor(Hs)} rows`);
+  const many = [...rows, ...rows, ...rows];
+  const { g, texts } = canvasSpy();
+  paintSign({ g, W, H: Hs, canvas: null as never, texture: { needsUpdate: false } as never }, null, many, false);
+  const said = texts.map((t) => t.text);
+  for (const t of ['REVIEW BAY', '9 waiting', 'B-02', 'FAILING', 'REVIEW', 'PAYOUT', '2h', `+${9 - rowsFor(Hs)} more`]) assert.ok(said.includes(t), `${t} on the sign: ${said.join('|')}`);
+  for (const t of texts) {
+    const [l, r] = span(t);
+    assert.ok(l >= 0 && r <= W, `"${t.text}" stays on the sign`);
+  }
+  // A meeting's seats the same way: its unit, its part, its turn as a chip and its tokens.
+  const m = { status: 'running', seats: [{ role: 'Lead', deskId: 'meeting-1', workerName: 'Echo', tokens: 48_200 }], turns: [{ seat: 0, doing: 'reading the diff', file: 'a', state: 'working' }] } as unknown as Meeting;
+  const seat = meetingSignRows(m)[0];
+  assert.deepEqual([seat.what, seat.state.text, seat.age], ['Lead', 'on it', '48k']);
+  assert.match(seat.next, /Echo - reading the diff/);
+});
+
+test("the Review bay's sign reads from the captain's dais: its counts are big enough there", () => {
+  const conn = SEATING_BY_ID.get('conn')!;
+  const eye = { x: conn.x, y: conn.y + 1.4 + conn.hips - 0.8, z: conn.z };
+  const dist = Math.hypot(BAY_SIGN.x - eye.x, BAY_SIGN.y - eye.y, BAY_SIGN.z - eye.z);
+  const capPx = (m: number) => (0.7 * m * (450 / Math.tan((27.5 * Math.PI) / 180))) / dist;
+  const rows = signRows([item({ key: 'a' }), item({ key: 'b', checks: 'fail' })], 'deck', NOW);
+  const face = farFace(signFar(null, rows), BAY_SIGN.width, BAY_SIGN.height, SIGN_UNITS);
+  assert.ok(face.metres >= FAR.minM, `the sign's counts are ${face.metres.toFixed(2)} m`);
+  assert.ok(capPx(face.metres) >= 9, `${capPx(face.metres).toFixed(1)} px of cap from ${dist.toFixed(1)} m`);
+  assert.ok(face.said.includes('REVIEW') && face.said.includes('FAILING') && face.said.includes('2'), face.said.join('|'));
+  const calm = farFace(signFar(null, signRows([item({ key: 'a' })], 'deck', NOW)), BAY_SIGN.width, BAY_SIGN.height, SIGN_UNITS);
+  assert.ok(calm.said.includes('OLDEST') && calm.said.includes('30m'), calm.said.join('|'));
+  assert.ok(farFace(signFar(null, []), BAY_SIGN.width, BAY_SIGN.height, SIGN_UNITS).said.includes('Free'));
 });

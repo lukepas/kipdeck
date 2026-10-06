@@ -9,8 +9,12 @@ import { INK, UI, clip, ground, titleBar, type Screen } from '../boards/screen';
 import { emptyBox, label, table, type Chip, type TableRow } from '../boards/table';
 import type { FarCount, FarSpec } from '../boards/far';
 
-/** The board's canvas units a metre: read walking up to it, from five metres or so. */
-export const FACE_UNITS = 360;
+/**
+ * The board's canvas units a metre: read walking up to it, from four metres or so. Its 2.8 m on the wall
+ * take the 1430 units its tables were laid out for when it stood 4 m wide in the aisle, so they keep their
+ * columns; past FAR.at its far face reads from the dais.
+ */
+export const FACE_UNITS = 510;
 
 /** Where the milestones end and the right-hand side starts (canvas units). */
 const splitOf = (W: number) => Math.round(W * 0.66);

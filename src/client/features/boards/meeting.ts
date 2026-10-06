@@ -3,12 +3,12 @@ import { MEETING_PATTERNS } from '../../../shared/meetings';
 import { fmtCost, fmtTokens } from '../../../shared/protocol/usage';
 import type { Meeting, MeetingState } from '../../../shared/protocol';
 import type { ReviewItem } from '../../../shared/review';
-import { ago } from '../../../shared/rowtext';
 import { PANEL } from './world';
-import { INK, MONO, UI, clip, ground, screen, titleBar, type Screen } from './screen';
-import { chip, emptyBox, facts, label, table, type Cell, type TableRow } from './table';
+import { INK, MONO, UI, clip, emptyBody, ground, more, row, rowsFor, screen, titleBar, type Screen } from './screen';
+import { chip, emptyBox, label, table, type TableRow } from './table';
 import { paintFar, type FarCount, type FarSpec } from './far';
-import { bayState, inboxRows, outline, seatRows } from './review-rows';
+import { bayState, inboxRows, meetingSignRows, outline, seatRows, signRows, type SignRow } from './review-rows';
+import { BAY_SIGN } from '../../../shared/wall-screens';
 
 /** Who has the floor right now: the roles on the parts being worked on. */
 export function speaking(m: Meeting): string[] {
@@ -176,15 +176,41 @@ export class MeetingBoardTexture {
   }
 }
 
+/** The sign's canvas units a metre: four rows on its metre of height, read walking up to the bay. */
+export const SIGN_UNITS = 600;
+
 /**
- * The panel on the glass beside the Review bay's door, like a room-booking screen: the bay's state in a
- * band across the top, then its facts as a key and value list (the pattern, the round, who has the
- * floor, what it has used), or, while it's free, how much waits for review and for how long.
+ * The Review bay's far face on the sign (far.ts), two counts across its narrow face: while it's free, how
+ * much waits for review, then how many fail their checks or, with none failing, the longest wait; while a
+ * meeting sits, its round and its state. Pure.
+ */
+export function signFar(m: BayData['state']['current'], rows: readonly SignRow[]): FarSpec {
+  if (!m) {
+    if (!rows.length) return { title: 'Review bay', hue: INK.lineStrong, counts: [], empty: 'Free' };
+    const failing = rows.filter((r) => r.state.hue === PANEL.stuck).length;
+    // Short words: two columns share the sign's 1.8 m, and a word never runs past its column.
+    const counts: FarCount[] = [{ n: String(rows.length), word: 'review', hue: PANEL.review, glyph: 'review' }];
+    counts.push(failing ? { n: String(failing), word: 'failing', hue: PANEL.stuck, glyph: 'stuck' } : { n: rows[0].age, word: 'oldest', hue: INK.text });
+    return { title: 'Review bay', hue: PANEL.review, counts };
+  }
+  // A meeting: its state in the name over the counts (and its rule's hue), its round and how many seats are on it.
+  const st = bayState(m);
+  const on = m.status === 'running' ? speaking(m).length : 0;
+  return { title: `Review bay - ${st.word}`, hue: st.hue, counts: [{ n: `${m.round}/${m.rounds}`, word: 'round', hue: INK.text }, { n: String(on), word: 'on it', hue: PANEL.working, glyph: 'working' }] };
+}
+
+/**
+ * The sign on the glass beside the Review bay's door, laid out like the wall boards (screen.ts): its
+ * name and how many wait in the title bar, then a row each, oldest first, with its unit, what to review,
+ * its state as a chip (its hue and its shape) and how long it has waited, "+N more" under them; while a
+ * meeting sits, its seats the same way. From across the deck, its counts (signFar).
  */
 export class MeetingSignTexture {
   readonly texture: THREE.CanvasTexture;
-  private s: Screen = screen(0.6, 0.96, 800);
+  private s: Screen = screen(BAY_SIGN.width, BAY_SIGN.height, SIGN_UNITS);
   private drawn = '';
+  /** From across the deck: its headline counts instead of its rows (far.ts). */
+  far = true;
 
   constructor() {
     this.texture = this.s.texture;
@@ -192,64 +218,30 @@ export class MeetingSignTexture {
 
   render(d: BayData) {
     const m = d.state.current;
-    const now = Date.now();
-    const waiting = d.inbox.filter((i) => i.floor === d.floor && !i.snoozed);
-    const st = bayState(m);
-    const rows: [string, Cell][] = m
-      ? m.status === 'running'
-        ? [
-            ['Pattern', MEETING_PATTERNS[m.pattern].label],
-            ['Round', { text: `${m.round} of ${m.rounds}`, mono: true }],
-            ['On it', speaking(m).join(', ') || '--'],
-            ['Tokens', { text: spent(m).tokens, mono: true }],
-            ['Cost', { text: spent(m).cost, mono: true }],
-          ]
-        : [
-            ['Pattern', MEETING_PATTERNS[m.pattern].label],
-            ['Rounds', { text: String(m.round), mono: true }],
-            ['Tokens', { text: spent(m).tokens, mono: true }],
-            ['Cost', { text: spent(m).cost, mono: true }],
-            [m.status === 'stopped' ? 'Why' : 'Wrote', m.status === 'stopped' ? (m.reason ?? 'by hand') : { text: m.output.split('/').pop() ?? m.output, mono: true }],
-          ]
-      : [
-          ['Waiting', { text: String(waiting.length), mono: true, color: waiting.length ? PANEL.review : INK.text }],
-          ['Oldest', { text: waiting.length ? ago(now - Math.min(...waiting.map((i) => i.since))) : '--', mono: true }],
-          ['Failing', { text: String(waiting.filter((i) => i.checks === 'fail').length), mono: true }],
-          ['Call one', 'E at the table'],
-        ];
-    const key = JSON.stringify([st, m?.title, rows]);
+    const rows = m ? meetingSignRows(m) : signRows(d.inbox, d.floor);
+    const key = JSON.stringify([this.far, m && [m.pattern, m.status, m.round, m.rounds], rows]);
     if (key === this.drawn) return;
     this.drawn = key;
-    const { g, W, H } = this.s;
-    ground(g, W, H);
-    const pad = 30;
-    // The band: the state, in its hue, as on a booking screen.
-    g.fillStyle = st.hue;
-    g.fillRect(0, 0, W, 8);
-    g.fillStyle = PANEL.card;
-    g.fillRect(0, 8, W, 92);
-    chip(g, { text: st.word, hue: st.hue, glyph: !m ? undefined : m.status === 'running' ? 'review' : m.status === 'done' ? 'done' : 'stuck', strong: true }, pad, 54, 40, W - pad * 2);
-    // What's on: the title, two lines at most.
-    g.textBaseline = 'alphabetic';
-    g.fillStyle = INK.text;
-    g.font = UI(700, 46);
-    const title = m ? m.title : 'Review bay';
-    const words = title.split(/\s+/);
-    let line = '';
-    const lines: string[] = [];
-    for (const w of words) {
-      const next = line ? `${line} ${w}` : w;
-      if (g.measureText(next).width > W - pad * 2 && line) {
-        lines.push(line);
-        line = w;
-      } else line = next;
-    }
-    if (line) lines.push(line);
-    lines.slice(0, 2).forEach((l, i) => g.fillText(clip(g, i === 1 && lines.length > 2 ? `${l}...` : l, W - pad * 2), pad, 168 + i * 54));
-    const top = lines.length > 1 ? 250 : 200;
-    g.fillStyle = INK.lineStrong;
-    g.fillRect(pad, top - 14, W - pad * 2, 3);
-    facts(g, pad, top, W - pad * 2, rows, 38, Math.min(84, Math.floor((H - top - 20) / rows.length)));
-    this.texture.needsUpdate = true;
+    paintSign(this.s, m, rows, this.far);
   }
+}
+
+/** Paints the sign on `s`: its far face (signFar), or its title bar and rows, the oldest first. */
+export function paintSign(s: Screen, m: BayData['state']['current'], rows: readonly SignRow[], far: boolean) {
+  if (far) {
+    paintFar(s, SIGN_UNITS, signFar(m, rows));
+    return;
+  }
+  const { g, W, H } = s;
+  ground(g, W, H);
+  const st = bayState(m);
+  const right = m ? `round ${m.round}/${m.rounds}` : rows.length ? `${rows.length} waiting` : 'free';
+  titleBar(g, W, m ? MEETING_PATTERNS[m.pattern].label : 'Review bay', right, m ? st.hue : rows.length ? PANEL.review : INK.lineStrong);
+  if (!rows.length) emptyBody(g, W, H, 'Nothing waits', 'E at the table calls a review');
+  else {
+    const shown = rows.slice(0, rowsFor(H));
+    shown.forEach((r, i) => row(g, W, i, { hue: r.state.hue, tag: r.unit, text: r.what, sub: r.next, chip: r.state, side: r.age, sideMono: true, sideColor: INK.text }, 48));
+    more(g, W, H, rows.length - shown.length);
+  }
+  s.texture.needsUpdate = true;
 }
