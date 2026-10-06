@@ -26,7 +26,7 @@ import { debugHandle } from '../giveway';
 import { COURSE } from '../hail/course';
 import { Couriers, type Flyer } from '../hail/world';
 import { warpFold } from '../holoui/logic';
-import { COMPLETE, TYPE, boostAt, clearedCard, completeCard, countdownCard, goldAt, irisAt, typeAt, type TypeCard } from './logic';
+import { COMPLETE, TYPE, boostAt, clearedCard, completeCard, countBeat, countdownCard, goldAt, irisAt, typeAt, type TypeCard } from './logic';
 import { Iris, TypePlane } from './world';
 
 export interface Kinetic {
@@ -118,7 +118,10 @@ export function installKinetic(ctx: Ctx, parts: Pick<Parts, 'space' | 'lights' |
       const t = typeAt(clock - countFrom, Infinity, still());
       reveal = t.reveal;
       a = still() ? Math.min(1, (clock - countFrom) / TYPE.fade) : 1;
+      const b = countBeat(count.left, still());
+      plane.beat(b.ring, b.punch);
     } else {
+      plane.beat(0, 0);
       countFrom = -Infinity;
       if (completeDue && !calls() && phase === 'idle') {
         completeDue = false;

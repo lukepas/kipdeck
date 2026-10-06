@@ -8,7 +8,7 @@ import path from 'node:path';
 import { ARC_BUILD, ARC_BUILD_MS, BUILD_ORDER, CARD, SCAN, WARP_FOLD, cardUv, faceBuild, scanAt, warpFold } from '../src/client/features/holoui/logic.js';
 import { GOLD, TAKE, TAKE_MS, armAt, goldAt as goldChaseAt, lipAt, riseAt, stepOf } from '../src/client/features/takeconn/logic.js';
 import { HAIL, HOVER, HOLO_TOP, beamReach, bezier, flareAt, markerAt, ringAt } from '../src/client/features/hail/logic.js';
-import { COMPLETE, IRIS_MS, TYPE, boostAt, clearedCard, completeCard, countdownCard, goldAt, irisAt, typeAt } from '../src/client/features/kinetic/logic.js';
+import { COMPLETE, IRIS_MS, TYPE, boostAt, clearedCard, completeCard, countBeat, countdownCard, fitSize, goldAt, irisAt, typeAt } from '../src/client/features/kinetic/logic.js';
 import { AISLE, ARC, DAIS } from '../src/shared/amphitheater.js';
 import { TURN } from '../src/client/features/bridge/holo.js';
 import { BREATHE, BREATHE_PERIODS } from '../src/client/features/cinema/logic.js';
@@ -122,8 +122,19 @@ test('the hail\'s marker leaves the holo, hovers in front of the dais by 1.5 s, 
 test('the kinetic type: the countdown said once with the waypoint cleared, the mission complete in the conn\'s gold', () => {
   const c = countdownCard({ n: 3, title: 'Payments webhook', final: false }, 2, 4, 2.4);
   assert.equal(c.digit, '3');
-  assert.equal(c.big, 'WAYPOINT 2/4 CLEARED');
-  assert.match(c.small, /^JUMP TO WAYPOINT 3: PAYMENTS WEBHOOK$/);
+  // Short and big, so it is never cut: JUMP IN and the digit, the waypoint and where to over it.
+  assert.equal(c.big, 'JUMP IN');
+  assert.equal(c.small, 'WAYPOINT 2/4 CLEARED - NEXT: PAYMENTS WEBHOOK');
+  assert.equal(countdownCard({ n: 4, title: 'Live', final: true }, 3, 4, 1).big, 'FINAL JUMP IN');
+  // The ring wipes round each second and the plate punches as a digit lands; with less motion, neither.
+  assert.deepEqual(countBeat(3, false), { punch: 1, ring: 1 });
+  assert.ok(countBeat(2.5, false).punch === 0 && Math.abs(countBeat(2.5, false).ring - 0.5) < 1e-9);
+  assert.deepEqual(countBeat(2.9, true), { punch: 0, ring: 1 });
+  // A long line shrinks to fit its plane (here 20 px a glyph at 40 px) before anything is cut.
+  const measure = (size: number) => 30 * size * 0.5;
+  assert.ok(measure(fitSize(measure, 600, 58, 20)) <= 600);
+  assert.equal(fitSize(measure, 10_000, 58, 20), 58, 'what fits keeps its size');
+  assert.equal(fitSize(measure, 10, 58, 20), 20, 'never under the smallest');
   assert.equal(clearedCard(1, 4, 'Auth rewrite').big, 'WAYPOINT 1/4 CLEARED');
   assert.equal(completeCard('Ship it').big, 'MISSION COMPLETE');
   assert.equal(completeCard('').tone, 'gold');

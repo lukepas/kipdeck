@@ -18,10 +18,35 @@ export function clearedCard(done: number, total: number, next: string | null): T
   return { small: next ? `NEXT: ${next.toUpperCase()}` : 'COURSE COMPLETE', big: `WAYPOINT ${done}/${total} CLEARED`, digit: '', tone: 'ship' };
 }
 
-/** A jump's countdown, said once: where to, the waypoint cleared, and the seconds left big at the right. */
+/**
+ * A jump's countdown, said once: short and big (JUMP IN, the seconds left at the right), with the
+ * waypoint cleared and where to over it. Short enough to set whole at full size: never cut.
+ */
 export function countdownCard(o: { n: number; title: string; final: boolean }, done: number, total: number, left: number): TypeCard {
-  const to = o.final ? `FINAL APPROACH: ${o.title.toUpperCase()}` : `JUMP TO WAYPOINT ${o.n}: ${o.title.toUpperCase()}`;
-  return { small: to, big: total ? `WAYPOINT ${done}/${total} CLEARED` : 'JUMP', digit: String(Math.max(1, Math.ceil(left))), tone: 'ship' };
+  const to = o.final ? `FINAL APPROACH: ${o.title.toUpperCase()}` : `NEXT: ${o.title.toUpperCase()}`;
+  return { small: total ? `WAYPOINT ${done}/${total} CLEARED - ${to}` : to, big: o.final ? 'FINAL JUMP IN' : 'JUMP IN', digit: String(Math.max(1, Math.ceil(left))), tone: 'ship' };
+}
+
+/**
+ * The countdown's beat each second, from the seconds left: the plate's punch as a digit lands (1 on
+ * the change, gone in a quarter second) and the ring round the digit wiping round (1 full on the
+ * change, 0 as the next lands). With less motion neither moves: no punch, the ring full.
+ */
+export function countBeat(left: number, still: boolean): { punch: number; ring: number } {
+  if (still) return { punch: 0, ring: 1 };
+  const since = Math.ceil(left) - left;
+  const k = Math.max(0, 1 - since / 0.25);
+  return { punch: k * k, ring: 1 - since };
+}
+
+/**
+ * The type size (px) that sets text `measure(size)` wide within `max`, from `size` down to `min`; at
+ * `min` the caller cuts what still doesn't fit. The type plane shrinks a long line rather than cut it.
+ */
+export function fitSize(measure: (size: number) => number, max: number, size: number, min: number): number {
+  let s = size;
+  while (s > min && measure(s) > max) s = Math.max(min, Math.floor(s * 0.94));
+  return s;
 }
 
 /** Every waypoint passed. */

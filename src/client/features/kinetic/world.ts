@@ -2,15 +2,15 @@ import * as THREE from 'three';
 import { DECK } from '../../world/office/materials';
 import { BRIDGE_LAYER } from '../bridge/shapes';
 import { CONN_GOLD } from '../bridge/conn';
-import type { TypeCard } from './logic';
+import { fitSize, type TypeCard } from './logic';
 
 // What the set pieces draw: the kinetic type plane, one canvas on its own dark backing under the bow's
 // glass over the arc (one draw while it shows, none at rest); and the iris, a shutter over the glass
 // for a switch of Night and Day (one draw for its 1.2 s), drawn with the sky so the room stands in front
 // of it and it shows only through the glass.
 
-/** Where the type plane hangs: on the axis, under the canopy over the arc, facing the conn's seated eye. */
-export const PLANE = { x: 0, y: 8.3, z: -4, w: 7.6, canvas: [2048, 384] as const, faces: [0, 2.98, 10.75] as const } as const;
+/** Where the type plane hangs: on the axis just over the arc and its ticker, under the milestone card and in the seated frame, facing the conn's seated eye. */
+export const PLANE = { x: 0, y: 7.5, z: -4.6, w: 8.2, canvas: [2048, 384] as const, faces: [0, 2.98, 10.75] as const } as const;
 
 const TYPE_VERT = /* glsl */ `
 varying vec2 vUv;
@@ -24,6 +24,10 @@ uniform sampler2D uMap;
 uniform float uReveal;
 uniform float uA;
 uniform vec3 uTone;
+uniform float uRing;
+uniform float uPunch;
+uniform vec2 uDigitAt;
+uniform float uAspect;
 varying vec2 vUv;
 void main() {
   vec4 t = texture2D(uMap, vUv);
@@ -31,14 +35,39 @@ void main() {
   float on = step(vUv.x, edge);
   float d = (vUv.x - edge) * 70.0;
   float line = uReveal < 0.999 ? exp(-d * d) : 0.0;
-  gl_FragColor = vec4(t.rgb * on + uTone * line * 1.6, (t.a * on + line * 0.85) * uA);
+  vec3 col = t.rgb * on + uTone * line * 1.6;
+  float a = t.a * on + line * 0.85;
+  // The countdown's ring round the digit, wiping round clockwise from the top as the second runs out,
+  // and lit up as each digit lands (uPunch).
+  if (uRing > 0.0) {
+    vec2 p = (vUv - uDigitAt) * vec2(uAspect, 1.0);
+    float r = length(p);
+    float ring = 1.0 - smoothstep(0.012, 0.024, abs(r - 0.44));
+    float ang = fract(atan(p.x, p.y) / 6.2831853 + 1.0);
+    float lit = step(ang, uRing) * ring;
+    col += uTone * lit * (1.4 + 2.0 * uPunch) + uTone * ring * 0.18;
+    a = max(a, (lit + ring * 0.2) * on);
+  }
+  gl_FragColor = vec4(col, a * uA);
   #include <colorspace_fragment>
 }`;
 
 const UI = (w: number, s: number) => `${w} ${s}px Archivo, system-ui, sans-serif`;
 const MONO = (s: number, w = 600) => `${w} ${s}px "JetBrains Mono", ui-monospace, monospace`;
 
-/** Fits `text` in `max` px by shortening it with an ellipsis. */
+/** The countdown's digit box on the canvas: its width, and its middle (px). */
+const DIGIT = { w: 340, cx: PLANE.canvas[0] - 40 - 170, cy: 36 + (PLANE.canvas[1] - 84) / 2 } as const;
+
+/** Sets `g`'s font to the biggest of `font(size)` from `size` to `min` that fits `text` in `max` px. */
+function fitFont(g: CanvasRenderingContext2D, text: string, max: number, font: (s: number) => string, size: number, min: number) {
+  const s = fitSize((k) => {
+    g.font = font(k);
+    return g.measureText(text).width;
+  }, max, size, min);
+  g.font = font(s);
+}
+
+/** Fits `text` in `max` px by shortening it with an ellipsis (the last resort, under the smallest size). */
 function fit(g: CanvasRenderingContext2D, text: string, max: number): string {
   if (g.measureText(text).width <= max) return text;
   let t = text;
@@ -63,7 +92,16 @@ export class TypePlane {
     const mat = new THREE.ShaderMaterial({
       vertexShader: TYPE_VERT,
       fragmentShader: TYPE_FRAG,
-      uniforms: { uMap: { value: this.tex }, uReveal: { value: 0 }, uA: { value: 0 }, uTone: { value: new THREE.Color(DECK.ship) } },
+      uniforms: {
+        uMap: { value: this.tex },
+        uReveal: { value: 0 },
+        uA: { value: 0 },
+        uTone: { value: new THREE.Color(DECK.ship) },
+        uRing: { value: 0 },
+        uPunch: { value: 0 },
+        uDigitAt: { value: new THREE.Vector2(DIGIT.cx / w, 1 - DIGIT.cy / h) },
+        uAspect: { value: w / h },
+      },
       transparent: true,
       depthWrite: false,
       fog: false,
@@ -93,31 +131,30 @@ export class TypePlane {
     g.fillStyle = tone;
     g.fillRect(0, 0, 14, H);
     g.fillRect(0, H - 6, W, 6);
-    const digitW = card.digit ? 340 : 0;
+    const digitW = card.digit ? DIGIT.w : 0;
     const textW = W - 90 - digitW - 60;
     g.textBaseline = 'alphabetic';
     g.textAlign = 'left';
     g.letterSpacing = '8px';
-    g.font = MONO(58);
+    fitFont(g, card.small, textW, (k) => MONO(k), 58, 36);
     g.fillStyle = tone;
     g.fillText(fit(g, card.small, textW), 60, 104);
     g.fillRect(60, 132, Math.min(textW, 520), 4);
     g.letterSpacing = '6px';
-    g.font = UI(800, 156);
+    fitFont(g, card.big, textW, (k) => UI(800, k), 156, 96);
     g.fillStyle = '#EEF4F8';
     g.fillText(fit(g, card.big, textW), 56, 312);
     g.letterSpacing = '0px';
     if (card.digit) {
-      const x = W - digitW - 40;
-      g.strokeStyle = tone;
-      g.lineWidth = 8;
-      g.strokeRect(x, 36, digitW, H - 84);
-      g.fillStyle = card.tone === 'gold' ? 'rgba(217,196,109,0.14)' : 'rgba(111,195,223,0.14)';
-      g.fillRect(x, 36, digitW, H - 84);
+      // The digit on a lit disc; its ring is the shader's, wiping round each second.
+      g.fillStyle = card.tone === 'gold' ? 'rgba(217,196,109,0.16)' : 'rgba(111,195,223,0.16)';
+      g.beginPath();
+      g.arc(DIGIT.cx, DIGIT.cy, 150, 0, Math.PI * 2);
+      g.fill();
       g.textAlign = 'center';
       g.font = MONO(270, 700);
       g.fillStyle = '#FFFFFF';
-      g.fillText(card.digit, x + digitW / 2, H - 76);
+      g.fillText(card.digit, DIGIT.cx, DIGIT.cy + 98);
       g.textAlign = 'left';
     }
     this.tex.needsUpdate = true;
@@ -130,6 +167,14 @@ export class TypePlane {
     u.uReveal.value = reveal;
     u.uA.value = a;
     this.mesh.visible = a > 0.003;
+  }
+
+  /** The countdown's beat (logic.ts countBeat): the ring round the digit (0 none) and the plate's punch as a digit lands. */
+  beat(ring: number, punch: number) {
+    const u = this.mesh.material.uniforms;
+    u.uRing.value = ring;
+    u.uPunch.value = punch;
+    this.mesh.scale.setScalar(1 + 0.07 * punch);
   }
 }
 
