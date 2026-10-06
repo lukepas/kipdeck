@@ -2,7 +2,8 @@
 // in which order, at what size, and which are only counted in a chip. Nothing here draws.
 //
 // The board is the hero of the situation arc, read from the captain's chair 17 m off, so its cards are
-// big: two columns of three at full size, each with the unit's name on its first line in 0.5 m type.
+// big: two columns of three at full size, each with the unit's name on its first line in 0.5 m type, or
+// one column of full-width cards when there are three or fewer (the first, if it needs you, the hero).
 // Order is by what a captain has to act on first: stuck, then needs you, then to review, then working,
 // then done. A unit that is stuck, needs you or waits for review is never left off: when there are more
 // of them than six cards, the board steps down to denser cards (two columns of five, then three of five)
@@ -27,7 +28,13 @@ export const GRIDS = [
   { name: 'dense', cols: 2, rows: 5, nameM: 0.27 },
   { name: 'denser', cols: 3, rows: 5, nameM: 0.24 },
 ] as const;
-export type Grid = (typeof GRIDS)[number];
+/**
+ * Three or fewer cards: one column, each card the board's full width, so the board never shows a
+ * column of cards beside a column of empty glass. The first card, when it needs the captain, is the
+ * hero: taller, lit, with the key that goes to it.
+ */
+export const WIDE = { name: 'wide', cols: 1, rows: 3, nameM: 0.5 } as const;
+export type Grid = (typeof GRIDS)[number] | typeof WIDE;
 
 /** How a unit shows on the board, or null for one that doesn't (asleep, or never given anything). */
 export function heroKind(r: Ranked): HeroKind | null {
@@ -90,10 +97,36 @@ export function planHero(ranked: readonly Ranked[]): HeroPlan {
   const c = attentionCounts(ranked);
   const counts: Record<HeroKind, number> = { stuck: c.stuck, 'needs-you': c['needs-you'], review: c.review, working: c.working, done: shown.filter((s) => s.kind === 'done').length };
   const top = URGENCY.find((k) => counts[k] > 0) ?? null;
-  return { grid, cards, chips, counts, top };
+  // The same cards, full width when they would only fill the first column of the grid.
+  const laid: Grid = grid === GRIDS[0] && cards.length <= WIDE.rows ? WIDE : grid;
+  return { grid: laid, cards, chips, counts, top };
 }
 
 /** Where card `i` of `n` goes on a grid: its column and row, filling down the first column first. */
 export function cardCell(grid: Grid, i: number): { col: number; row: number } {
   return { col: Math.floor(i / grid.rows), row: i % grid.rows };
+}
+
+/** Whether the board's first card is the hero (wide, and its unit needs the captain or is stuck). */
+export function heroFirst(plan: HeroPlan): boolean {
+  const k = plan.cards[0]?.kind;
+  return plan.grid.name === 'wide' && (k === 'needs-you' || k === 'stuck');
+}
+
+/**
+ * The rows of a wide board between `top` and `bottom` (canvas units), `gap` apart: the hero's row
+ * HERO_ROW times the others' height. Each is [y, h].
+ */
+export const HERO_ROW = 1.45;
+export function wideRows(plan: HeroPlan, top: number, bottom: number, gap: number): [number, number][] {
+  const n = WIDE.rows;
+  const weights = Array.from({ length: n }, (_, i) => (i === 0 && heroFirst(plan) ? HERO_ROW : 1));
+  const unit = (bottom - top - gap * (n - 1)) / weights.reduce((a, b) => a + b, 0);
+  const out: [number, number][] = [];
+  let y = top;
+  for (const w of weights) {
+    out.push([y, unit * w]);
+    y += unit * w + gap;
+  }
+  return out;
 }

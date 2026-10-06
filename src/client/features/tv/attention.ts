@@ -16,7 +16,7 @@ import { callSign } from '../../../shared/callsign';
 import { PANEL } from '../boards/world';
 import { INK, MONO, UI, UNITS_PER_M, clip, screen } from '../boards/screen';
 import { drawDone, drawGlyph } from '../../world/glyphs';
-import { cardCell, planHero, type HeroKind, type HeroPlan } from './plan';
+import { cardCell, heroFirst, planHero, wideRows, type HeroKind, type HeroPlan } from './plan';
 
 /** Each kind's hue: its stripe, its glyph, the board's edges when it's the most urgent. */
 export const HERO_HUE: Record<HeroKind, string> = { 'needs-you': PANEL.signal, stuck: PANEL.stuck, review: PANEL.review, working: '#6FC3DF', done: PANEL.settled };
@@ -142,20 +142,51 @@ function why(r: Ranked, kind: HeroKind): string {
   return statusPhrase(r.att, title);
 }
 
-/** One card at (x, y), w by h, for the grid it's on. */
-function paintCard(g: CanvasRenderingContext2D, card: { r: Ranked; kind: HeroKind }, x: number, y: number, w: number, h: number, size: 'full' | 'dense' | 'denser', now: number) {
+/** The key that goes to the hero card's unit (N, next unit), as a keycap at the card's right. */
+export const HERO_KEY = { key: 'N', word: 'GO TO' } as const;
+
+/** One card at (x, y), w by h, for the grid it's on; `hero` is the wide board's first card when it needs the captain. */
+function paintCard(g: CanvasRenderingContext2D, card: { r: Ranked; kind: HeroKind }, x: number, y: number, w: number, h: number, size: 'full' | 'dense' | 'denser' | 'wide', now: number, hero = false) {
   const { r, kind } = card;
   const quiet = kind === 'working' || kind === 'done';
   const hue = HERO_HUE[kind];
   g.fillStyle = quiet ? CARD_QUIET : CARD;
   g.fillRect(x, y, w, h);
   if (kind === 'needs-you' || kind === 'stuck') {
-    // A wash of its hue across the card, under the words: the ones to act on read as lit.
+    // A wash of its hue across the card, under the words: the ones to act on read as lit, the hero most.
     const grad = g.createLinearGradient(x, 0, x + w, 0);
-    grad.addColorStop(0, kind === 'stuck' ? 'rgba(255,77,94,0.26)' : 'rgba(255,106,26,0.24)');
-    grad.addColorStop(0.7, 'rgba(0,0,0,0)');
+    const rgb = kind === 'stuck' ? '255,77,94' : '255,106,26';
+    grad.addColorStop(0, `rgba(${rgb},${hero ? 0.5 : 0.26})`);
+    grad.addColorStop(hero ? 0.55 : 0.7, `rgba(${rgb},${hero ? 0.12 : 0})`);
+    grad.addColorStop(1, hero ? `rgba(${rgb},0.06)` : 'rgba(0,0,0,0)');
     g.fillStyle = grad;
     g.fillRect(x, y, w, h);
+  }
+  if (hero) {
+    // The hero's rim in its hue, and the key that goes to it at the right.
+    g.strokeStyle = hue;
+    g.lineWidth = 6;
+    g.strokeRect(x + 3, y + 3, w - 6, h - 6);
+    const kw = 150;
+    const kx = x + w - kw - 30;
+    const ky = y + (h - 128) / 2;
+    g.fillStyle = 'rgba(8,12,18,0.85)';
+    g.fillRect(kx, ky, kw, 128);
+    g.strokeStyle = '#EEF4F8';
+    g.lineWidth = 4;
+    g.strokeRect(kx + 2, ky + 2, kw - 4, 124);
+    g.textAlign = 'center';
+    g.textBaseline = 'alphabetic';
+    g.fillStyle = '#FFFFFF';
+    g.font = MONO(72, 700);
+    g.fillText(HERO_KEY.key, kx + kw / 2, ky + 78);
+    g.font = UI(700, 26);
+    g.letterSpacing = '3px';
+    g.fillStyle = hue;
+    g.fillText(HERO_KEY.word, kx + kw / 2, ky + 112);
+    g.letterSpacing = '0px';
+    g.textAlign = 'left';
+    w -= kw + 40;
   }
   if (kind === 'stuck') {
     // Its red rim, the same as round its station.
@@ -171,8 +202,36 @@ function paintCard(g: CanvasRenderingContext2D, card: { r: Ranked; kind: HeroKin
   const reason = why(r, kind);
   g.textBaseline = 'alphabetic';
   g.textAlign = 'left';
-  if (size === 'full') {
-    mark(g, kind, x + 60, y + 54, 30);
+  if (size === 'wide' && !hero) {
+    // A full-width row: the name big, why beside it on the same line, the clock and call sign at the right.
+    const base = y + h / 2 + 34;
+    mark(g, kind, x + 60, y + h / 2, 30);
+    g.font = MONO(40, 600);
+    g.textAlign = 'right';
+    g.fillStyle = INK.dim;
+    g.fillText(age, x + w - 22, y + h / 2 - 4);
+    const clockW = Math.max(g.measureText(age).width, sign ? g.measureText(sign).width : 0);
+    if (sign) {
+      g.font = MONO(32, 600);
+      g.fillStyle = INK.muted;
+      g.fillText(sign, x + w - 22, y + h / 2 + 40);
+    }
+    g.textAlign = 'left';
+    g.font = UI(700, 100);
+    g.fillStyle = quiet ? INK.dim : INK.text;
+    const right = x + w - clockW - 60;
+    const name = clip(g, r.entry.name, (right - x - 106) * 0.6);
+    g.fillText(name, x + 106, base);
+    const nx = x + 106 + g.measureText(name).width + 36;
+    g.font = UI(600, 46);
+    g.fillStyle = quiet ? INK.dim : kind === 'needs-you' || kind === 'stuck' ? '#F3D9C9' : '#D9DFE5';
+    g.fillText(clip(g, reason, right - nx), nx, base - 4);
+    return;
+  }
+  if (size === 'full' || size === 'wide') {
+    // The hero's name a size up: it has the taller row.
+    const big = hero ? 120 : 100;
+    mark(g, kind, x + 60, y + (hero ? 64 : 54), hero ? 36 : 30);
     // The clock at the right of the first line, the name as big as the line takes (0.5 m type).
     g.font = MONO(40, 600);
     g.textAlign = 'right';
@@ -180,9 +239,9 @@ function paintCard(g: CanvasRenderingContext2D, card: { r: Ranked; kind: HeroKin
     g.fillText(age, x + w - 22, y + 82);
     const clockW = g.measureText(age).width;
     g.textAlign = 'left';
-    g.font = UI(700, 100);
+    g.font = UI(700, big);
     g.fillStyle = quiet ? INK.dim : INK.text;
-    g.fillText(clip(g, r.entry.name, w - 108 - clockW - 40), x + 106, y + 88);
+    g.fillText(clip(g, r.entry.name, w - 108 - clockW - 40), x + 106, y + (hero ? 112 : 88));
     // Under it, why, then its call sign.
     g.font = MONO(32, 600);
     const sw = sign ? g.measureText(sign).width : 0;
@@ -223,12 +282,13 @@ function paintCard(g: CanvasRenderingContext2D, card: { r: Ranked; kind: HeroKin
 }
 
 /** The chips along the foot: what is counted rather than carded. */
-function paintChips(g: CanvasRenderingContext2D, W: number, H: number, plan: HeroPlan) {
+function paintChips(g: CanvasRenderingContext2D, W: number, H: number, plan: HeroPlan, skip?: HeroKind) {
   const { pad, foot } = HERO;
   let x = pad;
   const y = H - foot + 6;
   const h = foot - 16;
   for (const c of plan.chips) {
+    if (c.kind === skip) continue;
     const word = { working: 'WORKING', done: 'DONE', stuck: 'MORE STUCK', 'needs-you': 'MORE NEED YOU', review: 'MORE TO REVIEW' }[c.kind];
     g.font = UI(700, 34);
     g.letterSpacing = '3px';
@@ -269,30 +329,74 @@ export function paintAttention(g: CanvasRenderingContext2D, W: number, H: number
   const top = head + rule + gap;
   const bottom = H - foot - 4;
   const anchors: CardAnchor[] = [];
+  const working = plan.counts.working;
   if (!plan.cards.length) {
+    // All clear: nobody needs the captain, said big and calm in the settled green.
+    const mid = (top + bottom) / 2;
     g.textAlign = 'center';
-    g.textBaseline = 'middle';
-    g.fillStyle = INK.text;
-    g.font = UI(700, 64);
-    const working = plan.counts.working;
-    g.fillText(working ? 'All units on task. Nothing needs you.' : 'No units on this deck', W / 2, (top + bottom) / 2 - 30);
-    g.fillStyle = INK.dim;
-    g.font = UI(600, 38);
-    g.fillText(working ? 'The captain has the conn' : 'Deploy one at a free console', W / 2, (top + bottom) / 2 + 44);
-    g.textAlign = 'left';
     g.textBaseline = 'alphabetic';
+    if (working) {
+      g.font = UI(800, 150);
+      g.letterSpacing = '10px';
+      const word = 'ALL CLEAR';
+      const ww = g.measureText(word).width;
+      mark(g, 'done', W / 2 - ww / 2 - 90, mid - 40, 52);
+      g.fillStyle = PANEL.settled;
+      g.fillText(word, W / 2 + 40, mid + 12);
+      g.letterSpacing = '0px';
+      g.fillStyle = INK.dim;
+      g.font = UI(600, 46);
+      g.fillText(clip(g, `${working} on task. Nothing needs you.`, W - pad * 2), W / 2, mid + 100);
+    } else {
+      g.fillStyle = INK.text;
+      g.font = UI(700, 64);
+      g.fillText('No units on this deck', W / 2, mid - 10);
+      g.fillStyle = INK.dim;
+      g.font = UI(600, 38);
+      g.fillText('Deploy one at a free console', W / 2, mid + 60);
+    }
+    g.textAlign = 'left';
   }
   const { grid } = plan;
   const cw = (W - pad * 2 - gap * (grid.cols - 1)) / grid.cols;
   const ch = (bottom - top - gap * (grid.rows - 1)) / grid.rows;
+  const rows = grid.name === 'wide' ? wideRows(plan, top, bottom, gap) : null;
+  const hero = heroFirst(plan);
   plan.cards.forEach((card, i) => {
     const { col, row } = cardCell(grid, i);
     const x = pad + col * (cw + gap);
-    const y = top + row * (ch + gap);
-    paintCard(g, card, x, y, cw, ch, grid.name, now);
-    anchors.push({ id: card.r.entry.id, kind: card.kind, row, x, y: y + ch / 2, w: cw, h: ch });
+    const [y, h] = rows ? rows[row] : [top + row * (ch + gap), ch];
+    paintCard(g, card, x, y, cw, h, grid.name, now, hero && i === 0);
+    anchors.push({ id: card.r.entry.id, kind: card.kind, row, x, y: y + h / 2, w: cw, h });
   });
-  paintChips(g, W, H, plan);
+  const filler = !!rows && plan.cards.length > 0 && plan.cards.length < rows.length && working > 0;
+  if (rows && filler) {
+    // The rows a wide board has no card for: the rest of the crew, calm, so the glass is never empty.
+    const [y0] = rows[plan.cards.length];
+    const [ly, lh] = rows[rows.length - 1];
+    const mid = (y0 + ly + lh) / 2;
+    g.fillStyle = CARD_QUIET;
+    g.fillRect(pad, y0, W - pad * 2, ly + lh - y0);
+    g.fillStyle = HERO_HUE.working;
+    g.beginPath();
+    g.arc(pad + 60, mid, 16, 0, Math.PI * 2);
+    g.fill();
+    g.textBaseline = 'middle';
+    g.textAlign = 'left';
+    g.font = UI(800, 72);
+    g.letterSpacing = '6px';
+    g.fillStyle = INK.text;
+    const said = `${working} ON TASK`;
+    g.fillText(said, pad + 106, mid + 4);
+    const sw = g.measureText(said).width;
+    g.letterSpacing = '0px';
+    g.font = UI(600, 40);
+    g.fillStyle = INK.dim;
+    g.fillText(clip(g, 'the rest of the crew at work', W - pad * 2 - 146 - sw), pad + 106 + sw + 40, mid + 6);
+    g.textBaseline = 'alphabetic';
+  }
+  // The working chip says what the filler already says big: one of them.
+  paintChips(g, W, H, plan, filler ? 'working' : undefined);
   return { plan, anchors };
 }
 

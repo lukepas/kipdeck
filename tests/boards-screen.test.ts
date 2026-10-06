@@ -5,7 +5,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { LAYOUT, MORE_H, UNITS_PER_M, clip, rowTop, rowsFor } from '../src/client/features/boards/screen.js';
-import { HEADER_COUNTS, HERO, paintAttention } from '../src/client/features/tv/attention.js';
+import { HEADER_COUNTS, HERO, HERO_KEY, paintAttention } from '../src/client/features/tv/attention.js';
 import { GRIDS } from '../src/client/features/tv/plan.js';
 import { SITUATION, TV } from '../src/shared/layout.js';
 import { wingHeights } from '../src/shared/amphitheater.js';
@@ -152,4 +152,44 @@ test('with everyone at work the Attention board says so, and lists them when the
   const b = canvasSpy();
   paintAttention(b.g, W, H, [], Date.now());
   assert.ok(b.texts.some((t) => t.text === 'No units on this deck'));
+});
+
+test('three cards or fewer go full width, the first the hero when it needs you, with the key that goes to it', () => {
+  const W = Math.round(TV.width * UNITS_PER_M);
+  const H = Math.round(TV.height * UNITS_PER_M);
+  const { g, texts } = canvasSpy();
+  const crew = [ranked('needs-you', 'Byte', 'desk-2', 'Needs an answer'), ranked('review', 'Widget', 'desk-6', 'Done'), ranked('review', 'Dot', 'desk-13', 'Done'), ...['Gizmo', 'Bolt', 'Pixel', 'Echo'].map((n, i) => ranked('working', n, `desk-${i + 3}`, 'Rate limits'))];
+  const { plan, anchors } = paintAttention(g, W, H, crew, Date.now());
+  assert.equal(plan.grid.name, 'wide');
+  // Every card spans the board, and the hero's row is the tallest.
+  for (const a of anchors) assert.ok(a.w > W * 0.9, `${a.id} is ${a.w} wide`);
+  assert.ok(anchors[0].h > anchors[1].h * 1.3, 'the hero is taller');
+  const said = texts.map((t) => t.text);
+  assert.ok(said.includes(HERO_KEY.key) && said.includes(HERO_KEY.word), 'the hero shows its key');
+  assert.ok(said.includes('WORKING 4'), 'the rest counted');
+  inside(texts, W);
+});
+
+test('a wide board with a free row says the rest of the crew is at work there, once', () => {
+  const W = Math.round(TV.width * UNITS_PER_M);
+  const H = Math.round(TV.height * UNITS_PER_M);
+  const { g, texts } = canvasSpy();
+  const crew = [ranked('review', 'Widget', 'desk-6', 'Done'), ...['Gizmo', 'Bolt', 'Pixel', 'Echo', 'Nibble', 'Fizz', 'Cosmo'].map((n, i) => ranked('working', n, `desk-${i + 3}`, 'Rate limits'))];
+  const { plan } = paintAttention(g, W, H, crew, Date.now());
+  assert.equal(plan.grid.name, 'wide');
+  const said = texts.map((t) => t.text);
+  assert.ok(said.includes('7 ON TASK'));
+  assert.ok(!said.includes('WORKING 7'), 'not counted twice');
+  inside(texts, W);
+});
+
+test('with nobody waiting and everyone at work the board says ALL CLEAR', () => {
+  const W = Math.round(TV.width * UNITS_PER_M);
+  const H = Math.round(TV.height * UNITS_PER_M);
+  const { g, texts } = canvasSpy();
+  const crew = ['Gizmo', 'Bolt', 'Pixel', 'Echo', 'Nibble', 'Fizz', 'Cosmo'].map((n, i) => ranked('working', n, `desk-${i + 3}`, 'Rate limits'));
+  paintAttention(g, W, H, crew, Date.now());
+  const said = texts.map((t) => t.text);
+  assert.ok(said.includes('ALL CLEAR'));
+  inside(texts, W);
 });
