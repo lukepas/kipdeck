@@ -44,3 +44,7 @@ label + label { margin-top: 12px; }
 .credit { position: relative; z-index: 2; width: min(360px, 100%); margin-top: 12px; text-align: left; font: 400 11px var(--font-mono); color: var(--faint); }
 .credit a { color: var(--muted); text-decoration: none; }
 .credit a:hover { color: var(--text); }
+.local-say { margin: 0 0 12px; font-size: 13px; }
+.secret code#open-cmd { font-size: 15px; }
+button.link { width: auto; height: auto; margin: 14px 0 0; padding: 0; background: none; border: 0; color: var(--muted); font-weight: 500; font-size: 13px; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 2px; }
+button.link:hover { background: none; color: var(--text); }

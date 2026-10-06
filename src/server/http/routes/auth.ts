@@ -3,6 +3,7 @@
 import type http from 'node:http';
 import type { Ctx } from '../../office/context.js';
 import { str } from '../../office/input.js';
+import { localRequest, ownerName, passwordless } from '../../local.js';
 import { clientIp, isSecure, readBody, send } from '../util.js';
 import type { Route } from '../router.js';
 
@@ -49,8 +50,15 @@ export async function login(ctx: Ctx, req: http.IncomingMessage, res: http.Serve
   auth.recordSuccess(guess.ip);
   return send(res, 200, { ok: true }, signedIn(ctx, req, undefined, relay));
 }
-/** Which fields the sign-in forms ask for. */
-export const loginOptions = (ctx: Ctx) => ({ accounts: ctx.accounts.any, shared: ctx.accounts.sharedPassword });
+/**
+ * Which fields the sign-in forms ask for. `local`: this browser is on the computer of an office that
+ * signs its owner in from the terminal, so the page says how instead of asking for a password first.
+ */
+export const loginOptions = (ctx: Ctx, req?: http.IncomingMessage) => ({
+  accounts: ctx.accounts.any,
+  shared: ctx.accounts.sharedPassword,
+  local: !!req && !ctx.accounts.any && ctx.accounts.sharedPassword && passwordless(ctx.cfg) && localRequest(req),
+});
 
 /**
  * An invite link: `peek` says who it's for; otherwise it makes the account and signs it in.
@@ -77,7 +85,7 @@ const claimable = ({ cfg }: Ctx) => !!cfg.claimToken && !cfg.claimed && !!cfg.pa
 
 export const authRoutes = {
   login: { method: 'POST', path: '/api/login', auth: 'public', handle: (ctx, { req, res }) => login(ctx, req, res) },
-  loginOptions: { method: 'GET', path: '/api/login', auth: 'public', handle: (ctx, { res }) => send(res, 200, loginOptions(ctx)) },
+  loginOptions: { method: 'GET', path: '/api/login', auth: 'public', handle: (ctx, { req, res }) => send(res, 200, loginOptions(ctx, req)) },
   join: { method: 'POST', path: '/api/join', auth: 'public', handle: (ctx, { req, res }) => join(ctx, req, res) },
   claimable: { method: 'GET', path: '/api/claim', auth: 'public', handle: (ctx, { res }) => send(res, 200, { claimable: claimable(ctx) }) },
   claim: {
@@ -98,15 +106,17 @@ export const authRoutes = {
     },
   },
   // A sign-in link the office printed in its terminal (/login#key=...), traded for a session once.
+  // Only on this computer: not through a tunnel or a proxy, even with the key.
   link: {
     method: 'POST',
     path: '/api/link',
     auth: 'public',
     async handle(ctx, { req, res }) {
+      if (!localRequest(req)) return send(res, 403, { error: 'Sign-in links only work on the computer the office runs on. Sign in with the office password.' });
       const guess = await readGuess(ctx, req, res);
       if (!guess) return;
       if (!ctx.accounts.sharedPassword || !ctx.auth.useLinkKey(str(guess.body.key, 128))) {
-        return send(res, 410, { error: 'That sign-in link was already used. Sign in with the office password.' });
+        return send(res, 410, { error: 'That sign-in link was already used. Run `mergeline open` on this computer for a new one.' });
       }
       ctx.auth.recordSuccess(guess.ip);
       return send(res, 200, { ok: true }, signedIn(ctx, req));
@@ -144,5 +154,10 @@ export const authRoutes = {
       return send(res, 200, { ok: true }, signedIn(ctx, req, s.account.id));
     },
   },
-  whoami: { path: '/api/whoami', auth: 'session', handle: (ctx, { res, session }) => send(res, 200, { ok: true, me: ctx.meOf(session.account?.id), labs: ctx.labs.state() }) },
+  // `name`: on an office that runs on its owner's computer, what to call them until they say (git's user.name).
+  whoami: {
+    path: '/api/whoami',
+    auth: 'session',
+    handle: (ctx, { res, session }) => send(res, 200, { ok: true, me: ctx.meOf(session.account?.id), labs: ctx.labs.state(), name: !session.account && passwordless(ctx.cfg) ? ownerName() : undefined }),
+  },
 } satisfies Record<string, Route>;

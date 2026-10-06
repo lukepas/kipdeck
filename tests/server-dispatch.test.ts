@@ -164,7 +164,8 @@ test('answers the open routes before anyone signs in', async () => {
   const health = await get('/api/health');
   assert.equal(health.status, 200);
   assert.deepEqual(await health.json(), { ok: true });
-  assert.deepEqual(await (await get('/api/login')).json(), { accounts: false, shared: true });
+  // An office with a password (this one has --password) asks for it, even on its own computer.
+  assert.deepEqual(await (await get('/api/login')).json(), { accounts: false, shared: true, local: false });
   assert.deepEqual(await (await get('/api/claim')).json(), { claimable: false });
 
   const login = await get('/login');
