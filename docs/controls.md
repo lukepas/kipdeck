@@ -24,7 +24,8 @@ Back to the [README](../README.md).
 | / | Search the chat and every terminal on your floor |
 | Ctrl + K (⌘K on a Mac) | Command palette: find a worker, issue, PR, service, board, teammate or action; Enter opens it, Shift+Enter walks you there first |
 | V | Join voice; in voice, hold to talk (you're muted when you let go) |
-| M | Mute / unmute in voice |
+| M | Mute / unmute your mic in voice |
+| Shift + M | Turn all of the deck's sound off, or back on (Settings > Sound & voice has the main volume and the mixer; see [the design system](design.md#sound)) |
 | Ctrl + Space | Dictate, in a worker's terminal or a prompt box: hold it and talk, and what you said is typed in when you let go. A quick tap leaves it listening until the next tap. The mic button does the same |
 | Tab | The menu (top right of the top bar): every window, and what shows on screen |
 | Esc | Close any window (a terminal too) and get back to looking around, or to the Overview if you opened it there; in a forward lounge seat, stand up |

@@ -1,5 +1,5 @@
 // VESPER's caption: one line low over the 3D view, like a subtitle, shown for a few seconds and then
-// faded out. Plain words, no hue and no sound (the deck's four cues are the only sounds it has).
+// faded out. Plain words, no hue and no sound of its own (the ship's mind is read, never heard).
 import './caption.css';
 import { h } from '../../ui/dom';
 

@@ -364,16 +364,29 @@ The beats live in `src/client/features/beats/` (paths and timings in `logic.ts`,
 
 ## Sound
 
-The deck makes no sound of its own: no room tone, typing or footsteps. There are four short cues, synthesized in `src/client/sound/alerts.ts`, and the jump's two sounds in `src/client/sound/jump.ts`; all of them are off until you turn them on in Settings (Sound cues).
+Everything you hear is synthesized with Web Audio (no audio files): a few filtered noise bursts and tones per sound, varied a little each time. It is on by default and starts with your first click or key, since browsers allow sound no sooner. **Shift+M** turns all of it off and on anywhere on the deck; Settings > Sound & voice has the main volume and a mixer with a level for each group.
 
-| Cue | When | What you hear |
+| Group | What it is | Where it lives |
 | --- | --- | --- |
-| Needs you | a unit on your deck stops to ask something or wants a permission | 880 then 1320 Hz, 60 ms each; the reminder is the same, softer |
-| Stuck | a unit on your deck gets stuck | two low 330 Hz ticks |
-| Review ready | a unit finishes and its work waits for you | one soft 660 Hz tone |
+| Alerts | The state cues. The loudest group, and nothing on the deck turns it down; each cue ducks everything else for a moment as it plays. A hidden tab plays these and nothing else | `src/client/sound/alerts.ts` |
+| Interface | A click for a button, and a soft rising (opening) or falling (closing) breath for a window | `src/client/sound/ui.ts`, wired in `features/soundscape` |
+| Ship | Your boots on the deck plates, on a stair or riser and on the lounge's grating; a jump's push and its landing; sitting down (the captain's chair settles on its servo) and getting up; the lounge ladder's rungs and gate; Bolt's beeps from where it is; a bounty paid out; the jump and the surge | `features/soundscape/sfx.ts`, `features/bounties/sound.ts`, `src/client/sound/jump.ts` |
+| Ambience | A low bed (the hull's rumble, a faint hum, the vents' air slowly breathing), the drive's drone from the core aft, the holo table's glassy shimmer and Bolt's hover hum, the last three placed where they are so they pan and fall off as you walk | `features/soundscape/ambience.ts` |
+
+The deck's state sets the mix each frame (`src/client/sound/mix.ts`, tested in `tests/sound.test.ts`): while any unit needs you or is stuck the ambience sinks to 40% and the Ship group to 75%; Calm keeps 70% of the ambience and Silent running 30% (and 60% of the Ship group); a hidden tab silences everything but the alerts, and the ambience's sources are torn down after 2 s of silence, so a background tab spends nothing on them. Your ears follow the camera (the Overview's while it's up). Bolt's chatter to itself (every 22 to 50 s on its rounds) only plays at Full with nobody waiting.
+
+| Sound | When | What you hear |
+| --- | --- | --- |
+| Needs you | a unit on your deck stops to ask something or wants a permission (the hail) | a breath as the comm opens, then two soft chimes rising a fifth, 880 then 1320 Hz; the reminder is the same chimes, softer |
+| Stuck | a unit on your deck gets stuck | two low, dull 330 Hz ticks |
+| Review ready | a unit finishes and its work waits for you | one soft 660 Hz tone with a fifth over it |
 | Merged and proven | a proof-of-merge attestation lands | a low thunk and a high tick |
-| The jump's spool-up | a waypoint's countdown starts (only where the jump plays) | 3 s of band-passed noise sweeping up over a sine climbing from 55 to 110 Hz |
-| The jump's release | the ship goes into the tunnel | a burst of noise falling away over a sine dropping from 90 to 32 Hz, 1.6 s |
+| A payout | a bounty's coins fly from the escrow vault to the console of the unit that earned them | a tink as each coin leaves the vault, their rush of air moving across the deck, a brighter tink as each lands, then a soft C major chord at the console |
+| The jump | a waypoint's countdown, then the jump (only where the jump plays) | the spool-up (3 s of noise sweeping up over a climbing sine), the release into the stretch, the punch with the flash (a sub boom and a crack), and the arrival out of the tunnel (a long breath falling to a low swell, and two soft bells as the escorts drop into their slots) |
+| The surge | a merge speeds space up | a short, quiet rush |
+| Steps | each foot coming down while you cover ground | a heel's thud and a toe's scuff, with a plate's short ring, a stair's hollow knock or the grating's bright ring; quicker and brighter at a run |
+| The ladder | E at the forward lounge's ladder | hands closing on the stringers, a metal clank for every rung, the gate's servo and latch at the head |
+| Bolt | it wakes, docks, picks up a unit's work, hands it over, holds by a unit that needs you, or now and then to itself | quick droid glides: rising, falling, a "bweep", a happy warble and a bell, one low quiet note (never over the cue), a few random blips |
 
 ## Demo mode
 
