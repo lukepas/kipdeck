@@ -1,4 +1,4 @@
-// Nubbin, the bridge mascot, shot: stills of each thing he does (laps, a merge's twirl, zoomies and the
+// Kip, the bridge mascot, shot: stills of each thing he does (laps, a merge's twirl, zoomies and the
 // flop, sitting by a unit that needs you, hiding from a stuck one, napping in his nest, watching a
 // jump, escorting Bolt, a greeting), close up and from the captain's chair, the Overview without him,
 // and a 10 s clip. Starts the built office on a spare port with a throwaway home, password and project,
@@ -249,6 +249,14 @@ async function main() {
             want[0] *= rr / r;
             want[2] *= rr / r;
             sx = sx ? sx.map((v, i) => v + (want[i] - v) * (toward === 'chase' ? 0.06 : 0.12)) : want;
+            // Never closer than 1.3 m to him (a turn of his can swing the chase round onto him): pushed back out.
+            const ox = sx[0] - m.x;
+            const oz = sx[2] - m.z;
+            const od = Math.hypot(ox, oz);
+            if (od < 1.3) {
+              const k = 1.3 / (od || 1);
+              sx = [m.x + (od ? ox * k : 1.3), sx[1], m.z + oz * k];
+            }
             return [sx, [m.x, m.y + 0.36, m.z]];
           };
           p.update = (dt) => {
@@ -281,6 +289,82 @@ async function main() {
           };
         },
         [dist, h, side],
+      );
+    // A camera beside him along the pit lane (`along` metres round, `out` metres out toward the tiers),
+    // at `h`, looking at his middle: always in the open pit, never in the table or the consoles. With
+    // `orbit` (radians round him from that), a turnaround about him at the same distance, kept off the table.
+    const SIDE = (along = 1.8, out = 0.35, h = 0.75, orbit = null, look = 0.36, minR = 3.7) =>
+      page.evaluate(
+        ([along, out, h, orbit, look, minR]) => {
+          const o = window.__office;
+          const p = o.player;
+          p.__update ??= p.update;
+          const m0 = window.__world.mascot.state();
+          const r0 = Math.hypot(m0.x, m0.z) || 1;
+          const rad = [m0.x / r0, m0.z / r0];
+          const tan = [-rad[1], rad[0]];
+          let off = [tan[0] * along + rad[0] * out, tan[1] * along + rad[1] * out];
+          if (orbit !== null) {
+            const d = Math.hypot(along, out);
+            // 'side': square to his side where that keeps the camera in the open pit (clear of the table's
+            // rim and the tiers' consoles), else the nearest three-quarter view that does.
+            const at = (o) => [Math.sin(m0.yaw + o) * d, Math.cos(m0.yaw + o) * d];
+            const rOf = (v) => Math.hypot(m0.x + v[0], m0.z + v[1]);
+            const open = (v) => rOf(v) >= 3.7 && rOf(v) <= 4.8;
+            off = orbit === 'side' ? ([Math.PI / 2, -Math.PI / 2, 1.1, -1.1, 0.8, -0.8].map(at).find(open) ?? at(Math.PI / 2)) : at(orbit);
+          }
+          window.__cam = () => {
+            const m = window.__world.mascot.state();
+            const c = [m.x + off[0], m.y + h, m.z + off[1]];
+            const r = Math.hypot(c[0], c[2]);
+            if (r < minR) {
+              c[0] *= minR / r;
+              c[2] *= minR / r;
+            }
+            return [c, [m.x, m.y + look, m.z]];
+          };
+          p.update = (dt) => {
+            p.__update.call(p, dt);
+            const c = window.__cam();
+            o.camera.position.set(...c[0]);
+            o.camera.lookAt(...c[1]);
+          };
+        },
+        [along, out, h, orbit, look, minR],
+      );
+    // A camera that runs round the pit lane ahead of him, `lead` metres round the way he is going, `r` out
+    // from the table's middle, at `h`, looking back at him: always in the open pit between him and the
+    // table, so no console or tier ever comes between, and he turns to face it when he stops for you.
+    const LANE = (lead = 2.1, r = 3.55, h = 0.85) =>
+      page.evaluate(
+        ([lead, r, h]) => {
+          const o = window.__office;
+          const p = o.player;
+          p.__update ??= p.update;
+          let dir = 1;
+          let last = null;
+          let cam = null;
+          window.__cam = () => {
+            const m = window.__world.mascot.state();
+            const a = Math.atan2(m.z, m.x);
+            if (last !== null) {
+              const da = Math.atan2(Math.sin(a - last), Math.cos(a - last));
+              if (Math.abs(da) > 0.004) dir = Math.sign(da);
+            }
+            last = a;
+            const ca = a + (dir * lead) / Math.max(3.8, Math.hypot(m.x, m.z));
+            const want = [Math.cos(ca) * r, m.y + h, Math.sin(ca) * r];
+            cam = cam ? cam.map((v, i) => v + (want[i] - v) * 0.08) : want;
+            return [cam, [m.x, m.y + 0.4, m.z]];
+          };
+          p.update = (dt) => {
+            p.__update.call(p, dt);
+            const c = window.__cam();
+            o.camera.position.set(...c[0]);
+            o.camera.lookAt(...c[1]);
+          };
+        },
+        [lead, r, h],
       );
     const UNVIEW = () => page.evaluate(() => (window.__office.player.update = window.__office.player.__update ?? window.__office.player.update));
     const P = LIGHT === 'day' ? 'day-' : 'night-';
@@ -350,11 +434,14 @@ async function main() {
     }
     if (want('twirl')) {
       await merge('desk-5', 41);
+      await until(() => window.__world.mascot.state().mode === 'twirl', 20_000);
+      // Running round the pit lane ahead of him, so he turns to face it clear of the consoles.
+      await LANE(1.9, 3.55, 0.8);
       await until(() => window.__world.mascot.state().gesture === 'twirl', 20_000);
-      await FOLLOW(2.0, 0.75, 0.5, 'out');
-      await run(150);
+      // Near the top of the hop, the Sprig pointing straight up from his paw (once round), then mid-spin.
+      for (let i = 0; i < 60 && (await page.evaluate(() => window.__world.mascot.state().k)) < 0.445; i++) await page.evaluate(() => window.__step(1000 / 60, 1));
       await shot('twirl');
-      await run(500);
+      await run(130);
       await shot('twirl-2');
       await run(1600);
       await VIEW(...CONN);
@@ -363,11 +450,11 @@ async function main() {
     if (want('zoomies')) {
       await poke('zoomies');
       await until(() => window.__world.mascot.state().mode === 'zoomies', 10_000);
+      await LANE(2.0, 3.55, 0.85);
       await run(2500);
-      await FOLLOW(2.4, 0.9, 0.6, 'out');
-      await run(600);
       await shot('zoomies');
       await until(() => window.__world.mascot.state().gesture === 'flop', 20_000);
+      await LANE(1.8, 3.55, 1.15);
       await run(900);
       await shot('flop');
       await until(() => window.__world.mascot.state().mode !== 'zoomies', 10_000);
@@ -381,7 +468,7 @@ async function main() {
       await VIEW(...CONN);
       await run(100);
       await shot('sit-conn');
-      await FOLLOW(1.9, 0.75, 0.5, [0, 0]);
+      await SIDE(1.5, 0, 0.62, 0.6, 0.3);
       await run(1200);
       await shot('sit');
       await force(ask, { status: 'working', waitingSince: undefined, activity: undefined, workingSince: Date.now() });
@@ -391,13 +478,12 @@ async function main() {
       const stuck = await idOf('desk-13');
       await force(stuck, { action: 'failing', status: 'working', workingSince: Date.now() - 12 * 60_000 });
       await send({ t: 'timeline.event', event: { id: `live-stuck-${Date.now()}`, at: Date.now(), kind: 'stuck', floor, worker: stuck, name: 'desk-13', text: 'desk-13 stuck' } });
-      await FOLLOW(2.4, 1.1, 0.8, [3, 4]);
+      await FOLLOW(2.4, 1.1, 0.8, [0, 0]);
       await run(2600);
-      await shot('hide-run');
+      await shot('hide-walk');
       await until(() => window.__world.mascot.state().hold === 'hide', 25_000);
       await run(1500);
-      const hx = await page.evaluate(() => window.__world.mascot.state().x);
-      await VIEW([hx + Math.sign(hx) * 0.9, 2.95, 12.9], [hx, 2.05, 11.4]);
+      await SIDE(1.5, -0.6, 0.8, null, 0.25);
       await run(100);
       await shot('hide');
       await VIEW(...CONN);
@@ -412,14 +498,26 @@ async function main() {
     }
     if (want('greet')) {
       await until(() => ['laps', 'nest'].includes(window.__world.mascot.state().mode), 90_000);
-      await FOLLOW(1.45, 0.62, 0.25, 'out');
+      await until(() => !window.__world.mascot.state().moving, 30_000);
+      await SIDE(1.6, 0.25, 0.68);
       await run(600);
       await poke('greet');
       await until(() => window.__world.mascot.state().gesture === 'wave', 6000);
-      await run(330);
+      await run(450);
       await shot('greet');
       await run(500);
+      await shot('greet-2');
+      await until(() => !window.__world.mascot.state().gesture, 4000);
+      await run(200);
+      await SIDE(1.25, 0.2, 0.5, null, 0.38);
+      await run(60);
       await shot('portrait');
+      // A turnaround: front, side and back at the same distance, the moment held still (one frame each).
+      for (const [name, a] of [['front', 0], ['side', 'side'], ['back', Math.PI]]) {
+        await SIDE(1.5, 0, 0.6, a, 0.36);
+        await run(34);
+        await shot(`turn-${name}`);
+      }
       await run(2000);
     }
     if (want('window')) {
@@ -493,8 +591,27 @@ async function main() {
         }
         g.visible = true;
         const med = (xs) => [...xs].sort((a, b) => a - b)[xs.length >> 1];
+        // Him alone: only his group drawn (over a cleared target), against an empty group, 200 each.
+        const empty = new g.constructor();
+        const alone = { on: [], off: [] };
+        const ac = r.autoClear;
+        for (let i = 0; i < 20; i++) r.render(g, o.camera), gl.finish();
+        for (let i = 0; i < 1200; i++) {
+          const on = i % 2 === 0;
+          const t0 = now();
+          r.render(on ? g : empty, o.camera);
+          gl.finish();
+          alone[on ? 'on' : 'off'].push(now() - t0);
+        }
+        r.autoClear = ac;
+        r.info.autoReset = false;
+        r.info.reset();
+        r.render(g, o.camera);
+        const aloneCalls = r.info.render.calls;
+        r.info.autoReset = true;
         // His frame on the CPU: the tick's own average, read after a few hundred frames of laps.
-        return { callsOn, callsOff, added: callsOn - callsOff, renderOnMs: +med(t.on).toFixed(3), renderOffMs: +med(t.off).toFixed(3), cost: +(med(t.on) - med(t.off)).toFixed(3) };
+        const mean = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
+        return { aloneCalls, aloneMs: +(mean(alone.on) - mean(alone.off)).toFixed(3), aloneOnMs: +mean(alone.on).toFixed(3), aloneOffMs: +mean(alone.off).toFixed(3), callsOn, callsOff, added: callsOn - callsOff, renderOnMs: +med(t.on).toFixed(3), renderOffMs: +med(t.off).toFixed(3), cost: +(med(t.on) - med(t.off)).toFixed(3) };
       });
       // The real clock for his tick's own timer, a few hundred frames of laps, then frozen again.
       await page.evaluate(() => (performance.now = window.__clip.realNow));
@@ -531,7 +648,7 @@ async function main() {
         const m = window.__world.mascot.state();
         return m.mode === 'laps' && m.lap === 'run' && Math.abs(Math.hypot(m.x, m.z) - 4.1) < 0.2;
       }, 90_000);
-      await FOLLOW(2.2, 0.9, 0, 'chase');
+      await LANE();
       await run(1200);
       let merged = false;
       for (let f = 0; f < FPS * 10; f++) {
