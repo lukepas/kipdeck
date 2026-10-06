@@ -99,6 +99,9 @@ export interface AlertSettings {
 export const AMBER_MINUTES = [2, 5, 10, 15] as const;
 export const RED_MINUTES = [5, 10, 20, 30] as const;
 export const ALERT_DEFAULTS: Readonly<AlertSettings> = { on: true, amberMin: 5, redMin: 10 };
+/** Settings > Bridge > Hands (features/hands): Auto draws your first-person hands at High and Medium, On at every tier, Off never. */
+export const HANDS_MODES = ['auto', 'on', 'off'] as const;
+export type HandsMode = (typeof HANDS_MODES)[number];
 /** Settings > Bridge > Start of watch (features/launch): the launch and the debrief, the debrief only, or neither. */
 export const WATCH_MODES = ['full', 'debrief', 'off'] as const;
 
@@ -146,6 +149,8 @@ export interface Settings {
   momentum: boolean;
   /** Settings > Bridge > Turnaround clock: the pit wall in the Review bay (features/turnaround). */
   turnaround: boolean;
+  /** Settings > Bridge > Hands: your gloved hands in front of you in first person. */
+  hands: HandsMode;
 }
 
 const SETTINGS_KEY = 'agent-office.settings';
@@ -230,7 +235,7 @@ export function rememberSpot(s: Spot) {
 }
 
 export function loadSettings(): Settings {
-  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', quality: 'auto', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { ...LIFE_PART_DEFAULTS }, voice: 'on', celebrations: 'full', alerts: { ...ALERT_DEFAULTS }, watch: 'full', momentum: true, turnaround: true };
+  const s: Settings = { view: 'first', volume: 0.7, muted: true, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', quality: 'auto', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { ...LIFE_PART_DEFAULTS }, voice: 'on', celebrations: 'full', alerts: { ...ALERT_DEFAULTS }, watch: 'full', momentum: true, turnaround: true, hands: 'auto' };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null');
     if (saved?.view === 'first' || saved?.view === 'third') s.view = saved.view;
@@ -257,6 +262,7 @@ export function loadSettings(): Settings {
     if (WATCH_MODES.includes(saved?.watch)) s.watch = saved.watch;
     if (typeof saved?.momentum === 'boolean') s.momentum = saved.momentum;
     if (typeof saved?.turnaround === 'boolean') s.turnaround = saved.turnaround;
+    if (HANDS_MODES.includes(saved?.hands)) s.hands = saved.hands;
   } catch {
     // storage blocked
   }

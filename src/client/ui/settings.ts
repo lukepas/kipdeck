@@ -13,6 +13,7 @@ import { showcaseSettings } from './showcase-settings';
 import { brightnessSettings, bridgeSettings, lightSettings } from './bridge-settings';
 import { lifeSettings } from './life-settings';
 import { qualitySettings } from './quality-settings';
+import { handsSettings } from './hands-settings';
 import { momentSettings } from './moments-settings';
 import { ritualSettings } from './rituals-settings';
 import { icon, type IconName } from './icons';
@@ -408,6 +409,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       setting('Brightness', 'you', ...brightnessSettings(() => settings, change)),
       setting('Ship motion', 'you', ...bridgeSettings(() => settings, change)),
       setting('Quality', 'you', ...qualitySettings(() => settings, change)),
+      setting('Hands', 'you', ...handsSettings(() => settings, change)),
       setting('Life', 'you', ...lifeSettings(() => settings, change)),
       setting('Moments', 'you', ...momentSettings(() => settings, change)),
       setting('Rituals', 'you', ...ritualSettings(() => settings, change)),
