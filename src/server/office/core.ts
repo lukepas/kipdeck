@@ -10,6 +10,7 @@ import { Building } from '../building.js';
 import type { Floor } from '../floor.js';
 import { ChatLog } from '../history.js';
 import { Labs } from '../labs.js';
+import { ShipLog } from '../shiplog.js';
 import type { Core, Ctx } from './context.js';
 import type { Client } from './client.js';
 
@@ -39,5 +40,7 @@ export function createCore(ctx: Ctx, cfg: Config, publicDir: string): Core {
   const floors = new Map<string, Floor>();
   // The parts beyond the inbox: off until an admin or the command line turns them on.
   const labs = new Labs(cfg.dataDir, cfg.labs);
-  return { cfg, publicDir, accounts, auth, hosts, clients, chat, officeName, models, building, floors, labs };
+  // Every review the inbox ends, merged or sent back, signed and kept on disk.
+  const shipped = new ShipLog(cfg.dataDir);
+  return { cfg, publicDir, accounts, auth, hosts, clients, chat, officeName, models, building, floors, labs, shipped };
 }

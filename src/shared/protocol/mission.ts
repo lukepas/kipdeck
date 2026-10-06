@@ -1,6 +1,7 @@
 // Mission control: what each floor is for (its mission and milestones), and the building-wide
 // roster of workers that the attention ranking (shared/attention.ts) runs on.
 
+import type { AgentProvider } from './agents.js';
 import type { GhPull } from './github.js';
 import type { WorkerAction, WorkerKind, WorkerStatus, WorkerTask } from './workers.js';
 
@@ -62,6 +63,11 @@ export interface RosterEntry {
   name: string;
   color: string;
   kind: WorkerKind;
+  /** The agent CLI it runs and the model it was asked for, for its logo and its row (agents only). */
+  provider?: AgentProvider;
+  model?: string;
+  /** The branch it works on, when it has a worktree of its own. */
+  branch?: string;
   status: WorkerStatus;
   acked: boolean;
   createdAt: number;
