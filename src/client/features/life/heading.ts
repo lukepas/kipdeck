@@ -23,7 +23,9 @@ declare module '../../world/types' {
 }
 
 /** The plate: how wide and tall (m), how far out from the table's middle toward the conn, how high over its top, its tilt back. */
-export const PLATE = { w: 2.6, h: 0.34, out: MISSION_TABLE.r - 0.12, y: 0.22, tilt: 0.25 } as const;
+// Secondary to the Attention board: 1.7 by 0.22 m (it was 2.6 by 0.34, the biggest type in the room
+// from the chair), set in the ship's cyan rather than white.
+export const PLATE = { w: 1.7, h: 0.22, out: MISSION_TABLE.r - 0.12, y: 0.2, tilt: 0.25 } as const;
 /** The progress ring on the tabletop, out past the emitter. */
 const RING = { inner: MISSION_TABLE.r * 0.72 + 0.36, outer: MISSION_TABLE.r * 0.72 + 0.44 } as const;
 /** Canvas pixels a metre of plate. */
@@ -35,7 +37,7 @@ function light(opacity: number): THREE.MeshBasicMaterial {
   return new THREE.MeshBasicMaterial({ color: DECK.ship, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide });
 }
 
-/** The caption on its plate: instrument black, a ship-cyan rule over it, the words centred in white. */
+/** The caption on its plate: instrument black, a ship-cyan rule over it, the words centred in pale cyan. */
 function paintPlate(g: CanvasRenderingContext2D, W: number, H: number, caption: string) {
   g.clearRect(0, 0, W, H);
   g.fillStyle = 'rgba(8,13,19,0.94)';
@@ -46,13 +48,13 @@ function paintPlate(g: CanvasRenderingContext2D, W: number, H: number, caption: 
   g.fillRect(0, H - 3, W, 3);
   g.textAlign = 'center';
   g.textBaseline = 'middle';
-  g.fillStyle = DECK.text;
-  let size = Math.round(H * 0.5);
-  g.font = UI(700, size);
+  g.fillStyle = '#BFE6F2';
+  let size = Math.round(H * 0.46);
+  g.font = UI(600, size);
   g.letterSpacing = `${Math.round(H * 0.05)}px`;
   while (size > 12 && g.measureText(caption).width > W - 40) {
     size -= 2;
-    g.font = UI(700, size);
+    g.font = UI(600, size);
   }
   g.fillText(caption, W / 2, H * 0.54);
   g.letterSpacing = '0px';

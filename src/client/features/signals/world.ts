@@ -41,13 +41,13 @@ uniform float uTime;
 uniform float uGain;
 varying float vY;
 void main() {
-  // A steady thread of light, faint at the unit and stronger at the board, with a pulse running up it
-  // and dashes of data streaming up it to the card (still with less motion: uTime held).
+  // A faint thread of light (it read as a hard red line across the crew from the chair), dashes of data
+  // streaming up it to the card, and a pulse running up it (still with less motion: uTime held).
   float head = fract(uTime / 1.6);
   float d = vY - head;
   float pulse = exp(-d * d * 260.0);
   float dash = step(0.55, fract(vY * 16.0 - uTime * 2.2));
-  float a = (0.18 + 0.25 * vY + 0.32 * dash + 0.9 * pulse) * uGain;
+  float a = (0.05 + 0.1 * vY + 0.22 * dash + 0.9 * pulse) * uGain;
   gl_FragColor = vec4(uColor * a, 1.0);
   #include <colorspace_fragment>
 }`;

@@ -99,16 +99,23 @@ export function installSeating(ctx: Ctx, deps: SeatingDeps) {
     return (id && deps.usable()[0].find((it) => it.kind === 'seat' && it.seatId === id)) || null;
   }
 
+  /** When you sat in the seat you're in (ms), so the captain's chair's hint can step back after a moment. */
+  let sat = { id: '', at: 0 };
   ctx.interactions.define('seat', {
     reach: 3,
     hint: (it) => {
       const seat = OFFICE_PLAN.seatingById.get(it.seatId ?? '');
       if (!seat) return { k: '', parts: [] };
       if (ctx.player.seat?.seatId === seat.id) {
+        if (sat.id !== seat.id) sat = { id: seat.id, at: performance.now() };
         const tv = !!seat.tv && tvShowing();
         const use = tv ? 'Watch the TV' : '';
+        // In the captain's chair the hint says where you are for 3 s, then only the key to get up: it
+        // sat in the middle of the captain's frame the whole time.
+        if (seat.id === 'conn' && !use && performance.now() - sat.at > 3000) return { k: `${seat.id}|sitting|quiet`, parts: [key('E', 'Get up')] };
         return { k: `${seat.id}|sitting|${tv}`, parts: [hintTitle(seat.label), aside('sitting'), ...(use ? [key('E', use), key('W A S D', 'Get up')] : [key('E', 'Get up')])] };
       }
+      sat = { id: '', at: 0 };
       const full = !freePlace(seat);
       return { k: `${seat.id}|${full}`, parts: [hintTitle(seat.label), full ? aside('no room') : key('E', 'Sit down')] };
     },

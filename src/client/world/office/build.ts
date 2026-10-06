@@ -156,7 +156,8 @@ export function buildOffice(): Office {
 
   const update = (t: number, dt: number, people: Iterable<{ x: number; y: number; z: number }>) => {
     const near = new Set<Door>();
-    for (const p of people) for (const d of doors) if (Math.abs(p.y - d.y) < 1.6 && Math.hypot(p.x - d.x, p.z - d.z) < 2.4) near.add(d);
+    const who = [...people];
+    for (const p of who) for (const d of doors) if (Math.abs(p.y - d.y) < 1.6 && Math.hypot(p.x - d.x, p.z - d.z) < 2.4) near.add(d);
     for (const d of doors) {
       const want = near.has(d) ? 1 : 0;
       if (d.open === want) continue;
@@ -168,9 +169,23 @@ export function buildOffice(): Office {
       if (!d.vacancy.visible || !d.group.visible || d.def.station) continue;
       d.vacancy.position.y = d.vacancyY + Math.sin(t * 2 + d.def.x) * 0.06;
       d.vacancy.rotation.y = t * 1.2;
+      // The free seat's plus shows to someone walking up to it, small, and is gone from across the deck
+      // (from the chair a dozen of them read as stray gizmos over the crew).
+      let dist = Infinity;
+      for (const p of who) dist = Math.min(dist, Math.hypot(p.x - d.def.x, p.z - d.def.z));
+      const k = vacancyScale(dist);
+      d.vacancy.scale.setScalar(Math.max(k, 1e-3));
+      const plus = d.vacancy.children[0];
+      if (plus) plus.visible = k > 0.01;
     }
     for (const u of updates) u(t, dt);
   };
 
   return { ...(given as OfficeHandles), group, colliders, interactables, desks, setLook, setProjectName, update };
+}
+
+/** How big a free seat's plus shows at `dist` m from the nearest person: 0.6 within 3 m, gone past 6. */
+export function vacancyScale(dist: number): number {
+  const k = Math.min(1, Math.max(0, (6 - dist) / 3));
+  return 0.6 * k * k * (3 - 2 * k);
 }
