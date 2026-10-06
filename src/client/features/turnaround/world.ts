@@ -1,33 +1,45 @@
 // The pit wall's look: a clock face on the Review bay's roof, facing the deck, with the captain's reply
-// and review times in large mono and a thin bar for each review today; the hairline that runs once
-// along the deck's west aisle from the bay to the drive core when a wait clears fast; and the bay's
-// light a step up when three or more units wait for review. Neutral and ship-cyan only: no state's
+// and review times as a table in mono (today, the seven-day median, how many waits) and a thin bar for
+// each review today; the hairline that runs once along the deck's west aisle from the bay to the drive
+// core when a wait clears fast; and the bay's light a step up when three or more units wait for review. Neutral and ship-cyan only: no state's
 // hue, never red for a slow number. Three draws, all on the bridge layer but the wash.
 import * as THREE from 'three';
 import { MEETING_ROOM } from '../../../shared/layout';
 import { AFT_CORE, PIT_WALL } from '../../../shared/ritual-slots';
-import { clockLine, waitText, type Turnaround } from '../../../shared/turnaround';
+import { clockLine, waitText, type Clock, type Turnaround } from '../../../shared/turnaround';
 import { DECK, matte } from '../../world/office/materials';
 import { mergeByMaterial } from '../../world/toon';
 import { onBridgeLayer } from '../bridge/shapes';
-import { sharp } from '../../world/sharp';
+import { INK, ground, screen, titleBar } from '../boards/screen';
+import { label, table, type TableRow } from '../boards/table';
+import { paintFar, type FarSpec } from '../boards/far';
 
-const MONO = (size: number, weight = 500) => `${weight} ${size}px "JetBrains Mono", ui-monospace, monospace`;
+/** The face's canvas units a metre: read from the deck below the bay and from the conn. */
+const UNITS = 240;
+
+/** The pit wall from across the deck: the reply and review clocks today and the queue, neutral and ship-cyan only. Pure. */
+export function pitFar(t: Turnaround | null, queue: number): FarSpec {
+  return {
+    title: 'Pit wall  today',
+    hue: DECK.shipDim,
+    counts: [
+      { n: waitText(t?.reply.today), word: 'reply', hue: INK.text },
+      { n: waitText(t?.review.today), word: 'review', hue: INK.text },
+      { n: String(queue), word: 'to review', hue: DECK.ship },
+    ],
+  };
+}
 
 export class PitWall {
   readonly mesh = new THREE.Group();
-  private readonly canvas = document.createElement('canvas');
-  private readonly texture: THREE.CanvasTexture;
+  private readonly face = screen(PIT_WALL.width, PIT_WALL.height, UNITS);
   private readonly mat: THREE.MeshBasicMaterial;
   private key = '';
+  /** From across the deck: its headline numbers instead of its table (boards/far.ts). */
+  far = true;
 
   constructor() {
-    this.canvas.width = 1024;
-    this.canvas.height = Math.round((1024 * PIT_WALL.height) / PIT_WALL.width);
-    this.texture = new THREE.CanvasTexture(this.canvas);
-    this.texture.colorSpace = THREE.SRGBColorSpace;
-    sharp(this.texture);
-    this.mat = new THREE.MeshBasicMaterial({ map: this.texture, toneMapped: false });
+    this.mat = new THREE.MeshBasicMaterial({ map: this.face.texture, toneMapped: false });
     const face = new THREE.Mesh(new THREE.PlaneGeometry(PIT_WALL.width, PIT_WALL.height), this.mat);
     face.position.z = 0.051;
     // A dark housing round the face and a mast down to the bay's roof, one mesh.
@@ -47,50 +59,54 @@ export class PitWall {
     onBridgeLayer(this.mesh);
   }
 
-  /** The face: both clocks, today's reviews as bars, and how many wait for review now. */
+  /**
+   * The face: a table of the two clocks (today, the seven-day median and how many waits each counts),
+   * and today's reviews as bars against the median's hairline at the right; the queue in the title.
+   */
   paint(t: Turnaround | null, queue: number) {
-    const key = JSON.stringify([t?.reply, t?.review, queue]);
+    const key = JSON.stringify([t?.reply, t?.review, queue, this.far]);
     if (key === this.key) return;
     this.key = key;
-    const g = this.canvas.getContext('2d')!;
-    const W = this.canvas.width;
-    const H = this.canvas.height;
-    g.fillStyle = DECK.instrument;
-    g.fillRect(0, 0, W, H);
+    if (this.far) {
+      paintFar(this.face, UNITS, pitFar(t, queue));
+      return;
+    }
+    const { g, W, H } = this.face;
+    ground(g, W, H);
     g.fillStyle = DECK.shipDim;
     g.fillRect(0, 0, W, 4);
-    g.fillRect(0, H - 4, W, 4);
-    g.textBaseline = 'middle';
-    g.font = MONO(26);
-    g.fillStyle = DECK.ship;
-    g.fillText('PIT WALL - THE CAPTAIN\'S TURNAROUND', 32, 36);
-    g.textAlign = 'right';
-    g.fillStyle = DECK.muted;
-    g.fillText(queue ? `${queue} TO REVIEW` : 'REVIEW QUEUE CLEAR', W - 32, 36);
-    g.textAlign = 'left';
-    const row = (y: number, label: 'REPLY' | 'REVIEW', c: Turnaround['reply'] | undefined) => {
-      g.font = MONO(30);
-      g.fillStyle = DECK.muted;
-      g.fillText(label, 32, y);
-      g.font = MONO(70, 600);
-      g.fillStyle = DECK.text;
-      const v = waitText(c?.today);
-      g.fillText(v, 190, y + 2);
-      const w = g.measureText(v).width;
-      g.font = MONO(30);
-      g.fillStyle = DECK.muted;
-      g.fillText(`7-DAY ${waitText(c?.median7)}`, 190 + w + 28, y + 6);
-    };
-    row(108, 'REPLY', t?.reply);
-    row(196, 'REVIEW', t?.review);
+    titleBar(g, W, 'Pit wall', queue ? `${queue} to review` : 'review queue clear', DECK.shipDim);
+    const split = Math.round(W * 0.56);
+    const cell = (ms: number | undefined) => ({ text: waitText(ms), mono: true, color: ms === undefined ? INK.muted : INK.text });
+    const row = (name: string, c: Clock | undefined): TableRow => ({ cells: [name, cell(c?.today), cell(c?.median7), { text: String(c?.samples ?? 0), mono: true, color: INK.dim }] });
+    table(g, {
+      x: 24,
+      y: 104,
+      w: split - 40,
+      h: H - 112,
+      size: 40,
+      rowH: 84,
+      columns: [
+        { label: 'Clock', w: 1.55 },
+        { label: 'Today', w: 1.05, align: 'right', mono: true },
+        { label: '7-day', w: 1.05, align: 'right', mono: true },
+        { label: 'Waits', w: 0.95, align: 'right', mono: true },
+      ],
+      rows: [row('Reply', t?.reply), row('Review', t?.review)],
+    });
     // Today's reviews: a thin bar each, its height the wait, against the seven-day median's hairline.
+    g.fillStyle = INK.lineStrong;
+    g.fillRect(split, 104, 2, H - 120);
     const bars = t?.review.bars ?? [];
-    const x0 = 640;
-    const x1 = W - 32;
-    const top = 84;
-    const bottom = H - 40;
+    const x0 = split + 24;
+    const x1 = W - 28;
+    const top = 150;
+    const bottom = H - 30;
+    label(g, bars.length ? "Today's reviews" : 'No reviews yet today', x0, 124, 22, 'left', INK.muted);
+    g.fillStyle = INK.line;
+    g.fillRect(x0, bottom, x1 - x0, 2);
     const max = Math.max(1, ...bars, (t?.review.median7 ?? 0) * 1.6);
-    const step = bars.length ? Math.min(28, (x1 - x0) / bars.length) : 28;
+    const step = bars.length ? Math.min(26, (x1 - x0) / bars.length) : 26;
     bars.forEach((ms, i) => {
       const h = Math.max(3, ((bottom - top) * ms) / max);
       g.fillStyle = DECK.steelLight;
@@ -101,10 +117,7 @@ export class PitWall {
       g.fillStyle = DECK.ship;
       for (let x = x0; x < x1; x += 14) g.fillRect(x, y - 1, 8, 2);
     }
-    g.font = MONO(22);
-    g.fillStyle = DECK.muted;
-    g.fillText(bars.length ? "TODAY'S REVIEWS" : 'NO REVIEWS YET TODAY', x0, H - 20);
-    this.texture.needsUpdate = true;
+    this.face.texture.needsUpdate = true;
     this.mesh.userData.lines = [clockLine('REPLY', t?.reply ?? { samples: 0 }), clockLine('REVIEW', t?.review ?? { samples: 0 })];
   }
 

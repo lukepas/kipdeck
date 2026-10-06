@@ -121,6 +121,14 @@ export class MachineTexture {
       g.fillRect(x, mid - 10, bw, 20);
       g.fillStyle = loadColor(pct);
       g.fillRect(x, mid - 10, (bw * Math.max(0, Math.min(100, pct))) / 100, 20);
+      // Its track, with a tick at each quarter and the 90% line, so the bar reads as a gauge.
+      g.strokeStyle = INK.lineStrong;
+      g.lineWidth = 2;
+      g.strokeRect(x + 1, mid - 11, bw - 2, 22);
+      g.fillStyle = INK.lineStrong;
+      for (const q of [0.25, 0.5, 0.75]) g.fillRect(x + bw * q - 1, mid + 11, 2, 6);
+      g.fillStyle = INK.dim;
+      g.fillRect(x + bw * 0.9 - 1, mid - 15, 2, 30);
       x += bw + 14;
       g.fillStyle = INK.text;
       g.font = MONO_FONT(40, 600);

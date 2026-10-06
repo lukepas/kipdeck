@@ -7,6 +7,7 @@ import { drawGlyph, type GlyphKind } from '../../world/glyphs';
 import { INK, LAYOUT, MONO, UI, UNITS_PER_M, clip as clipText, emptyBody, glowEdge, ground, more, offlineBody, row, rowTop, rowsFor, screen, titleBar, type Row, type Screen } from './screen';
 import type { GhIssue, GhPull, GhState, QueueState, QueueTask, ServiceInfo, WorkerInfo } from '../../../shared/protocol';
 import { workerForPull } from '../../state';
+import type { BoardBounty } from '../bounties/logic';
 
 /** An issue's card on the wall: a light slate card, its pin from the data palette (shared/datacolors.ts). */
 export const NOTE_COLORS = ['#C9D2DC', '#BCC6D1', '#D3DAE1', '#C2CCD6', '#CDD5DD'];
@@ -157,7 +158,9 @@ export class BoardTexture {
   urgency: BoardUrgency = null;
   /** The row being reached for, outlined in Signal (see lift). */
   private lifted: number | null = null;
-  private last: [GhState<GhIssue> | GhState<GhPull>, Map<string, WorkerInfo> | undefined] | null = null;
+  private last: [GhState<GhIssue> | GhState<GhPull>, Map<string, WorkerInfo> | undefined, ReadonlyMap<number, BoardBounty> | undefined] | null = null;
+  /** Where each funded issue's coin hovers over its row (canvas units): features/bounties puts the coins there. */
+  sockets: { number: number; x: number; y: number }[] = [];
 
   constructor(private kind: 'issues' | 'pulls') {
     this.texture = this.s.texture;
@@ -182,15 +185,16 @@ export class BoardTexture {
     if (this.last) this.render(...this.last);
   }
 
-  /** `workers` lets a PR's row name the unit and console it came from. */
   /** Draws it `m` metres tall from now on (./fold.ts), again if that's a change. */
   setHeight(m: number) {
     if (this.panel.setHeight(m) && this.last) this.render(...this.last);
   }
 
-  render(state: GhState<GhIssue> | GhState<GhPull>, workers?: Map<string, WorkerInfo>) {
-    this.last = [state, workers];
+  /** `workers` lets a PR's row name the unit and console it came from; `bounties` puts each funded issue's amount on its row. */
+  render(state: GhState<GhIssue> | GhState<GhPull>, workers?: Map<string, WorkerInfo>, bounties?: ReadonlyMap<number, BoardBounty>) {
+    this.last = [state, workers, bounties];
     this.notes = [];
+    this.sockets = [];
     const { g, W } = this.s;
     const H = this.panel.h;
     const pulls = this.kind === 'pulls';
@@ -200,7 +204,8 @@ export class BoardTexture {
     const prs = pulls ? (open as GhPull[]) : [];
     this.urgency = prs.some((p) => !p.isDraft && p.checks === 'fail') ? 'stuck' : prs.some((p) => !p.isDraft && p.reviewDecision !== 'APPROVED') ? 'review' : null;
     const rule = urgentEdge(g, W, H, this.urgency);
-    titleBar(g, W, pulls ? 'Pull requests' : 'Issues', open.length ? `${open.length} open` : undefined, rule);
+    const funded = pulls ? 0 : open.filter((i) => bounties?.has(i.number)).length;
+    titleBar(g, W, pulls ? 'Pull requests' : 'Issues', open.length ? `${open.length} open${funded ? `  ${funded} funded in test USDC` : ''}` : undefined, rule);
     if (!open.length) {
       if (state.error) offlineBody(g, W, H, offlineLine(state.error));
       else emptyBody(g, W, H, state.loading && !state.fetchedAt ? 'Loading' : pulls ? 'No open pull requests' : 'No open issues', pulls ? "A unit's PR lands here when it opens one" : 'New issues land here first');
@@ -212,7 +217,7 @@ export class BoardTexture {
       const lifted = it.number === this.lifted;
       const y = rowTop(i);
       this.notes.push({ number: it.number, x: W / 2, y: y + LAYOUT.rowH / 2, w: W - LAYOUT.pad * 2, h: LAYOUT.rowH });
-      if (!pulls) return row(g, W, i, { hue: INK.lineStrong, tag: `#${it.number}`, text: it.title, lifted }, 64);
+      if (!pulls) return issueRow(g, W, i, it as GhIssue, bounties?.get(it.number), lifted, this.sockets);
       const pr = it as GhPull;
       const w = workers ? workerForPull(workers.values(), pr) : undefined;
       const checks = pr.isDraft ? null : CHECKS[pr.checks];
@@ -227,6 +232,38 @@ export class BoardTexture {
   }
 }
 
+/** Room at a funded row's right end for its coin (canvas units), and the hue its amount takes by state. */
+const COIN_GAP = 96;
+const BOUNTY_HUE = { funded: PANEL.proof, claimed: PANEL.proof, paying: PANEL.proof, approve: PANEL.review, blocked: PANEL.stuck } as const;
+
+/**
+ * An issue's row: its number and title, and when it has a bounty in escrow, the amount in mono at its
+ * right in proof's violet (a state's hue when it waits on approval or is blocked) and a faint hex socket
+ * past it, under the coin features/bounties hovers there (`sockets` says where).
+ */
+function issueRow(g: CanvasRenderingContext2D, W: number, i: number, it: GhIssue, b: BoardBounty | undefined, lifted: boolean, sockets: { number: number; x: number; y: number }[]) {
+  if (!b) return row(g, W, i, { hue: INK.lineStrong, tag: `#${it.number}`, text: it.title, lifted }, 64);
+  row(g, W, i, { hue: PANEL.proof, tag: `#${it.number}`, text: it.title, side: b.amount, sideColor: BOUNTY_HUE[b.shape], sideMono: true, sideGap: COIN_GAP, lifted }, 64);
+  const x = W - LAYOUT.pad - 24 - COIN_GAP / 2 + 12;
+  const y = rowTop(i) + LAYOUT.rowH / 2;
+  sockets.push({ number: it.number, x, y });
+  g.save();
+  g.strokeStyle = PANEL.proof;
+  g.globalAlpha = 0.45;
+  g.lineWidth = 3;
+  g.beginPath();
+  for (let k = 0; k < 6; k++) {
+    const a = (k * Math.PI) / 3 + Math.PI / 6;
+    const px = x + Math.cos(a) * 34;
+    const py = y + Math.sin(a) * 34;
+    if (k) g.lineTo(px, py);
+    else g.moveTo(px, py);
+  }
+  g.closePath();
+  g.stroke();
+  g.restore();
+}
+
 /** The Services board: the web servers units are running, a row each with its port in mono. */
 export class ServicesBoardTexture {
   readonly texture: THREE.CanvasTexture;
@@ -235,22 +272,44 @@ export class ServicesBoardTexture {
   private drawn = '';
   /** Nothing running: folded to a pill (./fold.ts). */
   folded = false;
+  /** The ports of the rows drawn now, top to bottom (serviceAt). */
+  private shown: number[] = [];
+  /** The row outlined: the one you're pointing at, which E puts on the service monitor. */
+  private lifted: number | null = null;
+  private last: [ServiceInfo[], Map<string, WorkerInfo>] | null = null;
 
   constructor() {
     this.texture = this.s.texture;
   }
 
+  /** The port of the service whose row is at `uv` on the face, if any. */
+  serviceAt(uv: THREE.Vector2): number | undefined {
+    if (this.folded) return undefined;
+    const py = (1 - uv.y) * this.panel.h;
+    const i = this.shown.findIndex((_, i) => py >= rowTop(i) && py <= rowTop(i) + LAYOUT.rowH);
+    return i < 0 ? undefined : this.shown[i];
+  }
+
+  /** Outlines the row of the service on `port` (null for none). */
+  lift(port: number | null) {
+    if (port === this.lifted) return;
+    this.lifted = port;
+    if (this.last) this.render(...this.last);
+  }
+
   render(items: ServiceInfo[], workers: Map<string, WorkerInfo>) {
+    this.last = [items, workers];
     const rows = items.map((s) => {
       const w = workers.get(s.workerId);
       return { port: s.port, title: s.title || s.command, who: [w?.name ?? 'A unit', w?.worktree?.branch].filter(Boolean).join('  ') };
     });
     // Worker updates stream in constantly; only redraw when what's shown changes.
-    const key = JSON.stringify(rows);
+    const key = JSON.stringify([rows, this.lifted, this.panel.h]);
     if (key === this.drawn) return;
     this.drawn = key;
     const { g, W } = this.s;
     this.folded = !rows.length;
+    if (this.folded) this.shown = [];
     this.panel.setHeight(this.folded ? PILL : SITUATION.height);
     const H = this.panel.h;
     g.clearRect(0, 0, W, this.s.H);
@@ -268,7 +327,8 @@ export class ServicesBoardTexture {
       g.fill();
     };
     const shown = rows.slice(0, rowsFor(H));
-    shown.forEach((r, i) => row(g, W, i, { hue: PANEL.settled, mark: up, text: r.title, side: `:${r.port}`, sideColor: INK.text, sideMono: true, sub: r.who }));
+    this.shown = shown.map((r) => r.port);
+    shown.forEach((r, i) => row(g, W, i, { hue: PANEL.settled, mark: up, text: r.title, side: `:${r.port}`, sideColor: INK.text, sideMono: true, sub: r.who, lifted: r.port === this.lifted }));
     more(g, W, H, rows.length - shown.length);
     this.texture.needsUpdate = true;
   }

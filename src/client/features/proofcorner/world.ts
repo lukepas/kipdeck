@@ -3,6 +3,16 @@ import { FLOOR, PROOF_CORNER } from '../../../shared/layout';
 import { mesh, textPlane } from '../../world/toon';
 import type { Fixture } from '../../world/office/fixture';
 import { DECK, box, contactShadow, flat, matte, practical } from '../../world/office/materials';
+import { wallBoard } from '../../world/office/props';
+import { screen } from '../boards/screen';
+import { LEDGER_UNITS, ledgerFar, paintLedger, type LedgerView } from './ledger';
+import { paintFar } from '../boards/far';
+
+/**
+ * The ledger's screen on the west wall: over the low port behind the vault and the plinth, under the
+ * slim strip above it, its middle on the port's (z -3), facing into the deck.
+ */
+export const LEDGER = { z: -3.0, y: 3.13, width: 4.4, height: 0.96 } as const;
 
 // The Proof corner on the west wall, south of the capacity panel: everything on the deck that is
 // about proof on chain, and the only violet in the room. The attestation rail on the wall lights one
@@ -20,6 +30,10 @@ export interface ProofCorner {
   setReputation(units: number): void;
   /** The plinth glows violet from above, 0 to 1: a step has just been added (index.ts). */
   setStepGlow(k: number): void;
+  /** Paints the ledger's two tables: the escrow and the ERC-8004 records (ledger.ts); from far off, its headline counts (boards/far.ts). */
+  setLedger(v: LedgerView, far: boolean): void;
+  /** The ledger's screen, for how far it is from you. */
+  readonly ledger: THREE.Object3D;
 }
 
 declare module '../../world/types' {
@@ -55,11 +69,13 @@ export const proofCorner: Fixture<'proof'> = (site) => {
   }
   const head = textPlane('PROOF', { face: 'display', size: 56, color: DECK.proof, track: 0.12 });
   head.scale.multiplyScalar(0.7);
-  head.position.set(wallX + 0.05, rail.y1 + 0.3, rail.z);
+  head.position.set(wallX + 0.05, rail.y1 + 0.38, rail.z);
   head.rotation.y = Math.PI / 2;
   group.add(head);
+  // The tally under the head, at the top of the rail, where nothing on the deck hides it.
+  const countAt = rail.y1 + 0.08;
   let count = caption('0 merged', DECK.proof);
-  count.position.set(wallX + 0.05, rail.y0 - 0.22, rail.z);
+  count.position.set(wallX + 0.05, countAt, rail.z);
   count.rotation.y = Math.PI / 2;
   group.add(count);
 
@@ -112,6 +128,14 @@ export const proofCorner: Fixture<'proof'> = (site) => {
   plinth.add(plinthGlow);
   group.add(plinth);
   site.colliders.push({ minX: FLOOR.minX, maxX: p.x + p.width / 2, minZ: p.z - p.depth / 2, maxZ: p.z + p.depth / 2, top: p.steps * p.rise });
+  // The ledger over the port: the escrow's and the records' tables (ledger.ts), lit glass like the arc's.
+  const ledgerScreen = screen(LEDGER.width, LEDGER.height, LEDGER_UNITS);
+  const { group: ledgerFrame, face: ledgerFace } = wallBoard(LEDGER.width, LEDGER.height);
+  (ledgerFace.material as THREE.MeshBasicMaterial).map = ledgerScreen.texture;
+  ledgerFrame.position.set(wallX + 0.03, LEDGER.y, LEDGER.z);
+  ledgerFrame.rotation.y = Math.PI / 2;
+  ledgerFrame.name = 'proof-ledger';
+  group.add(ledgerFrame);
   site.group.add(group);
 
   let tally = -1;
@@ -123,7 +147,7 @@ export const proofCorner: Fixture<'proof'> = (site) => {
       group.remove(count);
       count.material.map?.dispose();
       count = caption(`${merged} merged`, DECK.proof);
-      count.position.set(wallX + 0.05, rail.y0 - 0.22, rail.z);
+      count.position.set(wallX + 0.05, countAt, rail.z);
       count.rotation.y = Math.PI / 2;
       group.add(count);
     },
@@ -142,6 +166,11 @@ export const proofCorner: Fixture<'proof'> = (site) => {
     setStepGlow(k) {
       plinthGlow.intensity = Math.max(0, Math.min(1, k)) * 3;
     },
+    setLedger(v, far) {
+      if (far) paintFar(ledgerScreen, LEDGER_UNITS, ledgerFar(v));
+      else paintLedger(ledgerScreen, v);
+    },
+    ledger: ledgerFace,
   };
   return { handle: { proof } };
 };

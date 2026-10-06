@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { sharp } from '../../world/sharp';
+import { chip as drawChip, chipWidth, type Chip } from './table';
 
 // What every screen on the situation wall (and the capacity panel) is drawn with, so they read alike
 // and from across the deck: a canvas the panel's own shape, painted at 200 units a metre and backed at
@@ -156,6 +157,10 @@ export interface Row {
   side?: string;
   sideColor?: string;
   sideMono?: boolean;
+  /** Room kept clear at the row's right end, past the side text (canvas units): where a bounty's coin hovers. */
+  sideGap?: number;
+  /** Its state as a chip (its glyph and a word, in its hue), on the first line just left of the side text. */
+  chip?: Chip;
   /** A second line, smaller, for up close. */
   sub?: string;
   /** Finished or a draft: the card and its words step back. */
@@ -206,7 +211,7 @@ export function row(g: CanvasRenderingContext2D, W: number, i: number, r: Row, t
   r.mark?.(g, x0 + glyphX - pad / 2, r.sub ? y + 40 : y + rowH / 2, 19);
   g.textBaseline = 'alphabetic';
   // The side text first, so the main line knows how much room it has.
-  let right = x0 + w - 24;
+  let right = x0 + w - 24 - (r.sideGap ?? 0);
   if (r.side) {
     g.textAlign = 'right';
     g.font = r.sideMono ? MONO(36, 600) : UI(500, 38);
@@ -215,6 +220,12 @@ export function row(g: CanvasRenderingContext2D, W: number, i: number, r: Row, t
     g.fillText(side, right, line1 - 2);
     right -= g.measureText(side).width + 28;
     g.textAlign = 'left';
+  }
+  if (r.chip) {
+    const size = Math.round(36 * Math.max(0.8, k));
+    const cw = chipWidth(g, r.chip, size, w * 0.3);
+    drawChip(g, r.chip, right - cw, line1 - Math.round(size * 0.36), size, w * 0.3);
+    right -= cw + 24;
   }
   let x = x0 + textX - pad;
   if (r.tag) {

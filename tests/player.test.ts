@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { PlayerController } from '../src/client/player/index.js';
 import type { Collider } from '../src/client/world/types.js';
-import { FLOOR, SEATING_BY_ID, SLAB, TV, seatAt, seatPlace } from '../src/shared/layout.js';
+import { FLOOR, SLAB, TV, seatAt, seatPlace, type SeatDef } from '../src/shared/layout.js';
 
 /** The office floor, over the floor below. */
 const officeFloor: Collider = { ...FLOOR, bottom: -SLAB, top: 0 };
@@ -136,15 +136,18 @@ function overlaps(c: Collider, x: number, z: number) {
   return Math.hypot(x - THREE.MathUtils.clamp(x, c.minX, c.maxX), z - THREE.MathUtils.clamp(z, c.minZ, c.maxZ)) < 0.32;
 }
 
-test('sits on the lounge couch until you walk off, then gets up clear of it', (t) => {
-  // The bench lies along x, facing the Attention board to its north (-z); a low table stands off its front.
-  const seat = SEATING_BY_ID.get('couch')!;
-  const couch: Collider = { minX: seat.x - 2.2, maxX: seat.x + 2.2, minZ: seat.z - 0.5, maxZ: seat.z + 0.5, top: 0.47 };
+/** A bench of three places on the open floor, facing north (-z): the way a seat with several places works. */
+const BENCH: SeatDef = { id: 'test-bench', label: 'Bench', x: 0, y: 0, z: 4, rotY: Math.PI, places: [-1, 0, 1], hips: 0.5, depth: -0.05, out: 0.9 };
+
+test('sits on a bench until you walk off, then gets up clear of it', (t) => {
+  // The bench lies along x, facing north (-z); a low table stands off its front.
+  const seat = BENCH;
+  const bench: Collider = { minX: seat.x - 2.2, maxX: seat.x + 2.2, minZ: seat.z - 0.5, maxZ: seat.z + 0.5, top: 0.47 };
   const table: Collider = { minX: seat.x - 0.8, maxX: seat.x + 0.8, minZ: seat.z - 2.8, maxZ: seat.z - 2.2, top: 0.46 };
-  const { player, keys, frames } = controller(t, [officeFloor, couch, table]);
+  const { player, keys, frames } = controller(t, [officeFloor, bench, table]);
   let gotUp = 0;
   player.onStand = () => gotUp++;
-  const place = seatPlace(SEATING_BY_ID.get('couch')!, 2);
+  const place = seatPlace(BENCH, 2);
   player.sit(place);
   keys();
   frames(30);
@@ -155,14 +158,14 @@ test('sits on the lounge couch until you walk off, then gets up clear of it', (t
   frames(1);
   assert.equal(player.seat, null);
   assert.equal(gotUp, 1);
-  assert.ok(!overlaps(couch, player.pos.x, player.pos.z), `still on the couch at ${player.pos.toArray()}`);
+  assert.ok(!overlaps(bench, player.pos.x, player.pos.z), `still on the bench at ${player.pos.toArray()}`);
   frames(10);
-  assert.ok(Math.hypot(player.pos.x - TV.x, player.pos.z - TV.z) < Math.hypot(place.x - TV.x, place.z - TV.z) - 0.8, `walked toward the TV: ${player.pos.toArray()}`);
+  assert.ok(player.pos.z < place.z - 0.8, `walked on the way it faces: ${player.pos.toArray()}`);
   assert.equal(player.pos.y, 0);
 });
 
-test('gets up off a beanbag to the side when something stands in front of it', (t) => {
-  const bag = SEATING_BY_ID.get('lounge-beanbag-1')!;
+test('gets up off a stool to the side when something stands in front of it', (t) => {
+  const bag: SeatDef = { id: 'test-stool', label: 'Stool', x: -2.45, y: 0, z: 4.2, rotY: Math.atan2(TV.x + 2.45, TV.z - 4.2), places: [0], hips: 0.42, depth: -0.1, out: 1.2 };
   const bean: Collider = { minX: bag.x - 0.5, maxX: bag.x + 0.5, minZ: bag.z - 0.5, maxZ: bag.z + 0.5, top: 0.42 };
   const place = seatPlace(bag, 0);
   const ax = place.x + Math.sin(bag.rotY) * bag.out;
@@ -175,7 +178,7 @@ test('gets up off a beanbag to the side when something stands in front of it', (
 });
 
 test('seat places are only the ones the office has', () => {
-  assert.equal(seatAt('couch:2')?.seatId, 'couch');
-  assert.equal(seatAt('lounge-beanbag-1:0')?.seatId, 'lounge-beanbag-1');
-  for (const bad of ['couch:3', 'couch:', 'couch', 'sofa:0', 'couch:-1', 'couch:1.5', '']) assert.equal(seatAt(bad), undefined, bad);
+  assert.equal(seatAt('conn:0')?.seatId, 'conn');
+  assert.equal(seatAt('view-3:0')?.seatId, 'view-3');
+  for (const bad of ['couch:1', 'lounge-beanbag-1:0', 'conn:1', 'conn:', 'conn', 'sofa:0', 'conn:-1', 'conn:0.5', '']) assert.equal(seatAt(bad), undefined, bad);
 });

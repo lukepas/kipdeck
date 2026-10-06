@@ -4,6 +4,7 @@
  * and the meeting room's two. What E does at each is defined with it.
  */
 import type * as THREE from 'three';
+import type { ServiceInfo } from '../../../shared/protocol';
 import type { GhIssue } from '../../../shared/protocol';
 import type { Ctx } from '../../core/context';
 import { aside, boardHint, hintTitle, key, onE } from '../../core/hint';
@@ -17,8 +18,10 @@ import { openServices } from '../../ui/services';
 import { BoardTexture, QueueBoardTexture, ServicesBoardTexture } from './world';
 import { MachineTexture } from './machine';
 import { MeetingBoardTexture, MeetingSignTexture } from './meeting';
+import { FarWatch } from './far';
 import { foldWings } from './fold';
 import type { World } from '../../world/world';
+import { boardBounties } from '../bounties/logic';
 
 // The kinds of thing you can use that this defines (see InteractKinds in world/types.ts).
 declare module '../../world/types' {
@@ -39,6 +42,10 @@ export interface BoardsDeps {
   boardActions(): BoardActions;
   /** The task queue's window. */
   showQueue(): void;
+  /** Where the crosshair's aim lands on what you can use (see aimHit in input/pointer.ts). */
+  aimHit(): THREE.Intersection | null;
+  /** Puts the service on `port` on the service monitor (features/monitor). */
+  watchService(port: number): void;
 }
 
 export function installBoards(ctx: Ctx, deps: BoardsDeps) {
@@ -68,10 +75,12 @@ export function installBoards(ctx: Ctx, deps: BoardsDeps) {
   // The cork holds the issues nobody has started on: one that's in progress comes off it, as a closed one does.
   const renderIssuesBoard = () => {
     const off = offBoard();
-    issuesTex.render({ ...store.issues, items: store.issues.items.filter((i) => !off.has(i.number) && !inProgress(i, store.taskForIssue(i.number))) });
+    const items = store.issues.items.filter((i) => !off.has(i.number) && !inProgress(i, store.taskForIssue(i.number)));
+    issuesTex.render({ ...store.issues, items }, undefined, boardBounties(store.floor ? store.bounties?.[store.floor] : undefined));
   };
   // The queue too: a task that starts running takes its issue off the board before GitHub says it's assigned.
-  mountBoard(office.boardMeshes.issues, issuesTex.texture, renderIssuesBoard, ['issues', 'queue']);
+  // A funded issue's row carries its amount, and its coin hovers there (features/bounties).
+  mountBoard(office.boardMeshes.issues, issuesTex.texture, renderIssuesBoard, ['issues', 'queue', 'bounties']);
   let carriedOff = '';
   store.on('peers', () => {
     const k = [...offBoard()].join(',');
@@ -125,10 +134,27 @@ export function installBoards(ctx: Ctx, deps: BoardsDeps) {
     hint: () => boardHint('Pull request board'),
     use: onE(() => openBoard('pulls', ctx.net, deps.boardActions())),
   });
+  /** The service whose row on the Services board the crosshair is on, if any. */
+  function aimedService(): ServiceInfo | null {
+    const hit = deps.aimHit();
+    if (!hit?.uv || hit.object !== ctx.world().boardMeshes.services) return null;
+    const port = servicesTex.serviceAt(hit.uv);
+    return store.services.items.find((s) => s.port === port) ?? null;
+  }
+  // The row you point at is outlined: E puts it on the service monitor. O (or E off the rows) opens the window.
+  ctx.ticks.add('hud', () => servicesTex.lift(aimedService()?.port ?? null));
   ctx.interactions.define('services', {
     reach: 9,
-    hint: () => boardHint('Services board'),
-    use: onE(() => openServices()),
+    hint: () => {
+      const s = aimedService();
+      if (!s) return { k: '', parts: [hintTitle('Services board'), key('E', 'Open'), aside('or point at a row to watch it')] };
+      return { k: String(s.port), parts: [hintTitle(clip(`${s.title || s.command} :${s.port}`, 60)), key('E', 'Watch on the monitor'), key('O', 'Open the board')] };
+    },
+    use: (_it, k) => {
+      const s = k === 'E' ? aimedService() : null;
+      if (s) deps.watchService(s.port);
+      else if (k === 'E' || k === 'O') openServices();
+    },
   });
   ctx.interactions.define('queue', {
     reach: 9,
@@ -142,10 +168,34 @@ export function installBoards(ctx: Ctx, deps: BoardsDeps) {
   const machineTex = new MachineTexture();
   mountBoard(office.machineScreen, machineTex.texture, () => machineTex.render(store.machine), ['machine']);
   // The meeting room: its output as it's written on the back wall, and how it's going on the door.
+  // While it's free, both list what waits for review on this deck (its times move by the minute).
+  const bay = () => ({ state: store.meeting, inbox: store.inbox(), floor: store.floor });
   const meetingBoardTex = new MeetingBoardTexture();
-  mountBoard(office.meetingBoard, meetingBoardTex.texture, () => meetingBoardTex.render(store.meeting), ['meeting']);
+  const renderBayBoard = () => meetingBoardTex.render(bay());
+  mountBoard(office.meetingBoard, meetingBoardTex.texture, renderBayBoard, ['meeting', 'roster', 'bounties', 'floor']);
   const meetingSignTex = new MeetingSignTexture();
-  mountBoard(office.meetingSign, meetingSignTex.texture, () => meetingSignTex.render(store.meeting), ['meeting']);
+  const renderBaySign = () => meetingSignTex.render(bay());
+  mountBoard(office.meetingSign, meetingSignTex.texture, renderBaySign, ['meeting', 'roster', 'bounties', 'floor']);
+  // From across the deck the bay's board and its sign show their headline counts, walking up to them their tables (far.ts).
+  const bayFar = office.meetingBoard ? new FarWatch(office.meetingBoard) : null;
+  const signFar = office.meetingSign ? new FarWatch(office.meetingSign) : null;
+  ctx.ticks.add('world', ({ dt }) => {
+    const f = bayFar?.check(ctx.camera, dt) ?? null;
+    if (f !== null) {
+      meetingBoardTex.far = f;
+      renderBayBoard();
+    }
+    const s = signFar?.check(ctx.camera, dt) ?? null;
+    if (s !== null) {
+      meetingSignTex.far = s;
+      renderBaySign();
+    }
+  });
+  window.setInterval(() => {
+    if (document.hidden) return;
+    renderBayBoard();
+    renderBaySign();
+  }, 60_000);
   /** Puts every board's texture up on `w`'s boards. */
   function dressBoards(w: World) {
     showOn(w.boardMeshes.issues, issuesTex.texture);

@@ -224,6 +224,8 @@ test("the office's pages carry a strict Content-Security-Policy", async () => {
     assert.match(csp, /frame-ancestors 'none'/);
     assert.match(csp, /base-uri 'none'/);
     assert.match(csp, new RegExp(`connect-src 'self' ws://localhost:${port} wss://localhost:${port}`));
+    // Frames: https, and on a page reached on this computer the relay's localhost links (the service monitor), never other http.
+    assert.match(csp, /frame-src https: http:\/\/localhost:\*(;|$)/, `${p}: frames`);
   }
 });
 

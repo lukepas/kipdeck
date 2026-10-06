@@ -1,0 +1,20 @@
+/* The service monitor's live page (live.ts): a layer just over the canvas, under the HUD and every window. */
+.monitor-layer { position: absolute !important; inset: 0; overflow: hidden; pointer-events: none; }
+.monitor-layer * { pointer-events: none; }
+.monitor-layer.using .monitor-page, .monitor-layer.using .monitor-page * { pointer-events: auto; }
+.monitor-page { display: flex; flex-direction: column; background: #0d131a; border: 0; box-sizing: border-box; overflow: hidden; }
+.monitor-bar { display: flex; align-items: center; gap: 8px; height: 48px; flex: none; padding: 0 8px 0 14px; background: var(--surface-1); border-bottom: 1px solid var(--line-strong); color: var(--text); font: 600 17px var(--font-ui); }
+.monitor-live { font: 700 13px var(--font-mono); letter-spacing: .12em; color: var(--ship, #6fc3df); border: 1px solid currentColor; border-radius: 3px; padding: 2px 6px; }
+.monitor-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.monitor-btn { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 10px; }
+.monitor-btn[hidden] { display: none; }
+.monitor-holder { flex: 1; position: relative; background: #fff; }
+.monitor-frame, .monitor-modal-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; }
+.monitor-layer:not(.using) .monitor-bar { opacity: .92; }
+
+/* Full screen: the same page in a window, its own ✕ top right. */
+.modal.monitor-modal { width: min(1280px, calc(100vw - 32px)); height: calc(100vh - 32px); max-height: calc(100vh - 32px); }
+.monitor-modal .monitor-modal-body { position: relative; flex: 1; background: #fff; }
+.monitor-modal header .btn { flex: none; }
+.monitor-modal .monitor-note { margin: 0; padding: 6px 16px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
+.modal.monitor-modal:focus { outline: none; }

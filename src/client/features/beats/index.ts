@@ -113,7 +113,7 @@ export function installBeats(ctx: Ctx, parts: Pick<Parts, 'views' | 'proofCorner
     const floor = m.floor === store.floor ? '' : ` on ${store.floors.find((f) => f.id === m.floor)?.name ?? 'another deck'}`;
     const say = () => toast(`PR #${m.pr} merged: ${tokenAmount(m.amount, decimals)} ${m.symbol} released to ${who}${floor}`, 'proof', { hash: hashOf(m.url), settled: net === 'mock' ? 'the mock chain' : 'devnet', href: m.url });
     if (m.floor !== store.floor || still()) {
-      parts.proofCorner.arrive();
+      parts.proofCorner.arrive(m);
       return say();
     }
     // The new segment is the one past those lit now, which the pulse lights as it parks.
@@ -123,7 +123,7 @@ export function installBeats(ctx: Ctx, parts: Pick<Parts, 'views' | 'proofCorner
       phases: toRailPhases(segment),
       color: DECK.proof,
       done: () => {
-        parts.proofCorner.arrive();
+        parts.proofCorner.arrive(m);
         say();
       },
     });

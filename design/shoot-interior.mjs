@@ -20,9 +20,15 @@
 // SHOOT_LEAN=1 adds the focus lean from the chair onto the Attention board as <light>-<quality>-lean.png.
 // SHOOT_MEASURE=1 measures each Attention card's name on the shot: cap height (px) and contrast against its card.
 // SHOOT_MISSION=1 sets a course with four waypoints (the second under way) and units toward them.
+// SHOOT_HANDS=1 shoots the first-person hands after the main shot (design/shoot-hands.mjs).
+// SHOOT_LOUNGE=1 shoots the forward lounge after the main shot (design/shoot-lounge.mjs).
+// SHOOT_SOUND=1 shoots Settings > Sound & voice and records two clips with their sound (design/shoot-sound.mjs).
 // SHOOT_MOTION=hail,stuck,done,jump,conn,ambient,complete,iris,reduced shoots the motion layer's beats
 // after the main shot (design/shoot-motion.mjs): held frame sequences and clips, <name>-<beat>-<ms>.png.
+// SHOOT_DOCS=1 writes a few Markdown files into the project first (the docs rack's index).
+// SHOOT_TOUR='[[eye,aim],...]' eases the camera through those keys over SHOOT_TOUR_MS and saves <name>-tour.mp4.
 // SHOOT_EVAL='...' runs a probe's code in the page just before the shot and prints what it returns.
+// SHOOT_PAYOUT='[eye,aim]' records a bounty paid out from that eye (needs bounties seeded with #43 by SHOOT_EVAL).
 // SHOOT_MASK=1 checks what stands in front of the situation arc: it paints every board's face (and the
 // capacity strip's) flat magenta, shoots <light>-<quality>-mask.png, and counts the pixels inside each
 // face's rectangle on screen that aren't magenta (anything drawn over a board: a head, a console, the
@@ -53,6 +59,12 @@ const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');
 for (const d of [home, project, bin]) mkdirSync(d, { recursive: true });
+// SHOOT_DOCS=1 puts a few Markdown files in the project, so the docs rack's index has rows to show.
+if (process.env.SHOOT_DOCS === '1') {
+  mkdirSync(path.join(project, 'docs', 'api'), { recursive: true });
+  const docs = { 'README.md': '# Acme app', 'docs/setup.md': '# Setup', 'docs/bounties.md': '# Devnet bounties', 'docs/auth.md': '# The auth rewrite', 'docs/api/rate-limits.md': '# Rate limits', 'CHANGELOG.md': '# Changelog' };
+  for (const [file, text] of Object.entries(docs)) writeFileSync(path.join(project, file), `${text}\n\n${'Some words. '.repeat(40)}\n`);
+}
 execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: project });
 execFileSync('git', ['-c', 'user.email=t@example.invalid', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'start'], { cwd: project });
 
@@ -175,6 +187,8 @@ async function main() {
   const { chromium } = await import('playwright-core');
   // SHOOT_BACKEND=swiftshader draws on the CPU, as the e2e tests' browser does.
   const args = process.env.SHOOT_BACKEND === 'swiftshader' ? ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] : ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'];
+  // The sound clips need audio to start without waiting on a real person's gesture.
+  if (process.env.SHOOT_SOUND) args.push('--autoplay-policy=no-user-gesture-required');
   const browser = await chromium.launch({ headless: true, args });
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, colorScheme: LIGHT === 'day' ? 'light' : 'dark' });
@@ -207,7 +221,11 @@ async function main() {
     const status = await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD);
     if (status !== 200) throw new Error('login failed ' + status);
     await page.goto(`${base}/`, { waitUntil: 'commit' });
-    await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
+    await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 }).catch((e) => {
+      // The page never came up: say why (its errors), not only that it timed out.
+      console.log(JSON.stringify({ boot: 'failed', errors }));
+      throw e;
+    });
     for (const [deskId, prompt] of TASKS) {
       await page.evaluate(([deskId, prompt]) => window.__office.net.send({ t: 'worker.spawn', deskId, prompt, worktree: false }), [deskId, prompt]);
       await wait(200);
@@ -304,6 +322,21 @@ async function main() {
       });
     });
     console.log(JSON.stringify({ shot: `${NAME}.png`, tier, setting: QUALITY, cap: CAP || null }));
+    // SHOOT_HANDS=1: the first-person hands (design/shoot-hands.mjs), on your feet with the camera your own.
+    if (process.env.SHOOT_HANDS) {
+      const { handsShots } = await import('./shoot-hands.mjs');
+      await handsShots(page, { out: OUT, name: NAME, wait, ffmpeg: process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg' });
+    }
+    // SHOOT_LOUNGE=1: the forward lounge (design/shoot-lounge.mjs): its ladder, the climb, its seats' view and a clip.
+    if (process.env.SHOOT_LOUNGE) {
+      const { loungeShots } = await import('./shoot-lounge.mjs');
+      await loungeShots(page, { out: OUT, name: NAME, wait, ffmpeg: process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg' });
+    }
+    // SHOOT_SOUND: the deck's sound (design/shoot-sound.mjs): the mixer, and two clips with what it played.
+    if (process.env.SHOOT_SOUND) {
+      const { soundShots } = await import('./shoot-sound.mjs');
+      await soundShots(page, { out: OUT, name: NAME, wait, ffmpeg: process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg' });
+    }
     // SHOOT_MOTION: the motion layer's beats, each as a held sequence or a clip (design/shoot-motion.mjs).
     if (process.env.SHOOT_MOTION) {
       const { motionShots } = await import('./shoot-motion.mjs');
@@ -331,6 +364,126 @@ async function main() {
       }, eye);
       await wait(1500);
       await page.screenshot({ path: path.join(OUT, `${NAME}-${key}.png`) });
+    }
+    // SHOOT_TOUR='[[[x,y,z],[x,y,z]],...]': the camera eased from each eye and aim to the next, about 12
+    // frames a second over SHOOT_TOUR_MS (default 6000), saved as <name>-tour.mp4.
+    if (process.env.SHOOT_TOUR) {
+      const keys = JSON.parse(process.env.SHOOT_TOUR);
+      const ms = Number(process.env.SHOOT_TOUR_MS ?? 6000);
+      const frames = path.join(OUT, `${NAME}-tour-frames`);
+      mkdirSync(frames, { recursive: true });
+      const n = Math.round((ms / 1000) * 12);
+      for (let i = 0; i < n; i++) {
+        const u = (i / (n - 1)) * (keys.length - 1);
+        const k = Math.min(keys.length - 2, Math.floor(u));
+        const f = u - k;
+        const e = f * f * (3 - 2 * f);
+        const mix = (a, b) => a.map((v, j) => v + (b[j] - v) * e);
+        await page.evaluate(([from, to]) => {
+          const o = window.__office;
+          o.player.update = (dt) => {
+            o.player.__update.call(o.player, dt);
+            o.camera.position.set(...from);
+            o.camera.lookAt(...to);
+          };
+        }, [mix(keys[k][0], keys[k + 1][0]), mix(keys[k][1], keys[k + 1][1])]);
+        await wait(60);
+        await page.screenshot({ path: path.join(frames, `f${String(i).padStart(4, '0')}.png`) });
+      }
+      execFileSync(process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg', ['-y', '-loglevel', 'error', '-framerate', '12', '-i', path.join(frames, 'f%04d.png'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-vf', 'scale=1440:-2', path.join(OUT, `${NAME}-tour.mp4`)]);
+      console.log(JSON.stringify({ tour: `${NAME}-tour.mp4`, frames: n }));
+    }
+    // SHOOT_PAYOUT='[eye,aim]': a bounty paid out, from that eye (features/bounties): the bounty on the
+    // shot's seeded #43 goes to paying (and #48 is funded), then the release comes in as the server would send it (the merge
+    // beat's pulse up the rail, the lid, the coins out of the vault to the unit's console and the receipt),
+    // recorded for SHOOT_PAYOUT_MS (default 9000) as <name>-payout.mp4 at the rate the frames really came,
+    // with a still of the coins in flight and of the receipt (<name>-payout-flight.png, -receipt.png).
+    if (process.env.SHOOT_PAYOUT) {
+      // 'auto': the unit nearest the vault takes the payout, framed from the room's side so the vault and its console are both in view.
+      const [eye, aim] =
+        process.env.SHOOT_PAYOUT === 'auto'
+          ? await page.evaluate(() => {
+              const o = window.__office;
+              const V = o.camera.position.constructor;
+              const vault = new V(-14.75, 1.1, -4.1);
+              let best = null;
+              for (const w of o.store.workers.values()) {
+                const view = o.workerViews.get(w.id);
+                if (!view) continue;
+                const at = view.model.where(new V());
+                const d = at.distanceTo(vault);
+                if (!best || d < best.d) best = { d, at, name: w.name };
+              }
+              window.__payTo = best.name;
+              const m = vault.clone().add(best.at).multiplyScalar(0.5);
+              const along = best.at.clone().sub(vault).setY(0).normalize();
+              const side = new V(-along.z, 0, along.x);
+              if (side.z < 0) side.multiplyScalar(-1);
+              // Over the unit's shoulder, looking back at the vault: the coins come toward you and land in front.
+              const clamp = (v) => Math.max(-13.5, Math.min(13.5, v));
+              return [[clamp(best.at.x + along.x * 3.2 + side.x * 1.6), 3.4, clamp(best.at.z + along.z * 3.2 + side.z * 1.6)], [m.x, 1.5, m.z]];
+            })
+          : JSON.parse(process.env.SHOOT_PAYOUT);
+      await page.evaluate(([from, to]) => {
+        const o = window.__office;
+        o.player.update = (dt) => {
+          o.player.__update.call(o.player, dt);
+          o.camera.position.set(...from);
+          o.camera.lookAt(...to);
+        };
+      }, [eye, aim]);
+      await wait(1200);
+      const step = (phase) =>
+        page.evaluate((phase) => {
+          const o = window.__office;
+          const s = o.store;
+          const f = s.floor;
+          const st = s.bounties[f];
+          const b = st.items.find((i) => i.issue === 43);
+          const unit = [...s.workers.values()].find((w) => w.name === (window.__payTo ?? b.workerName)) ?? [...s.workers.values()][0];
+          const sig = '4hX9pQe2Vt7LmZcRk3NwYb8JfAa1sDuGq6HoEi5TyWn' + 'Kp2';
+          const now = Date.now();
+          const items = st.items.map((i) => (i.issue !== 43 ? i : { ...i, workerName: unit.name, phase, txs: phase === 'released' ? [...i.txs, { kind: 'paid', sig, at: now, url: `https://explorer.solana.com/tx/${sig}?cluster=devnet` }] : i.txs }));
+          // As it goes to paying, #48 is funded with 90 USDC: its coins drop onto a new stack and its row on the Issues board takes the amount.
+          if (phase === 'paying' && !items.some((i) => i.issue === 48)) items.push({ issue: 48, nonce: 1, pda: 'Pda48', amount: '90000000', decimals: 6, symbol: 'USDC', funders: 1, expiry: now + 6 * 864e5, phase: 'open', txs: [{ kind: 'funded', sig: '3Fund48', at: now }] });
+          const replay = window.__world.bounties.replay;
+          replay({ t: 'bounties', floor: f, state: { ...st, items } });
+          if (phase === 'released') replay({ t: 'bounty.paid', floor: f, issue: 43, pr: b.claimPr ?? 77, amount: b.amount, symbol: b.symbol, workerName: unit.name, url: `https://explorer.solana.com/tx/${sig}?cluster=devnet` });
+          return unit.name;
+        }, phase);
+      const frames = path.join(OUT, `${NAME}-payout-frames`);
+      mkdirSync(frames, { recursive: true });
+      const ms = Number(process.env.SHOOT_PAYOUT_MS ?? 9000);
+      const t0 = Date.now();
+      let i = 0;
+      let paid = false;
+      let shotFlight = false;
+      let shotReceipt = false;
+      console.log(JSON.stringify({ payout: await step('paying') }));
+      while (Date.now() - t0 < ms) {
+        const t = Date.now() - t0;
+        if (!paid && t > 1200) {
+          await step('released');
+          paid = true;
+        }
+        await page.screenshot({ path: path.join(frames, `f${String(i++).padStart(4, '0')}.png`) });
+        const state = await page.evaluate(() => {
+          const fl = window.__world.bounties.flight;
+          return { coins: fl.coins.count, card: fl.card.visible };
+        });
+        if (!shotFlight && state.coins >= 3) {
+          await page.screenshot({ path: path.join(OUT, `${NAME}-payout-flight.png`) });
+          shotFlight = true;
+        }
+        if (!shotReceipt && state.card && !state.coins) {
+          await wait(500);
+          await page.screenshot({ path: path.join(OUT, `${NAME}-payout-receipt.png`) });
+          shotReceipt = true;
+        }
+      }
+      const fps = Math.max(1, Math.round((i / ((Date.now() - t0) / 1000)) * 10) / 10);
+      execFileSync(process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg', ['-y', '-loglevel', 'error', '-framerate', String(fps), '-i', path.join(frames, 'f%04d.png'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-r', '24', '-vf', 'scale=1440:-2', path.join(OUT, `${NAME}-payout.mp4`)]);
+      console.log(JSON.stringify({ payoutClip: `${NAME}-payout.mp4`, frames: i, fps, shotFlight, shotReceipt }));
     }
     if (process.env.SHOOT_MASK) {
       const rects = await page.evaluate(async () => {

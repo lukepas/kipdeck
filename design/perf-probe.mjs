@@ -3,6 +3,7 @@
 // and seeds what the bridge's world reads (six sister decks, two units with open pull requests) the
 // way the shots do. Then, from the conn and from a side port, it times a forced render over 30 frames
 // with gl.finish, counts the draw calls of one frame, and reads rAF's p50 and p95 over 240 frames.
+// Then on your feet at the docs rack with the first-person hands drawn, and again with the datapad up.
 // Then the worst cases: from the conn through a jump (sampled while its tunnel is open, the countdown
 // and the name on the glass with it) and through the start of watch (sampled while the log is typed),
 // where the build has them; and the conn again with the CPU throttled 4x, to show the margin under
@@ -14,8 +15,10 @@
 //
 //   npm run build && node design/perf-probe.mjs [metal|swiftshader] [label]
 //
+// PROBE_LIST=1 adds which named parts of the scene each vantage's draws go to (to find what to merge).
 // PROBE_PORT picks the port (default 4692), PROBE_ROOT another checkout's build to time (a baseline),
-// PROBE_CONN the conn's eye and aim.
+// PROBE_CONN the conn's eye and aim. PROBE_SOUND=1 starts the deck's sound first (a key press, as a
+// person's first one would), so the ambience and the effects run while it times; it prints the audio's state.
 // Prints one JSON line per vantage.
 import { spawn, execFileSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
@@ -167,10 +170,26 @@ async function measure([from, to]) {
     draw();
     gl.finish();
   }
+  // PROBE_LIST: which parts of the scene this frame's draws go to (the path of names down from the scene).
+  const by = {};
+  const orig = r.renderBufferDirect;
+  if (window.__probeList)
+    r.renderBufferDirect = function (camera, scene, geometry, material, object, group) {
+      // The nearest named ancestor, the geometry and the material; the shadow map's draws apart.
+      let o = object;
+      while (o && !o.name && !o.isScene) o = o.parent;
+      const named = o && !o.isScene ? o.name : '-';
+      const pass = material.isMeshDepthMaterial || material.isMeshDistanceMaterial ? 'shadow ' : '';
+      const key = `${pass}${named} ${object.type}/${geometry.type}/${material.type}${object.isInstancedMesh ? ' [inst]' : ''}${object.count === 0 ? ' (empty)' : ''}`;
+      by[key] = (by[key] ?? 0) + 1;
+      return orig.call(this, camera, scene, geometry, material, object, group);
+    };
   r.info.autoReset = false;
   r.info.reset();
   draw();
   gl.finish();
+  r.renderBufferDirect = orig;
+  const list = window.__probeList ? Object.fromEntries(Object.entries(by).sort((x, y) => y[1] - x[1])) : undefined;
   const calls = r.info.render.calls;
   const triangles = r.info.render.triangles;
   r.info.autoReset = true;
@@ -193,7 +212,7 @@ async function measure([from, to]) {
   const q = (xs, k) => [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.floor(xs.length * k))];
   const tier = o.quality?.tier?.();
   const budget = o.quality?.budget?.();
-  return { tier, calls, budget, withinBudget: budget ? calls <= budget : undefined, triangles, renderMs: +q(times, 0.5).toFixed(2), renderP95: +q(times, 0.95).toFixed(2), rafP50: +q(gaps, 0.5).toFixed(1), rafP95: +q(gaps, 0.95).toFixed(1) };
+  return { tier, calls, list, budget, withinBudget: budget ? calls <= budget : undefined, triangles, renderMs: +q(times, 0.5).toFixed(2), renderP95: +q(times, 0.95).toFixed(2), rafP50: +q(gaps, 0.5).toFixed(1), rafP95: +q(gaps, 0.95).toFixed(1) };
 }
 
 /** Runs in the page: from `from` toward `to`, the frame's cost with Ship motion on and off, three times each, space's clock running. */
@@ -337,7 +356,7 @@ async function during([[from, to], kind]) {
 
 async function main() {
   const { chromium } = await import('playwright-core');
-  const browser = await chromium.launch({ headless: true, args: ARGS });
+  const browser = await chromium.launch({ headless: true, args: process.env.PROBE_SOUND === '1' ? [...ARGS, '--autoplay-policy=no-user-gesture-required'] : ARGS });
   await waitUp();
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, colorScheme: 'dark' });
@@ -352,6 +371,7 @@ async function main() {
       }
     }, JSON.parse(process.env.PROBE_SETTINGS ?? '{}'));
     const page = await context.newPage();
+    if (process.env.PROBE_LIST) await page.addInitScript(() => (window.__probeList = true));
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`${base}/login`);
@@ -370,10 +390,17 @@ async function main() {
     await wait(8000);
     await page.evaluate(seedWorld);
     await wait(3000);
+    if (process.env.PROBE_SOUND === '1') {
+      await page.keyboard.press('Shift');
+      await wait(2500);
+      console.log(JSON.stringify({ sound: await page.evaluate(() => ({ state: window.__sound?.state, ambience: window.__world?.soundscape?.ambience?.() ?? null, level: window.__sound?.level?.() ?? null })) }));
+    }
     const VANTAGES = {
       // PROBE_CONN '[[x,y,z],[x,y,z]]' moves the conn's eye (a layout that raises or moves the dais).
       conn: JSON.parse(process.env.PROBE_CONN ?? 'null') ?? [[0, 2.05, 11.4], [0, 2.4, -12]],
       port: [[-11.5, 1.55, 3.6], [-30, 2.6, 0.5]],
+      // On your feet at the docs rack in first person: the hands drawn (their own scene and lights).
+      hands: [[13.3, 1.4, 1.8], [15.7, 1.5, 1.5]],
     };
     // Each vantage with the bridge's world on, switched off (Settings > Bridge > Life, where there is
     // one) and on again, in the same session: the run-to-run spread is wider than a feature's share.
@@ -393,6 +420,18 @@ async function main() {
       }
     }
     await parts(true);
+    // The hands with Mission control's datapad up in the left (its glass a canvas), on your feet at the rack.
+    if (await page.evaluate(() => !!window.__world?.hands)) {
+      await page.evaluate(() => window.__world.hands.pad(true));
+      const m = await page.evaluate(measure, VANTAGES.hands);
+      await page.evaluate(() => window.__world.hands.pad(false));
+      console.log(JSON.stringify({ label: LABEL, backend: BACKEND, vantage: 'hands-pad', world: 'on', shown: await page.evaluate(() => window.__world.hands.shown()), ...m }));
+      // And the same spot with Settings > Bridge > Hands Off: what the hands cost.
+      await page.evaluate(() => (window.__office.settings.hands = 'off'));
+      const off = await page.evaluate(measure, VANTAGES.hands);
+      await page.evaluate(() => (window.__office.settings.hands = 'auto'));
+      console.log(JSON.stringify({ label: LABEL, backend: BACKEND, vantage: 'hands-off', world: 'on', ...off }));
+    }
     // The worst cases, from the conn: the jump's tunnel and the start of watch's log, where the build has them.
     for (const kind of ['jump', 'launch']) {
       const m = await page.evaluate(during, [VANTAGES.conn, kind]);

@@ -1,26 +1,31 @@
 import * as THREE from 'three';
-import { WHITEBOARD } from '../../../shared/layout';
+import { FLOOR, WHITEBOARD, WHITEBOARD_DEPTH } from '../../../shared/layout';
 import { mesh, textPlane } from '../../world/toon';
 import type { Collider, Interactable } from '../../world/types';
 import type { Fixture } from '../../world/office/fixture';
-import { DECK, box, contactShadow, ink as wallInk, matte } from '../../world/office/materials';
+import { DECK, box, ink as wallInk, matte } from '../../world/office/materials';
+import { screen } from '../boards/screen';
+import { FACE_UNITS, paintPlan, planFar, sketchBox, type PlanView } from './face';
+import { paintFar } from '../boards/far';
 
-// The whiteboard: a slim board on casters out on the open floor in the east aisle. Its face shows
-// whatever everyone has drawn on it (see ui.ts), live, drawn light on the deck's slate.
-/** The face's canvas, in pixels per meter. */
-const PX = 512;
-/** Clear space around a drawing on the face, in pixels. */
-const PAD = 40;
-const FONT = 'Archivo, system-ui, sans-serif';
+// The planning board: a slim board mounted flush on the west wall, north of the Proof corner. Its face shows
+// the floor's plan as tables and whatever everyone has drawn on it (see ui.ts), live, beside them
+// (face.ts).
 
 export interface WhiteboardStand {
   group: THREE.Group;
   colliders: Collider[];
   /** Walk up and press E. */
   interactable: Interactable;
-  /** Puts a drawing on the face (scaled to fit), or the "come and draw" note when there's none. */
+  /** Puts a drawing on the face (scaled to fit its box), or the queue's table when there's none. */
   show(drawing: HTMLCanvasElement | null): void;
-  /** How big a drawing fills the face, in pixels. */
+  /** The plan's tables (face.ts). */
+  setPlan(plan: PlanView): void;
+  /** From across the deck its headline counts instead of its tables (boards/far.ts). */
+  setFar(far: boolean): void;
+  /** Its face, for how far it is from you. */
+  face: THREE.Object3D;
+  /** How big a drawing fills its box on the face, in pixels. */
   fit: { width: number; height: number };
 }
 
@@ -32,89 +37,67 @@ export function buildWhiteboard(): WhiteboardStand {
   const alu = matte(DECK.steel, { metalness: 0.3, roughness: 0.6 });
   const ink = matte(DECK.wallReveal);
   const mid = bottom + height / 2;
-  const post = width / 2 + 0.1;
+  // Built facing +z from its back on the wall (z 0), WHITEBOARD_DEPTH deep.
+  const d = WHITEBOARD_DEPTH;
 
-  // The writing surface in a slim steel frame; the back is a plain slate panel.
-  group.add(mesh(box(width + 0.1, height + 0.1, 0.06), ink, 0, mid, 0));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(width * PX);
-  canvas.height = Math.round(height * PX);
-  const g = canvas.getContext('2d')!;
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
+  // A slate mounting plate on the wall, the writing surface in a slim steel frame proud of it.
+  group.add(mesh(box(width + 0.22, height + 0.2, 0.03), ink, 0, mid + 0.05, 0.015, false));
+  group.add(mesh(box(width + 0.1, height + 0.1, d - 0.04), alu, 0, mid, 0.03 + (d - 0.04) / 2, false));
+  const face2d = screen(width, height, FACE_UNITS);
+  const texture = face2d.texture;
   const face = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }));
-  face.position.set(0, mid, 0.032);
+  face.position.set(0, mid, d + 0.002);
   group.add(face);
 
-  // Two posts on feet with a caster at each end, and a bar across the bottom.
-  for (const sx of [-post, post]) {
-    group.add(mesh(new THREE.CylinderGeometry(0.035, 0.035, bottom + height + 0.2, 10), alu, sx, (bottom + height + 0.2) / 2 + 0.1, 0));
-    group.add(mesh(box(0.09, 0.06, 0.95), alu, sx, 0.13, 0));
-    for (const sz of [-0.42, 0.42]) {
-      const wheel = mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.04, 12), ink, sx, 0.055, sz, false);
-      wheel.rotation.z = Math.PI / 2;
-      group.add(wheel);
-    }
-    group.add(mesh(new THREE.SphereGeometry(0.05, 10, 8), alu, sx, bottom + height + 0.3, 0, false));
-  }
-  group.add(mesh(new THREE.CylinderGeometry(0.025, 0.025, post * 2, 8).rotateZ(Math.PI / 2), alu, 0, 0.3, 0, false));
-
-  // A slim tray under the face.
-  group.add(mesh(box(width * 0.55, 0.03, 0.1), alu, 0, bottom - 0.08, 0.07, false));
-  group.add(contactShadow(width + 0.8, 1.6));
+  // A slim marker tray along the foot of the frame.
+  group.add(mesh(box(width * 0.55, 0.03, 0.1), alu, 0, bottom - 0.08, d + 0.03, false));
 
   const plaque = textPlane('PLANNING BOARD', { face: 'display', size: 48, color: DECK.muted, track: 0.08 });
   plaque.scale.multiplyScalar(0.55);
   wallInk(plaque.material);
-  plaque.position.set(-width / 2 + 0.5, bottom + height + 0.2, 0.05);
+  // Its left edge on the face's: the sign is as wide as its words, so it is placed by its own width.
+  plaque.geometry.computeBoundingBox();
+  const signW = (plaque.geometry.boundingBox!.max.x - plaque.geometry.boundingBox!.min.x) * plaque.scale.x;
+  plaque.position.set(-width / 2 + 0.05 + signW / 2, bottom + height + 0.24, 0.035);
   group.add(plaque);
 
-  const colliders: Collider[] = [{ minX: x - post - 0.1, maxX: x + post + 0.1, minZ: z - 0.48, maxZ: z + 0.48, top: bottom + height + 0.35 }];
+  // Flat on the wall: you walk up to its face, never round it.
+  const colliders: Collider[] = [{ minX: FLOOR.minX, maxX: x + d + 0.02, minZ: z - width / 2 - 0.2, maxZ: z + width / 2 + 0.2, top: bottom + height + 0.2 }];
   const interactable: Interactable = { kind: 'whiteboard', x: x + Math.sin(rotY) * 1.7, z: z + Math.cos(rotY) * 1.7, radius: 2.3 };
   group.userData.interact = interactable;
 
-  const show = (drawing: HTMLCanvasElement | null) => {
-    const W = canvas.width;
-    const H = canvas.height;
-    g.fillStyle = DECK.console;
-    g.fillRect(0, 0, W, H);
-    g.fillStyle = 'rgba(38,49,61,0.5)';
-    for (let gx = PX / 4; gx < W; gx += PX / 4) g.fillRect(gx, 0, 1, H);
-    for (let gy = PX / 4; gy < H; gy += PX / 4) g.fillRect(0, gy, W, 1);
-    if (drawing) {
-      const s = Math.min((W - PAD * 2) / drawing.width, (H - PAD * 2) / drawing.height);
-      const w = drawing.width * s;
-      const h = drawing.height * s;
-      // Drawn dark on white, shown light on the slate: the same picture in the deck's dark mode.
-      g.filter = 'invert(1) hue-rotate(180deg)';
-      g.drawImage(drawing, (W - w) / 2, (H - h) / 2, w, h);
-      g.filter = 'none';
-    } else {
-      g.fillStyle = DECK.text;
-      g.textAlign = 'center';
-      g.textBaseline = 'middle';
-      g.font = `600 110px ${FONT}`;
-      g.fillText('Planning board', W / 2, H / 2 - 60);
-      g.fillStyle = DECK.muted;
-      g.font = `500 56px ${FONT}`;
-      g.fillText('Sketch the plan. Everyone on this deck sees it.', W / 2, H / 2 + 70);
-    }
-    texture.needsUpdate = true;
+  let drawing: HTMLCanvasElement | null = null;
+  let plan: PlanView = { statement: '', done: 0, total: 0, milestones: [], queue: [], queued: 0 };
+  let far = true;
+  const paint = () => (far ? paintFar(face2d, FACE_UNITS, planFar(plan)) : paintPlan(face2d, plan, drawing));
+  const show = (d: HTMLCanvasElement | null) => {
+    drawing = d;
+    paint();
   };
-  show(null);
+  const setPlan = (p: PlanView) => {
+    plan = p;
+    paint();
+  };
+  const setFar = (f: boolean) => {
+    if (f === far) return;
+    far = f;
+    paint();
+  };
+  paint();
+  const sketch = sketchBox(face2d.W, face2d.H);
+  const px = face2d.canvas.width / face2d.W;
 
-  return { group, colliders, interactable, show, fit: { width: canvas.width - PAD * 2, height: canvas.height - PAD * 2 } };
+  return { group, colliders, interactable, show, setPlan, setFar, face, fit: { width: Math.round(sketch.w * px), height: Math.round(sketch.h * px) } };
 }
 
 declare module '../../world/types' {
   interface OfficeHandles {
-    /** The rolling whiteboard everyone draws on together. */
+    /** The planning board on the west wall everyone draws on together. */
     whiteboard: WhiteboardStand;
   }
 }
 
-/** The whiteboard, out on the floor in the east aisle. */
+/** The planning board, on the west wall between the Review bay and the Proof corner. */
 export const whiteboard: Fixture<'whiteboard'> = () => {
   const built = buildWhiteboard();
   return { group: built.group, colliders: built.colliders, interactables: [built.interactable], handle: { whiteboard: built } };

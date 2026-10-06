@@ -11,6 +11,7 @@ import { fontsReady } from '../../world/toon';
 import { ARC } from '../../../shared/amphitheater';
 import { TV } from '../../../shared/layout';
 import { attentionBoard } from './attention';
+import { tvAction } from './share';
 import { debugHandle } from '../giveway';
 
 // The kinds of thing you can use that this defines (see InteractKinds in world/types.ts).
@@ -53,8 +54,8 @@ export function installTv(ctx: Ctx, deps: TvDeps) {
   ctx.interactions.define('tv', {
     reach: 10,
     hint: () => {
-      const any = deps.shares().length > 0;
-      return { k: String(any), parts: [hintTitle('Attention board'), key('E', any ? 'Watch full screen' : 'Share your screen')] };
+      const act = tvAction(deps.shares());
+      return { k: act, parts: [hintTitle('Attention board'), key('E', act === 'watch' ? 'Watch full screen' : 'Share your screen')] };
     },
     use: onE(() => deps.watch()),
   });

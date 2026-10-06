@@ -12,7 +12,9 @@ import { bountySettings } from './bounty-settings';
 import { showcaseSettings } from './showcase-settings';
 import { brightnessSettings, bridgeSettings, lightSettings } from './bridge-settings';
 import { lifeSettings } from './life-settings';
+import { soundSettings } from './sound-settings';
 import { qualitySettings } from './quality-settings';
+import { handsSettings } from './hands-settings';
 import { momentSettings } from './moments-settings';
 import { ritualSettings } from './rituals-settings';
 import { icon, type IconName } from './icons';
@@ -54,7 +56,7 @@ const setting = (title: string, scope: Scope | null, ...body: Node[]) =>
 let lastPane: SettingsPane = 'you';
 
 /** `first` opens on that category instead of the last one. */
-export function openSettings(net: Net, settings: Settings, onChange: (s: Settings) => void, onCharacter: () => void, sound: Pick<DeckSound, 'cue'>, notifier: DesktopNotifier, onSignOut: () => void, first?: SettingsPane) {
+export function openSettings(net: Net, settings: Settings, onChange: (s: Settings) => void, onCharacter: () => void, sound: Pick<DeckSound, 'cue' | 'ui' | 'jump'>, notifier: DesktopNotifier, onSignOut: () => void, first?: SettingsPane) {
   const seg = h('div.seg', { role: 'radiogroup', 'aria-label': 'Camera view' });
   const note = h('p.setting-note');
   const paint = () => {
@@ -82,44 +84,15 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
   };
   paint();
 
-  /** A volume slider with its mute button. Dragging it turns the sound back on; letting go plays `preview`. */
-  const volumeRow = (label: string, level: 'volume', muted: 'muted', preview?: () => void) => {
-    const slider = h('input', { type: 'range', min: 0, max: 100, step: 1, 'aria-label': label });
-    const pct = h('span.vol-pct');
-    const mute = h('button.btn', { type: 'button' });
-    const row = h('div.volume', {}, mute, slider, pct);
-    const paint = () => {
-      const v = Math.round(settings[level] * 100);
-      slider.value = String(v);
-      slider.style.setProperty('--fill', `${v}%`);
-      pct.textContent = settings[muted] ? 'Off' : `${v}%`;
-      mute.textContent = settings[muted] ? 'Turn on' : 'Turn off';
-      mute.setAttribute('aria-pressed', String(settings[muted]));
-      mute.classList.toggle('primary', settings[muted]);
-      row.classList.toggle('muted', settings[muted]);
-    };
-    paint();
-    slider.addEventListener('input', () => {
-      settings = { ...settings, [level]: Number(slider.value) / 100, [muted]: false };
-      onChange(settings);
-      paint();
-    });
-    if (preview) slider.addEventListener('change', preview);
-    mute.addEventListener('click', () => {
-      settings = { ...settings, [muted]: !settings[muted] };
-      onChange(settings);
-      paint();
-      if (!settings[muted]) preview?.();
-    });
-    return row;
-  };
-  const soundRow = volumeRow('Sound cues volume', 'volume', 'muted', () => sound.cue('review'));
-
   /** Changes some of your own settings, and has the office take them up. */
   const change = (some: Partial<Settings>) => {
     settings = { ...settings, ...some };
     onChange(settings);
   };
+  // The main volume and the mixer (sound-settings.ts); letting go of a slider plays a sample of its group.
+  const sounds = soundSettings(() => settings, change, {
+    sample: (group) => (group === 'alerts' ? sound.cue('review') : group === 'ui' ? sound.ui('open') : group === 'ship' ? sound.jump('surge') : undefined),
+  });
   // Voice chat: an open mic, or muted until you hold V.
   const talkRow = choiceRow('Voice chat', [[false, 'Open mic'], [true, 'Push to talk']], () => settings.pushToTalk, (pushToTalk) => change({ pushToTalk }));
   // The alarm when a worker stops to ask you something; picking one plays it.
@@ -408,14 +381,16 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       setting('Brightness', 'you', ...brightnessSettings(() => settings, change)),
       setting('Ship motion', 'you', ...bridgeSettings(() => settings, change)),
       setting('Quality', 'you', ...qualitySettings(() => settings, change)),
+      setting('Hands', 'you', ...handsSettings(() => settings, change)),
       setting('Life', 'you', ...lifeSettings(() => settings, change)),
       setting('Moments', 'you', ...momentSettings(() => settings, change)),
       setting('Rituals', 'you', ...ritualSettings(() => settings, change)),
     ],
     sound: [
-      setting('Sound cues', 'you', soundRow, h('p.setting-note', {}, 'Off until you turn them on. Four short cues, one per change worth hearing from another tab: a unit needs you (two rising notes), a unit is stuck (two low ticks), a unit is ready for review (one soft tone) and a merge is proven on chain (a low thunk and a tick). The deck makes no other sound, and voice chat has its own level.')),
-      setting('When a unit needs you', 'you', alarmRow, h('p.setting-note', {}, 'The needs-you cue the moment a unit on your deck stops to ask you something or wants a permission. Keep reminding me plays it again, softly, every 30 seconds until someone opens the terminal of that unit. A unit you snoozed in Mission control stays quiet. It plays only while sound cues are on.')),
-      setting('Voice chat', 'you', talkRow, h('p.setting-note', {}, 'Either way, V joins voice, holding V talks and you\'re muted once you let go, and M mutes or unmutes. With push to talk you join muted. Leave voice from the menu.')),
+      setting('Sound', 'you', ...sounds.main, h('p.setting-note', {}, 'On from your first click or key (browsers allow sound no sooner). Shift+M turns it all off and on again anywhere on the deck. Voice chat has its own level.')),
+      setting('Mixer', 'you', ...sounds.mixer, h('p.setting-note', {}, 'Each group under the main volume. Alerts are never turned down by the deck: everything else steps back while a unit needs you, Calm and Silent running quieten the ambience, and a hidden tab plays the alerts only.')),
+      setting('When a unit needs you', 'you', alarmRow, h('p.setting-note', {}, 'The needs-you cue the moment a unit on your deck stops to ask you something or wants a permission. Keep reminding me plays it again, softly, every 30 seconds until someone opens the terminal of that unit. A unit you snoozed in Mission control stays quiet. It plays while sound is on and Alerts are up.')),
+      setting('Voice chat', 'you', talkRow, h('p.setting-note', {}, 'Either way, V joins voice, holding V talks and you\'re muted once you let go, and M mutes or unmutes your mic (Shift+M is the deck\'s own sound). With push to talk you join muted. Leave voice from the menu.')),
     ],
     notify: [
       setting('Desktop notifications', 'you', notifyRow, notifyNote),

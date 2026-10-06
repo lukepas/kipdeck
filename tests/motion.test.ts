@@ -1,6 +1,6 @@
 // Motion that marks a change of state (DESIGN.md, docs/design.md): the merge beat's and the dispatch
 // trace's paths and timings (src/client/features/beats/logic.ts), callouts stacking clear of each
-// other (src/client/features/workers/declutter.ts), and the four sound cues (src/client/sound/alerts.ts).
+// other (src/client/features/workers/declutter.ts), and the state cues (src/client/sound/alerts.ts).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { BEAT_MS, along, beatAt, beatMs, dispatchPhases, hashOf, railSegment, rimToward, toRailPhases, toTablePhases } from '../src/client/features/beats/logic.js';
@@ -85,15 +85,14 @@ test('a callout never floats more than four of its heights off its unit', () => 
   for (const lift of stack(pile)) assert.ok(lift <= 40);
 });
 
-test('four short cues: needs you rises 880 then 1320 Hz at 60 ms each, stuck is two low ticks', () => {
+test('the state cues: needs you is a hail rising 880 then 1320 Hz, stuck is two low ticks', () => {
+  const tones = (c: keyof typeof CUES) => CUES[c].filter((n) => n.wave !== 'air');
   assert.deepEqual(
-    CUES['needs-you'].map((n) => [n.f, n.len]),
-    [
-      [880, 0.06],
-      [1320, 0.06],
-    ],
+    tones('needs-you').map((n) => n.f),
+    [880, 1320],
   );
-  assert.ok(CUES['needs-you-again'].every((n, i) => n.f === CUES['needs-you'][i].f && n.gain < CUES['needs-you'][i].gain), 'the reminder is the same, softer');
+  assert.ok(CUES['needs-you'][0].wave === 'air' && CUES['needs-you'][0].at === 0, 'the comm opens first, with a breath');
+  assert.ok(tones('needs-you-again').every((n, i) => n.f === tones('needs-you')[i].f && n.gain < tones('needs-you')[i].gain), 'the reminder is the same chimes, softer');
   assert.deepEqual(
     CUES.stuck.map((n) => n.f),
     [330, 330],

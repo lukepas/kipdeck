@@ -51,14 +51,20 @@ export function jitter(id: string, salt = 0): number {
  * east, each rank further out and further aft, every other rank high over the walls, nudged a little by the deck's id so no two fleets look
  * stamped out. x east, y up, z aft (m, from the deck's middle).
  */
+/** Where the near port escort holds station along the ship (z): aft of the Proof corner's windows. */
+export const NEAR_PORT_Z = 7;
+
 export function slotFor(i: number, id: string): { x: number; y: number; z: number; side: -1 | 1 } {
   const side: -1 | 1 = i % 2 === 0 ? -1 : 1;
   const rank = Math.floor(i / 2);
   const j = jitter(id);
   // The near rank at a seated eye's height, past the side ports; the next one high, over the walls, so
   // it shows through the canopy from the middle of the deck; and so on, further out and further aft.
+  // The near port ship holds station aft of the Proof corner, so it never sits in the window behind the
+  // escrow vault's stacks (where it read as a block clipping through them).
   const high = rank % 2 === 1;
-  return { side, x: side * (27 + rank * 12 + j * 4), y: high ? 13 + j * 2 : -0.5 + j * 1.2, z: -4 + rank * 14 + (jitter(id, 7) - 0.5) * 6 };
+  const near = side < 0 && rank === 0 ? NEAR_PORT_Z : -4;
+  return { side, x: side * (27 + rank * 12 + j * 4), y: high ? 13 + j * 2 : -0.5 + j * 1.2, z: near + rank * 14 + (jitter(id, 7) - 0.5) * 6 };
 }
 
 /** The sister decks that fly (the first MAX_SHIPS by when they came aboard) and how many more there are. */

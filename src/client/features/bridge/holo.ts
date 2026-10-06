@@ -138,6 +138,7 @@ export const holo: Fixture<'holo'> = (site) => {
   const units = new THREE.InstancedMesh(new THREE.ShapeGeometry(unitShape), light(0.55, '#BFE6F2'), UNITS);
   (units.material as THREE.MeshBasicMaterial).side = THREE.DoubleSide;
   units.count = 0;
+  units.visible = false;
   units.frustumCulled = false;
   plot.add(units);
 
@@ -187,6 +188,7 @@ export const holo: Fixture<'holo'> = (site) => {
       }
     });
     units.count = placed;
+    units.visible = placed > 0;
     units.instanceMatrix.needsUpdate = true;
     // Between the last waypoint passed and the next (at the foot with none passed, or no course).
     const done = ms.filter((x) => x.done).length;

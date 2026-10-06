@@ -26,7 +26,7 @@ export const presenceHandlers = {
     const key = str(msg.seat, 40);
     const seat = seatAt(key) ? key : undefined;
     if (seat === c.peer.seat) return;
-    // Somebody on the floor got there first (two people arriving at an empty couch at once).
+    // Somebody on the floor got there first (two people arriving at an empty seat at once).
     // (Not yourself, on a connection that hasn't timed out yet after a reconnect.)
     const same = (o: typeof c) => o.peer.name === c.peer.name || (!!o.accountId && o.accountId === c.accountId);
     const there = seat && [...ctx.clients.values()].find((o) => o !== c && !same(o) && o.peer.seat === seat && o.peer.floor === c.peer.floor);

@@ -8,7 +8,7 @@ import { AHEAD_MS, BOB, DROP_MS, HAIL_MS, HULL, HULL_COLORS, MAX_SHIPS, SALUTE_M
 import { RING_INLAY } from '../src/client/features/lights/modes.js';
 import { ambientSafe } from '../src/client/features/space/logic.js';
 import { DECK } from '../src/client/world/office/materials.js';
-import { FLOOR } from '../src/shared/layout.js';
+import { FLOOR, PROOF_CORNER } from '../src/shared/layout.js';
 import { LONE_ESCORT, fleetOverflow, hailLine, hullName } from '../src/shared/shiplog.js';
 import type { FloorInfo } from '../src/shared/protocol.js';
 
@@ -57,6 +57,8 @@ test('the V: alternating west and east, each rank further out and aft, always ou
     assert.ok(slots[i].z > slots[i - 2].z - 6, 'and aft');
   }
   assert.deepEqual(slotFor(3, 'x'), slotFor(3, 'x'), 'the same deck holds the same slot');
+  // The lone escort (slot 0, port side) is never in the window behind the escrow vault's stacks.
+  for (const id of ['a', 'deck-0', 'zz', 'billing-api']) assert.ok(Math.abs(slotFor(0, id).z - PROOF_CORNER.vault.z) > 6, `slot 0 of ${id} at z ${slotFor(0, id).z.toFixed(1)}`);
 });
 
 test('the bob is slow: a period of 6 to 12 s, never an attention cadence', () => {

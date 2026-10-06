@@ -21,6 +21,7 @@ const hot = (hex: string, k: number) => new THREE.Color(hex).multiplyScalar(k);
 function instanced(geo: THREE.BufferGeometry, mat: THREE.Material, order: number): THREE.InstancedMesh {
   const m = new THREE.InstancedMesh(geo, mat, MAX);
   m.count = 0;
+  m.visible = false;
   m.frustumCulled = false;
   m.castShadow = false;
   m.receiveShadow = false;

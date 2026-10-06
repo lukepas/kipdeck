@@ -23,7 +23,6 @@ import {
   PODS,
   PROOF_CORNER,
   READY_LINE,
-  SEATING,
   TITLE_BLOCK,
   TV,
   deskSeat,
@@ -336,9 +335,6 @@ function zones(): SVGElement {
     const anchor = b.x < -1 ? 'end' : b.x > 1 ? 'start' : 'middle';
     g.append(label(b.x - nx * 0.75, b.z - nz * 0.75 + 0.2, name, cls, anchor));
   }
-  // The operator bench facing the Attention board.
-  const bench = SEATING[0];
-  g.append(el('rect', { x: r(bench.x - 2.1), y: r(bench.z - 0.35), width: 4.2, height: 0.7, class: 'p-furniture' }));
   // The Proof corner on the west wall: the capacity panel, the violet rail, the vault and the plinth.
   const m = MACHINE_MONITOR;
   g.append(el('line', { x1: FLOOR.minX + 0.2, y1: m.z - m.width / 2, x2: FLOOR.minX + 0.2, y2: m.z + m.width / 2, class: 'p-board' }));

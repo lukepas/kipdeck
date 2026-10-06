@@ -3,11 +3,12 @@ import type { FloorPalette } from '../../../shared/floors';
 import { elevator } from '../elevator';
 import { bookshelf } from '../../features/bookshelf/world';
 import { whiteboard } from '../../features/whiteboard/world';
+import { serviceMonitor } from '../../features/monitor/world';
 import { stack } from '../stack';
 import { signs } from '../desksigns';
 import type { Collider, DeskView, Interactable, Office, OfficeHandles } from '../types';
 import { DECK, floorTexture, matteUnique, type Looks } from './materials';
-import { boards, lounge, machineMonitor, tv } from './room';
+import { boards, machineMonitor, tv } from './room';
 import { amphitheater } from '../../features/amphitheater/tiers';
 import { situationArc } from '../../features/amphitheater/arc';
 import { lamps } from '../../features/lights/rig';
@@ -36,6 +37,7 @@ import { heading } from '../../features/life/heading';
 import { ticker } from '../../features/life/ticker';
 import { watchPlinth } from '../../features/crew/world';
 import { droid } from '../../features/droid/world';
+import { forwardLounge } from '../../features/lounge/world';
 
 // The deck, put together from its fixtures (see fixture.ts): the slab and its walls, the paint on its
 // floor, the bridge's hull round it, the mission table and the pods of consoles facing it, the
@@ -72,7 +74,7 @@ function floorPlan() {
     beanbags,
     kiosks,
     // The situation arc hung north of the table (features/amphitheater), its work boards and its
-    // Attention board, and the operator bench facing that.
+    // Attention board.
     situationArc,
     boards,
     tv,
@@ -83,7 +85,8 @@ function floorPlan() {
     proofCorner,
     // The unit of the watch on the Proof corner's plinth (features/crew).
     watchPlinth,
-    lounge,
+    // The viewing balcony at the bow behind the arc, its ladder and its seats (features/lounge).
+    forwardLounge,
     conn,
     bookshelf,
     lamps,
@@ -92,6 +95,8 @@ function floorPlan() {
     meetingRoom,
     elevator,
     whiteboard,
+    // The service monitor flush on the east wall (features/monitor).
+    serviceMonitor,
     // Bolt, the bridge droid, and its charger on the west wall (features/droid).
     droid,
   ] as const;

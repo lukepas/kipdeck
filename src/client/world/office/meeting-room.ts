@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { MEETING_BOARD, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, deskSeat, type DeskDef } from '../../../shared/layout';
+import { BAY_SIGN } from '../../../shared/wall-screens';
 import { mesh, textPlane } from '../toon';
 import type { Collider, DeskView, Interactable } from '../types';
 import type { Fixture } from './fixture';
@@ -167,16 +168,15 @@ export function buildMeetingRoom(group: THREE.Group, colliders: Collider[], inte
   interactables.push(read);
   frame.userData.interact = read;
 
-  // The panel on the glass beside the door, like a room-booking screen: what's on, the round, the
-  // tokens, and the summary once it's over. Beside the door rather than past it, so the board shows.
-  const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.96), new THREE.MeshBasicMaterial({ color: '#ffffff' }));
-  // Inside the glass, facing out: the door's leaf slides across outside it and would cut through a
-  // panel on the outer face, its glints flickering with the screen. Between the door and the side glass.
-  const near = Math.abs(R.door.x0 - sx) < Math.abs(R.door.x1 - sx) ? R.door.x0 : R.door.x1;
-  sign.position.set((sx + near) / 2, 1.45, fz - fo * (T / 2 + 0.03));
+  // The sign on the glass beside the door: the bay's queue as a table up close, its counts from across
+  // the deck (BAY_SIGN). Inside the glass, facing out: the door's leaf slides across outside it and would
+  // cut through a panel on the outer face, its glints flickering with the screen.
+  const S = BAY_SIGN;
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(S.width, S.height), new THREE.MeshBasicMaterial({ color: '#ffffff', toneMapped: false, fog: false }));
+  sign.position.set(S.x, S.y, fz - fo * (T / 2 + 0.03));
   sign.rotation.y = outward;
   group.add(sign);
-  const plate = mesh(box(0.66, 1.03, 0.03), matte(DECK.wallReveal), sign.position.x, sign.position.y, fz - fo * (T / 2 + 0.05), false);
+  const plate = mesh(box(S.width + 0.06, S.height + 0.07, 0.03), matte(DECK.wallReveal), sign.position.x, sign.position.y, fz - fo * (T / 2 + 0.05), false);
   group.add(plate);
   const door: Interactable = { kind: 'meeting', x: sign.position.x, z: fz + fo * 1.2, radius: 1.8 };
   interactables.push(door);

@@ -2,7 +2,75 @@
 
 Back to the [README](../README.md) and the [design system](../DESIGN.md).
 
-The latest round is first, [the interior: the hype round](#the-interior-the-hype-round); the earlier rounds follow it in order.
+The latest round is first, [the fixes round](#the-fixes-round-the-bays-sign-the-planning-board-the-service-monitor-and-the-pit); the earlier rounds follow it in order.
+
+## The fixes round: the bay's sign, the planning board, the service monitor and the pit
+
+Four things the captain asked for. The shots are under `shots/fixes/`: `before/` and `before-boards/` from the build before the round (`design/shoot.mjs` and `shoot-boards.mjs`), and `after-night/`, `after-day/` and `after-low/` from `node design/shoot-fixes.mjs`, which seeds the boards' stand-in crew and runs a real little web server as a unit's dev server, at 1440x900 on the software renderer with Quality forced to High (Low for `after-low/`).
+
+### What changed (check it in under a minute)
+
+1. **The Review bay's sign is a table.** It was a 0.6 m list of facts beside the door, unreadable past a few metres (`before/deck-bay.png`). It is now a 1.8 by 1 m screen in the pane west of the door on the board layout: its name and how many wait, then a row each with the unit, what to review, its state as a chip in the ranking's hue and shape, and its age, four rows and +N more (`after-night/bay-sign.png`, `after-day/bay-sign.png`). From the dais, 25 m off, it shows two counts at 0.44 m (`after-night/seated-port.png`).
+2. **The planning board hangs on the west wall.** It stood on wheels in the east aisle (`before/deck-east.png`). It is flush on the west wall between the Review bay's glass and the hull frame north of the attestation rail, off the port bow from the dais and clear of the line to the arc and the bow glass (`after-night/seated-port.png`, `after-night/planning-board.png`); its tables keep their columns.
+3. **A service monitor on the east wall.** Walk up to it and the live page of a unit's dev server is on the screen, a real sandboxed frame placed by CSS3DRenderer (`after-night/monitor-live.png`); E gives it the mouse (`monitor-use.png`), O opens it full screen (`monitor-modal.png`). At a slant, far off or behind something, the screen's card shows instead (`monitor-slant.png`); with nothing running, a clean card (`monitor-none.png`); at Low quality, an Open button (`after-low/monitor-live.png`). E on a row of the Services board puts that service on it (`services-aim.png`). It loads only the link the Services board already opens; the CSP adds `http://localhost:*` to frame-src only on a page reached on this computer.
+4. **The pit is clear.** The operator bench and its two stools are gone (`before/deck-north.png` against `after-night/seated-bow.png`); E at the Attention board watches a teammate's shared screen full screen, as it already did.
+5. **The debrief end-to-end test passes.** The start of watch timed itself by the frame's capped dt, so at a few frames a second its wait and launch ran several times too long and the debrief came after the test's 60 s. It keeps the wall clock now.
+
+### Frame time
+
+`node design/perf-probe.mjs metal` (M3 Pro, ANGLE Metal), after: the conn at High draws 390 calls (budget 400; 385 after the feel pass), 1.8 to 2.2 ms forced render, rAF p50 and p95 16.7 ms (60 fps); the jump 424 calls, 2.1 ms; Medium with the CPU throttled 4x 328 calls (budget 330). The monitor's live page is drawn by the browser, not the scene, and only while it shows.
+
+### Checks
+
+`npm run typecheck`, `npm test` (all pass, the debrief test included), `npm run build`, `node design/flicker-check.mjs` (Night and Day, 600 frames each, no bad frame).
+
+### Left for later
+
+- The monitor's far face is small from the dais (it is a screen to walk up to); the sign and the planning board are the ones read from there.
+- A page that refuses to be framed (its own X-Frame-Options) shows blank on the monitor; Open in a tab still works.
+
+## The feel pass: tables, bounties, hands, the lounge and sound
+
+The captain asked for tables instead of walls of text, something to see for bounties, hands in first person, a lounge at the bow to climb up to and watch space from, and sound. That landed in the stages before this one (`shots/feel-tables`, `feel-bounties`, `feel-hands`, `feel-lounge`, `feel-sound`); three critics then reviewed it (`shots/feel-review`), and this pass fixes what they found. Every shot here is a **seeded demo crew** (stand-in units and bounties from `design/seed-bounties.js`, no chain touched), on the GPU (ANGLE Metal, M3 Pro) at 1440x900, Quality forced to High.
+
+### What changed (check it in under a minute)
+
+1. **No click on any sound.** A GainNode starts at 1, so every burst and tone let one full-level sample through before its envelope: the -11 dBFS tick on a walk. Envelopes are now silent from the moment they are made (`sound/dsp.ts` env). A step's thud is a pitched thump with a white-noise click, so 50 steps spread 4 dB in peak, not 18; each step wanders up to 2 dB and the feet alternate in pitch and side.
+2. **Alerts are the loudest thing on the deck, measured.** `node design/sound-levels.mjs` renders every recipe offline through the deck's chain and fails on a broken budget. A walk sits 14 dB under the needs-you hail (loudest 50 ms -36.1 against -21.5 dBFS), every alert is 6 dB or more over a walk, the jump's punch is under the alerts, and nothing is under -50 dBFS: Bolt's hold note (was -55 peak) is -40, the surge (was -41) is -27 and has a pitch, so the Ship slider's sample is heard (`sound-levels.txt`, `sound-levels.json`).
+3. **Hands hold the ladder.** Each glove is planted on a rung in the deck's own space and stays there while you climb past it, then goes over the other to the next rung in 0.15 s; the clank plays as it lands, and your eyes follow your hands (`night-high-lounge-climb.png`, `-climb-high.png`, `night-high-lounge.mp4`).
+4. **Hands get out of the way.** At rest they are a loose fist low in each corner, the left a touch lower and back. Stop at a board within 3 m (or stand still 1.5 s) and the left drops away and the right sinks to its knuckles (`night-high-hands-rest.png` against `-read.png` and `-docs-read.png`); a step, a turn or a reach brings them back. They are not drawn through the jump's tunnel.
+5. **Tables read from the dais.** Past 8 m the ledger, the docs rack, the planning board, the Review bay's board and the pit wall show headline counts at least 30 cm tall (`night-high-dais-*.png`); walk up and the table is back (`night-high-close-*.png`). The planning board's sign is no longer cut off.
+6. **The lounge keeps you on call.** Sat in a lounge seat, a readout on the glass says who needs you with N to go there, or counts the jump in; only urgent arrows stay at the edge of the view; the seated view lifts higher (`night-high-lounge-sit.png`).
+7. **Bounties read from the chair.** Coins in flight are sized by distance (about 20 px across from the chair) with a fading trail, the receipt holds 8 s (`night-high-sit-payout-*.png`), and the lone escort no longer sits in the window behind the vault's stacks (`night-high-escrow-vault.png`).
+8. **Draw calls back under budget.** Empty instanced meshes are hidden, each hand is one mesh, the lounge casts no shadows: the conn is 385 (was 394 after the stages, 378 before them) and the jump 420 (was 427, 415 before).
+
+The reel is `reel-20s.mp4` (with sound, labelled *Seeded demo crew*): 10 s on foot to the ladder, the climb and a lounge seat, then 10 s from the chair through a jump into a payout. Its contact sheet is `reel-sheet.png`.
+
+### Frame time
+
+`node design/perf-probe.mjs metal`, before (the `design/ugc-army` build from a `git archive`) and after, two runs at High and one at Medium (`shots/feel-final/perf/frames-before.jsonl`, `frames-after.jsonl`). The new *hands* vantage stands at the docs rack in first person with the hands drawn; *hands-pad* has the datapad up, *hands-off* turns them off.
+
+| | Before | After |
+| --- | --- | --- |
+| High, conn: draw calls (budget 400) | 378 | 384 to 385 |
+| High, conn: forced render p50 / p95 | 2.1 to 3.0 / 2.6 to 3.6 ms | 1.8 to 2.2 / 2.3 to 3.3 ms |
+| High, jump with the tunnel open | 415 calls, 2.5 to 2.8 ms | 420 calls, 1.9 to 2.2 ms |
+| High, standing at the docs rack, hands on / off | 139 (no hands) | 144 to 145 / 141, 1.0 to 1.1 ms either way |
+| High, hands with the datapad up | | 148, 1.1 to 1.2 ms |
+| Medium, conn | 316 calls, 1.7 to 2.4 ms | 323 to 324 calls, 1.6 ms |
+| Medium, jump | 353 calls | 359 calls |
+| Motion layer (Ship motion on against off), High | 0.6 to 0.7 ms | 0 to 0.1 ms (budget 0.6) |
+| rAF p95 | 16.7 ms | 16.7 ms (60 fps) |
+
+### Checks
+
+`npm run typecheck`, `npm test` (one end-to-end test, *back after a while away*, times out waiting for the debrief; it fails the same way on the `design/ugc-army` build), `npm run build`, `node design/flicker-check.mjs` (Night and Day, 600 frames each, no bad frame; again at High with jumps), `node design/sound-levels.mjs` (all budgets met).
+
+### Left for later
+
+- The unit arrows at the edge of the view can still sit over a wall table's left column up close; only the lounge hides the non-urgent ones.
+- The vault's stacks have no tag of their own: the label above them names each column.
+- The capacity close-up's shoot pose and a hull strut over the lounge's view were not redone.
 
 ## The interior: the hype round
 
@@ -978,3 +1046,90 @@ The A/B is CPU time at the browser's 0.1 ms resolution, and the before build's o
 - The wings' rows don't slide in yet: only the Attention board's cards do; a wing's header sweeps instead.
 - The hail's marker leaves a ghost: the holo's own marker for that unit stays on the route while its copy flies to the dais.
 - The beam's climb is easiest to see from a station in view; a unit out of view shows its card's slide and the marker.
+
+## The feel: first-person hands
+
+The captain's gloved hands in first person (`src/client/features/hands/`, [docs/design.md](../docs/design.md#your-hands-in-first-person)). Shots in `shots/feel-hands/`: `before/` is the same build with Settings > Bridge > Hands at Off, `after/` with them on, both Night at High through Metal, and `after/day-high-*` by Day. Each run has the hands at rest beside the captain's chair (`-hands-rest`), mid-walk (`-walk`), at the press of a reach and tap (`-reach`, the reach held by its own clock), at the docs rack tapping it (`-docs-tap`), with Mission control open and the datapad up (`-pad`) and sat in the chair, where they step out of the way (`-sit`). `after/night-high-hands.mp4` is a short walk with a look round, a tap and the datapad up and down.
+
+    npm run build && SHOOT_HANDS=1 SHOOT_HANDS_MODE=off SHOOT_HANDS_CLIP=0 node design/shoot-interior.mjs feel-hands/before
+    npm run build && SHOOT_HANDS=1 node design/shoot-interior.mjs feel-hands/after
+
+`SHOOT_HANDS_STUDIO=1` adds the hands alone over the hidden deck, to judge their shapes.
+
+### Frame times
+
+`node design/perf-probe.mjs metal` with `PROBE_SETTINGS='{"quality":"high","hands":"off"}'` against `'{"quality":"high","hands":"on"}'`, the same build, alternating, two runs each. The probe stands at the conn, so the hands are in its frame.
+
+| | Hands off | Hands on | Budget |
+| --- | --- | --- | --- |
+| Conn draw calls | 378 to 379 | 386 | 400 |
+| Conn, High: forced render | 2.1 to 2.4 ms, p95 2.8 to 3.7 | 1.7 to 2.8 ms, p95 2.5 to 3.7 | |
+| Port draw calls | 139 | 147 | 400 |
+| Jump with the tunnel open | 2.2 ms, 417 to 418 calls | 2.6 to 2.8 ms, 425 calls | |
+| rAF p50 | 16.7 ms | 16.7 ms | |
+
+Eight draws and about 7,500 triangles; the render time moves inside the run-to-run spread. `node design/flicker-check.mjs metal` with `FLICKER_QUALITY=high` passes, Night and Day, 600 frames each.
+
+### Checks
+
+- `tests/hands.test.ts`: when the hands show (tiers, seated, Overview, third person, shots), the slide in and out and the cut under less motion, the lag clamped to a few centimetres, the walk's opposite swing, the reach's jab, straight finger and press, the held reach, the datapad's hold and its four lines. `tests/client-store.test.ts`: the setting's default and parse.
+- `npm run typecheck` and `npm run build` clean; `npm test` all but `mission-e2e`'s debrief test under SwiftShader, which fails the same way with the hands left out of the build (as in the motion round above).
+
+### Left for later
+
+- The datapad sits low in the left of the view, so a tall Mission control window covers most of it; it reads best beside a short one, and as the window opens and closes.
+- The hands take the room's light where you stand only through its sky, key and fill: a pod's lamp or the holo next to you does not light them.
+
+## The feel: sound
+
+The deck had four optional cues and the jump, off until you turned them on, and no other sound. Now it is on from your first click or key, in four groups with a mixer (`src/client/sound/`, `src/client/features/soundscape/`, [docs/design.md](../docs/design.md#sound)): Alerts (the state cues, always on top), Interface (clicks, windows), Ship (steps on plates, stairs and the lounge's grating, a jump and its landing, seats, the ladder, Bolt's beeps, a payout, the jump in four parts, the surge) and Ambience (a low bed, the drive's drone aft, the holo's shimmer and Bolt's hover, placed where they are). Shift+M mutes it all. Everything is Web Audio synthesis, no files.
+
+Shots in `shots/feel-sound/`: `before/` and `after/` Settings > Sound & voice (`-sound-settings.png`), Night at High through Metal from the captain's chair; `before/` is commit 4964e30 built from a `git archive`. `after/` adds two clips recorded with the sound straight off the deck's master (a MediaRecorder on `DeckSound.tap()`), each with its audio alone (`.m4a`), its spectrogram (`-spectrum.png`) and waveform (`-wave.png`), and a contact sheet:
+
+- `night-high-calm-sit-sound-deck.mp4`: a walk over the plates to the forward lounge's ladder, the climb (hands on, seven rungs, the gate), a step on the grating, a lounge seat, Esc, a jump and its landing.
+- `night-high-calm-sit-sound-bridge.mp4`: from the chair, the jump (spool, release, punch, arrival with its two bells), a bounty paid out (coins leaving the vault, their rush across the deck, landing, the chord), Mission control opened, a click and closed, then a unit hailing you: the comm's breath and the two chimes, and the ambience sinking under it.
+- `night-high-calm-sit-sound-muted.png`: Shift+M and its toast.
+
+    npm run build && SHOOT_SOUND=1 SHOOT_POSE=sit SHOOT_CREW=calm node design/shoot-interior.mjs feel-sound/after
+    SHOOT_ROOT=<a build of 4964e30> SHOOT_SOUND=settings SHOOT_POSE=sit SHOOT_CREW=calm node design/shoot-interior.mjs feel-sound/before
+
+### Levels
+
+Measured off the recordings (100 ms windows, at the default volume and mix):
+
+| | RMS | Peak |
+| --- | --- | --- |
+| Ambience at the chair (the drive is aft of it) | -39 dBFS | |
+| Ambience by the lounge | -42 dBFS | |
+| A hail (needs you) | -23 dBFS | -10 dBFS |
+| The jump's punch | -15 dBFS | -8 dBFS |
+| A payout's chord, from the chair (18 m off) | -28 dBFS | -17 dBFS |
+| A window opening | -29 dBFS | -19 dBFS |
+| A step on the plates | -30 dBFS | -15 to -7 dBFS |
+
+The shot's checks, printed by the script: a hidden tab keeps the alerts at full level while the interface, ship and ambience go to 0 and the ambience's sources are torn down within 2.5 s and come back when the tab does; while a unit needs you the ambience sits at 40%; Shift+M sets the master to 0 and back.
+
+### Frame times
+
+`PROBE_SOUND=1 node design/perf-probe.mjs metal`, which presses a key first so the sound starts (the after run had the ambience playing, the before run's sound was off by default), against the 4964e30 build (`frames-before.jsonl`, `frames-after.jsonl`).
+
+| | Before | After |
+| --- | --- | --- |
+| High, conn: draw calls | 395 | 395 |
+| High, conn: forced render p50 / p95 | 1.6 to 1.7 / 2.4 to 2.7 ms | 1.6 to 1.7 / 2.7 ms |
+| Port | 1.1 to 1.2 ms | 1.3 ms |
+| Jump with the tunnel open | 2.3 ms | 2.5 ms |
+| Motion layer | 0.1 ms | 0 ms |
+| rAF p50 / p95 | 16.7 / 16.8 ms | 16.7 / 16.8 ms |
+
+No draws: the sound runs on the audio thread. Per frame the page only diffs a few numbers (your steps, Bolt's state, the mix) and moves your ears 30 times a second. `node design/flicker-check.mjs` passes, Night and Day, 600 frames each.
+
+### Checks
+
+- `tests/sound.test.ts`: the mix (on by default, alerts loudest, a hidden tab's alerts only, Calm and Silent running, the sink while a unit needs you, never the alerts), the steps (a step each half cycle only when you covered ground, a run's stride, a stair, the lounge's grating), a jump's push and its landing, the seat, the ladder's own sounds, Bolt's words and chatter, the jump's parts, the payout's chord and the mixer's rows. `tests/motion.test.ts`: the cues. `tests/client-store.test.ts`: the mixer's default and parse, and a mute saved before the mixer dropped.
+- `npm run typecheck` and `npm run build` clean; `npm test` all but `mission-e2e`'s debrief test, which times out the same way on the 4964e30 build.
+
+### Left for later
+
+- Other people's steps and voices of the units at their consoles are not heard; only you and Bolt make sound on the deck.
+- The ambience does not change with where the ship is (a waypoint's region, the jump's tunnel) beyond the jump's own sounds.

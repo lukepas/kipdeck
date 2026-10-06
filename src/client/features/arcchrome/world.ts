@@ -154,6 +154,7 @@ export const arcChrome: Fixture<'arcChrome'> = (site) => {
   chevrons.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(PULL.count * 2 * 3), 3);
   chevrons.frustumCulled = false;
   chevrons.count = 0;
+  chevrons.visible = false;
   chevrons.renderOrder = 4;
   chevrons.name = 'arc-pull';
   site.group.add(chevrons);

@@ -56,6 +56,7 @@ import { installVoice } from './features/voice';
 import { installWaiting } from './features/waiting';
 import { installWalking } from './features/walking';
 import { installWhiteboard } from './features/whiteboard';
+import { installMonitor } from './features/monitor';
 import { installWorkerActions } from './features/workers/actions';
 import { installWorkerViews } from './features/workers/views';
 import { installDeclutter } from './features/workers/declutter';
@@ -92,6 +93,9 @@ import { installHoloUi } from './features/holoui';
 import { installTakeConn } from './features/takeconn';
 import { installHail } from './features/hail';
 import { installKinetic } from './features/kinetic';
+import { installHands } from './features/hands';
+import { installLounge } from './features/lounge';
+import { installSoundscape } from './features/soundscape';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -121,7 +125,14 @@ parts.stage = createScene(canvas, makeRenderer(canvas) ?? (await noWebGL()));
 parts.worlds = createWorlds(ctx);
 
 // ---- The install list ---------------------------------------------------------------------------
-parts.boards = installBoards(ctx, { aimedNote: () => parts.pointer.aimedNote(), pickUp: (it) => parts.cards.pickUp(it), boardActions: () => parts.actions.boardActions(), showQueue: () => parts.waiting.showQueue() });
+parts.boards = installBoards(ctx, {
+  aimedNote: () => parts.pointer.aimedNote(),
+  pickUp: (it) => parts.cards.pickUp(it),
+  boardActions: () => parts.actions.boardActions(),
+  showQueue: () => parts.waiting.showQueue(),
+  aimHit: () => parts.pointer.aimHit(),
+  watchService: (port) => parts.monitor.show(port),
+});
 installWhiteboard(ctx);
 // Onto whatever you're walking on: the office's floor and furniture.
 parts.tv = installTv(ctx, { shares: () => parts.talk.currentShares(), watch: () => parts.talk.watchShare(), jumpReady: () => parts.space?.phase() === 'held' });
@@ -168,9 +179,9 @@ parts.cards = installCarrying(ctx, {
   officeIsFull: parts.actions.officeIsFull,
   showMeeting: parts.meeting.showMeeting,
 });
-parts.seating = installSeating(ctx, { shares: () => parts.talk.currentShares(), watchShare: () => parts.talk.watchShare(), usable: () => parts.pointer.usable() });
+parts.seating = installSeating(ctx, { usable: () => parts.pointer.usable() });
 installLanded(ctx, { notifier: parts.notifier, ritual: () => parts.launch?.ritual() ?? null });
-installBounties(ctx);
+installBounties(ctx, parts);
 installPods(ctx);
 parts.proofCorner = installProofCorner(ctx);
 installBeats(ctx, parts);
@@ -227,6 +238,14 @@ installKinetic(ctx, parts);
 // The bridge's pulse at rest: the wave down the canopy's ribs, the halo's glint, the wake over the glass.
 installPulse(ctx, parts);
 installFocusLean(ctx, parts);
+// The forward lounge at the bow: its ladder's climb and its seats' view (features/lounge).
+parts.lounge = installLounge(ctx, parts);
+// The service monitor on the east wall: a unit's web server's live page (features/monitor).
+parts.monitor = installMonitor(ctx, parts);
+// Your gloved hands in first person, drawn over the deck (features/hands).
+installHands(ctx, parts);
+// What you hear besides the cues: your steps, Bolt, the interface and the bridge's ambience (features/soundscape).
+installSoundscape(ctx, parts);
 installDeclutter(ctx, parts);
 installDemo(ctx, parts);
 installChat(ctx);

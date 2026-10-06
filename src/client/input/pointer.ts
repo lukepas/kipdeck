@@ -175,6 +175,8 @@ export function installPointer(ctx: Ctx, core: CoreState, parts: PointerParts) {
   return {
     /** What you're pointing at (first person) or standing at (third), if anything. */
     target: () => target,
+    /** Where the crosshair's aim lands on what you can use, while it's within reach (first person); null otherwise. */
+    aimHit: (): THREE.Intersection | null => (player.view === 'first' && lastAim?.near && lastAim.it === target ? lastAim.hit : null),
     aimedNote: () => aimedNote,
     usable,
     use,

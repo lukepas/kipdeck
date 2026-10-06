@@ -4,7 +4,7 @@ import type { PeerInfo } from '../../shared/protocol';
 /**
  * What a teammate is up to, for the line under their name tag and in the sidebar: whatever they have
  * open ("in Pixel's terminal", "reading PR #12"), else somewhere worth saying they are ("on
- * the operator bench", "in the review bay"). Nothing while they're just walking about the deck.
+ * the lounge seat", "in the review bay"). Nothing while they're just walking about the deck.
  */
 export function whereabouts(p: PeerInfo): string | undefined {
   if (p.doing) return p.doing;
@@ -13,9 +13,10 @@ export function whereabouts(p: PeerInfo): string | undefined {
   const place = p.seat ? seatAt(p.seat) : undefined;
   const seat = place && SEATING_BY_ID.get(place.seatId);
   if (seat) {
-    // "Operator bench" -> "on the operator bench" (a 3D sign's leading symbol, if it has one, is left out).
+    // "Captain's chair" -> "in the captain's chair", "Lounge seat" -> "on the lounge seat" (a 3D sign's
+    // leading symbol, if it has one, is left out).
     const name = seat.label.replace(/^[^\p{L}\p{N}]+/u, '');
-    return `on the ${name.toLowerCase()}`;
+    return `${/chair$/i.test(name) ? 'in' : 'on'} the ${name.toLowerCase()}`;
   }
   // Through the north wall in the overflow bay (the back office): nobody gets there unless the floor's built out.
   if (p.y > -1 && inWing(p.x, p.z, WING.rows)) return 'in the overflow bay';

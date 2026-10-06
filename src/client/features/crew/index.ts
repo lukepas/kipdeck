@@ -51,7 +51,9 @@ export function installCrew(ctx: Ctx, parts: Pick<Parts, 'views' | 'giveWay' | '
   const white = new THREE.InstancedMesh(geo, new THREE.MeshBasicMaterial({ color: DECK.working, toneMapped: false }), MAX_UNITS * 3);
   const violet = new THREE.InstancedMesh(geo, new THREE.MeshBasicMaterial({ color: DECK.proof, toneMapped: false }), MAX_UNITS);
   for (const m of [white, violet]) {
+    // Empty is hidden: an instanced mesh with no instances is still a draw call.
     m.count = 0;
+    m.visible = false;
     m.frustumCulled = false;
     m.name = 'crew-chevrons';
     ctx.scene.add(onBridgeLayer(m));
@@ -123,6 +125,8 @@ export function installCrew(ctx: Ctx, parts: Pick<Parts, 'views' | 'giveWay' | '
     }
     white.count = w;
     violet.count = v;
+    white.visible = w > 0;
+    violet.visible = v > 0;
     if (w) white.instanceMatrix.needsUpdate = true;
     if (v) violet.instanceMatrix.needsUpdate = true;
   });

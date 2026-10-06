@@ -245,8 +245,11 @@ export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' |
     if (phase !== 'idle') endLaunch(true);
   });
 
-  ctx.ticks.add('world', ({ dt }) => {
-    clock += dt * 1000;
+  ctx.ticks.add('world', ({ delta }) => {
+    // The start of watch keeps the wall clock, not the frame's (capped at 0.1 s a frame): on a slow
+    // machine, a software renderer or a busy test run at a few frames a second, the wait for the deck and
+    // the launch's 6 s still take their own time instead of five times as long.
+    clock += delta * 1000;
     // At load: once the deck, its crew and its log are here (or after a while regardless), and the
     // arrival shot (features/cinema) has landed on the conn.
     if (pendingLoad && store.floor && !document.getElementById('loading') && !parts.cinema?.arriving()) {

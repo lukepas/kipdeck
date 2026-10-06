@@ -6,6 +6,7 @@
 // curb and the Standby bench either side of it.
 import { ARC, ARC_CENTRE, DAIS, TIERS, heroPanel, stripPanel, wingPanel } from './amphitheater.js';
 export { heightAt } from './amphitheater.js';
+import { LOUNGE_SEATS } from './lounge.js';
 
 export const FLOOR = { minX: -16, maxX: 16, minZ: -16, maxZ: 16 } as const;
 /** How high the ceiling is, all the way across the room. */
@@ -405,11 +406,15 @@ export function plantsAt(level: number): readonly (readonly [x: number, z: numbe
 }
 
 /**
- * The planning board on wheels everyone sketches on together, out on the open floor in the east
- * aisle, off the way in from the lift, facing north (`rotY` PI faces -z). `width` and `height` are its
- * writing surface, whose bottom edge is `bottom` above the floor.
+ * The planning board everyone sketches on together, mounted flush on the west wall between the Review
+ * bay's front glass and the hull frame north of the attestation rail, facing the deck (`rotY` PI/2
+ * faces +x). From the captain's dais it is off the port bow, clear of the line to the situation arc and
+ * the bow glass; nothing stands in the way to it. `x` is its back on the wall; `width` and `height` are
+ * its writing surface, whose bottom edge is `bottom` above the floor (over the walls' low light strip).
  */
-export const WHITEBOARD = { x: 12.6, z: 7.6, rotY: Math.PI, width: 4, height: 2.2, bottom: 0.5 } as const;
+export const WHITEBOARD = { x: FLOOR.minX + 0.04, z: -8.98, rotY: Math.PI / 2, width: 2.8, height: 2.0, bottom: 1.05 } as const;
+/** How far the planning board stands off the wall, its frame and face included (m). */
+export const WHITEBOARD_DEPTH = 0.1;
 
 /** The office's floor slab: it runs from -SLAB up to 0. */
 export const SLAB = 0.3;
@@ -480,7 +485,7 @@ export const CONN = { x: DAIS.x, z: DAIS.z, r: DAIS.r, h: DAIS.h, rail: 0.95 } a
 
 /**
  * Something to sit on, standing at x, z on the floor at `y`. You
- * sit facing `rotY` (0 = +z). A couch has a few places side by side; a chair or a beanbag has one.
+ * sit facing `rotY` (0 = +z). A bench has a few places side by side; a chair has one.
  */
 export interface SeatDef {
   id: string;
@@ -498,29 +503,28 @@ export interface SeatDef {
   depth: number;
   /** Getting up, you step off this far in front of where you sat (negative: behind, away from a desk or a table). */
   out: number;
-  /** It faces the lounge TV: sitting down there puts whatever's being shared up on your screen. */
-  tv?: boolean;
+  /** A seat for looking out of the bow glass (the forward lounge, shared/lounge.ts): Esc gets you up too. */
+  view?: boolean;
 }
 
 /**
- * Where people can sit: the operator bench and its stools (buildOffice puts them there), in the pit
- * north of the table, facing the Attention board, and the captain's chair on the conn, facing the same
- * way from the back of the tiers. Units have their own seats, the consoles and the Standby bench in SEATS.
+ * Where people can sit: the captain's chair on the conn, facing the Attention board from the back of
+ * the tiers, and the forward lounge's seats facing the bow glass. Nothing stands in the pit between the
+ * table and the arc: a shared screen is watched with E at the Attention board itself (features/tv).
+ * Units have their own seats, the consoles and the Standby bench in SEATS.
  */
 export const SEATING: SeatDef[] = [
-  { id: 'couch', label: 'Operator bench', x: 0, y: 0, z: -4.4, rotY: Math.PI, places: [-1, 0, 1], hips: 0.5, depth: -0.05, out: 0.9, tv: true },
-  // A stool either side of it, turned to the board.
-  { id: 'lounge-beanbag-1', label: 'Stool', x: -2.45, y: 0, z: -4.2, rotY: Math.atan2(TV.x + 2.45, TV.z + 4.2), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
-  { id: 'lounge-beanbag-2', label: 'Stool', x: 2.45, y: 0, z: -4.2, rotY: Math.atan2(TV.x - 2.45, TV.z + 4.2), places: [0], hips: 0.42, depth: -0.1, out: 1.2 },
   // On the conn, a little south of its middle, so getting up leaves you on the dais facing the bow; set
   // high, so the seated eye is about 3 m over the deck, over the tiers and the pit to the arc.
   { id: 'conn', label: "Captain's chair", x: CONN.x, y: CONN.h, z: CONN.z + 0.25, rotY: Math.PI, places: [0], hips: 0.58, depth: -0.05, out: 0.8 },
+  // Up in the forward lounge behind the arc, facing the bow glass.
+  ...LOUNGE_SEATS,
 ];
 export const SEATING_BY_ID = new Map(SEATING.map((s) => [s.id, s]));
 
 /** One place on a seat: where your feet go on its floor, the way you face, and the rest of what sitting there takes. */
 export interface SeatPlace {
-  /** What a peer's `seat` says while they sit here: the seat's id and which place, like "couch:1". */
+  /** What a peer's `seat` says while they sit here: the seat's id and which place, like "conn:0". */
   key: string;
   seatId: string;
   x: number;

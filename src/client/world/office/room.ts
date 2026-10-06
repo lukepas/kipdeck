@@ -1,16 +1,13 @@
 import * as THREE from 'three';
-import { BOARDS, MACHINE_MONITOR, SEATING_BY_ID, TV } from '../../../shared/layout';
-import { mesh } from '../toon';
+import { BOARDS, MACHINE_MONITOR, TV } from '../../../shared/layout';
 import type { Interactable } from '../types';
 import type { Fixture } from './fixture';
-import { DECK, box, contactShadow, flat } from './materials';
 import { wallBoard } from './props';
-import { chair, seatable } from './seats';
 
 // The deck past its walls and its seats: the boards of the situation arc hung north of the mission
 // table (Issues, Queue, Attention, Pull requests and Services; the arc's own structure is
-// features/amphitheater/arc.ts), the capacity strip under the Attention board and the operator bench. The lamps over the pods and the
-// table are the lights' (features/lights/rig.ts).
+// features/amphitheater/arc.ts) and the capacity strip under the Attention board. The pit between the
+// table and the arc is left clear. The lamps over the pods and the table are the lights' (features/lights/rig.ts).
 
 declare module '../types' {
   interface OfficeHandles {
@@ -65,35 +62,4 @@ export const machineMonitor: Fixture<'machineScreen'> = (site) => {
   monitor.rotation.y = m.rotY;
   site.group.add(monitor);
   return { handle: { machineScreen } };
-};
-
-/** The operator bench due north of the table, facing the Attention board, and a stool either side of it. */
-export const lounge: Fixture = (site) => {
-  const seat = SEATING_BY_ID.get('couch')!;
-  const bench = new THREE.Group();
-  // Built along x facing +z, then turned to face the board.
-  const len = 3.4;
-  bench.add(mesh(box(len, 0.4, 0.7), flat(DECK.console), 0, 0.2, 0));
-  bench.add(mesh(box(len - 0.06, 0.06, 0.64), flat(DECK.consoleTop), 0, 0.43, 0));
-  bench.add(mesh(box(len, 0.36, 0.1), flat(DECK.console), 0, 0.64, -0.32));
-  bench.add(contactShadow(len + 0.6, 1.4));
-  bench.position.set(seat.x, 0, seat.z);
-  bench.rotation.y = seat.rotY;
-  site.group.add(bench);
-  // Its top on the seat, so someone standing on the bench stands on it: along x or z, the way it's turned.
-  const alongX = Math.abs(Math.cos(seat.rotY)) > 0.5;
-  site.colliders.push(alongX ? { minX: seat.x - len / 2, maxX: seat.x + len / 2, minZ: seat.z - 0.5, maxZ: seat.z + 0.5, top: 0.46 } : { minX: seat.x - 0.5, maxX: seat.x + 0.5, minZ: seat.z - len / 2, maxZ: seat.z + len / 2, top: 0.46 });
-  seatable(bench, 'couch', 2.6, site.interactables);
-
-  for (const id of ['lounge-beanbag-1', 'lounge-beanbag-2']) {
-    const s = SEATING_BY_ID.get(id)!;
-    const stool = chair();
-    stool.position.set(s.x, 0, s.z);
-    stool.rotation.y = s.rotY;
-    stool.add(contactShadow(0.9, 0.9));
-    site.group.add(stool);
-    site.colliders.push({ minX: s.x - 0.3, maxX: s.x + 0.3, minZ: s.z - 0.3, maxZ: s.z + 0.3, top: 0.42 });
-    seatable(stool, id, 1.4, site.interactables);
-  }
-  return {};
 };
