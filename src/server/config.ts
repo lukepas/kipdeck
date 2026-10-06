@@ -10,6 +10,7 @@ import { splitEnvNames, validEnvPattern, type WorkerEnvConfig } from './worker-e
 import { readStateJson, stateDirProblem, untrustedState, writeState } from './safefs.js';
 import { CHAIN_HELP, chainFlagsFromEnv, takeChainFlag, type ChainFlags } from './chain/flags.js';
 import { parseLabList, type LabId } from '../shared/labs.js';
+import { telemetryForbidden } from './telemetry.js';
 
 export interface Config {
   /** The office's own folder: the building's data lives in its .agent-office. */
@@ -21,6 +22,8 @@ export interface Config {
   projects?: string;
   /** Started as `agent-office <dir>`: that checkout is a floor of its own (it's also `dir`). */
   project?: string;
+  /** Started from a terminal (with no [dir]) inside a git checkout: its top (cli.ts). The first project of a new office, and the setup card's suggestion. */
+  startedIn?: string;
   host: string;
   port: number;
   /** --port or PORT named the port: it's that one or nothing. Otherwise the next free one from 4600 will do. */
@@ -69,6 +72,8 @@ export interface Config {
   chain: ChainFlags;
   /** Labs held on from the command line (--labs, AGENT_OFFICE_LABS; a chain flag holds proof on). See labs.ts. */
   labs: LabId[];
+  /** Anonymous usage numbers (telemetry.ts): off unless turned on; `forbidden` keeps them off for good. */
+  telemetry: { forced: boolean; forbidden?: string; endpoint?: string };
 }
 
 export interface RTCIceServerLike {
@@ -178,6 +183,11 @@ Options:
       --labs <names>      Hold labs on, comma separated (env AGENT_OFFICE_LABS):
                           bridge, ops, meetings, voice, ambience, proof, or all.
                           All are off by default; admins switch them from Labs
+      --telemetry         Share anonymous usage numbers (env MERGELINE_TELEMETRY=1):
+                          minutes to the first agent, answer and merge, and
+                          minutes agents wait in Needs you. Off by default; the
+                          setup card turns it on or off. See docs/security.md
+      --no-telemetry      Never share them (also DO_NOT_TRACK=1)
 ${CHAIN_HELP}  -h, --help              Show this help
 
 Started in a terminal, it opens in your browser already signed in, with a link
@@ -349,6 +359,10 @@ export function loadConfig(argv: string[]): Config {
       case '--projects':
         projects = path.resolve(takeValue(argv, i++, a));
         break;
+      case '--telemetry':
+      case '--no-telemetry':
+        // Read with the environment below (telemetryForbidden).
+        break;
       case '--labs': {
         const more = parseLabList(takeValue(argv, i++, a));
         labs.on.push(...more.on);
@@ -517,6 +531,11 @@ export function loadConfig(argv: string[]): Config {
     webhook,
     chain,
     labs: forcedLabs(labs, chain),
+    telemetry: {
+      forced: argv.includes('--telemetry') || process.env.MERGELINE_TELEMETRY === '1',
+      forbidden: telemetryForbidden(process.env, argv),
+      endpoint: process.env.MERGELINE_TELEMETRY_URL || undefined,
+    },
   };
 }
 
