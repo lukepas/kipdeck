@@ -156,6 +156,8 @@ export interface Row {
   side?: string;
   sideColor?: string;
   sideMono?: boolean;
+  /** Room kept clear at the row's right end, past the side text (canvas units): where a bounty's coin hovers. */
+  sideGap?: number;
   /** A second line, smaller, for up close. */
   sub?: string;
   /** Finished or a draft: the card and its words step back. */
@@ -206,7 +208,7 @@ export function row(g: CanvasRenderingContext2D, W: number, i: number, r: Row, t
   r.mark?.(g, x0 + glyphX - pad / 2, r.sub ? y + 40 : y + rowH / 2, 19);
   g.textBaseline = 'alphabetic';
   // The side text first, so the main line knows how much room it has.
-  let right = x0 + w - 24;
+  let right = x0 + w - 24 - (r.sideGap ?? 0);
   if (r.side) {
     g.textAlign = 'right';
     g.font = r.sideMono ? MONO(36, 600) : UI(500, 38);

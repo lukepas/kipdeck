@@ -19,6 +19,7 @@ import { MachineTexture } from './machine';
 import { MeetingBoardTexture, MeetingSignTexture } from './meeting';
 import { foldWings } from './fold';
 import type { World } from '../../world/world';
+import { boardBounties } from '../bounties/logic';
 
 // The kinds of thing you can use that this defines (see InteractKinds in world/types.ts).
 declare module '../../world/types' {
@@ -68,10 +69,12 @@ export function installBoards(ctx: Ctx, deps: BoardsDeps) {
   // The cork holds the issues nobody has started on: one that's in progress comes off it, as a closed one does.
   const renderIssuesBoard = () => {
     const off = offBoard();
-    issuesTex.render({ ...store.issues, items: store.issues.items.filter((i) => !off.has(i.number) && !inProgress(i, store.taskForIssue(i.number))) });
+    const items = store.issues.items.filter((i) => !off.has(i.number) && !inProgress(i, store.taskForIssue(i.number)));
+    issuesTex.render({ ...store.issues, items }, undefined, boardBounties(store.floor ? store.bounties?.[store.floor] : undefined));
   };
   // The queue too: a task that starts running takes its issue off the board before GitHub says it's assigned.
-  mountBoard(office.boardMeshes.issues, issuesTex.texture, renderIssuesBoard, ['issues', 'queue']);
+  // A funded issue's row carries its amount, and its coin hovers there (features/bounties).
+  mountBoard(office.boardMeshes.issues, issuesTex.texture, renderIssuesBoard, ['issues', 'queue', 'bounties']);
   let carriedOff = '';
   store.on('peers', () => {
     const k = [...offBoard()].join(',');
