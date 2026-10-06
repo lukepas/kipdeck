@@ -2,6 +2,58 @@
 
 Back to the [README](../README.md) and the [design system](../DESIGN.md).
 
+The latest round is first, [the interior: the hype round](#the-interior-the-hype-round); the earlier rounds follow it in order.
+
+## The interior: the hype round
+
+The captain said the room looked poor: no clarity, no readability, no hype, and he could not tell what had changed. Every shot here is on the GPU (ANGLE Metal, M3 Pro) at 1440x900, Quality forced to High unless it says Medium, sat in the captain's chair, captured with a seeded demo crew (desk-2's unit asking, two to review, the rest at work, a course set). The before set is the build of 65a6819 from a `git archive` (`shots/interior-final/baseline-commit.txt`).
+
+### What changed (check it in under a minute)
+
+1. **The sky is deep, not a white haze.** Sit down by Night: the top of the frame is a saturated magenta, teal and indigo galaxy with crisp stars, and nothing glows over the boards (`before-after-night-high-sit.png`).
+2. **The Attention board fills its glass.** Three cards or fewer go full width; the one that needs you is a big lit hero card with an **N** key on it; a spare row says how many are on task; with nobody waiting it says **ALL CLEAR**.
+3. **Every board reads whole from the chair.** With the Units rail open the view is centred on the canvas right of it, so Issues is no longer cut off.
+4. **The countdown is the hype beat.** A milestone done shows **JUMP IN** and a huge digit with a ring wiping round it and a punch each second, never cut (`before-after-night-high-calm-sit-jump-countdown.png`).
+5. **The room moves at rest.** Every 7 s a wave of light runs down the canopy's ribs, a glint turns round the halo, and at High lit dust streams over the glass (`reel-15s.mp4`).
+6. **Stand up behind the chair** and you see the pit: the back is shoulder high with a headrest and a cyan rim (`before-after-night-high-sit-stand.png`).
+7. **Press G**: the Overview is a dark slate plan with the arc facing you and the deck filling the frame (`before-after-night-high-sit-overview.png`).
+8. **Less clutter**: the holo's caption is a third smaller, the orange beam is a faint thread, a free seat's plus shows only up close, and the chair's hint shrinks to "E Get up" after 3 s.
+
+### Before and after
+
+In `shots/interior-final/`: side by side, `before-after-<shot>.png` (Night High seated, Day High seated, Night Medium seated, the Overview, standing behind the chair, from the table, the countdown); the stills alone in `before/` and `after/`; `reel-15s.mp4` (6 s of the idle bridge, then a merge, the countdown and the jump, Night, High, from the chair) and its contact sheet `reel-sheet.png`. Taken with `SHOOT_POSE=sit SHOOT_MISSION=1 SHOOT_QUALITY=<high|medium> SHOOT_LIGHT=<night|day> SHOOT_OVERVIEW=1 node design/shoot-interior.mjs interior-final/<side>` (`SHOOT_CREW=calm SHOOT_MOTION=jump` for the countdown) and `SHOOT_POSE=sit SHOOT_QUALITY=high SHOOT_OUT=interior-final/after node design/shoot-life.mjs idle,seatmerge` for the reel.
+
+### Frame time
+
+`node design/perf-probe.mjs metal` from the chair (`PROBE_CONN='[[0,2.98,11],[0,3.5,-6.5]]'`), before and after, two runs each at High and one at Medium, Low and Auto (`frames-before.jsonl`, `frames-after.jsonl`).
+
+| | Before | After |
+| --- | --- | --- |
+| High, conn: draw calls (budget 400) | 364 | 364 |
+| High, conn: forced render p50 / p95 | 1.8 to 2.0 / 2.3 to 2.4 ms | 1.9 to 2.1 / 2.2 to 2.5 ms |
+| High, jump with the tunnel open | 396 calls, 1.9 to 2.0 ms | 396 calls, 2.0 to 2.1 ms |
+| High, conn, CPU 4x | 7.2 to 10.9 ms | 7.5 to 7.6 ms |
+| Medium, conn | 303 calls, 1.4 to 1.6 ms | 302 calls, 1.6 to 1.8 ms |
+| Low, conn | 254 calls, 1.4 to 1.8 ms | 252 calls, 1.5 to 1.7 ms |
+| Motion layer (Ship motion on against off), High | 0.1 ms | 0 to 0.1 ms (budget 0.6) |
+| Auto on the M3 Pro | | picked High, stayed at High |
+| rAF p95 | 16.7 ms | 16.7 ms (60 fps) |
+
+The pulse is two draws animated on the GPU from one clock (no per-frame CPU work but a few uniforms); the sky's cap is a few instructions in a shader that was already drawn. The Low motion line read 0.3 ms (p95 0.2) in one run, against 0.1 before: the pulse does nothing at Low (it returns at once), so that is the 0.1 ms clock's noise.
+
+### Checks
+
+- `npm run typecheck` and `npm run build` clean. `npm test`: 1024 of 1025; the one failure is `mission-e2e`'s debrief test, which waits 60 s for a 3D office under SwiftShader that takes about 63 s, and fails the same way on the before build (run here on its `git archive`).
+- `node design/flicker-check.mjs` passes by Night and by Day, at High, by default and through a jump (`FLICKER_JUMP=1`).
+- New tests: `tests/seatframe.test.ts` (every board whole right of the rail from the seat), `tests/interior-hype.test.ts` (the sky's cap under the glow and the tone mapping, the rib wave, when the pulse plays, the tiers, the plus marks), the wide board and ALL CLEAR in `tests/boards-screen.test.ts`, the countdown's copy, beat and fit in `tests/motion-layer.test.ts`, the Overview's framing in `tests/cinema.test.ts`.
+
+### Left for later
+
+- Day is still blue-lit by the planet and close to the before set apart from the board and the sky; a warmer sun rim and a cooler key were not tuned this round.
+- Armrest console screens and a warm amber counter-colour for the captain's controls (the critics' identity notes) were not built.
+- The mission bar in the bottom HUD still cuts the goal and the course.
+- The working pip over a unit near the camera still reads as a floating cyan disc from close by.
+
 Three critics (visual, originality and a hackathon judge) reviewed the redesign from the shots in `shots/review/`. This round fixed every item they marked must and most of the should and nice ones. The after shots are in `shots/final/`; `shoot.mjs final` and `node --import tsx shoot-pom.ts final` take them again from a built office.
 
 ## Why it changed
