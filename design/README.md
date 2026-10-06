@@ -867,3 +867,62 @@ The sky's new work is in its bake (once per region); the spotlight is two unifor
 - Day's rib shadows across the tiers: the key's shadow map doesn't take the canopy's ribs as casters yet.
 - Flybys with kitbashed silhouettes (freighter, corvette, fighter wing) were not built in this stage.
 - The calm and need fixtures don't share a frame (the held jump plays when nobody waits): a pinned-region option for the shoot would let the give-way be measured on pixels.
+
+## The interior: motion
+
+The fifth stage of the interior round: a motion layer over the room, so a change is something the captain sees happen rather than finds changed, and the bridge feels alive without costing frames. Four features, each a module of its own: `features/holoui` (the arc's faces in motion), `features/takeconn` (taking the conn, the gold chase), `features/hail` (the attention beats) and `features/kinetic` (the set pieces over the bow). What it is and how it moves is in [docs/design.md](../docs/design.md#the-motion-layer) and DESIGN.md (rules 1 and 8).
+
+### What changed
+
+- **Taking the conn**: on sitting in the chair and as the session's arrival, about 3 s. The view rises from behind the chair's back, clear over its top, onto the seated eye; the tier lips light from the pit up to the dais a step every 120 ms; the arc builds in, the Attention board first, each face wiped on from the bottom with a scanline, its header typed behind a cursor and its counts rolling like an odometer; the armrest strips boot. Any key skips it on the next frame; Low and less motion get a 300 ms fade.
+- **The arc's chrome**: an edge-light chase round every board every 6 s, a scan down the whole arc every 6 s at 15%, a sweep across a header when its data changes, new cards sliding in (250 ms, 120 ms apart), bezels crossfading to a new state's hue.
+- **The hail**: the station flares, a shockwave spreads over the floor, the beam climbs to the card in 400 ms, the card slides into the top of the Attention board with orange chevrons, and the unit's ship marker flies from the holo to hover in front of the dais with its call sign for 1.6 s. Stuck: a red sweep, a 1 Hz rim blink and a scanline tear on its card only. Done: a green flash, a tick into the holo, the course filling to the ship.
+- **Data flow**: dashes up every needs-you beam, a gold chase up the tier lips every 8 s (bright on a waypoint).
+- **One kinetic type plane** under the canopy over the arc: WAYPOINT 2/4 CLEARED, the jump's 3-2-1 (now said only there: the band and the sky's banner no longer repeat it, which the critics flagged) and MISSION COMPLETE.
+- **The warp**: the room down to 40% through the countdown (it was 65%), the arc folding flat through the stretch and the tunnel, opening on the new system. **The mission complete**: the galaxy 30% brighter for 6 s, the course gold, a V of markers over the pit. **Night and Day**: a 1.2 s iris over the glass.
+- **Ambient, tuned to be seen**: the route turns 6 degrees a second (was 3), the conn breathes 0.6 of a degree over 7 s (was a third), the sky turns 3 degrees a minute (was 0.6) with the nebula's knots drifting, and a flyby every 40 to 90 s (was 6 to 10 minutes).
+
+### Before and after
+
+On the GPU (ANGLE Metal, M3 Pro) at 1440x900, sat in the captain's chair, a course set, the desk-2 need fixture, toasts closed, in `shots/interior-motion/`. The before set is 4644bcd (the look stage) from a `git archive` in a scratch folder (`SHOOT_ROOT`); static frames of the two builds are the same picture by design, so the comparison is of the beats.
+
+| | Before | After |
+| --- | --- | --- |
+| A new call at desk-12, real time (`before-after-hail-400/800/1500.png`, `*/night-high-sit-hailclip.mp4`) | the card appears, the diamond and beam come on, nothing else | the station flares, a shockwave on the floor, the card slides in with chevrons, the marker C-04 hovers by the dais |
+| The hail held at 0, 200, 400, 800 and 1500 ms (`after-hail-sequence.png`, the sixth frame Ship motion Off) | | flare and ring, the beam on its way, the card's empty slot outlined, the card sliding in with the sweep, the marker at the dais; at 1500 ms the steady diamond; with motion off a still outline and the marker crossfaded in, nothing travels |
+| Sitting in the chair (`before-after-conn-1000.png`, `after/night-high-sit-conn-*.png`, `*/connclip.mp4`) | a cut to the seated view | over the chair's back at 0 to 250 ms, the arc wiping and typing on at 600 to 1000, whole at 2400 |
+| The jump, calm crew (`after/night-high-calm-sit-jump-*.png`) | the countdown on the band and on the sky | the countdown once on the type plane with WAYPOINT 1/4 CLEARED, streaks with the arc folded flat, the arc open again on arrival |
+| Medium and Day (`after/night-medium-sit-hail-800/1500.png`, `after/day-high-sit-hail-800/1500.png`, `after/day-medium-sit-connclip.mp4`) | | the same beats: Medium keeps every one of them, Day reads them on its lighter plate |
+| Stuck, done, mission complete, iris (`after/*-stuck-*`, `*-done-*`, `*-complete-*`, `*-iris-*`) | | the red sweep on its card; the green flash and tick; MISSION COMPLETE in gold; the iris over the glass |
+| 5 s of ambient from the chair (`*/night-high-calm-sit-ambient.mp4`, `-first-last.png`) | the holo turning, the scan rings | plus the scan down the arc, the edge chase, the beams' dashes, the gold chase, the breathing and the drifting gas |
+
+Measured on the shots: the take of the conn skipped by a key mid-way is over on the next frame (`at` null, the camera moved 0.4 mm, the breathing); the countdown's places during a jump are the type plane only (`{"kinetic":"2","skyBanner":false,"band":null}`); a rail group folds and unfolds in 27 ms in the middle of the tunnel.
+
+### Frame times
+
+`node design/perf-probe.mjs metal` from the chair (`PROBE_CONN='[[0,2.98,11],[0,3.5,-6.5]]'`), `PROBE_SETTINGS='{"quality":"high"}'`, before and after alternating, five runs each (`frames-before.jsonl`, `frames-after.jsonl`), and one each at Low (`frames-low.jsonl`). Medians of the runs; p95 the median of the runs' p95s, the worst in brackets.
+
+| | Before | After | Budget |
+| --- | --- | --- | --- |
+| Conn, High: forced render | 1.8 ms, p95 2.35 (2.6) | 1.85 ms, p95 2.35 (2.5) | |
+| Conn, High, CPU 4x | 7.4 ms, p95 9.1 (9.5) | 7.4 ms, p95 9.2 (9.3) | |
+| Conn draw calls | 364 | 364 | 400 |
+| Jump with the tunnel open | 2.0 ms, p95 2.5, 396 calls | 2.0 ms, p95 2.5, 396 calls | |
+| rAF p95 | 16.7 ms | 16.7 ms | |
+| Motion layer at rest, High (Ship motion on against off, frame CPU) | 0.1 to 0.2 ms | 0.1 to 0.2 ms, p95 0 to 0.1 | 0.6 |
+| Motion layer with a hail held mid-beat, High | | 0 to 0.1 ms, p95 0 to 0.1 | 0.6, 1 at p95 |
+| Motion layer at Low, at rest / with a hail | 0.1 ms | 0.1 / 0.2 ms, p95 0 / 0.1 | 0.2 |
+
+The A/B is CPU time at the browser's 0.1 ms resolution, and the before build's own reading (0.1 to 0.2 ms) is the floor of it: the layer adds nothing the probe can tell apart. At rest it adds no draw call; a beat's flares, rings and couriers are one instanced draw each while they play.
+
+### Checks
+
+- `tests/motion-layer.test.ts`: the take of the conn's order and length, the steps pit to dais, the rise clear over the chair's back, the gold chase, the scan, a card's uv, the warp's fold, the hail's beam, flare, ring and marker (in front of the dais, only a fade with less motion), the type plane's cards and crossfade, the countdown said once, the mission complete, the iris, and the ambient rates. `tests/cinema.test.ts` and `tests/space.test.ts` hold the new breathing and flyby gap.
+- `npm run typecheck` and `npm run build` clean; `npm test` 1014 of 1015, the one failure `mission-e2e`'s debrief test under SwiftShader, whose debrief takes about 63 s on this build and on the before build alike against a 60 s wait. `FLICKER_QUALITY=high node design/flicker-check.mjs metal` passes by Night and by Day, and with `FLICKER_MOTION=off` (Ship motion Off) too.
+
+### Left for later
+
+- The second region of sky after a jump (region 2) has a bright cyan core behind the arc that washes the Attention board; the before build does the same (checked side by side), so it is the sky's tuning, not this layer.
+- The wings' rows don't slide in yet: only the Attention board's cards do; a wing's header sweeps instead.
+- The hail's marker leaves a ghost: the holo's own marker for that unit stays on the route while its copy flies to the dais.
+- The beam's climb is easiest to see from a station in view; a unit out of view shows its card's slide and the marker.
