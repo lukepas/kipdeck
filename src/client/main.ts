@@ -10,7 +10,6 @@ import { askName } from './ui/name';
 import { elevatorPanelOpen } from './ui/elevator';
 import { onModelsProgress, preloadModels } from './world/models';
 import { loadingScreen } from './ui/loading';
-import { offerLite, touchOnly } from './ui/litesuggest';
 import { createCtx } from './core/ctx';
 import type { Parts } from './core/parts';
 import { createScene, fitWindow, makeRenderer, noWebGL } from './core/scene';
@@ -98,18 +97,13 @@ import { installKinetic } from './features/kinetic';
 import { installHands } from './features/hands';
 import { installLounge } from './features/lounge';
 import { installSoundscape } from './features/soundscape';
+import { fetchLabs, installLabs } from './features/labs';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
-// Came here from the 2D view's 3D button: it isn't offered straight back.
-const chose3d = new URLSearchParams(location.search).has('3d');
-if (chose3d) history.replaceState(null, '', location.pathname);
-/** Offers the 2D view (/lite) where the 3D is hard going. */
-const offer2d = (why: 'touch' | 'slow') => chose3d || offerLite(why);
-// A phone can't walk around the office: the 2D view is made for it.
-if (touchOnly()) offer2d('touch');
-// The models made in Blender, loaded before the world they're in is built (see world/models.ts).
-await preloadModels();
+// The models made in Blender, loaded before the world they're in is built (see world/models.ts), and
+// which labs are on (Bridge ambience decides how the bridge starts).
+const [labsAtStart] = await Promise.all([fetchLabs(), preloadModels()]);
 
 // ---- The context every part of the office plugs into (see core/context.ts) ----------------------------
 // Built before the parts it hands out, which are there by the time anything asks for them. Every part
@@ -119,7 +113,7 @@ await preloadModels();
 const parts = {} as Parts;
 const { ctx, core } = createCtx(parts);
 // The office's own parts of each frame, before anything else's.
-installLoop(ctx, parts, { offer2d });
+installLoop(ctx, parts);
 
 // ---- Renderer & scene ---------------------------------------------------------------------------
 const canvas = $('scene') as HTMLCanvasElement;
@@ -144,6 +138,8 @@ parts.net = new Net(() => store.profile, () => parts.arrival.whereNow());
 parts.voice = new Voice(parts.net);
 parts.me = makeMe(ctx);
 parts.settings = loadSettings();
+// Before anything reads the settings: without Bridge ambience the bridge starts calm (features/labs).
+installLabs(ctx, parts, labsAtStart);
 parts.player = new PlayerController(ctx.camera, canvas, ctx.office.colliders);
 installKeyGuards(ctx, parts);
 parts.place = installPlace(ctx, core, parts);
@@ -277,7 +273,7 @@ function boot() {
 async function whoami() {
   try {
     const res = await fetch('/api/whoami', { cache: 'no-store' });
-    if (res.status === 401) location.href = '/login';
+    if (res.status === 401) location.href = '/login?next=/bridge';
     const { me } = (await res.json()) as { me?: typeof store.me };
     if (me) store.me = me;
   } catch {

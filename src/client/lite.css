@@ -1,8 +1,8 @@
 @import './styles/base.css';
 
-/* The 2D view (lite.html): a page that scrolls, made for a phone, rather than a HUD over the 3D deck.
-   The same tokens, top bar, counters and status glyphs as the 3D office; a plain ranked list of units,
-   each with a stripe in its state's color. */
+/* The home page (index.html, lite.ts): a page that scrolls, made for a desk and a phone alike, rather
+   than a HUD over the 3D bridge. The same tokens and status glyphs as the bridge; one plain ranked list
+   of agents, each with a stripe in its state's color, in one calm column. */
 html, body { height: auto; min-height: 100%; overflow: auto; }
 body.lite { min-height: 100dvh; background: var(--void); -webkit-tap-highlight-color: transparent; }
 
@@ -18,11 +18,10 @@ body.lite { min-height: 100dvh; background: var(--void); -webkit-tap-highlight-c
 }
 .lite-floor select option { background: var(--surface-1); color: var(--text); }
 .lite-floor select:disabled { background-image: none; opacity: 1; cursor: default; }
-.lite-bar .counters { margin: 0; }
 
-.lite-main { width: 100%; max-width: 760px; margin: 0 auto; padding: 14px 12px calc(96px + env(safe-area-inset-bottom)); }
-/* The deck plan (shared/plot.ts) beside the list on a wide window, above it on a middling one, and
-   folded away on a phone, where the ranked list is the whole page. */
+.lite-main { width: 100%; max-width: 880px; margin: 0 auto; padding: 20px 16px calc(96px + env(safe-area-inset-bottom)); }
+/* The deck plan (shared/plot.ts), only with Bridge view on in Labs (body.with-plot): beside the list
+   on a wide window, above it on a middling one, and folded away on a phone. */
 .lite-plot-panel { display: none; }
 .lite-plot { aspect-ratio: 39.2 / 29.4; width: 100%; background: var(--void); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
 .lite-legend { display: inline-flex; flex-wrap: wrap; gap: 4px 14px; margin-left: auto; font: 400 11px var(--font-ui); text-transform: none; letter-spacing: 0; font-stretch: 100%; color: var(--muted); }
@@ -33,13 +32,14 @@ body.lite { min-height: 100dvh; background: var(--void); -webkit-tap-highlight-c
 .lite-key.l-working .ico { color: var(--working); }
 .lite-key.l-parked .ico { color: var(--faint); }
 @media (min-width: 720px) {
-  .lite-main { max-width: 1440px; padding-left: 20px; padding-right: 20px; }
-  .lite-plot-panel { display: block; margin-bottom: 18px; }
+  .lite-main { padding-left: 24px; padding-right: 24px; }
+  body.with-plot .lite-main { max-width: 1440px; }
+  body.with-plot .lite-plot-panel { display: block; margin-bottom: 18px; }
   .lite-plot { max-height: 52vh; margin: 0 auto; }
 }
 @media (min-width: 1100px) {
-  .lite-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(420px, 520px); gap: 24px; align-items: start; }
-  .lite-plot-panel { position: sticky; top: 66px; margin: 0; }
+  body.with-plot .lite-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(420px, 520px); gap: 24px; align-items: start; }
+  body.with-plot .lite-plot-panel { position: sticky; top: 66px; margin: 0; }
   .lite-plot { max-height: calc(100dvh - 150px); }
 }
 .lite-meta { margin: 0 0 12px; font: 400 11px var(--font-mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -92,7 +92,9 @@ body.lite { min-height: 100dvh; background: var(--void); -webkit-tap-highlight-c
 .lite-state { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .lite-state small { font: 400 11px var(--font-mono); color: var(--muted); white-space: nowrap; }
 .lite-say { flex: none; align-self: center; width: 36px; height: 36px; margin-right: 10px; padding: 0; justify-content: center; }
-.lite-empty { padding: 28px 12px; text-align: center; color: var(--muted); background: var(--surface-1); }
+.lite-empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 32px 12px; text-align: center; color: var(--muted); background: var(--surface-1); }
+.lite-empty p { margin: 0; }
+.lite-empty .btn { height: 40px; padding: 0 16px; }
 
 .lite-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 8px 12px; padding-bottom: max(8px, env(safe-area-inset-bottom)); background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-top: 1px solid var(--line); }
 .lite-nav .btn { min-height: 44px; padding: 4px 6px; justify-content: center; flex-wrap: wrap; gap: 6px; white-space: normal; text-align: center; line-height: 1.15; font-size: 13px; }
@@ -101,14 +103,14 @@ body.lite { min-height: 100dvh; background: var(--void); -webkit-tap-highlight-c
 .lite-nav .n:empty { display: none; }
 .lite-nav .n { min-width: 18px; padding: 0 4px; border-radius: var(--radius-chip); background: var(--surface-3); color: var(--text); font: 500 11px/16px var(--font-mono); }
 .lite-nav .btn.primary .n { background: rgb(13 19 26 / .2); color: var(--on-signal); }
-/* A wide window: the bars line up with the list. */
-@media (min-width: 720px) and (max-width: 1099px) { .lite-nav { padding-left: max(20px, calc(50% - 700px)); padding-right: max(20px, calc(50% - 700px)); } }
-@media (min-width: 1100px) { .lite-nav { left: auto; width: min(560px, 100%); right: max(0px, calc(50% - 720px)); padding-right: 20px; border-left: 1px solid var(--line); } }
+/* A wide window: the bar lines up with the list's column (with the plan beside it, with the list on the right). */
+@media (min-width: 720px) { .lite-nav { padding-left: max(24px, calc(50% - 416px)); padding-right: max(24px, calc(50% - 416px)); } }
+@media (min-width: 720px) and (max-width: 1099px) { body.with-plot .lite-nav { padding-left: max(20px, calc(50% - 700px)); padding-right: max(20px, calc(50% - 700px)); } }
+@media (min-width: 1100px) { body.with-plot .lite-nav { left: auto; width: min(560px, 100%); right: max(0px, calc(50% - 720px)); padding-left: 12px; padding-right: 20px; border-left: 1px solid var(--line); } }
 .lite-icon { width: 36px; padding: 0; justify-content: center; }
 .lite-icon[aria-pressed=true] { background: var(--surface-3); }
 @media print { .lite-bar, .lite-nav, #toasts, .conn { display: none; } .lite-plot-panel { position: static; } }
-@media (max-width: 760px) { .lite-bar .counters { display: none; } }
-@media (max-width: 420px) { .lite-bar .brand-word { display: none; } .lite-bar .brand { padding-right: 8px; } }
+@media (max-width: 420px) { .lite-bar .brand-word { display: none; } .lite-bar .brand { padding-right: 8px; } .lite-bar { gap: 6px; } }
 
 /* The page scrolls here, so what floats over it stays put on the screen. */
 #toasts { position: fixed; right: 12px; top: auto; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 60; flex-direction: column-reverse; }

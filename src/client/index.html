@@ -1,83 +1,51 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="auto">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#0d131a" />
     <title>UGC Army</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./lite.css" />
   </head>
-  <body>
-    <!-- The loading screen: up from the first paint until the deck is ready to be seen (see ui/loading.ts). -->
-    <div id="loading" role="status" aria-live="polite">
-      <div class="loading-card">
-        <svg class="loading-mark" viewBox="0 0 24 24" aria-hidden="true">
-          <path class="c c1" d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z" fill="currentColor" />
-          <path class="c c2" d="m4 17 8-8 8 8" fill="none" stroke="currentColor" stroke-width="2.5" />
-          <path class="c c3" d="m4 22 8-8 8 8" fill="none" stroke="currentColor" stroke-width="2.5" />
-        </svg>
-        <div class="loading-name">UGC <span>ARMY</span></div>
-        <div class="loading-bar" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="loading-fill"></span></div>
-        <p class="loading-say">Loading deck</p>
+  <body class="lite">
+    <!-- The home page (lite.ts): every agent ranked by what needs you, no 3D. The 3D bridge is /bridge (Labs). -->
+    <header class="lite-bar">
+      <span class="brand" aria-label="UGC Army">
+        <svg class="brand-mark" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z" fill="currentColor" /><path d="m4 17 8-8 8 8M4 22l8-8 8 8" fill="none" stroke="currentColor" stroke-width="2.5" /></svg>
+        <span class="brand-word" aria-hidden="true"><b>UGC</b> <span>ARMY</span></span>
+      </span>
+      <label class="lite-floor" title="The project you're looking at: pick another to see its agents">
+        <span class="lite-floor-label">Project</span>
+        <select id="floor" aria-label="Project"></select>
+      </label>
+      <button id="btn-mission" class="btn" type="button" title="Mission control: what needs someone, in every project">Mission <span class="n"></span></button>
+      <a id="to-bridge" class="btn hidden" href="/bridge" title="The 3D bridge: the same agents as a room to walk around, or a wall display for a team (Labs)">Bridge view</a>
+      <button id="btn-print" class="btn lite-icon" type="button" aria-pressed="false" title="Light or dark" aria-label="Light colors"></button>
+      <button id="btn-labs" class="btn lite-icon" type="button" title="Labs: the parts beyond the inbox, off until switched on" aria-label="Labs"></button>
+    </header>
+    <main class="lite-main">
+      <section class="lite-plot-panel" aria-labelledby="plot-h">
+        <h2 id="plot-h" class="lite-h">Deck plan <span class="lite-legend" id="legend"></span></h2>
+        <div id="plot" class="lite-plot"></div>
+      </section>
+      <div class="lite-list">
+      <p id="floor-meta" class="lite-meta"></p>
+      <div id="mission-strip" class="lite-mission"></div>
+      <div id="elsewhere" class="lite-elsewhere hidden"></div>
+      <h2 class="lite-h">Agents <span id="waiting-now" class="lite-waiting"></span><button id="btn-digest" class="btn lite-all" type="button" title="While you were away: what happened since you were last here">Catch up</button><button id="all-floors" class="btn lite-all" type="button" aria-pressed="false" title="Show the agents in every project, not just this one">All projects</button></h2>
+      <ol id="workers" class="lite-workers" aria-label="Agents, most in need of you first"></ol>
       </div>
-    </div>
-    <div id="app">
-      <canvas id="scene" tabindex="-1"></canvas>
-      <div id="fade"></div>
-      <div id="hud">
-        <div id="compass"></div>
-        <header class="topbar">
-          <span class="brand" aria-label="UGC Army">
-            <svg class="brand-mark" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z" fill="currentColor" /><path d="m4 17 8-8 8 8M4 22l8-8 8 8" fill="none" stroke="currentColor" stroke-width="2.5" /></svg>
-            <span class="brand-word" aria-hidden="true"><b>UGC</b> <span>ARMY</span></span>
-          </span>
-          <div class="project" id="project" role="button" tabindex="-1" title="Decks: go to another project">
-            <div class="project-name"><span id="project-name">UGC Army</span><span id="floors-waiting" class="svc-count hidden"></span></div>
-            <div class="project-meta" id="project-meta"></div>
-          </div>
-          <!-- Filled by features/counters: what needs you, what's stuck, to review and at work, and what's proven on chain. -->
-          <div id="counters" class="counters" role="group" aria-label="Units by state"></div>
-          <span class="spacer"></span>
-          <!-- Filled by ui/menu.ts: Mission control, pinned actions, and the menu with everything else. -->
-          <nav id="dock" class="dock" aria-label="Deck"></nav>
-        </header>
-        <!-- The Units rail (ui/workers-panel.ts): full height down the left, every unit on the deck in the
-             ranking's order, grouped by state; it folds to a 56px strip of call signs and glyphs. -->
-        <aside id="rail" class="rail" aria-label="Units">
-          <section id="workers-panel" class="panel workers">
-            <h3><span class="rail-title">Units</span> <span id="worker-count" class="count"></span><span id="workers-cost" class="cost" title="Spent by the units at their consoles"></span><button id="waiting" class="rail-next hidden" type="button" title="Go to the next unit waiting on someone, the ones that need you first (N)"></button><button id="rail-fold" class="rail-fold" type="button" aria-expanded="true" aria-controls="workers" title="Fold the rail to call signs"><svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4 4.5h16v15H4Z"/><path d="M9.5 4.5v15"/></svg></button></h3>
-            <ul id="workers"></ul>
-          </section>
-          <section id="people-panel" class="panel people">
-            <h3>Operators <span id="people-count" class="count"></span><button class="panel-x" data-hud="people" aria-label="Hide" title="Hide (Menu > HUD layers brings it back)"><svg class="ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button></h3>
-            <ul id="people"></ul>
-          </section>
-          <section id="spend" class="panel spend">
-            <h3>Spend<button class="panel-x" data-hud="spend" aria-label="Hide" title="Hide (Menu > HUD layers brings it back)"><svg class="ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button></h3>
-            <div id="usage" class="usage hidden"></div>
-          </section>
-          <section id="limits" class="panel limits hidden" title="Read again now"></section>
-        </aside>
-        <!-- The bottom bar: the mission strip (ui/mission/strip.ts) on the left, the keys worth knowing in the
-             middle (features/bottombar), and the chat folded to a button on the right. -->
-        <footer id="bottombar" class="bottombar">
-          <section id="mission-strip" class="mission-strip" aria-label="Mission"></section>
-          <div id="bb-keys" class="bb-keys" aria-label="Keys"></div>
-          <section class="chat" id="chat">
-            <ul id="chat-log"></ul>
-            <input id="chat-input" maxlength="500" placeholder="Say something to the deck" autocomplete="off" aria-label="Chat" />
-          </section>
-        </footer>
-        <div id="crosshair" class="crosshair hidden"><span class="look-hint">Click to look around</span></div>
-        <div id="hint" class="hint hidden"></div>
-        <div id="toasts"></div>
-        <div id="shares"></div>
-        <div id="conn" class="conn hidden">Reconnecting...</div>
-        <div id="upgrade-banner" class="conn upgrading hidden"></div>
-      </div>
-      <div id="modal-root"></div>
-    </div>
-    <script type="module" src="./main.ts"></script>
+    </main>
+    <nav class="lite-nav" aria-label="Deck">
+      <button id="btn-issues" class="btn" type="button" data-icon="issue">Issues <span class="n"></span></button>
+      <button id="btn-pulls" class="btn" type="button" data-icon="pull">PRs <span class="n"></span></button>
+      <button id="btn-queue" class="btn" type="button" data-icon="queue">Queue <span class="n"></span></button>
+      <button id="btn-new" class="btn primary" type="button" data-icon="plus">New task</button>
+    </nav>
+    <div id="toasts"></div>
+    <div id="conn" class="conn hidden">Reconnecting...</div>
+    <div id="modal-root"></div>
+    <script type="module" src="./lite.ts"></script>
   </body>
 </html>

@@ -13,6 +13,7 @@ import type { MeetingClientMsg, MeetingServerMsg } from './protocol/meetings.js'
 import type { PresenceClientMsg, PresenceServerMsg } from './protocol/presence.js';
 import type { QueueClientMsg, QueueServerMsg } from './protocol/queue.js';
 import type { ReputationClientMsg, ReputationServerMsg } from './protocol/reputation.js';
+import type { LabsClientMsg, LabsServerMsg } from './protocol/labs.js';
 import type { LandedServerMsg } from './protocol/landed.js';
 import type { MissionClientMsg, MissionServerMsg } from './protocol/mission.js';
 import type { PaceClientMsg, PaceServerMsg } from './protocol/pace.js';
@@ -30,6 +31,7 @@ export * from './protocol/changes.js';
 export * from './protocol/floors.js';
 export * from './protocol/github.js';
 export * from './protocol/meetings.js';
+export * from './protocol/labs.js';
 export * from './protocol/landed.js';
 export * from './protocol/mission.js';
 export * from './protocol/pace.js';
@@ -63,7 +65,8 @@ export type ClientMsg =
   | BountiesClientMsg
   | ReputationClientMsg
   | ShowcaseClientMsg
-  | PaceClientMsg;
+  | PaceClientMsg
+  | LabsClientMsg;
 
 export type ServerMsg =
   | PresenceServerMsg
@@ -83,4 +86,5 @@ export type ServerMsg =
   | BountiesServerMsg
   | ReputationServerMsg
   | ShowcaseServerMsg
-  | PaceServerMsg;
+  | PaceServerMsg
+  | LabsServerMsg;

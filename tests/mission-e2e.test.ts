@@ -1,7 +1,9 @@
-// End to end: Mission control in the built office, in a headless browser. In the 2D view: the
+// End to end: Mission control in the built office, in a headless browser. On the home page: the
 // mission strip, the Mission button, editing the mission and a milestone in place, the tabs and
 // their keys, the timeline, and Esc closing the window; back after a while away, the digest as the
-// first card. In the 3D office: I opens it and Esc puts it away, and the digest opens by itself.
+// first card. In the 3D Bridge view: I opens it and Esc puts it away, and the digest opens by itself.
+// Goals, the timeline and the debrief are Labs (Goals and timeline, Bridge ambience), which this
+// office starts with on (--labs ops,ambience).
 // Skipped (not failed) when there's no build (npm run build), the build is older than the client's
 // sources, or there's no browser playwright-core can start.
 import { after, before, test } from 'node:test';
@@ -19,7 +21,7 @@ import { bundleWhy } from './support/bundle.js';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BUNDLE = path.join(ROOT, 'dist', 'public');
 const stale = bundleWhy(path.join(BUNDLE, 'index.html'), [path.join(ROOT, 'src', 'client'), path.join(ROOT, 'src', 'shared')]);
-const built = !stale && existsSync(path.join(BUNDLE, 'lite.html'));
+const built = !stale && existsSync(path.join(BUNDLE, 'bridge.html'));
 const PASSWORD = 'mission-e2e';
 
 const root = mkdtempSync(path.join(tmpdir(), 'office-mission-'));
@@ -68,7 +70,7 @@ before(async () => {
   const log = console.log;
   console.log = () => {};
   try {
-    office = await startServer(loadConfig([project, '--home', home, '--projects', path.join(root, 'projects'), '--port', String(port), '--password', PASSWORD, '--no-open', '--agent', claude]), { publicDir: BUNDLE });
+    office = await startServer(loadConfig([project, '--home', home, '--projects', path.join(root, 'projects'), '--port', String(port), '--password', PASSWORD, '--no-open', '--agent', claude, '--labs', 'ops,ambience']), { publicDir: BUNDLE });
   } finally {
     console.log = log;
   }
@@ -110,7 +112,7 @@ test('the 2D view: the strip, Mission control, editing the mission in place, the
   if (why) return t.skip(why);
   const { page, errors, context } = await signedIn({ width: 420, height: 860 });
   t.after(() => context.close());
-  await page.goto(`${base}/lite`);
+  await page.goto(`${base}/`);
   // No mission yet: the strip is a call to set one, and opens the Goals tab.
   await page.locator('#mission-strip .ms-cta', { hasText: 'Set the mission' }).waitFor({ timeout: 15_000 });
   await page.locator('#mission-strip .ms-strip').click();
@@ -180,7 +182,7 @@ test('the 3D office: the strip in the bottom bar, I opens Mission control, Esc p
   if (why) return t.skip(why);
   const { page, errors, context } = await signedIn();
   t.after(() => context.close());
-  await page.goto(`${base}/`);
+  await page.goto(`${base}/bridge`);
   await page.waitForFunction(() => !!(window as unknown as { __office?: { store: { floor: string | null } } }).__office?.store.floor, null, { timeout: 60_000 });
   // The mission from the test before is on the strip, bottom left.
   await page.locator('#mission-strip .ms-statement', { hasText: 'Make sign-in boring' }).waitFor({ timeout: 15_000 });
@@ -210,7 +212,7 @@ test('back after a while away: the digest is the first card in the 2D view, and 
   if (why) return t.skip(why);
   const lite = await signedIn({ width: 420, height: 860 }, 40 * 60_000);
   t.after(() => lite.context.close());
-  await lite.page.goto(`${base}/lite`);
+  await lite.page.goto(`${base}/`);
   const card = lite.page.locator('.lite-digest');
   await card.waitFor({ timeout: 15_000 });
   await card.locator('.dg-summary').waitFor();
@@ -229,7 +231,7 @@ test('back after a while away: the digest is the first card in the 2D view, and 
 
   const office = await signedIn(undefined, 40 * 60_000);
   t.after(() => office.context.close());
-  await office.page.goto(`${base}/`);
+  await office.page.goto(`${base}/bridge`);
   // The start of watch takes the window's place at load: the debrief, whose Full log is the window.
   const debrief = office.page.locator('.debrief.on');
   await debrief.waitFor({ timeout: 60_000 });
@@ -251,7 +253,7 @@ test('a first visit to the 3D office asks only for a name, never for a character
   if (why) return t.skip(why);
   const { page, errors, context } = await signedIn(undefined, 0, true);
   t.after(() => context.close());
-  await page.goto(`${base}/`);
+  await page.goto(`${base}/bridge`);
   const ask = page.locator('.modal.name-ask');
   await ask.waitFor({ timeout: 60_000 });
   assert.equal(await page.locator('.modal.charsel').count(), 0, 'no character creator in the way');

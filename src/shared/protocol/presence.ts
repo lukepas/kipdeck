@@ -6,6 +6,7 @@ import type { Reminder, ReviewPull, RosterEntry } from './mission.js';
 import type { FloorInfo, FloorView, ProjectsDirState } from './floors.js';
 import type { LeaveOnMergeState, MachineState, NotifyState, PromptsState, UpgradeState } from './settings.js';
 import type { PlanLimits, UsageState } from './usage.js';
+import type { LabsState } from '../labs.js';
 
 /** The issue on a card someone carries around the floor (see PeerInfo.carrying). */
 export interface CarriedIssue {
@@ -39,7 +40,7 @@ export interface PeerInfo {
   doing?: string;
   /** Reading something off the bookshelf (the bookshelf's hint lists who). */
   reading?: boolean;
-  /** On the 2D view (/lite: a phone, say, or a slow computer): in the office, but not standing anywhere in it. */
+  /** On the home page (/, no 3D: a phone, say, or a laptop): in the office, but not standing anywhere in the bridge. */
   lite?: boolean;
 }
 
@@ -114,6 +115,8 @@ export type PresenceServerMsg =
       /** The office's prompts and the worker everyone starts on. */
       prompts: PromptsState;
       leaveOnMerge: LeaveOnMergeState;
+      /** Which labs are on (see shared/labs.ts). */
+      labs: LabsState;
       /** Every hired worker in the building, for the attention ranking (see RosterEntry). */
       roster: RosterEntry[];
       /** Pull requests waiting for a person that no worker on the roster stands for (see ReviewPull). */

@@ -27,6 +27,7 @@ import type { Reputation } from '../chain/reputation.js';
 import type { ReputationIndex } from '../chain/rep-index.js';
 import type { MergeProofs } from '../chain/attest.js';
 import type { Showcase } from '../showcase/service.js';
+import type { Labs } from '../labs.js';
 import type { AgentProvider, FloorInfo, Me, Reminder, ReminderSnooze, ReviewPull, RosterEntry, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
 import type { Client } from './client.js';
 import type { Spot } from './input.js';
@@ -53,6 +54,8 @@ export interface Core {
   /** The building: a floor per project, each with its own workers, boards and queue. */
   building: Building;
   floors: Map<string, Floor>;
+  /** Which labs are on: the parts beyond the inbox, all off by default (see labs.ts). */
+  labs: Labs;
 }
 
 /** Made once the hook server listens, before any floor opens (office/services.ts). */

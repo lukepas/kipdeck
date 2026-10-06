@@ -144,5 +144,5 @@ export const authRoutes = {
       return send(res, 200, { ok: true }, signedIn(ctx, req, s.account.id));
     },
   },
-  whoami: { path: '/api/whoami', auth: 'session', handle: (ctx, { res, session }) => send(res, 200, { ok: true, me: ctx.meOf(session.account?.id) }) },
+  whoami: { path: '/api/whoami', auth: 'session', handle: (ctx, { res, session }) => send(res, 200, { ok: true, me: ctx.meOf(session.account?.id), labs: ctx.labs.state() }) },
 } satisfies Record<string, Route>;

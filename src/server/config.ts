@@ -9,6 +9,7 @@ import { parseAllowedHosts } from './hosts.js';
 import { splitEnvNames, validEnvPattern, type WorkerEnvConfig } from './worker-env.js';
 import { readStateJson, stateDirProblem, untrustedState, writeState } from './safefs.js';
 import { CHAIN_HELP, chainFlagsFromEnv, takeChainFlag, type ChainFlags } from './chain/flags.js';
+import { parseLabList, type LabId } from '../shared/labs.js';
 
 export interface Config {
   /** The office's own folder: the building's data lives in its .agent-office. */
@@ -64,6 +65,8 @@ export interface Config {
   webhook?: string;
   /** Paid tasks over x402 and proof-of-merge attestations, testnets only (see chain/flags.ts). */
   chain: ChainFlags;
+  /** Labs held on from the command line (--labs, AGENT_OFFICE_LABS; a chain flag holds proof on). See labs.ts. */
+  labs: LabId[];
 }
 
 export interface RTCIceServerLike {
@@ -72,7 +75,7 @@ export interface RTCIceServerLike {
   credential?: string;
 }
 
-const HELP = `ugc-army - UGC Army: mission control for your team's ${AGENT_PROVIDERS.filter((p) => p !== 'custom').map((p) => PROVIDER_META[p].name).join(' / ')} agents, with proof of every merge on testnets.
+const HELP = `ugc-army - UGC Army: the inbox for your ${AGENT_PROVIDERS.filter((p) => p !== 'custom').map((p) => PROVIDER_META[p].name).join(' / ')} agents.
 (Built on agent-office, MIT. The agent-office command still works.)
 
 Usage:
@@ -166,6 +169,9 @@ Options:
       --webhook <url>     Post to this Slack or Discord webhook when a worker
                           needs input, finishes or gets stuck (env AGENT_OFFICE_WEBHOOK).
                           Also settable from Settings in the office; "" turns it off
+      --labs <names>      Hold labs on, comma separated (env AGENT_OFFICE_LABS):
+                          bridge, ops, meetings, voice, ambience, proof, or all.
+                          All are off by default; admins switch them from Labs
 ${CHAIN_HELP}  -h, --help              Show this help
 
 Started in a terminal, the office opens in your browser already signed in, with
@@ -247,6 +253,7 @@ export function loadConfig(argv: string[]): Config {
   let maxWorkers = process.env.AGENT_OFFICE_MAX_WORKERS || '';
   let webhook = process.env.AGENT_OFFICE_WEBHOOK;
   const chain = chainFlagsFromEnv();
+  const labs = parseLabList(process.env.AGENT_OFFICE_LABS);
   const iceServers: RTCIceServerLike[] = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
   // A container can't take --turn (deploy/container/compose.yaml), so the TURN servers come from the environment too.
   for (const url of (process.env.AGENT_OFFICE_TURN ?? '').split(/\s+/).filter(Boolean)) iceServers.push(parseTurn(url));
@@ -332,6 +339,12 @@ export function loadConfig(argv: string[]): Config {
       case '--projects':
         projects = path.resolve(takeValue(argv, i++, a));
         break;
+      case '--labs': {
+        const more = parseLabList(takeValue(argv, i++, a));
+        labs.on.push(...more.on);
+        labs.unknown.push(...more.unknown);
+        break;
+      }
       default: {
         const used = takeChainFlag(chain, argv, i);
         if (typeof used === 'string') {
@@ -492,7 +505,19 @@ export function loadConfig(argv: string[]): Config {
     maxWorkers: workerLimit,
     webhook,
     chain,
+    labs: forcedLabs(labs, chain),
   };
+}
+
+/** The labs the command line holds on: --labs and AGENT_OFFICE_LABS, and proof with any chain flag (they're proof's own switches). */
+function forcedLabs(labs: { on: LabId[]; unknown: string[] }, chain: ChainFlags): LabId[] {
+  if (labs.unknown.length) {
+    console.error(`agent-office: --labs: unknown lab ${labs.unknown.map((u) => JSON.stringify(u)).join(', ')} (bridge, ops, meetings, voice, ambience, proof or all)`);
+    process.exit(2);
+  }
+  const on = new Set(labs.on);
+  if (chain.x402.enabled || chain.attest.enabled || chain.reputation.enabled) on.add('proof');
+  return [...on];
 }
 
 export async function ensureSelfSigned(cfg: Config): Promise<void> {

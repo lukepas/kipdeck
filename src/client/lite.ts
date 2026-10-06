@@ -1,8 +1,7 @@
-// The 2D view (/lite): the office without the 3D, for a phone or a computer the 3D office is too
-// much for. Every worker on the floor and how it's doing, the ones waiting on someone first; its
-// terminal, with the keys a phone's keyboard hasn't got and a box to send it a prompt; and the boards
-// and the task queue. You're in the office as someone on the 2D view (PeerInfo.lite), not standing
-// anywhere in it.
+// The home page (/): every agent and how it's doing, the ones waiting on you first; its terminal,
+// with the keys a phone's keyboard hasn't got and a box to send it a prompt; and the boards and the
+// task queue. No three.js: the 3D bridge is a view of its own at /bridge, behind Labs. You're in the
+// office as someone on the 2D view (PeerInfo.lite), not standing anywhere in it.
 
 import { Net } from './net';
 import { AVATAR_COLORS, loadProfile, loadSettings, saveProfile, saveSettings, store, type MissionTab } from './state';
@@ -34,18 +33,17 @@ import { askNotifyPermission, DesktopNotifier, notifyPermission, waitingOnSomeon
 import { repoChoices } from './shared/hiring';
 // The tab title counts the workers waiting on someone, on every floor, as the 3D office's does.
 import { renderTitle } from './shared/title';
-import { mountCounters } from './ui/counters';
 import { icon, isIcon, LEVEL_ICON, type IconName } from './ui/icons';
 import { address } from '../shared/callsign';
 import { LEVEL_LABEL, type AttentionLevel } from '../shared/attention';
 import { ago, headline, sameText, shortPath, stateWord, statusPhrase, type Headline } from '../shared/rowtext';
-import { mountLitePlot } from './lite-plot';
 import { mountThemeToggle } from './lite-theme';
+import { openLabs } from './ui/labs';
 
-// Sent here because this browser can't draw the 3D office (see noWebGL in core/scene.ts).
+// Sent back here because this browser can't draw the 3D bridge (see noWebGL in core/scene.ts).
 if (new URLSearchParams(location.search).get('why') === 'webgl') {
   history.replaceState(null, '', location.pathname);
-  toast("This browser can't draw the 3D office (WebGL is off or missing), so here's the 2D view", 'warn');
+  toast("This browser can't draw the 3D bridge (WebGL is off or missing)", 'warn');
 }
 
 // Your name and color from the 3D office, if this browser has been in it. Nobody sees a character
@@ -101,7 +99,7 @@ const floorLabel = (f: FloorInfo) => `${f.name}${f.cloning ? ` (${cloneLabel(f.c
 
 function renderFloors() {
   const options = store.floors.map((f) => h('option', { value: f.id, disabled: !!f.cloning }, floorLabel(f)));
-  if (!store.floors.length) options.push(h('option', { value: '' }, 'No decks yet'));
+  if (!store.floors.length) options.push(h('option', { value: '' }, 'No projects yet'));
   floorSelect.replaceChildren(...options);
   floorSelect.value = store.floor ?? '';
   floorSelect.disabled = store.floors.length < 2;
@@ -148,12 +146,22 @@ function renderWorkers() {
   for (const w of [...store.workers.values()].sort((a, b) => a.createdAt - b.createdAt)) if (!listed.has(w.id)) cards.push(workerCard(w));
   const ul = $('workers');
   ul.replaceChildren(...(digest ? [digest] : []), ...cards);
-  if (!cards.length) ul.append(h('li.lite-empty', {}, store.project ? 'No units on this deck yet. New task deploys one.' : 'No units here.'));
+  // Nothing yet: the one thing to do next, right here.
+  if (!cards.length) {
+    ul.append(
+      h(
+        'li.lite-empty',
+        {},
+        h('p', {}, store.project ? 'No agents in this project yet.' : 'No agents here.'),
+        store.project ? h('button.btn.primary', { type: 'button', onclick: () => sendToWorker('New task') }, icon('plus', 16), 'Start an agent') : null,
+      ),
+    );
+  }
   const chip = attentionChip();
   $('waiting-now').textContent = chip.text;
   $('btn-mission').querySelector('.n')!.textContent = chip.total ? String(chip.total) : '';
   $('btn-mission').classList.toggle('reminders', chip.reminders > 0);
-  $('btn-mission').title = `Mission control: what needs someone, on every deck, and the deck's goals${chip.reminders ? ` · reminders open: ${chip.reminders}` : ''}`;
+  $('btn-mission').title = `Mission control: what needs someone, in every project${chip.reminders ? ` · reminders open: ${chip.reminders}` : ''}`;
   const all = $('all-floors');
   all.setAttribute('aria-pressed', String(settings.allFloors));
   all.classList.toggle('hidden', store.floors.length < 2);
@@ -393,7 +401,7 @@ $('all-floors').addEventListener('click', () => {
   renderWorkers();
 });
 const paintStrip = () => renderStrip($('mission-strip'), (tab) => showMission(tab));
-for (const t of ['mission', 'roster', 'floor', 'issues', 'pulls'] as const) store.on(t, paintStrip);
+for (const t of ['labs', 'mission', 'roster', 'floor', 'issues', 'pulls'] as const) store.on(t, paintStrip);
 // Back after a while away: the digest as the first card (here it never covers anything, so it shows straight away).
 let digestShown = false;
 const showDigest = () => {
@@ -409,19 +417,33 @@ watchStuck((e, reason) => {
   if (e.floor === store.floor) navigator.vibrate?.(200);
 });
 
-// The nav's glyphs (ui/icons.ts), and the counters the 3D office's top bar has too.
+// The nav's glyphs (ui/icons.ts).
 for (const b of document.querySelectorAll<HTMLElement>('.lite-nav [data-icon]')) if (isIcon(b.dataset.icon ?? '')) b.prepend(icon(b.dataset.icon as IconName, 16));
-mountCounters($('lite-counters'), (tab) => showMission(tab));
-// The deck plan beside the list (shared/plot.ts), and the key to its glyphs.
-mountLitePlot($('plot'), (id) => {
-  const e = store.rosterEntry(id);
-  if (store.workers.has(id)) openWorker(id);
-  else if (e) runAction(missionDeps, e, 'look');
-});
-$('legend').replaceChildren(
-  ...(['needs-you', 'stuck', 'review', 'working', 'parked'] as const).map((l) => h('span.lite-key', { class: `l-${l}` }, icon(LEVEL_ICON[l], 12), l === 'parked' ? 'Parked' : LEVEL_LABEL[l])),
-);
 mountThemeToggle($('btn-print'));
+$('btn-labs').replaceChildren(icon('labs', 16));
+$('btn-labs').addEventListener('click', () => openLabs(net));
+
+// ---- Bridge view (Labs): the link to /bridge, and the deck plan beside the list -----------------
+// The plan is loaded only once the lab is on, so the home page never pays for it otherwise.
+let plotMounted = false;
+async function renderBridgeLab() {
+  const on = store.lab('bridge');
+  $('to-bridge').classList.toggle('hidden', !on);
+  document.body.classList.toggle('with-plot', on);
+  if (!on || plotMounted) return;
+  plotMounted = true;
+  const { mountLitePlot } = await import('./lite-plot');
+  mountLitePlot($('plot'), (id) => {
+    const e = store.rosterEntry(id);
+    if (store.workers.has(id)) openWorker(id);
+    else if (e) runAction(missionDeps, e, 'look');
+  });
+  $('legend').replaceChildren(
+    ...(['needs-you', 'stuck', 'review', 'working', 'parked'] as const).map((l) => h('span.lite-key', { class: `l-${l}` }, icon(LEVEL_ICON[l], 12), l === 'parked' ? 'Parked' : LEVEL_LABEL[l])),
+  );
+}
+store.on('labs', () => void renderBridgeLab());
+store.on('labs', renderWorkers);
 
 $('btn-issues').addEventListener('click', () => openBoard('issues', net, boardActions()));
 $('btn-pulls').addEventListener('click', () => openBoard('pulls', net, boardActions()));
@@ -463,13 +485,13 @@ bell.addEventListener('click', async () => {
   await askNotifyPermission();
   bell.remove();
 });
-if (notifyPermission() === 'default' && settings.notify) $('to-3d').before(bell);
+if (notifyPermission() === 'default' && settings.notify) $('btn-print').before(bell);
 
 // ---- In ----------------------------------------------------------------------------------------
 void (async () => {
   try {
     const res = await fetch('/api/whoami', { cache: 'no-store' });
-    if (res.status === 401) return void (location.href = '/login?next=/lite');
+    if (res.status === 401) return void (location.href = '/login');
     const { me } = (await res.json()) as { me?: typeof store.me };
     if (me) store.me = me;
   } catch {

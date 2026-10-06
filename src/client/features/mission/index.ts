@@ -62,7 +62,7 @@ export function installMission(ctx: Ctx, parts: MissionParts) {
   // The strip under the floor's name (a HUD panel, see ui/menu.ts).
   const strip = $('mission-strip');
   const paintStrip = () => renderStrip(strip, (tab) => showMission(tab));
-  for (const t of ['mission', 'roster', 'floor', 'issues', 'pulls'] as const) store.on(t, paintStrip);
+  for (const t of ['labs', 'mission', 'roster', 'floor', 'issues', 'pulls'] as const) store.on(t, paintStrip);
   paintStrip();
 
   ctx.keys.bind({

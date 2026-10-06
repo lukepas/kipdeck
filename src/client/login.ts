@@ -12,8 +12,8 @@ const error = document.getElementById('error') as HTMLParagraphElement;
 const submit = document.getElementById('submit') as HTMLButtonElement;
 
 const NAME_KEY = 'agent-office.login-name';
-/** Where to go once in: the 2D view if that's where you were headed (see loginUrl in net.ts), else the office. */
-const NEXT = new URLSearchParams(location.search).get('next') === '/lite' ? '/lite' : '/';
+/** Where to go once in: the Bridge view if that's where you were headed (see loginUrl in net.ts), else home. */
+const NEXT = new URLSearchParams(location.search).get('next') === '/bridge' ? '/bridge' : '/';
 
 // A sign-in link from the office's terminal (/login#key=...): it works once, so take it out of the
 // address bar and trade it for a session. The key is after the #, so it never reaches a server log.

@@ -1,4 +1,4 @@
-/** The tab's title, the same in the 3D office and the 2D view (/lite). No three.js here: the 2D view imports it. */
+/** The tab's title, the same in the 3D bridge and the home page. No three.js here: the home page imports it. */
 import { needingSomeone } from '../../shared/attention';
 import { store } from '../state';
 import { setFaviconAlert } from '../ui/brand';

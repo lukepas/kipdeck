@@ -7,7 +7,7 @@ import { UPSTREAM_CREDIT } from '../../shared/copy';
 import { h } from './dom';
 
 export const PRODUCT = 'UGC Army';
-export const TAGLINE = 'Mission control for your AI agents. Proof of every merge.';
+export const TAGLINE = 'The inbox for your AI coding agents.';
 export const CREDIT = UPSTREAM_CREDIT;
 export const CREDIT_URL = 'https://github.com/AgentSystemLabs/agent-office';
 
