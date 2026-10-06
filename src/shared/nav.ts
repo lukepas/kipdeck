@@ -5,7 +5,7 @@
 
 import { LEDGE } from './amphitheater.js';
 import { loungeFootprint } from './lounge.js';
-import { BEANBAGS, BOOKSHELF, DESK_SIZE, ELEVATOR, ELEVATOR_BACK, ELEVATOR_FRONT, FLOOR, KIOSK, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, MISSION_TABLE, PROOF_CORNER, SEATING, STATIONS, WHITEBOARD, WING, builtDesks, heightAt, plantsAt, wingLevel, wingMinZ, type DeskDef } from './layout.js';
+import { BEANBAGS, BOOKSHELF, DESK_SIZE, ELEVATOR, ELEVATOR_BACK, ELEVATOR_FRONT, FLOOR, KIOSK, MEETING_ROOM, MEETING_SEATS, MEETING_TABLE, MISSION_TABLE, PROOF_CORNER, SEATING, STATIONS, WHITEBOARD, WHITEBOARD_DEPTH, WING, builtDesks, heightAt, plantsAt, wingLevel, wingMinZ, type DeskDef } from './layout.js';
 
 
 export type Pt = [number, number];
@@ -86,8 +86,9 @@ function obstacles(wing: number): Obstacles {
   rects.push([lx0, lx0 + ELEVATOR.wall, z0, z1], [lx1 - ELEVATOR.wall, lx1, z0, z1]);
   rects.push([lx0, ELEVATOR.x - ELEVATOR.doorWidth / 2, ELEVATOR_FRONT - 0.07, ELEVATOR_FRONT + 0.07], [ELEVATOR.x + ELEVATOR.doorWidth / 2, lx1, ELEVATOR_FRONT - 0.07, ELEVATOR_FRONT + 0.07]);
   // The situation arc hangs over the deck: nothing of it stands on the floor.
-  // The whiteboard on its wheels, as features/whiteboard/world.ts puts it (it turns a half turn at most).
-  rects.push([WHITEBOARD.x - WHITEBOARD.width / 2 - 0.2, WHITEBOARD.x + WHITEBOARD.width / 2 + 0.2, WHITEBOARD.z - 0.48, WHITEBOARD.z + 0.48]);
+  // The planning board flush on the west wall, as features/whiteboard/world.ts hangs it, and a step
+  // out from it so a route doesn't scrape along its face.
+  rects.push([FLOOR.minX, WHITEBOARD.x + WHITEBOARD_DEPTH + 0.2, WHITEBOARD.z - WHITEBOARD.width / 2 - 0.15, WHITEBOARD.z + WHITEBOARD.width / 2 + 0.15]);
   // The docs rack against the north wall, as features/bookshelf/world.ts puts it, out to the wall behind it.
   const shelf = footprint({ id: 'docs', label: '', x: BOOKSHELF.x, z: BOOKSHELF.z, rotY: BOOKSHELF.rotY }, -BOOKSHELF.width / 2 - 0.04, BOOKSHELF.width / 2 + 0.04, -BOOKSHELF.depth / 2 - 0.3, BOOKSHELF.depth / 2 + 0.03);
   rects.push(shelf);

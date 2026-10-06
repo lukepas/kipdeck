@@ -406,11 +406,15 @@ export function plantsAt(level: number): readonly (readonly [x: number, z: numbe
 }
 
 /**
- * The planning board on wheels everyone sketches on together, out on the open floor in the east
- * aisle, off the way in from the lift, facing north (`rotY` PI faces -z). `width` and `height` are its
- * writing surface, whose bottom edge is `bottom` above the floor.
+ * The planning board everyone sketches on together, mounted flush on the west wall between the Review
+ * bay's front glass and the hull frame north of the attestation rail, facing the deck (`rotY` PI/2
+ * faces +x). From the captain's dais it is off the port bow, clear of the line to the situation arc and
+ * the bow glass; nothing stands in the way to it. `x` is its back on the wall; `width` and `height` are
+ * its writing surface, whose bottom edge is `bottom` above the floor (over the walls' low light strip).
  */
-export const WHITEBOARD = { x: 12.6, z: 7.6, rotY: Math.PI, width: 4, height: 2.2, bottom: 0.5 } as const;
+export const WHITEBOARD = { x: FLOOR.minX + 0.04, z: -8.98, rotY: Math.PI / 2, width: 2.8, height: 2.0, bottom: 1.05 } as const;
+/** How far the planning board stands off the wall, its frame and face included (m). */
+export const WHITEBOARD_DEPTH = 0.1;
 
 /** The office's floor slab: it runs from -SLAB up to 0. */
 export const SLAB = 0.3;

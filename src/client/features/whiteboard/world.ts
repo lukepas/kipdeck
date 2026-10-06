@@ -1,14 +1,14 @@
 import * as THREE from 'three';
-import { WHITEBOARD } from '../../../shared/layout';
+import { FLOOR, WHITEBOARD, WHITEBOARD_DEPTH } from '../../../shared/layout';
 import { mesh, textPlane } from '../../world/toon';
 import type { Collider, Interactable } from '../../world/types';
 import type { Fixture } from '../../world/office/fixture';
-import { DECK, box, contactShadow, ink as wallInk, matte } from '../../world/office/materials';
+import { DECK, box, ink as wallInk, matte } from '../../world/office/materials';
 import { screen } from '../boards/screen';
 import { FACE_UNITS, paintPlan, planFar, sketchBox, type PlanView } from './face';
 import { paintFar } from '../boards/far';
 
-// The planning board: a slim board on casters out on the open floor in the east aisle. Its face shows
+// The planning board: a slim board mounted flush on the west wall, north of the Proof corner. Its face shows
 // the floor's plan as tables and whatever everyone has drawn on it (see ui.ts), live, beside them
 // (face.ts).
 
@@ -37,32 +37,20 @@ export function buildWhiteboard(): WhiteboardStand {
   const alu = matte(DECK.steel, { metalness: 0.3, roughness: 0.6 });
   const ink = matte(DECK.wallReveal);
   const mid = bottom + height / 2;
-  const post = width / 2 + 0.1;
+  // Built facing +z from its back on the wall (z 0), WHITEBOARD_DEPTH deep.
+  const d = WHITEBOARD_DEPTH;
 
-  // The writing surface in a slim steel frame; the back is a plain slate panel.
-  group.add(mesh(box(width + 0.1, height + 0.1, 0.06), ink, 0, mid, 0));
+  // A slate mounting plate on the wall, the writing surface in a slim steel frame proud of it.
+  group.add(mesh(box(width + 0.22, height + 0.2, 0.03), ink, 0, mid + 0.05, 0.015, false));
+  group.add(mesh(box(width + 0.1, height + 0.1, d - 0.04), alu, 0, mid, 0.03 + (d - 0.04) / 2, false));
   const face2d = screen(width, height, FACE_UNITS);
   const texture = face2d.texture;
   const face = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }));
-  face.position.set(0, mid, 0.032);
+  face.position.set(0, mid, d + 0.002);
   group.add(face);
 
-  // Two posts on feet with a caster at each end, and a bar across the bottom.
-  for (const sx of [-post, post]) {
-    group.add(mesh(new THREE.CylinderGeometry(0.035, 0.035, bottom + height + 0.2, 10), alu, sx, (bottom + height + 0.2) / 2 + 0.1, 0));
-    group.add(mesh(box(0.09, 0.06, 0.95), alu, sx, 0.13, 0));
-    for (const sz of [-0.42, 0.42]) {
-      const wheel = mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.04, 12), ink, sx, 0.055, sz, false);
-      wheel.rotation.z = Math.PI / 2;
-      group.add(wheel);
-    }
-    group.add(mesh(new THREE.SphereGeometry(0.05, 10, 8), alu, sx, bottom + height + 0.3, 0, false));
-  }
-  group.add(mesh(new THREE.CylinderGeometry(0.025, 0.025, post * 2, 8).rotateZ(Math.PI / 2), alu, 0, 0.3, 0, false));
-
-  // A slim tray under the face.
-  group.add(mesh(box(width * 0.55, 0.03, 0.1), alu, 0, bottom - 0.08, 0.07, false));
-  group.add(contactShadow(width + 0.8, 1.6));
+  // A slim marker tray along the foot of the frame.
+  group.add(mesh(box(width * 0.55, 0.03, 0.1), alu, 0, bottom - 0.08, d + 0.03, false));
 
   const plaque = textPlane('PLANNING BOARD', { face: 'display', size: 48, color: DECK.muted, track: 0.08 });
   plaque.scale.multiplyScalar(0.55);
@@ -70,10 +58,11 @@ export function buildWhiteboard(): WhiteboardStand {
   // Its left edge on the face's: the sign is as wide as its words, so it is placed by its own width.
   plaque.geometry.computeBoundingBox();
   const signW = (plaque.geometry.boundingBox!.max.x - plaque.geometry.boundingBox!.min.x) * plaque.scale.x;
-  plaque.position.set(-width / 2 + 0.05 + signW / 2, bottom + height + 0.2, 0.05);
+  plaque.position.set(-width / 2 + 0.05 + signW / 2, bottom + height + 0.24, 0.035);
   group.add(plaque);
 
-  const colliders: Collider[] = [{ minX: x - post - 0.1, maxX: x + post + 0.1, minZ: z - 0.48, maxZ: z + 0.48, top: bottom + height + 0.35 }];
+  // Flat on the wall: you walk up to its face, never round it.
+  const colliders: Collider[] = [{ minX: FLOOR.minX, maxX: x + d + 0.02, minZ: z - width / 2 - 0.2, maxZ: z + width / 2 + 0.2, top: bottom + height + 0.2 }];
   const interactable: Interactable = { kind: 'whiteboard', x: x + Math.sin(rotY) * 1.7, z: z + Math.cos(rotY) * 1.7, radius: 2.3 };
   group.userData.interact = interactable;
 
@@ -103,12 +92,12 @@ export function buildWhiteboard(): WhiteboardStand {
 
 declare module '../../world/types' {
   interface OfficeHandles {
-    /** The rolling whiteboard everyone draws on together. */
+    /** The planning board on the west wall everyone draws on together. */
     whiteboard: WhiteboardStand;
   }
 }
 
-/** The whiteboard, out on the floor in the east aisle. */
+/** The planning board, on the west wall between the Review bay and the Proof corner. */
 export const whiteboard: Fixture<'whiteboard'> = () => {
   const built = buildWhiteboard();
   return { group: built.group, colliders: built.colliders, interactables: [built.interactable], handle: { whiteboard: built } };

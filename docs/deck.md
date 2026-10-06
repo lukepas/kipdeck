@@ -23,7 +23,7 @@ The deck is a 32 m square. North is the bow and the situation arc's side; the De
 | Overflow bay | through the north wall in the north-east corner | Two more consoles a row, up to two rows, at the Room to grow sign (`desk-17` to `desk-20`). |
 | Title block | on the floor in the south-east corner | The deck's name and number, who's looking, the build's revision and the credit to agent-office. |
 
-The docs rack stands against the east wall, its index over it (the project's Markdown, the latest changed first, with folder, age and size), and the planning board on wheels in the east aisle, off the way in from the lift: the mission's milestones as a table (state, issues closed of all, units on it, spend, due), and beside them the sketch everyone draws on it, or the task queue while nobody has drawn.
+The docs rack stands against the east wall, its index over it (the project's Markdown, the latest changed first, with folder, age and size), and the planning board hangs flush on the west wall between the Review bay's front glass and the attestation rail (off the port bow from the dais, clear of the line to the arc and the bow glass): the mission's milestones as a table (state, issues closed of all, units on it, spend, due), and beside them the sketch everyone draws on it, or the task queue while nobody has drawn.
 
 ### Cell addresses
 

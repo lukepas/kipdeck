@@ -221,6 +221,14 @@ test('the viewports sit in the hull between its frames, clear of what hangs on t
   clear(MEETING_ROOM.minZ, MEETING_ROOM.maxZ, 'the Review bay');
   clear(MEETING_BOARD.z - MEETING_BOARD.width / 2, MEETING_BOARD.z + MEETING_BOARD.width / 2, 'the Review bay board');
   clear(PROOF_CORNER.rail.z - PROOF_CORNER.rail.width / 2 - 0.5, PROOF_CORNER.rail.z + PROOF_CORNER.rail.width / 2 + 0.5, 'the attestation rail');
+  // The planning board, flush on the west wall between the Review bay's front glass and the hull frame
+  // that steps aside for the rail, its face over the walls' low light strip.
+  const wb = { z0: WHITEBOARD.z - WHITEBOARD.width / 2 - 0.11, z1: WHITEBOARD.z + WHITEBOARD.width / 2 + 0.11 };
+  clear(wb.z0, wb.z1, 'the planning board');
+  assert.ok(WHITEBOARD.x - FLOOR.minX < 0.1 && WHITEBOARD.rotY === Math.PI / 2, 'the planning board hangs on the west wall, facing the deck');
+  assert.ok(wb.z0 > MEETING_ROOM.maxZ + 0.04, 'the planning board is clear of the Review bay');
+  assert.ok(wb.z1 < PROOF_CORNER.rail.z - 0.9 - 0.21 - 0.01, 'and of the hull frame north of the rail');
+  assert.ok(WHITEBOARD.bottom - 0.05 > 0.96 && WHITEBOARD.bottom + WHITEBOARD.height + 0.45 < 3.73 - 0.035, 'between the walls\' light strips');
   // The vault and the plinth are low: a port's sill is over them.
   for (const o of west) assert.ok(o.y0 > PROOF_CORNER.vault.height && o.y0 > PROOF_CORNER.plinth.steps * PROOF_CORNER.plinth.rise);
   // The docs rack on the east wall.
