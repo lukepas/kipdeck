@@ -2,7 +2,8 @@
 // mission strip, the Mission button, editing the mission and a milestone in place, the tabs and
 // their keys, the timeline, and Esc closing the window; back after a while away, the digest as the
 // first card. In the 3D office: I opens it and Esc puts it away, and the digest opens by itself.
-// Skipped (not failed) when there's no build (npm run build) or no browser playwright-core can start.
+// Skipped (not failed) when there's no build (npm run build), the build is older than the client's
+// sources, or there's no browser playwright-core can start.
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
@@ -13,17 +14,19 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Browser, Page } from 'playwright-core';
+import { bundleWhy } from './support/bundle.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BUNDLE = path.join(ROOT, 'dist', 'public');
-const built = existsSync(path.join(BUNDLE, 'index.html')) && existsSync(path.join(BUNDLE, 'lite.html'));
+const stale = bundleWhy(path.join(BUNDLE, 'index.html'), [path.join(ROOT, 'src', 'client'), path.join(ROOT, 'src', 'shared')]);
+const built = !stale && existsSync(path.join(BUNDLE, 'lite.html'));
 const PASSWORD = 'mission-e2e';
 
 const root = mkdtempSync(path.join(tmpdir(), 'office-mission-'));
 let office: { shutdown(): void } | undefined;
 let browser: Browser | undefined;
 let base = '';
-let why = built ? '' : 'no client bundle: run npm run build first';
+let why = stale || (built ? '' : 'no client bundle: run npm run build first');
 
 async function launch(): Promise<Browser | undefined> {
   const { chromium } = await import('playwright-core');

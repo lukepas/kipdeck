@@ -86,4 +86,4 @@ It writes `index.html`, the bundle, `showcase.json`, `leaderboard.json` and `og.
 | `src/client/ui/showcase-settings.ts` | Its pane in Settings |
 | `onchain/indexer/src/showcase.ts`, `scripts/showcase.ts` | The static export |
 
-Tests: `tests/showcase.test.ts` (the whitelist, redaction, links, settings, the card, admin-only settings, and the routes: public, GET only, the policy, off by default, rate limited) and `tests/showcase-e2e.test.ts` (the page in a headless browser on a phone and a desktop, from fixture data, through the office's routes; set `SHOWCASE_SHOTS=<dir>` to keep its screenshots). `onchain/indexer/test/showcase.test.ts` covers the export.
+Tests: `tests/showcase.test.ts` (the whitelist, redaction, links, settings, the card, admin-only settings, and the routes: public, GET only, the policy, off by default, rate limited) and `tests/showcase-e2e.test.ts` (the page in a headless browser on a phone and a desktop, from fixture data, through the office's routes; set `SHOWCASE_SHOTS=<dir>` to keep its screenshots; skipped when `dist/showcase` is missing or older than its sources). `onchain/indexer/test/showcase.test.ts` covers the export.

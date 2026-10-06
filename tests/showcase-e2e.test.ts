@@ -3,10 +3,11 @@
 // its strict policy and no violations, shows the counters, the floor, the board, the work and the
 // bounties, switches the board's view, and opens an explorer link (only its address is checked:
 // the explorer itself is answered locally). Screenshots go to SHOWCASE_SHOTS when that is set.
-// Skipped (not failed) when there's no build (npm run build) or no browser playwright-core can start.
+// Skipped (not failed) when there's no build (npm run build), the build is older than the showcase's
+// sources, or there's no browser playwright-core can start.
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,16 +17,18 @@ import { showcaseRoutes } from '../src/server/http/routes/showcase.js';
 import type { Ctx } from '../src/server/office/context.js';
 import { publicShowcase } from '../src/shared/showcase.js';
 import { fixtureInput } from './support/showcase-fixture.js';
+import { bundleWhy } from './support/bundle.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BUNDLE = path.join(ROOT, 'dist', 'showcase');
-const built = existsSync(path.join(BUNDLE, 'index.html'));
+const stale = bundleWhy(path.join(BUNDLE, 'index.html'), [path.join(ROOT, 'src', 'client', 'showcase'), path.join(ROOT, 'src', 'shared')], 'showcase bundle');
+const built = !stale;
 const SHOTS = process.env.SHOWCASE_SHOTS;
 
 let browser: Browser | undefined;
 let server: http.Server | undefined;
 let base = '';
-let why = built ? '' : 'no showcase bundle: run npm run build first';
+let why = stale;
 
 async function launch(): Promise<Browser | undefined> {
   const { chromium } = await import('playwright-core');
