@@ -8,7 +8,8 @@
 // waiting behind it, and prints how many frames broke that (it should be 0).
 // SHOOT_QUALITY=high|medium|low forces the Quality tier (default: the saved setting, Auto). `idle` is
 // 15 s of the bridge from the captain's seated eye with nothing happening; `seatmerge` is the merge and
-// the jump from that eye. SHOOT_SEAT_EYE='[[x,y,z],[x,y,z]]' moves that eye (default the chair's).
+// the jump from that eye. SHOOT_SEAT_EYE='[[x,y,z],[x,y,z]]' moves that eye (default the chair's);
+// SHOOT_POSE=sit sits in the chair instead, with its framing.
 import { spawn, execFileSync } from 'node:child_process';
 import { chmodSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -524,15 +525,29 @@ async function main() {
       [[5, () => done('desk-14', 'D-02 finished: the devnet deploy script')]],
     );
 
+    // SHOOT_POSE=sit: sat in the captain's chair the way E does (its framing, and the frame centred right
+    // of the Units rail), rather than the pinned seat eye.
+    const SEAT = async () => {
+      if (process.env.SHOOT_POSE !== 'sit') return VIEW(...JSON.parse(process.env.SHOOT_SEAT_EYE ?? '[[0,2.98,11],[0,3.5,-6.5]]'));
+      await page.evaluate(() => {
+        const o = window.__office;
+        const p = o.player;
+        if (p.__update) p.update = p.__update;
+        const it = o.office.interactables.find((i) => i.kind === 'seat' && i.seatId === 'conn');
+        p.sit({ key: 'conn:0', seatId: 'conn', x: it.x, y: it.y, z: it.z + 0.05, rotY: Math.PI, hips: it.hips ?? 0.48, out: 0.8 });
+      });
+      await run(400);
+      await page.evaluate(() => window.__world?.takeConn?.skip?.());
+    };
     // Review: 15 s of the idle bridge from the captain's seated eye, nothing happening, at 30 fps.
     if (want('idle')) {
-      await VIEW(...JSON.parse(process.env.SHOOT_SEAT_EYE ?? "[[0,2.98,11],[0,3.5,-6.5]]"));
+      await SEAT();
       await run(2500);
       await clip('idle-bridge', 15, () => null, []);
     }
     // Review: the merge and the jump from the seated eye as well.
     if (want('seatmerge')) {
-      await VIEW(...JSON.parse(process.env.SHOOT_SEAT_EYE ?? "[[0,2.98,11],[0,3.5,-6.5]]"));
+      await SEAT();
       await run(1500);
       await clip('seatmerge-milestone', 20, () => null, [
         [0.5, async () => (await merge('desk-2', 81), await send(pace(floor, { run: 4, best: 6, week: 13, record: 15 })), await force(rev2, { pr: { number: 81, state: 'merged' } }))],
