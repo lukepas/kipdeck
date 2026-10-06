@@ -22,6 +22,8 @@
 // SHOOT_MISSION=1 sets a course with four waypoints (the second under way) and units toward them.
 // SHOOT_MOTION=hail,stuck,done,jump,conn,ambient,complete,iris,reduced shoots the motion layer's beats
 // after the main shot (design/shoot-motion.mjs): held frame sequences and clips, <name>-<beat>-<ms>.png.
+// SHOOT_DOCS=1 writes a few Markdown files into the project first (the docs rack's index).
+// SHOOT_TOUR='[[eye,aim],...]' eases the camera through those keys over SHOOT_TOUR_MS and saves <name>-tour.mp4.
 // SHOOT_EVAL='...' runs a probe's code in the page just before the shot and prints what it returns.
 // SHOOT_MASK=1 checks what stands in front of the situation arc: it paints every board's face (and the
 // capacity strip's) flat magenta, shoots <light>-<quality>-mask.png, and counts the pixels inside each
@@ -53,6 +55,12 @@ const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');
 for (const d of [home, project, bin]) mkdirSync(d, { recursive: true });
+// SHOOT_DOCS=1 puts a few Markdown files in the project, so the docs rack's index has rows to show.
+if (process.env.SHOOT_DOCS === '1') {
+  mkdirSync(path.join(project, 'docs', 'api'), { recursive: true });
+  const docs = { 'README.md': '# Acme app', 'docs/setup.md': '# Setup', 'docs/bounties.md': '# Devnet bounties', 'docs/auth.md': '# The auth rewrite', 'docs/api/rate-limits.md': '# Rate limits', 'CHANGELOG.md': '# Changelog' };
+  for (const [file, text] of Object.entries(docs)) writeFileSync(path.join(project, file), `${text}\n\n${'Some words. '.repeat(40)}\n`);
+}
 execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: project });
 execFileSync('git', ['-c', 'user.email=t@example.invalid', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'start'], { cwd: project });
 
@@ -331,6 +339,34 @@ async function main() {
       }, eye);
       await wait(1500);
       await page.screenshot({ path: path.join(OUT, `${NAME}-${key}.png`) });
+    }
+    // SHOOT_TOUR='[[[x,y,z],[x,y,z]],...]': the camera eased from each eye and aim to the next, about 12
+    // frames a second over SHOOT_TOUR_MS (default 6000), saved as <name>-tour.mp4.
+    if (process.env.SHOOT_TOUR) {
+      const keys = JSON.parse(process.env.SHOOT_TOUR);
+      const ms = Number(process.env.SHOOT_TOUR_MS ?? 6000);
+      const frames = path.join(OUT, `${NAME}-tour-frames`);
+      mkdirSync(frames, { recursive: true });
+      const n = Math.round((ms / 1000) * 12);
+      for (let i = 0; i < n; i++) {
+        const u = (i / (n - 1)) * (keys.length - 1);
+        const k = Math.min(keys.length - 2, Math.floor(u));
+        const f = u - k;
+        const e = f * f * (3 - 2 * f);
+        const mix = (a, b) => a.map((v, j) => v + (b[j] - v) * e);
+        await page.evaluate(([from, to]) => {
+          const o = window.__office;
+          o.player.update = (dt) => {
+            o.player.__update.call(o.player, dt);
+            o.camera.position.set(...from);
+            o.camera.lookAt(...to);
+          };
+        }, [mix(keys[k][0], keys[k + 1][0]), mix(keys[k][1], keys[k + 1][1])]);
+        await wait(60);
+        await page.screenshot({ path: path.join(frames, `f${String(i).padStart(4, '0')}.png`) });
+      }
+      execFileSync(process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg', ['-y', '-loglevel', 'error', '-framerate', '12', '-i', path.join(frames, 'f%04d.png'), '-c:v', 'libx264', '-pix_fmt', 'yuv420p', '-vf', 'scale=1440:-2', path.join(OUT, `${NAME}-tour.mp4`)]);
+      console.log(JSON.stringify({ tour: `${NAME}-tour.mp4`, frames: n }));
     }
     if (process.env.SHOOT_MASK) {
       const rects = await page.evaluate(async () => {
