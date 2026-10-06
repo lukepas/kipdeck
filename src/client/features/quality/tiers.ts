@@ -68,12 +68,17 @@ export interface TierLook {
    * that say its state (the band, the ring, the glyph and the callout) are drawn at every distance.
    */
   detail: number;
+  /**
+   * The bridge's pulse (features/pulse): the wave down the canopy's ribs and the halo's glint, and at
+   * High the wake streaming over the glass, the one touch only High draws that you see at a glance.
+   */
+  pulse: 'full' | 'ribs' | null;
 }
 
 export const TIER_LOOKS: Readonly<Record<Tier, TierLook>> = {
-  high: { pixelRatio: 1.5, bloom: 'full', shadow: { size: 2048, everyMs: 0 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'all', motes: 1500, cookie: true, outsideLight: true, mirror: true, parallax: 4, flare: true, aa: 'smaa', grade: true, character: true, detail: 20 },
-  medium: { pixelRatio: 1.25, bloom: 'half', shadow: { size: 1024, everyMs: 50 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'bow', motes: 800, cookie: true, outsideLight: true, mirror: false, parallax: 3, flare: true, aa: 'fxaa', grade: true, character: true, detail: 13 },
-  low: { pixelRatio: 1, bloom: null, shadow: { size: 1024, everyMs: null }, skyLight: false, roomLight: false, glossFloor: false, starLayers: 2, shafts: null, motes: 0, cookie: false, outsideLight: false, mirror: false, parallax: 1, flare: false, aa: null, grade: false, character: false, detail: 7 },
+  high: { pixelRatio: 1.5, bloom: 'full', shadow: { size: 2048, everyMs: 0 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'all', motes: 1500, cookie: true, outsideLight: true, mirror: true, parallax: 4, flare: true, aa: 'smaa', grade: true, character: true, detail: 20, pulse: 'full' },
+  medium: { pixelRatio: 1.25, bloom: 'half', shadow: { size: 1024, everyMs: 50 }, skyLight: true, roomLight: true, glossFloor: true, starLayers: 3, shafts: 'bow', motes: 800, cookie: true, outsideLight: true, mirror: false, parallax: 3, flare: true, aa: 'fxaa', grade: true, character: true, detail: 13, pulse: 'ribs' },
+  low: { pixelRatio: 1, bloom: null, shadow: { size: 1024, everyMs: null }, skyLight: false, roomLight: false, glossFloor: false, starLayers: 2, shafts: null, motes: 0, cookie: false, outsideLight: false, mirror: false, parallax: 1, flare: false, aa: null, grade: false, character: false, detail: 7, pulse: null },
 };
 
 /**

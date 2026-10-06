@@ -63,6 +63,7 @@ import { installBoardFaces } from './features/boardfaces';
 import { installFocusLean } from './features/focuslean';
 import { installAmphitheater } from './features/amphitheater';
 import { installSeatFrame } from './features/seatframe';
+import { installPulse } from './features/pulse';
 import { installDemo } from './features/demo';
 import { installBottomBar } from './features/bottombar';
 import { makeMotion } from './motion';
@@ -223,6 +224,8 @@ parts.holoUi = installHoloUi(ctx, parts);
 parts.takeConn = installTakeConn(ctx, parts);
 parts.hail = installHail(ctx, parts);
 installKinetic(ctx, parts);
+// The bridge's pulse at rest: the wave down the canopy's ribs, the halo's glint, the wake over the glass.
+installPulse(ctx, parts);
 installFocusLean(ctx, parts);
 installDeclutter(ctx, parts);
 installDemo(ctx, parts);
