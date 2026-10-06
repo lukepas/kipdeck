@@ -3,7 +3,7 @@ import { drawDone } from '../../world/glyphs';
 import { PANEL } from '../boards/world';
 import { INK, MONO, UI, UNITS_PER_M, screen, type Screen } from '../boards/screen';
 import { coins } from './coin';
-import { FLIGHT, MAX_COINS, coinAt, flightTime, receiptAlpha, type P3 } from './logic';
+import { FLIGHT, FLY, MAX_COINS, coinAt, flightTime, flySize, receiptAlpha, type P3 } from './logic';
 
 // The tokens moving: a coin over each funded issue's row on the Issues board, and a payout's coins
 // flying out of the vault over the deck to the console of the unit that earned them, where a receipt
@@ -31,7 +31,9 @@ export class BoardCoins {
   private readonly v = new THREE.Vector3();
   private readonly box = new THREE.Box3();
   private readonly violet = new THREE.Color(PANEL.proof);
-  private key = '';
+  /** What was placed last: the sockets' list (the same array while the board isn't repainted) and the face's place. */
+  private placed: readonly Socket[] | null = null;
+  private readonly at = new THREE.Matrix4();
 
   constructor() {
     this.mesh.name = 'issue-bounty-coins';
@@ -45,14 +47,13 @@ export class BoardCoins {
     if (!face || !sockets.length) {
       this.mesh.count = 0;
       this.mesh.visible = false;
-      this.key = '';
+      this.placed = null;
       return;
     }
-    face.updateWorldMatrix(true, false);
-    const e = face.matrixWorld.elements;
-    const key = `${sockets.map((s) => `${s.number}:${s.x}:${s.y}`).join(',')}|${e.join(',')}`;
-    if (key === this.key) return;
-    this.key = key;
+    // Nothing to do while the board's sockets and its place are as they were: no string, no garbage.
+    if (sockets === this.placed && face.matrixWorld.equals(this.at)) return;
+    this.placed = sockets;
+    this.at.copy(face.matrixWorld);
     const geo = face.geometry;
     if (!geo.boundingBox) geo.computeBoundingBox();
     this.box.copy(geo.boundingBox!);
@@ -105,7 +106,8 @@ const RECEIPT_SIZE = { width: 1.6, height: 0.5, units: 300, over: 2.15 } as cons
 /** A payout on its way, and its receipt over the console once it lands. One at a time, the rest wait their turn. */
 export class PayoutFlight {
   readonly root = new THREE.Group();
-  private readonly coins = coins(MAX_COINS);
+  /** Each coin and its trail (FLY.trail.n fading coins behind it), one draw. */
+  private readonly coins = coins(MAX_COINS * (1 + FLY.trail.n));
   private readonly screen: Screen;
   private readonly card: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   private readonly queue: Flight[] = [];
@@ -115,6 +117,8 @@ export class PayoutFlight {
   private readonly s = new THREE.Vector3();
   private readonly v = new THREE.Vector3();
   private readonly violet = new THREE.Color(PANEL.proof);
+  private readonly dim = new THREE.Color();
+  private readonly eye = new THREE.Vector3();
   private painted: Receipt | null = null;
 
   constructor() {
@@ -150,18 +154,25 @@ export class PayoutFlight {
     // The coins in the air.
     let k = 0;
     if (!f.still && f.t < fly) {
+      camera.getWorldPosition(this.eye);
+      const T = FLY.trail;
       for (let i = 0; i < f.n; i++) {
-        const { p, k: u } = coinAt(i, f.t, f.from, f.to);
-        if (u <= 0 || u >= 1) continue;
-        // Each coin turns over as it flies and shrinks into the console as it lands.
-        const spin = (f.t - i * FLIGHT.gap) * 9 + i;
-        this.e.set(spin * 0.6, spin, 0.4);
-        this.q.setFromEuler(this.e);
-        const size = 1.8 * (u > 0.85 ? (1 - u) / 0.15 : Math.min(1, u / 0.08));
-        this.m.compose(this.v.set(p.x, p.y, p.z), this.q, this.s.setScalar(Math.max(0.001, size)));
-        this.coins.setMatrixAt(k, this.m);
-        this.coins.setColorAt(k, this.violet);
-        k++;
+        // The coin, then its trail: the same coin a moment back along its path, smaller and dimmer.
+        for (let g = 0; g <= T.n; g++) {
+          const t = f.t - g * T.gap;
+          const { p, k: u } = coinAt(i, t, f.from, f.to);
+          if (u <= 0 || u >= 1) continue;
+          // Each coin turns over as it flies, as big as reads from where you are, and shrinks into the console as it lands.
+          const spin = (t - i * FLIGHT.gap) * 9 + i;
+          this.e.set(spin * 0.6, spin, 0.4);
+          this.q.setFromEuler(this.e);
+          const d = this.v.set(p.x, p.y, p.z).distanceTo(this.eye);
+          const size = flySize(d) * (u > 0.85 ? (1 - u) / 0.15 : Math.min(1, u / 0.08)) * (1 - g * T.shrink);
+          this.m.compose(this.v, this.q, this.s.setScalar(Math.max(0.001, size)));
+          this.coins.setMatrixAt(k, this.m);
+          this.coins.setColorAt(k, g ? this.dim.copy(this.violet).multiplyScalar(1 - g * T.dim) : this.violet);
+          k++;
+        }
       }
     }
     this.coins.count = k;

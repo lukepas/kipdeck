@@ -141,7 +141,17 @@ export interface P3 {
 /** How long one coin takes from the vault to the console (s), and the gap between coins setting off. */
 export const FLIGHT = { s: 1.5, gap: 0.09, rise: 2.2 } as const;
 /** How long the receipt holds over the console, and its fades in and out (s). */
-export const RECEIPT = { hold: 6, fade: 0.4 } as const;
+export const RECEIPT = { hold: 8, fade: 0.4 } as const;
+
+/**
+ * How big a coin in flight is (times a vault coin): at least `min`, and `perM` a metre it is from you, so
+ * from the captain's chair 18 m off it is still about 20 px across. Its trail: `n` fading coins behind
+ * it, each `gap` s back along its path, smaller and dimmer.
+ */
+export const FLY = { min: 2.4, perM: 0.14, trail: { n: 3, gap: 0.045, shrink: 0.2, dim: 0.22 } } as const;
+
+/** A flying coin's size `d` metres from you, before its landing's shrink. */
+export const flySize = (d: number) => Math.max(FLY.min, d * FLY.perM);
 
 /** How many coins fly for a payout of `tokens`: the stack it was, at least 3 so it reads as a flow. */
 export const flightCoins = (tokens: number) => Math.max(3, coinsFor(tokens));

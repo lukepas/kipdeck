@@ -119,3 +119,13 @@ test('a transaction is shown by its head and tail', () => {
   assert.equal(shortSig('mock-tx-1'), 'mock-tx-1');
   assert.equal(shortSig(undefined), '');
 });
+
+test('a payout coin in flight reads from the captain\'s chair: about 20 px across 18 m off, with a fading trail', async () => {
+  const { FLY, flySize, COIN_R } = { ...(await import('../src/client/features/bounties/logic.js')), COIN_R: (await import('../src/client/features/bounties/coin.js')).COIN.r };
+  // 1440x900 at a 55 degree view: 864 px a radian of focal length.
+  const px = (d: number) => (2 * COIN_R * flySize(d) * (450 / Math.tan((27.5 * Math.PI) / 180))) / d;
+  assert.ok(px(18) >= 18, `${px(18).toFixed(1)} px at the chair`);
+  assert.ok(px(4) >= px(18), 'never smaller up close');
+  assert.ok(flySize(2) === FLY.min, 'up close, as it was');
+  assert.ok(FLY.trail.n >= 2 && 1 - FLY.trail.n * FLY.trail.shrink > 0 && 1 - FLY.trail.n * FLY.trail.dim > 0, 'the trail fades but never goes negative');
+});
