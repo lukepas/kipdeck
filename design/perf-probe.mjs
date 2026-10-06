@@ -15,7 +15,8 @@
 //   npm run build && node design/perf-probe.mjs [metal|swiftshader] [label]
 //
 // PROBE_PORT picks the port (default 4692), PROBE_ROOT another checkout's build to time (a baseline),
-// PROBE_CONN the conn's eye and aim.
+// PROBE_CONN the conn's eye and aim. PROBE_SOUND=1 starts the deck's sound first (a key press, as a
+// person's first one would), so the ambience and the effects run while it times; it prints the audio's state.
 // Prints one JSON line per vantage.
 import { spawn, execFileSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
@@ -337,7 +338,7 @@ async function during([[from, to], kind]) {
 
 async function main() {
   const { chromium } = await import('playwright-core');
-  const browser = await chromium.launch({ headless: true, args: ARGS });
+  const browser = await chromium.launch({ headless: true, args: process.env.PROBE_SOUND === '1' ? [...ARGS, '--autoplay-policy=no-user-gesture-required'] : ARGS });
   await waitUp();
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, colorScheme: 'dark' });
@@ -370,6 +371,11 @@ async function main() {
     await wait(8000);
     await page.evaluate(seedWorld);
     await wait(3000);
+    if (process.env.PROBE_SOUND === '1') {
+      await page.keyboard.press('Shift');
+      await wait(2500);
+      console.log(JSON.stringify({ sound: await page.evaluate(() => ({ state: window.__sound?.state, ambience: window.__world?.soundscape?.ambience?.() ?? null, level: window.__sound?.level?.() ?? null })) }));
+    }
     const VANTAGES = {
       // PROBE_CONN '[[x,y,z],[x,y,z]]' moves the conn's eye (a layout that raises or moves the dais).
       conn: JSON.parse(process.env.PROBE_CONN ?? 'null') ?? [[0, 2.05, 11.4], [0, 2.4, -12]],

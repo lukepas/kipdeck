@@ -22,6 +22,7 @@
 // SHOOT_MISSION=1 sets a course with four waypoints (the second under way) and units toward them.
 // SHOOT_HANDS=1 shoots the first-person hands after the main shot (design/shoot-hands.mjs).
 // SHOOT_LOUNGE=1 shoots the forward lounge after the main shot (design/shoot-lounge.mjs).
+// SHOOT_SOUND=1 shoots Settings > Sound & voice and records two clips with their sound (design/shoot-sound.mjs).
 // SHOOT_MOTION=hail,stuck,done,jump,conn,ambient,complete,iris,reduced shoots the motion layer's beats
 // after the main shot (design/shoot-motion.mjs): held frame sequences and clips, <name>-<beat>-<ms>.png.
 // SHOOT_DOCS=1 writes a few Markdown files into the project first (the docs rack's index).
@@ -186,6 +187,8 @@ async function main() {
   const { chromium } = await import('playwright-core');
   // SHOOT_BACKEND=swiftshader draws on the CPU, as the e2e tests' browser does.
   const args = process.env.SHOOT_BACKEND === 'swiftshader' ? ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] : ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'];
+  // The sound clips need audio to start without waiting on a real person's gesture.
+  if (process.env.SHOOT_SOUND) args.push('--autoplay-policy=no-user-gesture-required');
   const browser = await chromium.launch({ headless: true, args });
   try {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1, colorScheme: LIGHT === 'day' ? 'light' : 'dark' });
@@ -328,6 +331,11 @@ async function main() {
     if (process.env.SHOOT_LOUNGE) {
       const { loungeShots } = await import('./shoot-lounge.mjs');
       await loungeShots(page, { out: OUT, name: NAME, wait, ffmpeg: process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg' });
+    }
+    // SHOOT_SOUND: the deck's sound (design/shoot-sound.mjs): the mixer, and two clips with what it played.
+    if (process.env.SHOOT_SOUND) {
+      const { soundShots } = await import('./shoot-sound.mjs');
+      await soundShots(page, { out: OUT, name: NAME, wait, ffmpeg: process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg' });
     }
     // SHOOT_MOTION: the motion layer's beats, each as a held sequence or a clip (design/shoot-motion.mjs).
     if (process.env.SHOOT_MOTION) {

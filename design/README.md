@@ -1011,3 +1011,57 @@ Eight draws and about 7,500 triangles; the render time moves inside the run-to-r
 
 - The datapad sits low in the left of the view, so a tall Mission control window covers most of it; it reads best beside a short one, and as the window opens and closes.
 - The hands take the room's light where you stand only through its sky, key and fill: a pod's lamp or the holo next to you does not light them.
+
+## The feel: sound
+
+The deck had four optional cues and the jump, off until you turned them on, and no other sound. Now it is on from your first click or key, in four groups with a mixer (`src/client/sound/`, `src/client/features/soundscape/`, [docs/design.md](../docs/design.md#sound)): Alerts (the state cues, always on top), Interface (clicks, windows), Ship (steps on plates, stairs and the lounge's grating, a jump and its landing, seats, the ladder, Bolt's beeps, a payout, the jump in four parts, the surge) and Ambience (a low bed, the drive's drone aft, the holo's shimmer and Bolt's hover, placed where they are). Shift+M mutes it all. Everything is Web Audio synthesis, no files.
+
+Shots in `shots/feel-sound/`: `before/` and `after/` Settings > Sound & voice (`-sound-settings.png`), Night at High through Metal from the captain's chair; `before/` is commit 4964e30 built from a `git archive`. `after/` adds two clips recorded with the sound straight off the deck's master (a MediaRecorder on `DeckSound.tap()`), each with its audio alone (`.m4a`), its spectrogram (`-spectrum.png`) and waveform (`-wave.png`), and a contact sheet:
+
+- `night-high-calm-sit-sound-deck.mp4`: a walk over the plates to the forward lounge's ladder, the climb (hands on, seven rungs, the gate), a step on the grating, a lounge seat, Esc, a jump and its landing.
+- `night-high-calm-sit-sound-bridge.mp4`: from the chair, the jump (spool, release, punch, arrival with its two bells), a bounty paid out (coins leaving the vault, their rush across the deck, landing, the chord), Mission control opened, a click and closed, then a unit hailing you: the comm's breath and the two chimes, and the ambience sinking under it.
+- `night-high-calm-sit-sound-muted.png`: Shift+M and its toast.
+
+    npm run build && SHOOT_SOUND=1 SHOOT_POSE=sit SHOOT_CREW=calm node design/shoot-interior.mjs feel-sound/after
+    SHOOT_ROOT=<a build of 4964e30> SHOOT_SOUND=settings SHOOT_POSE=sit SHOOT_CREW=calm node design/shoot-interior.mjs feel-sound/before
+
+### Levels
+
+Measured off the recordings (100 ms windows, at the default volume and mix):
+
+| | RMS | Peak |
+| --- | --- | --- |
+| Ambience at the chair (the drive is aft of it) | -39 dBFS | |
+| Ambience by the lounge | -42 dBFS | |
+| A hail (needs you) | -23 dBFS | -10 dBFS |
+| The jump's punch | -15 dBFS | -8 dBFS |
+| A payout's chord, from the chair (18 m off) | -28 dBFS | -17 dBFS |
+| A window opening | -29 dBFS | -19 dBFS |
+| A step on the plates | -30 dBFS | -15 to -7 dBFS |
+
+The shot's checks, printed by the script: a hidden tab keeps the alerts at full level while the interface, ship and ambience go to 0 and the ambience's sources are torn down within 2.5 s and come back when the tab does; while a unit needs you the ambience sits at 40%; Shift+M sets the master to 0 and back.
+
+### Frame times
+
+`PROBE_SOUND=1 node design/perf-probe.mjs metal`, which presses a key first so the sound starts (the after run had the ambience playing, the before run's sound was off by default), against the 4964e30 build (`frames-before.jsonl`, `frames-after.jsonl`).
+
+| | Before | After |
+| --- | --- | --- |
+| High, conn: draw calls | 395 | 395 |
+| High, conn: forced render p50 / p95 | 1.6 to 1.7 / 2.4 to 2.7 ms | 1.6 to 1.7 / 2.7 ms |
+| Port | 1.1 to 1.2 ms | 1.3 ms |
+| Jump with the tunnel open | 2.3 ms | 2.5 ms |
+| Motion layer | 0.1 ms | 0 ms |
+| rAF p50 / p95 | 16.7 / 16.8 ms | 16.7 / 16.8 ms |
+
+No draws: the sound runs on the audio thread. Per frame the page only diffs a few numbers (your steps, Bolt's state, the mix) and moves your ears 30 times a second. `node design/flicker-check.mjs` passes, Night and Day, 600 frames each.
+
+### Checks
+
+- `tests/sound.test.ts`: the mix (on by default, alerts loudest, a hidden tab's alerts only, Calm and Silent running, the sink while a unit needs you, never the alerts), the steps (a step each half cycle only when you covered ground, a run's stride, a stair, the lounge's grating), a jump's push and its landing, the seat, the ladder's own sounds, Bolt's words and chatter, the jump's parts, the payout's chord and the mixer's rows. `tests/motion.test.ts`: the cues. `tests/client-store.test.ts`: the mixer's default and parse, and a mute saved before the mixer dropped.
+- `npm run typecheck` and `npm run build` clean; `npm test` all but `mission-e2e`'s debrief test, which times out the same way on the 4964e30 build.
+
+### Left for later
+
+- Other people's steps and voices of the units at their consoles are not heard; only you and Bolt make sound on the deck.
+- The ambience does not change with where the ship is (a waypoint's region, the jump's tunnel) beyond the jump's own sounds.
