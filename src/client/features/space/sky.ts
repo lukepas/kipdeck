@@ -27,6 +27,15 @@ export const DAY_PLANET = (() => {
   return { dir: [d.x, d.y, d.z] as [number, number, number], radius: (42 * Math.PI) / 180 };
 })();
 
+/**
+ * The brightest the sky's gas may be (its brightest channel, linear, before exposure), by Night and by
+ * Day. The gas is baked many times brighter than this; past the cap's knee it rolls off toward it with
+ * its hue kept, so the nebula stays deep magenta, teal and indigo through the tone mapping instead of
+ * washing to a pastel white, and stays under the glow's threshold (0.85) so it never blooms over the
+ * canopy and the arc. Star points are added after the cap: they stay crisp and may glow.
+ */
+export const SKY_CAP = { night: 0.36, day: 0.62, knee: 0.55 } as const;
+
 /** How fast the sky turns round the ship (radians a second): 3 degrees a minute. */
 export const SKY_TURN = (3 * Math.PI) / 180 / 60;
 
@@ -161,6 +170,14 @@ varying vec3 vDir;
 varying vec4 vClip;
 ${NOISE}
 uniform vec4 uBoards[${BOARD_SLOTS}];
+/** Rolls a colour's brightest channel off toward \`cap\` past the knee, its hue kept. */
+vec3 capped(vec3 c, float cap) {
+  float m = max(c.r, max(c.g, c.b));
+  float k = cap * ${SKY_CAP.knee.toFixed(2)};
+  if (m <= k) return c;
+  float span = cap - k;
+  return c * ((k + span * (1.0 - exp(-(m - k) / span))) / m);
+}
 /** 0 on a wall board's face and within 0.12 (NDC) of it, 1 clear of every one. */
 float clearOfBoards(vec2 p) {
   float m = 1.0;
@@ -212,7 +229,9 @@ void main() {
   float clear = clearOfBoards(ndc);
   // The knots shimmer as the gas drifts: a slow wave of brightness travelling through them.
   float drift = 0.72 + 0.28 * sin(dot(d, vec3(9.0, 6.0, 4.0)) + uDrift * 0.9) * sin(dot(d, vec3(-5.0, 8.0, 3.0)) - uDrift * 0.55);
-  col += mix(hue, vec3(1.0), 0.4) * sky.a * KNOT * uDim * clear * drift;
+  col += mix(hue, vec3(1.0), 0.25) * sky.a * KNOT * uDim * clear * drift;
+  // Deep, not blown: the gas rolled off under the cap (SKY_CAP), its colour kept.
+  col = capped(col, mix(${SKY_CAP.night.toFixed(2)}, ${SKY_CAP.day.toFixed(2)}, uDay));
   // The mission complete: the galaxy brightens for a few seconds (1 at rest).
   col *= uBoost;
   // Behind the wall boards and just round them the sky sinks to a quarter: the arc always has a dark
@@ -252,6 +271,8 @@ void main() {
     // The atmosphere's glow over the limb, fading into space.
     float glow = exp(-max(-into, 0.0) / 0.05) * step(into, 0.0);
     col += uAtmo * (glow * 1.8 + exp(-max(-into, 0.0) / 0.012) * step(into, 0.0) * 1.5) * uDay;
+    // The sunlit planet and its limb under Day's cap too: bright, never a white sheet over the bow.
+    col = mix(col, capped(col, ${SKY_CAP.day.toFixed(2)} * 1.3), uDay);
   }
   // The jump's flash: light added over the sky, so its stars and its band still show through it.
   col += uFlashColor * uFlash;
