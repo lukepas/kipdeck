@@ -14,7 +14,7 @@ import { paintCountStrip, paintCourseStrip, type Course } from './readouts';
 // The conn: the captain's dais at the back of the amphitheatre (shared/amphitheater.ts DAIS), on the
 // axis of the table and the Attention board. A raised drum with a lit gold lip, a brass rail round its
 // back but where the aisle comes up from the pit and the galleries come up from the back tier, and the
-// captain's chair, the room's hero: a high back with gold piping, a gold underlight on the deck plate
+// captain's chair, the room's hero: a shoulder-high back with a headrest, gold piping, a cyan rim, a gold underlight on the deck plate
 // under it, and the counts (left) and the course (right) on slim strips along its armrests.
 
 export interface ConnView {
@@ -113,7 +113,7 @@ function dais(statics: THREE.Group, cols: Collider[]) {
   }
 }
 
-/** The captain's chair, built facing +z and turned to the bow: the room's hero, high-backed, gold-piped. */
+/** The captain's chair, built facing +z and turned to the bow: the room's hero, shoulder-high, gold-piped, rim-lit. */
 function captainsChair(): { chair: THREE.Group; arms: [THREE.Object3D, THREE.Object3D] } {
   const g = new THREE.Group();
   const shell = flat(DECK.console);
@@ -133,21 +133,29 @@ function captainsChair(): { chair: THREE.Group; arms: [THREE.Object3D, THREE.Obj
   const under = new THREE.Mesh(new THREE.TorusGeometry(0.33, 0.012, 4, 48).rotateX(Math.PI / 2), gold);
   under.position.y = 0.375;
   g.add(under);
-  // The high back, leaning back a little, its headrest and the wings either side of it.
+  // The back, leaning back a little: shoulder-high, not a wall (standing behind the chair, or coming up
+  // onto the dais, the eye clears it and sees the pit). An open frame round a padded spine, a headrest
+  // on two posts, gold piping, and a ship-cyan rim down its outer edges so it reads lit from behind.
+  const rim = practical(DECK.ship);
   const back = new THREE.Group();
   back.position.set(0, 0.5, -0.29);
   back.rotation.x = -0.14;
-  back.add(mesh(rbox(0.7, 1.12, 0.12, 0.05), shell, 0, 0.56, 0));
-  back.add(mesh(rbox(0.56, 0.86, 0.04, 0.02), pad, 0, 0.5, 0.07));
-  back.add(mesh(rbox(0.46, 0.2, 0.1, 0.04), pad, 0, 1.0, 0.08));
+  back.add(mesh(rbox(0.66, 0.66, 0.1, 0.05), shell, 0, 0.34, 0));
+  back.add(mesh(rbox(0.5, 0.56, 0.04, 0.02), pad, 0, 0.34, 0.06));
+  // The headrest, over a gap, on two brass posts.
+  for (const s of [-1, 1]) back.add(mesh(box(0.035, 0.16, 0.035), brass, s * 0.13, 0.74, 0.01, false));
+  back.add(mesh(rbox(0.42, 0.15, 0.09, 0.045), pad, 0, 0.86, 0.03));
+  back.add(mesh(box(0.36, 0.012, 0.012), gold, 0, 0.94, 0.075, false));
   for (const s of [-1, 1]) {
-    const wing = mesh(rbox(0.1, 0.62, 0.22, 0.04), shell, s * 0.34, 0.78, 0.06);
+    const wing = mesh(rbox(0.09, 0.46, 0.2, 0.04), shell, s * 0.32, 0.42, 0.06);
     wing.rotation.y = s * -0.3;
     back.add(wing);
-    // Gold piping down each edge of the back.
-    back.add(mesh(box(0.014, 1.0, 0.014), gold, s * 0.355, 0.56, 0.065, false));
+    // Gold piping down each edge of the back, and the rim light behind it.
+    back.add(mesh(box(0.014, 0.62, 0.014), gold, s * 0.335, 0.34, 0.06, false));
+    back.add(mesh(box(0.016, 0.6, 0.016), rim, s * 0.34, 0.34, -0.06, false));
   }
-  back.add(mesh(box(0.7, 0.014, 0.014), gold, 0, 1.125, 0.065, false));
+  back.add(mesh(box(0.66, 0.014, 0.014), gold, 0, 0.67, 0.06, false));
+  back.add(mesh(box(0.6, 0.016, 0.016), rim, 0, 0.68, -0.06, false));
   g.add(back);
   // The armrests, each with a slim strip along its top, tilted up toward whoever sits there.
   const arms: THREE.Object3D[] = [];
