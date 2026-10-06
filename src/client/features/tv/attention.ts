@@ -230,7 +230,7 @@ function paintChips(g: CanvasRenderingContext2D, W: number, H: number, plan: Her
   const h = foot - 16;
   for (const c of plan.chips) {
     const word = { working: 'WORKING', done: 'DONE', stuck: 'MORE STUCK', 'needs-you': 'MORE NEED YOU', review: 'MORE TO REVIEW' }[c.kind];
-    g.font = UI(700, 30);
+    g.font = UI(700, 34);
     g.letterSpacing = '3px';
     const text = `${word} ${c.n}`;
     const w = g.measureText(text).width + 74;

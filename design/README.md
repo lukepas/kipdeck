@@ -763,3 +763,46 @@ The floor and the arc cost fewer draws than the standing wall and the overhead s
 - The routes (`nav.ts`) don't use the galleries (a metre wide, with a ledge either side they leave no cell clear); people walk them, units and N's flights go by the aisle.
 - N stands you 2.4 m behind a back-tier console, which is on a gallery: higher than the unit, still looking over its shoulder.
 - `tests/mission-e2e.test.ts`'s debrief case failed once in this stage's runs on the baseline bundle too (SwiftShader nearing its 60 s wait); it passed in the final full run.
+
+## The interior: diegetic UI
+
+The third stage of the interior round: what the room says, and how it says it. The layout stage gave the room a composition; this one makes the information plane in it read from the captain's chair at a glance. The Attention board becomes the arc's hero, every board gets chrome in the colour of its most urgent state, each attention state gets its own shape in the room, a unit shows one label at a time, the holo becomes a route column with one caption, and the room counts in two places only. What it is and how it moves is in [docs/design.md](../docs/design.md#the-bridge-from-the-captains-chair) and [DESIGN.md](../DESIGN.md).
+
+### What changed
+
+- **The Attention board** (`features/tv/plan.ts`, `attention.ts`): a header with ATTENTION, the counts and a JUMP READY chip; then cards in the order a captain acts (stuck, needs you, to review, working, done), two columns of three with names in 0.5 m type. Waiting and stuck units always have a card (denser grids past six, never hidden); working units fold into one *WORKING 12* chip when they don't all fit; done has its own green check. The old count band (with a DONE tile that showed the review glyph) and the three-row list with "+8 more" are gone.
+- **Lit glass and the wings' fold** (`features/boards/fold.ts`, `world.ts`, `screen.ts`): the arc's faces are `#E8ECEF` text on a smoked 88% ground with no slab behind; a wing's row is 0.3 m type; an empty Queue or Services folds to a 0.34 m pill and the board over it grows from two rows to four.
+- **Chrome** (`features/arcchrome`): a 2 px bezel and four corner brackets round every face, one instanced draw replacing the graphite bezels, coloured by the board's most urgent state (the hero at full strength with a chase while someone needs you or is stuck, the wings at 55%). The pull: chevrons along the arc's foot and a brightened wing on the side of a waiting unit out of view.
+- **Signals** (`features/signals`): diamond and beam, blinking triangle and station rim, turning review ring, working pip; one instanced draw a kind. The orange light columns are gone.
+- **Labels** (`features/workers/labels.ts`, `declutter.ts`, `ui/compass.ts`): edge mark, else card, else callout; piles fold into a counted chip; no callout on a board's face; the compass points from the unit, not its seat, and keeps off the boards; the crosshair is a faint dot over a board (it was the orange dot that sat on the Attention board in every earlier shot).
+- **The holo** (`features/bridge/holo.ts`, `holo-route.ts`, `holo-labels.ts`, `features/life/heading.ts`): the route column, waypoint plates, unit markers, one caption plate at the lip; the turning ring of lettering is gone; the uplight moved from 0.5 to 1.5 m over the top, which removes the white hot spot the critics called the holo's core.
+- **Counts in two places**: the condition band names who and why, never how many; JUMP READY moved off the band; the rail's group heads don't count; a unit's call is a chip at the top centre, not a toast in the lower left.
+- **Zoned hue**: conn gold and brass moved from hue 39 to about 48 (`#D9C46D`, `#9D8D53`), so orange in the room means needs you.
+
+### Before and after
+
+On the GPU (ANGLE Metal, M3 Pro) at 1440x900, sat in the captain's chair, toasts and the waiting card closed, with a course set (`SHOOT_MISSION=1`), in `shots/interior-diegetic-ui/`. The fixture is the desk-2 need fixture grown to three units asking, one crashed (stuck) and two done (to review) (`SHOOT_CREW=signals`); `twenty` adds units to 20 on the consoles and the Standby bench. The before set is the build of ff9199d from a `git archive` in a scratch folder (`SHOOT_ROOT`), shot with the same script.
+
+| | Before | After |
+| --- | --- | --- |
+| The chair, Night and Day, High and Medium (`<light>-<quality>-signals-sit.png`, `before-after-signals-sit.png`, `before-after-day-high-signals-sit.png`) | the Attention board lists three of six waiting units ("+8 more"), the stuck one missing; names 11 px; red-brown columns over the units; callouts piled on the pit; a white blob on the table; JUMP READY on the band | six cards (stuck first) with names at 19 to 20 px, orange chrome and a chase; diamonds and beams; one caption plate; the band quiet |
+| 20 units (`night-high-twenty-sit.png`, `before-after-twenty-sit.png`) | three rows and "+17 more" | every waiting and stuck unit a card, *WORKING 14* one chip |
+| Mid, close on the board, close on a pod, the lean, the Overview (`after/night-high-signals-sit-*.png`) | | no label on another label or on board text; the compass's marks off the board's face |
+
+`measure-after.jsonl` is each card's name measured on the shot (`SHOOT_MEASURE=1`): cap height 19 to 20 px in every shot, Night and Day, High and Medium; contrast of the name against its card 12.4:1 to 14.1:1. The before set's rows measure 11 px with the same method (by hand on the shot's boxes), contrast 12.6:1.
+
+### Checks
+
+- `tests/diegetic-ui.test.ts`: the card order, never hiding a waiting unit, the 20-unit chips, the denser grids, the header's counts, the fold's heights, the chrome's bars, the pull, one label a unit, the piles, the route column under the chair's line. `tests/boards-screen.test.ts`: the hero's header, cards, chips and text inside the board; the 17 px arithmetic. `tests/bridge-ship.test.ts`: the signals, the 1 Hz blink, the compass keeping off a board. `tests/alert.test.ts`: the band never says how many. `tests/life.test.ts`: the caption.
+- `npm run typecheck`, `npm test` and `npm run build` clean; `tests/size.test.ts` green; `node design/flicker-check.mjs` passes by Night and by Day with the glow on.
+
+### Frame times
+
+`node design/perf-probe.mjs metal`, five runs of the stage's build on the M3 Pro at 1440x900 (taken at the start of the look stage, which builds on it): from the conn at High a forced render takes 1.8 ms (median of the runs' medians; p95 2.3 ms, the worst run's p95 2.6 ms) in 378 draw calls against a budget of 400, rAF p95 16.8 ms; with the CPU throttled 4x 7.6 ms (p95 9.1 ms, worst 12.9 ms); through the jump 2.0 ms in 431 calls. The motion layer costs 0.1 ms of CPU against its 0.6 ms budget.
+
+### Left for later
+
+- From down in the pit (the mid shot) the holo's rings and course stand in front of the capacity strip: only its stars, cone and plates keep off the boards.
+- The hint bar ("Captain's chair - Get up") sits over the caption plate in the lean.
+- Review keeps its amber at hue 44; the plan's cooler yellow for review would touch the DOM tokens and every surface, so it waits for a tokens pass.
+- The Attention board's second line (why) is 0.2 m type, about 8 px from the chair: it reads in the lean, not at a glance.
