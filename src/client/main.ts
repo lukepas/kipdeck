@@ -92,6 +92,7 @@ import { installHoloUi } from './features/holoui';
 import { installTakeConn } from './features/takeconn';
 import { installHail } from './features/hail';
 import { installKinetic } from './features/kinetic';
+import { installHands } from './features/hands';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -227,6 +228,8 @@ installKinetic(ctx, parts);
 // The bridge's pulse at rest: the wave down the canopy's ribs, the halo's glint, the wake over the glass.
 installPulse(ctx, parts);
 installFocusLean(ctx, parts);
+// Your gloved hands in first person, drawn over the deck (features/hands).
+installHands(ctx, parts);
 installDeclutter(ctx, parts);
 installDemo(ctx, parts);
 installChat(ctx);
