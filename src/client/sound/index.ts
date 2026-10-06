@@ -8,6 +8,7 @@
 import { playCue, type Cue } from './alerts';
 import { AudioCore } from './core';
 import { playJump, type JumpSound } from './jump';
+import { playMascot, type MascotSound } from '../features/mascot/sound';
 
 export type { Cue } from './alerts';
 
@@ -33,6 +34,11 @@ export class DeckSound {
   /** Plays a part of the jump (jump.ts): the drive spooling up, or the release into the tunnel. */
   jump(part: JumpSound) {
     playJump(this.a, part);
+  }
+
+  /** Plays one of the bridge mascot's chirps or the Spark Sprig's sparkle (features/mascot/sound.ts), at `level` of its own loudness. */
+  mascot(sound: MascotSound, level = 1) {
+    playMascot(this.a, sound, level);
   }
 
   /** Plays one of the four cues (see alerts.ts). */

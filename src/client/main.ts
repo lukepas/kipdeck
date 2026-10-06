@@ -82,6 +82,7 @@ import { installSorties } from './features/sorties';
 import { installVesper } from './features/vesper';
 import { installCrew } from './features/crew';
 import { installDroid } from './features/droid';
+import { installMascot } from './features/mascot';
 import { installAlert } from './features/alert';
 import { installMoments } from './features/moments';
 import { installDrive } from './features/drive';
@@ -188,6 +189,8 @@ installSorties(ctx, parts);
 parts.vesper = installVesper(ctx, parts);
 parts.crew = installCrew(ctx, parts);
 parts.droid = installDroid(ctx, parts);
+// Nubbin, the bridge mascot: after Bolt, whose errands he follows.
+installMascot(ctx, parts);
 // Before the moments: its pose comes off first each frame, as it is laid last (after their gestures).
 installPosture(ctx, parts);
 parts.alert = installAlert(ctx, parts);
