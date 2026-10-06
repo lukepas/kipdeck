@@ -1,18 +1,19 @@
 // Fundable-track screenshots: starts the built office on a spare port with a throwaway home,
-// password and project, hires stand-in agents that report fake states over the hook server (the
-// same stand-in as design/shoot.mjs; every task says "(demo)"), and saves PNGs of the home page,
-// sign-in, the Bridge view and the windows people open first, at 1440x900 and 390x844.
+// password and project, and walks the inbox's loop with stand-in agents (tests/support/standin.mjs:
+// no model runs, every task says "(demo)"): the first run, the Deploy sheet, five agents in their
+// sections, answering one, reviewing a diff, merging it into Shipped today, the palette, the menu and
+// the keys, then the same on a phone. PNGs at 1440x900 and 390x844.
 //
 //   npm run build && node design/shoot-fundable.mjs <stage>/<before|after> [only,these,shots]
 //
-// SHOOT_HOME=/lite shoots an older build whose home was the 2D view at /lite (the before of stage 2);
-// SHOOT_BRIDGE=/ likewise for where its 3D lived. SHOOT_3D=0 skips the 3D shots (slow on SwiftShader).
-// SHOOT_ROOT runs another checkout's build. Always stops the office and its terminals at the end.
+// SHOOT_3D=0 skips the 3D bridge (slow on SwiftShader). SHOOT_ROOT runs another checkout's build.
+// Always stops the office and its terminals at the end.
 import { spawn, execFileSync } from 'node:child_process';
-import { chmodSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { writeStandIn } from '../tests/support/standin.mjs';
 
 const ROOT = path.resolve(process.env.SHOOT_ROOT ?? path.join(path.dirname(fileURLToPath(import.meta.url)), '..'));
 const HERE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -23,49 +24,24 @@ mkdirSync(OUT, { recursive: true });
 const PORT = Number(process.env.SHOOT_PORT ?? 4684);
 const PASSWORD = 'shoot-' + Math.random().toString(36).slice(2, 8);
 const base = `http://127.0.0.1:${PORT}`;
-const HOME_PATH = process.env.SHOOT_HOME ?? '/';
-const BRIDGE_PATH = process.env.SHOOT_BRIDGE ?? '/bridge';
 const WITH_3D = process.env.SHOOT_3D !== '0';
 
 const tmp = mkdtempSync(path.join(tmpdir(), 'fundable-shoot-'));
 const home = path.join(tmp, 'home');
-const project = path.join(tmp, 'project');
+const project = path.join(tmp, 'checkout-api');
 const bin = path.join(tmp, 'bin');
 for (const d of [home, project, bin]) mkdirSync(d, { recursive: true });
 execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: project });
 execFileSync('git', ['-c', 'user.email=t@example.invalid', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'start'], { cwd: project });
+const agent = writeStandIn(bin);
 
-// The stand-in for Claude Code from design/shoot.mjs: says over the hook server what state it's in
-// (by a word in its prompt), prints a little, and waits a bounded while.
-const agent = path.join(bin, 'claude');
-writeFileSync(
-  agent,
-  `#!/bin/sh
-for last; do :; done
-post() { curl -sS -m 3 -X POST -H "Authorization: Bearer $AGENT_OFFICE_HOOK_TOKEN" -H "Content-Type: application/json" --data-binary "$2" "$AGENT_OFFICE_HOOK_URL/hooks/claude?worker=$AGENT_OFFICE_WORKER_ID&event=$1" >/dev/null 2>&1; }
-post SessionStart '{"source":"startup"}'
-sleep 1
-post UserPromptSubmit "{\\"prompt\\":\\"$(echo "$last" | sed 's/\\[[a-z]*\\] //')\\"}"
-echo "> $last"
-echo "[demo] stand-in agent: no real work happens here"
-case "$last" in
-  *"[ask]"*) post PreToolUse '{"tool_name":"AskUserQuestion","tool_input":{}}' ;;
-  *"[done]"*) post PreToolUse '{"tool_name":"Edit","tool_input":{"file_path":"src/a.ts"}}'; sleep 1; post Stop '{}' ;;
-  *) post PreToolUse '{"tool_name":"Bash","tool_input":{"command":"npm test"}}' ;;
-esac
-i=0
-while [ $i -lt 120 ]; do echo "  ok $i - test passes"; i=$((i+1)); sleep 5; done
-`,
-);
-chmodSync(agent, 0o755);
-
-/** Demo data: five stand-in agents, one waiting on a question, one finished, three at work. */
+/** Demo data: five stand-in agents, one that will ask a question, one that finishes with a diff, three at work. */
 const TASKS = [
-  ['desk-1', '[ask] Pick the session store for the auth rewrite (demo)'],
+  ['desk-1', '[ask] Fix the flaky checkout test (demo)'],
   ['desk-2', 'Add rate limiting to /api/login (demo)'],
-  ['desk-5', '[done] Fix the flaky checkout test (demo)'],
-  ['desk-6', 'Write the README quickstart (demo)'],
-  ['desk-9', 'Port the settings page to the form kit (demo)'],
+  ['desk-5', '[done] Write the README quickstart (demo)'],
+  ['desk-6', 'Port the settings page to the form kit (demo)'],
+  ['desk-9', 'Upgrade the payment SDK to v5 (demo)'],
 ];
 
 const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--agent', agent, '--home', path.join(home, '.agent-office')], {
@@ -113,8 +89,7 @@ async function shot(page, name) {
 
 const PROFILE = () => {
   try {
-    localStorage.setItem('agent-office.lite-declined', '1');
-    localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Demo', color: '#4FA3A5', look: { skin: 0, hair: 0, style: 0 } }));
+    localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Demo Lead', color: '#4FA3A5', look: { skin: 0, hair: 0, style: 0 } }));
   } catch {
     // storage blocked
   }
@@ -128,8 +103,13 @@ async function signIn(page) {
 
 /** The home page, signed in, with its store up. */
 async function openHome(page) {
-  await page.goto(`${base}${HOME_PATH}`);
+  await page.goto(`${base}/`);
   await page.waitForFunction(() => !!window.__lite?.store.project, null, { timeout: 30_000 });
+}
+
+/** Waits until the agent whose task has `text` is in `section` (needs-you, review, working, idle). */
+async function inSection(page, text, section, timeout = 30_000) {
+  await page.locator(`.sec-${section} .row`, { hasText: text }).first().waitFor({ timeout });
 }
 
 const { chromium } = await import('playwright-core');
@@ -157,72 +137,110 @@ try {
   await openHome(page);
   await wait(800);
   await shot(page, 'home-empty-desktop');
-  for (const [deskId, prompt] of TASKS) {
-    await page.evaluate(([d, p]) => window.__lite.net.send({ t: 'worker.spawn', deskId: d, prompt: p, worktree: false }), [deskId, prompt]);
-    await wait(250);
-  }
-  await wait(9000);
-  console.log('counts', JSON.stringify(await page.evaluate(() => window.__lite.store.counts())));
-  await shot(page, 'home-desktop');
-  if (want('mission-desktop')) {
-    await page.locator('#btn-mission').click();
-    await wait(900);
-    await shot(page, 'mission-desktop');
-    await page.keyboard.press('Escape');
-    await wait(300);
-  }
-  if (want('labs-desktop') && (await page.locator('#btn-labs').count())) {
-    await page.locator('#btn-labs').click();
-    await wait(600);
-    await shot(page, 'labs-desktop');
-    await page.keyboard.press('Escape');
-    await wait(300);
-  }
-  if (want('terminal-desktop')) {
-    await page.locator('.lite-card').first().click();
-    await wait(1500);
-    await shot(page, 'terminal-desktop');
-    await page.keyboard.press('Escape');
-    await wait(300);
-  }
+  // The Deploy sheet, from the N key, on the starter task.
+  await page.keyboard.press('n');
+  await page.locator('.modal.deploy').waitFor();
+  await page.locator('#deploy-prompt').fill('Add rate limiting to /api/login (demo)');
+  await wait(300);
+  await shot(page, 'deploy-desktop');
+  await page.keyboard.press('Escape');
 
-  // With Bridge view on in Labs: the link to /bridge and the deck plan beside the list (an office with Labs only).
-  if (want('home-bridge-lab-desktop') && (await page.locator('#btn-labs').count())) {
+  for (const [deskId, prompt] of TASKS) {
+    await page.evaluate(([d, p]) => window.__lite.net.send({ t: 'worker.spawn', deskId: d, prompt: p, worktree: true }), [deskId, prompt]);
+    await wait(300);
+  }
+  await inSection(page, 'Fix the flaky checkout test', 'needs-you');
+  await inSection(page, 'Write the README quickstart', 'review');
+  await wait(1500);
+  await shot(page, 'home-desktop');
+
+  // Answer: the row's button opens the terminal in the pane with the reply box ready.
+  await page.locator('.sec-needs-you .row', { hasText: 'Fix the flaky checkout test' }).locator('.row-act').click();
+  await page.locator('.pane .term-say input').waitFor({ timeout: 15_000 });
+  await wait(1500);
+  await page.locator('.pane .term-say input').fill('fix the selector');
+  await shot(page, 'answer-desktop');
+  await page.keyboard.press('Enter');
+  await inSection(page, 'Fix the flaky checkout test', 'review');
+
+  // Review: the diff in the Changes tab, then Merge.
+  await page.locator('.sec-review .row', { hasText: 'Write the README quickstart' }).locator('.row-main').click();
+  await page.locator('.pane .changes-files li').first().waitFor({ timeout: 15_000 });
+  await page.locator('.pane .changes-files li').first().click();
+  await wait(1200);
+  await shot(page, 'review-desktop');
+  await page.locator('.pane .rv-merge').click();
+  await page.locator('.ship', { hasText: 'README quickstart' }).waitFor({ timeout: 20_000 });
+  await wait(1200);
+  await shot(page, 'merged-desktop');
+
+  // Log tab of the merged agent.
+  if (want('log-desktop')) {
+    const id = await page.evaluate(() => window.__lite.store.roster.find((e) => /README/.test(e.task?.name ?? '') || /README/.test(e.activity ?? ''))?.id);
+    if (id) await page.evaluate((x) => window.__lite.home.select(x, 'log'), id);
+    else await page.locator('.pane-tab', { hasText: 'Log' }).click();
+    await wait(1200);
+    await shot(page, 'log-desktop');
+  }
+  // The palette, the menu and the keys.
+  await page.evaluate(() => window.__lite.home.select(undefined));
+  await page.locator('body').click({ position: { x: 1000, y: 600 } });
+  await page.keyboard.press('Control+k');
+  await page.locator('.modal.palette').waitFor();
+  await wait(200);
+  await page.keyboard.type('rate');
+  await wait(300);
+  await shot(page, 'palette-desktop');
+  await page.keyboard.press('Escape');
+  await page.locator('#btn-avatar').click();
+  await wait(300);
+  await shot(page, 'menu-desktop');
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('?');
+  await wait(300);
+  await shot(page, 'keys-desktop');
+  await page.keyboard.press('Escape');
+
+  // With Bridge view on in Labs: the deck plan in the empty pane, and the link in the top bar.
+  if (want('home-bridge-lab-desktop')) {
     await page.evaluate(() => window.__lite.net.send({ t: 'labs.set', patch: { bridge: true } }));
-    await wait(1500);
+    await wait(2000);
     await shot(page, 'home-bridge-lab-desktop');
     await page.evaluate(() => window.__lite.net.send({ t: 'labs.set', patch: { bridge: false } }));
     await wait(800);
-    await page.reload();
-    await page.waitForFunction(() => !!window.__lite?.store.project, null, { timeout: 30_000 });
-    await wait(1000);
   }
+
+  // A phone: the list, then an agent over it.
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.evaluate(() => window.__lite.home.select(undefined));
   await wait(700);
   await shot(page, 'home-phone');
-  if (want('home-phone-scrolled')) {
-    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await wait(400);
-    await shot(page, 'home-phone-scrolled');
-  }
+  await page.locator('.sec-review .row').first().locator('.row-main').click();
+  await wait(1500);
+  await shot(page, 'review-phone');
+  await page.locator('.pane-tab', { hasText: 'Terminal' }).click();
+  await wait(1500);
+  await shot(page, 'terminal-phone');
+  await page.locator('.pane-back').click();
+  await wait(400);
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await wait(400);
+  await shot(page, 'home-phone-scrolled');
 
   if (WITH_3D) {
     await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto(`${base}${BRIDGE_PATH}`, { waitUntil: 'commit' });
+    await page.goto(`${base}/bridge`, { waitUntil: 'commit' });
     await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 120_000 });
     await wait(6000);
     await shot(page, 'bridge-desktop');
-    if (want('bridge-menu')) {
-      await page.keyboard.press('Tab');
-      await wait(800);
-      await shot(page, 'bridge-menu');
-      await page.keyboard.press('Escape');
-    }
   }
   await ctx.close();
+} catch (err) {
+  console.error('shoot failed:', err.message);
+  process.exitCode = 1;
 } finally {
   await browser.close().catch(() => {});
 }
 if (errors.length) console.log('page errors:', errors.join(' | '));
 stop();
-process.exit(0);
+process.exit(process.exitCode ?? 0);
