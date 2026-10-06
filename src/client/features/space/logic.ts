@@ -249,10 +249,12 @@ export function ambientSafe(hex: string): boolean {
 
 /**
  * How far space's spectacle falls while a unit needs the captain or is stuck: the nebula's knots, the
- * dust drifting past the ports and the sun's flare (features/vista), and a big body's rim. The stars,
- * the band and the body itself stay as they are.
+ * dust drifting past the ports and the sun's flare (features/vista), and a big body's rim, to 80% (a new
+ * call ducks it to 60% for 2.5 s first: giveway/logic.ts SPECTACLE_DUCK). The stars, the band and the
+ * body itself stay as they are. Space stays saturated while people wait: the waiting station is picked
+ * out by the grade's local vignette, not by a dimmer universe.
  */
-export const SPACE_GIVE_WAY = 0.35;
+export const SPACE_GIVE_WAY = 0.8;
 
 /** Every colour space uses: the sky, the stars, the flybys, the warp's flash. All of them pass ambientSafe. */
 export const SPACE_COLORS = {

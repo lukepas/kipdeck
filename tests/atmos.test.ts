@@ -6,6 +6,7 @@ import { GIVE_WAY_LIGHT, JUMP_FLASH, SHAFT_LIGHT, SPILL, cookieOn, easeToward, f
 import { MAX_SHAFTS, POOL_SOURCES, keyFall, pools, shafts } from '../src/client/features/atmos/plan.js';
 import { bowMotes } from '../src/client/features/atmos/motes.js';
 import { ribMask } from '../src/client/features/atmos/cookie.js';
+import { SPECTACLE_DUCK, spectacleTarget } from '../src/client/features/giveway/logic.js';
 import { HAZE, heightFogChunks } from '../src/client/features/atmos/fog.js';
 import { TIERS, TIER_LOOKS } from '../src/client/features/quality/tiers.js';
 import { LIGHT_MODES } from '../src/client/features/lights/modes.js';
@@ -13,19 +14,34 @@ import { LIGHT_MODES } from '../src/client/features/lights/modes.js';
 // The light round the deck (features/atmos): how it gives way to attention, how strong each piece is,
 // what each Quality tier draws, where the shafts and pools stand, and the sky's hue in the lights.
 
-test('spectacle gives way to 30% over half a second, and comes back as fast, never past either end', () => {
+test('spectacle gives way locally: to 85% while anyone waits, a step of it taking under half a second, never past either end', () => {
+  assert.ok(GIVE_WAY_LIGHT.to >= 0.85, 'the room stays alive while people wait');
   let k = 1;
-  for (let ms = 0; ms < GIVE_WAY_LIGHT.ms - 20; ms += 16) k = spectacleStep(k, true, 16);
-  assert.ok(k > GIVE_WAY_LIGHT.to, 'not there before 500 ms');
-  for (let i = 0; i < 4; i++) k = spectacleStep(k, true, 16);
+  k = spectacleStep(k, true, 16);
+  assert.ok(k < 1 && k > GIVE_WAY_LIGHT.to);
+  for (let ms = 0; ms < GIVE_WAY_LIGHT.ms; ms += 16) k = spectacleStep(k, true, 16);
   assert.equal(k, GIVE_WAY_LIGHT.to);
   assert.equal(spectacleStep(k, true, 1000), GIVE_WAY_LIGHT.to);
   k = spectacleStep(k, false, GIVE_WAY_LIGHT.ms);
   assert.ok(Math.abs(k - 1) < 1e-9);
   assert.equal(spectacleStep(1, false, 5000), 1);
+  // A level as the target: the new call's duck.
+  assert.equal(spectacleStep(1, SPECTACLE_DUCK.to, 1e9), SPECTACLE_DUCK.to);
   // A hidden tab's long frame (or a negative one) never throws it past its target.
   assert.equal(spectacleStep(0.5, true, 1e9), GIVE_WAY_LIGHT.to);
   assert.equal(spectacleStep(0.5, false, -5), 0.5);
+});
+
+test('a new call ducks the spectacle to 60% for 2.5 s, then it holds at its waiting level', () => {
+  assert.equal(SPECTACLE_DUCK.to, 0.6);
+  assert.equal(SPECTACLE_DUCK.ms, 2500);
+  assert.equal(spectacleTarget(true, 0, GIVE_WAY_LIGHT.to), 0.6);
+  assert.equal(spectacleTarget(true, 2499, GIVE_WAY_LIGHT.to), 0.6);
+  assert.equal(spectacleTarget(true, 2500, GIVE_WAY_LIGHT.to), GIVE_WAY_LIGHT.to);
+  assert.equal(spectacleTarget(false, Infinity, GIVE_WAY_LIGHT.to), 1);
+  assert.equal(spectacleTarget(true, Infinity, GIVE_WAY_LIGHT.to), GIVE_WAY_LIGHT.to);
+  // A call that was answered before the duck ended still finishes its beat, never darker than the duck.
+  assert.equal(spectacleTarget(false, 1000, 0.8), 0.6);
 });
 
 test('the shafts are faint enough never to bloom, and Day hangs four tenths of Night', () => {

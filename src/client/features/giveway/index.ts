@@ -29,6 +29,8 @@ export interface GiveWay {
   attention(): boolean;
   /** Whether a unit has just started needing you or got stuck (the 3 s duck). */
   ducking(): boolean;
+  /** How long ago (ms) a unit last started needing you or got stuck; Infinity before any has on this deck. */
+  callAge(): number;
   /** Whether the pod (A to D, or a seat id off the pods) has a unit that needs you or is stuck. */
   hushed(pod: string): boolean;
   /** Whether the page is in view. */
@@ -48,6 +50,7 @@ export function installGiveWay(ctx: Ctx): GiveWay {
   let clock = 0;
   let readAt = -Infinity;
   let duckUntil = -Infinity;
+  let callAt = -Infinity;
   let last = { needs: 0, stuck: 0 };
   /** Whether this deck has been read once: arriving where units already wait is no news, nothing to duck for. */
   let primed = false;
@@ -69,7 +72,10 @@ export function installGiveWay(ctx: Ctx): GiveWay {
       else stuck++;
       if (seats.has(r.entry.deskId)) hushed.add(podKey(r.entry.deskId));
     }
-    if (primed && (needs > last.needs || stuck > last.stuck)) duckUntil = clock + GIVE_WAY.duckMs;
+    if (primed && (needs > last.needs || stuck > last.stuck)) {
+      duckUntil = clock + GIVE_WAY.duckMs;
+      callAt = clock;
+    }
     primed = store.floor !== null;
     last = { needs, stuck };
     waiting = needs > 0;
@@ -82,6 +88,7 @@ export function installGiveWay(ctx: Ctx): GiveWay {
   store.on('floor', () => {
     primed = false;
     duckUntil = -Infinity;
+    callAt = -Infinity;
     read();
   });
 
@@ -104,6 +111,7 @@ export function installGiveWay(ctx: Ctx): GiveWay {
     gain: () => gain,
     attention: () => calls,
     ducking: () => clock < duckUntil,
+    callAge: () => clock - callAt,
     hushed: (pod) => hushed.has(pod),
     visible: () => typeof document === 'undefined' || document.visibilityState !== 'hidden',
   };

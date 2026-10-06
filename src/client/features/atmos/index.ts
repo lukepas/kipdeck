@@ -14,7 +14,7 @@
  *
  * Settings > Bridge > Quality says how much of it is drawn (features/quality/tiers.ts): Low keeps the
  * pools and the fog. When a unit needs the captain or is stuck the shafts, the motes, the cookie and
- * the flyby's wash give way to 30% over half a second (logic.ts); the attention marks are fog: false
+ * the flyby's wash stand at 85% (a new call ducks them to 60% for 2.5 s) (logic.ts); the attention marks are fog: false
  * and carry their own light, so nothing here ever touches them. Ship motion Off and reduced motion
  * (and Silent running) hold the dust, the shafts' drift and the cookie's turn still. Everything it
  * changes after load is a uniform or a light's colour, level or direction: nothing recompiles.
@@ -26,7 +26,8 @@ import { LIGHT_MODES } from '../lights/modes';
 import { debugHandle } from '../giveway';
 import { Cookie } from './cookie';
 import { HAZE_COLOR, heightFogChunks } from './fog';
-import { DRIFT, JUMP_FLASH, SPILL, cookieOn, poolLevel, shaftLevel, shaftSet, spectacleStep, SHAFT_COLOR } from './logic';
+import { spectacleTarget } from '../giveway/logic';
+import { DRIFT, GIVE_WAY_LIGHT, JUMP_FLASH, SPILL, cookieOn, poolLevel, shaftLevel, shaftSet, spectacleStep, SHAFT_COLOR } from './logic';
 import { Mirror, MIRROR_LEVEL } from './mirror';
 import { floorMirror } from '../../world/office/floor';
 import { makeMotes } from './motes';
@@ -45,7 +46,7 @@ const COOKIE_ANGLE = 0.62;
 const COOKIE_EASE_S = 0.5;
 
 export interface Atmos {
-  /** How far the spectacle stands now (1 full, 0.3 given way to attention). */
+  /** How far the spectacle stands now (1 full, 0.85 given way to attention, 0.6 for a new call's duck). */
   spectacle(): number;
   /** The cookie's and the small sky's memory (bytes), for the budget. */
   bytes(): number;
@@ -101,7 +102,7 @@ export function installAtmos(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   ctx.ticks.add('world', ({ now, dt }) => {
     const mode = parts.lights.mode();
     const gw = parts.giveWay;
-    spectacle = spectacleStep(spectacle, gw.attention(), dt * 1000);
+    spectacle = spectacleStep(spectacle, spectacleTarget(gw.attention(), gw.callAge(), GIVE_WAY_LIGHT.to), dt * 1000);
     // Ambient motion: none with Ship motion Off, reduced motion or Silent running; half at Calm.
     const motion = gw.frozen() ? 0 : gw.motion();
     clock += dt * motion;

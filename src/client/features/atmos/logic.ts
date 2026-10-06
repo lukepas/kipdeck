@@ -7,18 +7,24 @@ import type { LightMode } from '../../lighting';
 import type { LifeLevel } from '../../state/persist';
 
 /**
- * Spectacle gives way: while a unit needs the captain or is stuck, the shafts, the motes, the rib
- * cookie and the flyby's wash dim to `to` of themselves, over `ms`. The attention marks carry their
- * own light and never dim.
+ * Spectacle gives way, locally: while a unit needs the captain or is stuck, the shafts, the motes, the
+ * rib cookie and the flyby's wash stand at `to` of themselves (85%: the room stays alive, the captain
+ * asked for a bridge that never goes grey), and a new call ducks them to 60% for 2.5 s
+ * (giveway/logic.ts SPECTACLE_DUCK) before they come back. Each change takes `ms` for a whole step. The
+ * attention marks carry their own light and never dim; what makes a waiting unit stand out is the
+ * grade's local vignette round it (features/cinema), not a dark room.
  */
-export const GIVE_WAY_LIGHT = { to: 0.3, ms: 500 } as const;
+export const GIVE_WAY_LIGHT = { to: 0.85, ms: 500 } as const;
 
-/** Steps the spectacle's level `now` toward full (1) or given way (GIVE_WAY_LIGHT.to) by `dtMs`, linearly over GIVE_WAY_LIGHT.ms. */
-export function spectacleStep(now: number, attention: boolean, dtMs: number): number {
-  const to = attention ? GIVE_WAY_LIGHT.to : 1;
-  const rate = (1 - GIVE_WAY_LIGHT.to) / GIVE_WAY_LIGHT.ms;
-  const step = rate * Math.max(0, dtMs);
-  return now < to ? Math.min(to, now + step) : Math.max(to, now - step);
+/**
+ * Steps the spectacle's level `now` toward `to` (1 full, GIVE_WAY_LIGHT.to given way, or the duck's
+ * level: giveway/logic.ts spectacleTarget) by `dtMs`, a whole step from 1 to 0 taking GIVE_WAY_LIGHT.ms.
+ * A boolean is the old form: true for given way, false for full.
+ */
+export function spectacleStep(now: number, to: number | boolean, dtMs: number): number {
+  const target = typeof to === 'boolean' ? (to ? GIVE_WAY_LIGHT.to : 1) : to;
+  const step = Math.max(0, dtMs) / GIVE_WAY_LIGHT.ms;
+  return now < target ? Math.min(target, now + step) : Math.max(target, now - step);
 }
 
 /**

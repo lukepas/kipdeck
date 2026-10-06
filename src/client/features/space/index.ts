@@ -21,6 +21,7 @@ import { store } from '../../state';
 import { DECK, VIEWPORT_GLASS } from '../../world/office/materials';
 import { Flybys } from './flybys';
 import { zoomOf } from '../../core/zoom';
+import { spectacleTarget } from '../giveway/logic';
 import { BANNER_MS, DUCK_MS, FIRST_FLYBY_MS, FLEET_STAGGER_MS, FLYBY_GAP_MS, JUMP, JUMP_FOV, JUMP_HOLD_MS, JUMP_MS, JUMP_STRETCH, MERGE_WINDOW_MS, PUNCH_LIFT, SPACE_COLORS, SPACE_GIVE_WAY, SURGE, SURGE_GAP_MS, SURGE_HARD, SURGE_MS, between, countdownLeft, cruiseSpeed, flashPeak, jumpAt, jumpsNow, motionScale, pickFlyby, seeded, surgeAt, surgeGlint, surgesNow, spoolLevel, type FlybyKind } from './logic';
 import { GLOW, JumpGlow, countdownGlow } from './jumpglow';
 import { Banner, Tunnel } from './tunnel';
@@ -298,7 +299,7 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   ctx.ticks.add('world', (frame) => {
     // The sky's own give way and its Day, on real time (not space's clock, which the shots hold).
     const ease = Math.min(1, frame.dt / YIELD_S);
-    knots += ((parts.giveWay?.attention() ? SPACE_GIVE_WAY : 1) - knots) * ease;
+    knots += ((parts.giveWay ? spectacleTarget(parts.giveWay.attention(), parts.giveWay.callAge(), SPACE_GIVE_WAY) : 1) - knots) * ease;
     sky.setDim(knots);
     dayNow += ((parts.lights?.mode() === 'day' ? 1 : 0) - dayNow) * ease;
     sky.setDay(dayNow);

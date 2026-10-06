@@ -26,6 +26,7 @@ import { BRIDGE_LAYER, onBridgeLayer } from '../bridge/shapes';
 import { debugHandle } from '../giveway';
 import { KEY_AT } from '../lights/modes';
 import { SPACE_GIVE_WAY } from '../space/logic';
+import { spectacleTarget } from '../giveway/logic';
 import { region } from '../space/sky';
 import { Dust } from './dust';
 import { Flare } from './flare';
@@ -85,7 +86,7 @@ export function installVista(ctx: Ctx, parts: Pick<Parts, 'stage' | 'space' | 'q
       held = view.region;
       giant.place(region(held).giant);
     }
-    yieldK = easeTo(yieldK, parts.giveWay.attention() ? SPACE_GIVE_WAY : 1, ms, YIELD_PER_MS);
+    yieldK = easeTo(yieldK, spectacleTarget(parts.giveWay.attention(), parts.giveWay.callAge(), SPACE_GIVE_WAY), ms, YIELD_PER_MS);
     day = easeTo(day, parts.lights.mode() === 'day' ? 1 : 0, ms, YIELD_PER_MS);
     const speed = parts.space.speed();
     for (let i = 0; i < DUST_LAYERS.length; i++) {

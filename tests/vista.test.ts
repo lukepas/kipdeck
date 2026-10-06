@@ -123,12 +123,13 @@ test('the flare: shapes along the line from the sun through the middle, faded of
 });
 
 test('the vista gives way to the captain the way the sky does, and comes back', () => {
-  assert.ok(SPACE_GIVE_WAY > 0 && SPACE_GIVE_WAY < 0.5);
+  // Locally: space stays saturated while people wait (80%), never the old 35% dimmer.
+  assert.ok(SPACE_GIVE_WAY >= 0.8 && SPACE_GIVE_WAY < 1);
   let k = 1;
-  // A whole step (1 to 0) takes half a second: the fall to SPACE_GIVE_WAY a little under that.
-  for (let ms = 0; ms < 300; ms += 15) k = easeTo(k, SPACE_GIVE_WAY, 15, 1 / 500);
-  assert.ok(k > SPACE_GIVE_WAY && k < 0.5, `not there yet at 300 ms: ${k}`);
-  k = easeTo(k, SPACE_GIVE_WAY, 30, 1 / 500);
+  // A whole step (1 to 0) takes half a second: the fall to SPACE_GIVE_WAY takes a tenth of that.
+  for (let ms = 0; ms < 60; ms += 15) k = easeTo(k, SPACE_GIVE_WAY, 15, 1 / 500);
+  assert.ok(k > SPACE_GIVE_WAY && k < 1, `not there yet at 60 ms: ${k}`);
+  k = easeTo(k, SPACE_GIVE_WAY, 60, 1 / 500);
   assert.equal(k, SPACE_GIVE_WAY);
   assert.equal(easeTo(k, 1, 1e9, 1 / 500), 1, 'never past its target');
   assert.equal(easeTo(0.5, 1, -5, 1 / 500), 0.5);

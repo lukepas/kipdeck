@@ -61,6 +61,23 @@ export function lifeGain(o: { ducking: boolean; waiting: boolean }): number {
   return (o.ducking ? GIVE_WAY.duck : 1) * (o.waiting ? GIVE_WAY.waiting : 1);
 }
 
+/**
+ * The spectacle's duck (the shafts, the dust, the nebula's knots, the giant): a unit that has just
+ * started needing you or got stuck takes it down to `to` for `ms`, then it comes back to its
+ * waiting level. It is a beat that says "look", not a dimmer left on: the room stays alive while
+ * anyone waits, and only a local vignette round the waiting station and the hero rows holds.
+ */
+export const SPECTACLE_DUCK = { to: 0.6, ms: 2500 } as const;
+
+/**
+ * How far the spectacle stands (0-1): ducked for SPECTACLE_DUCK.ms after a new call (`callAgeMs` since
+ * it), at `given` while anyone needs you or is stuck, full otherwise.
+ */
+export function spectacleTarget(attention: boolean, callAgeMs: number, given: number): number {
+  if (callAgeMs >= 0 && callAgeMs < SPECTACLE_DUCK.ms) return Math.min(given, SPECTACLE_DUCK.to);
+  return attention ? given : 1;
+}
+
 /** How long a set piece may wait behind attention before it gives up and becomes a card (ms). */
 export const CARD_AFTER_MS = 10 * 60_000;
 
