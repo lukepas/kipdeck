@@ -4,23 +4,23 @@ import { mesh, textPlane } from '../../world/toon';
 import type { Collider, Interactable } from '../../world/types';
 import type { Fixture } from '../../world/office/fixture';
 import { DECK, box, contactShadow, ink as wallInk, matte } from '../../world/office/materials';
+import { screen } from '../boards/screen';
+import { FACE_UNITS, paintPlan, sketchBox, type PlanView } from './face';
 
-// The whiteboard: a slim board on casters out on the open floor in the east aisle. Its face shows
-// whatever everyone has drawn on it (see ui.ts), live, drawn light on the deck's slate.
-/** The face's canvas, in pixels per meter. */
-const PX = 512;
-/** Clear space around a drawing on the face, in pixels. */
-const PAD = 40;
-const FONT = 'Archivo, system-ui, sans-serif';
+// The planning board: a slim board on casters out on the open floor in the east aisle. Its face shows
+// the floor's plan as tables and whatever everyone has drawn on it (see ui.ts), live, beside them
+// (face.ts).
 
 export interface WhiteboardStand {
   group: THREE.Group;
   colliders: Collider[];
   /** Walk up and press E. */
   interactable: Interactable;
-  /** Puts a drawing on the face (scaled to fit), or the "come and draw" note when there's none. */
+  /** Puts a drawing on the face (scaled to fit its box), or the queue's table when there's none. */
   show(drawing: HTMLCanvasElement | null): void;
-  /** How big a drawing fills the face, in pixels. */
+  /** The plan's tables (face.ts). */
+  setPlan(plan: PlanView): void;
+  /** How big a drawing fills its box on the face, in pixels. */
   fit: { width: number; height: number };
 }
 
@@ -36,13 +36,8 @@ export function buildWhiteboard(): WhiteboardStand {
 
   // The writing surface in a slim steel frame; the back is a plain slate panel.
   group.add(mesh(box(width + 0.1, height + 0.1, 0.06), ink, 0, mid, 0));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(width * PX);
-  canvas.height = Math.round(height * PX);
-  const g = canvas.getContext('2d')!;
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.anisotropy = 4;
+  const face2d = screen(width, height, FACE_UNITS);
+  const texture = face2d.texture;
   const face = new THREE.Mesh(new THREE.PlaneGeometry(width, height), new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }));
   face.position.set(0, mid, 0.032);
   group.add(face);
@@ -74,37 +69,22 @@ export function buildWhiteboard(): WhiteboardStand {
   const interactable: Interactable = { kind: 'whiteboard', x: x + Math.sin(rotY) * 1.7, z: z + Math.cos(rotY) * 1.7, radius: 2.3 };
   group.userData.interact = interactable;
 
-  const show = (drawing: HTMLCanvasElement | null) => {
-    const W = canvas.width;
-    const H = canvas.height;
-    g.fillStyle = DECK.console;
-    g.fillRect(0, 0, W, H);
-    g.fillStyle = 'rgba(38,49,61,0.5)';
-    for (let gx = PX / 4; gx < W; gx += PX / 4) g.fillRect(gx, 0, 1, H);
-    for (let gy = PX / 4; gy < H; gy += PX / 4) g.fillRect(0, gy, W, 1);
-    if (drawing) {
-      const s = Math.min((W - PAD * 2) / drawing.width, (H - PAD * 2) / drawing.height);
-      const w = drawing.width * s;
-      const h = drawing.height * s;
-      // Drawn dark on white, shown light on the slate: the same picture in the deck's dark mode.
-      g.filter = 'invert(1) hue-rotate(180deg)';
-      g.drawImage(drawing, (W - w) / 2, (H - h) / 2, w, h);
-      g.filter = 'none';
-    } else {
-      g.fillStyle = DECK.text;
-      g.textAlign = 'center';
-      g.textBaseline = 'middle';
-      g.font = `600 110px ${FONT}`;
-      g.fillText('Planning board', W / 2, H / 2 - 60);
-      g.fillStyle = DECK.muted;
-      g.font = `500 56px ${FONT}`;
-      g.fillText('Sketch the plan. Everyone on this deck sees it.', W / 2, H / 2 + 70);
-    }
-    texture.needsUpdate = true;
+  let drawing: HTMLCanvasElement | null = null;
+  let plan: PlanView = { statement: '', done: 0, total: 0, milestones: [], queue: [], queued: 0 };
+  const paint = () => paintPlan(face2d, plan, drawing);
+  const show = (d: HTMLCanvasElement | null) => {
+    drawing = d;
+    paint();
   };
-  show(null);
+  const setPlan = (p: PlanView) => {
+    plan = p;
+    paint();
+  };
+  paint();
+  const sketch = sketchBox(face2d.W, face2d.H);
+  const px = face2d.canvas.width / face2d.W;
 
-  return { group, colliders, interactable, show, fit: { width: canvas.width - PAD * 2, height: canvas.height - PAD * 2 } };
+  return { group, colliders, interactable, show, setPlan, fit: { width: Math.round(sketch.w * px), height: Math.round(sketch.h * px) } };
 }
 
 declare module '../../world/types' {
