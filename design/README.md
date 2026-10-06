@@ -1225,3 +1225,32 @@ The home page is the inbox now, and everything that isn't the inbox is a lab, of
 - Bridge ambience covers what Settings already had switches for. The lounge's ladder, stencils (L), the jump and carrying cards (Q) are still there in the bridge with it off.
 - Changing any setting in the bridge's Settings while ambience is off saves the calm values with it.
 - Meetings hides the bridge's Review bay and planning board rows and the *Meeting...* and *Review panel...* buttons on issues and pull requests; the Review bay itself still stands in the 3D room.
+
+## Fundable, stage 3: one command to first value
+
+From a cold terminal to the first agent at work is one command and one button: `npx mergeline` in your repository opens the inbox signed in, with that repository as the project, and the setup card's **Deploy your first agent** starts one on a safe task. Shots are in `shots/fundable/stage-4/` (the fourth build stage of six): `before/` is the build before this stage (`SHOOT_ROOT` on a `git archive` of it), `after/` this one, both from `node design/shoot-onboarding.mjs stage-4/<before|after>` on a throwaway home and a demo repository (`acme-api`, its files and git name marked demo), started in a pseudo-terminal with nothing chosen, at 1440x900 and 390x844. `after-inbox/` is `design/shoot-fundable.mjs` again, to check the inbox itself didn't move. `timed/` is the exit check.
+
+### What changed (check it in under a minute)
+
+1. **No questions in the terminal** (`before/terminal-desktop.png` against `after/`). Before, a new office asked where to clone projects and offered to sign GitHub in, then printed the generated password. Now it prints where it runs, the one-time sign-in link (opened in your browser), how to get a new one, the project and the agents it found.
+2. **No password on your own computer.** Bound to 127.0.0.1 with no password chosen, the link is the way in, and `mergeline open` makes another with the office's local key. Links and the key only work from this computer (loopback address and name, no proxy or tunnel headers), and the local routes refuse anything with an Origin. Signed out, the sign-in page says `npx mergeline open` with the password one click behind (`before/login-desktop.png` against `after/`).
+3. **No Who is it? window** (`before/first-open-desktop.png`). You go by git's `user.name` on your own computer (DL, Demo Lead, in the shots).
+4. **The folder you start in is the project.** Before, a new office started in a repository had no project, and the first-run button ended in *Add a project first* (`before/first-agent-desktop.png`). Now `acme-api` is the project, and the first agent is under Working (`after/first-agent-desktop.png`, `after/first-agent-phone.png`).
+5. **The setup card** (`after/first-open-desktop.png`, `after/first-run-phone.png`): Agents found and signed in (missing ones with the line that installs them), the Project, GitHub as optional with `gh auth login` to copy and Check again, one primary button, and an unticked switch for anonymous usage numbers with exactly what it would send. The Deploy sheet marks agents this computer doesn't have (`after/deploy-first-desktop.png`).
+6. **Mergeline.** The package, the command, every page title and the wordmark. `mergeline attach` moves a Claude Code or Codex session started in a terminal into the inbox. `install.sh` and `install.ps1` install the npm package instead of upstream's releases.
+
+### Timed
+
+`node design/time-to-first-agent.mjs` packs the package, runs `npx --package=<tarball> mergeline` from a fresh demo repository with a clean HOME and an empty npm cache, opens the printed link in a fresh browser, presses the setup card's button and Enter, and stops the clock when the agent is under Working: running after 4.3 s, the setup card after 4.7 s, the first agent after 6.5 s on this M-series Mac (`timed/timings.json`). The agent is the stand-in (no model), so a real one adds its own start-up; npm's download is the part that grows on a slow network.
+
+### Checks
+
+`npm run typecheck`, `npm run build`, `npm test` (all pass but the four launch-kit disclosure tests that fail on this branch's rewritten history). New: `tests/local-signin.test.ts` (what counts as this computer, the link through a proxy, another site and twice, the local key's every refusal, `mergeline open`, the free port), `tests/telemetry.test.ts` (off records nothing, DO_NOT_TRACK, what a record holds and never holds, sending), `tests/firstrun.test.ts` (agents and sign-in, GitHub, `addFolder`, admins only) and `tests/attach.test.ts` (finding Claude Code and Codex sessions, carrying one on, once).
+
+### Left for later
+
+- Nothing is published: `npm publish` waits for the trademark search on Mergeline (`business/naming.md`). The tarball is what `npm pack` makes and installs cleanly with `npx`.
+- No telemetry endpoint exists, so turned-on events only wait in the outbox until `MERGELINE_TELEMETRY_URL` names one.
+- Claude Code's sign-in is read from its files; a token kept only in the keychain with no `oauthAccount` in `.claude.json` shows as signed out. Cursor's sign-in isn't read at all (it says nothing rather than guess).
+- `mergeline attach` can't see whether the session still runs in its terminal; it asks you to quit it first. Cursor chats need `--session`.
+- The README's image is still the inbox still, not the 30-second GIF (the demo stage makes it).
