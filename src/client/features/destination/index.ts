@@ -32,7 +32,7 @@ const NO_MISSION_GAIN = 0.45;
 
 export interface Destination {
   /** The size it shows now (degrees) and the progress it is drawn for. */
-  state(): { deg: number; target: number; progress: number | undefined; orbit: boolean };
+  state(): { deg: number; target: number; progress: number | undefined; orbit: boolean; heading: string[] };
   /** Plays the arrival now (the shots). */
   arrive(): void;
 }
@@ -56,6 +56,8 @@ export function installDestination(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'spa
   /** The arrival waiting its turn: to play, or (it came in while the tab was hidden) only a card. */
   const held = new HeldPieces<'play' | 'card'>();
   let lastKey = '';
+  /** What the heading band would say (no longer drawn on the sky: the course strip says it). */
+  let heading: string[] = [];
   let freshAt = -Infinity;
   /** Out of a jump's tunnel: when, so the new world swings in; and how open the tunnel was last frame. */
   let swingFrom = -Infinity;
@@ -96,6 +98,7 @@ export function installDestination(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'spa
       progress = undefined;
       orbit = false;
       view.setLabel([]);
+      heading = [];
       retarget(0);
       return;
     }
@@ -117,7 +120,11 @@ export function installDestination(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'spa
     held.clear();
     const behind = open ? behindDays(open.due, Date.now()) : 0;
     const n = open ? m.milestones.indexOf(open) + 1 : total;
-    view.setLabel(open ? headingBand({ title: milestoneOf(m, open.id)?.title ?? open.title, n, of: total, percent: (progress ?? 0) * 100, behindDays: behind }) : []);
+    // Where the ship is making for is said on the course strip and the chair's armrest, not on the sky:
+    // a sign over the world covered it (the look stage). The band's words are still worked out (the
+    // shots and the tests read them) but drawn only in orbit.
+    heading = open ? headingBand({ title: milestoneOf(m, open.id)?.title ?? open.title, n, of: total, percent: (progress ?? 0) * 100, behindDays: behind }) : [];
+    view.setLabel([]);
     const size = fresh ? sizeFor(progress) : heldSize(Math.max(shown, to), sizeFor(progress), behind > 0);
     if (fresh) shown = from = to = size;
     else retarget(size);
@@ -160,7 +167,7 @@ export function installDestination(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'spa
   });
 
   const destination: Destination = {
-    state: () => ({ deg: shown, target: to, progress, orbit }),
+    state: () => ({ deg: shown, target: to, progress, orbit, heading }),
     arrive: () => arrive(false),
   };
   debugHandle('destination', destination);

@@ -23,8 +23,11 @@ export const SETTLE_MS = 30_000;
  * and the situation wall from the conn, the rest in the canopy's glass.
  */
 export const AHEAD_ELEVATION = 16;
-/** How far off the bow it sits (degrees, east positive): in the clear pane left of the canopy's middle rib from the conn. */
-export const AHEAD_AZIMUTH = -9;
+/**
+ * How far off the bow it sits (degrees, east positive): off to port, over the arc's port wing from the
+ * chair, so it frames the room rather than sitting square behind the Attention board (the look stage).
+ */
+export const AHEAD_AZIMUTH = -30;
 /** Where the heading band sits (degrees): under the world in its pane, just over the canopy's eaves ring from the conn. */
 export const BAND_AT = { az: -7.5, el: 15.4 } as const;
 /** The band's widest (degrees across): inside the clear pane from the conn, so no rib ever cuts its words. */

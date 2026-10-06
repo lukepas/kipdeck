@@ -17,6 +17,16 @@ import { SPACE_COLORS, seeded } from './logic';
 const RADIUS = 100;
 /** The baked cube's faces (px): the band and the nebula are soft, the stars are drawn live. */
 const FACE = 512;
+/**
+ * Day's planet under the ship: the way to its middle (ahead and below, a little to starboard) and its
+ * radius on the sky (radians), so its day side fills the lower bow and its limb arcs about 28 degrees
+ * over the horizon ahead, across the canopy over the situation arc from the chair, space over it.
+ */
+export const DAY_PLANET = (() => {
+  const d = new THREE.Vector3(0.3, -0.42, -1).normalize();
+  return { dir: [d.x, d.y, d.z] as [number, number, number], radius: (42 * Math.PI) / 180 };
+})();
+
 /** How fast the sky turns round the ship (radians a second): 0.6 degrees a minute. */
 export const SKY_TURN = (0.6 * Math.PI) / 180 / 60;
 
@@ -40,7 +50,7 @@ void main() {
  * from a side port it has value contrast and never reads as grey haze.
  */
 export const BAKE_FRAG = /* glsl */ `
-uniform vec3 uVoid, uDeep, uBand, uTeal, uIndigo, uMagenta;
+uniform vec3 uVoid, uDeep, uBand, uBandCore, uTeal, uIndigo, uMagenta;
 uniform vec3 uBandN, uCore, uNeb, uSeed;
 uniform float uNebSize;
 uniform vec3 uLobeA, uLobeB;
@@ -78,10 +88,20 @@ void main() {
   // Dust lanes along its middle: sharp-edged and nearly black where they are thickest.
   float dust = fbm(d * 3.6 + uSeed * 0.7 + 5.0, 5) + 0.18 * (ridged(d * 11.0 + uSeed, 3) - 0.45);
   float lane = 1.0 - 0.86 * smoothstep(0.47, 0.6, dust) * exp(-(h * h) / 0.022);
-  float bandL = (0.55 * band * (0.06 + 1.6 * smoothstep(0.42, 0.8, mott)) + 0.7 * coreW) * lane;
-  col += uBand * bandL * 0.16;
+  float bandL = (0.55 * band * (0.06 + 1.6 * smoothstep(0.42, 0.8, mott)) + 0.9 * coreW) * lane;
+  // The band bright enough to read as a galaxy through the glass from the chair (it was a faint smudge):
+  // its arms near-white, its core warm white, swelling round the core.
+  col += mix(uBand, uBandCore, clamp(coreW * 1.6, 0.0, 1.0)) * bandL * (1.6 + 1.8 * core);
   // A fine haze of unresolved stars in the band, clumped.
-  col += uBand * band * lane * smoothstep(0.5, 0.8, fbm(d * 26.0 + uSeed, 3)) * 0.07;
+  col += uBand * band * lane * smoothstep(0.5, 0.8, fbm(d * 26.0 + uSeed, 3)) * 0.16;
+  // Coloured lanes of gas along the band's two edges, magenta on one side and teal on the other, with
+  // indigo between: the galaxy reads as colour, not as grey haze.
+  float ea = (h - 0.16 + wob * 0.05) / 0.09;
+  float eb = (h + 0.15 + wob * 0.05) / 0.08;
+  float edgeA = exp(-ea * ea);
+  float edgeB = exp(-eb * eb);
+  float gasL = smoothstep(0.35, 0.75, fbm(d * 4.2 + uSeed * 0.9 + 17.0, 4)) * (0.45 + 0.55 * core);
+  col += uMagenta * edgeA * gasL * 1.6 + uTeal * edgeB * gasL * 2.2 + uIndigo * band * gasL * 0.8 * (1.0 - coreW);
   // The nebula: fbm warped by fbm warped by fbm, in a soft patch round uNeb.
   vec3 q = d * 2.4 + uSeed * 2.1;
   vec3 w = vec3(fbm(q, 4), fbm(q + 3.1, 4), fbm(q + 7.7, 4));
@@ -93,16 +113,19 @@ void main() {
   float gas = smoothstep(0.34, 0.74, n) * shape;
   // Filaments: ridges of the warped field, brightest where the gas is.
   float fil = ridged(q * 3.2 + w2 * 2.2 + 13.0, 4);
-  vec3 nebC = mix(uIndigo, uTeal, smoothstep(0.38, 0.72, n + 0.25 * (fbm(q * 0.8 + 11.0, 3) - 0.5)));
+  vec3 nebC = mix(uIndigo, uTeal * 1.35, smoothstep(0.32, 0.66, n + 0.3 * (fbm(q * 0.8 + 11.0, 3) - 0.5)));
   nebC = mix(nebC, uMagenta, smoothstep(0.52, 0.78, fbm(q * 1.1 + 23.0, 3)) * smoothstep(0.46, 0.76, n) * 0.85);
   float emis = gas * gas * (0.45 + 1.7 * fil * fil);
-  col += nebC * emis * 1.15;
+  col += nebC * emis * 9.0;
   // A faint wide glow round the whole patch, so its edge falls off into the void rather than stopping.
-  col += mix(uIndigo, uTeal, 0.3) * shape * smoothstep(0.2, 0.6, n) * 0.08;
+  col += mix(uIndigo, uMagenta, 0.35) * shape * smoothstep(0.2, 0.6, n) * 1.1;
   // Lanes of dust across the nebula (and the band behind it), dark and crisp.
   float dl = fbm(q * 2.2 + w * 1.8 + 31.0, 5);
   float dark = smoothstep(0.5, 0.6, dl) * smoothstep(0.0, 0.5, shape);
-  col *= 1.0 - 0.85 * dark;
+  col *= 1.0 - 0.72 * dark;
+  // Space is saturated: the gas's colour pushed past the tone mapping's pull toward white.
+  float lumC = dot(col, vec3(0.2126, 0.7152, 0.0722));
+  col = max(vec3(lumC) + (col - vec3(lumC)) * 1.45, vec3(0.0));
   // The knots: compact bright cores on the filaments, in the dense gas, off the dust.
   float blob = vnoise(q * 9.0 + w2 * 3.0 + 41.0);
   float knot = smoothstep(0.66, 0.92, blob) * smoothstep(0.32, 0.68, fil) * smoothstep(0.25, 0.7, gas) * (1.0 - dark);
@@ -130,6 +153,8 @@ const float KNOT = 0.85;
 uniform vec3 uCool, uWarm;
 uniform float uDim;
 uniform float uDay;
+uniform vec4 uPlanet;
+uniform vec3 uOcean, uLand, uAtmo;
 varying vec3 vDir;
 varying vec4 vClip;
 ${NOISE}
@@ -182,13 +207,46 @@ void main() {
   // captain, and kept off the wall boards' faces (and well clear of them, so they never glow over a row).
   vec3 hue = col / max(max(col.r, max(col.g, col.b)), 1e-3);
   vec2 ndc = vClip.xy / max(vClip.w, 1e-4);
-  col += mix(hue, vec3(1.0), 0.4) * sky.a * KNOT * uDim * clearOfBoards(ndc);
+  float clear = clearOfBoards(ndc);
+  col += mix(hue, vec3(1.0), 0.4) * sky.a * KNOT * uDim * clear;
+  // Behind the wall boards and just round them the sky sinks to a quarter: the arc always has a dark
+  // ground behind its smoked glass, however bright the gas is there, and its type keeps its contrast.
+  col *= mix(0.22, 1.0, clear);
   // The finest layer is the moving far stars' (stars.ts): the sky's own start a step coarser.
   col += stars(d, 60.0, 0.16, 1.0, 1.25, density);
   col += stars(d, 22.0, 0.20, 1.6, 1.6, 1.0);
-  // By Day the sky is paler and brighter: less saturated, lifted toward its own grey.
-  float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
-  col = mix(col, vec3(lum), 0.45 * uDay) * (1.0 + 0.5 * uDay) + uLift * uDay;
+  // By Day the ship is in high orbit over a sunlit planet: space over it a little lifted, and the
+  // planet's day side filling the lower bow, its limb a bright blue arc with the atmosphere's glow over
+  // it. Fixed to the ship (vDir, not the sky's slow turn), so the horizon holds still.
+  if (uDay > 0.001) {
+    col = col * (1.0 - 0.6 * uDay) + uLift * uDay * 0.3;
+    vec3 v = normalize(vDir);
+    float c = dot(v, uPlanet.xyz);
+    float edge = cos(uPlanet.w);
+    // Angle in from the limb (radians, about): positive on the planet, negative over it.
+    float into = (c - edge) / max(sin(uPlanet.w), 1e-3);
+    // The sun high over the ship's port quarter: the face we see is the day side, its terminator off to starboard.
+    vec3 sunD = normalize(vec3(-0.55, 0.7, 0.45));
+    if (into > 0.0) {
+      // The ray onto a unit sphere seen from its own orbit (sin of its angular radius = 1 / distance),
+      // so the ground foreshortens toward the limb as it does from a ship.
+      float D = 1.0 / max(sin(uPlanet.w), 0.05);
+      float disc = max(1.0 - D * D * (1.0 - c * c), 0.0);
+      vec3 H = v * (D * c - sqrt(disc)) - uPlanet.xyz * D;
+      float cl = smoothstep(0.56, 0.7, fbm(H * vec3(18.0, 30.0, 18.0) + vec3(3.1, 7.7, 1.9), 5)) * smoothstep(0.35, 0.6, fbm(H * 4.0 + 2.0, 3));
+      float land = smoothstep(0.52, 0.56, fbm(H * 5.0 + vec3(11.0), 5));
+      vec3 ground = mix(uOcean, uLand, land);
+      float lit = clamp(0.15 + 1.1 * dot(H, sunD), 0.03, 1.25);
+      vec3 surf = mix(ground, vec3(0.95, 0.97, 1.0), cl * 0.9) * lit;
+      // Seen through more air toward the limb: bluer and brighter.
+      float slant = 1.0 - clamp(dot(H, -v), 0.0, 1.0);
+      surf = mix(surf, uAtmo * (0.6 + 1.4 * lit), slant * slant * 0.85);
+      col = mix(col, surf * 1.7, uDay * smoothstep(0.0, 0.003, into));
+    }
+    // The atmosphere's glow over the limb, fading into space.
+    float glow = exp(-max(-into, 0.0) / 0.05) * step(into, 0.0);
+    col += uAtmo * (glow * 1.8 + exp(-max(-into, 0.0) / 0.012) * step(into, 0.0) * 1.5) * uDay;
+  }
   // The jump's flash: light added over the sky, so its stars and its band still show through it.
   col += uFlashColor * uFlash;
   gl_FragColor = vec4(col, 1.0);
@@ -246,7 +304,7 @@ export function region(n: number): Region {
     palette: n === 0 ? 0 : Math.floor(r() * 3),
     seed: r() * 50,
   };
-  return { bandN, core, neb, nebSize: (n === 0 ? 34 : 24 + r() * 16) * deg, lobes, lobeSize: (n === 0 ? 28 : 22 + r() * 10) * deg, seed, giant };
+  return { bandN, core, neb, nebSize: (n === 0 ? 46 : 32 + r() * 16) * deg, lobes, lobeSize: (n === 0 ? 28 : 22 + r() * 10) * deg, seed, giant };
 }
 
 /** The side (-1 west, 1 east) clear of region `n`'s giant: where a passing planet goes. */
@@ -260,6 +318,7 @@ export function bakeUniforms(): Record<string, THREE.IUniform> {
     uVoid: { value: linear(SPACE_COLORS.void) },
     uDeep: { value: linear(SPACE_COLORS.deep) },
     uBand: { value: linear(SPACE_COLORS.band) },
+    uBandCore: { value: linear(SPACE_COLORS.bandCore) },
     uTeal: { value: linear(SPACE_COLORS.nebulaTeal) },
     uIndigo: { value: linear(SPACE_COLORS.nebulaIndigo) },
     uMagenta: { value: linear(SPACE_COLORS.nebulaMagenta) },
@@ -337,6 +396,10 @@ export class Sky {
         uDim: { value: 1 },
         uDay: { value: 0 },
         uLift: { value: linear(SPACE_COLORS.dayLift) },
+        uPlanet: { value: new THREE.Vector4(...DAY_PLANET.dir, DAY_PLANET.radius) },
+        uOcean: { value: linear(SPACE_COLORS.dayOcean) },
+        uLand: { value: linear(SPACE_COLORS.dayLand) },
+        uAtmo: { value: linear(SPACE_COLORS.dayAtmosphere) },
         uBoards: { value: boards },
       },
     });

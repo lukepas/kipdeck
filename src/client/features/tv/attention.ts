@@ -33,7 +33,7 @@ export const HEADER_COUNTS: readonly (readonly [HeroKind, string])[] = [
 export const HERO = { pad: 28, head: 92, rule: 6, foot: 54, gap: 10 } as const;
 
 /** Smoked backing: the board's ground lets a little of space through (the face is drawn as glass). */
-const GROUND = 'rgba(12,18,25,0.88)';
+const GROUND = 'rgba(8,12,18,0.94)';
 const CARD = '#162029';
 const CARD_QUIET = 'rgba(22,32,41,0.75)';
 

@@ -258,13 +258,16 @@ export const SPACE_GIVE_WAY = 0.8;
 
 /** Every colour space uses: the sky, the stars, the flybys, the warp's flash. All of them pass ambientSafe. */
 export const SPACE_COLORS = {
-  void: '#04070C',
-  deep: '#0A1018',
-  band: '#C8D2DC',
-  nebulaTeal: '#1F7C88',
-  nebulaIndigo: '#24305E',
-  /** The nebula's warm side: a deep magenta, clear of the reserved violet (proof) and red-orange (attention) hues. */
-  nebulaMagenta: '#7A2E6E',
+  void: '#03050B',
+  deep: '#090C1C',
+  /** The galactic band: a cool near-white, and its core a warm white (both of low chroma, clear of the state hues). */
+  band: '#D6DCF2',
+  bandCore: '#F6EEE4',
+  nebulaTeal: '#1FCFC4',
+  /** The nebula's cool depth: a saturated indigo-violet at hue about 245, clear of proof's violet (250 to 290). */
+  nebulaIndigo: '#3F36D6',
+  /** The nebula's warm side: a vivid magenta (hue about 315), clear of the reserved violet (proof) and red-orange (attention) hues. */
+  nebulaMagenta: '#C42FA0',
   starCool: '#BFD3FF',
   starWarm: '#FFF4E8',
   flash: '#DDF4FF',
@@ -281,6 +284,10 @@ export const SPACE_COLORS = {
   giantStorm: '#D8E4E8',
   /** The sun's light and its flare's warm core: a warm white, all but neutral. */
   sun: '#FFF6EA',
+  /** Day's planet under the ship (features/space/sky.ts): its oceans, its land and the atmosphere's limb. */
+  dayOcean: '#1450A8',
+  dayLand: '#2E6E62',
+  dayAtmosphere: '#7CC4FF',
   /** What Day adds over the whole sky: a pale, cool grey. */
   dayLift: '#1A2430',
 } as const;

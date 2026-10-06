@@ -80,8 +80,8 @@ export function screen(widthM: number, heightM: number, unitsPerM: number = UNIT
   return { canvas, g, W, H, texture };
 }
 
-/** The smoked ground every board of the arc paints first: 88% slate, so a frame is never a black rectangle. */
-export const SMOKED = 'rgba(12,18,25,0.88)';
+/** The smoked ground every board of the arc paints first: 94% slate, so a frame is never a black rectangle, and the saturated sky behind it (the look stage) never shows through enough to cost its type contrast. */
+export const SMOKED = 'rgba(8,12,18,0.94)';
 
 /** The panel's ground: smoked slate with the faintest 1 m-style grid, kept off the rows. */
 export function ground(g: CanvasRenderingContext2D, W: number, H: number) {
