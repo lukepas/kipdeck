@@ -16,6 +16,10 @@
 // SHOOT_POSE=sit sits you in the captain's chair the way E does and shoots the view the chair gives
 // (its own height, field of view and aim), rather than the pinned eye; it saves <light>-<quality>-sit.png.
 // SHOOT_OVERVIEW=1 adds the Overview (G) as <light>-<quality>-overview.png.
+// SHOOT_LEAN=1 adds the focus lean from the chair onto the Attention board as <light>-<quality>-lean.png.
+// SHOOT_MEASURE=1 measures each Attention card's name on the shot: cap height (px) and contrast against its card.
+// SHOOT_MISSION=1 sets a course with four waypoints (the second under way) and units toward them.
+// SHOOT_EVAL='...' runs a probe's code in the page just before the shot and prints what it returns.
 // SHOOT_MASK=1 checks what stands in front of the situation arc: it paints every board's face (and the
 // capacity strip's) flat magenta, shoots <light>-<quality>-mask.png, and counts the pixels inside each
 // face's rectangle on screen that aren't magenta (anything drawn over a board: a head, a console, the
@@ -39,7 +43,7 @@ const QUALITY = process.env.SHOOT_QUALITY ?? 'high';
 const CAP = process.env.SHOOT_CAP ?? '';
 const UI = !!process.env.SHOOT_UI;
 const POSE = process.env.SHOOT_POSE ?? 'pinned';
-const NAME = `${LIGHT}-${QUALITY}${CAP ? `-cap-${CAP}` : ''}${POSE === 'sit' ? '-sit' : ''}`;
+const NAME = `${LIGHT}-${QUALITY}${CAP ? `-cap-${CAP}` : ''}${process.env.SHOOT_CREW && process.env.SHOOT_CREW !== 'need' ? `-${process.env.SHOOT_CREW}` : ''}${POSE === 'sit' ? '-sit' : ''}`;
 
 const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-interior-'));
 const home = path.join(tmp, 'home');
@@ -62,6 +66,7 @@ post UserPromptSubmit "{\\"prompt\\":\\"$(echo "$last" | sed 's/\\[[a-z]*\\] //'
 echo "> $last"
 case "$last" in
   *"[ask]"*) post PreToolUse '{"tool_name":"AskUserQuestion","tool_input":{}}' ;;
+  *"[crash]"*) sleep 2; exit 3 ;;
   *"[done]"*) post PreToolUse '{"tool_name":"Edit","tool_input":{"file_path":"src/a.ts"}}'; sleep 1; post Stop '{}' ;;
   *) post PreToolUse '{"tool_name":"Bash","tool_input":{"command":"npm test"}}' ;;
 esac
@@ -72,7 +77,11 @@ while [ $i -lt 120 ]; do echo "  ok $i - test passes"; i=$((i+1)); sleep 5; done
 chmodSync(agent, 0o755);
 
 // A busy crew, every unit at work but two done, and desk-2's asking you (the need fixture).
-const TASKS = [
+// SHOOT_CREW=signals has three asking (desk-2's among them), one crashed (stuck) and two done (to
+// review), the rest at work; SHOOT_CREW=twenty puts 20 units on the deck (the consoles and the
+// Standby bench) with the same signals. The default is the need fixture alone.
+const CREW = process.env.SHOOT_CREW ?? 'need';
+const NEED = [
   ['desk-1', 'Pick the session store for the auth rewrite'],
   ['desk-2', '[ask] Migrate the payments webhook to the new queue'],
   ['desk-3', 'Publish the SDK release candidate'],
@@ -85,6 +94,20 @@ const TASKS = [
   ['desk-14', 'Cache the reputation index'],
   ['desk-15', 'Trim the bundle under 300 kB'],
 ];
+const SIGNALS = NEED.map(([d, t]) => (d === 'desk-9' ? [d, '[ask] Add rate limits to the public API'] : d === 'desk-11' ? [d, '[ask] Bump the Anchor toolchain'] : d === 'desk-14' ? [d, '[crash] Cache the reputation index'] : [d, t]));
+const TWENTY = [
+  ...SIGNALS,
+  ['desk-4', 'Split the deploy workflow'],
+  ['desk-7', 'Retry the indexer on a dropped socket'],
+  ['desk-8', 'Lint the launch calendar'],
+  ['desk-12', 'Profile the terminal scrollback'],
+  ['desk-16', 'Add the wallet settings card'],
+  ['beanbag-1', 'Translate the sign-in page'],
+  ['beanbag-2', 'Draft the release notes'],
+  ['beanbag-3', 'Write the x402 gateway tests'],
+  ['beanbag-9', 'Shrink the hull texture atlas'],
+];
+const TASKS = CREW === 'twenty' ? TWENTY : CREW === 'signals' ? SIGNALS : NEED;
 
 const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--agent', agent, '--home', path.join(home, '.agent-office')], {
   env: { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
@@ -190,6 +213,30 @@ async function main() {
       s.pulls = { items: fx.pulls, fetchedAt: Date.now(), loading: false };
       for (const t of ['issues', 'pulls']) s.emit(t);
     }, fixtures());
+    // SHOOT_MISSION=1: a course on the holo (as design/shoot.mjs sets it), the first waypoint passed and
+    // the second under way with two of its five issues closed, and four units working toward waypoints.
+    if (process.env.SHOOT_MISSION === '1') {
+      await page.evaluate(() => {
+        const net = window.__office.net;
+        net.send({ t: 'mission.set', statement: 'Ship the auth rewrite and the devnet bounty flow' });
+        for (const title of ['Session store picked', 'Auth rewrite', 'Payments webhook', 'Devnet bounties live']) net.send({ t: 'mission.milestone', op: 'add', title });
+      });
+      await wait(900);
+      await page.evaluate(() => {
+        const o = window.__office;
+        const net = o.net;
+        const ms = o.store.mission.milestones;
+        if (ms[0]) net.send({ t: 'mission.milestone', op: 'update', id: ms[0].id, done: true });
+        if (ms[1]) net.send({ t: 'mission.milestone', op: 'update', id: ms[1].id, issues: [41, 42, 43, 44, 48] });
+        if (ms[1]) net.send({ t: 'mission.milestone', op: 'activate', id: ms[1].id });
+        const s = o.store;
+        s.issues = { ...s.issues, items: s.issues.items.map((i) => (i.number === 41 || i.number === 48 ? { ...i, state: 'CLOSED' } : i)) };
+        s.emit('issues');
+        const goals = { 'desk-1': 1, 'desk-2': 2, 'desk-5': 1, 'desk-9': 1, 'desk-10': 3, 'desk-15': 2 };
+        for (const w of s.workers.values()) if (goals[w.deskId] !== undefined && ms[goals[w.deskId]]) net.send({ t: 'worker.goal', workerId: w.id, goal: ms[goals[w.deskId]].id });
+      });
+      await wait(1500);
+    }
     // Pinned at the conn (or sat in its chair), space's clock held once any jump is over, the toasts closed.
     await page.evaluate(
       ([from, to, pose]) => {
@@ -220,8 +267,43 @@ async function main() {
       document.querySelector('section.debrief button.close')?.click();
     });
     await wait(300);
+    // SHOOT_EVAL: a probe's code run in the page before the shot (its result printed), to find what draws where.
+    if (process.env.SHOOT_EVAL) {
+      console.log(JSON.stringify({ eval: await page.evaluate(process.env.SHOOT_EVAL) }));
+      await wait(800);
+    }
     await page.screenshot({ path: path.join(OUT, `${NAME}.png`) });
+    // Where the Attention board's cards are in this shot (SHOOT_MEASURE), before any other view moves the camera.
+    const measureCards = process.env.SHOOT_MEASURE !== '1' ? [] : await page.evaluate(() => {
+      const o = window.__office;
+      const a = window.__world?.attention;
+      if (!a) return [];
+      const m = o.office.tvScreen;
+      m.updateWorldMatrix(true, false);
+      const { W, H } = a.size;
+      const toPx = (u, v) => {
+        const p = new o.camera.position.constructor((u / W - 0.5) * 7.2, (0.5 - v / H) * 3.2, 0).applyMatrix4(m.matrixWorld).project(o.camera);
+        return [((p.x + 1) / 2) * innerWidth, ((1 - p.y) / 2) * innerHeight];
+      };
+      // The name's line on a full card: from 100 units in, from 4 under the card's top to 94 (its baseline is at 88, the line under it starts at 104).
+      return a.anchors().map((c) => {
+        const top = c.y - c.h / 2;
+        const [x0, y0] = toPx(c.x + 100, top + 4);
+        const [x1, y1] = toPx(c.x + c.w * 0.6, top + 94);
+        return { id: c.id, kind: c.kind, x0, y0, x1, y1 };
+      });
+    });
     console.log(JSON.stringify({ shot: `${NAME}.png`, tier, setting: QUALITY, cap: CAP || null }));
+    // SHOOT_LEAN=1: the focus lean from the chair (features/focuslean), the mouse moved once to arm it
+    // and then still while the crosshair rests on the Attention board, saved as <name>-lean.png.
+    if (process.env.SHOOT_LEAN === '1') {
+      await page.mouse.move(700, 450);
+      await page.mouse.move(720, 452, { steps: 4 });
+      await wait(2200);
+      await page.screenshot({ path: path.join(OUT, `${NAME}-lean.png`) });
+      await page.mouse.move(740, 460, { steps: 2 });
+      await wait(1200);
+    }
     const extra = JSON.parse(process.env.SHOOT_VANTAGES ?? '{}');
     for (const [key, eye] of Object.entries(extra)) {
       await page.evaluate(([from, to]) => {
@@ -304,6 +386,40 @@ async function main() {
         report[id] = { pixels: seen, covered, share: seen ? +(covered / seen).toFixed(4) : null };
       }
       console.log(JSON.stringify({ mask: report }));
+    }
+    // SHOOT_MEASURE=1: each Attention card's name on screen, measured on the shot itself: the cap height
+    // of its first letter (the tallest run of text pixels in its first glyph's columns) and the contrast
+    // of the name's text against the card under it (WCAG, from the shot's sRGB), as a JSON line.
+    if (process.env.SHOOT_MEASURE === '1') {
+      const cards = measureCards;
+      const raw = execFileSync(process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg', ['-v', 'error', '-i', path.join(OUT, `${NAME}.png`), '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { maxBuffer: 64 * 1024 * 1024 });
+      const px = (x, y) => {
+        const i = (y * 1440 + x) * 3;
+        return [raw[i], raw[i + 1], raw[i + 2]];
+      };
+      const lin = (c) => ((c /= 255) <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+      const lum = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+      const out = cards.map((c) => {
+        const xs = [Math.round(c.x0), Math.round(c.x1)];
+        const ys = [Math.round(c.y0), Math.round(c.y1)];
+        const all = [];
+        for (let y = ys[0]; y <= ys[1]; y++) for (let x = xs[0]; x <= xs[1]; x++) all.push({ x, y, l: lum(px(x, y)) });
+        const sorted = all.map((p) => p.l).sort((a, b) => a - b);
+        const bg = sorted[Math.floor(sorted.length * 0.3)];
+        const hi = sorted[Math.floor(sorted.length * 0.985)];
+        const cut = bg + (hi - bg) * 0.5;
+        // The first glyph: the first run of columns from the left holding text pixels.
+        const colHas = (x) => all.some((p) => p.x === x && p.l > cut);
+        let x = xs[0];
+        while (x <= xs[1] && !colHas(x)) x++;
+        const gx0 = x;
+        while (x <= xs[1] && colHas(x)) x++;
+        const glyph = all.filter((p) => p.x >= gx0 && p.x < x && p.l > cut);
+        const cap = glyph.length ? Math.max(...glyph.map((p) => p.y)) - Math.min(...glyph.map((p) => p.y)) + 1 : 0;
+        const ratio = (hi + 0.05) / (bg + 0.05);
+        return { id: c.id, kind: c.kind, capPx: cap, contrast: +ratio.toFixed(1) };
+      });
+      console.log(JSON.stringify({ measure: out }));
     }
     if (process.env.SHOOT_OVERVIEW) {
       await page.evaluate(() => {
