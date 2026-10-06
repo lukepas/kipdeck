@@ -2,7 +2,8 @@
 // (shared/attention.ts), grouped by state. The groups that need a person stay open; "working",
 // "ready" and the board agents fold into one line each until you open them. A row is the unit's call
 // sign, its name, one status phrase and one relative time (shared/rowtext.ts), with a 2px rule in its
-// state's color: no wide text badge, so a name keeps its width. The counts live on the top bar alone.
+// state's color: no wide text badge, so a name keeps its width. The counts live on the top bar and the
+// Attention board's header alone: a group's head names it, it never counts it.
 
 import './units-rail.css';
 import { LEVEL_LABEL, type AttentionLevel, type Attention } from '../../shared/attention';
@@ -117,7 +118,6 @@ export function renderWorkers(onOpen: (id: string) => void) {
           { type: 'button', 'aria-expanded': String(open), title: `${open ? 'Fold' : 'Show'} ${GROUP_LABEL[g].toLowerCase()}`, onclick: () => (setFold(g, !open), renderWorkers(lastOpen)) },
           h('span.unit-glyph', { 'aria-hidden': 'true' }, icon(g === 'agents' ? 'unit' : LEVEL_ICON[g], 12)),
           h('span.rail-label', {}, GROUP_LABEL[g]),
-          h('span.rail-n', {}, String(list.length)),
           h('span.rail-chev', { 'aria-hidden': 'true' }),
         ),
       ),

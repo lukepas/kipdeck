@@ -12,3 +12,20 @@
 }
 :root[data-motion=reduce] #counters .counter.c-needs-you.pulse { animation: none; outline: 2px solid var(--signal); outline-offset: 2px; }
 :root[data-motion=reduce] .needs-you-flash.on { animation: none; }
+
+/* The chip a unit's call comes in as: top centre, under the counters, one line. It folds into the counter. */
+.needs-you-chip {
+  position: absolute; top: calc(var(--bar) + 10px); left: 50%; translate: -50% 0; z-index: 45;
+  display: inline-flex; align-items: center; gap: 8px; max-width: min(560px, 60vw); padding: 5px 8px 5px 10px;
+  background: var(--hud-fill); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  border: 1px solid var(--signal); border-radius: var(--radius); box-shadow: var(--hud-shadow);
+  color: var(--text); font: 600 13px/18px var(--font-ui); cursor: pointer; pointer-events: auto;
+  animation: needs-you-chip-in 260ms var(--ease);
+}
+.needs-you-chip .nyc-glyph { display: inline-flex; color: var(--signal); }
+.needs-you-chip .nyc-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.needs-you-chip .nyc-more { color: var(--muted); font-weight: 500; white-space: nowrap; }
+.needs-you-chip kbd { padding: 0 4px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); font: 500 11px/16px var(--font-mono); color: var(--muted); }
+@keyframes needs-you-chip-in { from { opacity: 0; translate: -50% -6px; } to { opacity: 1; translate: -50% 0; } }
+@media (prefers-reduced-motion: reduce) { .needs-you-chip { animation: none; } }
+:root[data-motion=reduce] .needs-you-chip { animation: none; }

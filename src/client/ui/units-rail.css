@@ -29,7 +29,6 @@
 .rail-group:first-child { margin-top: 0; }
 .rail-head { display: flex; align-items: center; gap: 7px; width: 100%; height: 26px; padding: 0 6px; border: 0; border-radius: var(--radius); background: none; color: var(--muted); font: 600 10px var(--font-display); font-stretch: var(--stretch-display); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; text-align: left; }
 .rail-head:hover { background: var(--surface-3); color: var(--text); }
-.rail-n { font: 500 11px var(--font-mono); letter-spacing: 0; color: var(--text); }
 .rail-chev { margin-left: auto; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg) translate(-2px, -2px); transition: transform var(--t-ui) var(--ease); }
 .rail-head[aria-expanded=false] .rail-chev { transform: rotate(-45deg); }
 .rail-group.needs-you .unit-glyph { color: var(--signal); }

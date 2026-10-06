@@ -1,5 +1,6 @@
 import './ui.css';
-import { toast } from '../../ui/dom';
+import { h } from '../../ui/dom';
+import { icon } from '../../ui/icons';
 import type { BannerText } from './logic';
 
 export interface BannerHooks {
@@ -13,10 +14,11 @@ const HOLD_MS = 8000;
 const PULSE_MS = 3600;
 
 /**
- * A unit needs you: the top bar's needs-you counter owns the count. When one starts asking, a toast
- * in the one stack (ui/dom.ts toast) says who and what for; a click on it or N goes there. After a few
- * seconds it folds away and the counter pulses three times where it went. The edge of the screen
- * flashes as it comes in. In demo mode the toast stays while anyone needs you.
+ * A unit needs you: the top bar's needs-you counter owns the count. When one starts asking, a compact
+ * chip at the top of the view, under the counters, says who and what for (never a toast in the lower
+ * left, where it would cover the deck); a click on it or N goes there. After a few seconds it folds
+ * away and the counter pulses three times where it went. The edge of the screen flashes as it comes in.
+ * In demo mode the chip stays while anyone needs you.
  */
 export class Banner {
   private readonly edge: HTMLElement;
@@ -52,11 +54,15 @@ export class Banner {
     if (!text) return;
     this.card?.remove();
     this.shownKey = text.key;
-    const card = toast(`${text.title}${text.more ? `  ${text.more}` : ''}`, 'needs-you', undefined, {
-      ms: this.demo ? 1e9 : HOLD_MS,
-      sub: text.detail || undefined,
-      onclick: () => this.hooks.go(text),
-    });
+    const card = h(
+      'button.needs-you-chip',
+      { type: 'button', role: 'alert', title: text.detail || 'Go there (N)', onclick: () => this.hooks.go(text) },
+      h('span.nyc-glyph', { 'aria-hidden': 'true' }, icon('needs-you', 14)),
+      h('span.nyc-text', {}, text.title),
+      text.more ? h('span.nyc-more', {}, text.more) : null,
+      h('kbd', {}, 'N'),
+    );
+    (document.getElementById('hud') ?? document.body).append(card);
     this.card = card;
     if (!this.demo) setTimeout(() => this.card === card && this.fold(true), HOLD_MS);
   }

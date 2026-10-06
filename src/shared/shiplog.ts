@@ -110,22 +110,26 @@ const REMINDER_WORDS: Record<NonNullable<ConditionWhy['reminder']>, string> = {
   'milestone-overdue': 'A WAYPOINT IS PAST ITS DATE',
 };
 
-/** "CONDITION AMBER - 2 UNITS AWAIT ORDERS", "CONDITION RED - C-01 STUCK 14 MIN", "CONDITION GREEN - ALL STATIONS WORKING". */
+/**
+ * "CONDITION AMBER - UNITS AWAIT ORDERS", "CONDITION RED - C-01 STUCK 14 MIN", "CONDITION GREEN - ALL
+ * STATIONS WORKING". No counts: the room counts in two places only, the top bar and the Attention
+ * board's header, so the band names who and why, never how many.
+ */
 export function conditionLine(c: ConditionName, why: ConditionWhy, working = 0): string {
   if (c === 'green') return working > 0 ? 'CONDITION GREEN - ALL STATIONS WORKING' : 'CONDITION GREEN - ALL CLEAR';
   const head = `CONDITION ${c.toUpperCase()}`;
   if (c === 'red') {
-    if (why.stuck > 1) return `${head} - ${plural(why.stuck, 'UNIT')} STUCK`;
+    if (why.stuck > 1) return `${head} - UNITS STUCK`;
     if (why.top?.stuck) return `${head} - ${why.top.unit} STUCK ${why.top.min} MIN${asksTail(why)}`;
   }
-  if (why.waiting > 0) return `${head} - ${plural(why.waiting, 'UNIT')} ${why.waiting === 1 ? 'AWAITS' : 'AWAIT'} ORDERS`;
+  if (why.waiting > 0) return `${head} - ${why.waiting === 1 ? 'A UNIT AWAITS' : 'UNITS AWAIT'} ORDERS`;
   return why.reminder ? `${head} - ${REMINDER_WORDS[why.reminder]}` : head;
 }
 
-/** The quick answer after a stuck unit's line: " - +1 AWAITS ORDERS (A-03)". */
+/** The quick answer after a stuck unit's line: " - ORDERS AWAITED AT A-03". */
 function asksTail(why: ConditionWhy): string {
   if (!why.asks?.n) return '';
-  return ` - +${why.asks.n} ${why.asks.n === 1 ? 'AWAITS' : 'AWAIT'} ORDERS (${why.asks.unit})`;
+  return ` - ORDERS AWAITED AT ${why.asks.unit}`;
 }
 
 /** What the band says while the latch is still on its way down and nothing waits any more. */

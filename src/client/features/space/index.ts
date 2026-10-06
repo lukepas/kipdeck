@@ -169,13 +169,14 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
     surgePeak = SURGE.peak;
   }
 
-  /** The band under the overhead strip (features/alert): the countdown, or a jump waiting for the captain (under the condition's line). */
+  /**
+   * The band under the overhead strip (features/alert): the countdown. A jump waiting for the captain
+   * is said once, as the JUMP READY chip on the Attention board's header (features/tv), not on the band.
+   */
   function say(text: string | null) {
     if (text === bandSays) return;
     bandSays = text;
-    const held = text === JUMP_READY;
-    parts.alert?.say('jump', held ? null : text);
-    parts.alert?.say('held', held ? text : null);
+    parts.alert?.say('jump', text === JUMP_READY ? null : text);
   }
 
   function showBanner(to: Waypoint) {

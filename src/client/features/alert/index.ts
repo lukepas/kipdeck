@@ -37,9 +37,9 @@ export interface Alert {
   settling(): boolean;
   /**
    * Puts a line on the band, or takes it off with null: a jump's countdown ('jump', over everything),
-   * a jump held for the captain ('held', under the condition's line), or a notice ('notice', last, for `ms`).
+   * or a notice ('notice', last, for `ms`). A jump held for the captain is the Attention board's chip (features/tv).
    */
-  say(slot: 'jump' | 'held' | 'notice', text: string | null, glyph?: BandGlyph, ms?: number): void;
+  say(slot: 'jump' | 'notice', text: string | null, glyph?: BandGlyph, ms?: number): void;
   /**
    * Brings the room's lights up from `from` aft to bow over `ms`, the pods' lamps coming on one pod at a
    * time (the start of watch, features/launch); null puts them straight up.
@@ -57,7 +57,6 @@ export function installAlert(ctx: Ctx, parts: Pick<Parts, 'lights' | 'giveWay'>)
   let readAt = -Infinity;
   let line: { text: string; glyph: BandGlyph } | null = null;
   let jumpLine: { text: string; glyph: BandGlyph } | null = null;
-  let heldLine: { text: string; glyph: BandGlyph } | null = null;
   let greenLine: { text: string; glyph: BandGlyph } | null = null;
   let notice: { text: string; glyph: BandGlyph; until: number } | null = null;
   let greenUntil = -Infinity;
@@ -158,7 +157,7 @@ export function installAlert(ctx: Ctx, parts: Pick<Parts, 'lights' | 'giveWay'>)
 
     // The band: a jump's line over the condition's, a notice under it.
     if (notice && clock >= notice.until) notice = null;
-    const show = jumpLine ?? line ?? heldLine ?? greenLine ?? notice;
+    const show = jumpLine ?? line ?? greenLine ?? notice;
     band.say(show?.text ?? null, show?.glyph ?? null);
     band.step(dt, frozen);
   });
@@ -168,7 +167,6 @@ export function installAlert(ctx: Ctx, parts: Pick<Parts, 'lights' | 'giveWay'>)
     settling: () => latch.stepping || standDown !== null || clock < greenUntil,
     say(slot, text, glyph = null, ms = 4000) {
       if (slot === 'jump') jumpLine = text ? { text, glyph } : null;
-      else if (slot === 'held') heldLine = text ? { text, glyph } : null;
       else notice = text ? { text, glyph, until: clock + ms } : null;
     },
     wake(from, ms = STAND_DOWN_MS) {
@@ -176,6 +174,6 @@ export function installAlert(ctx: Ctx, parts: Pick<Parts, 'lights' | 'giveWay'>)
       applied = '';
     },
   };
-  debugHandle('alert', { ...alert, line: () => (jumpLine ?? line ?? heldLine ?? greenLine ?? notice)?.text ?? null, room: () => room });
+  debugHandle('alert', { ...alert, line: () => (jumpLine ?? line ?? greenLine ?? notice)?.text ?? null, room: () => room });
   return alert;
 }
