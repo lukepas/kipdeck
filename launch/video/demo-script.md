@@ -2,6 +2,8 @@
 
 For the Colosseum Crypto World's Fair. Screen recording with the founder's voiceover. Target 2:55, hard limit 3:00 (Colosseum: "no more than three minutes").
 
+A silent 2:58 cut of these beats, with the voiceover as captions and a 60 s 9:16 highlight, is made from the real office by the scripts in [capture/](capture/README.md). Inside the office it shows a seeded demo crew and replays the merge and the payout, and each shot is tagged as real or demo data. Use it to rehearse the voiceover, or as the fallback if the day's take fails.
+
 Last checked: 2026-10-07, against Colosseum's hackathon FAQ (https://colosseum.com/hackathon) and their submission guide (https://blog.colosseum.com/perfecting-your-hackathon-submission/).
 
 ## What Colosseum asks for

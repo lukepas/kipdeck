@@ -1,0 +1,119 @@
+1
+00:00:03,950 --> 00:00:09,694
+This is UGC Army, a fork of agent-office. Every coding agent on the team is a unit at a console.
+
+2
+00:00:09,944 --> 00:00:13,339
+One function, attention.ts, ranks them: needs you, stuck, to review, working.
+
+3
+00:00:13,589 --> 00:00:18,550
+The board, the top bar, the tab title and the 2D view all read that one ranking.
+
+4
+00:00:19,350 --> 00:00:22,830
+Issue two on our public demo repo carries a devnet USDC bounty.
+
+5
+00:00:23,080 --> 00:00:28,301
+It sits in a program-owned vault, one per bounty, that the office opened with its attester and approver keys.
+
+6
+00:00:28,551 --> 00:00:33,274
+Anyone can fund it from the board, or from a Blink, where only the funder's wallet signs.
+
+7
+00:00:33,524 --> 00:00:37,750
+I'll put a Claude Code unit on it. It works in its own git worktree.
+
+8
+00:00:38,550 --> 00:00:44,293
+While that runs, here's one an office unit finished earlier, for issue one.
+
+9
+00:00:44,543 --> 00:00:53,350
+The office opened it on the repository itself. A pull request from a fork never counts, whatever its branch is called.
+
+10
+00:00:54,150 --> 00:01:00,214
+A person merges it. The office then asks GitHub fresh: was it merged, by a user, not a bot,
+
+11
+00:01:00,464 --> 00:01:05,950
+and does that user have write access? A merge by the agent's own operator is labelled self.
+
+12
+00:01:06,750 --> 00:01:11,695
+Nothing moves yet. The payout waits in the review inbox until an admin approves it,
+
+13
+00:01:11,945 --> 00:01:16,018
+and the approval is a signature from the admin's own browser wallet,
+
+14
+00:01:16,268 --> 00:01:20,050
+so no key on the office's machine can pay anyone alone.
+
+15
+00:01:20,850 --> 00:01:26,294
+The release lands on Solana devnet. The program is native Rust, no Anchor.
+
+16
+00:01:26,544 --> 00:01:32,351
+Release checks two signers, the attester who vouched for the merge and the approver,
+
+17
+00:01:32,601 --> 00:01:36,230
+then moves the escrow to the operator's wallet.
+
+18
+00:01:36,480 --> 00:01:42,650
+If nobody releases it before expiry, anyone can crank the refund back to each funder.
+
+19
+00:01:43,450 --> 00:01:50,870
+The same merge is attested on Base Sepolia with EAS: the outcome, the merge commit, the harness, the time to merge.
+
+20
+00:01:51,120 --> 00:01:57,250
+Reverts and closes get attested too. And the agent gets ERC-8004 feedback that points back at it.
+
+21
+00:01:58,050 --> 00:02:03,973
+The public board at slash pom is rebuilt from chain data alone. Every row links to its proof,
+
+22
+00:02:04,223 --> 00:02:09,850
+and it only counts attesters you choose to trust, since anyone can write to a public schema.
+
+23
+00:02:10,650 --> 00:02:16,638
+An outsider, a person or another agent, can hire a worker for one task over x402.
+
+24
+00:02:16,888 --> 00:02:23,541
+The first request gets a 402. The payer signs a USDC authorization, x402.org settles it on Base Sepolia,
+
+25
+00:02:23,791 --> 00:02:27,450
+and the task waits, held, until an admin approves.
+
+26
+00:02:28,250 --> 00:02:34,436
+A repository can skip the office entirely. This GitHub Action runs the same merge checks and signs the claim.
+
+27
+00:02:34,686 --> 00:02:42,050
+So far it has run once on devnet, against a test GitHub API. It's pinned to a commit, because it holds a key.
+
+28
+00:02:42,850 --> 00:02:48,070
+Keys are dedicated testnet keys in owner-only files, and workers never get them in their environment.
+
+29
+00:02:48,320 --> 00:02:53,830
+The clients check the chain before they sign. Nothing is audited yet, so it stays on testnet.
+
+30
+00:02:54,080 --> 00:02:57,850
+It's all MIT, built on agent-office by webdevcody. Thanks for watching.
