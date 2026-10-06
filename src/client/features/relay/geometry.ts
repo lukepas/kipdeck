@@ -6,10 +6,12 @@ import { RELAY, RELAY_COLORS, armAngle } from './logic';
 // - The steel: the spire's triangular truss, its crown, the docking collar and its arms, and the three
 //   rings, in one merged geometry. Each vertex says which part it belongs to (the spire, or ring 1, 2
 //   or 3), and the vertex shader turns it by that part's pose, so the rings turn on their own with no
-//   draw of their own. The bracing a tier leaves out collapses in the vertex shader. The innermost
-//   ring carries the ledger's 32 segments, lit by a count.
-// - The lights: one draw of points (the crown's core and its halo, the strobe, the approach lights,
-//   the node-stars, the merge packet, the deploy trace and the arrival's flash), placed each frame.
+//   draw of their own. One bracing set at every tier, its members at least a pixel across from the
+//   chair, so nothing sub-pixel crawls as the truss turns. The rings carry an emissive rim, and the
+//   innermost carries the ledger's 32 segments, always faintly lit and warm to the count of payouts.
+// - The lights: one draw of points (the crown's core and its two halos, the strobe, the approach
+//   lights, the rings' tracers, the docking traffic, the node-stars, the merge packet, the deploy trace
+//   and the arrival's flash), placed each frame.
 // - The threads: hairlines between the nodes and down to the spire, one draw of line segments.
 //
 // All three are drawn round the camera on their own line of sight (index.ts), small and close, and
@@ -37,7 +39,6 @@ vec3 relayStreak(vec3 p) {
 const STEEL_VERT = /* glsl */ `
 attribute vec4 aInfo;
 uniform mat4 uPart[5];
-uniform float uCoarse;
 varying vec3 vN;
 varying vec3 vView;
 varying vec4 vInfo;
@@ -47,12 +48,6 @@ ${STREAK_GLSL}
 void main() {
   vInfo = aInfo;
   vH = position.y;
-  // The bracing the tier leaves out: the fine set at Medium and Low, the coarse set at High.
-  bool gone = (aInfo.y > 0.5 && aInfo.y < 1.5 && uCoarse > 0.5) || (aInfo.y > 1.5 && uCoarse < 0.5);
-  if (gone) {
-    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
-    return;
-  }
   mat4 m = uPart[int(aInfo.x + 0.5)];
   vec3 p = relayStreak((m * vec4(position, 1.0)).xyz);
   vN = normalize(mat3(m) * normal);
@@ -63,8 +58,8 @@ void main() {
 }`;
 
 const STEEL_FRAG = /* glsl */ `
-uniform vec3 uSun, uLit, uShade, uFill, uCrown, uCyan, uWarm;
-uniform float uDay, uCrownK, uLedgerLit, uLedgerLevel, uLedgerBase, uLedgerFlash, uLights, uShow, uSeg;
+uniform vec3 uSun, uLit, uShade, uDayLit, uDayShade, uFill, uCrown, uCyan, uWarm, uHaze;
+uniform float uDay, uCrownK, uLedgerLit, uLedgerLevel, uLedgerBase, uLedgerFlash, uLedgerIdle, uLights, uShow, uSeg, uHazeK;
 varying vec3 vN;
 varying vec3 vView;
 varying vec4 vInfo;
@@ -74,19 +69,26 @@ void main() {
   float ndl = dot(n, uSun);
   // The sun's key from high over the bow, so its terminator agrees with the deck's shadows.
   float lit = smoothstep(-0.15, 0.85, ndl);
-  vec3 col = mix(uShade, uLit, lit) * (1.0 + 0.6 * uDay);
+  // By Night dark steel; by Day a light hull grey, so it reads lit on a pale sky.
+  vec3 col = mix(mix(uShade, uLit, lit), mix(uDayShade, uDayLit, lit), uDay);
   // A cool rim where a face turns away from the eye, catching the nebula's light, so the lattice keeps its edges.
   float edge = 1.0 - clamp(abs(dot(n, normalize(vView))), 0.0, 1.0);
-  col += uFill * edge * edge * (1.0 - 0.5 * uDay);
+  col += uFill * edge * edge * (1.0 - 0.4 * uDay);
   float kind = vInfo.w;
+  float part = vInfo.x;
   // The crown's housing: lit from inside by the core, brightest round its waist.
   if (kind > 0.5 && kind < 1.5) {
     float waist = 1.0 - clamp(abs(vH - ${(RELAY.spire.height + RELAY.crown.height * 0.55).toFixed(1)}) / ${(RELAY.crown.height * 0.5).toFixed(1)}, 0.0, 1.0);
-    col += uCrown * uCrownK * (0.25 + 0.75 * waist) * uLights;
+    col += uCrown * uCrownK * (0.6 + 1.6 * waist) * uLights;
   }
-  // A ring's outer face: a faint ship-cyan hairline, so the rings read by Night.
-  if (kind > 1.5 && kind < 2.5) col += uCyan * 0.16 * uLights * (1.0 - 0.7 * uDay);
-  // The ledger: the innermost ring's segments, lit to the count of payouts this watch.
+  // The rings' own light: an emissive ship-cyan rim where the band turns from the eye (a Fresnel edge),
+  // and a brighter hairline on each ring's outer face, so the rings read as lit by Night and by Day.
+  if (part > 0.5 && part < 3.5) {
+    float rim = edge * edge * edge;
+    col += uCyan * (0.25 + 1.1 * rim) * uLights;
+    if (kind > 1.5 && kind < 2.5) col += uCyan * 0.55 * uLights;
+  }
+  // The ledger: the innermost ring's 32 segments, always faintly lit, warm to the count of payouts this watch.
   if (vInfo.z >= 0.0) {
     float seg = floor(vInfo.z);
     float u = fract(vInfo.z);
@@ -94,16 +96,19 @@ void main() {
     float on = step(seg + 0.5, uLedgerLit) * uLedgerLevel + uLedgerBase;
     // The newest segment comes up over its own beat.
     if (abs(seg - (uLedgerLit - 1.0)) < 0.5) on *= uSeg;
-    col += uWarm * gap * (on + uLedgerFlash) * 0.9 * uLights;
+    col += gap * (uCyan * uLedgerIdle + uWarm * (on + uLedgerFlash) * 1.3) * uLights;
   }
-  gl_FragColor = vec4(col * uShow, uShow);
+  // Kilometres off: the steel (never the lights) fades a little toward the haze's blue.
+  col = mix(col, uHaze, uHazeK);
+  // Straight alpha: through the jump's fade it is drawn transparent, with normal blending.
+  gl_FragColor = vec4(col, uShow);
   #include <colorspace_fragment>
 }`;
 
 const POINT_VERT = /* glsl */ `
 attribute vec3 aColor;
 attribute float aSize;
-uniform float uPx;
+uniform float uPx, uMaxPx;
 varying vec3 vColor;
 varying float vSoft;
 ${DEPTH_GLSL}
@@ -111,10 +116,13 @@ ${STREAK_GLSL}
 void main() {
   vColor = aColor;
   vec4 mv = modelViewMatrix * vec4(relayStreak(position), 1.0);
-  gl_Position = relayDepth(projectionMatrix * mv, mv, 0.6);
-  gl_PointSize = max(aSize * uPx, 0.0);
-  // The big soft halos (over 10 px) fall off gently; the small points are a crisp core.
-  vSoft = clamp((aSize - 6.0) / 30.0, 0.0, 1.0);
+  // The lamp's lights and the halos (16 px and up) sit past the lamp's own housing, so its glass never
+  // hides the core; the rings, tens of metres nearer, still pass in front of the glow.
+  gl_Position = relayDepth(projectionMatrix * mv, mv, aSize > 15.0 ? 4.0 : 0.6);
+  // Never past the driver's largest point (ALIASED_POINT_SIZE_RANGE, 255 on some), so a halo never jumps smaller on a 2x display.
+  gl_PointSize = clamp(aSize * uPx, 0.0, uMaxPx);
+  // The halos (from 24 px) fall off gently; the smaller points, the lamp's core among them, are a crisp core.
+  vSoft = clamp((aSize - 20.0) / 30.0, 0.0, 1.0);
 }`;
 
 const POINT_FRAG = /* glsl */ `
@@ -127,7 +135,7 @@ void main() {
   if (r2 > 1.0) discard;
   float core = exp(-r2 * 9.0);
   float halo = (1.0 - r2) * (1.0 - r2);
-  float k = mix(core + 0.18 * halo, 0.55 * halo * halo, vSoft);
+  float k = mix(core + 0.18 * halo, 0.55 * halo, vSoft);
   gl_FragColor = vec4(vColor * k * uShow, 1.0);
   #include <colorspace_fragment>
 }`;
@@ -234,24 +242,14 @@ export function steelGeometry(): THREE.BufferGeometry {
   const b = new Builder();
   const s = RELAY.spire;
   const levels = Math.round(s.height / s.brace);
-  // The three legs, a piece per brace level so they taper smoothly.
+  // The three legs, a piece per brace level so they taper smoothly; a ring of struts at every level and
+  // a diagonal up each face, zig-zagging. One set at every tier.
   for (let j = 0; j < 3; j++) for (let k = 0; k < levels; k++) b.member(legAt(j, k * s.brace), legAt(j, (k + 1) * s.brace + 0.4), s.leg, [0, 0, -1, 0]);
-  // The bracing: a ring of struts at every level and a diagonal up each face, zig-zagging. The fine set
-  // (every 11 m, 1) at High; the coarse set (every 22 m, 2) at Medium and Low; set 0 at every tier.
-  for (let k = 0; k <= levels; k++) {
-    const set = k % 2 === 0 ? 0 : 1;
-    for (let j = 0; j < 3; j++) b.member(legAt(j, k * s.brace), legAt((j + 1) % 3, k * s.brace), s.strut, [0, set, -1, 0]);
-  }
+  for (let k = 0; k <= levels; k++) for (let j = 0; j < 3; j++) b.member(legAt(j, k * s.brace), legAt((j + 1) % 3, k * s.brace), s.strut, [0, 0, -1, 0]);
   for (let k = 0; k < levels; k++) {
     for (let j = 0; j < 3; j++) {
       const up = (k + j) % 2 === 0;
-      b.member(legAt(up ? j : (j + 1) % 3, k * s.brace), legAt(up ? (j + 1) % 3 : j, (k + 1) * s.brace), s.strut, [0, 1, -1, 0]);
-    }
-  }
-  for (let k = 0; k < levels; k += 2) {
-    for (let j = 0; j < 3; j++) {
-      const up = (k / 2 + j) % 2 === 0;
-      b.member(legAt(up ? j : (j + 1) % 3, k * s.brace), legAt(up ? (j + 1) % 3 : j, Math.min(levels, k + 2) * s.brace), s.strut, [0, 2, -1, 0]);
+      b.member(legAt(up ? j : (j + 1) % 3, k * s.brace), legAt(up ? (j + 1) % 3 : j, (k + 1) * s.brace), s.strut, [0, 0, -1, 0]);
     }
   }
   // The crown: a faceted lamp housing, six sides, widest a little over its middle, glowing from inside.
@@ -265,6 +263,8 @@ export function steelGeometry(): THREE.BufferGeometry {
     b.quad(foot[i], foot[n], waist[n], waist[i], [0, 0, -1, 1]);
     b.quad(waist[i], waist[n], tip, tip, [0, 0, -1, 1]);
   }
+  // The mast from the lamp up through the rings to the strobe.
+  b.member(new THREE.Vector3(0, s.height + c.height - 2, 0), new THREE.Vector3(0, RELAY.mast.top, 0), RELAY.mast.width, [0, 0, -1, 0]);
   // The docking collar at the foot, and its four arms.
   const cl = RELAY.collar;
   const seg = 32;
@@ -293,12 +293,16 @@ export function steelMaterial(): THREE.ShaderMaterial {
     fog: false,
     uniforms: {
       uPart: { value: [new THREE.Matrix4(), new THREE.Matrix4(), new THREE.Matrix4(), new THREE.Matrix4(), new THREE.Matrix4()] },
-      uCoarse: { value: 0 },
       uDepth: { value: new THREE.Vector3() },
       uStreak: { value: new THREE.Vector2(1, 0) },
       uSun: { value: new THREE.Vector3(0, 1, 0) },
       uLit: { value: c(RELAY_COLORS.steelLit) },
       uShade: { value: c(RELAY_COLORS.steelShade) },
+      uDayLit: { value: c(RELAY_COLORS.dayLit) },
+      uDayShade: { value: c(RELAY_COLORS.dayShade) },
+      uHaze: { value: c(RELAY_COLORS.haze) },
+      uHazeK: { value: 0.2 },
+      uLedgerIdle: { value: 0.22 },
       uFill: { value: c('#2E5A70') },
       uCrown: { value: c(RELAY_COLORS.crown) },
       uCyan: { value: c(RELAY_COLORS.cyan) },
@@ -317,14 +321,14 @@ export function steelMaterial(): THREE.ShaderMaterial {
 }
 
 /** The most lights it draws at once. */
-export const LIGHTS = 112;
+export const LIGHTS = 176;
 
 export function lightsMaterial(): THREE.ShaderMaterial {
   return new THREE.ShaderMaterial({
     vertexShader: POINT_VERT,
     fragmentShader: POINT_FRAG,
     ...additive,
-    uniforms: { uDepth: { value: new THREE.Vector3() }, uStreak: { value: new THREE.Vector2(1, 0) }, uPx: { value: 1 }, uShow: { value: 1 } },
+    uniforms: { uDepth: { value: new THREE.Vector3() }, uStreak: { value: new THREE.Vector2(1, 0) }, uPx: { value: 1 }, uMaxPx: { value: 255 }, uShow: { value: 1 } },
   });
 }
 

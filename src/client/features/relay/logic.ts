@@ -20,32 +20,37 @@ const DEG = Math.PI / 180;
 
 /**
  * Its shape (m) and where it stands. The bearing is from the captain's seated eye, starboard of the
- * bow; the ship goes north (-z), starboard is +x. Its base sits `baseDrop` degrees under the eye's
- * level and it is `range` metres out, so it stands about 16 degrees tall and 15 across its rings: at
- * the starboard end of the chair's view, past the arc's starboard wing, and whole out of the forward
- * starboard ports.
+ * bow; the ship goes north (-z), starboard is +x. Its base sits `baseLift` degrees over the eye's level
+ * and it is `range` metres out, so it stands about 8 degrees tall and as wide across its rings: at the
+ * starboard end of the chair's view, in the canopy pane over the arc's starboard wing where its lamp
+ * and the hub of its rings are clear of every rib and purlin (`hubPoints`), and whole out of the
+ * forward starboard glass.
  */
 export const RELAY = {
-  bearing: 20,
-  range: 1650,
-  baseLift: 14.8,
-  spire: { height: 220, base: 14, top: 4, brace: 11, leg: 4, strut: 2 },
-  crown: { height: 18, radius: 5.5 },
+  bearing: 21.75,
+  range: 1750,
+  baseLift: 14.75,
+  /** The truss up to the lamp: one bracing set at every tier (a strut ring and a diagonal a face every `brace` m), members thick enough to hold a pixel from the chair. */
+  spire: { height: 120, base: 16, top: 6, brace: 20, leg: 5, strut: 3.5 },
+  /** The lamp's housing, on top of the truss at the heart of the rings: its core is at the rings' middle. */
+  crown: { height: 18, radius: 7 },
+  /** The slim mast from the lamp up through the rings to the strobe at its tip. */
+  mast: { top: 228, width: 3 },
   /**
    * The docking collar at the foot: it holds still while the truss turns, its four arms squared to the
    * chair's line of sight (armAngle), so from the conn they read level or upright, never as a bar
    * slanting across a ring.
    */
-  collar: { radius: 20, tube: 3, arms: 4, arm: 30, lights: 7 },
-  /** The middle of the rings, up the spire: low enough that the outer ring passes under the crown. */
-  ringAt: 100,
+  collar: { radius: 20, tube: 3.5, arms: 4, arm: 30, lights: 7 },
+  /** The middle of the rings, up the spire: where the lamp's core is, so the rings turn round the light. */
+  ringAt: 130,
   rings: [
     { r: 70, tilt: 18, axis: 215, period: 140, dir: 1, wander: 0 },
     { r: 96, tilt: 52, axis: 335, period: 200, dir: -1, wander: 0 },
     { r: 122, tilt: 74, axis: 95, period: 310, dir: 1, wander: 10 },
   ],
   /** Each ring's band: across (in its plane) and thick (m). */
-  band: { width: 8, thick: 3 },
+  band: { width: 11, thick: 5 },
   /** One turn of the spire (s). */
   spin: 90,
   /** The crown's breath: between lo and hi over `s` seconds. */
@@ -58,8 +63,12 @@ export const RELAY = {
   nodes: 24,
   /** The ledger ring's segments (the innermost, flattest ring). */
   ledger: 32,
-  /** The strobe at the crown: a double flash every 1.8 s, as the hull's (features/bridge/skin.ts). */
+  /** The strobe at the mast's tip: a double flash every 1.8 s, as the hull's (features/bridge/skin.ts). */
   strobeS: 1.8,
+  /** The tracers running each ring, idle or not: how many a ring, one lap round its ring (s, ring 1 to 3), and the points of each one's tail. */
+  tracers: { perRing: 2, lapS: [11, 15, 21], tail: 4 },
+  /** The docking traffic: shuttles running in from the dark to the arms' tips, each `s` seconds from setting off to docking, staggered. */
+  traffic: { shuttles: 3, s: 26, from: 170 },
 } as const;
 
 /** How far round the camera it is drawn (m): past the dust's nearer sheets, inside the stars' clamp (space/stars.ts). */
@@ -81,6 +90,11 @@ export const RELAY_COLORS = {
   strobe: '#F2FAFF',
   /** A beat's warm white on a node or a thread. */
   warm: '#FFF4EA',
+  /** The steel by Day: a light hull grey, so it reads lit against a pale sky and not as black scaffolding. */
+  dayLit: '#AEB9C6',
+  dayShade: '#5E6A78',
+  /** The blue it fades toward with distance (a kilometre and more of the system's dust between it and the glass). */
+  haze: '#2F4A6A',
 } as const;
 
 /** The seated eye in the captain's chair (as tests/sightline.test.ts works it out). */
@@ -102,8 +116,10 @@ export function bobAt(t: number): number {
   return RELAY.bob.deg * DEG * Math.sin((t / RELAY.bob.s) * Math.PI * 2);
 }
 
-/** The top of the crown over the base (m). */
+/** The top of the lamp's housing over the base (m). */
 export const CROWN_TOP = RELAY.spire.height + RELAY.crown.height;
+/** The top of the mast, where the strobe is (m): the top of it on its axis. */
+export const MAST_TOP = RELAY.mast.top;
 /** Where the crown's core light is, over the base (m). */
 export const CORE_AT = RELAY.spire.height + RELAY.crown.height * 0.55;
 
@@ -219,8 +235,8 @@ export function outlinePoints(spins: readonly number[] = [0, 0, 0, 0], wander = 
   const s = RELAY.spire;
   const sp = spirePose(spins[0]);
   for (let k = 0; k <= 20; k++) {
-    const h = (k / 20) * CROWN_TOP;
-    const w = h > s.height ? RELAY.crown.radius : s.base + ((s.top - s.base) * h) / s.height;
+    const h = (k / 20) * MAST_TOP;
+    const w = h > CROWN_TOP ? RELAY.mast.width : h > s.height ? RELAY.crown.radius * 2 : s.base + ((s.top - s.base) * h) / s.height;
     for (let j = 0; j < 3; j++) out.push(apply(sp, { x: (w / 2) * Math.cos((j * 2 * Math.PI) / 3), y: h, z: (w / 2) * Math.sin((j * 2 * Math.PI) / 3) }));
   }
   const c = RELAY.collar;
@@ -247,6 +263,64 @@ export function outlineBox(v: View, spins?: readonly number[], wander?: number):
     y1 = Math.max(y1, q.y);
   }
   return { x0, y0, x1, y1 };
+}
+
+/**
+ * The lamp and the hub of its rings, in its own frame: the crown from its foot to its tip, and a disc
+ * of `HUB` m round the spire at the rings' middle. From the chair these stay in clear glass, between
+ * the canopy's ribs and purlins (tests/relay-beacon.test.ts), so no frame member ever cuts through
+ * the middle of the beacon. The rings' rims are wider than any pane of the canopy seen from the chair
+ * (its panes over the boards are under about 90 px across at 1440x900), so a rib may pass behind
+ * their outer edges as a window frame does.
+ */
+export const HUB = 50;
+export function hubPoints(spin = 0): Vec3[] {
+  const out: Vec3[] = [];
+  const sp = spirePose(spin);
+  for (let k = 0; k <= 12; k++) out.push(apply(sp, { x: 0, y: RELAY.spire.height - 4 + ((RELAY.crown.height + 4) * k) / 12, z: 0 }));
+  for (let k = 0; k <= 10; k++) out.push({ x: 0, y: RELAY.ringAt - HUB + (2 * HUB * k) / 10, z: 0 });
+  for (let k = 0; k < 24; k++) {
+    const a = (k / 24) * Math.PI * 2;
+    out.push({ x: HUB * Math.cos(a), y: RELAY.ringAt, z: HUB * Math.sin(a) });
+  }
+  return out;
+}
+
+/** The corners of a box round all of it, rings at any turn included, in its own frame: what the board guard projects. */
+export function envelopePoints(): Vec3[] {
+  const r = RELAY.rings[2].r + RELAY.band.width;
+  const out: Vec3[] = [];
+  for (const y of [-2, RELAY.ringAt - r, RELAY.ringAt + r, MAST_TOP + 2]) for (const [x, z] of [[-r, -r], [-r, r], [r, -r], [r, r]]) out.push({ x, y, z });
+  return out;
+}
+
+/** Whether a box on screen (NDC) comes within `margin` of any of `rects`. */
+export function boxHits(box: { x0: number; y0: number; x1: number; y1: number }, rects: readonly ({ x0: number; y0: number; x1: number; y1: number } | null)[], margin: number): boolean {
+  return rects.some((r) => !!r && box.x0 < r.x1 + margin && box.x1 > r.x0 - margin && box.y0 < r.y1 + margin && box.y1 > r.y0 - margin);
+}
+
+/** Where tracer `j` of ring `i` is round its ring (radians) `t` seconds of turning in, and the tail's point `k` behind it. */
+export function tracerAngle(i: number, j: number, t: number, k = 0): number {
+  const T = RELAY.tracers;
+  const dir = RELAY.rings[i].dir;
+  return (j / T.perRing) * Math.PI * 2 + dir * ((t / T.lapS[i]) * Math.PI * 2 - k * 0.07);
+}
+
+/**
+ * Shuttle `i` of the docking traffic `t` seconds in, in the beacon's frame: running in from the dark
+ * (RELAY.traffic.from m out, above the collar) to the tip of its arm, easing in as it docks. `level` is
+ * how bright its running light stands (fading in as it sets off and out as it docks), 0 between runs.
+ */
+export function shuttleAt(i: number, t: number): { p: Vec3; level: number } {
+  const T = RELAY.traffic;
+  const k = (((t / T.s + i / T.shuttles) % 1) + 1) % 1;
+  const a = armAngle(i % RELAY.collar.arms);
+  const tip = RELAY.collar.radius + RELAY.collar.arm;
+  const from = { x: T.from * Math.cos(a + 0.5), y: 60 + 25 * i, z: T.from * Math.sin(a + 0.5) };
+  const to = { x: tip * Math.cos(a), y: 3, z: tip * Math.sin(a) };
+  const e = 1 - (1 - Math.min(1, k / 0.85)) ** 2;
+  const level = Math.min(1, k / 0.1) * Math.min(1, Math.max(0, (0.95 - k) / 0.1));
+  return { p: { x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e, z: from.z + (to.z - from.z) * e }, level };
 }
 
 // ---- The units at work on its rings ------------------------------------------------------------------
@@ -369,9 +443,24 @@ export function ledgerOf(count: number): { lit: number; level: number; laps: num
   return { lit, level: 0.4, laps };
 }
 
-/** Whether a merge or payout beat may play on the beacon now: dropped, never queued, while a unit needs you or is stuck. */
-export function beatAllowed(attention: boolean): boolean {
-  return !attention;
+/** Whether a merge or payout beat may play on the beacon now: dropped, never queued, while a unit needs you or is stuck, and while the tab is hidden (it would play out of nowhere the moment you came back). */
+export function beatAllowed(attention: boolean, hidden = false): boolean {
+  return !attention && !hidden;
+}
+
+/**
+ * Whether its beats play in place: with reduced motion or Ship motion not at Full nothing travels. The
+ * merge warms its node and then flares the crown where the packet would have arrived, a deploy warms
+ * the new unit's node, and the approach lights brighten all together rather than chasing.
+ */
+export function beatsStill(o: { frozen: boolean; ship: string }): boolean {
+  return o.frozen || o.ship !== 'full';
+}
+
+/** The approach lights all at once (the still chase): how bright they are lifted `ms` after it starts. */
+export function chaseStillAt(ms: number): number {
+  if (ms < 0 || ms > BEAT.chase + 250) return 0;
+  return Math.sin((ms / (BEAT.chase + 250)) * Math.PI);
 }
 
 /**
@@ -449,9 +538,20 @@ export function spoolAt(ms: number): { lights: number; spin: number } {
 
 export type RelayTier = 'high' | 'medium' | 'low';
 
-/** What a Quality tier draws of it: the draws, whether the threads are drawn, the glow's size and the bracing's spacing (m). */
-export function tierLook(tier: RelayTier): { draws: number; threads: boolean; glow: number; brace: number; streak: boolean } {
-  if (tier === 'low') return { draws: 2, threads: false, glow: 0, brace: RELAY.spire.brace * 2, streak: false };
-  if (tier === 'medium') return { draws: 3, threads: true, glow: 0.5, brace: RELAY.spire.brace * 2, streak: true };
-  return { draws: 3, threads: true, glow: 1, brace: RELAY.spire.brace, streak: true };
+/**
+ * What a Quality tier draws of it: the draws, whether the threads are drawn, the glow's size, and
+ * whether the jump streaks. The truss is the same at every tier: one bracing set, members at least a
+ * pixel across, so nothing finer than a pixel crawls as it turns.
+ */
+export function tierLook(tier: RelayTier): { draws: number; threads: boolean; glow: number; streak: boolean } {
+  if (tier === 'low') return { draws: 2, threads: false, glow: 0, streak: false };
+  if (tier === 'medium') return { draws: 3, threads: true, glow: 0.6, streak: true };
+  return { draws: 3, threads: true, glow: 1, streak: true };
 }
+
+/**
+ * The crown lamp's three lights: the crisp core, a lamp-sized halo and a wide soft one larger than the
+ * whole structure (what sells a light kilometres off). Sizes in px at 900 px tall, levels before the
+ * light mode; the halos scale with the tier's glow and give way to the boards.
+ */
+export const LAMP = { core: { size: 18, level: 5 }, halo: { size: 84, level: 1.9 }, wide: { size: 230, level: 0.55 } } as const;
