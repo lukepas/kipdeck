@@ -1,124 +1,56 @@
 @import './styles/base.css';
 
-/* The home page (index.html, lite.ts): a page that scrolls, made for a desk and a phone alike, rather
-   than a HUD over the 3D bridge. The same tokens and status glyphs as the bridge; one plain ranked list
-   of agents, each with a stripe in its state's color, in one calm column. */
-html, body { height: auto; min-height: 100%; overflow: auto; }
-body.lite { min-height: 100dvh; background: var(--void); -webkit-tap-highlight-color: transparent; }
+/* The home page (index.html, lite.ts, home/): one light, neutral page. A top bar, the inbox on the
+   left (about 40%) and the selected agent on the right. On a phone, the list alone, and the agent
+   over it when one is picked. The inbox's own parts are styled in home/home.css. */
+html, body { height: 100%; }
+body.lite { margin: 0; background: var(--void); color: var(--text); font-family: var(--font-ui); -webkit-tap-highlight-color: transparent; }
 
-.lite-bar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 12px; padding-top: max(6px, env(safe-area-inset-top)); background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
-.lite-bar .brand { padding-right: 12px; border-right: 1px solid var(--line); height: 24px; }
-.lite-bar .btn { height: 36px; flex: none; text-decoration: none; }
-.lite-floor { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; margin: 0; }
-.lite-floor-label { font: 500 10px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--faint); }
-.lite-floor select {
-  width: auto; max-width: 100%; min-width: 0; padding: 0 20px 0 0; border: 0; background: none; color: var(--text);
-  font: 600 15px/1.25 var(--font-display); font-stretch: var(--stretch-display); letter-spacing: .01em; text-overflow: ellipsis; appearance: none; -webkit-appearance: none; cursor: pointer;
-  background: no-repeat right 2px center / 10px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238A97A5' stroke-width='2' stroke-linecap='square'/%3E%3C/svg%3E");
+/* ---- The top bar ------------------------------------------------------------------------------ */
+.hb { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 16px; padding-top: env(safe-area-inset-top); background: var(--surface-1); border-bottom: 1px solid var(--line); }
+.hb-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--text); text-decoration: none; font: 600 15px/1 var(--font-ui); letter-spacing: -.01em; white-space: nowrap; }
+.hb-brand .brand-mark { flex: none; }
+.hb-project { width: auto; max-width: 200px; height: 34px; padding: 0 28px 0 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-1); color: var(--text); font: 500 13px var(--font-ui); appearance: none; -webkit-appearance: none; cursor: pointer; text-overflow: ellipsis;
+  background: no-repeat right 10px center / 10px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238A97A5' stroke-width='2'/%3E%3C/svg%3E"), var(--surface-1); }
+.hb-search { flex: 0 1 340px; min-width: 0; display: flex; align-items: center; gap: 8px; height: 34px; padding: 0 8px 0 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--void); color: var(--muted); cursor: text; }
+.hb-search:focus-within { border-color: var(--line-strong); background: var(--surface-1); }
+.hb-search input { flex: 1; min-width: 0; height: 100%; border: 0; outline: none; background: none; color: var(--text); font: 400 14px var(--font-ui); }
+.hb-search input::-webkit-search-cancel-button { display: none; }
+.hb-kbd { flex: none; font: 500 10px/16px var(--font-mono); padding: 0 5px; border: 1px solid var(--line); border-radius: var(--radius-chip); color: var(--muted); background: var(--surface-1); }
+.hb-grow { flex: 1; }
+.hb-link { font-size: 13px; color: var(--muted); text-decoration: none; white-space: nowrap; }
+.hb-link:hover { color: var(--text); text-decoration: underline; }
+.hb-deploy { height: 34px; padding: 0 14px; gap: 6px; white-space: nowrap; }
+.hb-avatar { flex: none; width: 32px; height: 32px; padding: 0; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); font: 600 12px var(--font-ui); cursor: pointer; }
+.hb-avatar:hover, .hb-avatar[aria-expanded=true] { background: var(--surface-3); }
+.hb :focus-visible { outline: 2px solid var(--signal); outline-offset: 1px; }
+
+/* ---- Two columns on a wide window, one on a phone ---------------------------------------------- */
+.home-main { display: grid; grid-template-columns: minmax(340px, 40%) minmax(0, 1fr); height: calc(100dvh - 56px - env(safe-area-inset-top)); }
+.inbox-col { min-width: 0; overflow: auto; padding: 16px 16px 40px; border-right: 1px solid var(--line); background: var(--void); }
+.pane { min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--surface-1); }
+@media (min-width: 1280px) { .inbox-col { padding: 20px 24px 48px; } }
+@media (max-width: 899px) {
+  html, body { height: auto; }
+  .home-main { display: block; height: auto; }
+  .inbox-col { border-right: 0; padding: 12px 16px calc(32px + env(safe-area-inset-bottom)); }
+  .pane { display: none; }
+  body.pane-open .pane { display: flex; position: fixed; inset: 0; z-index: 40; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+  body.pane-open { overflow: hidden; }
+  .hb { gap: 8px; padding: 0 12px; }
+  .hb-name, .hb-kbd, .hb-link { display: none; }
+  .hb-search { flex: 1 1 auto; }
+  .hb-project { max-width: 110px; }
 }
-.lite-floor select option { background: var(--surface-1); color: var(--text); }
-.lite-floor select:disabled { background-image: none; opacity: 1; cursor: default; }
+@media (max-width: 420px) { .hb-deploy { padding: 0 10px; } }
 
-.lite-main { width: 100%; max-width: 880px; margin: 0 auto; padding: 20px 16px calc(96px + env(safe-area-inset-bottom)); }
-/* The deck plan (shared/plot.ts), only with Bridge view on in Labs (body.with-plot): beside the list
-   on a wide window, above it on a middling one, and folded away on a phone. */
-.lite-plot-panel { display: none; }
-.lite-plot { aspect-ratio: 39.2 / 29.4; width: 100%; background: var(--void); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-.lite-legend { display: inline-flex; flex-wrap: wrap; gap: 4px 14px; margin-left: auto; font: 400 11px var(--font-ui); text-transform: none; letter-spacing: 0; font-stretch: 100%; color: var(--muted); }
-.lite-key { display: inline-flex; align-items: center; gap: 5px; }
-.lite-key.l-needs-you .ico { color: var(--signal); }
-.lite-key.l-stuck .ico { color: var(--stuck); }
-.lite-key.l-review .ico { color: var(--review); }
-.lite-key.l-working .ico { color: var(--working); }
-.lite-key.l-parked .ico { color: var(--faint); }
-@media (min-width: 720px) {
-  .lite-main { padding-left: 24px; padding-right: 24px; }
-  body.with-plot .lite-main { max-width: 1440px; }
-  body.with-plot .lite-plot-panel { display: block; margin-bottom: 18px; }
-  .lite-plot { max-height: 52vh; margin: 0 auto; }
-}
-@media (min-width: 1100px) {
-  body.with-plot .lite-main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(420px, 520px); gap: 24px; align-items: start; }
-  body.with-plot .lite-plot-panel { position: sticky; top: 66px; margin: 0; }
-  .lite-plot { max-height: calc(100dvh - 150px); }
-}
-.lite-meta { margin: 0 0 12px; font: 400 11px var(--font-mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lite-meta:empty { display: none; }
-.lite-elsewhere { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-.lite-go { justify-content: space-between; min-height: 44px; height: auto; padding: 8px 12px; background: var(--signal-tint); border-color: rgb(255 106 26 / .5); box-shadow: inset 2px 0 0 var(--signal); white-space: normal; text-align: left; }
-.lite-go:hover { background: rgb(255 106 26 / .2); }
-.lite-h { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 10px; margin: 6px 0 10px; font-family: var(--font-display); font-stretch: var(--stretch-display); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
-.lite-waiting { font: 500 12px var(--font-ui); text-transform: none; letter-spacing: 0; color: var(--signal); }
-.lite-all { margin-left: auto; height: 28px; padding: 0 10px; font-size: 12px; text-transform: none; letter-spacing: 0; font-stretch: 100%; }
-.lite-h .lite-all + .lite-all { margin-left: 0; }
-.lite-all[aria-pressed=true] { background: var(--surface-3); border-color: var(--text); }
-.lite-bar .n:empty { display: none; }
-.lite-bar .n { min-width: 18px; padding: 0 4px; border-radius: var(--radius-chip); background: var(--signal-tint); border: 1px solid rgb(255 106 26 / .5); color: var(--signal); font: 500 11px/16px var(--font-mono); }
-/* The mission strip (ui/mission/strip.ts), the first card. */
-.lite-mission { margin-bottom: 14px; background: var(--surface-1); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-.lite-mission:empty { display: none; }
-.lite-mission .ms-strip { padding: 10px 14px; }
-/* Why it needs someone, in words (see shared/attention.ts). */
-.lite-why { font-size: 13px; font-weight: 500; overflow-wrap: anywhere; color: var(--text); }
-.lite-worker.elsewhere .lite-sub b { color: var(--text); font-weight: 500; }
-
-/* A row per unit, the ones that need someone first (the building's one ranking, shared/attention.ts),
-   a 2px stripe in the state's color down its left edge. */
-.lite-workers { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-.lite-worker { display: flex; align-items: stretch; background: var(--surface-1); box-shadow: inset 2px 0 0 var(--line-strong); }
-.lite-worker + .lite-worker { border-top: 1px solid var(--line); }
-.lite-worker.waiting, .lite-worker.needs-you { box-shadow: inset 2px 0 0 var(--signal); background: linear-gradient(90deg, var(--signal-tint), transparent 50%), var(--surface-1); }
-.lite-worker.stuck { box-shadow: inset 2px 0 0 var(--stuck); }
-.lite-worker.done.waiting, .lite-worker.review { box-shadow: inset 2px 0 0 var(--review); background: var(--surface-1); }
-.lite-worker.exited, .lite-worker.offline, .lite-worker.parked { box-shadow: inset 2px 0 0 var(--line); }
-.lite-worker.exited .lite-name, .lite-worker.offline .lite-name { color: var(--muted); }
-.lite-card { flex: 1; min-width: 0; display: flex; align-items: flex-start; gap: 10px; padding: 12px 10px 12px 14px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-.lite-card:hover { background: var(--surface-2); }
-.lite-card:active { background: var(--surface-3); }
-.lite-card:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--signal); }
-.lite-glyph { flex: none; display: grid; place-items: center; width: 20px; height: 20px; color: var(--muted); }
-.lite-glyph.l-needs-you { color: var(--signal); }
-.lite-glyph.l-stuck { color: var(--stuck); }
-.lite-glyph.l-review { color: var(--review); }
-.lite-glyph.l-working { color: var(--working); }
-.lite-glyph.l-parked { color: var(--faint); }
-.lite-addr { margin-left: 8px; font: 500 11px var(--font-mono); color: var(--muted); letter-spacing: .02em; }
-.lite-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.lite-name { display: flex; align-items: baseline; flex-wrap: wrap; font-size: 14px; font-weight: 600; }
-.lite-task { font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
-.lite-now { font: 400 12px/1.45 var(--font-mono); color: var(--muted); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.lite-worker.needs_input .lite-now { color: var(--text); }
-.lite-sub { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
-.lite-state { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.lite-state small { font: 400 11px var(--font-mono); color: var(--muted); white-space: nowrap; }
-.lite-say { flex: none; align-self: center; width: 36px; height: 36px; margin-right: 10px; padding: 0; justify-content: center; }
-.lite-empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 32px 12px; text-align: center; color: var(--muted); background: var(--surface-1); }
-.lite-empty p { margin: 0; }
-.lite-empty .btn { height: 40px; padding: 0 16px; }
-
-.lite-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding: 8px 12px; padding-bottom: max(8px, env(safe-area-inset-bottom)); background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-top: 1px solid var(--line); }
-.lite-nav .btn { min-height: 44px; padding: 4px 6px; justify-content: center; flex-wrap: wrap; gap: 6px; white-space: normal; text-align: center; line-height: 1.15; font-size: 13px; }
-.lite-nav .btn .ico { color: var(--muted); }
-.lite-nav .btn.primary .ico { color: var(--on-signal); }
-.lite-nav .n:empty { display: none; }
-.lite-nav .n { min-width: 18px; padding: 0 4px; border-radius: var(--radius-chip); background: var(--surface-3); color: var(--text); font: 500 11px/16px var(--font-mono); }
-.lite-nav .btn.primary .n { background: rgb(13 19 26 / .2); color: var(--on-signal); }
-/* A wide window: the bar lines up with the list's column (with the plan beside it, with the list on the right). */
-@media (min-width: 720px) { .lite-nav { padding-left: max(24px, calc(50% - 416px)); padding-right: max(24px, calc(50% - 416px)); } }
-@media (min-width: 720px) and (max-width: 1099px) { body.with-plot .lite-nav { padding-left: max(20px, calc(50% - 700px)); padding-right: max(20px, calc(50% - 700px)); } }
-@media (min-width: 1100px) { body.with-plot .lite-nav { left: auto; width: min(560px, 100%); right: max(0px, calc(50% - 720px)); padding-left: 12px; padding-right: 20px; border-left: 1px solid var(--line); } }
-.lite-icon { width: 36px; padding: 0; justify-content: center; }
-.lite-icon[aria-pressed=true] { background: var(--surface-3); }
-@media print { .lite-bar, .lite-nav, #toasts, .conn { display: none; } .lite-plot-panel { position: static; } }
-@media (max-width: 420px) { .lite-bar .brand-word { display: none; } .lite-bar .brand { padding-right: 8px; } .lite-bar { gap: 6px; } }
-
-/* The page scrolls here, so what floats over it stays put on the screen. */
-#toasts { position: fixed; right: 12px; top: auto; bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 60; flex-direction: column-reverse; }
-.conn { position: fixed; top: 60px; z-index: 60; }
+/* What floats over the page stays put on the screen. */
+#toasts { position: fixed; right: 12px; top: auto; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 60; flex-direction: column-reverse; }
+.conn { position: fixed; top: 64px; z-index: 60; }
 .backdrop { z-index: 50; }
 
 /* No zooming in on a box as you tap it (iOS does, for text under 16px). */
-.modal textarea, .modal input[type=text], .modal input[type=password], .modal select { font-size: 16px; }
+@media (pointer: coarse) { .modal textarea, .modal input[type=text], .modal input[type=password], .modal select, .hb-search input { font-size: 16px; } }
 
 /* On a phone, the big windows take the whole screen; the small ones stay dialogs. */
 @media (max-width: 640px) {
@@ -128,16 +60,8 @@ body.lite { min-height: 100dvh; background: var(--void); -webkit-tap-highlight-c
   body.lite .modal.term, body.lite .modal.board, body.lite .modal.gh-window, body.lite .modal.desk-changes, body.lite .modal.meeting-window,
   body.lite .modal[aria-label="Task queue"] { width: 100%; height: 100dvh; max-height: 100dvh; border: 0; border-radius: 0; box-shadow: none; }
   .modal { max-height: calc(100dvh - 16px); }
-  body.lite .modal.term .term-host { padding: 6px 2px 2px 6px; }
   body.lite .modal.board .body { padding: 10px; overflow-x: auto; }
   .modal.board .column { min-width: 78vw; }
   .modal.board header .board-status { display: none; }
 }
-
-/* Mission control's reminders: an amber diamond on its button. */
-#btn-mission.reminders::after { content: ''; width: 6px; height: 6px; background: var(--review); transform: rotate(45deg); }
-/* While you were away, as the first card. */
-.lite-digest { list-style: none; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface-1); padding: 12px 14px; margin-bottom: 14px; display: flex; flex-direction: column; gap: 8px; }
-.lite-digest .dg-head { display: flex; justify-content: space-between; align-items: center; }
-.lite-digest .dg-summary { font-size: 15px; margin: 0; }
-.lite-digest > .btn { align-self: flex-start; }
+@media print { .hb, #toasts, .conn, .pane { display: none; } .home-main { display: block; height: auto; } }
