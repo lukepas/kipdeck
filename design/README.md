@@ -2,7 +2,50 @@
 
 Back to the [README](../README.md) and the [design system](../DESIGN.md).
 
-The latest round is first, [the interior: the hype round](#the-interior-the-hype-round); the earlier rounds follow it in order.
+The latest round is first, [the feel pass](#the-feel-pass-tables-bounties-hands-the-lounge-and-sound); the earlier rounds follow it in order.
+
+## The feel pass: tables, bounties, hands, the lounge and sound
+
+The captain asked for tables instead of walls of text, something to see for bounties, hands in first person, a lounge at the bow to climb up to and watch space from, and sound. That landed in the stages before this one (`shots/feel-tables`, `feel-bounties`, `feel-hands`, `feel-lounge`, `feel-sound`); three critics then reviewed it (`shots/feel-review`), and this pass fixes what they found. Every shot here is a **seeded demo crew** (stand-in units and bounties from `design/seed-bounties.js`, no chain touched), on the GPU (ANGLE Metal, M3 Pro) at 1440x900, Quality forced to High.
+
+### What changed (check it in under a minute)
+
+1. **No click on any sound.** A GainNode starts at 1, so every burst and tone let one full-level sample through before its envelope: the -11 dBFS tick on a walk. Envelopes are now silent from the moment they are made (`sound/dsp.ts` env). A step's thud is a pitched thump with a white-noise click, so 50 steps spread 4 dB in peak, not 18; each step wanders up to 2 dB and the feet alternate in pitch and side.
+2. **Alerts are the loudest thing on the deck, measured.** `node design/sound-levels.mjs` renders every recipe offline through the deck's chain and fails on a broken budget. A walk sits 14 dB under the needs-you hail (loudest 50 ms -36.1 against -21.5 dBFS), every alert is 6 dB or more over a walk, the jump's punch is under the alerts, and nothing is under -50 dBFS: Bolt's hold note (was -55 peak) is -40, the surge (was -41) is -27 and has a pitch, so the Ship slider's sample is heard (`sound-levels.txt`, `sound-levels.json`).
+3. **Hands hold the ladder.** Each glove is planted on a rung in the deck's own space and stays there while you climb past it, then goes over the other to the next rung in 0.15 s; the clank plays as it lands, and your eyes follow your hands (`night-high-lounge-climb.png`, `-climb-high.png`, `night-high-lounge.mp4`).
+4. **Hands get out of the way.** At rest they are a loose fist low in each corner, the left a touch lower and back. Stop at a board within 3 m (or stand still 1.5 s) and the left drops away and the right sinks to its knuckles (`night-high-hands-rest.png` against `-read.png` and `-docs-read.png`); a step, a turn or a reach brings them back. They are not drawn through the jump's tunnel.
+5. **Tables read from the dais.** Past 8 m the ledger, the docs rack, the planning board, the Review bay's board and the pit wall show headline counts at least 30 cm tall (`night-high-dais-*.png`); walk up and the table is back (`night-high-close-*.png`). The planning board's sign is no longer cut off.
+6. **The lounge keeps you on call.** Sat in a lounge seat, a readout on the glass says who needs you with N to go there, or counts the jump in; only urgent arrows stay at the edge of the view; the seated view lifts higher (`night-high-lounge-sit.png`).
+7. **Bounties read from the chair.** Coins in flight are sized by distance (about 20 px across from the chair) with a fading trail, the receipt holds 8 s (`night-high-sit-payout-*.png`), and the lone escort no longer sits in the window behind the vault's stacks (`night-high-escrow-vault.png`).
+8. **Draw calls back under budget.** Empty instanced meshes are hidden, each hand is one mesh, the lounge casts no shadows: the conn is 385 (was 394 after the stages, 378 before them) and the jump 420 (was 427, 415 before).
+
+The reel is `reel-20s.mp4` (with sound, labelled *Seeded demo crew*): 10 s on foot to the ladder, the climb and a lounge seat, then 10 s from the chair through a jump into a payout. Its contact sheet is `reel-sheet.png`.
+
+### Frame time
+
+`node design/perf-probe.mjs metal`, before (the `design/ugc-army` build from a `git archive`) and after, two runs at High and one at Medium (`shots/feel-final/perf/frames-before.jsonl`, `frames-after.jsonl`). The new *hands* vantage stands at the docs rack in first person with the hands drawn; *hands-pad* has the datapad up, *hands-off* turns them off.
+
+| | Before | After |
+| --- | --- | --- |
+| High, conn: draw calls (budget 400) | 378 | 384 to 385 |
+| High, conn: forced render p50 / p95 | 2.1 to 3.0 / 2.6 to 3.6 ms | 1.8 to 2.2 / 2.3 to 3.3 ms |
+| High, jump with the tunnel open | 415 calls, 2.5 to 2.8 ms | 420 calls, 1.9 to 2.2 ms |
+| High, standing at the docs rack, hands on / off | 139 (no hands) | 144 to 145 / 141, 1.0 to 1.1 ms either way |
+| High, hands with the datapad up | | 148, 1.1 to 1.2 ms |
+| Medium, conn | 316 calls, 1.7 to 2.4 ms | 323 to 324 calls, 1.6 ms |
+| Medium, jump | 353 calls | 359 calls |
+| Motion layer (Ship motion on against off), High | 0.6 to 0.7 ms | 0 to 0.1 ms (budget 0.6) |
+| rAF p95 | 16.7 ms | 16.7 ms (60 fps) |
+
+### Checks
+
+`npm run typecheck`, `npm test` (one end-to-end test, *back after a while away*, times out waiting for the debrief; it fails the same way on the `design/ugc-army` build), `npm run build`, `node design/flicker-check.mjs` (Night and Day, 600 frames each, no bad frame; again at High with jumps), `node design/sound-levels.mjs` (all budgets met).
+
+### Left for later
+
+- The unit arrows at the edge of the view can still sit over a wall table's left column up close; only the lounge hides the non-urgent ones.
+- The vault's stacks have no tag of their own: the label above them names each column.
+- The capacity close-up's shoot pose and a hull strut over the lounge's view were not redone.
 
 ## The interior: the hype round
 
