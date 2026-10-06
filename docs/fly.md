@@ -1,6 +1,6 @@
 # Fly.io reference
 
-The full story behind `deploy/fly.sh`. The short version is in the [README](../README.md#deploy-to-flyio).
+The full story behind `deploy/fly.sh`. The short version is in [Teams and servers](self-hosting.md#deploy-to-flyio).
 
 You need an up-to-date **flyctl, logged in** (`fly auth login`; [install it](https://fly.io/docs/flyctl/install/) with `brew install flyctl` or `curl -L https://fly.io/install.sh | sh`, and update an old one with `fly version upgrade`), plus `ssh`, `curl`, Node.js and a clone of this repo:
 

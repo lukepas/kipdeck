@@ -6,6 +6,18 @@ The home page at `/` is the product: one inbox for every coding agent you run. I
 
 ![The inbox: Needs you, To review and Working on the left, the selected agent on the right (demo data)](img/inbox.png)
 
+## The first visit
+
+`npx mergeline` in the repository you work in opens this page in your browser, signed in (on your own computer there is no password; see [Security](security.md#signing-in-on-your-own-computer)), with that repository as the first project. Until the first agent, the list is the **setup card**:
+
+- **Agents**: the agent CLIs on this computer, Claude Code, Codex and Cursor always and the beta ones when they're installed, each with whether it's signed in (read from its own files and keys, not by running it). One that isn't ready says the one line that fixes it (`claude auth login`, `npm install -g @openai/codex`...), with a copy button.
+- **Project**: the folder Mergeline was started in. Started somewhere else, **Use <folder>** or a box to clone a repository from GitHub (admins).
+- **GitHub**: optional. Without `gh`, review reads the local diff and Merge merges on this computer; **Check again** asks `gh` afresh.
+- **Deploy your first agent** opens the Deploy sheet on a safe starter task (a 5-line SUMMARY.md on how to run the repository) with the first ready agent picked. Enter, and the agent is under Working within seconds.
+- Under it, an unticked switch for [anonymous usage numbers](security.md#anonymous-usage-numbers), with exactly what it would send.
+
+Already running Claude Code or Codex in a terminal? Quit it there and run `npx mergeline attach` in the same folder: its session carries on as one of the inbox's agents ([Configuration](configuration.md#command-line)). The server side of the card is `src/server/firstrun.ts` and `ws/handlers/setup.ts`; the card is `src/client/home/setup.ts`.
+
 ## The loop
 
 1. **Deploy.** **Deploy agent** in the top bar (or **N**) opens one sheet: the project, the agent (Claude Code, Codex and Cursor up front; the others, marked beta, under More) and the task. The model and effort are under More. Enter starts the agent on a branch of its own, so agents on the same project never step on each other. The new agent is selected as it arrives.
@@ -19,7 +31,7 @@ The home page at `/` is the product: one inbox for every coding agent you run. I
 - **The list**, on the left. Each row is the agent's mark (CC for Claude Code, Cx for Codex, Cu for Cursor), the task in plain words, why it is there, its project and branch, how long it has waited and its one button. Needs you and To review are always open: clicking their header never folds them. Idle opens with **Show**. Reminders that no listed agent stands for (a pull request approved an hour ago and still not merged, say) are rows of their own in Needs you.
 - **The pane**, on the right: the selected agent. Its header has the task, the agent and model, how long it has worked, **Stop** (its session ends; its branch stays) and the row's button again. Three tabs: **Terminal** (live, with the keys a phone lacks and a reply box), **Changes** (the diff, the files, its pull request and checks, **Send back**, **Open PR** where there is a GitHub repository, and **Merge**) and **Log** (what happened to it, newest first). With nothing selected it says what waits and offers to start with the oldest.
 - **Shipped today**, under the list: what merged since midnight, the count and the agent-hours behind it, and the merge rate by agent and model over the last 30 days.
-- **Get started**, over the list until done: Deploy an agent, Answer one question, Merge one change.
+- **Get started**, over the list from the first agent until done: Deploy an agent, Answer one question, Merge one change. Before the first agent, the setup card stands in for the list.
 - **Avatar menu**: Work (Issues, Pull requests, Task queue), Mission control, notifications, light or dark, the keyboard shortcuts, Labs, Bridge view (with that lab on) and Sign out.
 
 On a phone (under 900px wide) the list is the page, and tapping a row opens the agent over it with **Inbox** to go back. Answer and Merge are large tap targets.
