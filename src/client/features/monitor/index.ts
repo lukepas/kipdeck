@@ -15,7 +15,7 @@ import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { aside, hintTitle, key } from '../../core/hint';
 import { store } from '../../state';
-import { modalOpen, toast } from '../../ui/dom';
+import { clip, modalOpen, toast } from '../../ui/dom';
 import { openServices, serviceUrl } from '../../ui/services';
 import { screen } from '../boards/screen';
 import { FarWatch } from '../boards/far';
@@ -190,7 +190,7 @@ export function installMonitor(ctx: Ctx, parts: MonitorParts) {
       const shown = live.shown;
       return {
         k: `${s.port}|${shown}|${many}`,
-        parts: [hintTitle(`Monitor: ${title(s)}`), aside(`:${s.port}`), key('E', shown ? 'Use the page' : 'Open'), key('O', 'Full screen'), ...(many ? [key('C', 'Next')] : []), ...(shown ? [key('R', 'Reload')] : [])],
+        parts: [hintTitle(`${clip(title(s), 32)} :${s.port}`), key('E', shown ? 'Use the page' : 'Open'), key('O', 'Full screen'), ...(many ? [key('C', 'Next')] : []), ...(shown ? [key('R', 'Reload')] : [])],
       };
     },
     use: (_it, k) => {
