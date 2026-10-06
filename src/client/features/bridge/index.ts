@@ -1,8 +1,7 @@
 /**
  * The bridge: the deck dressed as a starship's bridge round the same plan. Its fixtures (the hull and
- * its viewports' frames, the canopy, the ship outside, the conn, the holo course plot, the forward
- * displays' bezels, the stations' fins and traces) are built with the rest of the floor
- * (world/office/build.ts); this keeps them current: the counts and the course on the conn's armrests,
+ * its viewports' frames, the canopy, the ship outside, the conn, the holo course plot, the stations'
+ * fins and traces) are built with the rest of the floor (world/office/build.ts); this keeps them current: the counts and the course on the conn's armrests,
  * the course on the holo, and the holo's slow turn. The walk camera sees the bridge layer (the canopy,
  * the aft glass, the ticker and the condition band over the arc); the Overview's doesn't.
  */
@@ -11,11 +10,12 @@ import { store } from '../../state';
 import { BRIDGE_LAYER, OUTSIDE_LAYER } from './shapes';
 import type { Parts } from '../../core/parts';
 import type { Course } from './readouts';
+import { platesOffBoards } from './holo-labels';
 
 /** How often the counts are read again (s): the ranking moves by the second at most. */
 const COUNT_EVERY = 1;
 
-export function installBridge(ctx: Ctx, parts: Pick<Parts, 'overview'>) {
+export function installBridge(ctx: Ctx, parts: Pick<Parts, 'overview' | 'boardFaces' | 'stage'>) {
   const { conn, holo, runningLights } = ctx.office;
   ctx.camera.layers.enable(BRIDGE_LAYER);
 
@@ -23,10 +23,19 @@ export function installBridge(ctx: Ctx, parts: Pick<Parts, 'overview'>) {
     const m = store.mission;
     const c: Course = { statement: m.statement, milestones: m.milestones.map((ms) => ({ title: ms.title, done: ms.done, active: ms.id === m.active })) };
     conn.setCourse(c);
-    holo.setCourse(c);
+    // The holo parks a marker at each waypoint for every unit on this deck working toward it.
+    const here = store.roster.filter((e) => e.floor === store.floor && e.goal && e.status !== 'exited' && e.status !== 'offline');
+    holo.setCourse({ ...c, milestones: m.milestones.map((ms, i) => ({ ...c.milestones[i], units: here.filter((e) => e.goal === ms.id).length })) });
   }
   store.on('mission', course);
   store.on('floor', course);
+  let unitsKey = '';
+  store.on('roster', () => {
+    const k = store.roster.filter((e) => e.floor === store.floor).map((e) => `${e.goal}|${e.status}`).join(',');
+    if (k === unitsKey) return;
+    unitsKey = k;
+    course();
+  });
   course();
 
   // The counts repaint from the same store events the alert band reads (features/alert), in the same
@@ -35,6 +44,8 @@ export function installBridge(ctx: Ctx, parts: Pick<Parts, 'overview'>) {
     conn.setCounts(store.counts());
   };
   for (const topic of ['roster', 'reminders', 'floor'] as const) store.on(topic, paintCounts);
+  // The waypoints' plates stand down while they'd cover a board.
+  platesOffBoards(ctx, parts);
   let readAt = -Infinity;
   ctx.ticks.add('world', ({ dt, now }) => {
     if (!ctx.reduceMotion.matches) holo.turn(dt);

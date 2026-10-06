@@ -1,12 +1,13 @@
 // The arc and the room as the captain reads them: the Attention board's cards (features/tv/plan.ts),
 // the wings folding an empty Queue or Services to a pill (shared/amphitheater.ts), the chrome round each
-// board and the pull toward a unit out of view (features/arcchrome/logic.ts), and one label a unit
-// (features/workers/labels.ts).
+// board and the pull toward a unit out of view (features/arcchrome/logic.ts), one label a unit
+// (features/workers/labels.ts), and the holo's route column (features/bridge/holo-route.ts).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { GRIDS, HERO_ORDER, cardCell, heroKind, planHero } from '../src/client/features/tv/plan.js';
 import { CHROME, CHROME_IDS, PULL, armOf, chromeBars, pullAt } from '../src/client/features/arcchrome/logic.js';
 import { HERO_READABLE_PX, labelSource, pileWord, piles } from '../src/client/features/workers/labels.js';
+import { COLUMN, columnRing, overlaps, routePoint, unitSlot } from '../src/client/features/bridge/holo-route.js';
 import { ARC, PILL, heroPanel, wingHeights, wingMiddles, wingPanel } from '../src/shared/amphitheater.js';
 import { BOARDS, MACHINE_MONITOR, TV } from '../src/shared/layout.js';
 import type { AttentionLevel, Ranked } from '../src/shared/attention.js';
@@ -161,4 +162,26 @@ test('callouts piled on one another fold into one chip that counts them', () => 
   assert.equal(pileWord(['needs-you', 'stuck', 'review']), '3 waiting');
   assert.equal(pileWord(['working', 'working']), '2 working');
   assert.equal(pileWord(['working', 'needs-you']), '2 units');
+});
+
+test("the holo's route column narrows as it rises and stays under the conn's line to the arc", () => {
+  for (let i = 1; i < COLUMN.rings; i++) {
+    assert.ok(columnRing(i).y > columnRing(i - 1).y);
+    assert.ok(columnRing(i).radius < columnRing(i - 1).radius);
+  }
+  // The chair's eye (about 2.98 m up at z 10.9) to the capacity strip's foot: over the table that line
+  // is at about 2.59 m. The column's top (over the 0.95 m tabletop) stays under it.
+  const lineAtTable = 2.98 - (2.98 - ARC.bottom) * (10.9 / (10.9 - ARC.z));
+  assert.ok(0.95 + COLUMN.y1 < lineAtTable, `${(0.95 + COLUMN.y1).toFixed(2)} m under ${lineAtTable.toFixed(2)} m`);
+  // The course climbs steadily, starting on the conn's side.
+  assert.ok(routePoint(0).z > 0);
+  for (let t = 0.1; t <= 1; t += 0.1) assert.ok(routePoint(t).y > routePoint(t - 0.1).y);
+  // A unit's marker parks close round its waypoint.
+  const at = routePoint(0.5);
+  for (let k = 0; k < 8; k++) {
+    const s = unitSlot(at, k);
+    assert.ok(Math.hypot(s.x - at.x, s.z - at.z) < 0.3);
+  }
+  assert.equal(overlaps({ left: 0, right: 10, top: 0, bottom: 10 }, [{ left: 5, right: 20, top: 5, bottom: 20 }]), true);
+  assert.equal(overlaps({ left: 0, right: 10, top: 0, bottom: 10 }, [{ left: 10, right: 20, top: 0, bottom: 10 }]), false);
 });

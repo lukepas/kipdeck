@@ -4,7 +4,7 @@
 // ship-cyan (DESIGN.md, rule 1).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ACTIVITY, BLINK, GIVE_WAY, PANEL, PULSE, blinkOn, bump, decay, headingPhrases, lifeScale, panelMode, percentTo, pulseGap, runFor, shownActivity, stationGain, tickerItems, typing, underWayText } from '../src/client/features/life/logic.js';
+import { ACTIVITY, BLINK, GIVE_WAY, PANEL, PULSE, blinkOn, bump, decay, holoCaption, lifeScale, panelMode, percentTo, pulseGap, runFor, shownActivity, stationGain, tickerItems, typing, underWayText } from '../src/client/features/life/logic.js';
 import type { TimelineEvent } from '../src/shared/protocol.js';
 
 test('a station gets busy as its terminal prints and quiet as it stops', () => {
@@ -74,18 +74,18 @@ test("the blinkers keep slow cadences of their own, never a state's", () => {
   assert.ok(Math.abs(on / steps - BLINK.onS / p) < 0.01);
 });
 
-test("the holo's heading says how far the ship has come, honestly", () => {
-  assert.deepEqual(headingPhrases({ statement: '', milestones: 0, closed: 0, issues: 0, units: 0 }), ['NO COURSE SET', 'SET THE COURSE IN MISSION CONTROL (I)']);
+test("the holo's caption says where the ship is making for and how far it has come, honestly", () => {
+  assert.equal(holoCaption({ statement: '', milestones: 0, closed: 0, issues: 0, units: 0 }), 'NO COURSE SET  -  I TO SET IT');
   const h = { statement: 'Ship the  auth rewrite', milestones: 4, wp: { n: 2, title: 'Auth rewrite' }, closed: 2, issues: 5, units: 3 };
   assert.equal(percentTo(h), 40);
-  assert.deepEqual(headingPhrases(h), ['CAPTAIN, WE ARE 40% OF THE WAY TO AUTH REWRITE', 'WP 2 OF 4', '3 ISSUES OUT', '3 UNITS ON IT', 'COURSE: SHIP THE AUTH REWRITE']);
+  assert.equal(holoCaption(h), 'AUTH REWRITE  2/4  40%');
   // No issues linked: no percent made up, only where the ship is making for.
   const bare = { ...h, closed: 0, issues: 0, units: 1 };
   assert.equal(percentTo(bare), undefined);
-  assert.deepEqual(headingPhrases(bare).slice(0, 3), ['CAPTAIN, WE ARE MAKING FOR AUTH REWRITE', 'WP 2 OF 4', '1 UNIT ON IT']);
-  assert.equal(headingPhrases({ ...h, wp: undefined })[0], 'ALL 4 WAYPOINTS PASSED');
-  // "Captain" once at most.
-  assert.ok(headingPhrases(h).join(' ').split('CAPTAIN').length <= 2);
+  assert.equal(holoCaption(bare), 'AUTH REWRITE  2/4');
+  assert.equal(holoCaption({ ...h, wp: undefined }), 'SHIP THE AUTH REWRITE  4/4  IN ORBIT');
+  // One line, short enough for the plate.
+  assert.ok(holoCaption({ ...h, wp: { n: 1, title: 'A waypoint with a very long name indeed that goes on' } }).length <= 40);
 });
 
 test('the ticker: the deck clock, how long under way, and the log of this deck', () => {

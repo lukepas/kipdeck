@@ -47,9 +47,10 @@ export const lamps: Fixture<'lamps'> = (site) => {
   table.position.set(MISSION_TABLE.x, LIGHT_Y + 0.6, MISSION_TABLE.z);
   table.target.position.set(MISSION_TABLE.x, 0, MISSION_TABLE.z);
   site.group.add(table, table.target);
-  // Just over the top's rim, so it lights the faces round the table and the console fronts facing it.
+  // High over the top (1.5 m), so it lights the faces round the table and the console fronts facing it
+  // without burning a hot spot into the tabletop under it (the holo's core stays under the bloom).
   const holo = new THREE.PointLight(night.holo.color, night.holo.i, 9, 2);
-  holo.position.set(MISSION_TABLE.x, MISSION_TABLE.h + 0.5, MISSION_TABLE.z);
+  holo.position.set(MISSION_TABLE.x, MISSION_TABLE.h + 1.5, MISSION_TABLE.z);
   site.group.add(holo);
   return { handle: { lamps: { pods, table, holo } } };
 };

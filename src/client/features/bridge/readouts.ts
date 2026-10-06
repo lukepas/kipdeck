@@ -10,7 +10,8 @@ import { stretch } from '../../world/toon';
 /** The floor's mission as the bridge reads it: the statement and the milestones, the active one marked. */
 export interface Course {
   statement: string;
-  milestones: { title: string; done: boolean; active: boolean }[];
+  /** Each waypoint; `units` how many of the deck's units work on an issue of it (the holo parks a marker for each). */
+  milestones: { title: string; done: boolean; active: boolean; units?: number }[];
 }
 
 /** The levels the top bar counts, in its order, and what each is called on an instrument. */

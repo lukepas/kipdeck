@@ -123,19 +123,19 @@ export function percentTo(h: Pick<Heading, 'closed' | 'issues'>): number | undef
   return h.issues ? Math.round((h.closed / h.issues) * 100) : undefined;
 }
 
-/** What the holo band over the mission table says, phrase by phrase, upper case as the instruments do. */
-export function headingPhrases(h: Heading): string[] {
-  if (!h.statement && !h.milestones) return ['NO COURSE SET', 'SET THE COURSE IN MISSION CONTROL (I)'];
-  const out: string[] = [];
+/**
+ * The holo's one caption at the table's lip: where the ship is making for, which waypoint of how many,
+ * and how far it has come ("AUTH REWRITE  2/4  40%"); the course alone once every waypoint is passed.
+ */
+export function holoCaption(h: Heading): string {
+  if (!h.statement && !h.milestones) return 'NO COURSE SET  -  I TO SET IT';
   const pct = percentTo(h);
-  if (h.wp) {
-    out.push(pct === undefined ? `CAPTAIN, WE ARE MAKING FOR ${h.wp.title.toUpperCase()}` : `CAPTAIN, WE ARE ${pct}% OF THE WAY TO ${h.wp.title.toUpperCase()}`);
-    out.push(`WP ${h.wp.n} OF ${h.milestones}`);
-    if (h.issues) out.push(`${h.issues - h.closed} ${h.issues - h.closed === 1 ? 'ISSUE' : 'ISSUES'} OUT`);
-    out.push(h.units ? `${h.units} ${h.units === 1 ? 'UNIT' : 'UNITS'} ON IT` : 'NO UNIT ON IT YET');
-  } else if (h.milestones) out.push(`ALL ${h.milestones} WAYPOINTS PASSED`);
-  if (h.statement) out.push(`COURSE: ${h.statement.replace(/\s+/g, ' ').toUpperCase()}`);
-  return out;
+  const name = (s: string) => {
+    const t = s.replace(/\s+/g, ' ').trim().toUpperCase();
+    return t.length > 28 ? `${t.slice(0, 25).trimEnd()}...` : t;
+  };
+  if (h.wp) return [name(h.wp.title), `${h.wp.n}/${h.milestones}`, pct === undefined ? '' : `${pct}%`].filter(Boolean).join('  ');
+  return h.milestones ? `${name(h.statement || 'COURSE')}  ${h.milestones}/${h.milestones}  IN ORBIT` : name(h.statement);
 }
 
 const two = (n: number) => String(n).padStart(2, '0');

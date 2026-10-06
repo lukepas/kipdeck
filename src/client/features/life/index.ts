@@ -19,7 +19,7 @@ import type { Parts } from '../../core/parts';
 import { store } from '../../state';
 import { seeded } from '../space/logic';
 import { ambientGain } from '../giveway/logic';
-import { GIVE_WAY, bump, decay, headingPhrases, lifeScale, panelMode, percentTo, pulseGap, shipTime, shownActivity, stationGain, tickerItems, underWayText, type Heading } from './logic';
+import { GIVE_WAY, bump, decay, holoCaption, lifeScale, panelMode, percentTo, pulseGap, shipTime, shownActivity, stationGain, tickerItems, underWayText, type Heading } from './logic';
 
 /** How bright a station's hood trace is in each state (0 dark, 1 full ship-cyan); a working one goes by how busy it is. */
 const TRACE = { empty: 0.08, parked: 0.15, review: 0.3, 'needs-you': 0.1, stuck: 0, merged: 0.3 } as const;
@@ -60,7 +60,7 @@ export function installLife(ctx: Ctx, parts: Pick<Parts, 'views'>) {
       units: p?.workers ?? 0,
     };
     const pct = percentTo(h);
-    heading.set(headingPhrases(h), pct === undefined ? undefined : pct / 100);
+    heading.set(holoCaption(h), pct === undefined ? undefined : pct / 100);
   }
   for (const t of ['mission', 'roster', 'issues', 'pulls', 'floor'] as const) store.on(t, readHeading);
   readHeading();
@@ -162,7 +162,6 @@ export function installLife(ctx: Ctx, parts: Pick<Parts, 'views'>) {
     if (scale > 0) pulses.step(dt * scale);
     else pulses.clear();
     holo.flow(dt, scale * deckGain);
-    heading.turn(dt, scale * deckGain);
     ticker.run(dt, scale * deckGain);
   });
 }
