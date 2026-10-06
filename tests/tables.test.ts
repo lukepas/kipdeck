@@ -138,6 +138,7 @@ test("the ledger puts what waits for a person first, the live ones next and the 
   // Approve, blocked, claimed and open are still in escrow: 50 + 5 + 40 + 25.
   assert.deepEqual(v.held, { count: 4, total: '120.00 USDC' });
   assert.equal(v.paid, 1);
+  assert.equal(v.paidTotal, '50.00 USDC');
   // What's next: a claim's PR, an open one's time left, a settled one's age.
   assert.equal(v.bounties[2].cells[4], 'PR #78');
   assert.equal(v.bounties[3].cells[4], '5 d left');

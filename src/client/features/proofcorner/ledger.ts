@@ -53,8 +53,9 @@ export interface LedgerView {
   bounties: TableRow[];
   /** In escrow now: how many, and the total ("75.00 USDC"). */
   held: { count: number; total: string };
-  /** Paid out: how many. */
+  /** Paid out: how many, and the total ("50.00 USDC"). */
   paid: number;
+  paidTotal: string;
   /** Reputation is on. */
   rep: boolean;
   agents: TableRow[];
@@ -81,6 +82,11 @@ export function ledgerView(b: BountiesState | undefined, rep: ReputationState | 
     bounties,
     held: { count: held.length, total: `${tokenUnits(sum.units, sum.decimals)} ${symbol}` },
     paid: items.filter((i) => i.phase === 'released').length,
+    paidTotal: (() => {
+      const paid = items.filter((i) => i.phase === 'released');
+      const s = sumUnits(paid);
+      return `${tokenUnits(s.units, s.decimals)} ${paid[0]?.symbol ?? symbol}`;
+    })(),
     rep: !!rep?.enabled,
     agents: agents.map((a): TableRow => {
       const s = a.stats;
@@ -120,11 +126,17 @@ export function paintLedger(s: Screen, v: LedgerView) {
   g.fillText('PROOF', pad, 38);
   const pw = g.measureText('PROOF').width;
   g.letterSpacing = '0px';
-  label(g, `escrow ${v.network}`, pad + pw + 26, 39, 24, 'left', PANEL.proof);
+  // What's held and paid at the end of the escrow's half, measured first so the network's label never runs into it.
   g.textAlign = 'right';
-  g.font = MONO(28, 600);
+  g.font = MONO(26, 600);
   g.fillStyle = INK.text;
-  if (v.on) g.fillText(`${v.held.count} held  ${v.held.total}  ${v.paid} paid`, split - 24, 39);
+  // The token is said once, by the label ("TEST USDC"): the sums are amounts alone.
+  const bare = (t: string) => t.replace(/ \S+$/, '');
+  const sums = v.on ? `${bare(v.held.total)} held  ${v.paid ? `${bare(v.paidTotal)} paid` : '0 paid'}` : '';
+  if (sums) g.fillText(sums, split - 24, 39);
+  const sumsW = sums ? g.measureText(sums).width : 0;
+  const lx = pad + pw + 26;
+  label(g, v.network === 'mock' ? 'mock chain' : 'devnet  test usdc', lx, 39, 22, 'left', PANEL.proof, split - 24 - sumsW - 24 - lx);
   g.textAlign = 'left';
   const rx = split + 24;
   const rw = W - pad - rx;
