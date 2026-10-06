@@ -5,6 +5,7 @@ import { store } from '../../state';
 import { clip } from '../../ui/dom';
 import { mirrorWhiteboard, openWhiteboard } from './ui';
 import { planView } from './face';
+import { FarWatch } from '../boards/far';
 
 // The kinds of thing you can use that this defines (see InteractKinds in world/types.ts).
 declare module '../../world/types' {
@@ -28,6 +29,12 @@ export function installWhiteboard(ctx: Ctx) {
   };
   for (const topic of ['mission', 'issues', 'queue', 'roster', 'floor'] as const) store.on(topic, plan);
   plan();
+  // From across the deck its headline counts, walking up to it its tables (boards/far.ts).
+  const far = new FarWatch(office.whiteboard.face);
+  ctx.ticks.add('world', ({ dt }) => {
+    const f = far.check(ctx.camera, dt);
+    if (f !== null) office.whiteboard.setFar(f);
+  });
   ctx.interactions.define('whiteboard', {
     reach: 7,
     hint: () => {

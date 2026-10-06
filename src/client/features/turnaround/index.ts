@@ -25,6 +25,7 @@ import { store } from '../../state';
 import { h } from '../../ui/dom';
 import { debugHandle } from '../giveway';
 import { bayWash, Hairline, HAIRLINE_MS, PitWall } from './world';
+import { FarWatch } from '../boards/far';
 
 /** A wait cleared longer ago than this is old news on arrival: no run for it (ms). */
 const FRESH_MS = 2 * 60_000;
@@ -83,8 +84,15 @@ export function installTurnaround(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'driv
   });
 
   let shown = '';
+  // From across the deck its headline numbers, walking up to it its table (boards/far.ts).
+  const far = new FarWatch(wall.mesh);
   ctx.ticks.add('world', ({ dt }) => {
     clock += dt * 1000;
+    const f = far.check(ctx.camera, dt);
+    if (f !== null) {
+      wall.far = f;
+      paint();
+    }
     const key = `${ctx.settings.turnaround}`;
     if (key !== shown) {
       shown = key;

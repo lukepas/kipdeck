@@ -6,7 +6,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { columnsAt, headH, moreH, rowsThatFit, table, withAlpha, type Column } from '../src/client/features/boards/table.js';
-import { ledgerView, paintLedger, phaseChip } from '../src/client/features/proofcorner/ledger.js';
+import { LEDGER_UNITS, ledgerFar, ledgerView, paintLedger, phaseChip } from '../src/client/features/proofcorner/ledger.js';
+import { FAR, farCountSize, farFrom, paintFar, type FarSpec } from '../src/client/features/boards/far.js';
+import { bayFar } from '../src/client/features/boards/meeting.js';
+import { DOCS_SCREEN, docsFar } from '../src/client/features/bookshelf/index-screen.js';
+import { FACE_UNITS, planFar } from '../src/client/features/whiteboard/face.js';
 import { checksChip, inboxRows, outline, seatRows } from '../src/client/features/boards/review-rows.js';
 import { planView } from '../src/client/features/whiteboard/face.js';
 import { docsView, sizeText } from '../src/client/features/bookshelf/index-screen.js';
@@ -266,4 +270,44 @@ test("the docs rack's index lists the latest changed first, with its folder, age
   assert.deepEqual(v.rows[0].cells.map((c) => (typeof c === 'string' ? c : (c as { text: string }).text)), ['limits', 'docs/api', '1m', '14 kB']);
   assert.deepEqual(v.rows[1].cells.map((c) => (typeof c === 'string' ? c : (c as { text: string }).text)), ['Acme', '/', '3h', '900 B']);
   assert.equal(sizeText(1023), '1023 B');
+});
+
+/** Paints `f` on a spy screen `wM` by `hM` metres at `units` a metre; the largest type drawn, in metres on the wall, and what was said. */
+function farFace(f: FarSpec, wM: number, hM: number, units: number) {
+  const { g, texts } = canvasSpy();
+  const W = Math.round(wM * units);
+  const Hh = Math.round(hM * units);
+  paintFar({ g, W, H: Hh, canvas: null as never, texture: { needsUpdate: false } as never }, units, f);
+  const px = (font: string) => Number(/(\d+)px/.exec(font)?.[1] ?? 0);
+  const biggest = Math.max(...texts.map((t) => px(t.font)));
+  for (const t of texts) {
+    const [l, r] = span(t);
+    assert.ok(l >= -1 && r <= W + 1, `"${t.text}" stays on the panel`);
+  }
+  return { metres: biggest / units, said: texts.map((t) => t.text) };
+}
+
+test('from the dais every table shows its headline counts, big enough to read there; up close, its table again', () => {
+  // Past FAR.at the far face, back under FAR.back; between, whichever it was (never flickers).
+  assert.equal(farFrom(FAR.at + 0.1, false), true);
+  assert.equal(farFrom(FAR.at - 0.5, false), false);
+  assert.equal(farFrom(FAR.at - 0.5, true), true);
+  assert.equal(farFrom(FAR.back - 0.1, true), false);
+  // From the captain's chair at 1440x900 (55 degree view: 864 px a radian of focal length) the side
+  // walls are up to 20 m off: a count FAR.minM tall has a cap (0.7 of it) of at least 9 px there,
+  // where a table's 0.075 m rows had 2 px.
+  const capPx = (m: number, dist: number) => (0.7 * m * (450 / Math.tan((27.5 * Math.PI) / 180))) / dist;
+  assert.ok(capPx(FAR.minM, 20) >= 9, `${capPx(FAR.minM, 20).toFixed(1)} px`);
+  const ledger = farFace(ledgerFar(ledgerView(BOUNTIES, undefined, NOW)), 4.4, 0.96, LEDGER_UNITS);
+  assert.ok(ledger.metres >= FAR.minM, `ledger counts ${ledger.metres.toFixed(2)} m`);
+  assert.ok(ledger.said.includes('TO APPROVE') && ledger.said.includes('BLOCKED') && ledger.said.includes('PAID'), ledger.said.join('|'));
+  assert.ok(ledger.said.includes('120'), `what is held, as an amount: ${ledger.said.join('|')}`);
+  const docs = farFace(docsFar(docsView({ files: [{ path: 'docs/a.md', title: 'A', mtime: NOW - H, size: 900 }, { path: 'README.md', mtime: NOW - 2 * H, size: 4000 }], more: false } as never, NOW)), DOCS_SCREEN.width, DOCS_SCREEN.height, DOCS_SCREEN.units);
+  assert.ok(docs.metres >= FAR.minM && docs.said.includes('DOCS') && docs.said.includes('2'));
+  const bay = farFace(bayFar(null, [{ hue: PANEL.stuck, cells: ['a', 'b', 'c', null, { text: '2h', mono: true }] }, { hue: PANEL.review, cells: ['a', 'b', 'c', null, { text: '5m', mono: true }] }]), 3.6, 1.6, 400);
+  assert.ok(bay.metres >= FAR.minM && bay.said.includes('TO REVIEW') && bay.said.includes('FAILING') && bay.said.includes('2h'), bay.said.join('|'));
+  const plan = farFace(planFar({ statement: 's', done: 1, total: 4, milestones: [], queue: [], queued: 2 }), 4, 2.2, FACE_UNITS);
+  assert.ok(plan.metres >= FAR.minM && plan.said.includes('1/4'));
+  // The pit wall's face is 1.48 m at 240 a metre: its count still makes the size.
+  assert.ok(farCountSize(1.48 * 240, 240) >= FAR.minM * 240);
 });

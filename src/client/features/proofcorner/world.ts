@@ -5,7 +5,8 @@ import type { Fixture } from '../../world/office/fixture';
 import { DECK, box, contactShadow, flat, matte, practical } from '../../world/office/materials';
 import { wallBoard } from '../../world/office/props';
 import { screen } from '../boards/screen';
-import { LEDGER_UNITS, paintLedger, type LedgerView } from './ledger';
+import { LEDGER_UNITS, ledgerFar, paintLedger, type LedgerView } from './ledger';
+import { paintFar } from '../boards/far';
 
 /**
  * The ledger's screen on the west wall: over the low port behind the vault and the plinth, under the
@@ -29,8 +30,10 @@ export interface ProofCorner {
   setReputation(units: number): void;
   /** The plinth glows violet from above, 0 to 1: a step has just been added (index.ts). */
   setStepGlow(k: number): void;
-  /** Paints the ledger's two tables: the escrow and the ERC-8004 records (ledger.ts). */
-  setLedger(v: LedgerView): void;
+  /** Paints the ledger's two tables: the escrow and the ERC-8004 records (ledger.ts); from far off, its headline counts (boards/far.ts). */
+  setLedger(v: LedgerView, far: boolean): void;
+  /** The ledger's screen, for how far it is from you. */
+  readonly ledger: THREE.Object3D;
 }
 
 declare module '../../world/types' {
@@ -163,9 +166,11 @@ export const proofCorner: Fixture<'proof'> = (site) => {
     setStepGlow(k) {
       plinthGlow.intensity = Math.max(0, Math.min(1, k)) * 3;
     },
-    setLedger(v) {
-      paintLedger(ledgerScreen, v);
+    setLedger(v, far) {
+      if (far) paintFar(ledgerScreen, LEDGER_UNITS, ledgerFar(v));
+      else paintLedger(ledgerScreen, v);
     },
+    ledger: ledgerFace,
   };
   return { handle: { proof } };
 };

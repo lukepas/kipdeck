@@ -10,6 +10,7 @@ import { ago } from '../../../shared/rowtext';
 import { PANEL } from '../boards/world';
 import { INK, MONO, UI, ground, type Screen } from '../boards/screen';
 import { emptyBox, label, table, type Chip, type TableRow } from '../boards/table';
+import type { FarCount, FarSpec } from '../boards/far';
 
 /** Where a phase sorts on the ledger: what waits for a person first, then what's live, then the past. */
 const ORDER: Record<BountyPhase, number> = { 'awaiting-approval': 0, blocked: 1, paying: 2, claimed: 3, open: 4, released: 5, refunded: 6, cancelled: 7, expired: 8 };
@@ -97,6 +98,24 @@ export function ledgerView(b: BountiesState | undefined, rep: ReputationState | 
     }),
     owed: rep?.owed ?? 0,
   };
+}
+
+/**
+ * The ledger from across the deck (boards/far.ts): what's held in escrow, what waits for your approval,
+ * what's blocked, what's been paid, and how many units have ERC-8004 records. Pure.
+ */
+export function ledgerFar(v: LedgerView): FarSpec {
+  const title = v.network === 'mock' ? 'Proof  mock chain' : 'Proof  devnet test usdc';
+  if (!v.on) return { title, hue: PANEL.proof, counts: [], empty: 'Bounties are off' };
+  const chips = v.bounties.map((r) => r.cells[2]).filter((c): c is { chip: Chip } => !!c && typeof c === 'object' && 'chip' in c);
+  const n = (text: string) => chips.filter((c) => c.chip.text === text).length;
+  // Whole amounts without their cents, so the figure is as big as the panel allows.
+  const counts: FarCount[] = [{ n: v.held.total.replace(/ \S+$/, '').replace(/\.00$/, ''), word: `${v.held.count} in escrow`, hue: PANEL.proof }];
+  if (n('approve')) counts.push({ n: String(n('approve')), word: 'to approve', hue: PANEL.review, glyph: 'review' });
+  if (n('blocked')) counts.push({ n: String(n('blocked')), word: 'blocked', hue: PANEL.stuck, glyph: 'stuck' });
+  counts.push({ n: String(v.paid), word: 'paid', hue: PANEL.settled, glyph: 'done' });
+  if (v.rep && counts.length < 4) counts.push({ n: String(v.agents.length), word: 'erc-8004', hue: PANEL.proof });
+  return { title, hue: PANEL.proof, counts: counts.slice(0, 4) };
 }
 
 const lastAt = (b: BountyView) => (b.txs.length ? b.txs[b.txs.length - 1].at : 0);

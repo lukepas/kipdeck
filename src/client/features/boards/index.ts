@@ -17,6 +17,7 @@ import { openServices } from '../../ui/services';
 import { BoardTexture, QueueBoardTexture, ServicesBoardTexture } from './world';
 import { MachineTexture } from './machine';
 import { MeetingBoardTexture, MeetingSignTexture } from './meeting';
+import { FarWatch } from './far';
 import { foldWings } from './fold';
 import type { World } from '../../world/world';
 import { boardBounties } from '../bounties/logic';
@@ -153,6 +154,14 @@ export function installBoards(ctx: Ctx, deps: BoardsDeps) {
   const meetingSignTex = new MeetingSignTexture();
   const renderBaySign = () => meetingSignTex.render(bay());
   mountBoard(office.meetingSign, meetingSignTex.texture, renderBaySign, ['meeting', 'roster', 'bounties', 'floor']);
+  // From across the deck the bay's board shows its headline counts, walking up to it its tables (far.ts).
+  const bayFar = office.meetingBoard ? new FarWatch(office.meetingBoard) : null;
+  ctx.ticks.add('world', ({ dt }) => {
+    const f = bayFar?.check(ctx.camera, dt) ?? null;
+    if (f === null) return;
+    meetingBoardTex.far = f;
+    renderBayBoard();
+  });
   window.setInterval(() => {
     if (document.hidden) return;
     renderBayBoard();

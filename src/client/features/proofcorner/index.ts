@@ -13,6 +13,7 @@ import type { ServerMsg } from '../../../shared/protocol';
 import { store } from '../../state';
 import { proofTally } from '../../ui/counters';
 import { ledgerView } from './ledger';
+import { FarWatch } from '../boards/far';
 
 /** A payout as the server says it (bounty.paid). */
 type Paid = Extract<ServerMsg, { t: 'bounty.paid' }>;
@@ -42,12 +43,14 @@ export function installProofCorner(ctx: Ctx) {
   }
   /** The ledger's tables, repainted only when what they say changes (its times move by the minute). */
   let ledgerKey = '';
+  /** From across the deck the ledger shows its headline counts (boards/far.ts); walking up to it, its tables. */
+  const far = new FarWatch(proof.ledger);
   function paintLedger() {
     const v = ledgerView(store.floor ? store.bounties?.[store.floor] : undefined, store.reputation);
-    const key = JSON.stringify(v);
+    const key = JSON.stringify(v) + far.far;
     if (key === ledgerKey) return;
     ledgerKey = key;
-    proof.setLedger(v);
+    proof.setLedger(v, far.far);
   }
   window.setInterval(() => !document.hidden && paintLedger(), 60_000);
   for (const topic of ['bounties', 'reputation', 'floors', 'floor'] as const) store.on(topic, render);
@@ -55,6 +58,7 @@ export function installProofCorner(ctx: Ctx) {
 
   let since = Infinity;
   ctx.ticks.add('world', ({ dt }) => {
+    if (far.check(ctx.camera, dt) !== null) paintLedger();
     if (glowT !== Infinity) {
       glowT += dt;
       const k = glowT / STEP_GLOW;

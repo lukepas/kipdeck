@@ -5,6 +5,8 @@ import type { DocList } from '../../../shared/docs';
 import { ago } from '../../../shared/rowtext';
 import { INK, ground, titleBar, type Screen } from '../boards/screen';
 import { emptyBox, table, type TableRow } from '../boards/table';
+import type { FarSpec } from '../boards/far';
+import { DECK } from '../../world/office/materials';
 
 /** The index's size on the wall (metres) and its canvas units a metre. */
 export const DOCS_SCREEN = { width: 1.7, height: 0.96, units: 420 } as const;
@@ -62,4 +64,22 @@ export function paintDocs(s: Screen, v: DocsView) {
       rows: v.rows,
     });
   s.texture.needsUpdate = true;
+}
+
+/** The rack from across the deck (boards/far.ts): how many docs, how long since the last edit, and in how many folders. Pure. */
+export function docsFar(v: DocsView): FarSpec {
+  const hue = DECK.ship;
+  if (v.status !== 'ok') return { title: 'Docs', hue, counts: [], empty: v.status === 'loading' ? 'Looking along the shelves' : "Can't list the docs" };
+  if (!v.rows.length) return { title: 'Docs', hue, counts: [], empty: 'No Markdown yet' };
+  const cell = (c: unknown) => (typeof c === 'string' ? c : c && typeof c === 'object' && 'text' in c ? String((c as { text: string }).text) : '');
+  const folders = new Set(v.rows.map((r) => cell(r.cells[1])));
+  return {
+    title: 'Docs',
+    hue,
+    counts: [
+      { n: `${v.count}${v.more ? '+' : ''}`, word: 'docs', hue: INK.text },
+      { n: cell(v.rows[0].cells[2]), word: 'last edit', hue },
+      { n: String(folders.size), word: folders.size === 1 ? 'folder' : 'folders', hue: INK.text },
+    ],
+  };
 }

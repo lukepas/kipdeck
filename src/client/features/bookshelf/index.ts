@@ -5,7 +5,10 @@ import { store } from '../../state';
 import { openBookshelf } from './ui';
 import { clip, toast } from '../../ui/dom';
 import type { DocList } from '../../../shared/docs';
-import { docsView, paintDocs } from './index-screen';
+import * as THREE from 'three';
+import { docsFar, docsView, paintDocs, DOCS_SCREEN } from './index-screen';
+import { FarWatch, paintFar } from '../boards/far';
+import { BOOKSHELF } from '../../../shared/layout';
 
 /** How often the rack's index looks again while the tab shows (ms): docs change slowly. */
 const INDEX_EVERY = 5 * 60_000;
@@ -27,13 +30,19 @@ export function installBookshelf(ctx: Ctx) {
   // The rack's index: the project's Markdown as a table over the shelves, the latest changed first.
   let list: DocList | null | Error = null;
   let drawn = '';
+  // From across the deck its headline counts (boards/far.ts), up close the table.
+  const far = new FarWatch(new THREE.Vector3(BOOKSHELF.x, 2.6, BOOKSHELF.z));
   const paint = () => {
     const v = docsView(list);
-    const key = JSON.stringify(v);
+    const key = JSON.stringify(v) + far.far;
     if (key === drawn) return;
     drawn = key;
-    paintDocs(ctx.office.docsIndex, v);
+    if (far.far) paintFar(ctx.office.docsIndex, DOCS_SCREEN.units, docsFar(v));
+    else paintDocs(ctx.office.docsIndex, v);
   };
+  ctx.ticks.add('world', ({ dt }) => {
+    if (far.check(ctx.camera, dt) !== null) paint();
+  });
   let asked = 0;
   async function look() {
     const floor = store.floor;

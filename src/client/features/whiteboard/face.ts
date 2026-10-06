@@ -7,6 +7,7 @@ import { DECK } from '../../world/office/materials';
 import { PANEL } from '../boards/world';
 import { INK, UI, clip, ground, titleBar, type Screen } from '../boards/screen';
 import { emptyBox, label, table, type Chip, type TableRow } from '../boards/table';
+import type { FarCount, FarSpec } from '../boards/far';
 
 /** The board's canvas units a metre: read walking up to it, from five metres or so. */
 export const FACE_UNITS = 360;
@@ -136,4 +137,17 @@ export function paintPlan(s: Screen, v: PlanView, drawing: HTMLCanvasElement | n
   } else emptyBox(g, box.x, TOP, box.w, H - TOP - 24, 'Sketch the plan', 'E here: everyone on this deck sees it', 36);
   g.textBaseline = 'alphabetic';
   s.texture.needsUpdate = true;
+}
+
+/** The plan from across the deck (boards/far.ts): milestones done of all, late ones, units on it, and the task queue. Pure. */
+export function planFar(v: PlanView): FarSpec {
+  const hue = DECK.ship;
+  if (!v.total && !v.queue.length) return { title: 'Plan', hue, counts: [], empty: 'No mission set yet' };
+  const late = v.milestones.filter((m) => !m.quiet && typeof m.cells[5] === 'object' && m.cells[5] && 'text' in m.cells[5] && / late$/.test(m.cells[5].text)).length;
+  const running = v.queue.length - v.queued;
+  const counts: FarCount[] = [{ n: `${v.done}/${v.total}`, word: 'milestones', hue: PANEL.settled, glyph: v.total && v.done === v.total ? 'done' : undefined }];
+  if (late) counts.push({ n: String(late), word: 'late', hue: PANEL.review, glyph: 'review' });
+  counts.push({ n: String(running), word: 'tasks on it', hue: PANEL.working, glyph: 'working' });
+  counts.push({ n: String(v.queued), word: 'queued', hue: INK.muted, glyph: 'queued' });
+  return { title: 'Plan', hue, counts };
 }

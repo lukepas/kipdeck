@@ -12,15 +12,31 @@ import { mergeByMaterial } from '../../world/toon';
 import { onBridgeLayer } from '../bridge/shapes';
 import { INK, ground, screen, titleBar } from '../boards/screen';
 import { label, table, type TableRow } from '../boards/table';
+import { paintFar, type FarSpec } from '../boards/far';
 
 /** The face's canvas units a metre: read from the deck below the bay and from the conn. */
 const UNITS = 240;
+
+/** The pit wall from across the deck: the reply and review clocks today and the queue, neutral and ship-cyan only. Pure. */
+export function pitFar(t: Turnaround | null, queue: number): FarSpec {
+  return {
+    title: 'Pit wall  today',
+    hue: DECK.shipDim,
+    counts: [
+      { n: waitText(t?.reply.today), word: 'reply', hue: INK.text },
+      { n: waitText(t?.review.today), word: 'review', hue: INK.text },
+      { n: String(queue), word: 'to review', hue: DECK.ship },
+    ],
+  };
+}
 
 export class PitWall {
   readonly mesh = new THREE.Group();
   private readonly face = screen(PIT_WALL.width, PIT_WALL.height, UNITS);
   private readonly mat: THREE.MeshBasicMaterial;
   private key = '';
+  /** From across the deck: its headline numbers instead of its table (boards/far.ts). */
+  far = true;
 
   constructor() {
     this.mat = new THREE.MeshBasicMaterial({ map: this.face.texture, toneMapped: false });
@@ -48,9 +64,13 @@ export class PitWall {
    * and today's reviews as bars against the median's hairline at the right; the queue in the title.
    */
   paint(t: Turnaround | null, queue: number) {
-    const key = JSON.stringify([t?.reply, t?.review, queue]);
+    const key = JSON.stringify([t?.reply, t?.review, queue, this.far]);
     if (key === this.key) return;
     this.key = key;
+    if (this.far) {
+      paintFar(this.face, UNITS, pitFar(t, queue));
+      return;
+    }
     const { g, W, H } = this.face;
     ground(g, W, H);
     g.fillStyle = DECK.shipDim;

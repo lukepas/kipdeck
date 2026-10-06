@@ -6,7 +6,8 @@ import type { ReviewItem } from '../../../shared/review';
 import { ago } from '../../../shared/rowtext';
 import { PANEL } from './world';
 import { INK, MONO, UI, clip, ground, screen, titleBar, type Screen } from './screen';
-import { chip, emptyBox, facts, label, table, type Cell } from './table';
+import { chip, emptyBox, facts, label, table, type Cell, type TableRow } from './table';
+import { paintFar, type FarCount, type FarSpec } from './far';
 import { bayState, inboxRows, outline, seatRows } from './review-rows';
 
 /** Who has the floor right now: the roles on the parts being worked on. */
@@ -34,10 +35,42 @@ const BOARD_UNITS = 400;
  * this deck, a row each, oldest first. While a meeting sits: its seats (part, unit, what it's doing,
  * its turn, its tokens) and, beside them, the outline of the file it's writing.
  */
+/**
+ * The Review bay's board from across the deck (far.ts): while it's free, how much waits for review, how
+ * many of those have failing checks and how long the oldest has waited; while a meeting sits, its round,
+ * its state and what it has used. Pure.
+ */
+export function bayFar(m: BayData['state']['current'], rows: readonly TableRow[]): FarSpec {
+  if (!m) {
+    const failing = rows.filter((r) => r.hue === PANEL.stuck).length;
+    const first = rows[0]?.cells[4];
+    // Oldest first: the top row has waited longest.
+    const oldest = first && typeof first === 'object' && 'text' in first ? first.text : '';
+    if (!rows.length) return { title: 'Review bay', hue: INK.lineStrong, counts: [], empty: 'Nothing waits for review' };
+    const counts: FarCount[] = [{ n: String(rows.length), word: 'to review', hue: PANEL.review, glyph: 'review' }];
+    if (failing) counts.push({ n: String(failing), word: 'failing', hue: PANEL.stuck, glyph: 'stuck' });
+    counts.push({ n: oldest || '--', word: 'longest wait', hue: INK.text });
+    return { title: 'Review bay', hue: PANEL.review, counts };
+  }
+  const st = bayState(m);
+  const spend = spent(m);
+  return {
+    title: MEETING_PATTERNS[m.pattern].label,
+    hue: st.hue,
+    counts: [
+      { n: `${m.round}/${m.rounds}`, word: 'round', hue: INK.text },
+      { n: st.word, word: 'state', hue: st.hue },
+      { n: spend.cost, word: `${spend.tokens} tokens`, hue: INK.text },
+    ],
+  };
+}
+
 export class MeetingBoardTexture {
   readonly texture: THREE.CanvasTexture;
   private s: Screen = screen(3.6, 1.6, BOARD_UNITS);
   private drawn = '';
+  /** From across the deck: its headline counts instead of its tables (far.ts). */
+  far = true;
 
   constructor() {
     this.texture = this.s.texture;
@@ -47,9 +80,13 @@ export class MeetingBoardTexture {
     const m = d.state.current;
     const now = Date.now();
     const rows = m ? [] : inboxRows(d.inbox, d.floor, now);
-    const key = JSON.stringify([m && [m.status, m.round, m.step, m.turns, m.seats, m.tokens, m.cost, m.preview, m.output, m.reason], rows]);
+    const key = JSON.stringify([m && [m.status, m.round, m.step, m.turns, m.seats, m.tokens, m.cost, m.preview, m.output, m.reason], rows, this.far]);
     if (key === this.drawn) return;
     this.drawn = key;
+    if (this.far) {
+      paintFar(this.s, BOARD_UNITS, bayFar(m, rows));
+      return;
+    }
     const { g, W, H } = this.s;
     ground(g, W, H);
     const st = bayState(m);

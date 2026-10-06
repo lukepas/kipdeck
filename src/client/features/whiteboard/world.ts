@@ -5,7 +5,8 @@ import type { Collider, Interactable } from '../../world/types';
 import type { Fixture } from '../../world/office/fixture';
 import { DECK, box, contactShadow, ink as wallInk, matte } from '../../world/office/materials';
 import { screen } from '../boards/screen';
-import { FACE_UNITS, paintPlan, sketchBox, type PlanView } from './face';
+import { FACE_UNITS, paintPlan, planFar, sketchBox, type PlanView } from './face';
+import { paintFar } from '../boards/far';
 
 // The planning board: a slim board on casters out on the open floor in the east aisle. Its face shows
 // the floor's plan as tables and whatever everyone has drawn on it (see ui.ts), live, beside them
@@ -20,6 +21,10 @@ export interface WhiteboardStand {
   show(drawing: HTMLCanvasElement | null): void;
   /** The plan's tables (face.ts). */
   setPlan(plan: PlanView): void;
+  /** From across the deck its headline counts instead of its tables (boards/far.ts). */
+  setFar(far: boolean): void;
+  /** Its face, for how far it is from you. */
+  face: THREE.Object3D;
   /** How big a drawing fills its box on the face, in pixels. */
   fit: { width: number; height: number };
 }
@@ -62,7 +67,10 @@ export function buildWhiteboard(): WhiteboardStand {
   const plaque = textPlane('PLANNING BOARD', { face: 'display', size: 48, color: DECK.muted, track: 0.08 });
   plaque.scale.multiplyScalar(0.55);
   wallInk(plaque.material);
-  plaque.position.set(-width / 2 + 0.5, bottom + height + 0.2, 0.05);
+  // Its left edge on the face's: the sign is as wide as its words, so it is placed by its own width.
+  plaque.geometry.computeBoundingBox();
+  const signW = (plaque.geometry.boundingBox!.max.x - plaque.geometry.boundingBox!.min.x) * plaque.scale.x;
+  plaque.position.set(-width / 2 + 0.05 + signW / 2, bottom + height + 0.2, 0.05);
   group.add(plaque);
 
   const colliders: Collider[] = [{ minX: x - post - 0.1, maxX: x + post + 0.1, minZ: z - 0.48, maxZ: z + 0.48, top: bottom + height + 0.35 }];
@@ -71,7 +79,8 @@ export function buildWhiteboard(): WhiteboardStand {
 
   let drawing: HTMLCanvasElement | null = null;
   let plan: PlanView = { statement: '', done: 0, total: 0, milestones: [], queue: [], queued: 0 };
-  const paint = () => paintPlan(face2d, plan, drawing);
+  let far = true;
+  const paint = () => (far ? paintFar(face2d, FACE_UNITS, planFar(plan)) : paintPlan(face2d, plan, drawing));
   const show = (d: HTMLCanvasElement | null) => {
     drawing = d;
     paint();
@@ -80,11 +89,16 @@ export function buildWhiteboard(): WhiteboardStand {
     plan = p;
     paint();
   };
+  const setFar = (f: boolean) => {
+    if (f === far) return;
+    far = f;
+    paint();
+  };
   paint();
   const sketch = sketchBox(face2d.W, face2d.H);
   const px = face2d.canvas.width / face2d.W;
 
-  return { group, colliders, interactable, show, setPlan, fit: { width: Math.round(sketch.w * px), height: Math.round(sketch.h * px) } };
+  return { group, colliders, interactable, show, setPlan, setFar, face, fit: { width: Math.round(sketch.w * px), height: Math.round(sketch.h * px) } };
 }
 
 declare module '../../world/types' {
