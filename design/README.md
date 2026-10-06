@@ -2,7 +2,31 @@
 
 Back to the [README](../README.md) and the [design system](../DESIGN.md).
 
-The latest round is first, [the interior: the hype round](#the-interior-the-hype-round); the earlier rounds follow it in order.
+The latest round is first, [the bridge mascot](#the-bridge-mascot); the earlier rounds follow it in order.
+
+## The bridge mascot
+
+The captain asked for a small creature running round the bridge with a glowing blade. The deck is shown in public, so the mascot is an original character rather than anyone's licensed one: Nubbin, a cream stowaway deck kit with tall leaf ears, hazel eyes, a slate-blue vest and a striped scarf, waving the Spark Sprig, a toy crystal light-wand with a rose rim. He has no green, robe, hood or sideways ears, no powers, and the Sprig never ignites, hums or clashes. What he does is in [the design system](../docs/design.md#the-crew).
+
+### Shots
+
+In `shots/mascot/build/`, Night and Day, Quality High: `<light>-laps-conn`, `-laps-close`, `-laps-bounce`, `-escort`, `-escort-bay`, `-twirl`, `-zoomies`, `-flop`, `-sit`, `-sit-conn`, `-hide-run`, `-hide`, `-hide-conn`, `-hide-shake`, `-greet`, `-portrait`, `-window-countdown`, `-window-jump`, `-window-sneeze`, `-nest`, `-nest-conn`, `-overview` (he is not in it), and `<light>-clip-10s.mp4` (a chase camera on his laps, a merge half a second in, his run across the table and the twirl facing you). Taken with `SHOOT_LIGHT=<night|day> SHOOT_QUALITY=high node design/shoot-mascot.mjs` from a built office.
+
+### Cost
+
+- Draw calls: four with him in view (all of him in one skinned mesh, his eyes, the crystal, his shadow), six at most with the motes and his nest; `shoot-mascot.mjs perf` counts 128 against 123 by Night and 115 against 110 by Day at the same view.
+- His frame on the CPU: 0.03 to 0.07 ms (his tick's own average over a run of laps). A forced render with him shown and hidden reads within the GPU's noise (plus or minus 0.5 ms either way).
+- `node design/perf-probe.mjs metal` with him on and off at High: the conn 379 and 382 calls (inside the budget of 400), render p50 2 to 3 ms either way, rAF p95 16.7 ms (60 fps), the motion layer 0 to 0.2 ms against its 0.6 ms budget.
+- `node design/flicker-check.mjs metal` passes by Night and Day at High, and through jumps (`FLICKER_JUMP=1`).
+
+### Checks
+
+`npm run typecheck` and `npm run build` clean. `npm test`: 1040 of 1041; the one failure is `mission-e2e`'s debrief test, which fails the same way on the build before this round (its 3D office takes longer than the test's 60 s under SwiftShader). New tests: `tests/mascot.test.ts` (his ways, spots, priorities, laps, gestures, springs, the Sprig's light), the Sprig's rose and glow in `tests/lights.test.ts` and `tests/cinema.test.ts`.
+
+### Left for later
+
+- Low draws his contact shadow the same soft way as High.
+- From the captain's chair he is small (a third of a unit's height), so most of what he does reads best walking about the deck.
 
 ## The interior: the hype round
 
