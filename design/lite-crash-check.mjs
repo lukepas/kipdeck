@@ -149,16 +149,17 @@ async function run(name, opts, order) {
           break;
         }
       }
-      // Open each unit (its live terminal) and close it again, then Mission control, as a person would.
+      // Open each unit (its live terminal, in the inbox's pane) and close it again, then Mission control, as a person would.
       for (let i = 0; i < 3 && !crashes.length; i++) {
-        await page.locator('.lite-card').nth(i).click({ timeout: 5000 }).catch((e) => errors.push('click: ' + String(e.message).split('\n')[0]));
+        await page.locator('.row .row-main').nth(i).click({ timeout: 5000 }).catch((e) => errors.push('click: ' + String(e.message).split('\n')[0]));
         await wait(1500);
         if (i === 0 && !crashes.length && OUT) await page.screenshot({ path: path.join(OUT, `terminal-${name}-${order}-${viewport.width}.png`) }).catch(() => {});
         await page.keyboard.press('Escape').catch(() => {});
         await wait(400);
       }
       if (!crashes.length) {
-        await page.locator('#btn-mission').click({ timeout: 5000 }).catch(() => {});
+        await page.locator('#btn-avatar').click({ timeout: 5000 }).catch(() => {});
+        await page.locator('.menu-pop .menu-item', { hasText: 'Mission control' }).click({ timeout: 5000 }).catch(() => {});
         await wait(1200);
         await page.keyboard.press('Escape').catch(() => {});
       }

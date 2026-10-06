@@ -1029,7 +1029,8 @@ async function main() {
       tp.on('console', (m) => m.type() === 'error' && console.log('console:', m.text()));
       await signIn(tp);
       await tp.goto(`${base}/lite`);
-      await tp.locator('.lite-card').nth(4).click();
+      // The inbox opens the terminal in its pane (a docked .modal.term).
+      await tp.locator('.row .row-main').first().click();
       await tp.locator('.modal.term').waitFor({ timeout: 10_000 });
       await wait(1500);
       await shot(tp, 'terminal');
