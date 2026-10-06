@@ -188,6 +188,8 @@ function stripFace(into: THREE.Object3D, w: number, h: number) {
   const { canvas, g, texture } = canvasTexture(640, Math.round((640 * h) / w));
   const face = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }));
   face.rotation.z = -Math.PI / 2;
+  // Found by name for the take-the-conn boot (features/takeconn).
+  face.name = 'conn-strip';
   into.add(face);
   return { canvas, g, texture };
 }
