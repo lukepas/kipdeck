@@ -1,25 +1,37 @@
-// The starship bridge's legibility pieces: the needs-you beacon is light that never covers a board
-// or the unit (features/needsyou/world.ts), callouts slide back into view (features/workers/declutter.ts),
+// The starship bridge's legibility pieces: the attention signals over the units stay under the boards
+// and blink as they should (features/signals), callouts slide back into view (features/workers/declutter.ts),
 // the compass keeps the most important marks on a crowded edge (ui/compass.ts), and the side ports are
 // wide and low with a strip over each (shared/layout.ts).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { NEAR_FLOOR, SHAFT_HEIGHT, STRENGTH, beaconStrength } from '../src/client/features/needsyou/world.js';
+import { BLINK, MARK, signalOf } from '../src/client/features/signals/logic.js';
+import { blinkOn } from '../src/client/features/signals/world.js';
 import { nudge } from '../src/client/features/workers/declutter.js';
-import { crowd, type BearingKind } from '../src/client/ui/compass.js';
-import { BOARDS, WINDOWS } from '../src/shared/layout.js';
-import { UNIT } from '../src/client/world/character/unit-body.js';
+import { clearOf, crowd, type BearingKind } from '../src/client/ui/compass.js';
+import { WINDOWS } from '../src/shared/layout.js';
 
-test("the needs-you beacon is a soft column under the boards, at its faintest up close", () => {
-  // About one and a half units tall, well short of the boards' tops, so it never runs up through them.
-  assert.ok(SHAFT_HEIGHT <= 1.6 * UNIT.top);
-  for (const b of Object.values(BOARDS)) assert.ok(SHAFT_HEIGHT < b.y, `the ${b.label} board's middle is over the shaft's top`);
-  // Added light, never near opaque.
-  assert.ok(STRENGTH.night <= 0.4 && STRENGTH.day <= 0.65);
-  assert.equal(beaconStrength(0, false), STRENGTH.night);
-  assert.ok(Math.abs(beaconStrength(1, false) - STRENGTH.night * NEAR_FLOOR) < 1e-9, 'a third of it with the camera right there');
-  assert.ok(beaconStrength(0.5, false) < beaconStrength(0, false) && beaconStrength(0.5, false) > beaconStrength(1, false));
-  assert.ok(beaconStrength(0, true) > beaconStrength(0, false), 'stronger by day, over the lighter floor');
+test('each attention state has its own mark, over the head or at the feet', () => {
+  assert.equal(signalOf('needs-you'), 'needs-you');
+  assert.equal(signalOf('stuck'), 'stuck');
+  assert.equal(signalOf('review'), 'review');
+  assert.equal(signalOf('working'), 'working');
+  assert.equal(signalOf('parked'), null);
+  assert.equal(signalOf('merged'), null);
+  // The diamond floats half a metre over the head, the pip lower, the ring round the feet wider than the unit's own (0.5 m).
+  assert.equal(MARK.over, 0.5);
+  assert.ok(MARK.pipOver < MARK.over);
+  assert.ok(MARK.ring > 0.5 && MARK.rim > MARK.ring);
+});
+
+test('the stuck triangle blinks once a second, lit most of it', () => {
+  assert.equal(BLINK.hz, 1);
+  let on = 0;
+  const steps = 1000;
+  for (let i = 0; i < steps; i++) if (blinkOn((i / steps) * 5)) on++;
+  assert.ok(Math.abs(on / steps - BLINK.on) < 0.01);
+  assert.equal(blinkOn(0.1), true);
+  assert.equal(blinkOn(0.9), false);
+  assert.equal(blinkOn(1.1), true, 'the next second');
 });
 
 test('a callout that would run off the side of the view slides back in', () => {
@@ -54,4 +66,17 @@ test('the side ports are wide and low, at a seated eye, with a slim strip over e
   }
   // The low port comes first on each wall: the wall seams line up with it (features/bridge/inlay.ts).
   for (const wall of ['east', 'west'] as const) assert.ok(WINDOWS.find((o) => o.wall === wall)!.y1 < 3);
+});
+
+test("a mark down the side of the view moves off a board's face to the nearest clear height", () => {
+  const board = { left: 200, right: 1200, top: 200, bottom: 700 };
+  // Clear already: it stays.
+  assert.equal(clearOf(300, 120, [board], 60, 796), 120);
+  // On the board: up over it (nearer than under it), clear of its top by the mark's reach.
+  const y = clearOf(300, 300, [board], 60, 796);
+  assert.ok(y + 40 <= board.top, `${y} clears the board`);
+  // Nearer the bottom: under it.
+  assert.ok(clearOf(300, 650, [board], 60, 796) - 18 >= board.bottom);
+  // A board off to the side of the mark doesn't move it.
+  assert.equal(clearOf(100, 300, [board], 60, 796), 300);
 });

@@ -100,7 +100,7 @@ export interface Parts {
   waiting: Made<typeof installWaiting>;
   /** Mission control and the mission strip (see features/mission). */
   mission: Made<typeof installMission>;
-  /** The beacon over a worker that needs you, the banner, the flash and the alarm (see features/needsyou). */
+  /** The banner over a worker that needs you, the flash and the alarm (see features/needsyou). */
   needsYou: Made<typeof installNeedsYou>;
   meeting: Made<typeof installMeeting>;
   bookshelf: Made<typeof installBookshelf>;

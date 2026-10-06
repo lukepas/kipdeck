@@ -1,10 +1,12 @@
-// The arc as the captain reads it: the Attention board's cards (features/tv/plan.ts), the wings folding
-// an empty Queue or Services to a pill (shared/amphitheater.ts), and the chrome round each board and the
-// pull toward a unit out of view (features/arcchrome/logic.ts).
+// The arc and the room as the captain reads them: the Attention board's cards (features/tv/plan.ts),
+// the wings folding an empty Queue or Services to a pill (shared/amphitheater.ts), the chrome round each
+// board and the pull toward a unit out of view (features/arcchrome/logic.ts), and one label a unit
+// (features/workers/labels.ts).
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { GRIDS, HERO_ORDER, cardCell, heroKind, planHero } from '../src/client/features/tv/plan.js';
 import { CHROME, CHROME_IDS, PULL, armOf, chromeBars, pullAt } from '../src/client/features/arcchrome/logic.js';
+import { HERO_READABLE_PX, labelSource, pileWord, piles } from '../src/client/features/workers/labels.js';
 import { ARC, PILL, heroPanel, wingHeights, wingMiddles, wingPanel } from '../src/shared/amphitheater.js';
 import { BOARDS, MACHINE_MONITOR, TV } from '../src/shared/layout.js';
 import type { AttentionLevel, Ranked } from '../src/shared/attention.js';
@@ -137,4 +139,26 @@ test('the pull toward a unit out of view runs along the foot of the wing on its 
     assert.ok(Math.abs(b.x) > Math.abs(a.x) && Math.abs(c.x) > Math.abs(a.x), 'stepping outward');
     assert.ok(a.y < ARC.bottom, 'under the arc, clear of every board');
   }
+});
+
+test('one label a unit: its edge mark, else its card on the board, else its callout', () => {
+  const big = HERO_READABLE_PX + 1;
+  assert.equal(labelSource({ pointed: true, hasRow: true, heroPx: big, near: false }), 'pointer');
+  assert.equal(labelSource({ pointed: false, hasRow: true, heroPx: big, near: false }), 'row');
+  assert.equal(labelSource({ pointed: false, hasRow: true, heroPx: 40, near: false }), 'world', 'the board too small to read');
+  assert.equal(labelSource({ pointed: false, hasRow: false, heroPx: big, near: false }), 'world', 'only counted: its callout');
+  assert.equal(labelSource({ pointed: false, hasRow: true, heroPx: big, near: true }), 'world', 'you are at it');
+});
+
+test('callouts piled on one another fold into one chip that counts them', () => {
+  const box = (x: number, bottom = 300) => ({ x, bottom, w: 100, h: 30 });
+  // Two piled, one apart.
+  assert.deepEqual(piles([box(0), box(40), box(400)]), [[0, 1]]);
+  // A chain: each on the next.
+  assert.deepEqual(piles([box(0), box(60), box(120)]), [[0, 1, 2]]);
+  // Touching at an edge isn't a pile.
+  assert.deepEqual(piles([box(0), box(100)]), []);
+  assert.equal(pileWord(['needs-you', 'stuck', 'review']), '3 waiting');
+  assert.equal(pileWord(['working', 'working']), '2 working');
+  assert.equal(pileWord(['working', 'needs-you']), '2 units');
 });

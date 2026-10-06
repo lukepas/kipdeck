@@ -1,0 +1,13 @@
+/* The chip a pile of three or more callouts folds into ("3 working"), over the view (declutter.ts). */
+.label-chips { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
+.label-chips > div {
+  position: absolute; left: 0; top: 0;
+  padding: 2px 8px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip);
+  background: rgb(11 18 25 / .86); color: #E8ECEF; border-color: #3E4B5A;
+  font: 600 11px/16px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap;
+}
+.label-chips > div[hidden] { display: none; }
+
+/* Over a board's face the crosshair steps back to a small, faint dot, off the words (even while the
+   board is what E would use: the hint bar says so). */
+#crosshair.over-board { transform: scale(.5); opacity: .45; background: var(--text); }

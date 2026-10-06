@@ -50,6 +50,7 @@ import { installPeers } from './features/peers';
 import { installSeating } from './features/seating';
 import { installTv } from './features/tv';
 import { installArcChrome } from './features/arcchrome';
+import { installSignals } from './features/signals';
 import { installVoice } from './features/voice';
 import { installWaiting } from './features/waiting';
 import { installWalking } from './features/walking';
@@ -204,6 +205,8 @@ parts.flight = installFlight(ctx);
 parts.boardFaces = installBoardFaces(ctx, parts);
 installAmphitheater(ctx, parts);
 installArcChrome(ctx, parts);
+// The diamond, the triangle, the ring and the pip over the units, and the beams up to their cards.
+installSignals(ctx, parts);
 installFocusLean(ctx, parts);
 installDeclutter(ctx, parts);
 installDemo(ctx, parts);

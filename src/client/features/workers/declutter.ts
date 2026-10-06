@@ -13,6 +13,9 @@ import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { FADED, dock } from './dock';
+import { labelSource, pileWord, piles } from './labels';
+import { Worker } from '../../world/character';
+import './chips.css';
 
 /** A callout on screen, in pixels from the top left: its left edge, its bottom edge, its size. */
 export interface LabelBox {
@@ -117,7 +120,25 @@ export function nudge(b: LabelBox, left: number, right: number): number {
   return 0;
 }
 
-export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds' | 'overview' | 'stage' | 'boardFaces'>) {
+/** How close (m) you are to a unit for its own callout to keep its place over its card on the board. */
+const AT_UNIT = 4;
+
+/** How wide the compass's marks down the left edge of the view are, with a gap (px, ui/compass.ts). */
+const COMPASS_W = 96;
+
+/** How often the piles of callouts are found again (ms): ten times a second. */
+const PILE_EVERY = 100;
+
+export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds' | 'overview' | 'stage' | 'boardFaces' | 'waiting' | 'tv'>) {
+  // The chips piles of callouts fold into ("3 working"), over the view.
+  const layer = document.createElement('div');
+  layer.className = 'label-chips';
+  document.body.append(layer);
+  const chips: HTMLElement[] = [];
+  /** The callouts in each pile, as last found. */
+  let pileSets: Set<unknown>[] = [];
+  let pilesAt = -Infinity;
+  let wasOverBoard = false;
   const bottom = new THREE.Vector3();
   const top = new THREE.Vector3();
   const at = new THREE.Vector3();
@@ -139,8 +160,7 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
     camera.updateMatrixWorld();
     const W = window.innerWidth;
     const H = window.innerHeight;
-    type Model = { setLift(m: number): void; setMode(m: Placed['mode']): void; setNudge(f: number): void; dock(at: THREE.Vector3 | null, fade: number, dt: number): void };
-    const shown: { model: Model; label: Label; rank: number; d: number; pxPerM: number; anchorX: number; depth: number }[] = [];
+    const shown: { model: Worker; label: Label; rank: number; d: number; pxPerM: number; anchorX: number; depth: number }[] = [];
     // Callouts face the camera: their height runs along its up, which the frame drawn last left in its matrix.
     up.set(0, 1, 0).applyQuaternion(camera.quaternion);
     /** A callout's box on screen from its edges in the world, or null when it's off the screen. */
@@ -154,9 +174,30 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
       return { x: cx - w / 2, bottom: ((1 - bottom.y) / 2) * H, w, h };
     };
     // The floor's units, and the board agents waiting at their kiosks (core/stations.ts).
-    const models = [...parts.views.workerViews.values()].map((v) => v.model);
-    for (const a of parts.worlds.idleAgents()) if (a.view.vacancy.visible) models.push(a.model);
-    for (const m of models) {
+    const entries: { id: string | null; model: Worker; near: boolean }[] = [];
+    // Near: you're right at it (within AT_UNIT), where its own callout says more than its card.
+    for (const [id, v] of parts.views.workerViews) entries.push({ id, model: v.model, near: camera.position.distanceTo(v.model.where(at)) < AT_UNIT });
+    for (const a of parts.worlds.idleAgents()) if (a.view.vacancy.visible) entries.push({ id: null, model: a.model, near: false });
+    // One label a unit (labels.ts): its mark at the edge, else its card on the Attention board, else its callout.
+    const overview = parts.overview.active();
+    Worker.marks = !overview;
+    // The crosshair steps back to a small dot over a board's face, so it never sits on a word.
+    const overBoard = !!parts.boardFaces?.aimed();
+    if (overBoard !== wasOverBoard) {
+      wasOverBoard = overBoard;
+      document.getElementById('crosshair')?.classList.toggle('over-board', overBoard);
+    }
+    const hero = parts.boardFaces?.faces().find((f) => f.id === 'tv')?.px;
+    const heroPx = hero && !overview ? hero.bottom - hero.top : 0;
+    const pointed = parts.waiting.pointed();
+    for (const { id, model: m, near } of entries) {
+      if (id && labelSource({ pointed: pointed.has(id), hasRow: parts.tv.hasCard(id), heroPx, near }) !== 'world') {
+        m.setLift(0);
+        m.setMode('hidden');
+        m.setNudge(0);
+        m.dock(null, 1, dt);
+        continue;
+      }
       if (!m.calloutEdges(bottom, top, up)) {
         m.setLift(0);
         m.setMode('full');
@@ -184,6 +225,44 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
       }
       shown.push({ model: m, label: { full, compact, keep: m.rank < 2 }, rank: m.rank, d, pxPerM, anchorX: ((anchor.x + 1) / 2) * W, depth: anchor.z });
     }
+    // Three or more callouts piled on one another fold into one chip that counts them (found ten times a second).
+    if (now - pilesAt > PILE_EVERY) {
+      pilesAt = now;
+      // As each will stand once slid in clear of the view's sides and the rail.
+      const at = shown.map((s) => ({ ...s.label.full, x: s.label.full.x + nudge(s.label.full, left, W) }));
+      pileSets = piles(at).map((g) => new Set<unknown>(g.map((i) => shown[i].model)));
+    }
+    const live = pileSets.map((set) => shown.filter((s) => set.has(s.model))).filter((g) => g.length >= 2);
+    live.forEach((group, i) => {
+      const el = (chips[i] ??= layer.appendChild(document.createElement('div')));
+      const x0 = Math.min(...group.map((g) => g.label.full.x));
+      const x1 = Math.max(...group.map((g) => g.label.full.x + g.label.full.w));
+      const b = Math.min(...group.map((g) => g.label.full.bottom));
+      const word = pileWord(group.map((g) => g.model.showing));
+      el.hidden = false;
+      if (el.textContent !== word) {
+        el.textContent = word;
+        el.dataset.w = String(el.offsetWidth);
+      }
+      // Clear of the view's sides and the rail, as a callout slides in.
+      const half = Number(el.dataset.w ?? 0) / 2;
+      // Clear of the compass's marks down the left edge (their dial and name): a pile that would sit on
+      // them shows no chip (its units are off to that side, where the compass already points).
+      const cx = Math.min(W - half - 8, (x0 + x1) / 2);
+      el.hidden = cx < left + COMPASS_W + half;
+      el.style.transform = `translate(${Math.round(cx)}px, ${Math.round(b)}px) translate(-50%, -100%)`;
+      for (const g of group) {
+        g.model.setMode('hidden');
+        g.model.setLift(0);
+        g.model.setNudge(0);
+        g.model.dock(null, 1, dt);
+      }
+    });
+    for (let i = live.length; i < chips.length; i++) chips[i].hidden = true;
+    const inPile = new Set(live.flat());
+    const free = shown.filter((s) => !inPile.has(s));
+    shown.length = 0;
+    shown.push(...free);
     shown.sort((a, b) => a.rank - b.rank || a.d - b.d);
     const placed = declutter(shown.map((s) => s.label));
     const slid = shown.map((s, i) => {
@@ -208,6 +287,9 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
         return;
       }
       s.model.setNudge(c.by / c.w);
+      // Never left on a board's face: one that found no slot under it stands down (its mark and its card say it).
+      const onBoard = !c.hidden && boards.some((b) => c.x < b.right && c.x + c.w > b.left && c.bottom > b.top && c.bottom - c.h < b.bottom);
+      if (onBoard) s.model.setMode('hidden');
       s.model.dock(null, k.kind === 'fade' ? FADED : 1, dt);
     });
   });

@@ -117,6 +117,8 @@ export class Worker {
   static weight = 1;
   /** How much bigger still a unit that needs you or is stuck is tagged: 1.5 from the Overview, else 1. */
   static urgentBoost = 1;
+  /** The room draws its own marks over units that need you or are stuck (features/signals): no glyph over them then. */
+  static marks = true;
 
   private name: string;
   private sign = '';
@@ -311,7 +313,9 @@ export class Worker {
     if (this.callout) this.callout.visible = this.mode === 'full';
     if (this.compact) this.compact.visible = this.mode === 'compact';
     const kind = this.leaving !== null ? null : this.kind();
-    setGlyphKind(this.glyph, this.mode !== 'hidden' || !kind || kind === 'working' || kind === 'parked' ? null : kind);
+    // Needs you and stuck have their own marks in the room while Worker.marks says so (features/signals).
+    const marked = Worker.marks && (kind === 'needs-you' || kind === 'stuck');
+    setGlyphKind(this.glyph, this.mode !== 'hidden' || !kind || kind === 'working' || kind === 'parked' || marked ? null : kind);
   }
 
   /** Where it ranks for a place on screen: needs you or stuck first, then to review and merged, then the rest. */

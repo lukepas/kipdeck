@@ -1,6 +1,7 @@
 /**
  * A worker that needs you is the one thing in the office that can't wait, so it's the hardest to
- * miss: a shaft of light over it you can see from across the deck, the top bar's counter, a toast
+ * miss: the diamond over it and the beam up to its card on the Attention board (features/signals), the
+ * top bar's counter, a toast
  * saying who and what for when one starts asking (it folds into the counter after a few seconds), a
  * flash round the edge of the screen and an alarm when one on your floor starts asking, and (if you
  * ask for it) a reminder until someone's at its terminal.
@@ -8,25 +9,18 @@
  * Who needs you is the building's one ranking (shared/attention.ts): its needs-you level, the
  * snoozed ones left out, the same workers the attention chip, the tab title and N count first.
  */
-import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { store } from '../../state';
 import { $ } from '../../ui/dom';
 import { bannerText, Fresh, needingYou, Reminders } from './logic';
 import { Banner } from './ui';
-import { Beacon } from './world';
 
-/** How close (m) the camera is for the beacon's light to be at its faintest, and how far off for its brightest. */
-const NEAR = 3;
-const FAR = 7;
-
-/** Follows the roster for the banner, the flash and the alarm, and registers the beacons' tick ('others', after the workers' own). */
-export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'views' | 'waiting' | 'mission' | 'stage' | 'lights'>) {
-  const { scene, sound, settings } = ctx;
+/** Follows the roster for the banner, the flash and the alarm. */
+export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'waiting' | 'mission'>) {
+  const { sound, settings } = ctx;
   const fresh = new Fresh();
   const reminders = new Reminders();
-  const beacons = new Map<string, Beacon>();
 
   /** Everyone who needs you, on every floor, longest first. */
   const asking = () => needingYou(store.ranked());
@@ -57,19 +51,6 @@ export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'views' | 'waiting'
         reminders.rang(performance.now());
       }
     }
-    const here = new Set(askingHere().map((w) => w.id));
-    for (const [id, b] of beacons) {
-      if (here.has(id)) continue;
-      b.dispose();
-      beacons.delete(id);
-    }
-    for (const id of here) {
-      if (beacons.has(id)) continue;
-      const b = new Beacon();
-      b.root.visible = false;
-      scene.add(b.root);
-      beacons.set(id, b);
-    }
     paintBanner();
   }
   // The roster has the ranking; the floor's own workers have their views and who's at their terminals.
@@ -85,38 +66,5 @@ export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'views' | 'waiting'
     if (reminders.due(askingHere(), performance.now()) && settings.needsYouSound === 'remind') sound.cue('needs-you-again');
   }, 1000);
 
-  const at = new THREE.Vector3();
-  const ground = new THREE.Vector3();
-  const eye = new THREE.Vector3();
-  ctx.ticks.add('others', ({ now }) => {
-    // From wherever the frame is drawn: the walk camera, or the Overview's.
-    (parts.stage.view ?? ctx.camera).getWorldPosition(eye);
-    const motion = ctx.reduceMotion.matches ? 0 : ctx.reduceMotion.ship === 'calm' ? 0.5 : 1;
-    const day = parts.lights?.mode() === 'day';
-    for (const [id, b] of beacons) {
-      const v = parts.views.workerViews.get(id);
-      const root = v?.model.root;
-      // Not drawn (it's on its way in, or out of sight): neither is its shaft.
-      b.root.visible = !!root && inView(root, scene);
-      if (!v || !b.root.visible) continue;
-      // Wherever it is: at its console, or out on the ready line.
-      v.model.where(at);
-      const desk = ctx.world().desks.get(v.deskId);
-      const floor = desk ? desk.group.getWorldPosition(ground).y : at.y;
-      const d = eye.distanceTo(at);
-      const near = 1 - Math.min(1, Math.max(0, (d - NEAR) / (FAR - NEAR)));
-      b.update(at, floor, near, now / 1000, motion, day);
-    }
-  });
-
-  return { beacons };
-}
-
-/** Whether `o` is in the scene and nothing it's inside is hidden. */
-function inView(o: THREE.Object3D, scene: THREE.Scene): boolean {
-  for (let p: THREE.Object3D | null = o; p; p = p.parent) {
-    if (!p.visible) return false;
-    if (p === scene) return true;
-  }
-  return false;
+  return {};
 }
