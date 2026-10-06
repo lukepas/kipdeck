@@ -7,9 +7,8 @@
 
 import { Net } from './net';
 import { AVATAR_COLORS, loadProfile, loadSettings, saveProfile, store } from './state';
-import { randomLook } from '../shared/avatar';
+import { randomLook, randomName } from '../shared/avatar';
 import { $, doingNow, onDoingChange, onModalChange, readingNow, toast } from './ui/dom';
-import { askName } from './ui/name';
 import { routeWorktreeMessage } from './ui/prompt';
 import { runAction } from './ui/mission/act';
 import { watchStuck } from './ui/mission/watch';
@@ -108,24 +107,27 @@ onModalChange(() => sendDoing());
 onDoingChange(() => sendDoing());
 
 // ---- In ----------------------------------------------------------------------------------------
+/** What the office calls you until you say (git's user.name, on your own computer). */
+let suggested: string | undefined;
 void (async () => {
   try {
     const res = await fetch('/api/whoami', { cache: 'no-store' });
     if (res.status === 401) return void (location.href = '/login');
-    const { me } = (await res.json()) as { me?: typeof store.me };
+    const { me, name } = (await res.json()) as { me?: typeof store.me; name?: string };
     if (me) store.me = me;
+    suggested = name;
   } catch {
     // the welcome message says it too
   }
-  // With an account of your own, your name is that account's.
+  // With an account of your own, your name is that account's. New here, there's nothing to fill
+  // in: you go by git's user.name on your own computer, else a made-up name.
   if (store.me.account) store.profile.name = store.me.account.name;
-  if (saved || store.me.account) return net.connect();
-  askName((name) => {
-    store.profile.name = name;
+  else if (!saved) {
+    store.profile.name = suggested ?? randomName();
     // No look: the 3D bridge deals one the first time you go in.
-    saveProfile({ name, color: store.profile.color });
-    net.connect();
-  });
+    saveProfile({ name: store.profile.name, color: store.profile.color });
+  }
+  net.connect();
 })();
 
 renderTitle();

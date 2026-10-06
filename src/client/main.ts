@@ -6,7 +6,6 @@ import { randomLook } from '../shared/avatar';
 import { PlayerController } from './player';
 import { Voice } from './voice';
 import { $ } from './ui/dom';
-import { askName } from './ui/name';
 import { elevatorPanelOpen } from './ui/elevator';
 import { onModelsProgress, preloadModels } from './world/models';
 import { loadingScreen } from './ui/loading';
@@ -269,13 +268,17 @@ function boot() {
   requestAnimationFrame(frame);
 }
 
+/** What the office calls you until you say (git's user.name, on your own computer). */
+let suggestedName: string | undefined;
+
 /** Who you're signed in as. With an account of your own, your name is that account's. */
 async function whoami() {
   try {
     const res = await fetch('/api/whoami', { cache: 'no-store' });
     if (res.status === 401) location.href = '/login?next=/bridge';
-    const { me } = (await res.json()) as { me?: typeof store.me };
+    const { me, name } = (await res.json()) as { me?: typeof store.me; name?: string };
     if (me) store.me = me;
+    suggestedName = name;
   } catch {
     // the welcome message says it too
   }
@@ -304,23 +307,16 @@ void whoami().then(() => {
     store.profile = { ...saved, look: saved.look };
     return enter();
   }
-  // New here: no character to pick before you see the office. A look and a shirt are dealt at
-  // random (Settings > Your character changes them), and only a name is asked for: none with an
-  // account, or when the 2D view already has one.
+  // New here: nothing to fill in before you see the office. A look and a shirt are dealt at random
+  // and the name is your account's, git's user.name on your own computer, or a made-up one
+  // (Settings > Your character changes any of them).
   store.profile = {
-    name: saved?.name ?? store.profile.name,
+    name: saved?.name ?? suggestedName ?? store.profile.name,
     color: saved?.color ?? AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
     look: randomLook(),
   };
-  if (saved || store.me.account) {
-    saveProfile(store.profile);
-    return enter();
-  }
-  askName((name) => {
-    store.profile.name = name;
-    saveProfile(store.profile);
-    enter();
-  });
+  saveProfile(store.profile);
+  enter();
 });
 
 // Debug handle for quick checks from the console / headless screenshots.

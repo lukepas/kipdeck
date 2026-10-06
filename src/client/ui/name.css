@@ -1,4 +1,0 @@
-/* The first-run name box (ui/name.ts). */
-.name-ask { width: min(420px, calc(100vw - 32px)); }
-.name-ask .body p { margin: 0 0 12px; font-weight: 500; }
-.name-ask input { width: 100%; box-sizing: border-box; }

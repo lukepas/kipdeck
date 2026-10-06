@@ -253,20 +253,16 @@ test('back after a while away: the digest is over the list on the home page, and
   assert.deepEqual(office.errors, []);
 });
 
-test('a first visit to the 3D office asks only for a name, never for a character', async (t) => {
+test('a first visit to the 3D office asks for nothing: no name, no character', async (t) => {
   if (why) return t.skip(why);
   const { page, errors, context } = await signedIn(undefined, 0, true);
   t.after(() => context.close());
   await page.goto(`${base}/bridge`);
-  const ask = page.locator('.modal.name-ask');
-  await ask.waitFor({ timeout: 60_000 });
-  assert.equal(await page.locator('.modal.charsel').count(), 0, 'no character creator in the way');
-  assert.equal(await ask.locator('header .close').count(), 1);
-  await ask.locator('input').fill('Nia');
-  await ask.locator('button[type=submit]').click();
   await page.waitForFunction(() => !!(window as unknown as { __office?: { store: { floor: string | null } } }).__office?.store.floor, null, { timeout: 60_000 });
+  assert.equal(await page.locator('.modal.name-ask').count(), 0, 'no name to type');
+  assert.equal(await page.locator('.modal.charsel').count(), 0, 'no character creator in the way');
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('agent-office.profile') ?? 'null'));
-  assert.equal(saved.name, 'Nia');
+  assert.match(saved.name, /\S/, 'a name to go by (a made-up one: this office has a password, so it is not its owner\'s own)');
   assert.ok(saved.look, 'a look was dealt, and kept for next time');
   await page.locator('#mission-strip').waitFor();
   assert.deepEqual(errors, []);

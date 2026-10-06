@@ -7,6 +7,7 @@ import { agentRoutes } from './agents.js';
 import { authRoutes } from './auth.js';
 import { fileRoutes } from './files.js';
 import { githubRoutes } from './github.js';
+import { localRoutes } from './local.js';
 import { pageRoutes } from './pages.js';
 import { reputationRoutes } from './reputation.js';
 import { searchRoutes } from './search.js';
@@ -25,6 +26,8 @@ export const routes: readonly Route[] = [
   authRoutes.claimable,
   authRoutes.claim,
   authRoutes.link,
+  // Commands on this computer with the office's local key (mergeline open, attach).
+  localRoutes.link,
   authRoutes.logout,
   authRoutes.password,
   pageRoutes.health,

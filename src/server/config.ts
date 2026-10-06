@@ -23,6 +23,8 @@ export interface Config {
   project?: string;
   host: string;
   port: number;
+  /** --port or PORT named the port: it's that one or nothing. Otherwise the next free one from 4600 will do. */
+  portGiven: boolean;
   /** Open the office in a browser, signed in, when it's started in a terminal (--no-open: don't). */
   open: boolean;
   /** Plaintext password, only when known: from --password, or generated and not yet claimed. */
@@ -81,18 +83,19 @@ const HELP = `mergeline - the inbox for your ${AGENT_PROVIDERS.filter((p) => p !
 Usage:
   mergeline [options]
   mergeline [dir] [options]
+  mergeline open [--print]
   mergeline setup [--projects <dir>] [--project <owner/repo>]...
   mergeline prune [dir] [--dry-run] [--force]
   mergeline accounts [list|invite|revoke|role|password] ...
   mergeline tunnel [office@address | url]
 
-Runs the office. Every project is a floor of the building: open Floors,
-pick one of the repositories your \`gh\` login can see, and the office clones it
-into the projects folder as a new floor. Workers, terminals, boards and the
-task queue on a floor all belong to that floor's checkout.
+Runs the inbox for your coding agents, at http://localhost:4600 (or the next
+free port). Each project is a git checkout, and every agent works on a branch of
+its own in a worktree of it. Projects come from the folder you start it in, or
+from GitHub (cloned with your \`gh\` login into the projects folder).
 
-The first time it starts in a terminal with no floors, it walks you through
-where projects are cloned, signing the GitHub CLI in, and your first project.
+Started inside a git repository, that repository is its first project. The
+browser's setup card does the rest: which agents are installed, GitHub (optional).
 
 Started from anywhere, the office keeps its data in --home. Given a [dir] (or
 started in a project where an office already ran), it keeps its data in
@@ -100,6 +103,8 @@ started in a project where an office already ran), it keeps its data in
 (an admin can take it off in the elevator like any other).
 
 Commands:
+  open                    Open the running office in your browser, signed in
+                          (a new sign-in link; see open --help)
   setup                   Pick the folder projects are cloned into and clone
                           projects as floors: a walkthrough in a terminal, or
                           just --projects / --project for scripts (see setup --help)
@@ -118,7 +123,8 @@ Options:
       --projects <dir>    Where new floors are cloned, as <dir>/<owner>/<repo>
                           (default ~/agent-office, env AGENT_OFFICE_PROJECTS).
                           Also settable from Settings in the office
-  -p, --port <n>          Port to listen on (default 4600, env PORT)
+  -p, --port <n>          Port to listen on (env PORT). Without it, 4600 or the
+                          next free port after it
   -H, --host <addr>       Address to bind (default 127.0.0.1: only this machine).
                           0.0.0.0 lets other computers on your network in
       --password <pw>     Office password (env AGENT_OFFICE_PASSWORD).
@@ -174,8 +180,10 @@ Options:
                           All are off by default; admins switch them from Labs
 ${CHAIN_HELP}  -h, --help              Show this help
 
-Started in a terminal, the office opens in your browser already signed in, with
-a link that works once. Only this machine can reach it unless you pass --host.
+Started in a terminal, it opens in your browser already signed in, with a link
+that works once; \`mergeline open\` makes a new one. On this computer there is no
+password to type. Only this machine can reach it unless you pass --host, and then
+the password (or people's own accounts) is how everyone else signs in.
 To run it on a server for your team, see deploy/provision.sh.
 
 Voice and screen sharing need a secure context: use https (a reverse proxy,
@@ -232,6 +240,7 @@ export function loadConfig(argv: string[]): Config {
   let homeGiven = !!process.env.AGENT_OFFICE_HOME;
   let projects = process.env.AGENT_OFFICE_PROJECTS ? path.resolve(process.env.AGENT_OFFICE_PROJECTS) : '';
   let port = Number(process.env.PORT) || 4600;
+  let portGiven = !!Number(process.env.PORT);
   // Loopback unless asked: an office lets whoever signs in run commands on this machine.
   let host = '127.0.0.1';
   let open = !process.env.AGENT_OFFICE_NO_OPEN || process.env.AGENT_OFFICE_NO_OPEN === '0';
@@ -268,6 +277,7 @@ export function loadConfig(argv: string[]): Config {
       case '-p':
       case '--port':
         port = Number(takeValue(argv, i++, a));
+        portGiven = true;
         break;
       case '-H':
       case '--host':
@@ -474,6 +484,7 @@ export function loadConfig(argv: string[]): Config {
     project: project || undefined,
     host,
     port,
+    portGiven,
     open,
     password: password || undefined,
     passwordGenerated,
