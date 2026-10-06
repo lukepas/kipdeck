@@ -94,6 +94,7 @@ import { installHail } from './features/hail';
 import { installKinetic } from './features/kinetic';
 import { installHands } from './features/hands';
 import { installLounge } from './features/lounge';
+import { installSoundscape } from './features/soundscape';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -233,6 +234,8 @@ installFocusLean(ctx, parts);
 parts.lounge = installLounge(ctx, parts);
 // Your gloved hands in first person, drawn over the deck (features/hands).
 installHands(ctx, parts);
+// What you hear besides the cues: your steps, Bolt, the interface and the bridge's ambience (features/soundscape).
+installSoundscape(ctx, parts);
 installDeclutter(ctx, parts);
 installDemo(ctx, parts);
 installChat(ctx);
