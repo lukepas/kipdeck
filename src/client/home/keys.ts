@@ -88,8 +88,11 @@ export function installKeys(actions: Actions, palette: () => void, search: HTMLI
           search.blur();
         } else if (home.paneOpen && matchMedia('(max-width: 899px)').matches) home.select(undefined);
         else if (inPane) focusSelected();
-        else if (home.selected) home.select(undefined);
-        else return;
+        else if (home.selected) {
+          // Held first: an empty pane would otherwise open the next one again at once (pane.ts).
+          home.held = true;
+          home.select(undefined);
+        } else return;
         e.preventDefault();
         e.stopPropagation();
         return;

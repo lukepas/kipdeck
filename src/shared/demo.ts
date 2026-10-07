@@ -20,11 +20,11 @@ export const INSTALL_COMMAND = 'npx mergeline';
 /** Who the hosted demo's scripted reviewer is, in the shipped log and on the agents' terminals. */
 export const DEMO_REVIEWER = 'Demo Lead (scripted)';
 
-/** The note over the inbox in a demo office: what it is, and the command to run next (`lead` says what for). */
-export function demoNote(d: DemoInfo): { text: string; lead: string; command: string } {
+/** The demo's pill in the top bar: what it is (`short` in the pill, `text` in full), and the command to run next (`lead` says what for). */
+export function demoNote(d: DemoInfo): { text: string; short: string; lead: string; command: string } {
   return d.readOnly
-    ? { text: 'Live demo, read only. The agents and the reviewer are scripted, and no model runs.', lead: 'Try it on your computer', command: DEMO_COMMAND }
-    : { text: `Scripted agents on a throwaway repo (${d.project}). No model runs, and nothing of yours is touched.`, lead: 'Run it for real', command: INSTALL_COMMAND };
+    ? { text: 'Live demo, read only. The agents and the reviewer are scripted, and no model runs.', short: 'Scripted agents and reviewer', lead: 'Try it yourself', command: DEMO_COMMAND }
+    : { text: `Scripted agents on a throwaway repo (${d.project}). No model runs, and nothing of yours is touched.`, short: 'Scripted agents, throwaway repo', lead: 'Run it for real', command: INSTALL_COMMAND };
 }
 
 /** What a visitor to the read-only demo is told when they try to act. */

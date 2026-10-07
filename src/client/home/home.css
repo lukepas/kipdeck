@@ -60,6 +60,9 @@ button.sec-h:hover { color: var(--text); }
 .s-working .row-title { font-weight: 500; }
 .s-working .agent-mark, .s-idle .agent-mark { width: 24px; height: 24px; font-size: 10px; }
 .row.snoozed .row-title { color: var(--muted); }
+/* The wait bar: how long it has waited on you, out of 30 minutes, amber turning to Signal as it grows. */
+.row-wait { position: absolute; left: 0; bottom: 0; height: 2px; width: max(8px, calc(var(--wait, 0) * 100%)); background: color-mix(in srgb, var(--signal) calc(var(--wait, 0) * 100%), var(--review)); opacity: .85; pointer-events: none; transition: width .6s ease; }
+.l-needs-you .row-wait, .l-stuck .row-wait { background: var(--signal); }
 @media (pointer: coarse) { .row-act { height: 40px; padding: 0 16px; font-size: 14px; } }
 
 /* ---- First run, the checklist, the digest ------------------------------------------------------ */
@@ -68,6 +71,7 @@ button.sec-h:hover { color: var(--text); }
 .first-run p { margin: 0; max-width: 46ch; color: var(--muted); font-size: 14px; line-height: 1.5; }
 .first-run .big { height: 42px; padding: 0 18px; gap: 8px; font-size: 15px; }
 .first-run .first-hint { font-size: 12px; }
+.inbox + .checklist { margin-top: 24px; }
 .checklist { margin-bottom: 20px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-1); }
 .cl-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .cl-head h2 { margin: 0; font: 600 14px var(--font-ui); }
@@ -154,18 +158,21 @@ button.sec-h:hover { color: var(--text); }
 .docked > .modal.term.in-dock > .term-tabbar { grid-row: 1; }
 .docked > .modal.term.in-dock > .term-keypad { grid-row: 3; }
 .docked .changes-files { width: min(280px, 38%); }
+.docked .wt-path { display: none; }
 /* The pane has its own Open PR and Merge, and the bridge keeps the terminal's pinned links. */
 .docked .pr-slot, .docked > .modal.term.in-dock > .term-tabbar { display: none; }
 .docked > .modal.term.in-dock { grid-template-rows: 0 minmax(0, 1fr) auto; }
 
 @media (max-width: 599px) {
-  /* A phone: the title gets the row's width and two lines; the button goes under it, and the quiet
-     Open goes (a tap on the row opens it). */
+  /* A phone: the title gets the row's width and two lines. */
   .row { flex-wrap: wrap; padding-right: 0; }
   .row-main { flex-basis: 100%; align-items: flex-start; }
   .row-title { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-  .row-act.act { margin: -4px 12px 12px auto; }
-  .row-act.quiet { display: none; }
+  /* The whole row is the tap: no second button, no project, just the task, one status line and its age. */
+  .row-act { display: none; }
+  .row-where { display: none; }
+  .row-sub { white-space: normal; }
+  .row-status { white-space: nowrap; }
 }
 @media (max-width: 899px) {
   .pane { position: relative; }

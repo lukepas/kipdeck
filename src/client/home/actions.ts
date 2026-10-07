@@ -3,6 +3,7 @@
 // doesn't draw itself (a pull request, the boards, the queue, Mission control) load when first wanted.
 
 import { nextUp, type RowAction } from '../../shared/inbox';
+import { waitWords } from '../../shared/metrics';
 import type { InboxServerMsg, Reminder, RosterEntry } from '../../shared/protocol';
 import type { AgentProvider } from '../../shared/providers';
 import type { Net } from '../net';
@@ -180,10 +181,18 @@ export function createActions(net: Net): Actions {
         toast(msg.error, 'warn');
         return home.change();
       }
-      // The office tells everyone who merged what; this page moves on to the next thing.
+      // The office tells everyone who merged what; this page moves on to the next thing. The first
+      // merge in this browser is worth saying once, with how long the loop took.
+      if (home.firstMerge()) {
+        const first = Math.min(...store.roster.map((e) => e.createdAt), Date.now());
+        toast(`First change merged, ${waitWords(Date.now() - first)} after your first agent started. It's in Shipped today.`);
+      }
       home.check('merge');
       // On to the next thing that needs you, so Enter keeps the loop going.
       const next = nextUp(currentView(), msg.workerId);
+      // Nothing next: the pane rests on "nothing needs you" until something new arrives, rather than
+      // opening the change just merged again while it's still leaving To review.
+      if (!next) home.held = true;
       home.select(next?.id, next ? (next.status === 'needs_input' ? 'terminal' : 'changes') : undefined);
     },
     openBoard: (kind) => void lazy.boards().then((m) => m.openBoard(kind, net, boardActions())),

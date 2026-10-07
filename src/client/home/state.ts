@@ -10,6 +10,7 @@ export type PaneTab = 'terminal' | 'changes' | 'log';
 const CHECK_KEY = 'mergeline.checklist';
 const IDLE_KEY = 'mergeline.idle-open';
 const PROJECT_KEY = 'mergeline.project';
+const FIRST_MERGE_KEY = 'mergeline.first-merge';
 
 function read(key: string): string | null {
   try {
@@ -50,6 +51,10 @@ export const home = {
   deployedAt: 0,
   /** On a phone: the pane is up over the list. */
   paneOpen: false,
+  /** A demo office (`--demo`): no Get started checklist. */
+  demo: false,
+  /** Esc emptied the pane on purpose: nothing opens in it by itself until another agent needs you (pane.ts). */
+  held: false,
   /** '' for All projects, else a floor id. */
   project: read(PROJECT_KEY) ?? '',
   query: '',
@@ -70,6 +75,7 @@ export const home = {
 
   select(id: string | undefined, tab?: PaneTab) {
     this.selected = id;
+    if (id) this.held = false;
     if (tab) this.tab = tab;
     this.paneOpen = !!id;
     this.change();
@@ -100,6 +106,12 @@ export const home = {
   },
   checklistShown(): boolean {
     return !this.checklist.hidden && !checklistDone(this.checklist);
+  },
+  /** True once, for this browser's first merge (the toast that says so), false after. */
+  firstMerge(): boolean {
+    if (read(FIRST_MERGE_KEY)) return false;
+    write(FIRST_MERGE_KEY, String(Date.now()));
+    return true;
   },
   addRecord(r: ShipRecord) {
     if (this.records.some((x) => x.id === r.id)) return;

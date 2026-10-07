@@ -132,13 +132,17 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   await row(page, 'review', 'Write the README quickstart').waitFor({ timeout: 30_000 });
   assert.match(await page.locator('.sec-needs-you .sec-h').innerText(), /Needs you\s*1/);
 
-  // Answer: the row's one button opens its terminal with the reply box ready.
+  // Answer: the row's one button opens its question card over the terminal, the reply box ready.
   const ask = row(page, 'needs-you', 'Fix the flaky checkout test');
   assert.equal(await ask.locator('.row-act').innerText(), 'Answer');
   await ask.locator('.row-act').click();
-  const reply = page.locator('.pane .term-say input');
+  const reply = page.locator('.pane .q-card .q-reply input');
   await reply.waitFor({ timeout: 15_000 });
-  await page.waitForFunction(() => document.activeElement?.matches('.pane .term-say input'), null, { timeout: 5_000 });
+  await page.locator('.pane .q-card .q-text', { hasText: 'update the snapshot or fix the selector?' }).waitFor({ timeout: 15_000 });
+  await page.waitForFunction(() => document.activeElement?.matches('.pane .q-reply input'), null, { timeout: 5_000 });
+  // One way to answer: the header has no second Answer, and the terminal's own reply bar steps aside.
+  assert.equal(await page.locator('.pane .pane-primary').count(), 0);
+  assert.equal(await page.locator('.pane .term-say input').isVisible(), false);
   await page.keyboard.type('fix the selector');
   await page.keyboard.press('Enter');
   await row(page, 'review', 'Fix the flaky checkout test').waitFor({ timeout: 30_000 });
@@ -178,7 +182,8 @@ test('the keys: ? lists them, Esc closes it, / searches, Ctrl+K finds an agent',
   const { page, errors, context } = await signedIn({ width: 1280, height: 800 });
   t.after(() => context.close());
   await page.locator('.sec-review .row').first().waitFor({ timeout: 15_000 });
-  await page.locator('body').click({ position: { x: 900, y: 700 } });
+  // A click on the list's empty foot, outside any box or terminal (the pane has opened the oldest by itself).
+  await page.locator('body').click({ position: { x: 200, y: 780 } });
   await page.keyboard.press('?');
   const keys = page.locator('.modal.keys-help');
   await keys.waitFor();

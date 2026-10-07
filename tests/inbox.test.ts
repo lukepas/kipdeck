@@ -5,7 +5,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { attention, rankRoster } from '../src/shared/attention.js';
-import { ageLabel, buildInbox, checklistDone, checklistSeen, looseReminders, matches, mergeRates, nextUp, rowAction, sectionOf, shipPayload, shippedLine, shippedToday, startOfDay, waitedLabel } from '../src/shared/inbox.js';
+import { ageLabel, buildInbox, changeSummary, waitShare, checklistDone, checklistSeen, looseReminders, matches, mergeRates, nextUp, rowAction, sectionOf, shipPayload, shippedLine, shippedToday, startOfDay, waitedLabel } from '../src/shared/inbox.js';
 import type { Reminder, RosterEntry, ShipRecord } from '../src/shared/protocol.js';
 
 const NOW = new Date(2026, 9, 7, 15, 0, 0).getTime();
@@ -76,6 +76,11 @@ test('the list keeps the ranking order in each section, filters by project and s
   assert.equal(ageLabel('needs-you', view.sections['needs-you'][0].att, NOW), 'waiting 20m');
   assert.equal(ageLabel('idle', { since: NOW - 3 * 60 * MIN }, NOW), 'idle 3h');
   assert.equal(ageLabel('working', { since: NOW - 4 * MIN }, NOW), '4m');
+  assert.equal(ageLabel('review', { since: NOW - 2 * MIN }, NOW), 'ready 2m');
+  assert.equal(changeSummary({ files: 1, additions: 3, deletions: 0, ahead: 1 } as RosterEntry['work']), '1 file, +3 -0');
+  assert.equal(changeSummary(undefined), undefined);
+  assert.equal(waitShare(NOW - 15 * MIN, NOW), 0.5);
+  assert.equal(waitShare(NOW - 90 * MIN, NOW), 1);
 });
 
 test('after a merge the next one is the oldest that needs you, else the oldest to review', () => {

@@ -77,7 +77,7 @@ after(async () => {
   await rm(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
 });
 
-test('the demo on your computer: the note, a question from Codex, a diff from Claude Code, a merge, and Cursor in To review', { timeout: 90_000 }, async (t) => {
+test('the demo on your computer: the pill, a question from Codex opening by itself, answered from its card, a diff from Claude Code, a merge, and Cursor in To review', { timeout: 90_000 }, async (t) => {
   if (why) return t.skip(why);
   const context = await browser!.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'light' });
   const page = await context.newPage();
@@ -87,9 +87,10 @@ test('the demo on your computer: the note, a question from Codex, a diff from Cl
   assert.equal(await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD), 200);
   await page.goto(`${base}/`);
 
-  const note = page.locator('#demo.demo-note');
+  // One pill in the top bar says it's the demo, with the command to run it for real; no checklist.
+  const note = page.locator('#demo.hb-demo');
   await note.waitFor();
-  assert.match(await note.innerText(), /Scripted agents on a throwaway repo \(acme-shop\)/);
+  assert.match((await note.getAttribute('title')) ?? '', /Scripted agents on a throwaway repo \(acme-shop\)/);
   assert.equal(await note.locator('code').innerText(), 'npx mergeline');
 
   const row = (section: string, text: string) => page.locator(`.sec-${section} .row`, { hasText: text }).first();
@@ -97,9 +98,15 @@ test('the demo on your computer: the note, a question from Codex, a diff from Cl
   assert.match(await row('needs-you', 'Fix the flaky checkout test').locator('.row-status').innerText(), /^Needs an answer$/);
   assert.match(await row('needs-you', 'Fix the flaky checkout test').locator('.agent-mark').getAttribute('class') ?? '', /p-codex/);
 
+  assert.equal(await page.locator('#checklist').isVisible(), false, 'no Get started checklist in the demo');
+  // Nothing was selected, so the pane opened the question by itself, in words, over the terminal.
+  const card = page.locator('.pane .q-card');
+  await card.locator('.q-text', { hasText: 'Update the snapshot or fix the selector?' }).waitFor({ timeout: 15_000 });
+  assert.match(await page.locator('.pane-title h2').innerText(), /Fix the flaky checkout test/);
+  // Answer from the row puts the cursor in the card's one reply box.
   await row('needs-you', 'Fix the flaky checkout test').locator('.row-act').click();
-  const reply = page.locator('.pane .term-say input');
-  await reply.waitFor({ timeout: 15_000 });
+  const reply = card.locator('.q-reply input');
+  await page.waitForFunction(() => !!document.activeElement?.closest('.q-reply'), null, { timeout: 5000 });
   await reply.fill('fix the selector');
   await reply.press('Enter');
   await row('working', 'Fix the flaky checkout test').or(row('review', 'Fix the flaky checkout test')).waitFor({ timeout: 15_000 });

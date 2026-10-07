@@ -92,7 +92,7 @@ const KEYPAD: { label: string; title: string; keys: string | ((term: Terminal) =
   { label: 'Tab', title: 'Tab', keys: '\t', touch: true },
 ];
 
-let current: { workerId: string; modal: Modal; find(f: TerminalFind): void; reply(): void } | null = null;
+let current: { workerId: string; modal: Modal; find(f: TerminalFind): void; reply(): void; screen(): string[] } | null = null;
 const listeners = new Set<(msg: ServerMsg) => void>();
 
 /** Main feeds every server message through here so open terminals can pick theirs. */
@@ -107,6 +107,11 @@ export function openTerminalFor(): string | null {
 /** Puts the cursor in the open terminal's reply box (the keypad's), when it's `workerId`'s: answering from the inbox. */
 export function focusTerminalReply(workerId: string) {
   if (current?.workerId === workerId) current.reply();
+}
+
+/** The open terminal's visible lines, top to bottom, when it's `workerId`'s (what the question card reads). */
+export function terminalScreen(workerId: string): string[] | undefined {
+  return current?.workerId === workerId ? current.screen() : undefined;
 }
 
 /** Closes the terminal that's open, docked or not. */
@@ -147,8 +152,11 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
   const keys = h('div.term-keys', { role: 'group', 'aria-label': 'Keys' });
   const say = h('input', { type: 'text', placeholder: 'Reply, or tell it what to do next...', 'aria-label': 'Prompt', enterkeyhint: 'send', autocomplete: 'off' }) as HTMLInputElement;
   const sayBtn = h('button.btn.primary', { type: 'submit' }, 'Send');
-  // The quick keys sit in the reply bar as one compact segmented control, before the box.
-  const sayForm = h('form.term-say', {}, keys, dictateField(say), sayBtn);
+  // The quick keys sit in the reply bar as one compact segmented control, before the box, folded
+  // behind Keys in the pane's keypad (the question card answers most questions without them).
+  const keysToggle = opts.keypad ? h('button.btn.term-keys-toggle', { type: 'button', 'aria-expanded': 'false', title: 'Terminal keys: 1 2 3, Esc, Ctrl+C' }, 'Keys') : null;
+  const sayForm = h('form.term-say', {}, keysToggle, keys, dictateField(say), sayBtn);
+  keysToggle?.addEventListener('click', () => keysToggle.setAttribute('aria-expanded', String(sayForm.classList.toggle('keys-open'))));
   const keypad = opts.keypad ? h('div.term-keypad', {}, sayForm) : null;
   const meta = termMeta();
   const tabs = termTabs(workerId, { host, keypad, focusTerm: () => term.focus() });
@@ -378,6 +386,18 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
       else pendingFind = f;
     },
     reply: () => (keypad ? say.focus() : term.focus()),
+    // A line the terminal wrapped is joined back to the one it came from, so a question reads whole.
+    screen: () => {
+      const b = term.buffer.active;
+      const lines: string[] = [];
+      for (let i = 0; i < term.rows; i++) {
+        const line = b.getLine(b.viewportY + i);
+        const text = line?.translateToString(true) ?? '';
+        if (line?.isWrapped && lines.length) lines[lines.length - 1] += text;
+        else lines.push(text);
+      }
+      return lines;
+    },
   };
   closeBtn.addEventListener('click', () => modal.close());
   changesBtn.addEventListener('click', () => {

@@ -1,6 +1,6 @@
-// The avatar menu, top right: everything that isn't the inbox, in one short list. Work (the GitHub
-// boards and the task queue), Mission control, catching up, notifications, light or dark, Labs, the
-// keys, and signing out. A dropdown, not a window: a click outside or Esc puts it away.
+// The avatar menu, top right: the few things that aren't the inbox, in one short list: Numbers,
+// Settings, Help and keys, and signing out (with the GitHub boards and the queue above them while
+// that lab is on). A dropdown, not a window: a click outside or Esc puts it away.
 
 import { h } from '../ui/dom';
 import { icon, type IconName } from '../ui/icons';

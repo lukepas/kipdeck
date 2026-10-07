@@ -103,9 +103,9 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
 
   // The most agents running at once, across every project. Admins set it.
   const limitInput = h('input', { type: 'text', inputmode: 'numeric', 'aria-label': 'Most agents at once', spellcheck: 'false', autocomplete: 'off' }) as HTMLInputElement;
-  const limitSave = h('button.btn.primary', { type: 'button' }, 'Set limit');
+  // Saved as you leave the box or press Enter: no button of its own.
   const limitClear = h('button.btn', { type: 'button' });
-  const limitRow = h('div.webhook', {}, limitInput, limitSave, limitClear);
+  const limitRow = h('div.webhook', {}, limitInput, limitClear);
   const limitNote = h('p.setting-note');
   follow(() => {
     const m = store.machine;
@@ -128,7 +128,7 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
     net.send({ t: 'machine.limit', limit: n });
     limitInput.value = '';
   };
-  limitSave.addEventListener('click', saveLimit);
+  limitInput.addEventListener('change', () => limitInput.value.trim() && saveLimit());
   limitInput.addEventListener('keydown', (e) => e.key === 'Enter' && saveLimit());
   limitClear.addEventListener('click', () => net.send({ t: 'machine.limit', limit: null }));
 
@@ -280,7 +280,7 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
       id: 'agents',
       icon: 'units',
       label: 'Agents',
-      blurb: 'What agents start on, how many run at once, and what happens after a merge.',
+      blurb: 'What agents start on, how many run at once, and what happens after a merge. These apply to everyone using this Mergeline.',
       body: [
         setting('Default agent', 'office', agentNow, agent.element, agentActions, agentNote),
         setting('Agents at once', 'office', limitRow, limitNote),

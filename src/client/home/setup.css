@@ -32,3 +32,12 @@
 @media (max-width: 899px) {
   .su-repo { max-width: none; }
 }
+.su-found { display: flex; flex-direction: column; gap: 4px; margin: 2px 0; }
+.su-found p { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; font-size: 14px; color: var(--text); }
+.su-found p.su-say { padding-left: 26px; color: var(--muted); font-size: 13px; }
+.su-found .su-glyph { background: var(--working-tint, rgb(46 160 67 / .12)); color: var(--settled); }
+.su-found .agent-mark { width: 20px; height: 20px; font-size: 9px; }
+.su-found code { padding: 1px 6px; border: 1px solid var(--line); border-radius: 3px; background: var(--surface-2); font: 12px var(--font-mono); }
+.su-details { width: 100%; font-size: 13px; color: var(--muted); }
+.su-details summary { cursor: pointer; width: max-content; }
+.su-details .su-rows { margin-top: 8px; }
