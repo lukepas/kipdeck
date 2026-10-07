@@ -3,7 +3,7 @@
 // bending the page behind it. One small WebGL1 fragment pass on a canvas that exists only while
 // the ring is out (created on the merge, its context freed after), or the same ring in Canvas2D
 // where WebGL is missing. Pointer events pass straight through it.
-import { token } from '../engine/env';
+import { rgbOf } from '../engine/env';
 
 const VERT = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
 const FRAG = `precision mediump float;
@@ -24,13 +24,6 @@ void main(){
   gl_FragColor=vec4(c*fade+core*trail*fade,alpha);
 }`;
 
-function rgb(hex: string, fallback: [number, number, number]): [number, number, number] {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) return fallback;
-  const n = parseInt(m[1], 16);
-  return [(n >> 16) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
-}
-
 /** Sends one ring out from (x, y) in viewport pixels. Resolves when it has gone. */
 export function shockwave(x: number, y: number, ms = 1100): Promise<void> {
   const canvas = document.createElement('canvas');
@@ -40,8 +33,8 @@ export function shockwave(x: number, y: number, ms = 1100): Promise<void> {
   canvas.width = Math.round(innerWidth * dpr);
   canvas.height = Math.round(innerHeight * dpr);
   document.body.append(canvas);
-  const core = rgb(token('--signal') || '#ff6a1a', [1, 0.42, 0.1]);
-  const rim = rgb(token('--proof') || '#a68bff', [0.65, 0.55, 1]);
+  const core = rgbOf('--signal', [1, 0.42, 0.1]);
+  const rim = rgbOf('--proof', [0.65, 0.55, 1]);
   const gl = canvas.getContext('webgl', { premultipliedAlpha: false, alpha: true, antialias: false });
   const start = performance.now();
   let draw: (t: number) => void;

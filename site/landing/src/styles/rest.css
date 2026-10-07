@@ -60,7 +60,7 @@
 .chart { position: relative; }
 .big-num { display: flex; align-items: baseline; gap: 14px; margin: 0 0 18px; }
 .big-num b { font-size: clamp(88px, 10vw, 160px); line-height: .8; letter-spacing: -.05em; }
-.big-num span { font-size: 13px; color: var(--muted); }
+.big-num > span { font-size: 13px; color: var(--muted); }
 .chart svg { width: 100%; height: auto; overflow: visible; }
 .chart .axis path { stroke: var(--line); stroke-width: 1; }
 .chart .cols rect { fill: var(--surface-3); stroke: var(--line-strong); stroke-width: 1; }
@@ -78,14 +78,6 @@
 .tile code { margin-top: auto; padding-top: 10px; font-size: 12px; color: var(--ship); }
 .tile h3 { margin-top: 2px; }
 .tile-bridge { grid-column: span 2; grid-row: span 2; background: linear-gradient(180deg, color-mix(in srgb, var(--ship) 5%, var(--surface-1)), var(--surface-1)); }
-.deck { width: 100%; max-width: 520px; margin: 0 auto 8px; overflow: visible; }
-.deck-floor path { fill: color-mix(in srgb, var(--ship) 5%, var(--void)); stroke: var(--ship-dim); stroke-width: 1; }
-.deck-grid path { stroke: var(--ship-dim); stroke-width: .75; stroke-dasharray: 2 4; fill: none; }
-.deck-stations path { fill: var(--surface-3); stroke: var(--ship); stroke-width: 1; }
-.deck-units .u-needs { fill: var(--signal); }
-.deck-units .u-review { fill: none; stroke: var(--review); stroke-width: 2; }
-.deck-units .u-work { fill: var(--working); }
-.deck-sweep { stroke: var(--ship); stroke-width: 1.5; opacity: .7; }
 .switch { position: relative; width: 36px; height: 20px; border-radius: 10px; background: color-mix(in srgb, var(--ship) 22%, var(--surface-3)); border: 1px solid var(--ship-dim); margin-bottom: 8px; }
 .switch i { position: absolute; top: 2px; left: 18px; width: 14px; height: 14px; border-radius: 50%; background: var(--ship); }
 .tile-film { grid-column: 1 / -1; padding: 12px; min-height: 0; }

@@ -6,6 +6,10 @@ import './styles/app.css';
 import './styles/story.css';
 import './styles/rest.css';
 import './styles/motion.css';
+import './styles/pins.css';
+import './styles/loop.css';
+import './styles/scenes.css';
+import './styles/labs.css';
 import { SCENES } from './scenes/index';
 import { mountHero } from './scenes/hero';
 import { countUp } from './engine/count';
@@ -13,6 +17,8 @@ import { env } from './engine/env';
 import { themeButton, copyButtons, tryDemo, topBar, magnetic } from './ui/controls';
 import { waitlist } from './ui/waitlist';
 import { watchFilm } from './ui/watch';
+import { soundButton, cue } from './ui/sound';
+import { wait } from './ui/wait';
 
 const root = document.documentElement;
 root.classList.add('js');
@@ -24,6 +30,8 @@ tryDemo();
 waitlist();
 watchFilm();
 magnetic();
+soundButton();
+wait.on((since) => cue(since === null ? 'answer' : 'ask'));
 
 // The hero mounts at once (it is on screen); the rest wait until they are close.
 const hero = document.querySelector<HTMLElement>('[data-scene="hero"]');
@@ -67,7 +75,7 @@ const seen = new IntersectionObserver(
   },
   { rootMargin: '0px 0px -12% 0px' },
 );
-document.querySelectorAll<HTMLElement>('.label, h2.display, .lede, .measured li, .rv').forEach((el) => {
+document.querySelectorAll<HTMLElement>('.label, h2.display, .lede, .rv').forEach((el) => {
   if (el.closest('.hero')) return;
   el.classList.add('rv');
   seen.observe(el);

@@ -1,0 +1,106 @@
+/* Staged states for sections 05 to 08 and the top bar's extras. Every rule here applies only under
+   `.staged`, which a scene sets when it is about to drive its section, so without script or with
+   less motion the page is exactly its HTML. */
+
+/* ---------- Top bar: sound and the docked sparkline ---------- */
+.sound { visibility: hidden; }
+html.js .sound { visibility: visible; }
+.sound .wave { fill: none; stroke: currentColor; stroke-width: 1.6; display: none; }
+.sound .mute { fill: none; stroke: currentColor; stroke-width: 1.6; }
+.sound[aria-pressed='true'] { color: var(--signal); border-color: color-mix(in srgb, var(--signal) 50%, var(--line)); }
+.sound[aria-pressed='true'] .wave { display: inline; }
+.sound[aria-pressed='true'] .mute { display: none; }
+.pulse { position: relative; }
+.spark { position: absolute; left: 14px; right: 14px; top: calc(100% + 5px); width: calc(100% - 28px); height: 12px; overflow: visible; opacity: 0; pointer-events: none; }
+.spark polyline { fill: none; stroke: var(--signal); stroke-width: 1.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.pulse.spark-on .spark { opacity: 1; transition: opacity 300ms var(--ease); }
+.pulse.spark-on .spark polyline { stroke-dashoffset: 0; transition: stroke-dashoffset 1200ms var(--ease-out) 200ms; }
+@media (max-width: 520px) { .spark { display: none; } }
+
+/* ---------- 05 Why ---------- */
+.table-wrap { position: relative; }
+.us-frame { display: none; }
+.table-wrap.staged .us-frame { display: block; position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.us-frame rect { fill: none; stroke: var(--signal); stroke-width: 1.5; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.table-wrap.staged.go .us-frame rect { stroke-dashoffset: 0; transition: stroke-dashoffset 1100ms var(--ease-out) 1250ms; }
+.table-wrap.staged .why-table .us { box-shadow: none; background: transparent; transition: background-color 600ms var(--ease) 1400ms; }
+.table-wrap.staged.go .why-table .us { background: var(--tint-signal); }
+.table-wrap.staged .why-table th, .table-wrap.staged .why-table td {
+  border-bottom-color: transparent;
+  background-image: linear-gradient(var(--line), var(--line)); background-repeat: no-repeat; background-position: 0 100%; background-size: 0 1px;
+}
+.table-wrap.staged.go .why-table th, .table-wrap.staged.go .why-table td { background-size: 100% 1px; transition: background-size 700ms var(--ease-out) calc(var(--r, 0) * 60ms); }
+.table-wrap.staged.go .why-table td.us { background-image: none; }
+.table-wrap.staged .why-table thead th { opacity: 0; transform: translateY(8px); transition: opacity 500ms var(--ease), transform 600ms var(--ease-out); }
+.table-wrap.staged.go .why-table thead th { opacity: 1; transform: none; }
+.table-wrap.staged .why-table tbody th { opacity: 0; transition: opacity 500ms var(--ease) calc(150ms + var(--r, 0) * 70ms); }
+.table-wrap.staged.go .why-table tbody th { opacity: 1; }
+.table-wrap.staged .why-table td > span { opacity: 0; }
+.table-wrap.staged .why-table td > span.dec, .table-wrap.staged .why-table td > span.done { opacity: 1; }
+.why-table td > span { position: relative; }
+.why-table td > span.dec { color: transparent; }
+.why-table td > span.dec::before { opacity: 0; }
+.why-table td > span.dec::after { content: attr(data-s); position: absolute; left: 22px; top: 0; white-space: pre; font-family: var(--font-mono); font-size: .92em; color: var(--muted); }
+.why-table td.us > span.dec::after { color: var(--signal); }
+.why-table td > span.done::before { animation: mark-in 420ms var(--ease-spring); }
+@keyframes mark-in { from { transform: scale(0) rotate(-30deg); } }
+.why-table td.us { position: relative; }
+.table-wrap.staged .why-table td.us::after { content: ''; position: absolute; left: 14px; right: 14px; bottom: 7px; height: 2px; background: var(--signal); transform-origin: 0 50%; transform: scaleX(0); opacity: .9; }
+.table-wrap.staged.go .why-table td.us::after { animation: waitrun 1400ms var(--ease-out) var(--at, 0ms) both; }
+@keyframes waitrun { 0% { transform: scaleX(0); opacity: .9; } 60% { transform: scaleX(1); opacity: .9; } 100% { transform: scaleX(1); opacity: 0; } }
+@media (max-width: 720px) { .table-wrap.staged .us-frame { display: none; } }
+
+/* ---------- 06 Yours ---------- */
+.typing-term .c { visibility: hidden; }
+.typing-term .c.on { visibility: visible; }
+.caret { display: inline-block; position: relative; width: 0; height: 1em; vertical-align: -2px; }
+.caret::after { content: ''; position: absolute; left: 1px; top: 0; width: .55em; height: 1.15em; background: #ff6a1a; animation: blink 900ms steps(1) infinite; }
+.measured li { transition: opacity 500ms var(--ease), transform 700ms var(--ease-spring); }
+.measured li.waiting-count { opacity: .18; transform: translateY(10px); }
+.measured li.counted b { animation: land 700ms var(--ease-spring); }
+@keyframes land { from { transform: scale(.86); } }
+.measured b { display: inline-block; min-width: 2.2ch; transform-origin: 0 100%; }
+.ledger.staged li { position: relative; clip-path: inset(0 0 100% 0); opacity: 0; transform: translateY(-10px); transition: clip-path 520ms steps(6, end), opacity 200ms, transform 520ms var(--ease-out); }
+.ledger.staged li.printed { clip-path: inset(0 0 0 0); opacity: 1; transform: none; }
+.ledger li { position: relative; }
+.ledger li::after { content: ''; position: absolute; left: -8px; right: -8px; top: 3px; bottom: 3px; z-index: -1; border-radius: 2px; background: var(--tint-signal); transform-origin: 0 50%; transform: scaleX(0); transition: transform 600ms var(--ease-out); }
+.ledger li:hover::after { transform: scaleX(var(--wv, .1)); }
+.ledger { isolation: isolate; }
+.merged-today { margin-left: 10px; }
+.merged-today b { color: var(--proof); font-weight: 600; }
+.packets .hit { fill: none; stroke: var(--signal); stroke-width: 1.5; opacity: 0; }
+
+/* ---------- 07 Phone ---------- */
+.phone-list { position: relative; }
+.phone .sec { margin: 10px 2px 6px; font-size: 12px; }
+.phone .sec-shipped { color: var(--proof); }
+.phone .row-btn.mini { height: 24px; padding: 0 9px; font-size: 11.5px; }
+.phone .row.working .row-btn, .phone .row.merged .row-btn, .phone .row.working .waitbar, .phone .row.merged .waitbar { display: none; }
+.phone .row.review .row-btn { border-color: var(--proof); color: var(--proof); }
+.phone .row .st { flex: none; width: 9px; height: 9px; margin-right: -3px; }
+.phone .tap, .phone .ring { display: none; }
+.phone.staged { transform: perspective(1400px) rotateY(-30deg) rotateX(16deg) translateY(50px) scale(.9); opacity: 0; transition: transform 1300ms var(--ease-out), opacity 700ms var(--ease); }
+.phone.staged.in { transform: perspective(1400px) rotateY(-7deg) rotateX(calc(4deg + var(--lean, 0deg))); opacity: 1; }
+.phone.staged .push { opacity: 0; transform: translateY(-24px) scale(.96); transition: opacity 300ms var(--ease), transform 600ms var(--ease-spring); }
+.phone.staged .push.down { opacity: 1; transform: none; }
+.phone.staged .phone-list > * { transition: translate 700ms var(--ease-spring); }
+.phone.staged .row .waitbar > i { --w: .32; }
+.phone.staged .row.snap .waitbar > i { --w: 0; transition: transform 500ms var(--ease-spring); }
+.phone.staged .row .st { animation: pop 460ms var(--ease-spring); }
+.phone.staged .sec-shipped.lit { animation: unfurl 700ms var(--ease-out); }
+.phone.staged .tap { display: block; position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; border-radius: 50%; z-index: 5; pointer-events: none; background: rgb(244 246 248 / .3); border: 1.5px solid rgb(244 246 248 / .85); opacity: 0; }
+.phone.staged .tap.go { animation: thumb 700ms var(--ease-out) both; }
+@keyframes thumb { 0% { opacity: 0; scale: 1.6; } 30% { opacity: 1; scale: .8; } 55% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.4; } }
+.phone.staged .ring { display: block; position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; z-index: 4; pointer-events: none; border: 2px solid var(--proof); box-shadow: 0 0 20px var(--signal), inset 0 0 12px var(--signal); opacity: 0; }
+.phone.staged .ring.go { animation: minishock 900ms var(--ease-out) both; }
+@keyframes minishock { 0% { opacity: 1; transform: scale(.4); } 100% { opacity: 0; transform: scale(24); } }
+
+/* ---------- 08 Numbers ---------- */
+.chart.staged .cols rect { transform-box: fill-box; transform-origin: 50% 100%; }
+.chart.staged .cols rect:last-child { fill: var(--surface-3); stroke: var(--line-strong); }
+.chart.staged .cols rect.cur { fill: var(--text); stroke: none; transition: fill 250ms var(--ease); }
+.chart.staged .cols rect:first-child.cur { fill: var(--signal); }
+.chart.staged .vals text:last-child { fill: var(--muted); font-weight: 400; }
+.chart.staged .vals text.cur { fill: var(--text); font-weight: 600; }
+.big-num b { display: inline-block; min-width: 1.15em; text-align: right; font-variant-numeric: tabular-nums; }
+.big-num > span { min-width: 24ch; }

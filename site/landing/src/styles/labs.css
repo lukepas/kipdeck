@@ -1,0 +1,132 @@
+/* 09 Labs to 12 End: the deck, the switches, the escrow, the zipper, the seats, the March to the
+   Mark and the footer. The deck is pure CSS 3D driven by one number, --lift (0 a flat list of
+   inbox rows, 1 the bridge seen from above at an angle); without script it rests at 1. */
+
+/* ---------- 09 The deck ---------- */
+.deck3d { --lift: 1; position: relative; height: 300px; margin: -6px -6px 6px; perspective: 1100px; perspective-origin: 50% 30%; overflow: hidden; }
+.plane {
+  position: absolute; inset: 0; transform-style: preserve-3d;
+  transform: translateY(calc(var(--lift) * 14px)) rotateX(calc(56deg * var(--lift))) rotateZ(calc(-34deg * var(--lift))) scale(calc(1 - .12 * var(--lift)));
+}
+.deck-floor {
+  position: absolute; left: 50%; top: 50%; width: 500px; height: 500px; margin: -250px 0 0 -250px; border-radius: 50%;
+  border: 1px solid var(--ship-dim); opacity: var(--lift);
+  background: repeating-radial-gradient(circle at 50% 50%, transparent 0 54px, color-mix(in srgb, var(--ship) 18%, transparent) 54px 55px), radial-gradient(circle, color-mix(in srgb, var(--ship) 8%, var(--void)) 0, var(--void) 70%);
+}
+.deck-floor::after { content: ''; position: absolute; left: 50%; top: 50%; width: 14px; height: 14px; margin: -7px; border: 1.5px solid var(--ship); transform: rotate(45deg); }
+.station {
+  --fx: 0px; --fy: 0px; --tx: 0px; --ty: 0px; --ta: 0deg;
+  position: absolute; left: 50%; top: 50%; width: 190px; height: 38px; margin: -19px 0 0 -95px;
+  display: flex; align-items: center; gap: 8px; padding: 0 10px; transform-style: preserve-3d;
+  border: 1px solid var(--line-strong); border-radius: 3px; background: var(--surface-2); font-size: 12px;
+  transform:
+    translate3d(calc(var(--fx) + (var(--tx) - var(--fx)) * var(--lift)), calc(var(--fy) + (var(--ty) - var(--fy)) * var(--lift)), calc(var(--lift) * 14px))
+    rotateZ(calc(var(--ta) * var(--lift)));
+}
+.station::after { content: ''; position: absolute; inset: -1px; border-radius: 3px; background: color-mix(in srgb, var(--ship) 10%, #05080b); border: 1px solid var(--ship-dim); transform: translateZ(calc(var(--lift) * -14px)); opacity: var(--lift); }
+.station::before { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; background: var(--working); }
+.station.s-needs::before { background: var(--signal); }
+.station.s-review::before { background: var(--review); }
+.station .sign { width: 26px; height: 22px; font-size: 10px; }
+.st-t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; opacity: calc(1 - var(--lift) * 1.3); }
+.station:nth-child(2) { --fy: -92px; --tx: -177px; --ty: -34px; --ta: -62deg; }
+.station:nth-child(3) { --fy: -46px; --tx: -94px; --ty: -117px; --ta: -28deg; }
+.station:nth-child(4) { --fy: 0px; --tx: 21px; --ty: -139px; --ta: 6deg; }
+.station:nth-child(5) { --fy: 46px; --tx: 123px; --ty: -98px; --ta: 38deg; }
+.station:nth-child(6) { --fy: 92px; --tx: 188px; --ty: -8px; --ta: 70deg; }
+/* A unit seated at each station, turned to face you whatever the deck's angle. */
+.unit {
+  position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px; background: var(--working);
+  -webkit-mask: var(--g-working) center / contain no-repeat; mask: var(--g-working) center / contain no-repeat;
+  opacity: var(--lift);
+  transform: translateZ(calc(var(--lift) * 30px)) rotateZ(calc(var(--ta) * -1 * var(--lift))) rotateZ(calc(34deg * var(--lift))) rotateX(calc(-56deg * var(--lift))) scale(calc(.4 + .9 * var(--lift)));
+}
+.s-needs .unit { background: var(--signal); -webkit-mask-image: var(--g-needs-you); mask-image: var(--g-needs-you); filter: drop-shadow(0 0 6px var(--signal)); }
+.s-review .unit { background: var(--review); -webkit-mask-image: var(--g-review); mask-image: var(--g-review); }
+.sweep { position: absolute; left: 50%; top: 50%; width: 220px; height: 1.5px; margin-top: -1px; transform-origin: 0 50%; background: linear-gradient(90deg, var(--ship), transparent); opacity: 0; transform: translateZ(1px); }
+.deck3d.live .sweep { opacity: .8; animation: radar 5s linear infinite; }
+@keyframes radar { from { transform: translateZ(1px) rotate(0deg); } to { transform: translateZ(1px) rotate(360deg); } }
+.deck3d canvas { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1200ms var(--ease); }
+.deck3d.gl canvas { opacity: 1; }
+.deck3d.gl .plane { opacity: 0; transition: opacity 900ms var(--ease); }
+@media (max-width: 600px) { .deck3d { height: 250px; } .plane { scale: .78; } }
+
+/* The other lab tiles switch on like switches. */
+.bento.staged .tile:not(.tile-bridge):not(.tile-film) { transition: border-color 400ms var(--ease), background-color 400ms var(--ease); }
+.bento.staged .tile:not(.tile-bridge):not(.tile-film):not(.on) { border-color: var(--line); background: color-mix(in srgb, var(--surface-1) 60%, var(--void)); }
+.bento.staged .tile:not(.on) h3, .bento.staged .tile:not(.on) p, .bento.staged .tile:not(.on) code { opacity: .4; }
+.bento.staged .tile h3, .bento.staged .tile p, .bento.staged .tile code { transition: opacity 500ms var(--ease) 150ms; }
+.bento.staged .switch { transition: background-color 300ms var(--ease); }
+.bento.staged .switch i { transition: left 380ms var(--ease-spring), background-color 300ms; }
+.bento.staged .tile:not(.on) .switch { background: var(--surface-3); border-color: var(--line-strong); }
+.bento.staged .tile:not(.on) .switch i { left: 2px; background: var(--muted); }
+.bento.staged .tile.on::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 40%; pointer-events: none; background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--ship) 14%, transparent) 90%, var(--ship)); opacity: 0; animation: power 900ms var(--ease-out); }
+@keyframes power { 0% { opacity: 1; transform: translateY(-100%); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(250%); } }
+
+/* ---------- 10 Proof of Merge ---------- */
+.release { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 16px; margin-top: 16px; }
+.merge-chip .glyph { width: 12px; height: 12px; color: var(--proof); }
+.merge-chip:disabled { opacity: .5; cursor: default; }
+.amount { font-size: 12.5px; color: var(--muted); }
+.amount b { color: var(--settled); font-weight: 600; font-size: 15px; }
+.proof-grid { position: relative; }
+.attest { display: none; }
+.proof .staged ~ .attest, .proof-grid.staged .attest { display: block; position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 2; }
+.attest path { fill: none; stroke: var(--proof); stroke-width: 1.5; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.proof-grid.released .attest path { stroke-dashoffset: 0; transition: stroke-dashoffset 900ms var(--ease-out) 450ms; }
+.escrow svg { overflow: visible; }
+.escrow .coin, .escrow .lid, .escrow .shackle { transform-box: fill-box; }
+.proof-grid.staged .escrow .coin { transform: translateY(calc((1 - var(--drop, 1)) * -64px + var(--drop, 1) * 92px)); opacity: calc(.2 + var(--drop, 1) * 4); }
+.proof-grid.staged .escrow .lid { transform-origin: 0 50%; transform: rotate(calc((1 - var(--close, 1)) * -28deg)); }
+.proof-grid.staged .escrow .shackle { transform: translateY(calc((1 - var(--lock, 1)) * -7px)); }
+.proof-grid.released .escrow .coin { transform: translateY(-28px); transition: transform 900ms var(--ease-spring) 200ms; }
+.proof-grid.released .escrow .lid { transform-origin: 0 50%; transform: rotate(-32deg); transition: transform 500ms var(--ease-out) 120ms; }
+.proof-grid.released .escrow .shackle { transform-origin: 100% 100%; transform: translate(0, -9px) rotate(28deg); transition: transform 380ms var(--ease-spring); }
+.proof-grid.released .escrow .lock rect { fill: var(--tint-settled); stroke: var(--settled); transition: fill 300ms, stroke 300ms; }
+.proof-grid.staged .amount { opacity: .35; }
+.proof-grid.released .amount { opacity: 1; transition: opacity 300ms; }
+.proof-grid.staged .receipt > div { opacity: .28; transform: translateX(10px); transition: opacity 400ms var(--ease), transform 600ms var(--ease-out); }
+.proof-grid.staged .receipt > div.on { opacity: 1; transform: none; }
+.proof-grid.staged .receipt .settled .glyph { transform: scale(0); }
+.proof-grid.staged .receipt .settled.on .glyph { transform: none; transition: transform 500ms var(--ease-spring) 200ms; }
+.proof-grid.staged .receipt { transition: box-shadow 600ms var(--ease); }
+.proof-grid.released .receipt { box-shadow: 0 0 0 4px var(--tint-proof), 0 30px 60px -30px var(--proof); }
+
+/* ---------- 11 Teams ---------- */
+.plans { position: relative; }
+.plans.staged .plan { opacity: 0; transition: opacity 500ms var(--ease), transform 900ms var(--ease-out), clip-path 900ms var(--ease-out); }
+.plans.staged .plan:first-child { transform: translateX(40px); clip-path: inset(0 0 0 100%); }
+.plans.staged .plan + .plan { transform: translateX(-40px); clip-path: inset(0 100% 0 0); border-left-color: transparent; }
+.plans.staged::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--signal); transform-origin: 50% 0; transform: scaleY(0); transition: transform 600ms var(--ease-out), opacity 500ms 900ms; z-index: 1; }
+.plans.staged.go::before { transform: scaleY(1); opacity: 0; }
+.plans.staged.go .plan { opacity: 1; transform: none; clip-path: inset(0 0 0 0); transition-delay: 350ms; }
+.plans.staged.go .plan + .plan { border-left-color: var(--line-strong); }
+@media (max-width: 600px) { .plans.staged::before { display: none; } }
+.seats.staged li { transform: rotate(45deg) scale(0); transition: transform 500ms var(--ease-spring); }
+.seats.staged.go li { transform: rotate(45deg) scale(1); }
+.seats.staged.go li:nth-child(2) { transition-delay: 80ms; } .seats.staged.go li:nth-child(3) { transition-delay: 160ms; }
+.seats.staged.go li:nth-child(4) { transition-delay: 240ms; } .seats.staged.go li:nth-child(5) { transition-delay: 320ms; }
+.seats li.filled { animation: seat 700ms var(--ease-spring); box-shadow: 0 0 18px var(--signal); }
+@keyframes seat { from { transform: rotate(45deg) scale(2.2); opacity: 0; } }
+.ask { position: relative; }
+.ask-grid { position: absolute; inset: -40px calc(-1 * var(--gutter)); width: calc(100% + 2 * var(--gutter)); height: calc(100% + 80px); pointer-events: none; z-index: 0; }
+.ask > :not(.ask-grid) { position: relative; z-index: 1; }
+canvas.march { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 79; pointer-events: none; }
+
+/* ---------- 12 End ---------- */
+.calm-inbox { position: relative; transition: border-color 400ms var(--ease), background-color 400ms var(--ease); }
+.end-mark { flex: none; }
+.end-mark .mark-lead { transform-box: fill-box; transform-origin: 50% 100%; }
+@media (prefers-reduced-motion: no-preference) {
+  .end-mark .mark-lead { animation: breathe 3.6s var(--ease) infinite; }
+}
+@keyframes breathe { 50% { transform: translateY(-1.5px); opacity: .7; } }
+.calm-g { width: 14px; height: 14px; }
+.calm-answer { visibility: hidden; }
+.calm-clock { min-width: 4.5ch; text-align: right; }
+.calm-inbox.waiting { border-color: color-mix(in srgb, var(--signal) 55%, var(--line)); background: color-mix(in srgb, var(--surface-1) 85%, var(--tint-signal)); }
+.calm-inbox.waiting .end-mark .mark-lead { fill: var(--signal); }
+.calm-inbox.waiting .calm-g { --g: var(--g-needs-you); color: var(--signal); }
+.calm-inbox.waiting .calm-answer { visibility: visible; }
+.calm-inbox.waiting .calm-clock { color: var(--signal); }
+.calm-inbox.settled .calm-g { animation: pop 500ms var(--ease-spring); }

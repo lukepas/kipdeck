@@ -50,7 +50,6 @@
   html.js h2.display.rv.in { clip-path: inset(0 0 -.2em 0); }
   .waitbar > i { transition: none; }
   .lap-hum { animation: hum 1.6s linear infinite; }
-  .deck-sweep { animation: sweep 4s var(--ease) infinite; }
 }
 
 @keyframes inhale {
@@ -73,8 +72,12 @@
 
 /* The odometer's reels: each digit is a column 0 to 9 that rolls to its value. The digit itself
    stays in the text (transparent), so the element reads as a plain value. */
-.odo .d { display: inline-block; position: relative; overflow: hidden; height: 1.1em; line-height: 1.1em; vertical-align: top; color: transparent; }
+/* The digit's own glyph is hidden by its fill, not its color, so the reel can still paint in the
+   inherited color (currentColor) wherever no --odo-c is given. */
+.odo .d { display: inline-block; position: relative; overflow: hidden; height: 1.1em; line-height: 1.1em; vertical-align: top; -webkit-text-fill-color: transparent; }
 .odo .d::before {
   content: '0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9'; white-space: pre; position: absolute; left: 0; top: 0;
-  line-height: 1.1em; color: var(--odo-c, currentColor); transform: translateY(calc(var(--d, 0) * -1.1em));
+  line-height: 1.1em; color: var(--odo-c, currentColor); -webkit-text-fill-color: var(--odo-c, currentColor); transform: translateY(calc(var(--d, 0) * -1.1em));
 }
+/* The odometer's other characters sit in the same box as its reels, so letters and digits share a line. */
+.odo > span:not(.d) { display: inline-block; height: 1.1em; line-height: 1.1em; vertical-align: top; }

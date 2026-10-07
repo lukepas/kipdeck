@@ -48,7 +48,8 @@
       <a href="#teams">Teams</a>
       <a data-link="repo" href="https://github.com/zbagdzevicius/ugcarmy" rel="noopener noreferrer">Source</a>
     </nav>
-    <p class="pulse mono" aria-live="off"><i class="glyph g-needs-you"></i><span data-pulse-count>1</span> waiting on you <span class="pulse-sep">/</span> <span data-pulse-wait>0:07</span></p>
+    <p class="pulse mono" aria-live="off"><i class="glyph g-needs-you"></i><span data-pulse-count>1</span> waiting on you <span class="pulse-sep">/</span> <span data-pulse-wait>0:07</span><svg class="spark" viewBox="0 0 60 12" preserveAspectRatio="none" aria-hidden="true"><polyline pathLength="1" points="1,1 10,3.5 19,4.5 29,6.5 39,7.5 49,9.5 59,11"/></svg></p>
+    <button class="theme sound" type="button" id="sound" aria-pressed="false" aria-label="Sound"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path class="spk" d="M4 9.5h3.5L12 5.5v13l-4.5-4H4Z"/><path class="wave" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="mute" d="m15.5 9.5 5 5m0-5-5 5"/></svg></button>
     <button class="theme" type="button" id="theme" aria-label="Switch color theme"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16Z"/></svg></button>
   </div>
 </header>
@@ -130,6 +131,8 @@
 
 <!-- 02 The funnel -->
 <section class="funnel" id="funnel" aria-labelledby="funnel-h" data-scene="funnel">
+  <div class="track"><div class="stage">
+  <canvas class="swarm" aria-hidden="true"></canvas>
   <div class="wrap two-col">
     <div class="col-copy">
       <p class="label"><span class="num">02</span> Every vendor, one list</p>
@@ -159,37 +162,49 @@
       <figcaption class="demo-tag mono">Demo data: scripted agents</figcaption>
     </figure>
   </div>
+  </div></div>
 </section>
 
 <!-- 03 The problem -->
 <section class="problem" id="problem" aria-labelledby="problem-h" data-scene="problem">
+  <div class="track"><div class="stage">
   <div class="wrap">
     <p class="label"><span class="num">03</span> The problem</p>
     <h2 id="problem-h" class="display">23 minutes of nothing.</h2>
-    <div class="clock-span" aria-hidden="true">
-      <span class="ts mono">10:02</span>
-      <span class="span-bar"><i></i><b class="mono">waiting on you</b></span>
-      <span class="ts mono sig">10:25</span>
-    </div>
-    <p class="huge display" aria-hidden="true"><span>23</span> min</p>
-    <div class="two-col problem-cols">
-      <p class="lede">An agent that asks at 10:02 and is answered at 10:25 did nothing for 23 minutes. Vendors race to make agents faster. Nobody measures the time agents sit blocked on a person, across vendors. That is the gap {{name}} fills.</p>
-      <figure class="lanes" aria-labelledby="lanes-cap">
-        <svg viewBox="0 0 600 220" role="img" aria-labelledby="lanes-title">
-          <title id="lanes-title">Five agents across a workday. Each orange segment is time an agent spent waiting on a person.</title>
-          <g class="lane-grid">
-            <path d="M40 10V200M152 10V200M264 10V200M376 10V200M488 10V200M600 10V200"/>
-          </g>
-          <g class="lane-labels mono"><text x="0" y="34">CC</text><text x="0" y="72">Cx</text><text x="0" y="110">Cu</text><text x="0" y="148">OC</text><text x="0" y="186">Pi</text></g>
-          <g class="lane-work"><path d="M40 30H140M196 30H330M372 30H560"/><path d="M40 68H90M228 68H420M468 68H590"/><path d="M60 106H250M286 106H470"/><path d="M40 144H120M190 144H310M380 144H520"/><path d="M80 182H230M264 182H400M452 182H580"/></g>
-          <g class="lane-wait"><path d="M140 30H196M330 30H372"/><path d="M90 68H228M420 68H468"/><path d="M250 106H286M470 106H560"/><path d="M120 144H190M310 144H380"/><path d="M230 182H264M400 182H452"/></g>
-          <g class="lane-asks"><path d="M140 24l6 6-6 6-6-6Z"/><path d="M90 62l6 6-6 6-6-6Z"/><path d="M250 100l6 6-6 6-6-6Z"/><path d="M120 138l6 6-6 6-6-6Z"/><path d="M230 176l6 6-6 6-6-6Z"/><path d="M330 24l6 6-6 6-6-6Z"/><path d="M420 62l6 6-6 6-6-6Z"/><path d="M470 100l6 6-6 6-6-6Z"/><path d="M310 138l6 6-6 6-6-6Z"/><path d="M400 176l6 6-6 6-6-6Z"/></g>
-          <g class="lane-hours mono"><text x="40" y="216">9:00</text><text x="152" y="216">11:00</text><text x="264" y="216">13:00</text><text x="376" y="216">15:00</text><text x="488" y="216">17:00</text></g>
-        </svg>
-        <figcaption id="lanes-cap" class="mono"><b class="sig">2h 41m</b> blocked today <span class="tag-inline">illustrative</span></figcaption>
-      </figure>
+    <div class="layers">
+      <div class="layer-a">
+        <div class="clock-span" aria-hidden="true">
+          <span class="ts mono">10:02</span>
+          <span class="span-bar"><i></i><b class="mono">waiting on you</b><em class="span-now mono">10:25</em></span>
+          <span class="ts mono sig ts-end">10:25</span>
+        </div>
+        <p class="huge display" aria-hidden="true"><span>23</span> min</p>
+      </div>
+      <div class="two-col problem-cols layer-b">
+        <p class="lede">An agent that asks at 10:02 and is answered at 10:25 did nothing for 23 minutes. Vendors race to make agents faster. Nobody measures the time agents sit blocked on a person, across vendors. That is the gap {{name}} fills.</p>
+        <figure class="lanes" aria-labelledby="lanes-cap">
+          <svg viewBox="0 0 600 250" role="img" aria-labelledby="lanes-title">
+            <title id="lanes-title">Five agents across a workday. Each orange segment is time an agent spent waiting on a person.</title>
+            <g class="lane-grid">
+              <path d="M40 10V200M152 10V200M264 10V200M376 10V200M488 10V200M600 10V200"/>
+            </g>
+            <g class="lane-labels mono"><text x="0" y="34">CC</text><text x="0" y="72">Cx</text><text x="0" y="110">Cu</text><text x="0" y="148">OC</text><text x="0" y="186">Pi</text></g>
+            <g class="lane-draw">
+              <g class="lane-work"><path d="M40 30H140M196 30H330M372 30H560"/><path d="M40 68H90M228 68H420M468 68H590"/><path d="M60 106H250M286 106H470"/><path d="M40 144H120M190 144H310M380 144H520"/><path d="M80 182H230M264 182H400M452 182H580"/></g>
+              <g class="lane-wait"><path d="M140 30H196"/><path d="M330 30H372"/><path d="M90 68H228"/><path d="M420 68H468"/><path d="M250 106H286"/><path d="M470 106H560"/><path d="M120 144H190"/><path d="M310 144H380"/><path d="M230 182H264"/><path d="M400 182H452"/></g>
+              <g class="lane-asks"><path d="M140 24l6 6-6 6-6-6Z"/><path d="M90 62l6 6-6 6-6-6Z"/><path d="M250 100l6 6-6 6-6-6Z"/><path d="M120 138l6 6-6 6-6-6Z"/><path d="M230 176l6 6-6 6-6-6Z"/><path d="M330 24l6 6-6 6-6-6Z"/><path d="M420 62l6 6-6 6-6-6Z"/><path d="M470 100l6 6-6 6-6-6Z"/><path d="M310 138l6 6-6 6-6-6Z"/><path d="M400 176l6 6-6 6-6-6Z"/></g>
+            </g>
+            <g class="lane-hours mono"><text x="40" y="216">9:00</text><text x="152" y="216">11:00</text><text x="264" y="216">13:00</text><text x="376" y="216">15:00</text><text x="488" y="216">17:00</text></g>
+            <text class="lane-sum mono" x="40" y="248">all of it, end to end</text>
+          </svg>
+          <figcaption id="lanes-cap" class="mono"><b class="sig" data-blocked>2h 41m</b> blocked today <span class="tag-inline">illustrative</span></figcaption>
+        </figure>
+      </div>
     </div>
   </div>
+  <p class="dock-note mono" aria-hidden="true"><i class="glyph g-needs-you"></i>That is the metric: how long agents wait on you.</p>
+  </div></div>
+  <i class="dock" aria-hidden="true"></i>
 </section>
 
 <!-- 04 The loop -->
@@ -199,28 +214,66 @@
     <h2 id="loop-h" class="display">Ask. Answer. Review. Merge.</h2>
     <p class="lede">The oldest agent waiting opens by itself. Its question is in plain words, with one reply box and a button per numbered choice, for every CLI. The finished diff sits beside the list. Merge on your machine without GitHub, or open a pull request.</p>
   </div>
+  <div class="track"><div class="stage">
   <div class="wrap loop-stage">
-    <ol class="beats">
-      <li class="beat-item"><span class="beat-n mono">a</span><h3>Ask</h3><p>A raw terminal line becomes a card: the question in words, a button for each numbered choice.</p></li>
-      <li class="beat-item"><span class="beat-n mono">b</span><h3>Answer</h3><p>One box. Send, and the wait stops counting. The agent drops into To review when it is done.</p></li>
-      <li class="beat-item"><span class="beat-n mono">c</span><h3>Review</h3><p>The real diff beside the list: files, hunks, the tests it ran.</p></li>
-      <li class="beat-item"><span class="beat-n mono">d</span><h3>Merge</h3><p>On this computer, no GitHub needed, or as a pull request when <code>gh</code> is there.</p></li>
-    </ol>
+    <div class="beats-col">
+      <ol class="beats">
+        <li class="beat-item"><span class="beat-n mono">a</span><h3>Ask</h3><p>The agent's raw terminal line becomes a card: the question in words, a button for each numbered choice.</p></li>
+        <li class="beat-item"><span class="beat-n mono">b</span><h3>Answer</h3><p>One box. Send, and the wait stops counting. The agent goes back to work, then drops into To review.</p></li>
+        <li class="beat-item"><span class="beat-n mono">c</span><h3>Review</h3><p>The real diff beside the list: the files, every hunk, the tests it ran.</p></li>
+        <li class="beat-item"><span class="beat-n mono">d</span><h3>Merge</h3><p>On this computer, no GitHub needed, or as a pull request when <code>gh</code> is there.</p></li>
+      </ol>
+      <nav class="scrub" aria-label="Steps of the loop" hidden>
+        <button type="button" data-beat="0"><i></i><span>Ask</span></button>
+        <button type="button" data-beat="1"><i></i><span>Answer</span></button>
+        <button type="button" data-beat="2"><i></i><span>Review</span></button>
+        <button type="button" data-beat="3"><i></i><span>Merge</span></button>
+      </nav>
+    </div>
 
-    <div class="loop-app" aria-label="The loop in the app, with demo data">
-      <div class="app pane-app">
-        <div class="pane-head">
-          <span class="sign mono">CC</span>
-          <span class="pane-title"><b>Add rate limiting to /api/login</b><span class="mono">Claude Code / acme-shop / office/add-rate-limiting-to-api-8edc</span></span>
-          <span class="pane-actions"><span class="btn sm">Send back</span><span class="btn sm primary merge-btn">Merge</span></span>
+    <div class="loop-app">
+      <div class="app loop-win" role="group" aria-label="The loop in the app, with demo data">
+        <div class="loop-list">
+          <p class="sec sec-needs"><i class="glyph g-needs-you"></i>Needs you <span class="count">0</span></p>
+          <p class="sec sec-review"><i class="glyph g-review"></i>To review <span class="count">1</span></p>
+          <div class="row review"><i class="glyph g-review st" aria-hidden="true"></i><span class="sign mono">Cu</span><span class="row-main"><span class="row-title">Write the README quickstart</span><span class="row-sub">2 files, +38 -4</span></span></div>
+          <p class="sec sec-working"><i class="glyph g-working"></i>Working <span class="count">2</span></p>
+          <div class="row working"><i class="glyph g-working st" aria-hidden="true"></i><span class="sign mono">Cx</span><span class="row-main"><span class="row-title">Fix the flaky checkout test</span><span class="row-sub">Bash: npx playwright test</span></span></div>
+          <div class="row working"><i class="glyph g-working st" aria-hidden="true"></i><span class="sign mono">Pi</span><span class="row-main"><span class="row-title">Upgrade the payment SDK to v5</span><span class="row-sub">Edit: pay/client.js</span></span></div>
+          <p class="sec sec-shipped"><i class="glyph g-merged"></i>Shipped today <span class="count" data-shipped>3</span></p>
+          <div class="row merged cc-row"><i class="glyph g-merged st" aria-hidden="true"></i><span class="sign mono">CC</span><span class="row-main"><span class="row-title">Add rate limiting to /api/login</span><span class="row-sub cc-sub">Merged, 3 files</span></span><span class="row-age mono cc-age">0:23</span><i class="waitbar" aria-hidden="true"><i></i></i></div>
         </div>
-        <div class="pane-tabs"><span>Terminal</span><span class="on">Changes <i class="count">3</i></span><span>Log</span></div>
-        <div class="diff-wrap">
-          <ul class="files mono" aria-label="Changed files">
-            <li class="on"><span class="fmod">M</span>api/login.js<b>+11 -0</b></li>
-            <li><span class="fadd">A</span>api/rate-limit.js<b>+32 -0</b></li>
-            <li><span class="fadd">A</span>api/rate-limit.test.js<b>+27 -0</b></li>
-          </ul>
+        <div class="pane">
+          <div class="pane-head">
+            <span class="sign mono">CC</span>
+            <span class="pane-title"><b>Add rate limiting to /api/login</b><span class="mono">Claude Code / acme-shop / office/add-rate-limiting-to-api-8edc</span></span>
+            <span class="pane-actions"><span class="btn sm">Send back</span><button class="btn sm primary merge-btn" type="button">Merge</button></span>
+          </div>
+          <div class="pane-tabs"><span class="tab-term">Terminal</span><span class="tab-changes on">Changes <i class="count">3</i></span><span>Log</span><i class="tab-ink" aria-hidden="true"></i></div>
+          <div class="pane-body">
+<pre class="term-layer mono" aria-hidden="true"><span class="tl"><span class="dim">&gt;</span> Add rate limiting to /api/login</span>
+<span class="tl"><b>Read</b> api/login.js</span>
+<span class="tl dim">  Reading api/login.js and how sessions start.</span>
+<span class="tl"><b>Grep</b> rateLimit</span>
+<span class="tl dim">  No rate limiter in the repository yet: writing a small one.</span>
+<span class="tl q-line"><span class="q">?</span> <span class="q-text">Keep the rate limit in memory, or in Redis?</span></span>
+<span class="tl q-opts">  <span class="q-o">1) In memory</span>   <span class="q-o">2) Redis</span></span>
+<span class="tl after dim">  In memory for now. Writing api/rate-limit.js</span></pre>
+            <div class="qcard">
+              <div class="qcard-in">
+                <svg class="qcard-edge" aria-hidden="true"><rect x=".5" y=".5" width="100%" height="100%" rx="3" pathLength="1"/></svg>
+                <p class="qcard-k mono"><i class="glyph g-needs-you"></i><span class="qk-who">Claude Code asks</span> <span class="row-age">waited <span class="qk-wait">0:23</span></span></p>
+                <p class="qcard-q">Keep the rate limit in memory, or in Redis?</p>
+                <div class="choices"><span class="btn sm on choice">1 In memory</span><span class="btn sm choice">2 Redis</span></div>
+                <div class="reply"><span class="reply-box"><span class="reply-text">In memory for now</span></span><span class="btn sm primary send">Send</span></div>
+              </div>
+            </div>
+            <div class="diff-wrap">
+              <ul class="files mono" aria-label="Changed files">
+                <li class="on"><span class="fmod">M</span>api/login.js<b>+11 -0</b></li>
+                <li><span class="fadd">A</span>api/rate-limit.js<b>+32 -0</b></li>
+                <li><span class="fadd">A</span>api/rate-limit.test.js<b>+27 -0</b></li>
+              </ul>
 <div class="diff mono" role="group" aria-label="api/login.js, 9 lines added">
           <span class="hunk">@@ -1,13 +1,24 @@</span>
           <span class="l"><span class="ln" aria-hidden="true"><i>1</i><i>1</i></span><span class="sg" aria-hidden="true"> </span><code>import { findUser, checkPassword, startSession } from './users.js';</code></span>
@@ -238,23 +291,17 @@
           <span class="l add"><span class="ln" aria-hidden="true"><i></i><i>13</i></span><span class="sg" aria-hidden="true">+</span><code>  }</code></span>
           <span class="l"><span class="ln" aria-hidden="true"><i>5</i><i>14</i></span><span class="sg" aria-hidden="true"> </span><code>  const user = await findUser(email);</code></span>
           </div>
+            </div>
+          </div>
+          <p class="pane-foot mono"><span>3 files, <span class="foot-add">+70</span> -0, 1 commit</span><span class="tests"><i class="glyph g-check"></i>tests <span class="tests-n">12/12</span></span></p>
         </div>
-        <p class="pane-foot mono"><span>3 files, +70 -0, 1 commit</span><span class="tests"><i class="glyph g-check"></i>tests 12/12</span></p>
         <figcaption class="demo-tag mono">Demo data: scripted agents</figcaption>
       </div>
-
-      <div class="qcard" aria-label="Codex's question as a card">
-        <p class="term mono"><span class="dim">? </span>Update the snapshot or fix the selector?</p>
-        <div class="qcard-in">
-          <p class="qcard-k mono"><i class="glyph g-needs-you"></i>Codex asks <span class="row-age">waited 0:23</span></p>
-          <p class="qcard-q">Update the snapshot or fix the selector?</p>
-          <div class="choices"><span class="btn sm">1 Update the snapshot</span><span class="btn sm on">2 Fix the selector</span></div>
-          <div class="reply"><span class="reply-box">Fix the selector</span><span class="btn sm primary">Send</span></div>
-        </div>
-      </div>
-
       <p class="stamp" aria-hidden="true">MERGED</p>
     </div>
+  </div>
+  </div></div>
+  <div class="wrap">
     <p class="footnote mono">Four clicks from a fresh start to the first merged change, 10.7 s (measured: design/measure-final.mjs, headless Chromium, scripted demo).</p>
   </div>
 </section>
@@ -323,7 +370,7 @@
         <li><span>10:25</span><span>Cx</span><span>gpt-5-codex</span><span>you</span><span class="w sig">waited 23:04</span><span class="h">7be0d13</span></li>
         <li><span>09:58</span><span>Cu</span><span>cursor</span><span>you</span><span class="w">waited 2:12</span><span class="h">03c9e6a</span></li>
       </ol>
-      <figcaption id="machine-cap" class="mono">Signed record, kept on your machine <span class="tag-inline">demo data</span></figcaption>
+      <figcaption id="machine-cap" class="mono">Signed record, kept on your machine <span class="tag-inline">demo data</span> <span class="merged-today">merged today <b data-merged>3</b></span></figcaption>
     </figure>
   </div>
 </section>
@@ -339,15 +386,18 @@
     </div>
     <figure class="phone" aria-label="The inbox on a phone, with demo data">
       <div class="phone-screen">
-        <div class="push"><i class="glyph g-needs-you"></i><span><b>Codex needs you</b><span>Update the snapshot or fix the selector?</span></span></div>
-        <p class="sec sec-needs"><i class="glyph g-needs-you"></i>Needs you <span class="count">1</span></p>
-        <div class="row needs"><span class="sign mono">Cx</span><span class="row-main"><span class="row-title">Fix the flaky checkout test</span><span class="row-sub">waiting 3m</span></span><i class="waitbar w-10" aria-hidden="true"><i></i></i></div>
-        <p class="sec sec-review"><i class="glyph g-review"></i>To review <span class="count">1</span></p>
-        <div class="row review"><span class="sign mono">Cu</span><span class="row-main"><span class="row-title">Write the README quickstart</span><span class="row-sub">2 files, +38 -4</span></span></div>
-        <p class="sec sec-working"><i class="glyph g-working"></i>Working <span class="count">2</span></p>
-        <div class="row working"><span class="sign mono">CC</span><span class="row-main"><span class="row-title">Upgrade the payment SDK</span><span class="row-sub">Bash: npm test</span></span></div>
-        <div class="row working"><span class="sign mono">Pi</span><span class="row-main"><span class="row-title">Port the settings page</span><span class="row-sub">Edit: web/settings.js</span></span></div>
-        <p class="phone-merged mono"><i class="glyph g-merged"></i>Shipped today 2</p>
+        <div class="push"><i class="glyph g-merged push-g"></i><span><b class="push-t">Merged from your phone</b><span class="push-s">Write the README quickstart, 2 files</span></span></div>
+        <div class="phone-list">
+          <p class="sec sec-needs"><i class="glyph g-needs-you"></i>Needs you <span class="count">0</span></p>
+          <p class="sec sec-review"><i class="glyph g-review"></i>To review <span class="count">0</span></p>
+          <p class="sec sec-working"><i class="glyph g-working"></i>Working <span class="count">3</span></p>
+          <div class="row working ph-cx"><i class="glyph g-working st" aria-hidden="true"></i><span class="sign mono">Cx</span><span class="row-main"><span class="row-title">Fix the flaky checkout test</span><span class="row-sub">Answered. Back at work.</span></span><span class="row-btn mini">Answer</span><i class="waitbar" aria-hidden="true"><i></i></i></div>
+          <div class="row working"><i class="glyph g-working st" aria-hidden="true"></i><span class="sign mono">CC</span><span class="row-main"><span class="row-title">Upgrade the payment SDK</span><span class="row-sub">Bash: npm test</span></span></div>
+          <div class="row working"><i class="glyph g-working st" aria-hidden="true"></i><span class="sign mono">Pi</span><span class="row-main"><span class="row-title">Port the settings page</span><span class="row-sub">Edit: web/settings.js</span></span></div>
+          <p class="sec sec-shipped"><i class="glyph g-merged"></i>Shipped today <span class="count ph-shipped">3</span></p>
+          <div class="row merged ph-cu"><i class="glyph g-merged st" aria-hidden="true"></i><span class="sign mono">Cu</span><span class="row-main"><span class="row-title">Write the README quickstart</span><span class="row-sub">Merged from the couch</span></span><span class="row-btn mini">Merge</span></div>
+        </div>
+        <i class="tap" aria-hidden="true"></i><i class="ring" aria-hidden="true"></i>
       </div>
       <figcaption class="demo-tag mono">Demo data</figcaption>
     </figure>
@@ -384,13 +434,17 @@
     <p class="lede">Off by default, compiled and tested. An admin switches each one on in Settings, or holds it on with <code>--labs &lt;id&gt;</code>.</p>
     <ul class="bento">
       <li class="tile tile-bridge">
-        <svg class="deck" viewBox="0 0 400 220" aria-hidden="true">
-          <g class="deck-floor"><path d="M200 20 380 120 200 210 20 120Z"/></g>
-          <g class="deck-grid"><path d="M110 70 290 170M155 45 335 145M245 45 65 145M290 70 110 170"/></g>
-          <g class="deck-stations"><path d="M150 92l20 11-20 11-20-11Z"/><path d="M230 92l20 11-20 11-20-11Z"/><path d="M190 136l20 11-20 11-20-11Z"/><path d="M270 136l20 11-20 11-20-11Z"/><path d="M110 136l20 11-20 11-20-11Z"/></g>
-          <g class="deck-units"><path class="u-needs" d="M150 80l5 5-5 5-5-5Z"/><circle class="u-review" cx="230" cy="85" r="4"/><path class="u-work" d="M184 128h12v3h-12Z"/><path class="u-work" d="M264 128h12v3h-12Z"/><path class="u-work" d="M104 128h12v3h-12Z"/></g>
-          <path class="deck-sweep" d="M20 120 200 210"/>
-        </svg>
+        <div class="deck3d" aria-hidden="true">
+          <div class="plane">
+            <i class="deck-floor"></i>
+            <div class="station s-needs"><i class="glyph g-needs-you"></i><span class="sign mono">Cx</span><span class="st-t">Fix the flaky checkout test</span><i class="unit"></i></div>
+            <div class="station s-review"><i class="glyph g-review"></i><span class="sign mono">CC</span><span class="st-t">Add rate limiting to /api/login</span><i class="unit"></i></div>
+            <div class="station s-working"><i class="glyph g-working"></i><span class="sign mono">Cu</span><span class="st-t">Write the README quickstart</span><i class="unit"></i></div>
+            <div class="station s-working"><i class="glyph g-working"></i><span class="sign mono">OC</span><span class="st-t">Port the settings page</span><i class="unit"></i></div>
+            <div class="station s-working"><i class="glyph g-working"></i><span class="sign mono">Pi</span><span class="st-t">Upgrade the payment SDK</span><i class="unit"></i></div>
+            <i class="sweep"></i>
+          </div>
+        </div>
         <h3>The Bridge</h3><p>A 3D starship bridge where agents sit at stations, with a mascot, sound and a lounge. For a team's wall screen.</p><code class="mono">--labs bridge,ambience</code>
       </li>
       <li class="tile"><span class="switch" aria-hidden="true"><i></i></span><h3>Goals and timeline</h3><p>Mission control with goals, milestones and a timeline of what every agent did.</p><code class="mono">--labs ops</code></li>
@@ -418,13 +472,15 @@
   <div class="wrap proof-grid">
     <figure class="escrow" aria-label="An escrow released by a merge, testnet">
       <svg viewBox="0 0 320 220" aria-hidden="true">
+        <g class="coin"><circle cx="160" cy="60" r="22"/><text x="160" y="64" class="mono">USDC</text></g>
         <rect class="box" x="70" y="96" width="180" height="100" rx="4"/>
         <path class="lid" d="M70 96h180"/>
-        <g class="lock"><rect x="146" y="128" width="28" height="22" rx="2"/><path d="M151 128v-8a9 9 0 0 1 18 0v8"/></g>
-        <g class="coin"><circle cx="160" cy="60" r="22"/><text x="160" y="64" class="mono">USDC</text></g>
+        <g class="lock"><rect x="146" y="128" width="28" height="22" rx="2"/><path class="shackle" d="M151 128v-8a9 9 0 0 1 18 0v8"/></g>
       </svg>
       <figcaption class="mono"><span class="chip">devnet, test USDC</span> Test USDC in escrow, released on a human merge</figcaption>
+      <div class="release"><button class="btn sm merge-chip" type="button"><i class="glyph g-merged" aria-hidden="true"></i>Merge, as the human</button><span class="mono amount"><b data-amount>5.00</b> test USDC released</span></div>
     </figure>
+    <svg class="attest" aria-hidden="true"><path pathLength="1"/></svg>
     <dl class="receipt mono">
       <div><dt>Release tx</dt><dd><a href="https://explorer.solana.com/tx/2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc?cluster=devnet" rel="noopener noreferrer">2rPSWQv7...ZtUc</a> <span class="chip">Solana devnet</span></dd></div>
       <div><dt>Escrow program</dt><dd><a href="https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet" rel="noopener noreferrer">JAH6Zioo...yVQs6</a> <span class="chip">Solana devnet</span></dd></div>
@@ -481,9 +537,11 @@
 <footer class="end" id="end" aria-labelledby="end-h" data-scene="end">
   <div class="wrap">
     <div class="calm-inbox">
-      <i class="glyph g-check"></i>
-      <p id="end-h">Nothing waits on you.</p>
-      <span class="mono">0:00</span>
+      <svg class="mark end-mark" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path class="mark-lead" d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z"/><path class="mark-trail" d="m4 17 8-8 8 8M4 22l8-8 8 8"/></svg>
+      <i class="glyph g-check calm-g" aria-hidden="true"></i>
+      <p id="end-h" aria-live="polite">Nothing waits on you.</p>
+      <button class="btn sm calm-answer" type="button" tabindex="-1">Answer</button>
+      <span class="mono calm-clock">0:00</span>
     </div>
     <svg class="giant" viewBox="0 0 1200 150" aria-hidden="true"><text x="0" y="128"><tspan class="wm-lead">{{lead}}</tspan><tspan class="wm-muted">{{muted}}</tspan></text></svg>
     <nav class="foot-links" aria-label="More">

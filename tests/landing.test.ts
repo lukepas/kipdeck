@@ -231,6 +231,8 @@ test('built with an endpoint, the waitlist sends the email and where it came fro
   await page.locator('#status.ok').waitFor({ timeout: 5000 });
   assert.deepEqual(sent, [{ email: 'lead@example.com', source: 'landing' }]);
   assert.equal(await page.inputValue('#email'), '', 'the form is cleared');
+  // The seat fills as the agents finish forming the mark over the seats.
+  await page.locator('.seats li.filled').waitFor({ timeout: 4000 });
   assert.equal(await page.locator('.seats li.filled').count(), 1);
 });
 
