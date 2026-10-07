@@ -222,8 +222,15 @@ try {
   await p.locator('.ship', { hasText: 'flaky' }).waitFor({ timeout: 20_000 });
   await p.evaluate(() => window.__lite.home.select(undefined));
   await caption(p, 'Nothing waits on you. Three shipped today.');
+  await wait(3000);
+  // Numbers: the wait-time story an investor update quotes, from the signed records.
+  await point(p, p.locator('#btn-avatar'));
+  await point(p, p.locator('.menu-pop .menu-item', { hasText: 'Numbers' }));
+  await p.locator('.modal.numbers').waitFor({ timeout: 10_000 });
+  await caption(p, 'Numbers: human wait time, merges and merge rate, from signed records.', true);
+  await wait(5000);
   desk.mark('calmEnd');
-  await wait(4000);
+  await wait(1000);
   await desk.context.close();
 
   // ---- The Bridge view as a team's wall display (REC_BRIDGE=1) ---------------------------------------
@@ -285,15 +292,15 @@ const d = marks.desk;
 const ph = marks.phone;
 /** [input, from, to] in seconds of that recording, or [png, seconds]. */
 const parts = [
-  ['title', 4],
-  ['terminal', 3.5],
-  [webm('desk'), d.arrive, d.arrive + 3.5],
-  [webm('desk'), d.needs - 0.5, d.answered + 2.5],
-  [webm('desk'), d.review - 0.3, d.merged + 3],
+  ['title', 5],
+  ['terminal', 4.5],
+  [webm('desk'), d.arrive, d.arrive + 4],
+  [webm('desk'), d.needs - 0.5, d.answered + 3],
+  [webm('desk'), d.review - 0.3, d.merged + 3.5],
   [webm('phone'), ph.ready - 0.3, ph.done],
-  [webm('desk'), d.calm, d.calmEnd + 3],
+  [webm('desk'), d.calm, d.calmEnd],
   ...(BRIDGE ? [[webm('bridge'), marks.bridge.wall, marks.bridge.wall + 3.5]] : []),
-  ['end', 5],
+  ['end', 6],
 ];
 const fit = `scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=0xeef1f4,setsar=1,fps=30,format=yuv420p`;
 const clips = parts.map((part, i) => {
