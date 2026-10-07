@@ -10,10 +10,11 @@ import './styles/pins.css';
 import './styles/loop.css';
 import './styles/scenes.css';
 import './styles/labs.css';
-import { SCENES } from './scenes/index';
+import './styles/perf.css';
+import { SCENES, preloadScenes } from './scenes/index';
 import { mountHero } from './scenes/hero';
 import { countUp } from './engine/count';
-import { env } from './engine/env';
+import { env, tier } from './engine/env';
 import { themeButton, copyButtons, tryDemo, topBar, magnetic } from './ui/controls';
 import { waitlist } from './ui/waitlist';
 import { watchFilm } from './ui/watch';
@@ -23,19 +24,24 @@ import { wait } from './ui/wait';
 const root = document.documentElement;
 root.classList.add('js');
 if (env.reduced) root.classList.add('calm-motion');
-
-themeButton();
-topBar();
-tryDemo();
-waitlist();
-watchFilm();
-magnetic();
-soundButton();
-wait.on((since) => cue(since === null ? 'answer' : 'ask'));
+// The light tier (Save-Data, low memory, phones) drops what costs the GPU most, like the top bar's blur.
+root.classList.add(`tier-${tier}`);
 
 // The hero mounts at once (it is on screen); the rest wait until they are close.
 const hero = document.querySelector<HTMLElement>('[data-scene="hero"]');
 const heroScene = hero ? (mountHero(hero) as ReturnType<typeof mountHero>) : null;
+themeButton();
+topBar();
+tryDemo();
+// What is below the fold or behind a click wires up in the next task, so the opening's first frame
+// is not held up by it.
+setTimeout(() => {
+  waitlist();
+  watchFilm();
+  magnetic();
+  soundButton();
+  wait.on((since) => cue(since === null ? 'answer' : 'ask'));
+}, 0);
 copyButtons((btn) => {
   btn.classList.remove('ping');
   void btn.offsetWidth;
@@ -51,12 +57,16 @@ const near = new IntersectionObserver(
       near.unobserve(e.target);
       const el = e.target as HTMLElement;
       const id = el.dataset.scene!;
-      if (id !== 'hero') SCENES[id]?.(el);
+      if (id !== 'hero') void SCENES[id]?.().then((mount) => mount(el));
     }
   },
-  { rootMargin: '50% 0px' },
+  { rootMargin: '100% 0px' },
 );
-document.querySelectorAll<HTMLElement>('[data-scene]').forEach((s) => near.observe(s));
+const sections = [...document.querySelectorAll<HTMLElement>('[data-scene]')];
+sections.forEach((s) => near.observe(s));
+// Every other scene's chunk, fetched while the browser is idle once the opening has played, so none
+// is fetched as its section arrives. With less motion no scene stages anything, so none is fetched.
+if (!env.reduced) addEventListener('load', () => setTimeout(() => preloadScenes(sections.map((s) => s.dataset.scene!)), 2600), { once: true });
 
 // The hero's facts count up once the headline has landed.
 setTimeout(() => document.querySelectorAll<HTMLElement>('.facts [data-count]').forEach((c) => countUp(c, 900)), 900);

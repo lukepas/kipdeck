@@ -8,6 +8,7 @@
     "dev": "vite",
     "build": "node ../build.mjs",
     "preview": "node ../serve.mjs",
+    "perf": "node ../perf.mjs",
     "typecheck": "tsc -p tsconfig.json"
   }
 }

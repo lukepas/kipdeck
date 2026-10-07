@@ -17,6 +17,14 @@ export function themeButton() {
   });
 }
 
+/** Says something to a screen reader through the page's one polite live region. */
+export function announce(text: string) {
+  const el = document.getElementById('announce');
+  if (!el) return;
+  el.textContent = '';
+  setTimeout(() => (el.textContent = text), 30);
+}
+
 /** Copy buttons: the command, or a note that the browser would not. Copying answers the waiting agent too. */
 export function copyButtons(onCopy: (btn: HTMLElement) => void) {
   document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
@@ -24,6 +32,7 @@ export function copyButtons(onCopy: (btn: HTMLElement) => void) {
       const text = btn.getAttribute('data-copy') ?? '';
       const done = (ok: boolean) => {
         btn.textContent = ok ? 'Copied' : 'Select it';
+        announce(ok ? 'Copied to the clipboard.' : 'The browser would not copy. Select the command and copy it.');
         btn.classList.toggle('done', ok);
         setTimeout(() => {
           btn.textContent = 'Copy';
@@ -52,16 +61,15 @@ export function tryDemo() {
 }
 
 export function topBar() {
+  // A sentinel at the very top of the page, watched, instead of a scroll listener that reads
+  // scrollY: reading it inside a scroll can force a layout in the middle of a busy frame.
   const bar = document.getElementById('top')!;
-  let on = false;
-  const check = () => {
-    const next = window.scrollY > 8;
-    if (next !== on) bar.classList.toggle('scrolled', (on = next));
-  };
-  addEventListener('scroll', check, { passive: true });
-  check();
+  const probe = document.createElement('div');
+  probe.setAttribute('aria-hidden', 'true');
+  probe.style.cssText = 'position:absolute;left:0;top:0;width:1px;height:9px;pointer-events:none';
+  document.body.prepend(probe);
+  new IntersectionObserver(([e]) => bar.classList.toggle('scrolled', !e.isIntersecting)).observe(probe);
 }
-
 /** The primary button leans toward the pointer (fine pointers only, never with less motion). */
 export function magnetic() {
   if (!env.finePointer || env.reduced) return;

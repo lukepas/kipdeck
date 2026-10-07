@@ -92,6 +92,7 @@ p { max-width: 64ch; }
 /* The top bar. */
 header.top { position: fixed; inset: 0 0 auto 0; z-index: 50; transition: background-color 200ms var(--ease), border-color 200ms var(--ease); border-bottom: 1px solid transparent; }
 header.top.scrolled { background: color-mix(in srgb, var(--void) 82%, transparent); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); border-bottom-color: var(--line); }
+.tier-lite header.top.scrolled, .tier-min header.top.scrolled { -webkit-backdrop-filter: none; backdrop-filter: none; background: color-mix(in srgb, var(--void) 95%, transparent); }
 .top-in { display: flex; align-items: center; gap: 22px; height: 64px; max-width: calc(var(--wrap) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
 .lockup { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); margin-right: auto; }
 .mark { flex: none; overflow: visible; }

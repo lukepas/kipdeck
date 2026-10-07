@@ -33,6 +33,7 @@
     "build:server": "tsc -p tsconfig.server.json",
     "build:site": "node site/build.mjs",
     "preview:site": "node site/serve.mjs",
+    "perf:site": "node site/perf.mjs",
     "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit && tsc -p tsconfig.launch.json && tsc -p site/landing/tsconfig.json",
     "launch:check": "tsx launch/chain/tools/calendar.ts --check && tsx launch/chain/tools/counts.ts --check && tsx launch/chain/tools/lint.ts && tsx launch/tools/calendar.ts --check && tsx launch/tools/lint.ts",
     "start": "node bin/agent-office.js",

@@ -29,7 +29,9 @@ export function shockwave(x: number, y: number, ms = 1100): Promise<void> {
   const canvas = document.createElement('canvas');
   canvas.className = 'shockwave';
   canvas.setAttribute('aria-hidden', 'true');
-  const dpr = Math.min(devicePixelRatio || 1, 1.5);
+  // The ring is soft light, so it is drawn at a little over half the screen's pixels and scaled up:
+  // a third of the fill, and a small texture for the compositor to take on.
+  const dpr = Math.min(devicePixelRatio || 1, 1.5) * 0.6;
   canvas.width = Math.round(innerWidth * dpr);
   canvas.height = Math.round(innerHeight * dpr);
   document.body.append(canvas);
