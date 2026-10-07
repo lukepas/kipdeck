@@ -11,11 +11,12 @@
                             empty, the form says plainly that nothing was sent
     MERGELINE_DEMO_URL      the hosted read-only demo; empty, Try the demo points at npx mergeline --demo
     MERGELINE_REPO_URL      the source repository; empty, the npm page
+    MERGELINE_NPM_PUBLISHED 1 once `npx mergeline` works from the npm registry: the "not on npm yet" line goes
   See docs/landing.md.
 -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
 <meta name="referrer" content="no-referrer">
-<meta name="description" content="Mergeline is the inbox for your AI coding agents. See which agent needs you, review what's ready and merge what shipped, across Claude Code, Codex and Cursor. One command, open source, runs on your machine.">
+<meta name="description" content="Mergeline is the inbox for your AI coding agents. See which agent is waiting on you and for how long, answer it, review the diff and merge, across Claude Code, Codex and Cursor. Open source, runs on your machine.">
 <title>Mergeline</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='2' fill='%230D131A'/%3E%3Cg transform='translate(2.4 1.6) scale(.8)'%3E%3Cpath d='M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z' fill='%23E8ECEF'/%3E%3Cpath d='m4 17 8-8 8 8M4 22l8-8 8 8' fill='none' stroke='%23E8ECEF' stroke-width='2.5'/%3E%3C/g%3E%3C/svg%3E">
 <style>
@@ -128,7 +129,7 @@
 
   form.waitlist { display: grid; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 24px; }
   label { font-weight: 600; font-size: 15px; display: block; margin-bottom: 4px; }
-  input[type="email"], select { width: 100%; padding: 11px 12px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--bg); color: var(--text); font: inherit; }
+  input[type="email"] { width: 100%; padding: 11px 12px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--bg); color: var(--text); font: inherit; }
   .check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; font-size: 15px; }
   .check input { margin-top: 5px; }
   .note { font-size: 14px; color: var(--muted); margin: 0; }
@@ -136,11 +137,22 @@
   .status.warn { color: var(--review); }
   .status.ok { color: var(--ok); }
 
+  .unpublished { margin: 10px 0 0; }
+  .facts { list-style: none; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 28px; margin: 22px auto 0; padding: 0; font-size: 14px; color: var(--muted); }
+  .facts b { display: block; color: var(--text); font-size: 15px; }
+  .table-wrap { margin-top: 28px; overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  table.why { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 620px; }
+  table.why th, table.why td { padding: 14px 16px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+  table.why tbody tr:last-child th, table.why tbody tr:last-child td { border-bottom: 0; }
+  table.why thead th { font-size: 13px; color: var(--muted); font-weight: 600; background: var(--surface-2); }
+  table.why tbody th { font-weight: 600; width: 34%; }
+  table.why td:last-child { color: var(--text); font-weight: 600; }
+  table.why td { color: var(--muted); }
+  .join { display: flex; gap: 8px; }
+  .join input { flex: 1; min-width: 0; }
   .demo-cmd { display: none; margin: 16px auto 0; }
   .demo-cmd:target, .demo-cmd.shown { display: block; }
 
-  .bridge { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 32px; align-items: center; }
-  .bridge img { border-radius: var(--radius); border: 1px solid var(--line); opacity: 0.92; }
   .tag { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border: 1px solid var(--line-strong); border-radius: 4px; padding: 0 6px; margin-bottom: 10px; }
 
   footer { padding: 32px 0 48px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
@@ -149,7 +161,7 @@
   @media (max-width: 860px) {
     nav.links { display: none; }
     .loop { grid-template-columns: 1fr 1fr; }
-    .grid3, .two, .bridge { grid-template-columns: 1fr; }
+    .grid3, .two { grid-template-columns: 1fr; }
     .hero { padding-top: 28px; }
     section { padding: 48px 0; }
   }
@@ -157,6 +169,7 @@
     .loop { grid-template-columns: 1fr; }
     .npx { font-size: 15px; padding-left: 12px; }
     .copy { margin-left: 4px; padding: 6px 9px; }
+    .join { flex-direction: column; }
   }
 </style>
 </head>
@@ -170,6 +183,7 @@
     <span class="grow"></span>
     <nav class="links" aria-label="Sections">
       <a href="#how">How it works</a>
+      <a href="#why">Why Mergeline</a>
       <a href="#teams">Teams</a>
       <a data-link="repo" href="https://www.npmjs.com/package/mergeline" rel="noopener noreferrer">Source</a>
     </nav>
@@ -179,53 +193,65 @@
   <main id="top">
     <div class="hero">
       <h1>The inbox for your AI coding agents</h1>
-      <p class="lede">One inbox for every coding agent you run. See which one needs you, review what's ready and merge what shipped, across Claude Code, Codex and Cursor.</p>
+      <p class="lede">Your agents spend a good part of the day blocked, waiting on you. Mergeline is one inbox for Claude Code, Codex and Cursor that shows who is waiting and for how long, and puts the answer, the diff and the merge one click away.</p>
       <div class="npx"><code><span class="prompt">$</span>npx mergeline</code><button class="copy" type="button" data-copy="npx mergeline" aria-label="Copy npx mergeline">Copy</button></div>
+      <p class="small unpublished" data-unpublished>Not on npm yet: until it is, <a data-link="repo-run" href="https://github.com/zbagdzevicius/ugcarmy#run-it" rel="noopener noreferrer">run it from source</a> in two minutes.</p>
       <div class="cta">
         <a class="btn primary" data-link="demo" href="#try-demo">Try the demo</a>
-        <a class="btn" href="#teams">Join the team waitlist</a>
+        <a class="btn" href="#recording">Watch 30 seconds</a>
       </div>
       <div class="npx demo-cmd" id="try-demo"><code><span class="prompt">$</span>npx mergeline --demo</code><button class="copy" type="button" data-copy="npx mergeline --demo" aria-label="Copy npx mergeline --demo">Copy</button></div>
-      <p class="small agents">Open source (MIT). Runs on your laptop or your team's dev box. Nothing leaves it.</p>
-      <figure class="shot">
+      <ul class="facts" aria-label="At a glance">
+        <li><b>Every agent CLI</b> Claude Code, Codex, Cursor, and more in beta</li>
+        <li><b>Wait time, measured</b> how long each agent waits on a person</li>
+        <li><b>Yours</b> open source (MIT), runs on your machine</li>
+      </ul>
+      <figure class="shot" id="recording">
         <div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
-        <img src="../docs/img/demo.gif" width="880" height="550" alt="Mergeline in 30 seconds: Codex asks a question and is answered from its row, then Claude Code's change is reviewed and merged into Shipped today. Demo data from scripted agents.">
+        <img src="../docs/img/demo.gif" width="880" height="550" alt="Mergeline in 30 seconds: Codex's question opens by itself and is answered in one box, then Claude Code's change is reviewed and merged into Shipped today. Demo data from scripted agents.">
       </figure>
-      <p class="caption small">30 seconds of <code>npx mergeline --demo</code>: scripted agents, a real repository, a real merge.</p>
+      <p class="caption small">30 seconds of <code>npx mergeline --demo</code>: scripted agents, a real repository, a real merge. If the live demo is busy, this is the same loop.</p>
     </div>
 
     <section id="how" aria-labelledby="how-h" class="center">
-      <h2 id="how-h">Stop babysitting agents</h2>
-      <p class="lede">Agents sit blocked on a question for twenty minutes while finished branches pile up unreviewed. Mergeline puts every agent in one list, sorted by what it needs from you.</p>
+      <h2 id="how-h">Human wait time is the bottleneck</h2>
+      <p class="lede">An agent that asks a question at 10:02 and gets an answer at 10:25 did nothing for 23 minutes. Mergeline puts every agent in one list, sorted by what it needs from you, and counts how long each one waited.</p>
       <ol class="loop">
-        <li><h3>Deploy</h3><p>Pick a project, an agent and a task. Each agent works on a branch of its own.</p></li>
-        <li><h3>Get pinged</h3><p>A notification only when an agent needs an answer or has something to review.</p></li>
-        <li><h3>Act</h3><p>Every row has one button: Answer, Review changes, Fix checks or Merge.</p></li>
-        <li><h3>Ship</h3><p>Merged work lands in Shipped today, with a signed record of who reviewed it.</p></li>
+        <li><h3>Deploy</h3><p>Pick an agent and a task. Each agent works on a branch of its own.</p></li>
+        <li><h3>Get pinged</h3><p>Only when an agent needs an answer or has something to merge. Its question opens in plain words.</p></li>
+        <li><h3>Act</h3><p>Answer in one box, read the diff beside the list, Merge. No terminal juggling.</p></li>
+        <li><h3>Measure</h3><p>Every merge is a signed record: which agent and model, who reviewed it, how long it waited on you.</p></li>
       </ol>
     </section>
 
-    <section aria-labelledby="why-h">
+    <section id="why" aria-labelledby="why-h">
       <div class="center">
-        <h2 id="why-h">Built for engineers who run five agents at once</h2>
+        <h2 id="why-h">Why not the tools you already have?</h2>
+        <p class="lede">They are good at running agents. Mergeline is about the person between them.</p>
       </div>
-      <div class="grid3">
-        <div class="card"><h3>Every agent CLI</h3><p>Claude Code, Codex and Cursor side by side, with OpenCode, Pi and others in beta. Already started one in a terminal? <code>mergeline attach</code> moves it in.</p></div>
-        <div class="card"><h3>Any machine, any screen</h3><p>Your laptop or a remote Linux dev box, in the browser. Answer a question or merge a change from your phone.</p></div>
-        <div class="card"><h3>Open and accountable</h3><p>MIT licensed and self-hosted. Every merge writes a signed record: which agent and model, the prompt, and who reviewed it.</p></div>
+      <div class="table-wrap">
+        <table class="why">
+          <thead><tr><th scope="col">If you use</th><th scope="col">It gives you</th><th scope="col">Mergeline adds</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">One vendor's background agents (Claude Code, Codex, Cursor)</th><td>That vendor's agents, in that vendor's app</td><td>Every CLI in one list, ranked by who is waiting on you</td></tr>
+            <tr><th scope="row">A task board for agents</th><td>Tasks in columns</td><td>The question an agent is stuck on right now, answered in one box</td></tr>
+            <tr><th scope="row">GitHub's pull request views</th><td>Pull requests once they exist</td><td>The local diff and Merge before there is a pull request, or without GitHub at all</td></tr>
+            <tr><th scope="row">Terminals and tmux</th><td>Full control, one pane at a time</td><td>Every terminal one click away, from a laptop or a phone, with wait time counted</td></tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
     <section aria-labelledby="phone-h">
       <div class="two">
-        <div class="phone"><img src="../docs/img/inbox-phone.png" width="390" height="844" alt="The inbox on a phone: Needs you, To review and Working, each row with one button. Demo data."></div>
+        <div class="phone"><img src="../docs/img/inbox-phone.png" width="390" height="844" alt="The inbox on a phone: who is waiting on you, Needs you, To review and Working. Demo data."></div>
         <div>
-          <h2 id="phone-h">See how long agents wait on you</h2>
-          <p>The number that matters is human wait time: how long an agent sits blocked before someone acts. Mergeline shows it next to what merged and the merge rate per agent and model, from records on your own machine.</p>
+          <h2 id="phone-h">Answer from anywhere</h2>
+          <p>The inbox works the same on a phone: the agent's question, one reply box, the diff and Merge. Its top line is the day's numbers: who is waiting on you now, the median wait, and what merged.</p>
           <ul class="plain">
             <li>One command to start, signed in on your own computer, no settings to fill in.</li>
             <li>No GitHub needed: review the local diff and merge on your machine, or open pull requests with checks when <code>gh</code> is there.</li>
-            <li>Anonymous usage numbers stay off unless you turn them on.</li>
+            <li>Runs on your laptop or your team's dev box. Nothing leaves it; anonymous usage numbers stay off unless you turn them on.</li>
           </ul>
         </div>
       </div>
@@ -236,40 +262,18 @@
         <div>
           <span class="tag">Team tier</span>
           <h2 id="teams-h">A shared inbox for your team</h2>
-          <p>For teams of 5 to 50 running agents across several repositories: one inbox everyone can see, questions routed to whoever owns them, and the history of who merged what. Accounts and invite links already work in the free version.</p>
-          <p class="note">Free for individuals, always. We'll write once when the team tier opens. No newsletter, no tracking, and we delete your details if you ask.</p>
+          <p>Planned for teams running agents across several repositories: one inbox everyone sees, questions routed to whoever owns them, single sign-on and an audit trail of who merged what. Accounts and invite links already work in the free version, and the single-player inbox stays free and open source.</p>
+          <p class="note">We are looking for five design partners who run five or more agents a day. Leave your email and we will write once.</p>
         </div>
         <form class="waitlist" id="waitlist-form" data-endpoint="" novalidate>
-          <div>
-            <label for="email">Work email</label>
+          <label for="email">Work email</label>
+          <div class="join">
             <input id="email" name="email" type="email" autocomplete="email" required>
+            <button class="btn primary" type="submit">Join the waitlist</button>
           </div>
-          <div>
-            <label for="team">Team size</label>
-            <select id="team" name="team">
-              <option value="1">Just me</option>
-              <option value="2-4">2 to 4</option>
-              <option value="5-20" selected>5 to 20</option>
-              <option value="21-50">21 to 50</option>
-              <option value="50+">More than 50</option>
-            </select>
-          </div>
-          <label class="check"><input id="price" name="price" type="checkbox"> <span>Send me the price when it's set.</span></label>
-          <label class="check"><input id="consent" name="consent" type="checkbox" required> <span>You may email me about the team tier. I can ask you to delete my details at any time.</span></label>
-          <button class="btn primary" type="submit">Join the waitlist</button>
+          <p class="note">We only email you about the team tier, and delete your address if you ask. No newsletter, no tracking.</p>
           <p class="status" id="status" role="status" aria-live="polite"></p>
         </form>
-      </div>
-    </section>
-
-    <section aria-labelledby="bridge-h">
-      <div class="bridge">
-        <div>
-          <span class="tag">Labs</span>
-          <h3 id="bridge-h">And for the team's wall screen</h3>
-          <p class="note">The Bridge view shows the same agents as a 3D room, made for a TV in the office. It's off until you switch it on in Labs.</p>
-        </div>
-        <img src="../docs/img/bridge-wall.png" width="1440" height="900" alt="The Bridge view: the same agents at stations in a 3D room, a Labs view for a wall display. Demo data." loading="lazy">
       </div>
     </section>
   </main>
@@ -323,7 +327,6 @@
     var form = document.getElementById('waitlist-form');
     var status = document.getElementById('status');
     var email = document.getElementById('email');
-    var consent = document.getElementById('consent');
     function say(text, kind) {
       status.textContent = text;
       status.className = 'status ' + kind;
@@ -336,17 +339,12 @@
         email.focus();
         return;
       }
-      if (!consent.checked) {
-        say('Please tick the box so we may email you.', 'warn');
-        consent.focus();
-        return;
-      }
       var endpoint = form.getAttribute('data-endpoint');
       if (!endpoint) {
         say('Thanks. The waitlist is not open yet, so nothing was sent. Please check back soon.', 'warn');
         return;
       }
-      var body = { email: value, team: form.team.value, price: form.price.checked, source: 'landing' };
+      var body = { email: value, source: 'landing' };
       fetch(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), credentials: 'omit', referrerPolicy: 'no-referrer' })
         .then(function (res) {
           if (!res.ok) throw new Error(String(res.status));
