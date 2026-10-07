@@ -2,8 +2,9 @@
 // inbox): Mission control from the avatar menu, editing the mission and a milestone in place, the
 // tabs and their keys, the timeline, and Esc closing the window; back after a while away, the digest
 // over the list. In the 3D Bridge view: I opens it and Esc puts it away, and the digest opens by itself.
-// Goals, the timeline and the debrief are Labs (Goals and timeline, Bridge ambience), which this
-// office starts with on (--labs ops,ambience).
+// Goals, the timeline and the debrief are Labs (Goals and timeline, Bridge ambience), and Mission
+// control on the home page is in the GitHub boards and queue lab, which this office starts with on
+// (--labs ops,ambience,boards).
 // Skipped (not failed) when there's no build (npm run build), the build is older than the client's
 // sources, or there's no browser playwright-core can start.
 import { after, before, test } from 'node:test';
@@ -70,7 +71,7 @@ before(async () => {
   const log = console.log;
   console.log = () => {};
   try {
-    office = await startServer(loadConfig([project, '--home', home, '--projects', path.join(root, 'projects'), '--port', String(port), '--password', PASSWORD, '--no-open', '--agent', claude, '--labs', 'ops,ambience']), { publicDir: BUNDLE });
+    office = await startServer(loadConfig([project, '--home', home, '--projects', path.join(root, 'projects'), '--port', String(port), '--password', PASSWORD, '--no-open', '--agent', claude, '--labs', 'ops,ambience,boards']), { publicDir: BUNDLE });
   } finally {
     console.log = log;
   }
