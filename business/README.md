@@ -9,7 +9,7 @@ The fork is based on [AgentSystemLabs/agent-office](https://github.com/AgentSyst
 1. Get written clearance from your employer before any paid work, public launch or grant application: [employer-clearance-request.md](employer-clearance-request.md). Until you have it, treat everything below as private drafts.
 2. Talk to upstream before you talk to customers: [upstream-partnership.md](upstream-partnership.md). Offer the security fixes first, with nothing asked in return.
 3. Pick a name and run the trademark checks: [naming.md](naming.md).
-4. Put up the waitlist page: the product's landing with the team tier waitlist is [site/index.html](../site/index.html) ([docs/landing.md](../docs/landing.md)); [landing/index.html](landing/index.html) is the consulting offer's page.
+4. Put up the waitlist page: the product's landing with the team tier waitlist is [site/landing/](../site/landing/index.html) ([docs/landing.md](../docs/landing.md)); [landing/index.html](landing/index.html) is the consulting offer's page.
 5. Sell the pilot: [agent-team-lab-offer.md](agent-team-lab-offer.md), priced from [pricing-and-metrics.md](pricing-and-metrics.md), contracted with [sow-template.md](sow-template.md).
 6. Run the workshop as a lead-in or an add-on: [workshop/](workshop/README.md).
 7. Apply for vendor credits to cover model and compute costs during pilots and hackathons: [vendor-credits.md](vendor-credits.md).
