@@ -20,6 +20,8 @@ export class CalloutDocking {
   private from = 0;
   private lifted = false;
   private shown = true;
+  /** How far in its pop it is (0-1, callout-view.ts): its strength on top of the fade. */
+  alpha = 1;
 
   constructor(private readonly leader: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>) {
     leader.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
@@ -59,7 +61,7 @@ export class CalloutDocking {
     for (const c of chips) {
       if (!c) continue;
       c.position.copy(this.at);
-      c.material.opacity = this.fade;
+      c.material.opacity = this.fade * this.alpha;
     }
     const leader = this.leader;
     leader.visible = this.shown && (this.lifted || this.k > 0.05);
@@ -68,6 +70,6 @@ export class CalloutDocking {
     p.setXYZ(0, 0, this.from, 0);
     p.setXYZ(1, this.at.x, this.at.y, this.at.z);
     p.needsUpdate = true;
-    leader.material.opacity = 0.7 * this.fade;
+    leader.material.opacity = 0.7 * this.fade * this.alpha;
   }
 }

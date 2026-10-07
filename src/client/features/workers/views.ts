@@ -28,6 +28,7 @@ import { workerBounty } from '../../ui/bounty';
 import { Worker } from '../../world/character';
 import { Laptop } from './laptop';
 import { Arrivals, Departures } from './leaving';
+import { staggerDelay, tierFor } from './lod';
 
 // The kinds of thing you can use that this defines (see InteractKinds in world/types.ts).
 declare module '../../world/types' {
@@ -42,19 +43,11 @@ export interface WorkerView {
   deskId: string;
   status: string;
   acked: boolean;
-  /** Its callout is showing all it has (see NEAR). */
-  near: boolean;
   /** The screen version its visor last flickered for. */
   printed: number;
   /** Its small parts are drawn: it's within Quality's detail range (see TierLook.detail). */
   detail: boolean;
 }
-
-/** How close (meters) the camera comes before a unit's callout shows its task, and how far it goes before it's one line again. */
-const NEAR = 6;
-const NEAR_LEAVE = 7.5;
-/** How much further off a unit that needs you, or is stuck, shows all it has. */
-const URGENT_NEAR = 2;
 
 export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'notifier' | 'waiting' | 'peers' | 'overview' | 'quality'>;
 
@@ -98,6 +91,7 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
         desk.seatAnchor.add(model.root);
         model.dockOn(desk.group);
         model.setCallSign(callSign(w.deskId));
+        model.setStagger(staggerDelay(w.id));
         const provider = resolvedProvider(w.provider, store.project);
         if (w.kind === 'agent') model.setProvider(PROVIDER_GLYPH[provider], PROVIDER_STRIPE[provider]);
         else model.setProvider('$', PROVIDER_STRIPE.custom);
@@ -106,7 +100,7 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
         const laptop = new Laptop();
         desk.laptopAnchor.add(laptop.root);
         desk.chair.rotation.y = 0;
-        v = { model, laptop, deskId: w.deskId, status: '', acked: true, near: false, printed: -2, detail: true };
+        v = { model, laptop, deskId: w.deskId, status: '', acked: true, printed: -2, detail: true };
         workerViews.set(w.id, v);
       }
       if (v.status !== w.status || v.acked !== w.acked) {
@@ -122,6 +116,8 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
         v.model.setStatus(w.status);
       }
       v.model.setAction(w.action);
+      v.model.setActivity(w.activity);
+      v.model.setMeta(w.worktree?.branch, w.model ?? w.usage?.model ?? (w.kind === 'agent' ? resolvedProvider(w.provider, store.project) : undefined));
       v.model.setPr(workerPr(w, store.pulls.items, store.queue.tasks));
       v.model.setLost(!!w.lost);
       // A unit holding a claimed bounty shows what it's worth ahead of its task.
@@ -219,12 +215,10 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     const range = parts.quality.look().detail;
     for (const [id, v] of workerViews) {
       const desk = OFFICE_PLAN.byId.get(v.deskId)!;
-      // Near enough to read: its callout shows its task and how long it has been this way.
       const d = v.model.where(workerPos).distanceTo(camPos);
-      // One that needs you, or is stuck, says so from further off; from the Overview each is one line.
-      const reach = (v.model.urgent ? URGENT_NEAR : 1) * (v.near ? NEAR_LEAVE : NEAR);
-      v.near = !parts.overview?.active() && d < reach;
-      v.model.setNear(v.near);
+      // How much its callout says (lod.ts): a tab from far off, a line between, the card up close; by
+      // the Overview's zoom or, walking, how far off it is. One that needs you or is stuck keeps its call sign.
+      v.model.setTier(tierFor({ ortho: ov?.active() ? ov.camera : null, distance: d }, v.model.tier));
       // Its small parts (and its laptop's) only within Quality's detail range, a little past it to leave.
       const detail = d < range * (v.detail ? 1.08 : 1);
       if (detail !== v.detail) {
@@ -244,7 +238,9 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     }
     for (const a of parts.worlds.idleAgents()) {
       if (!a.view.vacancy.visible) continue;
-      a.model.setDetail(a.model.where(workerPos).distanceTo(camPos) < range);
+      const d = a.model.where(workerPos).distanceTo(camPos);
+      a.model.setDetail(d < range);
+      a.model.setTier(tierFor({ ortho: ov?.active() ? ov.camera : null, distance: d }, a.model.tier));
       a.model.update(dt, t);
     }
     departures.update(dt, t);

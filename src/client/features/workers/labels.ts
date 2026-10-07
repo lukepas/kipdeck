@@ -2,7 +2,9 @@
 // each frame): its mark at the edge of the view while it's out of sight, else its card on the Attention
 // board while that board is up and big enough to read, else its callout in the room. A unit you're
 // standing at keeps its callout. Callouts that pile up on each other (two or more, each covering a
-// quarter of another) fold into one chip that counts them ("3 working"). Nothing here draws.
+// quarter of another) fold into one chip that counts them ("3 working"). How big each callout is comes
+// from its tier (lod.ts): from far off a working unit's is a 14 px tab, so they seldom pile; up close
+// the full cards do, and fold. Nothing here draws.
 
 import type { LabelBox } from './declutter';
 

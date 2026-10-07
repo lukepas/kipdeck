@@ -15,6 +15,16 @@ export function ago(ms: number): string {
   return `${Math.floor(h / 24)}d`;
 }
 
+/**
+ * The same clock to the second, for a count that ticks where you can watch it (a unit's callout up
+ * close): '0:42', '4:05' under an hour, then as `ago` ('2h', '3d').
+ */
+export function elapsed(ms: number): string {
+  const s = Math.floor(Math.max(0, ms) / 1000);
+  if (s >= 3600) return ago(ms);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
 /** A leading "[ask]" or "[perm]" split off its text: shown as a chip, never as brackets. */
 export function splitTag(s: string): { tag?: string; text: string } {
   const m = /^\s*\[([a-z][\w-]{0,15})\]\s*/i.exec(s);
@@ -83,9 +93,9 @@ const PLAIN: Record<Attention['level'], string> = {
   parked: 'Ready',
 };
 
-/** The row's one status phrase: the ranking's label, unless it only repeats `title`. */
+/** The row's one status phrase: the ranking's label, unless it only repeats `title` (or there is none). */
 export function statusPhrase(att: Pick<Attention, 'level' | 'label'>, title?: string): string {
-  return sameText(att.label, title) ? PLAIN[att.level] : att.label;
+  return !att.label.trim() || sameText(att.label, title) ? PLAIN[att.level] : att.label;
 }
 
 /** The one word a badge carries next to its glyph ("done", "crashed"); the detail goes in a tooltip. */

@@ -1,19 +1,16 @@
 import * as THREE from 'three';
 import type { AttentionLevel } from '../../../shared/attention';
-import { ago, splitTag } from '../../../shared/rowtext';
+import { splitTag } from '../../../shared/rowtext';
 import type { WorkerAction, WorkerStatus, WorkerTask } from '../../../shared/protocol';
 import { isAsleep, type WorkerPr } from '../../../shared/status';
 import { contactShadow, DECK } from '../office/materials';
 import { GLYPH_HUE, type GlyphKind } from '../glyphs';
-import { disposeSprite } from '../toon';
 import { UNIT, buildUnit, disposeUnit, paintShell, setGlyph, type Shell, type UnitBody } from './unit-body';
-import { calloutSprite, clip, type CalloutText } from './unit-callout';
 import { CalloutDocking } from './callout-dock';
+import { CalloutView, calloutText } from './callout-view';
+import { CALLOUT_SCREEN, type CalloutTier } from '../../features/workers/lod';
 import { GLYPH_SCREEN, GroundRing, glyphSprite, setGlyphKind } from './unit-marks';
 
-/** The smallest a callout gets on screen, and the tallest a full one gets up close: this much of the view's height. */
-const CALLOUT_MIN = 0.02;
-const CALLOUT_MAX = 0.075;
 /** How far (m) a callout is lifted before a leader line ties it back to its unit's head. */
 const LEADER_FROM = 0.12;
 /** How long the violet check stays over a unit once its pull request has merged (s). */
@@ -27,15 +24,6 @@ const SLUMP = 0.14;
 /** Seconds to come in at a console (it builds up from its base) and for a stuck unit's hatch to fade in. */
 const SPAWN = 0.5;
 const HATCH_IN = 0.2;
-
-const STATE_WORD: Record<GlyphKind, string> = {
-  'needs-you': 'NEEDS YOU',
-  stuck: 'STUCK',
-  review: 'TO REVIEW',
-  working: 'WORKING',
-  parked: 'ON DECK',
-  merged: 'MERGED',
-};
 
 /** Somewhere a unit glides to, in its seat's space: a spot and which way it faces there. */
 export interface Spot {
@@ -83,16 +71,14 @@ export class Worker {
   private ring = new GroundRing();
   private shadow: THREE.Mesh;
   private glyph = glyphSprite();
-  private callout: THREE.Sprite | null = null;
+  /** Its callout, at the tier it shows (callout-view.ts). */
+  private callouts: CalloutView;
   /** A hairline from its head up to its callout, while the callout is lifted off it or docked under a board. */
   private leader: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>;
   /** Where the callout is drawn: its own place, or docked under a wall board (callout-dock.ts). */
   private docking: CalloutDocking;
   /** How high its head is in the mover's space this frame (it builds up as it comes in). */
   private headY: number = UNIT.top;
-  /** The same callout shrunk to its glyph and call sign, for where callouts crowd. */
-  private compact: THREE.Sprite | null = null;
-  private calloutKey = '';
   /** Which callout shows, as the declutter pass decided this frame (features/workers/declutter.ts). */
   private mode: CalloutMode = 'full';
   /** How far (its seat's meters) the callout is lifted off its place so it doesn't cover another's, and how far it's headed (see setLift). */
@@ -128,8 +114,9 @@ export class Worker {
   private task: WorkerTask | undefined;
   private pr: WorkerPr | undefined;
   private lost = false;
-  private near = false;
   private action: WorkerAction | undefined;
+  private activity: string | undefined;
+  private meta: { branch?: string; model?: string } = {};
   /** Seconds left showing the violet check, once its pull request merged. */
   private mergedT = 0;
   private spawnT = 0;
@@ -162,6 +149,7 @@ export class Worker {
     this.leader.frustumCulled = false;
     this.mover.add(this.leader);
     this.docking = new CalloutDocking(this.leader);
+    this.callouts = new CalloutView(this.mover);
     if (Worker.calm) this.spawnT = 1;
     this.paint();
   }
@@ -249,10 +237,32 @@ export class Worker {
     this.paint();
   }
 
-  /** You're close, or it's selected: its callout shows its task and how long it's been this way. */
-  setNear(near: boolean) {
-    if (near === this.near) return;
-    this.near = near;
+  /** How much its callout says (features/workers/lod.ts): it changes after the unit's own delay, and pops in. */
+  setTier(tier: CalloutTier) {
+    this.callouts.request(tier, performance.now(), Worker.calm);
+  }
+
+  /** The tier its callout shows now. */
+  get tier(): CalloutTier {
+    return this.callouts.tier;
+  }
+
+  /** Its own delay (ms) before its callout changes tier, so a zoom ripples across the crew (lod.ts staggerDelay). */
+  setStagger(ms: number) {
+    this.callouts.delay = ms;
+  }
+
+  /** What it's doing now (its latest tool call or prompt), on its callout from the middle distance. */
+  setActivity(text: string | undefined) {
+    if (text === this.activity) return;
+    this.activity = text;
+    this.paint();
+  }
+
+  /** Its branch and model, on its callout's third line up close. */
+  setMeta(branch: string | undefined, model: string | undefined) {
+    if (branch === this.meta.branch && model === this.meta.model) return;
+    this.meta = { branch, model };
     this.paint();
   }
 
@@ -288,17 +298,18 @@ export class Worker {
    * camera's `up`, not the world's. False when it has no callout showing.
    */
   calloutEdges(bottom: THREE.Vector3, top: THREE.Vector3, up: THREE.Vector3, compact = false): boolean {
-    const c = compact ? this.compact : this.callout;
+    const c = compact ? this.callouts.compact : this.callouts.full;
     if (!c || !this.root.visible) return false;
     this.mover.localToWorld(bottom.set(0, UNIT.top + 0.14, 0));
     const scale = this.mover.getWorldScale(tmp).y;
-    top.copy(bottom).addScaledVector(up, c.scale.y * scale);
+    // Measured at its full size, not part way through a pop.
+    top.copy(bottom).addScaledVector(up, (c.scale.y / this.callouts.pop.scale) * scale);
     return true;
   }
 
   /** A callout's width over its height, as drawn: the full one's, or the call sign's. */
   calloutAspect(compact = false): number {
-    const c = compact ? this.compact : this.callout;
+    const c = compact ? this.callouts.compact : this.callouts.full;
     return c ? c.scale.x / c.scale.y : 1;
   }
 
@@ -310,8 +321,8 @@ export class Worker {
   }
 
   private showMode() {
-    if (this.callout) this.callout.visible = this.mode === 'full';
-    if (this.compact) this.compact.visible = this.mode === 'compact';
+    if (this.callouts.full) this.callouts.full.visible = this.mode === 'full';
+    if (this.callouts.compact) this.callouts.compact.visible = this.mode === 'compact';
     const kind = this.leaving !== null ? null : this.kind();
     // Needs you and stuck have their own marks in the room while Worker.marks says so (features/signals).
     const marked = Worker.marks && (kind === 'needs-you' || kind === 'stuck');
@@ -329,13 +340,13 @@ export class Worker {
    * stays inside the view. Both the full callout and the call sign's.
    */
   setNudge(frac: number) {
-    for (const c of [this.callout, this.compact]) if (c) c.center.x = 0.5 - frac;
+    for (const c of [this.callouts.full, this.callouts.compact]) if (c) c.center.x = 0.5 - frac;
   }
 
   /** Docks the callout under a wall board at `at` (the world), or home (null), `fade` its strength (features/workers/dock.ts). */
   dock(at: THREE.Vector3 | null, fade: number, dt: number) {
     if (at) this.mover.updateWorldMatrix(true, false);
-    this.docking.dock(at ? this.mover.worldToLocal(tmp.copy(at)) : null, fade, dt, Worker.calm, [this.callout, this.compact]);
+    this.docking.dock(at ? this.mover.worldToLocal(tmp.copy(at)) : null, fade, dt, Worker.calm, [this.callouts.full, this.callouts.compact]);
   }
 
   /** Lifts the callout (and the glyph over it) `meters` straight up off its place, in the world's meters; it eases there. */
@@ -376,48 +387,36 @@ export class Worker {
     return this.level;
   }
 
-  private statusLine(kind: GlyphKind): string {
-    const age = ago(Date.now() - this.since);
-    if (this.lost) return 'STUCK  worktree deleted';
-    if (kind === 'stuck') return clip(`STUCK  ${this.reason ?? ''}  ${age}`, 38);
-    if (kind === 'merged') return `MERGED  PR #${this.pr?.number ?? ''}`;
-    if (kind === 'review' && this.pr) return `PR #${this.pr.number} ${this.pr.state.toUpperCase()}`;
-    if (kind === 'parked') return isAsleep(this.status) ? 'OFFLINE' : STATE_WORD.parked;
-    return `${STATE_WORD[kind]}  ${age}`;
-  }
-
-  /** Redraws the callout when what it says has changed (its age ticks by the minute). */
+  /** Redraws the callout when what it says has changed (up close its clock ticks by the second). */
   private paint() {
     const kind = this.kind();
-    const leaving = this.leaving !== null;
-    const text: CalloutText = {
-      sign: this.sign,
-      name: this.name,
-      kind: leaving ? null : kind,
-      near: !leaving && (this.near || !!this.said),
-      task: this.said ?? (this.task?.name ? splitTag(this.task.name).text : undefined),
-      status: leaving ? undefined : this.statusLine(kind),
-      ...(this.epithet && !leaving && !this.said ? { epithet: this.epithet } : {}),
-    };
-    if (leaving) text.name = `${this.name}  ${this.leaving}`;
-    const key = JSON.stringify(text);
-    this.lastDraw = performance.now();
+    const now = Date.now();
+    const text = calloutText(
+      {
+        tier: this.callouts.tier,
+        sign: this.sign,
+        name: this.name,
+        kind,
+        level: this.level,
+        since: this.since,
+        reason: this.reason,
+        status: this.status,
+        lost: this.lost,
+        task: this.task?.name ? splitTag(this.task.name).text : undefined,
+        activity: this.activity,
+        pr: this.pr,
+        ...this.meta,
+        epithet: this.epithet,
+        said: this.said,
+        leaving: this.leaving,
+      },
+      now,
+    );
+    this.lastDraw = now;
     paintShell(this.body, this.shell(kind));
-    if (key === this.calloutKey) return this.showMode();
-    this.calloutKey = key;
-    for (const old of [this.callout, this.compact]) {
-      if (!old) continue;
-      this.mover.remove(old);
-      disposeSprite(old);
-    }
-    this.callout = calloutSprite(text);
-    this.compact = calloutSprite({ ...text, compact: true, near: false });
-    for (const c of [this.callout, this.compact]) {
-      c.userData.base = c.scale.clone();
-      this.mover.add(c);
-    }
+    const drawn = this.callouts.draw(text);
     this.showMode();
-    this.place();
+    if (drawn) this.place();
   }
 
   private shell(kind: GlyphKind): Shell {
@@ -433,7 +432,10 @@ export class Worker {
       this.mergedT = Math.max(0, this.mergedT - dt);
       if (!this.mergedT) this.paint();
     }
-    if (performance.now() - this.lastDraw > 15_000) this.paint();
+    const now = performance.now();
+    if (this.callouts.tick(now, calm)) this.paint();
+    // Up close its clock ticks by the second; further off it says nothing that ages.
+    else if (Date.now() - this.lastDraw > (this.callouts.tier === 'near' ? 1000 : 15_000)) this.paint();
     this.spawnT = calm ? 1 : Math.min(1, this.spawnT + dt / SPAWN);
     this.hatchT = Math.min(1, this.hatchT + dt / HATCH_IN);
     this.flick = Math.max(0, this.flick - dt * 5);
@@ -448,30 +450,35 @@ export class Worker {
     this.place();
   }
 
-  /** Keeps the glyph the same size on screen, and the callout from going smaller than CALLOUT_MIN. */
+  /** Keeps the glyph the same size on screen, and the callout within its tier's share of the view (lod.ts CALLOUT_SCREEN). */
   private size() {
     const screen = Worker.screen;
-    if (!screen || !this.callout) return;
+    const full = this.callouts.full;
+    if (!screen || !full) return;
     const scale = this.root.getWorldScale(tmp).y;
     const span = screen(this.mover.getWorldPosition(tmp)) / scale;
     this.glyph.scale.setScalar(GLYPH_SCREEN * span * Worker.weight);
-    for (const c of [this.callout, this.compact]) {
+    const { min, max } = CALLOUT_SCREEN[this.callouts.tier];
+    const fullY = (full.userData.base as THREE.Vector3).y;
+    for (const c of [full, this.callouts.compact]) {
       if (!c) continue;
       const base = c.userData.base as THREE.Vector3;
-      // Never smaller than CALLOUT_MIN of the view, never taller than CALLOUT_MAX of it up close.
-      const lo = Math.max(Worker.weight, (CALLOUT_MIN * Worker.weight * span) / base.y);
-      const boost = this.urgent ? Worker.urgentBoost : 1;
-      const k = Math.min(lo, (CALLOUT_MAX * Worker.weight * span) / Math.max(base.y, (this.callout.userData.base as THREE.Vector3).y)) * boost;
+      // Never smaller than `min` of the view, never taller than `max` of it up close.
+      const lo = Math.max(Worker.weight, (min * Worker.weight * span) / base.y);
+      // Tagged bigger from the Overview while it needs you, short of the card up close (big enough as it is).
+      const boost = this.urgent && this.callouts.tier !== 'near' ? Worker.urgentBoost : 1;
+      const k = Math.min(lo, (max * Worker.weight * span) / Math.max(base.y, fullY)) * boost * this.callouts.pop.scale;
       c.scale.set(base.x * k, base.y * k, 1);
     }
   }
 
   /** The callout at its place plus its lift, unless it's docked; the glyph, when it shows, where the callout would be. */
   private place() {
-    if (!this.callout) return;
+    if (!this.callouts.full) return;
     this.glyph.position.y = this.headY + 0.14;
+    this.docking.alpha = this.callouts.pop.alpha;
     // Lifted off its head, or docked under a board: a hairline ties it back.
-    this.docking.home(this.headY + 0.14 + this.lift, this.headY + 0.04, this.lift > LEADER_FROM, this.mode !== 'hidden', [this.callout, this.compact]);
+    this.docking.home(this.headY + 0.14 + this.lift, this.headY + 0.04, this.lift > LEADER_FROM, this.mode !== 'hidden', [this.callouts.full, this.callouts.compact]);
   }
 
   /** Toward its target (or its seat), at a steady pace, leaning into the move. */
@@ -575,8 +582,7 @@ export class Worker {
   dispose() {
     this.leader.geometry.dispose();
     this.leader.material.dispose();
-    if (this.callout) disposeSprite(this.callout);
-    if (this.compact) disposeSprite(this.compact);
+    this.callouts.dispose();
     setGlyph(this.body, '');
     this.ring.dispose();
     this.glyph.material.dispose();
