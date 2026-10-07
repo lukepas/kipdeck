@@ -97,6 +97,9 @@ export function isSnoozed(e: Pick<RosterEntry, 'snooze'>, now: number): boolean 
   return !!s && (s.until === 'change' || s.until > now);
 }
 
+/** The tools agents ask the person a question with, by name alone (Claude Code's, Codex's). */
+const ASKING_TOOL = /^(?:[\w-]+[._])?(?:AskUserQuestion|ask_user_question|request_user_input)$/;
+
 /** When it last showed any sign of life: a hook event, terminal output, or starting to work. */
 function lastSign(e: RosterEntry): number {
   return Math.max(e.activityAt ?? 0, e.outputAt ?? 0, e.workingSince ?? 0, e.waitingSince ?? 0, e.createdAt);
@@ -110,8 +113,10 @@ export function attention(e: RosterEntry, now: number): Attention {
 
   if (e.lost) return at('stuck', 'rebuild', waited, 'Worktree deleted', 'worktree deleted');
   if (e.status === 'needs_input') {
-    const what = e.activity ? `: ${e.activity}` : '';
-    return at('needs-you', 'answer', waited, e.activity ?? 'Needs an answer', `needs input for ${duration(now - waited)}${what}`);
+    // An activity that's only the asking tool's name (Codex's request_user_input) says less than this.
+    const said = e.activity && !ASKING_TOOL.test(e.activity) ? e.activity : undefined;
+    const what = said ? `: ${said}` : '';
+    return at('needs-you', 'answer', waited, said ?? 'Needs an answer', `needs input for ${duration(now - waited)}${what}`);
   }
   if (isCrashed(e)) return at('stuck', 'resume', waited, `Crashed (exit ${e.exitCode})`, `crashed (exit ${e.exitCode})`);
   if (e.status === 'working' && e.action === 'failing') return at('stuck', 'look', e.workingSince ?? waited, 'Tests or build failing', 'tests or build failing repeatedly');
