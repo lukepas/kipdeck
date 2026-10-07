@@ -2,7 +2,31 @@
 
 Back to the [README](../README.md).
 
-The home page (`/`, [the inbox](inbox.md)) has six keys: **Ctrl+K** to find an agent or a command, **N** to deploy an agent, **Enter** for the selected agent's next step, **Esc** to go back to the list, **/** to search and **?** to list them. Up and Down (or j and k) move the selection. Everything else there is a click or a tap: a row's one button, **Deploy agent**, and the avatar menu for the boards, the queue, Mission control and [Labs](labs.md). Esc closes any window. The keys below are the Bridge view's (`/bridge`).
+## The inbox
+
+The home page (`/`, [the inbox](inbox.md)) has six keys. None of them fire while you type in a box or a terminal, or while a window is open.
+
+| Key | Action |
+| --- | --- |
+| Ctrl + K (Cmd + K) | Find an agent by its task or name, or any command |
+| N | Deploy an agent |
+| Enter | The selected agent's next step (its row's button) |
+| Esc | Back to the list: from the pane's terminal, out of the search box, or off the selection; closes any window |
+| / | Search agents |
+| ? | Help: the loop, these keys and the docs |
+
+Up and Down (or j and k) move the selection. Everything else is a click or a tap: a row's one button, **Deploy agent**, and the avatar menu at the top right:
+
+- **Work**: Issues, Pull requests and the Task queue.
+- **Numbers**: human wait time, merges and the merge rate ([metrics](metrics.md)).
+- **Settings**: three panes. **Account** (who you're signed in as, your password, light or dark, teammates and anonymous usage numbers for admins), **Agents** (the default agent and model, how many run at once, what happens after a merge, where new projects are cloned, the prompts) and **Notifications** (desktop notifications, and the team's Slack or Discord channel).
+- **Labs**, **Bridge view** (with that lab on), **Help and keys** and **Sign out**.
+
+Mission control, While you were away and light or dark are one Ctrl+K away. Every window has a close button at its top right, and Esc closes it too.
+
+## The Bridge view (Labs)
+
+The keys below are the Bridge view's (`/bridge`). Its Settings has the same three panes as the inbox's, then **Bridge** (lights, brightness, ship motion, quality, hands, life, moments and rituals), **Sound & voice**, and **Bounties** with Proof of Merge on; **Your operator** and **Camera view** are under Account there.
 
 | Key | Action |
 | --- | --- |

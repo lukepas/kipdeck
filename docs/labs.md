@@ -32,7 +32,7 @@ The table of labs is `src/shared/labs.ts`. The server keeps them in `src/server/
 
 - an HTTP route takes `lab: '<id>'` (`src/server/http/router.ts`), and isn't matched while that lab is off;
 - a menu row in the bridge takes `lab: '<id>'` (`HudAction` in `src/client/ui/menu.ts`);
-- a settings pane takes `lab` in `PANES` (`src/client/ui/settings.ts`);
+- a settings pane is added only while its lab is on (Bounties in `src/client/ui/settings.ts`, after the three panes every page shares from `settings-core.ts`);
 - client code asks the store: `store.lab('<id>')` (`src/client/state/slices/labs.ts`), and follows the `labs` topic.
 
 `tests/labs.test.ts` checks the defaults, the switches, the routes behind Proof of Merge and what each lab hides.
