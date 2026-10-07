@@ -2,7 +2,10 @@
 // what it left uncommitted is committed on its branch first, and the branch is merged into the
 // project's branch in the project folder with a merge commit. The project folder has to be on that
 // branch with nothing uncommitted, so a merge never mixes with someone's own work in progress; a
-// conflict is aborted and said, never left half done.
+// conflict is aborted and said, never left half done. An agent that works in the project folder
+// itself (a session moved in with `mergeline attach`) has no branch to merge, and committing
+// everything there would sweep up the person's own edits too, so that is refused with what to do.
+// One merge at a time per project folder: a second waits for the first (git's index is one lock).
 import { execFile } from 'node:child_process';
 
 interface Run {
@@ -55,14 +58,27 @@ async function commitAll(dir: string, message: string, who: string, env?: Record
   return commit.code === 0 ? undefined : said(commit, 'git commit failed');
 }
 
-/** Merges the work, returning the commit it's now in, or why it couldn't. */
-export async function localMerge(m: LocalMerge): Promise<{ commit: string } | { error: string }> {
+/** The merge under way in each project folder, so the next one starts after it. */
+const queues = new Map<string, Promise<unknown>>();
+
+/** Merges the work, returning the commit it's now in, or why it couldn't. Merges into one project folder run one at a time. */
+export function localMerge(m: LocalMerge): Promise<{ commit: string } | { error: string }> {
+  const before = queues.get(m.projectDir) ?? Promise.resolve();
+  const mine = before.then(() => mergeNow(m));
+  const tail = mine.catch(() => undefined);
+  queues.set(m.projectDir, tail);
+  void tail.then(() => queues.get(m.projectDir) === tail && queues.delete(m.projectDir));
+  return mine;
+}
+
+async function mergeNow(m: LocalMerge): Promise<{ commit: string } | { error: string }> {
+  if (!m.branch || m.workDir === m.projectDir) {
+    return { error: 'This agent works in the project folder itself, so its changes sit with anything else uncommitted there. Commit the files it changed yourself (git add them, then git commit); Merge only merges an agent that has a branch of its own.' };
+  }
+  if (!m.base) return { error: 'The project has no branch to merge into' };
   const committed = await commitAll(m.workDir, m.message, m.who, m.env);
   if (committed) return { error: committed };
   const head = async () => (await run(['rev-parse', 'HEAD'], m.projectDir, m.env)).out.trim();
-  // Worked in the project folder itself: committing it there was the merge.
-  if (!m.branch || m.workDir === m.projectDir) return { commit: await head() };
-  if (!m.base) return { error: 'The project has no branch to merge into' };
 
   const on = (await run(['rev-parse', '--abbrev-ref', 'HEAD'], m.projectDir, m.env)).out.trim();
   if (on !== m.base) return { error: `The project folder is on ${on || 'no branch'}, not ${m.base}: switch it back, or open a pull request instead` };
@@ -75,6 +91,10 @@ export async function localMerge(m: LocalMerge): Promise<{ commit: string } | { 
 
   const merge = await run([...(await identity(m.projectDir, m.who, m.env)), 'merge', '--no-ff', '--no-edit', '-m', m.message, m.branch], m.projectDir, m.env);
   if (merge.code !== 0) {
+    // Only a merge that stopped half way (MERGE_HEAD) is a conflict to abort; a hook or a lock that
+    // refused it left nothing to undo, and git's own words say why.
+    const halfway = (await run(['rev-parse', '-q', '--verify', 'MERGE_HEAD'], m.projectDir, m.env)).code === 0;
+    if (!halfway) return { error: `git merge failed: ${said(merge, 'no reason given')}` };
     await run(['merge', '--abort'], m.projectDir, m.env);
     return { error: `${m.branch} conflicts with ${m.base}: send it back to rebase, or open a pull request` };
   }

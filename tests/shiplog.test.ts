@@ -123,13 +123,33 @@ test('a conflict is aborted and said, and the project stays clean on its branch'
   }
 });
 
-test('an agent that worked in the project folder itself: committing there is the merge', async () => {
+test("an agent that worked in the project folder itself is refused: nothing of the person's own is committed", async () => {
   const s = setup();
   try {
-    writeFileSync(path.join(s.project, 'c.md'), 'in place\n');
+    const head = git(s.project, 'rev-parse', 'HEAD');
+    writeFileSync(path.join(s.project, 'c.md'), 'the agent in place\n');
+    writeFileSync(path.join(s.project, '.env.local'), 'SECRET=mine\n');
     const r = await merge(s, { workDir: s.project, branch: undefined });
-    assert.ok('commit' in r);
-    assert.equal(git(s.project, 'log', '-1', '--format=%s'), 'Add a file');
+    assert.match('error' in r ? r.error : '', /works in the project folder itself/);
+    assert.equal(git(s.project, 'rev-parse', 'HEAD'), head, 'no commit');
+    assert.match(git(s.project, 'status', '--porcelain'), /\?\? \.env\.local/);
+  } finally {
+    s.done();
+  }
+});
+
+test('two merges into one project folder run one after the other, both landing', async () => {
+  const s = setup();
+  try {
+    const second = path.join(s.root, 'wt2');
+    git(s.project, 'worktree', 'add', '-q', '-b', 'office/pixel-2', second);
+    writeFileSync(path.join(s.work, 'a.md'), 'one\n');
+    writeFileSync(path.join(second, 'b.md'), 'two\n');
+    const [a, b] = await Promise.all([merge(s), merge(s, { workDir: second, branch: 'office/pixel-2', message: 'Add another' })]);
+    assert.ok('commit' in a && 'commit' in b, JSON.stringify([a, b]));
+    assert.equal(readFileSync(path.join(s.project, 'a.md'), 'utf8'), 'one\n');
+    assert.equal(readFileSync(path.join(s.project, 'b.md'), 'utf8'), 'two\n');
+    assert.equal(git(s.project, 'status', '--porcelain'), '');
   } finally {
     s.done();
   }
