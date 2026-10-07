@@ -1,8 +1,11 @@
 // The merge's shockwave: one ring of light that leaves the Merge button and crosses the viewport,
 // Signal at its core and the Proof violet at its rim, with a thin chromatic fringe like glass
-// bending the page behind it. One small WebGL1 fragment pass on a canvas that exists only while
-// the ring is out (created on the merge, its context freed after), or the same ring in Canvas2D
+// bending the page behind it. One small WebGL1 pass on one canvas, or the same ring in Canvas2D
 // where WebGL is missing. Pointer events pass straight through it.
+//
+// The canvas, its context and the compiled program are made ahead of time (warmShockwave, called
+// while the browser is idle once the loop is a viewport away) and kept, hidden, for every ring
+// after: compiling shaders on the merge itself cost a dropped frame at the page's climax.
 import { rgbOf } from '../engine/env';
 
 // The ring is drawn as an annulus mesh that covers only the band where it has light (its core,
@@ -46,13 +49,17 @@ function annulus(): Float32Array {
   return v;
 }
 
-type Ring = { draw(t: number): void; free(): void };
+type Ring = {
+  /** Draws the ring at progress t (0 to 1). */
+  draw(t: number): void;
+  /** Sets where the ring starts (viewport px) and the drawing size. */
+  place(x: number, y: number): void;
+};
 
 /** The ring in WebGL on `canvas`, or null where WebGL is missing or the program will not link. */
-function glRing(canvas: HTMLCanvasElement, x: number, y: number, dpr: number, core: number[], rim: number[]): Ring | null {
+function glRing(canvas: HTMLCanvasElement, dpr: number, core: number[], rim: number[]): { ring: Ring; ready: Promise<void> } | null {
   const gl = canvas.getContext('webgl', { premultipliedAlpha: false, alpha: true, antialias: false });
   if (!gl) return null;
-  const lose = () => gl.getExtension('WEBGL_lose_context')?.loseContext();
   const sh = (type: number, src: string) => {
     const s = gl.createShader(type)!;
     gl.shaderSource(s, src);
@@ -63,42 +70,73 @@ function glRing(canvas: HTMLCanvasElement, x: number, y: number, dpr: number, co
   gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT));
   gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
   gl.linkProgram(prog);
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-    lose();
-    return null;
-  }
-  gl.useProgram(prog);
-  const buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, annulus(), gl.STATIC_DRAW);
-  const loc = gl.getAttribLocation(prog, 'a');
-  gl.enableVertexAttribArray(loc);
-  gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
-  gl.enable(gl.BLEND);
-  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  // Where the driver can compile off the main thread, wait for it before asking whether it linked
+  // (asking blocks until it is done).
+  const parallel = gl.getExtension('KHR_parallel_shader_compile') as { COMPLETION_STATUS_KHR: number } | null;
+  const compiled = new Promise<void>((resolve) => {
+    if (!parallel) return resolve();
+    const poll = () => (gl.getProgramParameter(prog, parallel.COMPLETION_STATUS_KHR) ? resolve() : requestAnimationFrame(poll));
+    poll();
+  });
+  let ok = true;
+  let set = false;
   const u = (n: string) => gl.getUniformLocation(prog, n);
-  gl.uniform2f(u('res'), canvas.width, canvas.height);
-  gl.uniform2f(u('at'), x * dpr, y * dpr);
-  gl.uniform3f(u('core'), core[0], core[1], core[2]);
-  gl.uniform3f(u('rim'), rim[0], rim[1], rim[2]);
-  gl.uniform1f(u('scale'), dpr);
-  const ut = u('t');
-  return {
+  let ut: WebGLUniformLocation | null = null, ures: WebGLUniformLocation | null = null, uat: WebGLUniformLocation | null = null;
+  const setup = (): boolean => {
+    if (set) return ok;
+    set = true;
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return (ok = false);
+    gl.useProgram(prog);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, annulus(), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'a');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 3, gl.FLOAT, false, 0, 0);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.uniform3f(u('core'), core[0], core[1], core[2]);
+    gl.uniform3f(u('rim'), rim[0], rim[1], rim[2]);
+    gl.uniform1f(u('scale'), dpr);
+    ut = u('t');
+    ures = u('res');
+    uat = u('at');
+    return ok;
+  };
+  const ring: Ring = {
     draw(t) {
+      if (!setup()) return;
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.uniform1f(ut, t);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, (SEGMENTS + 1) * 2);
     },
-    free: lose,
+    place(x, y) {
+      if (!setup()) return;
+      gl.uniform2f(ures, canvas.width, canvas.height);
+      gl.uniform2f(uat, x * dpr, y * dpr);
+    },
   };
+  // One fully faded frame, so the driver has done its first draw too before the merge.
+  const ready = compiled.then(() => {
+    if (!setup()) return;
+    ring.place(0, 0);
+    ring.draw(1);
+  });
+  // A program that failed to link (checked only once it has compiled) means no WebGL ring.
+  if (!parallel && !setup()) {
+    gl.getExtension('WEBGL_lose_context')?.loseContext();
+    return null;
+  }
+  return { ring, ready };
 }
 
 /** The same ring in Canvas2D. */
-function flatRing(canvas: HTMLCanvasElement, x: number, y: number, dpr: number, core: number[], rim: number[]): Ring {
+function flatRing(canvas: HTMLCanvasElement, dpr: number, core: number[], rim: number[]): Ring {
   const ctx = canvas.getContext('2d')!;
   const css = (c: number[], a: number) => `rgba(${c.map((v) => Math.round(v * 255)).join(',')},${a})`;
+  let x = 0, y = 0;
   return {
     draw(t) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -116,12 +154,19 @@ function flatRing(canvas: HTMLCanvasElement, x: number, y: number, dpr: number, 
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.stroke();
     },
-    free() {},
+    place(px, py) {
+      x = px;
+      y = py;
+    },
   };
 }
 
-/** Sends one ring out from (x, y) in viewport pixels. Resolves when it has gone. */
-export function shockwave(x: number, y: number, ms = 1100): Promise<void> {
+type Kept = { canvas: HTMLCanvasElement; ring: Ring; dpr: number; ready: Promise<void> };
+let kept: Kept | null = null;
+
+/** Makes the ring's canvas, context and program now, hidden, so the first merge only draws. */
+export function warmShockwave(): Promise<void> {
+  if (kept) return kept.ready;
   // The ring is soft light, so it is drawn at a little over half the screen's pixels and scaled up:
   // a third of the fill, and a small texture for the compositor to take on.
   const dpr = Math.min(devicePixelRatio || 1, 1.5) * 0.6;
@@ -131,28 +176,51 @@ export function shockwave(x: number, y: number, ms = 1100): Promise<void> {
     c.setAttribute('aria-hidden', 'true');
     c.width = Math.round(innerWidth * dpr);
     c.height = Math.round(innerHeight * dpr);
+    c.style.visibility = 'hidden';
     return c;
   };
   const core = rgbOf('--signal', [1, 0.42, 0.1]);
   const rim = rgbOf('--proof', [0.65, 0.55, 1]);
   let canvas = make();
-  let ring = glRing(canvas, x, y, dpr, core, rim);
-  if (!ring) {
+  const gl = glRing(canvas, dpr, core, rim);
+  let ring: Ring;
+  let ready = Promise.resolve();
+  if (gl) {
+    ring = gl.ring;
+    ready = gl.ready;
+  } else {
     // A canvas that tried WebGL cannot draw 2D, so the fallback gets a fresh one.
     canvas = make();
-    ring = flatRing(canvas, x, y, dpr, core, rim);
+    ring = flatRing(canvas, dpr, core, rim);
   }
   document.body.append(canvas);
-  const { draw, free } = ring;
+  kept = { canvas, ring, dpr, ready };
+  return ready;
+}
+
+let running = 0;
+
+/** Sends one ring out from (x, y) in viewport pixels. Resolves when it has gone. */
+export function shockwave(x: number, y: number, ms = 1100): Promise<void> {
+  void warmShockwave();
+  const { canvas, ring, dpr } = kept!;
+  const w = Math.round(innerWidth * dpr), h = Math.round(innerHeight * dpr);
+  if (canvas.width !== w || canvas.height !== h) {
+    canvas.width = w;
+    canvas.height = h;
+  }
+  ring.place(x, y);
+  canvas.style.visibility = 'visible';
+  const id = ++running;
   const start = performance.now();
   return new Promise((resolve) => {
     const tick = (now: number) => {
+      if (id !== running) return resolve();
       const t = Math.min(1, (now - start) / ms);
-      draw(1 - Math.pow(1 - t, 2.2));
+      ring.draw(1 - Math.pow(1 - t, 2.2));
       if (t < 1) requestAnimationFrame(tick);
       else {
-        free();
-        canvas.remove();
+        canvas.style.visibility = 'hidden';
         resolve();
       }
     };

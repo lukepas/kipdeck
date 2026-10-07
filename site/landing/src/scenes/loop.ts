@@ -1,24 +1,32 @@
 // 04 The loop: ask, answer, review, merge, on a full-size replica of the app. One scroll drives it:
 //
-// a Ask. The agent's terminal prints what it did, then a raw prompt: "? Keep the rate limit in
-//   memory, or in Redis?  1) In memory  2) Redis". Its characters leave the terminal and reflow,
+// a Ask. The first frame already shows the agent asking: its terminal with what it did, then a raw
+//   prompt: "? Keep the rate limit in memory, or in Redis?  1) In memory  2) Redis". Its characters
+//   leave the terminal and reflow,
 //   one by one, into a question card whose border draws around them; the numbered choices fan out
 //   as buttons. In the list the agent sits under Needs you, its wait bar growing.
 // b Answer. Choice 1, a reply typed at the scroll's pace, Send. The wait bar snaps to zero, the
 //   diamond becomes the ringed dot, the row drops into To review, and the page's own wait clock
 //   and "waiting on you" (the visitor's wait, since the hero) clear too.
-// c Review. The Changes tab: files slide in, the hunk unfolds line by line, + lines wipe green
-//   from the gutter, "+70" climbs and the tests tick to 12/12. Real code, selectable.
+// c Review. The Changes tab: files slide in (the tab and the footer count them), the hunk unfolds
+//   line by line, + lines wipe green from the gutter, "+70" climbs with it, and the tests run with a
+//   spinner, 4/12, 8/12, and turn green only at 12/12. Real code, selectable.
 // d Merge. The button charges as the visitor scrolls; pressing it, or scrolling on, merges: the
 //   shockwave, the MERGED stamp, and the row turns into the violet squared check under Shipped today.
+//   Send back is a real button too: it takes the story back to the Answer step.
+//
+// The shockwave's canvas and program are made while the browser is idle once the loop is a viewport
+// away, so the merge itself only draws. Tabbing to Send back or Merge scrolls to the Review step's
+// end first, so focus never lands on a control the scene has not shown yet.
 //
 // The HTML holds the end state (answered, merged), which is what a reader without motion sees.
 import { drive, ease, span, lerp, setter, mark } from '../engine/drive';
 import { stackOffsets } from '../engine/stack';
 import { odometer } from '../engine/odometer';
 import { wait, clock } from '../ui/wait';
-import { shockwave } from '../fx/shockwave';
+import { shockwave, warmShockwave } from '../fx/shockwave';
 import { cue } from '../ui/sound';
+import { announce } from '../ui/controls';
 import { env } from '../engine/env';
 
 const REPLY = 'In memory for now';
@@ -70,8 +78,12 @@ export function mountLoop(section: HTMLElement) {
   const files = $$<HTMLElement>('.files li');
   const dl = $$<HTMLElement>('.diff > *');
   const footAdd = $<HTMLElement>('.foot-add');
+  const footFiles = $<HTMLElement>('.foot-files');
+  const tabCount = $<HTMLElement>('.tab-count');
+  const tests = $<HTMLElement>('.tests');
   const testsN = $<HTMLElement>('.tests-n');
   const mergeBtn = $<HTMLButtonElement>('.merge-btn');
+  const sendBack = $<HTMLButtonElement>('.send-back');
   const stamp = $<HTMLElement>('.stamp');
 
   // ---- Characters: the question as single letters, in the terminal and in the card.
@@ -176,16 +188,14 @@ export function mountLoop(section: HTMLElement) {
     set(scrub, '--p', p.toFixed(4));
 
     // ---- a Ask: the terminal prints, then the prompt types.
-    lines.forEach((l, i) => {
+    // The terminal is full from the first frame: the agent is already asking.
+    lines.forEach((l) => {
       if (l === afterLine) return;
-      const at = l === qLine ? 0.06 : l === qOptLine ? 0.11 : i * 0.012;
-      const k = ease(p, at, at + 0.02);
       // The card takes the eye: the log behind it steps back while it is up.
       const back = l === qLine ? 1 : 1 - 0.6 * ease(p, 0.13, 0.2) * (1 - ease(p, 0.44, 0.48));
-      set(l, 'opacity', (k * back).toFixed(3));
-      set(l, 'transform', `translateY(${(6 * (1 - k)).toFixed(1)}px)`);
+      set(l, 'opacity', back.toFixed(3));
     });
-    const typed = Math.round(span(p, 0.06, 0.11) * Q.length);
+    const typed = Q.length;
     const collapse = span(p, 0.12, 0.22);
     tChars.forEach((c, i) => {
       const k = ease(collapse, (i / Q.length) * 0.5, (i / Q.length) * 0.5 + 0.5);
@@ -261,11 +271,17 @@ export function mountLoop(section: HTMLElement) {
     set(ink, '--x', tab.toFixed(3));
     set(term, 'opacity', (1 - tab).toFixed(3));
     set(diffWrap, 'opacity', tab.toFixed(3));
+    let shownFiles = 0;
     files.forEach((f, i) => {
       const k = ease(p, 0.52 + i * 0.02, 0.56 + i * 0.02);
+      if (k > 0.5) shownFiles++;
       set(f, 'opacity', k.toFixed(3));
       set(f, 'transform', `translateX(${(-14 * (1 - k)).toFixed(1)}px)`);
     });
+    // The tab and the footer count the files as they arrive.
+    const nf = String(shownFiles);
+    if (tabCount.textContent !== nf) tabCount.textContent = nf;
+    if (footFiles.textContent !== nf) footFiles.textContent = nf;
     dl.forEach((l, i) => {
       const at = 0.55 + (i / dl.length) * 0.15;
       const k = ease(p, at, at + 0.018);
@@ -275,8 +291,12 @@ export function mountLoop(section: HTMLElement) {
     });
     const add = `+${Math.round(ease(p, 0.55, 0.72) * 70)}`;
     if (footAdd.textContent !== add) footAdd.textContent = add;
-    const tests = `${Math.round(span(p, 0.62, 0.74) * 12)}/12`;
-    if (testsN.textContent !== tests) testsN.textContent = tests;
+    // The tests run with a spinner and turn green only when all twelve pass.
+    const passed = Math.round(span(p, 0.62, 0.74) * 12);
+    const testTxt = `${passed}/12`;
+    if (testsN.textContent !== testTxt) testsN.textContent = testTxt;
+    tests.classList.toggle('pending', passed === 0);
+    tests.classList.toggle('running', passed > 0 && passed < 12);
 
     // ---- d Merge: the button charges, then the merge.
     set(mergeBtn, '--charge', ease(p, 0.76, 0.87).toFixed(3));
@@ -294,8 +314,28 @@ export function mountLoop(section: HTMLElement) {
   remeasure();
   new ResizeObserver(remeasure).observe(body);
   void document.fonts?.ready.then(remeasure);
-  const driver = drive(track, update, { fallback: 'play', playMs: 11000 });
+  let progress = 0;
+  const driver = drive(track, (p) => update((progress = p)), { fallback: 'play', playMs: 11000 });
   if (driver.mode === 'pin') scrub.hidden = false;
+
+  // Tabbing to the pane's actions: scroll to the end of Review first, where both are shown.
+  section.querySelector('.pane-actions')?.addEventListener('focusin', () => {
+    if (driver.mode === 'pin' && progress < 0.74) scrollTo({ top: driver.scrollFor(0.8), behavior: 'instant' });
+  });
+  // Send back: the change goes back to the agent with a note, so the story goes back to Answer.
+  sendBack.addEventListener('click', () => {
+    announce('Sent back: the agent gets your note and goes back to work.');
+    if (driver.mode === 'pin') scrollTo({ top: driver.scrollFor(BEATS[1] + 0.06), behavior: env.reduced ? 'auto' : 'smooth' });
+  });
+
+  // The merge's ring, made ahead of time while the browser is idle, once the loop is a viewport away.
+  const near = new IntersectionObserver(([e]) => {
+    if (!e.isIntersecting) return;
+    near.disconnect();
+    const idle = (fn: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 1500 }) : setTimeout(fn, 300));
+    idle(() => void warmShockwave());
+  }, { rootMargin: '100% 0px' });
+  near.observe(track);
   dots.forEach((d, i) =>
     d.addEventListener('click', () => {
       if (driver.mode !== 'pin') return;

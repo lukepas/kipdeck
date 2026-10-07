@@ -34,7 +34,13 @@
 .loop .staged .beat-item::before { display: none; }
 .loop .staged .beat-item h3 { font-size: clamp(30px, 2.8vw, 44px); font-family: var(--font-display); font-stretch: 118%; letter-spacing: -.02em; margin: 6px 0 12px; }
 .loop .staged .beat-item p { font-size: 16px; }
-.loop .staged .beat-n { display: inline-grid; place-items: center; width: 22px; height: 22px; border: 1px solid var(--line-strong); border-radius: 2px; color: var(--text); }
+.loop .staged .beat-n { display: inline-grid; place-items: center; height: 22px; padding: 0 7px; border: 1px solid var(--line-strong); border-radius: 2px; color: var(--muted); font-size: 11px; letter-spacing: .04em; }
+/* The tests: a neutral spinner while they run, the green check only when all of them pass. */
+.pane-foot .tests .spin { display: none; }
+.loop .staged .pane-foot .tests.pending, .loop .staged .pane-foot .tests.running { color: var(--muted); }
+.loop .staged .pane-foot .tests.pending .glyph, .loop .staged .pane-foot .tests.running .glyph { display: none; }
+.loop .staged .pane-foot .tests.running .spin { display: inline-block; width: 10px; height: 10px; border: 1.5px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 700ms linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .scrub { position: relative; display: flex; flex-direction: column; gap: 2px; margin-top: 34px; padding-left: 2px; }
 .scrub::before { content: ''; position: absolute; left: 10px; top: 14px; bottom: 14px; width: 1px; background: var(--line); }
 .scrub::after { content: ''; position: absolute; left: 10px; top: 14px; width: 1px; height: calc((100% - 28px) * var(--p, 0)); background: var(--signal); }
@@ -101,6 +107,8 @@
 canvas.shockwave { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 80; pointer-events: none; }
 
 @media (prefers-reduced-motion: no-preference) and (min-width: 900px) and (min-height: 600px) {
+  /* The app sits high in its pinned stage, so it is right under the lede as the section arrives. */
+  html.js .loop .track > .stage { justify-content: flex-start; padding-top: clamp(96px, 14vh, 150px); }
   html.js .loop .stage .loop-stage { margin-top: 0; align-items: center; }
   html.js .loop .stage .beats-col { align-self: center; }
 }
