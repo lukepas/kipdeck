@@ -18,7 +18,7 @@ export const SHORTCUTS: readonly [string, string][] = [
   ['Enter', "The selected agent's next step"],
   ['Esc', 'Back to the list'],
   ['/', 'Search agents'],
-  ['?', 'These keys'],
+  ['?', 'This help'],
 ];
 
 /** The loop the inbox is built around, in four verbs. */

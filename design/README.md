@@ -1278,3 +1278,29 @@ Anyone can now see the whole loop in a minute without an agent CLI, a sign-in or
 - The hosted demo isn't deployed: there is no domain or Fly app yet. The image builds and runs; `fly deploy` with `deploy/demo/fly.toml` is the step.
 - The read-only demo has no rate limit of its own on its way in; Fly's connection limit (200) is the cap.
 - The phone in the video is the 390x844 recording centred on the 1440x900 frame, not a phone mock-up.
+
+## Fundable, stage 5: the fundraising surface
+
+What an investor or a first user sees beyond the inbox is now as calm as the inbox: Settings in three panes, a short avatar menu, Help on **?**, a Numbers window for the deck, and a landing page with a team tier waitlist. Shots are in `shots/fundable/stage-6/` (the sixth build stage of six): `before/` is the build before this stage (`SHOOT_ROOT` on a `git archive` of it, `SHOOT_3D=1 node design/shoot-surface.mjs stage-6/before`), `after/` this one, both on `--demo` (its scripted agents, every task marked demo) with a throwaway home and password, at 1440x900 and 390x844. A shot whose window didn't exist before is missing from `before/`.
+
+### What changed (check it in under a minute)
+
+1. **Settings on the home page** (`after/settings-account-desktop.png`, `-agents-`, `-notify-`, and the phone ones). Before, the home page had no Settings at all; the only Settings was the bridge's seven panes in its own words (`before/bridge-settings-desktop.png`: You, Bridge, Sound & voice, Notifications, Decks, Units). Now both pages share one frame and three panes, Account, Agents and Notifications; the bridge adds its own after them (`after/bridge-settings-desktop.png`).
+2. **The avatar menu** (`before/menu-desktop.png` against `after/`): Work (Issues, Pull requests, Task queue, Mission control), then Numbers, Settings, Labs, Help and keys, Sign out. Notifications and light or dark moved into Settings.
+3. **Help** (`after/help-desktop.png`): the loop in four verbs, the six keys and a link to the docs, on **?**. Before it was the keys alone.
+4. **Numbers** (`after/numbers-desktop.png`, `after/numbers-phone.png`): human wait time first, then merged, merge rate and agent-hours, this week against the last, merges per day and the merge rate per agent and model with its N. In the demo it says the agents are scripted. Copy as Markdown for an investor update.
+5. **The landing page** (`after/landing-full-desktop.png`, `after/landing-full-phone.png`; `before/` is the consulting waitlist page in `business/landing/`, which stays): the sentence, `npx mergeline`, Try the demo, the GIF, the loop, the team tier waitlist and the Bridge view as a small teaser at the bottom. `npm run build:site` fills in the hosted demo, the waitlist endpoint and the repository.
+6. **One fix found on the way**: the menu's notification switch and the notifier read two copies of the settings, so turning notifications on took a reload. They share one now.
+
+### Checks
+
+`npm run typecheck`, `npm run build`, `npm test` (1262 tests, all pass but the four launch-kit disclosure tests that fail on this branch's rewritten history). New: `tests/metrics.test.ts` (the weeks, the median, the bars, the labels and the Markdown), `tests/surface-e2e.test.ts` (the menu, three-pane Settings, Numbers after a real merge in the demo and Help, each closed by its close button and by Esc) and `tests/landing.test.ts` (nothing loaded from elsewhere, the first screen, the waitlist with and without an endpoint, the build's CSP and https rule, phone width, dark mode, ASCII copy). `tests/labs.test.ts` checks the Bounties pane is only built with Proof of Merge on.
+
+### Left for later
+
+- Nothing is posted, sent or published. The launch kit (`launch/mergeline/`) lists the gates first: employer clearance, the trademark search, `npm publish`, a public repository, the hosted demo, the landing page with a waitlist endpoint, and the real-agent video.
+- The waitlist needs an endpoint the founder runs (docs/landing.md); without one the form says nothing was sent.
+- `DOCS_URL` (Help's link) is the npm page until the public repository's address is settled (`src/shared/copy.ts`).
+- The Numbers in the demo are thin by design: the demo writes no backdated history, so deck numbers have to come from real use.
+- The Monid USD 7.7M figure had no primary source and is dropped (`launch/mergeline/README.md`).
+- The provider picker in Settings > Agents still has two bridge-era notes (office usage and the cost panel) from `ui/provider.ts`, which the Deploy sheet shares.
