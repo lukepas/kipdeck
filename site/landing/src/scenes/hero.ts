@@ -156,7 +156,6 @@ export function mountHero(section: HTMLElement) {
     row.classList.remove('working', 'cleared', 'checked');
     row.classList.add('needs');
     row.disabled = false;
-    row.setAttribute('aria-label', `Codex asks: ${q} Answer it`);
     row.querySelector('.row-btn')!.textContent = 'Answer';
     rowAge.firstChild!.textContent = 'waiting ';
     chrome(true);
@@ -180,7 +179,6 @@ export function mountHero(section: HTMLElement) {
     rowSub.textContent = 'Answered. Back at work.';
     row.querySelector('.row-btn')!.textContent = 'Answered';
     rowAge.firstChild!.textContent = 'answered ';
-    row.setAttribute('aria-label', 'Codex was answered and is back at work');
     chrome(false);
     stopwatch.classList.add('flash');
     setTimeout(() => stopwatch.classList.remove('flash'), 90);

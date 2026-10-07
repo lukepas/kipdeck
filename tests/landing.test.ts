@@ -193,7 +193,7 @@ test('the wait: Codex stops and asks as the page opens, and answering it clears 
   await page.locator('[data-clear]').click();
   assert.equal(await page.locator('[data-pulse-count]').textContent(), '0');
   assert.equal(await page.locator('#stopwatch').textContent(), '0:00');
-  assert.match((await page.locator('[data-clear]').getAttribute('aria-label')) ?? '', /was answered/);
+  assert.equal(await page.locator('[data-clear]').getAttribute('aria-label'), null, 'its visible text is its name');
   assert.equal(await page.locator('#favicon').getAttribute('href'), 'favicon.svg');
   assert.equal((await page.locator('[data-clear]').textContent())?.includes('Answered. Back at work.'), true);
   await page.waitForTimeout(900);

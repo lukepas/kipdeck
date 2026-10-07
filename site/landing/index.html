@@ -108,11 +108,11 @@
       </div>
       <div class="app-list">
         <p class="sec sec-needs"><i class="glyph g-needs-you"></i>Needs you <span class="count">1</span></p>
-        <button class="row needs" type="button" data-clear aria-label="Codex asks: update the snapshot or fix the selector? Answer it">
+        <button class="row needs" type="button" data-clear>
           <svg class="st" viewBox="0 0 24 24" aria-hidden="true"><path class="st-shape" d="M12 3.5 20.5 12 12 20.5 3.5 12Z"/><path class="st-check" d="m5 12.5 4.5 4.5L19 7.5"/></svg>
           <span class="sign mono">Cx</span>
           <span class="row-main"><span class="row-title">Fix the flaky checkout test</span><span class="row-sub">Update the snapshot or fix the selector?</span></span>
-          <span class="row-age mono">waiting <span data-row-wait>0:07</span></span>
+          <span class="row-age mono" aria-hidden="true">waiting <span data-row-wait>0:07</span></span>
           <span class="row-btn">Answer</span>
           <i class="waitbar" aria-hidden="true"><i></i></i>
         </button>
@@ -315,7 +315,7 @@
     <p class="label"><span class="num">05</span> Why not the tools you already have?</p>
     <h2 id="why-h" class="display">The layer across them.</h2>
     <p class="lede">Vendor dashboards see one vendor. Task boards do not know an agent is blocked. GitHub sees the pull request, not the 23 minutes before it. {{name}} sits across them: cross-vendor, self-hosted, and it measures the wait.</p>
-    <div class="table-wrap" tabindex="0" role="region" aria-labelledby="why-h">
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Comparison table">
       <table class="why-table">
         <thead><tr><th scope="col"><span class="sr">What you need</span></th><th scope="col">One vendor's dashboard</th><th scope="col">A task board for agents</th><th scope="col">GitHub pull requests</th><th scope="col">Terminals and tmux</th><th scope="col" class="us">{{name}}</th></tr></thead>
         <tbody>
