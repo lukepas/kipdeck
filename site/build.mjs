@@ -38,7 +38,12 @@ export function buildPage(html, env) {
   const demo = url('MERGELINE_DEMO_URL');
   if (demo) out = out.replace('data-link="demo" href="#try-demo"', `data-link="demo" href="${attr(demo.href)}" rel="noopener"`);
   const repo = url('MERGELINE_REPO_URL');
-  if (repo) out = out.replace(/data-link="repo" href="[^"]*"/, `data-link="repo" href="${attr(repo.href)}"`);
+  if (repo) {
+    out = out.replace(/data-link="repo" href="[^"]*"/, `data-link="repo" href="${attr(repo.href)}"`);
+    out = out.replace(/data-link="repo-run" href="[^"]*"/, `data-link="repo-run" href="${attr(new URL('#run-it', repo).href)}"`);
+  }
+  // Until `npx mergeline` works from the registry, the page says so under the command (never a command that 404s).
+  if (env.MERGELINE_NPM_PUBLISHED === '1') out = out.replace(/\s*<p class="small unpublished" data-unpublished>[\s\S]*?<\/p>/, '');
   return out;
 }
 
@@ -53,5 +58,5 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   writeFileSync(path.join(OUT, 'index.html'), buildPage(html, process.env));
   for (const f of pictures(html)) copyFileSync(path.join(ROOT, 'docs', 'img', f), path.join(OUT, 'img', f));
   console.log(`site: ${path.relative(ROOT, OUT)}/index.html and ${pictures(html).length} pictures`);
-  for (const name of ['MERGELINE_WAITLIST_URL', 'MERGELINE_DEMO_URL', 'MERGELINE_REPO_URL']) if (!process.env[name]) console.log(`  ${name} is not set (see docs/landing.md)`);
+  for (const name of ['MERGELINE_WAITLIST_URL', 'MERGELINE_DEMO_URL', 'MERGELINE_REPO_URL', 'MERGELINE_NPM_PUBLISHED']) if (!process.env[name]) console.log(`  ${name} is not set (see docs/landing.md)`);
 }

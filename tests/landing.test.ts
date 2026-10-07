@@ -1,9 +1,9 @@
 // The landing page (site/index.html) and its build (site/build.mjs), in a real headless browser:
 // playwright-core's own Chromium, else the one in CHROMIUM_PATH, else an installed Google Chrome.
 // Browser tests are skipped, not failed, where there is none. It loads nothing from other sites, says
-// what it is in its first screen (the sentence, npx mergeline, the demo, the waitlist), fits a phone,
-// and its waitlist checks its input, sends nothing until the build names an endpoint, then sends
-// exactly the email, team size and price interest, and nothing else.
+// what it is in its first screen (the sentence and the wedge, npx mergeline and that it isn't on npm
+// yet, the demo and the recording), fits a phone, and its waitlist checks its input, sends nothing
+// until the build names an endpoint, then sends exactly the email, and nothing else.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
@@ -71,15 +71,20 @@ test('the build fills in the addresses, opens the CSP to the waitlist only, and 
   assert.match(built, /connect-src https:\/\/wait\.example\.eu;/);
   assert.match(built, /data-link="demo" href="https:\/\/demo\.example\.eu\/" rel="noopener"/);
   assert.match(built, /data-link="repo" href="https:\/\/github\.com\/example\/mergeline"/);
+  assert.match(built, /data-link="repo-run" href="https:\/\/github\.com\/example\/mergeline#run-it"/);
+  // Not on npm yet: the page says so under the command, until the build says it's published.
+  assert.match(plain, /data-unpublished>Not on npm yet/);
+  assert.doesNotMatch(buildPage(html, { MERGELINE_NPM_PUBLISHED: '1' }), /data-unpublished|Not on npm yet/);
   assert.throws(() => buildPage(html, { MERGELINE_WAITLIST_URL: 'http://wait.example.eu/' }), /must be https/);
   assert.throws(() => buildPage(html, { MERGELINE_DEMO_URL: 'not a url' }), /not a URL/);
 });
 
-test('the first screen: the sentence, npx mergeline, Try the demo and the waitlist; nothing loaded from elsewhere', { skip: why || false }, async (t) => {
+test('the first screen: the sentence and the wedge, npx mergeline, Try the demo and the recording; nothing loaded from elsewhere', { skip: why || false }, async (t) => {
   const { page, requests, errors } = await open(t);
   assert.equal(await page.title(), 'Mergeline');
   assert.equal(await page.locator('h1').innerText(), 'The inbox for your AI coding agents');
-  for (const sel of ['.hero > .npx:not(.demo-cmd) code', '[data-link="demo"]', 'a[href="#teams"]', '.shot img']) {
+  assert.match(await page.locator('.hero .lede').innerText(), /who is waiting and for how long/);
+  for (const sel of ['.hero > .npx:not(.demo-cmd) code', '[data-link="demo"]', 'a[href="#recording"]', '.unpublished', '.shot img']) {
     const box = await page.locator(sel).first().boundingBox();
     assert.ok(box && box.y < 900, `${sel} is in the first screen`);
   }
@@ -89,10 +94,9 @@ test('the first screen: the sentence, npx mergeline, Try the demo and the waitli
   await page.locator('[data-link="demo"]').click();
   assert.equal(await page.locator('#try-demo').isVisible(), true);
   assert.match(await page.locator('#try-demo code').innerText(), /npx mergeline --demo/);
-  // The Bridge view is a teaser at the bottom, after the waitlist.
-  const teams = (await page.locator('#teams').boundingBox())!.y;
-  const bridge = (await page.locator('#bridge-h').boundingBox())!.y;
-  assert.ok(bridge > teams);
+  // Why not the tools you have: a row each, and no 3D Bridge view on the page (it's in Labs and the docs).
+  assert.equal(await page.locator('table.why tbody tr').count(), 4);
+  assert.equal(await page.locator('#bridge-h, img[src*="bridge"]').count(), 0);
   assert.deepEqual(outside(requests), []);
   assert.deepEqual(errors, []);
 });
@@ -100,20 +104,19 @@ test('the first screen: the sentence, npx mergeline, Try the demo and the waitli
 test('the waitlist checks its input and says plainly that nothing was sent', { skip: why || false }, async (t) => {
   const { page, requests, errors } = await open(t);
   const submit = page.getByRole('button', { name: 'Join the waitlist' });
+  // One field and one button.
+  assert.equal(await page.locator('#waitlist-form input, #waitlist-form select').count(), 1);
   await page.fill('#email', 'not-an-email');
   await submit.click();
   assert.match((await page.locator('#status').textContent()) ?? '', /valid email/);
   await page.fill('#email', 'someone@example.com');
-  await submit.click();
-  assert.match((await page.locator('#status').textContent()) ?? '', /tick the box/);
-  await page.check('#consent');
   await submit.click();
   assert.match((await page.locator('#status').textContent()) ?? '', /nothing was sent/);
   assert.deepEqual(outside(requests), []);
   assert.deepEqual(errors, []);
 });
 
-test('built with an endpoint, the waitlist sends the email, team size and price interest, and nothing else', { skip: why || false }, async (t) => {
+test('built with an endpoint, the waitlist sends the email and where it came from, and nothing else', { skip: why || false }, async (t) => {
   const dir = mkdtempSync(path.join(tmpdir(), 'landing-'));
   const file = path.join(dir, 'index.html');
   writeFileSync(file, buildPage(html, { MERGELINE_WAITLIST_URL: 'https://wait.example.eu/api/join' }));
@@ -128,12 +131,9 @@ test('built with an endpoint, the waitlist sends the email, team size and price 
   const page = await context.newPage();
   await page.goto(pathToFileURL(file).href);
   await page.fill('#email', 'lead@example.com');
-  await page.selectOption('#team', '21-50');
-  await page.check('#price');
-  await page.check('#consent');
   await page.getByRole('button', { name: 'Join the waitlist' }).click();
   await page.locator('#status.ok').waitFor({ timeout: 5000 });
-  assert.deepEqual(sent, [{ email: 'lead@example.com', team: '21-50', price: true, source: 'landing' }]);
+  assert.deepEqual(sent, [{ email: 'lead@example.com', source: 'landing' }]);
   assert.equal(await page.inputValue('#email'), '', 'the form is cleared');
 });
 
