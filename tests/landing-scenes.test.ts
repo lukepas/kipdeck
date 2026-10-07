@@ -5,7 +5,8 @@
 // What it holds the scenes to: a scroll through the whole page, on a laptop and on a phone, throws
 // nothing, never scrolls sideways and shifts nothing; the loop's answer clears the visitor's own
 // wait and its merge is a real button that stamps the change merged; Proof of Merge releases only
-// on a merge and keeps every value marked testnet; the footer tells the truth about the wait; and
+// on a merge (once by itself when in view, then on the replay button) and keeps every value marked
+// testnet; the footer tells the truth about the wait; and
 // with less motion no scene stages anything, so every section is its final HTML.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -149,15 +150,17 @@ test('section 06 looks finished within a second of coming into view, and its ter
   assert.deepEqual(errors, []);
 });
 
-test('Proof of Merge holds the test USDC until a human merges, and every value says testnet', { skip: why || false, timeout: 60_000 }, async (t) => {
+test('Proof of Merge releases the test USDC on a merge, once by itself in view, and replays; every value says testnet', { skip: why || false, timeout: 60_000 }, async (t) => {
   const { page, errors } = await open(t);
-  await page.evaluate(() => document.querySelector('#proof .escrow')!.scrollIntoView({ block: 'center' }));
-  await page.waitForTimeout(900);
   assert.equal(await page.locator('#proof .receipt > div.on').count(), 0, 'nothing settles before the merge');
-  await page.getByRole('button', { name: 'Merge, as the human' }).click();
-  await page.locator('#proof .receipt .settled.on').waitFor({ timeout: 4000 });
+  await page.evaluate(() => document.querySelector('#proof .proof-grid')!.scrollIntoView({ block: 'center' }));
+  await page.locator('#proof .receipt .settled.on').waitFor({ timeout: 6000 });
   assert.equal(await page.locator('#proof .receipt > div.on').count(), 4);
-  assert.equal(await page.locator('[data-amount]').textContent(), '5.00');
+  await page.waitForFunction(() => document.querySelector('[data-amount]')!.textContent === '5.00');
+  const replay = page.getByRole('button', { name: 'Replay the merge' });
+  await replay.click();
+  assert.equal(await page.locator('#proof .receipt > div.on').count(), 0, 'the replay holds the pay again first');
+  await page.locator('#proof .receipt .settled.on').waitFor({ timeout: 4000 });
   const proof = await page.locator('#proof').innerText();
   assert.match(proof, /Testnet only/i);
   assert.match(proof, /test USDC/);

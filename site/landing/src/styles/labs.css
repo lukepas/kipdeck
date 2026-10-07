@@ -54,9 +54,12 @@
 
 /* The other lab tiles switch on like switches. */
 .bento.staged .tile:not(.tile-bridge):not(.tile-film) { transition: border-color 400ms var(--ease), background-color 400ms var(--ease); }
+/* A lab that is off keeps its words at full contrast: only its switch and its flag go quiet. */
 .bento.staged .tile:not(.tile-bridge):not(.tile-film):not(.on) { border-color: var(--line); background: color-mix(in srgb, var(--surface-1) 60%, var(--void)); }
-.bento.staged .tile:not(.on) h3, .bento.staged .tile:not(.on) p, .bento.staged .tile:not(.on) code { opacity: .4; }
-.bento.staged .tile h3, .bento.staged .tile p, .bento.staged .tile code { transition: opacity 500ms var(--ease) 150ms; }
+.bento.staged .tile:not(.on) code { color: var(--muted); }
+.bento.staged .tile code { transition: color 400ms var(--ease) 150ms; }
+.bento.staged .tile-bridge .deck3d { transition: opacity 500ms var(--ease); }
+.bento.staged .tile-bridge:not(.on) .deck3d { opacity: .3; }
 .bento.staged .switch { transition: background-color 300ms var(--ease); }
 .bento.staged .switch i { transition: left 380ms var(--ease-spring), background-color 300ms; }
 .bento.staged .tile:not(.on) .switch { background: var(--surface-3); border-color: var(--line-strong); }
@@ -84,10 +87,13 @@
 .proof-grid.released .escrow .lid { transform-origin: 0 50%; transform: rotate(-32deg); transition: transform 500ms var(--ease-out) 120ms; }
 .proof-grid.released .escrow .shackle { transform-origin: 100% 100%; transform: translate(0, -9px) rotate(28deg); transition: transform 380ms var(--ease-spring); }
 .proof-grid.released .escrow .lock rect { fill: var(--tint-settled); stroke: var(--settled); transition: fill 300ms, stroke 300ms; }
-.proof-grid.staged .amount { opacity: .35; }
-.proof-grid.released .amount { opacity: 1; transition: opacity 300ms; }
-.proof-grid.staged .receipt > div { opacity: .28; transform: translateX(10px); transition: opacity 400ms var(--ease), transform 600ms var(--ease-out); }
-.proof-grid.staged .receipt > div.on { opacity: 1; transform: none; }
+/* Held, the amount and the receipt read at full contrast; settling lights each row's violet edge. */
+.proof-grid.staged .amount b { color: var(--muted); transition: color 300ms; }
+.proof-grid.released .amount b { color: var(--settled); }
+.proof-grid.staged .receipt > div { transform: translateX(8px); box-shadow: inset 0 0 0 transparent; transition: transform 500ms var(--ease-out), box-shadow 300ms var(--ease); }
+.proof-grid.staged .receipt > div.on { transform: none; box-shadow: inset 3px 0 0 var(--proof); }
+.merge-chip.pressed { transform: scale(.94); box-shadow: 0 0 0 6px var(--tint-proof); }
+.merge-chip { min-width: 14em; justify-content: center; transition: transform 140ms var(--ease), box-shadow 300ms var(--ease); }
 .proof-grid.staged .receipt .settled .glyph { transform: scale(0); }
 .proof-grid.staged .receipt .settled.on .glyph { transform: none; transition: transform 500ms var(--ease-spring) 200ms; }
 .proof-grid.staged .receipt { transition: box-shadow 600ms var(--ease); }

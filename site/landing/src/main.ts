@@ -20,10 +20,18 @@ import { waitlist } from './ui/waitlist';
 import { watchFilm } from './ui/watch';
 import { soundButton, cue } from './ui/sound';
 import { wait } from './ui/wait';
+import { steadyAnchors } from './ui/anchors';
 
 const root = document.documentElement;
 root.classList.add('js');
 if (env.reduced) root.classList.add('calm-motion');
+// The scenes read "less motion" once, at boot. If the visitor changes it while the page is open,
+// start again in the new mode rather than leave scenes half staged.
+try {
+  matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () => location.reload());
+} catch {
+  // An old browser without matchMedia events keeps the mode it booted in.
+}
 // The light tier (Save-Data, low memory, phones) drops what costs the GPU most, like the top bar's blur.
 root.classList.add(`tier-${tier}`);
 
@@ -35,6 +43,7 @@ topBar();
 tryDemo();
 // What is below the fold or behind a click wires up in the next task, so the opening's first frame
 // is not held up by it.
+steadyAnchors();
 setTimeout(() => {
   waitlist();
   watchFilm();

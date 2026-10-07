@@ -6,7 +6,8 @@
 // - every piece of text meets WCAG AA contrast against what is behind it, in both themes;
 // - drawings (canvases, decorative SVG) are hidden from screen readers, every control has a name,
 //   and every focusable thing shows a visible focus ring;
-// - Copy, Try the demo, Watch, the loop's Merge and the waitlist all work from the keyboard alone;
+// - Copy, Try the demo, Watch, the loop's Merge, the Labs flags and the design-partner link all
+//   work from the keyboard alone;
 // - the film has English captions;
 // - the head says what the page is to search engines and link previews (description, Open Graph,
 //   Twitter, structured data for free open source software with no ratings), and a build that
@@ -204,13 +205,13 @@ test('drawings are hidden from screen readers, every control has a name, and foc
   assert.match(stops[0], /skip/, 'the first stop skips to the page');
 });
 
-test('Copy, Try the demo, Watch, Merge and the waitlist all work from the keyboard alone', { skip: why || false, timeout: 60_000 }, async (t) => {
+test('Copy, Try the demo, Watch, Merge, the Labs flags and the design-partner link all work from the keyboard alone', { skip: why || false, timeout: 60_000 }, async (t) => {
   const { page, errors } = await open(t);
   await page.keyboard.press('Shift'); // play the opening to its end
   // Copy: Enter on the button copies the command and says so to a screen reader.
-  await page.locator('.cmd[data-unpublished] .copy').focus();
+  await page.locator('#try-demo .cmd[data-unpublished] .copy').focus();
   await page.keyboard.press('Enter');
-  await page.waitForFunction(() => /Copied|Select it/.test(document.querySelector('.cmd[data-unpublished] .copy')!.textContent ?? ''));
+  await page.waitForFunction(() => /Copied|Select it/.test(document.querySelector('#try-demo .cmd[data-unpublished] .copy')!.textContent ?? ''));
   await page.waitForFunction(() => (document.getElementById('announce')?.textContent ?? '').length > 0);
   // Try the demo: Enter copies the demo command and moves focus to its Copy.
   await page.locator('[data-link="demo"]').focus();
@@ -234,11 +235,20 @@ test('Copy, Try the demo, Watch, Merge and the waitlist all work from the keyboa
   await page.locator('#loop .merge-btn').focus();
   await page.keyboard.press('Space');
   await page.waitForFunction(() => document.getElementById('loop')!.classList.contains('is-merged'));
-  // The waitlist: type and press Enter.
-  await page.locator('#email').focus();
-  await page.keyboard.type('someone@example.com');
-  await page.keyboard.press('Enter');
-  await page.waitForFunction(() => /nothing was sent/.test(document.getElementById('status')?.textContent ?? ''));
+  // A Labs flag: Space switches its lab off, and again on.
+  const flag = page.locator('.flag[data-lab="voice"]');
+  await page.evaluate(() => document.querySelector('.labs-cmd')!.scrollIntoView({ block: 'center' }));
+  // The Labs scene has mounted (its bento is staged) and has switched the flags on in turn.
+  await page.waitForFunction(() => document.querySelector('.bento.staged') !== null && document.querySelector('.flag[data-lab="meetings"]')!.getAttribute('aria-pressed') === 'true', undefined, { timeout: 6000 });
+  await flag.focus();
+  await page.keyboard.press('Space');
+  assert.equal(await flag.getAttribute('aria-pressed'), 'false');
+  assert.equal(await page.locator('.tile[data-lab="voice"]').evaluate((el) => el.classList.contains('on')), false);
+  await page.keyboard.press('Space');
+  assert.equal(await flag.getAttribute('aria-pressed'), 'true');
+  // The design-partner link is a real link, reached by the keyboard.
+  await page.locator('.apply-link').focus();
+  assert.equal(await page.evaluate(() => document.activeElement?.matches('a.apply-link[href*="/issues/new"]')), true);
   assert.deepEqual(errors, []);
 });
 

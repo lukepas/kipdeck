@@ -439,9 +439,13 @@
   <div class="wrap">
     <p class="label"><span class="num">09</span> Labs</p>
     <h2 id="labs-h" class="display">What else is in the box.</h2>
-    <p class="lede">Off by default, compiled and tested. An admin switches each one on in Settings, or holds it on with <code>--labs &lt;id&gt;</code>.</p>
+    <p class="lede">Off by default, compiled and tested. An admin switches each one on in Settings, or holds it on from the command line. Each flag adds a view to the same inbox.</p>
+    <div class="cmd labs-cmd" role="group" aria-label="Labs on the command line. Press a flag to switch its lab on or off.">
+      <span class="cmd-prompt" aria-hidden="true">$</span>
+      <code class="cmd-text">npm start -- --labs <span class="flags"><button class="flag" type="button" data-lab="bridge" aria-pressed="true">bridge</button>,<button class="flag" type="button" data-lab="ops" aria-pressed="true">ops</button>,<button class="flag" type="button" data-lab="boards" aria-pressed="true">boards</button>,<button class="flag" type="button" data-lab="voice" aria-pressed="true">voice</button>,<button class="flag" type="button" data-lab="meetings" aria-pressed="true">meetings</button></span></code>
+    </div>
     <ul class="bento">
-      <li class="tile tile-bridge">
+      <li class="tile tile-bridge on" data-lab="bridge">
         <div class="deck3d" aria-hidden="true">
           <div class="plane">
             <i class="deck-floor"></i>
@@ -455,13 +459,13 @@
         </div>
         <h3>The Bridge</h3><p>A 3D starship bridge where agents sit at stations, with a mascot, sound and a lounge. For a team's wall screen.</p><code class="mono">--labs bridge,ambience</code>
       </li>
-      <li class="tile"><span class="switch" aria-hidden="true"><i></i></span><h3>Goals and timeline</h3><p>Mission control with goals, milestones and a timeline of what every agent did.</p><code class="mono">--labs ops</code></li>
-      <li class="tile"><span class="switch" aria-hidden="true"><i></i></span><h3>GitHub boards and queue</h3><p>Issues, pull requests and a task queue that hands the next issue to a free agent.</p><code class="mono">--labs boards</code></li>
-      <li class="tile"><span class="switch" aria-hidden="true"><i></i></span><h3>Voice</h3><p>Voice chat, screen sharing and dictation into any prompt box.</p><code class="mono">--labs voice</code></li>
-      <li class="tile"><span class="switch" aria-hidden="true"><i></i></span><h3>Meetings</h3><p>A review bay and a planning whiteboard on any issue or pull request.</p><code class="mono">--labs meetings</code></li>
+      <li class="tile on" data-lab="ops"><span class="switch" aria-hidden="true"><i></i></span><h3>Goals and timeline</h3><p>Mission control with goals, milestones and a timeline of what every agent did.</p><code class="mono">--labs ops</code></li>
+      <li class="tile on" data-lab="boards"><span class="switch" aria-hidden="true"><i></i></span><h3>GitHub boards and queue</h3><p>Issues, pull requests and a task queue that hands the next issue to a free agent.</p><code class="mono">--labs boards</code></li>
+      <li class="tile on" data-lab="voice"><span class="switch" aria-hidden="true"><i></i></span><h3>Voice</h3><p>Voice chat, screen sharing and dictation into any prompt box.</p><code class="mono">--labs voice</code></li>
+      <li class="tile on" data-lab="meetings"><span class="switch" aria-hidden="true"><i></i></span><h3>Meetings</h3><p>A review bay and a planning whiteboard on any issue or pull request.</p><code class="mono">--labs meetings</code></li>
       <li class="tile tile-film">
         <div class="film" id="film">
-          <picture><source media="(max-width: 600px)" srcset="media/poster-9x16.webp"><img src="media/poster-16x9.webp" width="1280" height="720" alt="Poster of the 30 second film: paid only when a human merges." loading="lazy" decoding="async"></picture>
+          <picture><source media="(max-width: 600px)" srcset="media/poster-9x16.webp"><img src="media/poster-16x9.webp" width="1280" height="720" alt="Poster of the 30 second film: 64 agents, each in its own terminal, a few of them waiting." loading="lazy" decoding="async"></picture>
           <button class="film-play" type="button" data-watch aria-label="Watch the 30 second film"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 4.5v15L19.5 12Z"/></svg></button>
         </div>
         <p class="mono small">The 30 second film, drawn in code. Labs and demo data.</p>
@@ -470,10 +474,50 @@
   </div>
 </section>
 
-<!-- 10 Proof of Merge -->
+<!-- 10 Teams and the ask -->
+<section class="teams" id="teams" aria-labelledby="teams-h" data-scene="teams">
+  <div class="wrap">
+    <p class="label"><span class="num">10</span> Teams</p>
+    <h2 id="teams-h" class="display">Free for you. Paid for the team.</h2>
+  </div>
+  <div class="wrap plans">
+    <div class="plan">
+      <h3>Free <span class="mono">MIT</span></h3>
+      <p>For one engineer, open source, forever.</p>
+      <ul><li>The inbox across every agent CLI</li><li>Answer, review and merge, with or without GitHub</li><li>The signed record and Numbers</li><li>Your laptop or the team's dev box</li></ul>
+    </div>
+    <div class="plan plan-team">
+      <h3>Team <span class="mono">planned</span></h3>
+      <p>For teams running agents across several repositories.</p>
+      <ul><li>A shared inbox everyone sees</li><li>Questions routed to whoever owns them</li><li>Single sign-on and an audit trail</li><li>Team wait-time reporting</li></ul>
+    </div>
+  </div>
+  <div class="wrap ask">
+    <div class="ask-copy">
+      <h3>Five design partners</h3>
+      <p>No users yet, honestly. We are looking for five design partners who run five or more agents a day, to shape the Team tier with us.</p>
+      <ol class="seats" aria-label="Design partner seats, none filled"><li></li><li></li><li></li><li></li><li></li></ol>
+    </div>
+    <div class="apply">
+      <a class="btn primary apply-link" data-link="partner" href="{{repo}}/issues/new?title=Design%20partner%3A%20&amp;body=How%20many%20agents%20do%20you%20run%20a%20day%2C%20and%20with%20which%20CLIs%3F%0A%0AWhat%20would%20you%20want%20measured%3F%0A%0AHow%20should%20we%20reach%20you%3F" rel="noopener noreferrer">Apply as a design partner</a>
+      <p class="note">Opens a new issue on GitHub with three short questions. It is public, so leave out anything private.</p>
+      <form class="waitlist" id="waitlist-form" data-endpoint="" hidden novalidate>
+        <label for="email">The Team tier waitlist: your work email</label>
+        <div class="join">
+          <input id="email" name="email" type="email" autocomplete="email" required>
+          <button class="btn" type="submit">Join the Team waitlist</button>
+        </div>
+        <p class="note">We only email you about the Team tier, and delete your address if you ask. No newsletter, no tracking.</p>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- 11 Proof of Merge -->
 <section class="proof" id="proof" aria-labelledby="proof-h" data-scene="proof">
   <div class="wrap">
-    <p class="label"><span class="num">10</span> Proof of Merge <span class="badge mono">Testnet only</span></p>
+    <p class="label"><span class="num">11</span> Proof of Merge <span class="badge mono">Testnet only</span></p>
     <h2 id="proof-h" class="display">Paid only when a <span class="sig">human</span> merges.</h2>
     <p class="lede">A lab for paying agents by outcome: escrowed devnet USDC released only on a human merge, Base Sepolia attestations, ERC-8004 reputation, x402 pay-per-task, and a GitHub Action to fund an issue. Testnets only, test funds only.</p>
   </div>
@@ -498,49 +542,6 @@
   </div>
 </section>
 
-<!-- 11 Teams and the ask -->
-<section class="teams" id="teams" aria-labelledby="teams-h" data-scene="teams">
-  <div class="wrap">
-    <p class="label"><span class="num">11</span> Teams</p>
-    <h2 id="teams-h" class="display">Free for you. Paid for the team.</h2>
-  </div>
-  <div class="wrap plans">
-    <div class="plan">
-      <h3>Free <span class="mono">MIT</span></h3>
-      <p>For one engineer, open source, forever.</p>
-      <ul><li>The inbox across every agent CLI</li><li>Answer, review and merge, with or without GitHub</li><li>The signed record and Numbers</li><li>Your laptop or the team's dev box</li></ul>
-    </div>
-    <div class="plan plan-team">
-      <h3>Team <span class="mono">planned</span></h3>
-      <p>For teams running agents across several repositories.</p>
-      <ul><li>A shared inbox everyone sees</li><li>Questions routed to whoever owns them</li><li>Single sign-on and an audit trail</li><li>Team wait-time reporting</li></ul>
-    </div>
-  </div>
-  <div class="wrap ask">
-    <div class="ask-copy">
-      <h3>Five design partners</h3>
-      <p>No users yet, honestly. We are signing five design partners who run five or more agents a day.</p>
-      <ol class="seats" aria-label="Design partner seats, none filled"><li></li><li></li><li></li><li></li><li></li></ol>
-    </div>
-    <form class="waitlist" id="waitlist-form" data-endpoint="" novalidate>
-      <label for="email">Work email</label>
-      <div class="join">
-        <input id="email" name="email" type="email" autocomplete="email" required>
-        <button class="btn primary" type="submit">Join the waitlist</button>
-      </div>
-      <p class="note">We only email you about the team tier, and delete your address if you ask. No newsletter, no tracking.</p>
-      <p class="status" id="status" role="status" aria-live="polite"></p>
-    </form>
-  </div>
-  <div class="wrap">
-    <dl class="investors">
-      <div><dt class="mono">The wedge</dt><dd>Human wait time across vendors. Nobody else measures it.</dd></div>
-      <div><dt class="mono">The model</dt><dd>Open core: free for one engineer, paid for the team.</dd></div>
-      <div><dt class="mono">The ask</dt><dd>Five design partners now, then a pre-seed round to reach the first fifty teams.</dd></div>
-    </dl>
-  </div>
-</section>
-
 <!-- 12 Footer -->
 <footer class="end" id="end" aria-labelledby="end-h" data-scene="end">
   <div class="wrap">
@@ -551,13 +552,32 @@
       <button class="btn sm calm-answer" type="button" tabindex="-1">Answer</button>
       <span class="mono calm-clock">0:00</span>
     </div>
+    <div class="end-cta">
+      <div class="cmd" data-unpublished>
+        <span class="cmd-prompt" aria-hidden="true">$</span>
+        <code class="cmd-text">git clone {{repo}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo</code>
+        <button class="copy" type="button" data-copy="git clone {{repo}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo" aria-label="Copy the command that runs the demo">Copy</button>
+      </div>
+      <div class="cmd" data-published hidden>
+        <span class="cmd-prompt" aria-hidden="true">$</span>
+        <code class="cmd-text">npx {{pkg}} --demo</code>
+        <button class="copy" type="button" data-copy="npx {{pkg}} --demo" aria-label="Copy npx {{pkg}} --demo">Copy</button>
+      </div>
+      <p class="end-links"><a class="btn ghost" data-link="repo" href="{{repo}}" rel="noopener noreferrer">Star on GitHub</a><a class="btn ghost" data-link="repo-docs" href="{{repo}}#readme" rel="noopener noreferrer">Read the docs</a></p>
+    </div>
     <svg class="giant" viewBox="0 0 1200 150" aria-hidden="true"><text x="0" y="128"><tspan class="wm-lead">{{lead}}</tspan><tspan class="wm-muted">{{muted}}</tspan></text></svg>
     <nav class="foot-links" aria-label="More">
       <a data-link="repo" href="{{repo}}" rel="noopener noreferrer">Source</a>
       <a href="{{repo}}#readme" data-link="repo-docs" rel="noopener noreferrer">Docs</a>
       <a href="#labs">Labs</a>
       <a href="#teams">Teams</a>
+      <a href="#investors">For investors</a>
     </nav>
+    <dl class="investors" id="investors" aria-label="For investors">
+      <div><dt class="mono">The wedge</dt><dd>How long agents wait on a person, across vendors. A vendor's own dashboard does not show it.</dd></div>
+      <div><dt class="mono">The model</dt><dd>Open core: free for one engineer, paid for the team.</dd></div>
+      <div><dt class="mono">The ask</dt><dd>Five design partners now, then a pre-seed round to reach the first fifty teams.</dd></div>
+    </dl>
     <p class="credit">{{name}} is open source under the MIT license. Built on <a href="https://github.com/AgentSystemLabs/agent-office" rel="noopener noreferrer">agent-office</a> by webdevcody / AgentSystemLabs, MIT; not affiliated with or endorsed by its authors.</p>
     <p class="credit">This page loads nothing from other sites, sets no cookies and has no analytics. Fonts: Archivo and JetBrains Mono, SIL Open Font License.</p>
   </div>
