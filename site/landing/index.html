@@ -62,7 +62,7 @@
   <div class="wrap hero-grid">
     <div class="hero-copy">
       <p class="label"><span class="num">01</span> {{name}} <span class="label-sep">/</span> <span class="label-tag">{{tagline}}</span></p>
-      <h1 id="hero-h" class="display hero-h"><span class="w">Your</span> <span class="w">agents</span> <span class="w">are</span><br class="hero-br"> <span class="waiting-box"><span class="w waiting" id="waiting">waiting</span><span class="stopwatch mono" id="stopwatch" aria-hidden="true">00:00</span></span> <span class="w">on</span> <span class="w">you.</span></h1>
+      <h1 id="hero-h" class="display hero-h"><span class="w" data-t="Your"><span>Your</span></span> <span class="w" data-t="agents"><span>agents</span></span> <span class="w" data-t="are"><span>are</span></span><br class="hero-br"> <span class="waiting-box"><span class="w waiting" id="waiting">waiting</span><span class="stopwatch mono" id="stopwatch" aria-hidden="true">00:00</span></span> <span class="w" data-t="on"><span>on</span></span> <span class="w" data-t="you."><span>you.</span></span></h1>
       <p class="lede">One inbox for every coding agent you run: Claude Code, Codex, Cursor, OpenCode and Pi. See who is waiting on you and for how long, answer in one box, review and merge.</p>
 
       <div class="cmd" data-unpublished>
@@ -104,6 +104,7 @@
       <div class="app-list">
         <p class="sec sec-needs"><i class="glyph g-needs-you"></i>Needs you <span class="count">1</span></p>
         <button class="row needs" type="button" data-clear aria-label="Codex asks: update the snapshot or fix the selector? Answer it">
+          <svg class="st" viewBox="0 0 24 24" aria-hidden="true"><path class="st-shape" d="M12 3.5 20.5 12 12 20.5 3.5 12Z"/><path class="st-check" d="m5 12.5 4.5 4.5L19 7.5"/></svg>
           <span class="sign mono">Cx</span>
           <span class="row-main"><span class="row-title">Fix the flaky checkout test</span><span class="row-sub">Update the snapshot or fix the selector?</span></span>
           <span class="row-age mono">waiting <span data-row-wait>0:07</span></span>
@@ -112,14 +113,15 @@
         </button>
         <p class="sec sec-review"><i class="glyph g-review"></i>To review <span class="count">1</span></p>
         <div class="row review">
+          <i class="glyph g-review st" aria-hidden="true"></i>
           <span class="sign mono">CC</span>
           <span class="row-main"><span class="row-title">Add rate limiting to /api/login</span><span class="row-sub">3 files, +70 -0</span></span>
           <span class="row-age mono">ready 1m</span>
         </div>
         <p class="sec sec-working"><i class="glyph g-working"></i>Working <span class="count">3</span></p>
-        <div class="row working"><span class="sign mono">Cu</span><span class="row-main"><span class="row-title">Write the README quickstart</span><span class="row-sub">Write: docs/quickstart.md</span></span><span class="row-age mono">2m</span></div>
-        <div class="row working"><span class="sign mono">OC</span><span class="row-main"><span class="row-title">Port the settings page to the form kit</span><span class="row-sub">Edit: web/settings.js</span></span><span class="row-age mono">4m</span></div>
-        <div class="row working"><span class="sign mono">Pi</span><span class="row-main"><span class="row-title">Upgrade the payment SDK to v5</span><span class="row-sub">Bash: npm test</span></span><span class="row-age mono">6m</span></div>
+        <div class="row working"><i class="glyph g-working st" aria-hidden="true"></i><span class="sign mono">Cu</span><span class="row-main"><span class="row-title">Write the README quickstart</span><span class="row-sub">Write: docs/quickstart.md</span></span><span class="row-age mono">2m</span></div>
+        <div class="row working"><i class="glyph g-working st" aria-hidden="true"></i><span class="sign mono">OC</span><span class="row-main"><span class="row-title">Port the settings page to the form kit</span><span class="row-sub">Edit: web/settings.js</span></span><span class="row-age mono">4m</span></div>
+        <div class="row working"><i class="glyph g-working st" aria-hidden="true"></i><span class="sign mono">Pi</span><span class="row-main"><span class="row-title">Upgrade the payment SDK to v5</span><span class="row-sub">Bash: npm test</span></span><span class="row-age mono">6m</span></div>
       </div>
       <figcaption class="demo-tag mono">Demo data: scripted agents</figcaption>
     </figure>
@@ -478,7 +480,7 @@
 <!-- 12 Footer -->
 <footer class="end" id="end" aria-labelledby="end-h" data-scene="end">
   <div class="wrap">
-    <div class="calm">
+    <div class="calm-inbox">
       <i class="glyph g-check"></i>
       <p id="end-h">Nothing waits on you.</p>
       <span class="mono">0:00</span>
