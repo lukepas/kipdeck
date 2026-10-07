@@ -51,6 +51,7 @@ import { installSeating } from './features/seating';
 import { installTv } from './features/tv';
 import { installArcChrome } from './features/arcchrome';
 import { installSignals } from './features/signals';
+import { installHeartbeat } from './features/heartbeat';
 import { installSpotlight } from './features/spotlight';
 import { installVoice } from './features/voice';
 import { installWaiting } from './features/waiting';
@@ -237,6 +238,8 @@ installSeatFrame(ctx, parts);
 installArcChrome(ctx, parts);
 // The diamond, the triangle, the ring and the pip over the units, and the beams up to their cards.
 installSignals(ctx, parts);
+// Each tool call a pulse on the floor, and the quiet meter under each working unit (features/heartbeat).
+installHeartbeat(ctx, parts);
 installSpotlight(ctx, parts);
 // The motion layer over the room: the arc's faces in motion (the build, the scan, the sweeps, the
 // cards' effects, the warp's fold); taking the conn (the rise, the tiers lit pit to dais, the arc built
