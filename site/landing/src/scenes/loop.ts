@@ -261,7 +261,6 @@ export function mountLoop(section: HTMLElement) {
       const y = lerp(lerp(a, r, toReview), 0, toShip);
       set(el, 'transform', `translateY(${y.toFixed(1)}px)`);
     }
-    set(secNeeds, 'opacity', (1 - 0.45 * toReview).toFixed(3));
     set(secShipped, 'opacity', (0.55 + 0.45 * toShip).toFixed(3));
 
     // ---- c Review: the Changes tab.

@@ -5,7 +5,7 @@
 // With `paintOnly`, a changed digit only rolls its reel and leaves the text as it was, so a tick
 // causes no layout at all. That is for a counter inside something that moves by transform (the
 // asking row as it climbs), where a relayout would be reported as a layout shift; the element's
-// container must carry the value for assistive tech instead (the row's aria-label does).
+// container must carry the value for assistive tech instead, or hide it from it (the hero row hides its paint-only clock).
 
 export function odometer(el: HTMLElement, paintOnly = false): (text: string) => void {
   const cells: HTMLElement[] = [];
