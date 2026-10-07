@@ -8,6 +8,7 @@ import type { Net } from '../../net';
 import { store } from '../../state';
 import { h, timeAgo } from '../dom';
 import { openEvent, type MissionDeps } from './act';
+import { locateButton } from './locate';
 
 export const KIND_LABEL: Record<TimelineKind, string> = {
   hired: 'Hired',
@@ -68,12 +69,20 @@ function picker(label: string, key: keyof typeof filter, all: string, options: M
   return h('label.mc-filter', {}, label, select);
 }
 
-/** One event: when, where, what kind, what happened; its button opens what it's about. */
+/** Keys that press a row that is a button, as they press a button. */
+export const ROW_PRESS_KEYS: ReadonlySet<string> = new Set(['Enter', ' ']);
+
+/**
+ * One event: when, where, what kind, what happened. The whole row is the button that opens what
+ * it's about (a chevron shows on hover); its links and Locate do their own thing.
+ */
 export function eventRow(deps: MissionDeps, e: TimelineEvent, showFloor: boolean): HTMLElement {
   const floorName = store.floors.find((f) => f.id === e.floor)?.name ?? '';
-  return h(
+  const unit = e.worker ? store.rosterEntry(e.worker) : undefined;
+  const open = () => openEvent(deps, e);
+  const row = h(
     'li.mc-row.tl-row',
-    { class: e.kind, tabindex: '-1', 'data-id': `${e.floor}:${e.id}` },
+    { class: e.kind, tabindex: '0', role: 'button', 'aria-label': `Open: ${e.text}`, 'data-id': `${e.floor}:${e.id}` },
     h(
       'div.tl-main',
       {},
@@ -85,9 +94,21 @@ export function eventRow(deps: MissionDeps, e: TimelineEvent, showFloor: boolean
       explorerLink(e.link) ? h('a.tl-tx', { href: e.link, target: '_blank', rel: 'noopener noreferrer' }, e.kind === 'merge-attested' ? 'proof' : 'tx') : null,
       // A bounty's transaction, on the devnet explorer (a mock one has nowhere to go).
       !e.link && e.tx && !e.tx.startsWith('mock-') ? h('a.tl-tx', { href: `https://explorer.solana.com/tx/${encodeURIComponent(e.tx)}?cluster=devnet`, target: '_blank', rel: 'noopener noreferrer' }, 'tx') : null,
-      h('button.btn.small.mc-act', { type: 'button', onclick: () => openEvent(deps, e), 'aria-label': `Open: ${e.text}` }, 'Open'),
+      unit ? locateButton(deps, unit) : null,
+      h('span.tl-chev', { 'aria-hidden': 'true' }),
     ),
   );
+  row.addEventListener('click', (ev) => {
+    // A link or a button inside the row is its own click.
+    if ((ev.target as HTMLElement).closest('a, button')) return;
+    open();
+  });
+  row.addEventListener('keydown', (ev) => {
+    if (ev.target !== row || !ROW_PRESS_KEYS.has(ev.key) || ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    ev.preventDefault();
+    open();
+  });
+  return row;
 }
 
 export function renderTimeline(deps: MissionDeps, net: Net): HTMLElement {

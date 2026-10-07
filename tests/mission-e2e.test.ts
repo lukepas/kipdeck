@@ -160,6 +160,25 @@ test('the 2D view: the strip, Mission control, editing the mission in place, the
   await modal.locator('.tl-row', { hasText: 'Tess changed the mission: Make sign-in boring' }).waitFor();
   assert.equal(await modal.locator('.tl-row script').count(), 0);
   assert.match(await modal.locator('.tl-row').first().innerText(), /added the milestone/);
+  // The whole row is the button: no Open button on it, and Enter on it opens what it's about (a
+  // milestone: the Goals tab).
+  assert.equal(await modal.locator('.tl-row .mc-act').count(), 0);
+  const first = modal.locator('.tl-row').first();
+  assert.equal(await first.getAttribute('role'), 'button');
+  assert.equal(await first.getAttribute('tabindex'), '0');
+  await first.focus();
+  await page.keyboard.press('Enter');
+  assert.equal(await modal.locator('.mc-tab[aria-selected=true]').innerText(), 'Goals');
+  await page.keyboard.press('4');
+  // So does a click anywhere on it, and Space.
+  await modal.locator('.tl-row', { hasText: 'Tess added the milestone Auth rewrite' }).first().click();
+  assert.equal(await modal.locator('.mc-tab[aria-selected=true]').innerText(), 'Goals');
+  await page.keyboard.press('4');
+  await modal.locator('.tl-row').first().focus();
+  await page.keyboard.press(' ');
+  assert.equal(await modal.locator('.mc-tab[aria-selected=true]').innerText(), 'Goals');
+  // No Locate in the 2D view: it has no deck to point at.
+  assert.equal(await modal.locator('.mc-locate').count(), 0);
   await page.keyboard.press('3');
   assert.match(await modal.locator('.mc-tab[aria-selected=true]').innerText(), /^Review/);
   await modal.locator('.mc-empty', { hasText: 'Nothing waits for review' }).waitFor();
@@ -263,5 +282,93 @@ test('a first visit to the 3D office asks only for a name, never for a character
   assert.equal(saved.name, 'Nia');
   assert.ok(saved.look, 'a look was dealt, and kept for next time');
   await page.locator('#mission-strip').waitFor();
+  assert.deepEqual(errors, []);
+});
+
+test('docked in the 3D office: the deck stays in view, D floats it, a click on the deck hands the mouse back, Esc goes straight to mouse-look, and Crew is live', async (t) => {
+  if (why) return t.skip(why);
+  const { page, errors, context } = await signedIn({ width: 1440, height: 900 });
+  t.after(() => context.close());
+  // Docked last time; pointer lock asked for is counted (a headless browser can't really take the mouse).
+  await context.addInitScript(() => {
+    try {
+      localStorage.setItem('agent-office.mission-dock', 'dock');
+    } catch {
+      // storage blocked
+    }
+    const w = window as unknown as { __locks: number[] };
+    w.__locks = [];
+    HTMLCanvasElement.prototype.requestPointerLock = function () {
+      w.__locks.push(performance.now());
+      // Taken and let go at once, as far as the page can tell, so the next ask isn't still pending.
+      setTimeout(() => document.dispatchEvent(new Event('pointerlockchange')), 0);
+      return Promise.resolve();
+    } as typeof HTMLCanvasElement.prototype.requestPointerLock;
+  });
+  // A software-rendered deck starves the page of frames, so motion would never finish: settle it,
+  // and poll on a timer below rather than on animation frames.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(`${base}/`);
+  await page.waitForFunction(() => !!(window as unknown as { __office?: { store: { floor: string | null } } }).__office?.store.floor, null, { timeout: 60_000 });
+  // A unit aboard, for the Crew tab's Now column (the stand-in agent exits at once, so it's stuck: crashed).
+  await page.evaluate(() => (window as unknown as { __office: { net: { send(m: unknown): void } } }).__office.net.send({ t: 'worker.spawn', deskId: 'desk-1', prompt: 'Pick the session store', worktree: false }));
+  await page.waitForFunction(() => (window as unknown as { __office: { store: { roster: unknown[] } } }).__office.store.roster.length > 0, null, { timeout: 30_000 });
+  const locks = () => page.evaluate(() => (window as unknown as { __locks: number[] }).__locks.length);
+  const stacked = () => page.locator('#modal-root > .backdrop').count();
+
+  await page.locator('#scene').focus();
+  await page.keyboard.press('i');
+  const docked = page.locator('.mc-dock-host > .modal.mission-control.docked');
+  await docked.waitFor({ timeout: 10_000 });
+  // On the right, under the top bar, 400px wide, no dim over the deck.
+  const box = (await docked.boundingBox())!;
+  assert.equal(Math.round(box.width), 400);
+  assert.equal(Math.round(box.x + box.width), 1440);
+  assert.ok(box.y >= 40 && box.y <= 60, `under the top bar, at ${box.y}`);
+  assert.equal(await page.locator('#modal-root > .backdrop:not(.mc-dock-backdrop)').count(), 0, 'no dimming backdrop');
+  assert.equal(await docked.locator('header .close').count(), 1);
+  assert.equal(await docked.locator('.mc-dock-btn').innerText(), 'Float');
+
+  // Crew: the live Now column, the unit's state and how long.
+  await page.keyboard.press('5');
+  const now = docked.locator('.crew-row .crew-now-state').first();
+  await now.waitFor();
+  assert.match(await now.locator('.crew-now-text').innerText(), /\S/);
+  assert.match(await now.locator('.crew-now-for').innerText(), /^(<1m|\d+[mhd])$/);
+
+  // D floats it in the middle, remembered; D again docks it.
+  await page.keyboard.press('d');
+  await page.locator('#modal-root > .backdrop > .modal.mission-control').waitFor();
+  assert.equal(await page.locator('.mc-dock-host').count(), 0);
+  assert.equal(await page.evaluate(() => localStorage.getItem('agent-office.mission-dock')), 'float');
+  await page.keyboard.press('d');
+  await docked.waitFor();
+  assert.equal(await page.evaluate(() => localStorage.getItem('agent-office.mission-dock')), 'dock');
+
+  // A click on the deck: the panel stays, and the deck has the mouse and the keys back.
+  const before = await locks();
+  await page.locator('#scene').click({ position: { x: 500, y: 600 } });
+  await page.waitForFunction((n) => (window as unknown as { __locks: number[] }).__locks.length > n, before, { timeout: 10_000, polling: 100 });
+  assert.equal(await stacked(), 0, 'off the window stack');
+  assert.equal(await docked.count(), 1, 'still docked and in view');
+  // I takes the keys back for it.
+  await page.keyboard.press('i');
+  await page.waitForFunction(() => document.querySelectorAll('#modal-root > .backdrop.mc-dock-backdrop').length === 1, null, { polling: 100 });
+
+  // Esc closes it, and mouse-look is asked for by the close itself, with no extra click. (How soon
+  // depends on how fast this machine draws the deck; design/shoot-dock.mjs measures it.)
+  const ask = await locks();
+  await page.keyboard.press('Escape');
+  await page.waitForFunction((n) => (window as unknown as { __locks: number[] }).__locks.length > n, ask, { timeout: 5000, polling: 100 });
+  await page.waitForFunction(() => !document.querySelector('.modal.mission-control'), null, { polling: 100 });
+  assert.equal(await stacked(), 0);
+
+  // Too narrow to dock: it floats, though docking is what's remembered.
+  await page.setViewportSize({ width: 860, height: 800 });
+  await page.locator('#scene').focus();
+  await page.keyboard.press('i');
+  await page.locator('#modal-root > .backdrop > .modal.mission-control').waitFor();
+  assert.equal(await page.locator('.mc-dock-host').count(), 0);
+  await page.keyboard.press('Escape');
   assert.deepEqual(errors, []);
 });

@@ -1,16 +1,18 @@
 // Mission control's Attention tab: the reminders first, then every hired worker in the building,
-// grouped by how much it needs someone, most first. What waits for review is one line that opens
-// the Review tab (which lists it), and the working and parked ones wait behind a fold, so the list
-// stays short. Its counts are store.counts(), the same as the chip's and the tab title's.
+// grouped by how much it needs someone, most first. What waits for review is one line with a Review
+// button for the oldest of it and a link to the Review tab (which lists it all), and the working and
+// parked ones wait behind a fold, so the list stays short. Its counts are store.counts(), the same as
+// the chip's and the tab title's.
 
 import { ATTENTION_LEVELS, LEVEL_LABEL, type AttentionLevel, type Ranked } from '../../../shared/attention';
+import type { ReviewItem } from '../../../shared/review';
 import { store } from '../../state';
 import { h } from '../dom';
-import type { MissionDeps } from './act';
+import { runAction, runPayout, runPull, type MissionDeps } from './act';
 import { renderReminders } from './reminders';
 import { rosterRow } from './rows';
 
-/** Levels that show without unfolding. 'review' is a line to the Review tab instead (see reviewLine). */
+/** Levels that show without unfolding. 'review' is one line instead (see reviewLine). */
 const OPEN: ReadonlySet<AttentionLevel> = new Set(['needs-you', 'stuck']);
 
 const LEVEL_WHAT: Record<AttentionLevel, string> = {
@@ -25,29 +27,43 @@ const LEVEL_WHAT: Record<AttentionLevel, string> = {
 const unfolded = new Set<AttentionLevel>();
 
 /**
- * "To review 3: open the Review tab", for the finished work and pull requests the Review tab lists
- * (store.counts().review, which counts the pull requests no worker stands for too).
+ * "To review 3", for the finished work and pull requests the Review tab lists (store.counts().review,
+ * which counts the pull requests no worker stands for too): Review does the oldest one's next step
+ * right here, and the Review tab is a quieter link beside it.
  */
-function reviewLine(deps: MissionDeps, n: number): HTMLElement | null {
+function reviewLine(deps: MissionDeps, n: number, ranked: Ranked[]): HTMLElement | null {
   if (!n) return null;
+  const oldest = store.inbox()[0];
+  const what = oldest ? (oldest.entry?.name ?? (oldest.pull ? `PR #${oldest.pull.number}` : oldest.payout ? `bounty #${oldest.payout.issue}` : '')) : '';
   return h(
     'section.mc-group',
     {},
     h(
-      'button.mc-level.review',
-      { type: 'button', title: LEVEL_WHAT.review, onclick: () => deps.showTab('review') },
+      'div.mc-level.review.mc-level-static',
+      { title: LEVEL_WHAT.review },
       h('span.mc-level-name', {}, LEVEL_LABEL.review),
       h('span.mc-level-n', {}, String(n)),
-      h('span.mc-level-what', {}, 'Open the Review tab'),
+      oldest ? h('button.btn.small.primary.mc-review-now', { type: 'button', title: what ? `The oldest first: ${what}` : 'The oldest first', onclick: () => openReviewItem(deps, oldest, ranked) }, 'Review') : null,
+      h('button.mc-textlink', { type: 'button', onclick: () => deps.showTab('review') }, 'Open the Review tab'),
     ),
   );
+}
+
+/** Does a review item's next step, as its row in the Review tab would. */
+export function openReviewItem(deps: MissionDeps, i: ReviewItem, ranked: Ranked[]) {
+  const r = i.entry && ranked.find((x) => x.entry.id === i.entry!.id);
+  if (r) return runAction(deps, r.entry, r.att.action);
+  if (i.entry) return runAction(deps, i.entry, i.action);
+  if (i.pull) return runPull(deps, i.pull, i.action);
+  if (i.payout) return runPayout(deps, i.payout, i.action);
+  deps.showTab('review');
 }
 
 export function renderAttention(deps: MissionDeps, ranked: Ranked[], now: number): HTMLElement {
   const showFloor = store.floors.length > 1;
   const counts = store.counts();
   const reminders = renderReminders(deps, now);
-  const review = reviewLine(deps, counts.review);
+  const review = reviewLine(deps, counts.review, ranked);
   if (!ranked.length) return h('div.mc-attention', {}, reminders, review, h('p.mc-empty', {}, review ? 'No workers are hired.' : 'Nobody is hired yet. Hire a worker at a desk, or put a task on the queue.'));
   const sections: HTMLElement[] = [];
   for (const level of ATTENTION_LEVELS) {
