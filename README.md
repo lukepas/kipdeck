@@ -191,7 +191,7 @@ The npm package ships the built `dist/` (`files` in `package.json`), so `npx mer
 - [The inbox](docs/inbox.md): the home page, its loop, the setup card, Numbers, Settings, its keys and the shipped log
 - [The demo](docs/demo.md): `npx mergeline --demo` with five scripted agents, the hosted read-only demo, and the scripts that make the video, the GIF and the deck's screenshots
 - [Metrics for the deck](docs/metrics.md): what each number means, where it comes from, and what not to show
-- [The landing page](docs/landing.md): `site/index.html`, its build and the team tier waitlist
+- [The landing page](docs/landing.md): `site/landing/` (`npm run build:site`, then `npm run preview:site`), the one file that holds the product's name, and the team tier waitlist
 - [Features](docs/features.md): the inbox first, then the whole office in detail
 - [Controls](docs/controls.md): the inbox's keys and menu, the Bridge view's keys, and a terminal's
 - [Agents](docs/agents.md): every harness Mergeline runs (Claude Code, Codex, Cursor; OpenCode, Grok, Muse, DeepSeek Harness and Pi in beta), models and effort, and the prompts
