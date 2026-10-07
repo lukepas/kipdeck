@@ -82,9 +82,11 @@ export function questionCard(net: Net): QuestionCard {
       }
       timer ??= setInterval(() => void read(), READ_MS);
       void read();
+      // Answer asks for the box. The card never takes the keyboard by itself: the inbox's keys (N, /,
+      // the arrows) keep working while a question waits.
       if (home.focusReply === e.id) {
         home.focusReply = undefined;
-        setTimeout(() => input.focus(), 60);
+        setTimeout(() => input.focus({ preventScroll: true }), 60);
       }
     },
   };

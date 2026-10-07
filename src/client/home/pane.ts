@@ -219,10 +219,26 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
     return true;
   };
 
+  /** The selected agent's status last time, so its finishing turns the pane to what it changed. */
+  let lastStatus: { id: string; status: string } | undefined;
+  /** It finished while watched; the switch waits for the office to say what it changed. */
+  let finished: string | undefined;
+
   const render = () => {
     // Selecting one renders the pane again (home.change), so this pass has nothing left to do.
     if (autoOpen()) return;
     const e = home.selected ? store.rosterEntry(home.selected) : undefined;
+    // The agent you're watching finished: its diff is the next thing to look at (once there is one,
+    // and not while you're typing in its terminal).
+    const was = lastStatus;
+    lastStatus = e ? { id: e.id, status: e.status } : undefined;
+    if (e && was?.id === e.id && was.status !== e.status && e.status === 'done') finished = e.id;
+    if (finished && (!e || e.id !== finished || e.status !== 'done' || home.tab !== 'terminal')) finished = undefined;
+    if (e && finished === e.id && e.work?.files && !document.activeElement?.closest('.xterm')) {
+      finished = undefined;
+      home.select(e.id, 'changes');
+      return;
+    }
     card.show(e);
     root.classList.toggle('has-agent', !!e);
     document.body.classList.toggle('pane-open', home.paneOpen && !!e);
