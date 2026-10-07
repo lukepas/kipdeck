@@ -191,8 +191,8 @@ export function mountLoop(section: HTMLElement) {
     // The terminal is full from the first frame: the agent is already asking.
     lines.forEach((l) => {
       if (l === afterLine) return;
-      // The card takes the eye: the log behind it steps back while it is up.
-      const back = l === qLine ? 1 : 1 - 0.6 * ease(p, 0.13, 0.2) * (1 - ease(p, 0.44, 0.48));
+      // The card takes the eye: the log behind it steps back while it is up, to 0.7 so it still reads at 4.5:1.
+      const back = l === qLine ? 1 : 1 - 0.3 * ease(p, 0.13, 0.2) * (1 - ease(p, 0.44, 0.48));
       set(l, 'opacity', back.toFixed(3));
     });
     const typed = Q.length;
@@ -261,7 +261,7 @@ export function mountLoop(section: HTMLElement) {
       const y = lerp(lerp(a, r, toReview), 0, toShip);
       set(el, 'transform', `translateY(${y.toFixed(1)}px)`);
     }
-    set(secShipped, 'opacity', (0.55 + 0.45 * toShip).toFixed(3));
+    set(secShipped, 'opacity', (0.9 + 0.1 * toShip).toFixed(3)); // 0.9 at rest still reads at 4.5:1
 
     // ---- c Review: the Changes tab.
     const tab = ease(p, 0.5, 0.53);
