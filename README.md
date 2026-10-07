@@ -365,6 +365,7 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 | X | Stand a unit down |
 | L | Stencil a tag by a console ("Operations", "Code cleanup") |
 | G | The Overview: the whole deck from above, a little off the axis, as one plan with the arc facing you (Q / E turn it, G walks again) |
+| Click (Overview) | Select a unit: the view flies to it, a ring locks on under it, its rail row is marked and a card bottom right offers what it needs (Answer, Review changes). Click a rail row to select and find a unit, double-click it to open its terminal, Esc to let go |
 | T / Enter | Chat |
 | V | Join voice; then hold V to talk |
 | M | Mute / unmute in voice |

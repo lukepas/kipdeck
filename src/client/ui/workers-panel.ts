@@ -3,7 +3,9 @@
 // "ready" and the board agents fold into one line each until you open them. A row is the unit's call
 // sign, its name, one status phrase and one relative time (shared/rowtext.ts), with a 2px rule in its
 // state's color: no wide text badge, so a name keeps its width. The counts live on the top bar and the
-// Attention board's header alone: a group's head names it, it never counts it.
+// Attention board's header alone: a group's head names it, it never counts it. Linked to the deck's
+// selection (features/selection, RailLink below), a click selects a unit and finds it on the deck, and
+// a double-click or Enter opens its terminal.
 
 import './units-rail.css';
 import { LEVEL_LABEL, type AttentionLevel, type Attention } from '../../shared/attention';
@@ -49,6 +51,32 @@ function isOpen(group: Group): boolean {
 
 let lastOpen: (id: string) => void = () => {};
 
+/**
+ * What the deck's selection (features/selection) does with the rail, once it's there: a click on a
+ * row selects that unit and finds it on the deck, pointing at a row hovers it there, and the selected
+ * row is marked. Without one (the rail on its own), a click opens the unit's terminal, as it always did.
+ */
+export interface RailLink {
+  /** Select unit `id` and bring it into view. */
+  onLocate(id: string): void;
+  /** The row under the mouse or the keyboard's focus (null: none). */
+  onHover(id: string | null): void;
+  /** The selected unit, to mark its row. */
+  selected(): string | null;
+}
+
+let link: RailLink | null = null;
+
+/** Links the rail to the deck's selection (see RailLink). */
+export function linkRail(l: RailLink) {
+  link = l;
+}
+
+/** Marks the row of the selected unit `id` (none: null), without drawing the rail again. */
+export function markRailSelected(id: string | null) {
+  for (const li of document.querySelectorAll<HTMLElement>('#workers .unit-row')) li.setAttribute('aria-selected', String(li.dataset.id === id));
+}
+
 /** One unit's row. */
 function row(w: WorkerInfo, att: Attention | undefined, level: Group, now: number, oneHarness: boolean, onOpen: (id: string) => void): HTMLElement {
   const provider = w.kind === 'agent' ? providerLabel(w.provider, store.project) : 'shell';
@@ -68,13 +96,28 @@ function row(w: WorkerInfo, att: Attention | undefined, level: Group, now: numbe
     w.worktree && `branch ${w.worktree.branch}`,
     w.pr && `PR #${w.pr.number}`,
     usageState === 'tracked' && w.usage ? usageTitle(w.usage, providerKind) : '',
-    'Click to open its terminal',
+    link ? 'Click to select it and find it on the deck, double-click (or Enter) to open its terminal' : 'Click to open its terminal',
   ]
     .filter(Boolean)
     .join('\n');
+  const hover = (id: string | null) => link?.onHover(id);
   return h(
     'li.unit-row',
-    { class: level, onclick: () => onOpen(w.id), title, tabindex: '0', onkeydown: (e: Event) => ((e as KeyboardEvent).key === 'Enter' ? onOpen(w.id) : undefined) },
+    {
+      class: level,
+      title,
+      tabindex: '0',
+      role: 'option',
+      'data-id': w.id,
+      'aria-selected': String(!!link && link.selected() === w.id),
+      onclick: () => (link ? link.onLocate(w.id) : onOpen(w.id)),
+      ondblclick: () => link && onOpen(w.id),
+      onkeydown: (e: Event) => ((e as KeyboardEvent).key === 'Enter' ? onOpen(w.id) : undefined),
+      onmouseenter: () => hover(w.id),
+      onmouseleave: () => hover(null),
+      onfocus: () => hover(w.id),
+      onblur: () => hover(null),
+    },
     h('span.callsign', {}, callSign(w.deskId) || '--'),
     h('span.unit-glyph', { 'aria-hidden': 'true' }, icon(level === 'agents' ? 'unit' : LEVEL_ICON[level], 12)),
     h('span.name-col', {}, h('span.name', {}, w.name), h('span.sub', {}, sub)),

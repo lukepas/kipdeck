@@ -22,6 +22,7 @@ export const HELP_ROWS: readonly (readonly [string, string])[] = [
   ['lean', "From the conn (in the captain's chair, or on the dais with the mouse captured), rest the crosshair on a wall board and the view leans in on it; move the mouse or press a key to lean back"],
   ['Drag / wheel', 'Orbit and zoom the camera in third person'],
   ['G', 'Overview: the whole deck from above, the demo shot. Q and E turn it a quarter at a time, W A S D or a drag pan, the wheel zooms, and G or Esc walks again. A window opened up there closes back to it'],
+  ['overview', 'Click a unit in the Overview - select it: the view flies to it, a ring locks on under it, its row in the Units rail is marked and a card bottom right says what it is on, with the button it needs (Answer, Review changes). Click a rail row to select and find a unit; double-click a rail row (or Enter on it) to open its terminal. Esc or the card\'s close button lets go'],
   ['P', 'Prompt: give a task to a new or existing worker at the desk you face'],
   ['C', 'Changes: what the worker at the desk you face changed - files and diff, commit, discard, open a PR'],
   ['B', 'Open a shared shell (dev servers, git, tests) at an empty desk'],

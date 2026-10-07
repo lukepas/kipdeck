@@ -1,0 +1,61 @@
+/* The selected unit (features/selection): the inspector card docked bottom right over the deck, above
+   the bottom bar, and the selected row in the Units rail. Ship-cyan marks the selection: the
+   instruments' own color, never a state, so being selected never reads as an alert. */
+
+.sel-card {
+  position: fixed;
+  right: 12px;
+  bottom: 62px;
+  z-index: 4;
+  width: 320px;
+  max-width: calc(100vw - 24px);
+  box-sizing: border-box;
+  padding: 10px 12px 12px 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--hud-fill);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--hud-shadow);
+  color: var(--text);
+  font: 400 13px/1.35 var(--font-ui);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 160ms ease-out, transform 160ms ease-out;
+  pointer-events: auto;
+}
+.sel-card[hidden] { display: none; }
+.sel-card.open { opacity: 1; transform: none; }
+/* The rule down its left side, in ship-cyan like the reticle on the floor. */
+.sel-card::before { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; border-radius: var(--radius) 0 0 var(--radius); background: var(--ship, #6fc3df); }
+.sel-card .close.corner { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border-color: transparent; background: none; color: var(--muted); }
+.sel-card .close.corner:hover { background: var(--surface-3); color: var(--text); }
+
+.sel-body { position: relative; }
+.sel-content { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+/* Switching units: the old content fades out on top of the new one fading in, 120 ms. */
+.sel-content.sel-out { position: absolute; inset: 0 0 auto 0; animation: sel-out 120ms ease-out forwards; pointer-events: none; }
+.sel-content.sel-in { animation: sel-in 120ms ease-out; }
+@keyframes sel-out { to { opacity: 0; } }
+@keyframes sel-in { from { opacity: 0; } }
+
+.sel-head { display: flex; align-items: center; gap: 8px; min-width: 0; padding-right: 28px; }
+.sel-head .unit-sign { flex: none; padding: 1px 5px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); font: 500 11px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text); }
+.sel-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sel-state { margin-left: auto; flex: none; font: 500 11px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+.sel-state.needs-you { color: var(--signal); }
+.sel-state.stuck { color: var(--stuck); }
+.sel-state.review { color: var(--review); }
+.sel-state.working { color: var(--working); }
+.sel-title { font-weight: 700; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sel-activity { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sel-meta { font: 400 11px var(--font-mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sel-actions { display: flex; gap: 6px; margin-top: 6px; }
+.sel-actions .btn { height: 28px; padding: 0 12px; font-size: 12.5px; }
+
+/* The rail's row for the selected unit: a ship-cyan bar inside its state rule, and the raised fill. */
+.unit-row[aria-selected=true] { position: relative; background: var(--surface-3); }
+.unit-row[aria-selected=true]::before { content: ''; position: absolute; left: 2px; top: 3px; bottom: 3px; width: 2px; background: var(--ship, #6fc3df); }
+
+/* Up in the Overview its legend sits bottom middle; on a narrow screen the card rides above it. */
+@media (max-width: 900px) { body.overview .sel-card { bottom: 100px; } }
