@@ -51,7 +51,8 @@ export function firstReadyAgent(): AgentProvider | undefined {
   return state?.agents.find(ready)?.provider;
 }
 
-function copyLine(text: string): HTMLElement {
+/** A command to copy: its text and a copy button. */
+export function copyLine(text: string): HTMLElement {
   const btn = h('button.btn.quiet.small.copy', { type: 'button', title: 'Copy', 'aria-label': `Copy ${text}` }, icon('copy', 12));
   btn.addEventListener('click', () => {
     void navigator.clipboard?.writeText(text).then(
