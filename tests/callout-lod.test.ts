@@ -1,0 +1,178 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { CALLOUT_SCREEN, MID_MAX, OVERVIEW_BOUNDS, POP_FROM, STAGGER_MAX, WALK_BOUNDS, activityLine, midLine, popAt, staggerDelay, tierAt, tierFor, type CalloutTier } from '../src/client/features/workers/lod.ts';
+import { elapsed, statusPhrase } from '../src/shared/rowtext.ts';
+import { calloutText, type UnitSays } from '../src/client/world/character/callout-view.ts';
+
+const ortho = (half: number) => ({ top: half, bottom: -half });
+
+test('the Overview picks the tier from its half-height: tabs far, a line between, cards near', () => {
+  assert.equal(tierFor({ ortho: ortho(20), distance: 0 }), 'far');
+  assert.equal(tierFor({ ortho: ortho(10), distance: 0 }), 'mid');
+  assert.equal(tierFor({ ortho: ortho(5.3), distance: 0 }), 'near');
+  // The camera's distance means nothing up there.
+  assert.equal(tierFor({ ortho: ortho(20), distance: 1 }), 'far');
+  // The zooms the deck shots use (camera-overview.ts: HALF_HEIGHT 16 over the zoom).
+  assert.equal(tierFor({ ortho: ortho(16 / 0.8), distance: 0 }), 'far');
+  assert.equal(tierFor({ ortho: ortho(16 / 1.6), distance: 0 }), 'mid');
+  assert.equal(tierFor({ ortho: ortho(16 / 3.0), distance: 0 }), 'near');
+});
+
+test('walking picks each unit\'s tier from how far off it is', () => {
+  assert.equal(tierFor({ distance: 20 }), 'far');
+  assert.equal(tierFor({ distance: 9 }), 'mid');
+  assert.equal(tierFor({ distance: 3 }), 'near');
+  assert.equal(tierAt(WALK_BOUNDS.far + 0.01, WALK_BOUNDS), 'far');
+  assert.equal(tierAt(WALK_BOUNDS.near - 0.01, WALK_BOUNDS), 'near');
+});
+
+test('a tier never flips while the view sways 5% either side of a boundary', () => {
+  for (const [bounds, edge] of [
+    [WALK_BOUNDS, WALK_BOUNDS.far],
+    [WALK_BOUNDS, WALK_BOUNDS.near],
+    [OVERVIEW_BOUNDS, OVERVIEW_BOUNDS.far],
+    [OVERVIEW_BOUNDS, OVERVIEW_BOUNDS.near],
+  ] as const) {
+    for (const start of [edge * 0.95, edge * 1.05]) {
+      let tier: CalloutTier = tierAt(start, bounds);
+      const first = tier;
+      for (let i = 0; i < 40; i++) {
+        tier = tierAt(edge * (i % 2 ? 1.05 : 0.95), bounds, tier);
+        assert.equal(tier, first, `flipped at ${edge} m starting from ${start}`);
+      }
+    }
+  }
+});
+
+test('past the 10% band the tier does change, both ways, and a big jump skips the middle', () => {
+  assert.equal(tierAt(WALK_BOUNDS.far * 0.89, WALK_BOUNDS, 'far'), 'mid');
+  assert.equal(tierAt(WALK_BOUNDS.far * 1.11, WALK_BOUNDS, 'mid'), 'far');
+  assert.equal(tierAt(WALK_BOUNDS.near * 0.89, WALK_BOUNDS, 'mid'), 'near');
+  assert.equal(tierAt(WALK_BOUNDS.near * 1.11, WALK_BOUNDS, 'near'), 'mid');
+  assert.equal(tierAt(1, WALK_BOUNDS, 'far'), 'near');
+  assert.equal(tierAt(40, WALK_BOUNDS, 'near'), 'far');
+});
+
+test('a selected unit is never smaller than a line', () => {
+  assert.equal(tierFor({ distance: 30 }, undefined, { selected: true }), 'mid');
+  assert.equal(tierFor({ ortho: ortho(20), distance: 0 }, 'far', { selected: true }), 'mid');
+  assert.equal(tierFor({ distance: 2 }, undefined, { selected: true }), 'near');
+});
+
+test('the stagger is the same every time for an id, and within 0-240 ms', () => {
+  const seen = new Set<number>();
+  for (let i = 0; i < 500; i++) {
+    const id = `w-${i}-${(i * 7919).toString(36)}`;
+    const d = staggerDelay(id);
+    assert.equal(d, staggerDelay(id));
+    assert.ok(Number.isInteger(d) && d >= 0 && d <= STAGGER_MAX, `${id}: ${d}`);
+    seen.add(Math.floor(d / 40));
+  }
+  // Spread over the window, not bunched at one end.
+  assert.equal(seen.size, 7);
+});
+
+test('the pop grows from 88% and clear to full, eased out, and holds before it starts', () => {
+  assert.deepEqual(popAt(-50), { scale: POP_FROM, alpha: 0 });
+  assert.deepEqual(popAt(180), { scale: 1, alpha: 1 });
+  assert.deepEqual(popAt(1000), { scale: 1, alpha: 1 });
+  const half = popAt(90);
+  // easeOutCubic: most of the way there by half time.
+  assert.ok(half.alpha > 0.85 && half.alpha < 0.9, String(half.alpha));
+  assert.ok(half.scale > POP_FROM && half.scale < 1);
+});
+
+test('the middle line: a tool call as a short verb, cut to 22, else the status phrase', () => {
+  assert.equal(activityLine('Bash: npm test'), 'Bash: npm test');
+  assert.equal(activityLine('Edit: /Users/tess/office/src/client/world/worker.ts'), 'Edit worker.ts');
+  assert.equal(activityLine('Read: src\\server\\dsh.ts'), 'Read dsh.ts');
+  const long = activityLine('Bash: npm run build && node design/shoot.mjs after');
+  assert.ok(long.length <= MID_MAX && long.endsWith('...'), long);
+  assert.equal(activityLine('Fix the login redirect\nand more'), 'Fix the login redirect');
+  // Working, or waiting on you: what it's doing now.
+  assert.equal(midLine({ activity: 'Bash: npm test', level: 'working', label: 'Working' }), 'Bash: npm test');
+  assert.equal(midLine({ activity: 'Wants permission: Bash', level: 'needs-you', label: 'x' }), 'Wants permission: Bash');
+  // Done or stuck: its last tool call is old news, so the ranking's phrase.
+  assert.equal(midLine({ activity: 'Bash: npm test', level: 'review', label: 'Done: PR ready' }), 'Done: PR ready');
+  assert.equal(midLine({ activity: '', level: 'working', label: 'Fix login', title: 'Fix login' }), 'Working');
+  assert.equal(midLine({ level: 'stuck' }), 'Stuck');
+  assert.ok(midLine({ level: 'stuck', label: 'Silent for 12 minutes after a failing test run' }).length <= MID_MAX);
+});
+
+test('a status phrase with no label says the plain word', () => {
+  assert.equal(statusPhrase({ level: 'parked', label: '' }), 'Ready');
+  assert.equal(statusPhrase({ level: 'working', label: '  ' }), 'Working');
+});
+
+test('the near card\'s clock ticks by the second under an hour', () => {
+  assert.equal(elapsed(0), '0:00');
+  assert.equal(elapsed(42_500), '0:42');
+  assert.equal(elapsed(4 * 60_000 + 5_000), '4:05');
+  assert.equal(elapsed(59 * 60_000 + 59_000), '59:59');
+  assert.equal(elapsed(2 * 3_600_000 + 5_000), '2h');
+  assert.equal(elapsed(-5), '0:00');
+});
+
+const NOW = 1_800_000_000_000;
+const unit = (o: Partial<UnitSays>): UnitSays => ({
+  tier: 'mid',
+  sign: 'A-03',
+  name: 'Pixel',
+  kind: 'working',
+  level: 'working',
+  since: NOW - 125_000,
+  status: 'working',
+  lost: false,
+  epithet: '',
+  said: null,
+  leaving: null,
+  ...o,
+});
+
+test('far: a bare tab, unless it needs you or is stuck, which keeps its call sign', () => {
+  assert.deepEqual(calloutText(unit({ tier: 'far' }), NOW), { tier: 'far', sign: '', name: 'Pixel', kind: 'working' });
+  assert.equal(calloutText(unit({ tier: 'far', kind: 'needs-you', level: 'needs-you' }), NOW).sign, 'A-03');
+  assert.equal(calloutText(unit({ tier: 'far', kind: 'stuck', level: 'stuck' }), NOW).sign, 'A-03');
+});
+
+test('mid: the call sign and what it is doing', () => {
+  const t = calloutText(unit({ activity: 'Edit: src/a/worker.ts' }), NOW);
+  assert.equal(t.line, 'Edit worker.ts');
+  assert.equal(t.sign, 'A-03');
+  assert.equal(t.clock, undefined);
+});
+
+test('near: who, a chip with the state and a clock, the task, and branch / PR / model', () => {
+  const t = calloutText(unit({ tier: 'near', task: 'Fix login redirect', branch: 'office/pixel-3', pr: { state: 'open', number: 12 }, model: 'claude-opus-5-5', epithet: 'the Mechanic' }), NOW);
+  assert.equal(t.chip, 'WORKING');
+  assert.equal(t.clock, '2:05');
+  assert.equal(t.task, 'Fix login redirect');
+  assert.equal(t.meta, 'office/pixel-3 / PR #12 / claude-opus-5-5');
+  assert.equal(t.epithet, 'the Mechanic');
+  // A second later only the clock moved.
+  const next = calloutText(unit({ tier: 'near', task: 'Fix login redirect', branch: 'office/pixel-3', pr: { state: 'open', number: 12 }, model: 'claude-opus-5-5', epithet: 'the Mechanic' }), NOW + 1000);
+  assert.equal(next.clock, '2:06');
+  // Stuck: the reason in its hue in place of the meta; a lost worktree says so.
+  const stuck = calloutText(unit({ tier: 'near', kind: 'stuck', level: 'stuck', reason: 'Crashed', branch: 'b' }), NOW);
+  assert.equal(stuck.meta, 'Crashed');
+  assert.equal(stuck.metaHue, true);
+  assert.equal(calloutText(unit({ tier: 'near', kind: 'stuck', level: 'stuck', lost: true }), NOW).meta, 'worktree deleted');
+  // Parked: no clock; asleep says so.
+  const off = calloutText(unit({ tier: 'near', kind: 'parked', level: 'parked', status: 'offline' }), NOW);
+  assert.equal(off.chip, 'OFFLINE');
+  assert.equal(off.clock, undefined);
+  // No task: the live line stands in for it.
+  assert.equal(calloutText(unit({ tier: 'near', activity: 'Bash: npm test' }), NOW).task, 'Bash: npm test');
+});
+
+test('a word said, or a unit standing down, overrides the tier', () => {
+  assert.equal(calloutText(unit({ tier: 'far', said: 'Shipped!' }), NOW).task, 'Shipped!');
+  const going = calloutText(unit({ tier: 'near', leaving: 'signing off' }), NOW);
+  assert.equal(going.kind, null);
+  assert.equal(going.name, 'Pixel  signing off');
+});
+
+test('each tier takes a bigger share of the view than the one before', () => {
+  assert.ok(CALLOUT_SCREEN.far.min < CALLOUT_SCREEN.mid.min && CALLOUT_SCREEN.mid.min < CALLOUT_SCREEN.near.min);
+  for (const t of Object.values(CALLOUT_SCREEN)) assert.ok(t.min <= t.max);
+});
