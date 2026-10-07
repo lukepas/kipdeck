@@ -120,7 +120,8 @@ export interface Messaging {
   toastAll(text: string, level?: ToastLevel): void;
   /** To everyone on one floor. */
   toFloor(floor: Floor, msg: ServerMsg, droppable?: boolean): void;
-  toastFloor(floor: Floor | undefined, text: string, level?: ToastLevel): void;
+  /** To everyone on one floor but `except` (a client id: whoever did it). */
+  toastFloor(floor: Floor | undefined, text: string, level?: ToastLevel, except?: string): void;
   /** To everyone else on the same floor as `c`: nobody on another floor can see them. */
   toNeighbors(c: Client, msg: ServerMsg, droppable?: boolean): void;
   /** Tells just this person why their request didn't happen; nothing when there's no error. */
