@@ -5,6 +5,7 @@ import type { Route } from '../router.js';
 import { actionRoutes } from './actions.js';
 import { agentRoutes } from './agents.js';
 import { authRoutes } from './auth.js';
+import { demoRoutes } from './demo.js';
 import { fileRoutes } from './files.js';
 import { githubRoutes } from './github.js';
 import { localRoutes } from './local.js';
@@ -19,6 +20,8 @@ import { x402Routes } from './x402.js';
 const proof = (route: Route): Route => ({ ...route, lab: 'proof' });
 
 export const routes: readonly Route[] = [
+  // The read-only demo signs whoever opens it in to watch (only there with --demo --read-only).
+  demoRoutes.enter,
   // Anyone.
   authRoutes.login,
   authRoutes.loginOptions,

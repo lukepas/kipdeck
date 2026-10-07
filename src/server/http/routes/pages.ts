@@ -7,7 +7,7 @@ import type { Route, RouteRequest } from '../router.js';
 import type { Ctx } from '../../office/context.js';
 
 /** One of the bundle's own pages, never cached, so a new version is picked up at once. */
-const page = (name: string) => (ctx: Ctx, r: RouteRequest) => serveFile(r.res, path.join(ctx.publicDir, name), false, csp(ctx, r));
+export const page = (name: string) => (ctx: Ctx, r: RouteRequest) => serveFile(r.res, path.join(ctx.publicDir, name), false, csp(ctx, r));
 /** The policy for a page, with the office's socket at the host the browser reached it by. */
 const csp = (ctx: Ctx, { req }: RouteRequest) => contentSecurityPolicy(ctx.hosts.requestHost(req));
 
