@@ -104,3 +104,11 @@ html.js .sound { visibility: visible; }
 .chart.staged .vals text.cur { fill: var(--text); font-weight: 600; }
 .big-num b { display: inline-block; min-width: 1.15em; text-align: right; font-variant-numeric: tabular-nums; }
 .big-num > span { min-width: 24ch; }
+
+/* Text that a scene rewrites sits in a box of fixed width, so nothing beside it ever moves. */
+.big-num b { width: 1.42em; min-width: 0; }
+.loop-list .cc-age { min-width: 12ch; text-align: right; }
+.loop-list .cc-row .row-title { font-size: 12.5px; }
+.foot-add { display: inline-block; min-width: 3ch; text-align: right; }
+.tests-n { display: inline-block; min-width: 5ch; }
+.lanes figcaption b { display: inline-block; min-width: 6ch; }
