@@ -66,6 +66,7 @@ import { installAmphitheater } from './features/amphitheater';
 import { installSeatFrame } from './features/seatframe';
 import { installPulse } from './features/pulse';
 import { installDemo } from './features/demo';
+import { installHomeView } from './features/homeview';
 import { installBottomBar } from './features/bottombar';
 import { makeMotion } from './motion';
 import { installLights } from './features/lights';
@@ -228,6 +229,7 @@ parts.pointer = installPointer(ctx, core, parts);
 // The selected unit (features/selection): ahead of the Overview, so its Esc lets go of a selection first.
 parts.selection = installSelection(ctx, parts);
 parts.overview = installOverview(ctx, parts);
+installHomeView(ctx, parts);
 parts.flight = installFlight(ctx);
 parts.boardFaces = installBoardFaces(ctx, parts);
 installAmphitheater(ctx, parts);
