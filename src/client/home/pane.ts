@@ -63,7 +63,7 @@ const HOW = [
 
 /** The pane with nothing selected: how it works, or what's waiting and one button to start on it. */
 function emptyState(actions: Actions): HTMLElement {
-  const keys = h('p.pe-keys', {}, h('kbd', {}, 'Up'), h('kbd', {}, 'Down'), ' to move · ', h('kbd', {}, 'Enter'), ' to act · ', h('kbd', {}, '?'), ' for keys');
+  const keys = h('p.pe-keys', {}, h('kbd', {}, 'Up'), h('kbd', {}, 'Down'), ' to move · ', h('kbd', {}, 'Enter'), ' to act · ', h('kbd', {}, '?'), ' for help');
   if (!store.roster.length) {
     return h(
       'div.pe',

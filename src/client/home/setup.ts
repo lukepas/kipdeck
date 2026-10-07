@@ -120,6 +120,31 @@ function githubRow(s: SetupState, net: Net): HTMLElement {
   return row('optional', 'GitHub', without, h('span.su-line', {}, what, g.fix ? copyLine(g.fix) : null, again));
 }
 
+/** What the office last said it found, if it has. */
+export function setupState(): SetupState | undefined {
+  return state;
+}
+
+/** The switch for anonymous usage numbers, and exactly what they'd send (the setup card and Settings). */
+export function usageSwitch(net: Net, s: SetupState): HTMLElement {
+  return h(
+    'div.su-usage',
+    {},
+    h(
+      'label',
+      {},
+      h('input', { type: 'checkbox', checked: s.telemetry.on, onchange: (e: Event) => net.send({ t: 'setup.telemetry', on: (e.target as HTMLInputElement).checked }) }),
+      h('span', {}, 'Share anonymous usage numbers: minutes to your first merge, and how long agents wait on you.'),
+    ),
+    h(
+      'details',
+      {},
+      h('summary', {}, "What's sent"),
+      h('p', {}, "Each event is its name (first agent, first answer, first merge, or one wait in Needs you), a number of minutes, a random id made when you turn this on, the Mergeline version, your OS and the day. Never code, prompts, names, paths or repositories. Events wait in telemetry-outbox.jsonl in the office's data folder, so you can read them first. Off by default; DO_NOT_TRACK=1 keeps it off."),
+    ),
+  );
+}
+
 /** The card, or null until the office has said what it found. */
 export function setupCard(net: Net, deploy: (prompt: string, provider?: AgentProvider) => void): HTMLElement {
   const s = state;
@@ -134,24 +159,7 @@ export function setupCard(net: Net, deploy: (prompt: string, provider?: AgentPro
     icon('plus', 16),
     'Deploy your first agent',
   );
-  const usage = s.telemetry.allowed && admin
-    ? h(
-        'div.su-usage',
-        {},
-        h(
-          'label',
-          {},
-          h('input', { type: 'checkbox', checked: s.telemetry.on, onchange: (e: Event) => net.send({ t: 'setup.telemetry', on: (e.target as HTMLInputElement).checked }) }),
-          h('span', {}, 'Share anonymous usage numbers: minutes to your first merge, and how long agents wait on you.'),
-        ),
-        h(
-          'details',
-          {},
-          h('summary', {}, "What's sent"),
-          h('p', {}, 'Each event is its name (first agent, first answer, first merge, or one wait in Needs you), a number of minutes, a random id made when you turn this on, the Mergeline version, your OS and the day. Never code, prompts, names, paths or repositories. Events wait in telemetry-outbox.jsonl in the office\'s data folder, so you can read them first. Off by default; DO_NOT_TRACK=1 keeps it off.'),
-        ),
-      )
-    : null;
+  const usage = s.telemetry.allowed && admin ? usageSwitch(net, s) : null;
   return h(
     'div.first-run.setup-card',
     {},
