@@ -6,6 +6,8 @@ import type { Ctx } from '../office/context.js';
 import { hostnameOf } from '../hosts.js';
 import { login, loginOptions } from './routes/auth.js';
 import { send } from './util.js';
+import { readOnly } from '../demo/readonly.js';
+import { READ_ONLY_REFUSAL } from '../../shared/demo.js';
 
 /** A request a route answers: `path` is the URL's path, decoded. */
 export interface RouteRequest {
@@ -23,6 +25,8 @@ interface Answers {
   method?: 'GET' | 'POST';
   /** Only while this lab is on (see labs.ts); while it's off the route isn't there at all. */
   lab?: LabId;
+  /** Only while this holds (the read-only demo's own routes, say); otherwise the route isn't there at all. */
+  when?(ctx: Ctx): boolean;
 }
 
 /**
@@ -48,6 +52,7 @@ function misdirected(res: http.ServerResponse, host: string | undefined) {
 const matches = (ctx: Ctx, route: Route, method: string | undefined, p: string) =>
   (!route.method || route.method === method) &&
   (!route.lab || ctx.labs.on(route.lab)) &&
+  (!route.when || route.when(ctx)) &&
   (route.prefix !== undefined ? p.startsWith(route.prefix) : typeof route.path === 'string' ? p === route.path : route.path.includes(p));
 
 /**
@@ -88,6 +93,8 @@ export function requestHandler(ctx: Ctx, routes: readonly Route[]) {
       // Signing in and out only from the office's own pages: another site can't sign a visitor in
       // as someone else (login CSRF), or out.
       if (req.method === 'POST' && AUTH_POSTS.has(p) && !hosts.postOk(req)) return send(res, 403, { error: 'Forbidden' });
+      // The read-only demo only answers what looks (demo/readonly.ts).
+      if (readOnly(ctx) && req.method !== 'GET' && req.method !== 'HEAD') return send(res, 403, { error: READ_ONLY_REFUSAL });
       const r: RouteRequest = { req, res, url, path: p };
       for (const route of open) if (route.auth === 'public' && matches(ctx, route, req.method, p)) return await route.handle(ctx, r);
 
