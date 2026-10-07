@@ -97,7 +97,7 @@ test('the avatar menu, three-pane Settings, Numbers after a merge, and Help, eac
   const modals = () => page.locator('#modal-root .modal').count();
 
   // The menu: Work, then Mergeline's own, in plain words. No Bridge view while that lab is off.
-  assert.deepEqual(await menu(), ['Issues', 'Pull requests', 'Task queue', 'Numbers', 'Settings', 'Labs', 'Help and keys', 'Sign out']);
+  assert.deepEqual(await menu(), ['Issues', 'Pull requests', 'Task queue', 'Mission control', 'Numbers', 'Settings', 'Labs', 'Help and keys', 'Sign out']);
 
   // Settings: three panes, none of the bridge's.
   await item('Settings').click();

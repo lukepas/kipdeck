@@ -87,7 +87,7 @@ More in [docs/labs.md](docs/labs.md).
 - **Settings in three panes.** Account, Agents and Notifications. Six keys, and Help on **?** ([controls](docs/controls.md)).
 - **Teams.** Accounts with invite links, a shared dev box reached by SSH tunnel or Tailscale, and the team's Slack or Discord channel ([below](#teams-and-servers)).
 - **Agents that manage agents.** Every agent can list, deploy, message and stop the others through the `mergeline` MCP server or the `office-workers` command ([agents](docs/agents.md)).
-- **Mission control** (Ctrl+K): the same ranking with reminders, the review inbox and the digest of what happened while you were away ([mission control](docs/mission-control.md)).
+- **Mission control** (the avatar menu's Work): the same ranking with reminders, the review inbox and the digest of what happened while you were away ([mission control](docs/mission-control.md)).
 
 Everything else, the 3D bridge with its crew, moments and ambience, goals and the timeline, meetings, voice and Proof of Merge on testnets, is in [Labs](#labs) and described in [features](docs/features.md).
 
