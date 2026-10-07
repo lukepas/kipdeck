@@ -49,7 +49,7 @@ export interface WorkerView {
   detail: boolean;
 }
 
-export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'notifier' | 'waiting' | 'peers' | 'overview' | 'quality'>;
+export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'notifier' | 'waiting' | 'peers' | 'overview' | 'quality' | 'selection'>;
 
 /**
  * Registers what follows the workers, the floor plan, the meeting, the pull requests and
@@ -218,7 +218,8 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
       const d = v.model.where(workerPos).distanceTo(camPos);
       // How much its callout says (lod.ts): a tab from far off, a line between, the card up close; by
       // the Overview's zoom or, walking, how far off it is. One that needs you or is stuck keeps its call sign.
-      v.model.setTier(tierFor({ ortho: ov?.active() ? ov.camera : null, distance: d }, v.model.tier));
+      // The selected unit (features/selection) is never smaller than a line.
+      v.model.setTier(tierFor({ ortho: ov?.active() ? ov.camera : null, distance: d }, v.model.tier, { selected: parts.selection?.id() === id }));
       // Its small parts (and its laptop's) only within Quality's detail range, a little past it to leave.
       const detail = d < range * (v.detail ? 1.08 : 1);
       if (detail !== v.detail) {
