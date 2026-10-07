@@ -1,20 +1,23 @@
-// Builds the landing page into dist/site/: index.html with its three addresses filled in from the
-// environment, and the screenshots it shows copied next to it. Nothing else: the page has no
-// scripts, fonts or styles of its own to bundle. See docs/landing.md.
+// Builds the landing page (site/landing/, Vite) into dist/site/, fills in its deploy addresses from
+// the environment, and renders its share card (og.png) from the brand. See docs/landing.md.
 //
 //   MERGELINE_WAITLIST_URL=https://... MERGELINE_DEMO_URL=https://demo... npm run build:site
+//   MERGELINE_BRAND=ugc-army npm run build:site        # the other name (site/landing/brand.ts)
 //
 // Each address must be https (a waitlist on http would send emails in the clear). Without
-// MERGELINE_WAITLIST_URL the form stays as it is in the repository: it checks its input and says
-// nothing was sent. The page's Content-Security-Policy lets it reach the waitlist's origin and no other.
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+// MERGELINE_WAITLIST_URL the form checks its input and says nothing was sent. The page's
+// Content-Security-Policy lets it reach the waitlist's origin and no other.
+import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const OUT = path.join(ROOT, 'dist', 'site');
+export const OUT = path.join(ROOT, 'dist', 'site');
+/** The repository every link and command on the page points at until MERGELINE_REPO_URL says otherwise. */
+export const DEFAULT_REPO = 'https://github.com/zbagdzevicius/ugcarmy';
 
-/** The page with its addresses filled in. Exported for tests/landing.test.ts. */
+/** The built page with its addresses filled in. Exported for tests/landing.test.ts. */
 export function buildPage(html, env) {
   const url = (name) => {
     const v = (env[name] ?? '').trim();
@@ -29,7 +32,7 @@ export function buildPage(html, env) {
     return u;
   };
   const attr = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
-  let out = html.replaceAll('../docs/img/', 'img/');
+  let out = html;
   const waitlist = url('MERGELINE_WAITLIST_URL');
   if (waitlist) {
     out = out.replace('data-endpoint=""', `data-endpoint="${attr(waitlist.href)}"`);
@@ -38,25 +41,95 @@ export function buildPage(html, env) {
   const demo = url('MERGELINE_DEMO_URL');
   if (demo) out = out.replace('data-link="demo" href="#try-demo"', `data-link="demo" href="${attr(demo.href)}" rel="noopener"`);
   const repo = url('MERGELINE_REPO_URL');
-  if (repo) {
-    out = out.replace(/data-link="repo" href="[^"]*"/, `data-link="repo" href="${attr(repo.href)}"`);
-    out = out.replace(/data-link="repo-run" href="[^"]*"/, `data-link="repo-run" href="${attr(new URL('#from-source', repo).href)}"`);
+  if (repo) out = out.replaceAll(DEFAULT_REPO, attr(repo.href.replace(/\/$/, '')));
+  // Until `npx` works from the registry, the page shows the from-source command and says so (never a
+  // command that 404s). Published, the npx command takes its place.
+  if (env.MERGELINE_NPM_PUBLISHED === '1') {
+    out = out.replace(/\s*<(div|p|pre|span|code)\b[^>]*\bdata-unpublished\b[^>]*>[\s\S]*?<\/\1>/g, '');
+    out = out.replaceAll('data-published hidden', 'data-published');
+    out = out.replace(/data-copy="[^"]*" data-copy-published="([^"]*)"/g, 'data-copy="$1"');
   }
-  // Until `npx mergeline` works from the registry, the page says so under the command (never a command that 404s).
-  if (env.MERGELINE_NPM_PUBLISHED === '1') out = out.replace(/\s*<p class="small unpublished" data-unpublished>[\s\S]*?<\/p>/, '');
   return out;
 }
 
-/** The screenshots the page shows (from docs/img). */
-export function pictures(html) {
-  return [...new Set([...html.matchAll(/src="\.\.\/docs\/img\/([^"]+)"/g)].map((m) => m[1]))];
+/** The share card, 1200 by 630, drawn from the brand with the page's own fonts. */
+export function cardHtml({ name, lead, muted, archivo, mono }) {
+  const font = (f) => `data:font/woff2;base64,${readFileSync(f).toString('base64')}`;
+  return `<!doctype html><meta charset="utf-8"><style>
+@font-face{font-family:A;src:url(${font(archivo)});font-weight:100 900;font-stretch:62% 125%}
+@font-face{font-family:M;src:url(${font(mono)});font-weight:100 800}
+*{margin:0;box-sizing:border-box}html,body{width:1200px;height:630px;background:#0d131a;color:#e8ecef;font-family:A}
+body{padding:64px 72px;background-image:radial-gradient(rgba(138,151,165,.25) 1px,transparent 1.2px),radial-gradient(600px 500px at 90% 80%,rgba(255,106,26,.12),transparent);background-size:28px 28px,auto;position:relative;overflow:hidden}
+.top{display:flex;align-items:center;gap:14px;font-stretch:118%;font-weight:600;letter-spacing:.06em;font-size:24px}.top span{color:#8a97a5}
+h1{margin-top:70px;font-stretch:118%;font-weight:750;font-size:104px;line-height:.92;letter-spacing:-.025em}h1 b{color:#ff6a1a;font-weight:750;font-stretch:125%}
+p{margin-top:34px;font-size:28px;color:#8a97a5;max-width:900px}
+.row{position:absolute;right:72px;top:64px;display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid #3a4756;border-left:3px solid #ff6a1a;border-radius:4px;background:#141b23;font-family:M;font-size:20px;color:#ff6a1a}
+.row i{width:14px;height:14px;background:#ff6a1a;transform:rotate(45deg)}
+.bar{position:absolute;left:0;top:0;height:6px;width:38%;background:#ff6a1a}
+</style><div class="bar"></div><div class="top"><svg width="34" height="34" viewBox="0 0 24 24"><path d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z" fill="#ff6a1a"/><path d="m4 17 8-8 8 8M4 22l8-8 8 8" fill="none" stroke="#e8ecef" stroke-width="2.5"/></svg>${lead}<span>${muted}</span></div>
+<div class="row"><i></i>waiting 23:04</div>
+<h1>Your agents are<br><b>waiting</b> on you.</h1><p>${name}: one inbox for every coding agent you run. Answer, review and merge.</p>`;
+}
+
+async function shareCard(outDir) {
+  const html = readFileSync(path.join(outDir, 'index.html'), 'utf8');
+  const name = (html.match(/<title>([^<]*)<\/title>/) ?? [])[1] ?? '';
+  const lead = (html.match(/<tspan class="wm-lead">([^<]*)</) ?? [])[1] ?? '';
+  const muted = (html.match(/<tspan class="wm-muted">([^<]*)</) ?? [])[1] ?? '';
+  const assets = readdirSync(path.join(outDir, 'assets'));
+  const pick = (re) => path.join(outDir, 'assets', assets.find((f) => re.test(f)) ?? '');
+  let chromium;
+  try {
+    ({ chromium } = await import('playwright-core'));
+  } catch {
+    return 'playwright-core is not installed: og.png not drawn';
+  }
+  let browser;
+  for (const how of [{}, ...(process.env.CHROMIUM_PATH ? [{ executablePath: process.env.CHROMIUM_PATH }] : []), { channel: 'chrome' }]) {
+    try {
+      browser = await chromium.launch({ headless: true, ...how });
+      break;
+    } catch {
+      // Try the next browser.
+    }
+  }
+  if (!browser) return 'no headless Chromium here: og.png not drawn';
+  try {
+    const dir = mkdtempSync(path.join(tmpdir(), 'og-'));
+    const file = path.join(dir, 'card.html');
+    writeFileSync(file, cardHtml({ name, lead, muted, archivo: pick(/^archivo-latin-[\w-]+\.woff2$/), mono: pick(/^jetbrains-mono-latin-[\w-]+\.woff2$/) }));
+    const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
+    await page.goto(pathToFileURL(file).href);
+    await page.evaluate(() => document.fonts.ready);
+    await page.screenshot({ path: path.join(outDir, 'og.png') });
+    return 'og.png drawn';
+  } finally {
+    await browser.close();
+  }
+}
+
+/** Builds the page into `outDir` for `env` (MERGELINE_BRAND and the four addresses). */
+export async function buildSite({ env = process.env, outDir = OUT, card = true } = {}) {
+  const { build } = await import('vite');
+  const saved = { brand: process.env.MERGELINE_BRAND, out: process.env.MERGELINE_SITE_OUT };
+  process.env.MERGELINE_BRAND = env.MERGELINE_BRAND ?? '';
+  process.env.MERGELINE_SITE_OUT = outDir;
+  try {
+    await build({ configFile: path.join(ROOT, 'site', 'landing', 'vite.config.ts'), logLevel: 'warn', mode: 'production' });
+  } finally {
+    if (saved.brand === undefined) delete process.env.MERGELINE_BRAND;
+    else process.env.MERGELINE_BRAND = saved.brand;
+    if (saved.out === undefined) delete process.env.MERGELINE_SITE_OUT;
+    else process.env.MERGELINE_SITE_OUT = saved.out;
+  }
+  const file = path.join(outDir, 'index.html');
+  writeFileSync(file, buildPage(readFileSync(file, 'utf8'), env));
+  const og = card ? await shareCard(outDir) : 'og.png skipped';
+  return { outDir, og };
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const html = readFileSync(path.join(ROOT, 'site', 'index.html'), 'utf8');
-  mkdirSync(path.join(OUT, 'img'), { recursive: true });
-  writeFileSync(path.join(OUT, 'index.html'), buildPage(html, process.env));
-  for (const f of pictures(html)) copyFileSync(path.join(ROOT, 'docs', 'img', f), path.join(OUT, 'img', f));
-  console.log(`site: ${path.relative(ROOT, OUT)}/index.html and ${pictures(html).length} pictures`);
+  const { outDir, og } = await buildSite();
+  console.log(`site: ${path.relative(ROOT, outDir)}/index.html (${og})`);
   for (const name of ['MERGELINE_WAITLIST_URL', 'MERGELINE_DEMO_URL', 'MERGELINE_REPO_URL', 'MERGELINE_NPM_PUBLISHED']) if (!process.env[name]) console.log(`  ${name} is not set (see docs/landing.md)`);
 }

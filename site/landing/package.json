@@ -1,0 +1,13 @@
+{
+  "name": "mergeline-landing",
+  "private": true,
+  "version": "0.0.0",
+  "description": "The landing page, built on its own into dist/site/. It uses the repository's own Vite and adds no dependencies. See docs/landing.md.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "node ../build.mjs",
+    "preview": "node ../serve.mjs",
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

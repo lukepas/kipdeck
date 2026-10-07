@@ -1,0 +1,69 @@
+/* The landing page's tokens. The app's own token file comes first, so every surface, hue, font and
+   curve here is the product's (src/client/styles/tokens.css, with its Archivo and JetBrains Mono
+   faces). This file adds what only the page needs and the light set, which follows the system and
+   the theme button. */
+@import '../../../../src/client/styles/tokens.css';
+
+:root {
+  --tint-signal: rgb(255 106 26 / .12);
+  --tint-review: rgb(245 197 66 / .10);
+  --tint-proof: rgb(166 139 255 / .12);
+  --tint-settled: rgb(61 220 151 / .12);
+  --dot: rgb(138 151 165 / .28);
+  --glow-signal: rgb(255 106 26 / .09);
+  --glow-proof: rgb(166 139 255 / .10);
+  --ship: #6fc3df;
+  --ship-dim: #2c5e70;
+  --stamp-ink: #0b0b0c;
+  --stamp-paper: #f2f0eb;
+  --code-bg: #0a0f14;
+  --term-text: #c9d2dc;
+  --add-bg: rgb(61 220 151 / .10);
+  --add-line: rgb(61 220 151 / .55);
+  --shadow-lift: 0 30px 80px -20px rgb(0 0 0 / .65), 0 0 0 1px rgb(255 255 255 / .02);
+  --wrap: 1320px;
+  --gutter: clamp(16px, 4vw, 56px);
+  --section-pad: clamp(96px, 13vh, 168px);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    color-scheme: light;
+    --void: #f4f6f8; --surface-1: #ffffff; --surface-2: #eef1f4; --surface-3: #e3e8ed;
+    --line: #d5dbe1; --line-strong: #b4bec8; --text: #0d131a; --muted: #56616d; --faint: #8a97a5;
+    --signal: #a8380a; --stuck: #c01f33; --review: #8a5a00; --working: #56616d; --proof: #5b3fd1; --settled: #0f7a4f;
+    --on-signal: #ffffff;
+    --signal-tint: rgb(168 56 10 / .07); --review-tint: rgb(138 90 0 / .08); --proof-tint: rgb(91 63 209 / .08);
+    --tint-signal: rgb(168 56 10 / .08); --tint-review: rgb(138 90 0 / .08); --tint-proof: rgb(91 63 209 / .08); --tint-settled: rgb(15 122 79 / .08);
+    --dot: rgb(86 97 109 / .22); --glow-signal: rgb(168 56 10 / .06); --glow-proof: rgb(91 63 209 / .06);
+    --ship: #1f6f8b; --ship-dim: #9cc7d6;
+    --code-bg: #0d131a; --add-bg: rgb(15 122 79 / .09); --add-line: rgb(15 122 79 / .5);
+    --shadow-lift: 0 30px 70px -24px rgb(13 19 26 / .28), 0 0 0 1px rgb(13 19 26 / .02);
+    --hud-fill: rgb(255 255 255 / .9);
+  }
+}
+:root[data-theme='light'] {
+  color-scheme: light;
+  --void: #f4f6f8; --surface-1: #ffffff; --surface-2: #eef1f4; --surface-3: #e3e8ed;
+  --line: #d5dbe1; --line-strong: #b4bec8; --text: #0d131a; --muted: #56616d; --faint: #8a97a5;
+  --signal: #a8380a; --stuck: #c01f33; --review: #8a5a00; --working: #56616d; --proof: #5b3fd1; --settled: #0f7a4f;
+  --on-signal: #ffffff;
+  --signal-tint: rgb(168 56 10 / .07); --review-tint: rgb(138 90 0 / .08); --proof-tint: rgb(91 63 209 / .08);
+  --tint-signal: rgb(168 56 10 / .08); --tint-review: rgb(138 90 0 / .08); --tint-proof: rgb(91 63 209 / .08); --tint-settled: rgb(15 122 79 / .08);
+  --dot: rgb(86 97 109 / .22); --glow-signal: rgb(168 56 10 / .06); --glow-proof: rgb(91 63 209 / .06);
+  --ship: #1f6f8b; --ship-dim: #9cc7d6;
+  --code-bg: #0d131a; --add-bg: rgb(15 122 79 / .09); --add-line: rgb(15 122 79 / .5);
+  --shadow-lift: 0 30px 70px -24px rgb(13 19 26 / .28), 0 0 0 1px rgb(13 19 26 / .02);
+  --hud-fill: rgb(255 255 255 / .9);
+}
+/* The oklch overrides in the app's tokens would win over the hex light set on wide-gamut screens: the
+   light set restates them. */
+@supports (color: oklch(0% 0 0)) {
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme='dark']) { --void: #f4f6f8; --surface-1: #ffffff; --surface-2: #eef1f4; --surface-3: #e3e8ed; --line: #d5dbe1; --line-strong: #b4bec8; --text: #0d131a; --muted: #56616d; --signal: #a8380a; --stuck: #c01f33; --review: #8a5a00; --working: #56616d; --proof: #5b3fd1; --settled: #0f7a4f; }
+  }
+  :root[data-theme='light'] { --void: #f4f6f8; --surface-1: #ffffff; --surface-2: #eef1f4; --surface-3: #e3e8ed; --line: #d5dbe1; --line-strong: #b4bec8; --text: #0d131a; --muted: #56616d; --signal: #a8380a; --stuck: #c01f33; --review: #8a5a00; --working: #56616d; --proof: #5b3fd1; --settled: #0f7a4f; }
+}
+:root[data-theme='dark'] { color-scheme: dark; }

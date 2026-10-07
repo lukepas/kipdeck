@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--
+  The {{name}} landing page. site/landing/ builds it with Vite into dist/site/ (npm run build:site).
+  Everything it shows is drawn in code from the app's own tokens and glyphs: no stock pictures, no
+  scripts, fonts or styles from other sites, no cookies, no analytics. See docs/landing.md.
+-->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; media-src 'self'; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#0D131A">
+<title>{{name}}</title>
+<meta name="description" content="{{ogDescription}}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ogTitle}}">
+<meta property="og:description" content="{{ogDescription}}">
+<meta property="og:image" content="og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{{ogTitle}}">
+<meta name="twitter:description" content="{{ogDescription}}">
+<meta name="twitter:image" content="og.png">
+<link rel="icon" id="favicon" href="favicon.svg" type="image/svg+xml">
+<link rel="preload" as="font" type="font/woff2" href="../../src/client/styles/fonts/archivo-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="../../src/client/styles/fonts/jetbrains-mono-latin.woff2" crossorigin>
+<script vite-ignore src="theme-boot.js"></script>
+<script type="module" src="./src/main.ts"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to the page</a>
+
+<div class="waitclock" id="waitclock" aria-hidden="true"><i class="waitclock-bar"></i></div>
+
+<header class="top" id="top">
+  <div class="top-in">
+    <a class="lockup" href="#main" aria-label="{{name}}, back to the top">
+      <svg class="mark" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path class="mark-lead" d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z"/><path class="mark-trail" d="m4 17 8-8 8 8M4 22l8-8 8 8"/></svg>
+      <svg class="wordmark" viewBox="0 0 160 20" height="16" aria-hidden="true"><text x="0" y="15"><tspan class="wm-lead">{{lead}}</tspan><tspan class="wm-muted">{{muted}}</tspan></text></svg>
+    </a>
+    <nav class="links" aria-label="Sections">
+      <a href="#loop">The loop</a>
+      <a href="#why">Why</a>
+      <a href="#labs">Labs</a>
+      <a href="#teams">Teams</a>
+      <a data-link="repo" href="https://github.com/zbagdzevicius/ugcarmy" rel="noopener noreferrer">Source</a>
+    </nav>
+    <p class="pulse mono" aria-live="off"><i class="glyph g-needs-you"></i><span data-pulse-count>1</span> waiting on you <span class="pulse-sep">/</span> <span data-pulse-wait>0:07</span></p>
+    <button class="theme" type="button" id="theme" aria-label="Switch color theme"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16Z"/></svg></button>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- 01 Hero -->
+<section class="hero" id="hero" aria-labelledby="hero-h" data-scene="hero">
+  <canvas class="field" id="field" aria-hidden="true"></canvas>
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="label"><span class="num">01</span> {{name}} <span class="label-sep">/</span> <span class="label-tag">{{tagline}}</span></p>
+      <h1 id="hero-h" class="display hero-h"><span class="w">Your</span> <span class="w">agents</span> <span class="w">are</span><br class="hero-br"> <span class="waiting-box"><span class="w waiting" id="waiting">waiting</span><span class="stopwatch mono" id="stopwatch" aria-hidden="true">00:00</span></span> <span class="w">on</span> <span class="w">you.</span></h1>
+      <p class="lede">One inbox for every coding agent you run: Claude Code, Codex, Cursor, OpenCode and Pi. See who is waiting on you and for how long, answer in one box, review and merge.</p>
+
+      <div class="cmd" data-unpublished>
+        <span class="cmd-prompt" aria-hidden="true">$</span>
+        <code class="cmd-text">git clone https://github.com/zbagdzevicius/ugcarmy {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start</code>
+        <button class="copy" type="button" data-copy="git clone https://github.com/zbagdzevicius/ugcarmy {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start" aria-label="Copy the command that runs {{name}} from source">Copy</button>
+      </div>
+      <div class="cmd" data-published hidden>
+        <span class="cmd-prompt" aria-hidden="true">$</span>
+        <code class="cmd-text">npx {{pkg}}</code>
+        <button class="copy" type="button" data-copy="npx {{pkg}}" aria-label="Copy npx {{pkg}}">Copy</button>
+      </div>
+      <p class="small mono unpublished" data-unpublished>Not on npm yet: <a data-link="repo-run" href="https://github.com/zbagdzevicius/ugcarmy#from-source" rel="noopener noreferrer">run it from source</a>. <code>npx {{pkg}}</code> comes with the release.</p>
+
+      <div class="cta">
+        <a class="btn primary magnetic" data-link="demo" href="#try-demo"><i class="glyph g-needs-you" aria-hidden="true"></i>Try the demo</a>
+        <button class="btn ghost" type="button" data-watch><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 4.5v15L19.5 12Z"/></svg>Watch 30 seconds</button>
+      </div>
+      <div class="cmd demo-cmd" id="try-demo">
+        <span class="cmd-prompt" aria-hidden="true">$</span>
+        <code class="cmd-text" data-unpublished>npm start -- --demo</code>
+        <code class="cmd-text" data-published hidden>npx {{pkg}} --demo</code>
+        <button class="copy" type="button" data-copy="npm start -- --demo" data-copy-published="npx {{pkg}} --demo" aria-label="Copy the demo command">Copy</button>
+        <p class="small demo-note">Five scripted agents on a throwaway repository. No agent CLI, sign-in or model needed.</p>
+      </div>
+
+      <ul class="facts" aria-label="At a glance">
+        <li><b class="mono" data-count="5">5</b> agent CLIs in one list</li>
+        <li><b class="mono" data-count="10.7" data-dec="1">10.7 s</b> to a first merge <span class="tag-inline">measured, scripted demo</span></li>
+        <li><b class="mono">MIT</b> runs on your machine</li>
+      </ul>
+    </div>
+
+    <figure class="app mini" id="mini-inbox" aria-label="The {{name}} inbox, with demo data">
+      <div class="app-bar">
+        <span class="app-brand"><svg class="mark" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path class="mark-lead" d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z"/><path class="mark-trail" d="m4 17 8-8 8 8M4 22l8-8 8 8"/></svg>{{name}}</span>
+        <span class="app-pulse mono"><span><b data-mini-waiting>1</b> waiting on you</span><span><b data-mini-median>0:07</b> median wait</span><span><b data-mini-merged>0</b> merged today</span></span>
+      </div>
+      <div class="app-list">
+        <p class="sec sec-needs"><i class="glyph g-needs-you"></i>Needs you <span class="count">1</span></p>
+        <button class="row needs" type="button" data-clear aria-label="Codex asks: update the snapshot or fix the selector? Answer it">
+          <span class="sign mono">Cx</span>
+          <span class="row-main"><span class="row-title">Fix the flaky checkout test</span><span class="row-sub">Update the snapshot or fix the selector?</span></span>
+          <span class="row-age mono">waiting <span data-row-wait>0:07</span></span>
+          <span class="row-btn">Answer</span>
+          <i class="waitbar" aria-hidden="true"><i></i></i>
+        </button>
+        <p class="sec sec-review"><i class="glyph g-review"></i>To review <span class="count">1</span></p>
+        <div class="row review">
+          <span class="sign mono">CC</span>
+          <span class="row-main"><span class="row-title">Add rate limiting to /api/login</span><span class="row-sub">3 files, +70 -0</span></span>
+          <span class="row-age mono">ready 1m</span>
+        </div>
+        <p class="sec sec-working"><i class="glyph g-working"></i>Working <span class="count">3</span></p>
+        <div class="row working"><span class="sign mono">Cu</span><span class="row-main"><span class="row-title">Write the README quickstart</span><span class="row-sub">Write: docs/quickstart.md</span></span><span class="row-age mono">2m</span></div>
+        <div class="row working"><span class="sign mono">OC</span><span class="row-main"><span class="row-title">Port the settings page to the form kit</span><span class="row-sub">Edit: web/settings.js</span></span><span class="row-age mono">4m</span></div>
+        <div class="row working"><span class="sign mono">Pi</span><span class="row-main"><span class="row-title">Upgrade the payment SDK to v5</span><span class="row-sub">Bash: npm test</span></span><span class="row-age mono">6m</span></div>
+      </div>
+      <figcaption class="demo-tag mono">Demo data: scripted agents</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 02 The funnel -->
+<section class="funnel" id="funnel" aria-labelledby="funnel-h" data-scene="funnel">
+  <div class="wrap two-col">
+    <div class="col-copy">
+      <p class="label"><span class="num">02</span> Every vendor, one list</p>
+      <h2 id="funnel-h" class="display"><span class="beat">Five agent CLIs.</span> <span class="beat">Each on its own branch.</span> <span class="beat sig">One list, oldest wait first.</span></h2>
+      <p>Claude Code, Codex and Cursor side by side, with OpenCode and Pi in beta. A vendor's own dashboard only sees its own agents. Here every agent you run is in one list, ranked by who has waited on you longest.</p>
+      <ul class="vendors mono" aria-label="Agent CLIs">
+        <li><span class="sign">CC</span>Claude Code</li>
+        <li><span class="sign">Cx</span>Codex</li>
+        <li><span class="sign">Cu</span>Cursor</li>
+        <li><span class="sign">OC</span>OpenCode <em>beta</em></li>
+        <li><span class="sign">Pi</span>Pi <em>beta</em></li>
+      </ul>
+    </div>
+    <figure class="app ranked" aria-label="Every agent in one ranked list, with demo data">
+      <div class="ranked-list">
+        <p class="sec sec-needs"><i class="glyph g-needs-you"></i>Needs you <span class="count">2</span></p>
+        <div class="row needs"><span class="sign mono">Cx</span><span class="row-main"><span class="row-title">Fix the flaky checkout test</span><span class="row-sub branch mono">office/fix-the-flaky-checkout-test-3f2a</span></span><span class="row-age mono">waiting 23m</span><i class="waitbar w-77" aria-hidden="true"><i></i></i></div>
+        <div class="row needs"><span class="sign mono">OC</span><span class="row-main"><span class="row-title">Port the settings page to the form kit</span><span class="row-sub branch mono">office/port-the-settings-page-9c1e</span></span><span class="row-age mono">waiting 4m</span><i class="waitbar w-13" aria-hidden="true"><i></i></i></div>
+        <p class="sec sec-review"><i class="glyph g-review"></i>To review <span class="count">1</span></p>
+        <div class="row review"><span class="sign mono">CC</span><span class="row-main"><span class="row-title">Add rate limiting to /api/login</span><span class="row-sub branch mono">office/add-rate-limiting-to-api-8edc</span></span><span class="row-age mono">ready 2m</span></div>
+        <p class="sec sec-working"><i class="glyph g-working"></i>Working <span class="count">3</span></p>
+        <div class="row working"><span class="sign mono">Cu</span><span class="row-main"><span class="row-title">Write the README quickstart</span><span class="row-sub branch mono">office/write-the-readme-quick-51b0</span></span><span class="row-age mono">7m</span></div>
+        <div class="row working"><span class="sign mono">Pi</span><span class="row-main"><span class="row-title">Upgrade the payment SDK to v5</span><span class="row-sub branch mono">office/upgrade-the-payment-sdk-a7d4</span></span><span class="row-age mono">12m</span></div>
+        <div class="row working"><span class="sign mono">CC</span><span class="row-main"><span class="row-title">Add an index to orders.created_at</span><span class="row-sub branch mono">office/add-an-index-to-orders-c02f</span></span><span class="row-age mono">15m</span></div>
+        <p class="sec sec-idle"><i class="glyph g-parked"></i>Idle <span class="count">1</span></p>
+      </div>
+      <figcaption class="demo-tag mono">Demo data: scripted agents</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 03 The problem -->
+<section class="problem" id="problem" aria-labelledby="problem-h" data-scene="problem">
+  <div class="wrap">
+    <p class="label"><span class="num">03</span> The problem</p>
+    <h2 id="problem-h" class="display">23 minutes of nothing.</h2>
+    <div class="clock-span" aria-hidden="true">
+      <span class="ts mono">10:02</span>
+      <span class="span-bar"><i></i><b class="mono">waiting on you</b></span>
+      <span class="ts mono sig">10:25</span>
+    </div>
+    <p class="huge display" aria-hidden="true"><span>23</span> min</p>
+    <div class="two-col problem-cols">
+      <p class="lede">An agent that asks at 10:02 and is answered at 10:25 did nothing for 23 minutes. Vendors race to make agents faster. Nobody measures the time agents sit blocked on a person, across vendors. That is the gap {{name}} fills.</p>
+      <figure class="lanes" aria-labelledby="lanes-cap">
+        <svg viewBox="0 0 600 220" role="img" aria-labelledby="lanes-title">
+          <title id="lanes-title">Five agents across a workday. Each orange segment is time an agent spent waiting on a person.</title>
+          <g class="lane-grid">
+            <path d="M40 10V200M152 10V200M264 10V200M376 10V200M488 10V200M600 10V200"/>
+          </g>
+          <g class="lane-labels mono"><text x="0" y="34">CC</text><text x="0" y="72">Cx</text><text x="0" y="110">Cu</text><text x="0" y="148">OC</text><text x="0" y="186">Pi</text></g>
+          <g class="lane-work"><path d="M40 30H140M196 30H330M372 30H560"/><path d="M40 68H90M228 68H420M468 68H590"/><path d="M60 106H250M286 106H470"/><path d="M40 144H120M190 144H310M380 144H520"/><path d="M80 182H230M264 182H400M452 182H580"/></g>
+          <g class="lane-wait"><path d="M140 30H196M330 30H372"/><path d="M90 68H228M420 68H468"/><path d="M250 106H286M470 106H560"/><path d="M120 144H190M310 144H380"/><path d="M230 182H264M400 182H452"/></g>
+          <g class="lane-asks"><path d="M140 24l6 6-6 6-6-6Z"/><path d="M90 62l6 6-6 6-6-6Z"/><path d="M250 100l6 6-6 6-6-6Z"/><path d="M120 138l6 6-6 6-6-6Z"/><path d="M230 176l6 6-6 6-6-6Z"/><path d="M330 24l6 6-6 6-6-6Z"/><path d="M420 62l6 6-6 6-6-6Z"/><path d="M470 100l6 6-6 6-6-6Z"/><path d="M310 138l6 6-6 6-6-6Z"/><path d="M400 176l6 6-6 6-6-6Z"/></g>
+          <g class="lane-hours mono"><text x="40" y="216">9:00</text><text x="152" y="216">11:00</text><text x="264" y="216">13:00</text><text x="376" y="216">15:00</text><text x="488" y="216">17:00</text></g>
+        </svg>
+        <figcaption id="lanes-cap" class="mono"><b class="sig">2h 41m</b> blocked today <span class="tag-inline">illustrative</span></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- 04 The loop -->
+<section class="loop" id="loop" aria-labelledby="loop-h" data-scene="loop">
+  <div class="wrap">
+    <p class="label"><span class="num">04</span> The loop</p>
+    <h2 id="loop-h" class="display">Ask. Answer. Review. Merge.</h2>
+    <p class="lede">The oldest agent waiting opens by itself. Its question is in plain words, with one reply box and a button per numbered choice, for every CLI. The finished diff sits beside the list. Merge on your machine without GitHub, or open a pull request.</p>
+  </div>
+  <div class="wrap loop-stage">
+    <ol class="beats">
+      <li class="beat-item"><span class="beat-n mono">a</span><h3>Ask</h3><p>A raw terminal line becomes a card: the question in words, a button for each numbered choice.</p></li>
+      <li class="beat-item"><span class="beat-n mono">b</span><h3>Answer</h3><p>One box. Send, and the wait stops counting. The agent drops into To review when it is done.</p></li>
+      <li class="beat-item"><span class="beat-n mono">c</span><h3>Review</h3><p>The real diff beside the list: files, hunks, the tests it ran.</p></li>
+      <li class="beat-item"><span class="beat-n mono">d</span><h3>Merge</h3><p>On this computer, no GitHub needed, or as a pull request when <code>gh</code> is there.</p></li>
+    </ol>
+
+    <div class="loop-app" aria-label="The loop in the app, with demo data">
+      <div class="app pane-app">
+        <div class="pane-head">
+          <span class="sign mono">CC</span>
+          <span class="pane-title"><b>Add rate limiting to /api/login</b><span class="mono">Claude Code / acme-shop / office/add-rate-limiting-to-api-8edc</span></span>
+          <span class="pane-actions"><span class="btn sm">Send back</span><span class="btn sm primary merge-btn">Merge</span></span>
+        </div>
+        <div class="pane-tabs"><span>Terminal</span><span class="on">Changes <i class="count">3</i></span><span>Log</span></div>
+        <div class="diff-wrap">
+          <ul class="files mono" aria-label="Changed files">
+            <li class="on"><span class="fmod">M</span>api/login.js<b>+11 -0</b></li>
+            <li><span class="fadd">A</span>api/rate-limit.js<b>+32 -0</b></li>
+            <li><span class="fadd">A</span>api/rate-limit.test.js<b>+27 -0</b></li>
+          </ul>
+<div class="diff mono" role="group" aria-label="api/login.js, 9 lines added">
+          <span class="hunk">@@ -1,13 +1,24 @@</span>
+          <span class="l"><span class="ln" aria-hidden="true"><i>1</i><i>1</i></span><span class="sg" aria-hidden="true"> </span><code>import { findUser, checkPassword, startSession } from './users.js';</code></span>
+          <span class="l add"><span class="ln" aria-hidden="true"><i></i><i>2</i></span><span class="sg" aria-hidden="true">+</span><code>import { rateLimit } from './rate-limit.js';</code></span>
+          <span class="l add"><span class="ln" aria-hidden="true"><i></i><i>3</i></span><span class="sg" aria-hidden="true">+</span><code></code></span>
+          <span class="l add"><span class="ln" aria-hidden="true"><i></i><i>4</i></span><span class="sg" aria-hidden="true">+</span><code>/** Five tries a minute for each address and each email. */</code></span>
+          <span class="l add"><span class="ln" aria-hidden="true"><i></i><i>5</i></span><span class="sg" aria-hidden="true">+</span><code>const tries = rateLimit({ max: 5, windowMs: 60_000 });</code></span>
+          <span class="l"><span class="ln" aria-hidden="true"><i>2</i><i>6</i></span><span class="sg" aria-hidden="true"> </span><code></code></span>
+          <span class="l"><span class="ln" aria-hidden="true"><i>3</i><i>7</i></span><span class="sg" aria-hidden="true"> </span><code>export async function login(req, res) {</code></span>
+          <span class="l"><span class="ln" aria-hidden="true"><i>4</i><i>8</i></span><span class="sg" aria-hidden="true"> </span><code>  const { email, password } = req.body ?? {};</code></span>
+          <span class="l add"><span class="ln" aria-hidden="true"><i></i><i>9</i></span><span class="sg" aria-hidden="true">+</span><code>  const wait = tries.take(req.ip) ?? tries.take(email);</code></span>
+          <span class="l add"><span class="ln" aria-hidden="true"><i></i><i>10</i></span><span class="sg" aria-hidden="true">+</span><code>  if (wait) {</code></span>
+          <span class="l add"><span class="ln" aria-hidden="true"><i></i><i>11</i></span><span class="sg" aria-hidden="true">+</span><code>    res.set('Retry-After', String(Math.ceil(wait / 1000)));</code></span>
+          <span class="l add"><span class="ln" aria-hidden="true"><i></i><i>12</i></span><span class="sg" aria-hidden="true">+</span><code>    return res.status(429).json({ error: 'Too many tries.' });</code></span>
+          <span class="l add"><span class="ln" aria-hidden="true"><i></i><i>13</i></span><span class="sg" aria-hidden="true">+</span><code>  }</code></span>
+          <span class="l"><span class="ln" aria-hidden="true"><i>5</i><i>14</i></span><span class="sg" aria-hidden="true"> </span><code>  const user = await findUser(email);</code></span>
+          </div>
+        </div>
+        <p class="pane-foot mono"><span>3 files, +70 -0, 1 commit</span><span class="tests"><i class="glyph g-check"></i>tests 12/12</span></p>
+        <figcaption class="demo-tag mono">Demo data: scripted agents</figcaption>
+      </div>
+
+      <div class="qcard" aria-label="Codex's question as a card">
+        <p class="term mono"><span class="dim">? </span>Update the snapshot or fix the selector?</p>
+        <div class="qcard-in">
+          <p class="qcard-k mono"><i class="glyph g-needs-you"></i>Codex asks <span class="row-age">waited 0:23</span></p>
+          <p class="qcard-q">Update the snapshot or fix the selector?</p>
+          <div class="choices"><span class="btn sm">1 Update the snapshot</span><span class="btn sm on">2 Fix the selector</span></div>
+          <div class="reply"><span class="reply-box">Fix the selector</span><span class="btn sm primary">Send</span></div>
+        </div>
+      </div>
+
+      <p class="stamp" aria-hidden="true">MERGED</p>
+    </div>
+    <p class="footnote mono">Four clicks from a fresh start to the first merged change, 10.7 s (measured: design/measure-final.mjs, headless Chromium, scripted demo).</p>
+  </div>
+</section>
+
+<!-- 05 Why not the tools you have -->
+<section class="why" id="why" aria-labelledby="why-h" data-scene="why">
+  <div class="wrap">
+    <p class="label"><span class="num">05</span> Why not the tools you already have?</p>
+    <h2 id="why-h" class="display">The layer across them.</h2>
+    <p class="lede">Vendor dashboards see one vendor. Task boards do not know an agent is blocked. GitHub sees the pull request, not the 23 minutes before it. {{name}} sits across them: cross-vendor, self-hosted, and it measures the wait.</p>
+    <div class="table-wrap" tabindex="0" role="region" aria-labelledby="why-h">
+      <table class="why-table">
+        <thead><tr><th scope="col"><span class="sr">What you need</span></th><th scope="col">One vendor's dashboard</th><th scope="col">A task board for agents</th><th scope="col">GitHub pull requests</th><th scope="col">Terminals and tmux</th><th scope="col" class="us">{{name}}</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Every agent CLI in one list</th><td data-label="One vendor's dashboard"><span class="no">Its own agents</span></td><td data-label="A task board"><span class="part">If you file them</span></td><td data-label="GitHub pull requests"><span class="no">Once a PR exists</span></td><td data-label="Terminals and tmux"><span class="part">One pane at a time</span></td><td data-label="{{name}}" class="us"><span class="yes">Ranked by wait</span></td></tr>
+          <tr><th scope="row">Knows an agent is blocked on you now</th><td data-label="One vendor's dashboard"><span class="part">Its own agents</span></td><td data-label="A task board"><span class="no">No</span></td><td data-label="GitHub pull requests"><span class="no">No</span></td><td data-label="Terminals and tmux"><span class="part">If you look</span></td><td data-label="{{name}}" class="us"><span class="yes">Top of the list</span></td></tr>
+          <tr><th scope="row">Answer the question in one box</th><td data-label="One vendor's dashboard"><span class="part">In its app</span></td><td data-label="A task board"><span class="no">No</span></td><td data-label="GitHub pull requests"><span class="no">No</span></td><td data-label="Terminals and tmux"><span class="part">Find the terminal</span></td><td data-label="{{name}}" class="us"><span class="yes">Every CLI</span></td></tr>
+          <tr><th scope="row">Review and merge before a PR exists</th><td data-label="One vendor's dashboard"><span class="no">No</span></td><td data-label="A task board"><span class="no">No</span></td><td data-label="GitHub pull requests"><span class="no">No</span></td><td data-label="Terminals and tmux"><span class="part">By hand</span></td><td data-label="{{name}}" class="us"><span class="yes">Or open one</span></td></tr>
+          <tr><th scope="row">Measures how long agents wait on a person</th><td data-label="One vendor's dashboard"><span class="no">No</span></td><td data-label="A task board"><span class="no">No</span></td><td data-label="GitHub pull requests"><span class="no">No</span></td><td data-label="Terminals and tmux"><span class="no">No</span></td><td data-label="{{name}}" class="us"><span class="yes">Per agent and model</span></td></tr>
+          <tr><th scope="row">Runs on your machine</th><td data-label="One vendor's dashboard"><span class="no">Their cloud</span></td><td data-label="A task board"><span class="part">Depends</span></td><td data-label="GitHub pull requests"><span class="no">Their cloud</span></td><td data-label="Terminals and tmux"><span class="yes">Yes</span></td><td data-label="{{name}}" class="us"><span class="yes">Yes, MIT</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 06 Yours -->
+<section class="yours" id="yours" aria-labelledby="yours-h" data-scene="yours">
+  <div class="wrap">
+    <p class="label"><span class="num">06</span> Yours</p>
+    <h2 id="yours-h" class="display">One command. Your machine. A signed record.</h2>
+    <p class="lede">It runs on your laptop or the team's dev box. {{name}} sends nothing anywhere: your agents talk only to their own model. Open source, MIT. Every merge and send-back is a signed record: the agent and model, who reviewed it, how long it waited.</p>
+  </div>
+  <div class="wrap yours-grid">
+    <div class="term-win" id="from-source">
+      <div class="term-bar mono"><span class="term-tab on" data-unpublished>from source</span><span class="term-tab on" data-published hidden>npx</span></div>
+<pre class="term-body mono" data-unpublished aria-label="Running {{name}} from source"><span class="p">$</span> git clone https://github.com/zbagdzevicius/ugcarmy {{folder}}
+<span class="p">$</span> cd {{folder}} &amp;&amp; npm install
+<span class="dim">added 412 packages, built client and server</span>
+<span class="p">$</span> npm start -- --demo
+<span class="ok">ready</span>  https://localhost:4600  <span class="dim">signed in on this computer</span>
+<span class="dim">first agent at work</span>      <b>3.4 s</b>
+<span class="dim">first merged change</span>      <b>10.7 s</b>  <span class="dim">4 clicks</span></pre>
+<pre class="term-body mono" data-published hidden aria-label="Running {{name}} with npx"><span class="p">$</span> cd ~/code/your-project
+<span class="p">$</span> npx {{pkg}}
+<span class="ok">ready</span>  https://localhost:4600  <span class="dim">signed in on this computer</span>
+<span class="dim">first agent at work</span>      <b>3.4 s</b>
+<span class="dim">first merged change</span>      <b>10.7 s</b>  <span class="dim">4 clicks</span></pre>
+    </div>
+    <ul class="measured" aria-label="Measured on the scripted demo">
+      <li><b class="display" data-count="3.4" data-dec="1">3.4</b><span class="unit">s</span><span class="what">to the first agent at work</span></li>
+      <li><b class="display" data-count="10.7" data-dec="1">10.7</b><span class="unit">s</span><span class="what">to the first merged change</span></li>
+      <li><b class="display" data-count="4">4</b><span class="unit">clicks</span><span class="what">from a fresh start to that merge</span></li>
+    </ul>
+    <p class="footnote mono measured-note">Measured: headless Chromium on an M-series Mac, a fresh home and repository per run, the scripted demo's stand-in agent. Results in design/shots/fundable/final/measure.json.</p>
+
+    <figure class="machine" aria-labelledby="machine-cap">
+      <svg class="laptop" viewBox="0 0 420 260" aria-hidden="true">
+        <path class="lap-hum" d="M210 40 380 138 210 236 40 138Z"/>
+        <path class="lap-base" d="M210 56 352 138 210 220 68 138Z"/>
+        <path class="lap-screen" d="M68 138V48L210 -34V56Z" transform="translate(0 6)"/>
+        <g class="packets"><circle cx="300" cy="94" r="3"/><circle cx="120" cy="190" r="3"/><circle cx="330" cy="168" r="3"/></g>
+      </svg>
+      <ol class="ledger mono" aria-label="Signed merge record, demo data">
+        <li><span>10:41</span><span>CC</span><span>claude-sonnet</span><span>you</span><span class="w">waited 0:00</span><span class="h">a41f9c2</span></li>
+        <li><span>10:25</span><span>Cx</span><span>gpt-5-codex</span><span>you</span><span class="w sig">waited 23:04</span><span class="h">7be0d13</span></li>
+        <li><span>09:58</span><span>Cu</span><span>cursor</span><span>you</span><span class="w">waited 2:12</span><span class="h">03c9e6a</span></li>
+      </ol>
+      <figcaption id="machine-cap" class="mono">Signed record, kept on your machine <span class="tag-inline">demo data</span></figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 07 Phone -->
+<section class="phone-sec" id="phone" aria-labelledby="phone-h" data-scene="phone">
+  <div class="wrap two-col">
+    <div class="col-copy">
+      <p class="label"><span class="num">07</span> Answer from anywhere</p>
+      <h2 id="phone-h" class="display">The couch counts.</h2>
+      <p>The same inbox on your phone: the list alone, one tap target per row. Answer the question and merge the README without opening a laptop.</p>
+      <p class="small">It serves your network over HTTPS; reach it from outside with your own tunnel or the team's dev box.</p>
+    </div>
+    <figure class="phone" aria-label="The inbox on a phone, with demo data">
+      <div class="phone-screen">
+        <div class="push"><i class="glyph g-needs-you"></i><span><b>Codex needs you</b><span>Update the snapshot or fix the selector?</span></span></div>
+        <p class="sec sec-needs"><i class="glyph g-needs-you"></i>Needs you <span class="count">1</span></p>
+        <div class="row needs"><span class="sign mono">Cx</span><span class="row-main"><span class="row-title">Fix the flaky checkout test</span><span class="row-sub">waiting 3m</span></span><i class="waitbar w-10" aria-hidden="true"><i></i></i></div>
+        <p class="sec sec-review"><i class="glyph g-review"></i>To review <span class="count">1</span></p>
+        <div class="row review"><span class="sign mono">Cu</span><span class="row-main"><span class="row-title">Write the README quickstart</span><span class="row-sub">2 files, +38 -4</span></span></div>
+        <p class="sec sec-working"><i class="glyph g-working"></i>Working <span class="count">2</span></p>
+        <div class="row working"><span class="sign mono">CC</span><span class="row-main"><span class="row-title">Upgrade the payment SDK</span><span class="row-sub">Bash: npm test</span></span></div>
+        <div class="row working"><span class="sign mono">Pi</span><span class="row-main"><span class="row-title">Port the settings page</span><span class="row-sub">Edit: web/settings.js</span></span></div>
+        <p class="phone-merged mono"><i class="glyph g-merged"></i>Shipped today 2</p>
+      </div>
+      <figcaption class="demo-tag mono">Demo data</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 08 Numbers -->
+<section class="numbers" id="numbers" aria-labelledby="numbers-h" data-scene="numbers">
+  <div class="wrap two-col">
+    <div class="col-copy">
+      <p class="label"><span class="num">08</span> Numbers</p>
+      <h2 id="numbers-h" class="display">The metric a team lead asks for.</h2>
+      <p>Human wait time per agent and model, week over week, and the merge rate. The top bar shows who is waiting now and today's median. Numbers shows the week.</p>
+    </div>
+    <figure class="chart" aria-labelledby="chart-cap">
+      <p class="big-num"><b class="display">7</b><span class="mono">min median wait, Sunday</span></p>
+      <svg viewBox="0 0 560 240" role="img" aria-labelledby="chart-title">
+        <title id="chart-title">Median human wait per day, Monday to Sunday: 23, 19, 17, 14, 12, 9 and 7 minutes. Illustrative.</title>
+        <g class="axis"><path d="M0 200H560M0 150H560M0 100H560M0 50H560"/></g>
+        <g class="cols"><rect x="20" y="16" width="56" height="184"/><rect x="98" y="48" width="56" height="152"/><rect x="176" y="64" width="56" height="136"/><rect x="254" y="88" width="56" height="112"/><rect x="332" y="104" width="56" height="96"/><rect x="410" y="128" width="56" height="72"/><rect x="488" y="144" width="56" height="56"/></g>
+        <g class="vals mono"><text x="48" y="10">23</text><text x="126" y="42">19</text><text x="204" y="58">17</text><text x="282" y="82">14</text><text x="360" y="98">12</text><text x="438" y="122">9</text><text x="516" y="138">7</text></g>
+        <g class="days mono"><text x="48" y="222">Mon</text><text x="126" y="222">Tue</text><text x="204" y="222">Wed</text><text x="282" y="222">Thu</text><text x="360" y="222">Fri</text><text x="438" y="222">Sat</text><text x="516" y="222">Sun</text></g>
+      </svg>
+      <figcaption id="chart-cap" class="mono">Illustrative: a modelled week, not customer data. Merge rate 86%, same week.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- 09 Labs -->
+<section class="labs" id="labs" aria-labelledby="labs-h" data-scene="labs">
+  <div class="wrap">
+    <p class="label"><span class="num">09</span> Labs</p>
+    <h2 id="labs-h" class="display">What else is in the box.</h2>
+    <p class="lede">Off by default, compiled and tested. An admin switches each one on in Settings, or holds it on with <code>--labs &lt;id&gt;</code>.</p>
+    <ul class="bento">
+      <li class="tile tile-bridge">
+        <svg class="deck" viewBox="0 0 400 220" aria-hidden="true">
+          <g class="deck-floor"><path d="M200 20 380 120 200 210 20 120Z"/></g>
+          <g class="deck-grid"><path d="M110 70 290 170M155 45 335 145M245 45 65 145M290 70 110 170"/></g>
+          <g class="deck-stations"><path d="M150 92l20 11-20 11-20-11Z"/><path d="M230 92l20 11-20 11-20-11Z"/><path d="M190 136l20 11-20 11-20-11Z"/><path d="M270 136l20 11-20 11-20-11Z"/><path d="M110 136l20 11-20 11-20-11Z"/></g>
+          <g class="deck-units"><path class="u-needs" d="M150 80l5 5-5 5-5-5Z"/><circle class="u-review" cx="230" cy="85" r="4"/><path class="u-work" d="M184 128h12v3h-12Z"/><path class="u-work" d="M264 128h12v3h-12Z"/><path class="u-work" d="M104 128h12v3h-12Z"/></g>
+          <path class="deck-sweep" d="M20 120 200 210"/>
+        </svg>
+        <h3>The Bridge</h3><p>A 3D starship bridge where agents sit at stations, with a mascot, sound and a lounge. For a team's wall screen.</p><code class="mono">--labs bridge,ambience</code>
+      </li>
+      <li class="tile"><span class="switch" aria-hidden="true"><i></i></span><h3>Goals and timeline</h3><p>Mission control with goals, milestones and a timeline of what every agent did.</p><code class="mono">--labs ops</code></li>
+      <li class="tile"><span class="switch" aria-hidden="true"><i></i></span><h3>GitHub boards and queue</h3><p>Issues, pull requests and a task queue that hands the next issue to a free agent.</p><code class="mono">--labs boards</code></li>
+      <li class="tile"><span class="switch" aria-hidden="true"><i></i></span><h3>Voice</h3><p>Voice chat, screen sharing and dictation into any prompt box.</p><code class="mono">--labs voice</code></li>
+      <li class="tile"><span class="switch" aria-hidden="true"><i></i></span><h3>Meetings</h3><p>A review bay and a planning whiteboard on any issue or pull request.</p><code class="mono">--labs meetings</code></li>
+      <li class="tile tile-film">
+        <div class="film" id="film">
+          <picture><source media="(max-width: 600px)" srcset="media/poster-9x16.webp"><img src="media/poster-16x9.webp" width="1280" height="720" alt="Poster of the 30 second film: paid only when a human merges." loading="lazy" decoding="async"></picture>
+          <button class="film-play" type="button" data-watch aria-label="Watch the 30 second film"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 4.5v15L19.5 12Z"/></svg></button>
+        </div>
+        <p class="mono small">The 30 second film, drawn in code. Labs and demo data.</p>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- 10 Proof of Merge -->
+<section class="proof" id="proof" aria-labelledby="proof-h" data-scene="proof">
+  <div class="wrap">
+    <p class="label"><span class="num">10</span> Proof of Merge <span class="badge mono">Testnet only</span></p>
+    <h2 id="proof-h" class="display">Paid only when a <span class="sig">human</span> merges.</h2>
+    <p class="lede">A lab for paying agents by outcome: escrowed devnet USDC released only on a human merge, Base Sepolia attestations, ERC-8004 reputation, x402 pay-per-task, and a GitHub Action to fund an issue. Testnets only, test funds only.</p>
+  </div>
+  <div class="wrap proof-grid">
+    <figure class="escrow" aria-label="An escrow released by a merge, testnet">
+      <svg viewBox="0 0 320 220" aria-hidden="true">
+        <rect class="box" x="70" y="96" width="180" height="100" rx="4"/>
+        <path class="lid" d="M70 96h180"/>
+        <g class="lock"><rect x="146" y="128" width="28" height="22" rx="2"/><path d="M151 128v-8a9 9 0 0 1 18 0v8"/></g>
+        <g class="coin"><circle cx="160" cy="60" r="22"/><text x="160" y="64" class="mono">USDC</text></g>
+      </svg>
+      <figcaption class="mono"><span class="chip">devnet, test USDC</span> Test USDC in escrow, released on a human merge</figcaption>
+    </figure>
+    <dl class="receipt mono">
+      <div><dt>Release tx</dt><dd><a href="https://explorer.solana.com/tx/2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc?cluster=devnet" rel="noopener noreferrer">2rPSWQv7...ZtUc</a> <span class="chip">Solana devnet</span></dd></div>
+      <div><dt>Escrow program</dt><dd><a href="https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet" rel="noopener noreferrer">JAH6Zioo...yVQs6</a> <span class="chip">Solana devnet</span></dd></div>
+      <div><dt>EAS schema</dt><dd><a href="https://base-sepolia.easscan.org/schema/view/0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900" rel="noopener noreferrer">0x368e9023...a900</a> <span class="chip">Base Sepolia</span></dd></div>
+      <div class="settled"><dt>Status</dt><dd><i class="glyph g-check"></i>settled on devnet</dd></div>
+    </dl>
+  </div>
+</section>
+
+<!-- 11 Teams and the ask -->
+<section class="teams" id="teams" aria-labelledby="teams-h" data-scene="teams">
+  <div class="wrap">
+    <p class="label"><span class="num">11</span> Teams</p>
+    <h2 id="teams-h" class="display">Free for you. Paid for the team.</h2>
+  </div>
+  <div class="wrap plans">
+    <div class="plan">
+      <h3>Free <span class="mono">MIT</span></h3>
+      <p>For one engineer, open source, forever.</p>
+      <ul><li>The inbox across every agent CLI</li><li>Answer, review and merge, with or without GitHub</li><li>The signed record and Numbers</li><li>Your laptop or the team's dev box</li></ul>
+    </div>
+    <div class="plan plan-team">
+      <h3>Team <span class="mono">planned</span></h3>
+      <p>For teams running agents across several repositories.</p>
+      <ul><li>A shared inbox everyone sees</li><li>Questions routed to whoever owns them</li><li>Single sign-on and an audit trail</li><li>Team wait-time reporting</li></ul>
+    </div>
+  </div>
+  <div class="wrap ask">
+    <div class="ask-copy">
+      <h3>Five design partners</h3>
+      <p>No users yet, honestly. We are signing five design partners who run five or more agents a day.</p>
+      <ol class="seats" aria-label="Design partner seats, none filled"><li></li><li></li><li></li><li></li><li></li></ol>
+    </div>
+    <form class="waitlist" id="waitlist-form" data-endpoint="" novalidate>
+      <label for="email">Work email</label>
+      <div class="join">
+        <input id="email" name="email" type="email" autocomplete="email" required>
+        <button class="btn primary" type="submit">Join the waitlist</button>
+      </div>
+      <p class="note">We only email you about the team tier, and delete your address if you ask. No newsletter, no tracking.</p>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+  <div class="wrap">
+    <dl class="investors">
+      <div><dt class="mono">The wedge</dt><dd>Human wait time across vendors. Nobody else measures it.</dd></div>
+      <div><dt class="mono">The model</dt><dd>Open core: free for one engineer, paid for the team.</dd></div>
+      <div><dt class="mono">The ask</dt><dd>Five design partners now, then a pre-seed round to reach the first fifty teams.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<!-- 12 Footer -->
+<footer class="end" id="end" aria-labelledby="end-h" data-scene="end">
+  <div class="wrap">
+    <div class="calm">
+      <i class="glyph g-check"></i>
+      <p id="end-h">Nothing waits on you.</p>
+      <span class="mono">0:00</span>
+    </div>
+    <svg class="giant" viewBox="0 0 1200 150" aria-hidden="true"><text x="0" y="128"><tspan class="wm-lead">{{lead}}</tspan><tspan class="wm-muted">{{muted}}</tspan></text></svg>
+    <nav class="foot-links" aria-label="More">
+      <a data-link="repo" href="https://github.com/zbagdzevicius/ugcarmy" rel="noopener noreferrer">Source</a>
+      <a href="https://github.com/zbagdzevicius/ugcarmy#readme" data-link="repo-docs" rel="noopener noreferrer">Docs</a>
+      <a href="#labs">Labs</a>
+      <a href="#teams">Teams</a>
+    </nav>
+    <p class="credit">{{name}} is open source under the MIT license. Built on <a href="https://github.com/AgentSystemLabs/agent-office" rel="noopener noreferrer">agent-office</a> by webdevcody / AgentSystemLabs, MIT; not affiliated with or endorsed by its authors.</p>
+    <p class="credit">This page loads nothing from other sites, sets no cookies and has no analytics. Fonts: Archivo and JetBrains Mono, SIL Open Font License.</p>
+  </div>
+</footer>
+</main>
+
+<dialog class="watch" id="watch" aria-labelledby="watch-h">
+  <div class="watch-in">
+    <h2 id="watch-h" class="sr">The 30 second film</h2>
+    <button class="close" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    <video id="watch-video" controls playsinline preload="none" width="1280" height="720" poster="media/poster-16x9.webp">
+      <source src="media/film-9x16.mp4" type="video/mp4" media="(max-width: 600px) and (orientation: portrait)">
+      <source src="media/film-16x9.webm" type="video/webm">
+      <source src="media/film-16x9.mp4" type="video/mp4">
+    </video>
+    <p class="mono small">The film is drawn frame by frame in code. Its rows are demo data; its chain values are real testnet artifacts.</p>
+  </div>
+</dialog>
+</body>
+</html>
