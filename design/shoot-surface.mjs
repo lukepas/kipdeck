@@ -2,8 +2,7 @@
 // Numbers window and the landing page, at 1440x900 and 390x844. Starts the built office with `--demo`
 // (its scripted agents and throwaway repository, every task marked demo) on a spare port with a
 // throwaway HOME and password, waits until Needs you and To review have something in them, and shoots.
-// The landing page is opened from disk (site/index.html, or business/landing/index.html in a build
-// from before the site existed).
+// The landing page is built from site/landing into a temporary folder and served on 127.0.0.1:4695.
 //
 //   npm run build && node design/shoot-surface.mjs stage-6/after [only,these,shots]
 //   SHOOT_ROOT=<a built checkout> node design/shoot-surface.mjs stage-6/before
@@ -11,10 +10,10 @@
 // SHOOT_3D=1 also shoots the Bridge view's Settings (slow on SwiftShader). A shot whose window doesn't
 // exist in that build is skipped with a note. Always stops the office at the end.
 import { spawn } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync } from 'node:fs';
+import { mkdirSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 const HERE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ROOT = path.resolve(process.env.SHOOT_ROOT ?? HERE);
@@ -184,9 +183,13 @@ try {
     await ctx.close();
   }
 
-  // ---- The landing page, from disk ------------------------------------------------------------
-  const site = [path.join(ROOT, 'site', 'index.html'), path.join(ROOT, 'business', 'landing', 'index.html')].find((f) => existsSync(f));
-  if (site) {
+  // ---- The landing page, built and served on 127.0.0.1:4695 --------------------------------------
+  const { buildSite } = await import('../site/build.mjs');
+  const { serve } = await import('../site/serve.mjs');
+  const siteDir = mkdtempSync(path.join(tmpdir(), 'site-'));
+  await buildSite({ outDir: siteDir, card: false, env: {} });
+  const site = await serve(siteDir, 4695);
+  {
     for (const [vp, tag] of [
       [{ width: 1440, height: 900 }, 'desktop'],
       [{ width: 390, height: 844 }, 'phone'],
@@ -194,12 +197,13 @@ try {
       const ctx = await browser.newContext({ viewport: vp, colorScheme: 'light' });
       const page = await ctx.newPage();
       page.on('pageerror', (e) => errors.push(e.message));
-      await page.goto(pathToFileURL(site).href);
-      await wait(800);
+      await page.goto(site.url);
+      await wait(2400);
       await shot(page, `landing-${tag}`);
       await shot(page, `landing-full-${tag}`, { fullPage: true });
       await ctx.close();
     }
+    site.server.close();
   }
 } catch (err) {
   console.error('shoot failed:', err.message);
