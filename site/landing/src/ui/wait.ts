@@ -37,9 +37,9 @@ export const wait = {
   },
 };
 
-/** m:ss, or mm:ss with `pad`. */
-export function clock(s: number, pad = false): string {
+/** m:ss, the one clock format on the page. */
+export function clock(s: number): string {
   const m = Math.floor(s / 60);
   const r = Math.floor(s % 60);
-  return `${pad && m < 10 ? '0' : ''}${m}:${r < 10 ? '0' : ''}${r}`;
+  return `${m}:${r < 10 ? '0' : ''}${r}`;
 }

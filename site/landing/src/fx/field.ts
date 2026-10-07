@@ -3,8 +3,9 @@
 // depths. When an agent waits on the visitor, one unit in the Codex lane stops dead and lights
 // Signal orange, with a hairline to the row that is waiting: the background tells the same story as
 // the inbox. On load every unit is launched from the Formation mark in the top bar and flies out
-// to its lane: the agents leave the mark and go to work. Everything (position, lane, depth, state,
-// launch time) lives in typed arrays; a frame allocates nothing.
+// to its lane: the agents leave the mark and go to work. No unit is drawn over the words: the
+// headline, the lede, the command, the buttons and the facts each keep a clear box around them.
+// Everything (position, lane, depth, state, launch time) lives in typed arrays; a frame allocates nothing.
 import { every } from '../engine/loop';
 import { env, tier, token } from '../engine/env';
 import { governor } from '../engine/governor';
@@ -36,7 +37,10 @@ const WORKING = 0, BLOCKED = 1;
 /** Vertical bands of the fade behind the copy (one stroke per band and depth). */
 const BANDS = 6;
 
-export function mountField(canvas: HTMLCanvasElement): FieldHandle {
+/** Space kept clear around each block of text (px). */
+const CLEAR = 14;
+
+export function mountField(canvas: HTMLCanvasElement, clear: Element[] = []): FieldHandle {
   const ctx = canvas.getContext('2d', { alpha: true })!;
   // Units by device: a laptop draws 420; a phone 160; Save-Data, low memory or less motion 80.
   const max = tier === 'min' || env.saveData || env.memory <= 4 ? 80 : env.phone ? 160 : 420;
@@ -53,6 +57,8 @@ export function mountField(canvas: HTMLCanvasElement): FieldHandle {
   // Where each unit is drawn this frame (filled by the move pass, read by the draw pass).
   const px = new Float32Array(max), py = new Float32Array(max), pax = new Float32Array(max), pay = new Float32Array(max);
   const pband = new Uint8Array(max), pvis = new Uint8Array(max);
+  // The boxes kept clear (canvas coordinates, padded), read in the frame's read pass: x0, y0, x1, y1.
+  const holes = new Float32Array(clear.length * 4);
 
   let w = 0, h = 0, dpr = 1;
   let colors = { dot: '', unit: '', signal: '' };
@@ -209,6 +215,12 @@ export function mountField(canvas: HTMLCanvasElement): FieldHandle {
         const d = Math.hypot(dx, dy) || 1;
         ax = dx / d; ay = dy / d;
       }
+      for (let k = 0; k < holes.length; k += 4) {
+        if (x > holes[k] && x < holes[k + 2] && y > holes[k + 1] && y < holes[k + 3]) {
+          pvis[i] = 0;
+          break;
+        }
+      }
       px[i] = x; py[i] = y; pax[i] = ax; pay[i] = ay;
       pband[i] = Math.max(0, Math.min(BANDS - 1, Math.floor((x / w) * BANDS)));
     }
@@ -290,6 +302,13 @@ export function mountField(canvas: HTMLCanvasElement): FieldHandle {
       const r = canvas.getBoundingClientRect();
       canvasTop = r.top;
       canvasLeft = r.left;
+      clear.forEach((el, k) => {
+        const b = el.getBoundingClientRect();
+        holes[k * 4] = b.left - r.left - CLEAR;
+        holes[k * 4 + 1] = b.top - r.top - CLEAR;
+        holes[k * 4 + 2] = b.right - r.left + CLEAR;
+        holes[k * 4 + 3] = b.bottom - r.top + CLEAR;
+      });
       gov.read();
       if (rescale) {
         rescale = false;

@@ -1,8 +1,6 @@
 // 08 Numbers: the metric a team lead asks for. As the chart rises into view its seven columns grow
 // from the floor, then a cursor walks the week day by day and the big numeral rolls to that day's
-// median wait (23 on Monday down to 7 on Sunday, a modelled week, labelled illustrative). When it
-// reaches Sunday a sparkline of the week docks under the top bar's pulse, beside the live wait: the
-// same number, kept in view for the rest of the page.
+// median wait (23 on Monday down to 7 on Sunday, a modelled week, labelled illustrative).
 import { env } from '../engine/env';
 import { drive, ease, span, setter } from '../engine/drive';
 import { odometer } from '../engine/odometer';
@@ -17,11 +15,9 @@ export function mountNumbers(section: HTMLElement) {
   const vals = [...chart.querySelectorAll<SVGTextElement>('.vals text')];
   const big = chart.querySelector<HTMLElement>('.big-num b')!;
   const day = chart.querySelector<HTMLElement>('.big-num span')!;
-  const pulse = document.querySelector<HTMLElement>('.pulse');
   const setBig = odometer(big);
   const set = setter();
   chart.classList.add('staged');
-  let docked = false;
   let shownDay = -1;
 
   drive(chart, (p) => {
@@ -37,10 +33,6 @@ export function mountNumbers(section: HTMLElement) {
       day.textContent = `min median wait, ${DAYS[d]}`;
       cols.forEach((c, i) => c.classList.toggle('cur', i === d));
       vals.forEach((v, i) => v.classList.toggle('cur', i === d));
-    }
-    if (!docked && p >= 0.98) {
-      docked = true;
-      pulse?.classList.add('spark-on');
     }
   }, { fallback: 'view', viewEnd: 0.3 });
 }
