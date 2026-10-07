@@ -134,6 +134,14 @@ const saved = { ...process.env };
 let port = 0;
 let office: { shutdown(): void } | undefined;
 let cfg: import('../src/server/config.js').Config | undefined;
+/** What the demo's director said went wrong (its console.error lines), so a merge that fails fails the test. */
+const errors: string[] = [];
+const consoleError = console.error;
+console.error = (...args: unknown[]) => {
+  const line = args.map(String).join(' ');
+  if (/^mergeline: (demo|couldn't start the demo|the demo)/.test(line)) errors.push(line);
+  consoleError(...args);
+};
 
 before(async () => {
   mkdirSync(pub, { recursive: true });
@@ -191,7 +199,7 @@ function call(p: string, opts: { method?: string; cookie?: string; body?: unknow
   });
 }
 
-test('the hosted demo: a visitor is signed in to watch and can change nothing; the scripted reviewer answers, merges and starts over', { timeout: 90_000 }, async () => {
+test('the hosted demo: a visitor is signed in to watch and can change nothing; the scripted reviewer answers, merges and starts over, and the next round does too', { timeout: 150_000 }, async () => {
   assert.ok(cfg?.demo?.readOnly && cfg.demo.workspace);
   // In by opening it: a cookie, then the home page.
   const first = await call('/');
@@ -278,5 +286,11 @@ test('the hosted demo: a visitor is signed in to watch and can change nothing; t
   await until('the next round', () => cleared > 0 && [...workers.keys()].filter((id) => !firstRound.has(id)).length >= 5, 40_000);
   const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: cfg!.demo!.workspace!.repo, encoding: 'utf8' }).trim();
   assert.equal(head, cfg!.demo!.workspace!.seed, 'back on the first commit');
+  // The second round plays out like the first: the same three changes reach To review and merge, so
+  // a visitor who arrives at any time sees the whole loop (a leftover branch or worktree would stop it).
+  const secondRound = new Set([...workers.keys()].filter((id) => !firstRound.has(id)));
+  await until('the second round in To review', () => [...secondRound].some((id) => workers.get(id)?.status === 'done'), 40_000);
+  await until('three merges in the second round', () => records.filter((r) => r.kind === 'merged' && secondRound.has(r.workerId)).length >= 3, 40_000);
+  assert.deepEqual(errors, [], 'the director logged no error');
   ws.close();
 });

@@ -90,8 +90,9 @@ const inSection = (page, text, section, timeout = 60_000) => row(page, section, 
 
 const { chromium } = await import('playwright-core');
 const local = startOffice(PORT);
-const hosted = startOffice(PORT + 1, ['--read-only']);
-await Promise.all([waitUp(local), waitUp(hosted)]);
+await waitUp(local);
+/** The hosted office is started just before its shots: started with the local one, it had played through several rounds by then and a shot could wait most of one for its row. */
+let hosted;
 const browser = await chromium.launch({ headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const errors = [];
 try {
@@ -164,6 +165,8 @@ try {
   await ctx.close();
 
   // ---- The hosted demo: read only, a scripted reviewer --------------------------------------
+  hosted = startOffice(PORT + 1, ['--read-only']);
+  await waitUp(hosted);
   for (const [vp, tag] of [
     [{ width: 1440, height: 900 }, 'desktop'],
     [{ width: 390, height: 844 }, 'phone'],
@@ -174,7 +177,8 @@ try {
     // No password: opening it signs you in to watch.
     await hp.goto(`${hosted.base}/`);
     await hp.waitForFunction(() => (window.__lite?.store.roster.length ?? 0) >= 5, null, { timeout: 30_000 });
-    await inSection(hp, 'Add rate limiting', 'review');
+    // A round is about 85 s (script.ts: the last merge, then HOLD_S), so up to two of them for the row.
+    await inSection(hp, 'Add rate limiting', 'review', 180_000);
     await wait(1500);
     await shot(hp, `hosted-${tag}`);
     if (tag === 'desktop') {
@@ -195,6 +199,12 @@ try {
   await browser.close().catch(() => {});
 }
 if (errors.length) console.log('page errors:', errors.join(' | '));
+// The director logs a failed answer or merge; the hosted demo must never have one.
+const directorErrors = offices.flatMap((o) => o.log.split('\n').filter((l) => /mergeline: (demo|couldn't start the demo)/.test(l)));
+if (directorErrors.length) {
+  console.error('demo director errors:\n' + directorErrors.join('\n'));
+  process.exitCode = 1;
+}
 stopAll();
 await wait(1500);
 process.exit(process.exitCode ?? 0);
