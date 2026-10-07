@@ -90,7 +90,7 @@ button.row:hover .row-btn { background: var(--signal); color: var(--on-signal); 
 /* The question card, with the raw terminal line it came from above it. */
 .qcard { width: min(440px, 100%); }
 .qcard .term { margin: 0 0 10px; padding: 9px 12px; background: var(--code-bg); color: var(--term-text); border-radius: var(--radius); font-size: 12.5px; border: 1px solid var(--line); }
-.qcard .term .dim { color: #5f6c7a; }
+.qcard .term .dim { color: #8a97a5; }
 .qcard-in { position: relative; padding: 16px 16px 16px 19px; background: var(--surface-1); border: 1px solid var(--line-strong); border-radius: var(--radius); box-shadow: var(--shadow-lift); }
 .qcard-in::before { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; background: var(--signal); border-radius: var(--radius) 0 0 var(--radius); }
 .qcard-k { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--signal); }

@@ -9,6 +9,8 @@ export function watchFilm() {
   document.querySelectorAll<HTMLElement>('[data-watch]').forEach((btn) =>
     btn.addEventListener('click', () => {
       opener = btn;
+      // The poster is fetched only now, so the first load never pays for a film nobody opened.
+      if (!video.poster && video.dataset.poster) video.poster = video.dataset.poster;
       dialog.showModal();
       dialog.querySelector<HTMLElement>('[data-close]')?.focus();
       video.muted = true;

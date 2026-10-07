@@ -87,10 +87,10 @@ test('the copy is plain ASCII: no dash or quote glyphs, no ellipsis character', 
 test('one name per build: each brand says its own name and never the other', () => {
   const a = texts(main.dir);
   const b = texts(ugc.dir);
-  assert.match(main.html, /<title>Mergeline<\/title>/);
+  assert.match(main.html, /<title>Mergeline: the inbox for your AI coding agents<\/title>/);
   assert.match(main.html, /<meta property="og:title" content="Mergeline: /);
   assert.doesNotMatch(a, /ugc army|ugc-army/i);
-  assert.match(ugc.html, /<title>UGC Army<\/title>/);
+  assert.match(ugc.html, /<title>UGC Army: the inbox for your AI coding agents<\/title>/);
   assert.match(ugc.html, /npx ugc-army/);
   assert.doesNotMatch(b, /mergeline/i);
   assert.doesNotMatch(main.html + ugc.html, /\{\{\w+\}\}/, 'no brand token left unfilled');
@@ -150,7 +150,7 @@ test('every staged surface is labelled: demo data, measured or illustrative; eve
 
 test('the first screen: the sentence, the from-source command, Try the demo and Watch; nothing loaded from elsewhere', { skip: why || false }, async (t) => {
   const { page, requests, errors } = await open(t);
-  assert.equal(await page.title(), 'Mergeline');
+  assert.equal(await page.title(), 'Mergeline: the inbox for your AI coding agents');
   assert.equal((await page.locator('h1').innerText()).replace(/\s+/g, ' ').replace(/\s*\d\d:\d\d\s*/, ' ').trim(), 'Your agents are waiting on you.');
   for (const sel of ['.cmd[data-unpublished] .cmd-text', '[data-link="demo"]', '.cta [data-watch]', '.unpublished', '#mini-inbox']) {
     const box = await page.locator(sel).first().boundingBox();

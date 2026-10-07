@@ -7,7 +7,27 @@ import { brandFor, type Brand } from './brand.ts';
 
 const here = import.meta.dirname;
 
-/** {{name}}, {{tagline}}, {{lead}}, {{muted}}, {{pkg}}, {{folder}}, {{ogTitle}}, {{ogDescription}} in the HTML. */
+/** The page's structured data: free, open source software, with no ratings or reviews (it has none). */
+export function jsonLd(brand: Brand): string {
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: brand.name,
+    description: brand.ogDescription,
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'macOS, Linux, Windows',
+    softwareRequirements: 'Node.js 20 or later, git, and one agent CLI (Claude Code, Codex or Cursor)',
+    license: 'https://opensource.org/licenses/MIT',
+    isAccessibleForFree: true,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    codeRepository: 'https://github.com/zbagdzevicius/ugcarmy',
+    image: 'og.png',
+  };
+  // No '<' can close the script element early.
+  return JSON.stringify(data).replace(/</g, '\\u003c');
+}
+
+/** {{name}}, {{tagline}}, {{lead}}, {{muted}}, {{pkg}}, {{folder}}, {{ogTitle}}, {{ogDescription}}, {{ogImageAlt}} and {{jsonld}} in the HTML. */
 function brandHtml(brand: Brand): Plugin {
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   const values: Record<string, string> = {
@@ -19,6 +39,9 @@ function brandHtml(brand: Brand): Plugin {
     folder: brand.folder,
     ogTitle: brand.ogTitle,
     ogDescription: brand.ogDescription,
+    // The tab and search result title: the name, then what it is ("Mergeline: the inbox for your AI coding agents").
+    title: `${brand.name}: ${brand.tagline.charAt(0).toLowerCase()}${brand.tagline.slice(1).replace(/\.$/, '')}`,
+    ogImageAlt: `${brand.name}: your agents are waiting on you. An inbox row reads waiting 23:04.`,
   };
   return {
     name: 'landing-brand',
@@ -26,7 +49,8 @@ function brandHtml(brand: Brand): Plugin {
       order: 'pre',
       handler(html) {
         const out = html.replace(/\{\{(\w+)\}\}/g, (m, key: string) => {
-          if (!(key in values)) throw new Error(`index.html asks for {{${key}}}, which brand.ts does not have`);
+          if (!(key in values) && key !== 'jsonld') throw new Error(`index.html asks for {{${key}}}, which brand.ts does not have`);
+          if (key === 'jsonld') return jsonLd(brand);
           return esc(values[key]);
         });
         return out;

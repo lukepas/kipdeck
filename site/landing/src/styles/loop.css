@@ -51,7 +51,7 @@
 .loop .staged .term-layer { display: block; margin: 0; padding: 16px 18px; background: var(--code-bg); color: var(--term-text); font-size: 12.5px; line-height: 1.75; white-space: pre-wrap; overflow: hidden; }
 .term-layer .tl { display: inline-block; }
 .term-layer b { color: #e8ecef; font-weight: 600; }
-.term-layer .dim, .term-layer .tl.dim { color: #6f7c8a; }
+.term-layer .dim, .term-layer .tl.dim { color: #8a97a5; }
 .term-layer .q { color: #ff6a1a; font-weight: 700; }
 .term-layer .q-line { color: #e8ecef; }
 .term-layer .q-o { color: #e8ecef; }

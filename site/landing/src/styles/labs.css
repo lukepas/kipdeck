@@ -34,15 +34,16 @@
 .station:nth-child(4) { --fy: 0px; --tx: 21px; --ty: -139px; --ta: 6deg; }
 .station:nth-child(5) { --fy: 46px; --tx: 123px; --ty: -98px; --ta: 38deg; }
 .station:nth-child(6) { --fy: 92px; --tx: 188px; --ty: -8px; --ta: 70deg; }
-/* A unit seated at each station, turned to face you whatever the deck's angle. */
-.unit {
+/* A unit seated at each station, turned to face you whatever the deck's angle. Scoped to the deck:
+   the measured counters in 06 have a .unit of their own (s, clicks). */
+.deck3d .unit {
   position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px; background: var(--working);
   -webkit-mask: var(--g-working) center / contain no-repeat; mask: var(--g-working) center / contain no-repeat;
   opacity: var(--lift);
   transform: translateZ(calc(var(--lift) * 30px)) rotateZ(calc(var(--ta) * -1 * var(--lift))) rotateZ(calc(34deg * var(--lift))) rotateX(calc(-56deg * var(--lift))) scale(calc(.4 + .9 * var(--lift)));
 }
-.s-needs .unit { background: var(--signal); -webkit-mask-image: var(--g-needs-you); mask-image: var(--g-needs-you); filter: drop-shadow(0 0 6px var(--signal)); }
-.s-review .unit { background: var(--review); -webkit-mask-image: var(--g-review); mask-image: var(--g-review); }
+.deck3d .s-needs .unit { background: var(--signal); -webkit-mask-image: var(--g-needs-you); mask-image: var(--g-needs-you); filter: drop-shadow(0 0 6px var(--signal)); }
+.deck3d .s-review .unit { background: var(--review); -webkit-mask-image: var(--g-review); mask-image: var(--g-review); }
 .sweep { position: absolute; left: 50%; top: 50%; width: 220px; height: 1.5px; margin-top: -1px; transform-origin: 0 50%; background: linear-gradient(90deg, var(--ship), transparent); opacity: 0; transform: translateZ(1px); }
 .deck3d.live .sweep { opacity: .8; animation: radar 5s linear infinite; }
 @keyframes radar { from { transform: translateZ(1px) rotate(0deg); } to { transform: translateZ(1px) rotate(360deg); } }
