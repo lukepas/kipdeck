@@ -31,8 +31,9 @@
 .cmd-prompt { color: #5f6c7a; font-family: var(--font-mono); }
 .cmd-text { flex: 1; min-width: 0; padding: 6px 0; font-size: 13px; line-height: 1.55; white-space: normal; overflow-wrap: anywhere; color: #e8ecef; }
 .cmd-text::-webkit-scrollbar { display: none; }
-.copy { flex: none; height: 38px; padding: 0 14px; border: 1px solid #3a4756; border-radius: 3px; background: #141b23; color: #e8ecef; font: 500 13px/1 var(--font-ui); cursor: pointer; transition: border-color var(--t-ui) var(--ease), background-color var(--t-ui) var(--ease); }
+.copy { flex: none; height: 38px; min-width: 88px; padding: 0 14px; text-align: center; border: 1px solid #3a4756; border-radius: 3px; background: #141b23; color: #e8ecef; font: 500 13px/1 var(--font-ui); cursor: pointer; transition: border-color var(--t-ui) var(--ease), background-color var(--t-ui) var(--ease); }
 .copy:hover { border-color: #8a97a5; }
+/* min-width holds the button at its widest label (Select it), so Copy turning into Copied never rewraps the command. */
 .copy.done { border-color: var(--settled); color: #3ddc97; }
 .unpublished { margin: 10px 0 0; font-size: 12.5px; }
 .unpublished a { color: var(--text); }

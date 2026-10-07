@@ -56,7 +56,8 @@
 .term-layer .q-line { color: #e8ecef; }
 .term-layer .q-o { color: #e8ecef; }
 .term-layer .after { opacity: 0; }
-.ch { display: inline-block; white-space: pre; will-change: transform; }
+.ch { display: inline-block; white-space: pre; }
+/* No will-change on the letters: a layer per letter made every frame's commit slow. They move inside the app's own paint box. */
 .loop .staged .pane-body .qcard { align-self: end; z-index: 2; margin: 0 18px 18px; max-width: 480px; }
 .loop .staged .qcard-in { background: color-mix(in srgb, var(--surface-1) calc(var(--bg, 1) * 100%), transparent); border-color: transparent; box-shadow: 0 30px 60px -24px rgb(0 0 0 / calc(var(--bg, 1) * .7)); }
 .loop .staged .qcard-in::before { opacity: var(--bg, 1); }

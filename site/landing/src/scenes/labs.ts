@@ -2,10 +2,12 @@
 // the page, tilt back and spread into consoles around a deck: the same agents, now at stations,
 // each with a unit seated at it that keeps its status glyph (the one that needs you glows Signal).
 // A ship-cyan sweep starts once the deck has settled. On a capable device the deck then hands over
-// to a small three.js bridge (loaded only now, only here); elsewhere the CSS deck stays. The other
+// to a small three.js bridge, drawn in a worker so it never blocks a scroll (fx/bridge.ts; loaded only
+// now, only here); elsewhere the CSS deck stays. The other
 // lab tiles switch on one after another like switches, each powering up with a scanline.
 import { env, tier } from '../engine/env';
 import { drive, ease } from '../engine/drive';
+import { canOffscreen, mountBridge } from '../fx/bridge';
 
 export function mountLabs(section: HTMLElement) {
   if (env.reduced) return;
@@ -25,9 +27,8 @@ export function mountLabs(section: HTMLElement) {
       deck.classList.toggle('live', live);
       if (live && !gl && canBridge()) {
         gl = true;
-        void import('../fx/bridge').then((m) => m.mountBridge(deck)).catch(() => {
-          // No WebGL after all: the CSS deck stays.
-        });
+        // No worker canvas or no WebGL after all: the CSS deck stays.
+        mountBridge(deck);
       }
     }
   }, { fallback: 'view', viewEnd: 0.32 });
@@ -43,5 +44,5 @@ export function mountLabs(section: HTMLElement) {
 
 function canBridge(): boolean {
   if (tier !== 'full' || env.saveData || env.memory < 4) return false;
-  return typeof WebGLRenderingContext !== 'undefined';
+  return typeof WebGLRenderingContext !== 'undefined' && canOffscreen();
 }

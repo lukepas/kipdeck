@@ -42,6 +42,8 @@ export default defineConfig(() => {
     base: './',
     publicDir: resolve(here, 'public'),
     plugins: [brandHtml(brand)],
+    // The Labs bridge's worker imports three.js as a module.
+    worker: { format: 'es' as const },
     server: { port: 4691, fs: { allow: [resolve(here, '../..')] } },
     build: {
       outDir: process.env.MERGELINE_SITE_OUT ? resolve(process.env.MERGELINE_SITE_OUT) : resolve(here, '../../dist/site'),
@@ -50,7 +52,7 @@ export default defineConfig(() => {
       modulePreload: { polyfill: false },
       assetsInlineLimit: 0,
       reportCompressedSize: false,
-      // The one big chunk is the Labs tile's three.js bridge, loaded only on demand (fx/bridge.ts).
+      // The one big chunk is the Labs tile's three.js bridge, a worker loaded only on demand (fx/bridge.ts).
       chunkSizeWarningLimit: 600,
     },
   };
