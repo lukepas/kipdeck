@@ -71,9 +71,14 @@ async function stills(name, viewport, scheme, reduced = false) {
 }
 
 /** LCP and CLS on a fresh load, plus frame times over a scripted scroll through the whole page. */
-async function vitals(viewport) {
+async function vitals(viewport, cpu = 1) {
   const ctx = await context(viewport, 'dark');
   const page = await ctx.newPage();
+  if (cpu > 1) {
+    const cdp = await ctx.newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: cpu });
+    await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 40, downloadThroughput: (10 * 1024 * 1024) / 8, uploadThroughput: (5 * 1024 * 1024) / 8 });
+  }
   await page.addInitScript(() => {
     window.__lcp = 0;
     window.__cls = 0;
@@ -145,6 +150,7 @@ try {
   report.reduced = await stills('reduced-dark', { width: 1440, height: 900 }, 'dark', true);
   report.metrics.desktop = await vitals({ width: 1440, height: 900 });
   report.metrics.phone = await vitals({ width: 390, height: 844 });
+  report.metrics.phoneThrottled = await vitals({ width: 390, height: 844 }, 4);
   if (clip) report.clip = await scrollClip('desktop', { width: 1440, height: 900 });
 } finally {
   await browser.close();
