@@ -30,6 +30,7 @@ import type { Showcase } from '../showcase/service.js';
 import type { Labs } from '../labs.js';
 import type { Telemetry } from '../telemetry.js';
 import type { ShipLog } from '../shiplog.js';
+import type { DemoDirector } from '../demo/director.js';
 import type { AgentProvider, FloorInfo, Me, Reminder, ReminderSnooze, ReviewPull, RosterEntry, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
 import type { Client } from './client.js';
 import type { Spot } from './input.js';
@@ -108,6 +109,8 @@ export interface LateServices {
   reputationIndex?: ReputationIndex;
   /** The public showcase at /pom/, off until an admin turns it on (see showcase/service.ts). */
   showcase: Showcase;
+  /** With --demo: seats the scripted agents and, in the read-only demo, plays the reviewer (see demo/director.ts). */
+  demo?: DemoDirector;
 }
 
 /** Sending to browsers (office/messaging.ts). */

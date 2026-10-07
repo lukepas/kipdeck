@@ -7,6 +7,7 @@ import type { FloorInfo, FloorView, ProjectsDirState } from './floors.js';
 import type { LeaveOnMergeState, MachineState, NotifyState, PromptsState, UpgradeState } from './settings.js';
 import type { PlanLimits, UsageState } from './usage.js';
 import type { LabsState } from '../labs.js';
+import type { DemoInfo } from '../demo.js';
 
 /** The issue on a card someone carries around the floor (see PeerInfo.carrying). */
 export interface CarriedIssue {
@@ -126,6 +127,8 @@ export type PresenceServerMsg =
       reminders: Reminder[];
       /** Your account was last seen this long ago (ms since epoch), when that's longer than AWAY_MS: the digest opens. */
       awaySince?: number;
+      /** The office is the demo (`--demo`, see shared/demo.ts). */
+      demo?: DemoInfo;
     } & FloorView)
   | { t: 'peer.join'; peer: PeerInfo }
   | { t: 'peer.update'; peer: PeerInfo }

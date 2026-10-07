@@ -60,6 +60,17 @@ export class ShipLog {
     }
     return r;
   }
+
+  /** Forgets every record, on disk too: only the hosted demo does, as each round starts over (server/demo). */
+  clear() {
+    this.records = [];
+    if (!this.file) return;
+    try {
+      writeState(this.file, '');
+    } catch {
+      // the next round's records still go after the old ones
+    }
+  }
 }
 
 /** Whether `r` was signed by the key whose public half is `publicKeyPem`, and not changed since. */
