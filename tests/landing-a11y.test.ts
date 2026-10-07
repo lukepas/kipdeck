@@ -212,11 +212,11 @@ test('Copy, Try the demo, Watch, Merge and the waitlist all work from the keyboa
   await page.keyboard.press('Enter');
   await page.waitForFunction(() => /Copied|Select it/.test(document.querySelector('.cmd[data-unpublished] .copy')!.textContent ?? ''));
   await page.waitForFunction(() => (document.getElementById('announce')?.textContent ?? '').length > 0);
-  // Try the demo: Enter shows the demo command and moves focus to its Copy.
+  // Try the demo: Enter copies the demo command and moves focus to its Copy.
   await page.locator('[data-link="demo"]').focus();
   await page.keyboard.press('Enter');
-  assert.equal(await page.locator('#try-demo').isVisible(), true);
   assert.equal(await page.evaluate(() => document.activeElement?.closest('#try-demo') !== null), true);
+  await page.waitForFunction(() => /Copied|Select it/.test(document.querySelector('#try-demo .copy')!.textContent ?? ''));
   // Watch: Enter opens the film, focus lands on Close, Esc closes it and focus comes back.
   await page.locator('.cta [data-watch]').focus();
   await page.keyboard.press('Enter');

@@ -42,9 +42,12 @@
 .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
 .magnetic { will-change: transform; }
 .magnetic .glyph { width: 11px; height: 11px; }
-.demo-cmd { display: none; margin-top: 14px; flex-wrap: wrap; }
-.demo-cmd:target, .demo-cmd.shown { display: flex; }
-.demo-note { flex-basis: 100%; margin: 4px 0 2px; font-size: 12.5px; color: #8a97a5; }
+/* The hero's command is the demo's: Try the demo copies it and lights its frame once. */
+.try { max-width: 620px; }
+.try .cmd { transition: border-color 300ms var(--ease); }
+.try.lit .cmd:not([hidden]) { animation: cmd-lit 1400ms var(--ease-out); }
+@keyframes cmd-lit { 0% { border-color: var(--signal); box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal) 28%, transparent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+.demo-note { margin: 10px 0 0; font-size: 13.5px; color: var(--text); }
 .facts { display: flex; flex-wrap: wrap; gap: 14px 34px; margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
 .facts li { display: flex; flex-direction: column; gap: 2px; }
 .facts b { font-size: 24px; font-weight: 500; color: var(--text); letter-spacing: -.02em; }
@@ -169,6 +172,13 @@ svg.st { overflow: visible; }
   .pane-actions .btn:first-child { display: none; }
   .clock-span { grid-template-columns: auto 1fr auto; }
   .facts { gap: 14px 24px; }
+}
+@media (max-width: 860px) {
+  /* On a phone the two buttons come before the command, so Try the demo sits in the first screen. */
+  .hero-copy > .cta { order: 1; margin-top: 0; margin-bottom: 22px; }
+  .hero-copy > .try { order: 2; }
+  .hero-copy > .facts { order: 3; }
+  .hero .app.mini { order: 4; }
 }
 @media (max-width: 520px) {
   .hero { padding-top: 92px; }

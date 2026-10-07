@@ -14,8 +14,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const OUT = path.join(ROOT, 'dist', 'site');
-/** The repository every link and command on the page points at until MERGELINE_REPO_URL says otherwise. */
-export const DEFAULT_REPO = 'https://github.com/zbagdzevicius/ugcarmy';
+/** The repository a built page points at: the brand's (site/landing/brand.ts), on the html element. */
+export function repoOf(html) {
+  return (/<html\b[^>]*\bdata-repo="([^"]+)"/.exec(html) ?? [])[1] ?? '';
+}
 
 /** The built page with its addresses filled in. Exported for tests/landing.test.ts. */
 export function buildPage(html, env) {
@@ -50,8 +52,16 @@ export function buildPage(html, env) {
     out = out.replaceAll('content="og.png"', `content="${href}og.png"`);
     out = out.replace('"image":"og.png"', `"image":"${href}og.png","url":"${href}"`);
   }
+  // Every link and command that names the brand's repository moves to MERGELINE_REPO_URL.
   const repo = url('MERGELINE_REPO_URL');
-  if (repo) out = out.replaceAll(DEFAULT_REPO, attr(repo.href.replace(/\/$/, '')));
+  const current = repoOf(out);
+  if (repo && current) {
+    const next = repo.href.replace(/\/$/, '').replace(/\.git$/, '');
+    out = out.replaceAll(current, attr(next));
+    // The clone lands in a folder named after the repository, so the command's cd follows it.
+    const slug = (u) => u.split('/').pop();
+    out = out.replaceAll(`cd ${slug(current)} &amp;&amp;`, `cd ${attr(slug(next))} &amp;&amp;`);
+  }
   // Until `npx` works from the registry, the page shows the from-source command and says so (never a
   // command that 404s). Published, the npx command takes its place.
   if (env.MERGELINE_NPM_PUBLISHED === '1') {

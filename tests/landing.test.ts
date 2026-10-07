@@ -5,8 +5,9 @@
 //
 // What it holds the page to: one brand per build and never the other name; nothing loaded from
 // other sites; every staged surface labelled as demo data, measured or illustrative; every chain
-// value marked testnet; the from-source command until the build says npm is published; a first
-// screen that says what it is; a waitlist that sends nothing until the build names an endpoint;
+// value marked testnet; the from-source command until the build says npm is published; one
+// repository per brand, named in brand.ts; a first screen that says what it is and a hero command
+// that runs the demo; a waitlist that sends nothing until the build names an endpoint;
 // a phone without sideways scrolling; both themes; the film's window closing by its x and by Esc;
 // a calm, final state with less motion; and no layout shift.
 import test from 'node:test';
@@ -17,7 +18,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, type Browser } from 'playwright-core';
 // @ts-expect-error a plain .mjs script with no types
-import { buildPage, buildSite, DEFAULT_REPO } from '../site/build.mjs';
+import { buildPage, buildSite, repoOf } from '../site/build.mjs';
 // @ts-expect-error a plain .mjs script with no types
 import { serve } from '../site/serve.mjs';
 
@@ -94,6 +95,12 @@ test('one name per build: each brand says its own name and never the other', () 
   assert.match(ugc.html, /npx ugc-army/);
   assert.doesNotMatch(b, /mergeline/i);
   assert.doesNotMatch(main.html + ugc.html, /\{\{\w+\}\}/, 'no brand token left unfilled');
+  // The repository is the brand's too: a Mergeline build never clones or links the other one.
+  assert.equal(repoOf(main.html), 'https://github.com/zbagdzevicius/mergeline');
+  assert.equal(repoOf(ugc.html), 'https://github.com/zbagdzevicius/ugcarmy');
+  assert.doesNotMatch(a, /ugcarmy/i);
+  assert.match(main.html, /data-copy="git clone https:\/\/github\.com\/zbagdzevicius\/mergeline &amp;&amp; cd mergeline &amp;&amp; npm install &amp;&amp; npm start -- --demo"/);
+  assert.match(main.html, /"codeRepository":"https:\/\/github\.com\/zbagdzevicius\/mergeline"/);
 });
 
 test('every film and poster the page shows is in site/landing/public/media, and the build copies it', () => {
@@ -112,14 +119,14 @@ test('the build fills in the addresses, opens the CSP to the waitlist only, and 
   assert.match(html, /data-endpoint=""/);
   assert.match(html, /connect-src 'none'/);
   assert.match(html, /script-src 'self'; style-src 'self'/);
-  const filled = buildPage(html, { MERGELINE_WAITLIST_URL: 'https://wait.example.eu/api/join', MERGELINE_DEMO_URL: 'https://demo.example.eu/', MERGELINE_REPO_URL: 'https://github.com/example/mergeline' });
+  const filled = buildPage(html, { MERGELINE_WAITLIST_URL: 'https://wait.example.eu/api/join', MERGELINE_DEMO_URL: 'https://demo.example.eu/', MERGELINE_REPO_URL: 'https://github.com/example/agent-inbox' });
   assert.match(filled, /data-endpoint="https:\/\/wait\.example\.eu\/api\/join"/);
   assert.match(filled, /connect-src https:\/\/wait\.example\.eu;/);
   assert.match(filled, /data-link="demo" href="https:\/\/demo\.example\.eu\/" rel="noopener"/);
-  assert.match(filled, /data-link="repo" href="https:\/\/github\.com\/example\/mergeline"/);
-  assert.match(filled, /data-link="repo-run" href="https:\/\/github\.com\/example\/mergeline#from-source"/);
-  assert.match(filled, /data-copy="git clone https:\/\/github\.com\/example\/mergeline mergeline/);
-  assert.ok(!filled.includes(DEFAULT_REPO), 'no link left to the default repository');
+  assert.match(filled, /data-link="repo" href="https:\/\/github\.com\/example\/agent-inbox"/);
+  assert.match(filled, /data-link="repo-run" href="https:\/\/github\.com\/example\/agent-inbox#from-source"/);
+  assert.match(filled, /data-copy="git clone https:\/\/github\.com\/example\/agent-inbox &amp;&amp; cd agent-inbox &amp;&amp;/);
+  assert.ok(!filled.includes(repoOf(html)), 'no link left to the brand repository');
   assert.throws(() => buildPage(html, { MERGELINE_WAITLIST_URL: 'http://wait.example.eu/' }), /must be https/);
   assert.throws(() => buildPage(html, { MERGELINE_DEMO_URL: 'not a url' }), /not a URL/);
 });
@@ -131,7 +138,7 @@ test('until npm is published the page says so and shows the from-source command;
   const published = buildPage(main.html, { MERGELINE_NPM_PUBLISHED: '1' });
   assert.doesNotMatch(published, /data-unpublished|Not on npm yet|git clone/);
   assert.match(published, /<div class="cmd" data-published>/);
-  assert.match(published, /data-copy="npx mergeline"/);
+  assert.match(published, /data-copy="npx mergeline --demo"/);
 });
 
 test('every staged surface is labelled: demo data, measured or illustrative; every chain value says testnet', () => {
@@ -141,7 +148,9 @@ test('every staged surface is labelled: demo data, measured or illustrative; eve
     if (!staged.test(s)) continue;
     assert.match(s, /Demo data|demo data|Illustrative|illustrative|measured/, `section "${s.slice(0, 30)}" labels what it shows`);
   }
-  assert.match(source, /10\.7 s<\/b> to a first merge <span class="tag-inline">measured, scripted demo/);
+  // The measured numbers live in section 06, beside how they were measured.
+  assert.match(source, /aria-label="Measured on the scripted demo">[\s\S]*?data-count="10\.7"/);
+  assert.match(source, /class="footnote mono measured-note">Measured: headless Chromium/);
   const proof = source.slice(source.indexOf('<!-- 10 Proof'), source.indexOf('<!-- 11 '));
   assert.match(proof, /Testnet only/);
   for (const row of proof.match(/<div><dt>[^<]+<\/dt><dd>.*?<\/dd><\/div>/g) ?? []) assert.match(row, /devnet|Sepolia/, row);
@@ -157,11 +166,13 @@ test('the first screen: the sentence, the from-source command, Try the demo and 
     assert.ok(box && box.y < 900, `${sel} is in the first screen`);
   }
   assert.equal(await page.locator('[data-published]:visible').count(), 0);
-  // Without a hosted demo, Try the demo shows the command that runs it.
-  assert.equal(await page.locator('#try-demo').isVisible(), false);
+  // The hero's command is the demo's, and says what the demo is. Without a hosted demo, Try the
+  // demo copies that same command and lights it.
+  assert.match(await page.locator('#try-demo .cmd-text:visible').innerText(), /^git clone .* && npm start -- --demo$/);
+  assert.match(await page.locator('#try-demo').innerText(), /No agent CLI, sign-in or model needed/);
   await page.locator('[data-link="demo"]').click();
-  assert.equal(await page.locator('#try-demo').isVisible(), true);
-  assert.match(await page.locator('#try-demo code:visible').innerText(), /--demo/);
+  assert.equal(await page.locator('#try-demo.lit').count(), 1);
+  await page.waitForFunction(() => /Copied|Select it/.test(document.querySelector('#try-demo .copy')!.textContent ?? ''));
   assert.equal(await page.locator('table.why-table tbody tr').count(), 6);
   assert.deepEqual(outside(requests), []);
   assert.deepEqual(errors, []);

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-repo="{{repo}}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -54,7 +54,7 @@
       <a href="#why">Why</a>
       <a href="#labs">Labs</a>
       <a href="#teams">Teams</a>
-      <a data-link="repo" href="https://github.com/zbagdzevicius/ugcarmy" rel="noopener noreferrer">Source</a>
+      <a data-link="repo" href="{{repo}}" rel="noopener noreferrer">Source</a>
     </nav>
     <p class="pulse mono" aria-live="off"><i class="glyph g-needs-you"></i><span data-pulse-count>1</span> waiting on you <span class="pulse-sep" aria-hidden="true">/</span> <span data-pulse-wait>0:07</span><svg class="spark" viewBox="0 0 60 12" preserveAspectRatio="none" aria-hidden="true"><polyline pathLength="1" points="1,1 10,3.5 19,4.5 29,6.5 39,7.5 49,9.5 59,11"/></svg></p>
     <button class="theme sound" type="button" id="sound" aria-pressed="false" aria-label="Sound"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path class="spk" d="M4 9.5h3.5L12 5.5v13l-4.5-4H4Z"/><path class="wave" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="mute" d="m15.5 9.5 5 5m0-5-5 5"/></svg></button>
@@ -74,34 +74,30 @@
       <h1 id="hero-h" class="display hero-h"><span class="w" data-t="Your"><span>Your</span></span> <span class="w" data-t="agents"><span>agents</span></span> <span class="w" data-t="are"><span>are</span></span><br class="hero-br"> <span class="waiting-box"><span class="w waiting" id="waiting">waiting</span><span class="stopwatch mono" id="stopwatch" aria-hidden="true">00:00</span></span> <span class="w" data-t="on"><span>on</span></span> <span class="w" data-t="you."><span>you.</span></span></h1>
       <p class="lede">One inbox for every coding agent you run: Claude Code, Codex, Cursor, OpenCode and Pi. See who is waiting on you and for how long, answer in one box, review and merge.</p>
 
-      <div class="cmd" data-unpublished>
-        <span class="cmd-prompt" aria-hidden="true">$</span>
-        <code class="cmd-text">git clone https://github.com/zbagdzevicius/ugcarmy {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start</code>
-        <button class="copy" type="button" data-copy="git clone https://github.com/zbagdzevicius/ugcarmy {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start" aria-label="Copy the command that runs {{name}} from source">Copy</button>
+      <div class="try" id="try-demo">
+        <div class="cmd" data-unpublished>
+          <span class="cmd-prompt" aria-hidden="true">$</span>
+          <code class="cmd-text">git clone {{repo}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo</code>
+          <button class="copy" type="button" data-copy="git clone {{repo}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo" aria-label="Copy the command that runs the {{name}} demo from source">Copy</button>
+        </div>
+        <div class="cmd" data-published hidden>
+          <span class="cmd-prompt" aria-hidden="true">$</span>
+          <code class="cmd-text">npx {{pkg}} --demo</code>
+          <button class="copy" type="button" data-copy="npx {{pkg}} --demo" aria-label="Copy npx {{pkg}} --demo">Copy</button>
+        </div>
+        <p class="small demo-note">The demo: five scripted agents on a throwaway repository. No agent CLI, sign-in or model needed.</p>
+        <p class="small mono unpublished" data-unpublished>Not on npm yet: <a data-link="repo-run" href="{{repo}}#from-source" rel="noopener noreferrer">run it from source</a>. <code>npx {{pkg}}</code> comes with the release.</p>
       </div>
-      <div class="cmd" data-published hidden>
-        <span class="cmd-prompt" aria-hidden="true">$</span>
-        <code class="cmd-text">npx {{pkg}}</code>
-        <button class="copy" type="button" data-copy="npx {{pkg}}" aria-label="Copy npx {{pkg}}">Copy</button>
-      </div>
-      <p class="small mono unpublished" data-unpublished>Not on npm yet: <a data-link="repo-run" href="https://github.com/zbagdzevicius/ugcarmy#from-source" rel="noopener noreferrer">run it from source</a>. <code>npx {{pkg}}</code> comes with the release.</p>
 
       <div class="cta">
         <a class="btn primary magnetic" data-link="demo" href="#try-demo"><i class="glyph g-needs-you" aria-hidden="true"></i>Try the demo</a>
         <button class="btn ghost" type="button" data-watch><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 4.5v15L19.5 12Z"/></svg>Watch 30 seconds</button>
       </div>
-      <div class="cmd demo-cmd" id="try-demo">
-        <span class="cmd-prompt" aria-hidden="true">$</span>
-        <code class="cmd-text" data-unpublished>npm start -- --demo</code>
-        <code class="cmd-text" data-published hidden>npx {{pkg}} --demo</code>
-        <button class="copy" type="button" data-copy="npm start -- --demo" data-copy-published="npx {{pkg}} --demo" aria-label="Copy the demo command">Copy</button>
-        <p class="small demo-note">Five scripted agents on a throwaway repository. No agent CLI, sign-in or model needed.</p>
-      </div>
 
       <ul class="facts" aria-label="At a glance">
         <li><b class="mono" data-count="5">5</b> agent CLIs in one list</li>
-        <li><b class="mono" data-count="10.7" data-dec="1">10.7 s</b> to a first merge <span class="tag-inline">measured, scripted demo</span></li>
-        <li><b class="mono">MIT</b> runs on your machine</li>
+        <li><b class="mono">1st</b> the oldest question, ranked by wait</li>
+        <li><b class="mono">MIT</b> runs on localhost, no account</li>
       </ul>
     </div>
 
@@ -346,7 +342,7 @@
   <div class="wrap yours-grid">
     <div class="term-win" id="from-source">
       <div class="term-bar mono"><span class="term-tab on" data-unpublished>from source</span><span class="term-tab on" data-published hidden>npx</span></div>
-<pre class="term-body mono" data-unpublished aria-label="Running {{name}} from source"><span class="p">$</span> git clone https://github.com/zbagdzevicius/ugcarmy {{folder}}
+<pre class="term-body mono" data-unpublished aria-label="Running {{name}} from source"><span class="p">$</span> git clone {{repo}}
 <span class="p">$</span> cd {{folder}} &amp;&amp; npm install
 <span class="dim">added 412 packages, built client and server</span>
 <span class="p">$</span> npm start -- --demo
@@ -553,8 +549,8 @@
     </div>
     <svg class="giant" viewBox="0 0 1200 150" aria-hidden="true"><text x="0" y="128"><tspan class="wm-lead">{{lead}}</tspan><tspan class="wm-muted">{{muted}}</tspan></text></svg>
     <nav class="foot-links" aria-label="More">
-      <a data-link="repo" href="https://github.com/zbagdzevicius/ugcarmy" rel="noopener noreferrer">Source</a>
-      <a href="https://github.com/zbagdzevicius/ugcarmy#readme" data-link="repo-docs" rel="noopener noreferrer">Docs</a>
+      <a data-link="repo" href="{{repo}}" rel="noopener noreferrer">Source</a>
+      <a href="{{repo}}#readme" data-link="repo-docs" rel="noopener noreferrer">Docs</a>
       <a href="#labs">Labs</a>
       <a href="#teams">Teams</a>
     </nav>
