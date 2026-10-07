@@ -155,10 +155,17 @@ export function pick(kind: VoiceKind, ctx: VoiceContext, seed: string, mode: Voi
 /**
  * The one plain sentence when a unit starts needing the captain or gets stuck: no wit, whatever the
  * mode. "B-03 is stuck: tests or build failing. It needs you." "A-02 is waiting on your answer."
+ * "A-03 wants permission: Bash. It needs you."
  */
 export function attentionLine(unit: string, level: 'needs-you' | 'stuck', label: string): VoiceLine {
   const what = clip(label, 60).replace(/[.\s]+$/, '');
-  const text = level === 'stuck' ? `${unit} is stuck: ${what.charAt(0).toLowerCase()}${what.slice(1)}. It needs you.` : `${unit} is waiting on your answer. It needs you.`;
+  const ask = /^Wants permission:?\s*(.*)$/i.exec(what);
+  const text =
+    level === 'stuck'
+      ? `${unit} is stuck: ${what.charAt(0).toLowerCase()}${what.slice(1)}. It needs you.`
+      : ask
+        ? `${unit} wants permission${ask[1] ? `: ${ask[1]}` : ''}. It needs you.`
+        : `${unit} is waiting on your answer. It needs you.`;
   return { text, unit, weight: 9 };
 }
 

@@ -8,7 +8,7 @@ import { GLYPH_HUE, type GlyphKind } from '../glyphs';
 import { UNIT, buildUnit, disposeUnit, paintShell, setGlyph, type Shell, type UnitBody } from './unit-body';
 import { CalloutDocking } from './callout-dock';
 import { CalloutView, calloutText } from './callout-view';
-import { CALLOUT_SCREEN, type CalloutTier } from '../../features/workers/lod';
+import type { CalloutTier } from '../../features/workers/lod';
 import { GLYPH_SCREEN, GroundRing, glyphSprite, setGlyphKind } from './unit-marks';
 
 /** How far (m) a callout is lifted before a leader line ties it back to its unit's head. */
@@ -108,6 +108,7 @@ export class Worker {
 
   private name: string;
   private sign = '';
+  private selected = false;
   private level: AttentionLevel = 'parked';
   private since = Date.now();
   private reason: string | undefined;
@@ -167,6 +168,17 @@ export class Worker {
   /** "A-03": the seat it holds (shared/callsign.ts). */
   setCallSign(sign: string) {
     this.sign = sign;
+    this.paint();
+  }
+
+  get callSign(): string {
+    return this.sign;
+  }
+
+  /** The selected unit (features/selection): its callout gets a ship-cyan outline and draws over its neighbours'. */
+  setSelected(on: boolean) {
+    if (on === this.selected) return;
+    this.selected = on;
     this.paint();
   }
 
@@ -298,19 +310,12 @@ export class Worker {
    * camera's `up`, not the world's. False when it has no callout showing.
    */
   calloutEdges(bottom: THREE.Vector3, top: THREE.Vector3, up: THREE.Vector3, compact = false): boolean {
-    const c = compact ? this.callouts.compact : this.callouts.full;
-    if (!c || !this.root.visible) return false;
-    this.mover.localToWorld(bottom.set(0, UNIT.top + 0.14, 0));
-    const scale = this.mover.getWorldScale(tmp).y;
-    // Measured at its full size, not part way through a pop.
-    top.copy(bottom).addScaledVector(up, (c.scale.y / this.callouts.pop.scale) * scale);
-    return true;
+    return this.root.visible && this.callouts.edges(this.mover, UNIT.top + 0.14, bottom, top, up, compact);
   }
 
   /** A callout's width over its height, as drawn: the full one's, or the call sign's. */
   calloutAspect(compact = false): number {
-    const c = compact ? this.callouts.compact : this.callouts.full;
-    return c ? c.scale.x / c.scale.y : 1;
+    return this.callouts.aspect(compact);
   }
 
   /** Which callout shows; the glyph over its head shows only when neither does. */
@@ -409,6 +414,7 @@ export class Worker {
         epithet: this.epithet,
         said: this.said,
         leaving: this.leaving,
+        selected: this.selected,
       },
       now,
     );
@@ -450,26 +456,14 @@ export class Worker {
     this.place();
   }
 
-  /** Keeps the glyph the same size on screen, and the callout within its tier's share of the view (lod.ts CALLOUT_SCREEN). */
+  /** Keeps the glyph the same size on screen, and the callout within its tier's share of the view (callout-view.ts). */
   private size() {
     const screen = Worker.screen;
-    const full = this.callouts.full;
-    if (!screen || !full) return;
-    const scale = this.root.getWorldScale(tmp).y;
-    const span = screen(this.mover.getWorldPosition(tmp)) / scale;
+    if (!screen || !this.callouts.full) return;
+    const span = screen(this.mover.getWorldPosition(tmp)) / this.root.getWorldScale(tmp).y;
     this.glyph.scale.setScalar(GLYPH_SCREEN * span * Worker.weight);
-    const { min, max } = CALLOUT_SCREEN[this.callouts.tier];
-    const fullY = (full.userData.base as THREE.Vector3).y;
-    for (const c of [full, this.callouts.compact]) {
-      if (!c) continue;
-      const base = c.userData.base as THREE.Vector3;
-      // Never smaller than `min` of the view, never taller than `max` of it up close.
-      const lo = Math.max(Worker.weight, (min * Worker.weight * span) / base.y);
-      // Tagged bigger from the Overview while it needs you, short of the card up close (big enough as it is).
-      const boost = this.urgent && this.callouts.tier !== 'near' ? Worker.urgentBoost : 1;
-      const k = Math.min(lo, (max * Worker.weight * span) / Math.max(base.y, fullY)) * boost * this.callouts.pop.scale;
-      c.scale.set(base.x * k, base.y * k, 1);
-    }
+    // Tagged bigger from the Overview while it needs you, short of the card up close (big enough as it is).
+    this.callouts.size(span, Worker.weight, this.urgent && this.callouts.tier !== 'near' ? Worker.urgentBoost : 1);
   }
 
   /** The callout at its place plus its lift, unless it's docked; the glyph, when it shows, where the callout would be. */

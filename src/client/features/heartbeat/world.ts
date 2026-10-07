@@ -93,7 +93,7 @@ export class HeartbeatSet {
   constructor() {
     // The pulse: a thin ring 1 m out, scaled to its radius; its hue times its opacity, added to what's under it.
     const ring = new THREE.RingGeometry(0.93, 1, 64, 1).rotateX(-Math.PI / 2);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, polygonOffset: true, polygonOffsetFactor: -4 });
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -4 });
     this.rings = instanced(ring, ringMat);
     for (let i = 0; i < MAX; i++) this.rings.setColorAt(i, this.c.setRGB(0, 0, 0));
     this.rings.instanceColor!.setUsage(THREE.DynamicDrawUsage);

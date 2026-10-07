@@ -1,7 +1,8 @@
 /**
  * The selection reticle: a ring on the floor under a unit, three corner-bracket arcs round a faint
- * hairline circle, in ship-cyan (the instruments' own color, never a state: a selection must never read
- * as an alert). It follows the unit's live position, so it goes with a unit gliding to the ready line.
+ * hairline circle, in white (never a state's hue, nor the cyan of the heartbeat meters round it: a
+ * selection must never read as an alert, or as one more working unit). It follows the unit's live
+ * position, so it goes with a unit gliding to the ready line. Drawn only from the Overview.
  *
  * Motion: selecting locks on (scale 1.6 to 1, fade in, 220 ms, ease-out cubic), then the brackets turn
  * slowly (one bracket's step every 3 s); letting go fades it in 120 ms. Held still (reduced motion,
@@ -9,9 +10,13 @@
  * half strength.
  */
 import * as THREE from 'three';
-import { DECK } from '../../world/office/materials';
 import { easeOutCubic } from './logic';
 
+/**
+ * White, not ship-cyan: from the Overview every working unit's heartbeat meter is a cyan circle on the
+ * floor too, and the selection must never read as one more of those (nor as a state's hue).
+ */
+const RING_COLOR = 0xffffff;
 /** The ring's radius (m), the brackets' width, and how far over the floor it floats (no z-fighting). */
 const RADIUS = 0.9;
 const WIDTH = 0.1;
@@ -52,7 +57,7 @@ export class Reticle {
   /** `peak` is how strong it is once locked on: 1 for the selection, 0.5 for a hover. */
   constructor(private readonly peak: number) {
     const mat = (depthTest = true) =>
-      new THREE.MeshBasicMaterial({ color: DECK.ship, transparent: true, opacity: 0, depthWrite: false, depthTest, side: THREE.DoubleSide, toneMapped: false, fog: false });
+      new THREE.MeshBasicMaterial({ color: RING_COLOR, transparent: true, opacity: 0, depthWrite: false, depthTest, side: THREE.DoubleSide, toneMapped: false, fog: false });
     this.brackets = mat();
     this.hair = mat();
     this.through = mat(false);

@@ -204,10 +204,12 @@ export const GRADE: Readonly<Record<'night' | 'day', GradeLook>> = {
  * The Overview's grade over the mode's: the hull and the floor taken toward a dark slate (vibrance
  * below zero takes saturation out of what has little, never out of a state's mark or a lit ring), so
  * from over the deck the units, the pods and their states stand out of it; no fringe, dirt or heavy
- * corners from up there.
+ * corners from up there. With `p` under 1, that far between the mode's grade and the Overview's.
  */
-export function overviewLook(g: GradeLook): GradeLook {
-  return { ...g, vibrance: -0.7, vignette: g.vignette * 0.5, aberration: 0, dirt: 0 };
+export function overviewLook(g: GradeLook, p = 1): GradeLook {
+  // `p` of the way there (core/camera-overview.ts progress()): the move up blends into it, frame by frame.
+  const k = Math.min(1, Math.max(0, p));
+  return { ...g, vibrance: g.vibrance + (-0.7 - g.vibrance) * k, vignette: g.vignette * (1 - 0.5 * k), aberration: g.aberration * (1 - k), dirt: g.dirt * (1 - k) };
 }
 
 const luma = (c: readonly number[]) => 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];

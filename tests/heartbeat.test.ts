@@ -5,7 +5,7 @@ import path from 'node:path';
 import { lastSign, TOOL_SILENT_MS } from '../src/shared/attention.js';
 import { DATA_COLORS } from '../src/shared/datacolors.js';
 import { DECK } from '../src/client/world/office/materials.js';
-import { HEARTBEAT, meterHue, pulseDue, pulseHue, pulseShape, quietFraction } from '../src/client/features/heartbeat/logic.js';
+import { HEARTBEAT, meterHue, meterMix, pulseDue, pulseHue, pulseShape, quietFraction } from '../src/client/features/heartbeat/logic.js';
 
 const NOW = 50 * 60_000;
 
@@ -83,6 +83,16 @@ test('pulseHue maps each action to the deck palette, failing to the stuck hue', 
   assert.equal(pulseHue(undefined), DECK.ship);
   // Never the needs-you orange: a pulse must not read as a call.
   for (const a of ['read', 'edit', 'test', 'web', 'failing', undefined] as const) assert.notEqual(pulseHue(a), DECK.signal);
+});
+
+test('the meter blends from cyan to amber between 45% and 55% drained, never in one frame', () => {
+  assert.equal(meterMix(0), 0);
+  assert.equal(meterMix(0.45), 0);
+  assert.ok(Math.abs(meterMix(0.5) - 0.5) < 1e-9);
+  assert.equal(meterMix(0.55), 1);
+  assert.equal(meterMix(1), 1);
+  // Smooth: a 1% step of drain moves the hue by well under a quarter of the way.
+  for (let q = 0.4; q < 0.6; q += 0.01) assert.ok(meterMix(q + 0.01) - meterMix(q) < 0.2, `at ${q.toFixed(2)}`);
 });
 
 test('the meter is cyan below half drained and amber from half', () => {

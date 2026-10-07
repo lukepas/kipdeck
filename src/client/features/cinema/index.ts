@@ -55,7 +55,7 @@ const MOVED_PX = 2;
 /** How fast the screens go steady, or come back, when the captain is needed (per second). */
 const STEADY_RATE = 4;
 
-export function installCinema(ctx: Ctx, parts: Pick<Parts, 'stage' | 'player' | 'quality' | 'lights' | 'giveWay' | 'space' | 'fleet'>): Cinema {
+export function installCinema(ctx: Ctx, parts: Pick<Parts, 'stage' | 'player' | 'quality' | 'lights' | 'giveWay' | 'space' | 'fleet' | 'overview'>): Cinema {
   const { camera } = ctx;
 
   // ---- The screens' character, the holo's and the trim's -------------------------------------------
@@ -309,7 +309,9 @@ export function installCinema(ctx: Ctx, parts: Pick<Parts, 'stage' | 'player' | 
         if (!grade) return;
         const mode = parts.lights.mode();
         grade.on(parts.quality.look().grade);
-        grade.look(parts.stage.view ? overviewLook(GRADE[mode]) : GRADE[mode], bloom.glowing());
+        // Into the Overview's grade as the view goes up, not on the move's first frame.
+        const up = parts.overview?.progress() ?? (parts.stage.view ? 1 : 0);
+        grade.look(up > 0 ? overviewLook(GRADE[mode], up) : GRADE[mode], bloom.glowing());
         if (!still() && screensPinned === null) seed = (seed + 1) % 997;
         grade.frame(seed, bloom.size(), bloom.glowTexture());
       });

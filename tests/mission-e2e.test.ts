@@ -343,6 +343,19 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   await crewRow.locator('.mc-locate').click();
   await page.locator('.sel-card:not([hidden]) .sel-name').waitFor({ timeout: 10_000 });
   assert.equal(await docked.count(), 1, 'still docked after Locate');
+  // And it's seen, not just there: the card sits left of the docked panel, nothing over its middle or its button.
+  await page.waitForFunction(() => document.querySelector('.sel-card.open') && getComputedStyle(document.querySelector('.sel-card')!).opacity === '1', null, { timeout: 5000, polling: 100 });
+  const seen = await page.evaluate(() => {
+    const card = document.querySelector<HTMLElement>('.sel-card')!;
+    const at = (el: Element) => {
+      const r = el.getBoundingClientRect();
+      return card.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2));
+    };
+    const btn = card.querySelector('.sel-actions .btn');
+    return { card: at(card), button: btn ? at(btn) : true, right: card.getBoundingClientRect().right, dock: document.querySelector('.mc-dock-host')!.getBoundingClientRect().left };
+  });
+  assert.ok(seen.card && seen.button, `the selected unit's card is in view beside the docked panel: ${JSON.stringify(seen)}`);
+  assert.ok(seen.right <= seen.dock, 'the card ends left of the docked panel');
 
   // D floats it in the middle, remembered; D again docks it.
   await page.keyboard.press('d');

@@ -54,7 +54,7 @@ export interface Atmos {
   gain: { shafts: number; motes: number; pools: number };
 }
 
-export function installAtmos(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | 'quality' | 'space' | 'giveWay' | 'alert'>): Atmos {
+export function installAtmos(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | 'quality' | 'space' | 'giveWay' | 'alert' | 'overview'>): Atmos {
   const { scene, renderer } = ctx;
   // Before anything compiles with the fog's chunks: the first frame is drawn after every install.
   heightFogChunks();
@@ -111,11 +111,20 @@ export function installAtmos(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
     // The shafts and their dust.
     shaft.uniforms.uTime.value = clock * DRIFT.shafts;
     // From the Overview a shaft is a pale band across the deck plan, over the units: a trace of it only.
-    shaft.uniforms.uLevel.value = shaftLevel(mode) * spectacle * gain.shafts * (parts.stage.view ? 0.15 : 1);
+    // Down to it as the view goes up (core/camera-overview.ts progress()), not on the move's first frame;
+    // and down while the camera is still low, before it passes through a shaft (from inside one, its
+    // haze fills a third of the frame for a frame or two: a flash), coming back as it lands on the way down.
+    const k = Math.min(1, (parts.overview?.progress() ?? (parts.stage.view ? 1 : 0)) / 0.08);
+    const up = k * k * (3 - 2 * k);
+    // On the move itself none at all: the camera passes through them. Landed up there, a trace (15%).
+    const trace = parts.overview?.moving() ? 0 : 0.15;
+    shaft.uniforms.uLevel.value = shaftLevel(mode) * spectacle * gain.shafts * (1 - (1 - trace) * up);
     shaft.uniforms.uColor.value.copy(shaftColor.set(SHAFT_COLOR[mode]));
     shaft.uniforms.uRes.value.copy(res);
     motes.uniforms.uTime.value = clock * DRIFT.motes;
-    motes.uniforms.uLevel.value = MOTE_LEVEL[mode] * spectacle * gain.motes;
+    // The dust too: the moving camera would sweep through it, a mote by the lens a soft disc filling
+    // the frame for a frame. From up there it's too fine to see anyway.
+    motes.uniforms.uLevel.value = MOTE_LEVEL[mode] * spectacle * gain.motes * (1 - up);
     motes.uniforms.uColor.value.copy(shaftColor);
     motes.uniforms.uPixel.value = renderer.getPixelRatio();
     motes.uniforms.uRes.value.copy(res);

@@ -159,6 +159,8 @@
 .backdrop.mc-dock-backdrop { display: none; }
 .mc-dock-host { position: fixed; top: var(--bar, 44px); right: 0; bottom: 0; width: 400px; z-index: 48; display: flex; }
 .mc-dock-host > .modal.mission-control { width: 100%; max-height: none; height: 100%; border-width: 0 0 0 1px; border-radius: 0; box-shadow: -16px 0 40px rgb(0 0 0 / .35); animation: mc-dock-in 200ms ease-out; }
+/* Docked while the deck has the keys: the tabs dim (1-5 go to the deck until a click on the panel or I). */
+.mc-dock-host > .modal.mission-control.mc-keys-away .mc-tabs { opacity: .5; transition: opacity var(--t-ui, 120ms) ease-out; }
 .modal.mission-control.mc-moved { animation: none; }
 @keyframes mc-dock-in { from { opacity: 0; transform: translateX(24px); } }
 @media (prefers-reduced-motion: reduce) {

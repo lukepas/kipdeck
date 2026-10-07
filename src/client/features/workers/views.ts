@@ -219,7 +219,10 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
       // How much its callout says (lod.ts): a tab from far off, a line between, the card up close; by
       // the Overview's zoom or, walking, how far off it is. One that needs you or is stuck keeps its call sign.
       // The selected unit (features/selection) is never smaller than a line.
-      v.model.setTier(tierFor({ ortho: ov?.active() ? ov.camera : null, distance: d }, v.model.tier, { selected: parts.selection?.id() === id }));
+      // Zoomed in to a pod or a unit in the Overview, its whole card; and its callout outlined over its neighbours'.
+      const selected = parts.selection?.id() === id;
+      v.model.setSelected(selected);
+      v.model.setTier(tierFor({ ortho: ov?.active() ? ov.camera : null, distance: d }, v.model.tier, { selected, zoom: ov?.active() ? ov.zoomTier() : undefined }));
       // Its small parts (and its laptop's) only within Quality's detail range, a little past it to leave.
       const detail = d < range * (v.detail ? 1.08 : 1);
       if (detail !== v.detail) {

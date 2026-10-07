@@ -19,7 +19,7 @@ export interface PodLabelText {
   letter: PodLetter;
   /** The goal's title, clipped to TITLE_MAX characters, or "No goal yet". */
   title: string;
-  /** Whether there's a goal (the title is muted without one). */
+  /** Whether there's a goal: without one the title is muted, and the counts take the big line over it (draw.ts). */
   goal: boolean;
   segments: Segment[];
   /** Everything above in one string: a label is painted again only when this changes. */

@@ -2,8 +2,9 @@
 // since you left. Anyone who needs you or is stuck comes first, a plain sentence each with its glyph
 // and a button to go to them (N goes to the first, as it always does); then what landed (merges, USDC
 // paid, attestations, waypoints, how far the destination came); then one dry closing line. It never
-// takes the mouse. A close button top right puts it away, and so does Esc while the mouse is free, which hands the
-// mouse straight back to the view. It puts itself away after a while, longer while it lists who waits.
+// takes the mouse. A close button top right puts it away, and so does Esc while the mouse is free (once
+// a selected unit has let go of it), which hands the mouse straight back to the view. It puts itself away
+// after a while, longer while it lists who waits, and as soon as you pick a unit or go up to the Overview.
 import './debrief.css';
 import type { Debrief } from '../../../shared/launch';
 import { h, modalOpen } from '../../ui/dom';
@@ -16,6 +17,8 @@ export interface DebriefDeps {
   fullLog(): void;
   /** Hands the mouse back to the view. */
   backToGame(): void;
+  /** Whether Esc belongs to something else first (a selected unit lets go before this goes; docs/controls.md). */
+  escTaken?(): boolean;
 }
 
 export class DebriefPanel {
@@ -32,7 +35,7 @@ export class DebriefPanel {
     window.addEventListener(
       'keydown',
       (e) => {
-        if (e.key !== 'Escape' || !this.open || modalOpen() || document.pointerLockElement) return;
+        if (e.key !== 'Escape' || !this.open || modalOpen() || document.pointerLockElement || this.deps.escTaken?.()) return;
         e.preventDefault();
         e.stopPropagation();
         this.close(true);

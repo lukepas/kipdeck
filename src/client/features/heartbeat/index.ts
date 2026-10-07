@@ -17,8 +17,9 @@ import { store } from '../../state';
 import { debugHandle } from '../giveway';
 import type { WorkerView } from '../workers/views';
 import type { WorkerInfo } from '../../../shared/protocol';
-import { HEARTBEAT, meterHue, pulseDue, pulseHue, pulseShape, quietFraction } from './logic';
+import { HEARTBEAT, meterMix, pulseDue, pulseHue, pulseShape, quietFraction } from './logic';
 import { HeartbeatSet } from './world';
+import { DECK } from '../../world/office/materials';
 
 /** What the heartbeat keeps about one unit between reads. */
 interface Beat {
@@ -43,14 +44,12 @@ export function installHeartbeat(ctx: Ctx, parts: Pick<Parts, 'views'>) {
   const set = new HeartbeatSet();
   ctx.scene.add(set.root);
   const beats = new Map<string, Beat>();
-  // The meter's two hues, parsed once: a hex string parsed every frame would allocate.
-  const meterColors = new Map<string, THREE.Color>();
-  const meterColor = (q: number) => {
-    const hex = meterHue(q);
-    let c = meterColors.get(hex);
-    if (!c) meterColors.set(hex, (c = new THREE.Color(hex)));
-    return c;
-  };
+  // The meter's two hues, parsed once, and the blend between them (45-55% drained) in one scratch color:
+  // a hex string parsed every frame would allocate.
+  const cyan = new THREE.Color(DECK.ship);
+  const amber = new THREE.Color(DECK.review);
+  const mixed = new THREE.Color();
+  const meterColor = (q: number) => mixed.copy(cyan).lerp(amber, meterMix(q));
   const foot = new THREE.Vector3();
   const station = new THREE.Vector3();
   const shape = new THREE.Vector2();

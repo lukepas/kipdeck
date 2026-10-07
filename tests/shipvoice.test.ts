@@ -54,7 +54,9 @@ test('every line is calm ASCII: no exclamation marks, no braces left unfilled, n
 
 test('attention gets one plain sentence, whatever the label says', () => {
   assert.equal(attentionLine('B-03', 'stuck', 'Tests or build failing').text, 'B-03 is stuck: tests or build failing. It needs you.');
-  assert.equal(attentionLine('A-02', 'needs-you', 'Wants permission: Bash').text, 'A-02 is waiting on your answer. It needs you.');
+  // A permission wait says so, and what for, rather than "waiting on your answer".
+  assert.equal(attentionLine('A-02', 'needs-you', 'Wants permission: Bash').text, 'A-02 wants permission: Bash. It needs you.');
+  assert.equal(attentionLine('A-02', 'needs-you', 'Needs an answer').text, 'A-02 is waiting on your answer. It needs you.');
   assert.ok(attentionLine('A-02', 'stuck', 'x').weight > pick('milestone-done', {}, 's').weight);
 });
 

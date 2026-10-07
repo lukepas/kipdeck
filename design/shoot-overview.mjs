@@ -112,6 +112,9 @@ const pin = (page, ms) =>
     performance.now = () => w.__pinBase + m;
   }, ms);
 
+/** The most a frame's mean brightness (0-255) may change from the one before during the move. */
+const MAX_STEP = 10;
+
 /** Runs in the page: reads back every frame that reaches the screen for `ms` real ms after `run`. */
 async function readFrames([ms, key]) {
   const o = window.__office;
@@ -245,6 +248,9 @@ async function main() {
       console.log(`${label} real time: ${frames.length} frames, cameras ${[...new Set(frames.map((f) => f.cam))].join(' > ')}, mean ${Math.min(...means)}-${Math.max(...means)}, biggest step ${jump.toFixed(1)}`);
       writeFileSync(path.join(OUT, `frames-${label}.json`), JSON.stringify(frames, null, 1));
       check(frames.length >= 5 && blank.length === 0, `${label}: no blank frame in ${frames.length}`);
+      // No flicker: the move eases the grade and the light in with it, so no frame jumps in brightness
+      // from the one before (0-255 mean luma; the flicker check above only catches black frames).
+      check(jump <= MAX_STEP, `${label}: no frame-to-frame brightness step over ${MAX_STEP} (biggest ${jump.toFixed(1)})`);
       await wait(1200);
     }
 

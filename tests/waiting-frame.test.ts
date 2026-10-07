@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { DESKS, MISSION_TABLE, deskSeat, podOf, readySpot } from '../src/shared/layout';
 import { walkable } from '../src/shared/nav';
 import { EYE_HEIGHT } from '../src/client/player/camera';
-import { FRAME_AIM, FRAME_DISTANCE, FRAME_PITCH, framePose, onReadyLine, sightClear } from '../src/client/features/waiting/frame';
+import { FRAME_AIM, FRAME_DISTANCE, FRAME_PITCH, FRAME_PITCH_MIN, STOOL_OF, framePose, onReadyLine, sightClear } from '../src/client/features/waiting/frame';
 import { ACQUIRE, acquireAt, bracketRect } from '../src/client/features/waiting/acquire';
 
 const DEG = 180 / Math.PI;
@@ -39,9 +39,11 @@ test('framePose turns off a blocked spot, and still faces the unit from 2.2 m', 
   const desk = DESKS[2];
   const unit = deskSeat(desk, 1.25);
   const anywhere = () => true;
-  const straight = framePose(unit, desk, { sight: anywhere })!;
+  // A flat floor: on a real one, a spot on the unit's own tier comes before the turn order.
+  const flat = () => 0;
+  const straight = framePose(unit, desk, { sight: anywhere, floorAt: flat })!;
   const blocked = (x: number, z: number) => Math.hypot(x - straight.x, z - straight.z) > 0.05;
-  const pose = framePose(unit, desk, { walkable: blocked, sight: anywhere })!;
+  const pose = framePose(unit, desk, { walkable: blocked, sight: anywhere, floorAt: flat })!;
   assert.ok(pose);
   assert.ok(dist(pose, straight) > 0.5, 'it moved off the blocked spot');
   assert.ok(Math.abs(dist(pose, unit) - FRAME_DISTANCE) < 1e-6);
@@ -77,7 +79,7 @@ test('on the real deck every unit, seated or on its ready line, gets a walkable 
       const pose = framePose(unit, desk, { walkable: (x, z) => walkable(x, z) });
       assert.ok(pose, `${desk.id} at (${unit.x}, ${unit.z}) has a spot`);
       assert.ok(walkable(pose.x, pose.z));
-      assert.ok(sightClear(pose, unit), `${desk.id}: no console between you and the unit`);
+      assert.ok(sightClear(pose, unit, undefined, STOOL_OF.get(desk.id)), `${desk.id}: no console between you and the unit`);
       assert.ok(aimError(pose, unit) < 2);
       assert.ok(Math.abs(dist(pose, unit) - FRAME_DISTANCE) < 1e-6);
     }
@@ -94,14 +96,30 @@ test('a console between you and the unit turns you round it', () => {
   assert.ok(aimError(pose, unit) < 2);
 });
 
-test('from a tier above the pit it looks further down, so the crosshair still lands on the unit', () => {
+test('from a tier above it looks further down, never steeper than FRAME_PITCH_MIN, and the crosshair stays on the unit', () => {
   const desk = DESKS[0];
   const unit = { ...readySpot(podOf(desk.id)!, 1), y: 0 };
-  const pose = framePose(unit, desk, { sight: () => true, floorAt: (x, z) => (Math.hypot(x, z) > 5 ? 0.45 : 0) })!;
-  // The line from your eyes at the pitch crosses the unit at FRAME_AIM over its foot.
-  const eye = 0.45 + EYE_HEIGHT;
-  assert.ok(Math.abs(eye + Math.tan(pose.pitch) * FRAME_DISTANCE - FRAME_AIM) < 1e-9);
-  assert.ok(pose.pitch < FRAME_PITCH);
+  // The unit alone in a pit: every spot round it is a step up.
+  for (const step of [0.2, 0.45]) {
+    const pose = framePose(unit, desk, { sight: () => true, floorAt: (x, z) => (Math.hypot(x - unit.x, z - unit.z) > 1 ? step : 0) })!;
+    const eye = step + EYE_HEIGHT;
+    const exact = Math.atan2(FRAME_AIM - eye, FRAME_DISTANCE);
+    assert.ok(pose.pitch < FRAME_PITCH);
+    assert.ok(Math.abs(pose.pitch - Math.max(FRAME_PITCH_MIN, exact)) < 1e-9, `step ${step}: pitch ${pose.pitch}`);
+    // The line from your eyes crosses the unit within a hand's width of FRAME_AIM over its foot (its head).
+    assert.ok(Math.abs(eye + Math.tan(pose.pitch) * FRAME_DISTANCE - FRAME_AIM) < 0.1);
+  }
+});
+
+test("of the spots round a unit, one on its own tier comes first: you face it level, not from the tier above", () => {
+  const desk = DESKS[0];
+  const unit = { ...readySpot(podOf(desk.id)!, 1), y: 0 };
+  // Straight out (away from the table) is up a tier; round to the side the floor is the unit's own.
+  const floorAt = (x: number, z: number) => (Math.hypot(x - MISSION_TABLE.x, z - MISSION_TABLE.z) > Math.hypot(unit.x, unit.z) + 1 ? 0.45 : 0);
+  const pose = framePose(unit, desk, { sight: () => true, floorAt })!;
+  assert.equal(floorAt(pose.x, pose.z), 0);
+  assert.ok(Math.abs(pose.pitch - FRAME_PITCH) < 1e-9, 'level with it, it looks the usual touch down');
+  assert.ok(aimError(pose, unit) < 2);
 });
 
 test('the bracket closes from 1.8 to 1.1 over 260 ms, holds, fades and goes', () => {

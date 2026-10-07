@@ -49,6 +49,12 @@ function isOpen(group: Group): boolean {
   return folds()[group] ?? OPEN_BY_DEFAULT.has(group);
 }
 
+/**
+ * The selected unit: its group shows open while it's selected, whatever you folded, so its marked row
+ * is in view; not saved as your choice, so the group folds again once you let go of it.
+ */
+let revealFor: string | null = null;
+
 let lastOpen: (id: string) => void = () => {};
 
 /**
@@ -72,9 +78,21 @@ export function linkRail(l: RailLink) {
   link = l;
 }
 
-/** Marks the row of the selected unit `id` (none: null), without drawing the rail again. */
+/**
+ * Marks the row of the selected unit `id` (none: null). Its group opens for it when you'd folded it (and
+ * a group opened only for the last one folds again), and the row scrolls into view.
+ */
 export function markRailSelected(id: string | null) {
-  for (const li of document.querySelectorAll<HTMLElement>('#workers .unit-row')) li.setAttribute('aria-selected', String(li.dataset.id === id));
+  const was = revealFor;
+  revealFor = id;
+  const rowOf = (x: string) => document.querySelector<HTMLElement>(`#workers .unit-row[data-id="${CSS.escape(x)}"]`);
+  // Drawn again only when a group has to open or fold for it.
+  if ((id && !rowOf(id)) || (was && was !== id && rowOf(was))) renderWorkers(lastOpen);
+  for (const li of document.querySelectorAll<HTMLElement>('#workers .unit-row')) {
+    if (li.dataset.id === id) li.setAttribute('aria-current', 'true');
+    else li.removeAttribute('aria-current');
+  }
+  if (id) rowOf(id)?.scrollIntoView({ block: 'nearest' });
 }
 
 /** One unit's row. */
@@ -107,9 +125,8 @@ function row(w: WorkerInfo, att: Attention | undefined, level: Group, now: numbe
       class: level,
       title,
       tabindex: '0',
-      role: 'option',
       'data-id': w.id,
-      'aria-selected': String(!!link && link.selected() === w.id),
+      ...(link && link.selected() === w.id ? { 'aria-current': 'true' } : {}),
       onclick: () => (link ? link.onLocate(w.id) : onOpen(w.id)),
       ondblclick: () => link && onOpen(w.id),
       onkeydown: (e: Event) => ((e as KeyboardEvent).key === 'Enter' ? onOpen(w.id) : undefined),
@@ -151,14 +168,16 @@ export function renderWorkers(onOpen: (id: string) => void) {
   for (const g of GROUPS) {
     const list = groups.get(g);
     if (!list?.length) continue;
-    const open = isOpen(g);
+    // The selected unit's group shows open while it's selected (not saved as your choice).
+    const revealed = !!revealFor && list.some((w) => w.id === revealFor) && !isOpen(g);
+    const open = isOpen(g) || revealed;
     items.push(
       h(
         'li.rail-group',
         { class: g },
         h(
           'button.rail-head',
-          { type: 'button', 'aria-expanded': String(open), title: `${open ? 'Fold' : 'Show'} ${GROUP_LABEL[g].toLowerCase()}`, onclick: () => (setFold(g, !open), renderWorkers(lastOpen)) },
+          { type: 'button', 'aria-expanded': String(open), title: `${open ? 'Fold' : 'Show'} ${GROUP_LABEL[g].toLowerCase()}`, onclick: () => (revealed ? (revealFor = null) : setFold(g, !open), renderWorkers(lastOpen)) },
           h('span.unit-glyph', { 'aria-hidden': 'true' }, icon(g === 'agents' ? 'unit' : LEVEL_ICON[g], 12)),
           h('span.rail-label', {}, GROUP_LABEL[g]),
           h('span.rail-chev', { 'aria-hidden': 'true' }),

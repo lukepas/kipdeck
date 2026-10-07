@@ -1,9 +1,8 @@
 // Painting a pod's ground label into its canvas: the pod's letter, the goal's title in bold over the
-// counts line, each count in its state's color ("1 needs you" Signal orange, "stuck" red, "to review"
+// counts line (with no goal, the counts big and "No goal yet" small under them), each count in its state's color ("1 needs you" Signal orange, "stuck" red, "to review"
 // yellow, the rest grey), on a dark chip so it reads on the deck by night and by day. A count that
 // changes rolls: the old number slides up and out as the new one comes in from below (`k` 0 to 1).
-// The goal's hue isn't painted here: it's the bar down the label's left (world.ts), which fades with
-// the zone.
+// The goal's hue is the bar down the label's left (paintBar), painted again as the zone's hue fades.
 import { stretch } from '../../world/toon';
 import { DECK } from '../../world/office/materials';
 import { countsText, SEP, segmentText, type PodLabelText, type Tone } from './label';
@@ -24,8 +23,14 @@ export const TONE_COLOR: Record<Tone, string> = {
   idle: DECK.muted,
 };
 
-/** How much of the canvas's width the hue bar takes, on the left (world.ts lays its mesh there). */
+/** How much of the canvas's width the hue bar takes, on the left. */
 export const BAR = 0.022;
+
+/** The goal's hue as a bar down the label's left, in `color` (a CSS color). */
+export function paintBar(g: CanvasRenderingContext2D, W: number, H: number, color: string) {
+  g.fillStyle = color;
+  g.fillRect(H * 0.08, H * 0.14, W * BAR, H * 0.72);
+}
 
 /** The label's chip: instrument black, a little see-through, with a steel hairline. */
 function chip(g: CanvasRenderingContext2D, W: number, H: number) {
@@ -64,24 +69,28 @@ export function paintLabel(g: CanvasRenderingContext2D, W: number, H: number, te
   const max = W - x0 - H * 0.14;
   g.textAlign = 'left';
   g.textBaseline = 'alphabetic';
-  // Line 1: the goal, bold.
+  // With a goal: the goal in bold over the counts. Without one the counts are what there is to read,
+  // so they take the big line and "No goal yet" goes small and muted under them.
+  const countsFirst = !text.goal;
+  // The title: bold and big over the counts, or small and muted under them.
   g.fillStyle = text.goal ? DECK.text : DECK.muted;
-  g.font = UI(700, Math.round(H * 0.36));
+  g.font = countsFirst ? UI(500, Math.round(H * 0.24)) : UI(700, Math.round(H * 0.36));
   narrow(g, true);
   let title = text.title;
   while (title.length > 3 && g.measureText(title).width > max) title = `${title.slice(0, -2).trimEnd()}…`;
-  g.fillText(title, x0, H * 0.47);
+  g.fillText(title, x0, countsFirst ? H * 0.83 : H * 0.47);
   narrow(g, false);
 
-  // Line 2: the counts, each in its tone, a size smaller where the whole line wouldn't fit.
-  let size = Math.round(H * 0.27);
-  g.font = UI(600, size);
+  // The counts, each in its tone, a size smaller where the whole line wouldn't fit.
+  const weight = countsFirst ? 700 : 600;
+  let size = Math.round(H * (countsFirst ? 0.34 : 0.27));
+  g.font = UI(weight, size);
   const wide = g.measureText(countsText(text.segments)).width;
   if (wide > max) {
     size = Math.floor((size * max) / wide);
-    g.font = UI(600, size);
+    g.font = UI(weight, size);
   }
-  const base = H * 0.83;
+  const base = countsFirst ? H * 0.5 : H * 0.83;
   let x = x0;
   const band = { top: base - size * 1.05, h: size * 1.35 };
   const e = 1 - (1 - Math.min(1, Math.max(0, k))) ** 3;

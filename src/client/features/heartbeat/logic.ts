@@ -76,7 +76,16 @@ export function pulseShape(ageMs: number, gain: number, out: { x: number; y: num
   out.y = live ? HEARTBEAT.alpha * (1 - e) * gain : 0;
 }
 
-/** The meter's hue for how far it's drained: ship-cyan, amber from halfway. */
+/** How far either side of halfway (amberAt) the meter blends from ship-cyan to amber, rather than switching in a frame. */
+export const METER_BLEND = 0.05;
+
+/** How far the meter's hue has gone from ship-cyan (0) to amber (1) at `q` drained: smooth from 45% to 55%. */
+export function meterMix(q: number): number {
+  const k = Math.min(1, Math.max(0, (q - (HEARTBEAT.amberAt - METER_BLEND)) / (2 * METER_BLEND)));
+  return k * k * (3 - 2 * k);
+}
+
+/** The meter's hue for how far it's drained, the nearer of its two: ship-cyan, amber from halfway. */
 export function meterHue(q: number): string {
   return q < HEARTBEAT.amberAt ? DECK.ship : DECK.review;
 }

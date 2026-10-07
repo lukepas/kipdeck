@@ -30,6 +30,8 @@ export interface CalloutText {
   epithet?: string;
   /** Just the glyph and the call sign: what a callout shrinks to where callouts crowd (features/workers/declutter.ts). */
   compact?: boolean;
+  /** The selected unit's: a ship-cyan hairline in place of the steel one, drawn over its neighbours. */
+  selected?: boolean;
 }
 
 /** Drawn at twice its pixels, so the small type holds up close. */
@@ -44,14 +46,14 @@ const STRIPE = 3 * R;
 const TAB = 14;
 
 /** The plate every tier sits on: the dark chip, its hairline, and the state's stripe down the left. */
-function plate(ctx: CanvasRenderingContext2D, w: number, h: number, kind: GlyphKind | null, stripe = STRIPE) {
+function plate(ctx: CanvasRenderingContext2D, w: number, h: number, kind: GlyphKind | null, stripe = STRIPE, selected = false) {
   const c = ctx.canvas;
   c.width = w;
   c.height = h;
   ctx.fillStyle = `rgba(${CALLOUT_CHIP.rgb.join(', ')}, ${CALLOUT_CHIP.alpha})`;
   ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = DECK.steel;
-  ctx.lineWidth = 2 * R;
+  ctx.strokeStyle = selected ? DECK.ship : DECK.steel;
+  ctx.lineWidth = (selected ? 3 : 2) * R;
   ctx.strokeRect(R, R, w - 2 * R, h - 2 * R);
   if (kind && kind !== 'parked') {
     ctx.fillStyle = GLYPH_HUE[kind];
@@ -64,9 +66,9 @@ function plate(ctx: CanvasRenderingContext2D, w: number, h: number, kind: GlyphK
 }
 
 /** Far, with nothing to say: the glyph alone on a square tab. */
-function drawTab(ctx: CanvasRenderingContext2D, kind: GlyphKind | null) {
+function drawTab(ctx: CanvasRenderingContext2D, kind: GlyphKind | null, selected = false) {
   const s = TAB * R;
-  plate(ctx, s, s, kind, 2 * R);
+  plate(ctx, s, s, kind, 2 * R, selected);
   if (kind) drawGlyph(ctx, kind, s / 2 + R, s / 2, 4.2 * R);
 }
 
@@ -83,7 +85,7 @@ function drawLine(ctx: CanvasRenderingContext2D, o: CalloutText) {
   const lineH = 30 * R;
   const w = Math.ceil((o.kind ? glyphR * 2 + 9 * R : 0) + headW + gap + tailW + PAD * 2 + STRIPE);
   const h = Math.ceil(lineH + PAD * 0.8);
-  plate(ctx, w, h, o.kind);
+  plate(ctx, w, h, o.kind, STRIPE, o.selected);
   let x = STRIPE + PAD;
   const y = PAD * 0.4 + lineH / 2;
   if (o.kind) {
@@ -119,7 +121,7 @@ function drawCard(ctx: CanvasRenderingContext2D, o: CalloutText) {
   const rows = [26 * R, o.task ? 36 * R : 0, o.meta ? 24 * R : 0];
   const w = Math.ceil(Math.max(whoW + epW + (chip ? 18 * R + chipW : 0), taskW, metaW) + PAD * 2 + STRIPE);
   const h = Math.ceil(rows.reduce((a, b) => a + b, 0) + PAD * 1.2);
-  plate(ctx, w, h, o.kind);
+  plate(ctx, w, h, o.kind, STRIPE, o.selected);
   const left = STRIPE + PAD;
   let y = PAD * 0.6 + rows[0] / 2;
   ctx.font = MONO(15);
@@ -164,7 +166,7 @@ function drawCard(ctx: CanvasRenderingContext2D, o: CalloutText) {
 /** Draws `o` onto `ctx`'s canvas, sized to fit it. */
 export function drawCallout(ctx: CanvasRenderingContext2D, o: CalloutText) {
   if (o.tier === 'near' && !o.compact) drawCard(ctx, o);
-  else if (o.tier === 'far' && !o.sign) drawTab(ctx, o.kind);
+  else if (o.tier === 'far' && !o.sign) drawTab(ctx, o.kind, o.selected);
   else drawLine(ctx, o);
 }
 
@@ -177,7 +179,8 @@ export function calloutSprite(o: CalloutText): THREE.Sprite {
   // An attention carrier: no fog ever greys it (docs/design.md).
   const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture(ctx.canvas), depthWrite: false, depthTest: false, transparent: true, fog: false }));
   sprite.center.set(0.5, 0);
-  sprite.renderOrder = 10;
+  // The selected unit's over its neighbours'.
+  sprite.renderOrder = o.selected ? 11 : 10;
   fit(sprite, ctx.canvas);
   return sprite;
 }

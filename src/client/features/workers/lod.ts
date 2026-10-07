@@ -54,12 +54,19 @@ export interface TierView {
  */
 export interface TierFloor {
   selected?: boolean;
+  /**
+   * The Overview's zoom tier (core/overview-transition.ts): zoomed in to a pod or a unit, the selected
+   * unit shows its whole card, so it reads as "this one" against its neighbours' lines.
+   */
+  zoom?: 'deck' | 'pod' | 'unit';
 }
 
 /** A unit's callout tier this frame, given the one it had (`prev`, for the hysteresis). */
 export function tierFor(view: TierView, prev?: CalloutTier, floor: TierFloor = {}): CalloutTier {
   const tier = view.ortho ? tierAt((view.ortho.top - view.ortho.bottom) / 2, OVERVIEW_BOUNDS, prev) : tierAt(view.distance, WALK_BOUNDS, prev);
-  return floor.selected && ORDER[tier] < ORDER.mid ? 'mid' : tier;
+  if (!floor.selected) return tier;
+  const least: CalloutTier = view.ortho && (floor.zoom === 'pod' || floor.zoom === 'unit') ? 'near' : 'mid';
+  return ORDER[tier] < ORDER[least] ? least : tier;
 }
 
 /**
@@ -122,11 +129,39 @@ export function activityLine(activity: string): string {
   return clip(one, MID_MAX);
 }
 
+/** "Wants permission: Bash: npm publish": the hook's words for a tool call waiting on your yes. */
+const PERMISSION = /^Wants permission:\s*/i;
+
+/** What a permission wait asks, without the hook's words ("Bash: npm publish"), or null when it isn't one. */
+export function permissionAsk(o: { activity?: string; label?: string }): string | null {
+  for (const s of [o.activity, o.label]) {
+    const one = s?.split('\n')[0].trim() ?? '';
+    if (PERMISSION.test(one)) return one.replace(PERMISSION, '').trim() || null;
+  }
+  return null;
+}
+
 /**
  * The middle tier's words after the call sign: what it's doing now while it works or waits on you (its
- * latest tool call or prompt), else the ranking's status phrase (shared/rowtext.ts).
+ * latest tool call or prompt), else the ranking's status phrase (shared/rowtext.ts). A permission wait
+ * says what you'd allow, as a question ("Allow npm publish?"), not the hook's own words.
  */
 export function midLine(o: { activity?: string; level: AttentionLevel; label?: string; title?: string }): string {
+  if (o.level === 'needs-you') {
+    const ask = permissionAsk(o);
+    // The tool's name goes too: the command says it ("npm publish", not "Bash: npm publish").
+    if (ask) return `Allow ${clip(ask.replace(/^[A-Za-z][\w.-]{0,30}:\s*/, '') || ask, MID_MAX - 7)}?`;
+  }
   if (o.activity?.trim() && (o.level === 'working' || o.level === 'needs-you')) return activityLine(o.activity);
   return clip(statusPhrase({ level: o.level, label: o.label ?? '' }, o.title), MID_MAX);
+}
+
+/**
+ * The near card's third line for a unit that needs someone: what it asks (a permission's tool call, a
+ * question's prompt) or why it's stuck, in place of its branch and engine. Null for any other unit.
+ */
+export function askLine(o: { activity?: string; level: AttentionLevel; label?: string }): string | null {
+  if (o.level === 'stuck') return o.label?.trim() || null;
+  if (o.level !== 'needs-you') return null;
+  return permissionAsk(o) ?? (o.activity?.split('\n')[0].trim() || o.label?.trim() || null);
 }
