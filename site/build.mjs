@@ -40,7 +40,7 @@ export function buildPage(html, env) {
   const repo = url('MERGELINE_REPO_URL');
   if (repo) {
     out = out.replace(/data-link="repo" href="[^"]*"/, `data-link="repo" href="${attr(repo.href)}"`);
-    out = out.replace(/data-link="repo-run" href="[^"]*"/, `data-link="repo-run" href="${attr(new URL('#run-it', repo).href)}"`);
+    out = out.replace(/data-link="repo-run" href="[^"]*"/, `data-link="repo-run" href="${attr(new URL('#from-source', repo).href)}"`);
   }
   // Until `npx mergeline` works from the registry, the page says so under the command (never a command that 404s).
   if (env.MERGELINE_NPM_PUBLISHED === '1') out = out.replace(/\s*<p class="small unpublished" data-unpublished>[\s\S]*?<\/p>/, '');

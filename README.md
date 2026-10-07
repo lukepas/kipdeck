@@ -6,7 +6,9 @@ The inbox for your AI coding agents: see which agent needs you, review what's re
 npx mergeline
 ```
 
-![Mergeline in 30 seconds: Codex asks a question and is answered from its row, Claude Code's diff is reviewed and merged into Shipped today (the demo's scripted agents, no model)](docs/img/demo.gif)
+> Not on npm yet: the name waits on a trademark search ([business/naming.md](business/naming.md)). Until it is published, [run it from source](#from-source).
+
+![Mergeline in 30 seconds: Codex's question opens by itself and is answered in one box, Claude Code's diff is reviewed and merged into Shipped today (the demo's scripted agents, no model)](docs/img/demo.gif)
 
 No agents yet? `npx mergeline --demo` plays five scripted ones on a throwaway repository, no CLI, sign-in or model needed ([the demo](docs/demo.md)).
 
@@ -14,7 +16,7 @@ Run it inside the repository you work in. It opens in your browser, signed in, w
 
 [**Run it**](#run-it) · [**Try the demo**](docs/demo.md) · [**Attach an agent**](#attach-an-agent-you-already-started) · [**Teams and servers**](docs/self-hosting.md) · [**Labs**](#labs) · [**Docs**](docs/features.md)
 
-- **One loop.** **Deploy agent**, get pinged when it needs you, act on its row (Answer, Review changes, Merge), and it lands in **Shipped today**. Each row has one button; the selected agent's live terminal, diff and log sit beside the list. See [the inbox](docs/inbox.md).
+- **One loop.** **Deploy agent**, get pinged when it needs you, answer its question in one box, review the diff beside the list and Merge, and it lands in **Shipped today**. The oldest agent waiting on you opens by itself; the top bar counts who is waiting, the median wait and what merged today. See [the inbox](docs/inbox.md).
 - **One ranking.** `src/shared/attention.ts` decides the order everywhere: the inbox's sections (Needs you, To review, Working, Idle), Mission control, the tab title and notifications.
 - **A record of what shipped.** Every merge and send-back is kept on your machine as a signed record: which agent and model, the prompt, and who reviewed it. **Numbers** shows human wait time and the merge rate per agent and model from it.
 - **Calm by default.** Everything that isn't the inbox (the 3D Bridge view, goals and the timeline, meetings, voice, Proof of Merge on testnets) is off until someone switches it on in [Labs](#labs).
@@ -39,7 +41,18 @@ npx mergeline
 3. The **setup card** says which agents it found and whether each is signed in, the project, and GitHub, with the one line to run for anything that isn't ready.
 4. **Deploy your first agent** starts one on a safe task (a 5-line SUMMARY.md on how to run the repository). It shows up under **Working** within seconds and under **To review** when it's done.
 
-Nothing asks you anything in the terminal, and there are no settings to fill in. From a clean machine to the first agent at work takes under two minutes, most of it npm downloading; `design/time-to-first-agent.mjs` times it.
+Nothing asks you anything in the terminal, and there are no settings to fill in. From a clean machine to the first agent at work takes under two minutes, most of it npm downloading; `design/time-to-first-agent.mjs` times it (from a local `npm pack` tarball until the package is on npm).
+
+### From source
+
+Until `mergeline` is on npm, build it once and run it from inside the repository you work in:
+
+```bash
+git clone https://github.com/zbagdzevicius/ugcarmy mergeline
+cd mergeline && npm install && npm run build
+cd ~/code/your-project && node ~/path/to/mergeline/bin/agent-office.js        # what npx mergeline will run
+node ~/path/to/mergeline/bin/agent-office.js --demo                         # the demo, anywhere
+```
 
 Common options:
 
@@ -66,16 +79,17 @@ It finds that folder's newest Claude Code or Codex session in the CLI's own file
 
 ## Labs
 
-Labs are the parts beyond the inbox. Each is off as the office ships, so a first visit sees the inbox and nothing else. An admin switches them for everyone from **Labs** in the home page's avatar menu (or Ctrl+K) or the Bridge view's menu; `--labs bridge,ops` (or `AGENT_OFFICE_LABS`) holds some on from the command line. Turning one off hides it; nothing is deleted.
+Labs are the parts beyond the inbox. Each is off as the office ships, so a first visit sees the inbox and nothing else. An admin switches them for everyone from **Open Labs...** at the foot of Settings > Account on the home page (or Labs in Ctrl+K) or the Bridge view's menu; `--labs bridge,ops` (or `AGENT_OFFICE_LABS`) holds some on from the command line. Turning one off hides it; nothing is deleted.
 
 | Lab | What switching it on brings back |
 | --- | --- |
+| GitHub boards and queue | Issues, Pull requests, the Task queue and Mission control in the home page's avatar menu and Ctrl+K. |
 | Bridge view | A link to the 3D bridge at `/bridge` on the home page, and the deck plan in the pane while no agent is selected. `/bridge` itself always opens. |
 | Goals and timeline | Goals and milestones, the Timeline and Crew tabs in Mission control, the Bridge view's mission strip and the Services board. |
 | Meetings | The Review bay and the planning whiteboard. |
 | Voice | Voice chat, screen sharing and the dictation mic in prompt boxes and terminals. |
 | Bridge ambience | The bridge in full: mascot, ship's voice, hands, celebrations, start of watch, ship motion and the ambience bed. Off, the bridge starts calm. |
-| Proof of Merge (testnets) | Bounties and payouts, attestations, ERC-8004 reputation, x402 paid tasks and `/pom/`. Their HTTP routes don't exist while it's off. Any chain flag (`--x402`, `--attest`, `--reputation`) holds it on. |
+| Proof of Merge (testnets) | Bounties and payouts, attestations, ERC-8004 reputation, x402 paid tasks and `/pom/`. Their HTTP routes don't exist and their socket messages go nowhere while it's off. Any chain flag (`--x402`, `--attest`, `--reputation`) holds it on. |
 
 More in [docs/labs.md](docs/labs.md).
 
@@ -87,7 +101,7 @@ More in [docs/labs.md](docs/labs.md).
 - **Settings in three panes.** Account, Agents and Notifications. Six keys, and Help on **?** ([controls](docs/controls.md)).
 - **Teams.** Accounts with invite links, a shared dev box reached by SSH tunnel or Tailscale, and the team's Slack or Discord channel ([below](#teams-and-servers)).
 - **Agents that manage agents.** Every agent can list, deploy, message and stop the others through the `mergeline` MCP server or the `office-workers` command ([agents](docs/agents.md)).
-- **Mission control** (the avatar menu's Work): the same ranking with reminders, the review inbox and the digest of what happened while you were away ([mission control](docs/mission-control.md)).
+- **Mission control** (with the GitHub boards and queue lab on): the same ranking with reminders, the review inbox and the digest of what happened while you were away ([mission control](docs/mission-control.md)).
 
 Everything else, the 3D bridge with its crew, moments and ambience, goals and the timeline, meetings, voice and Proof of Merge on testnets, is in [Labs](#labs) and described in [features](docs/features.md).
 
@@ -151,7 +165,7 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 
 ## Controls
 
-Six keys on the home page: **Ctrl+K** (find an agent or a command), **N** (deploy an agent), **Enter** (the selected agent's next step), **Esc** (back to the list, or close a window), **/** (search) and **?** (Help). Up and Down move the selection. Everything else is a row's one button or the avatar menu: Work, Numbers, Settings, Labs, Help and Sign out. The Bridge view's keys (walking, the Overview, voice) are in [docs/controls.md](docs/controls.md#the-bridge-view-labs).
+Six keys on the home page: **Ctrl+K** (find an agent or a command), **N** (deploy an agent), **Enter** (the selected agent's next step), **Esc** (back to the list, or close a window), **/** (search) and **?** (Help). Up and Down move the selection. Everything else is a row's button or the avatar menu: Numbers, Settings, Help and Sign out (Labs is in Settings and Ctrl+K). The Bridge view's keys (walking, the Overview, voice) are in [docs/controls.md](docs/controls.md#the-bridge-view-labs).
 
 ## Development
 
