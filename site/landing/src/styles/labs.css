@@ -6,7 +6,7 @@
 .deck3d { --lift: 1; position: relative; height: 300px; margin: -6px -6px 6px; perspective: 1100px; perspective-origin: 50% 30%; overflow: hidden; }
 .plane {
   position: absolute; inset: 0; transform-style: preserve-3d;
-  transform: translateY(calc(var(--lift) * 14px)) rotateX(calc(56deg * var(--lift))) rotateZ(calc(-34deg * var(--lift))) scale(calc(1 - .12 * var(--lift)));
+  transform: translateY(calc(var(--lift) * 46px)) rotateX(calc(56deg * var(--lift))) rotateZ(calc(-34deg * var(--lift))) scale(calc(1 - .12 * var(--lift)));
 }
 .deck-floor {
   position: absolute; left: 50%; top: 50%; width: 500px; height: 500px; margin: -250px 0 0 -250px; border-radius: 50%;
