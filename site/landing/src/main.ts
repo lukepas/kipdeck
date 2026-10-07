@@ -29,6 +29,9 @@ magnetic();
 const hero = document.querySelector<HTMLElement>('[data-scene="hero"]');
 const heroScene = hero ? (mountHero(hero) as ReturnType<typeof mountHero>) : null;
 copyButtons((btn) => {
+  btn.classList.remove('ping');
+  void btn.offsetWidth;
+  btn.classList.add('ping');
   const r = btn.getBoundingClientRect();
   heroScene?.attend(r.left + r.width / 2, r.top + r.height / 2);
 });

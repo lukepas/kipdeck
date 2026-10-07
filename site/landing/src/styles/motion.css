@@ -2,18 +2,47 @@
    With less motion (the system's setting) none of it runs and every element is at its final state. */
 
 @media (prefers-reduced-motion: no-preference) {
-  html.inhale .hero-h .w { animation: inhale 820ms var(--ease-out) both; animation-delay: calc(120ms + var(--i, 0) * 70ms); }
-  html.inhale .hero-h .waiting { animation: none; }
-  html.inhale .stopwatch { animation: fade-in 500ms 700ms both; }
+  /* The headline inhales: every word opens from width 62 and weight 300 to width 118 and weight
+     750, one after another, inside a box already at its final size. */
+  html.js .hero-h .w[data-t] > span, html.js .hero-h .waiting { animation: inhale 1100ms var(--ease-out) backwards; }
+  html.js .hero-h > :nth-child(1) > span { animation-delay: 140ms; }
+  html.js .hero-h > :nth-child(2) > span { animation-delay: 210ms; }
+  html.js .hero-h > :nth-child(3) > span { animation-delay: 280ms; }
+  html.js .hero-h .waiting { animation-delay: 350ms; }
+  html.js .hero-h > :nth-child(6) > span { animation-delay: 420ms; }
+  html.js .hero-h > :nth-child(7) > span { animation-delay: 490ms; }
+  html.js .stopwatch { animation: fade-in 500ms 1000ms backwards; }
+  .odo .d::before { transition: transform 460ms cubic-bezier(.34, 1.45, .64, 1); }
+  html.js .hero-glow { animation: fade-in 1600ms var(--ease) 300ms backwards; }
+  /* A Signal scanline reads the inbox top to bottom as its rows arrive. */
+  html.js .hero .app.mini::after {
+    content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none;
+    background: linear-gradient(to bottom, transparent 70%, color-mix(in srgb, var(--signal) 7%, transparent) calc(100% - 1px), var(--signal) calc(100% - 1px));
+    transform: translateY(-100%); animation: scan 1300ms cubic-bezier(.45, 0, .25, 1) 480ms both;
+  }
+  /* The one primary button: while an agent waits, a diamond rides its edge. */
+  @supports (offset-path: inset(0 round 4px)) {
+    .btn.primary.magnetic::after {
+      content: ''; position: absolute; left: 0; top: 0; width: 8px; height: 8px; background: var(--signal); pointer-events: none;
+      clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+      offset-path: inset(-5px round 7px); offset-rotate: 0deg; offset-anchor: center;
+      opacity: 0; transition: opacity 400ms var(--ease); animation: ride 5.5s linear infinite;
+    }
+    html.agent-waiting .btn.primary.magnetic::after { opacity: 1; }
+    .btn.primary.magnetic:hover::after { animation-duration: 1.8s; }
+  }
   html.js .lockup .mark-trail { stroke-dasharray: 40; animation: draw 900ms var(--ease-out) both 80ms; }
   html.js .lockup .mark-lead { animation: notch 1200ms backwards; }
   html.js .hero .app.mini { animation: lift 1000ms var(--ease-out) both 260ms; }
-  html.js .hero .app.mini .row { animation: stream 520ms var(--ease-out) both; }
-  html.js .hero .app.mini .row:nth-of-type(1) { animation-delay: 520ms; }
-  html.js .hero .app.mini .row:nth-of-type(2) { animation-delay: 560ms; }
-  html.js .hero .app.mini .row:nth-of-type(3) { animation-delay: 600ms; }
-  html.js .hero .app.mini .row:nth-of-type(4) { animation-delay: 640ms; }
-  html.js .hero .app.mini .row:nth-of-type(5) { animation-delay: 680ms; }
+  /* Rows stream in, top to bottom in the order the opening shows them (Codex last, at work). */
+  html.js .hero .app.mini .row, html.js .hero .app.mini .sec { animation: stream 560ms var(--ease-out) both 520ms; }
+  html.js .hero .app.mini .app-list > :nth-child(3) { animation-delay: 500ms; }
+  html.js .hero .app.mini .app-list > :nth-child(4) { animation-delay: 540ms; }
+  html.js .hero .app.mini .app-list > :nth-child(5) { animation-delay: 580ms; }
+  html.js .hero .app.mini .app-list > :nth-child(6) { animation-delay: 620ms; }
+  html.js .hero .app.mini .app-list > :nth-child(7) { animation-delay: 660ms; }
+  html.js .hero .app.mini .app-list > :nth-child(8) { animation-delay: 700ms; }
+  html.js .hero .app.mini .app-list > :nth-child(2) { animation-delay: 740ms; }
 
   html.js .rv { opacity: 0; transform: translateY(22px); transition: opacity 700ms var(--ease-out), transform 900ms var(--ease-out); }
   html.js .rv.in { opacity: 1; transform: none; }
@@ -25,10 +54,15 @@
 }
 
 @keyframes inhale {
-  from { opacity: 0; transform: scaleX(.62) translateY(.06em); filter: blur(6px); }
-  60% { opacity: 1; filter: blur(0); }
-  to { opacity: 1; transform: none; }
+  from { opacity: 0; font-stretch: 62%; font-weight: 300; transform: translateY(.14em); }
+  30% { opacity: 1; }
 }
+@keyframes scan { 0% { transform: translateY(-100%); opacity: 1; } 85% { opacity: 1; } 100% { transform: translateY(0); opacity: 0; } }
+@keyframes ride { to { offset-distance: 100%; } }
+@keyframes caret { 50% { background-size: 0 0; } }
+@keyframes burst { from { opacity: 1; transform: scaleX(.15); } 40% { opacity: 1; } to { opacity: 0; transform: scaleX(1); } }
+@keyframes ghost-ring { from { opacity: 1; transform: scale(.3); } to { opacity: 0; transform: scale(1.5); } }
+@keyframes ping { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.35, 1.6); } }
 @keyframes fade-in { from { opacity: 0; } }
 @keyframes draw { from { stroke-dashoffset: 40; } }
 @keyframes notch { 0%, 55% { fill: currentColor; } 65% { fill: var(--signal); } 80% { fill: currentColor; } }
@@ -36,3 +70,11 @@
 @keyframes stream { from { opacity: 0; transform: translateX(18px); } }
 @keyframes hum { to { stroke-dashoffset: -18; } }
 @keyframes sweep { 0% { opacity: 0; transform: translate(0, 0); } 30% { opacity: .8; } 100% { opacity: 0; transform: translate(180px, -90px); } }
+
+/* The odometer's reels: each digit is a column 0 to 9 that rolls to its value. The digit itself
+   stays in the text (transparent), so the element reads as a plain value. */
+.odo .d { display: inline-block; position: relative; overflow: hidden; height: 1.1em; line-height: 1.1em; vertical-align: top; color: transparent; }
+.odo .d::before {
+  content: '0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9'; white-space: pre; position: absolute; left: 0; top: 0;
+  line-height: 1.1em; color: var(--odo-c, currentColor); transform: translateY(calc(var(--d, 0) * -1.1em));
+}
