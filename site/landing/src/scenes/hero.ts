@@ -81,7 +81,9 @@ export function mountHero(section: HTMLElement) {
   });
 
   const canvas = section.querySelector<HTMLCanvasElement>('#field');
-  const field: FieldHandle | null = canvas ? mountField(canvas) : null;
+  // The field keeps clear of every block of words, so nothing crosses the text.
+  const words = [...section.querySelectorAll('.hero-copy > .label, .hero-h .w, .hero .lede, .try, .cta, .facts')];
+  const field: FieldHandle | null = canvas ? mountField(canvas, words) : null;
   // On a phone the headline fills the lanes, so the unit that will wait on you works in the gap
   // between the headline and the subhead, to the right of "on you."
   if (field && env.phone) {
@@ -117,7 +119,7 @@ export function mountHero(section: HTMLElement) {
     if (whole === lastSecond) return;
     lastSecond = whole;
     const text = clock(s);
-    setStopwatch(env.reduced ? '23:00' : clock(s, true));
+    setStopwatch(env.reduced ? '23:00' : text);
     setRowWait(text);
     miniMedian.textContent = text;
     pulseWait.textContent = text;

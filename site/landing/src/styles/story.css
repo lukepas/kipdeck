@@ -21,10 +21,11 @@
 .waiting-box { position: relative; display: inline-block; white-space: nowrap; contain: layout style; }
 .waiting-box::before { content: 'waiting'; visibility: hidden; font-stretch: 125%; }
 .waiting { position: absolute; left: 0; top: 0; color: var(--signal); font-stretch: var(--ws, 118%); }
-.stopwatch { position: absolute; right: -.1em; top: .12em; z-index: 1; padding: .12em .34em; font-size: max(11px, .12em); background: var(--void); font-weight: 500; letter-spacing: 0; line-height: 1.1; color: var(--signal); border: 1px solid color-mix(in srgb, var(--signal) 45%, transparent); border-radius: 3px; }
+/* The stopwatch sits on the cap line over the w, where no letter of the line above reaches down. */
+.stopwatch { position: absolute; left: .03em; top: .06em; z-index: 1; padding: .12em .34em; font-size: max(11px, .12em); background: var(--void); font-weight: 500; letter-spacing: 0; line-height: 1.1; color: var(--signal); border: 1px solid color-mix(in srgb, var(--signal) 45%, transparent); border-radius: 3px; }
 .stopwatch { --odo-c: var(--signal); transition: border-color 300ms var(--ease), color 300ms var(--ease); }
 /* On a phone the word sits at the end of its line, so the stopwatch moves beside it, clear of the g. */
-@media (max-width: 720px) { .stopwatch { right: auto; left: calc(100% + .08em); top: .34em; } }
+@media (max-width: 720px) { .stopwatch { left: calc(100% + .08em); top: .34em; } }
 .stopwatch.idle { --odo-c: var(--muted); color: var(--muted); border-color: var(--line-strong); }
 .stopwatch.flash { background: var(--signal); color: var(--on-signal); --odo-c: var(--on-signal); }
 .hero .lede { margin-bottom: 26px; color: var(--muted); }

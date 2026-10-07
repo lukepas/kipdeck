@@ -186,12 +186,12 @@ test('the wait: Codex stops and asks as the page opens, and answering it clears 
   // About 2.4 s in it asks and climbs to the top; from then on the visitor's own time counts.
   await page.locator('[data-clear]:enabled').waitFor({ timeout: 5000 });
   await page.waitForTimeout(1200);
-  assert.match((await page.locator('#stopwatch').textContent()) ?? '', /^00:0\d$/);
+  assert.match((await page.locator('#stopwatch').textContent()) ?? '', /^0:0\d$/, 'one clock format, m:ss, everywhere');
   assert.equal(await page.locator('[data-pulse-count]').textContent(), '1');
   assert.equal(await page.locator('#favicon').getAttribute('href'), 'favicon-alert.svg');
   await page.locator('[data-clear]').click();
   assert.equal(await page.locator('[data-pulse-count]').textContent(), '0');
-  assert.equal(await page.locator('#stopwatch').textContent(), '00:00');
+  assert.equal(await page.locator('#stopwatch').textContent(), '0:00');
   assert.match((await page.locator('[data-clear]').getAttribute('aria-label')) ?? '', /was answered/);
   assert.equal(await page.locator('#favicon').getAttribute('href'), 'favicon.svg');
   assert.equal((await page.locator('[data-clear]').textContent())?.includes('Answered. Back at work.'), true);

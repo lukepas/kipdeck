@@ -2,7 +2,7 @@
    `.staged`, which a scene sets when it is about to drive its section, so without script or with
    less motion the page is exactly its HTML. */
 
-/* ---------- Top bar: sound and the docked sparkline ---------- */
+/* ---------- Top bar: sound ---------- */
 .sound { visibility: hidden; }
 html.js .sound { visibility: visible; }
 .sound .wave { fill: none; stroke: currentColor; stroke-width: 1.6; display: none; }
@@ -10,12 +10,6 @@ html.js .sound { visibility: visible; }
 .sound[aria-pressed='true'] { color: var(--signal); border-color: color-mix(in srgb, var(--signal) 50%, var(--line)); }
 .sound[aria-pressed='true'] .wave { display: inline; }
 .sound[aria-pressed='true'] .mute { display: none; }
-.pulse { position: relative; }
-.spark { position: absolute; left: 14px; right: 14px; top: calc(100% + 5px); width: calc(100% - 28px); height: 12px; overflow: visible; opacity: 0; pointer-events: none; }
-.spark polyline { fill: none; stroke: var(--signal); stroke-width: 1.5; stroke-linejoin: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1; stroke-dashoffset: 1; }
-.pulse.spark-on .spark { opacity: 1; transition: opacity 300ms var(--ease); }
-.pulse.spark-on .spark polyline { stroke-dashoffset: 0; transition: stroke-dashoffset 1200ms var(--ease-out) 200ms; }
-@media (max-width: 520px) { .spark { display: none; } }
 
 /* ---------- 05 Why ---------- */
 .table-wrap { position: relative; }
