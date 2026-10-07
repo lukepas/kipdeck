@@ -168,7 +168,15 @@ export function mountFunnel(section: HTMLElement) {
     const mouthX = cardR.x + 10, mouthY = cy;
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, w, h);
+    // In the vortex the units leave short trails (the last frames fade out rather than clear), so
+    // the spin reads as motion even while the scroll holds still.
+    const trail = vortex > 0.05 && collapse < 0.6 && tier === 'full';
+    if (trail) {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = `rgba(0,0,0,${(0.42 + collapse * 0.5).toFixed(2)})`;
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = 'source-over';
+    } else ctx.clearRect(0, 0, w, h);
     // The row slots the units are headed for, faint, so the card reads as a mouth with places in it.
     const slots = ease(p, 0.3, 0.5) * show;
     if (slots > 0.01) {
@@ -240,7 +248,7 @@ export function mountFunnel(section: HTMLElement) {
         // Units crossing the copy are dimmed so the words stay crisp.
         ctx.globalAlpha = Math.min(1, show * (0.34 + z * 0.24) * (lit ? 1.25 : 1) * (over ? 0.4 : 1));
         ctx.lineWidth = 1 + z * 0.4;
-        const size = (2.8 + z * 1.6) * (1 + vortex * 0.25 * (1 - collapse));
+        const size = (2.8 + z * 1.6) * (1 + vortex * 0.45 * (1 - collapse));
         ctx.beginPath();
         for (let i = 0; i < N; i++) {
           if (uz[i] !== z) continue;

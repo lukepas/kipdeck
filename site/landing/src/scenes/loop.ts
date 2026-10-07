@@ -219,7 +219,7 @@ export function mountLoop(section: HTMLElement) {
     const wtxt = clock(answered ? 23 : waited);
     if (qWait.textContent !== wtxt) qWait.textContent = wtxt;
     set(ccBar, '--w', answered ? '0' : (0.04 + (waited / 23) * 0.6).toFixed(3));
-    const ageTxt = answered ? (merged ? '0:23' : 'answered') : `waiting ${wtxt}`;
+    const ageTxt = answered ? (merged ? 'waited 0:23' : 'answered') : `waiting ${wtxt}`;
     if (ccAge.textContent !== ageTxt) ccAge.textContent = ageTxt;
     const whoTxt = answered ? 'Answered' : 'Claude Code asks';
     if (who.textContent !== whoTxt) who.textContent = whoTxt;

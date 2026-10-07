@@ -65,7 +65,8 @@
 .loop .staged .choice { transform-origin: 0 50%; }
 .send { transition: transform 120ms var(--ease); }
 .send.press { transform: translateY(2px) scale(.96); }
-.reply-text.typing::after { content: ''; display: inline-block; width: .45em; height: 1.05em; margin-left: 1px; vertical-align: -2px; background: var(--signal); animation: blink 900ms steps(1) infinite; }
+/* The caret is the reply's own background, so typing never moves a box. */
+.reply-text.typing { padding-right: .6em; background: linear-gradient(var(--signal), var(--signal)) right 1px center / .45em 1.05em no-repeat; animation: caret 900ms steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 .loop .staged .pane-tabs .on { box-shadow: none; }
 .loop .staged .tab-ink { position: absolute; bottom: -1px; left: 0; height: 2px; background: var(--text); width: calc(var(--w0, 60px) + (var(--w1, 80px) - var(--w0, 60px)) * var(--x, 1)); transform: translateX(calc(var(--x0, 16px) + (var(--x1, 90px) - var(--x0, 16px)) * var(--x, 1))); }

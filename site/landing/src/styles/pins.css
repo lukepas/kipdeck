@@ -70,3 +70,7 @@ canvas.swarm { display: none; }
   html.js .problem .clock-span { margin-top: 5vh; }
   html.js .problem .lanes svg { max-height: 44vh; }
 }
+
+/* A scene may draw past its column for a moment (the MERGED stamp landing at 2.4 times its size);
+   the page itself never grows sideways. clip, unlike hidden, keeps the sticky stages sticking. */
+main { overflow-x: clip; }
