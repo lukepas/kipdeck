@@ -336,6 +336,14 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   assert.match(await now.locator('.crew-now-text').innerText(), /\S/);
   assert.match(await now.locator('.crew-now-for').innerText(), /^(<1m|\d+[mhd])$/);
 
+  // Locate on a Crew row selects the unit on the deck (features/selection): the selection card shows
+  // it, and the docked panel stays up beside it.
+  const crewRow = docked.locator('.crew-row', { has: page.locator('.mc-locate') }).first();
+  await crewRow.hover();
+  await crewRow.locator('.mc-locate').click();
+  await page.locator('.sel-card:not([hidden]) .sel-name').waitFor({ timeout: 10_000 });
+  assert.equal(await docked.count(), 1, 'still docked after Locate');
+
   // D floats it in the middle, remembered; D again docks it.
   await page.keyboard.press('d');
   await page.locator('#modal-root > .backdrop > .modal.mission-control').waitFor();
