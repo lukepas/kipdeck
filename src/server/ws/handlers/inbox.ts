@@ -47,22 +47,33 @@ function logged(ctx: Ctx, floor: Floor, w: WorkerInfo, record: Omit<ShipRecord, 
   return r;
 }
 
-function merge(ctx: Ctx, c: Client, workerId: string) {
-  const who = c.peer.name;
+/** Who merges: someone in the office (their connection), or the hosted demo's scripted reviewer (server/demo). */
+export interface Reviewer {
+  who: string;
+  accountId?: string;
+  /** Their connection: a pull request is merged on GitHub as them, so only someone with one can merge one. */
+  client?: Client;
+}
+
+/** Merges an agent's work for `by`: its pull request when it has an open one, else its branch locally. `reply` hears how it went. */
+export function mergeWork(ctx: Ctx, by: Reviewer, workerId: string, reply: (r: { record: ShipRecord } | { error: string }) => void) {
+  const { who } = by;
   const w = workerOf(ctx, workerId);
-  const fail = (error: string) => ctx.sendTo(c, { t: 'inbox.merged', workerId, error });
+  const fail = (error: string) => reply({ error });
   if (!w) return fail('That agent has gone');
   const { floor, info } = w;
   if (info.kind !== 'agent') return fail('Only an agent\'s work is merged from the inbox');
   const base = about(floor, info, who);
   const done = (extra: Partial<ShipRecord>) => {
     const record = logged(ctx, floor, info, { ...base, kind: 'merged', ...extra });
-    ctx.sendTo(c, { t: 'inbox.merged', workerId, record });
+    reply({ record });
     ctx.toastFloor(floor, `${who} merged ${base.task ? `"${base.task}"` : `${info.name}'s work`}${extra.pr ? ` (PR #${extra.pr.number})` : ''}`);
   };
   const pr = ctx.rosterEntryOf(info.id)?.pr;
   if (pr?.state === 'merged') return fail(`PR #${pr.number} is merged already`);
   if (pr?.state === 'open') {
+    const c = by.client;
+    if (!c) return fail(`PR #${pr.number} is merged on GitHub by someone signed in to it`);
     const url = info.pr?.number === pr.number ? info.pr.url : undefined;
     return ctx.withGitHub(
       c,
@@ -77,7 +88,7 @@ function merge(ctx: Ctx, c: Client, workerId: string) {
   }
   const task = base.task ?? info.prompt?.split('\n')[0] ?? 'agent work';
   const message = `${task.slice(0, 72)}\n\nMerged from the inbox by ${who}. Work by ${info.name} (${[base.provider, base.model].filter(Boolean).join(', ') || 'agent'}).`;
-  const env = c.accountId ? ctx.signins.apply(c.accountId, childEnv(), [], 'github') : undefined;
+  const env = by.accountId ? ctx.signins.apply(by.accountId, childEnv(), [], 'github') : undefined;
   void localMerge({
     projectDir: floor.dir,
     workDir: info.worktree ? path.join(floor.dir, info.worktree.path) : floor.dir,
@@ -91,7 +102,8 @@ function merge(ctx: Ctx, c: Client, workerId: string) {
 
 export const inboxHandlers = {
   'inbox.merge'(ctx, c, msg) {
-    merge(ctx, c, str(msg.workerId, 32));
+    const workerId = str(msg.workerId, 32);
+    mergeWork(ctx, { who: c.peer.name, accountId: c.accountId, client: c }, workerId, (r) => ctx.sendTo(c, { t: 'inbox.merged', workerId, ...r }));
   },
   'inbox.sendBack'(ctx, c, msg) {
     const who = c.peer.name;
