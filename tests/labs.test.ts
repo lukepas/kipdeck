@@ -16,7 +16,7 @@ import type { Client } from '../src/server/office/client.js';
 import type { ServerMsg } from '../src/shared/protocol.js';
 
 test('every lab is off as the office ships, and each says what it brings back', () => {
-  assert.deepEqual(defaultLabs(), { bridge: false, ops: false, meetings: false, voice: false, ambience: false, proof: false });
+  assert.deepEqual(defaultLabs(), { boards: false, bridge: false, ops: false, meetings: false, voice: false, ambience: false, proof: false });
   for (const id of LAB_IDS) {
     assert.ok(LAB_META[id].name && LAB_META[id].what.length > 20, id);
     // Plain ASCII prose: no em or en dashes.
@@ -71,7 +71,7 @@ test('--labs and AGENT_OFFICE_LABS hold labs on, and a chain flag holds Proof of
   assert.deepEqual(loadConfig([...base, '--labs', 'meetings']).labs, ['voice', 'meetings']);
 });
 
-test('only an admin switches labs, and everyone hears which are on', () => {
+test('only an admin switches labs, and everyone hears which are on, without a toast', () => {
   const sent: { to?: string; msg: ServerMsg }[] = [];
   const toasts: string[] = [];
   const warned: string[] = [];
@@ -89,7 +89,7 @@ test('only an admin switches labs, and everyone hears which are on', () => {
   assert.deepEqual(warned, ['Only admins can switch labs on or off']);
   labsHandlers['labs.set'](ctx, client('admin'), { t: 'labs.set', patch: { proof: true } });
   assert.equal(labs.on('proof'), true);
-  assert.deepEqual(toasts, ['Ana turned on Proof of Merge (testnets) (Labs)']);
+  assert.deepEqual(toasts, []);
   const last = sent.at(-1)!.msg as Extract<ServerMsg, { t: 'labs' }>;
   assert.equal(last.t, 'labs');
   assert.equal(last.state.on.proof, true);
@@ -144,4 +144,22 @@ test('without Bridge ambience the bridge starts calm, and nothing that tells you
   assert.deepEqual([calm.alerts, calm.needsYouSound, calm.notify, calm.mix.alerts], [s.alerts, s.needsYouSound, s.notify, s.mix.alerts]);
   assert.equal(s.life, 'full');
   assert.equal(calmBridge({ ...s, shipMotion: 'off' }).shipMotion, 'off');
+});
+
+test("a lab that's off is off over the socket too: Proof of Merge's, meetings' and voice's messages go nowhere", async () => {
+  const { labRefuses, MESSAGE_LAB } = await import('../src/server/ws/labgate.js');
+  const labs = new Labs(undefined);
+  const warned: string[] = [];
+  const ctx = { labs, warn: (_c: Client, e: string) => warned.push(e) } as unknown as Ctx;
+  const c = {} as Client;
+  for (const t of ['bounty.approve', 'bounty.release.sent', 'bounty.wallet', 'reputation.get', 'showcase.settings']) assert.equal(MESSAGE_LAB.get(t), 'proof', t);
+  assert.equal(MESSAGE_LAB.get('meeting.start'), 'meetings');
+  assert.equal(labRefuses(ctx, c, 'bounty.approve'), true);
+  assert.deepEqual(warned, ['Proof of Merge (testnets) is off. An admin turns it on in Labs.']);
+  assert.equal(labRefuses(ctx, c, 'rtc'), true);
+  assert.equal(warned.length, 1, 'voice chatter is dropped quietly');
+  // The core loop is never gated.
+  for (const t of ['inbox.merge', 'worker.spawn', 'term.input', 'changes.diff']) assert.equal(labRefuses(ctx, c, t), false, t);
+  labs.set({ proof: true }, 'Ana');
+  assert.equal(labRefuses(ctx, c, 'bounty.approve'), false);
 });

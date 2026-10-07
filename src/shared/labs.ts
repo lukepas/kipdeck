@@ -5,7 +5,7 @@
 // all read the same table.
 
 /** Every lab, in the order the Labs window lists them. */
-export const LAB_IDS = ['bridge', 'ops', 'meetings', 'voice', 'ambience', 'proof'] as const;
+export const LAB_IDS = ['boards', 'bridge', 'ops', 'meetings', 'voice', 'ambience', 'proof'] as const;
 export type LabId = (typeof LAB_IDS)[number];
 
 /** Which labs are on. */
@@ -13,6 +13,7 @@ export type Labs = Record<LabId, boolean>;
 
 /** What a person reads in the Labs window: a name, one line on what turning it on brings back. */
 export const LAB_META: Readonly<Record<LabId, { name: string; what: string }>> = {
+  boards: { name: 'GitHub boards and queue', what: "Issues, Pull requests, the Task queue and Mission control in the home page's menu and commands. The inbox already shows every agent's pull request and checks." },
   bridge: { name: 'Bridge view', what: 'A link to the 3D bridge (/bridge) on the home page, and the deck plan in the pane while no agent is selected. The bridge works as a wall display for a team room.' },
   ops: { name: 'Goals and timeline', what: 'Goals and milestones, the Timeline and Crew tabs in Mission control, and the Services board.' },
   meetings: { name: 'Meetings', what: 'The Review bay, where agents work through a question together, and the planning whiteboard.' },
