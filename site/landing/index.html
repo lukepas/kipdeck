@@ -175,6 +175,7 @@
   <div class="wrap">
     <p class="label"><span class="num">03</span> The problem</p>
     <h2 id="problem-h" class="display">23 minutes of nothing.</h2>
+    <p class="lede problem-lede">An agent that asks at 10:02 and is answered at 10:25 did nothing for 23 minutes. Vendors race to make agents faster, and each vendor's dashboard sees only its own agents. None of them shows how long your agents, across every vendor, sit blocked on you. {{name}} measures that.</p>
     <div class="layers">
       <div class="layer-a">
         <div class="clock-span" aria-hidden="true">
@@ -184,10 +185,8 @@
         </div>
         <p class="huge display" aria-hidden="true"><span>23</span> min</p>
       </div>
-      <div class="two-col problem-cols layer-b">
-        <p class="lede">An agent that asks at 10:02 and is answered at 10:25 did nothing for 23 minutes. Vendors race to make agents faster. Nobody measures the time agents sit blocked on a person, across vendors. That is the gap {{name}} fills.</p>
-        <figure class="lanes" aria-labelledby="lanes-cap">
-          <svg viewBox="0 0 600 250" role="img" aria-labelledby="lanes-title">
+      <figure class="lanes layer-b" aria-labelledby="lanes-cap">
+          <svg viewBox="0 0 600 256" role="img" aria-labelledby="lanes-title">
             <title id="lanes-title">Five agents across a workday. Each orange segment is time an agent spent waiting on a person.</title>
             <g class="lane-grid">
               <path d="M40 10V200M152 10V200M264 10V200M376 10V200M488 10V200M600 10V200"/>
@@ -199,11 +198,11 @@
               <g class="lane-asks"><path d="M140 24l6 6-6 6-6-6Z"/><path d="M90 62l6 6-6 6-6-6Z"/><path d="M250 100l6 6-6 6-6-6Z"/><path d="M120 138l6 6-6 6-6-6Z"/><path d="M230 176l6 6-6 6-6-6Z"/><path d="M330 24l6 6-6 6-6-6Z"/><path d="M420 62l6 6-6 6-6-6Z"/><path d="M470 100l6 6-6 6-6-6Z"/><path d="M310 138l6 6-6 6-6-6Z"/><path d="M400 176l6 6-6 6-6-6Z"/></g>
             </g>
             <g class="lane-hours mono"><text x="40" y="216">9:00</text><text x="152" y="216">11:00</text><text x="264" y="216">13:00</text><text x="376" y="216">15:00</text><text x="488" y="216">17:00</text></g>
-            <text class="lane-sum mono" x="40" y="248">all of it, end to end</text>
+            <path class="lane-total" d="M40 232H600"/>
+            <text class="lane-sum mono" x="40" y="250">all of it, end to end</text>
           </svg>
           <figcaption id="lanes-cap" class="mono"><b class="sig" data-blocked>2h 41m</b> blocked today <span class="tag-inline">illustrative</span></figcaption>
-        </figure>
-      </div>
+      </figure>
     </div>
   </div>
   <p class="dock-note mono" aria-hidden="true"><i class="glyph g-needs-you"></i>That is the metric: how long agents wait on you.</p>
