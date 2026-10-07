@@ -22,6 +22,9 @@ export interface FieldHandle {
   launch(x: number, y: number, spread?: number): void;
   /** Lands every unit still in flight (the visitor skipped the intro). */
   land(): void;
+  /** Where the lit unit works, vertically (viewport y), or null for its lane. On a phone the hero
+   *  passes the gap under the headline, so the unit that waits on you never sits on the words. */
+  perch(y: number | null): void;
 }
 
 const LANES = 5;
@@ -57,6 +60,7 @@ export function mountField(canvas: HTMLCanvasElement): FieldHandle {
   let beam: DOMRect | null = null;
   let canvasTop = 0, canvasLeft = 0;
   let litGlow = 0;
+  let perchY: number | null = null;
   let attendX = 0, attendY = 0, attendUntil = 0;
   let running = false;
   let stop: (() => void) | null = null;
@@ -87,7 +91,7 @@ export function mountField(canvas: HTMLCanvasElement): FieldHandle {
       uy[i] = (rnd() - 0.5) * 0.11;
       ustate[i] = WORKING;
     }
-    ux[LIT] = w * (env.phone ? 0.9 : 0.86);
+    ux[LIT] = w * (env.phone ? 0.97 : 0.86);
   }
 
   function resize() {
@@ -237,7 +241,7 @@ export function mountField(canvas: HTMLCanvasElement): FieldHandle {
       ux[LIT] -= 30 * dt;
       if (ux[LIT] < -12) ux[LIT] += w + 24;
     }
-    const lx = ux[LIT], ly = laneY(ulane[LIT]) + uy[LIT] * h;
+    const lx = ux[LIT], ly = perchY ?? laneY(ulane[LIT]) + uy[LIT] * h;
     // The lit unit fades in where it works instead of flying, so the one that will block is never lost in the swarm.
     let litIn = 1;
     if (ulaunch[LIT]) {
@@ -352,6 +356,9 @@ export function mountField(canvas: HTMLCanvasElement): FieldHandle {
     },
     land() {
       ulaunch.fill(0);
+    },
+    perch(y) {
+      perchY = y === null ? null : y - canvas.getBoundingClientRect().top;
     },
     active(on) {
       if (tier === 'min') return;
