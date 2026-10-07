@@ -1,7 +1,7 @@
 // Builds the landing page (site/landing/, Vite) into dist/site/, fills in its deploy addresses from
 // the environment, and renders its share card (og.png) from the brand. See docs/landing.md.
 //
-//   MERGELINE_WAITLIST_URL=https://... MERGELINE_DEMO_URL=https://demo... npm run build:site
+//   MERGELINE_SITE_URL=https://mergeline.dev/ MERGELINE_WAITLIST_URL=https://... npm run build:site
 //   MERGELINE_BRAND=ugc-army npm run build:site        # the other name (site/landing/brand.ts)
 //
 // Each address must be https (a waitlist on http would send emails in the clear). Without
@@ -40,6 +40,16 @@ export function buildPage(html, env) {
   }
   const demo = url('MERGELINE_DEMO_URL');
   if (demo) out = out.replace('data-link="demo" href="#try-demo"', `data-link="demo" href="${attr(demo.href)}" rel="noopener"`);
+  // Where the page itself lives: the canonical link, og:url, and absolute addresses for the share
+  // card (most link previews ignore a relative og:image). Without it there is no canonical link,
+  // since a relative one would be wrong wherever the page is copied.
+  const site = url('MERGELINE_SITE_URL');
+  if (site) {
+    const href = attr(site.href.endsWith('/') ? site.href : `${site.href}/`);
+    out = out.replace('<meta name="robots"', `<link rel="canonical" href="${href}">\n<meta property="og:url" content="${href}">\n<meta name="robots"`);
+    out = out.replaceAll('content="og.png"', `content="${href}og.png"`);
+    out = out.replace('"image":"og.png"', `"image":"${href}og.png","url":"${href}"`);
+  }
   const repo = url('MERGELINE_REPO_URL');
   if (repo) out = out.replaceAll(DEFAULT_REPO, attr(repo.href.replace(/\/$/, '')));
   // Until `npx` works from the registry, the page shows the from-source command and says so (never a
@@ -73,7 +83,7 @@ p{margin-top:34px;font-size:28px;color:#8a97a5;max-width:900px}
 
 async function shareCard(outDir) {
   const html = readFileSync(path.join(outDir, 'index.html'), 'utf8');
-  const name = (html.match(/<title>([^<]*)<\/title>/) ?? [])[1] ?? '';
+  const name = (html.match(/<meta property="og:site_name" content="([^"]*)"/) ?? [])[1] ?? '';
   const lead = (html.match(/<tspan class="wm-lead">([^<]*)</) ?? [])[1] ?? '';
   const muted = (html.match(/<tspan class="wm-muted">([^<]*)</) ?? [])[1] ?? '';
   const assets = readdirSync(path.join(outDir, 'assets'));
@@ -108,6 +118,20 @@ async function shareCard(outDir) {
   }
 }
 
+/** robots.txt (from public/) gets the sitemap's address, and sitemap.xml is written, once the build knows where the page lives. */
+export function writeCrawlerFiles(outDir, env) {
+  const v = (env.MERGELINE_SITE_URL ?? '').trim();
+  if (!v) return;
+  const href = new URL(v).href.replace(/\/?$/, '/');
+  const robots = path.join(outDir, 'robots.txt');
+  writeFileSync(robots, `${readFileSync(robots, 'utf8').trimEnd()}\nSitemap: ${href}sitemap.xml\n`);
+  const day = new Date().toISOString().slice(0, 10);
+  writeFileSync(
+    path.join(outDir, 'sitemap.xml'),
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n  <url><loc>${href}</loc><lastmod>${day}</lastmod></url>\n</urlset>\n`,
+  );
+}
+
 /** Builds the page into `outDir` for `env` (MERGELINE_BRAND and the four addresses). */
 export async function buildSite({ env = process.env, outDir = OUT, card = true } = {}) {
   const { build } = await import('vite');
@@ -124,6 +148,7 @@ export async function buildSite({ env = process.env, outDir = OUT, card = true }
   }
   const file = path.join(outDir, 'index.html');
   writeFileSync(file, buildPage(readFileSync(file, 'utf8'), env));
+  writeCrawlerFiles(outDir, env);
   const og = card ? await shareCard(outDir) : 'og.png skipped';
   return { outDir, og };
 }
@@ -131,5 +156,5 @@ export async function buildSite({ env = process.env, outDir = OUT, card = true }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { outDir, og } = await buildSite();
   console.log(`site: ${path.relative(ROOT, outDir)}/index.html (${og})`);
-  for (const name of ['MERGELINE_WAITLIST_URL', 'MERGELINE_DEMO_URL', 'MERGELINE_REPO_URL', 'MERGELINE_NPM_PUBLISHED']) if (!process.env[name]) console.log(`  ${name} is not set (see docs/landing.md)`);
+  for (const name of ['MERGELINE_SITE_URL', 'MERGELINE_WAITLIST_URL', 'MERGELINE_DEMO_URL', 'MERGELINE_REPO_URL', 'MERGELINE_NPM_PUBLISHED']) if (!process.env[name]) console.log(`  ${name} is not set (see docs/landing.md)`);
 }

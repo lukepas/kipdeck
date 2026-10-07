@@ -11,10 +11,11 @@
 .why-table thead .us { color: var(--signal); font-size: 15px; box-shadow: inset 1px 0 0 var(--signal), inset -1px 0 0 var(--signal), inset 0 2px 0 var(--signal); }
 .why-table tbody tr:last-child .us { box-shadow: inset 1px 0 0 var(--signal), inset -1px 0 0 var(--signal), inset 0 -1px 0 var(--signal); }
 .yes, .no, .part { display: inline-flex; align-items: center; gap: 8px; }
+.no::before { opacity: .55; }
 .yes::before, .no::before, .part::before { content: ''; flex: none; width: 14px; height: 14px; background: currentColor; -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
 .yes { color: var(--text); font-weight: 500; --m: var(--g-check); }
 .yes::before { color: var(--settled); background: var(--settled); }
-.no { color: var(--faint); --m: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 11h12v2H6Z'/%3E%3C/svg%3E"); }
+.no { color: var(--muted); --m: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 11h12v2H6Z'/%3E%3C/svg%3E"); }
 .part { --m: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm0 2v12a6 6 0 0 1 0-12Z'/%3E%3C/svg%3E"); }
 
 /* ---------- 06 Yours ---------- */
@@ -26,7 +27,7 @@
 .term-tab .soon { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #5f6c7a; }
 .term-body { margin: 0; padding: 18px 20px 22px; font-size: 13.5px; line-height: 1.75; white-space: pre-wrap; word-break: break-all; }
 .term-body .p { color: #ff6a1a; }
-.term-body .dim { color: #5f6c7a; }
+.term-body .dim { color: #8a97a5; }
 .term-body .ok { color: #3ddc97; }
 .term-body b { color: #e8ecef; font-weight: 600; }
 .measured { display: flex; flex-direction: column; gap: 22px; }

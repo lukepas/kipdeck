@@ -12,18 +12,25 @@
 <meta name="referrer" content="no-referrer">
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#0D131A">
-<title>{{name}}</title>
+<title>{{title}}</title>
 <meta name="description" content="{{ogDescription}}">
+<meta name="robots" content="index, follow">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="{{name}}">
+<meta property="og:locale" content="en">
 <meta property="og:title" content="{{ogTitle}}">
 <meta property="og:description" content="{{ogDescription}}">
 <meta property="og:image" content="og.png">
+<meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{ogImageAlt}}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{{ogTitle}}">
 <meta name="twitter:description" content="{{ogDescription}}">
 <meta name="twitter:image" content="og.png">
+<meta name="twitter:image:alt" content="{{ogImageAlt}}">
+<script type="application/ld+json">{{jsonld}}</script>
 <link rel="icon" id="favicon" href="favicon.svg" type="image/svg+xml">
 <link rel="preload" as="font" type="font/woff2" href="../../src/client/styles/fonts/archivo-latin.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="../../src/client/styles/fonts/jetbrains-mono-latin.woff2" crossorigin>
@@ -49,7 +56,7 @@
       <a href="#teams">Teams</a>
       <a data-link="repo" href="https://github.com/zbagdzevicius/ugcarmy" rel="noopener noreferrer">Source</a>
     </nav>
-    <p class="pulse mono" aria-live="off"><i class="glyph g-needs-you"></i><span data-pulse-count>1</span> waiting on you <span class="pulse-sep">/</span> <span data-pulse-wait>0:07</span><svg class="spark" viewBox="0 0 60 12" preserveAspectRatio="none" aria-hidden="true"><polyline pathLength="1" points="1,1 10,3.5 19,4.5 29,6.5 39,7.5 49,9.5 59,11"/></svg></p>
+    <p class="pulse mono" aria-live="off"><i class="glyph g-needs-you"></i><span data-pulse-count>1</span> waiting on you <span class="pulse-sep" aria-hidden="true">/</span> <span data-pulse-wait>0:07</span><svg class="spark" viewBox="0 0 60 12" preserveAspectRatio="none" aria-hidden="true"><polyline pathLength="1" points="1,1 10,3.5 19,4.5 29,6.5 39,7.5 49,9.5 59,11"/></svg></p>
     <button class="theme sound" type="button" id="sound" aria-pressed="false" aria-label="Sound"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path class="spk" d="M4 9.5h3.5L12 5.5v13l-4.5-4H4Z"/><path class="wave" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="mute" d="m15.5 9.5 5 5m0-5-5 5"/></svg></button>
     <button class="theme" type="button" id="theme" aria-label="Switch color theme"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16Z"/></svg></button>
   </div>
@@ -63,7 +70,7 @@
   <div class="hero-glow" aria-hidden="true"></div>
   <div class="wrap hero-grid">
     <div class="hero-copy">
-      <p class="label"><span class="num">01</span> {{name}} <span class="label-sep">/</span> <span class="label-tag">{{tagline}}</span></p>
+      <p class="label"><span class="num">01</span> {{name}} <span class="label-sep" aria-hidden="true">/</span> <span class="label-tag">{{tagline}}</span></p>
       <h1 id="hero-h" class="display hero-h"><span class="w" data-t="Your"><span>Your</span></span> <span class="w" data-t="agents"><span>agents</span></span> <span class="w" data-t="are"><span>are</span></span><br class="hero-br"> <span class="waiting-box"><span class="w waiting" id="waiting">waiting</span><span class="stopwatch mono" id="stopwatch" aria-hidden="true">00:00</span></span> <span class="w" data-t="on"><span>on</span></span> <span class="w" data-t="you."><span>you.</span></span></h1>
       <p class="lede">One inbox for every coding agent you run: Claude Code, Codex, Cursor, OpenCode and Pi. See who is waiting on you and for how long, answer in one box, review and merge.</p>
 
@@ -561,10 +568,11 @@
   <div class="watch-in">
     <h2 id="watch-h" class="sr">The 30 second film</h2>
     <button class="close" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
-    <video id="watch-video" controls playsinline preload="none" width="1280" height="720" poster="media/poster-16x9.webp">
+    <video id="watch-video" controls playsinline preload="none" width="1280" height="720" data-poster="media/poster-16x9.webp">
       <source src="media/film-9x16.mp4" type="video/mp4" media="(max-width: 600px) and (orientation: portrait)">
       <source src="media/film-16x9.webm" type="video/webm">
       <source src="media/film-16x9.mp4" type="video/mp4">
+      <track kind="captions" srclang="en" label="English" src="media/film-captions.vtt" default>
     </video>
     <p class="mono small">The film is drawn frame by frame in code. Its rows are demo data; its chain values are real testnet artifacts.</p>
   </div>
