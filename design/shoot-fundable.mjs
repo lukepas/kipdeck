@@ -156,9 +156,9 @@ try {
 
   // Answer: the row's button opens the terminal in the pane with the reply box ready.
   await page.locator('.sec-needs-you .row', { hasText: 'Fix the flaky checkout test' }).locator('.row-act').click();
-  await page.locator('.pane .term-say input').waitFor({ timeout: 15_000 });
+  await page.locator('.pane .q-reply input').waitFor({ timeout: 15_000 });
   await wait(1500);
-  await page.locator('.pane .term-say input').fill('fix the selector');
+  await page.locator('.pane .q-reply input').fill('fix the selector');
   await shot(page, 'answer-desktop');
   await page.keyboard.press('Enter');
   await inSection(page, 'Fix the flaky checkout test', 'review');

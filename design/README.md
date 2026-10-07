@@ -1304,3 +1304,23 @@ What an investor or a first user sees beyond the inbox is now as calm as the inb
 - The Numbers in the demo are thin by design: the demo writes no backdated history, so deck numbers have to come from real use.
 - The Monid USD 7.7M figure had no primary source and is dropped (`launch/mergeline/README.md`).
 - The provider picker in Settings > Agents still has two bridge-era notes (office usage and the cost panel) from `ui/provider.ts`, which the Deploy sheet shares.
+
+## Fundable, the review round: fundraising-ready
+
+Three critics (investor, first user, engineer) reviewed stage 5 from `shots/fundable/review/`; this round fixes every must and most shoulds. The direction, the full list, what is hidden and how to bring it back, the numbers and the investor demo script are in [PRODUCT.md](../PRODUCT.md).
+
+### What changed (check it in under a minute)
+
+1. **The pane is never empty while something waits** (`final/before-after/01-home.png`): the oldest that needs you opens by itself, its question as a card with one reply box (`02-answer.png`).
+2. **The pulse** in the top bar: waiting on you now, the median wait today, merged today. A wait bar grows along each waiting row.
+3. **The demo is a pill**, not a card and a checklist; the setup card is one line and one button beside a looping preview (`05-first-run.png`).
+4. **One way out of review** (`03-review.png`), rows that say what changed, the menu down to four rows (`06-menu.png`), Settings without leftover words (`07-settings-agents.png`), a one-tap phone list (`08-phone.png`).
+5. **Server**: no toasts for your own actions, Labs gated over the socket, merges refused in a shared folder and queued per folder, branches named after the task, the hosted demo tested into its second round.
+6. **Landing** (`10-landing.png`): the wedge above the fold, *Why not*, not on npm yet said plainly, one email field, no 3D section.
+
+Stills: `node design/shoot-final.mjs final` (after) against the review round's shots (`final/before/`, pairs in `final/before-after/`). Video: `node design/record-demo.mjs design/shots/fundable/final` (60 s, silent, tagged demo data). Numbers: `node design/measure-final.mjs` for this build and `SHOOT_ROOT` on a `git archive` of ae964cad. The demo's own shoot with the hosted demo: `SHOOT_3D=0 node design/shoot-demo.mjs final/demo-shoot`.
+
+### Checks
+
+`npm run typecheck`, `npm run build`, `npm test` (all pass but the four launch-kit disclosure tests that fail on this branch's rewritten history). New: `tests/question.test.ts`, the pulse in `tests/metrics.test.ts`, the lab gate in `tests/labs.test.ts`, the refused shared-folder merge and the queued merges in `tests/shiplog.test.ts`, branch names in `tests/worktrees.test.ts`, the hosted demo's second round in `tests/demo.test.ts`, and the question card, the pill and the four-row menu in the browser tests.
+
