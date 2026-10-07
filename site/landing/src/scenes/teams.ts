@@ -1,9 +1,9 @@
-// 11 Teams and the ask. The two plans part from the middle like a zipper (one product, split into a
+// 10 Teams and the ask. The two plans part from the middle like a zipper (one product, split into a
 // free and a paid side), and the five design-partner seats appear as empty diamonds: nobody has
-// taken one yet, and the page says so. Focusing the email field pulls the dot grid behind it toward
-// the field. A join that really went through re-forms the agents into the Formation mark over the
-// seats (the March to the Mark), sends a ring out, and fills a seat; nothing plays for a join that
-// was not sent.
+// taken one yet, and the page says so. Pointing at or focusing "Apply as a design partner" (or the
+// Team waitlist's email field, in a build that has one) pulls the dot grid behind it toward it. A
+// join that really went through re-forms the agents into the Formation mark over the seats (the
+// March to the Mark), sends a ring out, and fills a seat; nothing plays for a join that was not sent.
 import { env, tier, token } from '../engine/env';
 import { Spring } from '../engine/spring';
 import { every } from '../engine/loop';
@@ -15,7 +15,10 @@ export function mountTeams(section: HTMLElement) {
   const plans = section.querySelector<HTMLElement>('.plans')!;
   const seats = section.querySelector<HTMLElement>('.seats')!;
   const ask = section.querySelector<HTMLElement>('.ask')!;
-  const input = section.querySelector<HTMLInputElement>('#email')!;
+  const apply = section.querySelector<HTMLElement>('.apply-link');
+  const input = section.querySelector<HTMLInputElement>('#email');
+  // What the grid leans toward: the email field when the waitlist is shown, else the apply link.
+  const target = () => (input && input.offsetParent !== null ? input : apply);
 
   plans.classList.add('staged');
   seats.classList.add('staged');
@@ -49,7 +52,9 @@ export function mountTeams(section: HTMLElement) {
       h = r.height;
       canvas.width = Math.round(w * dpr);
       canvas.height = Math.round(h * dpr);
-      const c = canvas.getBoundingClientRect(), f = input.getBoundingClientRect();
+      const t = target();
+      if (!t) return draw();
+      const c = canvas.getBoundingClientRect(), f = t.getBoundingClientRect();
       tx = f.left - c.left + f.width / 2;
       ty = f.top - c.top + f.height / 2;
       draw();
@@ -84,8 +89,14 @@ export function mountTeams(section: HTMLElement) {
         },
       });
     };
-    input.addEventListener('focus', () => (colors(), (pull.target = 1), animate()));
-    input.addEventListener('blur', () => ((pull.target = 0), animate()));
+    const lean = () => (colors(), size(), (pull.target = 1), animate());
+    const rest = () => ((pull.target = 0), animate());
+    for (const el of [apply, input]) {
+      el?.addEventListener('focus', lean);
+      el?.addEventListener('blur', rest);
+      el?.addEventListener('pointerenter', lean);
+      el?.addEventListener('pointerleave', rest);
+    }
   }
 
   // ---- A real join: the March to the Mark over the seats.

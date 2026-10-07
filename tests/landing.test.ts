@@ -151,7 +151,8 @@ test('every staged surface is labelled: demo data, measured or illustrative; eve
   // The measured numbers live in section 06, beside how they were measured.
   assert.match(source, /aria-label="Measured on the scripted demo">[\s\S]*?data-count="10\.7"/);
   assert.match(source, /class="footnote mono measured-note">Measured: headless Chromium/);
-  const proof = source.slice(source.indexOf('<!-- 10 Proof'), source.indexOf('<!-- 11 '));
+  const proof = source.slice(source.indexOf('<!-- 11 Proof'), source.indexOf('<!-- 12 '));
+  assert.ok(proof.length > 200, 'the Proof of Merge section is found');
   assert.match(proof, /Testnet only/);
   for (const row of proof.match(/<div><dt>[^<]+<\/dt><dd>.*?<\/dd><\/div>/g) ?? []) assert.match(row, /devnet|Sepolia/, row);
   assert.doesNotMatch(source, /\b(customers|users love|trusted by|testimonial)\b/i, 'no invented traction');
@@ -212,16 +213,13 @@ test('any key during the opening plays it to its end: Codex asks at once', { ski
   assert.deepEqual(errors, []);
 });
 
-test('the waitlist checks its input and says plainly that nothing was sent', { skip: why || false }, async (t) => {
+test('the ask works without a server: a design-partner application as a new GitHub issue, and no waitlist form', { skip: why || false }, async (t) => {
   const { page, requests, errors } = await open(t);
-  const submit = page.getByRole('button', { name: 'Join the waitlist' });
-  assert.equal(await page.locator('#waitlist-form input, #waitlist-form select').count(), 1);
-  await page.fill('#email', 'not-an-email');
-  await submit.click();
-  assert.match((await page.locator('#status').textContent()) ?? '', /valid email/);
-  await page.fill('#email', 'someone@example.com');
-  await submit.click();
-  assert.match((await page.locator('#status').textContent()) ?? '', /nothing was sent/);
+  assert.equal(await page.locator('#waitlist-form').isVisible(), false, 'no form that would throw a lead away');
+  const apply = page.getByRole('link', { name: 'Apply as a design partner' });
+  const href = (await apply.getAttribute('href')) ?? '';
+  assert.ok(href.startsWith(`${repoOf(main.html)}/issues/new?title=Design%20partner`), href);
+  assert.match(decodeURIComponent(href), /How many agents do you run a day/);
   assert.deepEqual(outside(requests), []);
   assert.deepEqual(errors, []);
 });
@@ -237,8 +235,9 @@ test('built with an endpoint, the waitlist sends the email and where it came fro
   });
   const page = await context.newPage();
   await page.goto(withEndpoint.url);
+  assert.ok(await page.locator('#waitlist-form').isVisible(), 'a build with an endpoint shows the Team waitlist');
   await page.fill('#email', 'lead@example.com');
-  await page.getByRole('button', { name: 'Join the waitlist' }).click();
+  await page.getByRole('button', { name: 'Join the Team waitlist' }).click();
   await page.locator('#status.ok').waitFor({ timeout: 5000 });
   assert.deepEqual(sent, [{ email: 'lead@example.com', source: 'landing' }]);
   assert.equal(await page.inputValue('#email'), '', 'the form is cleared');
@@ -251,7 +250,7 @@ test('at phone width it fits without sideways scrolling, top to bottom', { skip:
   const { page } = await open(t, main.url, { width: 360, height: 780 });
   const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
   assert.ok(scroll <= client, `${scroll}px wide in a ${client}px window`);
-  assert.ok(await page.locator('#waitlist-form').isVisible());
+  assert.ok(await page.locator('.apply-link').isVisible());
 });
 
 test('dark mode follows the system and the theme button overrides it', { skip: why || false }, async (t) => {

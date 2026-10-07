@@ -1,12 +1,17 @@
-// 12 End: nothing waits on you. The giant wordmark compresses from width 125 to 62 as the page
-// reaches its end, the opposite of "waiting" widening in the hero: time waited goes to zero. The
-// calm inbox above it is honest about the page's one piece of state: if an agent has started
-// waiting on the visitor again (the hero's Codex asks every so often), it says so, counts the wait,
-// turns the mark's lead chevron Signal and offers Answer; answering settles it back to a check.
+// 12 End: nothing waits on you. The giant wordmark opens on Archivo's width axis from condensed (62)
+// to the header's own width (118) as the page reaches its end, the way the hero's headline inhaled:
+// at rest it is the same lockup as the top bar's. The calm inbox above it is honest about the
+// page's one piece of state: if an agent has started waiting on the visitor again (the hero's Codex
+// asks every so often), it says so, counts the wait, turns the mark's lead chevron Signal and
+// offers Answer; answering settles it back to a check. Under it, the demo command and the links.
 import { clamp } from '../engine/loop';
 import { whileVisible } from '../engine/wake';
 import { env } from '../engine/env';
 import { wait, clock } from '../ui/wait';
+
+/** The width axis: where the wordmark starts, and the header's own (base.css, .wordmark text). */
+const CONDENSED = 62;
+const HEADER = 118;
 
 export function mountEnd(section: HTMLElement) {
   const text = section.querySelector<SVGTextElement>('.giant text');
@@ -20,7 +25,7 @@ export function mountEnd(section: HTMLElement) {
       progress = clamp((innerHeight - r.top) / Math.max(1, r.height));
     },
     write() {
-      const v = Math.round((125 - 63 * progress) * 10) / 10;
+      const v = Math.round((CONDENSED + (HEADER - CONDENSED) * progress) * 10) / 10;
       if (v !== last) text.style.setProperty('--gs', `${(last = v)}%`);
     },
   };

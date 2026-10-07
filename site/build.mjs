@@ -5,8 +5,9 @@
 //   MERGELINE_BRAND=ugc-army npm run build:site        # the other name (site/landing/brand.ts)
 //
 // Each address must be https (a waitlist on http would send emails in the clear). Without
-// MERGELINE_WAITLIST_URL the form checks its input and says nothing was sent. The page's
-// Content-Security-Policy lets it reach the waitlist's origin and no other.
+// MERGELINE_WAITLIST_URL the Team waitlist form is not shown at all (the design-partner link, a
+// new GitHub issue, is the ask). The page's Content-Security-Policy lets it reach the waitlist's
+// origin and no other.
 import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -37,7 +38,8 @@ export function buildPage(html, env) {
   let out = html;
   const waitlist = url('MERGELINE_WAITLIST_URL');
   if (waitlist) {
-    out = out.replace('data-endpoint=""', `data-endpoint="${attr(waitlist.href)}"`);
+    // The Team tier waitlist is shown only in a build that has somewhere to send it.
+    out = out.replace('data-endpoint="" hidden', `data-endpoint="${attr(waitlist.href)}"`);
     out = out.replace("connect-src 'none'", `connect-src ${waitlist.origin}`);
   }
   const demo = url('MERGELINE_DEMO_URL');
