@@ -2,7 +2,7 @@
 
 Back to the [README](../README.md).
 
-`site/landing/` is the product's one-page site, built with Vite into `dist/site/`. It acts out the product around one number: how long an agent waits on a person. An agent in the hero's inbox is waiting on the visitor from the first frame. The word *waiting* widens with a live stopwatch, a Signal line along the top of the window grows in real seconds, and the top bar counts it. Answering the row (or copying the command) clears every clock at once.
+`site/landing/` is the product's one-page site, built with Vite into `dist/site/`. It acts out the product around one number: how long an agent waits on a person. The hero opens on a working inbox: the agent units fly out of the mark in the top bar to their lanes, the headline breathes in on Archivo's width axis and five rows stream into Working. About 2.4 s in, Codex stops and asks. Its steel bar turns into the needs-you diamond, the row climbs to the top and its question types in. From then on the visitor's own time counts: the word *waiting* widens with a live stopwatch, a Signal line along the top of the window grows in real seconds, the top bar and the favicon say someone is waiting, and one unit in the far field lights up with a line to the row. Answering the row (or copying the command) clears every clock at once and sends Codex back to work. Any key, click or scroll during the opening plays it to its end at once, and after six idle seconds a ghost cursor answers once to show the gesture.
 
 The twelve sections, in order: the hero, every vendor in one list, the 23 minutes an unanswered question costs, the loop (ask, answer, review, merge), *Why not the tools you already have?*, running it yourself with the measured times, the phone, Numbers, Labs with the 30-second film, Proof of Merge (testnet only), the team tier with its waitlist, and the end.
 
@@ -16,7 +16,7 @@ Everything on it is drawn in code from the app's own tokens and glyphs (`src/cli
 - No traction is invented: the ask is five design partners.
 - With less motion (the system setting) every section shows its final state, nothing ticks and the stopwatch reads a still 23:00.
 
-`tests/landing.test.ts` builds the page once per brand, serves it on 127.0.0.1 and checks all of the above in headless Chromium. It also checks the waitlist, the phone width, both themes, the film window (its x and Esc both close it) and layout shift.
+`tests/landing.test.ts` builds the page once per brand, serves it on 127.0.0.1 and checks all of the above in headless Chromium. It also checks the opening (Codex asks, answering clears every clock, a key skips to the end), the waitlist, the phone width, both themes, the film window (its x and Esc both close it, and focus goes back to its button) and that nothing shifts through the whole opening.
 
 ## The name
 
@@ -64,12 +64,15 @@ The build also draws `og.png` (1200 by 630, the share card) from the brand with 
 - `site/landing/index.html`: every section's final, readable state as semantic HTML. A reader without script sees the whole page.
 - `site/landing/src/main.ts`: boots the controls and mounts each section's scene as it comes near the viewport.
 - `site/landing/src/scenes/`: one module per section, registered in `scenes/index.ts` by the section's `data-scene`. A new section plugs in there, never in `main.ts`.
-- `site/landing/src/engine/`: one shared `requestAnimationFrame` loop that runs only while something moves and stops when the tab is hidden, a spring, counters, and what the device asks for (less motion, Save-Data, low memory).
-- `site/landing/src/fx/field.ts`: the hero's Canvas2D field (a dot grid that bends toward the cursor, agent units drifting in five vendor lanes, the one that blocks on you). It lives in typed arrays, allocates nothing per frame, and halves its units if frames run slow.
+- `site/landing/src/engine/`: one shared `requestAnimationFrame` loop that runs only while something moves and stops when the tab is hidden (`loop.ts`, with `wake.ts` to run a task only while its section is on screen), a spring, counters, an odometer whose text stays the plain value, path morphing between glyphs drawn with the same points, a typewriter, compositor slides by the `translate` property (so a list reorders on screen without its DOM moving or anything shifting), and what the device asks for (less motion, Save-Data, low memory).
+- `site/landing/src/fx/field.ts`: the hero's Canvas2D field (a dot grid that bends toward the cursor, agent units launched from the mark into five vendor lanes, the one that blocks on you). It lives in typed arrays and allocates nothing per frame: the grid is drawn once and copied, only the dots near the cursor are drawn live, and the units fade behind the copy by band instead of a full-canvas composite. It halves its units if frames run slow.
+- `site/landing/src/ui/ghost.ts`: the ghost cursor that answers the waiting agent once after six idle seconds.
 - `site/landing/src/ui/wait.ts`: the page's one piece of state, whether a scripted agent is waiting on the visitor and since when.
 - `site/landing/public/media/`: the 30-second film re-encoded for the web (AV1 WebM, H.264 MP4 and the 9:16 cut for phones) and its posters. The film never plays by itself and loads only when someone opens it.
 
 `node design/shoot-landing.mjs design/shots/landing/<stage> [--clip]` serves a build and shoots it at 1440x900, 1920x1080 and 390x844 in both themes and with less motion. It also measures largest contentful paint, layout shift, frame times over a full scroll and what the first load weighs, and with `--clip` records a scroll-through video.
+
+`node design/shoot-hero.mjs design/shots/landing/<stage> [--no-clip]` shoots the hero's opening along its timeline (launch, inhale, rows, Codex asking and climbing, the wait running, answered, back to work, the ghost cursor, the pointer and Copy) in both themes, on a big screen and a phone, records the first twelve seconds in real time, and reports LCP with its element, layout shift, long tasks and frame times, also on a phone at 4x CPU throttle.
 
 ## The waitlist
 

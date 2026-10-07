@@ -167,8 +167,13 @@ test('the first screen: the sentence, the from-source command, Try the demo and 
   assert.deepEqual(errors, []);
 });
 
-test('the wait: an agent waits on you from the first frame, and answering it clears every clock', { skip: why || false }, async (t) => {
+test('the wait: Codex stops and asks as the page opens, and answering it clears every clock', { skip: why || false }, async (t) => {
   const { page, errors } = await open(t, main.url, { dark: true });
+  // The opening: Codex works at the foot of the list, nothing waits, and the button is not live yet.
+  assert.equal(await page.locator('[data-pulse-count]').textContent(), '0');
+  assert.equal(await page.locator('[data-clear]').isDisabled(), true);
+  // About 2.4 s in it asks and climbs to the top; from then on the visitor's own time counts.
+  await page.locator('[data-clear]:enabled').waitFor({ timeout: 5000 });
   await page.waitForTimeout(1200);
   assert.match((await page.locator('#stopwatch').textContent()) ?? '', /^00:0\d$/);
   assert.equal(await page.locator('[data-pulse-count]').textContent(), '1');
@@ -178,9 +183,21 @@ test('the wait: an agent waits on you from the first frame, and answering it cle
   assert.equal(await page.locator('#stopwatch').textContent(), '00:00');
   assert.match((await page.locator('[data-clear]').getAttribute('aria-label')) ?? '', /was answered/);
   assert.equal(await page.locator('#favicon').getAttribute('href'), 'favicon.svg');
+  assert.equal((await page.locator('[data-clear]').textContent())?.includes('Answered. Back at work.'), true);
   await page.waitForTimeout(900);
   const scale = await page.evaluate(() => Number(getComputedStyle(document.querySelector('#waitclock')!).getPropertyValue('--wait') || 0));
   assert.ok(scale < 0.01, `the wait clock is back at zero (${scale})`);
+  assert.deepEqual(errors, []);
+});
+
+test('any key during the opening plays it to its end: Codex asks at once', { skip: why || false }, async (t) => {
+  const { page, errors } = await open(t, main.url, { dark: true });
+  await page.keyboard.press('Shift');
+  await page.waitForTimeout(150);
+  assert.equal(await page.locator('[data-clear]').isEnabled(), true);
+  assert.equal(await page.locator('[data-pulse-count]').textContent(), '1');
+  const opacity = await page.evaluate(() => getComputedStyle(document.querySelector('.hero-h .w > span')!).opacity);
+  assert.equal(opacity, '1', 'the headline is fully set');
   assert.deepEqual(errors, []);
 });
 
@@ -244,6 +261,7 @@ test('Watch 30 seconds opens the film in a window that its x and Esc both close'
   assert.equal(await dialog.isVisible(), true);
   await page.keyboard.press('Escape');
   assert.equal(await dialog.isVisible(), false);
+  assert.equal(await page.evaluate(() => document.activeElement?.matches('.cta [data-watch]')), true, 'focus is back on the button that opened it');
   assert.deepEqual(errors, []);
 });
 
@@ -270,7 +288,8 @@ test('no layout shift while the page loads and the hero plays', { skip: why || f
     }).observe({ type: 'layout-shift', buffered: true });
   });
   await page.goto(main.url);
-  await page.waitForTimeout(2500);
+  // Through the whole opening: the inhale, the rows, and Codex climbing to the top.
+  await page.waitForTimeout(4200);
   const cls = await page.evaluate(() => (window as unknown as { cls: number }).cls);
   assert.ok(cls < 0.01, `cumulative layout shift ${cls}`);
 });
