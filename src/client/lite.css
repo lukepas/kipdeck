@@ -45,7 +45,10 @@ body.lite { margin: 0; background: var(--void); color: var(--text); font-family:
 @media (max-width: 420px) { .hb-deploy { padding: 0 10px; } }
 
 /* What floats over the page stays put on the screen. */
-#toasts { position: fixed; right: 12px; top: auto; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 60; flex-direction: column-reverse; }
+/* Toasts sit at the bottom of the list's column, never over the pane's reply box, Send or Merge; on a
+   phone, at the top under the bar, clear of the buttons at the bottom of a row or the pane. */
+#toasts { position: fixed; left: 16px; right: auto; top: auto; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 60; width: min(380px, calc(40vw - 32px)); flex-direction: column-reverse; }
+@media (max-width: 899px) { #toasts { left: 50%; right: auto; top: calc(64px + env(safe-area-inset-top)); bottom: auto; width: min(380px, calc(100vw - 24px)); transform: translateX(-50%); flex-direction: column; } }
 .conn { position: fixed; top: 64px; z-index: 60; }
 .backdrop { z-index: 50; }
 

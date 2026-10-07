@@ -67,7 +67,7 @@ export function mergeWork(ctx: Ctx, by: Reviewer, workerId: string, reply: (r: {
   const done = (extra: Partial<ShipRecord>) => {
     const record = logged(ctx, floor, info, { ...base, kind: 'merged', ...extra });
     reply({ record });
-    ctx.toastFloor(floor, `${who} merged ${base.task ? `"${base.task}"` : `${info.name}'s work`}${extra.pr ? ` (PR #${extra.pr.number})` : ''}`);
+    ctx.toastFloor(floor, `${who} merged ${base.task ? `"${base.task}"` : `${info.name}'s work`}${extra.pr ? ` (PR #${extra.pr.number})` : ''}`, 'info', by.client?.id);
   };
   const pr = ctx.rosterEntryOf(info.id)?.pr;
   if (pr?.state === 'merged') return fail(`PR #${pr.number} is merged already`);
@@ -115,7 +115,7 @@ export const inboxHandlers = {
       const err = w.floor.workers.prompt(w.wid, note, who);
       if (err) return ctx.warn(c, err);
       logged(ctx, w.floor, w.info, { ...about(w.floor, w.info, who), kind: 'sent-back', note });
-      ctx.toastFloor(w.floor, `${who} sent ${w.info.name}'s work back`);
+      ctx.toastFloor(w.floor, `${who} sent ${w.info.name}'s work back`, 'info', c.id);
     };
     // Typed into an agent, so never a fork's or an outsider's PR to check out and run (see shared/pulltrust.ts).
     w.floor.github.guardCheckout(note, send, (why) => ctx.warn(c, why));
