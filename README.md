@@ -361,7 +361,7 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 | P | Give a task to a new unit, or to the one at this console |
 | C | See a unit's changes: diff, commit, open a PR |
 | I | Mission control: reminders and what needs someone on every deck, the deck's goals, the review inbox and the timeline |
-| N | Go to the next unit that's waiting on you (the view flies there), then the next deck's |
+| N | Go to the next unit that's waiting on you (the view flies to the unit, where it is standing, and brackets it), then the next deck's |
 | X | Stand a unit down |
 | L | Stencil a tag by a console ("Operations", "Code cleanup") |
 | G | The Overview: the whole deck from above, a little off the axis, as one plan with the arc facing you (Q / E turn it, G walks again) |

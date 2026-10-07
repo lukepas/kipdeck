@@ -99,6 +99,8 @@ export const motes: Fixture<'motes'> = (site) => {
   points.frustumCulled = false;
   points.renderOrder = 4;
   points.name = 'life-motes';
+  // Light, not a thing: never in the way of the crosshair (a Points cloud catches any ray within a metre of a mote).
+  points.raycast = () => {};
   points.onBeforeRender = (renderer) => void (mat.uniforms.uPixel.value = renderer.getPixelRatio());
   site.group.add(points);
   return {

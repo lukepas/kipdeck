@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { OFFICE_PLAN } from '../../../shared/plan';
 import { SEATING_BY_ID } from '../../../shared/layout';
+import { walkable } from '../../../shared/nav';
 import { isAsleep } from '../../../shared/status';
 import type { Ctx } from '../../core/context';
 import type { CoreState } from '../../core/ctx';
@@ -19,15 +20,23 @@ import { $, closeAllModals, h, modalOpen, toast } from '../../ui/dom';
 import { openQueue } from '../../ui/queue';
 import { openSearch } from '../../ui/search';
 import { openTerminal, type TerminalFind } from '../../ui/terminal';
+import { makeAcquire } from './acquire';
+import { FRAME_AIM, framePose } from './frame';
+import { debugHandle } from '../giveway';
 
 /** Registers N (and the Units rail's next button), the compass's tick ('render') and / (search). */
-export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worlds' | 'views' | 'actions' | 'mission' | 'overview' | 'boardFaces'>) {
+export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worlds' | 'views' | 'actions' | 'mission' | 'overview' | 'boardFaces' | 'flight' | 'seating' | 'walking' | 'stage' | 'pointer'>,
+) {
   const { player, camera, net } = ctx;
+  const acquire = makeAcquire(ctx, parts);
+  // For the shots: whether the bracket shows, and what the crosshair lands on once you're there.
+  debugHandle('waiting', { bracket: acquire.showing, aimed: () => parts.pointer.target() });
   const nextUp = new NextUp();
   const compass = new Compass($('compass'));
   /** What the last press of N said, which the next press replaces. */
   let nextToast: HTMLElement | null = null;
   const workerPos = new THREE.Vector3();
+  const unitScale = new THREE.Vector3();
 
   /**
    * N: to the first worker waiting on someone, and on each press after, the next. In the ranking's
@@ -58,7 +67,8 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
   }
 
   /**
-   * Puts you behind worker `id` on this floor, looking over its shoulder, with any window closed; from
+   * Puts you by worker `id` on this floor where it is now (at its console, or on its pod's ready line
+   * when it needs you), facing it, with any window closed, and brackets it once the view lands; from
    * the Overview, the Overview pans and zooms onto it instead. False when there's no getting there
    * (you're between floors, or it's gone).
    */
@@ -73,7 +83,25 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
       parts.overview.flyTo(at.x, at.z);
       return true;
     }
-    parts.actions.standAt(desk);
+    const v = parts.views.workerViews.get(id);
+    const at = v && !desk.station && !desk.room ? v.model.where(workerPos) : null;
+    const k = v?.model.root.getWorldScale(unitScale).y || 1;
+    const pose = at && framePose(at, desk, { walkable: (x, z) => walkable(x, z, player.wing), aim: FRAME_AIM * k });
+    if (!pose) {
+      parts.actions.standAt(desk);
+    } else {
+      // As actions.standAt does it, at the unit instead of its desk.
+      parts.flight.from();
+      if (player.seat) parts.seating.standUp();
+      ctx.activities.stopAll('desk');
+      parts.walking.stopWalkingTo();
+      player.pos.set(pose.x, 0, pose.z);
+      player.vy = 0;
+      player.facing = pose.facing;
+      player.camYaw = pose.facing - Math.PI;
+      player.lookPitch = pose.pitch;
+    }
+    acquire.lock(id);
     return true;
   }
 
@@ -193,5 +221,5 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
   /** The units the compass points to now, at the edge of the view (their callouts give way to it). */
   const pointed = (): ReadonlySet<string> => compass.shown;
 
-  return { goToNextWaiting, goToWorker, answerWorker, renderWaiting, openWorkerTerminal, openWorkerChanges, showSearch, showQueue, pointed };
+  return { acquire, goToNextWaiting, goToWorker, answerWorker, renderWaiting, openWorkerTerminal, openWorkerChanges, showSearch, showQueue, pointed };
 }
