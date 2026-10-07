@@ -92,7 +92,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
     {
       id: 'bridge',
       icon: 'ship',
-      label: 'Bridge view',
+      label: 'Bridge',
       blurb: 'The lights on the bridge, how space moves outside the glass, how much the deck draws, and how much the bridge lives.',
       body: [
         setting('Bridge lights', 'you', ...lightSettings(() => settings, change)),
