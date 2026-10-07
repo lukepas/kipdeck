@@ -8,12 +8,12 @@
 //   - a first run: a demo repository (acme-web, every file and commit marked demo) with the test
 //     stand-in agent (tests/support/standin.mjs, no model) as Claude Code, started from inside it;
 //   - `--demo`: the five scripted agents on their throwaway repository (acme-shop).
-// Then the landing page (site/index.html) straight from disk. Every picture is demo data.
+// Then the landing page (site/landing, built into a temporary folder and served on 127.0.0.1:4694). Every picture is demo data.
 import { execFileSync, spawn } from 'node:child_process';
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { writeStandIn } from '../tests/support/standin.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -213,14 +213,23 @@ try {
   await shot(page, 'merged-phone', { clearToasts: true });
   await ctx.close();
 
-  // ---- The landing page, from disk -------------------------------------------------------------------
-  for (const [vp, tag] of [[DESK, 'desktop'], [PHONE, 'phone']]) {
-    const lp = await browser.newPage({ viewport: vp, colorScheme: 'light' });
-    await lp.goto(pathToFileURL(path.join(ROOT, 'site', 'index.html')).href);
-    await wait(800);
-    await shot(lp, `landing-${tag}`);
-    await shot(lp, `landing-full-${tag}`, { full: true });
-    await lp.close();
+  // ---- The landing page, built and served -------------------------------------------------------------
+  const { buildSite } = await import('../site/build.mjs');
+  const { serve } = await import('../site/serve.mjs');
+  const siteDir = mkdtempSync(path.join(tmpdir(), 'site-'));
+  await buildSite({ outDir: siteDir, card: false, env: {} });
+  const site = await serve(siteDir, 4694);
+  try {
+    for (const [vp, tag] of [[DESK, 'desktop'], [PHONE, 'phone']]) {
+      const lp = await browser.newPage({ viewport: vp, colorScheme: 'light' });
+      await lp.goto(site.url);
+      await wait(2400);
+      await shot(lp, `landing-${tag}`);
+      await shot(lp, `landing-full-${tag}`, { full: true });
+      await lp.close();
+    }
+  } finally {
+    site.server.close();
   }
 } catch (err) {
   console.error('shoot failed:', err.message);
