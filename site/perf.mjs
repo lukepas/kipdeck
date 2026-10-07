@@ -95,7 +95,14 @@ function observe() {
     }
   }).observe({ type: 'layout-shift', buffered: true });
   new PerformanceObserver((l) => {
-    for (const e of l.getEntries()) p.long.push({ at: Math.round(e.startTime), ms: Math.round(e.duration) });
+    for (const e of l.getEntries()) {
+      // Where the page was: the section across the middle of the window.
+      const mid = [...document.querySelectorAll('[data-scene]')].find((s) => {
+        const r = s.getBoundingClientRect();
+        return r.top < innerHeight / 2 && r.bottom > innerHeight / 2;
+      });
+      p.long.push({ at: Math.round(e.startTime), ms: Math.round(e.duration), section: mid?.id ?? '' });
+    }
   }).observe({ type: 'longtask', buffered: true });
   new PerformanceObserver((l) => {
     for (const e of l.getEntries()) if (e.interactionId) p.events.push({ name: e.name, ms: Math.round(e.duration), target: e.target?.id || e.target?.className || '' });
@@ -231,7 +238,7 @@ export function broken(report) {
     const lcpBudget = r === report.phone ? BUDGETS.lcpPhoneMs : BUDGETS.lcpDesktopMs;
     if (r.lcpMs > lcpBudget) out.push(`${name}: LCP ${r.lcpMs} ms is over ${lcpBudget} ms`);
     if (r.cls > BUDGETS.cls) out.push(`${name}: layout shift ${r.cls}`);
-    for (const l of r.scroll.longTasks) if (l.ms > BUDGETS.longTaskMs) out.push(`${name}: a ${l.ms} ms long task while scrolling (at ${l.at} ms)`);
+    for (const l of r.scroll.longTasks) if (l.ms > BUDGETS.longTaskMs) out.push(`${name}: a ${l.ms} ms long task while scrolling (at ${l.at} ms, in ${l.section || 'no section'})`);
     if (r.inpMs > BUDGETS.inpMs) out.push(`${name}: an interaction took ${r.inpMs} ms`);
     for (const e of r.errors) out.push(`${name}: console error: ${e}`);
   }

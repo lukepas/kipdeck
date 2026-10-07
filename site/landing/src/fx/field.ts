@@ -7,6 +7,7 @@
 // launch time) lives in typed arrays; a frame allocates nothing.
 import { every } from '../engine/loop';
 import { env, tier, token } from '../engine/env';
+import { governor } from '../engine/governor';
 
 export interface FieldHandle {
   /** Where the lit unit's hairline points (viewport coordinates), or null for no beam. */
@@ -34,7 +35,8 @@ const BANDS = 6;
 
 export function mountField(canvas: HTMLCanvasElement): FieldHandle {
   const ctx = canvas.getContext('2d', { alpha: true })!;
-  const max = tier === 'full' ? 420 : tier === 'lite' ? 140 : 90;
+  // Units by device: a laptop draws 420; a phone 160; Save-Data, low memory or less motion 80.
+  const max = tier === 'min' || env.saveData || env.memory <= 4 ? 80 : env.phone ? 160 : 420;
   let count = max;
   const ux = new Float32Array(max);
   const uy = new Float32Array(max);
@@ -58,8 +60,16 @@ export function mountField(canvas: HTMLCanvasElement): FieldHandle {
   let attendX = 0, attendY = 0, attendUntil = 0;
   let running = false;
   let stop: (() => void) | null = null;
-  // The quality governor: average frame time over 30 frames; halve the units if it runs slow.
-  let slow = 0, frames = 0;
+  // The quality governor (engine/governor.ts): fewer units if frames run slow, fewer pixels while flung.
+  // A new pixel ratio is applied in the next read pass, never in the middle of a write.
+  let dprScale = 1, rescale = false;
+  const gov = governor((q) => {
+    count = Math.max(40, Math.floor(max * q.units));
+    if (q.dprScale !== dprScale) {
+      dprScale = q.dprScale;
+      rescale = true;
+    }
+  });
 
   function readColors() {
     colors = { dot: token('--dot') || 'rgba(138,151,165,.28)', unit: token('--working') || '#c9d2dc', signal: token('--signal') || '#ff6a1a' };
@@ -82,7 +92,7 @@ export function mountField(canvas: HTMLCanvasElement): FieldHandle {
 
   function resize() {
     const r = canvas.getBoundingClientRect();
-    dpr = Math.min(window.devicePixelRatio || 1, env.phone ? 1.25 : 1.5);
+    dpr = Math.min(window.devicePixelRatio || 1, env.phone ? 1.25 : 1.5) * dprScale;
     const nw = Math.max(1, Math.round(r.width)), nh = Math.max(1, Math.round(r.height));
     if (nw === w && nh === h && canvas.width === Math.round(nw * dpr)) return;
     const first = w === 0;
@@ -276,6 +286,11 @@ export function mountField(canvas: HTMLCanvasElement): FieldHandle {
       const r = canvas.getBoundingClientRect();
       canvasTop = r.top;
       canvasLeft = r.left;
+      gov.read();
+      if (rescale) {
+        rescale = false;
+        resize();
+      }
     },
     write(dt: number) {
       const k = Math.min(1, dt * 7);
@@ -285,13 +300,7 @@ export function mountField(canvas: HTMLCanvasElement): FieldHandle {
         ey += (cy - ey) * k;
       }
       draw(dt);
-      frames++;
-      slow += dt;
-      if (frames === 30) {
-        if (slow / 30 > 0.018 && count > 60) count = Math.floor(count / 2);
-        frames = 0;
-        slow = 0;
-      }
+      gov.tick(dt);
     },
   };
 
@@ -348,6 +357,7 @@ export function mountField(canvas: HTMLCanvasElement): FieldHandle {
       if (tier === 'min') return;
       if (on && !running) {
         running = true;
+        gov.rest();
         stop = every(task);
       } else if (!on && running) {
         running = false;

@@ -10,6 +10,7 @@
 // phone it plays once in time as the card comes into view.
 import { drive, ease, span, setter, lerp } from '../engine/drive';
 import { tier, token, env } from '../engine/env';
+import { governor } from '../engine/governor';
 import { stackOffsets } from '../engine/stack';
 
 const VENDORS = ['CC', 'Cx', 'Cu', 'OC', 'Pi'];
@@ -47,7 +48,17 @@ export function mountFunnel(section: HTMLElement) {
   new ResizeObserver(measure).observe(list);
 
   // ---- The units.
-  const N = tier === 'full' ? 440 : 170;
+  const N = tier === 'full' ? 440 : env.saveData || env.memory <= 4 ? 80 : 170;
+  // How many are drawn: the quality governor halves it if frames run slow (engine/governor.ts).
+  let n = N;
+  let dprScale = 1, rescale = false;
+  const gov = governor((q) => {
+    n = Math.max(40, Math.floor(N * q.units));
+    if (q.dprScale !== dprScale) {
+      dprScale = q.dprScale;
+      rescale = true;
+    }
+  });
   const ctx = canvas.getContext('2d')!;
   const uv = new Uint8Array(N); // vendor
   const ur = new Uint8Array(N); // target row
@@ -85,7 +96,7 @@ export function mountFunnel(section: HTMLElement) {
   new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   function resize() {
     const r = canvas.getBoundingClientRect();
-    dpr = Math.min(devicePixelRatio || 1, env.phone ? 1.25 : 1.5);
+    dpr = Math.min(devicePixelRatio || 1, env.phone ? 1.25 : 1.5) * dprScale;
     w = Math.max(1, Math.round(r.width));
     h = Math.max(1, Math.round(r.height));
     canvas.width = Math.round(w * dpr);
@@ -191,7 +202,7 @@ export function mountFunnel(section: HTMLElement) {
     }
     const stackedNow = cardR.y > (chipR[0]?.y ?? 0);
     const copyRight = chipR.reduce((m, c) => Math.max(m, c.x + c.w), 0) + 12;
-    for (let i = 0; i < N; i++) {
+    for (let i = 0; i < n; i++) {
       const v = uv[i];
       const c = chipR[v] ?? chipR[0];
       // The stream: from the vendor's chip to the card's mouth, a smooth S (sideways on a wide
@@ -250,7 +261,7 @@ export function mountFunnel(section: HTMLElement) {
         ctx.lineWidth = 1 + z * 0.4;
         const size = (2.8 + z * 1.6) * (1 + vortex * 0.45 * (1 - collapse));
         ctx.beginPath();
-        for (let i = 0; i < N; i++) {
+        for (let i = 0; i < n; i++) {
           if (uz[i] !== z) continue;
           if ((xs[i] < copyRight && !stackedNow ? 1 : 0) !== over) continue;
           const isLit = rowNeeds[ur[i]] && collapse > 0.35 + uslot[i] * 0.3 ? 1 : 0;
@@ -272,8 +283,17 @@ export function mountFunnel(section: HTMLElement) {
     ctx.globalAlpha = 1;
   }
 
+  const read = () => {
+    gov.read();
+    if (rescale) {
+      rescale = false;
+      resize();
+    }
+    if (reading) readRects();
+  };
   drive(track, (p, dt) => {
     frame(p, dt);
+    gov.tick(dt);
     reading = p < 0.72;
-  }, { fallback: 'play', playMs: 5600, always: true, read: () => reading && readRects() });
+  }, { fallback: 'play', playMs: 5600, always: true, read });
 }
