@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CALLOUT_SCREEN, MID_MAX, OVERVIEW_BOUNDS, POP_FROM, STAGGER_MAX, WALK_BOUNDS, activityLine, midLine, popAt, staggerDelay, tierAt, tierFor, type CalloutTier } from '../src/client/features/workers/lod.ts';
+import { CALLOUT_SCREEN, MID_MAX, OVERVIEW_BOUNDS, POP_FROM, STAGGER_MAX, WALK_BOUNDS, activityLine, askLine, midLine, permissionAsk, popAt, staggerDelay, tierAt, tierFor, type CalloutTier } from '../src/client/features/workers/lod.ts';
 import { elapsed, statusPhrase } from '../src/shared/rowtext.ts';
 import { calloutText, type UnitSays } from '../src/client/world/character/callout-view.ts';
 
@@ -59,6 +59,36 @@ test('a selected unit is never smaller than a line', () => {
   assert.equal(tierFor({ distance: 2 }, undefined, { selected: true }), 'near');
 });
 
+test('zoomed in to a pod or a unit in the Overview, the selected unit shows its whole card; its neighbours keep their line', () => {
+  for (const zoom of ['pod', 'unit'] as const) {
+    assert.equal(tierFor({ ortho: ortho(10), distance: 0 }, 'mid', { selected: true, zoom }), 'near');
+    assert.equal(tierFor({ ortho: ortho(10), distance: 0 }, 'mid', { selected: false, zoom }), 'mid');
+  }
+  // From the whole deck it stays a line, and walking the zoom means nothing.
+  assert.equal(tierFor({ ortho: ortho(20), distance: 0 }, 'far', { selected: true, zoom: 'deck' }), 'mid');
+  assert.equal(tierFor({ distance: 10 }, 'mid', { selected: true, zoom: 'pod' }), 'mid');
+});
+
+test('a permission wait says what you would allow, as a question, not the hook\'s words', () => {
+  const ask = { level: 'needs-you' as const, activity: 'Wants permission: Bash: npm publish', label: 'Wants permission: Bash: npm publish' };
+  assert.equal(midLine(ask), 'Allow npm publish?');
+  assert.ok(midLine(ask).length <= MID_MAX);
+  // The ask alone from the label when there's no activity; a long command is cut, still a question.
+  assert.equal(midLine({ level: 'needs-you', label: 'Wants permission: Edit' }), 'Allow Edit?');
+  const long = midLine({ level: 'needs-you', activity: 'Wants permission: Bash: rm -rf node_modules && npm ci --prefer-offline' });
+  assert.ok(long.startsWith('Allow ') && long.endsWith('...?') && long.length <= MID_MAX, long);
+  // A question keeps its prompt's subject, as before.
+  assert.equal(midLine({ level: 'needs-you', activity: 'Which session store should I use?' }), activityLine('Which session store should I use?'));
+  assert.equal(permissionAsk({ activity: 'Bash: npm test' }), null);
+});
+
+test("the near card's third line for one that needs someone is what it asks or why it's stuck", () => {
+  assert.equal(askLine({ level: 'needs-you', activity: 'Wants permission: Bash: npm publish' }), 'Bash: npm publish');
+  assert.equal(askLine({ level: 'needs-you', activity: 'Which session store?' }), 'Which session store?');
+  assert.equal(askLine({ level: 'stuck', label: 'Crashed (exit 3)' }), 'Crashed (exit 3)');
+  assert.equal(askLine({ level: 'working', activity: 'Bash: npm test' }), null);
+});
+
 test('the stagger is the same every time for an id, and within 0-240 ms', () => {
   const seen = new Set<number>();
   for (let i = 0; i < 500; i++) {
@@ -91,7 +121,9 @@ test('the middle line: a tool call as a short verb, cut to 22, else the status p
   assert.equal(activityLine('Fix the login redirect\nand more'), 'Fix the login redirect');
   // Working, or waiting on you: what it's doing now.
   assert.equal(midLine({ activity: 'Bash: npm test', level: 'working', label: 'Working' }), 'Bash: npm test');
-  assert.equal(midLine({ activity: 'Wants permission: Bash', level: 'needs-you', label: 'x' }), 'Wants permission: Bash');
+  assert.equal(midLine({ activity: 'Bash: npm publish', level: 'needs-you', label: 'x' }), 'Bash: npm publish');
+  // A permission wait asks the question instead (see the permission test above).
+  assert.equal(midLine({ activity: 'Wants permission: Bash', level: 'needs-you', label: 'x' }), 'Allow Bash?');
   // Done or stuck: its last tool call is old news, so the ranking's phrase.
   assert.equal(midLine({ activity: 'Bash: npm test', level: 'review', label: 'Done: PR ready' }), 'Done: PR ready');
   assert.equal(midLine({ activity: '', level: 'working', label: 'Fix login', title: 'Fix login' }), 'Working');
@@ -163,6 +195,16 @@ test('near: who, a chip with the state and a clock, the task, and branch / PR / 
   assert.equal(off.clock, undefined);
   // No task: the live line stands in for it.
   assert.equal(calloutText(unit({ tier: 'near', activity: 'Bash: npm test' }), NOW).task, 'Bash: npm test');
+  // Needs you: line three is the ask, not the engine.
+  const asks = calloutText(unit({ tier: 'near', kind: 'needs-you', level: 'needs-you', task: 'Publish the SDK', activity: 'Wants permission: Bash: npm publish', reason: 'Wants permission: Bash: npm publish', model: 'claude' }), NOW);
+  assert.equal(asks.meta, 'Bash: npm publish');
+  assert.equal(asks.metaHue, true);
+});
+
+test('the selected unit keeps its call sign from far off, and its callout says it is selected at every tier', () => {
+  assert.equal(calloutText(unit({ tier: 'far', selected: true }), NOW).sign, 'A-03');
+  for (const tier of ['far', 'mid', 'near'] as const) assert.equal(calloutText(unit({ tier, selected: true }), NOW).selected, true);
+  assert.equal(calloutText(unit({ tier: 'mid' }), NOW).selected, undefined);
 });
 
 test('a word said, or a unit standing down, overrides the tier', () => {

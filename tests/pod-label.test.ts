@@ -138,6 +138,26 @@ test('each label lies flat on clear deck: one level all over, on the floor, off 
   }
 });
 
+test("each label lies by its own pod: nearer its own zone's middle than any other pod's, and none on another", () => {
+  const middle = (letter: (typeof POD_LETTERS)[number]): [number, number] => {
+    const z = podZone(letter);
+    const am = (z.a0 + z.a1) / 2;
+    const rm = (z.r0 + z.r1) / 2;
+    return [MISSION_TABLE.x + Math.cos(am) * rm, MISSION_TABLE.z + Math.sin(am) * rm];
+  };
+  for (const letter of POD_LETTERS) {
+    const { x, z } = LABEL_SPOTS[letter];
+    const own = Math.hypot(x - middle(letter)[0], z - middle(letter)[1]);
+    // The upper tier's labels sit just outside its rail; the lower tier's, walled in, at the tiers' ends.
+    assert.ok(own < 9, `${letter}'s label is ${own.toFixed(1)} m from its zone`);
+    for (const other of POD_LETTERS) {
+      if (other === letter) continue;
+      const d = Math.hypot(x - middle(other)[0], z - middle(other)[1]);
+      assert.ok(own < d, `${letter}'s label (${own.toFixed(1)} m) is nearer its own zone than ${other}'s (${d.toFixed(1)} m)`);
+    }
+  }
+});
+
 test('a busy pod\'s counts line fits inside its chip: nothing is painted past the right edge', async () => {
   const { paintLabel } = await import('../src/client/features/pods/draw.js');
   const W = Math.round(LABEL.w * LABEL.px);
@@ -163,4 +183,8 @@ test('a busy pod\'s counts line fits inside its chip: nothing is painted past th
   paintLabel(g as unknown as CanvasRenderingContext2D, W, H, text, new Map(), 1);
   assert.ok(drawn.some((d) => /\d/.test(d.t)), 'the counts were painted');
   for (const d of drawn) assert.ok(d.right <= W, `"${d.t}" runs to ${d.right.toFixed(0)} px on a ${W} px chip`);
+  // With no goal the counts take the big line, and still fit.
+  drawn.length = 0;
+  paintLabel(g as unknown as CanvasRenderingContext2D, W, H, podLabel('A', undefined, busy), new Map(), 1);
+  for (const d of drawn) assert.ok(d.right <= W, `no goal: "${d.t}" runs to ${d.right.toFixed(0)} px on a ${W} px chip`);
 });

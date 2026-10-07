@@ -7,7 +7,7 @@ Back to the [README](../README.md).
 | W A S D / arrows | Walk (hold Shift to run) |
 | Space | Jump (you can land on consoles) |
 | Mouse drag / wheel | Orbit / zoom the camera |
-| G | The Overview: the whole deck from above, a little off the axis on the starboard side, so the dais, the tiers, the pit and the arc facing you read as one plan. The view rises into it from your eyes in 650 ms and dollies back down into them the same way (keys wait for it to land; with less motion it cuts). In it, Q / E turn it a quarter, W A S D, the arrows or a drag pan, the wheel zooms, a click on a unit selects it (see [Selecting a unit](#selecting-a-unit)), and G or Esc walks again. Left alone for 8 s it drifts by half a degree. The deck opens in whichever view you were last in (see [The deck](deck.md#walk-and-overview)) |
+| G | The Overview: the whole deck from above, a little off the axis on the starboard side, so the dais, the tiers, the pit and the arc facing you read as one plan. The view rises into it from your eyes in 650 ms and dollies back down into them the same way (G or Esc pressed during it is taken once it lands, other keys wait; with less motion it cuts). In it, Q / E turn it a quarter, W A S D, the arrows or a drag pan, the wheel zooms, a click on a unit selects it (see [Selecting a unit](#selecting-a-unit)), and G or Esc walks again. Left alone for 8 s it drifts by half a degree. The deck opens in whichever view you were last in (see [The deck](deck.md#walk-and-overview)) |
 | E | Interact: hire a worker, open its terminal, read a board, take an issue's note off the board, prompt a board agent, call a review in the Review bay, sketch on the planning board, read the docs at the docs rack, watch a shared screen at the Attention board (or share yours), put a service on the service monitor (E on its row of the Services board) and use its live page there, sit down (or get up), climb the forward lounge's ladder up or down, open the Floors window at the Deck lift, open the overflow bay past the lift for 2 more consoles (at the **Room to grow** sign) |
 | P | Prompt: give a task to a new worker, or to the one at this desk |
 | C | Changes: the files the worker at this desk changed and their diff; commit, discard or open a PR |
@@ -16,7 +16,7 @@ Back to the [README](../README.md).
 | X | Send a worker home (frees the desk; a worker with its own worktree asks what to do with it) |
 | L | Stencil a tag on the floor by the console you face (*Operations*, *Code cleanup*), in one of seven colors; again to change it or take it up |
 | O | Open a pull request for a worker on its own branch, or see the one it has (a worker across several projects gets one in each) |
-| I | Mission control: the reminders, then what needs someone on every floor, ranked, with why and one next step; the floor's mission and milestones; everything waiting for a review; the timeline of what happened. Inside, 1 2 3 4 switch tabs, the arrows pick a row and Enter does its step (see [Mission control](mission-control.md)) |
+| I | Mission control: the reminders, then what needs someone on every floor, ranked, with why and one next step; the floor's mission and milestones; everything waiting for a review; the timeline of what happened. Inside, 1-5 switch tabs, the arrows pick a row, Enter does its step and D docks it down the right of the deck or floats it again (see [Mission control](mission-control.md)) |
 | N | Go to the next unit waiting on someone and select it (the view flies to the unit, where it is standing: 2.2 m out from it on the side away from the mission table, facing it, so a unit that needs you is framed on its pod's ready line rather than at its empty console, and corner brackets in its state's hue close in on it as you land; from the Overview it pans onto it), the ones that need you first and then the ones that are done, longest-waiting first; again for the next one, and after the last one on your floor, on to the next floor's (one that needs you on another floor comes before one here that's only done; snoozed ones are skipped) |
 | Q | Put back the issue card you're carrying |
 | H | These controls |
@@ -49,14 +49,14 @@ One unit can be selected at a time, and the Overview, the Units rail and Walk al
 
 | Do | What happens |
 | --- | --- |
-| Click a unit in the Overview | It's selected and the view flies to it. A ship-cyan ring locks on under it on the floor, just outside a working unit's quiet meter so the two never overlap (and follows it, to the ready line too), its row in the Units rail is marked, and a card bottom right shows its call sign, name, state and how long it's been that way, its task, its latest activity, and its branch, PR and engine |
-| Point at a unit in the Overview | The pointer cursor and a faint ring under it. In Walk, the unit at the console under your crosshair gets the same faint ring |
+| Click a unit in the Overview | It's selected and the view flies to it. A white ring locks on under it on the floor, just outside a working unit's quiet meter so the two never overlap (and follows it, to the ready line too), its callout gets a cyan outline and draws over its neighbours' (zoomed in to a pod, it shows its whole card), its row in the Units rail is marked (its group opens if you'd folded it), and a card bottom right shows its call sign, name, state and how long it's been that way, its task, its latest activity, and its branch, PR and engine. With Mission control docked, the card sits left of it |
+| Point at a unit in the Overview | The pointer cursor and a faint ring under it. In Walk the rings stay off: you're standing at the unit, and the crosshair says what you aim at |
 | Click bare deck in the Overview | Lets go of the selection (a drag still pans) |
 | Click a row in the Units rail | Selects that unit and finds it: the Overview flies to it, and in Walk you're taken to its console, facing it. Pointing at a row (or tabbing to it) shows the faint ring under the unit on the deck |
 | Double-click a rail row, or Enter on it | Opens the unit's terminal |
-| N, a needs-you badge, a notification, or Locate in Mission control | The unit you're taken to becomes the selected one, so the ring, the rail and the card move with you |
+| N, a needs-you badge, a notification, or Locate in Mission control | The unit you're taken to becomes the selected one, so the rail and the card move with you (and the ring, in the Overview) |
 | The card's button | The one thing the unit's state asks for: **Answer** (it needs you: its terminal), **Review changes** (it's done), **Open terminal** (it's stuck), or **Terminal** and **Changes** while it works |
-| Esc, or the card's close button (X) | Lets go of the selection. Up in the Overview the next Esc walks again |
+| Esc, or the card's close button (X) | Lets go of the selection, before Esc does anything else (an open notice such as the "Waiting on you" debrief closes on the next Esc). Up in the Overview the next Esc walks again |
 
 With reduced motion, or Settings > Bridge > Ship motion at Off, the ring and the card cut in and out instead of easing, and the ring doesn't turn. To change decks, click the deck name in the top-left corner.
 

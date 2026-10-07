@@ -161,3 +161,16 @@ test('the home view is remembered, and a browser that throws on storage still bo
   assert.equal(readHome(), 'walk');
   assert.equal(writeHome('overview'), false);
 });
+
+test("the Overview's grade comes in with the move: none of it at your eyes, all of it up there, and steps no bigger than the move's", async () => {
+  const { GRADE, overviewLook } = await import('../src/client/features/cinema/logic.js');
+  for (const mode of ['night', 'day'] as const) {
+    const g = GRADE[mode];
+    assert.deepEqual(overviewLook(g, 0), g);
+    assert.deepEqual(overviewLook(g, 1), overviewLook(g));
+    // Half way up, half way between: no switch on the first frame of the move.
+    const half = overviewLook(g, 0.5);
+    assert.ok(Math.abs(half.vibrance - (g.vibrance + overviewLook(g).vibrance) / 2) < 1e-9);
+    assert.ok(half.vignette < g.vignette && half.vignette > overviewLook(g).vignette);
+  }
+});

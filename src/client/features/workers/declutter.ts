@@ -129,7 +129,7 @@ const COMPASS_W = 96;
 /** How often the piles of callouts are found again (ms): ten times a second. */
 const PILE_EVERY = 100;
 
-export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds' | 'overview' | 'stage' | 'boardFaces' | 'waiting' | 'tv'>) {
+export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds' | 'overview' | 'stage' | 'boardFaces' | 'waiting' | 'tv' | 'selection'>) {
   // The chips piles of callouts fold into ("3 working"), over the view.
   const layer = document.createElement('div');
   layer.className = 'label-chips';
@@ -190,6 +190,9 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
     const hero = parts.boardFaces?.faces().find((f) => f.id === 'tv')?.px;
     const heroPx = hero && !overview ? hero.bottom - hero.top : 0;
     const pointed = parts.waiting.pointed();
+    // The selected unit's callout always shows, placed first, so it's never folded, shrunk or covered.
+    const selected = parts.selection?.id();
+    const selectedModel = selected ? parts.views.workerViews.get(selected)?.model : undefined;
     for (const { id, model: m, near } of entries) {
       if (id && labelSource({ pointed: pointed.has(id), hasRow: parts.tv.hasCard(id), heroPx, near }) !== 'world') {
         m.setLift(0);
@@ -223,14 +226,18 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
         m.dock(null, 1, dt);
         continue;
       }
-      shown.push({ model: m, label: { full, compact, keep: m.rank < 2 }, rank: m.rank, d, pxPerM, anchorX: ((anchor.x + 1) / 2) * W, depth: anchor.z });
+      const mine = m === selectedModel;
+      shown.push({ model: m, label: { full, compact, keep: m.rank < 2 || mine }, rank: mine ? -1 : m.rank, d, pxPerM, anchorX: ((anchor.x + 1) / 2) * W, depth: anchor.z });
     }
     // Three or more callouts piled on one another fold into one chip that counts them (found ten times a second).
     if (now - pilesAt > PILE_EVERY) {
       pilesAt = now;
       // As each will stand once slid in clear of the view's sides and the rail.
-      const at = shown.map((s) => ({ ...s.label.full, x: s.label.full.x + nudge(s.label.full, left, W) }));
-      pileSets = piles(at).map((g) => new Set<unknown>(g.map((i) => shown[i].model)));
+      // Only units at work or parked fold: one that needs you, is stuck or waits for review, and the
+      // selected one, always keep their own callout (declutter() lifts or shrinks it instead).
+      const foldable = shown.filter((s) => s.rank >= 2);
+      const at = foldable.map((s) => ({ ...s.label.full, x: s.label.full.x + nudge(s.label.full, left, W) }));
+      pileSets = piles(at).map((g) => new Set<unknown>(g.map((i) => foldable[i].model)));
     }
     const live = pileSets.map((set) => shown.filter((s) => set.has(s.model))).filter((g) => g.length >= 2);
     live.forEach((group, i) => {
@@ -238,7 +245,7 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
       const x0 = Math.min(...group.map((g) => g.label.full.x));
       const x1 = Math.max(...group.map((g) => g.label.full.x + g.label.full.w));
       const b = Math.min(...group.map((g) => g.label.full.bottom));
-      const word = pileWord(group.map((g) => g.model.showing));
+      const word = pileWord(group.map((g) => g.model.showing), group.map((g) => g.model.callSign));
       el.hidden = false;
       if (el.textContent !== word) {
         el.textContent = word;

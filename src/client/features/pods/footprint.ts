@@ -5,12 +5,14 @@
 // inner and outer edge, as wide round the table as the pod's arc and half a console either side, kept
 // off the centre aisle and the tiers' end ramps. Its corners are rounded.
 //
-// Its ground label lies flat on the open deck beside the amphitheatre, turned to the Overview's
-// default yaw so it reads the right way up from there: A's and D's (the port pods) on the deck past
-// the tiers' west end, A's nearer the camera as its pod is; C's past their east end beside it, and B's
-// further out on the starboard deck. A label turned that way is too long to fit on a tier's narrow
-// sector, so they lie where the floor is clear and level: off the pit and its ready lines, the
-// consoles and the kiosks, and in sight from the Overview's framed pose (tests/pod-label.test.ts).
+// Its ground label lies flat on the open deck beside its own pod, turned to the Overview's default yaw
+// so it reads the right way up from there: A's and B's (the upper tier's pods) just outside the tiers'
+// outer rail, off the middle of their own zone, the way a room's name sits on its outer wall; D's and
+// C's (the lower tier's, walled in by the upper one) on the deck past the tiers' west and east ends,
+// the open floor nearest them. A label turned that way is too long to fit on a tier's narrow sector,
+// so they lie where the floor is clear and level: off the pit and its ready lines, the consoles and
+// the kiosks, apart from each other, and each nearer its own pod's zone than any other's
+// (tests/pod-label.test.ts).
 import { AISLE, TIERS, TIER_SPAN } from '../../../shared/amphitheater';
 import { MISSION_TABLE, PODS, POD_LETTERS, type PodLetter } from '../../../shared/layout';
 import { SIDE_YAW } from '../../core/overview-frame';
@@ -95,10 +97,10 @@ export const LABEL = { w: 5, d: 1.35, px: 160 } as const;
 
 /** Where each pod's label lies (its middle, on the deck), turned LABEL_YAW about y (see the top of the file). */
 export const LABEL_SPOTS: Record<PodLetter, { x: number; z: number }> = {
-  A: { x: -11.7, z: -1.1 },
-  D: { x: -11.7, z: -3.3 },
-  B: { x: 12.8, z: 1.6 },
-  C: { x: 7.6, z: -2.6 },
+  A: { x: -10.4, z: 7.9 },
+  D: { x: -10.5, z: -1.8 },
+  B: { x: 8.8, z: 7.8 },
+  C: { x: 7.8, z: -2.5 },
 };
 
 /** The labels' turn about y: the Overview's default yaw, so their tops point away from its camera. */

@@ -12,6 +12,8 @@ import { EYE_HEIGHT } from '../../player/camera';
 /** How far from the unit you stand (m), and how far down you look (rad) when you both stand on the same floor. */
 export const FRAME_DISTANCE = 2.2;
 export const FRAME_PITCH = -0.12;
+/** The steepest you're left looking down (rad): from a tier above, any steeper and the unit's callout leaves the top of the view. */
+export const FRAME_PITCH_MIN = -0.3;
 /**
  * How high over the unit's foot the crosshair lands (m): where FRAME_PITCH's line crosses it on the
  * same floor, its head plate, so its head and callout sit just over the middle of the view. From a
@@ -37,12 +39,22 @@ export interface FramePose {
  * where its own unit sits. Points, with SIGHT_CLEAR round each kept clear of the line of sight.
  */
 const IN_THE_WAY: readonly Pt[] = DESKS.flatMap((d) => [deskPoint(d, -0.5, 0), deskPoint(d, 0, 0), deskPoint(d, 0.5, 0), deskPoint(d, 0, 1.0)]);
+/** Each desk's stool point in IN_THE_WAY: its own unit sits there, so it never stands in the way of seeing that unit. */
+export const STOOL_OF = new Map<string, Pt>(DESKS.map((d, i) => [d.id, IN_THE_WAY[i * 4 + 3]]));
+/** How far a console's points keep the line of sight off. */
 const SIGHT_CLEAR = 0.45;
-/** How much of the line short of the unit isn't checked (the unit's own stool and console are there). */
-const SIGHT_SHORT = 0.7;
+/**
+ * How much of the line short of the unit isn't checked: the unit itself and its stool. Its own console
+ * is checked like any other, so you never end up looking at it across its console (standing on the
+ * table's side of a seated unit, its console filling the view).
+ */
+const SIGHT_SHORT = 0.35;
 
-/** Whether nothing on the deck (a console, another unit at its stool) stands between `from` and the unit at `to`. */
-export function sightClear(from: { x: number; z: number }, to: { x: number; z: number }, inTheWay: readonly Pt[] = IN_THE_WAY): boolean {
+/**
+ * Whether nothing on the deck (a console, another unit at its stool) stands between `from` and the unit
+ * at `to`; `own` is a point left out (the unit's own stool, STOOL_OF).
+ */
+export function sightClear(from: { x: number; z: number }, to: { x: number; z: number }, inTheWay: readonly Pt[] = IN_THE_WAY, own?: Pt): boolean {
   const dx = to.x - from.x;
   const dz = to.z - from.z;
   const len = Math.hypot(dx, dz);
@@ -50,7 +62,9 @@ export function sightClear(from: { x: number; z: number }, to: { x: number; z: n
   const ux = dx / len;
   const uz = dz / len;
   const reach = len - SIGHT_SHORT;
-  for (const [px, pz] of inTheWay) {
+  for (const p of inTheWay) {
+    if (p === own) continue;
+    const [px, pz] = p;
     const t = Math.max(0, Math.min(reach, (px - from.x) * ux + (pz - from.z) * uz));
     if (Math.hypot(from.x + ux * t - px, from.z + uz * t - pz) < SIGHT_CLEAR) return false;
   }
@@ -86,8 +100,9 @@ function awayFrom(unit: { x: number; z: number }, desk: DeskDef): [number, numbe
 /**
  * Where to stand to frame the unit at `unit` (its live place) whose console is `desk`: FRAME_DISTANCE
  * out from it away from the table, turned 30 degrees at a time either side when that spot isn't
- * `walkable` or a console is in the way (`sight`), facing it. Null when nowhere round it will do (the
- * caller falls back to standing at the desk).
+ * `walkable` or a console is in the way (`sight`), facing it. Of the spots that will do, one on the
+ * unit's own tier comes first, and the view never looks down steeper than FRAME_PITCH_MIN. Null when
+ * nowhere round it will do (the caller falls back to standing at the desk).
  */
 export interface FrameOpts {
   /** Whether you can stand at (x, z): the nav grid's cells (shared/nav.ts). */
@@ -98,20 +113,30 @@ export interface FrameOpts {
   floorAt?: (x: number, z: number) => number;
   /** How high over the unit's foot to look (FRAME_AIM, times its scale). */
   aim?: number;
+  /** How far out to stand (m): FRAME_DISTANCE, or less where a desk's reach is shorter. */
+  distance?: number;
 }
 
 export function framePose(unit: { x: number; z: number; y?: number }, desk: DeskDef, opts: FrameOpts = {}): FramePose | null {
-  const { walkable = () => true, sight = sightClear, floorAt = heightAt, aim = FRAME_AIM } = opts;
-  const target = (unit.y ?? floorAt(unit.x, unit.z)) + aim;
+  const own = STOOL_OF.get(desk.id);
+  const { walkable = () => true, sight = (f, t) => sightClear(f, t, IN_THE_WAY, own), floorAt = heightAt, aim = FRAME_AIM, distance = FRAME_DISTANCE } = opts;
+  const foot = unit.y ?? floorAt(unit.x, unit.z);
+  const target = foot + aim;
   const [ox, oz] = awayFrom(unit, desk);
-  for (const turn of TURNS) {
+  // Every spot round it that will do, in the order tried (straight out, then 30 degrees either side).
+  const spots: { x: number; z: number; step: number; order: number }[] = [];
+  TURNS.forEach((turn, order) => {
     const c = Math.cos(turn);
     const s = Math.sin(turn);
-    const x = unit.x + (ox * c - oz * s) * FRAME_DISTANCE;
-    const z = unit.z + (ox * s + oz * c) * FRAME_DISTANCE;
-    if (!walkable(x, z) || !sight({ x, z }, unit)) continue;
-    const pitch = Math.atan2(target - (floorAt(x, z) + EYE_HEIGHT), FRAME_DISTANCE);
-    return { x, z, facing: Math.atan2(unit.x - x, unit.z - z), pitch };
-  }
-  return null;
+    const x = unit.x + (ox * c - oz * s) * distance;
+    const z = unit.z + (ox * s + oz * c) * distance;
+    if (!walkable(x, z) || !sight({ x, z }, unit)) return;
+    spots.push({ x, z, step: Math.abs(floorAt(x, z) - foot), order });
+  });
+  if (!spots.length) return null;
+  // On the unit's own tier first, so you face it level rather than looking down on it from the one above.
+  spots.sort((a, b) => (Math.abs(a.step - b.step) > 0.05 ? a.step - b.step : a.order - b.order));
+  const { x, z } = spots[0];
+  const pitch = Math.max(FRAME_PITCH_MIN, Math.atan2(target - (floorAt(x, z) + EYE_HEIGHT), distance));
+  return { x, z, facing: Math.atan2(unit.x - x, unit.z - z), pitch };
 }

@@ -76,6 +76,15 @@ function flip(el: HTMLElement, first: Box) {
 }
 
 let dockedOpen = false;
+/** How wide a docked panel is (px, mission.css's .mc-dock-host). */
+export const DOCK_WIDTH = 400;
+/**
+ * Tells the page's CSS how much of the deck's right side a docked panel covers (--dock-right), so
+ * what sits bottom right (the selected unit's card, the bottom bar) moves left of it instead of under it.
+ */
+function claimRight(px: number) {
+  document.documentElement.style.setProperty('--dock-right', `${px}px`);
+}
 /** Whether Mission control is open and docked: what it does next to it (Locate) can leave it up. */
 export function missionDocked(): boolean {
   return dockedOpen;
@@ -123,7 +132,10 @@ export function mountShell(el: HTMLElement, opts: { doing: string; onEnd(): void
     // Too narrow to dock: no button that would do nothing you could see (D says why).
     modeBtn.hidden = window.innerWidth < DOCK_MIN_WIDTH;
     el.classList.toggle('docked', isDocked);
+    // Docked but the deck has the keys: its tabs dim, so 1-5 not switching them is no surprise.
+    el.classList.toggle('mc-keys-away', isDocked && !m);
     dockedOpen = isDocked && !ending;
+    claimRight(dockedOpen ? DOCK_WIDTH : 0);
   }
 
   function onClose() {
@@ -160,6 +172,7 @@ export function mountShell(el: HTMLElement, opts: { doing: string; onEnd(): void
     m.close();
     quiet = false;
     m = null;
+    paint();
   }
 
   /** Into the other layout, from where it is to where it goes. */
@@ -196,6 +209,7 @@ export function mountShell(el: HTMLElement, opts: { doing: string; onEnd(): void
   function end() {
     ending = true;
     dockedOpen = false;
+    claimRight(0);
     window.removeEventListener('pointerdown', onPointer, true);
     window.removeEventListener('resize', onResize);
     const gone = host;

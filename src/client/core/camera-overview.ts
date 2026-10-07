@@ -48,6 +48,12 @@ export interface Overview {
   active(): boolean;
   /** Whether the 650 ms move up or down is under way. */
   moving(): boolean;
+  /**
+   * How far up the view is: 0 in Walk, 1 in the Overview, and the move's eased way between them, so
+   * what the Overview changes (the grade, the light shafts) follows the move instead of switching on
+   * its first frame.
+   */
+  progress(): number;
   /** Up into the Overview, or back down to Walk. */
   toggle(on?: boolean): void;
   /** Pans and zooms to (x, z) in 650 ms (a cut under reduced motion), going up into the Overview first. Never zooms out. */
@@ -97,6 +103,8 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
   let move: { up: boolean; at: number; eye: THREE.Vector3; q: THREE.Quaternion; fov: number; look: { yaw: number; pitch: number } } | null = null;
   /** A toggle asked for during the move, taken once it lands. */
   let pending: { want: boolean; fly?: [number, number] } | null = null;
+  /** The move's eased way up this frame (0 your eyes, 1 the Overview), as placeMove last drew it. */
+  let moveK = 0;
 
   // ---- The idle drift ---------------------------------------------------------------------------------
   let inputAt = performance.now();
@@ -280,8 +288,11 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
   // Keys, ahead of the office's own while up here: the turn, the pan, and the ways back down.
   ctx.keys.add('guard', (e) => {
     if (!on) return false;
-    // Held while the view moves.
-    if (move) return true;
+    // Held while the view moves; G or Esc then is taken once it lands (Esc walks again, as it would up here).
+    if (move) {
+      if (!e.repeat && (e.code === 'KeyG' || e.code === 'Escape')) toggle(e.code === 'KeyG' ? !move.up : false);
+      return true;
+    }
     touch();
     // Anything you do up here takes over from a slow orbit.
     if (e.code !== 'KeyG' && e.code !== 'Escape') orbitSpeed = 0;
@@ -378,7 +389,8 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     if (!move) return;
     const k = Math.min(1, (now - move.at) / TRANSITION_MS);
     const e = easeInOutCubic(k);
-    placeMove(move.up ? e : 1 - e, aspect, at);
+    moveK = move.up ? e : 1 - e;
+    placeMove(moveK, aspect, at);
     if (k < 1) return;
     const up = move.up;
     move = null;
@@ -400,6 +412,7 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     camera,
     active: () => on,
     moving: () => !!move,
+    progress: () => (move ? moveK : on ? 1 : 0),
     toggle,
     flyTo,
     orbit,

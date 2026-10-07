@@ -41,3 +41,13 @@ test('one that needs someone shrinks to its call sign and lifts clear rather tha
   assert.equal(out[2].mode, 'compact');
   assert.ok(out[2].lift > 23);
 });
+
+test('a pile of three or fewer names its call signs; a bigger one counts', async () => {
+  const { pileWord } = await import('../src/client/features/workers/labels.js');
+  assert.equal(pileWord(['working', 'working'], ['A-03', 'D-02']), 'A-03, D-02 working');
+  assert.equal(pileWord(['working', 'parked', 'working'], ['A-01', 'A-02', 'B-01']), 'A-01, A-02, B-01');
+  assert.equal(pileWord(['working', 'working', 'working', 'working'], ['A-01', 'A-02', 'B-01', 'B-02']), '4 working');
+  // Without every call sign it counts, as before.
+  assert.equal(pileWord(['working', 'working'], ['A-03', '']), '2 working');
+  assert.equal(pileWord(['working', 'needs-you']), '2 units');
+});

@@ -264,7 +264,7 @@ async function main() {
     const c2 = await onScreen(done);
     const canvasMid = { x: 720, y: 450 };
     console.log('rail click: unit at', JSON.stringify(c2), 'screen centre', JSON.stringify(canvasMid), 'off by', Math.round(Math.hypot(c2.x - canvasMid.x, c2.y - canvasMid.y - 0)), 'px');
-    console.log('row aria-selected:', await row.getAttribute('aria-selected'));
+    console.log('row aria-current:', await row.getAttribute('aria-current'));
     console.log('card after rail click:', await card());
     await shot(page, 'rail-selected');
     await page.screenshot({ path: path.join(OUT, 'rail-selected-row.png'), clip: { x: 0, y: 300, width: 264, height: 110 } });

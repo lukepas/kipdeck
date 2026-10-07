@@ -66,7 +66,10 @@ export function createInspector(deps: InspectorDeps) {
     const att = attentionOf(w);
     const head = headline(w.task ?? (w.title ? { name: w.title } : undefined), w.activity ?? w.prompt);
     els.state.className = `sel-state ${att.level}`;
-    els.state.textContent = `${w.lost ? 'Worktree deleted' : statusPhrase(att, head.title)} · ${elapsed(Date.now() - att.since)}`;
+    // Only the short word up here ("Wants permission"): what it asks ("Bash: npm publish") is the line below.
+    const phrase = w.lost ? 'Worktree deleted' : statusPhrase(att, head.title).replace(/:\s.*$/, '');
+    els.state.textContent = `${phrase} · ${elapsed(Date.now() - att.since)}`;
+    els.state.title = w.lost ? '' : statusPhrase(att, head.title);
     els.title.textContent = head.title || 'No task yet';
     const activity = w.activity && !sameText(w.activity, head.title) ? w.activity : '';
     els.activity.textContent = activity || (head.detail ?? '');

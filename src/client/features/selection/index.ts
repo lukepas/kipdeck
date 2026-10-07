@@ -1,7 +1,7 @@
 /**
  * One selected unit across the deck's three ways of looking at it: the Overview, the Units rail and
  * Walk. Click a unit in the Overview (pick.ts) or a row of the rail (ui/workers-panel.ts) and it's
- * selected: the view flies to it, a reticle locks on under it (reticle.ts), its rail row is marked,
+ * selected: the view flies to it, a reticle locks on under it in the Overview (reticle.ts), its rail row is marked,
  * and the inspector card (inspector.ts) says what it's on with the button its state asks for. Pointing
  * at a unit (the mouse in the Overview, a rail row, the crosshair in Walk) hovers it: a half-strength
  * reticle. Esc lets go first, before anything else takes Esc; ✕ on the card does too. A unit that
@@ -153,12 +153,15 @@ export function installSelection(ctx: Ctx, parts: SelectionParts): Selection {
     syncHover();
   });
 
-  // The reticles follow their units every frame (one gliding to the ready line too).
+  // The reticles follow their units every frame (one gliding to the ready line too). Only from the
+  // Overview: in Walk you're standing right at the unit, where a 0.9 m ring would fill the floor of the
+  // view on top of its own state ring and N's bracket, and the crosshair already says what you aim at.
   ctx.ticks.add('world', () => {
     const now = performance.now();
     const still = ctx.reduceMotion.matches;
-    selRing.update(now, whereIs(selOn), still);
-    hovRing.update(now, whereIs(hovOn), still);
+    const up = parts.overview.active();
+    selRing.update(now, up ? whereIs(selOn) : null, still);
+    hovRing.update(now, up ? whereIs(hovOn) : null, still);
   });
 
   // Taken to a unit some other way (N, a needs-you badge, a notification): that unit is the selected

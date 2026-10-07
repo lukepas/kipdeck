@@ -90,7 +90,7 @@
 .limits .muted { color: var(--muted); }
 
 /* The bottom bar: the mission strip, the keys, the chat. It starts past the rail. */
-.bottombar { position: absolute; left: calc(var(--rail) + 12px); right: 12px; bottom: 10px; height: 40px; z-index: 2; display: flex; align-items: center; gap: 8px; pointer-events: none !important; transition: left var(--t-ui) var(--ease); }
+.bottombar { position: absolute; left: calc(var(--rail) + 12px); right: calc(12px + var(--dock-right, 0px)); bottom: 10px; height: 40px; z-index: 2; display: flex; align-items: center; gap: 8px; pointer-events: none !important; transition: left var(--t-ui) var(--ease); }
 .bottombar > * { pointer-events: auto; }
 .bottombar .mission-strip { flex: 0 1 600px; min-width: 0; height: 40px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: var(--hud-shadow); }
 .bottombar .mission-strip:empty { visibility: hidden; }

@@ -48,7 +48,7 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
     bar.append(b);
   });
   const body = h('div.mc-body', { role: 'tabpanel' });
-  body.addEventListener('focusout', () => setTimeout(() => behind && render(), 0));
+  body.addEventListener('focusout', () => setTimeout(() => behind && render(true), 0));
   const el = h('div.modal.mission-control', { role: 'dialog', 'aria-label': 'Mission control' }, h('header', {}, h('h2', {}, 'Mission control'), bar), body);
 
   function paintTabs() {
@@ -64,25 +64,43 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
 
   /** Set when a redraw waited for you to finish with a box or a picker. */
   let behind = false;
+  /** The tab's markup as last drawn: a redraw that would draw the same leaves the rows in place. */
+  let drawn = '';
+  /** A redraw asked for, waiting for the next frame (several store updates in one frame draw once). */
+  let queued = 0;
+  const later = () => {
+    if (queued) return;
+    queued = requestAnimationFrame(() => {
+      queued = 0;
+      render();
+    });
+  };
   /**
    * Draws the tab again, keeping the row you were on, where you'd scrolled to, and what you're typing
    * in a box that stays (data-keep). Never under a box being edited or a picker in use: it catches
    * up once you leave it.
    */
-  function render() {
+  function render(force = false) {
+    // The tabs first: whichever tab is drawn below, the bar always says which it is.
+    paintTabs();
     const active = document.activeElement as HTMLElement | null;
     if (active && body.contains(active) && (active.classList.contains(EDITING) || active.matches('select'))) {
       behind = true;
       return;
     }
     behind = false;
+    const now = Date.now();
+    const ranked = store.ranked();
+    const fresh = current === 'attention' ? renderAttention(deps, ranked, now) : current === 'review' ? renderReview(deps, ranked, now) : current === 'timeline' ? renderTimeline(deps, deps.net) : current === 'crew' ? renderCrew(deps, ranked, now) : renderGoals(deps);
+    // Nothing changed that shows: the rows stay put (a hover, a focus, a button under the mouse holds).
+    const markup = `${current}|${fresh.outerHTML}`;
+    if (!force && markup === drawn) return;
+    drawn = markup;
     const keep = active && body.contains(active) ? active.dataset.keep : undefined;
     const typed = keep ? (active as HTMLInputElement).value : '';
     const focused = (document.activeElement as HTMLElement | null)?.closest<HTMLElement>('.mc-row')?.dataset.id;
     const scroll = body.scrollTop;
-    const now = Date.now();
-    const ranked = store.ranked();
-    body.replaceChildren(current === 'attention' ? renderAttention(deps, ranked, now) : current === 'review' ? renderReview(deps, ranked, now) : current === 'timeline' ? renderTimeline(deps, deps.net) : current === 'crew' ? renderCrew(deps, ranked, now) : renderGoals(deps));
+    body.replaceChildren(fresh);
     body.scrollTop = scroll;
     if (focused) body.querySelector<HTMLElement>(`.mc-row[data-id="${CSS.escape(focused)}"]`)?.focus();
     const again = keep ? body.querySelector<HTMLInputElement>(`[data-keep="${CSS.escape(keep)}"]`) : null;
@@ -90,14 +108,13 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
       again.value = typed;
       again.focus();
     }
-    paintTabs();
   }
 
   function show(t: MissionTab) {
     current = t;
     prefs.save(t);
     body.scrollTop = 0;
-    render();
+    render(true);
   }
 
   /**
@@ -140,15 +157,17 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
   }
 
   const topics: Topic[] = ['roster', 'mission', 'issues', 'pulls', 'workers', 'floor', 'me', 'reminders', 'timeline', 'signins', 'bounties', 'reputation'];
-  const offs = topics.map((t) => store.on(t, render));
+  // Store updates come several a second while units work: one redraw a frame at most.
+  const offs = topics.map((t) => store.on(t, later));
   // "12 min" moves on by itself, and a worker goes silent by not changing.
-  const timer = window.setInterval(render, 30_000);
+  const timer = window.setInterval(later, 30_000);
   // Esc is ours (it may be cancelling an edit), so the window's own Esc is off; the ✕ stays (dock.ts).
   const shell: Shell = mountShell(el, {
     doing: 'in Mission control',
     onEnd: () => {
       offs.forEach((off) => off());
       clearInterval(timer);
+      cancelAnimationFrame(queued);
       window.removeEventListener('keydown', onKey, true);
       open = null;
     },

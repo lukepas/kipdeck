@@ -46,11 +46,19 @@ export function piles(boxes: readonly LabelBox[]): number[][] {
   return [...groups.values()].filter((g) => g.length >= PILE);
 }
 
-/** What a pile's chip says: "3 waiting" when every one waits on someone, "4 working" when every one works, else "5 units". */
-export function pileWord(kinds: readonly (string | undefined)[]): string {
+/** A pile this small names its units' call signs rather than counting them. */
+export const NAMED_PILE = 3;
+
+/**
+ * What a pile's chip says: "3 waiting" when every one waits on someone, "4 working" when every one
+ * works, else "5 units". With their call signs (`signs`), a pile of NAMED_PILE or fewer names them
+ * ("A-03, D-02 working"), so no unit in it goes anonymous.
+ */
+export function pileWord(kinds: readonly (string | undefined)[], signs: readonly string[] = []): string {
   const n = kinds.length;
   const waiting = (k: string | undefined) => k === 'needs-you' || k === 'stuck' || k === 'review';
-  if (kinds.every(waiting)) return `${n} waiting`;
-  if (kinds.every((k) => k === 'working')) return `${n} working`;
-  return `${n} units`;
+  const word = kinds.every(waiting) ? 'waiting' : kinds.every((k) => k === 'working') ? 'working' : '';
+  const named = signs.filter(Boolean);
+  if (n <= NAMED_PILE && named.length === n) return word ? `${named.join(', ')} ${word}` : named.join(', ');
+  return `${n} ${word || 'units'}`;
 }

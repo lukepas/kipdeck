@@ -53,10 +53,10 @@ test('selection is its own feature: installed ahead of the Overview, linked to t
   const rail = readFileSync(path.join(client, 'ui/workers-panel.ts'), 'utf8');
   assert.match(rail, /export function linkRail\(/);
   assert.match(rail, /ondblclick: \(\) => link && onOpen\(w\.id\)/, 'double-click still opens the terminal');
-  // The reticle is ship-cyan, never a state's hue.
+  // The reticle is white: never a state's hue, nor the ship-cyan of the heartbeat meters round it.
   const reticle = readFileSync(path.join(client, 'features/selection/reticle.ts'), 'utf8');
-  assert.match(reticle, /DECK\.ship/);
-  assert.doesNotMatch(reticle, /DECK\.(signal|stuck|review|working)/);
+  assert.match(reticle, /RING_COLOR = 0xffffff/);
+  assert.doesNotMatch(reticle, /DECK\.(ship|signal|stuck|review|working)/);
 });
 
 test("the selection reticle's marks stay clear of the heartbeat's quiet meter under the same unit", async () => {

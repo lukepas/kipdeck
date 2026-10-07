@@ -4,7 +4,8 @@
 
 .sel-card {
   position: fixed;
-  right: 12px;
+  /* Left of a docked Mission control (ui/mission/dock.ts sets --dock-right), never under it. */
+  right: calc(12px + var(--dock-right, 0px));
   bottom: 62px;
   z-index: 4;
   width: 320px;
@@ -41,8 +42,8 @@
 
 .sel-head { display: flex; align-items: center; gap: 8px; min-width: 0; padding-right: 28px; }
 .sel-head .unit-sign { flex: none; padding: 1px 5px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); font: 500 11px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text); }
-.sel-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.sel-state { margin-left: auto; flex: none; font: 500 11px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+.sel-name { flex: 0 0 auto; max-width: 50%; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sel-state { margin-left: auto; flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 11px var(--font-mono); font-variant-numeric: tabular-nums; color: var(--muted); }
 .sel-state.needs-you { color: var(--signal); }
 .sel-state.stuck { color: var(--stuck); }
 .sel-state.review { color: var(--review); }
@@ -53,9 +54,10 @@
 .sel-actions { display: flex; gap: 6px; margin-top: 6px; }
 .sel-actions .btn { height: 28px; padding: 0 12px; font-size: 12.5px; }
 
-/* The rail's row for the selected unit: a ship-cyan bar inside its state rule, and the raised fill. */
-.unit-row[aria-selected=true] { position: relative; background: var(--surface-3); }
-.unit-row[aria-selected=true]::before { content: ''; position: absolute; left: 2px; top: 3px; bottom: 3px; width: 2px; background: var(--ship, #6fc3df); }
+/* The rail's row for the selected unit: a 2px ship-cyan outline inside it, as the card's left rule, and
+   the raised fill, so it reads apart from the orange rows that need you. */
+.unit-row[aria-current=true] { position: relative; background: var(--surface-3); box-shadow: inset 0 0 0 2px var(--ship, #6fc3df); }
 
-/* Up in the Overview its legend sits bottom middle; on a narrow screen the card rides above it. */
-@media (max-width: 900px) { body.overview .sel-card { bottom: 100px; } }
+/* Up in the Overview its legend sits bottom middle, and on a narrow screen it wraps to two lines: the
+   card rides above both. */
+@media (max-width: 900px) { body.overview .sel-card { bottom: 124px; } }
