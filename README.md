@@ -6,11 +6,13 @@ The inbox for your AI coding agents: see which agent needs you, review what's re
 npx mergeline
 ```
 
-![The inbox: an agent that needs an answer, one with work to review and three at work on the left, the selected agent on the right (demo data)](docs/img/inbox.png)
+![Mergeline in 30 seconds: Codex asks a question and is answered from its row, Claude Code's diff is reviewed and merged into Shipped today (the demo's scripted agents, no model)](docs/img/demo.gif)
+
+No agents yet? `npx mergeline --demo` plays five scripted ones on a throwaway repository, no CLI, sign-in or model needed ([the demo](docs/demo.md)).
 
 Run it inside the repository you work in. It opens in your browser, signed in, with that repository as your first project. Claude Code, Codex and Cursor run side by side (OpenCode, Pi, Grok, Muse and DeepSeek Harness in beta), each on a branch of its own, and you answer, review and merge from one page, on your laptop or your phone. It runs on your machine or your team's dev box, and nothing leaves it.
 
-[**Run it**](#run-it) · [**Attach an agent**](#attach-an-agent-you-already-started) · [**Teams and servers**](docs/self-hosting.md) · [**Labs**](#labs) · [**Docs**](docs/features.md)
+[**Run it**](#run-it) · [**Try the demo**](docs/demo.md) · [**Attach an agent**](#attach-an-agent-you-already-started) · [**Teams and servers**](docs/self-hosting.md) · [**Labs**](#labs) · [**Docs**](docs/features.md)
 
 - **One loop.** **Deploy agent**, get pinged when it needs you, act on its row (Answer, Review changes, Merge), and it lands in **Shipped today**. Each row has one button; the selected agent's live terminal, diff and log sit beside the list. See [the inbox](docs/inbox.md).
 - **One ranking.** `src/shared/attention.ts` decides the order everywhere: the inbox's sections (Needs you, To review, Working, Idle), Mission control, the tab title and notifications.
@@ -202,6 +204,7 @@ The npm package ships the built `dist/` (`files` in `package.json`), so `npx mer
 ## More
 
 - [The inbox](docs/inbox.md): the home page, its loop, the setup card, its keys and the shipped log
+- [The demo](docs/demo.md): `npx mergeline --demo` with five scripted agents, the hosted read-only demo, and the scripts that make the video, the GIF and the deck's screenshots
 - [Features](docs/features.md): seeing what every agent does, handing out work, reviewing it and staying on mission
 - [Design system](docs/design.md): each surface on screen, the motion and the deck's sound, demo mode, and how to check a design change with `design/shoot.mjs`
 - [The deck](docs/deck.md): what's where on the 3D deck (the pit and the mission table, the tiers and the pods, the conn's dais, the ready line, the situation arc, the Proof corner), cell addresses, and the Overview camera
