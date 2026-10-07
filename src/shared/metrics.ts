@@ -125,3 +125,38 @@ export function numbersMarkdown(n: Numbers, opts: { project?: string; demo?: boo
   lines.push('', 'From the signed shipped log on this machine (shipped.jsonl). Human wait time is how long finished work waited on a person before its review.');
   return lines.join('\n');
 }
+
+/** The inbox's two numbers for today (home/pulse.ts): merges, and the median wait on a person, with the longest wait right now. */
+export interface TodayPulse {
+  merged: number;
+  /** Median ms today's reviewed work waited on a person; undefined before the first review. */
+  medianWaitMs?: number;
+  /** The longest anyone is waiting on you right now (ms), or undefined when nobody is. */
+  waitingNowMs?: number;
+  /** How many are waiting on you right now. */
+  waiting: number;
+}
+
+/** Today's pulse from the shipped log and when each agent waiting on you started waiting. */
+export function todayPulse(records: readonly ShipRecord[], waitingSince: readonly number[], now: number): TodayPulse {
+  const from = startOfDay(now);
+  const today = records.filter((r) => r.at >= from && r.at <= now + 60_000);
+  const waits = today.filter((r) => typeof r.waitedMs === 'number').map((r) => r.waitedMs!);
+  const m = median(waits);
+  const longest = waitingSince.length ? Math.max(0, now - Math.min(...waitingSince)) : undefined;
+  return {
+    merged: today.filter((r) => r.kind === 'merged').length,
+    ...(m === undefined ? {} : { medianWaitMs: m }),
+    ...(longest === undefined ? {} : { waitingNowMs: longest }),
+    waiting: waitingSince.length,
+  };
+}
+
+/** A wait the way the inbox says it: "38s", "4m", "1h 12m". */
+export function waitWords(ms: number): string {
+  const s = Math.round(ms / 1000);
+  if (s < 60) return `${s}s`;
+  const min = Math.round(s / 60);
+  if (min < 60) return `${min}m`;
+  return `${Math.floor(min / 60)}h ${min % 60}m`;
+}

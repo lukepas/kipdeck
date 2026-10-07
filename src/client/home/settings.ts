@@ -34,6 +34,16 @@ function appearance(): HTMLElement {
   return row;
 }
 
+/** Labs, at the foot of Account: the parts beyond the inbox, each off until someone turns it on. */
+function labs(net: Net): HTMLElement {
+  return setting(
+    'Labs',
+    'office',
+    h('p.setting-note', {}, 'The 3D Bridge view, GitHub boards and the task queue, goals, meetings, voice and Proof of Merge. Each is off until an admin turns it on.'),
+    h('div.seg', { style: 'margin-top:8px' }, h('button.btn', { type: 'button', onclick: () => void lazy.labs().then((m) => m.openLabs(net)) }, 'Open Labs...')),
+  );
+}
+
 export interface HomeSettingsDeps {
   net: Net;
   settings: Settings;
@@ -63,7 +73,7 @@ export function openHomeSettings(d: HomeSettingsDeps, first?: CorePane) {
     },
     sample: () => d.notifier.sample(),
     signOut: () => void fetch('/api/logout', { method: 'POST' }).finally(() => location.assign('/login')),
-    extra: { account: [setting('Appearance', 'you', appearance()), ...(team ? [team] : []), ...(usage ? [usage] : [])] },
+    extra: { account: [setting('Appearance', 'you', appearance()), ...(team ? [team] : []), ...(usage ? [usage] : []), labs(net)] },
   });
   openSettingsFrame(core.panes, first ?? lastPane, { onPick: (id) => (lastPane = id), onClose: core.off });
 }

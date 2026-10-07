@@ -1,10 +1,12 @@
 // The inbox's list: Needs you and To review always open, Working as one line per agent, Idle folded
-// until opened. Each row is the agent's mark, its task in plain words, its project and branch, how
-// long it has waited, and one primary button. Clicking a row selects it; clicking a section header
-// never folds a section that's always open.
+// until opened. Each row is the agent's mark, its task in plain words, one status line (what it asks,
+// what it changed, or what it's doing), its project when there's more than one, how long it has
+// waited, and a button only where there's a decision (Answer, Review changes, Merge...): the whole
+// row opens it. A row that waits on you has a bar along its foot that grows and reddens with the
+// wait. Clicking a section header never folds a section that's always open.
 
 import { attention, LEVEL_LABEL, type Ranked } from '../../shared/attention';
-import { ageLabel, ALWAYS_OPEN, buildInbox, INBOX_SECTIONS, looseReminders, rowAction, SECTION_LABEL, type InboxSection, type InboxView, type RowAction } from '../../shared/inbox';
+import { ageLabel, ALWAYS_OPEN, buildInbox, changeSummary, INBOX_SECTIONS, looseReminders, rowAction, SECTION_LABEL, waitShare, type InboxSection, type InboxView, type RowAction } from '../../shared/inbox';
 import type { Reminder, RosterEntry } from '../../shared/protocol';
 import { headline, statusPhrase } from '../../shared/rowtext';
 import { PROVIDER_META, type AgentProvider } from '../../shared/providers';
@@ -41,10 +43,13 @@ export function entryTitle(e: RosterEntry): string {
   return head.title || (e.status === 'idle' ? 'Waiting for a task' : 'Getting started');
 }
 
-/** "api / office/pixel-3f2a": the project, and the branch when it has one of its own. */
+/** "api / fix-the-login-3f2a": the project, and the branch when it has one of its own (the pane's header). */
 export function whereLabel(e: RosterEntry): string {
   return [e.floorName, e.branch?.replace(/^office\//, '')].filter(Boolean).join(' / ');
 }
+
+/** A row's project, only when the office has more than one: the branch is in the pane, not the row. */
+const rowWhere = (e: RosterEntry) => (store.floors.length > 1 ? e.floorName : '');
 
 /** The inbox as it is now, filtered by the project picker and the search box. */
 export function currentView(): InboxView {
@@ -56,12 +61,14 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
   const title = entryTitle(e);
   const { action, label } = rowAction(r.att);
   const provider = PROVIDER_META[e.provider ?? 'claude']?.label ?? 'Agent';
-  // Working: what it's doing right now, live. Otherwise why it's here, in the ranking's words.
-  const status = section === 'working' ? (e.activity ?? r.att.label) : statusPhrase(r.att, title);
+  // Working: what it's doing right now, live. To review: what it changed. Otherwise why it's here, in the ranking's words.
+  const status = section === 'working' ? (e.activity ?? r.att.label) : (section === 'review' && changeSummary(e.work)) || statusPhrase(r.att, title);
   const selected = home.selected === e.id;
+  const where = rowWhere(e);
+  const waits = section === 'needs-you' || section === 'review';
   return h(
     'li.row',
-    { class: `l-${r.att.level} s-${section}${selected ? ' selected' : ''}${r.att.snoozed ? ' snoozed' : ''}`, 'data-id': e.id },
+    { class: `l-${r.att.level} s-${section}${selected ? ' selected' : ''}${r.att.snoozed ? ' snoozed' : ''}`, 'data-id': e.id, style: waits ? `--wait:${waitShare(r.att.since, now).toFixed(3)}` : undefined },
     h(
       'button.row-main',
       { type: 'button', 'aria-current': selected ? 'true' : undefined, 'aria-label': `${title}: ${e.name}, ${provider}, ${LEVEL_LABEL[r.att.level]}`, onclick: () => home.select(e.id, section === 'review' ? 'changes' : 'terminal') },
@@ -70,11 +77,13 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
         'span.row-text',
         {},
         h('span.row-title', {}, title),
-        h('span.row-sub', {}, h('span.row-status', { title: r.att.reason ?? r.att.label }, status), h('span.row-where', { title: whereLabel(e) }, whereLabel(e))),
+        h('span.row-sub', {}, h('span.row-status', { title: r.att.reason ?? r.att.label }, status), where ? h('span.row-where', {}, where) : null),
       ),
       h('span.row-age', {}, ageLabel(section, r.att, now)),
     ),
-    h('button.btn.row-act', { type: 'button', class: section === 'needs-you' || section === 'review' ? 'act' : 'quiet', onclick: () => deps.act(e, action), 'aria-label': `${label}: ${title}` }, label),
+    // Opening it is the row itself: a button only for a decision.
+    action === 'open' ? null : h('button.btn.row-act', { type: 'button', class: waits ? 'act' : 'quiet', onclick: () => deps.act(e, action), 'aria-label': `${label}: ${title}` }, label),
+    waits ? h('span.row-wait', { 'aria-hidden': 'true' }) : null,
   );
 }
 

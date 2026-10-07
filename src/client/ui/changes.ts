@@ -239,11 +239,14 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
       bits.push(uncommitted ? `${uncommitted} uncommitted` : s.files.length ? 'all committed' : '');
       if (s.ahead) bits.push(`${s.ahead} commit${s.ahead > 1 ? 's' : ''} ahead of ${s.base}`);
       if (!s.dir) bits.push(h('span', { title: "This worker works in the project folder itself, so this is everything uncommitted there - everyone's edits, not just its own." }, 'shared project folder'));
-      else bits.push(h('span', { title: `Its own worktree at ${s.dir}` }, `${s.dir}`));
+      else bits.push(h('span.wt-path', { title: `Its own worktree at ${s.dir}` }, `${s.dir}`));
       summary.append(...bits.filter(Boolean).map((b) => (typeof b === 'string' ? h('span', {}, b) : b)));
     }
     discardBtn.disabled = busy || !uncommitted;
     commitBtn.disabled = busy || !uncommitted;
+    // In the inbox's pane, Send back and Merge are the way out: the footer only shows while there's
+    // something uncommitted to commit or throw away, and without the worktree's folder.
+    if (opts.dock) el.querySelector('footer')?.classList.toggle('hidden', !busy && !uncommitted && !s?.error);
     commitBtn.textContent = uncommitted ? `Commit ${uncommitted} file${uncommitted > 1 ? 's' : ''}...` : 'Commit...';
     prSlot.replaceChildren();
     if (!s) return;

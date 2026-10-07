@@ -159,15 +159,32 @@ export function setupCard(net: Net, deploy: (prompt: string, provider?: AgentPro
     icon('plus', 16),
     'Deploy your first agent',
   );
-  const usage = s.telemetry.allowed && admin ? usageSwitch(net, s) : null;
+  const rows = h('ol.su-rows', { 'aria-label': 'Setup' }, agentsRow(s), projectRow(s, net, admin), githubRow(s, net));
+  // Everything found: one line says what, and the rows fold under Details. Anonymous usage numbers
+  // are asked about in Settings, never before the first agent.
+  const summary = canDeploy && agent ? foundLine(s, agent) : null;
   return h(
     'div.first-run.setup-card',
-    {},
+    { class: canDeploy ? 'ready' : '' },
     h('h2', {}, 'Deploy your first agent'),
     h('p', {}, 'It works on a branch of its own. When it needs an answer or has something to review, it shows up here.'),
-    h('ol.su-rows', { 'aria-label': 'Setup' }, agentsRow(s), projectRow(s, net, admin), githubRow(s, net)),
+    summary,
+    canDeploy ? null : rows,
     go,
     h('p.first-hint', {}, 'It starts with a safe task: a 5-line SUMMARY.md on how to run this repo.'),
-    usage,
+    canDeploy ? h('details.su-details', {}, h('summary', {}, 'Details'), rows) : null,
+  );
+}
+
+/** "Claude Code · acme-web · merges on this computer, no GitHub needed": what was found, in one line. */
+function foundLine(s: SetupState, agent: AgentProvider): HTMLElement {
+  const floors = store.floors.filter((f) => !f.cloning);
+  const here = (s.startedIn?.floor && floors.find((f) => f.id === s.startedIn!.floor)) || floors[0];
+  const github = s.github.state === 'ok' ? `pull requests as ${s.github.login ?? 'you'} on GitHub` : 'merges on this computer, no GitHub needed';
+  return h(
+    'div.su-found',
+    {},
+    h('p', {}, h('span.su-glyph.ok', { 'aria-hidden': 'true' }, icon('check', 14)), agentMark(agent), h('b', {}, PROVIDER_META[agent].label), h('span', {}, 'in'), h('code', {}, here?.name ?? 'your project')),
+    h('p.su-say', {}, `${github[0].toUpperCase()}${github.slice(1)}.`),
   );
 }

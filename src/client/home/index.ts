@@ -1,6 +1,6 @@
-// The inbox at /: puts its parts together on the page lite.ts set up. The top bar (the project picker,
-// search, Deploy agent and the avatar menu), the list on the left with the checklist over it and
-// Shipped today under it, the selected agent's pane on the right, and the keys.
+// The inbox at /: puts its parts together on the page lite.ts set up. The top bar (the demo's pill, the
+// project picker, search, today's pulse, Deploy agent and the avatar menu), the list on the left with
+// the checklist and Shipped today under it, the selected agent's pane on the right, and the keys.
 
 import { checklistSeen, nextUp } from '../../shared/inbox';
 import type { ServerMsg } from '../../shared/protocol';
@@ -21,6 +21,7 @@ import { closeMenu, menuOpen, toggleMenu, type MenuEntry } from './menu';
 import { installPane, paneMessage } from './pane';
 import { openPalette, type Command } from './palette';
 import { renderChecklist, renderShipped } from './shipped';
+import { renderPulse } from './pulse';
 import { askSetup, onSetupChange, setupCard, setupMessage } from './setup';
 import { demoMessage } from './demo';
 import { home } from './state';
@@ -87,10 +88,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     { label: 'Deploy agent', hint: 'N', icon: 'plus', run: () => actions.deploy() },
     { label: 'Search agents', hint: '/', icon: 'search', run: () => search.focus() },
     { label: 'Numbers', hint: 'Wait time, merges, merge rate', icon: 'plot', run: openNumbers },
-    { label: 'Issues', hint: 'Work', icon: 'issue', run: () => actions.openBoard('issues') },
-    { label: 'Pull requests', hint: 'Work', icon: 'pull', run: () => actions.openBoard('pulls') },
-    { label: 'Task queue', hint: 'Work', icon: 'queue', run: () => actions.openQueue() },
-    { label: 'Mission control', hint: 'Attention and review across projects', icon: 'mission', run: () => actions.showMission() },
+    ...(store.lab('boards') ? workCommands() : []),
     { label: 'While you were away', icon: 'clock', run: () => recallDigest(showDigest) },
     { label: 'Settings', hint: 'Account, agents, notifications', icon: 'settings', run: openSettings },
     { label: 'Light or dark', icon: 'contrast', run: theme },
@@ -99,6 +97,15 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     { label: 'Help and keys', hint: '?', icon: 'help', run: openHelp },
   ];
   const palette = () => openPalette(commands);
+  /** The GitHub boards, the queue and Mission control: behind the boards lab, so the inbox is the one place work is managed. */
+  function workCommands(): Command[] {
+    return [
+      { label: 'Issues', hint: 'GitHub', icon: 'issue', run: () => actions.openBoard('issues') },
+      { label: 'Pull requests', hint: 'GitHub', icon: 'pull', run: () => actions.openBoard('pulls') },
+      { label: 'Task queue', hint: 'Labs', icon: 'queue', run: () => actions.openQueue() },
+      { label: 'Mission control', hint: 'Labs: every project on one board', icon: 'mission', run: () => actions.showMission() },
+    ];
+  }
 
   const avatar = $('btn-avatar');
   const initials = () => (store.profile.name.trim().split(/\s+/).map((w) => w[0]?.toUpperCase() ?? '').join('').slice(0, 2) || '?');
@@ -108,16 +115,21 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
   };
   avatar.addEventListener('click', () => {
     const open = (n: number) => (n ? String(n) : '');
+    // Four rows: the inbox is home, so nothing here manages work. Labs is in Settings and the commands.
+    const work: MenuEntry[] = store.lab('boards')
+      ? [
+          { group: 'Labs' },
+          { label: 'Issues', icon: 'issue', note: open(store.issues.items.filter((i) => i.state === 'OPEN').length), run: () => actions.openBoard('issues') },
+          { label: 'Pull requests', icon: 'pull', note: open(store.pulls.items.filter((p) => p.state === 'OPEN').length), run: () => actions.openBoard('pulls') },
+          { label: 'Task queue', icon: 'queue', note: open(store.queue.tasks.filter((t) => t.status !== 'done').length), run: () => actions.openQueue() },
+          { label: 'Mission control', icon: 'mission', run: () => actions.showMission() },
+          { group: 'Mergeline' },
+        ]
+      : [];
     const entries: MenuEntry[] = [
-      { group: 'Work' },
-      { label: 'Issues', icon: 'issue', note: open(store.issues.items.filter((i) => i.state === 'OPEN').length), run: () => actions.openBoard('issues') },
-      { label: 'Pull requests', icon: 'pull', note: open(store.pulls.items.filter((p) => p.state === 'OPEN').length), run: () => actions.openBoard('pulls') },
-      { label: 'Task queue', icon: 'queue', note: open(store.queue.tasks.filter((t) => t.status !== 'done').length), run: () => actions.openQueue() },
-      { label: 'Mission control', icon: 'mission', run: () => actions.showMission() },
-      { group: 'Mergeline' },
+      ...work,
       { label: 'Numbers', icon: 'plot', run: openNumbers },
       { label: 'Settings', icon: 'settings', run: openSettings },
-      { label: 'Labs', icon: 'labs', run: () => actions.openLabs() },
       store.lab('bridge') ? { label: 'Bridge view', icon: 'ship', run: () => location.assign('/bridge') } : null,
       { label: 'Help and keys', icon: 'help', note: '?', run: openHelp },
       { label: 'Sign out', icon: 'logout', run: () => void fetch('/api/logout', { method: 'POST' }).finally(() => location.assign('/login')) },
@@ -160,10 +172,14 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
       return;
     }
     renderList(inbox, actions, () => setupCard(net, (prompt, provider) => actions.deploy(prompt, provider)));
-    renderChecklist(checklist, () => actions.deploy(), !!inbox.querySelector('.first-run'));
-    // Before the first agent there's nothing to have shipped: the first-run card stands alone.
-    shipped.classList.toggle('hidden', !!inbox.querySelector('.first-run') && !home.records.length);
+    // The demo shows the loop rather than teaching it: no checklist there.
+    renderChecklist(checklist, () => actions.deploy(), !!inbox.querySelector('.first-run') || home.demo);
+    // The setup card has the one Deploy button until the first agent.
+    $('btn-deploy').classList.toggle('hidden', !!inbox.querySelector('.first-run'));
+    // Shipped today shows up with the first merge, not as an empty box before it.
+    shipped.classList.toggle('hidden', !home.records.some((r) => r.kind === 'merged'));
     renderShipped(shipped);
+    renderPulse([$('pulse'), $('pulse-list')], openNumbers);
     renderDigest();
     $('to-bridge').classList.toggle('hidden', !store.lab('bridge'));
     paintAvatar();

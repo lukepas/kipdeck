@@ -1,7 +1,9 @@
 // The right pane: the selected agent. Its header says the task, the agent and model, how long it has
 // worked, and carries Stop and the row's primary action again. Under it, three tabs: Terminal (live,
-// answered inline), Changes (the diff, its checks and pull request, Merge and Send back) and Log
-// (what happened to it). On a phone the pane covers the list, with a Back button.
+// with the question card over it while it asks something), Changes (the diff, its checks and pull
+// request, Merge and Send back) and Log (what happened to it). On a wide screen it is never empty
+// while something waits: with nothing selected, the oldest that needs you (or is ready to review)
+// opens by itself. On a phone the pane covers the list, with a Back button.
 
 import { attention, duration } from '../../shared/attention';
 import { nextUp, rowAction, sectionOf } from '../../shared/inbox';
@@ -16,7 +18,12 @@ import type { Actions } from './actions';
 import { onProject } from './deploy';
 import * as lazy from './lazy';
 import { agentMark, currentView, entryTitle, whereLabel } from './list';
+import { questionCard } from './question';
+import { preview } from './preview';
 import { home, type PaneTab } from './state';
+
+/** Wide enough for the list and the pane side by side (lite.css). */
+const wide = () => matchMedia('(min-width: 900px)').matches;
 
 const TABS: { id: PaneTab; label: string }[] = [
   { id: 'terminal', label: 'Terminal' },
@@ -54,25 +61,10 @@ function workLine(e: RosterEntry): string {
 const CHECKS: Record<string, string> = { pass: 'checks passing', fail: 'checks failing', pending: 'checks running', none: 'no checks' };
 const REVIEW: Record<string, string> = { approved: 'approved', changes: 'changes requested', required: 'review required' };
 
-/** The three steps of the loop, for the empty pane before any agent is deployed. */
-const HOW = [
-  ['Deploy', 'Give an agent a task. It works on a branch of its own.'],
-  ['Get pinged', 'When it has a question or finishes, it moves to the top of the list.'],
-  ['Review and merge', 'Answer it, read the diff, merge. It lands in Shipped today.'],
-] as const;
-
 /** The pane with nothing selected: how it works, or what's waiting and one button to start on it. */
 function emptyState(actions: Actions): HTMLElement {
   const keys = h('p.pe-keys', {}, h('kbd', {}, 'Up'), h('kbd', {}, 'Down'), ' to move · ', h('kbd', {}, 'Enter'), ' to act · ', h('kbd', {}, '?'), ' for help');
-  if (!store.roster.length) {
-    return h(
-      'div.pe',
-      {},
-      h('h2', {}, 'How it works'),
-      h('ol.pe-how', {}, ...HOW.map(([t, d], i) => h('li', {}, h('span.pe-n', {}, String(i + 1)), h('span', {}, h('b', {}, t), d)))),
-      keys,
-    );
-  }
+  if (!store.roster.length) return preview();
   const view = currentView();
   const next = nextUp(view);
   const n = view.counts;
@@ -94,9 +86,10 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
   const head = h('header.pane-h');
   const tabs = h('nav.pane-tabs', { role: 'tablist', 'aria-label': 'Agent' });
   const review = h('div.pane-review');
+  const card = questionCard(net);
   const body = h('div.pane-body');
   const empty = h('div.pane-empty');
-  root.replaceChildren(empty, back, head, tabs, review, body);
+  root.replaceChildren(empty, back, head, tabs, review, card.el, body);
 
   /** What the body shows now, so a re-render only remounts when that changes. */
   let mounted: { id: string; tab: PaneTab } | null = null;
@@ -137,7 +130,8 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
       t.openTerminal(net, e.id, undefined, undefined, { keypad: true, dock: body });
       if (t.openTerminalFor() !== e.id) return;
       mounted = want;
-      if (home.focusReply === e.id) {
+      // One that's asking: the question card's box takes the cursor instead (question.ts).
+      if (home.focusReply === e.id && e.status !== 'needs_input') {
         home.focusReply = undefined;
         setTimeout(() => t.focusTerminalReply(e.id), 80);
       }
@@ -188,8 +182,9 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
         'div.pane-acts',
         {},
         asleep ? null : h('button.btn.quiet.pane-stop', { type: 'button', title: 'End its session; its branch stays', onclick: () => actions.stop(e) }, 'Stop'),
-        // The row's action again, unless it's only "open this", which the pane already is.
-        action === 'open' || action === 'look' || (home.tab === 'changes' && (action === 'review' || action === 'merge' || action === 'hand-back')) ? null : h('button.btn.pane-primary', { type: 'button', class: sectionOf(att) === 'needs-you' ? 'act' : '', onclick: () => actions.act(e, action) }, label),
+        // The row's action again, unless it's only "open this", which the pane already is, or Answer,
+        // which the question card under the tabs is.
+        action === 'open' || action === 'look' || (action === 'answer' && home.tab === 'terminal') || (home.tab === 'changes' && (action === 'review' || action === 'merge' || action === 'hand-back')) ? null : h('button.btn.pane-primary', { type: 'button', class: sectionOf(att) === 'needs-you' ? 'act' : '', onclick: () => actions.act(e, action) }, label),
       ),
     );
     tabs.replaceChildren(
@@ -209,8 +204,26 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
     if (plan.parentElement !== empty) empty.replaceChildren(plan);
   };
 
+  /** The agents last seen waiting on you, so one that newly does opens again after an Esc or a merge. */
+  let waitingIds = new Set<string>();
+  /** With nothing selected on a wide screen: the oldest that needs you, else the oldest to review. */
+  const autoOpen = (): boolean => {
+    const view = currentView();
+    const now = new Set([...view.sections['needs-you'], ...view.sections.review].map((r) => r.entry.id));
+    if ([...now].some((id) => !waitingIds.has(id))) home.held = false;
+    waitingIds = now;
+    if (!wide() || home.held || home.selected) return false;
+    const next = nextUp(view);
+    if (!next) return false;
+    home.select(next.id, next.status === 'needs_input' ? 'terminal' : 'changes');
+    return true;
+  };
+
   const render = () => {
+    // Selecting one renders the pane again (home.change), so this pass has nothing left to do.
+    if (autoOpen()) return;
     const e = home.selected ? store.rosterEntry(home.selected) : undefined;
+    card.show(e);
     root.classList.toggle('has-agent', !!e);
     document.body.classList.toggle('pane-open', home.paneOpen && !!e);
     if (!e) {

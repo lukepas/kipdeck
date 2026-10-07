@@ -70,12 +70,25 @@ export function rowAction(att: Attention): { action: RowAction; label: string } 
   return { action, label: rowLabel(action) };
 }
 
-/** How long a row has been the way it is, in the words its section uses: "waiting 12m", "idle 2h". */
+/** How long a row has been the way it is, in the words its section uses: "waiting 12m", "ready 3m", "idle 2h". */
 export function ageLabel(section: InboxSection, att: Pick<Attention, 'since'>, now: number): string {
   const t = ago(now - att.since);
-  if (section === 'needs-you' || section === 'review') return `waiting ${t}`;
+  if (section === 'needs-you') return `waiting ${t}`;
+  if (section === 'review') return `ready ${t}`;
   if (section === 'idle') return `idle ${t}`;
   return t;
+}
+
+/** "1 file, +3 -0": what a finished agent changed, for its To review row (undefined before the office has looked). */
+export function changeSummary(work: RosterEntry['work']): string | undefined {
+  if (!work?.files) return undefined;
+  return `${work.files} file${work.files === 1 ? '' : 's'}, +${work.additions} -${work.deletions}`;
+}
+
+/** How long something has waited on a person, as a share of WAIT_FULL_MS (0 to 1): the length of a row's wait bar. */
+export const WAIT_FULL_MS = 30 * 60_000;
+export function waitShare(since: number, now: number): number {
+  return Math.max(0, Math.min(1, (now - since) / WAIT_FULL_MS));
 }
 
 /** Whether `e` matches a search: its name, task, activity, project, branch or agent. */

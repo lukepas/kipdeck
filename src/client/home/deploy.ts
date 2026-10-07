@@ -49,13 +49,15 @@ export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentPr
   const fields = agentFields(store.project, 'deploy-agent', provider === def.provider ? def : { provider });
   fields.element.classList.add('deploy-fields');
   const chips = h('div.deploy-agents', { role: 'radiogroup', 'aria-label': 'Agent' });
-  // Claude Code, Codex and Cursor up front; the rest (beta) under More, unless one is picked.
-  const front = () => providers.filter((p) => CERTIFIED.has(p) || p === provider);
+  // An agent this computer doesn't have says so, and how to get it (the setup card's finding).
+  const missing = (p: AgentProvider) => agentFound(p)?.installed === false;
+  // Claude Code, Codex and Cursor up front, when this computer has them; the rest (beta, or not
+  // installed) under More, unless one is picked.
+  const front = () => providers.filter((p) => (CERTIFIED.has(p) && !missing(p)) || p === provider);
+  const absent = providers.filter((p) => CERTIFIED.has(p) && missing(p));
   const others = providers.filter((p) => !CERTIFIED.has(p));
   const other = h('select', { id: 'deploy-other', 'aria-label': 'Other agents (beta)' }, h('option', { value: '' }, 'Pick one...'), ...others.map((p) => h('option', { value: p }, `${PROVIDER_META[p].label} (beta)`))) as HTMLSelectElement;
   other.addEventListener('change', () => other.value && pick(other.value as AgentProvider));
-  // An agent this computer doesn't have says so, and how to get it (the setup card's finding).
-  const missing = (p: AgentProvider) => agentFound(p)?.installed === false;
   const paintChips = () =>
     chips.replaceChildren(
       ...front().map((p) =>
@@ -84,7 +86,10 @@ export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentPr
 
   const ta = h('textarea', { rows: 5, id: 'deploy-prompt', placeholder: 'What should it do? For example: add rate limiting to /api/login', 'aria-label': 'Task' }) as HTMLTextAreaElement;
   ta.value = opts.prompt ?? '';
-  const more = h('details.deploy-more', {}, h('summary', {}, 'More: model, effort and other agents'), fields.element, others.length ? h('div.deploy-other', {}, h('label', { for: 'deploy-other' }, 'Other agents (beta)'), other) : null);
+  const install = absent.length
+    ? h('div.deploy-other', {}, h('label', {}, 'Not on this computer yet'), ...absent.map((p) => h('p.deploy-note', {}, `${PROVIDER_META[p].label}: `, h('code', {}, agentFound(p)?.fix ?? ''), ' ', h('button.btn.small', { type: 'button', onclick: () => pick(p) }, 'Pick anyway'))))
+    : null;
+  const more = h('details.deploy-more', {}, h('summary', {}, 'More: model, effort and other agents'), fields.element, others.length ? h('div.deploy-other', {}, h('label', { for: 'deploy-other' }, 'Other agents (beta)'), other) : null, install);
   const branchNote = h('p.deploy-note');
   const paintNote = () => {
     const f = store.floors.find((x) => x.id === project.value);
@@ -102,8 +107,9 @@ export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentPr
     h(
       'div.body',
       {},
-      h('label', { for: 'deploy-project' }, 'Project'),
-      project,
+      // With one project there's nothing to choose.
+      floors.length > 1 ? h('label', { for: 'deploy-project' }, 'Project') : null,
+      floors.length > 1 ? project : null,
       h('label', {}, 'Agent'),
       chips,
       h('label', { for: 'deploy-prompt' }, 'Task'),

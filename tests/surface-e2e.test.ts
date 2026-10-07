@@ -96,8 +96,8 @@ test('the avatar menu, three-pane Settings, Numbers after a merge, and Help, eac
   const item = (label: string) => page.locator('.menu-pop .menu-item', { hasText: label }).first();
   const modals = () => page.locator('#modal-root .modal').count();
 
-  // The menu: Work, then Mergeline's own, in plain words. No Bridge view while that lab is off.
-  assert.deepEqual(await menu(), ['Issues', 'Pull requests', 'Task queue', 'Mission control', 'Numbers', 'Settings', 'Labs', 'Help and keys', 'Sign out']);
+  // The menu: four rows in plain words. No boards, queue or Bridge view while their labs are off.
+  assert.deepEqual(await menu(), ['Numbers', 'Settings', 'Help and keys', 'Sign out']);
 
   // Settings: three panes, none of the bridge's.
   await item('Settings').click();
@@ -107,6 +107,7 @@ test('the avatar menu, three-pane Settings, Numbers after a merge, and Help, eac
   const all = await settings.innerText();
   for (const gone of ['Camera view', 'Bridge lights', 'Ship motion', 'Mixer', 'Bounties', 'unit']) assert.ok(!all.includes(gone), `Settings mentions ${gone}`);
   assert.match(all, /Appearance/);
+  assert.ok(await settings.locator('.setting-head h4', { hasText: 'Labs' }).isVisible(), 'Labs is at the foot of Account');
   await settings.locator('.settings-tab', { hasText: 'Agents' }).click();
   for (const h of ['Default agent', 'Agents at once', 'After a merge', 'Projects folder', 'Prompts']) assert.ok(await settings.locator('.setting-head h4', { hasText: h }).isVisible(), `Agents has ${h}`);
   await settings.locator('.settings-tab', { hasText: 'Notifications' }).click();
