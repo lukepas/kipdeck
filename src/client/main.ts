@@ -98,6 +98,7 @@ import { installKinetic } from './features/kinetic';
 import { installHands } from './features/hands';
 import { installLounge } from './features/lounge';
 import { installSoundscape } from './features/soundscape';
+import { installSelection } from './features/selection';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
@@ -224,6 +225,8 @@ parts.hintbar = installHintBar(ctx, core, parts);
 installKeyboard(ctx, parts);
 parts.focus = installFocus(ctx, core, parts);
 parts.pointer = installPointer(ctx, core, parts);
+// The selected unit (features/selection): ahead of the Overview, so its Esc lets go of a selection first.
+parts.selection = installSelection(ctx, parts);
 parts.overview = installOverview(ctx, parts);
 parts.flight = installFlight(ctx);
 parts.boardFaces = installBoardFaces(ctx, parts);

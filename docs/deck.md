@@ -93,7 +93,8 @@ You arrive in **Walk**: first person, as before (third person is in Settings). S
 | Q / E | Turn the deck a quarter (280 ms) |
 | W A S D / arrows, or drag | Pan |
 | Wheel | Zoom |
-| G / Esc | Back to Walk |
+| Click a unit / bare deck | Select it, or let go (see [Selecting a unit](controls.md#selecting-a-unit)) |
+| G / Esc | Back to Walk (with a unit selected, the first Esc lets go of it) |
 
 A window opened from the Overview closes back to it with no extra click; one opened from Walk closes straight back to mouse-look. Going to a unit (N, a click on its toast, a search result) flies the view there in a 700 ms arc in Walk (`src/client/core/flight.ts`), or pans and zooms the Overview onto it in 300 ms (`flyTo` in `src/client/core/camera-overview.ts`). Under reduced motion, the turn and every flight are cuts. In demo mode (`?demo=1`) the Overview turns slowly round the table until you take over; see [docs/design.md](design.md#demo-mode).
 

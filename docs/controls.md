@@ -7,7 +7,7 @@ Back to the [README](../README.md).
 | W A S D / arrows | Walk (hold Shift to run) |
 | Space | Jump (you can land on consoles) |
 | Mouse drag / wheel | Orbit / zoom the camera |
-| G | The Overview: the whole deck from above, a little off the axis on the starboard side, so the dais, the tiers, the pit and the arc facing you read as one plan. In it, Q / E turn it a quarter, W A S D, the arrows or a drag pan, the wheel zooms, and G or Esc walks again (see [The deck](deck.md#walk-and-overview)) |
+| G | The Overview: the whole deck from above, a little off the axis on the starboard side, so the dais, the tiers, the pit and the arc facing you read as one plan. In it, Q / E turn it a quarter, W A S D, the arrows or a drag pan, the wheel zooms, a click on a unit selects it (see [Selecting a unit](#selecting-a-unit)), and G or Esc walks again (see [The deck](deck.md#walk-and-overview)) |
 | E | Interact: hire a worker, open its terminal, read a board, take an issue's note off the board, prompt a board agent, call a review in the Review bay, sketch on the planning board, read the docs at the docs rack, watch a shared screen at the Attention board (or share yours), put a service on the service monitor (E on its row of the Services board) and use its live page there, sit down (or get up), climb the forward lounge's ladder up or down, open the Floors window at the Deck lift, open the overflow bay past the lift for 2 more consoles (at the **Room to grow** sign) |
 | P | Prompt: give a task to a new worker, or to the one at this desk |
 | C | Changes: the files the worker at this desk changed and their diff; commit, discard or open a PR |
@@ -28,7 +28,7 @@ Back to the [README](../README.md).
 | Shift + M | Turn all of the deck's sound off, or back on (Settings > Sound & voice has the main volume and the mixer; see [the design system](design.md#sound)) |
 | Ctrl + Space | Dictate, in a worker's terminal or a prompt box: hold it and talk, and what you said is typed in when you let go. A quick tap leaves it listening until the next tap. The mic button does the same |
 | Tab | The menu (top right of the top bar): every window, and what shows on screen |
-| Esc | Close any window (a terminal too) and get back to looking around, or to the Overview if you opened it there; in a forward lounge seat, stand up |
+| Esc | Close any window (a terminal too) and get back to looking around, or to the Overview if you opened it there; with a unit selected and no window open, let go of it; in a forward lounge seat, stand up |
 | Ctrl + [ | Send Esc to a terminal instead, to close a menu like Claude's `/skills` or interrupt Claude. **Esc** in the terminal's header does the same |
 
 Sitting in the captain's chair (E at it) frames the bridge: a slightly narrower view, aimed low on the situation arc, the bow and the arc over the pit and the crew. From the conn (in the chair, or standing on the dais with the mouse captured), once you've moved the mouse, rest the crosshair on a wall board for a moment and the view leans in on it, so its rows read without walking up; move the mouse or press a key and it eases back. With reduced motion, or Settings > Bridge > Ship motion at Off, it cuts instead of easing.
@@ -41,7 +41,23 @@ The forward lounge is a balcony at the bow, behind the Attention and Pull reques
 
 Bounties need no keys of their own: walk to the Proof corner on the west wall to read the escrow vault's stacks and the ledger over it, or press E at the Issues board, where a funded issue's row carries its amount and a violet coin, to fund one (see [Proof of Merge bounties](bounties.md#in-the-office)).
 
-You can also click a nearby console to interact with it, or click a unit in the Units rail down the left to open its terminal. To change decks, click the deck name in the top-left corner.
+You can also click a nearby console to interact with it.
+
+## Selecting a unit
+
+One unit can be selected at a time, and the Overview, the Units rail and Walk all agree on which one it is:
+
+| Do | What happens |
+| --- | --- |
+| Click a unit in the Overview | It's selected and the view flies to it. A ship-cyan ring locks on under it on the floor (and follows it, to the ready line too), its row in the Units rail is marked, and a card bottom right shows its call sign, name, state and how long it's been that way, its task, its latest activity, and its branch, PR and engine |
+| Point at a unit in the Overview | The pointer cursor and a faint ring under it. In Walk, the unit at the console under your crosshair gets the same faint ring |
+| Click bare deck in the Overview | Lets go of the selection (a drag still pans) |
+| Click a row in the Units rail | Selects that unit and finds it: the Overview flies to it, and in Walk you're taken to its console, facing it. Pointing at a row (or tabbing to it) shows the faint ring under the unit on the deck |
+| Double-click a rail row, or Enter on it | Opens the unit's terminal |
+| The card's button | The one thing the unit's state asks for: **Answer** (it needs you: its terminal), **Review changes** (it's done), **Open terminal** (it's stuck), or **Terminal** and **Changes** while it works |
+| Esc, or the card's close button (X) | Lets go of the selection. Up in the Overview the next Esc walks again |
+
+With reduced motion, or Settings > Bridge > Ship motion at Off, the ring and the card cut in and out instead of easing, and the ring doesn't turn. To change decks, click the deck name in the top-left corner.
 
 For a screen share, a projector or a recording, open the deck with `?demo=1`: bigger type and callouts, the needs-you toast kept up, and the Overview turning slowly round the mission table until you press a key, drag or scroll (see [the design system](design.md#demo-mode)).
 
