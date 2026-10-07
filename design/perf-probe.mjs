@@ -15,6 +15,7 @@
 //
 //   npm run build && node design/perf-probe.mjs [metal|swiftshader] [label]
 //
+// PROBE_OVERVIEW=1 also times the Overview (G) over the whole deck, three times held still and three left to its idle drift.
 // PROBE_LIST=1 adds which named parts of the scene each vantage's draws go to (to find what to merge).
 // PROBE_PORT picks the port (default 4692), PROBE_ROOT another checkout's build to time (a baseline),
 // PROBE_CONN the conn's eye and aim. PROBE_SOUND=1 starts the deck's sound first (a key press, as a
@@ -424,6 +425,23 @@ async function main() {
       }
     }
     await parts(true);
+    // PROBE_OVERVIEW=1: the Overview over the whole deck (G), landed and left to its idle drift.
+    if (process.env.PROBE_OVERVIEW) {
+      await page.evaluate(() => window.__office.overview.toggle(true));
+      await page.waitForFunction(() => window.__office.overview.active() && !window.__office.overview.moving?.(), null, { timeout: 10_000 });
+      // Held (a wheel of nothing is input, which holds the drift for 8 s), then left to drift.
+      const still = () => page.evaluate(() => window.__office.renderer.domElement.dispatchEvent(new WheelEvent('wheel', { deltaY: 0 })));
+      for (let i = 0; i < 3; i++) {
+        await still();
+        const held = await page.evaluate(measure, VANTAGES.conn);
+        console.log(JSON.stringify({ label: LABEL, backend: BACKEND, vantage: 'overview', drift: false, ...held }));
+        await wait(9000);
+        const drifting = await page.evaluate(measure, VANTAGES.conn);
+        console.log(JSON.stringify({ label: LABEL, backend: BACKEND, vantage: 'overview', drift: true, ...drifting }));
+      }
+      await page.evaluate(() => window.__office.overview.toggle(false));
+      await wait(1000);
+    }
     // The hands with Mission control's datapad up in the left (its glass a canvas), on your feet at the rack.
     if (await page.evaluate(() => !!window.__world?.hands)) {
       await page.evaluate(() => window.__world.hands.pad(true));

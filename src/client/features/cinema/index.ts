@@ -44,6 +44,8 @@ export interface Cinema {
   arriving(): boolean;
   /** Pins the screens' own clock at `s` seconds (the shots: the roll band a second on, all else held), or lets it run with null. */
   screensAt(s: number | null): void;
+  /** Calls `fn` once the arrival is over: landed, skipped, or never played (at once if it already is). */
+  onDone(fn: () => void): void;
 }
 
 /** The most the arrival waits on its first frame for the loading screen to fade (ms). */
@@ -94,6 +96,13 @@ export function installCinema(ctx: Ctx, parts: Pick<Parts, 'stage' | 'player' | 
   let arrivalMs = 0;
   let played = false;
   const own = { at: new THREE.Vector3(), q: new THREE.Quaternion() };
+  let over = false;
+  const whenDone: (() => void)[] = [];
+  function done() {
+    if (over) return;
+    over = true;
+    for (const fn of whenDone.splice(0)) fn();
+  }
   const offFloor = store.on('floor', () => {
     if (!store.floor) return;
     offFloor();
@@ -101,7 +110,7 @@ export function installCinema(ctx: Ctx, parts: Pick<Parts, 'stage' | 'player' | 
     const why = arrivalWhy({ still: still(), attention: c['needs-you'] + c.stuck > 0, visible: document.visibilityState !== 'hidden', character: parts.quality.look().character, played });
     played = true;
     arrivalState = why;
-    if (why !== 'plays') return;
+    if (why !== 'plays') return done();
     arrival = { at: performance.now(), start: performance.now() };
     arrivalState = 'playing';
     input = false;
@@ -137,7 +146,7 @@ export function installCinema(ctx: Ctx, parts: Pick<Parts, 'stage' | 'player' | 
       arrival = null;
       arrivalState = 'skipped';
       occlude(false);
-      return;
+      return done();
     }
     // Held on its first frame while the loading screen fades (2 s at most), so the shot starts in the clear.
     if (held === null && document.getElementById('loading') && now - arrival.at < ARRIVAL_HOLD_MS) arrival.start = now;
@@ -146,7 +155,7 @@ export function installCinema(ctx: Ctx, parts: Pick<Parts, 'stage' | 'player' | 
       arrival = null;
       arrivalState = 'done';
       occlude(false);
-      return;
+      return done();
     }
     const k = arrivalAt(arrivalMs);
     // Outside the hull until it's down through the canopy's glass.
@@ -335,6 +344,10 @@ export function installCinema(ctx: Ctx, parts: Pick<Parts, 'stage' | 'player' | 
     merge: framedMerge,
     arriving: () => !!arrival,
     screensAt: (t) => void (screensPinned = t),
+    onDone(fn) {
+      if (over) fn();
+      else whenDone.push(fn);
+    },
   };
   debugHandle('cinema', cinema);
   return cinema;
