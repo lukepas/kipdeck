@@ -10,9 +10,6 @@ import type { Client } from '../office/client.js';
 /** What a visitor may send: looking, never changing. */
 export const READ_ONLY_ALLOWS: ReadonlySet<string> = new Set([
   'ping',
-  'move',
-  'sit',
-  'act',
   'doing',
   'worker.attach',
   'worker.detach',
@@ -23,12 +20,15 @@ export const READ_ONLY_ALLOWS: ReadonlySet<string> = new Set([
   'inbox.log',
   'pace.get',
   'timeline.get',
-  'limits.refresh',
   'team.get',
 ]);
 
-/** What a page sends by itself rather than someone asking for it: dropped without a word. */
-const QUIET: ReadonlySet<string> = new Set(['term.resize', 'term.typing', 'profile', 'rtc', 'voice', 'setup.check']);
+/**
+ * What a page sends by itself rather than someone asking for it, presence a visitor has no use for
+ * (nobody has an avatar on the home page) and usage-limit lookups that would reach other services:
+ * dropped without a word.
+ */
+const QUIET: ReadonlySet<string> = new Set(['term.resize', 'term.typing', 'profile', 'rtc', 'voice', 'setup.check', 'move', 'sit', 'act', 'limits.refresh']);
 
 /** The least time between two refusals told to one visitor. */
 const TOLD_GAP_MS = 4000;

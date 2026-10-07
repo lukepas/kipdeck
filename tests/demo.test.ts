@@ -98,8 +98,8 @@ test('read only: a visitor may look, never change, and hears why now and then', 
   const warned: string[] = [];
   const ctx = { cfg: { demo: { readOnly: true } }, warn: (_c: Client, text: string) => warned.push(text) } as unknown as Ctx;
   const c = {} as Client;
-  for (const t of READ_ONLY_ALLOWS) assert.ok(Object.hasOwn(handlers, t) || ['ping', 'move', 'sit', 'act', 'doing'].includes(t), `${t} is a message the office takes`);
-  for (const t of ['worker.spawn', 'worker.prompt', 'worker.kill', 'term.input', 'inbox.merge', 'inbox.sendBack', 'labs.set', 'chat', 'changes.commit', 'changes.discard', 'queue.add', 'accounts.invite', 'setup.useFolder']) {
+  for (const t of READ_ONLY_ALLOWS) assert.ok(Object.hasOwn(handlers, t) || ['ping', 'doing'].includes(t), `${t} is a message the office takes`);
+  for (const t of ['limits.refresh', 'move', 'sit', 'act', 'worker.spawn', 'worker.prompt', 'worker.kill', 'term.input', 'inbox.merge', 'inbox.sendBack', 'labs.set', 'chat', 'changes.commit', 'changes.discard', 'queue.add', 'accounts.invite', 'setup.useFolder']) {
     assert.ok(!READ_ONLY_ALLOWS.has(t), `${t} isn't allowed`);
   }
   assert.equal(readOnlyRefuses(ctx, c, 'changes.diff', 0), false);
@@ -108,8 +108,10 @@ test('read only: a visitor may look, never change, and hears why now and then', 
   assert.deepEqual(warned, [READ_ONLY_REFUSAL], 'told once, not for every keystroke');
   assert.equal(readOnlyRefuses(ctx, c, 'worker.prompt', 20_000), true);
   assert.equal(warned.length, 2);
-  // What a page sends by itself is dropped without a word.
+  // What a page sends by itself is dropped without a word, and so are presence and limit lookups.
   assert.equal(readOnlyRefuses(ctx, c, 'term.resize', 40_000), true);
+  assert.equal(readOnlyRefuses(ctx, c, 'limits.refresh', 41_000), true);
+  assert.equal(readOnlyRefuses(ctx, c, 'move', 42_000), true);
   assert.equal(warned.length, 2);
   // Anywhere else, nothing is refused.
   const open = { cfg: {}, warn: () => assert.fail('no warning') } as unknown as Ctx;

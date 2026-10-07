@@ -252,7 +252,7 @@ test('answers the signed-in routes', async () => {
   const who = (await (await get('/api/whoami', me)).json()) as { ok: boolean; me: unknown; labs: { on: Record<string, boolean>; forced: string[] } };
   assert.deepEqual({ ok: who.ok, me: who.me }, { ok: true, me: { admin: true } });
   // Every lab is off as the office ships.
-  assert.deepEqual(who.labs.on, { bridge: false, ops: false, meetings: false, voice: false, ambience: false, proof: false });
+  assert.deepEqual(who.labs.on, { boards: false, bridge: false, ops: false, meetings: false, voice: false, ambience: false, proof: false });
   assert.deepEqual(who.labs.forced, []);
   // Home is the inbox; the 3D bridge is a page of its own; the old 2D view's address lands home.
   assert.match(await (await get('/', me)).text(), /<title>index<\/title>/);
@@ -573,8 +573,13 @@ test('settings, accounts, sign-ins and the boards answer as before', async () =>
   assert.deepEqual(await a.take('gh.labeled'), { t: 'gh.labeled', kind: 'pull', number: 3, error: 'No labels to change' });
   a.send({ t: 'queue.add', prompt: 'x', provider: 'nope' });
   await warned('Unknown agent provider');
+  // A lab's messages go nowhere while it's off, with a line saying so (ws/labgate.ts).
+  a.send({ t: 'meeting.start', pattern: 'debate', prompt: 'x', roles: [], provider: 'nope' });
+  await warned('Meetings is off. An admin turns it on in Labs.');
+  office.labs.set({ meetings: true }, 'test');
   a.send({ t: 'meeting.start', pattern: 'debate', prompt: 'x', roles: [], provider: 'nope' });
   await warned('Unknown agent provider');
+  office.labs.set({ meetings: false }, 'test');
   a.send({ t: 'queue.move', taskId: 'nope', delta: 1 });
   a.send({ t: 'changes.watch', workerId: 'nope' });
   a.send({ t: 'changes.unwatch', workerId: 'nope' });
