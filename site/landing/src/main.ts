@@ -76,6 +76,14 @@ sections.forEach((s) => near.observe(s));
 // Every other scene's chunk, fetched while the browser is idle once the opening has played, so none
 // is fetched as its section arrives. With less motion no scene stages anything, so none is fetched.
 if (!env.reduced) addEventListener('load', () => setTimeout(() => preloadScenes(sections.map((s) => s.dataset.scene!)), 2600), { once: true });
+// The merge's ring (its canvas, context and compiled program) is made in the first idle moment
+// after the opening, while the page is still at its top, so neither a scroll nor the merge pays for it.
+if (!env.reduced && tier !== 'min') {
+  addEventListener('load', () => setTimeout(() => {
+    const idle = (fn: () => void) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 800 }) : setTimeout(fn, 0));
+    idle(() => void import('./fx/shockwave').then((m) => m.warmShockwave()));
+  }, 2900), { once: true });
+}
 
 // The hero's facts count up once the headline has landed.
 setTimeout(() => document.querySelectorAll<HTMLElement>('.facts [data-count]').forEach((c) => countUp(c, 900)), 900);
