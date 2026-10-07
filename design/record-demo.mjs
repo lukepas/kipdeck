@@ -1,8 +1,10 @@
 // The demo video and GIF: records `mergeline --demo` in a headless browser as the loop plays out (the
-// agents arriving, Codex's question answered, Claude Code's diff reviewed and merged, Cursor's README
-// merged from a phone, the 3D Bridge view as a wall display), with captions drawn on the page and a
-// pointer where it clicks, then cuts the waiting out with ffmpeg into a 60-second MP4 with title and
-// end cards, and a 30-second GIF of the loop for the README.
+// agents arriving, Codex's question opening by itself and answered in one box, Claude Code's diff
+// reviewed and merged, Cursor's README merged from a phone, and the calm inbox with three shipped),
+// with captions drawn on the page, a "Demo data" tag in the corner and a pointer where it clicks, then
+// cuts the waiting out with ffmpeg into a silent MP4 of about a minute with title and end cards, and a
+// 30-second GIF of the loop for the README and the landing page. REC_BRIDGE=1 adds the 3D Bridge view
+// as a wall display (a Labs view, left out of the investor cut).
 //
 //   npm run build && node design/record-demo.mjs [out-dir]
 //
@@ -24,6 +26,7 @@ const PASSWORD = 'rec-' + Math.random().toString(36).slice(2, 8);
 const base = `http://127.0.0.1:${PORT}`;
 const W = 1440;
 const H = 900;
+const BRIDGE = process.env.REC_BRIDGE === '1';
 
 const home = mkdtempSync(path.join(tmpdir(), 'demo-record-home-'));
 const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), '--demo', '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD], {
@@ -67,12 +70,14 @@ const OVERLAY = () => {
     #rec-ptr { position: fixed; left: 0; top: 0; z-index: 2147483647; width: 22px; height: 22px; margin: -11px 0 0 -11px; border-radius: 50%; background: rgba(176, 58, 20, .35); border: 2px solid #b03a14; pointer-events: none; transition: transform .45s cubic-bezier(.3,.7,.3,1), opacity .2s; opacity: 0; }
     #rec-ptr.on { opacity: 1; }
     #rec-ptr.down { background: rgba(176, 58, 20, .7); }
+    #rec-tag { position: fixed; right: 14px; bottom: 12px; z-index: 2147483647; padding: 3px 9px; border-radius: 999px; background: rgba(17, 20, 24, .78); color: #fff; font: 600 12px/1.4 system-ui, sans-serif; letter-spacing: .02em; pointer-events: none; }
     @media (max-width: 500px) { #rec-cap { bottom: 18px; font-size: 16px; padding: 10px 14px; } }`;
   const add = () => {
     document.head.append(style);
     const cap = Object.assign(document.createElement('div'), { id: 'rec-cap' });
     const ptr = Object.assign(document.createElement('div'), { id: 'rec-ptr' });
-    document.body.append(cap, ptr);
+    const tag = Object.assign(document.createElement('div'), { id: 'rec-tag', textContent: 'Demo data: scripted agents, no model runs' });
+    document.body.append(cap, ptr, tag);
   };
   if (document.body) add();
   else document.addEventListener('DOMContentLoaded', add);
@@ -152,17 +157,16 @@ try {
   await caption(p, 'Five coding agents start, each on a branch of its own.');
   await row(p, 'needs-you', 'flaky checkout').waitFor({ timeout: 60_000 });
   desk.mark('needs');
-  await caption(p, 'Codex has a question. It goes to the top: Needs you.');
-  await wait(2500);
-  await point(p, row(p, 'needs-you', 'flaky checkout').locator('.row-act'));
-  await p.locator('.pane .term-say input').waitFor({ timeout: 15_000 });
-  await caption(p, 'Answer: its terminal opens with the reply box ready.');
-  await wait(1200);
-  await p.locator('.pane .term-say input').pressSequentially('fix the selector', { delay: 70 });
+  await caption(p, 'Codex has a question. It opens by itself, in plain words.');
+  await p.locator('.pane .q-card .q-text', { hasText: 'snapshot' }).waitFor({ timeout: 15_000 });
+  await wait(2600);
+  await point(p, p.locator('.pane .q-reply input'));
+  await caption(p, 'One box to answer. No terminal juggling.');
+  await p.locator('.pane .q-reply input').pressSequentially('Fix the selector', { delay: 70 });
   await wait(400);
   await p.keyboard.press('Enter');
   await row(p, 'working', 'flaky checkout').waitFor({ timeout: 20_000 });
-  await caption(p, 'Back to work. Agents stop waiting on you.');
+  await caption(p, 'Back to work. The top bar counts who is waiting on you.');
   desk.mark('answered');
   await row(p, 'review', 'rate limiting').waitFor({ timeout: 60_000 });
   desk.mark('review');
@@ -177,7 +181,7 @@ try {
   await p.mouse.wheel(0, 260);
   await wait(1600);
   await point(p, p.locator('.pane .rv-merge'));
-  await caption(p, 'Merged. Shipped today keeps a signed record of it.');
+  await caption(p, 'Merged: a signed record of who reviewed it and how long it waited.');
   await p.locator('.ship', { hasText: 'rate limiting' }).waitFor({ timeout: 20_000 });
   desk.mark('merged');
   await wait(3500);
@@ -217,12 +221,13 @@ try {
   await point(p, p.locator('.pane .rv-merge'));
   await p.locator('.ship', { hasText: 'flaky' }).waitFor({ timeout: 20_000 });
   await p.evaluate(() => window.__lite.home.select(undefined));
-  await caption(p, 'Nothing needs you, nothing to review. Three shipped.');
+  await caption(p, 'Nothing waits on you. Three shipped today.');
   desk.mark('calmEnd');
   await wait(4000);
   await desk.context.close();
 
-  // ---- The Bridge view as a team's wall display ---------------------------------------------------
+  // ---- The Bridge view as a team's wall display (REC_BRIDGE=1) ---------------------------------------
+  if (BRIDGE) {
   const bridge = await recorded('bridge', { width: W, height: H });
   await signIn(bridge.page);
   // Bridge view is a lab: switched on from the inbox (the office's admin is whoever signs in here).
@@ -241,6 +246,7 @@ try {
   bridge.mark('wall');
   await wait(4000);
   await bridge.context.close();
+  }
 } catch (err) {
   console.error('recording failed:', err.message);
   failed = true;
@@ -260,13 +266,13 @@ const card = async (name, html) => {
   await page.close();
 };
 const mark = `<svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z" fill="#13171c"/><path d="m4 17 8-8 8 8M4 22l8-8 8 8" fill="none" stroke="#13171c" stroke-width="2.5"/></svg>`;
-await card('title', `<div style="max-width:980px;text-align:center"><div>${mark}</div><h1 style="font-size:54px;line-height:1.15;letter-spacing:-.02em;margin:28px 0 18px">Engineers now run five to ten coding agents at once.</h1><p style="font-size:30px;color:#4a5560;margin:0">Nobody knows which one is waiting on them.</p></div>`);
+await card('title', `<div style="max-width:1000px;text-align:center"><div>${mark}</div><h1 style="font-size:54px;line-height:1.15;letter-spacing:-.02em;margin:28px 0 18px">Your coding agents spend the day waiting on you.</h1><p style="font-size:30px;color:#4a5560;margin:0">Mergeline shows who is waiting, for how long, and gets them moving again.</p></div>`);
 const lines = started
   .split('\n')
   .filter((l) => l.trim() && !/Sign in \(the link|Lost the tab|password|Ctrl\+C|closing/.test(l))
   .map((l) => l.replace(/\/var\/folders\/\S+?\/(mergeline-demo-)/, '/tmp/$1').replace(/&/g, '&amp;').replace(/</g, '&lt;'));
 await card('terminal', `<div style="width:1180px;border-radius:14px;background:#14181d;color:#e6e9ec;box-shadow:0 20px 60px rgba(0,0,0,.25);font:22px/1.6 ui-monospace,Menlo,monospace;padding:28px 34px"><div style="color:#7d8a96">$ <span style="color:#fff">npx mergeline --demo</span></div>${lines.map((l) => `<div style="white-space:pre-wrap;padding-left:2ch;text-indent:-2ch">${l.trim()}</div>`).join('')}</div>`);
-await card('end', `<div style="max-width:1040px;text-align:center"><div>${mark}</div><h1 style="font-size:50px;line-height:1.15;letter-spacing:-.02em;margin:24px 0 14px">Mergeline</h1><p style="font-size:28px;color:#4a5560;margin:0 0 34px">One inbox for every coding agent you run: see what needs you, review what's ready, merge what shipped.</p><code style="display:inline-block;font:30px ui-monospace,Menlo,monospace;padding:14px 24px;border-radius:10px;background:#fff;border:1px solid #d5dbe1">npx mergeline</code><p style="font-size:20px;color:#6b7680;margin:30px 0 0">Open source. Runs on your machine or your team's dev box.<br>Recorded with the demo's scripted agents: no model ran.</p></div>`);
+await card('end', `<div style="max-width:1040px;text-align:center"><div>${mark}</div><h1 style="font-size:50px;line-height:1.15;letter-spacing:-.02em;margin:24px 0 14px">Mergeline</h1><p style="font-size:28px;color:#4a5560;margin:0 0 34px">One inbox for Claude Code, Codex and Cursor: who is waiting on you, the answer, the diff and the merge.</p><code style="display:inline-block;font:30px ui-monospace,Menlo,monospace;padding:14px 24px;border-radius:10px;background:#fff;border:1px solid #d5dbe1">npx mergeline --demo</code><p style="font-size:20px;color:#6b7680;margin:30px 0 0">Open source. Runs on your machine or your team's dev box.<br>Recorded with the demo's scripted agents: no model ran.</p></div>`);
 await cardBrowser.close();
 
 // ---- The cut ------------------------------------------------------------------------------------
@@ -279,15 +285,15 @@ const d = marks.desk;
 const ph = marks.phone;
 /** [input, from, to] in seconds of that recording, or [png, seconds]. */
 const parts = [
-  ['title', 4.5],
-  ['terminal', 5],
-  [webm('desk'), d.arrive, d.arrive + 5],
+  ['title', 4],
+  ['terminal', 3.5],
+  [webm('desk'), d.arrive, d.arrive + 3.5],
   [webm('desk'), d.needs - 0.5, d.answered + 2.5],
-  [webm('desk'), d.review - 0.3, d.merged + 3.5],
+  [webm('desk'), d.review - 0.3, d.merged + 3],
   [webm('phone'), ph.ready - 0.3, ph.done],
-  [webm('desk'), d.calm, d.calmEnd + 3.5],
-  [webm('bridge'), marks.bridge.wall, marks.bridge.wall + 3.5],
-  ['end', 5.5],
+  [webm('desk'), d.calm, d.calmEnd + 3],
+  ...(BRIDGE ? [[webm('bridge'), marks.bridge.wall, marks.bridge.wall + 3.5]] : []),
+  ['end', 5],
 ];
 const fit = `scale=${W}:${H}:force_original_aspect_ratio=decrease,pad=${W}:${H}:(ow-iw)/2:(oh-ih)/2:color=0xeef1f4,setsar=1,fps=30,format=yuv420p`;
 const clips = parts.map((part, i) => {

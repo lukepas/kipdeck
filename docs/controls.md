@@ -17,10 +17,9 @@ The home page (`/`, [the inbox](inbox.md)) has six keys. None of them fire while
 
 Up and Down (or j and k) move the selection. Everything else is a click or a tap: a row's one button, **Deploy agent**, and the avatar menu at the top right:
 
-- **Work**: Issues, Pull requests, the Task queue and Mission control.
 - **Numbers**: human wait time, merges and the merge rate ([metrics](metrics.md)).
 - **Settings**: three panes. **Account** (who you're signed in as, your password, light or dark, teammates and anonymous usage numbers for admins), **Agents** (the default agent and model, how many run at once, what happens after a merge, where new projects are cloned, the prompts) and **Notifications** (desktop notifications, and the team's Slack or Discord channel).
-- **Labs**, **Bridge view** (with that lab on), **Help and keys** and **Sign out**.
+- **Bridge view** (with that lab on), **Help and keys** and **Sign out**. With the GitHub boards and queue lab on, Issues, Pull requests, the Task queue and Mission control come first. Labs is at the foot of Settings > Account, and in Ctrl+K.
 
 While you were away and light or dark are one Ctrl+K away. Every window has a close button at its top right, and Esc closes it too.
 

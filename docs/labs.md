@@ -4,12 +4,13 @@ Back to the [README](../README.md).
 
 The office is an inbox for your coding agents: the home page at `/` ([the inbox](inbox.md)) sorts every agent by what it needs from you, and opens each one's terminal, its changes and its pull request beside the list. Everything else the office can do is a lab. Each lab is off as the office ships, so the first thing anyone sees is the inbox and nothing else.
 
-Turning a lab off hides it: its menu rows, its settings pane, its tabs and, for Proof of Merge, its HTTP routes. Its code stays in the build and in the tests, and what it saved (bounties, goals, a whiteboard) stays on disk for when it comes back on.
+Turning a lab off hides it: its menu rows, its settings pane, its tabs, for Proof of Merge its HTTP routes, and over the socket the messages of Proof of Merge, Meetings and Voice (a page that sends one hears which lab it needs). Its code stays in the build and in the tests, and what it saved (bounties, goals, a whiteboard) stays on disk for when it comes back on.
 
 ## The labs
 
 | Lab | Id | What switching it on brings back |
 | --- | --- | --- |
+| GitHub boards and queue | `boards` | Issues, Pull requests, the Task queue and Mission control in the home page's avatar menu and Ctrl+K. Without it the inbox is the one place work is managed: it already shows every agent's pull request and checks. The Bridge view keeps its own boards. |
 | Bridge view | `bridge` | The **Bridge view** link on the home page's top bar and in its avatar menu, and the deck plan in the pane while no agent is selected. The 3D bridge itself is a page of its own at `/bridge` and always opens; this lab only decides whether the home page points to it. The bridge works as a wall display for a team room. |
 | Goals and timeline | `ops` | Mission control's Goals, Timeline and Crew tabs (Attention and Review are always there), the mission strip in the bridge, and the bridge menu's Timeline, Mission and milestones and Services rows. |
 | Meetings | `meetings` | The bridge menu's Review bay and Planning board, and the **Meeting...** and **Review panel...** buttons on an issue and a pull request. |
@@ -19,7 +20,7 @@ Turning a lab off hides it: its menu rows, its settings pane, its tabs and, for 
 
 ## Switching them
 
-- **From the office.** **Labs** in the home page's avatar menu (top right) or its command palette (Ctrl+K), or **Labs** in the Bridge view's menu (Tab). An admin switches a lab for everyone in the office, and everyone is told who did. Anyone else sees which are on. The window has a ✕ in its top right, and Esc closes it.
+- **From the office.** **Open Labs...** at the foot of Settings > Account on the home page, or Labs in its command palette (Ctrl+K), or **Labs** in the Bridge view's menu (Tab). An admin switches a lab for everyone in the office; the Labs window says who switched one last, and nobody gets a toast about it. Anyone else sees which are on. The window has a ✕ in its top right, and Esc closes it.
 - **From the command line.** `--labs bridge,ops` (or `AGENT_OFFICE_LABS=bridge,ops`, or `all`) holds those labs on for as long as the office runs; the Labs window shows them on and can't switch them off. Any chain flag (`--x402`, `--attest`, `--reputation`) holds Proof of Merge on, since those are its own switches.
 
 An admin's choice is kept in `labs.json` in the office's data folder (`~/agent-office/.agent-office/` by default), so a restart keeps it.
@@ -31,6 +32,7 @@ Bridge ambience takes effect when the Bridge view loads; switching it while you'
 The table of labs is `src/shared/labs.ts`. The server keeps them in `src/server/labs.ts` (`ctx.labs`), sends them in the welcome and with `/api/whoami`, and takes `labs.set` from admins (`src/server/ws/handlers/labs.ts`). A lab joins the registries it hides from rather than being checked in the middle of other code:
 
 - an HTTP route takes `lab: '<id>'` (`src/server/http/router.ts`), and isn't matched while that lab is off;
+- a socket message belongs to a lab through its handler map (`src/server/ws/labgate.ts`), and `dispatch` drops it while that lab is off;
 - a menu row in the bridge takes `lab: '<id>'` (`HudAction` in `src/client/ui/menu.ts`);
 - a settings pane is added only while its lab is on (Bounties in `src/client/ui/settings.ts`, after the three panes every page shares from `settings-core.ts`);
 - client code asks the store: `store.lab('<id>')` (`src/client/state/slices/labs.ts`), and follows the `labs` topic.

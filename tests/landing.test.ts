@@ -71,7 +71,7 @@ test('the build fills in the addresses, opens the CSP to the waitlist only, and 
   assert.match(built, /connect-src https:\/\/wait\.example\.eu;/);
   assert.match(built, /data-link="demo" href="https:\/\/demo\.example\.eu\/" rel="noopener"/);
   assert.match(built, /data-link="repo" href="https:\/\/github\.com\/example\/mergeline"/);
-  assert.match(built, /data-link="repo-run" href="https:\/\/github\.com\/example\/mergeline#run-it"/);
+  assert.match(built, /data-link="repo-run" href="https:\/\/github\.com\/example\/mergeline#from-source"/);
   // Not on npm yet: the page says so under the command, until the build says it's published.
   assert.match(plain, /data-unpublished>Not on npm yet/);
   assert.doesNotMatch(buildPage(html, { MERGELINE_NPM_PUBLISHED: '1' }), /data-unpublished|Not on npm yet/);
