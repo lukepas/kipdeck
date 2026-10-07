@@ -20,6 +20,7 @@ import { installPane, paneMessage } from './pane';
 import { openPalette, type Command } from './palette';
 import { renderChecklist, renderShipped } from './shipped';
 import { askSetup, onSetupChange, setupCard, setupMessage } from './setup';
+import { demoMessage } from './demo';
 import { home } from './state';
 import './home.css';
 
@@ -29,6 +30,7 @@ export function homeMessage(net: Net, actions: Actions, msg: ServerMsg) {
   routeLazy(msg);
   paneMessage(msg);
   setupMessage(msg);
+  demoMessage(msg, $('demo'));
   switch (msg.t) {
     case 'welcome':
       void rewatch(net);
