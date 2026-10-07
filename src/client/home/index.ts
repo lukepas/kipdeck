@@ -5,14 +5,16 @@
 import { checklistSeen, nextUp } from '../../shared/inbox';
 import type { ServerMsg } from '../../shared/protocol';
 import type { Net } from '../net';
-import { loadSettings, saveSettings, store } from '../state';
+import { store } from '../state';
 import { $, h } from '../ui/dom';
 import { icon } from '../ui/icons';
 import { digestCard, recallDigest, watchAway } from '../ui/mission/digest';
-import { askNotifyPermission, notifyPermission } from '../notify';
-import { applyLight, isLight, toggleLight } from '../lite-theme';
+import type { DesktopNotifier } from '../notify';
+import type { Settings } from '../state';
+import { applyLight, toggleLight } from '../lite-theme';
 import { createActions, type Actions } from './actions';
-import { installKeys, openKeys } from './keys';
+import { installKeys, openHelp } from './keys';
+import * as lazy from './lazy';
 import { rewatch, routeLazy } from './lazy';
 import { currentView, renderList } from './list';
 import { closeMenu, menuOpen, toggleMenu, type MenuEntry } from './menu';
@@ -51,9 +53,11 @@ export function homeMessage(net: Net, actions: Actions, msg: ServerMsg) {
   }
 }
 
-export function installHome(net: Net): Actions {
+/** Puts the inbox together. `settings` and `notifier` are the page's own (lite.ts), so Settings changes what the notifier reads. */
+export function installHome(net: Net, settings: Settings, notifier: DesktopNotifier): Actions {
   const actions = createActions(net);
-  const settings = loadSettings();
+  const openSettings = () => void lazy.settings().then((m) => m.openHomeSettings({ net, settings, notifier }));
+  const openNumbers = () => void lazy.numbers().then((m) => m.openNumbers());
 
   // ---- The top bar ----------------------------------------------------------------------------
   const project = $('project') as HTMLSelectElement;
@@ -82,15 +86,17 @@ export function installHome(net: Net): Actions {
   const commands = (): Command[] => [
     { label: 'Deploy agent', hint: 'N', icon: 'plus', run: () => actions.deploy() },
     { label: 'Search agents', hint: '/', icon: 'search', run: () => search.focus() },
+    { label: 'Numbers', hint: 'Wait time, merges, merge rate', icon: 'plot', run: openNumbers },
     { label: 'Issues', hint: 'Work', icon: 'issue', run: () => actions.openBoard('issues') },
     { label: 'Pull requests', hint: 'Work', icon: 'pull', run: () => actions.openBoard('pulls') },
     { label: 'Task queue', hint: 'Work', icon: 'queue', run: () => actions.openQueue() },
     { label: 'Mission control', hint: 'Attention and review across projects', icon: 'mission', run: () => actions.showMission() },
     { label: 'While you were away', icon: 'clock', run: () => recallDigest(showDigest) },
+    { label: 'Settings', hint: 'Account, agents, notifications', icon: 'settings', run: openSettings },
     { label: 'Light or dark', icon: 'contrast', run: theme },
     { label: 'Labs', hint: 'Bridge view, meetings, voice...', icon: 'labs', run: () => actions.openLabs() },
     ...(store.lab('bridge') ? [{ label: 'Bridge view', hint: '3D', icon: 'ship' as const, run: () => location.assign('/bridge') }] : []),
-    { label: 'Keyboard shortcuts', hint: '?', icon: 'keyboard', run: openKeys },
+    { label: 'Help and keys', hint: '?', icon: 'help', run: openHelp },
   ];
   const palette = () => openPalette(commands);
 
@@ -101,32 +107,18 @@ export function installHome(net: Net): Actions {
     avatar.title = `${store.profile.name}: menu`;
   };
   avatar.addEventListener('click', () => {
-    const notes = notifyPermission();
+    const open = (n: number) => (n ? String(n) : '');
     const entries: MenuEntry[] = [
       { group: 'Work' },
-      { label: 'Issues', icon: 'issue', note: String(store.issues.items.filter((i) => i.state === 'OPEN').length || ''), run: () => actions.openBoard('issues') },
-      { label: 'Pull requests', icon: 'pull', note: String(store.pulls.items.filter((p) => p.state === 'OPEN').length || ''), run: () => actions.openBoard('pulls') },
-      { label: 'Task queue', icon: 'queue', note: String(store.queue.tasks.filter((t) => t.status !== 'done').length || ''), run: () => actions.openQueue() },
-      { label: 'Mission control', icon: 'mission', run: () => actions.showMission() },
-      { group: 'You' },
-      notes === 'unsupported'
-        ? null
-        : {
-            label: 'Notifications',
-            icon: 'bell',
-            note: settings.notify && notes === 'granted' ? 'On' : 'Off',
-            run: async () => {
-              if (notes !== 'granted') {
-                settings.notify = true;
-                await askNotifyPermission();
-              } else settings.notify = !settings.notify;
-              saveSettings(settings);
-            },
-          },
-      { label: 'Light or dark', icon: 'contrast', note: isLight() ? 'Light' : 'Dark', run: theme },
-      { label: 'Keyboard shortcuts', icon: 'keyboard', note: '?', run: openKeys },
+      { label: 'Issues', icon: 'issue', note: open(store.issues.items.filter((i) => i.state === 'OPEN').length), run: () => actions.openBoard('issues') },
+      { label: 'Pull requests', icon: 'pull', note: open(store.pulls.items.filter((p) => p.state === 'OPEN').length), run: () => actions.openBoard('pulls') },
+      { label: 'Task queue', icon: 'queue', note: open(store.queue.tasks.filter((t) => t.status !== 'done').length), run: () => actions.openQueue() },
+      { group: 'Mergeline' },
+      { label: 'Numbers', icon: 'plot', run: openNumbers },
+      { label: 'Settings', icon: 'settings', run: openSettings },
       { label: 'Labs', icon: 'labs', run: () => actions.openLabs() },
       store.lab('bridge') ? { label: 'Bridge view', icon: 'ship', run: () => location.assign('/bridge') } : null,
+      { label: 'Help and keys', icon: 'help', note: '?', run: openHelp },
       { label: 'Sign out', icon: 'logout', run: () => void fetch('/api/logout', { method: 'POST' }).finally(() => location.assign('/login')) },
     ];
     toggleMenu(avatar, store.profile.name, entries);

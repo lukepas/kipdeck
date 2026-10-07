@@ -33,7 +33,7 @@ const net = new Net(() => store.profile, () => null, true);
 const settings = loadSettings();
 // A click on a notification selects that agent's row, its terminal open.
 const notifier = new DesktopNotifier(() => settings.notify, (id) => home.select(id, 'terminal'));
-const actions = installHome(net);
+const actions = installHome(net, settings, notifier);
 
 /** The server version this page was loaded with. */
 let bootVersion = '';

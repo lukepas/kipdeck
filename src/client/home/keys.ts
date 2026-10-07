@@ -1,9 +1,10 @@
 // The inbox's keys, six of them: Ctrl+K the command palette, N to deploy an agent, Enter for the
-// selected row's primary action, Esc to step back, / to search and ? for this list. The arrow keys
-// (and j and k) move the selection. None of them fire while you type in a box or the terminal, or
+// selected row's primary action, Esc to step back, / to search and ? for Help (the loop and these
+// keys). The arrow keys (and j and k) move the selection. None of them fire while you type in a box or the terminal, or
 // while a window is open; Esc in the pane's terminal steps back to the list instead of reaching the
 // agent (Ctrl+[ or the keypad's Esc sends one).
 
+import { DOCS_URL } from '../../shared/copy';
 import { rowAction } from '../../shared/inbox';
 import { h, modalOpen, openModal } from '../ui/dom';
 import type { Actions } from './actions';
@@ -20,13 +21,30 @@ export const SHORTCUTS: readonly [string, string][] = [
   ['?', 'These keys'],
 ];
 
-/** The list of keys, in a window of its own. */
-export function openKeys() {
+/** The loop the inbox is built around, in four verbs. */
+export const LOOP: readonly [string, string][] = [
+  ['Deploy', 'Deploy agent (or N) starts an agent on a branch of its own.'],
+  ['Get pinged', 'It shows up in Needs you when it has a question, and in To review when it is done.'],
+  ['Act', 'Each row has one button: Answer, Review changes, Fix checks or Merge.'],
+  ['Ship', 'A merge lands in Shipped today with a signed record, and Enter moves on to the next.'],
+];
+
+/** Help (? or the avatar menu): the loop, the six keys and where the docs are. */
+export function openHelp() {
   const el = h(
     'div.modal.keys-help',
-    { role: 'dialog', 'aria-label': 'Keyboard shortcuts' },
-    h('header', {}, h('h2', {}, 'Keyboard shortcuts')),
-    h('div.body', {}, h('dl', {}, ...SHORTCUTS.flatMap(([k, what]) => [h('dt', {}, ...k.split(' ').map((x) => h('kbd', {}, x))), h('dd', {}, what)])), h('p.keys-note', {}, 'Up and Down (or j and k) move through the list.')),
+    { role: 'dialog', 'aria-label': 'Help' },
+    h('header', {}, h('h2', {}, 'Help')),
+    h(
+      'div.body',
+      {},
+      h('h3.help-h', {}, 'How it works'),
+      h('ol.help-loop', {}, ...LOOP.map(([verb, what]) => h('li', {}, h('b', {}, verb), h('span', {}, what)))),
+      h('h3.help-h', {}, 'Keys'),
+      h('dl', {}, ...SHORTCUTS.flatMap(([k, what]) => [h('dt', {}, ...k.split(' ').map((x) => h('kbd', {}, x))), h('dd', {}, what)])),
+      h('p.keys-note', {}, 'Up and Down (or j and k) move through the list.'),
+      h('p.keys-note', {}, h('a', { href: DOCS_URL, target: '_blank', rel: 'noopener' }, 'Read the docs'), ' for teams, servers, Labs and every option.'),
+    ),
   );
   openModal(el);
 }
@@ -83,7 +101,7 @@ export function installKeys(actions: Actions, palette: () => void, search: HTMLI
         search.select();
       } else if (e.key === '?') {
         e.preventDefault();
-        openKeys();
+        openHelp();
       } else if (e.key === 'n' || e.key === 'N') {
         e.preventDefault();
         actions.deploy();

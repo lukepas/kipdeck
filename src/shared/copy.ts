@@ -7,6 +7,11 @@
 export const PRODUCT = 'Mergeline';
 /** The command it runs as (agent-office still works, for upstream's scripts). */
 export const CLI = 'mergeline';
+/**
+ * Where the full docs are read, linked from the home page's Help. The npm page shows the README; the
+ * docs/ folder lives with the source. Change it here once the public repository's address is settled.
+ */
+export const DOCS_URL = 'https://www.npmjs.com/package/mergeline';
 /** Where it came from, as the license names it. */
 export const UPSTREAM_CREDIT = 'Built on agent-office (AgentSystemLabs / webdevcody), MIT';
 /** The same where there is only room for a line of small type (the title block on the deck's floor). */
