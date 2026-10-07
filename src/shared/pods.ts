@@ -4,7 +4,7 @@ import { POD_LETTERS, nextFreeSeat, podDesks, podOf, type DeskDef, type PodLette
  * Pods and goals: each of the four pods of consoles round the mission table takes on the goal most of
  * its units work toward, and a new unit with a goal is seated in that goal's pod when there's a free
  * console there. A unit whose goal changes keeps its console: only its line to the table moves.
- * Pure: the server's queue seats by it, and the deck's floor plates (features/pods) name each pod's.
+ * Pure: the server's queue seats by it, and the deck's pod zones and ground labels (features/pods) show each pod's.
  */
 
 /** A unit where it sits, and the goal it works toward, if any. */
