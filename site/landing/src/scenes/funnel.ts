@@ -1,13 +1,15 @@
-// 02 The funnel: every vendor, one list. Five streams of agent units leave the five vendor chips
-// (Claude Code, Codex, Cursor, OpenCode, Pi) and flow to the inbox card. As the visitor scrolls they
+// 02 The funnel: every vendor, one list. The card is there from the first frame: one row already in
+// place (Codex, waiting on you) and every other row a dashed slot labelled with its vendor's chip.
+// Five streams of agent units leave the five vendor chips (Claude Code, Codex, Cursor, OpenCode, Pi)
+// and flow to the card. As the visitor scrolls they
 // leave their streams, spiral into a vortex around the card, and collapse into its rows: the units
 // bound for a row that waits on you turn Signal on the way. The canvas then hands over to the real
-// DOM card. Each row's branch writes itself in ("each on its own branch"), and last the rows leave
+// DOM card: each slot fills in as its units land. Each row's branch writes itself in ("each on its own branch"), and last the rows leave
 // the order a vendor's dashboard would list them in (by vendor) for the one this inbox uses: whoever
 // has waited on you longest, on top, with the section headings sliding in and the wait bars filling.
 //
-// The three sentences of the heading light up with the three beats. Pinned on wide screens; on a
-// phone it plays once in time as the card comes into view.
+// The heading is whole from the start; the scroll drives the diagram only. Pinned on wide screens;
+// on a phone it plays once in time as the card comes into view.
 import { drive, ease, span, setter, lerp } from '../engine/drive';
 import { tier, token, env } from '../engine/env';
 import { governor } from '../engine/governor';
@@ -24,7 +26,6 @@ export function mountFunnel(section: HTMLElement) {
   const rows = items.filter((el) => el.classList.contains('row'));
   const heads = items.filter((el) => el.classList.contains('sec'));
   const chips = [...section.querySelectorAll<HTMLElement>('.vendors li')];
-  const beats = [...section.querySelectorAll<HTMLElement>('h2 .beat')];
   const branches = rows.map((r) => r.querySelector<HTMLElement>('.branch'));
   const bars = rows.map((r) => r.querySelector<HTMLElement>('.waitbar > i'));
   const barTo = rows.map((r) => {
@@ -131,10 +132,6 @@ export function mountFunnel(section: HTMLElement) {
 
   function frame(p: number, dt: number) {
     t += dt;
-    // Beats of the heading.
-    const beat = p < 0.3 ? 0 : p < 0.8 ? 1 : 2;
-    beats.forEach((b, i) => b.classList.toggle('lit', i <= beat));
-
     const vortex = ease(p, 0.26, 0.56);
     const collapse = ease(p, 0.52, 0.68);
     const hand = ease(p, 0.64, 0.72); // canvas to DOM
@@ -143,7 +140,8 @@ export function mountFunnel(section: HTMLElement) {
     // ---- The DOM card.
     set(card, '--frame', ease(p, 0.08, 0.3).toFixed(3));
     rows.forEach((r, i) => {
-      set(r, 'opacity', hand.toFixed(3));
+      // The first row is in place from the start; every other slot fills as its units land.
+      set(r, '--fill', i === 0 ? '1' : hand.toFixed(3));
       // Rows that climb pass on the right, rows that sink on the left, lifted while they move.
       const k = ease(rank, i * 0.04, 0.76 + i * 0.04);
       const off = shuffled.get(r) ?? 0;
@@ -188,18 +186,6 @@ export function mountFunnel(section: HTMLElement) {
       ctx.fillRect(0, 0, w, h);
       ctx.globalCompositeOperation = 'source-over';
     } else ctx.clearRect(0, 0, w, h);
-    // The row slots the units are headed for, faint, so the card reads as a mouth with places in it.
-    const slots = ease(p, 0.3, 0.5) * show;
-    if (slots > 0.01) {
-      ctx.strokeStyle = colors.unit;
-      ctx.globalAlpha = 0.16 * slots;
-      ctx.lineWidth = 1;
-      ctx.setLineDash([3, 5]);
-      ctx.beginPath();
-      for (const r of rowR) ctx.rect(r.x + 0.5, r.y + 0.5, r.w - 1, r.h - 1);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
     const stackedNow = cardR.y > (chipR[0]?.y ?? 0);
     const copyRight = chipR.reduce((m, c) => Math.max(m, c.x + c.w), 0) + 12;
     for (let i = 0; i < n; i++) {

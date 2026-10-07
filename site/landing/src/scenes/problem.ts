@@ -2,14 +2,16 @@
 // 10:25, when someone answers: its wait bar stretches across the viewport and heats from steel to
 // Signal, and "23 min" lands. Then the view widens to a workday: five lanes draw from 9:00, each
 // stops at a question (the needs-you diamond) and grows its own wait, and an odometer adds them up.
-// Last, every orange segment slides into one bar, end to end, and that bar flies up and docks into
-// the wait clock along the top of the page, which has been counting the visitor's own wait all
-// along: that is the metric.
+// Last, one bar under the day fills with every wait, end to end: each orange segment lights on its
+// own lane as the bar takes it in. That bar flies up and docks into the wait clock along the top of
+// the page, which has been counting the visitor's own wait all along: that is the metric. The
+// heading and the lede are on screen from the first frame; the scroll drives the diagram only.
 import { drive, ease, span, lerp, setter, mark } from '../engine/drive';
 import { odometer } from '../engine/odometer';
 
 const SUM_Y = 232;
 const SUM_X0 = 40, SUM_X1 = 600;
+const SUM_W = SUM_X1 - SUM_X0;
 /** Minutes per SVG unit of wait, so the full day reads 2h 41m (illustrative). */
 const MIN_PER_UNIT = 161 / 636;
 
@@ -19,7 +21,6 @@ export function mountProblem(section: HTMLElement) {
   const stage = $<HTMLElement>('.stage');
   const layerA = $<HTMLElement>('.layer-a');
   const layerB = $<HTMLElement>('.layer-b');
-  const tsStart = $<HTMLElement>('.clock-span .ts');
   const tsEnd = $<HTMLElement>('.ts-end');
   const bar = $<HTMLElement>('.span-bar > i');
   const now = $<HTMLElement>('.span-now');
@@ -30,6 +31,7 @@ export function mountProblem(section: HTMLElement) {
   const asks = [...section.querySelectorAll<SVGPathElement>('.lane-asks path')];
   const waits = [...section.querySelectorAll<SVGPathElement>('.lane-wait path')];
   const sumLabel = $<SVGTextElement>('.lane-sum');
+  const totalBar = $<SVGPathElement>('.lane-total');
   const blocked = $<HTMLElement>('[data-blocked]');
   const note = $<HTMLElement>('.dock-note');
   const dock = $<HTMLElement>('.dock');
@@ -42,12 +44,12 @@ export function mountProblem(section: HTMLElement) {
     return { el: p, x1, x2, y, len: x2 - x1 };
   });
   const total = segs.reduce((a, s) => a + s.len, 0);
-  const fit = (SUM_X1 - SUM_X0) / total;
+  // Where each segment starts in the total, as a share of it.
   let cum = 0;
   const sumAt = segs.map((s) => {
-    const x = SUM_X0 + cum * fit;
+    const at = cum / total;
     cum += s.len;
-    return x;
+    return at;
   });
   const askX = asks.map((a) => num(a.getAttribute('d') ?? '')[0]);
   const setBlocked = odometer(blocked);
@@ -64,9 +66,6 @@ export function mountProblem(section: HTMLElement) {
 
   function update(p: number) {
     // ---- The clock from 10:02 to 10:25.
-    const inA = ease(p, 0, 0.08);
-    set(tsStart, 'transform', `translateX(${(-30 * (1 - inA)).toFixed(1)}px)`);
-    set(tsStart, 'opacity', inA.toFixed(3));
     const run = span(p, 0.06, 0.36);
     set(bar, 'clipPath', `inset(0 ${(100 - run * 100).toFixed(2)}% 0 0)`);
     const minute = Math.round(run * 23);
@@ -83,12 +82,14 @@ export function mountProblem(section: HTMLElement) {
     set(huge, 'opacity', Math.min(1, land * 3).toFixed(3));
     set(huge, 'transform', `translateY(${(30 * (1 - back)).toFixed(1)}px) scale(${(back * (1 + sq)).toFixed(4)}, ${(back * (1 - sq)).toFixed(4)})`);
     // ---- From the one wait to the workday.
-    const swap = ease(p, 0.5, 0.6);
+    // Pinned, the workday takes the clock's place; anywhere else the two stack and both stay.
+    const swap = track.dataset.mode === 'pin' ? ease(p, 0.5, 0.6) : 0;
+    const dayIn = track.dataset.mode === 'pin' ? swap : 1;
     set(layerA, 'transform', `translateY(${(-60 * swap).toFixed(1)}px) scale(${(1 - 0.06 * swap).toFixed(4)})`);
     set(layerA, 'opacity', (1 - swap).toFixed(3));
-    set(layerB, 'transform', `translateY(${(50 * (1 - swap)).toFixed(1)}px)`);
-    set(layerB, 'opacity', swap.toFixed(3));
-    layerB.style.visibility = swap > 0 ? '' : 'hidden';
+    set(layerB, 'transform', `translateY(${(50 * (1 - dayIn)).toFixed(1)}px)`);
+    set(layerB, 'opacity', dayIn.toFixed(3));
+    layerB.style.visibility = dayIn > 0 ? '' : 'hidden';
     // The day draws left to right; every question pops its diamond as the day reaches it.
     const day = span(p, 0.56, 0.8);
     const head = SUM_X0 + (SUM_X1 - SUM_X0) * day;
@@ -98,25 +99,25 @@ export function mountProblem(section: HTMLElement) {
     for (const s of segs) shown += Math.min(s.len, Math.max(0, head - s.x1));
     const mins = Math.round(shown * MIN_PER_UNIT);
     setBlocked(`${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, '0')}m`);
-    // ---- Every wait, end to end, in one bar.
+    // ---- Every wait, end to end, in one bar under the day. The segments stay on their lanes and
+    // light as the bar takes them in.
     const sum = ease(p, 0.82, 0.92);
-    set(work as unknown as HTMLElement, 'opacity', (1 - 0.8 * sum).toFixed(3));
-    asks.forEach((a) => set(a as unknown as HTMLElement, 'opacity', (1 - 0.85 * sum).toFixed(3)));
-    segs.forEach((s, i) => {
-      const k = ease(sum, i * 0.03, 0.7 + i * 0.03);
-      const dx = (sumAt[i] - s.x1) * k, dy = (SUM_Y - s.y) * k, sx = lerp(1, fit, k);
-      set(s.el as unknown as HTMLElement, 'transform', `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) scaleX(${sx.toFixed(4)})`);
-    });
+    set(work as unknown as HTMLElement, 'opacity', (1 - 0.6 * sum).toFixed(3));
+    asks.forEach((a) => set(a as unknown as HTMLElement, 'opacity', (1 - 0.6 * sum).toFixed(3)));
+    set(totalBar as unknown as HTMLElement, 'clipPath', `inset(0 ${(100 - 100 * sum).toFixed(2)}% 0 0)`);
+    segs.forEach((s, i) => s.el.classList.toggle('counted', sum > sumAt[i] + 0.001 && sum < 0.999));
     set(sumLabel as unknown as HTMLElement, 'opacity', ease(sum, 0.6, 1).toFixed(3));
     // ---- The bar flies up and docks into the wait clock.
     const fly = ease(p, 0.92, 0.99);
     const flying = fly > 0 && fly < 1 && svgBox;
     set(dock, 'opacity', flying ? '1' : '0');
-    waits.forEach((w) => set(w as unknown as HTMLElement, 'visibility', fly > 0 ? 'hidden' : 'visible'));
+    set(totalBar as unknown as HTMLElement, 'visibility', fly > 0 && fly < 1 ? 'hidden' : 'visible');
     if (flying && svgBox) {
-      const u = svgBox.width / 600;
-      const x0 = svgBox.left + SUM_X0 * u, y0 = svgBox.top + (SUM_Y - 3) * u;
-      const w0 = (SUM_X1 - SUM_X0) * u, h0 = 6 * u;
+      // The drawing keeps its aspect inside its box (it may be letterboxed by the max-height).
+      const u = Math.min(svgBox.width / 600, svgBox.height / 256);
+      const ox = (svgBox.width - 600 * u) / 2, oy = (svgBox.height - 256 * u) / 2;
+      const x0 = svgBox.left + ox + SUM_X0 * u, y0 = svgBox.top + oy + (SUM_Y - 3) * u;
+      const w0 = SUM_W * u, h0 = 6 * u;
       const w1 = Math.max(innerWidth * clockScale, 120);
       set(dock, 'width', `${w0.toFixed(1)}px`);
       set(dock, 'height', `${h0.toFixed(2)}px`);
