@@ -81,3 +81,20 @@ deploy/fly.sh ssh | logs              # a shell in the machine / follow the offi
 **Cost.** Fly bills the machine by the second while it runs, plus the volume, the dedicated IPv4 address and the volume's snapshots. Nothing pauses by itself: `deploy/fly.sh pause` stops the machine's share, and `deploy/fly.sh destroy` stops all of it. Destroying deletes the app with its machine, volume and address, and everything on them.
 
 **Any other Docker host.** See [Railway's notes](railway.md): the image is the same.
+
+## A public read-only demo
+
+The hosted demo ([the demo](demo.md#the-hosted-demo)) is a different app from the team office above: `mergeline --demo --read-only` on a public `https://<app>.fly.dev`, with scripted agents, no volume, no SSH and nothing secret in it. It's built from [`deploy/demo/Dockerfile`](../deploy/demo/Dockerfile) with [`deploy/demo/fly.toml`](../deploy/demo/fly.toml). Set your app's name in that file's `app` and `AGENT_OFFICE_ALLOWED_HOSTS` first (and add your own domain to the second, like `demo.example.com`), then, from the repository root:
+
+```bash
+fly apps create <app>
+fly deploy . -c deploy/demo/fly.toml -a <app> --dockerfile deploy/demo/Dockerfile \
+  --ignorefile deploy/demo/Dockerfile.dockerignore
+```
+
+- **What runs.** One `shared-cpu-1x` machine with 512 MB, in Stockholm (`arn`; `primary_region` to change it), listening on 8080 behind Fly's proxy, which ends TLS (`--trust-proxy` marks the session cookie Secure). Fly's health check is `GET /api/health`.
+- **Stopped while nobody watches.** `auto_stop_machines` stops the machine when no one is connected and the next visitor starts it again, in a few seconds; the fleet starts with it. Fly bills only while it runs.
+- **Your own domain.** `fly certs add demo.example.com -a <app>`, point the name at the app as `fly certs show` says, and add the name to `AGENT_OFFICE_ALLOWED_HOSTS` (`fly secrets set` or the `[env]` in the file, then deploy again). A name the office doesn't answer to gets a 421.
+- **Updating.** The same `fly deploy` from a newer checkout. Nothing on the machine needs to survive it.
+
+The image runs anywhere else the same way: `docker build -f deploy/demo/Dockerfile -t mergeline-demo .`, then `docker run -p 8080:8080 -e AGENT_OFFICE_ALLOWED_HOSTS=demo.example.com mergeline-demo` behind whatever ends TLS.

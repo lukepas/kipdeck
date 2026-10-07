@@ -232,6 +232,8 @@ deploy/fly.sh destroy                 # delete the app and its volume (asks firs
 
 `--region`, `--org`, `--vm-size`, `--memory`, `--disk` and `--name` (for several offices) are in `deploy/fly.sh help`. The details, and what's on the volume, are in [docs/fly.md](fly.md).
 
+The public, read-only demo (`mergeline --demo --read-only`, scripted agents, no volume) is a different, smaller app: see [A public read-only demo](fly.md#a-public-read-only-demo).
+
 ## Deploy to Dokploy
 
 Already run a [Dokploy](https://dokploy.com) server? One script puts the office on it, through Dokploy's API. You need an **API key** (Dokploy: **Settings → Profile → API/CLI Keys**, with rate limiting off), `ssh`, `curl`, `git`, Node.js and a clone of this repo:

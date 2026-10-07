@@ -125,6 +125,17 @@ Changing the team webhook, upgrading the office, editing the office's prompts, t
 
 The [public showcase](showcase.md) at `/pom/` is off until an admin turns it on (⚙️ Settings; the settings messages are admin-only both ways, since they list private repositories). Its routes are public, after the host check: `GET` only, 120 requests a minute per client address, no cookies read or set. Its page has its own stricter policy (`showcaseContentSecurityPolicy` in `csp.ts`: `default-src 'none'`, the office's own scripts and styles only, nothing inline, no frames or forms, and `connect-src` limited to the office and the public Base Sepolia and Solana devnet RPCs). Everything it shows goes through one whitelist serializer (`publicShowcase` in `shared/showcase.ts`) that builds each object field by field and rebuilds every link from an id; private repositories are redacted unless an admin chooses otherwise.
 
+## The read-only demo
+
+The hosted demo (`mergeline --demo --read-only`, [the demo](demo.md#the-hosted-demo)) is the one office where opening the page signs you in: `GET /` with no session answers with a shared-password session cookie and sends the browser back. That breaks the threat model above on purpose, so the demo is built to have nothing worth taking and to take nothing from the people watching:
+
+- **Only with the demo.** `--read-only` is refused without `--demo`, and `--demo` refuses a `[dir]`: the office's one project is the throwaway `acme-shop` repository it makes itself, and its agents are the demo's scripted stand-ins. The image (`deploy/demo/Dockerfile`) has no agent CLI, no GitHub token, no sign-ins and no model key, and anonymous usage numbers are off in every demo.
+- **Looking, never changing.** Over HTTP only GET and HEAD are answered: every POST (signing in or out, a new password, a file dropped on a terminal) gets a 403. Over the socket only the messages that look are taken (`READ_ONLY_ALLOWS` in `src/server/demo/readonly.ts`: attaching to a terminal's screen, a diff, the shipped log, where someone is); everything else, from hiring an agent and typing into its terminal to merging, Labs and chat, is dropped before its handler runs, with a toast at most every four seconds. The scripted reviewer acts from the server, never through a socket.
+- **The usual checks still apply.** The names it answers to (`AGENT_OFFICE_ALLOWED_HOSTS`), the Origin check on its socket and the content security policy are the same as anywhere (see [Other websites](#other-websites)).
+- **Not defended.** Load: many visitors at once cost CPU and memory, and the way in has no rate limit of its own; the Fly config caps connections at 200. A visitor's cookie lasts the usual 7 days, which only lets them watch.
+
+`tests/demo.test.ts` opens the hosted demo as a visitor and tries each of these.
+
 ## Sessions
 
 - A sign-in lasts 7 days (it was 14). `AGENT_OFFICE_SESSION_DAYS` sets it, from 1 to 90.

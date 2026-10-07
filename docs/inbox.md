@@ -16,6 +16,8 @@ The home page at `/` is the product: one inbox for every coding agent you run. I
 - **Deploy your first agent** opens the Deploy sheet on a safe starter task (a 5-line SUMMARY.md on how to run the repository) with the first ready agent picked. Enter, and the agent is under Working within seconds.
 - Under it, an unticked switch for [anonymous usage numbers](security.md#anonymous-usage-numbers), with exactly what it would send.
 
+No agent CLI yet? `npx mergeline --demo` opens this page on a throwaway repository with five scripted agents, and a note over the list says so ([the demo](demo.md)).
+
 Already running Claude Code or Codex in a terminal? Quit it there and run `npx mergeline attach` in the same folder: its session carries on as one of the inbox's agents ([Configuration](configuration.md#command-line)). The server side of the card is `src/server/firstrun.ts` and `ws/handlers/setup.ts`; the card is `src/client/home/setup.ts`.
 
 ## The loop

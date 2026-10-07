@@ -51,6 +51,12 @@ mergeline [dir] [options]      (npx mergeline, or agent-office: the same command
       --telemetry         Share anonymous usage numbers (env MERGELINE_TELEMETRY=1); off by default,
                           and MERGELINE_TELEMETRY_URL says where to (see docs/security.md)
       --no-telemetry      Never share them (also DO_NOT_TRACK=1 or MERGELINE_TELEMETRY=0)
+      --demo              Five scripted agents on a throwaway repository in a temporary folder,
+                          deleted when it stops: no agent CLI, sign-in or model (env MERGELINE_DEMO=1;
+                          MERGELINE_DEMO_PACE=4 plays it four times faster). Not with a [dir]
+      --read-only         With --demo only: the hosted demo. Whoever opens it is signed in to watch,
+                          only GET requests and looking are taken, and a scripted reviewer answers,
+                          merges and starts over (env MERGELINE_DEMO=read-only). See docs/demo.md
       --labs <names>      Hold labs on, comma separated: bridge, ops, meetings, voice, ambience,
                           proof, or all (env AGENT_OFFICE_LABS). All are off by default and admins
                           switch them from Labs in the office (see docs/labs.md). A chain flag
