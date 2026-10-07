@@ -11,6 +11,7 @@ import { isAsleep } from '../../../shared/status';
 import type { Ctx } from '../../core/context';
 import type { CoreState } from '../../core/ctx';
 import type { Parts } from '../../core/parts';
+import type { Off } from '../../core/registry';
 import { NextUp, unsnoozed, waitingElsewhere, waitingInOrder, waitingLabel } from '../../nextup';
 import { waitingOnSomeone } from '../../notify';
 import { store } from '../../state';
@@ -29,14 +30,20 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
 ) {
   const { player, camera, net } = ctx;
   const acquire = makeAcquire(ctx, parts);
-  // For the shots: whether the bracket shows, and what the crosshair lands on once you're there.
-  debugHandle('waiting', { bracket: acquire.showing, aimed: () => parts.pointer.target() });
+  // For the shots and the tests: whether the bracket shows, what the crosshair lands on once you're
+  // there, and a way to be taken to a unit.
+  debugHandle('waiting', { bracket: acquire.showing, aimed: () => parts.pointer.target(), goTo: (id: string) => goToWorker(id) });
   const nextUp = new NextUp();
   const compass = new Compass($('compass'));
   /** What the last press of N said, which the next press replaces. */
   let nextToast: HTMLElement | null = null;
   const workerPos = new THREE.Vector3();
   const unitScale = new THREE.Vector3();
+  /** Who hears each unit you're taken to (N, a needs-you badge, a notification; features/selection selects it). */
+  const arrivals = new Set<(id: string) => void>();
+  const arrived = (id: string) => {
+    for (const fn of arrivals) fn(id);
+  };
 
   /**
    * N: to the first worker waiting on someone, and on each press after, the next. In the ranking's
@@ -81,6 +88,7 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
       const v = parts.views.workerViews.get(id);
       const at = v ? v.model.where(workerPos) : workerPos.set(desk.x, 0, desk.z);
       parts.overview.flyTo(at.x, at.z);
+      arrived(id);
       return true;
     }
     const v = parts.views.workerViews.get(id);
@@ -102,6 +110,7 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
       player.lookPitch = pose.pitch;
     }
     acquire.lock(id);
+    arrived(id);
     return true;
   }
 
@@ -221,5 +230,11 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
   /** The units the compass points to now, at the edge of the view (their callouts give way to it). */
   const pointed = (): ReadonlySet<string> => compass.shown;
 
-  return { acquire, goToNextWaiting, goToWorker, answerWorker, renderWaiting, openWorkerTerminal, openWorkerChanges, showSearch, showQueue, pointed };
+  /** Hears each unit goToWorker takes you to. */
+  function onArrive(fn: (id: string) => void): Off {
+    arrivals.add(fn);
+    return () => void arrivals.delete(fn);
+  }
+
+  return { acquire, onArrive, goToNextWaiting, goToWorker, answerWorker, renderWaiting, openWorkerTerminal, openWorkerChanges, showSearch, showQueue, pointed };
 }

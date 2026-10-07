@@ -137,3 +137,30 @@ test('each label lies flat on clear deck: one level all over, on the floor, off 
     }
   }
 });
+
+test('a busy pod\'s counts line fits inside its chip: nothing is painted past the right edge', async () => {
+  const { paintLabel } = await import('../src/client/features/pods/draw.js');
+  const W = Math.round(LABEL.w * LABEL.px);
+  const H = Math.round(LABEL.d * LABEL.px);
+  // A stand-in 2D context: text measures 0.6 of its font size a character, and each fillText is kept.
+  let px = 10;
+  const drawn: { t: string; right: number }[] = [];
+  const g = new Proxy({} as Record<string, unknown>, {
+    get(target, key) {
+      if (key === 'measureText') return (t: string) => ({ width: t.length * px * 0.6 });
+      if (key === 'fillText') return (t: string, x: number) => drawn.push({ t, right: x + t.length * px * 0.6 });
+      if (key in target) return target[key as string];
+      return () => {};
+    },
+    set(target, key, v) {
+      if (key === 'font') px = Number(/(\d+)px/.exec(String(v))?.[1] ?? px);
+      target[key as string] = v;
+      return true;
+    },
+  });
+  const busy = [u('needs-you'), u('stuck'), u('review'), u('review'), u('working'), u('working'), u('working')];
+  const text = podLabel('A', { title: 'Auth rewrite on the new session store' } as never, busy);
+  paintLabel(g as unknown as CanvasRenderingContext2D, W, H, text, new Map(), 1);
+  assert.ok(drawn.some((d) => /\d/.test(d.t)), 'the counts were painted');
+  for (const d of drawn) assert.ok(d.right <= W, `"${d.t}" runs to ${d.right.toFixed(0)} px on a ${W} px chip`);
+});

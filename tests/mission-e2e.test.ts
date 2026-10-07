@@ -378,5 +378,18 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   await page.locator('#modal-root > .backdrop > .modal.mission-control').waitFor();
   assert.equal(await page.locator('.mc-dock-host').count(), 0);
   await page.keyboard.press('Escape');
+
+  // Taken to another unit some other way (N, a badge, a notification): the selection goes with you.
+  await page.evaluate(() => (window as unknown as { __office: { net: { send(m: unknown): void } } }).__office.net.send({ t: 'worker.spawn', deskId: 'desk-2', prompt: 'Cache the index', worktree: false }));
+  await page.waitForFunction(() => (window as unknown as { __office: { workerViews: Map<string, unknown> } }).__office.workerViews.size > 1, null, { timeout: 30_000, polling: 250 });
+  const picked = await page.locator('.sel-card .sel-name').innerText();
+  type Office = { __office: { store: { workers: Map<string, { id: string; name: string }> } }; __world: { waiting: { goTo(id: string): boolean } } };
+  const other = await page.evaluate((picked) => {
+    const w = window as unknown as Office;
+    const u = [...w.__office.store.workers.values()].find((x) => x.name !== picked)!;
+    w.__world.waiting.goTo(u.id);
+    return u.name;
+  }, picked);
+  await page.waitForFunction((name) => document.querySelector('.sel-card:not([hidden]) .sel-name')?.textContent === name, other, { timeout: 10_000, polling: 100 });
   assert.deepEqual(errors, []);
 });
