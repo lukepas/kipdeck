@@ -40,7 +40,46 @@ Sound is off until the speaker button in the top bar turns it on; then an agent 
 
 `tests/landing-scenes.test.ts` scrolls through every scene on a laptop and on a phone (nothing thrown, never wider than the window, no layout shift), answers and merges in the loop with the keyboard, releases Proof of Merge, answers from the footer, and checks that with less motion nothing stages or pins.
 
+`tests/landing-a11y.test.ts` checks WCAG AA contrast for every piece of text in both themes on a laptop and a phone, that drawings are hidden from screen readers and every control has a name and a visible focus ring, that Copy, Try the demo, Watch, Merge and the waitlist work from the keyboard alone, the film's captions, the search and share tags, the page with WebGL taken away (the merge ring draws in 2D, the Labs deck stays CSS, nothing errors), no WebGL error or warning with it, and the performance budgets below.
+
 `tests/landing.test.ts` builds the page once per brand, serves it on 127.0.0.1 and checks all of the above in headless Chromium. It also checks the opening (Codex asks, answering clears every clock, a key skips to the end), the waitlist, the phone width, both themes, the film window (its x and Esc both close it, and focus goes back to its button) and that nothing shifts through the whole opening.
+
+## Speed, access and search
+
+The budgets, held by `site/perf.mjs` and the test above:
+
+| Budget | Limit | Measured (this build) |
+| --- | --- | --- |
+| First-load JS, gzipped | 60 KB | 10.4 KB (engine, field, hero) |
+| CSS, gzipped | 30 KB | 17.9 KB |
+| First-load transfer, with both fonts | 350 KB | 189 KB |
+| LCP, laptop | 1.0 s | 40 ms (the headline) |
+| LCP, phone at 4x CPU on slow 4G | 1.8 s | 1.0 s (the subhead) |
+| Layout shift, load and a full scroll | 0.01 | 0 |
+| Long tasks while scrolling, phone at 4x CPU | none over 50 ms | none |
+| Longest interaction (answer, Copy, theme, Merge) | 100 ms | 24 ms laptop, 48 ms phone at 4x |
+
+Frames over a full scripted scroll hold 16.7 ms at the 50th, 95th and 99th percentile on both. The other scenes (about 19 KB gzipped together) and the three.js bridge (130 KB, Labs only) load later; the film loads only when someone opens it.
+
+```bash
+npm run perf:site                                  # build, measure, print, exit 1 on a broken budget
+node site/perf.mjs --no-build --json report.json   # measure the current dist/site and keep the numbers
+```
+
+It serves the build gzipped (as any host does) on 127.0.0.1 and runs headless Chromium twice: a laptop at 1440x900, and a phone at 390x844 with 4x CPU throttling on a 150 ms, 1.6 Mbps link (Lighthouse's mobile settings). Each run loads the page, scrolls the whole of it in ten seconds, then answers the waiting agent, copies, switches the theme twice and opens the loop. It reports weight, LCP and its element, layout shift with the elements that moved, frame times, every long task with the section it happened in, the longest interaction and console errors. Lighthouse is not a dependency; where `lighthouse` is installed it runs too and its scores go in the report. Headless Chromium draws WebGL in software, so a budget that breaks once is measured again before the test fails.
+
+What keeps it inside them:
+
+- Every scene but the hero is its own chunk, fetched while the browser is idle after the opening (`scenes/index.ts`), so the first load is the engine, the field and the hero.
+- The three.js bridge is parsed and drawn in a worker on an `OffscreenCanvas` (`fx/bridge.ts`, `fx/bridge-worker.ts`); where a browser cannot hand a canvas to a worker it never loads and the CSS deck stays.
+- Sections far below the fold skip style, layout and paint until they come near (`content-visibility` with remembered sizes, `styles/perf.css`), so the first layout is about 500 boxes instead of 1,800.
+- One quality governor (`engine/governor.ts`) for the canvases: slow frames halve the units, then the pixels; a fling draws at half resolution until the scroll calms. Save-Data or 4 GB of memory or less start the field and the funnel at 80 units, and the light tier drops the top bar's blur.
+- The merge's ring is an annulus mesh that shades only its lit band, at 0.6x pixels, and falls back to Canvas2D if WebGL is missing or its program does not link.
+- Pins are `position: sticky` with native scroll; nothing intercepts the wheel. Layout reads happen in one pass per frame before any write, the loop stops when the tab is hidden, and every canvas stops when it is off screen.
+
+Accessibility: the page is semantic HTML that reads in full without script, canvases and drawings are `aria-hidden`, there is a skip link, every control has a name and a visible focus ring, Copy announces itself through a polite live region, the film has English captions (`public/media/film-captions.vtt`: its on-screen words and the sounds that carry meaning) and never plays by itself, and text meets AA in both themes. With less motion every scene shows its final state, the field is still, the wait clock is hidden, the stopwatch reads 23:00 and no scene chunk is fetched ahead of time.
+
+Search and sharing: the title says what it is (`Mergeline: the inbox for your AI coding agents`), with a description, Open Graph and Twitter tags with image alt text, and `SoftwareApplication` structured data (free, MIT, no ratings, since there are none). `robots.txt` ships with the build; once `MERGELINE_SITE_URL` says where the page lives, the build adds the canonical link, `og:url`, absolute share-card addresses, `sitemap.xml` and its line in `robots.txt`.
 
 ## The name
 
@@ -64,6 +103,7 @@ The page's scripts are ES modules, which browsers will not run from `file://`, s
 For a deploy, fill in the addresses:
 
 ```bash
+MERGELINE_SITE_URL=https://<your domain>/ \
 MERGELINE_WAITLIST_URL=https://<your endpoint> \
 MERGELINE_DEMO_URL=https://demo.<your domain>/ \
 MERGELINE_REPO_URL=https://github.com/<org>/mergeline \
@@ -75,6 +115,7 @@ Upload `dist/site/` to any static host (GitHub Pages, Cloudflare Pages, Netlify,
 
 | Variable | What it does | Unset |
 | --- | --- | --- |
+| `MERGELINE_SITE_URL` | Where the page lives: the canonical link, `og:url`, absolute share-card addresses, `sitemap.xml` and its line in `robots.txt` | No canonical link and no sitemap (a relative one would be wrong wherever the page is copied) |
 | `MERGELINE_WAITLIST_URL` | The form POSTs JSON here, and the page's CSP allows that origin and no other | The form checks its input and says nothing was sent |
 | `MERGELINE_DEMO_URL` | **Try the demo** opens the hosted read-only demo ([the demo](demo.md#the-hosted-demo), [Fly](fly.md)) | **Try the demo** shows the demo command with a copy button |
 | `MERGELINE_REPO_URL` | Every link to the source, and the clone command | This repository |
@@ -86,16 +127,18 @@ The build also draws `og.png` (1200 by 630, the share card) from the brand with 
 ## How it is put together
 
 - `site/landing/index.html`: every section's final, readable state as semantic HTML. A reader without script sees the whole page.
-- `site/landing/src/main.ts`: boots the controls and mounts each section's scene as it comes near the viewport.
-- `site/landing/src/scenes/`: one module per section, registered in `scenes/index.ts` by the section's `data-scene`. A new section plugs in there, never in `main.ts`.
+- `site/landing/src/main.ts`: mounts the hero, boots the controls and mounts each section's scene as it comes within a screen of the viewport.
+- `site/landing/src/scenes/`: one module per section, registered in `scenes/index.ts` by the section's `data-scene`, each its own lazy chunk (the hero ships in the first one). A new section plugs in there, never in `main.ts`.
 - `site/landing/src/engine/`: one shared `requestAnimationFrame` loop that runs only while something moves and stops when the tab is hidden (`loop.ts`, with `wake.ts` to run a task only while its section is on screen), a spring, counters, an odometer whose text stays the plain value, path morphing between glyphs drawn with the same points, a typewriter, compositor slides by the `translate` property (so a list reorders on screen without its DOM moving or anything shifting), and what the device asks for (less motion, Save-Data, low memory).
 - `site/landing/src/engine/drive.ts`: drives a scene with one progress number from 0 to 1, from a pinned track's scroll, how far an element has risen into view, or a play in time, smoothed, with marks that fire going forward and undo going back. `stack.ts` draws a list in another order by transform alone.
-- `site/landing/src/fx/shockwave.ts` (the merge's ring, WebGL1 with a Canvas2D fallback, alive only while it is out), `fx/march.ts` (the March to the Mark) and `fx/bridge.ts` (the three.js bridge, its own lazy chunk, loaded only for the Labs tile on a device with memory to spare and no Save-Data).
+- `site/landing/src/fx/shockwave.ts` (the merge's ring, WebGL1 with a Canvas2D fallback, alive only while it is out), `fx/march.ts` (the March to the Mark) and `fx/bridge.ts` with `fx/bridge-worker.ts` and `fx/bridge-scene.ts` (the three.js bridge, drawn in a worker, loaded only for the Labs tile on a device with memory to spare, no Save-Data and a canvas it can hand to a worker).
 - `site/landing/src/ui/sound.ts`: the opt-in hook notes.
-- `site/landing/src/fx/field.ts`: the hero's Canvas2D field (a dot grid that bends toward the cursor, agent units launched from the mark into five vendor lanes, the one that blocks on you). It lives in typed arrays and allocates nothing per frame: the grid is drawn once and copied, only the dots near the cursor are drawn live, and the units fade behind the copy by band instead of a full-canvas composite. It halves its units if frames run slow.
+- `site/landing/src/fx/field.ts`: the hero's Canvas2D field (a dot grid that bends toward the cursor, agent units launched from the mark into five vendor lanes, the one that blocks on you). It lives in typed arrays and allocates nothing per frame: the grid is drawn once and copied, only the dots near the cursor are drawn live, and the units fade behind the copy by band instead of a full-canvas composite. `engine/governor.ts` trims it (and the funnel) when frames run slow or the page is flung.
 - `site/landing/src/ui/ghost.ts`: the ghost cursor that answers the waiting agent once after six idle seconds.
 - `site/landing/src/ui/wait.ts`: the page's one piece of state, whether a scripted agent is waiting on the visitor and since when.
 - `site/landing/public/media/`: the 30-second film re-encoded for the web (AV1 WebM, H.264 MP4 and the 9:16 cut for phones) and its posters. The film never plays by itself and loads only when someone opens it.
+
+`site/perf.mjs` is the performance gate described above.
 
 `node design/shoot-landing.mjs design/shots/landing/<stage> [--clip]` serves a build and shoots it at 1440x900, 1920x1080 and 390x844 in both themes and with less motion. It also measures largest contentful paint, layout shift, frame times over a full scroll and what the first load weighs, and with `--clip` records a scroll-through video.
 

@@ -1,0 +1,306 @@
+{
+  "weight": {
+    "files": [
+      {
+        "file": "assets/archivo-latin-DXrUVZxZ.woff2",
+        "bytes": 90096,
+        "gzip": 90096
+      },
+      {
+        "file": "assets/jetbrains-mono-latin-D000Msq0.woff2",
+        "bytes": 40480,
+        "gzip": 40480
+      },
+      {
+        "file": "theme-boot.js",
+        "bytes": 492,
+        "gzip": 323
+      },
+      {
+        "file": "assets/index-CahsvQo3.js",
+        "bytes": 25409,
+        "gzip": 10292
+      },
+      {
+        "file": "assets/index-DW1Kv9qq.css",
+        "bytes": 84145,
+        "gzip": 18313
+      }
+    ],
+    "lazy": [
+      {
+        "file": "assets/bridge-worker-BHbFbEQ7.js",
+        "gzip": 132566
+      },
+      {
+        "file": "assets/loop-CTPMrAfr.js",
+        "gzip": 2748
+      },
+      {
+        "file": "assets/funnel-CKyYKK5W.js",
+        "gzip": 2733
+      },
+      {
+        "file": "assets/teams-DiD88mog.js",
+        "gzip": 1811
+      },
+      {
+        "file": "assets/shockwave-D0NIIlFq.js",
+        "gzip": 1677
+      },
+      {
+        "file": "assets/yours-C4UX7kl4.js",
+        "gzip": 1677
+      },
+      {
+        "file": "assets/problem-U51WfshH.js",
+        "gzip": 1603
+      },
+      {
+        "file": "assets/phone-BWbOyN43.js",
+        "gzip": 1282
+      },
+      {
+        "file": "assets/labs-CfIlbarW.js",
+        "gzip": 1168
+      },
+      {
+        "file": "assets/drive-BrvfcTXG.js",
+        "gzip": 1066
+      },
+      {
+        "file": "assets/why-_cwOTd8j.js",
+        "gzip": 884
+      },
+      {
+        "file": "assets/proof-DxzB2Paf.js",
+        "gzip": 773
+      },
+      {
+        "file": "assets/end-DWtz1dAh.js",
+        "gzip": 611
+      },
+      {
+        "file": "assets/numbers-3NNovNpX.js",
+        "gzip": 591
+      },
+      {
+        "file": "assets/stack-BPAjO5mb.js",
+        "gzip": 265
+      },
+      {
+        "file": "assets/wake-Do13BM8d.js",
+        "gzip": 204
+      }
+    ],
+    "htmlGzip": 12838,
+    "firstLoadJsGzip": 10615,
+    "cssGzip": 18313,
+    "fontBytes": 130576,
+    "lazyJsGzip": 151659
+  },
+  "desktop": {
+    "viewport": "1440x900",
+    "cpu": 1,
+    "network": "none",
+    "lcpMs": 40,
+    "lcpElement": "h1#hero-h.display.hero-h",
+    "loadMs": 43,
+    "cls": 0,
+    "shifts": [],
+    "firstLoadTransfer": 193479,
+    "firstLoadRequests": [
+      "/ 12895",
+      "/theme-boot.js 323",
+      "/assets/jetbrains-mono-latin-D000Msq0.woff2 40480",
+      "/assets/archivo-latin-DXrUVZxZ.woff2 90096",
+      "/assets/index-DW1Kv9qq.css 18381",
+      "/assets/index-CahsvQo3.js 10304",
+      "/media/film-captions.vtt 1904",
+      "/assets/funnel-CKyYKK5W.js 2733",
+      "/assets/drive-BrvfcTXG.js 1066",
+      "/assets/stack-BPAjO5mb.js 265",
+      "/assets/problem-U51WfshH.js 1603",
+      "/assets/loop-CTPMrAfr.js 2748",
+      "/assets/shockwave-D0NIIlFq.js 1677",
+      "/assets/why-_cwOTd8j.js 884",
+      "/assets/yours-C4UX7kl4.js 1677",
+      "/assets/wake-Do13BM8d.js 204",
+      "/assets/phone-BWbOyN43.js 1283",
+      "/assets/numbers-3NNovNpX.js 591",
+      "/assets/labs-CfIlbarW.js 1168",
+      "/assets/proof-DxzB2Paf.js 773",
+      "/assets/teams-DiD88mog.js 1813",
+      "/assets/end-DWtz1dAh.js 611"
+    ],
+    "openingLongTasks": [],
+    "scroll": {
+      "frames": 590,
+      "avgMs": 17,
+      "p50": 16.7,
+      "p95": 16.7,
+      "p99": 16.8,
+      "over20ms": 2,
+      "over50ms": 1,
+      "longTasks": []
+    },
+    "inpMs": 24,
+    "events": [
+      {
+        "name": "pointerdown",
+        "ms": 24,
+        "target": "copy ping"
+      },
+      {
+        "name": "pointerup",
+        "ms": 24,
+        "target": "copy ping"
+      },
+      {
+        "name": "click",
+        "ms": 24,
+        "target": "copy ping"
+      },
+      {
+        "name": "pointerdown",
+        "ms": 24,
+        "target": {}
+      },
+      {
+        "name": "pointerup",
+        "ms": 24,
+        "target": {}
+      },
+      {
+        "name": "click",
+        "ms": 24,
+        "target": {}
+      },
+      {
+        "name": "pointerdown",
+        "ms": 24,
+        "target": {}
+      },
+      {
+        "name": "pointerup",
+        "ms": 24,
+        "target": {}
+      },
+      {
+        "name": "click",
+        "ms": 24,
+        "target": {}
+      }
+    ],
+    "errors": []
+  },
+  "phone": {
+    "viewport": "390x844",
+    "cpu": 4,
+    "network": "150 ms, 1.6 Mbps",
+    "lcpMs": 1016,
+    "lcpElement": "p.lede",
+    "loadMs": 1170,
+    "cls": 0,
+    "shifts": [],
+    "firstLoadTransfer": 187240,
+    "firstLoadRequests": [
+      "/ 12895",
+      "/theme-boot.js 323",
+      "/media/film-captions.vtt 1904",
+      "/assets/index-CahsvQo3.js 10304",
+      "/assets/index-DW1Kv9qq.css 18381",
+      "/assets/jetbrains-mono-latin-D000Msq0.woff2 40480",
+      "/assets/archivo-latin-DXrUVZxZ.woff2 90096",
+      "/assets/drive-BrvfcTXG.js 1066",
+      "/assets/stack-BPAjO5mb.js 265",
+      "/assets/funnel-CKyYKK5W.js 2733",
+      "/assets/problem-U51WfshH.js 1603",
+      "/assets/loop-CTPMrAfr.js 2748",
+      "/assets/shockwave-D0NIIlFq.js 1677",
+      "/assets/why-_cwOTd8j.js 884",
+      "/assets/wake-Do13BM8d.js 204",
+      "/assets/yours-C4UX7kl4.js 1677"
+    ],
+    "openingLongTasks": [
+      {
+        "at": 846,
+        "ms": 105,
+        "section": "hero"
+      }
+    ],
+    "scroll": {
+      "frames": 598,
+      "avgMs": 16.7,
+      "p50": 16.7,
+      "p95": 16.7,
+      "p99": 16.8,
+      "over20ms": 3,
+      "over50ms": 0,
+      "longTasks": []
+    },
+    "inpMs": 48,
+    "events": [
+      {
+        "name": "pointerdown",
+        "ms": 32,
+        "target": "copy ping"
+      },
+      {
+        "name": "pointerup",
+        "ms": 32,
+        "target": "copy ping"
+      },
+      {
+        "name": "click",
+        "ms": 32,
+        "target": "copy ping"
+      },
+      {
+        "name": "pointerdown",
+        "ms": 48,
+        "target": {}
+      },
+      {
+        "name": "pointerup",
+        "ms": 48,
+        "target": {}
+      },
+      {
+        "name": "click",
+        "ms": 48,
+        "target": {}
+      },
+      {
+        "name": "pointerdown",
+        "ms": 32,
+        "target": {}
+      },
+      {
+        "name": "pointerup",
+        "ms": 32,
+        "target": {}
+      },
+      {
+        "name": "click",
+        "ms": 32,
+        "target": {}
+      }
+    ],
+    "errors": []
+  },
+  "lighthouse": {
+    "skipped": "lighthouse is not installed here (it is not a dependency of this repository); install it globally to add its scores"
+  },
+  "budgets": {
+    "firstLoadJsGzip": 61440,
+    "cssGzip": 30720,
+    "firstLoadTransfer": 358400,
+    "lcpPhoneMs": 1800,
+    "lcpDesktopMs": 1000,
+    "cls": 0.01,
+    "longTaskMs": 50,
+    "inpMs": 100
+  },
+  "broken": []
+}
