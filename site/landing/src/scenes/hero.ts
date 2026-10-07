@@ -82,6 +82,14 @@ export function mountHero(section: HTMLElement) {
 
   const canvas = section.querySelector<HTMLCanvasElement>('#field');
   const field: FieldHandle | null = canvas ? mountField(canvas) : null;
+  // On a phone the headline fills the lanes, so the unit that will wait on you works in the gap
+  // between the headline and the subhead, to the right of "on you."
+  if (field && env.phone) {
+    const h1 = $<HTMLElement>('h1'), lede = $<HTMLElement>('.lede');
+    const perch = () => field.perch((h1.getBoundingClientRect().bottom + lede.getBoundingClientRect().top) / 2);
+    perch();
+    new ResizeObserver(perch).observe(h1);
+  }
 
   // ---- The list's two layouts: Codex asking at the top (the HTML), or working at the foot.
   const items = [...list.children].filter((el): el is HTMLElement => el instanceof HTMLElement && !el.classList.contains('demo-tag'));
