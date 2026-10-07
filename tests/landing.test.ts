@@ -160,7 +160,7 @@ test('every staged surface is labelled: demo data, measured or illustrative; eve
 test('the first screen: the sentence, the from-source command, Try the demo and Watch; nothing loaded from elsewhere', { skip: why || false }, async (t) => {
   const { page, requests, errors } = await open(t);
   assert.equal(await page.title(), 'Mergeline: the inbox for your AI coding agents');
-  assert.equal((await page.locator('h1').innerText()).replace(/\s+/g, ' ').replace(/\s*\d\d:\d\d\s*/, ' ').trim(), 'Your agents are waiting on you.');
+  assert.equal((await page.locator('h1').innerText()).replace(/\s+/g, ' ').replace(/\s*\d{1,2}:\d\d\s*/, ' ').trim(), 'Your agents are waiting on you.');
   for (const sel of ['.cmd[data-unpublished] .cmd-text', '[data-link="demo"]', '.cta [data-watch]', '.unpublished', '#mini-inbox']) {
     const box = await page.locator(sel).first().boundingBox();
     assert.ok(box && box.y < 900, `${sel} is in the first screen`);
