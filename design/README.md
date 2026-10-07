@@ -1254,3 +1254,27 @@ From a cold terminal to the first agent at work is one command and one button: `
 - Claude Code's sign-in is read from its files; a token kept only in the keychain with no `oauthAccount` in `.claude.json` shows as signed out. Cursor's sign-in isn't read at all (it says nothing rather than guess).
 - `mergeline attach` can't see whether the session still runs in its terminal; it asks you to quit it first. Cursor chats need `--session`.
 - The README's image is still the inbox still, not the 30-second GIF (the demo stage makes it).
+
+## Fundable, stage 4: the demo
+
+Anyone can now see the whole loop in a minute without an agent CLI, a sign-in or a model: `npx mergeline --demo` plays five scripted agents (two Claude Code, two Codex, one Cursor) on a throwaway repository, and `--demo --read-only` is the same for a public address, with a scripted reviewer. The video, the GIF and the deck's screenshots are all made from it by scripts ([docs/demo.md](../docs/demo.md)). Shots are in `shots/fundable/stage-5/` (the fifth build stage of six): `before/` is the build before this stage (`SHOOT_ROOT` on a `git archive` of it, `node design/shoot-fundable.mjs stage-5/before`, stand-in agents whose tasks say `(demo)`), with `before/demo-flag.txt` for what `--demo` said then; `after/` is `node design/shoot-demo.mjs stage-5/after`; `deck/` holds the four for the deck; `video/` (not in git) is `node design/record-demo.mjs`. All at 1440x900 and 390x844.
+
+### What changed (check it in under a minute)
+
+1. **`npx mergeline --demo`** (`before/demo-flag.txt`: *unknown option --demo*). A fresh temporary folder with a git repository, `acme-shop`, and stand-ins for `claude`, `codex` and `cursor-agent` first on the office's PATH. Each reports over its own agent's hooks, works in a worktree and commits real files, so the office reads it as it reads the real CLI, the diffs are real and Merge merges. Codex asks at about 0:20, Claude Code finishes a three-file change at about 0:35, Cursor the README at about 0:50, and two keep working (`after/arriving-desktop.png`, `after/home-desktop.png`). Ctrl+C deletes the folder.
+2. **A note over the inbox** says it's the demo, with `npx mergeline` to copy (`after/home-desktop.png` against `before/home-desktop.png`, where demo data was only a word in each task).
+3. **Codex's question in words.** A question asked through Codex's `request_user_input` showed that name as the row's status; it now says *Needs an answer*, like Claude Code's (`after/answer-desktop.png`). This was a real-Codex bug the demo found.
+4. **The hosted demo** (`after/hosted-desktop.png`, `after/hosted-phone.png`, `after/hosted-refused-desktop.png`). Opening it signs you in to watch; only GET and the socket messages that look are taken, and anything else gets one toast with `npx mergeline --demo`. *Demo Lead (scripted)* answers the question, merges the three changes through the inbox's own merge (signed records) and starts the round over from the first commit, about every 80 seconds. `deploy/demo/Dockerfile` and `deploy/demo/fly.toml` deploy it; the image was built and run locally with Docker for this stage.
+5. **The deck's screenshots** (`deck/home.png`, `deck/pane-diff.png`, `deck/phone.png`, `deck/bridge-wall.png`, and `deck/answer.png`), without toasts.
+6. **The video and the GIF.** `design/record-demo.mjs` records the loop with captions and a pointer, cuts the waiting out and adds a title card, the terminal's real output and an end card: `video/mergeline-demo.mp4` (56 s, 2.7 MB) and `video/mergeline-demo.gif` (26 s, 880 px, 2.4 MB), copied to `docs/img/demo.gif`, which is now the README's first image.
+
+### Checks
+
+`npm run typecheck`, `npm run build`, `npm test` (all pass but the four launch-kit disclosure tests that fail on this branch's rewritten history). New: `tests/demo.test.ts` (the script's timing and demo labels, the reviewer's schedule, the read-only allow list, the options, and the hosted demo end to end as a visitor: the way in, every refusal, the scripted answer, three signed merges and the next round from the first commit) and `tests/demo-e2e.test.ts` (the demo in a browser at six times its pace). `tests/attention.test.ts` has the asking-tool wording.
+
+### Left for later
+
+- The 60-second cut is the demo's scripted agents, and its end card says so. The take with real agents on a real repository is recorded by hand (docs/demo.md says how); it needs real CLI sign-ins and spends real tokens, so it wasn't made here.
+- The hosted demo isn't deployed: there is no domain or Fly app yet. The image builds and runs; `fly deploy` with `deploy/demo/fly.toml` is the step.
+- The read-only demo has no rate limit of its own on its way in; Fly's connection limit (200) is the cap.
+- The phone in the video is the 390x844 recording centred on the 1440x900 frame, not a phone mock-up.
