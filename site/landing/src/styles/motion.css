@@ -49,7 +49,6 @@
   html.js h2.display.rv { clip-path: inset(0 0 100% 0); transform: translateY(.18em); transition: clip-path 900ms var(--ease-out), transform 900ms var(--ease-out), opacity 300ms; }
   html.js h2.display.rv.in { clip-path: inset(0 0 -.2em 0); }
   .waitbar > i { transition: none; }
-  .lap-hum { animation: hum 1.6s linear infinite; }
 }
 
 @keyframes inhale {
@@ -67,7 +66,6 @@
 @keyframes notch { 0%, 55% { fill: currentColor; } 65% { fill: var(--signal); } 80% { fill: currentColor; } }
 @keyframes lift { from { opacity: 0; transform: translateY(26px) scale(.985); } }
 @keyframes stream { from { opacity: 0; transform: translateX(18px); } }
-@keyframes hum { to { stroke-dashoffset: -18; } }
 @keyframes sweep { 0% { opacity: 0; transform: translate(0, 0); } 30% { opacity: .8; } 100% { opacity: 0; transform: translate(180px, -90px); } }
 
 /* The odometer's reels: each digit is a column 0 to 9 that rolls to its value. The digit itself

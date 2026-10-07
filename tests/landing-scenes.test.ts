@@ -129,6 +129,26 @@ test('the loop: answering clears the visitor\'s own wait, and Merge is a button 
   assert.deepEqual(errors, []);
 });
 
+test('section 06 looks finished within a second of coming into view, and its terminal reads whole to a screen reader', { skip: why || false, timeout: 60_000 }, async (t) => {
+  const { page, errors } = await open(t);
+  // Before the terminal runs, every line is already in the accessibility tree.
+  const tree = await page.locator('#from-source').ariaSnapshot();
+  assert.match(tree, /npm install/);
+  assert.match(tree, /ready\s+https:\/\/localhost:4600/);
+  await page.evaluate(() => document.querySelector('#yours .measured')!.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(1200);
+  const figures = await page.locator('#yours .measured b').allTextContents();
+  assert.deepEqual(figures, ['3.4', '10.7', '4']);
+  const contrast = await page.locator('#yours .measured li').first().evaluate((li) => getComputedStyle(li).opacity);
+  assert.equal(contrast, '1', 'the numbers are never greyed out waiting');
+  await page.evaluate(() => document.querySelector('#yours .ledger')!.scrollIntoView({ block: 'center' }));
+  await page.waitForTimeout(1200);
+  assert.equal(await page.locator('#yours .ledger li.printed').count(), 3);
+  assert.equal(await page.locator('#yours [data-merged]').evaluate((el) => el.textContent?.replace(/\s/g, '')), '3');
+  assert.equal(await page.locator('#yours .term-body .tl:not(.on)').evaluateAll((els) => els.filter((e) => (e as HTMLElement).offsetParent !== null).length), 0, 'the terminal has finished');
+  assert.deepEqual(errors, []);
+});
+
 test('Proof of Merge holds the test USDC until a human merges, and every value says testnet', { skip: why || false, timeout: 60_000 }, async (t) => {
   const { page, errors } = await open(t);
   await page.evaluate(() => document.querySelector('#proof .escrow')!.scrollIntoView({ block: 'center' }));

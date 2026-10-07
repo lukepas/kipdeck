@@ -340,41 +340,46 @@
     <p class="lede">It runs on your laptop or the team's dev box. {{name}} sends nothing anywhere: your agents talk only to their own model. Open source, MIT. Every merge and send-back is a signed record: the agent and model, who reviewed it, how long it waited.</p>
   </div>
   <div class="wrap yours-grid">
-    <div class="term-win" id="from-source">
-      <div class="term-bar mono"><span class="term-tab on" data-unpublished>from source</span><span class="term-tab on" data-published hidden>npx</span></div>
-<pre class="term-body mono" data-unpublished aria-label="Running {{name}} from source"><span class="p">$</span> git clone {{repo}}
-<span class="p">$</span> cd {{folder}} &amp;&amp; npm install
-<span class="dim">added 412 packages, built client and server</span>
-<span class="p">$</span> npm start -- --demo
-<span class="ok">ready</span>  https://localhost:4600  <span class="dim">signed in on this computer</span>
-<span class="dim">first agent at work</span>      <b>3.4 s</b>
-<span class="dim">first merged change</span>      <b>10.7 s</b>  <span class="dim">4 clicks</span></pre>
-<pre class="term-body mono" data-published hidden aria-label="Running {{name}} with npx"><span class="p">$</span> cd ~/code/your-project
-<span class="p">$</span> npx {{pkg}}
-<span class="ok">ready</span>  https://localhost:4600  <span class="dim">signed in on this computer</span>
-<span class="dim">first agent at work</span>      <b>3.4 s</b>
-<span class="dim">first merged change</span>      <b>10.7 s</b>  <span class="dim">4 clicks</span></pre>
+    <div class="term-win" id="from-source" role="group" aria-label="Running {{name}} on your own project">
+      <div class="term-bar mono"><span class="term-tab on" data-unpublished>your project, from source</span><span class="term-tab on" data-published hidden>your project</span></div>
+<pre class="term-body mono" data-unpublished><span class="tl"><span class="p">$</span> git clone {{repo}} &amp;&amp; cd {{folder}} &amp;&amp; npm install</span>
+<span class="tl dim">added 412 packages, built client and server</span>
+<span class="tl"><span class="p">$</span> cd ~/code/your-project</span>
+<span class="tl"><span class="p">$</span> node ~/{{folder}}/bin/agent-office.js</span>
+<span class="tl"><span class="ok">ready</span>  https://localhost:4600  <span class="dim">signed in on this computer</span></span></pre>
+<pre class="term-body mono" data-published hidden><span class="tl"><span class="p">$</span> cd ~/code/your-project</span>
+<span class="tl"><span class="p">$</span> npx {{pkg}}</span>
+<span class="tl"><span class="ok">ready</span>  https://localhost:4600  <span class="dim">signed in on this computer</span></span></pre>
     </div>
     <ul class="measured" aria-label="Measured on the scripted demo">
-      <li><b class="display" data-count="3.4" data-dec="1">3.4</b><span class="unit">s</span><span class="what">to the first agent at work</span></li>
-      <li><b class="display" data-count="10.7" data-dec="1">10.7</b><span class="unit">s</span><span class="what">to the first merged change</span></li>
-      <li><b class="display" data-count="4">4</b><span class="unit">clicks</span><span class="what">from a fresh start to that merge</span></li>
+      <li><span class="fig"><b class="display" data-count="3.4" data-dec="1">3.4</b><span class="unit">s</span></span><span class="what">to the first agent at work</span></li>
+      <li><span class="fig"><b class="display" data-count="10.7" data-dec="1">10.7</b><span class="unit">s</span></span><span class="what">to the first merged change</span></li>
+      <li><span class="fig"><b class="display" data-count="4">4</b><span class="unit">clicks</span></span><span class="what">from a fresh start to that merge</span></li>
     </ul>
-    <p class="footnote mono measured-note">Measured: headless Chromium on an M-series Mac, a fresh home and repository per run, the scripted demo's stand-in agent. Results in design/shots/fundable/final/measure.json.</p>
+    <p class="footnote mono measured-note">Measured: headless Chromium on an M-series Mac, the hero's demo command, a fresh home and repository per run, the scripted demo's stand-in agent. Results in design/shots/fundable/final/measure.json.</p>
 
     <figure class="machine" aria-labelledby="machine-cap">
-      <svg class="laptop" viewBox="0 0 420 260" aria-hidden="true">
-        <path class="lap-hum" d="M210 40 380 138 210 236 40 138Z"/>
-        <path class="lap-base" d="M210 56 352 138 210 220 68 138Z"/>
-        <path class="lap-screen" d="M68 138V48L210 -34V56Z" transform="translate(0 6)"/>
-        <g class="packets"><circle cx="300" cy="94" r="3"/><circle cx="120" cy="190" r="3"/><circle cx="330" cy="168" r="3"/></g>
+      <svg class="wall" viewBox="0 0 500 290" aria-hidden="true">
+        <rect class="wall-edge" x="16" y="16" width="272" height="258" rx="10"/>
+        <text class="wall-k mono" x="34" y="40">YOUR MACHINE</text>
+        <g class="node"><rect x="40" y="54" width="176" height="46" rx="4"/><text class="mono" x="56" y="74">agents</text><text class="mono sub" x="56" y="90">CC  Cx  Cu  OC  Pi</text></g>
+        <g class="node node-us"><rect x="40" y="134" width="176" height="46" rx="4"/><text class="mono" x="56" y="154">{{name}}</text><text class="mono sub" x="56" y="170">localhost:4600</text></g>
+        <g class="node"><rect x="40" y="214" width="176" height="46" rx="4"/><text class="mono" x="56" y="234">signed record</text><text class="mono sub" x="56" y="250">every merge, kept here</text></g>
+        <path class="link" d="M128 100V134M128 180V214"/>
+        <g class="node node-out"><rect x="330" y="54" width="162" height="46" rx="4"/><text class="mono" x="344" y="74">model APIs</text><text class="mono sub" x="344" y="90">each agent's own</text></g>
+        <g class="node node-none"><rect x="330" y="134" width="162" height="46" rx="4"/><text class="mono" x="344" y="154">{{name}} servers</text><text class="mono sub" x="344" y="170">none to send to</text></g>
+        <path class="out" d="M216 77H322"/><path class="out-head" d="M316 71 324 77 316 83"/>
+        <path class="stopped" d="M216 157H280"/><path class="stop-x" d="M290 151 302 163M302 151 290 163"/>
+        <g class="packets"><circle class="pk-out" cx="306" cy="77" r="3.5"/><circle class="pk-stop" cx="276" cy="157" r="3.5"/><circle class="pk-local" cx="128" cy="118" r="3"/><circle class="pk-local" cx="128" cy="198" r="3"/></g>
       </svg>
-      <ol class="ledger mono" aria-label="Signed merge record, demo data">
-        <li><span>10:41</span><span>CC</span><span>claude-sonnet</span><span>you</span><span class="w">waited 0:00</span><span class="h">a41f9c2</span></li>
-        <li><span>10:25</span><span>Cx</span><span>gpt-5-codex</span><span>you</span><span class="w sig">waited 23:04</span><span class="h">7be0d13</span></li>
-        <li><span>09:58</span><span>Cu</span><span>cursor</span><span>you</span><span class="w">waited 2:12</span><span class="h">03c9e6a</span></li>
-      </ol>
-      <figcaption id="machine-cap" class="mono">Signed record, kept on your machine <span class="tag-inline">demo data</span> <span class="merged-today">merged today <b data-merged>3</b></span></figcaption>
+      <div class="record">
+        <ol class="ledger mono" aria-label="Signed merge record, demo data">
+          <li><span>10:41</span><span>CC</span><span>claude-sonnet</span><span>you</span><span class="w">waited 0:00</span><span class="h">a41f9c2</span></li>
+          <li><span>10:25</span><span>Cx</span><span>gpt-5-codex</span><span>you</span><span class="w sig">waited 23:04</span><span class="h">7be0d13</span></li>
+          <li><span>09:58</span><span>Cu</span><span>cursor</span><span>you</span><span class="w">waited 2:12</span><span class="h">03c9e6a</span></li>
+        </ol>
+        <figcaption id="machine-cap" class="mono">Your agents talk to their own model; {{name}} sends nothing out. The signed record stays on your machine. <span class="tag-inline">demo data</span> <span class="merged-today">merged today <b data-merged>3</b></span></figcaption>
+      </div>
     </figure>
   </div>
 </section>
