@@ -12,7 +12,10 @@ import type { Chevrons } from '../../../shared/commendations';
 import { store } from '../../state';
 import { h } from '../dom';
 import { unitSign } from '../unitsign';
+import type { Ranked } from '../../../shared/attention';
 import type { MissionDeps } from './act';
+import { crewNow, crewOrder } from './crewnow';
+import { locateButton } from './locate';
 
 /** Thin chevrons as marks: white for the record, one violet for a record on chain. */
 export function chevronMarks(c: Chevrons): HTMLElement | null {
@@ -32,30 +35,51 @@ export function crewBits(id: string, level?: string): HTMLElement[] {
 
 let asked = false;
 
-/** The Crew tab. */
-export function renderCrew(deps: MissionDeps): HTMLElement {
+/** The Now column of a unit's row: its state's glyph, what it's doing (statusPhrase), for how long, and its latest activity muted. */
+function nowCell(r: Ranked | undefined, now: number): HTMLElement {
+  if (!r) return h('div.crew-now', {}, h('span.crew-now-state', {}, 'Not ranked yet'));
+  const n = crewNow(r, now);
+  return h(
+    'div.crew-now',
+    {},
+    h('span.crew-now-state', { class: r.att.level, title: r.att.reason ?? n.state }, h('i.crew-glyph', { 'aria-hidden': 'true' }), h('span.crew-now-text', {}, n.state), h('span.crew-now-for', { title: 'Time in this state' }, n.elapsed)),
+    n.activity ? h('span.crew-now-act', { title: n.activity }, n.activity) : null,
+  );
+}
+
+/** The Crew tab: the units in the attention ranking's order (whoever needs you first), each with its record and what it's doing now. */
+export function renderCrew(deps: MissionDeps, ranked: Ranked[], now: number): HTMLElement {
   if (!store.timeline.loaded && !asked) {
     asked = true;
     deps.net.send({ t: 'timeline.get' });
   }
   const on = crewOn();
   const book = crewBook();
-  const units = [...store.roster].sort((a, b) => Number(b.floor === store.floor) - Number(a.floor === store.floor) || a.floorName.localeCompare(b.floorName) || callSign(a.deskId).localeCompare(callSign(b.deskId)));
+  const byId = new Map(ranked.map((r) => [r.entry.id, r]));
+  const units = crewOrder(store.roster, ranked, store.floor);
   const watchId = book.watch(store.floor);
   const watch = watchId ? store.roster.find((e) => e.id === watchId) : undefined;
   const rows = units.map((e) => {
     const ep = on ? book.epithets.get(e.id) : undefined;
     const line = rosterLine(callSign(e.deskId) || e.name, ep?.title, book.logs.get(e.id), book.reverts.get(e.id) ?? 0);
+    const r = byId.get(e.id);
     return h(
       'li.mc-row.crew-row',
-      { tabindex: '-1', 'data-id': e.id },
+      { class: r?.att.level ?? '', tabindex: '-1', 'data-id': e.id },
       h(
-        'div.mc-main',
+        'div.mc-main.crew-main',
         {},
         unitSign(e.deskId),
         h('div.mc-who', {}, h('span.mc-name', {}, e.name), h('span.mc-sub', {}, e.floorName)),
-        h('div.mc-what', {}, h('span.crew-line', { title: ep ? `${ep.title}: ${ep.why}` : line }, line), ...(on ? [chevronMarks(book.chevrons(e.id))] : [])),
-        e.id === watchId && on ? h('span.crew-watch', { title: 'The best clean record on the last watch' }, 'Unit of the watch') : null,
+        nowCell(r, now),
+        h(
+          'div.mc-what',
+          {},
+          h('span.crew-line', { title: ep ? `${ep.title}: ${ep.why}` : line }, line),
+          ...(on ? [chevronMarks(book.chevrons(e.id))] : []),
+          e.id === watchId && on ? h('span.crew-watch', { title: 'The best clean record on the last watch' }, 'Unit of the watch') : null,
+        ),
+        h('div.mc-btns', {}, locateButton(deps, e)),
       ),
     );
   });
