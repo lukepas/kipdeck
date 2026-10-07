@@ -16,6 +16,8 @@ import { easeOutCubic } from './logic';
 const RADIUS = 0.9;
 const WIDTH = 0.1;
 const LIFT = 0.03;
+/** How far outside the brackets the hairline circle runs. */
+const HAIR_GAP = 0.03;
 /** Three brackets, each this much of its third of the circle (the rest is the gap). */
 const BRACKETS = 3;
 const FILL = 0.62;
@@ -26,6 +28,12 @@ const FADE_MS = 120;
 const THROUGH = 0.35;
 /** One bracket's step (a third of a turn) takes this long. */
 const STEP_MS = 3000;
+
+/** The radii (m) the reticle's marks take on the floor, inner to outer: its brackets and its hairline. */
+export const RETICLE_BANDS = {
+  brackets: [RADIUS - WIDTH, RADIUS],
+  hairline: [RADIUS + HAIR_GAP, RADIUS + HAIR_GAP + 0.015],
+} as const;
 
 export class Reticle {
   readonly root = new THREE.Group();
@@ -55,7 +63,9 @@ export class Reticle {
       hidden.renderOrder = 5;
       this.spin.add(hidden, new THREE.Mesh(arc, this.brackets));
     }
-    const circle = new THREE.Mesh(new THREE.RingGeometry(RADIUS - WIDTH - 0.06, RADIUS - WIDTH - 0.045, 64), this.hair);
+    // The hairline runs just outside the brackets: inside them is the heartbeat's quiet meter
+    // (features/heartbeat, 0.72-0.78 m), and a cyan line over it would hide the meter's hue.
+    const circle = new THREE.Mesh(new THREE.RingGeometry(RETICLE_BANDS.hairline[0], RETICLE_BANDS.hairline[1], 64), this.hair);
     this.root.add(this.spin, circle);
     // Flat on the floor, drawn after the floor and the unit's own ground ring.
     this.root.rotation.x = -Math.PI / 2;

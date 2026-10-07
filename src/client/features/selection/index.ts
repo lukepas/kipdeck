@@ -161,6 +161,12 @@ export function installSelection(ctx: Ctx, parts: SelectionParts): Selection {
     hovRing.update(now, whereIs(hovOn), still);
   });
 
+  // Taken to a unit some other way (N, a needs-you badge, a notification): that unit is the selected
+  // one, so the card, the ring and the rail follow it rather than staying on the last one picked.
+  parts.waiting.onArrive((id) => {
+    if (id !== selected) select(id);
+  });
+
   pickUnits(ctx, parts, { select, clear, hover });
 
   linkRail({ onLocate: (id) => select(id, { fly: true }), onHover: hover, selected: () => selected });

@@ -17,7 +17,7 @@ Back to the [README](../README.md).
 | L | Stencil a tag on the floor by the console you face (*Operations*, *Code cleanup*), in one of seven colors; again to change it or take it up |
 | O | Open a pull request for a worker on its own branch, or see the one it has (a worker across several projects gets one in each) |
 | I | Mission control: the reminders, then what needs someone on every floor, ranked, with why and one next step; the floor's mission and milestones; everything waiting for a review; the timeline of what happened. Inside, 1 2 3 4 switch tabs, the arrows pick a row and Enter does its step (see [Mission control](mission-control.md)) |
-| N | Go to the next unit waiting on someone (the view flies to the unit, where it is standing: 2.2 m out from it on the side away from the mission table, facing it, so a unit that needs you is framed on its pod's ready line rather than at its empty console, and corner brackets in its state's hue close in on it as you land; from the Overview it pans onto it), the ones that need you first and then the ones that are done, longest-waiting first; again for the next one, and after the last one on your floor, on to the next floor's (one that needs you on another floor comes before one here that's only done; snoozed ones are skipped) |
+| N | Go to the next unit waiting on someone and select it (the view flies to the unit, where it is standing: 2.2 m out from it on the side away from the mission table, facing it, so a unit that needs you is framed on its pod's ready line rather than at its empty console, and corner brackets in its state's hue close in on it as you land; from the Overview it pans onto it), the ones that need you first and then the ones that are done, longest-waiting first; again for the next one, and after the last one on your floor, on to the next floor's (one that needs you on another floor comes before one here that's only done; snoozed ones are skipped) |
 | Q | Put back the issue card you're carrying |
 | H | These controls |
 | T / Enter | Chat |
@@ -49,11 +49,12 @@ One unit can be selected at a time, and the Overview, the Units rail and Walk al
 
 | Do | What happens |
 | --- | --- |
-| Click a unit in the Overview | It's selected and the view flies to it. A ship-cyan ring locks on under it on the floor (and follows it, to the ready line too), its row in the Units rail is marked, and a card bottom right shows its call sign, name, state and how long it's been that way, its task, its latest activity, and its branch, PR and engine |
+| Click a unit in the Overview | It's selected and the view flies to it. A ship-cyan ring locks on under it on the floor, just outside a working unit's quiet meter so the two never overlap (and follows it, to the ready line too), its row in the Units rail is marked, and a card bottom right shows its call sign, name, state and how long it's been that way, its task, its latest activity, and its branch, PR and engine |
 | Point at a unit in the Overview | The pointer cursor and a faint ring under it. In Walk, the unit at the console under your crosshair gets the same faint ring |
 | Click bare deck in the Overview | Lets go of the selection (a drag still pans) |
 | Click a row in the Units rail | Selects that unit and finds it: the Overview flies to it, and in Walk you're taken to its console, facing it. Pointing at a row (or tabbing to it) shows the faint ring under the unit on the deck |
 | Double-click a rail row, or Enter on it | Opens the unit's terminal |
+| N, a needs-you badge, a notification, or Locate in Mission control | The unit you're taken to becomes the selected one, so the ring, the rail and the card move with you |
 | The card's button | The one thing the unit's state asks for: **Answer** (it needs you: its terminal), **Review changes** (it's done), **Open terminal** (it's stuck), or **Terminal** and **Changes** while it works |
 | Esc, or the card's close button (X) | Lets go of the selection. Up in the Overview the next Esc walks again |
 

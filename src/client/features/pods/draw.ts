@@ -6,7 +6,7 @@
 // the zone.
 import { stretch } from '../../world/toon';
 import { DECK } from '../../world/office/materials';
-import { SEP, segmentText, type PodLabelText, type Tone } from './label';
+import { countsText, SEP, segmentText, type PodLabelText, type Tone } from './label';
 
 const UI = (weight: number, size: number) => `${weight} ${size}px Archivo, system-ui, sans-serif`;
 
@@ -73,10 +73,15 @@ export function paintLabel(g: CanvasRenderingContext2D, W: number, H: number, te
   g.fillText(title, x0, H * 0.47);
   narrow(g, false);
 
-  // Line 2: the counts, each in its tone.
-  const size = Math.round(H * 0.27);
-  const base = H * 0.83;
+  // Line 2: the counts, each in its tone, a size smaller where the whole line wouldn't fit.
+  let size = Math.round(H * 0.27);
   g.font = UI(600, size);
+  const wide = g.measureText(countsText(text.segments)).width;
+  if (wide > max) {
+    size = Math.floor((size * max) / wide);
+    g.font = UI(600, size);
+  }
+  const base = H * 0.83;
   let x = x0;
   const band = { top: base - size * 1.05, h: size * 1.35 };
   const e = 1 - (1 - Math.min(1, Math.max(0, k))) ** 3;

@@ -58,3 +58,13 @@ test('selection is its own feature: installed ahead of the Overview, linked to t
   assert.match(reticle, /DECK\.ship/);
   assert.doesNotMatch(reticle, /DECK\.(signal|stuck|review|working)/);
 });
+
+test("the selection reticle's marks stay clear of the heartbeat's quiet meter under the same unit", async () => {
+  const { RETICLE_BANDS } = await import('../src/client/features/selection/reticle.js');
+  const { HEARTBEAT } = await import('../src/client/features/heartbeat/logic.js');
+  // The meter is 0.06 m wide (features/heartbeat/world.ts ARC_W), centred on its radius.
+  const meter = [HEARTBEAT.meterR - 0.03, HEARTBEAT.meterR + 0.03];
+  for (const [name, [lo, hi]] of Object.entries(RETICLE_BANDS)) {
+    assert.ok(hi <= meter[0] || lo >= meter[1], `the reticle's ${name} (${lo}-${hi} m) overlaps the quiet meter (${meter[0]}-${meter[1]} m)`);
+  }
+});
