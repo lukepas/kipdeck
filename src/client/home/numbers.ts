@@ -37,7 +37,7 @@ export function openNumbers() {
         tile('Human wait time', minutesLabel(week.waitMin), `median before a review, ${changeLabel(week.waitMin, before.waitMin, minutesLabel)}`, true),
         tile('Changes merged', String(week.merged), changeLabel(week.merged, before.merged, (x) => String(x ?? 0))),
         tile('Merge rate', percent(week.rate), `${week.merged} merged, ${week.sentBack} sent back`),
-        tile('Agent-hours merged', week.agentHours.toFixed(1), 'hours agents worked on what merged'),
+        tile('Agent-hours merged', week.agentHours > 0 && week.agentHours < 0.1 ? '<0.1' : week.agentHours.toFixed(1), 'hours agents worked on what merged'),
       ),
       h(
         'section.nb-chart',
