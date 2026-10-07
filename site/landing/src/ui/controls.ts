@@ -47,17 +47,23 @@ export function copyButtons(onCopy: (btn: HTMLElement) => void) {
   });
 }
 
-/** Try the demo: the hosted demo when the build named one, else the command that runs it from the clone. */
+/** Try the demo: the hosted demo when the build named one, else it copies the hero's command (the
+ *  one that runs the demo) and lights it, so the next step is a paste. */
 export function tryDemo() {
   const demo = document.querySelector<HTMLAnchorElement>('[data-link="demo"]');
-  if (demo?.getAttribute('href') === '#try-demo') {
-    demo.addEventListener('click', (e) => {
-      e.preventDefault();
-      const box = document.getElementById('try-demo')!;
-      box.classList.add('shown');
-      box.querySelector<HTMLButtonElement>('.copy')?.focus({ preventScroll: true });
-    });
-  }
+  if (demo?.getAttribute('href') !== '#try-demo') return;
+  demo.addEventListener('click', (e) => {
+    e.preventDefault();
+    const box = document.getElementById('try-demo')!;
+    const copy = [...box.querySelectorAll<HTMLButtonElement>('.copy')].find((b) => b.offsetParent !== null);
+    const r = box.getBoundingClientRect();
+    if (r.top < 70 || r.bottom > innerHeight) box.scrollIntoView({ block: 'center', behavior: env.reduced ? 'auto' : 'smooth' });
+    box.classList.remove('lit');
+    void box.offsetWidth;
+    box.classList.add('lit');
+    copy?.focus({ preventScroll: true });
+    copy?.click();
+  });
 }
 
 export function topBar() {

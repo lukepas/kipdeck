@@ -127,7 +127,11 @@ nav.links a:hover { color: var(--text); }
   body { font-size: 17px; }
 }
 @media (max-width: 520px) {
-  .label .label-sep, .label .label-tag { display: none; }
+  .label .label-sep { display: none; }
+  .label .label-tag { display: none; }
+  /* The hero keeps its tagline on a phone, on a line of its own: it says what the product is. */
+  .hero .label { flex-wrap: wrap; row-gap: 8px; }
+  .hero .label .label-tag { display: block; order: 3; flex-basis: 100%; }
   .pulse .pulse-sep, .pulse [data-pulse-wait] { display: none; }
   .wordmark { height: 13px; }
   .top-in { gap: 12px; height: 56px; }

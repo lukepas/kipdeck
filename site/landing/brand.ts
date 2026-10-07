@@ -1,6 +1,6 @@
 // The one place the product's name lives on the landing page. The page title, the Open Graph and
-// Twitter tags, the wordmark, every sentence that says the name, the command and the generated
-// share card all read from here. Swap the name by editing BRANDS, or pick one at build time:
+// Twitter tags, the wordmark, every sentence that says the name, the repository every link and
+// command points at, and the generated share card all read from here. Swap the name by editing BRANDS, or pick one at build time:
 //
 //   MERGELINE_BRAND=ugc-army npm run build:site
 //
@@ -17,7 +17,10 @@ export interface Brand {
   wordmark: { lead: string; muted: string };
   /** The npm package and the command it will be, once it is published. */
   pkg: string;
-  /** The folder a clone lands in, for the from-source command. */
+  /** The source repository: every Source and Docs link, the clone command, the design-partner
+   *  application (a new issue there) and the structured data. MERGELINE_REPO_URL overrides it at build. */
+  repo: string;
+  /** The folder a clone lands in (the repository's last path segment). */
   folder: string;
   /** The Formation mark's variant: 'formation' (three chevrons) is the only one drawn today. */
   markVariant: 'formation';
@@ -35,6 +38,7 @@ export const BRANDS = {
     tagline: 'The inbox for your AI coding agents.',
     wordmark: { lead: 'MERGE', muted: 'LINE' },
     pkg: 'mergeline',
+    repo: 'https://github.com/zbagdzevicius/mergeline',
     folder: 'mergeline',
     markVariant: 'formation',
     ogTitle: 'Mergeline: your agents are waiting on you',
@@ -46,7 +50,8 @@ export const BRANDS = {
     tagline: 'The inbox for your AI coding agents.',
     wordmark: { lead: 'UGC', muted: 'ARMY' },
     pkg: 'ugc-army',
-    folder: 'ugc-army',
+    repo: 'https://github.com/zbagdzevicius/ugcarmy',
+    folder: 'ugcarmy',
     markVariant: 'formation',
     ogTitle: 'UGC Army: your agents are waiting on you',
     ogDescription: DESCRIPTION,

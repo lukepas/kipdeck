@@ -20,14 +20,14 @@ export function jsonLd(brand: Brand): string {
     license: 'https://opensource.org/licenses/MIT',
     isAccessibleForFree: true,
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-    codeRepository: 'https://github.com/zbagdzevicius/ugcarmy',
+    codeRepository: brand.repo,
     image: 'og.png',
   };
   // No '<' can close the script element early.
   return JSON.stringify(data).replace(/</g, '\\u003c');
 }
 
-/** {{name}}, {{tagline}}, {{lead}}, {{muted}}, {{pkg}}, {{folder}}, {{ogTitle}}, {{ogDescription}}, {{ogImageAlt}} and {{jsonld}} in the HTML. */
+/** {{name}}, {{tagline}}, {{lead}}, {{muted}}, {{pkg}}, {{repo}}, {{folder}}, {{ogTitle}}, {{ogDescription}}, {{ogImageAlt}} and {{jsonld}} in the HTML. */
 function brandHtml(brand: Brand): Plugin {
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   const values: Record<string, string> = {
@@ -36,6 +36,7 @@ function brandHtml(brand: Brand): Plugin {
     lead: brand.wordmark.lead,
     muted: brand.wordmark.muted,
     pkg: brand.pkg,
+    repo: brand.repo,
     folder: brand.folder,
     ogTitle: brand.ogTitle,
     ogDescription: brand.ogDescription,
