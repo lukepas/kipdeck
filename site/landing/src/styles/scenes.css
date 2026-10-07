@@ -51,24 +51,25 @@ html.js .sound { visibility: visible; }
 @media (max-width: 720px) { .table-wrap.staged .us-frame { display: none; } }
 
 /* ---------- 06 Yours ---------- */
-.typing-term .c { visibility: hidden; }
-.typing-term .c.on { visibility: visible; }
-.caret { display: inline-block; position: relative; width: 0; height: 1em; vertical-align: -2px; }
-.caret::after { content: ''; position: absolute; left: 1px; top: 0; width: .55em; height: 1.15em; background: #ff6a1a; animation: blink 900ms steps(1) infinite; }
-.measured li { transition: opacity 500ms var(--ease), transform 700ms var(--ease-spring); }
-.measured li.waiting-count { opacity: .18; transform: translateY(10px); }
-.measured li.counted b { animation: land 700ms var(--ease-spring); }
-@keyframes land { from { transform: scale(.86); } }
-.measured b { display: inline-block; min-width: 2.2ch; transform-origin: 0 100%; }
-.ledger.staged li { position: relative; clip-path: inset(0 0 100% 0); opacity: 0; transform: translateY(-10px); transition: clip-path 520ms steps(6, end), opacity 200ms, transform 520ms var(--ease-out); }
+/* The terminal's lines stay in the page (and in the accessibility tree) the whole time; a line that
+   is not typed yet is only clipped, and a typed line uncovers left to right in character steps. */
+.typing-term .tl { clip-path: inset(0 100% 0 0); }
+.typing-term .tl.on { clip-path: inset(0 0 0 0); transition: clip-path var(--type-ms, 0ms) steps(var(--type-n, 1), end); }
+.measured.staged b { font-variant-numeric: tabular-nums; }
+.measured li.counted .fig { animation: land 650ms var(--ease-spring); transform-origin: 0 100%; }
+@keyframes land { from { transform: scale(.9); } }
+.ledger.staged li { position: relative; clip-path: inset(0 0 100% 0); opacity: 0; transform: translateY(-8px); transition: clip-path 360ms steps(4, end), opacity 160ms, transform 360ms var(--ease-out); }
 .ledger.staged li.printed { clip-path: inset(0 0 0 0); opacity: 1; transform: none; }
 .ledger li { position: relative; }
 .ledger li::after { content: ''; position: absolute; left: -8px; right: -8px; top: 3px; bottom: 3px; z-index: -1; border-radius: 2px; background: var(--tint-signal); transform-origin: 0 50%; transform: scaleX(0); transition: transform 600ms var(--ease-out); }
 .ledger li:hover::after { transform: scaleX(var(--wv, .1)); }
 .ledger { isolation: isolate; }
-.merged-today { margin-left: 10px; }
+.merged-today { margin-left: 10px; white-space: nowrap; }
 .merged-today b { color: var(--proof); font-weight: 600; }
 .packets .hit { fill: none; stroke: var(--signal); stroke-width: 1.5; opacity: 0; }
+.wall.staged .stop-x { transform-box: fill-box; transform-origin: center; }
+.wall.staged .stop-x.hit { animation: stop-hit 420ms var(--ease-out); }
+@keyframes stop-hit { 0% { transform: scale(1.6); stroke-width: 3; } }
 
 /* ---------- 07 Phone ---------- */
 .phone-list { position: relative; }

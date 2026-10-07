@@ -30,18 +30,37 @@
 .term-body .dim { color: #8a97a5; }
 .term-body .ok { color: #3ddc97; }
 .term-body b { color: #e8ecef; font-weight: 600; }
+.term-body .tl { display: inline-block; max-width: 100%; vertical-align: top; }
 .measured { display: flex; flex-direction: column; gap: 22px; }
-.measured li { display: grid; grid-template-columns: auto 1fr; align-items: baseline; column-gap: 10px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
-.measured b { font-size: clamp(64px, 7vw, 112px); line-height: .85; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
-.measured .unit { font-family: var(--font-mono); font-size: 16px; color: var(--muted); }
-.measured .what { grid-column: 1 / -1; margin-top: 8px; font-size: 14px; color: var(--muted); }
-.measured-note { grid-column: 1 / -1; margin-top: 0; }
+.measured li { display: flex; flex-direction: column; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+/* The unit sits right after its number, on the same baseline, so "4 clicks" reads as one value. */
+.measured .fig { display: flex; align-items: baseline; gap: .15em; font-size: clamp(64px, 7vw, 112px); line-height: .85; }
+.measured b { font-size: 1em; letter-spacing: -.04em; font-variant-numeric: tabular-nums; }
+.measured .unit { font-family: var(--font-mono); font-size: .22em; letter-spacing: 0; color: var(--muted); }
+.measured .what { margin-top: 10px; font-size: 14px; color: var(--muted); }
+.yours-grid { grid-template-rows: auto 1fr; }
+.yours-grid > .measured { grid-row: 1 / span 2; }
+.measured-note { grid-column: 1; grid-row: 2; align-self: start; margin-top: 0; }
 .machine { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(28px, 4vw, 64px); align-items: center; margin-top: clamp(40px, 6vh, 72px); }
-.laptop { width: 100%; max-width: 440px; overflow: visible; }
-.lap-hum { fill: none; stroke: var(--signal); stroke-width: 1.2; stroke-dasharray: 3 6; opacity: .7; }
-.lap-base { fill: var(--surface-2); stroke: var(--line-strong); }
-.lap-screen { fill: var(--surface-1); stroke: var(--line-strong); }
+/* Your machine, literally: a wall, what is inside it, what passes through it, and what never leaves. */
+.wall { width: 100%; max-width: 480px; overflow: visible; }
+.wall-edge { fill: color-mix(in srgb, var(--signal) 4%, transparent); stroke: var(--signal); stroke-width: 1.5; stroke-dasharray: 5 5; }
+.wall-k { font-size: 11px; letter-spacing: .08em; fill: var(--signal); }
+.wall .node rect { fill: var(--surface-1); stroke: var(--line-strong); }
+.wall .node text { font-size: 12px; fill: var(--text); }
+.wall .node .sub { font-size: 10.5px; fill: var(--muted); }
+.wall .node-us rect { stroke: var(--signal); }
+.wall .node-none rect { fill: none; stroke-dasharray: 3 4; }
+.wall .node-none text { fill: var(--muted); }
+.wall .link, .wall .out, .wall .stopped { fill: none; stroke: var(--line-strong); stroke-width: 1.5; }
+.wall .out { stroke: var(--text); }
+.wall .out-head { fill: none; stroke: var(--text); stroke-width: 1.5; }
+.wall .stopped { stroke-dasharray: 3 4; }
+.wall .stop-x { fill: none; stroke: var(--signal); stroke-width: 2; stroke-linecap: round; }
 .packets circle { fill: var(--muted); }
+.packets .pk-out { fill: var(--text); }
+.packets .pk-stop { fill: var(--signal); }
+.record { min-width: 0; }
 .ledger { position: relative; padding: 18px 20px 22px; border: 1px solid var(--line-strong); border-radius: 4px; background: var(--surface-1); font-size: 12.5px; }
 .ledger::before, .ledger::after { content: ''; position: absolute; left: 10px; right: 10px; height: 0; border-top: 1px dashed var(--line-strong); }
 .ledger::before { top: 8px; } .ledger::after { bottom: 8px; }
@@ -51,7 +70,7 @@
 .ledger .w { color: var(--text); }
 .ledger .w.sig { color: var(--signal); }
 .ledger .h { color: var(--proof); text-align: right; }
-.machine figcaption { grid-column: 2; font-size: 12px; color: var(--muted); }
+.machine figcaption { margin-top: 12px; font-size: 12px; line-height: 1.6; color: var(--muted); }
 
 /* ---------- 07 Phone ---------- */
 .phone-sec .two-col { grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); }
@@ -166,7 +185,9 @@ dialog.watch::backdrop { background: rgb(5 8 12 / .78); -webkit-backdrop-filter:
 @media (max-width: 1080px) {
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .yours-grid, .machine, .proof-grid { grid-template-columns: 1fr; }
-  .machine figcaption { grid-column: 1; }
+  .wall { max-width: 520px; margin: 0 auto; }
+  .yours-grid { grid-template-rows: none; }
+  .yours-grid > .measured, .measured-note { grid-row: auto; }
 }
 @media (max-width: 860px) {
   .phone-sec .two-col, .numbers .two-col { grid-template-columns: 1fr; }
