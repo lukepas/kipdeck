@@ -2,7 +2,9 @@
 // on it: a push drops ("Codex needs you"), a thumb taps it and Codex goes back to work (its wait bar
 // snaps to zero), then the thumb merges the README from To review: a small shockwave stays inside
 // the screen, the row becomes the violet squared check under Shipped today, and a push confirms
-// it. On a desktop with a mouse the phone also leans with the speed of the scroll (6 degrees at most).
+// it. Each touch is a ring that opens from the button it presses, and the button presses down for
+// 90 ms. The phone turns in and then rests flat, so its text is crisp; on a desktop with a mouse it
+// also leans with the speed of the scroll (6 degrees at most) and settles back.
 //
 // The DOM holds the end state; the scene draws the start by transform alone, so nothing shifts.
 import { env } from '../engine/env';
@@ -71,6 +73,9 @@ export function mountPhone(section: HTMLElement) {
   };
   const tapOn = (el: HTMLElement) => {
     const p = at(el);
+    // The button presses down for 90 ms under the touch, and a ring opens from it.
+    el.classList.add('pressed');
+    setTimeout(() => el.classList.remove('pressed'), 90);
     tap.style.transform = `translate(${p.x}px, ${p.y}px)`;
     tap.classList.remove('go');
     void tap.offsetWidth;

@@ -75,7 +75,9 @@ html.js .sound { visibility: visible; }
 .phone .row .st { flex: none; width: 9px; height: 9px; margin-right: -3px; }
 .phone .tap, .phone .ring { display: none; }
 .phone.staged { transform: perspective(1400px) rotateY(-30deg) rotateX(16deg) translateY(50px) scale(.9); opacity: 0; transition: transform 1300ms var(--ease-out), opacity 700ms var(--ease); }
-.phone.staged.in { transform: perspective(1400px) rotateY(-7deg) rotateX(calc(4deg + var(--lean, 0deg))); opacity: 1; }
+/* At rest the phone is flat to the page, so its text renders crisp and a tap lands where it aims;
+   on a desktop it only leans with the scroll's speed, and settles back. */
+.phone.staged.in { transform: perspective(1400px) rotateX(var(--lean, 0deg)); opacity: 1; }
 .phone.staged .push { opacity: 0; transform: translateY(-24px) scale(.96); transition: opacity 300ms var(--ease), transform 600ms var(--ease-spring); }
 .phone.staged .push.down { opacity: 1; transform: none; }
 .phone.staged .phone-list > * { transition: translate 700ms var(--ease-spring); }
@@ -83,9 +85,11 @@ html.js .sound { visibility: visible; }
 .phone.staged .row.snap .waitbar > i { --w: 0; transition: transform 500ms var(--ease-spring); }
 .phone.staged .row .st { animation: pop 460ms var(--ease-spring); }
 .phone.staged .sec-shipped.lit { animation: unfurl 700ms var(--ease-out); }
-.phone.staged .tap { display: block; position: absolute; left: -22px; top: -22px; width: 44px; height: 44px; border-radius: 50%; z-index: 5; pointer-events: none; background: rgb(244 246 248 / .3); border: 1.5px solid rgb(244 246 248 / .85); opacity: 0; }
-.phone.staged .tap.go { animation: thumb 700ms var(--ease-out) both; }
-@keyframes thumb { 0% { opacity: 0; scale: 1.6; } 30% { opacity: 1; scale: .8; } 55% { opacity: 1; scale: 1; } 100% { opacity: 0; scale: 1.4; } }
+.phone.staged .tap { display: block; position: absolute; left: -16px; top: -16px; width: 32px; height: 32px; border-radius: 50%; z-index: 5; pointer-events: none; border: 2px solid rgb(244 246 248 / .9); opacity: 0; }
+.phone.staged .tap.go { animation: thumb 620ms var(--ease-out) both; }
+@keyframes thumb { 0% { opacity: 1; scale: .35; } 100% { opacity: 0; scale: 1.7; } }
+.phone .row-btn { transition: transform 90ms var(--ease); }
+.phone .row-btn.pressed { transform: scale(.9); }
 .phone.staged .ring { display: block; position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; z-index: 4; pointer-events: none; border: 2px solid var(--proof); box-shadow: 0 0 20px var(--signal), inset 0 0 12px var(--signal); opacity: 0; }
 .phone.staged .ring.go { animation: minishock 900ms var(--ease-out) both; }
 @keyframes minishock { 0% { opacity: 1; transform: scale(.4); } 100% { opacity: 0; transform: scale(24); } }
