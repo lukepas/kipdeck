@@ -80,6 +80,7 @@ export function onConnection(ctx: Ctx, ws: WebSocket, url: URL, session: Session
     roster: ctx.rosterEntries(),
     reviewQueue: ctx.reviewQueue(),
     ...(ctx.viewer() ? { viewer: ctx.viewer() } : {}),
+    ...(ctx.demo ? { demo: ctx.demo.info } : {}),
     reminders: ctx.reminders(),
     ...(awaySince !== undefined ? { awaySince } : {}),
     ...floorView(ctx, floor),

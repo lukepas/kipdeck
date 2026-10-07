@@ -11,6 +11,7 @@ import { readStateJson, stateDirProblem, untrustedState, writeState } from './sa
 import { CHAIN_HELP, chainFlagsFromEnv, takeChainFlag, type ChainFlags } from './chain/flags.js';
 import { parseLabList, type LabId } from '../shared/labs.js';
 import { telemetryForbidden } from './telemetry.js';
+import { freshDemoHome, type DemoWorkspace } from './demo/workspace.js';
 
 export interface Config {
   /** The office's own folder: the building's data lives in its .agent-office. */
@@ -74,6 +75,8 @@ export interface Config {
   labs: LabId[];
   /** Anonymous usage numbers (telemetry.ts): off unless turned on; `forbidden` keeps them off for good. */
   telemetry: { forced: boolean; forbidden?: string; endpoint?: string };
+  /** --demo: scripted agents on a throwaway repository (see demo/): `readOnly` the hosted demo, `temp` a home deleted on exit, its workspace once made. */
+  demo?: { readOnly: boolean; temp: boolean; workspace?: DemoWorkspace };
 }
 
 export interface RTCIceServerLike {
@@ -88,6 +91,7 @@ const HELP = `mergeline - the inbox for your ${AGENT_PROVIDERS.filter((p) => p !
 Usage:
   mergeline [options]
   mergeline [dir] [options]
+  mergeline --demo [--read-only]
   mergeline open [--print]
   mergeline attach [--agent claude|codex|cursor] [--session <id>] [--list]
   mergeline setup [--projects <dir>] [--project <owner/repo>]...
@@ -192,6 +196,10 @@ Options:
                           minutes agents wait in Needs you. Off by default; the
                           setup card turns it on or off. See docs/security.md
       --no-telemetry      Never share them (also DO_NOT_TRACK=1)
+      --demo              Five scripted agents on a throwaway repository: no
+                          agent CLI, sign-in or model needed (env MERGELINE_DEMO=1)
+      --read-only         With --demo, the hosted demo: visitors only watch and a
+                          scripted reviewer acts (MERGELINE_DEMO=read-only)
 ${CHAIN_HELP}  -h, --help              Show this help
 
 Started in a terminal, it opens in your browser already signed in, with a link
@@ -277,6 +285,8 @@ export function loadConfig(argv: string[]): Config {
   let webhook = process.env.AGENT_OFFICE_WEBHOOK;
   const chain = chainFlagsFromEnv();
   const labs = parseLabList(process.env.AGENT_OFFICE_LABS);
+  let demo = !!process.env.MERGELINE_DEMO && process.env.MERGELINE_DEMO !== '0';
+  let readOnly = process.env.MERGELINE_DEMO === 'read-only';
   const iceServers: RTCIceServerLike[] = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
   // A container can't take --turn (deploy/container/compose.yaml), so the TURN servers come from the environment too.
   for (const url of (process.env.AGENT_OFFICE_TURN ?? '').split(/\s+/).filter(Boolean)) iceServers.push(parseTurn(url));
@@ -363,6 +373,12 @@ export function loadConfig(argv: string[]): Config {
       case '--projects':
         projects = path.resolve(takeValue(argv, i++, a));
         break;
+      case '--demo':
+        demo = true;
+        break;
+      case '--read-only':
+        readOnly = true;
+        break;
       case '--telemetry':
       case '--no-telemetry':
         // Read with the environment below (telemetryForbidden).
@@ -393,10 +409,20 @@ export function loadConfig(argv: string[]): Config {
     }
   }
 
+  if (readOnly && !demo) {
+    console.error('agent-office: --read-only goes with --demo (the hosted demo)');
+    process.exit(2);
+  }
+  // The demo never touches a project of yours: a throwaway home of its own unless one is given.
+  if (demo && project) {
+    console.error('agent-office: --demo makes a throwaway project of its own: start it without a [dir]');
+    process.exit(2);
+  }
+  if (demo && !homeGiven) home = freshDemoHome();
   // An office already runs in this project (started here before there were floors): carry on with
   // it, its workers and its password, rather than open an empty building somewhere else.
   const cwd = process.cwd();
-  if (!project && !homeGiven && cwd !== home && existsSync(path.join(cwd, '.agent-office', 'config.json'))) project = cwd;
+  if (!project && !demo && !homeGiven && cwd !== home && existsSync(path.join(cwd, '.agent-office', 'config.json'))) project = cwd;
   if (project && !existsSync(project)) {
     console.error(`agent-office: directory not found: ${project}`);
     process.exit(2);
@@ -535,9 +561,10 @@ export function loadConfig(argv: string[]): Config {
     webhook,
     chain,
     labs: forcedLabs(labs, chain),
+    ...(demo ? { demo: { readOnly, temp: !homeGiven } } : {}),
     telemetry: {
-      forced: argv.includes('--telemetry') || process.env.MERGELINE_TELEMETRY === '1',
-      forbidden: telemetryForbidden(process.env, argv),
+      forced: !demo && (argv.includes('--telemetry') || process.env.MERGELINE_TELEMETRY === '1'),
+      forbidden: demo ? 'off in the demo' : telemetryForbidden(process.env, argv),
       endpoint: process.env.MERGELINE_TELEMETRY_URL || undefined,
     },
   };

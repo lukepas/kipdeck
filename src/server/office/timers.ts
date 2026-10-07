@@ -54,8 +54,11 @@ export function startTimers(ctx: Ctx): () => void {
   const seen = setInterval(() => stampConnected(ctx), SEEN_MS);
   // Anonymous usage numbers, when someone turned them on: does nothing while they're off.
   const usage = setInterval(() => ctx.telemetry.on && ctx.telemetry.sweep(ctx.rosterEntries(), ctx.shipped.recent()), TELEMETRY_SWEEP_MS);
+  // The demo's scripted agents, and the read-only demo's reviewer (demo/director.ts).
+  const stopDemo = ctx.demo?.start();
 
   return () => {
+    stopDemo?.();
     clearInterval(usage);
     clearInterval(seen);
     clearTimeout(firstSweep);

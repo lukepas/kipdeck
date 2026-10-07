@@ -40,8 +40,17 @@ if (argv[0] === 'open') {
 const cfg = loadConfig(argv);
 await ensureSelfSigned(cfg);
 // Started inside a git checkout (with no [dir]): that's where you work. The office's own home isn't.
-const top = cfg.project ? undefined : gitTop(process.cwd());
+const top = cfg.project || cfg.demo ? undefined : gitTop(process.cwd());
 if (top && !within(cfg.dir, top)) cfg.startedIn = top;
+// The demo: scripted agents on a throwaway repository of its own (demo/).
+if (cfg.demo) {
+  const { setUpDemo } = await import('./demo/index.js');
+  const ws = setUpDemo(cfg);
+  if (typeof ws === 'string') {
+    console.error(`${CLI}: --demo: ${ws}`);
+    process.exit(2);
+  }
+}
 const { interactive } = await import('./setup.js');
 const atTerminal = interactive();
 // Nobody named a port: 4600, or the next free one, so another office (or anything else) there never
@@ -107,15 +116,20 @@ const agentsLine = usable.length
     ? 'found, but not signed in - the browser says how'
     : `none found - install Claude Code, Codex or Cursor (e.g. ${agents.find((a) => a.provider === 'claude')?.fix ?? 'npm install -g @anthropic-ai/claude-code'})`;
 
+const demoLines = cfg.demo
+  ? [
+      cfg.demo.readOnly ? '  Demo, read only: visitors are signed in to watch; a scripted reviewer answers and merges.' : '  Demo: five scripted agents on a throwaway repository. No model runs and your code is not touched.',
+      `  project   ${cfg.demo.workspace?.repo ?? ''}${cfg.demo.temp ? ' (deleted when you stop it)' : ''}`,
+    ]
+  : [`  project   ${projectLine}`, `  agents    ${agentsLine}`];
 const lines = [
   '',
   `  ${PRODUCT} is running at ${[...urls].join('  ')}`,
   signIn ? (opened ? '  Opened in your browser, signed in.' : `  Sign in (the link works once): ${signIn}`) : '',
   signIn ? `  Lost the tab? Run \`${again} open\` for a new link.` : '',
   '',
-  `  project   ${projectLine}`,
-  `  agents    ${agentsLine}`,
-  noPassword ? '' : `  password  ${passwordLine()}`,
+  ...demoLines,
+  noPassword || cfg.demo?.readOnly ? '' : `  password  ${passwordLine()}`,
   '',
   loopback ? '  Only this computer can reach it (--host 0.0.0.0 lets your network in). Ctrl+C stops it.' : '  Ctrl+C stops it.',
   cfg.tls || loopback ? '' : '  Tip: voice and screen share need https off localhost: use a reverse proxy or --self-signed.',
@@ -131,11 +145,15 @@ let closing = false;
 const stop = (signal: NodeJS.Signals) => {
   if (closing) process.exit(1);
   closing = true;
-  const keep = signal === 'SIGTERM';
+  // The demo's agents never outlive it: its home goes with it (demo/index.ts).
+  const keep = signal === 'SIGTERM' && !cfg.demo;
   console.log(keep ? `\n  closing ${PRODUCT} - agents keep running for the next start...` : `\n  closing ${PRODUCT}...`);
   removeLocalFile(cfg.dataDir);
   office.shutdown(keep);
-  setTimeout(() => process.exit(0), 300);
+  setTimeout(() => {
+    if (cfg.demo) void import('./demo/index.js').then((d) => d.removeDemoHome(cfg)).finally(() => process.exit(0));
+    else process.exit(0);
+  }, 300);
 };
 // Last line of defense: one bad request must never take down every running worker.
 process.on('unhandledRejection', (err) => console.error(`${CLI}: unhandled rejection`, err));
