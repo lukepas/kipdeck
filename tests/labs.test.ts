@@ -126,7 +126,9 @@ test("the Bridge view's menu rows, panes and tabs name their lab", () => {
   for (const [id, lab] of [['ledger', 'proof'], ['bounties', 'proof'], ['timeline', 'ops'], ['goals', 'ops'], ['services', 'ops'], ['voice', 'voice'], ['share', 'voice'], ['whiteboard', 'meetings']]) {
     assert.match(hud, new RegExp(`id: '${id}',[^\\n]*lab: '${lab}'`), `${id} is behind ${lab}`);
   }
-  assert.match(src('ui/settings.ts'), /id: 'bounties',[^\n]*lab: 'proof'/);
+  // The Bounties pane is only built while Proof of Merge is on, and the panes every page shares have no lab's.
+  assert.match(src('ui/settings.ts'), /if \(store\.lab\('proof'\)\) \{[^}]*bountySettings[\s\S]*?id: 'bounties'/);
+  assert.doesNotMatch(src('ui/settings-core.ts'), /bount|proof|lab\(/i);
   assert.match(src('ui/menu.ts'), /!a\.lab \|\| store\.lab\(a\.lab\)/);
 });
 
