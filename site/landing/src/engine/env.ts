@@ -19,3 +19,18 @@ export const tier: 'full' | 'lite' | 'min' = env.reduced ? 'min' : env.saveData 
 export function token(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
+
+let probe: CanvasRenderingContext2D | null = null;
+/** A theme color as 0 to 1 RGB, whatever syntax the token uses (hex, rgb() or oklch()). */
+export function rgbOf(name: string, fallback: [number, number, number]): [number, number, number] {
+  const value = token(name);
+  if (!value) return fallback;
+  probe ??= document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+  if (!probe) return fallback;
+  probe.clearRect(0, 0, 1, 1);
+  probe.fillStyle = '#000';
+  probe.fillStyle = value;
+  probe.fillRect(0, 0, 1, 1);
+  const [r, g, b] = probe.getImageData(0, 0, 1, 1).data;
+  return [r / 255, g / 255, b / 255];
+}

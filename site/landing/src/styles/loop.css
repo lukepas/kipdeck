@@ -1,0 +1,113 @@
+/* 04 The loop: the app replica (list beside the pane) and its staged states. Static, it shows the
+   end of the story: answered, reviewed, merged. Staged (scenes/loop.ts drives it), the pane's three
+   layers (terminal, question card, diff) share one cell and the scroll moves between them. */
+
+.loop-stage { grid-template-columns: minmax(200px, 3fr) minmax(0, 10fr); }
+.loop-win { display: grid; grid-template-columns: minmax(220px, 27%) minmax(0, 1fr); }
+.loop-list { position: relative; padding: 6px 12px 60px; border-right: 1px solid var(--line); background: var(--void); }
+.loop-list .row { min-height: 54px; padding: 8px 10px; gap: 10px; }
+.loop-list .row-title { font-size: 13px; }
+.loop-list .row-sub { font-size: 11.5px; }
+.loop-list .row .st { flex: none; width: 10px; height: 10px; margin-right: -2px; }
+.loop-list .row-age { font-size: 11px; }
+.loop-list .sec-shipped { color: var(--proof); }
+.loop-list .sec-shipped .count { border-color: var(--proof); color: var(--proof); }
+.row.merged .sign { color: var(--proof); }
+.row.merged .row-age { color: var(--proof); }
+.row.merged .waitbar, .row.review .waitbar { visibility: hidden; }
+.pane { position: relative; display: flex; flex-direction: column; min-width: 0; }
+.pane-tabs { position: relative; }
+.pane-body { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.term-layer { display: none; }
+.pane-body .qcard { width: auto; margin: 14px 16px; }
+.pane-body .diff-wrap { flex: 1; border-top: 1px solid var(--line); }
+.loop-win .demo-tag { bottom: 46px; }
+.loop-app { padding: 0; }
+.loop-app .stamp { right: 18px; bottom: 70px; }
+.qcard-edge { display: none; }
+.scrub[hidden] { display: none; }
+
+/* ---------- Staged ---------- */
+.loop .staged .beats { display: grid; border-left: 0; position: static; }
+.loop .staged .beat-item { grid-area: 1 / 1; padding: 0; clip-path: inset(0 0 100% 0); opacity: 0; transform: translateY(14px); transition: clip-path 700ms var(--ease-out), opacity 400ms var(--ease), transform 700ms var(--ease-out); }
+.loop .staged .beat-item.on { clip-path: inset(-10% -10% -10% -10%); opacity: 1; transform: none; }
+.loop .staged .beat-item::before { display: none; }
+.loop .staged .beat-item h3 { font-size: clamp(30px, 2.8vw, 44px); font-family: var(--font-display); font-stretch: 118%; letter-spacing: -.02em; margin: 6px 0 12px; }
+.loop .staged .beat-item p { font-size: 16px; }
+.loop .staged .beat-n { display: inline-grid; place-items: center; width: 22px; height: 22px; border: 1px solid var(--line-strong); border-radius: 2px; color: var(--text); }
+.scrub { position: relative; display: flex; flex-direction: column; gap: 2px; margin-top: 34px; padding-left: 2px; }
+.scrub::before { content: ''; position: absolute; left: 10px; top: 14px; bottom: 14px; width: 1px; background: var(--line); }
+.scrub::after { content: ''; position: absolute; left: 10px; top: 14px; width: 1px; height: calc((100% - 28px) * var(--p, 0)); background: var(--signal); }
+.scrub button { position: relative; z-index: 1; display: flex; align-items: center; gap: 12px; padding: 5px 0; border: 0; background: none; color: var(--muted); font: 500 13px/1.2 var(--font-ui); cursor: pointer; text-align: left; }
+.scrub button i { width: 9px; height: 9px; margin-left: 4px; background: var(--void); border: 1.5px solid var(--line-strong); transform: rotate(45deg); transition: background-color 300ms var(--ease), border-color 300ms var(--ease), transform 400ms var(--ease-spring); }
+.scrub button.on { color: var(--text); }
+.scrub button.on i { background: var(--signal); border-color: var(--signal); transform: rotate(45deg) scale(1.25); }
+.scrub button:last-child.on i { background: var(--proof); border-color: var(--proof); }
+.scrub button:hover { color: var(--text); }
+.scrub button:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+.loop .staged .pane-body { display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); flex: none; height: clamp(300px, 46vh, 420px); overflow: hidden; }
+.loop .staged .pane-body > * { grid-area: 1 / 1; min-width: 0; min-height: 0; }
+.loop .staged .term-layer { display: block; margin: 0; padding: 16px 18px; background: var(--code-bg); color: var(--term-text); font-size: 12.5px; line-height: 1.75; white-space: pre-wrap; overflow: hidden; }
+.term-layer .tl { display: inline-block; }
+.term-layer b { color: #e8ecef; font-weight: 600; }
+.term-layer .dim, .term-layer .tl.dim { color: #6f7c8a; }
+.term-layer .q { color: #ff6a1a; font-weight: 700; }
+.term-layer .q-line { color: #e8ecef; }
+.term-layer .q-o { color: #e8ecef; }
+.term-layer .after { opacity: 0; }
+.ch { display: inline-block; white-space: pre; will-change: transform; }
+.loop .staged .pane-body .qcard { align-self: end; z-index: 2; margin: 0 18px 18px; max-width: 480px; }
+.loop .staged .qcard-in { background: color-mix(in srgb, var(--surface-1) calc(var(--bg, 1) * 100%), transparent); border-color: transparent; box-shadow: 0 30px 60px -24px rgb(0 0 0 / calc(var(--bg, 1) * .7)); }
+.loop .staged .qcard-in::before { opacity: var(--bg, 1); }
+.loop .staged .qcard-edge { display: block; position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.qcard-edge rect { width: calc(100% - 1px); height: calc(100% - 1px); fill: none; stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 1; stroke-dashoffset: 0; }
+.loop .staged .choice { transform-origin: 0 50%; }
+.send { transition: transform 120ms var(--ease); }
+.send.press { transform: translateY(2px) scale(.96); }
+.reply-text.typing::after { content: ''; display: inline-block; width: .45em; height: 1.05em; margin-left: 1px; vertical-align: -2px; background: var(--signal); animation: blink 900ms steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.loop .staged .pane-tabs .on { box-shadow: none; }
+.loop .staged .tab-ink { position: absolute; bottom: -1px; left: 0; height: 2px; background: var(--text); width: calc(var(--w0, 60px) + (var(--w1, 80px) - var(--w0, 60px)) * var(--x, 1)); transform: translateX(calc(var(--x0, 16px) + (var(--x1, 90px) - var(--x0, 16px)) * var(--x, 1))); }
+.tab-ink { display: none; }
+.loop .staged .tab-ink { display: block; }
+.loop .staged .diff-wrap { border-top: 0; overflow: hidden; }
+.loop .staged .diff .l.add { position: relative; background: none; box-shadow: none; }
+.loop .staged .diff .l.add::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--add-bg); box-shadow: inset 2px 0 0 var(--add-line); transform-origin: 0 50%; transform: scaleX(var(--wipe, 1)); }
+.loop .staged .diff { isolation: isolate; }
+.loop .staged .loop-list > * { transition: transform 520ms var(--ease-out), opacity 300ms var(--ease); }
+.loop .staged .row.snap .waitbar > i { transition: transform 700ms cubic-bezier(.34, 1.5, .64, 1); }
+.loop .staged .cc-row .st { transition: transform 420ms var(--ease-spring); }
+.loop .staged .cc-row.review .st, .loop .staged .cc-row.merged .st { animation: pop 460ms var(--ease-spring); }
+@keyframes pop { from { transform: scale(.2); } 60% { transform: scale(1.5); } }
+.loop .staged .merge-btn {
+  position: relative; overflow: hidden; color: var(--text); border-color: var(--signal);
+  background: radial-gradient(circle at 50% 50%, var(--signal) calc(var(--charge, 0) * 72%), var(--tint-signal) calc(var(--charge, 0) * 72% + 1px));
+}
+.loop .staged .merge-btn.charged { color: var(--on-signal); animation: charged 1.1s var(--ease-out) infinite; }
+@keyframes charged { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--signal) 60%, transparent); } to { box-shadow: 0 0 0 10px transparent; } }
+.loop .staged .stamp { opacity: 0; transform: rotate(-16deg) scale(2.4); pointer-events: none; }
+.loop .staged .stamp.landed { animation: stamp 520ms cubic-bezier(.2, 0, .2, 1) both; }
+@keyframes stamp {
+  0% { opacity: 0; transform: rotate(-16deg) scale(2.4); }
+  62% { opacity: 1; transform: rotate(-6deg) scale(.9); }
+  74% { transform: rotate(-7.5deg) scale(1.05); }
+  100% { opacity: 1; transform: rotate(-7deg) scale(1); }
+}
+.loop.is-merged .sec-shipped { animation: unfurl 700ms var(--ease-out); }
+@keyframes unfurl { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+canvas.shockwave { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 80; pointer-events: none; }
+
+@media (prefers-reduced-motion: no-preference) and (min-width: 900px) and (min-height: 600px) {
+  html.js .loop .stage .loop-stage { margin-top: 0; align-items: center; }
+  html.js .loop .stage .beats-col { align-self: center; }
+}
+@media (max-width: 1080px) {
+  .loop-stage { grid-template-columns: minmax(0, 1fr); }
+  .loop .staged .beats { grid-template-columns: none; }
+}
+@media (max-width: 760px) {
+  .loop-win { grid-template-columns: minmax(0, 1fr); }
+  .loop-list { display: none; }
+  .loop .staged .pane-body { height: 460px; }
+}

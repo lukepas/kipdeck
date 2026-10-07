@@ -28,7 +28,12 @@ export function waitlist() {
         if (!res.ok) throw new Error(String(res.status));
         form.reset();
         say("Thanks, you're on the list. We'll write once, when the team tier opens.", 'ok');
-        document.querySelector('.seats li:not(.filled)')?.classList.add('filled');
+        // The seat fills as the agents form the mark over the seats (scenes/teams.ts), or at once.
+        document.dispatchEvent(new CustomEvent('landing:joined'));
+        const seat = document.querySelector('.seats li:not(.filled)');
+        const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (calm) seat?.classList.add('filled');
+        else setTimeout(() => seat?.classList.add('filled'), 1150);
       })
       .catch(() => say('That did not go through. Please try again later.', 'warn'));
   });

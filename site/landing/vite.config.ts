@@ -50,6 +50,8 @@ export default defineConfig(() => {
       modulePreload: { polyfill: false },
       assetsInlineLimit: 0,
       reportCompressedSize: false,
+      // The one big chunk is the Labs tile's three.js bridge, loaded only on demand (fx/bridge.ts).
+      chunkSizeWarningLimit: 600,
     },
   };
 });
