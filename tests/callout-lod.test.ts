@@ -53,20 +53,14 @@ test('past the 10% band the tier does change, both ways, and a big jump skips th
   assert.equal(tierAt(40, WALK_BOUNDS, 'near'), 'far');
 });
 
-test('a selected unit is never smaller than a line', () => {
+test('a selected unit shows its one line, never its tab nor its card: the selection card has the rest', () => {
   assert.equal(tierFor({ distance: 30 }, undefined, { selected: true }), 'mid');
   assert.equal(tierFor({ ortho: ortho(20), distance: 0 }, 'far', { selected: true }), 'mid');
-  assert.equal(tierFor({ distance: 2 }, undefined, { selected: true }), 'near');
-});
-
-test('zoomed in to a pod or a unit in the Overview, the selected unit shows its whole card; its neighbours keep their line', () => {
-  for (const zoom of ['pod', 'unit'] as const) {
-    assert.equal(tierFor({ ortho: ortho(10), distance: 0 }, 'mid', { selected: true, zoom }), 'near');
-    assert.equal(tierFor({ ortho: ortho(10), distance: 0 }, 'mid', { selected: false, zoom }), 'mid');
-  }
-  // From the whole deck it stays a line, and walking the zoom means nothing.
-  assert.equal(tierFor({ ortho: ortho(20), distance: 0 }, 'far', { selected: true, zoom: 'deck' }), 'mid');
-  assert.equal(tierFor({ distance: 10 }, 'mid', { selected: true, zoom: 'pod' }), 'mid');
+  // Up close too: its card would cover the unit, and the selection card already says it all.
+  assert.equal(tierFor({ distance: 2 }, undefined, { selected: true }), 'mid');
+  for (const zoom of ['deck', 'pod', 'unit'] as const) assert.equal(tierFor({ ortho: ortho(10), distance: 0 }, 'mid', { selected: true, zoom }), 'mid');
+  // Its neighbours keep theirs.
+  assert.equal(tierFor({ distance: 2 }, undefined, { selected: false }), 'near');
 });
 
 test('a permission wait says what you would allow, as a question, not the hook\'s words', () => {
@@ -138,13 +132,13 @@ test('a status phrase with no label says the plain word', () => {
   assert.equal(statusPhrase({ level: 'working', label: '  ' }), 'Working');
 });
 
-test("the near card's clock ticks by the second under a minute, then reads as the deck's one clock", () => {
-  assert.equal(elapsed(0), '0s');
-  assert.equal(elapsed(42_500), '42s');
+test("the near card's clock is the deck's one clock: '<1m' under a minute, as the rail and Mission control say", () => {
+  assert.equal(elapsed(0), '<1m');
+  assert.equal(elapsed(42_500), '<1m');
   assert.equal(elapsed(4 * 60_000 + 5_000), '4m');
   assert.equal(elapsed(59 * 60_000 + 59_000), '59m');
   assert.equal(elapsed(2 * 3_600_000 + 5_000), '2h');
-  assert.equal(elapsed(-5), '0s');
+  assert.equal(elapsed(-5), '<1m');
 });
 
 const NOW = 1_800_000_000_000;
@@ -188,7 +182,7 @@ test('near: who, a chip with the state and a clock, the task, and branch / PR / 
   // A second later only the clock moved.
   const next = calloutText(unit({ tier: 'near', task: 'Fix login redirect', branch: 'office/pixel-3', pr: { state: 'open', number: 12 }, model: 'claude-opus-5-5', epithet: 'the Mechanic' }), NOW + 1000);
   assert.equal(next.clock, '2m');
-  assert.equal(calloutText(unit({ tier: 'near', since: NOW - 14_000 }), NOW).clock, '14s');
+  assert.equal(calloutText(unit({ tier: 'near', since: NOW - 14_000 }), NOW).clock, '<1m');
   // Stuck: the reason in its hue in place of the meta; a lost worktree says so.
   const stuck = calloutText(unit({ tier: 'near', kind: 'stuck', level: 'stuck', reason: 'Crashed', branch: 'b' }), NOW);
   assert.equal(stuck.meta, 'Crashed');

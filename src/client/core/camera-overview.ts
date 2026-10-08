@@ -5,8 +5,8 @@
  * down are one 650 ms move (core/overview-transition.ts): from your eyes, rising and closing its field
  * of view onto the Overview's framing, handed to the orthographic camera on the frame where the two draw
  * the same picture; input is held for it, and with less motion it cuts. In it, Q and E turn the deck a
- * quarter at a time (280 ms), W A S D or the arrows or a drag pan, the wheel zooms (damped, into the
- * point under the pointer), a flight to a unit (900 ms, fast then settling) lands it in the middle of
+ * quarter at a time (280 ms), W A S D or the arrows or a drag pan, the wheel zooms (a damped glide into
+ * the point under the pointer, and zooming out past the framing, back toward its middle), a flight to a unit (900 ms, a short ease in, then fast and settling) lands it in the middle of
  * the deck you can see (past the Units rail, short of a docked Mission control), and Esc or G walks
  * again. Left alone for 8 s it drifts by half a degree and a hand's width, so the shot stays alive. A
  * window opened over it closes back to it, with no extra click. Which of the two you start in is
@@ -19,7 +19,8 @@ import { h, modalOpen } from '../ui/dom';
 import type { Ctx } from './context';
 import type { Parts } from './parts';
 import { OVERVIEW_PITCH, SIDE_YAW, allFramed, frameBox, framePose, framedPoints } from './overview-frame';
-import { FLY_MS, TRANSITION_MS, blendProjection, driftAt, easeInOutCubic, easeOutQuint, fovAlong, fovForHalfHeight, morphAt, zoomPan, zoomTierOf, zoomToward, type Drift, type ZoomTier } from './overview-transition';
+import { FLY_MS, TRANSITION_MS, blendProjection, driftAt, easeFly, easeInOutCubic, easeMove, fovAlong, fovForHalfHeight, morphAt, zoomTierOf, type Drift, type ZoomTier } from './overview-transition';
+import { WheelZoom } from './overview-wheel';
 
 /** How the camera looks down, how far back it stands, and how much of the deck fills the screen's height at zoom 1. */
 const PITCH = OVERVIEW_PITCH;
@@ -83,9 +84,8 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
   let on = false;
   let yaw = 0;
   let zoom = 1;
-  /** Where the wheel is taking the zoom, and the pointer it zooms into (px from the window's middle). */
-  let zoomGoal = 1;
-  const wheelAt = { x: 0, y: 0 };
+  /** The wheel's damped zoom (core/overview-wheel.ts). */
+  const wheel = new WheelZoom(ZOOM.min, ZOOM.max);
   const framed = framedPoints();
   /**
    * The framed pose every trip up starts from: from the starboard quarter, the dais, the tiers, the pit
@@ -100,7 +100,9 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     fly = null;
     drift = STILL;
     target.set(pose.x, 0, pose.z);
-    zoom = zoomGoal = THREE.MathUtils.clamp(pose.zoom, ZOOM.min, ZOOM.max);
+    zoom = THREE.MathUtils.clamp(pose.zoom, ZOOM.min, ZOOM.max);
+    wheel.hold(zoom);
+    Object.assign(wheel.home, { x: pose.x, z: pose.z, zoom });
   }
   let turn: { from: number; to: number; at: number } | null = null;
   let fly: { from: THREE.Vector3; to: THREE.Vector3; z0: number; z1: number; at: number } | null = null;
@@ -243,6 +245,10 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     moveCam.aspect = aspect;
     moveCam.updateProjectionMatrix();
     const m = morphAt(k);
+    // For what sizes itself by the Overview's frame on the way (the pods' labels): how far the move's
+    // projection has blended into the Overview's, and the Overview's camera it blends into.
+    moveCam.userData.morph = m;
+    moveCam.userData.overview = camera;
     if (m > 0) {
       blendProjection(moveCam.projectionMatrix.elements, camera.projectionMatrix.elements, m, moveCam.projectionMatrix.elements);
       moveCam.projectionMatrixInverse.copy(moveCam.projectionMatrix).invert();
@@ -295,7 +301,7 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     // that far to its left, along the view's right at the flight's zoom.
     const shift = (seenMiddle() * (2 * HALF_HEIGHT)) / z1 / Math.max(1, window.innerHeight);
     const to = new THREE.Vector3(x - shift * Math.cos(yaw), 0, z + shift * Math.sin(yaw));
-    zoomGoal = z1;
+    wheel.hold(z1);
     if (ctx.reduceMotion.matches) {
       target.copy(to);
       zoom = z1;
@@ -374,9 +380,7 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
       orbitSpeed = 0;
       // The wheel takes over from a flight, from where it has got to.
       fly = null;
-      zoomGoal = THREE.MathUtils.clamp(zoomGoal * Math.exp(-e.deltaY * 0.0015), ZOOM.min, ZOOM.max);
-      wheelAt.x = e.clientX - window.innerWidth / 2;
-      wheelAt.y = e.clientY - window.innerHeight / 2;
+      wheel.wheel(e.deltaY, e.clientX - window.innerWidth / 2, e.clientY - window.innerHeight / 2);
     },
     { passive: true },
   );
@@ -403,16 +407,19 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     if (orbitSpeed && !turn && !fly && !move && !still) yaw += orbitSpeed * dt;
     if (fly) {
       const k = Math.min(1, (now - fly.at) / FLY_MS);
-      const e = still ? 1 : easeOutQuint(k);
+      const e = still ? 1 : easeFly(k);
       target.lerpVectors(fly.from, fly.to, e);
       zoom = fly.z0 + (fly.z1 - fly.z0) * e;
       if (k >= 1) fly = null;
-    } else if (zoom !== zoomGoal) {
-      // The wheel: eased toward where it's taking the zoom, the point under the pointer held still.
-      const z0 = zoom;
-      zoom = still ? zoomGoal : zoomToward(zoom, zoomGoal, dt);
-      const [dx, dz] = zoomPan(wheelAt.x, wheelAt.y, z0, zoom, (2 * HALF_HEIGHT) / Math.max(1, window.innerHeight), PITCH);
-      pan(dx, dz);
+    } else if (wheel.moving(zoom)) {
+      // The wheel: a damped glide toward where it's taking the zoom, into the point under the pointer,
+      // or zooming out past the framing, back toward the framed middle.
+      const step = wheel.step(zoom, dt, still, (2 * HALF_HEIGHT) / Math.max(1, window.innerHeight), PITCH);
+      zoom = step.zoom;
+      if (step.home) {
+        target.x += (wheel.home.x - target.x) * step.home;
+        target.z += (wheel.home.z - target.z) * step.home;
+      } else pan(step.pan[0], step.pan[1]);
     }
     let mx = 0;
     let mz = 0;
@@ -434,8 +441,8 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     camera.updateMatrixWorld();
     if (!move) return;
     const k = Math.min(1, (now - move.at) / TRANSITION_MS);
-    const e = easeInOutCubic(k);
-    moveK = move.up ? e : 1 - e;
+    // Going up the ease runs forward; going down, the same quick start from the Overview's end.
+    moveK = move.up ? easeMove(k) : 1 - easeMove(k);
     placeMove(moveK, aspect, at);
     if (k < 1) return;
     const up = move.up;

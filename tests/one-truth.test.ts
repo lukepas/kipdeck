@@ -54,9 +54,12 @@ test('a row has one title, its tag as a chip, one status phrase with no time in 
   const pixel = attention(FIXTURE[0], NOW);
   const head = headline(FIXTURE[0].task, FIXTURE[0].activity);
   assert.deepEqual(head, { title: 'Pick the session store for the auth rewrite', tag: 'ask' });
-  // Its question is its title: the phrase says what it is instead of saying it twice.
-  assert.equal(statusPhrase(pixel, head.title), 'Needs an answer');
-  assert.equal(statusPhrase(attention(FIXTURE[1], NOW), 'Ship it'), 'Wants permission: Bash: npm publish');
+  // Its question is its title: the phrase says what it is instead of saying it twice, by its level's one name.
+  assert.equal(statusPhrase(pixel, head.title), 'Needs you');
+  // A phrase for one that needs someone leads with its level's name, the same word the callout's chip says.
+  assert.equal(statusPhrase(attention(FIXTURE[1], NOW), 'Ship it'), 'Needs you · Wants permission: Bash: npm publish');
+  assert.equal(statusPhrase({ level: 'review', label: 'Done' }), 'To review · Done');
+  assert.equal(statusPhrase({ level: 'stuck', label: 'Stuck' }), 'Stuck');
   assert.doesNotMatch(statusPhrase(attention(FIXTURE[3], NOW)), /\d|minute|ago/);
   assert.deepEqual([ago(0), ago(4 * 60_000), ago(2 * 3600_000), ago(3 * 86_400_000)], ['<1m', '4m', '2h', '3d']);
   assert.deepEqual(FIXTURE.map((e) => stateWord(attention(e, NOW))), ['needs you', 'permission', 'crashed', 'done', 'working', 'working']);

@@ -188,22 +188,30 @@ test('a busy pod\'s counts line fits inside its chip: nothing is painted past th
   for (const d of drawn) assert.ok(d.right <= W, `no goal: "${d.t}" runs to ${d.right.toFixed(0)} px on a ${W} px chip`);
 });
 
-test('from the Overview zoomed out a label grows so its counts read at least 11 px, never past 1.5 times; zoomed in it shrinks to 18 px; each is framed whole', async () => {
-  const { MAX_GROW, MIN_TEXT_PX, MAX_TEXT_PX, labelGrow } = await import('../src/client/features/pods/world.js');
+test('from the Overview a label reads about 11 px at any zoom: up to 2.5 times zoomed out, down to 0.6 zoomed in; each is framed whole', async () => {
+  const { MAX_GROW, MIN_GROW, MIN_TEXT_PX, labelGrow, growFor } = await import('../src/client/features/pods/world.js');
   const { OVERVIEW_PITCH, allFramed, framedPoints } = await import('../src/client/core/overview-frame.js');
+  const THREE = await import('three');
   const caps = (pxPerM: number, k: number) => 0.38 * 0.72 * LABEL.d * k * Math.sin(OVERVIEW_PITCH) * pxPerM;
-  // Close in it keeps the size it reads at, as the callouts do: never taller than MAX_TEXT_PX.
-  for (const pxPerM of [80, 120, 200]) {
+  assert.equal(MAX_GROW, 2.5);
+  assert.equal(MIN_GROW, 0.6);
+  // Zoomed right in it shrinks, never under MIN_GROW; at the deck's zoom (about 28 px a metre on a 900 px view) it grows.
+  assert.equal(labelGrow(200, OVERVIEW_PITCH), MIN_GROW);
+  for (const pxPerM of [24, 28, 34, 60]) {
     const k = labelGrow(pxPerM, OVERVIEW_PITCH);
-    assert.ok(k < 1 && Math.abs(caps(pxPerM, k) - MAX_TEXT_PX) < 1e-6, `${caps(pxPerM, k)} px at ${pxPerM} px/m`);
-  }
-  // At the deck's zoom (about 28 px a metre on a 900 px view) it grows.
-  for (const pxPerM of [24, 28, 34]) {
-    const k = labelGrow(pxPerM, OVERVIEW_PITCH);
-    assert.ok(k > 1 && k <= MAX_GROW);
-    assert.ok(caps(pxPerM, k) >= MIN_TEXT_PX - 1e-9 || k === MAX_GROW, `${caps(pxPerM, k)} px at ${pxPerM} px/m`);
+    assert.ok(k >= MIN_GROW && k <= MAX_GROW);
+    assert.ok(Math.abs(caps(pxPerM, k) - MIN_TEXT_PX) < 1e-6, `${caps(pxPerM, k)} px at ${pxPerM} px/m`);
   }
   assert.equal(labelGrow(5, OVERVIEW_PITCH), MAX_GROW);
+  // Walking it's its own size; on the move up it blends into the Overview's size as the projection does.
+  const walk = new THREE.PerspectiveCamera(60, 1.6, 0.1, 400);
+  assert.equal(growFor(walk, 900), 1);
+  const ov = new THREE.OrthographicCamera(-25, 25, 16, -16, 0.1, 400);
+  const landed = growFor(ov, 900);
+  walk.userData = { overview: ov, morph: 0.5 };
+  assert.ok(Math.abs(growFor(walk, 900) - (1 + (landed - 1) * 0.5)) < 1e-9, 'half way through the blend, half way to its size up there');
+  walk.userData = { overview: ov, morph: 1 };
+  assert.equal(growFor(walk, 900), landed, 'the hand-over frame is the same size');
   // The pods add their labels to what every trip up frames (index.ts), past the base points.
   const src = (await import('node:fs')).readFileSync(new URL('../src/client/features/pods/index.ts', import.meta.url), 'utf8');
   assert.match(src, /frameAlso\(labelCorners\(letter\)/);
@@ -219,6 +227,29 @@ test('a label hides while any of it is under the Units rail, and fades back in c
   assert.equal(railAlpha(box(400), 264), 1);
   // No rail (folded): always shows.
   assert.equal(railAlpha(box(10), 0), 1);
+});
+
+test('the pod zones lie face up and draw one side only: one draw call, not two', async () => {
+  const { makeZones, faceUp } = await import('../src/client/features/pods/zone.js');
+  const THREE = await import('three');
+  const z = makeZones(POD_LETTERS, POD_HUE_NONE);
+  const mesh = z.group.children[0] as InstanceType<typeof THREE.Mesh>;
+  assert.equal((mesh.material as InstanceType<typeof THREE.MeshBasicMaterial>).side, THREE.FrontSide);
+  const pos = mesh.geometry.getAttribute('position');
+  const idx = mesh.geometry.getIndex()!;
+  for (let t = 0; t < idx.count; t += 3) {
+    const [a, b, c] = [idx.getX(t), idx.getX(t + 1), idx.getX(t + 2)];
+    const ny = (pos.getZ(b) - pos.getZ(a)) * (pos.getX(c) - pos.getX(a)) - (pos.getX(b) - pos.getX(a)) * (pos.getZ(c) - pos.getZ(a));
+    assert.ok(ny >= -1e-9, `triangle ${t / 3} faces down`);
+  }
+  // A triangle wound downward is turned over; one wound up is left alone.
+  const tri = [0, 0, 0, 1, 0, 0, 0, 0, 1];
+  const down = [0, 1, 2];
+  faceUp(tri, down);
+  assert.deepEqual(down, [0, 2, 1]);
+  const up = [0, 2, 1];
+  faceUp(tri, up);
+  assert.deepEqual(up, [0, 2, 1]);
 });
 
 test('every pod zone, fill and outline, is one mesh: one draw for all four', async () => {

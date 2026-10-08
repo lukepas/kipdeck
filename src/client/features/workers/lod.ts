@@ -9,7 +9,7 @@
 // world/character/callout-view.ts animates it and features/workers/views.ts picks the tier each frame.
 
 import type { AttentionLevel } from '../../../shared/attention';
-import { splitTag, statusPhrase } from '../../../shared/rowtext';
+import { STATE_NAME, splitTag, statusDetail } from '../../../shared/rowtext';
 
 export type CalloutTier = 'far' | 'mid' | 'near';
 
@@ -25,8 +25,6 @@ export const OVERVIEW_BOUNDS: TierBounds = { far: 13, near: 6 };
 export const WALK_BOUNDS: TierBounds = { far: 14, near: 5 };
 /** How far past a boundary (a fraction of it) the view has to go before the tier changes back. */
 export const HYSTERESIS = 0.1;
-
-const ORDER: Record<CalloutTier, number> = { far: 0, mid: 1, near: 2 };
 
 /** The tier at `v` meters for `bounds`, staying at `prev` until `v` is HYSTERESIS past the boundary it crosses. */
 export function tierAt(v: number, bounds: TierBounds, prev?: CalloutTier): CalloutTier {
@@ -49,26 +47,27 @@ export interface TierView {
 }
 
 /**
- * What lifts a unit's floor: a selected one is never smaller than a line. One that needs you or is
- * stuck is never a bare tab either, but from far off it stays a tab with its call sign beside it
- * (callout-view.ts) rather than a whole line, which would pile onto its neighbours' tabs and fold
- * into a "2 units" chip that hides it.
+ * What sets a unit's tier besides the view. The selected unit shows its one line (glyph, call sign,
+ * what it's doing) at any distance: never a bare tab, and never its whole card either, which up close
+ * would cover the unit itself and only repeat the selection card (features/selection). One that needs
+ * you or is stuck is never a bare tab either, but from far off it stays a tab with its call sign beside
+ * it (callout-view.ts) rather than a whole line, which would pile onto its neighbours' tabs and fold
+ * into a "2 units" chip that hides it. While the view moves up into the Overview or back down, every
+ * callout is a tab (`moving`), so no card flashes across the screen mid-move.
  */
 export interface TierFloor {
   selected?: boolean;
-  /**
-   * The Overview's zoom tier (core/overview-transition.ts): zoomed in to a pod or a unit, the selected
-   * unit shows its whole card, so it reads as "this one" against its neighbours' lines.
-   */
+  /** The Overview's zoom tier (core/overview-transition.ts), for modules that show more up close. */
   zoom?: 'deck' | 'pod' | 'unit';
+  /** The move up into the Overview, or back down, is under way. */
+  moving?: boolean;
 }
 
 /** A unit's callout tier this frame, given the one it had (`prev`, for the hysteresis). */
 export function tierFor(view: TierView, prev?: CalloutTier, floor: TierFloor = {}): CalloutTier {
-  const tier = view.ortho ? tierAt((view.ortho.top - view.ortho.bottom) / 2, OVERVIEW_BOUNDS, prev) : tierAt(view.distance, WALK_BOUNDS, prev);
-  if (!floor.selected) return tier;
-  const least: CalloutTier = view.ortho && (floor.zoom === 'pod' || floor.zoom === 'unit') ? 'near' : 'mid';
-  return ORDER[tier] < ORDER[least] ? least : tier;
+  if (floor.selected) return 'mid';
+  if (floor.moving) return 'far';
+  return view.ortho ? tierAt((view.ortho.top - view.ortho.bottom) / 2, OVERVIEW_BOUNDS, prev) : tierAt(view.distance, WALK_BOUNDS, prev);
 }
 
 /**
@@ -202,7 +201,7 @@ export function permissionAsk(o: { activity?: string; label?: string }): string 
 
 /**
  * The middle tier's words after the call sign: what it's doing now while it works or waits on you (its
- * latest tool call or prompt), else the ranking's status phrase (shared/rowtext.ts). A permission wait
+ * latest tool call or prompt), else the ranking's label, or its level's name (shared/rowtext.ts). A permission wait
  * says what you'd allow, as a question ("Allow npm publish?"), not the hook's own words.
  */
 export function midLine(raw: { activity?: string; level: AttentionLevel; label?: string; title?: string }): string {
@@ -213,7 +212,9 @@ export function midLine(raw: { activity?: string; level: AttentionLevel; label?:
     if (ask) return `Allow ${clip(ask.replace(/^[A-Za-z][\w.-]{0,30}:\s*/, '') || ask, MID_MAX - 7)}?`;
   }
   if (o.activity?.trim() && (o.level === 'working' || o.level === 'needs-you')) return activityLine(o.activity);
-  return clip(statusPhrase({ level: o.level, label: o.label ?? '' }, o.title), MID_MAX);
+  // The glyph's hue beside it says the state: the line says what about it ("Done: PR ready"), or its name.
+  const att = { level: o.level, label: o.label ?? '' };
+  return clip(statusDetail(att, o.title) || STATE_NAME[o.level], MID_MAX);
 }
 
 /**

@@ -8,11 +8,14 @@
  * that slid sideways clear of the others, a hairline tying it back to its unit. A shrunk callout grows
  * back to its full card only once there is GROW_ROOM to spare, so it doesn't flick between the two as
  * the view drifts. A callout that would run off the side of the view, or under the Units rail, slides
- * back in. From the Overview the pods' ground labels (features/pods) are placed first, as fixed
- * obstacles, so a callout lifts or shrinks clear of a label rather than sitting on its words. Then none
- * covers a wall board: one that would docks under that board's lower bezel, or stands down (dock.ts):
- * never left half faded over another card. One that needs someone and finds no slot stays over the
- * board rather than going. The
+ * back in. From the Overview some boxes are there before any callout and every callout keeps clear of
+ * them the same way: the pods' ground labels (features/pods), and the bodies of the units that must show,
+ * so no callout sits on a pod's words or on a unit that needs you. A callout that must show and was
+ * lifted more than half its height, or slid sideways, gets a hairline in its state's hue back to its
+ * unit, so a stack of needs-you chips over a pod still says whose is whose. Then none covers a wall
+ * board: one that would docks under that board's lower bezel, or stands down (dock.ts): never left half
+ * faded over another card. One that needs someone and finds no slot stays over the board rather than
+ * going. The
  * placing itself is declutter(), nudge() and dock(), with nothing to draw, so the tests run them.
  */
 import * as THREE from 'three';
@@ -121,7 +124,7 @@ function clearLift(b: LabelBox, placed: Box[], limit: number): number | null {
  * with a small lift (a shrunk one needs GROW_ROOM to spare as well), else its call sign, else (one that
  * needs nobody) nothing. One that must show and fits nowhere takes its call sign lifted up to
  * MAX_LIFT, else slid sideways clear (sideStep); only when even that finds no room does it cover another.
- * `fixed` are boxes already there that every callout keeps clear of the same way (the pods' ground labels).
+ * `fixed` are boxes already there that every callout keeps clear of the same way (pod labels, units' bodies).
  */
 export function declutter(labels: readonly Label[], fixed: readonly Box[] = []): Placed[] {
   const placed: Box[] = [...fixed];
@@ -172,6 +175,9 @@ export function nudge(b: LabelBox, left: number, right: number): number {
 /** How close (m) you are to a unit for its own callout to keep its place over its card on the board. */
 const AT_UNIT = 4;
 
+/** Half a unit's width (m) on screen, for the box its body takes that other callouts keep off. */
+const BODY_HALF_W = 0.4;
+
 /** How wide the compass's marks down the left edge of the view are, with a gap (px, ui/compass.ts). */
 const COMPASS_W = 96;
 
@@ -199,8 +205,15 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
   // After the units have moved and sized their callouts ('others'), before the frame is drawn.
   const slot = new THREE.Vector3();
   /** The last frame's placing, for the shots and the console (window.__world.declutter). */
-  let last: { sign: string; label: Label; placed: Placed }[] = [];
-  debugHandle('declutter', { last: () => last });
+  let lastShown: readonly { model: Worker; label: Label }[] = [];
+  let lastPlaced: readonly Placed[] = [];
+  let lastFixed: readonly Box[] = [];
+  // Built only when read, so there's nothing to throw away each frame when nobody is looking.
+  debugHandle('declutter', { last: () => lastShown.map((s, i) => ({ sign: s.model.callSign, label: s.label, placed: lastPlaced[i] })), fixed: () => lastFixed });
+  /** The boxes callouts keep clear of this frame (reused). */
+  const fixed: Box[] = [];
+  const bodies: Box[] = [];
+  const foot = new THREE.Vector3();
   ctx.ticks.add('hud', ({ now, dt }) => {
     const camera = parts.stage.view ?? ctx.camera;
     if (now - measured > 1000) {
@@ -251,6 +264,7 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
         m.setLift(0);
         m.setMode('hidden');
         m.setNudge(0);
+        m.setTie(false);
         m.dock(null, 1, dt);
         continue;
       }
@@ -258,6 +272,7 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
         m.setLift(0);
         m.setMode('full');
         m.setNudge(0);
+        m.setTie(false);
         m.dock(null, 1, dt);
         continue;
       }
@@ -276,6 +291,7 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
         m.setLift(0);
         m.setMode('full');
         m.setNudge(0);
+        m.setTie(false);
         m.dock(null, 1, dt);
         continue;
       }
@@ -315,6 +331,7 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
         g.model.setMode('hidden');
         g.model.setLift(0);
         g.model.setNudge(0);
+        g.model.setTie(false);
         g.model.dock(null, 1, dt);
       }
     });
@@ -324,14 +341,34 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
     shown.length = 0;
     shown.push(...free);
     shown.sort((a, b) => a.rank - b.rank || a.d - b.d);
-    // From the Overview the pods' ground labels are there first: callouts keep off their words.
-    const fixed = overview ? (ctx.office.pods?.boxes() ?? []).map((b) => ({ x: b.left, top: b.top, bottom: b.bottom, w: b.right - b.left })) : [];
+    // Fixed first: from the Overview the pods' ground labels, and the bodies of the units that must show.
+    fixed.length = 0;
+    if (overview) for (const b of ctx.office.pods?.boxes(camera, W, H) ?? []) fixed.push({ x: b.left, top: b.top, bottom: b.bottom, w: b.right - b.left });
+    // (Walking, a unit's body is large on screen up close: there it would push every neighbour's callout away.)
+    if (overview) shown.forEach((s, i) => {
+      if (!s.label.keep) return;
+      // From under its callout's own place down to its foot, as wide as the unit.
+      foot.copy(s.model.where(at)).project(camera);
+      const half = BODY_HALF_W * s.pxPerM;
+      const b = (bodies[i] ??= { x: 0, top: 0, bottom: 0, w: 0 });
+      b.x = s.anchorX - half;
+      b.w = 2 * half;
+      b.top = s.label.full.bottom + GAP;
+      b.bottom = Math.max(b.top + 1, ((1 - foot.y) / 2) * H);
+      fixed.push(b);
+    });
     const placed = declutter(shown.map((s) => s.label), fixed);
-    last = shown.map((s, i) => ({ sign: s.model.callSign, label: s.label, placed: placed[i] }));
+    lastShown = shown.slice();
+    lastPlaced = placed;
+    lastFixed = fixed;
+    Worker.right.set(1, 0, 0).applyQuaternion(camera.quaternion);
     const slid = shown.map((s, i) => {
       const { mode, lift, dx } = placed[i];
       s.model.setMode(mode);
       s.model.setLift(lift / s.pxPerM);
+      // A stacked or slid chip that must show keeps a hairline back to its unit.
+      const h = mode === 'compact' ? s.label.compact.h : s.label.full.h;
+      s.model.setTie(s.label.keep && mode !== 'hidden' && (lift > h / 2 || dx !== 0));
       const at = mode === 'compact' ? s.label.compact : s.label.full;
       const b = { ...at, x: at.x + dx };
       // Only a callout whose unit is in view slides in: one whose unit is off the side, or under the

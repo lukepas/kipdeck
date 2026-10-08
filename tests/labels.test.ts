@@ -99,3 +99,23 @@ test('a pile of three or fewer names its call signs; a bigger one counts', async
   assert.equal(pileWord(['working', 'working'], ['A-03', '']), '2 working');
   assert.equal(pileWord(['working', 'needs-you']), '2 units');
 });
+
+test("callouts keep off what's already there: a pod's ground label and the body of a unit that needs you", () => {
+  // The pod label "C 2 working" lies right where C-01's callout would go; a needs-you unit's body stands
+  // under where a neighbour's callout would land.
+  const podLabel = { x: 80, top: 70, bottom: 100, w: 200 };
+  const body = { x: 300, top: 60, bottom: 140, w: 40 };
+  const ls = [label(100, 100, true), label(280, 100, false)];
+  const out = declutter(ls, [podLabel, body]);
+  ls.forEach((l, i) => {
+    if (out[i].mode === 'hidden') return;
+    const b = placedBox(l, out[i]);
+    assert.ok(!overlaps(b, podLabel), `${i} sits on the pod label`);
+    assert.ok(!overlaps(b, body), `${i} sits on the unit's body`);
+  });
+  // The one that must show still shows, lifted clear rather than hidden.
+  assert.notEqual(out[0].mode, 'hidden');
+  assert.ok(out[0].lift > 0);
+  // With nothing there, it stays put.
+  assert.equal(declutter([label(100, 100, true)])[0].lift, 0);
+});

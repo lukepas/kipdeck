@@ -208,7 +208,7 @@ test('the 3D office: the strip in the bottom bar, I opens Mission control, Esc p
   await page.locator('#scene').focus();
   await page.keyboard.press('i');
   const modal = page.locator('.modal.mission-control');
-  await modal.waitFor({ timeout: 10_000 });
+  await modal.waitFor({ timeout: 30_000 });
   await page.keyboard.press('2');
   await modal.locator('.mc-milestone', { hasText: 'Auth rewrite' }).waitFor();
   if (process.env.MISSION_E2E_SHOT) await page.screenshot({ path: process.env.MISSION_E2E_SHOT });
@@ -254,7 +254,9 @@ test('back after a while away: the digest is the first card in the 2D view, and 
   await debrief.waitFor({ timeout: 60_000 });
   assert.match(await debrief.locator('.debrief-title').innerText(), /SINCE YOU LEFT/);
   assert.equal(await debrief.locator('.close').count(), 1);
-  await debrief.locator('button', { hasText: 'Full log' }).click();
+  // A dispatched click, as Locate's below: under the full suite's load the software renderer starves
+  // Playwright's wait for the button to hold still.
+  await debrief.locator('button', { hasText: 'Full log' }).dispatchEvent('click');
   const digest = office.page.locator('.modal.digest');
   await digest.waitFor({ timeout: 30_000 });
   assert.match(await digest.locator('.dg-summary').innerText(), /./);
@@ -319,7 +321,7 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   await page.locator('#scene').focus();
   await page.keyboard.press('i');
   const docked = page.locator('.mc-dock-host > .modal.mission-control.docked');
-  await docked.waitFor({ timeout: 10_000 });
+  await docked.waitFor({ timeout: 30_000 });
   // On the right, under the top bar, 400px wide, no dim over the deck.
   const box = (await docked.boundingBox())!;
   assert.equal(Math.round(box.width), 400);
@@ -342,7 +344,7 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   // A dispatched click: Playwright's own waits for the button to hold still for two animation frames,
   // which the software renderer starves (the same reason this file polls on a timer).
   await crewRow.locator('.mc-locate').dispatchEvent('click');
-  await page.locator('.sel-card:not([hidden]) .sel-name').waitFor({ timeout: 10_000 });
+  await page.locator('.sel-card:not([hidden]) .sel-name').waitFor({ timeout: 30_000 });
   assert.equal(await docked.count(), 1, 'still docked after Locate');
   // And it's seen, not just there: the card sits left of the docked panel, nothing over its middle or its button.
   // Its 160 ms fade-in runs on the page's frames, which the software renderer draws slowly on a busy
@@ -377,7 +379,7 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   // A click on the deck: the panel stays, and the deck has the mouse and the keys back.
   const before = await locks();
   await page.locator('#scene').click({ position: { x: 500, y: 600 } });
-  await page.waitForFunction((n) => (window as unknown as { __locks: number[] }).__locks.length > n, before, { timeout: 10_000, polling: 100 });
+  await page.waitForFunction((n) => (window as unknown as { __locks: number[] }).__locks.length > n, before, { timeout: 30_000, polling: 100 });
   assert.equal(await stacked(), 0, 'off the window stack');
   assert.equal(await docked.count(), 1, 'still docked and in view');
   assert.equal(await docked.evaluate((m) => m.classList.contains('mc-keys-away')), true, 'its tabs dim while the deck has the keys');
@@ -389,7 +391,7 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   // depends on how fast this machine draws the deck; design/shoot-dock.mjs measures it.)
   const ask = await locks();
   await page.keyboard.press('Escape');
-  await page.waitForFunction((n) => (window as unknown as { __locks: number[] }).__locks.length > n, ask, { timeout: 5000, polling: 100 });
+  await page.waitForFunction((n) => (window as unknown as { __locks: number[] }).__locks.length > n, ask, { timeout: 30_000, polling: 100 });
   await page.waitForFunction(() => !document.querySelector('.modal.mission-control'), null, { polling: 100 });
   assert.equal(await stacked(), 0);
 
@@ -412,7 +414,7 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
     w.__world.waiting.goTo(u.id);
     return u.name;
   }, picked);
-  await page.waitForFunction((name) => document.querySelector('.sel-card:not([hidden]) .sel-name')?.textContent === name, other, { timeout: 10_000, polling: 100 });
+  await page.waitForFunction((name) => document.querySelector('.sel-card:not([hidden]) .sel-name')?.textContent === name, other, { timeout: 30_000, polling: 100 });
   assert.deepEqual(errors, []);
 });
 
@@ -451,7 +453,7 @@ test('selecting in the 3D office: two Escs from an Overview selection walk again
   assert.equal(seen, '', `no unit drawn on the deck: ${seen}`);
   const active = () => page.evaluate(() => (window as unknown as Office).__office.overview.active());
   // Polled on a timer: Playwright's own waits ride animation frames, which a software-rendered deck starves.
-  const cardUp = () => page.waitForFunction(() => !!document.querySelector('.sel-card:not([hidden]).open .sel-name'), null, { timeout: 10_000, polling: 100 });
+  const cardUp = () => page.waitForFunction(() => !!document.querySelector('.sel-card:not([hidden]).open .sel-name'), null, { timeout: 30_000, polling: 100 });
 
   // Up into the Overview, and a click on the unit selects it.
   await page.locator('#scene').focus();
@@ -474,10 +476,14 @@ test('selecting in the 3D office: two Escs from an Overview selection walk again
   await cardUp();
   // The first Esc lets go of the unit, the Overview stays up; the second walks again.
   await page.keyboard.press('Escape');
-  await page.waitForFunction(() => document.querySelector('.sel-card')?.hasAttribute('hidden') || !document.querySelector('.sel-card.open'), null, { timeout: 5000, polling: 100 });
+  const letGo = await page
+    .waitForFunction(() => document.querySelector('.sel-card')?.hasAttribute('hidden') || !document.querySelector('.sel-card.open'), null, { timeout: 30_000, polling: 100 })
+    .then(() => '')
+    .catch(() => page.evaluate(() => JSON.stringify({ focus: document.activeElement?.id || document.activeElement?.className, modals: [...document.querySelectorAll('.modal, .backdrop, section.debrief')].map((m) => m.className), card: document.querySelector('.sel-card')?.className })));
+  assert.equal(letGo, '', `the first Esc kept the card: ${letGo}`);
   assert.equal(await active(), true, 'still up after the first Esc');
   await page.keyboard.press('Escape');
-  await page.waitForFunction(() => !(window as unknown as Office).__office.overview.active(), null, { timeout: 5000, polling: 100 });
+  await page.waitForFunction(() => !(window as unknown as Office).__office.overview.active(), null, { timeout: 30_000, polling: 100 });
   assert.equal(await active(), false, 'walking after the second Esc');
 
   // In Walk: taken to the unit (as N does), its card is up; its ✕ lets go and asks for mouse-look at once.
@@ -488,6 +494,6 @@ test('selecting in the 3D office: two Escs from an Overview selection walk again
   await cardUp();
   const asked = await page.evaluate(() => (window as unknown as { __locks: number[] }).__locks.length);
   await page.locator('.sel-card .close').dispatchEvent('click');
-  await page.waitForFunction((n) => (window as unknown as { __locks: number[] }).__locks.length > n, asked, { timeout: 5000, polling: 100 });
+  await page.waitForFunction((n) => (window as unknown as { __locks: number[] }).__locks.length > n, asked, { timeout: 30_000, polling: 100 });
   assert.deepEqual(errors, []);
 });

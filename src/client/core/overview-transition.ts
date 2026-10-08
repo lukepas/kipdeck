@@ -12,31 +12,102 @@
 export const TRANSITION_MS = 650;
 /**
  * How long a flight to a unit takes (ms): longer than the move, on an ease that gets most of the way
- * fast and then settles (easeOutQuint), so a click lands at once and the frame comes to rest gently.
+ * fast and then settles (easeFly), so a click lands at once and the frame comes to rest gently.
  */
 export const FLY_MS = 900;
 /** Where along the move (k) the projection starts to blend into the orthographic one. */
 export const MORPH_FROM = 0.6;
 
-/** Slow out, fast through the middle, slow in. */
+/** Slow out, fast through the middle, slow in (a quarter turn). */
 export function easeInOutCubic(k: number): number {
   const t = Math.min(1, Math.max(0, k));
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 }
 
-/** Fast away, then a long settle: the flight to a unit. */
+/** Fast away, then a long settle. */
 export function easeOutQuint(k: number): number {
   const t = Math.min(1, Math.max(0, k));
   return 1 - (1 - t) ** 5;
 }
 
 /**
- * The wheel's zoom, damped: `zoom` eased toward `goal` over `dt` seconds (about 70 ms to close two
- * thirds of the way), never past it.
+ * CSS's cubic-bezier(x1, y1, x2, y2) as an ease of k (0-1): x solved for k by Newton's method (a
+ * bisection when that stalls), then y at it.
  */
-export function zoomToward(zoom: number, goal: number, dt: number): number {
-  const next = zoom + (goal - zoom) * (1 - Math.exp(-dt * 14));
-  return Math.abs(goal - next) < 1e-4 ? goal : next;
+export function cubicBezier(x1: number, y1: number, x2: number, y2: number): (k: number) => number {
+  const at = (a: number, b: number, t: number) => 3 * a * t * (1 - t) ** 2 + 3 * b * t * t * (1 - t) + t ** 3;
+  const slope = (a: number, b: number, t: number) => 3 * a * (1 - t) ** 2 + 6 * (b - a) * t * (1 - t) + 3 * (1 - b) * t * t;
+  return (k) => {
+    const x = Math.min(1, Math.max(0, k));
+    if (x === 0 || x === 1) return x;
+    let t = x;
+    for (let i = 0; i < 8; i++) {
+      const d = slope(x1, x2, t);
+      if (Math.abs(d) < 1e-6) break;
+      t -= (at(x1, x2, t) - x) / d;
+    }
+    if (!(t >= 0 && t <= 1) || Math.abs(at(x1, x2, t) - x) > 1e-5) {
+      let lo = 0;
+      let hi = 1;
+      for (let i = 0; i < 40; i++) {
+        t = (lo + hi) / 2;
+        if (at(x1, x2, t) < x) lo = t;
+        else hi = t;
+      }
+    }
+    return at(y1, y2, t);
+  };
+}
+
+/**
+ * The move up into the Overview and back down: under way on the first frame, its fastest stretch
+ * early, then a long settle onto the framing (the shafts and the gloss follow progress(), so a quick
+ * start no longer flashes them).
+ */
+export const easeMove = cubicBezier(0.3, 0, 0.15, 1);
+
+/**
+ * A flight to a unit: a short ease in over its first 60-80 ms, so its first frame doesn't jump at five
+ * times its average speed, then fast and a long settle.
+ */
+export const easeFly = cubicBezier(0.25, 0.1, 0, 1);
+
+/** How stiff the wheel's zoom spring is (per second squared): critically damped, most of the way in about 300 ms. */
+export const ZOOM_SPRING = 120;
+
+/**
+ * The wheel's zoom on a critically damped spring: `zoom` moving at `vel` (per second) pulled toward
+ * `goal` over `dt` seconds, worked out exactly (no step size to go unstable on a slow frame). Each
+ * wheel notch moves the goal; the speed carries over, so a run of notches is one smooth glide rather
+ * than a step at each. It lands exactly, and never overshoots from rest.
+ */
+export function zoomSpring(zoom: number, vel: number, goal: number, dt: number, k = ZOOM_SPRING): [number, number] {
+  const w = Math.sqrt(k);
+  const c1 = zoom - goal;
+  const c2 = vel + w * c1;
+  const e = Math.exp(-w * dt);
+  const next = goal + (c1 + c2 * dt) * e;
+  const v = (c2 - w * (c1 + c2 * dt)) * e;
+  // Within 0.002 of the goal (well under a pixel) and nearly still: there.
+  return Math.abs(goal - next) < 2e-3 && Math.abs(v) < 2e-2 ? [goal, 0] : [next, v];
+}
+
+/**
+ * How much of the way back to the framed middle the view goes as the wheel zooms out from `z0` to `z1`
+ * below the framed zoom `home` (0-1): nothing zooming in or above the framing, and all of it by the
+ * time the zoom reaches `min`, so zoomed right out the deck sits whole in the middle of the free view
+ * rather than drifted off into a corner after the pointer.
+ */
+export function pullHome(z0: number, z1: number, home: number, min: number): number {
+  if (z1 >= z0 || z1 >= home) return 0;
+  const from = Math.min(z0, home);
+  if (from <= min) return 1;
+  return Math.min(1, Math.max(0, (from - z1) / (from - min)));
+}
+
+/** The least the wheel zooms out: 60% of the framed zoom, so the deck still fills most of the free view (never past ZOOM.min's floor, nor above the framing). */
+export function zoomFloor(home: number, least: number): number {
+  return Math.min(home, Math.max(least, home * 0.6));
 }
 
 /**

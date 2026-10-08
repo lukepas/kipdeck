@@ -30,9 +30,9 @@ test('the inspector offers the one button each state asks for', () => {
   }
 });
 
-test('the card clock counts seconds while it is short', () => {
-  assert.equal(elapsed(-5), '0s');
-  assert.equal(elapsed(42_000), '42s');
+test("the card's clock is the deck's one clock: '<1m' under a minute, never ticking by the second", () => {
+  assert.equal(elapsed(-5), '<1m');
+  assert.equal(elapsed(42_000), '<1m');
   assert.equal(elapsed(4 * 60_000 + 7_000), '4m');
   assert.equal(elapsed(2 * 3_600_000 + 5 * 60_000), '2h');
   assert.equal(elapsed(76 * 3_600_000), '3d');
