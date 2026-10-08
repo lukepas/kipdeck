@@ -314,42 +314,59 @@ function readyLine(): SVGElement {
   return g;
 }
 
+/** A zone name on the plan: where its baseline sits (deck metres) and how it is anchored. */
+export interface PlanLabel {
+  x: number;
+  y: number;
+  text: string;
+  cls: string;
+  anchor: 'start' | 'middle' | 'end';
+}
+
+/**
+ * The names on the situation arc and the Proof corner. Each wing's two panels hang one over the other,
+ * so their names stack behind the wing (the upper panel's further back). The capacity strip runs
+ * along the foot of the Attention board, so its name sits under ATTENTION. The Proof corner's names
+ * are there only with Proof of Merge on (`proof`).
+ */
+export function planLabels(proof = true): PlanLabel[] {
+  const out: PlanLabel[] = [];
+  const behind = (b: { x: number; z: number; rotY: number }, d: number) => ({ x: b.x - Math.sin(b.rotY) * d, y: b.z - Math.cos(b.rotY) * d + 0.2 });
+  const anchorOf = (x: number) => (x < -1 ? 'end' : x > 1 ? 'start' : 'middle');
+  for (const [upper, lower] of [[BOARDS.issues, BOARDS.queue], [BOARDS.pulls, BOARDS.services]] as const) {
+    const up = behind(upper, 1.35);
+    const lo = behind(lower, 0.75);
+    out.push({ ...up, text: upper === BOARDS.pulls ? 'PRS' : upper.label.toUpperCase(), cls: '', anchor: anchorOf(upper.x) });
+    out.push({ ...lo, text: lower.label.toUpperCase(), cls: '', anchor: anchorOf(lower.x) });
+  }
+  const tv = behind(TV, 0.75);
+  out.push({ ...tv, text: 'ATTENTION', cls: 'attention', anchor: 'middle' });
+  const m = MACHINE_MONITOR;
+  out.push({ x: m.x, y: m.z + 0.75, text: 'CAPACITY', cls: '', anchor: 'middle' });
+  if (!proof) return out;
+  const { rail, vault, plinth } = PROOF_CORNER;
+  out.push({ x: FLOOR.minX + 0.7, y: rail.z + 0.2, text: 'PROOF', cls: 'proof', anchor: 'start' });
+  out.push({ x: vault.x + 0.9, y: vault.z + 0.2, text: 'ESCROW', cls: 'proof', anchor: 'start' });
+  out.push({ x: plinth.x + 1.05, y: plinth.z + 0.2, text: 'ERC-8004', cls: 'proof', anchor: 'start' });
+  return out;
+}
+
 /** The situation wall and its boards, the Proof corner, the Review bay, the Standby bench and the Deck lift. */
 function zones(proof: boolean): SVGElement {
   const g = el('g', { class: 'p-zones' });
   const label = (x: number, y: number, s: string, cls = '', anchor = 'middle') => text(x, y, `p-zone-t ${cls}`.trim(), s, { 'text-anchor': anchor });
-  // The situation wall: each panel a line along its face, its name on the table's side of it.
-  const facets: [{ x: number; z: number; rotY: number; width: number }, string, string][] = [
-    [BOARDS.issues, 'ISSUES', ''],
-    [BOARDS.queue, 'QUEUE', ''],
-    [TV, 'ATTENTION', 'attention'],
-    [BOARDS.pulls, 'PRS', ''],
-    [BOARDS.services, 'SERVICES', ''],
-  ];
-  // Panels whose names would land on top of each other (two faces of one wall) stack a line apart, away from the wall.
-  const names: { x: number; z: number; at: { x: number; z: number }; text: string; cls: string; anchor: string }[] = [];
-  for (const [b, name, cls] of facets) {
+  // The situation wall: a line along each panel's face. A wing's two panels hang one over the other,
+  // so in plan they share a line and their names stack behind it, the upper one further back.
+  const panels = [BOARDS.issues, BOARDS.pulls, TV];
+  for (const b of panels) {
     const tx = Math.cos(b.rotY);
     const tz = -Math.sin(b.rotY);
-    const nx = Math.sin(b.rotY);
-    const nz = Math.cos(b.rotY);
     const h = b.width / 2 - 0.1;
-    g.append(el('line', { x1: r(b.x - tx * h), y1: r(b.z - tz * h), x2: r(b.x + tx * h), y2: r(b.z + tz * h), class: `p-board ${cls}`.trim() }));
-    // Its name behind it, in the aisle between the wall and the deck's edge, running away from the
-    // table so it clears the line and the pods' letters.
-    const anchor = b.x < -1 ? 'end' : b.x > 1 ? 'start' : 'middle';
-    const at = { x: b.x - nx * 0.75, z: b.z - nz * 0.75 + 0.2 };
-    const stacked = names.filter((n) => n.anchor === anchor && Math.hypot(n.at.x - at.x, n.at.z - at.z) < 3);
-    const first = stacked[0];
-    names.push({ x: first ? first.x : at.x, z: first ? first.z - stacked.length * 0.9 : at.z, at, text: name, cls, anchor });
+    g.append(el('line', { x1: r(b.x - tx * h), y1: r(b.z - tz * h), x2: r(b.x + tx * h), y2: r(b.z + tz * h), class: b === TV ? 'p-board attention' : 'p-board' }));
   }
-  for (const n of names) g.append(label(n.x, n.z, n.text, n.cls, n.anchor));
-  // The capacity panel on the west wall, and the Proof corner beside it (the violet rail, the vault
-  // and the plinth) with Proof of Merge on.
-  const m = MACHINE_MONITOR;
-  g.append(el('line', { x1: FLOOR.minX + 0.2, y1: m.z - m.width / 2, x2: FLOOR.minX + 0.2, y2: m.z + m.width / 2, class: 'p-board' }));
-  g.append(label(FLOOR.minX + 0.7, m.z + 0.2, 'CAPACITY', '', 'start'));
-  if (proof) proofCorner(g, label);
+  for (const l of planLabels(proof)) g.append(label(l.x, l.y, l.text, l.cls, l.anchor));
+  // The Proof corner on the west wall, with Proof of Merge on.
+  if (proof) proofCorner(g);
   // The Review bay: smoked glass along its front (the door in it) and its side, and its table.
   const mr = MEETING_ROOM;
   const fz = mr.front.z;
@@ -373,16 +390,13 @@ function zones(proof: boolean): SVGElement {
   return g;
 }
 
-/** The Proof corner (Labs > Proof of Merge): the violet rail, the escrow vault and the ERC-8004 plinth. */
-function proofCorner(g: SVGGElement, label: (x: number, y: number, s: string, cls?: string, anchor?: string) => SVGTextElement) {
+/** The Proof corner (Labs > Proof of Merge): the violet rail, the escrow vault and the ERC-8004 plinth. Its names are in planLabels. */
+function proofCorner(g: SVGGElement) {
   const { rail, vault, plinth } = PROOF_CORNER;
   g.append(el('rect', { x: FLOOR.minX + 0.1, y: rail.z - 0.5, width: 0.3, height: 1, class: 'p-proof' }));
-  g.append(label(FLOOR.minX + 0.7, rail.z + 0.2, 'PROOF', 'proof', 'start'));
   g.append(el('rect', { x: vault.x - vault.depth / 2, y: vault.z - vault.width / 2, width: vault.depth, height: vault.width, class: 'p-proof-line' }));
-  g.append(label(vault.x + 0.9, vault.z + 0.2, 'ESCROW', 'proof', 'start'));
   for (let i = 0; i < plinth.steps; i++) {
     const w = plinth.width - i * 0.28;
     g.append(el('rect', { x: r(plinth.x - w / 2), y: r(plinth.z - w / 2), width: r(w), height: r(w), class: 'p-proof-line' }));
   }
-  g.append(label(plinth.x + 1.05, plinth.z + 0.2, 'ERC-8004', 'proof', 'start'));
 }
