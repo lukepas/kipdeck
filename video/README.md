@@ -1,4 +1,4 @@
-# PROOF OF MERGE - UGC Army, 30 s
+# PROOF OF MERGE - Kipdeck, 30 s
 
 The launch film, drawn frame by frame in code. One page (`src/index.html`) renders any frame from a time value. `render.mjs` steps through the frames in headless Chromium and encodes them with the soundtrack. The film has no stock footage, no bitmaps and no AI imagery. The fonts are OFL and the music is synthesized in `audio/`.
 
@@ -8,19 +8,19 @@ The delivery set lives in `out/final/` (git-ignored, so it is rebuilt from sourc
 
 | File | What it is |
 |------|------------|
-| `ugc-army-30s-16x9.mp4` | 1920x1080, 60 fps, 30.000 s, H.264 High + AAC 320k, -14 LUFS |
-| `ugc-army-30s-9x16.mp4` | 1080x1920, 60 fps. Its own 4x14 layout that respects the feed's safe areas, not a crop |
-| `ugc-army-30s-1x1.mp4` | 1080x1080, 60 fps. The 16:9 grid at a smaller unit, with the colliding modules re-placed |
-| `ugc-army-poster-<format>.png` | The poster frame at 14.9 s: the thesis over the merged grid |
-| `ugc-army-teaser-6s.webm`, `.gif` | The merge drop, 12.0-18.0 s, muted and looping (the seam is a cut on the downbeat) |
+| `kipdeck-30s-16x9.mp4` | 1920x1080, 60 fps, 30.000 s, H.264 High + AAC 320k, -14 LUFS |
+| `kipdeck-30s-9x16.mp4` | 1080x1920, 60 fps. Its own 4x14 layout that respects the feed's safe areas, not a crop |
+| `kipdeck-30s-1x1.mp4` | 1080x1080, 60 fps. The 16:9 grid at a smaller unit, with the colliding modules re-placed |
+| `kipdeck-poster-<format>.png` | The poster frame at 14.9 s: the thesis over the merged grid |
+| `kipdeck-teaser-6s.webm`, `.gif` | The merge drop, 12.0-18.0 s, muted and looping (the seam is a cut on the downbeat) |
 | `CREDITS.md` | Fonts and their licences, the upstream project, the tools (copied from `assets/CREDITS.md`) |
 
 To rebuild it (about 15 minutes per film on an M-series Mac):
 
 ```sh
-node render.mjs --format 16x9 --out out/final/ugc-army-30s-16x9.mp4
-node render.mjs --format 9x16 --out out/final/ugc-army-30s-9x16.mp4
-node render.mjs --format 1x1  --out out/final/ugc-army-30s-1x1.mp4
+node render.mjs --format 16x9 --out out/final/kipdeck-30s-16x9.mp4
+node render.mjs --format 9x16 --out out/final/kipdeck-30s-9x16.mp4
+node render.mjs --format 1x1  --out out/final/kipdeck-30s-1x1.mp4
 python3 tools/deliver.py      # posters, teaser, then checks every film
 ```
 
@@ -31,9 +31,9 @@ python3 tools/deliver.py      # posters, teaser, then checks every film
 All commands run from `video/`. Node 22, `ffmpeg`/`ffprobe` (Homebrew's are picked up from `/opt/homebrew/bin`) and a Chromium for `playwright-core` are needed. The repo's root `node_modules` provides `three` and `playwright-core`, so nothing needs installing here.
 
 ```sh
-npm run preview            # whole film, 640x360 @ 30 fps, ~35 s -> out/ugc-army-16x9-preview.mp4
+npm run preview            # whole film, 640x360 @ 30 fps, ~35 s -> out/kipdeck-16x9-preview.mp4
 npm run preview:vertical   # same in 9:16 (360x640)
-npm run render             # final 1920x1080 @ 60 fps, ~10 min -> out/ugc-army-16x9.mp4
+npm run render             # final 1920x1080 @ 60 fps, ~10 min -> out/kipdeck-16x9.mp4
 npm run render:vertical    # final 1080x1920 @ 60 fps
 npm run render:square      # final 1080x1080 @ 60 fps (preview:square for a quick look)
 npm run poster             # the end card's last frame as a PNG poster -> out/stills/16x9-29.500.png
@@ -58,7 +58,7 @@ If no browser is found, run `npx playwright-core install chromium` once.
 | `--guides` | off | Overlay the grid and the safe areas |
 | `--no-grain` | grain on | Skip the film-grain overlay (for colour checks) |
 | `--blur N` | 8 | Cap on motion-blur samples per frame |
-| `--out file.mp4` | `out/ugc-army-<format>[-preview][-from-to].mp4` | Output path |
+| `--out file.mp4` | `out/kipdeck-<format>[-preview][-from-to].mp4` | Output path |
 | `--keep-frames` | off | Stop after writing `out/frames/`, no encode |
 
 The encode settings are H.264 High, yuv420p tagged BT.709 limited range, CRF 16 with `+faststart`, and AAC at 320 kb/s and 48 kHz. Encoding stops at exactly `frames / fps` seconds, and the script prints an `ffprobe` summary of both streams. A render fails if the page logs any error or warning. The one exception is SwiftShader's "GPU stall due to ReadPixels" note, which every screenshot triggers.
@@ -73,9 +73,9 @@ Three Python tools (Pillow plus Homebrew's `ffmpeg`) check a finished film. Run 
 
 ```sh
 python3 tools/hits.py out/review-r1/hits                        # the PNG frame at every beatmap hit
-python3 tools/sheet.py out/ugc-army-r1.mp4 out/review-r1/sheet-16x9.png   # one frame every 0.5 s, timestamped
-python3 tools/sheet.py out/ugc-army-9x16-preview.mp4 out/review-r1/sheet-9x16.png --cols 12 --width 240
-python3 tools/verify.py out/ugc-army-r1.mp4                     # streams, sync and loudness
+python3 tools/sheet.py out/kipdeck-r1.mp4 out/review-r1/sheet-16x9.png   # one frame every 0.5 s, timestamped
+python3 tools/sheet.py out/kipdeck-9x16-preview.mp4 out/review-r1/sheet-9x16.png --cols 12 --width 240
+python3 tools/verify.py out/kipdeck-r1.mp4                     # streams, sync and loudness
 ```
 
 `hits.py` writes one still per hit frame, named `<t>s-f<frame>-<hit names>.png`. Hits that share a frame share a file. `sheet.py` pulls frames by index (every 30th at 60 fps), so each cell is exactly `t = k * 0.5`.
@@ -177,7 +177,7 @@ The engine and pipeline are complete. Act 1 (`act1.js`, 0-10 s) is final: the op
 After the first critique pass:
 
 - Type leads its hits everywhere (see above), and word spaces no longer collapse. `Who gets paid?` breathes as one block, and the thesis reads `Paid only when / a human merges.` in full on the first frame after the click.
-- Act 1: frame 0 is a poster (`1` set, first hairline drawn). `64 agents.` lands with the counter lock on 3.5, and the counter holds 64 through the overload. `Who needs you?` lands on the 5.5 cut itself and carries over into mission control beside the lit NEEDS YOU column. `UGC Army.` slams as the act's largest type with the kicker `Mission control for your AI coding agents.`, and the app header waits until 7.0. The 64 tiles land by 9.0 (the score moved with them), and the sorted 32/08/06/18 board holds for two beats. The whip-pan into act 2 is one camera move cut mid-move, so 10.0 already shows the timeline. One demo-data tag per frame, under the module.
+- Act 1: frame 0 is a poster (`1` set, first hairline drawn). `64 agents.` lands with the counter lock on 3.5, and the counter holds 64 through the overload. `Who needs you?` lands on the 5.5 cut itself and carries over into mission control beside the lit NEEDS YOU column. `Kipdeck.` slams as the act's largest type with the kicker `Mission control for your AI coding agents.`, and the app header waits until 7.0. The 64 tiles land by 9.0 (the score moved with them), and the sorted 32/08/06/18 board holds for two beats. The whip-pan into act 2 is one camera move cut mid-move, so 10.0 already shows the timeline. One demo-data tag per frame, under the module.
 - Act 2: the timeline clears for `Who gets paid?`, and the cursor rests on Merge from 13.5. The click flashes ink then red, the shockwave is a crisp hairline ring, and the card says MERGED once, with a check. The escrow is a lump sum: 0.00 at OPEN, 25.00 locks behind a padlock on FUNDED and only turns green on RELEASED. The release tx decodes in base58 over 17.0-17.5, with cycling glyphs dimmed so a paused frame never shows a wrong hash, and settles with box 04 and its headline on 17.5.
 - Act 3: the ledger opens with row 1 printed and the schema slot in place. The schema decodes in hex and settles on 21.0. The leaderboard re-ranks onto the 23.5 backbeat and holds, and its bar cells are half a grid column. x402 now shows the real flow: `POST /api/x402/task`, 402, a retry with `X-PAYMENT: 0.10 test USDC`, then `202 Accepted`, held until an admin approves. Earlier cuts said 200 OK, which the office does not answer. All four recap panels are on screen from 25.5, and panel 04 turns from 0.00 to green 25.00 on `Get paid.`. The end card builds a mark a third of the frame high on 27.0. The wordmark slams on 27.5 and stays inside the grid, and the red centre is lit on the last frame. The small print names Solana devnet and Base Sepolia and gives the release tx and schema ids to look up.
 - Audio: the master is limited to -2.0 dBTP. Short pre-impact gaps (`PRE_GAPS` in `score.mjs`) give the 5.5 cut, the 6.0 lock, the PR cards, the 24.0 buzz and the end-card hits a transient of their own, and the reverse cymbal stops just before 27.0.
@@ -187,7 +187,7 @@ After the first critique pass:
 After the second critique pass:
 
 - Type: the left-to-right mask wipe is gone. Every headline reveals per word and is complete 2 frames before its hit (see above). Questions drop, answers rise. `Which agents actually ship.` keeps the wide face one size down (two lines in 9:16).
-- Act 1: frame 0 is a full Claude Code terminal typing its first line at a readable size, beside the `1`. New split panes boot with their prompt typed instead of as a grey card. The 5.5 cut is clean ink with the question in paper for 8 frames before the ghosted tiles stream back. The board dims under `UGC Army.`, and the descriptor `Mission control for your AI coding agents.` lands on 7.0 in Archivo at a readable size with the harnesses named under it. Bottom-anchored headlines keep their descenders above the bottom rule.
+- Act 1: frame 0 is a full Claude Code terminal typing its first line at a readable size, beside the `1`. New split panes boot with their prompt typed instead of as a grey card. The 5.5 cut is clean ink with the question in paper for 8 frames before the ghosted tiles stream back. The board dims under `Kipdeck.`, and the descriptor `Mission control for your AI coding agents.` lands on 7.0 in Archivo at a readable size with the harnesses named under it. Bottom-anchored headlines keep their descenders above the bottom rule.
 - Act 2: `Goals.`, `Milestones.` and `Review inbox.` replace each other in one slot while the timeline (bigger strokes and labels) builds above. The inbox header opens with the first card, so it is never parked half off frame. PR #1 sits on the grid (cols 7-12, rows E-G) in a clean hole in the merged cells. The escrow names `25 Test USDC` on the OPEN hit, says `Solana devnet` at label size and shows the program id beside the release tx, and its grid holds one opacity.
 - Act 3: the ATTESTED stamp sits in the top row's empty right column at -6 degrees with a 2-frame impact, and the schema starts decoding with it. Rows print ahead of their hits. The rejected PR gets its own lane (`#41 unmerged - no pay`). x402 strikes `402 Payment Required` and sets `202 Accepted` before the 24.5 hit, the flaps stay inside the margin, `Pay per task.` rises with the 402 and `x402.` joins it on 25.0, and the note matches the gateway (held until a person approves it). Data labels are `demo data` on everything illustrative; only the real artifacts name their chain.
 - Recap: each panel cuts in fully drawn on its own word, and slots still to come are hairline outlines, not ghosts. Panel 01 is the populated act 1 board. 9:16 shows one panel at a time, full width.

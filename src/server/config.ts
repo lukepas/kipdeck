@@ -72,7 +72,7 @@ export interface RTCIceServerLike {
   credential?: string;
 }
 
-const HELP = `ugc-army - UGC Army: mission control for your team's ${AGENT_PROVIDERS.filter((p) => p !== 'custom').map((p) => PROVIDER_META[p].name).join(' / ')} agents, with proof of every merge on testnets.
+const HELP = `kipdeck - Kipdeck: mission control for your team's ${AGENT_PROVIDERS.filter((p) => p !== 'custom').map((p) => PROVIDER_META[p].name).join(' / ')} agents, with proof of every merge on testnets.
 (Built on agent-office, MIT. The agent-office command still works.)
 
 Usage:

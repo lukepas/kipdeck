@@ -1,8 +1,8 @@
-# UGC Army design system
+# Kipdeck design system
 
 Back to the [README](README.md).
 
-UGC Army is an operations deck for teams running many AI coding agents. The screen is calm by default and only an exception carries color, so the eye goes straight to what needs a person. This page is the contract for every surface: the 3D deck, the 2D view at `/lite`, the sign-in pages and the `/pom/` showcase.
+Kipdeck is an operations deck for teams running many AI coding agents. The screen is calm by default and only an exception carries color, so the eye goes straight to what needs a person. This page is the contract for every surface: the 3D deck, the 2D view at `/lite`, the sign-in pages and the `/pom/` showcase.
 
 The tokens live in `src/client/styles/tokens.css`. Every sheet uses them by name; a hex value in a module sheet is a bug. [docs/design.md](docs/design.md) shows the system on screen: each surface, the full motion table, the deck's sound, demo mode and how to check a change.
 
@@ -66,7 +66,7 @@ The glyphs are in `src/client/ui/icons.ts` (`LEVEL_ICON`), drawn on canvas for t
 
 ## The mark
 
-The Formation mark is three chevrons in an upward V: the lead one solid with a 2px alignment notch, the two trailing ones 2.5px outlines. The wordmark is "UGC ARMY" in Archivo at 118% width, 600, +6% tracking, with ARMY muted. The favicon is the mark in light on void; its lead chevron turns Signal orange while anything needs you (`setFaviconAlert` in `ui/brand.ts`). The `/pom/` variant has a violet lead chevron.
+The Formation mark is three chevrons in an upward V: the lead one solid with a 2px alignment notch, the two trailing ones 2.5px outlines. The wordmark is "KIPDECK" in Archivo at 118% width, 600, +6% tracking, with DECK muted (KIP in the text color, no space between the halves). The favicon is the mark in light on void; its lead chevron turns Signal orange while anything needs you (`setFaviconAlert` in `ui/brand.ts`). The `/pom/` variant has a violet lead chevron.
 
 Upstream credit stays where it was and is added to the sign-in footer: "Built on agent-office (AgentSystemLabs / webdevcody), MIT", the party the LICENSE names first.
 

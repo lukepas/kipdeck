@@ -243,7 +243,7 @@ function drawTimelineWorld(S, t, L, { hidePR1 = false } = {}) {
   const tg = design.size('tag') * 1.3; // the timeline reads at phone size
 
   // App header, as act 1 left it.
-  const w = text(S, 'UGC Army', L.header.x, L.header.y, { size: ls, color: P.ink });
+  const w = text(S, 'Kipdeck', L.header.x, L.header.y, { size: ls, color: P.ink });
   text(S, 'Timeline', L.header.x + w + ls * 0.8, L.header.y, { size: ls, weight: 500, color: P.grey });
 
   // Goal line with week ticks.

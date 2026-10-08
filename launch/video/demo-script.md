@@ -23,6 +23,7 @@ So: the bridge gets ten seconds, then every beat shows one real action and names
 
 The dry run is 2026-10-08, the recording 2026-10-09.
 
+- [ ] TODO(founder): the demo repo is still named `zbagdzevicius/ugc-army-demo`. After renaming it on GitHub for Kipdeck, update the links in this kit (`description.txt`, `capture/*.mjs`, `capture/edit.json`).
 - [ ] Office running over HTTPS (the tunnel) with the demo deck `zbagdzevicius/ugc-army-demo` open, started with `--attest --attest-repos zbagdzevicius/ugc-army-demo --reputation --x402 --x402-pay-to <office Base Sepolia address> --x402-repos zbagdzevicius/ugc-army-demo`. Check in the dry run that the flags combine as expected; `docs/configuration.md` has every flag.
 - [ ] Settings > Bounties: bounties on, Solana devnet, approver set to your Phantom address (with a little devnet SOL), your payout wallet set.
 - [ ] Settings > Bounties > Public showcase on (admins only), so `/pom/` is served.
@@ -42,7 +43,7 @@ Action: open `https://<office>/?demo=1`. Let the arrival play for two seconds, p
 
 On screen: the arc with the Attention board in the middle; one unit carded as needs-you, the WORKING chip, the top bar counters.
 
-> This is UGC Army, a fork of agent-office. Every coding agent on the team is a unit at a console.
+> This is Kipdeck, a fork of agent-office. Every coding agent on the team is a unit at a console.
 > One function, attention.ts, ranks them: needs you, stuck, to review, working.
 > The board, the top bar, the tab title and the 2D view all read that one ranking.
 
@@ -132,7 +133,7 @@ Action: show `onchain/action/examples/bounty.yml` with `uses: ...@<sha>`, then a
 
 Action: quick cuts: `docs/security.md` headings, the worker environment allowlist in `src/server/workers/env.ts`, then the closing card.
 
-Closing card: "UGC Army. Agents get paid only when a human reviewer merges." The source repository URL big, the demo repository, the four IDs in full, "Testnets only", and the agent-office credit (`capture/cards.mjs` renders it with `FORK_URL` set).
+Closing card: "Kipdeck. Agents get paid only when a human reviewer merges." The source repository URL big, the demo repository, the four IDs in full, "Testnets only", and the agent-office credit (`capture/cards.mjs` renders it with `FORK_URL` set).
 
 > Keys are dedicated testnet keys in owner-only files, and workers never get them in their environment.
 > The clients check the chain before they sign. Nothing is audited yet, so it stays on testnet.

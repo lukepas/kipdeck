@@ -1,11 +1,12 @@
 {
   "name": "agent-office",
   "version": "0.1.0",
-  "description": "UGC Army: mission control for teams running many AI coding agents, with proof of every merge on testnets. Built on agent-office by webdevcody (MIT).",
+  "description": "Kipdeck: the inbox for your AI coding agents. Mission control for teams running many AI coding agents, with proof of every merge on testnets. Built on agent-office by webdevcody (MIT).",
   "type": "module",
   "bin": {
-    "ugc-army": "bin/agent-office.js",
-    "agent-office": "bin/agent-office.js"
+    "kipdeck": "bin/agent-office.js",
+    "agent-office": "bin/agent-office.js",
+    "ugc-army": "bin/agent-office.js"
   },
   "imports": {
     "#tests/css": "./tests/support/css.mjs"

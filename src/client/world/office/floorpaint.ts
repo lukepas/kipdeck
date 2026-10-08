@@ -292,10 +292,10 @@ function paintTitle(g: CanvasRenderingContext2D, W: number, H: number, info: Tit
   stretch(g, true);
   g.fillStyle = DECK.text;
   g.letterSpacing = `${Math.round(H * 0.01)}px`;
-  g.fillText('UGC', 14 * s, H * 0.8);
-  const ugc = g.measureText('UGC ').width;
+  g.fillText('KIP', 14 * s, H * 0.8);
+  const kip = g.measureText('KIP').width;
   g.fillStyle = DECK.muted;
-  g.fillText('ARMY', 14 * s + ugc, H * 0.8);
+  g.fillText('DECK', 14 * s + kip, H * 0.8);
   g.letterSpacing = '0px';
   stretch(g, false);
   // The cells: deck, revision, operator; each a small caption and its value in mono.

@@ -1,5 +1,5 @@
 /**
- * The UGC Army icon set: inline SVG on a 24 grid, 1.75px strokes, square caps and mitred joins, drawn
+ * The Kipdeck icon set: inline SVG on a 24 grid, 1.75px strokes, square caps and mitred joins, drawn
  * in currentColor so each one takes the color of the text around it. It replaces the emoji the chrome
  * used to carry. The six status glyphs are shapes first, so a state reads without its hue:
  * needs you is a solid diamond, stuck a hollow triangle with a bar, to review a hollow circle with a
