@@ -64,6 +64,19 @@ const WHITE = new THREE.Color('#ffffff');
 export const ZONE_LINE_W = 0.05;
 
 /**
+ * Turns every triangle of `index` to face up (+y), in place: the zones lie flat and are only ever seen
+ * from above, so they're drawn one side only, one draw, where a two-sided see-through mesh costs two.
+ */
+export function faceUp(pos: readonly number[], index: number[]) {
+  for (let t = 0; t + 2 < index.length; t += 3) {
+    const [a, b, c] = [index[t] * 3, index[t + 1] * 3, index[t + 2] * 3];
+    // The y of (b - a) x (c - a): below zero, it faces down.
+    const ny = (pos[b + 2] - pos[a + 2]) * (pos[c] - pos[a]) - (pos[b] - pos[a]) * (pos[c + 2] - pos[a + 2]);
+    if (ny < 0) [index[t + 1], index[t + 2]] = [index[t + 2], index[t + 1]];
+  }
+}
+
+/**
  * The zones of `letters`, each in `hex` to start with: every fill and every outline (a thin band along
  * its edge) merged into one mesh, each pod's hue and each part's strength in its own vertices' colors,
  * so all the pods cost the deck one draw call.
@@ -99,6 +112,7 @@ export function makeZones(letters: readonly PodLetter[], hex: string): Zones {
     });
     ranges.set(letter, { fill: [base, fillEnd], line: [fillEnd, pos.length / 3], fade: new HueFade(hex) });
   }
+  faceUp(pos, index);
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
   const colors = new Float32Array((pos.length / 3) * 4);
@@ -107,7 +121,7 @@ export function makeZones(letters: readonly PodLetter[], hex: string): Zones {
   geo.setIndex(index);
   const mesh = new THREE.Mesh(
     geo,
-    new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, toneMapped: false }),
+    new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.FrontSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, toneMapped: false }),
   );
   const group = new THREE.Group();
   group.name = 'pod-zones';

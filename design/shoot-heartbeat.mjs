@@ -180,7 +180,33 @@ async function main() {
       if (s.drawn.rings > 0 && !best) best = name;
       await wait(250);
     }
-    console.log(JSON.stringify({ pulseFrame: best }));
+    // A pulse lasts under a second and comes only with a tool call, and a headless renderer may draw
+    // only a few frames a second: if none was caught above, watch every frame in the page (up to
+    // PULSE_WAIT_S) until a ring is drawn, shoot it at once, and fail when none ever is.
+    if (!best) {
+      const seen = await page.evaluate(
+        (ms) =>
+          new Promise((resolve) => {
+            const until = performance.now() + ms;
+            const look = () => {
+              const c = window.__world.heartbeat.counts();
+              if (c.rings > 0) resolve(c);
+              else if (performance.now() > until) resolve(null);
+              else requestAnimationFrame(look);
+            };
+            look();
+          }),
+        Number(process.env.PULSE_WAIT_S ?? 30) * 1000,
+      );
+      if (seen) {
+        best = 'heartbeat-pulse';
+        await page.screenshot({ path: path.join(OUT, `${best}.png`) });
+        console.log(JSON.stringify({ name: best, drawn: seen }));
+      }
+    }
+    const pulses = await page.evaluate(() => window.__world.heartbeat.started());
+    console.log(JSON.stringify({ pulseFrame: best, pulses }));
+    if (!best) throw new Error(`no pulse ring was drawn (${pulses} pulses started)`);
     // The silent unit's meter up close (from this vantage it's left of the busy one).
     await page.screenshot({ path: path.join(OUT, 'heartbeat-quiet-crop.png'), clip: { x: 270, y: 320, width: 400, height: 300 } });
     // Ship motion Off: the pulses stop, the meters stay.

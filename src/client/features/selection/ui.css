@@ -30,6 +30,8 @@
 /* Under any window over the deck (Mission control floating, a terminal): never drawn over its corner. Docked, it stays, left of the dock. */
 body:has(#modal-root > .backdrop:not(.mc-dock-backdrop)) .sel-card { visibility: hidden; }
 .sel-card.open { opacity: 1; transform: none; }
+/* While it's up, the HUD's centred pieces (styles/hud.css --clear-right) keep clear of it: its width and a gap. */
+body:has(.sel-card.open) #hud { --sel-clear: 344px; }
 /* The rule down its left side, in white like the reticle on the floor. */
 .sel-card::before { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; border-radius: var(--radius) 0 0 var(--radius); background: var(--text); }
 .sel-card .close.corner { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border-color: transparent; background: none; color: var(--muted); }

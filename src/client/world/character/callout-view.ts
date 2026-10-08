@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import type { AttentionLevel } from '../../../shared/attention';
-import { elapsed, headline } from '../../../shared/rowtext';
+import { STATE_NAME, elapsed, headline } from '../../../shared/rowtext';
 import type { WorkerStatus, WorkerTask } from '../../../shared/protocol';
 import { isAsleep, type WorkerPr } from '../../../shared/status';
 import { CALLOUT_SCREEN, FADE_OUT_MS, askLine, clip, easeOutCubic, midLine, popAt, sameWords, wrapTwo, type CalloutTier } from '../../features/workers/lod';
@@ -8,14 +8,8 @@ import type { GlyphKind } from '../glyphs';
 import { disposeSprite } from '../toon';
 import { CALLOUT_PX, calloutSprite, redrawCallout, type CalloutText } from './unit-callout';
 
-const STATE_WORD: Record<GlyphKind, string> = {
-  'needs-you': 'NEEDS YOU',
-  stuck: 'STUCK',
-  review: 'TO REVIEW',
-  working: 'WORKING',
-  parked: 'ON DECK',
-  merged: 'MERGED',
-};
+/** The chip's word: its level's one name (shared/rowtext.ts STATE_NAME, the rail's and the card's), in capitals. */
+const STATE_WORD: Record<GlyphKind, string> = { ...STATE_NAME, merged: 'Merged' };
 const scratch = new THREE.Vector3();
 /** The near card's task and its third line, at most this many characters. */
 const TASK_MAX = 30;
@@ -33,6 +27,8 @@ export interface UnitSays {
   status: WorkerStatus;
   lost: boolean;
   task?: string;
+  /** The task's one-line summary: the near card's task line says it, where the name is only a few words. */
+  summary?: string;
   activity?: string;
   pr?: WorkerPr;
   branch?: string;
@@ -49,11 +45,12 @@ export interface UnitSays {
 /**
  * What a unit has to say, from its own fields (world/character/worker.ts): its task as one title, the
  * whole of it where the short name was cut from the front of its summary, so a card never shows a
- * name cut short as though it were the whole task ("Pick the session").
+ * name cut short as though it were the whole task ("Pick the session"), and its one-line summary
+ * where that says more than the name.
  */
-export function calloutInput(o: Omit<UnitSays, 'task'> & { task?: WorkerTask }): UnitSays {
-  const title = o.task ? headline(o.task).title : '';
-  return { ...o, task: title || undefined };
+export function calloutInput(o: Omit<UnitSays, 'task' | 'summary'> & { task?: WorkerTask }): UnitSays {
+  const h = o.task ? headline(o.task) : undefined;
+  return { ...o, task: h?.title || undefined, summary: h?.detail || undefined };
 }
 
 /** The near card's third line for a unit that needs an answer and says nothing more about what it asks. */
@@ -70,14 +67,14 @@ export function calloutText(u: UnitSays, now: number): CalloutText {
   const line = midLine({ activity: u.activity, level: u.level, label: u.reason, title: u.task });
   if (tier === 'mid') return { tier, sign: u.sign, name: u.name, kind: u.kind, line, ...sel };
   const parked = u.kind === 'parked';
-  const chip = u.lost ? 'STUCK' : parked && isAsleep(u.status) ? 'OFFLINE' : STATE_WORD[u.kind];
+  const chip = (u.lost ? STATE_NAME.stuck : parked && isAsleep(u.status) ? 'Offline' : STATE_WORD[u.kind]).toUpperCase();
   // The task in full, on two lines at most, said once.
-  const task = wrapTwo(u.said ?? (u.task || line), TASK_MAX);
+  const task = wrapTwo(u.said ?? (u.summary || u.task || line), TASK_MAX);
   // One that needs someone spends its third line on what it asks or why it's stuck, unless that's the
   // task over again (a question whose prompt is the task); the engine is for the rest.
   const asked = u.lost ? 'worktree deleted' : urgent ? (askLine({ activity: u.activity, level: u.level, label: u.reason }) ?? undefined) : undefined;
   const said = u.said ?? u.task;
-  const ask = asked && !(said && sameWords(asked, said)) ? asked : undefined;
+  const ask = asked && !(said && sameWords(asked, said)) && !(u.summary && sameWords(asked, u.summary)) ? asked : undefined;
   const pr = u.pr ? `PR #${u.pr.number}${u.pr.state === 'open' ? '' : ` ${u.pr.state}`}` : '';
   // One that needs you never spends its third line on the engine: with nothing more to say about what
   // it asks (a question whose prompt is the task), it says it wants an answer, in its hue.

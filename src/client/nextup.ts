@@ -4,7 +4,7 @@
 // panel's button counts them. Every list of workers is in the building's one ranking instead
 // (shared/attention.ts), which puts the same ones first.
 
-import type { Ranked } from '../shared/attention';
+import { attentionCounts, type Ranked } from '../shared/attention';
 import type { RosterEntry, WorkerInfo } from '../shared/protocol';
 import { waitingOnSomeone } from './notify';
 
@@ -49,26 +49,61 @@ export function waitingLabel(waiting: readonly WorkerInfo[]): string {
   return [needs && `${needs} ${needs === 1 ? 'needs' : 'need'} you`, done && `${done} done`].filter(Boolean).join(' · ');
 }
 
+/** The levels N goes through, in this order: the ones that need you, then the stuck ones, then the ones to review. */
+const N_LEVELS = ['needs-you', 'stuck', 'review'] as const;
+
+/** One stop on N's round: who, and since when it has been that way (a new wait is new to the round). */
+export interface Stop {
+  id: string;
+  since: number;
+}
+
 /**
- * One press of N after another: the first worker in line (see waitingInOrder) you haven't been to
- * yet this round, and once you've been to them all, the first again. A worker that starts waiting again after
- * you've been to it is new to this round.
+ * N's round on a floor, straight from the building's ranking (shared/attention.ts) so it goes where
+ * the top bar and the Attention board count: the ones that need you, then the stuck ones, then the
+ * ones to review, longest first within each, snoozed ones left out.
+ */
+export function nLine(ranked: readonly Ranked[]): Stop[] {
+  return N_LEVELS.flatMap((level) => ranked.filter((r) => r.att.level === level && !r.att.snoozed).map((r) => ({ id: r.entry.id, since: r.att.since })));
+}
+
+/**
+ * The toast after N: "2 of 5: 2 need you · 1 stuck · 2 to review. N for the next", counted as the
+ * top bar counts them, or null when there's only the one.
+ */
+export function nToast(line: readonly Stop[], id: string, ranked: readonly Ranked[]): string | null {
+  if (line.length < 2) return null;
+  const c = attentionCounts(ranked);
+  const parts = [c['needs-you'] && `${c['needs-you']} ${c['needs-you'] === 1 ? 'needs' : 'need'} you`, c.stuck && `${c.stuck} stuck`, c.review && `${c.review} to review`].filter(Boolean);
+  return `${line.findIndex((s) => s.id === id) + 1} of ${line.length}: ${parts.join(' · ')}. N for the next`;
+}
+
+/**
+ * One press of N after another: the first worker in line you haven't been to yet this round, and
+ * once you've been to them all, the first again. A worker that starts waiting again after you've
+ * been to it is new to this round.
  */
 export class NextUp {
   /** Who this round has been to, and the wait each was on then. */
   private visited = new Map<string, number>();
 
-  /** The one to go to next. `here` is the worker you're standing at, which only comes up if it's the only one. */
-  next(workers: Iterable<WorkerInfo>, here?: string): Waiting | undefined {
-    const waiting = waitingInOrder(workers);
-    for (const [id, at] of this.visited) if (!waiting.some((w) => w.id === id && since(w) === at)) this.visited.delete(id);
-    const others = waiting.filter((w) => w.id !== here);
+  /** The one to go to next from a line in order (see nLine). `here` is the worker you're standing at, which only comes up if it's the only one. */
+  pick<T extends Stop>(line: readonly T[], here?: string): T | undefined {
+    for (const [id, at] of this.visited) if (!line.some((w) => w.id === id && w.since === at)) this.visited.delete(id);
+    const others = line.filter((w) => w.id !== here);
     let pick = others.find((w) => !this.visited.has(w.id));
     if (!pick) {
       this.visited.clear();
-      pick = others[0] ?? waiting[0];
+      pick = others[0] ?? line[0];
     }
-    if (pick) this.visited.set(pick.id, since(pick));
+    if (pick) this.visited.set(pick.id, pick.since);
     return pick;
+  }
+
+  /** The one to go to next among `workers` waiting on someone (see waitingInOrder). */
+  next(workers: Iterable<WorkerInfo>, here?: string): Waiting | undefined {
+    const waiting = waitingInOrder(workers);
+    const id = this.pick(waiting.map((w) => ({ id: w.id, since: since(w) })), here)?.id;
+    return waiting.find((w) => w.id === id);
   }
 }

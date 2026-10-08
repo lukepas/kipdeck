@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import * as THREE from 'three';
-import { DRIFT, FLY_MS, TRANSITION_MS, blendProjection, driftAt, easeInOutCubic, easeOutQuint, zoomPan, zoomToward, fovAlong, fovForHalfHeight, halfHeightAt, morphAt, orthographic, perspective, toPixels, zoomTierOf } from '../src/client/core/overview-transition.js';
+import { DRIFT, FLY_MS, TRANSITION_MS, blendProjection, cubicBezier, driftAt, easeFly, easeInOutCubic, easeMove, easeOutQuint, pullHome, zoomFloor, zoomPan, zoomSpring, fovAlong, fovForHalfHeight, halfHeightAt, morphAt, orthographic, perspective, toPixels, zoomTierOf } from '../src/client/core/overview-transition.js';
 import { HOME_KEY, readHome, writeHome } from '../src/client/features/homeview/home.js';
 
 const W = 1920;
@@ -12,24 +12,56 @@ const DIST = 80;
 const NEAR = 0.1;
 const FAR = 400;
 
-test('the flight to a unit takes 900 ms, most of the way fast and then a long settle', () => {
-  assert.equal(FLY_MS, 900);
-  assert.equal(easeOutQuint(0), 0);
-  assert.equal(easeOutQuint(1), 1);
-  // Two thirds of the way in the first fifth of the time; the last tenth of the way takes half of it.
-  assert.ok(easeOutQuint(0.2) > 0.66);
-  assert.ok(easeOutQuint(0.5) > 0.96);
-  for (let k = 0; k < 1; k += 0.01) assert.ok(easeOutQuint(k + 0.01) >= easeOutQuint(k), `monotonic at ${k}`);
+test('cubicBezier is CSS cubic-bezier: ends pinned, linear when its handles are on the diagonal', () => {
+  const lin = cubicBezier(1 / 3, 1 / 3, 2 / 3, 2 / 3);
+  for (const k of [0, 0.1, 0.5, 0.9, 1]) assert.ok(Math.abs(lin(k) - k) < 1e-4, `linear at ${k}`);
+  // CSS's ease (0.25, 0.1, 0.25, 1) at half time is about 0.8.
+  assert.ok(Math.abs(cubicBezier(0.25, 0.1, 0.25, 1)(0.5) - 0.8024) < 2e-3);
 });
 
-test('the wheel eases the zoom toward where it is taking it, and holds the point under the pointer', () => {
-  // About a frame at 60 fps closes a fifth of the way; it never overshoots, and lands exactly.
+test('the flight to a unit takes 900 ms: a short ease in, most of the way fast, then a long settle', () => {
+  assert.equal(FLY_MS, 900);
+  assert.equal(easeFly(0), 0);
+  assert.equal(easeFly(1), 1);
+  // Its first frame (16 ms of 900) moves no faster than its average speed, where easeOutQuint jumped at five times it.
+  const first = easeFly(16 / FLY_MS) / (16 / FLY_MS);
+  assert.ok(first < 1.6, `first frame at ${first.toFixed(2)} times the average speed`);
+  assert.ok(easeOutQuint(16 / FLY_MS) / (16 / FLY_MS) > 4.5);
+  // Most of the way by a third of the time; the last tenth takes a long settle.
+  assert.ok(easeFly(1 / 3) > 0.7);
+  assert.ok(easeFly(0.6) < 0.99);
+  for (let k = 0; k < 1; k += 0.01) assert.ok(easeFly(k + 0.01) >= easeFly(k), `monotonic at ${k}`);
+});
+
+test('the wheel glides the zoom on a damped spring, and holds the point under the pointer', () => {
+  // From rest toward 2: under way at once, never past it, and there within a second.
   let z = 1;
+  let v = 0;
   const steps: number[] = [];
-  for (let i = 0; i < 60; i++) steps.push((z = zoomToward(z, 2, 1 / 60)));
-  assert.ok(steps[0] > 1.15 && steps[0] < 1.3, `first frame ${steps[0]}`);
+  for (let i = 0; i < 60; i++) {
+    [z, v] = zoomSpring(z, v, 2, 1 / 60);
+    steps.push(z);
+  }
+  assert.ok(steps[0] > 1 && steps[0] < 1.05, `first frame ${steps[0]}`);
   for (let i = 1; i < steps.length; i++) assert.ok(steps[i] >= steps[i - 1] && steps[i] <= 2);
   assert.equal(steps[steps.length - 1], 2, 'lands on the goal');
+  // A second notch mid-glide keeps the speed it had: no frame jumps further than the frames round it.
+  z = 1;
+  v = 0;
+  let goal = 1.3;
+  let prev = 0;
+  let worst = 0;
+  for (let i = 0; i < 60; i++) {
+    if (i === 6) goal = 1.7;
+    const before = z;
+    [z, v] = zoomSpring(z, v, goal, 1 / 60);
+    const d = z - before;
+    if (i > 1) worst = Math.max(worst, d - prev);
+    prev = d;
+  }
+  assert.ok(worst < 0.02, `the step between frames grew by ${worst.toFixed(3)} at most`);
+  // A slow frame doesn't throw it past the goal.
+  assert.ok(zoomSpring(1, 0, 2, 0.5)[0] <= 2);
   // The point under the pointer stays put: what the view's middle moves is what the point's offset shrinks by.
   const perPx = 32 / 900;
   const pitch = (48 * Math.PI) / 180;
@@ -41,14 +73,46 @@ test('the wheel eases the zoom toward where it is taking it, and holds the point
   assert.deepEqual(zoomPan(0, 0, 1, 3, perPx, pitch), [0, 0]);
 });
 
-test('the move up and down takes 650 ms on a cubic in-out ease', () => {
+test('zooming out past the framing heads back to the framed middle, all the way by the least zoom', () => {
+  // The least zoom is 60% of the framed one, within the camera's floor, never above the framing.
+  assert.equal(zoomFloor(1.2, 0.75), 0.75);
+  assert.ok(Math.abs(zoomFloor(2, 0.75) - 1.2) < 1e-9);
+  assert.equal(zoomFloor(0.6, 0.75), 0.6);
+  // Zooming in, or out above the framing: none of the way.
+  assert.equal(pullHome(1, 1.2, 1, 0.75), 0);
+  assert.equal(pullHome(2, 1.5, 1, 0.75), 0);
+  // Step by step from the framing down to the least zoom: all of the way home by the end.
+  let left = 1;
+  let z = 1;
+  for (const next of [0.95, 0.9, 0.85, 0.8, 0.75]) {
+    left *= 1 - pullHome(z, next, 1, 0.75);
+    z = next;
+  }
+  assert.ok(left < 1e-9, `${left} of the way left`);
+});
+
+test('the move up and down takes 650 ms, under way on its first frame and settling long', () => {
   assert.equal(TRANSITION_MS, 650);
-  assert.equal(easeInOutCubic(0), 0);
-  assert.equal(easeInOutCubic(1), 1);
+  assert.equal(easeMove(0), 0);
+  assert.equal(easeMove(1), 1);
+  // Its first 70 ms cover far more than easeInOutCubic's did (about 0.5% of the way).
+  const k70 = 70 / TRANSITION_MS;
+  assert.ok(easeInOutCubic(k70) < 0.006);
+  assert.ok(easeMove(k70) > 0.04, `${easeMove(k70)} of the way in the first 70 ms`);
+  // Its fastest stretch comes in the first third, not at the middle.
+  let fastest = 0;
+  let at = 0;
+  for (let k = 0; k < 1; k += 0.01) {
+    const d = easeMove(k + 0.01) - easeMove(k);
+    if (d > fastest) {
+      fastest = d;
+      at = k;
+    }
+    assert.ok(d >= 0, `monotonic at ${k}`);
+  }
+  assert.ok(at < 0.34, `fastest at ${at}`);
+  // The quarter turn keeps its in-out ease.
   assert.equal(easeInOutCubic(0.5), 0.5);
-  // Slower out of the start than a quadratic.
-  assert.ok(easeInOutCubic(0.2) < 2 * 0.2 * 0.2);
-  for (let k = 0; k < 1; k += 0.01) assert.ok(easeInOutCubic(k + 0.01) >= easeInOutCubic(k), `monotonic at ${k}`);
 });
 
 test('the field of view closes from your eyes onto the Overview framing', () => {
@@ -219,7 +283,38 @@ test("the deck's polished surfaces go matte on the way up, so the move never swe
     assert.ok(r >= last && r - last < 0.04, `step ${r - last} at ${k}`);
     last = r;
   }
-  // Wired into the atmosphere's frame, on the Overview's eased progress.
-  const atmos = readFileSync(path.join(process.cwd(), 'src/client/features/atmos/index.ts'), 'utf8');
-  assert.match(atmos, /gloss\.update\(parts\.overview\?\.progress\(\) \?\? 0\)/);
+  // Its own frame tick, on the Overview's eased progress.
+  const gloss = readFileSync(path.join(process.cwd(), 'src/client/features/atmos/gloss.ts'), 'utf8');
+  assert.match(gloss, /parts\.overview\?\.progress\(\) \?\? 0/);
+  assert.match(gloss, /ctx\.ticks\.add\('world'/);
+});
+
+test('the gloss gives back what it took, unless something else changed it meanwhile; a unit hired up there goes matte too', async () => {
+  const { Gloss, MATTE, AGAIN_MS, exposureAt, OVERVIEW_LIFT } = await import('../src/client/features/atmos/gloss.js');
+  const scene = new THREE.Scene();
+  const table = new THREE.MeshStandardMaterial({ roughness: 0.2 });
+  const floor = new THREE.MeshStandardMaterial({ roughness: 0.3 });
+  scene.add(new THREE.Mesh(new THREE.BoxGeometry(), table), new THREE.Mesh(new THREE.BoxGeometry(), floor));
+  const g = new Gloss(scene);
+  g.update(0.5, 0);
+  g.update(1, 10);
+  assert.equal(table.roughness, MATTE);
+  // A Quality switch sets the floor's roughness while the Overview is up: that's its roughness now.
+  floor.roughness = 0.1;
+  g.update(1, 20);
+  g.update(0.5, 30);
+  g.update(0, 40);
+  assert.equal(table.roughness, 0.2, 'the table gets its own back');
+  assert.ok(Math.abs(floor.roughness - 0.1) < 1e-9, `the floor keeps the new 0.1, not the stale 0.3 (${floor.roughness})`);
+  // Up there, a unit that comes on the deck is matte within AGAIN_MS.
+  g.update(1, 100);
+  const unit = new THREE.MeshStandardMaterial({ roughness: 0.25 });
+  scene.add(new THREE.Mesh(new THREE.BoxGeometry(), unit));
+  g.update(1, 100 + AGAIN_MS / 2);
+  assert.equal(unit.roughness, 0.25);
+  g.update(1, 100 + AGAIN_MS + 1);
+  assert.equal(unit.roughness, MATTE);
+  // The exposure: the rig's own in Walk, a quarter more from the Overview.
+  assert.equal(exposureAt(1.1, 0), 1.1);
+  assert.ok(Math.abs(exposureAt(1.1, 1) - 1.1 * (1 + OVERVIEW_LIFT)) < 1e-12);
 });

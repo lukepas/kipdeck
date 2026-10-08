@@ -75,6 +75,7 @@ import { installQuality } from './features/quality';
 import { installMerge } from './features/merge';
 import { installIbl } from './features/ibl';
 import { installAtmos } from './features/atmos';
+import { installGloss } from './features/atmos/gloss';
 import { installRelay } from './features/relay';
 import { installVista } from './features/vista';
 import { installCinema } from './features/cinema';
@@ -213,6 +214,8 @@ parts.alert = installAlert(ctx, parts);
 installIbl(ctx, parts);
 // The light round the deck: shafts, dust, haze, pools, the canopy's ribs and light from outside.
 installAtmos(ctx, parts);
+// From the Overview: the deck's polished surfaces matte and the exposure a little up, with the move.
+installGloss(ctx, parts);
 // Space close by: dust streaming past the ports, a giant off one side, the sun's flare through the canopy.
 installVista(ctx, parts);
 // The Relay Beacon off the starboard bow: the fleet's relay station, its rings carrying the units at work.
