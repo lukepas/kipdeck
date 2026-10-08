@@ -3,7 +3,7 @@
 // phrase with no time in it, and one relative time from one clock. Pure, so the server and both
 // clients can use it.
 
-import type { Attention } from './attention.js';
+import { LEVEL_LABEL, type Attention } from './attention.js';
 
 /** The deck's one clock for "how long": '<1m', '4m', '2h', '3d'. */
 export function ago(ms: number): string {
@@ -13,6 +13,16 @@ export function ago(ms: number): string {
   const h = Math.floor(min / 60);
   if (h < 48) return `${h}h`;
   return `${Math.floor(h / 24)}d`;
+}
+
+/**
+ * A unit's clock on any surface (its callout, the selected unit's card, the rail, Mission control):
+ * the same as `ago`, so two places never show the same unit at two different times. Under a minute
+ * it says '<1m': seconds decide nothing for whoever runs the crew, and a count ticking every second
+ * only draws the eye.
+ */
+export function elapsed(ms: number): string {
+  return ago(ms);
 }
 
 /** A leading "[ask]" or "[perm]" split off its text: shown as a chip, never as brackets. */
@@ -74,18 +84,40 @@ function firstLine(s: string): string {
   return s.split('\n').find((l) => l.trim())?.trim() ?? '';
 }
 
-/** What it says for the level when its own words would only repeat the title. */
-const PLAIN: Record<Attention['level'], string> = {
-  'needs-you': 'Needs an answer',
-  stuck: 'Stuck',
-  review: 'To review',
-  working: 'Working',
-  parked: 'Ready',
-};
+/**
+ * Each level's one name, the same on every surface: the callout's chip (in capitals), the rail, the
+ * selected unit's card, Mission control's rows and the hint bar. The ranking's names (LEVEL_LABEL),
+ * with a parked unit simply "Ready" (the status pill's word for an idle one).
+ */
+export const STATE_NAME: Record<Attention['level'], string> = { ...LEVEL_LABEL, parked: 'Ready' };
 
-/** The row's one status phrase: the ranking's label, unless it only repeats `title`. */
+/** Labels that only say "it needs an answer", which the level's name says already. */
+const STOCK_ASK = /^needs (an answer|input|you)$/i;
+
+/** The ranking's label when it adds something the level's name and `title` don't say, else ''. */
+export function statusDetail(att: Pick<Attention, 'level' | 'label'>, title?: string): string {
+  const label = att.label.trim();
+  return label && !sameText(label, title) && !sameText(label, STATE_NAME[att.level]) && !STOCK_ASK.test(label) ? label : '';
+}
+
+/**
+ * The row's one status phrase, leading with its level's name when it needs someone: "To review ·
+ * Done", "Stuck · Crashed (exit 3)", "Needs you". A unit at work or parked says its label (what
+ * it's on), or its level's name with none.
+ */
 export function statusPhrase(att: Pick<Attention, 'level' | 'label'>, title?: string): string {
-  return sameText(att.label, title) ? PLAIN[att.level] : att.label;
+  const name = STATE_NAME[att.level];
+  const own = statusDetail(att, title);
+  if (att.level === 'needs-you' || att.level === 'stuck' || att.level === 'review') return own ? `${name} · ${own}` : name;
+  return own || name;
+}
+
+/**
+ * The inbox row's status, under a section heading that already names the level: what the ranking
+ * says when it adds something, else the level's plain words ("Needs an answer", "Stuck").
+ */
+export function rowStatus(att: Pick<Attention, 'level' | 'label'>, title?: string): string {
+  return statusDetail(att, title) || (att.level === 'needs-you' ? 'Needs an answer' : STATE_NAME[att.level]);
 }
 
 /** The one word a badge carries next to its glyph ("done", "crashed"); the detail goes in a tooltip. */

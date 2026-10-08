@@ -100,8 +100,11 @@ export function isSnoozed(e: Pick<RosterEntry, 'snooze'>, now: number): boolean 
 /** The tools agents ask the person a question with, by name alone (Claude Code's, Codex's). */
 const ASKING_TOOL = /^(?:[\w-]+[._])?(?:AskUserQuestion|ask_user_question|request_user_input)$/;
 
-/** When it last showed any sign of life: a hook event, terminal output, or starting to work. */
-function lastSign(e: RosterEntry): number {
+/**
+ * When it last showed any sign of life: a hook event, terminal output, or starting to work. The deck's
+ * quiet meter (client features/heartbeat) drains from the same moment, so the two never disagree.
+ */
+export function lastSign(e: Pick<RosterEntry, 'activityAt' | 'outputAt' | 'workingSince' | 'waitingSince' | 'createdAt'>): number {
   return Math.max(e.activityAt ?? 0, e.outputAt ?? 0, e.workingSince ?? 0, e.waitingSince ?? 0, e.createdAt);
 }
 

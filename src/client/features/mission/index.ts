@@ -16,7 +16,7 @@ import { openPull } from '../../ui/pull';
 import { watchStuck } from '../../ui/mission/watch';
 import { renderWorkers } from '../../ui/workers-panel';
 
-export type MissionParts = Pick<Parts, 'waiting' | 'actions' | 'travel' | 'notifier' | 'settings' | 'launch'>;
+export type MissionParts = Pick<Parts, 'waiting' | 'actions' | 'travel' | 'notifier' | 'settings' | 'launch' | 'selection'>;
 
 export function installMission(ctx: Ctx, parts: MissionParts) {
   const { net, sound } = ctx;
@@ -48,6 +48,12 @@ export function installMission(ctx: Ctx, parts: MissionParts) {
         if (store.floor === floor && desk) setTimeout(() => parts.actions.standAt(desk), 0);
       });
       parts.travel.switchFloor(floor);
+    },
+    // A unit on this deck is selected and found (features/selection); one on another deck is a ride there.
+    locate: (floor, deskId) => {
+      const unit = floor === store.floor ? [...store.workers.values()].find((w) => w.deskId === deskId) : undefined;
+      if (unit && parts.selection) parts.selection.select(unit.id, { fly: true });
+      else deps.goTo(floor, deskId);
     },
   };
 

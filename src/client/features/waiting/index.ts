@@ -6,11 +6,14 @@
 import * as THREE from 'three';
 import { OFFICE_PLAN } from '../../../shared/plan';
 import { SEATING_BY_ID } from '../../../shared/layout';
+import { walkable } from '../../../shared/nav';
 import { isAsleep } from '../../../shared/status';
 import type { Ctx } from '../../core/context';
 import type { CoreState } from '../../core/ctx';
 import type { Parts } from '../../core/parts';
-import { NextUp, unsnoozed, waitingElsewhere, waitingInOrder, waitingLabel } from '../../nextup';
+import type { Off } from '../../core/registry';
+import { attentionCounts, attentionLabel } from '../../../shared/attention';
+import { NextUp, nLine, nToast, unsnoozed, waitingElsewhere, waitingInOrder } from '../../nextup';
 import { waitingOnSomeone } from '../../notify';
 import { store } from '../../state';
 import { openChanges } from '../../ui/changes';
@@ -19,29 +22,45 @@ import { $, closeAllModals, h, modalOpen, toast } from '../../ui/dom';
 import { openQueue } from '../../ui/queue';
 import { openSearch } from '../../ui/search';
 import { openTerminal, type TerminalFind } from '../../ui/terminal';
+import { makeAcquire } from './acquire';
+import { FRAME_AIM, framePose } from './frame';
+import { debugHandle } from '../giveway';
 
 /** Registers N (and the Units rail's next button), the compass's tick ('render') and / (search). */
-export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worlds' | 'views' | 'actions' | 'mission' | 'overview' | 'boardFaces'>) {
+export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'worlds' | 'views' | 'actions' | 'mission' | 'overview' | 'boardFaces' | 'flight' | 'seating' | 'walking' | 'stage' | 'pointer'>,
+) {
   const { player, camera, net } = ctx;
+  const acquire = makeAcquire(ctx, parts);
+  // For the shots and the tests: whether the bracket shows, what the crosshair lands on once you're
+  // there, and a way to be taken to a unit.
+  debugHandle('waiting', { bracket: acquire.showing, aimed: () => parts.pointer.target(), goTo: (id: string) => goToWorker(id) });
   const nextUp = new NextUp();
   const compass = new Compass($('compass'));
   /** What the last press of N said, which the next press replaces. */
   let nextToast: HTMLElement | null = null;
   const workerPos = new THREE.Vector3();
+  const unitScale = new THREE.Vector3();
+  /** Who hears each unit you're taken to (N, a needs-you badge, a notification; features/selection selects it). */
+  const arrivals = new Set<(id: string) => void>();
+  const arrived = (id: string) => {
+    for (const fn of arrivals) fn(id);
+  };
 
   /**
-   * N: to the first worker waiting on someone, and on each press after, the next. In the ranking's
-   * order (shared/attention.ts): the ones that need you before the ones that are done, so one that
-   * needs you on another floor comes before one here that's only done, as the banner says (features/needsyou).
-   * Snoozed ones are left out here too, as everywhere else.
+   * N: to the first unit in the building's ranking (shared/attention.ts) on this floor, and on each
+   * press after, the next: the ones that need you, then the stuck ones, then the ones to review, as the
+   * top bar counts them and the Attention board lists them. One that needs you on another floor comes
+   * before one here that's only stuck or done, as the banner says (features/needsyou). Snoozed ones
+   * are left out here too, as everywhere else.
    */
   function goToNextWaiting() {
     if (core.trip) return;
-    const here = awake();
-    const waiting = waitingInOrder(here);
+    const ranked = store.ranked(store.floor);
+    const line = nLine(ranked).filter((s) => store.workers.has(s.id));
     const other = elsewhere();
-    const away = !waiting.length || (other?.status === 'needs_input' && waiting[0].status !== 'needs_input');
-    const w = away ? undefined : nextUp.next(here, waitingBeside());
+    const first = line.length ? ranked.find((r) => r.entry.id === line[0].id)?.att.level : undefined;
+    const away = !line.length || (other?.status === 'needs_input' && first !== 'needs-you');
+    const w = away ? undefined : nextUp.pick(line, waitingBeside());
     nextToast?.remove();
     if (!w || !goToWorker(w.id)) {
       // Building-wide: after the last one here, the one on another floor that has waited longest.
@@ -53,12 +72,15 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
       parts.mission.missionDeps.goTo(other.floor, other.deskId);
       return;
     }
-    const of = waiting.length > 1 ? ` (${waiting.findIndex((x) => x.id === w.id) + 1} of ${waiting.length})` : '';
-    nextToast = toast(`${w.status === 'needs_input' ? `${w.name} needs you` : `${w.name} is done`}${of}. E opens its terminal`);
+    // Who it is, what it asks and the button to answer are on its card now (features/selection), its
+    // callout and the hint: the toast only says where this one is in the round and what the round holds.
+    const say = nToast(line, w.id, ranked);
+    if (say) nextToast = toast(say);
   }
 
   /**
-   * Puts you behind worker `id` on this floor, looking over its shoulder, with any window closed; from
+   * Puts you by worker `id` on this floor where it is now (at its console, or on its pod's ready line
+   * when it needs you), facing it, with any window closed, and brackets it once the view lands; from
    * the Overview, the Overview pans and zooms onto it instead. False when there's no getting there
    * (you're between floors, or it's gone).
    */
@@ -71,9 +93,29 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
       const v = parts.views.workerViews.get(id);
       const at = v ? v.model.where(workerPos) : workerPos.set(desk.x, 0, desk.z);
       parts.overview.flyTo(at.x, at.z);
+      arrived(id);
       return true;
     }
-    parts.actions.standAt(desk);
+    const v = parts.views.workerViews.get(id);
+    const at = v && !desk.station && !desk.room ? v.model.where(workerPos) : null;
+    const k = v?.model.root.getWorldScale(unitScale).y || 1;
+    const pose = at && framePose(at, desk, { walkable: (x, z) => walkable(x, z, player.wing), aim: FRAME_AIM * k });
+    if (!pose) {
+      parts.actions.standAt(desk);
+    } else {
+      // As actions.standAt does it, at the unit instead of its desk.
+      parts.flight.from();
+      if (player.seat) parts.seating.standUp();
+      ctx.activities.stopAll('desk');
+      parts.walking.stopWalkingTo();
+      player.pos.set(pose.x, 0, pose.z);
+      player.vy = 0;
+      player.facing = pose.facing;
+      player.camYaw = pose.facing - Math.PI;
+      player.lookPitch = pose.pitch;
+    }
+    acquire.lock(id);
+    arrived(id);
     return true;
   }
 
@@ -111,13 +153,16 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
 
   function renderWaiting() {
     const waiting = waitingInOrder(awake());
+    // Shown whenever N has somewhere to go: a stuck unit counts, as the top bar counts it.
+    const ranked = store.ranked(store.floor);
+    const line = nLine(ranked);
     const el = $('waiting');
-    el.classList.toggle('hidden', !waiting.length);
+    el.classList.toggle('hidden', !line.length);
     el.classList.toggle('all-done', waiting.every((w) => w.status === 'done'));
     el.classList.toggle('needs-you-now', waiting.some((w) => w.status === 'needs_input'));
     // The counts are the top bar's: the rail's button only says there is someone to go to.
-    if (waiting.length) el.replaceChildren('N next');
-    el.title = waiting.length ? `${waitingLabel(waiting)}: go to the next (N)` : '';
+    if (line.length) el.replaceChildren('N next');
+    el.title = line.length ? `${attentionLabel(attentionCounts(ranked))}: go to the next (N)` : '';
   }
   // A snooze is in the roster, not the floor's workers.
   store.on('roster', renderWaiting);
@@ -193,5 +238,11 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
   /** The units the compass points to now, at the edge of the view (their callouts give way to it). */
   const pointed = (): ReadonlySet<string> => compass.shown;
 
-  return { goToNextWaiting, goToWorker, answerWorker, renderWaiting, openWorkerTerminal, openWorkerChanges, showSearch, showQueue, pointed };
+  /** Hears each unit goToWorker takes you to. */
+  function onArrive(fn: (id: string) => void): Off {
+    arrivals.add(fn);
+    return () => void arrivals.delete(fn);
+  }
+
+  return { acquire, onArrive, goToNextWaiting, goToWorker, answerWorker, renderWaiting, openWorkerTerminal, openWorkerChanges, showSearch, showQueue, pointed };
 }

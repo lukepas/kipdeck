@@ -115,7 +115,9 @@ export function fallbackTask(prompt: string): WorkerTask {
   const one = prompt.replace(/\s+/g, ' ').trim();
   const words = one.replace(/^(please|can you|could you|hey|ok|so)\b[\s,]*/i, '').split(' ');
   const name = words.slice(0, 4).join(' ').replace(/[\s,.;:!?-]+$/, '');
-  return { name: cap(clip(name, NAME_MAX)), summary: cap(clip(one, SUMMARY_MAX)) };
+  // Its first words only: three dots say there's more (the summary has it).
+  const more = words.length > 4 && name.length < NAME_MAX ? '...' : '';
+  return { name: cap(clip(name, NAME_MAX)) + more, summary: cap(clip(one, SUMMARY_MAX)) };
 }
 
 function describe(ctx: TaskContext): string {
