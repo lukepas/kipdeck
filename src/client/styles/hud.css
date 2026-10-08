@@ -99,7 +99,10 @@ body:has(.sel-card.open) #hud { --clear-right: calc(var(--dock-right, 0px) + 344
 .bottombar > * { pointer-events: auto; }
 .bottombar .mission-strip { flex: 0 1 600px; min-width: 0; height: 40px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: var(--hud-shadow); }
 .bottombar .mission-strip:empty { visibility: hidden; }
-.bb-keys { flex: 1; min-width: 0; display: flex; justify-content: center; gap: 6px; overflow: hidden; }
+/* A key that doesn't fit drops out whole onto a hidden second row, never cut off mid-word (Mission control docked narrows the bar);
+   with no room for even one, none shows. */
+.bb-keys { flex: 1; min-width: 0; height: 28px; display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 6px; overflow: hidden; container: bb-keys / inline-size; }
+@container bb-keys (max-width: 160px) { .bb-key { visibility: hidden; } }
 .bb-key { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 9px 0 5px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--hud-fill); color: var(--muted); font-size: 12px; white-space: nowrap; cursor: pointer; }
 .bb-key:hover { color: var(--text); background: var(--surface-3); }
 .bb-key kbd { min-width: 18px; padding: 0 4px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); color: var(--text); font: 500 11px/16px var(--font-mono); text-align: center; }

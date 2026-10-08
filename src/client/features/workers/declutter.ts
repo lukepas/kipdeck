@@ -8,14 +8,17 @@
  * that slid sideways clear of the others, a hairline tying it back to its unit. A shrunk callout grows
  * back to its full card only once there is GROW_ROOM to spare, so it doesn't flick between the two as
  * the view drifts. A callout that would run off the side of the view, or under the Units rail, slides
- * back in. Then none covers a wall board: one that would docks under that board's lower bezel, or fades
- * (dock.ts); one that needs someone and finds no slot stays over the board rather than going. The
+ * back in. From the Overview the pods' ground labels (features/pods) are placed first, as fixed
+ * obstacles, so a callout lifts or shrinks clear of a label rather than sitting on its words. Then none
+ * covers a wall board: one that would docks under that board's lower bezel, or stands down (dock.ts):
+ * never left half faded over another card. One that needs someone and finds no slot stays over the
+ * board rather than going. The
  * placing itself is declutter(), nudge() and dock(), with nothing to draw, so the tests run them.
  */
 import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
-import { FADED, dock, standsDown } from './dock';
+import { dock, standsDown } from './dock';
 import { labelSource, pileWord, piles } from './labels';
 import { debugHandle } from '../giveway';
 import { Worker } from '../../world/character';
@@ -81,7 +84,7 @@ const SOFT_LIFT = 1.5;
 /** `b` grown by `by` pixels on every side. */
 const grown = (b: LabelBox, by: number): LabelBox => ({ x: b.x - by, bottom: b.bottom + by, w: b.w + 2 * by, h: b.h + 2 * by });
 
-type Box = { x: number; top: number; bottom: number; w: number };
+export type Box = { x: number; top: number; bottom: number; w: number };
 
 /**
  * Where a callout that must show goes once lifting it MAX_LIFT hasn't cleared it: slid sideways just
@@ -118,9 +121,10 @@ function clearLift(b: LabelBox, placed: Box[], limit: number): number | null {
  * with a small lift (a shrunk one needs GROW_ROOM to spare as well), else its call sign, else (one that
  * needs nobody) nothing. One that must show and fits nowhere takes its call sign lifted up to
  * MAX_LIFT, else slid sideways clear (sideStep); only when even that finds no room does it cover another.
+ * `fixed` are boxes already there that every callout keeps clear of the same way (the pods' ground labels).
  */
-export function declutter(labels: readonly Label[]): Placed[] {
-  const placed: Box[] = [];
+export function declutter(labels: readonly Label[], fixed: readonly Box[] = []): Placed[] {
+  const placed: Box[] = [...fixed];
   const put = (b: LabelBox, lift: number, dx = 0) => placed.push({ x: b.x + dx, top: b.bottom - lift - b.h, bottom: b.bottom - lift, w: b.w });
   return labels.map((l) => {
     // Growing back needs room to spare; staying full needs only the room it takes.
@@ -320,7 +324,9 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
     shown.length = 0;
     shown.push(...free);
     shown.sort((a, b) => a.rank - b.rank || a.d - b.d);
-    const placed = declutter(shown.map((s) => s.label));
+    // From the Overview the pods' ground labels are there first: callouts keep off their words.
+    const fixed = overview ? (ctx.office.pods?.boxes() ?? []).map((b) => ({ x: b.left, top: b.top, bottom: b.bottom, w: b.right - b.left })) : [];
+    const placed = declutter(shown.map((s) => s.label), fixed);
     last = shown.map((s, i) => ({ sign: s.model.callSign, label: s.label, placed: placed[i] }));
     const slid = shown.map((s, i) => {
       const { mode, lift, dx } = placed[i];
@@ -334,7 +340,7 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
       const by = dx + (mode === 'hidden' || anchor < left || anchor > W ? 0 : nudge(b, left, W));
       return { x: at.x + by, bottom: b.bottom - lift, w: b.w, h: b.h, anchor: s.anchorX, keep: s.label.keep, hidden: mode === 'hidden', by };
     });
-    // Off the wall boards: docked under a bezel at the unit's own depth, so it's the size it was, or faded.
+    // Off the wall boards: docked under a bezel at the unit's own depth, so it's the size it was, or out of sight.
     const boards = parts.boardFaces?.faces().flatMap((f) => (f.px ? [f.px] : [])) ?? [];
     dock(slid, boards, H).forEach((k, i) => {
       const s = shown[i];
@@ -345,10 +351,11 @@ export function installDeclutter(ctx: Ctx, parts: Pick<Parts, 'views' | 'worlds'
         return;
       }
       s.model.setNudge(c.by / c.w);
-      // Never left on a board's face: one that found no slot under it stands down (its mark and its card
-      // say it), unless it needs someone, which always shows: over the board, at full strength.
-      if (standsDown(c, boards)) s.model.setMode('hidden');
-      s.model.dock(null, k.kind === 'fade' ? FADED : 1, dt);
+      // Never left on a board's face, nor half faded over another card: one that found no slot under it
+      // stands down (its mark and its card say it), unless it needs someone, which always shows: over
+      // the board, at full strength.
+      if (k.kind === 'out' || standsDown(c, boards)) s.model.setMode('hidden');
+      s.model.dock(null, 1, dt);
     });
   });
 }

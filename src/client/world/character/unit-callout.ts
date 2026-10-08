@@ -38,6 +38,8 @@ export interface CalloutText {
 const R = 2;
 /** World meters per canvas pixel (before R), as the deck's other labels. */
 const SCALE = 0.0048;
+/** The same, for whoever turns a callout's size back into its pixels as drawn (callout-view.ts). */
+export const CALLOUT_PX = SCALE;
 const MONO = (px: number, w = 500) => `${w} ${px * R}px "JetBrains Mono", ui-monospace, monospace`;
 const UI = (px: number, w = 500) => `${w} ${px * R}px Archivo, system-ui, sans-serif`;
 const PAD = 10 * R;

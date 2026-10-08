@@ -149,8 +149,9 @@
 .tl-text { min-width: 0; overflow-wrap: anywhere; }
 .tl-more { margin-top: 10px; }
 
-/* Locate, on any row with a unit: always there, quiet, full strength on hover or with the row selected. */
+/* Locate, on any row with a unit: always there and named, quiet, full strength on hover or with the row selected. */
 .mc-locate { width: 26px; height: 26px; padding: 0; display: grid; place-items: center; opacity: .55; transition: opacity 120ms ease-out; }
+.mc-locate.labelled { width: auto; display: inline-flex; align-items: center; gap: 5px; padding: 0 9px 0 7px; opacity: .8; }
 .mc-row:hover .mc-locate, .mc-row:focus-within .mc-locate, .mc-locate:focus-visible { opacity: 1; }
 /* To review: the oldest one's Review right on the line, the tab as a quiet link beside it. */
 .mc-level-static { cursor: default; }

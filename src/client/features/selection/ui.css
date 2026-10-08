@@ -27,6 +27,8 @@
   pointer-events: auto;
 }
 .sel-card[hidden] { display: none; }
+/* Under any window over the deck (Mission control floating, a terminal): never drawn over its corner. Docked, it stays, left of the dock. */
+body:has(#modal-root > .backdrop:not(.mc-dock-backdrop)) .sel-card { visibility: hidden; }
 .sel-card.open { opacity: 1; transform: none; }
 /* The rule down its left side, in white like the reticle on the floor. */
 .sel-card::before { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; border-radius: var(--radius) 0 0 var(--radius); background: var(--text); }

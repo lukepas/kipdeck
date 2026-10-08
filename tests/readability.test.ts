@@ -6,7 +6,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { contains, pack, rectOf, toPx } from '../src/client/features/boardfaces/logic.js';
 import { BOARD_SLOTS, HOLO_TOP, OFF_SCREEN, boardMask, boardSlots, coneHeight } from '../src/client/features/bridge/holo-mask.js';
-import { FADED, dock, packRow, type Chip } from '../src/client/features/workers/dock.js';
+import { dock, packRow, type Chip } from '../src/client/features/workers/dock.js';
 import { LEAN, REST, easeInOut, leanDegrees, leanStep, type LeanInput, type LeanState } from '../src/client/features/focuslean/logic.js';
 import { fieldOf, zoomOf } from '../src/client/core/zoom.js';
 import { ARC } from '../src/shared/amphitheater.js';
@@ -76,12 +76,11 @@ test('the callouts that need someone dock first, and only the others fade when t
   // Two rows of two under a board 300 px wide: four dock, the fifth fades.
   const board = { left: 400, right: 700, top: 200, bottom: 420 };
   const out = dock([chip(450, 400, true), chip(460, 400, true), chip(470, 400), chip(480, 400), chip(490, 400)], [board], 900);
-  assert.deepEqual(out.map((o) => o.kind), ['dock', 'dock', 'dock', 'dock', 'fade']);
+  assert.deepEqual(out.map((o) => o.kind), ['dock', 'dock', 'dock', 'dock', 'out']);
   if (out[0].kind === 'dock' && out[2].kind === 'dock') assert.equal(out[2].bottom - out[0].bottom, 34, 'the second row under the first');
-  assert.ok(FADED === 0.25);
   // A row with no room at all (the board's foot at the bottom of the view): needs you stays, at full strength.
   const low = { left: 400, right: 900, top: 600, bottom: 890 };
-  assert.deepEqual(dock([chip(500, 700, true), chip(600, 700)], [low], 900), [{ kind: 'free' }, { kind: 'fade' }]);
+  assert.deepEqual(dock([chip(500, 700, true), chip(600, 700)], [low], 900), [{ kind: 'free' }, { kind: 'out' }]);
 });
 
 test('the chips docked already shuffle along to make room, so a later one never takes a slot an earlier one needed', () => {

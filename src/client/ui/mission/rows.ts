@@ -85,7 +85,7 @@ export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { sho
         ...repBits(e.id),
       ),
       h('span.mc-time', { title: 'Time in this state' }, ago(now - r.att.since)),
-      h('div.mc-btns', {}, locateButton(deps, e), primary, toggle),
+      h('div.mc-btns', {}, primary, locateButton(deps, e), toggle),
     ),
     more,
   );

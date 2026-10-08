@@ -171,26 +171,13 @@ async function measure([from, to]) {
     draw();
     gl.finish();
   }
-  // PROBE_LIST: which parts of the scene this frame's draws go to (the path of names down from the scene).
-  const by = {};
-  const orig = r.renderBufferDirect;
-  if (window.__probeList)
-    r.renderBufferDirect = function (camera, scene, geometry, material, object, group) {
-      // The nearest named ancestor, the geometry and the material; the shadow map's draws apart.
-      let o = object;
-      while (o && !o.name && !o.isScene) o = o.parent;
-      const named = o && !o.isScene ? o.name : '-';
-      const pass = material.isMeshDepthMaterial || material.isMeshDistanceMaterial ? 'shadow ' : '';
-      const key = `${pass}${named} ${object.type}/${geometry.type}/${material.type}${object.isInstancedMesh ? ' [inst]' : ''}${object.count === 0 ? ' (empty)' : ''}`;
-      by[key] = (by[key] ?? 0) + 1;
-      return orig.call(this, camera, scene, geometry, material, object, group);
-    };
+  // PROBE_LIST: which parts of the scene this frame's draws go to (tallyDraws, put on the page at the start).
+  const tally = window.__tallyDraws?.(r);
   r.info.autoReset = false;
   r.info.reset();
   draw();
   gl.finish();
-  r.renderBufferDirect = orig;
-  const list = window.__probeList ? Object.fromEntries(Object.entries(by).sort((x, y) => y[1] - x[1])) : undefined;
+  const list = tally?.();
   const calls = r.info.render.calls;
   const triangles = r.info.render.triangles;
   r.info.autoReset = true;
@@ -328,6 +315,7 @@ async function during([[from, to], kind]) {
   const times = [];
   let calls = 0;
   let triangles = 0;
+  let list;
   for (let i = 0; i < 900 && times.length < 60; i++) {
     await frame();
     if (!up()) {
@@ -336,10 +324,13 @@ async function during([[from, to], kind]) {
     }
     r.info.autoReset = false;
     r.info.reset();
+    // PROBE_LIST: where the first sampled frame's draws go, as for the other vantages.
+    const tally = times.length ? undefined : window.__tallyDraws?.(r);
     const t0 = performance.now();
     draw();
     gl.finish();
     times.push(performance.now() - t0);
+    if (tally) list = tally();
     calls = Math.max(calls, r.info.render.calls);
     triangles = Math.max(triangles, r.info.render.triangles);
     r.info.autoReset = true;
@@ -352,7 +343,7 @@ async function during([[from, to], kind]) {
   p.update = p.__update;
   if (!times.length) return { skipped: `${kind} never came up` };
   const q = (xs, k) => [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.floor(xs.length * k))];
-  return { calls, triangles, samples: times.length, renderMs: +q(times, 0.5).toFixed(2), renderP95: +q(times, 0.95).toFixed(2) };
+  return { calls, triangles, samples: times.length, renderMs: +q(times, 0.5).toFixed(2), renderP95: +q(times, 0.95).toFixed(2), ...(list ? { list } : {}) };
 }
 
 async function main() {
@@ -372,7 +363,29 @@ async function main() {
       }
     }, JSON.parse(process.env.PROBE_SETTINGS ?? '{}'));
     const page = await context.newPage();
-    if (process.env.PROBE_LIST) await page.addInitScript(() => (window.__probeList = true));
+    // PROBE_LIST: window.__tallyDraws(renderer) counts the next frame's draws by the named part of the
+    // scene they go to (the nearest named ancestor, the geometry and the material; the shadow map's
+    // apart), and gives back the counts, most first, when called again. One for every vantage.
+    if (process.env.PROBE_LIST)
+      await page.addInitScript(() => {
+        window.__tallyDraws = (r) => {
+          const by = {};
+          const orig = r.renderBufferDirect;
+          r.renderBufferDirect = function (camera, scene, geometry, material, object, group) {
+            let o = object;
+            while (o && !o.name && !o.isScene) o = o.parent;
+            const named = o && !o.isScene ? o.name : '-';
+            const pass = material.isMeshDepthMaterial || material.isMeshDistanceMaterial ? 'shadow ' : '';
+            const key = `${pass}${named} ${object.type}/${geometry.type}/${material.type}${object.isInstancedMesh ? ' [inst]' : ''}${object.count === 0 ? ' (empty)' : ''}`;
+            by[key] = (by[key] ?? 0) + 1;
+            return orig.call(this, camera, scene, geometry, material, object, group);
+          };
+          return () => {
+            r.renderBufferDirect = orig;
+            return Object.fromEntries(Object.entries(by).sort((x, y) => y[1] - x[1]));
+          };
+        };
+      });
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`${base}/login`);

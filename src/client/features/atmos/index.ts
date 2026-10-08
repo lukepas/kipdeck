@@ -114,16 +114,16 @@ export function installAtmos(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
 
     // The shafts and their dust.
     shaft.uniforms.uTime.value = clock * DRIFT.shafts;
-    // From the Overview a shaft is a pale band across the deck plan, over the units: a trace of it only.
-    // Down to it as the view goes up (core/camera-overview.ts progress()), not on the move's first frame;
+    // From the Overview a shaft is a pale band across the deck plan, over the units: none up there.
+    // Down to nothing as the view goes up (core/camera-overview.ts progress()), not on the move's first frame;
     // and down while the camera is still low, before it passes through a shaft (from inside one, its
     // haze fills a third of the frame for a frame or two: a flash), coming back as it lands on the way down.
     const k = Math.min(1, (parts.overview?.progress() ?? (parts.stage.view ? 1 : 0)) / 0.08);
     const up = k * k * (3 - 2 * k);
     gloss.update(parts.overview?.progress() ?? 0);
-    // On the move itself none at all: the camera passes through them. Landed up there, a trace (15%).
-    const trace = parts.overview?.moving() ? 0 : 0.15;
-    shaft.uniforms.uLevel.value = shaftLevel(mode) * spectacle * gain.shafts * (1 - (1 - trace) * up);
+    // None on the move (the camera passes through them) or landed (over the deck plan even a trace reads
+    // as white smudges on the floor rather than light).
+    shaft.uniforms.uLevel.value = shaftLevel(mode) * spectacle * gain.shafts * (1 - up);
     shaft.uniforms.uColor.value.copy(shaftColor.set(SHAFT_COLOR[mode]));
     shaft.uniforms.uRes.value.copy(res);
     motes.uniforms.uTime.value = clock * DRIFT.motes;

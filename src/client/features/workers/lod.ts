@@ -3,11 +3,13 @@
 // sign and what it's doing now), and near, the three-line card (who, its state and for how long, its
 // task, its branch, PR and model). Each boundary has a 10% band of hysteresis, so a callout never
 // flickers between two tiers at the edge, and a change ripples across the crew: each unit pops in
-// after a delay of its own (0-240 ms from its id) rather than all at once. Pure, so the tests run it;
+// after a delay of its own rather than all at once. From the Overview the ripple runs outward from the
+// middle of the view, the units that need someone first (rippleDelays); walking, each unit's delay
+// comes from its id (staggerDelay). Pure, so the tests run it;
 // world/character/callout-view.ts animates it and features/workers/views.ts picks the tier each frame.
 
 import type { AttentionLevel } from '../../../shared/attention';
-import { statusPhrase } from '../../../shared/rowtext';
+import { splitTag, statusPhrase } from '../../../shared/rowtext';
 
 export type CalloutTier = 'far' | 'mid' | 'near';
 
@@ -81,7 +83,12 @@ export const CALLOUT_SCREEN: Record<CalloutTier, { min: number; max: number }> =
 
 /** The longest a unit waits before its callout changes with a zoom (ms), and how long the change takes. */
 export const STAGGER_MAX = 240;
-export const POP_MS = 180;
+export const POP_MS = 220;
+/** The ripple from the Overview: this many ms between one unit and the next out from the middle, at most RIPPLE_MAX. */
+export const RIPPLE_STEP = 45;
+export const RIPPLE_MAX = 360;
+/** How far (px, as drawn) a callout rises as it pops in. */
+export const POP_RISE = 6;
 /** How long the old content fades out before a change of tier swaps it (ms). */
 export const FADE_OUT_MS = 90;
 /** How small a callout starts as it pops in, against its full size. */
@@ -98,12 +105,36 @@ export function staggerDelay(id: string): number {
   return (h >>> 0) % (STAGGER_MAX + 1);
 }
 
+/** A unit on screen for the ripple: where it stands (px) and whether it needs someone. */
+export interface RippleUnit {
+  x: number;
+  y: number;
+  urgent: boolean;
+}
+
+/**
+ * Each unit's delay (ms) before its callout pops in from the Overview: the ones that need someone at
+ * once, then the rest one at a time out from the view's middle (`cx`, `cy`), RIPPLE_STEP apart and
+ * never later than RIPPLE_MAX, so the cards arrive as a ripple rather than all in the same frame.
+ */
+export function rippleDelays(units: readonly RippleUnit[], cx: number, cy: number): number[] {
+  const order = units.map((_, i) => i).filter((i) => !units[i].urgent);
+  const far = (i: number) => Math.hypot(units[i].x - cx, units[i].y - cy);
+  order.sort((a, b) => far(a) - far(b));
+  const out = units.map(() => 0);
+  order.forEach((i, n) => (out[i] = Math.min(RIPPLE_MAX, (n + 1) * RIPPLE_STEP)));
+  return out;
+}
+
 export const easeOutCubic = (k: number) => 1 - (1 - Math.min(1, Math.max(0, k))) ** 3;
 
-/** A callout `ms` into its pop: its scale (POP_FROM to 1) and opacity (0 to 1), eased out. */
-export function popAt(ms: number): { scale: number; alpha: number } {
+/**
+ * A callout `ms` into its pop: its scale (POP_FROM to 1), opacity (0 to 1) and how far it still has to
+ * rise (POP_RISE px to none), eased out.
+ */
+export function popAt(ms: number): { scale: number; alpha: number; rise: number } {
   const e = easeOutCubic(ms / POP_MS);
-  return { scale: POP_FROM + (1 - POP_FROM) * e, alpha: e };
+  return { scale: POP_FROM + (1 - POP_FROM) * e, alpha: e, rise: (1 - e) * POP_RISE };
 }
 
 /** Cuts `s` to at most `n` characters at a word's end, with three dots when it's cut. */
@@ -152,6 +183,11 @@ export function activityLine(activity: string): string {
   return clip(one, MID_MAX);
 }
 
+/** `o` with a leading "[ask]" or "[perm]" taken off its activity and label: a callout never shows the brackets. */
+function untagged<T extends { activity?: string; label?: string }>(o: T): T {
+  return { ...o, activity: o.activity === undefined ? undefined : splitTag(o.activity).text, label: o.label === undefined ? undefined : splitTag(o.label).text };
+}
+
 /** "Wants permission: Bash: npm publish": the hook's words for a tool call waiting on your yes. */
 const PERMISSION = /^Wants permission:\s*/i;
 
@@ -169,7 +205,8 @@ export function permissionAsk(o: { activity?: string; label?: string }): string 
  * latest tool call or prompt), else the ranking's status phrase (shared/rowtext.ts). A permission wait
  * says what you'd allow, as a question ("Allow npm publish?"), not the hook's own words.
  */
-export function midLine(o: { activity?: string; level: AttentionLevel; label?: string; title?: string }): string {
+export function midLine(raw: { activity?: string; level: AttentionLevel; label?: string; title?: string }): string {
+  const o = untagged(raw);
   if (o.level === 'needs-you') {
     const ask = permissionAsk(o);
     // The tool's name goes too: the command says it ("npm publish", not "Bash: npm publish").
@@ -183,7 +220,8 @@ export function midLine(o: { activity?: string; level: AttentionLevel; label?: s
  * The near card's third line for a unit that needs someone: what it asks (a permission's tool call, a
  * question's prompt) or why it's stuck, in place of its branch and engine. Null for any other unit.
  */
-export function askLine(o: { activity?: string; level: AttentionLevel; label?: string }): string | null {
+export function askLine(raw: { activity?: string; level: AttentionLevel; label?: string }): string | null {
+  const o = untagged(raw);
   if (o.level === 'stuck') return o.label?.trim() || null;
   if (o.level !== 'needs-you') return null;
   return permissionAsk(o) ?? (o.activity?.split('\n')[0].trim() || o.label?.trim() || null);
