@@ -15,3 +15,6 @@ design/shots/interior-baseline/
 
 # The demo video's rendered footage and mp4s (launch/video/capture/ makes them again).
 launch/video/out/
+
+# The demo video, its raw recordings and its GIF (design/record-demo.mjs makes them again).
+design/shots/fundable/*/video/

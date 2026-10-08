@@ -1,7 +1,10 @@
-// End to end: Mission control in the built office, in a headless browser. In the 2D view: the
-// mission strip, the Mission button, editing the mission and a milestone in place, the tabs and
-// their keys, the timeline, and Esc closing the window; back after a while away, the digest as the
-// first card. In the 3D office: I opens it and Esc puts it away, and the digest opens by itself.
+// End to end: Mission control in the built office, in a headless browser. On the home page (the
+// inbox): Mission control from the avatar menu, editing the mission and a milestone in place, the
+// tabs and their keys, the timeline, and Esc closing the window; back after a while away, the digest
+// over the list. In the 3D Bridge view: I opens it and Esc puts it away, and the digest opens by itself.
+// Goals, the timeline and the debrief are Labs (Goals and timeline, Bridge ambience), and Mission
+// control on the home page is in the GitHub boards and queue lab, which this office starts with on
+// (--labs ops,ambience,boards).
 // Skipped (not failed) when there's no build (npm run build), the build is older than the client's
 // sources, or there's no browser playwright-core can start.
 import { after, before, test } from 'node:test';
@@ -19,7 +22,7 @@ import { bundleWhy } from './support/bundle.js';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BUNDLE = path.join(ROOT, 'dist', 'public');
 const stale = bundleWhy(path.join(BUNDLE, 'index.html'), [path.join(ROOT, 'src', 'client'), path.join(ROOT, 'src', 'shared')]);
-const built = !stale && existsSync(path.join(BUNDLE, 'lite.html'));
+const built = !stale && existsSync(path.join(BUNDLE, 'bridge.html'));
 const PASSWORD = 'mission-e2e';
 
 const root = mkdtempSync(path.join(tmpdir(), 'office-mission-'));
@@ -68,7 +71,7 @@ before(async () => {
   const log = console.log;
   console.log = () => {};
   try {
-    office = await startServer(loadConfig([project, '--home', home, '--projects', path.join(root, 'projects'), '--port', String(port), '--password', PASSWORD, '--no-open', '--agent', claude]), { publicDir: BUNDLE });
+    office = await startServer(loadConfig([project, '--home', home, '--projects', path.join(root, 'projects'), '--port', String(port), '--password', PASSWORD, '--no-open', '--agent', claude, '--labs', 'ops,ambience,boards']), { publicDir: BUNDLE });
   } finally {
     console.log = log;
   }
@@ -106,39 +109,42 @@ async function signedIn(viewport = { width: 1280, height: 800 }, away = 0, fresh
 
 const missionOpen = (page: Page) => page.locator('.modal.mission-control').count();
 
-test('the 2D view: the strip, Mission control, editing the mission in place, the tabs and Esc', async (t) => {
+/** Mission control from the home page's avatar menu. */
+async function openFromMenu(page: Page) {
+  await page.locator('#btn-avatar').click();
+  await page.locator('.menu-pop .menu-item', { hasText: 'Mission control' }).click();
+}
+
+test('the home page: Mission control from the menu, editing the mission in place, the tabs and Esc', async (t) => {
   if (why) return t.skip(why);
   const { page, errors, context } = await signedIn({ width: 420, height: 860 });
   t.after(() => context.close());
-  await page.goto(`${base}/lite`);
-  // No mission yet: the strip is a call to set one, and opens the Goals tab.
-  await page.locator('#mission-strip .ms-cta', { hasText: 'Set the mission' }).waitFor({ timeout: 15_000 });
-  await page.locator('#mission-strip .ms-strip').click();
+  await page.goto(`${base}/`);
+  await page.locator('.first-run').waitFor({ timeout: 15_000 });
+  await openFromMenu(page);
   const modal = page.locator('.modal.mission-control');
   await modal.waitFor();
+  await page.keyboard.press('2');
   assert.equal(await modal.locator('.mc-tab[aria-selected=true]').innerText(), 'Goals');
   // It has its ✕ in the top right.
   assert.equal(await modal.locator('header .close').count(), 1);
 
-  // Click the statement, type, Enter: it's the floor's mission, and the strip says it.
+  // Click the statement, type, Enter: it's the floor's mission.
   await modal.locator('.mc-statement .mc-edit-btn').click();
   const box = modal.locator('.mc-statement textarea');
   await box.fill('Make sign-in boring <script>alert(1)</script>');
   await box.press('Enter');
-  await page.locator('#mission-strip .ms-statement', { hasText: 'Make sign-in boring' }).waitFor();
+  await modal.locator('.mc-statement', { hasText: 'Make sign-in boring' }).waitFor();
   // Rendered as text, never as markup.
-  assert.equal(await page.locator('#mission-strip script').count(), 0);
-  assert.match(await page.locator('#mission-strip .ms-statement').innerText(), /<script>alert\(1\)<\/script>/);
+  assert.equal(await modal.locator('.mc-statement script').count(), 0);
+  assert.match(await modal.locator('.mc-statement').innerText(), /<script>alert\(1\)<\/script>/);
 
-  // A milestone, added with Enter: the active one, on the strip.
+  // A milestone, added with Enter: the active one.
   const add = modal.locator('input[aria-label="New milestone"]');
   await add.fill('Auth rewrite');
   await add.press('Enter');
   await modal.locator('.mc-milestone.active', { hasText: 'Auth rewrite' }).waitFor();
-  await page.locator('#mission-strip .ms-title', { hasText: 'Auth rewrite' }).waitFor();
-  // No issues on it yet: no bar stuck at 0%, it says so instead.
-  assert.equal(await page.locator('#mission-strip .ms-bar').count(), 0);
-  assert.match(await page.locator('#mission-strip .ms-count').innerText(), /no issues linked yet/);
+  // No issues on it yet: no bar stuck at 0%.
   assert.equal(await modal.locator('.mc-milestone .mc-bar').count(), 0);
 
   // Esc while editing cancels the edit and leaves the window open.
@@ -183,10 +189,10 @@ test('the 2D view: the strip, Mission control, editing the mission in place, the
   assert.match(await modal.locator('.mc-tab[aria-selected=true]').innerText(), /^Review/);
   await modal.locator('.mc-empty', { hasText: 'Nothing waits for review' }).waitFor();
 
-  // Esc closes it; the Mission button brings it back on the tab you had last.
+  // Esc closes it; the menu brings it back on the tab you had last.
   await page.keyboard.press('Escape');
   assert.equal(await missionOpen(page), 0);
-  await page.locator('#btn-mission').click();
+  await openFromMenu(page);
   await modal.waitFor();
   assert.match(await modal.locator('.mc-tab[aria-selected=true]').innerText(), /^Review/);
   await modal.locator('header .close').click();
@@ -199,7 +205,7 @@ test('the 3D office: the strip in the bottom bar, I opens Mission control, Esc p
   if (why) return t.skip(why);
   const { page, errors, context } = await signedIn();
   t.after(() => context.close());
-  await page.goto(`${base}/`);
+  await page.goto(`${base}/bridge`);
   await page.waitForFunction(() => !!(window as unknown as { __office?: { store: { floor: string | null } } }).__office?.store.floor, null, { timeout: 60_000 });
   // The mission from the test before is on the strip, bottom left.
   await page.locator('#mission-strip .ms-statement', { hasText: 'Make sign-in boring' }).waitFor({ timeout: 15_000 });
@@ -225,30 +231,31 @@ test('the 3D office: the strip in the bottom bar, I opens Mission control, Esc p
   assert.deepEqual(errors, []);
 });
 
-test('back after a while away: the digest is the first card in the 2D view, and the debrief in the 3D office opens it', async (t) => {
+test('back after a while away: the digest is over the list on the home page, and the debrief in the 3D office opens it', async (t) => {
   if (why) return t.skip(why);
   const lite = await signedIn({ width: 420, height: 860 }, 40 * 60_000);
   t.after(() => lite.context.close());
-  await lite.page.goto(`${base}/lite`);
+  await lite.page.goto(`${base}/`);
   const card = lite.page.locator('.lite-digest');
   await card.waitFor({ timeout: 15_000 });
   await card.locator('.dg-summary').waitFor();
   assert.match(await card.innerText(), /While you were away/);
+  // Going to what needs you puts it away (nothing does here, so nothing is selected).
   await card.locator('button', { hasText: 'Show what needs me' }).click();
-  const modal = lite.page.locator('.modal.mission-control');
-  await modal.waitFor();
-  assert.equal(await modal.locator('.mc-tab[aria-selected=true]').innerText(), 'Attention');
-  await lite.page.keyboard.press('Escape');
-  await card.locator('button[aria-label=Dismiss]').click();
   assert.equal(await card.count(), 0);
-  // Catch up brings it back.
-  await lite.page.locator('#btn-digest').click();
+  // The palette brings it back, and its ✕ dismisses it.
+  await lite.page.keyboard.press('Control+k');
+  await lite.page.locator('.modal.palette').waitFor();
+  await lite.page.keyboard.type('while you were away');
+  await lite.page.keyboard.press('Enter');
   await lite.page.locator('.lite-digest').waitFor();
+  await lite.page.locator('.lite-digest button[aria-label=Dismiss]').click();
+  assert.equal(await lite.page.locator('.lite-digest').count(), 0);
   assert.deepEqual(lite.errors, []);
 
   const office = await signedIn(undefined, 40 * 60_000);
   t.after(() => office.context.close());
-  await office.page.goto(`${base}/`);
+  await office.page.goto(`${base}/bridge`);
   // The start of watch takes the window's place at load: the debrief, whose Full log is the window.
   const debrief = office.page.locator('.debrief.on');
   await debrief.waitFor({ timeout: 60_000 });
@@ -268,20 +275,16 @@ test('back after a while away: the digest is the first card in the 2D view, and 
   assert.deepEqual(office.errors, []);
 });
 
-test('a first visit to the 3D office asks only for a name, never for a character', async (t) => {
+test('a first visit to the 3D office asks for nothing: no name, no character', async (t) => {
   if (why) return t.skip(why);
   const { page, errors, context } = await signedIn(undefined, 0, true);
   t.after(() => context.close());
-  await page.goto(`${base}/`);
-  const ask = page.locator('.modal.name-ask');
-  await ask.waitFor({ timeout: 60_000 });
-  assert.equal(await page.locator('.modal.charsel').count(), 0, 'no character creator in the way');
-  assert.equal(await ask.locator('header .close').count(), 1);
-  await ask.locator('input').fill('Nia');
-  await ask.locator('button[type=submit]').click();
+  await page.goto(`${base}/bridge`);
   await page.waitForFunction(() => !!(window as unknown as { __office?: { store: { floor: string | null } } }).__office?.store.floor, null, { timeout: 60_000 });
+  assert.equal(await page.locator('.modal.name-ask').count(), 0, 'no name to type');
+  assert.equal(await page.locator('.modal.charsel').count(), 0, 'no character creator in the way');
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('agent-office.profile') ?? 'null'));
-  assert.equal(saved.name, 'Nia');
+  assert.match(saved.name, /\S/, 'a name to go by (a made-up one: this office has a password, so it is not its owner\'s own)');
   assert.ok(saved.look, 'a look was dealt, and kept for next time');
   await page.locator('#mission-strip').waitFor();
   assert.deepEqual(errors, []);
@@ -310,7 +313,7 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   // A software-rendered deck starves the page of frames, so motion would never finish: settle it,
   // and poll on a timer below rather than on animation frames.
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto(`${base}/`);
+  await page.goto(`${base}/bridge`);
   await page.waitForFunction(() => !!(window as unknown as { __office?: { store: { floor: string | null } } }).__office?.store.floor, null, { timeout: 60_000 });
   // A unit aboard, for the Crew tab's Now column (the stand-in agent exits at once, so it's stuck: crashed).
   await page.evaluate(() => (window as unknown as { __office: { net: { send(m: unknown): void } } }).__office.net.send({ t: 'worker.spawn', deskId: 'desk-1', prompt: 'Pick the session store', worktree: false }));
@@ -433,7 +436,7 @@ test('selecting in the 3D office: two Escs from an Overview selection walk again
   });
   // Settled motion: the move up and down and the flights are cuts on a software-rendered deck.
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto(`${base}/`);
+  await page.goto(`${base}/bridge`);
   type Office = {
     __office: {
       store: { floor: string | null; roster: unknown[]; workers: Map<string, { id: string }> };

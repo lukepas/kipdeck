@@ -18,7 +18,7 @@ const PORT = Number(process.env.SHOOT_PORT ?? 4688);
 const PASSWORD = 'shoot-' + Math.random().toString(36).slice(2, 8);
 const base = `http://127.0.0.1:${PORT}`;
 
-const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-shoot-'));
+const tmp = mkdtempSync(path.join(tmpdir(), 'kipdeck-shoot-'));
 const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');
@@ -82,7 +82,7 @@ const DEFAULT_TASKS = [
 const NEED = new Set((process.env.SHOOT_NEED ?? '').split(',').filter(Boolean));
 const TASKS = (process.env.SHOOT_CREW === 'busy' ? BUSY : DEFAULT_TASKS).map(([desk, prompt]) => [desk, NEED.has(desk) && !prompt.startsWith('[') ? `[ask] ${prompt}` : prompt]);
 
-const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--agent', agent, '--home', path.join(home, '.agent-office')], {
+const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--labs', process.env.SHOOT_LABS ?? 'all', '--agent', agent, '--home', path.join(home, '.agent-office')], {
   env: { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
   stdio: ['ignore', 'pipe', 'pipe'],
   detached: true,
@@ -215,7 +215,7 @@ async function main() {
     const errors = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await signIn(page);
-    await page.goto(`${base}/`, { waitUntil: 'commit' });
+    await page.goto(`${base}/bridge`, { waitUntil: 'commit' });
     if (want('loading')) {
       await page.locator('#loading').waitFor({ timeout: 10_000 });
       await wait(700);
@@ -896,7 +896,7 @@ async function main() {
       // A phone that asked for the 3D deck (the 2D view's 3D button): one surface, the rail a sheet.
       const phone = await context.newPage();
       await phone.setViewportSize({ width: 390, height: 844 });
-      await phone.goto(`${base}/?3d=1`, { waitUntil: 'commit' });
+      await phone.goto(`${base}/bridge`, { waitUntil: 'commit' });
       await phone.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
       await wait(6000);
       await shot(phone, 'office-phone');
@@ -946,7 +946,7 @@ async function main() {
       await ctx2.addInitScript(PROFILE, [LIGHT, QUALITY]);
       const p2 = await ctx2.newPage();
       await signIn(p2);
-      await p2.goto(`${base}/`, { waitUntil: 'commit' });
+      await p2.goto(`${base}/bridge`, { waitUntil: 'commit' });
       await p2.waitForFunction(() => !!window.__world?.cinema?.state().arrival, null, { timeout: 90_000 });
       const first = await p2.evaluate(() => {
         const o = window.__office;
@@ -978,8 +978,9 @@ async function main() {
       });
       const pp = await ctx4.newPage();
       await signIn(pp);
+      // The home page is the phone's page now: no redirect, it is where you land.
       await pp.goto(`${base}/`);
-      await pp.waitForURL(/\/lite/, { timeout: 30_000 });
+      await pp.waitForFunction(() => !!window.__lite, null, { timeout: 30_000 });
       await wait(2500);
       console.log('phone landed on', new URL(pp.url()).pathname);
       await shot(pp, 'phone-redirect');
@@ -996,7 +997,7 @@ async function main() {
       const dp = await ctx3.newPage();
       dp.on('pageerror', (e) => console.log('demo page error:', e.message));
       await signIn(dp);
-      await dp.goto(`${base}/?demo=1`, { waitUntil: 'commit' });
+      await dp.goto(`${base}/bridge?demo=1`, { waitUntil: 'commit' });
       await dp.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
       await wait(6000);
       await shot(dp, 'demo');
@@ -1028,7 +1029,8 @@ async function main() {
       tp.on('console', (m) => m.type() === 'error' && console.log('console:', m.text()));
       await signIn(tp);
       await tp.goto(`${base}/lite`);
-      await tp.locator('.lite-card').nth(4).click();
+      // The inbox opens the terminal in its pane (a docked .modal.term).
+      await tp.locator('.row .row-main').first().click();
       await tp.locator('.modal.term').waitFor({ timeout: 10_000 });
       await wait(1500);
       await shot(tp, 'terminal');

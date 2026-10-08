@@ -20,7 +20,7 @@ const PORT = Number(process.env.WALK_PORT ?? 4695);
 const PASSWORD = 'shoot-' + Math.random().toString(36).slice(2, 8);
 const base = `http://127.0.0.1:${PORT}`;
 
-const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-interior-'));
+const tmp = mkdtempSync(path.join(tmpdir(), 'kipdeck-interior-'));
 const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');
@@ -65,7 +65,7 @@ const TASKS = [
   ['desk-15', 'Trim the bundle under 300 kB'],
 ];
 
-const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--agent', agent, '--home', path.join(home, '.agent-office')], {
+const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--labs', process.env.SHOOT_LABS ?? 'all', '--agent', agent, '--home', path.join(home, '.agent-office')], {
   env: { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
   stdio: ['ignore', 'pipe', 'pipe'],
   detached: true,
@@ -127,7 +127,7 @@ async function main() {
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto(`${base}/login`);
     await page.evaluate(async (password) => fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) }), PASSWORD);
-    await page.goto(`${base}/`, { waitUntil: 'commit' });
+    await page.goto(`${base}/bridge`, { waitUntil: 'commit' });
     await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
     for (const [deskId, prompt] of TASKS.slice(0, 4)) {
       await page.evaluate(([deskId, prompt]) => window.__office.net.send({ t: 'worker.spawn', deskId, prompt, worktree: false }), [deskId, prompt]);

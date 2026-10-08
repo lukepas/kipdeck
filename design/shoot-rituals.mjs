@@ -28,7 +28,7 @@ const base = `http://127.0.0.1:${PORT}`;
 const LIGHT = process.env.SHOOT_LIGHT ?? '';
 const SCHEME = LIGHT === 'day' ? 'light' : 'dark';
 
-const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-rituals-'));
+const tmp = mkdtempSync(path.join(tmpdir(), 'kipdeck-rituals-'));
 const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');
@@ -60,7 +60,7 @@ chmodSync(agent, 0o755);
 
 const CREW = ['desk-1', 'desk-2', 'desk-3', 'desk-5', 'desk-6', 'desk-7', 'desk-9', 'desk-10', 'desk-13', 'desk-14'];
 
-const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--agent', agent, '--home', path.join(home, '.agent-office')], {
+const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--labs', process.env.SHOOT_LABS ?? 'all', '--agent', agent, '--home', path.join(home, '.agent-office')], {
   env: { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
   stdio: ['ignore', 'pipe', 'pipe'],
   detached: true,
@@ -230,7 +230,7 @@ async function main() {
     await page.goto(`${base}/login`);
     const status = await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD);
     if (status !== 200) throw new Error('login failed ' + status);
-    await page.goto(`${base}/`, { waitUntil: 'commit' });
+    await page.goto(`${base}/bridge`, { waitUntil: 'commit' });
     await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
     for (const deskId of CREW) {
       await page.evaluate((deskId) => window.__office.net.send({ t: 'worker.spawn', deskId, prompt: 'Keep the build green', worktree: false }), deskId);

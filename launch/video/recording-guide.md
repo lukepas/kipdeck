@@ -78,14 +78,14 @@ If you record sound on a separate device, clap once on camera at the start of ea
 
 - iMovie is enough. DaVinci Resolve (free) if you want more control.
 - Cut the face cam to the clean takes, drop the cutaways from the demo footage over the matching lines, keep each under four seconds.
-- Add burned-in captions; many judges watch on mute. CapCut or DaVinci Resolve can generate them, then fix product names by hand (UGC Army, Solana, Base Sepolia, devnet, x402, EAS, ERC-8004).
+- Add burned-in captions; many judges watch on mute. CapCut or DaVinci Resolve can generate them, then fix product names by hand (Kipdeck, Solana, Base Sepolia, devnet, x402, EAS, ERC-8004).
 - Music: none, or very quiet under the demo only. Never over the pitch's voice.
 - Check the runtime: pitch at or under 2:30, demo at or under 3:00.
 - Export H.264, 1920 x 1080, 30 fps.
 
 ## Uploading
 
-- YouTube, unlisted, or Loom. Give each a plain title ("UGC Army - pitch", "UGC Army - technical demo").
+- YouTube, unlisted, or Loom. Give each a plain title ("Kipdeck - pitch", "Kipdeck - technical demo").
 - Open each link in a private window, signed out, and watch it to the end before pasting it into the form.
 - Keep the original files; they also make the build-in-public posts and the weekly update.
 

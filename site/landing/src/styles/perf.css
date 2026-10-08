@@ -1,0 +1,28 @@
+/* Sections well below the fold skip style, layout and paint until they come near the viewport
+   (content-visibility), so the first layout is the hero and the funnel, not 1,800 boxes. Each holds
+   a size estimate until it has rendered once, then remembers its real size (the auto keyword), so
+   the scrollbar is close from the start and nothing on screen moves when one renders. The problem
+   section is left out: its docking bar is position: fixed, which containment would trap. */
+main > :is(#loop, #why, #yours, #phone, #numbers, #labs, #proof, #teams), #end { content-visibility: auto; }
+#loop { contain-intrinsic-size: auto 485vh; }
+#why { contain-intrinsic-size: auto 1010px; }
+#yours { contain-intrinsic-size: auto 1580px; }
+#phone { contain-intrinsic-size: auto 890px; }
+#numbers { contain-intrinsic-size: auto 760px; }
+#labs { contain-intrinsic-size: auto 1920px; }
+#proof { contain-intrinsic-size: auto 980px; }
+#teams { contain-intrinsic-size: auto 1020px; }
+#end { contain-intrinsic-size: auto 930px; }
+@media (max-width: 899px), (max-height: 599px) {
+  #loop { contain-intrinsic-size: auto 1440px; }
+}
+@media (max-width: 720px) {
+  #why { contain-intrinsic-size: auto 2050px; }
+  #yours { contain-intrinsic-size: auto 1990px; }
+  #phone { contain-intrinsic-size: auto 1200px; }
+  #numbers { contain-intrinsic-size: auto 870px; }
+  #labs { contain-intrinsic-size: auto 2620px; }
+  #proof { contain-intrinsic-size: auto 1270px; }
+  #teams { contain-intrinsic-size: auto 1480px; }
+  #end { contain-intrinsic-size: auto 1180px; }
+}

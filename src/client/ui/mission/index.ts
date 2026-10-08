@@ -23,6 +23,11 @@ export { missionDocked } from './dock';
 
 const TAB_LABEL: Record<MissionTab, string> = { attention: 'Attention', goals: 'Goals', review: 'Review', timeline: 'Timeline', crew: 'Crew' };
 
+/** The tabs on offer: Attention and Review always; Goals, Timeline and Crew with Goals and timeline on in Labs. */
+export function missionTabs(): MissionTab[] {
+  return MISSION_TABS.filter((t) => t === 'attention' || t === 'review' || store.lab('ops'));
+}
+
 /** Where the last tab is remembered (the view's Settings). */
 export interface MissionPrefs {
   tab: MissionTab;
@@ -37,12 +42,14 @@ export function missionOpen(): boolean {
 setMissionOpen(missionOpen);
 
 /** Opens Mission control on `tab` (else the one you had last), or switches the open one to it. */
-export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: MissionTab = prefs.tab) {
+export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, wanted: MissionTab = prefs.tab) {
+  const shown = missionTabs();
+  const tab = shown.includes(wanted) ? wanted : 'attention';
   if (open) return open.show(tab);
   let current = tab;
   const tabs = new Map<MissionTab, HTMLButtonElement>();
   const bar = h('div.mc-tabs', { role: 'tablist', 'aria-label': 'Mission control' });
-  MISSION_TABS.forEach((t, i) => {
+  shown.forEach((t, i) => {
     const b = h('button.mc-tab', { type: 'button', role: 'tab', title: `${TAB_LABEL[t]} (${i + 1})`, onclick: () => show(t) }) as HTMLButtonElement;
     tabs.set(t, b);
     bar.append(b);
@@ -138,9 +145,9 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
       return shell.toggle();
     }
     const n = Number(e.key);
-    if (n >= 1 && n <= MISSION_TABS.length && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    if (n >= 1 && n <= shown.length && !e.ctrlKey && !e.metaKey && !e.altKey) {
       e.preventDefault();
-      return show(MISSION_TABS[n - 1]);
+      return show(shown[n - 1]);
     }
     const rows = [...body.querySelectorAll<HTMLElement>('.mc-row')];
     if (!rows.length) return;
@@ -156,7 +163,7 @@ export function openMissionControl(deps: MissionDeps, prefs: MissionPrefs, tab: 
     }
   }
 
-  const topics: Topic[] = ['roster', 'mission', 'issues', 'pulls', 'workers', 'floor', 'me', 'reminders', 'timeline', 'signins', 'bounties', 'reputation'];
+  const topics: Topic[] = ['labs', 'roster', 'mission', 'issues', 'pulls', 'workers', 'floor', 'me', 'reminders', 'timeline', 'signins', 'bounties', 'reputation'];
   // Store updates come several a second while units work: one redraw a frame at most.
   const offs = topics.map((t) => store.on(t, later));
   // "12 min" moves on by itself, and a worker goes silent by not changing.

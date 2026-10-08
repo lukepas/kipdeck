@@ -16,7 +16,7 @@ const home = path.join(root, 'home');
 const pub = path.join(root, 'public');
 mkdirSync(path.join(home, '.agent-office'), { recursive: true });
 mkdirSync(pub, { recursive: true });
-for (const page of ['index', 'lite', 'login', 'claim', 'join']) writeFileSync(path.join(pub, `${page}.html`), `<!doctype html><title>${page}</title>`);
+for (const page of ['index', 'bridge', 'login', 'claim', 'join']) writeFileSync(path.join(pub, `${page}.html`), `<!doctype html><title>${page}</title>`);
 writeFileSync(path.join(pub, 'favicon.svg'), '<svg xmlns="http://www.w3.org/2000/svg"/>');
 // Nothing of the person running the tests: their home, their sign-ins, their agent.
 const saved = { ...process.env };
@@ -214,7 +214,7 @@ test('sessions last a week, not two', async () => {
 
 test("the office's pages carry a strict Content-Security-Policy", async () => {
   const cookie = await login();
-  for (const [p, headers] of [['/', { cookie }], ['/lite', { cookie }], ['/login', {}], ['/join', {}], ['/claim', {}]] as const) {
+  for (const [p, headers] of [['/', { cookie }], ['/bridge', { cookie }], ['/login', {}], ['/join', {}], ['/claim', {}]] as const) {
     const r = await call(p, { headers });
     assert.equal(r.status, 200, p);
     const csp = String(r.headers['content-security-policy']);

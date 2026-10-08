@@ -37,6 +37,7 @@ const FFMPEG = process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg';
 const FPS = 30;
 const W = 1920;
 const H = 1080;
+// TODO(founder): rename the GitHub repo zbagdzevicius/ugc-army-demo to the Kipdeck name, then update REPO.
 const REPO = 'zbagdzevicius/ugc-army-demo';
 // The office's public Base Sepolia address, as in README.md and docs/x402.md (an address, never a key).
 const PAY_TO = '0x2522fAd50CA1e545D8Bd8593763432bAB0dcDe9b';

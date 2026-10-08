@@ -1,0 +1,84 @@
+/* Pinned scenes. A section's .track is tall and its .stage sticks to the viewport while the visitor
+   scrolls through it; the scene (scenes/*.ts) maps how far they are to its progress. The media query
+   is PIN_MEDIA in engine/drive.ts. Without script, with less motion, or on a small screen the track
+   is as tall as its content and nothing sticks: every section reads top to bottom at its final state.
+   `.staged` is set by the scene once it drives the section, so its starting states only ever apply
+   while something is there to move them. */
+
+.track > .stage { position: relative; }
+canvas.swarm { display: none; }
+
+@media (prefers-reduced-motion: no-preference) and (min-width: 900px) and (min-height: 600px) {
+  html.js .track { height: var(--pin, 250vh); }
+  html.js .track > .stage {
+    position: sticky; top: 0; height: 100vh; height: 100svh; overflow: clip;
+    display: flex; flex-direction: column; justify-content: center; padding-top: 64px;
+  }
+  html.js section:has(> .track) { padding-top: 0; padding-bottom: 0; }
+  html.js .funnel .track { --pin: 280vh; }
+  html.js .problem .track { --pin: 300vh; }
+  html.js .loop .track { --pin: 440vh; }
+}
+
+/* ---------- 02 Funnel ---------- */
+.funnel .staged canvas.swarm { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+.funnel .staged .two-col { position: relative; z-index: 2; align-items: center; }
+/* A row that has not filled yet is a dashed slot with its vendor's chip in it; --fill (0 to 1) turns
+   it into the real row. */
+.funnel .staged .ranked-list .row {
+  background-color: color-mix(in srgb, var(--surface-1) calc(var(--fill, 1) * 100%), transparent);
+  border-color: color-mix(in srgb, var(--line) calc(var(--fill, 1) * 100%), transparent);
+  outline: 1px dashed color-mix(in srgb, var(--line-strong) calc((1 - var(--fill, 1)) * 100%), transparent); outline-offset: -1px;
+}
+.funnel .staged .ranked-list .row.needs { background-color: color-mix(in srgb, color-mix(in srgb, var(--surface-2) 70%, var(--tint-signal)) calc(var(--fill, 1) * 100%), transparent); }
+.funnel .staged .ranked-list .row > :not(.sign), .funnel .staged .ranked-list .row::before { opacity: var(--fill, 1); }
+.funnel .staged .app.ranked::before {
+  /* The mouth: a Signal hairline traces the card while the units pour in. */
+  content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--signal) calc(var(--frame, 0) * 60%), transparent);
+}
+.funnel .staged .ranked-list .row, .funnel .staged .ranked-list .sec { will-change: transform, opacity; }
+.funnel .staged .branch { clip-path: inset(0 100% 0 0); }
+@media (prefers-reduced-motion: no-preference) and (min-width: 900px) and (min-height: 600px) {
+  html.js .funnel .stage .col-copy p { max-width: 46ch; }
+}
+.funnel .staged .ranked-list .row.moving { z-index: 2; box-shadow: 0 16px 34px -14px rgb(0 0 0 / .6), 0 0 0 1px var(--line-strong); }
+
+/* ---------- 03 Problem ---------- */
+.span-bar { container-type: inline-size; }
+.span-now, .dock-note, .dock { display: none; }
+.lane-sum { fill: var(--muted); font-size: 11px; letter-spacing: .04em; }
+.problem .staged .lane-wait path { transition: stroke-width 260ms var(--ease-out), filter 260ms var(--ease-out); }
+.problem .staged .lane-wait path.counted { stroke-width: 8; filter: drop-shadow(0 0 4px var(--signal)); }
+.problem .staged[data-mode='pin'] .layers { display: grid; }
+.problem .staged .layers > * { grid-area: 1 / 1; min-width: 0; }
+.problem .staged .layer-a { align-self: center; }
+.problem .staged .layer-b { align-self: end; }
+.problem .staged .huge { transform-origin: 0 100%; will-change: transform, opacity; }
+.problem .staged .span-now {
+  display: block; position: absolute; left: 0; bottom: calc(100% + 12px); padding: 3px 8px; border-radius: 3px;
+  background: var(--signal); color: var(--on-signal); font-size: 13px; font-style: normal; font-weight: 600; white-space: nowrap;
+}
+.problem .staged .span-now::after { content: ''; position: absolute; left: 50%; top: 100%; margin-left: -4px; border: 4px solid transparent; border-top-color: var(--signal); }
+/* The end of the wait is on screen from the first frame, in the muted color; it turns Signal when the clock reaches it. */
+.problem .staged .ts-end { color: var(--muted); transition: color 300ms var(--ease), transform 500ms var(--ease-spring); }
+.problem .staged .ts-end.reached { color: var(--signal); transform: scale(1.06); }
+.problem .staged .lane-asks path { transform-box: fill-box; transform-origin: 50% 50%; transform: scale(0); transition: transform 420ms var(--ease-spring); }
+.problem .staged .lane-asks path.on { transform: scale(1.35); }
+.problem .staged .dock-note {
+  display: flex; align-items: center; gap: 10px; position: absolute; z-index: 5; left: var(--gutter); top: 84px; margin: 0;
+  font-size: 13px; color: var(--text); opacity: 0;
+}
+.problem .staged .dock-note .glyph { width: 9px; height: 9px; }
+.problem .dock { display: block; position: fixed; left: 0; top: 0; z-index: 61; opacity: 0; pointer-events: none; background: var(--signal); border-radius: 1px; transform-origin: 0 0; box-shadow: 0 0 18px var(--signal); }
+.waitclock.docked .waitclock-bar { animation: docked 900ms var(--ease-out); }
+@keyframes docked { 0% { box-shadow: 0 0 0 var(--signal); filter: brightness(1.8); } 30% { box-shadow: 0 0 34px 4px var(--signal); } 100% { box-shadow: 0 0 12px var(--signal); filter: none; } }
+@media (prefers-reduced-motion: no-preference) and (min-width: 900px) and (min-height: 600px) {
+  html.js .problem .huge { font-size: min(19vw, 26vh); margin: 3vh 0 0; }
+  html.js .problem .clock-span { margin-top: 4vh; }
+  html.js .problem .lanes svg { max-height: 40vh; }
+}
+
+/* A scene may draw past its column for a moment (the MERGED stamp landing at 2.4 times its size);
+   the page itself never grows sideways. clip, unlike hidden, keeps the sticky stages sticking. */
+main { overflow-x: clip; }

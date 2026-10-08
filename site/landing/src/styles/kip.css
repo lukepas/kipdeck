@@ -1,0 +1,46 @@
+/* Kip, the product's mascot, as in the investor deck (deck/site/kip.css). Loaded with his
+   lazy chunk (src/kip/index.ts), so the first load does not carry it. Colours follow the agent-office
+   mascot; the wand is the brand's green or teal. */
+:root {
+  --kip-fur: #E9DCC6; --kip-belly: #F6EEDF; --kip-slate: #3B4350; --kip-tan: #B89F82;
+  --kip-vest: #4A5A70; --kip-knit: #8592A6; --kip-vest-dark: #3E4C5F; --kip-brass: #B9A86E;
+  --kip-iris: #6B4A2B; --kip-pupil: #1A1410; --kip-glint: #E8E6E2; --kip-wood: #CDAE84;
+  --kip-rim: #F3A6BC;
+  --kip-ink: rgba(0, 0, 0, .35);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) { --kip-ink: rgba(10, 15, 28, .45); }
+}
+:root[data-theme='light'] { --kip-ink: rgba(10, 15, 28, .45); }
+
+/* The layers. The document layer sits at the page's top-left with no height, so the page's own
+   scrolling carries him; it clips sideways, so running in from off-screen never widens the page. */
+#kip-doc { position: absolute; left: 0; top: 0; width: 100%; height: 0; overflow-x: clip; overflow-y: visible; pointer-events: none; z-index: 40; }
+#kip-fixed { position: fixed; inset: 0; overflow: clip; pointer-events: none; z-index: 40; }
+.kip-stage-host { position: absolute; inset: 0; overflow: clip; pointer-events: none; z-index: 6; }
+
+.kip-fx { position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform, opacity; border-radius: 50%; }
+.kip-fx.kip-ring { border: 2px solid currentColor; background: none; }
+
+/* The hit area is what is drawn (his shapes), not his 74x96 box. */
+.kip { position: absolute; left: 0; top: 0; pointer-events: none; transform-origin: 50% 100%; will-change: transform;
+  -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.kip .k-flip svg { pointer-events: none; }
+.kip .k-root > g:not(.k-fx-g) { pointer-events: visiblePainted; cursor: pointer; }
+.kip.static .k-root > g:not(.k-fx-g) { pointer-events: none; cursor: default; }
+.kip .k-flip { width: 100%; height: 100%; transform-origin: 50% 100%; will-change: transform; }
+/* The idle bob breathes for a few cycles after he arrives (or is poked), then rests: a CSS animation
+   that never ends costs a style pass every frame. kit.pulse() swaps the keyframes' name to restart it. */
+.kip .k-bob { width: 100%; height: 100%; animation: kip-bob 1.6s ease-in-out 8 alternate; will-change: transform; }
+.kip.bob2 .k-bob { animation-name: kip-bob2; }
+.kip svg { width: 100%; height: 100%; overflow: visible; display: block; }
+.kip .k-pict { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.kip .o { stroke: var(--kip-ink); stroke-width: 1.2; stroke-linejoin: round; }
+.kip .k-fx-g * { pointer-events: none; }
+.kip.asleep .k-bob { animation-duration: 3.2s; }
+.kip.static .k-bob, .kip.away .k-bob { animation: none; }
+@keyframes kip-bob { from { transform: translateY(0); } to { transform: translateY(-2px); } }
+@keyframes kip-bob2 { from { transform: translateY(0); } to { transform: translateY(-2px); } }
+
+@media (prefers-reduced-motion: reduce) { .kip .k-bob { animation: none; } }
+@media print { #kip-doc, #kip-fixed, .kip-stage-host { display: none !important; } }

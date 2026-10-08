@@ -169,7 +169,7 @@ body.overview .bb-keys { visibility: hidden; }
   .dock-btn .lbl { display: none; }
   .bb-key .kw { display: none; }
 }
-/* A phone in the 3D view (most are sent to the 2D view, see ui/litesuggest.ts): one surface. The rail is
+/* A phone in the Bridge view (the home page is made for phones; this is for whoever opens /bridge): one surface. The rail is
    a bottom sheet the Units button opens, the counters are glyph and number in fixed widths, and nothing
    floats over the deck but the toasts under the bar. */
 @media (max-width: 640px) {
