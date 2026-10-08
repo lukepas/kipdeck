@@ -16,6 +16,8 @@
 // crawl into the stars) and runs the pit wall's hairline, and faces aft a third of the time, so the
 // core is in view. FLICKER_RELAY=1 faces the Relay Beacon from the chair's eye a third of the time and
 // plays its merge (the crown's flare at its bloom peak), a payout and a deploy every 200 frames.
+// FLICKER_OVERVIEW=1 sweeps the Overview instead: up into it and the wheel zooming all the way in and
+// out and back, so the units' callouts change tier (tabs, lines, cards) and pop in over and over.
 // FLICKER_QUALITY=high (or medium, low) draws at that tier rather than Auto's, which
 // steps down on a busy machine and would leave the glow out.
 import { spawn, execFileSync } from 'node:child_process';
@@ -43,7 +45,7 @@ if (!existsSync(path.join(ROOT, 'dist', 'public', 'index.html'))) {
   process.exit(0);
 }
 
-const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-flicker-'));
+const tmp = mkdtempSync(path.join(tmpdir(), 'kipdeck-flicker-'));
 const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');
@@ -73,7 +75,7 @@ while [ $i -lt 60 ]; do echo "  ok $i"; i=$((i+1)); sleep 5; done
 chmodSync(agent, 0o755);
 const TASKS = [['desk-1', '[ask] a'], ['desk-2', 'b'], ['desk-3', '[ask] c'], ['desk-5', 'd'], ['desk-6', 'e'], ['desk-9', 'f']];
 
-const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--agent', agent, '--home', path.join(home, '.agent-office')], {
+const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--labs', process.env.SHOOT_LABS ?? 'all', '--agent', agent, '--home', path.join(home, '.agent-office')], {
   env: { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
   stdio: ['ignore', 'pipe', 'pipe'],
   detached: true,
@@ -114,8 +116,9 @@ async function waitUp() {
 }
 
 /** Runs in the page: sweeps the camera for `n` frames and measures each one, jumping the ship now and then with `jump`. */
-async function sweep([n, jump, rituals, relay]) {
+async function sweep([n, jump, rituals, relay, overview]) {
   const o = window.__office;
+  if (overview) o.overview.toggle(true);
   if (rituals) {
     const at = Date.now();
     const pace = { run: 7, best: 9, week: { merges: 12, issues: 4 }, record: 15, weeks: [3, 5, 8, 6, 9, 15, 11, 12], reply: { today: 180000, median7: 540000, samples: 3 }, review: { today: 900000, median7: 1500000, samples: 2, bars: [600000, 1200000] }, cleared: { reviews: 2, recovered: 1 }, latest: { kind: 'reply', ms: 120000, at }, day: 3 };
@@ -190,6 +193,7 @@ async function sweep([n, jump, rituals, relay]) {
   let cur = pose(0);
   p.update = (dt) => {
     update.call(p, dt);
+    if (overview) return;
     o.camera.position.set(...cur[0]);
     o.camera.lookAt(...cur[1]);
   };
@@ -205,6 +209,8 @@ async function sweep([n, jump, rituals, relay]) {
         i++;
         cur = pose(i);
         if (jump && i % 420 === 1) o.space.jump?.();
+        // In and out across the tiers: about 160 frames from 0.75 to 3.2 and back.
+        if (overview) o.renderer.domElement.dispatchEvent(new WheelEvent('wheel', { deltaY: Math.sin((i / 160) * Math.PI) > 0 ? -12 : 12 }));
         if (rituals && i % 420 === 2) window.__world?.watch?.play('launch', 9 * 3600000);
         if (rituals && i % 420 === 300) window.__world?.turnaround?.run();
         if (relay && i % 200 === 5) {
@@ -220,6 +226,7 @@ async function sweep([n, jump, rituals, relay]) {
   } finally {
     p.update = update;
     r.render = orig;
+    if (overview) o.overview.toggle(false);
   }
   return { frames, bloom: !!o.stage.draw };
 }
@@ -272,7 +279,7 @@ async function main() {
       page.on('pageerror', (e) => errors.push(e.message));
       await page.goto(`${base}/login`);
       await page.evaluate(async (password) => fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) }), PASSWORD);
-      await page.goto(`${base}/`, { waitUntil: 'commit' });
+      await page.goto(`${base}/bridge`, { waitUntil: 'commit' });
       await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
       if (lighting === 'night') {
         // Jumping wants nobody waiting on the captain: the units only work then.
@@ -287,7 +294,7 @@ async function main() {
         });
       }
       await wait(6000);
-      const { frames, bloom } = await page.evaluate(sweep, [FRAMES, process.env.FLICKER_JUMP === '1', process.env.FLICKER_RITUALS === '1', process.env.FLICKER_RELAY === '1']);
+      const { frames, bloom } = await page.evaluate(sweep, [FRAMES, process.env.FLICKER_JUMP === '1', process.env.FLICKER_RITUALS === '1', process.env.FLICKER_RELAY === '1', process.env.FLICKER_OVERVIEW === '1']);
       const bad = badFrames(frames);
       const means = frames.map((f) => f.mean);
       console.log(`${BACKEND}/${lighting} (bloom ${bloom ? 'on' : 'off'}): ${frames.length} frames, mean luminance ${Math.min(...means).toFixed(1)}-${Math.max(...means).toFixed(1)}, bad ${bad.length}${process.env.FLICKER_JUMP === '1' ? `, ${frames.filter((f) => f.tunnel).length} in the tunnel` : ''}`);

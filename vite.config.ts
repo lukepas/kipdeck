@@ -63,8 +63,10 @@ export default defineConfig({
         warn(warning);
       },
       input: {
-        main: resolve(import.meta.dirname, 'src/client/index.html'),
-        lite: resolve(import.meta.dirname, 'src/client/lite.html'),
+        // The home page at /: the inbox, no three.js (lite.ts).
+        home: resolve(import.meta.dirname, 'src/client/index.html'),
+        // The 3D bridge at /bridge, a bundle of its own that the home page never loads (main.ts).
+        bridge: resolve(import.meta.dirname, 'src/client/bridge.html'),
         login: resolve(import.meta.dirname, 'src/client/login.html'),
         claim: resolve(import.meta.dirname, 'src/client/claim.html'),
         join: resolve(import.meta.dirname, 'src/client/join.html'),

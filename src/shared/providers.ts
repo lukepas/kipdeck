@@ -207,11 +207,11 @@ export const PROVIDER_META: Record<AgentProvider, ProviderMeta> = {
     models: {
       pick: 'list',
       fixed: CLAUDE_MODELS.map((id) => ({ id, name: CLAUDE_MODEL_NAMES[id] })),
-      unset: 'Default (--agent-args)',
-      hint: 'The cost panel tracks each model separately.',
+      unset: "Agent's default",
+      hint: 'Usage is counted for each model separately.',
     },
     takesEffort: true,
-    usage: { tracked: true, note: 'Office usage and budget track Claude Code.' },
+    usage: { tracked: true, note: 'Usage and the budget are counted for Claude Code.' },
   },
   opencode: {
     label: 'OpenCode',
@@ -249,7 +249,7 @@ export const PROVIDER_META: Record<AgentProvider, ProviderMeta> = {
       reports: true,
       noCost: true,
       waiting: 'waiting for first report',
-      note: 'Review Office hooks in /hooks to enable tracking. Codex reports root-session tokens; subagents are excluded and cost is unavailable.',
+      note: 'Review the Kipdeck hooks in /hooks to turn tracking on. Codex reports root-session tokens; subagents are excluded and cost is unavailable.',
     },
   },
   grok: {

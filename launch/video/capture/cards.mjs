@@ -1,4 +1,4 @@
-// The demo's graphics, drawn in headless Chromium from HTML: the title and end cards in the UGC Army
+// The demo's graphics, drawn in headless Chromium from HTML: the title and end cards in the Kipdeck
 // brand of the 30 s teaser (paper, ink, the signal red, Archivo, Inter Tight, JetBrains Mono, the 3x3 mark),
 // the code and doc pages (real files from this repository, real line numbers), the terminal page (the
 // office's own 402, saved by office.mjs), and the overlays edit.json asks for: the lower-third captions,
@@ -8,7 +8,7 @@
 //
 // Fonts: FONTS_DIR (default: the teaser's video/assets/fonts in the sibling video worktree) for the
 // variable Archivo, Inter Tight and JetBrains Mono; this repository's own woff2 files stand in when it is
-// missing. Writes launch/video/out/gfx/ (untracked). FORK_URL (e.g. github.com/you/ugc-army) is the source
+// missing. Writes launch/video/out/gfx/ (untracked). FORK_URL (e.g. github.com/you/kipdeck) is the source
 // repository on the title and end cards; without it they say SET FORK_URL BEFORE EXPORT in red.
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -96,7 +96,7 @@ add('title', 1920, 1080, `<body style="background:${C.paper};color:${C.ink}">
 <div style="position:absolute;left:96px;top:92px">${mark(52, 8)}</div>
 <div class="mono" style="position:absolute;left:330px;top:100px;font-size:22px;letter-spacing:.08em;color:${C.grey}">TECHNICAL DEMO - HOW IT WORKS</div>
 <div class="mono" style="position:absolute;left:330px;top:140px;font-size:34px;font-weight:700">Mission control for AI coding agents.</div>
-<div class="disp" data-fit="1740" style="position:absolute;left:84px;top:300px;font-size:300px;font-weight:900;font-stretch:125%;letter-spacing:-.01em;line-height:1;white-space:nowrap">UGC ARMY</div>
+<div class="disp" data-fit="1740" style="position:absolute;left:84px;top:300px;font-size:300px;font-weight:900;font-stretch:125%;letter-spacing:-.01em;line-height:1;white-space:nowrap">KIPDECK</div>
 <div style="position:absolute;left:96px;top:575px;font-size:62px;font-weight:700;line-height:1.15">Agents get paid only when a <span style="color:${C.signal}">human reviewer</span> merges.</div>
 <div style="position:absolute;left:96px;top:735px;display:flex;flex-direction:column;gap:12px">
   <div style="display:flex;gap:26px;align-items:baseline"><span class="mono" style="width:190px;font-size:20px;font-weight:700;color:${C.grey};letter-spacing:.06em">SOURCE</span>${sourceLine(40)}</div>
@@ -130,7 +130,7 @@ add('fork', 1920, 1080, `<body style="background:${C.paper};color:${C.ink}">
 
 const idRows = (label, value, size) => IDS.map(([k, v, n]) => `<div style="display:flex;gap:22px;align-items:baseline"><span class="mono" style="width:${label}px;flex:none;font-size:${size * 0.9}px;font-weight:700;color:${C.grey};letter-spacing:.05em">${k}<br><span style="font-weight:400">${n}</span></span><span class="mono" style="font-size:${value}px;font-weight:700;word-break:break-all">${v}</span></div>`).join('');
 add('end', 1920, 1080, `<body style="background:${C.paper};color:${C.ink}">
-<div style="position:absolute;left:96px;top:70px;display:flex;align-items:center;gap:30px">${mark(30, 5)}<span class="disp" style="font-size:84px;font-weight:900;font-stretch:125%;line-height:1">UGC ARMY</span></div>
+<div style="position:absolute;left:96px;top:70px;display:flex;align-items:center;gap:30px">${mark(30, 5)}<span class="disp" style="font-size:84px;font-weight:900;font-stretch:125%;line-height:1">KIPDECK</span></div>
 <div style="position:absolute;left:96px;top:190px;font-size:52px;font-weight:700">${TAGLINE}</div>
 <div style="position:absolute;left:96px;top:290px;display:flex;flex-direction:column;gap:10px">
   <div style="display:flex;gap:22px;align-items:baseline"><span class="mono" style="width:250px;font-size:20px;font-weight:700;color:${C.grey};letter-spacing:.05em">SOURCE CODE</span>${sourceLine(48)}</div>
@@ -143,7 +143,7 @@ add('end', 1920, 1080, `<body style="background:${C.paper};color:${C.ink}">
 
 add('vtitle', 1080, 1920, `<body style="background:${C.paper};color:${C.ink}">
 <div style="position:absolute;left:72px;top:150px">${mark(70, 9)}</div>
-<div class="disp" style="position:absolute;left:62px;top:440px;font-size:250px;font-weight:900;font-stretch:112%;line-height:.92">UGC<br>ARMY</div>
+<div class="disp" style="position:absolute;left:62px;top:440px;font-size:250px;font-weight:900;font-stretch:112%;line-height:.92">KIP<br>DECK</div>
 <div class="mono" style="position:absolute;left:72px;top:930px;font-size:34px;font-weight:700">Mission control for AI coding agents.</div>
 <div class="disp" style="position:absolute;left:72px;right:60px;top:1030px;font-size:92px;font-weight:900;line-height:1.02;letter-spacing:-.01em">Agents get paid only when a <span style="color:${C.signal}">human reviewer</span> merges.</div>
 <div class="mono" style="position:absolute;left:72px;top:1480px;font-size:30px;line-height:1.5">Solana devnet escrow.<br>Proof of merge on Base Sepolia.</div>
@@ -152,7 +152,7 @@ add('vtitle', 1080, 1920, `<body style="background:${C.paper};color:${C.ink}">
 
 add('vend', 1080, 1920, `<body style="background:${C.paper};color:${C.ink}">
 <div style="position:absolute;left:72px;top:130px">${mark(56, 8)}</div>
-<div class="disp" style="position:absolute;left:62px;top:380px;font-size:200px;font-weight:900;font-stretch:112%;line-height:.92">UGC<br>ARMY</div>
+<div class="disp" style="position:absolute;left:62px;top:380px;font-size:200px;font-weight:900;font-stretch:112%;line-height:.92">KIP<br>DECK</div>
 <div style="position:absolute;left:72px;right:72px;top:780px;font-size:58px;font-weight:700;line-height:1.15">${TAGLINE}</div>
 <div style="position:absolute;left:72px;right:72px;top:1010px;display:flex;flex-direction:column;gap:12px">
   <div class="mono" style="font-size:22px;letter-spacing:.08em;color:${C.grey};font-weight:700">SOURCE CODE</div>
@@ -315,7 +315,7 @@ edit.vertical.segments.forEach((s, i) => {
   const [colour, text] = edit.tags[s.tag];
   add(`vseg-${String(i).padStart(2, '0')}`, 1080, 1920, `<body style="background:transparent">
 <div style="position:absolute;left:0;top:0;width:1080px;height:300px;background:${C.ink}"></div>
-<div style="position:absolute;left:64px;top:70px;display:flex;align-items:center;gap:22px">${mark(16, 4, C.paper)}<span class="disp" style="color:${C.paper};font-size:34px;font-weight:900;font-stretch:125%">UGC ARMY</span></div>
+<div style="position:absolute;left:64px;top:70px;display:flex;align-items:center;gap:22px">${mark(16, 4, C.paper)}<span class="disp" style="color:${C.paper};font-size:34px;font-weight:900;font-stretch:125%">KIPDECK</span></div>
 <div class="disp" style="position:absolute;left:64px;right:64px;top:150px;color:${C.paper};font-size:60px;font-weight:800;line-height:1.05">${esc(s.title)}</div>
 <div style="position:absolute;left:0;top:1500px;width:1080px;height:420px;background:${C.ink}"></div>
 <div style="position:absolute;left:64px;right:64px;top:1550px;color:${C.paper};font-size:50px;font-weight:600;line-height:1.22">${esc(s.caption)}</div>

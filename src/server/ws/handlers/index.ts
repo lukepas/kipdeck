@@ -6,6 +6,8 @@ import { bountiesHandlers, bountiesView } from './bounties.js';
 import { changesHandlers, changesHooks } from './changes.js';
 import { floorHandlers, projectView } from './floors.js';
 import { githubHandlers, issuesView, pullsView } from './github.js';
+import { inboxHandlers } from './inbox.js';
+import { labsHandlers } from './labs.js';
 import { meetingHandlers, meetingView } from './meetings.js';
 import { missionHandlers, missionView } from './mission.js';
 import { paceHandlers } from './pace.js';
@@ -14,6 +16,7 @@ import { presenceHandlers } from './presence.js';
 import { queueHandlers, queueView } from './queue.js';
 import { reputationHandlers } from './reputation.js';
 import { servicesView, settingsHandlers } from './settings.js';
+import { setupHandlers } from './setup.js';
 import { showcaseHandlers } from './showcase.js';
 import { signinsHandlers } from './signins.js';
 import { teamHandlers } from './team.js';
@@ -30,6 +33,8 @@ export const handlers: HandlerMap<ClientMsg> = {
   ...changesHandlers,
   ...floorHandlers,
   ...githubHandlers,
+  ...inboxHandlers,
+  ...labsHandlers,
   ...meetingHandlers,
   ...missionHandlers,
   ...paceHandlers,
@@ -38,6 +43,7 @@ export const handlers: HandlerMap<ClientMsg> = {
   ...queueHandlers,
   ...reputationHandlers,
   ...settingsHandlers,
+  ...setupHandlers,
   ...showcaseHandlers,
   ...signinsHandlers,
   ...teamHandlers,

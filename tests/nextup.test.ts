@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { NextUp, unsnoozed, waitingElsewhere, waitingElsewhereCount, waitingInOrder, waitingLabel } from '../src/client/nextup.js';
+import { NextUp, nLine, nToast, unsnoozed, waitingElsewhere, waitingElsewhereCount, waitingInOrder, waitingLabel } from '../src/client/nextup.js';
 import { bannerText, needingYou } from '../src/client/features/needsyou/logic.js';
 import { rankRoster } from '../src/shared/attention.js';
 import type { RosterEntry, WorkerInfo, WorkerStatus } from '../src/shared/protocol.js';
@@ -76,4 +76,28 @@ test("a snoozed worker isn't N's next stop, its button's count or the next floor
   // Its snooze ends: it's N's first stop again.
   const woke = rankRoster([entry(x, 'a'), entry(y, 'b')], NOW);
   assert.equal(new NextUp().next(unsnoozed([x], woke))?.id, 'x');
+});
+
+test('N follows the Attention ranking: the ones that need you, then the stuck ones, then the ones to review, and its toast counts as the top bar does', () => {
+  // A-02 and A-03 need you, C-03 has crashed, D-01 and B-01 are done, Y is snoozed, Z is at work.
+  const ranked = rankRoster(
+    [
+      entry(worker('a2', 'needs_input', NOW - 5 * 60_000), 'f'),
+      entry(worker('d1', 'done', NOW - 20 * 60_000), 'f'),
+      entry(worker('c3', 'exited', NOW - 9 * 60_000), 'f', { exitCode: 3, waitingSince: NOW - 9 * 60_000 }),
+      entry(worker('a3', 'needs_input', NOW - 2 * 60_000), 'f'),
+      entry(worker('b1', 'done', NOW - 60_000), 'f'),
+      entry(worker('y', 'needs_input', NOW - 30 * 60_000), 'f', { snooze: { until: 'change' } }),
+      entry(worker('z', 'working'), 'f'),
+    ],
+    NOW,
+  );
+  const line = nLine(ranked);
+  assert.deepEqual(line.map((x) => x.id), ['a2', 'a3', 'c3', 'd1', 'b1']);
+  // Five presses visit each once, the stuck one included, then the round starts over.
+  const n = new NextUp();
+  assert.deepEqual([1, 2, 3, 4, 5, 6].map(() => n.pick(line)?.id), ['a2', 'a3', 'c3', 'd1', 'b1', 'a2']);
+  // The toast: where this one is in the round, and the round as the top bar counts it.
+  assert.equal(nToast(line, 'c3', ranked), '3 of 5: 2 need you · 1 stuck · 2 to review. N for the next');
+  assert.equal(nToast(line.slice(0, 1), 'a2', ranked), null);
 });

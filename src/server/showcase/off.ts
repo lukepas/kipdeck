@@ -37,7 +37,7 @@ const HTML = `<!doctype html>
 </head>
 <body>
 <main>
-  <div class="mark">${MARK}<b>UGC</b> <span>ARMY</span></div>
+  <div class="mark">${MARK}<b>MERGE</b><span>LINE</span></div>
   <p class="eyebrow">Proof of Merge</p>
   <h1>The public ledger is off on this deck</h1>
   <p>This office keeps its merges, payouts and attestations private until an admin publishes them.</p>

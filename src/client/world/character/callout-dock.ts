@@ -15,11 +15,15 @@ export class CalloutDocking {
   private docked = false;
   private readonly to = new THREE.Vector3();
   private readonly at = new THREE.Vector3();
+  /** How far sideways (the mover's space) the callout is drawn from its place: the hairline ends there. */
+  private readonly side = new THREE.Vector3();
   private fade = 1;
   private homeY = 0;
   private from = 0;
   private lifted = false;
   private shown = true;
+  /** How far in its pop it is (0-1, callout-view.ts): its strength on top of the fade. */
+  alpha = 1;
 
   constructor(private readonly leader: THREE.Line<THREE.BufferGeometry, THREE.LineBasicMaterial>) {
     leader.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3));
@@ -30,8 +34,10 @@ export class CalloutDocking {
    * `lifted` when another callout has pushed it far enough off its head to want the hairline, `shown`
    * unless the declutter pass left it out.
    */
-  home(homeY: number, from: number, lifted: boolean, shown: boolean, chips: readonly (THREE.Sprite | null)[]) {
+  home(homeY: number, from: number, lifted: boolean, shown: boolean, chips: readonly (THREE.Sprite | null)[], side?: THREE.Vector3, hue?: THREE.ColorRepresentation) {
     this.homeY = homeY;
+    if (side) this.side.copy(side);
+    if (hue !== undefined) this.leader.material.color.set(hue);
     this.from = from;
     this.lifted = lifted;
     this.shown = shown;
@@ -59,15 +65,17 @@ export class CalloutDocking {
     for (const c of chips) {
       if (!c) continue;
       c.position.copy(this.at);
-      c.material.opacity = this.fade;
+      c.material.opacity = this.fade * this.alpha;
     }
     const leader = this.leader;
     leader.visible = this.shown && (this.lifted || this.k > 0.05);
     if (!leader.visible) return;
     const p = leader.geometry.getAttribute('position') as THREE.BufferAttribute;
     p.setXYZ(0, 0, this.from, 0);
-    p.setXYZ(1, this.at.x, this.at.y, this.at.z);
+    // At home the hairline ends under the callout as it's drawn, slid aside or not; docked, at the dock.
+    const k = 1 - this.k;
+    p.setXYZ(1, this.at.x + this.side.x * k, this.at.y, this.at.z + this.side.z * k);
     p.needsUpdate = true;
-    leader.material.opacity = 0.7 * this.fade;
+    leader.material.opacity = 0.7 * this.fade * this.alpha;
   }
 }

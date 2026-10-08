@@ -36,7 +36,7 @@ const FFMPEG = process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg';
 const CLIP_FOV = Number(process.env.SHOOT_CLIP_FOV ?? 30);
 const want = (s) => !ONLY || ONLY.has(s);
 
-const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-relay-'));
+const tmp = mkdtempSync(path.join(tmpdir(), 'kipdeck-relay-'));
 const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');
@@ -79,7 +79,7 @@ const TASKS = [
   ['desk-15', 'Trim the bundle under 300 kB'],
 ];
 
-const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--agent', agent, '--home', path.join(home, '.agent-office')], {
+const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--labs', process.env.SHOOT_LABS ?? 'all', '--agent', agent, '--home', path.join(home, '.agent-office')], {
   env: { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
   stdio: ['ignore', 'pipe', 'pipe'],
   detached: true,
@@ -158,7 +158,7 @@ async function main() {
   await waitUp();
   const { chromium } = await import('playwright-core');
   const browser = await chromium.launch({ headless: true, args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] });
-  const clipDir = process.env.SHOOT_CLIP ? mkdtempSync(path.join(tmpdir(), 'ugc-relay-clip-')) : null;
+  const clipDir = process.env.SHOOT_CLIP ? mkdtempSync(path.join(tmpdir(), 'kipdeck-relay-clip-')) : null;
   try {
     const context = await browser.newContext({
       viewport: { width: 1440, height: 900 },
@@ -188,7 +188,7 @@ async function main() {
     await page.goto(`${base}/login`);
     const status = await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD);
     if (status !== 200) throw new Error('login failed ' + status);
-    await page.goto(`${base}/`, { waitUntil: 'commit' });
+    await page.goto(`${base}/bridge`, { waitUntil: 'commit' });
     await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
     for (const [deskId, prompt] of TASKS) {
       await page.evaluate(([deskId, prompt]) => window.__office.net.send({ t: 'worker.spawn', deskId, prompt, worktree: false }), [deskId, prompt]);

@@ -3,7 +3,7 @@ import { NAV } from '../../shared/copy.js';
 import path from 'node:path';
 import type { AgentChoice, AgentEffort, AgentProvider, TerminalHit, WorkerInfo, WorkerKind, WorkerRepo, WorkerStatus } from '../../shared/protocol.js';
 import { AGENT_PROVIDERS, takesEffort, takesModel } from '../../shared/providers.js';
-import { Worktrees, workspaceOf, type WorktreeCleanup, type WorktreeState } from '../worktrees.js';
+import { Worktrees, workspaceOf, worktreeSlug, type WorktreeCleanup, type WorktreeState } from '../worktrees.js';
 import { DESK_BY_ID, STATION_AGENT, deskBuilt } from '../../shared/layout.js';
 import { isCrashed } from '../../shared/attention.js';
 import { stationBrief } from '../stations.js';
@@ -233,9 +233,10 @@ export class WorkerManager {
    * Hires a worker at a desk. `meeting` seats one at the meeting room's table instead, for that meeting
    * (see meetings.ts), in the meeting's own worktree, which everyone at the table shares. `repos` are
    * other floors' repositories a worker in its own worktree works in too (see makeWorkspace). `link`
-   * is the issue it's there for and the milestone it works towards (see MissionHooks.goalFor).
+   * is the issue it's there for and the milestone it works towards (see MissionHooks.goalFor), and
+   * `session` one of its CLI's own sessions to carry on (`kipdeck attach` adopting it).
    */
-  spawn(deskId: string, by: string, prompt?: string, worktree = false, kind: WorkerKind = 'agent', provider?: AgentProvider, model?: string, effort?: AgentEffort, meeting?: { id: string; worktree?: WorkerInfo['worktree'] }, owner?: string, repos: RepoSource[] = [], link: { goal?: string; issue?: number } = {}): WorkerInfo | string {
+  spawn(deskId: string, by: string, prompt?: string, worktree = false, kind: WorkerKind = 'agent', provider?: AgentProvider, model?: string, effort?: AgentEffort, meeting?: { id: string; worktree?: WorkerInfo['worktree'] }, owner?: string, repos: RepoSource[] = [], link: { goal?: string; issue?: number; session?: string } = {}): WorkerInfo | string {
     // Nobody picked (a board agent, say): the office's default worker, model and effort included.
     if (kind === 'agent' && provider === undefined) ({ provider, model, effort } = this.officeDefault);
     const selectedProvider = kind === 'agent' ? provider : undefined;
@@ -270,8 +271,8 @@ export class WorkerManager {
     let wt: WorkerInfo['worktree'] = meeting?.worktree;
     let others: WorkerRepo[] | undefined;
     if (worktree) {
-      const slug = `${name.toLowerCase()}-${id.slice(0, 4)}`;
-      const made = repos.length ? this.makeWorkspace(slug, repos) : this.trees.create(slug);
+      const slug = worktreeSlug(prompt, name, id);
+      const made = repos.length ? this.worktrees.makeWorkspace(slug, repos) : this.trees.create(slug);
       if (typeof made === 'string') return made;
       if ('repos' in made) {
         ({ worktree: wt, repos: others } = made);
@@ -306,6 +307,7 @@ export class WorkerManager {
       meeting: meeting?.id,
       issue: kind === 'agent' ? link.issue : undefined,
       goal: kind === 'agent' ? this.mission.goalFor(link.goal, link.issue) : undefined,
+      sessionId: kind === 'agent' ? link.session : undefined,
     };
     const w = newWorker(info, newTracker());
     w.owner = owner;
@@ -315,14 +317,9 @@ export class WorkerManager {
     const first = seat.station && info.prompt ? `${stationBrief(seat.station, this.prompts)}\n\n${info.prompt}` : info.prompt;
     // The team's mission goes first, framed as context, never as part of the task (see 'worker.mission').
     const note = first && kind === 'agent' ? this.mission.note(info) : undefined;
-    this.launch(w, note ? `${note}\n\n${first}` : first, undefined);
+    this.launch(w, note ? `${note}\n\n${first}` : first, info.sessionId);
     this.persist();
     return info;
-  }
-
-  /** The workspace of a worker across repositories (see WorkerTrees.makeWorkspace). */
-  private makeWorkspace(slug: string, repos: RepoSource[]): { worktree: NonNullable<WorkerInfo['worktree']>; repos: WorkerRepo[]; notes: string[] } | string {
-    return this.worktrees.makeWorkspace(slug, repos);
   }
 
   /** Starts a worker that isn't running again, carrying on its session, with `prompt` as its next message. */

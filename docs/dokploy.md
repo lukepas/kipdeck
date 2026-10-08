@@ -1,6 +1,6 @@
 # Dokploy reference
 
-The full story behind `deploy/dokploy.sh`. The short version is in the [README](../README.md#deploy-to-dokploy).
+The full story behind `deploy/dokploy.sh`. The short version is in [Teams and servers](self-hosting.md#deploy-to-dokploy).
 
 You need a **[Dokploy](https://dokploy.com) server** and an **API key** for it, plus `ssh`, `curl`, `git`, Node.js and a clone of this repo. Make the key in Dokploy under **Settings → Profile → API/CLI Keys**, and leave its rate limiting off: the script checks on the build every few seconds.
 

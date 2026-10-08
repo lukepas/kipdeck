@@ -31,3 +31,9 @@ test('every board on the situation arc and the capacity strip is named once', ()
     assert.equal(names.filter((x) => x === n).length, 1, n);
   }
 });
+
+test('with Proof of Merge off, the Proof corner names are left out', () => {
+  const names = planLabels(false).map((l) => l.text);
+  for (const n of ['PROOF', 'ESCROW', 'ERC-8004']) assert.equal(names.includes(n), false, n);
+  assert.ok(names.includes('CAPACITY'));
+});

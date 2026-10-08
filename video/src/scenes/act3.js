@@ -73,7 +73,7 @@ function layout(design) {
   return L;
 }
 
-// UGC ARMY + section, flush-left in the header row; optional right label.
+// KIPDECK + section, flush-left in the header row; optional right label.
 function header(S, L, section, { right, rightColor, dot, alpha = 1, wipe = 1 } = {}) {
   const { ctx, design } = S;
   const P = design.palette;
@@ -91,7 +91,7 @@ function header(S, L, section, { right, rightColor, dot, alpha = 1, wipe = 1 } =
     ctx.globalAlpha = 1;
     cx += ls * 1.1;
   }
-  const w = text(S, dot ? section : 'UGC Army', cx, y, { kind: dot ? 'mono' : 'label', size: ls, weight: 700, color: P.ink, alpha });
+  const w = text(S, dot ? section : 'Kipdeck', cx, y, { kind: dot ? 'mono' : 'label', size: ls, weight: 700, color: P.ink, alpha });
   if (!dot) text(S, section, cx + w + ls * 0.8, y, { size: ls, weight: 500, color: P.grey, alpha });
   if (right && !L.V) text(S, right, L.header.right, y, { size: ls, weight: 500, color: rightColor || P.grey, align: 'right', alpha });
   ctx.restore();
@@ -1389,7 +1389,7 @@ const endcard = {
     // Wordmark: one fixed width from the hit on; only the slam scale moves.
     const Wd = E.word;
     display(S, {
-      spans: Wd.lines === 2 ? [{ text: 'UGC' }, br, { text: 'ARMY' }] : 'UGC ARMY',
+      spans: Wd.lines === 2 ? [{ text: 'KIP' }, br, { text: 'DECK' }] : 'KIPDECK',
       x: Wd.x, base: Wd.base, size: Wd.size, lineHeight: 0.86,
       wdth: 100, wght: 900, tracking: -0.02, scale: slamS, fitWdthMin: 100,
       fit: (rightEdge(design) - Wd.x) / slamS,

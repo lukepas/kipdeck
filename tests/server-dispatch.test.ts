@@ -139,7 +139,7 @@ before(async () => {
     execFileSync('git', args, { cwd: project });
   }
   // A client bundle of its own, so the test needn't build one.
-  for (const page of ['index', 'login', 'claim', 'join', 'lite']) writeFileSync(path.join(publicDir, `${page}.html`), `<!doctype html><title>${page}</title>`);
+  for (const page of ['index', 'bridge', 'login', 'claim', 'join']) writeFileSync(path.join(publicDir, `${page}.html`), `<!doctype html><title>${page}</title>`);
   writeFileSync(path.join(publicDir, 'favicon.svg'), '<svg xmlns="http://www.w3.org/2000/svg"/>');
   writeFileSync(path.join(publicDir, 'assets', 'app.js'), 'export {};\n');
   // A stand-in for Claude Code, so reading the plan's limits never runs the real one.
@@ -164,7 +164,8 @@ test('answers the open routes before anyone signs in', async () => {
   const health = await get('/api/health');
   assert.equal(health.status, 200);
   assert.deepEqual(await health.json(), { ok: true });
-  assert.deepEqual(await (await get('/api/login')).json(), { accounts: false, shared: true });
+  // An office with a password (this one has --password) asks for it, even on its own computer.
+  assert.deepEqual(await (await get('/api/login')).json(), { accounts: false, shared: true, local: false });
   assert.deepEqual(await (await get('/api/claim')).json(), { claimable: false });
 
   const login = await get('/login');
@@ -182,7 +183,9 @@ test('answers the open routes before anyone signs in', async () => {
   const home = await get('/');
   assert.equal(home.status, 302);
   assert.equal(home.headers.get('location'), '/login');
-  assert.equal((await get('/lite')).headers.get('location'), '/login?next=/lite');
+  // The Bridge view comes back to itself after signing in; the old /lite address goes to sign in like home.
+  assert.equal((await get('/bridge')).headers.get('location'), '/login?next=/bridge');
+  assert.equal((await get('/lite')).headers.get('location'), '/login');
   const whoami = await get('/api/whoami');
   assert.equal(whoami.status, 401);
   assert.deepEqual(await whoami.json(), { error: 'Not logged in' });
@@ -199,7 +202,22 @@ test('answers the open routes before anyone signs in', async () => {
   assert.equal((await post('/api/join', { token: 'nope' })).status, 410);
 });
 
-test("the Fund-this-issue Action is public, CORS-open and off until an admin opts a repository in", async () => {
+test('Proof of Merge routes are not there until Proof of Merge is on in Labs', async () => {
+  // Off as the office ships: nobody signed in is sent to sign in, as for any other page.
+  assert.equal((await get('/actions.json')).headers.get('location'), '/login');
+  assert.equal((await get('/api/actions/fund?repo=a/b&issue=1')).status, 401);
+  assert.equal((await get('/pom/')).headers.get('location'), '/login');
+  assert.equal((await get('/api/public/leaderboard')).status, 401);
+  // Held on from the command line, it answers (the next test checks how).
+  assert.deepEqual(office.labs.set({ proof: true }, 'test'), ['proof']);
+  assert.equal((await get('/api/actions/icon.svg')).status, 200);
+  office.labs.set({ proof: false }, 'test');
+  assert.equal((await get('/api/actions/icon.svg')).status, 401);
+});
+
+test("the Fund-this-issue Action is public, CORS-open and off until an admin opts a repository in", async (t) => {
+  office.labs.set({ proof: true }, 'test');
+  t.after(() => office.labs.set({ proof: false }, 'test'));
   const manifest = await get('/actions.json');
   assert.equal(manifest.status, 404);
   assert.equal(manifest.headers.get('access-control-allow-origin'), '*');
@@ -231,9 +249,17 @@ test('signs in with the office password', async () => {
 
 test('answers the signed-in routes', async () => {
   const me = { cookie };
-  assert.deepEqual(await (await get('/api/whoami', me)).json(), { ok: true, me: { admin: true } });
+  const who = (await (await get('/api/whoami', me)).json()) as { ok: boolean; me: unknown; labs: { on: Record<string, boolean>; forced: string[] } };
+  assert.deepEqual({ ok: who.ok, me: who.me }, { ok: true, me: { admin: true } });
+  // Every lab is off as the office ships.
+  assert.deepEqual(who.labs.on, { boards: false, bridge: false, ops: false, meetings: false, voice: false, ambience: false, proof: false });
+  assert.deepEqual(who.labs.forced, []);
+  // Home is the inbox; the 3D bridge is a page of its own; the old 2D view's address lands home.
   assert.match(await (await get('/', me)).text(), /<title>index<\/title>/);
-  assert.match(await (await get('/lite', me)).text(), /<title>lite<\/title>/);
+  assert.match(await (await get('/bridge', me)).text(), /<title>bridge<\/title>/);
+  const lite = await get('/lite?why=webgl', me);
+  assert.equal(lite.status, 302);
+  assert.equal(lite.headers.get('location'), '/?why=webgl');
   const floor = office.floors()[0].id;
   assert.deepEqual(await (await get(`/api/search?q=zzzz&floor=${floor}`, me)).json(), { q: 'zzzz', chat: [], terminals: [], more: false });
   assert.deepEqual(await (await get('/api/search?q=z', me)).json(), { q: 'z', chat: [], terminals: [], more: false });
@@ -252,7 +278,7 @@ test('answers the signed-in routes', async () => {
   await bad(await get('/api/changes/file', me), 400, 'Bad request');
   await bad(await get(`/api/docs/file?floor=${floor}`, me), 400, 'Bad request');
   await bad(await get(`/api/docs/other?floor=${floor}&path=x`, me), 404, 'Not found');
-  assert.deepEqual(await (await fetch(base + '/api/whoami', { method: 'POST', headers: me })).json(), { ok: true, me: { admin: true } });
+  assert.deepEqual((await (await fetch(base + '/api/whoami', { method: 'POST', headers: me })).json()).me, { admin: true });
   // /api/image, the wall pictures' fetch-any-URL proxy, is gone with them.
   for (const [method, p] of [['GET', '/nothing-here.txt'], ['GET', '/api/image?url=http%3A%2F%2F127.0.0.1%2F'], ['PUT', '/api/login'], ['POST', '/api/docs'], ['POST', '/api/search']]) {
     const missing = await fetch(base + p, { method, headers: me });
@@ -547,8 +573,13 @@ test('settings, accounts, sign-ins and the boards answer as before', async () =>
   assert.deepEqual(await a.take('gh.labeled'), { t: 'gh.labeled', kind: 'pull', number: 3, error: 'No labels to change' });
   a.send({ t: 'queue.add', prompt: 'x', provider: 'nope' });
   await warned('Unknown agent provider');
+  // A lab's messages go nowhere while it's off, with a line saying so (ws/labgate.ts).
+  a.send({ t: 'meeting.start', pattern: 'debate', prompt: 'x', roles: [], provider: 'nope' });
+  await warned('Meetings is off. An admin turns it on in Labs.');
+  office.labs.set({ meetings: true }, 'test');
   a.send({ t: 'meeting.start', pattern: 'debate', prompt: 'x', roles: [], provider: 'nope' });
   await warned('Unknown agent provider');
+  office.labs.set({ meetings: false }, 'test');
   a.send({ t: 'queue.move', taskId: 'nope', delta: 1 });
   a.send({ t: 'changes.watch', workerId: 'nope' });
   a.send({ t: 'changes.unwatch', workerId: 'nope' });

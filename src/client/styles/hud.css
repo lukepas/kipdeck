@@ -7,6 +7,10 @@
 #app { position: fixed; inset: 0; }
 #scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
 #hud { position: absolute; inset: 0; pointer-events: none; --bar: 44px; --rail: 264px; --bottom: 52px; }
+/* What covers the deck's right side low down: a docked Mission control (ui/mission/dock.ts), and
+   whatever a feature sets as --sel-clear (the selected unit's card, features/selection/ui.css). The
+   hint, VESPER's line and the Overview's legend centre in what's left. */
+#hud { --clear-right: calc(var(--dock-right, 0px) + var(--sel-clear, 0px)); }
 #hud:has(.rail.folded) { --rail: 56px; }
 #hud:has(.rail.hud-off) { --rail: 0px; }
 #hud > * { pointer-events: auto; }
@@ -90,11 +94,20 @@
 .limits .muted { color: var(--muted); }
 
 /* The bottom bar: the mission strip, the keys, the chat. It starts past the rail. */
-.bottombar { position: absolute; left: calc(var(--rail) + 12px); right: 12px; bottom: 10px; height: 40px; z-index: 2; display: flex; align-items: center; gap: 8px; pointer-events: none !important; transition: left var(--t-ui) var(--ease); }
+.bottombar { position: absolute; left: calc(var(--rail) + 12px); right: calc(12px + var(--dock-right, 0px)); bottom: 10px; height: 40px; z-index: 2; display: flex; align-items: center; gap: 8px; pointer-events: none !important; transition: left var(--t-ui) var(--ease); }
 .bottombar > * { pointer-events: auto; }
-.bottombar .mission-strip { flex: 0 1 600px; min-width: 0; height: 40px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: var(--hud-shadow); }
+.bottombar { container: bb / inline-size; }
+/* The strip takes at most half the bar (it ends at the dock when Mission control is docked), the keys the rest. */
+.bottombar .mission-strip { flex: 0 1 min(600px, 50cqw); min-width: 0; height: 40px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: var(--hud-shadow); }
 .bottombar .mission-strip:empty { visibility: hidden; }
-.bb-keys { flex: 1; min-width: 0; display: flex; justify-content: center; gap: 6px; overflow: hidden; }
+/* A key that doesn't fit drops out whole onto a hidden second row, never cut off mid-word (Mission control docked narrows the bar);
+   with no room for even one, none shows. */
+.bb-keys { flex: 1; min-width: 0; height: 28px; display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 6px; overflow: hidden; container: bb-keys / inline-size; }
+@container bb-keys (max-width: 160px) { .bb-key { visibility: hidden; } }
+/* A narrow bar (Mission control docked, a small window): the key caps alone. */
+@container bb (max-width: 1060px) { .bb-key:not(.look) .kw { display: none; } .bb-key:not(.look) { padding-right: 5px; } }
+/* The chat open takes the keys' place: they step aside rather than sit under its field. */
+.bottombar:has(.chat.open, .chat:focus-within) .bb-keys { visibility: hidden; }
 .bb-key { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 9px 0 5px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--hud-fill); color: var(--muted); font-size: 12px; white-space: nowrap; cursor: pointer; }
 .bb-key:hover { color: var(--text); background: var(--surface-3); }
 .bb-key kbd { min-width: 18px; padding: 0 4px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); color: var(--text); font: 500 11px/16px var(--font-mono); text-align: center; }
@@ -120,10 +133,10 @@ body.overview .bb-keys { visibility: hidden; }
 
 /* What you're facing and what its keys do: over the bar, in the middle of the deck past the rail. */
 .hint {
-  position: absolute; left: calc(var(--rail) + (100vw - var(--rail)) / 2); bottom: calc(var(--bottom) + 10px); transform: translateX(-50%);
+  position: absolute; left: calc(var(--rail) + (100vw - var(--rail) - var(--clear-right, 0px)) / 2); bottom: calc(var(--bottom) + 10px); transform: translateX(-50%);
   background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 8px 14px; font-weight: 500; font-size: 13px; box-shadow: var(--hud-shadow);
-  display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center; max-width: min(720px, calc(100vw - var(--rail) - 48px));
+  display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center; max-width: min(720px, calc(100vw - var(--rail) - var(--clear-right, 0px) - 48px));
   pointer-events: none !important;
 }
 .hint .title { color: var(--text); font-weight: 600; }
@@ -156,7 +169,7 @@ body.overview .bb-keys { visibility: hidden; }
   .dock-btn .lbl { display: none; }
   .bb-key .kw { display: none; }
 }
-/* A phone in the 3D view (most are sent to the 2D view, see ui/litesuggest.ts): one surface. The rail is
+/* A phone in the Bridge view (the home page is made for phones; this is for whoever opens /bridge): one surface. The rail is
    a bottom sheet the Units button opens, the counters are glyph and number in fixed widths, and nothing
    floats over the deck but the toasts under the bar. */
 @media (max-width: 640px) {

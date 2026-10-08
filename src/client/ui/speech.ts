@@ -50,11 +50,24 @@ export function speechLang(): string {
   return (typeof navigator !== 'undefined' && navigator.language) || 'en-US';
 }
 
+/**
+ * Whether this browser can be asked about its on-device model at all. Builds of Chromium without
+ * Chrome's own layer on top (the headless shell that screenshots and tests run in, Electron) expose
+ * `available()` but have no on-device speech service behind it, and asking makes the browser kill
+ * the whole tab for an unknown Mojo interface. Chrome, Edge and the other full browsers answer.
+ */
+export function canAskOnDevice(ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''): boolean {
+  return !/HeadlessChrome|Electron\//.test(ua);
+}
+
 /** Whether the on-device model for a language is installed, once the browser has said (it's asked once). */
 const onDevice = new Map<string, boolean>();
-/** Asks ahead of time, so starting to listen never waits on the answer. */
-export function checkOnDevice(lang = speechLang(), Ctor = recognizer()) {
-  if (onDevice.has(lang) || !Ctor?.available) return;
+/**
+ * Asks ahead of the first word (the mic is hovered, focused or pressed), so starting to listen never
+ * waits on the answer, and never just because a window with a mic in it opened.
+ */
+export function checkOnDevice(lang = speechLang(), Ctor = recognizer(), ua?: string) {
+  if (onDevice.has(lang) || !Ctor?.available || !canAskOnDevice(ua)) return;
   onDevice.set(lang, false);
   Ctor.available({ langs: [lang], processLocally: true })
     .then((s) => onDevice.set(lang, s === 'available'))

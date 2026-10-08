@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { attention, attentionCounts, isCrashed, rankRoster } from '../src/shared/attention.js';
-import { ago, headline, shortPath, stateWord, statusPhrase } from '../src/shared/rowtext.js';
+import { ago, headline, rowStatus, shortPath, stateWord, statusPhrase } from '../src/shared/rowtext.js';
 import { tokenLabel, tokenUnits } from '../src/shared/money.js';
 import type { RosterEntry, WorkerInfo } from '../src/shared/protocol.js';
 import { WorkerManager } from '../src/server/workers.js';
@@ -42,10 +42,10 @@ test('the 3D top bar, the 2D view and Mission control count one fixture the same
   assert.equal(counts['needs-you'], 2);
   assert.equal(counts.working, 2);
   assert.deepEqual(attentionCounts(rankRoster(store.roster, Date.now())), { ...counts, review: 1 });
-  // Both views draw the top bar from the one mountCounters, which reads store.counts(); neither recounts.
+  // The 3D top bar draws its counters from the one mountCounters, which reads store.counts(); the home
+  // page has no counters strip (its counts are the Mission button's and the list's), and recounts nothing.
   const src = (f: string) => readFileSync(path.join(import.meta.dirname, '..', 'src', 'client', f), 'utf8');
   assert.match(src('ui/counters.ts'), /store\.counts\(\)/);
-  assert.match(src('lite.ts'), /mountCounters\(/);
   assert.match(src('features/counters/index.ts'), /mountCounters\(/);
   assert.doesNotMatch(src('lite.ts'), /attentionCounts\(|status === 'exited'/);
 });
@@ -54,10 +54,18 @@ test('a row has one title, its tag as a chip, one status phrase with no time in 
   const pixel = attention(FIXTURE[0], NOW);
   const head = headline(FIXTURE[0].task, FIXTURE[0].activity);
   assert.deepEqual(head, { title: 'Pick the session store for the auth rewrite', tag: 'ask' });
-  // Its question is its title: the phrase says what it is instead of saying it twice.
-  assert.equal(statusPhrase(pixel, head.title), 'Needs an answer');
-  assert.equal(statusPhrase(attention(FIXTURE[1], NOW), 'Ship it'), 'Wants permission: Bash: npm publish');
+  // Its question is its title: the phrase says what it is instead of saying it twice, by its level's one name.
+  assert.equal(statusPhrase(pixel, head.title), 'Needs you');
+  // A phrase for one that needs someone leads with its level's name, the same word the callout's chip says.
+  assert.equal(statusPhrase(attention(FIXTURE[1], NOW), 'Ship it'), 'Needs you · Wants permission: Bash: npm publish');
+  assert.equal(statusPhrase({ level: 'review', label: 'Done' }), 'To review · Done');
+  assert.equal(statusPhrase({ level: 'stuck', label: 'Stuck' }), 'Stuck');
   assert.doesNotMatch(statusPhrase(attention(FIXTURE[3], NOW)), /\d|minute|ago/);
+  // The inbox row sits under a heading that names the level, so it says only what the heading doesn't.
+  assert.equal(rowStatus({ level: 'needs-you', label: 'Needs an answer' }), 'Needs an answer');
+  assert.equal(rowStatus(attention(FIXTURE[1], NOW), 'Ship it'), 'Wants permission: Bash: npm publish');
+  assert.equal(rowStatus({ level: 'review', label: 'Done' }), 'Done');
+  assert.equal(rowStatus({ level: 'stuck', label: 'Stuck' }), 'Stuck');
   assert.deepEqual([ago(0), ago(4 * 60_000), ago(2 * 3600_000), ago(3 * 86_400_000)], ['<1m', '4m', '2h', '3d']);
   assert.deepEqual(FIXTURE.map((e) => stateWord(attention(e, NOW))), ['needs you', 'permission', 'crashed', 'done', 'working', 'working']);
   assert.equal(shortPath('/Users/ana/work/acme/ugc-review/project'), '~/.../ugc-review/project');

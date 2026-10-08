@@ -1,4 +1,4 @@
-/* UGC Army design tokens: the one source of color, type, line, radius and motion for every page (the
+/* Kipdeck design tokens: the one source of color, type, line, radius and motion for every page (the
    3D office, the 2D view, login/join/claim and the /pom/ showcase). DESIGN.md explains the rules
    behind them. Values are written as hex first (every browser) and again as OKLCH where supported;
    the two describe the same color.
@@ -60,6 +60,9 @@
   /* The data palette: telling things apart (a yoke, a sign, a pin), never a state (shared/datacolors.ts). */
   --data-1: #6e8fb3; --data-2: #4fa3a5; --data-3: #7fa58a; --data-4: #b8a07a;
   --data-5: #b07d6e; --data-6: #b07a92; --data-7: #6fa9c4; --data-8: #9aa36a;
+  /* The pods' goal hues: which goal a pod's zone works toward, never a state (src/shared/podhue.ts). */
+  --pod-1: #4fa8d8; --pod-2: #8e68a8; --pod-3: #45a593; --pod-4: #5c6fd6; --pod-5: #c98aa8; --pod-6: #b3a68a;
+  --pod-none: #6b7785;
   /* Text on a filled Signal button. */
   --on-signal: #0d131a;
 
