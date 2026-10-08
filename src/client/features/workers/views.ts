@@ -21,13 +21,21 @@ import { $ } from '../../ui/dom';
 import { openExpand } from '../../ui/floorplan';
 import { renderWorkers } from '../../ui/workers-panel';
 import { renderLimits } from '../../ui/limits';
-import { resolvedProvider } from '../../ui/provider';
+import { engineLabel, resolvedProvider } from '../../ui/provider';
 import { PROVIDER_GLYPH, PROVIDER_STRIPE, callSign } from '../../../shared/callsign';
 import { renderUsage } from '../../ui/usage';
 import { workerBounty } from '../../ui/bounty';
 import { Worker } from '../../world/character';
 import { Laptop } from './laptop';
 import { Arrivals, Departures } from './leaving';
+import { rippleDelays, staggerDelay, tierFor, type CalloutTier } from './lod';
+
+/** How quickly the callouts come back once the move lands (s, the time constant of their fade). */
+const DIM_S = 0.09;
+/** How quickly they fade as a move starts (s): gone in about the move's first quarter (TRANSITION_MS 650). */
+const DIM_OUT_S = 0.05;
+/** Faded below this, a callout is held out of sight for the rest of the move (callout-view.ts). */
+const HELD_BELOW = 0.03;
 
 // The kinds of thing you can use that this defines (see InteractKinds in world/types.ts).
 declare module '../../world/types' {
@@ -42,21 +50,13 @@ export interface WorkerView {
   deskId: string;
   status: string;
   acked: boolean;
-  /** Its callout is showing all it has (see NEAR). */
-  near: boolean;
   /** The screen version its visor last flickered for. */
   printed: number;
   /** Its small parts are drawn: it's within Quality's detail range (see TierLook.detail). */
   detail: boolean;
 }
 
-/** How close (meters) the camera comes before a unit's callout shows its task, and how far it goes before it's one line again. */
-const NEAR = 6;
-const NEAR_LEAVE = 7.5;
-/** How much further off a unit that needs you, or is stuck, shows all it has. */
-const URGENT_NEAR = 2;
-
-export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'notifier' | 'waiting' | 'peers' | 'overview' | 'quality'>;
+export type WorkerViewsParts = Pick<Parts, 'stage' | 'worlds' | 'travel' | 'notifier' | 'waiting' | 'peers' | 'overview' | 'quality' | 'selection'>;
 
 /**
  * Registers what follows the workers, the floor plan, the meeting, the pull requests and
@@ -98,6 +98,7 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
         desk.seatAnchor.add(model.root);
         model.dockOn(desk.group);
         model.setCallSign(callSign(w.deskId));
+        model.setStagger(staggerDelay(w.id));
         const provider = resolvedProvider(w.provider, store.project);
         if (w.kind === 'agent') model.setProvider(PROVIDER_GLYPH[provider], PROVIDER_STRIPE[provider]);
         else model.setProvider('$', PROVIDER_STRIPE.custom);
@@ -106,7 +107,7 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
         const laptop = new Laptop();
         desk.laptopAnchor.add(laptop.root);
         desk.chair.rotation.y = 0;
-        v = { model, laptop, deskId: w.deskId, status: '', acked: true, near: false, printed: -2, detail: true };
+        v = { model, laptop, deskId: w.deskId, status: '', acked: true, printed: -2, detail: true };
         workerViews.set(w.id, v);
       }
       if (v.status !== w.status || v.acked !== w.acked) {
@@ -122,6 +123,9 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
         v.model.setStatus(w.status);
       }
       v.model.setAction(w.action);
+      v.model.setActivity(w.activity);
+      // Its engine as the selection card names it ("Claude Code · opus"), never the provider's id.
+      v.model.setMeta(w.worktree?.branch, w.kind === 'agent' ? engineLabel(w, store.project) : undefined);
       v.model.setPr(workerPr(w, store.pulls.items, store.queue.tasks));
       v.model.setLost(!!w.lost);
       // A unit holding a claimed bounty shows what it's worth ahead of its task.
@@ -208,10 +212,54 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
   setInterval(paintLevels, 5000);
   store.on('bounties', syncWorkers);
   const workerPos = new THREE.Vector3();
-  ctx.ticks.add('others', ({ dt, t }) => {
+  const px = new THREE.Vector3();
+  const selAt = new THREE.Vector3();
+  /** About how high a unit's head stands over its foot (m): its callout's foot. */
+  const HEAD = 1.3;
+  /** Unit `m`'s head (where its callout stands) on screen (px) as `cam` sees it, in `out`. */
+  const onScreen = (m: Worker, cam: THREE.Camera, out: THREE.Vector3) => {
+    m.where(out);
+    out.y += HEAD;
+    out.project(cam);
+    return out.set(((out.x + 1) / 2) * innerWidth, ((1 - out.y) / 2) * innerHeight, out.z);
+  };
+  /** Whether the Overview was on the move last frame, and when the ripple's order was last worked out. */
+  let wasMoving = false;
+  let rippleAt = -Infinity;
+  /**
+   * Each unit's delay before its callout changes or pops in: a ripple out from the middle of the view,
+   * the ones that need someone first (lod.ts rippleDelays). Worked out on landing and four times a second.
+   */
+  function ripple(cam: THREE.Camera) {
+    const list = [...workerViews.values()];
+    const at = list.map((v) => {
+      const p = onScreen(v.model, cam, px);
+      return { x: p.z > 1 ? 1e5 : p.x, y: p.y, urgent: v.model.urgent };
+    });
+    rippleDelays(at, innerWidth / 2, innerHeight / 2).forEach((ms, i) => list[i].model.setStagger(ms));
+  }
+  /** A neighbour's callout no closer than this (px) to the selected unit's: one beside it is a tab, not a card over it. */
+  const NEAR_SELECTED_PX = 300;
+  ctx.ticks.add('others', ({ dt, t, now }) => {
     const camPos = camera.position;
     Worker.calm = ctx.reduceMotion.matches;
     const ov = parts.overview;
+    // The Overview on the move: every callout is a tab and fades out over the move's first frames
+    // (about its first quarter), then waits out of sight, and pops in as a ripple once it lands, fading
+    // back up over a quick 90 ms rather than a cut.
+    const moving = !!ov?.moving();
+    const want = moving ? 0 : 1;
+    Worker.dim = Worker.calm ? want : Worker.dim + (want - Worker.dim) * (1 - Math.exp(-dt / (moving ? DIM_OUT_S : DIM_S)));
+    Worker.hold = moving && Worker.dim < HELD_BELOW;
+    const view = ov?.active() ? ov.camera : camera;
+    if ((wasMoving && !moving) || (!moving && now - rippleAt > 250)) {
+      rippleAt = now;
+      ripple(view);
+    }
+    wasMoving = moving;
+    const selId = parts.selection?.id() ?? null;
+    const selModel = selId && !ov?.active() ? workerViews.get(selId)?.model : undefined;
+    const selPx = selModel ? onScreen(selModel, camera, selAt) : null;
     const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
     Worker.screen = (at) => (ov?.active() ? ov.camera.top - ov.camera.bottom : 2 * Math.tan(halfFov) * camera.position.distanceTo(at));
     // From the Overview the units that need you or are stuck are tagged half again as big.
@@ -219,12 +267,21 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     const range = parts.quality.look().detail;
     for (const [id, v] of workerViews) {
       const desk = OFFICE_PLAN.byId.get(v.deskId)!;
-      // Near enough to read: its callout shows its task and how long it has been this way.
       const d = v.model.where(workerPos).distanceTo(camPos);
-      // One that needs you, or is stuck, says so from further off; from the Overview each is one line.
-      const reach = (v.model.urgent ? URGENT_NEAR : 1) * (v.near ? NEAR_LEAVE : NEAR);
-      v.near = !parts.overview?.active() && d < reach;
-      v.model.setNear(v.near);
+      // How much its callout says (lod.ts): a tab from far off, a line between, the card up close; by
+      // the Overview's zoom or, walking, how far off it is. One that needs you or is stuck keeps its call sign.
+      // The selected unit (features/selection) shows one line at any distance, never its card (the
+      // selection card says the rest), outlined over its neighbours'. On the move up or down, a tab.
+      const selected = parts.selection?.id() === id;
+      v.model.setSelected(selected);
+      let tier: CalloutTier = tierFor({ ortho: ov?.active() ? ov.camera : null, distance: d }, v.model.tier, { selected, moving });
+      // Walking with a unit selected, a neighbour close by on screen steps back to its tab (with its call
+      // sign when it needs someone), so neither its card nor a line drawn at close range sits over the selected one's.
+      if (tier !== 'far' && selPx && !selected && selPx.z <= 1) {
+        const p = onScreen(v.model, camera, px);
+        if (Math.hypot(p.x - selPx.x, p.y - selPx.y) < NEAR_SELECTED_PX) tier = 'far';
+      }
+      v.model.setTier(tier);
       // Its small parts (and its laptop's) only within Quality's detail range, a little past it to leave.
       const detail = d < range * (v.detail ? 1.08 : 1);
       if (detail !== v.detail) {
@@ -244,7 +301,9 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
     }
     for (const a of parts.worlds.idleAgents()) {
       if (!a.view.vacancy.visible) continue;
-      a.model.setDetail(a.model.where(workerPos).distanceTo(camPos) < range);
+      const d = a.model.where(workerPos).distanceTo(camPos);
+      a.model.setDetail(d < range);
+      a.model.setTier(tierFor({ ortho: ov?.active() ? ov.camera : null, distance: d }, a.model.tier, { moving }));
       a.model.update(dt, t);
     }
     departures.update(dt, t);

@@ -12,6 +12,7 @@ import { doingLabel, money, runAction, snooze, snoozeLabel, type MissionDeps } f
 import { repBits } from './rep';
 import { crewBits } from './crew';
 import { unitSign } from '../unitsign';
+import { locateButton } from './locate';
 
 /** The rows whose "..." menu is open, kept while Mission control draws itself again. */
 const expanded = new Set<string>();
@@ -84,7 +85,7 @@ export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { sho
         ...repBits(e.id),
       ),
       h('span.mc-time', { title: 'Time in this state' }, ago(now - r.att.since)),
-      h('div.mc-btns', {}, primary, toggle),
+      h('div.mc-btns', {}, primary, locateButton(deps, e), toggle),
     ),
     more,
   );

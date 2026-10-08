@@ -166,6 +166,25 @@ test('the home page: Mission control from the menu, editing the mission in place
   await modal.locator('.tl-row', { hasText: 'Tess changed the mission: Make sign-in boring' }).waitFor();
   assert.equal(await modal.locator('.tl-row script').count(), 0);
   assert.match(await modal.locator('.tl-row').first().innerText(), /added the milestone/);
+  // The whole row is the button: no Open button on it, and Enter on it opens what it's about (a
+  // milestone: the Goals tab).
+  assert.equal(await modal.locator('.tl-row .mc-act').count(), 0);
+  const first = modal.locator('.tl-row').first();
+  assert.equal(await first.getAttribute('role'), 'button');
+  assert.equal(await first.getAttribute('tabindex'), '0');
+  await first.focus();
+  await page.keyboard.press('Enter');
+  assert.equal(await modal.locator('.mc-tab[aria-selected=true]').innerText(), 'Goals');
+  await page.keyboard.press('4');
+  // So does a click anywhere on it, and Space.
+  await modal.locator('.tl-row', { hasText: 'Tess added the milestone Auth rewrite' }).first().click();
+  assert.equal(await modal.locator('.mc-tab[aria-selected=true]').innerText(), 'Goals');
+  await page.keyboard.press('4');
+  await modal.locator('.tl-row').first().focus();
+  await page.keyboard.press(' ');
+  assert.equal(await modal.locator('.mc-tab[aria-selected=true]').innerText(), 'Goals');
+  // No Locate in the 2D view: it has no deck to point at.
+  assert.equal(await modal.locator('.mc-locate').count(), 0);
   await page.keyboard.press('3');
   assert.match(await modal.locator('.mc-tab[aria-selected=true]').innerText(), /^Review/);
   await modal.locator('.mc-empty', { hasText: 'Nothing waits for review' }).waitFor();
@@ -195,7 +214,7 @@ test('the 3D office: the strip in the bottom bar, I opens Mission control, Esc p
   await page.locator('#scene').focus();
   await page.keyboard.press('i');
   const modal = page.locator('.modal.mission-control');
-  await modal.waitFor({ timeout: 10_000 });
+  await modal.waitFor({ timeout: 30_000 });
   await page.keyboard.press('2');
   await modal.locator('.mc-milestone', { hasText: 'Auth rewrite' }).waitFor();
   if (process.env.MISSION_E2E_SHOT) await page.screenshot({ path: process.env.MISSION_E2E_SHOT });
@@ -242,7 +261,9 @@ test('back after a while away: the digest is over the list on the home page, and
   await debrief.waitFor({ timeout: 60_000 });
   assert.match(await debrief.locator('.debrief-title').innerText(), /SINCE YOU LEFT/);
   assert.equal(await debrief.locator('.close').count(), 1);
-  await debrief.locator('button', { hasText: 'Full log' }).click();
+  // A dispatched click, as Locate's below: under the full suite's load the software renderer starves
+  // Playwright's wait for the button to hold still.
+  await debrief.locator('button', { hasText: 'Full log' }).dispatchEvent('click');
   const digest = office.page.locator('.modal.digest');
   await digest.waitFor({ timeout: 30_000 });
   assert.match(await digest.locator('.dg-summary').innerText(), /./);
@@ -266,5 +287,216 @@ test('a first visit to the 3D office asks for nothing: no name, no character', a
   assert.match(saved.name, /\S/, 'a name to go by (a made-up one: this office has a password, so it is not its owner\'s own)');
   assert.ok(saved.look, 'a look was dealt, and kept for next time');
   await page.locator('#mission-strip').waitFor();
+  assert.deepEqual(errors, []);
+});
+
+test('docked in the 3D office: the deck stays in view, D floats it, a click on the deck hands the mouse back, Esc goes straight to mouse-look, and Crew is live', async (t) => {
+  if (why) return t.skip(why);
+  const { page, errors, context } = await signedIn({ width: 1440, height: 900 });
+  t.after(() => context.close());
+  // Docked last time; pointer lock asked for is counted (a headless browser can't really take the mouse).
+  await context.addInitScript(() => {
+    try {
+      localStorage.setItem('agent-office.mission-dock', 'dock');
+    } catch {
+      // storage blocked
+    }
+    const w = window as unknown as { __locks: number[] };
+    w.__locks = [];
+    HTMLCanvasElement.prototype.requestPointerLock = function () {
+      w.__locks.push(performance.now());
+      // Taken and let go at once, as far as the page can tell, so the next ask isn't still pending.
+      setTimeout(() => document.dispatchEvent(new Event('pointerlockchange')), 0);
+      return Promise.resolve();
+    } as typeof HTMLCanvasElement.prototype.requestPointerLock;
+  });
+  // A software-rendered deck starves the page of frames, so motion would never finish: settle it,
+  // and poll on a timer below rather than on animation frames.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(`${base}/bridge`);
+  await page.waitForFunction(() => !!(window as unknown as { __office?: { store: { floor: string | null } } }).__office?.store.floor, null, { timeout: 60_000 });
+  // A unit aboard, for the Crew tab's Now column (the stand-in agent exits at once, so it's stuck: crashed).
+  await page.evaluate(() => (window as unknown as { __office: { net: { send(m: unknown): void } } }).__office.net.send({ t: 'worker.spawn', deskId: 'desk-1', prompt: 'Pick the session store', worktree: false }));
+  await page.waitForFunction(() => (window as unknown as { __office: { store: { roster: unknown[] } } }).__office.store.roster.length > 0, null, { timeout: 30_000 });
+  const locks = () => page.evaluate(() => (window as unknown as { __locks: number[] }).__locks.length);
+  const stacked = () => page.locator('#modal-root > .backdrop').count();
+
+  await page.locator('#scene').focus();
+  await page.keyboard.press('i');
+  const docked = page.locator('.mc-dock-host > .modal.mission-control.docked');
+  await docked.waitFor({ timeout: 30_000 });
+  // On the right, under the top bar, 400px wide, no dim over the deck.
+  const box = (await docked.boundingBox())!;
+  assert.equal(Math.round(box.width), 400);
+  assert.equal(Math.round(box.x + box.width), 1440);
+  assert.ok(box.y >= 40 && box.y <= 60, `under the top bar, at ${box.y}`);
+  assert.equal(await page.locator('#modal-root > .backdrop:not(.mc-dock-backdrop)').count(), 0, 'no dimming backdrop');
+  assert.equal(await docked.locator('header .close').count(), 1);
+  assert.equal(await docked.locator('.mc-dock-btn').innerText(), 'Float');
+
+  // Crew: the live Now column, the unit's state and how long.
+  await page.keyboard.press('5');
+  const now = docked.locator('.crew-row .crew-now-state').first();
+  await now.waitFor();
+  assert.match(await now.locator('.crew-now-text').innerText(), /\S/);
+  assert.match(await now.locator('.crew-now-for').innerText(), /^(<1m|\d+[mhd])$/);
+
+  // Locate on a Crew row selects the unit on the deck (features/selection): the selection card shows
+  // it, and the docked panel stays up beside it.
+  const crewRow = docked.locator('.crew-row', { has: page.locator('.mc-locate') }).first();
+  // A dispatched click: Playwright's own waits for the button to hold still for two animation frames,
+  // which the software renderer starves (the same reason this file polls on a timer).
+  await crewRow.locator('.mc-locate').dispatchEvent('click');
+  await page.locator('.sel-card:not([hidden]) .sel-name').waitFor({ timeout: 30_000 });
+  assert.equal(await docked.count(), 1, 'still docked after Locate');
+  // And it's seen, not just there: the card sits left of the docked panel, nothing over its middle or its button.
+  // Its 160 ms fade-in runs on the page's frames, which the software renderer draws slowly on a busy
+  // machine (several seconds for Locate's flight): a generous wait, not a fixed one.
+  await page.waitForFunction(() => document.querySelector('.sel-card.open') && getComputedStyle(document.querySelector('.sel-card')!).opacity === '1', null, { timeout: 30_000, polling: 100 });
+  // No named function inside the page code: tsx's keepNames would wrap it in a __name() the page lacks.
+  const seen = await page.evaluate(() => {
+    const card = document.querySelector<HTMLElement>('.sel-card')!;
+    const btn = card.querySelector('.sel-actions .btn');
+    const hits = [card, btn].map((el) => {
+      if (!el) return true;
+      const r = el.getBoundingClientRect();
+      return card.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2));
+    });
+    return { card: hits[0], button: hits[1], right: card.getBoundingClientRect().right, dock: document.querySelector('.mc-dock-host')!.getBoundingClientRect().left };
+  });
+  assert.ok(seen.card && seen.button, `the selected unit's card is in view beside the docked panel: ${JSON.stringify(seen)}`);
+  assert.ok(seen.right <= seen.dock, 'the card ends left of the docked panel');
+
+  // Whoever has the keys after Locate, a click on the panel gives them to it (its tabs undim).
+  await docked.locator('header h2').click();
+  assert.equal(await docked.evaluate((m) => m.classList.contains('mc-keys-away')), false, 'a click on the panel takes the keys back');
+  // D floats it in the middle, remembered; D again docks it.
+  await page.keyboard.press('d');
+  await page.locator('#modal-root > .backdrop > .modal.mission-control').waitFor();
+  assert.equal(await page.locator('.mc-dock-host').count(), 0);
+  assert.equal(await page.evaluate(() => localStorage.getItem('agent-office.mission-dock')), 'float');
+  await page.keyboard.press('d');
+  await docked.waitFor();
+  assert.equal(await page.evaluate(() => localStorage.getItem('agent-office.mission-dock')), 'dock');
+
+  // A click on the deck: the panel stays, and the deck has the mouse and the keys back.
+  const before = await locks();
+  await page.locator('#scene').click({ position: { x: 500, y: 600 } });
+  await page.waitForFunction((n) => (window as unknown as { __locks: number[] }).__locks.length > n, before, { timeout: 30_000, polling: 100 });
+  assert.equal(await stacked(), 0, 'off the window stack');
+  assert.equal(await docked.count(), 1, 'still docked and in view');
+  assert.equal(await docked.evaluate((m) => m.classList.contains('mc-keys-away')), true, 'its tabs dim while the deck has the keys');
+  // I takes the keys back for it.
+  await page.keyboard.press('i');
+  await page.waitForFunction(() => document.querySelectorAll('#modal-root > .backdrop.mc-dock-backdrop').length === 1, null, { polling: 100 });
+
+  // Esc closes it, and mouse-look is asked for by the close itself, with no extra click. (How soon
+  // depends on how fast this machine draws the deck; design/shoot-dock.mjs measures it.)
+  const ask = await locks();
+  await page.keyboard.press('Escape');
+  await page.waitForFunction((n) => (window as unknown as { __locks: number[] }).__locks.length > n, ask, { timeout: 30_000, polling: 100 });
+  await page.waitForFunction(() => !document.querySelector('.modal.mission-control'), null, { polling: 100 });
+  assert.equal(await stacked(), 0);
+
+  // Too narrow to dock: it floats, though docking is what's remembered.
+  await page.setViewportSize({ width: 860, height: 800 });
+  await page.locator('#scene').focus();
+  await page.keyboard.press('i');
+  await page.locator('#modal-root > .backdrop > .modal.mission-control').waitFor();
+  assert.equal(await page.locator('.mc-dock-host').count(), 0);
+  await page.keyboard.press('Escape');
+
+  // Taken to another unit some other way (N, a badge, a notification): the selection goes with you.
+  await page.evaluate(() => (window as unknown as { __office: { net: { send(m: unknown): void } } }).__office.net.send({ t: 'worker.spawn', deskId: 'desk-2', prompt: 'Cache the index', worktree: false }));
+  await page.waitForFunction(() => (window as unknown as { __office: { workerViews: Map<string, unknown> } }).__office.workerViews.size > 1, null, { timeout: 30_000, polling: 250 });
+  const picked = await page.locator('.sel-card .sel-name').innerText();
+  type Office = { __office: { store: { workers: Map<string, { id: string; name: string }> } }; __world: { waiting: { goTo(id: string): boolean } } };
+  const other = await page.evaluate((picked) => {
+    const w = window as unknown as Office;
+    const u = [...w.__office.store.workers.values()].find((x) => x.name !== picked)!;
+    w.__world.waiting.goTo(u.id);
+    return u.name;
+  }, picked);
+  await page.waitForFunction((name) => document.querySelector('.sel-card:not([hidden]) .sel-name')?.textContent === name, other, { timeout: 30_000, polling: 100 });
+  assert.deepEqual(errors, []);
+});
+
+test('selecting in the 3D office: two Escs from an Overview selection walk again, and in Walk the card\'s ✕ hands the mouse straight back', async (t) => {
+  if (why) return t.skip(why);
+  const { page, errors, context } = await signedIn({ width: 1440, height: 900 });
+  t.after(() => context.close());
+  await context.addInitScript(() => {
+    const w = window as unknown as { __locks: number[] };
+    w.__locks = [];
+    HTMLCanvasElement.prototype.requestPointerLock = function () {
+      w.__locks.push(performance.now());
+      setTimeout(() => document.dispatchEvent(new Event('pointerlockchange')), 0);
+      return Promise.resolve();
+    } as typeof HTMLCanvasElement.prototype.requestPointerLock;
+  });
+  // Settled motion: the move up and down and the flights are cuts on a software-rendered deck.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(`${base}/bridge`);
+  type Office = {
+    __office: {
+      store: { floor: string | null; roster: unknown[]; workers: Map<string, { id: string }> };
+      net: { send(m: unknown): void };
+      overview: { active(): boolean; camera: { updateMatrixWorld(): void } };
+      workerViews: Map<string, { model: { where(v: unknown): { x: number; y: number; z: number; clone(): { y: number; project(c: unknown): { x: number; y: number } } } ; root: { position: { clone(): unknown } } } }>;
+    };
+    __world: { waiting: { goTo(id: string): boolean } };
+  };
+  await page.waitForFunction(() => !!(window as unknown as Office).__office?.store.floor, null, { timeout: 60_000 });
+  await page.evaluate(() => (window as unknown as Office).__office.net.send({ t: 'worker.spawn', deskId: 'desk-5', prompt: 'Pick the session store', worktree: false }));
+  await page.waitForFunction(() => (window as unknown as Office).__office.store.roster.length > 0, null, { timeout: 30_000, polling: 250 });
+  const seen = await page
+    .waitForFunction(() => (window as unknown as Office).__office.workerViews.size > 0, null, { timeout: 30_000, polling: 250 })
+    .then(() => '')
+    .catch(() => page.evaluate(() => JSON.stringify({ workers: (window as unknown as Office).__office.store.workers.size, roster: (window as unknown as Office).__office.store.roster.length, views: (window as unknown as Office).__office.workerViews.size })));
+  assert.equal(seen, '', `no unit drawn on the deck: ${seen}`);
+  const active = () => page.evaluate(() => (window as unknown as Office).__office.overview.active());
+  // Polled on a timer: Playwright's own waits ride animation frames, which a software-rendered deck starves.
+  const cardUp = () => page.waitForFunction(() => !!document.querySelector('.sel-card:not([hidden]).open .sel-name'), null, { timeout: 30_000, polling: 100 });
+
+  // Up into the Overview, and a click on the unit selects it.
+  await page.locator('#scene').focus();
+  await page.keyboard.press('g');
+  await page.waitForFunction(() => (window as unknown as Office).__office.overview.active(), null, { polling: 100 });
+  // A few frames drawn from up there, so its camera stands where it will (and the unit's callout has settled).
+  const frame = () => page.evaluate(() => (window as unknown as { __office: { renderer: { info: { render: { frame: number } } } } }).__office.renderer.info.render.frame);
+  const f0 = await frame();
+  await page.waitForFunction((f0) => (window as unknown as { __office: { renderer: { info: { render: { frame: number } } } } }).__office.renderer.info.render.frame >= f0 + 4, f0, { timeout: 30_000, polling: 100 });
+  const at = await page.evaluate(() => {
+    const o = (window as unknown as Office).__office;
+    const [, v] = [...o.workerViews][0];
+    o.overview.camera.updateMatrixWorld();
+    const p = v.model.where(v.model.root.position.clone()).clone();
+    p.y += 1;
+    const n = p.project(o.overview.camera);
+    return { x: ((n.x + 1) / 2) * innerWidth, y: ((1 - n.y) / 2) * innerHeight };
+  });
+  await page.mouse.click(at.x, at.y);
+  await cardUp();
+  // The first Esc lets go of the unit, the Overview stays up; the second walks again.
+  await page.keyboard.press('Escape');
+  const letGo = await page
+    .waitForFunction(() => document.querySelector('.sel-card')?.hasAttribute('hidden') || !document.querySelector('.sel-card.open'), null, { timeout: 30_000, polling: 100 })
+    .then(() => '')
+    .catch(() => page.evaluate(() => JSON.stringify({ focus: document.activeElement?.id || document.activeElement?.className, modals: [...document.querySelectorAll('.modal, .backdrop, section.debrief')].map((m) => m.className), card: document.querySelector('.sel-card')?.className })));
+  assert.equal(letGo, '', `the first Esc kept the card: ${letGo}`);
+  assert.equal(await active(), true, 'still up after the first Esc');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !(window as unknown as Office).__office.overview.active(), null, { timeout: 30_000, polling: 100 });
+  assert.equal(await active(), false, 'walking after the second Esc');
+
+  // In Walk: taken to the unit (as N does), its card is up; its ✕ lets go and asks for mouse-look at once.
+  await page.evaluate(() => {
+    const w = window as unknown as Office;
+    w.__world.waiting.goTo([...w.__office.store.workers.values()][0].id);
+  });
+  await cardUp();
+  const asked = await page.evaluate(() => (window as unknown as { __locks: number[] }).__locks.length);
+  await page.locator('.sel-card .close').dispatchEvent('click');
+  await page.waitForFunction((n) => (window as unknown as { __locks: number[] }).__locks.length > n, asked, { timeout: 30_000, polling: 100 });
   assert.deepEqual(errors, []);
 });

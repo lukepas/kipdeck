@@ -92,3 +92,12 @@ test("the day's log is typed onto the glass a sentence a line after a scanline's
   assert.ok(done < LAUNCH.log - 1500, 'at least a second and a half to read it whole');
   assert.deepEqual(typedAt(done + 10, lens).typed, lens);
 });
+
+test("the debrief puts itself away on a rise into the Overview you asked for, never on the deck's own home view", async () => {
+  const { readFileSync } = await import('node:fs');
+  const launch = readFileSync(new URL('../src/client/features/launch/index.ts', import.meta.url), 'utf8');
+  assert.match(launch, /overview\.onChange\(\(up, why\) => up && why === 'user' && panel\.close\(false\)\)/);
+  assert.doesNotMatch(launch, /setTimeout\(\(\) => \(risen = true\)/);
+  const home = readFileSync(new URL('../src/client/features/homeview/index.ts', import.meta.url), 'utf8');
+  assert.match(home, /overview\.toggle\(true, 'home'\)/);
+});

@@ -8,7 +8,7 @@
 import { attention, LEVEL_LABEL, type Ranked } from '../../shared/attention';
 import { ageLabel, ALWAYS_OPEN, buildInbox, changeSummary, INBOX_SECTIONS, looseReminders, rowAction, SECTION_LABEL, waitShare, type InboxSection, type InboxView, type RowAction } from '../../shared/inbox';
 import type { Reminder, RosterEntry } from '../../shared/protocol';
-import { headline, statusPhrase } from '../../shared/rowtext';
+import { headline, rowStatus } from '../../shared/rowtext';
 import { PROVIDER_META, type AgentProvider } from '../../shared/providers';
 import { store } from '../state';
 import { h } from '../ui/dom';
@@ -62,7 +62,7 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
   const { action, label } = rowAction(r.att);
   const provider = PROVIDER_META[e.provider ?? 'claude']?.label ?? 'Agent';
   // Working: what it's doing right now, live. To review: what it changed. Otherwise why it's here, in the ranking's words.
-  const status = section === 'working' ? (e.activity ?? r.att.label) : (section === 'review' && changeSummary(e.work)) || statusPhrase(r.att, title);
+  const status = section === 'working' ? (e.activity ?? r.att.label) : (section === 'review' && changeSummary(e.work)) || rowStatus(r.att, title);
   const selected = home.selected === e.id;
   const where = rowWhere(e);
   const waits = section === 'needs-you' || section === 'review';

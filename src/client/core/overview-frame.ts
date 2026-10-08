@@ -21,7 +21,15 @@ export const OVERVIEW_PITCH = (48 * Math.PI) / 180;
  * Where on the screen the framed things go (NDC, -1 to 1): clear of the rail (left), the bar (top) and
  * the bottom bar, filling the frame (it used to keep to the upper two thirds and leave the rest empty floor).
  */
-export const FRAME_BOX = { left: -0.56, right: 0.94, bottom: -0.74, top: 0.84 } as const;
+/** A box on the screen in NDC. */
+export interface FrameBox {
+  readonly left: number;
+  readonly right: number;
+  readonly bottom: number;
+  readonly top: number;
+}
+
+export const FRAME_BOX: FrameBox = { left: -0.56, right: 0.94, bottom: -0.74, top: 0.84 };
 
 /** A point of the world, x east, y up, z aft. */
 export type P3 = readonly [number, number, number];
@@ -51,6 +59,28 @@ export function framedPoints(): P3[] {
   return out;
 }
 
+/** What features add to the frame (features/pods: each pod's ground label, so a zone's name is never cut off). */
+const extras: P3[] = [];
+
+/** Adds `points` to what every trip up frames, alongside framedPoints(). */
+export function frameAlso(points: readonly P3[]) {
+  extras.push(...points);
+}
+
+/** Everything a trip up frames: framedPoints() and what features added (frameAlso). */
+export function allFramed(base: readonly P3[] = framedPoints()): P3[] {
+  return [...base, ...extras];
+}
+
+/**
+ * FRAME_BOX with its right edge brought in by `rightPx` pixels of a view `width` wide (a docked Mission
+ * control, ui/mission/dock.ts --dock-right), so nothing framed lands under the panel.
+ */
+export function frameBox(rightPx: number, width: number): FrameBox {
+  const right = FRAME_BOX.right - (2 * Math.max(0, rightPx)) / Math.max(1, width);
+  return { ...FRAME_BOX, right: Math.max(FRAME_BOX.left + 0.4, right) };
+}
+
 /** A point turned into a camera's frame at `yaw`: across the screen (u), and toward the camera (d). */
 export function turned([x, , z]: P3, yaw: number): { u: number; d: number } {
   return { u: x * Math.cos(yaw) - z * Math.sin(yaw), d: x * Math.sin(yaw) + z * Math.cos(yaw) };
@@ -61,7 +91,7 @@ export function turned([x, , z]: P3, yaw: number): { u: number; d: number } {
  * camera looking down at `pitch` from `yaw` (0 is from aft), whose screen is `halfHeight` m tall at
  * zoom 1 and `aspect` wide for each of that. Never closer than `maxZoom`.
  */
-export function framePose(points: readonly P3[], pitch: number, aspect: number, halfHeight: number, maxZoom = 3, yaw = 0): { x: number; z: number; zoom: number } {
+export function framePose(points: readonly P3[], pitch: number, aspect: number, halfHeight: number, maxZoom = 3, yaw = 0, box: FrameBox = FRAME_BOX): { x: number; z: number; zoom: number } {
   const c = Math.cos(pitch);
   const s = Math.sin(pitch);
   // Across (u) and up (v) the screen, from the floor's origin, before the target moves them.
@@ -77,7 +107,7 @@ export function framePose(points: readonly P3[], pitch: number, aspect: number, 
     v0 = Math.min(v0, v);
     v1 = Math.max(v1, v);
   }
-  const B = FRAME_BOX;
+  const B = box;
   const hh = Math.max((v1 - v0) / (B.top - B.bottom), (u1 - u0) / ((B.right - B.left) * aspect));
   const zoom = Math.min(maxZoom, halfHeight / hh);
   const h = halfHeight / zoom;

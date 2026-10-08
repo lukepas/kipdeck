@@ -3,7 +3,9 @@
 // "ready" and the board agents fold into one line each until you open them. A row is the unit's call
 // sign, its name, one status phrase and one relative time (shared/rowtext.ts), with a 2px rule in its
 // state's color: no wide text badge, so a name keeps its width. The counts live on the top bar and the
-// Attention board's header alone: a group's head names it, it never counts it.
+// Attention board's header alone: a group's head names it, it never counts it. Linked to the deck's
+// selection (features/selection, RailLink below), a click selects a unit and finds it on the deck, and
+// a double-click or Enter opens its terminal.
 
 import './units-rail.css';
 import { LEVEL_LABEL, type AttentionLevel, type Attention } from '../../shared/attention';
@@ -48,7 +50,51 @@ function isOpen(group: Group): boolean {
   return folds()[group] ?? OPEN_BY_DEFAULT.has(group);
 }
 
+/**
+ * The selected unit: its group shows open while it's selected, whatever you folded, so its marked row
+ * is in view; not saved as your choice, so the group folds again once you let go of it.
+ */
+let revealFor: string | null = null;
+
 let lastOpen: (id: string) => void = () => {};
+
+/**
+ * What the deck's selection (features/selection) does with the rail, once it's there: a click on a
+ * row selects that unit and finds it on the deck, pointing at a row hovers it there, and the selected
+ * row is marked. Without one (the rail on its own), a click opens the unit's terminal, as it always did.
+ */
+export interface RailLink {
+  /** Select unit `id` and bring it into view. */
+  onLocate(id: string): void;
+  /** The row under the mouse or the keyboard's focus (null: none). */
+  onHover(id: string | null): void;
+  /** The selected unit, to mark its row. */
+  selected(): string | null;
+}
+
+let link: RailLink | null = null;
+
+/** Links the rail to the deck's selection (see RailLink). */
+export function linkRail(l: RailLink) {
+  link = l;
+}
+
+/**
+ * Marks the row of the selected unit `id` (none: null). Its group opens for it when you'd folded it (and
+ * a group opened only for the last one folds again), and the row scrolls into view.
+ */
+export function markRailSelected(id: string | null) {
+  const was = revealFor;
+  revealFor = id;
+  const rowOf = (x: string) => document.querySelector<HTMLElement>(`#workers .unit-row[data-id="${CSS.escape(x)}"]`);
+  // Drawn again only when a group has to open or fold for it.
+  if ((id && !rowOf(id)) || (was && was !== id && rowOf(was))) renderWorkers(lastOpen);
+  for (const li of document.querySelectorAll<HTMLElement>('#workers .unit-row')) {
+    if (li.dataset.id === id) li.setAttribute('aria-current', 'true');
+    else li.removeAttribute('aria-current');
+  }
+  if (id) rowOf(id)?.scrollIntoView({ block: 'nearest' });
+}
 
 /** One unit's row. */
 function row(w: WorkerInfo, att: Attention | undefined, level: Group, now: number, oneHarness: boolean, onOpen: (id: string) => void): HTMLElement {
@@ -69,13 +115,27 @@ function row(w: WorkerInfo, att: Attention | undefined, level: Group, now: numbe
     w.worktree && `branch ${w.worktree.branch}`,
     w.pr && `PR #${w.pr.number}`,
     usageState === 'tracked' && w.usage ? usageTitle(w.usage, providerKind) : '',
-    'Click to open its terminal',
+    link ? 'Click to select it and find it on the deck, double-click (or Enter) to open its terminal' : 'Click to open its terminal',
   ]
     .filter(Boolean)
     .join('\n');
+  const hover = (id: string | null) => link?.onHover(id);
   return h(
     'li.unit-row',
-    { class: level, onclick: () => onOpen(w.id), title, tabindex: '0', onkeydown: (e: Event) => ((e as KeyboardEvent).key === 'Enter' ? onOpen(w.id) : undefined) },
+    {
+      class: level,
+      title,
+      tabindex: '0',
+      'data-id': w.id,
+      ...(link && link.selected() === w.id ? { 'aria-current': 'true' } : {}),
+      onclick: () => (link ? link.onLocate(w.id) : onOpen(w.id)),
+      ondblclick: () => link && onOpen(w.id),
+      onkeydown: (e: Event) => ((e as KeyboardEvent).key === 'Enter' ? onOpen(w.id) : undefined),
+      onmouseenter: () => hover(w.id),
+      onmouseleave: () => hover(null),
+      onfocus: () => hover(w.id),
+      onblur: () => hover(null),
+    },
     h('span.callsign', {}, callSign(w.deskId) || '--'),
     h('span.unit-glyph', { 'aria-hidden': 'true' }, icon(level === 'agents' ? 'unit' : LEVEL_ICON[level], 12)),
     h('span.name-col', {}, h('span.name', {}, w.name), h('span.sub', {}, sub)),
@@ -109,14 +169,16 @@ export function renderWorkers(onOpen: (id: string) => void) {
   for (const g of GROUPS) {
     const list = groups.get(g);
     if (!list?.length) continue;
-    const open = isOpen(g);
+    // The selected unit's group shows open while it's selected (not saved as your choice).
+    const revealed = !!revealFor && list.some((w) => w.id === revealFor) && !isOpen(g);
+    const open = isOpen(g) || revealed;
     items.push(
       h(
         'li.rail-group',
         { class: g },
         h(
           'button.rail-head',
-          { type: 'button', 'aria-expanded': String(open), title: `${open ? 'Fold' : 'Show'} ${GROUP_LABEL[g].toLowerCase()}`, onclick: () => (setFold(g, !open), renderWorkers(lastOpen)) },
+          { type: 'button', 'aria-expanded': String(open), title: `${open ? 'Fold' : 'Show'} ${GROUP_LABEL[g].toLowerCase()}`, onclick: () => (revealed ? (revealFor = null) : setFold(g, !open), renderWorkers(lastOpen)) },
           h('span.unit-glyph', { 'aria-hidden': 'true' }, icon(g === 'agents' ? 'unit' : LEVEL_ICON[g], 12)),
           h('span.rail-label', {}, GROUP_LABEL[g]),
           h('span.rail-chev', { 'aria-hidden': 'true' }),

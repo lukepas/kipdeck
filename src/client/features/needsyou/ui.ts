@@ -23,6 +23,7 @@ const PULSE_MS = 3600;
 export class Banner {
   private readonly edge: HTMLElement;
   private card: HTMLElement | null = null;
+  private cardId = '';
   private shownKey = '';
 
   constructor(
@@ -64,7 +65,13 @@ export class Banner {
     );
     (document.getElementById('hud') ?? document.body).append(card);
     this.card = card;
+    this.cardId = text.id;
     if (!this.demo) setTimeout(() => this.card === card && this.fold(true), HOLD_MS);
+  }
+
+  /** Hides the chip while `held` says the unit it names is quiet (the selected one: its card says the same thing). */
+  quietFor(held: (id: string) => boolean) {
+    if (this.card) this.card.hidden = !!this.cardId && held(this.cardId);
   }
 
   /** The toast goes; with `pulse`, the counter it folds into pulses. */

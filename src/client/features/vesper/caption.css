@@ -3,8 +3,8 @@
    still waveform and its name in small mono, the line in italics on the HUD's own fill. Never a state's hue: when a unit needs you the line is plain words and the toasts and the
    unit's glyph carry the colour. It fades in and out with the UI's one curve. */
 .vesper {
-  position: absolute; bottom: calc(var(--bottom) + 16px); left: calc(var(--rail) + (100% - var(--rail)) / 2); transform: translateX(-50%);
-  max-width: min(680px, calc(100% - var(--rail) - 48px)); pointer-events: none;
+  position: absolute; bottom: calc(var(--bottom) + 16px); left: calc(var(--rail) + (100% - var(--rail) - var(--clear-right, 0px)) / 2); transform: translateX(-50%);
+  max-width: min(680px, calc(100% - var(--rail) - var(--clear-right, 0px) - 48px)); pointer-events: none;
   display: flex; align-items: baseline; gap: 10px; padding: 7px 14px; border-radius: var(--radius);
   background: var(--hud-fill); border: 1px solid var(--line); box-shadow: var(--hud-shadow);
   opacity: 0; transition: opacity 400ms var(--ease);
@@ -16,3 +16,5 @@
 .vesper-name { font: 500 10px/1 var(--font-mono); letter-spacing: .14em; color: #6fc3df; flex: none; }
 .vesper-line { font: italic 400 15px/1.35 var(--font-ui); color: var(--text); }
 .vesper[hidden] { display: none; }
+/* Up in the Overview its keys' legend sits where the line would: the line goes over it. */
+body.overview .vesper { bottom: calc(var(--bottom) + 56px); }

@@ -2,7 +2,9 @@
 // each frame): its mark at the edge of the view while it's out of sight, else its card on the Attention
 // board while that board is up and big enough to read, else its callout in the room. A unit you're
 // standing at keeps its callout. Callouts that pile up on each other (two or more, each covering a
-// quarter of another) fold into one chip that counts them ("3 working"). Nothing here draws.
+// quarter of another) fold into one chip that counts them ("3 working"). How big each callout is comes
+// from its tier (lod.ts): from far off a working unit's is a 14 px tab, so they seldom pile; up close
+// the full cards do, and fold. Nothing here draws.
 
 import type { LabelBox } from './declutter';
 
@@ -44,11 +46,19 @@ export function piles(boxes: readonly LabelBox[]): number[][] {
   return [...groups.values()].filter((g) => g.length >= PILE);
 }
 
-/** What a pile's chip says: "3 waiting" when every one waits on someone, "4 working" when every one works, else "5 units". */
-export function pileWord(kinds: readonly (string | undefined)[]): string {
+/** A pile this small names its units' call signs rather than counting them. */
+export const NAMED_PILE = 3;
+
+/**
+ * What a pile's chip says: "3 waiting" when every one waits on someone, "4 working" when every one
+ * works, else "5 units". With their call signs (`signs`), a pile of NAMED_PILE or fewer names them
+ * ("A-03, D-02 working"), so no unit in it goes anonymous.
+ */
+export function pileWord(kinds: readonly (string | undefined)[], signs: readonly string[] = []): string {
   const n = kinds.length;
   const waiting = (k: string | undefined) => k === 'needs-you' || k === 'stuck' || k === 'review';
-  if (kinds.every(waiting)) return `${n} waiting`;
-  if (kinds.every((k) => k === 'working')) return `${n} working`;
-  return `${n} units`;
+  const word = kinds.every(waiting) ? 'waiting' : kinds.every((k) => k === 'working') ? 'working' : '';
+  const named = signs.filter(Boolean);
+  if (n <= NAMED_PILE && named.length === n) return word ? `${named.join(', ')} ${word}` : named.join(', ');
+  return `${n} ${word || 'units'}`;
 }

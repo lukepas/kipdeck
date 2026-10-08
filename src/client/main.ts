@@ -49,6 +49,7 @@ import { installSeating } from './features/seating';
 import { installTv } from './features/tv';
 import { installArcChrome } from './features/arcchrome';
 import { installSignals } from './features/signals';
+import { installHeartbeat } from './features/heartbeat';
 import { installSpotlight } from './features/spotlight';
 import { installVoice } from './features/voice';
 import { installWaiting } from './features/waiting';
@@ -64,6 +65,7 @@ import { installAmphitheater } from './features/amphitheater';
 import { installSeatFrame } from './features/seatframe';
 import { installPulse } from './features/pulse';
 import { installDemo } from './features/demo';
+import { installHomeView } from './features/homeview';
 import { installBottomBar } from './features/bottombar';
 import { makeMotion } from './motion';
 import { installLights } from './features/lights';
@@ -71,6 +73,7 @@ import { installQuality } from './features/quality';
 import { installMerge } from './features/merge';
 import { installIbl } from './features/ibl';
 import { installAtmos } from './features/atmos';
+import { installGloss } from './features/atmos/gloss';
 import { installRelay } from './features/relay';
 import { installVista } from './features/vista';
 import { installCinema } from './features/cinema';
@@ -96,6 +99,7 @@ import { installKinetic } from './features/kinetic';
 import { installHands } from './features/hands';
 import { installLounge } from './features/lounge';
 import { installSoundscape } from './features/soundscape';
+import { installSelection } from './features/selection';
 import { fetchLabs, installLabs } from './features/labs';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
@@ -205,6 +209,8 @@ parts.alert = installAlert(ctx, parts);
 installIbl(ctx, parts);
 // The light round the deck: shafts, dust, haze, pools, the canopy's ribs and light from outside.
 installAtmos(ctx, parts);
+// From the Overview: the deck's polished surfaces matte and the exposure a little up, with the move.
+installGloss(ctx, parts);
 // Space close by: dust streaming past the ports, a giant off one side, the sun's flare through the canopy.
 installVista(ctx, parts);
 // The Relay Beacon off the starboard bow: the fleet's relay station, its rings carrying the units at work.
@@ -219,7 +225,10 @@ parts.hintbar = installHintBar(ctx, core, parts);
 installKeyboard(ctx, parts);
 parts.focus = installFocus(ctx, core, parts);
 parts.pointer = installPointer(ctx, core, parts);
+// The selected unit (features/selection): ahead of the Overview, so its Esc lets go of a selection first.
+parts.selection = installSelection(ctx, parts);
 parts.overview = installOverview(ctx, parts);
+installHomeView(ctx, parts);
 parts.flight = installFlight(ctx);
 parts.boardFaces = installBoardFaces(ctx, parts);
 installAmphitheater(ctx, parts);
@@ -227,6 +236,8 @@ installSeatFrame(ctx, parts);
 installArcChrome(ctx, parts);
 // The diamond, the triangle, the ring and the pip over the units, and the beams up to their cards.
 installSignals(ctx, parts);
+// Each tool call a pulse on the floor, and the quiet meter under each working unit (features/heartbeat).
+installHeartbeat(ctx, parts);
 installSpotlight(ctx, parts);
 // The motion layer over the room: the arc's faces in motion (the build, the scan, the sweeps, the
 // cards' effects, the warp's fold); taking the conn (the rise, the tiers lit pit to dais, the arc built
