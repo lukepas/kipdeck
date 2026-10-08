@@ -10,8 +10,11 @@
 
 /** How long the move up into the Overview, or back down, takes (ms); input is held for it. */
 export const TRANSITION_MS = 650;
-/** How long a flight to a unit takes (ms). */
-export const FLY_MS = 650;
+/**
+ * How long a flight to a unit takes (ms): longer than the move, on an ease that gets most of the way
+ * fast and then settles (easeOutQuint), so a click lands at once and the frame comes to rest gently.
+ */
+export const FLY_MS = 900;
 /** Where along the move (k) the projection starts to blend into the orthographic one. */
 export const MORPH_FROM = 0.6;
 
@@ -19,6 +22,32 @@ export const MORPH_FROM = 0.6;
 export function easeInOutCubic(k: number): number {
   const t = Math.min(1, Math.max(0, k));
   return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
+/** Fast away, then a long settle: the flight to a unit. */
+export function easeOutQuint(k: number): number {
+  const t = Math.min(1, Math.max(0, k));
+  return 1 - (1 - t) ** 5;
+}
+
+/**
+ * The wheel's zoom, damped: `zoom` eased toward `goal` over `dt` seconds (about 70 ms to close two
+ * thirds of the way), never past it.
+ */
+export function zoomToward(zoom: number, goal: number, dt: number): number {
+  const next = zoom + (goal - zoom) * (1 - Math.exp(-dt * 14));
+  return Math.abs(goal - next) < 1e-4 ? goal : next;
+}
+
+/**
+ * How far (m, along the view's right and down on the deck) the Overview's middle moves so the point
+ * under the pointer stays under it while the zoom goes from `z0` to `z1`: `ox`, `oy` the pointer's
+ * pixels from the middle of the window, `perPx` the metres a pixel spans at zoom 1, `pitch` the
+ * camera's tilt (a pixel down the screen is 1 / sin(pitch) of that on the deck).
+ */
+export function zoomPan(ox: number, oy: number, z0: number, z1: number, perPx: number, pitch: number): [number, number] {
+  const k = perPx * (1 / z0 - 1 / z1);
+  return [ox * k, (oy * k) / Math.sin(pitch)];
 }
 
 /** 0 below `a`, 1 above `b`, smooth between. */

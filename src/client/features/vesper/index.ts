@@ -39,7 +39,7 @@ export interface Vesper {
   last(): { text: string; at: number } | null;
 }
 
-export function installVesper(ctx: Ctx, parts: Pick<Parts, 'giveWay'>): Vesper {
+export function installVesper(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'selection'>): Vesper {
   const gate = new VoiceGate();
   const caption = new VoiceCaption();
   const ticker = ctx.office.ticker;
@@ -63,10 +63,17 @@ export function installVesper(ctx: Ctx, parts: Pick<Parts, 'giveWay'>): Vesper {
     return (e && callSign(e.deskId)) || e?.name || name || undefined;
   };
 
-  function say(line: VoiceLine) {
+  /** The unit the caption's line is about (one that needs you), or null. */
+  let about: string | null = null;
+  /** The unit you have selected: its card already says what the line would (features/selection). */
+  const held = () => parts.selection?.id() ?? null;
+
+  function say(line: VoiceLine, unit: string | null = null) {
     said = { text: line.text, at: Date.now() };
     if (mode() === 'off') return;
-    caption.say(line.text, CAPTION_MS);
+    about = unit;
+    // About the unit you're looking at: the ticker takes it, the caption doesn't say it again.
+    if (!unit || unit !== held()) caption.say(line.text, CAPTION_MS);
     ticker.setVoice(line.text);
     tickerUntil = Date.now() + TICKER_MS;
   }
@@ -141,7 +148,7 @@ export function installVesper(ctx: Ctx, parts: Pick<Parts, 'giveWay'>): Vesper {
       const line = primed && mode() !== 'off' ? attentionLine(top.sign, top.level, top.label) : undefined;
       if (!gate.silent) caller = { id: top.id, sign: top.sign };
       const go = gate.attention(true, now, line);
-      if (go) say(go);
+      if (go) say(go, top.id);
     } else if (gate.silent) {
       gate.attention(false, now);
       const back = caller && store.roster.some((e) => e.id === caller!.id && e.status === 'working');
@@ -165,7 +172,7 @@ export function installVesper(ctx: Ctx, parts: Pick<Parts, 'giveWay'>): Vesper {
       tickerUntil = 0;
       ticker.setVoice(null);
     }
-    if (mode() === 'off' && caption.text) caption.clear();
+    if (caption.text && (mode() === 'off' || (about && about === held()))) caption.clear();
   }
   store.on('floor', () => {
     primed = false;

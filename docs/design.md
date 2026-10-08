@@ -239,7 +239,7 @@ Motion marks a change of state, and hue and the attention cadences belong to sta
 | A unit gets an ERC-8004 record | the plinth glows violet as its step lights | 1.2 s | the step lights |
 | You use something in first person (E or a click) | your right hand reaches in toward the crosshair, its index finger straightens and taps, its fingertip lit ship-cyan at the press | 420 ms | nothing moves |
 | Mission control opens, in first person | your left hand brings a datapad up into the lower left of the view, and takes it down again when the window closes | about 300 ms | it is there, or gone |
-| You go to a unit (N, a toast, search) | in Walk the view flies there in an arc; in the Overview it pans and zooms in (never out), on a cubic ease | 700 ms; 650 ms | a cut |
+| You go to a unit (N, a toast, search) | in Walk the view flies there in an arc; in the Overview it pans and zooms in (never out), fast and then settling (ease-out quint), the unit landing in the middle of the deck you can see | 700 ms; 900 ms | a cut |
 | You go up into the Overview, or back down (G) | the view rises from your eyes, its field of view closing onto the deck's framing, and lands on the orthographic view with nothing popping; down, the same move backwards into your eyes. The key legend fades in once it lands | 650 ms; the legend 150 ms | a cut |
 | The Overview turns (Q / E) | a quarter turn | 280 ms | a cut |
 | The Overview, left alone | it drifts by half a degree and 15 cm, on sines of 40 s and longer that never line up; any input stops it where it is | after 8 s idle | still |

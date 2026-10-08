@@ -52,16 +52,8 @@ export function buttonsFor(level: AttentionLevel): InspectButton[] {
   }
 }
 
-/** A live elapsed time for the card, to the second while it's short: '42s', '4m 07s', '2h 05m', '3d 4h'. */
-export function elapsed(ms: number): string {
-  const s = Math.floor(Math.max(0, ms) / 1000);
-  if (s < 60) return `${s}s`;
-  const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ${String(s % 60).padStart(2, '0')}s`;
-  const h = Math.floor(m / 60);
-  if (h < 48) return `${h}h ${String(m % 60).padStart(2, '0')}m`;
-  return `${Math.floor(h / 24)}d ${h % 24}h`;
-}
+/** The card's clock is the deck's one clock, to the second while it's short (shared/rowtext.ts): '42s', '4m', '2h'. */
+export { elapsed } from '../../../shared/rowtext';
 
 /** Eases out on a cubic: fast in, settling (the reticle's lock-on). */
 export const easeOutCubic = (k: number) => 1 - (1 - Math.min(1, Math.max(0, k))) ** 3;

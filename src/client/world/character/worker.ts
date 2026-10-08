@@ -251,7 +251,8 @@ export class Worker {
 
   /** How much its callout says (features/workers/lod.ts): it changes after the unit's own delay, and pops in. */
   setTier(tier: CalloutTier) {
-    this.callouts.request(tier, performance.now(), Worker.calm);
+    // One that needs someone changes at once: never the last of the crew to arrive.
+    this.callouts.request(tier, performance.now(), Worker.calm, this.urgent);
   }
 
   /** The tier its callout shows now. */
@@ -316,6 +317,11 @@ export class Worker {
   /** A callout's width over its height, as drawn: the full one's, or the call sign's. */
   calloutAspect(compact = false): number {
     return this.callouts.aspect(compact);
+  }
+
+  /** Which callout shows now (features/workers/declutter.ts reads it back for its hysteresis). */
+  get calloutMode(): CalloutMode {
+    return this.mode;
   }
 
   /** Which callout shows; the glyph over its head shows only when neither does. */

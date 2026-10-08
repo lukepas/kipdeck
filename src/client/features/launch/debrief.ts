@@ -19,6 +19,8 @@ export interface DebriefDeps {
   backToGame(): void;
   /** Whether Esc belongs to something else first (a selected unit lets go before this goes; docs/controls.md). */
   escTaken?(): boolean;
+  /** Whether the Esc that puts it away goes on to do what Esc does on the deck too (the Overview walks again). */
+  escWalks?(): boolean;
 }
 
 export class DebriefPanel {
@@ -36,6 +38,8 @@ export class DebriefPanel {
       'keydown',
       (e) => {
         if (e.key !== 'Escape' || !this.open || modalOpen() || document.pointerLockElement || this.deps.escTaken?.()) return;
+        // Up in the Overview it closes and lets the key on, so one Esc walks again (docs/controls.md).
+        if (this.deps.escWalks?.()) return this.close(false);
         e.preventDefault();
         e.stopPropagation();
         this.close(true);

@@ -42,6 +42,17 @@ export function bracketRect(box: { x0: number; y0: number; x1: number; y1: numbe
   return { left: cx - w / 2, top: cy - hgt / 2, width: w, height: hgt };
 }
 
+/**
+ * `r` with its bottom edge held at `floor` (px from the top) at the lowest: the bracket never crosses
+ * the bottom bar, the Mission control strip over it or the hint over that. Its top stays where it is.
+ */
+export function clampBottom<R extends { top: number; height: number }>(r: R, floor: number): R {
+  return r.top + r.height <= floor ? r : { ...r, height: Math.max(0, floor - r.top) };
+}
+
+/** Pixels kept clear along the bottom of the view: the bottom bar and the strip over it (styles/hud.css --bottom, plus a gap). */
+const BOTTOM_CLEAR = 62;
+
 /** Half the unit's width (m) the box takes either side of its middle. */
 const HALF_WIDTH = 0.38;
 
@@ -105,7 +116,10 @@ export function makeAcquire(ctx: Ctx, parts: Pick<Parts, 'views' | 'stage' | 'fl
       el.hidden = true;
       return;
     }
-    const r = bracketRect(box, at.scale);
+    // Clear of the bottom bar, and of the hint over it when that's up (what the unit's keys do).
+    const hint = document.getElementById('hint');
+    const hintTop = hint && !hint.classList.contains('hidden') ? hint.getBoundingClientRect().top - 6 : Infinity;
+    const r = clampBottom(bracketRect(box, at.scale), Math.min(innerHeight - BOTTOM_CLEAR, hintTop));
     el.hidden = false;
     el.style.transform = `translate(${r.left.toFixed(1)}px, ${r.top.toFixed(1)}px)`;
     el.style.width = `${r.width.toFixed(1)}px`;

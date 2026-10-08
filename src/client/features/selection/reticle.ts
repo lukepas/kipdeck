@@ -16,7 +16,7 @@ import { easeOutCubic } from './logic';
  * White, not ship-cyan: from the Overview every working unit's heartbeat meter is a cyan circle on the
  * floor too, and the selection must never read as one more of those (nor as a state's hue).
  */
-const RING_COLOR = 0xffffff;
+export const RING_COLOR = 0xffffff;
 /** The ring's radius (m), the brackets' width, and how far over the floor it floats (no z-fighting). */
 const RADIUS = 0.9;
 const WIDTH = 0.1;

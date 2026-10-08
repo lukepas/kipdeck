@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CALLOUT_SCREEN, MID_MAX, OVERVIEW_BOUNDS, POP_FROM, STAGGER_MAX, WALK_BOUNDS, activityLine, askLine, midLine, permissionAsk, popAt, staggerDelay, tierAt, tierFor, type CalloutTier } from '../src/client/features/workers/lod.ts';
+import { CALLOUT_SCREEN, FADE_OUT_MS, sameWords, wrapTwo, MID_MAX, OVERVIEW_BOUNDS, POP_FROM, STAGGER_MAX, WALK_BOUNDS, activityLine, askLine, midLine, permissionAsk, popAt, staggerDelay, tierAt, tierFor, type CalloutTier } from '../src/client/features/workers/lod.ts';
 import { elapsed, statusPhrase } from '../src/shared/rowtext.ts';
 import { calloutText, type UnitSays } from '../src/client/world/character/callout-view.ts';
 
@@ -136,13 +136,13 @@ test('a status phrase with no label says the plain word', () => {
   assert.equal(statusPhrase({ level: 'working', label: '  ' }), 'Working');
 });
 
-test('the near card\'s clock ticks by the second under an hour', () => {
-  assert.equal(elapsed(0), '0:00');
-  assert.equal(elapsed(42_500), '0:42');
-  assert.equal(elapsed(4 * 60_000 + 5_000), '4:05');
-  assert.equal(elapsed(59 * 60_000 + 59_000), '59:59');
+test("the near card's clock ticks by the second under a minute, then reads as the deck's one clock", () => {
+  assert.equal(elapsed(0), '0s');
+  assert.equal(elapsed(42_500), '42s');
+  assert.equal(elapsed(4 * 60_000 + 5_000), '4m');
+  assert.equal(elapsed(59 * 60_000 + 59_000), '59m');
   assert.equal(elapsed(2 * 3_600_000 + 5_000), '2h');
-  assert.equal(elapsed(-5), '0:00');
+  assert.equal(elapsed(-5), '0s');
 });
 
 const NOW = 1_800_000_000_000;
@@ -161,8 +161,10 @@ const unit = (o: Partial<UnitSays>): UnitSays => ({
   ...o,
 });
 
-test('far: a bare tab, unless it needs you or is stuck, which keeps its call sign', () => {
+test('far: a bare tab, unless it needs you, is stuck or waits for review, which keeps its call sign', () => {
   assert.deepEqual(calloutText(unit({ tier: 'far' }), NOW), { tier: 'far', sign: '', name: 'Pixel', kind: 'working' });
+  assert.equal(calloutText(unit({ tier: 'far', kind: 'review', level: 'review' }), NOW).sign, 'A-03');
+  assert.equal(calloutText(unit({ tier: 'far', kind: 'parked', level: 'parked' }), NOW).sign, '');
   assert.equal(calloutText(unit({ tier: 'far', kind: 'needs-you', level: 'needs-you' }), NOW).sign, 'A-03');
   assert.equal(calloutText(unit({ tier: 'far', kind: 'stuck', level: 'stuck' }), NOW).sign, 'A-03');
 });
@@ -177,13 +179,14 @@ test('mid: the call sign and what it is doing', () => {
 test('near: who, a chip with the state and a clock, the task, and branch / PR / model', () => {
   const t = calloutText(unit({ tier: 'near', task: 'Fix login redirect', branch: 'office/pixel-3', pr: { state: 'open', number: 12 }, model: 'claude-opus-5-5', epithet: 'the Mechanic' }), NOW);
   assert.equal(t.chip, 'WORKING');
-  assert.equal(t.clock, '2:05');
+  assert.equal(t.clock, '2m');
   assert.equal(t.task, 'Fix login redirect');
   assert.equal(t.meta, 'office/pixel-3 / PR #12 / claude-opus-5-5');
   assert.equal(t.epithet, 'the Mechanic');
   // A second later only the clock moved.
   const next = calloutText(unit({ tier: 'near', task: 'Fix login redirect', branch: 'office/pixel-3', pr: { state: 'open', number: 12 }, model: 'claude-opus-5-5', epithet: 'the Mechanic' }), NOW + 1000);
-  assert.equal(next.clock, '2:06');
+  assert.equal(next.clock, '2m');
+  assert.equal(calloutText(unit({ tier: 'near', since: NOW - 14_000 }), NOW).clock, '14s');
   // Stuck: the reason in its hue in place of the meta; a lost worktree says so.
   const stuck = calloutText(unit({ tier: 'near', kind: 'stuck', level: 'stuck', reason: 'Crashed', branch: 'b' }), NOW);
   assert.equal(stuck.meta, 'Crashed');
@@ -198,7 +201,52 @@ test('near: who, a chip with the state and a clock, the task, and branch / PR / 
   // Needs you: line three is the ask, not the engine.
   const asks = calloutText(unit({ tier: 'near', kind: 'needs-you', level: 'needs-you', task: 'Publish the SDK', activity: 'Wants permission: Bash: npm publish', reason: 'Wants permission: Bash: npm publish', model: 'claude' }), NOW);
   assert.equal(asks.meta, 'Bash: npm publish');
-  assert.equal(asks.metaHue, true);
+  // What it asks reads muted: the chip already says it needs you in its hue.
+  assert.equal(asks.metaHue, false);
+});
+
+test('near: the task said once, in full on up to two lines; a question that is the task again leaves line three to the engine', () => {
+  const ask = 'Pick the session store for the auth rewrite';
+  const t = calloutText(unit({ tier: 'near', kind: 'needs-you', level: 'needs-you', task: ask, activity: ask, branch: 'office/pixel', model: 'claude' }), NOW);
+  assert.equal(t.task, 'Pick the session store for the\nauth rewrite');
+  assert.equal(t.meta, 'office/pixel / claude');
+  assert.equal(t.metaHue, false);
+  // Two lines at most, the second cut with three dots.
+  const long = wrapTwo('Migrate the payments webhook to the new queue and drain the old one first', 30);
+  const lines = long.split('\n');
+  assert.equal(lines.length, 2);
+  for (const l of lines) assert.ok(l.length <= 30, l);
+  assert.ok(lines[1].endsWith('...'));
+  assert.equal(wrapTwo('Ship it', 30), 'Ship it');
+  assert.ok(sameWords('Pick the session...', 'Pick the session store for the auth rewrite'));
+  assert.ok(!sameWords('Bash: npm publish', 'Publish the SDK'));
+});
+
+test('a change of tier fades the old callout out before the new one pops in, and one that needs someone waits for nobody', async () => {
+  const { CalloutView } = await import('../src/client/world/character/callout-view.js');
+  const THREE = await import('three');
+  const v = new CalloutView(new THREE.Group());
+  v.delay = 200;
+  v.tick(0, false);
+  v.tick(1000, false);
+  assert.equal(v.pop.alpha, 1);
+  v.request('near', 1000, false);
+  v.tick(1100, false);
+  assert.equal(v.pop.alpha, 1, 'waits its own delay');
+  v.tick(1200, false);
+  v.tick(1245, false);
+  assert.ok(v.pop.alpha > 0 && v.pop.alpha < 1, 'fading out, never gone in one frame');
+  assert.equal(v.tier, 'mid');
+  assert.equal(v.tick(1300, false), true, 'swapped once faded');
+  assert.equal(v.tier, 'near');
+  const urgent = new CalloutView(new THREE.Group());
+  urgent.delay = 240;
+  urgent.tick(0, false);
+  urgent.tick(1000, false);
+  urgent.request('far', 1000, false, true);
+  urgent.tick(1001, false);
+  urgent.tick(1001 + FADE_OUT_MS, false);
+  assert.equal(urgent.tier, 'far', 'no stagger for one that needs you');
 });
 
 test('the selected unit keeps its call sign from far off, and its callout says it is selected at every tier', () => {

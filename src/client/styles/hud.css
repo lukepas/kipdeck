@@ -7,6 +7,11 @@
 #app { position: fixed; inset: 0; }
 #scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
 #hud { position: absolute; inset: 0; pointer-events: none; --bar: 44px; --rail: 264px; --bottom: 52px; }
+/* What covers the deck's right side low down: a docked Mission control (ui/mission/dock.ts), and the
+   selected unit's card beside it while it's up (features/selection). The hint, VESPER's line and the
+   Overview's legend centre in what's left. */
+#hud { --clear-right: var(--dock-right, 0px); }
+body:has(.sel-card.open) #hud { --clear-right: calc(var(--dock-right, 0px) + 344px); }
 #hud:has(.rail.folded) { --rail: 56px; }
 #hud:has(.rail.hud-off) { --rail: 0px; }
 #hud > * { pointer-events: auto; }
@@ -120,10 +125,10 @@ body.overview .bb-keys { visibility: hidden; }
 
 /* What you're facing and what its keys do: over the bar, in the middle of the deck past the rail. */
 .hint {
-  position: absolute; left: calc(var(--rail) + (100vw - var(--rail)) / 2); bottom: calc(var(--bottom) + 10px); transform: translateX(-50%);
+  position: absolute; left: calc(var(--rail) + (100vw - var(--rail) - var(--clear-right, 0px)) / 2); bottom: calc(var(--bottom) + 10px); transform: translateX(-50%);
   background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 8px 14px; font-weight: 500; font-size: 13px; box-shadow: var(--hud-shadow);
-  display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center; max-width: min(720px, calc(100vw - var(--rail) - 48px));
+  display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center; max-width: min(720px, calc(100vw - var(--rail) - var(--clear-right, 0px) - 48px));
   pointer-events: none !important;
 }
 .hint .title { color: var(--text); font-weight: 600; }

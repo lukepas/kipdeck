@@ -39,12 +39,11 @@ test("each count is painted in its state's color: needs you Signal orange, stuck
   assert.equal(TONE_COLOR.idle, DECK.muted);
 });
 
-test("the goal's title is cut to 24 characters, at a word where it can be", () => {
+test("the goal's title is cut to 34 characters, at a word where it can be", () => {
   assert.equal(clipTitle('Ship it'), 'Ship it');
-  const long = clipTitle('Auth rewrite on the new session store');
-  assert.ok(long.length <= 24, long);
-  assert.equal(long, 'Auth rewrite on the new…');
-  assert.equal(clipTitle('Supercalifragilisticexpialidocious'), 'Supercalifragilisticexp…');
+  assert.equal(clipTitle('Auth rewrite on the new session store'), 'Auth rewrite on the new session…');
+  assert.equal(clipTitle('Add rate limits to the public API'), 'Add rate limits to the public API');
+  assert.ok(clipTitle('Supercalifragilisticexpialidocious and more').length <= 34);
   assert.equal(podLabel('D', undefined, []).title, 'No goal yet');
   assert.equal(podLabel('A', { goal: 'g1', title: 'Payments', units: 2 }, []).title, 'Payments');
   assert.equal(podLabel('A', { goal: 'g1', units: 2 }, []).title, 'g1');
@@ -187,4 +186,32 @@ test('a busy pod\'s counts line fits inside its chip: nothing is painted past th
   drawn.length = 0;
   paintLabel(g as unknown as CanvasRenderingContext2D, W, H, podLabel('A', undefined, busy), new Map(), 1);
   for (const d of drawn) assert.ok(d.right <= W, `no goal: "${d.t}" runs to ${d.right.toFixed(0)} px on a ${W} px chip`);
+});
+
+test('from the Overview zoomed out a label grows so its counts read at least 11 px, never past 1.5 times; each is framed whole', async () => {
+  const { MAX_GROW, MIN_TEXT_PX, labelGrow } = await import('../src/client/features/pods/world.js');
+  const { OVERVIEW_PITCH, allFramed, framedPoints } = await import('../src/client/core/overview-frame.js');
+  const caps = (pxPerM: number, k: number) => 0.38 * 0.72 * LABEL.d * k * Math.sin(OVERVIEW_PITCH) * pxPerM;
+  // Close in it is its own size; at the deck's zoom (about 28 px a metre on a 900 px view) it grows.
+  assert.equal(labelGrow(200, OVERVIEW_PITCH), 1);
+  for (const pxPerM of [24, 28, 34]) {
+    const k = labelGrow(pxPerM, OVERVIEW_PITCH);
+    assert.ok(k > 1 && k <= MAX_GROW);
+    assert.ok(caps(pxPerM, k) >= MIN_TEXT_PX - 1e-9 || k === MAX_GROW, `${caps(pxPerM, k)} px at ${pxPerM} px/m`);
+  }
+  assert.equal(labelGrow(5, OVERVIEW_PITCH), MAX_GROW);
+  // The pods add their labels to what every trip up frames (index.ts), past the base points.
+  const src = (await import('node:fs')).readFileSync(new URL('../src/client/features/pods/index.ts', import.meta.url), 'utf8');
+  assert.match(src, /frameAlso\(labelCorners\(letter\)/);
+  assert.ok(allFramed().length >= framedPoints().length);
+});
+
+test('every pod zone, fill and outline, is one mesh: one draw for all four', async () => {
+  const { makeZones } = await import('../src/client/features/pods/zone.js');
+  const z = makeZones(POD_LETTERS, POD_HUE_NONE);
+  let meshes = 0;
+  z.group.traverse((o) => {
+    if ((o as { isMesh?: boolean; isLine?: boolean }).isMesh || (o as { isLine?: boolean }).isLine) meshes++;
+  });
+  assert.equal(meshes, 1);
 });

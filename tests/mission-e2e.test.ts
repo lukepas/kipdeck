@@ -339,8 +339,9 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   // Locate on a Crew row selects the unit on the deck (features/selection): the selection card shows
   // it, and the docked panel stays up beside it.
   const crewRow = docked.locator('.crew-row', { has: page.locator('.mc-locate') }).first();
-  await crewRow.hover();
-  await crewRow.locator('.mc-locate').click();
+  // A dispatched click: Playwright's own waits for the button to hold still for two animation frames,
+  // which the software renderer starves (the same reason this file polls on a timer).
+  await crewRow.locator('.mc-locate').dispatchEvent('click');
   await page.locator('.sel-card:not([hidden]) .sel-name').waitFor({ timeout: 10_000 });
   assert.equal(await docked.count(), 1, 'still docked after Locate');
   // And it's seen, not just there: the card sits left of the docked panel, nothing over its middle or its button.
@@ -410,5 +411,81 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
     return u.name;
   }, picked);
   await page.waitForFunction((name) => document.querySelector('.sel-card:not([hidden]) .sel-name')?.textContent === name, other, { timeout: 10_000, polling: 100 });
+  assert.deepEqual(errors, []);
+});
+
+test('selecting in the 3D office: two Escs from an Overview selection walk again, and in Walk the card\'s ✕ hands the mouse straight back', async (t) => {
+  if (why) return t.skip(why);
+  const { page, errors, context } = await signedIn({ width: 1440, height: 900 });
+  t.after(() => context.close());
+  await context.addInitScript(() => {
+    const w = window as unknown as { __locks: number[] };
+    w.__locks = [];
+    HTMLCanvasElement.prototype.requestPointerLock = function () {
+      w.__locks.push(performance.now());
+      setTimeout(() => document.dispatchEvent(new Event('pointerlockchange')), 0);
+      return Promise.resolve();
+    } as typeof HTMLCanvasElement.prototype.requestPointerLock;
+  });
+  // Settled motion: the move up and down and the flights are cuts on a software-rendered deck.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(`${base}/`);
+  type Office = {
+    __office: {
+      store: { floor: string | null; roster: unknown[]; workers: Map<string, { id: string }> };
+      net: { send(m: unknown): void };
+      overview: { active(): boolean; camera: { updateMatrixWorld(): void } };
+      workerViews: Map<string, { model: { where(v: unknown): { x: number; y: number; z: number; clone(): { y: number; project(c: unknown): { x: number; y: number } } } ; root: { position: { clone(): unknown } } } }>;
+    };
+    __world: { waiting: { goTo(id: string): boolean } };
+  };
+  await page.waitForFunction(() => !!(window as unknown as Office).__office?.store.floor, null, { timeout: 60_000 });
+  await page.evaluate(() => (window as unknown as Office).__office.net.send({ t: 'worker.spawn', deskId: 'desk-5', prompt: 'Pick the session store', worktree: false }));
+  await page.waitForFunction(() => (window as unknown as Office).__office.store.roster.length > 0, null, { timeout: 30_000, polling: 250 });
+  const seen = await page
+    .waitForFunction(() => (window as unknown as Office).__office.workerViews.size > 0, null, { timeout: 30_000, polling: 250 })
+    .then(() => '')
+    .catch(() => page.evaluate(() => JSON.stringify({ workers: (window as unknown as Office).__office.store.workers.size, roster: (window as unknown as Office).__office.store.roster.length, views: (window as unknown as Office).__office.workerViews.size })));
+  assert.equal(seen, '', `no unit drawn on the deck: ${seen}`);
+  const active = () => page.evaluate(() => (window as unknown as Office).__office.overview.active());
+  // Polled on a timer: Playwright's own waits ride animation frames, which a software-rendered deck starves.
+  const cardUp = () => page.waitForFunction(() => !!document.querySelector('.sel-card:not([hidden]).open .sel-name'), null, { timeout: 10_000, polling: 100 });
+
+  // Up into the Overview, and a click on the unit selects it.
+  await page.locator('#scene').focus();
+  await page.keyboard.press('g');
+  await page.waitForFunction(() => (window as unknown as Office).__office.overview.active(), null, { polling: 100 });
+  // A few frames drawn from up there, so its camera stands where it will (and the unit's callout has settled).
+  const frame = () => page.evaluate(() => (window as unknown as { __office: { renderer: { info: { render: { frame: number } } } } }).__office.renderer.info.render.frame);
+  const f0 = await frame();
+  await page.waitForFunction((f0) => (window as unknown as { __office: { renderer: { info: { render: { frame: number } } } } }).__office.renderer.info.render.frame >= f0 + 4, f0, { timeout: 30_000, polling: 100 });
+  const at = await page.evaluate(() => {
+    const o = (window as unknown as Office).__office;
+    const [, v] = [...o.workerViews][0];
+    o.overview.camera.updateMatrixWorld();
+    const p = v.model.where(v.model.root.position.clone()).clone();
+    p.y += 1;
+    const n = p.project(o.overview.camera);
+    return { x: ((n.x + 1) / 2) * innerWidth, y: ((1 - n.y) / 2) * innerHeight };
+  });
+  await page.mouse.click(at.x, at.y);
+  await cardUp();
+  // The first Esc lets go of the unit, the Overview stays up; the second walks again.
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.querySelector('.sel-card')?.hasAttribute('hidden') || !document.querySelector('.sel-card.open'), null, { timeout: 5000, polling: 100 });
+  assert.equal(await active(), true, 'still up after the first Esc');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => !(window as unknown as Office).__office.overview.active(), null, { timeout: 5000, polling: 100 });
+  assert.equal(await active(), false, 'walking after the second Esc');
+
+  // In Walk: taken to the unit (as N does), its card is up; its ✕ lets go and asks for mouse-look at once.
+  await page.evaluate(() => {
+    const w = window as unknown as Office;
+    w.__world.waiting.goTo([...w.__office.store.workers.values()][0].id);
+  });
+  await cardUp();
+  const asked = await page.evaluate(() => (window as unknown as { __locks: number[] }).__locks.length);
+  await page.locator('.sel-card .close').dispatchEvent('click');
+  await page.waitForFunction((n) => (window as unknown as { __locks: number[] }).__locks.length > n, asked, { timeout: 5000, polling: 100 });
   assert.deepEqual(errors, []);
 });

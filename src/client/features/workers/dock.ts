@@ -131,3 +131,12 @@ export function dock(chips: readonly Chip[], boards: readonly PxRect[], H: numbe
   });
   return out;
 }
+
+/**
+ * Whether callout `c`, left where it is (no slot under a bezel), stands down because it would sit on a
+ * board's face: one that needs someone (`keep`) never does; it shows over the board at full strength.
+ */
+export function standsDown(c: Chip, boards: readonly PxRect[]): boolean {
+  if (c.hidden || c.keep) return false;
+  return boards.some((b) => c.x < b.right && c.x + c.w > b.left && c.bottom > b.top && c.bottom - c.h < b.bottom);
+}

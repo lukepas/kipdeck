@@ -29,7 +29,7 @@ export function installHomeView(_ctx: Ctx, parts: Pick<Parts, 'overview' | 'cine
       writeHome(home);
     });
     parts.cinema.onDone(() => {
-      if (start === 'overview') parts.overview.toggle(true);
+      if (start === 'overview') parts.overview.toggle(true, 'home');
     });
   });
   return { home: () => home };

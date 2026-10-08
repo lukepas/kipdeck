@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 import * as THREE from 'three';
-import { DRIFT, FLY_MS, TRANSITION_MS, blendProjection, driftAt, easeInOutCubic, fovAlong, fovForHalfHeight, halfHeightAt, morphAt, orthographic, perspective, toPixels, zoomTierOf } from '../src/client/core/overview-transition.js';
+import { DRIFT, FLY_MS, TRANSITION_MS, blendProjection, driftAt, easeInOutCubic, easeOutQuint, zoomPan, zoomToward, fovAlong, fovForHalfHeight, halfHeightAt, morphAt, orthographic, perspective, toPixels, zoomTierOf } from '../src/client/core/overview-transition.js';
 import { HOME_KEY, readHome, writeHome } from '../src/client/features/homeview/home.js';
 
 const W = 1920;
@@ -10,9 +12,37 @@ const DIST = 80;
 const NEAR = 0.1;
 const FAR = 400;
 
-test('the move and the flight take 650 ms on a cubic in-out ease', () => {
+test('the flight to a unit takes 900 ms, most of the way fast and then a long settle', () => {
+  assert.equal(FLY_MS, 900);
+  assert.equal(easeOutQuint(0), 0);
+  assert.equal(easeOutQuint(1), 1);
+  // Two thirds of the way in the first fifth of the time; the last tenth of the way takes half of it.
+  assert.ok(easeOutQuint(0.2) > 0.66);
+  assert.ok(easeOutQuint(0.5) > 0.96);
+  for (let k = 0; k < 1; k += 0.01) assert.ok(easeOutQuint(k + 0.01) >= easeOutQuint(k), `monotonic at ${k}`);
+});
+
+test('the wheel eases the zoom toward where it is taking it, and holds the point under the pointer', () => {
+  // About a frame at 60 fps closes a fifth of the way; it never overshoots, and lands exactly.
+  let z = 1;
+  const steps: number[] = [];
+  for (let i = 0; i < 60; i++) steps.push((z = zoomToward(z, 2, 1 / 60)));
+  assert.ok(steps[0] > 1.15 && steps[0] < 1.3, `first frame ${steps[0]}`);
+  for (let i = 1; i < steps.length; i++) assert.ok(steps[i] >= steps[i - 1] && steps[i] <= 2);
+  assert.equal(steps[steps.length - 1], 2, 'lands on the goal');
+  // The point under the pointer stays put: what the view's middle moves is what the point's offset shrinks by.
+  const perPx = 32 / 900;
+  const pitch = (48 * Math.PI) / 180;
+  const [dx, dz] = zoomPan(300, 90, 1, 2, perPx, pitch);
+  assert.ok(Math.abs(dx - 300 * perPx * (1 - 1 / 2)) < 1e-9);
+  assert.ok(Math.abs(dz - (90 * perPx * (1 - 1 / 2)) / Math.sin(pitch)) < 1e-9);
+  // Zooming out moves it the other way; the middle of the window doesn't move at all.
+  assert.ok(zoomPan(300, 90, 2, 1, perPx, pitch)[0] < 0);
+  assert.deepEqual(zoomPan(0, 0, 1, 3, perPx, pitch), [0, 0]);
+});
+
+test('the move up and down takes 650 ms on a cubic in-out ease', () => {
   assert.equal(TRANSITION_MS, 650);
-  assert.equal(FLY_MS, 650);
   assert.equal(easeInOutCubic(0), 0);
   assert.equal(easeInOutCubic(1), 1);
   assert.equal(easeInOutCubic(0.5), 0.5);
@@ -173,4 +203,23 @@ test("the Overview's grade comes in with the move: none of it at your eyes, all 
     assert.ok(Math.abs(half.vibrance - (g.vibrance + overviewLook(g).vibrance) / 2) < 1e-9);
     assert.ok(half.vignette < g.vignette && half.vignette > overviewLook(g).vignette);
   }
+});
+
+test("the deck's polished surfaces go matte on the way up, so the move never sweeps through the key light's reflection", async () => {
+  const { MATTE, MATTE_BY, glossAt } = await import('../src/client/features/atmos/gloss.js');
+  // Walking, untouched; up there and from MATTE_BY of the way up, matte; rough ones never change.
+  assert.equal(glossAt(0.25, 0), 0.25);
+  assert.equal(glossAt(0.25, 1), MATTE);
+  assert.equal(glossAt(0.25, MATTE_BY), MATTE);
+  assert.equal(glossAt(0.8, 0.5), 0.8);
+  // Smooth on the way: no step bigger than a frame's share of the change at 60 fps over the move.
+  let last = glossAt(0.1, 0);
+  for (let k = 0.01; k <= 1; k += 0.01) {
+    const r = glossAt(0.1, k);
+    assert.ok(r >= last && r - last < 0.04, `step ${r - last} at ${k}`);
+    last = r;
+  }
+  // Wired into the atmosphere's frame, on the Overview's eased progress.
+  const atmos = readFileSync(path.join(process.cwd(), 'src/client/features/atmos/index.ts'), 'utf8');
+  assert.match(atmos, /gloss\.update\(parts\.overview\?\.progress\(\) \?\? 0\)/);
 });

@@ -33,6 +33,8 @@ void main() {
   // vMeter.a is how much has drained: the arc is lit from there to its end, so it empties clockwise.
   float lit = step(vMeter.a, vAlong);
   float a = mix(${TRACK.toFixed(2)}, 0.9, lit) * uGain;
+  // A tick at halfway, where it turns amber: how far it has drained reads against it.
+  a = max(a, (1.0 - step(0.008, abs(vAlong - ${HEARTBEAT.amberAt.toFixed(2)}))) * 0.9 * uGain);
   gl_FragColor = vec4(vMeter.rgb, a);
   #include <colorspace_fragment>
 }`;
@@ -91,8 +93,8 @@ export class HeartbeatSet {
   private nMeters = 0;
 
   constructor() {
-    // The pulse: a thin ring 1 m out, scaled to its radius; its hue times its opacity, added to what's under it.
-    const ring = new THREE.RingGeometry(0.93, 1, 64, 1).rotateX(-Math.PI / 2);
+    // The pulse: a thin line 1 m out (3% of its radius), scaled to its radius; its hue times its opacity, added to what's under it.
+    const ring = new THREE.RingGeometry(0.97, 1, 64, 1).rotateX(-Math.PI / 2);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -4 });
     this.rings = instanced(ring, ringMat);
     for (let i = 0; i < MAX; i++) this.rings.setColorAt(i, this.c.setRGB(0, 0, 0));
