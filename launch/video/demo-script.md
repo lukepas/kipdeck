@@ -23,6 +23,7 @@ So: the bridge gets ten seconds, then every beat shows one real action and names
 
 The dry run is 2026-10-08, the recording 2026-10-09.
 
+- [ ] TODO(founder): the demo repo is still named `zbagdzevicius/ugc-army-demo`. After renaming it on GitHub for Kipdeck, update the links in this kit (`description.txt`, `capture/*.mjs`, `capture/edit.json`).
 - [ ] Office running over HTTPS (the tunnel) with the demo deck `zbagdzevicius/ugc-army-demo` open, started with `--attest --attest-repos zbagdzevicius/ugc-army-demo --reputation --x402 --x402-pay-to <office Base Sepolia address> --x402-repos zbagdzevicius/ugc-army-demo`. Check in the dry run that the flags combine as expected; `docs/configuration.md` has every flag.
 - [ ] Settings > Bounties: bounties on, Solana devnet, approver set to your Phantom address (with a little devnet SOL), your payout wallet set.
 - [ ] Settings > Bounties > Public showcase on (admins only), so `/pom/` is served.
