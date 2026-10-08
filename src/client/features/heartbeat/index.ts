@@ -58,6 +58,8 @@ export function installHeartbeat(ctx: Ctx, parts: Pick<Parts, 'views'>) {
   const euler = new THREE.Euler();
   let readAt = -Infinity;
   let reads = 0;
+  /** How many pulses have started since the page loaded (for the shots: a pulse lasts under a second). */
+  let started = 0;
   let yielding = false;
   // The frame's clock and the pulses' gain, in a typed array: a number written to a closure's variable
   // is boxed, which would allocate every frame.
@@ -78,6 +80,7 @@ export function installHeartbeat(ctx: Ctx, parts: Pick<Parts, 'views'>) {
       }
       const next = w.activityAt ?? 0;
       if (w.status === 'working' && pulseDue(b.prev, next, b.lastPulseAt, now)) {
+        started++;
         b.lastPulseAt = now;
         b.pulseStart = perfNow;
         b.hue.set(pulseHue(w.action));
@@ -135,6 +138,7 @@ export function installHeartbeat(ctx: Ctx, parts: Pick<Parts, 'views'>) {
   // For the shots and the perf probe: what's drawn, and each unit's quiet share.
   debugHandle('heartbeat', {
     counts: () => set.counts(),
+    started: () => started,
     quiet: () => Object.fromEntries([...beats].map(([id, b]) => [id, Math.round(b.q * 100) / 100])),
   });
 }

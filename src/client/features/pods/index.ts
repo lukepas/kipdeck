@@ -10,7 +10,7 @@ import { frameAlso } from '../../core/overview-frame';
 import { heightAt, POD_LETTERS } from '../../../shared/layout';
 import { store } from '../../state';
 import { LABEL_SPOTS, labelCorners } from './footprint';
-import { MAX_GROW } from './world';
+import { FRAME_GROW } from './world';
 import { podViews } from './views';
 
 /** How often (ms) the labels look again: at most twice a second, and a unit's state can change with time alone. */
@@ -18,11 +18,11 @@ const EVERY_MS = 500;
 
 export function installPods(ctx: Ctx) {
   const { pods, missionTable } = ctx.office;
-  // Every trip up into the Overview frames each pod's label whole, at the most it grows (world.ts).
+  // Every trip up into the Overview frames each pod's label whole, at about the size it is there (world.ts).
   for (const letter of POD_LETTERS) {
     const { x, z } = LABEL_SPOTS[letter];
     const y = heightAt(x, z);
-    frameAlso(labelCorners(letter).map(([cx, cz]) => [x + (cx - x) * MAX_GROW, y, z + (cz - z) * MAX_GROW] as const));
+    frameAlso(labelCorners(letter).map(([cx, cz]) => [x + (cx - x) * FRAME_GROW, y, z + (cz - z) * FRAME_GROW] as const));
   }
 
   /** The zones and labels: the floor's units, ranked, by the pod their console is in. */

@@ -31,7 +31,7 @@ export interface Selection {
   on(fn: (id: string | null) => void): Off;
 }
 
-export type SelectionParts = Pick<Parts, 'overview' | 'views' | 'waiting' | 'pointer' | 'focus'>;
+export type SelectionParts = Pick<Parts, 'overview' | 'views' | 'waiting' | 'pointer' | 'focus' | 'vesper' | 'needsYou'>;
 
 export function installSelection(ctx: Ctx, parts: SelectionParts): Selection {
   let selected: string | null = null;
@@ -177,6 +177,12 @@ export function installSelection(ctx: Ctx, parts: SelectionParts): Selection {
   });
 
   pickUnits(ctx, parts, { select, clear, hover });
+
+  // The selected unit's card says who it is and what it needs: VESPER's caption and the needs-you
+  // banner keep off it (they'd only say it again, mid-flight to it).
+  const isSelected = (id: string) => id === selected;
+  parts.vesper.quietFor(isSelected);
+  parts.needsYou.quietFor(isSelected);
 
   linkRail({ onLocate: (id) => select(id, { fly: true }), onHover: hover, selected: () => selected });
 

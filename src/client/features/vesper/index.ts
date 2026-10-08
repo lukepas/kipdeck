@@ -18,6 +18,7 @@ import { QUIET_MARKS, VoiceGate, attentionLine, mergeContext, pick, type VoiceCo
 import type { TimelineEvent } from '../../../shared/protocol';
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
+import type { Off } from '../../core/registry';
 import { crewBook } from '../../shared/crew';
 import { store } from '../../state';
 import { debugHandle } from '../giveway';
@@ -37,9 +38,14 @@ export interface Vesper {
   say(kind: VoiceKind, c: VoiceContext, seed: string): void;
   /** What it last said, and when (the shots and the console). */
   last(): { text: string; at: number } | null;
+  /**
+   * Keeps the caption off a unit while `fn` says so (features/selection: the selected unit's card
+   * already says it); the ticker still carries the line. Returns how to take it back out.
+   */
+  quietFor(fn: (unitId: string) => boolean): Off;
 }
 
-export function installVesper(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'selection'>): Vesper {
+export function installVesper(ctx: Ctx, parts: Pick<Parts, 'giveWay'>): Vesper {
   const gate = new VoiceGate();
   const caption = new VoiceCaption();
   const ticker = ctx.office.ticker;
@@ -65,15 +71,19 @@ export function installVesper(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'selectio
 
   /** The unit the caption's line is about (one that needs you), or null. */
   let about: string | null = null;
-  /** The unit you have selected: its card already says what the line would (features/selection). */
-  const held = () => parts.selection?.id() ?? null;
+  /** Who the caption keeps off (quietFor): a unit whose own card already says what the line would. */
+  const quiet = new Set<(unitId: string) => boolean>();
+  const held = (unit: string) => {
+    for (const fn of quiet) if (fn(unit)) return true;
+    return false;
+  };
 
   function say(line: VoiceLine, unit: string | null = null) {
     said = { text: line.text, at: Date.now() };
     if (mode() === 'off') return;
     about = unit;
     // About the unit you're looking at: the ticker takes it, the caption doesn't say it again.
-    if (!unit || unit !== held()) caption.say(line.text, CAPTION_MS);
+    if (!unit || !held(unit)) caption.say(line.text, CAPTION_MS);
     ticker.setVoice(line.text);
     tickerUntil = Date.now() + TICKER_MS;
   }
@@ -172,7 +182,7 @@ export function installVesper(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'selectio
       tickerUntil = 0;
       ticker.setVoice(null);
     }
-    if (caption.text && (mode() === 'off' || (about && about === held()))) caption.clear();
+    if (caption.text && mode() === 'off') caption.clear();
   }
   store.on('floor', () => {
     primed = false;
@@ -185,6 +195,9 @@ export function installVesper(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'selectio
   let readAt = -Infinity;
   let clock = 0;
   ctx.ticks.add('world', ({ dt }) => {
+    // The unit the caption is about just got selected (a click, N, a badge): its card says it now, so
+    // the caption goes on this frame, not on the next read a second later, mid-flight.
+    if (about && caption.text && held(about)) caption.clear();
     clock += dt * 1000;
     if (clock - readAt < 1000) return;
     readAt = clock;
@@ -202,6 +215,10 @@ export function installVesper(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'selectio
       if (line) offer(line);
     },
     last: () => said,
+    quietFor(fn) {
+      quiet.add(fn);
+      return () => void quiet.delete(fn);
+    },
   };
   debugHandle('vesper', { ...vesper, caption: () => caption.text, gate: () => ({ silent: gate.silent, primed, caller: caller?.sign, mode: mode() }) });
   return vesper;
