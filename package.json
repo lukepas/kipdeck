@@ -1,7 +1,7 @@
 {
-  "name": "mergeline",
+  "name": "kipdeck",
   "version": "0.1.0",
-  "description": "Mergeline: the inbox for your AI coding agents (Claude Code, Codex, Cursor and more). See what needs you, review what is ready, merge what shipped. Built on agent-office by webdevcody (MIT).",
+  "description": "Kipdeck: the inbox for your AI coding agents (Claude Code, Codex, Cursor and more). See what needs you, review what is ready, merge what shipped. Built on agent-office by webdevcody (MIT).",
   "keywords": [
     "ai",
     "coding-agents",
@@ -14,7 +14,7 @@
   ],
   "type": "module",
   "bin": {
-    "mergeline": "bin/agent-office.js",
+    "kipdeck": "bin/agent-office.js",
     "agent-office": "bin/agent-office.js"
   },
   "imports": {

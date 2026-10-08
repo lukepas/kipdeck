@@ -1,13 +1,13 @@
 // Anonymous usage numbers, off unless someone turns them on (the setup card, --telemetry or
-// MERGELINE_TELEMETRY=1). They answer two questions and nothing else: how long it takes a new
+// KIPDECK_TELEMETRY=1). They answer two questions and nothing else: how long it takes a new
 // install to get to its first agent, its first answer and its first merge, and how long agents sit
 // in Needs you before a person acts. An event is a name, a number of minutes, a random install id
 // made when they're turned on, the version and the OS. Never a repository, path, branch, prompt,
 // name, email, address or anything an agent wrote.
 //
 // Off, nothing is recorded or sent. On, events wait in telemetry-outbox.jsonl in the office's data
-// folder, where anyone can read exactly what would go, and are sent only when MERGELINE_TELEMETRY_URL
-// names where to (no address is built in). DO_NOT_TRACK=1, MERGELINE_TELEMETRY=0 or --no-telemetry
+// folder, where anyone can read exactly what would go, and are sent only when KIPDECK_TELEMETRY_URL
+// names where to (no address is built in). DO_NOT_TRACK=1, KIPDECK_TELEMETRY=0 or --no-telemetry
 // keep them off for good on this office. See docs/security.md.
 
 import { randomBytes } from 'node:crypto';
@@ -17,6 +17,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { attention } from '../shared/attention.js';
 import type { RosterEntry, ShipRecord } from '../shared/protocol.js';
+import { brandEnvNames } from './brandenv.js';
 import { guardedFetch, type GuardOptions } from './netguard.js';
 import { appendState, readState, readStateJson, writeState } from './safefs.js';
 
@@ -70,7 +71,8 @@ export interface TelemetryOptions {
 export function telemetryForbidden(env: NodeJS.ProcessEnv, argv: readonly string[]): string | undefined {
   if (argv.includes('--no-telemetry')) return 'turned off with --no-telemetry';
   if (env.DO_NOT_TRACK && env.DO_NOT_TRACK !== '0') return 'DO_NOT_TRACK is set';
-  if (env.MERGELINE_TELEMETRY === '0') return 'MERGELINE_TELEMETRY=0 is set';
+  // Either name turns it off: KIPDECK_TELEMETRY or MERGELINE_TELEMETRY from before the rename.
+  for (const key of brandEnvNames('TELEMETRY')) if (env[key] === '0') return `${key}=0 is set`;
   return undefined;
 }
 

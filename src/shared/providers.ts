@@ -249,7 +249,7 @@ export const PROVIDER_META: Record<AgentProvider, ProviderMeta> = {
       reports: true,
       noCost: true,
       waiting: 'waiting for first report',
-      note: 'Review the Mergeline hooks in /hooks to turn tracking on. Codex reports root-session tokens; subagents are excluded and cost is unavailable.',
+      note: 'Review the Kipdeck hooks in /hooks to turn tracking on. Codex reports root-session tokens; subagents are excluded and cost is unavailable.',
     },
   },
   grok: {

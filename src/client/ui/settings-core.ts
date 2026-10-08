@@ -43,7 +43,7 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
   const signedIn = account
     ? `As ${account.name}, with your own account (${account.role}).`
     : store.me.admin
-      ? `As ${store.profile.name}, an admin of this Mergeline.`
+      ? `As ${store.profile.name}, an admin of this Kipdeck.`
       : `As ${store.profile.name}.`;
   // Your own account's password: a new one signs you out of every other browser (the office does it).
   const pwCurrent = h('input', { type: 'password', placeholder: 'Current password', 'aria-label': 'Current password', autocomplete: 'current-password' }) as HTMLInputElement;
@@ -59,7 +59,7 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
       if (res.ok) return location.reload();
       pwNote.textContent = body.error ?? `That didn't work (${res.status})`;
     } catch {
-      pwNote.textContent = "Couldn't reach Mergeline";
+      pwNote.textContent = "Couldn't reach Kipdeck";
     }
     pwSave.disabled = false;
   });
@@ -88,7 +88,7 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
     if (!agentTouched) agent.set(now);
     agentNote.textContent =
       'The Deploy sheet starts on this agent and model. Pick another there for one agent only.' +
-      (picked ? ` Set by ${picked.by} ${timeAgo(picked.at)}.` : ' It is the agent Mergeline was started with, on its own default model.') +
+      (picked ? ` Set by ${picked.by} ${timeAgo(picked.at)}.` : ' It is the agent Kipdeck was started with, on its own default model.') +
       (admin ? '' : ' Admins can change it.');
   }, 'prompts', 'me');
   agentSave.addEventListener('click', () => {
@@ -119,7 +119,7 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
         ? `No limit. ${m.workers} running now, across every project.`
         : `At most ${m.limit} at once, across every project (${m.workers} now). Deploying past that is refused.`;
     const from = m.set ? ` Set by ${m.set.by} ${timeAgo(m.set.at)}.` : '';
-    const cap = m.ceiling ? ` Mergeline was started with --max-workers ${m.ceiling}, so it can't go higher.` : '';
+    const cap = m.ceiling ? ` Kipdeck was started with --max-workers ${m.ceiling}, so it can't go higher.` : '';
     limitNote.textContent = now + from + cap + (admin ? '' : ' Admins can change it.');
   }, 'machine', 'me');
   const saveLimit = () => {
@@ -151,7 +151,7 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
     leaveNote.textContent = `${now} The same for everyone${by ? `, set by ${by}${at ? ` ${timeAgo(at)}` : ''}` : ''}.`;
   }, 'leaveOnMerge');
 
-  // Where new projects are cloned on Mergeline's machine. Admins move it.
+  // Where new projects are cloned on Kipdeck's machine. Admins move it.
   const dirInput = h('input', { type: 'text', placeholder: '~/Workspace', 'aria-label': 'Projects folder', spellcheck: 'false', autocomplete: 'off' }) as HTMLInputElement;
   const dirSave = h('button.btn.primary', { type: 'button' }, 'Save');
   const dirDefault = h('button.btn', { type: 'button', onclick: () => net.send({ t: 'floor.projectsDir', dir: '' }) }, 'Use the default');
@@ -177,7 +177,7 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
   dirSave.addEventListener('click', saveDir);
   dirInput.addEventListener('keydown', (e) => e.key === 'Enter' && saveDir());
 
-  // The prompts Mergeline writes for agents by itself. Admins rewrite them.
+  // The prompts Kipdeck writes for agents by itself. Admins rewrite them.
   const promptsOpen = h('button.btn', { type: 'button', onclick: () => openPromptEditor(net) });
   const promptsNote = h('p.setting-note');
   follow(() => {
@@ -185,7 +185,7 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
     promptsOpen.textContent = store.me.admin ? 'Edit the prompts...' : 'Read the prompts...';
     promptsNote.textContent =
       'What the buttons that hand an agent work add to its task: an issue or pull request from the boards, a task from the queue, Fix checks. ' +
-      (n ? `${n} of them rewritten.` : 'All as Mergeline wrote them.') +
+      (n ? `${n} of them rewritten.` : 'All as Kipdeck wrote them.') +
       (store.me.admin ? '' : ' Admins can rewrite them.');
   }, 'prompts', 'me');
 
@@ -280,7 +280,7 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
       id: 'agents',
       icon: 'units',
       label: 'Agents',
-      blurb: 'What agents start on, how many run at once, and what happens after a merge. These apply to everyone using this Mergeline.',
+      blurb: 'What agents start on, how many run at once, and what happens after a merge. These apply to everyone using this Kipdeck.',
       body: [
         setting('Default agent', 'office', agentNow, agent.element, agentActions, agentNote),
         setting('Agents at once', 'office', limitRow, limitNote),

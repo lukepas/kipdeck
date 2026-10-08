@@ -1,7 +1,8 @@
-// `mergeline --demo` (see script.ts): sets the office up to run the demo before it starts, and puts the
+// `kipdeck --demo` (see script.ts): sets the office up to run the demo before it starts, and puts the
 // throwaway home away after it stops. The director (director.ts) takes it from there.
 import { rmSync } from 'node:fs';
 import path from 'node:path';
+import { brandEnv } from '../brandenv.js';
 import type { Config } from '../config.js';
 import { demoPace, prepareDemo, type DemoWorkspace } from './workspace.js';
 
@@ -15,7 +16,7 @@ export function setUpDemo(cfg: Config): DemoWorkspace | string {
   if (process.platform === 'win32') return 'the demo runs on macOS and Linux (its stand-in agents are sh scripts); on Windows, use WSL';
   let ws: DemoWorkspace;
   try {
-    ws = prepareDemo(cfg.dir, demoPace(process.env.MERGELINE_DEMO_PACE));
+    ws = prepareDemo(cfg.dir, demoPace(brandEnv('DEMO_PACE')));
   } catch (err) {
     return `couldn't make the demo's repository (is git installed?): ${(err as Error).message}`;
   }
@@ -31,7 +32,8 @@ export function setUpDemo(cfg: Config): DemoWorkspace | string {
 export function removeDemoHome(cfg: Config) {
   if (!cfg.demo?.temp) return;
   const root = path.dirname(cfg.dir);
-  if (!path.basename(root).startsWith('mergeline-demo-')) return;
+  // mergeline-demo- is the prefix from before the rename to Kipdeck.
+  if (!['kipdeck-demo-', 'mergeline-demo-'].some((p) => path.basename(root).startsWith(p))) return;
   try {
     rmSync(root, { recursive: true, force: true, maxRetries: 3 });
   } catch {

@@ -1,4 +1,4 @@
-# Credits - PROOF OF MERGE, UGC Army (30 s)
+# Credits - PROOF OF MERGE, Kipdeck (30 s)
 
 The film is drawn frame by frame in code from `video/src/` and scored by the synthesizer in `video/audio/`. It uses no stock footage, no samples, no bitmaps and no AI-generated imagery or audio.
 

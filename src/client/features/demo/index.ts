@@ -10,8 +10,9 @@ import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { store } from '../../state';
 import { Worker } from '../../world/character/worker';
+import { storageKey } from '../../shared/storage-key';
 
-const KEY = 'ugc-army.demo';
+const KEY = storageKey('demo', () => sessionStorage);
 /** How much bigger units' callouts and glyphs are drawn. */
 const WEIGHT = 1.25;
 /** The Overview's turn round the table (radians a second): once round in about a minute and three quarters. */

@@ -1,7 +1,7 @@
 import net from 'node:net';
 
 // Picking the port when nobody named one: 4600, or the next one that's free, so a second office (or
-// anything else already on 4600) never stops `npx mergeline` from starting.
+// anything else already on 4600) never stops `npx kipdeck` from starting.
 
 /** Something answers on `port` at `host` (another program bound only to some other address still counts). */
 function answers(host: string, port: number): Promise<boolean> {

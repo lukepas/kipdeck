@@ -92,12 +92,12 @@ function projectRow(s: SetupState, net: Net, admin: boolean): HTMLElement {
     const here = s.startedIn?.floor ? floors.find((f) => f.id === s.startedIn!.floor) : undefined;
     const first = here ?? floors[0];
     const rest = floors.length - 1;
-    return row(true, 'Project', h('span.su-chips', {}, h('span.su-chip.mono', {}, first.name)), h('span.su-say', {}, `${here ? 'the folder you started Mergeline in' : first.dir}${rest ? ` and ${rest} more` : ''}`));
+    return row(true, 'Project', h('span.su-chips', {}, h('span.su-chip.mono', {}, first.name)), h('span.su-say', {}, `${here ? 'the folder you started Kipdeck in' : first.dir}${rest ? ` and ${rest} more` : ''}`));
   }
   if (cloning.length) return row(false, 'Project', h('span.su-say', {}, `Cloning ${cloning.map((f) => f.repo ?? f.name).join(', ')}...`));
   const parts: (HTMLElement | null)[] = [];
   if (s.startedIn && admin) {
-    parts.push(h('button.btn.primary.small', { type: 'button', onclick: () => net.send({ t: 'setup.useFolder' }) }, `Use ${s.startedIn.name}`), h('span.su-say', {}, 'the folder you started Mergeline in'));
+    parts.push(h('button.btn.primary.small', { type: 'button', onclick: () => net.send({ t: 'setup.useFolder' }) }, `Use ${s.startedIn.name}`), h('span.su-say', {}, 'the folder you started Kipdeck in'));
   }
   if (s.github.state === 'ok' && admin) {
     const input = h('input.su-repo', { type: 'text', placeholder: 'owner/repo', list: 'su-repos', 'aria-label': 'GitHub repository', autocomplete: 'off', spellcheck: 'false' }) as HTMLInputElement;
@@ -107,7 +107,7 @@ function projectRow(s: SetupState, net: Net, admin: boolean): HTMLElement {
     input.addEventListener('keydown', (e) => e.key === 'Enter' && add());
     parts.push(h('span.su-line.su-clone', {}, s.startedIn ? 'or clone one from GitHub:' : 'Clone one from GitHub:', input, list, h('button.btn.small', { type: 'button', onclick: add }, 'Add')));
   }
-  if (!parts.length) parts.push(h('span.su-say', {}, admin ? 'Start Mergeline inside a git repository (cd into it, then npx mergeline), or sign GitHub in to clone one.' : 'An admin adds projects.'));
+  if (!parts.length) parts.push(h('span.su-say', {}, admin ? 'Start Kipdeck inside a git repository (cd into it, then npx kipdeck), or sign GitHub in to clone one.' : 'An admin adds projects.'));
   return row(false, 'Project', ...parts);
 }
 
@@ -140,7 +140,7 @@ export function usageSwitch(net: Net, s: SetupState): HTMLElement {
       'details',
       {},
       h('summary', {}, "What's sent"),
-      h('p', {}, "Each event is its name (first agent, first answer, first merge, or one wait in Needs you), a number of minutes, a random id made when you turn this on, the Mergeline version, your OS and the day. Never code, prompts, names, paths or repositories. Events wait in telemetry-outbox.jsonl in the office's data folder, so you can read them first. Off by default; DO_NOT_TRACK=1 keeps it off."),
+      h('p', {}, "Each event is its name (first agent, first answer, first merge, or one wait in Needs you), a number of minutes, a random id made when you turn this on, the Kipdeck version, your OS and the day. Never code, prompts, names, paths or repositories. Events wait in telemetry-outbox.jsonl in the office's data folder, so you can read them first. Off by default; DO_NOT_TRACK=1 keeps it off."),
     ),
   );
 }

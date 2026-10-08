@@ -3,7 +3,7 @@
 // skipped, not failed, where there is none. The page is built here once per brand into temporary
 // folders and served on 127.0.0.1, since its scripts are modules that browsers will not run from file://.
 //
-// What it holds the page to: one brand per build and never the other name; nothing loaded from
+// What it holds the page to: the Kipdeck name and never one from before the rename; nothing loaded from
 // other sites; every staged surface labelled as demo data, measured or illustrative; every chain
 // value marked testnet; the from-source command until the build says npm is published; one
 // repository per brand, named in brand.ts; a first screen that says what it is and a hero command
@@ -35,8 +35,9 @@ async function built(env: Record<string, string>): Promise<Served> {
 }
 
 const main = await built({});
-const ugc = await built({ MERGELINE_BRAND: 'ugc-army' });
-const withEndpoint = await built({ MERGELINE_WAITLIST_URL: 'https://wait.example.eu/api/join' });
+// A build set up with the names from before the rename (MERGELINE_*), which still work.
+const legacy = await built({ MERGELINE_BRAND: 'kipdeck', MERGELINE_WAITLIST_URL: 'https://wait.example.eu/api/join' });
+const withEndpoint = await built({ KIPDECK_WAITLIST_URL: 'https://wait.example.eu/api/join' });
 
 let browser: Browser | undefined;
 let why = '';
@@ -52,7 +53,7 @@ if (browser) why = '';
 
 test.after(async () => {
   await browser?.close();
-  for (const s of [main, ugc, withEndpoint]) s.close();
+  for (const s of [main, legacy, withEndpoint]) s.close();
 });
 
 async function open(t: { after(fn: () => Promise<void>): void }, url = main.url, options: { width?: number; height?: number; dark?: boolean; reduced?: boolean } = {}) {
@@ -85,22 +86,23 @@ test('the copy is plain ASCII: no dash or quote glyphs, no ellipsis character', 
   for (const file of [SOURCE, path.join(ROOT, 'site', 'landing', 'brand.ts')]) assert.doesNotMatch(readFileSync(file, 'utf8'), /[\u2013\u2014\u2018\u2019\u201C\u201D\u2026\u00A0\u200B]/, file);
 });
 
-test('one name per build: each brand says its own name and never the other', () => {
+test('one name: the page says Kipdeck and never a name from before the rename', () => {
   const a = texts(main.dir);
-  const b = texts(ugc.dir);
-  assert.match(main.html, /<title>Mergeline: the inbox for your AI coding agents<\/title>/);
-  assert.match(main.html, /<meta property="og:title" content="Mergeline: /);
-  assert.doesNotMatch(a, /ugc army|ugc-army/i);
-  assert.match(ugc.html, /<title>UGC Army: the inbox for your AI coding agents<\/title>/);
-  assert.match(ugc.html, /npx ugc-army/);
-  assert.doesNotMatch(b, /mergeline/i);
-  assert.doesNotMatch(main.html + ugc.html, /\{\{\w+\}\}/, 'no brand token left unfilled');
-  // The repository is the brand's too: a Mergeline build never clones or links the other one.
-  assert.equal(repoOf(main.html), 'https://github.com/zbagdzevicius/mergeline');
-  assert.equal(repoOf(ugc.html), 'https://github.com/zbagdzevicius/ugcarmy');
-  assert.doesNotMatch(a, /ugcarmy/i);
-  assert.match(main.html, /data-copy="git clone https:\/\/github\.com\/zbagdzevicius\/mergeline &amp;&amp; cd mergeline &amp;&amp; npm install &amp;&amp; npm start -- --demo"/);
-  assert.match(main.html, /"codeRepository":"https:\/\/github\.com\/zbagdzevicius\/mergeline"/);
+  assert.match(main.html, /<title>Kipdeck: the inbox for your AI coding agents<\/title>/);
+  assert.match(main.html, /<meta property="og:title" content="Kipdeck: /);
+  assert.doesNotMatch(a, /ugc army|ugc-army|mergeline/i);
+  assert.doesNotMatch(main.html, /\{\{\w+\}\}/, 'no brand token left unfilled');
+  // Links and the clone use the real repository address, and the clone lands in a folder named kipdeck.
+  assert.equal(repoOf(main.html), 'https://github.com/zbagdzevicius/kipdeck');
+  assert.match(main.html, /data-copy="git clone https:\/\/github\.com\/zbagdzevicius\/kipdeck kipdeck &amp;&amp; cd kipdeck &amp;&amp; npm install &amp;&amp; npm start -- --demo"/);
+  assert.match(main.html, /"codeRepository":"https:\/\/github\.com\/zbagdzevicius\/kipdeck"/);
+});
+
+test('the MERGELINE_* build settings from before the rename still work', () => {
+  assert.match(legacy.html, /<title>Kipdeck: /);
+  assert.match(legacy.html, /data-endpoint="https:\/\/wait\.example\.eu\/api\/join"/);
+  assert.match(buildPage(main.html, { MERGELINE_NPM_PUBLISHED: '1' }), /data-copy="npx kipdeck --demo"/);
+  assert.throws(() => buildPage(main.html, { MERGELINE_DEMO_URL: 'http://demo.example.eu/' }), /KIPDECK_DEMO_URL must be https/);
 });
 
 test('every film and poster the page shows is in site/landing/public/media, and the build copies it', () => {
@@ -114,12 +116,40 @@ test('every film and poster the page shows is in site/landing/public/media, and 
   assert.match(source, /preload="none"/);
 });
 
+test('a build that cannot draw the share card still ships one: public/og.png, 1200 by 630', () => {
+  for (const file of [path.join(ROOT, 'site', 'landing', 'public', 'og.png'), path.join(main.dir, 'og.png')]) {
+    const png = readFileSync(file);
+    assert.equal(png.subarray(1, 4).toString('latin1'), 'PNG', file);
+    assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [1200, 630], file);
+  }
+});
+
+test('vercel.json builds the page and sends the same headers as public/_headers', () => {
+  const vercel = JSON.parse(readFileSync(path.join(ROOT, 'vercel.json'), 'utf8'));
+  assert.equal(vercel.installCommand, 'npm ci --ignore-scripts');
+  assert.equal(vercel.buildCommand, 'npm run build:site');
+  assert.equal(vercel.outputDirectory, 'dist/site');
+  // _headers: "/path/*" lines followed by indented "Key: value" lines.
+  const fromHeaders: Record<string, Record<string, string>> = {};
+  let at = '';
+  for (const line of readFileSync(path.join(ROOT, 'site', 'landing', 'public', '_headers'), 'utf8').split('\n')) {
+    if (/^\S/.test(line)) fromHeaders[(at = line.trim().replace(/\*$/, '(.*)'))] = {};
+    else if (line.trim()) {
+      const [key, ...value] = line.trim().split(':');
+      fromHeaders[at][key] = value.join(':').trim();
+    }
+  }
+  const fromVercel: Record<string, Record<string, string>> = {};
+  for (const rule of vercel.headers) fromVercel[rule.source] = Object.fromEntries(rule.headers.map((h: { key: string; value: string }) => [h.key, h.value]));
+  assert.deepEqual(fromVercel, fromHeaders);
+});
+
 test('the build fills in the addresses, opens the CSP to the waitlist only, and refuses http', () => {
   const html = main.html;
   assert.match(html, /data-endpoint=""/);
   assert.match(html, /connect-src 'none'/);
   assert.match(html, /script-src 'self'; style-src 'self'/);
-  const filled = buildPage(html, { MERGELINE_WAITLIST_URL: 'https://wait.example.eu/api/join', MERGELINE_DEMO_URL: 'https://demo.example.eu/', MERGELINE_REPO_URL: 'https://github.com/example/agent-inbox' });
+  const filled = buildPage(html, { KIPDECK_WAITLIST_URL: 'https://wait.example.eu/api/join', KIPDECK_DEMO_URL: 'https://demo.example.eu/', KIPDECK_REPO_URL: 'https://github.com/example/agent-inbox' });
   assert.match(filled, /data-endpoint="https:\/\/wait\.example\.eu\/api\/join"/);
   assert.match(filled, /connect-src https:\/\/wait\.example\.eu;/);
   assert.match(filled, /data-link="demo" href="https:\/\/demo\.example\.eu\/" rel="noopener"/);
@@ -127,18 +157,18 @@ test('the build fills in the addresses, opens the CSP to the waitlist only, and 
   assert.match(filled, /data-link="repo-run" href="https:\/\/github\.com\/example\/agent-inbox#from-source"/);
   assert.match(filled, /data-copy="git clone https:\/\/github\.com\/example\/agent-inbox &amp;&amp; cd agent-inbox &amp;&amp;/);
   assert.ok(!filled.includes(repoOf(html)), 'no link left to the brand repository');
-  assert.throws(() => buildPage(html, { MERGELINE_WAITLIST_URL: 'http://wait.example.eu/' }), /must be https/);
-  assert.throws(() => buildPage(html, { MERGELINE_DEMO_URL: 'not a url' }), /not a URL/);
+  assert.throws(() => buildPage(html, { KIPDECK_WAITLIST_URL: 'http://wait.example.eu/' }), /must be https/);
+  assert.throws(() => buildPage(html, { KIPDECK_DEMO_URL: 'not a url' }), /not a URL/);
 });
 
 test('until npm is published the page says so and shows the from-source command; published, npx takes its place', () => {
   assert.match(main.html, /Not on npm yet/);
   assert.match(main.html, /data-unpublished>/);
   assert.match(main.html, /data-published hidden/);
-  const published = buildPage(main.html, { MERGELINE_NPM_PUBLISHED: '1' });
+  const published = buildPage(main.html, { KIPDECK_NPM_PUBLISHED: '1' });
   assert.doesNotMatch(published, /data-unpublished|Not on npm yet|git clone/);
   assert.match(published, /<div class="cmd" data-published>/);
-  assert.match(published, /data-copy="npx mergeline --demo"/);
+  assert.match(published, /data-copy="npx kipdeck --demo"/);
 });
 
 test('every staged surface is labelled: demo data, measured or illustrative; every chain value says testnet', () => {
@@ -160,7 +190,7 @@ test('every staged surface is labelled: demo data, measured or illustrative; eve
 
 test('the first screen: the sentence, the from-source command, Try the demo and Watch; nothing loaded from elsewhere', { skip: why || false }, async (t) => {
   const { page, requests, errors } = await open(t);
-  assert.equal(await page.title(), 'Mergeline: the inbox for your AI coding agents');
+  assert.equal(await page.title(), 'Kipdeck: the inbox for your AI coding agents');
   assert.equal((await page.locator('h1').innerText()).replace(/\s+/g, ' ').replace(/\s*\d{1,2}:\d\d\s*/, ' ').trim(), 'Your agents are waiting on you.');
   for (const sel of ['.cmd[data-unpublished] .cmd-text', '[data-link="demo"]', '.cta [data-watch]', '.unpublished', '#mini-inbox']) {
     const box = await page.locator(sel).first().boundingBox();

@@ -54,7 +54,7 @@ const UI = !!process.env.SHOOT_UI;
 const POSE = process.env.SHOOT_POSE ?? 'pinned';
 const NAME = `${LIGHT}-${QUALITY}${CAP ? `-cap-${CAP}` : ''}${process.env.SHOOT_CREW && process.env.SHOOT_CREW !== 'need' ? `-${process.env.SHOOT_CREW}` : ''}${POSE === 'sit' ? '-sit' : ''}`;
 
-const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-interior-'));
+const tmp = mkdtempSync(path.join(tmpdir(), 'kipdeck-interior-'));
 const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');
@@ -594,7 +594,7 @@ async function main() {
     // the clip runs on for 9 s, through the spectacle's duck and back and the spotlight settling round
     // it. Saved as <name>-call.mp4, its frames' times in <name>-call.json.
     if (process.env.SHOOT_CLIP === 'call') {
-      const frames = mkdtempSync(path.join(tmpdir(), 'ugc-clip-'));
+      const frames = mkdtempSync(path.join(tmpdir(), 'kipdeck-clip-'));
       const times = [];
       const t0 = Date.now();
       let sent = false;

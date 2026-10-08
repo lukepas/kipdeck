@@ -27,7 +27,7 @@ const base = `http://127.0.0.1:${PORT}`;
 const LIGHT = process.env.SHOOT_LIGHT ?? '';
 const SCHEME = LIGHT === 'day' ? 'light' : 'dark';
 
-const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-crew-'));
+const tmp = mkdtempSync(path.join(tmpdir(), 'kipdeck-crew-'));
 const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');

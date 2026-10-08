@@ -13,7 +13,7 @@ export function renderTitle() {
   const waiting = needingSomeone(counts);
   // The tab's mark lights its lead chevron in Signal while a unit needs you, on any floor.
   setFaviconAlert(counts['needs-you'] > 0);
-  document.title = `${waiting ? `(${waiting}) ` : ''}${name ? `${name} · ` : ''}Mergeline`;
+  document.title = `${waiting ? `(${waiting}) ` : ''}${name ? `${name} · ` : ''}Kipdeck`;
 }
 
 // The roster changes without your floor's workers changing (another floor, a snooze).

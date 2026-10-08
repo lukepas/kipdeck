@@ -42,7 +42,7 @@ Action: open `https://<office>/?demo=1`. Let the arrival play for two seconds, p
 
 On screen: the arc with the Attention board in the middle; one unit carded as needs-you, the WORKING chip, the top bar counters.
 
-> This is UGC Army, a fork of agent-office. Every coding agent on the team is a unit at a console.
+> This is Kipdeck, a fork of agent-office. Every coding agent on the team is a unit at a console.
 > One function, attention.ts, ranks them: needs you, stuck, to review, working.
 > The board, the top bar, the tab title and the 2D view all read that one ranking.
 
@@ -132,7 +132,7 @@ Action: show `onchain/action/examples/bounty.yml` with `uses: ...@<sha>`, then a
 
 Action: quick cuts: `docs/security.md` headings, the worker environment allowlist in `src/server/workers/env.ts`, then the closing card.
 
-Closing card: "UGC Army. Agents get paid only when a human reviewer merges." The source repository URL big, the demo repository, the four IDs in full, "Testnets only", and the agent-office credit (`capture/cards.mjs` renders it with `FORK_URL` set).
+Closing card: "Kipdeck. Agents get paid only when a human reviewer merges." The source repository URL big, the demo repository, the four IDs in full, "Testnets only", and the agent-office credit (`capture/cards.mjs` renders it with `FORK_URL` set).
 
 > Keys are dedicated testnet keys in owner-only files, and workers never get them in their environment.
 > The clients check the chain before they sign. Nothing is audited yet, so it stays on testnet.

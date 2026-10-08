@@ -1,4 +1,4 @@
-// The Numbers window (avatar menu > Numbers, or Ctrl+K): what this Mergeline's signed shipped log
+// The Numbers window (avatar menu > Numbers, or Ctrl+K): what this Kipdeck's signed shipped log
 // says about the last two weeks, laid out to be read in a demo or pasted into an investor update.
 // Human wait time leads, because it's the number the product exists to bring down. Every figure is
 // from records on this machine (shared/metrics.ts); in the demo they're the scripted agents' and the

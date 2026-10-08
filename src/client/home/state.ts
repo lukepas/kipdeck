@@ -4,13 +4,14 @@
 
 import type { ShipRecord } from '../../shared/protocol';
 import { checklistDone, type ChecklistState, type ChecklistStep } from '../../shared/inbox';
+import { storageKey } from '../shared/storage-key';
 
 export type PaneTab = 'terminal' | 'changes' | 'log';
 
-const CHECK_KEY = 'mergeline.checklist';
-const IDLE_KEY = 'mergeline.idle-open';
-const PROJECT_KEY = 'mergeline.project';
-const FIRST_MERGE_KEY = 'mergeline.first-merge';
+const CHECK_KEY = storageKey('checklist');
+const IDLE_KEY = storageKey('idle-open');
+const PROJECT_KEY = storageKey('project');
+const FIRST_MERGE_KEY = storageKey('first-merge');
 
 function read(key: string): string | null {
   try {

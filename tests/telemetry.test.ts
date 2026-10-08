@@ -34,9 +34,9 @@ test('off as it ships: nothing recorded, nothing sent, however much happens', ()
   assert.deepEqual(t.state(), { on: false, allowed: true });
 });
 
-test('DO_NOT_TRACK, MERGELINE_TELEMETRY=0 and --no-telemetry keep it off, even against --telemetry', () => {
+test('DO_NOT_TRACK, KIPDECK_TELEMETRY=0 and --no-telemetry keep it off, even against --telemetry', () => {
   assert.match(telemetryForbidden({ DO_NOT_TRACK: '1' }, []) ?? '', /DO_NOT_TRACK/);
-  assert.match(telemetryForbidden({ MERGELINE_TELEMETRY: '0' }, []) ?? '', /MERGELINE_TELEMETRY=0/);
+  assert.match(telemetryForbidden({ KIPDECK_TELEMETRY: '0' }, []) ?? '', /KIPDECK_TELEMETRY=0/);
   assert.match(telemetryForbidden({}, ['--no-telemetry']) ?? '', /--no-telemetry/);
   assert.equal(telemetryForbidden({ DO_NOT_TRACK: '0' }, []), undefined);
   const t = new Telemetry(dir(), { forbidden: 'DO_NOT_TRACK is set', forced: true });

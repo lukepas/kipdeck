@@ -1,6 +1,6 @@
 // This computer. An office bound to it (127.0.0.1, the default) signs its owner in without a
 // password: the terminal it was started in prints a sign-in link that works once, and commands run
-// on this computer (`mergeline open`, `mergeline attach`) ask the running office for another one
+// on this computer (`kipdeck open`, `kipdeck attach`) ask the running office for another one
 // with a key only its owner can read. Nothing here lets a request in just because it comes from
 // 127.0.0.1: an SSH tunnel or a reverse proxy arrives from there too. See docs/security.md.
 
@@ -18,7 +18,15 @@ import { SERVICE_HEADER } from './tunnel/wire.js';
 /** The file in the office's data folder that says where it runs and holds its local key (0600). */
 export const LOCAL_FILE = 'local.json';
 /** The header a command on this computer sends its local key in. */
-export const LOCAL_KEY_HEADER = 'x-mergeline-key';
+export const LOCAL_KEY_HEADER = 'x-kipdeck-key';
+/** The same header under the product's name before the rename to Kipdeck: a newer command can meet an
+ *  office started from an older install, and the other way round, so both are taken. */
+export const LEGACY_LOCAL_KEY_HEADER = 'x-mergeline-key';
+
+/** The local key a request carries, under the current header or the older one. */
+export function localKeyFrom(headers: IncomingMessage['headers']): string | string[] | undefined {
+  return headers[LOCAL_KEY_HEADER] ?? headers[LEGACY_LOCAL_KEY_HEADER];
+}
 
 /** Headers a proxy, a tunnel or the office's own relay adds: a request carrying one came from somewhere else. */
 const FORWARDED = ['forwarded', 'x-forwarded-for', 'x-forwarded-host', 'x-real-ip', 'cf-connecting-ip', 'true-client-ip', 'x-agent-office-relay', SERVICE_HEADER];

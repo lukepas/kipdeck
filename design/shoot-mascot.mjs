@@ -24,7 +24,7 @@ const PASSWORD = 'nub-' + Math.random().toString(36).slice(2, 8);
 const base = `http://127.0.0.1:${PORT}`;
 const FFMPEG = '/opt/homebrew/bin/ffmpeg';
 
-const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-mascot-'));
+const tmp = mkdtempSync(path.join(tmpdir(), 'kipdeck-mascot-'));
 const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');

@@ -47,7 +47,7 @@ const svcServer = http.createServer((req, res) => {
 });
 svcServer.listen(SERVICE_PORT);
 
-const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-fixes-'));
+const tmp = mkdtempSync(path.join(tmpdir(), 'kipdeck-fixes-'));
 const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');

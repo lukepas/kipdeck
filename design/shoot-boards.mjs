@@ -23,7 +23,7 @@ const PASSWORD = 'shoot-' + Math.random().toString(36).slice(2, 8);
 const base = `http://127.0.0.1:${PORT}`;
 const LIGHT = process.env.SHOOT_LIGHT ?? 'night';
 
-const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-boards-'));
+const tmp = mkdtempSync(path.join(tmpdir(), 'kipdeck-boards-'));
 const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');

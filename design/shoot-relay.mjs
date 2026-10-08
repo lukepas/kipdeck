@@ -36,7 +36,7 @@ const FFMPEG = process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg';
 const CLIP_FOV = Number(process.env.SHOOT_CLIP_FOV ?? 30);
 const want = (s) => !ONLY || ONLY.has(s);
 
-const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-relay-'));
+const tmp = mkdtempSync(path.join(tmpdir(), 'kipdeck-relay-'));
 const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');
@@ -158,7 +158,7 @@ async function main() {
   await waitUp();
   const { chromium } = await import('playwright-core');
   const browser = await chromium.launch({ headless: true, args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] });
-  const clipDir = process.env.SHOOT_CLIP ? mkdtempSync(path.join(tmpdir(), 'ugc-relay-clip-')) : null;
+  const clipDir = process.env.SHOOT_CLIP ? mkdtempSync(path.join(tmpdir(), 'kipdeck-relay-clip-')) : null;
   try {
     const context = await browser.newContext({
       viewport: { width: 1440, height: 900 },

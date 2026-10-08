@@ -1,4 +1,4 @@
-// End to end: `mergeline --demo` in the built office, in a headless browser, at six times the script's
+// End to end: `kipdeck --demo` in the built office, in a headless browser, at six times the script's
 // pace. The note says it's a demo and how to run it for real; Codex's question lands in Needs you in
 // words (not its tool's name), the answer typed in the reply box sends it back to work, Claude Code's
 // change shows its diff and merges into Shipped today, and Cursor's arrives in To review: three agent
@@ -15,6 +15,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Browser } from 'playwright-core';
+import { demoNote } from '../src/shared/demo.js';
 import { bundleWhy } from './support/bundle.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -43,9 +44,9 @@ before(async () => {
     why = 'no browser for playwright-core (npx playwright-core install chromium, or install Chrome)';
     return;
   }
-  for (const k of Object.keys(process.env)) if (k.startsWith('AGENT_OFFICE_') || k.startsWith('MERGELINE_')) delete process.env[k];
+  for (const k of Object.keys(process.env)) if (k.startsWith('AGENT_OFFICE_') || k.startsWith('KIPDECK_') || k.startsWith('MERGELINE_')) delete process.env[k];
   writeFileSync(path.join(root, '.gitconfig'), '');
-  Object.assign(process.env, { HOME: root, USERPROFILE: root, MERGELINE_DEMO_PACE: '6', GIT_CONFIG_GLOBAL: path.join(root, '.gitconfig') });
+  Object.assign(process.env, { HOME: root, USERPROFILE: root, KIPDECK_DEMO_PACE: '6', GIT_CONFIG_GLOBAL: path.join(root, '.gitconfig') });
   const s = net.createServer();
   await new Promise<void>((r) => s.listen(0, '127.0.0.1', r));
   const port = (s.address() as net.AddressInfo).port;
@@ -91,7 +92,7 @@ test('the demo on your computer: the pill, a question from Codex opening by itse
   const note = page.locator('#demo.hb-demo');
   await note.waitFor();
   assert.match((await note.getAttribute('title')) ?? '', /Scripted agents on a throwaway repo \(acme-shop\)/);
-  assert.equal(await note.locator('code').innerText(), 'npx mergeline');
+  assert.equal(await note.locator('code').innerText(), demoNote({ readOnly: false, project: 'acme-shop' }).command);
 
   const row = (section: string, text: string) => page.locator(`.sec-${section} .row`, { hasText: text }).first();
   await row('needs-you', 'Fix the flaky checkout test').waitFor({ timeout: 30_000 });

@@ -78,7 +78,7 @@ test('labels: minutes, hours, percent and how a number moved', () => {
 test('the Markdown says where the numbers come from, marks demo data and gives every agent row its N', () => {
   const out = computeNumbers([rec(0, 'merged', { waitedMs: 3 * MIN, model: 'opus' }), rec(1, 'sent-back', { provider: 'codex' })], NOW);
   const md = numbersMarkdown(out, { project: 'acme', demo: true, now: NOW });
-  assert.match(md, /^Mergeline numbers, 2026-10-0\d, acme \(demo data, scripted agents\)/);
+  assert.match(md, /^Kipdeck numbers, 2026-10-0\d, acme \(demo data, scripted agents\)/);
   assert.match(md, /\| Human wait time \(median\) \| 3 min \| - \|/);
   assert.match(md, /\| Claude Code · opus \| 1 \| 0 \| 100% \| 1 \|/);
   assert.match(md, /\| Codex \| 0 \| 1 \| 0% \| 1 \|/);

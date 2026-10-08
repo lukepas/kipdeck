@@ -5,11 +5,11 @@
 #     --ignorefile deploy/demo/Dockerfile.dockerignore
 #
 # Set the app's name below and in AGENT_OFFICE_ALLOWED_HOSTS (plus your own domain, if it has one).
-app = "mergeline-demo"
+app = "kipdeck-demo"
 primary_region = "arn"
 
 [env]
-  AGENT_OFFICE_ALLOWED_HOSTS = "mergeline-demo.fly.dev"
+  AGENT_OFFICE_ALLOWED_HOSTS = "kipdeck-demo.fly.dev"
 
 [http_service]
   internal_port = 8080

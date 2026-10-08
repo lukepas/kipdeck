@@ -1,4 +1,4 @@
-// `mergeline open`: opens the running office in this computer's browser, signed in, with a new
+// `kipdeck open`: opens the running office in this computer's browser, signed in, with a new
 // sign-in link that works once. For a lost tab, a closed browser or an expired sign-in, so nobody on
 // their own computer ever needs a password. It asks the office with its local key (see local.ts).
 import { openBrowser } from './browser.js';
@@ -36,7 +36,7 @@ export async function askOffice(home: string | undefined, route: string, body: u
   return { ok: true, url: local.url, data };
 }
 
-/** `mergeline open ...`: returns the exit code. */
+/** `kipdeck open ...`: returns the exit code. */
 export async function openCommand(argv: string[]): Promise<number> {
   let print = false;
   let home: string | undefined;

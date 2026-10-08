@@ -41,7 +41,7 @@ if (!existsSync(path.join(ROOT, 'dist', 'public', 'index.html'))) {
   process.exit(0);
 }
 
-const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-probe-'));
+const tmp = mkdtempSync(path.join(tmpdir(), 'kipdeck-probe-'));
 const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');

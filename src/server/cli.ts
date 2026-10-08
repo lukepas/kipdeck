@@ -78,11 +78,11 @@ if (everywhere) {
     for (const ni of list ?? []) if (ni.family === 'IPv4' && !ni.internal) urls.add(`${scheme}://${ni.address}:${cfg.port}`);
   }
 }
-// What commands on this computer (`mergeline open`, `mergeline attach`) need to reach it.
+// What commands on this computer (`kipdeck open`, `kipdeck attach`) need to reach it.
 const api = `${scheme}://${everywhere ? '127.0.0.1' : cfg.host.includes(':') ? `[${cfg.host}]` : cfg.host}:${cfg.port}`;
 writeLocalFile(cfg.dataDir, here, api, cfg.secret);
 
-// How the command was typed: `npx mergeline` has no `mergeline` on the PATH to run again.
+// How the command was typed: `npx kipdeck` has no `kipdeck` on the PATH to run again.
 const again = process.env.npm_command === 'exec' ? `npx ${CLI}` : CLI;
 
 function passwordLine() {

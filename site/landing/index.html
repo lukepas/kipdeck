@@ -77,8 +77,8 @@
       <div class="try" id="try-demo">
         <div class="cmd" data-unpublished>
           <span class="cmd-prompt" aria-hidden="true">$</span>
-          <code class="cmd-text">git clone {{repo}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo</code>
-          <button class="copy" type="button" data-copy="git clone {{repo}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo" aria-label="Copy the command that runs the {{name}} demo from source">Copy</button>
+          <code class="cmd-text">git clone {{repo}} {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo</code>
+          <button class="copy" type="button" data-copy="git clone {{repo}} {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo" aria-label="Copy the command that runs the {{name}} demo from source">Copy</button>
         </div>
         <div class="cmd" data-published hidden>
           <span class="cmd-prompt" aria-hidden="true">$</span>
@@ -341,7 +341,7 @@
   <div class="wrap yours-grid">
     <div class="term-win" id="from-source" role="group" aria-label="Running {{name}} on your own project">
       <div class="term-bar mono"><span class="term-tab on" data-unpublished>your project, from source</span><span class="term-tab on" data-published hidden>your project</span></div>
-<pre class="term-body mono" data-unpublished><span class="tl"><span class="p">$</span> git clone {{repo}} &amp;&amp; cd {{folder}} &amp;&amp; npm install</span>
+<pre class="term-body mono" data-unpublished><span class="tl"><span class="p">$</span> git clone {{repo}} {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install</span>
 <span class="tl dim">added 412 packages, built client and server</span>
 <span class="tl"><span class="p">$</span> cd ~/code/your-project</span>
 <span class="tl"><span class="p">$</span> node ~/{{folder}}/bin/agent-office.js</span>
@@ -555,8 +555,8 @@
     <div class="end-cta">
       <div class="cmd" data-unpublished>
         <span class="cmd-prompt" aria-hidden="true">$</span>
-        <code class="cmd-text">git clone {{repo}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo</code>
-        <button class="copy" type="button" data-copy="git clone {{repo}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo" aria-label="Copy the command that runs the demo">Copy</button>
+        <code class="cmd-text">git clone {{repo}} {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo</code>
+        <button class="copy" type="button" data-copy="git clone {{repo}} {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo" aria-label="Copy the command that runs the demo">Copy</button>
       </div>
       <div class="cmd" data-published hidden>
         <span class="cmd-prompt" aria-hidden="true">$</span>

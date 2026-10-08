@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import WebSocket from 'ws';
-import { DEMO_REVIEWER, READ_ONLY_REFUSAL, demoNote } from '../src/shared/demo.js';
+import { DEMO_REVIEWER, ON_NPM, READ_ONLY_REFUSAL, demoNote } from '../src/shared/demo.js';
 import { DESK_BY_ID, deskBuilt } from '../src/shared/layout.js';
 import { FLEET, REVIEWS, SEED_FILES, dueReviews, improvised, roundOver, type DemoAgent } from '../src/server/demo/script.js';
 import { READ_ONLY_ALLOWS, readOnlyRefuses } from '../src/server/demo/readonly.js';
@@ -20,7 +20,7 @@ import type { Ctx } from '../src/server/office/context.js';
 import type { Client } from '../src/server/office/client.js';
 import type { ShipRecord, WorkerInfo } from '../src/shared/protocol.js';
 
-// The demo (`mergeline --demo`): its script, the read-only guard, the options, and the hosted demo
+// The demo (`kipdeck --demo`): its script, the read-only guard, the options, and the hosted demo
 // (`--demo --read-only`) end to end: a visitor is signed in to watch, can't change anything over HTTP
 // or the socket, and the scripted reviewer answers, merges with signed records and starts over.
 
@@ -66,8 +66,15 @@ test('everything the demo writes says it is demo data', () => {
   for (const a of FLEET) for (const s of a.steps) for (const [file, text] of Object.entries(s.write ?? {})) assert.match(text, /\[demo\]|\(demo\)/, `${a.key}: ${file}`);
   for (const s of improvised('Do a thing', 'do-a-thing')) for (const text of Object.values(s.write ?? {})) assert.match(text, /\[demo\]/);
   assert.match(demoNote({ readOnly: false, project: 'acme-shop' }).text, /Scripted agents/);
-  assert.equal(demoNote({ readOnly: true, project: 'acme-shop' }).command, 'npx mergeline --demo');
-  assert.equal(demoNote({ readOnly: false, project: 'acme-shop' }).command, 'npx mergeline');
+  assert.equal(demoNote({ readOnly: true, project: 'acme-shop' }, true).command, 'npx kipdeck --demo');
+  assert.equal(demoNote({ readOnly: false, project: 'acme-shop' }, true).command, 'npx kipdeck');
+  // Until kipdeck is on npm, nothing shows an npx command that 404s.
+  if (!ON_NPM) assert.doesNotMatch(READ_ONLY_REFUSAL, /npx/);
+  for (const readOnly of [true, false]) {
+    const note = demoNote({ readOnly, project: 'acme-shop' }, false);
+    assert.doesNotMatch(note.command, /npx/);
+    assert.match(note.text, /Not on npm yet/);
+  }
 });
 
 test('the scripted reviewer: one review per agent at a time, after its wait, faster at a faster pace', () => {
@@ -141,15 +148,15 @@ const errors: string[] = [];
 const consoleError = console.error;
 console.error = (...args: unknown[]) => {
   const line = args.map(String).join(' ');
-  if (/^mergeline: (demo|couldn't start the demo|the demo)/.test(line)) errors.push(line);
+  if (/^kipdeck: (demo|couldn't start the demo|the demo)/.test(line)) errors.push(line);
   consoleError(...args);
 };
 
 before(async () => {
   mkdirSync(pub, { recursive: true });
   for (const page of ['index', 'bridge', 'login', 'claim', 'join']) writeFileSync(path.join(pub, `${page}.html`), `<!doctype html><title>${page}</title>`);
-  for (const k of Object.keys(process.env)) if (k.startsWith('AGENT_OFFICE_') || k.startsWith('MERGELINE_')) delete process.env[k];
-  Object.assign(process.env, { HOME: root, USERPROFILE: root, AGENT_OFFICE_NO_OPEN: '1', MERGELINE_DEMO_PACE: '6', GIT_CONFIG_GLOBAL: path.join(root, '.gitconfig') });
+  for (const k of Object.keys(process.env)) if (k.startsWith('AGENT_OFFICE_') || k.startsWith('KIPDECK_') || k.startsWith('MERGELINE_')) delete process.env[k];
+  Object.assign(process.env, { HOME: root, USERPROFILE: root, AGENT_OFFICE_NO_OPEN: '1', KIPDECK_DEMO_PACE: '6', GIT_CONFIG_GLOBAL: path.join(root, '.gitconfig') });
   writeFileSync(path.join(root, '.gitconfig'), '');
   const s = net.createServer();
   await new Promise<void>((r) => s.listen(0, '127.0.0.1', r));

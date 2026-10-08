@@ -18,7 +18,7 @@ const PORT = Number(process.env.SHOOT_PORT ?? 4688);
 const PASSWORD = 'shoot-' + Math.random().toString(36).slice(2, 8);
 const base = `http://127.0.0.1:${PORT}`;
 
-const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-shoot-'));
+const tmp = mkdtempSync(path.join(tmpdir(), 'kipdeck-shoot-'));
 const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');

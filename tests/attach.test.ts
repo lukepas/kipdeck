@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { writeStandIn } from './support/standin.mjs';
 
-// `mergeline attach` (src/server/attach.ts and the /api/local/attach route): finding a folder's
+// `kipdeck attach` (src/server/attach.ts and the /api/local/attach route): finding a folder's
 // Claude Code and Codex sessions in their own files, and the running office carrying one on as an
 // agent of that folder's project. Only a command on this computer with the local key can ask.
 

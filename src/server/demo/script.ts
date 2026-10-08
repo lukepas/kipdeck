@@ -35,7 +35,7 @@ export interface DemoAgent {
   steps: DemoStep[];
 }
 
-const LOGIN = `// [demo] acme-shop's login route: made up for the Mergeline demo.
+const LOGIN = `// [demo] acme-shop's login route: made up for the Kipdeck demo.
 import { findUser, checkPassword, startSession } from './users.js';
 
 export async function login(req, res) {
@@ -51,7 +51,7 @@ export async function login(req, res) {
 }
 `;
 
-const LOGIN_LIMITED = `// [demo] acme-shop's login route: made up for the Mergeline demo.
+const LOGIN_LIMITED = `// [demo] acme-shop's login route: made up for the Kipdeck demo.
 import { findUser, checkPassword, startSession } from './users.js';
 import { rateLimit } from './rate-limit.js';
 
@@ -78,7 +78,7 @@ export async function login(req, res) {
 }
 `;
 
-const RATE_LIMIT = `// [demo] A fixed-window rate limiter, in memory: written by a stand-in agent for the Mergeline demo.
+const RATE_LIMIT = `// [demo] A fixed-window rate limiter, in memory: written by a stand-in agent for the Kipdeck demo.
 
 /**
  * At most \`max\` takes per key in each window of \`windowMs\`. \`take(key)\` says how many
@@ -112,7 +112,7 @@ export function rateLimit({ max, windowMs, now = Date.now }) {
 }
 `;
 
-const RATE_LIMIT_TEST = `// [demo] Tests for the rate limiter: written by a stand-in agent for the Mergeline demo.
+const RATE_LIMIT_TEST = `// [demo] Tests for the rate limiter: written by a stand-in agent for the Kipdeck demo.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { rateLimit } from './rate-limit.js';
@@ -141,7 +141,7 @@ test('forget starts a key over', () => {
 });
 `;
 
-const CHECKOUT_TEST = `// [demo] acme-shop's checkout test: made up for the Mergeline demo.
+const CHECKOUT_TEST = `// [demo] acme-shop's checkout test: made up for the Kipdeck demo.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { renderCheckout } from './checkout.js';
@@ -153,7 +153,7 @@ test('checkout shows the total', async () => {
 });
 `;
 
-const CHECKOUT_TEST_FIXED = `// [demo] acme-shop's checkout test: made up for the Mergeline demo.
+const CHECKOUT_TEST_FIXED = `// [demo] acme-shop's checkout test: made up for the Kipdeck demo.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { renderCheckout } from './checkout.js';
@@ -166,7 +166,7 @@ test('checkout shows the total', async () => {
 });
 `;
 
-const CHECKOUT = `// [demo] acme-shop's checkout page: made up for the Mergeline demo.
+const CHECKOUT = `// [demo] acme-shop's checkout page: made up for the Kipdeck demo.
 export async function renderCheckout({ items }) {
   const cents = items.reduce((sum, item) => sum + item.price, 0);
   return page([
@@ -185,13 +185,13 @@ function page(nodes) {
 
 const README = `# acme-shop (demo)
 
-A made-up shop for the Mergeline demo: an API in \`api/\`, a web front end in \`web/\` and docs in \`docs/\`.
+A made-up shop for the Kipdeck demo: an API in \`api/\`, a web front end in \`web/\` and docs in \`docs/\`.
 Nothing here runs anywhere; it's here so the demo's agents have something to change.
 `;
 
 const README_DONE = `# acme-shop (demo)
 
-A made-up shop for the Mergeline demo: an API in \`api/\`, a web front end in \`web/\` and docs in \`docs/\`.
+A made-up shop for the Kipdeck demo: an API in \`api/\`, a web front end in \`web/\` and docs in \`docs/\`.
 Nothing here runs anywhere; it's here so the demo's agents have something to change.
 
 ## Quickstart
@@ -207,7 +207,7 @@ More in [docs/quickstart.md](docs/quickstart.md).
 
 const QUICKSTART = `# Quickstart (demo)
 
-Written by a stand-in agent for the Mergeline demo.
+Written by a stand-in agent for the Kipdeck demo.
 
 1. Install Node.js 20 or newer.
 2. \`npm install\` in the repository.
@@ -222,13 +222,13 @@ Tests that touch the network are skipped unless \`ACME_LIVE=1\` is set.
 /** The throwaway repository's files, committed once as its first commit. */
 export const SEED_FILES: Record<string, string> = {
   'README.md': README,
-  'package.json': `${JSON.stringify({ name: 'acme-shop-demo', private: true, description: '[demo] Made up for the Mergeline demo', type: 'module', scripts: { test: 'node --test', start: 'node api/server.js' } }, null, 2)}\n`,
+  'package.json': `${JSON.stringify({ name: 'acme-shop-demo', private: true, description: '[demo] Made up for the Kipdeck demo', type: 'module', scripts: { test: 'node --test', start: 'node api/server.js' } }, null, 2)}\n`,
   'api/login.js': LOGIN,
-  'api/server.js': `// [demo] acme-shop's API server: made up for the Mergeline demo.\nimport { login } from './login.js';\n\nexport const routes = { 'POST /api/login': login };\n`,
-  'api/payments.js': `// [demo] acme-shop's payments: made up for the Mergeline demo.\nimport { Payments } from 'acme-pay-sdk';\n\nexport const payments = new Payments({ version: '4.2' });\n`,
+  'api/server.js': `// [demo] acme-shop's API server: made up for the Kipdeck demo.\nimport { login } from './login.js';\n\nexport const routes = { 'POST /api/login': login };\n`,
+  'api/payments.js': `// [demo] acme-shop's payments: made up for the Kipdeck demo.\nimport { Payments } from 'acme-pay-sdk';\n\nexport const payments = new Payments({ version: '4.2' });\n`,
   'web/checkout.js': CHECKOUT,
   'web/checkout.test.js': CHECKOUT_TEST,
-  'web/settings.js': `// [demo] acme-shop's settings page: made up for the Mergeline demo.\nexport function settingsForm(user) {\n  return { name: user.name, email: user.email };\n}\n`,
+  'web/settings.js': `// [demo] acme-shop's settings page: made up for the Kipdeck demo.\nexport function settingsForm(user) {\n  return { name: user.name, email: user.email };\n}\n`,
   'docs/quickstart.md': '# Quickstart (demo)\n\nTODO\n',
 };
 

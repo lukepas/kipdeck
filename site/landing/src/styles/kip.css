@@ -1,4 +1,4 @@
-/* Kip, the product's mascot, as in the investor deck (mergeline-deck/site/kip.css). Loaded with his
+/* Kip, the product's mascot, as in the investor deck (deck/site/kip.css). Loaded with his
    lazy chunk (src/kip/index.ts), so the first load does not carry it. Colours follow the agent-office
    mascot; the wand is the brand's green or teal. */
 :root {

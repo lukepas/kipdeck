@@ -8,19 +8,19 @@ The home page at `/` is the product: one inbox for every coding agent you run. I
 
 ## The first visit
 
-`npx mergeline` in the repository you work in opens this page in your browser, signed in (on your own computer there is no password; see [Security](security.md#signing-in-on-your-own-computer)), with that repository as the first project. Until the first agent, the list is the **setup card**. When everything is ready it is one line (the agent it found, the project, and whether merges go through GitHub or this computer), **Deploy your first agent**, and the rows below folded under **Details**:
+`npx kipdeck` in the repository you work in opens this page in your browser, signed in (on your own computer there is no password; see [Security](security.md#signing-in-on-your-own-computer)), with that repository as the first project. Until the first agent, the list is the **setup card**. When everything is ready it is one line (the agent it found, the project, and whether merges go through GitHub or this computer), **Deploy your first agent**, and the rows below folded under **Details**:
 
 - **Agents**: the agent CLIs on this computer, Claude Code, Codex and Cursor always and the beta ones when they're installed, each with whether it's signed in (read from its own files and keys, not by running it). One that isn't ready says the one line that fixes it (`claude auth login`, `npm install -g @openai/codex`...), with a copy button.
-- **Project**: the folder Mergeline was started in. Started somewhere else, **Use <folder>** or a box to clone a repository from GitHub (admins).
+- **Project**: the folder Kipdeck was started in. Started somewhere else, **Use <folder>** or a box to clone a repository from GitHub (admins).
 - **GitHub**: optional. Without `gh`, review reads the local diff and Merge merges on this computer; **Check again** asks `gh` afresh.
 - **Deploy your first agent** opens the Deploy sheet on a safe starter task (a 5-line SUMMARY.md on how to run the repository) with the first ready agent picked. Enter, and the agent is under Working within seconds.
 - [Anonymous usage numbers](security.md#anonymous-usage-numbers) are not asked about here: their switch is in Settings > Account.
 
 While the card is up, the top bar's **Deploy agent** is hidden (the card has the one button), and the pane beside it is a short looping preview of one row going from Working to Needs you, To review and Shipped today, marked *Preview*.
 
-No agent CLI yet? `npx mergeline --demo` opens this page on a throwaway repository with five scripted agents, and a **Demo** pill in the top bar says so, with the command to run it for real ([the demo](demo.md)).
+No agent CLI yet? `npx kipdeck --demo` opens this page on a throwaway repository with five scripted agents, and a **Demo** pill in the top bar says so, with the command to run it for real ([the demo](demo.md)).
 
-Already running Claude Code or Codex in a terminal? Quit it there and run `npx mergeline attach` in the same folder: its session carries on as one of the inbox's agents ([Configuration](configuration.md#command-line)). The server side of the card is `src/server/firstrun.ts` and `ws/handlers/setup.ts`; the card is `src/client/home/setup.ts`.
+Already running Claude Code or Codex in a terminal? Quit it there and run `npx kipdeck attach` in the same folder: its session carries on as one of the inbox's agents ([Configuration](configuration.md#command-line)). The server side of the card is `src/server/firstrun.ts` and `ws/handlers/setup.ts`; the card is `src/client/home/setup.ts`.
 
 ## The loop
 
@@ -67,7 +67,7 @@ Every review the inbox ends, merged or sent back, is written to `shipped.jsonl` 
 
 With no open pull request, Merge works on this machine: what the agent left uncommitted is committed on its branch first, then its branch is merged into the project's branch in the project folder with a merge commit. It is refused, with the reason, when the project folder is not on that branch or has uncommitted changes of its own (a merge never mixes with work in progress), when the branch has nothing new, or when the branch conflicts; a conflict is aborted, so the folder stays clean. A hook or a lock that stops git is reported in git's words, with nothing to undo. Merges into one project folder run one at a time.
 
-An agent that works in the project folder itself (a session moved in with `mergeline attach`, or a project that is not a git repository) has no branch to merge, and committing everything in that folder could sweep up your own edits, so Merge refuses it and says to commit the files it changed yourself.
+An agent that works in the project folder itself (a session moved in with `kipdeck attach`, or a project that is not a git repository) has no branch to merge, and committing everything in that folder could sweep up your own edits, so Merge refuses it and says to commit the files it changed yourself.
 
 Branches the office makes are named after the task: `office/fix-the-flaky-checkout-test-3f2a`, the task's first words and four characters of the agent's id (an agent with no task yet goes by its name).
 

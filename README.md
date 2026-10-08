@@ -1,16 +1,16 @@
-# Mergeline
+# Kipdeck
 
 The inbox for your AI coding agents: see which agent needs you, review what's ready, and merge what shipped.
 
 ```bash
-npx mergeline
+npx kipdeck
 ```
 
 > Not on npm yet: the name waits on a trademark search ([business/naming.md](business/naming.md)). Until it is published, [run it from source](#from-source).
 
-![Mergeline in 30 seconds: Codex's question opens by itself and is answered in one box, Claude Code's diff is reviewed and merged into Shipped today (the demo's scripted agents, no model)](docs/img/demo.gif)
+![Kipdeck in 30 seconds: Codex's question opens by itself and is answered in one box, Claude Code's diff is reviewed and merged into Shipped today (the demo's scripted agents, no model)](docs/img/demo.gif)
 
-No agents yet? `npx mergeline --demo` plays five scripted ones on a throwaway repository, no CLI, sign-in or model needed ([the demo](docs/demo.md)).
+No agents yet? `npx kipdeck --demo` plays five scripted ones on a throwaway repository, no CLI, sign-in or model needed ([the demo](docs/demo.md)).
 
 Run it inside the repository you work in. It opens in your browser, signed in, with that repository as your first project. Claude Code, Codex and Cursor run side by side (OpenCode, Pi, Grok, Muse and DeepSeek Harness in beta), each on a branch of its own, and you answer, review and merge from one page, on your laptop or your phone. It runs on your machine or your team's dev box, and nothing leaves it.
 
@@ -33,10 +33,10 @@ You need **Node.js 20+**, **git** and one agent CLI: **Claude Code** (`npm insta
 In the repository you work in:
 
 ```bash
-npx mergeline
+npx kipdeck
 ```
 
-1. It starts on `http://localhost:4600` (or the next free port) and opens your browser, **already signed in**. On your own computer there is no password to type: the link it opens works once, and `npx mergeline open` makes a new one if you lose the tab. Only your computer can reach it.
+1. It starts on `http://localhost:4600` (or the next free port) and opens your browser, **already signed in**. On your own computer there is no password to type: the link it opens works once, and `npx kipdeck open` makes a new one if you lose the tab. Only your computer can reach it.
 2. The repository you started it in is your first project. Started somewhere else, the setup card offers to clone one from GitHub.
 3. The **setup card** says which agents it found and whether each is signed in, the project, and GitHub, with the one line to run for anything that isn't ready.
 4. **Deploy your first agent** starts one on a safe task (a 5-line SUMMARY.md on how to run the repository). It shows up under **Working** within seconds and under **To review** when it's done.
@@ -45,37 +45,37 @@ Nothing asks you anything in the terminal, and there are no settings to fill in.
 
 ### From source
 
-Until `mergeline` is on npm, build it once and run it from inside the repository you work in:
+Until `kipdeck` is on npm, build it once and run it from inside the repository you work in:
 
 ```bash
-git clone https://github.com/zbagdzevicius/ugcarmy mergeline
-cd mergeline && npm install && npm run build
-cd ~/code/your-project && node ~/path/to/mergeline/bin/agent-office.js        # what npx mergeline will run
-node ~/path/to/mergeline/bin/agent-office.js --demo                         # the demo, anywhere
+git clone https://github.com/zbagdzevicius/kipdeck
+cd kipdeck && npm install && npm run build
+cd ~/code/your-project && node ~/path/to/kipdeck/bin/agent-office.js        # what npx kipdeck will run
+node ~/path/to/kipdeck/bin/agent-office.js --demo                         # the demo, anywhere
 ```
 
 Common options:
 
 ```bash
-npx mergeline --port 4700                 # this port or nothing
-npx mergeline ~/code/my-project           # keep the office's data in that project, as agent-office did
-npx mergeline --host 0.0.0.0              # let your network in (then everyone else signs in with a password)
-npx mergeline --password 'correct horse'  # a password, even on this computer
-npx mergeline --no-open                   # print the sign-in link instead of opening a browser
-npx mergeline --telemetry                 # share anonymous usage numbers (off by default)
+npx kipdeck --port 4700                 # this port or nothing
+npx kipdeck ~/code/my-project           # keep the office's data in that project, as agent-office did
+npx kipdeck --host 0.0.0.0              # let your network in (then everyone else signs in with a password)
+npx kipdeck --password 'correct horse'  # a password, even on this computer
+npx kipdeck --no-open                   # print the sign-in link instead of opening a browser
+npx kipdeck --telemetry                 # share anonymous usage numbers (off by default)
 ```
 
-To have a `mergeline` command instead: `npm install -g mergeline`, or [`install.sh`](install.sh) (macOS and Linux) and [`install.ps1`](install.ps1) (Windows), which install the same package. Every option is in [docs/configuration.md](docs/configuration.md); choosing models and providers per agent is in [docs/agents.md](docs/agents.md).
+To have a `kipdeck` command instead: `npm install -g kipdeck`, or [`install.sh`](install.sh) (macOS and Linux) and [`install.ps1`](install.ps1) (Windows), which install the same package. Every option is in [docs/configuration.md](docs/configuration.md); choosing models and providers per agent is in [docs/agents.md](docs/agents.md).
 
 ## Attach an agent you already started
 
-Started Claude Code or Codex in a terminal before Mergeline was running? Quit it there (Ctrl+C or `/exit`), then in the same folder:
+Started Claude Code or Codex in a terminal before Kipdeck was running? Quit it there (Ctrl+C or `/exit`), then in the same folder:
 
 ```bash
-npx mergeline attach
+npx kipdeck attach
 ```
 
-It finds that folder's newest Claude Code or Codex session in the CLI's own files, and the running Mergeline carries it on as one of its agents: the same conversation, now in the inbox with its terminal, its questions, its changes and the merge. `--list` shows the folder's sessions, `--session <id>` picks one, and Cursor needs `--agent cursor --session <id>` (`cursor-agent ls` lists them).
+It finds that folder's newest Claude Code or Codex session in the CLI's own files, and the running Kipdeck carries it on as one of its agents: the same conversation, now in the inbox with its terminal, its questions, its changes and the merge. `--list` shows the folder's sessions, `--session <id>` picks one, and Cursor needs `--agent cursor --session <id>` (`cursor-agent ls` lists them).
 
 ## Labs
 
@@ -96,11 +96,11 @@ More in [docs/labs.md](docs/labs.md).
 ## What it does
 
 - **The inbox.** Every agent in four sections (Needs you, To review, Working, Idle), one button per row, the selected agent's live terminal, diff and log beside the list, and Shipped today under it ([the inbox](docs/inbox.md)). It draws after about 175 kB on any laptop or phone; the old `/lite` address goes there.
-- **Deploy, attach, answer, review, merge.** The Deploy sheet starts an agent on a branch of its own; `mergeline attach` adopts one started in a terminal; Answer, Review changes, Fix checks and Merge do what they say, with or without GitHub.
+- **Deploy, attach, answer, review, merge.** The Deploy sheet starts an agent on a branch of its own; `kipdeck attach` adopts one started in a terminal; Answer, Review changes, Fix checks and Merge do what they say, with or without GitHub.
 - **Numbers.** Human wait time, changes merged, the merge rate and agent-hours, this week against the last, and the merge rate per agent and model with its N, from the signed shipped log on your machine ([metrics](docs/metrics.md)).
 - **Settings in three panes.** Account, Agents and Notifications. Six keys, and Help on **?** ([controls](docs/controls.md)).
 - **Teams.** Accounts with invite links, a shared dev box reached by SSH tunnel or Tailscale, and the team's Slack or Discord channel ([below](#teams-and-servers)).
-- **Agents that manage agents.** Every agent can list, deploy, message and stop the others through the `mergeline` MCP server or the `office-workers` command ([agents](docs/agents.md)).
+- **Agents that manage agents.** Every agent can list, deploy, message and stop the others through the `kipdeck` MCP server or the `office-workers` command ([agents](docs/agents.md)).
 - **Mission control** (with the GitHub boards and queue lab on): the same ranking with reminders, the review inbox and the digest of what happened while you were away ([mission control](docs/mission-control.md)).
 
 Everything else, the 3D bridge with its crew, moments and ambience, goals and the timeline, meetings, voice and Proof of Merge on testnets, is in [Labs](#labs) and described in [features](docs/features.md).
@@ -135,17 +135,17 @@ ssh -L 4600:localhost:4600 office@<your-office-ip>
 
 Their key logs in as a locked-down `office` user that can only forward to the office port: no shell, no other ports. Running the office on your own computer, or on your own domain over HTTPS? Skip this step.
 
-A teammate with Mergeline on their computer can run `npx mergeline tunnel office@<your-office-ip>` instead of the `ssh` line: it opens the same tunnel, and every web server a worker starts opens on their computer too ([docs/tunnel.md](docs/tunnel.md)).
+A teammate with Kipdeck on their computer can run `npx kipdeck tunnel office@<your-office-ip>` instead of the `ssh` line: it opens the same tunnel, and every web server a worker starts opens on their computer too ([docs/tunnel.md](docs/tunnel.md)).
 
 **2. Make them an account.** Open **Accounts** (Ctrl+K) and make an invite link. Name it (or let them pick) and make them a *Member* or an *Admin*. The link works once, for 7 days, and they choose their own password. Make one for yourself too, as an admin.
 
 The same works from a terminal on the office's machine, even while it runs:
 
 ```bash
-mergeline accounts                      # accounts and open invites
-mergeline accounts invite ada --admin   # prints a single-use /join#... link
-mergeline accounts role ada member
-mergeline accounts revoke ada           # signed out within seconds
+kipdeck accounts                      # accounts and open invites
+kipdeck accounts invite ada --admin   # prints a single-use /join#... link
+kipdeck accounts role ada member
+kipdeck accounts revoke ada           # signed out within seconds
 ```
 
 On the EC2 machine, run it through `deploy/aws.sh ssh` (on Azure, `deploy/azure.sh ssh`):
@@ -159,9 +159,9 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 
 **Their own Claude and GitHub.** With accounts, everyone's workers run on their own Claude plan, and the office acts on GitHub as them: comments, merges, labels, pushes and pull requests show up under their name. The first time someone comes in, **Your sign-ins** opens (it's under Menu > Deck too). *Sign in with Claude* gives them Claude's sign-in page and takes back the code it shows. *Sign in with GitHub* shows a one-time code for github.com/login/device. They can paste a token from `claude setup-token`, or a GitHub token, instead. A shell they open at a console runs as them, so `claude auth login` and `gh auth login` typed there work too. Admins can use the office machine's own sign-ins instead. Each account's sign-ins live in `.agent-office/homes/<account>/`, and revoking the account deletes them. The boards are read with the machine's own `gh`, so that account needs read access to the repos. Running it just for yourself, with no accounts, none of this applies.
 
-**3. Turn off the shared password.** Until you do, anyone who knows the office password can get in, as an admin. Once everyone has an account, switch it off in **Accounts** (signed in with your own admin account), or `mergeline accounts password off`.
+**3. Turn off the shared password.** Until you do, anyone who knows the office password can get in, as an admin. Once everyone has an account, switch it off in **Accounts** (signed in with your own admin account), or `kipdeck accounts password off`.
 
-**Removing someone.** Revoke their account in **Accounts** (or `mergeline accounts revoke <name>`), and on a server also remove them in **Invite teammates** (on AWS, `deploy/aws.sh uninvite <name>`; on Railway, `deploy/railway.sh uninvite <name>`; on Fly.io, `deploy/fly.sh uninvite <name>`; on Dokploy, `deploy/dokploy.sh uninvite <name>`) to take away their SSH keys and drop open tunnels (other teammates just reconnect). If the shared password is still on, change it with `deploy/aws.sh reset-password` (or `deploy/railway.sh reset-password`, `deploy/fly.sh reset-password` or `deploy/dokploy.sh reset-password`).
+**Removing someone.** Revoke their account in **Accounts** (or `kipdeck accounts revoke <name>`), and on a server also remove them in **Invite teammates** (on AWS, `deploy/aws.sh uninvite <name>`; on Railway, `deploy/railway.sh uninvite <name>`; on Fly.io, `deploy/fly.sh uninvite <name>`; on Dokploy, `deploy/dokploy.sh uninvite <name>`) to take away their SSH keys and drop open tunnels (other teammates just reconnect). If the shared password is still on, change it with `deploy/aws.sh reset-password` (or `deploy/railway.sh reset-password`, `deploy/fly.sh reset-password` or `deploy/dokploy.sh reset-password`).
 
 ## Controls
 
@@ -184,24 +184,24 @@ Server edits restart the server, not the workers. After changing `ptyhost.ts`, b
 
 The rules for coding agents working on this repository are in [`AGENTS.md`](AGENTS.md), which Codex, OpenCode and most other agent CLIs read. `CLAUDE.md` only imports it for Claude Code, so new rules go in `AGENTS.md`.
 
-The npm package ships the built `dist/` (`files` in `package.json`), so `npx mergeline` builds nothing on the user's machine: run `npm run build` before `npm publish` (`prepare` does it on `npm pack` and `npm publish`). `install.sh` and `install.ps1` install that package.
+The npm package ships the built `dist/` (`files` in `package.json`), so `npx kipdeck` builds nothing on the user's machine: run `npm run build` before `npm publish` (`prepare` does it on `npm pack` and `npm publish`). `install.sh` and `install.ps1` install that package.
 
 ## More
 
 - [The inbox](docs/inbox.md): the home page, its loop, the setup card, Numbers, Settings, its keys and the shipped log
-- [The demo](docs/demo.md): `npx mergeline --demo` with five scripted agents, the hosted read-only demo, and the scripts that make the video, the GIF and the deck's screenshots
+- [The demo](docs/demo.md): `npx kipdeck --demo` with five scripted agents, the hosted read-only demo, and the scripts that make the video, the GIF and the deck's screenshots
 - [Metrics for the deck](docs/metrics.md): what each number means, where it comes from, and what not to show
 - [The landing page](docs/landing.md): `site/landing/` (`npm run build:site`, then `npm run preview:site`), what each section's motion shows, the one file that holds the product's name, its speed budgets (`npm run perf:site`), accessibility and search tags, the design-partner ask, and how to deploy it to Cloudflare Pages ([site/landing/README.md](site/landing/README.md))
 - [Features](docs/features.md): the inbox first, then the whole office in detail
 - [Controls](docs/controls.md): the inbox's keys and menu, the Bridge view's keys, and a terminal's
-- [Agents](docs/agents.md): every harness Mergeline runs (Claude Code, Codex, Cursor; OpenCode, Grok, Muse, DeepSeek Harness and Pi in beta), models and effort, and the prompts
-- [Configuration](docs/configuration.md): every command-line option, and where Mergeline keeps its data
+- [Agents](docs/agents.md): every harness Kipdeck runs (Claude Code, Codex, Cursor; OpenCode, Grok, Muse, DeepSeek Harness and Pi in beta), models and effort, and the prompts
+- [Configuration](docs/configuration.md): every command-line option, and where Kipdeck keeps its data
 - [Teams and servers](docs/self-hosting.md): one script each for AWS, Azure, Railway, Fly.io and Dokploy, the one-line setup for any Ubuntu or Debian server, or by hand behind Caddy or nginx; references for [AWS](docs/aws.md), [Azure](docs/azure.md), [Railway](docs/railway.md), [Fly.io](docs/fly.md) and [Dokploy](docs/dokploy.md)
-- [Workers' servers on your own computer](docs/tunnel.md): `mergeline tunnel`, which opens every agent's web server on your computer by itself
+- [Workers' servers on your own computer](docs/tunnel.md): `kipdeck tunnel`, which opens every agent's web server on your computer by itself
 - [Security](docs/security.md): the threat model, signing in on your own computer, and anonymous usage numbers
 - [How it works](docs/how-it-works.md): the architecture, and security notes
 - [Code layout](docs/code-layout.md): where the code lives, adding a feature or an agent provider, and the size guard
-- [The launch kit](launch/mergeline/README.md): the gates before launch, the posts and the design-partner outreach
+- [The launch kit](launch/kipdeck/README.md): the gates before launch, the posts and the design-partner outreach
 
 Labs and the Bridge view:
 
@@ -213,7 +213,7 @@ Labs and the Bridge view:
 
 ## Upstream credit
 
-Mergeline is a fork of [agent-office](https://github.com/AgentSystemLabs/agent-office), created by webdevcody, Copyright (c) 2026 AgentSystemLabs, released under the MIT License. The server's architecture (projects as floors, agents and their terminals, worktrees, provider adapters, the queue, meetings, voice, accounts, the tunnel and the deploy scripts) is upstream's; [NOTICE](NOTICE) lists what this fork replaced and what remains, and [launch/chain/disclosure.md](launch/chain/disclosure.md) lists our changes commit by commit. This fork is not run by the upstream authors. The package is `mergeline`; the `agent-office` command it also installs is the same command, so upstream's scripts keep working.
+Kipdeck is a fork of [agent-office](https://github.com/AgentSystemLabs/agent-office), created by webdevcody, Copyright (c) 2026 AgentSystemLabs, released under the MIT License. The server's architecture (projects as floors, agents and their terminals, worktrees, provider adapters, the queue, meetings, voice, accounts, the tunnel and the deploy scripts) is upstream's; [NOTICE](NOTICE) lists what this fork replaced and what remains, and [launch/chain/disclosure.md](launch/chain/disclosure.md) lists our changes commit by commit. This fork is not run by the upstream authors. The package is `kipdeck`; the `agent-office` command it also installs is the same command, so upstream's scripts keep working.
 
 ## License
 

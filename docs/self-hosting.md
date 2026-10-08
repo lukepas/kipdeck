@@ -2,7 +2,7 @@
 
 One script each for [AWS](#deploy-to-aws-ec2), [Azure](#deploy-to-azure), [Railway](#deploy-to-railway), [Fly.io](#deploy-to-flyio) and [Dokploy](#deploy-to-dokploy), the one-line setup for [any Ubuntu or Debian server](#deploy-to-any-ubuntu-or-debian-server), or by hand behind Caddy or nginx. Back to the [README](../README.md).
 
-On your own computer you don't need any of this: `npx mergeline` in your repository. A team office is reached through an SSH tunnel or Tailscale, and everyone signs in with a password or their own account; the terminal's sign-in links only work on the machine the office runs on.
+On your own computer you don't need any of this: `npx kipdeck` in your repository. A team office is reached through an SSH tunnel or Tailscale, and everyone signs in with a password or their own account; the terminal's sign-in links only work on the machine the office runs on.
 
 ## One line on your own server
 
@@ -148,7 +148,7 @@ deploy/aws.sh resume              # start it again and open it
 deploy/aws.sh destroy             # delete everything it created (asks first)
 ```
 
-You can also upgrade from inside the office: **Update Mergeline** (Ctrl+K). Other flags (`--region`, `--instance-type`, `--disk`, `--name` for several offices) are in `deploy/aws.sh help`, and the details are in [docs/aws.md](aws.md).
+You can also upgrade from inside the office: **Update Kipdeck** (Ctrl+K). Other flags (`--region`, `--instance-type`, `--disk`, `--name` for several offices) are in `deploy/aws.sh help`, and the details are in [docs/aws.md](aws.md).
 
 **The workers' dev servers, on your computer.** The office runs on the server, so a worker's `npm run dev` listens there. Run this on your own computer and leave it running, and every web server a worker starts opens on the same port on yours, by itself (`http://localhost:5173` is the worker's), and closes when the worker stops it:
 
@@ -232,7 +232,7 @@ deploy/fly.sh destroy                 # delete the app and its volume (asks firs
 
 `--region`, `--org`, `--vm-size`, `--memory`, `--disk` and `--name` (for several offices) are in `deploy/fly.sh help`. The details, and what's on the volume, are in [docs/fly.md](fly.md).
 
-The public, read-only demo (`mergeline --demo --read-only`, scripted agents, no volume) is a different, smaller app: see [A public read-only demo](fly.md#a-public-read-only-demo).
+The public, read-only demo (`kipdeck --demo --read-only`, scripted agents, no volume) is a different, smaller app: see [A public read-only demo](fly.md#a-public-read-only-demo).
 
 ## Deploy to Dokploy
 

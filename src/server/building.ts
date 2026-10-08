@@ -258,7 +258,7 @@ export class Building {
 
   /**
    * Adds a checkout that's already on this computer as a floor, where it is: the repository
-   * `mergeline` was started in, or one `mergeline attach` adopts a session from. Its floor is the one
+   * `kipdeck` was started in, or one `kipdeck attach` adopts a session from. Its floor is the one
    * there already, if any. Returns the floor, or why it can't be one.
    */
   addFolder(dir: string, by: string): FloorDef | string {

@@ -11,8 +11,9 @@ import { agentFields, officeChoice, supportedProviders } from '../ui/provider';
 import { agentMark, CERTIFIED } from './list';
 import { agentFound } from './setup';
 import { home } from './state';
+import { storageKey } from '../shared/storage-key';
 
-const LAST_AGENT = 'mergeline.agent';
+const LAST_AGENT = storageKey('agent');
 
 /** Runs `then` once you're on project `floor`: at once on yours, else after the office has moved you there. */
 export function onProject(net: Net, floor: string, then: () => void) {

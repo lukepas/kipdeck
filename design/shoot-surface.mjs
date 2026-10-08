@@ -27,7 +27,7 @@ const base = `http://127.0.0.1:${PORT}`;
 
 const home = mkdtempSync(path.join(tmpdir(), 'surface-shoot-home-'));
 const child = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), '--demo', '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD], {
-  env: { ...process.env, HOME: home, MERGELINE_DEMO_PACE: '3' },
+  env: { ...process.env, HOME: home, KIPDECK_DEMO_PACE: '3' },
   stdio: ['ignore', 'pipe', 'pipe'],
   detached: true,
 });

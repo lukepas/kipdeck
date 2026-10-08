@@ -1,4 +1,4 @@
-// Kip's gestures, line for line from the deck (mergeline-deck/site/kip.js), plus riseFrom and squash
+// Kip's gestures, line for line from the deck (deck/site/kip.js), plus riseFrom and squash
 // from its wow.js. Each returns a timeline so a moment can lay them on its beats; with less motion
 // (kit.static) each one jumps straight to its end.
 import { set, to, timeline, getProperty, type Timeline } from './tween';

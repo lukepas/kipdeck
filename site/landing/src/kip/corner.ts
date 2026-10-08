@@ -21,7 +21,7 @@ const BARE = new Set(['HTML', 'BODY', 'MAIN', 'SECTION']);
 
 /** Whether nothing in `roots` (the sections near the window, and the footer) is drawn where he would
  *  show: no text or control (measured where text that is still sliding in will end up), and nothing
- *  at all (a card, a chart, an image, a border) on a 3 x 3 grid of points inside his box. */
+ *  at all (a card, a chart, an image, a border) on a 3 x 4 grid of points inside his box. */
 export function cornerClear(sp: Spot, roots: Element[]): boolean {
   const box = { ...boxAt(sp), b: innerHeight };
   for (const root of roots) {
@@ -30,8 +30,10 @@ export function cornerClear(sp: Spot, roots: Element[]): boolean {
     // Text still revealing (.rv, 22 px lower until it is in) counts where it will land too.
     if (obstacles(root).some((o) => box.l < o.r && box.r > o.l && box.t < o.b + 22 && box.b > o.t - 22)) return false;
   }
-  for (const fx of [0.15, 0.5, 0.85]) for (const fy of [0.15, 0.5, 0.85]) {
-    const x = box.l + (box.r - box.l) * fx, y = box.t + (box.b - box.t) * fy;
+  // The last row is the window's bottom pixels: content whose top edge only just shows there is
+  // still under him.
+  for (const fx of [0.15, 0.5, 0.85]) for (const fy of [0.15, 0.5, 0.85, 1]) {
+    const x = box.l + (box.r - box.l) * fx, y = Math.min(innerHeight - 2, box.t + (box.b - box.t) * fy);
     for (const el of document.elementsFromPoint(x, y)) {
       if (el.closest('.kip, #kip-doc, #kip-fixed, .kip-stage-host')) continue;
       if (BARE.has(el.tagName) || el.classList.contains('wrap') || el.classList.contains('track') || el.classList.contains('stage')) continue;
