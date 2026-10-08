@@ -73,7 +73,7 @@ export interface Launch {
   play(kind: 'launch' | 'debrief', awayMs: number): void;
 }
 
-export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' | 'focus' | 'mission' | 'cinema'>): Launch {
+export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' | 'focus' | 'mission' | 'cinema' | 'selection' | 'overview'>): Launch {
   const crawl = new WatchLog();
   const cards = new MomentCards(() => parts.focus.backToGame());
   const panel = new DebriefPanel({
@@ -91,7 +91,17 @@ export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' |
       });
     },
     backToGame: () => parts.focus.backToGame(),
+    // Esc lets go of a selected unit first, as everywhere (docs/controls.md).
+    escTaken: () => !!parts.selection.id(),
+    // Up in the Overview, the Esc that puts it away also walks again: one press, as the legend says.
+    escWalks: () => parts.overview.active(),
   });
+  // You've moved on (picked a unit, N to one, gone up to the Overview): the "waiting on you" list has
+  // done its job, and it would only sit over pod A.
+  parts.selection.on((id) => id && panel.close(false));
+  // Only a rise you asked for: the deck opening in the Overview (features/homeview, as the arrival
+  // ends) is where the debrief is meant to be read, not a sign you've moved on.
+  parts.overview.onChange((up, why) => up && why === 'user' && panel.close(false));
   const watching = demoOn();
   // Read before the first welcome stamps this browser as here (ui/mission/digest.ts).
   const bootAt = Date.now();

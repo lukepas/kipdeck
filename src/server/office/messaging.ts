@@ -27,8 +27,14 @@ export function messaging(ctx: Ctx): Messaging {
       c.ws.send(json);
     }
   };
-  const toastFloor = (floor: Floor | undefined, text: string, level: ToastLevel = 'info') => {
-    if (floor) toFloor(floor, { t: 'toast', text, level });
+  /** To everyone on one floor but `except` (a client id): whoever did it already sees it happen. */
+  const toastFloor = (floor: Floor | undefined, text: string, level: ToastLevel = 'info', except?: string) => {
+    if (!floor) return;
+    const json = JSON.stringify({ t: 'toast', text, level } satisfies ServerMsg);
+    for (const c of ctx.clients.values()) {
+      if (c.id === except || c.peer.floor !== floor.id || c.ws.readyState !== WebSocket.OPEN) continue;
+      c.ws.send(json);
+    }
   };
   /** To everyone else on the same floor as `c`: nobody on another floor can see them. */
   const toNeighbors = (c: Client, msg: ServerMsg, droppable = false) => {

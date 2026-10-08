@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { HOLD_MS, PushToTalk, QUIET_MS, Transcript, cleanSpoken, listen, speechProblem, spliceSpoken, type RecResults, type Recognizer, type RecognizerCtor } from '../src/client/ui/speech.js';
+import { HOLD_MS, PushToTalk, QUIET_MS, Transcript, canAskOnDevice, checkOnDevice, cleanSpoken, listen, speechProblem, spliceSpoken, type RecResults, type Recognizer, type RecognizerCtor } from '../src/client/ui/speech.js';
 
 /** A recognizer's results so far: [words, whether it has settled on them]. */
 const results = (...rs: [string, boolean][]): RecResults => Object.assign(rs.map(([transcript, isFinal]) => Object.assign([{ transcript }], { isFinal })), { length: rs.length });
@@ -219,4 +219,46 @@ test('without a recognizer, listening ends at once and says so', () => {
   listen({ interim: () => undefined, said: () => undefined, end: (p) => log.push(p ?? '') }, { Ctor: undefined });
   assert.equal(log.length, 1);
   assert.match(log[0], /no speech recognition/);
+});
+
+/** A recognizer class that records each on-device question it's asked. */
+function askable(answer = 'available') {
+  const asked: string[][] = [];
+  const Ctor = Object.assign(function () {} as unknown as new () => Recognizer, {
+    available: (opts: { langs: string[]; processLocally: boolean }) => {
+      asked.push(opts.langs);
+      return Promise.resolve(answer);
+    },
+  }) as RecognizerCtor;
+  return { Ctor, asked };
+}
+
+const CHROME = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36';
+const HEADLESS = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36';
+const ELECTRON = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) agent-desk/1.0.0 Chrome/138.0.0.0 Electron/37.2.0 Safari/537.36';
+
+test('a Chromium with no on-device speech service is never asked about it, since asking kills the tab', () => {
+  assert.equal(canAskOnDevice(CHROME), true);
+  assert.equal(canAskOnDevice(HEADLESS), false, 'the headless shell that screenshots and tests run in');
+  assert.equal(canAskOnDevice(ELECTRON), false);
+  const { Ctor, asked } = askable();
+  checkOnDevice('xx-HEADLESS', Ctor, HEADLESS);
+  checkOnDevice('xx-ELECTRON', Ctor, ELECTRON);
+  assert.deepEqual(asked, []);
+});
+
+test('a full browser is asked once per language whether the words can stay on the device', async () => {
+  const { Ctor, asked } = askable('available');
+  checkOnDevice('xx-ONCE', Ctor, CHROME);
+  checkOnDevice('xx-ONCE', Ctor, CHROME);
+  assert.deepEqual(asked, [['xx-ONCE']]);
+  await new Promise((r) => setTimeout(r, 0));
+  // Listening in that language now asks the recognizer to keep it local.
+  const made: Recognizer[] = [];
+  const Rec = function (this: Recognizer) {
+    Object.assign(this, { start() {}, stop() {}, abort() {}, onresult: null, onerror: null, onend: null });
+    made.push(this);
+  } as unknown as RecognizerCtor;
+  listen({ interim: () => undefined, said: () => undefined, end: () => undefined }, { Ctor: Rec, lang: 'xx-ONCE' });
+  assert.equal(made[0]?.processLocally, true);
 });

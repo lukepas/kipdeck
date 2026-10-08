@@ -1,0 +1,17 @@
+/* The question card over an asking agent's terminal (question.ts). */
+.q-card { display: flex; flex-direction: column; gap: 10px; padding: 14px 20px 16px; border-bottom: 1px solid var(--line); background: var(--surface-1); box-shadow: inset 3px 0 0 var(--signal); }
+.q-h { margin: 0; font: 600 11px var(--font-ui); letter-spacing: .04em; text-transform: uppercase; color: var(--signal); }
+.q-text p { margin: 0; font-size: 15px; line-height: 1.45; color: var(--text); }
+.q-text p + p { margin-top: 2px; }
+.q-text .q-none { color: var(--muted); font-size: 14px; }
+.q-choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.q-choice { height: auto; min-height: 34px; padding: 6px 12px 6px 6px; gap: 8px; font-size: 13px; text-align: left; white-space: normal; }
+.q-choice kbd { display: inline-grid; place-items: center; min-width: 20px; height: 20px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); background: var(--surface-2); font: 600 11px var(--font-mono); }
+.q-reply { display: flex; gap: 8px; }
+.q-reply input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--void); color: var(--text); font: 400 15px var(--font-ui); }
+.q-reply input:focus { outline: 2px solid var(--signal); outline-offset: -1px; border-color: var(--signal); }
+.q-reply .btn { height: 40px; padding: 0 18px; font-weight: 600; }
+/* While the card is up its box is the reply: the terminal's own reply bar goes, Keys stays reachable. */
+.pane.asking .term-keypad .term-say > :not(.term-keys-toggle):not(.term-keys) { display: none; }
+.pane.asking .term-keypad .term-say { justify-content: flex-start; }
+@media (max-width: 899px) { .q-card { padding: 12px 16px; } .q-reply input { font-size: 16px; } }

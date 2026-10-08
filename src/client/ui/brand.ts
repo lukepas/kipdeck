@@ -1,13 +1,13 @@
 /**
- * The UGC Army marks: the Formation mark (three chevrons in an upward V, the lead one solid), the
+ * The Kipdeck marks: the Formation mark (three chevrons in an upward V, the lead one solid), the
  * wordmark and the lockup, plus the favicon that turns its lead chevron Signal orange while anything
  * needs someone. No three.js here: the 2D view and the sign-in pages use it too.
  */
 import { UPSTREAM_CREDIT } from '../../shared/copy';
 import { h } from './dom';
 
-export const PRODUCT = 'UGC Army';
-export const TAGLINE = 'Mission control for your AI agents. Proof of every merge.';
+export const PRODUCT = 'Kipdeck';
+export const TAGLINE = 'The inbox for your AI coding agents.';
 export const CREDIT = UPSTREAM_CREDIT;
 export const CREDIT_URL = 'https://github.com/AgentSystemLabs/agent-office';
 
@@ -20,10 +20,10 @@ export function markSvg(size = 24, lead = 'currentColor', trail = 'currentColor'
   return `<svg class="brand-mark" aria-hidden="true" width="${size}" height="${size}" viewBox="0 0 24 24"><path d="${LEAD}" fill="${lead}"/><path d="${TRAIL}" fill="none" stroke="${trail}" stroke-width="2.5"/></svg>`;
 }
 
-/** The lockup: the mark on the left, then UGC in the text color and ARMY muted. */
+/** The lockup: the mark on the left, then KIP in the text color and DECK muted. */
 export function lockup(size = 22): HTMLElement {
   const el = h('span.brand', { 'aria-label': PRODUCT });
-  el.innerHTML = `${markSvg(size)}<span class="brand-word" aria-hidden="true"><b>UGC</b> <span>ARMY</span></span>`;
+  el.innerHTML = `${markSvg(size)}<span class="brand-word" aria-hidden="true"><b>KIP</b><span>DECK</span></span>`;
   return el;
 }
 

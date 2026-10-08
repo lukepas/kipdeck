@@ -10,6 +10,24 @@
 .crew-watch { font: 500 11px/1 var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--text); border: 1px solid var(--line-strong); border-radius: 2px; padding: 3px 6px; white-space: nowrap; }
 .crew-watch-line { margin: 0 0 10px; color: var(--muted); }
 .mc-crew .mc-what { flex-direction: row; align-items: center; gap: 10px; }
-.crew-row .mc-main { grid-template-columns: auto minmax(110px, 1fr) minmax(0, 3fr) auto; }
+.crew-row .mc-main { grid-template-columns: auto minmax(110px, 1fr) minmax(0, 2fr) minmax(0, 2fr) auto; }
+/* The live Now column: the state's glyph and hue, its phrase and for how long, the latest activity muted under it. */
+.crew-now { display: flex; flex-direction: column; min-width: 0; }
+.crew-now-state { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 12px; color: var(--muted); --g: var(--g-parked); }
+.crew-now-state.needs-you { color: var(--signal); --g: var(--g-needs-you); }
+.crew-now-state.stuck { color: var(--stuck); --g: var(--g-stuck); }
+.crew-now-state.review { color: var(--review); --g: var(--g-review); }
+.crew-now-state.working { color: var(--text); --g: var(--g-working); }
+.crew-glyph { flex: none; width: 10px; height: 10px; background: currentColor; -webkit-mask: var(--g) center / contain no-repeat; mask: var(--g) center / contain no-repeat; }
+.crew-now-state.working .crew-glyph { background: var(--working); }
+.crew-now-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.crew-now-for { flex: none; font: 400 11px var(--font-mono); color: var(--muted); }
+.crew-now-act { font-size: 12px; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@container mc (max-width: 720px) {
+  .crew-row .mc-main { grid-template-columns: auto minmax(0, 1fr) auto; row-gap: 4px; }
+  .crew-now { grid-column: 2 / -1; grid-row: 2; }
+  .crew-row .mc-what { grid-column: 2 / -1; grid-row: 3; flex-wrap: wrap; }
+  .crew-row .mc-btns { grid-column: 3; grid-row: 1; }
+}
 .mc-what > .crew-epithet, .mc-what > .crew-chevs { align-self: flex-start; }
 .mc-name .crew-epithet { margin-left: 6px; } .mc-name .crew-chevs { margin-left: 4px; }

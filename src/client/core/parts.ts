@@ -46,6 +46,7 @@ import type { installHail } from '../features/hail';
 import type { installVoice } from '../features/voice';
 import type { installWaiting } from '../features/waiting';
 import type { installWalking } from '../features/walking';
+import type { installSelection } from '../features/selection';
 import type { installWorkerActions } from '../features/workers/actions';
 import type { installWorkerViews } from '../features/workers/views';
 import type { installFocus } from '../input/focus';
@@ -151,4 +152,6 @@ export interface Parts {
   takeConn: Made<typeof installTakeConn>;
   /** The attention beats: a hail, a stuck unit, a unit gone to review (see features/hail). */
   hail: Made<typeof installHail>;
+  /** The one selected unit across the Overview, the Units rail and Walk (see features/selection). */
+  selection: Made<typeof installSelection>;
 }

@@ -5,8 +5,10 @@ import type { Route } from '../router.js';
 import { actionRoutes } from './actions.js';
 import { agentRoutes } from './agents.js';
 import { authRoutes } from './auth.js';
+import { demoRoutes } from './demo.js';
 import { fileRoutes } from './files.js';
 import { githubRoutes } from './github.js';
+import { localRoutes } from './local.js';
 import { pageRoutes } from './pages.js';
 import { reputationRoutes } from './reputation.js';
 import { searchRoutes } from './search.js';
@@ -14,7 +16,12 @@ import { serviceRoutes } from './services.js';
 import { showcaseRoutes } from './showcase.js';
 import { x402Routes } from './x402.js';
 
+/** A route that's only there while Proof of Merge is on in Labs (see labs.ts): off, it answers nothing. */
+const proof = (route: Route): Route => ({ ...route, lab: 'proof' });
+
 export const routes: readonly Route[] = [
+  // The read-only demo signs whoever opens it in to watch (only there with --demo --read-only).
+  demoRoutes.enter,
   // Anyone.
   authRoutes.login,
   authRoutes.loginOptions,
@@ -22,6 +29,9 @@ export const routes: readonly Route[] = [
   authRoutes.claimable,
   authRoutes.claim,
   authRoutes.link,
+  // Commands on this computer with the office's local key (kipdeck open, attach).
+  localRoutes.link,
+  localRoutes.attach,
   authRoutes.logout,
   authRoutes.password,
   pageRoutes.health,
@@ -30,21 +40,22 @@ export const routes: readonly Route[] = [
   pageRoutes.claim,
   pageRoutes.join,
   pageRoutes.favicon,
+  // Proof of Merge (Labs, testnets), each only while the lab is on.
   // The public "Fund this issue" Action (devnet), for opted-in repositories only.
-  actionRoutes.manifest,
-  actionRoutes.icon,
-  actionRoutes.fund,
+  proof(actionRoutes.manifest),
+  proof(actionRoutes.icon),
+  proof(actionRoutes.fund),
   // Paid tasks over x402 (testnets, --x402 only): the payment is what lets the payer in.
-  x402Routes.offer,
-  x402Routes.task,
+  proof(x402Routes.offer),
+  proof(x402Routes.task),
   // Merge-based agent reputation (--reputation): read only, for anyone.
-  reputationRoutes.agent,
-  reputationRoutes.leaderboard,
-  reputationRoutes.dataset,
-  reputationRoutes.card,
+  proof(reputationRoutes.agent),
+  proof(reputationRoutes.leaderboard),
+  proof(reputationRoutes.dataset),
+  proof(reputationRoutes.card),
   // The public showcase (/pom/), once an admin turns it on: read only, GET only.
-  showcaseRoutes.page,
-  showcaseRoutes.files,
+  proof(showcaseRoutes.page),
+  proof(showcaseRoutes.files),
   // Signed in.
   authRoutes.whoami,
   agentRoutes.models,
@@ -55,7 +66,8 @@ export const routes: readonly Route[] = [
   searchRoutes.search,
   serviceRoutes.forwards,
   githubRoutes.github,
-  pageRoutes.office,
+  pageRoutes.home,
+  pageRoutes.bridge,
   pageRoutes.lite,
   pageRoutes.bundle,
 ];

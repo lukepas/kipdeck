@@ -33,6 +33,7 @@ export function installSignals(ctx: Ctx, parts: Pick<Parts, 'views' | 'tv' | 'st
       sg.kind = kind;
       sg.phase = phaseOf(id);
       sg.reach = kind === 'needs-you' ? (parts.hail?.reach(id) ?? 1) : 1;
+      sg.carded = v.model.tier === 'near' && v.model.calloutMode === 'full';
       v.model.where(sg.foot);
       const k = v.model.root.getWorldScale(scale).y || 1;
       sg.head.copy(sg.foot).setY(sg.foot.y + UNIT.top * k);

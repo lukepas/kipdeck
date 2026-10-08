@@ -2,14 +2,14 @@
 """Build the delivery set in out/final from the rendered films, and check it.
 
 Expects the three finals rendered first (see README, "Video"):
-  out/final/ugc-army-30s-16x9.mp4   node render.mjs --out out/final/ugc-army-30s-16x9.mp4
-  out/final/ugc-army-30s-9x16.mp4   node render.mjs --format 9x16 --out ...
-  out/final/ugc-army-30s-1x1.mp4    node render.mjs --format 1x1 --out ...
+  out/final/kipdeck-30s-16x9.mp4   node render.mjs --out out/final/kipdeck-30s-16x9.mp4
+  out/final/kipdeck-30s-9x16.mp4   node render.mjs --format 9x16 --out ...
+  out/final/kipdeck-30s-1x1.mp4    node render.mjs --format 1x1 --out ...
 
 Then writes:
-  ugc-army-poster-<format>.png      the poster frame (POSTER_T) in each format
-  ugc-army-teaser-6s.webm           the merge drop (TEASER), VP9, muted, loops
-  ugc-army-teaser-6s.gif            the same at 640 wide, 25 fps
+  kipdeck-poster-<format>.png      the poster frame (POSTER_T) in each format
+  kipdeck-teaser-6s.webm           the merge drop (TEASER), VP9, muted, loops
+  kipdeck-teaser-6s.gif            the same at 640 wide, 25 fps
   CREDITS.md                        copied from assets/CREDITS.md
 
 and checks every mp4: H.264 High yuv420p, the size of its format, 60 fps,
@@ -37,14 +37,14 @@ TEASER = (12.0, 18.0)
 
 
 def film(fmt):
-    return os.path.join(FINAL, f"ugc-army-30s-{fmt}.mp4")
+    return os.path.join(FINAL, f"kipdeck-30s-{fmt}.mp4")
 
 
 def posters():
     for fmt in FORMATS:
         sh(["node", os.path.join(ROOT, "render.mjs"), "--format", fmt, "--still", str(POSTER_T)], timeout=300)
         src = os.path.join(ROOT, "out", "stills", f"{fmt}-{POSTER_T:.3f}.png")
-        dst = os.path.join(FINAL, f"ugc-army-poster-{fmt}.png")
+        dst = os.path.join(FINAL, f"kipdeck-poster-{fmt}.png")
         os.replace(src, dst)
         print(f"poster {fmt} -> {os.path.relpath(dst, ROOT)}")
 
@@ -52,8 +52,8 @@ def posters():
 def teaser():
     src = film("16x9")
     a, b = TEASER
-    webm = os.path.join(FINAL, "ugc-army-teaser-6s.webm")
-    gif = os.path.join(FINAL, "ugc-army-teaser-6s.gif")
+    webm = os.path.join(FINAL, "kipdeck-teaser-6s.webm")
+    gif = os.path.join(FINAL, "kipdeck-teaser-6s.gif")
     # Frame-exact cut: -ss after -i decodes from the start, so the first frame is t = 12.000.
     sh([tool("ffmpeg"), "-y", "-v", "error", "-i", src, "-ss", f"{a}", "-t", f"{b - a}", "-an",
         "-vf", "scale=1280:720:flags=lanczos", "-c:v", "libvpx-vp9", "-b:v", "0", "-crf", "30",
@@ -114,7 +114,7 @@ def main(argv):
     fails = []
     for fmt in FORMATS:
         check(fmt, fails)
-    for extra in ("ugc-army-teaser-6s.webm", "ugc-army-teaser-6s.gif"):
+    for extra in ("kipdeck-teaser-6s.webm", "kipdeck-teaser-6s.gif"):
         p = os.path.join(FINAL, extra)
         if os.path.exists(p):
             print(f"\n{os.path.relpath(p, ROOT)}  ({os.path.getsize(p) / 1e6:.1f} MB, {duration(p):.2f} s)")

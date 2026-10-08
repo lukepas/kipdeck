@@ -90,6 +90,7 @@ export async function startServer(cfg: Config, opts: StartOptions = {}) {
     hookPort,
     signInLink,
     floors: () => [...ctx.floors.values()],
+    labs: ctx.labs,
     projectsDir: () => ctx.building.projectsDir,
     resolvedAgent: resolveCommand(cfg.agentCmd),
   };

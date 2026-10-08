@@ -1,0 +1,15 @@
+/* The target-acquire bracket (features/waiting/acquire.ts): four corner ticks in the unit's state hue
+   round the unit N just brought you to. It never takes the mouse; the script sets its box, its
+   opacity and its hue each frame. Thin, square ends, the bridge's HUD line weight. */
+.acquire {
+  position: fixed; left: 0; top: 0; z-index: 3; pointer-events: none !important;
+  --acquire-hue: #6fc3df; --tick: clamp(10px, 22%, 26px);
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, .7));
+}
+.acquire[hidden] { display: none; }
+.acquire i { position: absolute; width: var(--tick); height: var(--tick); border: 0 solid var(--acquire-hue); }
+.acquire .tl { left: 0; top: 0; border-left-width: 2px; border-top-width: 2px; }
+.acquire .tr { right: 0; top: 0; border-right-width: 2px; border-top-width: 2px; }
+.acquire .bl { left: 0; bottom: 0; border-left-width: 2px; border-bottom-width: 2px; }
+.acquire .br { right: 0; bottom: 0; border-right-width: 2px; border-bottom-width: 2px; }
+body.overview .acquire { display: none !important; }

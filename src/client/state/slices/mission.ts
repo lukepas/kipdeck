@@ -52,8 +52,8 @@ export const mission: Slice = {
     inbox() {
       // Your own GitHub sign-in's login, else the office's (the shared password, or an admin on the machine's).
       const mine = this.signins?.github.status === 'ok' ? this.signins.github.who : undefined;
-      // Bounties waiting for a person: approving a payout is an admin's, setting a wallet anyone's.
-      const payouts = this.floors.flatMap((f) => bountyPayouts(f, this.bounties?.[f.id])).filter((p) => p.kind !== 'approve' || this.me.admin);
+      // Bounties waiting for a person, only with Proof of Merge on in Labs: approving a payout is an admin's, setting a wallet anyone's.
+      const payouts = this.lab('proof') ? this.floors.flatMap((f) => bountyPayouts(f, this.bounties?.[f.id])).filter((p) => p.kind !== 'approve' || this.me.admin) : [];
       return reviewInbox(this.ranked(), this.reviewQueue, mine ?? this.ghViewer, payouts);
     },
     counts() {

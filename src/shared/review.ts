@@ -2,7 +2,7 @@
 // Workers the attention ranking puts at 'review' (done and unread, a pull request to see to,
 // commits with no PR yet), and the pull requests no worker on the roster stands for: ones the office
 // made, and ones your review is requested on. Pure, so Mission control's Review tab, the attention
-// chip and /lite count the same things.
+// chip and the home page count the same things.
 
 import { tokenUnits } from './money.js';
 import type { NextAction, Ranked } from './attention.js';

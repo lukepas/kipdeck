@@ -4,7 +4,7 @@ Back to the [README](../README.md).
 
 A maintainer escrows devnet USDC against a GitHub issue. Any worker in the office can take the issue. The money moves only when a person with write access merges the worker's pull request and an office admin approves the payout in the review inbox. Then the Solana program pays the escrow to the wallet of the person who hired the worker.
 
-Testnets only: Solana devnet, or an in-memory mock. There is no mainnet setting anywhere, the SDK checks the RPC's genesis hash is devnet's before it signs anything, and the program only accepts devnet USDC (and a test mint in test builds). Bounties are off until an admin turns them on.
+Testnets only: Solana devnet, or an in-memory mock. There is no mainnet setting anywhere, the SDK checks the RPC's genesis hash is devnet's before it signs anything, and the program only accepts devnet USDC (and a test mint in test builds). Bounties are off until an admin turns them on, and the Bounties pane only shows with Proof of Merge on in [Labs](labs.md).
 
 This is part of the Proof of Merge fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). The program and its SDK live in [onchain/solana](../onchain/solana/README.md), which has its own build and tests.
 

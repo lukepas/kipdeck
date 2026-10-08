@@ -37,6 +37,11 @@ export interface MissionDeps {
   goTo(floor: string, deskId?: string): void;
   /** Opens Mission control on a tab (the Goals of the floor you're on, say). */
   showTab(tab: MissionTab): void;
+  /**
+   * Shows you where a unit is on the deck (the 3D view: the camera finds its desk). A view without
+   * it leaves it out, and the rows' Locate button hides (see locate.ts).
+   */
+  locate?(floor: string, deskId: string): void;
 }
 
 /** Things to do once you're on a floor, by floor: the ride there is running them when it lands. */

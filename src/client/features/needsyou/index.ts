@@ -11,13 +11,22 @@
  */
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
+import type { Off } from '../../core/registry';
 import { store } from '../../state';
 import { $ } from '../../ui/dom';
 import { bannerText, Fresh, needingYou, Reminders } from './logic';
 import { Banner } from './ui';
 
+export interface NeedsYou {
+  /**
+   * Keeps the banner off a unit while `fn` says so (features/selection: the selected unit's card
+   * already says who and what for). Returns how to take it back out.
+   */
+  quietFor(fn: (unitId: string) => boolean): Off;
+}
+
 /** Follows the roster for the banner, the flash and the alarm. */
-export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'waiting' | 'mission'>) {
+export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'waiting' | 'mission'>): NeedsYou {
   const { sound, settings } = ctx;
   const fresh = new Fresh();
   const reminders = new Reminders();
@@ -33,6 +42,14 @@ export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'waiting' | 'missio
       else parts.mission.missionDeps.goTo(b.floor, b.deskId);
     },
   });
+
+  // Not about a unit that's quiet for it (the one you have selected: its card says who and what for).
+  const quiet = new Set<(unitId: string) => boolean>();
+  const held = (id: string) => {
+    for (const fn of quiet) if (fn(id)) return true;
+    return false;
+  };
+  ctx.ticks.add('hud', () => banner.quietFor(held));
 
   function paintBanner() {
     banner.show(bannerText(asking(), Date.now(), store.floor));
@@ -66,5 +83,10 @@ export function installNeedsYou(ctx: Ctx, parts: Pick<Parts, 'waiting' | 'missio
     if (reminders.due(askingHere(), performance.now()) && settings.needsYouSound === 'remind') sound.cue('needs-you-again');
   }, 1000);
 
-  return {};
+  return {
+    quietFor(fn) {
+      quiet.add(fn);
+      return () => void quiet.delete(fn);
+    },
+  };
 }

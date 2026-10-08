@@ -303,7 +303,7 @@ async function main() {
     await stat(audio);
     const dur = (n / a.fps).toFixed(6);
     const slice = a.from != null || a.to != null ? `-${from}-${to}` : '';
-    const out = a.out ? path.resolve(a.out) : path.join(OUT, `ugc-army-${a.format}${a.preview ? '-preview' : ''}${slice}.mp4`);
+    const out = a.out ? path.resolve(a.out) : path.join(OUT, `kipdeck-${a.format}${a.preview ? '-preview' : ''}${slice}.mp4`);
     await mkdir(path.dirname(out), { recursive: true });
     // Encode to a temp name and move it into place only once ffprobe confirms
     // the frame count, so a failed run can never leave a short film behind.

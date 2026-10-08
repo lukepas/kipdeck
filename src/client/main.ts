@@ -6,11 +6,9 @@ import { randomLook } from '../shared/avatar';
 import { PlayerController } from './player';
 import { Voice } from './voice';
 import { $ } from './ui/dom';
-import { askName } from './ui/name';
 import { elevatorPanelOpen } from './ui/elevator';
 import { onModelsProgress, preloadModels } from './world/models';
 import { loadingScreen } from './ui/loading';
-import { offerLite, touchOnly } from './ui/litesuggest';
 import { createCtx } from './core/ctx';
 import type { Parts } from './core/parts';
 import { createScene, fitWindow, makeRenderer, noWebGL } from './core/scene';
@@ -51,6 +49,7 @@ import { installSeating } from './features/seating';
 import { installTv } from './features/tv';
 import { installArcChrome } from './features/arcchrome';
 import { installSignals } from './features/signals';
+import { installHeartbeat } from './features/heartbeat';
 import { installSpotlight } from './features/spotlight';
 import { installVoice } from './features/voice';
 import { installWaiting } from './features/waiting';
@@ -66,6 +65,7 @@ import { installAmphitheater } from './features/amphitheater';
 import { installSeatFrame } from './features/seatframe';
 import { installPulse } from './features/pulse';
 import { installDemo } from './features/demo';
+import { installHomeView } from './features/homeview';
 import { installBottomBar } from './features/bottombar';
 import { makeMotion } from './motion';
 import { installLights } from './features/lights';
@@ -73,6 +73,7 @@ import { installQuality } from './features/quality';
 import { installMerge } from './features/merge';
 import { installIbl } from './features/ibl';
 import { installAtmos } from './features/atmos';
+import { installGloss } from './features/atmos/gloss';
 import { installRelay } from './features/relay';
 import { installVista } from './features/vista';
 import { installCinema } from './features/cinema';
@@ -98,18 +99,14 @@ import { installKinetic } from './features/kinetic';
 import { installHands } from './features/hands';
 import { installLounge } from './features/lounge';
 import { installSoundscape } from './features/soundscape';
+import { installSelection } from './features/selection';
+import { fetchLabs, installLabs } from './features/labs';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
-// Came here from the 2D view's 3D button: it isn't offered straight back.
-const chose3d = new URLSearchParams(location.search).has('3d');
-if (chose3d) history.replaceState(null, '', location.pathname);
-/** Offers the 2D view (/lite) where the 3D is hard going. */
-const offer2d = (why: 'touch' | 'slow') => chose3d || offerLite(why);
-// A phone can't walk around the office: the 2D view is made for it.
-if (touchOnly()) offer2d('touch');
-// The models made in Blender, loaded before the world they're in is built (see world/models.ts).
-await preloadModels();
+// The models made in Blender, loaded before the world they're in is built (see world/models.ts), and
+// which labs are on (Bridge ambience decides how the bridge starts).
+const [labsAtStart] = await Promise.all([fetchLabs(), preloadModels()]);
 
 // ---- The context every part of the office plugs into (see core/context.ts) ----------------------------
 // Built before the parts it hands out, which are there by the time anything asks for them. Every part
@@ -119,7 +116,7 @@ await preloadModels();
 const parts = {} as Parts;
 const { ctx, core } = createCtx(parts);
 // The office's own parts of each frame, before anything else's.
-installLoop(ctx, parts, { offer2d });
+installLoop(ctx, parts);
 
 // ---- Renderer & scene ---------------------------------------------------------------------------
 const canvas = $('scene') as HTMLCanvasElement;
@@ -144,6 +141,8 @@ parts.net = new Net(() => store.profile, () => parts.arrival.whereNow());
 parts.voice = new Voice(parts.net);
 parts.me = makeMe(ctx);
 parts.settings = loadSettings();
+// Before anything reads the settings: without Bridge ambience the bridge starts calm (features/labs).
+installLabs(ctx, parts, labsAtStart);
 parts.player = new PlayerController(ctx.camera, canvas, ctx.office.colliders);
 installKeyGuards(ctx, parts);
 parts.place = installPlace(ctx, core, parts);
@@ -210,6 +209,8 @@ parts.alert = installAlert(ctx, parts);
 installIbl(ctx, parts);
 // The light round the deck: shafts, dust, haze, pools, the canopy's ribs and light from outside.
 installAtmos(ctx, parts);
+// From the Overview: the deck's polished surfaces matte and the exposure a little up, with the move.
+installGloss(ctx, parts);
 // Space close by: dust streaming past the ports, a giant off one side, the sun's flare through the canopy.
 installVista(ctx, parts);
 // The Relay Beacon off the starboard bow: the fleet's relay station, its rings carrying the units at work.
@@ -224,7 +225,10 @@ parts.hintbar = installHintBar(ctx, core, parts);
 installKeyboard(ctx, parts);
 parts.focus = installFocus(ctx, core, parts);
 parts.pointer = installPointer(ctx, core, parts);
+// The selected unit (features/selection): ahead of the Overview, so its Esc lets go of a selection first.
+parts.selection = installSelection(ctx, parts);
 parts.overview = installOverview(ctx, parts);
+installHomeView(ctx, parts);
 parts.flight = installFlight(ctx);
 parts.boardFaces = installBoardFaces(ctx, parts);
 installAmphitheater(ctx, parts);
@@ -232,6 +236,8 @@ installSeatFrame(ctx, parts);
 installArcChrome(ctx, parts);
 // The diamond, the triangle, the ring and the pip over the units, and the beams up to their cards.
 installSignals(ctx, parts);
+// Each tool call a pulse on the floor, and the quiet meter under each working unit (features/heartbeat).
+installHeartbeat(ctx, parts);
 installSpotlight(ctx, parts);
 // The motion layer over the room: the arc's faces in motion (the build, the scan, the sweeps, the
 // cards' effects, the warp's fold); taking the conn (the rise, the tiers lit pit to dais, the arc built
@@ -273,13 +279,17 @@ function boot() {
   requestAnimationFrame(frame);
 }
 
+/** What the office calls you until you say (git's user.name, on your own computer). */
+let suggestedName: string | undefined;
+
 /** Who you're signed in as. With an account of your own, your name is that account's. */
 async function whoami() {
   try {
     const res = await fetch('/api/whoami', { cache: 'no-store' });
-    if (res.status === 401) location.href = '/login';
-    const { me } = (await res.json()) as { me?: typeof store.me };
+    if (res.status === 401) location.href = '/login?next=/bridge';
+    const { me, name } = (await res.json()) as { me?: typeof store.me; name?: string };
     if (me) store.me = me;
+    suggestedName = name;
   } catch {
     // the welcome message says it too
   }
@@ -308,23 +318,16 @@ void whoami().then(() => {
     store.profile = { ...saved, look: saved.look };
     return enter();
   }
-  // New here: no character to pick before you see the office. A look and a shirt are dealt at
-  // random (Settings > Your character changes them), and only a name is asked for: none with an
-  // account, or when the 2D view already has one.
+  // New here: nothing to fill in before you see the office. A look and a shirt are dealt at random
+  // and the name is your account's, git's user.name on your own computer, or a made-up one
+  // (Settings > Your character changes any of them).
   store.profile = {
-    name: saved?.name ?? store.profile.name,
+    name: saved?.name ?? suggestedName ?? store.profile.name,
     color: saved?.color ?? AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
     look: randomLook(),
   };
-  if (saved || store.me.account) {
-    saveProfile(store.profile);
-    return enter();
-  }
-  askName((name) => {
-    store.profile.name = name;
-    saveProfile(store.profile);
-    enter();
-  });
+  saveProfile(store.profile);
+  enter();
 });
 
 // Debug handle for quick checks from the console / headless screenshots.

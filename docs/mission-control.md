@@ -4,9 +4,22 @@ Back to the [README](../README.md).
 
 Mission control answers one question: what needs a person right now, on any floor. It ranks every hired worker in the building by how much it needs someone, says why in plain words, and offers one next step. Next to that it keeps what each floor is for (its mission and milestones), so every worker, task and pull request can be tied back to a goal, an inbox of everything waiting for a review, a timeline of what happened, and reminders for what would otherwise be forgotten.
 
-Open it with **I** anywhere in the office, from the **Mission control** button on the top bar (always there), from the counters beside the deck's name (each one, *2 need you*, *1 stuck*, *3 to review*, *4 working*, opens the tab for its level: Review for to review, Attention for the rest), from the menu > **Mission control**, or from the command palette (**Ctrl+K**: *Mission control*, *Edit the mission*, *Review finished work*, *Timeline*, *While you were away*). In the 2D view (`/lite`) it's the **Mission** button in the top bar. It has a ✕ in the top right, and Esc closes it and puts you straight back into looking around. It remembers the tab you had open last.
+Open it with **I** anywhere in the office, from the **Mission control** button on the top bar (always there), from the counters beside the deck's name (each one, *2 need you*, *1 stuck*, *3 to review*, *4 working*, opens the tab for its level: Review for to review, Attention for the rest), from the menu > **Mission control**, or from the command palette (**Ctrl+K**: *Mission control*, *Edit the mission*, *Review finished work*, *Timeline*, *While you were away*). On the home page (`/`) it's **Mission control** in the avatar menu, or Ctrl+K there. Attention and Review are always there; Goals, Timeline and Crew come with Goals and timeline on in [Labs](labs.md), and the number keys follow the tabs shown. It has a ✕ in the top right, and Esc closes it and puts you straight back into looking around. It remembers the tab you had open last.
 
-Inside it, **1** to **5** switch tabs (Attention, Goals, Review, Timeline, Crew), the arrow keys move between rows, and **Enter** does the selected row's next step.
+Inside it, **1** to **5** switch tabs (Attention, Goals, Review, Timeline, Crew; all five on one line, docked too), the arrow keys move between rows, **Enter** does the selected row's next step, and **D** docks it or floats it again.
+
+### Docked or floating
+
+**Dock** in its header (or **D**) moves Mission control from the middle of the screen to a 400px panel down the right, under the top bar, with no dim over the deck, so you can work through the list while you watch the deck react. **Float** (or **D** again) puts it back in the middle. The office remembers which you chose, in this browser. Switching slides the window from one place to the other; with less motion asked for (the system's setting, or Settings > Bridge > Ship motion Off) it just moves.
+
+Docked, the panel stays up while you look around:
+
+- A click on the deck gives the game the mouse and the keys back, as it would with nothing open: mouse-look, walking, **N**. The panel keeps updating beside it, its tabs dimmed while the keys are the deck's (so **1**-**5** don't switch them then). The selected unit's card and the bottom bar move left of the panel rather than under it.
+- A click on the panel, or **I**, gives them back to Mission control.
+- A row's action that opens another window (a terminal, the Changes window, a pull request) opens it over the deck as usual; the panel is still there when you close it.
+- The ✕ and **Esc** put it away and drop you straight back into mouse-look, with no extra click, the same as any other window.
+
+A window narrower than 900px always floats, even if docking is what you chose last; it docks again once the window is wide enough. The 2D view (`/lite`) docks the same way.
 
 ## Attention
 
@@ -20,7 +33,7 @@ Every worker hired onto a console, the Standby bench or the Review bay's table, 
 | Working | At work and showing signs of life |
 | Ready or asleep | Ready for its next task (finished and seen to), or asleep |
 
-Within a level, whoever has waited longest comes first. The working and *Ready or asleep* groups stay folded until you open them, so the list stays short. What waits for review is one line, *To review N*, that opens the Review tab, where it's listed; N is the same count as the chip's and the tab title's, so it includes pull requests no worker stands for.
+Within a level, whoever has waited longest comes first. The working and *Ready or asleep* groups stay folded until you open them, so the list stays short. What waits for review is one line, *To review N*: its **Review** button does the next step for the oldest of it (opens its Changes window, its pull request or its bounty payout), and *Open the Review tab* beside it lists the lot. N is the same count as the chip's and the tab title's, so it includes pull requests no worker stands for.
 
 Each row shows the worker, its floor, what it's for (its milestone, its issue, or *unlinked* for an agent; a shell is never called that), what it's doing, the reason, how long it has been that way and what it has cost, with one button for the next step:
 
@@ -40,9 +53,11 @@ A worker on another floor takes you to its floor and its desk first, then does i
 
 With [agent reputation](reputation.md) on, each row (here and in the Review tab) also shows its agent's record from merges, *rep 86 · merges 80% · 25.00 USDC*, linked to its latest attestation, with the whole record in its tooltip. An agent whose merges get reverted often gets a hint in words; it never changes where the worker ranks.
 
+Where the view can show you a unit on the deck, its row has a **Locate** button (its target icon and the word, after the row's main button; a Timeline row keeps the icon alone), quiet until you hover the row (or select it with the arrow keys), in every tab with units in it. Docked, Mission control stays up while the view finds the unit; floating, it gets out of the way first. In the 3D office a unit on your deck is selected and the view finds it, in Walk landing you as N does, with the corner brackets on it, docked or not (the marked rail row and the card, which sits left of the docked panel, and the ring in the Overview; see [Selecting a unit](controls.md#selecting-a-unit)); one on another deck is a ride there. The 2D view has no deck to point at, so its rows have no Locate.
+
 **...** on a row has the rest: open its terminal, snooze it for 30 minutes, 2 hours or until its status next changes, link it to a milestone, send it home. A snooze is shared: everyone sees *snoozed by Ana until 14:30*, so two people don't both chase the same worker. A snoozed worker stays in the list, greyed, but it isn't counted and nothing notifies about it.
 
-The same ranking runs everywhere: the counters on the top bar (a glyph and a number per level, click one for its tab), the tab title's count and the favicon (its lead chevron turns orange while anything needs you), the needs-you alert row and the beacons over desks (the *Needs you* level, the snoozed ones left out), the order **N** goes in, the order of the Workers panel (which shows the reason in place of the bare status), the 2D view's list, the webhook, and what agents see from `list_workers`. It lives in one place, `src/shared/attention.ts`, with its thresholds.
+The same ranking runs everywhere: the counters on the top bar (a glyph and a number per level, click one for its tab), the tab title's count and the favicon (its lead chevron turns orange while anything needs you), the needs-you alert row and the beacons over desks (the *Needs you* level, the snoozed ones left out), the order **N** goes in, the order of the Workers panel (which shows the reason in place of the bare status), the home page's list, the webhook, and what agents see from `list_workers`. It lives in one place, `src/shared/attention.ts`, with its thresholds.
 
 **N** goes to the workers waiting on someone in the ranking's order: the ones that need you first, then the ones that are done, longest-waiting first within each. After the last one on your floor it takes you to the next floor's, and one that needs you on another floor comes before one here that's only done. Snoozed ones are skipped.
 
@@ -92,11 +107,13 @@ What happened on every floor, newest first. The office writes it from what chang
 | Mission, Milestone | The mission statement changed; a milestone was added, renamed, removed, made the active one or done |
 | Progress | A milestone's issues closed went up or down (*Auth rewrite: 5 of 7 issues closed*) |
 
-Pick a floor, a goal or a worker to see only theirs, and **Load older** for more. **Open** on an event goes to what it's about: the worker's terminal (if it's still here), the pull request, the queue or the Goals tab, on its floor.
+Pick a floor, a goal or a worker to see only theirs, and **Load older** for more. The whole row is a button: click it, or select it and press **Enter** or **Space**, to go to what it's about: the worker's terminal (if it's still here), the pull request, the queue or the Goals tab, on its floor. A small chevron shows on the row you point at. Its *proof* and *tx* links still open the explorer.
 
 ## Crew
 
-Each unit aboard with its record in one line, from the deck log as far as the page has it: *A-03 the Mechanic: 41 merges, 0 reverts*. It counts outcomes only (pull requests merged and closed unmerged, times stuck, and reverts from its agent's record when the office keeps reputation), never lines of code, tokens or terminal activity, and a slow record is shown as plainly as a quick one. There is no list of people here: it is about units.
+Each unit aboard, in the same order as the attention ranking (whoever needs you first), with what it's doing now and its record. The **Now** column is live: the state's glyph and phrase (*Needs an answer*, *Done*, *Working*), how long it has been that way, and its latest activity muted underneath (*Bash: npm test*). It follows the same updates as the rest of Mission control; nothing extra is asked of the server.
+
+The record is one line, from the deck log as far as the page has it: *A-03 the Mechanic: 41 merges, 0 reverts*. It counts outcomes only (pull requests merged and closed unmerged, times stuck, and reverts from its agent's record when the office keeps reputation), never lines of code, tokens or terminal activity, and a slow record is shown as plainly as a quick one. There is no list of people here: it is about units.
 
 - **Epithets** are earned from that record, never handed out at random, and worked out again as it changes: *the Mechanic* (most merges, none reverted), *the Anchor* (its merge closed out a waypoint), *the Comeback* (stuck three times, merged each time), *the Night Owl* (most merges on the night watch, 22:00 to 05:00), *the Quick Study* (the quickest median from opened to merged, over three or more), *the Steady Hand* (five merges, never stuck) and *the Rookie* (its first day aboard). Each goes to the one unit that holds it best, and a unit wears one at most. The epithet also shows on the unit's row in the other tabs, on its callout up close and in its console's column.
 - **Chevrons**: a thin white one for 5 merges, one for a merge rate of 90% or more over 5 outcomes or more, and one for 10 merges with none reverted; one violet chevron when its agent has an ERC-8004 record on chain. Hover them for why.
@@ -125,11 +142,11 @@ Things nobody has to answer right now, but somebody will:
 | Unpushed work | A worker asleep for a day with commits nobody pushed |
 | A long wait | A worker waiting on an answer for over an hour (the team's channel hears once) |
 
-The office looks once a minute. A reminder shows at the top of the Attention tab with its next step, puts an amber dot on the attention chip (and on the 2D view's **Mission** button), and toasts the people on its floor when it comes up, again at most once an hour while it stays open. **Snooze 30 min** puts it aside for a while; **Dismiss** puts it aside until what it's about changes: the dismissal is forgotten once the reminder has been gone for two hours, so a restart, when GitHub and the worktrees haven't answered yet, doesn't drop it. Everyone sees who did. A restart remembers both and toasts nothing on its first look. The thresholds are in `src/shared/attention.ts`, with the ranking's.
+The office looks once a minute. A reminder shows at the top of the Attention tab with its next step, puts an amber dot on the attention chip (and on the home page's **Mission** button), and toasts the people on its floor when it comes up, again at most once an hour while it stays open. **Snooze 30 min** puts it aside for a while; **Dismiss** puts it aside until what it's about changes: the dismissal is forgotten once the reminder has been gone for two hours, so a restart, when GitHub and the worktrees haven't answered yet, doesn't drop it. Everyone sees who did. A restart remembers both and toasts nothing on its first look. The thresholds are in `src/shared/attention.ts`, with the ranking's.
 
 ## The mission strip
 
-One line under the top bar, top left, in the 3D office (and the first card in the 2D view): the floor's mission, the active milestone with a thin progress bar (*Auth rewrite · 3/7 issues · 2 workers*), and *unlinked: 2* when agents aren't tied to anything and there is an open milestone to tie them to. A milestone with no issues shows no bar, just *no issues linked yet*. With no mission yet it reads *No mission yet. Set one*. Click it for the Goals tab. The menu's *Mission* switch hides it.
+One line under the top bar, top left, in the Bridge view, with Goals and timeline on in Labs: the floor's mission, the active milestone with a thin progress bar (*Auth rewrite · 3/7 issues · 2 workers*), and *unlinked: 2* when agents aren't tied to anything and there is an open milestone to tie them to. A milestone with no issues shows no bar, just *no issues linked yet*. With no mission yet it reads *No mission yet. Set one*. Click it for the Goals tab. The menu's *Mission* switch hides it.
 
 ## Linking work to goals
 

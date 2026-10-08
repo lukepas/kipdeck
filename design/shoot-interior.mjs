@@ -54,7 +54,7 @@ const UI = !!process.env.SHOOT_UI;
 const POSE = process.env.SHOOT_POSE ?? 'pinned';
 const NAME = `${LIGHT}-${QUALITY}${CAP ? `-cap-${CAP}` : ''}${process.env.SHOOT_CREW && process.env.SHOOT_CREW !== 'need' ? `-${process.env.SHOOT_CREW}` : ''}${POSE === 'sit' ? '-sit' : ''}`;
 
-const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-interior-'));
+const tmp = mkdtempSync(path.join(tmpdir(), 'kipdeck-interior-'));
 const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');
@@ -127,7 +127,7 @@ const TWENTY = [
 const CALM = NEED.map(([d, t]) => [d, t.replace('[ask] ', '')]);
 const TASKS = CREW === 'twenty' ? TWENTY : CREW === 'signals' ? SIGNALS : CREW === 'calm' ? CALM : NEED;
 
-const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--agent', agent, '--home', path.join(home, '.agent-office')], {
+const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--labs', process.env.SHOOT_LABS ?? 'all', '--agent', agent, '--home', path.join(home, '.agent-office')], {
   env: { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
   stdio: ['ignore', 'pipe', 'pipe'],
   detached: true,
@@ -220,7 +220,7 @@ async function main() {
     await page.goto(`${base}/login`);
     const status = await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD);
     if (status !== 200) throw new Error('login failed ' + status);
-    await page.goto(`${base}/`, { waitUntil: 'commit' });
+    await page.goto(`${base}/bridge`, { waitUntil: 'commit' });
     await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 }).catch((e) => {
       // The page never came up: say why (its errors), not only that it timed out.
       console.log(JSON.stringify({ boot: 'failed', errors }));
@@ -594,7 +594,7 @@ async function main() {
     // the clip runs on for 9 s, through the spectacle's duck and back and the spotlight settling round
     // it. Saved as <name>-call.mp4, its frames' times in <name>-call.json.
     if (process.env.SHOOT_CLIP === 'call') {
-      const frames = mkdtempSync(path.join(tmpdir(), 'ugc-clip-'));
+      const frames = mkdtempSync(path.join(tmpdir(), 'kipdeck-clip-'));
       const times = [];
       const t0 = Date.now();
       let sent = false;

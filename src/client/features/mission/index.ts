@@ -16,7 +16,7 @@ import { openPull } from '../../ui/pull';
 import { watchStuck } from '../../ui/mission/watch';
 import { renderWorkers } from '../../ui/workers-panel';
 
-export type MissionParts = Pick<Parts, 'waiting' | 'actions' | 'travel' | 'notifier' | 'settings' | 'launch'>;
+export type MissionParts = Pick<Parts, 'waiting' | 'actions' | 'travel' | 'notifier' | 'settings' | 'launch' | 'selection'>;
 
 export function installMission(ctx: Ctx, parts: MissionParts) {
   const { net, sound } = ctx;
@@ -49,6 +49,12 @@ export function installMission(ctx: Ctx, parts: MissionParts) {
       });
       parts.travel.switchFloor(floor);
     },
+    // A unit on this deck is selected and found (features/selection); one on another deck is a ride there.
+    locate: (floor, deskId) => {
+      const unit = floor === store.floor ? [...store.workers.values()].find((w) => w.deskId === deskId) : undefined;
+      if (unit && parts.selection) parts.selection.select(unit.id, { fly: true });
+      else deps.goTo(floor, deskId);
+    },
   };
 
   function showMission(tab?: MissionTab) {
@@ -62,7 +68,7 @@ export function installMission(ctx: Ctx, parts: MissionParts) {
   // The strip under the floor's name (a HUD panel, see ui/menu.ts).
   const strip = $('mission-strip');
   const paintStrip = () => renderStrip(strip, (tab) => showMission(tab));
-  for (const t of ['mission', 'roster', 'floor', 'issues', 'pulls'] as const) store.on(t, paintStrip);
+  for (const t of ['labs', 'mission', 'roster', 'floor', 'issues', 'pulls'] as const) store.on(t, paintStrip);
   paintStrip();
 
   ctx.keys.bind({

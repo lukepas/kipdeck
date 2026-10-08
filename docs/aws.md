@@ -1,6 +1,6 @@
 # AWS reference
 
-The full story behind `deploy/aws.sh`. The short version is in the [README](../README.md#deploy-to-aws-ec2).
+The full story behind `deploy/aws.sh`. The short version is in [Teams and servers](self-hosting.md#deploy-to-aws-ec2).
 
 If you have the AWS CLI logged in, one command gives you your own office on EC2. No Terraform needed:
 

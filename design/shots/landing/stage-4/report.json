@@ -1,0 +1,177 @@
+{
+  "url": "http://127.0.0.1:4690/",
+  "shots": [
+    "design/shots/landing/stage-4/desktop-dark-00-hero.png",
+    "design/shots/landing/stage-4/desktop-dark-01-funnel.png",
+    "design/shots/landing/stage-4/desktop-dark-02-problem.png",
+    "design/shots/landing/stage-4/desktop-dark-03-loop.png",
+    "design/shots/landing/stage-4/desktop-dark-04-why.png",
+    "design/shots/landing/stage-4/desktop-dark-05-yours.png",
+    "design/shots/landing/stage-4/desktop-dark-06-phone.png",
+    "design/shots/landing/stage-4/desktop-dark-07-numbers.png",
+    "design/shots/landing/stage-4/desktop-dark-08-labs.png",
+    "design/shots/landing/stage-4/desktop-dark-09-proof.png",
+    "design/shots/landing/stage-4/desktop-dark-10-teams.png",
+    "design/shots/landing/stage-4/desktop-dark-11-end.png",
+    "design/shots/landing/stage-4/desktop-light-00-hero.png",
+    "design/shots/landing/stage-4/desktop-light-01-funnel.png",
+    "design/shots/landing/stage-4/desktop-light-02-problem.png",
+    "design/shots/landing/stage-4/desktop-light-03-loop.png",
+    "design/shots/landing/stage-4/desktop-light-04-why.png",
+    "design/shots/landing/stage-4/desktop-light-05-yours.png",
+    "design/shots/landing/stage-4/desktop-light-06-phone.png",
+    "design/shots/landing/stage-4/desktop-light-07-numbers.png",
+    "design/shots/landing/stage-4/desktop-light-08-labs.png",
+    "design/shots/landing/stage-4/desktop-light-09-proof.png",
+    "design/shots/landing/stage-4/desktop-light-10-teams.png",
+    "design/shots/landing/stage-4/desktop-light-11-end.png",
+    "design/shots/landing/stage-4/big-dark-00-hero.png",
+    "design/shots/landing/stage-4/big-dark-01-funnel.png",
+    "design/shots/landing/stage-4/big-dark-02-problem.png",
+    "design/shots/landing/stage-4/big-dark-03-loop.png",
+    "design/shots/landing/stage-4/big-dark-04-why.png",
+    "design/shots/landing/stage-4/big-dark-05-yours.png",
+    "design/shots/landing/stage-4/big-dark-06-phone.png",
+    "design/shots/landing/stage-4/big-dark-07-numbers.png",
+    "design/shots/landing/stage-4/big-dark-08-labs.png",
+    "design/shots/landing/stage-4/big-dark-09-proof.png",
+    "design/shots/landing/stage-4/big-dark-10-teams.png",
+    "design/shots/landing/stage-4/big-dark-11-end.png",
+    "design/shots/landing/stage-4/phone-dark-00-hero.png",
+    "design/shots/landing/stage-4/phone-dark-01-funnel.png",
+    "design/shots/landing/stage-4/phone-dark-02-problem.png",
+    "design/shots/landing/stage-4/phone-dark-03-loop.png",
+    "design/shots/landing/stage-4/phone-dark-04-why.png",
+    "design/shots/landing/stage-4/phone-dark-05-yours.png",
+    "design/shots/landing/stage-4/phone-dark-06-phone.png",
+    "design/shots/landing/stage-4/phone-dark-07-numbers.png",
+    "design/shots/landing/stage-4/phone-dark-08-labs.png",
+    "design/shots/landing/stage-4/phone-dark-09-proof.png",
+    "design/shots/landing/stage-4/phone-dark-10-teams.png",
+    "design/shots/landing/stage-4/phone-dark-11-end.png",
+    "design/shots/landing/stage-4/phone-light-00-hero.png",
+    "design/shots/landing/stage-4/phone-light-01-funnel.png",
+    "design/shots/landing/stage-4/phone-light-02-problem.png",
+    "design/shots/landing/stage-4/phone-light-03-loop.png",
+    "design/shots/landing/stage-4/phone-light-04-why.png",
+    "design/shots/landing/stage-4/phone-light-05-yours.png",
+    "design/shots/landing/stage-4/phone-light-06-phone.png",
+    "design/shots/landing/stage-4/phone-light-07-numbers.png",
+    "design/shots/landing/stage-4/phone-light-08-labs.png",
+    "design/shots/landing/stage-4/phone-light-09-proof.png",
+    "design/shots/landing/stage-4/phone-light-10-teams.png",
+    "design/shots/landing/stage-4/phone-light-11-end.png",
+    "design/shots/landing/stage-4/reduced-dark-00-hero.png",
+    "design/shots/landing/stage-4/reduced-dark-01-funnel.png",
+    "design/shots/landing/stage-4/reduced-dark-02-problem.png",
+    "design/shots/landing/stage-4/reduced-dark-03-loop.png",
+    "design/shots/landing/stage-4/reduced-dark-04-why.png",
+    "design/shots/landing/stage-4/reduced-dark-05-yours.png",
+    "design/shots/landing/stage-4/reduced-dark-06-phone.png",
+    "design/shots/landing/stage-4/reduced-dark-07-numbers.png",
+    "design/shots/landing/stage-4/reduced-dark-08-labs.png",
+    "design/shots/landing/stage-4/reduced-dark-09-proof.png",
+    "design/shots/landing/stage-4/reduced-dark-10-teams.png",
+    "design/shots/landing/stage-4/reduced-dark-11-end.png"
+  ],
+  "metrics": {
+    "weight": {
+      "files": [
+        {
+          "file": "assets/archivo-latin-DXrUVZxZ.woff2",
+          "bytes": 90096,
+          "gzip": 90144
+        },
+        {
+          "file": "assets/jetbrains-mono-latin-D000Msq0.woff2",
+          "bytes": 40480,
+          "gzip": 40513
+        },
+        {
+          "file": "theme-boot.js",
+          "bytes": 492,
+          "gzip": 323
+        },
+        {
+          "file": "assets/index-Bli_iwL7.js",
+          "bytes": 25170,
+          "gzip": 10224
+        },
+        {
+          "file": "assets/index-BCtXP4fN.css",
+          "bytes": 84063,
+          "gzip": 18358
+        }
+      ],
+      "jsGzipFirstLoad": 10547,
+      "cssGzip": 18358,
+      "fontBytes": 130576,
+      "jsGzipAll": 162367,
+      "htmlGzip": 12894
+    },
+    "desktop": {
+      "lcp": 44,
+      "el": "",
+      "cls": 0,
+      "scroll": {
+        "frames": 540,
+        "avgMs": 16.68407407409615,
+        "p50": 16.699999999999818,
+        "p95": 16.700000000000728,
+        "p99": 16.800000000000182,
+        "over20ms": 1
+      }
+    },
+    "phone": {
+      "lcp": 40,
+      "el": "",
+      "cls": 0,
+      "scroll": {
+        "frames": 541,
+        "avgMs": 16.656931608133082,
+        "p50": 16.699999999999818,
+        "p95": 16.700000000000728,
+        "p99": 16.800000000000182,
+        "over20ms": 0
+      }
+    },
+    "phoneThrottled": {
+      "lcp": 396,
+      "el": "",
+      "cls": 0,
+      "scroll": {
+        "frames": 538,
+        "avgMs": 16.732342007457103,
+        "p50": 16.699999999999818,
+        "p95": 16.700000000000728,
+        "p99": 16.80000000000109,
+        "over20ms": 3
+      }
+    }
+  },
+  "desktop": {
+    "errors": [],
+    "overflow": 0
+  },
+  "desktopLight": {
+    "errors": [],
+    "overflow": 0
+  },
+  "big": {
+    "errors": [],
+    "overflow": 0
+  },
+  "phone": {
+    "errors": [],
+    "overflow": 0
+  },
+  "phoneLight": {
+    "errors": [],
+    "overflow": 0
+  },
+  "reduced": {
+    "errors": [],
+    "overflow": 0
+  },
+  "clip": "design/shots/landing/stage-4/desktop-scroll.mp4"
+}

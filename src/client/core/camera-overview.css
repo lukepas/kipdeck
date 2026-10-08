@@ -5,7 +5,9 @@ body.overview #crosshair,
 body.overview #compass { display: none !important; }
 .overview-legend {
   position: fixed;
-  left: 50%;
+  /* In the middle of the deck you can see: past the Units rail, short of a docked Mission control and
+     the selected unit's card (styles/hud.css --clear-right). */
+  left: calc(var(--rail, 0px) + (100vw - var(--rail, 0px) - var(--clear-right, 0px)) / 2);
   bottom: 62px;
   transform: translateX(-50%);
   display: flex;
@@ -23,5 +25,10 @@ body.overview #compass { display: none !important; }
   z-index: 5;
 }
 .overview-legend.hidden { display: none; }
+/* Fades in once the view has landed up here (150 ms); at once with less motion. */
+.overview-legend { opacity: 0; transition: opacity 150ms var(--ease); }
+.overview-legend.in { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .overview-legend { transition: none; } }
+:root[data-motion='reduce'] .overview-legend { transition: none; }
 .overview-legend b { color: var(--text); font: 600 11px var(--font-display); font-stretch: var(--stretch-display); letter-spacing: 0.08em; }
 .overview-legend kbd { display: inline-block; min-width: 18px; padding: 0 4px; margin-right: 2px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); color: var(--text); font: inherit; text-align: center; }

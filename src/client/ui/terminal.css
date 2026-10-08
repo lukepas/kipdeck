@@ -48,3 +48,8 @@
 .term-say { display: flex; gap: 8px; }
 .modal .term-say input[type=text] { flex: 1; min-width: 0; padding: 8px 10px; }
 .modal.term header .typed { font-size: 12px; font-weight: 400; color: var(--muted); white-space: nowrap; }
+/* The pane's keypad folds its keys behind Keys (the question card has the answers). */
+.term-keypad .term-keys { display: none; }
+.term-keypad .term-say.keys-open .term-keys { display: inline-flex; }
+.term-keys-toggle { flex: none; height: 34px; padding: 0 10px; font-size: 12px; color: var(--muted); }
+.term-keys-toggle[aria-expanded=true] { color: var(--text); background: var(--surface-3); }
