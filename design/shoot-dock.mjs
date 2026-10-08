@@ -157,7 +157,7 @@ async function main() {
       throw new Error(`no deck at ${page.url()}`);
     }
     // Every window's own entrance (the backdrop's fade, the window's rise) settles at once too.
-    await page.addStyleTag({ content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; }' });
+    await page.addStyleTag({ content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; }' });
     await page.locator('#scene').focus();
     const shot = async (name) => {
       await wait(450);
@@ -224,7 +224,7 @@ async function main() {
     // The 2D view docks the same way.
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(`${base}/lite`);
-    await page.addStyleTag({ content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; }' });
+    await page.addStyleTag({ content: '*, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; transition-duration: 0s !important; }' });
     await page.locator('#btn-mission').click();
     await page.locator('.mc-dock-host > .modal.mission-control.docked').waitFor({ timeout: 15_000 });
     await page.keyboard.press('5');
