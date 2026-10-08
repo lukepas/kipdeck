@@ -22,7 +22,7 @@ To check it:
 ```bash
 npm run typecheck         # includes site/landing/tsconfig.json
 npm run perf:site         # builds, measures the budgets in headless Chromium, exits 1 if one breaks
-node --import tsx --import=#tests/css --test tests/landing.test.ts tests/landing-scenes.test.ts tests/landing-a11y.test.ts
+node --import tsx --import=#tests/css --test tests/landing.test.ts tests/landing-scenes.test.ts tests/landing-a11y.test.ts tests/landing-kip.test.ts
 ```
 
 ## Change the name
@@ -98,6 +98,12 @@ Everything is drawn in code from the app's own tokens and glyphs: DOM replicas o
 | 12 End | Nothing waits on you | The footer tells the truth about the wait (it offers Answer if Codex asked again), gives the demo command and the links, and the wordmark opens to the header's width. |
 
 With less motion (the system setting) none of it runs: every section shows its final state and nothing ticks. Without script the page reads in full.
+
+## Kip
+
+Kip, the investor deck's mascot (same drawing, poses and green merge wand), lives on the page. Between sections he stands on the next section's label rule and runs along it as you scroll, with speed lines when you scroll fast and a skid when you stop, and in each section he plays along with the scene: he comes up over the hero's inbox when Codex asks and points his wand at Answer, watches the funnel's swarm, droops while the 23 minutes run, types and reads in the loop and zaps the MERGED stamp with his wand, hops down the numbers chart day by day, high-fives a teammate when the plans part, sits on the escrow lid, and for the finale dashes in along the footer's wordmark and runs along the tops of its letters, then plants his wand as a flag on the last E. Where nothing on screen has room for him, he peeks up beside the content column once the page is still (not on a phone). His eyes follow the cursor. Click him for a trick, press **K** while nothing has focus (or double-tap him on a phone) for a lap, and leave the page alone for 45 seconds and he naps.
+
+He never stands over text, a link, a button or a field: every spot is checked against the page's text lines and controls, and a spot that is not clear is skipped. He is decorative (`aria-hidden`, never focusable), loads in his own chunk after the opening has painted, and is hidden in print. With less motion he is a still drawing in three places (hero, loop, footer). `?nokip` turns him off and loads none of his code. His code is in `src/kip/`, one module per section in `src/kip/moments/`.
 
 ## Honest limits
 
