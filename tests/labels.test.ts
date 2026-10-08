@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { GROW_ROOM, declutter, type Label } from '../src/client/features/workers/declutter.js';
-import { FADED, dock, standsDown } from '../src/client/features/workers/dock.js';
+import { dock, standsDown } from '../src/client/features/workers/dock.js';
 
 const label = (x: number, bottom: number, keep: boolean, w = 160, cw = 60, h = 20): Label => ({ full: { x, bottom, w, h }, compact: { x: x + (w - cw) / 2, bottom, w: cw, h }, keep });
 
@@ -86,9 +86,8 @@ test('a callout that needs someone is never faded or stood down over a board', (
   assert.deepEqual(dock([chip], [board], 210), [{ kind: 'free' }]);
   assert.equal(standsDown(chip, [board]), false, 'it shows over the board');
   const calm = { ...chip, keep: false };
-  assert.deepEqual(dock([calm], [board], 210), [{ kind: 'fade' }]);
+  assert.deepEqual(dock([calm], [board], 210), [{ kind: 'out' }]);
   assert.equal(standsDown(calm, [board]), true);
-  assert.ok(FADED < 1);
 });
 
 test('a pile of three or fewer names its call signs; a bigger one counts', async () => {

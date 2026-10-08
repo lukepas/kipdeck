@@ -71,7 +71,22 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
     }
     // Who it is, what it asks and the button to answer are on its card now (features/selection), its
     // callout and the hint: the toast only says how many more there are, when there are.
-    if (waiting.length > 1) nextToast = toast(`${waiting.findIndex((x) => x.id === w.id) + 1} of ${waiting.length} waiting on you. N for the next`);
+    const count = waitingCount(waiting, w.id);
+    if (count) nextToast = toast(count);
+  }
+
+  /**
+   * The toast after N: where this one is in its own group and how many there are, counted as the top
+   * bar and the rail count them ("1 of 2 need you · 2 to review"), or null when it's the only one.
+   */
+  function waitingCount(waiting: readonly { id: string; status: string }[], id: string): string | null {
+    if (waiting.length < 2) return null;
+    const need = waiting.filter((x) => x.status === 'needs_input');
+    const review = waiting.filter((x) => x.status !== 'needs_input');
+    const mine = need.some((x) => x.id === id) ? need : review;
+    const at = `${mine.findIndex((x) => x.id === id) + 1} of ${mine.length} ${mine === need ? (mine.length === 1 ? 'needs you' : 'need you') : 'to review'}`;
+    const other = mine === need ? (review.length ? ` · ${review.length} to review` : '') : need.length ? ` · ${need.length} need${need.length === 1 ? 's' : ''} you` : '';
+    return `${at}${other}. N for the next`;
   }
 
   /**

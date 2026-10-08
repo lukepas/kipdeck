@@ -4,8 +4,9 @@
  * second row under the first once that's full),
  * as near its own unit as there's room, still tied to it by its hairline. The callouts that need
  * someone (needs you, stuck) come first in the order, so they take the slots first; one that finds no
- * free slot stays where it was, at full strength. Any other with no slot fades to a quarter, so it
- * never covers a row. Pure numbers in pixels, so the tests run it.
+ * free slot stays where it was, at full strength. Any other with no slot stands down ('out': the
+ * declutter pass hides it), so it never covers a row and is never left half faded over another card.
+ * Pure numbers in pixels, so the tests run it.
  */
 import type { PxRect } from '../boardfaces/logic';
 
@@ -17,17 +18,15 @@ export interface Chip {
   h: number;
   /** Where its unit is on screen, across: the slot it's given is as near this as there's room. */
   anchor: number;
-  /** Needs you or stuck: never faded. */
+  /** Needs you or stuck: never put out of sight. */
   keep: boolean;
   /** Not showing (the declutter pass left it out). */
   hidden?: boolean;
 }
 
-/** What becomes of a callout: left where it is, docked with its box's left and bottom here, or faded. */
-export type Docking = { kind: 'free' } | { kind: 'dock'; x: number; bottom: number; board: number } | { kind: 'fade' };
+/** What becomes of a callout: left where it is, docked with its box's left and bottom here, or out of sight. */
+export type Docking = { kind: 'free' } | { kind: 'dock'; x: number; bottom: number; board: number } | { kind: 'out' };
 
-/** How faint a callout with no slot is. */
-export const FADED = 0.25;
 /** Pixels kept under a bezel, between docked chips, and off the bottom of the view. */
 const GAP = 4;
 /** How many slot rows a board has under its bezel, one under the other. */
@@ -127,7 +126,7 @@ export function dock(chips: readonly Chip[], boards: readonly PxRect[], H: numbe
       row.forEach((r, j) => (out[r.i] = { kind: 'dock', x: xs[j], bottom: slotTop + r.h, board: best }));
       return;
     }
-    out[i] = c.keep ? { kind: 'free' } : { kind: 'fade' };
+    out[i] = c.keep ? { kind: 'free' } : { kind: 'out' };
   });
   return out;
 }

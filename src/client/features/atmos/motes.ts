@@ -40,6 +40,8 @@ void main() {
   vA *= 0.45 + 0.55 * (0.5 + 0.5 * sin(uTime * (0.5 + fract(seed * 13.0)) + seed * 91.0));
   vA *= overheadMask(p);
   vec4 mv = viewMatrix * vec4(p, 1.0);
+  // None within a few metres of the lens: a mote right by it is a soft disc over whatever is behind it (a callout's words).
+  vA *= smoothstep(1.0, 3.0, -mv.z);
   gl_Position = projectionMatrix * mv;
   gl_PointSize = uPixel * clamp(0.03 * 900.0 / max(-mv.z, 0.4), 1.5, 5.0);
 }`;

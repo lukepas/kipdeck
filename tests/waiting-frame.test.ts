@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { DESKS, MISSION_TABLE, deskSeat, podOf, readySpot } from '../src/shared/layout';
 import { walkable } from '../src/shared/nav';
 import { EYE_HEIGHT } from '../src/client/player/camera';
-import { FRAME_AIM, FRAME_DISTANCE, FRAME_PITCH, FRAME_PITCH_MIN, STOOL_OF, framePose, onReadyLine, sightClear } from '../src/client/features/waiting/frame';
+import { FRAME_AIM, FRAME_DISTANCE, FRAME_NEAR, FRAME_PITCH, FRAME_PITCH_MIN, STOOL_OF, framePose, onReadyLine, sightClear } from '../src/client/features/waiting/frame';
 import { ACQUIRE, acquireAt, bracketRect, clampBottom } from '../src/client/features/waiting/acquire';
 
 const DEG = 180 / Math.PI;
@@ -23,16 +23,21 @@ function aimError(pose: { x: number; z: number; facing: number }, unit: { x: num
 const dist = (a: { x: number; z: number }, b: { x: number; z: number }) => Math.hypot(a.x - b.x, a.z - b.z);
 const fromTable = (p: { x: number; z: number }) => Math.hypot(p.x - MISSION_TABLE.x, p.z - MISSION_TABLE.z);
 
-test('framePose faces the unit from 2.2 m, looking a touch down', () => {
+test('framePose faces the unit from 2.2 m, looking about 10 degrees down at its chest', () => {
   const desk = DESKS[5];
   const unit = deskSeat(desk, 1.25);
   const pose = framePose(unit, desk, { sight: () => true, floorAt: () => 0 })!;
   assert.ok(pose);
   assert.ok(aimError(pose, unit) < 2, `aim off by ${aimError(pose, unit)} degrees`);
   assert.ok(Math.abs(dist(pose, unit) - FRAME_DISTANCE) < 1e-6);
-  assert.ok(Math.abs(pose.pitch - FRAME_PITCH) < 1e-9, 'on the same floor it looks 0.12 rad down');
-  // At its seat, the far side from the table.
+  assert.ok(Math.abs(pose.pitch - FRAME_PITCH) < 1e-9, 'on the same floor it looks 0.17 rad down');
+  assert.ok(FRAME_PITCH > -0.18 && FRAME_AIM > 0.9 && FRAME_AIM < 1.1, 'its chest, not its head plate');
+  // At its seat, the far side from the table, and round to the side of it: never square on its back.
   assert.ok(fromTable(pose) > fromTable(unit));
+  const out = framePose(unit, desk, { sight: () => true, floorAt: () => 0, walkable: () => true })!;
+  const back = { x: unit.x + (unit.x - desk.x), z: unit.z + (unit.z - desk.z) };
+  const cos = ((out.x - unit.x) * (back.x - unit.x) + (out.z - unit.z) * (back.z - unit.z)) / (FRAME_DISTANCE * Math.hypot(back.x - unit.x, back.z - unit.z));
+  assert.ok(Math.abs(Math.acos(cos) * DEG - 60) < 1, `${Math.acos(cos) * DEG} degrees round from its back`);
 });
 
 test('framePose turns off a blocked spot, and still faces the unit from 2.2 m', () => {
@@ -48,9 +53,9 @@ test('framePose turns off a blocked spot, and still faces the unit from 2.2 m', 
   assert.ok(dist(pose, straight) > 0.5, 'it moved off the blocked spot');
   assert.ok(Math.abs(dist(pose, unit) - FRAME_DISTANCE) < 1e-6);
   assert.ok(aimError(pose, unit) < 2);
-  // The first turn tried is 30 degrees.
+  // At its console the first spot is 60 degrees round one side; blocked, the next is 60 round the other.
   const turn = Math.acos(((pose.x - unit.x) * (straight.x - unit.x) + (pose.z - unit.z) * (straight.z - unit.z)) / FRAME_DISTANCE ** 2) * DEG;
-  assert.ok(Math.abs(turn - 30) < 1e-6, `turned ${turn} degrees`);
+  assert.ok(Math.abs(turn - 120) < 1e-6, `turned ${turn} degrees`);
 });
 
 test('framePose falls back (null) when every spot round the unit is blocked', () => {
@@ -75,14 +80,27 @@ test('on the ready line it lands facing the unit, not its desk', () => {
 
 test('on the real deck every unit, seated or on its ready line, gets a walkable spot', () => {
   for (const desk of DESKS) {
-    for (const unit of [deskSeat(desk, 1.25), readySpot(podOf(desk.id)!, 2)]) {
+    // 0.93 m: where a unit really sits at its console (world/office/seats.ts seatAnchor).
+    for (const unit of [deskSeat(desk, 1.25), deskSeat(desk, 0.93), readySpot(podOf(desk.id)!, 2)]) {
       const pose = framePose(unit, desk, { walkable: (x, z) => walkable(x, z) });
       assert.ok(pose, `${desk.id} at (${unit.x}, ${unit.z}) has a spot`);
       assert.ok(walkable(pose.x, pose.z));
       assert.ok(sightClear(pose, unit, undefined, STOOL_OF.get(desk.id)), `${desk.id}: no console between you and the unit`);
       assert.ok(aimError(pose, unit) < 2);
-      assert.ok(Math.abs(dist(pose, unit) - FRAME_DISTANCE) < 1e-6);
+      const d = dist(pose, unit);
+      assert.ok(Math.abs(d - FRAME_DISTANCE) < 1e-6 || Math.abs(d - FRAME_NEAR) < 1e-6, `${desk.id}: ${d} m out`);
     }
+  }
+});
+
+test('a unit at its console is never framed square from behind: its neighbours and the tier behind bring you in to 1.6 m, 60 degrees round', () => {
+  for (const desk of DESKS) {
+    const unit = deskSeat(desk, 0.93);
+    const pose = framePose(unit, desk, { walkable: (x, z) => walkable(x, z) })!;
+    const back = [unit.x - desk.x, unit.z - desk.z];
+    const to = [pose.x - unit.x, pose.z - unit.z];
+    const off = Math.acos((back[0] * to[0] + back[1] * to[1]) / (Math.hypot(back[0], back[1]) * Math.hypot(to[0], to[1]))) * DEG;
+    assert.ok(off > 45, `${desk.id}: ${off.toFixed(0)} degrees round from its back`);
   }
 });
 

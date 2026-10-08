@@ -11,12 +11,12 @@ export const HEARTBEAT = {
   gap: 1200,
   /**
    * A pulse's life (ms), and the ring's radius (m) from its start to its end: it comes off the quiet
-   * meter (just outside its 0.75 m) and stops short of the next seat, so it never reads as the meter
-   * twitching or spills onto a neighbour.
+   * meter (just outside its 0.75 m) and grows to 1.4 times that, fading to nothing as it goes, so it
+   * reads as one ring leaving the unit, never as the meter twitching, and stops short of the next seat.
    */
   pulseMs: 600,
   from: 0.8,
-  to: 1.25,
+  to: 1.12,
   /** The ring's opacity at its strongest; it fades in over fadeInMs, then out to nothing. */
   alpha: 0.4,
   fadeInMs: 80,

@@ -1,13 +1,12 @@
 import * as THREE from 'three';
 import type { AttentionLevel } from '../../../shared/attention';
-import { splitTag } from '../../../shared/rowtext';
 import type { WorkerAction, WorkerStatus, WorkerTask } from '../../../shared/protocol';
 import { isAsleep, type WorkerPr } from '../../../shared/status';
 import { contactShadow, DECK } from '../office/materials';
 import { GLYPH_HUE, type GlyphKind } from '../glyphs';
 import { UNIT, buildUnit, disposeUnit, paintShell, setGlyph, type Shell, type UnitBody } from './unit-body';
 import { CalloutDocking } from './callout-dock';
-import { CalloutView, calloutText } from './callout-view';
+import { CalloutView, calloutInput, calloutText } from './callout-view';
 import type { CalloutTier } from '../../features/workers/lod';
 import { GLYPH_SCREEN, GroundRing, glyphSprite, setGlyphKind } from './unit-marks';
 
@@ -105,6 +104,8 @@ export class Worker {
   static urgentBoost = 1;
   /** The room draws its own marks over units that need you or are stuck (features/signals): no glyph over them then. */
   static marks = true;
+  /** Every callout held out of sight (the Overview on the move): they pop in once it lands (callout-view.ts). */
+  static hold = false;
 
   private name: string;
   private sign = '';
@@ -402,28 +403,9 @@ export class Worker {
   private paint() {
     const kind = this.kind();
     const now = Date.now();
-    const text = calloutText(
-      {
-        tier: this.callouts.tier,
-        sign: this.sign,
-        name: this.name,
-        kind,
-        level: this.level,
-        since: this.since,
-        reason: this.reason,
-        status: this.status,
-        lost: this.lost,
-        task: this.task?.name ? splitTag(this.task.name).text : undefined,
-        activity: this.activity,
-        pr: this.pr,
-        ...this.meta,
-        epithet: this.epithet,
-        said: this.said,
-        leaving: this.leaving,
-        selected: this.selected,
-      },
-      now,
-    );
+    const { sign, name, level, since, reason, status, lost, task, activity, pr, epithet, said, leaving, selected } = this;
+    const says = { tier: this.callouts.tier, sign, name, kind, level, since, reason, status, lost, task, activity, pr, ...this.meta, epithet, said, leaving, selected };
+    const text = calloutText(calloutInput(says), now);
     this.lastDraw = now;
     paintShell(this.body, this.shell(kind));
     const drawn = this.callouts.draw(text);
@@ -445,7 +427,7 @@ export class Worker {
       if (!this.mergedT) this.paint();
     }
     const now = performance.now();
-    if (this.callouts.tick(now, calm)) this.paint();
+    if (this.callouts.tick(now, calm, Worker.hold)) this.paint();
     // Up close its clock ticks by the second; further off it says nothing that ages.
     else if (Date.now() - this.lastDraw > (this.callouts.tier === 'near' ? 1000 : 15_000)) this.paint();
     this.spawnT = calm ? 1 : Math.min(1, this.spawnT + dt / SPAWN);
@@ -539,6 +521,8 @@ export class Worker {
     this.ring.setHalo(working ? (0.22 + 0.5 * this.busy) * (0.7 + 0.3 * breath) * Math.min(1, this.spawnT * 2) : 0);
     ring.material.opacity = gone ? 0 : strength[kind] * Math.min(1, this.spawnT * 2);
     ring.visible = ring.material.opacity > 0;
+    // At work the heartbeat's meter and pulse are round it (features/heartbeat): no dark disc stacked under them as well.
+    this.ring.inlay.visible = !working;
     // Needs you: a ring spreading out from it, one every PULSE.every seconds.
     const pulsing = kind === 'needs-you' && !gone && !calm;
     pulse.visible = pulsing;

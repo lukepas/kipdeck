@@ -345,7 +345,9 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   await page.locator('.sel-card:not([hidden]) .sel-name').waitFor({ timeout: 10_000 });
   assert.equal(await docked.count(), 1, 'still docked after Locate');
   // And it's seen, not just there: the card sits left of the docked panel, nothing over its middle or its button.
-  await page.waitForFunction(() => document.querySelector('.sel-card.open') && getComputedStyle(document.querySelector('.sel-card')!).opacity === '1', null, { timeout: 5000, polling: 100 });
+  // Its 160 ms fade-in runs on the page's frames, which the software renderer draws slowly on a busy
+  // machine (several seconds for Locate's flight): a generous wait, not a fixed one.
+  await page.waitForFunction(() => document.querySelector('.sel-card.open') && getComputedStyle(document.querySelector('.sel-card')!).opacity === '1', null, { timeout: 30_000, polling: 100 });
   // No named function inside the page code: tsx's keepNames would wrap it in a __name() the page lacks.
   const seen = await page.evaluate(() => {
     const card = document.querySelector<HTMLElement>('.sel-card')!;

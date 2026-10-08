@@ -28,7 +28,7 @@ import { workerBounty } from '../../ui/bounty';
 import { Worker } from '../../world/character';
 import { Laptop } from './laptop';
 import { Arrivals, Departures } from './leaving';
-import { staggerDelay, tierFor } from './lod';
+import { rippleDelays, staggerDelay, tierFor, type CalloutTier } from './lod';
 
 // The kinds of thing you can use that this defines (see InteractKinds in world/types.ts).
 declare module '../../world/types' {
@@ -204,10 +204,50 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
   setInterval(paintLevels, 5000);
   store.on('bounties', syncWorkers);
   const workerPos = new THREE.Vector3();
-  ctx.ticks.add('others', ({ dt, t }) => {
+  const px = new THREE.Vector3();
+  const selAt = new THREE.Vector3();
+  /** About how high a unit's head stands over its foot (m): its callout's foot. */
+  const HEAD = 1.3;
+  /** Unit `m`'s head (where its callout stands) on screen (px) as `cam` sees it, in `out`. */
+  const onScreen = (m: Worker, cam: THREE.Camera, out: THREE.Vector3) => {
+    m.where(out);
+    out.y += HEAD;
+    out.project(cam);
+    return out.set(((out.x + 1) / 2) * innerWidth, ((1 - out.y) / 2) * innerHeight, out.z);
+  };
+  /** Whether the Overview was on the move last frame, and when the ripple's order was last worked out. */
+  let wasMoving = false;
+  let rippleAt = -Infinity;
+  /**
+   * Each unit's delay before its callout changes or pops in: a ripple out from the middle of the view,
+   * the ones that need someone first (lod.ts rippleDelays). Worked out on landing and four times a second.
+   */
+  function ripple(cam: THREE.Camera) {
+    const list = [...workerViews.values()];
+    const at = list.map((v) => {
+      const p = onScreen(v.model, cam, px);
+      return { x: p.z > 1 ? 1e5 : p.x, y: p.y, urgent: v.model.urgent };
+    });
+    rippleDelays(at, innerWidth / 2, innerHeight / 2).forEach((ms, i) => list[i].model.setStagger(ms));
+  }
+  /** A neighbour's callout no closer than this (px) to the selected unit's: one beside it is a tab, not a card over it. */
+  const NEAR_SELECTED_PX = 300;
+  ctx.ticks.add('others', ({ dt, t, now }) => {
     const camPos = camera.position;
     Worker.calm = ctx.reduceMotion.matches;
     const ov = parts.overview;
+    // The Overview on the move: every callout waits out of sight, and pops in as a ripple once it lands.
+    const moving = !!ov?.moving();
+    Worker.hold = moving;
+    const view = ov?.active() ? ov.camera : camera;
+    if ((wasMoving && !moving) || (!moving && now - rippleAt > 250)) {
+      rippleAt = now;
+      ripple(view);
+    }
+    wasMoving = moving;
+    const selId = parts.selection?.id() ?? null;
+    const selModel = selId && !ov?.active() ? workerViews.get(selId)?.model : undefined;
+    const selPx = selModel ? onScreen(selModel, camera, selAt) : null;
     const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
     Worker.screen = (at) => (ov?.active() ? ov.camera.top - ov.camera.bottom : 2 * Math.tan(halfFov) * camera.position.distanceTo(at));
     // From the Overview the units that need you or are stuck are tagged half again as big.
@@ -222,7 +262,14 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
       // Zoomed in to a pod or a unit in the Overview, its whole card; and its callout outlined over its neighbours'.
       const selected = parts.selection?.id() === id;
       v.model.setSelected(selected);
-      v.model.setTier(tierFor({ ortho: ov?.active() ? ov.camera : null, distance: d }, v.model.tier, { selected, zoom: ov?.active() ? ov.zoomTier() : undefined }));
+      let tier: CalloutTier = tierFor({ ortho: ov?.active() ? ov.camera : null, distance: d }, v.model.tier, { selected, zoom: ov?.active() ? ov.zoomTier() : undefined });
+      // Walking with a unit selected, a neighbour close by on screen steps back to its tab (with its call
+      // sign when it needs someone), so neither its card nor a line drawn at close range sits over the selected one's.
+      if (tier !== 'far' && selPx && !selected && selPx.z <= 1) {
+        const p = onScreen(v.model, camera, px);
+        if (Math.hypot(p.x - selPx.x, p.y - selPx.y) < NEAR_SELECTED_PX) tier = 'far';
+      }
+      v.model.setTier(tier);
       // Its small parts (and its laptop's) only within Quality's detail range, a little past it to leave.
       const detail = d < range * (v.detail ? 1.08 : 1);
       if (detail !== v.detail) {

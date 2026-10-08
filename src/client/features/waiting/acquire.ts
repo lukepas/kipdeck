@@ -4,7 +4,8 @@
  * which unit the office brought you to. They start at 1.8 times the unit's box and close to 1.1 over
  * 260 ms once the flight has landed, hold 900 ms and fade over 200 ms. Under reduced motion they
  * show still at 1.1 for 600 ms. A DOM overlay that never takes the mouse; it follows the unit each
- * 'hud' tick while it shows, and steps aside for a window.
+ * 'hud' tick while it shows, keeps its lower corners off the bottom bar and the hint over it, and steps
+ * aside for a window (not for Mission control docked beside the deck).
  */
 import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
@@ -50,8 +51,11 @@ export function clampBottom<R extends { top: number; height: number }>(r: R, flo
   return r.top + r.height <= floor ? r : { ...r, height: Math.max(0, floor - r.top) };
 }
 
-/** Pixels kept clear along the bottom of the view: the bottom bar and the strip over it (styles/hud.css --bottom, plus a gap). */
-const BOTTOM_CLEAR = 62;
+/**
+ * Pixels kept clear along the bottom of the view over the bottom bar (styles/hud.css --bottom): the
+ * walk hint's rows and the action bar stand there, so the bracket's lower corners never land on them.
+ */
+const BOTTOM_CLEAR = 60;
 
 /** Half the unit's width (m) the box takes either side of its middle. */
 const HALF_WIDTH = 0.38;
@@ -65,6 +69,21 @@ export function makeAcquire(ctx: Ctx, parts: Pick<Parts, 'views' | 'stage' | 'fl
   (document.getElementById('hud') ?? document.body).append(el);
 
   let model: WorkerModel | null = null;
+  /**
+   * The lowest the bracket's bottom goes (px from the top): clear of the bottom bar and BOTTOM_CLEAR over
+   * it, and of the hint when that's up. Measured when it locks on, when the flight lands (the hint over
+   * the unit is up by then) and on a resize, never every frame.
+   */
+  let floor = Infinity;
+  function measureFloor() {
+    const bar = parseFloat(getComputedStyle(document.getElementById('hud') ?? document.body).getPropertyValue('--bottom')) || 52;
+    const hint = document.getElementById('hint');
+    const hintTop = hint && !hint.classList.contains('hidden') ? hint.getBoundingClientRect().top - 6 : Infinity;
+    floor = Math.min(innerHeight - bar - BOTTOM_CLEAR, hintTop);
+  }
+  addEventListener('resize', () => {
+    if (model) measureFloor();
+  });
   /** When the flight landed (performance.now()), or null while it's still flying. */
   let landed: number | null = null;
   const foot = new THREE.Vector3();
@@ -108,18 +127,19 @@ export function makeAcquire(ctx: Ctx, parts: Pick<Parts, 'views' | 'stage' | 'fl
       // It closes in once the view has caught up with where you are.
       if (parts.flight.flying()) return;
       landed = now;
+      measureFloor();
     }
     const at = acquireAt(now - landed, ctx.reduceMotion.matches);
     if (!at || !model.root.parent) return stop();
-    const box = modalOpen() ? null : boxOf(model, parts.stage.view ?? ctx.camera);
+    // A window over the deck hides it; Mission control docked beside the deck doesn't (its Locate brings you here).
+    const covered = modalOpen() && !!document.querySelector('#modal-root > .backdrop:not(.mc-dock-backdrop)');
+    const box = covered ? null : boxOf(model, parts.stage.view ?? ctx.camera);
     if (!box) {
       el.hidden = true;
       return;
     }
     // Clear of the bottom bar, and of the hint over it when that's up (what the unit's keys do).
-    const hint = document.getElementById('hint');
-    const hintTop = hint && !hint.classList.contains('hidden') ? hint.getBoundingClientRect().top - 6 : Infinity;
-    const r = clampBottom(bracketRect(box, at.scale), Math.min(innerHeight - BOTTOM_CLEAR, hintTop));
+    const r = clampBottom(bracketRect(box, at.scale), floor);
     el.hidden = false;
     el.style.transform = `translate(${r.left.toFixed(1)}px, ${r.top.toFixed(1)}px)`;
     el.style.width = `${r.width.toFixed(1)}px`;
@@ -135,6 +155,7 @@ export function makeAcquire(ctx: Ctx, parts: Pick<Parts, 'views' | 'stage' | 'fl
       if (!v) return stop();
       model = v.model;
       landed = null;
+      measureFloor();
     },
     /** Whether the bracket is on screen now (for the shots). */
     showing: () => !el.hidden,

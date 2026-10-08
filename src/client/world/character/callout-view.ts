@@ -1,12 +1,12 @@
 import * as THREE from 'three';
 import type { AttentionLevel } from '../../../shared/attention';
-import { elapsed } from '../../../shared/rowtext';
-import type { WorkerStatus } from '../../../shared/protocol';
+import { elapsed, headline } from '../../../shared/rowtext';
+import type { WorkerStatus, WorkerTask } from '../../../shared/protocol';
 import { isAsleep, type WorkerPr } from '../../../shared/status';
 import { CALLOUT_SCREEN, FADE_OUT_MS, askLine, clip, easeOutCubic, midLine, popAt, sameWords, wrapTwo, type CalloutTier } from '../../features/workers/lod';
 import type { GlyphKind } from '../glyphs';
 import { disposeSprite } from '../toon';
-import { calloutSprite, redrawCallout, type CalloutText } from './unit-callout';
+import { CALLOUT_PX, calloutSprite, redrawCallout, type CalloutText } from './unit-callout';
 
 const STATE_WORD: Record<GlyphKind, string> = {
   'needs-you': 'NEEDS YOU',
@@ -46,6 +46,19 @@ export interface UnitSays {
   selected?: boolean;
 }
 
+/**
+ * What a unit has to say, from its own fields (world/character/worker.ts): its task as one title, the
+ * whole of it where the short name was cut from the front of its summary, so a card never shows a
+ * name cut short as though it were the whole task ("Pick the session").
+ */
+export function calloutInput(o: Omit<UnitSays, 'task'> & { task?: WorkerTask }): UnitSays {
+  const title = o.task ? headline(o.task).title : '';
+  return { ...o, task: title || undefined };
+}
+
+/** The near card's third line for a unit that needs an answer and says nothing more about what it asks. */
+export const NEEDS_ANSWER = 'Needs an answer';
+
 /** What the callout says, from what the unit has to say and the time now. */
 export function calloutText(u: UnitSays, now: number): CalloutText {
   if (u.leaving !== null) return { tier: 'mid', sign: '', name: `${u.name}  ${u.leaving}`, kind: null };
@@ -66,9 +79,12 @@ export function calloutText(u: UnitSays, now: number): CalloutText {
   const said = u.said ?? u.task;
   const ask = asked && !(said && sameWords(asked, said)) ? asked : undefined;
   const pr = u.pr ? `PR #${u.pr.number}${u.pr.state === 'open' ? '' : ` ${u.pr.state}`}` : '';
-  const meta = ask ?? [u.branch, pr, u.model].filter(Boolean).join(' / ');
-  // Only a stuck unit's reason takes its red; what one asks reads muted under the task.
-  const stuckWhy = ask && (u.lost || u.kind === 'stuck');
+  // One that needs you never spends its third line on the engine: with nothing more to say about what
+  // it asks (a question whose prompt is the task), it says it wants an answer, in its hue.
+  const bare = !ask && u.kind === 'needs-you' && !u.lost;
+  const meta = ask ?? (bare ? NEEDS_ANSWER : [u.branch, pr, u.model].filter(Boolean).join(' / '));
+  // A stuck unit's reason takes its red, and so does a bare "Needs an answer"; what one asks reads muted under the task.
+  const stuckWhy = (ask && (u.lost || u.kind === 'stuck')) || bare;
   return {
     tier,
     sign: u.sign,
@@ -105,8 +121,10 @@ export class CalloutView {
   private shape = '';
   /** Its delay before a change (ms), from its id. */
   delay = 0;
-  /** This frame's pop: how big against its size, how strong. */
-  pop = { scale: 1, alpha: 1 };
+  /** This frame's pop: how big against its size, how strong, and how far (px as drawn) it still has to rise. */
+  pop = { scale: 1, alpha: 1, rise: 0 };
+  /** Held out of sight (the Overview on the move): it pops in, after its delay, once let go. */
+  private held = false;
 
   constructor(private readonly parent: THREE.Object3D) {}
 
@@ -117,13 +135,30 @@ export class CalloutView {
     this.switchAt = now + (calm || urgent ? 0 : this.delay);
   }
 
-  /** Steps the pop and the switch; true when the tier changed and it wants drawing again. */
-  tick(now: number, calm: boolean): boolean {
+  /**
+   * Steps the pop and the switch; true when the tier changed and it wants drawing again. While `hold`
+   * (the Overview on the move) it shows nothing and keeps its tier; let go, it takes the tier it's
+   * headed for at once and pops in after its delay, so the cards arrive once the view has landed.
+   */
+  tick(now: number, calm: boolean, hold = false): boolean {
     if (!this.born) {
       this.born = true;
       this.popFrom = calm ? -Infinity : now + this.delay;
     }
+    if (hold && !calm) {
+      this.held = true;
+      this.outFrom = null;
+      this.pop = { ...popAt(-1), alpha: 0 };
+      this.rise();
+      return false;
+    }
     let changed = false;
+    if (this.held) {
+      this.held = false;
+      changed = this.tier !== this.want;
+      this.tier = this.want;
+      this.popFrom = now + this.delay;
+    }
     if (this.want === this.tier) this.outFrom = null;
     else if (now >= this.switchAt) {
       // The old content fades out first, so the callout never blinks out in one frame.
@@ -135,14 +170,22 @@ export class CalloutView {
         changed = true;
       }
     }
-    if (calm) this.pop = { scale: 1, alpha: 1 };
+    if (calm) this.pop = { scale: 1, alpha: 1, rise: 0 };
     else if (this.outFrom !== null) {
-      const fading = { scale: 1, alpha: 1 - easeOutCubic((now - this.outFrom) / FADE_OUT_MS) };
+      const fading = 1 - easeOutCubic((now - this.outFrom) / FADE_OUT_MS);
       // Fading from wherever its own pop-in had got to.
       const was = popAt(now - this.popFrom);
-      this.pop = { scale: was.scale, alpha: Math.min(was.alpha, fading.alpha) };
+      this.pop = { ...was, alpha: Math.min(was.alpha, fading) };
     } else this.pop = popAt(now - this.popFrom);
+    this.rise();
     return changed;
+  }
+
+  /** Sets both sprites this frame's rise below their place: their anchor that far up into them. */
+  private rise() {
+    for (const c of [this.full, this.compact]) {
+      if (c) c.center.y = this.pop.rise / Math.max(1, (c.userData.base as THREE.Vector3).y / CALLOUT_PX);
+    }
   }
 
   /**

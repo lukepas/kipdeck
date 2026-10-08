@@ -297,7 +297,9 @@ async function main() {
     await shot(page, 'after-esc');
     await page.keyboard.press('Escape');
     // The move down takes 650 ms of the page's clock, which a software renderer draws a frame a second
-    // of: wait for it to land rather than a fixed while.
+    // of: wait for it to start, then to land, rather than a fixed while (polling for "not moving" alone
+    // can catch the frame before the move has begun).
+    await page.waitForFunction(() => window.__office.overview.moving() || !window.__office.overview.active(), null, { timeout: 30_000, polling: 50 });
     await page.waitForFunction(() => !window.__office.overview.moving() && window.__office.renderer.info.render.frame > 0, null, { timeout: 30_000, polling: 250 });
     await wait(300);
     console.log('after second Esc: overview', await page.evaluate(() => window.__office.overview.active()));

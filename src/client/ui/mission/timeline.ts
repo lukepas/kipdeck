@@ -94,7 +94,7 @@ export function eventRow(deps: MissionDeps, e: TimelineEvent, showFloor: boolean
       explorerLink(e.link) ? h('a.tl-tx', { href: e.link, target: '_blank', rel: 'noopener noreferrer' }, e.kind === 'merge-attested' ? 'proof' : 'tx') : null,
       // A bounty's transaction, on the devnet explorer (a mock one has nowhere to go).
       !e.link && e.tx && !e.tx.startsWith('mock-') ? h('a.tl-tx', { href: `https://explorer.solana.com/tx/${encodeURIComponent(e.tx)}?cluster=devnet`, target: '_blank', rel: 'noopener noreferrer' }, 'tx') : null,
-      unit ? locateButton(deps, unit) : null,
+      unit ? locateButton(deps, unit, false) : null,
       h('span.tl-chev', { 'aria-hidden': 'true' }),
     ),
   );

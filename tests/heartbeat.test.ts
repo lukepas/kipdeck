@@ -102,7 +102,7 @@ test('the meter is cyan below half drained and amber from half', () => {
   assert.equal(meterHue(1), DECK.review);
 });
 
-test('a pulse comes off the meter, swells 0.8 to 1.25 m, fades in over 80 ms, then out to 0 by 600 ms, easing out', () => {
+test('a pulse comes off the meter, swells 0.8 to 1.12 m (1.4 times), fades in over 80 ms, then out to 0 by 600 ms, easing out', () => {
   const at = (ms: number, gain = 1) => {
     const o = { x: NaN, y: NaN };
     pulseShape(ms, gain, o);
@@ -113,12 +113,13 @@ test('a pulse comes off the meter, swells 0.8 to 1.25 m, fades in over 80 ms, th
   // No full-strength ring on its first frame.
   assert.equal(at(0).y, 0);
   assert.ok(at(40).y > 0 && at(40).y < at(80).y);
-  assert.ok(Math.abs(at(600).x - 1.25) < 1e-9);
+  assert.ok(Math.abs(at(600).x - 1.12) < 1e-9);
+  assert.ok(Math.abs(HEARTBEAT.to / HEARTBEAT.from - 1.4) < 1e-9, 'one ring out to 1.4 times');
   assert.equal(at(600).y, 0);
   assert.equal(at(5000).y, 0);
   assert.equal(at(-1).y, 0);
   // easeOutQuad: 0.4375 of the way out a quarter of the way in.
-  assert.ok(Math.abs(at(150).x - (0.8 + 0.45 * 0.4375)) < 1e-9);
+  assert.ok(Math.abs(at(150).x - (0.8 + 0.32 * 0.4375)) < 1e-9);
   assert.ok(Math.abs(at(150).y - 0.4 * (1 - 0.4375)) < 1e-9);
   for (let t = 100; t < 600; t += 50) assert.ok(at(t + 50).y <= at(t).y && at(t + 50).x >= at(t).x);
   for (let t = 0; t < 600; t += 10) assert.ok(at(t).y <= HEARTBEAT.alpha);

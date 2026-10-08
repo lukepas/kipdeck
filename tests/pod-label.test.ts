@@ -44,7 +44,7 @@ test("the goal's title is cut to 34 characters, at a word where it can be", () =
   assert.equal(clipTitle('Auth rewrite on the new session store'), 'Auth rewrite on the new session…');
   assert.equal(clipTitle('Add rate limits to the public API'), 'Add rate limits to the public API');
   assert.ok(clipTitle('Supercalifragilisticexpialidocious and more').length <= 34);
-  assert.equal(podLabel('D', undefined, []).title, 'No goal yet');
+  assert.equal(podLabel('D', undefined, []).title, '', 'no goal: the counts stand alone');
   assert.equal(podLabel('A', { goal: 'g1', title: 'Payments', units: 2 }, []).title, 'Payments');
   assert.equal(podLabel('A', { goal: 'g1', units: 2 }, []).title, 'g1');
 });
@@ -82,7 +82,7 @@ test("each pod's view: its goal's hue (no two goals alike), its title and its co
   assert.equal(countsText(v.A.text.segments), '1 needs you · 2 working');
   assert.equal(countsText(v.C.text.segments), '1 stuck · 1 working', 'a unit off the pods is in no pod');
   assert.equal(countsText(v.D.text.segments), 'idle');
-  assert.equal(v.D.text.title, 'No goal yet');
+  assert.equal(v.D.text.title, '');
 });
 
 test("each zone lies on its pod's tier, round its consoles, off the aisle and the tiers' ends", () => {
@@ -188,12 +188,16 @@ test('a busy pod\'s counts line fits inside its chip: nothing is painted past th
   for (const d of drawn) assert.ok(d.right <= W, `no goal: "${d.t}" runs to ${d.right.toFixed(0)} px on a ${W} px chip`);
 });
 
-test('from the Overview zoomed out a label grows so its counts read at least 11 px, never past 1.5 times; each is framed whole', async () => {
-  const { MAX_GROW, MIN_TEXT_PX, labelGrow } = await import('../src/client/features/pods/world.js');
+test('from the Overview zoomed out a label grows so its counts read at least 11 px, never past 1.5 times; zoomed in it shrinks to 18 px; each is framed whole', async () => {
+  const { MAX_GROW, MIN_TEXT_PX, MAX_TEXT_PX, labelGrow } = await import('../src/client/features/pods/world.js');
   const { OVERVIEW_PITCH, allFramed, framedPoints } = await import('../src/client/core/overview-frame.js');
   const caps = (pxPerM: number, k: number) => 0.38 * 0.72 * LABEL.d * k * Math.sin(OVERVIEW_PITCH) * pxPerM;
-  // Close in it is its own size; at the deck's zoom (about 28 px a metre on a 900 px view) it grows.
-  assert.equal(labelGrow(200, OVERVIEW_PITCH), 1);
+  // Close in it keeps the size it reads at, as the callouts do: never taller than MAX_TEXT_PX.
+  for (const pxPerM of [80, 120, 200]) {
+    const k = labelGrow(pxPerM, OVERVIEW_PITCH);
+    assert.ok(k < 1 && Math.abs(caps(pxPerM, k) - MAX_TEXT_PX) < 1e-6, `${caps(pxPerM, k)} px at ${pxPerM} px/m`);
+  }
+  // At the deck's zoom (about 28 px a metre on a 900 px view) it grows.
   for (const pxPerM of [24, 28, 34]) {
     const k = labelGrow(pxPerM, OVERVIEW_PITCH);
     assert.ok(k > 1 && k <= MAX_GROW);
@@ -204,6 +208,17 @@ test('from the Overview zoomed out a label grows so its counts read at least 11 
   const src = (await import('node:fs')).readFileSync(new URL('../src/client/features/pods/index.ts', import.meta.url), 'utf8');
   assert.match(src, /frameAlso\(labelCorners\(letter\)/);
   assert.ok(allFramed().length >= framedPoints().length);
+});
+
+test('a label hides while any of it is under the Units rail, and fades back in clear of it', async () => {
+  const { railAlpha } = await import('../src/client/features/pods/world.js');
+  const box = (left: number) => ({ left, right: left + 200, top: 100, bottom: 140 });
+  assert.equal(railAlpha(box(200), 264), 0, 'its left end under the rail');
+  assert.equal(railAlpha(box(264), 264), 0);
+  assert.ok(railAlpha(box(276), 264) > 0 && railAlpha(box(276), 264) < 1);
+  assert.equal(railAlpha(box(400), 264), 1);
+  // No rail (folded): always shows.
+  assert.equal(railAlpha(box(10), 0), 1);
 });
 
 test('every pod zone, fill and outline, is one mesh: one draw for all four', async () => {

@@ -39,6 +39,12 @@ export interface Signal {
   phase: number;
   /** How far up to its card the beam has climbed (0-1): a new call's beam climbs (features/hail), else 1. */
   reach: number;
+  /**
+   * Its close-up card is showing over its head (features/workers/lod.ts, the near tier): the card says
+   * needs you or stuck in its chip, so the diamond or the triangle over its head stands down rather
+   * than poke out from behind the card as the biggest shape on screen.
+   */
+  carded?: boolean;
 }
 
 /** The signal a unit's shown state gets: none while it's parked (asleep, ready) or just merged. */

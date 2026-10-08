@@ -17,7 +17,7 @@ export interface Segment {
 
 export interface PodLabelText {
   letter: PodLetter;
-  /** The goal's title, clipped to TITLE_MAX characters, or "No goal yet". */
+  /** The goal's title, clipped to TITLE_MAX characters, or '' without one (the counts stand alone then). */
   title: string;
   /** Whether there's a goal: without one the title under the counts is muted (draw.ts). */
   goal: boolean;
@@ -72,7 +72,7 @@ export const countsText = (segs: readonly Segment[]) => segs.map(segmentText).jo
 
 /** A pod's label: its goal (if any) and its units' counts. */
 export function podLabel(letter: PodLetter, goal: PodGoal | undefined, units: Iterable<PodUnit>): PodLabelText {
-  const title = goal ? clipTitle(goal.title ?? goal.goal) : 'No goal yet';
+  const title = goal ? clipTitle(goal.title ?? goal.goal) : '';
   const segs = segments(units);
   return { letter, title, goal: !!goal, segments: segs, key: `${letter}|${goal ? 1 : 0}|${title}|${countsText(segs)}` };
 }

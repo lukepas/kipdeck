@@ -8,11 +8,12 @@ import { HEARTBEAT } from './logic';
 
 /** Most units drawn (a deck seats 16 at its consoles, the overflow bay and the Standby bench more). */
 const MAX = 32;
-/** The arc's width (m) and how many segments it's cut in. */
-const ARC_W = 0.06;
+/** The arc's width (m) and how many segments it's cut in: a thin line, so it reads as a meter, not another ring. */
+const ARC_W = 0.035;
 const ARC_SEGMENTS = 60;
-/** How bright the drained part of the arc stays, so the meter still reads as a meter when it's empty. */
-const TRACK = 0.1;
+/** How bright the drained part of the arc stays, so the meter still reads as a meter when it's empty, and the lit part. */
+const TRACK = 0.08;
+const LIT = 0.5;
 
 const METER_VERT = /* glsl */ `
 attribute float along;
@@ -32,9 +33,9 @@ varying vec4 vMeter;
 void main() {
   // vMeter.a is how much has drained: the arc is lit from there to its end, so it empties clockwise.
   float lit = step(vMeter.a, vAlong);
-  float a = mix(${TRACK.toFixed(2)}, 0.9, lit) * uGain;
+  float a = mix(${TRACK.toFixed(2)}, ${LIT.toFixed(2)}, lit) * uGain;
   // A tick at halfway, where it turns amber: how far it has drained reads against it.
-  a = max(a, (1.0 - step(0.008, abs(vAlong - ${HEARTBEAT.amberAt.toFixed(2)}))) * 0.9 * uGain);
+  a = max(a, (1.0 - step(0.008, abs(vAlong - ${HEARTBEAT.amberAt.toFixed(2)}))) * ${LIT.toFixed(2)} * uGain);
   gl_FragColor = vec4(vMeter.rgb, a);
   #include <colorspace_fragment>
 }`;

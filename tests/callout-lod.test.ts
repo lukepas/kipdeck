@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CALLOUT_SCREEN, FADE_OUT_MS, sameWords, wrapTwo, MID_MAX, OVERVIEW_BOUNDS, POP_FROM, STAGGER_MAX, WALK_BOUNDS, activityLine, askLine, midLine, permissionAsk, popAt, staggerDelay, tierAt, tierFor, type CalloutTier } from '../src/client/features/workers/lod.ts';
+import { CALLOUT_SCREEN, FADE_OUT_MS, sameWords, wrapTwo, MID_MAX, OVERVIEW_BOUNDS, POP_FROM, POP_MS, POP_RISE, RIPPLE_MAX, RIPPLE_STEP, STAGGER_MAX, rippleDelays, WALK_BOUNDS, activityLine, askLine, midLine, permissionAsk, popAt, staggerDelay, tierAt, tierFor, type CalloutTier } from '../src/client/features/workers/lod.ts';
 import { elapsed, statusPhrase } from '../src/shared/rowtext.ts';
-import { calloutText, type UnitSays } from '../src/client/world/character/callout-view.ts';
+import { NEEDS_ANSWER, calloutInput, calloutText, type UnitSays } from '../src/client/world/character/callout-view.ts';
 
 const ortho = (half: number) => ({ top: half, bottom: -half });
 
@@ -102,11 +102,13 @@ test('the stagger is the same every time for an id, and within 0-240 ms', () => 
   assert.equal(seen.size, 7);
 });
 
-test('the pop grows from 88% and clear to full, eased out, and holds before it starts', () => {
-  assert.deepEqual(popAt(-50), { scale: POP_FROM, alpha: 0 });
-  assert.deepEqual(popAt(180), { scale: 1, alpha: 1 });
-  assert.deepEqual(popAt(1000), { scale: 1, alpha: 1 });
-  const half = popAt(90);
+test('the pop grows from 88% and clear to full and rises 6 px into place over 220 ms, eased out, and holds before it starts', () => {
+  assert.equal(POP_MS, 220);
+  assert.deepEqual(popAt(-50), { scale: POP_FROM, alpha: 0, rise: POP_RISE });
+  assert.deepEqual(popAt(POP_MS), { scale: 1, alpha: 1, rise: 0 });
+  assert.deepEqual(popAt(1000), { scale: 1, alpha: 1, rise: 0 });
+  assert.ok(popAt(POP_MS / 4).rise < POP_RISE && popAt(POP_MS / 4).rise > popAt(POP_MS / 2).rise);
+  const half = popAt(POP_MS / 2);
   // easeOutCubic: most of the way there by half time.
   assert.ok(half.alpha > 0.85 && half.alpha < 0.9, String(half.alpha));
   assert.ok(half.scale > POP_FROM && half.scale < 1);
@@ -209,8 +211,13 @@ test('near: the task said once, in full on up to two lines; a question that is t
   const ask = 'Pick the session store for the auth rewrite';
   const t = calloutText(unit({ tier: 'near', kind: 'needs-you', level: 'needs-you', task: ask, activity: ask, branch: 'office/pixel', model: 'claude' }), NOW);
   assert.equal(t.task, 'Pick the session store for the\nauth rewrite');
-  assert.equal(t.meta, 'office/pixel / claude');
-  assert.equal(t.metaHue, false);
+  // Nothing more to say about what it asks: it says it wants an answer, in its hue, never the engine.
+  assert.equal(t.meta, NEEDS_ANSWER);
+  assert.equal(t.metaHue, true);
+  // A question with no words of its own at all says the same.
+  assert.equal(calloutText(unit({ tier: 'near', kind: 'needs-you', level: 'needs-you', task: ask, model: 'claude' }), NOW).meta, NEEDS_ANSWER);
+  // A unit at work keeps its branch and engine.
+  assert.equal(calloutText(unit({ tier: 'near', task: ask, branch: 'office/pixel', model: 'claude' }), NOW).meta, 'office/pixel / claude');
   // Two lines at most, the second cut with three dots.
   const long = wrapTwo('Migrate the payments webhook to the new queue and drain the old one first', 30);
   const lines = long.split('\n');
@@ -260,6 +267,59 @@ test('a word said, or a unit standing down, overrides the tier', () => {
   const going = calloutText(unit({ tier: 'near', leaving: 'signing off' }), NOW);
   assert.equal(going.kind, null);
   assert.equal(going.name, 'Pixel  signing off');
+});
+
+test('a task whose short name was cut from its summary shows the whole of it, cut with dots only where it runs over', () => {
+  const base = { tier: 'near' as const, sign: 'A-01', name: 'Pixel', kind: 'needs-you' as const, level: 'needs-you' as const, since: NOW, status: 'needs_input' as const, lost: false, epithet: '', said: null, leaving: null };
+  const pick = calloutInput({ ...base, task: { name: 'Pick the session', summary: 'Pick the session store for the auth rewrite' } });
+  assert.equal(pick.task, 'Pick the session store for the auth rewrite');
+  assert.equal(calloutText(pick, NOW).task, 'Pick the session store for the\nauth rewrite');
+  const long = calloutText(calloutInput({ ...base, task: { name: 'Migrate the payments webhook', summary: 'Migrate the payments webhook to the new queue and drain the old one first' } }), NOW).task!;
+  assert.ok(long.endsWith('...'), long);
+  // A tag on the name is a chip elsewhere, never brackets on the card.
+  assert.equal(calloutInput({ ...base, task: { name: '[ask] Which cookie' } }).task, 'Which cookie');
+  assert.equal(calloutInput({ ...base }).task, undefined);
+});
+
+test('an [ask] or [perm] tag never shows on a callout', () => {
+  assert.equal(midLine({ level: 'working', activity: '[ask] Which cookie name?' }), 'Which cookie name?');
+  assert.equal(midLine({ level: 'review', label: '[ask] Done' }), 'Done');
+  assert.equal(askLine({ level: 'needs-you', activity: '[ask] Which cookie name?' }), 'Which cookie name?');
+  assert.equal(askLine({ level: 'needs-you', label: '[perm] Wants permission: Bash: npm publish' }), 'Bash: npm publish');
+});
+
+test('from the Overview the pop-in ripples out from the middle, the ones that need someone first', () => {
+  const units = [
+    { x: 900, y: 500, urgent: false },
+    { x: 500, y: 450, urgent: false },
+    { x: 100, y: 100, urgent: true },
+    { x: 510, y: 460, urgent: false },
+  ];
+  const d = rippleDelays(units, 500, 450);
+  assert.equal(d[2], 0, 'needs you: at once, wherever it is');
+  assert.equal(d[1], RIPPLE_STEP, 'the nearest the middle next');
+  assert.equal(d[3], 2 * RIPPLE_STEP);
+  assert.equal(d[0], 3 * RIPPLE_STEP);
+  const many = rippleDelays(Array.from({ length: 20 }, (_, i) => ({ x: i * 50, y: 0, urgent: false })), 0, 0);
+  assert.equal(Math.max(...many), RIPPLE_MAX);
+});
+
+test('held while the Overview moves, a callout shows nothing and keeps its tier, then pops in after its delay once let go', async () => {
+  const { CalloutView } = await import('../src/client/world/character/callout-view.js');
+  const THREE = await import('three');
+  const v = new CalloutView(new THREE.Group());
+  v.delay = 90;
+  v.tick(0, false);
+  v.tick(1000, false);
+  v.request('far', 1000, false);
+  assert.equal(v.tick(1100, false, true), false);
+  assert.equal(v.pop.alpha, 0, 'out of sight on the move');
+  assert.equal(v.tier, 'mid', 'its tier held');
+  assert.equal(v.tick(1700, false, false), true, 'landed: the new tier at once');
+  assert.equal(v.tier, 'far');
+  assert.equal(v.pop.alpha, 0, 'still waiting its delay');
+  v.tick(1700 + 90 + POP_MS, false);
+  assert.equal(v.pop.alpha, 1);
 });
 
 test('each tier takes a bigger share of the view than the one before', () => {

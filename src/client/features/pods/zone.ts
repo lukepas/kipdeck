@@ -1,5 +1,5 @@
-// A pod's zone on the floor: its slice of the tier (footprint.ts) washed in its goal's hue at 30%, with
-// a line round it in a brighter tint of the hue at 70%, so the Overview shows which pods share a goal
+// A pod's zone on the floor: its slice of the tier (footprint.ts) washed in its goal's hue at 55%, with
+// a line round it in a brighter tint of the hue at 90%, so the Overview shows which pods share a goal
 // without reading a word, the way a plan colours each room's floor. A hue that changes cross-fades over 500 ms (eased in and out), never
 // a pop; with less motion it changes at once.
 import * as THREE from 'three';
@@ -7,7 +7,7 @@ import type { PodLetter } from '../../../shared/layout';
 import { podZone, zoneOutline } from './footprint';
 
 /** The zone's fill and outline strength, and how long a change of hue takes. */
-export const ZONE_LOOK = { fill: 0.3, line: 0.7, lift: 0.5, fadeMs: 500 } as const;
+export const ZONE_LOOK = { fill: 0.55, line: 0.9, lift: 0.5, fadeMs: 500 } as const;
 
 const easeInOut = (k: number) => (k < 0.5 ? 2 * k * k : 1 - (-2 * k + 2) ** 2 / 2);
 

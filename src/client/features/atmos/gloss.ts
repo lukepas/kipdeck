@@ -26,10 +26,14 @@ export class Gloss {
   /** Each polished material and its own roughness. */
   private readonly own = new Map<THREE.MeshStandardMaterial, number>();
   private last = 0;
+  private collectedAt = -Infinity;
 
   constructor(private readonly scene: THREE.Object3D) {}
 
-  /** Finds the polished materials afresh (a move is starting: units and fixtures may have come since). */
+  /** How often (ms) the materials are looked for again while the Overview is up: a unit may come on the deck meanwhile. */
+  static readonly AGAIN_MS = 1000;
+
+  /** Finds the polished materials afresh (a move is starting, or a unit or a fixture may have come since). */
   private collect() {
     this.scene.traverse((o) => {
       const m = (o as THREE.Mesh).material;
@@ -42,9 +46,14 @@ export class Gloss {
   }
 
   /** Sets every polished surface for the view `up` of the way into the Overview. */
-  update(up: number) {
-    if (up === this.last) return;
-    if (this.last === 0) this.collect();
+  update(up: number, now = performance.now()) {
+    // Up there, one that came on the deck since the move (a unit deployed) goes matte too, within a second.
+    const stale = up > 0 && now - this.collectedAt > Gloss.AGAIN_MS;
+    if (up === this.last && !stale) return;
+    if (this.last === 0 || stale) {
+      this.collect();
+      this.collectedAt = now;
+    }
     this.last = up;
     for (const [m, r] of this.own) m.roughness = glossAt(r, up);
     // Back in Walk: let go of them, so a material disposed meanwhile isn't held.
