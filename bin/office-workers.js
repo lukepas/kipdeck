@@ -296,7 +296,7 @@ export const TOOLS = [
     name: 'list_workers',
     title: 'List workers',
     description:
-      "Lists the coding agents (the office's workers) at the desks on this Kipdeck deck, and shells: each one's id, name, status, desk, task, git worktree branch and pull request " +
+      "Lists the coding agents (the office's workers) at the desks on this deck, and shells: each one's id, name, status, desk, task, git worktree branch and pull request " +
       '(pr; a worker that opened one the office does not show here needs link_pr). ' +
       'merged: true means a pull request of its merged and none is open: its work landed and it can go home. staying says why the office would not send it home by itself yet ' +
       '(still working, someone has its terminal open, a board agent...). worktree.deleted: true means its folder was deleted outside the office, so it cannot start until a person rebuilds it at its desk. you: true is you. ' +

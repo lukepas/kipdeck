@@ -96,7 +96,7 @@ const add = (name, w, h, html, transparent = false) => jobs.push({ name, w, h, h
 add('title', 1920, 1080, `<body style="background:${C.paper};color:${C.ink}">
 <div style="position:absolute;left:96px;top:92px">${mark(52, 8)}</div>
 <div class="mono" style="position:absolute;left:330px;top:100px;font-size:22px;letter-spacing:.08em;color:${C.grey}">TECHNICAL DEMO - HOW IT WORKS</div>
-<div class="mono" style="position:absolute;left:330px;top:140px;font-size:34px;font-weight:700">Mission control for AI coding agents.</div>
+<div class="mono" style="position:absolute;left:330px;top:140px;font-size:34px;font-weight:700">The inbox for your AI coding agents.</div>
 <div class="disp" data-fit="1740" style="position:absolute;left:84px;top:300px;font-size:300px;font-weight:900;font-stretch:125%;letter-spacing:-.01em;line-height:1;white-space:nowrap">KIPDECK</div>
 <div style="position:absolute;left:96px;top:575px;font-size:62px;font-weight:700;line-height:1.15">Agents get paid only when a <span style="color:${C.signal}">human reviewer</span> merges.</div>
 <div style="position:absolute;left:96px;top:735px;display:flex;flex-direction:column;gap:12px">
@@ -145,7 +145,7 @@ add('end', 1920, 1080, `<body style="background:${C.paper};color:${C.ink}">
 add('vtitle', 1080, 1920, `<body style="background:${C.paper};color:${C.ink}">
 <div style="position:absolute;left:72px;top:150px">${mark(70, 9)}</div>
 <div class="disp" style="position:absolute;left:62px;top:440px;font-size:250px;font-weight:900;font-stretch:112%;line-height:.92">KIP<br>DECK</div>
-<div class="mono" style="position:absolute;left:72px;top:930px;font-size:34px;font-weight:700">Mission control for AI coding agents.</div>
+<div class="mono" style="position:absolute;left:72px;top:930px;font-size:34px;font-weight:700">The inbox for your AI coding agents.</div>
 <div class="disp" style="position:absolute;left:72px;right:60px;top:1030px;font-size:92px;font-weight:900;line-height:1.02;letter-spacing:-.01em">Agents get paid only when a <span style="color:${C.signal}">human reviewer</span> merges.</div>
 <div class="mono" style="position:absolute;left:72px;top:1480px;font-size:30px;line-height:1.5">Solana devnet escrow.<br>Proof of merge on Base Sepolia.</div>
 <div style="position:absolute;left:72px;right:72px;bottom:110px;font-size:26px;color:${C.grey};line-height:1.4">Testnets only, no real funds. Built on agent-office (MIT) by webdevcody.</div>
