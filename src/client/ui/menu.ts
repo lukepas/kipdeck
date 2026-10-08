@@ -3,6 +3,7 @@ import { store, type HudPanel, type Settings, type Topic } from '../state';
 import { DESK_BY_ID } from '../../shared/layout';
 import { $, h, openModal, type Modal } from './dom';
 import { icon, type IconName } from './icons';
+import type { LabId } from '../../shared/labs';
 
 /** The menu's groups, in order. */
 export type MenuSection = 'Command' | 'Work' | 'Proof' | 'Deck' | 'Comms';
@@ -25,6 +26,8 @@ export interface HudAction {
   tone?: () => 'primary' | 'danger' | undefined;
   /** Only offered some of the time (Invite, Accounts, Upgrade). */
   shown?: () => boolean;
+  /** Only while this lab is on (see shared/labs.ts): off, it is neither in the menu nor on the top bar. */
+  lab?: LabId;
   /** Up on the top bar by itself while true, pinned or not: you're sharing your screen, an update is out. */
   status?: () => boolean;
   /** Its words on the top bar while `status` put it there; a pinned one is just its icon. */
@@ -76,7 +79,7 @@ export function mountHud(actions: HudAction[], settings: Settings, save: () => v
   const iconOf = (a: HudAction) => (typeof a.icon === 'string' ? a.icon : a.icon());
   const keyOf = (a: HudAction) => (typeof a.key === 'function' ? a.key() : a.key);
   const classOf = (a: HudAction, blocked?: string) => [a.on?.() && 'on', a.tone?.(), blocked && 'dim'].filter(Boolean).join(' ');
-  const offered = (a: HudAction) => a.shown?.() ?? true;
+  const offered = (a: HudAction) => (!a.lab || store.lab(a.lab)) && (a.shown?.() ?? true);
   const pinned = (a: HudAction) => settings.pins.includes(a.id);
   let menu: Modal | null = null;
 
@@ -309,7 +312,7 @@ export function mountHud(actions: HudAction[], settings: Settings, save: () => v
     },
     true,
   );
-  for (const t of ['workers', 'roster', 'peers', 'issues', 'pulls', 'services', 'queue', 'meeting', 'upgrade', 'me', 'floors', 'signins'] as Topic[]) store.on(t, render);
+  for (const t of ['labs', 'workers', 'roster', 'peers', 'issues', 'pulls', 'services', 'queue', 'meeting', 'upgrade', 'me', 'floors', 'signins'] as Topic[]) store.on(t, render);
   applyPanels();
   render();
   return { refresh: render, toggleMenu };

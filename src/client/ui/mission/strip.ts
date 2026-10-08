@@ -10,7 +10,9 @@ import { icon } from '../icons';
 
 export function renderStrip(el: HTMLElement, open: (tab: 'goals') => void) {
   const m = store.mission;
-  if (!store.floor) {
+  // The floor's mission and milestones are Goals, in Labs: with it off there's no strip.
+  el.classList.toggle('hidden', !store.lab('ops'));
+  if (!store.floor || !store.lab('ops')) {
     el.replaceChildren();
     return;
   }

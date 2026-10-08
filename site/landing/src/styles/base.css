@@ -1,0 +1,138 @@
+/* Reset, type, layout, buttons, glyphs, the top bar and the wait clock. */
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background: var(--void); }
+body {
+  margin: 0; background: var(--void); color: var(--text);
+  font: 400 18px/1.56 var(--font-ui); font-stretch: 100%;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+img, video, svg, canvas { display: block; max-width: 100%; }
+img, video { height: auto; }
+a { color: inherit; text-underline-offset: 3px; text-decoration-thickness: 1px; text-decoration-color: var(--line-strong); }
+a:hover { text-decoration-color: currentColor; }
+code, pre, kbd, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+code { font-size: .9em; }
+p { margin: 0 0 1em; }
+h1, h2, h3 { margin: 0; font-weight: 700; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+figure { margin: 0; }
+::selection { background: rgb(255 106 26 / .32); color: var(--text); }
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; border-radius: 2px; }
+[hidden] { display: none !important; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.skip { position: fixed; left: 16px; top: -60px; z-index: 100; padding: 10px 14px; background: var(--signal); color: var(--on-signal); font-weight: 600; border-radius: var(--radius); text-decoration: none; }
+.skip:focus { top: 12px; }
+
+.wrap { width: 100%; max-width: calc(var(--wrap) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
+section, footer.end { position: relative; padding: var(--section-pad) 0; }
+section + section { border-top: 1px solid var(--line); }
+
+/* Type. Archivo at width 118 for every display line, as in the app's DESIGN.md. */
+.display { font-family: var(--font-display); font-stretch: 118%; font-weight: 750; letter-spacing: -.025em; line-height: .92; }
+h2.display { font-size: clamp(38px, 5.4vw, 84px); max-width: 15ch; margin-bottom: .45em; text-wrap: balance; }
+h3 { font-family: var(--font-display); font-stretch: 112%; font-size: 20px; letter-spacing: -.01em; line-height: 1.15; }
+.lede { font-size: clamp(18px, 1.5vw, 21px); line-height: 1.55; color: var(--muted); max-width: 62ch; }
+.lede b, .lede strong { color: var(--text); font-weight: 600; }
+p { max-width: 64ch; }
+.small { font-size: 14px; color: var(--muted); }
+.sig { color: var(--signal); }
+.label {
+  display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; margin: 0 0 28px;
+  font-family: var(--font-display); font-stretch: 118%; font-weight: 600; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+}
+.label .num { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0; color: var(--text); padding: 1px 6px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); }
+.label .label-sep { color: var(--line-strong); }
+.label::after { content: ''; flex: 1; min-width: 24px; height: 1px; background: var(--line); }
+.footnote { font-size: 12px; color: var(--muted); margin-top: 18px; max-width: 80ch; }
+.tag-inline { display: inline-block; padding: 0 5px; margin-left: 4px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); font: 500 10.5px/16px var(--font-mono); letter-spacing: .02em; color: var(--muted); text-transform: lowercase; vertical-align: 2px; white-space: nowrap; }
+.two-col { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); min-width: 0; gap: clamp(32px, 5vw, 88px); align-items: center; }
+
+/* Buttons. One Signal primary per screen; everything else is a hairline. */
+.btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  height: 48px; padding: 0 20px; border-radius: var(--radius); border: 1px solid var(--line-strong);
+  background: var(--surface-1); color: var(--text); font: 600 16px/1 var(--font-ui); text-decoration: none; cursor: pointer; white-space: nowrap;
+  transition: background-color var(--t-ui) var(--ease), border-color var(--t-ui) var(--ease), transform 220ms var(--ease-out);
+}
+.btn:hover { background: var(--surface-2); border-color: var(--muted); }
+.btn:active { transform: translateY(1px) scale(.985); }
+.btn.primary { background: var(--signal); border-color: var(--signal); color: var(--on-signal); }
+.btn.primary:hover { background: color-mix(in oklab, var(--signal) 88%, white); }
+.btn.primary .glyph { color: currentColor; }
+.btn.ghost { background: transparent; }
+.btn svg { fill: currentColor; }
+.btn.sm { height: 30px; padding: 0 11px; font-size: 13px; font-weight: 500; }
+.btn.sm.primary { font-weight: 600; }
+.btn.sm.on { border-color: var(--signal); background: var(--tint-signal); box-shadow: inset 0 -2px 0 var(--signal); }
+
+/* The status glyphs, the app's own masks (src/client/styles/base.css). */
+:root {
+  --g-needs-you: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3.5 20.5 12 12 20.5 3.5 12Z'/%3E%3C/svg%3E");
+  --g-review: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='7.5' fill='none' stroke='black' stroke-width='2.25'/%3E%3Ccircle cx='12' cy='12' r='2.2'/%3E%3C/svg%3E");
+  --g-working: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 10.5h14v3H5Z'/%3E%3C/svg%3E");
+  --g-parked: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='3.5'/%3E%3C/svg%3E");
+  --g-merged: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Cpath d='M4 4h16v16H4Z'/%3E%3Cpath d='m8 12.5 3 3 5.5-6.5'/%3E%3C/svg%3E");
+  --g-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='square'%3E%3Cpath d='m5 12.5 4.5 4.5L19 7.5'/%3E%3C/svg%3E");
+}
+.glyph { display: inline-block; flex: none; width: 10px; height: 10px; background: currentColor; -webkit-mask: var(--g, var(--g-parked)) center / contain no-repeat; mask: var(--g, var(--g-parked)) center / contain no-repeat; }
+.g-needs-you { --g: var(--g-needs-you); color: var(--signal); }
+.g-review { --g: var(--g-review); color: var(--review); }
+.g-working { --g: var(--g-working); color: var(--working); }
+.g-parked { --g: var(--g-parked); color: var(--muted); }
+.g-merged { --g: var(--g-merged); color: var(--proof); }
+.g-check { --g: var(--g-check); color: var(--settled); }
+
+/* The wait clock: a Signal hairline along the very top that grows in real seconds while an agent
+   waits on the visitor, and springs back to nothing when they answer it. */
+.waitclock { position: fixed; inset: 0 0 auto 0; height: 3px; z-index: 60; pointer-events: none; }
+.waitclock-bar { display: block; height: 100%; width: 100%; background: var(--signal); transform-origin: 0 50%; transform: scaleX(var(--wait, 0)); box-shadow: 0 0 12px var(--signal); }
+
+/* The top bar. */
+header.top { position: fixed; inset: 0 0 auto 0; z-index: 50; transition: background-color 200ms var(--ease), border-color 200ms var(--ease); border-bottom: 1px solid transparent; }
+header.top.scrolled { background: color-mix(in srgb, var(--void) 82%, transparent); -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2); border-bottom-color: var(--line); }
+.tier-lite header.top.scrolled, .tier-min header.top.scrolled { -webkit-backdrop-filter: none; backdrop-filter: none; background: color-mix(in srgb, var(--void) 95%, transparent); }
+.top-in { display: flex; align-items: center; gap: 22px; height: 64px; max-width: calc(var(--wrap) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
+.lockup { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); margin-right: auto; }
+.mark { flex: none; overflow: visible; }
+.mark-lead { fill: currentColor; }
+.mark-trail { fill: none; stroke: currentColor; stroke-width: 2.5; }
+.lockup.alert .mark-lead { fill: var(--signal); }
+.wordmark { width: auto; overflow: visible; }
+.wordmark text, .giant text { font-family: var(--font-display); font-stretch: 118%; font-weight: 600; letter-spacing: .06em; font-size: 15px; fill: var(--text); }
+.wm-muted { fill: var(--muted); }
+nav.links { display: flex; gap: 26px; font-size: 14px; }
+nav.links a { color: var(--muted); text-decoration: none; transition: color var(--t-ui) var(--ease); }
+nav.links a:hover { color: var(--text); }
+.pulse { display: inline-flex; align-items: center; gap: 7px; margin: 0; padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.pulse [data-pulse-count], .pulse [data-pulse-wait] { color: var(--text); font-weight: 500; }
+.pulse.calm .glyph { --g: var(--g-check); color: var(--settled); }
+.pulse-sep { color: var(--line-strong); }
+.theme { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
+.theme:hover { color: var(--text); border-color: var(--line-strong); }
+.theme svg { fill: none; stroke: currentColor; stroke-width: 1.75; }
+.theme svg path { fill: currentColor; stroke: none; }
+
+/* Demo data: one small fixed tag on every staged surface. */
+.demo-tag { position: absolute; z-index: 3; right: 10px; bottom: 10px; padding: 2px 7px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); background: var(--surface-1); color: var(--muted); font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; }
+.badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--proof); border-radius: var(--radius-chip); color: var(--proof); background: var(--tint-proof); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.chip { display: inline-block; padding: 0 6px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); font: 500 10.5px/17px var(--font-mono); color: var(--muted); white-space: nowrap; }
+
+@media (max-width: 1080px) {
+  nav.links { display: none; }
+}
+@media (max-width: 860px) {
+  .two-col { grid-template-columns: minmax(0, 1fr); }
+  body { font-size: 17px; }
+}
+@media (max-width: 520px) {
+  .label .label-sep { display: none; }
+  .label .label-tag { display: none; }
+  /* The hero keeps its tagline on a phone, on a line of its own: it says what the product is. */
+  .hero .label { flex-wrap: wrap; row-gap: 8px; }
+  .hero .label .label-tag { display: block; order: 3; flex-basis: 100%; }
+  .pulse .pulse-sep, .pulse [data-pulse-wait] { display: none; }
+  .wordmark { height: 13px; }
+  .top-in { gap: 12px; height: 56px; }
+}

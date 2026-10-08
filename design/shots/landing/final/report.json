@@ -1,0 +1,370 @@
+{
+  "url": "http://127.0.0.1:4695/",
+  "stills": [
+    {
+      "tag": "desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "errors": [],
+      "overflow": 0,
+      "shots": [
+        "desktop-00-hero.png",
+        "desktop-01-funnel.png",
+        "desktop-01b-funnel.png",
+        "desktop-01c-funnel.png",
+        "desktop-02-problem.png",
+        "desktop-02b-problem.png",
+        "desktop-02c-problem.png",
+        "desktop-03-loop.png",
+        "desktop-03b-loop.png",
+        "desktop-03c-loop.png",
+        "desktop-04-why.png",
+        "desktop-05-yours.png",
+        "desktop-05b-yours.png",
+        "desktop-05c-yours.png",
+        "desktop-05b-yours.png",
+        "desktop-06-phone.png",
+        "desktop-07-numbers.png",
+        "desktop-08-labs.png",
+        "desktop-08b-labs.png",
+        "desktop-08c-labs.png",
+        "desktop-09-teams.png",
+        "desktop-10-proof.png",
+        "desktop-11-end.png",
+        "desktop-topbar-at-end.png"
+      ]
+    },
+    {
+      "tag": "phone",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "errors": [],
+      "overflow": 0,
+      "shots": [
+        "phone-00-hero.png",
+        "phone-01-funnel.png",
+        "phone-02-problem.png",
+        "phone-03-loop.png",
+        "phone-03b-loop.png",
+        "phone-03c-loop.png",
+        "phone-04-why.png",
+        "phone-04b-why.png",
+        "phone-04c-why.png",
+        "phone-05-yours.png",
+        "phone-05b-yours.png",
+        "phone-05c-yours.png",
+        "phone-05b-yours.png",
+        "phone-06-phone.png",
+        "phone-07-numbers.png",
+        "phone-08-labs.png",
+        "phone-08b-labs.png",
+        "phone-08c-labs.png",
+        "phone-09-teams.png",
+        "phone-09b-teams.png",
+        "phone-09c-teams.png",
+        "phone-10-proof.png",
+        "phone-11-end.png",
+        "phone-topbar-at-end.png"
+      ]
+    },
+    {
+      "tag": "big",
+      "viewport": {
+        "width": 1920,
+        "height": 1080
+      },
+      "errors": [],
+      "overflow": 0,
+      "shots": [
+        "big-00-hero.png",
+        "big-01-funnel.png",
+        "big-01b-funnel.png",
+        "big-01c-funnel.png",
+        "big-02-problem.png",
+        "big-02b-problem.png",
+        "big-02c-problem.png",
+        "big-03-loop.png",
+        "big-03b-loop.png",
+        "big-03c-loop.png",
+        "big-04-why.png",
+        "big-05-yours.png",
+        "big-05b-yours.png",
+        "big-topbar-at-end.png"
+      ]
+    },
+    {
+      "tag": "reduced-desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "errors": [],
+      "overflow": 0,
+      "shots": [
+        "reduced-desktop-00-hero.png",
+        "reduced-desktop-01-funnel.png",
+        "reduced-desktop-02-problem.png",
+        "reduced-desktop-03-loop.png",
+        "reduced-desktop-04-why.png",
+        "reduced-desktop-05-yours.png",
+        "reduced-desktop-06-phone.png",
+        "reduced-desktop-07-numbers.png",
+        "reduced-desktop-08-labs.png",
+        "reduced-desktop-09-teams.png",
+        "reduced-desktop-10-proof.png",
+        "reduced-desktop-11-end.png",
+        "reduced-desktop-topbar-at-end.png"
+      ]
+    },
+    {
+      "tag": "reduced-phone",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "errors": [],
+      "overflow": 0,
+      "shots": [
+        "reduced-phone-00-hero.png",
+        "reduced-phone-01-funnel.png",
+        "reduced-phone-02-problem.png",
+        "reduced-phone-03-loop.png",
+        "reduced-phone-04-why.png",
+        "reduced-phone-05-yours.png",
+        "reduced-phone-06-phone.png",
+        "reduced-phone-07-numbers.png",
+        "reduced-phone-08-labs.png",
+        "reduced-phone-09-teams.png",
+        "reduced-phone-10-proof.png",
+        "reduced-phone-11-end.png",
+        "reduced-phone-topbar-at-end.png"
+      ]
+    },
+    {
+      "tag": "light-desktop",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "errors": [],
+      "overflow": 0,
+      "shots": [
+        "light-desktop-00-hero.png",
+        "light-desktop-01-funnel.png",
+        "light-desktop-02-problem.png",
+        "light-desktop-03-loop.png",
+        "light-desktop-04-why.png",
+        "light-desktop-05-yours.png",
+        "light-desktop-06-phone.png",
+        "light-desktop-topbar-at-end.png"
+      ]
+    }
+  ],
+  "metrics": {
+    "desktop": {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cpu": 1,
+      "lcpMs": 44,
+      "lcpEl": "H1.display hero-h",
+      "cls": 0,
+      "transferInitial": {
+        "totalBytes": 199802,
+        "jsBytes": 34797
+      },
+      "scroll": {
+        "frames": 891,
+        "p50": 16.7,
+        "p95": 16.7,
+        "p99": 16.8,
+        "maxMs": 150.1,
+        "over20ms": 2,
+        "over33ms": 1,
+        "longTasksDuringScroll": [],
+        "clsAfterScroll": 0.00001208924763160151
+      },
+      "transferAfterFullScroll": {
+        "jsBytes": 34797,
+        "jsBytesExclBridge": 34797,
+        "mediaBytes": 0
+      }
+    },
+    "desktop4x": {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "cpu": 4,
+      "lcpMs": 180,
+      "lcpEl": "H1.display hero-h",
+      "cls": 0,
+      "transferInitial": {
+        "totalBytes": 199802,
+        "jsBytes": 34797
+      },
+      "scroll": {
+        "frames": 888,
+        "p50": 16.7,
+        "p95": 16.8,
+        "p99": 16.8,
+        "maxMs": 133.4,
+        "over20ms": 6,
+        "over33ms": 3,
+        "longTasksDuringScroll": [],
+        "clsAfterScroll": 0.000012696719071502058
+      },
+      "transferAfterFullScroll": {
+        "jsBytes": 34797,
+        "jsBytesExclBridge": 34797,
+        "mediaBytes": 0
+      }
+    },
+    "motoG4x": {
+      "viewport": {
+        "width": 412,
+        "height": 915
+      },
+      "cpu": 4,
+      "lcpMs": 204,
+      "lcpEl": "P.lede",
+      "cls": 0,
+      "transferInitial": {
+        "totalBytes": 199802,
+        "jsBytes": 34797
+      },
+      "scroll": {
+        "frames": 899,
+        "p50": 16.7,
+        "p95": 16.7,
+        "p99": 16.8,
+        "maxMs": 33.4,
+        "over20ms": 1,
+        "over33ms": 0,
+        "longTasksDuringScroll": [],
+        "clsAfterScroll": 0.000008880977292355379
+      },
+      "transferAfterFullScroll": {
+        "jsBytes": 34797,
+        "jsBytesExclBridge": 34797,
+        "mediaBytes": 0
+      }
+    }
+  },
+  "axe": [
+    {
+      "tag": "desktop",
+      "violations": []
+    },
+    {
+      "tag": "phone",
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "nodes": 2,
+          "sample": [
+            ".files > .on",
+            ".on > b"
+          ],
+          "help": "Elements must meet minimum color contrast ratio thresholds"
+        }
+      ]
+    },
+    {
+      "tag": "reduced-desktop",
+      "violations": []
+    },
+    {
+      "tag": "light-desktop",
+      "violations": []
+    }
+  ],
+  "webkit": {
+    "webkit-desktop": {
+      "errors": [
+        "Refused to apply a stylesheet because its hash, its nonce, or 'unsafe-inline' does not appear in the style-src directive of the Content Security Policy.",
+        "Refused to apply a stylesheet because its hash, its nonce, or 'unsafe-inline' does not appear in the style-src directive of the Content Security Policy.",
+        "Refused to apply a stylesheet because its hash, its nonce, or 'unsafe-inline' does not appear in the style-src directive of the Content Security Policy."
+      ],
+      "pin": {
+        "position": "sticky",
+        "stageTop": 0,
+        "mode": "pin"
+      },
+      "overflow": 0,
+      "dialog": {
+        "open": true,
+        "closedByEsc": true
+      }
+    },
+    "webkit-phone": {
+      "errors": [
+        "Refused to apply a stylesheet because its hash, its nonce, or 'unsafe-inline' does not appear in the style-src directive of the Content Security Policy.",
+        "Refused to apply a stylesheet because its hash, its nonce, or 'unsafe-inline' does not appear in the style-src directive of the Content Security Policy.",
+        "Refused to apply a stylesheet because its hash, its nonce, or 'unsafe-inline' does not appear in the style-src directive of the Content Security Policy."
+      ],
+      "pin": {
+        "position": "relative",
+        "stageTop": -193,
+        "mode": "play"
+      },
+      "overflow": 0,
+      "dialog": {
+        "open": true,
+        "closedByEsc": true
+      }
+    }
+  },
+  "anchors": [
+    {
+      "id": "loop",
+      "top": 0,
+      "want": 0,
+      "drift": 0
+    },
+    {
+      "id": "why",
+      "top": 0,
+      "want": 0,
+      "drift": 0
+    },
+    {
+      "id": "labs",
+      "top": -1,
+      "want": 0,
+      "drift": 1
+    },
+    {
+      "id": "teams",
+      "top": 0,
+      "want": 0,
+      "drift": 0
+    },
+    {
+      "id": "investors",
+      "top": 641,
+      "want": 90,
+      "drift": 551
+    }
+  ],
+  "keys": {
+    "stops": 37,
+    "bad": []
+  },
+  "video": {
+    "file": "design/shots/landing/final/scroll-1920x1080.mp4",
+    "capturedFrames": 2843,
+    "spanS": 54.2,
+    "scriptedWallMs": 60684,
+    "captureFps": 52.5,
+    "medianGapMs": 16.7,
+    "p95GapMs": 18.4,
+    "legs": 18
+  }
+}

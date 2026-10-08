@@ -1,10 +1,20 @@
 {
-  "name": "agent-office",
+  "name": "kipdeck",
   "version": "0.1.0",
-  "description": "UGC Army: mission control for teams running many AI coding agents, with proof of every merge on testnets. Built on agent-office by webdevcody (MIT).",
+  "description": "Kipdeck: the inbox for your AI coding agents (Claude Code, Codex, Cursor and more). See what needs you, review what is ready, merge what shipped. Built on agent-office by webdevcody (MIT).",
+  "keywords": [
+    "ai",
+    "coding-agents",
+    "claude-code",
+    "codex",
+    "cursor",
+    "inbox",
+    "code-review",
+    "worktree"
+  ],
   "type": "module",
   "bin": {
-    "ugc-army": "bin/agent-office.js",
+    "kipdeck": "bin/agent-office.js",
     "agent-office": "bin/agent-office.js"
   },
   "imports": {
@@ -12,7 +22,8 @@
   },
   "files": [
     "bin",
-    "dist"
+    "dist",
+    "NOTICE"
   ],
   "scripts": {
     "test": "node --import tsx --import=#tests/css --test tests/*.test.ts",
@@ -20,7 +31,10 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build && vite build -c vite.showcase.config.ts",
     "build:server": "tsc -p tsconfig.server.json",
-    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit && tsc -p tsconfig.launch.json",
+    "build:site": "node site/build.mjs",
+    "preview:site": "node site/serve.mjs",
+    "perf:site": "node site/perf.mjs",
+    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit && tsc -p tsconfig.launch.json && tsc -p site/landing/tsconfig.json",
     "launch:check": "tsx launch/chain/tools/calendar.ts --check && tsx launch/chain/tools/counts.ts --check && tsx launch/chain/tools/lint.ts && tsx launch/tools/calendar.ts --check && tsx launch/tools/lint.ts",
     "start": "node bin/agent-office.js",
     "prepare": "npm run build"

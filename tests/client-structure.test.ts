@@ -63,15 +63,20 @@ test('no part of the office imports main.ts: it only puts them together', () => 
   }
 });
 
-test('the 2D view loads no three.js, and none of the 3D office: what it shares with it is three.js-free', () => {
+test('the home page loads no three.js, and none of the 3D office: what it shares with it is three.js-free', () => {
   const lite = graph(path.join(client, 'lite.ts'));
+  // The windows it loads only when they're wanted (home/lazy.ts) are held to the same rule.
+  for (const m of read(path.join(client, 'home/lazy.ts')).matchAll(/import\('(\.[^']+)'\)/g)) {
+    const base = path.resolve(path.join(client, 'home'), m[1]);
+    for (const f of graph([`${base}.ts`, path.join(base, 'index.ts')].find((x) => existsSync(x))!)) lite.add(f);
+  }
   for (const f of lite) {
     const rel = path.relative(client, f);
     assert.doesNotMatch(read(f), /from 'three(?:\/[^']*)?'/, `${rel} (loaded by lite.ts) imports three.js`);
     assert.ok(!/^(core|features|input|world|player)\//.test(rel), `lite.ts loads ${rel}, part of the 3D office`);
   }
-  // What the 2D view and the 3D office share.
-  for (const shared of ['shared/title.ts', 'shared/hiring.ts', 'ui/mission/index.ts', 'ui/sendhome.ts']) {
+  // What the home page and the 3D office share.
+  for (const shared of ['shared/title.ts', 'ui/mission/act.ts', 'ui/mission/index.ts', 'ui/sendhome.ts', 'ui/terminal.ts', 'ui/changes.ts']) {
     assert.ok(lite.has(path.join(client, shared)), `lite.ts uses ${shared}`);
     assert.ok(graph(path.join(client, 'main.ts')).has(path.join(client, shared)), `the 3D office uses ${shared}`);
   }

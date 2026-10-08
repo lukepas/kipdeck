@@ -185,6 +185,8 @@ async function office(enabled: boolean) {
     auth: { fromRequest: () => undefined, fromAnyCookie: () => undefined },
     publicDir,
     showcase: { enabled, doc: async () => (built++, doc) },
+    // Proof of Merge on in Labs: these are its routes.
+    labs: { on: () => true },
   } as unknown as Ctx;
   const prev = process.env.AGENT_OFFICE_SHOWCASE_DIR;
   process.env.AGENT_OFFICE_SHOWCASE_DIR = bundle;

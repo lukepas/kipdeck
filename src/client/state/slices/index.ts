@@ -12,6 +12,7 @@ import { building, floor, me, presence } from '../core';
 import { accounts } from './accounts';
 import { bounties } from './bounties';
 import { floorPlan } from './floor-plan';
+import { labs } from './labs';
 import { leaveOnMerge } from './leave-on-merge';
 import { machine } from './machine';
 import { meeting } from './meeting';
@@ -53,4 +54,5 @@ export const SLICES: readonly Slice[] = [
   reputation,
   showcase,
   pace,
+  labs,
 ];

@@ -16,6 +16,7 @@ import { $, h, STATUS_LABEL } from './dom';
 import { icon, LEVEL_ICON } from './icons';
 import { usageLabel, usageTitle } from './usage';
 import { providerLabel, providerUsageState, resolvedProvider, modelBadge } from './provider';
+import { storageKey } from '../shared/storage-key';
 
 /** The groups, in the ranking's order, then the board agents. */
 type Group = AttentionLevel | 'agents';
@@ -24,7 +25,7 @@ const GROUPS: readonly Group[] = ['needs-you', 'stuck', 'review', 'working', 'pa
 const OPEN_BY_DEFAULT: ReadonlySet<Group> = new Set(['needs-you', 'stuck', 'review']);
 const GROUP_LABEL: Record<Group, string> = { ...LEVEL_LABEL, parked: 'Ready', agents: 'Board agents' };
 
-const FOLD_KEY = 'ugc-army.rail-groups';
+const FOLD_KEY = storageKey('rail-groups');
 
 /** The groups you opened or folded, remembered in this browser. */
 function folds(): Record<string, boolean> {

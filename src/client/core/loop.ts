@@ -4,20 +4,13 @@
  * else's (see installLoop), so within a phase they come first.
  */
 import * as THREE from 'three';
-import { SlowFrames } from '../framerate';
 import type { Ctx } from './context';
 import type { Parts } from './parts';
 import type { Frame } from './registry';
 
-export interface LoopDeps {
-  /** Offers the 2D view (/lite), where the 3D is hard going (see main.ts). */
-  offer2d(why: 'slow'): void;
-}
-
 /** Registers the office's own ticks: install it before anything else registers one. */
-export function installLoop(ctx: Ctx, parts: Pick<Parts, 'stage' | 'peers' | 'views' | 'place'>, deps: LoopDeps) {
+export function installLoop(ctx: Ctx, parts: Pick<Parts, 'stage' | 'peers' | 'views' | 'place'>) {
   // Registered before anything else's, so within a phase they come first.
-  ctx.ticks.add('pre', watchFrameRate);
   ctx.ticks.add('move', ({ dt }) => ctx.player.update(dt));
   ctx.ticks.add('me', moveMe);
   ctx.ticks.add('me', tellWhereYouAre);
@@ -27,14 +20,6 @@ export function installLoop(ctx: Ctx, parts: Pick<Parts, 'stage' | 'peers' | 'vi
   let lastSent = { x: 0, y: 0, z: 0, rotY: 0, moving: false, at: 0 };
   let spotSavedAt = 0;
   const headPos = new THREE.Vector3();
-  /** Frames coming too slowly for the 3D to be any fun: the 2D view is offered. */
-  const slowFrames = new SlowFrames();
-
-  /** Frames coming too slowly for the 3D to be any fun: the 2D view is offered. */
-  function watchFrameRate({ now, delta }: Frame) {
-    if (slowFrames.frame(now, delta * 1000)) deps.offer2d('slow');
-  }
-
   /** You as everyone else sees you, and the camera's view. */
   function moveMe({ dt, t }: Frame) {
     const { player, me, voice, camera } = ctx;

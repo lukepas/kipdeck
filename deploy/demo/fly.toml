@@ -1,0 +1,36 @@
+# The hosted demo on Fly.io (docs/fly.md#a-public-read-only-demo). From the repository root:
+#
+#   fly apps create <your-app>
+#   fly deploy . -c deploy/demo/fly.toml -a <your-app> --dockerfile deploy/demo/Dockerfile \
+#     --ignorefile deploy/demo/Dockerfile.dockerignore
+#
+# Set the app's name below and in AGENT_OFFICE_ALLOWED_HOSTS (plus your own domain, if it has one).
+app = "kipdeck-demo"
+primary_region = "arn"
+
+[env]
+  AGENT_OFFICE_ALLOWED_HOSTS = "kipdeck-demo.fly.dev"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Stopped while nobody watches; the next visitor starts it, and the fleet starts with it.
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.concurrency]
+    type = "connections"
+    soft_limit = 150
+    hard_limit = 200
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/api/health"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "15s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

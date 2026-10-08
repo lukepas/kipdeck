@@ -1177,3 +1177,153 @@ No draws: the sound runs on the audio thread. Per frame the page only diffs a fe
 
 - Other people's steps and voices of the units at their consoles are not heard; only you and Bolt make sound on the deck.
 - The ambience does not change with where the ship is (a waypoint's region, the jump's tunnel) beyond the jump's own sounds.
+
+## Fundable, stage 0: safe to build
+
+The fundable direction turns the 2D view (`/lite`) into the new home, so before building on it this stage settles the renderer crash the audit hit there, keeps the MIT attribution from getting lost again, and checks the working name.
+
+### The /lite renderer crash
+
+The audit's headless browser lost its tab on `/lite` with three fresh units. `node design/lite-crash-check.mjs` reproduces it on a throwaway office: three stand-in units (labelled `[demo]`) hired with no task, then each unit's terminal and Mission control opened and closed, at 1440x900 and 390x844, in Playwright's headless shell (software GL and GPU), the full Chromium and the installed Google Chrome, on `/lite` alone and after the 3D office.
+
+It crashed in the headless shell only, the moment a terminal opened. Chrome and the full Chromium never did. The browser's log named it: `Terminating render process for bad Mojo message: No binder found for interface media.mojom.OnDeviceSpeechRecognition`. Every terminal and prompt box with a dictation mic asked `SpeechRecognition.available({ processLocally: true })` as soon as it was built, and a Chromium without Chrome's own layer (the headless shell, Electron) has no service behind that call, so the browser kills the whole tab.
+
+The fix is in `src/client/ui/speech.ts` and `dictate.ts`: the question is asked when the mic is hovered, focused or pressed, never just because a window opened, and never in a browser whose user agent says HeadlessChrome or Electron. Dictation keeps using the on-device model where Chrome has one. This rules the crash out for real browsers (they were never affected) and makes headless shots and tests of the home safe.
+
+Shots in `shots/fundable/stage-1/`: `before/` is the pre-fix build of f8c708f from a `git archive` (`SHOOT_ROOT`), where the headless shell crashed at 1440 so it has no terminal shot; `after/` has the list and an open terminal at both sizes in every browser. `lite-crash-check.txt` in each folder is the run's result.
+
+### Checks
+
+- `tests/dictation.test.ts`: the headless shell and Electron are never asked about the on-device model, a full browser is asked once per language, and a language with the model listens locally.
+- `tests/attribution.test.ts`: LICENSE keeps the MIT text and AgentSystemLabs' copyright, NOTICE names agent-office and webdevcody, and the package ships NOTICE (`package.json` `files`; npm adds LICENSE by itself). LICENSE and NOTICE are unchanged; they were only missing from the main checkout's working tree, never from this branch.
+- `node design/lite-crash-check.mjs`: every browser ok (`CHECK_BROWSERS`, `CHECK_ORDERS` and `SHOOT_OUT` narrow it and save shots).
+
+### Name
+
+Mergeline and Agent Inbox are checked in `business/naming.md`. Agent Inbox is out (LangChain ships one, the npm name and domains are taken). Mergeline's npm name, `.dev` and `.eu` look free, but mergeline.io is a live Git-backed CMS with AI, so the trademark search has to come before the rename.
+
+## Fundable, stage 1: labs and the route split
+
+The home page is the inbox now, and everything that isn't the inbox is a lab, off until someone switches it on ([docs/labs.md](../docs/labs.md)). Shots are in `shots/fundable/stage-2/` (the second build stage of six): `before/` from the build before this stage, where the home was the 2D view at `/lite` and the 3D bridge was `/` (`SHOOT_HOME=/lite SHOOT_BRIDGE=/`), and `after/`, both from `node design/shoot-fundable.mjs stage-2/<before|after>` on a throwaway office with five stand-in agents whose tasks say `(demo)`, at 1440x900 and 390x844.
+
+### What changed (check it in under a minute)
+
+1. **`/` is the home page, `/bridge` is the 3D.** Two Vite entries that share nothing but `src/shared` and the shared UI: the home page loads 800,108 bytes before it draws against the 2D view's 812,503 and no three.js; the bridge loads its own 2.4 MB only when someone opens it (`tests/home-budget.test.ts`). `/lite` redirects home, sign-in comes back to `/bridge` when that's where you were, and a browser without WebGL is sent home. The slow-machine offer of the 2D view, and the phone redirect to it, are gone with `framerate.ts`: there is nothing to offer any more.
+2. **Labs.** Six switches, all off: Bridge view, Goals and timeline, Meetings, Voice, Bridge ambience, Proof of Merge. An admin switches them for everyone from the flask on the home page or Labs in the bridge's menu; `--labs` holds them on, and a chain flag holds Proof of Merge on. Each joins the registry it hides from (a route's `lab`, a menu row's `lab`, a settings pane's `lab`, `store.lab()` elsewhere), not a check in another feature's code.
+3. **Proof of Merge leaves the surface.** Its eleven public routes don't exist while it's off, the bridge menu has no Proof group, the Bounties pane is gone from Settings, payouts never reach the review inbox or its count, and the deck plan draws no Proof corner. The package description and the sign-in page no longer mention testnets.
+4. **A calm home** (`after/home-desktop.png` against `before/home-desktop.png`). One column at most 880px wide; no counters strip (the Mission button and the list's header carry the counts once); the deck plan only with Bridge view on, where its overlapping labels (CAPACITY over PROOF, ISSUES over QUEUE, PRS over SERVICES) are fixed (`after/home-bridge-lab-desktop.png`). An empty project says so and offers **Start an agent**. Mission control shows Attention and Review only, unless Goals and timeline is on (`after/mission-desktop.png`).
+5. **A plain sign-in.** One card on a plain page: *Sign in*, *The inbox for your AI coding agents.*, Password, Sign in. No deck plan behind it, no ESCROW or ERC-8004 (`after/login-desktop.png`).
+6. **A calm bridge.** Without Bridge ambience the bridge starts with every decorative system quiet and the alerts untouched, its menu loses Proof and Comms, and an **Inbox** chip stays on its top bar (`after/bridge-desktop.png`, `after/bridge-menu.png`). The design scripts for the bridge (`design/shoot*.mjs` and the checks) open `/bridge` with `--labs all` (`SHOOT_LABS` to change it), so they shoot what they always did.
+
+### Checks
+
+`npm run typecheck`, `npm run build`, `npm test` (all pass but the four launch-kit disclosure tests that fail on this branch's rewritten history), with `tests/labs.test.ts` (defaults, switches, the command line, admins only, every proof route behind its lab, payouts, the calm bridge) and `tests/home-budget.test.ts` new, and the mission end-to-end test on the home page and `/bridge` with `--labs ops,ambience`.
+
+### Left for later
+
+- The rename to Mergeline waits on the trademark search; the home still says UGC Army, and the rows still say units and decks (stage 2's copy pass).
+- Bridge ambience covers what Settings already had switches for. The lounge's ladder, stencils (L), the jump and carrying cards (Q) are still there in the bridge with it off.
+- Changing any setting in the bridge's Settings while ambience is off saves the calm values with it.
+- Meetings hides the bridge's Review bay and planning board rows and the *Meeting...* and *Review panel...* buttons on issues and pull requests; the Review bay itself still stands in the 3D room.
+
+## Fundable, stage 3: one command to first value
+
+From a cold terminal to the first agent at work is one command and one button: `npx kipdeck` in your repository opens the inbox signed in, with that repository as the project, and the setup card's **Deploy your first agent** starts one on a safe task. Shots are in `shots/fundable/stage-4/` (the fourth build stage of six): `before/` is the build before this stage (`SHOOT_ROOT` on a `git archive` of it), `after/` this one, both from `node design/shoot-onboarding.mjs stage-4/<before|after>` on a throwaway home and a demo repository (`acme-api`, its files and git name marked demo), started in a pseudo-terminal with nothing chosen, at 1440x900 and 390x844. `after-inbox/` is `design/shoot-fundable.mjs` again, to check the inbox itself didn't move. `timed/` is the exit check.
+
+### What changed (check it in under a minute)
+
+1. **No questions in the terminal** (`before/terminal-desktop.png` against `after/`). Before, a new office asked where to clone projects and offered to sign GitHub in, then printed the generated password. Now it prints where it runs, the one-time sign-in link (opened in your browser), how to get a new one, the project and the agents it found.
+2. **No password on your own computer.** Bound to 127.0.0.1 with no password chosen, the link is the way in, and `kipdeck open` makes another with the office's local key. Links and the key only work from this computer (loopback address and name, no proxy or tunnel headers), and the local routes refuse anything with an Origin. Signed out, the sign-in page says `npx kipdeck open` with the password one click behind (`before/login-desktop.png` against `after/`).
+3. **No Who is it? window** (`before/first-open-desktop.png`). You go by git's `user.name` on your own computer (DL, Demo Lead, in the shots).
+4. **The folder you start in is the project.** Before, a new office started in a repository had no project, and the first-run button ended in *Add a project first* (`before/first-agent-desktop.png`). Now `acme-api` is the project, and the first agent is under Working (`after/first-agent-desktop.png`, `after/first-agent-phone.png`).
+5. **The setup card** (`after/first-open-desktop.png`, `after/first-run-phone.png`): Agents found and signed in (missing ones with the line that installs them), the Project, GitHub as optional with `gh auth login` to copy and Check again, one primary button, and an unticked switch for anonymous usage numbers with exactly what it would send. The Deploy sheet marks agents this computer doesn't have (`after/deploy-first-desktop.png`).
+6. **Kipdeck.** The package, the command, every page title and the wordmark. `kipdeck attach` moves a Claude Code or Codex session started in a terminal into the inbox. `install.sh` and `install.ps1` install the npm package instead of upstream's releases.
+
+### Timed
+
+`node design/time-to-first-agent.mjs` packs the package, runs `npx --package=<tarball> kipdeck` from a fresh demo repository with a clean HOME and an empty npm cache, opens the printed link in a fresh browser, presses the setup card's button and Enter, and stops the clock when the agent is under Working: running after 4.3 s, the setup card after 4.7 s, the first agent after 6.5 s on this M-series Mac (`timed/timings.json`). The agent is the stand-in (no model), so a real one adds its own start-up; npm's download is the part that grows on a slow network.
+
+### Checks
+
+`npm run typecheck`, `npm run build`, `npm test` (all pass but the four launch-kit disclosure tests that fail on this branch's rewritten history). New: `tests/local-signin.test.ts` (what counts as this computer, the link through a proxy, another site and twice, the local key's every refusal, `kipdeck open`, the free port), `tests/telemetry.test.ts` (off records nothing, DO_NOT_TRACK, what a record holds and never holds, sending), `tests/firstrun.test.ts` (agents and sign-in, GitHub, `addFolder`, admins only) and `tests/attach.test.ts` (finding Claude Code and Codex sessions, carrying one on, once).
+
+### Left for later
+
+- Nothing is published: `npm publish` waits for the trademark search on Mergeline (`business/naming.md`). The tarball is what `npm pack` makes and installs cleanly with `npx`.
+- No telemetry endpoint exists, so turned-on events only wait in the outbox until `KIPDECK_TELEMETRY_URL` names one.
+- Claude Code's sign-in is read from its files; a token kept only in the keychain with no `oauthAccount` in `.claude.json` shows as signed out. Cursor's sign-in isn't read at all (it says nothing rather than guess).
+- `kipdeck attach` can't see whether the session still runs in its terminal; it asks you to quit it first. Cursor chats need `--session`.
+- The README's image is still the inbox still, not the 30-second GIF (the demo stage makes it).
+
+## Fundable, stage 4: the demo
+
+Anyone can now see the whole loop in a minute without an agent CLI, a sign-in or a model: `npx kipdeck --demo` plays five scripted agents (two Claude Code, two Codex, one Cursor) on a throwaway repository, and `--demo --read-only` is the same for a public address, with a scripted reviewer. The video, the GIF and the deck's screenshots are all made from it by scripts ([docs/demo.md](../docs/demo.md)). Shots are in `shots/fundable/stage-5/` (the fifth build stage of six): `before/` is the build before this stage (`SHOOT_ROOT` on a `git archive` of it, `node design/shoot-fundable.mjs stage-5/before`, stand-in agents whose tasks say `(demo)`), with `before/demo-flag.txt` for what `--demo` said then; `after/` is `node design/shoot-demo.mjs stage-5/after`; `deck/` holds the four for the deck; `video/` (not in git) is `node design/record-demo.mjs`. All at 1440x900 and 390x844.
+
+### What changed (check it in under a minute)
+
+1. **`npx kipdeck --demo`** (`before/demo-flag.txt`: *unknown option --demo*). A fresh temporary folder with a git repository, `acme-shop`, and stand-ins for `claude`, `codex` and `cursor-agent` first on the office's PATH. Each reports over its own agent's hooks, works in a worktree and commits real files, so the office reads it as it reads the real CLI, the diffs are real and Merge merges. Codex asks at about 0:20, Claude Code finishes a three-file change at about 0:35, Cursor the README at about 0:50, and two keep working (`after/arriving-desktop.png`, `after/home-desktop.png`). Ctrl+C deletes the folder.
+2. **A note over the inbox** says it's the demo, with `npx kipdeck` to copy (`after/home-desktop.png` against `before/home-desktop.png`, where demo data was only a word in each task).
+3. **Codex's question in words.** A question asked through Codex's `request_user_input` showed that name as the row's status; it now says *Needs an answer*, like Claude Code's (`after/answer-desktop.png`). This was a real-Codex bug the demo found.
+4. **The hosted demo** (`after/hosted-desktop.png`, `after/hosted-phone.png`, `after/hosted-refused-desktop.png`). Opening it signs you in to watch; only GET and the socket messages that look are taken, and anything else gets one toast with `npx kipdeck --demo`. *Demo Lead (scripted)* answers the question, merges the three changes through the inbox's own merge (signed records) and starts the round over from the first commit, about every 80 seconds. `deploy/demo/Dockerfile` and `deploy/demo/fly.toml` deploy it; the image was built and run locally with Docker for this stage.
+5. **The deck's screenshots** (`deck/home.png`, `deck/pane-diff.png`, `deck/phone.png`, `deck/bridge-wall.png`, and `deck/answer.png`), without toasts.
+6. **The video and the GIF.** `design/record-demo.mjs` records the loop with captions and a pointer, cuts the waiting out and adds a title card, the terminal's real output and an end card: `video/mergeline-demo.mp4` (56 s, 2.7 MB) and `video/mergeline-demo.gif` (26 s, 880 px, 2.4 MB), copied to `docs/img/demo.gif`, which is now the README's first image.
+
+### Checks
+
+`npm run typecheck`, `npm run build`, `npm test` (all pass but the four launch-kit disclosure tests that fail on this branch's rewritten history). New: `tests/demo.test.ts` (the script's timing and demo labels, the reviewer's schedule, the read-only allow list, the options, and the hosted demo end to end as a visitor: the way in, every refusal, the scripted answer, three signed merges and the next round from the first commit) and `tests/demo-e2e.test.ts` (the demo in a browser at six times its pace). `tests/attention.test.ts` has the asking-tool wording.
+
+### Left for later
+
+- The 60-second cut is the demo's scripted agents, and its end card says so. The take with real agents on a real repository is recorded by hand (docs/demo.md says how); it needs real CLI sign-ins and spends real tokens, so it wasn't made here.
+- The hosted demo isn't deployed: there is no domain or Fly app yet. The image builds and runs; `fly deploy` with `deploy/demo/fly.toml` is the step.
+- The read-only demo has no rate limit of its own on its way in; Fly's connection limit (200) is the cap.
+- The phone in the video is the 390x844 recording centred on the 1440x900 frame, not a phone mock-up.
+
+## Fundable, stage 5: the fundraising surface
+
+What an investor or a first user sees beyond the inbox is now as calm as the inbox: Settings in three panes, a short avatar menu, Help on **?**, a Numbers window for the deck, and a landing page with a team tier waitlist. Shots are in `shots/fundable/stage-6/` (the sixth build stage of six): `before/` is the build before this stage (`SHOOT_ROOT` on a `git archive` of it, `SHOOT_3D=1 node design/shoot-surface.mjs stage-6/before`), `after/` this one, both on `--demo` (its scripted agents, every task marked demo) with a throwaway home and password, at 1440x900 and 390x844. A shot whose window didn't exist before is missing from `before/`.
+
+### What changed (check it in under a minute)
+
+1. **Settings on the home page** (`after/settings-account-desktop.png`, `-agents-`, `-notify-`, and the phone ones). Before, the home page had no Settings at all; the only Settings was the bridge's seven panes in its own words (`before/bridge-settings-desktop.png`: You, Bridge, Sound & voice, Notifications, Decks, Units). Now both pages share one frame and three panes, Account, Agents and Notifications; the bridge adds its own after them (`after/bridge-settings-desktop.png`).
+2. **The avatar menu** (`before/menu-desktop.png` against `after/`): Work (Issues, Pull requests, Task queue, Mission control), then Numbers, Settings, Labs, Help and keys, Sign out. Notifications and light or dark moved into Settings.
+3. **Help** (`after/help-desktop.png`): the loop in four verbs, the six keys and a link to the docs, on **?**. Before it was the keys alone.
+4. **Numbers** (`after/numbers-desktop.png`, `after/numbers-phone.png`): human wait time first, then merged, merge rate and agent-hours, this week against the last, merges per day and the merge rate per agent and model with its N. In the demo it says the agents are scripted. Copy as Markdown for an investor update.
+5. **The landing page** (`after/landing-full-desktop.png`, `after/landing-full-phone.png`; `before/` is the consulting waitlist page in `business/landing/`, which stays): the sentence, `npx kipdeck`, Try the demo, the GIF, the loop, the team tier waitlist and the Bridge view as a small teaser at the bottom. `npm run build:site` fills in the hosted demo, the waitlist endpoint and the repository.
+6. **One fix found on the way**: the menu's notification switch and the notifier read two copies of the settings, so turning notifications on took a reload. They share one now.
+
+### Checks
+
+`npm run typecheck`, `npm run build`, `npm test` (1262 tests, all pass but the four launch-kit disclosure tests that fail on this branch's rewritten history). New: `tests/metrics.test.ts` (the weeks, the median, the bars, the labels and the Markdown), `tests/surface-e2e.test.ts` (the menu, three-pane Settings, Numbers after a real merge in the demo and Help, each closed by its close button and by Esc) and `tests/landing.test.ts` (nothing loaded from elsewhere, the first screen, the waitlist with and without an endpoint, the build's CSP and https rule, phone width, dark mode, ASCII copy). `tests/labs.test.ts` checks the Bounties pane is only built with Proof of Merge on.
+
+### Left for later
+
+- Nothing is posted, sent or published. The launch kit (`launch/kipdeck/`) lists the gates first: employer clearance, the trademark search, `npm publish`, a public repository, the hosted demo, the landing page with a waitlist endpoint, and the real-agent video.
+- The waitlist needs an endpoint the founder runs (docs/landing.md); without one the form says nothing was sent.
+- `DOCS_URL` (Help's link) is https://kipdeck.com (`src/shared/copy.ts`). The domain has no site yet: it sits on the registrar's suspension nameservers until the registrant verification is done.
+- The Numbers in the demo are thin by design: the demo writes no backdated history, so deck numbers have to come from real use.
+- The Monid USD 7.7M figure had no primary source and is dropped (`launch/kipdeck/README.md`).
+- The provider picker in Settings > Agents still has two bridge-era notes (office usage and the cost panel) from `ui/provider.ts`, which the Deploy sheet shares.
+
+## Fundable, the review round: fundraising-ready
+
+Three critics (investor, first user, engineer) reviewed stage 5 from `shots/fundable/review/`; this round fixes every must and most shoulds. The direction, the full list, what is hidden and how to bring it back, the numbers and the investor demo script are in [PRODUCT.md](../PRODUCT.md).
+
+### What changed (check it in under a minute)
+
+1. **The pane is never empty while something waits** (`final/before-after/01-home.png`): the oldest that needs you opens by itself, its question as a card with one reply box (`02-answer.png`).
+2. **The pulse** in the top bar: waiting on you now, the median wait today, merged today. A wait bar grows along each waiting row.
+3. **The demo is a pill**, not a card and a checklist; the setup card is one line and one button beside a looping preview (`05-first-run.png`).
+4. **One way out of review** (`03-review.png`), rows that say what changed, the menu down to four rows (`06-menu.png`), Settings without leftover words (`07-settings-agents.png`), a one-tap phone list (`08-phone.png`).
+5. **Server**: no toasts for your own actions, Labs gated over the socket, merges refused in a shared folder and queued per folder, branches named after the task, the hosted demo tested into its second round.
+6. **Landing** (`10-landing.png`): the wedge above the fold, *Why not*, not on npm yet said plainly, one email field, no 3D section.
+
+Stills: `node design/shoot-final.mjs final` (after) against the review round's shots (`final/before/`, pairs in `final/before-after/`). Video: `node design/record-demo.mjs design/shots/fundable/final` (60 s, silent, tagged demo data). Numbers: `node design/measure-final.mjs` for this build and `SHOOT_ROOT` on a `git archive` of ae964cad. The demo's own shoot with the hosted demo: `SHOOT_3D=0 node design/shoot-demo.mjs final/demo-shoot`.
+
+### Checks
+
+`npm run typecheck`, `npm run build`, `npm test` (all pass but the four launch-kit disclosure tests that fail on this branch's rewritten history). New: `tests/question.test.ts`, the pulse in `tests/metrics.test.ts`, the lab gate in `tests/labs.test.ts`, the refused shared-folder merge and the queued merges in `tests/shiplog.test.ts`, branch names in `tests/worktrees.test.ts`, the hosted demo's second round in `tests/demo.test.ts`, and the question card, the pill and the four-row menu in the browser tests.
+
+## The rename to Kipdeck
+
+The product is Kipdeck now (kipdeck.com), after Mergeline and, before that, UGC Army. The Fundable stage notes from stage 3 on describe the product as it is, so their commands and paths say Kipdeck; the recordings they name keep the file names they were made with until they are recorded again. Earlier entries keep the names of their day, including the `design/ugc-army` build and the Mergeline trademark check. The `MERGELINE_*` environment variables, the `x-mergeline-key` header, the old `mergeline.*` and `ugc-army.*` browser storage keys and the `mergeline-demo-` temporary folders are still read, so nothing set up before the rename breaks.

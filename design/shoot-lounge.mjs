@@ -168,7 +168,7 @@ export async function loungeShots(page, { out, name, wait, ffmpeg }) {
     await stand(LADDER.x + 0.4, 0, LADDER.foot + 3.6, 0.1, -0.04);
     await wait(1200);
     await clear();
-    const frames = mkdtempSync(path.join(tmpdir(), 'ugc-lounge-'));
+    const frames = mkdtempSync(path.join(tmpdir(), 'kipdeck-lounge-'));
     const t0 = Date.now();
     // The look eased each frame in the page, as a mouse would turn it (not while the climb or a walk has the head).
     await page.evaluate(() => {

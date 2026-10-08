@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// office-workers: the office's workers, from inside UGC Army: who's at which desk and where their
+// office-workers: the office's workers, from inside Kipdeck: who's at which desk and where their
 // pull requests stand, hiring one, sending some home (their worktrees and branches with them),
 // telling one something and saying which pull request is one's. The office puts it on every worker's PATH and gives each its own address and
 // token in AGENT_OFFICE_HOOK_URL, AGENT_OFFICE_WORKER_ID and AGENT_OFFICE_HOOK_TOKEN; this talks to
@@ -157,7 +157,7 @@ export function officeEnv(env) {
   const missing = ENV.filter((k) => !env[k]);
   if (missing.length) {
     throw new Error(
-      `${missing.join(', ')} ${missing.length === 1 ? "isn't" : "aren't"} set. office-workers only works inside UGC Army, ` +
+      `${missing.join(', ')} ${missing.length === 1 ? "isn't" : "aren't"} set. office-workers only works inside Kipdeck, ` +
         "from a worker's terminal.",
     );
   }
@@ -183,8 +183,8 @@ export function buildRequest(what, office, body) {
 export function refusal(status, body) {
   const said = body && typeof body.error === 'string' ? body.error : '';
   if (status === 401) return `The office didn't accept this worker's token (401)${said ? `: ${said}` : ''}. Is this a worker's terminal that's still running?`;
-  if (status === 404 && !said) return "The office doesn't know office-workers (404): it's running an older UGC Army than this command. Restart or upgrade it.";
-  if (status === 405) return "The office doesn't know this one yet (405): it's running an older UGC Army than this command. Restart or upgrade it.";
+  if (status === 404 && !said) return "The office doesn't know office-workers (404): it's running an older Kipdeck than this command. Restart or upgrade it.";
+  if (status === 405) return "The office doesn't know this one yet (405): it's running an older Kipdeck than this command. Restart or upgrade it.";
   return said || `The office said no (${status}).`;
 }
 
@@ -296,7 +296,7 @@ export const TOOLS = [
     name: 'list_workers',
     title: 'List workers',
     description:
-      "Lists the coding agents (the office's workers) at the desks on this UGC Army deck, and shells: each one's id, name, status, desk, task, git worktree branch and pull request " +
+      "Lists the coding agents (the office's workers) at the desks on this Kipdeck deck, and shells: each one's id, name, status, desk, task, git worktree branch and pull request " +
       '(pr; a worker that opened one the office does not show here needs link_pr). ' +
       'merged: true means a pull request of its merged and none is open: its work landed and it can go home. staying says why the office would not send it home by itself yet ' +
       '(still working, someone has its terminal open, a board agent...). worktree.deleted: true means its folder was deleted outside the office, so it cannot start until a person rebuilds it at its desk. you: true is you. ' +
@@ -308,7 +308,7 @@ export const TOOLS = [
     name: 'hire_worker',
     title: 'Hire a worker',
     description:
-      'Hires a new coding agent (a worker) at a free console in UGC Army to do a task. It starts right away, in its own git worktree on a fresh branch unless worktree is false, ' +
+      'Hires a new coding agent (a worker) at a free console in Kipdeck to do a task. It starts right away, in its own git worktree on a fresh branch unless worktree is false, ' +
       'and knows nothing but the prompt: make it complete (what to change and where, how to check it, and to open a pull request).',
     inputSchema: {
       type: 'object',
@@ -397,7 +397,7 @@ export const TOOLS = [
 ];
 
 const INSTRUCTIONS =
-  "You work in UGC Army, where coding agents (the office's workers) sit at desks, each usually in its own git worktree and branch. These tools are the way to see and manage " +
+  "You work in Kipdeck, where coding agents (the office's workers) sit at desks, each usually in its own git worktree and branch. These tools are the way to see and manage " +
   'the other agents: whenever you are asked about the agents or workers (who is working on what, whose pull request merged, hiring one, sending them home), use them, ' +
   "rather than looking for the agents with git, ps or HTTP calls. list_workers says where each one's pull request stands (merged: true means it merged), hire_worker " +
   'puts a new agent to work, send_home sends agents home and deletes their worktrees and branches, tell_worker gives one a prompt, and link_pr says which pull request is a ' +
@@ -444,7 +444,7 @@ export async function handleMcp(msg, io) {
       return ok({
         protocolVersion: MCP_VERSIONS.includes(asked) ? asked : MCP_VERSIONS[0],
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: 'ugc-army', title: 'UGC Army', version: '1.0.0' },
+        serverInfo: { name: 'kipdeck', title: 'Kipdeck', version: '1.0.0' },
         instructions: INSTRUCTIONS,
       });
     }

@@ -1,0 +1,19 @@
+{
+  "name": "kipdeck-deck",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Kipdeck investor deck (static site)",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "shots": "node scripts/shots.mjs",
+    "pdf": "node scripts/pdf.mjs",
+    "check:kip": "node scripts/kip-check.mjs"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@fontsource/inter": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0",
+    "gsap": "^3.15.0"
+  }
+}

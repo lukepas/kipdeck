@@ -276,12 +276,12 @@ function readout(S, { value, prev = value, label, sub, flap = 0, lockBar = 0, ji
   const x = H.x + jitter;
   let y = H.y + ls * 0.95;
   if (header > 0) {
-    // "UGC ARMY  MISSION CONTROL", wiping in from the left.
+    // "KIPDECK  MISSION CONTROL", wiping in from the left.
     S.ctx.save();
     S.ctx.beginPath();
     S.ctx.rect(x - 2 * u, H.y - ls, (H.w + 4 * u) * header, ls * 2.4);
     S.ctx.clip();
-    const w = text(S, 'UGC Army', x, y, { size: ls, weight: 700, color: P.ink, alpha });
+    const w = text(S, 'Kipdeck', x, y, { size: ls, weight: 700, color: P.ink, alpha });
     text(S, 'Mission control', x + w + ls * 0.8, y, { size: ls, weight: 500, color: P.grey, alpha });
     S.ctx.restore();
   } else if (label) {
@@ -764,7 +764,7 @@ const missionControl = {
     const P = design.palette;
     const u = design.u;
     const lock = tl.at('unsort.lock');
-    const ugc = tl.at('text.ugc-army');
+    const ugc = tl.at('text.kipdeck');
     const see = tl.at('text.see-every-agent');
     const L = missionLayout(design);
     const { start, dep, clears } = starts(tl, design);
@@ -919,7 +919,7 @@ const missionControl = {
     }
     tag(S, 'demo data', R, null, { below: true });
 
-    // Under the name the board dims for half a second, so 'UGC Army.' lands
+    // Under the name the board dims for half a second, so 'Kipdeck.' lands
     // against settled, readable state rather than the busiest frame of the sort.
     const veil = t < ugc - 4 / 60 ? 0 : t < ugc + 0.4 ? 1 : 1 - clamp((t - ugc - 0.4) * 60 / 8);
     if (veil > 0) {
@@ -941,7 +941,7 @@ const missionControl = {
       lines: design.vertical ? 2 : 3, enter: lock - 1, exit: ugc - 0.36, size: design.size('l'), wdth: 75,
     });
 
-    // 'UGC Army.' slams on 6.5 as the largest type of the act (wdth 125 to
+    // 'Kipdeck.' slams on 6.5 as the largest type of the act (wdth 125 to
     // 100 over a beat, a scale stamp after the hit). On 7.0 the descriptor
     // lands on its own lines at a readable size, with the harnesses it runs
     // named under it. 'See every agent.' replaces all of it on 8.0.
@@ -955,7 +955,7 @@ const missionControl = {
     const slam = curves.slam(clamp((t - ugc) / tl.beatSec));
     const stamp = 1 + 0.06 * (1 - expoOut(Math.max(0, t - ugc) * 60 / 6));
     moduleHeadline(S, {
-      spans: [{ text: 'UGC' }, br, { text: 'Army.' }], lines: 2, enter: ugc, exit: outAt, size, panX,
+      spans: [{ text: 'Kip' }, br, { text: 'deck.' }], lines: 2, enter: ugc, exit: outAt, size, panX,
       wdth: lerp(125, 100, slam), bottomPad: kickerH + gap, scale: stamp,
     });
     const kick = ugc + tl.beatSec;

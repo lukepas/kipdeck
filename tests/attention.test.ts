@@ -18,6 +18,15 @@ test('needs input comes first, with how long it has waited and what it asks', ()
   assert.equal(a.since, NOW - 18 * MIN);
 });
 
+test('a question asked with a tool says so in words, not the tool\'s name (Codex\'s request_user_input)', () => {
+  for (const activity of ['request_user_input', 'AskUserQuestion', 'functions.request_user_input', 'mcp__ui__ask_user_question']) {
+    const a = attention(entry({ status: 'needs_input', waitingSince: NOW - 3 * MIN, activity }), NOW);
+    assert.equal(a.label, 'Needs an answer', activity);
+    assert.equal(a.reason, 'needs input for 3 min');
+  }
+  assert.equal(attention(entry({ status: 'needs_input', activity: 'Wants permission: Bash: rm -rf build' }), NOW).label, 'Wants permission: Bash: rm -rf build');
+});
+
 test('a working worker with no sign of life for SILENT_MS is stuck, and one that just printed is not', () => {
   const silent = entry({ workingSince: NOW - 30 * MIN, activityAt: NOW - 12 * MIN, outputAt: NOW - 13 * MIN });
   assert.deepEqual([attention(silent, NOW).level, attention(silent, NOW).reason], ['stuck', 'working but silent for 12 min']);

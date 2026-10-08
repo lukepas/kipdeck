@@ -1,5 +1,5 @@
-/* The sign-in pages (login, join, claim): a full-bleed void with the deck plan drawn in hairlines
-   behind a 360px card (signin-art.ts), the mark and wordmark, one field and one button. */
+/* The sign-in pages (login, join, claim): a 360px card in the middle of a plain page (signin-art.ts),
+   the mark and wordmark, one field and one button, and the credit under it. */
 @import './styles/tokens.css';
 
 * { box-sizing: border-box; }
@@ -12,14 +12,8 @@ body {
 }
 :focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
 
-/* The deck plan behind the card (shared/plot.ts), on the right of a wide window with the card in the
-   clear column to its left; behind the card, quieter, on a narrow one. */
-.plot-art { position: fixed; top: 0; left: 34%; width: 64%; height: 100%; z-index: 0; pointer-events: none; overflow: visible; }
-body::before { content: ''; position: fixed; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse 60% 70% at 67% 50%, transparent 60%, var(--void)), linear-gradient(90deg, var(--void) 30%, transparent 46%); }
-/* On a wide window the card hangs from the plan's row-2 grid line (8.4 of the plan's 35.4 m from its
-   top, see LIVE_BOX in shared/plot.ts), with the credit under it, left-aligned. */
-@media (min-width: 900px) { body { justify-items: start; align-content: start; padding-left: max(24px, 7vw); padding-top: calc(100vh * 8.4 / 35.4); } }
-@media (max-width: 899px) { .plot-art { left: 0; width: 100%; opacity: .35; } body::before { background: radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, var(--void)); } }
+/* The card and the credit, one column in the middle, a little above centre. */
+body { align-content: center; padding-bottom: 12vh; }
 
 .card { position: relative; z-index: 2; width: min(360px, 100%); background: var(--surface-1); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 28px 28px 24px; text-align: left; }
 .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; color: var(--text); }
@@ -50,3 +44,7 @@ label + label { margin-top: 12px; }
 .credit { position: relative; z-index: 2; width: min(360px, 100%); margin-top: 12px; text-align: left; font: 400 11px var(--font-mono); color: var(--faint); }
 .credit a { color: var(--muted); text-decoration: none; }
 .credit a:hover { color: var(--text); }
+.local-say { margin: 0 0 12px; font-size: 13px; }
+.secret code#open-cmd { font-size: 15px; }
+button.link { width: auto; height: auto; margin: 14px 0 0; padding: 0; background: none; border: 0; color: var(--muted); font-weight: 500; font-size: 13px; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 2px; }
+button.link:hover { background: none; color: var(--text); }

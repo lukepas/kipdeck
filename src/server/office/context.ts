@@ -27,6 +27,10 @@ import type { Reputation } from '../chain/reputation.js';
 import type { ReputationIndex } from '../chain/rep-index.js';
 import type { MergeProofs } from '../chain/attest.js';
 import type { Showcase } from '../showcase/service.js';
+import type { Labs } from '../labs.js';
+import type { Telemetry } from '../telemetry.js';
+import type { ShipLog } from '../shiplog.js';
+import type { DemoDirector } from '../demo/director.js';
 import type { AgentProvider, FloorInfo, Me, Reminder, ReminderSnooze, ReviewPull, RosterEntry, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
 import type { Client } from './client.js';
 import type { Spot } from './input.js';
@@ -53,6 +57,12 @@ export interface Core {
   /** The building: a floor per project, each with its own workers, boards and queue. */
   building: Building;
   floors: Map<string, Floor>;
+  /** Which labs are on: the parts beyond the inbox, all off by default (see labs.ts). */
+  labs: Labs;
+  /** The shipped log: every review the inbox ended, merged or sent back, signed (see shiplog.ts). */
+  shipped: ShipLog;
+  /** Anonymous usage numbers, off unless someone turns them on (see telemetry.ts). */
+  telemetry: Telemetry;
 }
 
 /** Made once the hook server listens, before any floor opens (office/services.ts). */
@@ -99,6 +109,8 @@ export interface LateServices {
   reputationIndex?: ReputationIndex;
   /** The public showcase at /pom/, off until an admin turns it on (see showcase/service.ts). */
   showcase: Showcase;
+  /** With --demo: seats the scripted agents and, in the read-only demo, plays the reviewer (see demo/director.ts). */
+  demo?: DemoDirector;
 }
 
 /** Sending to browsers (office/messaging.ts). */
@@ -108,7 +120,8 @@ export interface Messaging {
   toastAll(text: string, level?: ToastLevel): void;
   /** To everyone on one floor. */
   toFloor(floor: Floor, msg: ServerMsg, droppable?: boolean): void;
-  toastFloor(floor: Floor | undefined, text: string, level?: ToastLevel): void;
+  /** To everyone on one floor but `except` (a client id: whoever did it). */
+  toastFloor(floor: Floor | undefined, text: string, level?: ToastLevel, except?: string): void;
   /** To everyone else on the same floor as `c`: nobody on another floor can see them. */
   toNeighbors(c: Client, msg: ServerMsg, droppable?: boolean): void;
   /** Tells just this person why their request didn't happen; nothing when there's no error. */

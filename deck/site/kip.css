@@ -1,0 +1,61 @@
+/* === KIP: the product's own mascot, drawn as one inline SVG and moved by GSAP ===
+   Colours follow the agent-office mascot (features/mascot/world.ts). No green, no robe, no hood. */
+:root {
+  --kip-fur: #E9DCC6; --kip-belly: #F6EEDF; --kip-slate: #3B4350; --kip-tan: #B89F82;
+  --kip-vest: #4A5A70; --kip-knit: #8592A6; --kip-vest-dark: #3E4C5F; --kip-brass: #B9A86E;
+  --kip-iris: #6B4A2B; --kip-pupil: #1A1410; --kip-glint: #E8E6E2; --kip-wood: #CDAE84;
+  --kip-rim: #F3A6BC;
+  --kip-ink: rgba(0, 0, 0, .35);
+}
+:root[data-theme="light"] { --kip-ink: rgba(10, 15, 28, .45); }
+
+#kip-layer { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 2; }
+.kip-fx { position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform, opacity; border-radius: 50%; }
+.kip-fx.ring { border: 2px solid currentColor; background: none; }
+
+/* The hit area is what is drawn (his shapes), not his 74x96 box, so it follows him at any size. */
+#kip-layer .kip { position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform;
+  -webkit-tap-highlight-color: transparent; user-select: none; }
+#kip-layer .kip .k-flip svg { pointer-events: none; }
+#kip-layer .kip .k-root > g:not(.k-fx-g) { pointer-events: visiblePainted; cursor: pointer; }
+.kip .k-flip { width: 100%; height: 100%; transform-origin: 50% 100%; will-change: transform; }
+.kip .k-bob { width: 100%; height: 100%; animation: kip-bob 1.6s ease-in-out infinite alternate; }
+.kip svg { width: 100%; height: 100%; overflow: visible; display: block; }
+.kip .o { stroke: var(--kip-ink); stroke-width: 1.2; stroke-linejoin: round; }
+.kip .k-fx-g * { pointer-events: none; }
+.kip.asleep .k-bob { animation-duration: 3.2s; }
+.kip.no-bob .k-bob, .kip.static .k-bob { animation: none; }
+@keyframes kip-bob { from { transform: translateY(0); } to { transform: translateY(-2px); } }
+
+/* Print and phone stickers: a still Kip in a pose, outside any text. */
+.slide > .kip-sticker { display: none; position: absolute; width: 74px; height: 96px; pointer-events: none; }
+.kip-sticker svg { width: 100%; height: 100%; overflow: visible; display: block; }
+.kip-sticker .o { stroke: var(--kip-ink); stroke-width: 1.2; stroke-linejoin: round; }
+body.flow .slide > .kip-sticker { display: block; position: relative; width: 72px; height: 93px; margin: 24px auto 0; left: auto !important; top: auto !important; }
+/* Phones, slide 1: Kip stands on the queue panel's top edge, so he is in the first screen. */
+body.flow .kip-sticker.inline { display: block; position: relative; width: 72px; height: 93px; margin: 0 8px -6px auto; flex: none; align-self: flex-end; }
+/* Phones, slide 1: he arrives with the queue's border and header (the panel is "bare" until then). */
+body.flow #s1 .kip-sticker.inline { transition: opacity .3s; }
+body.flow #s1:has([data-a="panel"].bare) .kip-sticker.inline { opacity: 0; }
+.kip-sticker.inline { display: none; }
+body.print .slide > .kip-sticker { display: block; }
+@media print { .slide > .kip-sticker { display: block; } }
+
+/* Extras that ride on the slides */
+#s11 .blk { position: relative; }
+#s11 .blk > .wow-pulse { position: absolute; inset: -1px; border: 2px solid var(--green); border-radius: inherit; opacity: 0; pointer-events: none; }
+#s13 .person { transition: translate .25s var(--ease, ease); }
+#s13 .person.wow-lift { position: relative; }
+/* The cards end with a clip-path, so the lift's shadow is drawn inside the card, pre-drawn and faded in. */
+#s13 .person.wow-lift::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow: inset 0 0 0 1px var(--line-2), inset 0 -60px 80px -50px rgba(61, 220, 151, .16); opacity: 0; transition: opacity .25s var(--ease, ease); }
+#s13 .person.wow-lift:hover { translate: 0 -4px; }
+#s13 .person.wow-lift:hover::after { opacity: 1; }
+.wow-ping { transform-box: fill-box; transform-origin: center; pointer-events: none; }
+
+/* Modes where Kip does not run around */
+body.flow #kip-layer, body.print #kip-layer { display: none; }
+@media print { #kip-layer { display: none !important; } }
+@media (prefers-reduced-motion: reduce) { .kip .k-bob { animation: none; } }
+body.no-trans .kip .k-bob { animation: none; }
+body.no-trans #s13 .person, body.no-trans #s13 .person::after { transition: none; }

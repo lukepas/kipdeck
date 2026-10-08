@@ -1,0 +1,141 @@
+{
+  "url": "http://127.0.0.1:4692/",
+  "timeline": {
+    "desktop": {
+      "shots": [
+        "design/shots/landing/stage-2/desktop-dark-t00250-launch.png",
+        "design/shots/landing/stage-2/desktop-dark-t00650-inhale.png",
+        "design/shots/landing/stage-2/desktop-dark-t01200-rows.png",
+        "design/shots/landing/stage-2/desktop-dark-t02550-asks.png",
+        "design/shots/landing/stage-2/desktop-dark-t03300-climbed.png",
+        "design/shots/landing/stage-2/desktop-dark-t07000-waiting.png",
+        "design/shots/landing/stage-2/desktop-dark-answered.png",
+        "design/shots/landing/stage-2/desktop-dark-back-to-work.png"
+      ],
+      "errors": [],
+      "lcp": {
+        "t": 68,
+        "el": "h1#hero-h.display.hero-h"
+      },
+      "cls": 0,
+      "longTasks": [],
+      "frames": {
+        "frames": 418,
+        "p50": 16.7,
+        "p95": 16.7,
+        "p99": 16.8,
+        "over20ms": 1
+      }
+    },
+    "desktopLight": {
+      "shots": [
+        "design/shots/landing/stage-2/desktop-light-t00250-launch.png",
+        "design/shots/landing/stage-2/desktop-light-t00650-inhale.png",
+        "design/shots/landing/stage-2/desktop-light-t01200-rows.png",
+        "design/shots/landing/stage-2/desktop-light-t02550-asks.png",
+        "design/shots/landing/stage-2/desktop-light-t03300-climbed.png",
+        "design/shots/landing/stage-2/desktop-light-t07000-waiting.png",
+        "design/shots/landing/stage-2/desktop-light-answered.png",
+        "design/shots/landing/stage-2/desktop-light-back-to-work.png"
+      ],
+      "errors": [],
+      "lcp": {
+        "t": 60,
+        "el": "h1#hero-h.display.hero-h"
+      },
+      "cls": 0,
+      "longTasks": [],
+      "frames": {
+        "frames": 421,
+        "p50": 16.7,
+        "p95": 16.7,
+        "p99": 16.8,
+        "over20ms": 0
+      }
+    },
+    "big": {
+      "shots": [
+        "design/shots/landing/stage-2/big-dark-t00250-launch.png",
+        "design/shots/landing/stage-2/big-dark-t00650-inhale.png",
+        "design/shots/landing/stage-2/big-dark-t01200-rows.png",
+        "design/shots/landing/stage-2/big-dark-t02550-asks.png",
+        "design/shots/landing/stage-2/big-dark-t03300-climbed.png",
+        "design/shots/landing/stage-2/big-dark-t07000-waiting.png",
+        "design/shots/landing/stage-2/big-dark-answered.png",
+        "design/shots/landing/stage-2/big-dark-back-to-work.png"
+      ],
+      "errors": [],
+      "lcp": {
+        "t": 68,
+        "el": "h1#hero-h.display.hero-h"
+      },
+      "cls": 0,
+      "longTasks": [],
+      "frames": {
+        "frames": 420,
+        "p50": 16.7,
+        "p95": 16.7,
+        "p99": 16.8,
+        "over20ms": 1
+      }
+    },
+    "phone": {
+      "shots": [
+        "design/shots/landing/stage-2/phone-dark-t00250-launch.png",
+        "design/shots/landing/stage-2/phone-dark-t00650-inhale.png",
+        "design/shots/landing/stage-2/phone-dark-t01200-rows.png",
+        "design/shots/landing/stage-2/phone-dark-t02550-asks.png",
+        "design/shots/landing/stage-2/phone-dark-t03300-climbed.png",
+        "design/shots/landing/stage-2/phone-dark-t07000-waiting.png",
+        "design/shots/landing/stage-2/phone-dark-answered.png",
+        "design/shots/landing/stage-2/phone-dark-back-to-work.png"
+      ],
+      "errors": [],
+      "lcp": {
+        "t": 60,
+        "el": "p.lede"
+      },
+      "cls": 0,
+      "longTasks": [],
+      "frames": {
+        "frames": 421,
+        "p50": 16.7,
+        "p95": 16.7,
+        "p99": 16.8,
+        "over20ms": 0
+      }
+    }
+  },
+  "vitals": {
+    "phoneThrottled": {
+      "lcp": {
+        "t": 488,
+        "el": "p.lede"
+      },
+      "cls": 0,
+      "longTasks": [
+        146
+      ],
+      "frames": {
+        "frames": 300,
+        "p50": 16.7,
+        "p95": 16.7,
+        "p99": 16.8,
+        "over20ms": 0
+      }
+    }
+  },
+  "ghost": {
+    "shots": [
+      "design/shots/landing/stage-2/desktop-ghost-arrives.png",
+      "design/shots/landing/stage-2/desktop-ghost-answers.png"
+    ],
+    "clearedByGhost": true
+  },
+  "pointer": [
+    "design/shots/landing/stage-2/desktop-pointer.png",
+    "design/shots/landing/stage-2/desktop-copied.png"
+  ],
+  "reduced": "design/shots/landing/stage-2/desktop-reduced.png",
+  "clip": "design/shots/landing/stage-2/desktop-opening.mp4"
+}
