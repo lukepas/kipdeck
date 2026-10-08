@@ -1,7 +1,7 @@
 {
   "name": "agent-office",
   "version": "0.1.0",
-  "description": "Kipdeck: the inbox for your AI coding agents. Mission control for teams running many AI coding agents, with proof of every merge on testnets. Built on agent-office by webdevcody (MIT).",
+  "description": "Kipdeck: the inbox for your AI coding agents, with proof of every merge on testnets. Built on agent-office by webdevcody (MIT).",
   "type": "module",
   "bin": {
     "kipdeck": "bin/agent-office.js",

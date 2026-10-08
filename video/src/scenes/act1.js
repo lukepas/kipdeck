@@ -764,7 +764,7 @@ const missionControl = {
     const P = design.palette;
     const u = design.u;
     const lock = tl.at('unsort.lock');
-    const ugc = tl.at('text.kipdeck');
+    const kip = tl.at('text.kipdeck');
     const see = tl.at('text.see-every-agent');
     const L = missionLayout(design);
     const { start, dep, clears } = starts(tl, design);
@@ -784,7 +784,7 @@ const missionControl = {
     // lit red, as the answer to 'Who needs you?', and pulses on the backbeats.
     const pulseHits = tl.prefixed('needs-you.pulse');
     const pulse = Math.max(0, 1 - tl.sinceLast(pulseHits, t) / 0.35);
-    const pulseA = Math.max(pulse > 0 ? expoOut(pulse) : 0, t < ugc ? 1 : 0);
+    const pulseA = Math.max(pulse > 0 ? expoOut(pulse) : 0, t < kip ? 1 : 0);
     const ls = design.size('labelS');
     const drawHead = (c) => {
       const col = L.column(c.id);
@@ -921,16 +921,16 @@ const missionControl = {
 
     // Under the name the board dims for half a second, so 'Kipdeck.' lands
     // against settled, readable state rather than the busiest frame of the sort.
-    const veil = t < ugc - 4 / 60 ? 0 : t < ugc + 0.4 ? 1 : 1 - clamp((t - ugc - 0.4) * 60 / 8);
+    const veil = t < kip - 4 / 60 ? 0 : t < kip + 0.4 ? 1 : 1 - clamp((t - kip - 0.4) * 60 / 8);
     if (veil > 0) {
       ctx.fillStyle = P.paper;
-      ctx.globalAlpha = 0.42 * veil * clamp((t - ugc + 4 / 60) * 60 / 3);
+      ctx.globalAlpha = 0.42 * veil * clamp((t - kip + 4 / 60) * 60 / 3);
       ctx.fillRect(R.x - 4 * u, R.y - 4 * u, R.w + 8 * u, R.h + 8 * u);
       ctx.globalAlpha = 1;
     }
 
     // The readout becomes the app header once the name has been said (7.0).
-    readout(S, { value: 64, sub: 'Agents', header: expoOut((t - ugc - tl.beatSec) * 60 / 10) });
+    readout(S, { value: 64, sub: 'Agents', header: expoOut((t - kip - tl.beatSec) * 60 / 10) });
     ctx.restore();
 
     // 'Who needs you?' carries over the 6.0 cut into the type module, beside
@@ -938,7 +938,7 @@ const missionControl = {
     // name rises.
     moduleHeadline(S, {
       spans: design.vertical ? [{ text: 'Who needs' }, br, { text: 'you?' }] : [{ text: 'Who' }, br, { text: 'needs' }, br, { text: 'you?' }],
-      lines: design.vertical ? 2 : 3, enter: lock - 1, exit: ugc - 0.36, size: design.size('l'), wdth: 75,
+      lines: design.vertical ? 2 : 3, enter: lock - 1, exit: kip - 0.36, size: design.size('l'), wdth: 75,
     });
 
     // 'Kipdeck.' slams on 6.5 as the largest type of the act (wdth 125 to
@@ -952,13 +952,13 @@ const missionControl = {
     const kickerH = kLines * ks * 1.04 + tick * 2.2;
     const gap = ks * 0.5;
     const outAt = see - 24 / 60;
-    const slam = curves.slam(clamp((t - ugc) / tl.beatSec));
-    const stamp = 1 + 0.06 * (1 - expoOut(Math.max(0, t - ugc) * 60 / 6));
+    const slam = curves.slam(clamp((t - kip) / tl.beatSec));
+    const stamp = 1 + 0.06 * (1 - expoOut(Math.max(0, t - kip) * 60 / 6));
     moduleHeadline(S, {
-      spans: [{ text: 'Kip' }, br, { text: 'deck.' }], lines: 2, enter: ugc, exit: outAt, size, panX,
+      spans: [{ text: 'Kip' }, br, { text: 'deck.' }], lines: 2, enter: kip, exit: outAt, size, panX,
       wdth: lerp(125, 100, slam), bottomPad: kickerH + gap, scale: stamp,
     });
-    const kick = ugc + tl.beatSec;
+    const kick = kip + tl.beatSec;
     const kSpans = design.vertical
       ? [{ text: 'Mission control for' }, br, { text: 'your AI coding agents.' }]
       : [{ text: 'Mission control' }, br, { text: 'for your AI' }, br, { text: 'coding agents.' }];

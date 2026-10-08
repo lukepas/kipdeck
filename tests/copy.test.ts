@@ -97,7 +97,7 @@ test('server and shared strings are plain ASCII copy: no em dash, ellipsis glyph
 test('the product calls itself Kipdeck wherever agents, tools and commits see it', () => {
   const bad: string[] = [];
   for (const f of [...files('src/server'), ...files('src/shared'), 'bin/office-workers.js', 'bin/office-queue.js']) {
-    for (const { line, text } of literals(readFileSync(path.join(root, f), 'utf8'))) if (/Agent Office|UGC Army|ugc-army/i.test(text)) bad.push(`${f}:${line}`);
+    for (const { line, text } of literals(readFileSync(path.join(root, f), 'utf8'))) if (/Agent Office|UGC Army|ugc-army|ugcarmy|mergeline/i.test(text)) bad.push(`${f}:${line}`);
   }
   assert.deepEqual(bad, []);
   const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8'));
