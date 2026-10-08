@@ -234,7 +234,7 @@ export class WorkerManager {
    * (see meetings.ts), in the meeting's own worktree, which everyone at the table shares. `repos` are
    * other floors' repositories a worker in its own worktree works in too (see makeWorkspace). `link`
    * is the issue it's there for and the milestone it works towards (see MissionHooks.goalFor), and
-   * `session` one of its CLI's own sessions to carry on (`mergeline attach` adopting it).
+   * `session` one of its CLI's own sessions to carry on (`kipdeck attach` adopting it).
    */
   spawn(deskId: string, by: string, prompt?: string, worktree = false, kind: WorkerKind = 'agent', provider?: AgentProvider, model?: string, effort?: AgentEffort, meeting?: { id: string; worktree?: WorkerInfo['worktree'] }, owner?: string, repos: RepoSource[] = [], link: { goal?: string; issue?: number; session?: string } = {}): WorkerInfo | string {
     // Nobody picked (a board agent, say): the office's default worker, model and effort included.

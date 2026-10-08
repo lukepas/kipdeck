@@ -1,4 +1,4 @@
-// Kip's poses, pivots and wand safety, as in the deck (mergeline-deck/site/kip.js).
+// Kip's poses, pivots and wand safety, as in the deck (deck/site/kip.js).
 
 export type PartVars = Record<string, number>;
 export type Pose = Record<string, PartVars>;

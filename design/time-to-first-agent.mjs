@@ -1,4 +1,4 @@
-// The stage's exit check, timed: a clean account goes from `npx mergeline` to its first agent at work.
+// The stage's exit check, timed: a clean account goes from `npx kipdeck` to its first agent at work.
 // A throwaway home with an empty npm cache (so npx downloads everything, as on a new machine), a
 // demo git repository, and the package as `npm pack` makes it (the registry's would be the same
 // tarball). The command runs in a pseudo-terminal from inside the repository; the link it prints is
@@ -50,7 +50,7 @@ const env = {
   npm_config_update_notifier: 'false',
 };
 const t0 = Date.now();
-const term = pty.spawn(path.join(nodeDir, 'npx'), ['--yes', `--package=${tarball}`, 'mergeline', '--host', '127.0.0.1', '--port', String(PORT), '--no-open'], { cwd: repo, env, cols: 120, rows: 40, name: 'xterm-256color' });
+const term = pty.spawn(path.join(nodeDir, 'npx'), ['--yes', `--package=${tarball}`, 'kipdeck', '--host', '127.0.0.1', '--port', String(PORT), '--no-open'], { cwd: repo, env, cols: 120, rows: 40, name: 'xterm-256color' });
 let raw = '';
 term.onData((d) => (raw += d));
 const clean = (s) => s.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, '').replace(/\r/g, '');

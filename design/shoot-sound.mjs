@@ -60,7 +60,7 @@ export async function soundShots(page, { out, name, wait, ffmpeg }) {
 
   /** Records `ms` of frames and sound while `script` ([at ms, fn]) runs; saves the clip, its audio, spectrum and waveform. */
   async function clip(label, ms, script) {
-    const frames = mkdtempSync(path.join(tmpdir(), `ugc-sound-${label}-`));
+    const frames = mkdtempSync(path.join(tmpdir(), `kipdeck-sound-${label}-`));
     await page.evaluate(() => {
       const stream = window.__sound.tap();
       const rec = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus', audioBitsPerSecond: 160_000 });

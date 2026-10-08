@@ -1,17 +1,20 @@
 // Builds the landing page (site/landing/, Vite) into dist/site/, fills in its deploy addresses from
 // the environment, and renders its share card (og.png) from the brand. See docs/landing.md.
 //
-//   MERGELINE_SITE_URL=https://mergeline.dev/ MERGELINE_WAITLIST_URL=https://... npm run build:site
-//   MERGELINE_BRAND=ugc-army npm run build:site        # the other name (site/landing/brand.ts)
+//   KIPDECK_SITE_URL=https://kipdeck.com/ KIPDECK_WAITLIST_URL=https://... npm run build:site
+//   KIPDECK_BRAND=<id> npm run build:site           # another entry in site/landing/brand.ts
+//
+// The MERGELINE_* names from before the rename to Kipdeck still work (site/env.mjs).
 //
 // Each address must be https (a waitlist on http would send emails in the clear). Without
-// MERGELINE_WAITLIST_URL the Team waitlist form is not shown at all (the design-partner link, a
+// KIPDECK_WAITLIST_URL the Team waitlist form is not shown at all (the design-partner link, a
 // new GitHub issue, is the ask). The page's Content-Security-Policy lets it reach the waitlist's
 // origin and no other.
 import { mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { siteEnv } from './env.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const OUT = path.join(ROOT, 'dist', 'site');
@@ -23,50 +26,52 @@ export function repoOf(html) {
 /** The built page with its addresses filled in. Exported for tests/landing.test.ts. */
 export function buildPage(html, env) {
   const url = (name) => {
-    const v = (env[name] ?? '').trim();
+    const v = (siteEnv(env, name) ?? '').trim();
     if (!v) return '';
     let u;
     try {
       u = new URL(v);
     } catch {
-      throw new Error(`${name} is not a URL: ${v}`);
+      throw new Error(`KIPDECK_${name} is not a URL: ${v}`);
     }
-    if (u.protocol !== 'https:') throw new Error(`${name} must be https: ${v}`);
+    if (u.protocol !== 'https:') throw new Error(`KIPDECK_${name} must be https: ${v}`);
     return u;
   };
   const attr = (s) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
   let out = html;
-  const waitlist = url('MERGELINE_WAITLIST_URL');
+  const waitlist = url('WAITLIST_URL');
   if (waitlist) {
     // The Team tier waitlist is shown only in a build that has somewhere to send it.
     out = out.replace('data-endpoint="" hidden', `data-endpoint="${attr(waitlist.href)}"`);
     out = out.replace("connect-src 'none'", `connect-src ${waitlist.origin}`);
   }
-  const demo = url('MERGELINE_DEMO_URL');
+  const demo = url('DEMO_URL');
   if (demo) out = out.replace('data-link="demo" href="#try-demo"', `data-link="demo" href="${attr(demo.href)}" rel="noopener"`);
   // Where the page itself lives: the canonical link, og:url, and absolute addresses for the share
   // card (most link previews ignore a relative og:image). Without it there is no canonical link,
   // since a relative one would be wrong wherever the page is copied.
-  const site = url('MERGELINE_SITE_URL');
+  const site = url('SITE_URL');
   if (site) {
     const href = attr(site.href.endsWith('/') ? site.href : `${site.href}/`);
     out = out.replace('<meta name="robots"', `<link rel="canonical" href="${href}">\n<meta property="og:url" content="${href}">\n<meta name="robots"`);
     out = out.replaceAll('content="og.png"', `content="${href}og.png"`);
     out = out.replace('"image":"og.png"', `"image":"${href}og.png","url":"${href}"`);
   }
-  // Every link and command that names the brand's repository moves to MERGELINE_REPO_URL.
-  const repo = url('MERGELINE_REPO_URL');
+  // Every link and command that names the brand's repository moves to KIPDECK_REPO_URL.
+  const repo = url('REPO_URL');
   const current = repoOf(out);
   if (repo && current) {
     const next = repo.href.replace(/\/$/, '').replace(/\.git$/, '');
-    out = out.replaceAll(current, attr(next));
-    // The clone lands in a folder named after the repository, so the command's cd follows it.
+    // The clone lands in a folder named after the new repository, so the command's folder and cd follow it.
     const slug = (u) => u.split('/').pop();
-    out = out.replaceAll(`cd ${slug(current)} &amp;&amp;`, `cd ${attr(slug(next))} &amp;&amp;`);
+    const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const clone = new RegExp(`git clone ${esc(current)}(?: [\\w.-]+)? &amp;&amp; cd [\\w.-]+ &amp;&amp;`, 'g');
+    out = out.replace(clone, `git clone ${attr(next)} &amp;&amp; cd ${attr(slug(next))} &amp;&amp;`);
+    out = out.replaceAll(current, attr(next));
   }
   // Until `npx` works from the registry, the page shows the from-source command and says so (never a
   // command that 404s). Published, the npx command takes its place.
-  if (env.MERGELINE_NPM_PUBLISHED === '1') {
+  if (siteEnv(env, 'NPM_PUBLISHED') === '1') {
     out = out.replace(/\s*<(div|p|pre|span|code)\b[^>]*\bdata-unpublished\b[^>]*>[\s\S]*?<\/\1>/g, '');
     out = out.replaceAll('data-published hidden', 'data-published');
     out = out.replace(/data-copy="[^"]*" data-copy-published="([^"]*)"/g, 'data-copy="$1"');
@@ -104,7 +109,7 @@ async function shareCard(outDir) {
   try {
     ({ chromium } = await import('playwright-core'));
   } catch {
-    return 'playwright-core is not installed: og.png not drawn';
+    return 'playwright-core is not installed: og.png not drawn, public/og.png ships instead';
   }
   let browser;
   for (const how of [{}, ...(process.env.CHROMIUM_PATH ? [{ executablePath: process.env.CHROMIUM_PATH }] : []), { channel: 'chrome' }]) {
@@ -115,7 +120,7 @@ async function shareCard(outDir) {
       // Try the next browser.
     }
   }
-  if (!browser) return 'no headless Chromium here: og.png not drawn';
+  if (!browser) return 'no headless Chromium here: og.png not drawn, public/og.png ships instead';
   try {
     const dir = mkdtempSync(path.join(tmpdir(), 'og-'));
     const file = path.join(dir, 'card.html');
@@ -132,7 +137,7 @@ async function shareCard(outDir) {
 
 /** robots.txt (from public/) gets the sitemap's address, and sitemap.xml is written, once the build knows where the page lives. */
 export function writeCrawlerFiles(outDir, env) {
-  const v = (env.MERGELINE_SITE_URL ?? '').trim();
+  const v = (siteEnv(env, 'SITE_URL') ?? '').trim();
   if (!v) return;
   const href = new URL(v).href.replace(/\/?$/, '/');
   const robots = path.join(outDir, 'robots.txt');
@@ -144,19 +149,19 @@ export function writeCrawlerFiles(outDir, env) {
   );
 }
 
-/** Builds the page into `outDir` for `env` (MERGELINE_BRAND and the four addresses). */
+/** Builds the page into `outDir` for `env` (KIPDECK_BRAND and the four addresses). */
 export async function buildSite({ env = process.env, outDir = OUT, card = true } = {}) {
   const { build } = await import('vite');
-  const saved = { brand: process.env.MERGELINE_BRAND, out: process.env.MERGELINE_SITE_OUT };
-  process.env.MERGELINE_BRAND = env.MERGELINE_BRAND ?? '';
-  process.env.MERGELINE_SITE_OUT = outDir;
+  const saved = { brand: process.env.KIPDECK_BRAND, out: process.env.KIPDECK_SITE_OUT };
+  process.env.KIPDECK_BRAND = siteEnv(env, 'BRAND') ?? '';
+  process.env.KIPDECK_SITE_OUT = outDir;
   try {
     await build({ configFile: path.join(ROOT, 'site', 'landing', 'vite.config.ts'), logLevel: 'warn', mode: 'production' });
   } finally {
-    if (saved.brand === undefined) delete process.env.MERGELINE_BRAND;
-    else process.env.MERGELINE_BRAND = saved.brand;
-    if (saved.out === undefined) delete process.env.MERGELINE_SITE_OUT;
-    else process.env.MERGELINE_SITE_OUT = saved.out;
+    if (saved.brand === undefined) delete process.env.KIPDECK_BRAND;
+    else process.env.KIPDECK_BRAND = saved.brand;
+    if (saved.out === undefined) delete process.env.KIPDECK_SITE_OUT;
+    else process.env.KIPDECK_SITE_OUT = saved.out;
   }
   const file = path.join(outDir, 'index.html');
   writeFileSync(file, buildPage(readFileSync(file, 'utf8'), env));
@@ -168,5 +173,5 @@ export async function buildSite({ env = process.env, outDir = OUT, card = true }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { outDir, og } = await buildSite();
   console.log(`site: ${path.relative(ROOT, outDir)}/index.html (${og})`);
-  for (const name of ['MERGELINE_SITE_URL', 'MERGELINE_WAITLIST_URL', 'MERGELINE_DEMO_URL', 'MERGELINE_REPO_URL', 'MERGELINE_NPM_PUBLISHED']) if (!process.env[name]) console.log(`  ${name} is not set (see docs/landing.md)`);
+  for (const name of ['SITE_URL', 'WAITLIST_URL', 'DEMO_URL', 'REPO_URL', 'NPM_PUBLISHED']) if (!siteEnv(process.env, name)) console.log(`  KIPDECK_${name} is not set (see docs/landing.md)`);
 }

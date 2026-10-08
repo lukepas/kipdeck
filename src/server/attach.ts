@@ -1,4 +1,4 @@
-// `mergeline attach`: an agent you started in a terminal (Claude Code or Codex in this folder) moves
+// `kipdeck attach`: an agent you started in a terminal (Claude Code or Codex in this folder) moves
 // into the inbox. It finds that agent's latest session for this folder in the CLI's own session files,
 // and the running office carries the session on as one of its agents (`claude --resume <id>`, `codex
 // resume <id>`, `cursor-agent --resume=<id>`), so its questions, its changes and the merge are in the
@@ -151,7 +151,7 @@ const ago = (at: number) => {
   return min < 1 ? 'just now' : min < 60 ? `${min}m ago` : min < 48 * 60 ? `${Math.round(min / 60)}h ago` : `${Math.round(min / 1440)}d ago`;
 };
 
-/** `mergeline attach ...`: returns the exit code. */
+/** `kipdeck attach ...`: returns the exit code. */
 export async function attachCommand(argv: string[]): Promise<number> {
   let agent: AgentProvider | undefined;
   let session = '';

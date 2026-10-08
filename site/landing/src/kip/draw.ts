@@ -1,6 +1,6 @@
-// Kip's drawing, the same as the investor deck's (mergeline-deck/site/kip.js): cream fur, tall leaf
+// Kip's drawing, the same as the investor deck's (deck/site/kip.js): cream fur, tall leaf
 // ears, a quilted slate vest, a knitted scarf and the merge wand (a short rod tipped with the
-// Mergeline chevron, brand green or teal). One inline SVG, viewBox 0 0 100 130, feet on y=128.
+// Kipdeck chevron, brand green or teal). One inline SVG, viewBox 0 0 100 130, feet on y=128.
 // The paths, colours and pivots are copied as they are; only the pictograms' inline style moved
 // into the .k-pict class, since the page's Content-Security-Policy blocks style attributes.
 
@@ -14,7 +14,7 @@ export function bodySVG(id: number, scarf?: string): string {
     const c = COLORS[g];
     return `<radialGradient id="kg-${g}-${id}"><stop offset="0" stop-color="${c}" stop-opacity=".95"/><stop offset=".45" stop-color="${c}" stop-opacity=".38"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></radialGradient>`;
   }).join('');
-  // The Sprig: a short merge wand held up and forward from the paw, tipped with the Mergeline chevron.
+  // The Sprig: a short merge wand held up and forward from the paw, tipped with the Kipdeck chevron.
   // Per colour: a faint halo (stacked translucent strokes at 35%, no filter), a coloured stroke, the
   // chevron and a small tip glow. The white core sits on top.
   const ROD = 'x1="70.5" y1="90" x2="78.6" y2="77.4"';

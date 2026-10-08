@@ -72,7 +72,7 @@ export class DemoDirector {
   /** A round: whoever is still there goes home, the project starts over, and the fleet is seated. */
   private async round() {
     const floor = this.floor();
-    if (!floor) return console.error(`mergeline: the demo project (${this.ws.repo}) didn't open`);
+    if (!floor) return console.error(`kipdeck: the demo project (${this.ws.repo}) didn't open`);
     if (this.look) clearInterval(this.look);
     this.look = undefined;
     const left = floor.workers.list();
@@ -84,7 +84,7 @@ export class DemoDirector {
         demoGit(['reset', '-q', '--hard', this.ws.seed], this.ws.repo);
         demoGit(['clean', '-q', '-fd'], this.ws.repo);
       } catch (err) {
-        console.error(`mergeline: couldn't start the demo project over: ${(err as Error).message}`);
+        console.error(`kipdeck: couldn't start the demo project over: ${(err as Error).message}`);
       }
     }
     if (this.info.readOnly) {
@@ -98,7 +98,7 @@ export class DemoDirector {
     FLEET.forEach((agent, i) =>
       this.later(() => {
         const r = floor.workers.spawn(agent.deskId, 'Demo', agent.task, true, 'agent', agent.provider);
-        if (typeof r === 'string') console.error(`mergeline: demo agent "${agent.task}": ${r}`);
+        if (typeof r === 'string') console.error(`kipdeck: demo agent "${agent.task}": ${r}`);
         else this.ids.set(agent.key, r.id);
       }, i * STAGGER_MS),
     );
@@ -126,11 +126,11 @@ export class DemoDirector {
       if (!id) continue;
       if (r.answer) {
         const err = floor.workers.prompt(id, r.answer, DEMO_REVIEWER);
-        if (err) console.error(`mergeline: demo answer: ${err}`);
+        if (err) console.error(`kipdeck: demo answer: ${err}`);
       }
       if (r.merge) {
         mergeWork(this.ctx, { who: DEMO_REVIEWER }, id, (res) => {
-          if ('error' in res) console.error(`mergeline: demo merge: ${res.error}`);
+          if ('error' in res) console.error(`kipdeck: demo merge: ${res.error}`);
           this.lastAt = Date.now();
         });
       }

@@ -11,7 +11,7 @@ export type Scope = 'you' | 'floor' | 'office';
 const SCOPE: Record<Scope, [label: string, title: string]> = {
   you: ['Just you', 'Only for you, kept in this browser'],
   floor: ['This project', 'The same for everyone on this project'],
-  office: ['Everyone', 'The same for everyone using this Mergeline'],
+  office: ['Everyone', 'The same for everyone using this Kipdeck'],
 };
 
 /** One setting: its name and who it's for, then whatever sets it. */

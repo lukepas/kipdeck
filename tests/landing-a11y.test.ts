@@ -258,7 +258,7 @@ test('the film has English captions, and its poster is fetched only when it is o
   assert.match(vtt, /^WEBVTT/);
   assert.match(vtt, /Paid only when a human merges\./);
   assert.match(vtt, /test funds only/);
-  assert.doesNotMatch(vtt, /mergeline|ugc army/i, 'the captions name no product, so either build can carry them');
+  assert.doesNotMatch(vtt, /kipdeck|kipdeck/i, 'the captions name no product, so either build can carry them');
   const { page } = await open(t);
   const posters: string[] = [];
   page.on('request', (r) => /poster/.test(r.url()) && posters.push(r.url()));
@@ -275,7 +275,7 @@ test('the head: description, Open Graph, Twitter and structured data; canonical,
   }
   const ld = JSON.parse(/<script type="application\/ld\+json">([^<]+)<\/script>/.exec(html)![1]);
   assert.equal(ld['@type'], 'SoftwareApplication');
-  assert.equal(ld.name, 'Mergeline');
+  assert.equal(ld.name, 'Kipdeck');
   assert.equal(ld.isAccessibleForFree, true);
   assert.equal(ld.offers.price, '0');
   assert.equal(ld.aggregateRating, undefined, 'no ratings: there are none');
@@ -284,15 +284,15 @@ test('the head: description, Open Graph, Twitter and structured data; canonical,
   assert.ok(existsSync(path.join(dir, 'robots.txt')));
   assert.ok(!existsSync(path.join(dir, 'sitemap.xml')));
   const placed = mkdtempSync(path.join(tmpdir(), 'landing-seo-'));
-  await buildSite({ env: { MERGELINE_SITE_URL: 'https://mergeline.example/' }, outDir: placed, card: false });
+  await buildSite({ env: { KIPDECK_SITE_URL: 'https://kipdeck.example/' }, outDir: placed, card: false });
   const page = readFileSync(path.join(placed, 'index.html'), 'utf8');
-  assert.match(page, /<link rel="canonical" href="https:\/\/mergeline\.example\/">/);
-  assert.match(page, /<meta property="og:url" content="https:\/\/mergeline\.example\/">/);
-  assert.match(page, /<meta property="og:image" content="https:\/\/mergeline\.example\/og\.png">/);
-  assert.match(page, /"image":"https:\/\/mergeline\.example\/og\.png","url":"https:\/\/mergeline\.example\/"/);
-  assert.match(readFileSync(path.join(placed, 'robots.txt'), 'utf8'), /Sitemap: https:\/\/mergeline\.example\/sitemap\.xml/);
-  assert.match(readFileSync(path.join(placed, 'sitemap.xml'), 'utf8'), /<loc>https:\/\/mergeline\.example\/<\/loc>/);
-  await assert.rejects(buildSite({ env: { MERGELINE_SITE_URL: 'http://mergeline.example/' }, outDir: placed, card: false }), /must be https/);
+  assert.match(page, /<link rel="canonical" href="https:\/\/kipdeck\.example\/">/);
+  assert.match(page, /<meta property="og:url" content="https:\/\/kipdeck\.example\/">/);
+  assert.match(page, /<meta property="og:image" content="https:\/\/kipdeck\.example\/og\.png">/);
+  assert.match(page, /"image":"https:\/\/kipdeck\.example\/og\.png","url":"https:\/\/kipdeck\.example\/"/);
+  assert.match(readFileSync(path.join(placed, 'robots.txt'), 'utf8'), /Sitemap: https:\/\/kipdeck\.example\/sitemap\.xml/);
+  assert.match(readFileSync(path.join(placed, 'sitemap.xml'), 'utf8'), /<loc>https:\/\/kipdeck\.example\/<\/loc>/);
+  await assert.rejects(buildSite({ env: { KIPDECK_SITE_URL: 'http://kipdeck.example/' }, outDir: placed, card: false }), /must be https/);
 });
 
 /** Scrolls top to bottom, merging in the loop on the way. */

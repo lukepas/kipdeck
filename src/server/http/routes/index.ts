@@ -29,7 +29,7 @@ export const routes: readonly Route[] = [
   authRoutes.claimable,
   authRoutes.claim,
   authRoutes.link,
-  // Commands on this computer with the office's local key (mergeline open, attach).
+  // Commands on this computer with the office's local key (kipdeck open, attach).
   localRoutes.link,
   localRoutes.attach,
   authRoutes.logout,

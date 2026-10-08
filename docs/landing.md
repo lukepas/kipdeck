@@ -34,7 +34,7 @@ Sound is off until the speaker button in the top bar turns it on; then an agent 
 
 - Every staged surface carries a *Demo data*, *measured* or *illustrative* tag. The measured numbers (3.4 s to the first agent, 10.7 s and 4 clicks to the first merge) come from `design/shots/fundable/final/measure.json`.
 - Every chain value in Proof of Merge is a real testnet artifact and says so (Solana devnet, Base Sepolia, test USDC).
-- Until `MERGELINE_NPM_PUBLISHED=1`, the page shows the from-source command and says *Not on npm yet*. It never shows a command that 404s.
+- Until `KIPDECK_NPM_PUBLISHED=1`, the page shows the from-source command and says *Not on npm yet*. It never shows a command that 404s.
 - No traction is invented: the ask is five design partners, and it works without a server (a new GitHub issue). No claim says nobody else measures the wait; the page says what a vendor's dashboard does not show.
 - One clock format, m:ss, everywhere on the page.
 - With less motion (the system setting) every section shows its final state, nothing ticks and the stopwatch reads a still 23:00.
@@ -80,17 +80,17 @@ What keeps it inside them:
 
 Accessibility: the page is semantic HTML that reads in full without script (a scene's text is clipped while it plays, never hidden from a screen reader), canvases and drawings are `aria-hidden`, there is a skip link, every control has a name and a visible focus ring, Copy announces itself through a polite live region, the film has English captions (`public/media/film-captions.vtt`: its on-screen words and the sounds that carry meaning) and never plays by itself, and text meets AA in both themes. With less motion every scene shows its final state, the field is still, the wait clock is hidden, the stopwatch reads 23:00 and no scene chunk is fetched ahead of time; switching it while the page is open reloads the page in the new mode. Tabbing into the loop's actions first scrolls to where the scene shows them, and in-page jumps re-align once the sections above have rendered at their real size (`ui/anchors.ts`).
 
-Search and sharing: the title says what it is (`Mergeline: the inbox for your AI coding agents`), with a description, Open Graph and Twitter tags with image alt text, and `SoftwareApplication` structured data (free, MIT, no ratings, since there are none). `robots.txt` ships with the build; once `MERGELINE_SITE_URL` says where the page lives, the build adds the canonical link, `og:url`, absolute share-card addresses, `sitemap.xml` and its line in `robots.txt`.
+Search and sharing: the title says what it is (`Kipdeck: the inbox for your AI coding agents`), with a description, Open Graph and Twitter tags with image alt text, and `SoftwareApplication` structured data (free, MIT, no ratings, since there are none). `robots.txt` ships with the build; once `KIPDECK_SITE_URL` says where the page lives, the build adds the canonical link, `og:url`, absolute share-card addresses, `sitemap.xml` and its line in `robots.txt`.
 
 ## The name
 
-The name, tagline, wordmark, npm package, source repository and share-card text live in one file, `site/landing/brand.ts`. The page title, the Open Graph and Twitter tags, the wordmark, every sentence that names the product, every Source and Docs link, the clone commands, the design-partner link, the structured data and the generated `og.png` all read from it. Mergeline is the default; build the other name with:
+The name, tagline, wordmark, npm package, source repository and share-card text live in one file, `site/landing/brand.ts`. The page title, the Open Graph and Twitter tags, the wordmark, every sentence that names the product, every Source and Docs link, the clone commands, the design-partner link, the structured data and the generated `og.png` all read from it. Kipdeck is the only entry. To try another name, add an entry to `BRANDS` and build it with:
 
 ```bash
-MERGELINE_BRAND=ugc-army npm run build:site
+KIPDECK_BRAND=<id> npm run build:site
 ```
 
-The test builds both and checks that each build never mentions the other name or clones the other repository. One thing it cannot change: the 30-second film's frames are drawn with the UGC Army wordmark, so a Mergeline build's film still shows that name until the film is rendered again.
+The test builds the page and checks that it never says a name from before the rename (Mergeline, UGC Army). The source repository is `github.com/zbagdzevicius/kipdeck`. One thing the build cannot change: the 30-second film's frames were rendered with the old UGC Army wordmark, so the page's film shows that name until the film in `video/` is rendered again.
 
 ## Build, look at it, publish
 
@@ -104,26 +104,28 @@ The page's scripts are ES modules, which browsers will not run from `file://`, s
 For a deploy, fill in the addresses:
 
 ```bash
-MERGELINE_SITE_URL=https://<your domain>/ \
-MERGELINE_WAITLIST_URL=https://<your endpoint> \
-MERGELINE_DEMO_URL=https://demo.<your domain>/ \
-MERGELINE_REPO_URL=https://github.com/<org>/mergeline \
-MERGELINE_NPM_PUBLISHED=1 \
+KIPDECK_SITE_URL=https://<your domain>/ \
+KIPDECK_WAITLIST_URL=https://<your endpoint> \
+KIPDECK_DEMO_URL=https://demo.<your domain>/ \
+KIPDECK_REPO_URL=https://github.com/<org>/kipdeck \
+KIPDECK_NPM_PUBLISHED=1 \
 npm run build:site
 ```
 
-Upload `dist/site/` to any static host (GitHub Pages, Cloudflare Pages, Netlify, or a bucket behind a CDN). Each address must be `https`, or the build stops.
+Upload `dist/site/` to any static host (GitHub Pages, Cloudflare Pages, Netlify, or a bucket behind a CDN), or let Vercel build it from Git: the root `vercel.json` holds the install and build commands, the output folder and the headers, so connecting the repository to a Vercel project is enough (see `site/landing/README.md`). Each address must be `https`, or the build stops.
 
 | Variable | What it does | Unset |
 | --- | --- | --- |
-| `MERGELINE_SITE_URL` | Where the page lives: the canonical link, `og:url`, absolute share-card addresses, `sitemap.xml` and its line in `robots.txt` | No canonical link and no sitemap (a relative one would be wrong wherever the page is copied) |
-| `MERGELINE_WAITLIST_URL` | The Team waitlist form appears under the design-partner link and POSTs JSON here; the page's CSP allows that origin and no other | No form: the ask is **Apply as a design partner**, a new GitHub issue |
-| `MERGELINE_DEMO_URL` | **Try the demo** opens the hosted read-only demo ([the demo](demo.md#the-hosted-demo), [Fly](fly.md)) | **Try the demo** copies the hero's demo command and lights it |
-| `MERGELINE_REPO_URL` | Replaces the brand's repository everywhere: links, the clone commands (their `cd` too), the design-partner link, the structured data | The brand's repository (`brand.ts`) |
-| `MERGELINE_NPM_PUBLISHED` | `1` once `npx` works from the registry: `npx` replaces the from-source command and the *Not on npm yet* line goes | The from-source command and the line stay |
-| `MERGELINE_BRAND` | `ugc-army` builds the page under the other name (`site/landing/brand.ts`) | Mergeline |
+| `KIPDECK_SITE_URL` | Where the page lives: the canonical link, `og:url`, absolute share-card addresses, `sitemap.xml` and its line in `robots.txt` | No canonical link and no sitemap (a relative one would be wrong wherever the page is copied) |
+| `KIPDECK_WAITLIST_URL` | The Team waitlist form appears under the design-partner link and POSTs JSON here; the page's CSP allows that origin and no other | No form: the ask is **Apply as a design partner**, a new GitHub issue |
+| `KIPDECK_DEMO_URL` | **Try the demo** opens the hosted read-only demo ([the demo](demo.md#the-hosted-demo), [Fly](fly.md)) | **Try the demo** copies the hero's demo command and lights it |
+| `KIPDECK_REPO_URL` | Replaces the brand's repository everywhere: links, the clone commands (their folder and `cd` too), the design-partner link, the structured data | The brand's repository (`brand.ts`) |
+| `KIPDECK_NPM_PUBLISHED` | `1` once `npx` works from the registry: `npx` replaces the from-source command and the *Not on npm yet* line goes | The from-source command and the line stay |
+| `KIPDECK_BRAND` | Picks an entry in `site/landing/brand.ts` | `kipdeck` |
 
-The build also draws `og.png` (1200 by 630, the share card) from the brand with headless Chromium when one is installed (`playwright-core`'s, `CHROMIUM_PATH` or Google Chrome). Without one it says so and skips the card.
+Each of these was called `MERGELINE_*` before the rename to Kipdeck. The old names still work when the `KIPDECK_*` one is not set (`site/env.mjs`).
+
+The build also draws `og.png` (1200 by 630, the share card) from the brand with headless Chromium when one is installed (`playwright-core`'s, `CHROMIUM_PATH` or Google Chrome). Without one it says so, and the committed `site/landing/public/og.png` ships instead (that is the case on Vercel and Cloudflare's builders).
 
 ## How it is put together
 
@@ -191,7 +193,7 @@ What holds him in place:
 
 **Apply as a design partner** opens a new issue on the brand's repository with three short questions (how many agents a day and with which CLIs, what you would want measured, how to reach you). It needs no server and never throws a lead away. The note under it says the issue is public.
 
-The Team tier waitlist form appears only in a build with `MERGELINE_WAITLIST_URL`. It sends exactly this, nothing more:
+The Team tier waitlist form appears only in a build with `KIPDECK_WAITLIST_URL`. It sends exactly this, nothing more:
 
 ```json
 { "email": "lead@example.com", "source": "landing" }

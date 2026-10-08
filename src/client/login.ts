@@ -29,7 +29,7 @@ if (linkKey) {
 }
 
 // On the computer the office runs on, with no password chosen for it: the way in is the terminal
-// (`mergeline open`), and the password form waits behind a link.
+// (`kipdeck open`), and the password form waits behind a link.
 const local = document.getElementById('local') as HTMLDivElement;
 function showLocal() {
   local.hidden = false;

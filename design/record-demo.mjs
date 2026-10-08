@@ -1,4 +1,4 @@
-// The demo video and GIF: records `mergeline --demo` in a headless browser as the loop plays out (the
+// The demo video and GIF: records `kipdeck --demo` in a headless browser as the loop plays out (the
 // agents arriving, Codex's question opening by itself and answered in one box, Claude Code's diff
 // reviewed and merged, Cursor's README merged from a phone, and the calm inbox with three shipped),
 // with captions drawn on the page, a "Demo data" tag in the corner and a pointer where it clicks, then
@@ -273,13 +273,13 @@ const card = async (name, html) => {
   await page.close();
 };
 const mark = `<svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z" fill="#13171c"/><path d="m4 17 8-8 8 8M4 22l8-8 8 8" fill="none" stroke="#13171c" stroke-width="2.5"/></svg>`;
-await card('title', `<div style="max-width:1000px;text-align:center"><div>${mark}</div><h1 style="font-size:54px;line-height:1.15;letter-spacing:-.02em;margin:28px 0 18px">Your coding agents spend the day waiting on you.</h1><p style="font-size:30px;color:#4a5560;margin:0">Mergeline shows who is waiting, for how long, and gets them moving again.</p></div>`);
+await card('title', `<div style="max-width:1000px;text-align:center"><div>${mark}</div><h1 style="font-size:54px;line-height:1.15;letter-spacing:-.02em;margin:28px 0 18px">Your coding agents spend the day waiting on you.</h1><p style="font-size:30px;color:#4a5560;margin:0">Kipdeck shows who is waiting, for how long, and gets them moving again.</p></div>`);
 const lines = started
   .split('\n')
   .filter((l) => l.trim() && !/Sign in \(the link|Lost the tab|password|Ctrl\+C|closing/.test(l))
-  .map((l) => l.replace(/\/var\/folders\/\S+?\/(mergeline-demo-)/, '/tmp/$1').replace(/&/g, '&amp;').replace(/</g, '&lt;'));
-await card('terminal', `<div style="width:1180px;border-radius:14px;background:#14181d;color:#e6e9ec;box-shadow:0 20px 60px rgba(0,0,0,.25);font:22px/1.6 ui-monospace,Menlo,monospace;padding:28px 34px"><div style="color:#7d8a96">$ <span style="color:#fff">npx mergeline --demo</span></div>${lines.map((l) => `<div style="white-space:pre-wrap;padding-left:2ch;text-indent:-2ch">${l.trim()}</div>`).join('')}</div>`);
-await card('end', `<div style="max-width:1040px;text-align:center"><div>${mark}</div><h1 style="font-size:50px;line-height:1.15;letter-spacing:-.02em;margin:24px 0 14px">Mergeline</h1><p style="font-size:28px;color:#4a5560;margin:0 0 34px">One inbox for Claude Code, Codex and Cursor: who is waiting on you, the answer, the diff and the merge.</p><code style="display:inline-block;font:30px ui-monospace,Menlo,monospace;padding:14px 24px;border-radius:10px;background:#fff;border:1px solid #d5dbe1">npx mergeline --demo</code><p style="font-size:20px;color:#6b7680;margin:30px 0 0">Open source. Runs on your machine or your team's dev box.<br>Recorded with the demo's scripted agents: no model ran.</p></div>`);
+  .map((l) => l.replace(/\/var\/folders\/\S+?\/(kipdeck-demo-)/, '/tmp/$1').replace(/&/g, '&amp;').replace(/</g, '&lt;'));
+await card('terminal', `<div style="width:1180px;border-radius:14px;background:#14181d;color:#e6e9ec;box-shadow:0 20px 60px rgba(0,0,0,.25);font:22px/1.6 ui-monospace,Menlo,monospace;padding:28px 34px"><div style="color:#7d8a96">$ <span style="color:#fff">npx kipdeck --demo</span></div>${lines.map((l) => `<div style="white-space:pre-wrap;padding-left:2ch;text-indent:-2ch">${l.trim()}</div>`).join('')}</div>`);
+await card('end', `<div style="max-width:1040px;text-align:center"><div>${mark}</div><h1 style="font-size:50px;line-height:1.15;letter-spacing:-.02em;margin:24px 0 14px">Kipdeck</h1><p style="font-size:28px;color:#4a5560;margin:0 0 34px">One inbox for Claude Code, Codex and Cursor: who is waiting on you, the answer, the diff and the merge.</p><code style="display:inline-block;font:30px ui-monospace,Menlo,monospace;padding:14px 24px;border-radius:10px;background:#fff;border:1px solid #d5dbe1">npx kipdeck --demo</code><p style="font-size:20px;color:#6b7680;margin:30px 0 0">Open source. Runs on your machine or your team's dev box.<br>Recorded with the demo's scripted agents: no model ran.</p></div>`);
 await cardBrowser.close();
 
 // ---- The cut ------------------------------------------------------------------------------------
@@ -313,7 +313,7 @@ const clips = parts.map((part, i) => {
 });
 const list = path.join(RAW, 'parts.txt');
 writeFileSync(list, clips.map((c) => `file '${c}'`).join('\n') + '\n');
-const mp4 = path.join(OUT, 'mergeline-demo.mp4');
+const mp4 = path.join(OUT, 'kipdeck-demo.mp4');
 execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', list, '-c', 'copy', '-movflags', '+faststart', mp4]);
 
 // The GIF: the loop itself (Needs you, answer, review, merge), 30 seconds at most, small enough for a README.
@@ -322,7 +322,7 @@ const gifList = path.join(RAW, 'gif-parts.txt');
 writeFileSync(gifList, gifParts.map((c) => `file '${c}'`).join('\n') + '\n');
 const loop = path.join(RAW, 'loop.mp4');
 execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', gifList, '-t', '30', '-c', 'copy', loop]);
-const gif = path.join(OUT, 'mergeline-demo.gif');
+const gif = path.join(OUT, 'kipdeck-demo.gif');
 execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', loop, '-vf', 'fps=8,scale=880:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=96:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle', gif]);
 copyFileSync(gif, path.join(ROOT, 'docs', 'img', 'demo.gif'));
 const secs = (f) => Number(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', f], { encoding: 'utf8' }).trim()).toFixed(1);

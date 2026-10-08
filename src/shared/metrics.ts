@@ -1,4 +1,4 @@
-// The Numbers window's arithmetic: what this Mergeline's signed shipped log says about the last two
+// The Numbers window's arithmetic: what this Kipdeck's signed shipped log says about the last two
 // weeks, the way a pitch deck or an investor update quotes it. Human wait time (how long finished work
 // sat waiting on a person before its review), changes merged and sent back, agent-hours behind the
 // merges, the merge rate (overall and per agent and model, always with its N) and merges per day.
@@ -108,7 +108,7 @@ export function changeLabel(now: number | undefined, before: number | undefined,
 export function numbersMarkdown(n: Numbers, opts: { project?: string; demo?: boolean; now: number }): string {
   const day = new Date(opts.now).toISOString().slice(0, 10);
   const lines = [
-    `Mergeline numbers, ${day}${opts.project ? `, ${opts.project}` : ''}${opts.demo ? ' (demo data, scripted agents)' : ''}`,
+    `Kipdeck numbers, ${day}${opts.project ? `, ${opts.project}` : ''}${opts.demo ? ' (demo data, scripted agents)' : ''}`,
     '',
     '| Last 7 days | This week | Week before |',
     '| --- | --- | --- |',

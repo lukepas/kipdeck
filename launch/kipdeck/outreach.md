@@ -1,6 +1,6 @@
 # Design partner outreach
 
-Goal: 3 to 5 European teams using Mergeline weekly within 4 to 8 weeks of launch, each willing to share their weekly Numbers table, give a quote and sign a letter of intent for the team tier. Ask 15 to 20 teams to get there. Nothing here has been sent.
+Goal: 3 to 5 European teams using Kipdeck weekly within 4 to 8 weeks of launch, each willing to share their weekly Numbers table, give a quote and sign a letter of intent for the team tier. Ask 15 to 20 teams to get there. Nothing here has been sent.
 
 ## Who to ask
 
@@ -27,7 +27,7 @@ Hi {{FIRST_NAME}},
 {{ONE_LINE_ABOUT_WHY_THEM, e.g. "Saw your post about running Claude Code on
 three services at once."}}
 
-I've built Mergeline, an open-source inbox for coding agents: every agent your
+I've built Kipdeck, an open-source inbox for coding agents: every agent your
 team runs (Claude Code, Codex, Cursor) in one list, sorted by what needs a
 person, with answer, review and merge one click away. It runs on your own
 machine or dev box.
@@ -36,7 +36,7 @@ I'm looking for a few teams to use it for a month and tell me what's wrong
 with it. In return: setup help, a direct line to me, and the team tier free
 for a year once it exists.
 
-Would a 20-minute call next week work? Or try `npx mergeline --demo` first.
+Would a 20-minute call next week work? Or try `npx kipdeck --demo` first.
 
 {{YOUR_NAME}}
 ```
@@ -58,7 +58,7 @@ Then within a day: a written summary of what they said, and an install session i
 | --- | --- |
 | Contacted | The first message sent |
 | Call | A call held |
-| Installed | Mergeline running on their machine with a real repository |
+| Installed | Kipdeck running on their machine with a real repository |
 | Weekly | A Numbers table sent two weeks in a row |
 | Partner | Weekly, plus permission to name them, a quote and a signed letter of intent |
 

@@ -3,7 +3,7 @@
 // project's branch in the project folder with a merge commit. The project folder has to be on that
 // branch with nothing uncommitted, so a merge never mixes with someone's own work in progress; a
 // conflict is aborted and said, never left half done. An agent that works in the project folder
-// itself (a session moved in with `mergeline attach`) has no branch to merge, and committing
+// itself (a session moved in with `kipdeck attach`) has no branch to merge, and committing
 // everything there would sweep up the person's own edits too, so that is refused with what to do.
 // One merge at a time per project folder: a second waits for the first (git's index is one lock).
 import { execFile } from 'node:child_process';

@@ -8,8 +8,9 @@
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { $, h } from '../../ui/dom';
+import { storageKey } from '../../shared/storage-key';
 
-const FOLD_KEY = 'ugc-army.rail-folded';
+const FOLD_KEY = storageKey('rail-folded');
 /** How long the rail stays folded for a merge beat (ms), unless you open it again. */
 const BEAT_FOLD_MS = 7000;
 

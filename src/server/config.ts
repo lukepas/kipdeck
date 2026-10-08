@@ -11,6 +11,7 @@ import { readStateJson, stateDirProblem, untrustedState, writeState } from './sa
 import { CHAIN_HELP, chainFlagsFromEnv, takeChainFlag, type ChainFlags } from './chain/flags.js';
 import { parseLabList, type LabId } from '../shared/labs.js';
 import { telemetryForbidden } from './telemetry.js';
+import { brandEnv } from './brandenv.js';
 import { freshDemoHome, type DemoWorkspace } from './demo/workspace.js';
 
 export interface Config {
@@ -85,19 +86,19 @@ export interface RTCIceServerLike {
   credential?: string;
 }
 
-const HELP = `mergeline - the inbox for your ${AGENT_PROVIDERS.filter((p) => p !== 'custom').map((p) => PROVIDER_META[p].name).join(' / ')} agents.
+const HELP = `kipdeck - the inbox for your ${AGENT_PROVIDERS.filter((p) => p !== 'custom').map((p) => PROVIDER_META[p].name).join(' / ')} agents.
 (Built on agent-office, MIT. The agent-office command still works.)
 
 Usage:
-  mergeline [options]
-  mergeline [dir] [options]
-  mergeline --demo [--read-only]
-  mergeline open [--print]
-  mergeline attach [--agent claude|codex|cursor] [--session <id>] [--list]
-  mergeline setup [--projects <dir>] [--project <owner/repo>]...
-  mergeline prune [dir] [--dry-run] [--force]
-  mergeline accounts [list|invite|revoke|role|password] ...
-  mergeline tunnel [office@address | url]
+  kipdeck [options]
+  kipdeck [dir] [options]
+  kipdeck --demo [--read-only]
+  kipdeck open [--print]
+  kipdeck attach [--agent claude|codex|cursor] [--session <id>] [--list]
+  kipdeck setup [--projects <dir>] [--project <owner/repo>]...
+  kipdeck prune [dir] [--dry-run] [--force]
+  kipdeck accounts [list|invite|revoke|role|password] ...
+  kipdeck tunnel [office@address | url]
 
 Runs the inbox for your coding agents, at http://localhost:4600 (or the next
 free port). Each project is a git checkout, and every agent works on a branch of
@@ -191,19 +192,19 @@ Options:
       --labs <names>      Hold labs on, comma separated (env AGENT_OFFICE_LABS):
                           bridge, ops, meetings, voice, ambience, proof, or all.
                           All are off by default; admins switch them from Labs
-      --telemetry         Share anonymous usage numbers (env MERGELINE_TELEMETRY=1):
+      --telemetry         Share anonymous usage numbers (env KIPDECK_TELEMETRY=1):
                           minutes to the first agent, answer and merge, and
                           minutes agents wait in Needs you. Off by default; the
                           setup card turns it on or off. See docs/security.md
       --no-telemetry      Never share them (also DO_NOT_TRACK=1)
       --demo              Five scripted agents on a throwaway repository: no
-                          agent CLI, sign-in or model needed (env MERGELINE_DEMO=1)
+                          agent CLI, sign-in or model needed (env KIPDECK_DEMO=1)
       --read-only         With --demo, the hosted demo: visitors only watch and a
-                          scripted reviewer acts (MERGELINE_DEMO=read-only)
+                          scripted reviewer acts (KIPDECK_DEMO=read-only)
 ${CHAIN_HELP}  -h, --help              Show this help
 
 Started in a terminal, it opens in your browser already signed in, with a link
-that works once; \`mergeline open\` makes a new one. On this computer there is no
+that works once; \`kipdeck open\` makes a new one. On this computer there is no
 password to type. Only this machine can reach it unless you pass --host, and then
 the password (or people's own accounts) is how everyone else signs in.
 To run it on a server for your team, see deploy/provision.sh.
@@ -285,8 +286,9 @@ export function loadConfig(argv: string[]): Config {
   let webhook = process.env.AGENT_OFFICE_WEBHOOK;
   const chain = chainFlagsFromEnv();
   const labs = parseLabList(process.env.AGENT_OFFICE_LABS);
-  let demo = !!process.env.MERGELINE_DEMO && process.env.MERGELINE_DEMO !== '0';
-  let readOnly = process.env.MERGELINE_DEMO === 'read-only';
+  const demoEnv = brandEnv('DEMO');
+  let demo = !!demoEnv && demoEnv !== '0';
+  let readOnly = demoEnv === 'read-only';
   const iceServers: RTCIceServerLike[] = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
   // A container can't take --turn (deploy/container/compose.yaml), so the TURN servers come from the environment too.
   for (const url of (process.env.AGENT_OFFICE_TURN ?? '').split(/\s+/).filter(Boolean)) iceServers.push(parseTurn(url));
@@ -563,9 +565,9 @@ export function loadConfig(argv: string[]): Config {
     labs: forcedLabs(labs, chain),
     ...(demo ? { demo: { readOnly, temp: !homeGiven } } : {}),
     telemetry: {
-      forced: !demo && (argv.includes('--telemetry') || process.env.MERGELINE_TELEMETRY === '1'),
+      forced: !demo && (argv.includes('--telemetry') || brandEnv('TELEMETRY') === '1'),
       forbidden: demo ? 'off in the demo' : telemetryForbidden(process.env, argv),
-      endpoint: process.env.MERGELINE_TELEMETRY_URL || undefined,
+      endpoint: brandEnv('TELEMETRY_URL') || undefined,
     },
   };
 }

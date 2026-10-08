@@ -116,7 +116,7 @@ export const authRoutes = {
       const guess = await readGuess(ctx, req, res);
       if (!guess) return;
       if (!ctx.accounts.sharedPassword || !ctx.auth.useLinkKey(str(guess.body.key, 128))) {
-        return send(res, 410, { error: 'That sign-in link was already used. Run `mergeline open` on this computer for a new one.' });
+        return send(res, 410, { error: 'That sign-in link was already used. Run `kipdeck open` on this computer for a new one.' });
       }
       ctx.auth.recordSuccess(guess.ip);
       return send(res, 200, { ok: true }, signedIn(ctx, req));

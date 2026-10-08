@@ -1,4 +1,4 @@
-/* Mergeline design tokens: the one source of color, type, line, radius and motion for every page (the
+/* Kipdeck design tokens: the one source of color, type, line, radius and motion for every page (the
    3D office, the 2D view, login/join/claim and the /pom/ showcase). DESIGN.md explains the rules
    behind them. Values are written as hex first (every browser) and again as OKLCH where supported;
    the two describe the same color.

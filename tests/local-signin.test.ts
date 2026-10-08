@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 // Signing in on your own computer without a password: the office bound to 127.0.0.1 prints a link
-// that works once, and `mergeline open` asks it for another with the local key. Both paths are
+// that works once, and `kipdeck open` asks it for another with the local key. Both paths are
 // attacked the way a tunnel, a proxy, another site or another program would. The office with a
 // password (or teammates through a tunnel) still signs in with it.
 
@@ -107,7 +107,7 @@ test('an office is passwordless only on loopback with no password chosen for it'
   assert.ok(!passwordless({ host: '127.0.0.1', passwordGenerated: true, claimToken: 't' }), 'claimed from a link (deploy/provision.sh)');
 });
 
-test('the sign-in page offers `mergeline open` on this computer, and the password through a proxy', async () => {
+test('the sign-in page offers `kipdeck open` on this computer, and the password through a proxy', async () => {
   assert.equal(JSON.parse((await call('/api/login')).body).local, true);
   assert.equal(JSON.parse((await call('/api/login', { headers: { 'x-forwarded-for': '203.0.113.9' } })).body).local, false);
   assert.equal(JSON.parse((await call('/api/login', { headers: { host: `127.0.0.1:${port}` } })).body).local, true);
@@ -149,7 +149,16 @@ test("the local key gets a command a new link; nothing else does", async () => {
   assert.equal((await call('/api/link', { method: 'POST', headers: own(), body: { key: keyOf(link) } })).status, 200);
 });
 
-test('`mergeline open` finds the running office from its local.json, which only its owner can read', async () => {
+test('a command from before the rename to Kipdeck still gets in with the x-mergeline-key header', async () => {
+  const { localKey, LEGACY_LOCAL_KEY_HEADER } = await import('../src/server/local.js');
+  assert.equal(LEGACY_LOCAL_KEY_HEADER, 'x-mergeline-key');
+  const ask = (headers: Record<string, string>) => call('/api/local/link', { method: 'POST', headers, body: {} });
+  assert.equal((await ask({ [LEGACY_LOCAL_KEY_HEADER]: 'guess' })).status, 403, 'a wrong key');
+  assert.equal((await ask({ [LEGACY_LOCAL_KEY_HEADER]: localKey(secret), 'x-forwarded-for': '203.0.113.9' })).status, 403, 'through a proxy');
+  assert.equal((await ask({ [LEGACY_LOCAL_KEY_HEADER]: localKey(secret) })).status, 200);
+});
+
+test('`kipdeck open` finds the running office from its local.json, which only its owner can read', async () => {
   const { askOffice } = await import('../src/server/opencmd.js');
   const file = path.join(home, '.agent-office', 'local.json');
   assert.equal(statSync(file).mode & 0o777, 0o600);

@@ -11,7 +11,7 @@ import { officeHome, type Config } from './config.js';
 
 // Setting up an office from its terminal: where projects are cloned, signing the GitHub CLI in, and
 // picking repositories to clone as projects. Nothing asks these when the office starts (the setup
-// card in the browser does it, see firstrun.ts); `mergeline setup` walks through them on request,
+// card in the browser does it, see firstrun.ts); `kipdeck setup` walks through them on request,
 // or does them without asking when given --projects / --project (deploy/provision.sh does).
 
 /** How many repositories a list shows; typing a word narrows it down. */

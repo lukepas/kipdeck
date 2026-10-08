@@ -2,11 +2,11 @@
 
 Back to the [README](../README.md).
 
-What a pre-seed deck should show for Mergeline, where each number comes from, and what not to show. The product has no users yet, so every number here starts at zero; the point of this page is that each one is defined before it is quoted, and measured the same way every week.
+What a pre-seed deck should show for Kipdeck, where each number comes from, and what not to show. The product has no users yet, so every number here starts at zero; the point of this page is that each one is defined before it is quoted, and measured the same way every week.
 
 ## In the product: Numbers
 
-**Numbers** (the avatar menu, or Ctrl+K) shows one Mergeline's last 7 days against the 7 before, for the project picked in the top bar or all of them:
+**Numbers** (the avatar menu, or Ctrl+K) shows one Kipdeck's last 7 days against the 7 before, for the project picked in the top bar or all of them:
 
 - **Human wait time**: the median minutes finished work sat waiting on a person before it was merged or sent back. This is the headline: the product exists to bring it down.
 - **Changes merged**, **merge rate** (merged over every review) and **agent-hours merged** (the time agents worked on what merged).
@@ -35,7 +35,7 @@ They are only as good as the share of people who opt in; say that N next to ever
 | Agents per active user per day, changes shipped per user per week | Design partners' Numbers tables |
 | Merge rate by agent and model across installs | Design partners' tables, with N; the cross-vendor data no single vendor has |
 | GitHub stars per week, contributors | The repository's insights page |
-| npm weekly downloads | `https://api.npmjs.org/downloads/point/last-week/mergeline` |
+| npm weekly downloads | `https://api.npmjs.org/downloads/point/last-week/kipdeck` |
 | Hosted demo visits to installs | The demo host's request log against npm downloads; show the slope, not a ratio |
 | Team tier waitlist size, and how many asked for the price | The waitlist endpoint (`price: true`, see [the landing page](landing.md#the-waitlist)) |
 | Design partners | 3 to 5 named teams using it weekly, a quote from each and a letter of intent for the team tier. Name a team only with its written permission |
@@ -54,4 +54,4 @@ echo "$agent of $total commits"
 - Chain transactions, testnet amounts or anything from Proof of Merge: it's a lab, off by default, and not part of the pitch.
 - Feature counts, deploy-target counts or line counts.
 - Demo numbers, or a percentage without its N.
-- A competitor's funding figure without a primary source. The Monid USD 7.7M figure is dropped: monid.ai (checked 2026-10-07) says nothing about funding, and Monid sells agents paid access to tools and APIs, which isn't this category anyway ([launch/mergeline](../launch/mergeline/README.md#monid)).
+- A competitor's funding figure without a primary source. The Monid USD 7.7M figure is dropped: monid.ai (checked 2026-10-07) says nothing about funding, and Monid sells agents paid access to tools and APIs, which isn't this category anyway ([launch/kipdeck](../launch/kipdeck/README.md#monid)).

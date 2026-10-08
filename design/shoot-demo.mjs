@@ -96,7 +96,7 @@ let hosted;
 const browser = await chromium.launch({ headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const errors = [];
 try {
-  // ---- On your computer: npx mergeline --demo ------------------------------------------------
+  // ---- On your computer: npx kipdeck --demo ------------------------------------------------
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'light' });
   await ctx.addInitScript(PROFILE);
   const page = await ctx.newPage();
@@ -200,7 +200,7 @@ try {
 }
 if (errors.length) console.log('page errors:', errors.join(' | '));
 // The director logs a failed answer or merge; the hosted demo must never have one.
-const directorErrors = offices.flatMap((o) => o.log.split('\n').filter((l) => /mergeline: (demo|couldn't start the demo)/.test(l)));
+const directorErrors = offices.flatMap((o) => o.log.split('\n').filter((l) => /kipdeck: (demo|couldn't start the demo)/.test(l)));
 if (directorErrors.length) {
   console.error('demo director errors:\n' + directorErrors.join('\n'));
   process.exitCode = 1;

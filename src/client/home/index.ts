@@ -123,7 +123,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
           { label: 'Pull requests', icon: 'pull', note: open(store.pulls.items.filter((p) => p.state === 'OPEN').length), run: () => actions.openBoard('pulls') },
           { label: 'Task queue', icon: 'queue', note: open(store.queue.tasks.filter((t) => t.status !== 'done').length), run: () => actions.openQueue() },
           { label: 'Mission control', icon: 'mission', run: () => actions.showMission() },
-          { group: 'Mergeline' },
+          { group: 'Kipdeck' },
         ]
       : [];
     const entries: MenuEntry[] = [

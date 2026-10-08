@@ -1,6 +1,6 @@
 # Features
 
-What Mergeline does. Back to the [README](../README.md).
+What Kipdeck does. Back to the [README](../README.md).
 
 The inbox at `/` is the product, and the first section here is all most people need. The sections after it describe the whole office in detail: much of that is the 3D Bridge view at `/bridge` and the other [Labs](labs.md) (goals, meetings, voice, ambience, Proof of Merge), each off until someone switches it on.
 
@@ -8,7 +8,7 @@ The inbox at `/` is the product, and the first section here is all most people n
 
 - **One list, sorted by what each agent needs from you.** Needs you (a question, a permission, or stuck), To review (finished work, a pull request, failing checks), Working (one line each, what it's doing now) and Idle. The order comes from one ranking, `src/shared/attention.ts`. See [the inbox](inbox.md).
 - **One button per row.** Answer opens the agent's live terminal with the cursor in its reply box. Review changes opens its diff, checks and pull request. Fix checks asks it to fix its failing checks. Merge merges its pull request, or its branch on your machine without GitHub. Send back hands the work back with your note.
-- **Deploy agent** (or **N**): a project, an agent (Claude Code, Codex and Cursor; OpenCode, Pi, Grok, Muse and DeepSeek Harness in beta) and a task. Each agent works on a branch of its own. `mergeline attach` moves a session you started in a terminal into the inbox.
+- **Deploy agent** (or **N**): a project, an agent (Claude Code, Codex and Cursor; OpenCode, Pi, Grok, Muse and DeepSeek Harness in beta) and a task. Each agent works on a branch of its own. `kipdeck attach` moves a session you started in a terminal into the inbox.
 - **Notifications** only when an agent starts needing you or has something to review, in the browser, and for the team in Slack or Discord.
 - **Shipped today**, with a signed record of every merge and send-back on your machine: which agent and model, the prompt, and who reviewed it.
 - **Numbers**: human wait time, changes merged, the merge rate and agent-hours for the last 7 days against the 7 before, merges per day, and the merge rate per agent and model with its N. Copy as Markdown pastes them into an update ([metrics](metrics.md)).
@@ -16,7 +16,7 @@ The inbox at `/` is the product, and the first section here is all most people n
 - **On a phone** the list is the page, and an agent opens over it with large Answer and Merge buttons.
 - **Teams**: accounts with single-use invite links, on your machine or a shared dev box ([teams and servers](self-hosting.md)).
 - **Six keys**: Ctrl+K, N, Enter, Esc, / and ? ([controls](controls.md)).
-- **A demo** with five scripted agents and no model: `npx mergeline --demo` ([the demo](demo.md)).
+- **A demo** with five scripted agents and no model: `npx kipdeck --demo` ([the demo](demo.md)).
 
 ## The office in detail (much of it the Bridge view, a lab)
 

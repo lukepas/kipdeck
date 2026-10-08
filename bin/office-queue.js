@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// office-queue: the task queue from inside Mergeline, for the agents standing by the boards (see
+// office-queue: the task queue from inside Kipdeck, for the agents standing by the boards (see
 // src/server/stations.ts). The office puts it on their PATH and gives them their own address and token
 // in AGENT_OFFICE_HOOK_URL, AGENT_OFFICE_WORKER_ID and AGENT_OFFICE_HOOK_TOKEN; this talks to the
 // /office/queue endpoint with them. Plain Node, no build step, no dependencies.
@@ -73,7 +73,7 @@ export function officeEnv(env) {
   const missing = ENV.filter((k) => !env[k]);
   if (missing.length) {
     throw new Error(
-      `${missing.join(', ')} ${missing.length === 1 ? "isn't" : "aren't"} set. office-queue only works inside Mergeline, ` +
+      `${missing.join(', ')} ${missing.length === 1 ? "isn't" : "aren't"} set. office-queue only works inside Kipdeck, ` +
         'from the terminal of an agent standing by one of the boards.',
     );
   }

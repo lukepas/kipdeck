@@ -41,7 +41,7 @@ writeStandIn(bin);
 writeFileSync(path.join(home, '.claude.json'), JSON.stringify({ oauthAccount: { emailAddress: 'demo@example.invalid' } }));
 
 const env = { HOME: home, PATH: `${bin}:${process.env.PATH}`, TERM: 'xterm-256color', LANG: process.env.LANG ?? 'en_US.UTF-8' };
-const entry = ['mergeline.js', 'agent-office.js'].map((f) => path.join(ROOT, 'bin', f)).find((f) => {
+const entry = ['kipdeck.js', 'agent-office.js'].map((f) => path.join(ROOT, 'bin', f)).find((f) => {
   try {
     execFileSync('test', ['-f', f]);
     return true;

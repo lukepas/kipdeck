@@ -177,7 +177,7 @@ export class Plot {
       el('rect', { x: minX, y: minZ, width: maxX - minX, height: maxZ - minZ, class: 'p-block-box' }),
       el('line', { x1: minX, y1: mid, x2: maxX, y2: mid, class: 'p-block-rule' }),
       el('line', { x1: minX + 2.9, y1: minZ, x2: minX + 2.9, y2: mid, class: 'p-block-rule' }),
-      text(minX + 0.25, minZ + 0.62, 'p-block-brand', 'MERGELINE'),
+      text(minX + 0.25, minZ + 0.62, 'p-block-brand', 'KIPDECK'),
       text(minX + 3.15, minZ + 0.62, 'p-block-deck', clip(deck, 14).toUpperCase()),
       text(minX + 0.25, mid + 0.55, 'p-block-small', revision ? `REV ${revision}` : 'MISSION CONTROL FOR AI AGENTS'),
       text(minX + 0.25, maxZ - 0.3, 'p-block-small', UPSTREAM_CREDIT_SHORT),

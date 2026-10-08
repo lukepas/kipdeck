@@ -43,9 +43,9 @@ before(async () => {
     why = 'no browser for playwright-core (npx playwright-core install chromium, or install Chrome)';
     return;
   }
-  for (const k of Object.keys(process.env)) if (k.startsWith('AGENT_OFFICE_') || k.startsWith('MERGELINE_')) delete process.env[k];
+  for (const k of Object.keys(process.env)) if (k.startsWith('AGENT_OFFICE_') || k.startsWith('KIPDECK_') || k.startsWith('MERGELINE_')) delete process.env[k];
   writeFileSync(path.join(root, '.gitconfig'), '');
-  Object.assign(process.env, { HOME: root, USERPROFILE: root, MERGELINE_DEMO_PACE: '6', GIT_CONFIG_GLOBAL: path.join(root, '.gitconfig') });
+  Object.assign(process.env, { HOME: root, USERPROFILE: root, KIPDECK_DEMO_PACE: '6', GIT_CONFIG_GLOBAL: path.join(root, '.gitconfig') });
   const s = net.createServer();
   await new Promise<void>((r) => s.listen(0, '127.0.0.1', r));
   const port = (s.address() as net.AddressInfo).port;

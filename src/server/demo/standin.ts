@@ -28,7 +28,7 @@ export const TASK_MARK = '@@TASK@@';
 export const SLUG_MARK = '@@SLUG@@';
 
 export const STANDIN_SOURCE = String.raw`'use strict';
-// [demo] Mergeline's stand-in agent: no model runs here. See src/server/demo/standin.ts.
+// [demo] Kipdeck's stand-in agent: no model runs here. See src/server/demo/standin.ts.
 const fs = require('fs');
 const path = require('path');
 const http = require('http');

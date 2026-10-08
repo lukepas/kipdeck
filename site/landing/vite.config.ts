@@ -1,9 +1,10 @@
-// The landing page's build: site/landing/ into dist/site/ (or MERGELINE_SITE_OUT). The brand is
-// chosen here (MERGELINE_BRAND, see brand.ts) and written into the HTML, so a build
-// says one name and only that one. site/build.mjs runs this, then fills in the deploy addresses.
+// The landing page's build: site/landing/ into dist/site/ (or KIPDECK_SITE_OUT; the older
+// MERGELINE_* names still work, see site/env.mjs). The brand is chosen here (KIPDECK_BRAND, see
+// brand.ts) and written into the HTML, so a build says one name and only that one. site/build.mjs runs this, then fills in the deploy addresses.
 import { defineConfig, type Plugin } from 'vite';
 import { resolve } from 'node:path';
 import { brandFor, type Brand } from './brand.ts';
+import { siteEnv } from '../env.mjs';
 
 const here = import.meta.dirname;
 
@@ -40,7 +41,7 @@ function brandHtml(brand: Brand): Plugin {
     folder: brand.folder,
     ogTitle: brand.ogTitle,
     ogDescription: brand.ogDescription,
-    // The tab and search result title: the name, then what it is ("Mergeline: the inbox for your AI coding agents").
+    // The tab and search result title: the name, then what it is ("Kipdeck: the inbox for your AI coding agents").
     title: `${brand.name}: ${brand.tagline.charAt(0).toLowerCase()}${brand.tagline.slice(1).replace(/\.$/, '')}`,
     ogImageAlt: `${brand.name}: your agents are waiting on you. An inbox row reads waiting 23:04.`,
   };
@@ -61,7 +62,8 @@ function brandHtml(brand: Brand): Plugin {
 }
 
 export default defineConfig(() => {
-  const brand = brandFor(process.env.MERGELINE_BRAND);
+  const brand = brandFor(siteEnv(process.env, 'BRAND'));
+  const out = siteEnv(process.env, 'SITE_OUT');
   return {
     root: here,
     base: './',
@@ -71,7 +73,7 @@ export default defineConfig(() => {
     worker: { format: 'es' as const },
     server: { port: 4691, fs: { allow: [resolve(here, '../..')] } },
     build: {
-      outDir: process.env.MERGELINE_SITE_OUT ? resolve(process.env.MERGELINE_SITE_OUT) : resolve(here, '../../dist/site'),
+      outDir: out ? resolve(out) : resolve(here, '../../dist/site'),
       emptyOutDir: true,
       target: 'es2022',
       modulePreload: { polyfill: false },

@@ -1,4 +1,4 @@
-// The demo's pill in the top bar (`mergeline --demo`, see shared/demo.ts): one short line saying the
+// The demo's pill in the top bar (`kipdeck --demo`, see shared/demo.ts): one short line saying the
 // agents are scripted, with the command to run it for real, so the inbox itself starts at the top of
 // the list. The whole note is its tooltip. A demo office has no Get started checklist (shipped.ts):
 // the demo shows the loop, it doesn't teach it.

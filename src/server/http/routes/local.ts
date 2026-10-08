@@ -1,11 +1,11 @@
-// What commands on this computer ask the running office for (`mergeline open`, `mergeline attach`):
+// What commands on this computer ask the running office for (`kipdeck open`, `kipdeck attach`):
 // only from this computer, never from a page (no Origin), and only with the local key from the
 // office's local.json, which only its owner can read (see local.ts).
 import { existsSync, statSync } from 'node:fs';
 import type http from 'node:http';
 import path from 'node:path';
 import type { Ctx } from '../../office/context.js';
-import { LOCAL_KEY_HEADER, localKeyOk, localRequest, ownerName } from '../../local.js';
+import { localKeyFrom, localKeyOk, localRequest, ownerName } from '../../local.js';
 import { str } from '../../office/input.js';
 import { nextFreeSeat } from '../../../shared/layout.js';
 import { PROVIDER_META, type AgentProvider } from '../../../shared/providers.js';
@@ -26,7 +26,7 @@ export function localCommand(ctx: Ctx, req: http.IncomingMessage, res: http.Serv
     send(res, 429, { error: 'Too many attempts. Try again in a few minutes.' });
     return false;
   }
-  if (!localKeyOk(req.headers[LOCAL_KEY_HEADER], ctx.cfg.secret)) {
+  if (!localKeyOk(localKeyFrom(req.headers), ctx.cfg.secret)) {
     send(res, 403, { error: "That isn't this office's local key" });
     return false;
   }
@@ -48,7 +48,7 @@ export async function localBody(req: http.IncomingMessage, res: http.ServerRespo
 }
 
 export const localRoutes = {
-  /** POST /api/local/link: a sign-in link that works once (`mergeline open`). */
+  /** POST /api/local/link: a sign-in link that works once (`kipdeck open`). */
   link: {
     method: 'POST',
     path: '/api/local/link',
@@ -60,7 +60,7 @@ export const localRoutes = {
     },
   },
   /**
-   * POST /api/local/attach: `mergeline attach` hands over an agent session someone started in a
+   * POST /api/local/attach: `kipdeck attach` hands over an agent session someone started in a
    * terminal on this computer ({ dir, provider, session, title }). The office carries it on as an
    * agent in that folder's project (adding the folder as one if it isn't), so it's in the inbox like
    * any other: its terminal, its questions, its changes and the merge.
@@ -106,5 +106,5 @@ export const localRoutes = {
   },
 } satisfies Record<string, Route>;
 
-/** The CLIs whose sessions `mergeline attach` can carry on (each resumes by id; see providers/). */
+/** The CLIs whose sessions `kipdeck attach` can carry on (each resumes by id; see providers/). */
 export const ATTACHABLE: readonly AgentProvider[] = ['claude', 'codex', 'cursor'];
