@@ -345,18 +345,23 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   assert.equal(await docked.count(), 1, 'still docked after Locate');
   // And it's seen, not just there: the card sits left of the docked panel, nothing over its middle or its button.
   await page.waitForFunction(() => document.querySelector('.sel-card.open') && getComputedStyle(document.querySelector('.sel-card')!).opacity === '1', null, { timeout: 5000, polling: 100 });
+  // No named function inside the page code: tsx's keepNames would wrap it in a __name() the page lacks.
   const seen = await page.evaluate(() => {
     const card = document.querySelector<HTMLElement>('.sel-card')!;
-    const at = (el: Element) => {
+    const btn = card.querySelector('.sel-actions .btn');
+    const hits = [card, btn].map((el) => {
+      if (!el) return true;
       const r = el.getBoundingClientRect();
       return card.contains(document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2));
-    };
-    const btn = card.querySelector('.sel-actions .btn');
-    return { card: at(card), button: btn ? at(btn) : true, right: card.getBoundingClientRect().right, dock: document.querySelector('.mc-dock-host')!.getBoundingClientRect().left };
+    });
+    return { card: hits[0], button: hits[1], right: card.getBoundingClientRect().right, dock: document.querySelector('.mc-dock-host')!.getBoundingClientRect().left };
   });
   assert.ok(seen.card && seen.button, `the selected unit's card is in view beside the docked panel: ${JSON.stringify(seen)}`);
   assert.ok(seen.right <= seen.dock, 'the card ends left of the docked panel');
 
+  // Whoever has the keys after Locate, a click on the panel gives them to it (its tabs undim).
+  await docked.locator('header h2').click();
+  assert.equal(await docked.evaluate((m) => m.classList.contains('mc-keys-away')), false, 'a click on the panel takes the keys back');
   // D floats it in the middle, remembered; D again docks it.
   await page.keyboard.press('d');
   await page.locator('#modal-root > .backdrop > .modal.mission-control').waitFor();
@@ -372,6 +377,7 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   await page.waitForFunction((n) => (window as unknown as { __locks: number[] }).__locks.length > n, before, { timeout: 10_000, polling: 100 });
   assert.equal(await stacked(), 0, 'off the window stack');
   assert.equal(await docked.count(), 1, 'still docked and in view');
+  assert.equal(await docked.evaluate((m) => m.classList.contains('mc-keys-away')), true, 'its tabs dim while the deck has the keys');
   // I takes the keys back for it.
   await page.keyboard.press('i');
   await page.waitForFunction(() => document.querySelectorAll('#modal-root > .backdrop.mc-dock-backdrop').length === 1, null, { polling: 100 });
