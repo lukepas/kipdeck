@@ -33,6 +33,19 @@ function attentionOf(w: WorkerInfo): Attention {
   return { level, label: level === 'needs-you' ? 'Needs an answer' : level === 'working' ? 'Working' : 'Ready', since: w.waitingSince ?? w.createdAt, action: 'look', snoozed: false };
 }
 
+/**
+ * Fades out everything in `body` ahead of new content: what's already fading goes at once, the rest
+ * fades (120 ms) and is then removed.
+ */
+export function switchOut(body: HTMLElement) {
+  for (const gone of body.querySelectorAll(':scope > .sel-out')) gone.remove();
+  for (const old of [...body.children] as HTMLElement[]) {
+    old.classList.add('sel-out');
+    old.addEventListener('animationend', () => old.remove(), { once: true });
+    window.setTimeout(() => old.remove(), 200);
+  }
+}
+
 export function createInspector(deps: InspectorDeps) {
   const body = h('div.sel-body');
   const x = h('button.btn.close.corner', { type: 'button', 'aria-label': 'Close', title: 'Close (Esc)', onclick: () => deps.close() }, icon('close', 14));
@@ -103,12 +116,11 @@ export function createInspector(deps: InspectorDeps) {
     }
     window.clearTimeout(leaving);
     const fresh = build(w);
-    const old = body.firstElementChild as HTMLElement | null;
-    if (was && old && !card.hidden) {
-      // A switch: the old content fades out over the new one fading in, the card stays put.
-      old.classList.add('sel-out');
-      old.addEventListener('animationend', () => old.remove(), { once: true });
-      window.setTimeout(() => old.remove(), 200);
+    if (was && body.firstElementChild && !card.hidden) {
+      // A switch: the old content fades out over the new one fading in, the card stays put. A switch
+      // again before that's done drops what was already fading at once, and fades every other child,
+      // so only the newest content is ever left at full strength.
+      switchOut(body);
       fresh.classList.add('sel-in');
       body.append(fresh);
     } else {

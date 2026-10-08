@@ -82,6 +82,8 @@ export const CALLOUT_SCREEN: Record<CalloutTier, { min: number; max: number }> =
 /** The longest a unit waits before its callout changes with a zoom (ms), and how long the change takes. */
 export const STAGGER_MAX = 240;
 export const POP_MS = 180;
+/** How long the old content fades out before a change of tier swaps it (ms). */
+export const FADE_OUT_MS = 90;
 /** How small a callout starts as it pops in, against its full size. */
 export const POP_FROM = 0.88;
 
@@ -110,6 +112,27 @@ export function clip(s: string, n: number): string {
   const cut = s.slice(0, n - 3);
   const space = cut.lastIndexOf(' ');
   return `${(space > n / 2 ? cut.slice(0, space) : cut).trimEnd()}...`;
+}
+
+/**
+ * `s` on at most two lines of at most `n` characters, broken at a word: the second cut with three dots
+ * when it still runs over. One line when it fits on one.
+ */
+export function wrapTwo(s: string, n: number): string {
+  const t = s.replace(/\s+/g, ' ').trim();
+  if (t.length <= n) return t;
+  const head = t.slice(0, n + 1);
+  const space = head.lastIndexOf(' ');
+  const cut = space > n / 2 ? space : n;
+  return `${t.slice(0, cut).trimEnd()}\n${clip(t.slice(cut).trim(), n)}`;
+}
+
+/** Whether `a` and `b` say the same thing (one starts with the other, case and spacing aside). */
+export function sameWords(a: string, b: string): boolean {
+  const norm = (x: string) => x.toLowerCase().replace(/\.{3}$/, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  const x = norm(a);
+  const y = norm(b);
+  return !!x && !!y && (x.startsWith(y) || y.startsWith(x));
 }
 
 /** The most characters the middle tier's activity takes. */

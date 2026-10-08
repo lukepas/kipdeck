@@ -3,7 +3,7 @@ import type { AttentionLevel } from '../../../shared/attention';
 import { elapsed } from '../../../shared/rowtext';
 import type { WorkerStatus } from '../../../shared/protocol';
 import { isAsleep, type WorkerPr } from '../../../shared/status';
-import { CALLOUT_SCREEN, askLine, clip, midLine, popAt, type CalloutTier } from '../../features/workers/lod';
+import { CALLOUT_SCREEN, FADE_OUT_MS, askLine, clip, easeOutCubic, midLine, popAt, sameWords, wrapTwo, type CalloutTier } from '../../features/workers/lod';
 import type { GlyphKind } from '../glyphs';
 import { disposeSprite } from '../toon';
 import { calloutSprite, redrawCallout, type CalloutText } from './unit-callout';
@@ -42,7 +42,7 @@ export interface UnitSays {
   said: string | null;
   /** Standing down: its name and this in place of the callout. */
   leaving: string | null;
-  /** The selected unit (features/selection): outlined in ship-cyan, drawn over its neighbours. */
+  /** The selected unit (features/selection): outlined in white, drawn over its neighbours. */
   selected?: boolean;
 }
 
@@ -52,16 +52,23 @@ export function calloutText(u: UnitSays, now: number): CalloutText {
   const urgent = u.kind === 'needs-you' || u.kind === 'stuck';
   const tier = u.said ? 'near' : u.tier;
   const sel = u.selected ? { selected: true } : {};
-  if (tier === 'far') return { tier, sign: urgent || u.selected ? u.sign : '', name: u.name, kind: u.kind, ...sel };
+  // From far off a tab, but one that needs someone (to review too) or is selected keeps its call sign beside it.
+  if (tier === 'far') return { tier, sign: urgent || u.kind === 'review' || u.selected ? u.sign : '', name: u.name, kind: u.kind, ...sel };
   const line = midLine({ activity: u.activity, level: u.level, label: u.reason, title: u.task });
   if (tier === 'mid') return { tier, sign: u.sign, name: u.name, kind: u.kind, line, ...sel };
   const parked = u.kind === 'parked';
   const chip = u.lost ? 'STUCK' : parked && isAsleep(u.status) ? 'OFFLINE' : STATE_WORD[u.kind];
-  // One that needs someone spends its third line on what it asks or why it's stuck; the engine is for the rest.
-  const ask = u.lost ? 'worktree deleted' : urgent ? (askLine({ activity: u.activity, level: u.level, label: u.reason }) ?? undefined) : undefined;
+  // The task in full, on two lines at most, said once.
+  const task = wrapTwo(u.said ?? (u.task || line), TASK_MAX);
+  // One that needs someone spends its third line on what it asks or why it's stuck, unless that's the
+  // task over again (a question whose prompt is the task); the engine is for the rest.
+  const asked = u.lost ? 'worktree deleted' : urgent ? (askLine({ activity: u.activity, level: u.level, label: u.reason }) ?? undefined) : undefined;
+  const said = u.said ?? u.task;
+  const ask = asked && !(said && sameWords(asked, said)) ? asked : undefined;
   const pr = u.pr ? `PR #${u.pr.number}${u.pr.state === 'open' ? '' : ` ${u.pr.state}`}` : '';
   const meta = ask ?? [u.branch, pr, u.model].filter(Boolean).join(' / ');
-  const stuckWhy = ask;
+  // Only a stuck unit's reason takes its red; what one asks reads muted under the task.
+  const stuckWhy = ask && (u.lost || u.kind === 'stuck');
   return {
     tier,
     sign: u.sign,
@@ -69,7 +76,7 @@ export function calloutText(u: UnitSays, now: number): CalloutText {
     kind: u.kind,
     chip,
     ...(parked || u.kind === 'merged' ? {} : { clock: elapsed(now - u.since) }),
-    task: clip(u.said ?? (u.task || line), TASK_MAX),
+    task,
     ...(meta ? { meta: clip(meta, META_MAX), metaHue: !!stuckWhy } : {}),
     ...(u.epithet && !u.said ? { epithet: u.epithet } : {}),
     ...sel,
@@ -78,9 +85,10 @@ export function calloutText(u: UnitSays, now: number): CalloutText {
 
 /**
  * A unit's callout as drawn: the full one and the call sign alone (for where callouts crowd), at the
- * tier it shows now. A change of tier waits the unit's own delay (features/workers/lod.ts), then
- * swaps the content and pops in, from 88% and clear to full size and strength in 180 ms; so does a
- * unit that has just come on the deck. A cut under reduced motion.
+ * tier it shows now. A change of tier waits the unit's own delay (features/workers/lod.ts; none for
+ * one that needs someone, so it is never the last to arrive), fades the old content out over 90 ms,
+ * then swaps it and pops in, from 88% and clear to full size and strength in 180 ms; a unit that has
+ * just come on the deck pops in the same way. A cut under reduced motion.
  */
 export class CalloutView {
   full: THREE.Sprite | null = null;
@@ -90,6 +98,8 @@ export class CalloutView {
   private want: CalloutTier = 'mid';
   private switchAt = 0;
   private popFrom = -Infinity;
+  /** When the old content started fading out ahead of a swap, or null. */
+  private outFrom: number | null = null;
   private born = false;
   private key = '';
   private shape = '';
@@ -100,11 +110,11 @@ export class CalloutView {
 
   constructor(private readonly parent: THREE.Object3D) {}
 
-  /** Heads for `tier`; it shows once its delay is up (at once when `calm`). */
-  request(tier: CalloutTier, now: number, calm: boolean) {
+  /** Heads for `tier`; it shows once its delay is up (at once when `calm`, or with no wait when `urgent`). */
+  request(tier: CalloutTier, now: number, calm: boolean, urgent = false) {
     if (tier === this.want) return;
     this.want = tier;
-    this.switchAt = now + (calm ? 0 : this.delay);
+    this.switchAt = now + (calm || urgent ? 0 : this.delay);
   }
 
   /** Steps the pop and the switch; true when the tier changed and it wants drawing again. */
@@ -114,12 +124,24 @@ export class CalloutView {
       this.popFrom = calm ? -Infinity : now + this.delay;
     }
     let changed = false;
-    if (this.want !== this.tier && now >= this.switchAt) {
-      this.tier = this.want;
-      this.popFrom = calm ? -Infinity : now;
-      changed = true;
+    if (this.want === this.tier) this.outFrom = null;
+    else if (now >= this.switchAt) {
+      // The old content fades out first, so the callout never blinks out in one frame.
+      if (!calm && this.outFrom === null) this.outFrom = now;
+      if (calm || now - (this.outFrom ?? now) >= FADE_OUT_MS) {
+        this.tier = this.want;
+        this.popFrom = calm ? -Infinity : now;
+        this.outFrom = null;
+        changed = true;
+      }
     }
-    this.pop = calm ? { scale: 1, alpha: 1 } : popAt(now - this.popFrom);
+    if (calm) this.pop = { scale: 1, alpha: 1 };
+    else if (this.outFrom !== null) {
+      const fading = { scale: 1, alpha: 1 - easeOutCubic((now - this.outFrom) / FADE_OUT_MS) };
+      // Fading from wherever its own pop-in had got to.
+      const was = popAt(now - this.popFrom);
+      this.pop = { scale: was.scale, alpha: Math.min(was.alpha, fading.alpha) };
+    } else this.pop = popAt(now - this.popFrom);
     return changed;
   }
 

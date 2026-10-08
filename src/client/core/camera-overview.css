@@ -5,7 +5,9 @@ body.overview #crosshair,
 body.overview #compass { display: none !important; }
 .overview-legend {
   position: fixed;
-  left: 50%;
+  /* In the middle of the deck you can see: past the Units rail, short of a docked Mission control and
+     the selected unit's card (styles/hud.css --clear-right). */
+  left: calc(var(--rail, 0px) + (100vw - var(--rail, 0px) - var(--clear-right, 0px)) / 2);
   bottom: 62px;
   transform: translateX(-50%);
   display: flex;

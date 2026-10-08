@@ -1,6 +1,7 @@
 /* The selected unit (features/selection): the inspector card docked bottom right over the deck, above
-   the bottom bar, and the selected row in the Units rail. Ship-cyan marks the selection: the
-   instruments' own color, never a state, so being selected never reads as an alert. */
+   the bottom bar, and the selected row in the Units rail. White marks the selection, as the reticle on
+   the floor: never a state's hue, so being selected never reads as an alert, and not the ship-cyan of
+   the heartbeat meters round the units either. */
 
 .sel-card {
   position: fixed;
@@ -27,8 +28,8 @@
 }
 .sel-card[hidden] { display: none; }
 .sel-card.open { opacity: 1; transform: none; }
-/* The rule down its left side, in ship-cyan like the reticle on the floor. */
-.sel-card::before { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; border-radius: var(--radius) 0 0 var(--radius); background: var(--ship, #6fc3df); }
+/* The rule down its left side, in white like the reticle on the floor. */
+.sel-card::before { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; border-radius: var(--radius) 0 0 var(--radius); background: var(--text); }
 .sel-card .close.corner { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border-color: transparent; background: none; color: var(--muted); }
 .sel-card .close.corner:hover { background: var(--surface-3); color: var(--text); }
 
@@ -54,9 +55,9 @@
 .sel-actions { display: flex; gap: 6px; margin-top: 6px; }
 .sel-actions .btn { height: 28px; padding: 0 12px; font-size: 12.5px; }
 
-/* The rail's row for the selected unit: a 2px ship-cyan outline inside it, as the card's left rule, and
+/* The rail's row for the selected unit: a 2px white outline inside it, as the card's left rule, and
    the raised fill, so it reads apart from the orange rows that need you. */
-.unit-row[aria-current=true] { position: relative; background: var(--surface-3); box-shadow: inset 0 0 0 2px var(--ship, #6fc3df); }
+.unit-row[aria-current=true] { position: relative; background: var(--surface-3); box-shadow: inset 0 0 0 2px var(--text); }
 
 /* Up in the Overview its legend sits bottom middle, and on a narrow screen it wraps to two lines: the
    card rides above both. */

@@ -19,7 +19,7 @@ export interface CalloutText {
   kind: GlyphKind | null;
   /** Mid: what it's doing ("Edit worker.ts"); a leaving unit's line has none. */
   line?: string;
-  /** Near: the task (bold, line two), the chip's word and clock, line three. */
+  /** Near: the task (bold, line two, a second line after a newline), the chip's word and clock, line three. */
   task?: string;
   chip?: string;
   clock?: string;
@@ -30,7 +30,7 @@ export interface CalloutText {
   epithet?: string;
   /** Just the glyph and the call sign: what a callout shrinks to where callouts crowd (features/workers/declutter.ts). */
   compact?: boolean;
-  /** The selected unit's: a ship-cyan hairline in place of the steel one, drawn over its neighbours. */
+  /** The selected unit's: a white hairline in place of the steel one (the reticle's white), drawn over its neighbours. */
   selected?: boolean;
 }
 
@@ -52,7 +52,7 @@ function plate(ctx: CanvasRenderingContext2D, w: number, h: number, kind: GlyphK
   c.height = h;
   ctx.fillStyle = `rgba(${CALLOUT_CHIP.rgb.join(', ')}, ${CALLOUT_CHIP.alpha})`;
   ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = selected ? DECK.ship : DECK.steel;
+  ctx.strokeStyle = selected ? DECK.text : DECK.steel;
   ctx.lineWidth = (selected ? 3 : 2) * R;
   ctx.strokeRect(R, R, w - 2 * R, h - 2 * R);
   if (kind && kind !== 'parked') {
@@ -115,10 +115,11 @@ function drawCard(ctx: CanvasRenderingContext2D, o: CalloutText) {
   ctx.font = MONO(14, 700);
   const chipW = chip ? ctx.measureText(chip).width + 12 * R : 0;
   ctx.font = UI(25, 700);
-  const taskW = o.task ? ctx.measureText(o.task).width : 0;
+  const taskLines = o.task ? o.task.split('\n') : [];
+  const taskW = Math.max(0, ...taskLines.map((l) => ctx.measureText(l).width));
   ctx.font = MONO(14, 400);
   const metaW = o.meta ? ctx.measureText(o.meta).width : 0;
-  const rows = [26 * R, o.task ? 36 * R : 0, o.meta ? 24 * R : 0];
+  const rows = [26 * R, taskLines.length * 36 * R - (taskLines.length > 1 ? 6 * R : 0), o.meta ? 24 * R : 0];
   const w = Math.ceil(Math.max(whoW + epW + (chip ? 18 * R + chipW : 0), taskW, metaW) + PAD * 2 + STRIPE);
   const h = Math.ceil(rows.reduce((a, b) => a + b, 0) + PAD * 1.2);
   plate(ctx, w, h, o.kind, STRIPE, o.selected);
@@ -148,12 +149,14 @@ function drawCard(ctx: CanvasRenderingContext2D, o: CalloutText) {
     ctx.fillText(chip, x + 6 * R, y + R / 2);
   }
   y += rows[0] / 2;
-  if (o.task) {
-    y += rows[1] / 2;
+  if (taskLines.length) {
+    const line = rows[1] / taskLines.length;
     ctx.font = UI(25, 700);
     ctx.fillStyle = DECK.text;
-    ctx.fillText(o.task, left, y);
-    y += rows[1] / 2;
+    for (const t of taskLines) {
+      ctx.fillText(t, left, y + line / 2);
+      y += line;
+    }
   }
   if (o.meta) {
     y += rows[2] / 2;

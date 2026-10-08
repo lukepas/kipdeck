@@ -4,8 +4,8 @@
  * selected: the view flies to it, a reticle locks on under it in the Overview (reticle.ts), its rail row is marked,
  * and the inspector card (inspector.ts) says what it's on with the button its state asks for. Pointing
  * at a unit (the mouse in the Overview, a rail row, the crosshair in Walk) hovers it: a half-strength
- * reticle. Esc lets go first, before anything else takes Esc; ✕ on the card does too. A unit that
- * leaves the deck lets go of its selection.
+ * reticle. Esc lets go first, before anything else takes Esc; ✕ on the card does too, and in Walk
+ * either puts you straight back into mouse-look. A unit that leaves the deck lets go of its selection.
  */
 import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
@@ -31,7 +31,7 @@ export interface Selection {
   on(fn: (id: string | null) => void): Off;
 }
 
-export type SelectionParts = Pick<Parts, 'overview' | 'views' | 'waiting' | 'pointer'>;
+export type SelectionParts = Pick<Parts, 'overview' | 'views' | 'waiting' | 'pointer' | 'focus'>;
 
 export function installSelection(ctx: Ctx, parts: SelectionParts): Selection {
   let selected: string | null = null;
@@ -49,8 +49,14 @@ export function installSelection(ctx: Ctx, parts: SelectionParts): Selection {
 
   const inspector = createInspector({
     act: (action, id) => (action === 'answer' || action === 'terminal' ? parts.waiting.openWorkerTerminal(id) : parts.waiting.openWorkerChanges(id)),
-    close: () => clear(),
+    close: () => letGo(),
   });
+
+  /** ✕ or Esc on the card: lets go, and in Walk hands the mouse straight back to looking round. */
+  function letGo() {
+    clear();
+    if (!parts.overview.active()) parts.focus.backToGame();
+  }
 
   const at = new THREE.Vector3();
   const floor = new THREE.Vector3();
@@ -137,7 +143,7 @@ export function installSelection(ctx: Ctx, parts: SelectionParts): Selection {
   // the Overview the next Esc walks again, as it always did (installed ahead of the Overview's keys).
   ctx.keys.add('guard', (e) => {
     if (e.code !== 'Escape' || !selected || !inspector.open() || modalOpen()) return false;
-    clear();
+    letGo();
     return true;
   });
 

@@ -60,15 +60,19 @@ export interface Zones {
 
 const WHITE = new THREE.Color('#ffffff');
 
+/** How wide a zone's outline is (m): a band laid in the same mesh as the fill, about a pixel from the Overview. */
+export const ZONE_LINE_W = 0.05;
+
 /**
- * The zones of `letters`, each in `hex` to start with: their fills merged into one mesh and their
- * outlines into one set of line segments, each pod's hue in its own vertices' colors, so the pods
- * cost the deck two draw calls rather than two each.
+ * The zones of `letters`, each in `hex` to start with: every fill and every outline (a thin band along
+ * its edge) merged into one mesh, each pod's hue and each part's strength in its own vertices' colors,
+ * so all the pods cost the deck one draw call.
  */
 export function makeZones(letters: readonly PodLetter[], hex: string): Zones {
-  const fillPos: number[] = [];
-  const fillIndex: number[] = [];
-  const linePos: number[] = [];
+  const pos: number[] = [];
+  const index: number[] = [];
+  /** Each vertex's strength: the fill's or the outline's. */
+  const alpha: number[] = [];
   const ranges = new Map<PodLetter, { fill: [number, number]; line: [number, number]; fade: HueFade }>();
   for (const letter of letters) {
     const z = podZone(letter);
@@ -76,50 +80,52 @@ export function makeZones(letters: readonly PodLetter[], hex: string): Zones {
     const y = z.h + 0.01;
     // The shape is drawn in x, y; turned so its y runs along the deck's z, and lifted to its tier.
     const geo = new THREE.ShapeGeometry(new THREE.Shape(pts.map(([x, zz]) => new THREE.Vector2(x, zz)))).rotateX(Math.PI / 2).translate(0, y, 0);
-    const base = fillPos.length / 3;
-    fillPos.push(...Array.from(geo.getAttribute('position').array));
-    for (const i of geo.getIndex()?.array ?? []) fillIndex.push(base + i);
+    const base = pos.length / 3;
+    pos.push(...Array.from(geo.getAttribute('position').array));
+    for (const i of geo.getIndex()?.array ?? []) index.push(base + i);
     geo.dispose();
-    const lineBase = linePos.length / 3;
+    const fillEnd = pos.length / 3;
+    for (let i = base; i < fillEnd; i++) alpha.push(ZONE_LOOK.fill);
+    // The outline: a band ZONE_LINE_W wide along each edge, a hair above the fill.
     pts.forEach(([x, zz], i) => {
       const [nx, nz] = pts[(i + 1) % pts.length];
-      linePos.push(x, y, zz, nx, y, nz);
+      const len = Math.hypot(nx - x, nz - zz) || 1;
+      const ox = (-(nz - zz) / len) * (ZONE_LINE_W / 2);
+      const oz = ((nx - x) / len) * (ZONE_LINE_W / 2);
+      const v = pos.length / 3;
+      pos.push(x - ox, y + 0.002, zz - oz, x + ox, y + 0.002, zz + oz, nx - ox, y + 0.002, nz - oz, nx + ox, y + 0.002, nz + oz);
+      index.push(v, v + 1, v + 2, v + 1, v + 3, v + 2);
+      alpha.push(ZONE_LOOK.line, ZONE_LOOK.line, ZONE_LOOK.line, ZONE_LOOK.line);
     });
-    ranges.set(letter, { fill: [base, fillPos.length / 3], line: [lineBase, linePos.length / 3], fade: new HueFade(hex) });
+    ranges.set(letter, { fill: [base, fillEnd], line: [fillEnd, pos.length / 3], fade: new HueFade(hex) });
   }
-  const fillGeo = new THREE.BufferGeometry();
-  fillGeo.setAttribute('position', new THREE.Float32BufferAttribute(fillPos, 3));
-  fillGeo.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(fillPos.length), 3));
-  fillGeo.setIndex(fillIndex);
-  const fill = new THREE.Mesh(
-    fillGeo,
-    new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: ZONE_LOOK.fill, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, toneMapped: false }),
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  const colors = new Float32Array((pos.length / 3) * 4);
+  alpha.forEach((a, i) => (colors[i * 4 + 3] = a));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 4));
+  geo.setIndex(index);
+  const mesh = new THREE.Mesh(
+    geo,
+    new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, toneMapped: false }),
   );
-  const lineGeo = new THREE.BufferGeometry();
-  lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(linePos, 3));
-  lineGeo.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(linePos.length), 3));
-  const line = new THREE.LineSegments(lineGeo, new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: ZONE_LOOK.line, depthWrite: false, toneMapped: false }));
   const group = new THREE.Group();
   group.name = 'pod-zones';
-  fill.renderOrder = 1;
-  line.renderOrder = 2;
-  // Paint on the floor, never in the way: the crosshair's ray passes through (a line's pick reaches a
-  // metre either side of it, and would stand between you and a unit as if it were a wall).
-  fill.raycast = line.raycast = () => {};
-  group.add(fill, line);
+  mesh.renderOrder = 1;
+  // Paint on the floor, never in the way: the crosshair's ray passes through.
+  mesh.raycast = () => {};
+  group.add(mesh);
 
-  const fillCol = fillGeo.getAttribute('color') as THREE.BufferAttribute;
-  const lineCol = lineGeo.getAttribute('color') as THREE.BufferAttribute;
+  const col = geo.getAttribute('color') as THREE.BufferAttribute;
   const lifted = new THREE.Color();
   /** Writes pod `letter`'s hue into its vertices: the fill in it, the outline a brighter tint of it. */
   const paint = (letter: PodLetter) => {
     const r = ranges.get(letter)!;
     const c = r.fade.color;
-    for (let i = r.fill[0]; i < r.fill[1]; i++) fillCol.setXYZ(i, c.r, c.g, c.b);
+    for (let i = r.fill[0]; i < r.fill[1]; i++) col.setXYZ(i, c.r, c.g, c.b);
     lifted.copy(c).lerp(WHITE, ZONE_LOOK.lift);
-    for (let i = r.line[0]; i < r.line[1]; i++) lineCol.setXYZ(i, lifted.r, lifted.g, lifted.b);
-    fillCol.needsUpdate = true;
-    lineCol.needsUpdate = true;
+    for (let i = r.line[0]; i < r.line[1]; i++) col.setXYZ(i, lifted.r, lifted.g, lifted.b);
+    col.needsUpdate = true;
   };
   for (const letter of letters) paint(letter);
   return {

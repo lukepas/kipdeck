@@ -6,7 +6,7 @@ import { DESKS, MISSION_TABLE, deskSeat, podOf, readySpot } from '../src/shared/
 import { walkable } from '../src/shared/nav';
 import { EYE_HEIGHT } from '../src/client/player/camera';
 import { FRAME_AIM, FRAME_DISTANCE, FRAME_PITCH, FRAME_PITCH_MIN, STOOL_OF, framePose, onReadyLine, sightClear } from '../src/client/features/waiting/frame';
-import { ACQUIRE, acquireAt, bracketRect } from '../src/client/features/waiting/acquire';
+import { ACQUIRE, acquireAt, bracketRect, clampBottom } from '../src/client/features/waiting/acquire';
 
 const DEG = 180 / Math.PI;
 
@@ -144,4 +144,13 @@ test('under reduced motion the bracket stands still at 1.1 for 600 ms', () => {
 test('bracketRect grows the box round its middle', () => {
   const r = bracketRect({ x0: 100, y0: 200, x1: 140, y1: 300 }, 2);
   assert.deepEqual(r, { left: 80, top: 150, width: 80, height: 200 });
+});
+
+test('the bracket never crosses the bottom bar: its bottom edge is held above it, its top where it was', () => {
+  const r = { left: 500, top: 360, width: 310, height: 520 };
+  const held = clampBottom(r, 900 - 62);
+  assert.equal(held.top, 360);
+  assert.equal(held.top + held.height, 838);
+  assert.deepEqual(clampBottom({ ...r, height: 100 }, 838), { ...r, height: 100 });
+  assert.equal(clampBottom({ ...r, top: 880 }, 838).height, 0);
 });

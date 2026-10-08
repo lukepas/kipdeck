@@ -6,7 +6,7 @@ Mission control answers one question: what needs a person right now, on any floo
 
 Open it with **I** anywhere in the office, from the **Mission control** button on the top bar (always there), from the counters beside the deck's name (each one, *2 need you*, *1 stuck*, *3 to review*, *4 working*, opens the tab for its level: Review for to review, Attention for the rest), from the menu > **Mission control**, or from the command palette (**Ctrl+K**: *Mission control*, *Edit the mission*, *Review finished work*, *Timeline*, *While you were away*). In the 2D view (`/lite`) it's the **Mission** button in the top bar. It has a ✕ in the top right, and Esc closes it and puts you straight back into looking around. It remembers the tab you had open last.
 
-Inside it, **1** to **5** switch tabs (Attention, Goals, Review, Timeline, Crew), the arrow keys move between rows, **Enter** does the selected row's next step, and **D** docks it or floats it again.
+Inside it, **1** to **5** switch tabs (Attention, Goals, Review, Timeline, Crew; all five on one line, docked too), the arrow keys move between rows, **Enter** does the selected row's next step, and **D** docks it or floats it again.
 
 ### Docked or floating
 
@@ -53,7 +53,7 @@ A worker on another floor takes you to its floor and its desk first, then does i
 
 With [agent reputation](reputation.md) on, each row (here and in the Review tab) also shows its agent's record from merges, *rep 86 · merges 80% · 25.00 USDC*, linked to its latest attestation, with the whole record in its tooltip. An agent whose merges get reverted often gets a hint in words; it never changes where the worker ranks.
 
-Where the view can show you a unit on the deck, hovering a row (or selecting it with the arrow keys) shows a **Locate** button, in every tab with units in it. Docked, Mission control stays up while the view finds the unit; floating, it gets out of the way first. In the 3D office a unit on your deck is selected and the view finds it (the marked rail row and the card, which sits left of the docked panel, and the ring in the Overview; see [Selecting a unit](controls.md#selecting-a-unit)); one on another deck is a ride there. The 2D view has no deck to point at, so its rows have no Locate.
+Where the view can show you a unit on the deck, its row has a **Locate** button, quiet until you hover the row (or select it with the arrow keys), in every tab with units in it. Docked, Mission control stays up while the view finds the unit; floating, it gets out of the way first. In the 3D office a unit on your deck is selected and the view finds it (the marked rail row and the card, which sits left of the docked panel, and the ring in the Overview; see [Selecting a unit](controls.md#selecting-a-unit)); one on another deck is a ride there. The 2D view has no deck to point at, so its rows have no Locate.
 
 **...** on a row has the rest: open its terminal, snooze it for 30 minutes, 2 hours or until its status next changes, link it to a milestone, send it home. A snooze is shared: everyone sees *snoozed by Ana until 14:30*, so two people don't both chase the same worker. A snoozed worker stays in the list, greyed, but it isn't counted and nothing notifies about it.
 

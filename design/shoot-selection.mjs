@@ -240,6 +240,22 @@ async function main() {
     const centred1 = await onScreen(asking);
     console.log('unit on screen after the flight:', JSON.stringify(centred1));
     await shot(page, 'overview-selected');
+    // No two callouts that must show cover each other (features/workers/declutter.ts).
+    const covered = await page.evaluate(() => {
+      const last = window.__world?.declutter?.last() ?? [];
+      const box = (x) => {
+        const b = x.placed.mode === 'full' ? x.label.full : x.label.compact;
+        return { x: b.x + x.placed.dx, w: b.w, bottom: b.bottom - x.placed.lift, top: b.bottom - x.placed.lift - b.h, sign: x.sign };
+      };
+      const kept = last.filter((x) => x.label.keep && x.placed.mode !== 'hidden').map(box);
+      const out = [];
+      for (let i = 0; i < kept.length; i++) for (let j = i + 1; j < kept.length; j++) {
+        const a = kept[i], b = kept[j];
+        if (a.x < b.x + b.w && a.x + a.w > b.x && a.bottom > b.top && a.top < b.bottom) out.push(`${a.sign}/${b.sign}`);
+      }
+      return { shown: last.filter((x) => x.label.keep).map((x) => `${x.sign}:${x.placed.mode}`), out };
+    });
+    console.log('callouts that must show:', covered.shown.join(' '), '| covering each other:', covered.out.join(' ') || 'none');
     await page.screenshot({ path: path.join(OUT, 'overview-selected-card.png'), clip: { x: 1440 - 360, y: 900 - 280, width: 360, height: 280 } });
     const c1 = await onScreen(asking);
     await page.screenshot({ path: path.join(OUT, 'overview-selected-reticle.png'), clip: { x: Math.max(0, c1.x - 200), y: Math.max(0, c1.y - 170), width: 400, height: 300 } });
@@ -261,9 +277,13 @@ async function main() {
     }
     await row.click();
     await wait(2500);
+    // As the deck click does: the card in, and a few frames of the flight's end drawn.
+    await settled();
     const c2 = await onScreen(done);
-    const canvasMid = { x: 720, y: 450 };
-    console.log('rail click: unit at', JSON.stringify(c2), 'screen centre', JSON.stringify(canvasMid), 'off by', Math.round(Math.hypot(c2.x - canvasMid.x, c2.y - canvasMid.y - 0)), 'px');
+    // The middle of the deck you can see: right of the Units rail.
+    const railRight = await page.evaluate(() => document.querySelector('.rail')?.getBoundingClientRect().right ?? 0);
+    const canvasMid = { x: (railRight + 1440) / 2, y: 450 };
+    console.log('rail click: unit at', JSON.stringify(c2), 'deck centre', JSON.stringify(canvasMid), 'off across by', Math.round(c2.x - canvasMid.x), 'px');
     console.log('row aria-current:', await row.getAttribute('aria-current'));
     console.log('card after rail click:', await card());
     await shot(page, 'rail-selected');
@@ -276,7 +296,10 @@ async function main() {
     console.log('after Esc: card', await card(), 'overview', await page.evaluate(() => window.__office.overview.active()));
     await shot(page, 'after-esc');
     await page.keyboard.press('Escape');
-    await wait(600);
+    // The move down takes 650 ms of the page's clock, which a software renderer draws a frame a second
+    // of: wait for it to land rather than a fixed while.
+    await page.waitForFunction(() => !window.__office.overview.moving() && window.__office.renderer.info.render.frame > 0, null, { timeout: 30_000, polling: 250 });
+    await wait(300);
     console.log('after second Esc: overview', await page.evaluate(() => window.__office.overview.active()));
 
     // In Walk, a rail row takes you to the unit, facing it, with the card up.

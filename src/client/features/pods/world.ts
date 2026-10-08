@@ -5,6 +5,7 @@ import { fontsReady } from '../../world/toon';
 import type { Fixture } from '../../world/office/fixture';
 import { paintBar, paintLabel } from './draw';
 import { LABEL, LABEL_SPOTS, LABEL_YAW } from './footprint';
+import { OVERVIEW_PITCH } from '../../core/overview-frame';
 import { rolls, type PodLabelText, type Tone } from './label';
 import { makeZones } from './zone';
 
@@ -15,9 +16,27 @@ import { makeZones } from './zone';
 // walking camera comes within 4 m of it (fading out over the last metre), so it isn't clutter at your
 // feet; the zone always shows.
 //
-// Draw calls are the deck's budget (docs/design.md, Draw budgets): every pod's zone is one fill and one outline
-// (zone.ts), and every label is one cell of one canvas, drawn as one mesh, so the four pods cost three
-// draws however many there are.
+// From the Overview zoomed out a label grows (up to MAX_GROW) so its counts line never reads smaller
+// than MIN_TEXT_PX on screen; every trip up frames it whole (index.ts, core/overview-frame.ts).
+//
+// Draw calls are the deck's budget (docs/design.md, Draw budgets): every pod's zone, its fill and its
+// outline, is one mesh (zone.ts), and every label is one cell of one canvas, drawn as one mesh, so the
+// four pods cost two draws however many there are.
+
+/** The least height (px) the counts line's capitals take on screen from the Overview, and the most a label grows for it. */
+export const MIN_TEXT_PX = 11;
+export const MAX_GROW = 1.5;
+/** The counts line's capitals against the label's depth (draw.ts: a 0.38 font, capitals about 0.72 of it). */
+const CAPS = 0.38 * 0.72;
+
+/**
+ * How much a label grows from the Overview so its counts line is MIN_TEXT_PX tall: `pxPerM` the screen's
+ * pixels a metre, `pitch` how steeply the camera looks down (the floor's depth comes out sin(pitch) as tall).
+ */
+export function labelGrow(pxPerM: number, pitch: number): number {
+  const px = CAPS * LABEL.d * Math.sin(pitch) * pxPerM;
+  return Math.min(MAX_GROW, Math.max(1, MIN_TEXT_PX / Math.max(1e-6, px)));
+}
 
 /** How long a changed count takes to roll in, and how near (m) the walking camera hides a label. */
 export const ROLL_MS = 220;
@@ -112,11 +131,28 @@ export const podPlates: Fixture<'pods'> = (site) => {
   mesh.raycast = () => {};
   group.add(mesh);
   const alphas = geo.getAttribute('color') as THREE.BufferAttribute;
+  const where = geo.getAttribute('position') as THREE.BufferAttribute;
+  const flat = Float32Array.from(where.array as ArrayLike<number>);
+  let grownBy = 1;
+  /** Grows every label `k` times round its own middle (their corners from where they were built). */
+  const grow = (k: number) => {
+    grownBy = k;
+    for (const l of labels) {
+      for (let i = l.cell * 4; i < l.cell * 4 + 4; i++) {
+        where.setXYZ(i, l.at.x + (flat[i * 3] - l.at.x) * k, flat[i * 3 + 1], l.at.z + (flat[i * 3 + 2] - l.at.z) * k);
+      }
+    }
+    where.needsUpdate = true;
+    geo.computeBoundingSphere();
+  };
   // Worked out for whichever camera is drawing them: hidden at your feet while walking, and over
   // whatever stands in front of them from the Overview (a rail, a wall), the way a plan's lettering is.
   // A label's strength reaches its vertices on the next frame drawn, too soon to see.
   mesh.onBeforeRender = (_r, _s, camera) => {
     mat.depthTest = (camera as THREE.PerspectiveCamera).isPerspectiveCamera === true;
+    const ortho = camera as THREE.OrthographicCamera;
+    const k = ortho.isOrthographicCamera ? labelGrow(innerHeight / Math.max(1e-6, (ortho.top - ortho.bottom) / ortho.zoom), OVERVIEW_PITCH) : 1;
+    if (Math.abs(k - grownBy) > 0.01) grow(k);
     for (const l of labels) {
       const a = labelAlpha(camera, l.at);
       if (Math.abs(a - l.alpha) < 0.004) continue;

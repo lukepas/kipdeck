@@ -5,7 +5,9 @@
  * down are one 650 ms move (core/overview-transition.ts): from your eyes, rising and closing its field
  * of view onto the Overview's framing, handed to the orthographic camera on the frame where the two draw
  * the same picture; input is held for it, and with less motion it cuts. In it, Q and E turn the deck a
- * quarter at a time (280 ms), W A S D or the arrows or a drag pan, the wheel zooms, and Esc or G walks
+ * quarter at a time (280 ms), W A S D or the arrows or a drag pan, the wheel zooms (damped, into the
+ * point under the pointer), a flight to a unit (900 ms, fast then settling) lands it in the middle of
+ * the deck you can see (past the Units rail, short of a docked Mission control), and Esc or G walks
  * again. Left alone for 8 s it drifts by half a degree and a hand's width, so the shot stays alive. A
  * window opened over it closes back to it, with no extra click. Which of the two you start in is
  * features/homeview's.
@@ -16,8 +18,8 @@ import { FLOOR } from '../../shared/layout';
 import { h, modalOpen } from '../ui/dom';
 import type { Ctx } from './context';
 import type { Parts } from './parts';
-import { OVERVIEW_PITCH, SIDE_YAW, framePose, framedPoints } from './overview-frame';
-import { FLY_MS, TRANSITION_MS, blendProjection, driftAt, easeInOutCubic, fovAlong, fovForHalfHeight, morphAt, zoomTierOf, type Drift, type ZoomTier } from './overview-transition';
+import { OVERVIEW_PITCH, SIDE_YAW, allFramed, frameBox, framePose, framedPoints } from './overview-frame';
+import { FLY_MS, TRANSITION_MS, blendProjection, driftAt, easeInOutCubic, easeOutQuint, fovAlong, fovForHalfHeight, morphAt, zoomPan, zoomTierOf, zoomToward, type Drift, type ZoomTier } from './overview-transition';
 
 /** How the camera looks down, how far back it stands, and how much of the deck fills the screen's height at zoom 1. */
 const PITCH = OVERVIEW_PITCH;
@@ -54,17 +56,24 @@ export interface Overview {
    * its first frame.
    */
   progress(): number;
-  /** Up into the Overview, or back down to Walk. */
-  toggle(on?: boolean): void;
+  /**
+   * Up into the Overview, or back down to Walk. `why` says who asked: you ('user', the default) or the
+   * deck opening in the view you were last in ('home', features/homeview), so a part that answers your
+   * own rise (the debrief putting itself away) can leave the deck's alone.
+   */
+  toggle(on?: boolean, why?: OverviewWhy): void;
   /** Pans and zooms to (x, z) in 650 ms (a cut under reduced motion), going up into the Overview first. Never zooms out. */
   flyTo(x: number, z: number): void;
   /** Turns slowly round the table at `speed` (radians a second) until you turn, pan or zoom yourself; 0 stops it. Demo mode's shot (features/demo). */
   orbit(speed: number): void;
   /** How close the Overview is: the whole deck, a pod, or a unit (for modules that show more up close). */
   zoomTier(): ZoomTier;
-  /** Calls `fn` with where you're going each time you go up or down (features/homeview remembers it). */
-  onChange(fn: (on: boolean) => void): () => void;
+  /** Calls `fn` with where you're going, and who asked, each time you go up or down (features/homeview remembers it). */
+  onChange(fn: (on: boolean, why: OverviewWhy) => void): () => void;
 }
+
+/** Who asked for a trip up or down: you, or the deck opening in its home view. */
+export type OverviewWhy = 'user' | 'home';
 
 export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview {
   const { player, canvas } = ctx;
@@ -74,19 +83,24 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
   let on = false;
   let yaw = 0;
   let zoom = 1;
+  /** Where the wheel is taking the zoom, and the pointer it zooms into (px from the window's middle). */
+  let zoomGoal = 1;
+  const wheelAt = { x: 0, y: 0 };
   const framed = framedPoints();
   /**
    * The framed pose every trip up starts from: from the starboard quarter, the dais, the tiers, the pit
    * and every board of the arc in the upper part of the screen (core/overview-frame.ts).
    */
   function frame() {
-    const pose = framePose(framed, PITCH, window.innerWidth / Math.max(1, window.innerHeight), HALF_HEIGHT, ZOOM.max, SIDE_YAW);
+    // What features framed too (the pods' labels), and short of a docked Mission control on the right.
+    const box = frameBox(dockRight(), window.innerWidth);
+    const pose = framePose(allFramed(framed), PITCH, window.innerWidth / Math.max(1, window.innerHeight), HALF_HEIGHT, ZOOM.max, SIDE_YAW, box);
     yaw = SIDE_YAW;
     turn = null;
     fly = null;
     drift = STILL;
     target.set(pose.x, 0, pose.z);
-    zoom = THREE.MathUtils.clamp(pose.zoom, ZOOM.min, ZOOM.max);
+    zoom = zoomGoal = THREE.MathUtils.clamp(pose.zoom, ZOOM.min, ZOOM.max);
   }
   let turn: { from: number; to: number; at: number } | null = null;
   let fly: { from: THREE.Vector3; to: THREE.Vector3; z0: number; z1: number; at: number } | null = null;
@@ -94,7 +108,7 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
   let walkFog: THREE.Fog | THREE.FogExp2 | null = null;
   /** The slow turn round the table (radians a second), or 0. */
   let orbitSpeed = 0;
-  const listeners = new Set<(on: boolean) => void>();
+  const listeners = new Set<(on: boolean, why: OverviewWhy) => void>();
 
   // ---- The move between Walk and the Overview ---------------------------------------------------------
   /** The camera the move is drawn with: your eyes' perspective, closing onto the Overview's framing. */
@@ -102,7 +116,7 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
   const moveFog = new THREE.Fog(0x000000, 1, 2);
   let move: { up: boolean; at: number; eye: THREE.Vector3; q: THREE.Quaternion; fov: number; look: { yaw: number; pitch: number } } | null = null;
   /** A toggle asked for during the move, taken once it lands. */
-  let pending: { want: boolean; fly?: [number, number] } | null = null;
+  let pending: { want: boolean; fly?: [number, number]; why?: OverviewWhy } | null = null;
   /** The move's eased way up this frame (0 your eyes, 1 the Overview), as placeMove last drew it. */
   let moveK = 0;
 
@@ -127,7 +141,8 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     h('span', {}, 'wheel zoom'),
     h('span', {}, h('kbd', {}, 'G'), ' walk'),
   );
-  document.body.append(legend);
+  // In the HUD, so it reads the HUD's widths (the rail's, what's docked on the right).
+  (document.getElementById('hud') ?? document.body).append(legend);
   /** The legend fades in once the view has landed up here (150 ms, camera-overview.css), and goes at once on the way down. */
   function showLegend(yes: boolean) {
     legend.classList.toggle('hidden', !yes);
@@ -155,14 +170,14 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     ctx.hint.invalidate();
   }
 
-  function toggle(want = !on) {
+  function toggle(want = !on, why: OverviewWhy = 'user') {
     if (move) {
       // Held while the view is moving: the last ask is taken once it lands.
-      pending = want === move.up ? null : { want };
+      pending = want === move.up ? null : { want, why };
       return;
     }
     if (want === on) return;
-    for (const fn of listeners) fn(want);
+    for (const fn of listeners) fn(want, why);
     const still = ctx.reduceMotion.matches;
     if (want) {
       on = true;
@@ -252,6 +267,21 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     }
   }
 
+  /** How much of the right side a docked Mission control covers (px). */
+  function dockRight(): number {
+    return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--dock-right')) || 0;
+  }
+
+  /**
+   * How far (px, to the right) the middle of the deck you can see is from the window's: past the Units
+   * rail on the left, short of a docked Mission control on the right (ui/mission/dock.ts --dock-right).
+   */
+  function seenMiddle(): number {
+    const rail = document.querySelector('.rail')?.getBoundingClientRect();
+    const left = rail && rail.width > 0 && rail.top < window.innerHeight / 2 ? rail.right : 0;
+    return (left - dockRight()) / 2;
+  }
+
   function flyTo(x: number, z: number) {
     if (move && !move.up) {
       pending = { want: true, fly: [x, z] };
@@ -259,14 +289,19 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     }
     toggle(true);
     touch();
-    const to = new THREE.Vector3(x, 0, z);
     // Closer if it's further out than a flight's zoom; never further out than it is.
     const z1 = Math.max(zoom, ZOOM.fly);
+    // The unit lands in the middle of what you can see, not of the window: the view's middle stands
+    // that far to its left, along the view's right at the flight's zoom.
+    const shift = (seenMiddle() * (2 * HALF_HEIGHT)) / z1 / Math.max(1, window.innerHeight);
+    const to = new THREE.Vector3(x - shift * Math.cos(yaw), 0, z + shift * Math.sin(yaw));
+    zoomGoal = z1;
     if (ctx.reduceMotion.matches) {
       target.copy(to);
       zoom = z1;
       return;
     }
+    // From where the view is this frame (a flight already on its way included).
     fly = { from: target.clone(), to, z0: zoom, z1, at: performance.now() };
   }
 
@@ -337,7 +372,11 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
       if (!on || move) return;
       touch();
       orbitSpeed = 0;
-      zoom = THREE.MathUtils.clamp(zoom * Math.exp(-e.deltaY * 0.0015), ZOOM.min, ZOOM.max);
+      // The wheel takes over from a flight, from where it has got to.
+      fly = null;
+      zoomGoal = THREE.MathUtils.clamp(zoomGoal * Math.exp(-e.deltaY * 0.0015), ZOOM.min, ZOOM.max);
+      wheelAt.x = e.clientX - window.innerWidth / 2;
+      wheelAt.y = e.clientY - window.innerHeight / 2;
     },
     { passive: true },
   );
@@ -364,9 +403,16 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     if (orbitSpeed && !turn && !fly && !move && !still) yaw += orbitSpeed * dt;
     if (fly) {
       const k = Math.min(1, (now - fly.at) / FLY_MS);
-      target.lerpVectors(fly.from, fly.to, easeInOutCubic(k));
-      zoom = fly.z0 + (fly.z1 - fly.z0) * easeInOutCubic(k);
+      const e = still ? 1 : easeOutQuint(k);
+      target.lerpVectors(fly.from, fly.to, e);
+      zoom = fly.z0 + (fly.z1 - fly.z0) * e;
       if (k >= 1) fly = null;
+    } else if (zoom !== zoomGoal) {
+      // The wheel: eased toward where it's taking the zoom, the point under the pointer held still.
+      const z0 = zoom;
+      zoom = still ? zoomGoal : zoomToward(zoom, zoomGoal, dt);
+      const [dx, dz] = zoomPan(wheelAt.x, wheelAt.y, z0, zoom, (2 * HALF_HEIGHT) / Math.max(1, window.innerHeight), PITCH);
+      pan(dx, dz);
     }
     let mx = 0;
     let mz = 0;
@@ -400,7 +446,7 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     const next = pending;
     pending = null;
     if (next?.fly) flyTo(next.fly[0], next.fly[1]);
-    else if (next) toggle(next.want);
+    else if (next) toggle(next.want, next.why);
   });
 
   function orbit(speed: number) {

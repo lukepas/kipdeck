@@ -19,7 +19,7 @@ export interface PodLabelText {
   letter: PodLetter;
   /** The goal's title, clipped to TITLE_MAX characters, or "No goal yet". */
   title: string;
-  /** Whether there's a goal: without one the title is muted, and the counts take the big line over it (draw.ts). */
+  /** Whether there's a goal: without one the title under the counts is muted (draw.ts). */
   goal: boolean;
   segments: Segment[];
   /** Everything above in one string: a label is painted again only when this changes. */
@@ -27,7 +27,7 @@ export interface PodLabelText {
 }
 
 /** The most of a goal's title the label shows. */
-export const TITLE_MAX = 24;
+export const TITLE_MAX = 34;
 
 /** A unit in the pod, as the ranking has it (shared/attention.ts). */
 export interface PodUnit {

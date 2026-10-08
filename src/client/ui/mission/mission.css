@@ -5,9 +5,16 @@
 .mission-control header { flex-wrap: wrap; padding-top: 0; padding-bottom: 0; }
 .mission-control header h2 { flex: 0 1 auto; margin-right: 8px; }
 /* Flat tabs with a 2px underline on the one showing. */
-.mc-tabs { display: flex; flex-wrap: wrap; gap: 0; flex: 1; align-self: stretch; }
+.mc-tabs { display: flex; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 0; flex: 1; min-width: 0; align-self: stretch; }
+.mc-tabs::-webkit-scrollbar { display: none; }
 .mc-tab { font: inherit; font-weight: 500; font-size: 13px; height: 47px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--muted); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.mc-tab { flex: none; white-space: nowrap; }
 .mc-tab:hover { color: var(--text); }
+/* Narrow (docked at 400px, a small window): all five tabs on one line. */
+@container mc (max-width: 480px) {
+  .mc-tab { padding: 0 8px; font-size: 12px; }
+  .mission-control header h2 { margin-right: 4px; }
+}
 .mc-tab[aria-selected=true] { color: var(--text); border-bottom-color: var(--signal); }
 .mc-n { min-width: 18px; height: 16px; display: inline-grid; place-items: center; padding: 0 4px; border-radius: var(--radius-chip); background: var(--signal-tint); border: 1px solid rgb(255 106 26 / .5); color: var(--signal); font: 500 10px var(--font-mono); }
 .mc-body { padding: 14px 16px 18px; overflow: auto; flex: 1; }
@@ -142,8 +149,8 @@
 .tl-text { min-width: 0; overflow-wrap: anywhere; }
 .tl-more { margin-top: 10px; }
 
-/* Locate, on any row with a unit: an icon that shows on hover or with the row selected. */
-.mc-locate { width: 26px; height: 26px; padding: 0; display: grid; place-items: center; opacity: 0; transition: opacity 120ms ease-out; }
+/* Locate, on any row with a unit: always there, quiet, full strength on hover or with the row selected. */
+.mc-locate { width: 26px; height: 26px; padding: 0; display: grid; place-items: center; opacity: .55; transition: opacity 120ms ease-out; }
 .mc-row:hover .mc-locate, .mc-row:focus-within .mc-locate, .mc-locate:focus-visible { opacity: 1; }
 /* To review: the oldest one's Review right on the line, the tab as a quiet link beside it. */
 .mc-level-static { cursor: default; }

@@ -16,13 +16,13 @@ export function ago(ms: number): string {
 }
 
 /**
- * The same clock to the second, for a count that ticks where you can watch it (a unit's callout up
- * close): '0:42', '4:05' under an hour, then as `ago` ('2h', '3d').
+ * The same clock to the second under a minute, for a count that ticks where you can watch it (a
+ * unit's callout up close, the selected unit's card): '42s', then as `ago` ('4m', '2h', '3d'). Views
+ * drawn only now and then keep `ago`'s '<1m', which stays true until they're drawn again.
  */
 export function elapsed(ms: number): string {
   const s = Math.floor(Math.max(0, ms) / 1000);
-  if (s >= 3600) return ago(ms);
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  return s < 60 ? `${s}s` : ago(ms);
 }
 
 /** A leading "[ask]" or "[perm]" split off its text: shown as a chip, never as brackets. */

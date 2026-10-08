@@ -9,12 +9,17 @@ import { DECK } from '../../world/office/materials';
 export const HEARTBEAT = {
   /** At most one pulse a unit this often (ms), however fast its tool calls come. */
   gap: 1200,
-  /** A pulse's life (ms), and the ring's radius (m) from its start to its end. */
+  /**
+   * A pulse's life (ms), and the ring's radius (m) from its start to its end: it comes off the quiet
+   * meter (just outside its 0.75 m) and stops short of the next seat, so it never reads as the meter
+   * twitching or spills onto a neighbour.
+   */
   pulseMs: 600,
-  from: 0.6,
-  to: 1.7,
-  /** The ring's opacity as it starts; it fades to nothing. */
-  alpha: 0.55,
+  from: 0.8,
+  to: 1.25,
+  /** The ring's opacity at its strongest; it fades in over fadeInMs, then out to nothing. */
+  alpha: 0.4,
+  fadeInMs: 80,
   /** The quiet meter: its radius (m), its sweep (radians) and where it turns amber (share drained). */
   meterR: 0.75,
   sweep: (300 * Math.PI) / 180,
@@ -64,8 +69,8 @@ export function pulseHue(action: WorkerAction | undefined): string {
 
 /**
  * A pulse `ageMs` into it, into `out`: its radius (x, m) swelling from HEARTBEAT.from to .to and its
- * opacity (y) fading from HEARTBEAT.alpha to 0, both on easeOutQuad, the opacity times `gain`; 0 before
- * it starts and once it's over. Written into a vector rather than returned, so the frame loop never
+ * opacity (y) coming up over HEARTBEAT.fadeInMs, then fading from HEARTBEAT.alpha to 0, on easeOutQuad,
+ * the opacity times `gain`; 0 before it starts and once it's over. Written into a vector rather than returned, so the frame loop never
  * boxes a number and a frame allocates nothing.
  */
 export function pulseShape(ageMs: number, gain: number, out: { x: number; y: number }): void {
@@ -73,7 +78,7 @@ export function pulseShape(ageMs: number, gain: number, out: { x: number; y: num
   const k = live ? ageMs / HEARTBEAT.pulseMs : 1;
   const e = 1 - (1 - k) * (1 - k);
   out.x = HEARTBEAT.from + (HEARTBEAT.to - HEARTBEAT.from) * e;
-  out.y = live ? HEARTBEAT.alpha * (1 - e) * gain : 0;
+  out.y = live ? HEARTBEAT.alpha * Math.min(1, ageMs / HEARTBEAT.fadeInMs) * (1 - e) * gain : 0;
 }
 
 /** How far either side of halfway (amberAt) the meter blends from ship-cyan to amber, rather than switching in a frame. */

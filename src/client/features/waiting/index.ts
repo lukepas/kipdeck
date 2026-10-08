@@ -69,8 +69,9 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
       parts.mission.missionDeps.goTo(other.floor, other.deskId);
       return;
     }
-    const of = waiting.length > 1 ? ` (${waiting.findIndex((x) => x.id === w.id) + 1} of ${waiting.length})` : '';
-    nextToast = toast(`${w.status === 'needs_input' ? `${w.name} needs you` : `${w.name} is done`}${of}. E opens its terminal`);
+    // Who it is, what it asks and the button to answer are on its card now (features/selection), its
+    // callout and the hint: the toast only says how many more there are, when there are.
+    if (waiting.length > 1) nextToast = toast(`${waiting.findIndex((x) => x.id === w.id) + 1} of ${waiting.length} waiting on you. N for the next`);
   }
 
   /**

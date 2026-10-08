@@ -11,6 +11,8 @@
  * - Light from outside: the sky's hue in the key and the fill, a passing planet's colour washing in
  *   through its port, a comet's or a meteor's glint, the jump's cyan flash (./outside.ts).
  * - At High, the polished floor mirrors the wall boards (./mirror.ts).
+ * - The polished surfaces go matte as the view rises into the Overview, so the move never sweeps
+ *   through the key light's reflection off the table top (./gloss.ts).
  *
  * Settings > Bridge > Quality says how much of it is drawn (features/quality/tiers.ts): Low keeps the
  * pools and the fog. When a unit needs the captain or is stuck the shafts, the motes, the cookie and
@@ -30,6 +32,7 @@ import { spectacleTarget } from '../giveway/logic';
 import { DRIFT, GIVE_WAY_LIGHT, JUMP_FLASH, SPILL, cookieOn, poolLevel, shaftLevel, shaftSet, spectacleStep, SHAFT_COLOR } from './logic';
 import { Mirror, MIRROR_LEVEL } from './mirror';
 import { floorMirror } from '../../world/office/floor';
+import { Gloss } from './gloss';
 import { makeMotes } from './motes';
 import { OutsideLights, SkySample } from './outside';
 import { POOL_SOURCES, pools, shafts } from './plan';
@@ -77,6 +80,7 @@ export function installAtmos(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   const sky = new SkySample(renderer);
   const outside = new OutsideLights(parts.stage.lights);
   const office = ctx.office;
+  const gloss = new Gloss(scene);
   const mirror = new Mirror(() => [office.boardMeshes.issues, office.boardMeshes.queue, office.tvScreen, office.boardMeshes.pulls, office.boardMeshes.services]);
 
   let look = parts.quality.look();
@@ -116,6 +120,7 @@ export function installAtmos(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
     // haze fills a third of the frame for a frame or two: a flash), coming back as it lands on the way down.
     const k = Math.min(1, (parts.overview?.progress() ?? (parts.stage.view ? 1 : 0)) / 0.08);
     const up = k * k * (3 - 2 * k);
+    gloss.update(parts.overview?.progress() ?? 0);
     // On the move itself none at all: the camera passes through them. Landed up there, a trace (15%).
     const trace = parts.overview?.moving() ? 0 : 0.15;
     shaft.uniforms.uLevel.value = shaftLevel(mode) * spectacle * gain.shafts * (1 - (1 - trace) * up);
