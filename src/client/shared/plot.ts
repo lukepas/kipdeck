@@ -179,7 +179,7 @@ export class Plot {
       el('line', { x1: minX + 2.9, y1: minZ, x2: minX + 2.9, y2: mid, class: 'p-block-rule' }),
       text(minX + 0.25, minZ + 0.62, 'p-block-brand', 'KIPDECK'),
       text(minX + 3.15, minZ + 0.62, 'p-block-deck', clip(deck, 14).toUpperCase()),
-      text(minX + 0.25, mid + 0.55, 'p-block-small', revision ? `REV ${revision}` : 'MISSION CONTROL FOR AI AGENTS'),
+      text(minX + 0.25, mid + 0.55, 'p-block-small', revision ? `REV ${revision}` : 'THE INBOX FOR YOUR AI CODING AGENTS'),
       text(minX + 0.25, maxZ - 0.3, 'p-block-small', UPSTREAM_CREDIT_SHORT),
     );
   }

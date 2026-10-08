@@ -276,7 +276,7 @@ The four totals share one uppercase label style, and the header names the last m
 
 ## Also in this round
 
-- The product calls itself UGC Army wherever agents, tools and commits see it: prompts, the MCP serverInfo, meeting commits, generated config and the CLI help (`ugc-army` is a bin alias). Server strings are plain ASCII with no emoji, units stand down rather than go home, and `tests/copy.test.ts` keeps it that way.
+- The product calls itself Kipdeck wherever agents, tools and commits see it: prompts, the MCP serverInfo, meeting commits, generated config and the CLI help (`kipdeck` is a bin alias). Server strings are plain ASCII with no emoji, units stand down rather than go home, and `tests/copy.test.ts` keeps it that way.
 - The README is written in the fork's own words, with one upstream credit block. The credit everywhere names AgentSystemLabs and webdevcody. LICENSE adds a line for the fork, and NOTICE lists what was replaced.
 - One data palette (`src/shared/datacolors.ts`) replaces upstream's pastels for yokes, workers, signs and pins. Saved colours are remapped by their index.
 - Each unit wears the Formation mark on its chest plate.
