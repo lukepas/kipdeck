@@ -311,44 +311,63 @@ function readyLine(): SVGElement {
   return g;
 }
 
+/** A zone name on the plan: where its baseline sits (deck metres) and how it is anchored. */
+export interface PlanLabel {
+  x: number;
+  y: number;
+  text: string;
+  cls: string;
+  anchor: 'start' | 'middle' | 'end';
+}
+
+/**
+ * The names on the situation arc and the Proof corner. Each wing's two panels hang one over the other,
+ * so their names stack behind the wing (the upper panel's further back). The capacity strip runs
+ * along the foot of the Attention board, so its name sits under ATTENTION.
+ */
+export function planLabels(): PlanLabel[] {
+  const out: PlanLabel[] = [];
+  const behind = (b: { x: number; z: number; rotY: number }, d: number) => ({ x: b.x - Math.sin(b.rotY) * d, y: b.z - Math.cos(b.rotY) * d + 0.2 });
+  const anchorOf = (x: number) => (x < -1 ? 'end' : x > 1 ? 'start' : 'middle');
+  for (const [upper, lower] of [[BOARDS.issues, BOARDS.queue], [BOARDS.pulls, BOARDS.services]] as const) {
+    const up = behind(upper, 1.35);
+    const lo = behind(lower, 0.75);
+    out.push({ ...up, text: upper === BOARDS.pulls ? 'PRS' : upper.label.toUpperCase(), cls: '', anchor: anchorOf(upper.x) });
+    out.push({ ...lo, text: lower.label.toUpperCase(), cls: '', anchor: anchorOf(lower.x) });
+  }
+  const tv = behind(TV, 0.75);
+  out.push({ ...tv, text: 'ATTENTION', cls: 'attention', anchor: 'middle' });
+  const m = MACHINE_MONITOR;
+  out.push({ x: m.x, y: m.z + 0.75, text: 'CAPACITY', cls: '', anchor: 'middle' });
+  const { rail, vault, plinth } = PROOF_CORNER;
+  out.push({ x: FLOOR.minX + 0.7, y: rail.z + 0.2, text: 'PROOF', cls: 'proof', anchor: 'start' });
+  out.push({ x: vault.x + 0.9, y: vault.z + 0.2, text: 'ESCROW', cls: 'proof', anchor: 'start' });
+  out.push({ x: plinth.x + 1.05, y: plinth.z + 0.2, text: 'ERC-8004', cls: 'proof', anchor: 'start' });
+  return out;
+}
+
 /** The situation wall and its boards, the Proof corner, the Review bay, the Standby bench and the Deck lift. */
 function zones(): SVGElement {
   const g = el('g', { class: 'p-zones' });
   const label = (x: number, y: number, s: string, cls = '', anchor = 'middle') => text(x, y, `p-zone-t ${cls}`.trim(), s, { 'text-anchor': anchor });
-  // The situation wall: each panel a line along its face, its name on the table's side of it.
-  const facets: [{ x: number; z: number; rotY: number; width: number }, string, string][] = [
-    [BOARDS.issues, 'ISSUES', ''],
-    [BOARDS.queue, 'QUEUE', ''],
-    [TV, 'ATTENTION', 'attention'],
-    [BOARDS.pulls, 'PRS', ''],
-    [BOARDS.services, 'SERVICES', ''],
-  ];
-  for (const [b, name, cls] of facets) {
+  // The situation wall: a line along each panel's face. A wing's two panels hang one over the other,
+  // so in plan they share a line and their names stack behind it, the upper one further back.
+  const panels = [BOARDS.issues, BOARDS.pulls, TV];
+  for (const b of panels) {
     const tx = Math.cos(b.rotY);
     const tz = -Math.sin(b.rotY);
-    const nx = Math.sin(b.rotY);
-    const nz = Math.cos(b.rotY);
     const h = b.width / 2 - 0.1;
-    g.append(el('line', { x1: r(b.x - tx * h), y1: r(b.z - tz * h), x2: r(b.x + tx * h), y2: r(b.z + tz * h), class: `p-board ${cls}`.trim() }));
-    // Its name behind it, in the aisle between the wall and the deck's edge, running away from the
-    // table so it clears the line and the pods' letters.
-    const anchor = b.x < -1 ? 'end' : b.x > 1 ? 'start' : 'middle';
-    g.append(label(b.x - nx * 0.75, b.z - nz * 0.75 + 0.2, name, cls, anchor));
+    g.append(el('line', { x1: r(b.x - tx * h), y1: r(b.z - tz * h), x2: r(b.x + tx * h), y2: r(b.z + tz * h), class: b === TV ? 'p-board attention' : 'p-board' }));
   }
-  // The Proof corner on the west wall: the capacity panel, the violet rail, the vault and the plinth.
-  const m = MACHINE_MONITOR;
-  g.append(el('line', { x1: FLOOR.minX + 0.2, y1: m.z - m.width / 2, x2: FLOOR.minX + 0.2, y2: m.z + m.width / 2, class: 'p-board' }));
-  g.append(label(FLOOR.minX + 0.7, m.z + 0.2, 'CAPACITY', '', 'start'));
+  for (const l of planLabels()) g.append(label(l.x, l.y, l.text, l.cls, l.anchor));
+  // The Proof corner on the west wall: the violet rail, the vault and the plinth.
   const { rail, vault, plinth } = PROOF_CORNER;
   g.append(el('rect', { x: FLOOR.minX + 0.1, y: rail.z - 0.5, width: 0.3, height: 1, class: 'p-proof' }));
-  g.append(label(FLOOR.minX + 0.7, rail.z + 0.2, 'PROOF', 'proof', 'start'));
   g.append(el('rect', { x: vault.x - vault.depth / 2, y: vault.z - vault.width / 2, width: vault.depth, height: vault.width, class: 'p-proof-line' }));
-  g.append(label(vault.x + 0.9, vault.z + 0.2, 'ESCROW', 'proof', 'start'));
   for (let i = 0; i < plinth.steps; i++) {
     const w = plinth.width - i * 0.28;
     g.append(el('rect', { x: r(plinth.x - w / 2), y: r(plinth.z - w / 2), width: r(w), height: r(w), class: 'p-proof-line' }));
   }
-  g.append(label(plinth.x + 1.05, plinth.z + 0.2, 'ERC-8004', 'proof', 'start'));
   // The Review bay: smoked glass along its front (the door in it) and its side, and its table.
   const mr = MEETING_ROOM;
   const fz = mr.front.z;
