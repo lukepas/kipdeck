@@ -112,6 +112,14 @@ export function statusPhrase(att: Pick<Attention, 'level' | 'label'>, title?: st
   return own || name;
 }
 
+/**
+ * The inbox row's status, under a section heading that already names the level: what the ranking
+ * says when it adds something, else the level's plain words ("Needs an answer", "Stuck").
+ */
+export function rowStatus(att: Pick<Attention, 'level' | 'label'>, title?: string): string {
+  return statusDetail(att, title) || (att.level === 'needs-you' ? 'Needs an answer' : STATE_NAME[att.level]);
+}
+
 /** The one word a badge carries next to its glyph ("done", "crashed"); the detail goes in a tooltip. */
 export function stateWord(att: Pick<Attention, 'level' | 'label' | 'action'>): string {
   switch (att.level) {

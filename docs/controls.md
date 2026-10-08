@@ -2,6 +2,31 @@
 
 Back to the [README](../README.md).
 
+## The inbox
+
+The home page (`/`, [the inbox](inbox.md)) has six keys. None of them fire while you type in a box or a terminal, or while a window is open.
+
+| Key | Action |
+| --- | --- |
+| Ctrl + K (Cmd + K) | Find an agent by its task or name, or any command |
+| N | Deploy an agent |
+| Enter | The selected agent's next step (its row's button) |
+| Esc | Back to the list: from the pane's terminal, out of the search box, or off the selection; closes any window |
+| / | Search agents |
+| ? | Help: the loop, these keys and the docs |
+
+Up and Down (or j and k) move the selection. Everything else is a click or a tap: a row's one button, **Deploy agent**, and the avatar menu at the top right:
+
+- **Numbers**: human wait time, merges and the merge rate ([metrics](metrics.md)).
+- **Settings**: three panes. **Account** (who you're signed in as, your password, light or dark, teammates and anonymous usage numbers for admins), **Agents** (the default agent and model, how many run at once, what happens after a merge, where new projects are cloned, the prompts) and **Notifications** (desktop notifications, and the team's Slack or Discord channel).
+- **Bridge view** (with that lab on), **Help and keys** and **Sign out**. With the GitHub boards and queue lab on, Issues, Pull requests, the Task queue and Mission control come first. Labs is at the foot of Settings > Account, and in Ctrl+K.
+
+While you were away and light or dark are one Ctrl+K away. Every window has a close button at its top right, and Esc closes it too.
+
+## The Bridge view (Labs)
+
+The keys below are the Bridge view's (`/bridge`). Its Settings has the same three panes as the inbox's, then **Bridge** (lights, brightness, ship motion, quality, hands, life, moments and rituals), **Sound & voice**, and **Bounties** with Proof of Merge on; **Your operator** and **Camera view** are under Account there.
+
 | Key | Action |
 | --- | --- |
 | W A S D / arrows | Walk (hold Shift to run) |
@@ -62,7 +87,7 @@ With reduced motion, or Settings > Bridge > Ship motion at Off, the ring and the
 
 For a screen share, a projector or a recording, open the deck with `?demo=1`: bigger type and callouts, the needs-you toast kept up, and the Overview turning slowly round the mission table until you press a key, drag or scroll (see [the design system](design.md#demo-mode)).
 
-On a phone, use the 2D view at `/lite` instead: a terminal there has a row of keys under it (**1** **2** **3**, the arrows, Enter, Tab, Esc, Ctrl+C) and a box to send a prompt. See [Features](features.md).
+On a phone, use the home page at `/`: tapping an agent opens it over the list, and its terminal has a row of keys under it (**1** **2** **3**, the arrows, Enter, Tab, Esc, Ctrl+C) and a reply box. See [the inbox](inbox.md).
 
 ## In a terminal
 

@@ -16,6 +16,8 @@
 .setting-head h4 { margin: 0; font-size: 14px; font-weight: 600; }
 .scope { margin-left: auto; padding: 0 6px; font: 500 10px/16px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; color: var(--muted); border: 1px solid var(--line-strong); border-radius: var(--radius-chip); cursor: default; }
 .scope.office { color: var(--text); }
+/* "Everyone" on every card said the same thing over and over: the pane's own line says it once. */
+.settings-pane .scope.office { display: none; }
 @media (max-width: 720px) {
   .settings-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
   .settings-nav { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line-strong); }

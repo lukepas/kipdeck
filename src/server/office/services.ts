@@ -15,6 +15,7 @@ import { LeaveOnMerge } from '../leave-on-merge.js';
 import { Bounties } from '../bounties.js';
 import { createChainServices } from './chain.js';
 import { Showcase } from '../showcase/service.js';
+import { DemoDirector } from '../demo/director.js';
 import type { ServiceInfo, ServicesState } from '../../shared/protocol.js';
 import type { BuildingServices, Ctx, LateServices } from './context.js';
 import type { Client } from './client.js';
@@ -154,5 +155,7 @@ export function createLateServices(ctx: Ctx): LateServices {
   );
   // The public showcase (/pom/): off until an admin turns it on in Settings.
   const showcase = new Showcase(ctx);
-  return { team, tailnet, services, upgrader, servicesState, bounties, showcase, ...createChainServices(ctx, bounties) };
+  // --demo: the scripted agents, and the read-only demo's reviewer (started with the clocks, timers.ts).
+  const demo = cfg.demo?.workspace ? new DemoDirector(ctx, cfg.demo.workspace, cfg.demo.readOnly) : undefined;
+  return { team, tailnet, services, upgrader, servicesState, bounties, showcase, ...(demo ? { demo } : {}), ...createChainServices(ctx, bounties) };
 }

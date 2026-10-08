@@ -1,0 +1,31 @@
+/* The Numbers window: four tiles (human wait time first), merges per day as bars, the merge rate by
+   agent and model with its N. Neutral ramp only; the lead tile gets weight, not color. */
+.modal.numbers { width: min(820px, 100%); max-height: calc(100vh - 32px); }
+.nb-body { display: flex; flex-direction: column; gap: 18px; overflow: auto; }
+.nb-intro, .nb-note { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.nb-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.nb-tile { display: flex; flex-direction: column; gap: 4px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-1); }
+.nb-tile.lead { border-color: var(--line-strong); background: var(--surface-2); }
+.nb-label { font-size: 12px; font-weight: 600; color: var(--muted); }
+.nb-value { font: 600 28px/1.15 var(--font-ui); letter-spacing: -.01em; color: var(--text); font-variant-numeric: tabular-nums; }
+.nb-sub { font-size: 12px; line-height: 1.4; color: var(--muted); }
+.nb-chart h3, .nb-rates h3 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
+.nb-rates h3 small { font-weight: 400; color: var(--muted); }
+.nb-bars { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); align-items: end; gap: 6px; height: 120px; margin: 0; padding: 0 0 2px; list-style: none; border-bottom: 1px solid var(--line-strong); }
+.nb-bars li { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 3px; height: 100%; min-width: 0; }
+.nb-bar { width: 100%; max-width: 28px; min-height: 2px; border-radius: 3px 3px 0 0; background: var(--text); opacity: .78; }
+.nb-bar.zero { background: var(--line); opacity: 1; }
+.nb-n { font: 500 11px var(--font-mono); color: var(--muted); }
+.nb-day { position: relative; top: 18px; height: 0; font: 400 10px var(--font-mono); color: var(--faint, var(--muted)); }
+.nb-chart { padding-bottom: 22px; }
+.nb-rates table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.nb-rates th, .nb-rates td { padding: 7px 8px; border-bottom: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }
+.nb-rates th:first-child, .nb-rates td:first-child { text-align: left; }
+.nb-rates th { font-weight: 600; color: var(--muted); font-size: 12px; }
+.nb-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 12px 18px; border-top: 1px solid var(--line); }
+.nb-foot .btn { display: inline-flex; align-items: center; gap: 6px; }
+@media (max-width: 720px) {
+  .nb-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .nb-value { font-size: 22px; }
+  .nb-bars { gap: 3px; height: 96px; }
+}

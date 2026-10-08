@@ -7,7 +7,7 @@ import type { Route, RouteRequest } from '../router.js';
 import type { Ctx } from '../../office/context.js';
 
 /** One of the bundle's own pages, never cached, so a new version is picked up at once. */
-const page = (name: string) => (ctx: Ctx, r: RouteRequest) => serveFile(r.res, path.join(ctx.publicDir, name), false, csp(ctx, r));
+export const page = (name: string) => (ctx: Ctx, r: RouteRequest) => serveFile(r.res, path.join(ctx.publicDir, name), false, csp(ctx, r));
 /** The policy for a page, with the office's socket at the host the browser reached it by. */
 const csp = (ctx: Ctx, { req }: RouteRequest) => contentSecurityPolicy(ctx.hosts.requestHost(req));
 
@@ -26,9 +26,12 @@ export const pageRoutes = {
   claim: { path: ['/claim', '/claim.html'], auth: 'public', handle: page('claim.html') },
   join: { path: ['/join', '/join.html'], auth: 'public', handle: page('join.html') },
   favicon: { path: '/favicon.svg', auth: 'public', handle: page('favicon.svg') },
-  office: { path: ['/', '/index.html'], auth: 'session', handle: page('index.html') },
-  // The 2D view: the workers, their terminals and the boards, without the 3D office (lite.ts).
-  lite: { path: ['/lite', '/lite.html'], auth: 'session', handle: page('lite.html') },
+  // The home page: the inbox of every agent, ranked by what needs you, without the 3D (lite.ts).
+  home: { path: ['/', '/index.html'], auth: 'session', handle: page('index.html') },
+  // The 3D bridge (main.ts), a view of its own: the home page never loads it.
+  bridge: { path: ['/bridge', '/bridge.html'], auth: 'session', handle: page('bridge.html') },
+  // Where the 2D view used to be: it is the home page now. Old links and bookmarks land there.
+  lite: { path: ['/lite', '/lite.html'], auth: 'session', handle: (_ctx, { res, url }) => void res.writeHead(302, { location: `/${url.search}` }).end() },
   /** Anything else in the bundle; last, since it answers every path. */
   bundle: {
     prefix: '/',

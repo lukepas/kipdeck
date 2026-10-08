@@ -1,0 +1,200 @@
+/* Sections 01 to 04: the hero, the funnel, the problem and the loop. */
+
+/* ---------- 01 Hero ---------- */
+.hero { padding-top: clamp(104px, 15vh, 148px); padding-bottom: clamp(72px, 10vh, 120px); overflow: clip; }
+.field { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+.hero-glow { transition: opacity 900ms var(--ease-out); position: absolute; z-index: 0; right: -10%; top: 30%; width: 900px; height: 900px; max-width: 120vw; border-radius: 50%; background: radial-gradient(closest-side, var(--glow-signal), transparent); pointer-events: none; }
+.hero-grid { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); column-gap: clamp(32px, 5vw, 80px); align-items: start; }
+.hero-copy { display: contents; }
+.hero-copy > * { grid-column: 1; }
+.hero-copy > .label, .hero-copy > h1 { grid-column: 1 / -1; }
+.hero .app.mini { grid-column: 2; grid-row: 3 / span 7; align-self: start; margin-top: 6px; }
+.hero-h { font-size: clamp(46px, 8vw, 128px); margin: 0 0 clamp(28px, 4vh, 44px); }
+.hero-h .w { display: inline-block; transform-origin: 0 80%; }
+/* Each word sits in a box sized by an invisible copy at its final width, so the inhale on the width
+   axis (narrow to wide) never moves the words around it. */
+.hero-h .w[data-t] { display: inline-grid; }
+.hero-h .w[data-t]::before { content: attr(data-t); grid-area: 1 / 1; visibility: hidden; }
+.hero-h .w[data-t] > span { grid-area: 1 / 1; }
+.hero-br { display: none; }
+@media (min-width: 900px) { .hero-br { display: inline; } }
+.waiting-box { position: relative; display: inline-block; white-space: nowrap; contain: layout style; }
+.waiting-box::before { content: 'waiting'; visibility: hidden; font-stretch: 125%; }
+.waiting { position: absolute; left: 0; top: 0; color: var(--signal); font-stretch: var(--ws, 118%); }
+/* The stopwatch sits on the cap line over the w, where no letter of the line above reaches down. */
+.stopwatch { position: absolute; left: .03em; top: .06em; z-index: 1; padding: .12em .34em; font-size: max(11px, .12em); background: var(--void); font-weight: 500; letter-spacing: 0; line-height: 1.1; color: var(--signal); border: 1px solid color-mix(in srgb, var(--signal) 45%, transparent); border-radius: 3px; }
+.stopwatch { --odo-c: var(--signal); transition: border-color 300ms var(--ease), color 300ms var(--ease); }
+/* On a phone the word sits at the end of its line, so the stopwatch moves beside it, clear of the g. */
+@media (max-width: 720px) { .stopwatch { left: calc(100% + .08em); top: .34em; } }
+.stopwatch.idle { --odo-c: var(--muted); color: var(--muted); border-color: var(--line-strong); }
+.stopwatch.flash { background: var(--signal); color: var(--on-signal); --odo-c: var(--on-signal); }
+.hero .lede { margin-bottom: 26px; color: var(--muted); }
+
+.cmd { position: relative; display: flex; align-items: center; gap: 10px; max-width: 620px; min-height: 52px; padding: 6px 6px 6px 16px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--code-bg); color: var(--term-text); }
+.cmd-prompt { color: #5f6c7a; font-family: var(--font-mono); }
+.cmd-text { flex: 1; min-width: 0; padding: 6px 0; font-size: 13px; line-height: 1.55; white-space: normal; overflow-wrap: anywhere; color: #e8ecef; }
+.cmd-text::-webkit-scrollbar { display: none; }
+.copy { flex: none; height: 38px; min-width: 88px; padding: 0 14px; text-align: center; border: 1px solid #3a4756; border-radius: 3px; background: #141b23; color: #e8ecef; font: 500 13px/1 var(--font-ui); cursor: pointer; transition: border-color var(--t-ui) var(--ease), background-color var(--t-ui) var(--ease); }
+.copy:hover { border-color: #8a97a5; }
+/* min-width holds the button at its widest label (Select it), so Copy turning into Copied never rewraps the command. */
+.copy.done { border-color: var(--settled); color: #3ddc97; }
+.unpublished { margin: 10px 0 0; font-size: 12.5px; }
+.unpublished a { color: var(--text); }
+.cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 26px; }
+.magnetic { will-change: transform; }
+.magnetic .glyph { width: 11px; height: 11px; }
+/* The hero's command is the demo's: Try the demo copies it and lights its frame once. */
+.try { max-width: 620px; }
+.try .cmd { transition: border-color 300ms var(--ease); }
+.try.lit .cmd:not([hidden]) { animation: cmd-lit 1400ms var(--ease-out); }
+@keyframes cmd-lit { 0% { border-color: var(--signal); box-shadow: 0 0 0 4px color-mix(in srgb, var(--signal) 28%, transparent); } 100% { box-shadow: 0 0 0 0 transparent; } }
+.demo-note { margin: 10px 0 0; font-size: 13.5px; color: var(--text); }
+.facts { display: flex; flex-wrap: wrap; gap: 14px 34px; margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
+.facts li { display: flex; flex-direction: column; gap: 2px; }
+.facts b { font-size: 24px; font-weight: 500; color: var(--text); letter-spacing: -.02em; }
+.facts .tag-inline { margin: 4px 0 0; align-self: flex-start; }
+
+.app.mini { max-width: 680px; width: 100%; }
+.app.mini .app-list { padding-bottom: 44px; }
+.app.mini .row-btn { margin-left: 4px; }
+
+/* The mini inbox's moving parts: a status glyph per row (the asking row's morphs between the
+   working bar and the needs-you diamond, and collapses to a check when answered), the needs
+   section that empties, and the row that lifts while it climbs. */
+.row .st { flex: none; width: 10px; height: 10px; margin-right: -4px; }
+svg.st { overflow: visible; }
+.st-shape { fill: var(--signal); transform-box: view-box; transform-origin: 12px 12px; transition: fill 320ms var(--ease), transform 300ms var(--ease-spring); }
+.row.working .st-shape { fill: var(--working); }
+.st-check { fill: none; stroke: var(--settled); stroke-width: 3; stroke-linecap: square; stroke-dasharray: 24; stroke-dashoffset: 24; transition: stroke-dashoffset 380ms var(--ease-out) 120ms; }
+.row.checked .st-shape { transform: scale(0); }
+.row.checked .st-check { stroke-dashoffset: 0; }
+.row.working .row-btn, .row.working .waitbar, .row.working [data-row-wait] { visibility: hidden; }
+.row.working .sign { color: var(--muted); }
+.app.mini .row[data-clear] { z-index: 2; }
+.row.lift { box-shadow: 0 18px 40px -16px rgba(0, 0, 0, .55), 0 0 0 1px color-mix(in srgb, var(--signal) 40%, transparent); }
+.row.ghost-hover { background: color-mix(in srgb, var(--surface-3) 70%, var(--tint-signal)); }
+.row.ghost-hover .row-btn { background: var(--signal); color: var(--on-signal); }
+.app-list .sec-needs { transition: opacity 420ms var(--ease), transform 520ms var(--ease-out); }
+.app-list.none-waiting .sec-needs { opacity: 0; transform: translateY(-8px); }
+/* Text in the asking row changes as it asks and is answered; fixed boxes keep every edge still. */
+.app.mini .row-sub { min-height: 1lh; }
+.app.mini .row-age { min-width: 13ch; text-align: right; --odo-c: var(--muted); }
+.app.mini .row.needs .row-age { --odo-c: var(--signal); }
+.app.mini .row.cleared .row-age { --odo-c: var(--review); }
+.app.mini .row-btn { min-width: 92px; justify-content: center; }
+/* The caret while a question types in: the line hugs its text and the caret is its background. */
+.row-sub.typing { align-self: flex-start; max-width: 100%; padding-right: .6em; background: linear-gradient(var(--signal), var(--signal)) right 1px center / .5em 1.05em no-repeat; animation: caret 900ms steps(1) infinite; }
+.row.burst::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(90% 160% at 92% 50%, color-mix(in srgb, var(--settled) 34%, transparent), transparent 70%);
+  transform-origin: 92% 50%; animation: burst 900ms var(--ease-out) both;
+}
+
+/* The ghost cursor that answers once, after six idle seconds. */
+.ghost-cursor { position: fixed; left: 0; top: 0; z-index: 70; pointer-events: none; opacity: 0; transition: opacity 320ms var(--ease); will-change: transform; }
+.ghost-cursor.in { opacity: 1; }
+.ghost-cursor svg { display: block; margin: -3px 0 0 -5px; fill: #f4f6f8; stroke: #0b0b0c; stroke-width: 1.3; stroke-linejoin: round; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .45)); transform-origin: 5px 3px; transition: transform 140ms var(--ease); }
+.ghost-cursor.press svg { transform: scale(.84); }
+.ghost-cursor i { position: absolute; left: -18px; top: -18px; width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--signal); opacity: 0; }
+.ghost-cursor.press i { animation: ghost-ring 640ms var(--ease-out) both; }
+.ghost-cursor.touch svg { display: none; }
+.ghost-cursor.touch::before { content: ''; position: absolute; left: -16px; top: -16px; width: 32px; height: 32px; border-radius: 50%; background: rgba(244, 246, 248, .28); border: 1.5px solid rgba(244, 246, 248, .8); }
+
+/* Copying pings the button: the command left, and the agent got its answer. */
+.copy { position: relative; }
+.copy.ping::after { content: ''; position: absolute; inset: -1px; border-radius: inherit; border: 1px solid var(--settled); pointer-events: none; animation: ping 700ms var(--ease-out) both; }
+
+/* ---------- 02 Funnel ---------- */
+.funnel h2.display { font-size: clamp(34px, 4vw, 60px); line-height: .98; }
+.funnel .beat { display: block; }
+.funnel .beat.sig { color: var(--signal); }
+.vendors { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; font-size: 13px; }
+.vendors li { display: inline-flex; align-items: center; gap: 8px; padding: 5px 10px 5px 5px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-1); }
+.vendors .sign { width: 28px; height: 22px; font-size: 10.5px; }
+.vendors em { font-style: normal; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border: 1px solid var(--line-strong); padding: 0 4px; border-radius: 2px; }
+.app.ranked .ranked-list { padding: 4px 18px 46px; }
+
+/* ---------- 03 Problem ---------- */
+.problem { overflow: clip; }
+.problem h2.display { max-width: none; }
+.clock-span { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: clamp(12px, 2vw, 28px); margin: clamp(32px, 6vh, 64px) 0 0; }
+.clock-span .ts { font-size: clamp(28px, 4.4vw, 64px); font-weight: 500; letter-spacing: -.03em; line-height: 1; }
+.span-bar { position: relative; height: 14px; border-radius: 2px; background: var(--surface-2); }
+.span-bar i { position: absolute; inset: 0; border-radius: 2px; background: linear-gradient(90deg, var(--working), var(--signal) 70%); opacity: .95; }
+.span-bar b { position: absolute; left: 0; top: calc(100% + 10px); font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.huge { margin: clamp(28px, 6vh, 72px) 0 clamp(24px, 5vh, 56px); font-size: clamp(120px, 23vw, 340px); line-height: .8; letter-spacing: -.05em; color: var(--muted); max-width: none; }
+.huge span { color: var(--signal); }
+.problem-lede { margin: 0; max-width: 62ch; color: var(--muted); }
+.problem .lanes { max-width: 860px; margin-top: clamp(28px, 5vh, 56px); }
+.lane-total { fill: none; stroke: var(--signal); stroke-width: 6; }
+.lanes svg { width: 100%; height: auto; overflow: visible; }
+.lane-grid path { stroke: var(--line); stroke-width: 1; fill: none; }
+.lane-labels text, .lane-hours text { fill: var(--muted); font-size: 11px; }
+.lane-hours text { text-anchor: middle; }
+.lane-work path { stroke: var(--working); stroke-opacity: .35; stroke-width: 6; fill: none; }
+.lane-wait path { stroke: var(--signal); stroke-width: 6; fill: none; }
+.lane-asks path { fill: var(--signal); stroke: var(--void); stroke-width: 2; }
+.lanes figcaption { display: flex; align-items: baseline; gap: 8px; margin-top: 14px; font-size: 14px; color: var(--muted); }
+.lanes figcaption b { font-size: 28px; font-weight: 500; letter-spacing: -.02em; }
+
+/* ---------- 04 Loop ---------- */
+.loop-stage { display: grid; grid-template-columns: minmax(220px, 3fr) minmax(0, 9fr); gap: clamp(28px, 4vw, 64px); margin-top: clamp(28px, 5vh, 56px); align-items: start; }
+.beats { display: flex; flex-direction: column; gap: 0; border-left: 1px solid var(--line); position: sticky; top: 96px; }
+.beat-item { position: relative; padding: 14px 0 18px 22px; }
+.beat-item::before { content: ''; position: absolute; left: -4px; top: 21px; width: 7px; height: 7px; background: var(--line-strong); transform: rotate(45deg); }
+.beat-item:last-child::before { background: var(--proof); }
+.beat-item:first-child::before { background: var(--signal); }
+.beat-n { font-size: 11px; color: var(--muted); }
+.beat-item h3 { margin: 2px 0 6px; font-size: 22px; }
+.beat-item p { margin: 0; font-size: 15px; color: var(--muted); line-height: 1.5; }
+.loop-app { position: relative; }
+.stamp {
+  position: absolute; z-index: 5; right: -18px; bottom: 34px; margin: 0; padding: 6px 18px 4px;
+  font-family: var(--font-display); font-stretch: 125%; font-weight: 800; font-size: clamp(30px, 3.6vw, 52px); letter-spacing: .08em; line-height: 1;
+  color: var(--stamp-ink); background: var(--stamp-paper); border: 3px solid var(--stamp-ink); outline: 2px solid var(--stamp-paper); transform: rotate(-7deg);
+  box-shadow: 0 20px 40px -18px rgb(0 0 0 / .6);
+}
+.merge-btn { box-shadow: 0 0 0 4px var(--tint-signal); }
+
+@media (max-width: 1080px) {
+  .loop-stage { grid-template-columns: minmax(0, 1fr); }
+  .beats { position: static; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-left: 0; gap: 4px 20px; }
+  .beat-item { padding-left: 18px; border-left: 1px solid var(--line); }
+}
+@media (max-width: 860px) {
+  .hero-grid { grid-template-columns: minmax(0, 1fr); }
+  .hero .app.mini { grid-column: 1; grid-row: auto; margin-top: 40px; }
+  .stamp { bottom: 60px; right: 8px; }
+  .diff-wrap { grid-template-columns: 1fr; }
+  .files { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+@media (max-width: 560px) {
+  .beats { grid-template-columns: minmax(0, 1fr); }
+  .app-pulse > span:nth-child(2) { display: none; }
+  .app.mini .row-btn { display: none; }
+  .pane-actions .btn:first-child { display: none; }
+  .clock-span { grid-template-columns: auto 1fr auto; }
+  .facts { gap: 14px 24px; }
+}
+@media (max-width: 860px) {
+  /* On a phone the two buttons come before the command, so Try the demo sits in the first screen. */
+  .hero-copy > .cta { order: 1; margin-top: 0; margin-bottom: 22px; }
+  .hero-copy > .try { order: 2; }
+  .hero-copy > .facts { order: 3; }
+  .hero .app.mini { order: 4; }
+}
+@media (max-width: 520px) {
+  .hero { padding-top: 92px; }
+  .hero .lede { font-size: 17px; }
+  .cmd-text { font-size: 12px; }
+  .cta .btn { flex: 1 1 auto; }
+  .facts { margin-top: 26px; }
+  .facts li { flex: 1 1 40%; }
+}
+@media (max-width: 560px) {
+  .beats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 14px; }
+  .beat-item { padding: 10px 0 12px 14px; }
+  .beat-item h3 { font-size: 18px; }
+  .beat-item p { font-size: 13.5px; }
+  .beat-item::before { top: 17px; }
+}

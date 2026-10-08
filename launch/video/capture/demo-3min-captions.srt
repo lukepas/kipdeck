@@ -1,6 +1,6 @@
 1
 00:00:07,050 --> 00:00:10,001
-This is UGC Army, a fork of agent-office.
+This is Kipdeck, a fork of agent-office.
 
 2
 00:00:10,251 --> 00:00:13,264

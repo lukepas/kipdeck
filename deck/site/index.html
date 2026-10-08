@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{name}} investor deck</title>
+<meta name="description" content="{{name}}: one inbox for every coding agent you run. Pre-seed, USD 100k at a USD 1M post-money cap.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0A0F1C">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230A0F1C'/%3E%3Cpath d='M8 17l8-7 8 7M8 24l8-7 8 7' fill='none' stroke='%23F4F6FA' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="preload" href="fonts/space-grotesk-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/jetbrains-mono-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="deck.css">
+<link rel="stylesheet" href="kip.css">
+<script src="config.js"></script>
+<script>
+  /* Theme and mode are decided before first paint so nothing flashes. */
+  (function () {
+    var q = new URLSearchParams(location.search);
+    if (q.get('theme')) document.documentElement.setAttribute('data-theme', q.get('theme'));
+  })();
+</script>
+</head>
+<body>
+<div class="progress" aria-hidden="true"><i></i></div>
+<div class="viewport" id="viewport">
+<main class="stage" id="stage" aria-live="polite">
+
+<!-- ============ 01 TITLE ============ -->
+<section class="slide" id="s1" data-title="Your agents are waiting on you">
+  <div class="grid12 layout">
+    <div class="s-1-5 col">
+      <div class="wordmark" data-a="wm">
+        <svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 16l9-8 9 8M7 25l9-8 9 8" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>{{name}}</span>
+      </div>
+      <h1 class="t-h1" data-a="h">Your agents are waiting on&nbsp;<span class="c-pink">you.</span></h1>
+      <p class="sub" data-a="sub">One inbox for every coding&nbsp;agent&nbsp;you&nbsp;run.</p>
+      <div class="meta" data-a="meta">
+        <span class="pill outline">Pre-seed</span><span class="pill outline">USD 100k SAFE, USD 1M post</span><span class="pill outline">Vilnius</span>
+      </div>
+    </div>
+    <div class="s-6-12">
+      <div class="q" data-a="panel">
+        <div class="q-head" data-a="qhead">
+          <span class="t-label"><span class="c-pink">&#9670;</span>&nbsp; Needs you <b class="t-num" style="color:var(--text)">8</b></span>
+          <span class="t-label faint">Illustration, ranked by wait</span>
+        </div>
+        <div class="q-list" data-a="list"></div>
+        <div class="term" data-a="term">$ <span class="cursor"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="founders" data-a="founders">Žygimantas Bagdzevičius<i>/</i>Lukas Kveraga<i>/</i>Ernestas Rimkevičius</div>
+  <div class="src src-quiet"><span>Agent CLIs: src/shared/providers.ts</span></div>
+  <aside class="notes">Engineers now run several coding agents at once: 70% of 906 surveyed engineers use two to four AI coding tools. The bottleneck is not the agents. It is how long they sit waiting on you. We are {{name}}: one inbox for every coding agent you run. Three engineers, Vilnius, raising USD 100k pre-seed.</aside>
+</section>
+
+<!-- ============ 02 PROBLEM ============ -->
+<section class="slide" id="s2" data-title="Agents got fast, review didn't">
+  <div class="grid12">
+    <div class="s-1-8">
+      <div class="t-label kicker c-pink" data-a="k">The problem</div>
+      <p class="quote" data-a="quote">An agent that asks a question at 10:02 and is answered at 10:25 <em>did nothing for 23&nbsp;minutes.</em></p>
+      <p class="t-label faint" style="margin-top:16px" data-a="qnote">Illustration of one wait. No tool measures this across vendors today.</p>
+    </div>
+    <div class="s-9-12 row" style="align-items:center; gap:28px; justify-content:flex-end">
+      <svg class="clock" viewBox="0 0 300 380" data-a="clock" aria-label="Clock from 10:02 to 10:25">
+        <circle cx="150" cy="150" r="140" fill="var(--surface)" stroke="var(--line-2)" stroke-width="2"/>
+        <g data-a="ticks"></g>
+        <path data-a="arc" d="" fill="var(--pink-a)" stroke="none"/>
+        <line data-a="hh" x1="150" y1="150" x2="150" y2="82" stroke="var(--muted)" stroke-width="8" stroke-linecap="round"/>
+        <line data-a="mh" x1="150" y1="150" x2="150" y2="34" stroke="var(--pink)" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="150" cy="150" r="9" fill="var(--text)"/>
+      </svg>
+    </div>
+  </div>
+  <div class="grid12" style="margin-top:40px">
+    <div class="s-1-7">
+      <div class="row" style="justify-content:space-between; align-items:baseline; margin-bottom:12px">
+        <div class="t-label">High-AI teams vs their own baseline</div>
+        <div class="t-label faint">Faros AI, 10,000+ devs, 1,255 teams</div>
+      </div>
+      <svg class="chart" viewBox="0 0 900 300" data-a="faros" style="width:100%">
+        <defs><pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="10" fill="var(--pink-a)"/><line x1="0" y1="0" x2="0" y2="10" stroke="var(--pink)" stroke-width="3" opacity=".45"/></pattern></defs>
+        <line class="grid" x1="230" y1="0" x2="230" y2="270"/><line class="grid" x1="400" y1="0" x2="400" y2="270"/><line class="grid" x1="570" y1="0" x2="570" y2="270"/><line class="grid" x1="740" y1="0" x2="740" y2="270"/>
+        <text x="230" y="296" font-size="14">0</text><text x="392" y="296" font-size="14">+25%</text><text x="562" y="296" font-size="14">+50%</text><text x="732" y="296" font-size="14">+75%</text>
+        <text x="0" y="52" font-size="20" style="fill:var(--text)">PRs merged</text>
+        <text x="0" y="142" font-size="20" style="fill:var(--text)">PR review time</text>
+        <text x="0" y="232" font-size="20" style="fill:var(--text)">Tasks completed</text>
+        <rect data-a="b1" x="230" y="22" height="46" width="666.4" rx="6" fill="var(--green)"/>
+        <rect data-a="b2" x="230" y="112" height="46" width="618.8" rx="6" fill="var(--amber)"/>
+        <rect data-a="b3" x="230" y="202" height="46" width="142.8" rx="6" fill="var(--cyan)"/>
+        <rect data-a="gap" x="372.8" y="202" height="46" width="523.6" fill="url(#hatch)"/>
+        <text data-a="v1" x="884" y="54" font-size="24" text-anchor="end" style="fill:#0A0F1C;font-weight:700">+98%</text>
+        <text data-a="v2" x="836" y="144" font-size="24" text-anchor="end" style="fill:#0A0F1C;font-weight:700">+91%</text>
+        <text data-a="v3" x="364" y="234" font-size="24" text-anchor="end" style="fill:#0A0F1C;font-weight:700">+21%</text>
+        <g data-a="gapl"><rect x="440" y="208" width="388" height="34" rx="8" fill="#0A0F1C" stroke="var(--line-2)"/><text x="634" y="231" font-size="16" text-anchor="middle" style="fill:#F4F6FA;font-weight:700">OUR READING: THE GAP IS REVIEW AND WAIT</text></g>
+      </svg>
+    </div>
+    <div class="s-8-12 col tiles" style="gap:18px; justify-content:center">
+      <div class="card" data-a="t1" style="border-left:3px solid var(--pink)">
+        <p class="t-h4" style="margin-bottom:10px">The natural bottleneck on all of this is how fast I can review the results.</p>
+        <p class="t-label">Simon Willison, Oct 2025</p>
+      </div>
+      <p class="t-small" data-a="t2">More evidence (METR, Stack Overflow, DORA, Atlassian) is in the appendix.</p>
+    </div>
+  </div>
+  <div class="src"><span><a href="https://www.faros.ai/blog/ai-software-engineering">Faros AI 2025-07-23</a></span><span><a href="https://simonwillison.net/2025/Oct/5/parallel-coding-agents/">Willison 2025-10-05</a></span><span>The gap label is our reading; Faros does not attribute it to waiting</span></div>
+  <aside class="notes">AI made code cheap. The human in the loop is now the bottleneck, and no tool measures it across vendors. Faros measured 10,000 developers: high-AI teams merge 98% more PRs, review time goes up 91%, and tasks completed only 21%. Our reading of that gap: review and work waiting on a person. The 10:02 example is an illustration, not a measurement.</aside>
+</section>
+
+<!-- ============ 03 MULTI-TOOL ============ -->
+<section class="slide" id="s3" data-title="Worse with every tool">
+  <div class="grid12">
+    <div class="s-1-5 col">
+      <div class="t-label kicker c-pink" data-a="k">It gets worse with every tool</div>
+      <div class="t-hero" data-a="hero"><span data-a="n70">70</span>%</div>
+      <p class="t-h4" style="margin-top:18px" data-a="lead">of 906 surveyed engineers use <b>2-4 AI coding tools</b>. <span class="muted">15% use 5 or more (Pragmatic Engineer, 2026).</span></p>
+      <p class="t-h3" style="margin-top:44px" data-a="pain">Four tools, four queues. Nobody sees the whole queue.</p>
+    </div>
+    <div class="s-6-12">
+      <div class="wins" style="display:grid; grid-template-columns:1fr 1fr; gap:20px; position:relative" data-a="wins">
+        <div class="card win" data-w="0"><div class="wh">Claude Code<span class="badge" data-badge>0</span></div><ul></ul></div>
+        <div class="card win" data-w="1"><div class="wh">Codex<span class="badge" data-badge>0</span></div><ul></ul></div>
+        <div class="card win" data-w="2"><div class="wh">Cursor<span class="badge" data-badge>0</span></div><ul></ul></div>
+        <div class="card win" data-w="3"><div class="wh">OpenCode<span class="badge" data-badge>0</span></div><ul></ul><div class="wait" data-a="wait">00:00</div></div>
+        <div class="focus" data-a="focus"></div>
+      </div>
+      <p class="t-label faint" style="margin-top:12px" data-a="illus">Illustration: four agent tools, four separate queues</p>
+    </div>
+  </div>
+  <div class="grid12 ev" style="margin-top:34px">
+    <div class="s-1-4 card" data-a="e1"><p class="t-small"><strong>Claude Code's own docs</strong> now recommend running several sessions in parallel, each in its own git worktree.</p></div>
+    <div class="s-5-12" style="display:grid; grid-template-columns:1fr 1fr; gap:24px">
+      <div class="card" data-a="e2"><p class="t-small"><strong>Anthropic added weekly limits</strong> because some users ran Claude Code "24/7".</p></div>
+      <div class="card" data-a="e3"><p class="t-small"><strong>Cursor promised to "refund any unexpected charges"</strong> after its June 2025 pricing change.</p></div>
+    </div>
+  </div>
+  <div class="src"><span><a href="https://newsletter.pragmaticengineer.com/p/ai-tooling-2026">Pragmatic Engineer, 906 respondents, 2026-01-27 to 02-17</a></span><span><a href="https://code.claude.com/docs/en/best-practices">Claude Code best practices (fetched 2026-10-07)</a></span><span><a href="https://techcrunch.com/2025/07/28/anthropic-unveils-new-rate-limits-to-curb-claude-code-power-users/">TechCrunch 2025-07-28</a></span><span><a href="https://cursor.com/blog/june-2025-pricing">Cursor 2025-07-04</a></span></div>
+  <aside class="notes">Teams run several agent vendors in parallel. 70% of 906 surveyed engineers use two to four AI coding tools. Each vendor's dashboard only sees its own agents, so the question that waited longest sits in the window nobody looked at.</aside>
+</section>
+
+<!-- ============ 04 WHY NOW ============ -->
+<section class="slide" id="s4" data-title="Why now">
+  <div class="grid12">
+    <div class="s-1-5 col">
+      <div class="t-label kicker c-cyan" data-a="k">Why now</div>
+      <h2 class="t-h2" data-a="h">AI coding revenue went vertical.</h2>
+      <p class="t-body" style="margin-top:22px" data-a="p">Parallel sessions are now in the vendors' own docs, and most engineers mix 2-4 tools. On a team, nobody sees all the agents, so the wait grows with every one.</p>
+      <div class="col" style="gap:16px; margin-top:34px">
+        <div class="card fact" data-a="f1"><span class="t-h2 t-num">4%</span><span class="t-small">of public GitHub commits authored by Claude Code, an estimate (analysis cited by Anthropic, Feb 2026)</span></div>
+        <div class="card fact" data-a="f2"><span class="t-h2 t-num">2M+</span><span class="t-small">weekly Codex users, 5x since the start of 2026 (Reuters, Mar 2026)</span></div>
+      </div>
+    </div>
+    <div class="s-6-12">
+      <div class="row" style="justify-content:space-between; align-items:baseline">
+        <div class="t-label">Annualised run-rate revenue, USD billions, one scale</div>
+        <div class="t-label faint">latest figure per vendor, Feb-Sep 2026</div>
+      </div>
+      <svg class="chart" viewBox="0 0 980 540" data-a="rr" style="width:100%; margin-top:10px">
+        <g data-a="axis">
+          <line class="grid" x1="60" y1="480" x2="980" y2="480"/><line class="grid" x1="60" y1="404" x2="980" y2="404"/><line class="grid" x1="60" y1="328" x2="980" y2="328"/><line class="grid" x1="60" y1="252" x2="980" y2="252"/><line class="grid" x1="60" y1="176" x2="980" y2="176"/><line class="grid" x1="60" y1="100" x2="980" y2="100"/><line class="grid" x1="60" y1="24" x2="980" y2="24"/>
+          <text x="40" y="485" font-size="15" text-anchor="end">0</text><text x="40" y="409" font-size="15" text-anchor="end">1</text><text x="40" y="333" font-size="15" text-anchor="end">2</text><text x="40" y="257" font-size="15" text-anchor="end">3</text><text x="40" y="181" font-size="15" text-anchor="end">4</text><text x="40" y="105" font-size="15" text-anchor="end">5</text><text x="40" y="29" font-size="15" text-anchor="end">6</text>
+        </g>
+        <!-- 76 px per USD 1B -->
+        <rect data-a="r1" x="110" y="442" width="150" height="38" rx="4" fill="var(--cyan)" opacity=".55"/>
+        <rect data-a="r2" x="330" y="290" width="150" height="190" rx="4" fill="var(--cyan)"/>
+        <path data-a="ln" d="M262 438 L328 296" stroke="var(--text)" stroke-width="3" fill="none" stroke-dasharray="6 6"/>
+        <text data-a="l1" x="185" y="430" font-size="22" text-anchor="middle" style="fill:var(--text);font-weight:700">0.5</text>
+        <text data-a="l2" x="405" y="278" font-size="22" text-anchor="middle" style="fill:var(--text);font-weight:700">2.5</text>
+        <text data-a="x5" x="282" y="350" font-size="28" text-anchor="end" style="fill:var(--cyan);font-weight:700">5x</text>
+        <text x="185" y="508" font-size="15" text-anchor="middle">Claude Code</text><text x="185" y="526" font-size="13" text-anchor="middle" opacity=".7">Sep 2025</text>
+        <text x="405" y="508" font-size="15" text-anchor="middle">Claude Code</text><text x="405" y="526" font-size="13" text-anchor="middle" opacity=".7">Feb 2026</text>
+        <g data-a="stack">
+          <rect data-a="sk1" x="640" y="290" width="190" height="190" fill="var(--cyan)"/>
+          <rect data-a="sk2" x="640" y="138" width="190" height="152" fill="var(--cyan)" opacity=".7"/>
+          <rect data-a="sk3" x="640" y="62" width="190" height="76" fill="var(--cyan)" opacity=".45"/>
+          <text x="735" y="392" font-size="17" text-anchor="middle" style="fill:#0A0F1C;font-weight:700">Claude Code 2.5</text>
+          <text x="735" y="220" font-size="17" text-anchor="middle" style="fill:#0A0F1C;font-weight:700">Cursor ~2.0</text>
+          <text x="735" y="106" font-size="17" text-anchor="middle" style="fill:var(--text);font-weight:700">Cognition 1.0+</text>
+        </g>
+        <text data-a="tot" x="735" y="44" font-size="30" text-anchor="middle" style="fill:var(--text);font-weight:700">USD 5.5B+ a year</text>
+        <text x="735" y="508" font-size="15" text-anchor="middle">Three vendors, Feb-Sep 2026</text>
+        <text x="735" y="526" font-size="13" text-anchor="middle" opacity=".7">different dates, summed</text>
+      </svg>
+    </div>
+  </div>
+  <div class="tl" data-a="tl" style="margin-top:26px">
+    <div class="row" style="align-items:center; gap:20px">
+      <div class="t-label" style="width:240px" data-a="tll">Capital is moving in:<br><span class="c-cyan">three rounds in seven months</span></div>
+      <div class="row chips" style="gap:20px; flex:1">
+        <div class="chip" data-a="c1"><span class="t-label faint">Feb 2026</span><span class="t-h4">Entire <b class="t-num">USD 60M</b></span><span class="t-small">seed, agent history in git</span></div>
+        <div class="chip" data-a="c2"><span class="t-label faint">Mar 2026</span><span class="t-h4">Conductor <b class="t-num">USD 22M</b></span><span class="t-small">Series A, parallel agents per dev</span></div>
+        <div class="chip" data-a="c3"><span class="t-label faint">Sep 2026</span><span class="t-h4">Herdr <b class="t-num">USD 6M</b></span><span class="t-small">seed, open-source agent runtime</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="src"><span><a href="https://www.anthropic.com/news/anthropic-raises-series-f-at-usd183b-post-money-valuation">Anthropic 2025-09-02</a></span><span><a href="https://www.anthropic.com/news/anthropic-raises-30-billion-series-g-funding-380-billion-post-money-valuation">Anthropic 2026-02-12</a></span><span><a href="https://en.wikipedia.org/wiki/OpenAI_Codex">Codex (Reuters 2026-03-19, via Wikipedia)</a></span><span><a href="https://www.bloomberg.com/news/articles/2026-03-02/cursor-recurring-revenue-doubles-in-three-months-to-2-billion">Cursor ~2B: Bloomberg 2026-03-02, via Cursor blog</a></span><span><a href="https://cognition.com/blog/1b-run-rate">Cognition 2026-09-25</a></span><span><a href="https://entire.io/blog/hello-entire-world">Entire</a></span><span><a href="https://www.conductor.build/blog/series-a">Conductor</a></span><span><a href="https://herdr.dev/blog">Herdr</a></span></div>
+  <aside class="notes">Claude Code went from over USD 500M run-rate in September 2025 to over USD 2.5B in February 2026. Add the latest reported figures for Cursor and Cognition, from different months of 2026, and it sums to more than USD 5.5B a year. None of it buys a vendor-neutral way to manage them. Capital is already moving in: three rounds in seven months.</aside>
+</section>
+
+<!-- ============ 05 PRODUCT ============ -->
+<section class="slide" id="s5" data-title="One inbox, four moves">
+  <div class="grid12">
+    <div class="s-1-4 col">
+      <div class="t-label kicker c-green" data-a="k">The product</div>
+      <h2 class="t-h3" data-a="h" style="margin-bottom:22px">Every agent CLI you run in one ranked list. Oldest wait on top.</h2>
+      <div class="step" data-step="0"><span class="n">01</span><span class="v">Deploy</span><p class="t-small">One sheet starts an agent, each on its own branch.</p></div>
+      <div class="step" data-step="1"><span class="n">02</span><span class="v">Pinged</span><p class="t-small">Claude Code, Codex, Cursor, plus 5 CLIs in beta and custom ones.</p></div>
+      <div class="step" data-step="2"><span class="n">03</span><span class="v">Act</span><p class="t-small">The question in plain words, one reply box. Review is the diff beside the list.</p></div>
+      <div class="step" data-step="3"><span class="n">04</span><span class="v">Ship</span><p class="t-small">Merge through GitHub or locally. Every merge is a signed record.</p></div>
+    </div>
+    <div class="s-5-12">
+      <div class="shots">
+        <div class="frame laptop" data-a="laptop">
+          <div class="bar"><i></i><i></i><i></i><span>localhost &middot; {{name}}</span></div>
+          <div class="vp">
+            <img data-shot="0" src="media/deploy-desktop.webp" alt="Deploy sheet" loading="lazy">
+            <img data-shot="1" src="media/home-desktop.webp" alt="Inbox with an agent waiting" loading="lazy">
+            <img data-shot="2" src="media/answer-desktop.webp" alt="Question card" loading="lazy">
+            <img data-shot="3" src="media/merged-desktop.webp" alt="Merged, shipped today" loading="lazy">
+          </div>
+        </div>
+        <div class="sig" data-a="sig">signed: agent / model / reviewer / wait</div>
+        <div class="phone" data-a="phone"><div class="screen">
+          <img data-pshot="1" src="media/home-phone-asking.webp" alt="Phone inbox" loading="lazy">
+          <img data-pshot="2" src="media/question-phone.webp" alt="Phone question" loading="lazy">
+          <img data-pshot="3" src="media/merged-phone.webp" alt="Phone merged" loading="lazy">
+        </div></div>
+      </div>
+    </div>
+  </div>
+  <div class="src"><span>Real screens from the build, demo mode (scripted agents, no model runs)</span><span>docs/inbox.md "The loop"</span><span>src/shared/attention.ts, tests/inbox.test.ts</span></div>
+  <aside class="notes">Four moves. Deploy an agent. Get pinged when it needs you, ranked by how long it has waited. Act: the question in plain words, one box, or review the diff beside the list. Ship: merge through GitHub or locally, and every merge becomes a signed record. Same inbox on the phone.</aside>
+</section>
+
+<!-- ============ 06 DEMO ============ -->
+<section class="slide" id="s6" data-title="60-second demo">
+  <div class="grid12">
+    <div class="s-1-4 col">
+      <div class="t-label kicker c-green" data-a="k">60-second demo</div>
+      <h2 class="t-h2" data-a="h">Asked to merged, one&nbsp;pane.</h2>
+      <p class="t-small" data-a="lede" style="margin-top:28px">The real build in demo mode: scripted stand-in agents, so it runs the same every time. A recording with live Claude Code and Codex sessions is next.</p>
+      <div class="t-label" data-a="cta" style="margin-top:28px; line-height:1.9"><span data-cta class="c-green"></span><br><a class="faint" href="media/kipdeck-demo.gif" target="_blank" rel="noopener">30 s GIF for email</a></div>
+    </div>
+    <div class="s-5-12">
+      <div class="player" data-a="player">
+        <div class="frame">
+          <div class="bar"><i></i><i></i><i></i><span>npx {{cmd}} --demo</span></div>
+          <div class="vp">
+            <video data-a="video" muted playsinline preload="none" poster="media/demo-poster.jpg">
+              <source src="media/kipdeck-demo.mp4" type="video/mp4">
+              <a href="media/kipdeck-demo.gif">Watch the 30 s GIF</a>
+            </video>
+            <div class="tagd tag-demo">Demo data: scripted agents, no model runs</div>
+          </div>
+        </div>
+        <div class="track"><i data-a="bar"></i>
+          <div class="mk" data-mk="10" style="left:16.7%"><b></b><span>Deploy</span></div>
+          <div class="mk up" data-mk="14" style="left:23.3%"><b></b><span>Pinged</span></div>
+          <div class="mk" data-mk="20" style="left:33.3%"><b></b><span>Act</span></div>
+          <div class="mk" data-mk="34" style="left:56.7%"><b></b><span>Ship</span></div>
+        </div>
+        <p class="cap" data-a="cap" aria-live="off"></p>
+      </div>
+    </div>
+  </div>
+  <div class="src"><span>Recording: 60 s, silent, real build in demo mode</span><span>tests/demo.test.ts, tests/demo-e2e.test.ts</span></div>
+  <aside class="notes">Let it play. Codex is blocked, it jumps to the top and its question opens in plain words. One box to answer. Claude Code finished: three files, tests pass, the real diff beside the list. Merge, without GitHub if you want. Same inbox on the phone. Then the number we sell on: human wait time per agent and model. Be upfront: the agents here are scripted stand-ins.</aside>
+</section>
+
+<!-- ============ 07 HOW IT WORKS ============ -->
+<section class="slide" id="s7" data-title="How it works">
+  <div class="grid12">
+    <div class="s-1-8">
+      <div class="t-label kicker c-cyan" data-a="k">How it works</div>
+      <h2 class="t-h2" data-a="h">Self-hosted, vendor-neutral, one command.</h2>
+    </div>
+    <div class="s-9-12 col" style="justify-content:flex-end">
+      <p class="t-body" data-a="p">{{name}} itself is self-hosted: no {{name}} cloud, no account. Your agents still talk to their own model APIs.</p>
+    </div>
+  </div>
+  <svg class="pipe" viewBox="0 0 1680 520" data-a="pipe" style="margin-top:34px">
+    <g class="node" data-n="cli">
+      <rect x="0" y="20" width="250" height="470" rx="16"/>
+      <text class="t" x="24" y="62">Agent CLIs</text>
+      <text class="d" x="24" y="104" style="fill:var(--text)">Claude Code</text><text class="d" x="24" y="134" style="fill:var(--text)">Codex</text><text class="d" x="24" y="164" style="fill:var(--text)">Cursor</text>
+      <text class="d" x="24" y="210">OpenCode  (beta)</text><text class="d" x="24" y="240">Pi  (beta)</text><text class="d" x="24" y="270">Grok  (beta)</text><text class="d" x="24" y="300">Muse  (beta)</text><text class="d" x="24" y="330">DeepSeek Harness (beta)</text>
+      <text class="d" x="24" y="376">+ custom</text>
+      <text class="d" x="24" y="460" style="fill:var(--faint)">each on its own branch</text>
+    </g>
+    <path class="wire" d="M250 230 H1660"/>
+    <path class="wire" d="M1535 290 V380"/>
+    <path class="wire" d="M1290 425 H1125 V290" stroke-dasharray="5 6"/>
+    <text x="1135" y="448" font-size="13" style="font-family:var(--mono); fill:var(--faint)">wait data</text>
+    <path class="lit" data-a="lit" d="M250 230 H1535 V380"/>
+    <g data-a="packets"></g>
+    <g class="node" data-n="attach"><rect x="300" y="170" width="190" height="120" rx="14"/><text class="t" x="318" y="214">attach</text><text class="d" x="318" y="244">joins a running</text><text class="d" x="318" y="264">Claude Code, Codex</text></g>
+    <g class="node" data-n="read"><rect x="520" y="170" width="190" height="120" rx="14"/><text class="t" x="538" y="214">question reader</text><text class="d" x="538" y="244">parses the ask</text><text class="d" x="538" y="264">from any CLI</text></g>
+    <g class="node" data-n="rank"><rect x="740" y="170" width="190" height="120" rx="14"/><text class="t" x="758" y="214">ranking</text><text class="d" x="758" y="244">oldest wait first</text><text class="d" x="758" y="264">same on every screen</text></g>
+    <g class="node" data-n="inbox"><rect x="960" y="170" width="190" height="120" rx="14"/><text class="t" x="978" y="214">inbox</text><text class="d" x="978" y="244">answer, review</text><text class="d" x="978" y="264">desktop and phone</text></g>
+    <g class="node" data-n="merge"><rect x="1180" y="170" width="190" height="120" rx="14"/><text class="t" x="1198" y="214">merge</text><text class="d" x="1198" y="244">GitHub or local;</text><text class="d" x="1198" y="264">refuses unsafe ones</text></g>
+    <g class="node" data-n="log"><rect x="1410" y="170" width="250" height="120" rx="14"/><text class="t" x="1428" y="214">signed log</text><text class="d" x="1428" y="244">Ed25519, appended to</text><text class="d" x="1428" y="264">shipped.jsonl</text></g>
+    <g class="node" data-n="num"><rect x="1290" y="380" width="370" height="106" rx="14"/><text class="t" x="1308" y="418">Pulse and Numbers</text><text class="d" x="1308" y="446">median wait, merge rate</text><text class="d" x="1308" y="466">per agent and per model</text></g>
+    <text data-a="ask" x="615" y="150" font-size="15" text-anchor="middle" style="font-family:var(--mono); fill:var(--text)">? update the snapshot or fix the selector</text>
+    <text data-a="sigt" x="1535" y="150" font-size="15" text-anchor="middle" style="font-family:var(--mono); fill:var(--green)">sig 3f9a..c1e0 (illustrative)</text>
+  </svg>
+  <ol class="pipe-list">
+    <li><b>Agent CLIs</b>Claude Code, Codex, Cursor; OpenCode, Pi, Grok, Muse, DeepSeek Harness in beta; plus custom</li>
+    <li><b>attach</b>takes over a running Claude Code or Codex session</li>
+    <li><b>question reader</b>parses the ask from any CLI</li>
+    <li><b>ranking</b>oldest wait first, one order everywhere</li>
+    <li><b>inbox</b>answer and review, desktop and phone</li>
+    <li class="g"><b>merge</b>GitHub or local; refuses unsafe merges</li>
+    <li class="g"><b>signed log</b>Ed25519, appended to shipped.jsonl</li>
+    <li class="g"><b>Pulse and Numbers</b>median wait, merge rate per agent and per model</li>
+  </ol>
+  <div class="callouts" data-a="callouts" style="margin-top:16px">
+    <span class="pill outline" style="height:44px; font-size:16px; padding:0 18px" data-install>npx {{cmd}}: one command</span>
+    <span class="pill outline" style="height:44px; font-size:16px; padding:0 18px">No password on your own machine</span>
+    <span class="pill outline" style="height:44px; font-size:16px; padding:0 18px">No {{name}} cloud; agents use their own APIs</span>
+  </div>
+  <div class="src"><span>src/shared/question.ts</span><span>src/server/localmerge.ts</span><span>src/server/shiplog.ts</span><span>src/shared/metrics.ts</span><span>src/server/firstrun.ts</span><span>src/shared/providers.ts (8 CLIs + custom)</span></div>
+  <aside class="notes">One question travels the pipeline: parsed from whatever CLI asked it, ranked, answered in the inbox, merged locally or through GitHub, and signed into the log. The log feeds Pulse and Numbers: median wait, merge rate per agent and per model. {{name}} itself runs on the team's machine; the agents still call their own model APIs.</aside>
+</section>
+
+<!-- ============ 08 PROOF OF EXECUTION ============ -->
+<section class="slide" id="s8" data-title="Proof of execution">
+  <div class="grid12">
+    <div class="s-1-8">
+      <div class="t-label kicker c-green" data-a="k">Proof of execution</div>
+      <h2 class="t-h2" data-a="h">A working product, measured. No users yet.</h2>
+    </div>
+    <div class="s-9-12 col" style="justify-content:flex-end">
+      <p class="honest" data-a="honest">Next, before revenue: publish, launch, and sign 5 design-partner teams that run 5+ agents a day.</p>
+    </div>
+  </div>
+  <div class="grid12" style="margin-top:40px">
+    <div class="s-1-5 col">
+      <div class="t-label">Fresh start to first merged change</div>
+      <div class="watch" data-a="watch"><span data-a="sec">0.0</span><span class="faint" style="font-size:.5em">s</span></div>
+      <svg viewBox="0 0 520 70" data-a="clicks" style="width:100%; margin-top:6px">
+        <line x1="0" y1="30" x2="520" y2="30" stroke="var(--line-2)" stroke-width="2"/>
+        <g data-a="cdots"></g>
+      </svg>
+      <div class="t-label faint" style="margin-top:4px">4 clicks &middot; measured 2026-10-07, headless, stand-in agent, no model</div>
+    </div>
+    <div class="s-6-12 col" style="gap:18px">
+      <div class="tiles">
+        <div class="tile" data-a="tile"><span class="big"><span data-count="3.4" data-dec="1">3.4</span><small>s</small></span><p>to the first agent at work, 1 click</p></div>
+        <div class="tile" data-a="tile"><span class="big">1<small>command</small></span><p data-install-note>to install with npx</p></div>
+        <div class="tile" data-a="tile"><span class="big"><span data-count="1281">1,281</span></span><p>test cases on the product branch</p></div>
+        <div class="tile" data-a="tile"><span class="big"><span data-count="19">19</span></span><p>security audit findings fixed in our fork</p></div>
+      </div>
+      <div class="ba" data-a="ba">
+        <img loading="lazy" src="media/poc-vs-now.webp" alt="Before: the 3D proof of concept. After: the inbox" data-a="baimg" style="left:0">
+        <div class="scan" data-a="scan" style="left:50%"></div>
+      </div>
+      <div class="t-label faint">Before: the 3D proof of concept &rarr; after: the inbox, 8 days later</div>
+    </div>
+  </div>
+  <div class="src"><span>measure.json (2026-10-07)</span><span>Test count: it/test calls in tests/, product/fundable c8119c0, 2026-10-07</span><span>Audit: launch/report/comparison.md (2026-10-06)</span></div>
+  <aside class="notes">We have no users yet, and we say so once. What we have is a working product, measured: 10.7 seconds and four clicks from a fresh start to the first merged change, 3.4 seconds to the first agent at work. 1,281 test cases. 19 audit findings fixed in our fork. The install is one npx command; today it runs from a local tarball, and the npm publish is milestone one.</aside>
+</section>
+
+<!-- ============ 09 MARKET ============ -->
+<section class="slide" id="s9" data-title="Market, bottom-up">
+  <div class="grid12">
+    <div class="s-1-5 col">
+      <div class="t-label kicker c-cyan" data-a="k">Market, bottom-up</div>
+      <h2 class="t-h2" data-a="h">11.3M developers use agents.</h2>
+      <div class="math" style="margin-top:30px">
+        <div class="ln" data-a="ln"><span class="k">Professional developers<small>SlashData, early 2025</small></span><span class="v">36.5M</span></div>
+        <div class="ln" data-a="ln"><span class="k">x 31% actively use AI agents<small>Stack Overflow 2025 share; our estimate</small></span><span class="v">11.3M</span></div>
+        <div class="ln" data-a="ln"><span class="k">x USD 360 a seat a year = TAM<small>our team-tier price; at Conductor's USD 720: 8.1B</small></span><span class="v c-cyan">USD 4.1B</span></div>
+        <div class="ln" data-a="ln"><span class="k">Daily agent users, 14.1% = SAM<small>Stack Overflow 2025; 5.1M x USD 360</small></span><span class="v">USD 1.9B</span></div>
+        <div class="ln" data-a="ln"><span class="k">Year-5 path, our assumption<small>100k free installs x 2% become teams x 10 seats x USD 360</small></span><span class="v c-pink">USD 7.2M ARR</span></div>
+      </div>
+      <p class="t-small" data-a="budget" style="margin-top:22px">The budget already exists: USD 5.5B+ a year already goes to AI coding tools (slide 4).</p>
+    </div>
+    <div class="s-6-12" style="display:flex; justify-content:flex-end">
+      <canvas data-a="cv" width="860" height="700" aria-label="Each dot is 10,000 developers; nested squares to scale: TAM, SAM and the year-5 path"></canvas>
+    </div>
+  </div>
+  <div class="src"><span><a href="https://www.slashdata.co/post/global-developer-population-trends-2025-how-many-developers-are-there">SlashData 2025-05-02</a></span><span><a href="https://survey.stackoverflow.co/2025/ai">Stack Overflow 2025 AI</a></span><span><a href="https://www.conductor.build/pricing">Conductor pricing</a></span><span>Squares drawn to scale by area</span></div>
+  <aside class="notes">Bottom-up: 36.5 million professional developers; applying Stack Overflow's 31% agent-use share gives about 11.3 million, our estimate. At our own team price, USD 30 a seat a month, that is a USD 4.1 billion TAM; at Conductor's USD 60 it would be 8.1. Daily agent users give a USD 1.9 billion SAM. The year-5 path is an assumption we will test: 100k free installs, 2% turn into teams of ten, USD 7.2M ARR.</aside>
+</section>
+
+<!-- ============ 10 COMPETITION ============ -->
+<section class="slide" id="s10" data-title="Competition and our wedge">
+  <div class="grid12">
+    <div class="s-all">
+      <div class="t-label kicker c-cyan" data-a="k">Competition</div>
+      <h2 class="t-h2" data-a="h">Others see one vendor or one laptop. We are building the team's queue.</h2>
+    </div>
+  </div>
+  <div class="grid12" style="margin-top:28px">
+    <div class="s-1-6">
+      <svg class="quad" viewBox="0 0 816 580" data-a="quad" style="width:100%; height:560px">
+        <rect x="448" y="0" width="368" height="270" fill="var(--green-a)" data-a="tr" opacity="0"/>
+        <line class="axisl" x1="448" y1="0" x2="448" y2="540" stroke="var(--line-2)"/>
+        <line class="axisl" x1="40" y1="270" x2="816" y2="270" stroke="var(--line-2)"/>
+        <line class="axisl" x1="40" y1="540" x2="816" y2="540" stroke="var(--line-2)"/>
+        <line class="axisl" x1="40" y1="0" x2="40" y2="540" stroke="var(--line-2)"/>
+        <text x="40" y="566" font-size="14" fill="var(--faint)">SINGLE VENDOR</text><text x="816" y="566" font-size="14" fill="var(--faint)" text-anchor="end">VENDOR-NEUTRAL &rarr;</text>
+        <text transform="translate(22 540) rotate(-90)" font-size="14" fill="var(--faint)">SINGLE DEVELOPER</text><text transform="translate(22 0) rotate(-90)" font-size="14" fill="var(--faint)" text-anchor="end">TEAM &rarr;</text>
+        <g data-a="chips"></g>
+        <g data-a="hub"></g>
+      </svg>
+    </div>
+    <div class="s-7-12 col" style="gap:18px">
+      <div class="card ans" data-a="ans"><p class="t-label c-cyan">Vendor dashboards</p><p class="t-small">Claude Code's Agent view and Cursor's cloud agents each see their own agents. 70% of 906 surveyed engineers use 2-4 AI coding tools.</p></div>
+      <div class="card ans" data-a="ans"><p class="t-label c-cyan">Conductor (USD 22M), Herdr (USD 6M)</p><p class="t-small">Conductor sells a Teams plan but runs locally on a Mac, per developer. Herdr is an open-source runtime that shows each agent as working, blocked or idle, on one machine.</p></div>
+      <div class="card ans hot" data-a="ans"><p class="t-label c-pink">Why won't Herdr add a team tier next quarter?</p><p class="t-small">It might. Our bet is the one number nobody reports: human wait time per agent and model, across vendors. We already log it on every merge. The team tier (shared queue, routing) is not built yet; it is milestone M3.</p></div>
+    </div>
+  </div>
+  <div class="src"><span><a href="https://www.conductor.build/pricing">Conductor</a></span><span><a href="https://herdr.dev">Herdr</a></span><span><a href="https://entire.io/blog/hello-entire-world">Entire</a></span><span><a href="https://factory.com/news/series-b">Factory</a></span><span><a href="https://cognition.com/blog/series-e">Cognition</a></span><span><a href="https://code.claude.com/docs/en/best-practices">Claude Code docs</a></span><span><a href="https://newsletter.pragmaticengineer.com/p/ai-tooling-2026">Pragmatic Engineer 2026</a></span><span>Placement is our reading of public product pages</span><span>Tool-by-tool table: appendix</span></div>
+  <aside class="notes">Vendor dashboards see their own agents. Conductor sells a Teams plan but runs per developer on a Mac. Herdr shows agent status on one machine. Entire is history in git, not a live inbox. Cognition and Factory sell their own agents. Could Herdr add a team tier? Yes. Our answer is speed to design partners and the cross-vendor wait metric we already record. The team tier itself is milestone M3, not built yet.</aside>
+</section>
+
+<!-- ============ 11 MOAT ============ -->
+<section class="slide" id="s11" data-title="Moat">
+  <div class="grid12">
+    <div class="s-1-6 col">
+      <div class="t-label kicker c-green" data-a="k">Moat, as a plan</div>
+      <h2 class="t-h2" data-a="h" style="margin-bottom:26px">Distribution first. Then wait data no single vendor has.</h2>
+      <div class="pt" data-a="pt"><span class="n">01</span><div><h4>Open-source installs</h4><p class="t-small">Single-player is MIT-licensed and free; public release at M1.</p></div></div>
+      <div class="pt" data-a="pt"><span class="n">02</span><div><h4>Cross-vendor wait data</h4><p class="t-small">Every merge already records agent, model, reviewer and wait. As teams adopt, that becomes data no single vendor can collect.</p></div></div>
+      <div class="pt" data-a="pt"><span class="n">03</span><div><h4>Team upgrade</h4><p class="t-small">The second person who needs the queue turns a free install into a paid team.</p></div></div>
+    </div>
+    <div class="s-7-12 col">
+      <div class="row chainrow" data-a="chain" style="gap:12px 14px; margin-top:40px; flex-wrap:wrap"></div>
+      <div class="card" data-a="heatcard" style="margin-top:22px">
+        <div class="row" style="justify-content:space-between; margin-bottom:14px"><span class="t-label">Median wait on a person, by agent, week over week</span><span class="t-label c-amber">Illustration</span></div>
+        <div class="heat" data-a="heat"></div>
+      </div>
+      <div class="row" data-a="lock" style="margin-top:18px; align-items:center; gap:14px">
+        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--green)" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        <span class="t-small">Self-hosted: the record sits on the team's machine, not in a {{name}} cloud.</span>
+      </div>
+    </div>
+  </div>
+  <p class="t-small" data-a="fork" style="position:absolute; left:120px; right:120px; bottom:126px; border-left:2px solid var(--line-2); padding-left:18px"><strong>Built on webdevcody/agent-office (MIT), so anyone can fork us too.</strong> What we added in 8 days: the ranking, inbox, question card, signed log, wait metrics, local merge, onboarding, attach and demo. The code is not the moat; installs and the wait data are.</p>
+  <div class="src"><span>src/server/shiplog.ts</span><span>src/shared/metrics.ts</span><span>PRODUCT.md</span></div>
+  <aside class="notes">We do not claim a moat today. The plan: open-source installs first, then the cross-vendor wait data that builds as teams adopt, then the team upgrade. We are open about the base: an MIT fork, which anyone can fork in turn. The code is not the moat.</aside>
+</section>
+
+<!-- ============ 12 BUSINESS MODEL ============ -->
+<section class="slide" id="s12" data-title="Business model and go-to-market">
+  <div class="grid12">
+    <div class="s-1-8">
+      <div class="t-label kicker c-green" data-a="k">Business model</div>
+      <h2 class="t-h2" data-a="h">Free for one engineer. Teams pay.</h2>
+    </div>
+  </div>
+  <div class="tiers" style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:30px">
+    <div class="tier" data-a="tier"><span class="t-label">Single player</span><span class="price">Free<small> MIT</small></span><ul><li>Inbox, local merge, signed log, wait metrics</li><li>The distribution: one npx command, public at M1</li></ul></div>
+    <div class="tier team" data-a="tier"><span class="t-label">Team tier <span class="c-amber">(price is our assumption)</span><span class="tbadge" data-a="badge">FREE</span></span><span class="price">USD 30<small> /seat/mo</small></span><ul><li>Shared queue, routing to the owner, team wait-time reports</li><li>SSO, audit export. Not built yet: milestone M3</li></ul></div>
+  </div>
+  <div class="t-label" style="margin:34px 0 12px" data-a="gtml">Go-to-market</div>
+  <div class="funnel">
+    <div class="fstep" data-a="fs"><span class="t-label faint">01</span><h4>Launch</h4><p class="t-small">npm publish and Hacker News with the 60 s demo (M1).</p></div>
+    <div class="fstep" data-a="fs"><span class="t-label faint">02</span><h4>5 design partners</h4><p class="t-small">Founder-led, teams running 5+ agents a day; European and regulated first.</p></div>
+    <div class="fstep" data-a="fs"><span class="t-label faint">03</span><h4>Bottom-up</h4><p class="t-small">One engineer installs free; the team upgrades when a second person needs the queue.</p></div>
+    <div class="fstep" data-a="fs"><span class="t-label faint">04</span><h4>Team tier</h4><p class="t-small">Paid seats for design partners first, then self-serve.</p></div>
+  </div>
+  <p class="t-small" data-a="note12" style="margin-top:30px">No revenue yet. Paid design-partner pilots are possible (offer ready, none sold); that is design-partner revenue, not the business.</p>
+  <div class="src"><span>PRODUCT.md "Business model"</span><span>USD 30: our assumption, same as the market slide</span></div>
+  <aside class="notes">Free and open source for one engineer: that is the distribution. Teams pay for the shared queue, routing, SSO and audit, about USD 30 a seat a month, our assumption to test. Go-to-market: launch, five design partners, bottom-up upgrades, then the team tier. Pilots can bring early cash, but they are not the business.</aside>
+</section>
+
+<!-- ============ 13 TEAM ============ -->
+<section class="slide" id="s13" data-title="The team">
+  <div class="grid12">
+    <div class="s-1-8">
+      <div class="t-label kicker c-green" data-a="k">The team</div>
+      <h2 class="t-h2" data-a="h">Engineers who have built and scaled products before.</h2>
+    </div>
+  </div>
+  <div class="people">
+    <div class="person" data-a="card">
+      <div class="row" style="align-items:center; gap:22px"><img class="ph" loading="lazy" src="media/founder-zygimantas.jpg" alt="Žygimantas Bagdzevičius"><div><div class="t-h3">Žygimantas Bagdzevičius</div><div class="t-label" style="margin-top:8px">CEO / CTO &middot; <a href="https://www.linkedin.com/in/zygimantas-bagdzevicius/" target="_blank" rel="noopener">LinkedIn</a></div></div></div>
+      <div class="stat"><span data-count="400" data-suffix="k">400k</span> <span class="t-label">MAU, exited</span></div>
+      <blockquote>Ex-Amazon engineer. Founded and exited a Lithuanian business that scaled to 400k monthly active users. Built Motored's whole product before outside money.</blockquote>
+    </div>
+    <div class="person" data-a="card">
+      <div class="row" style="align-items:center; gap:22px"><img class="ph" loading="lazy" src="media/team-lukas.jpg" alt="Lukas Kveraga"><div><div class="t-h3">Lukas Kveraga</div><div class="t-label" style="margin-top:8px">Founding Engineer</div></div></div>
+      <div class="stat">Ex-Vinted</div>
+      <blockquote>Lithuania's marketplace unicorn. Hands-on experience scaling a high-traffic two-sided marketplace.</blockquote>
+    </div>
+    <div class="person" data-a="card">
+      <div class="row" style="align-items:center; gap:22px"><img class="ph" loading="lazy" src="media/team-ernestas.webp" alt="Ernestas Rimkevičius"><div><div class="t-h3">Ernestas Rimkevičius</div><div class="t-label" style="margin-top:8px">Software Engineer &middot; <a href="https://www.linkedin.com/in/urnestos/" target="_blank" rel="noopener">LinkedIn</a></div></div></div>
+      <div class="stat">Pipelines</div>
+      <blockquote>Backend, importer, listings pipeline and ops tooling (at Motored).</blockquote>
+    </div>
+  </div>
+  <div class="grid12" style="margin-top:30px; align-items:end">
+    <div class="s-1-7 col" data-a="why">
+      <div class="disclose"><p class="t-label c-amber" style="margin-bottom:8px">Disclosure and commitment</p><p class="t-small" data-commit></p><p class="t-small" style="margin-top:8px"><strong>Company:</strong> to be incorporated before close.</p></div>
+    </div>
+    <div class="s-8-12 col" style="align-items:flex-end">
+      <div class="t-label" style="margin-bottom:34px; text-align:right">Product-branch commits by the CEO/CTO with coding agents, 30 Sep - 7 Oct 2026</div>
+      <div class="commits" data-a="commits"></div>
+    </div>
+  </div>
+  <div class="src"><span><a href="https://motored-lt.vercel.app/data-room#team">motored-lt.vercel.app/data-room</a> (backgrounds and Motored roles)</span><span>git log product/fundable: 533 commits, all by the CEO/CTO, almost all co-authored with Claude</span></div>
+  <aside class="notes">Zygimantas: ex-Amazon, founded and exited a business at 400k monthly active users, built a charity project that grew to 540k registered users, and built Motored's entire product before any outside money. Lukas: ex-Vinted, scaling a high-traffic marketplace. Ernestas: backend, importer and pipelines at Motored. Say the Motored overlap plainly: all three work there today. The commit chart is the CEO/CTO working with coding agents, which is the workflow we sell into, not a claim of team velocity.</aside>
+</section>
+
+<!-- ============ 14 ASK ============ -->
+<section class="slide" id="s14" data-title="The ask">
+  <div class="grid12">
+    <div class="s-1-5 col">
+      <div class="t-label kicker c-green" data-a="k">The ask</div>
+      <div class="amt" data-a="amt"><small>USD</small><span class="amtw"><span data-a="amtn">100</span>k</span></div>
+      <p class="t-h4" style="margin-top:24px" data-a="terms">Post-money SAFE, USD 1M valuation cap: 10%.</p>
+      <p class="t-small" style="margin-top:8px" data-a="terms2">Company to be incorporated before close. About USD 11k a month: 9 months of runway.</p>
+      <div class="row" style="gap:30px; margin-top:34px; align-items:center">
+        <svg class="donut" viewBox="0 0 300 300" data-a="donut"></svg>
+        <div class="legend" data-a="legend">
+          <div><i style="background:var(--green)"></i><b>70k</b><span>founder time, ~9 months</span></div>
+          <div><i style="background:var(--cyan)"></i><b>10k</b><span>models, hosting, hosted demo</span></div>
+          <div><i style="background:var(--amber)"></i><b>10k</b><span>company, legal, trademark, IP</span></div>
+          <div><i style="background:var(--muted)"></i><b>10k</b><span>go-to-market, partner travel</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="s-6-12 col">
+      <div class="t-label" style="margin-top:8px">9 months to 5 design partners and the first paying teams</div>
+      <div class="ms" data-a="ms">
+        <div class="line"></div><div class="fill" data-a="fill"></div>
+        <div class="m" style="left:0"><b></b><h5>M1</h5><p>npm publish, public repo, hosted demo</p></div>
+        <div class="m" style="left:25%"><b></b><h5>M2</h5><p>5 design partners running 5+ agents a day</p></div>
+        <div class="m" style="left:50%"><b></b><h5>M3</h5><p>Paid team tier: shared queue, routing, SSO</p></div>
+        <div class="m" style="left:75%"><b></b><h5>M4</h5><p>First paying teams; week-4 team retention measured</p></div>
+      </div>
+      <div class="q" data-a="final" style="margin-top:20px">
+        <div class="q-head"><span class="t-label"><span class="c-green">&#10003;</span>&nbsp; Needs you <b class="t-num" style="color:var(--text)">0</b></span><span class="t-label c-green" data-a="nobody">Nobody waiting.</span></div>
+        <div class="q-list" data-a="flist" style="height:210px"></div>
+      </div>
+      <p class="t-h4 muted" style="margin-top:30px" data-a="close"><strong style="color:var(--text);font-weight:500">What this round proves: teams pay for one queue across vendors.</strong> That is the case for a seed round. The long-term aim is the first fifty teams.</p>
+      <p class="t-mono muted" style="margin-top:14px" data-a="contact"></p>
+    </div>
+  </div>
+  <div class="src"><span>Use of funds is a proposal</span><span>Runway: USD 100k over ~9 months</span><span>Name subject to a trademark search</span></div>
+  <aside class="notes">USD 100k on a post-money SAFE at a USD 1M valuation cap, 10%. The company is incorporated before close. About USD 11k a month buys nine months. 70% buys founder time. Milestones: npm launch, five design partners, the paid team tier, first paying teams with retention measured. What it proves: teams pay for one cross-vendor queue, which is the case for a seed round. The queue is clear. Nobody waiting.</aside>
+</section>
+
+<!-- ============ 15 APPENDIX ============ -->
+<section class="slide" id="s15" data-title="Appendix">
+  <div class="grid12">
+    <div class="s-1-8">
+      <div class="t-label kicker" data-a="k">Appendix</div>
+      <h2 class="t-h3" data-a="h">Tool by tool, and more evidence on the problem.</h2>
+    </div>
+  </div>
+  <div class="grid12" style="margin-top:28px">
+    <div class="s-1-8 col">
+      <table data-a="tbl">
+        <thead><tr><th>What you need</th><th>Vendor dashboard</th><th>Task board</th><th>GitHub PRs</th><th>Terminals, tmux</th><th class="us">{{name}}</th></tr></thead>
+        <tbody>
+          <tr><td>Every agent CLI in one list</td><td>Its own</td><td>If you file them</td><td>Once a PR exists</td><td>One pane at a time</td><td class="us">Ranked by wait</td></tr>
+          <tr><td>Knows an agent is blocked on you</td><td>Its own</td><td>No</td><td>No</td><td>If you look</td><td class="us">Top of the list</td></tr>
+          <tr><td>Answer in one box</td><td>In its app</td><td>No</td><td>No</td><td>Find the terminal</td><td class="us">Every CLI</td></tr>
+          <tr><td>Review and merge before a PR</td><td>No</td><td>No</td><td>No</td><td>By hand</td><td class="us">Or open one</td></tr>
+          <tr><td>Measures wait on a person</td><td>No</td><td>No</td><td>No</td><td>No</td><td class="us">Per agent, model</td></tr>
+          <tr><td>Self-hosted</td><td>Varies (local CLI or vendor cloud)</td><td>Depends</td><td>Their cloud</td><td>Yes</td><td class="us">Yes, MIT (public at M1)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="s-9-12 col ev15" style="gap:14px">
+      <div data-a="ev"><b>METR:</b> experienced devs were 19% slower with AI while believing they were 20% faster.</div>
+      <div data-a="ev"><b>Stack Overflow 2025:</b> 66% frustrated by "almost right" output; 3.1% highly trust AI.</div>
+      <div data-a="ev"><b>DORA 2025:</b> AI adoption has a negative relationship with delivery stability.</div>
+      <div data-a="ev"><b>Atlassian DevEx, 3,500 devs:</b> 50% lose 10+ hours a week to friction; 63% say leaders do not get it.</div>
+    </div>
+  </div>
+  <div class="src"><span><a href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/">METR 2025-07-10</a></span><span><a href="https://survey.stackoverflow.co/2025/ai">Stack Overflow 2025</a></span><span><a href="https://cloud.google.com/blog/products/ai-machine-learning/announcing-the-2025-dora-report">DORA 2025-09-24</a></span><span><a href="https://www.atlassian.com/blog/developer/developer-experience-report-2025">Atlassian 2025-07-09</a></span><span>Table: our reading of public product pages</span></div>
+  <aside class="notes">Backup for questions: the tool-by-tool comparison and the wider evidence on review and friction.</aside>
+</section>
+
+</main>
+</div>
+<button class="navbtn prev" aria-label="Previous slide">&larr;</button>
+<button class="navbtn next" aria-label="Next slide">&rarr;</button>
+<div class="hint">&larr; &rarr; to move &middot; S sources &middot; P presenter &middot; ? help</div>
+<div class="help" role="dialog" aria-modal="true" aria-label="Keyboard help">
+  <div class="card">
+    <button class="x" aria-label="Close">&#10005;</button>
+    <h2>Keys</h2>
+    <dl>
+      <dt>&rarr; Space</dt><dd>Next slide</dd>
+      <dt>&larr;</dt><dd>Previous slide</dd>
+      <dt>Home / End</dt><dd>First / last slide</dd>
+      <dt>R</dt><dd>Replay this slide's motion</dd>
+      <dt>S</dt><dd>Show or hide source captions</dd>
+      <dt>F</dt><dd>Full screen</dd>
+      <dt>P</dt><dd>Presenter window with notes and timer</dd>
+      <dt>B</dt><dd>Black screen</dd>
+      <dt>Ctrl/Cmd + P</dt><dd>Print or save as PDF, one slide per page</dd>
+    </dl>
+  </div>
+</div>
+<script src="vendor/gsap.min.js"></script>
+<script src="slides.js"></script>
+<script src="kip.js"></script>
+<script src="wow.js"></script>
+<script src="deck.js"></script>
+</body>
+</html>

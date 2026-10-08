@@ -1665,7 +1665,7 @@ test("a worker whose worktree was deleted outside the office waits, marked lost,
   assert.deepEqual(after.get(kept.id)?.lost, { branch: 'here' });
   assert.deepEqual(after.get(gone.id)?.lost, { branch: 'gone' });
   assert.equal(after.get(kept.id)?.status, 'offline');
-  assert.match(after.resume(kept.id) ?? '', /worktree .* was deleted outside UGC Army/);
+  assert.match(after.resume(kept.id) ?? '', /worktree .* was deleted outside Kipdeck/);
   assert.equal(launches(f).length, launched);
 
   // Put back on its own branch, work and all, and it carries on its conversation.

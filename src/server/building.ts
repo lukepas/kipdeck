@@ -1,11 +1,13 @@
-import { execFileSync, spawn } from 'node:child_process';
-import { accessSync, constants, existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
-import os from 'node:os';
+import { spawn } from 'node:child_process';
+import { existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { FLOOR_PALETTES, MAX_FLOORS, normalizeRepo, sameRepo } from '../shared/floors.js';
 import type { CloneProgress, ProjectsDirState, RepoChoice } from '../shared/protocol.js';
 import { CloneRun, dropLog, savedClone, whyCloneFailed, type CloneEnd, type CloneRunOptions } from './clone.js';
 import { gh } from './github.js';
+import { checkoutAt, originRepo, tildify, untildify, unwritable, within } from './checkouts.js';
+
+export { originRepo, tildify } from './checkouts.js';
 import { isSymlink, readStateJson, symlinkOnTheWay, writeState } from './safefs.js';
 
 /** A floor as floors.json keeps it. */
@@ -254,6 +256,28 @@ export class Building {
     return def;
   }
 
+  /**
+   * Adds a checkout that's already on this computer as a floor, where it is: the repository
+   * `kipdeck` was started in, or one `kipdeck attach` adopts a session from. Its floor is the one
+   * there already, if any. Returns the floor, or why it can't be one.
+   */
+  addFolder(dir: string, by: string): FloorDef | string {
+    const abs = path.resolve(dir);
+    const known = this.defs.find((d) => path.resolve(d.dir) === abs);
+    if (known) return known;
+    if (!existsSync(abs) || !statSync(abs).isDirectory()) return `${tildify(abs)} isn't a folder`;
+    if (this.defs.length + this.cloning.size >= MAX_FLOORS) return `The building is full (${MAX_FLOORS} floors)`;
+    const overlaps = this.defs.find((d) => within(abs, path.resolve(d.dir)) || within(path.resolve(d.dir), abs));
+    if (overlaps) return `${tildify(abs)} overlaps the ${overlaps.name} project's checkout (${tildify(overlaps.dir)})`;
+    const repo = originRepo(abs);
+    const same = repo && this.defs.find((d) => sameRepo(d.repo, repo));
+    if (same) return `${repo} is a project already, checked out at ${tildify(same.dir)}`;
+    const def = this.newDef(path.basename(abs), repo, abs, by);
+    this.defs.push(def);
+    this.save();
+    return def;
+  }
+
   /** The office keeps its own data in this floor's checkout. */
   isLocal(id: string): boolean {
     return id === this.localId;
@@ -484,67 +508,6 @@ export class Building {
     } catch (err) {
       console.error(`agent-office: couldn't save ${this.clonesFile}: ${(err as Error).message}`);
     }
-  }
-}
-
-/** A path under the home folder as ~/..., for showing people. */
-export function tildify(p: string): string {
-  const home = os.homedir();
-  return p === home || p.startsWith(home + path.sep) ? `~${p.slice(home.length)}` : p;
-}
-
-function untildify(p: string): string {
-  return p === '~' || p.startsWith('~/') ? path.join(os.homedir(), p.slice(1)) : p;
-}
-
-/** `dir` is `parent` or somewhere under it. */
-function within(dir: string, parent: string): boolean {
-  const rel = path.relative(parent, dir);
-  return !rel || (rel !== '..' && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel));
-}
-
-/** Why the office couldn't make checkouts under `dir`, if it couldn't. It's made on the first clone, so it needn't exist yet. */
-function unwritable(dir: string): string | undefined {
-  let at = dir;
-  while (!existsSync(at) && path.dirname(at) !== at) at = path.dirname(at);
-  try {
-    if (!statSync(at).isDirectory()) return `${tildify(at)} isn't a folder`;
-    accessSync(at, constants.W_OK);
-  } catch {
-    return `The office can't write in ${tildify(at)}`;
-  }
-  return undefined;
-}
-
-/** The GitHub repository a checkout's origin points at. */
-export function originRepo(dir: string): string | undefined {
-  try {
-    const url = execFileSync('git', ['remote', 'get-url', 'origin'], { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 10_000 }).trim();
-    return /github\.com[/:]/i.test(url) ? normalizeRepo(url) : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/**
- * What's at `dest`: nothing yet ('none'), a checkout of `repo` ('ok'), or why it's in the way. A
- * clone that was cut off has its origin but no commit checked out; an `empty` repository has none to.
- */
-function checkoutAt(dest: string, repo: string, empty: boolean): 'none' | 'ok' | string {
-  if (!existsSync(dest)) return 'none';
-  if (!statSync(dest).isDirectory()) return `${dest} is already there and isn't a folder`;
-  if (!readdirSync(dest).length) return 'none';
-  if (!sameRepo(originRepo(dest), repo)) return `${dest} already exists and isn't a checkout of ${repo} - move it out of the way first`;
-  if (!empty && !hasCommit(dest)) return `${dest} is a clone of ${repo} that didn't finish - delete that folder and add the floor again`;
-  return 'ok';
-}
-
-function hasCommit(dir: string): boolean {
-  try {
-    execFileSync('git', ['rev-parse', '--verify', '--quiet', 'HEAD^{commit}'], { cwd: dir, stdio: 'ignore', timeout: 10_000 });
-    return true;
-  } catch {
-    return false;
   }
 }
 

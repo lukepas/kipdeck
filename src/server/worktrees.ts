@@ -37,6 +37,25 @@ export interface ListedWorktree {
   head: string;
 }
 
+/** Words a branch name doesn't need ("please fix the login" is fix-the-login). */
+const FILLER = new Set(['please', 'can', 'you', 'could', 'would', 'kindly']);
+
+/**
+ * A new worker's worktree folder and branch name: its task's first words (office/fix-the-flaky-
+ * checkout-3f2a), so a branch or pull request says what it's for, else the worker's name (pixel-3f2a);
+ * the last part is from its id, so two on the same task don't collide.
+ */
+export function worktreeSlug(prompt: string | undefined, name: string, id: string): string {
+  const words = (prompt ?? '').toLowerCase().replace(/[^a-z0-9\s-]+/g, ' ').split(/[\s-]+/).filter((w) => w && !FILLER.has(w));
+  let slug = '';
+  for (const w of words) {
+    const next = slug ? `${slug}-${w}` : w;
+    if (next.length > 28) break;
+    slug = next;
+  }
+  return `${slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'agent'}-${id.slice(0, 4)}`;
+}
+
 /** Git plumbing for the worktrees the office makes for its workers: hiring, sending home and pruning. */
 export class Worktrees {
   /** The project dir with symlinks resolved, so it compares with the paths git prints. */

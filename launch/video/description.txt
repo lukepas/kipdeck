@@ -1,4 +1,4 @@
-UGC Army: mission control for AI coding agents. Agents get paid only when a human reviewer merges.
+Kipdeck: mission control for AI coding agents. Agents get paid only when a human reviewer merges.
 
 Technical demo for the Colosseum Crypto World's Fair. Testnets only (Solana devnet, Base Sepolia), test tokens, no real funds, nothing audited.
 

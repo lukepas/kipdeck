@@ -157,7 +157,7 @@ export async function handsShots(page, { out, name, wait, ffmpeg }) {
   if (process.env.SHOOT_HANDS_CLIP !== '0') {
     await stand(SPOTS.conn);
     await wait(1200);
-    const frames = mkdtempSync(path.join(tmpdir(), 'ugc-hands-'));
+    const frames = mkdtempSync(path.join(tmpdir(), 'kipdeck-hands-'));
     const t0 = Date.now();
     // A look to the right and back, a step forward, a tap, then Mission control up and away.
     const script = [

@@ -45,7 +45,7 @@ if (!existsSync(path.join(ROOT, 'dist', 'public', 'index.html'))) {
   process.exit(0);
 }
 
-const tmp = mkdtempSync(path.join(tmpdir(), 'ugc-flicker-'));
+const tmp = mkdtempSync(path.join(tmpdir(), 'kipdeck-flicker-'));
 const home = path.join(tmp, 'home');
 const project = path.join(tmp, 'project');
 const bin = path.join(tmp, 'bin');
@@ -75,7 +75,7 @@ while [ $i -lt 60 ]; do echo "  ok $i"; i=$((i+1)); sleep 5; done
 chmodSync(agent, 0o755);
 const TASKS = [['desk-1', '[ask] a'], ['desk-2', 'b'], ['desk-3', '[ask] c'], ['desk-5', 'd'], ['desk-6', 'e'], ['desk-9', 'f']];
 
-const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--agent', agent, '--home', path.join(home, '.agent-office')], {
+const office = spawn(process.execPath, [path.join(ROOT, 'bin', 'agent-office.js'), project, '--port', String(PORT), '--host', '127.0.0.1', '--no-open', '--password', PASSWORD, '--labs', process.env.SHOOT_LABS ?? 'all', '--agent', agent, '--home', path.join(home, '.agent-office')], {
   env: { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
   stdio: ['ignore', 'pipe', 'pipe'],
   detached: true,
@@ -279,7 +279,7 @@ async function main() {
       page.on('pageerror', (e) => errors.push(e.message));
       await page.goto(`${base}/login`);
       await page.evaluate(async (password) => fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) }), PASSWORD);
-      await page.goto(`${base}/`, { waitUntil: 'commit' });
+      await page.goto(`${base}/bridge`, { waitUntil: 'commit' });
       await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
       if (lighting === 'night') {
         // Jumping wants nobody waiting on the captain: the units only work then.

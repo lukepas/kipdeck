@@ -47,9 +47,9 @@ export function makeRenderer(canvas: HTMLCanvasElement): THREE.WebGLRenderer | n
   }
 }
 
-/** No WebGL here (switched off, or no graphics for it): on to the 2D view, which does without. */
+/** No WebGL here (switched off, or no graphics for it): back to the home page, which does without. */
 export function noWebGL(): Promise<never> {
-  location.replace('/lite?why=webgl');
+  location.replace('/?why=webgl');
   return new Promise(() => {});
 }
 

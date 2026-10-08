@@ -195,7 +195,7 @@ export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: ht
   if (ask.goal && !goal) return send(res, 400, { error: `No milestone here is called ${ask.goal}: get_mission lists them` });
   const r = floor.workers.spawn(desk, who, ask.prompt, worktree, 'agent', provider, ask.model, ask.effort, undefined, owner, [], { goal: goal?.id, issue: ask.issue });
   if (typeof r === 'string') return send(res, 400, { error: r });
-  ctx.toastFloor(floor, `${who} hired ${r.name}${ask.issue ? ` for issue #${ask.issue}` : ' with a task'}`);
+  ctx.toastFloor(floor, `${who} deployed ${r.name}${ask.issue ? ` for issue #${ask.issue}` : ' with a task'}`);
   if (ask.issue) {
     const n = ask.issue;
     floor.queue.dropIssue(n);

@@ -19,7 +19,7 @@ So: your face for most of it, short cutaways to the real product, no hype words,
 - Numbers come only from `launch/chain/data/counts.json`, refreshed the day you record. If the numbers changed, change the lines in the traction beat to match before you read them.
 - Credit agent-office by webdevcody (MIT) once, out loud.
 - Don't name your employer, its clients or any client work, on camera or on screen.
-- The product is UGC Army; Proof of Merge is its on-chain layer. The Colosseum kit (`launch/chain/colosseum-worlds-fair.md`) still uses "Proof of Merge" as the product name. Pick one name for the form and the videos and use it in both.
+- The product is Kipdeck; Proof of Merge is its on-chain layer. The Colosseum kit (`launch/chain/colosseum-worlds-fair.md`) still uses "Proof of Merge" as the product name. Pick one name for the form and the videos and use it in both.
 
 ## Timed script
 
@@ -64,7 +64,7 @@ About 360 spoken words at roughly 150 words a minute. Times are cumulative. Squa
 
 ### 0:47 Product
 
-> UGC Army is mission control for that.
+> Kipdeck is mission control for that.
 > Every agent your team runs, Claude Code, Codex, Cursor, Pi, sits at a console on one shared bridge,
 > ranked by who needs a human right now.
 > Finished work lands in one review inbox.
@@ -148,7 +148,7 @@ So I took one rule seriously.
 The only signal that counts is a person merging the work.
 Not a benchmark. Not a pull request opened. A merge.
 
-UGC Army is mission control for that.
+Kipdeck is mission control for that.
 Every agent your team runs, Claude Code, Codex, Cursor, Pi,
 sits at a console on one shared bridge,
 ranked by who needs a human right now.

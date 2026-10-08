@@ -12,8 +12,8 @@ const error = document.getElementById('error') as HTMLParagraphElement;
 const submit = document.getElementById('submit') as HTMLButtonElement;
 
 const NAME_KEY = 'agent-office.login-name';
-/** Where to go once in: the 2D view if that's where you were headed (see loginUrl in net.ts), else the office. */
-const NEXT = new URLSearchParams(location.search).get('next') === '/lite' ? '/lite' : '/';
+/** Where to go once in: the Bridge view if that's where you were headed (see loginUrl in net.ts), else home. */
+const NEXT = new URLSearchParams(location.search).get('next') === '/bridge' ? '/bridge' : '/';
 
 // A sign-in link from the office's terminal (/login#key=...): it works once, so take it out of the
 // address bar and trade it for a session. The key is after the #, so it never reaches a server log.
@@ -28,10 +28,33 @@ if (linkKey) {
     .catch(() => void (error.textContent = 'Server unreachable'));
 }
 
+// On the computer the office runs on, with no password chosen for it: the way in is the terminal
+// (`kipdeck open`), and the password form waits behind a link.
+const local = document.getElementById('local') as HTMLDivElement;
+function showLocal() {
+  local.hidden = false;
+  form.hidden = true;
+  sub.textContent = 'The inbox for your AI coding agents.';
+  const cmd = document.getElementById('open-cmd')!.textContent ?? '';
+  const copy = document.getElementById('copy-cmd') as HTMLButtonElement;
+  copy.addEventListener('click', () => {
+    void navigator.clipboard?.writeText(cmd).then(
+      () => (copy.textContent = 'Copied'),
+      () => {},
+    );
+  });
+  document.getElementById('use-password')!.addEventListener('click', () => {
+    local.hidden = true;
+    form.hidden = false;
+    input.focus();
+  });
+}
+
 // Ask for a name once people have accounts; it's optional while the shared password still works.
 void fetch('/api/login', { cache: 'no-store' })
   .then((r) => r.json())
-  .then(({ accounts, shared }: { accounts: boolean; shared: boolean }) => {
+  .then(({ accounts, shared, local: here }: { accounts: boolean; shared: boolean; local?: boolean }) => {
+    if (here && !linkKey) return showLocal();
     if (!accounts && shared) return;
     nameRow.hidden = false;
     nameInput.required = !shared;

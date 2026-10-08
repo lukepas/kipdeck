@@ -6,11 +6,9 @@ import { randomLook } from '../shared/avatar';
 import { PlayerController } from './player';
 import { Voice } from './voice';
 import { $ } from './ui/dom';
-import { askName } from './ui/name';
 import { elevatorPanelOpen } from './ui/elevator';
 import { onModelsProgress, preloadModels } from './world/models';
 import { loadingScreen } from './ui/loading';
-import { offerLite, touchOnly } from './ui/litesuggest';
 import { createCtx } from './core/ctx';
 import type { Parts } from './core/parts';
 import { createScene, fitWindow, makeRenderer, noWebGL } from './core/scene';
@@ -102,18 +100,13 @@ import { installHands } from './features/hands';
 import { installLounge } from './features/lounge';
 import { installSoundscape } from './features/soundscape';
 import { installSelection } from './features/selection';
+import { fetchLabs, installLabs } from './features/labs';
 
 // The loading screen stays up until there's an office to see (see boot and whoami at the end).
 const loading = loadingScreen(onModelsProgress);
-// Came here from the 2D view's 3D button: it isn't offered straight back.
-const chose3d = new URLSearchParams(location.search).has('3d');
-if (chose3d) history.replaceState(null, '', location.pathname);
-/** Offers the 2D view (/lite) where the 3D is hard going. */
-const offer2d = (why: 'touch' | 'slow') => chose3d || offerLite(why);
-// A phone can't walk around the office: the 2D view is made for it.
-if (touchOnly()) offer2d('touch');
-// The models made in Blender, loaded before the world they're in is built (see world/models.ts).
-await preloadModels();
+// The models made in Blender, loaded before the world they're in is built (see world/models.ts), and
+// which labs are on (Bridge ambience decides how the bridge starts).
+const [labsAtStart] = await Promise.all([fetchLabs(), preloadModels()]);
 
 // ---- The context every part of the office plugs into (see core/context.ts) ----------------------------
 // Built before the parts it hands out, which are there by the time anything asks for them. Every part
@@ -123,7 +116,7 @@ await preloadModels();
 const parts = {} as Parts;
 const { ctx, core } = createCtx(parts);
 // The office's own parts of each frame, before anything else's.
-installLoop(ctx, parts, { offer2d });
+installLoop(ctx, parts);
 
 // ---- Renderer & scene ---------------------------------------------------------------------------
 const canvas = $('scene') as HTMLCanvasElement;
@@ -148,6 +141,8 @@ parts.net = new Net(() => store.profile, () => parts.arrival.whereNow());
 parts.voice = new Voice(parts.net);
 parts.me = makeMe(ctx);
 parts.settings = loadSettings();
+// Before anything reads the settings: without Bridge ambience the bridge starts calm (features/labs).
+installLabs(ctx, parts, labsAtStart);
 parts.player = new PlayerController(ctx.camera, canvas, ctx.office.colliders);
 installKeyGuards(ctx, parts);
 parts.place = installPlace(ctx, core, parts);
@@ -284,13 +279,17 @@ function boot() {
   requestAnimationFrame(frame);
 }
 
+/** What the office calls you until you say (git's user.name, on your own computer). */
+let suggestedName: string | undefined;
+
 /** Who you're signed in as. With an account of your own, your name is that account's. */
 async function whoami() {
   try {
     const res = await fetch('/api/whoami', { cache: 'no-store' });
-    if (res.status === 401) location.href = '/login';
-    const { me } = (await res.json()) as { me?: typeof store.me };
+    if (res.status === 401) location.href = '/login?next=/bridge';
+    const { me, name } = (await res.json()) as { me?: typeof store.me; name?: string };
     if (me) store.me = me;
+    suggestedName = name;
   } catch {
     // the welcome message says it too
   }
@@ -319,23 +318,16 @@ void whoami().then(() => {
     store.profile = { ...saved, look: saved.look };
     return enter();
   }
-  // New here: no character to pick before you see the office. A look and a shirt are dealt at
-  // random (Settings > Your character changes them), and only a name is asked for: none with an
-  // account, or when the 2D view already has one.
+  // New here: nothing to fill in before you see the office. A look and a shirt are dealt at random
+  // and the name is your account's, git's user.name on your own computer, or a made-up one
+  // (Settings > Your character changes any of them).
   store.profile = {
-    name: saved?.name ?? store.profile.name,
+    name: saved?.name ?? suggestedName ?? store.profile.name,
     color: saved?.color ?? AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)],
     look: randomLook(),
   };
-  if (saved || store.me.account) {
-    saveProfile(store.profile);
-    return enter();
-  }
-  askName((name) => {
-    store.profile.name = name;
-    saveProfile(store.profile);
-    enter();
-  });
+  saveProfile(store.profile);
+  enter();
 });
 
 // Debug handle for quick checks from the console / headless screenshots.
