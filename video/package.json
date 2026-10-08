@@ -1,8 +1,8 @@
 {
-  "name": "ugc-army-video",
+  "name": "kipdeck-video",
   "private": true,
   "type": "module",
-  "description": "PROOF OF MERGE - UGC Army, 30 s film rendered from code",
+  "description": "PROOF OF MERGE - Kipdeck, 30 s film rendered from code",
   "scripts": {
     "audio": "node audio/compose.mjs",
     "render": "node render.mjs",

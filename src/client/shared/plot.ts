@@ -1,9 +1,10 @@
 // The Plot: the deck drawn as a plan in hairlines, straight from shared/layout.ts, so it never drifts
 // from the 3D deck. The grid with its column bubbles, the mission table with a wedge per milestone,
 // the four pods of consoles, the ready line with its numbered ticks, the situation wall's panels, the
-// Proof corner, the Review bay, the Standby bench, the Deck lift and the title block. Units are their state glyphs
-// with their call signs, and a unit that needs you stands on its pod's ready line in ranking order,
-// as it does on the deck. No three.js: the 2D view draws it live and the sign-in pages draw it once.
+// Proof corner (with Proof of Merge on in Labs), the Review bay, the Standby bench, the Deck lift and the
+// title block. Units are their state glyphs with their call signs, and a unit that needs you stands on
+// its pod's ready line in ranking order, as it does on the deck. No three.js: the home page draws it
+// live beside the list, with Bridge view on in Labs.
 import { UPSTREAM_CREDIT_SHORT } from '../../shared/copy';
 import './plot.css';
 import {
@@ -59,6 +60,8 @@ export interface PlotOptions {
   revision?: string;
   /** Picking a unit (a click or Enter on its glyph). */
   onPick?: (id: string) => void;
+  /** Draw the Proof corner (the rail, the escrow vault, the ERC-8004 plinth): only with Proof of Merge on in Labs. */
+  proof?: boolean;
 }
 
 type Attrs = Record<string, string | number>;
@@ -116,7 +119,7 @@ export class Plot {
       this.el.setAttribute('role', 'img');
       this.el.setAttribute('aria-label', 'The deck plan: the mission table, four pods of consoles and where each unit is');
     }
-    this.el.append(defs(), grid(art), structure(), zones());
+    this.el.append(defs(), grid(art), structure(), zones(!!opts.proof));
     this.table = el('g', { class: 'p-table' });
     this.pods = el('g', { class: 'p-pods' });
     this.block = el('g', { class: 'p-block' });
@@ -174,7 +177,7 @@ export class Plot {
       el('rect', { x: minX, y: minZ, width: maxX - minX, height: maxZ - minZ, class: 'p-block-box' }),
       el('line', { x1: minX, y1: mid, x2: maxX, y2: mid, class: 'p-block-rule' }),
       el('line', { x1: minX + 2.9, y1: minZ, x2: minX + 2.9, y2: mid, class: 'p-block-rule' }),
-      text(minX + 0.25, minZ + 0.62, 'p-block-brand', 'UGC ARMY'),
+      text(minX + 0.25, minZ + 0.62, 'p-block-brand', 'KIPDECK'),
       text(minX + 3.15, minZ + 0.62, 'p-block-deck', clip(deck, 14).toUpperCase()),
       text(minX + 0.25, mid + 0.55, 'p-block-small', revision ? `REV ${revision}` : 'MISSION CONTROL FOR AI AGENTS'),
       text(minX + 0.25, maxZ - 0.3, 'p-block-small', UPSTREAM_CREDIT_SHORT),
@@ -312,7 +315,7 @@ function readyLine(): SVGElement {
 }
 
 /** The situation wall and its boards, the Proof corner, the Review bay, the Standby bench and the Deck lift. */
-function zones(): SVGElement {
+function zones(proof: boolean): SVGElement {
   const g = el('g', { class: 'p-zones' });
   const label = (x: number, y: number, s: string, cls = '', anchor = 'middle') => text(x, y, `p-zone-t ${cls}`.trim(), s, { 'text-anchor': anchor });
   // The situation wall: each panel a line along its face, its name on the table's side of it.
@@ -323,6 +326,8 @@ function zones(): SVGElement {
     [BOARDS.pulls, 'PRS', ''],
     [BOARDS.services, 'SERVICES', ''],
   ];
+  // Panels whose names would land on top of each other (two faces of one wall) stack a line apart, away from the wall.
+  const names: { x: number; z: number; at: { x: number; z: number }; text: string; cls: string; anchor: string }[] = [];
   for (const [b, name, cls] of facets) {
     const tx = Math.cos(b.rotY);
     const tz = -Math.sin(b.rotY);
@@ -333,22 +338,18 @@ function zones(): SVGElement {
     // Its name behind it, in the aisle between the wall and the deck's edge, running away from the
     // table so it clears the line and the pods' letters.
     const anchor = b.x < -1 ? 'end' : b.x > 1 ? 'start' : 'middle';
-    g.append(label(b.x - nx * 0.75, b.z - nz * 0.75 + 0.2, name, cls, anchor));
+    const at = { x: b.x - nx * 0.75, z: b.z - nz * 0.75 + 0.2 };
+    const stacked = names.filter((n) => n.anchor === anchor && Math.hypot(n.at.x - at.x, n.at.z - at.z) < 3);
+    const first = stacked[0];
+    names.push({ x: first ? first.x : at.x, z: first ? first.z - stacked.length * 0.9 : at.z, at, text: name, cls, anchor });
   }
-  // The Proof corner on the west wall: the capacity panel, the violet rail, the vault and the plinth.
+  for (const n of names) g.append(label(n.x, n.z, n.text, n.cls, n.anchor));
+  // The capacity panel on the west wall, and the Proof corner beside it (the violet rail, the vault
+  // and the plinth) with Proof of Merge on.
   const m = MACHINE_MONITOR;
   g.append(el('line', { x1: FLOOR.minX + 0.2, y1: m.z - m.width / 2, x2: FLOOR.minX + 0.2, y2: m.z + m.width / 2, class: 'p-board' }));
   g.append(label(FLOOR.minX + 0.7, m.z + 0.2, 'CAPACITY', '', 'start'));
-  const { rail, vault, plinth } = PROOF_CORNER;
-  g.append(el('rect', { x: FLOOR.minX + 0.1, y: rail.z - 0.5, width: 0.3, height: 1, class: 'p-proof' }));
-  g.append(label(FLOOR.minX + 0.7, rail.z + 0.2, 'PROOF', 'proof', 'start'));
-  g.append(el('rect', { x: vault.x - vault.depth / 2, y: vault.z - vault.width / 2, width: vault.depth, height: vault.width, class: 'p-proof-line' }));
-  g.append(label(vault.x + 0.9, vault.z + 0.2, 'ESCROW', 'proof', 'start'));
-  for (let i = 0; i < plinth.steps; i++) {
-    const w = plinth.width - i * 0.28;
-    g.append(el('rect', { x: r(plinth.x - w / 2), y: r(plinth.z - w / 2), width: r(w), height: r(w), class: 'p-proof-line' }));
-  }
-  g.append(label(plinth.x + 1.05, plinth.z + 0.2, 'ERC-8004', 'proof', 'start'));
+  if (proof) proofCorner(g, label);
   // The Review bay: smoked glass along its front (the door in it) and its side, and its table.
   const mr = MEETING_ROOM;
   const fz = mr.front.z;
@@ -370,4 +371,18 @@ function zones(): SVGElement {
   g.append(el('rect', { x: lx, y: lz, width: ELEVATOR.width, height: ELEVATOR.depth, class: 'p-lift' }));
   g.append(label(ELEVATOR.x, ELEVATOR_FRONT + Math.sign(ELEVATOR_FRONT - ELEVATOR_BACK) * 0.75 + 0.2, 'LIFT'));
   return g;
+}
+
+/** The Proof corner (Labs > Proof of Merge): the violet rail, the escrow vault and the ERC-8004 plinth. */
+function proofCorner(g: SVGGElement, label: (x: number, y: number, s: string, cls?: string, anchor?: string) => SVGTextElement) {
+  const { rail, vault, plinth } = PROOF_CORNER;
+  g.append(el('rect', { x: FLOOR.minX + 0.1, y: rail.z - 0.5, width: 0.3, height: 1, class: 'p-proof' }));
+  g.append(label(FLOOR.minX + 0.7, rail.z + 0.2, 'PROOF', 'proof', 'start'));
+  g.append(el('rect', { x: vault.x - vault.depth / 2, y: vault.z - vault.width / 2, width: vault.depth, height: vault.width, class: 'p-proof-line' }));
+  g.append(label(vault.x + 0.9, vault.z + 0.2, 'ESCROW', 'proof', 'start'));
+  for (let i = 0; i < plinth.steps; i++) {
+    const w = plinth.width - i * 0.28;
+    g.append(el('rect', { x: r(plinth.x - w / 2), y: r(plinth.z - w / 2), width: r(w), height: r(w), class: 'p-proof-line' }));
+  }
+  g.append(label(plinth.x + 1.05, plinth.z + 0.2, 'ERC-8004', 'proof', 'start'));
 }

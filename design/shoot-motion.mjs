@@ -252,7 +252,7 @@ export async function motionShots(page, { out, name, wait, ffmpeg, which, desk =
 
   /** Records frames in real time until `ms` after `t0` (or the first call), into a clip; their times. */
   async function record(file, ms, start) {
-    const frames = mkdtempSync(path.join(tmpdir(), `ugc-${file}-`));
+    const frames = mkdtempSync(path.join(tmpdir(), `kipdeck-${file}-`));
     const times = [];
     const t0 = Date.now();
     let mark = null;
@@ -316,7 +316,7 @@ export async function motionShots(page, { out, name, wait, ffmpeg, which, desk =
   if (which.includes('ambient')) {
     // 5 s from the chair as it is: the scan down the arc, the dashes, the gold chase, the sky's drift.
     await page.evaluate(() => window.__office.space.timeScale(1));
-    const frames = mkdtempSync(path.join(tmpdir(), 'ugc-ambient-'));
+    const frames = mkdtempSync(path.join(tmpdir(), 'kipdeck-ambient-'));
     const times = [];
     const t0 = Date.now();
     for (let f = 0; Date.now() - t0 < 5200; f++) {

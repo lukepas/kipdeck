@@ -1685,10 +1685,10 @@
   {
    "t": 6.5,
    "frame": 390,
-   "name": "text.ugc-army",
+   "name": "text.kipdeck",
    "kind": "text",
    "scene": "mission-control",
-   "text": "UGC Army."
+   "text": "Kipdeck."
   },
   {
    "t": 7.5,
@@ -2711,7 +2711,7 @@
    "name": "wordmark.slam",
    "kind": "text",
    "scene": "endcard",
-   "text": "UGC ARMY",
+   "text": "KIPDECK",
    "note": "wdth 125 settles to 100 by 28.0"
   },
   {

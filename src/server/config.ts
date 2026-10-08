@@ -9,6 +9,10 @@ import { parseAllowedHosts } from './hosts.js';
 import { splitEnvNames, validEnvPattern, type WorkerEnvConfig } from './worker-env.js';
 import { readStateJson, stateDirProblem, untrustedState, writeState } from './safefs.js';
 import { CHAIN_HELP, chainFlagsFromEnv, takeChainFlag, type ChainFlags } from './chain/flags.js';
+import { parseLabList, type LabId } from '../shared/labs.js';
+import { telemetryForbidden } from './telemetry.js';
+import { brandEnv } from './brandenv.js';
+import { freshDemoHome, type DemoWorkspace } from './demo/workspace.js';
 
 export interface Config {
   /** The office's own folder: the building's data lives in its .agent-office. */
@@ -20,8 +24,12 @@ export interface Config {
   projects?: string;
   /** Started as `agent-office <dir>`: that checkout is a floor of its own (it's also `dir`). */
   project?: string;
+  /** Started from a terminal (with no [dir]) inside a git checkout: its top (cli.ts). The first project of a new office, and the setup card's suggestion. */
+  startedIn?: string;
   host: string;
   port: number;
+  /** --port or PORT named the port: it's that one or nothing. Otherwise the next free one from 4600 will do. */
+  portGiven: boolean;
   /** Open the office in a browser, signed in, when it's started in a terminal (--no-open: don't). */
   open: boolean;
   /** Plaintext password, only when known: from --password, or generated and not yet claimed. */
@@ -64,6 +72,12 @@ export interface Config {
   webhook?: string;
   /** Paid tasks over x402 and proof-of-merge attestations, testnets only (see chain/flags.ts). */
   chain: ChainFlags;
+  /** Labs held on from the command line (--labs, AGENT_OFFICE_LABS; a chain flag holds proof on). See labs.ts. */
+  labs: LabId[];
+  /** Anonymous usage numbers (telemetry.ts): off unless turned on; `forbidden` keeps them off for good. */
+  telemetry: { forced: boolean; forbidden?: string; endpoint?: string };
+  /** --demo: scripted agents on a throwaway repository (see demo/): `readOnly` the hosted demo, `temp` a home deleted on exit, its workspace once made. */
+  demo?: { readOnly: boolean; temp: boolean; workspace?: DemoWorkspace };
 }
 
 export interface RTCIceServerLike {
@@ -72,24 +86,27 @@ export interface RTCIceServerLike {
   credential?: string;
 }
 
-const HELP = `ugc-army - UGC Army: mission control for your team's ${AGENT_PROVIDERS.filter((p) => p !== 'custom').map((p) => PROVIDER_META[p].name).join(' / ')} agents, with proof of every merge on testnets.
+const HELP = `kipdeck - the inbox for your ${AGENT_PROVIDERS.filter((p) => p !== 'custom').map((p) => PROVIDER_META[p].name).join(' / ')} agents.
 (Built on agent-office, MIT. The agent-office command still works.)
 
 Usage:
-  agent-office [options]
-  agent-office [dir] [options]
-  agent-office setup [--projects <dir>] [--project <owner/repo>]...
-  agent-office prune [dir] [--dry-run] [--force]
-  agent-office accounts [list|invite|revoke|role|password] ...
-  agent-office tunnel [office@address | url]
+  kipdeck [options]
+  kipdeck [dir] [options]
+  kipdeck --demo [--read-only]
+  kipdeck open [--print]
+  kipdeck attach [--agent claude|codex|cursor] [--session <id>] [--list]
+  kipdeck setup [--projects <dir>] [--project <owner/repo>]...
+  kipdeck prune [dir] [--dry-run] [--force]
+  kipdeck accounts [list|invite|revoke|role|password] ...
+  kipdeck tunnel [office@address | url]
 
-Runs the office. Every project is a floor of the building: open Floors,
-pick one of the repositories your \`gh\` login can see, and the office clones it
-into the projects folder as a new floor. Workers, terminals, boards and the
-task queue on a floor all belong to that floor's checkout.
+Runs the inbox for your coding agents, at http://localhost:4600 (or the next
+free port). Each project is a git checkout, and every agent works on a branch of
+its own in a worktree of it. Projects come from the folder you start it in, or
+from GitHub (cloned with your \`gh\` login into the projects folder).
 
-The first time it starts in a terminal with no floors, it walks you through
-where projects are cloned, signing the GitHub CLI in, and your first project.
+Started inside a git repository, that repository is its first project. The
+browser's setup card does the rest: which agents are installed, GitHub (optional).
 
 Started from anywhere, the office keeps its data in --home. Given a [dir] (or
 started in a project where an office already ran), it keeps its data in
@@ -97,6 +114,11 @@ started in a project where an office already ran), it keeps its data in
 (an admin can take it off in the elevator like any other).
 
 Commands:
+  open                    Open the running office in your browser, signed in
+                          (a new sign-in link; see open --help)
+  attach                  Move an agent you started in a terminal (Claude Code,
+                          Codex, Cursor) into the inbox: its session carries on
+                          as one of the office's agents (see attach --help)
   setup                   Pick the folder projects are cloned into and clone
                           projects as floors: a walkthrough in a terminal, or
                           just --projects / --project for scripts (see setup --help)
@@ -115,7 +137,8 @@ Options:
       --projects <dir>    Where new floors are cloned, as <dir>/<owner>/<repo>
                           (default ~/agent-office, env AGENT_OFFICE_PROJECTS).
                           Also settable from Settings in the office
-  -p, --port <n>          Port to listen on (default 4600, env PORT)
+  -p, --port <n>          Port to listen on (env PORT). Without it, 4600 or the
+                          next free port after it
   -H, --host <addr>       Address to bind (default 127.0.0.1: only this machine).
                           0.0.0.0 lets other computers on your network in
       --password <pw>     Office password (env AGENT_OFFICE_PASSWORD).
@@ -166,10 +189,24 @@ Options:
       --webhook <url>     Post to this Slack or Discord webhook when a worker
                           needs input, finishes or gets stuck (env AGENT_OFFICE_WEBHOOK).
                           Also settable from Settings in the office; "" turns it off
+      --labs <names>      Hold labs on, comma separated (env AGENT_OFFICE_LABS):
+                          bridge, ops, meetings, voice, ambience, proof, or all.
+                          All are off by default; admins switch them from Labs
+      --telemetry         Share anonymous usage numbers (env KIPDECK_TELEMETRY=1):
+                          minutes to the first agent, answer and merge, and
+                          minutes agents wait in Needs you. Off by default; the
+                          setup card turns it on or off. See docs/security.md
+      --no-telemetry      Never share them (also DO_NOT_TRACK=1)
+      --demo              Five scripted agents on a throwaway repository: no
+                          agent CLI, sign-in or model needed (env KIPDECK_DEMO=1)
+      --read-only         With --demo, the hosted demo: visitors only watch and a
+                          scripted reviewer acts (KIPDECK_DEMO=read-only)
 ${CHAIN_HELP}  -h, --help              Show this help
 
-Started in a terminal, the office opens in your browser already signed in, with
-a link that works once. Only this machine can reach it unless you pass --host.
+Started in a terminal, it opens in your browser already signed in, with a link
+that works once; \`kipdeck open\` makes a new one. On this computer there is no
+password to type. Only this machine can reach it unless you pass --host, and then
+the password (or people's own accounts) is how everyone else signs in.
 To run it on a server for your team, see deploy/provision.sh.
 
 Voice and screen sharing need a secure context: use https (a reverse proxy,
@@ -226,6 +263,7 @@ export function loadConfig(argv: string[]): Config {
   let homeGiven = !!process.env.AGENT_OFFICE_HOME;
   let projects = process.env.AGENT_OFFICE_PROJECTS ? path.resolve(process.env.AGENT_OFFICE_PROJECTS) : '';
   let port = Number(process.env.PORT) || 4600;
+  let portGiven = !!Number(process.env.PORT);
   // Loopback unless asked: an office lets whoever signs in run commands on this machine.
   let host = '127.0.0.1';
   let open = !process.env.AGENT_OFFICE_NO_OPEN || process.env.AGENT_OFFICE_NO_OPEN === '0';
@@ -247,6 +285,10 @@ export function loadConfig(argv: string[]): Config {
   let maxWorkers = process.env.AGENT_OFFICE_MAX_WORKERS || '';
   let webhook = process.env.AGENT_OFFICE_WEBHOOK;
   const chain = chainFlagsFromEnv();
+  const labs = parseLabList(process.env.AGENT_OFFICE_LABS);
+  const demoEnv = brandEnv('DEMO');
+  let demo = !!demoEnv && demoEnv !== '0';
+  let readOnly = demoEnv === 'read-only';
   const iceServers: RTCIceServerLike[] = [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }];
   // A container can't take --turn (deploy/container/compose.yaml), so the TURN servers come from the environment too.
   for (const url of (process.env.AGENT_OFFICE_TURN ?? '').split(/\s+/).filter(Boolean)) iceServers.push(parseTurn(url));
@@ -261,6 +303,7 @@ export function loadConfig(argv: string[]): Config {
       case '-p':
       case '--port':
         port = Number(takeValue(argv, i++, a));
+        portGiven = true;
         break;
       case '-H':
       case '--host':
@@ -332,6 +375,22 @@ export function loadConfig(argv: string[]): Config {
       case '--projects':
         projects = path.resolve(takeValue(argv, i++, a));
         break;
+      case '--demo':
+        demo = true;
+        break;
+      case '--read-only':
+        readOnly = true;
+        break;
+      case '--telemetry':
+      case '--no-telemetry':
+        // Read with the environment below (telemetryForbidden).
+        break;
+      case '--labs': {
+        const more = parseLabList(takeValue(argv, i++, a));
+        labs.on.push(...more.on);
+        labs.unknown.push(...more.unknown);
+        break;
+      }
       default: {
         const used = takeChainFlag(chain, argv, i);
         if (typeof used === 'string') {
@@ -352,10 +411,20 @@ export function loadConfig(argv: string[]): Config {
     }
   }
 
+  if (readOnly && !demo) {
+    console.error('agent-office: --read-only goes with --demo (the hosted demo)');
+    process.exit(2);
+  }
+  // The demo never touches a project of yours: a throwaway home of its own unless one is given.
+  if (demo && project) {
+    console.error('agent-office: --demo makes a throwaway project of its own: start it without a [dir]');
+    process.exit(2);
+  }
+  if (demo && !homeGiven) home = freshDemoHome();
   // An office already runs in this project (started here before there were floors): carry on with
   // it, its workers and its password, rather than open an empty building somewhere else.
   const cwd = process.cwd();
-  if (!project && !homeGiven && cwd !== home && existsSync(path.join(cwd, '.agent-office', 'config.json'))) project = cwd;
+  if (!project && !demo && !homeGiven && cwd !== home && existsSync(path.join(cwd, '.agent-office', 'config.json'))) project = cwd;
   if (project && !existsSync(project)) {
     console.error(`agent-office: directory not found: ${project}`);
     process.exit(2);
@@ -461,6 +530,7 @@ export function loadConfig(argv: string[]): Config {
     project: project || undefined,
     host,
     port,
+    portGiven,
     open,
     password: password || undefined,
     passwordGenerated,
@@ -492,7 +562,25 @@ export function loadConfig(argv: string[]): Config {
     maxWorkers: workerLimit,
     webhook,
     chain,
+    labs: forcedLabs(labs, chain),
+    ...(demo ? { demo: { readOnly, temp: !homeGiven } } : {}),
+    telemetry: {
+      forced: !demo && (argv.includes('--telemetry') || brandEnv('TELEMETRY') === '1'),
+      forbidden: demo ? 'off in the demo' : telemetryForbidden(process.env, argv),
+      endpoint: brandEnv('TELEMETRY_URL') || undefined,
+    },
   };
+}
+
+/** The labs the command line holds on: --labs and AGENT_OFFICE_LABS, and proof with any chain flag (they're proof's own switches). */
+function forcedLabs(labs: { on: LabId[]; unknown: string[] }, chain: ChainFlags): LabId[] {
+  if (labs.unknown.length) {
+    console.error(`agent-office: --labs: unknown lab ${labs.unknown.map((u) => JSON.stringify(u)).join(', ')} (bridge, ops, meetings, voice, ambience, proof or all)`);
+    process.exit(2);
+  }
+  const on = new Set(labs.on);
+  if (chain.x402.enabled || chain.attest.enabled || chain.reputation.enabled) on.add('proof');
+  return [...on];
 }
 
 export async function ensureSelfSigned(cfg: Config): Promise<void> {

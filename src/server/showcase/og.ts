@@ -1,4 +1,4 @@
-// The showcase's share card (og.png, 1200 x 630): a UGC Army title block on the deck's grid, with the
+// The showcase's share card (og.png, 1200 x 630): a Kipdeck title block on the deck's grid, with the
 // Formation mark, the latest merge that shows the whole money path (its PR, its bounty in large type and
 // the four steps with their short hashes), the totals and the credit, drawn in a 5 x 7 pixel font
 // straight into a PNG. No browser, no canvas and no
@@ -68,7 +68,7 @@ const GLYPHS: Record<string, string[]> = {
 
 type RGB = readonly [number, number, number];
 const hex = (h: string): RGB => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
-// The UGC Army tokens (src/client/styles/tokens.css), dark set.
+// The Kipdeck tokens (src/client/styles/tokens.css), dark set.
 const VOID = hex('#0d131a');
 const SURFACE = hex('#141b23');
 const GRID_MINOR = hex('#151c24');
@@ -230,8 +230,8 @@ export function ogImage(doc: ShowcaseDoc): Buffer {
   // Head: the mark, the wordmark and the product, the networks on the right.
   mark(r, X + 28, Y + 20, 2.4);
   let cx = X + 112;
-  cx += r.text(cx, Y + 34, 4, 'UGC', TEXT) + 24;
-  cx += r.text(cx, Y + 34, 4, 'ARMY', MUTED) + 28;
+  cx += r.text(cx, Y + 34, 4, 'KIP', TEXT);
+  cx += r.text(cx, Y + 34, 4, 'DECK', MUTED) + 28;
   r.text(cx, Y + 34, 4, '/ PROOF OF MERGE', PROOF);
   const net = 'SOLANA DEVNET - BASE SEPOLIA';
   r.rect(X + BW - 28 - textWidth(net, 2) - 22, Y + 40, 10, 10, SETTLED);

@@ -165,3 +165,12 @@ test('a worktree deleted with its branch comes back from origin when it was push
   const refused = await trees.restore(made);
   assert.ok('error' in refused && /already (checked out|used by worktree)/.test(refused.error), JSON.stringify(refused));
 });
+
+test("a worktree's branch is named after its task, else after the agent", async () => {
+  const { worktreeSlug } = await import('../src/server/worktrees.js');
+  assert.equal(worktreeSlug('Fix the flaky checkout test', 'Byte', '3f2a9c'), 'fix-the-flaky-checkout-test-3f2a');
+  assert.equal(worktreeSlug('Please add rate limiting to /api/login, with tests', 'Pixel', 'abcdef'), 'add-rate-limiting-to-api-abcd');
+  assert.equal(worktreeSlug(undefined, 'Pixel', 'abcdef'), 'pixel-abcd');
+  assert.equal(worktreeSlug('!!!', 'Pixel', 'abcdef'), 'pixel-abcd');
+  assert.equal(worktreeSlug('Supercalifragilisticexpialidociousness everywhere', 'Pixel', 'abcdef'), 'pixel-abcd');
+});

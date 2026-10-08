@@ -4,8 +4,8 @@
  * it steps down a tier when they keep falling behind, back up when they have room to spare, holds at
  * Medium on graphics that start at High unless frames are very slow, and throws away the frames after
  * anything that hitches once (./governor.ts says which). A step down is kept for a reload in the same
- * session, never longer than a day (./cap.ts). A tier picked by hand stays put. The 2D view offer for
- * frames that are slower still (SlowFrames) stays the floor under every tier.
+ * session, never longer than a day (./cap.ts). A tier picked by hand stays put. Low is the floor: a
+ * computer slower still has the home page, which draws no 3D.
  *
  * This part applies what's the renderer's own (the pixel ratio, and the key light's shadow map: its
  * size and how often it's drawn) and publishes the tier to the parts that draw more or less with it

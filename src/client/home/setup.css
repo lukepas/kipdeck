@@ -1,0 +1,43 @@
+/* The setup card (setup.ts): three rows the office fills in, one button, and the usage switch under it.
+   It sits inside .first-run, which gives it its frame and the heading's type. */
+.setup-card { gap: 14px; }
+.setup-card.loading p { color: var(--faint); }
+.su-rows { list-style: none; margin: 2px 0 4px; padding: 0; width: 100%; display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.su-rows > li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.su-glyph { display: grid; place-items: center; width: 20px; height: 20px; margin-top: 1px; border-radius: 50%; }
+.su-rows > li.ok .su-glyph { background: var(--working-tint, rgb(46 160 67 / .12)); color: var(--working, #2e7d32); }
+.su-rows > li.opt .su-glyph { color: var(--muted); }
+.su-rows > li.todo .su-glyph .dot { width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--review, #b7791f); }
+.su-body { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-width: 0; font-size: 14px; }
+.su-body > b { flex: 0 0 100%; font-weight: 600; }
+.su-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.su-chip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 9px 0 4px; border: 1px solid var(--line); border-radius: var(--radius-chip, 4px); background: var(--surface-2); font-size: 13px; }
+.su-chip.mono { padding-left: 9px; font-family: var(--font-mono); font-size: 12px; }
+.su-chip .agent-mark { width: 18px; height: 18px; font-size: 9px; }
+.su-say { color: var(--muted); font-size: 13px; }
+.su-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; flex: 0 0 100%; color: var(--muted); font-size: 13px; }
+.fix { display: inline-flex; align-items: center; gap: 2px; max-width: 100%; }
+.fix code { padding: 2px 6px; border-radius: 3px; background: var(--surface-2); border: 1px solid var(--line); color: var(--text); font: 12px var(--font-mono); overflow-wrap: anywhere; }
+.fix .copy { height: 24px; width: 24px; padding: 0; justify-content: center; }
+.su-more { flex: 0 0 100%; font-size: 13px; color: var(--muted); }
+.su-more summary { cursor: pointer; width: max-content; }
+.su-more .su-line { margin-top: 6px; }
+.su-repo { height: 30px; min-width: 0; flex: 1 1 160px; max-width: 260px; padding: 0 8px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--void); color: var(--text); font: 13px var(--font-mono); }
+.su-usage { display: flex; flex-direction: column; gap: 4px; padding-top: 4px; font-size: 12px; color: var(--muted); }
+.su-usage label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
+.su-usage input { margin: 1px 0 0; accent-color: var(--signal); }
+.su-usage summary { cursor: pointer; width: max-content; margin-left: 22px; }
+.su-usage details p { margin: 6px 0 0 22px; max-width: 60ch; font-size: 12px; }
+.setup-card .big:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 899px) {
+  .su-repo { max-width: none; }
+}
+.su-found { display: flex; flex-direction: column; gap: 4px; margin: 2px 0; }
+.su-found p { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; font-size: 14px; color: var(--text); }
+.su-found p.su-say { padding-left: 26px; color: var(--muted); font-size: 13px; }
+.su-found .su-glyph { background: var(--working-tint, rgb(46 160 67 / .12)); color: var(--settled); }
+.su-found .agent-mark { width: 20px; height: 20px; font-size: 9px; }
+.su-found code { padding: 1px 6px; border: 1px solid var(--line); border-radius: 3px; background: var(--surface-2); font: 12px var(--font-mono); }
+.su-details { width: 100%; font-size: 13px; color: var(--muted); }
+.su-details summary { cursor: pointer; width: max-content; }
+.su-details .su-rows { margin-top: 8px; }

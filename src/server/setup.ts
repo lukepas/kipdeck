@@ -10,10 +10,9 @@ import { Building, tildify } from './building.js';
 import { officeHome, type Config } from './config.js';
 
 // Setting up an office from its terminal: where projects are cloned, signing the GitHub CLI in, and
-// picking the first repositories to clone as floors. A new office walks you through it the first time
-// it starts in a terminal, so it opens on projects of your own instead of an empty building (or
-// whatever folder it happened to be started in). `agent-office setup` runs it again, or does it
-// without asking when given --projects / --project (deploy/provision.sh does).
+// picking repositories to clone as projects. Nothing asks these when the office starts (the setup
+// card in the browser does it, see firstrun.ts); `kipdeck setup` walks through them on request,
+// or does them without asking when given --projects / --project (deploy/provision.sh does).
 
 /** How many repositories a list shows; typing a word narrows it down. */
 const SHOWN = 12;
@@ -30,8 +29,8 @@ In a terminal it walks you through it: the workspace folder new projects are clo
 into, signing the GitHub CLI in, and picking repositories to clone as floors. Given
 --projects or --project it does just that and asks nothing, for scripts.
 
-A new office runs this by itself the first time it starts in a terminal. Run it
-while the office is stopped; while it runs, use its elevator and Settings.
+Nothing asks this when the office starts: its setup card in the browser does the
+same. Run it while the office is stopped.
 
 Options:
       --home <dir>        The office to set up (default ~/agent-office, env AGENT_OFFICE_HOME)
@@ -44,26 +43,6 @@ Options:
 /** Someone's at a terminal to answer questions. */
 export function interactive(): boolean {
   return !!process.stdin.isTTY && !!process.stdout.isTTY && !process.env.CI;
-}
-
-/**
- * The office starting in a terminal with no floors yet: walk through the workspace folder, GitHub
- * sign-in and the first projects before it opens. Enter skips any of it; the elevator does the same.
- */
-export async function welcome(cfg: Config): Promise<void> {
-  const building = new Building(cfg.dataDir, cfg.projectsDir, { terminal: true });
-  if (building.list().length) return;
-  // --projects is the answer to the first question (the office applies it again as it starts).
-  const folderGiven = !!cfg.projects && !building.setProjectsDir(cfg.projects, 'the command line');
-  console.log(`
-  Welcome to UGC Army.
-
-  Every project is a floor of the building, and this one doesn't have any yet.
-  Let's add your first: pick one of your GitHub repositories and the office
-  clones it. Press Enter to skip any question and do it from the office's
-  elevator instead.`);
-  await walkthrough(building, cfg.dataDir, !folderGiven && !building.projectsDirState().custom);
-  console.log(building.list().length ? '\n  All set. Opening the office...' : '\n  Opening the office: its elevator asks for your first project.');
 }
 
 /** `agent-office setup ...`: returns the exit code. */

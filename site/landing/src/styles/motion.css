@@ -1,0 +1,71 @@
+/* Motion that CSS can carry on its own: the headline's inhale, the mark drawing in, and reveals.
+   With less motion (the system's setting) none of it runs and every element is at its final state. */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* The headline inhales: every word opens from width 62 and weight 300 to width 118 and weight
+     750, one after another, inside a box already at its final size. */
+  html.js .hero-h .w[data-t] > span, html.js .hero-h .waiting { animation: inhale 1100ms var(--ease-out) backwards; }
+  html.js .hero-h > :nth-child(1) > span { animation-delay: 140ms; }
+  html.js .hero-h > :nth-child(2) > span { animation-delay: 210ms; }
+  html.js .hero-h > :nth-child(3) > span { animation-delay: 280ms; }
+  html.js .hero-h .waiting { animation-delay: 350ms; }
+  html.js .hero-h > :nth-child(6) > span { animation-delay: 420ms; }
+  html.js .hero-h > :nth-child(7) > span { animation-delay: 490ms; }
+  html.js .stopwatch { animation: fade-in 500ms 1000ms backwards; }
+  /* A short roll with no overshoot: the in-between frame never reads as a second digit. */
+  .odo .d::before { transition: transform 180ms cubic-bezier(.2, .8, .2, 1); }
+  html.js .hero-glow { animation: fade-in 1600ms var(--ease) 300ms backwards; }
+  /* A Signal scanline reads the inbox top to bottom as its rows arrive. */
+  html.js .hero .app.mini::after {
+    content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none;
+    background: linear-gradient(to bottom, transparent 70%, color-mix(in srgb, var(--signal) 7%, transparent) calc(100% - 1px), var(--signal) calc(100% - 1px));
+    transform: translateY(-100%); animation: scan 1300ms cubic-bezier(.45, 0, .25, 1) 480ms both;
+  }
+  html.js .lockup .mark-trail { stroke-dasharray: 40; animation: draw 900ms var(--ease-out) both 80ms; }
+  html.js .lockup .mark-lead { animation: notch 1200ms backwards; }
+  html.js .hero .app.mini { animation: lift 1000ms var(--ease-out) both 260ms; }
+  /* Rows stream in, top to bottom in the order the opening shows them (Codex last, at work). */
+  html.js .hero .app.mini .row, html.js .hero .app.mini .sec { animation: stream 560ms var(--ease-out) both 520ms; }
+  html.js .hero .app.mini .app-list > :nth-child(3) { animation-delay: 500ms; }
+  html.js .hero .app.mini .app-list > :nth-child(4) { animation-delay: 540ms; }
+  html.js .hero .app.mini .app-list > :nth-child(5) { animation-delay: 580ms; }
+  html.js .hero .app.mini .app-list > :nth-child(6) { animation-delay: 620ms; }
+  html.js .hero .app.mini .app-list > :nth-child(7) { animation-delay: 660ms; }
+  html.js .hero .app.mini .app-list > :nth-child(8) { animation-delay: 700ms; }
+  html.js .hero .app.mini .app-list > :nth-child(2) { animation-delay: 740ms; }
+
+  html.js .rv { opacity: 0; transform: translateY(22px); transition: opacity 700ms var(--ease-out), transform 900ms var(--ease-out); }
+  html.js .rv.in { opacity: 1; transform: none; }
+  html.js h2.display.rv { clip-path: inset(0 0 100% 0); transform: translateY(.18em); transition: clip-path 900ms var(--ease-out), transform 900ms var(--ease-out), opacity 300ms; }
+  html.js h2.display.rv.in { clip-path: inset(0 0 -.2em 0); }
+  .waitbar > i { transition: none; }
+}
+
+@keyframes inhale {
+  from { opacity: 0; font-stretch: 62%; font-weight: 300; transform: translateY(.14em); }
+  30% { opacity: 1; }
+}
+@keyframes scan { 0% { transform: translateY(-100%); opacity: 1; } 85% { opacity: 1; } 100% { transform: translateY(0); opacity: 0; } }
+@keyframes ride { to { offset-distance: 100%; } }
+@keyframes caret { 50% { background-size: 0 0; } }
+@keyframes burst { from { opacity: 1; transform: scaleX(.15); } 40% { opacity: 1; } to { opacity: 0; transform: scaleX(1); } }
+@keyframes ghost-ring { from { opacity: 1; transform: scale(.3); } to { opacity: 0; transform: scale(1.5); } }
+@keyframes ping { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.35, 1.6); } }
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes draw { from { stroke-dashoffset: 40; } }
+@keyframes notch { 0%, 55% { fill: currentColor; } 65% { fill: var(--signal); } 80% { fill: currentColor; } }
+@keyframes lift { from { opacity: 0; transform: translateY(26px) scale(.985); } }
+@keyframes stream { from { opacity: 0; transform: translateX(18px); } }
+@keyframes sweep { 0% { opacity: 0; transform: translate(0, 0); } 30% { opacity: .8; } 100% { opacity: 0; transform: translate(180px, -90px); } }
+
+/* The odometer's reels: each digit is a column 0 to 9 that rolls to its value. The digit itself
+   stays in the text (transparent), so the element reads as a plain value. */
+/* The digit's own glyph is hidden by its fill, not its color, so the reel can still paint in the
+   inherited color (currentColor) wherever no --odo-c is given. */
+.odo .d { display: inline-block; position: relative; overflow: clip; height: 1.15em; line-height: 1.15em; vertical-align: baseline; -webkit-text-fill-color: transparent; }
+.odo .d::before {
+  content: '0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9'; white-space: pre; position: absolute; left: 0; top: 0;
+  line-height: 1.15em; color: var(--odo-c, currentColor); -webkit-text-fill-color: var(--odo-c, currentColor); transform: translateY(calc(var(--d, 0) * -1.15em));
+}
+/* A reel cell is exactly one line tall and clipped (overflow: clip keeps the text baseline, so a
+   digit sits on its line like any other character); the separators are plain text beside it. */
