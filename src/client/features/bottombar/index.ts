@@ -7,9 +7,10 @@
  */
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
+import { renamedKey } from '../../shared/renamed-key';
 import { $, h } from '../../ui/dom';
 
-const FOLD_KEY = 'ugc-army.rail-folded';
+const FOLD_KEY = renamedKey('kipdeck.rail-folded', 'ugc-army.rail-folded');
 /** How long the rail stays folded for a merge beat (ms), unless you open it again. */
 const BEAT_FOLD_MS = 7000;
 

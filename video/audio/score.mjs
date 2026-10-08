@@ -210,7 +210,7 @@ export function compose() {
   hit(unsortStart, 'unsort.start', 'event', 'unsort', { note: 'reversed noise swell starts, streaks pull back up' });
   hit(UNSORT_T, 'swell.2.peak', 'riser-peak', 'unsort');
 
-  // ---- 6.0-10.0  UGC Army mission control: the sort as an arpeggio ------------------------------
+  // ---- 6.0-10.0  Kipdeck mission control: the sort as an arpeggio ------------------------------
   playKick(UNSORT_T, { gain: 1.0, decay: 0.38, weight: 1.2 });
   addMono(bus.fx, UNSORT_T, I.boom({ seed: 6060, level: 0.5 }), 0.5);
   hit(UNSORT_T, 'unsort.lock', 'impact', 'mission-control', { note: 'every streak back in its tile' });
@@ -261,7 +261,7 @@ export function compose() {
       });
     }
   }
-  hit(6.5, 'text.ugc-army', 'text', 'mission-control', { text: 'UGC Army.' });
+  hit(6.5, 'text.kipdeck', 'text', 'mission-control', { text: 'Kipdeck.' });
   playStamp(6.5, { gain: 0.45 });
   hit(8.0, 'text.see-every-agent', 'text', 'mission-control', { text: 'See every agent.' });
   playStamp(8.0, { gain: 0.45 });
@@ -459,7 +459,7 @@ export function compose() {
   addMono(bus.fx, 27.5, I.mouseClick({ seed: 2750, level: 1 }), 0.6);
   addMono(bus.fx, 27.5, I.boom({ seed: 2751, dur: 0.35, level: 0.7, fc: 260 }), 0.45);
   hit(27.5, 'mark.center.red', 'stamp', 'endcard', { note: 'centre cell turns signal red' });
-  hit(27.5, 'wordmark.slam', 'text', 'endcard', { text: 'UGC ARMY', note: 'wdth 125 settles to 100 by 28.0' });
+  hit(27.5, 'wordmark.slam', 'text', 'endcard', { text: 'KIPDECK', note: 'wdth 125 settles to 100 by 28.0' });
   [27.5, 28.0, 28.5, 29.0].forEach((t, k) => playKick(t, { gain: 0.62 - k * 0.06, weight: 0.6 }));
   hatsRange(27.0, 29.0, { gain: 0.09, openOffbeats: true });
   bassOffbeats(27.5, 29.0, 33, 0.28);

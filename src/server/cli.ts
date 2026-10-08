@@ -81,7 +81,7 @@ if (atTerminal && office.accounts.sharedPassword && !cfg.claimToken) {
 // Started in a project that's still one of the floors (it can be taken off like any other).
 const local = cfg.project && office.floors().some((f) => path.resolve(f.def.dir) === cfg.project);
 console.log(`
-  UGC Army is open${local ? ` for ${cfg.project}` : ''}
+  Kipdeck is open${local ? ` for ${cfg.project}` : ''}
 
   ${floorsLine()}
 

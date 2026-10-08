@@ -2,7 +2,7 @@
 
 Back to the [README](../README.md).
 
-UGC Army looks and behaves the same on every surface: the 3D deck, the 2D view at `/lite`, the sign-in pages and the `/pom/` showcase. This page walks through it as it is on screen: what each surface shows, how things move and sound, demo mode, and how to check a change. The rules and tokens themselves (colors, type, the status table, voice) are the short contract in [DESIGN.md](../DESIGN.md); where the deck's places are is [The deck](deck.md).
+Kipdeck looks and behaves the same on every surface: the 3D deck, the 2D view at `/lite`, the sign-in pages and the `/pom/` showcase. This page walks through it as it is on screen: what each surface shows, how things move and sound, demo mode, and how to check a change. The rules and tokens themselves (colors, type, the status table, voice) are the short contract in [DESIGN.md](../DESIGN.md); where the deck's places are is [The deck](deck.md).
 
 ## The idea in one paragraph
 

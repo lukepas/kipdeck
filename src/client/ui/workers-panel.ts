@@ -10,6 +10,7 @@ import { LEVEL_LABEL, type AttentionLevel, type Attention } from '../../shared/a
 import { ago, headline, statusPhrase } from '../../shared/rowtext';
 import type { WorkerInfo } from '../../shared/protocol';
 import { store } from '../state';
+import { renamedKey } from '../shared/renamed-key';
 import { DESK_BY_ID } from '../../shared/layout';
 import { address, callSign } from '../../shared/callsign';
 import { $, h, STATUS_LABEL } from './dom';
@@ -24,7 +25,7 @@ const GROUPS: readonly Group[] = ['needs-you', 'stuck', 'review', 'working', 'pa
 const OPEN_BY_DEFAULT: ReadonlySet<Group> = new Set(['needs-you', 'stuck', 'review']);
 const GROUP_LABEL: Record<Group, string> = { ...LEVEL_LABEL, parked: 'Ready', agents: 'Board agents' };
 
-const FOLD_KEY = 'ugc-army.rail-groups';
+const FOLD_KEY = renamedKey('kipdeck.rail-groups', 'ugc-army.rail-groups');
 
 /** The groups you opened or folded, remembered in this browser. */
 function folds(): Record<string, boolean> {
