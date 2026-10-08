@@ -85,6 +85,13 @@ if (!env.reduced && tier !== 'min') {
   }, 2900), { once: true });
 }
 
+// Kip, the mascot, in his own chunk once the opening has painted (never with ?nokip). Everything he
+// does is in src/kip/.
+if (!new URLSearchParams(location.search).has('nokip')) {
+  const kip = () => void import('./kip').then((m) => m.mountKip({ attend: (x, y) => heroScene?.attend(x, y) }));
+  requestAnimationFrame(() => ('requestIdleCallback' in window ? requestIdleCallback(kip, { timeout: 1200 }) : setTimeout(kip, 300)));
+}
+
 // The hero's facts count up once the headline has landed.
 setTimeout(() => document.querySelectorAll<HTMLElement>('.facts [data-count]').forEach((c) => countUp(c, 900)), 900);
 
