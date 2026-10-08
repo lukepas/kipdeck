@@ -70,7 +70,7 @@ const ranked = (e: RosterEntry, att: Partial<Attention>): Ranked => ({ entry: e,
 test("the Crew tab's Now column: the state's phrase, for how long, and the latest activity muted", () => {
   const now = 1_000_000_000;
   const asking = ranked(entry({ activity: 'Wants permission: Bash: npm test' }), { level: 'needs-you', label: 'needs input', action: 'answer', since: now - 18 * 60_000 });
-  assert.deepEqual(crewNow(asking, now), { state: 'needs input', elapsed: '18m', activity: 'Wants permission: Bash: npm test' });
+  assert.deepEqual(crewNow(asking, now), { state: 'Needs you', elapsed: '18m', activity: 'Wants permission: Bash: npm test' });
   // An activity that only says the state again isn't repeated under it.
   const quiet = ranked(entry({ activity: 'working' }), { since: now - 30_000 });
   assert.deepEqual(crewNow(quiet, now), { state: 'Working', elapsed: '<1m', activity: '' });

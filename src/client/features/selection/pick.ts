@@ -37,7 +37,12 @@ export function pickUnits(ctx: Ctx, parts: Pick<Parts, 'overview' | 'views'>, se
     return true;
   }
 
-  /** The unit under (clientX, clientY), by a ray through its body or callout, else the nearest one close by on screen. */
+  /**
+   * The unit under (clientX, clientY): by a ray through a unit's body first, nearest the camera; only
+   * when it hits no body, a callout (one lifted over a neighbour is nearer the camera than the body
+   * under it, so a click on that body must not go to the callout's unit); else the nearest one close by
+   * on screen.
+   */
   function unitAt(clientX: number, clientY: number): string | null {
     const r = canvas.getBoundingClientRect();
     ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
@@ -45,10 +50,20 @@ export function pickUnits(ctx: Ctx, parts: Pick<Parts, 'overview' | 'views'>, se
     raycaster.setFromCamera(ndc, camera);
     let best: string | null = null;
     let bestD = Infinity;
+    let chip: string | null = null;
+    let chipD = Infinity;
     for (const [id, v] of parts.views.workerViews) {
       if (!shown(v.model.root)) continue;
       for (const hit of raycaster.intersectObject(v.model.root, true)) {
         if (!shown(hit.object)) continue;
+        // A callout or a glyph (a sprite), or its hairline: only if no body is hit.
+        if ((hit.object as THREE.Sprite).isSprite || (hit.object as THREE.Line).isLine) {
+          if (hit.distance < chipD) {
+            chipD = hit.distance;
+            chip = id;
+          }
+          continue;
+        }
         if (hit.distance < bestD) {
           bestD = hit.distance;
           best = id;
@@ -56,6 +71,7 @@ export function pickUnits(ctx: Ctx, parts: Pick<Parts, 'overview' | 'views'>, se
         break;
       }
     }
+    best ??= chip;
     if (best) return best;
     // Missed by a hair: the unit whose chest is nearest the pointer on screen, within NEAR_PX.
     let nearPx = NEAR_PX;

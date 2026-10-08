@@ -12,7 +12,8 @@ import type { Ctx } from '../../core/context';
 import type { CoreState } from '../../core/ctx';
 import type { Parts } from '../../core/parts';
 import type { Off } from '../../core/registry';
-import { NextUp, unsnoozed, waitingElsewhere, waitingInOrder, waitingLabel } from '../../nextup';
+import { attentionCounts, attentionLabel } from '../../../shared/attention';
+import { NextUp, nLine, nToast, unsnoozed, waitingElsewhere, waitingInOrder } from '../../nextup';
 import { waitingOnSomeone } from '../../notify';
 import { store } from '../../state';
 import { openChanges } from '../../ui/changes';
@@ -46,18 +47,20 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
   };
 
   /**
-   * N: to the first worker waiting on someone, and on each press after, the next. In the ranking's
-   * order (shared/attention.ts): the ones that need you before the ones that are done, so one that
-   * needs you on another floor comes before one here that's only done, as the banner says (features/needsyou).
-   * Snoozed ones are left out here too, as everywhere else.
+   * N: to the first unit in the building's ranking (shared/attention.ts) on this floor, and on each
+   * press after, the next: the ones that need you, then the stuck ones, then the ones to review, as the
+   * top bar counts them and the Attention board lists them. One that needs you on another floor comes
+   * before one here that's only stuck or done, as the banner says (features/needsyou). Snoozed ones
+   * are left out here too, as everywhere else.
    */
   function goToNextWaiting() {
     if (core.trip) return;
-    const here = awake();
-    const waiting = waitingInOrder(here);
+    const ranked = store.ranked(store.floor);
+    const line = nLine(ranked).filter((s) => store.workers.has(s.id));
     const other = elsewhere();
-    const away = !waiting.length || (other?.status === 'needs_input' && waiting[0].status !== 'needs_input');
-    const w = away ? undefined : nextUp.next(here, waitingBeside());
+    const first = line.length ? ranked.find((r) => r.entry.id === line[0].id)?.att.level : undefined;
+    const away = !line.length || (other?.status === 'needs_input' && first !== 'needs-you');
+    const w = away ? undefined : nextUp.pick(line, waitingBeside());
     nextToast?.remove();
     if (!w || !goToWorker(w.id)) {
       // Building-wide: after the last one here, the one on another floor that has waited longest.
@@ -70,23 +73,9 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
       return;
     }
     // Who it is, what it asks and the button to answer are on its card now (features/selection), its
-    // callout and the hint: the toast only says how many more there are, when there are.
-    const count = waitingCount(waiting, w.id);
-    if (count) nextToast = toast(count);
-  }
-
-  /**
-   * The toast after N: where this one is in its own group and how many there are, counted as the top
-   * bar and the rail count them ("1 of 2 need you · 2 to review"), or null when it's the only one.
-   */
-  function waitingCount(waiting: readonly { id: string; status: string }[], id: string): string | null {
-    if (waiting.length < 2) return null;
-    const need = waiting.filter((x) => x.status === 'needs_input');
-    const review = waiting.filter((x) => x.status !== 'needs_input');
-    const mine = need.some((x) => x.id === id) ? need : review;
-    const at = `${mine.findIndex((x) => x.id === id) + 1} of ${mine.length} ${mine === need ? (mine.length === 1 ? 'needs you' : 'need you') : 'to review'}`;
-    const other = mine === need ? (review.length ? ` · ${review.length} to review` : '') : need.length ? ` · ${need.length} need${need.length === 1 ? 's' : ''} you` : '';
-    return `${at}${other}. N for the next`;
+    // callout and the hint: the toast only says where this one is in the round and what the round holds.
+    const say = nToast(line, w.id, ranked);
+    if (say) nextToast = toast(say);
   }
 
   /**
@@ -164,13 +153,16 @@ export function installWaiting(ctx: Ctx, core: CoreState, parts: Pick<Parts, 'wo
 
   function renderWaiting() {
     const waiting = waitingInOrder(awake());
+    // Shown whenever N has somewhere to go: a stuck unit counts, as the top bar counts it.
+    const ranked = store.ranked(store.floor);
+    const line = nLine(ranked);
     const el = $('waiting');
-    el.classList.toggle('hidden', !waiting.length);
+    el.classList.toggle('hidden', !line.length);
     el.classList.toggle('all-done', waiting.every((w) => w.status === 'done'));
     el.classList.toggle('needs-you-now', waiting.some((w) => w.status === 'needs_input'));
     // The counts are the top bar's: the rail's button only says there is someone to go to.
-    if (waiting.length) el.replaceChildren('N next');
-    el.title = waiting.length ? `${waitingLabel(waiting)}: go to the next (N)` : '';
+    if (line.length) el.replaceChildren('N next');
+    el.title = line.length ? `${attentionLabel(attentionCounts(ranked))}: go to the next (N)` : '';
   }
   // A snooze is in the roster, not the floor's workers.
   store.on('roster', renderWaiting);

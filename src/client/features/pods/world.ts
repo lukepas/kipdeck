@@ -13,49 +13,73 @@ import { makeZones } from './zone';
 // and, on the open deck beside its pod, a label lying flat and turned to the Overview's default yaw,
 // with the goal and "1 needs you · 3 working". From the Overview it's drawn over anything in front of it
 // (a rail, a wall), but under the units' callouts. A label hides as the walking camera comes within 4 m
-// of it (fading out over the last metre), so it isn't clutter at your feet, and it hides while any of it
-// is under the Units rail, so no cut-off word pokes out from under it; the zone always shows.
+// of it (fading out over the last metre), so it isn't clutter at your feet. From the Overview one that
+// the Units rail would cover slides along its pod's front edge until it's clear (clearOfRail), and one
+// still under it hides, so no cut-off word pokes out from under it; the zone always shows.
 //
 // From the Overview a label keeps about the same size on screen whatever the zoom, as the callouts do:
-// zoomed out it grows (up to MAX_GROW) so its counts line never reads smaller than MIN_TEXT_PX, and
-// zoomed in it shrinks so the line is never taller than MAX_TEXT_PX. Every trip up frames it whole
-// (index.ts, core/overview-frame.ts). Where each label lies on screen is kept for the callouts, which
-// lift clear of it (features/workers/declutter.ts, through PodDeck.boxes).
+// its counts line reads MIN_TEXT_PX tall, the label growing zoomed out and shrinking zoomed in, between
+// MIN_GROW and MAX_GROW times its size; on the
+// move up it grows in with the move rather than jumping on landing (growFor). Every trip up frames it
+// whole (index.ts, core/overview-frame.ts). Where each label lies on screen is kept for the callouts,
+// which lift clear of it (features/workers/declutter.ts, through PodDeck.boxes).
 //
 // Draw calls are the deck's budget (docs/design.md, Draw budgets): every pod's zone, its fill and its
 // outline, is one mesh (zone.ts), and every label is one cell of one canvas, drawn as one mesh, so the
 // four pods cost two draws however many there are.
 
-/** The least and most height (px) the counts line's capitals take on screen from the Overview, and the most a label grows for the least. */
+/** The height (px) the counts line's capitals take on screen from the Overview, at any zoom MIN_GROW to MAX_GROW allows. */
 export const MIN_TEXT_PX = 11;
-export const MAX_TEXT_PX = 18;
-export const MAX_GROW = 1.5;
+/** Zoomed right out, a label grows up to MAX_GROW so it still reads; zoomed in, it shrinks to MIN_GROW so it doesn't take over the view. */
+export const MAX_GROW = 2.5;
+export const MIN_GROW = 0.6;
+/** How big the framing allows for (index.ts frameAlso): what a label is at the framed zoom, give or take. */
+export const FRAME_GROW = 1.5;
 /** The counts line's capitals against the label's depth (draw.ts: a 0.38 font, capitals about 0.72 of it). */
 const CAPS = 0.38 * 0.72;
 
 /**
- * How much a label is scaled from the Overview so its counts line is between MIN_TEXT_PX and MAX_TEXT_PX
- * tall: `pxPerM` the screen's pixels a metre, `pitch` how steeply the camera looks down (the floor's
- * depth comes out sin(pitch) as tall). Never more than MAX_GROW.
+ * How much a label is scaled from the Overview so its counts line is MIN_TEXT_PX tall: `pxPerM` the
+ * screen's pixels a metre, `pitch` how steeply the camera looks down (the floor's depth comes out
+ * sin(pitch) as tall). Between MIN_GROW and MAX_GROW.
  */
 export function labelGrow(pxPerM: number, pitch: number): number {
-  const px = Math.max(1e-6, CAPS * LABEL.d * Math.sin(pitch) * pxPerM);
-  if (px > MAX_TEXT_PX) return MAX_TEXT_PX / px;
-  return Math.min(MAX_GROW, Math.max(1, MIN_TEXT_PX / px));
+  const px = CAPS * LABEL.d * Math.sin(pitch) * pxPerM;
+  return Math.min(MAX_GROW, Math.max(MIN_GROW, MIN_TEXT_PX / Math.max(1e-6, px)));
 }
 
-/** A label's box on screen (px from the top left). */
-export interface PodLabelBox {
+/**
+ * How much a label grows for `camera`: from the Overview, labelGrow at its zoom; on the move up or down
+ * (core/camera-overview.ts tags its camera with the Overview's and how far it has morphed into it), the
+ * same blended in as the move's projection blends, so the hand-over frame never resizes it; walking, 1.
+ */
+export function growFor(camera: THREE.Camera, h: number): number {
+  const ortho = camera as THREE.OrthographicCamera;
+  const ov = (ortho.isOrthographicCamera ? ortho : camera.userData.overview) as THREE.OrthographicCamera | undefined;
+  const morph = ortho.isOrthographicCamera ? 1 : ((camera.userData.morph as number | undefined) ?? 0);
+  if (!ov || morph <= 0) return 1;
+  const k = labelGrow(h / Math.max(1e-6, (ov.top - ov.bottom) / ov.zoom), OVERVIEW_PITCH);
+  return 1 + (k - 1) * morph;
+}
+
+/** A box on screen, in pixels from the top left. */
+export interface ScreenBox {
   left: number;
   top: number;
   right: number;
   bottom: number;
 }
 
-/** How far (px) past the Units rail's edge a label fades back in once the whole of it is clear. */
-const RAIL_FADE = 24;
+/** A label's box on screen (px from the top left). */
+export type PodLabelBox = ScreenBox;
 
-/** How strong a label is by the Units rail: hidden while any of it is under the rail, then fading in over RAIL_FADE. */
+/** How far (px) past the Units rail's edge a label fades back in once the whole of it is clear. */
+export const RAIL_FADE = 24;
+
+/**
+ * How strong a label is by the Units rail: hidden while any of it is still under the rail (once sliding
+ * it along its line, clearOfRail, can't clear it), then fading in over RAIL_FADE.
+ */
 export function railAlpha(box: PodLabelBox, railRight: number): number {
   if (railRight <= 0 || box.right < 0) return 1;
   return Math.min(1, Math.max(0, (box.left - railRight) / RAIL_FADE));
@@ -76,8 +100,11 @@ export interface PodDeck {
   show(views: Record<PodLetter, PodView>, now: number, reduce: boolean): void;
   /** Moves the fades and rolls on to `now`. */
   tick(now: number): void;
-  /** Each label on screen as the Overview drew it last, while it shows there (none walking, or hidden). */
-  boxes(): readonly PodLabelBox[];
+  /**
+   * Each label's box on screen (px from the top left) as `camera` draws it, the ones it doesn't show
+   * left out: unit callouts keep clear of them (features/workers/declutter.ts). The array is reused.
+   */
+  boxes(camera: THREE.Camera, w: number, h: number): readonly ScreenBox[];
 }
 
 declare module '../../world/types' {
@@ -152,7 +179,8 @@ export const podPlates: Fixture<'pods'> = (site) => {
   geo.setIndex(index);
   const mat = new THREE.MeshBasicMaterial({ map: texture, vertexColors: true, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
   const mesh = new THREE.Mesh(geo, mat);
-  // Over the deck's rails and walls from the Overview, under the units' callouts (10 and 11, world/character/unit-callout.ts).
+  // Over the deck's rails and walls from the Overview, under the units' callouts (10 and 11,
+  // world/character/unit-callout.ts) and their hairlines (9): lettering on the floor never paints over a callout.
   mesh.renderOrder = 8;
   mesh.name = 'pod-labels';
   // Lettering on the floor: the crosshair's ray passes through it.
@@ -162,12 +190,17 @@ export const podPlates: Fixture<'pods'> = (site) => {
   const where = geo.getAttribute('position') as THREE.BufferAttribute;
   const flat = Float32Array.from(where.array as ArrayLike<number>);
   let grownBy = 1;
-  /** Grows every label `k` times round its own middle (their corners from where they were built). */
+  /** Along a label's own reading line (its +x, turned to LABEL_YAW): how far each is slid to stay clear of the Units rail (m). */
+  const axis = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), LABEL_YAW);
+  const slid = labels.map(() => 0);
+  /** Grows every label `k` times round its own middle (their corners from where they were built), each slid along its line. */
   const grow = (k: number) => {
     grownBy = k;
     for (const l of labels) {
+      const ox = axis.x * slid[l.cell];
+      const oz = axis.z * slid[l.cell];
       for (let i = l.cell * 4; i < l.cell * 4 + 4; i++) {
-        where.setXYZ(i, l.at.x + (flat[i * 3] - l.at.x) * k, flat[i * 3 + 1], l.at.z + (flat[i * 3 + 2] - l.at.z) * k);
+        where.setXYZ(i, l.at.x + ox + (flat[i * 3] - l.at.x) * k, flat[i * 3 + 1], l.at.z + oz + (flat[i * 3 + 2] - l.at.z) * k);
       }
     }
     where.needsUpdate = true;
@@ -180,7 +213,7 @@ export const podPlates: Fixture<'pods'> = (site) => {
     b.left = b.top = Infinity;
     b.right = b.bottom = -Infinity;
     for (let i = l.cell * 4; i < l.cell * 4 + 4; i++) {
-      corner.fromBufferAttribute(where, i).project(camera);
+      corner.fromBufferAttribute(where, i).applyMatrix4(mesh.matrixWorld).project(camera);
       const x = ((corner.x + 1) / 2) * innerWidth;
       const y = ((1 - corner.y) / 2) * innerHeight;
       b.left = Math.min(b.left, x);
@@ -189,26 +222,53 @@ export const podPlates: Fixture<'pods'> = (site) => {
       b.bottom = Math.max(b.bottom, y);
     }
   };
-  /** Where the Units rail ends (px), measured now and then: it folds. */
+  // The Units rail's right edge (px), looked at now and then: it folds.
   let railRight = 0;
   let railAt = -Infinity;
-  /** Whether the frame drawn last was the Overview's: only then do the callouts keep clear of the labels. */
-  let fromAbove = false;
+  const p0 = new THREE.Vector3();
+  const p1 = new THREE.Vector3();
+  /** Looks again at where the Units rail ends, at most once a second. */
+  function railEdge() {
+    const now = performance.now();
+    if (now - railAt <= 1000) return;
+    railAt = now;
+    const rail = document.querySelector('.rail')?.getBoundingClientRect();
+    railRight = rail && rail.width > 0 && rail.top < innerHeight / 2 ? rail.right : 0;
+  }
+  /**
+   * From the Overview, slides a label whose left end would be under the Units rail along its own line
+   * (along its pod's front edge) until it clears it and its fade-in band, at most half its width; back
+   * again once there's room. True when any label's slide changed. One still under the rail hides (railAlpha).
+   */
+  function clearOfRail(camera: THREE.Camera): boolean {
+    let changed = false;
+    for (const l of labels) {
+      // Its middle and a metre along its line on screen: how many pixels right a metre slides it.
+      p0.copy(l.at).project(camera);
+      p1.copy(l.at).add(axis).project(camera);
+      const perM = ((p1.x - p0.x) / 2) * innerWidth;
+      const halfPx = (Math.abs(perM) * LABEL.w * grownBy) / 2;
+      const left = ((p0.x + 1) / 2) * innerWidth - halfPx;
+      const need = railRight + RAIL_FADE + 4 - left;
+      const want = need > 0 && Math.abs(perM) > 1 ? Math.min((LABEL.w * grownBy) / 2, need / Math.abs(perM)) * Math.sign(perM) : 0;
+      if (Math.abs(want - slid[l.cell]) > 0.02) {
+        slid[l.cell] = want;
+        changed = true;
+      }
+    }
+    return changed;
+  }
   // Worked out for whichever camera is drawing them: hidden at your feet while walking, and over
   // whatever stands in front of them from the Overview (a rail, a wall), the way a plan's lettering is.
   // A label's strength reaches its vertices on the next frame drawn, too soon to see.
   mesh.onBeforeRender = (_r, _s, camera) => {
-    mat.depthTest = (camera as THREE.PerspectiveCamera).isPerspectiveCamera === true;
-    const ortho = camera as THREE.OrthographicCamera;
-    fromAbove = ortho.isOrthographicCamera === true;
-    const k = fromAbove ? labelGrow(innerHeight / Math.max(1e-6, (ortho.top - ortho.bottom) / ortho.zoom), OVERVIEW_PITCH) : 1;
-    if (Math.abs(k - grownBy) > 0.01) grow(k);
-    const now = performance.now();
-    if (now - railAt > 1000) {
-      railAt = now;
-      const rail = document.querySelector('.rail')?.getBoundingClientRect();
-      railRight = rail && rail.width > 0 && rail.top < innerHeight / 2 ? rail.right : 0;
-    }
+    const ortho = (camera as THREE.OrthographicCamera).isOrthographicCamera === true;
+    // Over whatever stands in front of them once the view is mostly the Overview's, on the move too.
+    mat.depthTest = !ortho && ((camera.userData.morph as number | undefined) ?? 0) < 0.5;
+    railEdge();
+    const k = growFor(camera, innerHeight);
+    const shift = ortho ? clearOfRail(camera) : false;
+    if (Math.abs(k - grownBy) > 0.01 || shift) grow(k);
     for (const l of labels) {
       measure(l, camera);
       const a = labelAlpha(camera, l.at) * railAlpha(l.box, railRight);
@@ -238,7 +298,32 @@ export const podPlates: Fixture<'pods'> = (site) => {
 
   /** Each label's hue before this frame's fade, made once rather than every frame. */
   const before = new Uint32Array(labels.length);
+  const screen = labels.map((): ScreenBox => ({ left: 0, top: 0, right: 0, bottom: 0 }));
+  const shown: ScreenBox[] = [];
   const pods: PodDeck = {
+    boxes(camera, w, h) {
+      shown.length = 0;
+      if (!group.visible) return shown;
+      group.updateWorldMatrix(true, false);
+      for (const l of labels) {
+        // One faded more than halfway (at your feet, by the Units rail) is left out: nothing to keep off.
+        if (l.alpha <= 0.5 || !l.text) continue;
+        const b = screen[l.cell];
+        b.left = b.top = Infinity;
+        b.right = b.bottom = -Infinity;
+        for (let i = l.cell * 4; i < l.cell * 4 + 4; i++) {
+          corner.fromBufferAttribute(where, i).applyMatrix4(mesh.matrixWorld).project(camera);
+          const x = ((corner.x + 1) / 2) * w;
+          const y = ((1 - corner.y) / 2) * h;
+          b.left = Math.min(b.left, x);
+          b.right = Math.max(b.right, x);
+          b.top = Math.min(b.top, y);
+          b.bottom = Math.max(b.bottom, y);
+        }
+        shown.push(b);
+      }
+      return shown;
+    },
     show(views, now, reduce) {
       for (const l of labels) {
         const v = views[l.letter];
@@ -254,9 +339,6 @@ export const podPlates: Fixture<'pods'> = (site) => {
         l.text = v.text;
         repaint(l, l.rolling.size ? 0 : 1);
       }
-    },
-    boxes() {
-      return fromAbove ? labels.filter((l) => l.alpha > 0.5).map((l) => l.box) : [];
     },
     tick(now) {
       for (const [i, l] of labels.entries()) before[i] = zones.color(l.letter).getHex();
