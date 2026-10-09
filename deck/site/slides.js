@@ -16,7 +16,28 @@
     tl.from(els, v, at);
   }
   function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
-  function mmss(sec) { sec = Math.max(0, Math.round(sec)); return String(Math.floor(sec / 60)).padStart(2, '0') + ':' + String(sec % 60).padStart(2, '0'); }
+  /* A wait as an age, never a time of day: "45s", "8m 48s", "1h 02m". */
+  function age(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    if (sec < 60) return sec + 's';
+    if (sec < 3600) return Math.floor(sec / 60) + 'm ' + String(sec % 60).padStart(2, '0') + 's';
+    return Math.floor(sec / 3600) + 'h ' + String(Math.floor(sec / 60) % 60).padStart(2, '0') + 'm';
+  }
+  /* Wait intensity by age: fresh, over 5 minutes, over 30 minutes. One hue (attention), three strengths. */
+  function tier(sec) { return sec >= 1800 ? 'w3' : sec >= 300 ? 'w2' : 'w1'; }
+  /* Live wait clocks at rest: once a slide's motion has finished, its waits keep counting, one tick a
+     second, so the queue feels live while you talk over it. Still frames (reduced motion, ?static, ?hold,
+     print) never tick. fn(extraSeconds) redraws; stop() pauses (a revisit resumes), reset() zeroes. */
+  var q0 = new URLSearchParams(location.search);
+  var stillFrames = q0.has('static') || q0.has('hold') || q0.has('print') || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function liveTicker(fn) {
+    var id = null, n = 0;
+    return {
+      start: function () { if (stillFrames || id) return; id = setInterval(function () { n++; fn(n); }, 1000); },
+      stop: function () { if (id) { clearInterval(id); id = null; } },
+      reset: function () { this.stop(); n = 0; }
+    };
+  }
   function fmt(v, dec) { return Number(v).toLocaleString('en-US', { minimumFractionDigits: dec || 0, maximumFractionDigits: dec || 0 }); }
   /* A proxy clock: calls fn(seconds) for every rendered frame between `at` and `at + dur`. */
   function clock(tl, at, dur, fn) {
@@ -48,7 +69,7 @@
 
   var B = {};
 
-  /* ---------- 01 TITLE: cold open, eight agents ping, the queue snaps into one ranked list ---------- */
+  /* ---------- 01 TITLE: cold open, eight agents at work, three ask, the queue snaps into one ranked list ---------- */
   B.s1 = function (s, gsap) {
     var rows = [
       ['CC', 'Add rate limiting to /api/login', 'Claude Code'],
@@ -60,21 +81,25 @@
       ['Mu', 'Bump the Node image to 22', 'Muse'],
       ['Ds', 'Rename the billing env vars', 'DeepSeek Harness']
     ];
+    // Three agents ask (row, flip time, wait at rest in seconds); five keep working.
+    // One of each wait tier: over 30 min, over 5 min, fresh. B.s14 merges these same three.
+    var asks = [[3, 1.0, 34 * 60 + 12], [0, 1.15, 8 * 60 + 48], [6, 1.3, 100]];
+    var askOf = {}; asks.forEach(function (a) { askOf[a[0]] = a; });
+    var order = asks.map(function (a) { return a[0]; }).concat([1, 2, 4, 5, 7]);   // ranked: oldest wait first, then the working
     var list = A(s, 'list');
     list.innerHTML = '';
     var els = rows.map(function (r) {
       var d = document.createElement('div');
       d.className = 'q-row';
-      d.innerHTML = '<span class="av">' + r[0] + '</span><span class="ttl">' + r[1] + '<small>' + r[2] + '</small></span><span class="pill cyan"><i class="dot"></i><b>working</b></span><span class="tm">--:--</span>';
+      d.innerHTML = '<span class="av">' + r[0] + '</span><span class="ttl">' + r[1] + '<small>' + r[2] + '</small></span><span class="pill cyan"><i class="dot"></i><b>working</b></span><span class="tm"></span>';
       list.appendChild(d);
       return d;
     });
     var rowH = els[0].offsetHeight || 72;
     els.forEach(function (d, i) { gsap.set(d, { y: i * rowH }); });
     list.style.height = (rows.length * rowH) + 'px';
-    var order = [3, 0, 6, 1, 7, 2, 5, 4];       // the order agents start asking
-    var flipAt = {}; order.forEach(function (r, k) { flipAt[r] = 1.0 + k * 0.12; });
-    var FREEZE = 2.0, SPEED = 600;              // 1 s of animation shows as 10 min of waiting
+    var FREEZE = 2.0, END = 2.9;
+    var count = A(s, 'qcount');
 
     var tl = gsap.timeline({ paused: true });
     var panel = A(s, 'panel');
@@ -83,25 +108,36 @@
     tl.from(els, { autoAlpha: 0, x: -16, duration: 0.26, ease: 'power2.out', stagger: 0.07 }, 0.45);
     tl.from($$(s, '.q-row .ttl'), { clipPath: 'inset(0 100% 0 0)', duration: 0.3, ease: 'none', stagger: 0.07 }, 0.45);
 
-    clock(tl, 0, 2.9, function (t) {
+    var live = 0;   // seconds the clocks have ticked at rest
+    function paint(t) {
       panel.classList.toggle('bare', t < FREEZE);
+      var settled = t >= FREEZE + 0.3, n = 0;
       els.forEach(function (d, i) {
-        var pill = d.children[2], tm = d.children[3];
-        var asking = t >= flipAt[i];
+        var pill = d.children[2], tm = d.children[3], a = askOf[i];
+        var asking = !!a && t >= a[1];
+        if (asking) n++;
         if (asking !== d._asking) {
           d._asking = asking;
           pill.className = 'pill ' + (asking ? 'pink' : 'cyan');
           pill.lastChild.textContent = asking ? 'needs you' : 'working';
           d.classList.toggle('hot', asking);
         }
-        tm.textContent = asking ? mmss((Math.min(t, FREEZE) - flipAt[i]) * SPEED) : '--:--';
-        var settled = t >= FREEZE + 0.3;
+        // The wait counts up to its age as the queue sorts, then keeps ticking at rest.
+        var w = asking ? a[2] * gsap.parseEase('power2.out')(clamp((t - a[1]) / (FREEZE + 0.3 - a[1]), 0, 1)) + live : 0;
+        tm.textContent = asking ? age(w) : '';
+        d.dataset.w = asking ? tier(w) : '';
         var top = order[0] === i;
         pill.classList.toggle('pulse', settled && top);
-        pill.style.opacity = settled && !top ? 0.55 : 1;
-        d.style.background = settled && top ? 'var(--pink-a)' : '';
+        d.classList.toggle('calm', settled && !asking);
       });
-    });
+      if (count) count.textContent = n;
+    }
+    var tick = liveTicker(function (k) { live = k; paint(END); });
+    clock(tl, 0, END, function (t) { if (t < END) { tick.reset(); live = 0; } paint(t); });
+    tl.eventCallback('onComplete', tick.start);
+    // Stage mode pauses the clocks off-slide; a phone keeps them going (its slides never replay).
+    if (!s._s1wired) { s._s1wired = true; s.addEventListener('slide:leave', function () { if (!document.body.classList.contains('flow') && s._tick) s._tick.stop(); }); }
+    s._tick = tick;
     // The snap: rows reorder by wait (FLIP to their ranked slot) and the chrome arrives.
     order.forEach(function (r, rank) { tl.to(els[r], { y: rank * rowH, duration: 0.5, ease: 'power3.inOut' }, FREEZE); });
     tl.to(A(s, 'qhead'), { autoAlpha: 1, duration: 0.25 }, FREEZE + 0.1);
@@ -121,7 +157,7 @@
       ticks.insertAdjacentHTML('beforeend', '<line x1="' + (150 + r1 * Math.sin(a)) + '" y1="' + (150 - r1 * Math.cos(a)) + '" x2="' + (150 + r2 * Math.sin(a)) + '" y2="' + (150 - r2 * Math.cos(a)) + '" stroke="var(--muted)" stroke-width="' + (i % 3 ? 2 : 4) + '"/>');
     }
     var lbl = svg.querySelector('.idle-l');
-    if (!lbl) { svg.insertAdjacentHTML('beforeend', '<text class="idle-l" x="150" y="338" text-anchor="middle" style="font:700 30px var(--mono); fill:var(--pink)"></text><text x="150" y="368" text-anchor="middle" style="font:500 13px var(--mono); fill:var(--muted); letter-spacing:.08em">IDLE, BLOCKED</text>'); lbl = svg.querySelector('.idle-l'); }
+    if (!lbl) { svg.insertAdjacentHTML('beforeend', '<text class="idle-l" x="150" y="338" text-anchor="middle" style="font:700 30px var(--mono); fill:var(--pink)"></text><text x="150" y="368" text-anchor="middle" style="font:500 16px var(--mono); fill:var(--muted); letter-spacing:.08em">IDLE, BLOCKED</text>'); lbl = svg.querySelector('.idle-l'); }
     var mh = A(s, 'mh'), hh = A(s, 'hh'), arc = A(s, 'arc');
     function setClock(m) {
       mh.setAttribute('transform', 'rotate(' + (m * 6) + ' 150 150)');
@@ -178,7 +214,7 @@
       arrival.forEach(function (k, n) { if (t >= 0.5 + n * 0.14) counts[items[k].w]++; });
       wins.forEach(function (w, i) { w.querySelector('[data-badge]').textContent = counts[i]; });
       var startWait = 38 * 60 + 10;
-      A(s, 'wait').textContent = mmss(startWait + clamp(t - 0.5, 0, 3.7) * 48);
+      A(s, 'wait').textContent = age(startWait + clamp(t - 0.5, 0, 3.7) * 48);
     });
     // Frantic alt-tab: hard cuts between the three windows people look at. Never the fourth.
     var seq = [0, 1, 2, 0, 2, 1];
@@ -213,7 +249,7 @@
     tl.from(A(s, 'tot'), { autoAlpha: 0, y: 12, duration: 0.35, ease: 'back.out(2)' }, 2.45);
     rise(tl, [A(s, 'f1'), A(s, 'f2')], 1.0, { stagger: 0.12 });
     tl.from(A(s, 'tll'), { autoAlpha: 0, duration: 0.3 }, 2.6);
-    rise(tl, [A(s, 'c1'), A(s, 'c2'), A(s, 'c3')], 2.7, { y: 16, duration: 0.35, stagger: 0.12 });
+    rise(tl, [A(s, 'c1'), A(s, 'c2')], 2.7, { y: 16, duration: 0.35, stagger: 0.12 });
     return tl;
   };
 
@@ -239,34 +275,25 @@
     return tl;
   };
 
-  /* ---------- 06 DEMO: the laptop zooms in, the recording plays with narration and step markers ---------- */
+  /* ---------- 06 DEMO: the recording plays; its four beats light in the left column as they happen ---------- */
   B.s6 = function (s, gsap) {
-    var video = A(s, 'video'), cap = A(s, 'cap'), bar = A(s, 'bar'), mks = $$(s, '.mk');
-    var lines = [
-      [0, "Engineers now run several coding agents at once. The bottleneck isn't the agents: it's how long they sit waiting on you."],
-      [5, 'One command, in your repository. No account, no Kipdeck cloud.'],
-      [10, "Every vendor's agent in one list, each on its own branch."],
-      [14, 'Codex is blocked. It goes to the top and its question opens in plain words.'],
-      [20, "One box. No hunting through terminals. And the top bar counts who's waiting on you."],
-      [27, 'Claude Code finished: three files, tests pass. The real diff, beside the list.'],
-      [34, 'Merged, without GitHub if you want. Every merge is a signed record: agent, model, reviewer, wait.'],
-      [40, 'Same inbox on your phone.'],
-      [46, "Nothing waits on you. And here's the number we sell on: human wait time, per agent and model."],
-      [54, 'Free and open source for one engineer. Teams pay for the shared inbox, routing, SSO and audit.']
-    ];
+    var video = A(s, 'video'), bar = A(s, 'bar'), beats = $$(s, '.beats li');
     function sync(t) {
-      var line = lines[0][1];
-      lines.forEach(function (l) { if (t >= l[0]) line = l[1]; });
-      if (cap.textContent !== line) cap.textContent = line;
-      bar.style.width = (t / 60 * 100) + '%';
-      mks.forEach(function (m) { m.classList.toggle('on', t >= +m.dataset.mk); });
+      if (stillFrames) t = 999;   // still frames keep every beat lit, even while the video plays
+      var d = video.duration || 59;
+      bar.style.width = clamp(t / d * 100, 0, 100) + '%';
+      beats.forEach(function (b) {
+        var on = t >= +b.dataset.t;
+        if (on !== b._on) { b._on = on; b.classList.toggle('on', on); if (on && !stillFrames) gsap.fromTo(b, { x: 6 }, { x: 0, duration: 0.35, ease: 'back.out(3)' }); }
+      });
     }
     if (!s._wired) {
       s._wired = true;
       video.addEventListener('timeupdate', function () { sync(video.currentTime); });
-      video.addEventListener('ended', function () { sync(60); });
+      video.addEventListener('ended', function () { sync(video.duration || 59); });
       s.addEventListener('slide:enter', function () {
-        if (document.body.classList.contains('print')) return;
+        // Still frames keep the poster (the product, not the opening terminal frame); a click still plays it.
+        if (stillFrames || document.body.classList.contains('print')) return;
         video.preload = 'auto';
         try { video.currentTime = 0; } catch (e) { /* not loaded yet */ }
         var p = video.play(); if (p && p.catch) p.catch(function () {});
@@ -274,10 +301,13 @@
       s.addEventListener('slide:leave', function () { video.pause(); });
       A(s, 'player').addEventListener('click', function () { if (video.paused) video.play(); else video.pause(); });
     }
+    // Still frames (print, reduced motion, screenshots) show every beat lit; a live talk lights them in time.
     sync(0);
     var tl = gsap.timeline({ paused: true });
-    rise(tl, [A(s, 'k'), A(s, 'h'), A(s, 'lede'), A(s, 'cta')], 0);
-    tl.from(A(s, 'player'), { scale: 0.86, autoAlpha: 0, duration: 0.55, ease: 'expo.out', transformOrigin: '50% 40%' }, 0.05);
+    rise(tl, [A(s, 'k'), A(s, 'h')], 0);
+    rise(tl, beats, 0.2, { stagger: 0.06, y: 12 });
+    rise(tl, [A(s, 'cta')], 0.45);
+    tl.from(A(s, 'player'), { scale: 0.94, autoAlpha: 0, duration: 0.5, ease: 'expo.out', transformOrigin: '50% 40%' }, 0.05);
     return tl;
   };
 
@@ -335,46 +365,43 @@
     return tl;
   };
 
-  /* ---------- 08 PROOF: the stopwatch stops at 10.7 s, the odometers roll, the testnet hashes type ---------- */
+  /* ---------- 08 PROOF: the stopwatch runs to 10.7 s, a dot per click; only then do the odometers roll ---------- */
   B.s8 = function (s, gsap) {
     var sec = A(s, 'sec'), cg = A(s, 'cdots');
-    // Clicks 2 and 3 land 0.3 s apart, so they share one dot labelled "2".
-    var clicksAt = [3.376, 5.436, 10.702], counts = ['1', '2', '1'];
+    // Four clicks, as measured (clicks 2 and 3 land 0.3 s apart). The last one is the merge.
+    var clicksAt = [3.376, 5.436, 5.736, 10.702];
     cg.innerHTML = '';
     var NS = 'http://www.w3.org/2000/svg';
+    // Placed by time, but never closer than 18 px, so four clicks always read as four dots.
+    var prevX = -Infinity;
     var cs = clicksAt.map(function (c, i) {
-      var x = 14 + c / 10.702 * 490;
-      var g = document.createElementNS(NS, 'g');
-      var e = document.createElementNS(NS, 'circle'); e.setAttribute('cx', x); e.setAttribute('cy', 30); e.setAttribute('r', 11);
-      e.setAttribute('fill', i === 2 ? 'var(--green)' : 'var(--pink)'); g.appendChild(e);
-      if (counts[i] !== '1') { var tx = document.createElementNS(NS, 'text'); tx.setAttribute('x', x); tx.setAttribute('y', 64); tx.setAttribute('text-anchor', 'middle'); tx.setAttribute('style', 'font:500 14px var(--mono); fill:var(--muted)'); tx.textContent = 'x' + counts[i]; g.appendChild(tx); }
-      cg.appendChild(g); return g;
+      var e = document.createElementNS(NS, 'circle');
+      var x = Math.max(14 + c / 10.702 * 490, prevX + 18); prevX = x;
+      e.setAttribute('cx', x); e.setAttribute('cy', 30); e.setAttribute('r', i === 3 ? 11 : 7);
+      e.setAttribute('fill', i === 3 ? 'var(--green)' : 'var(--text)');
+      cg.appendChild(e); return e;
     });
-    var DUR = 1.6;
+    var DUR = 1.6, STOP = 0.2 + DUR;
     var tl = gsap.timeline({ paused: true });
     rise(tl, [A(s, 'k'), A(s, 'h')], 0);
-    tl.from(A(s, 'honest'), { autoAlpha: 0, duration: 0.6 }, 0.3);
-    clock(tl, 0.2, DUR, function (t) {
+        clock(tl, 0.2, DUR, function (t) {
       var v = 10.7 * gsap.parseEase('power1.out')(clamp(t / DUR, 0, 1));
       sec.textContent = v.toFixed(1);
       cs.forEach(function (c, i) { c.style.opacity = v >= clicksAt[i] - 0.05 ? 1 : 0; });
     });
-    tl.fromTo(A(s, 'watch'), { scale: 1 }, { scale: 1.04, duration: 0.06, yoyo: true, repeat: 1, transformOrigin: '0% 50%' }, 0.2 + DUR);
-    // Before/after: the scan line sweeps from the POC to now.
-    var img = A(s, 'baimg'), scan = A(s, 'scan');
-    tl.fromTo(scan, { left: '0%' }, { left: '100%', duration: 1.1, ease: 'power2.inOut' }, 0.5);
-    tl.fromTo(img, { clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0% 0 0)', duration: 1.1, ease: 'power2.inOut' }, 0.5);
-    tl.to(scan, { autoAlpha: 0, duration: 0.2 }, 1.65);
+    // The stop: one beat of weight on the number, the merge dot rings once.
+    tl.fromTo(A(s, 'watch'), { scale: 1 }, { scale: 1.04, duration: 0.06, yoyo: true, repeat: 1, transformOrigin: '0% 50%' }, STOP);
+    tl.fromTo(cs[3], { attr: { r: 18 } }, { attr: { r: 11 }, duration: 0.35, ease: 'back.out(3)', immediateRender: false }, STOP);
+    tl.from(A(s, 'mcap'), { autoAlpha: 0, duration: 0.3 }, STOP + 0.1);
+    // Then the tiles, one after another: measured first, counted second.
     var tiles = AA(s, 'tile');
-    rise(tl, tiles, 0.35, { stagger: 0.06 });
+    rise(tl, tiles, STOP + 0.15, { stagger: 0.14 });
     tiles.forEach(function (tile, i) {
       var c = tile.querySelector('[data-count]'); if (!c) return;
-      var to = +c.dataset.count, from = c.dataset.from ? +c.dataset.from : 0, dec = +(c.dataset.dec || 0);
-      counter(tl, c, from, to, 0.45 + i * 0.06, 1.1, dec);
+      counter(tl, c, 0, +c.dataset.count, STOP + 0.25 + i * 0.14, 0.9, +(c.dataset.dec || 0));
     });
-    var txs = AA(s, 'tx');
-    rise(tl, txs, 1.5, { stagger: 0.1 });
-    txs.forEach(function (tx, i) { var el = tx.querySelector('[data-type]'); scramble(tl, el, el.dataset.type, 1.55 + i * 0.12, 0.5); });
+    // The closing beat: what this proof buys next.
+    rise(tl, [A(s, 'honest')], STOP + 0.75, { duration: 0.4 });
     return tl;
   };
 
@@ -433,12 +460,12 @@
       var somA = clamp((t - 2.05) / 0.3, 0, 1);
       if (somA) {
         var bx = W - SOM - 30, by = BOT - SOM - 30;
-        ctx.globalAlpha = somA * 0.35; ctx.strokeStyle = C.pink; ctx.lineWidth = 2;
+        ctx.globalAlpha = somA * 0.35; ctx.strokeStyle = C.text; ctx.lineWidth = 2;
         ctx.beginPath(); ctx.arc(bx + SOM / 2, by + SOM / 2, 14 + 26 * (1 - somA) + 8, 0, 6.2832); ctx.stroke();
-        ctx.globalAlpha = somA; ctx.fillStyle = C.pink; ctx.fillRect(bx, by, SOM, SOM);
+        ctx.globalAlpha = somA; ctx.fillStyle = C.text; ctx.fillRect(bx, by, SOM, SOM);
         // Leader runs along the bottom edge, under the squares, out to the left.
         var ly = H - 14;
-        ctx.strokeStyle = C.pink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(bx + SOM / 2, by + SOM + 4); ctx.lineTo(bx + SOM / 2, ly); ctx.lineTo(X0 - 16, ly); ctx.stroke();
+        ctx.strokeStyle = C.text; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(bx + SOM / 2, by + SOM + 4); ctx.lineTo(bx + SOM / 2, ly); ctx.lineTo(X0 - 16, ly); ctx.stroke();
         ctx.fillStyle = C.text; ctx.font = '700 26px "Space Grotesk", sans-serif'; ctx.textAlign = 'right'; ctx.fillText('YEAR-5 PATH', X0 - 26, ly - 26);
         ctx.font = '500 14px "JetBrains Mono", monospace'; ctx.fillStyle = C.muted; ctx.fillText('OUR ASSUMPTION', X0 - 26, ly - 4); ctx.textAlign = 'left';
       }
@@ -455,51 +482,55 @@
     return tl;
   };
 
-  /* ---------- 10 COMPETITION: crowded quadrants, then the empty one lights up ---------- */
+  /* ---------- 10 COMPETITION: the map fills, Kipdeck lands bottom right today, a dashed path climbs to M3 ---------- */
   B.s10 = function (s, gsap) {
-    var NS = 'http://www.w3.org/2000/svg', g = A(s, 'chips'), hub = A(s, 'hub');
-    g.innerHTML = ''; hub.innerHTML = '';
-    // x: single vendor (left) to vendor-neutral (right); y: team (top) to single developer (bottom).
+    var NS = 'http://www.w3.org/2000/svg', g = A(s, 'chips'), usg = A(s, 'us');
+    g.innerHTML = ''; usg.innerHTML = '';
+    // x: launch agents inside our app (left) to attach wherever they run (right); y: team (top) to solo (bottom).
+    // [label, caption lines, x, y]
     var chips = [
-      ['Cognition', 'sells its own agents', 64, 40], ['Factory', 'sells its own agents', 236, 40], ['Cursor cloud agents', 'own vendor only', 64, 150],
-      ['Claude Code Agent view', 'own vendor only', 64, 300], ['One vendor CLI', 'one terminal', 64, 420],
-      ['Conductor', 'Teams plan, runs per dev', 470, 292], ['Herdr', 'OSS, one machine', 640, 370], ['Entire', 'history, not live', 470, 420], ['tmux', 'one pane', 700, 462]
+      ['Platform inboxes', ['GitHub Agent HQ, Codex app,', 'Antigravity, Claude Code'], 60, 30],
+      ['Conductor  USD 24M', ['workbench, cloud, multiplayer'], 60, 128],
+      ['Superset  USD 11.5M', ['agentic IDE, team plan'], 196, 202],
+      ['Emdash', ['open-source workbench'], 96, 330],
+      ['Paperclip', ['nearest neighbour, team timeline'], 476, 30],
+      ['Agentbox', ['free solo inbox'], 466, 462],
+      ['DIY Slack hook', ['USD 0 default'], 630, 400]
     ];
     function el(tag, attrs, parent) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); (parent || g).appendChild(e); return e; }
     var chipEls = chips.map(function (c) {
       var grp = el('g', { transform: 'translate(' + c[2] + ',' + c[3] + ')' });
-      var w = c[0].length * 10.5 + 32;
-      el('rect', { x: 0, y: 0, width: w, height: 40, rx: 20, fill: 'var(--raised)', stroke: 'var(--line-2)' }, grp);
+      el('rect', { x: 0, y: 0, width: c[0].length * 10.5 + 32, height: 40, rx: 20, fill: 'var(--raised)', stroke: 'var(--line-2)' }, grp);
       el('text', { x: 16, y: 26, 'font-size': 17, fill: 'var(--text)', style: 'font-family:var(--sans);font-weight:500' }, grp).textContent = c[0];
-      el('text', { x: 16, y: 60, 'font-size': 13, fill: 'var(--muted)' }, grp).textContent = c[1];
+      c[1].forEach(function (line, k) { el('text', { x: 16, y: 62 + k * 20, 'font-size': 15, fill: 'var(--muted)' }, grp).textContent = line; });
       return grp;
     });
-    var cx = 620, cy = 135;
-    var clis = ['Claude Code', 'Codex', 'Cursor', 'OpenCode', 'Pi', 'Grok', 'Muse', 'DeepSeek'];
-    var lines = [], labels = [];
-    clis.forEach(function (n, i) {
-      var a = -Math.PI / 2 + i * (2 * Math.PI / clis.length), rx = 118, ry = 94;
-      var x = cx + rx * Math.cos(a), y = cy + ry * Math.sin(a);
-      var ca = Math.cos(a), sa = Math.sin(a), off = 12;   // dot radius plus 8 px
-      lines.push(el('line', { x1: cx, y1: cy, x2: x, y2: y, stroke: 'var(--green)', 'stroke-width': 1.5, opacity: 0.6 }, hub));
-      var t = el('text', { x: x + ca * off, y: y + sa * off + (sa > 0.3 ? 12 : sa < -0.3 ? -2 : 5), 'font-size': 14, 'text-anchor': ca > 0.3 ? 'start' : ca < -0.3 ? 'end' : 'middle', fill: 'var(--muted)' }, hub);
-      t.textContent = n; labels.push(t);
-      el('circle', { cx: x, cy: y, r: 4, fill: 'var(--green)' }, hub);
-    });
-    var ring = el('circle', { cx: cx, cy: cy, r: 40, fill: 'none', stroke: 'var(--pink)', 'stroke-width': 3 }, hub);
-    var us = el('g', { transform: 'translate(' + (cx - 84) + ',' + (cy - 26) + ')' }, hub);
-    el('rect', { x: 0, y: 0, width: 168, height: 52, rx: 26, fill: 'var(--green)' }, us);
-    var ut = el('text', { x: 84, y: 34, 'font-size': 22, 'text-anchor': 'middle', fill: '#0A0F1C', style: 'font-family:var(--display);font-weight:700' }, us);
-    ut.textContent = (window.DECK_CONFIG && window.DECK_CONFIG.name) || 'Kipdeck';
+    var name = (window.DECK_CONFIG && window.DECK_CONFIG.name) || 'Kipdeck';
+    // Today: filled, bottom right (solo, attach anywhere).
+    var today = el('g', { transform: 'translate(600,296)' }, usg);
+    el('rect', { x: 0, y: 0, width: 176, height: 52, rx: 26, fill: 'var(--green)' }, today);
+    el('text', { x: 88, y: 34, 'font-size': 22, 'text-anchor': 'middle', fill: '#0A0F1C', style: 'font-family:var(--display);font-weight:700' }, today).textContent = name;
+    el('text', { x: 176, y: 76, 'font-size': 15, 'text-anchor': 'end', fill: 'var(--green)' }, today).textContent = 'TODAY: ANY CLI, ATTACH';
+    // M3: a dashed outline top right (team), not built yet.
+    var m3 = el('g', { transform: 'translate(600,132)' }, usg);
+    el('rect', { x: 1, y: 1, width: 174, height: 50, rx: 25, fill: 'none', stroke: 'var(--green)', 'stroke-width': 2, 'stroke-dasharray': '7 6' }, m3);
+    el('text', { x: 88, y: 33, 'font-size': 22, 'text-anchor': 'middle', fill: 'var(--green)', style: 'font-family:var(--display);font-weight:700' }, m3).textContent = name;
+    el('text', { x: -22, y: 22, 'font-size': 15, 'text-anchor': 'end', fill: 'var(--muted)' }, m3).textContent = 'M3: TEAM QUEUE';
+    el('text', { x: -22, y: 42, 'font-size': 15, 'text-anchor': 'end', fill: 'var(--muted)' }, m3).textContent = 'NOT BUILT YET';
+    var path = el('path', { d: 'M688 292 V188', stroke: 'var(--green)', 'stroke-width': 2, fill: 'none', 'stroke-dasharray': '6 6' }, usg);
+    var head = el('path', { d: 'M680 196 L688 184 L696 196', stroke: 'var(--green)', 'stroke-width': 2, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, usg);
+    var ring = el('rect', { x: 600, y: 296, width: 176, height: 52, rx: 26, fill: 'none', stroke: 'var(--green)', 'stroke-width': 2 }, usg);
     var tl = gsap.timeline({ paused: true });
     rise(tl, [A(s, 'k'), A(s, 'h')], 0);
     tl.from(s.querySelectorAll('.quad .axisl'), { autoAlpha: 0, duration: 0.3 }, 0.1);
-    tl.from(chipEls, { x: '-=40', autoAlpha: 0, duration: 0.4, ease: E, stagger: 0.06 }, 0.2);
-    tl.to(A(s, 'tr'), { opacity: 1, duration: 0.3 }, 1.0);
-    tl.from(us, { autoAlpha: 0, scale: 0.8, transformOrigin: '84px 26px', duration: 0.3, ease: E }, 1.0);
-    tl.fromTo(ring, { attr: { r: 30 }, opacity: 0.9 }, { attr: { r: 150 }, opacity: 0, duration: 0.7, ease: 'power2.out' }, 1.25);
-    tl.from(lines, { attr: { x2: cx, y2: cy }, duration: 0.45, ease: E, stagger: 0.04 }, 1.35);
-    tl.from(labels, { autoAlpha: 0, duration: 0.2, stagger: 0.04 }, 1.55);
+    tl.from(chipEls, { x: '-=30', autoAlpha: 0, duration: 0.35, ease: E, stagger: 0.06 }, 0.2);
+    // The point: we land where nobody else sits, then the path up to the team quadrant draws.
+    tl.from(today, { autoAlpha: 0, scale: 0.7, transformOrigin: '688px 322px', duration: 0.35, ease: 'back.out(2.2)' }, 0.95);
+    tl.fromTo(ring, { autoAlpha: 0.9, scale: 1, transformOrigin: '688px 322px' }, { autoAlpha: 0, scale: 1.35, duration: 0.6, ease: 'power2.out' }, 1.15);
+    tl.fromTo(path, { attr: { d: 'M688 292 V292' } }, { attr: { d: 'M688 292 V188' }, duration: 0.45, ease: 'power2.inOut' }, 1.35);
+    tl.from(head, { autoAlpha: 0, duration: 0.15 }, 1.75);
+    tl.to(A(s, 'tr'), { opacity: 1, duration: 0.4 }, 1.75);
+    tl.from(m3, { autoAlpha: 0, duration: 0.35 }, 1.8);
     rise(tl, AA(s, 'ans'), 0.5, { stagger: 0.15 });
     return tl;
   };
@@ -515,17 +546,19 @@
       if (i < recs.length - 1) { var l = document.createElement('span'); l.style.cssText = 'align-self:center;width:18px;height:2px;background:var(--green);opacity:.6'; chain.appendChild(l); }
       return d;
     });
-    var tag = document.createElement('div'); tag.className = 't-label'; tag.style.cssText = 'flex-basis:100%; order:-1; margin-bottom:2px'; tag.innerHTML = 'Signed merge records <span class="c-amber">(illustration)</span>'; chain.appendChild(tag);
+    var tag = document.createElement('div'); tag.className = 't-label'; tag.style.cssText = 'flex-basis:100%; order:-1; margin-bottom:2px'; tag.innerHTML = 'Signed merge records <span class="honest-tag">illustration</span>'; chain.appendChild(tag);
     var heat = A(s, 'heat'); heat.innerHTML = '';
     var agents = ['Claude Code', 'Codex', 'Cursor', 'OpenCode', 'Pi'];
+    // Mock minutes (tagged "mock data" on the card): waits shrink week over week as the queue gets worked.
+    var mock = [[14, 9, 6, 3, 1], [22, 12, 8, 4, 2], [11, 7, 4, 2, 1], [18, 13, 9, 5, 3], [9, 6, 3, 1, 1]];
     heat.insertAdjacentHTML('beforeend', '<div class="hd"></div>' + ['W1', 'W2', 'W3', 'W4', 'W5'].map(function (w) { return '<div class="hd">' + w + '</div>'; }).join(''));
     var cells = [];
     agents.forEach(function (a, r) {
       heat.insertAdjacentHTML('beforeend', '<div class="lb">' + a + '</div>');
       for (var c = 0; c < 5; c++) {
-        var v = clamp(0.95 - c * 0.17 + ((r * 7 + c * 3) % 5) * 0.06 - r * 0.04, 0.05, 1);   // waits shrink week over week
-        var d = document.createElement('div');
-        d.style.background = v > 0.6 ? 'rgba(255,46,99,' + (v * 0.75).toFixed(2) + ')' : v > 0.35 ? 'rgba(255,176,32,' + (0.25 + v * 0.6).toFixed(2) + ')' : 'rgba(61,220,151,' + (0.25 + (1 - v) * 0.5).toFixed(2) + ')';
+        var m = mock[r][c], d = document.createElement('div');
+        d.className = 'cell ' + (m > 10 ? 'w3' : m >= 2 ? 'w2' : 'w1');
+        d.textContent = m + 'm';
         d.dataset.d = r + c; heat.appendChild(d); cells.push(d);
       }
     });
@@ -537,6 +570,8 @@
     rise(tl, [A(s, 'heatcard')], 1.1);
     // A linear diagonal opacity wipe: data, not confetti.
     tl.from(cells, { autoAlpha: 0, duration: 0.2, ease: 'none', stagger: function (i) { return +cells[i].dataset.d * 0.05; } }, 1.3);
+    tl.from(A(s, 'legend3'), { autoAlpha: 0, duration: 0.3 }, 1.6);
+    tl.from(A(s, 'mock'), { autoAlpha: 0, duration: 0.3 }, 1.75);
     rise(tl, [A(s, 'lock')], 1.9);
     rise(tl, [A(s, 'fork')], 2.1);
     return tl;
@@ -551,11 +586,11 @@
     clock(tl, 0, 2.4, function (t) {
       var team = t >= 1.0;
       badge.textContent = team ? 'TEAM' : 'FREE';
-      badge.style.color = team ? 'var(--amber)' : 'var(--green)';
-      badge.style.background = team ? 'var(--amber-a)' : 'var(--green-a)';
+      badge.style.color = team ? 'var(--cyan)' : 'var(--green)';
+      badge.style.background = team ? 'var(--cyan-a)' : 'var(--green-a)';
     });
     tl.fromTo(badge, { scale: 1.2 }, { scale: 1, duration: 0.15 }, 1.0);
-    tl.fromTo(s.querySelector('.tier.team'), { borderColor: 'rgba(255,255,255,.18)' }, { borderColor: '#FFB020', duration: 0.3 }, 1.05);
+    tl.fromTo(s.querySelector('.tier.team'), { borderColor: 'rgba(255,255,255,.18)' }, { borderColor: '#2DD4D4', duration: 0.3 }, 1.05);
     rise(tl, [A(s, 'gtml')], 1.0);
     rise(tl, AA(s, 'fs'), 1.1, { stagger: 0.12, y: 0, x: -20 });
     rise(tl, [A(s, 'note12')], 1.8);
@@ -569,7 +604,7 @@
     var bars = data.map(function (d, i) {
       var b = document.createElement('div'); b.className = 'b';
       b.style.height = Math.round(d[1] / 131 * 110) + 'px';
-      b.innerHTML = '<span>' + d[1] + '</span><em>' + (i === 0 ? 'Sep 30' : 'Oct ' + d[0]) + '</em>';
+      b.innerHTML = '<span>' + d[1] + '</span><em><i class="mo">' + (i === 0 ? 'Sep ' : 'Oct ') + '</i>' + d[0] + '</em>';
       box.appendChild(b); return b;
     });
     var tl = gsap.timeline({ paused: true });
@@ -585,7 +620,7 @@
   /* ---------- 14 ASK: USD 100k splits into its uses, milestones light, the queue clears ---------- */
   B.s14 = function (s, gsap) {
     var NS = 'http://www.w3.org/2000/svg', svg = A(s, 'donut'); svg.innerHTML = '';
-    var R = 110, Cf = 2 * Math.PI * R, parts = [[0.7, 'var(--green)'], [0.1, 'var(--cyan)'], [0.1, 'var(--amber)'], [0.1, 'var(--muted)']];
+    var R = 110, Cf = 2 * Math.PI * R, parts = [[0.7, 'var(--green)'], [0.1, 'var(--cyan)'], [0.1, 'var(--muted)'], [0.1, 'var(--idle)']];
     var acc = 0, arcs = [];
     parts.forEach(function (p) {
       var c = document.createElementNS(NS, 'circle');
@@ -596,15 +631,23 @@
       c.setAttribute('transform', 'rotate(' + (-90 + acc * 360) + ' 150 150)');
       svg.appendChild(c); arcs.push({ el: c, len: len }); acc += p[0];
     });
-    svg.insertAdjacentHTML('beforeend', '<text x="150" y="146" text-anchor="middle" style="font:700 40px var(--display); fill:var(--text)">70%</text><text x="150" y="174" text-anchor="middle" style="font:500 13px var(--mono); fill:var(--muted); letter-spacing:.08em">FOUNDER TIME</text>');
+    svg.insertAdjacentHTML('beforeend', '<text x="150" y="146" text-anchor="middle" style="font:700 40px var(--display); fill:var(--text)">70%</text><text x="150" y="178" text-anchor="middle" style="font:500 18px var(--mono); fill:var(--muted); letter-spacing:.06em">FOUNDER TIME</text>');
     var flist = A(s, 'flist'); flist.innerHTML = '';
-    var rows = [['Cx', 'Fix the flaky checkout test', 'Codex', 754], ['CC', 'Add rate limiting to /api/login', 'Claude Code', 512], ['Cu', 'Write the README quickstart', 'Cursor', 204]];
-    var els = rows.map(function (r, i) {
+    // The three agents that needed you on the cover (B.s1), oldest wait first. Each one merges in turn.
+    var rows = [['Oc', 'Upgrade the payment SDK to v5', 'OpenCode', 34 * 60 + 12], ['CC', 'Add rate limiting to /api/login', 'Claude Code', 8 * 60 + 48], ['Mu', 'Bump the Node image to 22', 'Muse', 100]];
+    var els = rows.map(function (r) {
       var d = document.createElement('div'); d.className = 'q-row hot';
-      d.style.top = (i * 70) + 'px';
       d.innerHTML = '<span class="av">' + r[0] + '</span><span class="ttl">' + r[1] + '<small>' + r[2] + '</small></span><span class="pill pink"><i class="dot"></i><b>needs you</b></span><span class="tm"></span>';
       flist.appendChild(d); return d;
     });
+    var rowH = els[0].offsetHeight || 70;
+    els.forEach(function (d, i) { d.style.top = (i * rowH) + 'px'; });
+    flist.style.height = (rows.length * rowH) + 'px';
+    // On a phone the slide scrolls in with the milestones already read, so the merges start sooner.
+    var flow = document.body.classList.contains('flow');
+    var fcount = A(s, 'fcount'), fmark = A(s, 'fmark'), MERGE = flow ? 1.1 : 2.9, GAP = 0.3, QIN = flow ? 0.25 : 2.0;
+    // Rounded down, so "waited 34m" matches the cover's "34m 12s".
+    function mins(sec) { return sec < 60 ? sec + 's' : Math.floor(sec / 60) + 'm'; }
     var ms = $$(s, '.ms .m');
     var tl = gsap.timeline({ paused: true });
     tl.from(A(s, 'k'), { autoAlpha: 0, duration: 0.2 }, 0);
@@ -618,22 +661,37 @@
     tl.fromTo(A(s, 'fill'), { width: '0%' }, { width: '75%', duration: 1.2, ease: 'power1.inOut' }, 1.2);
     clock(tl, 0, 4.4, function (t) {
       ms.forEach(function (m, i) { m.classList.toggle('on', t >= 1.2 + i * 0.4); });
+      var left = 0;
       els.forEach(function (d, i) {
-        var done = t >= 2.9 + i * 0.25, w = rows[i][3];
-        var left = done ? 0 : Math.round(w * (1 - clamp((t - 2.4) / (0.5 + i * 0.25), 0, 1)));
-        d.children[3].textContent = mmss(left);
+        var done = t >= MERGE + i * GAP, w = rows[i][3];
+        if (!done) left++;
+        // Still waiting: the age keeps climbing in real seconds until the merge lands.
+        d.children[3].textContent = done ? 'waited ' + mins(w) : age(w + Math.max(0, t - QIN));
+        d.dataset.w = done ? '' : tier(w);
         if (d._done !== done) {
           d._done = done;
           d.classList.toggle('hot', !done); d.classList.toggle('done', done);
           d.children[2].className = 'pill ' + (done ? 'green' : 'pink');
           d.children[2].lastChild.textContent = done ? 'merged' : 'needs you';
+          d.children[2].firstChild.className = done ? 'ck' : 'dot';
         }
       });
+      if (fcount) fcount.textContent = left;
+      // The header mark is the attention diamond until the last wait clears, then a green check.
+      var clear = left === 0;
+      if (fmark._clear !== clear) { fmark._clear = clear; fmark.className = clear ? 'c-green' : 'c-pink'; fmark.innerHTML = clear ? '&#10003;' : '&#9670;'; }
     });
-    rise(tl, [A(s, 'final')], 2.0);
-    els.forEach(function (d, i) { tl.fromTo(d, { scale: 1.04 }, { scale: 1, duration: 0.12 }, 2.9 + i * 0.25); });
-    tl.from(A(s, 'nobody'), { autoAlpha: 0, x: 10, duration: 0.3 }, 3.5);
-    rise(tl, [A(s, 'close'), A(s, 'contact')], 3.6);
+    rise(tl, [A(s, 'final')], QIN);
+    // Each merge: the row snaps green and its pill gives one small check pulse.
+    els.forEach(function (d, i) {
+      var at = MERGE + i * GAP;
+      tl.fromTo(d, { backgroundColor: 'rgba(61,220,151,.22)' }, { backgroundColor: 'rgba(61,220,151,0)', duration: 0.5, ease: 'power2.out', immediateRender: false }, at);
+      tl.fromTo(d.children[2], { scale: 1.18 }, { scale: 1, duration: 0.3, ease: 'back.out(3)', immediateRender: false }, at);
+    });
+    tl.fromTo([fcount, fmark], { scale: 1.3 }, { scale: 1, duration: 0.25, ease: 'back.out(3)', immediateRender: false }, MERGE + 2 * GAP);
+    rise(tl, [A(s, 'nobody')], MERGE + 2 * GAP + 0.15, { y: 10, duration: 0.4 });
+    rise(tl, [A(s, 'close')], MERGE + 2 * GAP + 0.55, { y: 14, duration: 0.45 });
+    rise(tl, [A(s, 'contact')], MERGE + 2 * GAP + 0.8);
     return tl;
   };
 

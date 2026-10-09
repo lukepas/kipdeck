@@ -4,9 +4,11 @@
   "version": "0.1.0",
   "description": "Kipdeck investor deck (static site)",
   "scripts": {
-    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve.mjs",
     "shots": "node scripts/shots.mjs",
     "pdf": "node scripts/pdf.mjs",
+    "check": "node scripts/deck-check.mjs && node scripts/kip-check.mjs",
+    "check:deck": "node scripts/deck-check.mjs",
     "check:kip": "node scripts/kip-check.mjs"
   },
   "license": "UNLICENSED",

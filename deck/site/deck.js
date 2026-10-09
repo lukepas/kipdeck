@@ -27,11 +27,9 @@
   var md = doc.querySelector('meta[name=description]'); if (md) md.content = fill(md.content);
   doc.querySelectorAll('[data-commit]').forEach(function (el) { el.textContent = cfg.commitment; });
   doc.querySelectorAll('[data-cta]').forEach(function (el) { el.textContent = cfg.npmPublished ? 'Try it: npx ' + cmd + ' --demo' : 'Hosted demo on request'; });
+  /* Install claim: one command only once it is true. Until npm publish (M1) it says how it installs today. */
   doc.querySelectorAll('[data-install]').forEach(function (el) {
-    el.textContent = 'npx ' + cmd + ': one command' + (cfg.npmPublished ? '' : ' (local tarball today; npm at M1)');
-  });
-  doc.querySelectorAll('[data-install-note]').forEach(function (el) {
-    el.textContent = cfg.npmPublished ? 'to install: npx ' + cmd : 'to install with npx; from a local tarball today, npm publish is M1';
+    el.textContent = cfg.npmPublished ? 'npx ' + cmd + ': one command' : 'Installs from a local tarball today; npm at M1';
   });
   doc.querySelectorAll('[data-a=contact]').forEach(function (el) {
     var parts = [(cfg.team || []).join(', ')];
@@ -45,7 +43,7 @@
   slides.forEach(function (s, i) {
     var f = doc.createElement('div');
     f.className = 'foot';
-    f.innerHTML = '<span><b>' + cfg.name + '</b> &middot; Investor deck &middot; Data as of ' + cfg.asOf + '</span><span><b>' + String(i + 1).padStart(2, '0') + '</b> / ' + String(total).padStart(2, '0') + '</span>';
+    f.innerHTML = '<span><b>' + cfg.name + '</b> &middot; <span class="foot-x">Investor deck &middot; </span>Data as of ' + cfg.asOf + '</span><span><b>' + String(i + 1).padStart(2, '0') + '</b> / ' + String(total).padStart(2, '0') + '</span>';
     s.appendChild(f);
     s.setAttribute('aria-label', (i + 1) + ' of ' + total + ': ' + (s.dataset.title || ''));
   });
@@ -112,6 +110,7 @@
     }
     bar.firstElementChild.style.width = ((i + 1) / total * 100) + '%';
     bar.classList.toggle('done', i === total - 1);
+    if (prev > -1) doc.body.classList.remove('show-hint');   // the key hint goes once someone has moved
     if (!(opts && opts.silent)) {
       history.replaceState(null, '', location.pathname + location.search + '#' + (i + 1));
       if (chan) chan.postMessage({ type: 'goto', i: i });
@@ -239,6 +238,6 @@
   window.addEventListener('beforeprint', finalAll);
 
   /* Show the key hint for a few seconds on the first slide. */
-  doc.body.classList.add('show-hint'); setTimeout(function () { doc.body.classList.remove('show-hint'); }, 4500);
+  if (!hold) { doc.body.classList.add('show-hint'); setTimeout(function () { doc.body.classList.remove('show-hint'); }, 4500); }
   if ('ontouchstart' in window) doc.querySelectorAll('.navbtn').forEach(function (b) { b.style.display = 'block'; });
 })();

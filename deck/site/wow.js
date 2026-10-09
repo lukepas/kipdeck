@@ -1,5 +1,7 @@
-/* === WOW: Kip's moment on each slide, plus small extras ===
-   Kip lives on #kip-layer above the slides, so he carries over from one slide to the next.
+/* === WOW: Kip's few moments, plus small extras ===
+   Kip lives on #kip-layer above the slides. He appears only where a moment earns him: the cover (s1),
+   the merge in the demo (s6, cued by the video), the ask (s14) and the appendix nap (s15). On every
+   other slide he is off stage, so nothing competes with the one point the slide makes.
    Each moment's beat times mirror the matching builder in slides.js (B.sN); keep them in step.
    Going back never replays motion: Kip cuts to the slide's home spot and pose. R replays. */
 (function () {
@@ -67,10 +69,10 @@
     if (isFlow) {
       inlineSticker(s1, s1 && A(s1, 'panel'), 'wave');            // on the queue panel, in the first screen
       var b14 = inlineSticker(s14, s14 && A(s14, 'final'), 'happy');   // on the cleared queue, "Nobody waiting."
-      /* He arrives with the cleared queue (it rises at 2.0 on this slide's timeline). */
+      /* He arrives with the queue panel (on phones it rises at 0.25 on this slide's timeline, see B.s14). */
       if (b14 && !reduced) {
         gsap.set(b14, { autoAlpha: 0 });
-        s14.addEventListener('slide:enter', function () { gsap.to(b14, { autoAlpha: 1, duration: 0.3, delay: 2.3 }); });
+        s14.addEventListener('slide:enter', function () { gsap.to(b14, { autoAlpha: 1, duration: 0.3, delay: 0.5 }); });
       }
       return;
     }
@@ -157,7 +159,7 @@
   var M = {
     /* 01: the panel gets its border at FREEZE 2.0 and the header fades in by 2.35. Only then does a big
        Kip rise over the panel's top-left edge, spring out, dash the length of the re-sorted queue,
-       skid with a squash and stretch, settle to hero size and wave: 8 agents need you. */
+       skid with a squash and stretch, settle to hero size and wave: 3 agents need you. */
     s1: {
       size: BIG,
       x1: 1720,
@@ -168,7 +170,7 @@
         if (!K.away) tl.add(K.vanish(), 0);
         tl.call(function () { K.sprig('green'); }, null, 0.2);
         var t = riseFrom(tl, x0, y, 'r', 2.2, { hold: 0.55 });
-        var top = rows[3] && lay(rows[3]);                         // the OpenCode row, top of the queue once sorted
+        var top = rows[3] && lay(rows[3]);                         // the OpenCode row, the oldest wait, top of the queue once sorted
         if (top) tl.add(K.lookAt({ x: pb.x + top.cx, y: pb.y + 60 + 36 }), 2.6);
         tl.add(K.lookAt(null), t - 0.1);
         tl.add(K.runTo(x1 - 10, { y: y, dur: 0.6, dash: true, ease: 'power1.in' }), t);
@@ -181,273 +183,10 @@
         tl.add(K.lookAt(null), t + 3.2);
       }
     },
-    /* 02: Kip sits on the clock's rim and follows the minute hand as it sweeps 0.3-1.9; he slumps
-       (ears down) exactly as the sweep lands on +23 min, and flinches at the bars' thud (2.33). */
-    s2: {
-      rim: function (s) {
-        var c = layUnscaled(A(s, 'clock')), k = Math.min(c.w / 300, c.h / 380);
-        return { x: c.cx, y: c.y + (c.h - 380 * k) / 2 + 10 * k + 1, cy: c.y + (c.h - 380 * k) / 2 + 150 * k, k: k };
-      },
-      home: function (s) { var r = M.s2.rim(s); return { x: r.x, y: r.y, face: 'front', pose: 'sitdown', sprig: 'green' }; },
-      play: function (s, tl) {
-        var r = M.s2.rim(s);
-        var t = arrive(tl, r.x, r.y, 0.02, { face: 'front' });
-        tl.add(K.poseTo('sit', 0.2), Math.max(t, 0.25));
-        // pupils on the minute hand's tip while it sweeps (the slide's own power2.inOut, 10:02 to 10:25)
-        for (var j = 0; j <= 4; j++) {
-          var tt = 0.3 + j * 0.4, m = 2 + 23 * gsap.parseEase('power2.inOut')(Math.min(1, (tt - 0.3) / 1.6)), a = m * 6 * Math.PI / 180;
-          tl.add(K.lookAt({ x: r.x + 116 * r.k * Math.sin(a), y: r.cy - 116 * r.k * Math.cos(a) }), tt);
-        }
-        tl.add(K.poseTo('sitdown', 0.3), 1.9);
-        tl.add(K.lookAt(null), 2.0);
-        tl.add(K.flick(), 2.33);
-        tl.to(K.parts.root, { y: 6, duration: 0.06, yoyo: true, repeat: 1 }, 2.33);
-      }
-    },
-    /* 03: alt-tab cuts at 1.0 + n*0.24, the hard cut at 2.54 to the window nobody looks at. Kip dashes
-       off with the cut, then rises over that window's top edge and stares at its timer. */
-    s3: {
-      spot: function (s) { var w = lay($$(s, '.win')[3]); return { x: w.x + w.w - 56, y: w.y - 4 }; },
-      home: function (s) { var p = M.s3.spot(s); return { x: p.x, y: p.y, face: 'l', pose: 'stand', sprig: 'green', look: lay(A(s, 'wait')) }; },
-      play: function (s, tl) {
-        arrive(tl, 1560, LANE, 0, { face: 'front' });
-        var wins = $$(s, '.win'), seq = [0, 1, 2, 0, 2, 1];
-        seq.forEach(function (w, n) { var b = lay(wins[w]); tl.add(K.lookAt({ x: b.cx, y: b.cy }), 1.0 + n * 0.24); });
-        tl.add(K.runTo(1995, { dash: true }), 2.54);
-        tl.call(function () { K.away = true; }, null, 2.8);
-        K.away = true;
-        tl.add(K.lookAt(null), 2.8);
-        var p = M.s3.spot(s), wt = lay(A(s, 'wait'));
-        var t = riseFrom(tl, p.x, p.y, 'l', 2.95, { hold: 0.7 });
-        tl.add(K.lookAt({ x: wt.cx, y: wt.cy }), t);
-        tl.add(K.wide(true), t);
-        tl.add(K.picto('bang', 0.8), t + 0.05);
-      }
-    },
-    /* 04: 2.5 bar at 0.6, 5x pops at 1.35, the stack rises 1.6-2.5 (Claude Code, Cursor, Cognition),
-       USD 5.5B+ at 2.45. Kip stands where the stack will grow and rides its top up; before the last
-       segment he hops off to the chart floor beside it, then a happy hop and a paw up once the number settles. */
-    s4: {
-      size: 0.85,
-      geo: function (s) {
-        var a = A(s, 'sk1').getBoundingClientRect(), p = K.toStage(a.right, a.bottom);
-        return { right: p.x, floor: p.y };
-      },
-      home: function (s) { var g = M.s4.geo(s); return { x: g.right + 54, y: g.floor, face: 'l', pose: 'pawup', sprig: 'teal', size: 0.85 }; },
-      play: function (s, tl) {
-        var g = M.s4.geo(s), rx = g.right - 30, sk = [A(s, 'sk1'), A(s, 'sk2')];
-        tl.add(K.poof(rx, g.floor, 'front'), 0.4);
-        tl.add(K.sprigTo('teal', 0.2), 0.75);
-        tl.add(K.lookAt({ x: g.right - 400, y: g.floor - 200 }), 1.2);
-        tl.add(K.ears(58, 22, 0.08), 1.35);
-        tl.to(K.parts.tail, { scale: 1.3, duration: 0.1 }, 1.35);
-        tl.add(K.ears(0, 0, 0.2), 1.75);
-        tl.to(K.parts.tail, { scale: 1, duration: 0.3 }, 1.8);
-        tl.add(K.lookAt(null), 1.55);
-        // the ride: his feet follow the top of the stack (Claude Code, then Cursor) as it grows
-        var ride = { v: 0 };
-        tl.to(ride, { v: 1, duration: 0.5, ease: 'none', onUpdate: function () {
-          var top = Infinity;
-          sk.forEach(function (e) { var b = e.getBoundingClientRect(); if (b.height > 0.5) top = Math.min(top, K.toStage(0, b.top).y); });
-          if (top < Infinity) gsap.set(K.el, { y: top - K.h });
-        } }, 1.6);
-        tl.to(K.parts.armL, { rotation: 120, duration: 0.2 }, 1.65);
-        tl.to(K.parts.root, { scaleY: 0.92, duration: 0.1, yoyo: true, repeat: 1 }, 1.62);
-        tl.to(K.parts.armL, { rotation: 0, duration: 0.2 }, 2.0);
-        // where the ride leaves him (Cursor's final top, svg y 138 on the sk1 scale), for the hop's arc
-        var r1 = A(s, 'sk1').getBoundingClientRect(), ks = (K.toStage(r1.right, 0).x - K.toStage(r1.left, 0).x) / 190;
-        K.st.y = g.floor - (480 - 138) * ks;
-        tl.call(function () { K.sync(); }, null, 2.1);
-        tl.add(K.jumpTo(g.right + 54, g.floor, { h: 30, face: 'l' }), 2.1);
-        squash(tl, 2.6);
-        tl.add(K.lookAt(lay(A(s, 'tot'))), 2.7);
-        tl.add(K.happy(true), 3.0);
-        tl.add(K.hop(6), 3.0);
-        tl.add(K.poseTo('pawup', 0.2), 3.3);
-      }
-    },
-    /* 05: steps land at 0.5, 1.25, 2.0, 2.75. Kip hops down the left gutter beside each number. */
-    s5: {
-      size: 0.8,
-      ys: function (s) { return $$(s, '.step .n').map(function (n) { var b = lay(n); return b.y + b.h; }); },
-      home: function (s) { var ys = M.s5.ys(s); return { x: 70, y: ys[3], face: 'r', pose: 'happy', sprig: 'green', size: 0.8 }; },
-      play: function (s, tl) {
-        var ys = M.s5.ys(s), beats = [0.5, 1.25, 2.0, 2.75];
-        tl.add(K.poof(70, ys[0], 'r'), 0.2);
-        tl.add(K.sprigTo('teal', 0.15), 0.5);
-        tl.add(K.jumpTo(70, ys[1], { dur: 0.3, face: 'r' }), beats[1] - 0.38);
-        tl.add(K.picto('bang', 0.6), beats[1]);
-        tl.add(K.jumpTo(70, ys[2], { dur: 0.3, face: 'r' }), beats[2] - 0.38);
-        tl.add(K.type(0.5), beats[2] + 0.05);
-        tl.add(K.jumpTo(70, ys[3], { dur: 0.3, face: 'r' }), beats[3] - 0.38);
-        tl.add(K.sprigTo('green', 0.12), beats[3]);
-        tl.add(K.twirl(), beats[3] + 0.05);
-        tl.call(function () { K.burst('green', 12); }, null, beats[3] + 0.6);
-        tl.add(K.happy(true), beats[3] + 0.6);
-      }
-    },
-    /* 06: sits on the player and watches; his eyes follow the demo's progress dot (see EXTRAS.s6). */
-    s6: {
-      home: function (s) { return { x: 1720, y: lay(A(s, 'player')).y - 2, face: 'front', pose: 'sit', sprig: 'green' }; },
-      play: function (s, tl) {
-        var y = lay(A(s, 'player')).y - 2;
-        var t = arrive(tl, 1720, y, 0.25, { face: 'front' });
-        tl.add(K.sprigTo('green', 0.2), t);
-        tl.add(K.poseTo('sit', 0.25), t + 0.05);
-        tl.add(K.lookAt({ x: 1300, y: 500 }), t + 0.4);
-      }
-    },
-    /* 07: the packet leaves at 0.6 and reaches each node at 0.6 + 0.36k (+0.3); signed log at 2.76.
-       Kip carries it in the lane above the node row, drops down the gutter and runs onto the Pulse and
-       Numbers box, right under the signed log, where he plants the wand upright and the pennant flies. */
-    s7: {
-      size: 0.9,
-      lane: function (s) { return lay($$(s, '.node')[1]).y - 61; },             // 440: clear of the ask and sig labels
-      num: function (s) { var n = $$(s, '.node'); return lay(n[n.length - 1].querySelector('rect')); }, // Pulse and Numbers
-      home: function (s) { var b = M.s7.num(s); return { x: b.x + b.w - 46, y: b.y, face: 'l', pose: 'flag', sprig: 'green', size: 0.9 }; },
-      play: function (s, tl) {
-        var L = M.s7.lane(s), xs = [515, 735, 955, 1175, 1395, 1655];   // stage x = 120 + svg x (slides.js hit[])
-        var hm = M.s7.home(s);
-        if (K.away || Math.abs(K.st.x - 430) > 3 || Math.abs(K.st.y - L) > 3) tl.add(K.poof(430, L, 'r'), 0.1);
-        tl.add(K.sprigTo('green', 0.15), 0.3);
-        xs.forEach(function (x, k) { tl.add(K.runTo(x, { dur: 0.3, ease: 'power2.inOut', carry: true, keepCarry: true }), 0.6 + k * 0.36); });
-        tl.add(K.sprigTo('teal', 0.12), 1.9);
-        tl.add(K.sprigTo('green', 0.12), 2.3);
-        tl.add(K.runTo(1850, { dur: 0.2 }), 2.76);
-        tl.add(K.slideDown(hm.y), 2.98);
-        tl.add(K.runTo(hm.x, { dur: 0.3, face: 'l' }), 3.55);
-        tl.add(K.flag('green'), 3.95);
-        tl.add(K.wide(true), 4.3);
-        tl.add(K.lookAt({ x: 900, y: hm.y - 200 }), 4.3);
-        tl.add(K.wide(false), 5.1);
-        tl.add(K.lookAt(null), 5.2);
-      }
-    },
-    /* 08: the stopwatch runs 0.2-1.8 with power1.out and stops on 10.7. Kip races it in the clear band
-       under the timeline, skids under the green end dot as it lights, and holds still. */
-    s8: {
-      lane: function (s) { var c = lay(A(s, 'clicks')); return c.y + c.h + 136; },   // 762: clear of the caption, even mid-poof
-      dot: function (s) { var d = $$(s, '[data-a="cdots"] circle'); return d.length ? lay(d[d.length - 1]) : { cx: 785, cy: 574 }; },
-      home: function (s) { return { x: Math.round(M.s8.dot(s).cx), y: M.s8.lane(s), face: 'front', pose: 'tada', sprig: 'green' }; },
-      play: function (s, tl) {
-        var L = M.s8.lane(s), dx = M.s8.dot(s).cx;
-        tl.add(K.poof(140, L, 'r'), 0);
-        tl.add(K.sprigTo('green', 0.1), 0.05);
-        tl.add(K.runTo(dx - 8, { dur: 1.6, ease: 'power1.out' }), 0.2);
-        tl.add(K.skid(), 1.8);
-        squash(tl, 1.8);
-        tl.call(function () { var d = M.s8.dot(s); K.ringAt(d.cx, d.cy, 'green'); K.motes(d.cx, d.cy, 'green', 8); }, null, 1.82);
-        tl.add(K.faceTo('front'), 2.05);
-        tl.add(K.poseTo('tada', 0.22), 2.05);
-      }
-    },
-    /* 09: dots sift 0.55-0.9, move 0.95-1.55, TAM draws at 1.3, the year-5 square lands at 2.05.
-       Kip appears on the TAM's top edge, points at the square, then jumps down onto SAM's top edge. */
-    s9: {
-      target: function (s) { var c = lay(A(s, 'cv')); var SOM = Math.max(10, 520 * Math.sqrt(7.2 / 4070)); return { x: c.x + 860 - SOM / 2 - 30, y: c.y + 652 - SOM / 2 - 30 }; },
-      sam: function (s) { var c = lay(A(s, 'cv')), S = 520 * Math.sqrt(1.85 / 4.07); return { x: c.x + 860 - 64, y: c.y + 652 - S - 1 }; },
-      home: function (s) { var p = M.s9.sam(s); return { x: p.x, y: Math.round(p.y), face: 'r', pose: 'stand', sprig: 'green', point: M.s9.target(s) }; },
-      play: function (s, tl) {
-        var c = lay(A(s, 'cv')), top = c.y + 132, tg = M.s9.target(s), sp = M.s9.sam(s);
-        if (!K.away) tl.add(K.vanish(), 0);
-        tl.add(K.poof(1720, top, 'front'), 1.3);
-        tl.add(K.sprigTo('teal', 0.2), 1.35);
-        tl.add(K.lookAt({ x: 1540, y: 520 }), 1.6);
-        tl.add(K.sprigTo('green', 0.15), 2.0);
-        tl.add(K.pointAt(tg), 2.05);
-        tl.add(K.jumpTo(sp.x, Math.round(sp.y), { face: 'r' }), 2.75);
-        squash(tl, 3.25);
-        tl.add(K.pointAt(tg), 3.6);
-      }
-    },
-    /* 10: chips slide in 0.2-0.95, the empty quadrant lights at 1.0, the hub ring at 1.25.
-       Kip pops into the lit quadrant's top-right corner and plants the Sprig there. */
-    s10: {
-      size: 0.85,
-      spot: function (s) { var q = lay(A(s, 'quad')); return { x: q.x + q.w - 68, y: q.y + 19 }; },   // (880, 344)
-      home: function (s) { var p = M.s10.spot(s); return { x: p.x, y: p.y, face: 'l', pose: 'flag', sprig: 'green', size: 0.85 }; },
-      play: function (s, tl) {
-        var p = M.s10.spot(s);
-        if (!K.away) tl.add(K.vanish(), 0);
-        tl.add(K.sprigTo('green', 0.01), 0.7);
-        tl.add(K.poof(p.x, p.y, 'l'), 0.75);
-        tl.add(K.flag('green'), 1.15);
-        tl.call(function () { var hb = A(s, 'hub').querySelector('g'); if (!hb) return; var b = lay(hb); K.ringAt(b.cx, b.cy, 'green'); }, null, 1.3);
-      }
-    },
-    /* 11: blocks sign at 0.4, 0.58, 0.76; heatmap wipes from 1.3; the lock line at 1.9.
-       Kip stands in the slot right of #0414 and stamps each block as it signs. */
-    s11: {
-      spot: function (s) { var b = lay($$(s, '.blk').pop()); return { x: b.x + b.w + 68, y: b.y + b.h }; },   // (1750, 282)
-      home: function (s) { var p = M.s11.spot(s); return { x: p.x, y: p.y, face: 'l', pose: 'stand', sprig: 'green' }; },
-      play: function (s, tl) {
-        var p = M.s11.spot(s);
-        cut(tl);   // his s10 spot sits on this headline: no vanish puff there
-        arrive(tl, p.x, p.y, 0, { face: 'l', dur: 0.36 });
-        tl.add(K.sprigTo('green', 0.15), 0.3);
-        var pulses = $$(s, '.blk').map(function (b) {
-          var i = b.querySelector('.wow-pulse');
-          if (!i) { i = doc.createElement('i'); i.className = 'wow-pulse'; i.setAttribute('aria-hidden', 'true'); b.appendChild(i); }
-          return i;
-        });
-        [0.4, 0.58, 0.76].forEach(function (t, i) {
-          tl.add(K.stamp('green'), t);
-          if (pulses[i]) tl.fromTo(pulses[i], { opacity: 0 }, { opacity: 1, duration: 0.08, yoyo: true, repeat: 1, repeatDelay: 0.14, ease: 'power1.out' }, t + 0.14);
-        });
-        var hm = lay(A(s, 'heat'));
-        tl.add(K.lookAt({ x: hm.cx, y: hm.cy }), 1.3);
-        tl.add(K.lookAt(null), 2.0);
-      }
-    },
-    /* 12: tiers rise from 0.3, the badge flips to TEAM at 1.0. A teammate (amber jacket, no wand) runs
-       in from the right 0.15 s after Kip, for one high-five as the badge flips. */
-    s12: {
-      y: function (s) { return lay($$(s, '[data-a="tier"]')[1]).y; },
-      mate: { scarf: 'amber', scale: 0.85, vars: { '--kip-vest': '#C98A2B', '--kip-vest-dark': '#A06E1F', '--kip-fur': '#DCCAB0', '--kip-knit': '#9C8466' } },
-      home: function (s) { var y = M.s12.y(s); return { x: 1600, y: y, face: 'r', pose: 'happy', sprig: 'green', buddy: { x: 1664, y: y, face: 'l', pose: 'happy', sprig: 'off' } }; },
-      play: function (s, tl) {
-        var y = M.s12.y(s), bd = lay(A(s, 'badge'));
-        if (!K.away) tl.add(K.vanish(), 0);
-        tl.add(K.poof(1470, y, 'r'), 0.4);
-        var b = K.buddy(M.s12.mate);
-        b.at(1990, y, 'l'); b.away = true; b.sprig('off'); if (!still) b.life(true);
-        tl.add(K.runTo(1600, { dur: 0.3 }), 0.62);
-        tl.add(b.runTo(1664, { dash: true, face: 'l' }), 0.77);
-        tl.add(K.sprigTo('green', 0.15), 0.85);
-        tl.call(function () { K.motes(bd.cx, bd.cy, 'amber', 12); }, null, 1.0);
-        // High five with the paws nearest each other; Kip's wand is tucked away for it.
-        tl.to(K.parts.sprig, { autoAlpha: 0, duration: 0.08 }, 0.98);
-        tl.add(K.armTo(-140, { duration: 0.12, ease: 'power2.out' }), 1.03);
-        tl.to(b.parts.armR, { rotation: -140, duration: 0.12, ease: 'power2.out' }, 1.03);
-        tl.to([K.parts.root, b.parts.root], { rotation: 6, duration: 0.08, yoyo: true, repeat: 1 }, 1.13);
-        tl.call(function () { K.motes(1632, y - 82, 'amber', 8); }, null, 1.15);
-        tl.add(K.armTo(0, { duration: 0.2 }), 1.3);
-        tl.to(b.parts.armR, { rotation: 0, duration: 0.2 }, 1.3);
-        tl.to(K.parts.sprig, { autoAlpha: 1, duration: 0.15 }, 1.4);
-        tl.add(K.happy(true), 1.15);
-        tl.add(b.happy(true), 1.15);
-      }
-    },
-    /* 13: kept quiet. Commit bars grow from 1.0; he peeks in beside the graph, looks up at the tallest bar
-       (Oct 6, 131) and gives a paw up. */
-    s13: {
-      home: function (s) { return { x: 1860, y: M.s13.y(s), face: 'l', pose: 'pawup', sprig: 'green' }; },
-      y: function (s) { var c = lay(A(s, 'commits')); return c.y + c.h; },
-      play: function (s, tl) {
-        if (!K.away) tl.add(K.vanish(), 0);
-        tl.add(K.sprigTo('green', 0.01), 0.2);
-        tl.add(K.peek('r', M.s13.y(s), { x: 1860 }), 0.9);
-        var bars = $$(A(s, 'commits'), '.b'), c = lay(A(s, 'commits'));
-        if (bars[6]) { var bb = lay(bars[6]); tl.add(K.lookAt({ x: c.x + bb.cx, y: c.y + bb.y }), 1.6); }
-        tl.to(K.parts.head, { rotation: 10, duration: 0.12, yoyo: true, repeat: 1 }, 1.25);
-        tl.add(K.poseTo('pawup', 0.2), 1.8);
-        tl.add(K.lookAt(null), 2.8);
-      }
-    },
     /* 14, the finale: milestones light at 1.2 + 0.4i. Kip hops milestone to milestone in the lane above
        the track, landing on each one as it lights (a small ring at the dot). At M4 a green sweep rings
        out from the dot, he runs to the cleared queue ("Needs you 0"), drops onto its corner, grows to
-       hero size and throws both arms up as "Nobody waiting." lands at 3.5. No confetti. */
+       hero size and throws both arms up as the last merge lands (3.5; "Nobody waiting." follows). No confetti. */
     s14: {
       spot: function (s) { return { x: 1812, y: lay(A(s, 'final')).y + 1 }; },   // one foot on the cleared queue's corner, clear of the M4 label
       home: function (s) { var p = M.s14.spot(s); return { x: p.x, y: p.y, face: 'front', pose: 'tada', sprig: 'green', size: HERO }; },
@@ -525,39 +264,28 @@
       s._mv = function (c) { qx(clamp((c.x - 960) / 960, -1, 1)); qy(clamp((c.y - 540) / 540, -1, 1)); s._rest.restart(true); };
       s._p = p;
     }, off: function (s) { s._mv = null; if (s._rest) { s._rest.kill(); s._rest = null; } if (s._p) gsap.killTweensOf(s._p); A(s, 'laptop').style.translate = ''; A(s, 'phone').style.translate = ''; } },
+    /* 06, the merge: off stage while the demo plays, then at the Ship beat (the merge in the recording)
+       he pops onto the player's top edge, gives one hop and a green burst, and leaves again after a few
+       seconds. The cue time is the Ship beat's own data-t in index.html. */
     s6: { on: function (s) {
-      var v = A(s, 'video'), last = 0;
-      var cues = [
-        [14, function () { gsap.timeline().add(K.ears(-4, -10, 0.12)).add(K.wide(true), 0).add(K.wide(false), 0.8); }],
-        [34, function () { gsap.timeline().add(K.hop(14)).add(K.sprigTo('green', 0.15), 0); }],
-        [46, function () { gsap.timeline().add(K.happy(true)).add(K.lookAt({ x: 1300, y: 500 }), 0); }],
-        [54, function () { gsap.timeline().add(K.poseTo('sit', 0.25)).add(K.wave(1)); }]
-      ];
-      /* His eyes follow the demo's progress dot (the end of the progress bar under the player). */
-      var bar = A(s, 'bar');
+      var v = A(s, 'video'), ship = s.querySelector('[data-beat="ship"]'), at = ship ? +ship.dataset.t : 27.4, last = 0;
       s._tu = function () {
         var t = v.currentTime;
         if (t < last - 1) { last = t; return; }
-        if (!busy()) {
-          cues.forEach(function (c) { if (last < c[0] && t >= c[0]) c[1](); });
-          if (!K.asleep && bar) { var r = bar.getBoundingClientRect(), p = K.toStage(r.right, r.top + r.height / 2); if (p) { K.lookAt(p); } }
+        if (last < at && t >= at && !busy()) {
+          var y = lay(A(s, 'player')).y - 2, tl = gsap.timeline();
+          tl.add(K.poof(1720, y, 'front'));
+          tl.add(K.sprigTo('green', 0.15), 0.2);
+          tl.add(K.hop(14), 0.3);
+          tl.call(function () { K.burst('green', 10); }, null, 0.45);
+          tl.add(K.happy(true), 0.45);
+          tl.add(K.vanish(), 3.4);
+          ktl = tl;
         }
         last = t;
       };
-      s._pz = function () { if (v.paused && !K.asleep) { K.lookAt(null); gsap.timeline().add(K.faceTo('front')).add(K.happy(true), 0); } };
-      v.addEventListener('timeupdate', s._tu); v.addEventListener('pause', s._pz);
-    }, off: function (s) { var v = A(s, 'video'); if (s._tu) v.removeEventListener('timeupdate', s._tu); if (s._pz) v.removeEventListener('pause', s._pz); } },
-    s10: { on: function (s) {
-      var hub = A(s, 'hub');
-      s._ping = gsap.delayedCall(2, function () {
-        var c = doc.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        c.setAttribute('cx', 620); c.setAttribute('cy', 135); c.setAttribute('r', 40); c.setAttribute('fill', 'none');
-        c.setAttribute('stroke', 'var(--green)'); c.setAttribute('stroke-width', 2); c.setAttribute('class', 'wow-ping');
-        hub.insertBefore(c, hub.firstChild);
-        s._pc = c;
-        gsap.fromTo(c, { scale: 0.75, opacity: 0.8 }, { scale: 3.2, opacity: 0, duration: 1.1, ease: 'power2.out', repeat: 2, repeatDelay: 0.35, onComplete: function () { c.remove(); } });
-      });
-    }, off: function (s) { if (s._ping) s._ping.kill(); if (s._pc) { gsap.killTweensOf(s._pc); s._pc.remove(); s._pc = null; } } },
+      v.addEventListener('timeupdate', s._tu);
+    }, off: function (s) { var v = A(s, 'video'); if (s._tu) v.removeEventListener('timeupdate', s._tu); } },
     s13: { on: function (s) { $$(s, '.person').forEach(function (p) { p.classList.add('wow-lift'); }); }, off: function () {} },
     s14: { on: function (s) {
       var amt = A(s, 'amt');
@@ -568,9 +296,12 @@
 
   /* ---------- driving ---------- */
   function busy() { return !!(ktl && ktl.isActive()); }
-  function homeSpec(i) { var s = slides[i], m = M[s.id]; if (window.__deck) window.__deck.tl(i); /* the slide's builder makes some anchors */ return m ? m.home(s) : { x: 1860, y: LANE, face: 'front', pose: 'stand', sprig: 'rose' }; }
+  function homeSpec(i) { var s = slides[i], m = M[s.id]; if (window.__deck) window.__deck.tl(i); /* the slide's builder makes some anchors */ return m ? m.home(s) : null; }
+  /* Off stage: no puff, just gone (slides without a moment). */
+  function offStage() { K.stop(); K.dropBuddies(); K.at(2010, LANE, 'l'); K.away = true; gsap.set(K.el, { autoAlpha: 0 }); }
   function applyHome(i) {
     var h = homeSpec(i);
+    if (!h) { offStage(); return null; }
     K.stop();
     K.dropBuddies();
     K.setSize(h.size || 1);
@@ -584,11 +315,6 @@
     if (h.pose === 'sleep') K.sleep();
     K.static = was;
     if (h.pose === 'sleep' && !was) K.sleep();
-    if (h.buddy) {
-      var b = K.buddy(M.s12.mate), bh = h.buddy;
-      b.at(bh.x, bh.y, bh.face); b.away = false; b.pose(bh.pose); b.sprig(bh.sprig);
-      if (!was) b.life(true);
-    }
     return h;
   }
   function build(i) {
@@ -596,8 +322,9 @@
     if (window.__deck) window.__deck.tl(i);
     if (ktl) { ktl.kill(); ktl = null; }
     K.stop();
-    if (s.id !== 's12') K.dropBuddies();
+    K.dropBuddies();
     var tl = gsap.timeline({ paused: true });
+    if (!m) { var v = K.vanish(); tl.add(v, 0); tl.call(offStage, null, v.duration() + 0.01); return tl; }   // no moment here: he leaves (forward: runs off right)
     /* Hero size on s1 (s14 grows him itself, at the end of its moment); 96 px everywhere else. */
     var S = (m && m.size) || 1;
     if (Math.abs(K.curSize() - S) > 0.01 || K.st.size !== S) { if (K.away) K.setSize(S); else tl.add(K.sizeTo(S, 0.25), 0); }
@@ -618,7 +345,7 @@
   }
   slides.forEach(function (s, i) {
     s.addEventListener('slide:enter', function (e) { enter(i, !!(e.detail && e.detail.back)); });
-    s.addEventListener('slide:leave', function () { if (EX[s.id] && !still) EX[s.id].off(s); if (s.id === 's12') { K.buddies().forEach(function (b) { gsap.timeline().add(b.vanish()); }); setTimeout(function () { if (slides[cur] && slides[cur].id !== 's12') K.dropBuddies(); }, 250); } });
+    s.addEventListener('slide:leave', function () { if (EX[s.id] && !still) EX[s.id].off(s); });
     s.addEventListener('slide:replay', function () { if (still) return; if (EX[s.id]) { EX[s.id].off(s); EX[s.id].on(s); } ktl = build(i); ktl.play(0); });
   });
 
@@ -660,6 +387,7 @@
     if (ktl) ktl.kill();
     K.stop(); K.dropBuddies();
     var h = homeSpec(cur), tl = gsap.timeline();
+    if (!h) return;   // he is off stage on this slide
     if (Math.abs(K.curSize() - 1) > 0.01) tl.add(K.sizeTo(1, 0.2));
     if (Math.abs(K.st.y - LANE) > 3) tl.add(K.poof(K.st.x < 960 ? 200 : 1700, LANE, 'r'));
     tl.add(K.runTo(K.st.x > 960 ? 160 : 1760, { dash: true }));
@@ -731,6 +459,8 @@
     },
     home: function (i) { return applyHome(i); },
     box: function () { var out = [K.box()]; K.buddies().forEach(function (b) { out.push(b.box()); }); return out.filter(Boolean); },
+    /* Which slides have a scripted moment (and so a home spot). s6's merge is cued by its video instead. */
+    has: function (i) { return !!M[slides[i].id]; },
     get current() { return cur; }
   };
 })();

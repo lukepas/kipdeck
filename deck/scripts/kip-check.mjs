@@ -1,4 +1,5 @@
-// Checks that Kip never covers slide text and that he stays out of print, phone and reduced-motion modes.
+// Checks that Kip never covers slide text, that he appears only on the slides with a moment (s1, s14, s15,
+// plus the s6 merge, cued by the demo video), and that he stays out of print, phone and reduced-motion modes.
 // Usage: node scripts/kip-check.mjs [--shots=<dir>]   (exit code 1 on any failure)
 import fs from 'node:fs';
 import os from 'node:os';
@@ -59,12 +60,20 @@ try {
   await page.waitForFunction(() => window.__deckReady);
   const total = await page.evaluate(() => window.__deck.total);
 
+  const withKip = [];
   for (let i = 1; i <= total; i++) {
-    // 1. Final frame: home spot.
+    // 1. Final frame: home spot, or off stage on a slide without a moment.
     await page.goto(url + '?hold=final&n=' + i + '#' + i);
     await page.waitForFunction(() => window.__deckReady && document.fonts.status === 'loaded');
     await page.waitForTimeout(150);
+    const has = await page.evaluate((i) => window.__wow.has(i - 1), i);
     let res = await page.evaluate((fn) => { const tr = eval(fn); return [window.__wow.box(), tr()]; }, '(' + textRects.toString() + ')');
+    if (!has) {
+      if (res[0].length) fail(`s${i} final: Kip is on stage, but this slide has no moment`);
+      else console.log(`ok s${i} (no Kip)`);
+      continue;
+    }
+    withKip.push(i);
     let hit = overlaps(res);
     if (!res[0].length) fail(`s${i} final: Kip not on stage`);
     if (hit.length) fail(`s${i} final: Kip covers text: ${[...new Set(hit)].join(' | ')}`);
@@ -90,9 +99,42 @@ try {
     if (worst.length) fail(`s${i} moment: Kip covers text: ${worst.slice(0, 6).join(' | ')}`);
     else console.log(`ok s${i}`);
   }
+  if (withKip.join() !== '1,14,15') fail('Kip moments on slides ' + withKip.join(', ') + ', expected 1, 14, 15');
+
+  // 2b. s6: off stage while the demo plays, then the merge beat brings him in, clear of the text, and he leaves.
+  {
+    const mctx = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
+    const mp = await mctx.newPage();
+    mp.on('pageerror', (e) => errors.push('s6: ' + e));
+    await mp.goto(url + '#6');
+    await mp.waitForFunction(() => window.__deckReady);
+    await mp.waitForTimeout(900);
+    const before = await mp.evaluate(() => window.__wow.box().length);
+    if (before) fail('s6: Kip on stage before the merge beat');
+    // Headless Chromium may not decode the H.264 demo, so drive the cue the way the video would.
+    const at = await mp.evaluate(() => {
+      const s = document.getElementById('s6'), v = s.querySelector('video'), t = +s.querySelector('[data-beat="ship"]').dataset.t;
+      let now = t - 0.5;
+      Object.defineProperty(v, 'currentTime', { configurable: true, get: () => now, set: () => {} });
+      v.dispatchEvent(new Event('timeupdate'));
+      now = t + 0.1;
+      v.dispatchEvent(new Event('timeupdate'));
+      return t;
+    });
+    await mp.waitForTimeout(1000);
+    const mid = await mp.evaluate((fn) => { const tr = eval(fn); return [window.__wow.box(), tr()]; }, '(' + textRects.toString() + ')');
+    if (!mid[0].length) fail('s6: Kip did not arrive at the merge beat (' + at + ' s)');
+    const hit6 = overlaps(mid);
+    if (hit6.length) fail('s6 merge: Kip covers text: ' + [...new Set(hit6)].join(' | '));
+    if (shots) await mp.screenshot({ path: path.join(shots, 'kip-s6-merge.png') });
+    await mp.waitForTimeout(3400);
+    if (await mp.evaluate(() => window.__wow.box().length)) fail('s6: Kip did not leave after the merge');
+    if (!fails.some((f) => f.startsWith('s6'))) console.log('ok s6 merge moment');
+    await mctx.close();
+  }
 
   if (shots) {
-    for (const [i, mids] of [[1, [2.5, 3.2]], [7, [1.4, 2.9]], [14, [2.0, 3.7]]]) {
+    for (const [i, mids] of [[1, [2.5, 3.2]], [14, [2.0, 3.7]]]) {
       await page.goto(url + '?hold=0&n=s' + i + '#' + i);
       await page.waitForFunction(() => window.__deckReady);
       await page.evaluate((i) => { window.__k = window.__wow.build(i - 1); }, i);
@@ -120,7 +162,8 @@ try {
   if (pr.stickers !== 2) fail('print: expected 2 stickers, got ' + pr.stickers);
   // Into the temp dir, so a check never rewrites the tracked out/deck.pdf.
   const tmpPdf = path.join(os.tmpdir(), 'kip-check-' + process.pid + '.pdf');
-  execFileSync('node', [path.join(here, 'pdf.mjs'), '--out=' + tmpPdf], { stdio: 'pipe' });
+  // Its own server: with PORT pinned, the next port up (this check still holds PORT).
+  execFileSync('node', [path.join(here, 'pdf.mjs'), '--out=' + tmpPdf], { stdio: 'pipe', env: { ...process.env, PORT: process.env.PORT ? String(+process.env.PORT + 1) : '' } });
   const pdf = fs.readFileSync(tmpPdf, 'latin1');
   fs.rmSync(tmpPdf, { force: true });
   const pages = (pdf.match(/\/Type\s*\/Page[^s]/g) || []).length;

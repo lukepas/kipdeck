@@ -5,8 +5,10 @@ A static pitch deck: 14 slides plus an appendix, 1920x1080, scaled to any screen
 ## Run it
 
 ```
-node scripts/serve.mjs        # http://127.0.0.1:4321
+node scripts/serve.mjs        # http://127.0.0.1:4321 (PORT=5340 node scripts/serve.mjs for another port)
 ```
+
+The scripts below also honour `PORT`, so they can run inside a fixed port range on a shared machine.
 
 ## Present
 
@@ -18,16 +20,33 @@ node scripts/serve.mjs        # http://127.0.0.1:4321
 
 ## Kip, the mascot
 
-Kip is Kipdeck's own mascot (the deck kit from the agent office), drawn as inline SVG and moved with GSAP. He runs between slides in the strip above the content and in the side gutters, so he never covers text, and he has one small moment per slide timed to that slide's motion: he waves at the queue on slide 1, races the stopwatch on slide 8, high-fives a second kit on slide 12 and cheers with confetti on the ask.
+Kip is Kipdeck's own mascot (the deck kit from the agent office), drawn as inline SVG and moved with GSAP. He appears only where a moment earns him, and is off stage everywhere else so nothing competes with a slide's one point: he rises over the queue and waves on slide 1, pops onto the player for the merge in the demo on slide 6 (cued by the video, then he leaves), lands on the cleared queue on the ask (slide 14) and naps in the corner of the appendix (slide 15). He never covers text.
 
 - Hover him and he looks at you; click for a wave, hop, twirl or heart. K (or five quick clicks) sends him on a lap of the stage. Left alone for a minute, he dozes off.
 - Going back shows him at the slide's resting spot; R replays his moment with the slide.
 - `prefers-reduced-motion`, `?static` and `?hold` keep him in still poses. Phones and the PDF get two still stickers (slides 1 and 14) instead.
 - Turn him off with `kip: false` in `site/config.js`, or for one viewing with `?nokip`.
-- `npm run check:kip` checks every slide's moment against the text on it, and the print, phone, reduced-motion and keyboard modes. It writes its test PDF to the temp folder, so it never changes `out/`.
+- `npm run check:kip` checks that he is on slides 1, 14 and 15 only (plus the slide 6 merge), never over text, and the print, phone, reduced-motion and keyboard modes. It writes its test PDF to the temp folder, so it never changes `out/`.
 - Stepping forward, he runs out to the right and in from the left, so the slides play as one film. Going back cuts straight to his spot.
 
-Files: `site/kip.js` (the character and his gestures), `site/kip.css`, `site/wow.js` (what he does on each slide, plus small extras such as the tilting queue on slide 1 and the hub ping on slide 10).
+Files: `site/kip.js` (the character and his gestures), `site/kip.css`, `site/wow.js` (his moments, plus small extras such as the tilting queue on slide 1).
+
+## Check it
+
+```
+npm run check                   # both checks below
+npm run check:deck              # type at least 14 px (13 px on a phone), the cover and close queues, phone footer, banned copy,
+                                # plus one live playback of slides 1 and 14 on desktop and phone
+npm run check:kip               # Kip's moments and modes
+```
+
+## Motion
+
+- The cover queue ends mixed: three agents need you, five keep working. Waits read as ages (34m 12s, not a time of day) and are tinted by age: fresh, over 5 minutes, over 30 minutes. At rest the clocks keep ticking once a second.
+- The ask clears that same queue: each wait ticks in real seconds until its row snaps green with "waited 34m" and a check pulse, the count drops to 0 and the header diamond turns into a check. Then "Nobody waiting." and one closing line. On a phone the merges start as the slide scrolls in.
+- Never put a CSS `opacity` transition on an element GSAP fades (the queue rows): the two fight and the row ends invisible. `check:deck` plays slides 1 and 14 live to catch this.
+- Slide 6 plays the recording only in live playback. Still frames (`?static`, `?hold`, print, reduced motion) keep the poster; a click still plays it.
+- `prefers-reduced-motion`, `?static`, `?hold` and print show still final frames: no ticking, no pulses.
 
 ## Export the PDF
 

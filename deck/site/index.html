@@ -44,7 +44,7 @@
     <div class="s-6-12">
       <div class="q" data-a="panel">
         <div class="q-head" data-a="qhead">
-          <span class="t-label"><span class="c-pink">&#9670;</span>&nbsp; Needs you <b class="t-num" style="color:var(--text)">8</b></span>
+          <span class="t-label"><span class="c-pink">&#9670;</span>&nbsp; Needs you <b class="t-num" style="color:var(--text)" data-a="qcount">3</b><span class="q-working">&nbsp;&nbsp;<span class="c-cyan">Working</span> <b class="t-num" style="color:var(--text)">5</b></span></span>
           <span class="t-label faint">Illustration, ranked by wait</span>
         </div>
         <div class="q-list" data-a="list"></div>
@@ -61,7 +61,7 @@
 <section class="slide" id="s2" data-title="Agents got fast, review didn't">
   <div class="grid12">
     <div class="s-1-8">
-      <div class="t-label kicker c-pink" data-a="k">The problem</div>
+      <div class="t-label kicker" data-a="k">The problem</div>
       <p class="quote" data-a="quote">An agent that asks a question at 10:02 and is answered at 10:25 <em>did nothing for 23&nbsp;minutes.</em></p>
       <p class="t-label faint" style="margin-top:16px" data-a="qnote">Illustration of one wait. No tool measures this across vendors today.</p>
     </div>
@@ -83,14 +83,14 @@
         <div class="t-label faint">Faros AI, 10,000+ devs, 1,255 teams</div>
       </div>
       <svg class="chart" viewBox="0 0 900 300" data-a="faros" style="width:100%">
-        <defs><pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="10" fill="var(--pink-a)"/><line x1="0" y1="0" x2="0" y2="10" stroke="var(--pink)" stroke-width="3" opacity=".45"/></pattern></defs>
+        <defs><pattern id="hatch" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="10" height="10" fill="rgba(152,162,180,.08)"/><line x1="0" y1="0" x2="0" y2="10" stroke="var(--muted)" stroke-width="3" opacity=".35"/></pattern></defs>
         <line class="grid" x1="230" y1="0" x2="230" y2="270"/><line class="grid" x1="400" y1="0" x2="400" y2="270"/><line class="grid" x1="570" y1="0" x2="570" y2="270"/><line class="grid" x1="740" y1="0" x2="740" y2="270"/>
         <text x="230" y="296" font-size="14">0</text><text x="392" y="296" font-size="14">+25%</text><text x="562" y="296" font-size="14">+50%</text><text x="732" y="296" font-size="14">+75%</text>
         <text x="0" y="52" font-size="20" style="fill:var(--text)">PRs merged</text>
         <text x="0" y="142" font-size="20" style="fill:var(--text)">PR review time</text>
         <text x="0" y="232" font-size="20" style="fill:var(--text)">Tasks completed</text>
         <rect data-a="b1" x="230" y="22" height="46" width="666.4" rx="6" fill="var(--green)"/>
-        <rect data-a="b2" x="230" y="112" height="46" width="618.8" rx="6" fill="var(--amber)"/>
+        <rect data-a="b2" x="230" y="112" height="46" width="618.8" rx="6" fill="var(--muted)"/>
         <rect data-a="b3" x="230" y="202" height="46" width="142.8" rx="6" fill="var(--cyan)"/>
         <rect data-a="gap" x="372.8" y="202" height="46" width="523.6" fill="url(#hatch)"/>
         <text data-a="v1" x="884" y="54" font-size="24" text-anchor="end" style="fill:#0A0F1C;font-weight:700">+98%</text>
@@ -100,7 +100,7 @@
       </svg>
     </div>
     <div class="s-8-12 col tiles" style="gap:18px; justify-content:center">
-      <div class="card" data-a="t1" style="border-left:3px solid var(--pink)">
+      <div class="card" data-a="t1" style="border-left:3px solid var(--line-2)">
         <p class="t-h4" style="margin-bottom:10px">The natural bottleneck on all of this is how fast I can review the results.</p>
         <p class="t-label">Simon Willison, Oct 2025</p>
       </div>
@@ -115,7 +115,7 @@
 <section class="slide" id="s3" data-title="Worse with every tool">
   <div class="grid12">
     <div class="s-1-5 col">
-      <div class="t-label kicker c-pink" data-a="k">It gets worse with every tool</div>
+      <div class="t-label kicker" data-a="k">It gets worse with every tool</div>
       <div class="t-hero" data-a="hero"><span data-a="n70">70</span>%</div>
       <p class="t-h4" style="margin-top:18px" data-a="lead">of 906 surveyed engineers use <b>2-4 AI coding tools</b>. <span class="muted">15% use 5 or more (Pragmatic Engineer, 2026).</span></p>
       <p class="t-h3" style="margin-top:44px" data-a="pain">Four tools, four queues. Nobody sees the whole queue.</p>
@@ -125,7 +125,7 @@
         <div class="card win" data-w="0"><div class="wh">Claude Code<span class="badge" data-badge>0</span></div><ul></ul></div>
         <div class="card win" data-w="1"><div class="wh">Codex<span class="badge" data-badge>0</span></div><ul></ul></div>
         <div class="card win" data-w="2"><div class="wh">Cursor<span class="badge" data-badge>0</span></div><ul></ul></div>
-        <div class="card win" data-w="3"><div class="wh">OpenCode<span class="badge" data-badge>0</span></div><ul></ul><div class="wait" data-a="wait">00:00</div></div>
+        <div class="card win" data-w="3"><div class="wh">OpenCode<span class="badge" data-badge>0</span></div><ul></ul><div class="wait" data-a="wait">0s</div></div>
         <div class="focus" data-a="focus"></div>
       </div>
       <p class="t-label faint" style="margin-top:12px" data-a="illus">Illustration: four agent tools, four separate queues</p>
@@ -171,8 +171,8 @@
         <text data-a="l1" x="185" y="430" font-size="22" text-anchor="middle" style="fill:var(--text);font-weight:700">0.5</text>
         <text data-a="l2" x="405" y="278" font-size="22" text-anchor="middle" style="fill:var(--text);font-weight:700">2.5</text>
         <text data-a="x5" x="282" y="350" font-size="28" text-anchor="end" style="fill:var(--cyan);font-weight:700">5x</text>
-        <text x="185" y="508" font-size="15" text-anchor="middle">Claude Code</text><text x="185" y="526" font-size="13" text-anchor="middle" opacity=".7">Sep 2025</text>
-        <text x="405" y="508" font-size="15" text-anchor="middle">Claude Code</text><text x="405" y="526" font-size="13" text-anchor="middle" opacity=".7">Feb 2026</text>
+        <text x="185" y="508" font-size="15" text-anchor="middle">Claude Code</text><text x="185" y="530" font-size="16" text-anchor="middle" opacity=".7">Sep 2025</text>
+        <text x="405" y="508" font-size="15" text-anchor="middle">Claude Code</text><text x="405" y="530" font-size="16" text-anchor="middle" opacity=".7">Feb 2026</text>
         <g data-a="stack">
           <rect data-a="sk1" x="640" y="290" width="190" height="190" fill="var(--cyan)"/>
           <rect data-a="sk2" x="640" y="138" width="190" height="152" fill="var(--cyan)" opacity=".7"/>
@@ -183,22 +183,21 @@
         </g>
         <text data-a="tot" x="735" y="44" font-size="30" text-anchor="middle" style="fill:var(--text);font-weight:700">USD 5.5B+ a year</text>
         <text x="735" y="508" font-size="15" text-anchor="middle">Three vendors, Feb-Sep 2026</text>
-        <text x="735" y="526" font-size="13" text-anchor="middle" opacity=".7">different dates, summed</text>
+        <text x="735" y="530" font-size="16" text-anchor="middle" opacity=".7">different dates, summed</text>
       </svg>
     </div>
   </div>
   <div class="tl" data-a="tl" style="margin-top:26px">
     <div class="row" style="align-items:center; gap:20px">
-      <div class="t-label" style="width:240px" data-a="tll">Capital is moving in:<br><span class="c-cyan">three rounds in seven months</span></div>
+      <div class="t-label" style="width:240px" data-a="tll">Capital is moving in:<br><span class="c-cyan">two agent-workbench rounds in four months</span></div>
       <div class="row chips" style="gap:20px; flex:1">
-        <div class="chip" data-a="c1"><span class="t-label faint">Feb 2026</span><span class="t-h4">Entire <b class="t-num">USD 60M</b></span><span class="t-small">seed, agent history in git</span></div>
-        <div class="chip" data-a="c2"><span class="t-label faint">Mar 2026</span><span class="t-h4">Conductor <b class="t-num">USD 22M</b></span><span class="t-small">Series A, parallel agents per dev</span></div>
-        <div class="chip" data-a="c3"><span class="t-label faint">Sep 2026</span><span class="t-h4">Herdr <b class="t-num">USD 6M</b></span><span class="t-small">seed, open-source agent runtime</span></div>
+        <div class="chip" data-a="c1"><span class="t-label faint">Mar 2026</span><span class="t-h4">Conductor <b class="t-num">USD 22M</b></span><span class="t-small">Series A (USD 24M raised in total), runs agents inside its app</span></div>
+        <div class="chip" data-a="c2"><span class="t-label faint">Jul 2026</span><span class="t-h4">Superset <b class="t-num">USD 11.5M</b></span><span class="t-small">seed led by USV, an agentic IDE</span></div>
       </div>
     </div>
   </div>
-  <div class="src"><span><a href="https://www.anthropic.com/news/anthropic-raises-series-f-at-usd183b-post-money-valuation">Anthropic 2025-09-02</a></span><span><a href="https://www.anthropic.com/news/anthropic-raises-30-billion-series-g-funding-380-billion-post-money-valuation">Anthropic 2026-02-12</a></span><span><a href="https://en.wikipedia.org/wiki/OpenAI_Codex">Codex (Reuters 2026-03-19, via Wikipedia)</a></span><span><a href="https://www.bloomberg.com/news/articles/2026-03-02/cursor-recurring-revenue-doubles-in-three-months-to-2-billion">Cursor ~2B: Bloomberg 2026-03-02, via Cursor blog</a></span><span><a href="https://cognition.com/blog/1b-run-rate">Cognition 2026-09-25</a></span><span><a href="https://entire.io/blog/hello-entire-world">Entire</a></span><span><a href="https://www.conductor.build/blog/series-a">Conductor</a></span><span><a href="https://herdr.dev/blog">Herdr</a></span></div>
-  <aside class="notes">Claude Code went from over USD 500M run-rate in September 2025 to over USD 2.5B in February 2026. Add the latest reported figures for Cursor and Cognition, from different months of 2026, and it sums to more than USD 5.5B a year. None of it buys a vendor-neutral way to manage them. Capital is already moving in: three rounds in seven months.</aside>
+  <div class="src"><span><a href="https://www.anthropic.com/news/anthropic-raises-series-f-at-usd183b-post-money-valuation">Anthropic 2025-09-02</a></span><span><a href="https://www.anthropic.com/news/anthropic-raises-30-billion-series-g-funding-380-billion-post-money-valuation">Anthropic 2026-02-12</a></span><span><a href="https://en.wikipedia.org/wiki/OpenAI_Codex">Codex (Reuters 2026-03-19, via Wikipedia)</a></span><span><a href="https://www.bloomberg.com/news/articles/2026-03-02/cursor-recurring-revenue-doubles-in-three-months-to-2-billion">Cursor ~2B: Bloomberg 2026-03-02, via Cursor blog</a></span><span><a href="https://cognition.com/blog/1b-run-rate">Cognition 2026-09-25</a></span><span><a href="https://www.conductor.build/blog/series-a">Conductor</a></span><span><a href="https://superset.sh/team">Superset</a></span></div>
+  <aside class="notes">Claude Code went from over USD 500M run-rate in September 2025 to over USD 2.5B in February 2026. Add the latest reported figures for Cursor and Cognition, from different months of 2026, and it sums to more than USD 5.5B a year. None of it buys a vendor-neutral way to manage them. Capital is already moving in: Conductor's USD 22M Series A in March and Superset's USD 11.5M seed in July, both for workbenches that run agents inside their own app.</aside>
 </section>
 
 <!-- ============ 05 PRODUCT ============ -->
@@ -218,9 +217,7 @@
           <div class="bar"><i></i><i></i><i></i><span>localhost &middot; {{name}}</span></div>
           <div class="vp">
             <img data-shot="0" src="media/deploy-desktop.webp" alt="Deploy sheet" loading="lazy">
-            <img data-shot="1" src="media/home-desktop.webp" alt="Inbox with an agent waiting" loading="lazy">
-            <img data-shot="2" src="media/answer-desktop.webp" alt="Question card" loading="lazy">
-            <img data-shot="3" src="media/merged-desktop.webp" alt="Merged, shipped today" loading="lazy">
+            <img data-shot="1" src="media/home-desktop.webp" alt="Inbox: Codex needs you, its question open with one answer box" loading="lazy">
           </div>
         </div>
         <div class="sig" data-a="sig">signed: agent / model / reviewer / wait</div>
@@ -242,33 +239,31 @@
     <div class="s-1-4 col">
       <div class="t-label kicker c-green" data-a="k">60-second demo</div>
       <h2 class="t-h2" data-a="h">Asked to merged, one&nbsp;pane.</h2>
-      <p class="t-small" data-a="lede" style="margin-top:28px">The real build in demo mode: scripted stand-in agents, so it runs the same every time. A recording with live Claude Code and Codex sessions is next.</p>
-      <div class="t-label" data-a="cta" style="margin-top:28px; line-height:1.9"><span data-cta class="c-green"></span><br><a class="faint" href="media/kipdeck-demo.gif" target="_blank" rel="noopener">30 s GIF for email</a></div>
+      <ol class="beats" data-a="beats">
+        <li data-t="4.5"><span class="n">01</span><b>Deploy</b><span>Five branches, five agents</span></li>
+        <li data-t="8.4"><span class="n">02</span><b>Pinged</b><span>Codex jumps to the top</span></li>
+        <li data-t="12.4"><span class="n">03</span><b>Act</b><span>Answered in one box</span></li>
+        <li data-t="27.4" data-beat="ship"><span class="n">04</span><b>Ship</b><span>Merged, wait signed</span></li>
+      </ol>
+      <div class="t-label" data-a="cta" style="margin-top:26px; line-height:1.9"><span data-cta class="c-green"></span><br><a class="faint" href="media/kipdeck-demo.gif" target="_blank" rel="noopener">30 s GIF for email</a></div>
     </div>
     <div class="s-5-12">
       <div class="player" data-a="player">
         <div class="frame">
-          <div class="bar"><i></i><i></i><i></i><span>npx {{cmd}} --demo</span></div>
+          <div class="bar"><i></i><i></i><i></i><span>npx {{cmd}} --demo</span><span class="bar-tag">Demo data: scripted agents, no model runs</span></div>
           <div class="vp">
             <video data-a="video" muted playsinline preload="none" poster="media/demo-poster.jpg">
               <source src="media/kipdeck-demo.mp4" type="video/mp4">
               <a href="media/kipdeck-demo.gif">Watch the 30 s GIF</a>
             </video>
-            <div class="tagd tag-demo">Demo data: scripted agents, no model runs</div>
           </div>
         </div>
-        <div class="track"><i data-a="bar"></i>
-          <div class="mk" data-mk="10" style="left:16.7%"><b></b><span>Deploy</span></div>
-          <div class="mk up" data-mk="14" style="left:23.3%"><b></b><span>Pinged</span></div>
-          <div class="mk" data-mk="20" style="left:33.3%"><b></b><span>Act</span></div>
-          <div class="mk" data-mk="34" style="left:56.7%"><b></b><span>Ship</span></div>
-        </div>
-        <p class="cap" data-a="cap" aria-live="off"></p>
+        <div class="track"><i data-a="bar"></i></div>
       </div>
     </div>
   </div>
-  <div class="src"><span>Recording: 60 s, silent, real build in demo mode</span><span>tests/demo.test.ts, tests/demo-e2e.test.ts</span></div>
-  <aside class="notes">Let it play. Codex is blocked, it jumps to the top and its question opens in plain words. One box to answer. Claude Code finished: three files, tests pass, the real diff beside the list. Merge, without GitHub if you want. Same inbox on the phone. Then the number we sell on: human wait time per agent and model. Be upfront: the agents here are scripted stand-ins.</aside>
+  <div class="src"><span>Recording: about 60 s, silent, the real build in demo mode with scripted stand-in agents</span><span>tests/demo.test.ts, tests/demo-e2e.test.ts</span></div>
+  <aside class="notes">Let it play. Five agents start. Codex is blocked, it jumps to the top and its question opens in plain words. One box to answer. Claude Code finished: three files, tests pass, the real diff beside the list. Merge, without GitHub if you want. Same inbox on the phone. Then the number we sell on: human wait time per agent and model. Be upfront: the agents here are scripted stand-ins, so it runs the same every time. A recording with live Claude Code and Codex sessions is next.</aside>
 </section>
 
 <!-- ============ 07 HOW IT WORKS ============ -->
@@ -276,7 +271,7 @@
   <div class="grid12">
     <div class="s-1-8">
       <div class="t-label kicker c-cyan" data-a="k">How it works</div>
-      <h2 class="t-h2" data-a="h">Self-hosted, vendor-neutral, one command.</h2>
+      <h2 class="t-h2" data-a="h">Self-hosted, vendor-neutral, on your own machine.</h2>
     </div>
     <div class="s-9-12 col" style="justify-content:flex-end">
       <p class="t-body" data-a="p">{{name}} itself is self-hosted: no {{name}} cloud, no account. Your agents still talk to their own model APIs.</p>
@@ -294,7 +289,7 @@
     <path class="wire" d="M250 230 H1660"/>
     <path class="wire" d="M1535 290 V380"/>
     <path class="wire" d="M1290 425 H1125 V290" stroke-dasharray="5 6"/>
-    <text x="1135" y="448" font-size="13" style="font-family:var(--mono); fill:var(--faint)">wait data</text>
+    <text x="1135" y="450" font-size="16" style="font-family:var(--mono); fill:var(--muted)">wait data</text>
     <path class="lit" data-a="lit" d="M250 230 H1535 V380"/>
     <g data-a="packets"></g>
     <g class="node" data-n="attach"><rect x="300" y="170" width="190" height="120" rx="14"/><text class="t" x="318" y="214">attach</text><text class="d" x="318" y="244">joins a running</text><text class="d" x="318" y="264">Claude Code, Codex</text></g>
@@ -318,7 +313,7 @@
     <li class="g"><b>Pulse and Numbers</b>median wait, merge rate per agent and per model</li>
   </ol>
   <div class="callouts" data-a="callouts" style="margin-top:16px">
-    <span class="pill outline" style="height:44px; font-size:16px; padding:0 18px" data-install>npx {{cmd}}: one command</span>
+    <span class="pill outline" style="height:44px; font-size:16px; padding:0 18px" data-install>npx {{cmd}}</span>
     <span class="pill outline" style="height:44px; font-size:16px; padding:0 18px">No password on your own machine</span>
     <span class="pill outline" style="height:44px; font-size:16px; padding:0 18px">No {{name}} cloud; agents use their own APIs</span>
   </div>
@@ -333,11 +328,8 @@
       <div class="t-label kicker c-green" data-a="k">Proof of execution</div>
       <h2 class="t-h2" data-a="h">A working product, measured. No users yet.</h2>
     </div>
-    <div class="s-9-12 col" style="justify-content:flex-end">
-      <p class="honest" data-a="honest">Next, before revenue: publish, launch, and sign 5 design-partner teams that run 5+ agents a day.</p>
-    </div>
   </div>
-  <div class="grid12" style="margin-top:40px">
+  <div class="grid12" style="margin-top:80px">
     <div class="s-1-5 col">
       <div class="t-label">Fresh start to first merged change</div>
       <div class="watch" data-a="watch"><span data-a="sec">0.0</span><span class="faint" style="font-size:.5em">s</span></div>
@@ -345,24 +337,19 @@
         <line x1="0" y1="30" x2="520" y2="30" stroke="var(--line-2)" stroke-width="2"/>
         <g data-a="cdots"></g>
       </svg>
-      <div class="t-label faint" style="margin-top:4px">4 clicks &middot; measured 2026-10-07, headless, stand-in agent, no model</div>
+      <div class="t-label faint" style="margin-top:4px" data-a="mcap">4 clicks &middot; measured 2026-10-07, headless, stand-in agent, no model</div>
     </div>
-    <div class="s-6-12 col" style="gap:18px">
+    <div class="s-6-12 col" style="justify-content:flex-end">
       <div class="tiles">
         <div class="tile" data-a="tile"><span class="big"><span data-count="3.4" data-dec="1">3.4</span><small>s</small></span><p>to the first agent at work, 1 click</p></div>
-        <div class="tile" data-a="tile"><span class="big">1<small>command</small></span><p data-install-note>to install with npx</p></div>
         <div class="tile" data-a="tile"><span class="big"><span data-count="1281">1,281</span></span><p>test cases on the product branch</p></div>
         <div class="tile" data-a="tile"><span class="big"><span data-count="19">19</span></span><p>security audit findings fixed in our fork</p></div>
       </div>
-      <div class="ba" data-a="ba">
-        <img loading="lazy" src="media/poc-vs-now.webp" alt="Before: the 3D proof of concept. After: the inbox" data-a="baimg" style="left:0">
-        <div class="scan" data-a="scan" style="left:50%"></div>
-      </div>
-      <div class="t-label faint">Before: the 3D proof of concept &rarr; after: the inbox, 8 days later</div>
     </div>
   </div>
-  <div class="src"><span>measure.json (2026-10-07)</span><span>Test count: it/test calls in tests/, product/fundable c8119c0, 2026-10-07</span><span>Audit: launch/report/comparison.md (2026-10-06)</span></div>
-  <aside class="notes">We have no users yet, and we say so once. What we have is a working product, measured: 10.7 seconds and four clicks from a fresh start to the first merged change, 3.4 seconds to the first agent at work. 1,281 test cases. 19 audit findings fixed in our fork. The install is one npx command; today it runs from a local tarball, and the npm publish is milestone one.</aside>
+  <p class="honest" data-a="honest">Next, before revenue: publish, launch, and sign 5 design-partner teams that run 5+ agents a day.</p>
+  <div class="src"><span>measure.json (2026-10-07)</span><span>Test count: it/test calls in tests/, product branch at c8119c0, 2026-10-07</span><span>Audit: launch/report/comparison.md (2026-10-06)</span></div>
+  <aside class="notes">We have no users yet, and we say so once. What we have is a working product, measured: 10.7 seconds and four clicks from a fresh start to the first merged change, 3.4 seconds to the first agent at work. 1,281 test cases. 19 audit findings fixed in our fork. Today it installs from a local tarball; the npm publish is milestone one.</aside>
 </section>
 
 <!-- ============ 09 MARKET ============ -->
@@ -376,7 +363,7 @@
         <div class="ln" data-a="ln"><span class="k">x 31% actively use AI agents<small>Stack Overflow 2025 share; our estimate</small></span><span class="v">11.3M</span></div>
         <div class="ln" data-a="ln"><span class="k">x USD 360 a seat a year = TAM<small>our team-tier price; at Conductor's USD 720: 8.1B</small></span><span class="v c-cyan">USD 4.1B</span></div>
         <div class="ln" data-a="ln"><span class="k">Daily agent users, 14.1% = SAM<small>Stack Overflow 2025; 5.1M x USD 360</small></span><span class="v">USD 1.9B</span></div>
-        <div class="ln" data-a="ln"><span class="k">Year-5 path, our assumption<small>100k free installs x 2% become teams x 10 seats x USD 360</small></span><span class="v c-pink">USD 7.2M ARR</span></div>
+        <div class="ln" data-a="ln"><span class="k">Year-5 path, our assumption<small>100k free installs x 2% become teams x 10 seats x USD 360</small></span><span class="v">USD 7.2M ARR</span></div>
       </div>
       <p class="t-small" data-a="budget" style="margin-top:22px">The budget already exists: USD 5.5B+ a year already goes to AI coding tools (slide 4).</p>
     </div>
@@ -393,31 +380,31 @@
   <div class="grid12">
     <div class="s-all">
       <div class="t-label kicker c-cyan" data-a="k">Competition</div>
-      <h2 class="t-h2" data-a="h">Others see one vendor or one laptop. We are building the team's queue.</h2>
+      <h2 class="t-h2" data-a="h">Conductor and Superset help one developer run more agents. We stop your team keeping them waiting.</h2>
     </div>
   </div>
   <div class="grid12" style="margin-top:28px">
     <div class="s-1-6">
-      <svg class="quad" viewBox="0 0 816 580" data-a="quad" style="width:100%; height:560px">
+      <svg class="quad" viewBox="0 0 816 580" data-a="quad" style="width:100%; height:560px" aria-label="Map: launch agents inside our app versus attach to agents wherever they run, solo versus team">
         <rect x="448" y="0" width="368" height="270" fill="var(--green-a)" data-a="tr" opacity="0"/>
         <line class="axisl" x1="448" y1="0" x2="448" y2="540" stroke="var(--line-2)"/>
         <line class="axisl" x1="40" y1="270" x2="816" y2="270" stroke="var(--line-2)"/>
         <line class="axisl" x1="40" y1="540" x2="816" y2="540" stroke="var(--line-2)"/>
         <line class="axisl" x1="40" y1="0" x2="40" y2="540" stroke="var(--line-2)"/>
-        <text x="40" y="566" font-size="14" fill="var(--faint)">SINGLE VENDOR</text><text x="816" y="566" font-size="14" fill="var(--faint)" text-anchor="end">VENDOR-NEUTRAL &rarr;</text>
-        <text transform="translate(22 540) rotate(-90)" font-size="14" fill="var(--faint)">SINGLE DEVELOPER</text><text transform="translate(22 0) rotate(-90)" font-size="14" fill="var(--faint)" text-anchor="end">TEAM &rarr;</text>
+        <text x="40" y="568" font-size="15" fill="var(--muted)">LAUNCH AGENTS INSIDE OUR APP</text><text x="816" y="568" font-size="15" fill="var(--muted)" text-anchor="end">ATTACH WHEREVER THEY RUN &rarr;</text>
+        <text transform="translate(24 540) rotate(-90)" font-size="15" fill="var(--muted)">SOLO</text><text transform="translate(24 0) rotate(-90)" font-size="15" fill="var(--muted)" text-anchor="end">TEAM &rarr;</text>
         <g data-a="chips"></g>
-        <g data-a="hub"></g>
+        <g data-a="us"></g>
       </svg>
     </div>
     <div class="s-7-12 col" style="gap:18px">
-      <div class="card ans" data-a="ans"><p class="t-label c-cyan">Vendor dashboards</p><p class="t-small">Claude Code's Agent view and Cursor's cloud agents each see their own agents. 70% of 906 surveyed engineers use 2-4 AI coding tools.</p></div>
-      <div class="card ans" data-a="ans"><p class="t-label c-cyan">Conductor (USD 22M), Herdr (USD 6M)</p><p class="t-small">Conductor sells a Teams plan but runs locally on a Mac, per developer. Herdr is an open-source runtime that shows each agent as working, blocked or idle, on one machine.</p></div>
-      <div class="card ans hot" data-a="ans"><p class="t-label c-pink">Why won't Herdr add a team tier next quarter?</p><p class="t-small">It might. Our bet is the one number nobody reports: human wait time per agent and model, across vendors. We already log it on every merge. The team tier (shared queue, routing) is not built yet; it is milestone M3.</p></div>
+      <div class="card ans" data-a="ans"><p class="t-label c-cyan">Platform inboxes</p><p class="t-small">GitHub Agent HQ, the Codex app, Antigravity and Claude Code each show the agents in their own harness. 70% of 906 surveyed engineers use 2-4 AI coding tools.</p></div>
+      <div class="card ans" data-a="ans"><p class="t-label c-cyan">Workbenches: Conductor (USD 24M), Superset (USD 11.5M)</p><p class="t-small">Agents are launched inside their app, with timers, team plans and multiplayer. They are ahead of us on product and distribution.</p></div>
+      <div class="card ans key" data-a="ans"><p class="t-label c-green">Why won't Conductor, Superset or GitHub add this?</p><p class="t-small">They may add a team view, but it sees only the agents launched inside their own app. We attach to agents wherever they already run, any vendor, any machine, and route each wait to the teammate who owns it. Attach works today; team routing is M3, not built yet.</p></div>
     </div>
   </div>
-  <div class="src"><span><a href="https://www.conductor.build/pricing">Conductor</a></span><span><a href="https://herdr.dev">Herdr</a></span><span><a href="https://entire.io/blog/hello-entire-world">Entire</a></span><span><a href="https://factory.com/news/series-b">Factory</a></span><span><a href="https://cognition.com/blog/series-e">Cognition</a></span><span><a href="https://code.claude.com/docs/en/best-practices">Claude Code docs</a></span><span><a href="https://newsletter.pragmaticengineer.com/p/ai-tooling-2026">Pragmatic Engineer 2026</a></span><span>Placement is our reading of public product pages</span><span>Tool-by-tool table: appendix</span></div>
-  <aside class="notes">Vendor dashboards see their own agents. Conductor sells a Teams plan but runs per developer on a Mac. Herdr shows agent status on one machine. Entire is history in git, not a live inbox. Cognition and Factory sell their own agents. Could Herdr add a team tier? Yes. Our answer is speed to design partners and the cross-vendor wait metric we already record. The team tier itself is milestone M3, not built yet.</aside>
+  <div class="src"><span><a href="https://www.conductor.build/blog/series-a">Conductor</a></span><span><a href="https://superset.sh/team">Superset</a></span><span><a href="https://www.emdash.com">Emdash</a></span><span><a href="https://github.com/savannahfeder/agentbox">Agentbox</a></span><span><a href="https://paperclip.ing">Paperclip</a></span><span><a href="https://code.claude.com/docs/en/best-practices">Claude Code docs</a></span><span><a href="https://newsletter.pragmaticengineer.com/p/ai-tooling-2026">Pragmatic Engineer 2026</a></span><span>Placement is our reading of public product pages</span><span>Tool-by-tool table: appendix</span></div>
+  <aside class="notes">Two kinds of products sit next to us. Platform inboxes, GitHub Agent HQ, the Codex app, Antigravity, Claude Code, each see their own harness. Workbenches, Conductor with USD 24M raised and Superset with a USD 11.5M seed, run agents launched inside their app, now with timers and team plans; they are ahead of us on product and distribution. Agentbox and a DIY Slack hook are the free solo default. Paperclip is the nearest neighbour for teams. Why won't they add this? They may add a team view, but it only sees their own agents. We attach to agents wherever they run and route each wait to the teammate who owns it. Attach works today. Team routing is M3, not built yet.</aside>
 </section>
 
 <!-- ============ 11 MOAT ============ -->
@@ -432,9 +419,10 @@
     </div>
     <div class="s-7-12 col">
       <div class="row chainrow" data-a="chain" style="gap:12px 14px; margin-top:40px; flex-wrap:wrap"></div>
-      <div class="card" data-a="heatcard" style="margin-top:22px">
-        <div class="row" style="justify-content:space-between; margin-bottom:14px"><span class="t-label">Median wait on a person, by agent, week over week</span><span class="t-label c-amber">Illustration</span></div>
+      <div class="card heatcard" data-a="heatcard" style="margin-top:22px">
+        <div class="t-label" style="margin-bottom:22px">Median wait on a person, by agent, week over week <span class="honest-tag" data-a="mock">mock data</span></div>
         <div class="heat" data-a="heat"></div>
+        <div class="legend3" data-a="legend3"><span class="t-label">Wait</span><i class="w1"></i>under 2m<i class="w2"></i>2-10m<i class="w3"></i>over 10m</div>
       </div>
       <div class="row" data-a="lock" style="margin-top:18px; align-items:center; gap:14px">
         <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="var(--green)" stroke-width="2"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
@@ -457,7 +445,7 @@
   </div>
   <div class="tiers" style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:30px">
     <div class="tier" data-a="tier"><span class="t-label">Single player</span><span class="price">Free<small> MIT</small></span><ul><li>Inbox, local merge, signed log, wait metrics</li><li>The distribution: one npx command, public at M1</li></ul></div>
-    <div class="tier team" data-a="tier"><span class="t-label">Team tier <span class="c-amber">(price is our assumption)</span><span class="tbadge" data-a="badge">FREE</span></span><span class="price">USD 30<small> /seat/mo</small></span><ul><li>Shared queue, routing to the owner, team wait-time reports</li><li>SSO, audit export. Not built yet: milestone M3</li></ul></div>
+    <div class="tier team" data-a="tier"><span class="t-label">Team tier <span class="honest-tag">price is our assumption</span><span class="tbadge" data-a="badge">FREE</span></span><span class="price">USD 30<small> /seat/mo</small></span><ul><li>Shared queue, routing to the owner, team wait-time reports</li><li>SSO, audit export. Not built yet: milestone M3</li></ul></div>
   </div>
   <div class="t-label" style="margin:34px 0 12px" data-a="gtml">Go-to-market</div>
   <div class="funnel">
@@ -498,14 +486,14 @@
   </div>
   <div class="grid12" style="margin-top:30px; align-items:end">
     <div class="s-1-7 col" data-a="why">
-      <div class="disclose"><p class="t-label c-amber" style="margin-bottom:8px">Disclosure and commitment</p><p class="t-small" data-commit></p><p class="t-small" style="margin-top:8px"><strong>Company:</strong> to be incorporated before close.</p></div>
+      <div class="disclose"><p class="t-label" style="margin-bottom:8px; color:var(--text)">Disclosure and commitment</p><p class="t-small" data-commit></p><p class="t-small" style="margin-top:8px"><strong>Company:</strong> to be incorporated before close.</p></div>
     </div>
     <div class="s-8-12 col" style="align-items:flex-end">
-      <div class="t-label" style="margin-bottom:34px; text-align:right">Product-branch commits by the CEO/CTO with coding agents, 30 Sep - 7 Oct 2026</div>
+      <div class="t-label" style="margin-bottom:34px; text-align:right">CEO/CTO commits with agents, 30 Sep-7 Oct</div>
       <div class="commits" data-a="commits"></div>
     </div>
   </div>
-  <div class="src"><span><a href="https://motored-lt.vercel.app/data-room#team">motored-lt.vercel.app/data-room</a> (backgrounds and Motored roles)</span><span>git log product/fundable: 533 commits, all by the CEO/CTO, almost all co-authored with Claude</span></div>
+  <div class="src"><span><a href="https://motored-lt.vercel.app/data-room#team">motored-lt.vercel.app/data-room</a> (backgrounds and Motored roles)</span><span>git log of the product branch: 533 commits, all by the CEO/CTO, almost all co-authored with Claude</span></div>
   <aside class="notes">Zygimantas: ex-Amazon, founded and exited a business at 400k monthly active users, built a charity project that grew to 540k registered users, and built Motored's entire product before any outside money. Lukas: ex-Vinted, scaling a high-traffic marketplace. Ernestas: backend, importer and pipelines at Motored. Say the Motored overlap plainly: all three work there today. The commit chart is the CEO/CTO working with coding agents, which is the workflow we sell into, not a claim of team velocity.</aside>
 </section>
 
@@ -522,8 +510,8 @@
         <div class="legend" data-a="legend">
           <div><i style="background:var(--green)"></i><b>70k</b><span>founder time, ~9 months</span></div>
           <div><i style="background:var(--cyan)"></i><b>10k</b><span>models, hosting, hosted demo</span></div>
-          <div><i style="background:var(--amber)"></i><b>10k</b><span>company, legal, trademark, IP</span></div>
-          <div><i style="background:var(--muted)"></i><b>10k</b><span>go-to-market, partner travel</span></div>
+          <div><i style="background:var(--muted)"></i><b>10k</b><span>company, legal, trademark, IP</span></div>
+          <div><i style="background:var(--idle)"></i><b>10k</b><span>go-to-market, partner travel</span></div>
         </div>
       </div>
     </div>
@@ -537,10 +525,11 @@
         <div class="m" style="left:75%"><b></b><h5>M4</h5><p>First paying teams; week-4 team retention measured</p></div>
       </div>
       <div class="q" data-a="final" style="margin-top:20px">
-        <div class="q-head"><span class="t-label"><span class="c-green">&#10003;</span>&nbsp; Needs you <b class="t-num" style="color:var(--text)">0</b></span><span class="t-label c-green" data-a="nobody">Nobody waiting.</span></div>
-        <div class="q-list" data-a="flist" style="height:210px"></div>
+        <div class="q-head"><span class="t-label"><span class="c-pink" data-a="fmark" style="display:inline-block">&#9670;</span>&nbsp; Needs you <b class="t-num" style="color:var(--text); display:inline-block" data-a="fcount">0</b></span></div>
+        <div class="q-list" data-a="flist"></div>
       </div>
-      <p class="t-h4 muted" style="margin-top:30px" data-a="close"><strong style="color:var(--text);font-weight:500">What this round proves: teams pay for one queue across vendors.</strong> That is the case for a seed round. The long-term aim is the first fifty teams.</p>
+      <p class="payoff" data-a="nobody">Nobody waiting.</p>
+      <p class="close-line" data-a="close">What this round proves: teams pay for one queue across vendors.</p>
       <p class="t-mono muted" style="margin-top:14px" data-a="contact"></p>
     </div>
   </div>
