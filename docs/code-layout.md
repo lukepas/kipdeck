@@ -1,5 +1,7 @@
 # Code layout
 
+How Kipdeck's code is laid out, for anyone changing it.
+
 Back to the [README](../README.md).
 
 Where the code lives, and where a new feature's pieces go. The office used to grow by adding to the middle of a few big files: the server's message switch, the page's key handler, its frame loop and its store. Each of those is a registry now, and a feature is a folder of its own plus one line in each list it joins. If a change has you editing the middle of `main.ts`, `server.ts`, the store or `protocol.ts`, it probably belongs somewhere else.

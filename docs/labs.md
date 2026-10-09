@@ -1,5 +1,7 @@
 # Labs
 
+Kipdeck gives you full control and clarity over every AI coding agent you run, in one place. Everything beyond the inbox is a lab, off until someone turns it on.
+
 Back to the [README](../README.md).
 
 The office is an inbox for your coding agents: the home page at `/` ([the inbox](inbox.md)) sorts every agent by what it needs from you, and opens each one's terminal, its changes and its pull request beside the list. Everything else the office can do is a lab. Each lab is off as the office ships, so the first thing anyone sees is the inbox and nothing else.

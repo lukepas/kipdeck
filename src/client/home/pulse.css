@@ -2,7 +2,7 @@
    over the list on a phone. Signal only on "need you", and only above 0; amber for "to review". */
 .pulse-in { display: flex; align-items: stretch; gap: 0; width: 100%; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-1); color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .pulse-in:hover { border-color: var(--line-strong); }
-.pulse-in:focus-visible { outline: 2px solid var(--working); outline-offset: 1px; }
+.pulse-in:focus-visible { outline: 2px solid var(--act); outline-offset: 1px; }
 .pulse-stat { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; padding: 6px 12px; }
 .pulse-stat + .pulse-stat { border-left: 1px solid var(--line); }
 .pulse-stat b { font: 600 15px/1.2 var(--font-mono); color: var(--text); white-space: nowrap; font-variant-numeric: tabular-nums; }

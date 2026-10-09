@@ -1,5 +1,7 @@
 # Proof of merge on Base Sepolia
 
+Kipdeck's Proof of Merge lab, testnet only and off by default.
+
 Back to the [README](../README.md).
 
 Part of the Proof of Merge fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnet only: Base Sepolia (chain id 84532). Off unless the office is started with `--attest`, which also holds the Proof of Merge lab on (see [Labs](labs.md)).

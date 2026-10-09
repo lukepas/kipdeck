@@ -1,5 +1,7 @@
 # The deck
 
+The deck is the room drawn by Kipdeck's 3D Bridge view, a lab that shows the same agents as the inbox.
+
 Back to the [README](../README.md).
 
 Every project is a deck, and the room on it is the bridge of a ship under way: one operations floor inside a hull, the same on every project, built as a command amphitheatre. The mission table stands in a pit at deck level; south of it the deck steps up in two curved tiers of consoles to the captain's raised dais; the situation arc hangs over the north side, in front of the bow. It is built so that a glance from the captain's chair (or from the Overview above it) tells you which units need a person, which are stuck and which are only at work. The plan is `src/shared/layout.ts`, which the server checks seats against and the 2D view reads too, so the 3D deck and the rest never drift apart.

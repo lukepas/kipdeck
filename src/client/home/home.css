@@ -2,8 +2,8 @@
    and the sheets it opens (Deploy agent, the palette, the menu, the keys). Calm by default: only
    Needs you carries Signal, To review its amber, and everything else stays on the neutral ramp.
    A wait's clock reads fresh (muted), then amber from 5 minutes and red and bold from 30
-   (shared/wait.ts, data-tone). Motion only marks a change: a row that starts waiting rises in once,
-   and tokens.css turns it into a cut under reduced motion. */
+   (shared/wait.ts, data-tone). Motion only marks a change (motion.ts): a row that starts waiting
+   slides in once, and tokens.css turns it into a cut under reduced motion. */
 
 /* ---- Sections ---------------------------------------------------------------------------------- */
 .inbox { display: flex; flex-direction: column; gap: 20px; }
@@ -38,7 +38,7 @@ button.sec-h:hover { color: var(--text); }
 .row:hover { background: var(--surface-2); }
 .row.selected { background: var(--surface-3); }
 .row-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 11px 4px 11px 14px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-.row-main:focus-visible { outline: 2px solid var(--working); outline-offset: -2px; }
+.row-main:focus-visible { outline: 2px solid var(--act); outline-offset: -2px; }
 .agent-mark { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font: 600 11px/1 var(--font-mono); letter-spacing: -.02em; }
 .agent-mark.p-claude { background: #f3e9e1; border-color: #e6d3c4; color: #8a4a20; }
 .agent-mark.p-codex { background: #e9ecef; border-color: #d3d9df; color: #1d2329; }
@@ -73,12 +73,8 @@ button.sec-h:hover { color: var(--text); }
    one to review, amber turning red as it grows (orange is only for someone who needs you). */
 .row-wait { position: absolute; left: 0; bottom: 0; height: 2px; width: max(8px, calc(var(--wait, 0) * 100%)); background: color-mix(in srgb, var(--stuck) calc(var(--wait, 0) * 100%), var(--review)); opacity: .85; pointer-events: none; transition: width .6s ease; }
 .l-needs-you .row-wait, .l-stuck .row-wait { background: var(--signal); }
-/* A row that just started waiting on you: a short rise, and its left rule pulses once. A redraw in
-   the middle carries on where it was (--arrived-ago is a negative delay, list.ts), not from the start. */
-.row.arrived { animation: row-in 160ms var(--ease) var(--arrived-ago, 0ms); }
-.row.arrived::before { animation: rule-beat 900ms var(--ease) var(--arrived-ago, 0ms); }
-@keyframes row-in { from { opacity: 0; transform: translateY(4px); } }
-@keyframes rule-beat { 0% { width: 3px; } 30% { width: 6px; } 100% { width: 3px; } }
+/* A row that just started waiting on you, an answer landing and a merge rising into Shipped today:
+   motion.css (motion.ts), one beat each. */
 /* A merge held for its Undo (merge-hold.ts): the row steps back and its rule goes neutral; green is for once it lands. */
 .row.holding .row-main { opacity: .6; }
 .row.holding::before { background: var(--line-strong); }

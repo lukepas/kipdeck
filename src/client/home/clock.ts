@@ -14,7 +14,9 @@ export function tickClocks(root: ParentNode = document, now = Date.now()) {
     if (el.textContent !== text) el.textContent = text;
   }
   for (const el of root.querySelectorAll<HTMLElement>('[data-since]')) {
-    const ms = now - Number(el.dataset.since);
+    const since = Number(el.dataset.since);
+    if (!Number.isFinite(since)) continue;
+    const ms = now - since;
     const text = el.dataset.prefix ? `${el.dataset.prefix} ${waitWords(ms)}` : waitWords(ms);
     if (el.textContent !== text) el.textContent = text;
     const tone = waitTone(ms);

@@ -26,8 +26,8 @@ The tokens live in `src/client/styles/tokens.css`. Every sheet uses them by name
 | `--surface-2` | `#1A222C` | `#EEF1F4` | raised: buttons, cards |
 | `--surface-3` | `#212A35` | `#E3E8ED` | hover and selected |
 | `--line` / `--line-strong` | `#26313D` / `#3A4756` | `#D5DBE1` / `#B4BEC8` | hairlines |
-| `--text` / `--muted` | `#E8ECEF` / `#8A97A5` | `#0D131A` / `#56616D` | text |
-| `--signal` | `#FF6A1A` | `#C2410C` | needs you, and the one primary button per view |
+| `--text` / `--muted` | `#E8ECEF` / `#8A97A5` | `#0D131A` / `#56616D` | text; `--act` (the text color) fills the one primary button per view and draws the focus ring |
+| `--signal` | `#FF6A1A` | `#C2410C` | needs you, and nothing else |
 | `--stuck` | `#FF4D5E` | `#C01F33` | stuck or failed, always with the triangle |
 | `--review` | `#F5C542` | `#8A5A00` | to review |
 | `--working` | `#C9D2DC` | `#56616D` | working, quiet |
@@ -66,7 +66,7 @@ The glyphs are in `src/client/ui/icons.ts` (`LEVEL_ICON`), drawn on canvas for t
 
 ## The mark
 
-The Formation mark is three chevrons in an upward V: the lead one solid with a 2px alignment notch, the two trailing ones 2.5px outlines. The wordmark is "KIPDECK" in Archivo at 118% width, 600, +6% tracking, with DECK muted. The favicon is the mark in light on void; its lead chevron turns Signal orange while anything needs you (`setFaviconAlert` in `ui/brand.ts`). The `/pom/` variant has a violet lead chevron.
+The Formation mark is three chevrons in an upward V: the lead one solid with a 2px alignment notch, the two trailing ones 2.5px outlines. The wordmark is "KIPDECK" in Archivo at 118% width, 600, +6% tracking, with DECK muted. The favicon is the mark in light on void; its lead chevron turns Signal orange while an agent is in Needs you or Stuck (`setFaviconAlert` in `ui/brand.ts`, called from `shared/title.ts`). The `/pom/` variant has a violet lead chevron.
 
 Upstream credit stays where it was and is in the home page's Help > About: "Built on agent-office (AgentSystemLabs / webdevcody), MIT", the party the LICENSE names first. The sign-in pages carry only the card.
 
@@ -80,13 +80,13 @@ Upstream credit stays where it was and is in the home page's Help > About: "Buil
 - **Modals**: a sharp card on `--surface-1` with a 1px line; a 2px Signal rule on top only when it blocks. A ✕ top right with a 28px hit area. Esc or ✕ returns straight to mouse-look.
 - **Toasts**: one stack, top right under the bar, one card: a glyph column, a 3px stripe in the state's color, one sentence naming the unit by its address, and the time in mono from the shared clock. A unit that starts asking is not a toast: it is a compact chip at the top centre, under the counters (its diamond, who and what for, N), that folds into the needs-you counter after a few seconds and never covers the lower left. A proof toast adds the hash in a violet chip, a settled tick and an explorer link.
 - **Units in lists**: named by their call sign in a mono chip (`ui/unitsign.ts`), never by a color.
-- **Buttons**: Signal fills only an action for someone who needs you (Answer, Send, Start with the oldest), one per view. Any other main action (Deploy agent, Merge, Open PR, Sign in) is the neutral filled primary, `.btn.solid`: `--text` with void text. Secondary is a 1px outline; hover is one tone step. Focus is a 2px steel (`--working`) ring with a 2px offset, so orange always means someone needs you. Selection is steel or `--text` too: the selected changed file's rule, a picked choice in a window, the terminal's tab, the menu's focus. An empty Needs you keeps its diamond in `--faint`, and the dock's Send, a pull request link and Open PR are `.btn.solid`.
+- **Buttons**: the primary, one per view, is filled `--act` (the text color) with void text, `.btn.primary`: Deploy agent, Merge, Open PR, Send, Sign in. Signal fills a primary only for someone who needs you, `.btn.primary.needs-you` (Start with the oldest, Mission control's Answer). Secondary is a 1px outline; hover is one tone step. Focus is a 2px `--act` ring with a 2px offset, so an orange on screen is always someone who needs you. Selection is `--act` too: the selected changed file's rule, a picked choice in a window, the terminal's tab, the menu's focus. An empty Needs you keeps its diamond in `--faint`.
 - **Terminal**: xterm on `--void`, flat 32px tabs with a 2px underline, the status hues as ANSI colors, Signal only for the cursor.
 
 ## Surfaces outside the deck
 
 - **The home page** (`/`, `lite.ts`): one calm column. The top bar has the project, **Mission**, light or dark and Labs, and nothing that counts twice; then the ranked list of agents. Each row leads with its state glyph and its address in mono (*A-03 at C2*). With Bridge view on in Labs, the Plot (`src/client/shared/plot.ts`, the deck drawn as a plan in hairlines from `src/shared/layout.ts`) sits beside the list on a wide window. The contrast button gives the light whiteprint; until someone picks, it follows the system. The sign-in pages are one card on a plain page.
-- **Sign-in pages** (login, join, claim): the void, the Plot drawn once on the right with one unit lit Signal orange on the ready line, a 360px card with the mark, one field and *Enter deck* (the credit is in Help > About).
+- **Sign-in pages** (login, join, claim): one 360px card in the middle of a plain page in the theme you last used, with the mark and the KIPDECK wordmark, the tagline, one field and one button (*Sign in*, *Make my account*, *Enter deck*). The credit is in Help > About. Nothing behind the card, and no Signal: nobody is waiting yet.
 - **Loading**: the chevrons fill from the bottom over 900 ms in a ruled card over the deck's grid.
 - **`/pom/`, the Proof ledger**: violet is the only accent. Totals in Archivo at 125% width, each with a *verify* link; the *Last merge* panel with the proof rail and the four-step money path; a render of the real deck; dense ruled rows with violet proof chips (short hash, settled tick). The share card (`og.png`) is the same title block, drawn in a pixel font with no dependencies.
 

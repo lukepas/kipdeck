@@ -29,6 +29,11 @@ export const SOURCE_RUN_COMMAND = 'kipdeck';
 /** Where a visitor to the hosted demo asks for access: the landing page's design-partner section. */
 export const ACCESS_URL = `${DOCS_URL}/#teams`;
 
+/** The command that opens the office signed in from a terminal on its computer (the sign-in page), on npm or from a linked clone. */
+export function openCommand(onNpm = ON_NPM): string {
+  return `${onNpm ? INSTALL_COMMAND : SOURCE_RUN_COMMAND} open`;
+}
+
 /** Who the hosted demo's scripted reviewer is, in the shipped log and on the agents' terminals. */
 export const DEMO_REVIEWER = 'Demo Lead (scripted)';
 

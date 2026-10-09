@@ -125,9 +125,9 @@ export function bountyPayouts(floor: { id: string; name: string }, state: Bounti
   return out;
 }
 
-/** How many wait in the inbox, the snoozed ones left out. */
+/** How many wait in the inbox: the snoozed ones and merged pull requests that only wait to be archived left out (waitsOnYou). */
 export function inboxCount(items: readonly ReviewItem[]): number {
-  return items.filter((i) => !i.snoozed).length;
+  return items.filter((i) => !i.snoozed && i.action !== 'send-home').length;
 }
 
 /** A pull request as the review queue carries it (see ReviewPull): the fields cut down, the link https only. */

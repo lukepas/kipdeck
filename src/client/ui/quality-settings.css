@@ -14,5 +14,5 @@
 .q-chip-label { font-weight: 600; }
 .q-chip-why { color: var(--muted); }
 .q-chip-why:empty { display: none; }
-.q-chip-try { margin-left: auto; height: 26px; padding: 0 10px; font-size: 12px; font-weight: 600; color: var(--signal); border-color: var(--signal); }
+.q-chip-try { margin-left: auto; height: 26px; padding: 0 10px; font-size: 12px; font-weight: 600; color: var(--act); border-color: var(--act); }
 .q-chip-try[hidden] { display: none; }

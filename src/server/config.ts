@@ -86,7 +86,7 @@ export interface RTCIceServerLike {
   credential?: string;
 }
 
-const HELP = `kipdeck - the inbox for your ${AGENT_PROVIDERS.filter((p) => p !== 'custom').map((p) => PROVIDER_META[p].name).join(' / ')} agents.
+const HELP = `kipdeck - the inbox for your AI coding agents (${AGENT_PROVIDERS.filter((p) => p !== 'custom').map((p) => PROVIDER_META[p].name).join(' / ')}).
 (Built on agent-office, MIT. The agent-office command still works.)
 
 Usage:
@@ -153,8 +153,8 @@ Options:
                           (env AGENT_OFFICE_NO_OPEN=1)
       --agent <cmd>       Default agent command (default "claude", env AGENT_OFFICE_AGENT)
       --agent-args <str>  Extra args for the configured agent, e.g. "--model opus"
-                          Workers can also select Claude Code, OpenCode, Codex, Grok,
-                          Muse or DeepSeek Harness in the UI
+                          Workers can also run Codex or Cursor, and in beta OpenCode,
+                          Grok, Muse Code, DeepSeek Harness or Pi (picked in the UI)
       --dsh-profile <n>   DeepSeek Harness profile for its workers, over the ACP
                           server (default "acp", env AGENT_OFFICE_DSH_PROFILE)
       --tls-cert <file>   Serve HTTPS with this certificate (PEM)

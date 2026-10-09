@@ -3,11 +3,11 @@
  * wordmark and the lockup, plus the favicon that turns its lead chevron Signal orange while anything
  * needs someone. No three.js here: the 2D view and the sign-in pages use it too.
  */
-import { UPSTREAM_CREDIT } from '../../shared/copy';
+import { PRODUCT, UPSTREAM_CREDIT } from '../../shared/copy';
 import { h } from './dom';
 
-export const PRODUCT = 'Kipdeck';
-export const TAGLINE = 'The inbox for your AI coding agents.';
+// The name, the line under it and the description live in shared/copy.ts, for the app, the server and the landing page alike.
+export { DESCRIPTION, PRODUCT, TAGLINE } from '../../shared/copy';
 export const CREDIT = UPSTREAM_CREDIT;
 export const CREDIT_URL = 'https://github.com/AgentSystemLabs/agent-office';
 

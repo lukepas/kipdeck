@@ -1,5 +1,7 @@
 # Agent reputation from merges
 
+Agent reputation in Kipdeck's Proof of Merge lab, testnet only and off by default.
+
 Back to the [README](../README.md).
 
 Part of the Proof of Merge fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnet only: Base Sepolia (chain id 84532), and Solana devnet for bounty payouts. Off unless the office is started with `--reputation`, which needs `--attest`.

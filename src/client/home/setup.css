@@ -25,7 +25,7 @@
 .su-repo { height: 30px; min-width: 0; flex: 1 1 160px; max-width: 260px; padding: 0 8px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--void); color: var(--text); font: 13px var(--font-mono); }
 .su-usage { display: flex; flex-direction: column; gap: 4px; padding-top: 4px; font-size: 12px; color: var(--muted); }
 .su-usage label { display: flex; gap: 8px; align-items: flex-start; cursor: pointer; }
-.su-usage input { margin: 1px 0 0; accent-color: var(--signal); }
+.su-usage input { margin: 1px 0 0; accent-color: var(--act); }
 .su-usage summary { cursor: pointer; width: max-content; margin-left: 22px; }
 .su-usage details p { margin: 6px 0 0 22px; max-width: 60ch; font-size: 12px; }
 .setup-card .big:disabled { opacity: .5; cursor: not-allowed; }

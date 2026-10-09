@@ -65,6 +65,9 @@
   --pod-none: #6b7785;
   /* Text on a filled Signal button. */
   --on-signal: #0d131a;
+  /* The primary action and the focus ring: the text color, never Signal (Signal is a person needed, nothing else). */
+  --act: var(--text);
+  --on-act: var(--void);
 
   /* Faint fills behind a state (a row, a chip): the hue at low strength over the surface. */
   --signal-tint: rgb(255 106 26 / .12);
@@ -82,7 +85,7 @@
   /* Line and shape: 1px hairlines, 4px corners (2px on chips), no shadows on dense panels. */
   --radius: 4px;
   --radius-chip: 2px;
-  --focus: 0 0 0 2px var(--void), 0 0 0 4px var(--working);
+  --focus: 0 0 0 2px var(--void), 0 0 0 4px var(--act);
 
   /* Only HUD pieces floating over the 3D canvas get a fill you can half see through, and one soft shadow. */
   --hud-fill: rgb(20 27 35 / .85);
@@ -100,8 +103,8 @@
   --ink: var(--text);
   --paper: var(--surface-1);
   --paper-2: var(--surface-2);
-  --accent: var(--signal);
-  --accent-ink: var(--on-signal);
+  --accent: var(--act);
+  --accent-ink: var(--on-act);
   --good: var(--settled);
   --warn: var(--review);
   --bad: var(--stuck);

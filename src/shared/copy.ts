@@ -5,6 +5,22 @@
 
 /** The product, as people and agents see it. */
 export const PRODUCT = 'Kipdeck';
+/**
+ * One line under the name, the same on every surface: the app's sign-in pages and top bar, the
+ * landing page's title, the README, package.json and the installers (tests/one-story.test.ts holds the
+ * ones that cannot import it to this exact text).
+ */
+export const TAGLINE = 'The inbox for your AI coding agents.';
+/**
+ * What it is in one or two sentences, for the README, package.json and the landing page's share
+ * description: control and clarity over every agent, in one place.
+ */
+export const DESCRIPTION =
+  'Full control and clarity over every AI coding agent you run, in one place. See who is waiting on you and for how long, then answer, review and merge without leaving it.';
+/** The browser tab's title: "(2) acme-shop - Kipdeck", in plain ASCII, the count left out at zero. */
+export function tabTitle(waiting: number, project?: string): string {
+  return `${waiting > 0 ? `(${waiting}) ` : ''}${project ? `${project} - ` : ''}${PRODUCT}`;
+}
 /** The command it runs as (agent-office still works, for upstream's scripts). */
 export const CLI = 'kipdeck';
 /**

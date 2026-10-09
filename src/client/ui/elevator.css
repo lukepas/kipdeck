@@ -35,7 +35,7 @@
 .elevator .repo { display: flex; gap: 8px; align-items: baseline; padding: 7px 10px; border-bottom: 1px solid var(--line); cursor: pointer; }
 .elevator .repo:last-child { border-bottom: 0; }
 .elevator .repo:hover { background: var(--surface-3); }
-.elevator .repo.sel { background: var(--surface-3); box-shadow: inset 2px 0 0 var(--signal); }
+.elevator .repo.sel { background: var(--surface-3); box-shadow: inset 2px 0 0 var(--act); }
 .elevator .repo .nm { font-weight: 600; white-space: nowrap; }
 .elevator .repo .desc { flex: 1; min-width: 0; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .elevator .repo .when { font-size: 11px; color: var(--muted); white-space: nowrap; }

@@ -9,7 +9,7 @@
 .q-choice kbd { display: inline-grid; place-items: center; min-width: 20px; height: 20px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); background: var(--surface-2); font: 600 11px var(--font-mono); }
 .q-reply { display: flex; gap: 8px; }
 .q-reply input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--void); color: var(--text); font: 400 15px var(--font-ui); }
-.q-reply input:focus { outline: 2px solid var(--signal); outline-offset: -1px; border-color: var(--signal); }
+.q-reply input:focus { outline: 2px solid var(--act); outline-offset: -1px; border-color: var(--act); }
 .q-reply .btn { height: 40px; padding: 0 18px; font-weight: 600; }
 /* While the card is up its box is the reply: the terminal's own reply bar goes, Keys stays reachable. */
 .pane.asking .term-keypad .term-say > :not(.term-keys-toggle):not(.term-keys) { display: none; }

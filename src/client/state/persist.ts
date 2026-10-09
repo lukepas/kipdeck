@@ -1,6 +1,7 @@
 // What this browser remembers between visits, in localStorage: your profile, your settings, the floor
 // you were last on and the spot you were standing in. Every read and write shrugs off blocked storage.
 
+import { WAIT_AMBER_MS } from '../../shared/wait';
 import { DATA_COLORS, remapColor } from '../../shared/datacolors';
 import { randomLook, sanitizeLook, type Look } from '../../shared/avatar';
 import type { WatchMode } from '../../shared/launch';
@@ -99,7 +100,8 @@ export interface AlertSettings {
 }
 export const AMBER_MINUTES = [2, 5, 10, 15] as const;
 export const RED_MINUTES = [5, 10, 20, 30] as const;
-export const ALERT_DEFAULTS: Readonly<AlertSettings> = { on: true, amberMin: 5, redMin: 10 };
+/** Amber at WAIT_AMBER_MS by default: the same minute an inbox clock turns amber (shared/wait.ts). */
+export const ALERT_DEFAULTS: Readonly<AlertSettings> = { on: true, amberMin: WAIT_AMBER_MS / 60_000, redMin: 10 };
 /** Settings > Bridge > Hands (features/hands): Auto draws your first-person hands at High and Medium, On at every tier, Off never. */
 export const HANDS_MODES = ['auto', 'on', 'off'] as const;
 export type HandsMode = (typeof HANDS_MODES)[number];

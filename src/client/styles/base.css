@@ -12,8 +12,8 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 a { color: var(--text); text-underline-offset: 2px; text-decoration-color: var(--line-strong); }
 a:hover { text-decoration-color: currentColor; }
 code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-:focus-visible { outline: 2px solid var(--working); outline-offset: 2px; }
-::selection { background: rgb(255 106 26 / .3); }
+:focus-visible { outline: 2px solid var(--act); outline-offset: 2px; }
+::selection { background: color-mix(in oklab, var(--text) 25%, transparent); }
 * { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
 .hidden { display: none !important; }
 .ico { flex: none; display: inline-block; vertical-align: -3px; }
@@ -39,24 +39,24 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 .btn.on { background: var(--surface-3); border-color: var(--text); }
 .btn.danger { color: var(--stuck); border-color: var(--stuck); background: var(--stuck-tint); }
 .btn.danger:hover { background: rgb(255 77 94 / .2); }
-.btn.primary { background: var(--signal); border-color: var(--signal); color: var(--on-signal); font-weight: 600; }
-.btn.primary:hover { background: color-mix(in oklab, var(--signal) 88%, white); }
-/* The neutral primary: filled, high contrast, for a main action that nobody is waiting on (Deploy
-   agent, Merge, Sign in). Orange stays for someone who needs you. */
-.btn.solid { background: var(--text); border-color: var(--text); color: var(--void); font-weight: 600; }
-.btn.solid:hover { background: color-mix(in oklab, var(--text) 86%, var(--void)); }
-.btn.solid:disabled { opacity: 1; background: var(--surface-2); border-color: var(--line); color: var(--muted); }
+/* The one primary button per view is filled in ink (--act), for a main action nobody is waiting on
+   (Deploy agent, Merge, Sign in). Signal orange is kept for a person needed: .btn.primary.needs-you. */
+.btn.primary { background: var(--act); border-color: var(--act); color: var(--on-act); font-weight: 600; }
+.btn.primary:hover { background: color-mix(in oklab, var(--act) 86%, var(--void)); }
+.btn.primary:disabled { opacity: 1; background: var(--surface-2); border-color: var(--line); color: var(--muted); }
+.btn.primary.needs-you { background: var(--signal); border-color: var(--signal); color: var(--on-signal); }
+.btn.primary.needs-you:hover { background: color-mix(in oklab, var(--signal) 88%, white); }
 .btn.proof { color: var(--proof); border-color: var(--proof); background: var(--proof-tint); }
 .btn:disabled { opacity: .45; cursor: default; }
-/* A primary button that can't be pressed yet reads as a quiet one, never dark text on Signal. */
+/* A primary button that can't be pressed yet reads as a quiet one. */
 .btn.primary:disabled { opacity: 1; background: var(--surface-2); border-color: var(--line); color: var(--muted); }
 /* A square icon button, the same 32px as the rest. */
 .btn.icon { width: 32px; padding: 0; }
 /* Segmented controls: the chosen one is filled, not just outlined, so it reads at a glance (3:1 and more). */
-.seg .btn.on, .seg .btn[aria-checked=true], .seg .btn[aria-pressed=true] { background: var(--signal-tint); border-color: var(--signal); color: var(--text); font-weight: 600; box-shadow: inset 0 -2px 0 var(--signal); }
+.seg .btn.on, .seg .btn[aria-checked=true], .seg .btn[aria-pressed=true] { background: var(--surface-3); border-color: var(--act); color: var(--text); font-weight: 600; box-shadow: inset 0 -2px 0 var(--act); }
 .seg .btn:not(.on):not([aria-checked=true]) { color: var(--muted); }
-/* A primary button in a row of them (Settings' Save) keeps its own text color: never muted text on Signal. */
-.seg .btn.primary:not(:disabled) { color: var(--on-signal); }
+/* A primary button in a row of them (Settings' Save) keeps its own text color: never muted text on a fill. */
+.seg .btn.primary:not(:disabled) { color: var(--on-act); }
 /* A work item's [tag] ("ask", "perm"): a small mono chip before its title, never brackets. */
 .tag-chip { display: inline-block; margin-right: 6px; padding: 0 4px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); color: var(--muted); font: 500 10px/15px var(--font-mono); text-transform: lowercase; vertical-align: 1px; }
 .btn:disabled:hover { background: var(--surface-2); }
@@ -118,6 +118,8 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 .toast.error .toast-icon { color: var(--stuck); }
 .toast.proof::after { background: var(--proof); }
 .toast.proof .toast-icon { color: var(--proof); }
+.toast.shipped::after { background: var(--settled); }
+.toast.shipped .toast-icon { color: var(--settled); }
 .toast.needs-you { border-color: rgb(255 106 26 / .5); }
 .toast.needs-you::after { background: var(--signal); }
 .toast.needs-you .toast-icon { color: var(--signal); }
@@ -146,7 +148,7 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 .modal footer { display: flex; gap: 8px; justify-content: flex-end; padding: 10px 16px; border-top: 1px solid var(--line); background: var(--surface-1); align-items: center; }
 .modal footer .grow { flex: 1; font-size: 12px; color: var(--muted); }
 .modal textarea, .modal input[type=text], .modal input[type=password], .modal input[type=number], .modal input[type=url], .modal input[type=search], .modal select { width: 100%; font: inherit; font-size: 14px; color: var(--text); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 8px 10px; background: var(--void); outline: none; resize: vertical; }
-.modal textarea:focus, .modal input:is([type=text], [type=password], [type=number], [type=url], [type=search]):focus, .modal select:focus { border-color: var(--signal); }
+.modal textarea:focus, .modal input:is([type=text], [type=password], [type=number], [type=url], [type=search]):focus, .modal select:focus { border-color: var(--act); }
 .modal ::placeholder { color: var(--faint); }
 .modal label { font-weight: 600; font-size: 13px; display: block; margin-bottom: 6px; color: var(--text); }
 .close { width: 28px; height: 28px; padding: 0; justify-content: center; flex: none; background: transparent; border-color: transparent; color: var(--muted); }
@@ -170,8 +172,8 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 .svc-list li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface-1); cursor: pointer; }
 .svc-list li + li { border-top: 1px solid var(--line); }
 .svc-list li:hover { background: var(--surface-2); }
-.svc-list li.on { background: var(--surface-3); box-shadow: inset 2px 0 0 var(--signal); }
-.svc-list li:focus-visible { outline: 2px solid var(--working); outline-offset: -2px; }
+.svc-list li.on { background: var(--surface-3); box-shadow: inset 2px 0 0 var(--act); }
+.svc-list li:focus-visible { outline: 2px solid var(--act); outline-offset: -2px; }
 .svc-list .dot { width: 10px; height: 10px; }
 .svc-main { flex: 1; min-width: 0; }
 .svc-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

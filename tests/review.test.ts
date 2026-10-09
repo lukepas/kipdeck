@@ -72,6 +72,10 @@ test('the inbox: workers to review and the pull requests nobody stands for, olde
   // Not signed in to GitHub as anyone: only the office's own.
   assert.deepEqual(reviewInbox([], [office, theirs], undefined).map((i) => i.key), ['pr:f2:7']);
   assert.equal(inboxCount(items), 3);
+  // A merged pull request only waits to be archived: listed, but not counted as waiting on you.
+  const merged = rankRoster([entry({ id: 'm', status: 'idle', pr: { number: 3, state: 'merged' } as RosterEntry['pr'] })], NOW);
+  assert.equal(merged[0].att.action, 'send-home');
+  assert.equal(inboxCount(reviewInbox(merged, [])), 0);
   const approved = reviewPull({ id: 'f2', name: 'web' }, pull({ reviewDecision: 'APPROVED' }), true);
   assert.deepEqual([reviewInbox([], [approved])[0].action, reviewInbox([], [approved])[0].reason], ['merge', 'PR #41 approved: ready to merge']);
 });

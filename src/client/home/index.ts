@@ -27,6 +27,7 @@ import { installPane, paneMessage } from './pane';
 import { openPalette, type Command } from './palette';
 import { renderChecklist, renderShipped } from './shipped';
 import { renderPulse } from './pulse';
+import { markChanges } from './motion';
 import { askSetup, onSetupChange, setupCard, setupMessage } from './setup';
 import { demoMessage } from './demo';
 import { home } from './state';
@@ -187,6 +188,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     // Shipped today shows up with the first merge, not as an empty box before it.
     shipped.classList.toggle('hidden', !home.records.some((r) => r.kind === 'merged'));
     renderShipped(shipped);
+    markChanges(inbox, shipped, `${home.project}|${home.owner}|${home.query}|${home.idleOpen}`);
     renderPulse([$('pulse'), $('pulse-list')], openNumbers);
     renderOwner($('owner'));
     renderDigest();

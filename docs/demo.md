@@ -1,5 +1,7 @@
 # The demo
 
+Kipdeck gives you full control and clarity over every AI coding agent you run, in one place. The demo shows that in a minute, with scripted agents.
+
 Back to the [README](../README.md).
 
 See the whole loop in a minute without an agent CLI, a sign-in or a model:
