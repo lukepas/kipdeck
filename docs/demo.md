@@ -10,7 +10,7 @@ npx kipdeck --demo
 
 ![The demo: Codex's question answered, Claude Code's diff reviewed and merged into Shipped today (scripted agents, no model)](img/demo.gif)
 
-It opens the inbox in your browser, signed in, on a throwaway repository called `acme-shop`, and five agents start on it: two on Claude Code, two on Codex and one on Cursor. They are scripted stand-ins, so nothing runs a model and nothing costs anything, but the office reads them exactly as it reads the real CLIs: each reports over that agent's own hooks, works on a branch of its own in a worktree, and commits real files, so the diffs are real diffs and Merge really merges. A **Demo** pill in the top bar says it's the demo, with the command to copy for the real thing (the full note is its tooltip). Until Kipdeck is on npm that is the from-source command, not `npx kipdeck`, which would 404; `ON_NPM` in `src/shared/demo.ts` switches it, and there is no Get started checklist. Codex's question opens in the pane by itself as a card with one reply box.
+It opens the inbox in your browser, signed in, on a throwaway repository called `acme-shop`, and five agents start on it: two on Claude Code, two on Codex and one on Cursor. They are scripted stand-ins, so nothing runs a model and nothing costs anything, but the office reads them exactly as it reads the real CLIs: each reports over that agent's own hooks, works on a branch of its own in a worktree, and commits real files, so the diffs are real diffs and Merge really merges. A **Demo** pill in the top bar says it's the demo, with the command to copy for the real thing (the full note is its tooltip; on a narrow phone it is the tag alone). Until Kipdeck is on npm that is `kipdeck`, not `npx kipdeck`, which would 404: build and link the clone once (`cd kipdeck && npm install && npm run build && npm link`), then run it from your own repository (`cd ~/code/your-project && kipdeck`), as the README's From source says; `ON_NPM` in `src/shared/demo.ts` switches it, and there is no Get started checklist. Codex's question opens in the pane by itself as a card with its two numbered choices and one reply box.
 
 The repository lives in a fresh temporary folder, never in your code. Ctrl+C stops the agents and deletes the folder. The demo needs Node.js 20+ and git; on Windows, run it in WSL (the stand-ins are sh scripts). Anonymous usage numbers are always off in the demo.
 
@@ -21,16 +21,16 @@ The script is the same every time (`src/server/demo/script.ts`):
 | When | Agent | What you see |
 | --- | --- | --- |
 | 0:00 | all five | They arrive under **Working**, one by one, each with a line saying what it's doing (`Read: api/login.js`, `Bash: npm test`...). |
-| about 0:20 | Codex, *Fix the flaky checkout test* | It ran the test, found `.total` drawn twice, and asks *Update the snapshot or fix the selector?* The row moves to **Needs you**. |
+| about 0:20 | Codex, *Fix the flaky checkout test* | It ran the test, found `.total` drawn twice, and asks how to fix the test, with two choices: *1. Fix the selector* and *2. Update the snapshot*. The row moves to **Needs you**, and rises in. |
 | about 0:35 | Claude Code, *Add rate limiting to /api/login* | Done: a rate limiter, its tests and the login route, three files. The row moves to **To review**. |
 | about 0:50 | Cursor, *Write the README quickstart* | Done: the README and `docs/quickstart.md`. **To review**. |
 | always | Claude Code, *Upgrade the payment SDK to v5*; Codex, *Port the settings page to the form kit* | They keep working, so the inbox never looks finished. |
 
 Then it's yours:
 
-1. **Answer.** Press **Answer** on Codex's row (or Enter): its terminal opens in the pane with the reply box ready. Type `fix the selector` and press Enter. The row goes back to Working, and a little later Codex's fix is in To review.
-2. **Review.** **Review changes** on Claude Code's row opens the diff beside the list.
-3. **Merge.** **Merge** merges its branch into `acme-shop`'s `main` on your computer, and it lands in **Shipped today** with the agent, the commit and how long it waited on you, signed in the shipped log.
+1. **Answer.** Press **Answer** on Codex's row (or Enter): its question card opens in the pane. Press **1 Fix the selector** (the stand-in takes the one digit, as Claude Code does), or type an answer in the box. The row goes back to Working, a settled toast says it's back at work, and a little later Codex's fix is in To review.
+2. **Review.** **Review changes** on Claude Code's row opens the diff beside the list, with *into main* over it.
+3. **Merge.** **Merge** waits about seven seconds behind a toast that says *Merging into main on this computer*, with **Undo**. Then it merges its branch into `acme-shop`'s `main` on your computer, the toast turns to *Merged into main on this computer* with how long it waited on you, and the change lands in **Shipped today**, signed in the shipped log.
 4. **Send back** with a note works too: the stand-in commits the note and finishes again.
 5. **Deploy agent** works with any task: the stand-in writes a short note about it in `notes/`, commits it, and finishes.
 
@@ -40,8 +40,8 @@ To see it on your phone, start it with `--host 0.0.0.0` and sign in from the pho
 
 `kipdeck --demo --read-only` is the demo for a public address: anyone who opens it is signed in to watch, with no password, and nothing they send changes anything.
 
-- **Watching.** Visitors see the same inbox, the agents' live terminals, their diffs and Shipped today. Over the socket the office only takes the messages that look (a terminal's screen, a diff, the shipped log); over HTTP only GET and HEAD. Anything else (Deploy agent, typing into a terminal, Merge, Labs) is dropped, and a toast says *This demo is read only* with `npx kipdeck --demo` to run it at home. Like every demo office it has no Get started checklist. A visitor's presence and usage-limit lookups are dropped quietly.
-- **A scripted reviewer.** Since nobody watching can act, the office plays the reviewer, *Demo Lead (scripted)*: it answers Codex's question about ten seconds after it's asked, merges each finished change ten or twelve seconds after it's done, and 25 seconds after the last merge starts the round over from the repository's first commit with an empty shipped log. A round is about 80 seconds; one that gets stuck starts over after five minutes.
+- **Watching.** Visitors see the same inbox, the agents' live terminals, their diffs and Shipped today. Over the socket the office only takes the messages that look (a terminal's screen, a diff, the shipped log); over HTTP only GET and HEAD. Anything else (Deploy agent, typing into a terminal, Merge, Labs) is dropped, and a toast says *This demo is read only*. Until Kipdeck is on npm the repository is private, so the pill and the toast ask a visitor to get access from the team rather than show a command or a repository they couldn't use (the pill's ask links to the design-partner section of kipdeck.com); once `ON_NPM` is on they show `npx kipdeck --demo`. Like every demo office it has no Get started checklist. A visitor's presence and usage-limit lookups are dropped quietly.
+- **A scripted reviewer.** Since nobody watching can act, the office plays the reviewer, *Demo Lead (scripted)*: it answers Codex's question about ten seconds after it's asked (choice 1), merges each finished change ten or twelve seconds after it's done, and 25 seconds after the last merge starts the round over from the repository's first commit with an empty shipped log. A round is about 80 seconds; one that gets stuck starts over after five minutes.
 - **Deploying it.** [`deploy/demo/Dockerfile`](../deploy/demo/Dockerfile) is the image (Node, git and the build; no agent CLI, no volume), and [Fly.io's notes](fly.md#a-public-read-only-demo) deploy it with [`deploy/demo/fly.toml`](../deploy/demo/fly.toml). Any Docker host works: publish port 8080 and set `AGENT_OFFICE_ALLOWED_HOSTS` to the names it's reached at. What it exposes is in [Security](security.md#the-read-only-demo).
 
 ## Faster

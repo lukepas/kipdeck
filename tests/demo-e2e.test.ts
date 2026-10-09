@@ -102,14 +102,15 @@ test('the demo on your computer: the pill, a question from Codex opening by itse
   assert.equal(await page.locator('#checklist').isVisible(), false, 'no Get started checklist in the demo');
   // Nothing was selected, so the pane opened the question by itself, in words, over the terminal.
   const card = page.locator('.pane .q-card');
-  await card.locator('.q-text', { hasText: 'Update the snapshot or fix the selector?' }).waitFor({ timeout: 15_000 });
+  await card.locator('.q-text', { hasText: 'How should I fix the test?' }).waitFor({ timeout: 15_000 });
   assert.match(await page.locator('.pane-title h2').innerText(), /Fix the flaky checkout test/);
   // Answer from the row puts the cursor in the card's one reply box.
   await row('needs-you', 'Fix the flaky checkout test').locator('.row-act').click();
-  const reply = card.locator('.q-reply input');
   await page.waitForFunction(() => !!document.activeElement?.closest('.q-reply'), null, { timeout: 5000 });
-  await reply.fill('fix the selector');
-  await reply.press('Enter');
+  // The question has numbered choices, one button each; the first answers it with one digit.
+  const choice = card.locator('.q-choice', { hasText: 'Fix the selector' });
+  assert.equal(await card.locator('.q-choice').count(), 2);
+  await choice.click();
   await row('working', 'Fix the flaky checkout test').or(row('review', 'Fix the flaky checkout test')).waitFor({ timeout: 15_000 });
 
   await row('review', 'Add rate limiting').waitFor({ timeout: 30_000 });

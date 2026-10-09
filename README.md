@@ -16,7 +16,7 @@ Run it inside the repository you work in. It opens in your browser, signed in, w
 
 [**Run it**](#run-it) · [**Try the demo**](docs/demo.md) · [**Attach an agent**](#attach-an-agent-you-already-started) · [**Teams and servers**](docs/self-hosting.md) · [**Labs**](#labs) · [**Docs**](docs/features.md)
 
-- **One loop.** **Deploy agent**, get pinged when it needs you, answer its question in one box, review the diff beside the list and Merge, and it lands in **Shipped today**. The oldest agent waiting on you opens by itself; the top bar counts who is waiting, the median wait and what merged today. See [the inbox](docs/inbox.md).
+- **One loop.** **Deploy agent**, get pinged when it needs you, answer its question in one box, review the diff beside the list and Merge, and it lands in **Shipped today**. The oldest agent waiting on you opens by itself; the top bar says how many need you and how many are ready to review, with the oldest wait ticking, the median wait today and what merged today. Merge waits a few seconds for Undo and names where it goes. See [the inbox](docs/inbox.md).
 - **One ranking.** `src/shared/attention.ts` decides the order everywhere: the inbox's sections (Needs you, To review, Working, Idle), Mission control, the tab title and notifications.
 - **A record of what shipped.** Every merge and send-back is kept on your machine as a signed record: which agent and model, the prompt, and who reviewed it. **Numbers** shows human wait time and the merge rate per agent and model from it.
 - **Calm by default.** Everything that isn't the inbox (the 3D Bridge view, goals and the timeline, meetings, voice, Proof of Merge on testnets) is off until someone switches it on in [Labs](#labs).
@@ -45,14 +45,16 @@ Nothing asks you anything in the terminal, and there are no settings to fill in.
 
 ### From source
 
-Until `kipdeck` is on npm, build it once and run it from inside the repository you work in:
+Until `kipdeck` is on npm, build it once, link it, and run it from inside the repository you work in:
 
 ```bash
 git clone https://github.com/zbagdzevicius/kipdeck
-cd kipdeck && npm install && npm run build
-cd ~/code/your-project && node ~/path/to/kipdeck/bin/agent-office.js        # what npx kipdeck will run
-node ~/path/to/kipdeck/bin/agent-office.js --demo                         # the demo, anywhere
+cd kipdeck && npm install && npm run build && npm link     # npm link puts kipdeck on your PATH
+cd ~/code/your-project && kipdeck                           # what npx kipdeck will run
+kipdeck --demo                                              # the demo, anywhere
 ```
+
+The demo's pill copies that same `kipdeck` command.
 
 Common options:
 
@@ -96,8 +98,8 @@ More in [docs/labs.md](docs/labs.md).
 ## What it does
 
 - **The inbox.** Every agent in four sections (Needs you, To review, Working, Idle), one button per row, the selected agent's live terminal, diff and log beside the list, and Shipped today under it ([the inbox](docs/inbox.md)). It draws after about 175 kB on any laptop or phone; the old `/lite` address goes there.
-- **Deploy, attach, answer, review, merge.** The Deploy sheet starts an agent on a branch of its own; `kipdeck attach` adopts one started in a terminal; Answer, Review changes, Fix checks and Merge do what they say, with or without GitHub.
-- **Numbers.** Human wait time, changes merged, the merge rate and agent-hours, this week against the last, and the merge rate per agent and model with its N, from the signed shipped log on your machine ([metrics](docs/metrics.md)).
+- **Deploy, attach, answer, review, merge.** The Deploy sheet starts an agent on a branch of its own; `kipdeck attach` adopts one started in a terminal; Answer, Review changes, Fix checks and Merge do what they say, with or without GitHub. With a GitHub repository and no pull request yet, Open PR comes first. On a team, each row says whose agent it is, and **Mine / Team** filters the inbox.
+- **Numbers.** Human wait time, changes merged, the merge rate and agent-hours, the last 7 days against the 7 days before, and the merge rate per agent and model with its N, from the signed shipped log on your machine ([metrics](docs/metrics.md)).
 - **Settings in three panes.** Account, Agents and Notifications. Six keys, and Help on **?** ([controls](docs/controls.md)).
 - **Teams.** Accounts with invite links, a shared dev box reached by SSH tunnel or Tailscale, and the team's Slack or Discord channel ([below](#teams-and-servers)).
 - **Agents that manage agents.** Every agent can list, deploy, message and stop the others through the `kipdeck` MCP server or the `office-workers` command ([agents](docs/agents.md)).
@@ -165,7 +167,7 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 
 ## Controls
 
-Six keys on the home page: **Ctrl+K** (find an agent or a command), **N** (deploy an agent), **Enter** (the selected agent's next step), **Esc** (back to the list, or close a window), **/** (search) and **?** (Help). Up and Down move the selection. Everything else is a row's button or the avatar menu: Numbers, Settings, Help and Sign out (Labs is in Settings and Ctrl+K). The Bridge view's keys (walking, the Overview, voice) are in [docs/controls.md](docs/controls.md#the-bridge-view-labs).
+Six keys on the home page: **Ctrl+K** (find an agent or a command), **N** (deploy an agent), **Enter** (answer or review the selected agent; it never merges), **Esc** (back to the list, or close a window), **/** (search) and **?** (Help). Up and Down move the selection. Everything else is a row's button or the avatar menu: Numbers, Settings, Help and Sign out (Labs is in Settings and Ctrl+K). The Bridge view's keys (walking, the Overview, voice) are in [docs/controls.md](docs/controls.md#the-bridge-view-labs).
 
 ## Development
 

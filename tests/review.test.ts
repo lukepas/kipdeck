@@ -158,3 +158,12 @@ test('a roster entry carries its pull request\'s review and conflicts, and what 
   assert.deepEqual(e.work, { files: 1, additions: 2, deletions: 3, ahead: 1 });
   assert.equal(rosterEntry(floor, worker({ kind: 'shell' })).work, undefined);
 });
+
+test('a roster entry says whose agent it is and which branch its work merges into', () => {
+  const floor: RosterFloor = { id: 'f1', name: 'api', branch: 'main', pulls: [], tasks: [], goalTitle: () => undefined };
+  const e = rosterEntry(floor, worker());
+  assert.equal(e.createdBy, 'Ed');
+  assert.equal(e.into, 'main', "the project's branch when the worktree doesn't say");
+  assert.equal(rosterEntry(floor, worker({ worktree: { path: 'x', branch: 'office/m', base: 'abc', from: 'develop' } })).into, 'develop');
+  assert.equal(rosterEntry({ ...floor, branch: undefined }, worker()).into, undefined);
+});

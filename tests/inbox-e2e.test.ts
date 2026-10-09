@@ -2,7 +2,7 @@
 // (tests/support/standin.mjs: no model runs, every task says "(demo)"). Deploy two agents from the
 // Deploy sheet; one asks a question and lands in Needs you, the other finishes and lands in To
 // review. Answer the first from its row (the reply box is ready), review the second's diff and
-// merge it: it's in Shipped today, the project has the merge commit, the log has a signed record,
+// merge it (the merge waits for Undo first, and Undo really keeps it unmerged): it's in Shipped today, the project has the merge commit, the log has a signed record,
 // the next agent is selected and the checklist is done. Then the keys, and a phone.
 // Skipped (not failed) when there's no build (npm run build), the build is older than the client's
 // sources, or there's no browser playwright-core can start.
@@ -148,14 +148,42 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   await row(page, 'review', 'Fix the flaky checkout test').waitFor({ timeout: 30_000 });
   await page.locator('.sec-needs-you .sec-empty', { hasText: 'Nothing needs you' }).waitFor();
 
-  // Review: the Changes tab with what it changed, then Merge.
+  // Review: the Changes tab with what it changed and the branch it goes into, then Merge.
   await row(page, 'review', 'Write the README quickstart').locator('.row-main').click();
   await page.locator('.pane-tab.on', { hasText: 'Changes' }).waitFor();
   await page.locator('.pane .changes-files li', { hasText: 'Write-the-README-quickstart' }).waitFor({ timeout: 15_000 });
+  assert.equal(await page.locator('.pane .rv-into').innerText(), 'into main');
+  // Merge is held behind Undo, with a toast that names where it goes. Undo sends nothing.
+  await page.locator('.pane .rv-merge').click();
+  const hold = page.locator('#toasts .toast.hold');
+  await hold.waitFor({ timeout: 5_000 });
+  assert.match(await hold.locator('.toast-text').innerText(), /^Merging into main on this computer/);
+  assert.equal(await row(page, 'review', 'Write the README quickstart').locator('.row-act').innerText(), 'Undo');
+  await hold.locator('.hold-undo').click();
+  await page.locator('#toasts .toast', { hasText: 'Merge undone' }).waitFor({ timeout: 5_000 });
+  await page.waitForTimeout(500);
+  assert.equal(execFileSync('git', ['log', '--merges', '--format=%s', 'main'], { cwd: project, encoding: 'utf8' }).trim(), '', 'nothing merged after Undo');
+  assert.equal(await page.locator('.pane .rv-merge').innerText(), 'Merge');
+  // By keyboard: Enter on Merge holds it and puts the focus on Undo; Esc takes it back. Nothing merges,
+  // and while it's held the pulse no longer counts it as waiting on you.
+  await page.locator('.pane .rv-merge').focus();
+  await page.keyboard.press('Enter');
+  await hold.waitFor({ timeout: 5_000 });
+  assert.match(await hold.locator('.toast-text small').innerText(), /^Write the README quickstart \(/);
+  await page.waitForFunction(() => document.activeElement?.matches('.pane .rv-undo'), null, { timeout: 5_000 });
+  assert.match(await page.locator('#pulse .pulse-stat').nth(1).innerText(), /^1\s*to review/);
+  assert.match(await row(page, 'review', 'Write the README quickstart').locator('.row-status').innerText(), /^Merging in \ds$/);
+  await page.keyboard.press('Escape');
+  await hold.waitFor({ state: 'detached', timeout: 5_000 });
+  await page.waitForTimeout(500);
+  assert.equal(execFileSync('git', ['log', '--merges', '--format=%s', 'main'], { cwd: project, encoding: 'utf8' }).trim(), '', 'nothing merged after Esc');
+  assert.equal(await page.locator('.pane .rv-merge').innerText(), 'Merge');
+  // Merge again and let the hold run out: it lands, and the same toast says so with a check.
   await page.locator('.pane .rv-merge').click();
   await page.locator('.ship', { hasText: 'Write the README quickstart' }).waitFor({ timeout: 30_000 });
+  await page.locator('#toasts .toast.settled', { hasText: 'Merged into main on this computer' }).waitFor({ timeout: 5_000 });
   assert.match(await page.locator('.shipped .sec-total').innerText(), /^1 merged/);
-  // The next one to review is selected, so Enter keeps going.
+  // The next one to review is selected.
   await page.locator('.pane-title h2', { hasText: 'Fix the flaky checkout test' }).waitFor({ timeout: 10_000 });
   // Every step of the checklist is done, so it's gone.
   await page.waitForFunction(() => document.getElementById('checklist')?.classList.contains('hidden'), null, { timeout: 10_000 });
@@ -170,10 +198,16 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   assert.equal(records[0].provider, 'claude');
   assert.match(records[0].sig, /^[A-Za-z0-9+/=]{80,}$/);
 
-  // Enter does the selected row's step: on To review, that's its changes.
+  // Enter does the selected row's step: on To review, that's its changes, and never a merge.
   await page.locator('.sec-review .row.selected .row-main').focus();
   await page.keyboard.press('Enter');
   await page.locator('.pane-tab.on', { hasText: 'Changes' }).waitFor();
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(300);
+  assert.equal(await page.locator('#toasts .toast.hold').count(), 0, 'Enter never starts a merge');
+  // The pulse counts the list's own sections: 0 need you, 1 to review.
+  assert.match(await page.locator('#pulse .pulse-stat.p-zero').first().innerText(), /0\s*need you/);
+  assert.match(await page.locator('#pulse .pulse-stat.p-review').innerText(), /1\s*to review/);
   assert.deepEqual(errors, []);
 });
 

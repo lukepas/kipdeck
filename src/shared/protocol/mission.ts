@@ -68,6 +68,10 @@ export interface RosterEntry {
   model?: string;
   /** The branch it works on, when it has a worktree of its own. */
   branch?: string;
+  /** The branch its work merges into (its worktree's `from`, else the project's branch). */
+  into?: string;
+  /** Who deployed it: the person it belongs to (the inbox's Mine / Team filter). */
+  createdBy?: string;
   status: WorkerStatus;
   acked: boolean;
   createdAt: number;

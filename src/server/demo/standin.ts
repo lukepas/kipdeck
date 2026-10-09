@@ -103,6 +103,8 @@ function commit(message) {
 const lines = [];
 let waiting;
 let typed = '';
+/** While a question with choices waits: how many there are, so one digit picks one without Enter. */
+let picks = 0;
 if (process.stdin.isTTY) process.stdin.setRawMode(true);
 process.stdin.setEncoding('utf8');
 process.stdin.on('data', (chunk) => {
@@ -124,6 +126,11 @@ process.stdin.on('data', (chunk) => {
         typed = typed.slice(0, -1);
         process.stdout.write('\b \b');
       }
+    } else if (picks && waiting && !typed && ch >= '1' && ch <= String(picks)) {
+      process.stdout.write(ch + '\r\n');
+      const w = waiting;
+      waiting = undefined;
+      w(ch);
     } else if (ch >= ' ') {
       typed += ch;
       process.stdout.write(ch);
@@ -155,9 +162,14 @@ async function run() {
       const ask = play.route === 'codex' ? 'request_user_input' : 'AskUserQuestion';
       console.log('');
       console.log(bold('? ' + step.ask));
+      const choices = step.choices || [];
+      choices.forEach((c, n) => console.log('  ' + (n + 1) + '. ' + c));
       process.stdout.write(bold('> '));
       await post('PreToolUse', { tool_name: ask, tool_use_id: id, tool_input: {} });
-      const answer = await nextLine();
+      picks = choices.length;
+      let answer = await nextLine();
+      picks = 0;
+      if (/^[1-9]$/.test(answer) && choices[Number(answer) - 1]) answer = choices[Number(answer) - 1];
       console.log(dim('  (answered: ' + answer + ')'));
       await post('PostToolUse', { tool_name: ask, tool_use_id: id, tool_input: {} });
     }

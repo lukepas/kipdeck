@@ -12,7 +12,7 @@ export const DEMO_AUTHOR = { name: 'demo agent', email: 'demo-agent@example.inva
 /**
  * One thing an agent does, `after` seconds after the step before it. A `tool` is reported to the
  * office as a tool call (its activity line); `say` is printed in its terminal; `write` puts files in
- * its worktree; `ask` asks the person and waits for a line typed back; `finish` commits everything
+ * its worktree; `ask` asks the person and waits for a line typed back (or one digit, with `choices`); `finish` commits everything
  * with that message and ends its turn (To review); `again` starts its steps over (it never finishes).
  */
 export interface DemoStep {
@@ -21,6 +21,8 @@ export interface DemoStep {
   say?: string[];
   write?: Record<string, string>;
   ask?: string;
+  /** The numbered choices under `ask`, so the question card offers a button for each; one digit picks one. */
+  choices?: string[];
   finish?: string;
   again?: true;
 }
@@ -260,7 +262,7 @@ export const FLEET: DemoAgent[] = [
       { after: 3, tool: 'Read: web/checkout.test.js' },
       { after: 5, tool: 'Bash: npm test -- web', say: ['', 'not ok 1 - checkout shows the total', '  # failed 2 of 5 runs: .total was empty'] },
       { after: 5, tool: 'Read: web/checkout.js', say: ['.total is drawn twice and the first one is empty while the order loads.'] },
-      { after: 5, ask: 'Update the snapshot or fix the selector?' },
+      { after: 5, ask: 'The total is empty while the order loads. How should I fix the test?', choices: ['Fix the selector', 'Update the snapshot'] },
       { after: 4, tool: 'Edit: web/checkout.test.js', write: { 'web/checkout.test.js': CHECKOUT_TEST_FIXED } },
       { after: 5, tool: 'Bash: npm test -- web --repeat 5', say: ['', 'ok 1 - checkout shows the total (5 of 5 runs)'] },
       { after: 4, finish: 'Checkout test waits for the order total by its role, not the first .total', say: ['Done: the test passed 5 runs out of 5.'] },
@@ -335,7 +337,7 @@ export interface DemoReview {
 }
 
 export const REVIEWS: DemoReview[] = [
-  { key: 'flaky-test', when: 'needs_input', wait: 10, answer: 'fix the selector' },
+  { key: 'flaky-test', when: 'needs_input', wait: 10, answer: '1' },
   { key: 'rate-limit', when: 'done', wait: 12, merge: true },
   { key: 'readme', when: 'done', wait: 10, merge: true },
   { key: 'flaky-test', when: 'done', wait: 10, merge: true },

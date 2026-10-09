@@ -3,7 +3,9 @@
 // Markdown a founder pastes into an update.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CHART_DAYS, changeLabel, computeNumbers, median, minutesLabel, numbersMarkdown, percent } from '../src/shared/metrics.js';
+import { CHART_DAYS, changeLabel, computeNumbers, median, numbersMarkdown, todayPulse, waitCell, weekRate } from '../src/shared/metrics.js';
+import { hoursWords, MIN_REVIEWS, rateWords, waitTone, waitWords, WAIT_AMBER_MS, WAIT_RED_MS } from '../src/shared/wait.js';
+import type { ShipRecord } from '../src/shared/protocol.js';
 import type { ShipRecord } from '../src/shared/protocol.js';
 
 const MIN = 60_000;
@@ -34,8 +36,8 @@ test('this week is the last 7 days with today, the week before the 7 before thos
     rec(20, 'merged'),
   ];
   const out = computeNumbers(records, NOW);
-  assert.deepEqual(out.week, { merged: 2, sentBack: 1, waitMin: 4, agentHours: 2, rate: 2 / 3 });
-  assert.deepEqual(out.before, { merged: 1, sentBack: 1, waitMin: 45, agentHours: 0, rate: 0.5 });
+  assert.deepEqual(out.week, { merged: 2, sentBack: 1, waitMs: 4 * MIN, agentHours: 2, rate: 2 / 3 });
+  assert.deepEqual(out.before, { merged: 1, sentBack: 1, waitMs: 45 * MIN, agentHours: 0, rate: 0.5 });
   assert.equal(out.reviews, 6);
   assert.equal(out.rates.length, 1);
   assert.equal(out.rates[0].merged, 4);
@@ -44,9 +46,9 @@ test('this week is the last 7 days with today, the week before the 7 before thos
 
 test('a review with no wait recorded leaves the median alone; no reviews leave it and the rate undefined', () => {
   const out = computeNumbers([rec(1, 'merged'), rec(2, 'merged', { waitedMs: 6 * MIN })], NOW);
-  assert.equal(out.week.waitMin, 6);
+  assert.equal(out.week.waitMs, 6 * MIN);
   const none = computeNumbers([], NOW);
-  assert.equal(none.week.waitMin, undefined);
+  assert.equal(none.week.waitMs, undefined);
   assert.equal(none.week.rate, undefined);
   assert.equal(none.week.merged, 0);
 });
@@ -60,41 +62,73 @@ test('merges per day: 14 days, oldest first, sent-backs not counted, today last'
   for (let i = 1; i < out.days.length; i++) assert.ok(out.days[i].at > out.days[i - 1].at);
 });
 
-test('labels: minutes, hours, percent and how a number moved', () => {
-  assert.equal(minutesLabel(undefined), '-');
-  assert.equal(minutesLabel(4.25), '4.3 min');
-  assert.equal(minutesLabel(38.4), '38 min');
-  assert.equal(minutesLabel(126), '2.1 h');
-  assert.equal(percent(2 / 3), '67%');
-  assert.equal(percent(undefined), '-');
-  assert.equal(changeLabel(4, 12, minutesLabel), 'down from 12 min');
+test('one wait formatter: seconds first, then whole minutes, hours and days, never rounded up', () => {
+  assert.equal(waitWords(0), '0s');
+  assert.equal(waitWords(32_400), '32s');
+  assert.equal(waitWords(59_999), '59s');
+  assert.equal(waitWords(60_000), '1m');
+  assert.equal(waitWords(4 * MIN + 59_000), '4m');
+  assert.equal(waitWords(60 * MIN), '1h');
+  assert.equal(waitWords(72 * MIN), '1h 12m');
+  assert.equal(waitWords(27 * 60 * MIN), '1d 3h');
+  assert.equal(waitWords(-5), '0s');
+  assert.equal(waitCell(undefined), '-');
+  assert.equal(waitCell(3 * MIN), '3m');
+});
+
+test('a wait ages: fresh, amber from 5 minutes, red from 30', () => {
+  assert.equal(waitTone(0), 'fresh');
+  assert.equal(waitTone(WAIT_AMBER_MS - 1), 'fresh');
+  assert.equal(waitTone(WAIT_AMBER_MS), 'aging');
+  assert.equal(waitTone(WAIT_RED_MS - 1), 'aging');
+  assert.equal(waitTone(WAIT_RED_MS), 'stale');
+  assert.equal(WAIT_AMBER_MS, 5 * MIN);
+  assert.equal(WAIT_RED_MS, 30 * MIN);
+});
+
+test('labels: hours, a rate with its small-N guard, and how a number moved', () => {
+  assert.equal(hoursWords(0), '0');
+  assert.equal(hoursWords(0.04), '<0.1');
+  assert.equal(hoursWords(2.04), '2.0');
+  assert.equal(hoursWords(12.6), '13');
+  assert.equal(rateWords(2 / 3, MIN_REVIEWS), '67%');
+  assert.equal(rateWords(1, 1), '-', 'one merge out of one is not a rate');
+  assert.equal(rateWords(undefined, 9), '-');
+  assert.equal(weekRate({ merged: 1, sentBack: 0, agentHours: 0, rate: 1 }), '-');
+  assert.equal(weekRate({ merged: 4, sentBack: 1, agentHours: 0, rate: 0.8 }), '80%');
+  assert.equal(changeLabel(4 * MIN, 12 * MIN, waitCell), 'down from 12m');
   assert.equal(changeLabel(5, 3, (x) => String(x)), 'up from 3');
-  assert.equal(changeLabel(3, 3, (x) => String(x)), 'same as the week before');
-  assert.equal(changeLabel(3, undefined, (x) => String(x)), 'nothing the week before');
-  assert.equal(changeLabel(undefined, 3, minutesLabel), 'none this week, 3 min the week before');
-  assert.equal(changeLabel(undefined, undefined, minutesLabel), 'nothing yet');
+  assert.equal(changeLabel(3, 3, (x) => String(x)), 'same as the 7 days before');
+  assert.equal(changeLabel(3, undefined, (x) => String(x)), 'nothing the 7 days before');
+  assert.equal(changeLabel(undefined, 3 * MIN, waitCell), 'none in the last 7 days, 3m the 7 days before');
+  assert.equal(changeLabel(undefined, undefined, waitCell), 'nothing yet');
 });
 
 test('the Markdown says where the numbers come from, marks demo data and gives every agent row its N', () => {
   const out = computeNumbers([rec(0, 'merged', { waitedMs: 3 * MIN, model: 'opus' }), rec(1, 'sent-back', { provider: 'codex' })], NOW);
   const md = numbersMarkdown(out, { project: 'acme', demo: true, now: NOW });
   assert.match(md, /^Kipdeck numbers, 2026-10-0\d, acme \(demo data, scripted agents\)/);
-  assert.match(md, /\| Human wait time \(median\) \| 3 min \| - \|/);
-  assert.match(md, /\| Claude Code · opus \| 1 \| 0 \| 100% \| 1 \|/);
-  assert.match(md, /\| Codex \| 0 \| 1 \| 0% \| 1 \|/);
+  // The metric column has no name; the windows are named plainly.
+  assert.match(md, /^\| \| Last 7 days \| 7 days before \|$/m);
+  assert.match(md, /\| Human wait time \(median\) \| 3m \| - \|/);
+  assert.match(md, /\| Merge rate \| - \| - \|/);
+  assert.match(md, /\| Agent-hours merged \| 0 \| 0 \|/);
+  // One review is not a rate: "-" with its N beside it.
+  assert.match(md, /\| Claude Code · opus \| 1 \| 0 \| - \| 1 \|/);
+  assert.match(md, /\| Codex \| 0 \| 1 \| - \| 1 \|/);
   assert.match(md, /signed shipped log on this machine/);
   assert.doesNotMatch(numbersMarkdown(out, { now: NOW }), /demo/);
 });
 
-test("today's pulse: merges, the median wait of today's reviews and the longest wait right now", async () => {
-  const { todayPulse, waitWords } = await import('../src/shared/metrics.js');
+test("today's pulse: need you and to review apart, the oldest wait, today's merges and median wait", () => {
   const now = new Date(2026, 9, 7, 15, 0).getTime();
-  const rec = (at: number, kind: 'merged' | 'sent-back', waitedMs?: number) => ({ at, kind, waitedMs }) as unknown as import('../src/shared/protocol.js').ShipRecord;
+  const rec = (at: number, kind: 'merged' | 'sent-back', waitedMs?: number) => ({ at, kind, waitedMs }) as unknown as ShipRecord;
   const yesterday = now - 20 * 3_600_000;
-  const p = todayPulse([rec(now - 60_000, 'merged', 30_000), rec(now - 120_000, 'merged', 90_000), rec(now - 180_000, 'sent-back', 60_000), rec(yesterday, 'merged', 999_000)], [now - 240_000, now - 60_000], now);
-  assert.deepEqual(p, { merged: 2, medianWaitMs: 60_000, waitingNowMs: 240_000, waiting: 2 });
-  assert.deepEqual(todayPulse([], [], now), { merged: 0, waiting: 0 });
-  assert.equal(waitWords(38_000), '38s');
-  assert.equal(waitWords(4 * 60_000), '4m');
-  assert.equal(waitWords(72 * 60_000), '1h 12m');
+  const p = todayPulse([rec(now - 60_000, 'merged', 30_000), rec(now - 120_000, 'merged', 90_000), rec(now - 180_000, 'sent-back', 60_000), rec(yesterday, 'merged', 999_000)], { needYou: [now - 60_000], toReview: [now - 240_000, now - 10_000] }, now);
+  assert.deepEqual(p, { needYou: 1, toReview: 2, oldestNeedSince: now - 60_000, oldestReviewSince: now - 240_000, merged: 2, medianWaitMs: 60_000 });
+  // A fresh question and an old review: each figure keeps its own oldest wait, so "need you" never shows the review's 40m.
+  const mixed = todayPulse([], { needYou: [now - 20_000], toReview: [now - 40 * 60_000] }, now);
+  assert.equal(mixed.oldestNeedSince, now - 20_000);
+  assert.equal(mixed.oldestReviewSince, now - 40 * 60_000);
+  assert.deepEqual(todayPulse([], { needYou: [], toReview: [] }, now), { needYou: 0, toReview: 0, merged: 0 });
 });

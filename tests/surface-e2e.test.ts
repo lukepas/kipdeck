@@ -134,7 +134,8 @@ test('the avatar menu, three-pane Settings, Numbers after a merge, and Help, eac
   await numbers.waitFor();
   const tile = (label: string) => numbers.locator('.nb-tile', { hasText: label }).locator('.nb-value').innerText();
   assert.equal(await tile('Changes merged'), '1');
-  assert.equal(await tile('Merge rate'), '100%');
+  // One review is too few to call a rate: below five it says "-", not 100%.
+  assert.equal(await tile('Merge rate'), '-');
   assert.match(await numbers.locator('.nb-intro').innerText(), /demo's scripted agents/);
   assert.match(await numbers.locator('.nb-rates tbody').innerText(), /Claude Code/);
   await numbers.locator('header .close').click();

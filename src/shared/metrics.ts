@@ -6,6 +6,7 @@
 
 import { mergeRates, startOfDay, type MergeRate } from './inbox.js';
 import type { ShipRecord } from './protocol.js';
+import { hoursWords, MIN_REVIEWS, rateWords, waitWords } from './wait.js';
 
 const DAY = 86_400_000;
 /** The window the headline numbers cover, and the one before it they're compared with. */
@@ -24,8 +25,8 @@ export function median(values: readonly number[]): number | undefined {
 export interface WeekNumbers {
   merged: number;
   sentBack: number;
-  /** Median minutes the reviewed work waited on a person; undefined with no reviews. */
-  waitMin?: number;
+  /** Median ms the reviewed work waited on a person; undefined with no reviews. */
+  waitMs?: number;
   /** Hours the merged work's agents spent on it. */
   agentHours: number;
   /** Merged over every review, 0 to 1; undefined with no reviews. */
@@ -47,12 +48,12 @@ export interface Numbers {
 
 function weekOf(records: readonly ShipRecord[]): WeekNumbers {
   const merged = records.filter((r) => r.kind === 'merged');
-  const waits = records.filter((r) => typeof r.waitedMs === 'number').map((r) => r.waitedMs! / 60_000);
+  const waits = records.filter((r) => typeof r.waitedMs === 'number').map((r) => r.waitedMs!);
   const w = median(waits);
   return {
     merged: merged.length,
     sentBack: records.length - merged.length,
-    ...(w === undefined ? {} : { waitMin: w }),
+    ...(w === undefined ? {} : { waitMs: w }),
     agentHours: merged.reduce((n, r) => n + (r.workedMs ?? 0), 0) / 3_600_000,
     ...(records.length ? { rate: merged.length / records.length } : {}),
   };
@@ -84,23 +85,18 @@ export function computeNumbers(records: readonly ShipRecord[], now: number): Num
   };
 }
 
-/** "4.5 min", "38 min", "2.1 h": a wait in the unit that reads best. */
-export function minutesLabel(min: number | undefined): string {
-  if (min === undefined) return '-';
-  if (min < 10) return `${Math.round(min * 10) / 10} min`;
-  if (min < 90) return `${Math.round(min)} min`;
-  return `${Math.round((min / 60) * 10) / 10} h`;
-}
+/** A wait for a table cell: the inbox's words, or "-" with none. */
+export const waitCell = (ms: number | undefined) => (ms === undefined ? '-' : waitWords(ms));
 
-/** "50%", or "-" with nothing to divide. */
-export const percent = (rate: number | undefined) => (rate === undefined ? '-' : `${Math.round(rate * 100)}%`);
+/** A week's merge rate in words, "-" below MIN_REVIEWS reviews. */
+export const weekRate = (w: WeekNumbers) => rateWords(w.rate, w.merged + w.sentBack);
 
-/** How a number moved since the week before, in words: "down from 12 min", "up from 3", "new". */
+/** How a number moved since the 7 days before, in words: "down from 12m", "up from 3", "new". */
 export function changeLabel(now: number | undefined, before: number | undefined, show: (n: number | undefined) => string): string {
   if (now === undefined && before === undefined) return 'nothing yet';
-  if (before === undefined) return 'nothing the week before';
-  if (now === undefined) return `none this week, ${show(before)} the week before`;
-  if (Math.abs(now - before) < 1e-9) return `same as the week before`;
+  if (before === undefined) return 'nothing the 7 days before';
+  if (now === undefined) return `none in the last 7 days, ${show(before)} the 7 days before`;
+  if (Math.abs(now - before) < 1e-9) return `same as the 7 days before`;
   return `${now < before ? 'down' : 'up'} from ${show(before)}`;
 }
 
@@ -110,53 +106,54 @@ export function numbersMarkdown(n: Numbers, opts: { project?: string; demo?: boo
   const lines = [
     `Kipdeck numbers, ${day}${opts.project ? `, ${opts.project}` : ''}${opts.demo ? ' (demo data, scripted agents)' : ''}`,
     '',
-    '| Last 7 days | This week | Week before |',
+    '| | Last 7 days | 7 days before |',
     '| --- | --- | --- |',
-    `| Human wait time (median) | ${minutesLabel(n.week.waitMin)} | ${minutesLabel(n.before.waitMin)} |`,
+    `| Human wait time (median) | ${waitCell(n.week.waitMs)} | ${waitCell(n.before.waitMs)} |`,
     `| Changes merged | ${n.week.merged} | ${n.before.merged} |`,
     `| Sent back | ${n.week.sentBack} | ${n.before.sentBack} |`,
-    `| Merge rate | ${percent(n.week.rate)} | ${percent(n.before.rate)} |`,
-    `| Agent-hours merged | ${n.week.agentHours.toFixed(1)} | ${n.before.agentHours.toFixed(1)} |`,
+    `| Merge rate | ${weekRate(n.week)} | ${weekRate(n.before)} |`,
+    `| Agent-hours merged | ${hoursWords(n.week.agentHours)} | ${hoursWords(n.before.agentHours)} |`,
   ];
   if (n.rates.length) {
-    lines.push('', '| Agent and model (30 days) | Merged | Sent back | Merge rate | N |', '| --- | --- | --- | --- | --- |');
-    for (const r of n.rates) lines.push(`| ${r.label} | ${r.merged} | ${r.sentBack} | ${percent(r.rate)} | ${r.merged + r.sentBack} |`);
+    lines.push('', '| Agent and model (last 30 days) | Merged | Sent back | Merge rate | N |', '| --- | --- | --- | --- | --- |');
+    for (const r of n.rates) lines.push(`| ${r.label} | ${r.merged} | ${r.sentBack} | ${rateWords(r.rate, r.merged + r.sentBack)} | ${r.merged + r.sentBack} |`);
   }
-  lines.push('', 'From the signed shipped log on this machine (shipped.jsonl). Human wait time is how long finished work waited on a person before its review.');
+  lines.push('', `From the signed shipped log on this machine (shipped.jsonl). Human wait time is how long finished work waited on a person before its review. A merge rate needs ${MIN_REVIEWS} reviews before it shows.`);
   return lines.join('\n');
 }
 
-/** The inbox's two numbers for today (home/pulse.ts): merges, and the median wait on a person, with the longest wait right now. */
+/** The inbox's figures for today (home/pulse.ts): who waits on you now, split the way the list is, and today's merges and median wait. */
 export interface TodayPulse {
+  /** How many are in Needs you right now. */
+  needYou: number;
+  /** How many are in To review right now. */
+  toReview: number;
+  /** When the one waiting longest in Needs you started, or undefined when nobody there waits. */
+  oldestNeedSince?: number;
+  /** When the one waiting longest in To review started, or undefined when nothing waits for review. */
+  oldestReviewSince?: number;
   merged: number;
   /** Median ms today's reviewed work waited on a person; undefined before the first review. */
   medianWaitMs?: number;
-  /** The longest anyone is waiting on you right now (ms), or undefined when nobody is. */
-  waitingNowMs?: number;
-  /** How many are waiting on you right now. */
-  waiting: number;
 }
 
-/** Today's pulse from the shipped log and when each agent waiting on you started waiting. */
-export function todayPulse(records: readonly ShipRecord[], waitingSince: readonly number[], now: number): TodayPulse {
+/** When each one in Needs you and in To review started waiting: the list's own buckets. */
+export interface Waiting {
+  needYou: readonly number[];
+  toReview: readonly number[];
+}
+
+/** Today's pulse from the shipped log and the list's Needs you and To review sections. */
+export function todayPulse(records: readonly ShipRecord[], waiting: Waiting, now: number): TodayPulse {
   const from = startOfDay(now);
   const today = records.filter((r) => r.at >= from && r.at <= now + 60_000);
-  const waits = today.filter((r) => typeof r.waitedMs === 'number').map((r) => r.waitedMs!);
-  const m = median(waits);
-  const longest = waitingSince.length ? Math.max(0, now - Math.min(...waitingSince)) : undefined;
+  const m = median(today.filter((r) => typeof r.waitedMs === 'number').map((r) => r.waitedMs!));
   return {
+    needYou: waiting.needYou.length,
+    toReview: waiting.toReview.length,
+    ...(waiting.needYou.length ? { oldestNeedSince: Math.min(...waiting.needYou) } : {}),
+    ...(waiting.toReview.length ? { oldestReviewSince: Math.min(...waiting.toReview) } : {}),
     merged: today.filter((r) => r.kind === 'merged').length,
     ...(m === undefined ? {} : { medianWaitMs: m }),
-    ...(longest === undefined ? {} : { waitingNowMs: longest }),
-    waiting: waitingSince.length,
   };
-}
-
-/** A wait the way the inbox says it: "38s", "4m", "1h 12m". */
-export function waitWords(ms: number): string {
-  const s = Math.round(ms / 1000);
-  if (s < 60) return `${s}s`;
-  const min = Math.round(s / 60);
-  if (min < 60) return `${min}m`;
-  return `${Math.floor(min / 60)}h ${min % 60}m`;
 }

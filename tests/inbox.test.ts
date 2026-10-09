@@ -4,8 +4,8 @@
 // first-run checklist.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { attention, rankRoster } from '../src/shared/attention.js';
-import { ageLabel, buildInbox, changeSummary, waitShare, checklistDone, checklistSeen, looseReminders, matches, mergeRates, nextUp, rowAction, sectionOf, shipPayload, shippedLine, shippedToday, startOfDay, waitedLabel } from '../src/shared/inbox.js';
+import { activityWords, attention, rankRoster } from '../src/shared/attention.js';
+import { ageLabel, buildInbox, mergeWords, changeSummary, waitShare, checklistDone, checklistSeen, looseReminders, matches, mergeRates, nextUp, rowAction, sectionOf, shipPayload, shippedLine, shippedToday, startOfDay, waitedLabel } from '../src/shared/inbox.js';
 import type { Reminder, RosterEntry, ShipRecord } from '../src/shared/protocol.js';
 
 const NOW = new Date(2026, 9, 7, 15, 0, 0).getTime();
@@ -37,7 +37,8 @@ test('finished work is To review: Review changes, Fix checks, Merge, Send back',
   const failing = at(entry({ status: 'idle', pr: { number: 7, state: 'open', checks: 'fail' } }));
   assert.deepEqual(rowAction(failing), { action: 'fix-checks', label: 'Fix checks' });
   const approved = at(entry({ status: 'idle', pr: { number: 8, state: 'open', checks: 'pass', review: 'approved' } }));
-  assert.deepEqual(rowAction(approved), { action: 'merge', label: 'Merge' });
+  // Approved and ready to merge: the row (and Enter on it) opens the review, where Merge is. Never a merge from the list.
+  assert.deepEqual(rowAction(approved), { action: 'review', label: 'Review changes' });
   const asked = at(entry({ status: 'idle', pr: { number: 9, state: 'open', review: 'changes' } }));
   assert.deepEqual(rowAction(asked), { action: 'hand-back', label: 'Send back' });
 });
@@ -77,6 +78,9 @@ test('the list keeps the ranking order in each section, filters by project and s
   assert.equal(ageLabel('idle', { since: NOW - 3 * 60 * MIN }, NOW), 'idle 3h');
   assert.equal(ageLabel('working', { since: NOW - 4 * MIN }, NOW), '4m');
   assert.equal(ageLabel('review', { since: NOW - 2 * MIN }, NOW), 'ready 2m');
+  // A wait on you counts in seconds at first, so its clock visibly moves; the rest by the minute.
+  assert.equal(ageLabel('needs-you', { since: NOW - 32_000 }, NOW), 'waiting 32s');
+  assert.equal(ageLabel('working', { since: NOW - 32_000 }, NOW), '<1m');
   assert.equal(changeSummary({ files: 1, additions: 3, deletions: 0, ahead: 1 } as RosterEntry['work']), '1 file, +3 -0');
   assert.equal(changeSummary(undefined), undefined);
   assert.equal(waitShare(NOW - 15 * MIN, NOW), 0.5);
@@ -108,6 +112,8 @@ test('Shipped today counts what merged since midnight, and its agent-hours', () 
   assert.equal(shippedLine(today), '2 merged · 2.0 agent-hours');
   assert.equal(shippedLine([]), 'Nothing merged yet today');
   assert.equal(waitedLabel(record({ waitedMs: 12 * MIN })), 'waited on you 12m');
+  assert.equal(waitedLabel(record({ waitedMs: 32_000 })), 'waited on you 32s', 'the same words as the pulse');
+  assert.equal(shippedLine([record({ workedMs: 60_000 })]), '1 merged · <0.1 agent-hours');
 });
 
 test('the merge rate is per agent and model: merges over every review', () => {
@@ -135,4 +141,31 @@ test('the checklist: deploy and merge are seen from the office, answering from t
   assert.ok(!checklistDone(seen));
   assert.ok(checklistDone({ ...seen, answer: true }));
   assert.deepEqual(checklistSeen({}, [entry({ kind: 'shell' })], [record({ kind: 'sent-back' })]), { deploy: false, merge: false });
+});
+
+test('Mine shows only the agents you deployed, and search finds an agent by its owner', () => {
+  const roster = [
+    entry({ id: 'a', status: 'needs_input', waitingSince: NOW - 3 * MIN, createdBy: 'Ana' }),
+    entry({ id: 'b', status: 'done', acked: false, waitingSince: NOW - MIN, createdBy: 'Ben' }),
+    entry({ id: 'c', createdBy: 'Ana' }),
+  ];
+  const ranked = rankRoster(roster, NOW);
+  assert.deepEqual(buildInbox(ranked).counts, { 'needs-you': 1, review: 1, working: 1, idle: 0 });
+  assert.deepEqual(buildInbox(ranked, { owner: 'Ana' }).counts, { 'needs-you': 1, review: 0, working: 1, idle: 0 });
+  assert.ok(matches(roster[1], 'ben'));
+});
+
+test('a merge names what it does and where, before and after', () => {
+  assert.equal(mergeWords({ into: 'main', pr: { number: 12, state: 'open' } }), 'Squash-merging PR #12 into main');
+  assert.equal(mergeWords({ into: 'main', pr: { number: 12, state: 'open' } }, true), 'Merged PR #12 into main');
+  assert.equal(mergeWords({ into: 'main' }), 'Merging into main on this computer');
+  assert.equal(mergeWords({}, true), "Merged into the project's branch on this computer");
+});
+
+test("a row's activity is said in words: never the raw name of the tool an agent asks with", () => {
+  assert.equal(activityWords('request_user_input'), undefined);
+  assert.equal(activityWords('functions.request_user_input'), undefined);
+  assert.equal(activityWords('AskUserQuestion'), undefined);
+  assert.equal(activityWords(undefined), undefined);
+  assert.equal(activityWords('Editing src/login.ts'), 'Editing src/login.ts');
 });

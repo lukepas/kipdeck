@@ -1,0 +1,7 @@
+/* Mine / Team (owner.ts): two joined buttons in the top bar, the chosen one filled in neutral. */
+.hb-owner { flex: none; display: inline-flex; }
+.hb-owner .owner-opt { height: 34px; padding: 0 12px; border-radius: 0; color: var(--muted); background: var(--surface-1); }
+.hb-owner .owner-opt:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+.hb-owner .owner-opt + .owner-opt { margin-left: -1px; border-radius: 0 var(--radius) var(--radius) 0; }
+.hb-owner .owner-opt[aria-pressed=true] { position: relative; background: var(--surface-3); border-color: var(--line-strong); color: var(--text); font-weight: 600; }
+@media (max-width: 899px) { .hb-owner .owner-opt { padding: 0 8px; } }

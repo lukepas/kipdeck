@@ -1,0 +1,16 @@
+/* The settled beat (beat.ts) and the merge hold's toast (merge-hold.ts): green for what landed, never orange. */
+.toast.settled::after { background: var(--settled); }
+.toast.settled .toast-icon { color: var(--settled); }
+.toast.settled .toast-icon svg path { stroke-dasharray: 24; stroke-dashoffset: 0; animation: beat-draw 320ms var(--ease); }
+@keyframes beat-draw { from { stroke-dashoffset: 24; } }
+
+/* The merge hold: the sentence, a countdown in mono, and Undo, which takes clicks though the stack doesn't. */
+.toast.hold { grid-template-columns: 16px minmax(0, 1fr) auto auto; align-items: center; }
+.toast.hold .toast-icon { padding-top: 0; color: var(--text); }
+.toast.hold .hold-left { color: var(--muted); font: 400 11px var(--font-mono); font-variant-numeric: tabular-nums; }
+.toast.hold .hold-undo { pointer-events: auto; height: 26px; padding: 0 10px; font-size: 12px; font-weight: 600; }
+.toast.hold .hold-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--line-strong); transform-origin: left; animation: hold-run var(--hold-ms, 7000ms) linear forwards; }
+@keyframes hold-run { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+/* Under reduced motion the bar would sit empty from the start; the mono countdown says the time left. */
+@media (prefers-reduced-motion: reduce) { .toast.hold .hold-bar { display: none; } }
+:root[data-motion=reduce] .toast.hold .hold-bar { display: none; }
