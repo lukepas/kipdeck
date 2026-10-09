@@ -78,6 +78,9 @@ test("the Crew tab's Now column: the state's phrase, for how long, and the lates
   const long = ranked(entry({ activity: 'Edit src/a.ts\nand more' }), { since: now - 3 * 3_600_000 });
   assert.equal(crewNow(long, now).activity, 'Edit src/a.ts');
   assert.equal(crewNow(long, now).elapsed, '3h');
+  // An asking tool's bare name is never the activity (Codex's request_user_input).
+  const codex = ranked(entry({ activity: 'request_user_input', task: { name: 'Fix the flaky checkout test' } }), { level: 'needs-you', label: 'Needs an answer', action: 'answer', since: now - 60_000 });
+  assert.doesNotMatch(JSON.stringify(crewNow(codex, now)), /request_user_input/);
 });
 
 test('the Crew tab is in the attention ranking\'s order, units it has not ranked yet last', () => {

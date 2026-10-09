@@ -10,6 +10,7 @@ import { canLabel } from '../../../shared/floorplan';
 import { officeFull, pressureNote } from '../../../shared/machine';
 import type { AgentEffort, AgentProvider, WorkerInfo } from '../../../shared/protocol';
 import { isAsleep, isBusy } from '../../../shared/status';
+import { spokenActivity } from '../../../shared/attention';
 import type { Ctx, Hint } from '../../core/context';
 import { seatBuilt } from '../../core/floors';
 import { aside, key } from '../../core/hint';
@@ -323,7 +324,8 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
         ],
       };
     }
-    const doing = w.activity ? clip(w.activity, 48) : '';
+    const said = spokenActivity(w.activity);
+    const doing = said ? clip(said, 48) : '';
     const workerProvider = w.kind === 'agent' ? resolvedProvider(w.provider, store.project) : undefined;
     const spent = w.kind === 'agent' && w.usage ? usageLabel(w.usage, workerProvider) : '';
     const shell = w.kind === 'shell';
@@ -333,8 +335,9 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
         h('span.title', {}, `${sign ? `${sign} · ` : ''}${w.name} · ${STATUS_LABEL[w.status]}`),
         doing ? aside(doing) : '',
         spent ? h('span.cost', { title: usageTitle(w.usage!, workerProvider) }, spent) : '',
-        key('E', 'Open terminal'),
-        key('C', 'Changes'),
+        // The same words as the selected unit's card (features/selection/logic.ts buttonsFor): E answers one that needs you, C reviews a finished one.
+        key('E', w.status === 'needs_input' ? 'Answer' : 'Open terminal'),
+        key('C', prReady(w) ? 'Review changes' : 'Changes'),
         isAsleep(w.status) ? key('R', shell ? 'Restart' : 'Resume') : key('P', shell ? 'Run command' : 'Prompt'),
         w.repos?.length ? reposKey(w) : w.pr ? key('O', `PR #${w.pr.number}`) : w.prOpening ? aside('Opening PR...') : prReady(w) ? key('O', 'Open PR') : '',
         key('X', 'Stand down'),
@@ -369,7 +372,8 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
         ],
       };
     }
-    const doing = w.activity ? clip(w.activity, 48) : '';
+    const said = spokenActivity(w.activity);
+    const doing = said ? clip(said, 48) : '';
     const provider = resolvedProvider(w.provider, store.project);
     const spent = w.usage ? usageLabel(w.usage, provider) : '';
     return {

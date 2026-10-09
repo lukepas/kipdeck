@@ -37,9 +37,16 @@ export function installHud(ctx: Ctx, parts: HudParts) {
     if (btn) setTimeout(() => btn.blur(), 0);
   });
   // The project in the corner is the floor you're on; click it for the list of floors to go to.
-  $('project').addEventListener('click', () => {
+  const openProjects = () => {
     if (!store.floor) return travel.showElevator();
     toggleFloorMenu($('project'), { go: (id) => travel.switchFloor(id), floors: travel.showElevator });
+  };
+  $('project').addEventListener('click', openProjects);
+  // It's a button to a keyboard too (bridge.html gives it a tab stop): Enter or Space opens the list.
+  $('project').addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    openProjects();
   });
 
   // ---- The HUD: a few buttons on the top bar, everything else in the menu ----------------------------
@@ -74,7 +81,7 @@ export function installHud(ctx: Ctx, parts: HudParts) {
       { id: 'ledger', icon: 'proof', label: 'Proof ledger', section: 'Proof', lab: 'proof', title: () => 'The public Proof of Merge ledger at /pom/ (opens a new tab)', run: () => window.open('/pom/', '_blank', 'noopener') },
       { id: 'bounties', icon: 'bounty', label: 'Bounties and payouts', section: 'Proof', lab: 'proof', title: () => 'Devnet USDC escrowed on issues, paid only on a human merge', run: () => showSettings('bounties') },
       // ---- Deck: this office --------------------------------------------------------------------------
-      { id: 'elevator', icon: 'decks', label: 'Decks', section: 'Deck', count: () => store.floors.reduce((n, f) => n + (f.id === store.floor ? 0 : f.waiting), 0), title: () => 'Go to another project, or add one', run: travel.showElevator },
+      { id: 'elevator', icon: 'decks', label: 'Projects', section: 'Deck', count: () => store.floors.reduce((n, f) => n + (f.id === store.floor ? 0 : f.waiting), 0), title: () => 'Go to another project, or add one', run: travel.showElevator },
       { id: 'settings', icon: 'settings', label: 'Settings', section: 'Deck', run: showSettings },
       qualityMenuAction(() => showSettings('bridge')),
       { id: 'help', icon: 'keyboard', label: 'Controls', section: 'Deck', key: 'H', run: openHelp },

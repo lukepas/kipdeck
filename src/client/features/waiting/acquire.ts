@@ -10,7 +10,7 @@
 import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
-import { modalOpen } from '../../ui/dom';
+import { viewKeysHeld } from '../../ui/dom';
 import { UNIT } from '../../world/character/unit-body';
 import type { Worker as WorkerModel } from '../../world/character/worker';
 import { GLYPH_HUE } from '../../world/glyphs';
@@ -132,7 +132,7 @@ export function makeAcquire(ctx: Ctx, parts: Pick<Parts, 'views' | 'stage' | 'fl
     const at = acquireAt(now - landed, ctx.reduceMotion.matches);
     if (!at || !model.root.parent) return stop();
     // A window over the deck hides it; Mission control docked beside the deck doesn't (its Locate brings you here).
-    const covered = modalOpen() && !!document.querySelector('#modal-root > .backdrop:not(.mc-dock-backdrop)');
+    const covered = viewKeysHeld();
     const box = covered ? null : boxOf(model, parts.stage.view ?? ctx.camera);
     if (!box) {
       el.hidden = true;

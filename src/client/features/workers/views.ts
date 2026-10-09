@@ -192,12 +192,19 @@ export function installWorkerViews(ctx: Ctx, parts: WorkerViewsParts) {
    * Each unit's state is its place in the building's one ranking (shared/attention.ts): the same
    * level the top bar counts, the alert strip lists and the Attention board ranks.
    */
+  /** At most this wide (px) a view is a phone's (styles/hud.css, its 640px breakpoint). */
+  const PHONE_MAX_W = 640;
   function paintLevels() {
     const now = Date.now();
-    const ranked = new Map(store.ranked(store.floor).map((r) => [r.entry.id, r.att]));
+    const order = store.ranked(store.floor);
+    const ranked = new Map(order.map((r) => [r.entry.id, r.att]));
+    // First in line: the most urgent unit that needs you or is stuck (not snoozed), whose ask its callout
+    // keeps whole. Not on a phone: there the whole ask is wider than the view, and the short one reads.
+    const roomy = window.innerWidth > PHONE_MAX_W;
+    const first = roomy ? order.find((r) => !r.att.snoozed && (r.att.level === 'needs-you' || r.att.level === 'stuck'))?.entry.id : undefined;
     for (const [id, v] of workerViews) {
       const att = ranked.get(id);
-      if (att) v.model.setLevel(att.snoozed && att.level !== 'working' ? 'parked' : att.level, att.since, att.label);
+      if (att) v.model.setLevel(att.snoozed && att.level !== 'working' ? 'parked' : att.level, att.since, att.label, id === first);
       else {
         // Not on the roster yet (it has only just been deployed): its own status says enough.
         const w = store.workers.get(id);

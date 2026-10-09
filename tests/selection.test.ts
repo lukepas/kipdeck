@@ -115,3 +115,11 @@ test('switching units fast leaves only the newest content at full strength: what
     if (!had) delete g.window;
   }
 });
+
+test("the card's state line is the state and a short word, never a whole question, so its clock stays in view", async () => {
+  const { shortPhrase } = await import('../src/client/features/selection/logic.js');
+  assert.equal(shortPhrase('Needs you · Wants permission: Bash: npm publish'), 'Needs you · Wants permission');
+  assert.equal(shortPhrase('Needs you · Update the snapshot or fix the selector?'), 'Needs you');
+  assert.equal(shortPhrase('To review · Done: PR ready'), 'To review · Done');
+  assert.equal(shortPhrase('Working'), 'Working');
+});

@@ -87,17 +87,25 @@ export class NextUp {
   /** Who this round has been to, and the wait each was on then. */
   private visited = new Map<string, number>();
 
-  /** The one to go to next from a line in order (see nLine). `here` is the worker you're standing at, which only comes up if it's the only one. */
+  /** The one to go to next from a line in order (see nLine), marked as visited. `here` is the worker you're standing at, which only comes up if it's the only one. */
   pick<T extends Stop>(line: readonly T[], here?: string): T | undefined {
-    for (const [id, at] of this.visited) if (!line.some((w) => w.id === id && w.since === at)) this.visited.delete(id);
-    const others = line.filter((w) => w.id !== here);
-    let pick = others.find((w) => !this.visited.has(w.id));
-    if (!pick) {
-      this.visited.clear();
-      pick = others[0] ?? line[0];
-    }
+    const { pick, fresh } = this.choose(line, here);
+    if (fresh) this.visited.clear();
     if (pick) this.visited.set(pick.id, pick.since);
     return pick;
+  }
+
+  /** Who the next pick would be, without going there (the N chip says it): nothing is marked. */
+  peek<T extends Stop>(line: readonly T[], here?: string): T | undefined {
+    return this.choose(line, here).pick;
+  }
+
+  /** The next one in the round, and whether the round starts over to get it. Forgets visits whose wait has ended. */
+  private choose<T extends Stop>(line: readonly T[], here?: string): { pick: T | undefined; fresh: boolean } {
+    for (const [id, at] of this.visited) if (!line.some((w) => w.id === id && w.since === at)) this.visited.delete(id);
+    const others = line.filter((w) => w.id !== here);
+    const pick = others.find((w) => !this.visited.has(w.id));
+    return pick ? { pick, fresh: false } : { pick: others[0] ?? line[0], fresh: true };
   }
 
   /** The one to go to next among `workers` waiting on someone (see waitingInOrder). */

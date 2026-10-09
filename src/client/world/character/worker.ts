@@ -112,6 +112,8 @@ export class Worker {
   private level: AttentionLevel = 'parked';
   private since = Date.now();
   private reason: string | undefined;
+  /** First in line (callout-view.ts UnitSays.first). */
+  private first = false;
   private task: WorkerTask | undefined;
   private pr: WorkerPr | undefined;
   private lost = false;
@@ -219,11 +221,12 @@ export class Worker {
   }
 
   /** Where it stands in the ranking (shared/attention.ts): its level, since when, and why. */
-  setLevel(level: AttentionLevel, since = Date.now(), reason?: string) {
+  setLevel(level: AttentionLevel, since = Date.now(), reason?: string, first = false) {
     if (level === 'stuck' && this.level !== 'stuck') this.hatchT = 0;
     this.level = level;
     this.since = since;
     this.reason = reason;
+    this.first = first;
     this.paint();
   }
 
@@ -304,6 +307,13 @@ export class Worker {
     return this.mover.getWorldPosition(out);
   }
 
+  /** Where it will stand once its glide is over (its target, or its seat): where to frame it from afar. */
+  headedFor(out: THREE.Vector3): THREE.Vector3 {
+    const to = this.target ?? { x: 0, y: 0, z: 0 };
+    out.set(to.x, to.y, to.z);
+    return this.mover.parent ? this.mover.parent.localToWorld(out) : out;
+  }
+
   /**
    * Where its callout's bottom and top edges are in the world, at its own place (lift left out), for
    * the pass that keeps callouts from covering each other (features/workers/declutter.ts): the full
@@ -338,6 +348,11 @@ export class Worker {
     // Needs you and stuck have their own marks in the room while Worker.marks says so (features/signals).
     const marked = Worker.marks && (kind === 'needs-you' || kind === 'stuck');
     setGlyphKind(this.glyph, this.mode !== 'hidden' || !kind || kind === 'working' || kind === 'parked' || marked ? null : kind);
+  }
+
+  /** Which callouts draw over which where they still meet (declutter's order, the most urgent highest; over the pod plates' 8 and the hairlines' 9). */
+  setOrder(order: number) {
+    for (const c of [this.callouts.full, this.callouts.compact]) if (c) c.renderOrder = order;
   }
 
   /** Where it ranks for a place on screen: needs you or stuck first, then to review and merged, then the rest. */
@@ -411,8 +426,8 @@ export class Worker {
   private paint() {
     const kind = this.kind();
     const now = Date.now();
-    const { sign, name, level, since, reason, status, lost, task, activity, pr, epithet, said, leaving, selected } = this;
-    const says = { tier: this.callouts.tier, sign, name, kind, level, since, reason, status, lost, task, activity, pr, ...this.meta, epithet, said, leaving, selected };
+    const { sign, name, level, since, reason, status, lost, task, activity, pr, epithet, said, leaving, selected, first } = this;
+    const says = { tier: this.callouts.tier, sign, name, kind, level, since, reason, status, lost, task, activity, pr, ...this.meta, epithet, said, leaving, selected, first };
     const text = calloutText(calloutInput(says), now);
     this.lastDraw = now;
     paintShell(this.body, this.shell(kind));

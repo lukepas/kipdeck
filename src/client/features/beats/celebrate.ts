@@ -33,8 +33,9 @@ function ringTexture(): THREE.CanvasTexture {
   return ringTex;
 }
 
+// `map` only when there is one: three.js warns of every parameter given as undefined.
 const additive = (color: string, map?: THREE.Texture) =>
-  new THREE.MeshBasicMaterial({ color, map, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, side: THREE.DoubleSide });
+  new THREE.MeshBasicMaterial({ color, ...(map ? { map } : {}), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false, side: THREE.DoubleSide });
 
 export class Celebration {
   readonly root = new THREE.Group();

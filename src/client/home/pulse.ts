@@ -19,7 +19,7 @@ function stat(label: string, value: string, cls = '', title?: string, ...more: H
 
 /** The oldest wait as a ticking clock, in its tone. */
 function oldestClock(since: number, now: number): HTMLElement {
-  return h('time.pulse-clock', { 'data-since': String(since), 'data-tone': waitTone(now - since), title: 'The longest anyone has waited on you right now' }, waitWords(now - since));
+  return h('time.pulse-clock.wait-clock', { 'data-since': String(since), 'data-tone': waitTone(now - since), title: 'The longest anyone has waited on you right now' }, waitWords(now - since));
 }
 
 /** Draws the pulse into each of `roots` (the top bar's and the list's); hidden before there's anything to count. */

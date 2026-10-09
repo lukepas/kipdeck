@@ -31,6 +31,7 @@ import { markChanges } from './motion';
 import { askSetup, onSetupChange, setupCard, setupMessage } from './setup';
 import { demoMessage } from './demo';
 import { home } from './state';
+import '../ui/waitclock.css';
 import './home.css';
 
 

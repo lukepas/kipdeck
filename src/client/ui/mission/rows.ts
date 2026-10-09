@@ -3,7 +3,8 @@
 // same in every view), and the one thing to do next, with the rest behind the kebab.
 
 import { ACTION_LABEL, SNOOZE_CHOICES, type Ranked } from '../../../shared/attention';
-import { ago, headline, statusPhrase } from '../../../shared/rowtext';
+import { headline, statusPhrase } from '../../../shared/rowtext';
+import { waitSpan } from '../waitclock';
 import { icon } from '../icons';
 import { store } from '../../state';
 import { h } from '../dom';
@@ -84,7 +85,7 @@ export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { sho
         ...(opts.extra ?? []),
         ...repBits(e.id),
       ),
-      h('span.mc-time', { title: 'Time in this state' }, ago(now - r.att.since)),
+      waitSpan(r.att.level, now - r.att.since, `mc:${e.id}`, 'mc-time'),
       h('div.mc-btns', {}, primary, locateButton(deps, e), toggle),
     ),
     more,

@@ -5,6 +5,7 @@
 
 import { ACTION_LABEL, type Ranked } from '../../../shared/attention';
 import { ago } from '../../../shared/rowtext';
+import { waitSpan } from '../waitclock';
 import { tokenLabel } from '../../../shared/money';
 import { icon } from '../icons';
 import { diffLabel, type ReviewItem } from '../../../shared/review';
@@ -51,7 +52,7 @@ function pullRow(deps: MissionDeps, i: ReviewItem, now: number, showFloor: boole
       h('span.dot.mc-pr-dot', { 'aria-hidden': 'true' }),
       h('div.mc-who', {}, h('span.mc-name', { title: p.title }, `#${p.number} ${p.title}`), h('span.mc-sub', {}, sub)),
       h('div.mc-what', {}, h('span.mc-reason', {}, i.reason), ...facts(i)),
-      h('span.mc-time', { title: 'Open this long' }, ago(now - i.since)),
+      waitSpan('review', now - i.since, `mc:${i.key}`, 'mc-time'),
       h(
         'div.mc-btns',
         {},
@@ -77,7 +78,7 @@ function payoutRow(deps: MissionDeps, i: ReviewItem, now: number, showFloor: boo
       h('span.dot.mc-pr-dot', { 'aria-hidden': 'true' }),
       h('div.mc-who', {}, h('span.mc-name', {}, `Bounty #${p.issue}`), h('span.mc-sub', {}, sub)),
       h('div.mc-what', {}, h('span.mc-reason', {}, i.reason)),
-      h('span.mc-time', { title: 'Waiting this long' }, i.since ? ago(now - i.since) : ''),
+      i.since ? waitSpan('review', now - i.since, `mc:${i.key}`, 'mc-time') : h('span.mc-time'),
       h('div.mc-btns', {}, h('button.btn.small.mc-act', { type: 'button', onclick: () => runPayout(deps, p, i.action) }, ACTION_LABEL[i.action])),
     ),
   );

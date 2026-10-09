@@ -1,8 +1,8 @@
 /* The inbox (home/): its sections and rows, the checklist, Shipped today, the selected agent's pane,
    and the sheets it opens (Deploy agent, the palette, the menu, the keys). Calm by default: only
    Needs you carries Signal, To review its amber, and everything else stays on the neutral ramp.
-   A wait's clock reads fresh (muted), then amber from 5 minutes and red and bold from 30
-   (shared/wait.ts, data-tone). Motion only marks a change (motion.ts): a row that starts waiting
+   A wait's clock reads fresh (muted), then white and bold from 5 minutes and heavier and underlined
+   from 30, by weight and never by another state's colour (shared/wait.ts, ui/waitclock.css). Motion only marks a change (motion.ts): a row that starts waiting
    slides in once, and tokens.css turns it into a cut under reduced motion. */
 
 /* ---- Sections ---------------------------------------------------------------------------------- */
@@ -55,9 +55,6 @@ button.sec-h:hover { color: var(--text); }
 .row-owner { flex: none; color: var(--text); }
 .l-needs-you .row-status, .l-stuck .row-status { color: var(--text); }
 .row-age { flex: none; font: 400 11px var(--font-mono); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
-/* A wait's tone, the same on every clock (rows, the pulse): amber from 5 minutes, red and bold from 30. */
-[data-tone=aging] { color: var(--review); }
-[data-tone=stale] { color: var(--stuck); font-weight: 700; }
 .row-act { flex: none; height: 30px; padding: 0 12px; font-size: 13px; font-weight: 600; white-space: nowrap; }
 .row-act.act { background: var(--surface-1); border-color: var(--line-strong); }
 .l-needs-you .row-act.act { border-color: var(--signal); color: var(--signal); }
@@ -70,8 +67,8 @@ button.sec-h:hover { color: var(--text); }
 .s-working .agent-mark, .s-idle .agent-mark { width: 24px; height: 24px; font-size: 10px; }
 .row.snoozed .row-title { color: var(--muted); }
 /* The wait bar: how long it has waited on you, out of 30 minutes. Signal on a row that needs you; on
-   one to review, amber turning red as it grows (orange is only for someone who needs you). */
-.row-wait { position: absolute; left: 0; bottom: 0; height: 2px; width: max(8px, calc(var(--wait, 0) * 100%)); background: color-mix(in srgb, var(--stuck) calc(var(--wait, 0) * 100%), var(--review)); opacity: .85; pointer-events: none; transition: width .6s ease; }
+   one to review, its own amber (orange is only for someone who needs you, and a late wait never borrows stuck's red). */
+.row-wait { position: absolute; left: 0; bottom: 0; height: 2px; width: max(8px, calc(var(--wait, 0) * 100%)); background: var(--review); opacity: .85; pointer-events: none; transition: width .6s ease; }
 .l-needs-you .row-wait, .l-stuck .row-wait { background: var(--signal); }
 /* A row that just started waiting on you, an answer landing and a merge rising into Shipped today:
    motion.css (motion.ts), one beat each. */

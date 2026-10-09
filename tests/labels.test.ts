@@ -97,7 +97,7 @@ test('a pile of three or fewer names its call signs; a bigger one counts', async
   assert.equal(pileWord(['working', 'working', 'working', 'working'], ['A-01', 'A-02', 'B-01', 'B-02']), '4 working');
   // Without every call sign it counts, as before.
   assert.equal(pileWord(['working', 'working'], ['A-03', '']), '2 working');
-  assert.equal(pileWord(['working', 'needs-you']), '2 units');
+  assert.equal(pileWord(['working', 'needs-you']), '2 agents');
 });
 
 test("callouts keep off what's already there: a pod's ground label and the body of a unit that needs you", () => {
@@ -118,4 +118,11 @@ test("callouts keep off what's already there: a pod's ground label and the body 
   assert.ok(out[0].lift > 0);
   // With nothing there, it stays put.
   assert.equal(declutter([label(100, 100, true)])[0].lift, 0);
+});
+
+test("a pod plate pushes off only the calm callouts: one that needs someone draws over it, on its unit", () => {
+  const plate = { x: -50, top: 60, bottom: 110, w: 400 };
+  const out = declutter([label(0, 100, true), label(200, 100, false)], [], [plate]);
+  assert.equal(out[0].lift, 0, 'the needs-you callout stays over its unit, over the plate');
+  assert.ok(out[1].mode === 'hidden' || out[1].lift > 0, 'the calm one keeps off the plate');
 });

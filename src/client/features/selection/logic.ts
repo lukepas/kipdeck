@@ -57,3 +57,10 @@ export { elapsed } from '../../../shared/rowtext';
 
 /** Eases out on a cubic: fast in, settling (the reticle's lock-on). */
 export const easeOutCubic = (k: number) => 1 - (1 - Math.min(1, Math.max(0, k))) ** 3;
+
+/** A status phrase cut to its state and the word before any colon: "Needs you · Wants permission", "Needs you". */
+export function shortPhrase(phrase: string): string {
+  const [name, detail] = phrase.split(' · ');
+  const word = detail?.match(/^([^:]{1,24}):/)?.[1];
+  return word ? `${name} · ${word}` : name;
+}

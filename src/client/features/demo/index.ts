@@ -1,7 +1,7 @@
 /**
  * Demo mode, for a screen share, a projector or a recording: open the deck with `?demo=1` (it holds
  * for the tab until `?demo=0`). The type is at least about 15px, callouts and glyphs are drawn a
- * quarter bigger, the alert strip can't be put away, the Overview turns slowly round the mission
+ * quarter bigger, the alert strip can't be put away, the Overview sways slowly round the mission
  * table once you're in (any key, drag or wheel takes over), and the glow round emissive light is a
  * little stronger (features/lights), so a compressed video still reads. Under reduced motion there is no orbit.
  */

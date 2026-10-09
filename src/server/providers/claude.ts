@@ -82,6 +82,15 @@ process.stdin.on('end', () => {
   return settingsPath;
 }
 
+/**
+ * What an AskUserQuestion call asks: its first question's words, or the tool's name when it carries
+ * none (which every view drops, shared/attention.ts spokenActivity), never the tool call before it.
+ */
+function askedQuestion(payload: any): string {
+  const q = payload?.tool_input?.questions?.[0]?.question;
+  return typeof q === 'string' && q.trim() ? truncate(q.trim(), 80) : 'AskUserQuestion';
+}
+
 function describeTool(payload: any): string {
   const name = payload?.tool_name ?? 'tool';
   const input = payload?.tool_input ?? {};
@@ -150,8 +159,10 @@ function claudeHook(h: WorkerHandle, event: string, payload: any): boolean {
       else h.emit();
       break;
     case 'PreToolUse':
-      if (payload?.tool_name === 'AskUserQuestion') h.setStatus('needs_input');
-      else {
+      if (payload?.tool_name === 'AskUserQuestion') {
+        info.activity = askedQuestion(payload);
+        h.setStatus('needs_input');
+      } else {
         info.activity = describeTool(payload);
         info.action = toolAction(payload?.tool_name, payload?.tool_input);
         h.noteTool(info.activity);

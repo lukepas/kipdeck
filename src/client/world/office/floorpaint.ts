@@ -228,7 +228,7 @@ function standby(group: THREE.Group) {
     stretch(g, false);
     g.letterSpacing = '0px';
     g.textAlign = 'right';
-    g.fillText('parked units wait here', W - 8, H / 2 - 2);
+    g.fillText('parked agents wait here', W - 8, H / 2 - 2);
   }).mesh;
   label.position.set((x0 + x1) / 2, 0.006, z);
   group.add(label);

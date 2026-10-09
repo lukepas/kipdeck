@@ -8,7 +8,7 @@
 // comes from its id (staggerDelay). Pure, so the tests run it;
 // world/character/callout-view.ts animates it and features/workers/views.ts picks the tier each frame.
 
-import type { AttentionLevel } from '../../../shared/attention';
+import { spokenActivity, type AttentionLevel } from '../../../shared/attention';
 import { STATE_NAME, splitTag, statusDetail } from '../../../shared/rowtext';
 
 export type CalloutTier = 'far' | 'mid' | 'near';
@@ -182,9 +182,13 @@ export function activityLine(activity: string): string {
   return clip(one, MID_MAX);
 }
 
-/** `o` with a leading "[ask]" or "[perm]" taken off its activity and label: a callout never shows the brackets. */
+/**
+ * `o` with a leading "[ask]" or "[perm]" taken off its activity and label (a callout never shows the
+ * brackets), and with no activity when that's only the name of the tool it asks with ("request_user_input").
+ */
 function untagged<T extends { activity?: string; label?: string }>(o: T): T {
-  return { ...o, activity: o.activity === undefined ? undefined : splitTag(o.activity).text, label: o.label === undefined ? undefined : splitTag(o.label).text };
+  const activity = spokenActivity(o.activity);
+  return { ...o, activity: activity === undefined ? undefined : splitTag(activity).text, label: o.label === undefined ? undefined : splitTag(o.label).text };
 }
 
 /** "Wants permission: Bash: npm publish": the hook's words for a tool call waiting on your yes. */
@@ -199,6 +203,38 @@ export function permissionAsk(o: { activity?: string; label?: string }): string 
   return null;
 }
 
+/** The most characters an urgent unit's ask takes from far off, or where callouts crowd (compact). */
+export const FAR_MAX = 22;
+/** The most the first in line takes (the one N goes to first): room for the choice it asks, "Update the snapshot or fix the selector?". */
+export const LEAD_MAX = 44;
+
+/** A permission's command without the tool's name ("npm publish", not "Bash: npm publish"). */
+function command(ask: string): string {
+  return ask.replace(/^[A-Za-z][\w.-]{0,30}:\s*/, '') || ask;
+}
+
+/** A permission wait as the question it asks you, in at most `max` characters: "Allow npm publish?". */
+export function allowLine(ask: string, max: number): string {
+  return `Allow ${clip(command(ask), max - 7)}?`;
+}
+
+/**
+ * What a unit that needs someone says next to its call sign from far off, or where callouts crowd, in
+ * at most `max` characters: a permission's command as a question ("npm publish?"), the question it
+ * asks, or why it's stuck. Null for any other unit, and for one with nothing more to say than its state.
+ */
+export function shortAsk(raw: { activity?: string; level: AttentionLevel; label?: string }, max = FAR_MAX): string | null {
+  const o = untagged(raw);
+  if (o.level === 'stuck') return o.label?.trim() ? clip(o.label.trim(), max) : null;
+  if (o.level !== 'needs-you') return null;
+  const ask = permissionAsk(o);
+  if (ask) return `${clip(command(ask), max - 1)}?`;
+  const said = o.activity?.split('\n')[0].trim();
+  if (said) return clip(said, max);
+  const label = o.label?.trim();
+  return label && !/^needs (an answer|input|you)$/i.test(label) ? clip(label, max) : null;
+}
+
 /**
  * The middle tier's words after the call sign: what it's doing now while it works or waits on you (its
  * latest tool call or prompt), else the ranking's label, or its level's name (shared/rowtext.ts). A permission wait
@@ -209,7 +245,7 @@ export function midLine(raw: { activity?: string; level: AttentionLevel; label?:
   if (o.level === 'needs-you') {
     const ask = permissionAsk(o);
     // The tool's name goes too: the command says it ("npm publish", not "Bash: npm publish").
-    if (ask) return `Allow ${clip(ask.replace(/^[A-Za-z][\w.-]{0,30}:\s*/, '') || ask, MID_MAX - 7)}?`;
+    if (ask) return allowLine(ask, MID_MAX);
   }
   if (o.activity?.trim() && (o.level === 'working' || o.level === 'needs-you')) return activityLine(o.activity);
   // The glyph's hue beside it says the state: the line says what about it ("Done: PR ready"), or its name.

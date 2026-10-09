@@ -3,7 +3,8 @@ import type { AttentionLevel } from '../../../shared/attention';
 import { STATE_NAME, elapsed, headline } from '../../../shared/rowtext';
 import type { WorkerStatus, WorkerTask } from '../../../shared/protocol';
 import { isAsleep, type WorkerPr } from '../../../shared/status';
-import { CALLOUT_SCREEN, FADE_OUT_MS, askLine, clip, easeOutCubic, midLine, popAt, sameWords, wrapTwo, type CalloutTier } from '../../features/workers/lod';
+import { CALLOUT_SCREEN, FADE_OUT_MS, FAR_MAX, LEAD_MAX, askLine, clip, easeOutCubic, midLine, popAt, sameWords, shortAsk, wrapTwo, type CalloutTier } from '../../features/workers/lod';
+import { waitClock } from '../../../shared/wait';
 import type { GlyphKind } from '../glyphs';
 import { disposeSprite } from '../toon';
 import { CALLOUT_PX, calloutSprite, redrawCallout, type CalloutText } from './unit-callout';
@@ -40,6 +41,8 @@ export interface UnitSays {
   leaving: string | null;
   /** The selected unit (features/selection): outlined in white, drawn over its neighbours. */
   selected?: boolean;
+  /** First in line (the most urgent unit waiting on you, where N goes first): its short ask keeps the whole choice. */
+  first?: boolean;
 }
 
 /**
@@ -62,10 +65,21 @@ export function calloutText(u: UnitSays, now: number): CalloutText {
   const urgent = u.kind === 'needs-you' || u.kind === 'stuck';
   const tier = u.said ? 'near' : u.tier;
   const sel = u.selected ? { selected: true } : {};
-  // From far off a tab, but one that needs someone (to review too) or is selected keeps its call sign beside it.
-  if (tier === 'far') return { tier, sign: urgent || u.kind === 'review' || u.selected ? u.sign : '', name: u.name, kind: u.kind, ...sel };
+  // How long it has waited on someone, toned (shared/wait.ts): only for one that needs you, is stuck
+  // or waits for review, and never for a merged one taking its bow.
+  const clock = u.kind !== 'merged' ? waitClock(u.level, now - u.since) : { text: '' };
+  const wait = clock.tone ? { wait: clock.text, waitTone: clock.tone } : {};
+  // What one that needs you or is stuck asks, short, for the tab and for where callouts crowd: "npm publish?".
+  const shortly = urgent && !u.lost ? shortAsk({ activity: u.activity, level: u.level, label: u.reason }, u.first ? LEAD_MAX : FAR_MAX) : u.lost ? 'worktree deleted' : null;
+  const asks = shortly ? { ask: shortly } : {};
+  // From far off a tab, but one that needs someone (to review too) or is selected keeps its call sign
+  // beside it, and one that needs you or is stuck what it asks and for how long ("A-03 npm publish? 12m").
+  if (tier === 'far') {
+    const keeps = urgent || u.kind === 'review' || u.selected;
+    return { tier, sign: keeps ? u.sign : '', name: u.name, kind: u.kind, ...(keeps ? { ...asks, ...wait } : {}), ...sel };
+  }
   const line = midLine({ activity: u.activity, level: u.level, label: u.reason, title: u.task });
-  if (tier === 'mid') return { tier, sign: u.sign, name: u.name, kind: u.kind, line, ...sel };
+  if (tier === 'mid') return { tier, sign: u.sign, name: u.name, kind: u.kind, line, ...asks, ...wait, ...sel };
   const parked = u.kind === 'parked';
   const chip = (u.lost ? STATE_NAME.stuck : parked && isAsleep(u.status) ? 'Offline' : STATE_WORD[u.kind]).toUpperCase();
   // The task in full, on two lines at most, said once.
@@ -89,6 +103,8 @@ export function calloutText(u: UnitSays, now: number): CalloutText {
     kind: u.kind,
     chip,
     ...(parked || u.kind === 'merged' ? {} : { clock: elapsed(now - u.since) }),
+    ...asks,
+    ...wait,
     task,
     ...(meta ? { meta: clip(meta, META_MAX), metaHue: !!stuckWhy } : {}),
     ...(u.epithet && !u.said ? { epithet: u.epithet } : {}),
@@ -223,15 +239,16 @@ export class CalloutView {
     }
   }
 
-  /** Draws `text` when it says something new: in place when only the clock moved, else both sprites anew. */
+  /** Draws `text` when it says something new: in place when only a clock moved, else both sprites anew. */
   draw(text: CalloutText): boolean {
     const key = JSON.stringify(text);
     if (key === this.key) return false;
     this.key = key;
-    const { clock: _, ...rest } = text;
+    const { clock: _, wait: __, waitTone: ___, ...rest } = text;
     const shape = JSON.stringify(rest);
     if (shape === this.shape && this.full) {
       redrawCallout(this.full, text);
+      if (this.compact) redrawCallout(this.compact, { ...text, compact: true });
       return true;
     }
     this.shape = shape;

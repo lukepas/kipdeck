@@ -46,13 +46,13 @@ export interface HudAction {
 
 /** The HUD's layers, each one a chip in the menu that shows or hides it. */
 const PANELS: { id: HudPanel; icon: IconName; label: string; what: string }[] = [
-  { id: 'workers', icon: 'units', label: 'Units rail', what: 'Every unit on this deck, by state' },
+  { id: 'workers', icon: 'units', label: 'Agents rail', what: 'Every agent in this project, by state' },
   { id: 'mission', icon: 'target', label: 'Mission strip', what: "This deck's mission and its milestone" },
   { id: 'people', icon: 'people', label: 'Operators', what: "Who's here, on which deck" },
   { id: 'spend', icon: 'spend', label: 'Spend', what: 'Today, the budget, all time' },
   { id: 'limits', icon: 'limits', label: 'Plan limits', what: "The Claude plan's 5-hour and week" },
   { id: 'chat', icon: 'chat', label: 'Chat', what: 'T opens it either way' },
-  { id: 'floor', icon: 'info', label: 'Deck details', what: 'Branch, folder, default agent' },
+  { id: 'floor', icon: 'info', label: 'Project details', what: 'Branch, folder, default agent' },
 ];
 
 /** The element each panel is. */
@@ -153,7 +153,7 @@ export function mountHud(actions: HudAction[], settings: Settings, save: () => v
     const hired = workers.filter((w) => !DESK_BY_ID.get(w.deskId)?.station).length;
     const workersTitle = hired ? `${hired} unit${hired === 1 ? '' : 's'} on this deck` : 'No units on this deck yet';
     // What needs someone has its own chip on the bar (the 'mission' action), so this just counts them.
-    items.push(panelChip('workers', 'units', 'Units', hired, workersTitle));
+    items.push(panelChip('workers', 'units', 'Agents', hired, workersTitle));
     // Redrawn only when it looks different, so a busy worker's updates don't swap a button out from under a click.
     const next = h('div', {}, ...items);
     if (next.innerHTML !== [...dock.children].filter((c) => c !== menuBtn).map((c) => c.outerHTML).join('')) dock.replaceChildren(...items, menuBtn);

@@ -24,6 +24,16 @@ export const MARK = {
   beam: 0.018,
 } as const;
 
+/**
+ * Nearer than this (m) the diamond and the triangle shrink with the distance, so they hold the size on
+ * screen they have from here (about 45 px tall on a 900 px view) instead of filling the view as you walk
+ * up to the unit or N lands you beside it.
+ */
+export const MARK_FULL_AT = 8;
+
+/** How much a head mark is scaled at `distance` m from the eye: 1 from MARK_FULL_AT out, less nearer. */
+export const markScale = (distance: number) => Math.max(0.15, Math.min(1, distance / MARK_FULL_AT));
+
 /** The stuck triangle's blink: once a second, lit this share of it. */
 export const BLINK = { hz: 1, on: 0.62 } as const;
 
@@ -45,6 +55,8 @@ export interface Signal {
    * than poke out from behind the card as the biggest shape on screen.
    */
   carded?: boolean;
+  /** How much its head mark is scaled (markScale): 1 unless the eye is near. */
+  scale?: number;
 }
 
 /** The signal a unit's shown state gets: none while it's parked (asleep, ready) or just merged. */

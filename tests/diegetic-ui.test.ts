@@ -161,7 +161,7 @@ test('callouts piled on one another fold into one chip that counts them', () => 
   assert.deepEqual(piles([box(0), box(100)]), []);
   assert.equal(pileWord(['needs-you', 'stuck', 'review']), '3 waiting');
   assert.equal(pileWord(['working', 'working']), '2 working');
-  assert.equal(pileWord(['working', 'needs-you']), '2 units');
+  assert.equal(pileWord(['working', 'needs-you']), '2 agents');
 });
 
 test("the holo's route column narrows as it rises and stays under the conn's line to the arc", () => {

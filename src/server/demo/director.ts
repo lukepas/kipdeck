@@ -8,7 +8,7 @@ import { DEMO_REVIEWER, type DemoInfo } from '../../shared/demo.js';
 import type { Floor } from '../floor.js';
 import type { Ctx } from '../office/context.js';
 import { mergeWork } from '../ws/handlers/inbox.js';
-import { DEMO_PROJECT, FLEET, REVIEWS, dueReviews, roundOver, type SeenAgent } from './script.js';
+import { DEMO_PROJECT, FLEET, REVIEWS, backdate, dueReviews, roundOver, type SeenAgent } from './script.js';
 import { demoGit, type DemoWorkspace } from './workspace.js';
 
 /** How often the hosted demo's reviewer looks at the agents. */
@@ -26,6 +26,9 @@ export class DemoDirector {
   private lastAt = 0;
   private timers = new Set<NodeJS.Timeout>();
   private look?: NodeJS.Timeout;
+  /** Dating each agent's first wait (script.ts DemoAgent.waited), and whose has been dated this round. */
+  private ager?: NodeJS.Timeout;
+  private aged = new Set<string>();
   private busy = false;
   private stopped = false;
 
@@ -48,6 +51,7 @@ export class DemoDirector {
     for (const t of this.timers) clearTimeout(t);
     this.timers.clear();
     if (this.look) clearInterval(this.look);
+    if (this.ager) clearInterval(this.ager);
   }
 
   /** The demo's project, once it's open. */
@@ -94,6 +98,8 @@ export class DemoDirector {
     this.ids.clear();
     this.seen.clear();
     this.done.clear();
+    this.aged.clear();
+    this.ager ??= setInterval(() => this.age(floor), LOOK_MS);
     this.startedAt = this.lastAt = Date.now();
     FLEET.forEach((agent, i) =>
       this.later(() => {
@@ -103,6 +109,17 @@ export class DemoDirector {
       }, i * STAGGER_MS),
     );
     if (this.info.readOnly) this.look = setInterval(() => this.review(floor), LOOK_MS);
+  }
+
+  /** Dates each scripted agent's first wait on the person back by its `waited` minutes, once a round. */
+  private age(floor: Floor) {
+    if (this.stopped) return;
+    for (const agent of FLEET) {
+      const id = this.ids.get(agent.key);
+      const w = id ? floor.workers.get(id) : undefined;
+      const since = backdate(agent, w, this.aged);
+      if (id && since !== undefined) floor.workers.annotate(id, { waitingSince: since });
+    }
   }
 
   /** The hosted demo's reviewer: notes where each agent is, makes the reviews that are due, and starts over once the round is done. */

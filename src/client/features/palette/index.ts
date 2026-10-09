@@ -96,7 +96,7 @@ export function installPalette(ctx: Ctx, parts: PaletteParts) {
     out.push({
       icon: 'plus',
       kind: 'Action',
-      title: 'Deploy a unit',
+      title: 'Start an agent',
       detail: free ? `At ${free.label}, the free desk nearest you` : 'Every desk is taken',
       keywords: ['new worker', 'hire a worker', 'spawn an agent', 'new unit'],
       open: free ? hireAt(free) : () => toast('Every desk on this deck is taken', 'warn'),

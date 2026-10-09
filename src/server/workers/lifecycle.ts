@@ -6,6 +6,8 @@
 import { toolAction } from '../../shared/actions.js';
 import type { Worker, WorkerHandle } from './types.js';
 import { truncate } from './util.js';
+import { askedOnScreen } from './asked.js';
+import { screenText } from './terminal.js';
 
 /** A permission prompt this soon after the worker stopped needing input is the late one for what was just answered. */
 export const LATE_PROMPT_GRACE_MS = 5000;
@@ -153,5 +155,18 @@ export function reduceLifecycle(h: WorkerHandle, report: LifecycleReport, o: Lif
   }
   h.emit();
   h.persist();
+  return true;
+}
+
+/**
+ * A worker that needs an answer but whose hook named only the tool it asks with (Codex's
+ * request_user_input): its question read off its terminal becomes its activity (see asked.ts). Says
+ * whether that changed anything, for the caller to send the update.
+ */
+export function askedFromScreen(w: Pick<Worker, 'info' | 'term' | 'bootBlocked'>): boolean {
+  if (w.info.status !== 'needs_input' || !w.term || w.bootBlocked) return false;
+  const asked = askedOnScreen(w.info.status, w.info.activity, screenText(w.term));
+  if (!asked) return false;
+  w.info.activity = asked;
   return true;
 }

@@ -3,12 +3,12 @@
 // what it changed, or what it's doing), whose agent it is on a team, its project when there's more
 // than one, how long it has waited, and a button only where there's a decision (Answer, Review
 // changes, Fix checks...): the whole row opens it. A row that waits on you has a clock that ticks
-// (clock.ts) and turns amber at 5 minutes and red at 30 (shared/wait.ts), and a bar along its foot
+// (clock.ts) and turns bold at 5 minutes and heavier and underlined at 30 (shared/wait.ts), and a bar along its foot
 // that grows with the wait. A row that just started waiting rises in once (motion.ts reads each row's
 // data-section). Clicking a section header
 // never folds a section that's always open; with nobody waiting the two become one calm line.
 
-import { activityWords, attention, LEVEL_LABEL, type Ranked } from '../../shared/attention';
+import { spokenActivity, attention, LEVEL_LABEL, type Ranked } from '../../shared/attention';
 import { AGE_PREFIX, ageLabel, ALWAYS_OPEN, buildInbox, changeSummary, INBOX_SECTIONS, looseReminders, rowAction, SECTION_LABEL, waitShare, type InboxSection, type InboxView, type RowAction } from '../../shared/inbox';
 import type { Waiting } from '../../shared/metrics';
 import { waitTone, waitWords } from '../../shared/wait';
@@ -95,7 +95,7 @@ export function waitingNow(view: InboxView = currentView()): Waiting {
  */
 function workingStatus(r: Ranked, title: string): string {
   const e = r.entry;
-  const doing = activityWords(e.activity) ?? r.att.label;
+  const doing = spokenActivity(e.activity) ?? r.att.label;
   if (doing === title) return 'Starting...';
   const input = e.floor === store.floor ? store.workers.get(e.id)?.lastInput : undefined;
   if (input && e.activity && e.activityAt !== undefined && e.activityAt - input.at < 10_000 && e.activityAt >= input.at) {
@@ -164,7 +164,7 @@ function reminderRow(r: Reminder, deps: ListDeps, now: number): HTMLElement {
 function ageEl(section: InboxSection, att: { since: number; snoozed?: boolean }, now: number): HTMLElement {
   const waits = section === 'needs-you' || section === 'review';
   if (!waits) return h('span.row-age', {}, ageLabel(section, att, now));
-  return h('span.row-age', { 'data-since': String(att.since), 'data-prefix': AGE_PREFIX[section], 'data-tone': waitTone(now - att.since) }, ageLabel(section, att, now));
+  return h('span.row-age.wait-clock', { 'data-since': String(att.since), 'data-prefix': AGE_PREFIX[section], 'data-tone': waitTone(now - att.since) }, ageLabel(section, att, now));
 }
 
 /** What a section says when it's empty: calm, and pointing at the next thing to do. */

@@ -10,7 +10,10 @@
  */
 import * as THREE from 'three';
 import type { Ranked } from '../../../shared/attention';
-import { ago, headline, statusPhrase } from '../../../shared/rowtext';
+import { headline, statusPhrase } from '../../../shared/rowtext';
+import { WAIT_WEIGHT, waitClock } from '../../../shared/wait';
+import { fillWait } from '../../ui/waitink';
+import { DECK } from '../../world/office/materials';
 import { DESK_BY_ID, TV, cellOf } from '../../../shared/layout';
 import { callSign } from '../../../shared/callsign';
 import { PANEL } from '../boards/world';
@@ -198,7 +201,12 @@ function paintCard(g: CanvasRenderingContext2D, card: { r: Ranked; kind: HeroKin
   g.fillRect(x, y, size === 'full' ? 12 : 9, h);
   const desk = DESK_BY_ID.get(r.entry.deskId);
   const sign = callSign(r.entry.deskId) || (desk ? cellOf(desk.x, desk.z) : '');
-  const age = ago(now - r.att.since);
+  // How long, in its wait's tone when it waits on someone: bolder past 5 minutes, underlined past 30
+  // (shared/wait.ts), never in another state's colour.
+  const clock = waitClock(r.att.level, now - r.att.since);
+  const age = clock.text;
+  const ageInk = clock.tone && clock.tone !== 'fresh' ? INK.text : clock.tone ? INK.muted : INK.dim;
+  const ageWeight = clock.tone ? WAIT_WEIGHT[clock.tone] : 600;
   const reason = why(r, kind);
   g.textBaseline = 'alphabetic';
   g.textAlign = 'left';
@@ -206,10 +214,9 @@ function paintCard(g: CanvasRenderingContext2D, card: { r: Ranked; kind: HeroKin
     // A full-width row: the name big, why beside it on the same line, the clock and call sign at the right.
     const base = y + h / 2 + 34;
     mark(g, kind, x + 60, y + h / 2, 30);
-    g.font = MONO(40, 600);
+    g.font = MONO(40, ageWeight);
     g.textAlign = 'right';
-    g.fillStyle = INK.dim;
-    g.fillText(age, x + w - 22, y + h / 2 - 4);
+    fillWait(g, age, x + w - 22, y + h / 2 - 4, clock.tone, ageInk, 40);
     const clockW = Math.max(g.measureText(age).width, sign ? g.measureText(sign).width : 0);
     if (sign) {
       g.font = MONO(32, 600);
@@ -233,10 +240,9 @@ function paintCard(g: CanvasRenderingContext2D, card: { r: Ranked; kind: HeroKin
     const big = hero ? 120 : 100;
     mark(g, kind, x + 60, y + (hero ? 64 : 54), hero ? 36 : 30);
     // The clock at the right of the first line, the name as big as the line takes (0.5 m type).
-    g.font = MONO(40, 600);
+    g.font = MONO(40, ageWeight);
     g.textAlign = 'right';
-    g.fillStyle = INK.dim;
-    g.fillText(age, x + w - 22, y + 82);
+    fillWait(g, age, x + w - 22, y + 82, clock.tone, ageInk, 40);
     const clockW = g.measureText(age).width;
     g.textAlign = 'left';
     g.font = UI(700, big);
@@ -261,10 +267,9 @@ function paintCard(g: CanvasRenderingContext2D, card: { r: Ranked; kind: HeroKin
   const dense = size === 'dense';
   mark(g, kind, x + (dense ? 44 : 38), y + h / 2, dense ? 19 : 16);
   const base = y + h / 2 + (dense ? 19 : 17);
-  g.font = MONO(dense ? 34 : 30, 600);
+  g.font = MONO(dense ? 34 : 30, ageWeight);
   g.textAlign = 'right';
-  g.fillStyle = INK.dim;
-  g.fillText(age, x + w - 18, base - 2);
+  fillWait(g, age, x + w - 18, base - 2, clock.tone, ageInk, dense ? 34 : 30);
   const clockW = g.measureText(age).width;
   g.textAlign = 'left';
   g.font = UI(700, dense ? 54 : 48);
@@ -350,10 +355,10 @@ export function paintAttention(g: CanvasRenderingContext2D, W: number, H: number
     } else {
       g.fillStyle = INK.text;
       g.font = UI(700, 64);
-      g.fillText('No units on this deck', W / 2, mid - 10);
+      g.fillText('No agents here yet', W / 2, mid - 10);
       g.fillStyle = INK.dim;
       g.font = UI(600, 38);
-      g.fillText('Deploy one at a free console', W / 2, mid + 60);
+      g.fillText('Start one at a free console', W / 2, mid + 60);
     }
     g.textAlign = 'left';
   }

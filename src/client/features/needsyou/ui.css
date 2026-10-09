@@ -24,6 +24,9 @@
 }
 .needs-you-chip .nyc-glyph { display: inline-flex; color: var(--signal); }
 .needs-you-chip .nyc-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.needs-you-chip .nyc-ask { color: var(--muted); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.needs-you-chip .nyc-wait { font: 600 12px/18px var(--font-mono); font-variant-numeric: tabular-nums; }
+.needs-you-chip [hidden] { display: none; }
 .needs-you-chip .nyc-more { color: var(--muted); font-weight: 500; white-space: nowrap; }
 .needs-you-chip kbd { padding: 0 4px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); font: 500 11px/16px var(--font-mono); color: var(--muted); }
 @keyframes needs-you-chip-in { from { opacity: 0; translate: -50% -6px; } to { opacity: 1; translate: -50% 0; } }

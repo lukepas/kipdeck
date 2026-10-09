@@ -7,7 +7,7 @@ export const HELP_ROWS: readonly (readonly [string, string])[] = [
   ['W A S D', 'Walk (hold Shift to run)'],
   ['Space', 'Jump'],
   ['Mouse', 'Look around in first person (click to capture the mouse, Esc to free it)'],
-  ['Click / E', "Use what you look at: deploy a unit at a free console, open its terminal, read a board, call a review in the Review bay, watch a shared screen full screen (or share yours) at the Attention board, sit in the captain's chair (walk off to get up)"],
+  ['Click / E', "Use what you look at: start an agent at a free console, open its terminal, read a board, call a review in the Review bay, watch a shared screen full screen (or share yours) at the Attention board, sit in the captain's chair (walk off to get up)"],
   ['people', 'Click someone under "Operators" to walk over to them (on another deck, you go there first). The line under their name says what they have open or where they are'],
   ['decks', 'Every project is a deck: click the deck name in the top bar to switch to another one, or press E at the Deck lift on the south curb (or Decks in the menu) to add, clone or take off a project'],
   ['units', 'An agent stands by the issues board, the PR board and the task queue. Press E at one and type what you want: it runs as an agent that knows that board. O there opens its terminal, X sends it home'],

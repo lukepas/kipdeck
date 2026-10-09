@@ -51,14 +51,19 @@ export const NAMED_PILE = 3;
 
 /**
  * What a pile's chip says: "3 waiting" when every one waits on someone, "4 working" when every one
- * works, else "5 units". With their call signs (`signs`), a pile of NAMED_PILE or fewer names them
- * ("A-03, D-02 working"), so no unit in it goes anonymous.
+ * works, "2 idle" when every one is parked (or says nothing of its state), "3 working, 2 idle" for a
+ * mix of the two, else "5 units". With their call signs (`signs`), a pile of NAMED_PILE or fewer names
+ * them ("A-03, D-02 working"), so no unit in it goes anonymous.
  */
 export function pileWord(kinds: readonly (string | undefined)[], signs: readonly string[] = []): string {
   const n = kinds.length;
   const waiting = (k: string | undefined) => k === 'needs-you' || k === 'stuck' || k === 'review';
-  const word = kinds.every(waiting) ? 'waiting' : kinds.every((k) => k === 'working') ? 'working' : '';
+  const idle = (k: string | undefined) => k === undefined || k === 'parked';
+  const working = kinds.filter((k) => k === 'working').length;
+  const resting = kinds.filter(idle).length;
+  const word = kinds.every(waiting) ? 'waiting' : working === n ? 'working' : resting === n ? 'idle' : '';
   const named = signs.filter(Boolean);
   if (n <= NAMED_PILE && named.length === n) return word ? `${named.join(', ')} ${word}` : named.join(', ');
-  return `${n} ${word || 'units'}`;
+  if (!word && working + resting === n) return `${working} working, ${resting} idle`;
+  return `${n} ${word || 'agents'}`;
 }

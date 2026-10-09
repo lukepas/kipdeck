@@ -55,7 +55,7 @@ test('the banner names whoever has waited longest (on your floor first), what it
   const a = entry('Byte', 'needs_input', { activity: 'Wants permission: Bash: npm test', waitingSince: NOW - 4 * 60_000 });
   const b = entry('Pixel', 'needs_input', { activity: 'Which one?', waitingSince: NOW - 30_000 });
   const away = entry('Nib', 'needs_input', { floor: 'f2', floorName: 'Docs', activity: 'Which file?', waitingSince: NOW - 65 * 60_000 });
-  assert.deepEqual(bannerText([a], NOW, 'f1'), { id: 'Byte', floor: 'f1', deskId: 'desk-Byte', title: 'Byte needs you', detail: 'Wants permission: Bash: npm test · 4m', more: '', key: 'Byte|Byte needs you|Wants permission: Bash: npm test · 4m|' });
+  assert.deepEqual(bannerText([a], NOW, 'f1'), { id: 'Byte', floor: 'f1', deskId: 'desk-Byte', title: 'Byte needs you', detail: 'Wants permission: Bash: npm test · 4m', ask: 'Allow npm test?', wait: '4m', tone: 'fresh', more: '', key: 'Byte|Byte needs you|Wants permission: Bash: npm test · 4m|' });
   assert.equal(bannerText([a, b], NOW, 'f1')?.more, '+1 more');
   // In its first minute there's no time to give.
   assert.equal(bannerText([b], NOW, 'f1')?.detail, 'Which one?');
@@ -70,6 +70,13 @@ test('the banner names whoever has waited longest (on your floor first), what it
   assert.equal(long.detail.length, 90);
   assert.match(long.detail, /^Shall I x+\.\.\.$/);
   assert.equal(bannerText([], NOW, 'f1'), null);
+  // The chip says how long in its own tone: amber past 5 minutes, red past 30.
+  assert.deepEqual([bannerText([away], NOW, 'f1')?.wait, bannerText([away], NOW, 'f1')?.tone], ['1h', 'stale']);
+  assert.equal(bannerText([entry('Nib', 'needs_input', { waitingSince: NOW - 12 * 60_000 })], NOW, 'f1')?.tone, 'aging');
+  // A question asked with Codex's tool says nothing by the tool's name: the chip and its detail drop it.
+  const codex = bannerText([entry('Nib', 'needs_input', { waitingSince: NOW, activity: 'request_user_input', task: { name: 'Docs', summary: 'Writing the docs' } })], NOW, 'f1')!;
+  assert.equal(codex.detail, 'Writing the docs');
+  assert.equal(codex.ask, 'Writing the docs');
 });
 
 test('each wait of a worker has a key of its own, so a banner put away comes back when it asks again', () => {
@@ -132,4 +139,12 @@ test('the banner is the one needs-you signal that stays up, and nothing on scree
   const floorwatch = readFileSync(new URL('../src/client/core/floorwatch.ts', import.meta.url), 'utf8');
   // Another floor's worker is on the banner already: no toast or ding of the elevator's as well.
   assert.doesNotMatch(floorwatch, /toast\(|ding\(/);
+});
+
+test('the needs-you chip is said once, politely: who, what, how long, and the key', async () => {
+  const { spokenCall } = await import('../src/client/features/needsyou/ui.js');
+  const s = spokenCall({ title: 'Byte needs you', ask: 'Update the snapshot?', wait: '12m' });
+  assert.equal(s.said, 'Byte needs you, Update the snapshot?, waiting 12m');
+  assert.match(s.label, /\(N\)$/);
+  assert.equal(spokenCall({ title: 'Byte needs you', ask: '', wait: '' }).said, 'Byte needs you');
 });

@@ -6,10 +6,15 @@ body.overview #compass { display: none !important; }
 .overview-legend {
   position: fixed;
   /* In the middle of the deck you can see: past the Units rail, short of a docked Mission control and
-     the selected unit's card (styles/hud.css --clear-right). */
-  left: calc(var(--rail, 0px) + (100vw - var(--rail, 0px) - var(--clear-right, 0px)) / 2);
+     the selected unit's card (styles/hud.css --clear-right). Centred by its margins, not a translate of
+     half a viewport, so it stays centred whatever scale the HUD is drawn at (demo mode). */
+  left: var(--rail, 0px);
+  right: var(--clear-right, 0px);
+  width: max-content;
+  max-width: calc(100% - var(--rail, 0px) - var(--clear-right, 0px) - 24px);
+  margin-inline: auto;
   bottom: 62px;
-  transform: translateX(-50%);
+  white-space: nowrap;
   display: flex;
   gap: 14px;
   align-items: center;
@@ -17,8 +22,10 @@ body.overview #compass { display: none !important; }
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--hud-fill);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   box-shadow: var(--hud-shadow);
-  color: var(--muted);
+  color: var(--text);
   font: 500 12px var(--font-mono);
   font-variant-numeric: tabular-nums;
   pointer-events: none;
@@ -31,4 +38,10 @@ body.overview #compass { display: none !important; }
 @media (prefers-reduced-motion: reduce) { .overview-legend { transition: none; } }
 :root[data-motion='reduce'] .overview-legend { transition: none; }
 .overview-legend b { color: var(--text); font: 600 11px var(--font-display); font-stretch: var(--stretch-display); letter-spacing: 0.08em; }
+/* On a phone the legend says only what matters: its name and G back to Walk (no keys to turn or pan with),
+   centred across the whole width (a card along the bottom, the selected unit's, never pushes it aside). */
+@media (max-width: 640px) {
+  .overview-legend > span:not(.walk) { display: none; }
+  .overview-legend { left: 0; right: 0; max-width: calc(100% - 24px); }
+}
 .overview-legend kbd { display: inline-block; min-width: 18px; padding: 0 4px; margin-right: 2px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); color: var(--text); font: inherit; text-align: center; }

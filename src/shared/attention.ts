@@ -106,9 +106,12 @@ export function isSnoozed(e: Pick<RosterEntry, 'snooze'>, now: number): boolean 
 /** The tools agents ask the person a question with, by name alone (Claude Code's, Codex's). */
 const ASKING_TOOL = /^(?:[\w-]+[._])?(?:AskUserQuestion|ask_user_question|request_user_input)$/;
 
-/** What an agent's activity says to a person: undefined when there is none, or when it's only the name of the tool it asks with. */
-export function activityWords(activity?: string): string | undefined {
-  return activity && !ASKING_TOOL.test(activity) ? activity : undefined;
+/**
+ * What an agent's activity says, or undefined when it's only the name of the tool it asks a question
+ * with ("request_user_input"): that names no question, so no view shows it (the ranking's label does).
+ */
+export function spokenActivity(activity: string | undefined): string | undefined {
+  return activity && !ASKING_TOOL.test(activity.trim()) ? activity : undefined;
 }
 
 /**
@@ -128,7 +131,7 @@ export function attention(e: RosterEntry, now: number): Attention {
   if (e.lost) return at('stuck', 'rebuild', waited, 'Worktree deleted', 'worktree deleted');
   if (e.status === 'needs_input') {
     // An activity that's only the asking tool's name (Codex's request_user_input) says less than this.
-    const said = activityWords(e.activity);
+    const said = spokenActivity(e.activity);
     const what = said ? `: ${said}` : '';
     return at('needs-you', 'answer', waited, said ?? 'Needs an answer', `needs input for ${duration(now - waited)}${what}`);
   }

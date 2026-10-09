@@ -1,0 +1,9 @@
+/* Every wait clock, the bridge's (ui/waitclock.ts) and the inbox's rows and pulse (home/clock.ts): fresh muted, aging (over 5m) white and bold, stale (over 30m)
+   heavier with a bar under it. It escalates by weight, never by another state's colour (shared/wait.ts). A new minute fades in, a new tone eases over 200ms; reduced motion cuts both (styles/tokens.css).
+   Element-qualified so it wins over a row's own muted clock style whatever order the sheets load in. */
+:is(span, time).wait-clock { font-variant-numeric: tabular-nums; transition: color 200ms var(--ease); }
+:is(span, time).wait-clock[data-tone='fresh'] { color: var(--muted); }
+:is(span, time).wait-clock[data-tone='aging'] { color: var(--text); font-weight: 700; }
+:is(span, time).wait-clock[data-tone='stale'] { color: var(--text); font-weight: 800; box-shadow: inset 0 -2px 0 currentColor; }
+:is(span, time).wait-clock.tick { animation: wait-clock-tick 320ms var(--ease); }
+@keyframes wait-clock-tick { from { opacity: .25; } to { opacity: 1; } }

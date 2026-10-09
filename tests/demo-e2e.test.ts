@@ -96,7 +96,7 @@ test('the demo on your computer: the pill, a question from Codex opening by itse
 
   const row = (section: string, text: string) => page.locator(`.sec-${section} .row`, { hasText: text }).first();
   await row('needs-you', 'Fix the flaky checkout test').waitFor({ timeout: 30_000 });
-  assert.match(await row('needs-you', 'Fix the flaky checkout test').locator('.row-status').innerText(), /^Needs an answer$/);
+  assert.match(await row('needs-you', 'Fix the flaky checkout test').locator('.row-status').innerText(), /How should I fix the test\?$/, 'Codex names only its asking tool: the row says the question read off its terminal (server/workers/asked.ts)');
   assert.match(await row('needs-you', 'Fix the flaky checkout test').locator('.agent-mark').getAttribute('class') ?? '', /p-codex/);
 
   assert.equal(await page.locator('#checklist').isVisible(), false, 'no Get started checklist in the demo');

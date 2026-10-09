@@ -9,7 +9,7 @@
 
 import './units-rail.css';
 import { LEVEL_LABEL, type AttentionLevel, type Attention } from '../../shared/attention';
-import { ago, headline, statusPhrase } from '../../shared/rowtext';
+import { headline, statusPhrase } from '../../shared/rowtext';
 import type { WorkerInfo } from '../../shared/protocol';
 import { store } from '../state';
 import { DESK_BY_ID } from '../../shared/layout';
@@ -19,6 +19,7 @@ import { icon, LEVEL_ICON } from './icons';
 import { usageLabel, usageTitle } from './usage';
 import { providerLabel, providerUsageState, resolvedProvider, modelBadge } from './provider';
 import { storageKey } from '../shared/storage-key';
+import { forgetClocks, waitSpan } from './waitclock';
 
 /** The groups, in the ranking's order, then the board agents. */
 type Group = AttentionLevel | 'agents';
@@ -142,7 +143,8 @@ function row(w: WorkerInfo, att: Attention | undefined, level: Group, now: numbe
     h(
       'span.unit-meta',
       {},
-      h('span.ago', { title: 'Time in this state' }, att ? ago(now - att.since) : ''),
+      // How long it has waited, in its wait's tone when it waits on someone (shared/wait.ts).
+      att ? waitSpan(att.level, now - att.since, `rail:${w.id}`, 'ago') : h('span.ago'),
       usageState === 'tracked' && w.usage && !needs ? h('span.cost', {}, usageLabel(w.usage, providerKind)) : null,
     ),
   );
@@ -155,6 +157,9 @@ export function renderWorkers(onOpen: (id: string) => void) {
   const order = new Map(ranked.map((r, i) => [r.entry.id, i]));
   const why = new Map(ranked.map((r) => [r.entry.id, r.att]));
   const at = (w: WorkerInfo) => order.get(w.id) ?? Number.MAX_SAFE_INTEGER;
+  // The clocks of units that have gone (off every floor) are let go.
+  const anywhere = new Set(store.roster.map((e) => e.id));
+  forgetClocks((id) => store.workers.has(id) || anywhere.has(id));
   const workers = [...store.workers.values()].sort((a, b) => at(a) - at(b) || a.createdAt - b.createdAt);
   const now = Date.now();
   const providers = new Set(workers.filter((w) => w.kind === 'agent').map((w) => resolvedProvider(w.provider, store.project)));
@@ -188,7 +193,7 @@ export function renderWorkers(onOpen: (id: string) => void) {
     if (open) for (const w of list) items.push(row(w, why.get(w.id), g, now, oneHarness, onOpen));
   }
   ul.replaceChildren(...items);
-  if (!workers.length) ul.append(h('li.empty', {}, 'Walk up to a free console and press E to deploy a unit'));
+  if (!workers.length) ul.append(h('li.empty', {}, 'No agents yet. Walk up to a free console and press E to start one'));
   // The count is the units at consoles and on the bench: the board agents at their kiosks aren't counted.
   const hired = workers.filter((w) => !DESK_BY_ID.get(w.deskId)?.station).length;
   $('worker-count').textContent = hired ? String(hired) : '';

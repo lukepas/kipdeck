@@ -76,7 +76,7 @@ test('one wait formatter: seconds first, then whole minutes, hours and days, nev
   assert.equal(waitCell(3 * MIN), '3m');
 });
 
-test('a wait ages: fresh, amber from 5 minutes, red from 30', () => {
+test('a wait ages: fresh, aging from 5 minutes, stale from 30', () => {
   assert.equal(waitTone(0), 'fresh');
   assert.equal(waitTone(WAIT_AMBER_MS - 1), 'fresh');
   assert.equal(waitTone(WAIT_AMBER_MS), 'aging');
