@@ -27,8 +27,9 @@ body.loading main .sec, body.loading .last { opacity: .55; }
 .ico { flex: none; }
 
 /* ---------- Mark ---------- */
-.mark .lead { fill: var(--proof); }
-.mark .trail { fill: none; stroke: var(--text); stroke-width: 2.5; }
+/* Kip's mark (src/shared/logo.ts), his light in violet: this is the proof page. */
+.mark { flex: none; color: var(--text); }
+.mark .signal { fill: var(--proof); }
 .word { font-family: var(--font-display); font-stretch: var(--stretch-display); font-weight: 600; letter-spacing: .06em; white-space: nowrap; }
 .word b { font-weight: 600; }
 .word span { color: var(--muted); }

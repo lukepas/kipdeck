@@ -6,6 +6,7 @@
 // its pod's ready line in ranking order, as it does on the deck. No three.js: the home page draws it
 // live beside the list while the Deck lab is on (it ships on).
 import { TAGLINE, UPSTREAM_CREDIT_SHORT } from '../../shared/copy';
+import { MARK } from '../../shared/logo';
 import './plot.css';
 import {
   BEANBAGS,
@@ -145,13 +146,13 @@ export class Plot {
       const p = (rad: number, a: number) => `${r(Math.cos(a) * rad)} ${r(Math.sin(a) * rad)}`;
       kids.push(el('path', { d: `M${p(ri, a0)}L${p(ro, a0)}A${ro} ${ro} 0 ${large} 1 ${p(ro, a1)}L${p(ri, a1)}A${ri} ${ri} 0 ${large} 0 ${p(ri, a0)}Z`, class: `p-wedge${m.done ? ' done' : ''}${m.active ? ' active' : ''}` }));
     });
-    // The Formation mark in the middle of the table.
+    // Kip's mark (shared/logo.ts) in the middle of the table.
     kids.push(
       el(
         'g',
-        { class: 'p-mark', transform: 'translate(-.9 -.95) scale(.075)' },
-        el('path', { d: 'M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z', class: 'p-mark-lead' }),
-        el('path', { d: 'm4 17 8-8 8 8M4 22l8-8 8 8', class: 'p-mark-trail' }),
+        { class: 'p-mark', transform: 'translate(-.9 -.9) scale(.05625)' },
+        el('path', { d: MARK.body, class: 'p-mark-body' }),
+        el('path', { d: MARK.signal, class: 'p-mark-signal' }),
       ),
     );
     this.table.replaceChildren(...kids);

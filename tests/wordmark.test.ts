@@ -20,8 +20,8 @@ function visibleText(html: string): string {
 }
 
 const PAGES = ['src/client/index.html', 'src/client/bridge.html', 'src/client/login.html', 'src/client/join.html', 'src/client/claim.html', 'src/client/showcase/index.html', 'src/server/showcase/off.ts'];
-/** The pages that carry the two-tone wordmark (the home page has none). */
-const WORDMARKED = PAGES.filter((p) => p !== 'src/client/index.html');
+/** Every page carries the two-tone wordmark beside Kip's mark, the home page's top bar too. */
+const WORDMARKED = PAGES;
 
 test('the split markup is read as one word', () => {
   assert.match(visibleText('<span>MERGE<span>LINE</span></span>'), OLD);
@@ -36,10 +36,18 @@ for (const page of PAGES) {
   });
 }
 
-test('the wordmark reads KIPDECK on the bridge, its loading screen, the sign-in pages and the showcase', () => {
+test('the wordmark reads KIPDECK on the home page, the bridge, its loading screen, the sign-in pages and the showcase', () => {
   for (const f of WORDMARKED) {
     const src = readFileSync(path.join(ROOT, f), 'utf8');
     assert.doesNotMatch(src, /MERGE(?:<\/b>)?<span>LINE/, `${f} still spells the old name`);
     assert.match(src, /KIP(?:<\/b>)?<span>DECK<\/span>/, `${f} has no KIPDECK wordmark`);
+  }
+});
+
+test("every page's wordmark sits beside Kip's mark (src/shared/logo.ts), not the old chevrons", () => {
+  for (const f of WORDMARKED) {
+    const src = readFileSync(path.join(ROOT, f), 'utf8');
+    assert.match(src, /data-logo="(?:mark|small)"|markSvg\(/, `${f} draws no Kip mark`);
+    assert.doesNotMatch(src, /M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z/, `${f} still draws the old chevron mark`);
   }
 });

@@ -1,5 +1,5 @@
 /* === KIP: the product's own mascot, drawn as one inline SVG and moved by GSAP ===
-   Colours follow the agent-office mascot (features/mascot/world.ts). No green, no robe, no hood. */
+   Colours follow the app's mascot (features/mascot/world.ts). No green, no robe, no hood. */
 :root {
   --kip-fur: #E9DCC6; --kip-belly: #F6EEDF; --kip-slate: #3B4350; --kip-tan: #B89F82;
   --kip-vest: #4A5A70; --kip-knit: #8592A6; --kip-vest-dark: #3E4C5F; --kip-brass: #B9A86E;

@@ -26,6 +26,8 @@ export const pageRoutes = {
   claim: { path: ['/claim', '/claim.html'], auth: 'public', handle: page('claim.html') },
   join: { path: ['/join', '/join.html'], auth: 'public', handle: page('join.html') },
   favicon: { path: '/favicon.svg', auth: 'public', handle: page('favicon.svg') },
+  // Kip's app icon for a phone's home screen (design/logo/sync.ts renders it), fetched without a session.
+  appIcon: { path: '/apple-touch-icon.png', auth: 'public', handle: page('apple-touch-icon.png') },
   // The home page: the inbox of every agent, ranked by what needs you, without the 3D (lite.ts).
   home: { path: ['/', '/index.html'], auth: 'session', handle: page('index.html') },
   // The Deck: the 3D view of the same agents (main.ts, built as bridge.html), a page of its own the

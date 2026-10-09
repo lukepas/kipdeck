@@ -8,6 +8,12 @@ Kipdeck looks and behaves the same on every surface: the home page at `/`, the 3
 
 The deck is calm by default. Floors, consoles and units are slate and steel, and hue is zoned: Signal orange (hue 20 to 40) only when a unit needs a person, red when it is stuck, amber-yellow when its work waits for review, violet for proof on chain, ship-cyan for the instruments and quiet work, and the command's gold and brass (hue about 48, desaturated) on the dais and the chair. Every state also has its own shape (a solid diamond, a hollow triangle with a bar, a hollow circle with a dot), so the screen still reads in grayscale, for color-blind people and in compressed video. One ranking, `src/shared/attention.ts`, decides who needs someone, and everything that counts or orders units reads it: the top bar, the needs-you chip, the Attention board, the Units rail, the 2D plan, the favicon and the marks over the units. Counts are said in two places only: the top bar and the Attention board's header.
 
+## The logo
+
+![The Kipdeck lockup: Kip's face with his tuft as a signal light, then KIPDECK](../design/logo/lockup-dark.svg)
+
+The logo is Kip's face, drawn from the mascot: head, leaf ears, knocked-out eyes, and his curled tuft, whose bobble is the signal light. It sits beside the KIPDECK wordmark in every top bar (the home page, the Deck, the sign-in pages, the `/pom/` showcase), on the landing page, its share card and the pitch deck, and in the favicon and the app icon. Only the light changes: Signal orange while someone needs you (the favicon and the top bar's mark together), violet on `/pom/`, the mark's own colour otherwise. The mascot himself is unchanged. The rules and the files are in [DESIGN.md](../DESIGN.md#the-mark); `src/shared/logo.ts` is the one source, `npm run logo` writes the static copies, and `npm run logo -- --png` renders the PNG app icons.
+
 ## The surfaces
 
 ![The whole deck from the Overview, raised over its starboard quarter: the dais and the tiers of pods at the near left, the mission table in its pit, a unit that needs you on the ready line, the situation arc beyond](img/deck-overview.png)

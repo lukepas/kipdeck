@@ -20,7 +20,7 @@ The scripts below also honour `PORT`, so they can run inside a fixed port range 
 
 ## Kip, the mascot
 
-Kip is Kipdeck's own mascot (the deck kit from the agent office), drawn as inline SVG and moved with GSAP. He appears only where a moment earns him, and is off stage everywhere else so nothing competes with a slide's one point: he rises over the queue and waves on slide 1, pops onto the player for the merge in the demo on slide 6 (cued by the video, then he leaves), lands on the cleared queue on the ask (slide 14) and naps in the corner of the appendix (slide 15). He never covers text.
+Kip is Kipdeck's own mascot (the same character the app draws), drawn as inline SVG and moved with GSAP. He appears only where a moment earns him, and is off stage everywhere else so nothing competes with a slide's one point: he rises over the queue and waves on slide 1, pops onto the player for the merge in the demo on slide 6 (cued by the video, then he leaves), lands on the cleared queue on the ask (slide 14) and naps in the corner of the appendix (slide 15). He never covers text.
 
 - Hover him and he looks at you; click for a wave, hop, twirl or heart. K (or five quick clicks) sends him on a lap of the stage. Left alone for a minute, he dozes off.
 - Going back shows him at the slide's resting spot; R replays his moment with the slide.
@@ -88,6 +88,7 @@ Everything lives in `site/config.js`:
 - `site/deck.js` - navigation, scaling, presenter window, print
 - `site/kip.js`, `site/kip.css`, `site/wow.js` - Kip the mascot and the per-slide extras
 - `site/media/` - product stills, the 60 s demo (mp4) and the 30 s GIF
+- The logo (Kip's face with his tuft as the signal light) on the cover, the ask and every slide's footer, plus `site/favicon.svg` and `site/apple-touch-icon.png`: all written from `src/shared/logo.ts` by `npm run logo` at the repository root, so do not edit those copies by hand. The cover lights Kip's light in the needs-you colour; the ask leaves it calm.
 
 ## Before sending
 

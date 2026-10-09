@@ -5,7 +5,7 @@ import { mesh, textPlane } from '../toon';
 import { drawMark } from '../office/floorpaint';
 
 // A unit's body: a faceless figure on a hover base. A slim faceted torso with a lit band round its
-// chest and the Formation mark on its chest plate (the one thing on it that is the brand's own), a flat
+// chest and Kip's mark on its chest plate (the one thing on it that is the brand's own), a flat
 // head plate with a dark visor strip, short tapered arm blades, and a provider stripe down its back plate. Forward is +z, its origin is where it docks (the stool's pad, or the floor),
 // and it stands 1.3 m before its seat scales it. Built once per unit from shared shapes.
 //
@@ -88,13 +88,13 @@ const SHELL = (tone: Shell): THREE.MeshStandardMaterial => {
   return (shells[tone] ??= rimmed(c, k, rim));
 };
 
-/** The Formation mark for the chest plate, drawn once and shared: light steel chevrons on nothing. */
+/** Kip's mark for the chest plate, drawn once and shared: light on nothing. */
 let markTex: THREE.CanvasTexture | null = null;
 function chestMark(): THREE.CanvasTexture {
   if (markTex) return markTex;
   const c = document.createElement('canvas');
   c.width = c.height = 128;
-  drawMark(c.getContext('2d')!, 4, 4, 5, DECK.text, DECK.steel);
+  drawMark(c.getContext('2d')!, 4, 4, 5, DECK.text);
   markTex = new THREE.CanvasTexture(c);
   markTex.colorSpace = THREE.SRGBColorSpace;
   markTex.anisotropy = 4;
@@ -288,7 +288,7 @@ export function buildUnit(): UnitBody {
   // The provider stripe down its back.
   const stripe = matte(DECK.muted, { flat: true }).clone();
   const stripeMesh = add(s.stripe, stripe, 0, 0.72, -0.155, false);
-  // The Formation mark on the chest plate, above the band.
+  // Kip's mark on the chest plate, above the band.
   const mark = new THREE.MeshBasicMaterial({ map: chestMark(), transparent: true, toneMapped: false, depthWrite: false });
   const markMesh = add(s.mark, mark, 0, 0.905, 0.148, false);
   const glyphAt = new THREE.Group();

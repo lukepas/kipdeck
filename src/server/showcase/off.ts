@@ -3,6 +3,7 @@
 // Self-contained: its one style block is allowed by its hash, and nothing else loads.
 import { createHash } from 'node:crypto';
 import { PRODUCT } from '../../shared/copy.js';
+import { markSvg } from '../../shared/logo.js';
 
 const STYLE = `
 :root { color-scheme: dark; --void: #0d131a; --surface: #141b23; --line: #26313d; --text: #e8ecef; --muted: #8a97a5; --proof: #a68bff; }
@@ -15,7 +16,7 @@ main { width: min(440px, 100%); background: var(--surface); border: 1px solid va
 .mark { display: flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: .08em; font-size: 14px; }
 .mark span { color: var(--muted); }
 .mark svg { color: var(--text); }
-.mark svg .lead { color: var(--proof); }
+.mark svg .signal { fill: var(--proof); }
 .eyebrow { margin: 22px 0 6px; font: 600 11px ui-monospace, 'SF Mono', Menlo, monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--proof); }
 h1 { margin: 0 0 10px; font-size: 22px; font-weight: 600; line-height: 1.25; }
 p { margin: 0 0 12px; color: var(--muted); }
@@ -24,7 +25,8 @@ a { color: var(--text); text-underline-offset: 3px; }
 footer { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
 `;
 
-const MARK = `<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path class="lead" d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z" fill="currentColor"/><path d="m4 17 8-8 8 8M4 22l8-8 8 8" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>`;
+// Kip's mark, his light in violet here.
+const MARK = markSvg(24, 'logo');
 
 const HTML = `<!doctype html>
 <html lang="en">

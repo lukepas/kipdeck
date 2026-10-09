@@ -2,7 +2,7 @@
 // agent units (the app's steel chevrons) drifting right to left in five vendor lanes on three
 // depths. When an agent waits on the visitor, one unit in the Codex lane stops dead and lights
 // Signal orange, with a hairline to the row that is waiting: the background tells the same story as
-// the inbox. On load every unit is launched from the Formation mark in the top bar and flies out
+// the inbox. On load every unit is launched from Kip's mark in the top bar and flies out
 // to its lane: the agents leave the mark and go to work. No unit is drawn over the words: the
 // headline, the lede, the command, the buttons and the facts each keep a clear box around them.
 // Everything (position, lane, depth, state, launch time) lives in typed arrays; a frame allocates nothing.

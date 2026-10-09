@@ -27,7 +27,7 @@ node --import tsx --import=#tests/css --test tests/landing.test.ts tests/landing
 
 ## Change the name
 
-The name, tagline, wordmark, npm package, source repository and contact address live in one file, `site/landing/brand.ts`. The page title, the share tags, the wordmark, every sentence that names the product, every Source and Docs link, the clone commands, the design-partner link, the structured data and the generated share card (`og.png`) all read from it. Edit the `kipdeck` entry in `BRANDS`, or add one and pick it at build time:
+The name, tagline, wordmark, npm package, source repository and contact address live in one file, `site/landing/brand.ts`. The page title, the share tags, the wordmark, every sentence that names the product, every Source and Docs link, the clone commands, the design-partner link, the structured data and the generated share card (`og.png`) all read from it. The logo is not in `brand.ts`: Kip's mark in the header, the mini inbox and the footer, the favicons (`favicon-alert.svg` lights his light while someone waits), `apple-touch-icon.png` and the share card's mark are written from `src/shared/logo.ts` by `npm run logo` ([the logo](../../docs/design.md#the-logo)). Edit the `kipdeck` entry in `BRANDS`, or add one and pick it at build time:
 
 ```bash
 KIPDECK_BRAND=<id> npm run build:site

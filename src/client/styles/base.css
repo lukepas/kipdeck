@@ -19,6 +19,8 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 .ico { flex: none; display: inline-block; vertical-align: -3px; }
 .brand { display: inline-flex; align-items: center; gap: 9px; color: var(--text); white-space: nowrap; }
 .brand-mark { flex: none; display: block; }
+/* Kip's light (src/shared/logo.ts) comes on in Signal while anyone needs you, with the favicon's (ui/brand.ts). */
+.logo-lit .brand-mark .signal { fill: var(--signal); }
 .brand-word { font-family: var(--font-display); font-stretch: var(--stretch-display); font-weight: 600; font-size: 14px; letter-spacing: .06em; line-height: 1; }
 .brand-word b { font-weight: 600; color: var(--text); }
 .brand-word span { color: var(--muted); }

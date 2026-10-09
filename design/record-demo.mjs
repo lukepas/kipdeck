@@ -272,7 +272,8 @@ const card = async (name, html) => {
   await page.screenshot({ path: path.join(RAW, `${name}.png`) });
   await page.close();
 };
-const mark = `<svg width="56" height="56" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z" fill="#13171c"/><path d="m4 17 8-8 8 8M4 22l8-8 8 8" fill="none" stroke="#13171c" stroke-width="2.5"/></svg>`;
+// Kip's mark (src/shared/logo.ts; npm run logo keeps this copy in step).
+const mark = `<svg data-logo="mark" width="56" height="56" viewBox="0 0 32 32" fill="#13171c" aria-hidden="true"><path d="M4.7 21.6A11.3 9.4 0 1 1 27.3 21.6A11.3 9.4 0 1 1 4.7 21.6ZM10.5 16.9C5.3 12.3 3.4 5.4 4.7 1C8.5 3.6 11.5 10.1 10.5 16.9ZM21.5 16.9C20.5 10.1 23.5 3.6 27.3 1C28.6 5.4 26.7 12.3 21.5 16.9ZM8.4 21.1A3 3 0 1 0 14.4 21.1A3 3 0 1 0 8.4 21.1ZM11.5 20.1A0.8 0.8 0 1 1 13.1 20.1A0.8 0.8 0 1 1 11.5 20.1ZM17.6 21.1A3 3 0 1 0 23.6 21.1A3 3 0 1 0 17.6 21.1ZM20.7 20.1A0.8 0.8 0 1 1 22.3 20.1A0.8 0.8 0 1 1 20.7 20.1ZM15.4 14.1C13.8 11.5 14.8 8.1 16.9 6.6A0.5 0.5 0 0 1 17.5 7.4C15.5 9 15 10.8 16.6 13.4Z"/><path class="signal" d="M15.6 6A2.1 2.1 0 1 1 19.8 6A2.1 2.1 0 1 1 15.6 6Z"/></svg>`;
 await card('title', `<div style="max-width:1000px;text-align:center"><div>${mark}</div><h1 style="font-size:54px;line-height:1.15;letter-spacing:-.02em;margin:28px 0 18px">Your coding agents spend the day waiting on you.</h1><p style="font-size:30px;color:#4a5560;margin:0">Kipdeck shows who is waiting, for how long, and gets them moving again.</p></div>`);
 const lines = started
   .split('\n')

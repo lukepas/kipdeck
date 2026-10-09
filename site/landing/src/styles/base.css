@@ -96,10 +96,10 @@ header.top.scrolled { background: color-mix(in srgb, var(--void) 82%, transparen
 .tier-lite header.top.scrolled, .tier-min header.top.scrolled { -webkit-backdrop-filter: none; backdrop-filter: none; background: color-mix(in srgb, var(--void) 95%, transparent); }
 .top-in { display: flex; align-items: center; gap: 22px; height: 64px; max-width: calc(var(--wrap) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
 .lockup { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); margin-right: auto; }
+/* Kip's mark (src/shared/logo.ts): his face in currentColor; only his light (.signal) turns Signal. */
 .mark { flex: none; overflow: visible; }
-.mark-lead { fill: currentColor; }
-.mark-trail { fill: none; stroke: currentColor; stroke-width: 2.5; }
-.lockup.alert .mark-lead { fill: var(--signal); }
+.mark .signal { transition: fill 300ms var(--ease); }
+.lockup.alert .mark .signal { fill: var(--signal); }
 .wordmark { width: auto; overflow: visible; }
 .wordmark text, .giant text { font-family: var(--font-display); font-stretch: 118%; font-weight: 600; letter-spacing: .06em; font-size: 15px; fill: var(--text); }
 .wm-muted { fill: var(--muted); }

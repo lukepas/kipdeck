@@ -12,6 +12,7 @@ import path from 'node:path';
 import { build } from 'vite';
 // @ts-expect-error a plain .mjs script with no types
 import { buildSite } from '../site/build.mjs';
+import { MARK } from '../src/shared/logo.ts';
 
 const root = path.join(import.meta.dirname, '..');
 const OLD = /mergeline|ugc ?-?army/i;
@@ -82,6 +83,8 @@ test("the app's sign-in, join and claim pages draw the same KIP DECK lockup as u
     const html = readFileSync(path.join(app, f), 'utf8');
     assert.match(html, /<span class="wordmark" aria-hidden="true">KIP<span>DECK<\/span><\/span>/, f);
     assert.match(html, /<title>Kipdeck - /, f);
+    // Kip's mark from src/shared/logo.ts, as ui/brand.ts draws it, survives the build.
+    assert.ok(html.includes(`data-logo="mark"`) && html.includes(MARK.signal), `${f} draws Kip's mark`);
   }
   assert.match(readFileSync(path.join(root, 'src/client/ui/brand.ts'), 'utf8'), /<b>KIP<\/b><span>DECK<\/span>/);
 });

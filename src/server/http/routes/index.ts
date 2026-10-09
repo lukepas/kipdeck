@@ -40,6 +40,7 @@ export const routes: readonly Route[] = [
   pageRoutes.claim,
   pageRoutes.join,
   pageRoutes.favicon,
+  pageRoutes.appIcon,
   // Proof of Merge (Labs, testnets), each only while the lab is on.
   // The public "Fund this issue" Action (devnet), for opted-in repositories only.
   proof(actionRoutes.manifest),

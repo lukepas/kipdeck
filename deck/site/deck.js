@@ -39,11 +39,13 @@
     el.textContent = parts.join('  /  ');
   });
 
-  /* --- 2. Footer on every slide --- */
+  /* --- 2. Footer on every slide, led by Kip's small mark (the #foot-mark template in index.html) --- */
+  var footMark = doc.getElementById('foot-mark');
+  footMark = footMark ? footMark.innerHTML.trim() : '';
   slides.forEach(function (s, i) {
     var f = doc.createElement('div');
     f.className = 'foot';
-    f.innerHTML = '<span><b>' + cfg.name + '</b> &middot; <span class="foot-x">Investor deck &middot; </span>Data as of ' + cfg.asOf + '</span><span><b>' + String(i + 1).padStart(2, '0') + '</b> / ' + String(total).padStart(2, '0') + '</span>';
+    f.innerHTML = '<span>' + footMark + '<b>' + cfg.name + '</b> &middot; <span class="foot-x">Investor deck &middot; </span>Data as of ' + cfg.asOf + '</span><span><b>' + String(i + 1).padStart(2, '0') + '</b> / ' + String(total).padStart(2, '0') + '</span>';
     s.appendChild(f);
     s.setAttribute('aria-label', (i + 1) + ' of ' + total + ': ' + (s.dataset.title || ''));
   });

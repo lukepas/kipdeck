@@ -6,17 +6,14 @@
     <meta name="theme-color" content="#0d131a" />
     <title>Deck - Kipdeck</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
     <!-- The loading screen: up from the first paint until the deck is ready to be seen (see ui/loading.ts). -->
     <div id="loading" role="status" aria-live="polite">
       <div class="loading-card">
-        <svg class="loading-mark" viewBox="0 0 24 24" aria-hidden="true">
-          <path class="c c1" d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z" fill="currentColor" />
-          <path class="c c2" d="m4 17 8-8 8 8" fill="none" stroke="currentColor" stroke-width="2.5" />
-          <path class="c c3" d="m4 22 8-8 8 8" fill="none" stroke="currentColor" stroke-width="2.5" />
-        </svg>
+        <svg class="loading-mark" data-logo="mark" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M4.7 21.6A11.3 9.4 0 1 1 27.3 21.6A11.3 9.4 0 1 1 4.7 21.6ZM10.5 16.9C5.3 12.3 3.4 5.4 4.7 1C8.5 3.6 11.5 10.1 10.5 16.9ZM21.5 16.9C20.5 10.1 23.5 3.6 27.3 1C28.6 5.4 26.7 12.3 21.5 16.9ZM8.4 21.1A3 3 0 1 0 14.4 21.1A3 3 0 1 0 8.4 21.1ZM11.5 20.1A0.8 0.8 0 1 1 13.1 20.1A0.8 0.8 0 1 1 11.5 20.1ZM17.6 21.1A3 3 0 1 0 23.6 21.1A3 3 0 1 0 17.6 21.1ZM20.7 20.1A0.8 0.8 0 1 1 22.3 20.1A0.8 0.8 0 1 1 20.7 20.1ZM15.4 14.1C13.8 11.5 14.8 8.1 16.9 6.6A0.5 0.5 0 0 1 17.5 7.4C15.5 9 15 10.8 16.6 13.4Z"/><path class="signal" d="M15.6 6A2.1 2.1 0 1 1 19.8 6A2.1 2.1 0 1 1 15.6 6Z"/></svg>
         <div class="loading-name">KIP<span>DECK</span></div>
         <div class="loading-bar" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span class="loading-fill"></span></div>
         <p class="loading-say">Loading</p>
@@ -29,7 +26,7 @@
         <div id="compass"></div>
         <header class="topbar">
           <span class="brand" aria-label="Kipdeck">
-            <svg class="brand-mark" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z" fill="currentColor" /><path d="m4 17 8-8 8 8M4 22l8-8 8 8" fill="none" stroke="currentColor" stroke-width="2.5" /></svg>
+            <svg class="brand-mark" data-logo="mark" width="24" height="24" viewBox="0 0 32 32" fill="currentColor" aria-hidden="true"><path d="M4.7 21.6A11.3 9.4 0 1 1 27.3 21.6A11.3 9.4 0 1 1 4.7 21.6ZM10.5 16.9C5.3 12.3 3.4 5.4 4.7 1C8.5 3.6 11.5 10.1 10.5 16.9ZM21.5 16.9C20.5 10.1 23.5 3.6 27.3 1C28.6 5.4 26.7 12.3 21.5 16.9ZM8.4 21.1A3 3 0 1 0 14.4 21.1A3 3 0 1 0 8.4 21.1ZM11.5 20.1A0.8 0.8 0 1 1 13.1 20.1A0.8 0.8 0 1 1 11.5 20.1ZM17.6 21.1A3 3 0 1 0 23.6 21.1A3 3 0 1 0 17.6 21.1ZM20.7 20.1A0.8 0.8 0 1 1 22.3 20.1A0.8 0.8 0 1 1 20.7 20.1ZM15.4 14.1C13.8 11.5 14.8 8.1 16.9 6.6A0.5 0.5 0 0 1 17.5 7.4C15.5 9 15 10.8 16.6 13.4Z"/><path class="signal" d="M15.6 6A2.1 2.1 0 1 1 19.8 6A2.1 2.1 0 1 1 15.6 6Z"/></svg>
             <span class="brand-word" aria-hidden="true"><b>KIP</b><span>DECK</span></span>
           </span>
           <div class="project" id="project" role="button" tabindex="0" title="Projects: switch project">
