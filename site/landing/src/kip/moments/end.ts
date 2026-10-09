@@ -1,4 +1,4 @@
-// 12 End. The finale: as the footer comes up, Kip dashes in along the giant wordmark's baseline from
+// 11 End. The finale: as the footer comes up, Kip dashes in along the giant wordmark's baseline from
 // the right, skids and squashes in the empty space after the last letter, and as the wordmark opens
 // to its full width he throws both arms up and one green sweep rings out from the wand (no
 // confetti, as in the deck). Then he leaps up onto the letters and runs their tops, out to the M and

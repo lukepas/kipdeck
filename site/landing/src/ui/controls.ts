@@ -1,7 +1,6 @@
 // The page's plain controls: the theme button, Copy, Try the demo, the top bar's backdrop, and the
 // magnetic primary button. Each works with a keyboard and without motion.
 import { env } from '../engine/env';
-import { wait } from './wait';
 
 export function themeButton() {
   const root = document.documentElement;
@@ -25,7 +24,7 @@ export function announce(text: string) {
   setTimeout(() => (el.textContent = text), 30);
 }
 
-/** Copy buttons: the command, or a note that the browser would not. Copying answers the waiting agent too. */
+/** Copy buttons: the command, or a note that the browser would not. Copying answers nothing: only the visitor does. */
 export function copyButtons(onCopy: (btn: HTMLElement) => void) {
   document.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -41,9 +40,31 @@ export function copyButtons(onCopy: (btn: HTMLElement) => void) {
       };
       if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(() => done(true), () => done(false));
       else done(false);
-      wait.clear();
       onCopy(btn);
     });
+  });
+}
+
+/** Commands set as their && steps, so a line breaks only between steps (and an address only after
+ *  a slash), never inside a word. The text stays the same for copying and for a screen reader. */
+export function commandSteps() {
+  document.querySelectorAll<HTMLElement>('.cmd-text').forEach((el) => {
+    if (el.children.length) return; // the Labs command holds its own buttons
+    const steps = (el.textContent ?? '').split(' && ');
+    if (steps.length < 2 && !/\/\//.test(steps[0])) return;
+    el.replaceChildren(
+      ...steps.flatMap((step, i) => {
+        const span = document.createElement('span');
+        span.className = 'step';
+        // A break opportunity after each slash of an address (a <wbr> adds no text).
+        step.split(/(?<=\/)(?=[^/])/).forEach((part, k) => {
+          if (k) span.append(document.createElement('wbr'));
+          span.append(part);
+        });
+        if (i < steps.length - 1) span.append(' &&');
+        return i ? [' ', span] : [span];
+      }),
+    );
   });
 }
 

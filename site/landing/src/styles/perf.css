@@ -3,26 +3,24 @@
    a size estimate until it has rendered once, then remembers its real size (the auto keyword), so
    the scrollbar is close from the start and nothing on screen moves when one renders. The problem
    section is left out: its docking bar is position: fixed, which containment would trap. */
-main > :is(#loop, #why, #yours, #phone, #numbers, #labs, #proof, #teams), #end { content-visibility: auto; }
+main > :is(#loop, #why, #yours, #phone, #numbers, #labs, #teams), #end { content-visibility: auto; }
 #loop { contain-intrinsic-size: auto 485vh; }
-#why { contain-intrinsic-size: auto 1010px; }
-#yours { contain-intrinsic-size: auto 1580px; }
+#why { contain-intrinsic-size: auto 1120px; }
+#yours { contain-intrinsic-size: auto 1680px; }
 #phone { contain-intrinsic-size: auto 890px; }
-#numbers { contain-intrinsic-size: auto 760px; }
-#labs { contain-intrinsic-size: auto 1920px; }
-#proof { contain-intrinsic-size: auto 980px; }
-#teams { contain-intrinsic-size: auto 1020px; }
-#end { contain-intrinsic-size: auto 930px; }
+#numbers { contain-intrinsic-size: auto 715px; }
+#labs { contain-intrinsic-size: auto 1375px; }
+#teams { contain-intrinsic-size: auto 1030px; }
+#end { contain-intrinsic-size: auto 665px; }
 @media (max-width: 899px), (max-height: 599px) {
   #loop { contain-intrinsic-size: auto 1440px; }
 }
 @media (max-width: 720px) {
-  #why { contain-intrinsic-size: auto 2050px; }
-  #yours { contain-intrinsic-size: auto 1990px; }
-  #phone { contain-intrinsic-size: auto 1200px; }
-  #numbers { contain-intrinsic-size: auto 870px; }
-  #labs { contain-intrinsic-size: auto 2620px; }
-  #proof { contain-intrinsic-size: auto 1270px; }
-  #teams { contain-intrinsic-size: auto 1480px; }
-  #end { contain-intrinsic-size: auto 1180px; }
+  #why { contain-intrinsic-size: auto 2060px; }
+  #yours { contain-intrinsic-size: auto 2270px; }
+  #phone { contain-intrinsic-size: auto 1240px; }
+  #numbers { contain-intrinsic-size: auto 840px; }
+  #labs { contain-intrinsic-size: auto 2280px; }
+  #teams { contain-intrinsic-size: auto 1535px; }
+  #end { contain-intrinsic-size: auto 656px; }
 }

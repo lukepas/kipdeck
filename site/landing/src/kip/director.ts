@@ -9,7 +9,7 @@ import { every } from '../engine/loop';
 import { wait } from '../ui/wait';
 import type { Kit, Face } from './kit';
 import { stageHost, pinned, onPinChange, dropStages, view, syncView, type Host } from './hosts';
-import { obstacles, pick, clearSpan, onScreen, boxAt, roomAt, clear, type Spot, type Rect } from './perch';
+import { obstacles, pick, clearSpan, onScreen, header, boxAt, roomAt, clear, type Spot, type Rect } from './perch';
 import { MOMENTS } from './moments/index';
 import { cornerSpot, cornerClear, peekUp, peekDown } from './corner';
 import { probeSpots } from './probe';
@@ -54,7 +54,6 @@ export interface Director {
   probe(id: string): unknown;
 }
 
-const HEADER = 66;
 
 export function direct(kit: Kit, doc: Host, fixed: Host, lite: boolean): Director {
   const sections = [...document.querySelectorAll<HTMLElement>('main > [data-scene]')];
@@ -111,11 +110,11 @@ export function direct(kit: Kit, doc: Host, fixed: Host, lite: boolean): Directo
     if (owner?.want.id === id) {
       // Keep him while his spot is on screen below the header.
       const p = owner.run.host.toClient(owner.run.spot.x, owner.run.spot.y);
-      return onScreen(boxAt({ ...owner.run.spot, ...p }), HEADER) ? Math.abs(p.y - mid) : null;
+      return onScreen(boxAt({ ...owner.run.spot, ...p }), header()) ? Math.abs(p.y - mid) : null;
     }
     const r = sec.getBoundingClientRect();
-    if (r.bottom < HEADER || r.top > view.h) return null;
-    const s = def.spots(sec).find((sp) => onScreen(boxAt(sp), HEADER + 8) && sp.y < view.h - 24);
+    if (r.bottom < header() || r.top > view.h) return null;
+    const s = def.spots(sec).find((sp) => onScreen(boxAt(sp), header() + 8) && sp.y < view.h - 24);
     return s ? Math.abs(s.y - mid) : null;
   }
 
@@ -130,7 +129,7 @@ export function direct(kit: Kit, doc: Host, fixed: Host, lite: boolean): Directo
     const label = labelOf(sec);
     const lr = label?.getBoundingClientRect();
     const y = lr && lr.height ? lr.top + lr.height / 2 : sec.getBoundingClientRect().top;
-    return y > HEADER + 96 * size() + 8 && y < view.h - 40;
+    return y > header() + 96 * size() + 8 && y < view.h - 40;
   }
 
   /** Whether the coming section's moment will want him within the next 200 px of scroll down: then
@@ -498,7 +497,7 @@ export function direct(kit: Kit, doc: Host, fixed: Host, lite: boolean): Directo
     else {
       // The hairline, only while it is low enough on screen to stand on; otherwise this boundary
       // rests a moment (it is asked again as the page moves).
-      if (!(floorY > HEADER + 96 * s + 8 && floorY < view.h - 40)) {
+      if (!(floorY > header() + 96 * s + 8 && floorY < view.h - 40)) {
         rest.set(w.id, performance.now() + 500);
         return;
       }
@@ -561,7 +560,7 @@ export function direct(kit: Kit, doc: Host, fixed: Host, lite: boolean): Directo
     const sp = { x, y, s, face: 'l' as const };
     const W = document.documentElement.clientWidth;
     const b = boxAt(sp);
-    if (!onScreen(b, HEADER + 8) || b.r > W - 16) return null;
+    if (!onScreen(b, header() + 8) || b.r > W - 16) return null;
     if (!clear(b, obs) || !clear(boxAt(sp, 4, 36), prevObs)) return null;
     const span = clearSpan(y, x, s, obs, Math.max(ruleL + 20 * s, 16 + 37 * s), Math.min(ruleR - 20 * s, W - 16 - 37 * s));
     return span ? { x, y, span } : null;
@@ -705,7 +704,7 @@ export function direct(kit: Kit, doc: Host, fixed: Host, lite: boolean): Directo
         const n = kit.now();
         const host = kit.place as Host;
         const cy = host.toClient(n.x, n.y).y;
-        overHeader = cy - kit.h * kit.zs < HEADER - 2;
+        overHeader = cy - kit.h * kit.zs < header() - 2;
       }
       // What wants him is measured ten times a second, not every frame: each measure reads layout,
       // and a read in every frame of a scroll doubles the page's layout work.

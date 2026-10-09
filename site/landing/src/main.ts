@@ -15,7 +15,7 @@ import { SCENES, preloadScenes } from './scenes/index';
 import { mountHero } from './scenes/hero';
 import { countUp } from './engine/count';
 import { env, tier } from './engine/env';
-import { themeButton, copyButtons, tryDemo, topBar, magnetic } from './ui/controls';
+import { themeButton, copyButtons, tryDemo, topBar, magnetic, commandSteps } from './ui/controls';
 import { waitlist } from './ui/waitlist';
 import { watchFilm } from './ui/watch';
 import { soundButton, cue } from './ui/sound';
@@ -39,6 +39,7 @@ root.classList.add(`tier-${tier}`);
 const hero = document.querySelector<HTMLElement>('[data-scene="hero"]');
 const heroScene = hero ? (mountHero(hero) as ReturnType<typeof mountHero>) : null;
 themeButton();
+commandSteps();
 topBar();
 tryDemo();
 // What is below the fold or behind a click wires up in the next task, so the opening's first frame

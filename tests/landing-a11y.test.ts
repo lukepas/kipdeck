@@ -30,7 +30,8 @@ import { serve } from '../site/serve.mjs';
 import { measure, broken } from '../site/perf.mjs';
 
 const dir = mkdtempSync(path.join(tmpdir(), 'landing-a11y-'));
-await buildSite({ env: {}, outDir: dir, card: false });
+// Built as the page will be once the source is public: the clone command and the terminal are on it.
+await buildSite({ env: { KIPDECK_REPO_PUBLIC: '1' }, outDir: dir, card: false });
 const { server, url } = await serve(dir, 0);
 const html = readFileSync(path.join(dir, 'index.html'), 'utf8');
 
@@ -193,10 +194,13 @@ test('drawings are hidden from screen readers, every control has a name, and foc
       const cs = getComputedStyle(el);
       const ring = (cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0) || (cs.boxShadow !== 'none' && cs.boxShadow !== '');
       const r = el.getBoundingClientRect();
-      return { id: `${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}.${el.className}`.slice(0, 80), ring, onScreen: r.bottom > 0 && r.top < innerHeight && r.width > 0 };
+      // Focus has come back round to an element it already visited: the whole page has been walked.
+      const again = el.hasAttribute('data-tab-seen');
+      el.setAttribute('data-tab-seen', '');
+      return { id: `${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}.${el.className}`.slice(0, 80), ring, onScreen: r.bottom > 0 && r.top < innerHeight && r.width > 0, again };
     });
     if (!s) break;
-    if (stops.includes(s.id) && stops.length > 10) break;
+    if (s.again) break;
     stops.push(s.id);
     if (!s.ring || !s.onScreen) invisible.push(`${s.id} ring=${s.ring} onScreen=${s.onScreen}`);
   }
@@ -248,7 +252,7 @@ test('Copy, Try the demo, Watch, Merge, the Labs flags and the design-partner li
   assert.equal(await flag.getAttribute('aria-pressed'), 'true');
   // The design-partner link is a real link, reached by the keyboard.
   await page.locator('.apply-link').focus();
-  assert.equal(await page.evaluate(() => document.activeElement?.matches('a.apply-link[href*="/issues/new"]')), true);
+  assert.equal(await page.evaluate(() => document.activeElement?.matches('a.apply-link[href^="mailto:"]')), true);
   assert.deepEqual(errors, []);
 });
 

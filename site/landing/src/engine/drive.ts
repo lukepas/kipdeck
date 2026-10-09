@@ -9,6 +9,7 @@
 // - With less motion nothing runs: the HTML already holds every scene's final, readable state.
 import { every, clamp, type Task } from './loop';
 import { env } from './env';
+import { onArrive } from './arrive';
 
 /** Where tracks pin. The same query is in styles/pins.css. */
 export const PIN_MEDIA = '(min-width: 900px) and (min-height: 600px)';
@@ -47,7 +48,7 @@ export function drive(track: HTMLElement, update: Update, opts: DriveOptions = {
   let raw = 0;
   let shown = -1;
   let stopFrame: (() => void) | null = null;
-  let io: IntersectionObserver | null = null;
+  let io: { disconnect(): void } | null = null;
   let played = false;
   let rectTop = 0, rectH = 0;
 
@@ -85,14 +86,15 @@ export function drive(track: HTMLElement, update: Update, opts: DriveOptions = {
   function startFrames() {
     if (stopFrame) return;
     // Wake only while the track is near the viewport.
-    io = new IntersectionObserver(([e]) => {
+    const near = new IntersectionObserver(([e]) => {
       if (e.isIntersecting && !stopFrame) stopFrame = every(task);
       else if (!e.isIntersecting && stopFrame) {
         stopFrame();
         stopFrame = null;
       }
     }, { rootMargin: '10% 0px' });
-    io.observe(track);
+    near.observe(track);
+    io = near;
   }
 
   function play() {
@@ -121,13 +123,9 @@ export function drive(track: HTMLElement, update: Update, opts: DriveOptions = {
     track.dataset.mode = mode;
     if (mode === 'play') {
       if (!played) update((shown = 0), 0);
-      io = new IntersectionObserver(([e]) => {
-        if (e.isIntersecting) {
-          io?.disconnect();
-          play();
-        }
-      }, { threshold: 0.3 });
-      io.observe(track);
+      // As soon as the track's top is in the reader's view, whatever its height (a threshold on a
+      // track taller than the window could never be met).
+      io = { disconnect: onArrive(track, play, 0.85) };
     } else {
       // First frame at once, so the scene never shows its final state before it starts.
       const r = track.getBoundingClientRect();

@@ -22,7 +22,10 @@ canvas.swarm { display: none; }
 
 /* ---------- 02 Funnel ---------- */
 .funnel .staged canvas.swarm { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
-.funnel .staged .two-col { position: relative; z-index: 2; align-items: center; }
+/* The words sit over the swarm (the units pass under the lede and the chips, never across them);
+   the card stays under it, so the units still pour into its mouth. */
+.funnel .staged .two-col { position: relative; align-items: center; }
+.funnel .staged .col-copy { position: relative; z-index: 4; }
 /* A row that has not filled yet is a dashed slot with its vendor's chip in it; --fill (0 to 1) turns
    it into the real row. */
 .funnel .staged .ranked-list .row {
@@ -33,9 +36,9 @@ canvas.swarm { display: none; }
 .funnel .staged .ranked-list .row.needs { background-color: color-mix(in srgb, color-mix(in srgb, var(--surface-2) 70%, var(--tint-signal)) calc(var(--fill, 1) * 100%), transparent); }
 .funnel .staged .ranked-list .row > :not(.sign), .funnel .staged .ranked-list .row::before { opacity: var(--fill, 1); }
 .funnel .staged .app.ranked::before {
-  /* The mouth: a Signal hairline traces the card while the units pour in. */
+  /* The mouth: an accent hairline traces the card while the units pour in (Signal stays on the waits). */
   content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--signal) calc(var(--frame, 0) * 60%), transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) calc(var(--frame, 0) * 45%), transparent);
 }
 .funnel .staged .ranked-list .row, .funnel .staged .ranked-list .sec { will-change: transform, opacity; }
 .funnel .staged .branch { clip-path: inset(0 100% 0 0); }
@@ -70,6 +73,8 @@ canvas.swarm { display: none; }
   font-size: 13px; color: var(--text); opacity: 0;
 }
 .problem .staged .dock-note .glyph { width: 9px; height: 9px; }
+/* Only a pinned stage has room for the note above the heading; anywhere else it follows the figure. */
+.problem .staged:not([data-mode='pin']) .dock-note { position: static; margin: 20px var(--gutter) 0; transform: none; }
 .problem .dock { display: block; position: fixed; left: 0; top: 0; z-index: 61; opacity: 0; pointer-events: none; background: var(--signal); border-radius: 1px; transform-origin: 0 0; box-shadow: 0 0 18px var(--signal); }
 .waitclock.docked .waitclock-bar { animation: docked 900ms var(--ease-out); }
 @keyframes docked { 0% { box-shadow: 0 0 0 var(--signal); filter: brightness(1.8); } 30% { box-shadow: 0 0 34px 4px var(--signal); } 100% { box-shadow: 0 0 12px var(--signal); filter: none; } }

@@ -52,11 +52,11 @@
     <nav class="links" aria-label="Sections">
       <a href="#loop">The loop</a>
       <a href="#why">Why</a>
+      <a href="#yours">Security</a>
       <a href="#labs">Labs</a>
       <a href="#teams">Teams</a>
-      <a data-link="repo" href="{{repo}}" rel="noopener noreferrer">Source</a>
     </nav>
-    <p class="pulse mono" aria-live="off"><i class="glyph g-needs-you"></i><span data-pulse-count>1</span> waiting on you <span class="pulse-sep" aria-hidden="true">/</span> <span data-pulse-wait>0:07</span></p>
+    <p class="pulse mono" aria-live="off"><i class="glyph g-needs-you"></i><span data-pulse-count>1</span><span class="pulse-words"> waiting<span class="pulse-long"> on you</span></span> <span class="pulse-sep" aria-hidden="true">/</span> <span data-pulse-wait>0:07</span></p>
     <button class="theme sound" type="button" id="sound" aria-pressed="false" aria-label="Sound"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path class="spk" d="M4 9.5h3.5L12 5.5v13l-4.5-4H4Z"/><path class="wave" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="mute" d="m15.5 9.5 5 5m0-5-5 5"/></svg></button>
     <button class="theme" type="button" id="theme" aria-label="Switch color theme"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16Z"/></svg></button>
   </div>
@@ -72,8 +72,15 @@
     <div class="hero-copy">
       <p class="label"><span class="num">01</span> {{name}} <span class="label-sep" aria-hidden="true">/</span> <span class="label-tag">{{tagline}}</span></p>
       <h1 id="hero-h" class="display hero-h"><span class="w" data-t="Your"><span>Your</span></span> <span class="w" data-t="agents"><span>agents</span></span> <span class="w" data-t="are"><span>are</span></span><br class="hero-br"> <span class="waiting-box"><span class="w waiting" id="waiting">waiting</span><span class="stopwatch mono" id="stopwatch" aria-hidden="true">0:00</span></span> <span class="w" data-t="on"><span>on</span></span> <span class="w" data-t="you."><span>you.</span></span></h1>
-      <p class="lede">One inbox for every coding agent you run: Claude Code, Codex, Cursor, OpenCode and Pi. See who is waiting on you and for how long, answer in one box, review and merge.</p>
+      <p class="lede">Every coding agent you run, in one place. See who is waiting on you and for how long, then answer, review and merge without leaving it.</p>
+      <p class="small hero-sub">Start agents from {{name}}, each on its own branch, or bring one you already started with <code>{{pkg}} attach</code>.</p>
 
+      <div class="cta">
+        <a class="btn primary magnetic" data-link="demo" href="#try-demo">Copy the demo command</a>
+        <button class="btn ghost" type="button" data-watch><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 4.5v15L19.5 12Z"/></svg>Watch 30 seconds</button>
+      </div>
+
+      <!-- runnable -->
       <div class="try" id="try-demo">
         <div class="cmd" data-unpublished>
           <span class="cmd-prompt" aria-hidden="true">$</span>
@@ -88,11 +95,7 @@
         <p class="small demo-note">The demo: five scripted agents on a throwaway repository. No agent CLI, sign-in or model needed.</p>
         <p class="small mono unpublished" data-unpublished>Not on npm yet: <a data-link="repo-run" href="{{repo}}#from-source" rel="noopener noreferrer">run it from source</a>. <code>npx {{pkg}}</code> comes with the release.</p>
       </div>
-
-      <div class="cta">
-        <a class="btn primary magnetic" data-link="demo" href="#try-demo"><i class="glyph g-needs-you" aria-hidden="true"></i>Try the demo</a>
-        <button class="btn ghost" type="button" data-watch><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M7 4.5v15L19.5 12Z"/></svg>Watch 30 seconds</button>
-      </div>
+      <!-- /runnable -->
 
       <ul class="facts" aria-label="At a glance">
         <li><b class="mono" data-count="5">5</b> agent CLIs in one list</li>
@@ -104,7 +107,7 @@
     <figure class="app mini" id="mini-inbox" aria-label="The {{name}} inbox, with demo data">
       <div class="app-bar">
         <span class="app-brand"><svg class="mark" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path class="mark-lead" d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z"/><path class="mark-trail" d="m4 17 8-8 8 8M4 22l8-8 8 8"/></svg>{{name}}</span>
-        <span class="app-pulse mono"><span><b data-mini-waiting>1</b> waiting on you</span><span><b data-mini-median>0:07</b> median wait</span><span><b data-mini-merged>0</b> merged today</span></span>
+        <span class="app-pulse mono"><span><b data-mini-waiting>1</b> waiting on you</span><span><b data-mini-median>0:07</b> longest wait</span><span><b data-mini-merged>0</b> merged today</span></span>
       </div>
       <div class="app-list">
         <p class="sec sec-needs"><i class="glyph g-needs-you"></i>Needs you <span class="count">1</span></p>
@@ -112,17 +115,19 @@
           <svg class="st" viewBox="0 0 24 24" aria-hidden="true"><path class="st-shape" d="M12 3.5 20.5 12 12 20.5 3.5 12Z"/><path class="st-check" d="m5 12.5 4.5 4.5L19 7.5"/></svg>
           <span class="sign mono">Cx</span>
           <span class="row-main"><span class="row-title">Fix the flaky checkout test</span><span class="row-sub">Update the snapshot or fix the selector?</span></span>
-          <span class="row-age mono" aria-hidden="true">waiting <span data-row-wait>0:07</span></span>
+          <span class="row-age mono" aria-hidden="true"><span class="age-w">waiting </span><span data-row-wait>0:07</span></span>
+          <span class="sr" data-row-wait-sr>, waiting 0:07, </span>
           <span class="row-btn">Answer</span>
           <i class="waitbar" aria-hidden="true"><i></i></i>
         </button>
         <p class="sec sec-review"><i class="glyph g-review"></i>To review <span class="count">1</span></p>
-        <div class="row review">
+        <button class="row review" type="button" data-merge>
           <i class="glyph g-review st" aria-hidden="true"></i>
           <span class="sign mono">CC</span>
-          <span class="row-main"><span class="row-title">Add rate limiting to /api/login</span><span class="row-sub">3 files, +70 -0</span></span>
+          <span class="row-main"><span class="row-title">Add rate limiting to /api/login</span><span class="row-sub">3 files, +70 -0, tests pass</span></span>
           <span class="row-age mono">ready 1m</span>
-        </div>
+          <span class="row-btn merge">Merge</span>
+        </button>
         <p class="sec sec-working"><i class="glyph g-working"></i>Working <span class="count">3</span></p>
         <div class="row working"><i class="glyph g-working st" aria-hidden="true"></i><span class="sign mono">Cu</span><span class="row-main"><span class="row-title">Write the README quickstart</span><span class="row-sub">Write: docs/quickstart.md</span></span><span class="row-age mono">2m</span></div>
         <div class="row working"><i class="glyph g-working st" aria-hidden="true"></i><span class="sign mono">OC</span><span class="row-main"><span class="row-title">Port the settings page to the form kit</span><span class="row-sub">Edit: web/settings.js</span></span><span class="row-age mono">4m</span></div>
@@ -140,12 +145,12 @@
   <div class="wrap two-col">
     <div class="col-copy">
       <p class="label"><span class="num">02</span> Every vendor, one list</p>
-      <h2 id="funnel-h" class="display"><span class="beat">Five agent CLIs.</span> <span class="beat">Each on its own branch.</span> <span class="beat sig">One list, oldest wait first.</span></h2>
-      <p>Claude Code, Codex and Cursor side by side, with OpenCode and Pi in beta. A vendor's own dashboard only sees its own agents. Here every agent you run is in one list, ranked by who has waited on you longest.</p>
+      <h2 id="funnel-h" class="display"><span class="beat">Five agent CLIs.</span> <span class="beat">Each on its own branch.</span> <span class="beat">One list, oldest wait first.</span></h2>
+      <p>Claude Code, Codex and Cursor CLI side by side, with OpenCode and Pi in beta. A vendor's own inbox only sees its own agents. Here every agent you run is in one list, ranked by who has waited on you longest.</p>
       <ul class="vendors mono" aria-label="Agent CLIs">
         <li><span class="sign">CC</span>Claude Code</li>
         <li><span class="sign">Cx</span>Codex</li>
-        <li><span class="sign">Cu</span>Cursor</li>
+        <li><span class="sign">Cu</span>Cursor CLI</li>
         <li><span class="sign">OC</span>OpenCode <em>beta</em></li>
         <li><span class="sign">Pi</span>Pi <em>beta</em></li>
       </ul>
@@ -201,7 +206,7 @@
             <path class="lane-total" d="M40 232H600"/>
             <text class="lane-sum mono" x="40" y="250">all of it, end to end</text>
           </svg>
-          <figcaption id="lanes-cap" class="mono"><b class="sig" data-blocked>2h 41m</b> blocked today <span class="tag-inline">illustrative</span></figcaption>
+          <figcaption id="lanes-cap" class="mono"><b data-blocked>2h 41m</b> blocked today <span class="tag-inline">illustrative</span></figcaption>
       </figure>
     </div>
   </div>
@@ -237,7 +242,7 @@
     <div class="loop-app">
       <div class="app loop-win" role="group" aria-label="The loop in the app, with demo data">
         <div class="loop-list">
-          <p class="sec sec-needs"><i class="glyph g-needs-you"></i>Needs you <span class="count">0</span></p>
+          <p class="sec sec-needs zero"><i class="glyph g-needs-you"></i>Needs you <span class="count">0</span></p>
           <p class="sec sec-review"><i class="glyph g-review"></i>To review <span class="count">1</span></p>
           <div class="row review"><i class="glyph g-review st" aria-hidden="true"></i><span class="sign mono">Cu</span><span class="row-main"><span class="row-title">Write the README quickstart</span><span class="row-sub">2 files, +38 -4</span></span></div>
           <p class="sec sec-working"><i class="glyph g-working"></i>Working <span class="count">2</span></p>
@@ -250,7 +255,7 @@
           <div class="pane-head">
             <span class="sign mono">CC</span>
             <span class="pane-title"><b>Add rate limiting to /api/login</b><span class="mono">Claude Code / acme-shop / office/add-rate-limiting-to-api-8edc</span></span>
-            <span class="pane-actions"><button class="btn sm send-back" type="button">Send back</button><button class="btn sm primary merge-btn" type="button">Merge</button></span>
+            <span class="pane-actions"><span class="stamp mono" aria-hidden="true"><i class="glyph g-check"></i>Merged</span><button class="btn sm send-back" type="button">Send back</button><button class="btn sm primary merge-btn" type="button">Merge</button></span>
           </div>
           <div class="pane-tabs"><span class="tab-term">Terminal</span><span class="tab-changes on">Changes <i class="count tab-count">3</i></span><span>Log</span><i class="tab-ink" aria-hidden="true"></i></div>
           <div class="pane-body">
@@ -265,7 +270,7 @@
             <div class="qcard">
               <div class="qcard-in">
                 <svg class="qcard-edge" aria-hidden="true"><rect x=".5" y=".5" width="100%" height="100%" rx="3" pathLength="1"/></svg>
-                <p class="qcard-k mono"><i class="glyph g-needs-you"></i><span class="qk-who">Claude Code asks</span> <span class="row-age">waited <span class="qk-wait">0:23</span></span></p>
+                <p class="qcard-k mono done"><i class="glyph g-needs-you"></i><span class="qk-who">Answered</span> <span class="row-age"><span class="qk-w">waited</span> <span class="qk-wait">0:23</span></span></p>
                 <p class="qcard-q">Keep the rate limit in memory, or in Redis?</p>
                 <div class="choices"><span class="btn sm on choice">1 In memory</span><span class="btn sm choice">2 Redis</span></div>
                 <div class="reply"><span class="reply-box"><span class="reply-text">In memory for now</span></span><span class="btn sm primary send">Send</span></div>
@@ -300,12 +305,11 @@
         </div>
         <figcaption class="demo-tag mono">Demo data: scripted agents</figcaption>
       </div>
-      <p class="stamp" aria-hidden="true">MERGED</p>
     </div>
   </div>
   </div></div>
   <div class="wrap">
-    <p class="footnote mono">Four clicks from a fresh start to the first merged change, 10.7 s (measured: design/measure-final.mjs, headless Chromium, scripted demo).</p>
+    <p class="footnote mono">Four clicks from a fresh start to the first merged change, 10.7 s (measured: headless Chromium, the scripted demo; how it was measured is in section 06).</p>
   </div>
 </section>
 
@@ -314,17 +318,18 @@
   <div class="wrap">
     <p class="label"><span class="num">05</span> Why not the tools you already have?</p>
     <h2 id="why-h" class="display">The layer across them.</h2>
-    <p class="lede">Vendor dashboards see one vendor. Task boards do not know an agent is blocked. GitHub sees the pull request, not the 23 minutes before it. {{name}} sits across them: cross-vendor, self-hosted, and it measures the wait.</p>
+    <p class="lede">Vendor inboxes see their own platform's agents. Conductor and Superset help one developer run more agents. We stop your team keeping them waiting: {{name}} sits across every agent CLI, runs on your machine, and measures the wait.</p>
     <div class="table-wrap" tabindex="0" role="region" aria-label="Comparison table">
       <table class="why-table">
-        <thead><tr><th scope="col"><span class="sr">What you need</span></th><th scope="col">One vendor's dashboard</th><th scope="col">A task board for agents</th><th scope="col">GitHub pull requests</th><th scope="col">Terminals and tmux</th><th scope="col" class="us">{{name}}</th></tr></thead>
+        <thead><tr><th scope="col"><span class="sr">What you need</span></th><th scope="col">Vendor inboxes <span class="who">GitHub Agent HQ, Codex app, Claude Code</span></th><th scope="col">Agent workbenches <span class="who">Conductor, Superset, Emdash</span></th><th scope="col">Terminals and tmux</th><th scope="col" class="us">{{name}}</th></tr></thead>
         <tbody>
-          <tr><th scope="row">Every agent CLI in one list</th><td data-label="One vendor's dashboard"><span class="no">Its own agents</span></td><td data-label="A task board"><span class="part">If you file them</span></td><td data-label="GitHub pull requests"><span class="no">Once a PR exists</span></td><td data-label="Terminals and tmux"><span class="part">One pane at a time</span></td><td data-label="{{name}}" class="us"><span class="yes">Ranked by wait</span></td></tr>
-          <tr><th scope="row">Knows an agent is blocked on you now</th><td data-label="One vendor's dashboard"><span class="part">Its own agents</span></td><td data-label="A task board"><span class="no">No</span></td><td data-label="GitHub pull requests"><span class="no">No</span></td><td data-label="Terminals and tmux"><span class="part">If you look</span></td><td data-label="{{name}}" class="us"><span class="yes">Top of the list</span></td></tr>
-          <tr><th scope="row">Answer the question in one box</th><td data-label="One vendor's dashboard"><span class="part">In its app</span></td><td data-label="A task board"><span class="no">No</span></td><td data-label="GitHub pull requests"><span class="no">No</span></td><td data-label="Terminals and tmux"><span class="part">Find the terminal</span></td><td data-label="{{name}}" class="us"><span class="yes">Every CLI</span></td></tr>
-          <tr><th scope="row">Review and merge before a PR exists</th><td data-label="One vendor's dashboard"><span class="no">No</span></td><td data-label="A task board"><span class="no">No</span></td><td data-label="GitHub pull requests"><span class="no">No</span></td><td data-label="Terminals and tmux"><span class="part">By hand</span></td><td data-label="{{name}}" class="us"><span class="yes">Or open one</span></td></tr>
-          <tr><th scope="row">Measures how long agents wait on a person</th><td data-label="One vendor's dashboard"><span class="no">No</span></td><td data-label="A task board"><span class="no">No</span></td><td data-label="GitHub pull requests"><span class="no">No</span></td><td data-label="Terminals and tmux"><span class="no">No</span></td><td data-label="{{name}}" class="us"><span class="yes">Per agent and model</span></td></tr>
-          <tr><th scope="row">Runs on your machine</th><td data-label="One vendor's dashboard"><span class="no">Their cloud</span></td><td data-label="A task board"><span class="part">Depends</span></td><td data-label="GitHub pull requests"><span class="no">Their cloud</span></td><td data-label="Terminals and tmux"><span class="yes">Yes</span></td><td data-label="{{name}}" class="us"><span class="yes">Yes, MIT</span></td></tr>
+          <tr><th scope="row">Every agent CLI in one list</th><td data-label="Vendor inboxes"><span class="part">Their platform's agents</span></td><td data-label="Agent workbenches"><span class="part">The ones started in it</span></td><td data-label="Terminals and tmux"><span class="part">One pane at a time</span></td><td data-label="{{name}}" class="us"><span class="yes">Ranked by wait</span></td></tr>
+          <tr><th scope="row">Brings in an agent you already started</th><td data-label="Vendor inboxes"><span class="part">Their own sessions</span></td><td data-label="Agent workbenches"><span class="no">Starts its own</span></td><td data-label="Terminals and tmux"><span class="part">Where you left it</span></td><td data-label="{{name}}" class="us"><span class="yes"><code>{{pkg}} attach</code></span></td></tr>
+          <tr><th scope="row">Shows who is blocked on you, oldest first</th><td data-label="Vendor inboxes"><span class="part">Their own agents</span></td><td data-label="Agent workbenches"><span class="part">One developer's</span></td><td data-label="Terminals and tmux"><span class="part">If you look</span></td><td data-label="{{name}}" class="us"><span class="yes">Top of the list</span></td></tr>
+          <tr><th scope="row">Answer the question in one box</th><td data-label="Vendor inboxes"><span class="part">In their app</span></td><td data-label="Agent workbenches"><span class="part">In each agent's pane</span></td><td data-label="Terminals and tmux"><span class="part">Find the terminal</span></td><td data-label="{{name}}" class="us"><span class="yes">Every CLI</span></td></tr>
+          <tr><th scope="row">Review and merge before a PR exists</th><td data-label="Vendor inboxes"><span class="part">Mostly as a PR</span></td><td data-label="Agent workbenches"><span class="part">Diff, then a PR</span></td><td data-label="Terminals and tmux"><span class="part">By hand</span></td><td data-label="{{name}}" class="us"><span class="yes">Or open one</span></td></tr>
+          <tr><th scope="row">Measures how long agents wait on a person</th><td data-label="Vendor inboxes"><span class="no">No</span></td><td data-label="Agent workbenches"><span class="no">No</span></td><td data-label="Terminals and tmux"><span class="no">No</span></td><td data-label="{{name}}" class="us"><span class="yes">Per agent and model</span></td></tr>
+          <tr><th scope="row">Runs on your machine</th><td data-label="Vendor inboxes"><span class="part">Their cloud or app</span></td><td data-label="Agent workbenches"><span class="yes">Yes</span></td><td data-label="Terminals and tmux"><span class="yes">Yes</span></td><td data-label="{{name}}" class="us"><span class="yes">Yes, MIT</span></td></tr>
         </tbody>
       </table>
     </div>
@@ -336,26 +341,35 @@
   <div class="wrap">
     <p class="label"><span class="num">06</span> Yours</p>
     <h2 id="yours-h" class="display">One command. Your machine. A signed record.</h2>
-    <p class="lede">It runs on your laptop or the team's dev box. {{name}} sends nothing anywhere: your agents talk only to their own model. Open source, MIT. Every merge and send-back is a signed record: the agent and model, who reviewed it, how long it waited.</p>
+    <p class="lede">It runs on your laptop or the team's dev box. {{name}} has no servers of its own, so nothing comes to us: your agents talk only to their own model, and GitHub hears from it only when you open a pull request. Open source, MIT. Every merge and send-back is a signed record: the agent and model, who reviewed it, how long it waited.</p>
+    <ul class="trust" aria-label="Security">
+      <li><i class="glyph g-check" aria-hidden="true"></i><span><b>Localhost by default.</b> Only this computer can reach it until you pass <code>--host</code>.</span></li>
+      <li><i class="glyph g-check" aria-hidden="true"></i><span><b>Your network signs in.</b> Off localhost, everyone needs the password or their own account. For HTTPS, add <code>--self-signed</code> or a reverse proxy.</span></li>
+      <li><i class="glyph g-check" aria-hidden="true"></i><span><b>A record only you can sign.</b> Each merge is signed with an Ed25519 key made on your machine, and the key stays there.</span></li>
+    </ul>
   </div>
   <div class="wrap yours-grid">
+    <!-- runnable -->
     <div class="term-win" id="from-source" role="group" aria-label="Running {{name}} on your own project">
       <div class="term-bar mono"><span class="term-tab on" data-unpublished>your project, from source</span><span class="term-tab on" data-published hidden>your project</span></div>
-<pre class="term-body mono" data-unpublished><span class="tl"><span class="p">$</span> git clone {{repo}} {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install</span>
+<pre class="term-body mono" data-unpublished><span class="tl"><span class="p">$</span> git clone {{repo}} {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm link</span>
 <span class="tl dim">added 412 packages, built client and server</span>
 <span class="tl"><span class="p">$</span> cd ~/code/your-project</span>
-<span class="tl"><span class="p">$</span> node ~/{{folder}}/bin/agent-office.js</span>
-<span class="tl"><span class="ok">ready</span>  https://localhost:4600  <span class="dim">signed in on this computer</span></span></pre>
+<span class="tl"><span class="p">$</span> {{pkg}}</span>
+<span class="tl"><span class="ok">{{name}} is running at</span> http://localhost:4600</span>
+<span class="tl dim">Opened in your browser, signed in.</span></pre>
 <pre class="term-body mono" data-published hidden><span class="tl"><span class="p">$</span> cd ~/code/your-project</span>
 <span class="tl"><span class="p">$</span> npx {{pkg}}</span>
-<span class="tl"><span class="ok">ready</span>  https://localhost:4600  <span class="dim">signed in on this computer</span></span></pre>
+<span class="tl"><span class="ok">{{name}} is running at</span> http://localhost:4600</span>
+<span class="tl dim">Opened in your browser, signed in.</span></pre>
     </div>
+    <!-- /runnable -->
     <ul class="measured" aria-label="Measured on the scripted demo">
       <li><span class="fig"><b class="display" data-count="3.4" data-dec="1">3.4</b><span class="unit">s</span></span><span class="what">to the first agent at work</span></li>
       <li><span class="fig"><b class="display" data-count="10.7" data-dec="1">10.7</b><span class="unit">s</span></span><span class="what">to the first merged change</span></li>
       <li><span class="fig"><b class="display" data-count="4">4</b><span class="unit">clicks</span></span><span class="what">from a fresh start to that merge</span></li>
     </ul>
-    <p class="footnote mono measured-note">Measured: headless Chromium on an M-series Mac, the hero's demo command, a fresh home and repository per run, the scripted demo's stand-in agent. Results in design/shots/fundable/final/measure.json.</p>
+    <p class="footnote mono measured-note">Measured: headless Chromium on an M-series Mac, the hero's demo command, a fresh home and repository per run, the scripted demo's stand-in agent. The script and its results are in the source repository.</p>
 
     <figure class="machine" aria-labelledby="machine-cap">
       <svg class="wall" viewBox="0 0 500 290" aria-hidden="true">
@@ -373,11 +387,11 @@
       </svg>
       <div class="record">
         <ol class="ledger mono" aria-label="Signed merge record, demo data">
-          <li><span>10:41</span><span>CC</span><span>claude-sonnet</span><span>you</span><span class="w">waited 0:00</span><span class="h">a41f9c2</span></li>
-          <li><span>10:25</span><span>Cx</span><span>gpt-5-codex</span><span>you</span><span class="w sig">waited 23:04</span><span class="h">7be0d13</span></li>
+          <li><span>10:41</span><span>CC</span><span>claude-sonnet</span><span>you</span><span class="w">waited 0:23</span><span class="h">a41f9c2</span></li>
+          <li><span>10:25</span><span>Cx</span><span>gpt-5-codex</span><span>you</span><span class="w">waited 23:04</span><span class="h">7be0d13</span></li>
           <li><span>09:58</span><span>Cu</span><span>cursor</span><span>you</span><span class="w">waited 2:12</span><span class="h">03c9e6a</span></li>
         </ol>
-        <figcaption id="machine-cap" class="mono">Your agents talk to their own model; {{name}} sends nothing out. The signed record stays on your machine. <span class="tag-inline">demo data</span> <span class="merged-today">merged today <b data-merged>3</b></span></figcaption>
+        <figcaption id="machine-cap" class="mono">Your agents talk to their own model. {{name}} has no servers to send to. The signed record stays on your machine. <span class="tag-inline">demo data</span> <span class="merged-today">merged today <b data-merged>3</b></span></figcaption>
       </div>
     </figure>
   </div>
@@ -390,13 +404,13 @@
       <p class="label"><span class="num">07</span> Answer from anywhere</p>
       <h2 id="phone-h" class="display">The couch counts.</h2>
       <p>The same inbox on your phone: the list alone, one tap target per row. Answer the question and merge the README without opening a laptop.</p>
-      <p class="small">It serves your network over HTTPS; reach it from outside with your own tunnel or the team's dev box.</p>
+      <p class="small">Start it with <code>--host 0.0.0.0</code> and your phone on the same network signs in with the password. Add <code>--self-signed</code> for HTTPS, or reach it from outside through your own tunnel or the team's dev box.</p>
     </div>
     <figure class="phone" aria-label="The inbox on a phone, with demo data">
       <div class="phone-screen">
         <div class="push"><i class="glyph g-merged push-g"></i><span><b class="push-t">Merged from your phone</b><span class="push-s">Write the README quickstart, 2 files</span></span></div>
         <div class="phone-list">
-          <p class="sec sec-needs"><i class="glyph g-needs-you"></i>Needs you <span class="count">0</span></p>
+          <p class="sec sec-needs zero"><i class="glyph g-needs-you"></i>Needs you <span class="count">0</span></p>
           <p class="sec sec-review"><i class="glyph g-review"></i>To review <span class="count">0</span></p>
           <p class="sec sec-working"><i class="glyph g-working"></i>Working <span class="count">3</span></p>
           <div class="row working ph-cx"><i class="glyph g-working st" aria-hidden="true"></i><span class="sign mono">Cx</span><span class="row-main"><span class="row-title">Fix the flaky checkout test</span><span class="row-sub">Answered. Back at work.</span></span><span class="row-btn mini">Answer</span><i class="waitbar" aria-hidden="true"><i></i></i></div>
@@ -439,7 +453,7 @@
   <div class="wrap">
     <p class="label"><span class="num">09</span> Labs</p>
     <h2 id="labs-h" class="display">What else is in the box.</h2>
-    <p class="lede">Off by default, compiled and tested. An admin switches each one on in Settings, or holds it on from the command line. Each flag adds a view to the same inbox.</p>
+    <p class="lede">Off by default, compiled and tested. The inbox comes first; each lab adds a view to it. An admin switches one on in Settings, or holds it on from the command line.</p>
     <div class="cmd labs-cmd" role="group" aria-label="Labs on the command line. Press a flag to switch its lab on or off.">
       <span class="cmd-prompt" aria-hidden="true">$</span>
       <code class="cmd-text">npm start -- --labs <span class="flags"><button class="flag" type="button" data-lab="bridge" aria-pressed="true">bridge</button>,<button class="flag" type="button" data-lab="ops" aria-pressed="true">ops</button>,<button class="flag" type="button" data-lab="boards" aria-pressed="true">boards</button>,<button class="flag" type="button" data-lab="voice" aria-pressed="true">voice</button>,<button class="flag" type="button" data-lab="meetings" aria-pressed="true">meetings</button></span></code>
@@ -463,12 +477,12 @@
       <li class="tile on" data-lab="boards"><span class="switch" aria-hidden="true"><i></i></span><h3>GitHub boards and queue</h3><p>Issues, pull requests and a task queue that hands the next issue to a free agent.</p><code class="mono">--labs boards</code></li>
       <li class="tile on" data-lab="voice"><span class="switch" aria-hidden="true"><i></i></span><h3>Voice</h3><p>Voice chat, screen sharing and dictation into any prompt box.</p><code class="mono">--labs voice</code></li>
       <li class="tile on" data-lab="meetings"><span class="switch" aria-hidden="true"><i></i></span><h3>Meetings</h3><p>A review bay and a planning whiteboard on any issue or pull request.</p><code class="mono">--labs meetings</code></li>
-      <li class="tile tile-film">
-        <div class="film" id="film">
-          <picture><source media="(max-width: 600px)" srcset="media/poster-9x16.webp"><img src="media/poster-16x9.webp" width="1280" height="720" alt="Poster of the 30 second film: 64 agents, each in its own terminal, a few of them waiting." loading="lazy" decoding="async"></picture>
-          <button class="film-play" type="button" data-watch aria-label="Watch the 30 second film"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M7 4.5v15L19.5 12Z"/></svg></button>
-        </div>
-        <p class="mono small">The 30 second film, drawn in code. Labs and demo data.</p>
+      <li class="tile tile-proof">
+        <span class="badge mono">Testnet only</span>
+        <h3>Proof of Merge</h3>
+        <p>Pay an agent only when a person merges its work: test USDC held in escrow on Solana devnet and released on the merge, with a Base Sepolia attestation of who merged it. Its public ledger is the office's own <code>/pom/</code> page.</p>
+        <p class="pom-tx mono"><a href="https://explorer.solana.com/tx/2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc?cluster=devnet" rel="noopener noreferrer">A real release on devnet: 2rPSWQv7...ZtUc</a> <span class="chip">Solana devnet</span></p>
+        <code class="mono">--labs proof</code>
       </li>
     </ul>
   </div>
@@ -495,12 +509,12 @@
   <div class="wrap ask">
     <div class="ask-copy">
       <h3>Five design partners</h3>
-      <p>No users yet, honestly. We are looking for five design partners who run five or more agents a day, to shape the Team tier with us.</p>
+      <p>Five seats, none taken yet: no users yet, honestly. We are looking for teams who run five or more agents a day, to shape the Team tier with us: the shared queue, the routing, the wait report.</p>
       <ol class="seats" aria-label="Design partner seats, none filled"><li></li><li></li><li></li><li></li><li></li></ol>
     </div>
     <div class="apply">
-      <a class="btn primary apply-link" data-link="partner" href="{{repo}}/issues/new?title=Design%20partner%3A%20&amp;body=How%20many%20agents%20do%20you%20run%20a%20day%2C%20and%20with%20which%20CLIs%3F%0A%0AWhat%20would%20you%20want%20measured%3F%0A%0AHow%20should%20we%20reach%20you%3F" rel="noopener noreferrer">Apply as a design partner</a>
-      <p class="note">Opens a new issue on GitHub with three short questions. It is public, so leave out anything private.</p>
+      <a class="btn primary apply-link" data-link="partner" href="mailto:{{contact}}?subject=Design%20partner&amp;body=How%20many%20agents%20do%20you%20run%20a%20day%2C%20and%20with%20which%20CLIs%3F%0A%0AWhat%20would%20you%20want%20measured%3F%0A%0AHow%20big%20is%20the%20team%3F">Apply as a design partner</a>
+      <p class="note">Opens an email to <span class="mono">{{contact}}</span> with three short questions. A person reads every one.</p>
       <form class="waitlist" id="waitlist-form" data-endpoint="" hidden novalidate>
         <label for="email">The Team tier waitlist: your work email</label>
         <div class="join">
@@ -514,35 +528,7 @@
   </div>
 </section>
 
-<!-- 11 Proof of Merge -->
-<section class="proof" id="proof" aria-labelledby="proof-h" data-scene="proof">
-  <div class="wrap">
-    <p class="label"><span class="num">11</span> Proof of Merge <span class="badge mono">Testnet only</span></p>
-    <h2 id="proof-h" class="display">Paid only when a <span class="sig">human</span> merges.</h2>
-    <p class="lede">A lab for paying agents by outcome: escrowed devnet USDC released only on a human merge, Base Sepolia attestations, ERC-8004 reputation, x402 pay-per-task, and a GitHub Action to fund an issue. Testnets only, test funds only.</p>
-  </div>
-  <div class="wrap proof-grid">
-    <figure class="escrow" aria-label="An escrow released by a merge, testnet">
-      <svg viewBox="0 0 320 220" aria-hidden="true">
-        <g class="coin"><circle cx="160" cy="60" r="22"/><text x="160" y="64" class="mono">USDC</text></g>
-        <rect class="box" x="70" y="96" width="180" height="100" rx="4"/>
-        <path class="lid" d="M70 96h180"/>
-        <g class="lock"><rect x="146" y="128" width="28" height="22" rx="2"/><path class="shackle" d="M151 128v-8a9 9 0 0 1 18 0v8"/></g>
-      </svg>
-      <figcaption class="mono"><span class="chip">devnet, test USDC</span> Test USDC in escrow, released on a human merge</figcaption>
-      <div class="release"><button class="btn sm merge-chip" type="button"><i class="glyph g-merged" aria-hidden="true"></i>Merge, as the human</button><span class="mono amount"><b data-amount>5.00</b> test USDC released</span></div>
-    </figure>
-    <svg class="attest" aria-hidden="true"><path pathLength="1"/></svg>
-    <dl class="receipt mono">
-      <div><dt>Release tx</dt><dd><a href="https://explorer.solana.com/tx/2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc?cluster=devnet" rel="noopener noreferrer">2rPSWQv7...ZtUc</a> <span class="chip">Solana devnet</span></dd></div>
-      <div><dt>Escrow program</dt><dd><a href="https://explorer.solana.com/address/JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6?cluster=devnet" rel="noopener noreferrer">JAH6Zioo...yVQs6</a> <span class="chip">Solana devnet</span></dd></div>
-      <div><dt>EAS schema</dt><dd><a href="https://base-sepolia.easscan.org/schema/view/0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900" rel="noopener noreferrer">0x368e9023...a900</a> <span class="chip">Base Sepolia</span></dd></div>
-      <div class="settled"><dt>Status</dt><dd><i class="glyph g-check"></i>settled on devnet</dd></div>
-    </dl>
-  </div>
-</section>
-
-<!-- 12 Footer -->
+<!-- 11 Footer -->
 <footer class="end" id="end" aria-labelledby="end-h" data-scene="end">
   <div class="wrap">
     <div class="calm-inbox">
@@ -552,32 +538,14 @@
       <button class="btn sm calm-answer" type="button" tabindex="-1">Answer</button>
       <span class="mono calm-clock">0:00</span>
     </div>
-    <div class="end-cta">
-      <div class="cmd" data-unpublished>
-        <span class="cmd-prompt" aria-hidden="true">$</span>
-        <code class="cmd-text">git clone {{repo}} {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo</code>
-        <button class="copy" type="button" data-copy="git clone {{repo}} {{folder}} &amp;&amp; cd {{folder}} &amp;&amp; npm install &amp;&amp; npm start -- --demo" aria-label="Copy the command that runs the demo">Copy</button>
-      </div>
-      <div class="cmd" data-published hidden>
-        <span class="cmd-prompt" aria-hidden="true">$</span>
-        <code class="cmd-text">npx {{pkg}} --demo</code>
-        <button class="copy" type="button" data-copy="npx {{pkg}} --demo" aria-label="Copy npx {{pkg}} --demo">Copy</button>
-      </div>
-      <p class="end-links"><a class="btn ghost" data-link="repo" href="{{repo}}" rel="noopener noreferrer">Star on GitHub</a><a class="btn ghost" data-link="repo-docs" href="{{repo}}#readme" rel="noopener noreferrer">Read the docs</a></p>
-    </div>
     <svg class="giant" viewBox="0 0 1200 150" aria-hidden="true"><text x="0" y="128"><tspan class="wm-lead">{{lead}}</tspan><tspan class="wm-muted">{{muted}}</tspan></text></svg>
     <nav class="foot-links" aria-label="More">
       <a data-link="repo" href="{{repo}}" rel="noopener noreferrer">Source</a>
       <a href="{{repo}}#readme" data-link="repo-docs" rel="noopener noreferrer">Docs</a>
-      <a href="#labs">Labs</a>
       <a href="#teams">Teams</a>
-      <a href="#investors">For investors</a>
+      <a href="#labs">Labs</a>
+      <a href="mailto:{{contact}}">{{contact}}</a>
     </nav>
-    <dl class="investors" id="investors" aria-label="For investors">
-      <div><dt class="mono">The wedge</dt><dd>How long agents wait on a person, across vendors. A vendor's own dashboard does not show it.</dd></div>
-      <div><dt class="mono">The model</dt><dd>Open core: free for one engineer, paid for the team.</dd></div>
-      <div><dt class="mono">The ask</dt><dd>Five design partners now, then a pre-seed round to reach the first fifty teams.</dd></div>
-    </dl>
     <p class="credit">{{name}} is open source under the MIT license. Built on <a href="https://github.com/AgentSystemLabs/agent-office" rel="noopener noreferrer">agent-office</a> by webdevcody / AgentSystemLabs, MIT; not affiliated with or endorsed by its authors.</p>
     <p class="credit">This page loads nothing from other sites, sets no cookies and has no analytics. Fonts: Archivo and JetBrains Mono, SIL Open Font License.</p>
   </div>

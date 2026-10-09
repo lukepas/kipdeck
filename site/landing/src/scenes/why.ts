@@ -1,27 +1,27 @@
-// 05 Why not the tools you already have: the comparison resolves like a readout. The row hairlines
-// draw first, then every answer decodes in a diagonal wave (a few frames of mono noise that settle
-// on the words and their mark), and the column that answers yes to everything lights last, its
-// Signal frame drawing around it. One shot when the table comes into view, then still and readable.
+// 05 Why not the tools you already have: the comparison resolves like a readout. Every word is
+// readable from the first frame (the scene never hides a cell); when the table comes into view the
+// row hairlines draw, each answer's mark pops in a diagonal wave, and the frame around our column
+// draws last. One shot, then still.
 import { env } from '../engine/env';
-
-const NOISE = '01<>/#=+*?-x';
+import { onArrive } from '../engine/arrive';
 
 export function mountWhy(section: HTMLElement) {
   if (env.reduced) return;
   const wrap = section.querySelector<HTMLElement>('.table-wrap')!;
   const table = wrap.querySelector<HTMLTableElement>('table')!;
   const rows = [...table.querySelectorAll('tbody tr')];
-  const cells: { el: HTMLElement; text: string; at: number }[] = [];
-  rows.forEach((tr, r) =>
+  const marks: HTMLElement[] = [];
+  rows.forEach((tr, r) => {
+    (tr as HTMLElement).style.setProperty('--r', String(r));
     [...tr.querySelectorAll('td')].forEach((td, c) => {
       const label = td.querySelector<HTMLElement>('span');
       if (!label) return;
-      const at = 500 + (r + c) * 70 + (td.classList.contains('us') ? 380 : 0);
+      const at = 300 + (r + c) * 60 + (td.classList.contains('us') ? 240 : 0);
       td.style.setProperty('--at', `${at}ms`);
-      cells.push({ el: label, text: label.textContent ?? '', at });
-    }),
-  );
-  rows.forEach((tr, r) => (tr as HTMLElement).style.setProperty('--r', String(r)));
+      label.style.setProperty('--at', `${at}ms`);
+      marks.push(label);
+    });
+  });
 
   // The frame around our column, drawn as one stroke.
   const svgNS = 'http://www.w3.org/2000/svg';
@@ -46,37 +46,8 @@ export function mountWhy(section: HTMLElement) {
   new ResizeObserver(place).observe(table);
 
   wrap.classList.add('staged');
-  const io = new IntersectionObserver(
-    ([e]) => {
-      if (!e.isIntersecting) return;
-      io.disconnect();
-      wrap.classList.add('go');
-      for (const c of cells) decode(c.el, c.text, c.at);
-    },
-    { threshold: 0.3 },
-  );
-  io.observe(wrap);
-}
-
-/** A few frames of noise, letter by letter from the left, then the words. The noise is drawn by
- *  the cell's ::after (data-s), over the real text, so the table never reflows. */
-function decode(el: HTMLElement, text: string, delay: number) {
-  setTimeout(() => {
-    el.classList.add('dec');
-    const start = performance.now();
-    const dur = 260;
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / dur);
-      const fixed = Math.floor(t * text.length);
-      let s = text.slice(0, fixed);
-      for (let i = fixed; i < text.length; i++) s += text[i] === ' ' ? ' ' : NOISE[(Math.random() * NOISE.length) | 0];
-      el.dataset.s = s;
-      if (t < 1) requestAnimationFrame(tick);
-      else {
-        el.classList.remove('dec');
-        el.classList.add('done');
-      }
-    };
-    requestAnimationFrame(tick);
-  }, delay);
+  onArrive(wrap, () => {
+    wrap.classList.add('go');
+    for (const m of marks) m.classList.add('pop');
+  });
 }

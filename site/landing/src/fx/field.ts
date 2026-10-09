@@ -97,7 +97,8 @@ export function mountField(canvas: HTMLCanvasElement, clear: Element[] = []): Fi
       uy[i] = (rnd() - 0.5) * 0.11;
       ustate[i] = WORKING;
     }
-    ux[LIT] = w * (env.phone ? 0.97 : 0.86);
+    // Fully on screen: on a phone, clear of the right edge by more than its own size.
+    ux[LIT] = Math.min(w - 28, w * (env.phone ? 0.88 : 0.86));
   }
 
   function resize() {

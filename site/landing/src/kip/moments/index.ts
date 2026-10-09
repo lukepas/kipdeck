@@ -13,9 +13,8 @@ import { phone } from './phone';
 import { numbers } from './numbers';
 import { labs } from './labs';
 import { teams } from './teams';
-import { proof } from './proof';
 import { end } from './end';
 
 // They are small, so they ship in Kip's one lazy chunk rather than a chunk each.
-export const MOMENTS: Record<string, Moment> = { hero, funnel, problem, loop, why, yours, phone, numbers, labs, teams, proof, end };
+export const MOMENTS: Record<string, Moment> = { hero, funnel, problem, loop, why, yours, phone, numbers, labs, teams, end };
 

@@ -10,10 +10,10 @@
 .loop-list .row-sub { font-size: 11.5px; }
 .loop-list .row .st { flex: none; width: 10px; height: 10px; margin-right: -2px; }
 .loop-list .row-age { font-size: 11px; }
-.loop-list .sec-shipped { color: var(--proof); }
-.loop-list .sec-shipped .count { border-color: var(--proof); color: var(--proof); }
-.row.merged .sign { color: var(--proof); }
-.row.merged .row-age { color: var(--proof); }
+.loop-list .sec-shipped { color: var(--settled); }
+.loop-list .sec-shipped .count { border-color: var(--settled); color: var(--settled); }
+.row.merged .sign { color: var(--settled); }
+.row.merged .row-age { color: var(--settled); }
 .row.merged .waitbar, .row.review .waitbar { visibility: hidden; }
 .pane { position: relative; display: flex; flex-direction: column; min-width: 0; }
 .pane-tabs { position: relative; }
@@ -43,14 +43,14 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 .scrub { position: relative; display: flex; flex-direction: column; gap: 2px; margin-top: 34px; padding-left: 2px; }
 .scrub::before { content: ''; position: absolute; left: 10px; top: 14px; bottom: 14px; width: 1px; background: var(--line); }
-.scrub::after { content: ''; position: absolute; left: 10px; top: 14px; width: 1px; height: calc((100% - 28px) * var(--p, 0)); background: var(--signal); }
+.scrub::after { content: ''; position: absolute; left: 10px; top: 14px; width: 1px; height: calc((100% - 28px) * var(--p, 0)); background: var(--accent); }
 .scrub button { position: relative; z-index: 1; display: flex; align-items: center; gap: 12px; padding: 5px 0; border: 0; background: none; color: var(--muted); font: 500 13px/1.2 var(--font-ui); cursor: pointer; text-align: left; }
 .scrub button i { width: 9px; height: 9px; margin-left: 4px; background: var(--void); border: 1.5px solid var(--line-strong); transform: rotate(45deg); transition: background-color 300ms var(--ease), border-color 300ms var(--ease), transform 400ms var(--ease-spring); }
 .scrub button.on { color: var(--text); }
-.scrub button.on i { background: var(--signal); border-color: var(--signal); transform: rotate(45deg) scale(1.25); }
-.scrub button:last-child.on i { background: var(--proof); border-color: var(--proof); }
+.scrub button.on i { background: var(--accent); border-color: var(--accent); transform: rotate(45deg) scale(1.25); }
+.scrub button:last-child.on i { background: var(--settled); border-color: var(--settled); }
 .scrub button:hover { color: var(--text); }
-.scrub button:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.scrub button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .loop .staged .pane-body { display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); flex: none; height: clamp(300px, 46vh, 420px); overflow: hidden; }
 .loop .staged .pane-body > * { grid-area: 1 / 1; min-width: 0; min-height: 0; }
@@ -63,6 +63,8 @@
 .term-layer .q-o { color: #e8ecef; }
 .term-layer .after { opacity: 0; }
 .ch { display: inline-block; white-space: pre; }
+/* A word's letters break as one: lines wrap between words, never inside one. */
+.wd { display: inline-block; white-space: nowrap; }
 /* No will-change on the letters: a layer per letter made every frame's commit slow. They move inside the app's own paint box. */
 .loop .staged .pane-body .qcard { align-self: end; z-index: 2; margin: 0 18px 18px; max-width: 480px; }
 .loop .staged .qcard-in { background: color-mix(in srgb, var(--surface-1) calc(var(--bg, 1) * 100%), transparent); border-color: transparent; box-shadow: 0 30px 60px -24px rgb(0 0 0 / calc(var(--bg, 1) * .7)); }
@@ -89,19 +91,16 @@
 .loop .staged .cc-row.review .st, .loop .staged .cc-row.merged .st { animation: pop 460ms var(--ease-spring); }
 @keyframes pop { from { transform: scale(.2); } 60% { transform: scale(1.5); } }
 .loop .staged .merge-btn {
-  position: relative; overflow: hidden; color: var(--text); border-color: var(--signal);
-  background: radial-gradient(circle at 50% 50%, var(--signal) calc(var(--charge, 0) * 72%), var(--tint-signal) calc(var(--charge, 0) * 72% + 1px));
+  position: relative; overflow: hidden; color: var(--text); border-color: var(--settled);
+  background: radial-gradient(circle at 50% 50%, var(--settled) calc(var(--charge, 0) * 72%), var(--tint-settled) calc(var(--charge, 0) * 72% + 1px));
 }
-.loop .staged .merge-btn.charged { color: var(--on-signal); animation: charged 1.1s var(--ease-out) infinite; }
-@keyframes charged { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--signal) 60%, transparent); } to { box-shadow: 0 0 0 10px transparent; } }
-.loop .staged .stamp { opacity: 0; transform: rotate(-16deg) scale(2.4); pointer-events: none; }
-.loop .staged .stamp.landed { animation: stamp 520ms cubic-bezier(.2, 0, .2, 1) both; }
-@keyframes stamp {
-  0% { opacity: 0; transform: rotate(-16deg) scale(2.4); }
-  62% { opacity: 1; transform: rotate(-6deg) scale(.9); }
-  74% { transform: rotate(-7.5deg) scale(1.05); }
-  100% { opacity: 1; transform: rotate(-7deg) scale(1); }
-}
+.loop .staged .merge-btn.charged { color: var(--void); animation: charged 1.1s var(--ease-out) infinite; }
+@keyframes charged { from { box-shadow: 0 0 0 0 color-mix(in srgb, var(--settled) 60%, transparent); } to { box-shadow: 0 0 0 10px transparent; } }
+.loop .staged .stamp { opacity: 0; pointer-events: none; }
+.loop .staged .stamp.landed { animation: merged-in 220ms var(--ease-out) both; }
+@keyframes merged-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+/* Before its step, a pane action is shown but cannot be pressed yet. */
+.loop .staged .pane-actions .btn[aria-disabled='true'] { opacity: .45; cursor: default; }
 .loop.is-merged .sec-shipped { animation: unfurl 700ms var(--ease-out); }
 @keyframes unfurl { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
 canvas.shockwave { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 80; pointer-events: none; }

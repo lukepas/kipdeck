@@ -15,10 +15,10 @@
   /* A short roll with no overshoot: the in-between frame never reads as a second digit. */
   .odo .d::before { transition: transform 180ms cubic-bezier(.2, .8, .2, 1); }
   html.js .hero-glow { animation: fade-in 1600ms var(--ease) 300ms backwards; }
-  /* A Signal scanline reads the inbox top to bottom as its rows arrive. */
+  /* A steel scanline reads the inbox top to bottom as its rows arrive. */
   html.js .hero .app.mini::after {
     content: ''; position: absolute; inset: 0; z-index: 4; pointer-events: none;
-    background: linear-gradient(to bottom, transparent 70%, color-mix(in srgb, var(--signal) 7%, transparent) calc(100% - 1px), var(--signal) calc(100% - 1px));
+    background: linear-gradient(to bottom, transparent 70%, color-mix(in srgb, var(--muted) 8%, transparent) calc(100% - 1px), var(--muted) calc(100% - 1px));
     transform: translateY(-100%); animation: scan 1300ms cubic-bezier(.45, 0, .25, 1) 480ms both;
   }
   html.js .lockup .mark-trail { stroke-dasharray: 40; animation: draw 900ms var(--ease-out) both 80ms; }

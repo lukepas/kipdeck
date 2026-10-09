@@ -1,5 +1,6 @@
-// 10 Teams and the ask. The two plans part from the middle like a zipper (one product, split into a
-// free and a paid side), and the five design-partner seats appear as empty diamonds: nobody has
+// 10 Teams and the ask. A line runs down the middle like a zipper (one product, split into a free
+// and a paid side) and each plan's top rule draws; both plans are readable the whole time. The five
+// design-partner seats appear as empty diamonds: nobody has
 // taken one yet, and the page says so. Pointing at or focusing "Apply as a design partner" (or the
 // Team waitlist's email field, in a build that has one) pulls the dot grid behind it toward it. A
 // join that really went through re-forms the agents into the Formation mark over the seats (the
@@ -9,6 +10,7 @@ import { Spring } from '../engine/spring';
 import { every } from '../engine/loop';
 import { march } from '../fx/march';
 import { shockwave } from '../fx/shockwave';
+import { onArrive } from '../engine/arrive';
 
 export function mountTeams(section: HTMLElement) {
   if (env.reduced) return;
@@ -22,12 +24,8 @@ export function mountTeams(section: HTMLElement) {
 
   plans.classList.add('staged');
   seats.classList.add('staged');
-  const once = (el: HTMLElement, fn: () => void, threshold = 0.35) => {
-    const io = new IntersectionObserver(([e]) => e.isIntersecting && (io.disconnect(), fn()), { threshold });
-    io.observe(el);
-  };
-  once(plans, () => plans.classList.add('go'));
-  once(seats, () => seats.classList.add('go'), 0.8);
+  onArrive(plans, () => plans.classList.add('go'));
+  onArrive(seats, () => seats.classList.add('go'), 0.85);
 
   // ---- The dot grid that leans toward the field.
   if (tier !== 'min') {
@@ -42,7 +40,8 @@ export function mountTeams(section: HTMLElement) {
     let dot = '', sig = '';
     const colors = () => {
       dot = token('--dot') || 'rgba(138,151,165,.28)';
-      sig = token('--signal') || '#ff6a1a';
+      // The dots that lean in take the ink color: orange on this page only ever means a wait.
+      sig = token('--text') || '#e8ecef';
     };
     colors();
     const size = () => {
