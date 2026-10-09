@@ -7,7 +7,9 @@
      needs you  --signal  solid diamond       stuck   --stuck  hollow triangle with a bar
      to review  --review  hollow circle, dot  working --working steel, no glyph
      proof      --proof   violet, on-chain only (escrow, EAS, ERC-8004, x402, /pom/)
-     settled    --settled the small "settled on devnet" tick only, never a fill */
+     settled    --settled the small "settled on devnet" tick only, never a fill
+   Ship-cyan (--ship) is the Deck's own: its instruments and quiet work, and on the home page the way
+   in to the Deck. Never an attention state's. */
 
 @font-face {
   font-family: 'Archivo';
@@ -57,6 +59,9 @@
   --working: #c9d2dc;
   --proof: #a68bff;
   --settled: #3ddc97;
+  /* The Deck's instruments and quiet work, and the home page's way in to it (home/deck-cta.css). */
+  --ship: #6fc3df;
+  --ship-tint: rgb(111 195 223 / .10);
   /* The data palette: telling things apart (a yoke, a sign, a pin), never a state (shared/datacolors.ts). */
   --data-1: #6e8fb3; --data-2: #4fa3a5; --data-3: #7fa58a; --data-4: #b8a07a;
   --data-5: #b07d6e; --data-6: #b07a92; --data-7: #6fa9c4; --data-8: #9aa36a;
@@ -152,6 +157,8 @@
   --working: #56616d;
   --proof: #5b3fd1;
   --settled: #0f7a4f;
+  --ship: #1d6b84;
+  --ship-tint: rgb(29 107 132 / .08);
   --on-signal: #ffffff;
   --signal-tint: rgb(168 56 10 / .07);
   --stuck-tint: rgb(192 31 51 / .08);
@@ -180,6 +187,8 @@
     --working: #56616d;
     --proof: #5b3fd1;
     --settled: #0f7a4f;
+    --ship: #1d6b84;
+    --ship-tint: rgb(29 107 132 / .08);
     --on-signal: #ffffff;
     --signal-tint: rgb(168 56 10 / .07);
     --stuck-tint: rgb(192 31 51 / .08);

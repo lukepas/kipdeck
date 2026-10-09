@@ -132,7 +132,7 @@ const CLOSING = {
 /**
  * The debrief: who waits on the captain first, in plain words (the humour stops while anyone does),
  * then what landed while away, then one closing line, picked by `seed` so every viewer reads the same.
- * `voice` is Settings > Bridge > Ship's voice: off leaves the closing line out, plain keeps it plain.
+ * `voice` is Settings > Deck > Ship's voice: off leaves the closing line out, plain keeps it plain.
  */
 export function debriefOf(i: DebriefInput, voice: 'on' | 'plain' | 'off', seed: string): Debrief {
   const waiting = i.waiting.map((w) => ({ id: w.id, level: w.level, line: attentionLine(w.sign, w.level, w.label).text }));
@@ -155,7 +155,7 @@ export function debriefOf(i: DebriefInput, voice: 'on' | 'plain' | 'off', seed: 
   };
 }
 
-/** How the start of watch plays (Settings > Bridge > Start of watch). */
+/** How the start of watch plays (Settings > Deck > Start of watch). */
 export type WatchMode = 'full' | 'debrief' | 'off';
 
 /** Away this long, or the first visit of a new day: the launch. */

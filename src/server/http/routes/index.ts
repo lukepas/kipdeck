@@ -67,6 +67,7 @@ export const routes: readonly Route[] = [
   serviceRoutes.forwards,
   githubRoutes.github,
   pageRoutes.home,
+  pageRoutes.deck,
   pageRoutes.bridge,
   pageRoutes.lite,
   pageRoutes.bundle,

@@ -1,4 +1,4 @@
-// Labs in the Bridge view (see shared/labs.ts): the menu, Settings and Mission control hide what
+// Labs in the Deck (see shared/labs.ts): the menu, Settings and Mission control hide what
 // belongs to a lab that's off (they ask the store), and this part does the one thing the bridge does
 // before it's drawn: without Bridge ambience it starts calm (./calm.ts).
 import type { Ctx } from '../../core/context';
@@ -25,6 +25,6 @@ export function installLabs(_ctx: Ctx, parts: Pick<Parts, 'settings'>, atStart: 
   if (!ambience) parts.settings = calmBridge(parts.settings);
   // Switched while you're here: the bridge is built one way or the other, so a reload applies it.
   store.on('labs', () => {
-    if (store.lab('ambience') !== ambience) toast(`Bridge ambience is ${store.lab('ambience') ? 'on' : 'off'} now: reload the Bridge view to see it`);
+    if (store.lab('ambience') !== ambience) toast(`Deck ambience is ${store.lab('ambience') ? 'on' : 'off'} now: reload the Deck to see it`);
   });
 }

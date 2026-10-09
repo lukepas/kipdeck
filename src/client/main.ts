@@ -1,5 +1,5 @@
 import './style.css';
-import { Net } from './net';
+import { loginUrl, Net } from './net';
 import { DesktopNotifier } from './notify';
 import { AVATAR_COLORS, store, loadProfile, loadSettings, saveProfile } from './state';
 import { randomLook } from '../shared/avatar';
@@ -286,7 +286,7 @@ let suggestedName: string | undefined;
 async function whoami() {
   try {
     const res = await fetch('/api/whoami', { cache: 'no-store' });
-    if (res.status === 401) location.href = '/login?next=/bridge';
+    if (res.status === 401) location.href = loginUrl();
     const { me, name } = (await res.json()) as { me?: typeof store.me; name?: string };
     if (me) store.me = me;
     suggestedName = name;

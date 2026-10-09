@@ -19,12 +19,12 @@ Run it inside the repository you work in. It opens in your browser, signed in, w
 - **One loop.** **Deploy agent**, get pinged when it needs you, answer its question in one box, review the diff beside the list and Merge, and it lands in **Shipped today**. The oldest agent waiting on you opens by itself; the top bar says how many need you and how many are ready to review, with the oldest wait ticking, the median wait today and what merged today. Merge waits a few seconds for Undo and names where it goes. See [the inbox](docs/inbox.md).
 - **One ranking, one set of names.** `src/shared/attention.ts` decides the order and names the five states everywhere: Needs you, Stuck, To review, Working and Ready. The inbox's sections (Needs you with the stuck ones in it, To review, Working, Ready), Mission control, the tab title and notifications all read from it ([the inbox](docs/inbox.md) has the full list).
 - **A record of what shipped.** Every merge and send-back is kept on your machine as a signed record: which agent and model, the prompt, and who reviewed it. **Numbers** shows human wait time and the merge rate per agent and model from it.
-- **Calm by default.** Everything that isn't the inbox (the 3D Bridge view, goals and the timeline, meetings, voice, Proof of Merge on testnets) is off until someone switches it on in [Labs](#labs).
+- **The Deck.** **Enter the Deck** in the top bar (or **D**) takes you to `/deck`: the same agents at their stations on a 3D starship bridge, a wall display for a team room. It and the rest beyond the inbox (goals and the timeline, meetings, voice, Proof of Merge on testnets) are [Labs](#labs), all on as Kipdeck ships; an admin switches off what a team doesn't want.
 
 | | |
 | --- | --- |
-| ![The inbox on a phone: the list alone, an agent opens over it (demo data)](docs/img/inbox-phone.png) | ![The 3D Bridge view, a Labs view of the same agents (demo data)](docs/img/bridge-wall.png) |
-| The same inbox on a phone. | The Bridge view at `/bridge` (Labs): the same agents as a room, for a team's wall screen. |
+| ![The inbox on a phone: the list alone, an agent opens over it (demo data)](docs/img/inbox-phone.png) | ![The 3D Deck, the same agents as a room (demo data)](docs/img/bridge-wall.png) |
+| The same inbox on a phone. | The Deck at `/deck`: the same agents as a room, for a team's wall screen. The old `/bridge` address still lands there. |
 
 ## Run it
 
@@ -81,16 +81,16 @@ It finds that folder's newest Claude Code or Codex session in the CLI's own file
 
 ## Labs
 
-Labs are the parts beyond the inbox. Each is off as the office ships, so a first visit sees the inbox and nothing else. An admin switches them for everyone from **Open Labs...** at the foot of Settings > Account on the home page (or Labs in Ctrl+K) or the Bridge view's menu; `--labs bridge,ops` (or `AGENT_OFFICE_LABS`) holds some on from the command line. Turning one off hides it; nothing is deleted.
+Labs are the parts beyond the inbox. Each is on as the office ships, so a first visit sees all of it, the Deck first. An admin switches any of them off for everyone from **Open Labs...** at the foot of Settings > Account on the home page (or Labs in Ctrl+K) or the Deck's menu, and the choice is kept in the office's `labs.json`; `--labs bridge,ops` (or `AGENT_OFFICE_LABS`) holds some on from the command line so nobody can switch them off, and `--labs -proof` (or `--labs none`) holds them off. Turning one off hides it; nothing is deleted. A lab being on never asks the browser for anything by itself: the microphone and screen sharing wait for your click, sound for your first click or key, and Proof of Merge stays on testnets and sends nothing anywhere until an admin sets up its keys and flags.
 
-| Lab | What switching it on brings back |
+| Lab | What it brings (switching it off hides it) |
 | --- | --- |
 | GitHub boards and queue | Issues, Pull requests, the Task queue and Mission control in the home page's avatar menu and Ctrl+K. |
-| Bridge view | A link to the 3D bridge at `/bridge` on the home page, and the deck plan in the pane while no agent is selected. `/bridge` itself always opens. |
-| Goals and timeline | Goals and milestones, the Timeline and Crew tabs in Mission control, the Bridge view's mission strip and the Services board. |
+| Deck (3D) | **Enter the Deck** in the home page's top bar (and **D**, and Go to Deck in Ctrl+K), and the deck plan in the pane while no agent is selected. `/deck` itself always opens. |
+| Goals and timeline | Goals and milestones, the Timeline and Crew tabs in Mission control, the Deck's mission strip and the Services board. |
 | Meetings | The Review bay and the planning whiteboard. |
 | Voice | Voice chat, screen sharing and the dictation mic in prompt boxes and terminals. |
-| Bridge ambience | The bridge in full: mascot, ship's voice, hands, celebrations, start of watch, ship motion and the ambience bed. Off, the bridge starts calm. |
+| Deck ambience | The Deck in full: mascot, ship's voice, hands, celebrations, start of watch, ship motion and the ambience bed (from your first click or key). Off, the Deck starts calm. |
 | Proof of Merge (testnets) | Bounties and payouts, attestations, ERC-8004 reputation, x402 paid tasks and `/pom/`. Their HTTP routes don't exist and their socket messages go nowhere while it's off. Any chain flag (`--x402`, `--attest`, `--reputation`) holds it on. |
 
 More in [docs/labs.md](docs/labs.md).
@@ -100,12 +100,12 @@ More in [docs/labs.md](docs/labs.md).
 - **The inbox.** Every agent in four sections (Needs you, To review, Working, Ready), one button per row, the selected agent's live terminal, diff and log beside the list, and Shipped today under it ([the inbox](docs/inbox.md)). It draws after about 175 kB on any laptop or phone; the old `/lite` address goes there.
 - **Deploy, attach, answer, review, merge.** The Deploy sheet starts an agent on a branch of its own; `kipdeck attach` adopts one started in a terminal; Answer, Review changes, Fix checks and Merge do what they say, with or without GitHub. With a GitHub repository and no pull request yet, Open PR comes first. On a team, each row says whose agent it is, and **Mine / Team** filters the inbox.
 - **Numbers.** Human wait time, changes merged, the merge rate and agent-hours, the last 7 days against the 7 days before, and the merge rate per agent and model with its N, from the signed shipped log on your machine ([metrics](docs/metrics.md)).
-- **Settings in three panes.** Account, Agents and Notifications. Six keys, and Help on **?** ([controls](docs/controls.md)).
+- **Settings in three panes.** Account, Agents and Notifications. Seven keys, and Help on **?** ([controls](docs/controls.md)).
 - **Teams.** Accounts with invite links, a shared dev box reached by SSH tunnel or Tailscale, and the team's Slack or Discord channel ([below](#teams-and-servers)).
 - **Agents that manage agents.** Every agent can list, deploy, message and stop the others through the `kipdeck` MCP server or the `office-workers` command ([agents](docs/agents.md)).
 - **Mission control** (with the GitHub boards and queue lab on): the same ranking with reminders, the review inbox and the digest of what happened while you were away ([mission control](docs/mission-control.md)).
 
-Everything else, the 3D bridge with its crew, moments and ambience, goals and the timeline, meetings, voice and Proof of Merge on testnets, is in [Labs](#labs) and described in [features](docs/features.md).
+Everything else, the 3D Deck with its crew, moments and ambience, goals and the timeline, meetings, voice and Proof of Merge on testnets, is in [Labs](#labs) (all on unless an admin switches them off) and described in [features](docs/features.md).
 
 ## Teams and servers
 
@@ -167,7 +167,7 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 
 ## Controls
 
-Six keys on the home page: **Ctrl+K** (find an agent or a command), **N** (deploy an agent), **Enter** (answer or review the selected agent; it never merges), **Esc** (back to the list, or close a window), **/** (search) and **?** (Help). Up and Down move the selection. Everything else is a row's button or the avatar menu: Numbers, Settings, Help and Sign out (Labs is in Settings and Ctrl+K). The Bridge view's keys (walking, the Overview, voice) are in [docs/controls.md](docs/controls.md#the-bridge-view-labs).
+Seven keys on the home page: **Ctrl+K** (find an agent or a command), **N** (deploy an agent), **Enter** (answer or review the selected agent; it never merges), **Esc** (back to the list, or close a window), **/** (search), **?** (Help) and **D** (enter the Deck). Up and Down move the selection. Everything else is a row's button or the avatar menu: Numbers, Settings, Help and Sign out (Labs is in Settings and Ctrl+K). The Deck's keys (walking, the Overview, voice) are in [docs/controls.md](docs/controls.md#the-deck-labs).
 
 ## Development
 
@@ -195,7 +195,7 @@ The npm package ships the built `dist/` (`files` in `package.json`), so `npx kip
 - [Metrics for the deck](docs/metrics.md): what each number means, where it comes from, and what not to show
 - [The landing page](docs/landing.md): `site/landing/` (`npm run build:site`, then `npm run preview:site`), what each section's motion shows, the one file that holds the product's name, its speed budgets (`npm run perf:site`), accessibility and search tags, the design-partner ask, and how to deploy it to Cloudflare Pages ([site/landing/README.md](site/landing/README.md))
 - [Features](docs/features.md): the inbox first, then the whole office in detail
-- [Controls](docs/controls.md): the inbox's keys and menu, the Bridge view's keys, and a terminal's
+- [Controls](docs/controls.md): the inbox's keys and menu, the Deck's keys, and a terminal's
 - [Agents](docs/agents.md): every harness Kipdeck runs (Claude Code, Codex, Cursor; OpenCode, Grok, Muse, DeepSeek Harness and Pi in beta), models and effort, and the prompts
 - [Configuration](docs/configuration.md): every command-line option, and where Kipdeck keeps its data
 - [Teams and servers](docs/self-hosting.md): one script each for AWS, Azure, Railway, Fly.io and Dokploy, the one-line setup for any Ubuntu or Debian server, or by hand behind Caddy or nginx; references for [AWS](docs/aws.md), [Azure](docs/azure.md), [Railway](docs/railway.md), [Fly.io](docs/fly.md) and [Dokploy](docs/dokploy.md)
@@ -205,13 +205,13 @@ The npm package ships the built `dist/` (`files` in `package.json`), so `npx kip
 - [Code layout](docs/code-layout.md): where the code lives, adding a feature or an agent provider, and the size guard
 - [The launch kit](launch/kipdeck/README.md): the gates before launch, the posts and the design-partner outreach
 
-Labs and the Bridge view:
+Labs and the Deck:
 
 - [Labs](docs/labs.md): what each lab brings back, and how to switch it
 - [Mission control](docs/mission-control.md): the attention ranking, the floor's mission and milestones, linking work to goals, the review inbox, the timeline, reminders and the digest
 - [Design system](docs/design.md): each surface on screen, the motion and the deck's sound, demo mode, and how to check a design change with `design/shoot.mjs`
 - [The deck](docs/deck.md): what's where on the 3D deck, cell addresses, and the Overview camera
-- Proof of Merge on testnets (off by default, not part of the product's pitch): [bounties](docs/bounties.md), [attestations on Base Sepolia](docs/proof-of-merge.md), [ERC-8004 reputation](docs/reputation.md), [the public showcase](docs/showcase.md), [paid tasks over x402](docs/x402.md) and [the chain launch kit's tools](docs/launch.md) (archived)
+- Proof of Merge on testnets (a lab; nothing goes on chain until an admin sets up its keys and flags, and not part of the product's pitch): [bounties](docs/bounties.md), [attestations on Base Sepolia](docs/proof-of-merge.md), [ERC-8004 reputation](docs/reputation.md), [the public showcase](docs/showcase.md), [paid tasks over x402](docs/x402.md) and [the chain launch kit's tools](docs/launch.md) (archived)
 
 ## Upstream credit
 

@@ -1,4 +1,4 @@
-// Settings > Bridge > Quality: how much the 3D deck draws (features/quality). Auto starts from your
+// Settings > Deck > Quality: how much the 3D deck draws (features/quality). Auto starts from your
 // graphics, steps down a tier when frames keep falling behind and back up when they have room, and
 // says so live in a chip under the row ('Auto - running at High', and its last step with the reason
 // and the time). Low, Medium and High hold where you put them. Every tier shows the boards, the marks

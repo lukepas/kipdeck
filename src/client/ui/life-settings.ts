@@ -1,4 +1,4 @@
-// Settings > Bridge > Life: how much the bridge's life moves, and each part of the world outside the
+// Settings > Deck > Life: how much the bridge's life moves, and each part of the world outside the
 // glass on or off. Full is everything; Calm drops the gestures (an escort's salute, a hail line);
 // Silent running stops all ambient life and slows the stars to a crawl. Whatever it says, a unit that
 // needs you or is stuck shows at full strength, and life gives way to it.

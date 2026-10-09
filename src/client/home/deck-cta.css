@@ -1,0 +1,58 @@
+/* The way in to the Deck (home/deck-cta.ts): a pill in ship-cyan, the Deck's own colour, never Signal.
+   It moves only on a change: one sheen as it shows and when more agents get to work, and a live dot
+   that breathes (a 4 s period, the ambient rule in DESIGN.md) while any agent works. Reduced motion
+   and Ship motion at Off stop both (styles/tokens.css). */
+.deck-cta {
+  --deck-edge: color-mix(in oklab, var(--ship) 42%, var(--line));
+  position: relative; isolation: isolate; overflow: hidden; flex: none;
+  display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px 0 10px;
+  border: 1px solid var(--deck-edge); border-radius: 999px;
+  background: linear-gradient(100deg, var(--ship-tint), transparent 70%), var(--surface-1);
+  color: var(--text); font: 600 13px/1 var(--font-ui); letter-spacing: -.005em; text-decoration: none; white-space: nowrap;
+  transition: border-color var(--t-ui) var(--ease), box-shadow var(--t-ui) var(--ease), background-color var(--t-ui) var(--ease);
+}
+.deck-cta:hover { border-color: var(--ship); box-shadow: 0 0 0 3px var(--ship-tint), 0 0 18px -4px color-mix(in oklab, var(--ship) 55%, transparent); }
+.deck-cta:active { background-color: var(--surface-2); }
+.deck-cta-ico { display: inline-grid; place-items: center; width: 24px; height: 24px; margin-left: -4px; border-radius: 50%; background: var(--ship-tint); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ship) 35%, transparent); color: var(--ship); }
+.deck-cta-live { display: inline-flex; align-items: center; gap: 5px; height: 18px; padding-left: 10px; border-left: 1px solid var(--deck-edge); color: var(--ship); font: 500 12px/1 var(--font-ui); }
+.deck-cta-n { font: 600 12px/1 var(--font-mono); font-variant-numeric: tabular-nums; }
+.deck-cta-words { color: color-mix(in oklab, var(--ship) 75%, var(--muted)); }
+.deck-cta-dot { width: 6px; height: 6px; margin-right: 1px; border-radius: 50%; background: currentColor; opacity: .55; }
+.deck-cta.working .deck-cta-dot { opacity: 1; animation: deck-breathe 4s var(--ease) infinite; }
+@keyframes deck-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--ship) 60%, transparent); }
+  50% { box-shadow: 0 0 0 4px transparent; }
+}
+.deck-cta-go { display: inline-flex; color: var(--muted); margin-left: -2px; transition: transform var(--t-ui) var(--ease), color var(--t-ui) var(--ease); }
+.deck-cta:hover .deck-cta-go { color: var(--ship); transform: translateX(2px); }
+/* The sheen: one band of light crossing the pill, then still. */
+.deck-cta::after {
+  content: ''; position: absolute; inset: -1px; z-index: -1; pointer-events: none;
+  background: linear-gradient(100deg, transparent 30%, color-mix(in oklab, var(--ship) 26%, transparent) 50%, transparent 70%);
+  transform: translateX(-110%);
+}
+.deck-cta.sheen::after { animation: deck-sheen 1.6s var(--ease) both; }
+@keyframes deck-sheen { to { transform: translateX(110%); } }
+.deck-cta:focus-visible { outline: 2px solid var(--act); outline-offset: 2px; }
+
+/* The row over the list is the phone's: the bar keeps its search box there. */
+.deck-cta-row { display: none; }
+@media (max-width: 599px) {
+  .hb .deck-cta { display: none; }
+  .deck-cta-row { display: flex; width: 100%; height: 48px; margin-bottom: 16px; padding: 0 16px 0 10px; gap: 10px; }
+  .deck-cta-row .deck-cta-label { flex: 1; font-size: 14px; }
+  .deck-cta-row .deck-cta-ico { margin-left: 0; width: 28px; height: 28px; }
+}
+/* A laptop: the icon, the count and its words, so the project and search keep their room. */
+@media (min-width: 900px) and (max-width: 1439px) {
+  .hb .deck-cta { padding: 0 12px 0 10px; }
+  .hb .deck-cta-label, .hb .deck-cta-go { display: none; }
+  .hb .deck-cta-live { padding-left: 0; border-left: 0; }
+}
+/* Between a phone and a laptop: the icon and the count in the bar, a 44px target. */
+@media (min-width: 600px) and (max-width: 899px) {
+  .hb .deck-cta { height: 44px; min-width: 44px; padding: 0 10px; gap: 6px; justify-content: center; }
+  .hb .deck-cta-ico { margin-left: 0; }
+  .hb .deck-cta-label, .hb .deck-cta-go, .hb .deck-cta-words { display: none; }
+  .hb .deck-cta-live { padding-left: 0; border-left: 0; gap: 4px; }
+}

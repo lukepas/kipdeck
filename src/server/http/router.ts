@@ -8,6 +8,7 @@ import { login, loginOptions } from './routes/auth.js';
 import { send } from './util.js';
 import { readOnly } from '../demo/readonly.js';
 import { READ_ONLY_REFUSAL } from '../../shared/demo.js';
+import { loginUrlFor } from '../../shared/deck.js';
 
 /** A request a route answers: `path` is the URL's path, decoded. */
 export interface RouteRequest {
@@ -101,8 +102,8 @@ export function requestHandler(ctx: Ctx, routes: readonly Route[]) {
       const session = auth.fromRequest(req);
       if (!session) {
         if (p.startsWith('/api/')) return send(res, 401, { error: 'Not logged in' });
-        // Back to the Bridge view after signing in, if that's where they were going; else home.
-        res.writeHead(302, { location: p === '/bridge' ? '/login?next=/bridge' : '/login' }).end();
+        // Back to the Deck after signing in, if that's where they were going (by its old name too); else home.
+        res.writeHead(302, { location: loginUrlFor(p) }).end();
         return;
       }
       for (const route of signedIn) if (route.auth === 'session' && matches(ctx, route, req.method, p)) return await route.handle(ctx, { ...r, session });

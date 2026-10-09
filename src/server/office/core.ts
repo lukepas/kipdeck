@@ -39,8 +39,8 @@ export function createCore(ctx: Ctx, cfg: Config, publicDir: string): Core {
     if (err) console.error(`agent-office: --projects: ${err}`);
   }
   const floors = new Map<string, Floor>();
-  // The parts beyond the inbox: off until an admin or the command line turns them on.
-  const labs = new Labs(cfg.dataDir, cfg.labs);
+  // The parts beyond the inbox: on until an admin switches one off, or held on or off by the command line.
+  const labs = new Labs(cfg.dataDir, cfg.labs, cfg.labsOff ?? []);
   // Every review the inbox ends, merged or sent back, signed and kept on disk.
   const shipped = new ShipLog(cfg.dataDir);
   // Anonymous usage numbers: off unless someone turns them on.

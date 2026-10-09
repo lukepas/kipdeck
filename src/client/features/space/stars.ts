@@ -194,7 +194,7 @@ class Layer {
 export class Starfield {
   readonly group = new THREE.Group();
   private readonly layers: Layer[];
-  /** How many layers show and move, far first: Settings > Bridge > Quality at Low leaves the far two (features/quality). */
+  /** How many layers show and move, far first: Settings > Deck > Quality at Low leaves the far two (features/quality). */
   moving = LAYERS.length;
 
   constructor() {

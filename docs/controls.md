@@ -1,12 +1,12 @@
 # Controls
 
-Kipdeck gives you full control and clarity over every AI coding agent you run, in one place. This page lists every key and click, on the inbox and in the Bridge view.
+Kipdeck gives you full control and clarity over every AI coding agent you run, in one place. This page lists every key and click, on the inbox and in the Deck.
 
 Back to the [README](../README.md).
 
 ## The inbox
 
-The home page (`/`, [the inbox](inbox.md)) has six keys. None of them fire while you type in a box or a terminal, or while a window is open.
+The home page (`/`, [the inbox](inbox.md)) has six keys, and D for the Deck. None of them fire while you type in a box or a terminal, or while a window is open.
 
 | Key | Action |
 | --- | --- |
@@ -16,18 +16,19 @@ The home page (`/`, [the inbox](inbox.md)) has six keys. None of them fire while
 | Esc | Back to the list: from the pane's terminal, out of the search box, or off the selection; closes any window |
 | / | Search agents |
 | ? | Help: the loop, these keys and the docs |
+| D | Enter the Deck at `/deck` (while the Deck lab is on, as it is by default) |
 
-Up and Down (or j and k) move the selection. Everything else is a click or a tap: a row's one button, **Deploy agent**, and the avatar menu at the top right:
+Up and Down (or j and k) move the selection. Everything else is a click or a tap: a row's one button, **Enter the Deck** and **Deploy agent** in the top bar (on a phone, Enter the Deck is a row over the list), and the avatar menu at the top right:
 
 - **Numbers**: human wait time, merges and the merge rate ([metrics](metrics.md)).
 - **Settings**: three panes. **Account** (who you're signed in as, your password, light or dark, teammates and anonymous usage numbers for admins), **Agents** (the default agent and model, how many run at once, what happens after a merge, where new projects are cloned, the prompts) and **Notifications** (desktop notifications, and the team's Slack or Discord channel).
-- **Bridge view** (with that lab on), **Help and keys** and **Sign out**. With the GitHub boards and queue lab on, Issues, Pull requests, the Task queue and Mission control come first. Labs is at the foot of Settings > Account, and in Ctrl+K.
+- **Enter the Deck**, **Help and keys** and **Sign out**. With the GitHub boards and queue lab on (as it is by default), Issues, Pull requests, the Task queue and Mission control come first. Labs is at the foot of Settings > Account, and in Ctrl+K.
 
 While you were away and light or dark are one Ctrl+K away. Every window has a close button at its top right, and Esc closes it too.
 
-## The Bridge view (Labs)
+## The Deck (Labs)
 
-The keys below are the Bridge view's (`/bridge`). Its Settings has the same three panes as the inbox's, then **Bridge** (lights, brightness, ship motion, quality, hands, life, moments and rituals), **Sound & voice**, and **Bounties** with Proof of Merge on; **Your operator** and **Camera view** are under Account there.
+The keys below are the Deck's (`/deck`). Its Settings has the same three panes as the inbox's, then **Deck** (lights, brightness, ship motion, quality, hands, life, moments and rituals), **Sound & voice**, and **Bounties** with Proof of Merge on; **Your operator** and **Camera view** are under Account there.
 
 | Key | Action |
 | --- | --- |
@@ -58,9 +59,9 @@ The keys below are the Bridge view's (`/bridge`). Its Settings has the same thre
 | Esc | Close any window (a terminal too) and get back to looking around, or to the Overview if you opened it there; with a unit selected and no window open, let go of it; in a forward lounge seat, stand up |
 | Ctrl + [ | Send Esc to a terminal instead, to close a menu like Claude's `/skills` or interrupt Claude. **Esc** in the terminal's header does the same |
 
-Sitting in the captain's chair (E at it) frames the bridge: a slightly narrower view, aimed low on the situation arc, the bow and the arc over the pit and the crew. From the conn (in the chair, or standing on the dais with the mouse captured), once you've moved the mouse, rest the crosshair on a wall board for a moment and the view leans in on it, so its rows read without walking up; move the mouse or press a key and it eases back. With reduced motion, or Settings > Bridge > Ship motion at Off, it cuts instead of easing.
+Sitting in the captain's chair (E at it) frames the bridge: a slightly narrower view, aimed low on the situation arc, the bow and the arc over the pit and the crew. From the conn (in the chair, or standing on the dais with the mouse captured), once you've moved the mouse, rest the crosshair on a wall board for a moment and the view leans in on it, so its rows read without walking up; move the mouse or press a key and it eases back. With reduced motion, or Settings > Deck > Ship motion at Off, it cuts instead of easing.
 
-In first person your gloved hands are at the bottom of the view while you walk: when you press E or click something, the right one reaches out and taps it, and while Mission control is open the left one holds up a datapad with the top bar's counts. They step out of the way when you sit, in third person and in the Overview. Settings > Bridge > Hands turns them on at every Quality tier, or off (Auto leaves them out at Low). See [the design system](design.md#your-hands-in-first-person).
+In first person your gloved hands are at the bottom of the view while you walk: when you press E or click something, the right one reaches out and taps it, and while Mission control is open the left one holds up a datapad with the top bar's counts. They step out of the way when you sit, in third person and in the Overview. Settings > Deck > Hands turns them on at every Quality tier, or off (Auto leaves them out at Low). See [the design system](design.md#your-hands-in-first-person).
 
 The service monitor on the east wall shows the live page of a web server a unit is running. Point at a row of the Services board and press E to put that service on it (O opens the board's window). Walk up to the monitor: E gives the page the mouse (Esc, E or a click on the deck takes mouse-look back; a page you clicked into keeps Esc, so move the pointer off it first), O opens it full screen in a window (its close button top right, or Esc), C goes to the next service and R reloads it. At Low quality, or with the office on another computer, E opens it instead. See [the deck](deck.md#the-service-monitor).
 
@@ -85,7 +86,7 @@ One unit can be selected at a time, and the Overview, the Units rail and Walk al
 | The card's button | The one thing the unit's state asks for: **Answer** (it needs you: its terminal), **Review changes** (it's done), **Open terminal** (it's stuck), or **Terminal** and **Changes** while it works |
 | Esc, or the card's close button (X) | Lets go of the selection, before Esc does anything else; in Walk you're straight back in mouse-look. Up in the Overview the next Esc walks again, and puts away an open notice such as the "Waiting on you" debrief in the same press |
 
-With reduced motion, or Settings > Bridge > Ship motion at Off, the ring and the card cut in and out instead of easing, and the ring doesn't turn. To change decks, click the deck name in the top-left corner.
+With reduced motion, or Settings > Deck > Ship motion at Off, the ring and the card cut in and out instead of easing, and the ring doesn't turn. To change decks, click the deck name in the top-left corner.
 
 For a screen share, a projector or a recording, open the deck with `?demo=1`: bigger type and callouts, the needs-you toast kept up, and the Overview turning slowly round the mission table until you press a key, drag or scroll (see [the design system](design.md#demo-mode)).
 

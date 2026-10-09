@@ -87,7 +87,7 @@ export function installHud(ctx: Ctx, parts: HudParts) {
       { id: 'help', icon: 'keyboard', label: 'Controls', section: 'Deck', key: 'H', run: openHelp },
       // Always on the top bar: the way back to the home page, which is the product; the bridge is a view of it.
       { id: 'lite', icon: 'home', label: 'Back to inbox', section: 'Deck', status: () => true, chip: () => 'Inbox', title: () => 'Back to the inbox: every agent ranked by what needs you, without the 3D', run: () => location.assign('/') },
-      { id: 'labs', icon: 'labs', label: 'Labs', section: 'Deck', title: () => 'Switch on the parts beyond the inbox: the bridge in full, goals, meetings, voice, Proof of Merge', run: () => openLabs(net) },
+      { id: 'labs', icon: 'labs', label: 'Labs', section: 'Deck', title: () => 'The parts beyond the inbox, each with a switch: the Deck in full, goals, meetings, voice, Proof of Merge', run: () => openLabs(net) },
       { id: 'team', icon: 'invite', label: 'Invite teammates', section: 'Deck', shown: () => store.invites, run: () => openTeam(net) },
       { id: 'accounts', icon: 'key', label: 'Accounts', section: 'Deck', shown: () => store.me.admin, title: () => 'Invite people, see who has an account, revoke them', run: () => openAccounts(net) },
       { id: 'signins', icon: 'lock', label: 'Your sign-ins', section: 'Deck', shown: () => !!store.me.account, tone: () => (needsSigningIn() ? 'danger' : undefined), status: needsSigningIn, chip: () => 'Sign in to Claude', title: () => 'The Claude plan and GitHub account your units run on: your own', run: () => openSignIns(net) },

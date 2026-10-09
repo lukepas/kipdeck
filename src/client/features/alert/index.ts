@@ -12,7 +12,7 @@
  * When the last unit waiting or stuck clears, the bridge stands down: the lights come up aft to bow in
  * one soft 1.5 s sweep and the band says CONDITION GREEN for 4 s; celebrations held behind the call
  * (features/moments) go after it. Ship motion Off and reduced motion step at once, with no sweep.
- * Settings > Bridge > Alert conditions turns it off or moves its thresholds (5 and 10 minutes).
+ * Settings > Deck > Alert conditions turns it off or moves its thresholds (5 and 10 minutes).
  *
  * The band also carries a jump's countdown (features/space) and a recovery (features/moments).
  */

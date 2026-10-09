@@ -10,6 +10,7 @@ import { splitEnvNames, validEnvPattern, type WorkerEnvConfig } from './worker-e
 import { readStateJson, stateDirProblem, untrustedState, writeState } from './safefs.js';
 import { CHAIN_HELP, chainFlagsFromEnv, takeChainFlag, type ChainFlags } from './chain/flags.js';
 import { parseLabList, type LabId } from '../shared/labs.js';
+import { commandLineLabs } from './labs.js';
 import { telemetryForbidden } from './telemetry.js';
 import { brandEnv } from './brandenv.js';
 import { freshDemoHome, type DemoWorkspace } from './demo/workspace.js';
@@ -74,6 +75,8 @@ export interface Config {
   chain: ChainFlags;
   /** Labs held on from the command line (--labs, AGENT_OFFICE_LABS; a chain flag holds proof on). See labs.ts. */
   labs: LabId[];
+  /** Labs held off from the command line (--labs -proof, --labs none, or the same in AGENT_OFFICE_LABS). */
+  labsOff: LabId[];
   /** Anonymous usage numbers (telemetry.ts): off unless turned on; `forbidden` keeps them off for good. */
   telemetry: { forced: boolean; forbidden?: string; endpoint?: string };
   /** --demo: scripted agents on a throwaway repository (see demo/): `readOnly` the hosted demo, `temp` a home deleted on exit, its workspace once made. */
@@ -189,9 +192,10 @@ Options:
       --webhook <url>     Post to this Slack or Discord webhook when a worker
                           needs input, finishes or gets stuck (env AGENT_OFFICE_WEBHOOK).
                           Also settable from Settings in the office; "" turns it off
-      --labs <names>      Hold labs on, comma separated (env AGENT_OFFICE_LABS):
-                          bridge, ops, meetings, voice, ambience, proof, or all.
-                          All are off by default; admins switch them from Labs
+      --labs <names>      Hold labs on so admins can't switch them off (env AGENT_OFFICE_LABS):
+                          boards, bridge (the Deck), ops, meetings, voice, ambience,
+                          proof, or all. All are on by default. A leading minus holds
+                          one off instead (--labs -proof,-voice), and none holds all off
       --telemetry         Share anonymous usage numbers (env KIPDECK_TELEMETRY=1):
                           minutes to the first agent, answer and merge, and
                           minutes agents wait in Needs you. Off by default; the
@@ -388,6 +392,7 @@ export function loadConfig(argv: string[]): Config {
       case '--labs': {
         const more = parseLabList(takeValue(argv, i++, a));
         labs.on.push(...more.on);
+        labs.off.push(...more.off);
         labs.unknown.push(...more.unknown);
         break;
       }
@@ -562,7 +567,7 @@ export function loadConfig(argv: string[]): Config {
     maxWorkers: workerLimit,
     webhook,
     chain,
-    labs: forcedLabs(labs, chain),
+    ...commandLineLabs(labs, chain),
     ...(demo ? { demo: { readOnly, temp: !homeGiven } } : {}),
     telemetry: {
       forced: !demo && (argv.includes('--telemetry') || brandEnv('TELEMETRY') === '1'),
@@ -570,17 +575,6 @@ export function loadConfig(argv: string[]): Config {
       endpoint: brandEnv('TELEMETRY_URL') || undefined,
     },
   };
-}
-
-/** The labs the command line holds on: --labs and AGENT_OFFICE_LABS, and proof with any chain flag (they're proof's own switches). */
-function forcedLabs(labs: { on: LabId[]; unknown: string[] }, chain: ChainFlags): LabId[] {
-  if (labs.unknown.length) {
-    console.error(`agent-office: --labs: unknown lab ${labs.unknown.map((u) => JSON.stringify(u)).join(', ')} (bridge, ops, meetings, voice, ambience, proof or all)`);
-    process.exit(2);
-  }
-  const on = new Set(labs.on);
-  if (chain.x402.enabled || chain.attest.enabled || chain.reputation.enabled) on.add('proof');
-  return [...on];
 }
 
 export async function ensureSelfSigned(cfg: Config): Promise<void> {

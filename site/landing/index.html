@@ -453,13 +453,13 @@
   <div class="wrap">
     <p class="label"><span class="num">09</span> Labs</p>
     <h2 id="labs-h" class="display">What else is in the box.</h2>
-    <p class="lede">Off by default, compiled and tested. The inbox comes first; each lab adds a view to it. An admin switches one on in Settings, or holds it on from the command line.</p>
-    <div class="cmd labs-cmd" role="group" aria-label="Labs on the command line. Press a flag to switch its lab on or off.">
+    <p class="lede">On by default, compiled and tested. The inbox comes first, and the Deck is one click from it; each lab adds a view. An admin switches any of them off in Labs, or holds them on or off from the command line.</p>
+    <div class="cmd labs-cmd" role="group" aria-label="Labs on the command line. Every lab is on by default. Press a flag to hold its lab off, and again to hold it on.">
       <span class="cmd-prompt" aria-hidden="true">$</span>
-      <code class="cmd-text">npm start -- --labs <span class="flags"><button class="flag" type="button" data-lab="bridge" aria-pressed="true">bridge</button>,<button class="flag" type="button" data-lab="ops" aria-pressed="true">ops</button>,<button class="flag" type="button" data-lab="boards" aria-pressed="true">boards</button>,<button class="flag" type="button" data-lab="voice" aria-pressed="true">voice</button>,<button class="flag" type="button" data-lab="meetings" aria-pressed="true">meetings</button></span></code>
+      <code class="cmd-text">npx kipdeck --labs <span class="flags"><button class="flag" type="button" data-lab="bridge" aria-pressed="true">bridge</button>,<button class="flag" type="button" data-lab="ops" aria-pressed="true">ops</button>,<button class="flag" type="button" data-lab="boards" aria-pressed="true">boards</button>,<button class="flag" type="button" data-lab="voice" aria-pressed="true">voice</button>,<button class="flag" type="button" data-lab="meetings" aria-pressed="true">meetings</button></span></code>
     </div>
     <ul class="bento">
-      <li class="tile tile-bridge on" data-lab="bridge">
+      <li class="tile tile-bridge on power" data-lab="bridge">
         <div class="deck3d" aria-hidden="true">
           <div class="plane">
             <i class="deck-floor"></i>
@@ -471,18 +471,18 @@
             <i class="sweep"></i>
           </div>
         </div>
-        <h3>The Bridge</h3><p>A 3D starship bridge where agents sit at stations, with a mascot, sound and a lounge. For a team's wall screen.</p><code class="mono">--labs bridge,ambience</code>
+        <h3>The Deck</h3><p>Enter the Deck from the inbox: your agents at their stations on a 3D starship bridge, with a mascot, sound and a lounge. For a team's wall screen.</p><code class="mono">On by default</code>
       </li>
-      <li class="tile on" data-lab="ops"><span class="switch" aria-hidden="true"><i></i></span><h3>Goals and timeline</h3><p>Mission control with goals, milestones and a timeline of what every agent did.</p><code class="mono">--labs ops</code></li>
-      <li class="tile on" data-lab="boards"><span class="switch" aria-hidden="true"><i></i></span><h3>GitHub boards and queue</h3><p>Issues, pull requests and a task queue that hands the next issue to a free agent.</p><code class="mono">--labs boards</code></li>
-      <li class="tile on" data-lab="voice"><span class="switch" aria-hidden="true"><i></i></span><h3>Voice</h3><p>Voice chat, screen sharing and dictation into any prompt box.</p><code class="mono">--labs voice</code></li>
-      <li class="tile on" data-lab="meetings"><span class="switch" aria-hidden="true"><i></i></span><h3>Meetings</h3><p>A review bay and a planning whiteboard on any issue or pull request.</p><code class="mono">--labs meetings</code></li>
+      <li class="tile on power" data-lab="ops"><span class="switch" aria-hidden="true"><i></i></span><h3>Goals and timeline</h3><p>Mission control with goals, milestones and a timeline of what every agent did.</p><code class="mono">On by default</code></li>
+      <li class="tile on power" data-lab="boards"><span class="switch" aria-hidden="true"><i></i></span><h3>GitHub boards and queue</h3><p>Issues, pull requests and a task queue that hands the next issue to a free agent.</p><code class="mono">On by default</code></li>
+      <li class="tile on power" data-lab="voice"><span class="switch" aria-hidden="true"><i></i></span><h3>Voice</h3><p>Voice chat, screen sharing and dictation into any prompt box.</p><code class="mono">On by default</code></li>
+      <li class="tile on power" data-lab="meetings"><span class="switch" aria-hidden="true"><i></i></span><h3>Meetings</h3><p>A review bay and a planning whiteboard on any issue or pull request.</p><code class="mono">On by default</code></li>
       <li class="tile tile-proof">
         <span class="badge mono">Testnet only</span>
         <h3>Proof of Merge</h3>
         <p>Pay an agent only when a person merges its work: test USDC held in escrow on Solana devnet and released on the merge, with a Base Sepolia attestation of who merged it. Its public ledger is the office's own <code>/pom/</code> page.</p>
         <p class="pom-tx mono"><a href="https://explorer.solana.com/tx/2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc?cluster=devnet" rel="noopener noreferrer">A real release on devnet: 2rPSWQv7...ZtUc</a> <span class="chip">Solana devnet</span></p>
-        <code class="mono">--labs proof</code>
+        <code class="mono">On by default</code>
       </li>
     </ul>
   </div>

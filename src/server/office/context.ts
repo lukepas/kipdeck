@@ -57,7 +57,7 @@ export interface Core {
   /** The building: a floor per project, each with its own workers, boards and queue. */
   building: Building;
   floors: Map<string, Floor>;
-  /** Which labs are on: the parts beyond the inbox, all off by default (see labs.ts). */
+  /** Which labs are on: the parts beyond the inbox, all on by default, an admin switches any off (see labs.ts). */
   labs: Labs;
   /** The shipped log: every review the inbox ended, merged or sent back, signed (see shiplog.ts). */
   shipped: ShipLog;

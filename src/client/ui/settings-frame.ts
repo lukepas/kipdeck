@@ -1,5 +1,5 @@
 import './settings.css';
-// The Settings window's frame, shared by the home page and the Bridge view: the categories down the
+// The Settings window's frame, shared by the home page and the Deck: the categories down the
 // side (a row across the top on a phone), the picked one on the right, a card per setting, and a ✕
 // that closes it like Esc. Each page hands it its own panes; the three every page has (Account,
 // Agents, Notifications) come from settings-core.ts.

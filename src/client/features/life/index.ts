@@ -100,7 +100,7 @@ export function installLife(ctx: Ctx, parts: Pick<Parts, 'views'>) {
       readAt = clock;
       readDeck();
     }
-    // Silent running (Settings > Bridge > Life) stills it as Ship motion at Off does: the screens still read.
+    // Silent running (Settings > Deck > Life) stills it as Ship motion at Off does: the screens still read.
     const scale = lifeScale(ctx.reduceMotion.ship) * ambientGain(ctx.settings.life);
     const ducking = clock < duckUntil;
     duck += ((ducking ? GIVE_WAY.duck : 1) - duck) * Math.min(1, dt * 3);

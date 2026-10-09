@@ -10,7 +10,7 @@
  * At most one line in 90 s, never two in a row about one unit. The instant a unit needs you or gets
  * stuck the wit stops: VESPER says one plain sentence ("B-03 is stuck: tests or build failing. It needs
  * you.") and nothing more until that clears, then may say one line about the recovery. Hires that come
- * aboard meanwhile are announced after. Settings > Bridge > Ship's voice: On, Plain only (status lines,
+ * aboard meanwhile are announced after. Settings > Deck > Ship's voice: On, Plain only (status lines,
  * no humour; Silent running speaks this way too) or Off.
  */
 import { callSign } from '../../../shared/callsign';

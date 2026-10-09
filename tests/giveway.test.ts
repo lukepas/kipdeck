@@ -1,4 +1,4 @@
-// Life giving way (src/client/features/giveway/logic.ts): what Settings > Bridge > Life lets through at
+// Life giving way (src/client/features/giveway/logic.ts): what Settings > Deck > Life lets through at
 // each level, how ambient motion follows Ship motion and reduced motion, and how a set piece waits
 // behind attention, one at a time, until it gives up and becomes a card.
 import test from 'node:test';

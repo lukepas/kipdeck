@@ -1,8 +1,8 @@
 // The home page (/): the inbox for your AI coding agents. Every agent sorted by what it needs from you
 // (Needs you, To review, Working, Idle), the selected one's live terminal, changes and log beside the
 // list, and Shipped today under it. The inbox itself is home/; this file connects to the office,
-// signs you in and keeps the tab title and notifications current. No three.js: the 3D bridge is a
-// view of its own at /bridge, behind Labs. You're in the office as someone on the 2D view
+// signs you in and keeps the tab title and notifications current. No three.js: the 3D Deck is a
+// view of its own at /deck, its lab on by default. You're in the office as someone on the 2D view
 // (PeerInfo.lite), not standing anywhere in it.
 
 import { Net } from './net';
@@ -22,7 +22,7 @@ import * as lazy from './home/lazy';
 // Sent back here because this browser can't draw the 3D bridge (see noWebGL in core/scene.ts).
 if (new URLSearchParams(location.search).get('why') === 'webgl') {
   history.replaceState(null, '', location.pathname);
-  toast("This browser can't draw the 3D bridge (WebGL is off or missing)", 'warn');
+  toast("This browser can't draw the Deck in 3D (WebGL is off or missing)", 'warn');
 }
 
 // Your name and color from the 3D bridge, if this browser has been in it. Nobody sees a character

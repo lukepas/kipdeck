@@ -12,7 +12,7 @@
  * 400 ms crossfade and a card instead. With no mission, a dim unnamed star and the strip's own
  * "Set the mission".
  *
- * Settings > Bridge > Life > Destination ahead switches it off.
+ * Settings > Deck > Life > Destination ahead switches it off.
  */
 import { milestoneOf, milestoneProgress } from '../../../shared/mission';
 import { headingBand, missionCompleteCard, orbitBand } from '../../../shared/shiplog';

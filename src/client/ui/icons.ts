@@ -72,6 +72,8 @@ export const ICONS = {
   volume: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4Z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>',
   sparkle: '<path d="M12 3.5v6M12 14.5v6M3.5 12h6M14.5 12h6"/>',
   ship: '<path d="M12 3.5 18.5 20 12 16.5 5.5 20Z"/><path d="M12 9.5v4"/>',
+  // The Deck: the bridge's canopy over its plate, seen from the door.
+  deck: '<path d="M3.5 16.5 12 20.5l8.5-4L12 12.5Z"/><path d="M4.5 14a7.5 7.5 0 0 1 15 0"/><path d="M12 6.5v2"/>',
   reminder: '<circle cx="12" cy="13" r="7.5"/><path d="M12 9v4.5l2.5 2M4.5 4.5 7 7M19.5 4.5 17 7"/>',
 
   // ---- actions ----

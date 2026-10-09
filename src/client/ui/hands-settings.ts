@@ -1,4 +1,4 @@
-// Settings > Bridge > Hands: your gloved hands in front of you in first person (features/hands). Auto
+// Settings > Deck > Hands: your gloved hands in front of you in first person (features/hands). Auto
 // draws them at High and Medium and leaves them out at Low, where every draw counts; On draws them at
 // every tier; Off never.
 

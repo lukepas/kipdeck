@@ -19,7 +19,7 @@
  * gives way: with a unit needing you or stuck at load the launch is over in 1.2 s, the log is one line
  * on the band and the debrief lists only who waits; a call mid-launch cuts it short the same way. It
  * never plays a beat or moves the camera. Under reduced motion, Ship motion Off or Silent running it is a
- * still card for 6 s. Settings > Bridge > Start of watch: Full, Debrief only or Off. While it is on, it takes the place
+ * still card for 6 s. Settings > Deck > Start of watch: Full, Debrief only or Off. While it is on, it takes the place
  * of the "While you were away" window at load, which its Full log button opens.
  */
 import { callSign } from '../../../shared/callsign';

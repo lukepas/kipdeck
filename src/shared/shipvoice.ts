@@ -10,7 +10,7 @@
 
 import type { TimelineEvent } from './protocol.js';
 
-/** How VESPER speaks (Settings > Bridge > Ship's voice, where Off is the caller's to honour): with humour, or plain status lines only. */
+/** How VESPER speaks (Settings > Deck > Ship's voice, where Off is the caller's to honour): with humour, or plain status lines only. */
 export type VoiceStyle = 'on' | 'plain';
 
 /** What VESPER can speak about. Each is a real event or a real stretch of state, never a timer. */

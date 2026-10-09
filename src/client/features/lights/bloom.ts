@@ -31,9 +31,9 @@ export interface Bloom {
   glow(yes: boolean): void;
   /** Whether the glow is drawn now. */
   glowing(): boolean;
-  /** The glow's own size against the frame's (Settings > Bridge > Quality: 1 at High, 0.5 at Medium), and the frame's pixel ratio taken again. */
+  /** The glow's own size against the frame's (Settings > Deck > Quality: 1 at High, 0.5 at Medium), and the frame's pixel ratio taken again. */
   scale(k: number): void;
-  /** How the edges are smoothed (Settings > Bridge > Quality: SMAA at High, FXAA at Medium). */
+  /** How the edges are smoothed (Settings > Deck > Quality: SMAA at High, FXAA at Medium). */
   aa(kind: EdgeAa): void;
   /** Lays `pass` in after tone mapping and before the edges are smoothed: it reads display colours. */
   grade(pass: Pass): void;

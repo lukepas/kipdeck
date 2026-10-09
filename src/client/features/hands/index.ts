@@ -14,7 +14,7 @@
  * whatever Night, Day and Brightness have them), and the room's reflections with it.
  *
  * Out of the way: in third person, sat down (the conn's framing, a bean bag's view), in the Overview,
- * during the arrival, taking the conn and the jump's tunnel, and at Low under Settings > Bridge > Hands
+ * during the arrival, taking the conn and the jump's tunnel, and at Low under Settings > Deck > Hands
  * at Auto. They make way for what you read: aimed at a board or a console and settled a moment (or
  * still a while), the left drops out of view and the right sinks to its knuckles, ready to tap; a step,
  * a turn or a reach brings them back. On the lounge's ladder each hand holds its rung where the rung is,

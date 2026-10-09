@@ -221,7 +221,7 @@ test('the keys: ? lists them, Esc closes it, / searches, Ctrl+K finds an agent',
   await page.keyboard.press('?');
   const keys = page.locator('.modal.keys-help');
   await keys.waitFor();
-  assert.equal(await keys.locator('dt').count(), 6, 'six shortcuts');
+  assert.equal(await keys.locator('dt').count(), 7, 'six shortcuts, and D for the Deck (on by default)');
   assert.equal(await keys.locator('header .close').count(), 1);
   await page.keyboard.press('Escape');
   await keys.waitFor({ state: 'detached' });

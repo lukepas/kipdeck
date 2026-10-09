@@ -1,8 +1,8 @@
 // End to end: Mission control in the built office, in a headless browser. On the home page (the
 // inbox): Mission control from the avatar menu, editing the mission and a milestone in place, the
 // tabs and their keys, the timeline, and Esc closing the window; back after a while away, the digest
-// over the list. In the 3D Bridge view: I opens it and Esc puts it away, and the digest opens by itself.
-// Goals, the timeline and the debrief are Labs (Goals and timeline, Bridge ambience), and Mission
+// over the list. In the 3D Deck (/deck, and once by its old /bridge address): I opens it and Esc puts it away, and the digest opens by itself.
+// Goals, the timeline and the debrief are Labs (Goals and timeline, Deck ambience), and Mission
 // control on the home page is in the GitHub boards and queue lab, which this office starts with on
 // (--labs ops,ambience,boards).
 // Skipped (not failed) when there's no build (npm run build), the build is older than the client's
@@ -205,7 +205,9 @@ test('the 3D office: the strip in the bottom bar, I opens Mission control, Esc p
   if (why) return t.skip(why);
   const { page, errors, context } = await signedIn();
   t.after(() => context.close());
-  await page.goto(`${base}/bridge`);
+  // By its old address: /bridge still lands on the Deck at /deck, with its query and #hash.
+  await page.goto(`${base}/bridge?from=old#here`);
+  assert.equal(new URL(page.url()).pathname + new URL(page.url()).search + new URL(page.url()).hash, '/deck?from=old#here');
   await page.waitForFunction(() => !!(window as unknown as { __office?: { store: { floor: string | null } } }).__office?.store.floor, null, { timeout: 60_000 });
   // The mission from the test before is on the strip, bottom left.
   await page.locator('#mission-strip .ms-statement', { hasText: 'Make sign-in boring' }).waitFor({ timeout: 15_000 });
@@ -255,7 +257,7 @@ test('back after a while away: the digest is over the list on the home page, and
 
   const office = await signedIn(undefined, 40 * 60_000);
   t.after(() => office.context.close());
-  await office.page.goto(`${base}/bridge`);
+  await office.page.goto(`${base}/deck`);
   // The start of watch takes the window's place at load: the debrief, whose Full log is the window.
   const debrief = office.page.locator('.debrief.on');
   await debrief.waitFor({ timeout: 60_000 });
@@ -279,7 +281,7 @@ test('a first visit to the 3D office asks for nothing: no name, no character', a
   if (why) return t.skip(why);
   const { page, errors, context } = await signedIn(undefined, 0, true);
   t.after(() => context.close());
-  await page.goto(`${base}/bridge`);
+  await page.goto(`${base}/deck`);
   await page.waitForFunction(() => !!(window as unknown as { __office?: { store: { floor: string | null } } }).__office?.store.floor, null, { timeout: 60_000 });
   assert.equal(await page.locator('.modal.name-ask').count(), 0, 'no name to type');
   assert.equal(await page.locator('.modal.charsel').count(), 0, 'no character creator in the way');
@@ -313,7 +315,7 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   // A software-rendered deck starves the page of frames, so motion would never finish: settle it,
   // and poll on a timer below rather than on animation frames.
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto(`${base}/bridge`);
+  await page.goto(`${base}/deck`);
   await page.waitForFunction(() => !!(window as unknown as { __office?: { store: { floor: string | null } } }).__office?.store.floor, null, { timeout: 60_000 });
   // A unit aboard, for the Crew tab's Now column (the stand-in agent exits at once, so it's stuck: crashed).
   await page.evaluate(() => (window as unknown as { __office: { net: { send(m: unknown): void } } }).__office.net.send({ t: 'worker.spawn', deskId: 'desk-1', prompt: 'Pick the session store', worktree: false }));
@@ -437,7 +439,7 @@ test('docked in the 3D office, the deck keeps its own keys: N goes to the unit, 
   const mapWarnings: string[] = [];
   page.on('console', (m) => m.text().includes("parameter 'map'") && mapWarnings.push(m.text()));
   type Office = { __office: { store: { floor: string | null; roster: unknown[] }; net: { send(m: unknown): void }; overview: { active(): boolean } } };
-  await page.goto(`${base}/bridge`);
+  await page.goto(`${base}/deck`);
   await page.waitForFunction(() => !!(window as unknown as Office).__office?.store.floor, null, { timeout: 60_000 });
   // A unit aboard (the stand-in exits at once, so it's stuck: waiting on someone, which N goes to).
   await page.evaluate(() => (window as unknown as Office).__office.net.send({ t: 'worker.spawn', deskId: 'desk-1', prompt: 'Pick the session store', worktree: false }));
@@ -484,7 +486,7 @@ test('selecting in the 3D office: two Escs from an Overview selection walk again
   });
   // Settled motion: the move up and down and the flights are cuts on a software-rendered deck.
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto(`${base}/bridge`);
+  await page.goto(`${base}/deck`);
   type Office = {
     __office: {
       store: { floor: string | null; roster: unknown[]; workers: Map<string, { id: string }> };

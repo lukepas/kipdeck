@@ -14,7 +14,7 @@
  * gets one line from VESPER, once.
  *
  * The hairline gives way: it never runs while anyone else needs the captain or is stuck, in a hidden
- * tab, or under reduced motion, Ship motion Off or Silent running. Settings > Bridge > Turnaround
+ * tab, or under reduced motion, Ship motion Off or Silent running. Settings > Deck > Turnaround
  * clock turns all of it off.
  */
 import './ui.css';

@@ -287,7 +287,7 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
     document.body.classList.toggle('pane-open', home.paneOpen && !!e);
     if (!e) {
       if (home.selected && !store.rosterEntry(home.selected)) home.selected = undefined;
-      // With Bridge view on in Labs, the project's deck plan fills the empty pane (loaded only then).
+      // While the Deck lab is on (it ships on), the project's deck plan fills the empty pane (loaded only then).
       if (store.lab('bridge')) void showPlan();
       else {
         // Drawn again only when what it says changes, so a roster tick doesn't restart the cleared check.

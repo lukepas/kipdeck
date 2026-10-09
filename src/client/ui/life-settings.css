@@ -1,4 +1,4 @@
-/* Settings > Bridge > Life (ui/life-settings.ts): the level, then one row per part of the world
+/* Settings > Deck > Life (ui/life-settings.ts): the level, then one row per part of the world
    outside the glass, its name and an On / Off switch on a line, what it is under them. */
 .life-part { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 12px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
 .life-part-name { font-weight: 500; }

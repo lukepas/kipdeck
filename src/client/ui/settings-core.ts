@@ -3,7 +3,7 @@
 // a merge, where new projects are cloned, the office's prompts) and Notifications (this browser's
 // desktop notifications, the team's Slack or Discord channel). No three.js and nothing of the 3D
 // bridge: the home page loads this when Settings is first opened. A page adds rows of its own through
-// `extra`; the Bridge view adds its own panes after these (ui/settings.ts).
+// `extra`; the Deck adds its own panes after these (ui/settings.ts).
 import type { Net } from '../net';
 import { store, type Settings } from '../state';
 import { askNotifyPermission, notifyPermission } from '../notify';

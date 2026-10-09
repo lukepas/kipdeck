@@ -34,12 +34,12 @@ function appearance(): HTMLElement {
   return row;
 }
 
-/** Labs, at the foot of Account: the parts beyond the inbox, each off until someone turns it on. */
+/** Labs, at the foot of Account: the parts beyond the inbox, each on until an admin switches it off. */
 function labs(net: Net): HTMLElement {
   return setting(
     'Labs',
     'office',
-    h('p.setting-note', {}, 'The 3D Bridge view, GitHub boards and the task queue, goals, meetings, voice and Proof of Merge. Each is off until an admin turns it on.'),
+    h('p.setting-note', {}, 'The 3D Deck, GitHub boards and the task queue, goals, meetings, voice and Proof of Merge. Each is on until an admin switches it off.'),
     h('div.seg', { style: 'margin-top:8px' }, h('button.btn', { type: 'button', onclick: () => void lazy.labs().then((m) => m.openLabs(net)) }, 'Open Labs...')),
   );
 }

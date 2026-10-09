@@ -1,7 +1,7 @@
 /**
  * The bridge's lights: Night (low light, comfortable in a dark room yet clearly readable) or Day (high
  * light, a bright ship interior), or Auto, which follows the system's dark or light setting; and a
- * Brightness step either way (Settings > Bridge). The mode retunes the scene's lights and the deck's
+ * Brightness step either way (Settings > Deck). The mode retunes the scene's lights and the deck's
  * lamps (LIGHT_MODES in ./modes.ts; Brightness scales them all), the renderer's exposure, the glow, the deck's neutrals (Day
  * repaints them, ./palette.ts) and the page's own colors (the HUD's dark or print set, lighting.ts).
  *

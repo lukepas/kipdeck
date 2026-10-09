@@ -9,7 +9,7 @@
  *
  * None of it shows in the Overview (bridge layer; the epithet only up close in Walk), none of it has a
  * hue of its own, and the plinth waits while anyone needs you: a new unit of the watch steps up once
- * nothing is waiting. Settings > Bridge > Life > Crew epithets turns it all off.
+ * nothing is waiting. Settings > Deck > Life > Crew epithets turns it all off.
  */
 import * as THREE from 'three';
 import { callSign } from '../../../shared/callsign';

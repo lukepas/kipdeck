@@ -17,9 +17,12 @@ export const TAGLINE = 'The inbox for your AI coding agents.';
  */
 export const DESCRIPTION =
   'Full control and clarity over every AI coding agent you run, in one place. See who is waiting on you and for how long, then answer, review and merge without leaving it.';
-/** The browser tab's title: "(2) acme-shop - Kipdeck", in plain ASCII, the count left out at zero. */
-export function tabTitle(waiting: number, project?: string): string {
-  return `${waiting > 0 ? `(${waiting}) ` : ''}${project ? `${project} - ` : ''}${PRODUCT}`;
+/**
+ * The browser tab's title: "(2) acme-shop - Kipdeck", in plain ASCII, the count left out at zero.
+ * `view` names a view other than the inbox: "(2) acme-shop - Deck - Kipdeck" on the Deck.
+ */
+export function tabTitle(waiting: number, project?: string, view?: string): string {
+  return `${waiting > 0 ? `(${waiting}) ` : ''}${project ? `${project} - ` : ''}${view ? `${view} - ` : ''}${PRODUCT}`;
 }
 /** The command it runs as (agent-office still works, for upstream's scripts). */
 export const CLI = 'kipdeck';

@@ -11,7 +11,7 @@
  * - The sun's flare, where the key light comes from, broken up by the canopy's ribs as they cross it
  *   (./flare.ts, logic.ts canopyClear). One draw.
  *
- * Settings > Bridge > Quality says how much: four layers of dust at High, three at Medium, one at Low;
+ * Settings > Deck > Quality says how much: four layers of dust at High, three at Medium, one at Low;
  * the flare at Medium and High; the giant at every tier. When a unit needs the captain or is stuck the
  * dust, the flare and the giant's rim fall to SPACE_GIVE_WAY over half a second, as the nebula's knots
  * do (space/logic.ts); the giant itself stays. Each of the flare's shapes fades out where it would land

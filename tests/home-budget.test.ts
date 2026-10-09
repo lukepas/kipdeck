@@ -1,7 +1,7 @@
 // The home page at / is the product, and it has to open fast on any laptop or phone: what it loads
 // before it can draw (its scripts, the chunks they import and its stylesheets) stays at or under what
 // the 2D view at /lite loaded when it became the home (stage 0, 812,503 bytes), and none of it is
-// three.js. The 3D bridge is a bundle of its own at /bridge. Skipped (not failed) when the bundle is
+// three.js. The 3D Deck is a bundle of its own at /deck (built as bridge.html). Skipped (not failed) when the bundle is
 // missing or older than its sources.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -41,7 +41,7 @@ test('the home page loads no more than the 2D view did, and no three.js', { skip
   }
 });
 
-test('the 3D bridge is its own page, and the home page shares none of its entry', { skip: stale || undefined }, () => {
+test('the 3D Deck is its own page, and the home page shares none of its entry', { skip: stale || undefined }, () => {
   assert.ok(existsSync(path.join(BUNDLE, 'bridge.html')), 'bridge.html is built');
   const bridge = eager('bridge.html');
   const entry = bridge.find((f) => /\/bridge-[^/]+\.js$/.test(f));

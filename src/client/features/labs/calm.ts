@@ -1,4 +1,4 @@
-// The Bridge view without Bridge ambience (Labs): the same room and the same agents, with the
+// The Deck without Deck ambience (Labs): the same room and the same agents, with the
 // decorative systems quiet. Pure, so it's tested without a scene.
 import { LIFE_PARTS, type LifePart, type Settings } from '../../state/persist';
 

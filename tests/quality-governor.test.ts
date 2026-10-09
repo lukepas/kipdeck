@@ -4,7 +4,7 @@ import { GOVERNOR, Governor, floorFor, p95, type Step } from '../src/client/feat
 import { CAP_KEY, CAP_TTL_MS, OLD_CAP_KEYS, clearCap, readCap, sessionId, writeCap, type Store } from '../src/client/features/quality/cap.js';
 import { canTryHigh, chipText, menuText, stepText, type QualityStatus } from '../src/client/features/quality/status.js';
 
-// Auto at Settings > Bridge > Quality (features/quality/governor.ts): fed made-up frame streams, it
+// Auto at Settings > Deck > Quality (features/quality/governor.ts): fed made-up frame streams, it
 // throws away warm-up and hitches, steps down one tier only for sustained slow frames, climbs back
 // when there is room, and holds at Medium on graphics that start at High. And the cap a step down
 // leaves for a reload (cap.ts): versioned, per session, never older than a day.

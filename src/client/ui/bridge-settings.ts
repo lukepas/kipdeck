@@ -1,4 +1,4 @@
-// Settings > Bridge: the bridge's lights and how the ship moves outside its glass. Night is low light
+// Settings > Deck: the bridge's lights and how the ship moves outside its glass. Night is low light
 // for a dark room, Day high light for a bright one, Auto follows the system; Brightness steps either
 // way from there. Full streams the stars past, turns the sky and now and then sends something by;
 // Calm halves that and sends nothing by; Off stills space and, with it, everything else on the deck

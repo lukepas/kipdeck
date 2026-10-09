@@ -1,6 +1,6 @@
 /**
  * Giving way: the one signal every part of the bridge's world (the destination ahead, the fleet, the
- * squadron) reads to stay out of the way of what needs you, and Settings > Bridge > Life with it.
+ * squadron) reads to stay out of the way of what needs you, and Settings > Deck > Life with it.
  *
  * Once a second it reads this deck's ranking (shared/attention.ts): a unit that has just started
  * needing you or got stuck ducks all life for 3 s; its pod stays hushed while it lasts; and while
@@ -13,7 +13,7 @@ import { store, type LifeLevel, type LifePart } from '../../state';
 import { GIVE_WAY, ambientMotion, lifeAllows, lifeGain, type LifeAct } from './logic';
 
 export interface GiveWay {
-  /** Settings > Bridge > Life: Full, Calm or Silent running. */
+  /** Settings > Deck > Life: Full, Calm or Silent running. */
   level(): LifeLevel;
   /** Whether `part` is switched on under Life. */
   wants(part: LifePart): boolean;

@@ -60,6 +60,8 @@ test('the tab title says the count, the project and the name in plain ASCII', ()
   assert.equal(tabTitle(2, 'acme-shop'), '(2) acme-shop - Kipdeck');
   assert.equal(tabTitle(0, 'acme-shop'), 'acme-shop - Kipdeck');
   assert.equal(tabTitle(0), PRODUCT);
+  assert.equal(tabTitle(3, 'acme-shop', 'Deck'), '(3) acme-shop - Deck - Kipdeck');
+  assert.equal(tabTitle(0, undefined, 'Deck'), 'Deck - Kipdeck');
 });
 
 test('five states, named once: the sections and the ranking use STATE_LABEL', () => {

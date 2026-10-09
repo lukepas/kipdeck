@@ -1,6 +1,6 @@
 # Mission control
 
-Kipdeck gives you full control and clarity over every AI coding agent you run, in one place. Mission control is the Bridge view's list of who needs a person, on every project.
+Kipdeck gives you full control and clarity over every AI coding agent you run, in one place. Mission control is the Deck's list of who needs a person, on every project.
 
 Back to the [README](../README.md).
 
@@ -12,7 +12,7 @@ Inside it, **1** to **5** switch tabs (Attention, Goals, Review, Timeline, Crew;
 
 ### Docked or floating
 
-**Dock** in its header (or **D**) moves Mission control from the middle of the screen to a 400px panel down the right, under the top bar, with no dim over the deck, so you can work through the list while you watch the deck react. **Float** (or **D** again) puts it back in the middle. The office remembers which you chose, in this browser. Switching slides the window from one place to the other; with less motion asked for (the system's setting, or Settings > Bridge > Ship motion Off) it just moves.
+**Dock** in its header (or **D**) moves Mission control from the middle of the screen to a 400px panel down the right, under the top bar, with no dim over the deck, so you can work through the list while you watch the deck react. **Float** (or **D** again) puts it back in the middle. The office remembers which you chose, in this browser. Switching slides the window from one place to the other; with less motion asked for (the system's setting, or Settings > Deck > Ship motion Off) it just moves.
 
 Docked, the panel stays up while you look around:
 
@@ -121,7 +121,7 @@ The record is one line, from the deck log as far as the page has it: *A-03 the M
 - **Chevrons**: a thin white one for 5 merges, one for a merge rate of 90% or more over 5 outcomes or more, and one for 10 merges with none reverted; one violet chevron when its agent has an ERC-8004 record on chain. Hover them for why.
 - **Unit of the watch**: the unit with the best clean record on the last watch (yesterday: the most merges with no revert against it, ties to the quicker median merge). It is the same unit all day, and it stands on the Proof corner's plinth on the deck.
 
-Settings > Bridge > Life > Crew epithets turns the epithets, chevrons and the unit of the watch off everywhere; the records stay.
+Settings > Deck > Life > Crew epithets turns the epithets, chevrons and the unit of the watch off everywhere; the records stay.
 
 At the foot of the tab is the **Captain's log**: the day's entries the start of watch wrote to this deck's timeline (one a day, the first time a captain starts a watch there), newest first, a week of them. Each is the office's own words from real numbers: *Day 14 of the mission. Yesterday the fleet merged 9 pull requests, closed 14 issues and paid 3 bounties on devnet. Waypoint 3, Billing v2, is 60% done. Two units await orders.* The Timeline tab lists them too.
 
@@ -129,7 +129,7 @@ At the foot of the tab is the **Captain's log**: the day's entries the start of 
 
 Back after 15 minutes or more, *While you were away* opens once: a one-line summary and the events since you left, with **Show what needs me** for the Attention tab. Merges, milestones, stuck workers and the like are listed before the routine finishes and questions. The summary is worked out the same way everywhere (`src/shared/digest.ts`): *3 PRs merged, 2 workers finished and wait for review, 1 got stuck, Auth rewrite moved from 3/7 to 5/7*.
 
-With an account, the office remembers when you were last here (when you left, not when you came in, and never while you're still here in another tab). It stamps everyone connected once a minute and as it shuts down, so a restart or a crash doesn't make people who never left look away. On the shared password, this browser does. In the 3D office it's a window that waits until the office has loaded, no other window is open and you aren't typing; while Settings > Bridge > Rituals > Start of watch is on (the default), the start of watch's debrief takes its place at load, who waits on you listed first, and its **Full log** button opens this window ([docs/design.md](design.md#rituals)). In the 2D view it's the first card, and **Catch up** brings it back. From the palette, *While you were away* opens it again (the last hour's, if you weren't away).
+With an account, the office remembers when you were last here (when you left, not when you came in, and never while you're still here in another tab). It stamps everyone connected once a minute and as it shuts down, so a restart or a crash doesn't make people who never left look away. On the shared password, this browser does. In the 3D office it's a window that waits until the office has loaded, no other window is open and you aren't typing; while Settings > Deck > Rituals > Start of watch is on (the default), the start of watch's debrief takes its place at load, who waits on you listed first, and its **Full log** button opens this window ([docs/design.md](design.md#rituals)). In the 2D view it's the first card, and **Catch up** brings it back. From the palette, *While you were away* opens it again (the last hour's, if you weren't away).
 
 ## Reminders
 
@@ -148,7 +148,7 @@ The office looks once a minute. A reminder shows at the top of the Attention tab
 
 ## The mission strip
 
-One line under the top bar, top left, in the Bridge view, with Goals and timeline on in Labs: the floor's mission, the active milestone with a thin progress bar (*Auth rewrite · 3/7 issues · 2 workers*), and *unlinked: 2* when agents aren't tied to anything and there is an open milestone to tie them to. A milestone with no issues shows no bar, just *no issues linked yet*. With no mission yet it reads *No mission yet. Set one*. Click it for the Goals tab. The menu's *Mission* switch hides it.
+One line under the top bar, top left, in the Deck, with Goals and timeline on in Labs: the floor's mission, the active milestone with a thin progress bar (*Auth rewrite · 3/7 issues · 2 workers*), and *unlinked: 2* when agents aren't tied to anything and there is an open milestone to tie them to. A milestone with no issues shows no bar, just *no issues linked yet*. With no mission yet it reads *No mission yet. Set one*. Click it for the Goals tab. The menu's *Mission* switch hides it.
 
 ## Linking work to goals
 

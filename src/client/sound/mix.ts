@@ -21,7 +21,7 @@ export type { SoundGroup, SoundMix };
 export interface MixScene {
   /** The tab is hidden. */
   hidden: boolean;
-  /** Settings > Bridge > Life. */
+  /** Settings > Deck > Life. */
   life: LifeLevel;
   /** A unit on the deck needs you or is stuck. */
   attention: boolean;

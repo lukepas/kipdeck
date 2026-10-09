@@ -1,6 +1,6 @@
-// 09 Labs. Kip stands on the right end of the --labs command line. As its flags switch on in turn he
-// points his wand at each one, and when all five are lit, a twirl. The flags are real toggles: one
-// switched on gets a hop, one switched off droops his ears. The Bridge tile is his ship: hovering it
+// 09 Labs. Kip stands on the right end of the --labs command line. As a scanline powers each tile in
+// turn he points his wand at its flag, and when all five are lit, a twirl. The flags are real toggles:
+// one held on again gets a hop, one held off droops his ears. The Deck tile is his ship: hovering it
 // gets a wave.
 import { timeline } from '../tween';
 import { onTop, spots, type Moment } from './kinds';
@@ -15,13 +15,13 @@ export const labs: Moment = {
     const { kit, sec } = run;
     const flags = [...sec.querySelectorAll<HTMLButtonElement>('.flag')];
     const tiles = flags.map((f) => sec.querySelector(`.tile[data-lab="${f.dataset.lab}"]`));
-    const lit = () => tiles.filter((t) => t?.classList.contains('on')).length;
-    // The opening sequence (scenes/labs.ts switches them on 220 ms apart) or a visitor's press.
+    const lit = () => tiles.filter((t) => t?.classList.contains('power')).length;
+    // The opening sequence (scenes/labs.ts powers them 220 ms apart) or a visitor's press.
     let opening = lit() < tiles.length;
     let pressed: HTMLButtonElement | null = null;
     flags.forEach((f) => run.listen(f, 'click', () => (pressed = f)));
     tiles.forEach((t, i) =>
-      run.watch(t, 'on', (on) => {
+      run.watch(t, 'power', (on) => {
         if (opening) {
           if (!on) return;
           const tl = timeline().add(kit.pointAt(flags[i]));

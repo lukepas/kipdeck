@@ -1,4 +1,4 @@
-// Settings > Bridge > Rituals: the start of watch (features/launch), the momentum display (the drive
+// Settings > Deck > Rituals: the start of watch (features/launch), the momentum display (the drive
 // core and the fleet's log, features/drive) and the turnaround clock (the pit wall, features/turnaround).
 // Each answers real outcomes only and gives way to anyone who needs you; each can be toned down or off.
 
