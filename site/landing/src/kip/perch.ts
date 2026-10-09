@@ -84,8 +84,16 @@ export function clear(box: Rect, obs: Rect[]): boolean {
   return !obs.some((o) => hits(box, o));
 }
 
+// The fixed bar's height: 64 px on a laptop, taller below 1080 px where the section links get a row
+// of their own. Measured when it changes, so a frame never reads layout for it.
+let barH = 66;
+const bar = typeof document !== 'undefined' ? document.getElementById('top') : null;
+if (bar && typeof ResizeObserver !== 'undefined') new ResizeObserver(() => (barH = Math.max(66, Math.ceil(bar.offsetHeight) + 2))).observe(bar);
+/** Where the page shows below the fixed bar, in viewport px. */
+export const header = (): number => barH;
+
 /** Whether the box is fully inside the viewport, below the header. */
-export function onScreen(box: Rect, top = 66): boolean {
+export function onScreen(box: Rect, top = header()): boolean {
   return box.t >= top && box.b <= innerHeight - 4 && box.l >= 0 && box.r <= document.documentElement.clientWidth;
 }
 

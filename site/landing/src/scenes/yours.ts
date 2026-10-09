@@ -26,7 +26,8 @@ const OUTPUT_GAP = 50;
 
 export function mountYours(section: HTMLElement) {
   if (env.reduced) return;
-  const term = [...section.querySelectorAll<HTMLElement>('.term-body')].find((el) => !el.hidden && el.offsetParent !== null) ?? section.querySelector<HTMLElement>('.term-body')!;
+  // A build for a private repository has no terminal here (site/build.mjs): the rest still plays.
+  const term = [...section.querySelectorAll<HTMLElement>('.term-body')].find((el) => !el.hidden && el.offsetParent !== null) ?? section.querySelector<HTMLElement>('.term-body');
   const measuredList = section.querySelector<HTMLElement>('.measured')!;
   const measured = [...measuredList.querySelectorAll<HTMLElement>('li')];
   const ledger = section.querySelector<HTMLElement>('.ledger')!;
@@ -36,26 +37,7 @@ export function mountYours(section: HTMLElement) {
   setMerged?.('0');
 
   // ---- The terminal: whole lines, clipped until they run. A command uncovers in character steps.
-  const lines = [...term.querySelectorAll<HTMLElement>('.tl')];
-  term.classList.add('typing-term');
-  const plan: { el: HTMLElement; at: number }[] = [];
-  let t = 80;
-  for (const line of lines) {
-    const text = line.textContent ?? '';
-    if (text.trim().startsWith('$')) {
-      t += BEFORE_CMD;
-      const n = Math.max(1, text.length);
-      line.style.setProperty('--type-ms', `${n * CHAR_MS}ms`);
-      line.style.setProperty('--type-n', String(Math.min(n, 60)));
-      plan.push({ el: line, at: t });
-      t += n * CHAR_MS + AFTER_CMD;
-    } else {
-      t += OUTPUT_GAP;
-      plan.push({ el: line, at: t });
-    }
-  }
-  const runTerm = () => plan.forEach(({ el, at }) => setTimeout(() => el.classList.add('on'), at));
-  once(term, runTerm, 0.25);
+  if (term) runTerminal(term);
 
   // ---- The numbers: up from zero, at full contrast, as soon as their list is in view.
   measuredList.classList.add('staged');
@@ -159,4 +141,27 @@ function scramble(el: HTMLElement) {
       if (t >= 1) stop();
     },
   });
+}
+
+function runTerminal(term: HTMLElement) {
+  const lines = [...term.querySelectorAll<HTMLElement>('.tl')];
+  term.classList.add('typing-term');
+  const plan: { el: HTMLElement; at: number }[] = [];
+  let t = 80;
+  for (const line of lines) {
+    const text = line.textContent ?? '';
+    if (text.trim().startsWith('$')) {
+      t += BEFORE_CMD;
+      const n = Math.max(1, text.length);
+      line.style.setProperty('--type-ms', `${n * CHAR_MS}ms`);
+      line.style.setProperty('--type-n', String(Math.min(n, 60)));
+      plan.push({ el: line, at: t });
+      t += n * CHAR_MS + AFTER_CMD;
+    } else {
+      t += OUTPUT_GAP;
+      plan.push({ el: line, at: t });
+    }
+  }
+  const runTerm = () => plan.forEach(({ el, at }) => setTimeout(() => el.classList.add('on'), at));
+  once(term, runTerm, 0.25);
 }

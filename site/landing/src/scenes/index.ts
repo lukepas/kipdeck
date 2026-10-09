@@ -18,7 +18,6 @@ export const SCENES: Record<string, Loader> = {
   phone: () => import('./phone').then((m) => m.mountPhone),
   numbers: () => import('./numbers').then((m) => m.mountNumbers),
   labs: () => import('./labs').then((m) => m.mountLabs),
-  proof: () => import('./proof').then((m) => m.mountProof),
   teams: () => import('./teams').then((m) => m.mountTeams),
   end: () => import('./end').then((m) => m.mountEnd),
 };

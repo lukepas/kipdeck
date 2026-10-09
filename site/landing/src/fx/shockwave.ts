@@ -1,6 +1,6 @@
-// The merge's shockwave: one ring of light that leaves the Merge button and crosses the viewport,
-// Signal at its core and the Proof violet at its rim, with a thin chromatic fringe like glass
-// bending the page behind it. One small WebGL1 pass on one canvas, or the same ring in Canvas2D
+// The merge's shockwave: one ring of light in the Settled green (Signal is kept for waits) that
+// leaves the Merge button, with a thin fringe like glass bending the page behind it. It reaches
+// across the viewport, or only as far as the caller asks (the loop keeps it round the button). One small WebGL1 pass on one canvas, or the same ring in Canvas2D
 // where WebGL is missing. Pointer events pass straight through it.
 //
 // The canvas, its context and the compiled program are made ahead of time (warmShockwave, called
@@ -14,26 +14,26 @@ import { rgbOf } from '../engine/env';
 // stages declare mediump floats: uniforms they share must match in precision, or the link fails.
 const SEGMENTS = 160;
 const VERT = `precision mediump float;
-attribute vec3 a;uniform vec2 res;uniform vec2 at;uniform float t;uniform float scale;
+attribute vec3 a;uniform vec2 res;uniform vec2 at;uniform float t;uniform float scale;uniform float reach;uniform float wide;
 void main(){
-  float r=t*1.25*length(res)/scale;float w=22.+90.*t;
+  float r=t*reach;float w=(22.+90.*t)*wide;
   float rr=max(0.,mix(r-1.1*w,r+1.1*w,a.z));
   vec2 p=at+a.xy*rr*scale;
   gl_Position=vec4(p.x/res.x*2.-1.,1.-p.y/res.y*2.,0.,1.);
 }`;
 const FRAG = `precision mediump float;
-uniform vec2 res;uniform vec2 at;uniform float t;uniform vec3 core;uniform vec3 rim;uniform float scale;
+uniform vec2 res;uniform vec2 at;uniform float t;uniform vec3 core;uniform vec3 rim;uniform float scale;uniform float reach;uniform float wide;
 float ring(float d,float r,float w){return smoothstep(w,0.,abs(d-r));}
 void main(){
   vec2 q=gl_FragCoord.xy;q.y=res.y-q.y;
   float d=distance(q,at)/scale;
-  float r=t*1.25*length(res)/scale;
+  float r=t*reach;
   float fade=1.-t;fade*=fade;
-  float w=22.+90.*t;
+  float w=(22.+90.*t)*wide;
   float a=ring(d,r,w);
   float fr=ring(d,r-w*.35,w*.45)*.55;
   float fb=ring(d,r+w*.35,w*.45)*.55;
-  vec3 c=mix(core,rim,smoothstep(.0,.6,t))*a+vec3(1.,.42,.1)*fr+rim*fb;
+  vec3 c=mix(core,rim,smoothstep(.0,.6,t))*a+rim*fr+rim*fb;
   float alpha=clamp((a*.85+fr+fb)*fade,0.,1.);
   gl_FragColor=vec4(c*fade,alpha);
 }`;
@@ -52,8 +52,8 @@ function annulus(): Float32Array {
 type Ring = {
   /** Draws the ring at progress t (0 to 1). */
   draw(t: number): void;
-  /** Sets where the ring starts (viewport px) and the drawing size. */
-  place(x: number, y: number): void;
+  /** Sets where the ring starts (viewport px), how far it goes (px) and the drawing size. */
+  place(x: number, y: number, reach: number): void;
 };
 
 /** The ring in WebGL on `canvas`, or null where WebGL is missing or the program will not link. */
@@ -82,6 +82,7 @@ function glRing(canvas: HTMLCanvasElement, dpr: number, core: number[], rim: num
   let set = false;
   const u = (n: string) => gl.getUniformLocation(prog, n);
   let ut: WebGLUniformLocation | null = null, ures: WebGLUniformLocation | null = null, uat: WebGLUniformLocation | null = null;
+  let ureach: WebGLUniformLocation | null = null, uwide: WebGLUniformLocation | null = null;
   const setup = (): boolean => {
     if (set) return ok;
     set = true;
@@ -101,6 +102,8 @@ function glRing(canvas: HTMLCanvasElement, dpr: number, core: number[], rim: num
     ut = u('t');
     ures = u('res');
     uat = u('at');
+    ureach = u('reach');
+    uwide = u('wide');
     return ok;
   };
   const ring: Ring = {
@@ -112,16 +115,18 @@ function glRing(canvas: HTMLCanvasElement, dpr: number, core: number[], rim: num
       gl.uniform1f(ut, t);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, (SEGMENTS + 1) * 2);
     },
-    place(x, y) {
+    place(x, y, reach) {
       if (!setup()) return;
       gl.uniform2f(ures, canvas.width, canvas.height);
       gl.uniform2f(uat, x * dpr, y * dpr);
+      gl.uniform1f(ureach, reach);
+      gl.uniform1f(uwide, widthFor(reach));
     },
   };
   // One fully faded frame, so the driver has done its first draw too before the merge.
   const ready = compiled.then(() => {
     if (!setup()) return;
-    ring.place(0, 0);
+    ring.place(0, 0, fullReach());
     ring.draw(1);
   });
   // A program that failed to link (checked only once it has compiled) means no WebGL ring.
@@ -136,30 +141,37 @@ function glRing(canvas: HTMLCanvasElement, dpr: number, core: number[], rim: num
 function flatRing(canvas: HTMLCanvasElement, dpr: number, core: number[], rim: number[]): Ring {
   const ctx = canvas.getContext('2d')!;
   const css = (c: number[], a: number) => `rgba(${c.map((v) => Math.round(v * 255)).join(',')},${a})`;
-  let x = 0, y = 0;
+  let x = 0, y = 0, reach = 0, wide = 1;
   return {
     draw(t) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, innerWidth, innerHeight);
-      const r = t * 1.25 * Math.hypot(innerWidth, innerHeight);
+      const r = t * reach;
       const fade = (1 - t) * (1 - t);
-      ctx.lineWidth = 6 + 40 * t;
+      ctx.lineWidth = (6 + 40 * t) * wide;
       ctx.strokeStyle = css(rim, 0.5 * fade);
       ctx.beginPath();
       ctx.arc(x, y, r + 6, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.lineWidth = 3 + 18 * t;
+      ctx.lineWidth = (3 + 18 * t) * wide;
       ctx.strokeStyle = css(core, 0.9 * fade);
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.stroke();
     },
-    place(px, py) {
+    place(px, py, far) {
       x = px;
       y = py;
+      reach = far;
+      wide = widthFor(far);
     },
   };
 }
+
+/** Far enough to cross the whole viewport from anywhere on it. */
+const fullReach = () => 1.25 * Math.hypot(innerWidth, innerHeight);
+/** A short ring is a thin one: its band scales with how far it goes. */
+const widthFor = (reach: number) => Math.min(1, Math.max(0.15, reach / 1200));
 
 type Kept = { canvas: HTMLCanvasElement; ring: Ring; dpr: number; ready: Promise<void> };
 let kept: Kept | null = null;
@@ -179,8 +191,8 @@ export function warmShockwave(): Promise<void> {
     c.style.visibility = 'hidden';
     return c;
   };
-  const core = rgbOf('--signal', [1, 0.42, 0.1]);
-  const rim = rgbOf('--proof', [0.65, 0.55, 1]);
+  const core = rgbOf('--settled', [0.24, 0.86, 0.59]);
+  const rim = core;
   let canvas = make();
   const gl = glRing(canvas, dpr, core, rim);
   let ring: Ring;
@@ -200,8 +212,9 @@ export function warmShockwave(): Promise<void> {
 
 let running = 0;
 
-/** Sends one ring out from (x, y) in viewport pixels. Resolves when it has gone. */
-export function shockwave(x: number, y: number, ms = 1100): Promise<void> {
+/** Sends one ring out from (x, y) in viewport pixels, `reach` px at most (the whole viewport by
+ *  default). Resolves when it has gone. */
+export function shockwave(x: number, y: number, ms = 1100, reach = fullReach()): Promise<void> {
   void warmShockwave();
   const { canvas, ring, dpr } = kept!;
   const w = Math.round(innerWidth * dpr), h = Math.round(innerHeight * dpr);
@@ -209,7 +222,7 @@ export function shockwave(x: number, y: number, ms = 1100): Promise<void> {
     canvas.width = w;
     canvas.height = h;
   }
-  ring.place(x, y);
+  ring.place(x, y, reach);
   canvas.style.visibility = 'visible';
   const id = ++running;
   const start = performance.now();

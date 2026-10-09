@@ -194,7 +194,8 @@ export function mountFunnel(section: HTMLElement) {
       // The stream: from the vendor's chip to the card's mouth, a smooth S (sideways on a wide
       // screen, downward where the card sits under the copy).
       const f = (uph[i] + t * usp[i]) % 1;
-      const sx = c.x + c.w / 2, sy = c.y + c.h / 2;
+      // From the chip's right edge, so no unit starts on top of the words.
+      const sx = c.x + c.w, sy = c.y + c.h / 2;
       const stacked = cardR.y > sy + 40;
       const ex = stacked ? cx + ulane[i] * cardR.w * 0.36 : mouthX;
       const ey = stacked ? cardR.y + 14 : mouthY + ulane[i] * cardR.h * 0.32;
@@ -281,5 +282,5 @@ export function mountFunnel(section: HTMLElement) {
     frame(p, dt);
     gov.tick(dt);
     reading = p < 0.72;
-  }, { fallback: 'play', playMs: 5600, always: true, read });
+  }, { fallback: 'play', playMs: 3000, always: true, read });
 }

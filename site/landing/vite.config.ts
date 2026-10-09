@@ -17,7 +17,7 @@ export function jsonLd(brand: Brand): string {
     description: brand.ogDescription,
     applicationCategory: 'DeveloperApplication',
     operatingSystem: 'macOS, Linux, Windows',
-    softwareRequirements: 'Node.js 20 or later, git, and one agent CLI (Claude Code, Codex or Cursor)',
+    softwareRequirements: 'Node.js 20 or later, git, and one agent CLI (Claude Code, Codex or Cursor CLI)',
     license: 'https://opensource.org/licenses/MIT',
     isAccessibleForFree: true,
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
@@ -28,7 +28,7 @@ export function jsonLd(brand: Brand): string {
   return JSON.stringify(data).replace(/</g, '\\u003c');
 }
 
-/** {{name}}, {{tagline}}, {{lead}}, {{muted}}, {{pkg}}, {{repo}}, {{folder}}, {{ogTitle}}, {{ogDescription}}, {{ogImageAlt}} and {{jsonld}} in the HTML. */
+/** {{name}}, {{tagline}}, {{lead}}, {{muted}}, {{pkg}}, {{repo}}, {{folder}}, {{contact}}, {{ogTitle}}, {{ogDescription}}, {{ogImageAlt}} and {{jsonld}} in the HTML. */
 function brandHtml(brand: Brand): Plugin {
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   const values: Record<string, string> = {
@@ -39,6 +39,7 @@ function brandHtml(brand: Brand): Plugin {
     pkg: brand.pkg,
     repo: brand.repo,
     folder: brand.folder,
+    contact: brand.contact,
     ogTitle: brand.ogTitle,
     ogDescription: brand.ogDescription,
     // The tab and search result title: the name, then what it is ("Kipdeck: the inbox for your AI coding agents").

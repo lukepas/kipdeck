@@ -18,11 +18,11 @@ p { margin: 0 0 1em; }
 h1, h2, h3 { margin: 0; font-weight: 700; }
 ul, ol { margin: 0; padding: 0; list-style: none; }
 figure { margin: 0; }
-::selection { background: rgb(255 106 26 / .32); color: var(--text); }
-:focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; border-radius: 2px; }
+::selection { background: rgb(138 151 165 / .34); color: var(--text); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
 [hidden] { display: none !important; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.skip { position: fixed; left: 16px; top: -60px; z-index: 100; padding: 10px 14px; background: var(--signal); color: var(--on-signal); font-weight: 600; border-radius: var(--radius); text-decoration: none; }
+.skip { position: fixed; left: 16px; top: -60px; z-index: 100; padding: 10px 14px; background: var(--accent); color: var(--on-accent); font-weight: 600; border-radius: var(--radius); text-decoration: none; }
 .skip:focus { top: 12px; }
 
 .wrap { width: 100%; max-width: calc(var(--wrap) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
@@ -49,7 +49,8 @@ p { max-width: 64ch; }
 .tag-inline { display: inline-block; padding: 0 5px; margin-left: 4px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); font: 500 10.5px/16px var(--font-mono); letter-spacing: .02em; color: var(--muted); text-transform: lowercase; vertical-align: 2px; white-space: nowrap; }
 .two-col { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); min-width: 0; gap: clamp(32px, 5vw, 88px); align-items: center; }
 
-/* Buttons. One Signal primary per screen; everything else is a hairline. */
+/* Buttons. One ink primary per screen; everything else is a hairline. Signal is not a button color:
+   only the inbox's Answer, on a row that waits, wears it. */
 .btn {
   position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 9px;
   height: 48px; padding: 0 20px; border-radius: var(--radius); border: 1px solid var(--line-strong);
@@ -58,14 +59,14 @@ p { max-width: 64ch; }
 }
 .btn:hover { background: var(--surface-2); border-color: var(--muted); }
 .btn:active { transform: translateY(1px) scale(.985); }
-.btn.primary { background: var(--signal); border-color: var(--signal); color: var(--on-signal); }
-.btn.primary:hover { background: color-mix(in oklab, var(--signal) 88%, white); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn.primary:hover { background: color-mix(in oklab, var(--accent) 86%, var(--void)); }
 .btn.primary .glyph { color: currentColor; }
 .btn.ghost { background: transparent; }
 .btn svg { fill: currentColor; }
 .btn.sm { height: 30px; padding: 0 11px; font-size: 13px; font-weight: 500; }
 .btn.sm.primary { font-weight: 600; }
-.btn.sm.on { border-color: var(--signal); background: var(--tint-signal); box-shadow: inset 0 -2px 0 var(--signal); }
+.btn.sm.on { border-color: var(--accent); background: var(--tint-accent); box-shadow: inset 0 -2px 0 var(--accent); }
 
 /* The status glyphs, the app's own masks (src/client/styles/base.css). */
 :root {
@@ -81,7 +82,7 @@ p { max-width: 64ch; }
 .g-review { --g: var(--g-review); color: var(--review); }
 .g-working { --g: var(--g-working); color: var(--working); }
 .g-parked { --g: var(--g-parked); color: var(--muted); }
-.g-merged { --g: var(--g-merged); color: var(--proof); }
+.g-merged { --g: var(--g-merged); color: var(--settled); }
 .g-check { --g: var(--g-check); color: var(--settled); }
 
 /* The wait clock: a Signal hairline along the very top that grows in real seconds while an agent
@@ -108,6 +109,8 @@ nav.links a:hover { color: var(--text); }
 .pulse { display: inline-flex; align-items: center; gap: 7px; margin: 0; padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; color: var(--muted); white-space: nowrap; }
 .pulse [data-pulse-count], .pulse [data-pulse-wait] { color: var(--text); font-weight: 500; }
 .pulse.calm .glyph { --g: var(--g-check); color: var(--settled); }
+/* Nobody waiting: the pill drops its clock rather than show 0:00. */
+.pulse.calm [data-pulse-wait], .pulse.calm .pulse-sep { display: none; }
 .pulse-sep { color: var(--line-strong); }
 .theme { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: transparent; color: var(--muted); cursor: pointer; }
 .theme:hover { color: var(--text); border-color: var(--line-strong); }
@@ -119,8 +122,20 @@ nav.links a:hover { color: var(--text); }
 .badge { display: inline-block; padding: 2px 8px; border: 1px solid var(--proof); border-radius: var(--radius-chip); color: var(--proof); background: var(--tint-proof); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
 .chip { display: inline-block; padding: 0 6px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); font: 500 10.5px/17px var(--font-mono); color: var(--muted); white-space: nowrap; }
 
+/* Below 1080 px the section links get a row of their own under the bar, in the page's order, and
+   scroll sideways when they do not fit (the row fades at its right edge to say so). */
 @media (max-width: 1080px) {
-  nav.links { display: none; }
+  /* Two rows of controls over the page: the bar is solid here, scrolled or not, so no bright button
+     ghosts through behind the links. */
+  header.top, .tier-lite header.top.scrolled, .tier-min header.top.scrolled, header.top.scrolled { background: var(--void); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .top-in { flex-wrap: wrap; height: auto; min-height: 64px; row-gap: 0; padding-top: 12px; }
+  nav.links {
+    order: 10; flex: 1 0 100%; gap: 22px; margin: 0 calc(-1 * var(--gutter)); padding: 10px var(--gutter) 10px;
+    overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+  }
+  nav.links::-webkit-scrollbar { display: none; }
+  nav.links a { flex: none; white-space: nowrap; padding: 2px 0; }
 }
 @media (max-width: 860px) {
   .two-col { grid-template-columns: minmax(0, 1fr); }
@@ -132,7 +147,13 @@ nav.links a:hover { color: var(--text); }
   /* The hero keeps its tagline on a phone, on a line of its own: it says what the product is. */
   .hero .label { flex-wrap: wrap; row-gap: 8px; }
   .hero .label .label-tag { display: block; order: 3; flex-basis: 100%; }
-  .pulse .pulse-sep, .pulse [data-pulse-wait] { display: none; }
+  /* The pulse keeps its live clock on a phone, in short: "1 waiting / 0:07". */
+  .pulse .pulse-long { display: none; }
+  .pulse { gap: 5px; padding: 4px 7px; }
+  .lockup { gap: 7px; }
   .wordmark { height: 13px; }
-  .top-in { gap: 12px; height: 56px; }
+  .top-in { gap: 8px; min-height: 56px; padding-top: 8px; }
+  .theme { width: 30px; height: 30px; }
 }
+/* The narrowest phones keep the count and the clock: "1 / 0:07". */
+@media (max-width: 380px) { .pulse .pulse-words { display: none; } }

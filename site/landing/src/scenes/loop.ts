@@ -6,16 +6,19 @@
 //   one by one, into a question card whose border draws around them; the numbered choices fan out
 //   as buttons. In the list the agent sits under Needs you, its wait bar growing.
 // b Answer. Choice 1, a reply typed at the scroll's pace, Send. The wait bar snaps to zero, the
-//   diamond becomes the ringed dot, the row drops into To review, and the page's own wait clock
-//   and "waiting on you" (the visitor's wait, since the hero) clear too.
+//   diamond becomes the ringed dot and the row drops into To review. The scripted answer is Claude
+//   Code's, not the visitor's: the page's own wait (the hero's Codex, in the top bar) keeps counting
+//   until the visitor answers it or presses Merge here.
 // c Review. The Changes tab: files slide in (the tab and the footer count them), the hunk unfolds
 //   line by line, + lines wipe green from the gutter, "+70" climbs with it, and the tests run with a
 //   spinner, 4/12, 8/12, and turn green only at 12/12. Real code, selectable.
 // d Merge. The button charges as the visitor scrolls; pressing it, or scrolling on, merges: the
-//   shockwave, the MERGED stamp, and the row turns into the violet squared check under Shipped today.
-//   Send back is a real button too: it takes the story back to the Answer step.
+//   ring around the button, a small green "Merged" beside it, and the row turns into the green
+//   squared check under Shipped today. Send back is a real button too: it takes the story back to
+//   the Answer step. Neither can be pressed before the step that shows it (aria-disabled, so a
+//   keyboard can still reach them, and reaching them scrolls the story there).
 //
-// The shockwave's canvas and program are made while the browser is idle once the loop is a viewport
+// The merge ring's canvas and program are made while the browser is idle once the loop is a viewport
 // away, so the merge itself only draws. Tabbing to Send back or Merge scrolls to the Review step's
 // end first, so focus never lands on a control the scene has not shown yet.
 //
@@ -70,6 +73,8 @@ export function mountLoop(section: HTMLElement) {
   const edge = $<SVGRectElement>('.qcard-edge rect');
   const cardQ = $<HTMLElement>('.qcard-q');
   const who = $<HTMLElement>('.qk-who');
+  const cardK = $<HTMLElement>('.qcard-k');
+  const qWaitWord = $<HTMLElement>('.qk-w');
   const qWait = $<HTMLElement>('.qk-wait');
   const choices = $$<HTMLElement>('.choice');
   const replyText = $<HTMLElement>('.reply-text');
@@ -86,17 +91,31 @@ export function mountLoop(section: HTMLElement) {
   const sendBack = $<HTMLButtonElement>('.send-back');
   const stamp = $<HTMLElement>('.stamp');
 
-  // ---- Characters: the question as single letters, in the terminal and in the card.
+  // ---- Characters: the question as single letters, in the terminal and in the card. Each word's
+  // letters sit in one unbreakable box, so a line only ever breaks between words.
   const Q = qText.textContent ?? '';
   const chars = (el: HTMLElement) => {
     el.textContent = '';
-    return [...Q].map((c) => {
+    const out: HTMLElement[] = [];
+    let word: HTMLElement | null = null;
+    for (const c of Q) {
       const s = document.createElement('span');
       s.className = 'ch';
       s.textContent = c;
-      el.append(s);
-      return s;
-    });
+      out.push(s);
+      if (c === ' ') {
+        word = null;
+        el.append(s);
+        continue;
+      }
+      if (!word) {
+        word = document.createElement('span');
+        word.className = 'wd';
+        el.append(word);
+      }
+      word.append(s);
+    }
+    return out;
   };
   const tChars = chars(qText);
   const cChars = chars(cardQ);
@@ -146,8 +165,7 @@ export function mountLoop(section: HTMLElement) {
   let mergeClicked = false;
   const answer = mark(0.42, () => {
     ccRow.classList.add('snap');
-    if (wait.since !== null) wait.clear();
-    else cue('answer');
+    cue('answer');
   }, () => ccRow.classList.remove('snap'));
   function doMerge(fromClick: boolean) {
     if (merged) return;
@@ -159,9 +177,15 @@ export function mountLoop(section: HTMLElement) {
     stamp.classList.add('landed');
     shippedCount('3');
     const r = mergeBtn.getBoundingClientRect();
-    void shockwave(r.left + r.width / 2, r.top + r.height / 2);
+    // The ring stays round the button: the reward is the row settling into Shipped today.
+    void shockwave(r.left + r.width / 2, r.top + r.height / 2, 700, Math.max(r.width, r.height) * 1.8);
     cue('merge');
-    wait.clear();
+    // A merge the visitor pressed is their action: it answers what waits on them too, and the list
+    // shows it at once (the scroll has not moved, so nothing else would redraw it).
+    if (fromClick) {
+      wait.clear();
+      update(progress);
+    }
   }
   function unMerge() {
     if (!merged) return;
@@ -171,7 +195,8 @@ export function mountLoop(section: HTMLElement) {
     stamp.classList.remove('landed');
     shippedCount('2');
   }
-  mergeBtn.addEventListener('click', () => doMerge(true));
+  const ready = (b: HTMLElement) => b.getAttribute('aria-disabled') !== 'true';
+  mergeBtn.addEventListener('click', () => ready(mergeBtn) && doMerge(true));
 
   let lastBeat = -1;
   function update(p: number) {
@@ -212,9 +237,9 @@ export function mountLoop(section: HTMLElement) {
     cChars.forEach((c, i) => {
       const k = ease(collapse, (i / Q.length) * 0.5, (i / Q.length) * 0.5 + 0.5);
       const f = from[i] ?? { x: 0, y: 0 };
-      const arc = Math.sin(k * Math.PI) * -14;
+      // Straight in, no arc: the letters never cross the terminal's other lines on the way.
       set(c, 'opacity', k > 0 ? '1' : '0');
-      set(c, 'transform', k >= 1 ? 'none' : `translate(${(f.x * (1 - k)).toFixed(1)}px, ${(f.y * (1 - k) + arc).toFixed(1)}px) scale(${lerp(scaleFrom, 1, k).toFixed(3)})`);
+      set(c, 'transform', k >= 1 ? 'none' : `translate(${(f.x * (1 - k)).toFixed(1)}px, ${(f.y * (1 - k)).toFixed(1)}px) scale(${lerp(scaleFrom, 1, k).toFixed(3)})`);
     });
     choices.forEach((c, i) => {
       const k = ease(collapse, 0.55 + i * 0.12, 0.95 + i * 0.05);
@@ -228,6 +253,9 @@ export function mountLoop(section: HTMLElement) {
     const answered = p >= 0.42;
     const wtxt = clock(answered ? 23 : waited);
     if (qWait.textContent !== wtxt) qWait.textContent = wtxt;
+    const wWord = answered ? 'waited' : 'waiting';
+    if (qWaitWord.textContent !== wWord) qWaitWord.textContent = wWord;
+    cardK.classList.toggle('done', answered);
     set(ccBar, '--w', answered ? '0' : (0.04 + (waited / 23) * 0.6).toFixed(3));
     const ageTxt = answered ? (merged ? 'waited 0:23' : 'answered') : `waiting ${wtxt}`;
     if (ccAge.textContent !== ageTxt) ccAge.textContent = ageTxt;
@@ -254,6 +282,7 @@ export function mountLoop(section: HTMLElement) {
     const sub = merged ? 'Merged, 3 files' : answered ? '3 files, +70 -0' : Q;
     if (ccSub.textContent !== sub) ccSub.textContent = sub;
     needsCount.textContent = answered ? '0' : '1';
+    secNeeds.classList.toggle('zero', answered);
     reviewCount.textContent = merged ? '1' : answered ? '2' : '1';
     const toShip = merged ? (mergeClicked ? 1 : ease(p, 0.88, 0.95)) : 0;
     for (const el of items) {
@@ -297,7 +326,10 @@ export function mountLoop(section: HTMLElement) {
     tests.classList.toggle('pending', passed === 0);
     tests.classList.toggle('running', passed > 0 && passed < 12);
 
-    // ---- d Merge: the button charges, then the merge.
+    // ---- d Merge: the button charges, then the merge. Send back waits for the answer, Merge for
+    // the green tests.
+    mergeBtn.setAttribute('aria-disabled', String(p < 0.74));
+    sendBack.setAttribute('aria-disabled', String(p < 0.42));
     set(mergeBtn, '--charge', ease(p, 0.76, 0.87).toFixed(3));
     mergeBtn.classList.toggle('charged', p >= 0.87);
     if (p >= 0.88 && !merged) doMerge(false);
@@ -314,7 +346,7 @@ export function mountLoop(section: HTMLElement) {
   new ResizeObserver(remeasure).observe(body);
   void document.fonts?.ready.then(remeasure);
   let progress = 0;
-  const driver = drive(track, (p) => update((progress = p)), { fallback: 'play', playMs: 11000 });
+  const driver = drive(track, (p) => update((progress = p)), { fallback: 'play', playMs: 8000 });
   if (driver.mode === 'pin') scrub.hidden = false;
 
   // Tabbing to the pane's actions: scroll to the end of Review first, where both are shown.
@@ -323,6 +355,7 @@ export function mountLoop(section: HTMLElement) {
   });
   // Send back: the change goes back to the agent with a note, so the story goes back to Answer.
   sendBack.addEventListener('click', () => {
+    if (!ready(sendBack)) return;
     announce('Sent back: the agent gets your note and goes back to work.');
     if (driver.mode === 'pin') scrollTo({ top: driver.scrollFor(BEATS[1] + 0.06), behavior: env.reduced ? 'auto' : 'smooth' });
   });

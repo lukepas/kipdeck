@@ -1,14 +1,14 @@
 // 01 Hero. Kip lives on the top edge of the inbox, right of the headline's last line. He comes up
-// from behind that edge when Codex stops and asks (the page's own beat, about 2.4 s in): ears, then
-// eyes, a flick, out with a squash; he looks at the Codex row as it climbs, a bang, and points his
+// from behind that edge a beat after the page opens (it opens with Codex already asking, so the
+// headline gets read first): ears, then eyes, a flick, out with a squash; he looks at the Codex row as it climbs, a bang, and points his
 // wand at its Answer button. While it waits his eyes go between the stopwatch on "waiting" and the
 // row; answering (or copying the command) gets a cheer and a stamp ring at his feet.
 import { timeline } from '../tween';
 import { wait } from '../../ui/wait';
 import { onTop, spots, type Moment } from './kinds';
 
-/** The page's first ask (ms after load): scenes/hero.ts ASK_AT, plus a margin. */
-const FIRST_ASK = 2400 + 600;
+/** When he first comes up (ms after load): the page opens asking, and the headline reads first. */
+const FIRST_RISE = 1600;
 
 export const hero: Moment = {
   arrive: 'none',
@@ -39,7 +39,7 @@ export const hero: Moment = {
       const t0 = 0;
       tl.call(() => row && kit.lookAt(row), null, t0 + 0.3);
       // Not on the page's first ask: the stopwatch and the orange dot already call for the eye then.
-      if (performance.now() > FIRST_ASK + 4000) tl.add(kit.picto('bang', 0.8), t0 + 0.75);
+      if (performance.now() > FIRST_RISE + 4000) tl.add(kit.picto('bang', 0.8), t0 + 0.75);
       tl.add(kit.wide(true), t0 + 0.75);
       tl.call(() => answer && run.play(timeline().add(kit.pointAt(answer)).add(kit.wide(false), 0.4).add(kit.armTo(0, { duration: 0.3 }), 1.2).add(kit.lookAt(row), 1.2)), null, t0 + 1.0);
       run.play(tl);
@@ -98,10 +98,15 @@ export const hero: Moment = {
     follow();
     run.onWait((since) => since !== null && !following && follow());
 
-    // First visit: he waits behind the edge for the page's first ask.
-    if (performance.now() < FIRST_ASK) return;
-    // Came back later: up at once, then whatever the wait says.
-    if (wait.since !== null) asked(rise());
-    else run.play(timeline().add(rise()).add(kit.wave(2, { keepHappy: true })));
+    // Up once the headline has had its beat (at once when he comes back later), then whatever the
+    // wait says. An ask or an answer before that is picked up by onWait above.
+    const first = () => {
+      if (!run.live() || up) return;
+      if (wait.since !== null) asked(rise());
+      else run.play(timeline().add(rise()).add(kit.wave(2, { keepHappy: true })));
+    };
+    const left = FIRST_RISE - performance.now();
+    if (left > 0) run.later(left, first);
+    else first();
   },
 };

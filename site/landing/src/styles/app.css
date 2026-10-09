@@ -20,6 +20,8 @@
 .sec .glyph { width: 10px; height: 10px; }
 .sec .count { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; font: 600 11px/1 var(--font-mono); color: var(--muted); border: 1px solid var(--line-strong); }
 .sec-needs .count { background: var(--signal); border-color: var(--signal); color: var(--on-signal); }
+.sec-needs.zero .glyph { color: var(--muted); }
+.sec-needs.zero .count { background: transparent; border-color: var(--line-strong); color: var(--muted); }
 .sec-review .count { color: var(--review); border-color: var(--review); }
 
 .row {
@@ -32,7 +34,7 @@
 .row.needs { background: color-mix(in srgb, var(--surface-2) 70%, var(--tint-signal)); }
 .row.needs::before { background: var(--signal); }
 .row.review::before { background: var(--review); }
-.row.merged::before { background: var(--proof); }
+.row.merged::before { background: var(--settled); }
 .sign { flex: none; display: inline-grid; place-items: center; width: 30px; height: 26px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); background: var(--surface-2); color: var(--muted); font-size: 11px; font-weight: 500; }
 .row.needs .sign { color: var(--signal); border-color: color-mix(in srgb, var(--signal) 50%, var(--line-strong)); }
 .row.review .sign { color: var(--review); }
@@ -44,8 +46,13 @@
 .row.needs .row-age { color: var(--signal); }
 .row-btn { flex: none; display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border: 1px solid var(--signal); border-radius: var(--radius); color: var(--signal); font-weight: 600; font-size: 13px; }
 button.row { cursor: pointer; transition: background-color var(--t-ui) var(--ease); }
-button.row:hover { background: color-mix(in srgb, var(--surface-3) 70%, var(--tint-signal)); }
-button.row:hover .row-btn { background: var(--signal); color: var(--on-signal); }
+button.row:not(:disabled):hover { background: color-mix(in srgb, var(--surface-3) 70%, var(--tint-signal)); }
+button.row:not(:disabled):hover .row-btn { background: var(--signal); color: var(--on-signal); }
+/* A Merge in a row is the settled green, never Signal: nothing is waiting on it. */
+.row-btn.merge { border-color: var(--settled); color: var(--settled); }
+button.row.review:not(:disabled):hover { background: color-mix(in srgb, var(--surface-3) 70%, var(--tint-settled)); }
+button.row.review:not(:disabled):hover .row-btn { background: var(--settled); color: var(--void); }
+.row.merged .row-btn { display: none; }
 
 /* The wait bar: along a waiting row's foot, growing toward 30 minutes. */
 .waitbar { position: absolute; left: 2px; right: 0; bottom: 0; height: 2px; background: color-mix(in srgb, var(--signal) 14%, transparent); }
@@ -94,6 +101,9 @@ button.row:hover .row-btn { background: var(--signal); color: var(--on-signal); 
 .qcard-in { position: relative; padding: 16px 16px 16px 19px; background: var(--surface-1); border: 1px solid var(--line-strong); border-radius: var(--radius); box-shadow: var(--shadow-lift); }
 .qcard-in::before { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; background: var(--signal); border-radius: var(--radius) 0 0 var(--radius); }
 .qcard-k { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--signal); }
+/* Once answered the card's label is calm: a green check, no Signal. */
+.qcard-k.done { color: var(--muted); }
+.qcard-k.done .glyph { --g: var(--g-check); color: var(--settled); }
 .qcard-k .row-age { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 400; }
 .qcard-q { margin: 0 0 12px; font-size: 16px; font-weight: 500; }
 .choices { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
@@ -113,5 +123,5 @@ button.row:hover .row-btn { background: var(--signal); color: var(--on-signal); 
 .push > span { display: flex; flex-direction: column; min-width: 0; }
 .push b { font-size: 13px; }
 .push span span { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.phone-merged { display: flex; align-items: center; gap: 8px; margin: 14px 2px 0; font-size: 12px; color: var(--proof); }
+.phone-merged { display: flex; align-items: center; gap: 8px; margin: 14px 2px 0; font-size: 12px; color: var(--settled); }
 .phone-merged .glyph { width: 12px; height: 12px; }

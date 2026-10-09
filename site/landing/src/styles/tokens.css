@@ -14,8 +14,6 @@
   --glow-proof: rgb(166 139 255 / .10);
   --ship: #6fc3df;
   --ship-dim: #2c5e70;
-  --stamp-ink: #0b0b0c;
-  --stamp-paper: #f2f0eb;
   --code-bg: #0a0f14;
   --term-text: #c9d2dc;
   --add-bg: rgb(61 220 151 / .10);
@@ -26,6 +24,11 @@
   --section-pad: clamp(96px, 13vh, 168px);
   --ease-out: cubic-bezier(.16, 1, .3, 1);
   --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  /* The page's accent for everything that is not a wait: the ink itself. Signal orange is kept for
+     one meaning only, someone needs you (a question, a wait, its clocks). */
+  --accent: var(--text);
+  --on-accent: var(--void);
+  --tint-accent: color-mix(in srgb, var(--text) 6%, transparent);
 }
 
 @media (prefers-color-scheme: light) {

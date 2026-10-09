@@ -95,8 +95,13 @@ export function mountProblem(section: HTMLElement) {
     const head = SUM_X0 + (SUM_X1 - SUM_X0) * day;
     set(draw as unknown as HTMLElement, 'clipPath', `inset(0 ${(100 - 100 * span(head, 0, 600) * 1.02).toFixed(2)}% 0 0)`);
     asks.forEach((a, i) => a.classList.toggle('on', head >= askX[i] - 2));
-    let shown = 0;
-    for (const s of segs) shown += Math.min(s.len, Math.max(0, head - s.x1));
+    // Pinned, the total counts up as the day draws. Anywhere else the scene plays in time while the
+    // reader may already be at the caption, so the headline number is there from the start.
+    let shown = total;
+    if (track.dataset.mode === 'pin') {
+      shown = 0;
+      for (const s of segs) shown += Math.min(s.len, Math.max(0, head - s.x1));
+    }
     const mins = Math.round(shown * MIN_PER_UNIT);
     setBlocked(`${Math.floor(mins / 60)}h ${String(mins % 60).padStart(2, '0')}m`);
     // ---- Every wait, end to end, in one bar under the day. The segments stay on their lanes and
@@ -135,7 +140,7 @@ export function mountProblem(section: HTMLElement) {
 
   drive(track, update, {
     fallback: 'play',
-    playMs: 9000,
+    playMs: 3200,
     read() {
       svgBox = svg.getBoundingClientRect();
       clockScale = Number(getComputedStyle(clock ?? document.body).getPropertyValue('--wait')) || 0;
