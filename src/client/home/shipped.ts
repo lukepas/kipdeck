@@ -3,6 +3,7 @@
 // log. Above it, until it's done, the three-step first-run checklist.
 
 import { CHECKLIST, mergeRates, shippedLine, shippedToday, waitedLabel } from '../../shared/inbox';
+import { rateWords } from '../../shared/wait';
 import type { ShipRecord } from '../../shared/protocol';
 import { h } from '../ui/dom';
 import { icon } from '../ui/icons';
@@ -18,7 +19,7 @@ function shippedRow(r: ShipRecord): HTMLElement {
     'li.ship',
     {},
     agentMark(r.provider),
-    h('span.ship-text', {}, h('span.ship-title', {}, r.task ?? r.branch ?? 'Agent work'), h('span.ship-sub', {}, `${r.project} · ${r.agent} · `, link, ` · ${waitedLabel(r)}`)),
+    h('span.ship-text', {}, h('span.ship-title', {}, r.task ?? r.branch ?? 'Agent work'), h('span.ship-sub', {}, h('span.ship-wait', {}, waitedLabel(r)), ` · ${r.project} · ${r.agent} · `, link)),
     h('span.ship-at', { title: `Merged by ${r.reviewer}` }, time(r.at)),
   );
 }
@@ -41,7 +42,7 @@ export function renderShipped(root: HTMLElement) {
             'table',
             {},
             h('thead', {}, h('tr', {}, h('th', {}, 'Agent'), h('th', {}, 'Merged'), h('th', {}, 'Sent back'), h('th', {}, 'Rate'))),
-            h('tbody', {}, ...rates.map((m) => h('tr', {}, h('td', {}, m.label), h('td', {}, String(m.merged)), h('td', {}, String(m.sentBack)), h('td', {}, `${Math.round(m.rate * 100)}%`)))),
+            h('tbody', {}, ...rates.map((m) => h('tr', {}, h('td', {}, m.label), h('td', {}, String(m.merged)), h('td', {}, String(m.sentBack)), h('td', {}, rateWords(m.rate, m.merged + m.sentBack))))),
           ),
           h('p.rates-note', {}, 'Every merge and send-back is kept on this machine as a signed record: which agent and model, the prompt, and who reviewed it.'),
         )

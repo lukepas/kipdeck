@@ -13,6 +13,7 @@ export function rosterFloor(f: Floor): RosterFloor {
   return {
     id: f.id,
     name: f.def.name,
+    ...(f.project.branch ? { branch: f.project.branch } : {}),
     pulls: f.github.pulls.items,
     tasks: f.queue.state().tasks,
     goalTitle: (id) => f.mission.title(id),

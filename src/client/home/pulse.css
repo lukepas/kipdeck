@@ -1,13 +1,17 @@
-/* The pulse (pulse.ts): today's wait and merges, in the top bar on a wide screen, over the list on a phone. */
+/* The pulse (pulse.ts): who waits on you and today's wait and merges, in the top bar on a wide screen,
+   over the list on a phone. Signal only on "need you", and only above 0; amber for "to review". */
 .pulse-in { display: flex; align-items: stretch; gap: 0; width: 100%; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-1); color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .pulse-in:hover { border-color: var(--line-strong); }
-.pulse-in:focus-visible { outline: 2px solid var(--signal); outline-offset: 1px; }
+.pulse-in:focus-visible { outline: 2px solid var(--working); outline-offset: 1px; }
 .pulse-stat { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; padding: 6px 12px; }
 .pulse-stat + .pulse-stat { border-left: 1px solid var(--line); }
-.pulse-stat b { font: 600 15px/1.2 var(--font-mono); color: var(--text); white-space: nowrap; }
+.pulse-stat b { font: 600 15px/1.2 var(--font-mono); color: var(--text); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .pulse-stat span { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pulse-stat.hot b { color: var(--signal); }
-/* In the top bar: one line, three small figures. */
+.pulse-stat.p-zero b { color: var(--muted); }
+.pulse-stat.p-need b { color: var(--signal); }
+.pulse-stat.p-review b { color: var(--review); }
+.pulse-clock { font: 500 11px var(--font-mono); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* In the top bar: one line, small figures side by side. */
 .hb-pulse { flex: none; margin-left: 4px; }
 .hb-pulse .pulse-in { height: 38px; }
 .hb-pulse .pulse-stat { flex: none; flex-direction: row; align-items: baseline; gap: 6px; padding: 0 12px; align-self: center; }
@@ -15,6 +19,12 @@
 .hb-pulse .pulse-stat b { font-size: 13px; }
 .hb-pulse .pulse-stat span { font-size: 12px; }
 .list-pulse { margin-bottom: 16px; }
+/* Over the list on a phone: two rows of two, so no label is cut. */
+.list-pulse .pulse-in { display: grid; grid-template-columns: 1fr 1fr; }
+.list-pulse .pulse-stat:nth-child(3) { border-left: 0; }
+.list-pulse .pulse-stat:nth-child(n+3) { border-top: 1px solid var(--line); }
+.list-pulse .pulse-stat { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
 @media (min-width: 900px) { .list-pulse { display: none; } }
-@media (max-width: 1240px) { .hb-pulse .pulse-stat:nth-child(2) { display: none; } }
+@media (max-width: 1240px) { .hb-pulse .p-median { display: none; } }
+@media (max-width: 1080px) { .hb-pulse .p-merged { display: none; } }
 @media (max-width: 899px) { .hb-pulse { display: none; } }

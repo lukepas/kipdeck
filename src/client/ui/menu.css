@@ -12,7 +12,7 @@
 .menu-row { display: flex; align-items: center; gap: 2px; }
 .menu-item { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 8px; border: 0; border-radius: var(--radius); background: none; color: var(--text); font: inherit; font-size: 13px; font-weight: 500; text-align: left; cursor: pointer; }
 .menu-item:hover { background: var(--surface-3); }
-.menu-item:focus-visible, .menu-pin:focus-visible { outline: none; background: var(--surface-3); box-shadow: inset 0 0 0 2px var(--signal); }
+.menu-item:focus-visible, .menu-pin:focus-visible { outline: none; background: var(--surface-3); box-shadow: inset 0 0 0 2px var(--working); }
 .mi-icon { flex: none; width: 20px; display: grid; place-items: center; color: var(--muted); }
 .menu-item:hover .mi-icon { color: var(--text); }
 .mi-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -47,7 +47,7 @@
 .menu-comms-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 1px 12px; }
 .layer-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 8px 4px; }
 .menu-item.layer-chip { flex: none; height: 28px; padding: 0 9px; gap: 6px; font-size: 12px; border: 1px solid var(--line-strong); color: var(--muted); }
-.menu-item.layer-chip[aria-checked=true] { color: var(--text); background: var(--signal-tint); border-color: var(--signal); }
+.menu-item.layer-chip[aria-checked=true] { color: var(--text); background: var(--working-tint); border-color: var(--working); }
 .menu-foot { grid-column: 1 / -1; margin: 6px 0 0; padding: 8px 8px 4px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
 @media (max-width: 600px) { .hud-menu, .menu-comms-rows { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .hud-menu { animation: none; } }
@@ -55,4 +55,4 @@
 /* A row with a line under its label (Quality's tier now), and a one-click button beside it (Try High). */
 .menu-row-noted .menu-item { height: auto; min-height: 42px; padding-top: 5px; padding-bottom: 5px; }
 .menu-row-noted .mi-label small { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.menu-extra { flex: none; height: 26px; padding: 0 8px; font-size: 12px; font-weight: 600; color: var(--signal); border-color: var(--signal); }
+.menu-extra { flex: none; height: 26px; padding: 0 8px; font-size: 12px; font-weight: 600; color: var(--text); border-color: var(--line-strong); }

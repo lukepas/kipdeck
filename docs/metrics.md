@@ -6,14 +6,14 @@ What a pre-seed deck should show for Kipdeck, where each number comes from, and 
 
 ## In the product: Numbers
 
-**Numbers** (the avatar menu, or Ctrl+K) shows one Kipdeck's last 7 days against the 7 before, for the project picked in the top bar or all of them:
+**Numbers** (the avatar menu, Ctrl+K, or a click on the pulse) shows one Kipdeck's tiles for the last 7 days against the 7 days before, for the project picked in the top bar or all of them. Each window says its name: the tiles *last 7 days*, the chart *last 14 days*, the table *last 30 days*, and the pulse *today*.
 
-- **Human wait time**: the median minutes finished work sat waiting on a person before it was merged or sent back. This is the headline: the product exists to bring it down.
-- **Changes merged**, **merge rate** (merged over every review) and **agent-hours merged** (the time agents worked on what merged).
+- **Human wait time**: the median time finished work sat waiting on a person before it was merged or sent back, in the inbox's words (*32s*, *4m*, *1h 12m*; `waitWords` in `src/shared/wait.ts`, the one formatter the rows, the pulse, Shipped today, the toasts and the Markdown all use). This is the headline: the product exists to bring it down.
+- **Changes merged**, **merge rate** (merged over every review) and **agent-hours merged** (the time agents worked on what merged, in the same words as Shipped today: *<0.1*, *2.5*, *12*).
 - **Merged per day** for the last 14 days.
-- **Merge rate by agent and model** over 30 days, always with its N, so a 100% from one review reads as one review.
+- **Merge rate by agent and model** over 30 days, always with its N. A rate shows from 5 reviews; below that it says *-*, so one merge out of one never reads as 100%.
 
-**Copy as Markdown** puts the same table on the clipboard for an investor update. Every figure comes from the signed shipped log on that machine (`shipped.jsonl`, see [the inbox](inbox.md#the-shipped-log)); nothing is sent anywhere. In the demo the window says the agents are scripted: don't put demo numbers in a deck. The arithmetic is `src/shared/metrics.ts`.
+**Copy as Markdown** puts the same table on the clipboard for an investor update, its columns headed *Last 7 days* and *7 days before*. Every figure comes from the signed shipped log on that machine (`shipped.jsonl`, see [the inbox](inbox.md#the-shipped-log)); nothing is sent anywhere. In the demo the window says the agents are scripted: don't put demo numbers in a deck. The arithmetic is `src/shared/metrics.ts`.
 
 A design partner can send you their Numbers table each week (Copy as Markdown); that is the before and after for human wait time.
 

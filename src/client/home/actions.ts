@@ -3,7 +3,7 @@
 // doesn't draw itself (a pull request, the boards, the queue, Mission control) load when first wanted.
 
 import { nextUp, type RowAction } from '../../shared/inbox';
-import { waitWords } from '../../shared/metrics';
+import { waitWords } from '../../shared/wait';
 import type { InboxServerMsg, Reminder, RosterEntry } from '../../shared/protocol';
 import type { AgentProvider } from '../../shared/providers';
 import type { Net } from '../net';
@@ -14,7 +14,8 @@ import { reminderAction, runReminder, type MissionDeps } from '../ui/mission/act
 import { confirmDialog, lostWorktreeDialog, openPrompt } from '../ui/prompt';
 import { onProject, openDeploy } from './deploy';
 import * as lazy from './lazy';
-import { currentView } from './list';
+import { currentView, entryTitle } from './list';
+import { holdMerge, isHeld, mergeLanded, undoMerge } from './merge-hold';
 import { home } from './state';
 
 /** The prompt Fix checks sends: the agent looks the failures up itself. */
@@ -24,7 +25,12 @@ export interface Actions {
   act(e: RosterEntry, action: RowAction): void;
   remind(r: Reminder): void;
   reminderLabel(r: Reminder): string;
+  /** Merge, after a hold with Undo (merge-hold.ts). */
   merge(e: RosterEntry): void;
+  /** Takes a held merge back before it's sent. */
+  undoMerge(id: string): void;
+  /** Whether a merge is held for its Undo. */
+  held(id: string): boolean;
   /** Agents whose merge is under way. */
   merging: Set<string>;
   sendBack(e: RosterEntry): void;
@@ -109,10 +115,27 @@ export function createActions(net: Net): Actions {
   }
 
   function merge(e: RosterEntry) {
-    if (merging.has(e.id)) return;
-    merging.add(e.id);
-    home.change();
-    net.send({ t: 'inbox.merge', workerId: e.id });
+    if (merging.has(e.id) || isHeld(e.id)) return;
+    holdMerge(
+      e,
+      entryTitle(e),
+      () => {
+        merging.add(e.id);
+        net.send({ t: 'inbox.merge', workerId: e.id });
+      },
+      () => home.change(),
+    );
+    // The review bar was drawn again with Undo where Merge was: the keyboard goes there, so Enter or
+    // Space takes it back (Esc and u do too, keys.ts).
+    requestAnimationFrame(() => document.querySelector<HTMLElement>('.pane .rv-undo')?.focus());
+  }
+
+  function undo(id: string) {
+    undoMerge(id, () => home.change());
+    // Merge is back where Undo was; the keyboard stays on it rather than falling to the page.
+    requestAnimationFrame(() => {
+      if (!document.activeElement || document.activeElement === document.body) document.querySelector<HTMLElement>('.pane .rv-merge')?.focus();
+    });
   }
 
   function sendBack(e: RosterEntry) {
@@ -141,11 +164,11 @@ export function createActions(net: Net): Actions {
       case 'look':
       case 'open':
         return show(e.id, 'terminal');
+      // Merge from a row or a key is a review: only the review bar's Merge button merges (merge-hold.ts).
       case 'review':
       case 'open-pr':
-        return show(e.id, 'changes');
       case 'merge':
-        return merge(e);
+        return show(e.id, 'changes');
       case 'hand-back':
         return sendBack(e);
       case 'fix-checks':
@@ -171,6 +194,8 @@ export function createActions(net: Net): Actions {
     remind: (r) => runReminder(deps, r),
     reminderLabel: reminderAction,
     merge,
+    undoMerge: undo,
+    held: isHeld,
     merging,
     sendBack,
     stop,
@@ -178,17 +203,15 @@ export function createActions(net: Net): Actions {
     merged(msg) {
       merging.delete(msg.workerId);
       if (msg.error) {
-        toast(msg.error, 'warn');
+        if (!mergeLanded(msg.workerId, msg)) toast(msg.error, 'warn');
         return home.change();
       }
-      // The office tells everyone who merged what; this page moves on to the next thing. The first
-      // merge in this browser is worth saying once, with how long the loop took.
-      if (home.firstMerge()) {
-        const first = Math.min(...store.roster.map((e) => e.createdAt), Date.now());
-        toast(`First change merged, ${waitWords(Date.now() - first)} after your first agent started. It's in Shipped today.`);
-      }
+      // The office tells everyone who merged what; this page's hold toast says it landed and moves on
+      // to the next thing. The first merge in this browser is worth saying once, with how long the loop took.
+      const first = home.firstMerge() ? `Your first merge, ${waitWords(Date.now() - Math.min(...store.roster.map((e) => e.createdAt), Date.now()))} after your first agent started. It's in Shipped today.` : undefined;
+      if (!mergeLanded(msg.workerId, msg, first) && first) toast(first);
       home.check('merge');
-      // On to the next thing that needs you, so Enter keeps the loop going.
+      // On to the next thing that needs you.
       const next = nextUp(currentView(), msg.workerId);
       // Nothing next: the pane rests on "nothing needs you" until something new arrives, rather than
       // opening the change just merged again while it's still leaving To review.

@@ -9,6 +9,8 @@ import { workerPr } from '../shared/status.js';
 export interface RosterFloor {
   id: string;
   name: string;
+  /** The project's branch, which work merges into when its worktree doesn't say. */
+  branch?: string;
   pulls: GhPull[];
   tasks: QueueTask[];
   goalTitle(id: string | undefined): string | undefined;
@@ -47,6 +49,8 @@ export function rosterEntry(f: RosterFloor, w: WorkerInfo): RosterEntry {
     ...(w.kind === 'agent' && w.provider ? { provider: w.provider } : {}),
     ...(w.kind === 'agent' && w.model ? { model: w.model } : {}),
     ...(w.worktree ? { branch: w.worktree.branch } : {}),
+    ...((w.worktree?.from ?? f.branch) ? { into: w.worktree?.from ?? f.branch } : {}),
+    ...(w.createdBy ? { createdBy: w.createdBy } : {}),
     status: w.status,
     acked: w.acked,
     createdAt: w.createdAt,

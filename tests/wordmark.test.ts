@@ -1,0 +1,36 @@
+// The product is Kipdeck. The old names (Mergeline, UGC Army) must not show on the pages people see.
+// The wordmark is split over tags (`KIP<span>DECK</span>`), so a plain grep would miss `MERGE<span>LINE`:
+// this strips the tags first and reads the text a person would. Legacy-compat names in code
+// (storage-key.ts, brandenv.ts, the x-mergeline-key header) are not on a page and are not checked.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const OLD = /mergeline|ugc ?army/i;
+
+/** What a page says once its tags are gone, with the pieces of one word kept together. */
+function visibleText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/<[^>]+>/g, '');
+}
+
+const PAGES = ['src/client/index.html', 'src/client/login.html', 'src/client/join.html', 'src/client/claim.html', 'src/client/showcase/index.html', 'src/server/showcase/off.ts'];
+
+test('the split markup is read as one word', () => {
+  assert.match(visibleText('<span>MERGE<span>LINE</span></span>'), OLD);
+  assert.doesNotMatch(visibleText('<b>KIP</b><span>DECK</span>'), OLD);
+});
+
+for (const page of PAGES) {
+  test(`${page} shows the Kipdeck wordmark and no old name`, () => {
+    const text = visibleText(readFileSync(path.join(ROOT, page), 'utf8'));
+    assert.doesNotMatch(text, OLD);
+    if (page !== 'src/client/index.html') assert.match(text, /KIPDECK/);
+  });
+}

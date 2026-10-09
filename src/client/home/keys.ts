@@ -1,22 +1,24 @@
 // The inbox's keys, six of them: Ctrl+K the command palette, N to deploy an agent, Enter for the
-// selected row's primary action, Esc to step back, / to search and ? for Help (the loop and these
-// keys). The arrow keys (and j and k) move the selection. None of them fire while you type in a box or the terminal, or
+// selected row's primary action (which is never Merge: that's the pane's, behind a hold), Esc to step
+// back (or, while a merge is held, to undo it; u does too), / to search and ? for Help (the loop and
+// these keys). The arrow keys (and j and k) move the selection. None of them fire while you type in a box or the terminal, or
 // while a window is open; Esc in the pane's terminal steps back to the list instead of reaching the
 // agent (Ctrl+[ or the keypad's Esc sends one).
 
-import { DOCS_URL } from '../../shared/copy';
+import { DOCS_URL, PRODUCT, UPSTREAM_CREDIT } from '../../shared/copy';
 import { rowAction } from '../../shared/inbox';
 import { h, modalOpen, openModal } from '../ui/dom';
 import type { Actions } from './actions';
 import { listedOrder, rankOf } from './list';
 import { menuOpen } from './menu';
+import { latestHeld } from './merge-hold';
 import { home } from './state';
 
 export const SHORTCUTS: readonly [string, string][] = [
   ['Ctrl K', 'Commands and agents'],
   ['N', 'Deploy an agent'],
-  ['Enter', "The selected agent's next step"],
-  ['Esc', 'Back to the list'],
+  ['Enter', 'Answer or review the selected agent'],
+  ['Esc', 'Back to the list, or undo a merge while it waits'],
   ['/', 'Search agents'],
   ['?', 'This help'],
 ];
@@ -25,8 +27,8 @@ export const SHORTCUTS: readonly [string, string][] = [
 export const LOOP: readonly [string, string][] = [
   ['Deploy', 'Deploy agent (or N) starts an agent on a branch of its own.'],
   ['Get pinged', 'It shows up in Needs you when it has a question, and in To review when it is done.'],
-  ['Act', 'Each row has one button: Answer, Review changes, Fix checks or Merge.'],
-  ['Ship', 'A merge lands in Shipped today with a signed record, and Enter moves on to the next.'],
+  ['Act', 'Each row has one button: Answer, Review changes or Fix checks. Merge is in the review, with the branch it goes into.'],
+  ['Ship', 'Merge waits a few seconds for Undo, then lands in Shipped today with a signed record, and the next one opens.'],
 ];
 
 /** Help (? or the avatar menu): the loop, the six keys and where the docs are. */
@@ -44,6 +46,9 @@ export function openHelp() {
       h('dl', {}, ...SHORTCUTS.flatMap(([k, what]) => [h('dt', {}, ...k.split(' ').map((x) => h('kbd', {}, x))), h('dd', {}, what)])),
       h('p.keys-note', {}, 'Up and Down (or j and k) move through the list.'),
       h('p.keys-note', {}, h('a', { href: DOCS_URL, target: '_blank', rel: 'noopener' }, 'Read the docs'), ' for teams, servers, Labs and every option.'),
+      h('h3.help-h', {}, 'About'),
+      h('p.keys-note', {}, `${PRODUCT}: the inbox for your AI coding agents. Every agent in one place, who waits on you and for how long, and one button to act.`),
+      h('p.keys-note', {}, h('a', { href: 'https://github.com/AgentSystemLabs/agent-office', target: '_blank', rel: 'noopener noreferrer' }, UPSTREAM_CREDIT), '. The license and NOTICE ship with every copy.'),
     ),
   );
   openModal(el);
@@ -79,6 +84,13 @@ export function installKeys(actions: Actions, palette: () => void, search: HTMLI
       if (mod && !e.altKey && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         return palette();
+      }
+      // While a merge waits for its Undo, Esc (or u) takes the latest back, before anything else.
+      const held = latestHeld();
+      if (held && (e.key === 'Escape' || (e.key === 'u' && !typing(e.target) && !mod && !e.altKey)) && e.target !== search) {
+        e.preventDefault();
+        e.stopPropagation();
+        return actions.undoMerge(held);
       }
       if (e.key === 'Escape') {
         const inPane = !!(e.target instanceof HTMLElement && e.target.closest('.pane'));

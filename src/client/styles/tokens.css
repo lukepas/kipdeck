@@ -82,7 +82,7 @@
   /* Line and shape: 1px hairlines, 4px corners (2px on chips), no shadows on dense panels. */
   --radius: 4px;
   --radius-chip: 2px;
-  --focus: 0 0 0 2px var(--void), 0 0 0 4px var(--signal);
+  --focus: 0 0 0 2px var(--void), 0 0 0 4px var(--working);
 
   /* Only HUD pieces floating over the 3D canvas get a fill you can half see through, and one soft shadow. */
   --hud-fill: rgb(20 27 35 / .85);

@@ -4,6 +4,10 @@
 .demo-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .demo-run { flex: none; display: inline-flex; align-items: center; gap: 4px; }
 .hb-demo .fix code { background: var(--surface-1); font-size: 11px; }
+a.demo-lead { padding-right: 6px; color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
+a.demo-lead:hover { text-decoration-thickness: 2px; }
 @media (max-width: 1600px) { .hb-demo .demo-text { display: none; } }
 @media (max-width: 1100px) { .hb-demo .demo-run { display: none; } .hb-demo { padding-right: 6px; } }
 @media (max-width: 899px) { .hb-demo .demo-run { display: none; } .hb-demo { padding-right: 6px; } }
+/* A narrow phone: the tag alone, so the search box keeps its room. */
+@media (max-width: 420px) { .hb-demo { flex: none; height: auto; padding: 0; border: 0; background: none; } }

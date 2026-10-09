@@ -100,7 +100,7 @@ export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentPr
   paintNote();
 
   const cancel = h('button.btn', { type: 'button' }, 'Cancel');
-  const submit = h('button.btn.primary', { type: 'submit' }, 'Deploy');
+  const submit = h('button.btn.solid', { type: 'submit' }, 'Deploy');
   const form = h(
     'form.modal.deploy',
     { role: 'dialog', 'aria-label': 'Deploy agent' },

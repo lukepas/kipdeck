@@ -12,7 +12,7 @@ button, input, select, textarea { font-family: inherit; color: inherit; }
 a { color: var(--text); text-underline-offset: 2px; text-decoration-color: var(--line-strong); }
 a:hover { text-decoration-color: currentColor; }
 code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--working); outline-offset: 2px; }
 ::selection { background: rgb(255 106 26 / .3); }
 * { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
 .hidden { display: none !important; }
@@ -41,6 +41,11 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 .btn.danger:hover { background: rgb(255 77 94 / .2); }
 .btn.primary { background: var(--signal); border-color: var(--signal); color: var(--on-signal); font-weight: 600; }
 .btn.primary:hover { background: color-mix(in oklab, var(--signal) 88%, white); }
+/* The neutral primary: filled, high contrast, for a main action that nobody is waiting on (Deploy
+   agent, Merge, Sign in). Orange stays for someone who needs you. */
+.btn.solid { background: var(--text); border-color: var(--text); color: var(--void); font-weight: 600; }
+.btn.solid:hover { background: color-mix(in oklab, var(--text) 86%, var(--void)); }
+.btn.solid:disabled { opacity: 1; background: var(--surface-2); border-color: var(--line); color: var(--muted); }
 .btn.proof { color: var(--proof); border-color: var(--proof); background: var(--proof-tint); }
 .btn:disabled { opacity: .45; cursor: default; }
 /* A primary button that can't be pressed yet reads as a quiet one, never dark text on Signal. */
@@ -166,7 +171,7 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 .svc-list li + li { border-top: 1px solid var(--line); }
 .svc-list li:hover { background: var(--surface-2); }
 .svc-list li.on { background: var(--surface-3); box-shadow: inset 2px 0 0 var(--signal); }
-.svc-list li:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
+.svc-list li:focus-visible { outline: 2px solid var(--working); outline-offset: -2px; }
 .svc-list .dot { width: 10px; height: 10px; }
 .svc-main { flex: 1; min-width: 0; }
 .svc-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

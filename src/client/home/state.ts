@@ -1,9 +1,9 @@
 // What the inbox at / keeps of its own, apart from the office's store: which agent is selected, the
-// project and search it's filtered by, whether Idle is open, the pane's tab, the shipped log the
+// project, owner (Mine or Team) and search it's filtered by, whether Idle is open, the pane's tab, the shipped log the
 // office sent, and the first-run checklist (this browser's). Every change fires `change`.
 
 import type { ShipRecord } from '../../shared/protocol';
-import { checklistDone, type ChecklistState, type ChecklistStep } from '../../shared/inbox';
+import { checklistDone, type ChecklistState, type ChecklistStep, type OwnerFilter } from '../../shared/inbox';
 import { storageKey } from '../shared/storage-key';
 
 export type PaneTab = 'terminal' | 'changes' | 'log';
@@ -11,6 +11,7 @@ export type PaneTab = 'terminal' | 'changes' | 'log';
 const CHECK_KEY = storageKey('checklist');
 const IDLE_KEY = storageKey('idle-open');
 const PROJECT_KEY = storageKey('project');
+const OWNER_KEY = storageKey('owner');
 const FIRST_MERGE_KEY = storageKey('first-merge');
 
 function read(key: string): string | null {
@@ -58,6 +59,8 @@ export const home = {
   held: false,
   /** '' for All projects, else a floor id. */
   project: read(PROJECT_KEY) ?? '',
+  /** Everyone's agents (Team), or only the ones this person deployed (Mine). */
+  owner: (read(OWNER_KEY) === 'mine' ? 'mine' : 'team') as OwnerFilter,
   query: '',
   idleOpen: read(IDLE_KEY) === '1',
   /** The shipped log, newest first, once the office has sent it. */
@@ -84,6 +87,11 @@ export const home = {
   setProject(id: string) {
     this.project = id;
     write(PROJECT_KEY, id || null);
+    this.change();
+  },
+  setOwner(owner: OwnerFilter) {
+    this.owner = owner;
+    write(OWNER_KEY, owner === 'mine' ? owner : null);
     this.change();
   },
   setIdleOpen(open: boolean) {

@@ -1,5 +1,6 @@
 /* The sign-in pages (login, join, claim): a 360px card in the middle of a plain page (signin-art.ts),
-   the mark and wordmark, one field and one button, and the credit under it. */
+   the mark and wordmark, one field and one button. Orange is kept for someone who needs you, so the
+   button is the neutral filled primary and the focus ring is steel. */
 @import './styles/tokens.css';
 
 * { box-sizing: border-box; }
@@ -10,9 +11,9 @@ body {
   font-family: var(--font-ui); font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased;
   display: grid; place-items: center; padding: 16px 16px 56px; position: relative; overflow-x: hidden;
 }
-:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--working); outline-offset: 2px; }
 
-/* The card and the credit, one column in the middle, a little above centre. */
+/* The card, one column in the middle, a little above centre. */
 body { align-content: center; padding-bottom: 12vh; }
 
 .card { position: relative; z-index: 2; width: min(360px, 100%); background: var(--surface-1); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 28px 28px 24px; text-align: left; }
@@ -23,11 +24,11 @@ h1 { margin: 0 0 6px; font-family: var(--font-display); font-stretch: 108%; font
 .sub { margin: 0 0 22px; color: var(--muted); font-size: 13px; }
 label { display: block; text-align: left; font-weight: 500; font-size: 12px; color: var(--muted); }
 input { width: 100%; margin-top: 6px; height: 40px; padding: 0 12px; font: inherit; font-size: 15px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--void); color: var(--text); outline: none; }
-/* One ring: the 2px Signal outline with its offset, not a coloured border as well. */
+/* One ring: the 2px steel outline with its offset, not a coloured border as well. */
 input:focus { outline: none; }
-input:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
-button { margin-top: 16px; width: 100%; height: 40px; padding: 0 12px; font: inherit; font-size: 14px; font-weight: 600; border: 1px solid var(--signal); border-radius: var(--radius); background: var(--signal); color: var(--on-signal); cursor: pointer; }
-button:hover { background: color-mix(in oklab, var(--signal) 88%, white); }
+input:focus-visible { outline: 2px solid var(--working); outline-offset: 2px; }
+button { margin-top: 16px; width: 100%; height: 40px; padding: 0 12px; font: inherit; font-size: 14px; font-weight: 600; border: 1px solid var(--text); border-radius: var(--radius); background: var(--text); color: var(--void); cursor: pointer; }
+button:hover { background: color-mix(in oklab, var(--text) 86%, var(--void)); }
 button:disabled { opacity: .5; cursor: default; }
 .error { min-height: 1.2em; color: var(--stuck); font-size: 13px; margin: 12px 0 0; }
 .warn { text-align: left; background: var(--review-tint); border: 1px solid rgb(245 197 66 / .45); border-radius: var(--radius); padding: 10px 12px; margin: 0 0 14px; font-size: 13px; }
@@ -36,14 +37,11 @@ button:disabled { opacity: .5; cursor: default; }
 button.mini { width: auto; height: 28px; margin: 0; padding: 0 10px; font-size: 12px; background: var(--surface-2); color: var(--text); border-color: var(--line-strong); }
 button.mini:hover { background: var(--surface-3); }
 .check { display: flex; gap: 8px; align-items: center; justify-content: flex-start; margin-top: 14px; font-size: 13px; color: var(--text); }
-.check input { width: 16px; height: 16px; margin: 0; accent-color: var(--signal); }
+.check input { width: 16px; height: 16px; margin: 0; accent-color: var(--text); }
 a { color: var(--text); text-underline-offset: 2px; text-decoration-color: var(--line-strong); }
 label + label { margin-top: 12px; }
 .note { text-align: left; color: var(--muted); font-size: 12px; margin: 8px 0 0; }
 .role { display: inline-block; border: 1px solid rgb(245 197 66 / .5); color: var(--review); border-radius: var(--radius-chip); padding: 0 6px; font: 500 11px/18px var(--font-mono); }
-.credit { position: relative; z-index: 2; width: min(360px, 100%); margin-top: 12px; text-align: left; font: 400 11px var(--font-mono); color: var(--faint); }
-.credit a { color: var(--muted); text-decoration: none; }
-.credit a:hover { color: var(--text); }
 .local-say { margin: 0 0 12px; font-size: 13px; }
 .secret code#open-cmd { font-size: 15px; }
 button.link { width: auto; height: auto; margin: 14px 0 0; padding: 0; background: none; border: 0; color: var(--muted); font-weight: 500; font-size: 13px; text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 2px; }

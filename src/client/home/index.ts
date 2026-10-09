@@ -1,8 +1,10 @@
 // The inbox at /: puts its parts together on the page lite.ts set up. The top bar (the demo's pill, the
-// project picker, search, today's pulse, Deploy agent and the avatar menu), the list on the left with
-// the checklist and Shipped today under it, the selected agent's pane on the right, and the keys.
+// project picker, Mine or Team, search, today's pulse, Deploy agent and the avatar menu), the list on
+// the left with the checklist and Shipped today under it, the selected agent's pane on the right, the
+// keys, and the wait clocks that tick in place (clock.ts).
 
 import { checklistSeen, nextUp } from '../../shared/inbox';
+import { waitWords } from '../../shared/wait';
 import type { ServerMsg } from '../../shared/protocol';
 import type { Net } from '../net';
 import { store } from '../state';
@@ -13,11 +15,14 @@ import type { DesktopNotifier } from '../notify';
 import type { Settings } from '../state';
 import { applyLight, toggleLight } from '../lite-theme';
 import { createActions, type Actions } from './actions';
+import { settledToast } from './beat';
+import { startClocks, tickClocks } from './clock';
 import { installKeys, openHelp } from './keys';
 import * as lazy from './lazy';
 import { rewatch, routeLazy } from './lazy';
 import { currentView, renderList } from './list';
 import { closeMenu, menuOpen, toggleMenu, type MenuEntry } from './menu';
+import { renderOwner } from './owner';
 import { installPane, paneMessage } from './pane';
 import { openPalette, type Command } from './palette';
 import { renderChecklist, renderShipped } from './shipped';
@@ -97,7 +102,10 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     { label: 'Help and keys', hint: '?', icon: 'help', run: openHelp },
   ];
   const palette = () => openPalette(commands);
-  /** The GitHub boards, the queue and Mission control: behind the boards lab, so the inbox is the one place work is managed. */
+  /**
+   * The GitHub boards, the queue and Mission control: behind the boards lab. The inbox is the one
+   * place work is managed: every agent on every project, filtered by project and by Mine or Team.
+   */
   function workCommands(): Command[] {
     return [
       { label: 'Issues', hint: 'GitHub', icon: 'issue', run: () => actions.openBoard('issues') },
@@ -180,6 +188,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     shipped.classList.toggle('hidden', !home.records.some((r) => r.kind === 'merged'));
     renderShipped(shipped);
     renderPulse([$('pulse'), $('pulse-list')], openNumbers);
+    renderOwner($('owner'));
     renderDigest();
     $('to-bridge').classList.toggle('hidden', !store.lab('bridge'));
     paintAvatar();
@@ -187,8 +196,9 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
   home.on(renderAll);
   onSetupChange(renderAll);
   for (const t of ['roster', 'reminders', 'floors', 'labs', 'workers'] as const) store.on(t, renderAll);
-  // "waiting 3m" moves on by itself.
+  // The wait clocks tick each second in place; the rest (the wait bars, the idle times) every 30.
   setInterval(renderAll, 30_000);
+  startClocks();
 
   // A new agent this page just asked for: select it as it arrives.
   store.on('roster', () => {
@@ -199,13 +209,17 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     home.select(mine.id, 'terminal');
   });
 
-  // Answering a question counts for the checklist: an agent you typed to stopped needing you.
-  const was = new Map<string, string>();
+  // Answering a question counts for the checklist, and gets a small settled beat: an agent you typed
+  // to stopped needing you and is back at work.
+  const was = new Map<string, { status: string; since?: number }>();
   store.on('workers', () => {
     for (const w of store.workers.values()) {
       const before = was.get(w.id);
-      was.set(w.id, w.status);
-      if (before === 'needs_input' && w.status !== 'needs_input' && w.lastInput?.by === store.profile.name && Date.now() - w.lastInput.at < 120_000) home.check('answer');
+      was.set(w.id, { status: w.status, since: w.waitingSince });
+      if (before?.status === 'needs_input' && w.status !== 'needs_input' && w.lastInput?.by === store.profile.name && Date.now() - w.lastInput.at < 120_000) {
+        home.check('answer');
+        settledToast(`Answered ${w.name}. Back at work.`, before.since ? `It waited on you ${waitWords(w.lastInput.at - before.since)}.` : undefined);
+      }
     }
   });
 
@@ -214,5 +228,6 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
   window.addEventListener('blur', () => menuOpen() && closeMenu());
   renderProjects();
   renderAll();
+  tickClocks();
   return actions;
 }

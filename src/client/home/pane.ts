@@ -1,12 +1,15 @@
 // The right pane: the selected agent. Its header says the task, the agent and model, how long it has
 // worked, and carries Stop and the row's primary action again. Under it, three tabs: Terminal (live,
 // with the question card over it while it asks something), Changes (the diff, its checks and pull
-// request, Merge and Send back) and Log (what happened to it). On a wide screen it is never empty
-// while something waits: with nothing selected, the oldest that needs you (or is ready to review)
-// opens by itself. On a phone the pane covers the list, with a Back button.
+// request, the branch it merges into, Merge and Send back) and Log (what happened to it). On a wide
+// screen it is never empty while something waits: with nothing selected, the oldest that needs you
+// (or is ready to review) opens by itself. With nobody waiting it says so, with the day so far.
+// On a phone the pane covers the list, with a Back button.
 
 import { attention, duration } from '../../shared/attention';
-import { nextUp, rowAction, sectionOf } from '../../shared/inbox';
+import { intoWords, mergeWords, nextUp, rowAction, sectionOf } from '../../shared/inbox';
+import { todayPulse } from '../../shared/metrics';
+import { waitWords } from '../../shared/wait';
 import type { RosterEntry, ServerMsg, TimelineEvent } from '../../shared/protocol';
 import { PROVIDER_META } from '../../shared/providers';
 import type { Net } from '../net';
@@ -17,7 +20,7 @@ import { modelBadge } from '../ui/provider';
 import type { Actions } from './actions';
 import { onProject } from './deploy';
 import * as lazy from './lazy';
-import { agentMark, currentView, entryTitle, whereLabel } from './list';
+import { agentMark, currentView, entryTitle, waitingNow, whereLabel } from './list';
 import { questionCard } from './question';
 import { preview } from './preview';
 import { home, type PaneTab } from './state';
@@ -61,22 +64,48 @@ function workLine(e: RosterEntry): string {
 const CHECKS: Record<string, string> = { pass: 'checks passing', fail: 'checks failing', pending: 'checks running', none: 'no checks' };
 const REVIEW: Record<string, string> = { approved: 'approved', changes: 'changes requested', required: 'review required' };
 
-/** The pane with nothing selected: how it works, or what's waiting and one button to start on it. */
+/** "3 agents working, 1 merged today, median wait 32s today": the day so far, for the calm pane. */
+export function daySoFar(working: number, merged: number, medianWaitMs: number | undefined): string {
+  const parts = [working ? `${working} agent${working === 1 ? '' : 's'} working` : 'no agent working', `${merged} merged today`];
+  if (medianWaitMs !== undefined) parts.push(`median wait ${waitWords(medianWaitMs)} today`);
+  const s = parts.join(', ');
+  return `${s[0].toUpperCase()}${s.slice(1)}.`;
+}
+
+/** When the last one waiting on you was dealt with, so the cleared queue is marked once, just then. */
+let clearedAt = 0;
+
+/** The pane with nothing selected: what's waiting and one button to start on it, or, with nobody waiting, the day so far. */
 function emptyState(actions: Actions): HTMLElement {
-  const keys = h('p.pe-keys', {}, h('kbd', {}, 'Up'), h('kbd', {}, 'Down'), ' to move · ', h('kbd', {}, 'Enter'), ' to act · ', h('kbd', {}, '?'), ' for help');
+  const keys = h('p.pe-keys', {}, h('kbd', {}, 'Up'), h('kbd', {}, 'Down'), ' to move · ', h('kbd', {}, 'Enter'), ' to open · ', h('kbd', {}, '?'), ' for help');
   if (!store.roster.length) return preview();
   const view = currentView();
   const next = nextUp(view);
   const n = view.counts;
-  const line = n['needs-you'] ? `${n['needs-you']} agent${n['needs-you'] === 1 ? ' needs' : 's need'} you` : n.review ? `${n.review} change${n.review === 1 ? '' : 's'} to review` : 'Nothing needs you';
+  if (!n['needs-you'] && !n.review) {
+    // Cleared just now: the check draws itself in, once (under reduced motion it is simply there).
+    const earned = clearedAt > 0 && Date.now() - clearedAt < 1_500;
+    clearedAt = 0;
+    const records = home.project ? home.records.filter((r) => r.floor === home.project) : home.records;
+    const day = todayPulse(records, waitingNow(view), Date.now());
+    return h(
+      'div.pe.calm',
+      { class: earned ? 'earned' : '' },
+      h('span.pe-ok', {}, icon('check', 20)),
+      h('h2', {}, 'Nobody waiting'),
+      h('p', {}, daySoFar(n.working, day.merged, day.medianWaitMs)),
+      h('button.btn', { type: 'button', onclick: () => actions.deploy() }, icon('plus', 16), 'Deploy agent'),
+      keys,
+    );
+  }
+  const line = n['needs-you'] ? `${n['needs-you']} agent${n['needs-you'] === 1 ? ' needs' : 's need'} you` : `${n.review} change${n.review === 1 ? '' : 's'} to review`;
   const sub = n.working ? `${n.working} agent${n.working === 1 ? ' is' : 's are'} working.` : 'No agent is working right now.';
   return h(
     'div.pe',
-    { class: next ? '' : 'calm' },
-    next ? null : h('span.pe-ok', {}, icon('check', 20)),
+    {},
     h('h2', {}, line),
     h('p', {}, sub),
-    next ? h('button.btn.primary', { type: 'button', onclick: () => home.select(next.id, next.status === 'needs_input' ? 'terminal' : 'changes') }, n['needs-you'] ? 'Start with the oldest' : 'Review the oldest') : h('button.btn', { type: 'button', onclick: () => actions.deploy() }, icon('plus', 16), 'Deploy agent'),
+    next ? h(n['needs-you'] ? 'button.btn.primary' : 'button.btn.solid', { type: 'button', 'data-id': next.id, onclick: () => home.select(next.id, next.status === 'needs_input' ? 'terminal' : 'changes') }, n['needs-you'] ? 'Start with the oldest' : 'Review the oldest') : null,
     keys,
   );
 }
@@ -146,21 +175,31 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
   const reviewBar = (e: RosterEntry) => {
     const pr = e.pr;
     const merging = actions.merging.has(e.id);
-    const facts = [workLine(e), pr ? [`PR #${pr.number}`, pr.state === 'merged' ? 'merged' : CHECKS[pr.checks ?? 'none'], pr.review ? REVIEW[pr.review] : '', pr.conflicting ? 'conflicts' : ''].filter(Boolean).join(' · ') : ''].filter(Boolean);
+    const held = actions.held(e.id);
     const merged = pr?.state === 'merged';
+    const facts = [merged ? '' : `into ${intoWords(e)}`, workLine(e), pr ? [`PR #${pr.number}`, merged ? 'merged' : CHECKS[pr.checks ?? 'none'], pr.review ? REVIEW[pr.review] : '', pr.conflicting ? 'conflicts' : ''].filter(Boolean).join(' · ') : ''].filter(Boolean);
+    // With a GitHub repository and no pull request yet, the pull request comes first: Open PR is the
+    // primary, and merging the branch here without one is the second choice.
+    const prFirst = !pr && !!e.work && e.work.ahead > 0 && !!store.floors.find((f) => f.id === e.floor)?.repo;
+    const mergeLabel = merging ? 'Merging...' : pr ? `Merge PR #${pr.number}` : prFirst ? 'Merge locally' : 'Merge';
+    // Drawn again on every roster tick: the button with the focus keeps it (Merge becomes Undo merge
+    // in the same place), so the keyboard never falls back to the page.
+    const focused = [...review.querySelectorAll('button')].indexOf(document.activeElement as HTMLButtonElement);
     review.replaceChildren(
-      h('div.rv-facts', {}, ...(facts.length ? facts.map((f) => h('span', {}, f)) : [h('span', {}, 'What it changed shows below.')])),
+      h('div.rv-facts', {}, ...(facts.length ? facts.map((f, i) => h('span', { class: i === 0 && !merged ? 'rv-into' : undefined }, f)) : [h('span', {}, 'What it changed shows below.')])),
       merged
         ? h('div.rv-acts', {}, h('button.btn', { type: 'button', onclick: () => actions.stop(e, true) }, 'Archive'))
         : h(
             'div.rv-acts',
             {},
             h('button.btn', { type: 'button', onclick: () => actions.sendBack(e) }, 'Send back'),
-            // Only where there's a GitHub repository to open one on.
-            !pr && e.work && e.work.ahead > 0 && store.floors.find((f) => f.id === e.floor)?.repo ? h('button.btn', { type: 'button', title: 'Push its branch and open a pull request on GitHub', onclick: () => net.send({ t: 'worker.pr', workerId: e.id }) }, 'Open PR') : null,
-            h('button.btn.primary.rv-merge', { type: 'button', disabled: merging, onclick: () => actions.merge(e) }, merging ? 'Merging...' : pr ? `Merge PR #${pr.number}` : 'Merge'),
+            held
+              ? h('button.btn.solid.rv-merge.rv-undo', { type: 'button', onclick: () => actions.undoMerge(e.id) }, 'Undo merge')
+              : h(prFirst ? 'button.btn.rv-merge' : 'button.btn.solid.rv-merge', { type: 'button', disabled: merging, title: mergeWords(e), onclick: () => actions.merge(e) }, mergeLabel),
+            prFirst && !held ? h('button.btn.solid.rv-open-pr', { type: 'button', title: 'Push its branch and open a pull request on GitHub', onclick: () => net.send({ t: 'worker.pr', workerId: e.id }) }, 'Open PR') : null,
           ),
     );
+    if (focused >= 0) review.querySelectorAll('button')[focused]?.focus();
   };
 
   const header = (e: RosterEntry) => {
@@ -201,7 +240,10 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
       const { mountLitePlot } = await import('../lite-plot');
       mountLitePlot(plan, (id) => home.select(id, 'terminal'));
     }
-    if (plan.parentElement !== empty) empty.replaceChildren(plan);
+    if (plan.parentElement !== empty) {
+      delete empty.dataset.key;
+      empty.replaceChildren(plan);
+    }
   };
 
   /** The agents last seen waiting on you, so one that newly does opens again after an Esc or a merge. */
@@ -211,6 +253,7 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
     const view = currentView();
     const now = new Set([...view.sections['needs-you'], ...view.sections.review].map((r) => r.entry.id));
     if ([...now].some((id) => !waitingIds.has(id))) home.held = false;
+    if (waitingIds.size && !now.size) clearedAt = Date.now();
     waitingIds = now;
     if (!wide() || home.held || home.selected) return false;
     const next = nextUp(view);
@@ -246,7 +289,15 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
       if (home.selected && !store.rosterEntry(home.selected)) home.selected = undefined;
       // With Bridge view on in Labs, the project's deck plan fills the empty pane (loaded only then).
       if (store.lab('bridge')) void showPlan();
-      else empty.replaceChildren(emptyState(actions));
+      else {
+        // Drawn again only when what it says changes, so a roster tick doesn't restart the cleared check.
+        const next = emptyState(actions);
+        const key = next.outerHTML.replace(/ earned/, '');
+        if (empty.dataset.key !== key || !empty.firstElementChild) {
+          empty.dataset.key = key;
+          empty.replaceChildren(next);
+        }
+      }
       void unmount();
       return;
     }

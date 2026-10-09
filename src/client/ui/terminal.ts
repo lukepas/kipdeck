@@ -151,7 +151,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
   const host = h('div.term-host', { 'data-drop': 'Drop screenshots or files here to put them in the terminal' });
   const keys = h('div.term-keys', { role: 'group', 'aria-label': 'Keys' });
   const say = h('input', { type: 'text', placeholder: 'Reply, or tell it what to do next...', 'aria-label': 'Prompt', enterkeyhint: 'send', autocomplete: 'off' }) as HTMLInputElement;
-  const sayBtn = h('button.btn.primary', { type: 'submit' }, 'Send');
+  const sayBtn = h('button.btn.solid', { type: 'submit' }, 'Send');
   // The quick keys sit in the reply bar as one compact segmented control, before the box, folded
   // behind Keys in the pane's keypad (the question card answers most questions without them).
   const keysToggle = opts.keypad ? h('button.btn.term-keys-toggle', { type: 'button', 'aria-expanded': 'false', title: 'Terminal keys: 1 2 3, Esc, Ctrl+C' }, 'Keys') : null;
