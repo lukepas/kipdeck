@@ -50,8 +50,9 @@ function hatch(): THREE.CanvasTexture {
   return hatchTex;
 }
 
+// `map` only when there is one: three.js warns of every parameter given as undefined (two a unit).
 const flatMat = (map?: THREE.Texture) =>
-  new THREE.MeshBasicMaterial({ color: DECK.working, map, transparent: true, opacity: 0, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -3, fog: false });
+  new THREE.MeshBasicMaterial({ color: DECK.working, ...(map ? { map } : {}), transparent: true, opacity: 0, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -3, fog: false });
 
 /** The marks on the floor under a unit: its inlay, its ring, the pulse spreading from it, and the hatched band inside it. */
 export class GroundRing {

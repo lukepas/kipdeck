@@ -151,7 +151,7 @@ test('with everyone at work the Attention board says so, and lists them when the
   assert.ok(a.texts.some((t) => t.text === 'Byte'), 'two working units fit: they get cards');
   const b = canvasSpy();
   paintAttention(b.g, W, H, [], Date.now());
-  assert.ok(b.texts.some((t) => t.text === 'No units on this deck'));
+  assert.ok(b.texts.some((t) => t.text === 'No agents here yet'));
 });
 
 test('three cards or fewer go full width, the first the hero when it needs you, with the key that goes to it', () => {

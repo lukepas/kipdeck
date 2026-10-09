@@ -421,6 +421,54 @@ test('docked in the 3D office: the deck stays in view, D floats it, a click on t
   assert.deepEqual(errors, []);
 });
 
+test('docked in the 3D office, the deck keeps its own keys: N goes to the unit, G goes up, Tab opens the menu, with no click on the deck first', async (t) => {
+  if (why) return t.skip(why);
+  const { page, errors, context } = await signedIn({ width: 1440, height: 900 });
+  t.after(() => context.close());
+  await context.addInitScript(() => {
+    try {
+      localStorage.setItem('agent-office.mission-dock', 'dock');
+    } catch {
+      // storage blocked
+    }
+  });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  // No material is built with a texture that isn't there yet (three.js warns "parameter 'map' has value of undefined").
+  const mapWarnings: string[] = [];
+  page.on('console', (m) => m.text().includes("parameter 'map'") && mapWarnings.push(m.text()));
+  type Office = { __office: { store: { floor: string | null; roster: unknown[] }; net: { send(m: unknown): void }; overview: { active(): boolean } } };
+  await page.goto(`${base}/bridge`);
+  await page.waitForFunction(() => !!(window as unknown as Office).__office?.store.floor, null, { timeout: 60_000 });
+  // A unit aboard (the stand-in exits at once, so it's stuck: waiting on someone, which N goes to).
+  await page.evaluate(() => (window as unknown as Office).__office.net.send({ t: 'worker.spawn', deskId: 'desk-1', prompt: 'Pick the session store', worktree: false }));
+  await page.waitForFunction(() => (window as unknown as Office).__office.store.roster.length > 0, null, { timeout: 30_000, polling: 250 });
+
+  await page.locator('#scene').focus();
+  await page.keyboard.press('i');
+  await page.locator('.mc-dock-host > .modal.mission-control.docked').waitFor({ timeout: 30_000 });
+  assert.equal(await page.locator('#modal-root > .backdrop.mc-dock-backdrop').count(), 1, 'docked and holding its place on the window stack');
+
+  // N: to the unit waiting on someone, its card up beside the panel (or, while the stand-in is still
+  // starting, the toast that nobody waits yet): either way the deck heard the key.
+  await page.keyboard.press('n');
+  await page.waitForFunction(() => !!document.querySelector('.sel-card:not([hidden]) .sel-name') || [...document.querySelectorAll('#toasts .toast')].some((t) => /waiting|N for the next/i.test(t.textContent ?? '')), null, { timeout: 30_000, polling: 100 });
+  // G: up into the Overview.
+  await page.keyboard.press('g');
+  await page.waitForFunction(() => (window as unknown as Office).__office.overview.active(), null, { timeout: 30_000, polling: 100 });
+  // Tab: the menu.
+  await page.keyboard.press('Tab');
+  await page.locator('.hud-menu').waitFor({ timeout: 30_000 });
+  // Over the docked panel, not tucked under it: its right edge is the top of the pile there.
+  const onTop = await page.evaluate(() => {
+    const r = document.querySelector('.hud-menu')!.getBoundingClientRect();
+    return !!document.elementFromPoint(r.right - 24, r.top + 24)?.closest('.hud-menu');
+  });
+  assert.ok(onTop, 'the menu is over the docked panel');
+  assert.equal(await page.locator('.mc-dock-host > .modal.mission-control.docked').count(), 1, 'still docked');
+  assert.deepEqual(mapWarnings, []);
+  assert.deepEqual(errors, []);
+});
+
 test('selecting in the 3D office: two Escs from an Overview selection walk again, and in Walk the card\'s ✕ hands the mouse straight back', async (t) => {
   if (why) return t.skip(why);
   const { page, errors, context } = await signedIn({ width: 1440, height: 900 });

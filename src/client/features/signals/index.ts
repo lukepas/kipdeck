@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import type { Ctx } from '../../core/context';
 import type { Parts } from '../../core/parts';
 import { UNIT } from '../../world/character/unit-body';
-import { phaseOf, signalOf, type Signal } from './logic';
+import { markScale, phaseOf, signalOf, type Signal } from './logic';
 import { SignalSet } from './world';
 
 export function installSignals(ctx: Ctx, parts: Pick<Parts, 'views' | 'tv' | 'stage' | 'hail'>) {
@@ -33,7 +33,9 @@ export function installSignals(ctx: Ctx, parts: Pick<Parts, 'views' | 'tv' | 'st
       sg.kind = kind;
       sg.phase = phaseOf(id);
       sg.reach = kind === 'needs-you' ? (parts.hail?.reach(id) ?? 1) : 1;
-      sg.carded = v.model.tier === 'near' && v.model.calloutMode === 'full';
+      // Up close its callout over its head (the card, the folded line, or the selected unit's one line)
+      // carries its state glyph: the diamond or triangle would only be the biggest shape on screen.
+      sg.carded = v.model.tier === 'near';
       v.model.where(sg.foot);
       const k = v.model.root.getWorldScale(scale).y || 1;
       sg.head.copy(sg.foot).setY(sg.foot.y + UNIT.top * k);
@@ -44,6 +46,9 @@ export function installSignals(ctx: Ctx, parts: Pick<Parts, 'views' | 'tv' | 'st
       signals.push(sg);
     }
     const camera = parts.stage.view ?? ctx.camera;
+    // From the Overview (orthographic) every mark is its own size; walking, a near one shrinks (markScale).
+    const persp = (camera as THREE.PerspectiveCamera).isPerspectiveCamera;
+    for (const sg of signals) sg.scale = persp ? markScale(camera.position.distanceTo(sg.head)) : 1;
     euler.setFromQuaternion(camera.quaternion, 'YXZ');
     const motion = ctx.reduceMotion.matches ? 0 : ctx.reduceMotion.ship === 'calm' ? 0.5 : 1;
     set.set(signals, euler.y, clock, motion);

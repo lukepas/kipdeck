@@ -8,7 +8,9 @@
  * (120 ms) without bringing the card in again. Held still, both cut (the tokens' reduced-motion rule).
  */
 import './ui.css';
-import type { Attention } from '../../../shared/attention';
+import { spokenActivity, type Attention } from '../../../shared/attention';
+import { waitClock } from '../../../shared/wait';
+import { paintWait } from '../../ui/waitclock';
 import { headline, sameText, statusPhrase } from '../../../shared/rowtext';
 import type { WorkerInfo } from '../../../shared/protocol';
 import { store } from '../../state';
@@ -16,7 +18,7 @@ import { h } from '../../ui/dom';
 import { icon } from '../../ui/icons';
 import { engineLabel } from '../../ui/provider';
 import { unitSign } from '../../ui/unitsign';
-import { buttonsFor, elapsed, type InspectAction } from './logic';
+import { buttonsFor, elapsed, shortPhrase, type InspectAction } from './logic';
 
 export interface InspectorDeps {
   /** What each button does for unit `id`. */
@@ -59,11 +61,11 @@ export function createInspector(deps: InspectorDeps) {
   let leaving = 0;
 
   /** The current content's lines, made by build(). */
-  const els = { head: h('div'), state: h('span'), title: h('div'), activity: h('div'), meta: h('div'), actions: h('div') };
+  const els = { head: h('div'), state: h('span'), word: h('span'), clock: h('span'), title: h('div'), activity: h('div'), meta: h('div'), actions: h('div') };
 
   /** The card's content for unit `w`, made fresh (a switch of unit). */
   function build(w: WorkerInfo): HTMLElement {
-    els.head = h('div.sel-head', {}, unitSign(w.deskId), h('span.sel-name', {}, w.name), (els.state = h('span.sel-state')));
+    els.head = h('div.sel-head', {}, unitSign(w.deskId), h('span.sel-name', {}, w.name), (els.state = h('span.sel-state', {}, (els.word = h('span')), ' · ', (els.clock = h('span.sel-clock')))));
     els.title = h('div.sel-title');
     els.activity = h('div.sel-activity');
     els.meta = h('div.sel-meta');
@@ -77,14 +79,20 @@ export function createInspector(deps: InspectorDeps) {
     const w = id ? store.workers.get(id) : undefined;
     if (!w) return;
     const att = attentionOf(w);
-    const head = headline(w.task ?? (w.title ? { name: w.title } : undefined), w.activity ?? w.prompt);
+    // What it's doing, without an asking tool's bare name ("request_user_input"): that names no question.
+    const said = spokenActivity(w.activity);
+    const head = headline(w.task ?? (w.title ? { name: w.title } : undefined), said ?? w.prompt);
     els.state.className = `sel-state ${att.level}`;
-    // Only the short word up here ("Wants permission"): what it asks ("Bash: npm publish") is the line below.
-    const phrase = w.lost ? 'Worktree deleted' : statusPhrase(att, head.title).replace(/:\s.*$/, '');
-    els.state.textContent = `${phrase} · ${elapsed(Date.now() - att.since)}`;
+    // Only the short word up here ("Needs you · Wants permission"), never a whole question: what it asks
+    // ("Bash: npm publish", "Update the snapshot?") is the line below, and the clock stays in view.
+    const phrase = w.lost ? 'Worktree deleted' : shortPhrase(statusPhrase(att, head.title));
+    els.word.textContent = phrase;
+    // How long, in its wait's tone when it waits on you (amber past 5 minutes, red past 30), ticking to the minute.
+    const clock = waitClock(att.level, Date.now() - att.since);
+    paintWait(els.clock, elapsed(Date.now() - att.since), clock.tone, `sel:${w.id}`);
     els.state.title = w.lost ? '' : statusPhrase(att, head.title);
     els.title.textContent = head.title || 'No task yet';
-    const activity = w.activity && !sameText(w.activity, head.title) ? w.activity : '';
+    const activity = said && !sameText(said, head.title) ? said : '';
     els.activity.textContent = activity || (head.detail ?? '');
     els.activity.hidden = !els.activity.textContent;
     const meta = [w.worktree?.branch, w.pr ? `PR #${w.pr.number}` : '', w.kind === 'agent' ? engineLabel(w, store.project) : 'shell'].filter(Boolean);
@@ -142,3 +150,4 @@ export function createInspector(deps: InspectorDeps) {
     el: card,
   };
 }
+

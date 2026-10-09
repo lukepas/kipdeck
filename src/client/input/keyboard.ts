@@ -6,7 +6,7 @@ import type { Ctx } from '../core/context';
 import type { Parts } from '../core/parts';
 import { DESK_KEYS } from '../interaction';
 import { isTyping } from '../player';
-import { modalOpen } from '../ui/dom';
+import { viewKeysHeld } from '../ui/dom';
 
 /**
  * The office's own parts of the key chain. Install it before anything else's, so within a stage they
@@ -14,8 +14,9 @@ import { modalOpen } from '../ui/dom';
  */
 export function installKeyGuards(ctx: Ctx, parts: Pick<Parts, 'focus'>) {
   const { player } = ctx;
-  // A window's open or you're typing somewhere, or it's a shortcut: the key isn't the office's.
-  ctx.keys.add('guard', (e) => modalOpen() || isTyping(e) || e.metaKey || e.ctrlKey || e.altKey);
+  // A window's open (a docked panel only for the keys it took) or you're typing somewhere, or it's a
+  // shortcut: the key isn't the office's.
+  ctx.keys.add('guard', (e) => viewKeysHeld(e) || isTyping(e) || e.metaKey || e.ctrlKey || e.altKey);
   // Closing the last window didn't give you the mouse back: any key but Esc takes it (see backToGame).
   ctx.keys.add('guard', (e) => {
     if (parts.focus.relookOnKey() && e.key !== 'Escape' && player.canLock) player.lock();

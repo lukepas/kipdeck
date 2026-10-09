@@ -36,6 +36,11 @@ export interface Modal {
   doing?: string;
   /** You're reading while it's open: the bookshelf shows who else is (see PeerInfo.reading). */
   reading?: boolean;
+  /**
+   * A panel docked beside the view (Mission control docked): on the stack, so pointer lock and what
+   * teammates see agree that a window is open, but it doesn't take the view's keys (see viewKeysHeld).
+   */
+  side?: boolean;
   close(): void;
 }
 
@@ -49,6 +54,15 @@ export function onModalChange(fn: (open: boolean) => void) {
 
 export function modalOpen(): boolean {
   return stack.length > 0;
+}
+
+/**
+ * Whether a window holds the view's own keys (G, N, Tab...): any window on the stack but a side panel.
+ * With only a docked panel open the view keeps its keys, and the panel takes the ones it uses first
+ * (it handles them in the capture phase and calls preventDefault), so `e` says which it took.
+ */
+export function viewKeysHeld(e?: { defaultPrevented: boolean }): boolean {
+  return stack.some((m) => !m.side) || (stack.length > 0 && !!e?.defaultPrevented);
 }
 
 /** What the open windows say you're doing: the topmost one that says anything (a merge dialog over a PR is still "reading PR #12"). */
@@ -80,7 +94,7 @@ export function setDoing(modal: Modal, doing: string | undefined) {
  * is what teammates see under your name tag while it's open, like "reading PR #12", and `reading`
  * puts an open book in your character's hands. `onClose` hears whether it was the Esc key.
  */
-export function openModal(content: HTMLElement, opts: { escCloses?: boolean; onClose?: (byEsc: boolean) => void; backdropCloses?: boolean; closeButton?: boolean; doing?: string; reading?: boolean; dock?: HTMLElement } = {}): Modal {
+export function openModal(content: HTMLElement, opts: { escCloses?: boolean; onClose?: (byEsc: boolean) => void; backdropCloses?: boolean; closeButton?: boolean; doing?: string; reading?: boolean; dock?: HTMLElement; side?: boolean } = {}): Modal {
   if (opts.dock) return dockModal(content, opts.dock, opts);
   const backdrop = h('div.backdrop', {}, content);
   const root = document.getElementById('modal-root')!;
@@ -102,6 +116,7 @@ export function openModal(content: HTMLElement, opts: { escCloses?: boolean; onC
     backdrop,
     doing: opts.doing,
     reading: opts.reading,
+    side: opts.side,
     close() {
       if (closed) return;
       closed = true;

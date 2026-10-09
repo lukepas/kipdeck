@@ -101,3 +101,18 @@ test('N follows the Attention ranking: the ones that need you, then the stuck on
   assert.equal(nToast(line, 'c3', ranked), '3 of 5: 2 need you · 1 stuck · 2 to review. N for the next');
   assert.equal(nToast(line.slice(0, 1), 'a2', ranked), null);
 });
+
+test('peek says who N goes to next without going: after one press it names the second in line', async () => {
+  const { nextWord } = await import('../src/client/features/bottombar/nextword.js');
+  const line = [{ id: 'a', since: 1 }, { id: 'b', since: 2 }, { id: 'c', since: 3 }];
+  const up = new NextUp();
+  assert.equal(up.peek(line)?.id, 'a');
+  assert.equal(up.peek(line)?.id, 'a', 'peeking marks nothing');
+  assert.equal(up.pick(line)?.id, 'a');
+  assert.equal(up.peek(line, 'a')?.id, 'b', 'standing at the first, the chip names the second');
+  assert.equal(up.pick(line, 'a')?.id, 'b', 'and N goes there');
+  const r = (id: string, name: string) => ({ entry: { id, name } as never, att: { level: 'needs-you', label: '', action: 'answer', since: 0, snoozed: false } as never });
+  const ranked = [r('a', 'Byte'), r('b', 'Pixel')];
+  assert.equal(nextWord(ranked, 60_000, 'b').who, 'next: Pixel,');
+  assert.equal(nextWord(ranked, 60_000).who, 'next: Byte,', 'without a round, the first in line');
+});

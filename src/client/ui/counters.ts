@@ -17,6 +17,9 @@ const SHOWN: readonly AttentionLevel[] = ['needs-you', 'stuck', 'review', 'worki
 /** The words after each number. */
 const WORDS: Record<AttentionLevel, string> = { 'needs-you': 'need you', stuck: 'stuck', review: 'to review', working: 'working', parked: 'parked' };
 
+/** The words after `n` at `level`: "1 needs you", "2 need you" (the pod plates say it the same way). */
+export const countWord = (level: AttentionLevel, n: number) => (level === 'needs-you' && n === 1 ? 'needs you' : WORDS[level]);
+
 /** Paid-out bounties on every floor: how many, and how much of each token (shared/money.ts, as /pom/ writes it). */
 export function proofTally(): { released: number; amounts: Map<string, string>; network?: string } {
   let released = 0;
@@ -61,12 +64,12 @@ export function mountCounters(el: HTMLElement, open: (tab: MissionTab) => void):
           type: 'button',
           class: `c-${level}${n ? ' live' : ''}`,
           title: `${LEVEL_LABEL[level]}: ${n}. Open Mission control`,
-          'aria-label': `${n} ${WORDS[level]}`,
+          'aria-label': `${n} ${countWord(level, n)}`,
           onclick: () => open(level === 'review' ? 'review' : 'attention'),
         },
         icon(LEVEL_ICON[level], 14),
         h(`b${roll(level, n)}`, {}, String(n)),
-        h('span.cw', {}, WORDS[level]),
+        h('span.cw', {}, countWord(level, n)),
       );
     });
     const tally = proof.network

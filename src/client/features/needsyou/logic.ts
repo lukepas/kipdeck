@@ -3,10 +3,15 @@
  * see shared/attention.ts), who just started, what the banner says about them, and when to ring again.
  * No three.js and no page here, so the tests run it as it is.
  */
-import type { Ranked } from '../../../shared/attention';
+import { spokenActivity, type Ranked } from '../../../shared/attention';
 import { ago, splitTag } from '../../../shared/rowtext';
 import type { RosterEntry } from '../../../shared/protocol';
 import { alertDetail } from '../../../shared/status';
+import { waitTone, type WaitTone } from '../../../shared/wait';
+import { allowLine, clip, permissionAsk } from '../workers/lod';
+
+/** The most characters of what it asks the chip shows. */
+export const CHIP_ASK = 48;
 
 /** How long between reminders while a worker's still waiting on an answer nobody's looking at (ms). */
 export const REMIND_EVERY = 30_000;
@@ -33,6 +38,11 @@ export interface BannerText {
   title: string;
   /** What it's asking, where (when that's another floor) and for how long. */
   detail: string;
+  /** What it's asking, cut short for the chip, or ''. */
+  ask: string;
+  /** How long it has waited ('<1m', '12m') and that wait's tone (shared/wait.ts), shown in the chip itself. */
+  wait: string;
+  tone: WaitTone;
   /** How many more are asking, or ''. */
   more: string;
   /** Changes whenever the banner would read differently. */
@@ -47,7 +57,8 @@ export interface BannerText {
 export function bannerText(asking: readonly RosterEntry[], now: number, here: string | null): BannerText | null {
   const e = asking.find((a) => a.floor === here) ?? asking[0];
   if (!e) return null;
-  const raw = alertDetail(e)?.replace(/\s+/g, ' ').trim();
+  // An activity that's only the asking tool's name says nothing: the task's summary says more.
+  const raw = alertDetail({ ...e, activity: spokenActivity(e.activity) })?.replace(/\s+/g, ' ').trim();
   const ask = raw && splitTag(raw).text;
   const since = e.waitingSince ?? e.createdAt;
   // Nothing for its first minute: "under a minute" would only be noise.
@@ -56,7 +67,10 @@ export function bannerText(asking: readonly RosterEntry[], now: number, here: st
   const detail = [ask && (ask.length > 90 ? `${ask.slice(0, 87)}...` : ask), where, waited].filter(Boolean).join(' · ');
   const more = asking.length > 1 ? `+${asking.length - 1} more` : '';
   const title = `${e.name} needs you`;
-  return { id: e.id, floor: e.floor, deskId: e.deskId, title, detail, more, key: `${e.id}|${title}|${detail}|${more}` };
+  // The chip leads a permission with the command it would run ("Allow npm test?").
+  const perm = permissionAsk({ activity: e.activity });
+  const short = perm ? allowLine(perm, CHIP_ASK) : ask ? clip(ask, CHIP_ASK) : '';
+  return { id: e.id, floor: e.floor, deskId: e.deskId, title, detail, ask: short, wait: ago(now - since), tone: waitTone(now - since), more, key: `${e.id}|${title}|${detail}|${more}` };
 }
 
 /** Tells a worker that has just started needing you from one that already did when the page first saw it. */

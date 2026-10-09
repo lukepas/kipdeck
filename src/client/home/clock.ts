@@ -1,5 +1,5 @@
 // The wait clocks tick: every second, each clock with a `data-since` (a row waiting on you, the
-// pulse's longest wait) gets its text and its tone (fresh, amber from 5m, red from 30m) set again in
+// pulse's longest wait) gets its text and its tone (fresh, bold from 5m, heavier and underlined from 30m) set again in
 // place. Only those text nodes change, so the list isn't drawn again and nothing under the pointer
 // moves. Seconds show for the first minute, so a wait that just started is visibly a clock. A
 // `data-until` counts down instead ("Merging in 6s", a held merge's row).

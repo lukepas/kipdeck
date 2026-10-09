@@ -32,7 +32,7 @@ export function installFloorWatch(ctx: Ctx) {
     const badge = $('floors-waiting');
     badge.textContent = elsewhere ? String(elsewhere) : '';
     badge.classList.toggle('hidden', !elsewhere);
-    $('project').title = elsewhere ? `${elsewhere} worker${elsewhere === 1 ? '' : 's'} on other decks waiting on someone - click to go there` : 'Decks: go to another project';
+    $('project').title = elsewhere ? `${elsewhere} agent${elsewhere === 1 ? '' : 's'} in other projects waiting on you - click to go there` : 'Projects: switch project';
   }
 
   return { paintFloor, noticeWaiting };

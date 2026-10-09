@@ -1238,6 +1238,10 @@ test('a Claude worker acts out its latest tool call, and puts its head in its ha
   hook('Stop', {});
   assert.equal(workers.get(worker.id)?.status, 'done');
   assert.equal(action(), undefined);
+  // A question asked with AskUserQuestion is said in its own words, never by the tool's name.
+  hook('PreToolUse', { tool_name: 'AskUserQuestion', tool_input: { questions: [{ question: 'Which selector should I use?' }] } });
+  assert.equal(workers.get(worker.id)?.status, 'needs_input');
+  assert.equal(workers.get(worker.id)?.activity, 'Which selector should I use?');
 });
 
 test('a Claude worker that opens a pull request itself has it as its own', async (t) => {

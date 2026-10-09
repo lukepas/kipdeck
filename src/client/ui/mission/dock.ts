@@ -5,8 +5,10 @@
 // close as any other, so you're straight back in mouse-look with no extra click.
 //
 // The window takes its place on the modal stack (ui/dom.ts) through a stand-in that draws nothing, so
-// "a window is open" means the same everywhere (keys, pointer lock, what teammates see you doing),
-// while the panel itself lives outside the backdrop and isn't dimmed. Narrow screens float it.
+// "a window is open" means the same everywhere (pointer lock, what teammates see you doing), while the
+// panel itself lives outside the backdrop and isn't dimmed. The stand-in is a side panel: the deck's
+// own keys (G, N, Tab) keep working beside it, the panel taking only the keys it uses. Narrow screens
+// float it.
 
 import { h, openModal, toast, type Modal } from '../dom';
 import { icon } from '../icons';
@@ -152,11 +154,14 @@ export function mountShell(el: HTMLElement, opts: { doing: string; onEnd(): void
     if (isDocked) {
       host ??= h('div.mc-dock-host');
       if (el.parentElement !== host) host.append(el);
-      if (!host.isConnected) document.body.append(host);
+      // Just before the windows, in their stacking context: a window or the menu opened over it is on
+      // top, rather than tucked under a panel that sits over the whole view.
+      const windows = document.getElementById('modal-root');
+      if (!host.isConnected) windows ? windows.before(host) : document.body.append(host);
       // Under the view's top bar, however tall it is (the 3D office's, the 2D view's).
       const bar = document.querySelector('.topbar, .lite-bar');
       if (bar) host.style.top = `${Math.max(0, Math.round(bar.getBoundingClientRect().bottom))}px`;
-      m = openModal(proxy, { escCloses: false, closeButton: false, doing: opts.doing, onClose });
+      m = openModal(proxy, { escCloses: false, closeButton: false, doing: opts.doing, onClose, side: true });
       m.backdrop.classList.add('mc-dock-backdrop');
     } else {
       host?.remove();

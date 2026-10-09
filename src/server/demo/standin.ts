@@ -165,7 +165,9 @@ async function run() {
       const choices = step.choices || [];
       choices.forEach((c, n) => console.log('  ' + (n + 1) + '. ' + c));
       process.stdout.write(bold('> '));
-      await post('PreToolUse', { tool_name: ask, tool_use_id: id, tool_input: {} });
+      // The question goes with the call, as Claude Code sends it (Codex's hook carries the name only).
+      const input = play.route === 'codex' ? {} : { questions: [{ question: step.ask }] };
+      await post('PreToolUse', { tool_name: ask, tool_use_id: id, tool_input: input });
       picks = choices.length;
       let answer = await nextLine();
       picks = 0;

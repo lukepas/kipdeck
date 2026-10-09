@@ -299,5 +299,5 @@ export const PAD_ROWS: readonly [AttentionLevel, string][] = [
 
 /** What the datapad's glass says: one line per count, in order. */
 export function padLines(counts: AttentionCounts): string[] {
-  return PAD_ROWS.map(([level, word]) => `${counts[level]} ${word}`);
+  return PAD_ROWS.map(([level, word]) => `${counts[level]} ${level === 'needs-you' && counts[level] === 1 ? 'needs you' : word}`);
 }

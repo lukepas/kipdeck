@@ -113,7 +113,8 @@
 .bb-key kbd { min-width: 18px; padding: 0 4px; border: 1px solid var(--line-strong); border-radius: var(--radius-chip); color: var(--text); font: 500 11px/16px var(--font-mono); text-align: center; }
 .bb-key.look { color: var(--text); border-color: var(--line-strong); cursor: default; }
 .bb-key.look.hidden, .bb-key.hidden { display: none; }
-body.overview .bb-keys { visibility: hidden; }
+/* From the Overview the legend says the keys; the N chip stays, so who's next and for how long is still there. */
+body.overview .bb-keys .bb-key:not([data-key='N']) { visibility: hidden; }
 
 /* The chat: folded to a button on the right of the bar. T opens it; lines float up and fade. */
 .chat { position: relative; flex: none; display: flex; flex-direction: column; align-items: flex-end; }
@@ -133,7 +134,8 @@ body.overview .bb-keys { visibility: hidden; }
 
 /* What you're facing and what its keys do: over the bar, in the middle of the deck past the rail. */
 .hint {
-  position: absolute; left: calc(var(--rail) + (100vw - var(--rail) - var(--clear-right, 0px)) / 2); bottom: calc(var(--bottom) + 10px); transform: translateX(-50%);
+  /* Centred between the rail and what's docked on the right by its margins, so it holds under demo mode's zoom too. */
+  position: absolute; left: var(--rail); right: var(--clear-right, 0px); bottom: calc(var(--bottom) + 10px); width: max-content; margin-inline: auto;
   background: var(--hud-fill); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius);
   padding: 8px 14px; font-weight: 500; font-size: 13px; box-shadow: var(--hud-shadow);
   display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: center; max-width: min(720px, calc(100vw - var(--rail) - var(--clear-right, 0px) - 48px));

@@ -20,7 +20,9 @@ function visibleText(html: string): string {
     .replace(/<[^>]+>/g, '');
 }
 
-const PAGES = ['src/client/index.html', 'src/client/login.html', 'src/client/join.html', 'src/client/claim.html', 'src/client/showcase/index.html', 'src/server/showcase/off.ts'];
+const PAGES = ['src/client/index.html', 'src/client/bridge.html', 'src/client/login.html', 'src/client/join.html', 'src/client/claim.html', 'src/client/showcase/index.html', 'src/server/showcase/off.ts'];
+/** The pages that carry the two-tone wordmark (the home page has none). */
+const WORDMARKED = PAGES.filter((p) => p !== 'src/client/index.html');
 
 test('the split markup is read as one word', () => {
   assert.match(visibleText('<span>MERGE<span>LINE</span></span>'), OLD);
@@ -31,6 +33,14 @@ for (const page of PAGES) {
   test(`${page} shows the Kipdeck wordmark and no old name`, () => {
     const text = visibleText(readFileSync(path.join(ROOT, page), 'utf8'));
     assert.doesNotMatch(text, OLD);
-    if (page !== 'src/client/index.html') assert.match(text, /KIPDECK/);
+    if (WORDMARKED.includes(page)) assert.match(text, /KIPDECK/);
   });
 }
+
+test('the wordmark reads KIPDECK on the bridge, its loading screen, the sign-in pages and the showcase', () => {
+  for (const f of WORDMARKED) {
+    const src = readFileSync(path.join(ROOT, f), 'utf8');
+    assert.doesNotMatch(src, /MERGE(?:<\/b>)?<span>LINE/, `${f} still spells the old name`);
+    assert.match(src, /KIP(?:<\/b>)?<span>DECK<\/span>/, `${f} has no KIPDECK wordmark`);
+  }
+});

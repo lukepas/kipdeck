@@ -79,7 +79,7 @@ export function loadingScreen(watchModels: (fn: (p: ModelsProgress) => void) => 
 
   let files: ModelsProgress = { asked: 0, done: 0 };
   let frameDrawn = () => {};
-  const frame: Step = { say: 'Loading deck', done: new Promise<void>((resolve) => (frameDrawn = resolve)) };
+  const frame: Step = { say: 'Loading', done: new Promise<void>((resolve) => (frameDrawn = resolve)) };
   /** Every step and whether it has settled, the first frame's first. */
   const steps = [{ step: frame, settled: false }];
   let drawn = false;

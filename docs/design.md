@@ -449,7 +449,8 @@ Open the deck with `?demo=1` for a screen share, a projector or a recording. It 
 
 - The chrome is a fifth bigger, so the smallest type is about 15px, and unit callouts and glyphs are a quarter bigger.
 - The needs-you toast stays up while anyone needs you.
-- Once you're in, the Overview turns slowly round the mission table. Any key, drag or wheel takes over.
+- Once you're in, the Overview sways slowly round the mission table, about 32 degrees either side of where a trip up looks from, and its zoom is fitted to the ball round everything it frames, so every pod plate and board stays in view at every point of the sway. Any key, drag or wheel takes over.
+- The Overview's legend shows only G walk, centred over the deck you can see.
 - Lit edges, screens and state lights bloom a little more than the Night glow (0.4 against 0.32, in Day too), so they survive video compression (`src/client/features/lights/`).
 
 ## Focus and keyboard

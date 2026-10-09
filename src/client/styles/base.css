@@ -206,3 +206,6 @@ a.when:hover { text-decoration: underline; }
 /* "For goal" in the hire and queue forms (ui/mission/goalpick.ts). */
 .modal .goal-pick { display: flex; align-items: center; gap: 8px; margin: 10px 0 0; font-size: 14px; }
 .modal .goal-pick select { width: auto; font: inherit; font-size: 13px; padding: 4px 8px; max-width: 100%; }
+
+/* Said to a screen reader, never shown (the needs-you chip's call, features/needsyou/ui.ts). */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

@@ -3,4 +3,6 @@
 body.demo #hud { zoom: 1.2; }
 body.demo .backdrop { zoom: 1.12; }
 body.demo .needs-you-x { display: none; }
-body.demo .overview-legend { zoom: 1.2; }
+/* The legend is in #hud, so it's drawn at the HUD's scale already: no zoom of its own (two would push it
+   off centre). It shows only the way back to Walk, so the hero shot is the deck. */
+body.demo .overview-legend > span:not(.walk) { display: none; }

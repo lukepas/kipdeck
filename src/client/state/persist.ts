@@ -100,7 +100,7 @@ export interface AlertSettings {
 }
 export const AMBER_MINUTES = [2, 5, 10, 15] as const;
 export const RED_MINUTES = [5, 10, 20, 30] as const;
-/** Amber at WAIT_AMBER_MS by default: the same minute an inbox clock turns amber (shared/wait.ts). */
+/** Amber at WAIT_AMBER_MS by default: the same minute every wait clock turns aging (shared/wait.ts). */
 export const ALERT_DEFAULTS: Readonly<AlertSettings> = { on: true, amberMin: WAIT_AMBER_MS / 60_000, redMin: 10 };
 /** Settings > Bridge > Hands (features/hands): Auto draws your first-person hands at High and Medium, On at every tier, Off never. */
 export const HANDS_MODES = ['auto', 'on', 'off'] as const;

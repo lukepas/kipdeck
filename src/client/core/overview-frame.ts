@@ -59,26 +59,36 @@ export function framedPoints(): P3[] {
   return out;
 }
 
+/** Points to frame, or what to frame for a view `aspect` wide for each of its height (a label that grows on a phone). */
+export type Framed = readonly P3[] | ((aspect: number) => readonly P3[]);
+
 /** What features add to the frame (features/pods: each pod's ground label, so a zone's name is never cut off). */
-const extras: P3[] = [];
+const extras: Framed[] = [];
 
 /** Adds `points` to what every trip up frames, alongside framedPoints(). */
-export function frameAlso(points: readonly P3[]) {
-  extras.push(...points);
+export function frameAlso(points: Framed) {
+  extras.push(points);
 }
 
-/** Everything a trip up frames: framedPoints() and what features added (frameAlso). */
-export function allFramed(base: readonly P3[] = framedPoints()): P3[] {
-  return [...base, ...extras];
+/** Everything a trip up frames for a view `aspect` wide: framedPoints() and what features added (frameAlso). */
+export function allFramed(base: readonly P3[] = framedPoints(), aspect = 16 / 9): P3[] {
+  return [...base, ...extras.flatMap((e) => (typeof e === 'function' ? e(aspect) : e))];
 }
+
+/** How far (NDC) the box's left edge stands past the Units rail's. */
+export const RAIL_GAP = 0.07;
 
 /**
  * FRAME_BOX with its right edge brought in by `rightPx` pixels of a view `width` wide (a docked Mission
- * control, ui/mission/dock.ts --dock-right), so nothing framed lands under the panel.
+ * control, ui/mission/dock.ts --dock-right), so nothing framed lands under the panel. With `leftPx` (the
+ * Units rail's right edge, 0 where it's a sheet at the bottom, as on a phone) the left edge stands just
+ * past the rail instead of where a wide screen's rail is, so a narrow view uses its whole width.
  */
-export function frameBox(rightPx: number, width: number): FrameBox {
-  const right = FRAME_BOX.right - (2 * Math.max(0, rightPx)) / Math.max(1, width);
-  return { ...FRAME_BOX, right: Math.max(FRAME_BOX.left + 0.4, right) };
+export function frameBox(rightPx: number, width: number, leftPx?: number): FrameBox {
+  const w = Math.max(1, width);
+  const right = FRAME_BOX.right - (2 * Math.max(0, rightPx)) / w;
+  const left = leftPx === undefined ? FRAME_BOX.left : Math.max(-1 + RAIL_GAP / 2, -1 + (2 * Math.max(0, leftPx)) / w + RAIL_GAP);
+  return { ...FRAME_BOX, left, right: Math.max(left + 0.4, right) };
 }
 
 /** A point turned into a camera's frame at `yaw`: across the screen (u), and toward the camera (d). */
@@ -116,4 +126,32 @@ export function framePose(points: readonly P3[], pitch: number, aspect: number, 
   const u = (u0 + u1) / 2 - ((B.left + B.right) / 2) * w;
   const d = (((B.bottom + B.top) / 2) * h - (v0 + v1) / 2) / s;
   return { x: u * Math.cos(yaw) + d * Math.sin(yaw), z: -u * Math.sin(yaw) + d * Math.cos(yaw), zoom };
+}
+
+/** A ball round points: its middle and its radius (m). */
+export interface Sphere {
+  readonly c: P3;
+  readonly r: number;
+}
+
+/** The ball round `points`: centred on their box's middle, out to the furthest of them. */
+export function boundingSphere(points: readonly P3[]): Sphere {
+  if (!points.length) return { c: [0, 0, 0], r: 0 };
+  const lo = [Infinity, Infinity, Infinity];
+  const hi = [-Infinity, -Infinity, -Infinity];
+  for (const p of points) for (let i = 0; i < 3; i++) (lo[i] = Math.min(lo[i], p[i])), (hi[i] = Math.max(hi[i], p[i]));
+  const c: P3 = [(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2];
+  let r = 0;
+  for (const p of points) r = Math.max(r, Math.hypot(p[0] - c[0], p[1] - c[1], p[2] - c[2]));
+  return { c, r };
+}
+
+/**
+ * The pose for a view turning round `sphere` (demo mode's orbit): an orthographic camera sees a ball
+ * as a disc of the same radius from any side, so a zoom that fits the disc in `box` keeps everything
+ * inside the ball in frame at every `yaw`, and the target puts the disc's middle on the box's.
+ */
+export function orbitPose(sphere: Sphere, pitch: number, aspect: number, halfHeight: number, maxZoom = 3, yaw = 0, box: FrameBox = FRAME_BOX): { x: number; z: number; zoom: number } {
+  const hh = Math.max(sphere.r / ((box.top - box.bottom) / 2), sphere.r / (((box.right - box.left) / 2) * aspect), 1e-6);
+  return framePose([sphere.c], pitch, aspect, halfHeight, Math.min(maxZoom, halfHeight / hh), yaw, box);
 }

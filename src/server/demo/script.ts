@@ -35,6 +35,13 @@ export interface DemoAgent {
   /** Its task: the prompt it's started with, and how its stand-in finds these steps. */
   task: string;
   steps: DemoStep[];
+  /**
+   * Its first wait on the person (a question, or a change to review) shown as already this many
+   * minutes old: display data, so a demo that has run for a minute still shows the deck's ranking and
+   * wait tones (fresh, aging past 5 minutes, stale past 30) as a real team's morning would. The demo's
+   * own labels still say it's a demo.
+   */
+  waited?: number;
 }
 
 const LOGIN = `// [demo] acme-shop's login route: made up for the Kipdeck demo.
@@ -243,6 +250,7 @@ export const FLEET: DemoAgent[] = [
     provider: 'claude',
     deskId: 'desk-2',
     task: 'Add rate limiting to /api/login',
+    waited: 41,
     steps: [
       { after: 2, tool: 'Read: api/login.js', say: ['Reading api/login.js and how sessions start.'] },
       { after: 4, tool: 'Grep: rateLimit', say: ['No rate limiter in the repository yet: writing a small one.'] },
@@ -258,6 +266,7 @@ export const FLEET: DemoAgent[] = [
     provider: 'codex',
     deskId: 'desk-1',
     task: 'Fix the flaky checkout test',
+    waited: 12,
     steps: [
       { after: 3, tool: 'Read: web/checkout.test.js' },
       { after: 5, tool: 'Bash: npm test -- web', say: ['', 'not ok 1 - checkout shows the total', '  # failed 2 of 5 runs: .total was empty'] },
@@ -273,6 +282,7 @@ export const FLEET: DemoAgent[] = [
     provider: 'cursor',
     deskId: 'desk-5',
     task: 'Write the README quickstart',
+    waited: 3,
     steps: [
       { after: 3, tool: 'Read: README.md' },
       { after: 6, tool: 'Read: package.json', say: ['Scripts: test (node --test) and start (api/server.js).'] },
@@ -376,4 +386,14 @@ export function dueReviews(now: number, seen: ReadonlyMap<string, SeenAgent>, do
 export function roundOver(now: number, startedAt: number, done: ReadonlySet<number>, lastAt: number, pace = 1): boolean {
   if (now - startedAt >= (ROUND_MAX_S * 1000) / pace) return true;
   return done.size === REVIEWS.length && now - lastAt >= (HOLD_S * 1000) / pace;
+}
+
+/**
+ * When `agent`'s wait should be dated from (DemoAgent.waited minutes back), the first time it waits
+ * on the person this round (`aged` notes it), or undefined: no `waited`, not waiting, or dated already.
+ */
+export function backdate(agent: Pick<DemoAgent, 'key' | 'waited'>, w: { status: string; waitingSince?: number } | undefined, aged: Set<string>): number | undefined {
+  if (!agent.waited || !w || aged.has(agent.key) || (w.status !== 'needs_input' && w.status !== 'done') || w.waitingSince === undefined) return undefined;
+  aged.add(agent.key);
+  return w.waitingSince - agent.waited * 60_000;
 }

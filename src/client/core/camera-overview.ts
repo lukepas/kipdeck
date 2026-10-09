@@ -18,7 +18,7 @@ import { FLOOR } from '../../shared/layout';
 import { h, modalOpen } from '../ui/dom';
 import type { Ctx } from './context';
 import type { Parts } from './parts';
-import { OVERVIEW_PITCH, SIDE_YAW, allFramed, frameBox, framePose, framedPoints } from './overview-frame';
+import { OVERVIEW_PITCH, SIDE_YAW, allFramed, boundingSphere, frameBox, framePose, framedPoints, orbitPose } from './overview-frame';
 import { FLY_MS, TRANSITION_MS, blendProjection, driftAt, easeFly, easeInOutCubic, easeMove, fovAlong, fovForHalfHeight, morphAt, zoomTierOf, type Drift, type ZoomTier } from './overview-transition';
 import { WheelZoom } from './overview-wheel';
 
@@ -26,7 +26,11 @@ import { WheelZoom } from './overview-wheel';
 const PITCH = OVERVIEW_PITCH;
 const DIST = 80;
 const HALF_HEIGHT = 16;
-const ZOOM = { min: 0.75, max: 3.2, fly: 2 } as const;
+/**
+ * The zoom's range for the wheel (min to max), and for a framing (fit to max): a tall, narrow view (a
+ * phone) frames the deck from further out than the wheel goes on a wide one, so no pod plate is cut off.
+ */
+const ZOOM = { min: 0.75, fit: 0.3, max: 3.2, fly: 2 } as const;
 /** How long a quarter turn takes (ms), and how fast the keys pan (m/s at zoom 1). */
 const TURN_MS = 280;
 const PAN_SPEED = 14;
@@ -44,6 +48,14 @@ const PAN_KEYS: Record<string, [number, number]> = {
   ArrowRight: [1, 0],
 };
 const STILL: Drift = { yaw: 0, x: 0, z: 0 };
+/**
+ * Demo mode's slow turn swings this far (radians) either side of the framed yaw and back, rather than
+ * all the way round: the pods' ground plates face the framed yaw, and past about 40 degrees off it they
+ * read sideways or upside down.
+ */
+const ORBIT_SWAY = (32 * Math.PI) / 180;
+/** How quickly the view eases onto the turn's fitted pose (per second): no jump as it starts. */
+const ORBIT_EASE = 1.6;
 
 export interface Overview {
   readonly camera: THREE.OrthographicCamera;
@@ -65,7 +77,7 @@ export interface Overview {
   toggle(on?: boolean, why?: OverviewWhy): void;
   /** Pans and zooms to (x, z) in 650 ms (a cut under reduced motion), going up into the Overview first. Never zooms out. */
   flyTo(x: number, z: number): void;
-  /** Turns slowly round the table at `speed` (radians a second) until you turn, pan or zoom yourself; 0 stops it. Demo mode's shot (features/demo). */
+  /** Sways slowly round the table, at most `speed` radians a second, fitted so everything framed stays in view, until you turn, pan or zoom yourself; 0 stops it. Demo mode's shot (features/demo). */
   orbit(speed: number): void;
   /** How close the Overview is: the whole deck, a pod, or a unit (for modules that show more up close). */
   zoomTier(): ZoomTier;
@@ -93,14 +105,15 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
    */
   function frame() {
     // What features framed too (the pods' labels), and short of a docked Mission control on the right.
-    const box = frameBox(dockRight(), window.innerWidth);
-    const pose = framePose(allFramed(framed), PITCH, window.innerWidth / Math.max(1, window.innerHeight), HALF_HEIGHT, ZOOM.max, SIDE_YAW, box);
+    const box = frameBox(dockRight(), window.innerWidth, railRight());
+    const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+    const pose = framePose(allFramed(framed, aspect), PITCH, aspect, HALF_HEIGHT, ZOOM.max, SIDE_YAW, box);
     yaw = SIDE_YAW;
     turn = null;
     fly = null;
     drift = STILL;
     target.set(pose.x, 0, pose.z);
-    zoom = THREE.MathUtils.clamp(pose.zoom, ZOOM.min, ZOOM.max);
+    zoom = THREE.MathUtils.clamp(pose.zoom, ZOOM.fit, ZOOM.max);
     wheel.hold(zoom);
     Object.assign(wheel.home, { x: pose.x, z: pose.z, zoom });
   }
@@ -108,8 +121,13 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
   let fly: { from: THREE.Vector3; to: THREE.Vector3; z0: number; z1: number; at: number } | null = null;
   const held = new Set<string>();
   let walkFog: THREE.Fog | THREE.FogExp2 | null = null;
-  /** The slow turn round the table (radians a second), or 0. */
+  /** The slow turn round the table (radians a second at its quickest), or 0. */
   let orbitSpeed = 0;
+  /** How far round the slow turn has got (radians of its sway, see ORBIT_SWAY). */
+  let orbitPhase = 0;
+  /** The ball round everything framed, which the turn keeps in frame, and the box it's kept in (taken as it starts). */
+  let orbitBall = boundingSphere([]);
+  let orbitBox = frameBox(0, 1);
   const listeners = new Set<(on: boolean, why: OverviewWhy) => void>();
 
   // ---- The move between Walk and the Overview ---------------------------------------------------------
@@ -141,7 +159,7 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     h('span', {}, h('kbd', {}, 'Q'), h('kbd', {}, 'E'), ' turn'),
     h('span', {}, h('kbd', {}, 'WASD'), ' pan'),
     h('span', {}, 'wheel zoom'),
-    h('span', {}, h('kbd', {}, 'G'), ' walk'),
+    h('span.walk', {}, h('kbd', {}, 'G'), ' walk'),
   );
   // In the HUD, so it reads the HUD's widths (the rail's, what's docked on the right).
   (document.getElementById('hud') ?? document.body).append(legend);
@@ -283,9 +301,13 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
    * rail on the left, short of a docked Mission control on the right (ui/mission/dock.ts --dock-right).
    */
   function seenMiddle(): number {
+    return (railRight() - dockRight()) / 2;
+  }
+
+  /** Where the Units rail down the left ends (px), or 0 when it isn't down the left (a sheet at the bottom on a phone). */
+  function railRight(): number {
     const rail = document.querySelector('.rail')?.getBoundingClientRect();
-    const left = rail && rail.width > 0 && rail.top < window.innerHeight / 2 ? rail.right : 0;
-    return (left - dockRight()) / 2;
+    return rail && rail.width > 0 && rail.top < window.innerHeight / 2 ? rail.right : 0;
   }
 
   function flyTo(x: number, z: number) {
@@ -404,7 +426,18 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
       if (k >= 1) turn = null;
     }
     const still = ctx.reduceMotion.matches;
-    if (orbitSpeed && !turn && !fly && !move && !still) yaw += orbitSpeed * dt;
+    if (orbitSpeed && !turn && !fly && !move && !still) {
+      // A slow sway round the table, fitted to the ball round everything framed, so every plate and
+      // board stays in frame at every point of it; eased onto, so the start doesn't jump.
+      orbitPhase += (orbitSpeed * dt) / ORBIT_SWAY;
+      yaw = SIDE_YAW + ORBIT_SWAY * Math.sin(orbitPhase);
+      const pose = orbitPose(orbitBall, PITCH, window.innerWidth / Math.max(1, window.innerHeight), HALF_HEIGHT, ZOOM.max, yaw, orbitBox);
+      const k = 1 - Math.exp(-ORBIT_EASE * dt);
+      target.x += (pose.x - target.x) * k;
+      target.z += (pose.z - target.z) * k;
+      zoom += (THREE.MathUtils.clamp(pose.zoom, ZOOM.fit, ZOOM.max) - zoom) * k;
+      wheel.hold(zoom);
+    }
     if (fly) {
       const k = Math.min(1, (now - fly.at) / FLY_MS);
       const e = still ? 1 : easeFly(k);
@@ -456,8 +489,32 @@ export function installOverview(ctx: Ctx, parts: Pick<Parts, 'stage'>): Overview
     else if (next) toggle(next.want, next.why);
   });
 
+  /**
+   * Mission control docking or letting go on the right (--dock-right) while the view is up and still
+   * where a trip up framed it: it eases onto the new framing, so nothing framed is left under the panel.
+   * A view you have panned, zoomed or turned stays where you put it.
+   */
+  let lastDock = dockRight();
+  new MutationObserver(() => {
+    const now = dockRight();
+    if (now === lastDock) return;
+    lastDock = now;
+    const home = wheel.home;
+    const atHome = Math.hypot(target.x - home.x, target.z - home.z) < 0.5 && Math.abs(zoom - home.zoom) < 0.05 && Math.abs(yaw - SIDE_YAW) < 1e-3;
+    if (!on || move || orbitSpeed || turn || fly || !atHome) return;
+    const was = { x: target.x, z: target.z, zoom };
+    frame();
+    if (ctx.reduceMotion.matches) return;
+    fly = { from: new THREE.Vector3(was.x, 0, was.z), to: target.clone(), z0: was.zoom, z1: zoom, at: performance.now() };
+    target.set(was.x, 0, was.z);
+    zoom = was.zoom;
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+
   function orbit(speed: number) {
     orbitSpeed = speed;
+    orbitPhase = 0;
+    orbitBall = boundingSphere(allFramed(framed, window.innerWidth / Math.max(1, window.innerHeight)));
+    orbitBox = frameBox(dockRight(), window.innerWidth, railRight());
     if (speed) toggle(true);
   }
 

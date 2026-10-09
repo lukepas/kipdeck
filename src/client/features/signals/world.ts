@@ -122,11 +122,12 @@ export class SignalSet {
           if (nd >= MAX) break;
           const bob = Math.sin(tm * 2.1 + sg.phase) * 0.04;
           this.q.setFromAxisAngle(this.up, tm * 1.4 + sg.phase);
-          this.m.compose(this.p.set(head.x, head.y + MARK.over + bob, head.z), this.q, this.s.set(1, 1, 1));
+          const k = sg.scale ?? 1;
+          this.m.compose(this.p.set(head.x, head.y + MARK.over + bob, head.z), this.q, this.s.set(k, k, k));
           if (!sg.carded) this.diamonds.setMatrixAt(nd++, this.m);
           if (sg.card && nb < MAX) {
             // From just under the diamond up to the card's left edge.
-            this.p.set(head.x, head.y + MARK.over - MARK.diamond * 1.4, head.z);
+            this.p.set(head.x, head.y + MARK.over - MARK.diamond * 1.4 * k, head.z);
             this.dir.subVectors(sg.card, this.p);
             // A new call's beam climbs to its card (features/hail): only so much of it is drawn yet.
             const len = this.dir.length() * Math.max(0.001, sg.reach);
@@ -139,7 +140,8 @@ export class SignalSet {
         case 'stuck': {
           if (nt >= MAX) break;
           this.q.setFromAxisAngle(this.up, eyeYaw);
-          this.m.compose(this.p.set(head.x, head.y + MARK.over, head.z), this.q, this.s.set(1, 1, 1));
+          const k = sg.scale ?? 1;
+          this.m.compose(this.p.set(head.x, head.y + MARK.over, head.z), this.q, this.s.set(k, k, k));
           if (!sg.carded) this.triangles.setMatrixAt(nt++, this.m);
           this.q.identity();
           this.m.compose(this.p.set(sg.station.x, foot.y + 0.02, sg.station.z), this.q, this.s.set(1, 1, 1));

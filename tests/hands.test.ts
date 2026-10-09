@@ -156,5 +156,5 @@ test('Mission control brings the datapad up in the left hand, and it goes when t
 });
 
 test("the datapad's glass reads the top bar's four counts, most urgent first", () => {
-  assert.deepEqual(padLines({ 'needs-you': 1, stuck: 0, review: 2, working: 8, parked: 3 }), ['1 need you', '0 stuck', '2 to review', '8 working']);
+  assert.deepEqual(padLines({ 'needs-you': 1, stuck: 0, review: 2, working: 8, parked: 3 }), ['1 needs you', '0 stuck', '2 to review', '8 working']);
 });

@@ -85,7 +85,7 @@ test('one wait clock: a row, the pulse, Shipped today and the merge toast say th
   for (const f of ['src/shared/rowtext.ts', 'src/shared/metrics.ts', 'src/shared/inbox.ts', 'src/shared/attention.ts']) assert.doesNotMatch(read(f), /function waitWords/, f);
 });
 
-test('one amber mark: a clock turns amber at WAIT_AMBER_MS, the minute the bridge goes amber', () => {
+test('one amber mark: a clock turns aging at WAIT_AMBER_MS, the minute the bridge goes amber', () => {
   assert.equal(WAIT_AMBER_MS, 5 * MIN);
   assert.equal(waitTone(WAIT_AMBER_MS - 1), 'fresh');
   assert.equal(waitTone(WAIT_AMBER_MS), 'aging');
