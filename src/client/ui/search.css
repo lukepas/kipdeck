@@ -8,7 +8,7 @@
 .search-hit { padding: 6px 10px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); font-size: 14px; min-width: 0; }
 .search-hit.term { background: var(--void); color: var(--text); border-color: var(--line); cursor: pointer; }
 .search-hit.term:hover { outline: 1px solid var(--line-strong); outline-offset: 0; }
-.search-hit.term:focus-visible { outline: 2px solid var(--working); outline-offset: -2px; }
+.search-hit.term:focus-visible { outline: 2px solid var(--act); outline-offset: -2px; }
 .search-hit code { font-family: var(--font-mono); font-size: 12.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .search-meta { display: flex; gap: 8px; align-items: baseline; font-size: 12px; font-weight: 400; color: var(--muted); }
 .search-text { overflow-wrap: anywhere; }

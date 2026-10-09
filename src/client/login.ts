@@ -1,4 +1,6 @@
 import { mountSigninArt } from './signin-art';
+import { TAGLINE } from '../shared/copy';
+import { openCommand } from '../shared/demo';
 
 mountSigninArt();
 
@@ -34,9 +36,20 @@ const local = document.getElementById('local') as HTMLDivElement;
 function showLocal() {
   local.hidden = false;
   form.hidden = true;
-  sub.textContent = 'The inbox for your AI coding agents.';
-  const cmd = document.getElementById('open-cmd')!.textContent ?? '';
+  sub.textContent = TAGLINE;
+  // The command that works today: from the clone until Kipdeck is on npm.
+  const cmd = openCommand();
+  // A break allowed only after a slash, so a narrow screen wraps the path, never a file name.
+  document.getElementById('open-cmd')!.replaceChildren(
+    ...cmd.split(/(?<=\/)/).flatMap((part, i) => {
+      const span = document.createElement('span');
+      span.textContent = part;
+      return i ? [document.createElement('wbr'), span] : [span];
+    }),
+  );
   const copy = document.getElementById('copy-cmd') as HTMLButtonElement;
+  // The first Tab lands on the one thing to do here, not on the credit at the foot of the page.
+  copy.focus({ preventScroll: true });
   copy.addEventListener('click', () => {
     void navigator.clipboard?.writeText(cmd).then(
       () => (copy.textContent = 'Copied'),

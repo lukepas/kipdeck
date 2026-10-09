@@ -1,5 +1,7 @@
 # Dokploy reference
 
+How to run Kipdeck, the one place to see and steer every coding agent your team runs, on Dokploy.
+
 The full story behind `deploy/dokploy.sh`. The short version is in [Teams and servers](self-hosting.md#deploy-to-dokploy).
 
 You need a **[Dokploy](https://dokploy.com) server** and an **API key** for it, plus `ssh`, `curl`, `git`, Node.js and a clone of this repo. Make the key in Dokploy under **Settings → Profile → API/CLI Keys**, and leave its rate limiting off: the script checks on the build every few seconds.

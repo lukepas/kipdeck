@@ -1,5 +1,7 @@
 # Railway reference
 
+How to run Kipdeck, the one place to see and steer every coding agent your team runs, on Railway.
+
 The full story behind `deploy/railway.sh`. The short version is in [Teams and servers](self-hosting.md#deploy-to-railway).
 
 You need the **Railway CLI 5 or newer, logged in** (`railway login`; update an older one with `railway upgrade` or `brew upgrade railway`), plus `ssh`, `curl`, Node.js and a clone of this repo:

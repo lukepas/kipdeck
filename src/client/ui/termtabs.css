@@ -3,7 +3,7 @@
 .term-tabbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 0 10px; min-height: 34px; background: var(--surface-1); border-bottom: 1px solid var(--line); }
 .term-tabs { display: flex; gap: 2px; overflow-x: auto; flex: 1; min-width: 0; align-self: stretch; }
 .term-tab { display: flex; align-items: center; height: 33px; border-bottom: 2px solid transparent; flex: none; }
-.term-tab.on { border-bottom-color: var(--working); }
+.term-tab.on { border-bottom-color: var(--act); }
 .term-tab-label { height: 100%; padding: 0 10px; font: inherit; font-size: 12px; font-weight: 500; color: var(--muted); background: none; border: none; cursor: pointer; white-space: nowrap; }
 .term-tab.on .term-tab-label, .term-tab-label:hover { color: var(--text); }
 .term-tab-close { width: 20px; height: 20px; margin-right: 2px; padding: 0; border: none; background: none; border-radius: var(--radius-chip); display: grid; place-items: center; color: var(--muted); cursor: pointer; }

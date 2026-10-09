@@ -15,8 +15,8 @@
   .mc-tab { padding: 0 8px; font-size: 12px; }
   .mission-control header h2 { margin-right: 4px; }
 }
-.mc-tab[aria-selected=true] { color: var(--text); border-bottom-color: var(--signal); }
-.mc-n { min-width: 18px; height: 16px; display: inline-grid; place-items: center; padding: 0 4px; border-radius: var(--radius-chip); background: var(--signal-tint); border: 1px solid rgb(255 106 26 / .5); color: var(--signal); font: 500 10px var(--font-mono); }
+.mc-tab[aria-selected=true] { color: var(--text); border-bottom-color: var(--act); }
+.mc-n { min-width: 18px; height: 16px; display: inline-grid; place-items: center; padding: 0 4px; border-radius: var(--radius-chip); background: var(--surface-3); border: 1px solid var(--line-strong); color: var(--text); font: 500 10px var(--font-mono); }
 .mc-body { padding: 14px 16px 18px; overflow: auto; flex: 1; }
 .mc-note { margin: 6px 0; font-size: 12px; color: var(--muted); }
 .mc-empty, .mc-calm { margin: 32px 0; text-align: center; color: var(--muted); }
@@ -46,7 +46,7 @@
 .mc-row { background: var(--surface-1); padding: 8px 10px 8px 12px; outline: none; box-shadow: inset 2px 0 0 var(--line-strong); }
 .mc-row + .mc-row { border-top: 1px solid var(--line); }
 .mc-row:hover { background: var(--surface-2); }
-.mc-row:focus-visible, .mc-row:focus { background: var(--surface-3); outline: 1px solid var(--signal); outline-offset: -1px; }
+.mc-row:focus-visible, .mc-row:focus { background: var(--surface-3); outline: 1px solid var(--act); outline-offset: -1px; }
 .mc-row.needs-you { box-shadow: inset 2px 0 0 var(--signal); background: linear-gradient(90deg, var(--signal-tint), transparent 40%), var(--surface-1); }
 .mc-row.stuck { box-shadow: inset 2px 0 0 var(--stuck); }
 .mc-row.review { box-shadow: inset 2px 0 0 var(--review); }
@@ -83,7 +83,7 @@
 .mc-empty-mission { display: grid; justify-items: center; gap: 8px; margin: 8px 0 18px; padding: 22px 20px 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-2); text-align: center; }
 .mc-empty-mission h3 { margin: 0 !important; color: var(--text) !important; font-size: 13px !important; }
 .mc-empty-mission p { margin: 0; max-width: 520px; color: var(--muted); font-size: 13px; line-height: 1.5; }
-.mc-empty-icon { color: var(--signal); }
+.mc-empty-icon { color: var(--act); }
 .mc-empty-btns { margin-top: 4px; }
 .mc-example { margin-top: 10px; width: min(520px, 100%); padding: 10px 12px; border: 1px dashed var(--line-strong); border-radius: var(--radius); text-align: left; color: var(--muted); }
 .mc-example-label { font: 600 10px var(--font-mono); text-transform: uppercase; letter-spacing: .08em; color: var(--faint); }
@@ -94,7 +94,7 @@
 .mc-lock { display: inline-flex !important; gap: 6px; align-items: center; font-size: 12px !important; font-weight: 400 !important; color: var(--muted) !important; }
 .mc-milestones { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .mc-milestone { border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-1); padding: 10px 12px; }
-.mc-milestone.active { border-color: var(--line-strong); box-shadow: inset 2px 0 0 var(--signal); }
+.mc-milestone.active { border-color: var(--line-strong); box-shadow: inset 2px 0 0 var(--act); }
 .mc-milestone.done { opacity: .65; }
 .mc-ms-head { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
 .mc-badge { font: 500 10px/16px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; padding: 0 5px; border-radius: var(--radius-chip); border: 1px solid var(--line-strong); color: var(--text); }
@@ -140,7 +140,7 @@
 .tl-main { display: grid; grid-template-columns: 76px auto minmax(0, 1fr); grid-auto-columns: auto; grid-auto-flow: column; gap: 10px; align-items: center; font-size: 13px; }
 /* The whole row opens what it's about: a pointer, the hover band, a focus ring, and a chevron only on hover. */
 .mc-row.tl-row[role=button] { cursor: pointer; transition: background-color var(--t-ui, 160ms) ease-out; }
-.mc-row.tl-row[role=button]:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; }
+.mc-row.tl-row[role=button]:focus-visible { outline: 2px solid var(--act); outline-offset: -2px; }
 .tl-chev { display: grid; place-items: center; width: 14px; color: var(--muted); opacity: 0; transform: translateX(-4px); transition: opacity 140ms ease-out, transform 140ms ease-out; }
 .tl-chev::before { content: ''; width: 6px; height: 6px; border-top: 1.5px solid currentColor; border-right: 1.5px solid currentColor; transform: rotate(45deg); }
 .mc-row.tl-row:hover .tl-chev, .mc-row.tl-row:focus-visible .tl-chev { opacity: 1; transform: none; }
@@ -158,7 +158,7 @@
 .mc-review-now { margin-left: 4px; }
 .mc-textlink { all: unset; cursor: pointer; font-size: 12px; color: var(--muted); text-decoration: underline; text-decoration-color: var(--line-strong); text-underline-offset: 2px; }
 .mc-textlink:hover, .mc-textlink:focus-visible { color: var(--text); }
-.mc-textlink:focus-visible { outline: 1px solid var(--signal); outline-offset: 2px; }
+.mc-textlink:focus-visible { outline: 1px solid var(--act); outline-offset: 2px; }
 
 /* Docked (dock.ts): a 400px panel down the right under the top bar, no dim, the deck still in view. */
 .mc-dock-btn { flex: none; }
@@ -189,7 +189,7 @@
 .ms-strip { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 0 12px; font-size: 12px; color: var(--muted); border-radius: var(--radius); }
 .ms-strip:hover, .ms-strip:focus-visible { background: var(--surface-3); }
 .ms-target { flex: none; display: grid; place-items: center; color: var(--muted); }
-.ms-strip.empty .ms-target { color: var(--signal); }
+.ms-strip.empty .ms-target { color: var(--act); }
 .ms-cta { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; }
 .ms-why { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .ms-strip .key { margin: 0 0 0 auto; }

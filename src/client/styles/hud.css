@@ -127,7 +127,7 @@ body.overview .bb-keys { visibility: hidden; }
 #chat-log .sys { color: var(--muted); }
 #chat-input { width: 0; height: 28px; padding: 0; border: 1px solid transparent; border-radius: var(--radius); font: inherit; font-size: 13px; color: var(--text); background: var(--surface-1); outline: none; opacity: 0; transition: width var(--t-ui) var(--ease), opacity var(--t-ui) var(--ease); }
 #chat-input::placeholder { color: var(--muted); }
-.chat.open #chat-input, #chat-input:focus { width: 300px; padding: 0 10px; border-color: var(--signal); opacity: 1; }
+.chat.open #chat-input, #chat-input:focus { width: 300px; padding: 0 10px; border-color: var(--act); opacity: 1; }
 .chat.open .bb-key.chat-btn, .chat:focus-within .bb-key.chat-btn { display: none; }
 .chat-row { display: flex; align-items: center; gap: 6px; }
 
@@ -147,7 +147,7 @@ body.overview .bb-keys { visibility: hidden; }
   border-radius: 50%; background: var(--text); box-shadow: 0 0 0 1px rgb(0 0 0 / .5); opacity: .8;
   transition: transform var(--t-ui) var(--ease), background var(--t-ui) var(--ease); pointer-events: none !important;
 }
-.crosshair.on { transform: scale(1.5); background: var(--signal); opacity: 1; }
+.crosshair.on { transform: scale(1.5); background: var(--act); opacity: 1; }
 .crosshair .look-hint { display: none; }
 
 #shares { position: absolute; right: 12px; bottom: calc(var(--bottom) + 10px); display: flex; flex-direction: column; gap: 8px; }

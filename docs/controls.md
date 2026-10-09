@@ -1,5 +1,7 @@
 # Controls
 
+Kipdeck gives you full control and clarity over every AI coding agent you run, in one place. This page lists every key and click, on the inbox and in the Bridge view.
+
 Back to the [README](../README.md).
 
 ## The inbox

@@ -1,5 +1,7 @@
 # Workers' servers on your own computer
 
+Kipdeck gives you full control and clarity over every AI coding agent you run, in one place. When it runs on a server, `kipdeck tunnel` brings your agents' web servers to your own computer.
+
 Back to the [README](../README.md).
 
 When the office runs on a server, the web servers its workers start (`npm run dev`, a preview build, `python -m http.server`) listen on that machine, not on yours. `agent-office tunnel` brings them to you: run it once on your own computer and leave it running, and whenever a worker starts a server, the same port opens on your computer. `http://localhost:5173` in your browser is the worker's `localhost:5173`. When the worker stops the server, the port closes again a few seconds later. There's no command per server, and nothing to restart when a new one shows up.

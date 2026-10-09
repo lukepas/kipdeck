@@ -97,7 +97,7 @@ function projectRow(s: SetupState, net: Net, admin: boolean): HTMLElement {
   if (cloning.length) return row(false, 'Project', h('span.su-say', {}, `Cloning ${cloning.map((f) => f.repo ?? f.name).join(', ')}...`));
   const parts: (HTMLElement | null)[] = [];
   if (s.startedIn && admin) {
-    parts.push(h('button.btn.solid.small', { type: 'button', onclick: () => net.send({ t: 'setup.useFolder' }) }, `Use ${s.startedIn.name}`), h('span.su-say', {}, 'the folder you started Kipdeck in'));
+    parts.push(h('button.btn.primary.small', { type: 'button', onclick: () => net.send({ t: 'setup.useFolder' }) }, `Use ${s.startedIn.name}`), h('span.su-say', {}, 'the folder you started Kipdeck in'));
   }
   if (s.github.state === 'ok' && admin) {
     const input = h('input.su-repo', { type: 'text', placeholder: 'owner/repo', list: 'su-repos', 'aria-label': 'GitHub repository', autocomplete: 'off', spellcheck: 'false' }) as HTMLInputElement;
@@ -154,7 +154,7 @@ export function setupCard(net: Net, deploy: (prompt: string, provider?: AgentPro
   const agent = firstReadyAgent();
   const canDeploy = project && !!agent;
   const go = h(
-    'button.btn.solid.big',
+    'button.btn.primary.big',
     { type: 'button', disabled: !canDeploy, title: canDeploy ? undefined : !project ? 'Add a project first' : 'Install or sign in an agent first', onclick: () => deploy(STARTER_PROMPT, agent) },
     icon('plus', 16),
     'Deploy your first agent',

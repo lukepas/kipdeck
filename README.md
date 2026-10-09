@@ -1,6 +1,6 @@
 # Kipdeck
 
-The inbox for your AI coding agents: see which agent needs you, review what's ready, and merge what shipped.
+The inbox for your AI coding agents. Full control and clarity over every AI coding agent you run, in one place. See who is waiting on you and for how long, then answer, review and merge without leaving it.
 
 ```bash
 npx kipdeck
@@ -17,7 +17,7 @@ Run it inside the repository you work in. It opens in your browser, signed in, w
 [**Run it**](#run-it) · [**Try the demo**](docs/demo.md) · [**Attach an agent**](#attach-an-agent-you-already-started) · [**Teams and servers**](docs/self-hosting.md) · [**Labs**](#labs) · [**Docs**](docs/features.md)
 
 - **One loop.** **Deploy agent**, get pinged when it needs you, answer its question in one box, review the diff beside the list and Merge, and it lands in **Shipped today**. The oldest agent waiting on you opens by itself; the top bar says how many need you and how many are ready to review, with the oldest wait ticking, the median wait today and what merged today. Merge waits a few seconds for Undo and names where it goes. See [the inbox](docs/inbox.md).
-- **One ranking.** `src/shared/attention.ts` decides the order everywhere: the inbox's sections (Needs you, To review, Working, Idle), Mission control, the tab title and notifications.
+- **One ranking, one set of names.** `src/shared/attention.ts` decides the order and names the five states everywhere: Needs you, Stuck, To review, Working and Ready. The inbox's sections (Needs you with the stuck ones in it, To review, Working, Ready), Mission control, the tab title and notifications all read from it ([the inbox](docs/inbox.md) has the full list).
 - **A record of what shipped.** Every merge and send-back is kept on your machine as a signed record: which agent and model, the prompt, and who reviewed it. **Numbers** shows human wait time and the merge rate per agent and model from it.
 - **Calm by default.** Everything that isn't the inbox (the 3D Bridge view, goals and the timeline, meetings, voice, Proof of Merge on testnets) is off until someone switches it on in [Labs](#labs).
 
@@ -97,7 +97,7 @@ More in [docs/labs.md](docs/labs.md).
 
 ## What it does
 
-- **The inbox.** Every agent in four sections (Needs you, To review, Working, Idle), one button per row, the selected agent's live terminal, diff and log beside the list, and Shipped today under it ([the inbox](docs/inbox.md)). It draws after about 175 kB on any laptop or phone; the old `/lite` address goes there.
+- **The inbox.** Every agent in four sections (Needs you, To review, Working, Ready), one button per row, the selected agent's live terminal, diff and log beside the list, and Shipped today under it ([the inbox](docs/inbox.md)). It draws after about 175 kB on any laptop or phone; the old `/lite` address goes there.
 - **Deploy, attach, answer, review, merge.** The Deploy sheet starts an agent on a branch of its own; `kipdeck attach` adopts one started in a terminal; Answer, Review changes, Fix checks and Merge do what they say, with or without GitHub. With a GitHub repository and no pull request yet, Open PR comes first. On a team, each row says whose agent it is, and **Mine / Team** filters the inbox.
 - **Numbers.** Human wait time, changes merged, the merge rate and agent-hours, the last 7 days against the 7 days before, and the merge rate per agent and model with its N, from the signed shipped log on your machine ([metrics](docs/metrics.md)).
 - **Settings in three panes.** Account, Agents and Notifications. Six keys, and Help on **?** ([controls](docs/controls.md)).

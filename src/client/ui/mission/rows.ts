@@ -65,7 +65,7 @@ export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { sho
     else expanded.add(e.id);
     toggle.setAttribute('aria-expanded', String(!more.hidden));
   });
-  const primary = h('button.btn.small.mc-act', { type: 'button', class: r.att.level === 'needs-you' ? 'primary' : '', onclick: () => runAction(deps, e, r.att.action) }, ACTION_LABEL[r.att.action]);
+  const primary = h('button.btn.small.mc-act', { type: 'button', class: r.att.level === 'needs-you' ? 'primary needs-you' : '', onclick: () => runAction(deps, e, r.att.action) }, ACTION_LABEL[r.att.action]);
   const sub = [opts.showFloor ? e.floorName : '', link, cost].filter(Boolean).join(' · ');
   return h(
     'li.mc-row',

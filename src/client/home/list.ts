@@ -4,7 +4,8 @@
 // than one, how long it has waited, and a button only where there's a decision (Answer, Review
 // changes, Fix checks...): the whole row opens it. A row that waits on you has a clock that ticks
 // (clock.ts) and turns amber at 5 minutes and red at 30 (shared/wait.ts), and a bar along its foot
-// that grows with the wait. A row that just started waiting rises in once. Clicking a section header
+// that grows with the wait. A row that just started waiting rises in once (motion.ts reads each row's
+// data-section). Clicking a section header
 // never folds a section that's always open; with nobody waiting the two become one calm line.
 
 import { activityWords, attention, LEVEL_LABEL, type Ranked } from '../../shared/attention';
@@ -87,13 +88,6 @@ export function waitingNow(view: InboxView = currentView()): Waiting {
   };
 }
 
-/** The rows waiting on you at the last draw (section and id), so one that newly does rises in. Undefined before the first draw, which animates nothing. */
-let seenWaiting: Set<string> | undefined;
-/** When each row that newly waits on you arrived: it stays `.arrived` for ARRIVAL_MS over every redraw in between. */
-const arrivedAt = new Map<string, number>();
-/** How long the arrival lasts: the left rule's pulse (home.css rule-beat). */
-const ARRIVAL_MS = 900;
-
 /**
  * A Working row's status: what the agent is doing, live and in words. Never the raw name of the tool
  * it asked with, never its own title again ("Starting..."), and never the echo of a reply someone just
@@ -126,12 +120,11 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
   const held = until !== undefined;
   // A merge on its way: the row no longer waits on you, so its clock stops and its status counts down.
   const away = held || inFlight(e.id);
-  const at = waits ? arrivedAt.get(`${section}:${e.id}`) : undefined;
-  const style = [waits && !away ? `--wait:${waitShare(r.att.since, now).toFixed(3)}` : '', at === undefined ? '' : `--arrived-ago:${at - now}ms`].filter(Boolean).join(';');
+  const style = waits && !away ? `--wait:${waitShare(r.att.since, now).toFixed(3)}` : '';
   const spoken = [`${title}: ${e.name}`, provider, LEVEL_LABEL[r.att.level], waits && !away ? `${AGE_PREFIX[section]} ${waitWords(now - r.att.since)}` : '', owner ? `deployed by ${e.createdBy}` : ''].filter(Boolean).join(', ');
   return h(
     'li.row',
-    { class: `l-${r.att.level} s-${section}${selected ? ' selected' : ''}${r.att.snoozed ? ' snoozed' : ''}${held ? ' holding' : ''}${at === undefined ? '' : ' arrived'}`, 'data-id': e.id, style: style || undefined },
+    { class: `l-${r.att.level} s-${section}${selected ? ' selected' : ''}${r.att.snoozed ? ' snoozed' : ''}${held ? ' holding' : ''}`, 'data-id': e.id, 'data-section': section, style: style || undefined },
     h(
       'button.row-main',
       { type: 'button', 'aria-current': selected ? 'true' : undefined, 'aria-label': spoken, onclick: () => home.select(e.id, section === 'review' ? 'changes' : 'terminal') },
@@ -142,7 +135,7 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
         h('span.row-title', {}, title),
         h('span.row-sub', {}, held ? h('span.row-status.row-hold', { 'data-until': String(until), 'data-prefix': 'Merging in' }, `Merging in ${countdownWords(until - now)}`) : h('span.row-status', { title: r.att.reason ?? r.att.label }, away ? 'Merging...' : status), owner ? h('span.row-owner', { title: `Deployed by ${e.createdBy}` }, owner) : null, where ? h('span.row-where', {}, where) : null),
       ),
-      away ? null : ageEl(section, r.att.since, now),
+      away ? null : ageEl(section, r.att, now),
     ),
     // Opening it is the row itself: a button only for a decision, or Undo while its merge is held.
     held
@@ -158,19 +151,20 @@ function reminderRow(r: Reminder, deps: ListDeps, now: number): HTMLElement {
   return h(
     'li.row.reminder.l-needs-you.s-needs-you',
     {},
-    h('div.row-main', {}, h('span.agent-mark.reminder', { 'aria-hidden': 'true' }, icon('reminder', 14)), h('span.row-text', {}, h('span.row-title', {}, r.text), h('span.row-sub', {}, h('span.row-status', {}, 'Reminder'), h('span.row-where', {}, r.floorName))), ageEl('needs-you', r.since, now)),
+    h('div.row-main', {}, h('span.agent-mark.reminder', { 'aria-hidden': 'true' }, icon('reminder', 14)), h('span.row-text', {}, h('span.row-title', {}, r.text), h('span.row-sub', {}, h('span.row-status', {}, 'Reminder'), h('span.row-where', {}, r.floorName))), ageEl('needs-you', r, now)),
     h('button.btn.row-act.act', { type: 'button', onclick: () => deps.remind(r) }, deps.reminderLabel(r)),
   );
 }
 
 /**
  * A row's clock: "waiting 38s" in its wait's tone. A wait on you carries `data-since`, so clock.ts
- * ticks its text each second without drawing the list again.
+ * ticks its text each second without drawing the list again; the calm sections ("ready 2h", "snoozed
+ * 1h") move on with the 30 second redraw.
  */
-function ageEl(section: InboxSection, since: number, now: number): HTMLElement {
+function ageEl(section: InboxSection, att: { since: number; snoozed?: boolean }, now: number): HTMLElement {
   const waits = section === 'needs-you' || section === 'review';
-  if (!waits) return h('span.row-age', {}, ageLabel(section, { since }, now));
-  return h('span.row-age', { 'data-since': String(since), 'data-prefix': AGE_PREFIX[section], 'data-tone': waitTone(now - since) }, ageLabel(section, { since }, now));
+  if (!waits) return h('span.row-age', {}, ageLabel(section, att, now));
+  return h('span.row-age', { 'data-since': String(att.since), 'data-prefix': AGE_PREFIX[section], 'data-tone': waitTone(now - att.since) }, ageLabel(section, att, now));
 }
 
 /** What a section says when it's empty: calm, and pointing at the next thing to do. */
@@ -211,14 +205,6 @@ export function renderList(root: HTMLElement, deps: ListDeps, firstRun: () => HT
     root.replaceChildren(firstRun());
     return;
   }
-  // A row that newly waits on you rises in, once (none on the first draw), and stays arrived for
-  // ARRIVAL_MS however often the list redraws. Kept over the whole roster, so clearing a search or a
-  // filter brings rows back without replaying it.
-  const all = buildInbox(store.ranked());
-  const waitingKeys = new Set((['needs-you', 'review'] as const).flatMap((s) => all.sections[s].map((r) => `${s}:${r.entry.id}`)));
-  if (seenWaiting) for (const k of waitingKeys) if (!seenWaiting.has(k)) arrivedAt.set(k, now);
-  for (const [k, t] of arrivedAt) if (now - t >= ARRIVAL_MS || !waitingKeys.has(k)) arrivedAt.delete(k);
-  seenWaiting = waitingKeys;
   const parts = INBOX_SECTIONS.map((s) => section(s, view, s === 'needs-you' ? loose : [], deps, now)).filter((x): x is HTMLElement => !!x);
   if (home.query && !INBOX_SECTIONS.some((s) => view.sections[s].length)) parts.unshift(h('p.sec-empty.search-empty', {}, `No agent matches "${home.query}".`));
   root.replaceChildren(...parts);

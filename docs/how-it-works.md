@@ -1,5 +1,7 @@
 # How it works
 
+Kipdeck gives you full control and clarity over every AI coding agent you run, in one place. This page explains how: the server, the agents' terminals and the browser.
+
 Back to the [README](../README.md). [Code layout](code-layout.md) says where the code lives, and how a feature plugs in.
 
 ```

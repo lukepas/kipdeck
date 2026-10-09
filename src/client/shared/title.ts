@@ -1,19 +1,19 @@
 /** The tab's title, the same in the 3D bridge and the home page. No three.js here: the home page imports it. */
-import { needingSomeone } from '../../shared/attention';
+import { needsYou, waitsOnYou } from '../../shared/attention';
+import { tabTitle } from '../../shared/copy';
 import { store } from '../state';
 import { setFaviconAlert } from '../ui/brand';
 
 /**
- * The tab title counts what needs someone, on every floor (the building's one ranking, see
- * shared/attention.ts, with the review inbox), as the attention chip does, so you can see it from another tab.
+ * The tab title (tabTitle in shared/copy.ts) counts who is waiting on you on every project: waitsOnYou
+ * in shared/attention.ts, the same rule as the home page's pulse and its Needs you and To review
+ * sections, so you can see it from another tab.
  */
 export function renderTitle() {
-  const name = store.project?.name;
-  const counts = store.counts();
-  const waiting = needingSomeone(counts);
-  // The tab's mark lights its lead chevron in Signal while a unit needs you, on any floor.
-  setFaviconAlert(counts['needs-you'] > 0);
-  document.title = `${waiting ? `(${waiting}) ` : ''}${name ? `${name} · ` : ''}Kipdeck`;
+  const ranked = store.ranked();
+  // The tab's mark lights its lead chevron in Signal while an agent is in Needs you (a question, or stuck), on any project.
+  setFaviconAlert(ranked.some((r) => needsYou(r.att)));
+  document.title = tabTitle(ranked.filter((r) => waitsOnYou(r.att)).length, store.project?.name);
 }
 
 // The roster changes without your floor's workers changing (another floor, a snooze).

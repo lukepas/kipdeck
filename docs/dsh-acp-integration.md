@@ -1,5 +1,7 @@
 # DeepSeek Harness (DSH) as a fourth provider, over ACP
 
+A design record from Kipdeck's source: how DeepSeek Harness runs as an agent beside the others.
+
 Status: **implemented** (Phases 1–4; Phase 0 measurements, and the one item still open, are recorded
 at the end). Target: agent-office `main`, DSH `0.1.7-rc.2`.
 

@@ -1,0 +1,21 @@
+/* The inbox's beats (home/motion.ts): one short move when something changes for you, then still.
+   Each lasts BEAT_MS (1.2s). Signal only on a row that now needs you; an answer is ink, a merge is
+   Settled green. Reduced motion makes each a cut (styles/tokens.css). */
+.row.arrive { --beat: var(--review); animation: beat-arrive 1.2s var(--ease) both; }
+.row.arrive.l-needs-you { --beat: var(--signal); }
+.row.arrive.l-stuck { --beat: var(--stuck); }
+@keyframes beat-arrive {
+  0% { transform: translateX(-12px); opacity: 0; box-shadow: inset 0 0 0 1px var(--beat); }
+  30% { transform: none; opacity: 1; box-shadow: inset 0 0 0 1px var(--beat); }
+  100% { box-shadow: inset 0 0 0 1px transparent; }
+}
+.row.answered { animation: beat-answered 1.2s var(--ease) both; }
+@keyframes beat-answered {
+  0%, 20% { background: color-mix(in oklab, var(--text) 12%, transparent); }
+}
+.ship.new { animation: beat-ship 1.2s var(--ease) both; }
+@keyframes beat-ship {
+  0% { transform: translateY(-8px); opacity: 0; box-shadow: inset 3px 0 0 var(--settled); }
+  25% { transform: none; opacity: 1; box-shadow: inset 3px 0 0 var(--settled); background: color-mix(in oklab, var(--settled) 12%, transparent); }
+  100% { box-shadow: inset 3px 0 0 transparent; }
+}

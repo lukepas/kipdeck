@@ -1,11 +1,11 @@
 // The terminals' colors: in a terminal window (ui/terminal.ts), and on the consoles in the 3D deck
 // (features/workers/laptop.ts). The neutral slate ramp of tokens.css, with the status hues as ANSI
-// colors; Signal orange only for the cursor.
+// colors. No Signal orange: that means a person is needed.
 
 export const TERM_THEME = {
   background: '#0d131a',
   foreground: '#e8ecef',
-  cursor: '#ff6a1a',
+  cursor: '#e8ecef',
   cursorAccent: '#0d131a',
   selectionBackground: '#3a4756',
   black: '#1a222c',

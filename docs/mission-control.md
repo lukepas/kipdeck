@@ -1,5 +1,7 @@
 # Mission control
 
+Kipdeck gives you full control and clarity over every AI coding agent you run, in one place. Mission control is the Bridge view's list of who needs a person, on every project.
+
 Back to the [README](../README.md).
 
 Mission control answers one question: what needs a person right now, on any floor. It ranks every hired worker in the building by how much it needs someone, says why in plain words, and offers one next step. Next to that it keeps what each floor is for (its mission and milestones), so every worker, task and pull request can be tied back to a goal, an inbox of everything waiting for a review, a timeline of what happened, and reminders for what would otherwise be forgotten.

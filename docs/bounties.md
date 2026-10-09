@@ -1,5 +1,7 @@
 # Proof of Merge bounties
 
+Kipdeck's Proof of Merge bounties, a lab that is off by default.
+
 Back to the [README](../README.md).
 
 A maintainer escrows devnet USDC against a GitHub issue. Any worker in the office can take the issue. The money moves only when a person with write access merges the worker's pull request and an office admin approves the payout in the review inbox. Then the Solana program pays the escrow to the wallet of the person who hired the worker.

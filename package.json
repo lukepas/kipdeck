@@ -1,7 +1,7 @@
 {
   "name": "kipdeck",
   "version": "0.1.0",
-  "description": "Kipdeck: the inbox for your AI coding agents (Claude Code, Codex, Cursor and more). See what needs you, review what is ready, merge what shipped. Built on agent-office by webdevcody (MIT).",
+  "description": "Kipdeck: the inbox for your AI coding agents. Full control and clarity over every AI coding agent you run, in one place. See who is waiting on you and for how long, then answer, review and merge without leaving it. Built on agent-office by webdevcody (MIT).",
   "keywords": [
     "ai",
     "coding-agents",

@@ -1,5 +1,7 @@
 # Configuration
 
+Kipdeck gives you full control and clarity over every AI coding agent you run, in one place. This page lists its settings: flags, environment variables and where it keeps its files.
+
 Back to the [README](../README.md).
 
 ## Where the office keeps things

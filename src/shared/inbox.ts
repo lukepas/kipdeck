@@ -2,7 +2,7 @@
 // button per row, the shipped log's numbers and the first-run checklist. Pure, so the home page, the
 // server and the tests all work from the same rules.
 
-import { ACTION_LABEL, type Attention, type NextAction, type Ranked } from './attention.js';
+import { ACTION_LABEL, STATE_LABEL, needsYou, waitsOnYou, type Attention, type NextAction, type Ranked } from './attention.js';
 import { ago } from './rowtext.js';
 import type { Reminder, RosterEntry, ShipRecord } from './protocol.js';
 import { PROVIDER_META, type AgentProvider } from './providers.js';
@@ -12,11 +12,12 @@ import { hoursWords, WAIT_RED_MS, waitWords } from './wait.js';
 export type InboxSection = 'needs-you' | 'review' | 'working' | 'idle';
 export const INBOX_SECTIONS: readonly InboxSection[] = ['needs-you', 'review', 'working', 'idle'];
 
+/** The sections' names are the states' (STATE_LABEL), so the home page and the bridge call an agent one thing. Stuck agents sit in Needs you. */
 export const SECTION_LABEL: Readonly<Record<InboxSection, string>> = {
-  'needs-you': 'Needs you',
-  review: 'To review',
-  working: 'Working',
-  idle: 'Idle',
+  'needs-you': STATE_LABEL['needs-you'],
+  review: STATE_LABEL.review,
+  working: STATE_LABEL.working,
+  idle: STATE_LABEL.parked,
 };
 
 /** Sections that are always open; the others start folded and open with a click on their header. */
@@ -24,22 +25,14 @@ export const ALWAYS_OPEN: ReadonlySet<InboxSection> = new Set(['needs-you', 'rev
 
 /**
  * Which section a ranked agent goes in: needing an answer or stuck is Needs you, finished work is To
- * review, at work is Working, and the rest (ready, asleep, merged, snoozed) is Idle.
+ * review (waitsOnYou in attention.ts: a merged pull request only waits to be archived), at work is
+ * Working, and the rest (ready, asleep, merged, snoozed) is Ready.
  */
 export function sectionOf(att: Attention): InboxSection {
-  if (att.snoozed) return 'idle';
-  switch (att.level) {
-    case 'needs-you':
-    case 'stuck':
-      return 'needs-you';
-    case 'review':
-      // Its pull request merged: nothing left to review, it only waits to be archived.
-      return att.action === 'send-home' ? 'idle' : 'review';
-    case 'working':
-      return 'working';
-    default:
-      return 'idle';
-  }
+  if (needsYou(att)) return 'needs-you';
+  if (waitsOnYou(att)) return 'review';
+  if (!att.snoozed && att.level === 'working') return 'working';
+  return 'idle';
 }
 
 /** What a row's one primary button does: a next action, or just opening the agent. */
@@ -74,17 +67,23 @@ export function rowAction(att: Attention): { action: RowAction; label: string } 
   return { action, label: rowLabel(action) };
 }
 
-/** What a row's clock says before the time: "waiting", "ready", "idle", or nothing for Working. */
-export const AGE_PREFIX: Readonly<Record<InboxSection, string>> = { 'needs-you': 'waiting', review: 'ready', working: '', idle: 'idle' };
+/**
+ * What a row's clock says before the time, in its section's words: "waiting" in Needs you, "done" in
+ * To review, "ready" in Ready (the idle section, named as STATE_LABEL names it), nothing for Working.
+ */
+export const AGE_PREFIX: Readonly<Record<InboxSection, string>> = { 'needs-you': 'waiting', review: 'done', working: '', idle: 'ready' };
 
 /**
- * How long a row has been the way it is, in the words its section uses: "waiting 38s", "ready 12m",
- * "idle 2h". A wait on you counts in seconds at first (the page ticks it); the rest by the minute.
+ * How long a row has been the way it is, in the words its section uses: "waiting 38s", "done 12m",
+ * "ready 2h", "snoozed 1h". A wait on you (Needs you, To review) counts in seconds at first with
+ * waitWords, the clock the page ticks (home/clock.ts); the rest keep whole minutes. A snoozed row sits
+ * under Ready but says snoozed.
  */
-export function ageLabel(section: InboxSection, att: Pick<Attention, 'since'>, now: number): string {
+export function ageLabel(section: InboxSection, att: Pick<Attention, 'since'> & { snoozed?: boolean }, now: number): string {
   const waits = section === 'needs-you' || section === 'review';
   const t = waits ? waitWords(now - att.since) : ago(now - att.since);
-  return AGE_PREFIX[section] ? `${AGE_PREFIX[section]} ${t}` : t;
+  const prefix = att.snoozed ? 'snoozed' : AGE_PREFIX[section];
+  return prefix ? `${prefix} ${t}` : t;
 }
 
 /** "1 file, +3 -0": what a finished agent changed, for its To review row (undefined before the office has looked). */
@@ -125,7 +124,7 @@ export type OwnerFilter = 'team' | 'mine';
 
 export interface InboxView {
   sections: Record<InboxSection, Ranked[]>;
-  /** How many in each section (the snoozed ones are in Idle). */
+  /** How many in each section (the snoozed ones are in Ready). */
   counts: Record<InboxSection, number>;
 }
 
@@ -186,7 +185,7 @@ export function shippedLine(today: readonly ShipRecord[]): string {
   return `${today.length} merged · ${h} agent-hour${h === '1.0' ? '' : 's'}`;
 }
 
-/** "waited on you 32s": how long a merged change sat waiting for a person. */
+/** "waited on you 46s": how long a merged change sat waiting for a person, on the same clock as the pulse. */
 export function waitedLabel(r: Pick<ShipRecord, 'waitedMs'>): string {
   return `waited on you ${waitWords(r.waitedMs ?? 0)}`;
 }

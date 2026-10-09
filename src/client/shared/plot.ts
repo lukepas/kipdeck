@@ -5,7 +5,7 @@
 // title block. Units are their state glyphs with their call signs, and a unit that needs you stands on
 // its pod's ready line in ranking order, as it does on the deck. No three.js: the home page draws it
 // live beside the list, with Bridge view on in Labs.
-import { UPSTREAM_CREDIT_SHORT } from '../../shared/copy';
+import { TAGLINE, UPSTREAM_CREDIT_SHORT } from '../../shared/copy';
 import './plot.css';
 import {
   BEANBAGS,
@@ -179,7 +179,7 @@ export class Plot {
       el('line', { x1: minX + 2.9, y1: minZ, x2: minX + 2.9, y2: mid, class: 'p-block-rule' }),
       text(minX + 0.25, minZ + 0.62, 'p-block-brand', 'KIPDECK'),
       text(minX + 3.15, minZ + 0.62, 'p-block-deck', clip(deck, 14).toUpperCase()),
-      text(minX + 0.25, mid + 0.55, 'p-block-small', revision ? `REV ${revision}` : 'THE INBOX FOR YOUR AI CODING AGENTS'),
+      text(minX + 0.25, mid + 0.55, 'p-block-small', revision ? `REV ${revision}` : TAGLINE.replace(/\.$/, '').toUpperCase()),
       text(minX + 0.25, maxZ - 0.3, 'p-block-small', UPSTREAM_CREDIT_SHORT),
     );
   }

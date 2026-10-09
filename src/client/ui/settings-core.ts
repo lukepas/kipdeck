@@ -140,14 +140,14 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
     leaveRow.replaceChildren(
       ...([
         [true, 'Archive them'],
-        [false, 'Keep them in Idle'],
+        [false, 'Keep them in Ready'],
       ] as const).map(([value, label]) =>
         h('button.btn', { type: 'button', role: 'radio', 'aria-checked': String(on === value), class: on === value ? 'on' : '', onclick: () => store.leaveOnMerge.on !== value && net.send({ t: 'leaveOnMerge.set', on: value }) }, label),
       ),
     );
     const now = on
       ? "Once an agent's pull request merges and it isn't working or waiting on you, its session ends and its worktree and branch are deleted. A worktree with uncommitted changes, or commits that aren't on GitHub, is kept."
-      : 'An agent whose pull request merged stays in Idle until someone archives it.';
+      : 'An agent whose pull request merged stays in Ready until someone archives it.';
     leaveNote.textContent = `${now} The same for everyone${by ? `, set by ${by}${at ? ` ${timeAgo(at)}` : ''}` : ''}.`;
   }, 'leaveOnMerge');
 

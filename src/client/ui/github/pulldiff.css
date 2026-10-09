@@ -10,11 +10,11 @@
 .pd-bar i { display: block; height: 100%; width: 0; background: var(--text); transition: width .25s var(--ease); }
 .pd-done-txt { font-size: 12px; font-weight: 600; color: var(--muted); }
 /* The filter box is styled in styles/base.css, after the frame's text box rule. */
-.pd-side input[type=text]:focus { border-color: var(--signal); }
+.pd-side input[type=text]:focus { border-color: var(--act); }
 .pd-files { list-style: none; margin: 0; padding: 0; flex: 1; overflow: auto; display: flex; flex-direction: column; gap: 1px; }
 .pd-files li { display: flex; align-items: center; gap: 6px; padding: 3px 6px 3px calc(6px + var(--depth, 0) * 14px); border: 1px solid transparent; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; min-width: 0; }
 .pd-files li:hover { background: var(--surface-3); }
-.pd-files li.on { background: var(--surface-3); box-shadow: inset 2px 0 0 var(--signal); }
+.pd-files li.on { background: var(--surface-3); box-shadow: inset 2px 0 0 var(--act); }
 .pd-files li.reviewed .pd-path { color: var(--muted); }
 .pd-files li.pd-none { justify-content: center; color: var(--muted); cursor: default; }
 .pd-caret { width: 12px; flex: none; font-size: 11px; color: var(--muted); }

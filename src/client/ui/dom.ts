@@ -177,8 +177,8 @@ export interface ToastProof {
 export const shortHash = (hash: string) => (hash.length > 12 ? `${hash.slice(0, 4)}...${hash.slice(-4)}` : hash);
 
 /** A toast's level: its stripe, its glyph and its color. */
-export type ToastLevel = 'info' | 'warn' | 'error' | 'proof' | 'needs-you';
-const TOAST_GLYPH = { info: 'info', warn: 'review', error: 'stuck', proof: 'merged', 'needs-you': 'needs-you' } as const;
+export type ToastLevel = 'info' | 'warn' | 'error' | 'proof' | 'needs-you' | 'shipped';
+const TOAST_GLYPH = { info: 'info', warn: 'review', error: 'stuck', proof: 'merged', 'needs-you': 'needs-you', shipped: 'check' } as const;
 
 /**
  * A toast, in the one stack top right under the bar: a 3px stripe and a glyph in its level's color,

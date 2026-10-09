@@ -2,7 +2,7 @@
 // clock, the pulse, Shipped today, Numbers and its Markdown, and the toasts. Pure, so the server,
 // both clients and the tests share it.
 
-/** A wait turns amber here: someone has been kept a while. */
+/** A wait turns amber here: someone has been kept a while. The bridge's amber alert defaults to the same minute (client/state/persist.ts). */
 export const WAIT_AMBER_MS = 5 * 60_000;
 /** A wait turns red and bold here, and a row's wait bar is full. */
 export const WAIT_RED_MS = 30 * 60_000;

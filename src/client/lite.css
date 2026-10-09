@@ -23,7 +23,7 @@ body.lite { margin: 0; background: var(--void); color: var(--text); font-family:
 .hb-deploy { height: 34px; padding: 0 14px; gap: 6px; white-space: nowrap; }
 .hb-avatar { flex: none; width: 32px; height: 32px; padding: 0; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); font: 600 12px var(--font-ui); cursor: pointer; }
 .hb-avatar:hover, .hb-avatar[aria-expanded=true] { background: var(--surface-3); }
-.hb :focus-visible { outline: 2px solid var(--working); outline-offset: 1px; }
+.hb :focus-visible { outline: 2px solid var(--act); outline-offset: 1px; }
 
 /* ---- Two columns on a wide window, one on a phone ---------------------------------------------- */
 .home-main { display: grid; grid-template-columns: minmax(340px, 40%) minmax(0, 1fr); height: calc(100dvh - 56px - env(safe-area-inset-top)); }

@@ -1,5 +1,7 @@
 # The public showcase
 
+The public showcase of Kipdeck's Proof of Merge lab, testnet only.
+
 Back to the [README](../README.md).
 
 Part of the Proof of Merge fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnet only: Base Sepolia and Solana devnet.

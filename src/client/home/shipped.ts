@@ -17,7 +17,7 @@ function shippedRow(r: ShipRecord): HTMLElement {
   const link = r.pr?.url && /^https:\/\//.test(r.pr.url) ? h('a', { href: r.pr.url, target: '_blank', rel: 'noopener' }, where) : h('code', {}, where);
   return h(
     'li.ship',
-    {},
+    { 'data-key': `${r.at}:${r.agent}` },
     agentMark(r.provider),
     h('span.ship-text', {}, h('span.ship-title', {}, r.task ?? r.branch ?? 'Agent work'), h('span.ship-sub', {}, h('span.ship-wait', {}, waitedLabel(r)), ` · ${r.project} · ${r.agent} · `, link)),
     h('span.ship-at', { title: `Merged by ${r.reviewer}` }, time(r.at)),

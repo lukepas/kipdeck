@@ -512,7 +512,7 @@ step "Installing the agent-office service (restarts itself if it ever crashes)"
 unit=$(mktemp)
 cat >"$unit" <<UNIT
 [Unit]
-Description=Agent Office
+Description=Kipdeck
 After=network-online.target
 Wants=network-online.target
 StartLimitIntervalSec=0

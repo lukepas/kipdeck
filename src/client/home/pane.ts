@@ -105,7 +105,7 @@ function emptyState(actions: Actions): HTMLElement {
     {},
     h('h2', {}, line),
     h('p', {}, sub),
-    next ? h(n['needs-you'] ? 'button.btn.primary' : 'button.btn.solid', { type: 'button', 'data-id': next.id, onclick: () => home.select(next.id, next.status === 'needs_input' ? 'terminal' : 'changes') }, n['needs-you'] ? 'Start with the oldest' : 'Review the oldest') : null,
+    next ? h(n['needs-you'] ? 'button.btn.primary.needs-you' : 'button.btn.primary', { type: 'button', 'data-id': next.id, onclick: () => home.select(next.id, next.status === 'needs_input' ? 'terminal' : 'changes') }, n['needs-you'] ? 'Start with the oldest' : 'Review the oldest') : null,
     keys,
   );
 }
@@ -194,9 +194,9 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
             {},
             h('button.btn', { type: 'button', onclick: () => actions.sendBack(e) }, 'Send back'),
             held
-              ? h('button.btn.solid.rv-merge.rv-undo', { type: 'button', onclick: () => actions.undoMerge(e.id) }, 'Undo merge')
-              : h(prFirst ? 'button.btn.rv-merge' : 'button.btn.solid.rv-merge', { type: 'button', disabled: merging, title: mergeWords(e), onclick: () => actions.merge(e) }, mergeLabel),
-            prFirst && !held ? h('button.btn.solid.rv-open-pr', { type: 'button', title: 'Push its branch and open a pull request on GitHub', onclick: () => net.send({ t: 'worker.pr', workerId: e.id }) }, 'Open PR') : null,
+              ? h('button.btn.primary.rv-merge.rv-undo', { type: 'button', onclick: () => actions.undoMerge(e.id) }, 'Undo merge')
+              : h(prFirst ? 'button.btn.rv-merge' : 'button.btn.primary.rv-merge', { type: 'button', disabled: merging, title: mergeWords(e), onclick: () => actions.merge(e) }, mergeLabel),
+            prFirst && !held ? h('button.btn.primary.rv-open-pr', { type: 'button', title: 'Push its branch and open a pull request on GitHub', onclick: () => net.send({ t: 'worker.pr', workerId: e.id }) }, 'Open PR') : null,
           ),
     );
     if (focused >= 0) review.querySelectorAll('button')[focused]?.focus();
