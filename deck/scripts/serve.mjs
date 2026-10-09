@@ -7,7 +7,8 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'site');
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.woff2': 'font/woff2', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.png': 'image/png', '.gif': 'image/gif', '.mp4': 'video/mp4', '.webm': 'video/webm', '.json': 'application/json', '.md': 'text/plain' };
 
-export function serve(port = 0) {
+/* PORT pins the port (the shared machine hands out fixed ranges); 0 picks a free one. */
+export function serve(port = +process.env.PORT || 0) {
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
       let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
