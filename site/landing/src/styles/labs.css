@@ -88,17 +88,17 @@ canvas.march { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 
 
 /* ---------- 11 End ---------- */
 .calm-inbox { position: relative; transition: border-color 400ms var(--ease), background-color 400ms var(--ease); }
-.end-mark { flex: none; }
-.end-mark .mark-lead { transform-box: fill-box; transform-origin: 50% 100%; }
+.end-mark { flex: none; color: var(--text); }
+.end-mark .signal { transform-box: fill-box; transform-origin: 50% 100%; }
 @media (prefers-reduced-motion: no-preference) {
-  .end-mark .mark-lead { animation: breathe 3.6s var(--ease) infinite; }
+  .end-mark .signal { animation: breathe 3.6s var(--ease) infinite; }
 }
 @keyframes breathe { 50% { transform: translateY(-1.5px); opacity: .7; } }
 .calm-g { width: 14px; height: 14px; }
 .calm-answer { visibility: hidden; }
 .calm-clock { min-width: 4.5ch; text-align: right; }
 .calm-inbox.waiting { border-color: color-mix(in srgb, var(--signal) 55%, var(--line)); background: color-mix(in srgb, var(--surface-1) 85%, var(--tint-signal)); }
-.calm-inbox.waiting .end-mark .mark-lead { fill: var(--signal); }
+.calm-inbox.waiting .end-mark .signal { fill: var(--signal); }
 .calm-inbox.waiting .calm-g { --g: var(--g-needs-you); color: var(--signal); }
 .calm-inbox.waiting .calm-answer { visibility: visible; }
 .calm-inbox.waiting .calm-clock { color: var(--signal); }

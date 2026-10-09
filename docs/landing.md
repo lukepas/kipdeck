@@ -87,7 +87,7 @@ Search and sharing: the title says what it is (`Kipdeck: the inbox for your AI c
 
 ## The name
 
-The name, tagline, wordmark, npm package, source repository and share-card text live in one file, `site/landing/brand.ts`. The page title, the Open Graph and Twitter tags, the wordmark, every sentence that names the product, every Source and Docs link, the clone commands, the design-partner link, the structured data and the generated `og.png` all read from it. Kipdeck is the only entry. To try another name, add an entry to `BRANDS` and build it with:
+The name, tagline, wordmark, npm package, source repository and share-card text live in one file, `site/landing/brand.ts`. The page title, the Open Graph and Twitter tags, the wordmark, every sentence that names the product, every Source and Docs link, the clone commands, the design-partner link, the structured data and the generated `og.png` all read from it. The logo is not in `brand.ts`: Kip's mark in the header, the mini inbox and the footer, the favicons (`favicon-alert.svg` lights his light while someone waits), `apple-touch-icon.png` and the share card's mark are written from `src/shared/logo.ts` by `npm run logo` ([the logo](design.md#the-logo)). Kipdeck is the only entry. To try another name, add an entry to `BRANDS` and build it with:
 
 ```bash
 KIPDECK_BRAND=<id> npm run build:site

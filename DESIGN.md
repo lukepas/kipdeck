@@ -66,7 +66,13 @@ The glyphs are in `src/client/ui/icons.ts` (`LEVEL_ICON`), drawn on canvas for t
 
 ## The mark
 
-The Formation mark is three chevrons in an upward V: the lead one solid with a 2px alignment notch, the two trailing ones 2.5px outlines. The wordmark is "KIPDECK" in Archivo at 118% width, 600, +6% tracking, with DECK muted. The favicon is the mark in light on void; its lead chevron turns Signal orange while an agent is in Needs you or Stuck (`setFaviconAlert` in `ui/brand.ts`, called from `shared/title.ts`). The `/pom/` variant has a violet lead chevron.
+The mark is Kip's face: his head, leaf ears and knocked-out eyes with glints, in one colour, and his curled tuft, whose bobble is the signal light. It reads as Kip and as an agent's antenna with a light on it. Kip the mascot stays the illustrated character; the mark is the logo. It is fill only, in `currentColor`, on a 32 grid. Under about 22px use the small mark (`MARK_SMALL`), snapped to the 16px grid with a square light that stays a light at 16px and no glints.
+
+Only the light ever changes colour, so Signal keeps its one meaning: it turns Signal orange while an agent is in Needs you or Stuck (the favicon, and the top bar's mark through `.logo-lit`; `setFaviconAlert` in `ui/brand.ts`, called from `shared/title.ts`), and violet on the `/pom/` showcase. On a light page the lit light is `--signal` (#A8380A); #FF6A1A is for dark grounds and the favicon tile. In light mode the eyes knock out to the page, so Kip looks up at his own light.
+
+The wordmark is "KIPDECK" in Archivo at 118% width, 600, +6% tracking, with DECK muted, set beside the mark with the cap height centred on the head. The favicon is the small mark in light on a void tile with 7px corners. The app icon (`apple-touch-icon.png`) is the mark on a `#222C38` to void plate with a soft glow behind the light, full bleed so platform masks crop it.
+
+One file draws it: `src/shared/logo.ts`. The app, the Deck's canvases, the 2D plan and the `/pom/` share card import it; `npm run logo` (`design/logo/sync.ts`) writes every static copy (the favicons, the app icons, the press files in `design/logo/`, and the inline marks on the pages, the landing page, its share card and the pitch deck), and `tests/logo.test.ts` fails if any copy drifts.
 
 Upstream credit stays where it was and is in the home page's Help > About: "Built on agent-office (AgentSystemLabs / webdevcody), MIT", the party the LICENSE names first. The sign-in pages carry only the card.
 

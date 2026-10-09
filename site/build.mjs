@@ -119,13 +119,13 @@ export function cardHtml({ name, lead, muted, archivo, mono }) {
 @font-face{font-family:M;src:url(${font(mono)});font-weight:100 800}
 *{margin:0;box-sizing:border-box}html,body{width:1200px;height:630px;background:#0d131a;color:#e8ecef;font-family:A}
 body{padding:64px 72px;background-image:radial-gradient(rgba(138,151,165,.25) 1px,transparent 1.2px),radial-gradient(600px 500px at 90% 80%,rgba(255,106,26,.12),transparent);background-size:28px 28px,auto;position:relative;overflow:hidden}
-.top{display:flex;align-items:center;gap:14px;font-stretch:118%;font-weight:600;letter-spacing:.06em;font-size:24px}.top span{color:#8a97a5}
+.top{display:flex;align-items:center;gap:14px;font-stretch:118%;font-weight:600;letter-spacing:.06em;font-size:24px}.top .w span{color:#8a97a5}.top .signal{fill:#ff6a1a}
 h1{margin-top:70px;font-stretch:118%;font-weight:750;font-size:104px;line-height:.92;letter-spacing:-.025em}h1 b{color:#ff6a1a;font-weight:750;font-stretch:125%}
 p{margin-top:34px;font-size:28px;color:#8a97a5;max-width:900px}
 .row{position:absolute;right:72px;top:64px;display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid #3a4756;border-left:3px solid #ff6a1a;border-radius:4px;background:#141b23;font-family:M;font-size:20px;color:#ff6a1a}
 .row i{width:14px;height:14px;background:#ff6a1a;transform:rotate(45deg)}
 .bar{position:absolute;left:0;top:0;height:6px;width:38%;background:#ff6a1a}
-</style><div class="bar"></div><div class="top"><svg width="34" height="34" viewBox="0 0 24 24"><path d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z" fill="#ff6a1a"/><path d="m4 17 8-8 8 8M4 22l8-8 8 8" fill="none" stroke="#e8ecef" stroke-width="2.5"/></svg>${lead}<span>${muted}</span></div>
+</style><div class="bar"></div><div class="top"><svg data-logo="mark" width="44" height="44" viewBox="0 0 32 32" fill="#e8ecef"><path d="M4.7 21.6A11.3 9.4 0 1 1 27.3 21.6A11.3 9.4 0 1 1 4.7 21.6ZM10.5 16.9C5.3 12.3 3.4 5.4 4.7 1C8.5 3.6 11.5 10.1 10.5 16.9ZM21.5 16.9C20.5 10.1 23.5 3.6 27.3 1C28.6 5.4 26.7 12.3 21.5 16.9ZM8.4 21.1A3 3 0 1 0 14.4 21.1A3 3 0 1 0 8.4 21.1ZM11.5 20.1A0.8 0.8 0 1 1 13.1 20.1A0.8 0.8 0 1 1 11.5 20.1ZM17.6 21.1A3 3 0 1 0 23.6 21.1A3 3 0 1 0 17.6 21.1ZM20.7 20.1A0.8 0.8 0 1 1 22.3 20.1A0.8 0.8 0 1 1 20.7 20.1ZM15.4 14.1C13.8 11.5 14.8 8.1 16.9 6.6A0.5 0.5 0 0 1 17.5 7.4C15.5 9 15 10.8 16.6 13.4Z"/><path class="signal" d="M15.6 6A2.1 2.1 0 1 1 19.8 6A2.1 2.1 0 1 1 15.6 6Z"/></svg><span class="w">${lead}<span>${muted}</span></span></div>
 <div class="row"><i></i>waiting 23:04</div>
 <h1>Your agents are<br><b>waiting</b> on you.</h1><p>${name}: every coding agent you run, in one place. See who waits on you, then answer, review and merge.</p>`;
 }

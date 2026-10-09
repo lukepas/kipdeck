@@ -24,6 +24,7 @@ import { chromium, type Browser } from 'playwright-core';
 import { buildPage, buildSite, repoOf } from '../site/build.mjs';
 // @ts-expect-error a plain .mjs script with no types
 import { serve } from '../site/serve.mjs';
+import { LOGO_COLORS, faviconSvg, logoPaths } from '../src/shared/logo.ts';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SOURCE = path.join(ROOT, 'site', 'landing', 'index.html');
@@ -119,6 +120,21 @@ test('a build that cannot draw the share card still ships one: public/og.png, 12
     assert.equal(png.subarray(1, 4).toString('latin1'), 'PNG', file);
     assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [1200, 630], file);
   }
+});
+
+test("the header, the mini inbox and the footer draw Kip's mark, with his favicons and app icon beside the page", () => {
+  const marks = [...main.html.matchAll(/<svg class="mark[^"]*" data-logo="(mark|small)"[^>]*>([\s\S]*?)<\/svg>/g)];
+  assert.equal(marks.length, 3, 'the header, the mini inbox and the footer');
+  for (const [, kind, inner] of marks) assert.equal(inner, logoPaths(kind as 'mark' | 'small'));
+  assert.match(main.html, /<link rel="apple-touch-icon" href="apple-touch-icon.png">/);
+  for (const f of ['favicon.svg', 'favicon-alert.svg', 'apple-touch-icon.png']) assert.ok(existsSync(path.join(main.dir, f)), `the build has ${f}`);
+  assert.equal(readFileSync(path.join(main.dir, 'favicon-alert.svg'), 'utf8'), faviconSvg(LOGO_COLORS.signal));
+});
+
+test('the share card leads with Kip, his light lit in Signal', () => {
+  const card = readFileSync(path.join(ROOT, 'site', 'build.mjs'), 'utf8');
+  assert.ok(card.includes(`data-logo="mark" width="44" height="44" viewBox="0 0 32 32" fill="#e8ecef">${logoPaths('mark')}</svg>`));
+  assert.match(card, /\.top \.signal\{fill:#ff6a1a\}/);
 });
 
 test('vercel.json builds the page and sends the same headers as public/_headers', () => {

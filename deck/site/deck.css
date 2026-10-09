@@ -123,6 +123,7 @@ body.no-trans .slide.leaving { visibility: hidden; }
 .foot { position: absolute; left: 120px; right: 120px; bottom: 34px; display: flex; justify-content: space-between; align-items: baseline;
   font: 500 15px/1 var(--mono); letter-spacing: .06em; color: var(--faint); text-transform: uppercase; border-top: 1px solid var(--line); padding-top: 16px; }
 .foot b { color: var(--muted); font-weight: 500; }
+.foot-mark { display: inline; width: 18px; height: 18px; margin-right: 10px; vertical-align: -3px; color: var(--muted); }
 .src { position: absolute; left: 120px; right: 120px; bottom: 74px; font: 400 14px/1.45 var(--mono); color: var(--faint); }
 .src a { color: var(--faint); text-decoration: none; border-bottom: 1px dotted var(--line-2); }
 .src a:hover { color: var(--text); }
@@ -147,8 +148,13 @@ body.show-hint .hint { opacity: .9; }
 .help .x { position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; border: 0; background: transparent; color: var(--muted); font-size: 22px; cursor: pointer; }
 
 /* === SHARED VISUAL PARTS === */
-.mark { width: 56px; height: 56px; color: var(--text); }
-.wordmark { display: flex; align-items: center; gap: 18px; font: 700 52px/1 var(--display); letter-spacing: -0.03em; }
+/* The Kipdeck lockup (src/shared/logo.ts, written in by npm run logo): Kip's face, KIP, and DECK muted.
+   Only his light changes: lit in the needs-you colour while someone is waiting (the cover), calm once
+   nobody is (the close). */
+.wordmark { display: flex; align-items: center; color: var(--text); }
+.lockup { display: block; height: 64px; width: auto; aspect-ratio: 119.5 / 32; overflow: visible; }
+.lockup .word-muted { fill: var(--muted); }
+.lit .lockup .signal { fill: var(--pink); }
 .frame { background: #0B1020; border: 1px solid var(--line-2); border-radius: 18px; overflow: hidden; box-shadow: var(--glow); }
 .frame .bar { height: 34px; display: flex; align-items: center; gap: 8px; padding: 0 14px; background: rgba(255,255,255,.04); border-bottom: 1px solid var(--line); }
 .frame .bar i { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,.14); }
@@ -313,6 +319,8 @@ body.show-hint .hint { opacity: .9; }
 #s11 .blk b { color: var(--green); font-weight: 500; }
 #s11 .heat { display: grid; grid-template-columns: 150px repeat(5, 1fr); gap: 6px; }
 #s11 .heatcard { position: relative; overflow: hidden; }
+#s14 .close-brand { margin-top: 72px; } #s14 .close-brand .lockup { height: 44px; }
+#s11 .lockline { margin-top: 64px; align-items: center; gap: 16px; border-left: 2px solid var(--line-2); padding-left: 18px; }
 #s11 .heat div { height: 46px; border-radius: 6px; }
 #s11 .heat .cell { display: grid; place-items: center; font: 500 15px/1 var(--mono); color: var(--text); font-variant-numeric: tabular-nums; }
 /* History, not a live ask: a neutral ramp, and the attention hue only for the long waits. */
@@ -413,7 +421,7 @@ body.flow #s1 .sub { font-size: 19px; }
 body.flow #s1 .founders { position: static; margin-top: 28px; font-size: 13px; line-height: 1.8; }
 body.flow #s1 .q { height: auto; } body.flow #s1 .q-list { height: 432px; }
 body.flow #s1 .term { font-size: 14px; left: 12px; top: 56px; }
-body.flow .wordmark { font-size: 34px; } body.flow .mark { width: 38px; height: 38px; }
+body.flow .lockup { height: 42px; }
 body.flow #s2 .quote { font-size: 30px; } body.flow #s2 .clock { width: 160px !important; height: 203px !important; } body.flow #s2 .idle { font-size: 36px; }
 body.flow #s2 .strip { position: static; display: flex; flex-direction: column; gap: 12px; margin-top: 24px; } body.flow #s2 .strip div { font-size: 12px; }
 body.flow #s3 .win { height: 190px; } body.flow #s3 .wins { display: grid !important; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -435,7 +443,6 @@ body.flow #s8 .chain { grid-template-columns: 1fr; } body.flow #s8 .honest { fon
 body.flow #s9 .math .ln .v { font-size: 26px; } body.flow #s9 .math .ln .k { font-size: 14px; }
 
 body.flow #s11 .pt h4 { font-size: 20px; } body.flow #s11 .chainrow { flex-direction: row !important; flex-wrap: wrap; gap: 8px !important; } body.flow #s11 .chainrow > span { display: none; } body.flow #s11 .blk { width: calc(50% - 4px); height: auto; font-size: 13px; }
-body.flow #s11 [data-a=fork] { position: static !important; margin-top: 24px; }
 body.flow #s2 .clock { margin: 0 auto; }
 body.flow #s11 .heat { grid-template-columns: 96px repeat(5, 1fr); gap: 4px; } body.flow #s11 .heat .lb { font-size: 13px; } body.flow #s11 .heat .cell { font-size: 13px; } body.flow #s11 .heat .hd { font-size: 13px; }
 body.flow #s11 .legend3 { flex-wrap: wrap; font-size: 13px; }
@@ -494,6 +501,8 @@ body.flow #s5 .sig { position: static; margin-top: 8px; display: inline-block; }
 body.flow #s5 .laptop .vp { height: auto; }
 body.flow #s8 .ba { margin-top: 8px; }
 body.flow #s10 .ans { padding: 14px; }
+body.flow #s11 .lockline { flex-direction: row; align-items: flex-start; gap: 12px; margin-top: 32px; }
+body.flow #s11 .lockline svg { flex: none; }
 body.flow #s12 .tiers { grid-template-columns: 1fr !important; }
 body.flow #s14 .amt { font-size: 88px; } body.flow #s14 .amt small { font-size: 20px; margin-top: 8px; }
 body.flow #s15 table { font-size: 13px; } body.flow #s15 th, body.flow #s15 td { padding: 6px 6px; } body.flow #s15 th { font-size: 13px; }

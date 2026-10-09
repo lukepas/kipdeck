@@ -7,7 +7,7 @@ import { DECK, box, contactShadow, flat, matte, practical } from './office/mater
 import { drawMark } from './office/floorpaint';
 
 // The Deck lift (the elevator): a slate housing in the middle of the south curb, open to the
-// deck through a portal with a lit frame, the Formation mark and the deck's number over it. Every deck
+// deck through a portal with a lit frame, Kip's mark and the deck's number over it. Every deck
 // has it in the same place: it's where you arrive, and E there opens the Decks window. It's built
 // along `dir`, the way from its back wall out through its portal (shared/layout.ts ELEVATOR_BACK).
 
@@ -32,7 +32,7 @@ function paintSign(g: CanvasRenderingContext2D, text: string, n?: number) {
   g.clearRect(0, 0, w, h);
   g.fillStyle = DECK.wall;
   g.fillRect(0, 0, w, h);
-  drawMark(g, 22, 24, 8.5, DECK.text, DECK.muted);
+  drawMark(g, 22, 24, 8.5, DECK.text);
   g.textBaseline = 'alphabetic';
   g.fillStyle = DECK.muted;
   g.font = '700 46px Archivo, system-ui, sans-serif';
@@ -105,7 +105,7 @@ export function buildElevator(): Elevator {
   // The back wall of the car: the mark stencilled big, faint.
   const markCanvas = document.createElement('canvas');
   markCanvas.width = markCanvas.height = 256;
-  drawMark(markCanvas.getContext('2d')!, 8, 8, 10, DECK.steel, DECK.line);
+  drawMark(markCanvas.getContext('2d')!, 8, 8, 10, DECK.steel);
   const markTex = new THREE.CanvasTexture(markCanvas);
   markTex.colorSpace = THREE.SRGBColorSpace;
   const mark = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 1.1), new THREE.MeshBasicMaterial({ map: markTex, transparent: true, toneMapped: false }));

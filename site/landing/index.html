@@ -32,6 +32,7 @@
 <meta name="twitter:image:alt" content="{{ogImageAlt}}">
 <script type="application/ld+json">{{jsonld}}</script>
 <link rel="icon" id="favicon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preload" as="font" type="font/woff2" href="../../src/client/styles/fonts/archivo-latin.woff2" crossorigin>
 <link rel="preload" as="font" type="font/woff2" href="../../src/client/styles/fonts/jetbrains-mono-latin.woff2" crossorigin>
 <script vite-ignore src="theme-boot.js"></script>
@@ -46,7 +47,7 @@
 <header class="top" id="top">
   <div class="top-in">
     <a class="lockup" href="#main" aria-label="{{name}}, back to the top">
-      <svg class="mark" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path class="mark-lead" d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z"/><path class="mark-trail" d="m4 17 8-8 8 8M4 22l8-8 8 8"/></svg>
+      <svg class="mark" data-logo="mark" viewBox="0 0 32 32" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M4.7 21.6A11.3 9.4 0 1 1 27.3 21.6A11.3 9.4 0 1 1 4.7 21.6ZM10.5 16.9C5.3 12.3 3.4 5.4 4.7 1C8.5 3.6 11.5 10.1 10.5 16.9ZM21.5 16.9C20.5 10.1 23.5 3.6 27.3 1C28.6 5.4 26.7 12.3 21.5 16.9ZM8.4 21.1A3 3 0 1 0 14.4 21.1A3 3 0 1 0 8.4 21.1ZM11.5 20.1A0.8 0.8 0 1 1 13.1 20.1A0.8 0.8 0 1 1 11.5 20.1ZM17.6 21.1A3 3 0 1 0 23.6 21.1A3 3 0 1 0 17.6 21.1ZM20.7 20.1A0.8 0.8 0 1 1 22.3 20.1A0.8 0.8 0 1 1 20.7 20.1ZM15.4 14.1C13.8 11.5 14.8 8.1 16.9 6.6A0.5 0.5 0 0 1 17.5 7.4C15.5 9 15 10.8 16.6 13.4Z"/><path class="signal" d="M15.6 6A2.1 2.1 0 1 1 19.8 6A2.1 2.1 0 1 1 15.6 6Z"/></svg>
       <svg class="wordmark" viewBox="0 0 160 20" height="16" aria-hidden="true"><text x="0" y="15"><tspan class="wm-lead">{{lead}}</tspan><tspan class="wm-muted">{{muted}}</tspan></text></svg>
     </a>
     <nav class="links" aria-label="Sections">
@@ -106,7 +107,7 @@
 
     <figure class="app mini" id="mini-inbox" aria-label="The {{name}} inbox, with demo data">
       <div class="app-bar">
-        <span class="app-brand"><svg class="mark" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path class="mark-lead" d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z"/><path class="mark-trail" d="m4 17 8-8 8 8M4 22l8-8 8 8"/></svg>{{name}}</span>
+        <span class="app-brand"><svg class="mark" data-logo="small" viewBox="0 0 32 32" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M6 21A10 9 0 1 1 26 21A10 9 0 1 1 6 21ZM11 17C5.5 13 4 6.5 6 2C9.5 4.5 12 10.5 11 17ZM21 17C20 10.5 22.5 4.5 26 2C28 6.5 26.5 13 21 17ZM8 21A3 3 0 1 0 14 21A3 3 0 1 0 8 21ZM18 21A3 3 0 1 0 24 21A3 3 0 1 0 18 21ZM16 9h2v4h-2Z"/><path class="signal" d="M15.5 4h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3a1.5 1.5 0 0 1-1.5-1.5v-3a1.5 1.5 0 0 1 1.5-1.5Z"/></svg>{{name}}</span>
         <span class="app-pulse mono"><span><b data-mini-waiting>1</b> waiting on you</span><span><b data-mini-median>0:07</b> longest wait</span><span><b data-mini-merged>0</b> merged today</span></span>
       </div>
       <div class="app-list">
@@ -532,7 +533,7 @@
 <footer class="end" id="end" aria-labelledby="end-h" data-scene="end">
   <div class="wrap">
     <div class="calm-inbox">
-      <svg class="mark end-mark" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path class="mark-lead" d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z"/><path class="mark-trail" d="m4 17 8-8 8 8M4 22l8-8 8 8"/></svg>
+      <svg class="mark end-mark" data-logo="mark" viewBox="0 0 32 32" width="24" height="24" fill="currentColor" aria-hidden="true"><path d="M4.7 21.6A11.3 9.4 0 1 1 27.3 21.6A11.3 9.4 0 1 1 4.7 21.6ZM10.5 16.9C5.3 12.3 3.4 5.4 4.7 1C8.5 3.6 11.5 10.1 10.5 16.9ZM21.5 16.9C20.5 10.1 23.5 3.6 27.3 1C28.6 5.4 26.7 12.3 21.5 16.9ZM8.4 21.1A3 3 0 1 0 14.4 21.1A3 3 0 1 0 8.4 21.1ZM11.5 20.1A0.8 0.8 0 1 1 13.1 20.1A0.8 0.8 0 1 1 11.5 20.1ZM17.6 21.1A3 3 0 1 0 23.6 21.1A3 3 0 1 0 17.6 21.1ZM20.7 20.1A0.8 0.8 0 1 1 22.3 20.1A0.8 0.8 0 1 1 20.7 20.1ZM15.4 14.1C13.8 11.5 14.8 8.1 16.9 6.6A0.5 0.5 0 0 1 17.5 7.4C15.5 9 15 10.8 16.6 13.4Z"/><path class="signal" d="M15.6 6A2.1 2.1 0 1 1 19.8 6A2.1 2.1 0 1 1 15.6 6Z"/></svg>
       <i class="glyph g-check calm-g" aria-hidden="true"></i>
       <p id="end-h" aria-live="polite">Nothing waits on you.</p>
       <button class="btn sm calm-answer" type="button" tabindex="-1">Answer</button>

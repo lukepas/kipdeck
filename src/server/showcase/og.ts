@@ -1,10 +1,12 @@
-// The showcase's share card (og.png, 1200 x 630): a Kipdeck title block on the deck's grid, with the
-// Formation mark, the latest merge that shows the whole money path (its PR, its bounty in large type and
+// The showcase's share card (og.png, 1200 x 630): a Kipdeck title block on the deck's grid, with
+// Kip's mark, the latest merge that shows the whole money path (its PR, its bounty in large type and
 // the four steps with their short hashes), the totals and the credit, drawn in a 5 x 7 pixel font
 // straight into a PNG. No browser, no canvas and no
 // dependencies (node:zlib only), so the office can draw it on request and onchain/indexer's static
 // export can draw it at build time, from the same public document the page shows.
 import { UPSTREAM_CREDIT } from '../../shared/copy.js';
+import { MARK } from '../../shared/logo.js';
+import { flatten, inside } from '../../shared/logo-path.js';
 import { deflateSync } from 'node:zlib';
 import { HARNESSES, type ShowcaseDoc } from '../../shared/showcase.js';
 
@@ -172,15 +174,20 @@ export function encodePng(r: Raster): Buffer {
   return Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), chunk('IHDR', head), chunk('IDAT', deflateSync(rows, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
 }
 
-/** The Formation mark at (x, y), `s` pixels per unit of its 24 grid: the lead chevron violet, the trailing two light. */
+/** Kip's mark (shared/logo.ts) at (x, y) in a box 24 * `s` pixels square: his face light, his light violet. */
 function mark(r: Raster, x: number, y: number, s: number) {
-  const chevron = (dy: number, w: number, c: RGB) => {
-    r.line(x + 4 * s, y + (10 + dy) * s, x + 12 * s, y + (2 + dy) * s, w, c);
-    r.line(x + 12 * s, y + (2 + dy) * s, x + 20 * s, y + (10 + dy) * s, w, c);
-  };
-  chevron(0, 4 * s, PROOF);
-  chevron(7, 2.5 * s, TEXT);
-  chevron(12, 2.5 * s, TEXT);
+  const body = flatten(MARK.body);
+  const light = flatten(MARK.signal);
+  const k = (s * 24) / 32;
+  const size = Math.ceil(32 * k);
+  for (let py = 0; py < size; py++) {
+    for (let px = 0; px < size; px++) {
+      const u = (px + 0.5) / k;
+      const v = (py + 0.5) / k;
+      if (inside(light, u, v)) r.rect(x + px, y + py, 1, 1, PROOF);
+      else if (inside(body, u, v)) r.rect(x + px, y + py, 1, 1, TEXT);
+    }
+  }
 }
 
 /** The hash at the end of an explorer link, as "0x55b5...7c3c". */

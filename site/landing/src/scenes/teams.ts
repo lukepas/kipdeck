@@ -3,7 +3,7 @@
 // design-partner seats appear as empty diamonds: nobody has
 // taken one yet, and the page says so. Pointing at or focusing "Apply as a design partner" (or the
 // Team waitlist's email field, in a build that has one) pulls the dot grid behind it toward it. A
-// join that really went through re-forms the agents into the Formation mark over the seats (the
+// join that really went through re-forms the agents into Kip's mark over the seats (the
 // March to the Mark), sends a ring out, and fills a seat; nothing plays for a join that was not sent.
 import { env, tier, token } from '../engine/env';
 import { Spring } from '../engine/spring';

@@ -140,7 +140,7 @@ export class Couriers {
   private readonly fwd = new THREE.Vector3(0, 0, 1);
 
   constructor() {
-    // A flat chevron (the holo's unit marker, the Formation mark's shape), nose +z, and a thin keel so it reads edge on.
+    // A flat chevron (the holo's unit marker), nose +z, and a thin keel so it reads edge on.
     const shape = new THREE.Shape([new THREE.Vector2(0, 0.6), new THREE.Vector2(0.45, -0.3), new THREE.Vector2(0, -0.05), new THREE.Vector2(-0.45, -0.3)]);
     const flat = new THREE.ShapeGeometry(shape).rotateX(-Math.PI / 2).rotateY(Math.PI);
     const mat = new THREE.MeshBasicMaterial({ transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, toneMapped: false, fog: false });

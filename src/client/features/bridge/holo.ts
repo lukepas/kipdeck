@@ -127,7 +127,7 @@ export const holo: Fixture<'holo'> = (site) => {
   const octa = new THREE.OctahedronGeometry(0.075, 0);
   const edges = new THREE.EdgesGeometry(octa);
   const ringGeo = new THREE.TorusGeometry(0.15, 0.008, 4, 40);
-  // The ship: a flat chevron, the Formation mark's shape, lying along the course.
+  // The ship: a flat chevron lying along the course.
   const chevShape = new THREE.Shape([new THREE.Vector2(0, 0.14), new THREE.Vector2(0.1, -0.06), new THREE.Vector2(0, -0.01), new THREE.Vector2(-0.1, -0.06)]);
   const chevron = new THREE.Mesh(new THREE.ShapeGeometry(chevShape).rotateX(-Math.PI / 2), light(0.42, '#DDEFF5'));
   (chevron.material as THREE.MeshBasicMaterial).side = THREE.DoubleSide;

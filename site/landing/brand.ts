@@ -26,8 +26,8 @@ export interface Brand {
   contact: string;
   /** The folder a clone lands in (the repository's last path segment). */
   folder: string;
-  /** The Formation mark's variant: 'formation' (three chevrons) is the only one drawn today. */
-  markVariant: 'formation';
+  /** The mark: 'kip', Kip's face with his light (src/shared/logo.ts), is the only one drawn today. */
+  markVariant: 'kip';
   ogTitle: string;
   ogDescription: string;
 }
@@ -47,7 +47,7 @@ export const BRANDS = {
     // Founder TODO: confirm this mailbox receives mail; it is the default until a real address is chosen.
     contact: 'hello@kipdeck.com',
     folder: 'kipdeck',
-    markVariant: 'formation',
+    markVariant: 'kip',
     ogTitle: 'Kipdeck: your agents are waiting on you',
     ogDescription: DESCRIPTION,
   },

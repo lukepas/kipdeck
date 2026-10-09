@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="design/logo/lockup-dark.svg">
+  <img src="design/logo/lockup-light.svg" alt="Kipdeck" height="48">
+</picture>
+
 # Kipdeck
 
 The inbox for your AI coding agents. Full control and clarity over every AI coding agent you run, in one place. See who is waiting on you and for how long, then answer, review and merge without leaving it.

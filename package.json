@@ -32,6 +32,7 @@
     "build:client": "vite build && vite build -c vite.showcase.config.ts",
     "build:server": "tsc -p tsconfig.server.json",
     "build:site": "node site/build.mjs",
+    "logo": "tsx design/logo/sync.ts",
     "preview:site": "node site/serve.mjs",
     "perf:site": "node site/perf.mjs",
     "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit && tsc -p tsconfig.launch.json && tsc -p site/landing/tsconfig.json",

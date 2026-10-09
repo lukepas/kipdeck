@@ -6,6 +6,7 @@
  * dot, working a small steel bar, parked a dim dot, merged a check in a square. No three.js here: the
  * 2D view and the 3D office both use it, and the 3D billboards draw from the same paths.
  */
+import { MARK } from '../../shared/logo';
 
 /** Inner SVG markup for each glyph (stroked unless the path says otherwise). */
 export const ICONS = {
@@ -17,8 +18,8 @@ export const ICONS = {
   parked: '<circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" opacity=".55"/>',
   merged: '<path d="M4 4h16v16H4Z"/><path d="m8 12.5 3 3 5.5-6.5"/>',
 
-  // ---- the brand mark (Formation): three chevrons in an upward V, the lead one solid ----
-  mark: '<path d="M4 10 11 3l1 1 1-1 7 7v4l-8-8-8 8Z" fill="currentColor" stroke="none"/><path d="m4 17 8-8 8 8M4 22l8-8 8 8" stroke-width="2.5" stroke-linecap="butt"/>',
+  // ---- the brand mark: Kip's face and his light (shared/logo.ts), filled, from its 32 grid ----
+  mark: `<g transform="scale(.75)" fill="currentColor" stroke="none"><path d="${MARK.body}"/><path class="signal" d="${MARK.signal}"/></g>`,
 
   // ---- places and panels ----
   mission: '<path d="M3.5 3.5h7v7h-7ZM13.5 3.5h7v7h-7ZM3.5 13.5h7v7h-7Z"/><path d="M13.5 13.5h7v7h-7Z" fill="currentColor"/>',

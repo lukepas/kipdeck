@@ -573,7 +573,6 @@
     tl.from(A(s, 'legend3'), { autoAlpha: 0, duration: 0.3 }, 1.6);
     tl.from(A(s, 'mock'), { autoAlpha: 0, duration: 0.3 }, 1.75);
     rise(tl, [A(s, 'lock')], 1.9);
-    rise(tl, [A(s, 'fork')], 2.1);
     return tl;
   };
 

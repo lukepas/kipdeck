@@ -1,25 +1,16 @@
 // The March to the Mark: agent units stream in from the edges of the viewport and fall into rank as
-// the Formation mark (three chevrons, the lead one in Signal), hold for a moment, then break and
-// leave. It plays when someone joins the waitlist: one more seat at the table. One temporary
-// canvas, gone when they are.
+// Kip's mark (his outline, and his light in Signal), hold for a moment, then break and leave. It
+// plays when someone joins the waitlist: one more seat at the table. One temporary canvas, gone
+// when they are.
+import { MARK } from '../../../../src/shared/logo.ts';
+import { alongOutline, flatten } from '../../../../src/shared/logo-path.ts';
 import { token, tier } from '../engine/env';
 
-/** Points along the mark's three chevrons (24 by 24 box), the lead one doubled up. */
+/** Points along Kip's outline, in the 24 by 24 box the march is laid out in, his light ringed by its own (`lead`). */
 function markPoints(n: number): { x: number; y: number; lead: boolean }[] {
-  const chev = (y: number, k: number, lead: boolean) => {
-    const out: { x: number; y: number; lead: boolean }[] = [];
-    for (let i = 0; i < k; i++) {
-      const t = i / (k - 1);
-      const x = 4 + t * 16;
-      const yy = y + Math.abs(x - 12) - 0;
-      out.push({ x, y: yy, lead });
-      if (lead) out.push({ x, y: yy + 2.4, lead });
-    }
-    return out;
-  };
-  const lead = Math.round(n * 0.25);
-  const rest = Math.round((n - lead * 2) / 2);
-  return [...chev(4, lead, true), ...chev(9, rest, false), ...chev(14, rest, false)];
+  const light = Math.max(8, Math.round(n * 0.12));
+  const to24 = ([x, y]: [number, number], lead: boolean) => ({ x: x * 0.75, y: y * 0.75 + 1, lead });
+  return [...alongOutline(flatten(MARK.body), n - light).map((p) => to24(p, false)), ...alongOutline(flatten(MARK.signal), light).map((p) => to24(p, true))];
 }
 
 export function march(cx: number, cy: number, size = 220): Promise<void> {

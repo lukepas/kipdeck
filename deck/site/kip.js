@@ -1,5 +1,5 @@
 /* === KIP: the deck's mascot ===
-   Kip is Kipdeck's own mascot, the stowaway deck kit from the agent office: cream fur, tall leaf
+   Kip is Kipdeck's own mascot, the same character the app draws: cream fur, tall leaf
    ears, a quilted slate vest, a knitted scarf and the Spark Sprig (a glowing crystal leaf on a wooden
    grip). One inline SVG (viewBox 0 0 100 130, feet on y=128), moved only with transforms and opacity.
    Every gesture returns a GSAP timeline so wow.js can lay them on a slide's beats.

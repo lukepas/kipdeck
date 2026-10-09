@@ -1,4 +1,5 @@
 import { UPSTREAM_CREDIT_SHORT } from '../../../shared/copy';
+import { MARK } from '../../../shared/logo';
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { BEANBAGS, FLOOR, GRID, MISSION_TABLE, PODS, POD_LETTERS, READY_LINE, TITLE_BLOCK, readySpot } from '../../../shared/layout';
@@ -234,26 +235,22 @@ function standby(group: THREE.Group) {
   group.add(label);
 }
 
-/** The Formation mark: three chevrons nested in an upward V, the lead one solid, at `s` pixels per grid unit. */
-export function drawMark(g: CanvasRenderingContext2D, x: number, y: number, s: number, lead: string, trail: string) {
-  const chevron = (dy: number) => {
-    g.beginPath();
-    g.moveTo(x + 4 * s, y + (14 + dy) * s);
-    g.lineTo(x + 12 * s, y + (6 + dy) * s);
-    g.lineTo(x + 20 * s, y + (14 + dy) * s);
-  };
-  g.lineJoin = 'miter';
-  g.lineCap = 'square';
-  g.lineWidth = 2.5 * s;
-  g.strokeStyle = trail;
-  chevron(10);
-  g.stroke();
-  chevron(5);
-  g.stroke();
-  g.lineWidth = 4 * s;
-  g.strokeStyle = lead;
-  chevron(0);
-  g.stroke();
+let markPaths: { body: Path2D; signal: Path2D } | undefined;
+
+/**
+ * Kip's mark (shared/logo.ts): his face in `color`, his light in `light` (the face's colour unless a
+ * state lights it). It fills a 24 by 24 box at `s` pixels per unit, the box the old mark had.
+ */
+export function drawMark(g: CanvasRenderingContext2D, x: number, y: number, s: number, color: string, light = color) {
+  markPaths ??= { body: new Path2D(MARK.body), signal: new Path2D(MARK.signal) };
+  g.save();
+  g.translate(x, y);
+  g.scale(s * 0.75, s * 0.75);
+  g.fillStyle = color;
+  g.fill(markPaths.body);
+  g.fillStyle = light;
+  g.fill(markPaths.signal);
+  g.restore();
 }
 
 /** What the title block says: the deck, its number, who's looking, and the build's revision. */
@@ -286,7 +283,7 @@ function paintTitle(g: CanvasRenderingContext2D, W: number, H: number, info: Tit
   g.stroke();
   // The lockup: the mark and the wordmark.
   const s = H / 64;
-  drawMark(g, 14 * s, 6 * s, s * 1.2, DECK.text, DECK.muted);
+  drawMark(g, 14 * s, 6 * s, s * 1.2, DECK.text);
   g.textBaseline = 'alphabetic';
   g.font = UI(600, Math.round(H * 0.16));
   stretch(g, true);

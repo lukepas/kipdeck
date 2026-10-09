@@ -120,7 +120,7 @@ function paintTop(g: CanvasRenderingContext2D, m: TableMission) {
     g.stroke();
   }
   // The middle: the mark, and the statement.
-  drawMark(g, c - 48, c - 118, 4, DECK.text, DECK.muted);
+  drawMark(g, c - 48, c - 118, 4, DECK.text);
   g.textAlign = 'center';
   g.textBaseline = 'middle';
   g.fillStyle = DECK.muted;

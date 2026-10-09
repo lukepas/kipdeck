@@ -16,8 +16,7 @@
 .plot .p-wedge { fill: none; stroke: var(--line-strong); stroke-width: .04; }
 .plot .p-wedge.done { fill: color-mix(in oklab, var(--working) 22%, transparent); }
 .plot .p-wedge.active { stroke: var(--text); stroke-width: .06; }
-.plot .p-mark-lead { fill: var(--muted); }
-.plot .p-mark-trail { fill: none; stroke: var(--muted); stroke-width: 2.5; }
+.plot .p-mark-body, .plot .p-mark-signal { fill: var(--muted); }
 
 .plot .p-consoles rect { fill: var(--surface-2); stroke: var(--line-strong); stroke-width: .05; }
 .plot .p-pod { fill: var(--muted); font: 700 1.25px var(--font-display); font-stretch: var(--stretch-display); text-anchor: middle; }
