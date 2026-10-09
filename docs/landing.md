@@ -93,7 +93,7 @@ The name, tagline, wordmark, npm package, source repository and share-card text 
 KIPDECK_BRAND=<id> npm run build:site
 ```
 
-The test builds the page and checks that it never says a name from before the rename (Mergeline, UGC Army). The source repository is `github.com/zbagdzevicius/kipdeck`. One thing the build cannot change: the 30-second film's frames were rendered with the old UGC Army wordmark, so the page's film shows that name until the film in `video/` is rendered again.
+The test builds the page and checks that it never says a product name other than Kipdeck. The source repository is `github.com/zbagdzevicius/kipdeck`. One thing the build cannot change: the 30-second film's frames were rendered with the old UGC Army wordmark, so the page's film shows that name until the film in `video/` is rendered again.
 
 ## Build, look at it, publish
 
@@ -126,8 +126,6 @@ Upload `dist/site/` to any static host (GitHub Pages, Cloudflare Pages, Netlify,
 | `KIPDECK_REPO_PUBLIC` | `1` once the brand's repository is public: the clone command, section 06's terminal, the footer's Source and Docs links and the structured data's repository are shown | The repository is treated as private: none of those are on the page (the `npx` command still is with `KIPDECK_NPM_PUBLISHED=1`), the film is the hero's first button and **Become a design partner** its second |
 | `KIPDECK_NPM_PUBLISHED` | `1` once `npx` works from the registry: `npx` replaces the from-source command and the *Not on npm yet* line goes | The from-source command and the line stay |
 | `KIPDECK_BRAND` | Picks an entry in `site/landing/brand.ts` | `kipdeck` |
-
-Each of these was called `MERGELINE_*` before the rename to Kipdeck. The old names still work when the `KIPDECK_*` one is not set (`site/env.mjs`).
 
 The build also draws `og.png` (1200 by 630, the share card) from the brand with headless Chromium when one is installed (`playwright-core`'s, `CHROMIUM_PATH` or Google Chrome). Without one it says so, and the committed `site/landing/public/og.png` ships instead (that is the case on Vercel and Cloudflare's builders).
 

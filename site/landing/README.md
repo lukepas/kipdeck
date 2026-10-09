@@ -33,7 +33,7 @@ The name, tagline, wordmark, npm package, source repository and contact address 
 KIPDECK_BRAND=<id> npm run build:site
 ```
 
-`tests/landing.test.ts` builds the page and fails if it says a name from before the rename (Mergeline, UGC Army). The repository is `github.com/zbagdzevicius/kipdeck`. The 30-second film is the one exception: its frames were rendered with the old UGC Army wordmark and show it until the film is rendered again.
+`tests/landing.test.ts` builds the page and fails if it says a product name other than Kipdeck. The repository is `github.com/zbagdzevicius/kipdeck`. The 30-second film is the one exception: its frames were rendered with the old UGC Army wordmark and show it until the film is rendered again.
 
 ## Build for a real address
 
@@ -52,8 +52,6 @@ npm run build:site
 | `KIPDECK_NPM_PUBLISHED=1` | `npx` replaces the from-source commands | The from-source commands and the "Not on npm yet" line stay |
 | `KIPDECK_REPO_PUBLIC=1` | The repository is public: the clone command, the 06 terminal and the Source and Docs links are shown (`KIPDECK_REPO_URL` counts too) | Treated as private: none of them are shown, and the hero leads with the film and the design-partner email |
 | `KIPDECK_BRAND` | Picks an entry in `brand.ts` | `kipdeck` |
-
-The `MERGELINE_*` names from before the rename still work when the `KIPDECK_*` one is not set.
 
 Every address must be `https`, or the build stops. The build draws `og.png` with headless Chromium when one is installed (`playwright-core`'s, `CHROMIUM_PATH`, or Google Chrome). Without one it says so and the committed `site/landing/public/og.png` ships instead. When the brand or the headline changes, build where Chromium is available and copy `dist/site/og.png` over it.
 

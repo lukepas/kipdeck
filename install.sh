@@ -18,18 +18,15 @@
 #   KIPDECK_BIN_DIR        where the `kipdeck` command goes (default ~/.local/bin; empty: none)
 #   KIPDECK_INSTALL_ONLY   1: install, but don't start it
 #   KIPDECK_TARBALL        install this package tarball (from `npm pack`) instead of the registry's
-#
-# The MERGELINE_* names from before the rename to Kipdeck still work when the KIPDECK_* one isn't set.
-# An install from then (in ~/.local/share/mergeline, with a `mergeline` command) is left as it is.
 set -euo pipefail
 
-KIPDECK_VERSION="${KIPDECK_VERSION-${MERGELINE_VERSION:-}}"
-KIPDECK_TARBALL="${KIPDECK_TARBALL-${MERGELINE_TARBALL:-}}"
-KIPDECK_INSTALL_ONLY="${KIPDECK_INSTALL_ONLY-${MERGELINE_INSTALL_ONLY:-}}"
+KIPDECK_VERSION="${KIPDECK_VERSION:-}"
+KIPDECK_TARBALL="${KIPDECK_TARBALL:-}"
+KIPDECK_INSTALL_ONLY="${KIPDECK_INSTALL_ONLY:-}"
 
 PACKAGE="kipdeck"
-PREFIX="${KIPDECK_PREFIX:-${MERGELINE_PREFIX:-${XDG_DATA_HOME:-$HOME/.local/share}/kipdeck}}"
-BIN_DIR="${KIPDECK_BIN_DIR-${MERGELINE_BIN_DIR-$HOME/.local/bin}}"
+PREFIX="${KIPDECK_PREFIX:-${XDG_DATA_HOME:-$HOME/.local/share}/kipdeck}"
+BIN_DIR="${KIPDECK_BIN_DIR-$HOME/.local/bin}"
 
 if [ -t 2 ]; then CYAN=$'\033[1;36m' YELLOW=$'\033[1;33m' RED=$'\033[1;31m' RESET=$'\033[0m'
 else CYAN="" YELLOW="" RED="" RESET=""; fi

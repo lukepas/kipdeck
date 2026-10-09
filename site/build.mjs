@@ -4,8 +4,6 @@
 //   KIPDECK_SITE_URL=https://kipdeck.com/ KIPDECK_WAITLIST_URL=https://... npm run build:site
 //   KIPDECK_BRAND=<id> npm run build:site           # another entry in site/landing/brand.ts
 //
-// The MERGELINE_* names from before the rename to Kipdeck still work (site/env.mjs).
-//
 // While the brand's repository is private, build without KIPDECK_REPO_PUBLIC (the default): the page
 // then shows no clone command, terminal or Source link a visitor could not follow. Set it to 1 (or
 // set KIPDECK_REPO_URL) once the source is public.

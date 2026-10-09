@@ -161,7 +161,7 @@ console.error = (...args: unknown[]) => {
 before(async () => {
   mkdirSync(pub, { recursive: true });
   for (const page of ['index', 'bridge', 'login', 'claim', 'join']) writeFileSync(path.join(pub, `${page}.html`), `<!doctype html><title>${page}</title>`);
-  for (const k of Object.keys(process.env)) if (k.startsWith('AGENT_OFFICE_') || k.startsWith('KIPDECK_') || k.startsWith('MERGELINE_')) delete process.env[k];
+  for (const k of Object.keys(process.env)) if (k.startsWith('AGENT_OFFICE_') || k.startsWith('KIPDECK_')) delete process.env[k];
   Object.assign(process.env, { HOME: root, USERPROFILE: root, AGENT_OFFICE_NO_OPEN: '1', KIPDECK_DEMO_PACE: '6', GIT_CONFIG_GLOBAL: path.join(root, '.gitconfig') });
   writeFileSync(path.join(root, '.gitconfig'), '');
   const s = net.createServer();

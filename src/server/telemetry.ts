@@ -71,7 +71,6 @@ export interface TelemetryOptions {
 export function telemetryForbidden(env: NodeJS.ProcessEnv, argv: readonly string[]): string | undefined {
   if (argv.includes('--no-telemetry')) return 'turned off with --no-telemetry';
   if (env.DO_NOT_TRACK && env.DO_NOT_TRACK !== '0') return 'DO_NOT_TRACK is set';
-  // Either name turns it off: KIPDECK_TELEMETRY or MERGELINE_TELEMETRY from before the rename.
   for (const key of brandEnvNames('TELEMETRY')) if (env[key] === '0') return `${key}=0 is set`;
   return undefined;
 }

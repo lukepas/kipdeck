@@ -19,13 +19,9 @@ import { SERVICE_HEADER } from './tunnel/wire.js';
 export const LOCAL_FILE = 'local.json';
 /** The header a command on this computer sends its local key in. */
 export const LOCAL_KEY_HEADER = 'x-kipdeck-key';
-/** The same header under the product's name before the rename to Kipdeck: a newer command can meet an
- *  office started from an older install, and the other way round, so both are taken. */
-export const LEGACY_LOCAL_KEY_HEADER = 'x-mergeline-key';
-
-/** The local key a request carries, under the current header or the older one. */
+/** The local key a request carries. */
 export function localKeyFrom(headers: IncomingMessage['headers']): string | string[] | undefined {
-  return headers[LOCAL_KEY_HEADER] ?? headers[LEGACY_LOCAL_KEY_HEADER];
+  return headers[LOCAL_KEY_HEADER];
 }
 
 /** Headers a proxy, a tunnel or the office's own relay adds: a request carrying one came from somewhere else. */
