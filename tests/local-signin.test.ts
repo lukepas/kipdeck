@@ -149,15 +149,6 @@ test("the local key gets a command a new link; nothing else does", async () => {
   assert.equal((await call('/api/link', { method: 'POST', headers: own(), body: { key: keyOf(link) } })).status, 200);
 });
 
-test('a command from before the rename to Kipdeck still gets in with the x-mergeline-key header', async () => {
-  const { localKey, LEGACY_LOCAL_KEY_HEADER } = await import('../src/server/local.js');
-  assert.equal(LEGACY_LOCAL_KEY_HEADER, 'x-mergeline-key');
-  const ask = (headers: Record<string, string>) => call('/api/local/link', { method: 'POST', headers, body: {} });
-  assert.equal((await ask({ [LEGACY_LOCAL_KEY_HEADER]: 'guess' })).status, 403, 'a wrong key');
-  assert.equal((await ask({ [LEGACY_LOCAL_KEY_HEADER]: localKey(secret), 'x-forwarded-for': '203.0.113.9' })).status, 403, 'through a proxy');
-  assert.equal((await ask({ [LEGACY_LOCAL_KEY_HEADER]: localKey(secret) })).status, 200);
-});
-
 test('`kipdeck open` finds the running office from its local.json, which only its owner can read', async () => {
   const { askOffice } = await import('../src/server/opencmd.js');
   const file = path.join(home, '.agent-office', 'local.json');

@@ -4,23 +4,6 @@
   "buildCommand": "",
   "installCommand": "",
   "outputDirectory": "site",
-  "redirects": [
-    {
-      "source": "/media/mergeline-demo.gif",
-      "destination": "/media/kipdeck-demo.gif",
-      "permanent": true
-    },
-    {
-      "source": "/media/mergeline-demo.mp4",
-      "destination": "/media/kipdeck-demo.mp4",
-      "permanent": true
-    },
-    {
-      "source": "/media/mergeline-demo-30s.webm",
-      "destination": "/media/kipdeck-demo-30s.webm",
-      "permanent": true
-    }
-  ],
   "headers": [
     {
       "source": "/(.*)",

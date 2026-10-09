@@ -1,13 +1,9 @@
 // One name on every page: builds the app's pages (home, bridge, sign-in, join, claim), the /pom/
 // showcase and the landing page into temporary folders, strips the HTML tags (so a wordmark split
-// as MERGE<span>LINE</span> still reads MERGELINE), and fails on a name from before the rename.
+// as MERGE<span>LINE</span> still reads MERGELINE), and fails on an earlier product name.
 //
-// The old names stay only where they keep something set up before the rename working, and never in
-// what a person reads: the MERGELINE_* environment fallbacks (src/server/brandenv.ts, site/env.mjs,
-// the installers), the old browser storage keys (src/client/shared/storage-key.ts), the old sign-in
-// header (LEGACY_LOCAL_KEY_HEADER in src/server/local.ts), the demo folder prefix
-// (src/server/demo/index.ts), the deck's media redirects (deck/vercel.json) and the naming history
-// (business/naming.md, docs/configuration.md, docs/landing.md).
+// Outside these guards the old names appear only in the naming history (business/naming.md,
+// design/README.md) and in links to the demo repository, which still has its old name on GitHub.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
@@ -19,8 +15,6 @@ import { buildSite } from '../site/build.mjs';
 
 const root = path.join(import.meta.dirname, '..');
 const OLD = /mergeline|ugc ?-?army/i;
-/** The storage-key migration's prefixes: the only old names a page's script may carry. */
-const STORAGE_PREFIXES = /['"`](?:mergeline|ugc-army)\.['"`]/g;
 
 const out = mkdtempSync(path.join(tmpdir(), 'old-names-'));
 test.after(() => rmSync(out, { recursive: true, force: true }));
@@ -61,7 +55,7 @@ test('stripping the tags joins a split wordmark, so MERGE<span>LINE</span> canno
 });
 
 for (const [label, dir] of [['the app', app], ['the showcase', showcase], ['the landing page', site]] as const) {
-  test(`${label}: every page reads Kipdeck, never Mergeline or UGC Army`, () => {
+  test(`${label}: every page reads Kipdeck, never an earlier name`, () => {
     const pages = walk(dir).filter((f) => f.endsWith('.html'));
     assert.ok(pages.length > 0, `${label} built its pages`);
     for (const page of pages) {
@@ -75,9 +69,9 @@ for (const [label, dir] of [['the app', app], ['the showcase', showcase], ['the 
     }
   });
 
-  test(`${label}: no script or style carries an old name, but for the storage-key migration`, () => {
+  test(`${label}: no script or style carries an old name`, () => {
     for (const f of walk(dir).filter((p) => /\.(js|css)$/.test(p))) {
-      const code = readFileSync(f, 'utf8').replace(STORAGE_PREFIXES, '""');
+      const code = readFileSync(f, 'utf8');
       assert.doesNotMatch(code, OLD, `${path.relative(out, f)}: ${OLD.exec(code)?.[0]}`);
     }
   });

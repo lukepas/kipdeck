@@ -30,7 +30,7 @@ export function mulberry32(seed) {
 
 // A stream with helpers. rng('tiles') always yields the same sequence.
 export function rng(...seedParts) {
-  const next = mulberry32(hash32('ugc-army', ...seedParts));
+  const next = mulberry32(hash32('kipdeck', ...seedParts));
   return {
     next,
     range: (lo, hi) => lo + (hi - lo) * next(),

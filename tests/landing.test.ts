@@ -41,8 +41,6 @@ async function built(env: Record<string, string>): Promise<Served> {
 // terminal, the Source link); `closed` is the default build while the repository is private.
 const main = await built({ KIPDECK_REPO_PUBLIC: '1' });
 const closed = await built({});
-// A build set up with the names from before the rename (MERGELINE_*), which still work.
-const legacy = await built({ MERGELINE_BRAND: 'kipdeck', MERGELINE_WAITLIST_URL: 'https://wait.example.eu/api/join' });
 const withEndpoint = await built({ KIPDECK_WAITLIST_URL: 'https://wait.example.eu/api/join' });
 
 let browser: Browser | undefined;
@@ -59,7 +57,7 @@ if (browser) why = '';
 
 test.after(async () => {
   await browser?.close();
-  for (const s of [main, closed, legacy, withEndpoint]) s.close();
+  for (const s of [main, closed, withEndpoint]) s.close();
 });
 
 async function open(t: { after(fn: () => Promise<void>): void }, url = main.url, options: { width?: number; height?: number; dark?: boolean; reduced?: boolean } = {}) {
@@ -92,7 +90,7 @@ test('the copy is plain ASCII: no dash or quote glyphs, no ellipsis character', 
   for (const file of [SOURCE, path.join(ROOT, 'site', 'landing', 'brand.ts')]) assert.doesNotMatch(readFileSync(file, 'utf8'), /[\u2013\u2014\u2018\u2019\u201C\u201D\u2026\u00A0\u200B]/, file);
 });
 
-test('one name: the page says Kipdeck and never a name from before the rename', () => {
+test('one name: the page says Kipdeck and never another product name', () => {
   const a = texts(main.dir);
   assert.match(main.html, /<title>Kipdeck: the inbox for your AI coding agents<\/title>/);
   assert.match(main.html, /<meta property="og:title" content="Kipdeck: /);
@@ -102,14 +100,6 @@ test('one name: the page says Kipdeck and never a name from before the rename', 
   assert.equal(repoOf(main.html), 'https://github.com/zbagdzevicius/kipdeck');
   assert.match(main.html, /data-copy="git clone https:\/\/github\.com\/zbagdzevicius\/kipdeck kipdeck &amp;&amp; cd kipdeck &amp;&amp; npm install &amp;&amp; npm start -- --demo"/);
   assert.match(main.html, /"codeRepository":"https:\/\/github\.com\/zbagdzevicius\/kipdeck"/);
-});
-
-test('the MERGELINE_* build settings from before the rename still work', () => {
-  assert.match(legacy.html, /<title>Kipdeck: /);
-  assert.match(legacy.html, /data-endpoint="https:\/\/wait\.example\.eu\/api\/join"/);
-  assert.match(buildPage(main.html, { MERGELINE_NPM_PUBLISHED: '1' }), /data-copy="npx kipdeck --demo"/);
-  assert.match(buildPage(main.html, { MERGELINE_DEMO_URL: 'https://demo.example.eu/' }), /data-link="demo" href="https:\/\/demo\.example\.eu\/" rel="noopener">Try the demo</);
-  assert.throws(() => buildPage(main.html, { MERGELINE_DEMO_URL: 'http://demo.example.eu/' }), /KIPDECK_DEMO_URL must be https/);
 });
 
 test('every film and poster the page shows is in site/landing/public/media, and the build copies it', () => {

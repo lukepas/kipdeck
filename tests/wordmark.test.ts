@@ -1,7 +1,6 @@
-// The product is Kipdeck. The old names (Mergeline, UGC Army) must not show on the pages people see.
+// The product is Kipdeck. No earlier product name may show on the pages people see.
 // The wordmark is split over tags (`KIP<span>DECK</span>`), so a plain grep would miss `MERGE<span>LINE`:
-// this strips the tags first and reads the text a person would. Legacy-compat names in code
-// (storage-key.ts, brandenv.ts, the x-mergeline-key header) are not on a page and are not checked.
+// this strips the tags first and reads the text a person would.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

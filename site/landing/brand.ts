@@ -3,12 +3,12 @@
 // command points at, and the generated share card all read from here. Swap the name by editing BRANDS, or add
 // an entry and pick it at build time with KIPDECK_BRAND=<id> npm run build:site.
 //
-// tests/landing.test.ts builds the page and checks the old names (Mergeline, UGC Army) appear nowhere.
+// tests/landing.test.ts builds the page and checks no other product name appears.
 
 import { DESCRIPTION as COPY_DESCRIPTION, TAGLINE } from '../../src/shared/copy.ts';
 
 export interface Brand {
-  /** The id KIPDECK_BRAND (or the older MERGELINE_BRAND) selects. */
+  /** The id KIPDECK_BRAND selects. */
   id: string;
   /** The name as it is written in a sentence. */
   name: string;

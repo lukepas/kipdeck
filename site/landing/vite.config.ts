@@ -1,5 +1,5 @@
-// The landing page's build: site/landing/ into dist/site/ (or KIPDECK_SITE_OUT; the older
-// MERGELINE_* names still work, see site/env.mjs). The brand is chosen here (KIPDECK_BRAND, see
+// The landing page's build: site/landing/ into dist/site/ (or KIPDECK_SITE_OUT, see
+// site/env.mjs). The brand is chosen here (KIPDECK_BRAND, see
 // brand.ts) and written into the HTML, so a build says one name and only that one. site/build.mjs runs this, then fills in the deploy addresses.
 import { defineConfig, type Plugin } from 'vite';
 import { resolve } from 'node:path';

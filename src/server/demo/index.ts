@@ -32,8 +32,7 @@ export function setUpDemo(cfg: Config): DemoWorkspace | string {
 export function removeDemoHome(cfg: Config) {
   if (!cfg.demo?.temp) return;
   const root = path.dirname(cfg.dir);
-  // mergeline-demo- is the prefix from before the rename to Kipdeck.
-  if (!['kipdeck-demo-', 'mergeline-demo-'].some((p) => path.basename(root).startsWith(p))) return;
+  if (!path.basename(root).startsWith('kipdeck-demo-')) return;
   try {
     rmSync(root, { recursive: true, force: true, maxRetries: 3 });
   } catch {

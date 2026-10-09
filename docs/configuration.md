@@ -113,6 +113,4 @@ agent-office tunnel [office@address | url] [--port <n>] [--office-port <n>] [--n
   See docs/tunnel.md.
 ```
 
-Kipdeck was called Mergeline before. Its `MERGELINE_*` environment variables (`MERGELINE_DEMO`, `MERGELINE_DEMO_PACE`, `MERGELINE_TELEMETRY`, `MERGELINE_TELEMETRY_URL`) still work when the `KIPDECK_*` one is not set, and `MERGELINE_TELEMETRY=0` still keeps telemetry off. An office started from an older install and a newer `kipdeck open` still understand each other. The installers read their old `MERGELINE_*` settings too; an install made before the rename stays in `~/.local/share/mergeline` with its `mergeline` command until you remove it.
-
 Sign-ins last 7 days; `AGENT_OFFICE_SESSION_DAYS` sets it, from 1 to 90. What each of these protects against is in [Security](security.md).

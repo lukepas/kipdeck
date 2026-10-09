@@ -12,16 +12,8 @@
 #   KIPDECK_INSTALL_ONLY   1: install, but don't start it
 #   KIPDECK_TARBALL        install this package tarball (from `npm pack`) instead of the registry's
 
-#
-# The MERGELINE_* names from before the rename to Kipdeck still work when the KIPDECK_* one isn't set.
 
 $ErrorActionPreference = 'Stop'
-
-foreach ($name in 'VERSION', 'INSTALL_ONLY', 'TARBALL') {
-  if (-not (Test-Path "env:KIPDECK_$name") -and (Test-Path "env:MERGELINE_$name")) {
-    Set-Item "env:KIPDECK_$name" (Get-Item "env:MERGELINE_$name").Value
-  }
-}
 
 function Fail([string]$message) {
   Write-Host "kipdeck: $message" -ForegroundColor Red
