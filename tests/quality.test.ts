@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { DRAW_BUDGET, MOTION_BUDGET_MS, TIERS, TIER_LOOKS, autoTier, least, lower, tierOf } from '../src/client/features/quality/tiers.js';
 
-// Settings > Bridge > Quality (features/quality): which tier Auto starts from on which graphics, what
+// Settings > Deck > Quality (features/quality): which tier Auto starts from on which graphics, what
 // each tier draws. When Auto steps is tests/quality-governor.test.ts.
 
 test('Auto starts high on Apple silicon and discrete GPUs, in the middle on integrated ones, low in software', () => {

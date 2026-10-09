@@ -1,8 +1,10 @@
 // End to end: the home page's surface beyond the inbox, in the built office with `--demo` (its
 // scripted agents, at six times the script's pace) in a headless browser. The avatar menu is short and
 // in the inbox's words; Settings has exactly three panes (Account, Agents, Notifications) and nothing
-// of the 3D bridge; Numbers counts a merge the moment it lands; Help (?) has the loop and the six keys;
-// and every one of these windows closes with its top-right ✕ and with Esc.
+// of the 3D Deck; Numbers counts a merge the moment it lands; Help (?) has the loop and the six keys
+// and D; and every one of these windows closes with its top-right ✕ and with Esc. Enter the Deck in the
+// top bar (a row over the list on a phone): never Signal orange, D and Go to Deck take you to /deck,
+// and it hides when an admin switches the Deck lab off.
 // Skipped (not failed) when there's no build (npm run build), the build is older than the client's
 // sources, or there's no browser playwright-core can start.
 import { after, before, test } from 'node:test';
@@ -96,8 +98,10 @@ test('the avatar menu, three-pane Settings, Numbers after a merge, and Help, eac
   const item = (label: string) => page.locator('.menu-pop .menu-item', { hasText: label }).first();
   const modals = () => page.locator('#modal-root .modal').count();
 
-  // The menu: four rows in plain words. No boards, queue or Bridge view while their labs are off.
-  assert.deepEqual(await menu(), ['Numbers', 'Settings', 'Help and keys', 'Sign out']);
+  // The menu in plain words: with every lab on as the office ships, the boards and the queue first,
+  // then the four rows and Enter the Deck.
+  const rows = await menu();
+  for (const row of ['Issues', 'Pull requests', 'Task queue', 'Mission control', 'Numbers', 'Settings', 'Enter the Deck', 'Help and keys', 'Sign out']) assert.ok(rows.some((r) => r.startsWith(row)), `the menu has ${row}: ${rows.join(', ')}`);
 
   // Settings: three panes, none of the bridge's.
   await item('Settings').click();
@@ -152,7 +156,9 @@ test('the avatar menu, three-pane Settings, Numbers after a merge, and Help, eac
   const help = page.locator('.modal.keys-help');
   await help.waitFor();
   assert.equal(await help.locator('.help-loop li').count(), 4);
-  assert.equal(await help.locator('dt').count(), 6);
+  // The six keys, and D for the Deck while it's on.
+  assert.equal(await help.locator('dt').count(), 7);
+  assert.match(await help.locator('dl').innerText(), /Enter the Deck/);
   await help.locator('header .close').click();
   assert.equal(await modals(), 0, 'the ✕ closes Help');
   await page.keyboard.press('?');
@@ -162,4 +168,111 @@ test('the avatar menu, three-pane Settings, Numbers after a merge, and Help, eac
 
   assert.deepEqual(errors, []);
   await context.close();
+});
+
+test('Enter the Deck: in the top bar, never orange, D and Go to Deck go to /deck, a row on a phone, gone with the lab off', { timeout: 120_000 }, async (t) => {
+  if (why) return t.skip(why);
+  const context = await browser!.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+  t.after(() => context.close());
+  const page = await context.newPage();
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto(`${base}/login`);
+  assert.equal(await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD), 200);
+  await page.goto(`${base}/`);
+  const cta = page.locator('.hb #to-deck');
+  await cta.waitFor({ state: 'visible', timeout: 30_000 });
+  assert.equal(await cta.getAttribute('href'), '/deck');
+  assert.match(await cta.innerText(), /Enter the Deck/);
+  await page.locator('.sec-working .row').first().waitFor({ timeout: 30_000 });
+  await page.waitForFunction(() => !document.querySelector('#to-deck .deck-cta-live')?.classList.contains('hidden'));
+  assert.match(await cta.locator('.deck-cta-live').innerText(), /\d+\s*(at work|on deck)/);
+  // Ship-cyan, the Deck's colour: nothing in it is the Signal orange that means someone needs you.
+  const colours = await cta.evaluate((el) => {
+    const signal = getComputedStyle(document.documentElement).getPropertyValue('--signal').trim();
+    const probe = document.createElement('span');
+    probe.style.color = signal;
+    document.body.append(probe);
+    const orange = getComputedStyle(probe).color;
+    probe.remove();
+    const used = [el, ...el.querySelectorAll('*')].flatMap((n) => {
+      const s = getComputedStyle(n);
+      return [s.color, s.borderTopColor, s.backgroundColor];
+    });
+    return { orange, used };
+  });
+  assert.ok(!colours.used.includes(colours.orange), `Enter the Deck uses Signal orange (${colours.orange})`);
+  // The palette has Go to Deck.
+  await page.keyboard.press('Control+k');
+  await page.locator('.modal.palette').waitFor();
+  await page.keyboard.type('Go to Deck');
+  assert.ok(await page.locator('.modal.palette .pal-list', { hasText: 'Go to Deck' }).isVisible());
+  await page.keyboard.press('Escape');
+  // D, outside a box, goes to the Deck.
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await Promise.all([page.waitForURL(`${base}/deck`, { timeout: 15_000 }), page.keyboard.press('d')]);
+  await page.goBack();
+
+  // On a phone: a row over the list, at least 44px to tap, and nothing scrolls sideways.
+  const phone = await browser!.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, storageState: await context.storageState() });
+  t.after(() => phone.close());
+  const p2 = await phone.newPage();
+  await p2.goto(`${base}/`);
+  const row = p2.locator('#to-deck-row');
+  await row.waitFor({ state: 'visible', timeout: 30_000 });
+  assert.equal(await p2.locator('.hb #to-deck').isVisible(), false, 'the bar keeps its search box on a phone');
+  const box = (await row.boundingBox())!;
+  assert.ok(box.height >= 44 && box.x >= 12 && box.x + box.width <= 390 - 12, JSON.stringify(box));
+  assert.equal(await p2.evaluate(() => document.documentElement.scrollWidth), 390);
+
+  // On a laptop the pill gives way before the bar's context does: the project picker never shrinks,
+  // the demo's tag and command stay readable, and search keeps room to type in.
+  for (const width of [1024, 1440]) {
+    const lap = await browser!.newContext({ viewport: { width, height: 800 }, storageState: await context.storageState() });
+    t.after(() => lap.close());
+    const p3 = await lap.newPage();
+    await p3.goto(`${base}/`);
+    await p3.locator('.hb #to-deck').waitFor({ state: 'visible', timeout: 30_000 });
+    await p3.locator('#demo .demo-tag').waitFor({ timeout: 30_000 });
+    // No helper functions inside: the test runner's transform would name them with a helper the page lacks.
+    const bar = await p3.evaluate(() => {
+      const tag = document.querySelector('#demo .demo-tag')!;
+      return {
+        projectShrinks: getComputedStyle(document.getElementById('project')!).flexShrink,
+        tagCut: tag.scrollWidth > tag.clientWidth + 1,
+        codeWidth: document.querySelector('#demo .demo-run code')?.getBoundingClientRect().width ?? 0,
+        search: document.querySelector('.hb-search')!.getBoundingClientRect().width,
+        label: !!document.querySelector('.hb #to-deck .deck-cta-label')?.getClientRects().length,
+        scroll: document.documentElement.scrollWidth,
+      };
+    });
+    assert.equal(bar.projectShrinks, '0', `${width}: the project picker keeps its name`);
+    assert.equal(bar.tagCut, false, `${width}: the demo tag reads whole`);
+    if (width >= 1440) assert.ok(bar.codeWidth >= 50, `${width}: the demo's command keeps its first word (${bar.codeWidth}px)`);
+    assert.ok(bar.search >= 200, `${width}: search keeps its room (${bar.search}px)`);
+    assert.equal(bar.label, width >= 1440, `${width}: the pill says Enter the Deck only where the bar has room`);
+    assert.equal(bar.scroll, width);
+  }
+
+  // An admin switches the Deck lab off: the way in is gone, and D does nothing.
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ t: 'labs.set', patch: { bridge: false } }));
+      setTimeout(() => (ws.close(), resolve()), 500);
+    };
+  }));
+  await cta.waitFor({ state: 'hidden', timeout: 15_000 });
+  await page.keyboard.press('d');
+  await page.waitForTimeout(300);
+  assert.equal(new URL(page.url()).pathname, '/');
+  await page.evaluate(() => new Promise<void>((resolve) => {
+    const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ t: 'labs.set', patch: { bridge: true } }));
+      setTimeout(() => (ws.close(), resolve()), 500);
+    };
+  }));
+  await cta.waitFor({ state: 'visible', timeout: 15_000 });
+  assert.deepEqual(errors, []);
 });

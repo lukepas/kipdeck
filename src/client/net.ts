@@ -1,11 +1,12 @@
+import { loginUrlFor } from '../shared/deck';
 import type { ClientMsg, ServerMsg } from '../shared/protocol';
 import { lastFloor, store, type Profile, type Spot } from './state';
 
 type Handler = (msg: ServerMsg) => void;
 
-/** The sign-in page, coming back to the Bridge view afterwards if that's where you are (see login.ts). */
+/** The sign-in page, coming back to the Deck afterwards if that's where you are (see login.ts). */
 export function loginUrl(): string {
-  return location.pathname === '/bridge' ? '/login?next=/bridge' : '/login';
+  return loginUrlFor(location.pathname);
 }
 
 export class Net {

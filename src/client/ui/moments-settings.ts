@@ -1,4 +1,4 @@
-// Settings > Bridge > Celebrations and Alert conditions (features/moments, features/alert). Celebrations
+// Settings > Deck > Celebrations and Alert conditions (features/moments, features/alert). Celebrations
 // are earned by real events and come in tiers: Full plays them out, Cards only shows the ship's log card
 // alone, Off leaves only the merge beat and the jump, which mark the change itself. Alert conditions
 // step the room's light down while units wait on you, amber after a few minutes and red once one has

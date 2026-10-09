@@ -1,5 +1,5 @@
 // A celebration's card: the ship's log slip under the top bar, for a waypoint's numbers, the mission's
-// roll of the units that merged, or any moment that comes out as its card (Settings > Bridge >
+// roll of the units that merged, or any moment that comes out as its card (Settings > Deck >
 // Celebrations at Cards only, reduced motion, or one held too long behind a call). One at a time, the
 // newest in place of the last. It never takes the mouse: it shows while you keep walking and puts itself
 // away after a while. A ✕ top right puts it away now, and so does Esc while the mouse is free, which

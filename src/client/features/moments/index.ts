@@ -16,7 +16,7 @@
  *
  * Tier 1 and up wait while anyone needs the captain or is stuck, and while the lights come up from a
  * stand-down (features/alert); one at a time, a higher tier swallowing a lower one waiting, and one
- * held past ten minutes comes out as its card only. Settings > Bridge > Celebrations: Full, Cards only
+ * held past ten minutes comes out as its card only. Settings > Deck > Celebrations: Full, Cards only
  * or Off. Ship motion Off, reduced motion, Life at Calm or Silent running and a hidden tab turn the
  * gestures and sweeps into the card. No sound of its own, no hue beyond what the beats already use, and
  * the camera never moves.

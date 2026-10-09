@@ -12,7 +12,7 @@ The direction we took: **one inbox for every coding agent you run, built around 
 - **Self-hosted.** It runs on the engineer's laptop or the team's dev box. Code, prompts and the review record never leave it, which is what European and regulated teams ask first.
 - **The metric.** Every merge and send-back is a signed record: which agent and model, who reviewed it, how long it waited on a person. The top bar shows who is waiting now and the median wait today; Numbers shows the week.
 
-Everything that is not that loop is a lab, off by default, still compiled and tested.
+Everything that is not that loop is a lab, on by default (an admin can switch any off), still compiled and tested.
 
 ### Business model (for the pitch, not the app)
 
@@ -63,21 +63,21 @@ Three critics (an investor, a first user and an engineer) reviewed the build bef
 - **The demo's files** still carry a one-line `[demo]` header comment; the demo test requires everything the demo writes to say so.
 - **The real-agent recording** needs real CLI sign-ins and spends tokens; the cut here is the scripted demo, and says so.
 
-## What was cut or hidden, and how to bring it back
+## The labs, and how to switch them
 
-Nothing was deleted. Each lab is switched on by an admin in **Settings > Account > Open Labs...** (or Ctrl+K, Labs), or held on from the command line with `--labs <ids>` or `AGENT_OFFICE_LABS` (`all` for every one).
+Nothing was deleted. Every lab is on as Kipdeck ships, the Deck first: it is the strongest thing we show, so the home page's top bar has **Enter the Deck**. An admin switches any lab off in **Settings > Account > Open Labs...** (or Ctrl+K, Labs), and the command line holds labs on so nobody can switch them off, with `--labs <ids>` or `AGENT_OFFICE_LABS` (`all` for every one).
 
-| Hidden | Lab id | Bring it back |
+| What it shows | Lab id | Hold it on |
 | --- | --- | --- |
 | Issues, Pull requests, Task queue, Mission control in the menu and Ctrl+K | `boards` | `--labs boards` |
-| The 3D bridge link and the deck plan in the empty pane (`/bridge` itself always opens) | `bridge` | `--labs bridge` |
+| **Enter the Deck** in the top bar (and **D**) and the deck plan in the empty pane (`/deck` itself always opens) | `bridge` | `--labs bridge` |
 | Goals, milestones, the timeline and crew tabs, the Services board | `ops` | `--labs ops` |
 | The Review bay and the planning whiteboard | `meetings` | `--labs meetings` |
 | Voice chat, screen sharing, dictation | `voice` | `--labs voice` |
-| The bridge's mascot, ship's voice, hands, lounge, rituals, motion and soundscape | `ambience` | `--labs ambience` |
+| The Deck's mascot, ship's voice, hands, lounge, rituals, motion and soundscape | `ambience` | `--labs ambience` |
 | Proof of Merge: bounties, payouts, attestations, ERC-8004 reputation, x402, `/pom/` | `proof` | `--labs proof`, or any chain flag (`--x402`, `--attest`, `--reputation`) |
 
-Also moved, not removed: the Get started checklist (under the list; none in the demo), the usage-numbers switch (Settings > Account), the terminal's quick keys (behind **Keys**), the Changes footer's Commit and Discard (shown while something is uncommitted), the 3D Bridge view on the landing page (the docs and `docs/img/bridge-wall.png`), and the 3D Bridge in the video (`REC_BRIDGE=1 node design/record-demo.mjs`).
+Also moved, not removed: the Get started checklist (under the list; none in the demo), the usage-numbers switch (Settings > Account), the terminal's quick keys (behind **Keys**), the Changes footer's Commit and Discard (shown while something is uncommitted), the 3D Deck on the landing page (the docs and `docs/img/bridge-wall.png`), and the 3D Deck in the video (`REC_BRIDGE=1 node design/record-demo.mjs`).
 
 ## Time to value and click counts
 

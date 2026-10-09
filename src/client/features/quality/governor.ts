@@ -1,5 +1,5 @@
 /**
- * Auto's judgement of the frames (Settings > Bridge > Quality at Auto), as plain logic with no
+ * Auto's judgement of the frames (Settings > Deck > Quality at Auto), as plain logic with no
  * Three.js and no clock of its own, so tests/quality-governor.test.ts can feed it made-up frame
  * streams. features/quality/index.ts feeds it every frame's gap and applies what it says.
  *

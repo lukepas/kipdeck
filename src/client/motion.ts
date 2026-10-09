@@ -1,4 +1,4 @@
-// Less motion: asked for by the system (prefers-reduced-motion), or in Settings > Bridge with Ship
+// Less motion: asked for by the system (prefers-reduced-motion), or in Settings > Deck with Ship
 // motion at Off. Either one stills the whole office: the 3D deck reads `matches` (ctx.reduceMotion)
 // for its glides, flights, beats and the space outside, and the page's CSS reads the root's
 // data-motion="reduce" the same as the media query. Calm keeps the deck's own motion and only slows

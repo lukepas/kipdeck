@@ -1,7 +1,7 @@
 /**
  * Quality's row in the HUD menu (Tab), under Deck: the tier the deck draws at now, as the chip in
  * Settings says it ('Auto - running at High', and Auto's last step), a one-click 'Try High' when Auto
- * is running under the best these graphics draw, and the row itself opening Settings > Bridge.
+ * is running under the best these graphics draw, and the row itself opening Settings > Deck.
  */
 import type { HudAction } from '../../ui/menu';
 import { canTryHigh, menuText, qualityStatus, tryHigh, TIER_NAME } from './status';
@@ -16,7 +16,7 @@ export function qualityMenuAction(openBridge: () => void): HudAction {
       const s = qualityStatus();
       return s ? menuText(s) : '';
     },
-    title: () => 'How much the 3D deck draws: Settings > Bridge > Quality',
+    title: () => 'How much the 3D deck draws: Settings > Deck > Quality',
     extra: () => {
       const s = qualityStatus();
       if (!s || !canTryHigh(s)) return undefined;

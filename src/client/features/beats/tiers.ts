@@ -110,7 +110,7 @@ export function tierOf(e: TimelineEvent, history: readonly TimelineEvent[], c: T
 
 /**
  * How a moment shows: played out ('play'), as its card only ('card'), or not at all ('none').
- * Settings > Bridge > Celebrations at Off shows none (the merge beat and the jump still mark the
+ * Settings > Deck > Celebrations at Off shows none (the merge beat and the jump still mark the
  * change), Cards only shows the card; Ship motion Off, the system's reduced motion, Life at Calm or
  * Silent running, a hidden tab, and one held too long behind a call all come out as the card.
  */

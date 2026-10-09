@@ -28,8 +28,12 @@ export const pageRoutes = {
   favicon: { path: '/favicon.svg', auth: 'public', handle: page('favicon.svg') },
   // The home page: the inbox of every agent, ranked by what needs you, without the 3D (lite.ts).
   home: { path: ['/', '/index.html'], auth: 'session', handle: page('index.html') },
-  // The 3D bridge (main.ts), a view of its own: the home page never loads it.
-  bridge: { path: ['/bridge', '/bridge.html'], auth: 'session', handle: page('bridge.html') },
+  // The Deck: the 3D view of the same agents (main.ts, built as bridge.html), a page of its own the
+  // home page never loads.
+  deck: { path: ['/deck', '/bridge.html'], auth: 'session', handle: page('bridge.html') },
+  // The Deck's old address: links, bookmarks and wall displays pointed at /bridge land on /deck with
+  // their query (the browser keeps the #hash across the redirect).
+  bridge: { path: '/bridge', auth: 'session', handle: (_ctx, { res, url }) => void res.writeHead(302, { location: `/deck${url.search}` }).end() },
   // Where the 2D view used to be: it is the home page now. Old links and bookmarks land there.
   lite: { path: ['/lite', '/lite.html'], auth: 'session', handle: (_ctx, { res, url }) => void res.writeHead(302, { location: `/${url.search}` }).end() },
   /** Anything else in the bundle; last, since it answers every path. */

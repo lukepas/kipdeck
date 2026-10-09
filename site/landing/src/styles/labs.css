@@ -64,7 +64,7 @@
 .bento.staged .switch i { transition: left 380ms var(--ease-spring), background-color 300ms; }
 .bento.staged .tile:not(.on) .switch { background: var(--surface-3); border-color: var(--line-strong); }
 .bento.staged .tile:not(.on) .switch i { left: 2px; background: var(--muted); }
-.bento.staged .tile.on::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 40%; pointer-events: none; background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--ship) 14%, transparent) 90%, var(--ship)); opacity: 0; animation: power 900ms var(--ease-out); }
+.bento.staged .tile.on.power::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 40%; pointer-events: none; background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--ship) 14%, transparent) 90%, var(--ship)); opacity: 0; animation: power 900ms var(--ease-out); }
 @keyframes power { 0% { opacity: 1; transform: translateY(-100%); } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(250%); } }
 
 /* ---------- 10 Teams ---------- */

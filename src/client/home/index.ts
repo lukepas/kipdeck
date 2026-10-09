@@ -1,5 +1,5 @@
 // The inbox at /: puts its parts together on the page lite.ts set up. The top bar (the demo's pill, the
-// project picker, Mine or Team, search, today's pulse, Deploy agent and the avatar menu), the list on
+// project picker, Mine or Team, search, today's pulse, Enter the Deck, Deploy agent and the avatar menu), the list on
 // the left with the checklist and Shipped today under it, the selected agent's pane on the right, the
 // keys, and the wait clocks that tick in place (clock.ts).
 
@@ -27,6 +27,7 @@ import { installPane, paneMessage } from './pane';
 import { openPalette, type Command } from './palette';
 import { renderChecklist, renderShipped } from './shipped';
 import { renderPulse } from './pulse';
+import { deckCommands, deckMenuEntry, installDeckCta, renderDeckCta } from './deck-cta';
 import { markChanges } from './motion';
 import { askSetup, onSetupChange, setupCard, setupMessage } from './setup';
 import { demoMessage } from './demo';
@@ -85,6 +86,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     home.change();
   });
 
+  installDeckCta();
   $('btn-deploy').prepend(icon('plus', 16));
   $('btn-deploy').addEventListener('click', () => actions.deploy());
 
@@ -99,8 +101,8 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     { label: 'While you were away', icon: 'clock', run: () => recallDigest(showDigest) },
     { label: 'Settings', hint: 'Account, agents, notifications', icon: 'settings', run: openSettings },
     { label: 'Light or dark', icon: 'contrast', run: theme },
-    { label: 'Labs', hint: 'Bridge view, meetings, voice...', icon: 'labs', run: () => actions.openLabs() },
-    ...(store.lab('bridge') ? [{ label: 'Bridge view', hint: '3D', icon: 'ship' as const, run: () => location.assign('/bridge') }] : []),
+    ...deckCommands(),
+    { label: 'Labs', hint: 'The Deck, meetings, voice...', icon: 'labs', run: () => actions.openLabs() },
     { label: 'Help and keys', hint: '?', icon: 'help', run: openHelp },
   ];
   const palette = () => openPalette(commands);
@@ -140,7 +142,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
       ...work,
       { label: 'Numbers', icon: 'plot', run: openNumbers },
       { label: 'Settings', icon: 'settings', run: openSettings },
-      store.lab('bridge') ? { label: 'Bridge view', icon: 'ship', run: () => location.assign('/bridge') } : null,
+      deckMenuEntry(),
       { label: 'Help and keys', icon: 'help', note: '?', run: openHelp },
       { label: 'Sign out', icon: 'logout', run: () => void fetch('/api/logout', { method: 'POST' }).finally(() => location.assign('/login')) },
     ];
@@ -193,7 +195,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     renderPulse([$('pulse'), $('pulse-list')], openNumbers);
     renderOwner($('owner'));
     renderDigest();
-    $('to-bridge').classList.toggle('hidden', !store.lab('bridge'));
+    renderDeckCta();
     paintAvatar();
   };
   home.on(renderAll);

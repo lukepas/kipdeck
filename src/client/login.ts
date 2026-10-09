@@ -1,6 +1,7 @@
 import { mountSigninArt } from './signin-art';
 import { TAGLINE } from '../shared/copy';
 import { openCommand } from '../shared/demo';
+import { DECK_PATH, isDeckPath } from '../shared/deck';
 
 mountSigninArt();
 
@@ -14,8 +15,8 @@ const error = document.getElementById('error') as HTMLParagraphElement;
 const submit = document.getElementById('submit') as HTMLButtonElement;
 
 const NAME_KEY = 'agent-office.login-name';
-/** Where to go once in: the Bridge view if that's where you were headed (see loginUrl in net.ts), else home. */
-const NEXT = new URLSearchParams(location.search).get('next') === '/bridge' ? '/bridge' : '/';
+/** Where to go once in: the Deck if that's where you were headed (see loginUrl in net.ts), else home. */
+const NEXT = isDeckPath(new URLSearchParams(location.search).get('next') ?? '') ? DECK_PATH : '/';
 
 // A sign-in link from the office's terminal (/login#key=...): it works once, so take it out of the
 // address bar and trade it for a session. The key is after the #, so it never reaches a server log.

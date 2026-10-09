@@ -63,7 +63,7 @@ export type ShipMotion = (typeof SHIP_MOTIONS)[number];
 export const LIGHTINGS = ['auto', 'night', 'day'] as const;
 export type Lighting = (typeof LIGHTINGS)[number];
 /**
- * Settings > Bridge > Quality: how much the 3D deck draws (features/quality). Auto starts from what the
+ * Settings > Deck > Quality: how much the 3D deck draws (features/quality). Auto starts from what the
  * graphics are and steps down by itself when frames fall behind; the others hold where you put them.
  */
 export const QUALITIES = ['auto', 'low', 'medium', 'high'] as const;
@@ -72,7 +72,7 @@ export type Quality = (typeof QUALITIES)[number];
 export const BRIGHTNESS_STEPS = 2;
 
 /**
- * Settings > Bridge > Life: how much the bridge's life moves. Full as is; Calm drops the gestures
+ * Settings > Deck > Life: how much the bridge's life moves. Full as is; Calm drops the gestures
  * (salutes, hails, idle tricks); Silent running stops all ambient life and slows the stars to a crawl,
  * while every attention state keeps its full strength (features/giveway).
  */
@@ -86,13 +86,13 @@ export type LifeLevel = (typeof LIFE_LEVELS)[number];
 export const LIFE_PARTS = ['destination', 'fleet', 'sorties', 'epithets', 'droid', 'mascot', 'relay'] as const;
 export type LifePart = (typeof LIFE_PARTS)[number];
 export const LIFE_PART_DEFAULTS: Readonly<Record<LifePart, boolean>> = { destination: true, fleet: true, sorties: true, epithets: true, droid: true, mascot: true, relay: true };
-/** Settings > Bridge > Ship's voice (VESPER, features/vesper): with humour, plain status lines only, or silent. */
+/** Settings > Deck > Ship's voice (VESPER, features/vesper): with humour, plain status lines only, or silent. */
 export const VOICE_MODES = ['on', 'plain', 'off'] as const;
 export type VoiceMode = (typeof VOICE_MODES)[number];
-/** Settings > Bridge > Celebrations (features/moments): the tiered moments in full, as cards only, or off (the merge beat and the jump stay). */
+/** Settings > Deck > Celebrations (features/moments): the tiered moments in full, as cards only, or off (the merge beat and the jump stay). */
 export const CELEBRATION_MODES = ['full', 'cards', 'off'] as const;
 export type CelebrationMode = (typeof CELEBRATION_MODES)[number];
-/** Settings > Bridge > Alert conditions (features/alert): on or off, and the minutes a wait takes to go amber and a stuck unit red. */
+/** Settings > Deck > Alert conditions (features/alert): on or off, and the minutes a wait takes to go amber and a stuck unit red. */
 export interface AlertSettings {
   on: boolean;
   amberMin: number;
@@ -102,10 +102,10 @@ export const AMBER_MINUTES = [2, 5, 10, 15] as const;
 export const RED_MINUTES = [5, 10, 20, 30] as const;
 /** Amber at WAIT_AMBER_MS by default: the same minute every wait clock turns aging (shared/wait.ts). */
 export const ALERT_DEFAULTS: Readonly<AlertSettings> = { on: true, amberMin: WAIT_AMBER_MS / 60_000, redMin: 10 };
-/** Settings > Bridge > Hands (features/hands): Auto draws your first-person hands at High and Medium, On at every tier, Off never. */
+/** Settings > Deck > Hands (features/hands): Auto draws your first-person hands at High and Medium, On at every tier, Off never. */
 export const HANDS_MODES = ['auto', 'on', 'off'] as const;
 export type HandsMode = (typeof HANDS_MODES)[number];
-/** Settings > Bridge > Start of watch (features/launch): the launch and the debrief, the debrief only, or neither. */
+/** Settings > Deck > Start of watch (features/launch): the launch and the debrief, the debrief only, or neither. */
 export const WATCH_MODES = ['full', 'debrief', 'off'] as const;
 /**
  * Settings > Sound & voice > Mixer (sound/mix.ts): each group of the deck's sound at its own level, 0-1,
@@ -139,31 +139,31 @@ export interface Settings {
   missionTab: MissionTab;
   /** The 2D view lists the workers on every floor, not just yours. */
   allFloors: boolean;
-  /** Settings > Bridge: how space moves outside (Off stills the whole office, as the system's reduce-motion setting does). */
+  /** Settings > Deck: how space moves outside (Off stills the whole office, as the system's reduce-motion setting does). */
   shipMotion: ShipMotion;
-  /** Settings > Bridge: Quality, how much the 3D deck draws (Auto, Low, Medium or High). */
+  /** Settings > Deck: Quality, how much the 3D deck draws (Auto, Low, Medium or High). */
   quality: Quality;
-  /** Settings > Bridge: the bridge's lights, and the page's colors with them (see lighting.ts). */
+  /** Settings > Deck: the bridge's lights, and the page's colors with them (see lighting.ts). */
   lighting: Lighting;
-  /** Settings > Bridge: Brightness, a whole step from -BRIGHTNESS_STEPS to BRIGHTNESS_STEPS on top of the lights' mode. */
+  /** Settings > Deck: Brightness, a whole step from -BRIGHTNESS_STEPS to BRIGHTNESS_STEPS on top of the lights' mode. */
   brightness: number;
-  /** Settings > Bridge > Life: Full, Calm or Silent running. */
+  /** Settings > Deck > Life: Full, Calm or Silent running. */
   life: LifeLevel;
-  /** Settings > Bridge > Life: each part of the world outside on or off. */
+  /** Settings > Deck > Life: each part of the world outside on or off. */
   lifeParts: Record<LifePart, boolean>;
-  /** Settings > Bridge > Ship's voice: On, Plain only or Off. */
+  /** Settings > Deck > Ship's voice: On, Plain only or Off. */
   voice: VoiceMode;
-  /** Settings > Bridge > Celebrations: Full, Cards only or Off. */
+  /** Settings > Deck > Celebrations: Full, Cards only or Off. */
   celebrations: CelebrationMode;
-  /** Settings > Bridge > Alert conditions. */
+  /** Settings > Deck > Alert conditions. */
   alerts: AlertSettings;
-  /** Settings > Bridge > Start of watch: Full, Debrief only or Off. */
+  /** Settings > Deck > Start of watch: Full, Debrief only or Off. */
   watch: WatchMode;
-  /** Settings > Bridge > Momentum display: the drive core and the fleet's log on the ticker (features/drive). */
+  /** Settings > Deck > Momentum display: the drive core and the fleet's log on the ticker (features/drive). */
   momentum: boolean;
-  /** Settings > Bridge > Turnaround clock: the pit wall in the Review bay (features/turnaround). */
+  /** Settings > Deck > Turnaround clock: the pit wall in the Review bay (features/turnaround). */
   turnaround: boolean;
-  /** Settings > Bridge > Hands: your gloved hands in front of you in first person. */
+  /** Settings > Deck > Hands: your gloved hands in front of you in first person. */
   hands: HandsMode;
 }
 

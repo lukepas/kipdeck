@@ -1,6 +1,6 @@
 # Proof of merge on Base Sepolia
 
-Kipdeck's Proof of Merge lab, testnet only and off by default.
+Kipdeck's Proof of Merge lab, testnet only. The lab is on as Kipdeck ships, but attestations stay off unless the office is started with `--attest`.
 
 Back to the [README](../README.md).
 

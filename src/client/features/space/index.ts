@@ -6,7 +6,7 @@
  * ship-cyan only, and never moves the camera (DESIGN.md, rule 1).
  *
  * How fast the ship makes way is the one ambient cue tied to the deck: more merges in the last hour,
- * a little faster; no unit deployed, or all parked, and it holds station. Settings > Bridge > Ship
+ * a little faster; no unit deployed, or all parked, and it holds station. Settings > Deck > Ship
  * motion slows it all to half with no flybys and no streaks (Calm) or stills it (Off, as reduced
  * motion does), and a waypoint reached then only changes the view, a 400 ms crossfade. While a unit has
  * just started needing you or got stuck, the flybys dim and wait, and no surge plays. A jump widens
@@ -113,7 +113,7 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   const banner = new Banner();
   const glow = new JumpGlow();
   scene.add(sky.mesh, stars.group, flybys.far, flybys.near, tunnel.mesh, banner.mesh);
-  // Settings > Bridge > Quality: Low streams two of the star layers, the others all three.
+  // Settings > Deck > Quality: Low streams two of the star layers, the others all three.
   parts.quality.on((_, look) => void (stars.moving = look.starLayers));
   VIEWPORT_GLASS.emissive.set(DECK.ship);
   VIEWPORT_GLASS.emissiveIntensity = 0;
@@ -165,7 +165,7 @@ export function installSpace(ctx: Ctx, parts: Pick<Parts, 'stage' | 'lights' | '
   const outside: OutsideLight = { wash: 0, washDir: new THREE.Vector3(), washColor: new THREE.Color(), glint: 0, glintDir: new THREE.Vector3(), flash: 0 };
   const glintColor = new THREE.Color();
 
-  // Silent running (Settings > Bridge > Life) slows space to a crawl: no streaks, flybys or meteors.
+  // Silent running (Settings > Deck > Life) slows space to a crawl: no streaks, flybys or meteors.
   const scale = () => motionScale(ctx.reduceMotion.ship) * starScale(ctx.settings.life);
   const visible = () => typeof document === 'undefined' || document.visibilityState !== 'hidden';
 

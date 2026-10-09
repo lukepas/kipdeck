@@ -14,7 +14,7 @@
  *
  * It gives way: while a unit on this deck needs you or is stuck the ships hold still and the salutes and
  * hails are dropped (not queued); only the beacons stay. Ship motion Off or reduced motion hold them
- * still too, Calm (Settings > Bridge > Life) drops the salutes and hails, Silent running stills them.
+ * still too, Calm (Settings > Deck > Life) drops the salutes and hails, Silent running stills them.
  */
 import * as THREE from 'three';
 import type { FloorInfo } from '../../../shared/protocol';

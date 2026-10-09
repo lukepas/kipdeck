@@ -7,9 +7,9 @@
  *
  * It gives way: the moment a unit needs you or gets stuck, Bolt drops its errand, goes to that pod's
  * entrance and holds completely still with its lens on the unit, off the line from you to the glyph and
- * well outside its ring; while anyone waits it does no rounds. Calm (Settings > Bridge > Life) keeps the
+ * well outside its ring; while anyone waits it does no rounds. Calm (Settings > Deck > Life) keeps the
  * errands and drops the rounds and the merge turn; Silent running, Ship motion Off and reduced motion
- * dock it on its wall charger. It ships on (Settings > Bridge > Life > Bridge droid turns it off), and
+ * dock it on its wall charger. It ships on (Settings > Deck > Life > Bridge droid turns it off), and
  * the Overview never shows it (bridge layer). Its turret looks at what it serves, its arm folds in
  * flight and reaches down at a console, it hops as it hands its work over, and a short ship-cyan trail
  * follows the crate so a handoff reads from the conn.

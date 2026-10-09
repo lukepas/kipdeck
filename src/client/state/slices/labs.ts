@@ -13,7 +13,7 @@ declare module '../store' {
   }
 }
 
-/** Labs: the parts beyond the inbox, each off until an admin turns it on. */
+/** Labs: the parts beyond the inbox, each on until an admin switches it off. */
 export const labs: Slice = {
   init(s) {
     s.labs = undefined;

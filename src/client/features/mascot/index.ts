@@ -9,7 +9,7 @@
  * He gives way: while anyone needs you he does no laps, gestures or greetings. He keeps his own space:
  * walk up close and he steps back, and the camera never ends up inside him (he dithers out within a
  * metre and is not drawn closer than half a metre). Ship motion Off, reduced motion and Silent running
- * park him asleep in his nest, every pose a cut. A hidden tab does no work. Settings > Bridge > Life >
+ * park him asleep in his nest, every pose a cut. A hidden tab does no work. Settings > Deck > Life >
  * Bridge mascot turns him off. He lives on the bridge layer, so the Overview never shows him, and he
  * carries no state shape or state hue.
  */

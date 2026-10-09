@@ -22,7 +22,7 @@
  * still counts), as they are while the tab is hidden. Ship motion Off, reduced motion and Silent
  * running hold its turn, tracers, traffic and breath still, its beats play in place and the jump
  * becomes a fade. Its halos fade wherever its outline comes near a board's face, and through the
- * countdown. Settings > Bridge > Life > Relay beacon removes it whole: no objects, no draws, no
+ * countdown. Settings > Deck > Life > Relay beacon removes it whole: no objects, no draws, no
  * listeners. Three draws at High and Medium, two at Low (no threads, no glow); the Overview doesn't
  * see it (the bridge layer), nothing in it can be clicked.
  */
@@ -561,7 +561,7 @@ export function installRelay(ctx: Ctx, parts: Pick<Parts, 'space' | 'quality' | 
     };
   }
 
-  // Settings > Bridge > Life > Relay beacon: on mounts it all, off takes every object, draw and listener away.
+  // Settings > Deck > Life > Relay beacon: on mounts it all, off takes every object, draw and listener away.
   const sync = () => {
     const on = parts.giveWay.wants('relay');
     if (on && !live) live = mount();

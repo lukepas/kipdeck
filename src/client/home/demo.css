@@ -8,6 +8,9 @@
 .demo-run .copy { flex: none; }
 .demo-run code { min-width: 0; max-width: 32ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hb-demo .fix code { background: var(--surface-1); font-size: 11px; }
+/* The command never shrinks past its first word, whatever else is in the bar (Enter the Deck, the pulse). */
+.hb-demo .demo-run code { min-width: 9ch; }
+.hb-demo .demo-tag { flex: none; }
 a.demo-lead { padding-right: 6px; color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
 a.demo-lead:hover { text-decoration-thickness: 2px; }
 /* Beside the search box only the command (or the hosted demo's ask for access) stays; the full note is the tooltip. */

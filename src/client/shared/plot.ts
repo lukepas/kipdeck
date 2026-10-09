@@ -4,7 +4,7 @@
 // Proof corner (with Proof of Merge on in Labs), the Review bay, the Standby bench, the Deck lift and the
 // title block. Units are their state glyphs with their call signs, and a unit that needs you stands on
 // its pod's ready line in ranking order, as it does on the deck. No three.js: the home page draws it
-// live beside the list, with Bridge view on in Labs.
+// live beside the list while the Deck lab is on (it ships on).
 import { TAGLINE, UPSTREAM_CREDIT_SHORT } from '../../shared/copy';
 import './plot.css';
 import {

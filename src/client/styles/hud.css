@@ -171,7 +171,7 @@ body.overview .bb-keys .bb-key:not([data-key='N']) { visibility: hidden; }
   .dock-btn .lbl { display: none; }
   .bb-key .kw { display: none; }
 }
-/* A phone in the Bridge view (the home page is made for phones; this is for whoever opens /bridge): one surface. The rail is
+/* A phone in the Deck (the home page is made for phones; this is for whoever opens /deck): one surface. The rail is
    a bottom sheet the Units button opens, the counters are glyph and number in fixed widths, and nothing
    floats over the deck but the toasts under the bar. */
 @media (max-width: 640px) {

@@ -179,7 +179,7 @@ export function flashPeak(mode: 'night' | 'day', ship: ShipMotion): number {
 /**
  * Whether a waypoint reached now jumps the ship (true) or only crossfades the view: only at Full ship
  * motion, and only while the page is in view (a jump that came in while the tab was hidden would play
- * out of nowhere the moment you came back), and not under Silent running (Settings > Bridge > Life).
+ * out of nowhere the moment you came back), and not under Silent running (Settings > Deck > Life).
  */
 export function jumpsNow(ship: ShipMotion, visible: boolean, life: LifeLevel = 'full'): boolean {
   return ship === 'full' && visible && life !== 'silent';

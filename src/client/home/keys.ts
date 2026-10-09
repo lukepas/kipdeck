@@ -1,7 +1,7 @@
-// The inbox's keys, six of them: Ctrl+K the command palette, N to deploy an agent, Enter for the
+// The inbox's keys, six of them and D: Ctrl+K the command palette, N to deploy an agent, Enter for the
 // selected row's primary action (which is never Merge: that's the pane's, behind a hold), Esc to step
 // back (or, while a merge is held, to undo it; u does too), / to search and ? for Help (the loop and
-// these keys). The arrow keys (and j and k) move the selection. None of them fire while you type in a box or the terminal, or
+// these keys), and D to enter the Deck while it's on (home/deck-cta.ts). The arrow keys (and j and k) move the selection. None of them fire while you type in a box or the terminal, or
 // while a window is open; Esc in the pane's terminal steps back to the list instead of reaching the
 // agent (Ctrl+[ or the keypad's Esc sends one).
 
@@ -9,6 +9,7 @@ import { DOCS_URL, PRODUCT, UPSTREAM_CREDIT } from '../../shared/copy';
 import { rowAction } from '../../shared/inbox';
 import { h, modalOpen, openModal } from '../ui/dom';
 import type { Actions } from './actions';
+import { deckOn, goToDeck } from './deck-cta';
 import { listedOrder, rankOf } from './list';
 import { menuOpen } from './menu';
 import { latestHeld } from './merge-hold';
@@ -22,6 +23,9 @@ export const SHORTCUTS: readonly [string, string][] = [
   ['/', 'Search agents'],
   ['?', 'This help'],
 ];
+
+/** Shown in Help while the Deck is on. */
+export const DECK_SHORTCUT: readonly [string, string] = ['D', 'Enter the Deck'];
 
 /** The loop the inbox is built around, in four verbs. */
 export const LOOP: readonly [string, string][] = [
@@ -43,7 +47,7 @@ export function openHelp() {
       h('h3.help-h', {}, 'How it works'),
       h('ol.help-loop', {}, ...LOOP.map(([verb, what]) => h('li', {}, h('b', {}, verb), h('span', {}, what)))),
       h('h3.help-h', {}, 'Keys'),
-      h('dl', {}, ...SHORTCUTS.flatMap(([k, what]) => [h('dt', {}, ...k.split(' ').map((x) => h('kbd', {}, x))), h('dd', {}, what)])),
+      h('dl', {}, ...[...SHORTCUTS, ...(deckOn() ? [DECK_SHORTCUT] : [])].flatMap(([k, what]) => [h('dt', {}, ...k.split(' ').map((x) => h('kbd', {}, x))), h('dd', {}, what)])),
       h('p.keys-note', {}, 'Up and Down (or j and k) move through the list.'),
       h('p.keys-note', {}, h('a', { href: DOCS_URL, target: '_blank', rel: 'noopener' }, 'Read the docs'), ' for teams, servers, Labs and every option.'),
       h('h3.help-h', {}, 'About'),
@@ -120,6 +124,9 @@ export function installKeys(actions: Actions, palette: () => void, search: HTMLI
       } else if (e.key === 'n' || e.key === 'N') {
         e.preventDefault();
         actions.deploy();
+      } else if ((e.key === 'd' || e.key === 'D') && deckOn()) {
+        e.preventDefault();
+        goToDeck();
       } else if (e.key === 'ArrowDown' || e.key === 'j') {
         e.preventDefault();
         move(1);

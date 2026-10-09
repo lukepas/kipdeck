@@ -1,5 +1,5 @@
 /**
- * Settings > Bridge > Quality: Auto, Low, Medium or High, how much the 3D deck draws (the tiers are
+ * Settings > Deck > Quality: Auto, Low, Medium or High, how much the 3D deck draws (the tiers are
  * ./tiers.ts). Auto starts from what the graphics are and judges the frames as they come (./governor.ts):
  * it steps down a tier when they keep falling behind, back up when they have room to spare, holds at
  * Medium on graphics that start at High unless frames are very slow, and throws away the frames after

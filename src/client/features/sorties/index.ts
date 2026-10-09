@@ -10,7 +10,7 @@
  *
  * It gives way with the bridge: the patrols slow for 3 s when a unit starts needing you or gets stuck,
  * and slow to stillness in that pod while it lasts. Ship motion Off or reduced motion hold every fighter
- * where it is (the picket still counts true); Calm (Settings > Bridge > Life) and Silent running send
+ * where it is (the picket still counts true); Calm (Settings > Deck > Life) and Silent running send
  * the patrols home and keep the picket. Sixteen fighters at most; the picket's caption counts the rest.
  */
 import * as THREE from 'three';

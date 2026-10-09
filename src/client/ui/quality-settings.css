@@ -1,4 +1,4 @@
-/* Settings > Bridge > Quality: the live chip under the row (ui/quality-settings.ts). The meter is the tier
+/* Settings > Deck > Quality: the live chip under the row (ui/quality-settings.ts). The meter is the tier
    in three neutral bars, filled to the tier drawn now, so a step down shows before the words are read.
    No state hue: those are kept for what a unit is doing. */
 .q-chip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 10px; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--line-strong); border-radius: var(--radius); font-size: 13px; }

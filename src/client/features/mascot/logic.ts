@@ -16,7 +16,7 @@ export type Mode = 'off' | 'parked' | 'hide' | 'sit' | 'window' | 'twirl' | 'zoo
 
 /** What is true on the deck this moment, for pickMode. */
 export interface ModeInputs {
-  /** Settings > Bridge > Life > Bridge mascot. */
+  /** Settings > Deck > Life > Bridge mascot. */
   on: boolean;
   /** Ship motion Off or the system's reduced motion; or `motion` 0 (Silent running). */
   frozen: boolean;

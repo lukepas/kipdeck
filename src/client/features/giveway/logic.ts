@@ -1,5 +1,5 @@
 // The rules every part of the bridge's life plays by, kept free of three.js so the tests can pin them:
-// what each Life level (Settings > Bridge > Life) lets through, how fast ambient life may move under
+// what each Life level (Settings > Deck > Life) lets through, how fast ambient life may move under
 // Ship motion and reduced motion, and how a set piece waits behind attention. Attention always wins:
 // a unit that starts needing you or gets stuck ducks every bit of life for a few seconds, its pod stays
 // hushed while it lasts, and everything runs a little quieter while anyone waits on you.

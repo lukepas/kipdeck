@@ -122,11 +122,11 @@ export interface Parts {
   proofCorner: Made<typeof installProofCorner>;
   /** Space outside the glass: the sky, the stars, the flybys, the surge and the jump (see features/space). */
   space: Made<typeof installSpace>;
-  /** Settings > Bridge > Quality: the tier the deck draws at, Auto's or yours (see features/quality). */
+  /** Settings > Deck > Quality: the tier the deck draws at, Auto's or yours (see features/quality). */
   quality: Made<typeof installQuality>;
   /** The bridge's lights: Night, Day or Auto, and Brightness (see features/lights). */
   lights: Made<typeof installLights>;
-  /** Life giving way to attention, and Settings > Bridge > Life (see features/giveway). */
+  /** Life giving way to attention, and Settings > Deck > Life (see features/giveway). */
   giveWay: Made<typeof installGiveWay>;
   /** VESPER, the ship's mind: its lines for the ticker and the caption, and for a card's subtitle (see features/vesper). */
   vesper: Made<typeof installVesper>;

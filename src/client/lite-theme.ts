@@ -1,5 +1,5 @@
 // The home page's light or dark: the light whiteprint (tokens.css, [data-theme=print]) or the slate
-// deck. It is the bridge's lights (Settings > Bridge in the 3D office, lighting.ts): Day is the
+// deck. It is the bridge's lights (Settings > Deck in the 3D office, lighting.ts): Day is the
 // whiteprint, Night the slate, and Auto, until someone picks, follows the system's light or dark
 // setting. The pick is this browser's, kept with its settings; the avatar menu and Ctrl+K switch it.
 import { lightModeOf, markPageLight, saveLighting, savedLighting } from './lighting';

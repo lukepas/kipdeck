@@ -1,5 +1,5 @@
 /**
- * Settings > Bridge > Quality, as numbers: what each tier draws, and which tier Auto starts from on
+ * Settings > Deck > Quality, as numbers: what each tier draws, and which tier Auto starts from on
  * which graphics. Three.js-free, so tests/quality.test.ts reads the same table the deck does.
  *
  * The tiers trade spectacle for frames, never what the deck says: every tier draws the boards, the

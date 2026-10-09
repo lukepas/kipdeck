@@ -1,6 +1,6 @@
 # Agent reputation from merges
 
-Agent reputation in Kipdeck's Proof of Merge lab, testnet only and off by default.
+Agent reputation in Kipdeck's Proof of Merge lab, testnet only, and off unless the office is started with `--reputation`.
 
 Back to the [README](../README.md).
 

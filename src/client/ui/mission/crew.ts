@@ -90,7 +90,7 @@ export function renderCrew(deps: MissionDeps, ranked: Ranked[], now: number): HT
       'p.mc-note',
       {},
       'Records from the deck log as far as it is loaded: merges, pull requests closed unmerged, times stuck, and reverts from the agent record when the office keeps one. Units only, never people. ',
-      on ? '' : 'Crew epithets are off in Settings > Bridge > Life, so titles and chevrons are hidden.',
+      on ? '' : 'Crew epithets are off in Settings > Deck > Life, so titles and chevrons are hidden.',
     ),
     on && watch ? h('p.crew-watch-line', {}, h('span.crew-watch', {}, 'Unit of the watch'), ` ${callSign(watch.deskId) || watch.name} ${watch.name}${book.epithets.get(watch.id) ? `, ${book.epithets.get(watch.id)!.title}` : ''}: the best clean record on the last watch.`) : null,
     rows.length ? h('ul.mc-rows', {}, ...rows) : h('p.mc-empty', {}, 'No units aboard yet. Deploy one and its record starts with its first merge.'),

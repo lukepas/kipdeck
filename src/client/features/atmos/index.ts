@@ -15,7 +15,7 @@
  *   the move never sweeps through the key light's reflection off the table top and the plan still
  *   reads (./gloss.ts, installed on its own).
  *
- * Settings > Bridge > Quality says how much of it is drawn (features/quality/tiers.ts): Low keeps the
+ * Settings > Deck > Quality says how much of it is drawn (features/quality/tiers.ts): Low keeps the
  * pools and the fog. When a unit needs the captain or is stuck the shafts, the motes, the cookie and
  * the flyby's wash stand at 85% (a new call ducks them to 60% for 2.5 s) (logic.ts); the attention marks are fog: false
  * and carry their own light, so nothing here ever touches them. Ship motion Off and reduced motion

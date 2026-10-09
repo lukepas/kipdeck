@@ -65,7 +65,7 @@ export function crewBook(now = Date.now()): CrewBook {
 
 let onAt = -Infinity;
 let on = true;
-/** Settings > Bridge > Life > Crew epithets, read at most once a second (Mission control and the console read it per row). */
+/** Settings > Deck > Life > Crew epithets, read at most once a second (Mission control and the console read it per row). */
 export function crewOn(): boolean {
   const now = Date.now();
   if (now - onAt > 1000) {

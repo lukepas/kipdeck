@@ -20,7 +20,7 @@ export const FLOOR_ROUGH = { base: 0.92, walk: 0.35 } as const;
 export const MIRROR_BOARDS = 5;
 
 /**
- * The floor's own uniforms: how glossy its walkways are (Settings > Bridge > Quality: 0 at Low, 1
+ * The floor's own uniforms: how glossy its walkways are (Settings > Deck > Quality: 0 at Low, 1
  * above), and its mirror of the wall boards (features/atmos, High only): how strong it is (0 skips
  * it, no lookups), and each board's picture, its inverse world matrix and its face's rectangle in its
  * own space (min x, min y, max x, max y; empty skips it).

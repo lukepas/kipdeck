@@ -214,7 +214,7 @@ test('sessions last a week, not two', async () => {
 
 test("the office's pages carry a strict Content-Security-Policy", async () => {
   const cookie = await login();
-  for (const [p, headers] of [['/', { cookie }], ['/bridge', { cookie }], ['/login', {}], ['/join', {}], ['/claim', {}]] as const) {
+  for (const [p, headers] of [['/', { cookie }], ['/deck', { cookie }], ['/login', {}], ['/join', {}], ['/claim', {}]] as const) {
     const r = await call(p, { headers });
     assert.equal(r.status, 200, p);
     const csp = String(r.headers['content-security-policy']);

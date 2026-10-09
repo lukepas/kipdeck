@@ -51,7 +51,7 @@ echo "$agent of $total commits"
 
 ## Don't show
 
-- Chain transactions, testnet amounts or anything from Proof of Merge: it's a lab, off by default, and not part of the pitch.
+- Chain transactions, testnet amounts or anything from Proof of Merge: it's a lab, testnet only, and not part of the pitch.
 - Feature counts, deploy-target counts or line counts.
 - Demo numbers, or a percentage without its N.
 - A competitor's funding figure without a primary source. The Monid USD 7.7M figure is dropped: monid.ai (checked 2026-10-07) says nothing about funding, and Monid sells agents paid access to tools and APIs, which isn't this category anyway ([launch/kipdeck](../launch/kipdeck/README.md#monid)).
