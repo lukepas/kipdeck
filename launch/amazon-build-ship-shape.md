@@ -39,7 +39,7 @@ Code status on 2026-10-01: `launch/voice-mcp` has `src/server/mcp.ts`, a tested 
 Upstream already ships an MCP server for managing workers, but it speaks stdio to local agents only (upstream PR #192, 2026-09-29). Say so, because a judge reading the repo will find it.
 
 ```field name="What is new (for the description)" max-chars=1000
-Agent Office is an MIT open source project by webdevcody / AgentSystemLabs: a 3D office where coding agents work at desks. Upstream already has a local stdio MCP server that lets agents manage workers. For this hackathon we added a self-hosted remote MCP server over Streamable HTTP (MCP spec 2025-11-25) with bearer-token authentication and argument checks against each tool's schema. {{VOICE_WORK_BUILT}} Full list of our commits and files against the upstream baseline: {{DIFF_URL}}
+Agent Office is an MIT open source project by webdevcody / AgentSystemLabs: a 3D office where coding agents work at desks. Upstream already has a local stdio MCP server that lets agents manage workers. For this hackathon we added a self-hosted remote MCP server over Streamable HTTP (MCP spec 2025-11-25) with bearer-token authentication and argument checks against each tool's schema. {{VOICE_WORK_BUILT}} Full list of our commits and files against the upstream baseline: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 Paste the `whats-new.ts` output after it (see [disclosure.md](disclosure.md)).
@@ -65,7 +65,7 @@ How it works: the office server already tracks every worker, its terminal and it
 
 What is next: notifications pushed from the office ("the release agent needs you"), and multi-office support for teams.
 
-Built on Agent Office by webdevcody / AgentSystemLabs (MIT). Our additions are listed commit by commit: {{DIFF_URL}}
+Built on Agent Office by webdevcody / AgentSystemLabs (MIT). Our additions are listed commit by commit: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 ```field name="Product feedback" max-words=250

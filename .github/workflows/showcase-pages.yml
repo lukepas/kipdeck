@@ -44,7 +44,9 @@ jobs:
           for p in attest reputation indexer; do (cd onchain/$p && npm ci --ignore-scripts); done
       - name: Rebuild the board from the chain (testnets only)
         working-directory: onchain/indexer
-        run: npm run index -- --network base-sepolia --out out/
+        # publicnode takes 1,000 blocks per eth_getLogs; sepolia.base.org now takes 200, which is
+        # five times the calls and did not finish in 10 minutes on 2026-10-10.
+        run: npm run index -- --network base-sepolia --rpc https://base-sepolia-rpc.publicnode.com --out out/
       - name: Export the site
         working-directory: onchain/indexer
         env:

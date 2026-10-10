@@ -1,6 +1,6 @@
 # Colosseum Crypto World's Fair
 
-**Superseded: do not submit from this page.** The entry is Kipdeck, with Proof of Merge as its payout layer, and its kit is [chain/colosseum-worlds-fair.md](chain/colosseum-worlds-fair.md), with the disclosure in [chain/disclosure.md](chain/disclosure.md). This page is the plan as it stood on 2026-10-01 and is kept as history: the product name below is an old working name, the escrow has since been built and deployed on devnet, and the program uses solana-program, not Anchor.
+**Superseded: do not submit from this page.** Submit from [chain/SUBMIT.md](chain/SUBMIT.md). The entry is Kipdeck, with Proof of Merge as its payout layer, and its kit is [chain/colosseum-worlds-fair.md](chain/colosseum-worlds-fair.md), with the disclosure in [chain/disclosure.md](chain/disclosure.md). This page is the plan as it stood on 2026-10-01 and is kept as history: the product name below is an old working name, the escrow has since been built and deployed on devnet, and the program uses solana-program, not Anchor.
 
 Last checked: 2026-10-01. Sources: the event page, the official rules PDF and the Colosseum hackathon FAQ (links below). Anything not stated there is marked [unverified].
 
@@ -41,7 +41,7 @@ Code status on 2026-10-01: `launch/solana-escrow` has no commits, so nothing on 
 Paste into "anything else judges should know" (or the prior-work question if the form has one):
 
 ```field name="Prior work disclosure" max-chars=1500
-This is a fork of Agent Office (github.com/AgentSystemLabs/agent-office), an MIT-licensed open source project by webdevcody / AgentSystemLabs with community contributors. Upstream started on 2026-09-25, inside the contest period, and we are not its authors or affiliated with it. Upstream built the 3D multiplayer office, the desks where coding agent CLIs run in terminals, shared terminals, voice chat, the GitHub issue and PR boards and the deploy scripts. Nothing onchain existed upstream. Everything crypto in this submission is ours and was built during the contest: {{ONCHAIN_WORK_LIST}} (on 2026-10-01: x402 paid tasks on Base, held for admin approval, and a dependency-free x402 package; add the Solana escrow only once it exists). Upstream baseline commit: 665aeec (2026-09-30). Our commits and files against it: {{DIFF_URL}}
+This is a fork of Agent Office (github.com/AgentSystemLabs/agent-office), an MIT-licensed open source project by webdevcody / AgentSystemLabs with community contributors. Upstream started on 2026-09-25, inside the contest period, and we are not its authors or affiliated with it. Upstream built the 3D multiplayer office, the desks where coding agent CLIs run in terminals, shared terminals, voice chat, the GitHub issue and PR boards and the deploy scripts. Nothing onchain existed upstream. Everything crypto in this submission is ours and was built during the contest: (superseded: the current list is the prior work field in chain/SUBMIT.md) (on 2026-10-01: x402 paid tasks on Base, held for admin approval, and a dependency-free x402 package; add the Solana escrow only once it exists). Upstream baseline commit: 665aeec (2026-09-30). Our commits and files against it: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 Then the `whats-new.ts` output (see [disclosure.md](disclosure.md)).
@@ -73,7 +73,7 @@ Solana (Anchor program for escrow, @solana/web3.js client), Phantom wallet, GitH
 ```
 
 ```field name="Go-to-market and demand validation" max-words=200
-First users are open source maintainers who already run coding agents and teams paying contractors for small fixes. Channel: the Agent Office community (the upstream repo is public), GitHub issue labels ("bounty"), and a consultancy pilot where we run an office for a client team. Revenue: a small fee on each payout and a hosted office subscription. Validation so far: {{DEMAND_VALIDATION}} (conversations, sign-ups, pilots; fill in with real numbers only).
+First users are open source maintainers who already run coding agents and teams paying contractors for small fixes. Channel: the Agent Office community (the upstream repo is public), GitHub issue labels ("bounty"), and a consultancy pilot where we run an office for a client team. Revenue: a small fee on each payout and a hosted office subscription. Validation so far: (superseded: the current answer, from chain data, is in chain/SUBMIT.md) (conversations, sign-ups, pilots; fill in with real numbers only).
 ```
 
 ## Judging criteria

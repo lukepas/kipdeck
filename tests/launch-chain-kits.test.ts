@@ -27,6 +27,22 @@ test('every doc passes the linter, with its numbers sourced and its links checke
   assert.deepEqual(problems, []);
 });
 
+test('SUBMIT.md pastes the kit word for word, and every disclosure names the same stamped commit, one on this branch', () => {
+  const kit = new Map(fields(read('colosseum-worlds-fair.md')).map((f) => [f.name, f.text]));
+  const disclosure = new Map(fields(read('disclosure.md')).map((f) => [f.name, f.text]));
+  const submit = fields(read('SUBMIT.md'));
+  assert.ok(submit.length >= 10, `SUBMIT.md has ${submit.length} fields`);
+  for (const f of submit) {
+    const source = kit.get(f.name) ?? disclosure.get(f.name);
+    if (source !== undefined) assert.equal(f.text, source, `SUBMIT.md "${f.name}" differs from the kit`);
+  }
+  assert.equal(kit.get('Prior work disclosure'), disclosure.get('Disclosure (Colosseum)'));
+  const stamps = new Set(['colosseum-worlds-fair.md', 'disclosure.md', 'SUBMIT.md'].flatMap((f) => [...read(f).matchAll(/226452e4\.\.([0-9a-f]{8})\b/g)].map((m) => m[1])));
+  assert.equal(stamps.size, 1, `stamped commits: ${[...stamps]}`);
+  const [sha] = stamps;
+  assert.doesNotThrow(() => git('merge-base', '--is-ancestor', sha, 'HEAD'), `${sha} is not on this branch`);
+});
+
 test('calendar.ics, the README timeline and counts.json are what their sources generate', () => {
   assert.deepEqual(sync(LAUNCH_DIR, true), [], 'run: npx tsx launch/chain/tools/calendar.ts');
   assert.equal(read('data/counts.json'), renderCounts(), 'run: npx tsx launch/chain/tools/counts.ts');

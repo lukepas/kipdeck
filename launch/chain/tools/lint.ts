@@ -29,7 +29,7 @@ export const REQUIRED_SECTIONS = [
 ];
 
 /** The files in launch/chain/ that are not per-program kits. */
-export const NOT_KITS = new Set(['README.md', 'disclosure.md', 'judge-qa.md', 'video-scripts.md', 'landing.md', 'build-in-public.md']);
+export const NOT_KITS = new Set(['README.md', 'SUBMIT.md', 'disclosure.md', 'judge-qa.md', 'video-scripts.md', 'landing.md', 'build-in-public.md']);
 
 /** A kit may keep its videos in this shared file instead, by linking to it. */
 export const SHARED_VIDEOS = 'video-scripts.md';

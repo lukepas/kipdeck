@@ -11,7 +11,7 @@ export interface ReadOptions {
   identity?: Address;
   reputation?: Address;
   fromBlock?: bigint;
-  /** Blocks per getLogs (default 1,000: sepolia.base.org refuses a wider range). */
+  /** Blocks per getLogs (default 1,000); a smaller cap the RPC names in its error is taken. */
   chunk?: bigint;
   fetchFn?: typeof fetch;
 }
@@ -43,19 +43,44 @@ export interface FeedbackLog {
 
 function client(o: ReadOptions): PublicClient {
   // Read only, so no chain's formatters are needed (and the type stays a plain PublicClient).
-  return createPublicClient({ transport: http(o.rpcUrl, { ...(o.fetchFn ? { fetchFn: o.fetchFn } : {}), timeout: 30_000 }) });
+  return createPublicClient({ transport: http(o.rpcUrl, { ...(o.fetchFn ? { fetchFn: o.fetchFn } : {}), timeout: 30_000, ...PATIENT }) });
 }
 
 type Pub = PublicClient;
 
-/** Runs `read` over [from, latest] in ranges of `chunk` blocks, oldest first. */
-export async function inRanges<T>(pub: Pub, from: bigint, chunk: bigint | undefined, read: (from: bigint, to: bigint) => Promise<T[]>): Promise<T[]> {
+/** Reads only, so retrying is safe: public RPCs answer bursts with 429, and viem doubles the wait each try (0.5 s up to 16 s). */
+const PATIENT = { retryCount: 6, retryDelay: 500 } as const;
+
+/**
+ * The most blocks a public RPC says one getLogs may span, from errors like "eth_getLogs is limited to
+ * a 200 range" (sepolia.base.org). The same check as onchain/attest's read.ts; the packages share no code.
+ */
+export function rangeLimit(err: unknown): bigint | undefined {
+  for (let e = err as { details?: unknown; message?: unknown; cause?: unknown } | undefined, depth = 0; e && depth < 5; e = e.cause as typeof e, depth++) {
+    const m = /limited to a (\d+) range/i.exec(`${String(e.details ?? '')} ${String(e.message ?? '')}`);
+    if (m) return BigInt(m[1]);
+  }
+  return undefined;
+}
+
+/**
+ * Runs `read` over [from, latest] in ranges of `chunk` blocks, oldest first. When the RPC refuses a
+ * range and names a smaller cap, the rest is read in ranges of that cap.
+ */
+export async function inRanges<T>(pub: Pick<Pub, 'getBlockNumber'>, from: bigint, chunk: bigint | undefined, read: (from: bigint, to: bigint) => Promise<T[]>): Promise<T[]> {
   const latest = await pub.getBlockNumber();
-  const step = chunk ?? 1_000n;
+  let step = chunk ?? 1_000n;
   const out: T[] = [];
-  for (let a = from; a <= latest; a += step) {
+  for (let a = from; a <= latest; ) {
     const b = a + step - 1n < latest ? a + step - 1n : latest;
-    out.push(...(await read(a, b)));
+    try {
+      out.push(...(await read(a, b)));
+      a = b + 1n;
+    } catch (err) {
+      const cap = rangeLimit(err);
+      if (cap === undefined || cap < 1n || cap >= b - a + 1n) throw err;
+      step = cap;
+    }
   }
   return out;
 }

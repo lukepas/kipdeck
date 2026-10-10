@@ -32,7 +32,7 @@ This project is a fork of Agent Office (github.com/AgentSystemLabs/agent-office)
 Use this where every character counts (a 255-character summary, a Devpost elevator pitch).
 
 ```field name="Disclosure (short)" max-chars=255
-Fork of MIT-licensed Agent Office by webdevcody/AgentSystemLabs (upstream, first commit 2026-09-25). Our work: {{NEW_WORK_ONE_LINE}}. Diff vs upstream: {{DIFF_URL}}
+Fork of MIT-licensed Agent Office by webdevcody/AgentSystemLabs (upstream, first commit 2026-09-25). Our work: the inbox and Proof of Merge (Solana escrow, Base attestations, x402). Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 ## Exactly what is new
@@ -43,7 +43,7 @@ Generate this list from git right before each submission, so it is the branch's 
 npx tsx launch/tools/whats-new.ts > /tmp/whats-new.md
 ```
 
-It runs the same code as `launch/chain/tools/whats-new.ts`: the upstream credit and the two snapshot imports, our commits since `226452e4`, the 11 re-committed upstream pull requests with their upstream authors, the Dependabot bumps apart, and every changed file, grouped into code, tests, docs, deploy and kits. Paste it under the kit's disclosure section and link `{{DIFF_URL}}`, which is `https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main`.
+It runs the same code as `launch/chain/tools/whats-new.ts`: the upstream credit and the two snapshot imports, our commits since `226452e4`, the 11 re-committed upstream pull requests with their upstream authors, the Dependabot bumps apart, and every changed file, grouped into code, tests, docs, deploy and kits. Paste it under the kit's disclosure section and link the diff, https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main.
 
 As of 2026-10-01 the fork had these workstreams, each on its own branch from the 665aeec import (history: the branches were later merged or dropped, and the repository is now Kipdeck). The status column is what the branch held on 2026-10-01, not the plan. Only claim what is merged and working on the day you submit, and replace this table with the `whats-new.ts` output then.
 

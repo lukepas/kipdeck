@@ -67,8 +67,10 @@ test('lint passes on the kit, lists placeholders, and fails on a broken copy', (
   const ok = run('launch/chain/tools/lint.ts');
   assert.equal(ok.code, 0, ok.out);
   assert.match(ok.out, /files, no problems/);
-  assert.match(ok.out, /colosseum-worlds-fair\.md: to fill in: .*\{\{HEAD_SHA\}\}/);
-  assert.doesNotMatch(ok.out, /colosseum-worlds-fair\.md: to fill in: .*\{\{(FORK_URL|DIFF_URL|TEAM)\}\}/);
+  // The Colosseum entry is filled in: the commit is stamped (SUBMIT.md re-stamps it on submit day) and the showcase has its address.
+  assert.doesNotMatch(ok.out, /(colosseum-worlds-fair|disclosure)\.md: to fill in:/);
+  // Only what the founders upload is left: the two video links.
+  assert.match(ok.out, /SUBMIT\.md: to fill in: \{\{PITCH_VIDEO_URL\}\} \{\{DEMO_VIDEO_URL\}\}\n/);
   const { dir, tool } = copy(t);
   const kit = path.join(dir, 'colosseum-worlds-fair.md');
   writeFileSync(kit, readFileSync(kit, 'utf8').replace('Kipdeck\n```', `${'Kipdeck '.repeat(9)}\n\`\`\``).concat('\nAlso https://unchecked.example/page\n'));

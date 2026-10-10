@@ -8,6 +8,7 @@ Last checked: 2026-10-04
 
 | File | What it is |
 | --- | --- |
+| [SUBMIT.md](SUBMIT.md) | Submit day: the Colosseum form answers in order, the files to upload, the commands, the honest status |
 | [colosseum-worlds-fair.md](colosseum-worlds-fair.md) | The main entry: every form field drafted, closes 2026-10-12 23:59 PT |
 | [solana-foundation-grant.md](solana-foundation-grant.md) | Rolling grant: summary, "only possible on Solana", three milestones |
 | [arbitrum-dubai.md](arbitrum-dubai.md) | Arbitrum Open House Dubai, a later entry; nothing built for it yet. Frozen until after 2026-10-12 |
@@ -52,7 +53,7 @@ These need a browser, a person or a decision, and no script does them. Until 202
 
 - The Base Sepolia wallets hold test ETH: the registrar `0x7c2C45a17A432CF890E514f1AaB67D941ec58314` (no agent registered yet; the office registers an agent on ERC-8004 when its first PR is attested with `--reputation`) and the attester `0x83dAa5252b68D98F25CbB089CCeE4edc7C083403`. Top them up from a browser faucet if a run says they are short.
 - Devnet SOL from https://faucet.solana.com if `solana airdrop` is rate limited, for the funder wallet used on recording day.
-- The repository is public (https://github.com/zbagdzevicius/kipdeck) and its diff link is in the kits. Publish the showcase (GitHub Pages export), then fill in `{{SHOWCASE_URL}}`; on submission day put the submitted commit in place of `{{HEAD_SHA}}` in [disclosure.md](disclosure.md) and the Colosseum form.
+- The repository is public (https://github.com/zbagdzevicius/kipdeck) and its diff link is in the kits. Publish the showcase (GitHub Pages export) at https://zbagdzevicius.github.io/kipdeck/; on submission day re-stamp the commit after `226452e4..` in [disclosure.md](disclosure.md) and the Colosseum form. [SUBMIT.md](SUBMIT.md) has both commands.
 - Ask the multi-track question in the Colosseum Discord and paste the answer into [judge-qa.md](judge-qa.md).
 - Employer permission, registration on colosseum.com, recording the videos, posting.
 

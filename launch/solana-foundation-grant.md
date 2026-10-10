@@ -31,7 +31,7 @@ Code status on 2026-10-01: `launch/solana-escrow` has no commits. There is no es
 ## Pre-existing code disclosure
 
 ```field name="Prior work" max-chars=900
-The escrow program and SDK are new work by us, started during the Colosseum Crypto World's Fair (October 2026). The first product that uses them is our fork of Agent Office, an MIT-licensed open source 3D office for coding agents created by webdevcody / AgentSystemLabs; the office itself is their work, and the grant does not fund it. The grant funds only the escrow program, its SDK, audits and documentation, which do not depend on Agent Office. Upstream: github.com/AgentSystemLabs/agent-office. Our work so far: {{DIFF_URL}}
+The escrow program and SDK are new work by us, started during the Colosseum Crypto World's Fair (October 2026). The first product that uses them is our fork of Agent Office, an MIT-licensed open source 3D office for coding agents created by webdevcody / AgentSystemLabs; the office itself is their work, and the grant does not fund it. The grant funds only the escrow program, its SDK, audits and documentation, which do not depend on Agent Office. Upstream: github.com/AgentSystemLabs/agent-office. Our work so far: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 ## Project description
