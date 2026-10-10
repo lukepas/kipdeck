@@ -87,7 +87,7 @@ Everything lives in `site/config.js`:
 - `site/slides.js` - one GSAP timeline per slide
 - `site/deck.js` - navigation, scaling, presenter window, print
 - `site/kip.js`, `site/kip.css`, `site/wow.js` - Kip the mascot and the per-slide extras
-- `site/media/` - product stills, the 60 s demo (mp4) and the 30 s GIF
+- `site/media/` - product stills, the one-minute demo (kipdeck-demo-v2.mp4, 67 s) and the 27 s GIF
 - The logo (Kip's face with his tuft as the signal light) on the cover, the ask and every slide's footer, plus `site/favicon.svg` and `site/apple-touch-icon.png`: all written from `src/shared/logo.ts` by `npm run logo` at the repository root, so do not edit those copies by hand. The cover lights Kip's light in the needs-you colour; the ask leaves it calm.
 
 ## Before sending

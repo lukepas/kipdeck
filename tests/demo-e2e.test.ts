@@ -93,9 +93,22 @@ test('the demo on your computer: the pill, a question from Codex opening by itse
   await note.waitFor();
   assert.match((await note.getAttribute('title')) ?? '', /Scripted agents on a throwaway repo \(acme-shop\)/);
   assert.equal(await note.locator('code').innerText(), demoNote({ readOnly: false, project: 'acme-shop' }).command);
+  // At 1440x900 the whole command shows (not cut to "kipde..."), and its copy button sits clear of the search box.
+  const pillFits = () =>
+    page.evaluate(() => {
+      const code = document.querySelector('#demo.hb-demo code') as HTMLElement;
+      const copy = document.querySelector('#demo.hb-demo .copy') as HTMLElement;
+      const search = document.querySelector('.hb-search') as HTMLElement;
+      const a = copy.getBoundingClientRect();
+      const b = search.getBoundingClientRect();
+      const overlap = a.right > b.left && b.right > a.left && a.bottom > b.top && b.bottom > a.top;
+      return { clipped: code.scrollWidth > code.clientWidth, overlap };
+    });
+  assert.deepEqual(await pillFits(), { clipped: false, overlap: false }, 'the demo pill shows its whole command at 1440x900');
 
   const row = (section: string, text: string) => page.locator(`.sec-${section} .row`, { hasText: text }).first();
   await row('needs-you', 'Fix the flaky checkout test').waitFor({ timeout: 30_000 });
+  assert.deepEqual(await pillFits(), { clipped: false, overlap: false }, 'still whole once the bar fills (counters, Enter the Deck)');
   assert.match(await row('needs-you', 'Fix the flaky checkout test').locator('.row-status').innerText(), /How should I fix the test\?$/, 'Codex names only its asking tool: the row says the question read off its terminal (server/workers/asked.ts)');
   assert.match(await row('needs-you', 'Fix the flaky checkout test').locator('.agent-mark').getAttribute('class') ?? '', /p-codex/);
 

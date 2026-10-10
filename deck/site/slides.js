@@ -280,7 +280,7 @@
     var video = A(s, 'video'), bar = A(s, 'bar'), beats = $$(s, '.beats li');
     function sync(t) {
       if (stillFrames) t = 999;   // still frames keep every beat lit, even while the video plays
-      var d = video.duration || 59;
+      var d = video.duration || 67;
       bar.style.width = clamp(t / d * 100, 0, 100) + '%';
       beats.forEach(function (b) {
         var on = t >= +b.dataset.t;
@@ -290,7 +290,7 @@
     if (!s._wired) {
       s._wired = true;
       video.addEventListener('timeupdate', function () { sync(video.currentTime); });
-      video.addEventListener('ended', function () { sync(video.duration || 59); });
+      video.addEventListener('ended', function () { sync(video.duration || 67); });
       s.addEventListener('slide:enter', function () {
         // Still frames keep the poster (the product, not the opening terminal frame); a click still plays it.
         if (stillFrames || document.body.classList.contains('print')) return;

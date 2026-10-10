@@ -77,7 +77,7 @@ Nothing was deleted. Every lab is on as Kipdeck ships, the Deck first: it is the
 | The Deck's mascot, ship's voice, hands, lounge, rituals, motion and soundscape | `ambience` | `--labs ambience` |
 | Proof of Merge: bounties, payouts, attestations, ERC-8004 reputation, x402, `/pom/` | `proof` | `--labs proof`, or any chain flag (`--x402`, `--attest`, `--reputation`) |
 
-Also moved, not removed: the Get started checklist (under the list; none in the demo), the usage-numbers switch (Settings > Account), the terminal's quick keys (behind **Keys**), the Changes footer's Commit and Discard (shown while something is uncommitted), the 3D Deck on the landing page (the docs and `docs/img/bridge-wall.png`), and the 3D Deck in the video (`REC_BRIDGE=1 node design/record-demo.mjs`).
+Also moved, not removed: the Get started checklist (under the list; none in the demo), the usage-numbers switch (Settings > Account), the terminal's quick keys (behind **Keys**), the Changes footer's Commit and Discard (shown while something is uncommitted), the 3D Deck on the landing page (the docs and `docs/img/deck-wall.png`), and the 3D Deck in the video (`REC_DECK=1 node design/record-demo.mjs`).
 
 ## Time to value and click counts
 
@@ -94,22 +94,25 @@ Measured with `design/measure-final.mjs` on an M-series Mac, headless Chromium, 
 
 The desktop's control count went up by two because the pane is no longer empty: it shows the waiting agent's tabs, its reply box and Send. The words dropped by a third, and the first thing in the pane is now the question with a box to answer it. Cold `npx` from an empty npm cache was 4.0 s to running and 6.3 s to the first agent, measured from a local tarball (`review/timed-npx/timings.json`); a real registry download adds network time.
 
-## The investor demo (60 seconds)
+## The investor demo (about a minute)
 
-The recording is `design/shots/fundable/final/kipdeck-demo.mp4` (60 s, silent, every frame tagged *Demo data: scripted agents, no model runs*); the 30-second GIF is `docs/img/demo.gif`. Live, run `npx kipdeck --demo` (or `node bin/agent-office.js --demo` from a clone) before the meeting, and keep the recording open in a tab as the fallback.
+The recording is `design/shots/fundable/final/kipdeck-demo.mp4` (67 s, silent, every frame tagged *Demo data: scripted agents, no model runs*; deck/site/media/kipdeck-demo-v2.mp4); the 27-second GIF is `docs/img/demo.gif`. Live, run `kipdeck --demo` from a linked clone (`npx kipdeck --demo` once it is on npm) before the meeting, and keep the recording open in a tab as the fallback.
 
 | Time | On screen | Say |
 | --- | --- | --- |
 | 0:00 | Title card | "Engineers now run five or ten coding agents at once. The bottleneck isn't the agents: it's how long they sit waiting on you." |
-| 0:05 | The terminal: `npx kipdeck --demo` | "One command, in your repository. No account, nothing leaves your machine." |
-| 0:10 | Five agents arrive: Claude Code, Codex, Cursor | "Every vendor's agent in one list, each on its own branch." |
-| 0:14 | Codex's question opens by itself in the pane | "Codex is blocked. It goes to the top and its question opens in plain words." |
-| 0:20 | Typing the answer in one box | "One box. No hunting through terminals. And the top bar counts who's waiting on you." |
-| 0:27 | Claude Code's rate limiter in To review, the diff beside the list | "Claude Code finished: three files, tests pass. The real diff, beside the list." |
-| 0:34 | Merge; the first-merge note | "Merged, without GitHub if you want. Every merge is a signed record: which agent and model, who reviewed it, how long it waited." |
-| 0:40 | The phone: the README merged with one tap | "Same inbox on your phone." |
-| 0:46 | The calm inbox, then Numbers | "Nothing waits on you. And here's the number we sell on: human wait time, per agent and model, week over week." |
-| 0:54 | End card | "Free and open source for one engineer. Teams pay for the shared inbox, routing, SSO and audit. We're raising a pre-seed to take this to the first fifty teams." |
+| 0:05 | The terminal: `kipdeck --demo` | "One command, in your repository. No account, nothing leaves your machine." |
+| 0:09 | Five agents start: Claude Code, Codex, Cursor | "Every vendor's agent in one list, each on its own branch." |
+| 0:13 | Codex's question opens by itself in the pane | "Codex is blocked. It goes to the top and its question opens in plain words." |
+| 0:15 | Typing the answer in one box | "One box. No hunting through terminals. And the top bar counts who's waiting on you." |
+| 0:22 | Claude Code done, its diff beside the list | "Claude Code finished: three files, tests pass. The real diff, beside the list." |
+| 0:28 | Merge, the undo countdown | "Merge, without GitHub if you want. A few seconds to undo." |
+| 0:33 | It lands in Shipped today | "Every merge is a signed record: which agent and model, who reviewed it, how long it waited." |
+| 0:36 | The phone: the README merged with one tap | "Same inbox on your phone." |
+| 0:46 | Codex's fix merged | "And the fix Codex asked about is in too." |
+| 0:51 | The calm inbox | "Nothing waits on you." |
+| 0:54 | Numbers | "And here's the number we sell on: human wait time, per agent and model, week over week." |
+| 1:01 | End card with github.com/zbagdzevicius/kipdeck | "Free and open source for one engineer. Teams pay for the shared inbox, routing, SSO and audit. We're raising a pre-seed to take this to the first fifty teams." |
 
 Questions to expect, and the short answers:
 

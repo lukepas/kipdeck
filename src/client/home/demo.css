@@ -8,12 +8,14 @@
 .demo-run .copy { flex: none; }
 .demo-run code { min-width: 0; max-width: 32ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hb-demo .fix code { background: var(--surface-1); font-size: 11px; }
-/* The command never shrinks past its first word, whatever else is in the bar (Enter the Deck, the pulse). */
-.hb-demo .demo-run code { min-width: 9ch; }
+/* The command is short (`kipdeck`, `npx kipdeck --demo`) and never shrinks, whatever else is in the bar (Enter the Deck, the pulse). */
+.hb-demo .demo-run code { min-width: max-content; }
 .hb-demo .demo-tag { flex: none; }
 a.demo-lead { padding-right: 6px; color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
 a.demo-lead:hover { text-decoration-thickness: 2px; }
 /* Beside the search box only the command (or the hosted demo's ask for access) stays; the full note is the tooltip. */
+/* On a desktop the pill keeps its natural width and the search box (flex: 0 1 340px) gives up the room. */
+@media (min-width: 1101px) { .hb-demo { flex: none; } }
 @media (max-width: 1600px) { .hb-demo .demo-text, .hb-demo span.demo-lead { display: none; } }
 @media (max-width: 1100px) { .hb-demo .demo-run { display: none; } .hb-demo { padding-right: 6px; } }
 @media (max-width: 899px) { .hb-demo .demo-run { display: none; } .hb-demo { padding-right: 6px; } }

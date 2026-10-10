@@ -150,7 +150,8 @@ const BOARD_FIXTURE = (() => {
 
 async function shot(page, name, opts = {}) {
   if (!want(name)) return;
-  await page.screenshot({ path: path.join(OUT, `${name}.png`), ...opts });
+  // The 3D Deck on SwiftShader can take well over the default 30 s to hand over a frame.
+  await page.screenshot({ path: path.join(OUT, `${name}.png`), timeout: 180_000, ...opts });
 }
 
 async function signIn(page) {
@@ -997,7 +998,7 @@ async function main() {
       const dp = await ctx3.newPage();
       dp.on('pageerror', (e) => console.log('demo page error:', e.message));
       await signIn(dp);
-      await dp.goto(`${base}/bridge?demo=1`, { waitUntil: 'commit' });
+      await dp.goto(`${base}/deck?demo=1`, { waitUntil: 'commit' });
       await dp.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 90_000 });
       await wait(6000);
       await shot(dp, 'demo');

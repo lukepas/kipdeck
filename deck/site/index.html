@@ -216,15 +216,15 @@
         <div class="frame laptop" data-a="laptop">
           <div class="bar"><i></i><i></i><i></i><span>localhost &middot; {{name}}</span></div>
           <div class="vp">
-            <img data-shot="0" src="media/deploy-desktop.webp" alt="Deploy sheet" loading="lazy">
-            <img data-shot="1" src="media/home-desktop.webp" alt="Inbox: Codex needs you, its question open with one answer box" loading="lazy">
+            <img data-shot="0" src="media/deploy-desktop-v2.webp" alt="Deploy sheet" loading="lazy">
+            <img data-shot="1" src="media/home-desktop-v2.webp" alt="Inbox: Codex needs you, its question open with one answer box" loading="lazy">
           </div>
         </div>
         <div class="sig" data-a="sig">signed: agent / model / reviewer / wait</div>
         <div class="phone" data-a="phone"><div class="screen">
-          <img data-pshot="1" src="media/home-phone-asking.webp" alt="Phone inbox" loading="lazy">
-          <img data-pshot="2" src="media/question-phone.webp" alt="Phone question" loading="lazy">
-          <img data-pshot="3" src="media/merged-phone.webp" alt="Phone merged" loading="lazy">
+          <img data-pshot="1" src="media/home-phone-asking-v2.webp" alt="Phone inbox" loading="lazy">
+          <img data-pshot="2" src="media/question-phone-v2.webp" alt="Phone question" loading="lazy">
+          <img data-pshot="3" src="media/merged-phone-v2.webp" alt="Phone merged" loading="lazy">
         </div></div>
       </div>
     </div>
@@ -234,27 +234,27 @@
 </section>
 
 <!-- ============ 06 DEMO ============ -->
-<section class="slide" id="s6" data-title="60-second demo">
+<section class="slide" id="s6" data-title="One-minute demo">
   <div class="grid12">
     <div class="s-1-4 col">
-      <div class="t-label kicker c-green" data-a="k">60-second demo</div>
+      <div class="t-label kicker c-green" data-a="k">One-minute demo</div>
       <h2 class="t-h2" data-a="h">Asked to merged, one&nbsp;pane.</h2>
       <ol class="beats" data-a="beats">
-        <li data-t="4.5"><span class="n">01</span><b>Deploy</b><span>Five branches, five agents</span></li>
-        <li data-t="8.4"><span class="n">02</span><b>Pinged</b><span>Codex jumps to the top</span></li>
-        <li data-t="12.4"><span class="n">03</span><b>Act</b><span>Answered in one box</span></li>
-        <li data-t="27.4" data-beat="ship"><span class="n">04</span><b>Ship</b><span>Merged, wait signed</span></li>
+        <li data-t="9.5"><span class="n">01</span><b>Deploy</b><span>Five branches, five agents</span></li>
+        <li data-t="14"><span class="n">02</span><b>Pinged</b><span>Codex jumps to the top</span></li>
+        <li data-t="17"><span class="n">03</span><b>Act</b><span>Answered in one box</span></li>
+        <li data-t="33.6" data-beat="ship"><span class="n">04</span><b>Ship</b><span>Merged, wait signed</span></li>
       </ol>
-      <div class="t-label" data-a="cta" style="margin-top:26px; line-height:1.9"><span data-cta class="c-green"></span><br><a class="faint" href="media/kipdeck-demo.gif" target="_blank" rel="noopener">30 s GIF for email</a></div>
+      <div class="t-label" data-a="cta" style="margin-top:26px; line-height:1.9"><span data-cta class="c-green"></span><br><a class="faint" href="media/kipdeck-demo-v2.gif" target="_blank" rel="noopener">27 s GIF for email</a></div>
     </div>
     <div class="s-5-12">
       <div class="player" data-a="player">
         <div class="frame">
-          <div class="bar"><i></i><i></i><i></i><span>npx {{cmd}} --demo</span><span class="bar-tag">Demo data: scripted agents, no model runs</span></div>
+          <div class="bar"><i></i><i></i><i></i><span>{{cmd}} --demo</span><span class="bar-tag">Demo data: scripted agents, no model runs</span></div>
           <div class="vp">
-            <video data-a="video" muted playsinline preload="none" poster="media/demo-poster.jpg">
-              <source src="media/kipdeck-demo.mp4" type="video/mp4">
-              <a href="media/kipdeck-demo.gif">Watch the 30 s GIF</a>
+            <video data-a="video" muted playsinline preload="none" poster="media/demo-poster-v2.jpg">
+              <source src="media/kipdeck-demo-v2.mp4" type="video/mp4">
+              <a href="media/kipdeck-demo-v2.gif">Watch the 27 s GIF</a>
             </video>
           </div>
         </div>
@@ -262,7 +262,7 @@
       </div>
     </div>
   </div>
-  <div class="src"><span>Recording: about 60 s, silent, the real build in demo mode with scripted stand-in agents</span><span>tests/demo.test.ts, tests/demo-e2e.test.ts</span></div>
+  <div class="src"><span>Recording: about a minute, silent, the real build in demo mode with scripted stand-in agents</span><span>tests/demo.test.ts, tests/demo-e2e.test.ts</span></div>
   <aside class="notes">Let it play. Five agents start. Codex is blocked, it jumps to the top and its question opens in plain words. One box to answer. Claude Code finished: three files, tests pass, the real diff beside the list. Merge, without GitHub if you want. Same inbox on the phone. Then the number we sell on: human wait time per agent and model. Be upfront: the agents here are scripted stand-ins, so it runs the same every time. A recording with live Claude Code and Codex sessions is next.</aside>
 </section>
 
