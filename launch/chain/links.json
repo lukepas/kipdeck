@@ -100,6 +100,26 @@
     {
       "url": "https://explorer.solana.com/tx/4PYnNQZAi23BGUQ84EqDJfgSZABjqqKxPeyan6frLG25H6jWY8F6qrLGyRituXNXeHujZd29uWPXhoDN7MSdYsUe?cluster=devnet",
       "checked": "explorer answers 429 to scripts; getTransaction on api.devnet.solana.com: finalized, no error, slot 507291328, 12 test tokens from the bounty vault to the operator, 2026-10-04"
+    },
+    {
+      "url": "https://github.com/zbagdzevicius/kipdeck",
+      "checked": "HTTP 200 on 2026-10-09; public repository, the source of this entry"
+    },
+    {
+      "url": "https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main",
+      "checked": "HTTP 200 on 2026-10-09; the diff from our import of upstream 1bc3028 to main"
+    },
+    {
+      "url": "https://github.com/AgentSystemLabs/agent-office/commit/1bc3028472d38b161e85117bf621bb6bc12700e5",
+      "checked": "HTTP 200 on 2026-10-09; the upstream commit our 226452e4 imports (2026-09-30 23:26 UTC)"
+    },
+    {
+      "url": "https://github.com/zbagdzevicius/ugc-army-demo",
+      "checked": "HTTP 200 on 2026-10-09; the demo repository (named before the rename), devnet bounties in a test mint"
+    },
+    {
+      "url": "https://github.com/zbagdzevicius/ugc-army-demo/pull/4",
+      "checked": "HTTP 200 on 2026-10-09; merged 2026-10-07T12:03:41Z by the operator's own account (self, not paid)"
     }
   ]
 }

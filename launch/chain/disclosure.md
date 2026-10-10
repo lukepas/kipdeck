@@ -1,18 +1,42 @@
 # Pre-existing code disclosure
 
-Last checked: 2026-10-03
+Last checked: 2026-10-09
 
 Every program in this folder asks what existed before and what we built. This page is the one answer. The Colosseum kit pastes the form text below as is; the other kits trim it.
 
 ## The facts
 
+- Product: Kipdeck, https://github.com/zbagdzevicius/kipdeck. Proof of Merge is its payout layer, the on-chain part of this entry.
 - Upstream: agent-office, https://github.com/AgentSystemLabs/agent-office
-- License: MIT. `LICENSE` reads "Copyright (c) 2026 AgentSystemLabs" and stays unchanged in the fork.
+- License: MIT. `LICENSE` keeps upstream's line "Copyright (c) 2026 AgentSystemLabs" and the MIT text, and adds a line for our changes; `NOTICE` credits upstream.
 - Upstream author: webdevcody (Web Dev Cody), under AgentSystemLabs, with pull requests from community contributors.
 - Upstream's first commit: 2026-09-25, inside the Colosseum contest period (which started 2026-09-14).
-- Baseline: upstream commit `665aeec` (2026-09-30). Everything up to and including it is upstream work.
-- After the baseline, our branch was rebased onto upstream, so it also carries 16 upstream pull requests (by webdevcody and other contributors). They are upstream work too. `whats-new.ts` lists them separately.
-- Our own commits start on 2026-10-01. They are mission control, the security layer and everything on-chain. Nothing on-chain existed upstream.
+- Our history does not grow out of upstream's commits. It starts from two snapshot imports of upstream's tree, both on 2026-09-30, joined later by a merge:
+
+| Our commit | What it holds |
+| --- | --- |
+| `01d85bbb` "Import agent-office at 665aeec" | upstream at `665aeec` (2026-09-30 06:03 UTC) |
+| `226452e4` "Import agent-office at 1bc3028" | upstream at `1bc3028` (2026-09-30 23:26 UTC), the baseline `whats-new.ts` counts from |
+
+- Everything in those two imports is upstream work.
+- 11 upstream pull requests were later re-committed in our history under our name. They are upstream work too, by their upstream authors:
+
+| Our commit | Upstream PR | Upstream author |
+| --- | --- | --- |
+| ff1b76bd | #262 | webdevcody |
+| 4ed900bb | #263 | webdevcody |
+| f4869653 | #264 | webdevcody |
+| 4d44abae | #265 | webdevcody |
+| 3acfd45b | #266 | webdevcody |
+| 8e12ea84 | #268 | webdevcody |
+| 0f5c49f4 | #272 | webdevcody |
+| e825d794 | #271 | webdevcody |
+| 0622282c | #274 | webdevcody |
+| 9e954b18 | #273 | webdevcody |
+| 5db9e681 | #244 | Lohrey |
+
+- Two commits are Dependabot's dependency bumps: neither ours nor upstream's.
+- Ours is every other commit, from `bab333ed` on 2026-09-30: our first commit is 2026-09-30. That covers the inbox and mission control, the security layer and everything on-chain. Nothing on-chain existed upstream.
 - We are not affiliated with AgentSystemLabs and don't speak for them.
 
 ## Form text
@@ -20,13 +44,13 @@ Every program in this folder asks what existed before and what we built. This pa
 The Colosseum form's prior work answer, at most 1,500 characters:
 
 ```field name="Disclosure (Colosseum)" max-chars=1500
-Proof of Merge is a fork of agent-office (github.com/AgentSystemLabs/agent-office), MIT, created by webdevcody / AgentSystemLabs with community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D multiplayer office, desks where coding agent CLIs run in shared live terminals, voice, the GitHub issue and PR boards and the deploy scripts. Everything up to upstream commit 665aeec (2026-09-30) is theirs, and so are 16 later upstream pull requests that our branch carries because it is rebased on upstream. Ours, all written during the contest (our first commit is 2026-09-30): mission control (attention ranking, goals and milestones, review inbox, timeline, reminders), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and everything on-chain: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS proof-of-merge attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are exactly the ones by our authors in 665aeec..{{HEAD_SHA}}; the list is generated from git in launch/chain/disclosure.md. Testnets only. Diff: {{DIFF_URL}}
+Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..{{HEAD_SHA}} except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 A short form, where a field is tiny:
 
 ```field name="Disclosure (short)" max-chars=255
-Fork of agent-office (MIT) by webdevcody / AgentSystemLabs, upstream since 2026-09-25. Ours, from 2026-10-01: mission control and everything on-chain (Solana escrow, Base proof of merge, x402). Diff: {{DIFF_URL}}
+Built on agent-office (MIT) by webdevcody / AgentSystemLabs. Ours, from 2026-09-30: the inbox and Proof of Merge (Solana escrow, Base attestations, x402). 11 re-committed upstream PRs listed in launch/chain/disclosure.md.
 ```
 
 ## Exactly what is new
@@ -37,14 +61,15 @@ Generate the list from git right before submitting, so it is what the branch con
 npx tsx launch/chain/tools/whats-new.ts > /tmp/whats-new.md
 ```
 
-It prints the upstream credit, our commits since `665aeec`, the upstream pull requests in the same range (credited to upstream), and every changed file grouped into code, on-chain packages, tests, docs, deploy and kits. Commits are told apart by author: the names in `deadlines.json` (`fork.authors`) are ours, every other author is upstream's. Paste the output at the end of this page on submission day.
+It prints the upstream credit and the two snapshot imports, our commits since `226452e4`, the 11 re-committed upstream pull requests (each with its upstream number and author), the Dependabot bumps apart, and every file that differs from upstream's snapshot, grouped into code, on-chain packages, tests, docs, deploy and kits. Commits are told apart by the lists in `deadlines.json`: `upstream.imports` and `upstream.carried` are upstream's, the rest by `fork.authors` are ours, anyone else's (a bot's) is neither. Paste the output at the end of this page on submission day, and put the submitted commit (the first 8 characters of `origin/main`'s SHA) in place of `{{HEAD_SHA}}` above.
 
 Where each part lives:
 
 | Part | Ours or upstream | Where |
 | --- | --- | --- |
 | The office, desks, terminals, voice, boards, deploy scripts | upstream | most of `src/`, `deploy/`, `bin/` |
-| Mission control | ours | `src/server/mission.ts`, `src/shared/attention.ts`, `src/shared/review.ts`, `docs/mission-control.md` |
+| The 11 re-committed upstream pull requests | upstream | the commits in the table above |
+| The inbox and mission control | ours | `src/server/mission.ts`, `src/shared/attention.ts`, `src/shared/review.ts`, `docs/mission-control.md` |
 | Security layer | ours | `src/server/safefs.ts`, `netguard.ts`, `hosts.ts`, `csp.ts`, the environment allowlist in `src/server/workers/env.ts` (a file upstream's refactor created), `src/shared/pulltrust.ts`, `docs/security.md` |
 | Bounties in the office, Blink routes | ours | `src/server/bounties.ts`, `src/server/chain/`, `src/server/http/routes/actions.ts`, `docs/bounties.md` |
 | Solana escrow program and SDK | ours | `onchain/solana/` |
@@ -60,7 +85,7 @@ The rules ask for the status and ownership of open-source and third-party code (
 
 | Package | Version | License | Used by |
 | --- | --- | --- | --- |
-| agent-office (the upstream itself) | 665aeec and later upstream PRs | MIT | the whole fork |
+| agent-office (the upstream itself) | snapshots 665aeec and 1bc3028, and 11 upstream PRs | MIT | the whole product |
 | @lydell/node-pty | 1.2.0-beta.15 | MIT | office (upstream's dependency) |
 | @xterm/headless, @xterm/addon-serialize | 6.0.0, 0.14.0 | MIT | office (upstream's) |
 | selfsigned | 5.5.0 | MIT | office (upstream's) |
@@ -88,12 +113,13 @@ No root dependency was added for the on-chain work: each `onchain/<name>` packag
 
 ## Courtesy to upstream
 
-MIT doesn't require it, but tell the upstream author before submitting: what the fork is, what it enters, and that every page credits them. Draft:
+MIT doesn't require it, but tell the upstream author before submitting: what Kipdeck is, what it enters, and that every page credits them. Draft:
 
 ```text
-Hi Cody, I'm building on agent-office (MIT) in a fork called Proof of Merge for the
-Colosseum Crypto World's Fair: mission control for many agents, plus testnet-only
+Hi Cody, I'm building on agent-office (MIT) in a product called Kipdeck, entering the
+Colosseum Crypto World's Fair: the inbox for many coding agents, plus testnet-only
 bounties and proof-of-merge attestations. Every page credits agent-office and you by
-name, and the disclosure lists exactly which commits are ours. If any of it is useful
+name; the disclosure lists exactly which commits are ours, and credits the 11 upstream
+PRs we re-committed (#244 by Lohrey, the rest yours). If any of it is useful
 upstream I'm happy to open PRs. Thanks for building it.
 ```

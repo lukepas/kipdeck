@@ -8,7 +8,7 @@ Agent Office is an MIT open source project by webdevcody / AgentSystemLabs. This
 
 | Kit | Program | Closes | What we enter |
 | --- | --- | --- | --- |
-| [colosseum-worlds-fair.md](colosseum-worlds-fair.md) | Colosseum Crypto World's Fair | 2026-10-12 23:59 PT | Solana bounty escrow for agent work |
+| [chain/colosseum-worlds-fair.md](chain/colosseum-worlds-fair.md) | Colosseum Crypto World's Fair | 2026-10-12 23:59 PT | Kipdeck, with Proof of Merge as its payout layer. The older [colosseum-worlds-fair.md](colosseum-worlds-fair.md) here is superseded |
 | [amazon-build-ship-shape.md](amazon-build-ship-shape.md) | Amazon Build Ship Shape, Alexa+ track | 2026-10-23 12:00 PT | Remote MCP server so Alexa+ can run the office |
 | [nebius-nvidia.md](nebius-nvidia.md) | Nebius x NVIDIA Global AI Hackathon | 2026-10-30 10:00 PT | Workers on Nemotron via Token Factory, in sandboxes |
 | [vultr-agent-rush.md](vultr-agent-rush.md) | Vultr Agent Rush (lablab.ai) | 2026-11-08 [unverified time] | Sandboxed workers on a Vultr VM |
@@ -78,7 +78,7 @@ The kits are checked by `npm test`, so a broken limit fails the build instead of
 npx tsx launch/tools/calendar.ts          # regenerate calendar.ics and the timeline above from deadlines.json
 npx tsx launch/tools/calendar.ts --check  # exit 1 if either is stale
 npx tsx launch/tools/lint.ts              # field lengths, video timings, sections, ASCII, placeholders left to fill
-npx tsx launch/tools/whats-new.ts         # the "exactly what is new" list, from git, since upstream 665aeec
+npx tsx launch/tools/whats-new.ts         # the "exactly what is new" list, from git, since 226452e4 (our import of upstream 1bc3028)
 ```
 
 - Change a date: edit `deadlines.json`, run `calendar.ts`, commit all three files.

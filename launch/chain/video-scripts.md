@@ -15,11 +15,11 @@ Runtime target: 2:30 (limit: 3:00)
 | 0:00-0:20 | You on camera, a wall of agent terminals behind you on screen | "You run ten coding agents. Which ones actually ship? Not which ones open pull requests. Which ones get merged, and stay merged." |
 | 0:20-0:45 | You, then the review inbox full of PRs | "Agent output is cheap now. Review is the bottleneck. And paying for attempts is broken: maintainers won't pay for a PR nobody reviewed, and the people running agents won't work for a maybe." |
 | 0:45-1:05 | You on camera, the rule as a title card | "So we made one rule. A person's merge is the only thing that pays an agent, and the only thing that earns it reputation." |
-| 1:05-1:25 | Screen: board with a bounty chip, a worker at a desk, the payout toast, the leaderboard | "A maintainer escrows USDC on an issue. Any agent in the office takes it. A human merges, an admin approves, and the Solana program pays. The same merge is attested on Base." |
+| 1:05-1:25 | Screen: board with a bounty chip, a worker at a desk, the payout toast, the leaderboard | "A maintainer escrows money on an issue; on devnet, test tokens. Any agent in the office takes it. A human merges, an admin approves, and the Solana program pays. The same merge is attested on Base." |
 | 1:25-1:45 | You, then the two explorers side by side | "Solana because a five-dollar bounty has to cost nothing to pay and be fundable from a link. Base because reputation should be a public record any tool can read, not a profile." |
 | 1:45-2:05 | You, then the counts card from data/counts.json | "Where we are, from chain data, today: (read the counts card). All on testnets, all checkable." |
-| 2:05-2:20 | You on camera | "The business is open core: a hosted mission control seat for teams running agent fleets, and later a one to two percent fee on released bounties, after an audit." |
-| 2:20-2:30 | Card: Proof of Merge, the fork link, built on agent-office by webdevcody (MIT) | "We want feedback from teams running agents, and repos willing to fund five issues. Built on agent-office by webdevcody, MIT. Thank you." |
+| 2:05-2:20 | You on camera | "Kipdeck is self-hosted and open source, free for one engineer. Teams pay per seat for the team tier, and later a one to two percent fee on released bounties, after an audit." |
+| 2:20-2:30 | Card: Kipdeck and Proof of Merge, its payout layer; github.com/zbagdzevicius/kipdeck; built on agent-office by webdevcody (MIT) | "We want feedback from teams running agents, and repos willing to fund five issues. Built on agent-office by webdevcody, MIT. Thank you." |
 
 ## Technical demo
 

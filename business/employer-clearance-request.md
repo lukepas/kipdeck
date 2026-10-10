@@ -1,42 +1,46 @@
 # Employer clearance request
 
-Send this before any paid work, public hackathon entry, grant application or waitlist launch. Most consultancy employment contracts assign work-related IP to the employer and require approval for side activities, and some extend to anything built on company equipment or time. Read your own contract and any side-activity policy first, and adjust the draft to what they actually say.
+Draft for the founders, not sent. Send it before the Colosseum entry (2026-10-12), the npm launch, the pre-seed raise and any paid work. Most consultancy employment contracts assign work-related IP to the employer and require approval for side activities, and some extend to anything built on company equipment or time. Read your own contract and any side-activity policy first, and adjust the draft to what they actually say.
 
 Send it to your line manager, copy whoever owns legal or HR questions, and ask for the answer in writing (email is enough). Keep a copy outside company systems once you have it.
 
 ## Before you send
 
 - Find the IP assignment clause, the side-activity or conflict-of-interest clause, and any non-compete or non-solicitation clause. Note their section numbers.
-- List what already exists: this fork of an MIT-licensed project, the security fixes, hackathon code. Note where and when you wrote it (own laptop, own time, own accounts) and whether any client code, client data or company tooling was involved. If company tooling or time was used, say so in the email; hiding it costs more later.
+- List what already exists: Kipdeck, built on an MIT-licensed project and already public at https://github.com/zbagdzevicius/kipdeck (first commit 2026-09-30), the pitch deck, the landing page at https://kipdeck.com, and the testnet code for the Colosseum entry. Note where and when you wrote it (own laptop, own time, own accounts) and whether any client code, client data or company tooling was involved. If company tooling or time was used, say so in the email; hiding it costs more later.
+- The repository and the landing page are already public, and the pitch deck is online at https://kipdeck-deck.vercel.app: say so in the email, with dates, rather than leaving it for them to find.
 - Decide which option you prefer. Option B (internal offering) is a real alternative, not a bargaining chip: the company has clients, sales and delivery capacity you do not.
 
 ## Draft email
 
-Subject: Request for written approval: open-source side project and possible internal offering
+Subject: Request for written approval: Kipdeck, an open-source startup I co-founded
 
 Hi [Manager name],
 
-I would like your written approval, or a clear no, on a side project before I take it any further. I have kept it separate from client work, and I want to keep it that way.
+I would like your written approval, or a clear no, on a startup I am co-founding outside work, before it goes any further. I have kept it separate from client work, and I want to keep it that way.
 
-What it is: I maintain a fork of Agent Office, an MIT-licensed open-source tool by an independent developer. It runs a team of AI coding agents (Claude Code, Codex and others) in a shared browser-based workspace, with a task queue, GitHub issue and PR boards and per-person sign-ins. My changes so far are one security fix, a Nebius model-provider integration and the start of an MCP server for hackathon prototypes; more is in progress. [Update this sentence from the branch table in README.md on the day you send it.] I built it on my own equipment and my own time, using my own accounts. No client code, client data or [Company] tooling is involved. [If any was, say exactly what here.]
+What it is: Kipdeck, the inbox for your AI coding agents. It shows a team every coding agent it runs (Claude Code, Codex, Cursor and others) in one place, ranked by which one is waiting on a person. It is built on Agent Office, an MIT-licensed open-source tool by an independent developer, and is MIT-licensed itself. The code is already public at https://github.com/zbagdzevicius/kipdeck (first commit 2026-09-30), and the landing page is live at https://kipdeck.com. [Say since when the repository has been public.] I built it on my own equipment and my own time, using my own accounts. No client code, client data or [Company] tooling is involved. [If any was, say exactly what here.]
 
-What I want to do next, in the next three months:
+Who is involved: three co-founders, me (CEO/CTO), Lukas Kveraga and Ernestas Rimkevicius. [Say whether either of them works for [Company] or a [Company] client; if so, they need their own approval.]
 
-1. Contribute the security fixes back to the upstream open-source project under its MIT license.
-2. Enter public hackathons (Colosseum, Amazon, Nebius x NVIDIA, Vultr, Meta) with prototypes built on the fork. Deadlines run from Oct 12 to Nov 18.
-3. Apply for small grants and startup cloud credits (Solana Foundation, Filecoin, Innovation Agency Lithuania), and accept a Base Builder Grant if one is offered (Base picks recipients; there is no application).
-4. Offer a fixed-price pilot and a workshop on running teams of coding agents to companies.
+What we want to do next, in the next three months:
+
+1. Incorporate Kipdeck as a company before the round closes.
+2. Raise a pre-seed round: USD 100k on a SAFE at a USD 1M post-money cap, from angels and funds.
+3. Publish Kipdeck on npm and launch it publicly (Show HN, X, LinkedIn), and sign up to five design-partner teams; a paid team tier per seat comes later.
+4. Enter the Colosseum Crypto World's Fair hackathon (closes 2026-10-12) with Kipdeck and its testnet payout layer, and apply for grants and startup cloud credits (Solana Foundation and others).
+5. Keep contributing fixes back to the upstream open-source project under its MIT license.
 
 I see two ways to handle this and would be glad with either:
 
 Option A, side project. [Company] confirms in writing that:
-- the fork, my contributions to it and the hackathon entries belong to me and stay under the MIT license;
-- I may do items 1-3 above outside working hours;
-- item 4 is allowed only for organizations that are not [Company] clients or active prospects, and I will check each one with you before any conversation. [Or: item 4 is not allowed while I am employed, and I drop it.]
+- Kipdeck, my contributions to it and the hackathon entries belong to me and the company we form, and the code stays under the MIT license;
+- I may do items 1-5 above outside working hours, including holding equity and a founder role in the company and taking part in the raise;
+- Kipdeck will not approach [Company] clients or active prospects as design partners or customers without checking each one with you first. [Or: [Company] asks me to leave the role before the round closes, and we agree the timing.]
 
-Option B, internal offering. [Company] runs item 4 as its own offering, and I lead it:
+Option B, internal offering. [Company] runs consulting on agent teams as its own offering, and I lead it, while Kipdeck stays a separate company:
 - a 2-6 week fixed-price "agent team lab" pilot for client engineering teams, and a 1-day or 3-day workshop;
-- the open-source work (items 1-3) stays public and under MIT, so the offering is not tied to anything proprietary;
+- Kipdeck stays public and under MIT, so the offering is not tied to anything proprietary;
 - I have drafts ready: scope, deliverables, metrics (throughput, cost per merged PR), a security posture, pricing and a statement of work. I can walk you through them in 30 minutes.
 
 Either way I will not use client information, [Company] branding or company time for the side-project parts, and I will tell you if anything changes.
@@ -54,7 +58,7 @@ Thanks,
 
 ## What to ask for explicitly
 
-- Confirmation of who owns the fork and the contributions.
+- Confirmation of who owns Kipdeck and the contributions.
 - Permission to contribute to open source under MIT, even if everything else is refused.
 - Whether hackathon prizes, grants and credits count as outside income that needs separate approval.
-- Whether a separate legal entity (needed for most credit programs and grants) is allowed.
+- Whether founding and holding shares in a separate company, and raising money for it, is allowed while employed.

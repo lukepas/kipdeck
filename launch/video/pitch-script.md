@@ -19,7 +19,7 @@ So: your face for most of it, short cutaways to the real product, no hype words,
 - Numbers come only from `launch/chain/data/counts.json`, refreshed the day you record. If the numbers changed, change the lines in the traction beat to match before you read them.
 - Credit agent-office by webdevcody (MIT) once, out loud.
 - Don't name your employer, its clients or any client work, on camera or on screen.
-- The product is Kipdeck; Proof of Merge is its on-chain layer. The Colosseum kit (`launch/chain/colosseum-worlds-fair.md`) still uses "Proof of Merge" as the product name. Pick one name for the form and the videos and use it in both.
+- The product is Kipdeck; Proof of Merge is its payout layer. The Colosseum kit (`launch/chain/colosseum-worlds-fair.md`) uses the same: product name Kipdeck, with "Proof of Merge, the payout layer of Kipdeck" in the one-liner. Say it the same way here.
 
 ## Timed script
 
@@ -30,11 +30,11 @@ About 360 spoken words at roughly 150 words a minute. Times are cumulative. Squa
 | 0:00-0:15 | Hook | You, head and shoulders | ~35 |
 | 0:15-0:35 | Problem | You; cut to the Attention board with several units waiting | ~50 |
 | 0:35-0:47 | Insight | You; title card "A person's merge is the only thing that pays an agent." | ~30 |
-| 0:47-1:12 | Product | Cutaways: the bridge from the captain's chair, Mission control's Review tab, the payout toast | ~60 |
+| 0:47-1:12 | Product | Cutaways: the inbox, the Deck from the captain's chair, the Review tab, the payout toast | ~60 |
 | 1:12-1:32 | Why crypto | You; cut to Solana Explorer (devnet) and easscan (Base Sepolia) side by side | ~50 |
 | 1:32-1:52 | Traction | You; a plain card with the counts | ~50 |
 | 1:52-2:07 | Go-to-market | You | ~40 |
-| 2:07-2:17 | Team | You | ~25 |
+| 2:07-2:17 | Team | You; a card with the three founders' names | ~40 |
 | 2:17-2:27 | Ask | You; end card with the repo link and "Built on agent-office by webdevcody (MIT)" | ~25 |
 
 ### 0:00 Hook
@@ -64,10 +64,10 @@ About 360 spoken words at roughly 150 words a minute. Times are cumulative. Squa
 
 ### 0:47 Product
 
-> Kipdeck is mission control for that.
-> Every agent your team runs, Claude Code, Codex, Cursor, Pi, sits at a console on one shared bridge,
+> Kipdeck is the inbox for your AI coding agents.
+> Every agent your team runs, Claude Code, Codex, Cursor, Pi, shows up in one place,
 > ranked by who needs a human right now.
-> Finished work lands in one review inbox.
+> Finished work waits there for review.
 > And when a person merges an agent's pull request, the merge is proven.
 > A bounty is paid, and the agent's record grows.
 
@@ -88,12 +88,13 @@ Read the version that is true on the day. Refresh `counts.json` first.
 
 > Where we are, honestly.
 > Everything runs on testnets.
-> The escrow program is live on Solana devnet and has paid five bounties, seventy-seven test USDC, in scripted runs.
+> The escrow program is live on Solana devnet and has paid five bounties, seventy-seven test tokens, in scripted runs.
 > One paid task over x402 settled on Base Sepolia.
-> A public demo repo has three funded issues and an agent's pull request waiting for review.
+> On our public demo repo, an agent's pull request was merged, by me, so our own rule counted it as self and paid nothing.
+> Two funded issues there are still open.
 > We have no users yet. That's this month's job.
 
-[Version B, after the first real merge on ugc-army-demo:]
+[Version B, after the first merge that counts on the demo repo, by someone other than the operator:]
 
 > Where we are, honestly.
 > Everything runs on testnets.
@@ -106,22 +107,24 @@ Read the version that is true on the day. Refresh `counts.json` first.
 ### 1:52 Go-to-market
 
 > We start with small teams and open source maintainers who already run several agents.
-> They come for mission control, which works with the chain switched off.
+> They come for the inbox, which works with the chain switched off.
 > Bounties are the switch they flip when they want to pay for merged work.
-> Revenue is a hosted seat for teams, and later a small fee on released bounties, after an audit.
+> Kipdeck is self-hosted and free for one engineer. Teams pay per seat for the team tier,
+> and later a small fee on released bounties, after an audit.
 
 ### 2:07 Team
 
-> I'm a software engineer in Vilnius.
-> [One true line: years building software, the kind of systems, one thing you shipped. No employer name.]
-> I built this on top of agent-office, an MIT project by webdevcody.
-> Mission control and everything on chain are mine, built in the last two weeks.
+> We're three founders in Vilnius.
+> I'm Zygimantas, CEO and CTO; Lukas Kveraga is our founding engineer; Ernestas Rimkevicius is a software engineer.
+> [One true line about the team, as the deck says it. No current employer name.]
+> We built Kipdeck on top of agent-office, an MIT project by webdevcody.
+> The inbox and everything on chain are ours, built since 30 September.
 
-[If someone joins you before recording, add their name and one line, and add them on colosseum.com before the deadline.]
+[All three must be registered on colosseum.com before the deadline.]
 
 ### 2:17 Ask
 
-> I'm looking for five teams who run agents every day to use this weekly and tell me what's broken,
+> We're looking for five teams who run agents every day to use this weekly and tell us what's broken,
 > and maintainers willing to fund a few issues.
 > The links are below. Thanks.
 
@@ -148,11 +151,11 @@ So I took one rule seriously.
 The only signal that counts is a person merging the work.
 Not a benchmark. Not a pull request opened. A merge.
 
-Kipdeck is mission control for that.
+Kipdeck is the inbox for your AI coding agents.
 Every agent your team runs, Claude Code, Codex, Cursor, Pi,
-sits at a console on one shared bridge,
+shows up in one place,
 ranked by who needs a human right now.
-Finished work lands in one review inbox.
+Finished work waits there for review.
 And when a person merges an agent's pull request,
 the merge is proven.
 A bounty is paid, and the agent's record grows.
@@ -175,22 +178,26 @@ We have no users yet. That's this month's job.
 
 We start with small teams and open source maintainers
 who already run several agents.
-They come for mission control,
+They come for the inbox,
 which works with the chain switched off.
 Bounties are the switch they flip
 when they want to pay for merged work.
-Revenue is a hosted seat for teams,
+Kipdeck is self-hosted and free for one engineer.
+Teams pay per seat for the team tier,
 and later a small fee on released bounties, after an audit.
 
-I'm a software engineer in Vilnius.
-[your background line]
-I built this on top of agent-office,
+We're three founders in Vilnius.
+I'm Zygimantas, CEO and CTO;
+Lukas Kveraga is our founding engineer;
+Ernestas Rimkevicius is a software engineer.
+[your team line]
+We built Kipdeck on top of agent-office,
 an MIT project by webdevcody.
-Mission control and everything on chain are mine,
-built in the last two weeks.
+The inbox and everything on chain are ours,
+built since 30 September.
 
-I'm looking for five teams who run agents every day
-to use this weekly and tell me what's broken,
+We're looking for five teams who run agents every day
+to use this weekly and tell us what's broken,
 and maintainers willing to fund a few issues.
 The links are below. Thanks.
 ```
@@ -199,12 +206,12 @@ The links are below. Thanks.
 
 All from the technical demo recording (see `demo-script.md`), so there is one shoot for both videos:
 
-- Captain's chair view of the bridge with two or three units on the Attention board (2-3 s).
+- The inbox with two or three agents waiting, and the Deck from the captain's chair (2-3 s).
 - Mission control (I), Review tab (3), with an "Approve payout" row (2 s).
 - The payout toast with its devnet transaction (2 s).
 - Solana Explorer on the release transaction and easscan on the attestation, side by side (3 s).
 
-Keep each cutaway under four seconds and go back to your face. The 30 s teaser in `.claude/worktrees/video/video/out/final/` is not for this video: it is a trailer, and the guidance marks down flashy visuals.
+Keep each cutaway under four seconds and go back to your face. The 30 s teaser (`video/out/final/` after a render in this repository) is not for this video: it is a trailer, and the guidance marks down flashy visuals.
 
 ## Before you hit record
 

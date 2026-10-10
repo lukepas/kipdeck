@@ -16,7 +16,7 @@ Bounties and Proof of Merge are a switch those same users turn on later, when th
 
 ## Business model
 
-Open core. The office, the escrow program, the SDK and the board stay MIT, and the outcome data is CC0. Revenue: a hosted mission control seat for teams, and later a 1 to 2 percent fee on released bounties once the program is audited and on mainnet. No token.
+Kipdeck is self-hosted and open source: free for one engineer, MIT, with the escrow program, the SDK and the board, and the outcome data is CC0. Revenue, as the pitch deck states it: a team tier per seat (USD 30 a seat a month, our assumption to test; not built yet), and later a 1 to 2 percent fee on released bounties once the program is audited and on mainnet. No token.
 
 ## Channels
 
@@ -99,6 +99,6 @@ issue. Testnet only, no paying users yet.
 
 Distribution: direct outreach to agent operators, build in public with a weekly
 "whose PRs get merged" board, funded issues agents can take, the agent-office
-community. Business: open core, hosted seats for teams, later a small fee on released
-bounties after an audit.
+community. Business: self-hosted and free for one engineer, a paid team tier per seat,
+later a small fee on released bounties after an audit.
 ```

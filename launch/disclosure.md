@@ -7,9 +7,9 @@ Every program in this folder asks, in some form, what existed before and what th
 ## The facts
 
 - Upstream project: Agent Office, https://github.com/AgentSystemLabs/agent-office
-- License: MIT. `LICENSE` reads "Copyright (c) 2026 AgentSystemLabs". The license and notice stay in the fork unchanged.
+- License: MIT. `LICENSE` keeps upstream's line "Copyright (c) 2026 AgentSystemLabs" and the MIT text, and adds a line for our changes; `NOTICE` credits upstream.
 - Upstream author: webdevcody (Web Dev Cody), under the AgentSystemLabs organization, with pull requests from other contributors.
-- Upstream first commit: 2026-09-25. Our baseline is upstream commit `665aeec` (2026-09-30). Everything up to and including it is upstream work.
+- Upstream first commit: 2026-09-25. Our history starts from two snapshot imports of upstream, not from upstream's own commits: `01d85bbb` holds upstream `665aeec` and `226452e4` holds upstream `1bc3028` (both 2026-09-30). Everything in them is upstream work, and so are 11 upstream pull requests later re-committed in our history under our name. The commits and their upstream authors are in [chain/disclosure.md](chain/disclosure.md), the disclosure that is kept current; this page is the older kits' version.
 - We are not the upstream author and are not affiliated with AgentSystemLabs. We have not been asked to represent them.
 
 ## Why the dates matter
@@ -24,7 +24,7 @@ The upstream project did not exist before 2026-09-25. That cuts both ways:
 Use this where the form has room (Colosseum "anything else judges should know", Devpost "About the project", grant applications).
 
 ```field name="Disclosure (long)" max-chars=1500
-This project is a fork of Agent Office (github.com/AgentSystemLabs/agent-office), an MIT-licensed open source project created by webdevcody (AgentSystemLabs) with community contributors. Upstream built the 3D multiplayer office, the desks where Claude Code, Codex, OpenCode, Grok, Muse and DeepSeek Harness workers run, the shared live terminals, voice chat, the GitHub issue and PR boards, the stdio MCP server for managing workers, and the deploy scripts for AWS, Azure, Railway, Fly.io and Dokploy. Its first commit is dated 2026-09-25. Everything up to upstream commit 665aeec (2026-09-30) is their work, not ours; the MIT license and copyright notice are kept in LICENSE. We are not affiliated with AgentSystemLabs. What we built during this competition is listed below, commit by commit, with a link to the diff against the upstream baseline: {{DIFF_URL}}.
+This project is a fork of Agent Office (github.com/AgentSystemLabs/agent-office), an MIT-licensed open source project created by webdevcody (AgentSystemLabs) with community contributors. Upstream built the 3D multiplayer office, the desks where Claude Code, Codex, OpenCode, Grok, Muse and DeepSeek Harness workers run, the shared live terminals, voice chat, the GitHub issue and PR boards, the stdio MCP server for managing workers, and the deploy scripts for AWS, Azure, Railway, Fly.io and Dokploy. Its first commit is dated 2026-09-25. Our history starts from two snapshot imports of upstream, 01d85bbb (upstream 665aeec) and 226452e4 (upstream 1bc3028), both 2026-09-30. Everything in them is their work, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). The MIT license and copyright notice are kept in LICENSE. We are not affiliated with AgentSystemLabs. What we built during this competition is listed below, commit by commit, with a link to the diff against the upstream baseline: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main (the 11 upstream PRs are inside it).
 ```
 
 ## Disclosure text, short form
@@ -43,9 +43,9 @@ Generate this list from git right before each submission, so it is the branch's 
 npx tsx launch/tools/whats-new.ts > /tmp/whats-new.md
 ```
 
-It prints the upstream credit, every commit since `665aeec` and every changed file, grouped into code, tests, docs, deploy and kits. Paste it under the kit's disclosure section and link `{{DIFF_URL}}`, which is `https://github.com/<you>/agent-office/compare/665aeec...main` on the fork.
+It runs the same code as `launch/chain/tools/whats-new.ts`: the upstream credit and the two snapshot imports, our commits since `226452e4`, the 11 re-committed upstream pull requests with their upstream authors, the Dependabot bumps apart, and every changed file, grouped into code, tests, docs, deploy and kits. Paste it under the kit's disclosure section and link `{{DIFF_URL}}`, which is `https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main`.
 
-As of 2026-10-01 the fork has these workstreams, each on its own branch from `665aeec`. The status column is what `git log 665aeec..<branch>` showed on 2026-10-01, not the plan. Only claim what is merged and working on the day you submit, and replace this table with the `whats-new.ts` output then.
+As of 2026-10-01 the fork had these workstreams, each on its own branch from the 665aeec import (history: the branches were later merged or dropped, and the repository is now Kipdeck). The status column is what the branch held on 2026-10-01, not the plan. Only claim what is merged and working on the day you submit, and replace this table with the `whats-new.ts` output then.
 
 | Branch | Planned | In the branch on 2026-10-01 | Used by |
 | --- | --- | --- | --- |

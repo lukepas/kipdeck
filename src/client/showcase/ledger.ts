@@ -61,7 +61,7 @@ export function steps(doc: ShowcaseDoc, e: ShowcaseEvent): Step[] {
     {
       label: 'Escrow released',
       done: !!e.paid,
-      detail: e.paid ? `${units(e.paid.amount, e.paid.decimals)} USDC on Solana devnet` : 'no bounty on this one',
+      detail: e.paid ? `${units(e.paid.amount, e.paid.decimals)} test tokens on Solana devnet` : 'no bounty on this one',
       link: e.links.solana ? { href: e.links.solana, text: hashOf(e.links.solana) ?? 'tx', title: 'The payout on Solana Explorer (devnet)' } : undefined,
     },
     {
@@ -103,7 +103,7 @@ export function ledgerRow(doc: ShowcaseDoc, e: ShowcaseEvent): HTMLElement {
     { type: 'button', 'aria-expanded': 'false', title: 'Show its money path' },
     h('span.badge', { 'data-o': e.outcome }, e.outcome === 'merged' ? icon('merged', 14) : icon(e.outcome === 'reverted' ? 'stuck' : 'close', 14), outcome),
     h('span.body', {}, h('span.title', {}, h('b', {}, what), e.title ? ` ${e.title}` : ''), h('span.meta', {}, h('span.chip', { 'data-h': e.harness }, HARNESSES[e.harness] ?? e.harness), ` ${agentName(doc, e.agentId)}`, e.maintainer ? h('span.who-merged', { title: 'Who merged, as a keyed pseudonym: the chain never holds their GitHub account' }, ` - ${e.outcome} by a maintainer `, h('code', {}, e.maintainer.slice(0, 10))) : '')),
-    h('span.paid', {}, e.paid ? `${units(e.paid.amount, e.paid.decimals)} USDC` : ''),
+    h('span.paid', {}, e.paid ? `${units(e.paid.amount, e.paid.decimals)} TEST` : ''),
     h('span.age', {}, ago(e.at)),
   );
   toggle.addEventListener('click', () => {

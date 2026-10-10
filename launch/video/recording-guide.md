@@ -53,8 +53,8 @@ If you record sound on a separate device, clap once on camera at the start of ea
 - Record the screen first, without voice, following the shot list in `demo-script.md`. Then record the voiceover to the finished picture. This is easier than talking and driving the app at once, and retakes are cheap.
 - macOS: Cmd + Shift + 5, Record Selected Portion or Entire Screen. Options: no microphone, show mouse clicks on. For more control use OBS Studio (free): 1920 x 1080 canvas, 30 fps (60 for the bridge's motion if the Mac keeps up), MKV or MP4.
 - Set the display to a 1080p-friendly scale (System Settings > Displays) so text isn't tiny when shrunk, and zoom the browser to 125 to 150 percent for GitHub, explorers and terminals.
-- Use the office with `?demo=1`, and Settings > Bridge > Quality High if the Mac holds a steady frame rate; if it stutters, Medium.
-- Terminal: a large font (18 to 20 pt), a short prompt, a dark theme that matches the bridge.
+- Use the office with `?demo=1`, and Settings > Deck > Quality High if the Mac holds a steady frame rate; if it stutters, Medium.
+- Terminal: a large font (18 to 20 pt), a short prompt, a dark theme that matches the Deck.
 - Move the mouse slowly and pause on what you want people to read for a full second.
 - Record each shot as its own clip, named by its number in the shot list (`06b-explorer.mov`).
 

@@ -7,12 +7,12 @@
 //   npm run build && node launch/video/capture/office.mjs [shot,shot,...]
 //
 // Writes under launch/video/out/footage/ (untracked): <shot>.mp4 for the 3D clips (frame by frame at
-// 30 fps, the page's clock stepped so nothing stutters) and <shot>.png for the panels and the 2D view.
+// 30 fps, on the Deck at /deck, the page's clock stepped so nothing stutters) and <shot>.png for the panels and the inbox.
 //
 // Everything in the office is a seeded demo crew: stand-in units (a shell script that posts Claude Code's
 // hooks), boards and bounties played into the page as if the server had sent them. The boards mirror the
 // public demo repo zbagdzevicius/ugc-army-demo as it stands on devnet (issues #1-#3 with 10, 15 and 25
-// test USDC, PR #4 claiming #1); the merge, the approval and the payout are replayed, nothing touches a
+// test tokens, PR #4 claiming #1); the merge, the approval and the payout are replayed, nothing touches a
 // chain. The x402 402 answer is the office's own, from the real route (the offer names the office's public
 // Base Sepolia address; no key is involved). The edit labels every one of these shots "demo data".
 import { spawn, execFileSync } from 'node:child_process';
@@ -37,7 +37,8 @@ const FFMPEG = process.env.FFMPEG ?? '/opt/homebrew/bin/ffmpeg';
 const FPS = 30;
 const W = 1920;
 const H = 1080;
-// TODO(founder): rename the GitHub repo zbagdzevicius/ugc-army-demo to the Kipdeck name, then update REPO.
+// The demo repository keeps its pre-rename name: each devnet bounty's address is derived from the repo name,
+// so renaming it would orphan the three funded bounties. The cards label it a test repository.
 const REPO = 'zbagdzevicius/ugc-army-demo';
 // The office's public Base Sepolia address, as in README.md and docs/x402.md (an address, never a key).
 const PAY_TO = '0x2522fAd50CA1e545D8Bd8593763432bAB0dcDe9b';
@@ -198,7 +199,7 @@ function seedBounties(phase1) {
   const units = [...s.workers.values()];
   const expiry = Date.parse('2026-11-03T07:31:00Z');
   const funded = Date.parse('2026-10-04T07:31:00Z');
-  const b = (issue, usdc, phase, extra = {}) => ({ issue, nonce: 0, pda: `Pda${issue}`, amount: String(usdc * 1e6), decimals: 6, symbol: 'USDC', funders: 1, expiry, phase, txs: [{ kind: 'funded', sig: `Fund${issue}`, at: funded }], ...extra });
+  const b = (issue, usdc, phase, extra = {}) => ({ issue, nonce: 0, pda: `Pda${issue}`, amount: String(usdc * 1e6), decimals: 6, symbol: 'TEST', funders: 1, expiry, phase, txs: [{ kind: 'funded', sig: `Fund${issue}`, at: funded }], ...extra });
   const unit1 = units.find((u) => u.deskId === 'desk-1') ?? units[0];
   const items = [b(1, 10, phase1, { claimPr: 4, workerName: unit1?.name }), b(2, 15, 'open'), b(3, 25, 'open')];
   window.__world.bounties.replay({ t: 'bounties', floor: f, state: { enabled: true, network: 'solana-devnet', items, blink: true } });
@@ -258,7 +259,7 @@ async function main() {
       console.log('x402', r.status, headers.map(([k]) => k).join(','));
     }
 
-    await page.goto(`${base}/?demo=1`, { waitUntil: 'commit' });
+    await page.goto(`${base}/deck?demo=1`, { waitUntil: 'commit' });
     await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 120_000 });
     // The key hints ("E Get up") and the bottom bar sit where the edit's captions go: off the shots.
     // Mission control is drawn 1.4x so its rows read at 1080p.
@@ -505,10 +506,11 @@ async function main() {
 
     if (errors.length) console.log('page errors:', JSON.stringify(errors.slice(0, 8)));
 
-    // The 2D view: the crew as cards, a unit's terminal, and the queue board with a held x402 task.
+    // The home page (the inbox, which replaced the 2D view at /lite): the crew as rows, a unit's
+    // terminal in the pane, and the queue board with a held x402 task where the page still has one.
     if (want('lite')) {
       const lite = await context.newPage();
-      await lite.goto(`${base}/lite`);
+      await lite.goto(`${base}/?demo=1`);
       await lite.waitForFunction(() => !!window.__lite?.store, null, { timeout: 30_000 });
       await wait(2500);
       await lite.evaluate(pinBoards, fixtures());
@@ -516,10 +518,10 @@ async function main() {
       await lite.screenshot({ path: path.join(OUT, 'lite.png') });
       console.log('still lite');
       // The unit hired on camera for issue #2, its terminal live (its output scrolls once a second):
-      // real time at 15 fps, as the 2D view isn't on the stepped clock.
-      const card = lite.locator('.lite-card', { hasText: 'transliterate accented' }).first();
-      await (await card.count() ? card : lite.locator('.lite-card').first()).click();
-      await lite.locator('.modal.term').waitFor({ timeout: 10_000 });
+      // real time at 15 fps, as the inbox isn't on the stepped clock.
+      const row = lite.locator('li.row', { hasText: 'transliterate accented' }).first();
+      await (await row.count() ? row : lite.locator('li.row').first()).locator('.row-main').click();
+      await lite.locator('.xterm').first().waitFor({ timeout: 10_000 });
       await wait(1500);
       await lite.screenshot({ path: path.join(OUT, 'lite-terminal.png') });
       console.log('still lite-terminal');
@@ -542,10 +544,13 @@ async function main() {
         };
         s.emit('queue');
       }, REPO);
-      await lite.locator('#btn-queue').click();
-      await wait(1200);
-      await lite.screenshot({ path: path.join(OUT, 'queue-paid.png') });
-      console.log('still queue-paid');
+      // Not in the cut (its tag sat over the Approve button); kept for the record while the page has the button.
+      if (await lite.locator('#btn-queue').count()) {
+        await lite.locator('#btn-queue').click();
+        await wait(1200);
+        await lite.screenshot({ path: path.join(OUT, 'queue-paid.png') });
+        console.log('still queue-paid');
+      }
       await lite.close();
     }
   } finally {

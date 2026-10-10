@@ -6,7 +6,7 @@ import path from 'node:path';
 import { dayOf, LAUNCH_DIR, loadData, REPO_DIR, sync } from '../launch/chain/tools/calendar.js';
 import { render as renderCounts } from '../launch/chain/tools/counts.js';
 import { fields, kitFiles, launchDocs, lintFile, loadChecked, loadCounts, placeholders, unlistedLinks } from '../launch/chain/tools/lint.js';
-import { splitByAuthor, whatsNew } from '../launch/chain/tools/whats-new.js';
+import { classify, historyOf, whatsNew } from '../launch/chain/tools/whats-new.js';
 import { Docs } from '../src/server/docs.js';
 import { resolveDocLink } from '../src/shared/docs.js';
 
@@ -83,17 +83,24 @@ test('the addresses and transactions in the kit are the deployed ones', () => {
   assert.equal(attest.chainId, 84532);
 });
 
-test('the disclosure is true to git: upstream PRs carried in the branch, and our first commit date', () => {
+test('the disclosure is true to git: the snapshot imports, the upstream PRs re-committed in our history, our first commit date', () => {
   const data = loadData();
-  const { ours, upstream } = splitByAuthor(whatsNew(REPO_DIR, data.upstream.baseline).commits, data.fork.authors);
+  const { ours, upstream, imports } = classify(whatsNew(REPO_DIR, data.upstream.baseline).commits, historyOf(data));
   assert.ok(ours.length > 0);
+  assert.equal(upstream.length, data.upstream.carried!.length, 'every listed upstream PR is in the range');
+  assert.equal(imports.length + 1, data.upstream.imports!.length, 'the other import is the baseline itself');
+  for (const i of data.upstream.imports!) assert.doesNotThrow(() => git('merge-base', '--is-ancestor', i.sha, 'HEAD'), `${i.sha} is not on this branch`);
   const first = ours.map((c) => c.date).sort()[0];
   for (const file of ['disclosure.md', 'colosseum-worlds-fair.md']) {
     const text = read(file);
-    assert.ok(text.includes(`${upstream.length} later upstream pull requests`), `${file} should say ${upstream.length} later upstream pull requests`);
+    assert.ok(text.includes(`${upstream.length} upstream pull requests`), `${file} should say ${upstream.length} upstream pull requests`);
     assert.ok(text.includes(`our first commit is ${first}`), `${file} should say our first commit is ${first}`);
-    assert.ok(text.includes(data.upstream.baseline.slice(0, 7)));
+    assert.ok(text.includes(data.upstream.baseline.slice(0, 8)), `${file} should name the baseline ${data.upstream.baseline.slice(0, 8)}`);
+    assert.ok(!/\brebased\b/.test(text), `${file} says the branch is rebased on upstream; it is not`);
   }
+  const disclosure = read('disclosure.md');
+  for (const i of data.upstream.imports!) assert.ok(disclosure.includes(i.sha.slice(0, 8)) && disclosure.includes(i.upstream.slice(0, 7)), `disclosure.md should name the import ${i.sha.slice(0, 8)}`);
+  for (const c of upstream) assert.ok(disclosure.includes(`| ${c.sha.slice(0, 8)} | #${c.pr} | ${c.by} |`), `disclosure.md should credit upstream #${c.pr} (${c.sha.slice(0, 8)}) to ${c.by}`);
 });
 
 test('the landing copy is what /pom/ shows', () => {
@@ -131,7 +138,7 @@ test('relative links in the launch docs resolve to files in the repo', () => {
 test('the office bookshelf lists the kit with titles, so it can be read inside the office', async () => {
   const { files } = await new Docs(REPO_DIR).list();
   const shelf = new Map(files.map((f) => [f.path, f.title]));
-  assert.equal(shelf.get('launch/chain/README.md'), 'Proof of Merge launch kit');
+  assert.equal(shelf.get('launch/chain/README.md'), 'Kipdeck chain launch kit');
   assert.equal(shelf.get('launch/chain/colosseum-worlds-fair.md'), "Colosseum Crypto World's Fair");
   for (const doc of launchDocs()) assert.ok(shelf.get(`launch/chain/${doc}`), `${doc} missing from the shelf or untitled`);
 });

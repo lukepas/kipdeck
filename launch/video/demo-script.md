@@ -2,7 +2,7 @@
 
 For the Colosseum Crypto World's Fair. Screen recording with the founder's voiceover. Target 2:55, hard limit 3:00 (Colosseum: "no more than three minutes").
 
-A 2:56 cut without sound, with its own voiceover as captions and a 60 s 9:16 highlight, is made from the real office by the scripts in [capture/](capture/README.md); [README.md](README.md) says how to lay the voiceover on it. PR #4 is not merged yet, so that cut speaks in the conditional ("when a person merges it") and shows the merge and the payout as replays on the office's mock chain, with no transaction link. Its voiceover is [capture/voiceover.txt](capture/voiceover.txt), not the lines below, which are for the recording-day take after the real merge.
+A 2:56 cut without sound, with its own voiceover as captions and a 60 s 9:16 highlight, is made from the real office by the scripts in [capture/](capture/README.md); [README.md](README.md) says how to lay the voiceover on it. PR #4 was merged on 2026-10-07 by the operator's own account, so it counted as `self` and paid nothing; that cut says so, and shows the merge and the payout as replays on the office's mock chain, with no transaction link. Its voiceover is [capture/voiceover.txt](capture/voiceover.txt), not the lines below, which are for a live take after a merge that counts.
 
 Last checked: 2026-10-07, against Colosseum's hackathon FAQ (https://colosseum.com/hackathon) and their submission guide (https://blog.colosseum.com/perfecting-your-hackathon-submission/).
 
@@ -10,7 +10,7 @@ Last checked: 2026-10-07, against Colosseum's hackathon FAQ (https://colosseum.c
 
 The demo is about how it works, not why. Their guide asks for something "technical, direct, and specific to implementation": the core features you built, the tech stack, why you chose each part, and how the Solana integration, on-chain logic and architecture fit together. Interface walkthroughs and architecture visuals are welcome. Don't turn it into a second pitch.
 
-So: the bridge gets ten seconds, then every beat shows one real action and names the mechanism behind it.
+So: the Deck gets ten seconds, then every beat shows one real action and names the mechanism behind it.
 
 ## Ground rules
 
@@ -23,12 +23,12 @@ So: the bridge gets ten seconds, then every beat shows one real action and names
 
 The dry run is 2026-10-08, the recording 2026-10-09.
 
-- [ ] TODO(founder): the demo repo is still named `zbagdzevicius/ugc-army-demo`. After renaming it on GitHub for Kipdeck, update the links in this kit (`description.txt`, `capture/*.mjs`, `capture/edit.json`).
+- [ ] The demo repo keeps its name, `zbagdzevicius/ugc-army-demo`: each devnet bounty's address is derived from the repo name, so renaming it would orphan the funded bounties. Call it the demo repository, a test repository named before the rename, and say its bounties hold test tokens.
 - [ ] Office running over HTTPS (the tunnel) with the demo deck `zbagdzevicius/ugc-army-demo` open, started with `--attest --attest-repos zbagdzevicius/ugc-army-demo --reputation --x402 --x402-pay-to <office Base Sepolia address> --x402-repos zbagdzevicius/ugc-army-demo`. Check in the dry run that the flags combine as expected; `docs/configuration.md` has every flag.
 - [ ] Settings > Bounties: bounties on, Solana devnet, approver set to your Phantom address (with a little devnet SOL), your payout wallet set.
 - [ ] Settings > Bounties > Public showcase on (admins only), so `/pom/` is served.
-- [ ] Issues #1, #2 and #3 on ugc-army-demo funded on devnet (they are; check they have not expired).
-- [ ] PR #4 (closes #1, opened by an office unit) still open. It must be merged on camera by a second GitHub account with write access. Your own account merging it is recorded as `self` and shown apart on the board.
+- [ ] Issues #2 and #3 on the demo repo still open and funded on devnet (15 and 25 test tokens; they expire 2026-11-03). Issue #1's bounty is claimed by PR #4 with nothing paid.
+- [ ] PR #4 (closes #1) was merged on 2026-10-07 by the operator's own account: `self`, not paid, and it cannot be merged again. For a merge on camera, let a unit open a new pull request for issue #2 or #3 and have a second GitHub account with write access merge it. Your own account merging it is recorded as `self` and shown apart on the board.
 - [ ] The GitHub Action workflow (`onchain/action/examples/bounty.yml`) added to ugc-army-demo, pinned to a commit SHA, if you want beat 10 to show a real run. Until then it has only run against a fake GitHub API, and the voiceover says so.
 - [ ] x402 payer key file with Base Sepolia test USDC (it held 19.90 after 2026-10-04).
 - [ ] Browser: a clean profile, bookmarks bar hidden, zoom so text reads at 1080p. Add `?demo=1` to the office's address for bigger type and callouts.
@@ -37,7 +37,7 @@ The dry run is 2026-10-08, the recording 2026-10-09.
 
 About 400 spoken words. Each row: what you do, what the viewer sees, and the line you record. Record the voiceover after the screen capture, to picture (see `recording-guide.md`).
 
-### 1. The bridge and attention at a glance (0:00-0:15)
+### 1. The Deck and attention at a glance (0:00-0:15)
 
 Action: open `https://<office>/?demo=1`. Let the arrival play for two seconds, press any key to land. Walk to the captain's chair, press E to sit. Hold on the Attention board.
 
@@ -55,7 +55,7 @@ Action: stand up, walk to the arc's Issues board (or open it from the Tab menu).
 
 On screen: the issue row with its devnet amount, the escrow vault on the Proof corner with its coin stacks, the new unit sitting down.
 
-> Issue two on our public demo repo carries a devnet USDC bounty.
+> Issue two on our public demo repo carries a bounty of 15 test tokens on devnet.
 > It sits in a program-owned vault, one per bounty, that the office opened with its attester and approver keys.
 > Anyone can fund it from the board, or from a Blink, where only the funder's wallet signs.
 > I'll put a Claude Code unit on it. It works in its own git worktree.
@@ -71,14 +71,14 @@ On screen caption: "Units open PRs with the operator's GitHub token, so GitHub s
 
 ### 4. The human merge (0:52-1:05)
 
-Action: in a second browser profile signed in as the reviewer account (write access), approve and merge PR #4.
+Action: in a second browser profile signed in as the reviewer account (write access), approve and merge the unit's new pull request (for issue #2 or #3). Not PR #4: it is already merged, by the operator.
 
 > A person merges it. The office then asks GitHub fresh: was it merged, by a user, not a bot,
 > and does that user have write access? A merge by the agent's own operator is labelled self.
 
 ### 5. Admin approval in the review inbox (1:05-1:20)
 
-Action: back in the office, press I, then 3 for Review. Show the row "Approve payout of N USDC to <unit> for PR #4" with the time left. Press approve. Phantom pops up on devnet: sign.
+Action: back in the office, press I, then 3 for Review. Show the row "Approve payout of N ... to <unit> for PR #<new>" with the time left. Press approve. Phantom pops up on devnet: sign.
 
 > Nothing moves yet. The payout waits in the review inbox until an admin approves it,
 > and the approval is a signature from the admin's own browser wallet,
@@ -133,7 +133,7 @@ Action: show `onchain/action/examples/bounty.yml` with `uses: ...@<sha>`, then a
 
 Action: quick cuts: `docs/security.md` headings, the worker environment allowlist in `src/server/workers/env.ts`, then the closing card.
 
-Closing card: "Kipdeck. Agents get paid only when a human reviewer merges." The source repository URL big, the demo repository, the four IDs in full, "Testnets only", and the agent-office credit (`capture/cards.mjs` renders it with `FORK_URL` set).
+Closing card: "Kipdeck. Agents get paid only when a human reviewer merges." The source repository URL big, the demo repository, the four IDs in full, "Testnets only", and the agent-office credit (`capture/cards.mjs` renders it, with `github.com/zbagdzevicius/kipdeck` as the source).
 
 > Keys are dedicated testnet keys in owner-only files, and workers never get them in their environment.
 > The clients check the chain before they sign. Nothing is audited yet, so it stays on testnet.
@@ -152,7 +152,7 @@ Record each step on its own during the 2026-10-08 dry run, so a slow RPC on the 
 | 3a | Unit's terminal | Click the unit, its terminal for 2 s, Esc | 3 s | Dry-run take |
 | 3b | PR #4 on GitHub | Conversation tab, head branch, "Closes #1" | 6 s | None needed |
 | 3c | Claim on the unit's card | Hover or walk up to the unit with the amount on its card | 4 s | Dry-run take |
-| 4 | Merge | Reviewer profile: approve, merge PR #4 | 10 s | Cannot be redone: merge only once, on the real take |
+| 4 | Merge | Reviewer profile: approve, merge the unit's new PR (not PR #4, already merged by the operator) | 10 s | Cannot be redone: merge only once, on the real take |
 | 5 | Review inbox | I, then 3; Approve payout; Phantom signs on devnet | 12 s | Dry-run take of another bounty |
 | 6a | Toast and coins | Wait for the toast; coins fly to the console | 6 s | Never pair PR #4 with another bounty's transaction. Show the approver-wallet test release on its own, and say it is a test run: https://explorer.solana.com/tx/2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r?cluster=devnet |
 | 6b | Explorer | Click the toast's link | 8 s | Same link as 6a |

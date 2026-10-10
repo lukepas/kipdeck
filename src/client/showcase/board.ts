@@ -52,7 +52,7 @@ function row(doc: ShowcaseDoc, s: RepStats, i: number): HTMLElement {
     ['Revert rate', rateCell(s.revertRate, false)],
     ['n', String(s.samples)],
     ['Maintainers', String(s.distinctMaintainers)],
-    ['Earned', `${s.usdcEarned} USDC`],
+    ['Earned', `${s.usdcEarned} TEST`],
   ];
   const link = s.latest ? h('a.src', { href: s.latest, target: '_blank', rel: 'noopener', title: 'Its latest attestation on EAS (Base Sepolia)' }, 'proof') : h('span.src');
   return h(

@@ -41,7 +41,7 @@ Every row on the board links to its proof. Rebuild the whole board from chain da
 ## Footer
 
 ```field name="Credit" max-chars=200
-Built on agent-office (AgentSystemLabs / webdevcody), MIT. This fork adds Proof of Merge and is not run by the upstream authors.
+Built on agent-office (AgentSystemLabs / webdevcody), MIT. Kipdeck adds Proof of Merge, its payout layer, and is not run by the upstream authors.
 ```
 
 ```field name="Testnet notice" max-chars=200

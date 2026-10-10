@@ -1,5 +1,7 @@
 # Colosseum Crypto World's Fair
 
+**Superseded: do not submit from this page.** The entry is Kipdeck, with Proof of Merge as its payout layer, and its kit is [chain/colosseum-worlds-fair.md](chain/colosseum-worlds-fair.md), with the disclosure in [chain/disclosure.md](chain/disclosure.md). This page is the plan as it stood on 2026-10-01 and is kept as history: the product name below is an old working name, the escrow has since been built and deployed on devnet, and the program uses solana-program, not Anchor.
+
 Last checked: 2026-10-01. Sources: the event page, the official rules PDF and the Colosseum hackathon FAQ (links below). Anything not stated there is marked [unverified].
 
 Plan: enter the Solana track with bounty escrow for agent work (branch `launch/solana-escrow`): a maintainer funds an escrow for a GitHub issue, a worker in Agent Office solves it, and the escrow pays out when the pull request merges. The x402 pay-per-task work on Base (branch `launch/x402-base`) is the second chain story (the rules list a Base track: $25,000 across 5 projects; Solana: $100,000 across 10). Whether one project can be judged in two tracks is [unverified], so lead with Solana.

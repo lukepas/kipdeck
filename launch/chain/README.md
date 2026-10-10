@@ -1,6 +1,6 @@
-# Proof of Merge launch kit
+# Kipdeck chain launch kit
 
-Submission drafts, the disclosure, video scripts, landing copy, ten days of build-in-public posts and the calendar for the chain side of this fork. Proof of Merge is a fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs); every kit credits it. Testnets only: Solana devnet and Base Sepolia.
+Submission drafts, the disclosure, video scripts, landing copy, ten days of build-in-public posts and the calendar for the chain side of Kipdeck: Proof of Merge, the payout layer of Kipdeck. Kipdeck (https://github.com/zbagdzevicius/kipdeck) is built on [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs); every kit credits it. Testnets only: Solana devnet and Base Sepolia.
 
 Last checked: 2026-10-04
 
@@ -52,7 +52,7 @@ These need a browser, a person or a decision, and no script does them. Until 202
 
 - The Base Sepolia wallets hold test ETH: the registrar `0x7c2C45a17A432CF890E514f1AaB67D941ec58314` (no agent registered yet; the office registers an agent on ERC-8004 when its first PR is attested with `--reputation`) and the attester `0x83dAa5252b68D98F25CbB089CCeE4edc7C083403`. Top them up from a browser faucet if a run says they are short.
 - Devnet SOL from https://faucet.solana.com if `solana airdrop` is rate limited, for the funder wallet used on recording day.
-- Publish the fork and the showcase (GitHub Pages export), then fill in `{{FORK_URL}}`, `{{SHOWCASE_URL}}`, `{{DIFF_URL}}` and `{{HEAD_SHA}}`.
+- The repository is public (https://github.com/zbagdzevicius/kipdeck) and its diff link is in the kits. Publish the showcase (GitHub Pages export), then fill in `{{SHOWCASE_URL}}`; on submission day put the submitted commit in place of `{{HEAD_SHA}}` in [disclosure.md](disclosure.md) and the Colosseum form.
 - Ask the multi-track question in the Colosseum Discord and paste the answer into [judge-qa.md](judge-qa.md).
 - Employer permission, registration on colosseum.com, recording the videos, posting.
 
@@ -63,7 +63,7 @@ npm run launch:check                                  # all of the below in chec
 npx tsx launch/chain/tools/calendar.ts                # rewrite calendar.ics and the timeline below
 npx tsx launch/chain/tools/counts.ts --refresh <dir>  # take leaderboard.json from an indexer run, rewrite counts.json
 npx tsx launch/chain/tools/lint.ts                    # limits, sections, ASCII, sources, links, post rules
-npx tsx launch/chain/tools/whats-new.ts               # the disclosure's commit list, ours and upstream's apart
+npx tsx launch/chain/tools/whats-new.ts               # the disclosure's commit list: ours, upstream's re-committed PRs, bots
 ```
 
 How they work is in [docs/launch.md](../../docs/launch.md).

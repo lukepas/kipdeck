@@ -2,7 +2,7 @@
 
 Last checked: 2026-10-03. Source: the buildathon page on HackQuest (link below), which on that day showed an online three-week buildathon, a $30,000 prize pool with tracks "announcing soon", and a countdown of 27 days. Dates, rules and judging are not published yet, so almost everything here is [unverified].
 
-Plan: a later, separate entry, not part of the Colosseum submission. Proof of Merge (a fork of agent-office, MIT, by webdevcody / AgentSystemLabs) keeps its attestations chain-agnostic: the office's fallback contracts in `onchain/attest/contracts` and `onchain/reputation/contracts` are plain Solidity, so they can run on Arbitrum Sepolia next to Base Sepolia. The new work for this buildathon would be:
+Plan: a later, separate entry, not part of the Colosseum submission. Proof of Merge (the payout layer of Kipdeck, which is built on agent-office, MIT, by webdevcody / AgentSystemLabs) keeps its attestations chain-agnostic: the office's fallback contracts in `onchain/attest/contracts` and `onchain/reputation/contracts` are plain Solidity, so they can run on Arbitrum Sepolia next to Base Sepolia. The new work for this buildathon would be:
 
 - the MergeAttestor and the ERC-8004 fallback registries deployed on Arbitrum Sepolia, with the same chain-id guard the Base side has (Arbitrum Sepolia is chain id 421614);
 - the indexer reading both chains into one board, so a row says where its proof lives;
@@ -19,7 +19,7 @@ Nothing of this exists yet. Do not describe it as built until it is.
 
 - Buildathon page: https://arbitrum-dubai.hackquest.io/
 - Upstream credit: https://github.com/AgentSystemLabs/agent-office
-- Our fork: {{FORK_URL}}
+- Our repository: https://github.com/zbagdzevicius/kipdeck
 
 ## Eligibility checklist
 
@@ -31,7 +31,7 @@ Nothing of this exists yet. Do not describe it as built until it is.
 ## Pre-existing code disclosure
 
 ```field name="Prior work" max-chars=1000
-Proof of Merge is a fork of agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs; the office is their work. Before this buildathon we built, for the Colosseum Crypto World's Fair: mission control, a Solana devnet escrow for bounties paid only on a person's merge, and proof-of-merge attestations and ERC-8004 reputation on Base Sepolia. New for this buildathon: {{ARBITRUM_NEW_WORK}}. Our commits are listed in launch/chain/disclosure.md.
+Proof of Merge is the payout layer of Kipdeck, which is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs; the office is their work. Before this buildathon we built, for the Colosseum Crypto World's Fair: the inbox and mission control, a Solana devnet escrow for bounties paid only on a person's merge, and proof-of-merge attestations and ERC-8004 reputation on Base Sepolia. New for this buildathon: {{ARBITRUM_NEW_WORK}}. Our commits are listed in launch/chain/disclosure.md.
 ```
 
 ## Project description
