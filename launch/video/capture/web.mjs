@@ -22,7 +22,7 @@ const only = process.argv[2] ? new Set(process.argv[2].split(',')) : undefined;
 const PROGRAM = 'JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6';
 // The program's first release (2026-10-03), a demo bounty with no GitHub merge behind it (launch/chain/README.md).
 const RELEASE = '2rPSWQv7YSWkEwJWNJtGtpeN8WYQzHXvbPz8xb9dCbEz8LnpatSZaoYHyyyq7dgUCkmWHrU4ywFc29HPYa73ZtUc';
-// The bounty account for issue #2 on zbagdzevicius/ugc-army-demo (15 test USDC, open), from `ao-bounty show`.
+// The bounty account for issue #2 on zbagdzevicius/ugc-army-demo (15 test tokens, open), from `ao-bounty show`.
 // A release on the upgraded program through the approver-wallet path (2026-10-03): the attester and the
 // approver both signed, 5 test tokens, a demo bounty with no GitHub merge behind it (deployments/devnet.json).
 const RELEASE2 = '2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r';

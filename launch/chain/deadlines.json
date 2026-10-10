@@ -1,6 +1,6 @@
 {
   "calendar": {
-    "name": "Proof of Merge: chain launch",
+    "name": "Kipdeck: chain launch (Proof of Merge)",
     "stamp": "2026-10-03T00:00:00Z",
     "from": "2026-10-02",
     "home": "Europe/Vilnius"
@@ -11,11 +11,30 @@
     "copyright": "Copyright (c) 2026 AgentSystemLabs",
     "author": "webdevcody (Web Dev Cody), AgentSystemLabs",
     "firstCommit": "2026-09-25",
-    "baseline": "665aeec571bc03f76cbd16de8d628dd169a48874",
-    "baselineDate": "2026-09-30"
+    "baseline": "226452e4a00ab8b79327647a26461cc2c78115a2",
+    "baselineUpstream": "1bc3028472d38b161e85117bf621bb6bc12700e5",
+    "baselineDate": "2026-09-30",
+    "imports": [
+      { "sha": "01d85bbb9a8844df66160288af9a8765ba0f9530", "upstream": "665aeec571bc03f76cbd16de8d628dd169a48874" },
+      { "sha": "226452e4a00ab8b79327647a26461cc2c78115a2", "upstream": "1bc3028472d38b161e85117bf621bb6bc12700e5" }
+    ],
+    "carried": [
+      { "sha": "ff1b76bd", "pr": 262, "author": "webdevcody" },
+      { "sha": "4ed900bb", "pr": 263, "author": "webdevcody" },
+      { "sha": "f4869653", "pr": 264, "author": "webdevcody" },
+      { "sha": "4d44abae", "pr": 265, "author": "webdevcody" },
+      { "sha": "3acfd45b", "pr": 266, "author": "webdevcody" },
+      { "sha": "8e12ea84", "pr": 268, "author": "webdevcody" },
+      { "sha": "0f5c49f4", "pr": 272, "author": "webdevcody" },
+      { "sha": "e825d794", "pr": 271, "author": "webdevcody" },
+      { "sha": "0622282c", "pr": 274, "author": "webdevcody" },
+      { "sha": "9e954b18", "pr": 273, "author": "webdevcody" },
+      { "sha": "5db9e681", "pr": 244, "author": "Lohrey" }
+    ]
   },
   "fork": {
-    "name": "Proof of Merge",
+    "name": "Kipdeck",
+    "repo": "https://github.com/zbagdzevicius/kipdeck",
     "authors": ["Žygimantas Bagdzevičius"]
   },
   "events": [

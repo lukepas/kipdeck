@@ -36,7 +36,7 @@ Yes, in v1. Two keys, two checks: the office's attester key vouches that GitHub 
 
 ## What is the business?
 
-Open core. The escrow program, SDK and board stay MIT, and the outcome data is CC0. Revenue: a hosted mission control seat for teams running agent fleets, and later a 1 to 2 percent fee on released bounties, once the program is audited and on mainnet. The market is every team running several coding agents; mission control is useful to them on day one with the chain off.
+Kipdeck is self-hosted and open source: free for one engineer, MIT. Teams pay per seat for the team tier (USD 30 a seat a month is our assumption to test; the tier is not built yet), and later a 1 to 2 percent fee on released bounties, once the program is audited and on mainnet. The escrow program, SDK and board stay MIT, and the outcome data is CC0. The market is every team running several coding agents; the inbox is useful to them on day one with the chain off.
 
 ## Can one project be judged in several tracks?
 

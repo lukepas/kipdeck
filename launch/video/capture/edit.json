@@ -4,7 +4,7 @@
   "tags": {
     "demo": ["grey", "DEMO DATA - seeded office crew, nothing on chain"],
     "mirror": ["grey", "DEMO DATA - seeded office; the board mirrors the real devnet bounties"],
-    "replay": ["grey", "REPLAY - what happens when PR #4 merges; on GitHub it is still open"],
+    "replay": ["grey", "REPLAY - PR #4 was merged 2026-10-07 by the operator's own account: self, paid nothing"],
     "approval": ["grey", "DEMO DATA - seeded office; on the real run the admin signs in Phantom"],
     "payout": ["grey", "REPLAY - no transaction sent; the office's mock chain"],
     "fixture": ["grey", "TEST DATA - fixture; the live board is empty until a real merge"],
@@ -18,9 +18,9 @@
     { "n": 0, "title": "", "captions": [] },
     {
       "n": 1,
-      "title": "The bridge",
+      "title": "The Deck",
       "captions": [
-        "This is Kipdeck, a fork of agent-office.",
+        "This is Kipdeck, built on agent-office.",
         "Every coding agent is a unit at a console.",
         "The office ranks who needs you first:",
         "needs you, stuck, to review, working.",
@@ -32,7 +32,7 @@
       "title": "A funded issue",
       "captions": [
         "Issue two on our public demo repo",
-        "holds 15 test USDC on Solana devnet,",
+        "holds 15 test tokens on Solana devnet,",
         "in a vault only the program can move.",
         "Anyone can fund it from the board",
         "or a Blink, signing with their wallet.",
@@ -55,11 +55,11 @@
       "n": 4,
       "title": "When a person merges",
       "captions": [
-        "When a person merges it, the office",
-        "asks GitHub again: merged by a user,",
-        "not a bot, with write access?",
-        "If the agent's own operator merges,",
-        "it's labelled self and not counted."
+        "When a person merges, the office",
+        "asks GitHub: merged by a user, not a bot,",
+        "with write access? PR #4 was merged",
+        "by its own operator: labelled self,",
+        "so it paid nothing. This is a replay."
       ]
     },
     {
@@ -77,7 +77,7 @@
       "n": 6,
       "title": "The payout on Solana devnet",
       "captions": [
-        "Then the bounty is released on devnet.",
+        "On a counted merge, the bounty pays out.",
         "Here's a real release from a test run,",
         "with no GitHub merge behind it.",
         "It needed two signatures:",
@@ -166,18 +166,18 @@
       "tag": "devnet",
       "url": "https://explorer.solana.com/address/5V3sAZZ1eBBJ9sMK5tkB2KtQuxJnNpPL1TESNDkUwS85?cluster=devnet",
       "kb": [[0, 0, 1920], [430, 60, 1060]],
-      "note": [0.2, 4.8, "Issue #2's bounty account, owned by the escrow program (15 test USDC in its vault)"]
+      "note": [0.2, 4.8, "Issue #2's bounty account, owned by the escrow program (15 test tokens in its vault)"]
     },
     { "beat": 2, "src": "footage/hire.mp4", "in": 0.6, "dur": 9.0, "cut": 0, "tag": "demo" },
     {
       "beat": 3,
       "src": "footage/unit-terminal.mp4",
       "in": 0,
-      "crop": [330, 150, 1280],
+      "crop": [640, 50, 1280],
       "dur": 4.0,
       "cut": 0,
       "tag": "demo",
-      "note": [0.2, 3.8, "The 2D view: the new unit's live terminal, working on issue #2"]
+      "note": [0.2, 3.8, "The inbox: the new unit's live terminal, working on issue #2"]
     },
     {
       "beat": 3,
@@ -266,7 +266,7 @@
         "crop": [150, 0, 972],
         "tag": "mirror",
         "title": "A funded issue",
-        "caption": "Issue two holds 15 test USDC on Solana devnet."
+        "caption": "Issue two holds 15 test tokens on Solana devnet."
       },
       {
         "src": "web/gh-pr4.png",
@@ -291,8 +291,8 @@
         "dur": 6.4,
         "crop": [900, 60, 900],
         "tag": "payout",
-        "title": "After the merge, it pays",
-        "caption": "Replayed here: the release PR #4 gets once merged."
+        "title": "After a counted merge, it pays",
+        "caption": "A replay on the mock chain: PR #4 was self, unpaid."
       },
       {
         "src": "web/sol-release2.png",
@@ -300,7 +300,7 @@
         "crop": [470, 230, 760],
         "tag": "devnet",
         "title": "Two signers or no payout",
-        "caption": "A real devnet release: attester and approver."
+        "caption": "A devnet test run, no merge: two signers."
       },
       {
         "src": "web/eas-schema.png",

@@ -1,15 +1,16 @@
 // The demo's graphics, drawn in headless Chromium from HTML: the title and end cards in the Kipdeck
-// brand of the 30 s teaser (paper, ink, the signal red, Archivo, Inter Tight, JetBrains Mono, the 3x3 mark),
+// brand of the 30 s teaser (paper, ink, the signal red, Archivo, Inter Tight, JetBrains Mono) with Kip's
+// mark, the logo (design/logo/mark.svg, which `npm run logo` writes from src/shared/logo.ts),
 // the code and doc pages (real files from this repository, real line numbers), the terminal page (the
 // office's own 402, saved by office.mjs), and the overlays edit.json asks for: the lower-third captions,
 // each segment's beat label and source tag, its note, and the 9:16 frames.
 //
 //   node launch/video/capture/cards.mjs
 //
-// Fonts: FONTS_DIR (default: the teaser's video/assets/fonts in the sibling video worktree) for the
-// variable Archivo, Inter Tight and JetBrains Mono; this repository's own woff2 files stand in when it is
-// missing. Writes launch/video/out/gfx/ (untracked). FORK_URL (e.g. github.com/you/kipdeck) is the source
-// repository on the title and end cards; without it they say SET FORK_URL BEFORE EXPORT in red.
+// Fonts: FONTS_DIR (default: the teaser's video/assets/fonts in this repository) for the variable
+// Archivo, Inter Tight and JetBrains Mono; the app's own woff2 files stand in when it is missing.
+// Writes launch/video/out/gfx/ (untracked). FORK_URL (default github.com/zbagdzevicius/kipdeck) is the
+// source repository on the title and end cards, in both formats.
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -23,9 +24,9 @@ const OUT = path.join(ROOT, 'launch', 'video', 'out', 'gfx');
 const HTML = path.join(OUT, 'html');
 mkdirSync(HTML, { recursive: true });
 const edit = JSON.parse(readFileSync(path.join(HERE, 'edit.json'), 'utf8'));
-const FORK = process.env.FORK_URL ?? '';
+const FORK = process.env.FORK_URL || 'github.com/zbagdzevicius/kipdeck';
 
-const FONTS_DIR = process.env.FONTS_DIR ?? path.resolve(ROOT, '..', 'video', 'video', 'assets', 'fonts');
+const FONTS_DIR = process.env.FONTS_DIR ?? path.join(ROOT, 'video', 'assets', 'fonts');
 const REPO_FONTS = path.join(ROOT, 'src', 'client', 'styles', 'fonts');
 const font = (file, fallback) => {
   const p = path.join(FONTS_DIR, file);
@@ -47,41 +48,48 @@ body { font-family: 'Inter Tight', 'Helvetica Neue', Arial, sans-serif; -webkit-
 .disp { font-family: Archivo, 'Inter Tight', sans-serif; }`;
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-/** The 3x3 mark with the red middle, as on the teaser's end card. */
-const mark = (cell, gap, ink = C.ink) => `<div style="display:grid;grid-template-columns:repeat(3,${cell}px);gap:${gap}px">${Array.from({ length: 9 }, (_, i) => `<div style="width:${cell}px;height:${cell}px;background:${i === 4 ? C.signal : ink}"></div>`).join('')}</div>`;
+/**
+ * Kip's mark, the logo: the face in ink with his tuft's light in the signal colour. The paths come from
+ * design/logo/mark.svg, the static copy of src/shared/logo.ts that tests/logo.test.ts keeps in step.
+ * `size` is the old 3x3 grid's cell, so the cards keep their layout: the mark fills the same square.
+ */
+const LOGO_SVG = readFileSync(path.join(ROOT, 'design', 'logo', 'mark.svg'), 'utf8');
+const MARK_PATHS = [...LOGO_SVG.matchAll(/<path\b[^>]*\bd="([^"]+)"[^>]*>/g)].map((m) => ({ d: m[1], signal: /class="signal"/.test(m[0]) }));
+if (MARK_PATHS.length !== 2 || !MARK_PATHS.some((p) => p.signal)) throw new Error('design/logo/mark.svg: expected the body path and the signal light');
+const mark = (cell, gap, ink = C.ink) => {
+  const size = cell * 3 + gap * 2;
+  return `<svg data-logo="mark" width="${size}" height="${size}" viewBox="0 0 32 32" aria-label="Kipdeck">${MARK_PATHS.map((p) => `<path fill="${p.signal ? C.signal : ink}" d="${p.d}"/>`).join('')}</svg>`;
+};
 
 const PROGRAM = 'JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6';
 // Every ID on the end cards in full, one line each, so a judge can type or search it.
 const IDS = [
   ['ESCROW PROGRAM', PROGRAM, 'Solana devnet'],
-  ['RELEASE TX', '2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r', 'Solana devnet'],
+  ['RELEASE TX', '2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r', 'Solana devnet, test run'],
   ['EAS SCHEMA', '0x368e9023c13393aea075e78cae18e804725b0d1bb3e2b1a6c1117d759a01a900', 'Base Sepolia'],
   ['X402 PAYMENT', '0x490896509be59e45e7d14afbaa3ec24c18db5292f4ea1c71cf79533670d126dc', 'Base Sepolia'],
 ];
+// The demo repository keeps the name it had before the rename: its devnet bounties' addresses are derived
+// from it, so renaming it would orphan them. The cards label it as a test repository.
 const DEMO_REPO = 'github.com/zbagdzevicius/ugc-army-demo';
+const DEMO_LABEL = 'DEMO REPO (test repository)';
+const demoLabel = 'DEMO REPO<br><span style="font-weight:400">test repository</span>';
+// The product line, as in src/shared/copy.ts (TAGLINE).
+const PRODUCT_LINE = 'The inbox for your AI coding agents.';
 // One line, on every card that carries a line: the product rule.
 const TAGLINE = 'Agents get paid only when a human reviewer merges.';
-// The source repository. Until FORK_URL is set the cards say so in red, so a cut without it is never mistaken for final.
-const sourceLine = (size) =>
-  FORK
-    ? `<span class="mono" style="font-size:${size}px;font-weight:800">${esc(FORK)}</span>`
-    : `<span class="mono" style="font-size:${size}px;font-weight:800;color:${C.signal}">SET FORK_URL BEFORE EXPORT</span>`;
+// The source repository, on the title and end cards of both cuts.
+const sourceLine = (size) => `<span class="mono" style="font-size:${size}px;font-weight:800">${esc(FORK)}</span>`;
 
-// What this fork added since upstream, from git: commits by the fork's authors (launch/chain/deadlines.json)
-// since upstream's 665aeec, and the lines they added in src, onchain, tests, bin and docs (lock files left out).
-const FORK_BASE = '665aeec';
+// What we added on top of upstream, from git, by the disclosure's own rule (launch/chain/tools/whats-new.ts
+// --json): our commits since 226452e4, our import of upstream 1bc3028, without the snapshot imports, the 11
+// upstream pull requests re-committed in our history or the bots' bumps; and the lines those commits added
+// in src, onchain, tests, bin and docs (lock files left out).
 const forkStats = (() => {
   try {
-    const authors = JSON.parse(readFileSync(path.join(ROOT, 'launch/chain/deadlines.json'), 'utf8')).fork.authors;
-    const who = authors.flatMap((a) => ['--author', a]);
-    const git = (...a) => execFileSync('git', a, { cwd: ROOT, maxBuffer: 1 << 28 }).toString();
-    const commits = git('log', '--no-merges', '--format=%H', ...who, `${FORK_BASE}..HEAD`).trim().split('\n').filter(Boolean).length;
-    let added = 0;
-    for (const l of git('log', '--no-merges', '--numstat', '--format=', ...who, `${FORK_BASE}..HEAD`, '--', 'src', 'onchain', 'tests', 'bin', 'docs', ':!*package-lock.json', ':!*.lock').split('\n')) {
-      const n = Number(l.split('\t')[0]);
-      if (Number.isFinite(n) && l.includes('\t')) added += n;
-    }
-    return { commits, added, at: git('log', '-1', '--format=%cs', FORK_BASE).trim() };
+    const out = execFileSync(process.execPath, ['--import', 'tsx', path.join(ROOT, 'launch', 'chain', 'tools', 'whats-new.ts'), '--json'], { cwd: ROOT, maxBuffer: 1 << 28 }).toString();
+    const s = JSON.parse(out);
+    return { commits: s.ours, added: s.added, upstream: s.upstream, at: s.firstOurs };
   } catch (e) {
     console.log('fork stats unavailable:', e.message.split('\n')[0]);
     return undefined;
@@ -95,14 +103,14 @@ const add = (name, w, h, html, transparent = false) => jobs.push({ name, w, h, h
 add('title', 1920, 1080, `<body style="background:${C.paper};color:${C.ink}">
 <div style="position:absolute;left:96px;top:92px">${mark(52, 8)}</div>
 <div class="mono" style="position:absolute;left:330px;top:100px;font-size:22px;letter-spacing:.08em;color:${C.grey}">TECHNICAL DEMO - HOW IT WORKS</div>
-<div class="mono" style="position:absolute;left:330px;top:140px;font-size:34px;font-weight:700">Mission control for AI coding agents.</div>
+<div class="mono" style="position:absolute;left:330px;top:140px;font-size:34px;font-weight:700">${PRODUCT_LINE}</div>
 <div class="disp" data-fit="1740" style="position:absolute;left:84px;top:300px;font-size:300px;font-weight:900;font-stretch:125%;letter-spacing:-.01em;line-height:1;white-space:nowrap">KIPDECK</div>
 <div style="position:absolute;left:96px;top:575px;font-size:62px;font-weight:700;line-height:1.15">Agents get paid only when a <span style="color:${C.signal}">human reviewer</span> merges.</div>
 <div style="position:absolute;left:96px;top:735px;display:flex;flex-direction:column;gap:12px">
   <div style="display:flex;gap:26px;align-items:baseline"><span class="mono" style="width:190px;font-size:20px;font-weight:700;color:${C.grey};letter-spacing:.06em">SOURCE</span>${sourceLine(40)}</div>
-  <div style="display:flex;gap:26px;align-items:baseline"><span class="mono" style="width:190px;font-size:20px;font-weight:700;color:${C.grey};letter-spacing:.06em">DEMO REPO</span><span class="mono" style="font-size:30px;font-weight:700">${DEMO_REPO}</span></div>
+  <div style="display:flex;gap:26px;align-items:baseline"><span class="mono" style="width:190px;font-size:20px;font-weight:700;color:${C.grey};letter-spacing:.06em">${demoLabel}</span><span class="mono" style="font-size:30px;font-weight:700">${DEMO_REPO}</span></div>
 </div>
-<div style="position:absolute;left:96px;bottom:70px;font-size:22px;color:${C.grey}">Solana devnet escrow, proof of merge on Base Sepolia. Testnets only, test USDC, no real funds. Built on agent-office (MIT) by webdevcody.</div>
+<div style="position:absolute;left:96px;bottom:70px;font-size:22px;color:${C.grey}">Solana devnet escrow, proof of merge on Base Sepolia. Testnets only, test tokens, no real funds. Built on agent-office (MIT) by webdevcody.</div>
 </body>`);
 
 add('problem', 1920, 1080, `<body style="background:${C.ink};color:${C.paper}">
@@ -114,16 +122,16 @@ add('problem', 1920, 1080, `<body style="background:${C.ink};color:${C.paper}">
 const forkLines = forkStats
   ? `<div class="disp" style="font-size:96px;font-weight:900;line-height:1">${forkStats.commits} commits</div>
      <div class="disp" style="font-size:96px;font-weight:900;line-height:1;margin-top:10px">+${forkStats.added.toLocaleString('en-US')} lines</div>
-     <div class="mono" style="margin-top:22px;font-size:24px;color:${C.grey}">since the fork from upstream ${FORK_BASE} (${forkStats.at}), in src, onchain, tests, bin and docs; from git</div>`
+     <div class="mono" style="margin-top:22px;font-size:24px;color:${C.grey}">ours since the upstream imports of 2026-09-30, without the ${forkStats.upstream} re-committed upstream PRs; lines in src, onchain, tests, bin and docs; from git</div>`
   : `<div class="disp" style="font-size:80px;font-weight:900">See launch/chain/disclosure.md</div>`;
 add('fork', 1920, 1080, `<body style="background:${C.paper};color:${C.ink}">
-<div class="mono" style="position:absolute;left:96px;top:92px;font-size:24px;letter-spacing:.08em;color:${C.grey};font-weight:700">WHAT THIS FORK ADDED</div>
-<div style="position:absolute;left:96px;top:150px">${forkLines}</div>
+<div class="mono" style="position:absolute;left:96px;top:92px;font-size:24px;letter-spacing:.08em;color:${C.grey};font-weight:700">WHAT KIPDECK ADDED</div>
+<div style="position:absolute;left:96px;right:96px;top:150px">${forkLines}</div>
 <div style="position:absolute;left:96px;top:520px;right:96px;display:grid;grid-template-columns:1fr 1fr;gap:16px 60px;font-size:34px;font-weight:600;line-height:1.25">
   <div>The Solana escrow program and SDK</div><div>Bounties and Fund-this-issue Blinks</div>
   <div>The GitHub Action attester</div><div>x402 paid tasks</div>
   <div>EAS attestations and ERC-8004 feedback</div><div>The chain-only indexer and /pom</div>
-  <div>Mission control and the review inbox</div><div>The security layer</div>
+  <div>The inbox and mission control</div><div>The security layer</div>
 </div>
 <div style="position:absolute;left:96px;top:830px;right:96px;font-size:24px;color:${C.grey};line-height:1.4">Upstream's, not ours: the 3D office, live terminals, voice, the issue and PR boards (agent-office by webdevcody, MIT).</div>
 </body>`);
@@ -134,7 +142,7 @@ add('end', 1920, 1080, `<body style="background:${C.paper};color:${C.ink}">
 <div style="position:absolute;left:96px;top:190px;font-size:52px;font-weight:700">${TAGLINE}</div>
 <div style="position:absolute;left:96px;top:290px;display:flex;flex-direction:column;gap:10px">
   <div style="display:flex;gap:22px;align-items:baseline"><span class="mono" style="width:250px;font-size:20px;font-weight:700;color:${C.grey};letter-spacing:.05em">SOURCE CODE</span>${sourceLine(48)}</div>
-  <div style="display:flex;gap:22px;align-items:baseline"><span class="mono" style="width:250px;font-size:20px;font-weight:700;color:${C.grey};letter-spacing:.05em">DEMO REPO</span><span class="mono" style="font-size:34px;font-weight:700">${DEMO_REPO}</span></div>
+  <div style="display:flex;gap:22px;align-items:baseline"><span class="mono" style="width:250px;font-size:20px;font-weight:700;color:${C.grey};letter-spacing:.05em">${demoLabel}</span><span class="mono" style="font-size:34px;font-weight:700">${DEMO_REPO}</span></div>
 </div>
 <div class="mono" style="position:absolute;left:96px;top:450px;font-size:20px;letter-spacing:.08em;color:${C.grey};font-weight:700">VERIFY EVERY ID - FULL LINKS IN THE DESCRIPTION</div>
 <div style="position:absolute;left:96px;right:96px;top:494px;display:flex;flex-direction:column;gap:16px">${idRows(250, 25, 20)}</div>
@@ -144,9 +152,10 @@ add('end', 1920, 1080, `<body style="background:${C.paper};color:${C.ink}">
 add('vtitle', 1080, 1920, `<body style="background:${C.paper};color:${C.ink}">
 <div style="position:absolute;left:72px;top:150px">${mark(70, 9)}</div>
 <div class="disp" style="position:absolute;left:62px;top:440px;font-size:250px;font-weight:900;font-stretch:112%;line-height:.92">KIP<br>DECK</div>
-<div class="mono" style="position:absolute;left:72px;top:930px;font-size:34px;font-weight:700">Mission control for AI coding agents.</div>
+<div class="mono" style="position:absolute;left:72px;top:930px;font-size:34px;font-weight:700">${PRODUCT_LINE}</div>
 <div class="disp" style="position:absolute;left:72px;right:60px;top:1030px;font-size:92px;font-weight:900;line-height:1.02;letter-spacing:-.01em">Agents get paid only when a <span style="color:${C.signal}">human reviewer</span> merges.</div>
 <div class="mono" style="position:absolute;left:72px;top:1480px;font-size:30px;line-height:1.5">Solana devnet escrow.<br>Proof of merge on Base Sepolia.</div>
+<div style="position:absolute;left:72px;right:72px;top:1620px;display:flex;flex-direction:column;gap:8px"><div class="mono" style="font-size:22px;letter-spacing:.08em;color:${C.grey};font-weight:700">SOURCE CODE</div><div style="word-break:break-all">${sourceLine(34)}</div></div>
 <div style="position:absolute;left:72px;right:72px;bottom:110px;font-size:26px;color:${C.grey};line-height:1.4">Testnets only, no real funds. Built on agent-office (MIT) by webdevcody.</div>
 </body>`);
 
@@ -157,7 +166,7 @@ add('vend', 1080, 1920, `<body style="background:${C.paper};color:${C.ink}">
 <div style="position:absolute;left:72px;right:72px;top:1010px;display:flex;flex-direction:column;gap:12px">
   <div class="mono" style="font-size:22px;letter-spacing:.08em;color:${C.grey};font-weight:700">SOURCE CODE</div>
   <div style="word-break:break-all">${sourceLine(34)}</div>
-  <div class="mono" style="font-size:22px;letter-spacing:.08em;color:${C.grey};font-weight:700;margin-top:10px">DEMO REPO</div>
+  <div class="mono" style="font-size:22px;letter-spacing:.08em;color:${C.grey};font-weight:700;margin-top:10px">${DEMO_LABEL.toUpperCase()}</div>
   <div class="mono" style="font-size:32px;font-weight:700">${DEMO_REPO}</div>
   <div class="mono" style="font-size:22px;letter-spacing:.08em;color:${C.grey};font-weight:700;margin-top:18px">VERIFY EVERY ID</div>
   <div style="display:flex;flex-direction:column;gap:10px">${IDS.map(([k, v, n]) => `<div class="mono" style="font-size:16px;line-height:1.35"><b style="color:${C.grey}">${k}, ${n}</b><br><b style="font-size:17px;word-break:break-all">${v}</b></div>`).join('')}</div>

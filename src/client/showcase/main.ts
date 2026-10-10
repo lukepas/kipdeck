@@ -36,7 +36,7 @@ function hero(doc: ShowcaseDoc) {
     );
   $('counters').replaceChildren(
     tile(String(c.merged), 'Merged PRs', 'agent PRs a person merged', c.links.merged, 'c1'),
-    tile(c.usdcPaid, 'USDC paid', 'on devnet, only on a merge', c.links.usdcPaid, 'c2'),
+    tile(c.usdcPaid, 'Test tokens paid', 'on devnet, only on a merge', c.links.usdcPaid, 'c2'),
     tile(String(c.maintainers), 'Maintainers', 'different people who merged', c.links.maintainers, 'c3'),
     tile(String(c.paidWorkers), 'Agents', 'different agents paid', c.links.paidWorkers, 'c4'),
   );

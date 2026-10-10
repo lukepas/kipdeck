@@ -67,10 +67,11 @@ test('lint passes on the kit, lists placeholders, and fails on a broken copy', (
   const ok = run('launch/chain/tools/lint.ts');
   assert.equal(ok.code, 0, ok.out);
   assert.match(ok.out, /files, no problems/);
-  assert.match(ok.out, /colosseum-worlds-fair\.md: to fill in: .*\{\{FORK_URL\}\}/);
+  assert.match(ok.out, /colosseum-worlds-fair\.md: to fill in: .*\{\{HEAD_SHA\}\}/);
+  assert.doesNotMatch(ok.out, /colosseum-worlds-fair\.md: to fill in: .*\{\{(FORK_URL|DIFF_URL|TEAM)\}\}/);
   const { dir, tool } = copy(t);
   const kit = path.join(dir, 'colosseum-worlds-fair.md');
-  writeFileSync(kit, readFileSync(kit, 'utf8').replace('Proof of Merge\n```', `${'Proof of Merge '.repeat(5)}\n\`\`\``).concat('\nAlso https://unchecked.example/page\n'));
+  writeFileSync(kit, readFileSync(kit, 'utf8').replace('Kipdeck\n```', `${'Kipdeck '.repeat(9)}\n\`\`\``).concat('\nAlso https://unchecked.example/page\n'));
   const videos = path.join(dir, 'video-scripts.md');
   writeFileSync(videos, readFileSync(videos, 'utf8').replace('Runtime target: 2:50', 'Runtime target: 3:10'));
   const bad = run(tool('lint'));
@@ -83,9 +84,16 @@ test('lint passes on the kit, lists placeholders, and fails on a broken copy', (
 test('whats-new prints the upstream credit and our commits apart from upstream PRs', () => {
   const r = run('launch/chain/tools/whats-new.ts');
   assert.equal(r.code, 0, r.err);
-  assert.match(r.out, /^This project is a fork of Agent Office \(https:\/\/github\.com\/AgentSystemLabs\/agent-office\), MIT-licensed/);
-  assert.match(r.out, /In 665aeec\.\.[0-9a-f]{7}: \d+ commits, \d+ ours and \d+ upstream pull requests rebased in/);
+  assert.match(r.out, /^Kipdeck is built on agent-office \(https:\/\/github\.com\/AgentSystemLabs\/agent-office\), MIT-licensed/);
+  assert.match(r.out, /01d85bbb \(upstream 665aeec\) and 226452e4 \(upstream 1bc3028\)/);
+  assert.match(r.out, /In 226452e4\.\.[0-9a-f]{8} \(merges left out\): \d+ commits\. \d+ ours; 11 upstream pull requests re-committed under our name/);
   assert.match(r.out, /\nUpstream, not ours/);
+  const json = run('launch/chain/tools/whats-new.ts', '--json');
+  assert.equal(json.code, 0, json.err);
+  const stats = JSON.parse(json.out);
+  assert.equal(stats.upstream, 11);
+  assert.equal(stats.firstOurs, '2026-09-30');
+  assert.ok(stats.ours > 500 && stats.added > 0, json.out);
   const bad = run('launch/chain/tools/whats-new.ts', '--base', '0000000000000000000000000000000000000000');
   assert.equal(bad.code, 1);
   assert.match(bad.err, /not an ancestor|fetch upstream/);

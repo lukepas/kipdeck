@@ -93,7 +93,7 @@ for (const [name, viewport] of [
     assert.doesNotMatch(csp, /unsafe-inline|unsafe-eval/);
 
     await page.locator('.board .row:not(.head)').first().waitFor({ timeout: 15_000 });
-    // The counters, from the fixture: 7 merges by someone else (the hidden repository's left out), 25 USDC paid.
+    // The counters, from the fixture: 7 merges by someone else (the hidden repository's left out), 25 test tokens paid.
     assert.equal(await page.locator('.counter.c1 b').innerText(), '7');
     assert.equal(await page.locator('.counter.c2 b').innerText(), '25.00');
     assert.match(await page.locator('#feed').innerText(), /acme\/app#5 Fix the login redirect loop/);

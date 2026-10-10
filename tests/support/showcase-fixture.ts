@@ -38,9 +38,9 @@ export function fixtureInput(): ShowcaseInput {
     repos: { 'acme/app': { private: false }, 'acme/secret': { private: true }, 'acme/hidden': { private: false } },
     visibility: { 'acme/hidden': 'hidden' },
     bounties: [
-      { repo: 'acme/app', issue: 41, title: 'Flaky upload test', amount: '50000000', decimals: 6, symbol: 'USDC', expiry: (FIXTURE_NOW + 20 * 86400) * 1000, blink: true, funders: 3, pda: 'x', note: 'TERMINAL-OUTPUT' },
-      { repo: 'acme/secret', issue: 7, title: 'Rotate the billing keys', amount: '15000000', decimals: 6, symbol: 'USDC', expiry: (FIXTURE_NOW + 5 * 86400) * 1000, blink: true },
-      { repo: 'acme/hidden', issue: 3, title: 'Hidden work', amount: '1000000', decimals: 6, symbol: 'USDC', expiry: (FIXTURE_NOW + 5 * 86400) * 1000, blink: true },
+      { repo: 'acme/app', issue: 41, title: 'Flaky upload test', amount: '50000000', decimals: 6, symbol: 'TEST', expiry: (FIXTURE_NOW + 20 * 86400) * 1000, blink: true, funders: 3, pda: 'x', note: 'TERMINAL-OUTPUT' },
+      { repo: 'acme/secret', issue: 7, title: 'Rotate the billing keys', amount: '15000000', decimals: 6, symbol: 'TEST', expiry: (FIXTURE_NOW + 5 * 86400) * 1000, blink: true },
+      { repo: 'acme/hidden', issue: 3, title: 'Hidden work', amount: '1000000', decimals: 6, symbol: 'TEST', expiry: (FIXTURE_NOW + 5 * 86400) * 1000, blink: true },
     ],
     floor: [
       { sign: 'A-01', name: 'Sunny Otter', color: '#4f86f7', harness: 'claude', state: 'working', prompt: 'SECRET-PROMPT', cwd: '/Users/someone/project', env: { AWS_SECRET: 'x' } },

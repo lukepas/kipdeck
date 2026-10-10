@@ -1,124 +1,15 @@
-// What this fork adds on top of upstream, for the pre-existing code disclosure every form asks for.
-// It reads git, so the list is what the branch actually contains rather than what we meant to build:
+// The older kits' entry point to the one disclosure generator, launch/chain/tools/whats-new.ts. It used
+// to keep its own copy, which counted from upstream's 665aeec by author; our history starts from snapshot
+// imports of upstream instead, so both kits now read the same rules (launch/chain/deadlines.json):
 //
-//   npx tsx launch/tools/whats-new.ts                 since the baseline in deadlines.json
+//   npx tsx launch/tools/whats-new.ts                 since the baseline (226452e4, our import of upstream 1bc3028)
 //   npx tsx launch/tools/whats-new.ts --base <sha>    since another commit
 //
 // Paste its output under "Exactly what is new" in the kit you are submitting.
 
-import { execFileSync } from 'node:child_process';
-import path from 'node:path';
-import { isMain, LAUNCH_DIR, loadData, type LaunchData } from './calendar.js';
+import { isMain } from './calendar.js';
+import { main } from '../chain/tools/whats-new.js';
 
-export interface Commit {
-  sha: string;
-  date: string;
-  author: string;
-  subject: string;
-}
+export * from '../chain/tools/whats-new.js';
 
-export interface FileChange {
-  status: 'added' | 'modified' | 'deleted' | 'renamed';
-  path: string;
-}
-
-export interface WhatsNew {
-  base: string;
-  head: string;
-  commits: Commit[];
-  files: FileChange[];
-}
-
-function git(dir: string, ...args: string[]): string {
-  return execFileSync('git', args, { cwd: dir, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 64 * 1024 * 1024 });
-}
-
-/** The commits and files on HEAD that `base` doesn't have. Throws when `base` isn't an ancestor. */
-export function whatsNew(dir: string, base: string): WhatsNew {
-  try {
-    git(dir, 'merge-base', '--is-ancestor', base, 'HEAD');
-  } catch {
-    throw new Error(`${base} is not an ancestor of HEAD in ${dir}; fetch upstream or pass --base`);
-  }
-  const head = git(dir, 'rev-parse', 'HEAD').trim();
-  const commits = git(dir, 'log', '--no-merges', '--reverse', '--format=%H%x1f%aI%x1f%an%x1f%s', `${base}..HEAD`)
-    .split('\n')
-    .filter(Boolean)
-    .map((line) => {
-      const [sha, date, author, subject] = line.split('\x1f');
-      return { sha, date: date.slice(0, 10), author, subject };
-    });
-  const status = { A: 'added', M: 'modified', D: 'deleted', R: 'renamed' } as const;
-  const files = git(dir, 'diff', '--name-status', '-z', '--find-renames', base, 'HEAD')
-    .split('\0')
-    .filter(Boolean)
-    .reduce<{ out: FileChange[]; pending?: FileChange['status']; skip: number }>(
-      (acc, field) => {
-        if (acc.skip) {
-          acc.skip--;
-          return acc;
-        }
-        if (!acc.pending) {
-          const code = field[0] as keyof typeof status;
-          acc.pending = status[code] ?? 'modified';
-          // A rename is followed by the old path, then the new one; keep the new one.
-          if (code === 'R') acc.skip = 1;
-          return acc;
-        }
-        acc.out.push({ status: acc.pending, path: field });
-        acc.pending = undefined;
-        return acc;
-      },
-      { out: [], skip: 0 },
-    ).out;
-  return { base, head, commits, files };
-}
-
-/** Which part of the project a path belongs to, for grouping the disclosure. */
-export function area(file: string): string {
-  if (file.startsWith('launch/')) return 'Submission kits (launch/)';
-  if (file.startsWith('tests/')) return 'Tests';
-  if (file.startsWith('docs/') || /^README\.md$/i.test(file)) return 'Docs';
-  if (file.startsWith('src/') || file.startsWith('bin/')) return 'Code';
-  if (file.startsWith('deploy/') || /^install\.(sh|ps1)$/.test(file) || file.startsWith('.github/')) return 'Deploy and CI';
-  return 'Other';
-}
-
-const AREAS = ['Code', 'Tests', 'Docs', 'Deploy and CI', 'Submission kits (launch/)', 'Other'];
-
-/** The disclosure block: upstream credit, then every new commit and changed file, grouped. */
-export function disclosureMarkdown(upstream: LaunchData['upstream'], news: WhatsNew): string {
-  const out: string[] = [];
-  out.push(
-    `This project is a fork of Agent Office (${upstream.repo}), ${upstream.license}-licensed, ${upstream.copyright}, created by ${upstream.author}; its first commit is dated ${upstream.firstCommit}.`,
-    `Everything up to upstream commit ${news.base.slice(0, 7)} (${upstream.baselineDate}) is upstream work, not ours. The MIT license text and copyright notice are kept in LICENSE.`,
-    '',
-    `New in this fork (${news.commits.length} commits, ${news.files.length} files changed, ${news.base.slice(0, 7)}..${news.head.slice(0, 7)}):`,
-    '',
-  );
-  if (!news.commits.length) out.push('- Nothing yet: this branch is identical to the upstream baseline.');
-  for (const c of news.commits) out.push(`- ${c.date} ${c.sha.slice(0, 7)} ${c.subject}`);
-  for (const name of AREAS) {
-    const files = news.files.filter((f) => area(f.path) === name);
-    if (!files.length) continue;
-    out.push('', `${name}:`, '');
-    for (const f of files) out.push(`- ${f.status}: ${f.path}`);
-  }
-  return out.join('\n') + '\n';
-}
-
-if (isMain(import.meta.url)) {
-  const args = process.argv.slice(2);
-  const flag = (name: string) => {
-    const i = args.indexOf(name);
-    return i >= 0 ? args[i + 1] : undefined;
-  };
-  const data = loadData();
-  const dir = path.resolve(flag('--dir') ?? path.join(LAUNCH_DIR, '..'));
-  try {
-    process.stdout.write(disclosureMarkdown(data.upstream, whatsNew(dir, flag('--base') ?? data.upstream.baseline)));
-  } catch (err) {
-    console.error((err as Error).message);
-    process.exit(1);
-  }
-}
+if (isMain(import.meta.url)) main(process.argv.slice(2));

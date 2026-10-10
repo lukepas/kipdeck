@@ -33,9 +33,24 @@ export interface LaunchEvent {
 
 export interface LaunchData {
   calendar: { name: string; stamp: string; from: string; home: string };
-  upstream: { repo: string; license: string; copyright: string; author: string; firstCommit: string; baseline: string; baselineDate: string };
-  /** Who wrote this fork's own commits, as git names them; every other author in the range is upstream's. */
-  fork: { name: string; authors: string[] };
+  upstream: {
+    repo: string;
+    license: string;
+    copyright: string;
+    author: string;
+    firstCommit: string;
+    /** Our commit that imported upstream's latest snapshot; the disclosure counts from it. */
+    baseline: string;
+    /** The upstream commit that snapshot holds. */
+    baselineUpstream?: string;
+    baselineDate: string;
+    /** Our snapshot imports of upstream (root commits holding upstream's tree): upstream work, not ours. */
+    imports?: { sha: string; upstream: string }[];
+    /** Upstream pull requests re-committed in our history under our name, with their original authors. */
+    carried?: { sha: string; pr: number; author: string }[];
+  };
+  /** Who wrote this fork's own commits, as git names them. A commit by anyone else (a bot) is not ours either. */
+  fork: { name: string; repo?: string; authors: string[] };
   events: LaunchEvent[];
 }
 

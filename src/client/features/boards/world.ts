@@ -205,7 +205,7 @@ export class BoardTexture {
     this.urgency = prs.some((p) => !p.isDraft && p.checks === 'fail') ? 'stuck' : prs.some((p) => !p.isDraft && p.reviewDecision !== 'APPROVED') ? 'review' : null;
     const rule = urgentEdge(g, W, H, this.urgency);
     const funded = pulls ? 0 : open.filter((i) => bounties?.has(i.number)).length;
-    titleBar(g, W, pulls ? 'Pull requests' : 'Issues', open.length ? `${open.length} open${funded ? `  ${funded} funded in test USDC` : ''}` : undefined, rule);
+    titleBar(g, W, pulls ? 'Pull requests' : 'Issues', open.length ? `${open.length} open${funded ? `  ${funded} funded in test tokens` : ''}` : undefined, rule);
     if (!open.length) {
       if (state.error) offlineBody(g, W, H, offlineLine(state.error));
       else emptyBody(g, W, H, state.loading && !state.fetchedAt ? 'Loading' : pulls ? 'No open pull requests' : 'No open issues', pulls ? "A unit's PR lands here when it opens one" : 'New issues land here first');

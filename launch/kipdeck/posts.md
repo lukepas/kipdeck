@@ -1,6 +1,6 @@
 # Launch posts
 
-Status: needs the gates in [README.md](README.md#before-anything-goes-out). Every claim below is true of the code on this branch; numbers stay out until there are real ones. Fill `{{REPO_URL}}`, `{{DEMO_URL}}` and `{{SITE_URL}}` on the day.
+Status: needs the gates in [README.md](README.md#before-anything-goes-out). Every claim below is true of the code on this branch; numbers stay out until there are real ones. The repository (https://github.com/zbagdzevicius/kipdeck) and the site (https://kipdeck.com) are live and filled in; fill `{{DEMO_URL}}` once the hosted demo is up.
 
 ## Show HN
 
@@ -10,7 +10,7 @@ Title (80 characters at most):
 Show HN: Kipdeck - one inbox for Claude Code, Codex and Cursor agents
 ```
 
-URL: `{{REPO_URL}}`
+URL: `https://github.com/zbagdzevicius/kipdeck`
 
 First comment:
 
@@ -38,7 +38,8 @@ on a phone. No telemetry unless you turn it on.
 
 It's a fork of agent-office by webdevcody (MIT), which started as a 3D office
 for agents; I kept the server and rebuilt the front around the inbox. The 3D
-view is still there as an opt-in lab for a team's wall screen.
+view is still there as the Deck, one click from the inbox, for a team's wall
+screen; an admin can switch it off.
 
 Hosted read-only demo: {{DEMO_URL}}
 
@@ -76,7 +77,7 @@ Open source (MIT, a fork of webdevcody's agent-office), runs locally, no
 telemetry by default. Demo with scripted agents, no tokens spent:
 `npx kipdeck --demo` or {{DEMO_URL}}.
 
-Source: {{REPO_URL}}
+Source: https://github.com/zbagdzevicius/kipdeck
 ```
 
 ## X
@@ -91,7 +92,7 @@ what's ready to review, what shipped. One button per agent.
 
 npx kipdeck
 
-Open source, runs on your machine. {{SITE_URL}}
+Open source, runs on your machine. https://kipdeck.com
 ```
 
 Post 2 (reply):
@@ -118,5 +119,5 @@ I'm looking for 3 to 5 European teams to use it weekly as design partners, and
 tell me where it falls short. If your team runs agents across more than one
 repository, I'd like to talk.
 
-{{SITE_URL}}
+https://kipdeck.com
 ```

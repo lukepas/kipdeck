@@ -56,11 +56,11 @@ test('lint reports no problems on the kits, lists placeholders, and fails on a b
   assert.match(bad.out, /meta-vr-start\.md:\d+: runtime target 190s breaks the 180s limit/);
 });
 
-test('whats-new prints the upstream credit for this branch', () => {
+test('whats-new prints the upstream credit for this branch, counted from our import of upstream', () => {
   const r = run('launch/tools/whats-new.ts');
   assert.equal(r.code, 0, r.err);
-  assert.match(r.out, /^This project is a fork of Agent Office \(https:\/\/github\.com\/AgentSystemLabs\/agent-office\), MIT-licensed/);
-  assert.match(r.out, /New in this fork \(\d+ commits, \d+ files changed, 665aeec\.\./);
+  assert.match(r.out, /^Kipdeck is built on agent-office \(https:\/\/github\.com\/AgentSystemLabs\/agent-office\), MIT-licensed/);
+  assert.match(r.out, /In 226452e4\.\.[0-9a-f]{8} \(merges left out\): \d+ commits\. \d+ ours; 11 upstream pull requests/);
   const bad = run('launch/tools/whats-new.ts', '--base', '0000000000000000000000000000000000000000');
   assert.equal(bad.code, 1);
   assert.match(bad.err, /not an ancestor|fetch upstream/);

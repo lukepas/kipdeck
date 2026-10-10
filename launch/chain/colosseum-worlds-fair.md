@@ -2,7 +2,7 @@
 
 Last checked: 2026-10-03. Sources: the event page, the official rules PDF and the hackathon FAQ (links below). Anything they don't state is marked [unverified].
 
-Entry: Proof of Merge, a fork of agent-office (MIT, by webdevcody / AgentSystemLabs) that turns it into mission control for teams running many AI coding agents, where a person's merge is the only thing that moves money or reputation for an agent's work. Lead track: Solana (escrowed bounties on devnet). Second chain: Base (proof-of-merge attestations and ERC-8004 reputation on Base Sepolia). Also eligible for the Public Goods Award as MIT open source [unverified: how that award is judged].
+Entry: Kipdeck, the inbox for your AI coding agents, with Proof of Merge, the payout layer of Kipdeck: a person's merge is the only thing that moves money or reputation for an agent's work. Kipdeck is built on agent-office (MIT, by webdevcody / AgentSystemLabs). Lead track: Solana (escrowed bounties on devnet). Second chain: Base (proof-of-merge attestations and ERC-8004 reputation on Base Sepolia). Also eligible for the Public Goods Award as MIT open source [unverified: how that award is judged].
 
 ## Deadline
 
@@ -18,8 +18,9 @@ Entry: Proof of Merge, a fork of agent-office (MIT, by webdevcody / AgentSystemL
 - Official rules (PDF): https://colosseum.com/legal/Crypto%20World%27s%20Fair%20Hackathon%20Rules.pdf
 - Hackathon FAQ (form fields, videos, prior work): https://colosseum.com/hackathon
 - Arena (registration and the form): https://arena.colosseum.org
-- Upstream: https://github.com/AgentSystemLabs/agent-office (baseline commit https://github.com/AgentSystemLabs/agent-office/commit/665aeec571bc03f76cbd16de8d628dd169a48874)
-- Our fork: {{FORK_URL}}
+- Upstream: https://github.com/AgentSystemLabs/agent-office (our history starts from snapshot imports of https://github.com/AgentSystemLabs/agent-office/commit/665aeec571bc03f76cbd16de8d628dd169a48874 and https://github.com/AgentSystemLabs/agent-office/commit/1bc3028472d38b161e85117bf621bb6bc12700e5, see [disclosure.md](disclosure.md))
+- Our repository: https://github.com/zbagdzevicius/kipdeck
+- What we added since our import of upstream 1bc3028 (226452e4), the 11 re-committed upstream pull requests included and named in [disclosure.md](disclosure.md): https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 - Public showcase: {{SHOWCASE_URL}}
 
 What is deployed on testnets (every link below was checked on 2026-10-03, the x402 payment and the fifth bounty on 2026-10-04; the explorers block scripted requests, so the transactions were checked over RPC, see [links.json](links.json)):
@@ -41,7 +42,7 @@ What is deployed on testnets (every link below was checked on 2026-10-03, the x4
 - [ ] Employer: written permission for outside work, IP ownership and prizes. The rules make the entrant warrant that entering breaches no employer policy.
 - [ ] Every member registered on colosseum.com before 2026-10-12 23:59 PT, profile complete, consent given.
 - [ ] Prior work disclosed in the form: the FAQ allows pre-existing code but requires disclosing all relevant past development; misrepresenting it can mean disqualification. The rules (section 9) also ask entrants to tell Colosseum the status and ownership of open-source and third-party code. Both are covered by [disclosure.md](disclosure.md).
-- [ ] Repository public with the MIT `LICENSE` and the upstream copyright notice unchanged.
+- [x] Repository public (https://github.com/zbagdzevicius/kipdeck), with the MIT `LICENSE` keeping the upstream copyright notice, and `NOTICE` crediting upstream.
 - [ ] Testnet only. The rules and FAQ say nothing about mainnet [unverified: whether judges weigh it]; we say so plainly in [judge-qa.md](judge-qa.md).
 - [ ] Prizes are paid in Phantom CASH to the team leader after prize documents and due diligence (rules, section 14). Expect KYC [unverified: what it involves].
 
@@ -50,7 +51,7 @@ What is deployed on testnets (every link below was checked on 2026-10-03, the x4
 Paste into the prior work question, or "anything else judges should know". It is the same text as [disclosure.md](disclosure.md), where the commit list and the third-party license table are.
 
 ```field name="Prior work disclosure" max-chars=1500
-Proof of Merge is a fork of agent-office (github.com/AgentSystemLabs/agent-office), MIT, created by webdevcody / AgentSystemLabs with community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D multiplayer office, desks where coding agent CLIs run in shared live terminals, voice, the GitHub issue and PR boards and the deploy scripts. Everything up to upstream commit 665aeec (2026-09-30) is theirs, and so are 16 later upstream pull requests that our branch carries because it is rebased on upstream. Ours, all written during the contest (our first commit is 2026-09-30): mission control (attention ranking, goals and milestones, review inbox, timeline, reminders), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and everything on-chain: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS proof-of-merge attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are exactly the ones by our authors in 665aeec..{{HEAD_SHA}}; the list is generated from git in launch/chain/disclosure.md. Testnets only. Diff: {{DIFF_URL}}
+Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..{{HEAD_SHA}} except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 ## Project description
@@ -58,11 +59,11 @@ Proof of Merge is a fork of agent-office (github.com/AgentSystemLabs/agent-offic
 The FAQ lists the fields: product name and description, blockchains and tools, team backgrounds and location, logo, GitHub repository, a pitch video, a product demo, and go-to-market. Character limits are not published [unverified]; the limits below are ours, to keep answers short enough to read.
 
 ```field name="Product name" max-chars=60
-Proof of Merge
+Kipdeck
 ```
 
 ```field name="One-liner" max-chars=140
-Your AI agents get paid, and earn reputation, only when a human merges their work.
+Proof of Merge, the payout layer of Kipdeck: AI coding agents get paid, and earn reputation, only when a human merges.
 ```
 
 ```field name="Problem" max-words=120
@@ -70,11 +71,11 @@ Teams now run many coding agents at once: Claude Code, Codex, Cursor, Pi. Their 
 ```
 
 ```field name="Solution" max-words=200
-Proof of Merge is mission control for teams running many AI coding agents, with one rule: a person's merge is the only thing that moves money or reputation for an agent's work.
+Kipdeck is the inbox for your AI coding agents. Proof of Merge, its payout layer, adds one rule: a person's merge is the only thing that moves money or reputation for an agent's work.
 
-A maintainer escrows devnet USDC against a GitHub issue, from the office's board or a Fund this issue Blink. Any office worker can take it. When someone with write access merges the worker's pull request, made by the office on the repository itself and never from a fork, and an office admin approves the payout in the review inbox, the Solana program releases the escrow to the operator's wallet. It needs two signatures: the attester's and the approver's, which the admin gives from a browser wallet. Repositories can also run the attester as a GitHub Action.
+A maintainer escrows devnet test tokens (standing in for USDC) against a GitHub issue, from the office's board or a Fund this issue Blink. Any office worker can take it. When someone with write access merges the worker's pull request, made by the office on the repository itself and never from a fork, and an office admin approves the payout in the review inbox, the Solana program releases the escrow to the operator's wallet. It needs two signatures: the attester's and the approver's, which the admin gives from a browser wallet. Repositories can also run the attester as a GitHub Action.
 
-The same merge writes an EAS proof-of-merge attestation and ERC-8004 feedback on Base Sepolia. Reverts and closes are attested too. A public page shows the leaderboard (merge rate, time to merge, revert rate per agent and harness), rebuilt from chain data. Outsiders can hire a worker for one task over x402 (one paid on Base Sepolia so far), held until an admin approves it.
+The same merge writes an EAS proof-of-merge attestation and ERC-8004 feedback on Base Sepolia. Reverts and closes are attested too. A public page shows the leaderboard (merge rate, time to merge, revert rate per agent and harness), rebuilt from chain data. Outsiders can hire a worker for one task over x402, held until an admin approves it.
 
 No token, no NFT, no points. Testnets only.
 ```
@@ -92,19 +93,19 @@ Solana devnet: native Rust program on solana-program (no Anchor), TypeScript SDK
 ```
 
 ```field name="Go-to-market" max-words=150
-First users: small teams and open source maintainers who already run several coding agents and drown in their pull requests. They come for mission control (what needs me now, the review inbox), which works with the chain off. Bounties and proof of merge are the switch they turn on when they want to pay for merged work or show an agent's record.
+First users: small teams and open source maintainers who already run several coding agents and drown in their pull requests. They come for the inbox (what needs me now), which works with the chain off. Bounties and proof of merge are the switch they turn on when they want to pay for merged work or show an agent's record.
 
 Channels: build in public on X and Farcaster, the weekly "which coding agent's PRs actually get merged?" board, the agent-office community upstream, and maintainers we invite to point their agents at funded issues.
 
-Business: open core. A hosted mission control seat fee for teams, and later a 1 to 2 percent fee on released bounties once the program is audited and on mainnet. The escrow program and SDK stay MIT.
+Business: Kipdeck is self-hosted and open source, free for one engineer. Teams pay per seat for the team tier (USD 30 a month, our assumption; not built yet), later a 1 to 2 percent fee on released bounties once the program is audited and on mainnet. The escrow program and SDK stay MIT.
 ```
 
 ```field name="Demand validation" max-words=80 sources="merged_by_others,agents_ranked,devnet_bounties_released,devnet_test_usdc_released"
-Counted from chain data on the submission day, not estimated. Merged agent PRs attested on Base Sepolia: 0. Agents on the board: 0. Bounties released on Solana devnet: 5, scripted demos of 77 test USDC in all, with no GitHub merge behind them. We will refresh these numbers before submitting.
+Counted from chain data on the submission day, not estimated. Merged agent PRs attested on Base Sepolia: 0. Agents on the board: 0. Bounties released on Solana devnet: 5, scripted demos of 77 test tokens in all, with no GitHub merge behind them. We will refresh these numbers before submitting.
 ```
 
 ```field name="Team" max-words=80
-{{TEAM}}
+Three founders in Vilnius, building Kipdeck since 30 September. Zygimantas Bagdzevicius, CEO/CTO: ex-Amazon engineer, founded and exited a Lithuanian business that scaled to 400k monthly active users. Lukas Kveraga, founding engineer: ex-Vinted, scaling a high-traffic marketplace. Ernestas Rimkevicius, software engineer: backend, importers and pipelines.
 ```
 
 ```field name="Location" max-chars=60
@@ -122,7 +123,7 @@ The six criteria from the rules (section 8), no published weights.
 | Novelty | Which agents' pull requests get merged, as a public, checkable dataset per agent and harness; money and reputation move only on a person's merge, with two signatures and an admin in the loop |
 | UX | Fund from the board or a Blink; approve in the review inbox you already use; a payout toast with an explorer link |
 | Open source | MIT; the escrow program and SDK know nothing about the office; the board is CC0 data rebuilt by one command |
-| Business plan | Open core: hosted mission control seats, a small bounty fee after an audit and mainnet |
+| Business plan | Self-hosted and open source, free for one engineer; a paid team tier per seat (USD 30 a month, our assumption); a small bounty fee after an audit and mainnet |
 
 ## Demo video script
 
@@ -133,7 +134,7 @@ Both scripts, the shot lists and the fallback recordings are in [video-scripts.m
 - [ ] Employer permission saved.
 - [ ] Every member registered before 2026-10-12 23:59 PT.
 - [ ] Multi-track answer from Discord pasted into [judge-qa.md](judge-qa.md).
-- [ ] Repository public; `{{FORK_URL}}`, `{{DIFF_URL}}` and `{{HEAD_SHA}}` filled in.
+- [ ] Repository public (it is: https://github.com/zbagdzevicius/kipdeck); `{{HEAD_SHA}}` in the disclosure replaced with the submitted commit.
 - [ ] Counts refreshed from chain (`launch/chain/tools/counts.ts --refresh`), demand validation re-read.
 - [ ] Showcase published (GitHub Pages export from onchain/indexer); `{{SHOWCASE_URL}}` filled in.
 - [ ] Pitch and demo uploaded; links in the form.
