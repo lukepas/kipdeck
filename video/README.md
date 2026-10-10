@@ -11,7 +11,7 @@ The delivery set lives in `out/final/` (git-ignored, so it is rebuilt from sourc
 | `kipdeck-30s-16x9.mp4` | 1920x1080, 60 fps, 30.000 s, H.264 High + AAC 320k, -14 LUFS |
 | `kipdeck-30s-9x16.mp4` | 1080x1920, 60 fps. Its own 4x14 layout that respects the feed's safe areas, not a crop |
 | `kipdeck-30s-1x1.mp4` | 1080x1080, 60 fps. The 16:9 grid at a smaller unit, with the colliding modules re-placed |
-| `kipdeck-poster-<format>.png` | The poster frame at 14.9 s: the thesis over the merged grid |
+| `kipdeck-poster-<format>.png` | The poster frame at 5.2 s, the overload (`POSTER_T` in `tools/deliver.py`), the frame the landing's posters use |
 | `kipdeck-teaser-6s.webm`, `.gif` | The merge drop, 12.0-18.0 s, muted and looping (the seam is a cut on the downbeat) |
 | `CREDITS.md` | Fonts and their licences, the upstream project, the tools (copied from `assets/CREDITS.md`) |
 
@@ -22,7 +22,10 @@ node render.mjs --format 16x9 --out out/final/kipdeck-30s-16x9.mp4
 node render.mjs --format 9x16 --out out/final/kipdeck-30s-9x16.mp4
 node render.mjs --format 1x1  --out out/final/kipdeck-30s-1x1.mp4
 python3 tools/deliver.py      # posters, teaser, then checks every film
+python3 tools/deliver.py --web v2   # the landing's copies in site/landing/public/media
 ```
+
+The landing serves its media with a week-long cache, so a changed film ships under a new suffix (`-v2`, `-v3`...), and `site/landing/index.html`, the captions file next to it and `tests/landing-a11y.test.ts` move to the new names. Update the captions (`film-captions-<suffix>.vtt`) from `src/beatmap.json` whenever on-screen words change.
 
 `deliver.py` exits non-zero unless each film is H.264 High yuv420p at its size, 60 fps, 1800 frames and 30.000 s, carries AAC audio, and measures -14 +/- 1 LUFS integrated with a true peak at or below -1 dBTP. Run `tools/verify.py` on a film for the deeper sync and type checks.
 
@@ -191,7 +194,17 @@ After the second critique pass:
 - Act 2: `Goals.`, `Milestones.` and `Review inbox.` replace each other in one slot while the timeline (bigger strokes and labels) builds above. The inbox header opens with the first card, so it is never parked half off frame. PR #1 sits on the grid (cols 7-12, rows E-G) in a clean hole in the merged cells. The escrow names `25 Test USDC` on the OPEN hit, says `Solana devnet` at label size and shows the program id beside the release tx, and its grid holds one opacity.
 - Act 3: the ATTESTED stamp sits in the top row's empty right column at -6 degrees with a 2-frame impact, and the schema starts decoding with it. Rows print ahead of their hits. The rejected PR gets its own lane (`#41 unmerged - no pay`). x402 strikes `402 Payment Required` and sets `202 Accepted` before the 24.5 hit, the flaps stay inside the margin, `Pay per task.` rises with the 402 and `x402.` joins it on 25.0, and the note matches the gateway (held until a person approves it). Data labels are `demo data` on everything illustrative; only the real artifacts name their chain.
 - Recap: each panel cuts in fully drawn on its own word, and slots still to come are hairline outlines, not ghosts. Panel 01 is the populated act 1 board. 9:16 shows one panel at a time, full width.
-- End card: the complete mark (red centre lit) and the full-width wordmark slam on 27.0 with a 2-frame overshoot settled by frame 6, and the wordmark never changes width after that. The cells answer their 16ths with a small press. The promise is set in Archivo, line one on 27.5 and line two on 28.0. The right column carries `github.com/AgentSystemLabs/agent-office` and the release tx, program and schema ids from 28.0.
+- End card: the complete mark (red centre lit) and the full-width wordmark slam on 27.0 with a 2-frame overshoot settled by frame 6, and the wordmark never changes width after that. The cells answer their 16ths with a small press. The promise is set in Archivo, line one on 27.5 and line two on 28.0. The right column carries the repository URL and the release tx, program and schema ids from 28.0.
+
+### Kipdeck round
+
+The film now says only Kipdeck and only what is true:
+
+- The end card's mark is Kip, the Kipdeck logo (`src/engine/kip.js`, a copy of `MARK` in `src/shared/logo.ts` that `test/kip.test.mjs` keeps in step), in ink with his light in signal red. The old 3x3 mark's beats carry over: the face presses on each 16th, the light kicks a red ring on its stamp and blinks off before 29.5. The act 1 app header shows the small mark before `KIPDECK  INBOX`.
+- The tagline is the product's: `The inbox for your AI coding agents.` under `Kipdeck.` at 7.0 and as the end card's first promise line.
+- The call to action is `github.com/zbagdzevicius/kipdeck`. The upstream credit stays in the small print.
+- The escrow names `25 test tokens`: the release moved the project's devnet test mint (`testMint` in `onchain/solana/deployments/devnet.json`), not devnet USDC. The x402 retry keeps `0.10 test USDC`, which is Circle's test USDC on Base Sepolia.
+- The release tx's chip reads `Real devnet tx, test run` (`Test run` in 9:16): it is a real devnet transaction from a demo bounty with no GitHub merge behind it.
 
 ## Fonts and licences
 

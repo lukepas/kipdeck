@@ -12,6 +12,7 @@
 
 import { clamp, lerp, expoOut, expoIn, cubicIn, cubicBezier, curves } from '../engine/ease.js';
 import { rand01, rng } from '../engine/prng.js';
+import { kipMark } from '../engine/kip.js';
 import { bg, gridLines, text, tag, typeIn, typeFrom, whipCamera, AGENT_TOOLS, revealAt, baseOf, DESC } from './common.js';
 
 const N = 8;                       // tiles per side at the full split
@@ -276,13 +277,16 @@ function readout(S, { value, prev = value, label, sub, flap = 0, lockBar = 0, ji
   const x = H.x + jitter;
   let y = H.y + ls * 0.95;
   if (header > 0) {
-    // "KIPDECK  MISSION CONTROL", wiping in from the left.
+    // Kip's mark, then "KIPDECK  INBOX", wiping in from the left.
     S.ctx.save();
     S.ctx.beginPath();
     S.ctx.rect(x - 2 * u, H.y - ls, (H.w + 4 * u) * header, ls * 2.4);
     S.ctx.clip();
-    const w = text(S, 'Kipdeck', x, y, { size: ls, weight: 700, color: P.ink, alpha });
-    text(S, 'Mission control', x + w + ls * 0.8, y, { size: ls, weight: 500, color: P.grey, alpha });
+    const ms = ls * 1.5;
+    kipMark(S.ctx, x, y - ls * 0.36 - ms / 2, ms, { color: P.ink, light: P.signal, alpha });
+    const mx = x + ms + ls * 0.45;
+    const w = text(S, 'Kipdeck', mx, y, { size: ls, weight: 700, color: P.ink, alpha });
+    text(S, 'Inbox', mx + w + ls * 0.8, y, { size: ls, weight: 500, color: P.grey, alpha });
     S.ctx.restore();
   } else if (label) {
     text(S, label, x, y, { size: ls, weight: 700, color: P.grey, alpha });
@@ -764,7 +768,7 @@ const missionControl = {
     const P = design.palette;
     const u = design.u;
     const lock = tl.at('unsort.lock');
-    const ugc = tl.at('text.kipdeck');
+    const wordAt = tl.at('text.kipdeck');
     const see = tl.at('text.see-every-agent');
     const L = missionLayout(design);
     const { start, dep, clears } = starts(tl, design);
@@ -784,7 +788,7 @@ const missionControl = {
     // lit red, as the answer to 'Who needs you?', and pulses on the backbeats.
     const pulseHits = tl.prefixed('needs-you.pulse');
     const pulse = Math.max(0, 1 - tl.sinceLast(pulseHits, t) / 0.35);
-    const pulseA = Math.max(pulse > 0 ? expoOut(pulse) : 0, t < ugc ? 1 : 0);
+    const pulseA = Math.max(pulse > 0 ? expoOut(pulse) : 0, t < wordAt ? 1 : 0);
     const ls = design.size('labelS');
     const drawHead = (c) => {
       const col = L.column(c.id);
@@ -921,16 +925,16 @@ const missionControl = {
 
     // Under the name the board dims for half a second, so 'Kipdeck.' lands
     // against settled, readable state rather than the busiest frame of the sort.
-    const veil = t < ugc - 4 / 60 ? 0 : t < ugc + 0.4 ? 1 : 1 - clamp((t - ugc - 0.4) * 60 / 8);
+    const veil = t < wordAt - 4 / 60 ? 0 : t < wordAt + 0.4 ? 1 : 1 - clamp((t - wordAt - 0.4) * 60 / 8);
     if (veil > 0) {
       ctx.fillStyle = P.paper;
-      ctx.globalAlpha = 0.42 * veil * clamp((t - ugc + 4 / 60) * 60 / 3);
+      ctx.globalAlpha = 0.42 * veil * clamp((t - wordAt + 4 / 60) * 60 / 3);
       ctx.fillRect(R.x - 4 * u, R.y - 4 * u, R.w + 8 * u, R.h + 8 * u);
       ctx.globalAlpha = 1;
     }
 
     // The readout becomes the app header once the name has been said (7.0).
-    readout(S, { value: 64, sub: 'Agents', header: expoOut((t - ugc - tl.beatSec) * 60 / 10) });
+    readout(S, { value: 64, sub: 'Agents', header: expoOut((t - wordAt - tl.beatSec) * 60 / 10) });
     ctx.restore();
 
     // 'Who needs you?' carries over the 6.0 cut into the type module, beside
@@ -938,7 +942,7 @@ const missionControl = {
     // name rises.
     moduleHeadline(S, {
       spans: design.vertical ? [{ text: 'Who needs' }, br, { text: 'you?' }] : [{ text: 'Who' }, br, { text: 'needs' }, br, { text: 'you?' }],
-      lines: design.vertical ? 2 : 3, enter: lock - 1, exit: ugc - 0.36, size: design.size('l'), wdth: 75,
+      lines: design.vertical ? 2 : 3, enter: lock - 1, exit: wordAt - 0.36, size: design.size('l'), wdth: 75,
     });
 
     // 'Kipdeck.' slams on 6.5 as the largest type of the act (wdth 125 to
@@ -952,16 +956,16 @@ const missionControl = {
     const kickerH = kLines * ks * 1.04 + tick * 2.2;
     const gap = ks * 0.5;
     const outAt = see - 24 / 60;
-    const slam = curves.slam(clamp((t - ugc) / tl.beatSec));
-    const stamp = 1 + 0.06 * (1 - expoOut(Math.max(0, t - ugc) * 60 / 6));
+    const slam = curves.slam(clamp((t - wordAt) / tl.beatSec));
+    const stamp = 1 + 0.06 * (1 - expoOut(Math.max(0, t - wordAt) * 60 / 6));
     moduleHeadline(S, {
-      spans: [{ text: 'Kip' }, br, { text: 'deck.' }], lines: 2, enter: ugc, exit: outAt, size, panX,
+      spans: [{ text: 'Kip' }, br, { text: 'deck.' }], lines: 2, enter: wordAt, exit: outAt, size, panX,
       wdth: lerp(125, 100, slam), bottomPad: kickerH + gap, scale: stamp,
     });
-    const kick = ugc + tl.beatSec;
+    const kick = wordAt + tl.beatSec;
     const kSpans = design.vertical
-      ? [{ text: 'Mission control for' }, br, { text: 'your AI coding agents.' }]
-      : [{ text: 'Mission control' }, br, { text: 'for your AI' }, br, { text: 'coding agents.' }];
+      ? [{ text: 'The inbox for' }, br, { text: 'your AI coding agents.' }]
+      : [{ text: 'The inbox' }, br, { text: 'for your AI' }, br, { text: 'coding agents.' }];
     const kr = revealAt(t, kick, kSpans, { unit: 'line', stagger: 3, exit: outAt }, tl.fps);
     const z = typeBlock(design);
     if (kr) {
@@ -974,10 +978,17 @@ const missionControl = {
     }
     // The harnesses, as a ticker line under the descriptor.
     if (t >= kick - 4 / 60 && t < outAt + 6 / 60) {
-      const tools = AGENT_TOOLS.join('  -  ');
+      const tools = AGENT_TOOLS.join(' - ');
       const n = Math.ceil(tools.length * clamp((t - kick + 4 / 60) * 60 / 10));
       const a = t >= outAt ? 1 - clamp((t - outAt) * 60 / 6) : 1;
-      text(S, tools.slice(0, n), z.x + panX, z.y + z.h - tick * 0.4, { kind: 'mono', size: tick, weight: 700, color: P.grey, alpha: a });
+      // Shrink the line to the type module so 'Pi' never runs into the board.
+      ctx.save();
+      ctx.font = design.font(design.fonts.mono, 700, tick);
+      const full = ctx.measureText(tools).width;
+      ctx.restore();
+      const maxW = typeFit(design, z) - 8 * u;
+      const ts = full > maxW ? tick * maxW / full : tick;
+      text(S, tools.slice(0, n), z.x + panX, z.y + z.h - tick * 0.4, { kind: 'mono', size: ts, weight: 700, color: P.grey, alpha: a });
     }
     moduleHeadline(S, {
       spans: design.vertical ? [{ text: 'See every' }, br, { text: 'agent.' }] : [{ text: 'See' }, br, { text: 'every' }, br, { text: 'agent.' }],

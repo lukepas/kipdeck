@@ -16,11 +16,12 @@
 //
 // Truth: the schema UID is labelled as a schema, never as an attestation.
 // Ledger rows, the agent card, the leaderboard, the x402 exchange and the
-// recap's illustrative quadrants carry demo-data tags. 25 test USDC and the
+// recap's illustrative quadrants carry demo-data tags. 25 test tokens and the
 // devnet / Base Sepolia labels are real.
 
 import { clamp, lerp, expoOut, expoIn, cubicIn, backOut, curves, spring } from '../engine/ease.js';
 import { rand01, rng } from '../engine/prng.js';
+import { kipMark, LIGHT } from '../engine/kip.js';
 import { scrambleParts, glyphLocks, HEX } from '../engine/kinetic.js';
 import { bg, text, display, mix, baseOf, typeIn, typeFrom, rightEdge, revealAt, DESC } from './common.js';
 import { grid as swissGrid } from './act1.js';
@@ -1164,7 +1165,7 @@ function quadReview(S, r, lt, u) {
     ctx.strokeRect(r.x + pad, yy, r.w - pad * 2, h);
     text(S, `PR ${c.pr}`, r.x + pad * 1.6, yy + h * 0.42, { kind: 'mono', size: h * 0.26, weight: 700, color: P.ink });
     if (c.bounty) {
-      text(S, '25 test USDC', r.x + pad * 1.6, yy + h * 0.78, { kind: 'mono', size: h * 0.17, color: P.ink });
+      text(S, '25 test tokens', r.x + pad * 1.6, yy + h * 0.78, { kind: 'mono', size: h * 0.17, color: P.ink });
       const bw = (r.w - pad * 2) * 0.32, bh = h * 0.36;
       const bx = r.x + r.w - pad * 1.6 - bw, by = yy + h - h * 0.18 - bh;
       ctx.fillStyle = P.signal;
@@ -1224,7 +1225,7 @@ function quadPaid(S, r, lt, u) {
     ctx.strokeRect(r.x + pad, r.y + pad, r.w - pad * 2, bh);
     text(S, 'In escrow', r.x + pad * 1.5, r.y + pad + bh * 0.64, { size: bh * 0.34, color: P.grey });
     text(S, '0.00', r.x + pad, r.y + r.h * 0.72, { kind: 'mono', size: r.h * 0.26, weight: 700, color: P.ink, tracking: -0.02 });
-    text(S, 'Test USDC  -  Solana devnet', r.x + pad, r.y + r.h - pad, { size: 13 * u, color: P.grey });
+    text(S, 'Test tokens  -  Solana devnet', r.x + pad, r.y + r.h - pad, { size: 13 * u, color: P.grey });
     return;
   }
   ctx.fillStyle = P.ink;
@@ -1233,7 +1234,7 @@ function quadPaid(S, r, lt, u) {
   ctx.fillRect(r.x + pad, r.y + pad, r.w - pad * 2, bh);
   text(S, 'Released', r.x + pad * 1.5, r.y + pad + bh * 0.64, { size: bh * 0.34, color: P.ink });
   text(S, '25.00', r.x + pad, r.y + r.h * 0.72, { kind: 'mono', size: r.h * 0.26, weight: 700, color: P.solana, tracking: -0.02 });
-  text(S, 'Test USDC  -  Solana devnet', r.x + pad, r.y + r.h - pad, { size: 13 * u, color: P.paper });
+  text(S, 'Test tokens  -  Solana devnet', r.x + pad, r.y + r.h - pad, { size: 13 * u, color: P.paper });
 }
 
 const QUADS = [quadSee, quadReview, quadMerge, quadPaid];
@@ -1327,7 +1328,7 @@ const recap = {
 
 // ======================================================= 27-30 end card ==
 
-const REPO = 'github.com/AgentSystemLabs/agent-office';
+const REPO = 'github.com/zbagdzevicius/kipdeck';
 
 const endcard = {
   id: 'endcard',
@@ -1350,40 +1351,35 @@ const endcard = {
     const fi = frames(t, impact);
     const slamS = fi < 2 ? 1.06 : 1 + 0.06 * (1 - curves.snap(clamp((fi - 2) / 4)));
 
-    // The mark. Each cell answers its 16th from the score with a small press
-    // (the cells are already there); the centre kicks a red ring on its stamp.
-    // Bookend: the red centre blinks off for the 8 frames before 29.5 and is
-    // back on with the last tick, so the film ends lit.
+    // The mark: Kip, the Kipdeck logo, with his tuft's light in signal red.
+    // The face answers each of the score's 16ths (the old cell hits) with a
+    // small press; the light kicks a red ring on its stamp. Bookend: the
+    // light blinks off for the 8 frames before 29.5 and is back on with the
+    // last tick, so the film ends lit.
     const M = E.mark;
-    const cell = M.s / 3;
-    const gap = cell * 0.09;
     const red = tl.at('mark.center.red');
     const blink = tl.at('bookend.blink');
     const blinkOff = t >= blink - 8 / FPS && t < blink;
+    let press = 0;
+    tl.prefixed('mark.cell.').forEach((h) => {
+      const f = frames(t, h.t);
+      if (f >= 0 && f < 6) press = Math.max(press, 0.03 * (1 - f / 6));
+    });
     ctx.save();
     ctx.translate(M.x, M.y); ctx.scale(slamS, slamS); ctx.translate(-M.x, -M.y);
-    tl.prefixed('mark.cell.').forEach((h, i) => {
-      const centre = i === 4;
-      if (centre && blinkOff) return;
-      const f = frames(t, h.t);
-      const press = f >= 0 && f < 6 ? 0.1 * (1 - f / 6) : 0;
-      const x = M.x + (i % 3) * cell + cell / 2, y = M.y + Math.floor(i / 3) * cell + cell / 2;
-      const side = (cell - gap) * (1 - press);
-      ctx.fillStyle = centre ? P.signal : P.ink;
-      ctx.fillRect(x - side / 2, y - side / 2, side, side);
-      if (centre) {
-        const fr = frames(t, red);
-        if (fr >= 0 && fr < 14) {
-          const k = fr / 14;
-          const g = side / 2 + cell * 0.5 * expoOut(k);
-          ctx.strokeStyle = P.signal;
-          ctx.globalAlpha = 1 - k;
-          ctx.lineWidth = 2 * u;
-          ctx.strokeRect(x - g, y - g, g * 2, g * 2);
-          ctx.globalAlpha = 1;
-        }
-      }
-    });
+    kipMark(ctx, M.x, M.y, M.s, { color: P.ink, light: blinkOff ? null : P.signal, scale: 1 - press });
+    const fr = frames(t, red);
+    if (fr >= 0 && fr < 14) {
+      const k = fr / 14;
+      const scale = (M.s / 32) * (1 - press);
+      const lx = M.x + M.s / 2 + (LIGHT.x - 16) * scale, ly = M.y + M.s / 2 + (LIGHT.y - 16) * scale;
+      const g = LIGHT.r * scale + M.s * 0.12 * expoOut(k);
+      ctx.strokeStyle = P.signal;
+      ctx.globalAlpha = 1 - k;
+      ctx.lineWidth = 2 * u;
+      ctx.beginPath(); ctx.arc(lx, ly, g, 0, Math.PI * 2); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
     ctx.restore();
 
     // Wordmark: one fixed width from the hit on; only the slam scale moves.
@@ -1400,7 +1396,7 @@ const endcard = {
     const pr = tl.hit('text.promise');
     const line1 = tl.at('mark.center.red');
     const Pm = E.promise;
-    const pSpans = [{ text: 'An army of AI agents working for you.' }, br, { text: 'Your agents get paid only when you merge.' }];
+    const pSpans = [{ text: 'The inbox for your AI coding agents.' }, br, { text: 'Your agents get paid only when you merge.' }];
     const pReveal = revealAt(t, pr.t, pSpans, { unit: 'line', at: [0, Math.round((pr.t - line1) * FPS)] });
     if (pReveal) {
       display(S, {
@@ -1441,7 +1437,7 @@ const endcard = {
       const Sm = E.small;
       const lines = L.V
         ? [['Solana devnet - Base Sepolia. Testnet only.', P.ink], ['Built on agent-office (MIT) by webdevcody.', P.grey]]
-        : [['Testnet only: test USDC on Solana devnet and Base Sepolia, no real funds. Built on agent-office (MIT) by webdevcody.', P.grey]];
+        : [['Testnet only: test tokens on Solana devnet, test USDC on Base Sepolia, no real funds. Built on agent-office (MIT) by webdevcody.', P.grey]];
       lines.forEach(([l, c], i) => text(S, l, Sm.x, Sm.base + i * Sm.size * 1.5, { kind: 'ui', weight: 500, size: Sm.size, color: c, alpha: fade, tracking: 0.01 }));
     }
   },

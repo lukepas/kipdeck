@@ -33,7 +33,7 @@ The name, tagline, wordmark, npm package, source repository and contact address 
 KIPDECK_BRAND=<id> npm run build:site
 ```
 
-`tests/landing.test.ts` builds the page and fails if it says a product name other than Kipdeck. The repository is `github.com/zbagdzevicius/kipdeck`. The 30-second film is the one exception: its frames were rendered with the old UGC Army wordmark and show it until the film is rendered again.
+`tests/landing.test.ts` builds the page and fails if it says a product name other than Kipdeck. The repository is `github.com/zbagdzevicius/kipdeck`.
 
 ## Build for a real address
 

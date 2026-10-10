@@ -2,8 +2,8 @@ WEBVTT
 
 NOTE
 The 30 second film has music and no voice. These captions give its on-screen words at the time
-each lands (from the film's beatmap) and the sounds that carry meaning. The product's name is
-described, not spelled, so each build of the page names only its own product.
+each lands (from the film's beatmap, video/src/beatmap.json) and the sounds that carry meaning.
+The film names Kipdeck at 6.5 s and on the end card at 27.0 s.
 
 00:00.000 --> 00:01.000
 [Ticking hi-hats. One cell fills, a cursor blinks.]
@@ -20,8 +20,8 @@ Who needs you?
 [A glitch, then one dry stamp.]
 
 00:06.500 --> 00:08.000
-[The product's wordmark.]
-Mission control for your AI coding agents.
+Kipdeck.
+The inbox for your AI coding agents.
 
 00:08.000 --> 00:10.000
 See every agent.
@@ -46,11 +46,11 @@ Paid only when a human merges.
 [The Merge click: a sub drop and a chord.]
 
 00:16.000 --> 00:17.500
-25 test USDC.
+25 test tokens.
 
 00:17.500 --> 00:19.000
 Released on merge.
-[A heavy stamp.]
+[A heavy stamp. The release is a real Solana devnet transaction from a test run.]
 
 00:19.000 --> 00:21.500
 Proof of Merge.
@@ -74,11 +74,13 @@ Pay per task: x402.
 See. Review. Merge. Get paid.
 
 00:27.000 --> 00:28.000
-[The mark builds, cell by cell. The wordmark lands.]
+[Kip, the Kipdeck mark, and the wordmark land.]
+Kipdeck.
 
 00:28.000 --> 00:28.500
-An army of AI agents working for you. Your agents get paid only when you merge.
+The inbox for your AI coding agents. Your agents get paid only when you merge.
 
 00:28.500 --> 00:30.000
-An army of AI agents working for you. Your agents get paid only when you merge.
+The inbox for your AI coding agents. Your agents get paid only when you merge.
+Try it - verify every id: github.com/zbagdzevicius/kipdeck
 Solana devnet and Base Sepolia only, test funds only.

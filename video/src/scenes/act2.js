@@ -146,7 +146,7 @@ function drawCard(S, r, pr, { merged = 0, hover = 0, press = 0, shadow = 0, alph
 
   if (pr.bounty) {
     text(S, 'Bounty', r.x + pad, r.y + H * 0.56, { size: H * 0.075, color: P.grey, alpha });
-    text(S, '25 test USDC', r.x + pad, r.y + H * 0.71, { kind: 'mono', size: H * 0.13, weight: 700, color: P.ink, alpha });
+    text(S, '25 test tokens', r.x + pad, r.y + H * 0.71, { kind: 'mono', size: H * 0.13, weight: 700, color: P.ink, alpha });
     text(S, 'Escrowed on Solana devnet', r.x + pad, r.y + H - pad, { size: H * 0.068, color: P.grey, alpha });
     // The Merge button: signal red (a human action), flips to ink MERGED.
     const b = mergeButton(r);
@@ -728,7 +728,7 @@ const drop = {
 
 const STATES = [
   { id: 'OPEN', note: 'bounty posted', hit: 'state.open' },
-  { id: 'FUNDED', note: '25 test USDC escrowed', hit: 'state.funded' },
+  { id: 'FUNDED', note: '25 test tokens escrowed', hit: 'state.funded' },
   { id: 'CLAIMED', note: 'PR #1', hit: 'state.claimed' },
   { id: 'RELEASED', note: 'on merge', hit: 'state.released' },
 ];
@@ -883,7 +883,7 @@ const escrow = {
       const lab = design.size('label');
       const y = E.unit + ls * 0.9;
       let x = E.bar.x;
-      x += text(S, isFunded ? 'Test USDC' : '25 Test USDC', x, y, { size: lab, color: P.paper }) + ls;
+      x += text(S, isFunded ? 'Test tokens' : '25 test tokens', x, y, { size: lab, color: P.paper }) + ls;
       x += text(S, isReleased ? 'released' : isFunded ? 'in escrow' : 'bounty posted', x, y, { size: lab, weight: 500, color: isReleased ? P.solana : P.grey }) + ls;
       text(S, '- Solana devnet', x, y, { size: lab, color: P.solana });
     }
@@ -914,8 +914,11 @@ const escrow = {
       if (X.tagRight) text(S, `Program ${CHAIN.program}`, design.grid.x + design.grid.w * 0.9, X.label, { kind: 'mono', size: design.size('labelS'), weight: 700, color: P.grey, align: 'right' });
       else text(S, `Program ${CHAIN.program}`, X.x, X.base + X.size * 0.22 + design.size('tag') * 3.4, { kind: 'mono', size: design.size('labelS'), weight: 700, color: P.grey });
       if (done) {
-        // A small chip: this one is live on devnet, unlike the demo rows.
-        text(S, 'Live on devnet', X.x + lw + ls * 0.8, X.label, { size: design.size('labelS'), color: P.solana, alpha: ul });
+        // A small chip: a real devnet tx, unlike the demo rows, but from a
+        // test run with no GitHub merge behind it (devnet.json, e2e[0]).
+        // 9:16 has the program on this row, so the chip is shorter there; the
+        // 'devnet tx' tag beside the hash still says where it lives.
+        text(S, design.vertical ? 'Test run' : 'Real devnet tx, test run', X.x + lw + ls * 0.8, X.label, { size: design.size('labelS'), color: P.solana, alpha: ul });
         ctx.fillStyle = P.paper;
         ctx.fillRect(X.x, X.base + X.size * 0.22, tw * ul, Math.max(2, 3 * u));
         if (X.tagRight) text(S, 'devnet tx', X.x + tw + 16 * u, X.base, { size: design.size('tag'), color: P.grey });
