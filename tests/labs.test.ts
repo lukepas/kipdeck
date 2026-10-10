@@ -20,7 +20,7 @@ import type { ServerMsg } from '../src/shared/protocol.js';
 const allOff = () => Object.fromEntries(LAB_IDS.map((id) => [id, false])) as ReturnType<typeof defaultLabs>;
 
 test('every lab is on as the office ships, the Deck is called the Deck, and each says what it brings', () => {
-  assert.deepEqual(defaultLabs(), { boards: true, bridge: true, ops: true, meetings: true, voice: true, ambience: true, proof: true });
+  assert.deepEqual(defaultLabs(), { boards: true, bridge: true, ops: true, meetings: true, voice: true, ambience: true, proof: true, rundown: true });
   assert.equal(LAB_META.bridge.name, 'Deck (3D)');
   assert.match(LAB_META.bridge.what, /\/deck\b/);
   assert.doesNotMatch(LAB_META.bridge.what + LAB_META.ambience.name, /Bridge view|\/bridge\b/);

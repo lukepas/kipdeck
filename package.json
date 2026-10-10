@@ -36,9 +36,11 @@
   "scripts": {
     "test": "node --import tsx --import=#tests/css --test tests/*.test.ts",
     "dev": "concurrently -k \"vite\" \"tsx watch src/server/cli.ts --port 4600 --password dev --no-open\"",
-    "build": "npm run build:client && npm run build:server",
+    "build": "npm run build:client && npm run build:server && npm run build:rundown",
     "build:client": "vite build && vite build -c vite.showcase.config.ts",
     "build:server": "tsc -p tsconfig.server.json",
+    "build:rundown": "vite build -c vite.rundown.config.ts",
+    "rundown:install": "npm run build:rundown && node dist/rundown/rundown.mjs install --skill skills/rundown/SKILL.md --readme skills/rundown/README.md",
     "build:site": "node site/build.mjs",
     "logo": "tsx design/logo/sync.ts",
     "preview:site": "node site/serve.mjs",

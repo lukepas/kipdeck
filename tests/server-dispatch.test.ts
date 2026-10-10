@@ -255,7 +255,7 @@ test('answers the signed-in routes', async () => {
   const who = (await (await get('/api/whoami', me)).json()) as { ok: boolean; me: unknown; labs: { on: Record<string, boolean>; forced: string[] } };
   assert.deepEqual({ ok: who.ok, me: who.me }, { ok: true, me: { admin: true } });
   // Every lab is on as the office ships.
-  assert.deepEqual(who.labs.on, { boards: true, bridge: true, ops: true, meetings: true, voice: true, ambience: true, proof: true });
+  assert.deepEqual(who.labs.on, { boards: true, bridge: true, ops: true, meetings: true, voice: true, ambience: true, proof: true, rundown: true });
   assert.deepEqual(who.labs.forced, []);
   // Home is the inbox; the Deck is a page of its own at /deck, and its old /bridge address lands
   // there with its query; the old 2D view's address lands home.

@@ -67,6 +67,8 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
   const actions = createActions(net);
   const openSettings = () => void lazy.settings().then((m) => m.openHomeSettings({ net, settings, notifier }));
   const openNumbers = () => void lazy.numbers().then((m) => m.openNumbers());
+  // Labs > Rundown: the project picked in the top bar, else the first.
+  const openRundown = () => void lazy.rundown().then((m) => m.openRundown(net, { floor: home.project || undefined }));
 
   // ---- The top bar ----------------------------------------------------------------------------
   const project = $('project') as HTMLSelectElement;
@@ -97,6 +99,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     { label: 'Deploy agent', hint: 'N', icon: 'plus', run: () => actions.deploy() },
     { label: 'Search agents', hint: '/', icon: 'search', run: () => search.focus() },
     { label: 'Numbers', hint: 'Wait time, merges, merge rate', icon: 'plot', run: openNumbers },
+    ...(store.lab('rundown') ? [{ label: 'Rundown', hint: "Labs: a project's parts, milestones and decisions", icon: 'overview' as const, run: openRundown }] : []),
     ...(store.lab('boards') ? workCommands() : []),
     { label: 'While you were away', icon: 'clock', run: () => recallDigest(showDigest) },
     { label: 'Settings', hint: 'Account, agents, notifications', icon: 'settings', run: openSettings },
@@ -141,6 +144,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     const entries: MenuEntry[] = [
       ...work,
       { label: 'Numbers', icon: 'plot', run: openNumbers },
+      store.lab('rundown') ? { label: 'Rundown', icon: 'overview', run: openRundown } : null,
       { label: 'Settings', icon: 'settings', run: openSettings },
       deckMenuEntry(),
       { label: 'Help and keys', icon: 'help', note: '?', run: openHelp },
