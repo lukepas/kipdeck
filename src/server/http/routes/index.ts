@@ -11,6 +11,7 @@ import { githubRoutes } from './github.js';
 import { localRoutes } from './local.js';
 import { pageRoutes } from './pages.js';
 import { reputationRoutes } from './reputation.js';
+import { rundownRoutes } from './rundown.js';
 import { searchRoutes } from './search.js';
 import { serviceRoutes } from './services.js';
 import { showcaseRoutes } from './showcase.js';
@@ -67,6 +68,8 @@ export const routes: readonly Route[] = [
   searchRoutes.search,
   serviceRoutes.forwards,
   githubRoutes.github,
+  // Rundown (Labs): a project's map page as a download.
+  rundownRoutes.map,
   pageRoutes.home,
   pageRoutes.deck,
   pageRoutes.bridge,

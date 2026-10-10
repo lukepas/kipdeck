@@ -26,6 +26,7 @@ import type { installProofCorner } from '../features/proofcorner';
 import type { installSeating } from '../features/seating';
 import type { installLounge } from '../features/lounge';
 import type { installMonitor } from '../features/monitor';
+import type { installRundown } from '../features/rundown';
 import type { installSpace } from '../features/space';
 import type { installLights } from '../features/lights';
 import type { installQuality } from '../features/quality';
@@ -116,6 +117,8 @@ export interface Parts {
   lounge: Made<typeof installLounge>;
   /** The service monitor on the east wall: the live page of a unit's web server (features/monitor). */
   monitor: Made<typeof installMonitor>;
+  /** Labs > Rundown: the project's map on the holo, and its window (features/rundown). */
+  rundown: Made<typeof installRundown>;
   talk: Made<typeof installVoice>;
   hud: Made<typeof installHud>;
   /** The rail, the vault and the plinth keeping up with the chain (see features/proofcorner). */

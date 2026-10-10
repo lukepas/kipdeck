@@ -28,6 +28,7 @@ import { skin } from '../../features/bridge/skin';
 import { inlay } from '../../features/bridge/inlay';
 import { conn } from '../../features/bridge/conn';
 import { holo } from '../../features/bridge/holo';
+import { rundownHolo } from '../../features/rundown/world';
 import { arcChrome } from '../../features/arcchrome/world';
 import { stations } from '../../features/bridge/stations';
 import { panels } from '../../features/life/panels';
@@ -64,6 +65,8 @@ function floorPlan() {
     missionTable,
     holo,
     heading,
+    // The project's map as a city over the table, hidden until it's brought up (features/rundown).
+    rundownHolo,
     desks,
     stations,
     // The stations' screens, the data pulses from them to the holo table and the motes off them (features/life).

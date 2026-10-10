@@ -20,6 +20,8 @@
 // out and back, so the units' callouts change tier (tabs, lines, cards) and pop in over and over.
 // FLICKER_QUALITY=high (or medium, low) draws at that tier rather than Auto's, which
 // steps down on a busy machine and would leave the glow out.
+// FLICKER_RUNDOWN=1 raises the Rundown holo city over the table (Labs > Rundown), so its shaders
+// are in every frame of the sweep.
 import { spawn, execFileSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -265,15 +267,15 @@ async function main() {
     for (const lighting of ['night', 'day']) {
       const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, colorScheme: 'dark' });
       // FLICKER_MOTION=off checks with Ship motion Off (the motion layer's still forms).
-      await context.addInitScript(([lighting, quality, motion]) => {
+      await context.addInitScript(([lighting, quality, motion, rundown]) => {
         try {
-          localStorage.setItem('agent-office.settings', JSON.stringify({ lighting, ...(quality ? { quality } : {}), ...(motion ? { shipMotion: motion } : {}) }));
+          localStorage.setItem('agent-office.settings', JSON.stringify({ lighting, ...(quality ? { quality } : {}), ...(motion ? { shipMotion: motion } : {}), ...(rundown ? { rundownHolo: true } : {}) }));
           localStorage.setItem('agent-office.lite-declined', '1');
           localStorage.setItem('agent-office.profile', JSON.stringify({ name: 'Tess', color: '#4FA3A5', look: { skin: 0, hair: 0, style: 0 } }));
         } catch {
           // fine without
         }
-      }, [lighting, process.env.FLICKER_QUALITY ?? '', process.env.FLICKER_MOTION ?? '']);
+      }, [lighting, process.env.FLICKER_QUALITY ?? '', process.env.FLICKER_MOTION ?? '', process.env.FLICKER_RUNDOWN === '1']);
       const page = await context.newPage();
       const errors = [];
       page.on('pageerror', (e) => errors.push(e.message));

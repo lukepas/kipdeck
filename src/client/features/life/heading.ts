@@ -13,6 +13,8 @@ import { sharp } from '../../world/sharp';
 export interface HoloHeading {
   /** What the caption says, and how far round the ring goes (0-1, none without a measure). */
   set(caption: string, progress: number | undefined): void;
+  /** Stands the caption and the ring down past halfway of `k` (0-1), for something else over the table (features/rundown's holo city). */
+  yieldTo(k: number): void;
 }
 
 declare module '../../world/types' {
@@ -109,5 +111,8 @@ export const heading: Fixture<'heading'> = (site) => {
     arc.visible = progress !== undefined;
   };
   set('NO COURSE SET', undefined);
-  return { handle: { heading: { set } } };
+  const yieldTo = (k: number) => {
+    root.visible = k < 0.5;
+  };
+  return { handle: { heading: { set, yieldTo } } };
 };

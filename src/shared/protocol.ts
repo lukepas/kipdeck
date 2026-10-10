@@ -25,6 +25,7 @@ import type { TimelineClientMsg, TimelineServerMsg } from './protocol/timeline.j
 import type { WhiteboardClientMsg, WhiteboardServerMsg } from './protocol/whiteboard.js';
 import type { UsageClientMsg, UsageServerMsg } from './protocol/usage.js';
 import type { WorkerClientMsg, WorkerServerMsg } from './protocol/workers.js';
+import type { RundownClientMsg, RundownServerMsg } from './protocol/rundown.js';
 
 export * from './protocol/accounts.js';
 export * from './protocol/agents.js';
@@ -48,6 +49,7 @@ export * from './protocol/timeline.js';
 export * from './protocol/whiteboard.js';
 export * from './protocol/usage.js';
 export * from './protocol/workers.js';
+export * from './protocol/rundown.js';
 
 export type ClientMsg =
   | PresenceClientMsg
@@ -72,7 +74,8 @@ export type ClientMsg =
   | PaceClientMsg
   | LabsClientMsg
   | InboxClientMsg
-  | SetupClientMsg;
+  | SetupClientMsg
+  | RundownClientMsg;
 
 export type ServerMsg =
   | PresenceServerMsg
@@ -95,4 +98,5 @@ export type ServerMsg =
   | PaceServerMsg
   | LabsServerMsg
   | InboxServerMsg
-  | SetupServerMsg;
+  | SetupServerMsg
+  | RundownServerMsg;

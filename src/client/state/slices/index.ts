@@ -21,6 +21,7 @@ import { notify } from './notify';
 import { pace } from './pace';
 import { prompts } from './prompts';
 import { reputation } from './reputation';
+import { rundown } from './rundown';
 import { services } from './services';
 import { showcase } from './showcase';
 import { signins } from './signins';
@@ -55,4 +56,5 @@ export const SLICES: readonly Slice[] = [
   showcase,
   pace,
   labs,
+  rundown,
 ];

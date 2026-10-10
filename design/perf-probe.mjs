@@ -16,6 +16,11 @@
 //   npm run build && node design/perf-probe.mjs [metal|swiftshader] [label]
 //
 // PROBE_OVERVIEW=1 also times the Overview (G) over the whole deck, three times held still and three left to its idle drift.
+// Where the build has Labs > Rundown, the conn again with its holo city up: the probe waits until the
+// city says it is built (its root's userData.built, set once the rundown came in and was drawn), then
+// counts that frame, and the line says whether it kept to the tier's draw budget; up against down are
+// both printed (vantage rundown-up, rundown-down), and a city that adds draws, or is over budget at the
+// tier it was measured down at, fails the probe (exit 1).
 // PROBE_LIST=1 adds which named parts of the scene each vantage's draws go to (to find what to merge).
 // PROBE_PORT picks the port (default 4692), PROBE_ROOT another checkout's build to time (a baseline),
 // PROBE_CONN the conn's eye and aim. PROBE_SOUND=1 starts the deck's sound first (a key press, as a
@@ -467,6 +472,37 @@ async function main() {
       await page.evaluate(() => (window.__office.settings.hands = 'auto'));
       console.log(JSON.stringify({ label: LABEL, backend: BACKEND, vantage: 'hands-off', world: 'on', ...off }));
     }
+    // The holo city from the conn, once it is really built (not the frame before the rundown came in).
+    let rundownOver = false;
+    if (await page.evaluate(() => !!window.__office.scene.getObjectByName('rundown-holo') && !!window.__office.store.lab?.('rundown'))) {
+      const city = (on) => page.evaluate((on) => (window.__office.settings.rundownHolo = on), on);
+      const down = await page.evaluate(measure, VANTAGES.conn);
+      await city(true);
+      await page.waitForFunction(
+        () => {
+          const root = window.__office.scene.getObjectByName('rundown-holo');
+          return !!root?.userData.built && root.visible;
+        },
+        null,
+        { timeout: 120_000 },
+      );
+      // The fade's frames, so the star map and the column have stood down.
+      await page.waitForTimeout(2500);
+      const up = await page.evaluate(measure, VANTAGES.conn);
+      const cityDraws = await page.evaluate(() => {
+        let n = 0;
+        window.__office.scene.getObjectByName('rundown-holo').traverseVisible((o) => {
+          if ((o.isMesh || o.isLine || o.isPoints) && o.material?.visible !== false && (o.count ?? 1) > 0) n++;
+        });
+        return n;
+      });
+      await city(false);
+      console.log(JSON.stringify({ label: LABEL, backend: BACKEND, vantage: 'rundown-down', world: 'on', ...down }));
+      console.log(JSON.stringify({ label: LABEL, backend: BACKEND, vantage: 'rundown-up', world: 'on', cityDraws, net: up.calls - down.calls, ...up }));
+      // Auto quality may step tiers between the two samples: the city fails when it adds draws, or when
+      // it's over the budget of the same tier it was measured down at.
+      rundownOver = up.calls > down.calls || (up.tier === down.tier && up.withinBudget === false);
+    }
     // The worst cases, from the conn: the jump's tunnel and the start of watch's log, where the build has them.
     for (const kind of ['jump', 'launch']) {
       const m = await page.evaluate(during, [VANTAGES.conn, kind]);
@@ -487,6 +523,10 @@ async function main() {
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
     console.log(JSON.stringify({ label: LABEL, backend: BACKEND, vantage: 'conn-cpu4x', world: 'on', ...slow }));
     if (errors.length) console.log('page errors:', errors.slice(0, 5).join(' | '));
+    if (rundownOver) {
+      console.log('FAIL: the conn with the Rundown city up is over the draw budget');
+      return 1;
+    }
   } finally {
     await browser.close();
   }

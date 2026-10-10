@@ -9,6 +9,7 @@ import type { Client } from '../office/client.js';
 import { bountiesHandlers } from './handlers/bounties.js';
 import { meetingHandlers } from './handlers/meetings.js';
 import { reputationHandlers } from './handlers/reputation.js';
+import { rundownHandlers } from './handlers/rundown.js';
 import { showcaseHandlers } from './handlers/showcase.js';
 
 const LAB_MAPS: [LabId, object][] = [
@@ -16,6 +17,7 @@ const LAB_MAPS: [LabId, object][] = [
   ['proof', reputationHandlers],
   ['proof', showcaseHandlers],
   ['meetings', meetingHandlers],
+  ['rundown', rundownHandlers],
 ];
 
 /** Which lab each gated message type belongs to. */

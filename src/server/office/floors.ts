@@ -130,7 +130,11 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
       ctx.bounties?.pulls(floor);
       if (ctx.proofs) void ctx.proofs.pulls(proofFloor(floor, ctx));
     },
-    merged: (floor, n) => ctx.proofs?.merged(proofFloor(floor, ctx), n),
+    merged: (floor, n) => {
+      ctx.proofs?.merged(proofFloor(floor, ctx), n);
+      // A merge moves the project's map on (Labs > Rundown).
+      ctx.rundown?.invalidate(floor.id);
+    },
     queueChanged: (floor, state) => ctx.x402?.onQueue(floor.id, state),
     lent: (floor) => [...floors.values()].some((f) => f !== floor && worksIn(f, floor)),
     runAs: ctx.signins,

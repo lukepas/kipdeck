@@ -79,6 +79,8 @@ export interface StarMap {
   step(dt: number, k: number): void;
   /** Puts the ship's glow at `at` (in the plot's space). */
   ship(at: THREE.Vector3): void;
+  /** How much of its light shows, 0-1 (1 as built); at 0 it isn't drawn at all. */
+  gain(k: number): void;
 }
 
 /** A spiral of `n` stars, two arms and a bright core, in a disc `r` across, dealt from a fixed seed. */
@@ -158,6 +160,7 @@ export function starMap(coneFrom: number): StarMap {
   group.add(glow);
 
   let t = 0;
+  let gainK = 1;
   return {
     group,
     boards,
@@ -166,10 +169,17 @@ export function starMap(coneFrom: number): StarMap {
       disc.rotation.y = t * 0.05;
       mapMat.uniforms.uTime.value = t;
       coneMat.uniforms.uTime.value = t;
-      glowMat.opacity = 0.65 + 0.3 * Math.sin(t * 2.4);
+      glowMat.opacity = (0.65 + 0.3 * Math.sin(t * 2.4)) * gainK;
     },
     ship(at) {
       glow.position.copy(at);
+    },
+    gain(k) {
+      const g = Math.max(0, Math.min(1, k));
+      mapMat.uniforms.uGain.value = 0.8 * g;
+      coneMat.uniforms.uGain.value = g;
+      gainK = g;
+      group.visible = g > 0.001;
     },
   };
 }

@@ -1,6 +1,6 @@
 // The windows the inbox opens only now and then, loaded the first time they're wanted so the home page
 // draws without them: the terminal (xterm), the Changes window, the GitHub windows and boards, the task
-// queue, Mission control, Labs, the meeting room, sign-ins, Settings, Numbers and Accounts. A module that reads server messages
+// queue, Mission control, Labs, the meeting room, sign-ins, Settings, Numbers, Rundown and Accounts. A module that reads server messages
 // for its open window is handed every message from then on.
 
 import type { ServerMsg } from '../../shared/protocol';
@@ -39,6 +39,7 @@ export const signins = once(() => import('../ui/signins'));
 export const meeting = once(() => import('../ui/meeting'));
 export const settings = once(() => import('./settings'));
 export const numbers = once(() => import('./numbers'));
+export const rundown = once(() => import('../ui/rundown'));
 export const accounts = once(() => import('../ui/accounts'), (m) => m.routeAccountsMessage);
 
 /** After a reconnect the office has forgotten which terminal and which changes this page follows: tell it again. */

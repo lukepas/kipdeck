@@ -165,6 +165,8 @@ export interface Settings {
   turnaround: boolean;
   /** Settings > Deck > Hands: your gloved hands in front of you in first person. */
   hands: HandsMode;
+  /** Labs > Rundown: the project's map as a holo city over the mission table (features/rundown). */
+  rundownHolo: boolean;
 }
 
 const SETTINGS_KEY = 'agent-office.settings';
@@ -256,7 +258,7 @@ export function rememberSpot(s: Spot) {
 export let soundTurnedOnByUpdate = false;
 
 export function loadSettings(): Settings {
-  const s: Settings = { view: 'first', volume: 0.7, muted: false, mix: { ...MIX_DEFAULTS }, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', quality: 'auto', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { ...LIFE_PART_DEFAULTS }, voice: 'on', celebrations: 'full', alerts: { ...ALERT_DEFAULTS }, watch: 'full', momentum: true, turnaround: true, hands: 'auto' };
+  const s: Settings = { view: 'first', volume: 0.7, muted: false, mix: { ...MIX_DEFAULTS }, pushToTalk: false, notify: true, needsYouSound: 'once', hud: { ...HUD_DEFAULTS }, pins: [], missionTab: 'attention', allFloors: false, shipMotion: 'full', quality: 'auto', lighting: 'auto', brightness: 0, life: 'full', lifeParts: { ...LIFE_PART_DEFAULTS }, voice: 'on', celebrations: 'full', alerts: { ...ALERT_DEFAULTS }, watch: 'full', momentum: true, turnaround: true, hands: 'auto', rundownHolo: false };
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? 'null');
     if (saved?.view === 'first' || saved?.view === 'third') s.view = saved.view;
@@ -288,6 +290,7 @@ export function loadSettings(): Settings {
     if (typeof saved?.momentum === 'boolean') s.momentum = saved.momentum;
     if (typeof saved?.turnaround === 'boolean') s.turnaround = saved.turnaround;
     if (HANDS_MODES.includes(saved?.hands)) s.hands = saved.hands;
+    if (typeof saved?.rundownHolo === 'boolean') s.rundownHolo = saved.rundownHolo;
   } catch {
     // storage blocked
   }

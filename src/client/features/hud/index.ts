@@ -23,8 +23,9 @@ import { openUpgrade } from '../../ui/upgrade';
 import { openLabs } from '../../ui/labs';
 import { openWhiteboard } from '../whiteboard/ui';
 import { qualityMenuAction } from '../quality/menu';
+import { rundownMenuActions } from '../rundown';
 
-export type HudParts = Pick<Parts, 'place' | 'travel' | 'you' | 'actions' | 'waiting' | 'meeting' | 'bookshelf' | 'talk' | 'notifier' | 'mission'>;
+export type HudParts = Pick<Parts, 'place' | 'travel' | 'you' | 'actions' | 'waiting' | 'meeting' | 'bookshelf' | 'talk' | 'notifier' | 'mission' | 'rundown'>;
 
 /** Listens for clicks on the HUD and the project, registers what the HUD follows (see mountHud), and binds Tab, H and F. */
 export function installHud(ctx: Ctx, parts: HudParts) {
@@ -70,6 +71,7 @@ export function installHud(ctx: Ctx, parts: HudParts) {
       { id: 'review-inbox', icon: 'review', label: 'Review inbox', section: 'Command', count: () => store.counts().review, title: () => 'Finished work and pull requests waiting for a decision', run: () => parts.mission.showMission('review') },
       { id: 'timeline', icon: 'clock', label: 'Timeline', section: 'Command', lab: 'ops', title: () => 'What happened, on every deck', run: () => parts.mission.showMission('timeline') },
       { id: 'goals', icon: 'target', label: 'Mission and milestones', section: 'Command', lab: 'ops', title: () => "What this deck is for: the statement units are given, and its milestones", run: () => parts.mission.showMission('goals') },
+      ...rundownMenuActions(() => parts.rundown),
       { id: 'search', icon: 'search', label: 'Search terminals', section: 'Command', key: '/', title: () => 'Search the chat and every terminal', run: waiting.showSearch },
       // ---- Work: the boards ---------------------------------------------------------------------------
       { id: 'issues', icon: 'issue', label: 'Issues', section: 'Work', count: () => store.issues.items.filter((i) => i.state === 'OPEN').length, run: () => openBoard('issues', net, actions.boardActions()) },

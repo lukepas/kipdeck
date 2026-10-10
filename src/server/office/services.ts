@@ -16,6 +16,7 @@ import { Bounties } from '../bounties.js';
 import { createChainServices } from './chain.js';
 import { Showcase } from '../showcase/service.js';
 import { DemoDirector } from '../demo/director.js';
+import { RundownService } from '../rundown/service.js';
 import type { ServiceInfo, ServicesState } from '../../shared/protocol.js';
 import type { BuildingServices, Ctx, LateServices } from './context.js';
 import type { Client } from './client.js';
@@ -157,5 +158,7 @@ export function createLateServices(ctx: Ctx): LateServices {
   const showcase = new Showcase(ctx);
   // --demo: the scripted agents, and the read-only demo's reviewer (started with the clocks, timers.ts).
   const demo = cfg.demo?.workspace ? new DemoDirector(ctx, cfg.demo.workspace, cfg.demo.readOnly) : undefined;
-  return { team, tailnet, services, upgrader, servicesState, bounties, showcase, ...(demo ? { demo } : {}), ...createChainServices(ctx, bounties) };
+  // Each floor's rundown, computed only while someone watches it (Labs).
+  const rundown = new RundownService({ floor: (id) => floors.get(id), send: (ids, msg) => ids.forEach((id) => clients.get(id) && ctx.sendTo(clients.get(id)!, msg)) });
+  return { team, tailnet, services, upgrader, servicesState, bounties, showcase, rundown, ...(demo ? { demo } : {}), ...createChainServices(ctx, bounties) };
 }

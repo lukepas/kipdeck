@@ -96,6 +96,7 @@ Labs are the parts beyond the inbox. Each is on as the office ships, so a first 
 | Meetings | The Review bay and the planning whiteboard. |
 | Voice | Voice chat, screen sharing and the dictation mic in prompt boxes and terminals. |
 | Deck ambience | The Deck in full: mascot, ship's voice, hands, celebrations, start of watch, ship motion and the ambience bed (from your first click or key). Off, the Deck starts calm. |
+| Rundown | A map of each project: its parts by status, milestones, commit activity, branches and the decisions waiting on you, in the inbox (avatar menu and Ctrl+K) and as a city of light over the Deck's holo table. The same map the `/rundown` Claude Code skill draws; see [docs/rundown.md](docs/rundown.md). |
 | Proof of Merge (testnets) | Bounties and payouts, attestations, ERC-8004 reputation, x402 paid tasks and `/pom/`. Their HTTP routes don't exist and their socket messages go nowhere while it's off. Any chain flag (`--x402`, `--attest`, `--reputation`) holds it on. |
 
 More in [docs/labs.md](docs/labs.md).
@@ -213,6 +214,7 @@ The npm package ships the built `dist/` (`files` in `package.json`), so `npx kip
 Labs and the Deck:
 
 - [Labs](docs/labs.md): what each lab brings back, and how to switch it
+- [Rundown](docs/rundown.md): the project map, as the `/rundown` skill in any repository and in the office, its data model and its limits
 - [Mission control](docs/mission-control.md): the attention ranking, the floor's mission and milestones, linking work to goals, the review inbox, the timeline, reminders and the digest
 - [Design system](docs/design.md): each surface on screen, the motion and the deck's sound, demo mode, and how to check a design change with `design/shoot.mjs`
 - [The deck](docs/deck.md): what's where on the 3D deck, cell addresses, and the Overview camera
