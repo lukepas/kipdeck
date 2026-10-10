@@ -1,4 +1,4 @@
-// Proof of Merge bounties: devnet USDC escrowed against a floor's GitHub issues, paid to the agent
+// Proof of Merge bounties: devnet USDC or the project's test tokens escrowed against a floor's GitHub issues, paid to the agent
 // operator only when a person merges the office's pull request for the issue and an office admin
 // approves. The escrow is a Solana program (onchain/solana); this is what the office says about it.
 
@@ -61,6 +61,9 @@ export interface BountiesState {
   /** "solana-devnet" or "mock". Never a mainnet. */
   network: string;
   programId?: string;
+  /** The office's mint, and what it is called (shared/money.ts tokenSymbol): "USDC" or "TEST". */
+  mint?: string;
+  symbol?: string;
   items: BountyView[];
   /** The floor's repository, "owner/name" lowercased, once GitHub said. */
   repo?: string;

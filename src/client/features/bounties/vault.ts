@@ -229,7 +229,7 @@ export class VaultHolo {
     g.textAlign = 'right';
     g.font = MONO(22, 600);
     g.fillStyle = INK.text;
-    // The token is said once, by the network's label ("TEST USDC"): the sums are amounts alone.
+    // The token is said once, by the network's label ("DEVNET  TEST TOKENS"): the sums are amounts alone.
     const bare = (t: string) => t.replace(/ \S+$/, '');
     const sums = `${bare(v.held.total)} held${v.paid.count ? `  ${bare(v.paid.total)} paid` : ''}`;
     g.fillText(sums, W - 18, 31);

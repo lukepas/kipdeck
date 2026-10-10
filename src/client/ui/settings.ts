@@ -127,7 +127,7 @@ export function openSettings(net: Net, settings: Settings, onChange: (s: Setting
       id: 'bounties',
       icon: 'proof',
       label: 'Bounties',
-      blurb: "Proof of Merge: devnet USDC on issues, paid only when a person merges the office's pull request.",
+      blurb: "Proof of Merge: devnet USDC or test tokens on issues, paid only when a person merges the office's pull request.",
       body: [setting('Proof of Merge bounties', 'office', ...bounty.nodes), setting('Public showcase', 'office', ...pom.nodes)],
     });
   }

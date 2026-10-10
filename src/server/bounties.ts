@@ -1,4 +1,4 @@
-// Proof of Merge bounties, building-wide: devnet USDC escrowed against GitHub issues (the Solana
+// Proof of Merge bounties, building-wide: devnet USDC or test tokens escrowed against GitHub issues (the Solana
 // program in onchain/solana), claimed for the office PR a worker opened for the issue, and paid to
 // the worker's owner's wallet only after a person with write access merged it and an office admin
 // approved. Off until an admin turns it on in Settings.
@@ -19,6 +19,7 @@ import { BountyStore, type StoredBounty } from './chain/store.js';
 import { pullFacts, type GhRun } from './chain/merge-proof.js';
 import { mergerPseudonym, pseudonymSecret } from './chain/pseudonym.js';
 import { actionGet, actionPost, prepareFund, type FundingParts } from './chain/funding.js';
+import { tokenSymbol } from '../shared/money.js';
 
 type ToastLevel = 'info' | 'warn' | 'error';
 
@@ -56,7 +57,7 @@ export class Bounties {
   private attesterKey?: Signer;
   private approverAddress?: string;
   private approverWallet?: string;
-  private token = { symbol: 'USDC', decimals: 6, mint: '' };
+  private token = { symbol: tokenSymbol(undefined), decimals: 6, mint: '' };
   private error?: string;
   private floorErrors = new Map<string, string>();
   private stores = new Map<string, BountyStore>();
@@ -104,8 +105,10 @@ export class Bounties {
       const secret = pseudonymSecret(this.deps.dataDir);
       this.attester = new sdk.Attester(escrow, key, { pseudonym: (id) => mergerPseudonym(secret, id) });
       this.escrow = escrow;
+      this.token = { symbol: tokenSymbol(mint), decimals: 6, mint };
       try {
-        this.token = await escrow.token();
+        const t = await escrow.token(); // the SDK calls every mint "USDC": the name is ours, by the mint
+        this.token = { mint: t.mint, decimals: t.decimals, symbol: tokenSymbol(t.mint) };
       } catch (err) {
         this.error = `can't read the mint: ${(err as Error).message}`;
       }
@@ -214,7 +217,7 @@ export class Bounties {
     return {
       enabled: s.enabled,
       network: this.network,
-      ...(this.escrow ? { programId: this.escrow.programId } : {}),
+      ...(this.escrow ? { programId: this.escrow.programId, symbol: this.token.symbol, ...(this.token.mint ? { mint: this.token.mint } : {}) } : {}),
       items: floor && s.enabled ? this.store(floor).list().map((b) => this.view(b)) : [],
       ...(repo ? { repo } : {}),
       blink: !!repo && s.actionRepos.includes(repo),
@@ -228,10 +231,10 @@ export class Bounties {
   }
 
   /** The bounty paid for PR `pr` on a floor, when one was: its devnet signature and amount (proof of merge carries it). */
-  payout(floorId: string, pr: number): { tx: string; amount: string; decimals: number } | undefined {
+  payout(floorId: string, pr: number): { tx: string; amount: string; decimals: number; mint?: string } | undefined {
     const b = this.stores.get(floorId)?.list().find((x) => x.claimPr === pr);
     const sig = b?.txs.filter((t) => t.kind === 'paid').at(-1)?.sig;
-    return b && sig && /^[1-9A-HJ-NP-Za-km-z]{32,90}$/.test(sig) ? { tx: sig, amount: b.amount, decimals: this.token.decimals } : undefined;
+    return b && sig && /^[1-9A-HJ-NP-Za-km-z]{32,90}$/.test(sig) ? { tx: sig, amount: b.amount, decimals: this.token.decimals, ...(this.token.mint ? { mint: this.token.mint } : {}) } : undefined;
   }
 
   /** Whether a bounty claimed by PR `pr` still waits to be paid: merged and waiting for an admin, or being paid. */

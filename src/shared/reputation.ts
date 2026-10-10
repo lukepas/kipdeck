@@ -2,7 +2,9 @@
 // person caused (merged, reverted, closed unmerged), one pure function per figure. The office's own
 // ledger, the public API, the MCP tool and the chain-only indexer (onchain/indexer) all run these,
 // so the office and anyone rebuilding the board from the chain never disagree. Every threshold and
-// every score is here. No imports on purpose: onchain/indexer loads this file as it is.
+// every score is here. It imports only money.ts (pure, no imports of its own): onchain/indexer loads
+// both as they are.
+import { commonSymbol, tokenSymbol } from './money.js';
 
 /** A revert counts against the agent only when it lands this soon after the merge. */
 export const REVERT_WINDOW_S = 14 * 24 * 60 * 60;
@@ -46,7 +48,7 @@ export interface RepEvent {
   /** The agent's own operator merged or closed it. */
   self?: boolean;
   /** A bounty paid for it on Solana devnet: amount in the token's smallest units, and the payout. */
-  paid?: { amount: string; decimals: number; tx: string };
+  paid?: { amount: string; decimals: number; tx: string; mint?: string };
   /** The EAS attestation UID. */
   uid?: string;
   /** Where to check it: the attestation, the ERC-8004 feedback transaction, the Solana payout. */
@@ -79,6 +81,8 @@ export interface RepStats {
   distinctMaintainers: number;
   /** Paid out in bounties, in whole tokens with the token's decimals ("25.00"). */
   usdcEarned: string;
+  /** What usdcEarned is in, by the payouts' mints ("USDC", "TEST"): see shared/money.ts tokenSymbol. */
+  earnedSymbol: string;
   bountiesPaid: number;
   /** merged + closedUnmerged: what the rates are taken over. */
   samples: number;
@@ -172,7 +176,7 @@ export function statsOf(key: string, by: 'agent' | 'harness', events: readonly R
   }
   const samples = merged + closedUnmerged;
   const enough = samples >= MIN_SAMPLES;
-  // One token in practice (devnet USDC); a mix of decimals is summed in the finest one's units.
+  // One token in practice (devnet USDC or the test mint); a mix of decimals is summed in the finest one's units.
   const [decimals] = [...earned.keys()].sort((a, b) => b - a);
   const total = [...earned.entries()].reduce((sum, [d, v]) => sum + v * 10n ** BigInt((decimals ?? d) - d), 0n);
   return {
@@ -189,6 +193,7 @@ export function statsOf(key: string, by: 'agent' | 'harness', events: readonly R
     medianTimeToMerge: median(ttm),
     distinctMaintainers: maintainers.size,
     usdcEarned: formatUnits(total, decimals ?? 6),
+    earnedSymbol: commonSymbol(events.flatMap((e) => (e.paid ? [tokenSymbol(e.paid.mint)] : []))),
     bountiesPaid,
     samples,
     enough,
@@ -252,9 +257,14 @@ export function revertHint(s: RepStats | undefined): string | undefined {
   return `its merges get reverted often (${s.reverted} of ${s.merged})`;
 }
 
-/** A short line for a worker's row: "rep 86 · merges 80% · 25.00 USDC", or what it has so far. */
+/** What an agent earned, with its token's symbol once it was paid at all: "25.00 TEST", or "0.00". */
+export function earnedLabel(s: Pick<RepStats, 'usdcEarned' | 'earnedSymbol' | 'bountiesPaid'>): string {
+  return s.bountiesPaid ? `${s.usdcEarned} ${s.earnedSymbol}` : s.usdcEarned;
+}
+
+/** A short line for a worker's row: "rep 86 · merges 80% · 25.00 TEST", or what it has so far. */
 export function repLine(s: RepStats | undefined): string | undefined {
   if (!s) return undefined;
-  const parts = [s.score === null ? `${s.merged} merged, not enough data` : `rep ${s.score}`, s.mergeRate === null ? '' : `merges ${rateLabel(s.mergeRate)}`, s.bountiesPaid ? `${s.usdcEarned} USDC` : ''];
+  const parts = [s.score === null ? `${s.merged} merged, not enough data` : `rep ${s.score}`, s.mergeRate === null ? '' : `merges ${rateLabel(s.mergeRate)}`, s.bountiesPaid ? earnedLabel(s) : ''];
   return parts.filter(Boolean).join(' · ');
 }

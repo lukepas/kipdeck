@@ -76,7 +76,7 @@ async function fund(ctx: Ctx, r: RouteRequest) {
     return reply(r, 400, { message: 'The body is JSON with the account that signs' });
   }
   const amount = url.searchParams.get('amount') ?? '';
-  if (!/^\d{1,6}(\.\d{1,6})?$/.test(amount)) return reply(r, 400, { message: 'amount is a number of USDC' });
+  if (!/^\d{1,6}(\.\d{1,6})?$/.test(amount)) return reply(r, 400, { message: 'amount is a number of tokens' });
   if (typeof body.account !== 'string') return reply(r, 400, { message: 'account is the wallet that signs' });
   const a = await ctx.bounties.actionPost(t.repo, t.issue, amount, body.account);
   return reply(r, a.status, a.body);

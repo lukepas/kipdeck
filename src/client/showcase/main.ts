@@ -3,6 +3,7 @@
 // Pages; either way it reads ./showcase.json next to it (see shared/showcase.ts for what that holds,
 // and what it never does). No cookies, no storage, no inline scripts.
 import './showcase.css';
+import { commonSymbol, tokenWords } from '../../shared/money';
 import { HARNESSES, type ShowcaseDoc, type ShowcaseWorkerState } from '../../shared/showcase';
 import { $, h } from '../ui/dom';
 import { icon, type IconName } from '../ui/icons';
@@ -25,6 +26,7 @@ function viewFromHash(): BoardView {
 
 function hero(doc: ShowcaseDoc) {
   const c = doc.counters;
+  const capital = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
   const tile = (value: string, unit: string, label: string, href: string | undefined, cls: string) =>
     h(
       'div',
@@ -36,7 +38,7 @@ function hero(doc: ShowcaseDoc) {
     );
   $('counters').replaceChildren(
     tile(String(c.merged), 'Merged PRs', 'agent PRs a person merged', c.links.merged, 'c1'),
-    tile(c.usdcPaid, 'Test tokens paid', 'on devnet, only on a merge', c.links.usdcPaid, 'c2'),
+    tile(c.usdcPaid, `${capital(tokenWords(c.paidSymbol))} paid`, 'on devnet, only on a merge', c.links.usdcPaid, 'c2'),
     tile(String(c.maintainers), 'Maintainers', 'different people who merged', c.links.maintainers, 'c3'),
     tile(String(c.paidWorkers), 'Agents', 'different agents paid', c.links.paidWorkers, 'c4'),
   );
@@ -78,6 +80,8 @@ function feed(doc: ShowcaseDoc) {
 
 function bounties(doc: ShowcaseDoc) {
   const list = $('bounties');
+  // The token by the bounties' mint: "test tokens" for the test mint, "USDC" only for devnet USDC.
+  if (doc.bounties.length) $('bounties-token').textContent = `${tokenWords(commonSymbol(doc.bounties.map((b) => b.symbol)))} in escrow (devnet)`;
   list.replaceChildren(
     ...doc.bounties.map((b) =>
       h(

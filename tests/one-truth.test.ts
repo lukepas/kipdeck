@@ -71,10 +71,11 @@ test('a row has one title, its tag as a chip, one status phrase with no time in 
   assert.equal(shortPath('/Users/ana/work/acme/ugc-review/project'), '~/.../ugc-review/project');
 });
 
-test('money is written one way: two decimals and the token, devnet USDC', () => {
+test('money is written one way: two decimals and the token the bounty names', () => {
   assert.equal(tokenUnits('25000000', 6), '25.00');
   assert.equal(tokenUnits('12500000', 6), '12.50');
-  assert.equal(tokenLabel('15000000', 6), '15.00 USDC');
+  assert.equal(tokenLabel('15000000', 6, 'USDC'), '15.00 USDC');
+  assert.equal(tokenLabel('15000000', 6, 'TEST'), '15.00 TEST');
 });
 
 test('walking in never wakes a crashed unit, and wakes one that only finished', () => {

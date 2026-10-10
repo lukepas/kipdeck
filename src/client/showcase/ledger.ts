@@ -3,7 +3,11 @@
 // a short hash and a link to its explorer. A row opens to its money path: the unit's PR, the person's
 // merge, the escrow released, the merge attested. The "Last merge" panel is the same path for the
 // latest one, beside the proof rail: one lit segment per merge, as on the deck's Proof corner.
+import { tokenSymbol, tokenWords } from '../../shared/money';
 import { HARNESSES, type ShowcaseDoc, type ShowcaseEvent } from '../../shared/showcase';
+
+/** A payout's symbol, by its mint (a document from before payouts carried one names it by the mint alone). */
+const symbolOf = (p: NonNullable<ShowcaseEvent['paid']>) => p.symbol ?? tokenSymbol(p.mint);
 import { h } from '../ui/dom';
 import { icon } from '../ui/icons';
 import { ago, short, units, when } from './format';
@@ -61,7 +65,7 @@ export function steps(doc: ShowcaseDoc, e: ShowcaseEvent): Step[] {
     {
       label: 'Escrow released',
       done: !!e.paid,
-      detail: e.paid ? `${units(e.paid.amount, e.paid.decimals)} test tokens on Solana devnet` : 'no bounty on this one',
+      detail: e.paid ? `${units(e.paid.amount, e.paid.decimals)} ${tokenWords(symbolOf(e.paid))} on Solana devnet` : 'no bounty on this one',
       link: e.links.solana ? { href: e.links.solana, text: hashOf(e.links.solana) ?? 'tx', title: 'The payout on Solana Explorer (devnet)' } : undefined,
     },
     {
@@ -103,7 +107,7 @@ export function ledgerRow(doc: ShowcaseDoc, e: ShowcaseEvent): HTMLElement {
     { type: 'button', 'aria-expanded': 'false', title: 'Show its money path' },
     h('span.badge', { 'data-o': e.outcome }, e.outcome === 'merged' ? icon('merged', 14) : icon(e.outcome === 'reverted' ? 'stuck' : 'close', 14), outcome),
     h('span.body', {}, h('span.title', {}, h('b', {}, what), e.title ? ` ${e.title}` : ''), h('span.meta', {}, h('span.chip', { 'data-h': e.harness }, HARNESSES[e.harness] ?? e.harness), ` ${agentName(doc, e.agentId)}`, e.maintainer ? h('span.who-merged', { title: 'Who merged, as a keyed pseudonym: the chain never holds their GitHub account' }, ` - ${e.outcome} by a maintainer `, h('code', {}, e.maintainer.slice(0, 10))) : '')),
-    h('span.paid', {}, e.paid ? `${units(e.paid.amount, e.paid.decimals)} TEST` : ''),
+    h('span.paid', {}, e.paid ? `${units(e.paid.amount, e.paid.decimals)} ${symbolOf(e.paid)}` : ''),
     h('span.age', {}, ago(e.at)),
   );
   toggle.addEventListener('click', () => {

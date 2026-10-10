@@ -7,7 +7,7 @@
 // Pure, with no Node imports: the office's route, the showcase page and onchain/indexer's static
 // export all load this file as it is, so the three never disagree on what is public.
 import { DATA_COLORS } from './datacolors.js';
-import { sumUnits as sumMoney, tokenUnits } from './money.js';
+import { OTHER_SYMBOL, commonSymbol, sumUnits as sumMoney, tokenSymbol, tokenUnits } from './money.js';
 import type { RepEvent, RepOutcome } from './reputation.js';
 
 /** How a repository shows: its name and titles, "a private repo", or not at all. */
@@ -110,6 +110,8 @@ export interface ShowcaseInput {
   floorAt?: number;
   /** The office's public https address, for the "Fund this issue" Action. */
   officeUrl?: string;
+  /** The bounty mint, for payouts recorded without one (older office records, an older dataset). */
+  mint?: string;
   verify: ShowcaseVerifyInput;
 }
 
@@ -129,7 +131,8 @@ export interface ShowcaseEvent {
   /** A short pseudonym of who merged or closed it (the start of the attestation's mergedByHash). */
   maintainer?: string;
   self: boolean;
-  paid?: { amount: string; decimals: number };
+  /** The payout: its amount, its token's mint when known, and the symbol tokenSymbol gives the mint. */
+  paid?: { amount: string; decimals: number; mint?: string; symbol: string };
   links: { attestation?: string; feedback?: string; solana?: string };
 }
 
@@ -168,8 +171,10 @@ export interface ShowcaseDoc {
   network: { base: 'base-sepolia' | 'localnet'; solana: 'devnet' | 'localnet' | 'none' };
   counters: {
     merged: number;
-    /** Whole tokens, "25.00". */
+    /** Whole tokens, "25.00" (the name is older than the test mint: see paidSymbol). */
     usdcPaid: string;
+    /** What usdcPaid is in: "USDC", "TEST", or "TOKENS" for a mix or an unknown mint. */
+    paidSymbol: string;
     maintainers: number;
     paidWorkers: number;
     /** Where each one can be checked. */
@@ -241,7 +246,8 @@ function eventOf(e: RepEvent, repoShown: string | null, title: string | null, in
   if (merged) out.mergedAt = merged;
   if (typeof e.maintainer === 'string' && /^0x[0-9a-fA-F]{10,}/.test(e.maintainer) && !/^0x0*$/.test(e.maintainer)) out.maintainer = e.maintainer.slice(0, 12).toLowerCase();
   if (e.paid && /^\d{1,20}$/.test(e.paid.amount) && int(e.paid.decimals) !== undefined && e.paid.decimals <= 18) {
-    out.paid = { amount: e.paid.amount, decimals: e.paid.decimals };
+    const mint = pick(e.paid.mint, BASE58) ?? pick(input.mint, BASE58);
+    out.paid = { amount: e.paid.amount, decimals: e.paid.decimals, ...(mint ? { mint } : {}), symbol: tokenSymbol(mint) };
     if (repoShown && input.solana === 'devnet' && SIG.test(e.paid.tx)) out.links.solana = EXPLORERS.solanaTx(e.paid.tx);
   }
   // A redacted repository gets no links: the attestation's page decodes the repository's name, and
@@ -260,7 +266,7 @@ function bountyOf(b: ShowcaseInputBounty, vis: RepoVisibility, input: ShowcaseIn
   const expiry = int(b.expiry);
   if (!issue || decimals === undefined || decimals > 18 || expiry === undefined || typeof b.amount !== 'string' || !/^\d{1,20}$/.test(b.amount)) return undefined;
   const full = vis === 'full';
-  const out: ShowcaseBounty = { repo: full ? b.repo : null, issue, title: full ? (plain(b.title, 140) ?? null) : null, amount: b.amount, decimals, symbol: plain(b.symbol, 10) ?? 'USDC', expiry };
+  const out: ShowcaseBounty = { repo: full ? b.repo : null, issue, title: full ? (plain(b.title, 140) ?? null) : null, amount: b.amount, decimals, symbol: plain(b.symbol, 10) ?? OTHER_SYMBOL, expiry };
   // The Action's URL names the repository, so a redacted one gets no fund link.
   const office = input.officeUrl && /^https?:\/\/[A-Za-z0-9.\-:[\]]+$/.test(input.officeUrl) ? input.officeUrl : undefined;
   if (full && b.blink && office) {
@@ -354,6 +360,7 @@ export function publicShowcase(input: ShowcaseInput): ShowcaseDoc {
     counters: {
       merged: external.length,
       usdcPaid: sumUnits(paid.map((e) => e.paid!)),
+      paidSymbol: commonSymbol(paid.map((e) => e.paid!.symbol)),
       maintainers: new Set(external.flatMap((e) => (e.maintainer ? [e.maintainer] : []))).size,
       paidWorkers: new Set(paid.map((e) => e.agentId)).size,
       links: {
@@ -392,7 +399,7 @@ export function asRepEvents(events: readonly ShowcaseEvent[], countSelf: boolean
     ...(e.mergedAt ? { mergedAt: e.mergedAt } : {}),
     ...(e.maintainer ? { maintainer: e.maintainer } : {}),
     ...(e.self && !countSelf ? { self: true } : {}),
-    ...(e.paid ? { paid: { ...e.paid, tx: '' } } : {}),
+    ...(e.paid ? { paid: { amount: e.paid.amount, decimals: e.paid.decimals, tx: '', ...(e.paid.mint ? { mint: e.paid.mint } : {}) } } : {}),
     links: { ...e.links },
   }));
 }

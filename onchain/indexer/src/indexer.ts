@@ -73,7 +73,7 @@ export function joinEvents(atts: readonly ReadAttestation[], feedback: readonly 
     if (a.outcome === 1) {
       // Paid only when the payout is there on Solana: a 'paid' feedback tag alone doesn't make it so.
       const p = a.solanaTx ? bySig.get(a.solanaTx) : paidOf.get(`${repoKey(a.repo)}#${a.pr}#${a.mergeSha}`);
-      out.push({ ...base, pr: a.pr, outcome: 'merged', at: a.mergedAt, ...(a.openedAt ? { openedAt: a.openedAt } : {}), ...(p ? { paid: { amount: p.amount.toString(), decimals: p.decimals, tx: p.signature } } : {}), links: { ...links, ...(p ? { solana: p.link } : {}) } });
+      out.push({ ...base, pr: a.pr, outcome: 'merged', at: a.mergedAt, ...(a.openedAt ? { openedAt: a.openedAt } : {}), ...(p ? { paid: { amount: p.amount.toString(), decimals: p.decimals, tx: p.signature, mint: p.mint } } : {}), links: { ...links, ...(p ? { solana: p.link } : {}) } });
     } else if (a.outcome === 2) {
       const original = byUid.get(a.refUid.toLowerCase());
       if (!original || original.outcome !== 1) continue;

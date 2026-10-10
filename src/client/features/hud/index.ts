@@ -79,7 +79,7 @@ export function installHud(ctx: Ctx, parts: HudParts) {
       { id: 'docs', icon: 'docs', label: 'Docs', section: 'Work', title: () => "The project's docs", run: parts.bookshelf.showBookshelf },
       // ---- Proof: what is settled on testnets (Labs > Proof of Merge) ----------------------------------
       { id: 'ledger', icon: 'proof', label: 'Proof ledger', section: 'Proof', lab: 'proof', title: () => 'The public Proof of Merge ledger at /pom/ (opens a new tab)', run: () => window.open('/pom/', '_blank', 'noopener') },
-      { id: 'bounties', icon: 'bounty', label: 'Bounties and payouts', section: 'Proof', lab: 'proof', title: () => 'Devnet USDC escrowed on issues, paid only on a human merge', run: () => showSettings('bounties') },
+      { id: 'bounties', icon: 'bounty', label: 'Bounties and payouts', section: 'Proof', lab: 'proof', title: () => 'Devnet USDC or test tokens escrowed on issues, paid only on a human merge', run: () => showSettings('bounties') },
       // ---- Deck: this office --------------------------------------------------------------------------
       { id: 'elevator', icon: 'decks', label: 'Projects', section: 'Deck', count: () => store.floors.reduce((n, f) => n + (f.id === store.floor ? 0 : f.waiting), 0), title: () => 'Go to another project, or add one', run: travel.showElevator },
       { id: 'settings', icon: 'settings', label: 'Settings', section: 'Deck', run: showSettings },

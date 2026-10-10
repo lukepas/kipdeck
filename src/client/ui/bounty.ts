@@ -2,8 +2,9 @@
 // it stands, how long it has left), the Fund window (a browser wallet signs; or the Blink link to
 // share), and the badge over a worker holding a claimed bounty. Devnet only.
 import './bounty.css';
+import { PHASE_LABEL, bountiesSymbol as floorSymbol, timeLeft } from '../../shared/bounty-text';
+import { tokenWords } from '../../shared/money';
 import type { BountyView } from '../../shared/protocol';
-import { PHASE_LABEL, timeLeft } from '../../shared/bounty-text';
 import { tokenAmount } from '../../shared/review';
 import type { Net } from '../net';
 import { store } from '../state';
@@ -32,7 +33,7 @@ export function bountyChip(issue: number, net: Net): HTMLElement | '' {
   const b = s.items.find((x) => x.issue === issue);
   const live = !b || b.phase === 'open' || b.phase === 'claimed';
   const fund = live
-    ? h('button.bounty-fund', { type: 'button', title: 'Put devnet USDC on this issue', onclick: ((e: Event) => (e.stopPropagation(), openFund(issue, net))) as EventListener }, b ? '+ Fund' : 'Fund')
+    ? h('button.bounty-fund', { type: 'button', title: `Put devnet ${tokenWords(floorSymbol(s))} on this issue`, onclick: ((e: Event) => (e.stopPropagation(), openFund(issue, net))) as EventListener }, b ? '+ Fund' : 'Fund')
     : null;
   if (!b) return h('span.bounty-chip.none', {}, fund);
   const left = b.phase === 'open' || b.phase === 'claimed' ? ` · ${timeLeft(b.expiry)}` : '';
@@ -95,8 +96,9 @@ export function openFund(issue: number, net: Net) {
   const s = floorBounties();
   if (!s) return;
   const b = s.items.find((x) => x.issue === issue);
+  const symbol = floorSymbol(s);
   const amount = h('input', { type: 'text', inputmode: 'decimal', value: '20', 'aria-label': 'Amount', spellcheck: 'false', autocomplete: 'off' }) as HTMLInputElement;
-  const presets = h('div.seg', {}, ...['5', '20', '50'].map((v) => h('button.btn', { type: 'button', onclick: () => (amount.value = v) }, `${v} USDC`)));
+  const presets = h('div.seg', {}, ...['5', '20', '50'].map((v) => h('button.btn', { type: 'button', onclick: () => (amount.value = v) }, `${v} ${symbol}`)));
   const note = h('p.setting-note');
   const list = h('div.bounty-wallets');
   const mock = s.network === 'mock';
@@ -109,7 +111,7 @@ export function openFund(issue: number, net: Net) {
         net.send({ t: 'bounty.fund.prepare', issue, amount: text, wallet: store.bountySettings?.myWallet ?? '11111111111111111111111111111112' });
       } else {
         const account = await connect(w);
-        pending.set(issue, { wallet: w, account, amount: `${text} USDC` });
+        pending.set(issue, { wallet: w, account, amount: `${text} ${symbol}` });
         net.send({ t: 'bounty.fund.prepare', issue, amount: text, wallet: account.address });
       }
       modal.close();
@@ -132,8 +134,8 @@ export function openFund(issue: number, net: Net) {
       'div.bounty-body',
       {},
       h('p', {}, b ? `${amountOf(b)} from ${b.funders} funder${b.funders === 1 ? '' : 's'} so far, ${PHASE_LABEL[b.phase]}, ${timeLeft(b.expiry)}.` : 'No bounty on this issue yet: funding it opens one.'),
-      h('p.setting-note', {}, `Devnet ${mock ? 'mock' : 'USDC'}, no real money. It's paid to the agent operator only when a person with write access merges the office's pull request for this issue and an office admin approves; otherwise you can take yours back after the expiry.`),
-      h('label', {}, 'Amount (USDC) ', amount),
+      h('p.setting-note', {}, `${mock ? 'Mock chain' : `Devnet ${tokenWords(symbol)}`}, no real money. It's paid to the agent operator only when a person with write access merges the office's pull request for this issue and an office admin approves; otherwise you can take yours back after the expiry.`),
+      h('label', {}, `Amount (${symbol}) `, amount),
       presets,
       list,
       note,

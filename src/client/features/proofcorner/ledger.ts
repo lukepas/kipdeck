@@ -5,7 +5,7 @@
 // ledgerView is pure (tests/tables.test.ts); paintLedger draws it on the ledger's screen.
 import type { BountiesState, BountyPhase, BountyView, ReputationState } from '../../../shared/protocol';
 import { sumUnits, tokenUnits } from '../../../shared/money';
-import { timeLeft } from '../../../shared/bounty-text';
+import { bountiesSymbol, networkWords, timeLeft } from '../../../shared/bounty-text';
 import { ago } from '../../../shared/rowtext';
 import { PANEL } from '../boards/world';
 import { INK, MONO, UI, ground, type Screen } from '../boards/screen';
@@ -50,6 +50,8 @@ export interface LedgerView {
   /** Bounties are on for this floor. */
   on: boolean;
   network: string;
+  /** The network and its token for the board's label: "devnet  test tokens", "devnet  USDC" or "mock chain". */
+  label: string;
   /** Rows sorted by what needs a person first. */
   bounties: TableRow[];
   /** In escrow now: how many, and the total ("75.00 USDC"). */
@@ -70,7 +72,7 @@ export function ledgerView(b: BountiesState | undefined, rep: ReputationState | 
   items.sort((x, y) => ORDER[x.phase] - ORDER[y.phase] || (ORDER[x.phase] >= 5 ? lastAt(y) - lastAt(x) : x.issue - y.issue));
   const held = items.filter((i) => HELD.has(i.phase));
   const sum = sumUnits(held);
-  const symbol = held[0]?.symbol ?? 'USDC';
+  const symbol = bountiesSymbol(b);
   const bounties = items.map((i): TableRow => ({
     cells: [`#${i.issue}`, `${tokenUnits(i.amount, i.decimals)} ${i.symbol}`, { chip: phaseChip(i.phase) }, i.workerName ?? (i.phase === 'open' ? 'unclaimed' : '--'), detail(i, now)],
     hue: i.phase === 'awaiting-approval' ? PANEL.review : i.phase === 'blocked' ? PANEL.stuck : undefined,
@@ -80,6 +82,7 @@ export function ledgerView(b: BountiesState | undefined, rep: ReputationState | 
   return {
     on: !!b?.enabled,
     network: b?.network === 'mock' ? 'mock' : 'devnet',
+    label: networkWords(b?.network, symbol),
     bounties,
     held: { count: held.length, total: `${tokenUnits(sum.units, sum.decimals)} ${symbol}` },
     paid: items.filter((i) => i.phase === 'released').length,
@@ -105,7 +108,7 @@ export function ledgerView(b: BountiesState | undefined, rep: ReputationState | 
  * what's blocked, what's been paid, and how many units have ERC-8004 records. Pure.
  */
 export function ledgerFar(v: LedgerView): FarSpec {
-  const title = v.network === 'mock' ? 'Proof  mock chain' : 'Proof  devnet test usdc';
+  const title = `Proof  ${v.label}`;
   if (!v.on) return { title, hue: PANEL.proof, counts: [], empty: 'Bounties are off' };
   const chips = v.bounties.map((r) => r.cells[2]).filter((c): c is { chip: Chip } => !!c && typeof c === 'object' && 'chip' in c);
   const n = (text: string) => chips.filter((c) => c.chip.text === text).length;
@@ -149,13 +152,13 @@ export function paintLedger(s: Screen, v: LedgerView) {
   g.textAlign = 'right';
   g.font = MONO(26, 600);
   g.fillStyle = INK.text;
-  // The token is said once, by the label ("TEST USDC"): the sums are amounts alone.
+  // The token is said once, by the label ("devnet  test tokens"): the sums are amounts alone.
   const bare = (t: string) => t.replace(/ \S+$/, '');
   const sums = v.on ? `${bare(v.held.total)} held  ${v.paid ? `${bare(v.paidTotal)} paid` : '0 paid'}` : '';
   if (sums) g.fillText(sums, split - 24, 39);
   const sumsW = sums ? g.measureText(sums).width : 0;
   const lx = pad + pw + 26;
-  label(g, v.network === 'mock' ? 'mock chain' : 'devnet  test usdc', lx, 39, 22, 'left', PANEL.proof, split - 24 - sumsW - 24 - lx);
+  label(g, v.label, lx, 39, 22, 'left', PANEL.proof, split - 24 - sumsW - 24 - lx);
   g.textAlign = 'left';
   const rx = split + 24;
   const rw = W - pad - rx;

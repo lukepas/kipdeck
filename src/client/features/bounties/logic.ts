@@ -5,6 +5,7 @@
 // world.ts draws it and index.ts keeps it current.
 import type { BountiesState, BountyPhase, BountyView } from '../../../shared/protocol';
 import { sumUnits, tokenUnits } from '../../../shared/money';
+import { bountiesSymbol, networkWords } from '../../../shared/bounty-text';
 
 /** Phases still in escrow: each one is a stack on the vault. */
 export const HELD: ReadonlySet<BountyPhase> = new Set(['open', 'claimed', 'awaiting-approval', 'blocked', 'paying']);
@@ -75,15 +76,15 @@ export interface VaultView {
   paid: { count: number; total: string };
 }
 
-/** The network a label names: devnet test tokens, or the office's own mock chain. Never a mainnet. */
-export const networkLabel = (network: string | undefined) => (network === 'mock' ? 'MOCK CHAIN' : 'DEVNET  TEST USDC');
+/** The network a label names, with its token by the mint (devnet USDC or test tokens), or the office's own mock chain. Never a mainnet. */
+export const networkLabel = (network: string | undefined, symbol: string) => networkWords(network, symbol).toUpperCase();
 
 /** The vault's stacks and totals from the floor's bounties. Pure. */
 export function vaultView(b: BountiesState | undefined): VaultView {
   const items = b?.enabled ? b.items : [];
   const held = items.filter((i) => HELD.has(i.phase));
   const paid = items.filter((i) => i.phase === 'released');
-  const symbol = held[0]?.symbol ?? paid[0]?.symbol ?? 'USDC';
+  const symbol = bountiesSymbol(b);
   const total = (xs: BountyView[]) => {
     const s = sumUnits(xs);
     return `${tokenUnits(s.units, s.decimals)} ${symbol}`;
@@ -102,7 +103,7 @@ export function vaultView(b: BountiesState | undefined): VaultView {
   const room = all.length > MAX_STACKS ? MAX_STACKS - 1 : MAX_STACKS;
   return {
     on: !!b?.enabled,
-    network: networkLabel(b?.network),
+    network: networkLabel(b?.network, symbol),
     stacks: all.slice(0, room),
     more: Math.max(0, all.length - room),
     held: { count: held.length, total: total(held) },

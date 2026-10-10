@@ -3,7 +3,7 @@
 // merges get reverted often (words only: it never moves the worker in the ranking or holds anything
 // up), and the Agents section of the Goals tab, one row per agent identity.
 
-import { rateLabel, repLine, revertHint, type RepStats } from '../../../shared/reputation';
+import { earnedLabel, rateLabel, repLine, revertHint, type RepStats } from '../../../shared/reputation';
 import type { AgentRepView } from '../../../shared/protocol';
 import { store } from '../../state';
 import { h } from '../dom';
@@ -29,7 +29,7 @@ function details(a: AgentRepView, s: RepStats | undefined): string {
     lines.push(`Merged by others: ${s.merged} (by ${s.distinctMaintainers} maintainers); self-merged: ${s.selfMerged}`);
     lines.push(`Reverted within 14 days: ${s.reverted}; closed unmerged: ${s.closedUnmerged}`);
     lines.push(`Merge rate ${rateLabel(s.mergeRate)}; revert rate ${rateLabel(s.revertRate)}; score ${s.score ?? 'not enough data'}`);
-    lines.push(`Median time to merge: ${hours(s.medianTimeToMerge)}; earned ${s.usdcEarned} USDC from ${s.bountiesPaid} bounties`);
+    lines.push(`Median time to merge: ${hours(s.medianTimeToMerge)}; earned ${earnedLabel(s)} from ${s.bountiesPaid} bounties`);
   }
   lines.push('Click for its latest attestation on chain (testnet).');
   return lines.join('\n');
@@ -63,7 +63,7 @@ export function renderAgents(): HTMLElement | null {
       cell(s ? rateLabel(s.mergeRate) : 'not enough data'),
       cell(s ? `${s.merged}${s.selfMerged ? ` (+${s.selfMerged} self)` : ''}` : '0'),
       cell(s ? String(s.distinctMaintainers) : '0'),
-      cell(s ? `${s.usdcEarned} USDC` : '0.00 USDC'),
+      cell(s ? earnedLabel(s) : '0.00'),
       h('td.mc-links', {}, link(a.agentId ? `#${a.agentId}` : '', a.card), link('latest', s?.latest), link('registered', a.registered)),
     );
   });

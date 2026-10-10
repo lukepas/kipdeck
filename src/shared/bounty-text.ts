@@ -1,6 +1,17 @@
 // How a bounty's state is said in words, the same on the issue card's chip, the Fund window and the
 // Proof corner's ledger on the deck. Pure.
-import type { BountyPhase } from './protocol.js';
+import { OTHER_SYMBOL, tokenWords } from './money.js';
+import type { BountiesState, BountyPhase } from './protocol.js';
+
+/** What a floor's bounties are paid in, by the office's mint (shared/money.ts tokenSymbol): "USDC" or "TEST". */
+export function bountiesSymbol(s: Pick<BountiesState, 'symbol' | 'items'> | undefined): string {
+  return s?.symbol ?? s?.items[0]?.symbol ?? OTHER_SYMBOL;
+}
+
+/** The network and its token, as the deck's boards label them: "devnet  test tokens", or the mock chain. */
+export function networkWords(network: string | undefined, symbol: string): string {
+  return network === 'mock' ? 'mock chain' : `devnet  ${tokenWords(symbol)}`;
+}
 
 /** A bounty's phase in words. */
 export const PHASE_LABEL: Record<BountyPhase, string> = {
