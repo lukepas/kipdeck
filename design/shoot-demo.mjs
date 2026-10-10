@@ -1,14 +1,14 @@
 // Demo-stage screenshots: starts the built office with `--demo` on a spare port with a throwaway HOME and
 // password (the demo makes its own throwaway repository, acme-shop, and its five scripted agents), and
 // walks the loop as it plays out: the agents arriving, Needs you and To review filling up, answering the
-// question, the diff, the merge, the same on a phone, and the 3D Bridge view as a wall display. Then the
+// question, the diff, the merge, the same on a phone, and the 3D Deck (/deck) as a wall display. Then the
 // hosted demo (`--demo --read-only`) on the next port: what a visitor sees, and the note when they try
 // to act. PNGs at 1440x900 and 390x844 in shots/fundable/<stage>/, and the deck's four in <stage>/../deck/
 // when the stage ends in /after.
 //
 //   npm run build && node design/shoot-demo.mjs stage-5/after [only,these,shots]
 //
-// SHOOT_3D=0 skips the Bridge view (slow on SwiftShader). Always stops both offices at the end.
+// SHOOT_3D=0 skips the Deck (slow on SwiftShader). Always stops both offices at the end.
 import { spawn } from 'node:child_process';
 import { copyFileSync, mkdirSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -72,7 +72,8 @@ async function shot(page, name, deck) {
   if (!want(name)) return;
   // The deck's copies without the toasts of what just happened.
   if (deck) await page.evaluate(() => document.getElementById('toasts')?.replaceChildren());
-  await page.screenshot({ path: path.join(OUT, `${name}.png`) });
+  // The 3D Deck on SwiftShader can take well over the default 30 s to hand over a frame.
+  await page.screenshot({ path: path.join(OUT, `${name}.png`), timeout: 180_000 });
   if (deck && DECK) copyFileSync(path.join(OUT, `${name}.png`), path.join(DECK, `${deck}.png`));
   console.log('shot', name);
 }
@@ -96,7 +97,7 @@ let hosted;
 const browser = await chromium.launch({ headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const errors = [];
 try {
-  // ---- On your computer: npx kipdeck --demo ------------------------------------------------
+  // ---- On your computer: kipdeck --demo -----------------------------------------------------
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'light' });
   await ctx.addInitScript(PROFILE);
   const page = await ctx.newPage();
@@ -152,15 +153,15 @@ try {
   await wait(400);
   await shot(page, 'merged-phone');
 
-  // The Bridge view (Labs) as a team's wall display: the same agents, the Overview turning slowly.
-  if (WITH_3D && want('bridge-wall-desktop')) {
+  // The Deck (Labs, on by default; its lab id is still `bridge`) as a team's wall display: the same agents, the Overview turning slowly.
+  if (WITH_3D && want('deck-wall-desktop')) {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.evaluate(() => window.__lite.net.send({ t: 'labs.set', patch: { bridge: true } }));
     await wait(800);
-    await page.goto(`${local.base}/bridge?demo=1`, { waitUntil: 'commit' });
+    await page.goto(`${local.base}/deck?demo=1`, { waitUntil: 'commit' });
     await page.waitForFunction(() => !!window.__office?.store.floor, null, { timeout: 120_000 });
     await wait(9000);
-    await shot(page, 'bridge-wall-desktop', 'bridge-wall');
+    await shot(page, 'deck-wall-desktop', 'deck-wall');
   }
   await ctx.close();
 

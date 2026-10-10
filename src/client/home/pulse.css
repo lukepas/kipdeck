@@ -25,6 +25,8 @@
 .list-pulse .pulse-stat:nth-child(n+3) { border-top: 1px solid var(--line); }
 .list-pulse .pulse-stat { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
 @media (min-width: 900px) { .list-pulse { display: none; } }
+/* Up to 1600px the figures sit closer, so the demo pill's command and the search box both keep their room. */
+@media (max-width: 1600px) { .hb-pulse .pulse-stat { gap: 5px; padding: 0 8px; } }
 @media (max-width: 1240px) { .hb-pulse .p-median { display: none; } }
 @media (max-width: 1080px) { .hb-pulse .p-merged { display: none; } }
 @media (max-width: 899px) { .hb-pulse { display: none; } }

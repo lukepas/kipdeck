@@ -28,7 +28,7 @@ Run it inside the repository you work in. It opens in your browser, signed in, w
 
 | | |
 | --- | --- |
-| ![The inbox on a phone: the list alone, an agent opens over it (demo data)](docs/img/inbox-phone.png) | ![The 3D Deck, the same agents as a room (demo data)](docs/img/bridge-wall.png) |
+| ![The inbox on a phone: the list alone, an agent opens over it (demo data)](docs/img/inbox-phone.png) | ![The 3D Deck, the same agents as a room (demo data)](docs/img/deck-wall.png) |
 | The same inbox on a phone. | The Deck at `/deck`: the same agents as a room, for a team's wall screen. The old `/bridge` address still lands there. |
 
 ## Run it

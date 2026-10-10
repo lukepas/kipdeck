@@ -141,7 +141,7 @@ try {
   await page.waitForFunction(() => (window.__lite?.store.roster.length ?? 0) >= 5, null, { timeout: 30_000 });
   await wait(2500);
   await shot(page, 'arriving-desktop', { clearToasts: true });
-  await page.locator('.pane .q-card .q-text', { hasText: 'Update the snapshot' }).waitFor({ timeout: 60_000 });
+  await page.locator('.pane .q-card .q-text', { hasText: 'fix the test' }).waitFor({ timeout: 60_000 });
   await row(page, 'review', 'Add rate limiting').waitFor({ timeout: 60_000 });
   await wait(1200);
   await shot(page, 'home-desktop', { clearToasts: true });
@@ -152,7 +152,7 @@ try {
     await wait(600);
     await shot(p2.page, 'home-phone-asking', { clearToasts: true });
     await row(p2.page, 'needs-you', 'Fix the flaky checkout test').locator('.row-main').click();
-    await p2.page.locator('.pane .q-card .q-text', { hasText: 'Update the snapshot' }).waitFor({ timeout: 15_000 });
+    await p2.page.locator('.pane .q-card .q-text', { hasText: 'fix the test' }).waitFor({ timeout: 15_000 });
     await wait(600);
     await shot(p2.page, 'question-phone', { clearToasts: true });
     await p2.ctx.close();

@@ -16,15 +16,11 @@ The logo is Kip's face, drawn from the mascot: head, leaf ears, knocked-out eyes
 
 ## The surfaces
 
-![The whole deck from the Overview, raised over its starboard quarter: the dais and the tiers of pods at the near left, the mission table in its pit, a unit that needs you on the ready line, the situation arc beyond](img/deck-overview.png)
+![The whole deck from the Overview, raised over its starboard quarter: the tiers of pods with their pod plates, the mission table in its pit, the units that need you and a stuck one called out, the situation arc beyond](img/deck-overview.png)
 
 The Overview (G) is the demo shot: the whole deck from above with no perspective, raised over its starboard quarter so the amphitheatre reads in section. Units that need you stand on their pod's ready line with an orange diamond turning over them and a wave spreading across the floor from them; a stuck unit has a red triangle blinking over it, a red rim round its station and a hatched ring; a unit to review an amber ring turning at its feet; units at work wear ship-cyan (band, visor and a halo on the floor) and a small cyan pip over the head. From the Overview, the callouts of units that need you or are stuck are drawn half again as big. Callouts that would cover each other stack clear, the units that need someone placed first, with a hairline back to the unit when one is lifted, and a callout that would run off the side of the view or under the Units rail slides back in. Arrows at the edge of the screen point to units out of view that need you, are stuck or are to review, in that order; a crowded edge drops the ones to review first.
 
-![Close on pod A in Walk: two units that need you, each with its callout, ring and band](img/units-a.png)
-
 In Walk (first person, the default) callouts show more as you get closer: from across the deck the call sign and name, near a unit its task and how long it has been in its state.
-
-![Mission control's Attention tab: needs you, stuck, to review and working, each row with its call sign chip and one next step](img/mission.png)
 
 Mission control (I) lists units by the same ranking, each row with its call sign in a mono chip, why it is there in plain words and one primary verb. Units are never told apart by color: hue is for state.
 
@@ -34,7 +30,7 @@ The home page at `/` is [the inbox](inbox.md): a light, neutral page with the li
 
 Settings > Deck > Bridge lights sets Night (low light, for watching in a dark room) or Day (high light, a cool mid-grey ship rather than a white room) for the 3D deck, or Auto to follow the system. The same setting paints the HUD (the dark set by night, the print set by day), the 2D view, whose contrast button flips it, and the sign-in pages, so every surface of the office agrees. Brightness steps the 3D deck's lights two steps either way. See [the deck](deck.md#light-and-materials).
 
-![Toasts: a violet proof toast with its transaction hash and a settled tick, then stuck, review and plain ones](img/toasts.png)
+![Toasts: violet proof toasts with their transaction hash and a settled tick, and a stuck one, beside the compact needs-you chip under the counters](img/toasts.png)
 
 Toasts stack top right under the bar, all one card: a glyph column and a stripe in the state's color, one sentence that names the unit by its address (`Widget (B-02 at F2)`), and the time in mono from the deck's one clock. A unit that starts asking is not a toast: it comes in as a compact chip at the top of the view under the counters (its diamond, who and what for, N), which folds into the top bar's needs-you counter after a few seconds and never covers the deck's lower left (`features/needsyou/ui.ts`). A proof toast adds the transaction or attestation id in a violet chip, a green settled tick and a link to the testnet explorer, and stays up longer so there is time to click it.
 
@@ -160,8 +156,6 @@ The deck is a working ship rather than a grey model, and every tier draws the bo
 
 The room is lit by the ship and by space outside, and you can see the light in the air: shafts under the glass, dust in them, a low haze, pools on the floor. It all lives in `features/atmos`, laid over the light rig without adding a light to it, and it never touches what the captain reads.
 
-![Under the canopy by Night: shafts of light falling across the deck past the mission table, a planet going by the forward glass](img/light-side.png)
-
 - **Shafts of light** (`shafts.ts`, the list in `plan.ts`): under five of the canopy's panes (three over the wall, one either side of the table), falling the way the key light's shadows do, and in at each low side port; none stands over a station, so no beam of haze washes out a unit's state. One merged mesh, one additive draw. A fragment's light comes from how thick the shaft is along that look (through its middle bright, its silhouette gone, and more seen down its length), how far along the shaft it is and how high off the floor, with slow rays of dust drifting down it; no depth texture, and the eye can stand inside one. On the axis it adds 0.1 linear by Night (at most 1.6 times that seen end on), half the first look's, in the sun's warm colour, and six tenths of that by Day: a tinted streak of sunlight, never a grey wedge. Like the holo, a shaft fades to nothing where a wall board's face is on screen, and where the band or the ticker over the arc is behind it.
 - **Dust** (`motes.ts`): 1,500 points that live in their shaft's own terms (how far along it, how far from its axis, which way round), so they drift only inside the light and show only near its axis. One draw; Medium draws the canopy's 800.
 - **Height fog** (`fog.ts`): the fog chunks replaced at load, before anything compiles with them. The distance fog stays as it was (to the void, so what's far outside still sinks into space and the Overview's own near and far still fade the slab), and over it lies an exponential haze, a floor fog held under about a metre (it thins by e every 0.55 m up), integrated along the line from the eye, never covering more than a fifth of what is behind it, in a colour that takes the hue of the sky ahead. Only ALU, every tier.
@@ -177,8 +171,6 @@ At High it adds three draw calls at the conn (the shafts, the dust and the pools
 ### Space outside the glass
 
 Looking out of a port should feel like looking out of a ship: depth, a body close by, and light you could squint at. The sky behind it all is `src/client/features/space/sky.ts`; what is close by is `src/client/features/vista/`, plugged in with one line in `main.ts`.
-
-![Out of the port side by Night: a ringed gas giant with its terminator and the ring's shadow, teal gas and dark dust in front of it](img/space-port.png)
 
 - **The sky** is still baked once per region into a 512 cube, now with more in it. The gas is baked many times brighter than white, so the live sky rolls it off under a cap (`SKY_CAP`: 0.36 by Night, 0.62 by Day, the planet's limb too) with its hue kept: under the glow's threshold and the tone mapping's shoulder, it reads deep magenta, teal and indigo rather than a pastel haze over the canopy and the arc, and the star points are added over it, crisp. The nebula is domain-warped fbm twice over, with ridged filaments lit through it and crisp lanes of dust dark enough to read against it, teal where the gas is dense, indigo where it is thin and a deep magenta heart, with a lobe of it out of each side's ports so they no longer show grey haze. The galactic band is bright enough to read as a galaxy from the chair: near-white arms, a warm white core and dark dust lanes, with lanes of magenta and teal gas along its two edges and indigo between, and the whole sky pushed in saturation so the tone mapping doesn't wash it to pastel. Behind the wall boards and just round them the sky sinks to a quarter, so the arc always has a dark ground behind its glass. The nebula's emissive knots are baked into the cube's alpha and added back live in their own gas's hue, so they can dim while something needs the captain and keep clear of the wall boards' faces (0.12 of the screen round each). By Day the ship is in high orbit over a sunlit planet (`DAY_PLANET` in `sky.ts`): a sphere seen from its own orbit, so its ground foreshortens toward the limb, with oceans, land and cloud from noise, bluer through the air toward its edge and a bright atmosphere's glow over the limb, which arcs across the canopy over the arc from the chair; space over it is dimmed. It is fixed to the ship, not the sky's slow turn. The bake takes about 8 ms on an M3 Pro (113 ms in software rendering), done once at load behind the loading screen and once per jump in idle time.
 - **Dust streaming past** (`dust.ts`): four sheets of gas and dust each side of the ship, 38 to 92 m out, streaming aft as the ship makes way, the nearer ones faster, so a port has parallax as the ship moves and as you walk past it. One mesh and one draw for all of them, reading one 512 by 256 texture baked at start; a layer a tier leaves out collapses in the vertex shader. Their glow is added and their dust darkens what is behind it. Seen at a slant (out of the forward glass or the canopy), at their ends and toward their top and bottom they fade out, so only the side ports look onto them. A surge's streaks thin them and the jump's tunnel hides them.
@@ -330,11 +322,9 @@ Motion marks a change of state, and hue and the attention cadences belong to sta
 | A wait cleared faster than its seven-day median | a ship-cyan hairline runs once from the Review bay's door down the west aisle to the drive core, whose next breath swells; never while anyone else waits on you | 2.6 s | none |
 | Three or more units wait for review | the pit wall and the Review bay's floor come up a step | at once | the same |
 
-![The merge beat on its way: the violet pulse at the foot of the Proof corner's rail](img/beat-climb.png)
-
 The merge beat is the one celebration, and the moment to record for a video: the bridge marks the merge across the deck, then the pulse leaves the table, crosses to the west wall and climbs the rail.
 
-![The merge beat landed: a new lit segment on the rail, the vault lid up and the proof toast](img/beat-landed.png)
+![The merge beat landed: the Proof corner's paid tally up by one and the proof toast with its devnet transaction](img/beat-landed.png)
 
 Once it parks, the rail has one more lit segment (the rail is a tally that grows), the vault's lid is up with a violet glow, the top bar's violet counter has rolled, and the proof toast shows the devnet transaction. The camera only turns toward the Pull requests board for 2 s (the cinema's merge frame), and not at all while a unit needs you.
 

@@ -268,7 +268,7 @@
        he pops onto the player's top edge, gives one hop and a green burst, and leaves again after a few
        seconds. The cue time is the Ship beat's own data-t in index.html. */
     s6: { on: function (s) {
-      var v = A(s, 'video'), ship = s.querySelector('[data-beat="ship"]'), at = ship ? +ship.dataset.t : 27.4, last = 0;
+      var v = A(s, 'video'), ship = s.querySelector('[data-beat="ship"]'), at = ship ? +ship.dataset.t : 33.6, last = 0;
       s._tu = function () {
         var t = v.currentTime;
         if (t < last - 1) { last = t; return; }
