@@ -29,7 +29,7 @@ Code status on 2026-10-01: `launch/x402-base` works. With `--x402` (off by defau
 ## Pre-existing code disclosure
 
 ```field name="Prior work" max-chars=700
-We build on Agent Office, an MIT open source 3D office for coding agents by webdevcody / AgentSystemLabs (github.com/AgentSystemLabs/agent-office); the office is their work. What is ours and on Base: x402 paid tasks, so anyone can pay a set price in USDC on Base to put a task on a hosted office's queue. A facilitator verifies and settles the payment, and an admin approves the task before a coding agent starts on it. Our changes against upstream: {{DIFF_URL}}
+We build on Agent Office, an MIT open source 3D office for coding agents by webdevcody / AgentSystemLabs (github.com/AgentSystemLabs/agent-office); the office is their work. What is ours and on Base: x402 paid tasks, so anyone can pay a set price in USDC on Base to put a task on a hosted office's queue. A facilitator verifies and settles the payment, and an admin approves the task before a coding agent starts on it. Our changes against upstream: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 ## Project description

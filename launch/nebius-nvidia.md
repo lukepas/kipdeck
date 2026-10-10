@@ -40,7 +40,7 @@ Code status on 2026-10-01: `launch/nebius-nemotron` works. `NEBIUS_API_KEY` adds
 ## Pre-existing code disclosure
 
 ```field name="What is new" max-chars=900
-Built on Agent Office, an MIT open source project by webdevcody / AgentSystemLabs (upstream first commit 2026-09-25). Upstream provides the 3D office, the desks where agent CLIs run in terminals, shared terminals and the GitHub boards. For this hackathon we added: Nemotron on Nebius Token Factory as a model source for OpenCode workers, with Nemotron 3 Super as the default when switched on; Nebius prices on worker cards and a Nebius total in the Spend panel; and optional Tavily web search for workers. {{SANDBOX_AND_DEMO_IF_BUILT}} Our commits and files against the upstream baseline: {{DIFF_URL}}
+Built on Agent Office, an MIT open source project by webdevcody / AgentSystemLabs (upstream first commit 2026-09-25). Upstream provides the 3D office, the desks where agent CLIs run in terminals, shared terminals and the GitHub boards. For this hackathon we added: Nemotron on Nebius Token Factory as a model source for OpenCode workers, with Nemotron 3 Super as the default when switched on; Nebius prices on worker cards and a Nebius total in the Spend panel; and optional Tavily web search for workers. {{SANDBOX_AND_DEMO_IF_BUILT}} Our commits and files against the upstream baseline: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 Paste the `whats-new.ts` output after it (see [disclosure.md](disclosure.md)).
@@ -77,7 +77,7 @@ Tool calling reliability on smaller models, keeping long agent sessions within c
 Routing each task to the cheapest model that can do it, and a Nebius AI Cloud deploy script for teams that want the whole office on their own GPUs.
 
 ## Credit
-Built on Agent Office by webdevcody / AgentSystemLabs (MIT). Our additions: {{DIFF_URL}}
+Built on Agent Office by webdevcody / AgentSystemLabs (MIT). Our additions: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 ```field name="Feedback on the tools" max-words=250

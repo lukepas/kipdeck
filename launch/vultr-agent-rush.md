@@ -40,7 +40,7 @@ Code status on 2026-10-01: `launch/vultr-deploy` and `launch/docker-sandbox` hav
 Put this in the long description and say it on the first slide.
 
 ```field name="Disclosure paragraph" max-chars=800
-Built on Agent Office, an MIT open source project by webdevcody / AgentSystemLabs (github.com/AgentSystemLabs/agent-office): the 3D office, agent desks, shared terminals and GitHub boards are upstream work. During Agent Rush we built the Vultr deployment (backend on a Vultr VM), routed every agent model call through Vultr Serverless Inference, and moved each worker into a throwaway Docker sandbox with CPU, memory and time limits, no host credentials, and a reset after every task. Our commits against the upstream baseline: {{DIFF_URL}}
+Built on Agent Office, an MIT open source project by webdevcody / AgentSystemLabs (github.com/AgentSystemLabs/agent-office): the 3D office, agent desks, shared terminals and GitHub boards are upstream work. During Agent Rush we built the Vultr deployment (backend on a Vultr VM), routed every agent model call through Vultr Serverless Inference, and moved each worker into a throwaway Docker sandbox with CPU, memory and time limits, no host credentials, and a reset after every task. Our commits against the upstream baseline: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 ## Project description
@@ -64,7 +64,7 @@ The containment moment: in the demo, a worker is given a task that tempts it int
 
 Why it matters: teams want coding agents but cannot let them loose on a laptop full of credentials. A shared, visible office with a sandbox per worker is how a team can trust them.
 
-Built on Agent Office by webdevcody / AgentSystemLabs (MIT). Our additions are listed commit by commit: {{DIFF_URL}}
+Built on Agent Office by webdevcody / AgentSystemLabs (MIT). Our additions are listed commit by commit: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 Tags: Vultr, Vultr Serverless Inference, Docker, TypeScript, three.js, AI agents, sandboxing.

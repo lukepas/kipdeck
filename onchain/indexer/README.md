@@ -31,7 +31,7 @@ npm run index -- --network localnet --rpc http://127.0.0.1:8545 --solana-rpc htt
 npm run index -- --attester 0x... --registrar 0x... --from-block N --no-solana --chunk 1000
 ```
 
-Addresses come from the onchain packages' `deployments/<network>.json` unless given (`--solana-attester <address>` for whose payouts count). Only Base Sepolia's public RPCs, Solana devnet's public RPC or local nodes are accepted. Logs are read 1,000 blocks at a time on public RPCs (`--chunk` to change it): sepolia.base.org refuses a wider `eth_getLogs` range.
+Addresses come from the onchain packages' `deployments/<network>.json` unless given (`--solana-attester <address>` for whose payouts count). Only Base Sepolia's public RPCs, Solana devnet's public RPC or local nodes are accepted. Logs are read 1,000 blocks at a time on public RPCs (`--chunk` to change it). When an RPC refuses a range and names its cap, as sepolia.base.org did on 2026-10-10 ("eth_getLogs is limited to a 200 range"), the rest is read in ranges of that cap. That is five times the calls (a run there did not finish in 10 minutes), so use `--rpc https://base-sepolia-rpc.publicnode.com`, which still takes 1,000; the Pages workflow does. Solana calls the devnet RPC rate-limits (HTTP 429, "Too many requests") are retried with a doubling wait.
 
 `--record tape.json` keeps every JSON-RPC answer the run got, and `--replay tape.json` runs from the tape alone (a call not on it is an error, never a network request).
 

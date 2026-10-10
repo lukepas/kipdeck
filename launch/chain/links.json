@@ -14,8 +14,28 @@
       "checked": "HTTP 200 on 2026-10-03 (application/pdf); sections 5 to 9 and 14 read"
     },
     {
-      "url": "https://arena.colosseum.org",
-      "checked": "HTTP 200 on 2026-10-03"
+      "url": "https://colosseum.com/arena",
+      "checked": "HTTP 200 on 2026-10-10 (arena.colosseum.org answers 308 to it); the sign-in page for registration and the form"
+    },
+    {
+      "url": "https://zbagdzevicius.github.io/kipdeck/",
+      "checked": "HTTP 404 on 2026-10-10: not published yet. The address .github/workflows/showcase-pages.yml deploys to; open it again after the run"
+    },
+    {
+      "url": "https://base-sepolia-rpc.publicnode.com",
+      "checked": "2026-10-10: onchain/indexer read every Base Sepolia log range of 1,000 blocks from it; sepolia.base.org refused ranges over 200"
+    },
+    {
+      "url": "https://kipdeck.com",
+      "checked": "HTTP 200 on 2026-10-10; the landing, deployed from main"
+    },
+    {
+      "url": "https://kipdeck-deck.vercel.app",
+      "checked": "HTTP 200 on 2026-10-10; the pitch deck, team slide read"
+    },
+    {
+      "url": "https://explorer.solana.com/tx/2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r?cluster=devnet",
+      "checked": "getSignatureStatuses over api.devnet.solana.com on 2026-10-10: finalized, no error (the release shown in the demo cut)"
     },
     {
       "url": "https://solana.org/grants-funding",

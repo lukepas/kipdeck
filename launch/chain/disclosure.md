@@ -1,6 +1,6 @@
 # Pre-existing code disclosure
 
-Last checked: 2026-10-09
+Last checked: 2026-10-10
 
 Every program in this folder asks what existed before and what we built. This page is the one answer. The Colosseum kit pastes the form text below as is; the other kits trim it.
 
@@ -44,7 +44,7 @@ Every program in this folder asks what existed before and what we built. This pa
 The Colosseum form's prior work answer, at most 1,500 characters:
 
 ```field name="Disclosure (Colosseum)" max-chars=1500
-Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..{{HEAD_SHA}} except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..7b0f7538 except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 A short form, where a field is tiny:
@@ -61,7 +61,7 @@ Generate the list from git right before submitting, so it is what the branch con
 npx tsx launch/chain/tools/whats-new.ts > /tmp/whats-new.md
 ```
 
-It prints the upstream credit and the two snapshot imports, our commits since `226452e4`, the 11 re-committed upstream pull requests (each with its upstream number and author), the Dependabot bumps apart, and every file that differs from upstream's snapshot, grouped into code, on-chain packages, tests, docs, deploy and kits. Commits are told apart by the lists in `deadlines.json`: `upstream.imports` and `upstream.carried` are upstream's, the rest by `fork.authors` are ours, anyone else's (a bot's) is neither. Paste the output at the end of this page on submission day, and put the submitted commit (the first 8 characters of `origin/main`'s SHA) in place of `{{HEAD_SHA}}` above.
+It prints the upstream credit and the two snapshot imports, our commits since `226452e4`, the 11 re-committed upstream pull requests (each with its upstream number and author), the Dependabot bumps apart, and every file that differs from upstream's snapshot, grouped into code, on-chain packages, tests, docs, deploy and kits. Commits are told apart by the lists in `deadlines.json`: `upstream.imports` and `upstream.carried` are upstream's, the rest by `fork.authors` are ours, anyone else's (a bot's) is neither. Paste the output at the end of this page on submission day, and re-stamp the commit after `226452e4..` above with the submitted one (the first 8 characters of `origin/main`'s SHA; stamped `7b0f7538` on 2026-10-10). [SUBMIT.md](SUBMIT.md) has the command.
 
 Where each part lives:
 

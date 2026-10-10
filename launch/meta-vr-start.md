@@ -44,7 +44,7 @@ Code status on 2026-10-01: `launch/webxr-mode` and `launch/docker-sandbox` have 
 The form asks Adapted entries for "a summary of the new features and capabilities added during the competition window" with screenshots and changelogs. Give the same summary in the New division, in the description, so there is no doubt about what is ours. Paste the long text from [disclosure.md](disclosure.md), then:
 
 ```field name="What we built during the window" max-chars=1200
-During the competition window we added a WebXR immersive mode to Agent Office so it runs in the Meta Quest browser with hands only: pinch to walk to a desk, poke the laptop to focus a worker's terminal, pinch-drag to scroll, a palm-up wrist menu to hire, pause or dismiss a worker, and a seated mode that keeps every desk within reach. Workers run in throwaway Docker containers so the public demo office is safe to open. Everything else (the 3D office, the agents at desks, shared terminals, voice chat, GitHub boards) is upstream Agent Office by webdevcody (MIT). Changelog: {{DIFF_URL}}
+During the competition window we added a WebXR immersive mode to Agent Office so it runs in the Meta Quest browser with hands only: pinch to walk to a desk, poke the laptop to focus a worker's terminal, pinch-drag to scroll, a palm-up wrist menu to hire, pause or dismiss a worker, and a seated mode that keeps every desk within reach. Workers run in throwaway Docker containers so the public demo office is safe to open. Everything else (the 3D office, the agents at desks, shared terminals, voice chat, GitHub boards) is upstream Agent Office by webdevcody (MIT). Changelog: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 Then paste the output of `npx tsx launch/tools/whats-new.ts` (see [disclosure.md](disclosure.md)).
@@ -81,7 +81,7 @@ Eyes-and-hands focus for picking a terminal by looking at it, passthrough so the
 {{LAUNCH_DATE}}
 
 ## Credit
-Built on Agent Office by webdevcody / AgentSystemLabs (MIT). Only the XR mode and sandbox work listed in the changelog are ours: {{DIFF_URL}}
+Built on Agent Office by webdevcody / AgentSystemLabs (MIT). Only the XR mode and sandbox work listed in the changelog are ours: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 Testing instructions for judges (not word-limited): open `{{DEMO_URL}}` in the Quest browser, tap "Enter VR", sign in with the judge password `{{JUDGE_PASSWORD}}` (a demo office whose workers run in sandboxes and cannot reach the internet except GitHub and the model API).

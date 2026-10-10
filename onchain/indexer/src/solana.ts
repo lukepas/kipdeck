@@ -17,6 +17,8 @@ export interface SolanaSource {
   cluster: 'devnet' | 'localnet';
   /** Signatures per page (default 1000, the RPC's most). */
   pageSize?: number;
+  /** First wait before retrying a rate-limited call, doubled each time (default 500 ms). */
+  retryDelayMs?: number;
   /** The attesters whose payouts count (the office's Solana attester, deployments/<cluster>.json). Required. */
   attesters: readonly string[];
   /** The approvers whose payouts count; any approver when left out (an admin's wallet may change). */
@@ -40,11 +42,25 @@ export interface Payout {
   link: string;
 }
 
+const RATE_LIMITED = /too many requests|rate limit/i;
+const RETRIES = 6;
+
+/**
+ * One JSON-RPC call. The public devnet RPC answers bursts with HTTP 429 or a "Too many requests"
+ * error, so those are retried with a doubling wait; any other error is thrown at once.
+ */
 async function call<T>(src: SolanaSource, fetchFn: typeof fetch, method: string, params: unknown[]): Promise<T> {
-  const res = await fetchFn(src.rpcUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) });
-  const body = (await res.json()) as { result?: T; error?: { message?: string } };
-  if (body.error) throw new Error(`${method}: ${body.error.message ?? 'RPC error'}`);
-  return body.result as T;
+  let wait = src.retryDelayMs ?? 500;
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetchFn(src.rpcUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params }) });
+    const limited = res.status === 429;
+    const body = limited ? undefined : ((await res.json()) as { result?: T; error?: { message?: string } });
+    const message = limited ? 'Too many requests' : body?.error ? (body.error.message ?? 'RPC error') : undefined;
+    if (message === undefined) return body!.result as T;
+    if (!RATE_LIMITED.test(message) || attempt >= RETRIES) throw new Error(`${method}: ${message}`);
+    await new Promise((r) => setTimeout(r, wait));
+    wait *= 2;
+  }
 }
 
 export function explorerTx(src: Pick<SolanaSource, 'cluster' | 'rpcUrl'>, sig: string): string {

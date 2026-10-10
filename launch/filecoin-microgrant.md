@@ -36,7 +36,7 @@ Plan: **not ready to apply.** Every Filecoin program below needs a working proto
 These two fields describe a prototype that does not exist yet. Rewrite them from what is actually built before filing.
 
 ```field name="Prior work" max-chars=800
-Our prototype is part of a fork of Agent Office, an MIT open source 3D office for coding agents by webdevcody / AgentSystemLabs (github.com/AgentSystemLabs/agent-office). The office, its workers and terminals are upstream work. Ours: the session archive that stores a worker's terminal recording, pull request and meeting notes on IPFS and Filecoin, and everything the grant would fund. Our changes against upstream: {{DIFF_URL}}
+Our prototype is part of a fork of Agent Office, an MIT open source 3D office for coding agents by webdevcody / AgentSystemLabs (github.com/AgentSystemLabs/agent-office). The office, its workers and terminals are upstream work. Ours: the session archive that stores a worker's terminal recording, pull request and meeting notes on IPFS and Filecoin, and everything the grant would fund. Our changes against upstream: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 ## Project description
