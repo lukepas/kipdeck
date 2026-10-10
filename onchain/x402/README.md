@@ -1,6 +1,6 @@
 # onchain/x402: hire an office worker for one task over x402
 
-Part of the Proof of Merge fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnets only: Base Sepolia, Solana devnet through the x402.org facilitator, and a local anvil node for tests. There is no mainnet network in this package, and a mainnet chain id is refused wherever a network is chosen.
+Part of Proof of Merge, the payout layer of Kipdeck (a lab). Kipdeck is built on [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnets only: Base Sepolia, Solana devnet through the x402.org facilitator, and a local anvil node for tests. There is no mainnet network in this package, and a mainnet chain id is refused wherever a network is chosen.
 
 An outside agent (or a person with a shell) pays a small amount of test USDC to put one task on an office's queue: a GitHub issue of a repository the office takes paid work on, or a prompt. The office answers `402 Payment Required` with what it wants, the payer signs an EIP-3009 `TransferWithAuthorization`, and the office has a facilitator verify and settle it. The task then waits on the queue, held, until an office admin reads it and approves it. The office side lives in `src/server/x402/` and is described in [docs/x402.md](../../docs/x402.md).
 

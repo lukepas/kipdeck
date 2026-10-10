@@ -2,7 +2,7 @@
 
 Last checked: 2026-10-03. Sources: the Base grants team's post "Calling Based Builders" and its nomination form (links below).
 
-**Do not submit testnet work.** Base Builder Grants are retroactive: the team looks for builders whose contribution is "live and making an impact" and "bringing more users onchain". Everything in Proof of Merge (a fork of agent-office, MIT, by webdevcody / AgentSystemLabs) runs on Base Sepolia and Solana devnet, and stays there until an audit and a deliberate mainnet decision. This kit is ready for that day, and not before.
+**Do not submit testnet work.** Base Builder Grants are retroactive: the team looks for builders whose contribution is "live and making an impact" and "bringing more users onchain". Everything in Proof of Merge (the payout layer of Kipdeck, which is built on agent-office, MIT, by webdevcody / AgentSystemLabs) runs on Base Sepolia and Solana devnet, and stays there until an audit and a deliberate mainnet decision. This kit is ready for that day, and not before.
 
 ## Deadline
 
@@ -25,7 +25,7 @@ Last checked: 2026-10-03. Sources: the Base grants team's post "Calling Based Bu
 ## Pre-existing code disclosure
 
 ```field name="Prior work" max-chars=600
-Proof of Merge is a fork of agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs; the office is their work. Ours: mission control, proof-of-merge attestations (EAS) and ERC-8004 reputation for AI coding agents, a Solana escrow for bounties, x402 paid tasks and a public board. Commits: launch/chain/disclosure.md.
+Kipdeck, with Proof of Merge as its payout layer, is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs; the office is their work. Ours: the inbox and mission control, proof-of-merge attestations (EAS) and ERC-8004 reputation for AI coding agents, a Solana escrow for bounties, x402 paid tasks and a public board. Commits: launch/chain/disclosure.md.
 ```
 
 ## Project description
@@ -46,7 +46,7 @@ The post's three questions.
 
 ## Demo video script
 
-Use the technical demo in [video-scripts.md](video-scripts.md), recorded again on mainnet.
+Use the technical demo in [launch/video/](../video/README.md), recorded again on mainnet.
 
 ## Submission checklist
 

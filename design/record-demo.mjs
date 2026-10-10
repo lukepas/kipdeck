@@ -76,7 +76,7 @@ const OVERLAY = () => {
     #rec-ptr.on { opacity: 1; }
     #rec-ptr.down { background: rgba(176, 58, 20, .7); }
     #rec-tag { position: fixed; right: 14px; bottom: 12px; z-index: 2147483647; padding: 3px 9px; border-radius: 999px; background: rgba(17, 20, 24, .78); color: #fff; font: 600 12px/1.4 system-ui, sans-serif; letter-spacing: .02em; pointer-events: none; }
-    @media (max-width: 500px) { #rec-cap { display: none; } }`;
+    @media (max-width: 500px) { #rec-cap { display: none; } #rec-tag { display: none; } }`;
   const add = () => {
     document.head.append(style);
     const cap = Object.assign(document.createElement('div'), { id: 'rec-cap' });
@@ -90,7 +90,8 @@ const OVERLAY = () => {
 /**
  * Shows a caption: at the bottom over the agent pane, `'top'` (under the top bar) or `'low'` (at the very
  * bottom, under a dialog). On the phone the page draws none: its captions go beside it in the cut, so they
- * never cover the phone's toasts or the Demo data tag.
+ * never cover the phone's toasts or the Demo data tag. The phone draws no Demo data tag either: in the page it
+ * hid a merge toast's last line, so the cut puts the tag beside the phone, where the desktop shots have it.
  */
 const caption = (page, text, where = '') =>
   page.evaluate(([t, at]) => {
@@ -305,6 +306,13 @@ await sideCaption('cap-phone-1', 'On your phone: the README is done.');
 // Over the undo countdown the merge hasn't landed yet: the caption says what the screen shows.
 await sideCaption('cap-phone-tap', 'One tap to merge. A few seconds to undo.');
 await sideCaption('cap-phone-2', 'Merged with one tap.');
+// The phone's Demo data tag, in the frame's bottom-right corner beside the phone, as the desktop shots show it.
+{
+  const page = await cardBrowser.newPage({ viewport: { width: W, height: H } });
+  await page.setContent(`<!doctype html><html><body style="margin:0;width:${W}px;height:${H}px;background:transparent"><div style="position:absolute;right:14px;bottom:12px;padding:3px 9px;border-radius:999px;background:rgba(17,20,24,.78);color:#fff;font:600 12px/1.4 system-ui,sans-serif;letter-spacing:.02em">Demo data: scripted agents, no model runs</div></body></html>`);
+  await page.screenshot({ path: path.join(RAW, 'tag-phone.png'), omitBackground: true });
+  await page.close();
+}
 await cardBrowser.close();
 
 // ---- The cut ------------------------------------------------------------------------------------
@@ -327,8 +335,8 @@ const parts = [
   [webm('desk'), d.needs - 0.5, d.answered + 3],
   [webm('desk'), d.review - 0.3, d.mergeClick + 2.5],
   [webm('desk'), d.merged - 0.3, d.merged + 3.5],
-  [webm('phone'), ph.ready - 0.3, ph.tap + 2.5, [['cap-phone-1', 0, ph.tap - ph.ready + 0.5], ['cap-phone-tap', ph.tap - ph.ready + 0.5, 99]]],
-  [webm('phone'), ph.shipped - 0.3, ph.done, [['cap-phone-2', 0, 99]]],
+  [webm('phone'), ph.ready - 0.3, ph.tap + 2.5, [['tag-phone', 0, 99], ['cap-phone-1', 0, ph.tap - ph.ready + 0.5], ['cap-phone-tap', ph.tap - ph.ready + 0.5, 99]]],
+  [webm('phone'), ph.shipped - 0.3, ph.done, [['tag-phone', 0, 99], ['cap-phone-2', 0, 99]]],
   [webm('desk'), d.calm, d.calmClick + 2],
   [webm('desk'), d.calmShipped - 0.3, d.calmEnd],
   ...(WALL ? [[webm('wall'), marks.wall.wall, marks.wall.wall + 3.5]] : []),

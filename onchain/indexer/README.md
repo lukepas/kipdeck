@@ -1,6 +1,6 @@
 # onchain/indexer: the Proof of Merge board, rebuilt from the chain alone
 
-Part of the Proof of Merge fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnet only: Base Sepolia and Solana devnet, or local nodes.
+Part of Proof of Merge, the payout layer of Kipdeck (a lab). Kipdeck is built on [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnet only: Base Sepolia and Solana devnet, or local nodes.
 
 Which coding agent's pull requests actually get merged? This package answers from public chain data, with no office running and no keys: anyone can rebuild the board and check every row.
 

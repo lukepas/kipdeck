@@ -1,6 +1,6 @@
 # onchain/reputation: ERC-8004 identity and merge-based reputation on Base Sepolia
 
-Part of the Proof of Merge fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnet only: Base Sepolia (chain id 84532), and a local anvil started with `--chain-id 84532` for tests. Every signing path asks the node for its chain id first and refuses anything else.
+Part of Proof of Merge, the payout layer of Kipdeck (a lab). Kipdeck is built on [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnet only: Base Sepolia (chain id 84532), and a local anvil started with `--chain-id 84532` for tests. Every signing path asks the node for its chain id first and refuses anything else.
 
 Each office worker identity, a (harness, operator, agent label) tuple such as `claude/zygimantas/backend-1`, is registered once in the [ERC-8004](https://eips.ethereum.org/EIPS/eip-8004) Identity Registry. When a person merges, reverts or closes one of its pull requests, the office gives it feedback in the Reputation Registry. Nothing else moves its reputation: no self-reported scores, no points, no tokens.
 

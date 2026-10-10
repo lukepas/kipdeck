@@ -56,7 +56,7 @@ Every address must be `https`, or the build stops. The build draws `og.png` with
 
 ## Deploy to Vercel (automatic)
 
-The repository root has a `vercel.json` for the landing page: it installs with `npm ci --ignore-scripts`, builds with `npm run build:site`, serves `dist/site` and sends the same headers as `_headers`. In Vercel, connect the GitHub repository to the landing project (`kipdeck-landing`, https://kipdeck-landing.vercel.app) and leave the root directory at `./`. Set the production branch to the branch the page ships from and `KIPDECK_SITE_URL` (and any of the other addresses) under Environment Variables. Every push to that branch then goes live, and every other branch and pull request gets a preview address.
+The repository root has a `vercel.json` for the landing page: it installs with `npm ci --ignore-scripts`, builds with `npm run build:site`, serves `dist/site` and sends the same headers as `_headers`. In Vercel, connect the GitHub repository to the landing project and leave the root directory at `./`. Ours is the `kipdeck` project: production domain https://kipdeck.com (also https://kipdeck.vercel.app), auto-deploying from `main`. The older `kipdeck-landing` project only redirects https://kipdeck-landing.vercel.app to kipdeck.com and does not build the page. Set the production branch to the branch the page ships from and `KIPDECK_SITE_URL` (and any of the other addresses) under Environment Variables. Every push to that branch then goes live, and every other branch and pull request gets a preview address.
 
 Vercel's builder has no Chromium, so the committed `public/og.png` is the share card there.
 

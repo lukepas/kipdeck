@@ -1,5 +1,7 @@
 # Innovation Agency Lithuania
 
+**Drafted on 2026-10-01 under the old name.** The product is now Kipdeck, the inbox for your AI coding agents, built on agent-office (MIT, by webdevcody / AgentSystemLabs), with Proof of Merge as its payout layer. Refresh the product name, what is built and the disclosure from [chain/disclosure.md](chain/disclosure.md) before you use this kit.
+
 Last checked: 2026-10-01. Sources: the Innovation Agency (Inovaciju agentura) funding list and call pages, and the 2021-2027 EU investment site (links below). Call documents are in Lithuanian; details taken from summaries of them are [unverified] until read in the original.
 
 Two calls matter, and a third is listed so nobody wastes time on it:

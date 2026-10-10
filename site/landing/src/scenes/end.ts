@@ -2,7 +2,7 @@
 // to the header's own width (118) as the page reaches its end, the way the hero's headline inhaled:
 // at rest it is the same lockup as the top bar's. The calm inbox above it is honest about the
 // page's one piece of state: if an agent has started waiting on the visitor again (the hero's Codex
-// asks every so often), it says so, counts the wait, turns the mark's lead chevron Signal and
+// asks every so often), it says so, counts the wait, turns Kip's light Signal and
 // offers Answer; answering settles it back to a check.
 import { clamp } from '../engine/loop';
 import { whileVisible } from '../engine/wake';

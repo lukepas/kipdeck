@@ -1,5 +1,7 @@
 # Vultr Agent Rush (lablab.ai)
 
+**Drafted on 2026-10-01 under the old name.** The product is now Kipdeck, the inbox for your AI coding agents, built on agent-office (MIT, by webdevcody / AgentSystemLabs), with Proof of Merge as its payout layer. Refresh the product name, what is built and the disclosure from [chain/disclosure.md](chain/disclosure.md) before you use this kit.
+
 Last checked: 2026-10-01. Sources: the lablab.ai event page and lablab's general submission guidelines (links below). The event schedule is "to be announced", so every time below is [unverified] until lablab publishes it.
 
 Plan: the challenge "Blast Radius Zero: Safe Agent Execution on Vultr" asks for a web-based agent doing real work with every action inside a sandbox on Vultr. That is Agent Office with the Vultr deploy (branch `launch/vultr-deploy`) and per-worker Docker sandboxes (branch `launch/docker-sandbox`): coding agents at desks, each in its own container, every model call through Vultr Serverless Inference.

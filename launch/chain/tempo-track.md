@@ -2,7 +2,7 @@
 
 Last checked: 2026-10-03. Sources: the Colosseum rules PDF (section 14: "Tempo track: $100,000 will be awarded across 10 of the best products that integrate with the Tempo blockchain") and Tempo's connection details page. Whether one submission can be judged in several tracks is [unverified]; see [judge-qa.md](judge-qa.md).
 
-This is not a separate entry. Colosseum allows one product per team, so the Tempo work would be part of the same Proof of Merge submission (a fork of agent-office, MIT, by webdevcody / AgentSystemLabs), which leads with Solana. It is a stretch: do it only if the Solana and Base parts are recorded and stable by 2026-10-06.
+This is not a separate entry. Colosseum allows one product per team, so the Tempo work would be part of the same Kipdeck submission, with Proof of Merge as its payout layer (Kipdeck is built on agent-office, MIT, by webdevcody / AgentSystemLabs), which leads with Solana. It is a stretch: do it only if the Solana and Base parts are recorded and stable by 2026-10-06.
 
 Candidate integration, smallest first:
 
@@ -44,7 +44,7 @@ The same six criteria as the main entry (rules, section 8). The track adds one q
 
 ## Demo video script
 
-No separate video. If it ships, add a 10-second insert to the technical demo in [video-scripts.md](video-scripts.md): the same merge attested on Moderato, shown in Tempo's explorer.
+No separate video. If it ships, add a 10-second insert to the technical demo in [launch/video/](../video/README.md): the same merge attested on Moderato, shown in Tempo's explorer.
 
 ## Submission checklist
 

@@ -57,7 +57,7 @@ They're in `core/registry.ts`, and each is a field of `ctx`. Every registration 
 
 ### Stylesheets
 
-`style.css` is the 3D office's sheet. It pulls in `styles/base.css` (the reset, panels, buttons, status glyphs and the window frame, which the home page's `lite.css` loads too; it starts by importing `styles/tokens.css`, the colors, type, lines and motion every page uses, the sign-in pages' `login.css` included, with the rules in [DESIGN.md](../DESIGN.md)), `styles/hud.css` and `styles/loading.css`. Every other sheet sits next to its module and comes in with it. A module's sheet loads in no fixed order against `base.css`, so a module rule that overrides a base rule of the same specificity has to be more specific, or live at the end of `base.css` with the others there.
+`style.css` is the Deck's sheet. It pulls in `styles/base.css` (the reset, panels, buttons, status glyphs and the window frame, which the home page's `lite.css` loads too; it starts by importing `styles/tokens.css`, the colors, type, lines and motion every page uses, the sign-in pages' `login.css` included, with the rules in [DESIGN.md](../DESIGN.md)), `styles/hud.css` and `styles/loading.css`. Every other sheet sits next to its module and comes in with it. A module's sheet loads in no fixed order against `base.css`, so a module rule that overrides a base rule of the same specificity has to be more specific, or live at the end of `base.css` with the others there.
 
 ## Server
 

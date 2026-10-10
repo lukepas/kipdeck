@@ -16,7 +16,7 @@ Last checked: 2026-10-04
 | [base-builder.md](base-builder.md) | Base Builder Grants, only after a mainnet decision; do not submit testnet |
 | [disclosure.md](disclosure.md) | What is upstream's and what is ours, the form text, and every third-party license |
 | [judge-qa.md](judge-qa.md) | Answers for judges |
-| [video-scripts.md](video-scripts.md) | The pitch, the technical demo, the shot list with fallbacks, weekly updates |
+| [video-scripts.md](video-scripts.md) | The weekly update videos. Its pitch and demo scripts are superseded for Colosseum by [launch/video/](../video/README.md) (pitch-script.md, demo-script.md, capture/voiceover.txt, description.txt) |
 | [landing.md](landing.md) | The landing copy; the hero is the one on `/pom/` |
 | [build-in-public.md](build-in-public.md) | The ten-day plan and its rules; drafts in [posts/](posts/2026-10-02.md) |
 | [deadlines.json](deadlines.json) | Every date; [calendar.ics](calendar.ics) and the timeline below are made from it |
@@ -40,7 +40,7 @@ As of 2026-10-04 (the program and the first bounties 2026-10-03), checked over R
 | ERC-8004 registries we write to (not ours, version 2.0.0) | Base Sepolia | Identity `0x8004A818BFB912233c491871b3d84c89A494BD9e`, Reputation `0x8004B663056A597Dffe9eCcC1965A193B7388713` |
 | One x402 paid task (2026-10-04): 0.10 Circle test USDC from the payer `0x9C3259D51662a05E1E8dD0109cd2189345818F5D` to the office `0x2522fAd50CA1e545D8Bd8593763432bAB0dcDe9b`, settled by x402.org, the task held for an admin | Base Sepolia | `0x490896509be59e45e7d14afbaa3ec24c18db5292f4ea1c71cf79533670d126dc` (status 1), in `onchain/x402/deployments/base-sepolia.json` |
 
-Explorer links for each are in [colosseum-worlds-fair.md](colosseum-worlds-fair.md#links). The board itself is empty so far: no office PR has been merged and attested on Base Sepolia yet (see [data/counts.json](data/counts.json)).
+Explorer links for each are in [colosseum-worlds-fair.md](colosseum-worlds-fair.md#links). The board itself is empty so far: no office PR has been merged and attested on Base Sepolia yet (see [data/counts.json](data/counts.json)). The one merged office PR, #4 on the demo repository (2026-10-07), was merged by the operator's own account: it counts as self, paid nothing and was not attested, so `self_merges` stays 0 until an office attests a merge.
 
 ## Manual steps
 

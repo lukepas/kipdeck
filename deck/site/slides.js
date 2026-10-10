@@ -280,7 +280,7 @@
     var video = A(s, 'video'), bar = A(s, 'bar'), beats = $$(s, '.beats li');
     function sync(t) {
       if (stillFrames) t = 999;   // still frames keep every beat lit, even while the video plays
-      var d = video.duration || 67;
+      var d = video.duration || 66.5;
       bar.style.width = clamp(t / d * 100, 0, 100) + '%';
       beats.forEach(function (b) {
         var on = t >= +b.dataset.t;
@@ -290,7 +290,7 @@
     if (!s._wired) {
       s._wired = true;
       video.addEventListener('timeupdate', function () { sync(video.currentTime); });
-      video.addEventListener('ended', function () { sync(video.duration || 67); });
+      video.addEventListener('ended', function () { sync(video.duration || 66.5); });
       s.addEventListener('slide:enter', function () {
         // Still frames keep the poster (the product, not the opening terminal frame); a click still plays it.
         if (stillFrames || document.body.classList.contains('print')) return;
@@ -598,9 +598,9 @@
 
   /* ---------- 13 TEAM: three cards reveal, then the commit graph ---------- */
   B.s13 = function (s, gsap) {
-    // Our commits on main per day (author date, Vilnius), 30 Sep-9 Oct: 570 in all, main at 9a30f41f.
+    // Our commits on main per day (author date, Vilnius), 30 Sep-10 Oct: 574 in all, main at 7b0f7538.
     // Left out: 2 Dependabot bumps, the 2 upstream snapshot imports and the 11 re-committed upstream PRs.
-    var data = [['30', 10], ['1', 5], ['2', 62], ['3', 32], ['4', 118], ['5', 92], ['6', 131], ['7', 94], ['8', 18], ['9', 8]];
+    var data = [['30', 10], ['1', 5], ['2', 62], ['3', 32], ['4', 118], ['5', 92], ['6', 131], ['7', 94], ['8', 18], ['9', 8], ['10', 4]];
     var box = A(s, 'commits'); box.innerHTML = '';
     var bars = data.map(function (d, i) {
       var b = document.createElement('div'); b.className = 'b';

@@ -1,5 +1,7 @@
 # Video scripts
 
+**Superseded for Colosseum.** The pitch and the technical demo actually recorded are in [launch/video/](../video/README.md): [pitch-script.md](../video/pitch-script.md) (target 2:25), the 2:56 demo cut voiced from `launch/video/capture/voiceover.txt`, [demo-script.md](../video/demo-script.md) (the live take, 2:55) and `launch/video/description.txt`. The pitch and demo below (a Phantom-signed bounty and a real merge on camera) never ran as written; keep this page for the weekly update videos.
+
 The pitch and the technical demo for Colosseum (the FAQ asks for a two-to-three-minute presentation and a product demo of no more than three minutes), the weekly update videos, the shot list and a fallback for every step in case devnet or Base Sepolia is slow on the day.
 
 Rules for every video: say "devnet" or "Base Sepolia" whenever money or an attestation is on screen; never say mainnet except to say there is none; credit agent-office by webdevcody (MIT) on screen once; only state numbers from [data/counts.json](data/counts.json), refreshed the same day.

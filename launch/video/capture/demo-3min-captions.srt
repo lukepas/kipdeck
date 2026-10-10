@@ -151,19 +151,19 @@ After expiry, anyone can send a refund,
 and it goes back to each funder.
 
 39
-00:01:56,950 --> 00:01:58,853
-Paid merges are also attested
+00:01:56,950 --> 00:01:59,123
+Every counted merge is also attested
 
 40
-00:01:59,103 --> 00:02:00,789
+00:01:59,373 --> 00:02:00,977
 on Base Sepolia with EAS.
 
 41
-00:02:01,039 --> 00:02:03,051
+00:02:01,227 --> 00:02:03,141
 Reputation lives on Base, where
 
 42
-00:02:03,301 --> 00:02:05,150
+00:02:03,391 --> 00:02:05,150
 the ERC-8004 registries are.
 
 43

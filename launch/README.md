@@ -1,6 +1,6 @@
 # Launch kits
 
-Submission and application kits for this fork of Agent Office: five hackathons, four grant programs and sponsorship, with every deadline in one calendar. Written on 2026-09-30 from each program's official pages and re-checked against them on 2026-10-01. Rules change: re-read the official page before you submit, and fix the kit when they differ.
+Submission and application kits for Kipdeck, our fork of Agent Office: five hackathons, four grant programs and sponsorship, with every deadline in one calendar. Written on 2026-09-30 from each program's official pages and re-checked against them on 2026-10-01. The root kits below were drafted under the old name and each says so at the top; the Colosseum and Solana kits under [chain/](chain/README.md) are the current Kipdeck versions. Rules change: re-read the official page before you submit, and fix the kit when they differ.
 
 Agent Office is an MIT open source project by webdevcody / AgentSystemLabs. This fork is not theirs and they have not endorsed it. Every kit credits upstream and lists exactly what the fork adds; the shared wording and the facts behind it are in [disclosure.md](disclosure.md).
 
@@ -13,7 +13,7 @@ Agent Office is an MIT open source project by webdevcody / AgentSystemLabs. This
 | [nebius-nvidia.md](nebius-nvidia.md) | Nebius x NVIDIA Global AI Hackathon | 2026-10-30 10:00 PT | Workers on Nemotron via Token Factory, in sandboxes |
 | [vultr-agent-rush.md](vultr-agent-rush.md) | Vultr Agent Rush (lablab.ai) | 2026-11-08 [unverified time] | Sandboxed workers on a Vultr VM |
 | [meta-vr-start.md](meta-vr-start.md) | Meta VR Start Developer Competition 2026 | 2026-11-18 12:00 PT | WebXR, hands-first office in the Quest browser |
-| [solana-foundation-grant.md](solana-foundation-grant.md) | Solana Foundation grant | rolling | Open source escrow program and SDK |
+| [chain/solana-foundation-grant.md](chain/solana-foundation-grant.md) | Solana Foundation grant | rolling | Open source escrow program and SDK. The older [solana-foundation-grant.md](solana-foundation-grant.md) here is superseded |
 | [base-builder-grants.md](base-builder-grants.md) | Base Builder Grants | rolling | x402 pay-per-task on Base, once live on mainnet |
 | [filecoin-microgrant.md](filecoin-microgrant.md) | Filecoin devgrants | rolling [unverified status] | Not ready: needs an IPFS prototype first |
 | [innovation-agency-lithuania.md](innovation-agency-lithuania.md) | Innovation Agency Lithuania | 2026-11-11 17:00 EET | Travel refund for the Salt Lake City on-site day |
@@ -43,9 +43,9 @@ Every dated item from 2026-09-30, generated from [deadlines.json](deadlines.json
 | 2026-09-30 | Kickoff: apply to Meta VR Start, register on Colosseum Arena, Devpost (Amazon, Nebius, Meta) and lablab.ai | all day | this page | our target |
 | 2026-10-01 | Ask each organizer whether a fork of a third-party MIT project is eligible; send a courtesy note to the upstream author | all day | [disclosure.md](disclosure.md) | our target |
 | 2026-10-02 | Enable GitHub 2FA, apply for GitHub Sponsors, decide on an Open Collective host | all day | [sponsors.md](sponsors.md) | our target |
-| 2026-10-09 | Colosseum: freeze the build, record the pitch and technical demo videos | all day | [colosseum-worlds-fair.md](colosseum-worlds-fair.md) | our target |
-| 2026-10-12 | **Colosseum Crypto World's Fair: registration and submission close** | 23:59 PT (PDT, UTC-7); 2026-10-13 06:59 UTC; 2026-10-13 09:59 Vilnius | [colosseum-worlds-fair.md](colosseum-worlds-fair.md) | confirmed 2026-09-30 |
-| 2026-10-14 | Solana Foundation grant: submit the application (rolling, reuse the Colosseum material) | all day | [solana-foundation-grant.md](solana-foundation-grant.md) | our target |
+| 2026-10-09 | Colosseum: freeze the build, record the pitch and technical demo videos | all day | [chain/colosseum-worlds-fair.md](chain/colosseum-worlds-fair.md) | our target |
+| 2026-10-12 | **Colosseum Crypto World's Fair: registration and submission close** | 23:59 PT (PDT, UTC-7); 2026-10-13 06:59 UTC; 2026-10-13 09:59 Vilnius | [chain/colosseum-worlds-fair.md](chain/colosseum-worlds-fair.md) | confirmed 2026-09-30 |
+| 2026-10-14 | Solana Foundation grant: submit the application (rolling, reuse the Colosseum material) | all day | [chain/solana-foundation-grant.md](chain/solana-foundation-grant.md) | our target |
 | 2026-10-15 | Vultr Agent Rush: sign up on lablab.ai, join the Discord, ask about the on-site day in Salt Lake City | all day | [vultr-agent-rush.md](vultr-agent-rush.md) | our target |
 | 2026-10-20 | Amazon: record the demo video and finish the friction log | all day | [amazon-build-ship-shape.md](amazon-build-ship-shape.md) | our target |
 | 2026-10-21 | Innovation Agency Lithuania: file the foreign-event travel application in KIP as soon as the Salt Lake City flights are booked | all day | [innovation-agency-lithuania.md](innovation-agency-lithuania.md) | our target |
@@ -61,7 +61,7 @@ Every dated item from 2026-09-30, generated from [deadlines.json](deadlines.json
 | 2026-11-25 | Filecoin: apply for a Next Step microgrant or an Open Grant, only if the IPFS prototype exists | all day | [filecoin-microgrant.md](filecoin-microgrant.md) | our target [unverified] |
 | 2026-11-30 | Innovation Agency Lithuania: check for a new ICT prototype call | all day | [innovation-agency-lithuania.md](innovation-agency-lithuania.md) | our target [unverified] |
 | 2026-12-03 | Amazon Build Ship Shape: winners announced (on or around) | all day | [amazon-build-ship-shape.md](amazon-build-ship-shape.md) | confirmed 2026-09-30 |
-| 2026-12-05 | Colosseum Crypto World's Fair: winners announced (by) | all day | [colosseum-worlds-fair.md](colosseum-worlds-fair.md) | confirmed 2026-09-30 |
+| 2026-12-05 | Colosseum Crypto World's Fair: winners announced (by) | all day | [chain/colosseum-worlds-fair.md](chain/colosseum-worlds-fair.md) | confirmed 2026-09-30 |
 | 2026-12-11 | Meta VR Start Developer Competition: winners announced | all day | [meta-vr-start.md](meta-vr-start.md) | confirmed 2026-09-30 |
 | 2027-01-11 | Nebius x NVIDIA Global AI Hackathon: winners announced | all day | [nebius-nvidia.md](nebius-nvidia.md) | confirmed 2026-09-30 |
 <!-- timeline:end -->

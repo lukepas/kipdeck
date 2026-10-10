@@ -14,6 +14,8 @@
 .app-pulse > span { padding: 5px 10px; }
 .app-pulse > span + span { border-left: 1px solid var(--line); }
 .app-pulse b { color: var(--text); font-weight: 600; margin-right: 4px; }
+/* On a phone the card is too narrow for all three stats: keep the one that matters, "1 waiting on you". */
+@media (max-width: 520px) { .app-pulse > span + span { display: none; } }
 .app-list, .ranked-list { padding: 8px 14px 18px; background: var(--void); }
 
 .sec { display: flex; align-items: center; gap: 8px; margin: 14px 2px 8px; max-width: none; font-size: 13px; font-weight: 600; color: var(--muted); }

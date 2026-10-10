@@ -64,7 +64,7 @@ The page names what reviewers look for; there is no scoring rubric.
 
 ## Demo video script
 
-The form may not ask for a video [unverified]. Reuse the technical demo from [video-scripts.md](video-scripts.md), cut to the Solana part (fund, merge, approve, payout, refund).
+The form may not ask for a video [unverified]. Reuse the technical demo from [launch/video/](../video/README.md), cut to the Solana part (fund, merge, approve, payout, refund).
 
 ## Submission checklist
 

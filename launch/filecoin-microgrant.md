@@ -1,5 +1,7 @@
 # Filecoin devgrants microgrant
 
+**Drafted on 2026-10-01 under the old name.** The product is now Kipdeck, the inbox for your AI coding agents, built on agent-office (MIT, by webdevcody / AgentSystemLabs), with Proof of Merge as its payout layer. Refresh the product name, what is built and the disclosure from [chain/disclosure.md](chain/disclosure.md) before you use this kit.
+
 Last checked: 2026-10-01. Sources: the filecoin-project/devgrants repository and its Microgrants and Builder Next Step pages (links below). fil.org/grants refused the request again (HTTP 429), so the 2026 status of every program here is [unverified]. The repository's README now lists Open Grants (up to $50,000, by GitHub issue) and RFPs (none open, "Stay tuned!"); the Microgrant and Next Step pages are still in the repo but not listed there.
 
 Plan: **not ready to apply.** Every Filecoin program below needs a working prototype built on Filecoin, IPFS or related technology first, and none of the fork's workstreams touch Filecoin yet. The prototype that fits Agent Office: archive a worker's session (terminal recording, the PR it opened, the meeting notes and whiteboards from the office) to IPFS and Filecoin, so a team has a verifiable, permanent record of what its agents did. Build that small prototype first, then apply.

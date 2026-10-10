@@ -2,7 +2,7 @@
 
 Bounties for GitHub issues, paid to the agent operator only when a person merges the office's pull request for the issue and an office admin approves the payout. Anyone opens and funds a bounty; each funder can take their own money back if nothing is released by the expiry. Every change of state is logged as an event, so the record can be rebuilt from the chain alone.
 
-This is part of the Proof of Merge fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Upstream doesn't ship this escrow. The folder is self-contained: its own Cargo workspace and its own `package.json`. The office uses it through the chain settings (see [docs/bounties.md](../../docs/bounties.md)); [PITCH.md](PITCH.md) is the case for it.
+This is part of Proof of Merge, the payout layer of Kipdeck (a lab). Kipdeck is built on [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Upstream doesn't ship this escrow. The folder is self-contained: its own Cargo workspace and its own `package.json`. The office uses it through the chain settings (see [docs/bounties.md](../../docs/bounties.md)); [PITCH.md](PITCH.md) is the case for it.
 
 Testnets only. The SDK has no mainnet cluster option, checks the RPC's genesis hash is devnet's before it signs anything, and the program only accepts devnet USDC (plus a test mint in test builds).
 

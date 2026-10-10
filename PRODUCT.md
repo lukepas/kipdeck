@@ -16,7 +16,7 @@ Everything that is not that loop is a lab, on by default (an admin can switch an
 
 ### Business model (for the pitch, not the app)
 
-- **Free and open source (MIT), single player.** The inbox, the demo, local merges, the signed log, Numbers. This is the distribution: `npx kipdeck` in any repository.
+- **Free and open source (MIT), single player.** The inbox, the demo, local merges, the signed log, Numbers. This is the distribution: `npx kipdeck` in any repository, once it is on npm (until then `kipdeck` from a linked clone, see the README's From source).
 - **Paid team tier (waitlist on the landing page).** A shared inbox for a team, questions routed to whoever owns them, single sign-on, an audit trail of who merged what and team-level wait-time reporting. Accounts and invite links already work in the free version; routing, SSO and audit export are the paid build.
 - **What the team built beyond the fork.** The fork gave a 3D office with terminals at desks. This team built: the attention ranking that every surface shares, the inbox, the question card, the signed shipped log and its metrics, merging without GitHub, one-command onboarding with no password on your own computer, `kipdeck attach`, the scripted demo and its read-only hosted mode, Labs, and the whole Proof of Merge track (devnet bounty escrow, Base Sepolia attestations, ERC-8004 reputation, x402 paid tasks), now parked as a lab.
 
@@ -96,7 +96,7 @@ The desktop's control count went up by two because the pane is no longer empty: 
 
 ## The investor demo (about a minute)
 
-The recording is `design/shots/fundable/final/kipdeck-demo.mp4` (67 s, silent, every frame tagged *Demo data: scripted agents, no model runs*; deck/site/media/kipdeck-demo-v2.mp4); the 27-second GIF is `docs/img/demo.gif`. Live, run `kipdeck --demo` from a linked clone (`npx kipdeck --demo` once it is on npm) before the meeting, and keep the recording open in a tab as the fallback.
+The recording is `design/shots/fundable/final/kipdeck-demo.mp4` (66.5 s, silent, every frame tagged *Demo data: scripted agents, no model runs*, beside the phone in the phone part; deck/site/media/kipdeck-demo-v3.mp4); the 27-second GIF is `docs/img/demo.gif`. Live, run `kipdeck --demo` from a linked clone (`npx kipdeck --demo` once it is on npm) before the meeting, and keep the recording open in a tab as the fallback.
 
 | Time | On screen | Say |
 | --- | --- | --- |

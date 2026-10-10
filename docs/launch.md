@@ -4,7 +4,7 @@ Kipdeck's launch kit for the Proof of Merge lab, and the tools that check it.
 
 Back to the [README](../README.md).
 
-Part of the Proof of Merge fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). The submission drafts, posts and calendar for the chain side live in [launch/chain](../launch/chain/README.md). This page is about the four small tools that keep them honest. They run on `tsx`, need no network and add no dependency.
+Part of Proof of Merge, the payout layer of Kipdeck (a lab). Kipdeck is built on [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). The submission drafts, posts and calendar for the chain side live in [launch/chain](../launch/chain/README.md). This page is about the four small tools that keep them honest. They run on `tsx`, need no network and add no dependency.
 
 ## Why tools
 
