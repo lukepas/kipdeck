@@ -450,7 +450,7 @@ body.flow #s12 .tiers { display: grid !important; grid-template-columns: 1fr; } 
 body.flow #s12 .funnel { border: 0; border-radius: 0; overflow: visible; }
 body.flow #s12 .fstep, body.flow #s12 .fstep:first-child, body.flow #s12 .fstep:last-child { border: 1px solid var(--line); border-radius: 12px; margin: 0 0 8px; }
 body.flow #s12 .tier .price { font-size: 30px; }
-body.flow #s13 .person .stat { font-size: 40px; } body.flow #s13 .commits .b { width: 34px; } body.flow #s13 .commits .b em .mo { display: none; }
+body.flow #s13 .person .stat { font-size: 40px; } body.flow #s13 .commits .b { width: 28px; } body.flow #s13 .commits .b em .mo { display: none; }
 body.flow #s14 .amt { font-size: 96px; } body.flow #s14 .ms { height: auto; display: flex; flex-direction: column; gap: 14px; }
 body.flow #s14 .ms .line, body.flow #s14 .ms .fill { display: none; } body.flow #s14 .ms .m { position: static; width: auto; }
 body.flow #s14 .donut { width: 200px !important; height: 200px !important; }

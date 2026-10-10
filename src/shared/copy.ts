@@ -26,13 +26,13 @@ export function tabTitle(waiting: number, project?: string, view?: string): stri
 }
 /** The command it runs as (agent-office still works, for upstream's scripts). */
 export const CLI = 'kipdeck';
+/** The public source repository. */
+export const REPO_URL = 'https://github.com/zbagdzevicius/kipdeck';
 /**
- * Where the full docs are read, linked from the home page's Help: the product's site. The docs/
- * folder lives with the source. TODO(founder): kipdeck.com has no site yet and its DNS sits on the
- * registrar's suspension nameservers, which usually means the registrant email or ICANN verification
- * is not done. Finish that before the landing page goes there, or the domain may lapse.
+ * Where the full docs are read, linked from the home page's Help: the README, which links every page
+ * in docs/. (kipdeck.com is the marketing page, not the docs.)
  */
-export const DOCS_URL = 'https://kipdeck.com';
+export const DOCS_URL = `${REPO_URL}#readme`;
 /** Where it came from, as the license names it. */
 export const UPSTREAM_CREDIT = 'Built on agent-office (AgentSystemLabs / webdevcody), MIT';
 /** The same where there is only room for a line of small type (the title block on the deck's floor). */

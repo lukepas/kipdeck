@@ -715,7 +715,7 @@ export class MeetingRoom {
       const m = saved.current;
       // The workers at the table outlive a restart of the office, so a meeting carries on where it was.
       if (m && restorableMeeting(this.dir, m)) this.current = m;
-      else if (m) console.warn(`agent-office: not picking the meeting in ${this.statePath} back up: its files or worktree aren't where the office puts them`);
+      else if (m) console.warn(`kipdeck: not picking the meeting in ${this.statePath} back up: its files or worktree aren't where the office puts them`);
     } catch {
       // corrupt state file: an empty room
     }

@@ -1,6 +1,6 @@
 # Kipdeck: the fundraising build
 
-What this branch is, what changed to make it fundable, what was cut or hidden and how to bring it back, the numbers, and the script for showing it to an investor. Kipdeck is built on [agent-office](https://github.com/AgentSystemLabs/agent-office) by webdevcody (MIT); LICENSE and NOTICE carry that credit and are unchanged.
+What this branch is, what changed to make it fundable, what was cut or hidden and how to bring it back, the numbers, and the script for showing it to an investor. Kipdeck is built on [agent-office](https://github.com/AgentSystemLabs/agent-office) by webdevcody (MIT). LICENSE keeps upstream's copyright line and MIT text and adds ours; NOTICE (ours) credits upstream.
 
 ## The direction
 
@@ -55,7 +55,7 @@ Three critics (an investor, a first user and an engineer) reviewed the build bef
 
 ### Left for later (and why)
 
-- **npm publish, the domain and the hosted demo deploy** wait on the trademark search and an employer clearance (`launch/kipdeck/README.md`). Nothing was posted, sent or published.
+- **npm publish and the hosted demo deploy** wait on the trademark search and an employer clearance (`launch/kipdeck/README.md`). The repository (github.com/zbagdzevicius/kipdeck) is public and kipdeck.com serves the landing page.
 - **Traction row with real numbers.** There are no users yet; the page asks for five design partners instead of inventing a number.
 - **Branch prefix.** Branches still start `office/` so existing branches, prune and pull request detection keep working; renaming it is a migration.
 - **Merge all ready with passing tests** (the team headline feature) and a project filter chip are not built; the project picker covers several projects today.

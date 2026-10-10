@@ -235,7 +235,7 @@ export class Webhook {
     }
     // The link was changed while this was on its way; its outcome says nothing about the new one.
     if (this.saved !== saved) return error;
-    if (error) console.error(`agent-office: webhook: ${error}`);
+    if (error) console.error(`kipdeck: webhook: ${error}`);
     if (error !== this.error || !error) {
       this.error = error;
       if (!error) this.lastSentAt = Date.now();

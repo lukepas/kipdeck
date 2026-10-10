@@ -140,7 +140,7 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
   const worksIn = (from: Floor, on: Floor) => from.workers.list().some((w) => w.repos?.some((r) => r.floor === on.id));
   const openFloor = (def: FloorDef): Floor | undefined => {
     if (!existsSync(def.dir)) {
-      console.error(`agent-office: the ${def.name} floor's checkout is gone (${def.dir}) - it stays closed until it's back`);
+      console.error(`kipdeck: the ${def.name} floor's checkout is gone (${def.dir}) - it stays closed until it's back`);
       return undefined;
     }
     try {
@@ -148,7 +148,7 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
       floors.set(def.id, floor);
       return floor;
     } catch (err) {
-      console.error(`agent-office: couldn't open the ${def.name} floor: ${(err as Error).message}`);
+      console.error(`kipdeck: couldn't open the ${def.name} floor: ${(err as Error).message}`);
       return undefined;
     }
   };
@@ -165,7 +165,7 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
   ctx.building.resumeClones((r) => {
     ctx.floorsChanged();
     if (typeof r === 'string') {
-      console.error(`agent-office: ${r}`);
+      console.error(`kipdeck: ${r}`);
       return ctx.toastAll(`${r}`, 'warn');
     }
     if (!openFloor(r)) return;

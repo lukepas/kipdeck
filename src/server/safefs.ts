@@ -170,7 +170,7 @@ const warned = new Set<string>();
 function warnOnce(file: string, why: string) {
   if (warned.has(file)) return;
   warned.add(file);
-  console.warn(`agent-office: ignoring ${file}: ${why}`);
+  console.warn(`kipdeck: ignoring ${file}: ${why}`);
 }
 
 /**

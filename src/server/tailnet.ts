@@ -51,7 +51,7 @@ export class Tailnet {
         const want = this.wanted.join(' ');
         const err = await helper(['sync', ...this.wanted.map(String)]);
         if (err) {
-          if (err !== this.lastError) console.warn(`[agent-office] couldn't serve workers' servers on the tailnet: ${err}`);
+          if (err !== this.lastError) console.warn(`kipdeck: couldn't serve workers' servers on the tailnet: ${err}`);
           this.lastError = err;
           break; // the next change tries again
         }

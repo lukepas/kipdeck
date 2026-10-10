@@ -25,4 +25,4 @@ What remains from upstream
   whiteboard, accounts and sign-ins, the tunnel and the installers.
 - The client's architecture: the registries, the state store and its slices, the player and its
   camera, the navigation grid and the modal frame.
-- The package name and the agent-office command, kept so upstream changes can still be merged.
+- The agent-office command, kept as an alias of kipdeck so upstream's scripts keep working.

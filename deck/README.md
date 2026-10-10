@@ -55,7 +55,10 @@ node scripts/pdf.mjs            # out/deck.pdf, dark, one slide per page
 node scripts/pdf.mjs --light    # out/deck-light.pdf, light theme for paper
 node scripts/pdf.mjs --out=x.pdf  # write to another file instead
 node scripts/shots.mjs --phone  # shots/NN-final.png, NN-mid.png, phone-NN.png
+node scripts/og.mjs             # site/media/og-deck-v1.png, the share card (slide 1 at 1200x675)
 ```
+
+Link previews (Slack, LinkedIn, iMessage, email) show the `<head>`'s title, description and `og:image`. Media is cached for a year, so when slide 1 changes, render the card under a new name (`node scripts/og.mjs site/media/og-deck-v2.png`) and update the two image tags in `site/index.html`.
 
 The scripts use playwright-core from the repository root (`npm install` there first) (override with `PLAYWRIGHT_CORE`). Ctrl/Cmd+P in the browser also prints one slide per page.
 
@@ -74,7 +77,7 @@ vercel deploy --yes --prod      # production
 
 Everything lives in `site/config.js`:
 
-- `name`: every `{{name}}` in the deck and the `npx` command follow it.
+- `name`: every `{{name}}` in the slides and the `npx` command follow it. The `<head>` (title, description, Open Graph and Twitter tags) is plain text so link previews read it without running a script: change it there too. `npm run check:deck` fails on a `{{` in the `<head>`.
 - `npmPublished`: flip to `true` once `npx kipdeck` is on npm; the install claims and the demo CTA change with it.
 - `team`: the names, spelled once (diacritics included).
 - `contactEmail`, `demoUrl`, `repoUrl`: shown on the ask slide when set; empty values are left out.
@@ -94,7 +97,7 @@ Everything lives in `site/config.js`:
 
 - The team slide discloses that all three founders work at Motored today. Replace `commitment` in `site/config.js` with the signed full-time dates, equity split and IP assignment before the deck goes out.
 - Confirm titles (Ernestas is "Software Engineer" per the Motored data room) and add Lukas's LinkedIn.
-- Fill `contactEmail` (and `demoUrl`, `repoUrl` once public).
+- Fill `contactEmail` (and `demoUrl` once there is a hosted demo). `repoUrl` is the public repository, github.com/zbagdzevicius/kipdeck.
 - Confirm post-money SAFE with counsel and incorporate the company.
 - Replace the scripted demo with a recording of live agent sessions, and the illustration on slide 2 with a measured wait from your own use.
 

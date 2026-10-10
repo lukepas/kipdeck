@@ -4,11 +4,12 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import { WORKSPACE_FILES, WORKTREES_DIR, Worktrees, describeWork, gitError } from './worktrees.js';
 import { readStateJson, realWithin, stateDirProblem, within } from './safefs.js';
+import { CLI } from '../shared/copy.js';
 
-const HELP = `agent-office prune - remove leftover worker worktrees and branches
+const HELP = `${CLI} prune - remove leftover worker worktrees and branches
 
 Usage:
-  agent-office prune [dir] [options]
+  ${CLI} prune [dir] [options]
 
 Removes the worktrees under ${WORKTREES_DIR}/ and the office/* branches that
 no worker of the office in [dir] (default: current directory) uses any more.
@@ -69,26 +70,26 @@ export async function prune(argv: string[]): Promise<number> {
     } else if (a === '-n' || a === '--dry-run') dryRun = true;
     else if (a === '-f' || a === '--force') force = true;
     else if (a.startsWith('-')) {
-      console.error(`agent-office prune: unknown option ${a}\n`);
+      console.error(`kipdeck prune: unknown option ${a}\n`);
       process.stderr.write(HELP);
       return 2;
     } else dir = path.resolve(a);
   }
   if (!existsSync(dir)) {
-    console.error(`agent-office prune: directory not found: ${dir}`);
+    console.error(`kipdeck prune: directory not found: ${dir}`);
     return 2;
   }
   try {
     execFileSync('git', ['rev-parse', '--git-dir'], { cwd: dir, stdio: 'ignore' });
   } catch {
-    console.error(`agent-office prune: not a git repository: ${dir}`);
+    console.error(`kipdeck prune: not a git repository: ${dir}`);
     return 1;
   }
 
   // A symlinked .agent-office or worktrees folder would point the deletes below somewhere else entirely.
   const unsafe = stateDirProblem(dir);
   if (unsafe) {
-    console.error(`agent-office prune: ${unsafe} - not touching anything`);
+    console.error(`kipdeck prune: ${unsafe} - not touching anything`);
     return 1;
   }
   const home = path.join(dir, WORKTREES_DIR);
@@ -129,7 +130,7 @@ export async function prune(argv: string[]): Promise<number> {
     }
   };
 
-  console.log(`\n  agent-office prune - ${dir}${dryRun ? ' (dry run)' : ''}\n`);
+  console.log(`\n  kipdeck prune - ${dir}${dryRun ? ' (dry run)' : ''}\n`);
   const withWorktree = new Set<string>();
   for (const wt of worktrees) {
     if (wt.branch) withWorktree.add(wt.branch);
@@ -194,7 +195,7 @@ export async function prune(argv: string[]): Promise<number> {
     const left = workspaceLeft(path.join(dir, rel));
     if (Array.isArray(left)) {
       // Worktrees of other projects: pruning those projects takes them out, with their own checks.
-      keep(rel, `a workspace with worktrees of other projects in it (${left.join(', ')}) - run agent-office prune in those projects`);
+      keep(rel, `a workspace with worktrees of other projects in it (${left.join(', ')}) - run kipdeck prune in those projects`);
       continue;
     }
     if (!deletable(rel)) {

@@ -8,6 +8,7 @@ import { normalizeRepo, sameRepo } from '../shared/floors.js';
 import type { RepoChoice } from '../shared/protocol.js';
 import { Building, tildify } from './building.js';
 import { officeHome, type Config } from './config.js';
+import { CLI } from '../shared/copy.js';
 
 // Setting up an office from its terminal: where projects are cloned, signing the GitHub CLI in, and
 // picking repositories to clone as projects. Nothing asks these when the office starts (the setup
@@ -20,10 +21,10 @@ const SHOWN = 12;
 /** Folders people keep their code in, in the home folder: the first one that's there is the suggestion. */
 const CODE_FOLDERS = ['Workspace', 'workspace', 'Developer', 'code', 'Code', 'projects', 'Projects', 'repos', 'src', 'dev', 'git', 'GitHub', 'github'];
 
-const SETUP_HELP = `agent-office setup - pick where projects are cloned and which ones are floors
+const SETUP_HELP = `${CLI} setup - pick where projects are cloned and which ones are floors
 
 Usage:
-  agent-office setup [--projects <dir>] [--project <owner/repo>]... [--home <dir>]
+  ${CLI} setup [--projects <dir>] [--project <owner/repo>]... [--home <dir>]
 
 In a terminal it walks you through it: the workspace folder new projects are cloned
 into, signing the GitHub CLI in, and picking repositories to clone as floors. Given
@@ -55,7 +56,7 @@ export async function setupCommand(argv: string[]): Promise<number> {
     const value = () => {
       const v = argv[++i];
       if (v === undefined || v.startsWith('-')) {
-        console.error(`agent-office setup: ${a} needs a value`);
+        console.error(`kipdeck setup: ${a} needs a value`);
         process.exit(2);
       }
       return v;
@@ -67,7 +68,7 @@ export async function setupCommand(argv: string[]): Promise<number> {
     else if (a === '--projects') projects = value();
     else if (a === '--project') repos.push(value());
     else {
-      console.error(`agent-office setup: unknown option ${a}\n`);
+      console.error(`kipdeck setup: unknown option ${a}\n`);
       process.stderr.write(SETUP_HELP);
       return 2;
     }
@@ -84,26 +85,26 @@ export async function setupCommand(argv: string[]): Promise<number> {
   const dataDir = path.join(dir, '.agent-office');
   mkdirSync(dataDir, { recursive: true, mode: 0o700 });
   if (await officeRunning(dataDir)) {
-    console.error(`agent-office setup: the office in ${tildify(dir)} is running. Add projects from its elevator, and pick the workspace folder in Settings.`);
+    console.error(`kipdeck setup: the office in ${tildify(dir)} is running. Add projects from its elevator, and pick the workspace folder in Settings.`);
     return 1;
   }
   const building = new Building(dataDir, inProject ? path.join(os.homedir(), 'agent-office') : dir, { terminal: true });
 
   if (projects || repos.length || !interactive()) {
     if (!projects && !repos.length) {
-      console.error('agent-office setup: nothing to do without a terminal to ask in. Pass --projects <dir> and/or --project <owner/repo>.');
+      console.error('kipdeck setup: nothing to do without a terminal to ask in. Pass --projects <dir> and/or --project <owner/repo>.');
       return 2;
     }
     let code = 0;
     if (projects) {
-      const err = building.setProjectsDir(projects, 'agent-office setup');
+      const err = building.setProjectsDir(projects, 'kipdeck setup');
       if (err) {
-        console.error(`agent-office setup: --projects: ${err}`);
+        console.error(`kipdeck setup: --projects: ${err}`);
         return 1;
       }
       console.log(`  New projects are cloned into ${building.projectsDirState().dir}/<owner>/<repo>`);
     }
-    for (const repo of repos) if (!(await addFloor(building, repo, 'agent-office setup'))) code = 1;
+    for (const repo of repos) if (!(await addFloor(building, repo, 'kipdeck setup'))) code = 1;
     return code;
   }
 
@@ -122,7 +123,7 @@ async function walkthrough(building: Building, dataDir: string, askFolder: boole
   if (askFolder) await pickFolder(building);
   const login = await githubLogin(dataDir);
   if (!login) {
-    console.log('\n  Add projects from the elevator in the office once gh is ready (or run `agent-office setup` again).');
+    console.log('\n  Add projects from the elevator in the office once gh is ready (or run `kipdeck setup` again).');
     return;
   }
   await pickProjects(building, login);
@@ -291,7 +292,7 @@ function whoAmI(): string {
   try {
     return os.userInfo().username;
   } catch {
-    return 'agent-office setup';
+    return 'kipdeck setup';
   }
 }
 

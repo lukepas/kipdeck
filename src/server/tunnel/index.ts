@@ -1,5 +1,5 @@
 import { openBrowser } from '../browser.js';
-import { NAV } from '../../shared/copy.js';
+import { CLI, NAV } from '../../shared/copy.js';
 import { Forwarder } from './forwarder.js';
 import { Office } from './office.js';
 import { forget, signIn, type Credentials } from './session.js';
@@ -15,10 +15,10 @@ const DEFAULT_PORT = 4600;
 /** How often the office is asked which servers the workers run. It looks itself every 4 seconds. */
 const POLL_MS = 2000;
 
-const HELP = `agent-office tunnel: open every worker's web server on this computer, by itself
+const HELP = `${CLI} tunnel: open every worker's web server on this computer, by itself
 
 Usage:
-  agent-office tunnel [where] [options] [-- <ssh options>]
+  ${CLI} tunnel [where] [options] [-- <ssh options>]
 
 Run it on your own computer and leave it running. Whenever a worker in the office
 starts a web server (npm run dev, a preview build), the same port opens here:
@@ -49,7 +49,7 @@ Options:
       --insecure          Accept a certificate nobody vouches for (--self-signed)
   -h, --help              Show this help
 
-Everything after -- goes to ssh, e.g.  agent-office tunnel office@host -- -i ~/.ssh/office
+Everything after -- goes to ssh, e.g.  ${CLI} tunnel office@host -- -i ~/.ssh/office
 `;
 
 interface Options {
@@ -133,7 +133,7 @@ export async function tunnelCommand(argv: string[]): Promise<number> {
     parsed = parseArgs(argv);
     if (parsed) url = officeUrl(parsed.where || `http://localhost:${DEFAULT_PORT}`);
   } catch (err) {
-    console.error(`agent-office tunnel: ${(err as Error).message} (see agent-office tunnel --help)`);
+    console.error(`kipdeck tunnel: ${(err as Error).message} (see kipdeck tunnel --help)`);
     return 2;
   }
   if (!parsed) {
@@ -142,7 +142,7 @@ export async function tunnelCommand(argv: string[]): Promise<number> {
   }
   const o = parsed;
   const fail = (why: string) => {
-    console.error(`agent-office tunnel: ${why}`);
+    console.error(`kipdeck tunnel: ${why}`);
     return 1;
   };
 
@@ -184,7 +184,7 @@ export async function tunnelCommand(argv: string[]): Promise<number> {
   }
 
   async function run(): Promise<number> {
-    say(`\n  agent-office tunnel\n`);
+    say(`\n  kipdeck tunnel\n`);
     if (overSsh) {
       // A tunnel that's already open (this command running twice, or the one from 👥 Invite teammates) will do.
       if (await office.up()) say(`  the office is already open at ${office.origin}: using that tunnel`);
@@ -198,7 +198,7 @@ export async function tunnelCommand(argv: string[]): Promise<number> {
         if (err) return fail(`${err}. Is localhost:${office.port} free on this computer (--port picks another), and is your SSH key invited to the office?`);
       }
     } else if (!(await office.up())) {
-      return fail(`no office answers at ${office.origin}. Open the tunnel to it first, or give its SSH address: agent-office tunnel office@<address>`);
+      return fail(`no office answers at ${office.origin}. Open the tunnel to it first, or give its SSH address: kipdeck tunnel office@<address>`);
     }
     say(`  the office: ${office.origin}${overSsh ? ` (over SSH to ${o.where})` : ''}`);
     if (ssh && o.open) openBrowser(office.origin);

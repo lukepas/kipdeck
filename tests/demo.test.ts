@@ -68,18 +68,21 @@ test('everything the demo writes says it is demo data', () => {
   assert.match(demoNote({ readOnly: false, project: 'acme-shop' }).text, /Scripted agents/);
   assert.equal(demoNote({ readOnly: true, project: 'acme-shop' }, true).command, 'npx kipdeck --demo');
   assert.equal(demoNote({ readOnly: false, project: 'acme-shop' }, true).command, 'npx kipdeck');
-  // Until kipdeck is on npm, nothing shows an npx command that 404s, or a private repository to clone.
-  if (!ON_NPM) assert.doesNotMatch(READ_ONLY_REFUSAL, /npx|github\.com/);
+  // Until kipdeck is on npm, nothing shows an npx command that 404s; the public repository is the way in.
+  if (!ON_NPM) {
+    assert.doesNotMatch(READ_ONLY_REFUSAL, /npx|private beta/);
+    assert.match(READ_ONLY_REFUSAL, /github\.com\/zbagdzevicius\/kipdeck/);
+  }
   for (const readOnly of [true, false]) {
     const note = demoNote({ readOnly, project: 'acme-shop' }, false);
     assert.doesNotMatch(note.command ?? '', /npx|git clone|agent-office/);
     assert.match(note.text, /not on npm yet/i);
   }
-  // A visitor to the hosted demo is asked to get access; the clone's own demo names the kipdeck binary.
+  // A visitor to the hosted demo is sent to the run-from-source steps; the clone's own demo names the kipdeck binary.
   assert.equal(demoNote({ readOnly: true, project: 'acme-shop' }, false).command, undefined);
-  assert.match(demoNote({ readOnly: true, project: 'acme-shop' }, false).lead, /ask for access/);
-  // The ask goes somewhere: the landing page's design-partner section.
-  assert.match(demoNote({ readOnly: true, project: 'acme-shop' }, false).href ?? '', /^https:\/\/kipdeck\.com\/#teams$/);
+  assert.match(demoNote({ readOnly: true, project: 'acme-shop' }, false).lead, /from source/);
+  assert.doesNotMatch(demoNote({ readOnly: true, project: 'acme-shop' }, false).text, /private beta|ask the team/);
+  assert.equal(demoNote({ readOnly: true, project: 'acme-shop' }, false).href, 'https://github.com/zbagdzevicius/kipdeck#from-source');
   assert.equal(demoNote({ readOnly: false, project: 'acme-shop' }, false).command, 'kipdeck');
 });
 

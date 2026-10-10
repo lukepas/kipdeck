@@ -1,6 +1,9 @@
 # Install Kipdeck (the inbox for your AI coding agents) from npm on Windows and start it:
 #
-#   irm <this repository's raw install.ps1 URL> | iex
+#   irm https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/install.ps1 | iex
+#
+# Kipdeck is not on npm yet. Until it is, the registry install fails and this prints the steps that
+# run it from source instead (or set KIPDECK_TARBALL to a package built with `npm pack`).
 #
 # It installs the npm package `kipdeck` (built ahead: nothing is compiled on your machine) with
 # `npm install --global`, which puts a `kipdeck` command on your PATH. Run it again to update.
@@ -42,7 +45,22 @@ if ($env:KIPDECK_TARBALL) {
 
 Write-Host "==> Installing $spec" -ForegroundColor Cyan
 npm install --global --no-audit --no-fund --loglevel=error $spec
-if ($LASTEXITCODE -ne 0) { Fail "npm couldn't install $spec (see above)" }
+if ($LASTEXITCODE -ne 0) {
+  if (-not $env:KIPDECK_TARBALL) {
+    npm view kipdeck version *> $null
+    if ($LASTEXITCODE -ne 0) {
+      Write-Host ''
+      Write-Host 'Kipdeck is not on npm yet. Run it from source (Node.js 20+ and git):'
+      Write-Host ''
+      Write-Host '  git clone https://github.com/zbagdzevicius/kipdeck'
+      Write-Host '  cd kipdeck; npm install; npm run build; npm link'
+      Write-Host '  cd ~\code\your-project; kipdeck'
+      Write-Host ''
+      Fail 'kipdeck is not on npm yet: run it from source with the steps above'
+    }
+  }
+  Fail "npm couldn't install $spec (see above)"
+}
 
 if ($env:KIPDECK_INSTALL_ONLY -eq '1') {
   Write-Host '==> Installed. Start it in a project folder with: kipdeck' -ForegroundColor Cyan

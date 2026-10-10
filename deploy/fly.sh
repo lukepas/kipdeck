@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy your own Agent Office to Fly.io with one command, using flyctl.
+# Deploy your own Kipdeck to Fly.io with one command, using flyctl.
 #
 #   deploy/fly.sh up        create the app, build and start the office, open it
 #   deploy/fly.sh open      tunnel to the office and open it in your browser
@@ -40,7 +40,7 @@ LOCAL_PORT_SET=0
 
 usage() {
   cat <<'EOF'
-Agent Office on Fly.io — one command up, one command down.
+Kipdeck on Fly.io - one command up, one command down.
 
 Usage: deploy/fly.sh <command> [options]
 
@@ -555,7 +555,7 @@ cmd_up() {
   chmod 700 "$STATE_DIR"
   resolve_settings
 
-  say "Agent Office \"$NAME\" on Fly.io ($("$FLYCTL" auth whoami 2>/dev/null </dev/null | tail -n 1))"
+  say "Kipdeck \"$NAME\" on Fly.io ($("$FLYCTL" auth whoami 2>/dev/null </dev/null | tail -n 1))"
   echo "   app:      this checkout, built with $DOCKERFILE, as the Fly app $APP ($ORG, $REGION)"
   echo "   machine:  $VM_SIZE with $((VM_MEMORY / 1024)) GB (change it with: deploy/fly.sh resize <size>)"
   echo "   data:     a volume on /data: accounts, floors, projects (~/workspace), sign-ins, team keys"

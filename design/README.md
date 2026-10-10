@@ -1300,7 +1300,7 @@ What an investor or a first user sees beyond the inbox is now as calm as the inb
 
 - Nothing is posted, sent or published. The launch kit (`launch/kipdeck/`) lists the gates first: employer clearance, the trademark search, `npm publish`, a public repository, the hosted demo, the landing page with a waitlist endpoint, and the real-agent video.
 - The waitlist needs an endpoint the founder runs (docs/landing.md); without one the form says nothing was sent.
-- `DOCS_URL` (Help's link) is https://kipdeck.com (`src/shared/copy.ts`). The domain has no site yet: it sits on the registrar's suspension nameservers until the registrant verification is done.
+- `DOCS_URL` (Help's link) is the README in the public repository, https://github.com/zbagdzevicius/kipdeck#readme (`src/shared/copy.ts`). kipdeck.com serves the landing page, which is not the docs.
 - The Numbers in the demo are thin by design: the demo writes no backdated history, so deck numbers have to come from real use.
 - The Monid USD 7.7M figure had no primary source and is dropped (`launch/kipdeck/README.md`).
 - The provider picker in Settings > Agents still has two bridge-era notes (office usage and the cost panel) from `ui/provider.ts`, which the Deploy sheet shares.

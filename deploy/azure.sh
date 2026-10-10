@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy your own Agent Office to Azure with one command, using only the Azure CLI.
+# Deploy your own Kipdeck to Azure with one command, using only the Azure CLI.
 #
 #   deploy/azure.sh up        create the VM, install and start the office, open it
 #   deploy/azure.sh open      tunnel to the office and open it in your browser
@@ -43,7 +43,7 @@ SSH_RULE="agent-office-ssh" # the network security group's one inbound rule
 
 usage() {
   cat <<'EOF'
-Agent Office on Azure — one command up, one command down.
+Kipdeck on Azure - one command up, one command down.
 
 Usage: deploy/azure.sh <command> [options]
 
@@ -76,7 +76,7 @@ Commands
   logs               Follow the office's logs
   resize <size>      Change the VM size, e.g. Standard_D8as_v5 (stops it for a few minutes; the
                      address stays the same). `up --size <size>` does this too.
-  update             Install the latest agent-office on the VM and restart it
+  update             Install the latest Kipdeck on the VM and restart it
   reset-password     Forget the password and show a new one once in your browser
 
 Options
@@ -95,7 +95,7 @@ Options
   --project <owner/repo>    Also clone this GitHub repo as the office's first floor. Without it
                             the office opens on its elevator, which lists every repo your GitHub
                             token can see: pick one there. Projects go in ~/workspace on the VM
-  --app-repo <url>          agent-office repo to install (default: this checkout's GitHub origin)
+  --app-repo <url>          Kipdeck repo to install (default: this checkout's GitHub origin)
   --app-ref <ref>           Branch or tag to install (default: main)
   --github-token <token>    GitHub token for private repos + the issue/PR boards
                             (default: your local `gh auth token`)
@@ -478,7 +478,7 @@ set_ssh_sources() {
     azc network nsg rule create -g "$RG" --nsg-name "$NSG" -n "$SSH_RULE" --priority 1000 \
       --direction Inbound --access Allow --protocol Tcp --source-address-prefixes "$@" --source-port-ranges '*' \
       --destination-address-prefixes '*' --destination-port-ranges 22 \
-      --description "Agent Office: SSH from allowed IPs only" -o none
+      --description "Kipdeck: SSH from allowed IPs only" -o none
   fi
 }
 
@@ -664,7 +664,7 @@ cmd_up() {
   # What to install. The office starts with no project (never the checkout this script is in):
   # everyone picks theirs in its elevator, unless --project names a first one.
   if [[ -z "$APP_REPO" ]]; then
-    APP_REPO=$(github_https "$(git -C "$SCRIPT_DIR/.." remote get-url origin 2>/dev/null || true)" || echo "https://github.com/AgentSystemLabs/agent-office")
+    APP_REPO=$(github_https "$(git -C "$SCRIPT_DIR/.." remote get-url origin 2>/dev/null || true)" || echo "https://github.com/zbagdzevicius/kipdeck")
   fi
   local project_repo=""
   if [[ -n "$PROJECT" ]]; then
@@ -717,7 +717,7 @@ cmd_up() {
     fi
   fi
 
-  say "Agent Office \"$NAME\" in $LOCATION (subscription $SUB_NAME)"
+  say "Kipdeck \"$NAME\" in $LOCATION (subscription $SUB_NAME)"
   echo "   machine:  $machine"
   echo "   app:      $APP_REPO @ $APP_REF"
   echo "   projects: ${project_repo:+$project_repo, then }pick them in the office's elevator (cloned into ~/workspace)"
@@ -805,7 +805,7 @@ cmd_up() {
 
   [[ -f "$CLAIM_FILE" ]] || (umask 077 && random_token >"$CLAIM_FILE")
 
-  say "Provisioning (Node, git, gh, Claude Code, agent-office) — a few minutes on first run"
+  say "Provisioning (Node, git, gh, Claude Code, Kipdeck) — a few minutes on first run"
   local git_name git_email
   git_name=$(git config user.name 2>/dev/null || true)
   git_email=$(git config user.email 2>/dev/null || true)
@@ -1081,7 +1081,7 @@ cmd_resume() {
 cmd_update() {
   preflight
   require_vm
-  say "Updating agent-office on $IP"
+  say "Updating Kipdeck on $IP"
   remote "set -e
     ref=\$(git -C /opt/agent-office rev-parse --abbrev-ref HEAD)
     git -C /opt/agent-office fetch --depth 1 origin \"\$ref\" -q

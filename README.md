@@ -72,7 +72,7 @@ npx kipdeck --no-open                   # print the sign-in link instead of open
 npx kipdeck --telemetry                 # share anonymous usage numbers (off by default)
 ```
 
-To have a `kipdeck` command instead: `npm install -g kipdeck`, or [`install.sh`](install.sh) (macOS and Linux) and [`install.ps1`](install.ps1) (Windows), which install the same package. Every option is in [docs/configuration.md](docs/configuration.md); choosing models and providers per agent is in [docs/agents.md](docs/agents.md).
+Once it is on npm, to have a `kipdeck` command instead: `npm install -g kipdeck`, or [`install.sh`](install.sh) (macOS and Linux) and [`install.ps1`](install.ps1) (Windows), which install the same package. Until then those print the from-source steps above, and `npm link` gives you the same command. Every option is in [docs/configuration.md](docs/configuration.md); choosing models and providers per agent is in [docs/agents.md](docs/agents.md).
 
 ## Attach an agent you already started
 

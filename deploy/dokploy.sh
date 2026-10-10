@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy your own Agent Office to a Dokploy server with one command, using Dokploy's API.
+# Deploy your own Kipdeck to a Dokploy server with one command, using Dokploy's API.
 #
 #   deploy/dokploy.sh up --url https://dokploy.example.com   create the office, build it, open it
 #   deploy/dokploy.sh open                                   tunnel to the office and open it
@@ -38,7 +38,7 @@ LOCAL_PORT_SET=0
 
 usage() {
   cat <<'EOF'
-Agent Office on Dokploy — one command up, one command down.
+Kipdeck on Dokploy - one command up, one command down.
 
 Usage: deploy/dokploy.sh <command> [options]
 
@@ -296,7 +296,7 @@ ensure_project() {
     PROJECT_ID="" ENVIRONMENT_ID="" APPLICATION_ID="" APP_NAME=""
   fi
   if [[ -z "$PROJECT_ID" ]]; then
-    out=$(api POST project.create "$(mkjson '({name: v[0], description: "Agent Office (deploy/dokploy.sh)"})' "$NAME")") ||
+    out=$(api POST project.create "$(mkjson '({name: v[0], description: "Kipdeck (deploy/dokploy.sh)"})' "$NAME")") ||
       die "couldn't create the Dokploy project"
     PROJECT_ID=$(json 'j.project.projectId' <<<"$out")
     ENVIRONMENT_ID=$(json 'j.environment.environmentId' <<<"$out")
@@ -311,7 +311,7 @@ ensure_project() {
   fi
   if [[ -z "$APPLICATION_ID" ]]; then
     [[ -z "$SERVER_PICK" ]] || SERVER_ID="$SERVER_PICK"
-    out=$(api POST application.create "$(mkjson '({name: "office", appName: v[0], description: "Agent Office (deploy/dokploy.sh)", environmentId: v[1], serverId: v[2] || null})' \
+    out=$(api POST application.create "$(mkjson '({name: "office", appName: v[0], description: "Kipdeck (deploy/dokploy.sh)", environmentId: v[1], serverId: v[2] || null})' \
       "$NAME" "$ENVIRONMENT_ID" "$SERVER_ID")") ||
       die "couldn't create the office's application$([[ -n "$SERVER_ID" ]] || echo " (on Dokploy Cloud, pick one of your servers with --server <name>)")"
     APPLICATION_ID=$(json 'j.applicationId' <<<"$out")
@@ -600,7 +600,7 @@ cmd_up() {
   fi
   [[ $NO_GH_TOKEN -eq 1 ]] && gh_token=""
 
-  say "Agent Office \"$NAME\" on Dokploy ($DOKPLOY_URL)"
+  say "Kipdeck \"$NAME\" on Dokploy ($DOKPLOY_URL)"
   echo "   app:      this checkout, uploaded for Dokploy to build with $DOCKERFILE"
   echo "   data:     a Docker volume on /data: accounts, floors, projects (~/workspace), sign-ins, team keys"
   echo "   access:   SSH tunnel only (the office is never exposed), on a port of the Dokploy server"

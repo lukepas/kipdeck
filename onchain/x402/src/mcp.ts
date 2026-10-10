@@ -19,7 +19,7 @@ export const TOOLS = [
   {
     name: 'office_price',
     title: 'What a task costs',
-    description: 'Says what the Agent Office charges to hire one of its coding agents for one task (testnet USDC over x402), on which networks, and for which repositories. A person approves every paid task before it starts.',
+    description: 'Says what the Kipdeck office charges to hire one of its coding agents for one task (testnet USDC over x402), on which networks, and for which repositories. A person approves every paid task before it starts.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     annotations: { readOnlyHint: true, openWorldHint: true },
   },
@@ -27,7 +27,7 @@ export const TOOLS = [
     name: 'hire_worker',
     title: 'Hire a coding agent for one task',
     description:
-      'Pays the Agent Office (x402, testnet USDC) to put one task on its queue: a GitHub issue of a repository it takes paid work on, or a prompt. The task waits for an office admin to approve it, then a worker opens a pull request. ' +
+      'Pays the Kipdeck office (x402, testnet USDC) to put one task on its queue: a GitHub issue of a repository it takes paid work on, or a prompt. The task waits for an office admin to approve it, then a worker opens a pull request. ' +
       'Without a payment in _meta["x402/payment"] and no payer key file configured, it answers with the payment the office asks for.',
     inputSchema: {
       type: 'object',
@@ -72,7 +72,7 @@ const text = (t: string, extra: Partial<ToolResult> = {}): ToolResult => ({ cont
 
 function officeUrl(io: McpIo): string {
   const url = io.env.X402_OFFICE_URL;
-  if (!url) throw new Error('X402_OFFICE_URL is not set: point it at the Agent Office, e.g. https://office.example.com');
+  if (!url) throw new Error('X402_OFFICE_URL is not set: point it at the Kipdeck office, e.g. https://office.example.com');
   return url.replace(/\/+$/, '');
 }
 
@@ -148,8 +148,8 @@ export async function handleMcp(msg: Rpc, io: McpIo): Promise<unknown> {
       return ok({
         protocolVersion: typeof asked === 'string' && MCP_VERSIONS.includes(asked) ? asked : MCP_VERSIONS[0],
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: 'agent-office-x402', title: 'Agent Office paid tasks', version: '0.2.0' },
-        instructions: 'Hire an Agent Office coding agent for one task with testnet USDC over x402: office_price says what one costs, hire_worker pays and queues one (an admin approves it), task_status reads out how it is going.',
+        serverInfo: { name: 'agent-office-x402', title: 'Kipdeck paid tasks', version: '0.2.0' },
+        instructions: 'Hire a Kipdeck coding agent for one task with testnet USDC over x402: office_price says what one costs, hire_worker pays and queues one (an admin approves it), task_status reads out how it is going.',
       });
     }
     case 'ping':

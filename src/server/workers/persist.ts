@@ -83,7 +83,7 @@ export function restoreWorkers(file: string, dir: string, workers: Map<string, W
       // one the office could have made will do (see savedWorktree). A worker with a bad one is left out.
       const worktree = s.worktree === undefined ? undefined : savedWorktree(dir, s.worktree);
       if (s.worktree !== undefined && !worktree) {
-        console.warn(`agent-office: leaving ${String(s.name ?? s.id)} out of ${file}: its worktree isn't one the office makes`);
+        console.warn(`kipdeck: leaving ${String(s.name ?? s.id)} out of ${file}: its worktree isn't one the office makes`);
         continue;
       }
       const tracker = restoreTracker(s.tracker);

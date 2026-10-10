@@ -1,4 +1,4 @@
-# Agent Office in a container, the way deploy/railway.sh runs it on Railway, deploy/fly.sh on Fly.io
+# Kipdeck in a container, the way deploy/railway.sh runs it on Railway, deploy/fly.sh on Fly.io
 # and deploy/dokploy.sh on Dokploy. Any Docker host works the same way: mount a volume at /data and
 # publish port 22 (or the port in AGENT_OFFICE_SSHD_PORT, which deploy/fly.sh sets to 2222).
 #

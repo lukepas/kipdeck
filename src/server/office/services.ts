@@ -90,7 +90,7 @@ export function createServices(ctx: Ctx): BuildingServices {
   const webhook = new Webhook(cfg.dataDir, (workerId) => (workerId && ctx.workerFloor(workerId)?.def.name) || ctx.officeName, (state) => ctx.broadcast({ t: 'notify', state }));
   if (cfg.webhook !== undefined) {
     const err = webhook.set(cfg.webhook, 'the command line');
-    if (err) console.error(`agent-office: --webhook: ${err}`);
+    if (err) console.error(`kipdeck: --webhook: ${err}`);
   }
 
   // The machine's CPU and memory, for the monitor on the wall and a warning before hiring, and the

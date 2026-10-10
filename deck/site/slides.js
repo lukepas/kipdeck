@@ -598,7 +598,9 @@
 
   /* ---------- 13 TEAM: three cards reveal, then the commit graph ---------- */
   B.s13 = function (s, gsap) {
-    var data = [['30', 11], ['1', 14], ['2', 64], ['3', 32], ['4', 118], ['5', 92], ['6', 131], ['7', 71]];
+    // Our commits on main per day (author date, Vilnius), 30 Sep-9 Oct: 570 in all, main at 9a30f41f.
+    // Left out: 2 Dependabot bumps, the 2 upstream snapshot imports and the 11 re-committed upstream PRs.
+    var data = [['30', 10], ['1', 5], ['2', 62], ['3', 32], ['4', 118], ['5', 92], ['6', 131], ['7', 94], ['8', 18], ['9', 8]];
     var box = A(s, 'commits'); box.innerHTML = '';
     var bars = data.map(function (d, i) {
       var b = document.createElement('div'); b.className = 'b';

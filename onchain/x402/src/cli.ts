@@ -1,4 +1,4 @@
-// x402-office: hire an Agent Office worker for a task from a shell, check on it, and run a facilitator
+// x402-office: hire a Kipdeck worker for a task from a shell, check on it, and run a facilitator
 // or the MCP server. The payer's key is read from the key file X402_PAYER_KEY_FILE names, and nothing
 // of it is ever printed.
 

@@ -2,11 +2,14 @@
 # Install Kipdeck (the inbox for your AI coding agents) from npm and start it, for anyone who would
 # rather have a `kipdeck` command than type `npx kipdeck` each time:
 #
-#   curl -fsSL <this repository's raw install.sh URL> | bash
+#   curl -fsSL https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/install.sh | bash
 #
 # Anything after `bash -s --` goes to Kipdeck, e.g. a port:
 #
-#   curl -fsSL <...>/install.sh | bash -s -- --port 4700
+#   curl -fsSL https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/install.sh | bash -s -- --port 4700
+#
+# Kipdeck is not on npm yet. Until it is, the registry install fails and this prints the steps that
+# run it from source instead (or pass KIPDECK_TARBALL, a package built with `npm pack`).
 #
 # It installs the npm package `kipdeck` (built ahead: nothing is compiled on your machine) into
 # ~/.local/share/kipdeck and links a `kipdeck` command into ~/.local/bin. Run it again to update.
@@ -52,6 +55,19 @@ check_requirements() {
   fi
 }
 
+# What to run while the package is not on the registry: the README's "From source" steps.
+from_source() {
+  cat >&2 <<'EOF'
+
+Kipdeck is not on npm yet. Run it from source (Node.js 20+ and git):
+
+  git clone https://github.com/zbagdzevicius/kipdeck
+  cd kipdeck && npm install && npm run build && npm link
+  cd ~/code/your-project && kipdeck
+
+EOF
+}
+
 main() {
   check_requirements
   local spec="$PACKAGE@${KIPDECK_VERSION:-latest}"
@@ -61,8 +77,13 @@ main() {
   fi
   step "Installing $spec into $PREFIX"
   mkdir -p "$PREFIX"
-  npm install --global --prefix "$PREFIX" --no-audit --no-fund --loglevel=error "$spec" >&2 ||
+  if ! npm install --global --prefix "$PREFIX" --no-audit --no-fund --loglevel=error "$spec" >&2; then
+    if [ -z "${KIPDECK_TARBALL:-}" ] && ! npm view "$PACKAGE" version >/dev/null 2>&1; then
+      from_source
+      die "$PACKAGE is not on npm yet: run it from source with the steps above"
+    fi
     die "npm couldn't install $spec (see above)"
+  fi
   local entry="$PREFIX/bin/kipdeck"
   [ -x "$entry" ] || die "the package didn't put a kipdeck command in $PREFIX/bin"
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy your own Agent Office to AWS with one command, using only the AWS CLI.
+# Deploy your own Kipdeck to AWS with one command, using only the AWS CLI.
 #
 #   deploy/aws.sh up        create the machine, install and start the office, open it
 #   deploy/aws.sh open      tunnel to the office and open it in your browser
@@ -38,7 +38,7 @@ TAILSCALE_ADMIN="https://login.tailscale.com/admin"
 
 usage() {
   cat <<'EOF'
-Agent Office on AWS — one command up, one command down.
+Kipdeck on AWS - one command up, one command down.
 
 Usage: deploy/aws.sh <command> [options]
 
@@ -73,7 +73,7 @@ Commands
   logs               Follow the office's logs
   resize <type>      Change the machine size, e.g. t3.2xlarge (stops it for ~1-2 minutes;
                      the address stays the same). `up --instance-type <type>` does this too.
-  update             Install the latest agent-office on the machine and restart it
+  update             Install the latest Kipdeck on the machine and restart it
   reset-password     Forget the password and show a new one once in your browser
 
 Options
@@ -88,7 +88,7 @@ Options
   --project <owner/repo>    Also clone this GitHub repo as the office's first floor. Without it
                             the office opens on its elevator, which lists every repo your GitHub
                             token can see: pick one there. Projects go in ~/workspace on the box
-  --app-repo <url>          agent-office repo to install (default: this checkout's GitHub origin)
+  --app-repo <url>          Kipdeck repo to install (default: this checkout's GitHub origin)
   --app-ref <ref>           Branch or tag to install (default: main)
   --github-token <token>    GitHub token for private repos + the issue/PR boards
                             (default: your local `gh auth token`)
@@ -476,7 +476,7 @@ cmd_up() {
   # What to install. The office starts with no project (never the checkout this script is in):
   # everyone picks theirs in its elevator, unless --project names a first one.
   if [[ -z "$APP_REPO" ]]; then
-    APP_REPO=$(github_https "$(git -C "$SCRIPT_DIR/.." remote get-url origin 2>/dev/null || true)" || echo "https://github.com/AgentSystemLabs/agent-office")
+    APP_REPO=$(github_https "$(git -C "$SCRIPT_DIR/.." remote get-url origin 2>/dev/null || true)" || echo "https://github.com/zbagdzevicius/kipdeck")
   fi
   local project_repo=""
   if [[ -n "$PROJECT" ]]; then
@@ -495,7 +495,7 @@ cmd_up() {
   local a
   for a in "${EXTRA_ALLOW[@]+"${EXTRA_ALLOW[@]}"}"; do cidrs+=("$(to_cidr "$a")"); done
 
-  say "Agent Office \"$NAME\" in $AWS_REGION (account $ACCOUNT)"
+  say "Kipdeck \"$NAME\" in $AWS_REGION (account $ACCOUNT)"
   echo "   machine:  $INSTANCE_TYPE, ${DISK_GB} GiB disk, Ubuntu 24.04"
   echo "   app:      $APP_REPO @ $APP_REF"
   echo "   projects: ${project_repo:+$project_repo, then }pick them in the office's elevator (cloned into ~/workspace)"
@@ -542,7 +542,7 @@ cmd_up() {
   sg=$(find_sg)
   if [[ -z "$sg" ]]; then
     sg=$(aws_ ec2 create-security-group --group-name "$RESOURCE" --vpc-id "$vpc" \
-      --description "Agent Office $NAME - SSH from allowed IPs only" \
+      --description "Kipdeck $NAME - SSH from allowed IPs only" \
       --tag-specifications "ResourceType=security-group,Tags=[{Key=agent-office,Value=$NAME},{Key=Name,Value=$RESOURCE}]" \
       --query GroupId)
     ok "Security group $sg"
@@ -592,7 +592,7 @@ cmd_up() {
 
   [[ -f "$CLAIM_FILE" ]] || (umask 077 && random_token >"$CLAIM_FILE")
 
-  say "Provisioning (Node, git, gh, Claude Code, agent-office) — a few minutes on first run"
+  say "Provisioning (Node, git, gh, Claude Code, Kipdeck) — a few minutes on first run"
   local git_name git_email
   git_name=$(git config user.name 2>/dev/null || true)
   git_email=$(git config user.email 2>/dev/null || true)
@@ -855,7 +855,7 @@ cmd_resume() {
 cmd_update() {
   preflight
   require_instance
-  say "Updating agent-office on $IP"
+  say "Updating Kipdeck on $IP"
   remote "set -e
     ref=\$(git -C /opt/agent-office rev-parse --abbrev-ref HEAD)
     git -C /opt/agent-office fetch --depth 1 origin \"\$ref\" -q

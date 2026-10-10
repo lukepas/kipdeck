@@ -196,7 +196,7 @@ export class MergeProofs {
 
   /** Pull request `n` merged on `floor` (Floor.merged): owe an attestation if it's the office's own, or reverts one. */
   merged(floor: ProofFloor, n: number) {
-    void this.mergedNow(floor, n).catch((err) => console.error(`agent-office: proof of merge for PR #${n}: ${(err as Error).message}`));
+    void this.mergedNow(floor, n).catch((err) => console.error(`kipdeck: proof of merge for PR #${n}: ${(err as Error).message}`));
   }
 
   private async mergedNow(floor: ProofFloor, n: number) {

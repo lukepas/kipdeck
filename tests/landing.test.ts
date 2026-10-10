@@ -38,10 +38,10 @@ async function built(env: Record<string, string>): Promise<Served> {
   return { dir, url, html: readFileSync(path.join(dir, 'index.html'), 'utf8'), close: () => server.close() };
 }
 
-// Most tests read the page as it will be once its source is public (the clone command, the
-// terminal, the Source link); `closed` is the default build while the repository is private.
-const main = await built({ KIPDECK_REPO_PUBLIC: '1' });
-const closed = await built({});
+// The repository is public, so the default build (no settings) links it: the clone command, the
+// terminal, the Source link. `closed` is a build for a brand whose repository is private.
+const main = await built({});
+const closed = await built({ KIPDECK_REPO_PUBLIC: '0' });
 const withEndpoint = await built({ KIPDECK_WAITLIST_URL: 'https://wait.example.eu/api/join' });
 
 let browser: Browser | undefined;
@@ -184,13 +184,27 @@ test('while the repository is private the page points nowhere a visitor cannot f
   assert.match(cta, /<a class="btn ghost" data-link="partner-hero" href="mailto:hello@kipdeck\.com\?subject=Design%20partner/);
   assert.doesNotMatch(cta, /data-link="demo"/);
   // npx on the registry brings the command back without the source links; a hosted demo keeps its button.
-  const npm = buildPage(main.html, { KIPDECK_NPM_PUBLISHED: '1' });
+  const npm = buildPage(main.html, { KIPDECK_NPM_PUBLISHED: '1', KIPDECK_REPO_PUBLIC: '0' });
   assert.match(npm, /data-copy="npx kipdeck --demo"/);
   assert.doesNotMatch(npm, /data-link="repo"|codeRepository/);
   assert.match(buildPage(main.html, { KIPDECK_DEMO_URL: 'https://demo.example.eu/' }), /data-link="demo" href="https:\/\/demo\.example\.eu\/" rel="noopener">Try the demo</);
-  // Public (by flag or by KIPDECK_REPO_URL), everything comes back.
-  assert.match(main.html, /data-link="repo"/);
+  // The default build (the repository is public) links it everywhere.
+  assert.match(main.html, /data-link="repo" href="https:\/\/github\.com\/zbagdzevicius\/kipdeck"/);
   assert.match(main.html, /"codeRepository":"https:\/\/github\.com\/zbagdzevicius\/kipdeck"/);
+  assert.match(main.html, /data-copy="git clone https:\/\/github\.com\/zbagdzevicius\/kipdeck kipdeck &amp;&amp; cd kipdeck &amp;&amp;/);
+  // KIPDECK_REPO_URL counts as public even beside KIPDECK_REPO_PUBLIC=0.
+  const moved = buildPage(main.html, { KIPDECK_REPO_PUBLIC: '0', KIPDECK_REPO_URL: 'https://github.com/example/agent-inbox' });
+  assert.match(moved, /data-link="repo" href="https:\/\/github\.com\/example\/agent-inbox"/);
+});
+
+test('the Labs command line never shows an npx command that npm does not have yet', () => {
+  const labsOf = (html: string) => (/<div class="cmd labs-cmd"[\s\S]*?<\/div>/.exec(html) ?? [''])[0];
+  const labs = labsOf(main.html);
+  assert.match(labs, /<span data-unpublished>npm start -- --labs<\/span>/);
+  assert.match(labs, /<span data-published hidden>npx kipdeck --labs<\/span>/);
+  const published = labsOf(buildPage(main.html, { KIPDECK_NPM_PUBLISHED: '1' }));
+  assert.doesNotMatch(published, /npm start|data-unpublished|data-published hidden/);
+  assert.match(published, /<span data-published>npx kipdeck --labs<\/span> <span class="flags">/);
 });
 
 test('until npm is published the page says so and shows the from-source command; published, npx takes its place', () => {

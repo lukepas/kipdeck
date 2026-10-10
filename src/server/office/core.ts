@@ -36,7 +36,7 @@ export function createCore(ctx: Ctx, cfg: Config, publicDir: string): Core {
   const building = new Building(cfg.dataDir, cfg.projectsDir);
   if (cfg.projects) {
     const err = building.setProjectsDir(cfg.projects, 'the command line');
-    if (err) console.error(`agent-office: --projects: ${err}`);
+    if (err) console.error(`kipdeck: --projects: ${err}`);
   }
   const floors = new Map<string, Floor>();
   // The parts beyond the inbox: on until an admin switches one off, or held on or off by the command line.

@@ -124,3 +124,9 @@ test(`the bridge's world speaks calmly: no exclamation marks, no war words, no e
     assert.ok(/^[\x20-\x7e]*$/.test(w), `not plain ASCII: ${JSON.stringify(w)}`);
   }
 });
+
+test('Help\'s "Read the docs" opens the docs (the README in the public repository), not the marketing page', async () => {
+  const { DOCS_URL, REPO_URL } = await import('../src/shared/copy.ts');
+  assert.equal(REPO_URL, 'https://github.com/zbagdzevicius/kipdeck');
+  assert.equal(DOCS_URL, `${REPO_URL}#readme`);
+});
