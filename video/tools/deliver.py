@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """Build the delivery set in out/final from the rendered films, and check it.
 
-Expects the three finals rendered first (see README, "Video"):
+Expects the two finals rendered first (see README, "Video"):
   out/final/kipdeck-30s-16x9.mp4   node render.mjs --out out/final/kipdeck-30s-16x9.mp4
   out/final/kipdeck-30s-9x16.mp4   node render.mjs --format 9x16 --out ...
-  out/final/kipdeck-30s-1x1.mp4    node render.mjs --format 1x1 --out ...
+
+The 1:1 cut is not delivered: nothing (the landing, the launch kits, the posts)
+uses it. render.mjs still renders it with --format 1x1 if a square cut is ever
+needed again.
 
 Then writes:
   kipdeck-poster-<format>.png      the poster frame (POSTER_T) in each format
@@ -34,7 +37,8 @@ import sys
 from verify import ROOT, loudness, probe, sh, tool
 
 FINAL = os.path.join(ROOT, "out", "final")
-FORMATS = {"16x9": (1920, 1080), "9x16": (1080, 1920), "1x1": (1080, 1080)}
+# The delivered formats. 1x1 is left out on purpose (see the docstring).
+FORMATS = {"16x9": (1920, 1080), "9x16": (1080, 1920)}
 FPS, DURATION = 60, 30.0
 # The landing's poster frame (site/landing/public/media/poster-*.webp): the
 # overload, 64 agents smearing into streaks. It carries no brand, so a rename

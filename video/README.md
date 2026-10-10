@@ -10,17 +10,17 @@ The delivery set lives in `out/final/` (git-ignored, so it is rebuilt from sourc
 |------|------------|
 | `kipdeck-30s-16x9.mp4` | 1920x1080, 60 fps, 30.000 s, H.264 High + AAC 320k, -14 LUFS |
 | `kipdeck-30s-9x16.mp4` | 1080x1920, 60 fps. Its own 4x14 layout that respects the feed's safe areas, not a crop |
-| `kipdeck-30s-1x1.mp4` | 1080x1080, 60 fps. The 16:9 grid at a smaller unit, with the colliding modules re-placed |
 | `kipdeck-poster-<format>.png` | The poster frame at 5.2 s, the overload (`POSTER_T` in `tools/deliver.py`), the frame the landing's posters use |
 | `kipdeck-teaser-6s.webm`, `.gif` | The merge drop, 12.0-18.0 s, muted and looping (the seam is a cut on the downbeat) |
 | `CREDITS.md` | Fonts and their licences, the upstream project, the tools (copied from `assets/CREDITS.md`) |
+
+There is no 1:1 film in the delivery set. Nothing a person sees uses one (the landing serves the 16:9 and 9:16 cuts, and the launch kits and posts use those or the demo cut in `launch/video/`), so `tools/deliver.py` no longer expects, checks or makes a poster for it. The renderer still draws 1:1 (`--format 1x1`, `npm run render:square`, see the 1:1 paragraph under "Design system"); render it and look at every frame before anyone uses it, since it has not been reviewed since the rename.
 
 To rebuild it (about 15 minutes per film on an M-series Mac):
 
 ```sh
 node render.mjs --format 16x9 --out out/final/kipdeck-30s-16x9.mp4
 node render.mjs --format 9x16 --out out/final/kipdeck-30s-9x16.mp4
-node render.mjs --format 1x1  --out out/final/kipdeck-30s-1x1.mp4
 python3 tools/deliver.py      # posters, teaser, then checks every film
 python3 tools/deliver.py --web v2   # the landing's copies in site/landing/public/media
 ```
@@ -38,7 +38,7 @@ npm run preview            # whole film, 640x360 @ 30 fps, ~35 s -> out/kipdeck-
 npm run preview:vertical   # same in 9:16 (360x640)
 npm run render             # final 1920x1080 @ 60 fps, ~10 min -> out/kipdeck-16x9.mp4
 npm run render:vertical    # final 1080x1920 @ 60 fps
-npm run render:square      # final 1080x1080 @ 60 fps (preview:square for a quick look)
+npm run render:square      # 1080x1080 @ 60 fps, not delivered (preview:square for a quick look)
 npm run poster             # the end card's last frame as a PNG poster -> out/stills/16x9-29.500.png
 npm test                   # engine unit tests (easing, PRNG, decode, timeline, grid, word space)
 npm run audio              # re-synthesize the soundtrack and beatmap (see audio/)
