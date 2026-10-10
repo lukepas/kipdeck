@@ -13,7 +13,7 @@
 .hb-demo .demo-tag { flex: none; }
 a.demo-lead { padding-right: 6px; color: var(--text); text-decoration: underline; text-underline-offset: 2px; }
 a.demo-lead:hover { text-decoration-thickness: 2px; }
-/* Beside the search box only the command (or the hosted demo's ask for access) stays; the full note is the tooltip. */
+/* Beside the search box only the command (or the hosted demo's run-from-source link) stays; the full note is the tooltip. */
 /* On a desktop the pill keeps its natural width and the search box (flex: 0 1 340px) gives up the room. */
 @media (min-width: 1101px) { .hb-demo { flex: none; } }
 @media (max-width: 1600px) { .hb-demo .demo-text, .hb-demo span.demo-lead { display: none; } }

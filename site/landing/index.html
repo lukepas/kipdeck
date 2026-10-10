@@ -146,8 +146,8 @@
   <div class="wrap two-col">
     <div class="col-copy">
       <p class="label"><span class="num">02</span> Every vendor, one list</p>
-      <h2 id="funnel-h" class="display"><span class="beat">Five agent CLIs.</span> <span class="beat">Each on its own branch.</span> <span class="beat">One list, oldest wait first.</span></h2>
-      <p>Claude Code, Codex and Cursor CLI side by side, with OpenCode and Pi in beta. A vendor's own inbox only sees its own agents. Here every agent you run is in one list, ranked by who has waited on you longest.</p>
+      <h2 id="funnel-h" class="display"><span class="beat">Every agent CLI.</span> <span class="beat">Each on its own branch.</span> <span class="beat">One list, oldest wait first.</span></h2>
+      <p>Claude Code, Codex and Cursor CLI side by side, with OpenCode, Pi, Grok, Muse and DeepSeek Harness in beta. A vendor's own inbox only sees its own agents. Here every agent you run is in one list, ranked by who has waited on you longest.</p>
       <ul class="vendors mono" aria-label="Agent CLIs">
         <li><span class="sign">CC</span>Claude Code</li>
         <li><span class="sign">Cx</span>Codex</li>
@@ -457,7 +457,7 @@
     <p class="lede">On by default, compiled and tested. The inbox comes first, and the Deck is one click from it; each lab adds a view. An admin switches any of them off in Labs, or holds them on or off from the command line.</p>
     <div class="cmd labs-cmd" role="group" aria-label="Labs on the command line. Every lab is on by default. Press a flag to hold its lab off, and again to hold it on.">
       <span class="cmd-prompt" aria-hidden="true">$</span>
-      <code class="cmd-text">npx kipdeck --labs <span class="flags"><button class="flag" type="button" data-lab="bridge" aria-pressed="true">bridge</button>,<button class="flag" type="button" data-lab="ops" aria-pressed="true">ops</button>,<button class="flag" type="button" data-lab="boards" aria-pressed="true">boards</button>,<button class="flag" type="button" data-lab="voice" aria-pressed="true">voice</button>,<button class="flag" type="button" data-lab="meetings" aria-pressed="true">meetings</button></span></code>
+      <code class="cmd-text"><span data-unpublished>npm start -- --labs</span><span data-published hidden>npx {{pkg}} --labs</span> <span class="flags"><button class="flag" type="button" data-lab="bridge" aria-pressed="true">bridge</button>,<button class="flag" type="button" data-lab="ops" aria-pressed="true">ops</button>,<button class="flag" type="button" data-lab="boards" aria-pressed="true">boards</button>,<button class="flag" type="button" data-lab="voice" aria-pressed="true">voice</button>,<button class="flag" type="button" data-lab="meetings" aria-pressed="true">meetings</button></span></code>
     </div>
     <ul class="bento">
       <li class="tile tile-bridge on power" data-lab="bridge">

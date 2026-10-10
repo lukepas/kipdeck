@@ -2,7 +2,7 @@
   "name": "@agent-office/reputation",
   "version": "0.1.0",
   "private": true,
-  "description": "ERC-8004 agent identity and merge-based reputation on Base Sepolia for Agent Office workers: register each worker identity in the live Identity Registry, give feedback only for outcomes a person caused, read both back. Fallback AgentRegistry and ReputationLog contracts with the same signatures for local chains. Testnet only.",
+  "description": "ERC-8004 agent identity and merge-based reputation on Base Sepolia for Kipdeck workers: register each worker identity in the live Identity Registry, give feedback only for outcomes a person caused, read both back. Fallback AgentRegistry and ReputationLog contracts with the same signatures for local chains. Testnet only.",
   "type": "module",
   "license": "MIT",
   "main": "./dist/index.js",

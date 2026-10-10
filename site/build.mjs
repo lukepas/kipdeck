@@ -4,9 +4,10 @@
 //   KIPDECK_SITE_URL=https://kipdeck.com/ KIPDECK_WAITLIST_URL=https://... npm run build:site
 //   KIPDECK_BRAND=<id> npm run build:site           # another entry in site/landing/brand.ts
 //
-// While the brand's repository is private, build without KIPDECK_REPO_PUBLIC (the default): the page
-// then shows no clone command, terminal or Source link a visitor could not follow. Set it to 1 (or
-// set KIPDECK_REPO_URL) once the source is public.
+// The brand's repository (github.com/zbagdzevicius/kipdeck) is public, so a build with no settings
+// links it: the clone command, section 06's terminal, the Source and Docs links and the structured
+// data's codeRepository. For a brand whose repository is private, build with KIPDECK_REPO_PUBLIC=0:
+// the page then shows nothing a visitor could not follow.
 //
 // Each address must be https (a waitlist on http would send emails in the clear). Without
 // KIPDECK_WAITLIST_URL the Team waitlist form is not shown at all (the design-partner link, an
@@ -88,10 +89,10 @@ export function buildPage(html, given) {
     out = out.replaceAll('data-published hidden', 'data-published');
     out = out.replace(/data-copy="[^"]*" data-copy-published="([^"]*)"/g, 'data-copy="$1"');
   }
-  return withoutPrivateRepo(out, { open: Boolean(repo) || siteEnv(env, 'REPO_PUBLIC') === '1', npm: siteEnv(env, 'NPM_PUBLISHED') === '1', demo: Boolean(demo) });
+  return withoutPrivateRepo(out, { open: Boolean(repo) || siteEnv(env, 'REPO_PUBLIC') !== '0', npm: siteEnv(env, 'NPM_PUBLISHED') === '1', demo: Boolean(demo) });
 }
 
-/** While the brand's repository is private (no KIPDECK_REPO_URL and no KIPDECK_REPO_PUBLIC=1), a
+/** When the brand's repository is private (KIPDECK_REPO_PUBLIC=0 and no KIPDECK_REPO_URL), a
  *  visitor can neither clone it nor read its docs, so the page offers nothing that points there: the
  *  Source and Docs links and the structured data's repository go, and unless npx works the hero's
  *  command and section 06's terminal (the blocks between runnable markers) go too. Then the film is
@@ -205,5 +206,5 @@ export async function buildSite({ env = process.env, outDir = OUT, card = true }
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const { outDir, og } = await buildSite();
   console.log(`site: ${path.relative(ROOT, outDir)}/index.html (${og})`);
-  for (const name of ['SITE_URL', 'WAITLIST_URL', 'DEMO_URL', 'REPO_URL', 'REPO_PUBLIC', 'NPM_PUBLISHED']) if (!siteEnv(withSiteUrl(process.env), name)) console.log(`  KIPDECK_${name} is not set (see docs/landing.md)`);
+  for (const name of ['SITE_URL', 'WAITLIST_URL', 'DEMO_URL', 'NPM_PUBLISHED']) if (!siteEnv(withSiteUrl(process.env), name)) console.log(`  KIPDECK_${name} is not set (see docs/landing.md)`);
 }

@@ -98,7 +98,7 @@ export class Labs {
  */
 export function commandLineLabs(labs: { on: LabId[]; off: LabId[]; unknown: string[] }, chain: ChainFlags): { labs: LabId[]; labsOff: LabId[] } {
   if (labs.unknown.length) {
-    console.error(`agent-office: --labs: unknown lab ${labs.unknown.map((u) => JSON.stringify(u)).join(', ')} (boards, bridge, ops, meetings, voice, ambience, proof, all or none; a leading minus holds one off)`);
+    console.error(`kipdeck: --labs: unknown lab ${labs.unknown.map((u) => JSON.stringify(u)).join(', ')} (boards, bridge, ops, meetings, voice, ambience, proof, all or none; a leading minus holds one off)`);
     process.exit(2);
   }
   const on = new Set(labs.on);
@@ -106,7 +106,7 @@ export function commandLineLabs(labs: { on: LabId[]; off: LabId[]; unknown: stri
   const off = new Set(labs.off);
   const both = [...on].filter((id) => off.has(id));
   if (both.length) {
-    console.error(`agent-office: --labs: ${both.join(', ')} held both on and off (a chain flag such as --x402 holds proof on)`);
+    console.error(`kipdeck: --labs: ${both.join(', ')} held both on and off (a chain flag such as --x402 holds proof on)`);
     process.exit(2);
   }
   return { labs: [...on], labsOff: [...off] };

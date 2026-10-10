@@ -31,7 +31,7 @@ export function serviceTunnel(s: ServicesState, port: number, os: Os): string {
  * starts (`agent-office tunnel`, src/server/tunnel/). It reaches the office the way this page did.
  */
 export function autoTunnel(origin = location.origin): string {
-  return origin === 'http://localhost:4600' ? 'agent-office tunnel' : `agent-office tunnel ${origin}`;
+  return origin === 'http://localhost:4600' ? 'kipdeck tunnel' : `kipdeck tunnel ${origin}`;
 }
 
 /** Whether the office is likely on another machine than this browser, so its workers' ports aren't already here. */
@@ -99,8 +99,8 @@ export function openServices() {
             'Run this on your computer and leave it running. Every server a worker starts opens on the same port there (',
             h('code', {}, 'localhost:5173'),
             ' is the worker\'s), and closes when the worker stops it. It needs the ',
-            h('code', {}, 'agent-office'),
-            ' command on your computer: the install line in the README.',
+            h('code', {}, 'kipdeck'),
+            ' command on your computer: the From source steps in the README (npm link) set it up.',
           ),
           h('div.cmd', {}, h('pre', {}, autoTunnel()), copyButton('Copy', () => autoTunnel())),
         ),

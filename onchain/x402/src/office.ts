@@ -1,4 +1,4 @@
-// An Agent Office's paid task endpoint (src/server/x402/ in the office), from the outside: what a
+// A Kipdeck office's paid task endpoint (src/server/x402/ in the office), from the outside: what a
 // task costs, paying to put one on its queue (where it waits for an admin), and asking how it's going.
 
 import { payFetch, readRequired, type PayerOptions } from './payer.js';

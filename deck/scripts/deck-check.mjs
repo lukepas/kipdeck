@@ -40,6 +40,31 @@ const smallText = (all) => {
 };
 
 const { server, url } = await serve();
+
+/* The <head> as served, before any script runs: link previews (Slack, LinkedIn, iMessage, email) read
+   only this, so a {{token}} there is what people see. It must name the product and carry a share card
+   that exists in site/. */
+{
+  const raw = await (await fetch(url)).text();
+  const head = (/<head>([\s\S]*?)<\/head>/i.exec(raw) ?? [])[1] ?? '';
+  if (!head) fail('head: no <head> in index.html');
+  if (head.includes('{{')) fail('head: template token in <head>: ' + (head.match(/.*\{\{.*/g) ?? []).map((l) => l.trim()).join(' | '));
+  const meta = (attr, key) => (new RegExp(`<meta ${attr}="${key}" content="([^"]*)"`).exec(head) ?? [])[1] ?? '';
+  const title = (/<title>([^<]*)<\/title>/.exec(head) ?? [])[1] ?? '';
+  if (!/Kipdeck/.test(title)) fail('head: <title> does not name Kipdeck: ' + title);
+  for (const [attr, key] of [['name', 'description'], ['property', 'og:title'], ['property', 'og:description'], ['property', 'og:image'], ['name', 'twitter:card']]) {
+    if (!meta(attr, key)) fail(`head: no ${key}`);
+  }
+  const og = meta('property', 'og:image');
+  if (og && !/^https:\/\//.test(og)) fail('head: og:image must be absolute (most previews ignore a relative one): ' + og);
+  if (og) {
+    const local = new URL(new URL(og).pathname.replace(/^\//, ''), url);
+    const r = await fetch(local);
+    if (!r.ok) fail(`head: og:image ${new URL(og).pathname} is not in site/ (${r.status})`);
+  }
+  if (!fails.some((f) => f.startsWith('head'))) console.log('ok head: ' + title);
+}
+
 const browser = await chromium.launch();
 try {
   const ctx = await browser.newContext({ viewport: { width: 1920, height: 1080 } });

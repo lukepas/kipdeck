@@ -220,7 +220,7 @@ Voice and screen sharing need a secure context: use https (a reverse proxy,
 function takeValue(args: string[], i: number, flag: string): string {
   const v = args[i + 1];
   if (v === undefined || v.startsWith('--')) {
-    console.error(`agent-office: ${flag} needs a value`);
+    console.error(`kipdeck: ${flag} needs a value`);
     process.exit(2);
   }
   return v;
@@ -399,7 +399,7 @@ export function loadConfig(argv: string[]): Config {
       default: {
         const used = takeChainFlag(chain, argv, i);
         if (typeof used === 'string') {
-          console.error(`agent-office: ${used}`);
+          console.error(`kipdeck: ${used}`);
           process.exit(2);
         }
         if (used) {
@@ -407,7 +407,7 @@ export function loadConfig(argv: string[]): Config {
           break;
         }
         if (a.startsWith('-')) {
-          console.error(`agent-office: unknown option ${a}\n`);
+          console.error(`kipdeck: unknown option ${a}\n`);
           process.stderr.write(HELP);
           process.exit(2);
         }
@@ -417,12 +417,12 @@ export function loadConfig(argv: string[]): Config {
   }
 
   if (readOnly && !demo) {
-    console.error('agent-office: --read-only goes with --demo (the hosted demo)');
+    console.error('kipdeck: --read-only goes with --demo (the hosted demo)');
     process.exit(2);
   }
   // The demo never touches a project of yours: a throwaway home of its own unless one is given.
   if (demo && project) {
-    console.error('agent-office: --demo makes a throwaway project of its own: start it without a [dir]');
+    console.error('kipdeck: --demo makes a throwaway project of its own: start it without a [dir]');
     process.exit(2);
   }
   if (demo && !homeGiven) home = freshDemoHome();
@@ -431,30 +431,30 @@ export function loadConfig(argv: string[]): Config {
   const cwd = process.cwd();
   if (!project && !demo && !homeGiven && cwd !== home && existsSync(path.join(cwd, '.agent-office', 'config.json'))) project = cwd;
   if (project && !existsSync(project)) {
-    console.error(`agent-office: directory not found: ${project}`);
+    console.error(`kipdeck: directory not found: ${project}`);
     process.exit(2);
   }
   const dir = project || home;
   // New floors go next to the office's data when it has a home of its own, and never into a project.
   const projectsDir = project ? path.join(os.homedir(), 'agent-office') : home;
   if (!Number.isInteger(port) || port <= 0 || port > 65535) {
-    console.error('agent-office: invalid --port');
+    console.error('kipdeck: invalid --port');
     process.exit(2);
   }
   const budgetUsd = budget ? Number(budget.replace(/^\$/, '')) : undefined;
   if (budgetUsd !== undefined && !(budgetUsd > 0)) {
-    console.error('agent-office: --budget needs an amount in dollars, e.g. --budget 20');
+    console.error('kipdeck: --budget needs an amount in dollars, e.g. --budget 20');
     process.exit(2);
   }
   const workerLimit = maxWorkers ? parseWorkerLimit(maxWorkers) : undefined;
   if (maxWorkers && workerLimit === undefined) {
-    console.error(`agent-office: --max-workers needs a whole number from 1 to ${MAX_WORKER_LIMIT}, e.g. --max-workers 6`);
+    console.error(`kipdeck: --max-workers needs a whole number from 1 to ${MAX_WORKER_LIMIT}, e.g. --max-workers 6`);
     process.exit(2);
   }
 
   const badEnv = workerEnvAllow.find((n) => !validEnvPattern(n));
   if (badEnv) {
-    console.error(`agent-office: --worker-env takes variable names (a trailing * for a prefix), not "${badEnv}"`);
+    console.error(`kipdeck: --worker-env takes variable names (a trailing * for a prefix), not "${badEnv}"`);
     process.exit(2);
   }
 
@@ -462,7 +462,7 @@ export function loadConfig(argv: string[]): Config {
   // In a project, .agent-office is the checkout's: whatever the repository ships there isn't the office's.
   const unsafe = stateDirProblem(dir);
   if (unsafe) {
-    console.error(`agent-office: ${unsafe}`);
+    console.error(`kipdeck: ${unsafe}`);
     process.exit(2);
   }
   mkdirSync(dataDir, { recursive: true, mode: 0o700 });
@@ -472,7 +472,7 @@ export function loadConfig(argv: string[]): Config {
   // A config.json the repository ships would carry a password and session secret someone else knows.
   const shipped = existsSync(cfgPath) ? untrustedState(cfgPath) : undefined;
   if (shipped) {
-    console.error(`agent-office: refusing ${cfgPath}: ${shipped}. Take it out of the repository and start again.`);
+    console.error(`kipdeck: refusing ${cfgPath}: ${shipped}. Take it out of the repository and start again.`);
     process.exit(2);
   }
   let stored: { password?: string; verifier?: string; salt?: string; secret?: string; claimedAt?: number } = {};
@@ -492,7 +492,7 @@ export function loadConfig(argv: string[]): Config {
     delete stored.verifier;
     delete stored.claimedAt;
     save();
-    console.log('agent-office: password forgotten - a new one is generated on the next start');
+    console.log('kipdeck: password forgotten - a new one is generated on the next start');
     process.exit(0);
   }
 
@@ -519,7 +519,7 @@ export function loadConfig(argv: string[]): Config {
   let tls: Config['tls'];
   if (tlsCert || tlsKey) {
     if (!tlsCert || !tlsKey) {
-      console.error('agent-office: --tls-cert and --tls-key go together');
+      console.error('kipdeck: --tls-cert and --tls-key go together');
       process.exit(2);
     }
     tls = { cert: readFileSync(tlsCert, 'utf8'), key: readFileSync(tlsKey, 'utf8') };

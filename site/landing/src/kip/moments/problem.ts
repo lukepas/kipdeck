@@ -74,15 +74,22 @@ function baselineOf(el: Element): { y: number; r: number } | null {
 const phone: Moment = {
   arrive: 'rise',
   spots(sec) {
-    const huge = sec.querySelector('.huge');
+    const huge = sec.querySelector<HTMLElement>('.huge');
     const n = huge?.querySelector('span');
-    const b = n && baselineOf(n);
-    if (!huge || !b) return [];
+    if (!huge || !n) return [];
+    // Measured where "23 min" comes to rest: while it lands it is moved down and squashed (the
+    // scene's transform), and a spot taken from that would leave him on "min" once it settles.
+    const tf = huge.style.transform;
+    huge.style.transform = 'none';
+    const b = baselineOf(n);
     // Past the 40 px every display line keeps clear (perch.ts) on both lines ("23", and "min" where
     // it wraps under it), plus his wand held out toward them.
     const range = document.createRange();
     range.selectNodeContents(huge);
-    const right = Math.max(b.r, ...[...range.getClientRects()].filter((r) => r.width > 0).map((r) => r.right));
+    const rights = [...range.getClientRects()].filter((r) => r.width > 0).map((r) => r.right);
+    huge.style.transform = tf;
+    if (!b) return [];
+    const right = Math.max(b.r, ...rights);
     return spots({ x: right + 88, y: b.y, s: 0.62, face: 'l' }, { x: b.r + 88, y: b.y, s: 0.62, face: 'l' });
   },
   start(run) {

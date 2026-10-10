@@ -5,7 +5,8 @@
 // to a small three.js bridge, drawn in a worker so it never blocks a scroll (fx/bridge.ts; loaded only
 // now, only here); elsewhere the CSS deck stays.
 //
-// One command line drives the tiles: "npx kipdeck --labs bridge,ops,boards,voice,meetings". Every
+// One command line drives the tiles: "npm start -- --labs bridge,ops,boards,voice,meetings" from a
+// clone (the build swaps in "npx kipdeck --labs ..." once npm is published, site/build.mjs). Every
 // lab is on by default, as in the office, so the tiles start on; as the section arrives a scanline
 // powers each tile in turn. Pressing a flag holds its lab off (the flag reads "-voice", as the real
 // --labs does) or on again. The flags work without motion too (they only toggle).

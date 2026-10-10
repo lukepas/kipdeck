@@ -34,7 +34,7 @@ export interface Brand {
 
 // The tagline and the description are the app's (src/shared/copy.ts), so the page, the app and the
 // README say the same thing. The page adds which agents run and where.
-const DESCRIPTION = `${COPY_DESCRIPTION} Claude Code, Codex and Cursor CLI, with OpenCode and Pi in beta. Open source, on your machine.`;
+const DESCRIPTION = `${COPY_DESCRIPTION} Claude Code, Codex and Cursor CLI, with OpenCode, Pi, Grok, Muse and DeepSeek Harness in beta. Open source, on your machine.`;
 
 export const BRANDS = {
   kipdeck: {

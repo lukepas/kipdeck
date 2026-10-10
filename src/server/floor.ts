@@ -163,7 +163,7 @@ export class Floor {
     if (unsafe) throw new Error(unsafe);
     mkdirSync(dataDir, { recursive: true, mode: 0o700 });
     const shipped = trackedState(def.dir);
-    if (shipped.size) console.warn(`agent-office: the ${def.name} floor's repository ships ${shipped.size} file${shipped.size === 1 ? '' : 's'} in .agent-office; the office ignores them (see docs/security.md)`);
+    if (shipped.size) console.warn(`kipdeck: the ${def.name} floor's repository ships ${shipped.size} file${shipped.size === 1 ? '' : 's'} in .agent-office; the office ignores them (see docs/security.md)`);
     excludeFromGit(def.dir);
     this.project = projectInfo(def.dir, def.name, ctx.agentCmd, ctx.agentArgs);
     this.docs = new Docs(def.dir);

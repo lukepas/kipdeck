@@ -143,7 +143,7 @@ export class Building {
     try {
       writeState(this.pickedFile, JSON.stringify(this.picked ?? {}, null, 2));
     } catch (err) {
-      console.error(`agent-office: couldn't save the projects folder: ${(err as Error).message}`);
+      console.error(`kipdeck: couldn't save the projects folder: ${(err as Error).message}`);
     }
     return undefined;
   }
@@ -443,7 +443,7 @@ export class Building {
         });
       }
     } catch (err) {
-      console.error(`agent-office: ${this.file} couldn't be read, so the building starts empty: ${(err as Error).message}`);
+      console.error(`kipdeck: ${this.file} couldn't be read, so the building starts empty: ${(err as Error).message}`);
     }
   }
 
@@ -475,7 +475,7 @@ export class Building {
       if (off) writeState(this.localFile, JSON.stringify(off, null, 2));
       else if (!isSymlink(this.localFile)) rmSync(this.localFile, { force: true });
     } catch (err) {
-      console.error(`agent-office: couldn't save ${this.localFile}: ${(err as Error).message}`);
+      console.error(`kipdeck: couldn't save ${this.localFile}: ${(err as Error).message}`);
     }
   }
 
@@ -483,7 +483,7 @@ export class Building {
     try {
       writeState(this.file, JSON.stringify(this.defs, null, 2));
     } catch (err) {
-      console.error(`agent-office: couldn't save the floors: ${(err as Error).message}`);
+      console.error(`kipdeck: couldn't save the floors: ${(err as Error).message}`);
     }
   }
 
@@ -506,7 +506,7 @@ export class Building {
       if (saved.length) writeState(this.clonesFile, JSON.stringify(saved, null, 2));
       else if (!isSymlink(this.clonesFile)) rmSync(this.clonesFile, { force: true });
     } catch (err) {
-      console.error(`agent-office: couldn't save ${this.clonesFile}: ${(err as Error).message}`);
+      console.error(`kipdeck: couldn't save ${this.clonesFile}: ${(err as Error).message}`);
     }
   }
 }

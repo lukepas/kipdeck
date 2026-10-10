@@ -4,7 +4,7 @@
 // What the page is told about it, and the words it uses, are here; the fleet itself is the server's
 // (server/demo/).
 
-import { DOCS_URL } from './copy.js';
+import { REPO_URL } from './copy.js';
 
 /** What the page knows about a demo office (the welcome message's `demo`). */
 export interface DemoInfo {
@@ -26,8 +26,8 @@ export const DEMO_COMMAND = 'npx kipdeck --demo';
 export const INSTALL_COMMAND = 'npx kipdeck';
 /** Before npm: a clone linked once with `npm link` (README, From source) runs as `kipdeck` from any repository. */
 export const SOURCE_RUN_COMMAND = 'kipdeck';
-/** Where a visitor to the hosted demo asks for access: the landing page's design-partner section. */
-export const ACCESS_URL = `${DOCS_URL}/#teams`;
+/** Before npm: the README's steps that run it from a clone (the repository is public). */
+export const SOURCE_URL = `${REPO_URL}#from-source`;
 
 /** The command that opens the office signed in from a terminal on its computer (the sign-in page), on npm or from a linked clone. */
 export function openCommand(onNpm = ON_NPM): string {
@@ -39,15 +39,15 @@ export const DEMO_REVIEWER = 'Demo Lead (scripted)';
 
 /**
  * The demo's pill in the top bar: what it is (`short` in the pill, `text` in full), and the next step
- * (`lead` says what for): a command to copy, or, for a visitor to the hosted demo before npm (the
- * repository is private, so there is nothing they could clone), no command and an ask for access.
+ * (`lead` says what for): a command to copy, or, for a visitor to the hosted demo before npm (who has
+ * no clone to run a command in), a link to the README's run-from-source steps.
  */
 export function demoNote(d: DemoInfo, onNpm = ON_NPM): { text: string; short: string; lead: string; command?: string; href?: string } {
   if (d.readOnly) {
     const text = 'Live demo, read only. The agents and the reviewer are scripted, and no model runs.';
     return onNpm
       ? { text, short: 'Scripted agents and reviewer', lead: 'Try it yourself', command: DEMO_COMMAND }
-      : { text: `${text} Kipdeck is in a private beta and not on npm yet: ask the team for access.`, short: 'Scripted agents and reviewer', lead: 'Private beta, ask for access', href: ACCESS_URL };
+      : { text: `${text} Not on npm yet: run it from source at github.com/zbagdzevicius/kipdeck.`, short: 'Scripted agents and reviewer', lead: 'Run it from source', href: SOURCE_URL };
   }
   const text = `Scripted agents on a throwaway repo (${d.project}). No model runs, and nothing of yours is touched.`;
   return onNpm
@@ -56,4 +56,4 @@ export function demoNote(d: DemoInfo, onNpm = ON_NPM): { text: string; short: st
 }
 
 /** What a visitor to the read-only demo is told when they try to act. */
-export const READ_ONLY_REFUSAL = `This demo is read only: the agents and the reviewer are scripted. ${ON_NPM ? `Run ${DEMO_COMMAND} to try it on your computer.` : 'Kipdeck is in a private beta: ask the team for access to run it on your computer.'}`;
+export const READ_ONLY_REFUSAL = `This demo is read only: the agents and the reviewer are scripted. ${ON_NPM ? `Run ${DEMO_COMMAND} to try it on your computer.` : 'Kipdeck is not on npm yet: run it from source (github.com/zbagdzevicius/kipdeck) to try it on your computer.'}`;

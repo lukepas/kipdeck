@@ -267,7 +267,7 @@ export class SignIns {
       try {
         rmSync(home, { recursive: true, force: true });
       } catch (err) {
-        console.error(`agent-office: couldn't delete ${home}: ${(err as Error).message}`);
+        console.error(`kipdeck: couldn't delete ${home}: ${(err as Error).message}`);
       }
     });
   }
@@ -345,7 +345,7 @@ export class SignIns {
     try {
       writeState(path.join(this.home(id), 'signins.json'), JSON.stringify(s, null, 2));
     } catch (err) {
-      console.error(`agent-office: couldn't save ${id}'s sign-ins: ${(err as Error).message}`);
+      console.error(`kipdeck: couldn't save ${id}'s sign-ins: ${(err as Error).message}`);
     }
   }
 
@@ -573,7 +573,7 @@ export class SignIns {
     try {
       writeState(file, JSON.stringify(c, null, 2));
     } catch (err) {
-      console.error(`agent-office: couldn't write ${file}: ${(err as Error).message}`);
+      console.error(`kipdeck: couldn't write ${file}: ${(err as Error).message}`);
     }
   }
 
@@ -616,7 +616,7 @@ export class SignIns {
       if (readState(file) === text) return;
       writeState(file, text);
     } catch (err) {
-      console.error(`agent-office: couldn't write ${file}: ${(err as Error).message}`);
+      console.error(`kipdeck: couldn't write ${file}: ${(err as Error).message}`);
     }
   }
 }

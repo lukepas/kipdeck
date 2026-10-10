@@ -203,8 +203,8 @@ export class Forwarder {
 
   private relay(port: number, req: http.IncomingMessage, res: http.ServerResponse) {
     const headers = this.headers(port, req);
-    if (!headers) return refuse(res, 421, `This is localhost:${port}, forwarded by agent-office tunnel. Open it as http://localhost:${port}.`);
-    if (!fromHere(req, (p) => this.open.has(p))) return refuse(res, 403, `A page on another site asked for localhost:${port}, forwarded by agent-office tunnel: it isn't let through.`);
+    if (!headers) return refuse(res, 421, `This is localhost:${port}, forwarded by kipdeck tunnel. Open it as http://localhost:${port}.`);
+    if (!fromHere(req, (p) => this.open.has(p))) return refuse(res, 403, `A page on another site asked for localhost:${port}, forwarded by kipdeck tunnel: it isn't let through.`);
     const up = this.office.request(req.method, req.url, headers, (ur) => {
       res.writeHead(ur.statusCode ?? 502, ur.statusMessage, ur.headers);
       ur.pipe(res);
@@ -214,7 +214,7 @@ export class Forwarder {
       });
     });
     up.on('error', () => {
-      if (!res.headersSent) refuse(res, 502, `agent-office tunnel couldn't reach the office at ${this.office.origin}. It keeps trying: reload in a moment.`);
+      if (!res.headersSent) refuse(res, 502, `kipdeck tunnel couldn't reach the office at ${this.office.origin}. It keeps trying: reload in a moment.`);
       else res.destroy();
     });
     res.on('close', () => up.destroy());

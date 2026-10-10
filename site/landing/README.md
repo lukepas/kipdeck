@@ -39,7 +39,6 @@ KIPDECK_BRAND=<id> npm run build:site
 
 ```bash
 KIPDECK_SITE_URL=https://kipdeck.com/ \
-KIPDECK_REPO_URL=https://github.com/<org>/kipdeck \
 npm run build:site
 ```
 
@@ -50,7 +49,7 @@ npm run build:site
 | `KIPDECK_WAITLIST_URL` | Shows the Team waitlist form and lets it POST `{ email, source }` there (and nowhere else) | No form; the ask is the design-partner link, an email to the brand's contact address |
 | `KIPDECK_DEMO_URL` | **Try the demo** opens a hosted read-only demo | **Try the demo** copies the hero's demo command |
 | `KIPDECK_NPM_PUBLISHED=1` | `npx` replaces the from-source commands | The from-source commands and the "Not on npm yet" line stay |
-| `KIPDECK_REPO_PUBLIC=1` | The repository is public: the clone command, the 06 terminal and the Source and Docs links are shown (`KIPDECK_REPO_URL` counts too) | Treated as private: none of them are shown, and the hero leads with the film and the design-partner email |
+| `KIPDECK_REPO_PUBLIC=0` | For a brand whose repository is private: the clone command, the 06 terminal and the Source and Docs links are left out, and the hero leads with the film and the design-partner email | Public (github.com/zbagdzevicius/kipdeck is): all of them are shown |
 | `KIPDECK_BRAND` | Picks an entry in `brand.ts` | `kipdeck` |
 
 Every address must be `https`, or the build stops. The build draws `og.png` with headless Chromium when one is installed (`playwright-core`'s, `CHROMIUM_PATH`, or Google Chrome). Without one it says so and the committed `site/landing/public/og.png` ships instead. When the brand or the headline changes, build where Chromium is available and copy `dist/site/og.png` over it.
@@ -96,7 +95,7 @@ Everything is drawn in code from the app's own tokens and glyphs: DOM replicas o
 | Section | What it says | What moves, and why |
 | --- | --- | --- |
 | 01 Hero | Your agents are waiting on you | Agent units fly out of the mark to their lanes and the headline breathes in, while Codex is already waiting at the top of the inbox and every clock on the page counts your own wait (the stopwatch on "waiting", the line along the top, the top bar, the favicon), all painted from one state. Answering the row clears them all (scrolling and copying never do); Codex asks again a little later. The finished change under it has a green Merge. The field never crosses the words. |
-| 02 Every vendor | Five CLIs, one list, oldest wait first | The card is there from the first frame, its rows dashed slots labelled with vendor chips. Units stream from the five chips, spiral into the card and fill the slots, then the rows re-rank from vendor order to wait order. |
+| 02 Every vendor | Every CLI, one list, oldest wait first | The card is there from the first frame, its rows dashed slots labelled with vendor chips. Units stream from the five chips, spiral into the card and fill the slots, then the rows re-rank from vendor order to wait order. |
 | 03 The problem | 23 minutes of nothing | A clock runs 10:02 to 10:25 while one wait bar heats to orange; then a workday of five agents draws its waits, and a bar under the day fills with all of them and docks into the page's own wait clock: that is the metric. |
 | 04 The loop | Ask, answer, review, merge | The agent's raw terminal prompt reflows into a question card, the reply types, the diff assembles as real code, the tests run to 12/12, and Merge sends a small green ring and a green *Merged* beside the button. Pinned on wide screens; scroll back and it plays backwards. |
 | 05 Why | The layer across the tools you have | Vendor inboxes and agent workbenches by name. Every answer is readable from the first frame; the table draws its lines, pops each answer's mark and frames our column last. |
@@ -120,4 +119,4 @@ He never stands over text, a link, a button or a field: every spot is checked ag
 - No users and no revenue yet; the page says so and asks for five design partners.
 - Proof of Merge runs on testnets only (Solana devnet, Base Sepolia) with test funds; every chain value says so.
 - `npx kipdeck` is not on npm yet: the page shows the run-from-source command and says so.
-- The repository named in `brand.ts` must be public for the Source and Docs links and the clone command to work for visitors. The design-partner ask is an email to `contact` in `brand.ts`, so it works while the repository is private.
+- The repository named in `brand.ts`, github.com/zbagdzevicius/kipdeck, is public, so the default build shows the Source and Docs links and the clone command. The design-partner ask is an email to `contact` in `brand.ts`, so it also works in a `KIPDECK_REPO_PUBLIC=0` build.

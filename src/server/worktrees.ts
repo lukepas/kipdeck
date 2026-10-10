@@ -110,7 +110,7 @@ export class Worktrees {
         (err) => {
           // Its first complaint says what's wrong; the last line is advice about access rights.
           const why = String((err as { stderr?: string }).stderr ?? '').split('\n').find((l) => /^(fatal|error):/.test(l)) ?? gitError(err);
-          if (why !== this.fetchError) console.warn(`agent-office: couldn't fetch origin/${from} in ${this.dir}, so new worktrees start from what's here: ${why}`);
+          if (why !== this.fetchError) console.warn(`kipdeck: couldn't fetch origin/${from} in ${this.dir}, so new worktrees start from what's here: ${why}`);
           this.fetchError = why;
         },
       )

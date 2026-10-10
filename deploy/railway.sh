@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy your own Agent Office to Railway with one command, using the Railway CLI.
+# Deploy your own Kipdeck to Railway with one command, using the Railway CLI.
 #
 #   deploy/railway.sh up        create the project, build and start the office, open it
 #   deploy/railway.sh open      tunnel to the office and open it in your browser
@@ -32,7 +32,7 @@ LOCAL_PORT_SET=0
 
 usage() {
   cat <<'EOF'
-Agent Office on Railway — one command up, one command down.
+Kipdeck on Railway - one command up, one command down.
 
 Usage: deploy/railway.sh <command> [options]
 
@@ -421,7 +421,7 @@ cmd_up() {
   fi
   [[ $NO_GH_TOKEN -eq 1 ]] && gh_token=""
 
-  say "Agent Office \"$NAME\" on Railway ($(railway whoami --json 2>/dev/null | json 'j.name || j.email' || true))"
+  say "Kipdeck \"$NAME\" on Railway ($(railway whoami --json 2>/dev/null | json 'j.name || j.email' || true))"
   echo "   app:      this checkout, built with $DOCKERFILE"
   echo "   data:     a volume on /data: accounts, floors, projects (~/workspace), sign-ins, team keys"
   echo "   access:   SSH tunnel only (the office is never exposed), through Railway's TCP proxy"

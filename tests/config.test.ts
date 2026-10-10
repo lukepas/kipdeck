@@ -34,11 +34,11 @@ test('--agent-args takes flags as its value, as the help shows', (t) => {
 });
 
 test('--agent-args with nothing after it still needs a value', (t) => {
-  assert.throws(() => load(t, '--agent-args'), /exit 2: agent-office: --agent-args needs a value/);
+  assert.throws(() => load(t, '--agent-args'), /exit 2: kipdeck: --agent-args needs a value/);
 });
 
 test('other flags still treat a leading -- as a missing value', (t) => {
-  assert.throws(() => load(t, '--agent', '--agent-args', 'x'), /exit 2: agent-office: --agent needs a value/);
+  assert.throws(() => load(t, '--agent', '--agent-args', 'x'), /exit 2: kipdeck: --agent needs a value/);
 });
 
 test('the office listens on loopback unless --host says otherwise', (t) => {
@@ -55,7 +55,7 @@ test('workers get the clean allowlist unless --inherit-env, and --worker-env add
   assert.deepEqual(load(t).workerEnv, { policy: 'clean', allow: [] });
   assert.deepEqual(load(t, '--inherit-env').workerEnv, { policy: 'inherit', allow: [] });
   assert.deepEqual(load(t, '--worker-env', 'AWS_PROFILE,SENTRY_*', '--worker-env', 'FOO').workerEnv.allow, ['AWS_PROFILE', 'SENTRY_*', 'FOO']);
-  assert.throws(() => load(t, '--worker-env', 'A=B'), /exit 2: agent-office: --worker-env takes variable names/);
+  assert.throws(() => load(t, '--worker-env', 'A=B'), /exit 2: kipdeck: --worker-env takes variable names/);
 });
 
 test('--allowed-host adds names the office answers to', (t) => {

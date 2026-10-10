@@ -164,7 +164,7 @@ export function loopPage(res: http.ServerResponse, port: number) {
 
 /** `agent-office tunnel` sent a request without a session that works (it signs in again by itself). */
 export function tunnelSignedOutPage(res: http.ServerResponse, port: number) {
-  page(res, 401, 'Not signed in', `<p>This is a worker's server on port ${port}, forwarded by <code>agent-office tunnel</code>, which isn't signed in to the office right now. It signs in again by itself (look at its terminal); reload in a moment.</p>`);
+  page(res, 401, 'Not signed in', `<p>This is a worker's server on port ${port}, forwarded by <code>kipdeck tunnel</code>, which isn't signed in to the office right now. It signs in again by itself (look at its terminal); reload in a moment.</p>`);
 }
 
 export function stoppedPage(res: http.ServerResponse, port: number) {

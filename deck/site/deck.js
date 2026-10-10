@@ -29,13 +29,17 @@
   doc.querySelectorAll('[data-cta]').forEach(function (el) { el.textContent = cfg.npmPublished ? 'Try it: npx ' + cmd + ' --demo' : 'Hosted demo on request'; });
   /* Install claim: one command only once it is true. Until npm publish (M1) it says how it installs today. */
   doc.querySelectorAll('[data-install]').forEach(function (el) {
-    el.textContent = cfg.npmPublished ? 'npx ' + cmd + ': one command' : 'Installs from a local tarball today; npm at M1';
+    el.textContent = cfg.npmPublished ? 'npx ' + cmd + ': one command' : 'Runs from source today; npm at M1';
+  });
+  /* Demo command in the player bar: npx only once it is on npm; from source, npm link gives the same command. */
+  doc.querySelectorAll('[data-demo-cmd]').forEach(function (el) {
+    el.textContent = cfg.npmPublished ? 'npx ' + cmd + ' --demo' : cmd + ' --demo';
   });
   doc.querySelectorAll('[data-a=contact]').forEach(function (el) {
     var parts = [(cfg.team || []).join(', ')];
     if (cfg.contactEmail) parts.push(cfg.contactEmail);
     if (cfg.demoUrl) parts.push(cfg.demoUrl);
-    if (cfg.repoUrl) parts.push(cfg.repoUrl);
+    if (cfg.repoUrl) parts.push(cfg.repoUrl.replace(/^https?:\/\//, ''));
     el.textContent = parts.join('  /  ');
   });
 

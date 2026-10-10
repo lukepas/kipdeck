@@ -184,12 +184,12 @@ export function sendHomeDialog(opts: SendHomeOptions) {
     ? [
         ['all', 'Delete the worktrees and their branch', `Removes its worktrees of ${across.join(', ')}, and ${branch} in each.`],
         ['worktree', 'Delete the worktrees, keep the branch', `${branch} stays in each for a pull request or a later checkout.`],
-        ['keep', 'Keep them all', 'Leaves everything as it is; agent-office prune in each project tidies up later.'],
+        ['keep', 'Keep them all', 'Leaves everything as it is; kipdeck prune in each project tidies up later.'],
       ]
     : [
         ['all', 'Delete the worktree and its branch', `Removes ${path} and ${branch}.`],
         ['worktree', 'Delete the worktree, keep the branch', `${branch} stays for a pull request or a later checkout.`],
-        ['keep', 'Keep both', 'Leaves everything as it is; agent-office prune tidies up later.'],
+        ['keep', 'Keep both', 'Leaves everything as it is; kipdeck prune tidies up later.'],
       ];
   const radios = new Map<WorktreeCleanup, HTMLInputElement>();
   let touched = false;

@@ -14,7 +14,7 @@ import { X402Gateway, x402Settings } from '../x402/gateway.js';
 import type { Ctx } from './context.js';
 
 function refuse(what: string): never {
-  console.error(`agent-office: ${what}`);
+  console.error(`kipdeck: ${what}`);
   process.exit(2);
 }
 

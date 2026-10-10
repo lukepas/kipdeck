@@ -7,7 +7,7 @@ The full story behind `deploy/aws.sh`. The short version is in [Teams and server
 If you have the AWS CLI logged in, one command gives you your own office on EC2. No Terraform needed:
 
 ```bash
-git clone https://github.com/AgentSystemLabs/agent-office && cd agent-office
+git clone https://github.com/zbagdzevicius/kipdeck && cd kipdeck
 deploy/aws.sh up
 ```
 
