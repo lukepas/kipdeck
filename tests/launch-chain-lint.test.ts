@@ -96,6 +96,7 @@ test('a kit may keep its videos in video-scripts.md by linking to it; the shared
   const kit = `Last checked: 2026-10-03\n\n${REQUIRED_SECTIONS.map((s) => `## ${s}\n\ntext\n`).join('\n')}`;
   assert.ok(lintFile('kit.md', kit).some((i) => /Runtime target/.test(i.message)));
   assert.deepEqual(lintFile('kit.md', `${kit}\nSee [the scripts](video-scripts.md).\n`), []);
+  assert.deepEqual(lintFile('kit.md', `${kit}\nSee [the videos](../video/README.md).\n`), [], 'or the recorded ones in launch/video/');
   assert.ok(lintFile('video-scripts.md', '# Videos\n').some((i) => /Runtime target/.test(i.message)));
 });
 

@@ -1,5 +1,7 @@
 # Nebius x NVIDIA Global AI Hackathon
 
+**Drafted on 2026-10-01 under the old name.** The product is now Kipdeck, the inbox for your AI coding agents, built on agent-office (MIT, by webdevcody / AgentSystemLabs), with Proof of Merge as its payout layer. Refresh the product name, what is built and the disclosure from [chain/disclosure.md](chain/disclosure.md) before you use this kit.
+
 Last checked: 2026-10-01. Sources: the Devpost overview, official rules and resources page, and the Token Factory pages (links below). Anything not stated there is marked [unverified].
 
 Plan: enter the Coding and Agentic Engineering track. Agent Office workers run on NVIDIA Nemotron served by Nebius Token Factory (branch `launch/nebius-nemotron`), inside disposable sandboxes (branch `launch/docker-sandbox`), so a team can run a whole office of coding agents on open models.

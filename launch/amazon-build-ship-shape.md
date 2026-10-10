@@ -1,5 +1,7 @@
 # Amazon Build Ship Shape, Alexa+ track
 
+**Drafted on 2026-10-01 under the old name.** The product is now Kipdeck, the inbox for your AI coding agents, built on agent-office (MIT, by webdevcody / AgentSystemLabs), with Proof of Merge as its payout layer. Refresh the product name, what is built and the disclosure from [chain/disclosure.md](chain/disclosure.md) before you use this kit.
+
 Last checked: 2026-10-01. Sources: the Devpost overview, official rules and resources page (links below). Anything not stated there is marked [unverified].
 
 Plan: enter the Alexa+ track with a self-hosted remote MCP server for Agent Office (branch `launch/voice-mcp`), so Alexa+ can hire, check on and steer the office's coding agents by voice. Also enter the Open Source mini challenge; the overview says "PRs don't need to be merged; a forked, unmerged version is fine."

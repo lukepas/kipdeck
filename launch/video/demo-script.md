@@ -31,7 +31,7 @@ The dry run is 2026-10-08, the recording 2026-10-09.
 - [ ] PR #4 (closes #1) was merged on 2026-10-07 by the operator's own account: `self`, not paid, and it cannot be merged again. For a merge on camera, let a unit open a new pull request for issue #2 or #3 and have a second GitHub account with write access merge it. Your own account merging it is recorded as `self` and shown apart on the board.
 - [ ] The GitHub Action workflow (`onchain/action/examples/bounty.yml`) added to ugc-army-demo, pinned to a commit SHA, if you want beat 10 to show a real run. Until then it has only run against a fake GitHub API, and the voiceover says so.
 - [ ] x402 payer key file with Base Sepolia test USDC (it held 19.90 after 2026-10-04).
-- [ ] Browser: a clean profile, bookmarks bar hidden, zoom so text reads at 1080p. Add `?demo=1` to the office's address for bigger type and callouts.
+- [ ] Browser: a clean profile, bookmarks bar hidden, zoom so text reads at 1080p. Add `?demo=1` to the Deck's address (`/deck?demo=1`; `/` is the inbox) for bigger type and callouts.
 
 ## Timed script
 
@@ -39,13 +39,13 @@ About 400 spoken words. Each row: what you do, what the viewer sees, and the lin
 
 ### 1. The Deck and attention at a glance (0:00-0:15)
 
-Action: open `https://<office>/?demo=1`. Let the arrival play for two seconds, press any key to land. Walk to the captain's chair, press E to sit. Hold on the Attention board.
+Action: open `https://<office>/deck?demo=1` (the Deck; `/` is the inbox, which has no arrival or chair). Let the arrival play for two seconds, press any key to land. Walk to the captain's chair, press E to sit. Hold on the Attention board.
 
 On screen: the arc with the Attention board in the middle; one unit carded as needs-you, the WORKING chip, the top bar counters.
 
 > This is Kipdeck, a fork of agent-office. Every coding agent on the team is a unit at a console.
 > One function, attention.ts, ranks them: needs you, stuck, to review, working.
-> The board, the top bar, the tab title and the 2D view all read that one ranking.
+> The board, the top bar, the tab title and the inbox all read that one ranking.
 
 Lower third for 3 s: "TypeScript, three.js, Node. Solana devnet: native Rust program. Base Sepolia: EAS, ERC-8004, x402."
 
@@ -145,7 +145,7 @@ Record each step on its own during the 2026-10-08 dry run, so a slow RPC on the 
 
 | # | Shot | Concrete action in the app | Length | Fallback |
 | --- | --- | --- | --- | --- |
-| 1 | Arrival and captain's chair | `?demo=1`, any key to land, E at the chair | 15 s | Dry-run take |
+| 1 | Arrival and captain's chair | `/deck?demo=1`, any key to land, E at the chair | 15 s | Dry-run take |
 | 2a | Issues board with the bounty | Walk to the arc, or Tab menu > Issues; issue #2 row with coin and amount | 6 s | Dry-run take |
 | 2b | Fund window | Fund on issue #2's card, show Phantom and the Blink link, close with Esc | 4 s | Skip; the voiceover still covers the Blink |
 | 2c | Hire a unit | E at a free console, deploy Claude Code; P, task issue #2 | 8 s | Dry-run take |

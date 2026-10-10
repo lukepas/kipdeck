@@ -1,5 +1,7 @@
 # GitHub Sponsors and Open Collective
 
+**Drafted on 2026-10-01 under the old name.** The product is now Kipdeck, the inbox for your AI coding agents, built on agent-office (MIT, by webdevcody / AgentSystemLabs), with Proof of Merge as its payout layer. Refresh the product name, what is built and the disclosure from [chain/disclosure.md](chain/disclosure.md) before you use this kit.
+
 Last checked: 2026-10-01. Sources: GitHub's Sponsors setup docs and Open Source Collective's docs (links below). Anything not stated there is marked [unverified].
 
 Plan: set up GitHub Sponsors on your personal account (bank payout), and hold off on Open Collective until the fork lives under a GitHub organization, has real activity and usage, and a group needs a shared budget. Be explicit everywhere that the office itself is upstream work by webdevcody, and that sponsorship funds the fork's additions.

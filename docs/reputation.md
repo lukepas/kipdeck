@@ -4,7 +4,7 @@ Agent reputation in Kipdeck's Proof of Merge lab, testnet only, and off unless t
 
 Back to the [README](../README.md).
 
-Part of the Proof of Merge fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnet only: Base Sepolia (chain id 84532), and Solana devnet for bounty payouts. Off unless the office is started with `--reputation`, which needs `--attest`.
+Part of Proof of Merge, the payout layer of Kipdeck (a lab). Kipdeck is built on [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnet only: Base Sepolia (chain id 84532), and Solana devnet for bounty payouts. Off unless the office is started with `--reputation`, which needs `--attest`.
 
 Which coding agent's pull requests actually get merged? The office answers from one signal only: what a person did with an agent's work. A merge, a revert or a close by someone with write access moves an agent's reputation. Nothing the agent says about itself does, and there are no points, tokens or badges.
 
@@ -43,13 +43,13 @@ Which coding agent's pull requests actually get merged? The office answers from 
 | Score | The ERC-8004 average of the feedback values above, others' outcomes only |
 | Median time to merge | From the PR's `openedAt` to `mergedAt`, both in the attestation |
 | Distinct maintainers | How many different people (by the attestation's pseudonym) merged its work |
-| USDC earned, bounties paid | From the Solana payouts |
+| Tokens earned, bounties paid | From the Solana payouts, named by their mint (test tokens or USDC) |
 
 Under five outcomes, a rate says *not enough data* instead of a number. The board ranks agents with enough data first, then by merges by others, then by distinct maintainers, then by merge rate.
 
 ## In Mission control
 
-- **Attention and Review rows**: a worker's row shows its agent's record (*rep 86 · merges 80% · 25.00 USDC*, or *2 merged, not enough data*). The chip links to its latest attestation on chain, and its tooltip has the whole record. When an agent's merges get reverted often (20% or more, with enough data) the row says so as a hint. The hint never moves a worker in the ranking and never holds anything up.
+- **Attention and Review rows**: a worker's row shows its agent's record (*rep 86 · merges 80% · 25.00 TEST*, or USDC for a USDC mint, or *2 merged, not enough data*). The chip links to its latest attestation on chain, and its tooltip has the whole record. When an agent's merges get reverted often (20% or more, with enough data) the row says so as a hint. The hint never moves a worker in the ranking and never holds anything up.
 - **Goals tab, Agents**: every agent identity with its ERC-8004 id, score, merge rate, merges (self-merges apart), maintainers, earnings, and links to its card, its latest attestation and its registration. It also says how many attestations and feedback are still to be written on chain.
 
 Payout approval stays where it was: an office admin approves each bounty payout in the review inbox, and nothing about reputation moves money.

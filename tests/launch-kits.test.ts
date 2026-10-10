@@ -42,7 +42,11 @@ test('every entry points at a kit that exists and names its date; every kit has 
     if (e.kind === 'deadline' || e.kind === 'result') assert.ok(read(e.kit).includes(dayOf(e)), `${e.kit} never mentions ${e.id} on ${dayOf(e)}`);
   }
   // Sponsors and the rolling grants have tasks rather than deadlines, but still a date.
-  for (const kit of kits) assert.ok(data.events.some((e) => e.kit === kit), `no calendar entry for ${kit}`);
+  // A superseded kit (its first paragraph says so and points at the current one) hands its entries over.
+  for (const kit of kits) {
+    if (/^\*\*Superseded/m.test(read(kit))) continue;
+    assert.ok(data.events.some((e) => e.kit === kit), `no calendar entry for ${kit}`);
+  }
   assert.ok(data.events.some((e) => e.kit === 'disclosure.md'));
 });
 

@@ -35,12 +35,15 @@
   doc.querySelectorAll('[data-demo-cmd]').forEach(function (el) {
     el.textContent = cfg.npmPublished ? 'npx ' + cmd + ' --demo' : cmd + ' --demo';
   });
+  /* Contact line on the ask slide: the team, then the email, the site and the repository as real links. */
   doc.querySelectorAll('[data-a=contact]').forEach(function (el) {
-    var parts = [(cfg.team || []).join(', ')];
-    if (cfg.contactEmail) parts.push(cfg.contactEmail);
-    if (cfg.demoUrl) parts.push(cfg.demoUrl);
-    if (cfg.repoUrl) parts.push(cfg.repoUrl.replace(/^https?:\/\//, ''));
-    el.textContent = parts.join('  /  ');
+    var parts = [doc.createTextNode((cfg.team || []).join(', '))];
+    function link(href, text) { var a = doc.createElement('a'); a.href = href; a.textContent = text; if (!/^mailto:/.test(href)) a.rel = 'noopener noreferrer'; return a; }
+    if (cfg.contactEmail) parts.push(link('mailto:' + cfg.contactEmail, cfg.contactEmail));
+    if (cfg.demoUrl) parts.push(link(cfg.demoUrl, cfg.demoUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')));
+    if (cfg.repoUrl) parts.push(link(cfg.repoUrl, cfg.repoUrl.replace(/^https?:\/\//, '')));
+    el.textContent = '';
+    parts.forEach(function (p, i) { if (i) el.appendChild(doc.createTextNode('  /  ')); el.appendChild(p); });
   });
 
   /* --- 2. Footer on every slide, led by Kip's small mark (the #foot-mark template in index.html) --- */

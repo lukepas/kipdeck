@@ -63,7 +63,7 @@ DTSTART;VALUE=DATE:20261009
 DTEND;VALUE=DATE:20261010
 SUMMARY:Colosseum: freeze the build\, record the pitch and technical demo v
  ideos
-DESCRIPTION:Kit: launch/colosseum-worlds-fair.md
+DESCRIPTION:Kit: launch/chain/colosseum-worlds-fair.md
 CATEGORIES:TASK
 TRANSP:TRANSPARENT
 BEGIN:VALARM
@@ -81,8 +81,8 @@ DTEND:20261013T065900Z
 SUMMARY:DEADLINE: Colosseum Crypto World's Fair: registration and submissio
  n close
 DESCRIPTION:Closes 23:59 PT (PDT\, UTC-7) (2026-10-13 06:59 UTC\, 2026-10-1
- 3 09:59 Europe/Vilnius).\nKit: launch/colosseum-worlds-fair.md\nhttps://co
- losseum.com/worldsfair
+ 3 09:59 Europe/Vilnius).\nKit: launch/chain/colosseum-worlds-fair.md\nhttp
+ s://colosseum.com/worldsfair
 URL:https://colosseum.com/worldsfair
 CATEGORIES:DEADLINE
 TRANSP:TRANSPARENT
@@ -112,8 +112,8 @@ DTSTART;VALUE=DATE:20261014
 DTEND;VALUE=DATE:20261015
 SUMMARY:Solana Foundation grant: submit the application (rolling\, reuse th
  e Colosseum material)
-DESCRIPTION:Kit: launch/solana-foundation-grant.md\nhttps://solana.org/gran
- ts-funding
+DESCRIPTION:Kit: launch/chain/solana-foundation-grant.md\nhttps://solana.or
+ g/grants-funding
 URL:https://solana.org/grants-funding
 CATEGORIES:TASK
 TRANSP:TRANSPARENT
@@ -464,7 +464,7 @@ DTSTAMP:20260930T000000Z
 DTSTART;VALUE=DATE:20261205
 DTEND;VALUE=DATE:20261206
 SUMMARY:Results: Colosseum Crypto World's Fair: winners announced (by)
-DESCRIPTION:Kit: launch/colosseum-worlds-fair.md
+DESCRIPTION:Kit: launch/chain/colosseum-worlds-fair.md
 CATEGORIES:RESULT
 TRANSP:TRANSPARENT
 END:VEVENT

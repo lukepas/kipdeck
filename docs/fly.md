@@ -68,7 +68,7 @@ deploy/fly.sh reset-password          # new password, shown once; signs everyone
 deploy/fly.sh ssh | logs              # a shell in the machine / follow the office's logs
 ```
 
-**Updating.** Pull the latest agent-office into your clone and run `deploy/fly.sh update`. **⬆️ Upgrade the office** in the **☰** menu is for servers set up with `deploy/provision.sh`: a Fly machine's code comes from its image.
+**Updating.** Pull the latest Kipdeck into your clone and run `deploy/fly.sh update`. **⬆️ Upgrade the office** in the **☰** menu is for servers set up with `deploy/provision.sh`: a Fly machine's code comes from its image.
 
 **Machine size.** A `shared-cpu-4x` with 8 GB is plenty for a few workers. Shared CPUs are made for bursts, though, and Fly slows one down that stays busy for long. If workers build and test all day, move to dedicated CPUs: `deploy/fly.sh resize performance-2x` (memory stays, unless you add it: `resize performance-4x 16gb`). `fly platform vm-sizes` lists the sizes. The volume can grow too, never shrink: `fly volumes extend -a <app> <volume-id> -s 100`.
 

@@ -127,7 +127,7 @@ The six criteria from the rules (section 8), no published weights.
 
 ## Demo video script
 
-Both scripts, the shot lists and the fallback recordings are in [video-scripts.md](video-scripts.md): the pitch (2:30, founder on camera) and the technical demo (2:50). The FAQ asks for a two-to-three-minute presentation and a product demo of no more than three minutes.
+Both videos are made from [launch/video/](../video/README.md): the pitch from [pitch-script.md](../video/pitch-script.md) (target 2:25, hard stop 2:30, founder on camera), and the technical demo, a 2:56 cut built from recordings and voiced from `launch/video/capture/voiceover.txt`, with `launch/video/description.txt` for its upload. [demo-script.md](../video/demo-script.md) (target 2:55) is the live take for after a merge that counts. The older [video-scripts.md](video-scripts.md) (a worker at a desk, a Phantom-signed bounty and a real merge on camera) is superseded for Colosseum: the cut says PR #4 was a self-merge and labels its replays. The FAQ asks for a two-to-three-minute presentation and a product demo of no more than three minutes.
 
 ## Submission checklist
 

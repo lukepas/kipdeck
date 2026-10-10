@@ -54,7 +54,7 @@ Not published yet [unverified]. Fill in from the page when it is.
 
 ## Demo video script
 
-Reuse the technical demo in [video-scripts.md](video-scripts.md) with the attestation step shown on Arbitrum Sepolia instead of Base Sepolia, once that exists.
+Reuse the technical demo in [launch/video/](../video/README.md) with the attestation step shown on Arbitrum Sepolia instead of Base Sepolia, once that exists.
 
 ## Submission checklist
 

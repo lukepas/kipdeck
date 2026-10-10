@@ -94,7 +94,7 @@
       "n": 7,
       "title": "Proof of merge on Base Sepolia",
       "captions": [
-        "Paid merges are also attested",
+        "Every counted merge is also attested",
         "on Base Sepolia with EAS.",
         "Reputation lives on Base, where",
         "the ERC-8004 registries are."
@@ -308,7 +308,7 @@
         "crop": [390, 160, 620],
         "tag": "base",
         "title": "Proof of merge",
-        "caption": "Paid merges get an EAS attestation. Test runs so far."
+        "caption": "Every merge of an office PR gets an EAS attestation. Test runs so far."
       },
       {
         "src": "footage/pom-row.png",

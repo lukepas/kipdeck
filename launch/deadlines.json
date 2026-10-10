@@ -45,7 +45,7 @@
       "date": "2026-10-09",
       "kind": "task",
       "title": "Colosseum: freeze the build, record the pitch and technical demo videos",
-      "kit": "colosseum-worlds-fair.md",
+      "kit": "chain/colosseum-worlds-fair.md",
       "verified": true
     },
     {
@@ -54,7 +54,7 @@
       "zone": "PT (PDT, UTC-7)",
       "kind": "deadline",
       "title": "Colosseum Crypto World's Fair: registration and submission close",
-      "kit": "colosseum-worlds-fair.md",
+      "kit": "chain/colosseum-worlds-fair.md",
       "url": "https://colosseum.com/worldsfair",
       "verified": true
     },
@@ -63,7 +63,7 @@
       "date": "2026-10-14",
       "kind": "task",
       "title": "Solana Foundation grant: submit the application (rolling, reuse the Colosseum material)",
-      "kit": "solana-foundation-grant.md",
+      "kit": "chain/solana-foundation-grant.md",
       "url": "https://solana.org/grants-funding",
       "verified": true
     },
@@ -206,7 +206,7 @@
       "date": "2026-12-05",
       "kind": "result",
       "title": "Colosseum Crypto World's Fair: winners announced (by)",
-      "kit": "colosseum-worlds-fair.md",
+      "kit": "chain/colosseum-worlds-fair.md",
       "verified": true
     },
     {

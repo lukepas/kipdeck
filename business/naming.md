@@ -26,7 +26,7 @@ Status is from a quick web search on 2026-09-30. It is not a trademark check.
 
 Dropped after the quick search: Forgeyard (at least four agent-tooling projects on GitHub use it), Millrace (an AI workflow runtime at millrace.ai and a git-backed kanban tool use it), Deskwright (an AI desktop-automation MCP server), Loomwork (a writing app and an agent framework).
 
-The landing page uses Pairhouse as a working name. Change it in one place, the `<title>` and the elements with `data-name` in `landing/index.html`, once a name clears.
+The consulting landing page used Pairhouse as a working name until Kipdeck was chosen on 2026-10-08 (below); it says Kipdeck now. To rename it again, change the `<title>` and the elements with `data-name` in `landing/index.html`.
 
 ## Before choosing: trademark and availability checks
 
@@ -73,5 +73,5 @@ The product and the company are Kipdeck now, "the inbox for your AI coding agent
 | --- | --- |
 | Domain | kipdeck.com, registered by the founder. On 2026-10-08 its DNS pointed at the registrar's suspension nameservers (`suspension1/2.mydomainprovider.com`), which usually means the registrant email or ICANN verification is not done. Founder TODO: finish that before the landing page goes there, or the domain may lapse. Update 2026-10-09: kipdeck.com and www.kipdeck.com resolve and serve the landing page; Help's docs link (`DOCS_URL`) now opens the README on GitHub instead |
 | npm | `kipdeck` returned 404 from registry.npmjs.org on 2026-10-08, so the name looks free. Publish to hold it |
-| GitHub | Renamed to `zbagdzevicius/kipdeck` on 2026-10-08. The demo repository is still `zbagdzevicius/ugc-army-demo`; renaming it is a founder TODO (GitHub redirects the old address) |
+| GitHub | Renamed to `zbagdzevicius/kipdeck` on 2026-10-08. The demo repository `zbagdzevicius/ugc-army-demo` keeps its name until after Colosseum (2026-10-12): its devnet bounty addresses derive from it. Rename it only after those bounties expire or are refunded (GitHub redirects the old address) |
 | Trademark | Not checked yet. Run the same EUIPO, TMview and USPTO searches as above for "kipdeck" in Nice classes 9 and 42 |

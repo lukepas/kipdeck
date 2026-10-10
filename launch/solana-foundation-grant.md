@@ -1,5 +1,7 @@
 # Solana Foundation grant
 
+**Superseded: do not apply from this page.** The current Kipdeck version of this kit is [chain/solana-foundation-grant.md](chain/solana-foundation-grant.md); the escrow program and SDK this page calls unbuilt have since been built and deployed on devnet. This page is the plan as it stood on 2026-10-01 and is kept as history.
+
 Last checked: 2026-10-01. Source: the Solana Foundation grants page (link below). The application form itself was not opened, so its exact fields and limits are [unverified].
 
 Plan: apply for a milestone-based grant (or a convertible grant, since there is a commercial side) to turn the bounty escrow from the Colosseum entry into a public good: an open source, tool-agnostic escrow program and SDK for paying AI agents and contributors per merged pull request.

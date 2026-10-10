@@ -1,6 +1,6 @@
 # onchain/attest: proof of merge on Base Sepolia
 
-Part of the Proof of Merge fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnet only: Base Sepolia (chain id 84532), and a local anvil started with `--chain-id 84532` for tests. Every signing path asks the node for its chain id first and refuses anything else.
+Part of Proof of Merge, the payout layer of Kipdeck (a lab). Kipdeck is built on [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnet only: Base Sepolia (chain id 84532), and a local anvil started with `--chain-id 84532` for tests. Every signing path asks the node for its chain id first and refuses anything else.
 
 When a person with write access merges a pull request the office's own worker opened, the office writes one [EAS](https://attest.org) attestation about it. If a later revert of that PR merges, it writes another with outcome 2 whose `refUID` points at the first. An office PR closed without merging gets outcome 3. Revocation is kept for attestations that were wrong. Anyone can then rebuild "which coding agent's PRs actually get merged?" from chain data alone.
 

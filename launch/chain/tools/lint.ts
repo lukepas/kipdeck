@@ -283,7 +283,9 @@ export function lintFile(name: string, text: string, counts: Counts = {}): Issue
   if (name === SHARED_VIDEOS) return [...issues, ...videoIssues(text)];
   if (NOT_KITS.has(name) || name.includes('/')) return issues;
   if (!/^Last checked: \d{4}-\d{2}-\d{2}/m.test(text)) issues.push({ line: 0, message: 'missing "Last checked: YYYY-MM-DD" line' });
-  const videos = text.includes(`](${SHARED_VIDEOS}`) && !/^Runtime target:/m.test(text) ? [] : videoIssues(text);
+  // Or in launch/video/, where the Colosseum pitch and demo that were actually recorded live.
+  const shared = [SHARED_VIDEOS, '../video/'].some((p) => text.includes(`](${p}`));
+  const videos = shared && !/^Runtime target:/m.test(text) ? [] : videoIssues(text);
   return [...issues, ...sectionIssues(text), ...videos];
 }
 

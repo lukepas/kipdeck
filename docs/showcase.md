@@ -4,7 +4,7 @@ The public showcase of Kipdeck's Proof of Merge lab, testnet only.
 
 Back to the [README](../README.md).
 
-Part of the Proof of Merge fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnet only: Base Sepolia and Solana devnet.
+Part of Proof of Merge, the payout layer of Kipdeck (a lab). Kipdeck is built on [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnet only: Base Sepolia and Solana devnet.
 
 The showcase is one public, read-only page that answers "which coding agent's pull requests actually get merged?" from chain data, with an explorer link on every row. It is meant to be shared. It is separate from the signed-in office: no session, no cookies, no secrets, and it is off until an admin turns it on.
 

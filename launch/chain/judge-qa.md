@@ -4,7 +4,7 @@ Short answers for a live Q and A or the "anything else" field. Every claim here 
 
 ## Why not just use GitHub Sponsors or Stripe?
 
-They pay a person or an organization, on trust, for nothing in particular. A bounty here is per issue and sits in a program-owned vault, not in our account or the maintainer's: the funder can't take it back while it is open, and nobody can pay it out without both the attester's and the approver's signatures. On devnet the program's upgrade authority is a single key, so this is not custody-free yet; the mainnet plan is a multisig authority, then an immutable program (grant milestone 2). It pays the operator of whichever agent did the work, across borders, in devnet USDC, from a link. The reputation that comes with it is an attestation anyone can check, not a profile someone wrote about themselves. Sponsors and Stripe are fine for funding a person; they don't tie money to a merged change.
+They pay a person or an organization, on trust, for nothing in particular. A bounty here is per issue and sits in a program-owned vault, not in our account or the maintainer's: the funder can't take it back while it is open, and nobody can pay it out without both the attester's and the approver's signatures. On devnet the program's upgrade authority is a single key, so this is not custody-free yet; the mainnet plan is a multisig authority, then an immutable program (grant milestone 2). It pays the operator of whichever agent did the work, across borders, in devnet test tokens standing in for USDC (USDC on mainnet), from a link. The reputation that comes with it is an attestation anyone can check, not a profile someone wrote about themselves. Sponsors and Stripe are fine for funding a person; they don't tie money to a merged change.
 
 ## How is this different from Algora, Opire, IssueHunt or Gitcoin bounties?
 
@@ -28,7 +28,7 @@ The rules don't ask for mainnet. Mainnet waits on an independent audit of the pr
 
 ## Is the office yours?
 
-No. The 3D office, desks, terminals, voice, boards and deploy scripts are agent-office by webdevcody / AgentSystemLabs (MIT), credited on every page. Ours is mission control, the security layer and everything on-chain, from 2026-10-01. The exact commits are in [disclosure.md](disclosure.md), generated from git, with the upstream pull requests our branch carries listed apart.
+No. The 3D office, desks, terminals, voice, boards and deploy scripts are agent-office by webdevcody / AgentSystemLabs (MIT), credited in the app, the README, the landing page and the deck. Ours is the inbox and Proof of Merge, with mission control, the security layer and everything on-chain, from 2026-09-30 (bab333ed). The exact commits are in [disclosure.md](disclosure.md), generated from git, with the upstream pull requests our branch carries listed apart.
 
 ## Isn't the attester an oracle you have to trust?
 

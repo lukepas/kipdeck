@@ -4,7 +4,7 @@ window.DECK_CONFIG = {
   // Product name. Rename here only; every {{name}} and {{cmd}} follows it.
   name: 'Kipdeck',
   // Shown in the footer of every slide.
-  asOf: '9 Oct 2026',
+  asOf: '10 Oct 2026',
   // Flip to true once `npx kipdeck` is live on npm (gated on trademark search and employer clearance).
   // While false, every install claim says "runs from source today; npm at M1".
   npmPublished: false,
@@ -14,8 +14,9 @@ window.DECK_CONFIG = {
   // Team names, spelled once. Used on the ask slide contact line.
   team: ['Žygimantas Bagdzevičius', 'Lukas Kveraga', 'Ernestas Rimkevičius'],
   // Contact block on the ask slide. Empty values are left out (nothing "to be filled" is shown).
-  contactEmail: '',
-  demoUrl: '',
+  contactEmail: 'hello@kipdeck.com',
+  // The product site (kipdeck.com), linked on the ask slide.
+  demoUrl: 'https://kipdeck.com',
   repoUrl: 'https://github.com/zbagdzevicius/kipdeck',
   // Disclosure line on the team slide. It states only what is public today.
   // Founders: replace it with the agreed full-time dates, equity split and IP assignment once signed.

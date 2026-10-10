@@ -4,7 +4,7 @@ Kipdeck gives you full control and clarity over every AI coding agent you run, i
 
 One script each for [AWS](#deploy-to-aws-ec2), [Azure](#deploy-to-azure), [Railway](#deploy-to-railway), [Fly.io](#deploy-to-flyio) and [Dokploy](#deploy-to-dokploy), the one-line setup for [any Ubuntu or Debian server](#deploy-to-any-ubuntu-or-debian-server), or by hand behind Caddy or nginx. Back to the [README](../README.md).
 
-On your own computer you don't need any of this: `npx kipdeck` in your repository. A team office is reached through an SSH tunnel or Tailscale, and everyone signs in with a password or their own account; the terminal's sign-in links only work on the machine the office runs on.
+On your own computer you don't need any of this: `kipdeck` in your repository (`npx kipdeck` once it is on npm; until then from a linked clone, see the README's [From source](../README.md#from-source)). A team office is reached through an SSH tunnel or Tailscale, and everyone signs in with a password or their own account; the terminal's sign-in links only work on the machine the office runs on.
 
 ## One line on your own server
 

@@ -21,7 +21,7 @@ Docked, the panel stays up while you look around:
 - A row's action that opens another window (a terminal, the Changes window, a pull request) opens it over the deck as usual; the panel is still there when you close it.
 - The ✕ and **Esc** put it away and drop you straight back into mouse-look, with no extra click, the same as any other window.
 
-A window narrower than 900px always floats, even if docking is what you chose last; it docks again once the window is wide enough. The 2D view (`/lite`) docks the same way.
+A window narrower than 900px always floats, even if docking is what you chose last; it docks again once the window is wide enough. The inbox docks the same way.
 
 ## Attention
 
@@ -53,9 +53,9 @@ Each row shows the worker, its floor, what it's for (its milestone, its issue, o
 
 A worker on another floor takes you to its floor and its desk first, then does it.
 
-With [agent reputation](reputation.md) on, each row (here and in the Review tab) also shows its agent's record from merges, *rep 86 · merges 80% · 25.00 USDC*, linked to its latest attestation, with the whole record in its tooltip. An agent whose merges get reverted often gets a hint in words; it never changes where the worker ranks.
+With [agent reputation](reputation.md) on, each row (here and in the Review tab) also shows its agent's record from merges, *rep 86 · merges 80% · 25.00 TEST* (TEST for the devnet test mint, USDC only for a USDC mint), linked to its latest attestation, with the whole record in its tooltip. An agent whose merges get reverted often gets a hint in words; it never changes where the worker ranks.
 
-Where the view can show you a unit on the deck, its row has a **Locate** button (its target icon and the word, after the row's main button; a Timeline row keeps the icon alone), quiet until you hover the row (or select it with the arrow keys), in every tab with units in it. Docked, Mission control stays up while the view finds the unit; floating, it gets out of the way first. In the 3D office a unit on your deck is selected and the view finds it, in Walk landing you as N does, with the corner brackets on it, docked or not (the marked rail row and the card, which sits left of the docked panel, and the ring in the Overview; see [Selecting a unit](controls.md#selecting-a-unit)); one on another deck is a ride there. The 2D view has no deck to point at, so its rows have no Locate.
+Where the view can show you a unit on the deck, its row has a **Locate** button (its target icon and the word, after the row's main button; a Timeline row keeps the icon alone), quiet until you hover the row (or select it with the arrow keys), in every tab with units in it. Docked, Mission control stays up while the view finds the unit; floating, it gets out of the way first. On the Deck a unit on your deck is selected and the view finds it, in Walk landing you as N does, with the corner brackets on it, docked or not (the marked rail row and the card, which sits left of the docked panel, and the ring in the Overview; see [Selecting a unit](controls.md#selecting-a-unit)); one on another deck is a ride there. The inbox has no deck to point at, so its rows have no Locate.
 
 **...** on a row has the rest: open its terminal, snooze it for 30 minutes, 2 hours or until its status next changes, link it to a milestone, send it home. A snooze is shared: everyone sees *snoozed by Ana until 14:30*, so two people don't both chase the same worker. A snoozed worker stays in the list, greyed, but it isn't counted and nothing notifies about it.
 
@@ -129,7 +129,7 @@ At the foot of the tab is the **Captain's log**: the day's entries the start of 
 
 Back after 15 minutes or more, *While you were away* opens once: a one-line summary and the events since you left, with **Show what needs me** for the Attention tab. Merges, milestones, stuck workers and the like are listed before the routine finishes and questions. The summary is worked out the same way everywhere (`src/shared/digest.ts`): *3 PRs merged, 2 workers finished and wait for review, 1 got stuck, Auth rewrite moved from 3/7 to 5/7*.
 
-With an account, the office remembers when you were last here (when you left, not when you came in, and never while you're still here in another tab). It stamps everyone connected once a minute and as it shuts down, so a restart or a crash doesn't make people who never left look away. On the shared password, this browser does. In the 3D office it's a window that waits until the office has loaded, no other window is open and you aren't typing; while Settings > Deck > Rituals > Start of watch is on (the default), the start of watch's debrief takes its place at load, who waits on you listed first, and its **Full log** button opens this window ([docs/design.md](design.md#rituals)). In the 2D view it's the first card, and **Catch up** brings it back. From the palette, *While you were away* opens it again (the last hour's, if you weren't away).
+With an account, the office remembers when you were last here (when you left, not when you came in, and never while you're still here in another tab). It stamps everyone connected once a minute and as it shuts down, so a restart or a crash doesn't make people who never left look away. On the shared password, this browser does. On the Deck it's a window that waits until the office has loaded, no other window is open and you aren't typing; while Settings > Deck > Rituals > Start of watch is on (the default), the start of watch's debrief takes its place at load, who waits on you listed first, and its **Full log** button opens this window ([docs/design.md](design.md#rituals)). In the inbox it's the first card, and **Catch up** brings it back. From the palette, *While you were away* opens it again (the last hour's, if you weren't away).
 
 ## Reminders
 

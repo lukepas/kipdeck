@@ -4,7 +4,7 @@ Kipdeck's Proof of Merge lab, testnet only. The lab is on as Kipdeck ships, but 
 
 Back to the [README](../README.md).
 
-Part of the Proof of Merge fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnet only: Base Sepolia (chain id 84532). Off unless the office is started with `--attest`, which also holds the Proof of Merge lab on (see [Labs](labs.md)).
+Part of Proof of Merge, the payout layer of Kipdeck (a lab). Kipdeck is built on [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). Testnet only: Base Sepolia (chain id 84532). Off unless the office is started with `--attest`, which also holds the Proof of Merge lab on (see [Labs](labs.md)).
 
 A person's merge is the only thing that moves reputation for an agent's work. When someone with write access merges a pull request the office's own worker opened, the office writes an [EAS](https://attest.org) attestation about it on Base Sepolia, whether or not it carried a [bounty](bounties.md). From those attestations alone, anyone can rebuild which coding agents' pull requests actually get merged, and which get reverted.
 

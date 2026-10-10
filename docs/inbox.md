@@ -26,7 +26,7 @@ The list moves only when something changes for you (`src/client/home/motion.ts`)
 
 ## The first visit
 
-`npx kipdeck` in the repository you work in opens this page in your browser, signed in (on your own computer there is no password; see [Security](security.md#signing-in-on-your-own-computer)), with that repository as the first project. Until the first agent, the list is the **setup card**. When everything is ready it is one line (the agent it found, the project, and whether merges go through GitHub or this computer), **Deploy your first agent**, and the rows below folded under **Details**:
+`kipdeck` in the repository you work in (`npx kipdeck` once it is on npm; until then from a linked clone, see the README's [From source](../README.md#from-source)) opens this page in your browser, signed in (on your own computer there is no password; see [Security](security.md#signing-in-on-your-own-computer)), with that repository as the first project. Until the first agent, the list is the **setup card**. When everything is ready it is one line (the agent it found, the project, and whether merges go through GitHub or this computer), **Deploy your first agent**, and the rows below folded under **Details**:
 
 - **Agents**: the agent CLIs on this computer, Claude Code, Codex and Cursor always and the beta ones when they're installed, each with whether it's signed in (read from its own files and keys, not by running it). One that isn't ready says the one line that fixes it (`claude auth login`, `npm install -g @openai/codex`...), with a copy button.
 - **Project**: the folder Kipdeck was started in. Started somewhere else, **Use <folder>** or a box to clone a repository from GitHub (admins).
@@ -36,9 +36,9 @@ The list moves only when something changes for you (`src/client/home/motion.ts`)
 
 While the card is up, the top bar's **Deploy agent** is hidden (the card has the one button), and the pane beside it is a short looping preview of one row going from Working to Needs you, To review and Shipped today, marked *Preview*.
 
-No agent CLI yet? `npx kipdeck --demo` opens this page on a throwaway repository with five scripted agents, and a **Demo** pill in the top bar says so, with how to run it for real ([the demo](demo.md)).
+No agent CLI yet? `kipdeck --demo` (`npx kipdeck --demo` once it is on npm) opens this page on a throwaway repository with five scripted agents, and a **Demo** pill in the top bar says so, with how to run it for real ([the demo](demo.md)).
 
-Already running Claude Code or Codex in a terminal? Quit it there and run `npx kipdeck attach` in the same folder: its session carries on as one of the inbox's agents ([Configuration](configuration.md#command-line)). The server side of the card is `src/server/firstrun.ts` and `ws/handlers/setup.ts`; the card is `src/client/home/setup.ts`.
+Already running Claude Code or Codex in a terminal? Quit it there and run `kipdeck attach` (`npx kipdeck attach` once it is on npm) in the same folder: its session carries on as one of the inbox's agents ([Configuration](configuration.md#command-line)). The server side of the card is `src/server/firstrun.ts` and `ws/handlers/setup.ts`; the card is `src/client/home/setup.ts`.
 
 ## The loop
 

@@ -68,7 +68,7 @@ deploy/dokploy.sh reset-password       # new password, shown once; signs everyon
 deploy/dokploy.sh ssh | logs           # a shell in the container / follow the office's logs
 ```
 
-**Updating.** Pull the latest agent-office into your clone and run `deploy/dokploy.sh update`. **⬆️ Upgrade the office** in the **☰** menu is for servers set up with `deploy/provision.sh`: a container's code comes from its image. If a build fails, its log is on the application's **Deployments** tab in Dokploy (`status` prints the link).
+**Updating.** Pull the latest Kipdeck into your clone and run `deploy/dokploy.sh update`. **⬆️ Upgrade the office** in the **☰** menu is for servers set up with `deploy/provision.sh`: a container's code comes from its image. If a build fails, its log is on the application's **Deployments** tab in Dokploy (`status` prints the link).
 
 **Claude sign-in.** Pass `--claude-token "$(claude setup-token)"` (your Claude subscription) or `--anthropic-api-key <key>`; either becomes an environment variable of the application. Or pass neither, and run `/login` in the first worker's terminal: that sign-in is kept on the volume.
 

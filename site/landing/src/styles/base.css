@@ -155,5 +155,6 @@ nav.links a:hover { color: var(--text); }
   .top-in { gap: 8px; min-height: 56px; padding-top: 8px; }
   .theme { width: 30px; height: 30px; }
 }
-/* The narrowest phones keep the count and the clock: "1 / 0:07". */
-@media (max-width: 380px) { .pulse .pulse-words { display: none; } }
+/* Phones keep the count and the clock, "1 / 0:07", so the pulse, the sound and the theme buttons stay on
+   the lockup's row and the bar is two rows (controls, then the section links), not three. */
+@media (max-width: 440px) { .pulse .pulse-words { display: none; } }

@@ -2,7 +2,7 @@
 
 A JavaScript action a maintainer adds to any GitHub repository so the [Solana bounty escrow](../solana/README.md) works without running the office. When a pull request is merged, it checks the merge on GitHub and signs the escrow's claim with the repository's attester key. Paying out still needs the approver. Optionally it also writes the [Proof of Merge](../attest/README.md) attestation on Base Sepolia.
 
-Testnets only: Solana devnet (or a local validator for tests) and Base Sepolia. There is no mainnet input, the Solana client checks the RPC's genesis hash is devnet's before it signs, and the Base attestor checks the chain id. This is part of the Proof of Merge fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT). It is not published to the Marketplace or anywhere else.
+Testnets only: Solana devnet (or a local validator for tests) and Base Sepolia. There is no mainnet input, the Solana client checks the RPC's genesis hash is devnet's before it signs, and the Base attestor checks the chain id. This is part of Proof of Merge, the payout layer of Kipdeck, which is built on [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT). It is not published to the Marketplace or anywhere else.
 
 ## What a run does
 

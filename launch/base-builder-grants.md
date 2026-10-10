@@ -1,5 +1,7 @@
 # Base Builder Grants
 
+**Drafted on 2026-10-01 under the old name.** The product is now Kipdeck, the inbox for your AI coding agents, built on agent-office (MIT, by webdevcody / AgentSystemLabs), with Proof of Merge as its payout layer. Refresh the product name, what is built and the disclosure from [chain/disclosure.md](chain/disclosure.md) before you use this kit.
+
 Last checked: 2026-10-01. Sources: the Base grants team's post "Calling Based Builders" (dated 2023-10-30) and the Base "Get funded" docs (links below). The "Get funded" page lists Base Batches and the Base Ecosystem Fund but not Builder Grants, and the post is three years old, so whether Builder Grants still run in this form in 2026 is [unverified]. The nomination form was not opened, so its fields are [unverified].
 
 Plan: once x402 pay-per-task payments (branch `launch/x402-base`) are live on Base mainnet and someone other than us has paid for a task, nominate the project. The post describes "small grants for builders with early ideas or initial prototypes", but one of its three questions is whether the work is live and making an impact, and third-party summaries call the program retroactive. Nominate something that is live, not a plan.
