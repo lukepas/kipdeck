@@ -81,7 +81,7 @@ What keeps it inside them:
 - The merge's ring is an annulus mesh that shades only its lit band, at 0.6x pixels, and falls back to Canvas2D if WebGL is missing or its program does not link. Its canvas, context and program are made in the first idle moment after the opening (with `KHR_parallel_shader_compile` where the driver has it) and kept hidden, so the merge only draws.
 - Pins are `position: sticky` with native scroll; nothing intercepts the wheel. Layout reads happen in one pass per frame before any write, the loop stops when the tab is hidden, and every canvas stops when it is off screen.
 
-Accessibility: the page is semantic HTML that reads in full without script (a scene's text is clipped while it plays, never hidden from a screen reader), canvases and drawings are `aria-hidden`, there is a skip link, every control has a name and a visible focus ring, Copy announces itself through a polite live region, the film has English captions (`public/media/film-captions.vtt`: its on-screen words and the sounds that carry meaning) and never plays by itself, and text meets AA in both themes. With less motion every scene shows its final state, the field is still, the wait clock is hidden, every clock in the hero reads the same value, counting without rolling and no scene chunk is fetched ahead of time; switching it while the page is open reloads the page in the new mode. Tabbing into the loop's actions first scrolls to where the scene shows them, and in-page jumps re-align once the sections above have rendered at their real size (`ui/anchors.ts`).
+Accessibility: the page is semantic HTML that reads in full without script (a scene's text is clipped while it plays, never hidden from a screen reader), canvases and drawings are `aria-hidden`, there is a skip link, every control has a name and a visible focus ring, Copy announces itself through a polite live region, the film has English captions (`public/media/film-captions-v2.vtt`: its on-screen words and the sounds that carry meaning) and never plays by itself, and text meets AA in both themes. With less motion every scene shows its final state, the field is still, the wait clock is hidden, every clock in the hero reads the same value, counting without rolling and no scene chunk is fetched ahead of time; switching it while the page is open reloads the page in the new mode. Tabbing into the loop's actions first scrolls to where the scene shows them, and in-page jumps re-align once the sections above have rendered at their real size (`ui/anchors.ts`).
 
 Search and sharing: the title says what it is (`Kipdeck: the inbox for your AI coding agents`), with a description, Open Graph and Twitter tags with image alt text, and `SoftwareApplication` structured data (free, MIT, no ratings, since there are none). `robots.txt` ships with the build; once `KIPDECK_SITE_URL` says where the page lives (on Vercel it falls back to the project's production domain, `VERCEL_PROJECT_PRODUCTION_URL`), the build adds the canonical link, `og:url`, absolute share-card addresses, `sitemap.xml` and its line in `robots.txt`.
 
@@ -93,7 +93,7 @@ The name, tagline, wordmark, npm package, source repository and share-card text 
 KIPDECK_BRAND=<id> npm run build:site
 ```
 
-The test builds the page and checks that it never says a product name other than Kipdeck. The source repository is `github.com/zbagdzevicius/kipdeck`. One thing the build cannot change: the 30-second film's frames were rendered with the old UGC Army wordmark, so the page's film shows that name until the film in `video/` is rendered again.
+The test builds the page and checks that it never says a product name other than Kipdeck. The source repository is `github.com/zbagdzevicius/kipdeck`.
 
 ## Build, look at it, publish
 
@@ -142,7 +142,7 @@ The build also draws `og.png` (1200 by 630, the share card) from the brand with 
 - `site/landing/src/ui/ghost.ts`: the ghost cursor that answers the waiting agent once after six idle seconds.
 - `site/landing/src/ui/wait.ts`: the page's one piece of state, whether a scripted agent is waiting on the visitor and since when.
 - `site/landing/src/ui/anchors.ts`: in-page jumps that land where they aim once the sections above have rendered.
-- `site/landing/public/media/`: the 30-second film re-encoded for the web (AV1 WebM, H.264 MP4 and the 9:16 cut for phones) and its posters. The film never plays by itself and loads only when someone opens it.
+- `site/landing/public/media/`: the 30-second film re-encoded for the web (AV1 WebM, H.264 MP4 and the 9:16 cut for phones), its captions and its posters. The film never plays by itself and loads only when someone opens it. After a new render in `video/`, `python3 video/tools/deliver.py --web` writes the web files; a changed film gets a new file name (`-v2`, `-v3`...) because the landing caches media for a week, and the `<video>` sources, the captions file and `tests/landing-a11y.test.ts` move to the new name with it.
 
 `site/perf.mjs` is the performance gate described above.
 

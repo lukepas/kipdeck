@@ -17,6 +17,15 @@ and checks every mp4: H.264 High yuv420p, the size of its format, 60 fps,
 peak at or below -1 dBTP. Exits non-zero if a check fails.
 
 usage: python3 tools/deliver.py [--skip-posters] [--skip-teaser]
+       python3 tools/deliver.py --web [SUFFIX]
+
+--web skips all of the above and writes the landing page's copies of the 16:9
+and 9:16 finals to site/landing/public/media as film-16x9-SUFFIX.mp4 and .webm
+and film-9x16-SUFFIX.mp4 (SUFFIX defaults to v2): H.264 High about 550k (430k
+for 9:16) with AAC 80k, and AV1 at 460k with Opus 80k, all 1280 on the long side at
+30 fps. The landing caches media for a week, so a changed film takes a new
+SUFFIX, and site/landing/index.html, the captions file and
+tests/landing-a11y.test.ts move to it.
 """
 import os
 import shutil
@@ -27,9 +36,10 @@ from verify import ROOT, loudness, probe, sh, tool
 FINAL = os.path.join(ROOT, "out", "final")
 FORMATS = {"16x9": (1920, 1080), "9x16": (1080, 1920), "1x1": (1080, 1080)}
 FPS, DURATION = 60, 30.0
-# The strongest frame: the thesis set in full over the merged grid, PR #1
-# marked MERGED, the shockwave ring gone.
-POSTER_T = 14.9
+# The landing's poster frame (site/landing/public/media/poster-*.webp): the
+# overload, 64 agents smearing into streaks. It carries no brand, so a rename
+# never needs a new poster.
+POSTER_T = 5.2
 # The signature moment: 'Who gets paid?', the click, the shockwave, the ink
 # flood and 25.00 released. Both ends sit on a downbeat, so the loop seam is
 # a cut on the beat like the film's own.
@@ -64,6 +74,29 @@ def teaser():
         "-loop", "0", gif], timeout=900)
     for f in (webm, gif):
         print(f"teaser -> {os.path.relpath(f, ROOT)}")
+
+
+WEB = os.path.join(ROOT, "..", "site", "landing", "public", "media")
+
+
+def web(suffix):
+    """The landing's web copies of the finals (see the module docstring)."""
+    x264 = ["-c:v", "libx264", "-profile:v", "high", "-pix_fmt", "yuv420p", "-preset", "slow"]
+    aac = ["-c:a", "aac", "-b:a", "80k", "-ar", "48000", "-movflags", "+faststart"]
+    jobs = [
+        (film("16x9"), "scale=1280:720:flags=lanczos,fps=30",
+         x264 + ["-b:v", "550k", "-maxrate", "900k", "-bufsize", "1800k"] + aac, f"film-16x9-{suffix}.mp4"),
+        (film("16x9"), "scale=1280:720:flags=lanczos,fps=30",
+         ["-c:v", "libsvtav1", "-preset", "6", "-b:v", "460k", "-pix_fmt", "yuv420p", "-c:a", "libopus", "-b:a", "80k"],
+         f"film-16x9-{suffix}.webm"),
+        (film("9x16"), "scale=720:1280:flags=lanczos,fps=30",
+         x264 + ["-b:v", "430k", "-maxrate", "700k", "-bufsize", "1400k"] + aac, f"film-9x16-{suffix}.mp4"),
+    ]
+    for src, vf, args, name in jobs:
+        dst = os.path.normpath(os.path.join(WEB, name))
+        sh([tool("ffmpeg"), "-y", "-v", "error", "-i", src, "-vf", vf] + args + [dst], timeout=1800)
+        print(f"web -> {dst}  ({os.path.getsize(dst) / 1e6:.2f} MB, {duration(dst):.3f} s)")
+    return 0
 
 
 def duration(path):
@@ -104,6 +137,9 @@ def check(fmt, fails):
 
 
 def main(argv):
+    if "--web" in argv:
+        rest = argv[argv.index("--web") + 1:]
+        return web(rest[0] if rest else "v2")
     os.makedirs(FINAL, exist_ok=True)
     # The credits are kept in source (assets/CREDITS.md) and shipped beside the films.
     shutil.copyfile(os.path.join(ROOT, "assets", "CREDITS.md"), os.path.join(FINAL, "CREDITS.md"))

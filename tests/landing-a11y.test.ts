@@ -257,12 +257,16 @@ test('Copy, Try the demo, Watch, Merge, the Labs flags and the design-partner li
 });
 
 test('the film has English captions, and its poster is fetched only when it is opened', { skip: why || false }, async (t) => {
-  assert.match(html, /<track kind="captions" srclang="en" label="English" src="media\/film-captions\.vtt" default>/);
-  const vtt = readFileSync(path.join(dir, 'media', 'film-captions.vtt'), 'utf8');
+  assert.match(html, /<track kind="captions" srclang="en" label="English" src="media\/film-captions-v2\.vtt" default>/);
+  const vtt = readFileSync(path.join(dir, 'media', 'film-captions-v2.vtt'), 'utf8');
   assert.match(vtt, /^WEBVTT/);
   assert.match(vtt, /Paid only when a human merges\./);
   assert.match(vtt, /test funds only/);
-  assert.doesNotMatch(vtt, /kipdeck|kipdeck/i, 'the captions name no product, so either build can carry them');
+  // The film names Kipdeck on screen, so the captions do too, and none of the old names or the old slogan.
+  assert.match(vtt, /^Kipdeck\.$/m);
+  assert.match(vtt, /The inbox for your AI coding agents\./);
+  assert.match(vtt, /github\.com\/zbagdzevicius\/kipdeck/);
+  assert.doesNotMatch(vtt, /UGC Army|Mergeline|army of|test USDC/i);
   const { page } = await open(t);
   const posters: string[] = [];
   page.on('request', (r) => /poster/.test(r.url()) && posters.push(r.url()));

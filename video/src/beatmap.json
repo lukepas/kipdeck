@@ -2077,10 +2077,10 @@
   {
    "t": 16,
    "frame": 960,
-   "name": "text.25-test-usdc",
+   "name": "text.25-test-tokens",
    "kind": "text",
    "scene": "escrow",
-   "text": "25 test USDC."
+   "text": "25 test tokens."
   },
   {
    "t": 16.25,
@@ -2756,7 +2756,7 @@
    "name": "text.promise",
    "kind": "text",
    "scene": "endcard",
-   "text": "An army of AI agents working for you. Your agents get paid only when you merge."
+   "text": "The inbox for your AI coding agents. Your agents get paid only when you merge."
   },
   {
    "t": 28.5,

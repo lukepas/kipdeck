@@ -339,7 +339,7 @@ export function compose() {
     playStamp(t, { gain: 0.42 });
     hit(t, `state.${['open', 'funded', 'claimed'][k]}`, 'stamp', 'escrow', { weight: 'light' });
   });
-  hit(16.0, 'text.25-test-usdc', 'text', 'escrow', { text: '25 test USDC.' });
+  hit(16.0, 'text.25-test-tokens', 'text', 'escrow', { text: '25 test tokens.' });
   // The bounty is funded in one lump: four flap ticks fill the escrow bar into FUNDED (16.5),
   // where 25.00 locks and holds unchanged until RELEASED.
   for (let t = 16.25; t < 16.5 - 1e-9; t += S32) {
@@ -466,7 +466,7 @@ export function compose() {
   addMono(bus.drums, 27.5, I.clap({ seed: nextSeed() }), 0.25);
   addMono(bus.drums, 28.5, I.clap({ seed: nextSeed() }), 0.22);
   addStereo(bus.fx, 27.8, I.swish(0.3, { fFrom: 600, fTo: 3500, panFrom: -0.7, panTo: 0.4, seed: 2800, level: 0.3 }), 1);
-  hit(28.0, 'text.promise', 'text', 'endcard', { text: 'An army of AI agents working for you. Your agents get paid only when you merge.' });
+  hit(28.0, 'text.promise', 'text', 'endcard', { text: 'The inbox for your AI coding agents. Your agents get paid only when you merge.' });
   addMono(bus.fx, 28.5, I.tick({ freq: 1200, tau: 0.03 }), 0.06);
   hit(28.5, 'smallprint.fade', 'text', 'endcard', { note: 'testnet disclosure fades up and holds' });
   hit(28.5, 'outro.filter.start', 'event', 'endcard', { note: 'groove low-passes out over 2 beats' });
