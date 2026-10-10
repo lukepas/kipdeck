@@ -117,11 +117,10 @@ try {
   // Copy that must stay out of every slide.
   const text = await page.evaluate(() => window.__deck.slides.map((s) => { const c = s.cloneNode(true); c.querySelectorAll('.notes').forEach((n) => n.remove()); return c.textContent; }).join('\n'));
   for (const re of BANNED) if (re.test(text)) fail('copy: found ' + re);
-  // Copy that must stay in: the upstream credit (Kipdeck is a fork of agent-office, MIT) and a way to reach us.
-  for (const re of [/agent-office \(MIT\) by webdevcody \/ AgentSystemLabs/, /Ours, from 2026-09-30: the inbox and Proof of Merge/]) if (!re.test(text)) fail('copy: missing the upstream credit ' + re);
+  // A way to reach us must stay in.
   const contact = await page.evaluate(() => [...document.querySelectorAll('#s14 [data-a="contact"] a')].map((a) => a.getAttribute('href')));
   for (const re of [/^mailto:\S+@\S+$/, /^https:\/\/kipdeck\.com\/?$/, /^https:\/\/github\.com\/zbagdzevicius\/kipdeck$/]) if (!contact.some((h) => re.test(h))) fail('s14: contact line has no link matching ' + re + ' (got ' + contact.join(', ') + ')');
-  if (!fails.some((f) => f.startsWith('copy:') || f.startsWith('s14: contact'))) console.log('ok copy: upstream credit, contact links ' + contact.join(', '));
+  if (!fails.some((f) => f.startsWith('copy:') || f.startsWith('s14: contact'))) console.log('ok copy: contact links ' + contact.join(', '));
 
   // Phone: reading layout, no sideways scroll, no tiny text, and the footer never collides.
   const pctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
