@@ -129,7 +129,7 @@ test('the timeline notes a funding with its transaction', async (t) => {
   const funded = s.timeline.filter((x) => x.kind === 'bounty-funded');
   assert.equal(funded.length, 1);
   assert.match(funded[0].e.tx, /^mock-tx-\d+$/);
-  assert.match(funded[0].e.text, /#12's bounty is 20 USDC now \(1 funder\)/);
+  assert.match(funded[0].e.text, /#12's bounty is 20 TEST now \(1 funder\)/);
   // Looking again with nothing new says nothing again.
   await s.b.sync(s.floor as any);
   assert.equal(s.timeline.filter((x) => x.kind === 'bounty-funded').length, 1);
@@ -181,11 +181,11 @@ test("a person's merge waits for an admin, whose approval pays the operator and 
   const v = item(s.b, s.floor);
   assert.equal(v.phase, 'awaiting-approval');
   assert.equal(v.mergedBy, 'maintainer');
-  assert.match(s.toasts.join('\n'), /PR #77 merged: its 20 USDC bounty waits for an admin/);
+  assert.match(s.toasts.join('\n'), /PR #77 merged: its 20 TEST bounty waits for an admin/);
   // The review inbox's line for it.
   const payouts = bountyPayouts({ id: 'f1', name: 'Office' }, s.b.state(s.floor as any));
   const inbox = reviewInbox([], [], undefined, payouts);
-  assert.equal(inbox[0].reason, 'Approve payout of 20.00 USDC to Ada for PR #77');
+  assert.equal(inbox[0].reason, 'Approve payout of 20.00 TEST to Ada for PR #77');
   assert.equal(inbox[0].action, 'approve-payout');
   assert.equal(s.mock.balance(OPERATOR), 0n);
 
@@ -197,7 +197,7 @@ test("a person's merge waits for an admin, whose approval pays the operator and 
   const paid = s.timeline.find((x) => x.kind === 'bounty-paid')!;
   assert.equal(paid.e.tx, r.sig);
   assert.equal(paid.e.pr, 77);
-  assert.match(paid.e.text, /Grace approved: paid 20 USDC to Ada for PR #77/);
+  assert.match(paid.e.text, /Grace approved: paid 20 TEST to Ada for PR #77/);
   const msg = s.sent.find((m) => m.t === 'bounty.paid') as Extract<ServerMsg, { t: 'bounty.paid' }>;
   assert.deepEqual({ issue: msg.issue, pr: msg.pr, amount: msg.amount }, { issue: 12, pr: 77, amount: '20000000' });
   // Once.
@@ -375,7 +375,7 @@ test("a stranger's bounty on the same issue, with keys of their own, is never sh
   assert.notEqual(mine.address, (await s.mock.get(theirs))!.address);
   assert.equal((await s.mock.get(theirs))!.total, 1n);
   assert.equal(item(s.b, s.floor).pda, mine.address);
-  assert.equal(((await s.b.actionGet(REPO, 12, 'https://office.example')).body as any).description.includes('7 USDC'), true);
+  assert.equal(((await s.b.actionGet(REPO, 12, 'https://office.example')).body as any).description.includes('7 TEST'), true);
 });
 
 test('past its expiry a bounty takes no more funds: the next one opens, and the old one is still cranked back', async (t) => {
@@ -499,7 +499,7 @@ test('an admin is warned a day before a payout waiting for approval expires, and
   assert.ok(!s.toasts.some((x) => /expires in about/.test(x)));
   s.tick(3 * 86_400 - 3 * 3600);
   await s.b.sync(s.floor as any);
-  assert.ok(s.toasts.some((x) => /#12's 20 USDC bounty expires in about 3 h: approve the payout for PR #77/.test(x)));
+  assert.ok(s.toasts.some((x) => /#12's 20 TEST bounty expires in about 3 h: approve the payout for PR #77/.test(x)));
   await s.b.sync(s.floor as any);
   assert.equal(s.toasts.filter((x) => /expires in about/.test(x)).length, 1);
 });

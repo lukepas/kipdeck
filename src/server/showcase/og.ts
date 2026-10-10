@@ -9,6 +9,7 @@ import { MARK } from '../../shared/logo.js';
 import { flatten, inside } from '../../shared/logo-path.js';
 import { deflateSync } from 'node:zlib';
 import { HARNESSES, type ShowcaseDoc } from '../../shared/showcase.js';
+import { tokenWords } from '../../shared/money.js';
 
 export const OG_WIDTH = 1200;
 export const OG_HEIGHT = 630;
@@ -132,6 +133,13 @@ class Raster {
 export const textWidth = (str: string, s: number) => Math.max(0, str.length * 6 * s - s);
 
 /** Fits `str` into `width` pixels at size `s`, cutting it with "..." when it's longer. */
+/** The paid counter's name, by its token, in the 288 pixels the side column has: "TEST TOKENS PAID". */
+export function paidName(symbol: string): string {
+  const words = tokenWords(symbol).toUpperCase();
+  const long = `${words} PAID ON A MERGE`;
+  return long.length <= 24 ? long : `${words} PAID`;
+}
+
 function fit(str: string, s: number, width: number): string {
   const max = Math.floor((width + s) / (6 * s));
   return str.length <= max ? str : `${str.slice(0, Math.max(0, max - 3))}...`;
@@ -255,7 +263,8 @@ export function ogImage(doc: ShowcaseDoc): Buffer {
     const label = (doc.agents.find((a) => a.agentId === e.agentId)?.label ?? `agent #${e.agentId}`).replace(/-/g, ' ');
     r.text(L, HEAD + 52, 3, fit(`${e.repo ? `${e.repo}#${e.pr}` : `PR #${e.pr} in a private repo`} - ${label} (${HARNESSES[e.harness] ?? e.harness})`, 3, LW), MUTED);
     r.text(L, HEAD + 84, 4, fit(e.title ?? 'Merged by a person', 4, LW), TEXT);
-    const bounty = e.paid ? `${amount(e.paid.amount, e.paid.decimals)} USDC` : 'NO BOUNTY';
+    // Named by the payout's mint: "USDC" only for USDC, "TEST" for the project's test mint.
+    const bounty = e.paid ? `${amount(e.paid.amount, e.paid.decimals)} ${e.paid.symbol}` : 'NO BOUNTY';
     r.text(L, HEAD + 136, 9, fit(bounty, 9, LW), e.paid ? PROOF : FAINT);
     r.text(L, HEAD + 210, 2, e.paid ? 'RELEASED FROM ESCROW ON SOLANA DEVNET, ONLY ON A HUMAN MERGE' : 'MERGED BY A PERSON', MUTED);
     // The money path: four steps, each a node and a short hash.
@@ -284,7 +293,7 @@ export function ogImage(doc: ShowcaseDoc): Buffer {
   const c = doc.counters;
   const totals: [string, string, RGB][] = [
     [String(c.merged), 'MERGES ATTESTED', PROOF],
-    [c.usdcPaid, 'USDC PAID ON A MERGE', TEXT],
+    [c.usdcPaid, paidName(c.paidSymbol), TEXT],
     [String(c.maintainers), 'MAINTAINERS', TEXT],
   ];
   totals.forEach(([value, name, color], i) => {

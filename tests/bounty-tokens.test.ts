@@ -71,11 +71,19 @@ test('past the room on the vault the last column counts the rest, and nothing sh
   assert.equal(vaultView(undefined).on, false);
 });
 
-test('the network is always said as a testnet: devnet test USDC, or the mock chain', () => {
-  assert.match(networkLabel('solana-devnet'), /DEVNET/);
-  assert.match(networkLabel('solana-devnet'), /TEST USDC/);
-  assert.equal(networkLabel('mock'), 'MOCK CHAIN');
-  assert.match(networkLabel(undefined), /DEVNET/);
+test('the network is always said as a testnet, with its token by the mint, or the mock chain', () => {
+  assert.equal(networkLabel('solana-devnet', 'TEST'), 'DEVNET  TEST TOKENS');
+  assert.equal(networkLabel('solana-devnet', 'USDC'), 'DEVNET  USDC');
+  assert.equal(networkLabel('mock', 'TEST'), 'MOCK CHAIN');
+  assert.match(networkLabel(undefined, 'TOKENS'), /^DEVNET/);
+  assert.doesNotMatch(networkLabel('solana-devnet', 'TEST'), /USDC/);
+});
+
+test("the vault names the office's token by its mint, never USDC for test tokens", () => {
+  const v = vaultView(STATE([bounty(1, 20, 'open', { symbol: 'TEST' })], { symbol: 'TEST' }));
+  assert.equal(v.network, 'DEVNET  TEST TOKENS');
+  assert.equal(v.held.total, '20.00 TEST');
+  assert.equal(vaultView(STATE([bounty(1, 20, 'open')], { symbol: 'USDC' })).held.total, '20.00 USDC');
 });
 
 test("the Issues board's rows carry the amount of a bounty still held, and nothing for a settled one", () => {

@@ -85,6 +85,8 @@ export interface Payout {
   tx: string;
   amount: string;
   decimals: number;
+  /** The token's mint, so the payout is named for what it was (shared/money.ts tokenSymbol). */
+  mint?: string;
 }
 
 export interface ProofDeps {
@@ -216,9 +218,9 @@ export class MergeProofs {
   }
 
   /** The payout of PR `pr`'s bounty, as outbox fields. */
-  private paid(floorId: string, pr: number): Pick<OutboxItem, 'solanaTx' | 'paidAmount' | 'paidDecimals'> {
+  private paid(floorId: string, pr: number): Pick<OutboxItem, 'solanaTx' | 'paidAmount' | 'paidDecimals' | 'paidMint'> {
     const p = this.deps.payout?.(floorId, pr);
-    return p ? { solanaTx: p.tx, paidAmount: p.amount, paidDecimals: p.decimals } : {};
+    return p ? { solanaTx: p.tx, paidAmount: p.amount, paidDecimals: p.decimals, ...(p.mint ? { paidMint: p.mint } : {}) } : {};
   }
 
   /** A fresh list of a floor's pull requests: an office PR that closed without merging owes outcome 3. */

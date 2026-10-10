@@ -22,7 +22,7 @@ test('merge rate, revert rate, score, median time to merge and distinct maintain
     ev({ outcome: 'closed', maintainer: '0x01' }),
     ev({ outcome: 'closed', maintainer: '0x01' }),
     ev({ outcome: 'reverted', pr: 1, mergedAt: T + 100, at: T + 100 + DAY }),
-    ev({ paid: { amount: '25000000', decimals: 6, tx: '5'.repeat(88) }, maintainer: '0x04', openedAt: T - 700, at: T + 100 }), // 800 s
+    ev({ paid: { amount: '25000000', decimals: 6, tx: '5'.repeat(88), mint: '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU' }, maintainer: '0x04', openedAt: T - 700, at: T + 100 }), // 800 s
   ];
   const s = statsOf('7', 'agent', events);
   assert.equal(s.merged, 5);

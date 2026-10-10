@@ -39,6 +39,8 @@ export interface OutboxItem {
   /** The bounty paid for it: amount in the token's smallest units, and its decimals. */
   paidAmount?: string;
   paidDecimals?: number;
+  /** The paid token's mint (older items don't say). */
+  paidMint?: string;
   mergedAt: number;
   /** When the pull request was opened (ms), for time to merge. */
   openedAt?: number;
@@ -86,6 +88,7 @@ function clean(raw: unknown): OutboxItem | undefined {
   if (typeof r.paidAmount === 'string' && /^\d{1,30}$/.test(r.paidAmount)) out.paidAmount = r.paidAmount;
   const decimals = int(r.paidDecimals);
   if (decimals !== undefined && decimals <= 18) out.paidDecimals = decimals;
+  if (typeof r.paidMint === 'string' && /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(r.paidMint)) out.paidMint = r.paidMint;
   return out;
 }
 

@@ -31,6 +31,8 @@ export interface Payout {
   pr: number;
   amount: bigint;
   decimals: number;
+  /** The token's mint: devnet USDC or the test mint, named by shared/money.ts tokenSymbol. */
+  mint: string;
   claimant: string;
   mergeSha: string;
   signature: string;
@@ -87,7 +89,7 @@ export async function readPayouts(src: SolanaSource, fetchFn: typeof fetch = fet
       const acc = await call<{ value?: { data?: { parsed?: { info?: { decimals?: number } } } } }>(src, fetchFn, 'getAccountInfo', [c.mint, { encoding: 'jsonParsed', commitment: 'confirmed' }]);
       decimals.set(c.mint, acc.value?.data?.parsed?.info?.decimals ?? 6);
     }
-    out.push({ repoHash: c.repoHash, pr: e.prNumber, amount: e.amount, decimals: decimals.get(c.mint)!, claimant: e.claimantWallet, mergeSha: e.mergeSha, signature, ...(blockTime ? { blockTime } : {}), link: explorerTx(src, signature) });
+    out.push({ repoHash: c.repoHash, pr: e.prNumber, amount: e.amount, decimals: decimals.get(c.mint)!, mint: c.mint, claimant: e.claimantWallet, mergeSha: e.mergeSha, signature, ...(blockTime ? { blockTime } : {}), link: explorerTx(src, signature) });
   }
   return out;
 }

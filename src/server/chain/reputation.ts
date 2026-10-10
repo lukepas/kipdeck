@@ -77,6 +77,8 @@ export interface ReputationDeps {
   workers?(): { id: string; key: string }[];
   /** Whether the office takes paid tasks over x402 (agent cards say so). */
   x402?(): boolean;
+  /** The bounty mint, for payouts recorded before the outbox kept theirs (Bounties.mint). */
+  mint?(): string | undefined;
   /** Something a browser shows changed. */
   changed?(): void;
   /** Tests: the SDK, the RPC fetch, the clock, and no timer. */
@@ -105,7 +107,7 @@ function cleanFeedback(raw: unknown): FeedbackItem | undefined {
 }
 
 /** Outcomes the office attested, as the shared metrics take them (the same shape the indexer reads off the chain). */
-export function eventsOf(items: readonly OutboxItem[], feedbackLink: (key: string) => string | undefined = () => undefined): RepEvent[] {
+export function eventsOf(items: readonly OutboxItem[], feedbackLink: (key: string) => string | undefined = () => undefined, mint?: string): RepEvent[] {
   const live = items.filter((i) => i.uid && !i.skipped);
   const byKey = new Map(live.map((i) => [i.key, i]));
   const out: RepEvent[] = [];
@@ -116,7 +118,7 @@ export function eventsOf(items: readonly OutboxItem[], feedbackLink: (key: strin
     const opened = i.openedAt && sec(i.openedAt) <= at ? { openedAt: sec(i.openedAt) } : {};
     const base = { agentId: i.agentId ?? '0', harness: i.harness, repo: i.repo, uid: i.uid!, ...(!zero(i.maintainer) ? { maintainer: i.maintainer } : {}), ...(i.self ? { self: true } : {}) };
     if (i.outcome === 1) {
-      const paid = i.solanaTx && i.paidAmount ? { paid: { amount: i.paidAmount, decimals: i.paidDecimals ?? 6, tx: i.solanaTx } } : {};
+      const paid = i.solanaTx && i.paidAmount ? { paid: { amount: i.paidAmount, decimals: i.paidDecimals ?? 6, tx: i.solanaTx, ...((i.paidMint ?? mint) ? { mint: i.paidMint ?? mint } : {}) } } : {};
       out.push({ ...base, pr: i.pr, outcome: 'merged', at, ...opened, ...paid, links: { ...links, ...(i.solanaTx ? { solana: solanaTxLink(i.solanaTx) } : {}) } });
     } else if (i.outcome === 2) {
       const original = i.ref ? byKey.get(i.ref) : undefined;
@@ -322,7 +324,7 @@ export class Reputation {
 
   /** Every outcome the office attested, with its links. */
   events(): RepEvent[] {
-    return eventsOf(this.deps.attestations(), (key) => this.feedback.get(key)?.link);
+    return eventsOf(this.deps.attestations(), (key) => this.feedback.get(key)?.link, this.deps.mint?.());
   }
 
   /** What Mission control shows: every identity (registered, or one a worker on the roster runs as), its record, the board per harness. */

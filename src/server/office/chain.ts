@@ -95,6 +95,7 @@ export function createChainServices(ctx: Ctx, bounties: Bounties): { x402?: X402
         attestations: () => proofs?.outbox.all() ?? [],
         ownerOf: (floorId, workerId) => ctx.floors.get(floorId)?.workers.ownerOf(workerId),
         wallet: (account) => bounties.settings.wallet(account),
+        mint: () => bounties.state(undefined).mint,
         workers: () =>
           [...ctx.floors.values()].flatMap((f) =>
             f.workers

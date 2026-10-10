@@ -4,9 +4,21 @@ Kipdeck's Proof of Merge bounties, part of the Proof of Merge lab. The lab is on
 
 Back to the [README](../README.md).
 
-A maintainer escrows devnet USDC against a GitHub issue. Any worker in the office can take the issue. The money moves only when a person with write access merges the worker's pull request and an office admin approves the payout in the review inbox. Then the Solana program pays the escrow to the wallet of the person who hired the worker.
+A maintainer escrows devnet USDC, or the project's own test tokens, against a GitHub issue. Any worker in the office can take the issue. The money moves only when a person with write access merges the worker's pull request and an office admin approves the payout in the review inbox. Then the Solana program pays the escrow to the wallet of the person who hired the worker.
 
 Testnets only: Solana devnet, or an in-memory mock. There is no mainnet setting anywhere, the SDK checks the RPC's genesis hash is devnet's before it signs anything, and the program only accepts devnet USDC (and a test mint in test builds). Bounties are off until an admin turns them on, and the Bounties pane only shows with Proof of Merge on in [Labs](labs.md).
+
+## Which token
+
+A bounty is named by its mint, everywhere a person reads it: the inbox, the deck, the server's toasts and timeline, the Blink, `/pom` and its share image. One rule decides it (`tokenSymbol` in `src/shared/money.ts`):
+
+| Mint | Called |
+| --- | --- |
+| Circle's devnet USDC (`4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`) | `USDC` |
+| The project's test mint (`9CL3xM1UNUQk7XqKz8JHbYhPNH9iwZF4mU67sjSEzbMz`) | `TEST`, "test tokens" in a sentence |
+| Anything else, or a mix | `TOKENS` |
+
+The demo's bounties are in the test mint, so they show as `TEST`. The devnet program was built with the test mint feature, so it takes devnet USDC as well, and an office set to devnet USDC shows `USDC`. The mock always uses the test mint.
 
 This is part of the Proof of Merge fork of [agent-office](https://github.com/AgentSystemLabs/agent-office) (MIT, by webdevcody / AgentSystemLabs). The program and its SDK live in [onchain/solana](../onchain/solana/README.md), which has its own build and tests.
 
@@ -42,8 +54,8 @@ Every step is a transaction, and its signature goes on the floor's timeline: *bo
 
 - **Issue cards** on the board show a bounty's amount, phase and time left, and a **Fund** button. It opens a window where a Wallet Standard wallet (Phantom, Backpack, Solflare) signs the transaction the office built, or copies the Blink link (dial.to, devnet).
 - **Desks**: a worker holding a claimed bounty shows its amount on its card.
-- **On the deck** (the 3D office): the escrow vault on the Proof corner carries a stack of violet coins for each bounty still in escrow, as tall as its amount, its state as a shape round it, under a label with each one's issue, amount and state, the network (*devnet test USDC*) and what's held and paid; a funded issue's row on the Issues board shows its amount with a coin over it; and a payout's coins fly from the vault to the console of the unit that earned it, where a receipt shows the amount and the devnet transaction. All of it is drawn from the floor's real bounties ([the design](design.md#bounty-tokens)).
-- **Review inbox** (Mission control, **3**): *Approve payout of N USDC to <worker> for PR #x*, with the time left before the bounty expires, for admins, and *Set your payout wallet* for whoever's worker claimed without one.
+- **On the deck** (the 3D office): the escrow vault on the Proof corner carries a stack of violet coins for each bounty still in escrow, as tall as its amount, its state as a shape round it, under a label with each one's issue, amount and state, the network and its token (*devnet test tokens* or *devnet USDC*, by the mint) and what's held and paid; a funded issue's row on the Issues board shows its amount with a coin over it; and a payout's coins fly from the vault to the console of the unit that earned it, where a receipt shows the amount and the devnet transaction. All of it is drawn from the floor's real bounties ([the design](design.md#bounty-tokens)).
+- **Review inbox** (Mission control, **3**): *Approve payout of N TEST to <worker> for PR #x* (or *N USDC* on a devnet USDC bounty), with the time left before the bounty expires, for admins, and *Set your payout wallet* for whoever's worker claimed without one.
 - **Settings > Bounties**: everyone sets their own payout wallet (an address, never a key). Admins turn bounties on, choose Solana devnet or the mock, and set the program id, the mint, the attester key path, the approver (a wallet address, recommended, or a key path), the repositories the public Action may fund, how many days a new bounty runs, and whether the public Action shows issue titles (off by default, for private repositories).
 
 Settings are kept in `chain.json` and each floor's bounties in `bounties.json` in the office's data folder, both written through the office's state-file helpers (`safefs.ts`).
@@ -55,7 +67,7 @@ A Solana Action (a Blink) for repositories an admin opted into:
 | Route | What it does |
 | --- | --- |
 | `GET /actions.json` | the Actions rules file; 404 while bounties are off |
-| `GET /api/actions/fund?repo=owner/name&issue=N` | title, icon, the issue (or just `owner/name#N`), the current total, and buttons for 5, 20 and 50 USDC plus a custom amount |
+| `GET /api/actions/fund?repo=owner/name&issue=N` | title, icon, the issue (or just `owner/name#N`), the current total, and buttons for 5, 20 and 50 of the office's token (`TEST` or `USDC`) plus a custom amount |
 | `POST /api/actions/fund?repo=...&issue=...&amount=...` | an unsigned transaction for the `account` in the body: open the bounty if there isn't one, then fund it |
 
 The routes are public, since a wallet or dial.to asks without a session, but the host check still runs first, they answer with the CORS headers the Actions spec asks for, and each client address gets 30 requests a minute. The transaction only moves the funder's own tokens, and only their wallet signs it.
@@ -123,7 +135,7 @@ With `--attest`, the merge that pays a bounty is also attested on Base Sepolia, 
 
 - The program, the SDK and the office side pass their tests: Rust host tests, SDK tests (some of them litesvm runs of the built program), and the office's bounty tests in `npm test`.
 - One bounty ran end to end (open, fund, claim, release) on a local `solana-test-validator`, signatures in `onchain/solana/deployments/localnet.json`.
-- Devnet: the program is deployed (`JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`) and was upgraded in place on 2026-10-03 to put the attester and approver in a bounty's seeds. Demo bounties ran open, fund, claim and release there before and after the upgrade, one of them paid through the approver-wallet path, all with no GitHub merge behind them; signatures in `onchain/solana/deployments/devnet.json`.
+- Devnet: the program is deployed (`JAH6ZioohUJmhnTESy5TpedBPLuiGviZLhYFyQsyVQs6`) and was upgraded in place on 2026-10-03 to put the attester and approver in a bounty's seeds. Demo bounties, in the test mint, ran open, fund, claim and release there before and after the upgrade, one of them paid through the approver-wallet path, all with no GitHub merge behind them; signatures in `onchain/solana/deployments/devnet.json`.
 - The GitHub Action passed its unit tests and an end-to-end run against `solana-test-validator`, and ran once live on devnet against a fake GitHub API: claim, a release prepared on the approver's durable nonce, and the approver's cosign. It has not run from a real repository's workflow yet (see [onchain/action](../onchain/action/README.md#status)).
 - The devnet upgrade authority is a single key, so whoever holds it could replace the program: this deployment is not custody-free. A mainnet deployment would need a multisig upgrade authority first, then none.
 - Not audited. Testnet only.

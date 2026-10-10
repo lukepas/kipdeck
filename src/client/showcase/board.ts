@@ -1,7 +1,7 @@
 // The leaderboard: per harness or per agent, over 7 or 30 days or all time, with or without
 // self-merges. Worked out in the browser from the outcomes in the document, with the same functions
 // the office and onchain/indexer use (shared/reputation.ts), so the three always agree.
-import { inWindow, leaderboard, type RepStats } from '../../shared/reputation';
+import { earnedLabel, inWindow, leaderboard, type RepStats } from '../../shared/reputation';
 import { asRepEvents, HARNESSES, type ShowcaseDoc } from '../../shared/showcase';
 import { h } from '../ui/dom';
 import { pct, span } from './format';
@@ -52,7 +52,7 @@ function row(doc: ShowcaseDoc, s: RepStats, i: number): HTMLElement {
     ['Revert rate', rateCell(s.revertRate, false)],
     ['n', String(s.samples)],
     ['Maintainers', String(s.distinctMaintainers)],
-    ['Earned', `${s.usdcEarned} TEST`],
+    ['Earned', earnedLabel(s)],
   ];
   const link = s.latest ? h('a.src', { href: s.latest, target: '_blank', rel: 'noopener', title: 'Its latest attestation on EAS (Base Sepolia)' }, 'proof') : h('span.src');
   return h(

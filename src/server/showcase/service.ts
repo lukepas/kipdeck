@@ -65,7 +65,7 @@ export class Showcase {
       if (v === 'full') out.push(e);
       else {
         const { uid: _, paid, ...rest } = e;
-        out.push({ ...rest, repo: '', links: {}, ...(paid ? { paid: { amount: paid.amount, decimals: paid.decimals, tx: '' } } : {}) });
+        out.push({ ...rest, repo: '', links: {}, ...(paid ? { paid: { amount: paid.amount, decimals: paid.decimals, tx: '', ...(paid.mint ? { mint: paid.mint } : {}) } } : {}) });
       }
     }
     return out;
@@ -187,6 +187,7 @@ export class Showcase {
       floor,
       floorAt: Math.floor(nowMs / 1000),
       officeUrl,
+      mint: ctx.bounties.state(undefined).mint,
       verify: {
         programId,
         schemaUid: extra?.schemaUid ?? attest.schema ?? base?.schemaUid,
