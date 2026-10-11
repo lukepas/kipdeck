@@ -29,6 +29,11 @@ test('three chips, most useful first: an open issue, the tests, a TODO, then the
   for (const c of chips) assert.match(c.prompt, /ask me/i, c.kind);
 });
 
+test("an issue's title stays one quoted line: no quote or backtick of its own ends it early", () => {
+  const [chip] = starterChips({ issues: [{ number: 3, title: 'Login "breaks"\n`rm -rf` everything' }] });
+  assert.match(chip.prompt, /^Work on GitHub issue #3, "Login 'breaks' 'rm -rf' everything"\./);
+});
+
 test('a repository with little to go on still gets three chips, never a repeat', () => {
   const none = starterChips({});
   assert.equal(none.length, 3);

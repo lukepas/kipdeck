@@ -77,11 +77,12 @@ function typed(content: unknown): string | undefined {
 }
 
 /** Claude Code keeps a folder's sessions in ~/.claude/projects/<the folder's path, every other character a dash>/. */
-export function claudeSessions(dir: string, home = os.homedir(), env: NodeJS.ProcessEnv = process.env): FoundSession[] {
+export function claudeSessions(dir: string, home = os.homedir(), env: NodeJS.ProcessEnv = process.env, ids?: ReadonlySet<string>): FoundSession[] {
   const root = path.join(env.CLAUDE_CONFIG_DIR || path.join(home, '.claude'), 'projects', dir.replace(/[^A-Za-z0-9]/g, '-'));
   let names: string[] = [];
   try {
-    names = readdirSync(root).filter((n) => /^[0-9a-f-]{36}\.jsonl$/.test(n));
+    // `ids`: only those sessions, so a folder with hundreds of old ones isn't read for one title.
+    names = readdirSync(root).filter((n) => /^[0-9a-f-]{36}\.jsonl$/.test(n) && (!ids || ids.has(n.slice(0, -'.jsonl'.length))));
   } catch {
     return [];
   }
