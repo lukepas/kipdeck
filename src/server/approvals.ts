@@ -4,13 +4,16 @@
 // someone answers that id ('approval.answer'). An answer to an id that's gone is refused, so a late
 // click can never land on a different prompt.
 //
+// Claude Code shows its own prompt in the terminal while the hook runs and takes whichever answer
+// comes first, so a held request never keeps anyone from answering it there. That is why a request is
+// held whether or not an inbox page is open: a page opened later still shows it, and one that reloads
+// or reconnects finds it again.
+//
 // A request goes away without an answer when the agent moved on (a new prompt, its turn ended, its
-// session restarted, or the same tool call ran anyway), when the hook call itself goes (the agent was
-// interrupted or stopped), after HOLD_MS, or when nobody is left watching. It is then handed back to
-// the agent's own terminal prompt by answering the call with nothing: Claude Code asks there as it
-// always has, and the inbox's terminal question card is the fallback. Requests are only held while
-// someone has the inbox open (a page that sent 'approvals.get'): with nobody to answer, the agent asks
-// in its terminal straight away.
+// session restarted, or the same tool call ran anyway, as it does when someone answered in the
+// terminal), when the hook call itself goes (the agent was interrupted or stopped), or after HOLD_MS.
+// It is handed back to the terminal prompt by answering the call with nothing. An agent may ask more
+// than once at a time (subagents working side by side): each request is its own, oldest first.
 import { randomUUID } from 'node:crypto';
 import type { ServerResponse } from 'node:http';
 import { approvalView, claudeDecision, sameCall, type PermissionUpdate } from '../shared/approval.js';
@@ -18,6 +21,9 @@ import type { ApprovalDecision, ApprovalView, ServerMsg } from '../shared/protoc
 
 /** How long a request is held before it goes back to the terminal: under the hook's own timeout (providers/claude.ts). */
 export const HOLD_MS = 50 * 60_000;
+
+/** The most requests one agent has open at once; past that it asks in its terminal only. */
+export const MAX_PER_AGENT = 8;
 
 /** Hook events that mean the agent is past whatever it asked. */
 const MOVED_ON = new Set(['UserPromptSubmit', 'Stop', 'StopFailure', 'SessionStart']);
@@ -39,7 +45,7 @@ export interface DeskOptions {
 
 export class ApprovalDesk {
   private held = new Map<string, Held>();
-  /** The clients that asked to be told (the inbox pages): requests are held only while there's one. */
+  /** The clients that asked to be told (the inbox pages). */
   private watchers = new Set<string>();
 
   constructor(private o: DeskOptions) {}
@@ -55,10 +61,9 @@ export class ApprovalDesk {
     return this.list();
   }
 
-  /** `clientId` left. With nobody left to answer, every request goes back to its terminal. */
+  /** `clientId` left. The requests stay open: the terminal prompt is up beside them, and a page that comes back finds them. */
   unwatch(clientId: string) {
     this.watchers.delete(clientId);
-    if (!this.watchers.size) for (const id of [...this.held.keys()]) this.settle(id, '');
   }
 
   /** Whether this provider's event is a permission request the desk can hold. */
@@ -67,20 +72,21 @@ export class ApprovalDesk {
   }
 
   /**
-   * Holds hook call `res` as a request from `workerId` on `floor`. False when it isn't held (nobody is
-   * watching, or the payload names no tool): the caller answers the call itself.
+   * Holds hook call `res` as a request from `workerId` on `floor`. False when it isn't held (the
+   * payload names no tool, or the agent has MAX_PER_AGENT open already): the caller answers the call itself.
    */
   open(workerId: string, floor: string, payload: unknown, res: ServerResponse): boolean {
-    if (!this.watchers.size) return false;
     const id = randomUUID();
     const made = approvalView(payload, { id, workerId, floor, at: (this.o.now ?? Date.now)() });
     if (!made) return false;
-    // One request per agent at a time: an older one still open was overtaken.
-    for (const [old, h] of this.held) if (h.view.workerId === workerId) this.settle(old, '', false);
+    const p = payload as Held['payload'];
+    const call = { tool_name: p.tool_name, tool_input: p.tool_input };
+    // The same call asked again replaces the request before it, which can't be answered any more.
+    for (const [old, h] of this.held) if (h.view.workerId === workerId && sameCall(h.payload, call)) this.settle(old, '', false);
+    if ([...this.held.values()].filter((h) => h.view.workerId === workerId).length >= MAX_PER_AGENT) return false;
     const timer = setTimeout(() => this.settle(id, ''), this.o.holdMs ?? HOLD_MS);
     timer.unref?.();
-    const p = payload as Held['payload'];
-    this.held.set(id, { view: made.view, updates: made.updates, payload: { tool_name: p.tool_name, tool_input: p.tool_input }, res, timer });
+    this.held.set(id, { view: made.view, updates: made.updates, payload: call, res, timer });
     // The agent was interrupted or stopped: Claude Code drops the hook call, and the request with it.
     res.on('close', () => {
       if (this.held.get(id)?.res === res) this.settle(id, '');
@@ -102,7 +108,7 @@ export class ApprovalDesk {
     return this.held.get(id)?.view;
   }
 
-  /** A hook event from `workerId`: one that says it moved on takes its open request off. */
+  /** A hook event from `workerId`: one that says it moved on takes its open requests off. */
   movedOn(workerId: string, event: string, payload: unknown) {
     const ran = event === 'PostToolUse' || event === 'PostToolUseFailure';
     if (!MOVED_ON.has(event) && !ran) return;

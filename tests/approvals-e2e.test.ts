@@ -150,6 +150,12 @@ test('an approval from the hook: its own card with risk tags, answered by id', a
     await page.screenshot({ path: path.join(SHOTS, 'approval-desktop.png') });
   }
 
+  // A reload (the only page leaves and a new one comes) keeps the request: the card is back.
+  await page.reload();
+  await asking.locator('.row-status', { hasText: 'Wants approval: Run rm -rf dist' }).waitFor({ timeout: 15_000 });
+  await asking.locator('.row-act').click();
+  await card.waitFor({ timeout: 15_000 });
+
   // Allow once: the agent hears "allow" over its hook and goes on to finish.
   await card.locator('.ap-once').click();
   await row(page, 'review', 'Clean the build').waitFor({ timeout: 30_000 });

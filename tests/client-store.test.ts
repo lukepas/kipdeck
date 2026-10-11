@@ -365,3 +365,15 @@ test('the review inbox and reminders come with the roster', async () => {
   s.apply(msg({ t: 'reminders', items: [{ key: 'queue-paused:f1', kind: 'queue-paused', floor: 'f1', floorName: 'api', text: 'x', since: 1 }] }));
   assert.equal(s.reminders.length, 1);
 });
+
+test("approvals: each agent's open requests, oldest first", async () => {
+  const { Store } = await import('../src/client/state/store.js');
+  const { SLICES } = await import('../src/client/state/slices/index.js');
+  const s = new Store(SLICES);
+  const a = (id: string, workerId: string, at: number) => ({ id, workerId, floor: 'f1', title: `Run ${id}`, tool: 'Bash', paths: [], risks: [], at });
+  s.apply(msg({ t: 'approvals', items: [a('r3', 'w1', 30), a('r1', 'w1', 10), a('r2', 'w2', 20)] }));
+  assert.deepEqual([...s.approvals.keys()].sort(), ['w1', 'w2']);
+  assert.deepEqual(s.approvals.get('w1')?.map((x) => x.id), ['r1', 'r3']);
+  s.apply(msg({ t: 'approvals', items: [] }));
+  assert.equal(s.approvals.size, 0);
+});

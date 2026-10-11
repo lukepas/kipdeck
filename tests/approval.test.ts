@@ -77,6 +77,28 @@ test('always without suggestions: a plain shell command gets a session rule, any
   assert.equal(alwaysRules('Edit', { file_path: 'a.ts' }, undefined), undefined);
 });
 
+test('always without suggestions: never a prefix rule broader than the call it was asked for', () => {
+  for (const command of [
+    'rm -rf dist', // "rm -rf:*" would allow every rm -rf
+    'git push origin', // network
+    'cat .env', // secrets
+    'node -e "1"', // a flag as the second word runs any code
+    'python3 script.py', // an interpreter runs whatever comes after
+    'sudo ls',
+    'bash build.sh',
+    'npm run build', // "npm run:*" would allow every script
+    'npm exec cowsay',
+    'ls', // one word: no prefix to keep
+  ]) {
+    assert.equal(alwaysRules('Bash', { command }, undefined), undefined, command);
+  }
+  assert.equal(alwaysRules('Bash', { command: 'npm test' }, undefined)?.label, 'Bash(npm test:*)');
+  assert.equal(alwaysRules('Bash', { command: 'git status --short' }, undefined)?.label, 'Bash(git status:*)');
+  // The agent's own rule for a risky call still stands: it is exactly what it offered.
+  const own = [{ type: 'addRules', rules: [{ toolName: 'Bash', ruleContent: 'rm -rf dist' }], behavior: 'allow', destination: 'localSettings' }];
+  assert.equal(alwaysRules('Bash', { command: 'rm -rf dist' }, own)?.label, 'Bash(rm -rf dist)');
+});
+
 test("the hook's answer is what Claude Code reads off a PermissionRequest hook", () => {
   const out = (s: string) => JSON.parse(s).hookSpecificOutput;
   assert.deepEqual(out(claudeDecision('once')), { hookEventName: 'PermissionRequest', decision: { behavior: 'allow' } });
@@ -94,7 +116,11 @@ test('a payload becomes a card: tool, command, folder, tags and the always rule'
     { id: 'r1', workerId: 'w1', floor: 'f1', at: 5 },
   );
   assert.ok(made);
-  assert.deepEqual(made.view, { id: 'r1', title: 'Run rm -rf dist', workerId: 'w1', floor: 'f1', tool: 'Bash', command: 'rm -rf dist', paths: [], description: 'Clean the build', cwd: ROOT, risks: ['destructive'], always: 'Bash(rm -rf:*)', at: 5 });
+  assert.deepEqual(made.view, { id: 'r1', title: 'Run rm -rf dist', workerId: 'w1', floor: 'f1', tool: 'Bash', command: 'rm -rf dist', paths: [], description: 'Clean the build', cwd: ROOT, risks: ['destructive'], at: 5 });
+  assert.equal(
+    approvalView({ tool_name: 'Bash', tool_input: { command: 'npm test' }, cwd: ROOT }, { id: 'r2', workerId: 'w1', floor: 'f1', at: 6 })?.view.always,
+    'Bash(npm test:*)',
+  );
   assert.equal(approvalView({ tool_input: {} }, { id: 'x', workerId: 'w', floor: 'f', at: 0 }), undefined, 'no tool, no card');
   assert.equal(approvalView(null, { id: 'x', workerId: 'w', floor: 'f', at: 0 }), undefined);
 });

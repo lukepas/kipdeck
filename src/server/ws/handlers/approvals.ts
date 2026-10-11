@@ -28,7 +28,7 @@ export const approvalsHandlers = {
   },
 } satisfies HandlerMap<ApprovalsClientMsg>;
 
-/** A page that leaves stops watching; with nobody left, open requests go back to the terminal. */
+/** A page that leaves stops being told; its requests stay open for the next page (see approvals.ts). */
 export const approvalsHooks: FeatureHooks = {
   closed(ctx, c) {
     ctx.approvals.unwatch(c.id);

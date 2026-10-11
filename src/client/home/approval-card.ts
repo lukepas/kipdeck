@@ -25,12 +25,18 @@ function riskChips(a: ApprovalView): HTMLElement | null {
 export interface CardState {
   sent: boolean;
   denying: boolean;
+  /** How many more requests the agent has open after this one. */
+  behind: number;
+  /** The deny reason typed so far, kept across a redraw. */
+  reason?: string;
 }
 
 /** Draws request `a` into `el`; `answer` sends the decision. */
 export function paintApproval(el: HTMLElement, a: ApprovalView, s: CardState, answer: (d: ApprovalDecision | 'release', reason?: string) => void) {
   const redraw = () => paintApproval(el, a, s, answer);
   const reason = h('input', { type: 'text', placeholder: 'Why not? (it reads this)', 'aria-label': 'Why not', maxlength: String(DENY_REASON_MAX), autocomplete: 'off', enterkeyhint: 'send' }) as HTMLInputElement;
+  reason.value = s.reason ?? '';
+  reason.addEventListener('input', () => (s.reason = reason.value));
   const denyForm = h(
     'form.ap-deny',
     {
@@ -50,7 +56,13 @@ export function paintApproval(el: HTMLElement, a: ApprovalView, s: CardState, an
   };
   const where = [a.cwd ? `in ${a.cwd}` : '', a.tool].filter(Boolean).join(' · ');
   const parts: (HTMLElement | null)[] = [
-    h('header.ap-head', {}, h('h3.ap-h', {}, 'Approval'), h('span.ap-src', { title: "Taken from the agent's permission hook, not read off its screen" }, 'from its hook')),
+    h(
+      'header.ap-head',
+      {},
+      h('h3.ap-h', {}, 'Approval'),
+      h('span.ap-src', { title: "Taken from the agent's permission hook, not read off its screen" }, 'from its hook'),
+      s.behind ? h('span.ap-more', {}, `${s.behind} more after this one`) : null,
+    ),
     // With a command, the block under it says exactly what; the title doesn't repeat it.
     h('p.ap-title', {}, a.command ? 'It wants to run this command:' : `It wants to: ${a.title}`),
     a.command ? h('pre.ap-command', { 'aria-label': 'The command' }, a.command) : null,
@@ -70,5 +82,8 @@ export function paintApproval(el: HTMLElement, a: ApprovalView, s: CardState, an
         ),
     s.sent ? h('p.ap-sent', { role: 'status' }, 'Sent. Waiting for the agent...') : null,
   ];
+  // A redraw while someone types a reason keeps the cursor in the box.
+  const typing = s.denying && !!document.activeElement?.matches('.ap-deny input') && el.contains(document.activeElement);
   el.replaceChildren(...parts.filter((x): x is HTMLElement => !!x));
+  if (typing) reason.focus();
 }

@@ -26,22 +26,26 @@ export interface ApprovalCard {
 /** The risk tags' words (shared/approval.ts riskTags says which apply). */
 export const RISK_LABEL: Record<ApprovalRisk, string> = { destructive: 'Destructive', network: 'Network', outside: 'Outside the repo', secrets: 'Secrets' };
 
-/** An agent's open request, if it has one. */
-export const approvalOf = (workerId: string): ApprovalView | undefined => store.approvals.get(workerId);
+/** An agent's oldest open request, if it has one: the one its card shows first. */
+export const approvalOf = (workerId: string): ApprovalView | undefined => store.approvals.get(workerId)?.[0];
+
+/** How many more requests the agent has open behind the one on show. */
+export const approvalsBehind = (workerId: string): number => Math.max(0, (store.approvals.get(workerId)?.length ?? 0) - 1);
 
 /** What a list row says for an agent with an open request: its own status line, the button's label and the tags in a word each. */
 export function approvalRow(workerId: string): { status: string; label: string; tags: HTMLElement | null } | undefined {
   const a = approvalOf(workerId);
   if (!a) return undefined;
   const tags = a.risks.length ? h('span.row-owner.row-risk', {}, a.risks.map((r) => RISK_LABEL[r]).join(', ')) : null;
-  return { status: `Wants approval: ${a.title}`, label: 'Approve', tags };
+  const more = approvalsBehind(workerId);
+  return { status: `Wants approval: ${a.title}${more ? ` (+${more} more)` : ''}`, label: 'Approve', tags };
 }
 
 export function approvalCard(net: Net): ApprovalCard {
   const el = h('section.ap-card.hidden', { 'aria-label': 'Approval', tabindex: '-1' });
   /** The request on show, and where the card is in answering it. */
   let shown: ApprovalView | undefined;
-  const state: CardState = { sent: false, denying: false };
+  const state: CardState = { sent: false, denying: false, behind: 0 };
 
   // Every welcome (a reconnect too): the open requests, and to be told from now on.
   net.onMessage((msg) => {
@@ -77,11 +81,17 @@ export function approvalCard(net: Net): ApprovalCard {
         el.replaceChildren();
         return false;
       }
+      const behind = approvalsBehind(e.id);
       if (shown?.id !== a.id) {
         shown = a;
         state.sent = false;
         state.denying = false;
+        state.reason = undefined;
+        state.behind = behind;
         el.replaceChildren();
+        paint();
+      } else if (state.behind !== behind) {
+        state.behind = behind;
         paint();
       }
       // Approve from a row brings the card into view; it never presses anything by itself.

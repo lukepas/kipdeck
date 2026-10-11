@@ -118,10 +118,16 @@ function updateLabel(u: PermissionUpdate): string | undefined {
   return undefined;
 }
 
+/** Commands that run whatever words follow them, so a rule naming their first two words allows anything. */
+const RUNS_ANYTHING = /^(?:sudo|doas|env|xargs|exec|eval|command|nohup|time|timeout|nice|watch|ssh|bash|sh|zsh|fish|dash|node|deno|bun|npx|bunx|python[\d.]*|ruby|perl|php|lua|osascript|docker|kubectl)$/;
+
+/** Second words that hand the rest to something else: "npm run:*" would allow every script, "npm exec:*" any package. */
+const RUNS_NEXT = /^(?:run|run-script|exec|x|dlx)$/;
+
 /**
  * What "Allow always" would add: the rules the agent itself offered for this call (Claude Code's
- * permission_suggestions), else, for a plain shell command, its first two words with anything after
- * ("npm test:*") for this session only. None for anything else: the card then offers no "always".
+ * permission_suggestions), else, for a plain shell command with no risk tags, its first two words with
+ * anything after ("npm test:*") for this session only. None for anything else: the card then offers no "always".
  */
 export function alwaysRules(tool: string, input: Record<string, unknown>, suggestions: unknown): { updates: PermissionUpdate[]; label: string } | undefined {
   const offered = Array.isArray(suggestions) ? suggestions.filter((s): s is PermissionUpdate => !!s && typeof s === 'object') : [];
@@ -129,7 +135,12 @@ export function alwaysRules(tool: string, input: Record<string, unknown>, sugges
   if (labelled.length) return { updates: labelled.map((x) => x.u), label: labelled.map((x) => x.label).join('; ') };
   const command = str(input.command)?.trim();
   if (tool !== 'Bash' || !command || /[;&|<>`$()\n]/.test(command)) return undefined;
-  const prefix = command.split(/\s+/).slice(0, 2).join(' ');
+  const [first, second] = command.split(/\s+/);
+  // A prefix rule is only as safe as what it lets through: none for a risky command ("rm -rf:*" would
+  // allow every rm -rf), a flag as the second word ("node -e:*" runs any code), or a command that runs
+  // whatever comes after it (sudo, a shell, an interpreter).
+  if (!second || second.startsWith('-') || RUNS_ANYTHING.test(first) || RUNS_NEXT.test(second) || riskTags(tool, input).length) return undefined;
+  const prefix = `${first} ${second}`;
   const rule = { toolName: 'Bash', ruleContent: `${prefix}:*` };
   return { updates: [{ type: 'addRules', rules: [rule], behavior: 'allow', destination: 'session' }], label: `Bash(${rule.ruleContent})` };
 }

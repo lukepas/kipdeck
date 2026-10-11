@@ -5,7 +5,7 @@ import { afterEach, test } from 'node:test';
 import assert from 'node:assert/strict';
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { ApprovalDesk } from '../src/server/approvals.js';
+import { ApprovalDesk, MAX_PER_AGENT } from '../src/server/approvals.js';
 import type { ServerMsg } from '../src/shared/protocol.js';
 
 const PAYLOAD = { tool_name: 'Bash', tool_input: { command: 'rm -rf dist' }, cwd: '/r', permission_suggestions: [{ type: 'addRules', rules: [{ toolName: 'Bash', ruleContent: 'rm -rf dist' }], behavior: 'allow', destination: 'localSettings' }] };
@@ -39,9 +39,21 @@ async function setup(holdMs?: number) {
   return { desk, sent, ask, opened };
 }
 
-test('nobody watching: not held, the agent asks in its terminal', async () => {
-  const { desk, ask } = await setup();
-  assert.equal(await ask(), '{}');
+test('nobody watching yet: still held, and a page that opens later is told', async () => {
+  const { desk, sent, ask, opened } = await setup();
+  const answer = ask();
+  const [view] = await opened();
+  assert.equal(sent.length, 0, 'nobody to tell');
+  assert.deepEqual(desk.watch('c1'), [view]);
+  desk.answer(view.id, 'once');
+  assert.deepEqual(JSON.parse(await answer).hookSpecificOutput.decision, { behavior: 'allow' });
+});
+
+test('a payload that names no tool is not held', async () => {
+  const { desk } = await setup();
+  const res = { on() {}, writeHead() {}, end() {} } as unknown as http.ServerResponse;
+  assert.equal(desk.open('w1', 'f1', { tool_input: {} }, res), false);
+  assert.equal(desk.open('w1', 'f1', 'nonsense', res), false);
   assert.equal(desk.list().length, 0);
 });
 
@@ -117,32 +129,54 @@ test('the hook call dropping (agent interrupted) takes the request off', async (
   assert.equal(desk.list().length, 0);
 });
 
-test('time runs out, or the last watcher leaves: back to the terminal', async () => {
+test('time runs out: back to the terminal', async () => {
   const quick = await setup(50);
   quick.desk.watch('c1');
   assert.equal(await quick.ask(), '');
-  const { desk, ask, opened } = await setup();
-  desk.watch('c1');
-  desk.watch('c2');
-  const answer = ask();
-  await opened();
-  desk.unwatch('c1');
-  assert.equal(desk.list().length, 1, 'someone is still watching');
-  desk.unwatch('c2');
-  assert.equal(await answer, '');
+  assert.equal(quick.desk.list().length, 0);
 });
 
-test('one request per agent: a newer one overtakes the older', async () => {
+test('a page reloading (the last watcher leaves and comes back) keeps the request', async () => {
+  const { desk, sent, ask, opened } = await setup();
+  desk.watch('c1');
+  const answer = ask();
+  const [view] = await opened();
+  desk.unwatch('c1');
+  assert.equal(desk.list().length, 1, 'still open with nobody watching');
+  const told = sent.length;
+  assert.deepEqual(desk.watch('c2'), [view], 'the page that comes back finds it');
+  assert.equal(desk.answer(view.id, 'deny'), undefined);
+  assert.equal(JSON.parse(await answer).hookSpecificOutput.decision.behavior, 'deny');
+  assert.deepEqual(sent.slice(told).map((s) => s.to), [['c2']], 'only the page still there is told');
+});
+
+test('an agent asking twice at once (subagents side by side): both open, oldest first; the same call again replaces it', async () => {
   const { desk, ask, opened } = await setup();
   desk.watch('c1');
   const first = ask();
   await opened();
-  const second = ask();
   const other = ask('/w2');
+  await opened(2);
+  // The same call from the same agent again: the first can't be answered any more, so it goes.
+  const again = ask();
   assert.equal(await first, '');
   const list = await opened(2);
   assert.deepEqual(list.map((v) => v.workerId).sort(), ['w1', 'w2']);
+  // A different call from w1 while its first is open: both stay.
+  const res = { on() {}, writeHead() {}, end() {}, writableEnded: false, destroyed: false } as unknown as http.ServerResponse;
+  assert.equal(desk.open('w1', 'f1', { tool_name: 'Edit', tool_input: { file_path: '/r/a.ts' }, cwd: '/r' }, res), true);
+  const mine = desk.list().filter((v) => v.workerId === 'w1');
+  assert.deepEqual(mine.map((v) => v.tool), ['Bash', 'Edit']);
   desk.close();
-  assert.equal(await second, '');
+  assert.equal(await again, '');
   assert.equal(await other, '');
+});
+
+test('an agent can only hold so many requests open; past that it asks in its terminal', async () => {
+  const { desk } = await setup();
+  const res = () => ({ on() {}, writeHead() {}, end() {}, writableEnded: false, destroyed: false }) as unknown as http.ServerResponse;
+  for (let i = 0; i < MAX_PER_AGENT; i++) assert.equal(desk.open('w1', 'f1', { tool_name: 'Read', tool_input: { file_path: `/r/${i}` } }, res()), true);
+  assert.equal(desk.open('w1', 'f1', { tool_name: 'Read', tool_input: { file_path: '/r/x' } }, res()), false);
+  assert.equal(desk.open('w2', 'f1', { tool_name: 'Read', tool_input: { file_path: '/r/x' } }, res()), true, 'another agent is not held back');
+  desk.close();
 });
