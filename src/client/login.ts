@@ -1,7 +1,8 @@
 import { mountSigninArt } from './signin-art';
 import { TAGLINE } from '../shared/copy';
 import { openCommand } from '../shared/demo';
-import { DECK_PATH, isDeckPath } from '../shared/deck';
+import { nextAfterSignIn } from '../shared/signin-next';
+import { redeemPairing } from './pair-redeem';
 
 mountSigninArt();
 
@@ -15,8 +16,11 @@ const error = document.getElementById('error') as HTMLParagraphElement;
 const submit = document.getElementById('submit') as HTMLButtonElement;
 
 const NAME_KEY = 'agent-office.login-name';
-/** Where to go once in: the Deck if that's where you were headed (see loginUrl in net.ts), else home. */
-const NEXT = isDeckPath(new URLSearchParams(location.search).get('next') ?? '') ? DECK_PATH : '/';
+/** Where to go once in: the Deck, an agent or a project if that's where you were headed (see loginUrl in net.ts), else home. */
+const NEXT = nextAfterSignIn(new URLSearchParams(location.search).get('next'));
+
+// Opened from a Pair a phone code (/login#pair=...): this device signs in with it instead.
+const pairing = redeemPairing(NEXT, { sub, error, form });
 
 /** Why the sign-in link didn't work (`why`, without the command) and the whole message (`error`). */
 interface LinkRefusal {
@@ -89,7 +93,7 @@ void tryLink()
     return { refused, ...opts };
   })
   .then(({ refused, accounts, shared, local: here, open }) => {
-    if (here) return showLocal(open, refused);
+    if (here && !pairing) return showLocal(open, refused);
     if (refused) error.textContent = refused.error;
     if (!accounts && shared) return;
     nameRow.hidden = false;

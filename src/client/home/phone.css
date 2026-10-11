@@ -1,0 +1,8 @@
+/* The inbox on a phone (home/phone.ts): every control in the pane and over the list is at least 44px to
+   tap, the size a thumb hits without aiming. Only on a touch screen of phone width; a mouse keeps the
+   compact sizes. body.lite outranks each part's own sheet, whatever order they load in. */
+@media (max-width: 899px) and (pointer: coarse) {
+  body.lite :is(.pane-back, .pane-stop, .pane-primary, .pane-tab, .q-choice, .q-reply input, .q-reply .btn, .term-say input, .term-say .btn, .sig-chip, .rv-acts .btn) { min-height: 44px; }
+  body.lite .term-keys-toggle { height: 44px; min-width: 56px; }
+  body.lite .term-keys .btn { min-width: 44px; }
+}

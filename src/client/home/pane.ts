@@ -208,7 +208,7 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
     if (!wide() || home.held || home.selected) return false;
     const next = nextUp(view);
     if (!next) return false;
-    home.select(next.id, next.status === 'needs_input' ? 'terminal' : 'changes');
+    home.select(next.id, next.status === 'needs_input' ? 'terminal' : 'changes', true);
     return true;
   };
 

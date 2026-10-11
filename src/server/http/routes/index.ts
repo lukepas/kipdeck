@@ -6,6 +6,7 @@ import { actionRoutes } from './actions.js';
 import { agentRoutes } from './agents.js';
 import { authRoutes } from './auth.js';
 import { demoRoutes } from './demo.js';
+import { deviceRoutes } from './devices.js';
 import { fileRoutes } from './files.js';
 import { githubRoutes } from './github.js';
 import { localRoutes } from './local.js';
@@ -31,6 +32,8 @@ export const routes: readonly Route[] = [
   authRoutes.claimable,
   authRoutes.claim,
   authRoutes.link,
+  // A phone trading its pairing code for a device session (the Pair a phone QR code).
+  deviceRoutes.redeem,
   // Commands on this computer with the office's local key (kipdeck open, attach).
   localRoutes.link,
   localRoutes.attach,
@@ -81,6 +84,15 @@ export const routes: readonly Route[] = [
   pushRoutes.act,
   // Rundown (Labs): a project's map page as a download.
   rundownRoutes.map,
+  // Pairing phones, the devices paired so far, and the inbox's own addresses (/a/..., /p/...).
+  deviceRoutes.pair,
+  deviceRoutes.pairStatus,
+  deviceRoutes.device,
+  deviceRoutes.devices,
+  deviceRoutes.rename,
+  deviceRoutes.revoke,
+  deviceRoutes.agentPage,
+  deviceRoutes.projectPage,
   pageRoutes.home,
   pageRoutes.deck,
   pageRoutes.bridge,

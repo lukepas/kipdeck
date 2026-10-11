@@ -9,6 +9,8 @@ import { Ledger } from '../usage.js';
 import { PlanLimitsReader } from '../limits.js';
 import { Webhook } from '../webhook.js';
 import { createPush } from '../push/index.js';
+import { secureBase } from '../phone.js';
+import { agentLink } from '../../shared/deeplink.js';
 import { Machine } from '../machine.js';
 import type { Floor } from '../floor.js';
 import { OfficePrompts } from '../prompts.js';
@@ -94,6 +96,12 @@ export function createServices(ctx: Ctx): BuildingServices {
   // Slack / Discord pings for workers that need input or finish (set from Settings or --webhook).
   const project = (workerId?: string) => (workerId && ctx.workerFloor(workerId)?.def.name) || ctx.officeName;
   const webhook = new Webhook(cfg.dataDir, project, (state) => ctx.broadcast({ t: 'notify', state }), (id) => ctx.workerFloor(id)?.workers.get(id));
+  // Each post links to the agent in the inbox, once the office has a secure address (phone.ts).
+  webhook.link = (w) => {
+    const base = secureBase(cfg);
+    const floor = ctx.workerFloor(w.id);
+    return base && floor ? agentLink(base, floor.def.id, w.id) : undefined;
+  };
   if (cfg.webhook !== undefined) {
     const err = webhook.set(cfg.webhook, 'the command line');
     if (err) console.error(`kipdeck: --webhook: ${err}`);

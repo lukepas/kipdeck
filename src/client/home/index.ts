@@ -35,6 +35,7 @@ import { markChanges } from './motion';
 import { askSetup, onSetupChange, setupCard, setupMessage } from './setup';
 import { demoMessage } from './demo';
 import { installSpend, spendMessage, spendUi } from './spend-slot';
+import { installPhone, phoneCommands, phoneMenuEntry } from './phone';
 import { home } from './state';
 import { agentRef } from '../../shared/agentname';
 import '../ui/waitclock.css';
@@ -112,6 +113,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     { label: 'While you were away', icon: 'clock', run: () => recallDigest(showDigest) },
     { label: 'Settings', hint: 'Account, agents, notifications', icon: 'settings', run: openSettings },
     { label: 'Light or dark', icon: 'contrast', run: theme },
+    ...phoneCommands(),
     { label: 'Help and keys', hint: '?', icon: 'help', run: openHelp },
     ...(store.lab('rundown') ? [{ label: 'Rundown', hint: "Labs: a project's parts, milestones and decisions", icon: 'overview' as const, run: openRundown }] : []),
     ...(store.lab('boards') ? workCommands() : []),
@@ -153,6 +155,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
       { label: 'Numbers', icon: 'plot', run: openNumbers },
       { label: 'Signal', icon: 'target', run: openSignal },
       { label: 'Settings', icon: 'settings', run: openSettings },
+      phoneMenuEntry(),
       { label: 'Help and keys', icon: 'help', note: '?', run: openHelp },
       { label: 'Sign out', icon: 'logout', run: () => void fetch('/api/logout', { method: 'POST' }).finally(() => location.assign('/login')) },
       { group: 'Labs' },
@@ -247,6 +250,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
   installSpend(net);
   installSignal(net, openSignal);
   installKeys(actions, palette, search);
+  installPhone();
   window.addEventListener('blur', () => menuOpen() && closeMenu());
   renderProjects();
   renderAll();

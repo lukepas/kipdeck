@@ -119,4 +119,8 @@ agent-office tunnel [office@address | url] [--port <n>] [--office-port <n>] [--n
   See docs/tunnel.md.
 ```
 
-Sign-ins last 7 days; `AGENT_OFFICE_SESSION_DAYS` sets it, from 1 to 90. What each of these protects against is in [Security](security.md).
+Sign-ins last 7 days; `AGENT_OFFICE_SESSION_DAYS` sets it, from 1 to 90. A phone paired with **Pair a phone** stays signed in until it is revoked in Settings ([on your phone](inbox.md#on-your-phone)).
+
+`AGENT_OFFICE_PUBLIC_URL` is the office's own secure address, an https link (`https://kipdeck.example.com`): a domain behind Caddy or nginx, or a Cloudflare or ngrok tunnel to the office's port. The office answers to its name without `--allowed-host`, the **Pair a phone** code points there first, and the team channel's posts link to the agent there (`/a/<project>/<agent>`). Without it, an office on a tailnet (`AGENT_OFFICE_TAILSCALE_HOST`, set by `deploy/provision.sh --tailscale`) uses its tailnet name for both; an office with neither posts no links, and pairs phones over the local network with `--host 0.0.0.0`. A plain `http://` value is ignored.
+
+What each of these protects against is in [Security](security.md).

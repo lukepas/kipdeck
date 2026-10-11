@@ -274,11 +274,11 @@ test('Enter the Deck: a row in the avatar menu with the lab on, D and Go to Deck
   assert.equal(await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD), 200);
   await page.goto(`${base}/`);
   await page.locator('.sec-working .row, .sec-needs-you .row, .sec-review .row').first().waitFor({ timeout: 30_000 });
-  // Off as it ships: D does nothing.
+  // Off as it ships: D does nothing (the inbox stays, at / or at the agent the pane opened by itself).
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
   await page.keyboard.press('d');
   await page.waitForTimeout(300);
-  assert.equal(new URL(page.url()).pathname, '/');
+  assert.match(new URL(page.url()).pathname, /^\/(a\/[^/]+\/[^/]+)?$/);
 
   await setLabs(page, { bridge: true });
   t.after(() => setLabs(page, { bridge: false }).catch(() => {}));
@@ -352,6 +352,7 @@ test('Enter the Deck: a row in the avatar menu with the lab on, D and Go to Deck
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
   await page.keyboard.press('d');
   await page.waitForTimeout(300);
-  assert.equal(new URL(page.url()).pathname, '/');
+  // Still the inbox: at / or at the agent the pane opened by itself (/a/<project>/<agent>), never the Deck.
+  assert.match(new URL(page.url()).pathname, /^\/(a\/[^/]+\/[^/]+)?$/);
   assert.deepEqual(errors, []);
 });

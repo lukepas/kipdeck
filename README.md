@@ -70,7 +70,7 @@ Common options:
 ```bash
 kipdeck --port 4700                 # this port or nothing
 kipdeck ~/code/my-project           # keep the office's data in that project, as agent-office did
-kipdeck --host 0.0.0.0              # let your network in (then everyone else signs in with a password)
+kipdeck --host 0.0.0.0              # let your network in (others sign in with a password, or pair a phone)
 kipdeck --password 'correct horse'  # a password, even on this computer
 kipdeck --no-open                   # print the sign-in link instead of opening a browser
 kipdeck --telemetry                 # share anonymous usage numbers (off by default)
@@ -112,6 +112,7 @@ More in [docs/labs.md](docs/labs.md).
 - **The inbox.** Every agent in four sections (Needs you, To review, Working, Idle), one button per row, the selected agent's live terminal, diff and log beside the list, and Shipped today under it ([the inbox](docs/inbox.md)). It draws after about 175 kB on any laptop or phone; the old `/lite` address goes there.
 - **Approvals from the hook.** When Claude Code asks permission to run a tool, the inbox shows an Approval card with the exact command or files, where it runs and risk tags (destructive, network, outside the repo, secrets). Allow once, Always allow with the rule it adds, or Deny with a reason, each answer bound to that request. Agents without a permission hook still ask in their terminal, read off the screen and labelled as such ([the inbox](docs/inbox.md#approvals)).
 - **Deploy, attach, answer, review, merge.** The Deploy sheet starts an agent on a branch of its own; `kipdeck attach` adopts one started in a terminal; Answer, Review changes, Fix checks and Merge do what they say, with or without GitHub. Review opens with a brief over the diff: one confident Merge when the agent's tests passed and nothing is flagged, the gap in plain words when not, and line comments that go with Send back. With a GitHub repository and no pull request yet, Open PR comes first. On a team, each row says whose agent it is, and **Mine / Team** filters the inbox.
+- **Your phone.** **Pair a phone** (avatar menu, or Ctrl+K) shows a QR code that signs your phone in once, without a password; the phone stays signed in until you revoke it under Settings > Account > Paired devices. Every agent has its own address (`/a/<project>/<agent>`, a project is `/p/<project>`), so Back closes what you opened, a link opens the same agent on another device, and the team channel's posts link to the agent once the office has a secure address ([on your phone](docs/inbox.md#on-your-phone)).
 - **Numbers.** Human wait time, changes merged, the merge rate and agent-hours, the last 7 days against the 7 days before, and the merge rate per agent and model with its N, from the signed shipped log on your machine ([metrics](docs/metrics.md)).
 - **Settings in three panes.** Account, Agents and Notifications. Seven keys, and Help on **?** ([controls](docs/controls.md)).
 - **Push to your phone.** Kipdeck installs as an app, and an agent that needs an answer, wants an approval, has work to review or is stuck reaches your devices with a push titled by its task. The first Deploy asks once; Slack or Discord hears only if the push goes unanswered for a few minutes with nobody at a Kipdeck tab ([push](docs/push.md)).

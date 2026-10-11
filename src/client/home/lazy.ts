@@ -1,6 +1,6 @@
 // The windows the inbox opens only now and then, loaded the first time they're wanted so the home page
 // draws without them: the terminal (xterm), the Changes window, the GitHub windows and boards, the task
-// queue, Mission control, Labs, the meeting room, sign-ins, Settings, Numbers, Rundown, Signal's card, Accounts and an agent's request. A module that reads server messages
+// queue, Mission control, Labs, the meeting room, sign-ins, Settings, Numbers, Rundown, Signal's card, Accounts, an agent's request and Pair a phone. A module that reads server messages
 // for its open window is handed every message from then on.
 
 import type { ServerMsg } from '../../shared/protocol';
@@ -44,6 +44,7 @@ export const signal = once(() => import('../ui/signal'));
 export const approval = once(() => import('./approval-card'));
 export const accounts = once(() => import('../ui/accounts'), (m) => m.routeAccountsMessage);
 export const proposal = once(() => import('./proposal-window'));
+export const pair = once(() => import('../ui/pair'));
 
 /** After a reconnect the office has forgotten which terminal and which changes this page follows: tell it again. */
 export async function rewatch(net: Net) {
