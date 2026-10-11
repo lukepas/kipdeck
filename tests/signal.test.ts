@@ -5,7 +5,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import type { Ranked } from '../src/shared/attention.js';
 import type { RosterEntry, RundownGist, SignalGoal } from '../src/shared/protocol.js';
-import type { Rundown } from '../src/shared/rundown/schema.js';
 import {
   ascii,
   BURN_DAYS,
@@ -14,8 +13,10 @@ import {
   dayAt,
   forecastAt,
   gistOf,
-  gistOfRundown,
   LONG_WAIT_MS,
+  noGoalHint,
+  PEEK_GAP_MS,
+  peekDelay,
   PACE_MIN_BEFORE,
   pickMilestone,
   RISK_MARGIN_DAYS,
@@ -46,7 +47,11 @@ test('No goal: neither Goals nor a fresh rundown has a milestone, whatever else 
   assert.equal(s.level, 'no-goal');
   assert.deepEqual(s.reasons, []);
   assert.equal(s.milestone, null);
-  assert.equal(chipText(s), 'Set a goal');
+  assert.equal(chipText(s, { goals: true, rundown: true }), 'Set a goal');
+  // The chip only suggests what this page can do.
+  assert.equal(chipText(s, { goals: false, rundown: true }), 'Run /rundown');
+  assert.equal(chipText(s, { goals: false, rundown: false }), 'Turn on Goals in Labs');
+  assert.equal(noGoalHint({ goals: true, rundown: false }), 'Set a goal');
   assert.equal(computeSignal(input({ goal: null })).level, 'no-goal');
 });
 
@@ -55,7 +60,7 @@ test('On track: a milestone and no rule fired', () => {
   assert.equal(s.level, 'on-track');
   assert.equal(s.person, false);
   assert.deepEqual(s.milestone, { source: 'goals', id: 'g1', title: 'Auth rewrite', done: 5, total: 9, unit: 'issues' });
-  assert.equal(chipText(s), 'Auth rewrite 5/9');
+  assert.equal(chipText(s, { goals: false, rundown: false }), 'Auth rewrite 5/9');
   assert.equal(s.pace.trend, 'up');
 });
 
@@ -87,8 +92,10 @@ test('a rundown 7 days old or more feeds nothing, and says to run /rundown again
 test('Off track: past the due date with issues left, not on the due day itself, not with nothing left', () => {
   const late = computeSignal(input({ goal: goal({ due: day(-1) }) }));
   assert.equal(late.level, 'off-track');
-  assert.match(late.reasons[0].text, /^Past its due date \(\w{3} \d+\) with 4 issues left$/);
-  assert.match(late.forecast!, /, 4 issues left$/);
+  // The date and the count each said once: how late in the forecast line, what's left in the reason.
+  assert.equal(late.reasons[0].text, 'Past its due date with 4 issues left');
+  assert.equal(late.forecast, `due ${shortDay(dayAt(day(-1))!)}, 1 day late`);
+  assert.equal(computeSignal(input({ goal: goal({ due: day(-5) }) })).forecast, `due ${shortDay(dayAt(day(-5))!)}, 5 days late`);
   assert.equal(computeSignal(input({ goal: goal({ due: day(0) }) })).level, 'on-track', 'the due day is not overdue');
   const done = computeSignal(input({ goal: goal({ due: day(-3), closed: 9 }) }));
   assert.equal(done.level, 'on-track');
@@ -119,7 +126,7 @@ test('Off track: a part the skill marked stuck, with what it waits on', () => {
   assert.equal(computeSignal(input({ rundown: gist({ stuck: 2 }) })).reasons[0].text, '2 parts marked stuck in /rundown');
 });
 
-test('At risk: the forecast past the due date minus the margin; no pace means no forecast rule', () => {
+test('At risk: the forecast past the due date minus the margin, or nothing closed in a whole window', () => {
   // 4 issues left at 7 closed in 14 days (half a day each): 8 days out.
   const burn = { closed: 7, days: BURN_DAYS };
   assert.equal(forecastAt({ done: 5, total: 9 }, burn, NOW), NOW + 8 * DAY);
@@ -131,10 +138,25 @@ test('At risk: the forecast past the due date minus the margin; no pace means no
   const tight = computeSignal(input({ goal: goal({ due: day(8 + RISK_MARGIN_DAYS - 1) }), burn }));
   assert.equal(tight.level, 'at-risk');
   assert.equal(tight.person, false, 'a forecast is not a person');
-  assert.match(tight.reasons[0].text, /^Pace says ~\w{3} \d+, too close to \w{3} \d+$/);
-  const none = computeSignal(input({ goal: goal({ due: day(3) }), burn: { closed: 0, days: BURN_DAYS } }));
-  assert.equal(none.level, 'on-track');
-  assert.match(none.forecast!, /no issues closed in 14 days$/);
+  assert.equal(tight.reasons[0].text, `Pace says ~${shortDay(NOW + 8 * DAY)}, too close to ${shortDay(dayAt(day(9))!)}`);
+  // Past the due date, it says so instead of "too close".
+  const past = computeSignal(input({ goal: goal({ due: day(3) }), burn }));
+  assert.equal(past.reasons[0].text, `Pace says ~${shortDay(NOW + 8 * DAY)}, after the ${shortDay(dayAt(day(3))!)} due date`);
+  // Nothing closed in a whole window: at that pace it never lands, so At risk, whatever the due date.
+  const none = computeSignal(input({ goal: goal({ due: day(20), closed: 3 }), burn: { closed: 0, days: BURN_DAYS } }));
+  assert.equal(none.level, 'at-risk');
+  assert.equal(none.person, false);
+  assert.equal(none.reasons[0].text, `No issues closed in ${BURN_DAYS} days`);
+  assert.equal(none.forecast, `due ${shortDay(dayAt(day(20))!)}, 6 issues left`);
+  // A milestone younger than the window has no pace yet, which is no rule; nor is a gist not in yet.
+  const young = computeSignal(input({ goal: goal({ due: day(20) }), burn: { closed: 0, days: 2 } }));
+  assert.equal(young.level, 'on-track');
+  assert.equal(young.forecast, `due ${shortDay(dayAt(day(20))!)}, no pace yet`);
+  const waiting = computeSignal(input({ goal: goal({ due: day(20) }), burn: null }));
+  assert.equal(waiting.level, 'on-track');
+  assert.equal(waiting.forecast, `due ${shortDay(dayAt(day(20))!)}, 4 issues left`);
+  // A younger milestone's pace is its own days: 2 closed in 2 days is one a day, 4 left lands in 4.
+  assert.equal(forecastAt({ done: 5, total: 9 }, { closed: 2, days: 2 }, NOW), NOW + 4 * DAY);
 });
 
 test('At risk, orange: an open rundown decision, or a needs-you wait over an hour', () => {
@@ -190,6 +212,12 @@ test('the copy line: one line, plain ASCII, for Slack', () => {
   const both = computeSignal(input({ rundown: gist({ stuck: 1, decisionsOpen: 2, decisions: [{ id: 'D1', question: 'Q?' }] }) }));
   assert.equal(signalLine('p', both), 'p: Off track. Auth rewrite 5/9 issues. 1 part marked stuck in /rundown. 6 merged this week (5 the week before), 2 decisions open.');
   assert.equal(ascii('  a\u200bb\u00a0c  '), 'ab c');
+  // A clipped question and a title or next step with "..." of their own keep it: one stop, never doubled or cut.
+  const long = 'Should the session cookie move to the new domain before the launch or after the first customers are on it?';
+  const clipped = signalLine('p', computeSignal(input({ goal: goal({ title: 'Wait for it...' }), rundown: gist({ decisionsOpen: 1, decisions: [{ id: 'D1', question: long }], next: 'Ship it...' }) })));
+  assert.match(clipped, /^p: At risk\. Wait for it\.\.\. 5\/9 issues\. 1 decision open: "Should the session .+\.\.\."\. 6 merged this week \(5 the week before\)\. Next: Ship it\.\.\.$/);
+  assert.ok(!/[^.]\.\.[^.]/.test(clipped), `no ".." anywhere: ${clipped}`);
+  assert.equal(signalLine('p', computeSignal(input({ goal: null, rundown: gist({ next: 'Is it done?' }) }))), 'p: No goal. No milestone set. 6 merged this week (5 the week before). Next: Is it done?');
 });
 
 test('the gist of a rundown: the active milestone, open decisions, and only the skill\'s stuck parts', () => {
@@ -214,9 +242,11 @@ test('the gist of a rundown: the active milestone, open decisions, and only the 
     stuck: 2,
     waitingOn: 'a key',
   });
-  const r = { generatedAt: new Date(NOW).toISOString(), parts: [{ status: 'stuck', statusSource: 'inferred', waitingOn: null }, { status: 'stuck', statusSource: 'claude', waitingOn: 'x' }], milestones: ms, nextStep: null, decisions } as unknown as Rundown;
-  const live = gistOfRundown(r);
-  assert.equal(live.stuck, 1, 'an inferred status never counts');
-  assert.equal(live.at, NOW);
-  assert.equal(live.next, null);
+});
+
+test('a peek sooner than the office answers is held back until just after the gap, never dropped', () => {
+  assert.equal(peekDelay(undefined, NOW), 0);
+  assert.equal(peekDelay(NOW - PEEK_GAP_MS, NOW), 0);
+  const wait = peekDelay(NOW - 200, NOW);
+  assert.ok(wait > PEEK_GAP_MS - 200 && wait <= PEEK_GAP_MS, `${wait}`);
 });

@@ -1,16 +1,16 @@
 // Signal's chip at the head of the inbox list: the project's status at one look (shared/signal.ts),
 // one line, its glyph by shape (● On track, ▲ At risk, ■ Off track, ○ No goal), the milestone and how
-// far it got. A click opens the card (ui/signal/, loaded the first time). It shows the project the
-// pulse does: the one picked in the top bar, else the one you're on.
+// far it got. A click opens the card (ui/signal/, loaded the first time). It shows the project picked
+// in the top bar; under All projects, the one you're on (else the first), named on the chip.
 //
-// What it reads is on the page already: the Goals milestone (the floor you're on, live), the ranking,
-// the shipped log and, while the Rundown window watches the floor, its rundown. The rest comes in
-// Signal's gist (protocol/signal.ts), asked for when the page connects, when the project changes, when
-// the tab comes back into view and when a milestone moves; never on a timer.
+// What it reads is on the page already: the Goals milestone (the floor you're on, live), the ranking
+// and the shipped log. The rest comes in Signal's gist (protocol/signal.ts), asked for when the page
+// connects, when the project changes, when the tab comes back into view, when a milestone moves and
+// when the Rundown window's map of the project changes; never on a timer.
 
 import { milestoneOf, milestoneProgress } from '../../shared/mission';
 import { computeNumbers } from '../../shared/metrics';
-import { chipText, computeSignal, gistOfRundown, SIGNAL_GLYPH, SIGNAL_LABEL, type Signal, type SignalInput } from '../../shared/signal';
+import { chipText, computeSignal, peekDelay, SIGNAL_GLYPH, SIGNAL_LABEL, type Signal, type SignalInput, type SignalSources } from '../../shared/signal';
 import type { SignalGoal } from '../../shared/protocol';
 import type { Net } from '../net';
 import { store } from '../state';
@@ -29,6 +29,10 @@ export interface SignalView {
   project: string;
   signal: Signal;
   at: number;
+  /** Under All projects with more than one: the chip names the project it is about. */
+  named: boolean;
+  /** Where a milestone can come from here (Goals while its windows are reachable, /rundown while its lab is on). */
+  sources: SignalSources;
 }
 
 /** The project Signal is about: the top bar's pick, else the floor you're on, else the first. */
@@ -54,10 +58,7 @@ export function signalInput(floor: string, now = Date.now()): SignalInput {
   const gist = store.signals.get(floor)?.gist;
   const goal = goalOf(floor, now);
   const burn = goal && gist?.burn?.goal === goal.id ? gist.burn : null;
-  let rundown = store.lab('rundown') ? (gist?.rundown ?? null) : null;
-  // The Rundown window watches this floor: its rundown is newer, the file's age still counts.
-  const live = rundown && store.rundowns.get(floor)?.rundown;
-  if (rundown && live && live.generator.mode !== 'facts') rundown = { ...gistOfRundown(live), at: rundown.at };
+  const rundown = store.lab('rundown') ? (gist?.rundown ?? null) : null;
   const n = computeNumbers(home.records.filter((r) => r.floor === floor), now);
   return { now, goal, burn, rundown, ranked: store.ranked(floor), merges: { week: n.week.merged, before: n.before.merged } };
 }
@@ -67,13 +68,16 @@ export function signalView(now = Date.now()): SignalView | null {
   const floor = signalFloor();
   if (!floor) return null;
   const project = store.floors.find((f) => f.id === floor)?.name ?? floor;
-  return { floor, project, signal: computeSignal(signalInput(floor, now)), at: now };
+  const named = !home.project && store.floors.filter((f) => !f.cloning).length > 1;
+  // Goals lives in Mission control, which sits behind the GitHub boards lab too.
+  const sources = { goals: store.lab('boards') && store.lab('ops'), rundown: store.lab('rundown') };
+  return { floor, project, signal: computeSignal(signalInput(floor, now)), at: now, named, sources };
 }
 
 /** The chip for a status. */
 export function signalChip(v: SignalView, open: () => void): HTMLElement {
   const s = v.signal;
-  const what = chipText(s);
+  const what = v.named ? `${v.project} - ${chipText(s, v.sources)}` : chipText(s, v.sources);
   return h(
     'button.sig-chip',
     {
@@ -95,13 +99,21 @@ export function signalChip(v: SignalView, open: () => void): HTMLElement {
 export function installSignal(net: Net, open: () => void) {
   const root = $('signal');
   const peekedAt = new Map<string, number>();
-  const peek = (force = false) => {
-    const floor = signalFloor();
-    if (!floor || !net.up) return;
-    const last = peekedAt.get(floor) ?? 0;
-    if (!force && Date.now() - last < REPEEK_MS) return;
+  // A forced peek sooner than the office answers is held back until it will (one per floor), never lost.
+  const held = new Map<string, ReturnType<typeof setTimeout>>();
+  const send = (floor: string) => {
+    if (!net.up) return;
     peekedAt.set(floor, Date.now());
     net.send({ t: 'signal.peek', floor });
+  };
+  const peek = (force = false) => {
+    const floor = signalFloor();
+    if (!floor || !net.up || held.has(floor)) return;
+    const last = peekedAt.get(floor);
+    if (!force && Date.now() - (last ?? 0) < REPEEK_MS) return;
+    const wait = peekDelay(last, Date.now());
+    if (!wait) return send(floor);
+    held.set(floor, setTimeout(() => (held.delete(floor), send(floor)), wait));
   };
 
   let shownFloor: string | undefined;
@@ -130,11 +142,17 @@ export function installSignal(net: Net, open: () => void) {
   net.onStatus((up) => up && peekedAt.clear());
   store.on('floors', () => (peek(), render()));
   store.on('labs', () => (peek(true), render()));
+  // The Rundown window's map of this project changed: the skill's files may have too.
+  store.on('rundown', () => {
+    const floor = signalFloor();
+    const view = floor ? store.rundowns.get(floor) : undefined;
+    if (view && !view.computing) peek(true);
+  });
   store.on('timeline', () => {
     const e = store.timeline.events[0];
     if (e && MOVES.has(e.kind) && e.floor === signalFloor() && Date.now() - e.at < 10_000) peek(true);
   });
-  for (const t of ['roster', 'mission', 'issues', 'rundown', 'signal', 'floor'] as const) store.on(t, render);
+  for (const t of ['roster', 'mission', 'issues', 'signal', 'floor'] as const) store.on(t, render);
   home.on(render);
   document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && peek());
   // Ages cross their thresholds (a wait passing an hour, a due date passing) with nothing else moving.

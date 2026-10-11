@@ -36,7 +36,7 @@ export interface SignalGist {
   floor: string;
   /** The active Goals milestone (the ops lab), null with none. */
   goal: SignalGoal | null;
-  /** Issues of that milestone closed in the last `days` days (from the timeline's progress events). */
+  /** Issues of that milestone closed in the last `days` days (from the timeline's progress events): BURN_DAYS, or the milestone's age when younger. */
   burn: { goal: string; closed: number; days: number } | null;
   /** The last /rundown (the rundown lab), null with no readable .rundown/rundown.json. */
   rundown: RundownGist | null;

@@ -11,7 +11,7 @@
 .sig-what::before { content: '·'; margin-right: 8px; color: var(--faint); }
 .sig-more { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--faint); font-size: 12px; }
 .sig-more:empty { display: none; }
-.sig-more::before { content: '-'; margin-right: 8px; }
+.sig-more::before { content: '·'; margin-right: 8px; color: var(--faint); }
 .sig-chip[data-level='off-track'] .sig-glyph, .sig-chip[data-level='off-track'] .sig-word { color: var(--stuck); }
 .sig-chip[data-level='off-track'] { border-left: 3px solid var(--stuck); padding-left: 10px; }
 .sig-chip[data-level='at-risk'][data-person] { border-left: 3px solid var(--signal); padding-left: 10px; }

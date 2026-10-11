@@ -4,7 +4,7 @@ Kipdeck's one-look project status for whoever leads the project: on track, at ri
 
 Back to the [README](../README.md).
 
-Signal sits at the head of the inbox list, over the sections, as one line: a glyph, a status word, the milestone with how far it got, and the rule that set the status. It reads the project the pulse does: the one picked in the top bar, else the one you're on. A click opens the card. It's also **Signal** in the avatar menu and in Ctrl+K, next to Rundown. It's part of the inbox, not a lab, and still shows with every lab switched off.
+Signal sits at the head of the inbox list, over the sections, as one line: a glyph, a status word, the milestone with how far it got, and the rule that set the status. It reads the project picked in the top bar. Under All projects it reads the floor you're on, else the first, and with more than one project the chip names it first (*acme-shop - Auth rewrite 5/9*). A click opens the card. It's also **Signal** in the avatar menu and in Ctrl+K, next to Rundown. It's part of the inbox, not a lab, and still shows with every lab switched off.
 
 ![Signal at risk over the inbox list, and its card (demo data)](../design/shots/signal/card-at-risk-dark-1440.png)
 
@@ -26,7 +26,7 @@ At risk turns Signal orange only when a person can clear it (an open decision, a
 Every threshold is a named constant in `src/shared/signal.ts`:
 
 - **Off track**: past the due date (from the day after it) with issues left; a stuck agent linked to the shown milestone (its roster entry's `goal`), snoozed ones left out; or a part the `/rundown` skill marked stuck (an inferred status never counts). A crashed or stuck agent on other work stays in the inbox and doesn't move the project's status.
-- **At risk**: the forecast lands later than `RISK_MARGIN_DAYS` (2) days before the due date; an open decision in the last `/rundown`; a Needs you wait over `LONG_WAIT_MS` (1 hour); or this week's merges under `PACE_DROP` (half) of the week before, once the week before had at least `PACE_MIN_BEFORE` (4).
+- **At risk**: the forecast lands later than `RISK_MARGIN_DAYS` (2) days before the due date, or no issue of the milestone closed in a whole `BURN_DAYS` (14) day window, since at that pace it never lands; an open decision in the last `/rundown`; a Needs you wait over `LONG_WAIT_MS` (1 hour); or this week's merges under `PACE_DROP` (half) of the week before, once the week before had at least `PACE_MIN_BEFORE` (4).
 - Off track wins over At risk, and the card lists at most three reasons, Off track's first.
 
 ## Where the milestone comes from
@@ -37,23 +37,23 @@ A `.rundown/rundown.json` that is `STALE_RUNDOWN_DAYS` (7) days old or more feed
 
 ## The forecast
 
-For a Goals milestone with a due date, the card says *due Oct 24, pace says ~Oct 27 (rough)*. The pace is the milestone's issues closed over the last `BURN_DAYS` (14) days, from the timeline's progress events, which is the same count the Deck's fleet log uses (`issuesClosed` in `src/shared/pace.ts`). With nothing closed in that time there is no forecast and no forecast rule: the card says *no issues closed in 14 days*. A `/rundown` milestone has no pace to go by, so it shows only its due date.
+For a Goals milestone with a due date, the card says *due Oct 24, pace says ~Oct 27 (rough)*. The pace is the milestone's issues closed over the last `BURN_DAYS` (14) days, from the timeline's progress events, which is the same count the Deck's fleet log uses (`issuesClosed` in `src/shared/pace.ts`). A milestone younger than 14 days (counted from its first line on the timeline) is measured over its own days, and with nothing closed yet the card says *no pace yet*, which sets no rule. Once a whole 14 days pass with nothing closed, the status is At risk: *No issues closed in 14 days*. A `/rundown` milestone has no pace to go by, so it shows only its due date. Past the due date, the card says how many days late it is, and the reason says what's left.
 
 ## The card
 
 - The project, the status with its reasons, and the forecast.
 - **Milestone**: the title, done out of all, and where it came from.
 - **Pace, 7 days**: merges in the last 7 days from the signed shipped log, against the 7 before.
-- **Decisions**: the open ones in the last `/rundown`, the oldest one's age and its question.
+- **Decisions**: the open ones in the last `/rundown`, the oldest one's age and its question (left out when the reason above already quotes it).
 - **Next**: the `/rundown` skill's next step and how old it is, else *Answer* the agent that has waited on you longest.
-- **Copy as text** puts one line on the clipboard, plain ASCII, ready for Slack: *acme-shop: At risk. Auth rewrite 5/9 issues, due Oct 24, pace says ~Oct 27 (rough). 1 decision open: "JWT or opaque tokens?". 12 merged this week (9 the week before). Next: Wire the refresh endpoint.*
-- **Open Rundown** while the Rundown lab is on, and **Open Goals** while the Goals and timeline lab is on.
+- **Copy as text** puts one line on the clipboard, plain ASCII, ready for Slack: *acme-shop: At risk. Auth rewrite 5/9 issues, due Oct 30, pace says ~Oct 27 (rough). 1 decision open: "JWT or opaque tokens?". 12 merged this week (9 the week before). Next: Wire the refresh endpoint.*
+- **Open Rundown** while the Rundown lab is on, and **Open Goals** while Goals can be reached (the Goals and timeline lab and the GitHub boards and queue lab, which Mission control sits behind) and the card is about the floor you're on.
 
 The top-right ✕ and Esc close it.
 
 ## Freshness, and what the office reads
 
-Most of what Signal shows is already on the page: the Goals milestone of the floor you're on, the ranking, the shipped log, and the Rundown window's map while that window watches the project. The rest comes in a small gist over the socket (`signal.peek` and `signal.gist`, in `src/shared/protocol/signal.ts`): the Goals milestone of a project you aren't on, its issues closed lately, and what the last `/rundown` left in `.rundown/`. The office reads `rundown.json` through Rundown's own `skillJudgement()` (capped at 512 KB and checked), with the person's `milestones.md` and `decisions.md` over the skill's guesses, and keeps the gist per project until one of those files changes. It never runs git, never computes a map and never polls. The page asks when it connects, when the project picked changes, when the tab comes back into view (at most once a minute) and when a milestone moves on the timeline. A peek names a project by its id only, never a path. Each part of the gist follows its own lab, and the read-only demo drops the message without a word.
+Most of what Signal shows is already on the page: the Goals milestone of the floor you're on, the ranking and the shipped log. The rest comes in a small gist over the socket (`signal.peek` and `signal.gist`, in `src/shared/protocol/signal.ts`): the Goals milestone of a project you aren't on, its issues closed lately, and what the last `/rundown` left in `.rundown/`. The office reads `rundown.json` through Rundown's own `skillJudgement()` (capped at 512 KB and checked), with the person's `milestones.md` and `decisions.md` over the skill's guesses, and keeps the gist per project until one of those files changes. It never runs git, never computes a map and never polls. The page asks when it connects, when the project picked changes, when the tab comes back into view (at most once a minute), when a milestone moves on the timeline and when the Rundown window's map of the project changes. The office answers one peek per project a second (`PEEK_GAP_MS`); the page holds a sooner one back until then rather than lose it. A peek names a project by its id only, never a path. Each part of the gist follows its own lab, and the read-only demo drops the message without a word.
 
 ## For developers
 

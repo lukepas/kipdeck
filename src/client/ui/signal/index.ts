@@ -17,7 +17,7 @@ export interface SignalDeps {
   view(): SignalView | null;
   /** Opens Rundown on this project, while its lab is on. */
   openRundown?(floor: string): void;
-  /** Opens Goals, while the ops lab is on. */
+  /** Opens Goals on the floor you're on, while its windows are reachable (view().sources.goals). */
   openGoals?(): void;
 }
 
@@ -50,7 +50,9 @@ function decisionsCol(s: Signal): HTMLElement {
   if (!store.lab('rundown')) return column('Decisions', '-', 'Rundown is off in Labs');
   if (s.rundown !== 'fresh') return column('Decisions', '-', s.rundown === 'stale' ? 'The last /rundown is too old' : 'No /rundown in this project yet');
   if (!d.open) return column('Decisions', '0 open', 'From /rundown');
-  return column('Decisions', `${d.open} open`, d.oldestDays ? `Oldest ${plural(d.oldestDays, 'day')}` : null, d.first ? h('span.sg-sub.sg-q', { title: d.first }, `"${d.first}"`) : null);
+  // The reason over the columns already quotes the question when a decision set the status: said once.
+  const quoted = s.reasons.some((r) => r.rule === 'decision');
+  return column('Decisions', `${d.open} open`, d.oldestDays ? `Oldest ${plural(d.oldestDays, 'day')}` : null, d.first && !quoted ? h('span.sg-sub.sg-q', { title: d.first }, `"${d.first}"`) : null);
 }
 
 function body(v: SignalView): HTMLElement[] {
@@ -62,7 +64,7 @@ function body(v: SignalView): HTMLElement[] {
     h('div.sg-why', {}, h('b.sg-word', {}, SIGNAL_LABEL[s.level]), ...(s.forecast ? [h('span.sg-line', {}, s.forecast)] : []), ...s.reasons.map((r) => h('span.sg-line.sg-reason', { 'data-level': r.level, 'data-person': r.person ? '1' : undefined }, r.text))),
   );
   if (s.level === 'no-goal') {
-    const how = store.lab('ops') ? 'Set a milestone in Goals' : store.lab('rundown') ? 'Run /rundown in this project' : 'Turn on Goals or Rundown in Labs';
+    const how = v.sources.goals ? 'Set a milestone in Goals' : v.sources.rundown ? 'Run /rundown in this project' : 'Turn on Goals or Rundown in Labs';
     head.querySelector('.sg-why')!.append(h('span.sg-line', {}, `No milestone in Goals or /rundown. ${how} and this card says how it's going.`));
   }
   const next = s.next ? h('div.sg-next', {}, h('span.sg-label', {}, 'Next'), h('span.sg-next-text', {}, s.next.text), h('span.sg-sub', {}, s.next.from)) : null;
@@ -92,7 +94,8 @@ export function openSignal(deps: SignalDeps): Modal | null {
     asOf.textContent = `as of ${new Date(v.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     main.replaceChildren(...body(v));
     rundownBtn.classList.toggle('hidden', !deps.openRundown || !store.lab('rundown'));
-    goalsBtn.classList.toggle('hidden', !deps.openGoals || !store.lab('ops'));
+    // Goals opens on the floor you're on: hidden when the card is about another project.
+    goalsBtn.classList.toggle('hidden', !deps.openGoals || !v.sources.goals || v.floor !== store.floor);
   };
   copyBtn.addEventListener('click', () => {
     const line = signalLine(view.project, view.signal);

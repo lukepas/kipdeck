@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { Labs } from '../src/server/labs.js';
 import { dispatch } from '../src/server/ws/dispatch.js';
-import { forgetGists, signalGist, type GistFloor } from '../src/server/signal/gist.js';
+import { burnDays, forgetGists, signalGist, type GistFloor } from '../src/server/signal/gist.js';
 import { writeDecisions, writeMilestones } from '../src/shared/rundown/markdown.js';
 import { LIMITS } from '../src/shared/rundown/schema.js';
 import type { Ctx } from '../src/server/office/context.js';
@@ -213,4 +213,14 @@ test('the read-only demo drops a peek without a word', async () => {
   await new Promise((r) => setTimeout(r, 50));
   assert.deepEqual(o.sent, []);
   assert.deepEqual(o.warned, []);
+});
+
+test("a milestone younger than the window counts its pace over its own days", async () => {
+  assert.equal(burnDays([], NOW), 14, 'nothing on the timeline: its age is unknown, the whole window counts');
+  assert.equal(burnDays([{ at: NOW - 20 * DAY }, { at: NOW - DAY }], NOW), 14);
+  assert.equal(burnDays([{ at: NOW - 2.5 * DAY }], NOW), 3);
+  assert.equal(burnDays([{ at: NOW - 60_000 }], NOW), 1, 'made a minute ago: one day, never zero');
+  const added = { id: 'e-add', at: NOW - 3 * DAY, kind: 'milestone', floor: 'f1', goal: 'g1', text: 'added the milestone' } as TimelineEvent;
+  const g = await signalGist(floorAt(project('young'), mission(), [added, progress(NOW - DAY, 0, 1)]), { ops: true, rundown: false }, NOW);
+  assert.deepEqual(g.burn, { goal: 'g1', closed: 1, days: 3 });
 });

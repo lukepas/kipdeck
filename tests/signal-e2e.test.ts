@@ -141,6 +141,8 @@ test('the chip over the list and its card, through every status, closing by ✕ 
   const text = await card.innerText();
   assert.match(text, /At risk/i);
   assert.match(text, /1 decision open, oldest 2 days: "JWT or opaque tokens\?"/);
+  assert.equal(text.split('JWT or opaque tokens?').length, 2, 'the question is quoted once, in the reason, not again under Decisions');
+  assert.match(text, /no pace yet/, 'a milestone made today has no pace yet, which is not At risk');
   assert.match(text, /Pick a token format/);
   assert.match(text, /From Goals/);
   for (const b of ['Copy as text', 'Open Rundown', 'Open Goals']) assert.ok(await card.locator('footer .btn', { hasText: b }).isVisible(), b);
@@ -171,11 +173,28 @@ test('the chip over the list and its card, through every status, closing by ✕ 
   const id = await page.evaluate(() => (window as any).__lite.store.mission.milestones[0].id as string);
   await send(page, { t: 'mission.milestone', op: 'update', id, due: day(-1) });
   await waitLevel(page, 'off-track');
-  assert.match((await page.locator('#signal .sig-chip').getAttribute('title')) ?? '', /^Past its due date/);
+  assert.equal((await page.locator('#signal .sig-chip').getAttribute('title')) ?? '', 'Past its due date with 3 issues left');
+
+  // Under All projects with two or more, the chip names the project it is about.
+  const name = await page.evaluate(() => {
+    const s = (window as any).__lite.store;
+    const f = s.floors[0];
+    s.floors.push({ ...f, id: 'signal-e2e-other', name: 'other-project' });
+    s.emit('floors');
+    return f.name as string;
+  });
+  await page.waitForFunction((n) => document.querySelector('#signal .sig-what')?.textContent?.startsWith(`${n} - Auth rewrite`), name);
+  await page.evaluate(() => {
+    const s = (window as any).__lite.store;
+    s.floors = s.floors.filter((f: { id: string }) => f.id !== 'signal-e2e-other');
+    s.emit('floors');
+  });
+  await page.waitForFunction(() => document.querySelector('#signal .sig-what')?.textContent?.startsWith('Auth rewrite'));
 
   // Goals and Rundown off in Labs: still there, as No goal, and the card offers neither.
   await send(page, { t: 'labs.set', patch: { ops: false, rundown: false } });
   await waitLevel(page, 'no-goal');
+  assert.match(await page.locator('#signal .sig-chip').innerText(), /No goal\s*Turn on Goals in Labs/, 'never "Set a goal" with Goals off');
   await page.locator('#signal .sig-chip').click();
   await card.waitFor();
   assert.equal(await card.locator('footer .btn', { hasText: 'Open Rundown' }).isVisible(), false);

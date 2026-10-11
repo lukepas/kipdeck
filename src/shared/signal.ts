@@ -9,7 +9,7 @@
 // nothing at all, and the card says how old it is.
 
 import { NEEDS_INPUT_LONG_MS, type Ranked } from './attention.js';
-import type { Decision, Milestone, Part, Rundown } from './rundown/schema.js';
+import type { Decision, Milestone, Part } from './rundown/schema.js';
 import type { RundownGist, SignalGoal } from './protocol/signal.js';
 
 const DAY_MS = 24 * 60 * 60_000;
@@ -28,6 +28,8 @@ export const PACE_DROP = 0.5;
 export const PACE_MIN_BEFORE = 4;
 /** The most open decisions a gist carries by name. */
 export const GIST_DECISIONS = 3;
+/** The least time between two peeks at one floor from one page (ms): the office answers no sooner. */
+export const PEEK_GAP_MS = 1000;
 
 export type SignalLevel = 'on-track' | 'at-risk' | 'off-track' | 'no-goal';
 
@@ -79,7 +81,7 @@ export interface SignalInput {
   now: number;
   /** The active Goals milestone, while the ops lab is on. */
   goal: SignalGoal | null;
-  /** Issues of `goal` closed over the last `days` days. */
+  /** Issues of `goal` closed over the last `days` days (fewer than BURN_DAYS for a younger milestone). */
   burn: { closed: number; days: number } | null;
   /** The last /rundown, while the rundown lab is on. */
   rundown: RundownGist | null;
@@ -151,15 +153,24 @@ export function computeSignal(input: SignalInput): Signal {
     const due = `due ${shortDay(dueAt)}`;
     const burn = milestone.source === 'goals' ? input.burn : null;
     const eta = forecastAt(milestone, burn, now);
+    const leftWords = plural(left, milestone.unit.slice(0, -1));
+    const late = daysBetween(dueAt, now);
     if (milestone.total === 0) forecast = `${due}, no ${milestone.unit} yet`;
     else if (left <= 0) forecast = `${due}, all ${milestone.unit} done`;
-    else if (daysBetween(dueAt, now) > 0) {
-      forecast = `${due}, ${plural(left, milestone.unit.slice(0, -1))} left`;
-      off('overdue', `Past its due date (${shortDay(dueAt)}) with ${plural(left, milestone.unit.slice(0, -1))} left`);
+    else if (late > 0) {
+      // The date and the count each said once: the forecast line says how late, the reason what's left.
+      forecast = `${due}, ${plural(late, 'day')} late`;
+      off('overdue', `Past its due date with ${leftWords} left`);
     } else if (eta !== undefined) {
       forecast = `${due}, pace says ~${shortDay(eta)} (rough)`;
-      if (daysBetween(eta, dueAt) < RISK_MARGIN_DAYS) risk('forecast', `Pace says ~${shortDay(eta)}, too close to ${shortDay(dueAt)}`);
-    } else forecast = milestone.source === 'goals' ? `${due}, no issues closed in ${BURN_DAYS} days` : due;
+      if (daysBetween(eta, dueAt) < 0) risk('forecast', `Pace says ~${shortDay(eta)}, after the ${shortDay(dueAt)} due date`);
+      else if (daysBetween(eta, dueAt) < RISK_MARGIN_DAYS) risk('forecast', `Pace says ~${shortDay(eta)}, too close to ${shortDay(dueAt)}`);
+    } else if (burn && burn.closed <= 0 && burn.days >= BURN_DAYS) {
+      // Nothing closed in a whole window: at that pace it never lands, which is past any due date.
+      forecast = `${due}, ${leftWords} left`;
+      risk('forecast', `No issues closed in ${BURN_DAYS} days`);
+    } else if (burn && burn.closed <= 0) forecast = `${due}, no pace yet`;
+    else forecast = milestone.source === 'goals' ? `${due}, ${leftWords} left` : due;
   }
 
   // Agents stuck on this milestone: only those linked to it (entry.goal), never the whole floor's.
@@ -206,10 +217,27 @@ export function computeSignal(input: SignalInput): Signal {
   };
 }
 
-/** What the chip says after the status: the milestone and how far it got, else nothing. */
-export function chipText(s: Signal): string {
-  if (!s.milestone) return 'Set a goal';
+/** Where a milestone can come from on this page: Goals (reachable while its windows are), /rundown (its lab). */
+export interface SignalSources {
+  goals: boolean;
+  rundown: boolean;
+}
+
+/** What to do about No goal, given where a milestone can come from. */
+export function noGoalHint(src: SignalSources): string {
+  return src.goals ? 'Set a goal' : src.rundown ? 'Run /rundown' : 'Turn on Goals in Labs';
+}
+
+/** What the chip says after the status: the milestone and how far it got, else what to do about none. */
+export function chipText(s: Signal, src: SignalSources): string {
+  if (!s.milestone) return noGoalHint(src);
   return `${s.milestone.title} ${s.milestone.done}/${s.milestone.total}`;
+}
+
+/** How long to wait before a peek at a floor last peeked at `last`: 0 to send now, else just past the office's gap. */
+export function peekDelay(last: number | undefined, now: number): number {
+  if (last === undefined || now - last >= PEEK_GAP_MS) return 0;
+  return last + PEEK_GAP_MS + 100 - now;
 }
 
 /** Text made plain ASCII for a chat message: accents dropped, typographer's quotes and dashes made plain. */
@@ -228,14 +256,19 @@ export function ascii(text: string): string {
 
 /** The status as one line of plain ASCII, ready for Slack: "acme: At risk. Auth 5/9 issues, due Oct 24, ... Next: ...". */
 export function signalLine(project: string, s: Signal): string {
-  const parts: string[] = [`${project}: ${SIGNAL_LABEL[s.level]}.`];
-  if (s.milestone) parts.push(`${s.milestone.title} ${s.milestone.done}/${s.milestone.total} ${s.milestone.unit}${s.forecast ? `, ${s.forecast}` : ''}.`);
+  // Each part ends in one stop, unless it already ends in one of its own ("...", "?"): never doubled, never cut.
+  const end = (text: string) => {
+    const t = ascii(text);
+    return /[.!?]$/.test(t) ? t : `${t}.`;
+  };
+  const parts: string[] = [end(`${project}: ${SIGNAL_LABEL[s.level]}`)];
+  if (s.milestone) parts.push(end(`${s.milestone.title} ${s.milestone.done}/${s.milestone.total} ${s.milestone.unit}${s.forecast ? `, ${s.forecast}` : ''}`));
   else parts.push('No milestone set.');
-  if (s.reasons[0]) parts.push(`${s.reasons[0].text}.`);
+  if (s.reasons[0]) parts.push(end(s.reasons[0].text));
   const pace = `${s.pace.week} merged this week (${s.pace.before} the week before)`;
-  parts.push(s.decisions.open && s.reasons[0]?.rule !== 'decision' ? `${pace}, ${plural(s.decisions.open, 'decision')} open.` : `${pace}.`);
-  if (s.next) parts.push(`Next: ${s.next.text.replace(/[.\s]+$/, '')}.`);
-  return ascii(parts.join(' ').replace(/\.\./g, '.'));
+  parts.push(end(s.decisions.open && s.reasons[0]?.rule !== 'decision' ? `${pace}, ${plural(s.decisions.open, 'decision')} open` : pace));
+  if (s.next) parts.push(end(`Next: ${s.next.text}`));
+  return ascii(parts.join(' '));
 }
 
 /** The gist Signal reads, from what a rundown holds: its milestones, next step, decisions and parts. */
@@ -253,10 +286,4 @@ export function gistOf(at: number, parts: readonly Pick<Part, 'status' | 'waitin
     stuck: stuck.length,
     ...(waitingOn ? { waitingOn } : {}),
   };
-}
-
-/** The gist of a whole rundown the page already holds (the Rundown window watches it): only the skill's stuck parts count. */
-export function gistOfRundown(r: Rundown): RundownGist {
-  const at = Date.parse(r.generatedAt);
-  return gistOf(Number.isFinite(at) ? at : 0, r.parts.filter((p) => p.statusSource !== 'inferred'), r.milestones, r.nextStep?.text ?? null, r.decisions);
 }

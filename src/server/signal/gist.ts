@@ -84,6 +84,17 @@ export async function rundownGist(floorId: string, dir: string): Promise<Rundown
   return gist;
 }
 
+/**
+ * The days a milestone's pace is counted over: BURN_DAYS, or fewer when the first event the timeline
+ * has for it (its "added" line) is younger, so a milestone made today has no pace yet rather than none.
+ * With nothing on the timeline for it, its age is unknown and the whole window counts.
+ */
+export function burnDays(events: readonly Pick<TimelineEvent, 'at'>[], now: number): number {
+  if (!events.length) return BURN_DAYS;
+  const first = events.reduce((t, e) => Math.min(t, e.at), now);
+  return Math.min(BURN_DAYS, Math.max(1, Math.ceil((now - first) / DAY_MS)));
+}
+
 /** A floor's gist, each part only while its lab is on. */
 export async function signalGist(floor: GistFloor, labs: { ops: boolean; rundown: boolean }, now = Date.now()): Promise<SignalGist> {
   let goal: SignalGist['goal'] = null;
@@ -95,8 +106,9 @@ export async function signalGist(floor: GistFloor, labs: { ops: boolean; rundown
       const p = milestoneProgress(m, floor.github.issues.items, [], [], now);
       goal = { id: m.id, title: m.title, ...(m.due ? { due: m.due } : {}), closed: p.closed, issues: p.issues };
       const since = now - BURN_DAYS * DAY_MS;
-      const events = floor.timeline.list({ since, limit: Number.MAX_SAFE_INTEGER }).events.filter((e) => e.goal === m.id);
-      burn = { goal: m.id, closed: issuesClosed(events), days: BURN_DAYS };
+      const all = floor.timeline.list({ limit: Number.MAX_SAFE_INTEGER }).events.filter((e) => e.goal === m.id);
+      const events = all.filter((e) => e.at > since);
+      burn = { goal: m.id, closed: issuesClosed(events), days: burnDays(all, now) };
     }
   }
   const rundown = labs.rundown ? await rundownGist(floor.id, floor.dir) : null;
