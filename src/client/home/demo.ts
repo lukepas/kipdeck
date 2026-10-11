@@ -19,6 +19,7 @@ export function renderDemo(demo: DemoInfo | undefined, where: HTMLElement) {
   document.body.classList.toggle('demo-office', !!demo);
   document.body.classList.toggle('demo-read-only', !!demo?.readOnly);
   home.demo = !!demo;
+  home.readOnly = !!demo?.readOnly;
   where.replaceChildren();
   where.classList.toggle('hidden', !demo);
   if (!demo) return home.change();

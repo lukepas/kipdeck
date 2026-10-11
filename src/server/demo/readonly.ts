@@ -26,10 +26,10 @@ export const READ_ONLY_ALLOWS: ReadonlySet<string> = new Set([
 /**
  * What a page sends by itself rather than someone asking for it, presence a visitor has no use for
  * (nobody has an avatar on the home page), usage-limit lookups that would reach other services, and a
- * project's rundown (its contributors, uncommitted paths, branches and decisions are not for anonymous
- * visitors, as its download isn't): dropped without a word.
+ * project's rundown and Signal's gist of it (its contributors, uncommitted paths, branches and decisions
+ * are not for anonymous visitors, as its download isn't): dropped without a word.
  */
-const QUIET: ReadonlySet<string> = new Set(['term.resize', 'term.typing', 'profile', 'rtc', 'voice', 'setup.check', 'move', 'sit', 'act', 'limits.refresh', 'rundown.watch', 'rundown.unwatch']);
+const QUIET: ReadonlySet<string> = new Set(['term.resize', 'term.typing', 'profile', 'rtc', 'voice', 'setup.check', 'move', 'sit', 'act', 'limits.refresh', 'rundown.watch', 'rundown.unwatch', 'signal.peek']);
 
 /** The least time between two refusals told to one visitor. */
 const TOLD_GAP_MS = 4000;
