@@ -198,7 +198,7 @@ Options:
                           Also settable from Settings in the office; "" turns it off
       --labs <names>      Hold labs on so admins can't switch them off (env AGENT_OFFICE_LABS):
                           boards, bridge (the Deck), ops, meetings, voice, ambience,
-                          proof, or all. All are on by default. A leading minus holds
+                          proof, rundown, or all. All are off by default. A leading minus holds
                           one off instead (--labs -proof,-voice), and none holds all off
       --telemetry         Share anonymous usage numbers (env KIPDECK_TELEMETRY=1):
                           minutes to the first agent, answer and merge, and

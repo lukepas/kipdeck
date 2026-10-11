@@ -3,6 +3,7 @@
 // order (shared/attention.ts), the mission's milestones on the table and each pod's goal under its
 // letter. Picking a unit does what the list would.
 import { store } from './state';
+import { proofReady } from './proof-ready';
 import { Plot, type PlotUnit } from './shared/plot';
 import { podGoals } from '../shared/pods';
 import { address } from '../shared/callsign';
@@ -10,7 +11,7 @@ import { LEVEL_LABEL } from '../shared/attention';
 
 /** Mounts the plot in `box` and keeps it current; `pick` opens a unit. */
 export function mountLitePlot(box: HTMLElement, pick: (id: string) => void): Plot {
-  const plot = new Plot({ kind: 'live', onPick: pick, proof: store.lab('proof') });
+  const plot = new Plot({ kind: 'live', onPick: pick, proof: proofReady() });
   box.replaceChildren(plot.el);
 
   const units = () => {

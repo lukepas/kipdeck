@@ -1,10 +1,11 @@
-// End to end: Signal in the built office with `--demo`, in a headless browser. The chip sits at the
-// head of the inbox list on one line (never in the top bar, whose search keeps its room), says No goal
-// with no milestone, On track once Goals has one, At risk in Signal orange once the last /rundown has
+// End to end: Signal in the built office with `--demo`, in a headless browser. With no milestone
+// there is no chip (the card still opens from Ctrl+K and says No goal). Once Goals has one, the chip
+// sits at the head of the inbox list on one line (never in the top bar, whose search keeps its room),
+// says On track, At risk in Signal orange once the last /rundown has
 // an open decision, and Off track in red once the milestone is past its due date with issues left.
 // A click opens the card with Copy as text (one ASCII line), Open Rundown and Open Goals; its ✕ and
-// Esc both close it. Ctrl+K and the avatar menu have it, and with Goals and Rundown off in Labs it
-// still shows, as No goal, with neither Open button.
+// Esc both close it. Ctrl+K and the avatar menu have it, and with Goals and Rundown off in Labs the
+// chip goes and the card says No goal, with neither Open button.
 // Skipped (not failed) when there's no build (npm run build), the build is older than the client's
 // sources, or there's no browser playwright-core can start.
 import { after, before, test } from 'node:test';
@@ -90,6 +91,13 @@ const day = (offset: number) => {
 /** Sends a message on the page's own socket. */
 const send = (page: Page, msg: object) => page.evaluate((m) => (window as any).__lite.net.send(m), msg);
 const level = (page: Page) => page.locator('#signal .sig-chip').getAttribute('data-level');
+/** Opens Signal's card from Ctrl+K: with no goal there is no chip to click. */
+async function openCard(page: Page) {
+  await page.keyboard.press('Control+k');
+  await page.locator('.palette input').fill('Signal');
+  await page.keyboard.press('Enter');
+  await page.locator('.modal.signal').waitFor();
+}
 async function waitLevel(page: Page, want: string) {
   await page.locator(`#signal .sig-chip[data-level="${want}"]`).waitFor({ timeout: 20_000 });
 }
@@ -106,18 +114,18 @@ test('the chip over the list and its card, through every status, closing by ✕ 
   await page.goto(`${base}/`);
   await page.locator('.sec-working .row, .sec-needs-you .row').first().waitFor({ timeout: 30_000 });
 
-  // No goal: at the head of the list, one line, not in the top bar.
-  await waitLevel(page, 'no-goal');
-  const place = await page.evaluate(() => {
-    const chip = document.querySelector('#signal .sig-chip')!.getBoundingClientRect();
-    const list = document.getElementById('inbox')!.getBoundingClientRect();
-    return { inBar: !!document.querySelector('.hb .sig-chip'), above: chip.bottom <= list.top + 1, height: chip.height, search: document.querySelector('.hb-search')!.getBoundingClientRect().width };
-  });
-  assert.equal(place.inBar, false, 'not in the top bar');
-  assert.ok(place.above, 'over the sections');
-  assert.ok(place.height <= 40, `one line (${place.height}px)`);
-  assert.ok(place.search >= 200, `search keeps its room (${place.search}px)`);
-  assert.match(await page.locator('#signal .sig-chip').innerText(), /No goal\s*Set a goal/);
+  // Labs ship off; this office switches on the ones Signal reads milestones from.
+  await send(page, { t: 'labs.set', patch: { ops: true, rundown: true, boards: true } });
+  await page.waitForFunction(() => (window as any).__lite.store.lab('ops'));
+
+  // No goal: no chip over the list, so the list starts with the work; the card still opens from Ctrl+K.
+  await page.waitForTimeout(500);
+  assert.equal(await page.locator('#signal .sig-chip').count(), 0, 'no No goal strip');
+  await openCard(page);
+  const noGoal = page.locator('.modal.signal');
+  assert.match(await noGoal.innerText(), /No goal/i);
+  await page.keyboard.press('Escape');
+  await noGoal.waitFor({ state: 'detached' });
 
   // The read-only demo: a visitor can set nothing, so nothing is suggested and neither window is offered.
   await page.evaluate(() => {
@@ -125,10 +133,8 @@ test('the chip over the list and its card, through every status, closing by ✕ 
     l.home.readOnly = true;
     l.store.emit('floors');
   });
-  await page.waitForFunction(() => document.querySelector('#signal .sig-what')?.textContent === 'No milestone set');
-  await page.locator('#signal .sig-chip').click();
+  await openCard(page);
   const roCard = page.locator('.modal.signal');
-  await roCard.waitFor();
   assert.doesNotMatch(await roCard.locator('.sg-status').innerText(), /Set a|Run \/rundown|Turn on/);
   assert.equal(await roCard.locator('footer .btn', { hasText: 'Open Rundown' }).isVisible(), false);
   assert.equal(await roCard.locator('footer .btn', { hasText: 'Open Goals' }).isVisible(), false);
@@ -139,11 +145,19 @@ test('the chip over the list and its card, through every status, closing by ✕ 
     l.home.readOnly = false;
     l.store.emit('floors');
   });
-  await page.waitForFunction(() => document.querySelector('#signal .sig-what')?.textContent === 'Set a goal');
 
-  // On track: a Goals milestone due in a month.
+  // On track: a Goals milestone due in a month, and the chip shows up, at the head of the list, one line, not in the top bar.
   await send(page, { t: 'mission.milestone', op: 'add', title: 'Auth rewrite', issues: [1, 2, 3], due: day(30) });
   await waitLevel(page, 'on-track');
+  const place = await page.evaluate(() => {
+    const chip = document.querySelector('#signal .sig-chip')!.getBoundingClientRect();
+    const list = document.getElementById('inbox')!.getBoundingClientRect();
+    return { inBar: !!document.querySelector('.hb .sig-chip'), above: chip.bottom <= list.top + 1, height: chip.height, search: document.querySelector('.hb-search')!.getBoundingClientRect().width };
+  });
+  assert.equal(place.inBar, false, 'not in the top bar');
+  assert.ok(place.above, 'over the sections');
+  assert.ok(place.height <= 40, `one line (${place.height}px)`);
+  assert.ok(place.search >= 200, `search keeps its room (${place.search}px)`);
   assert.match(await page.locator('#signal .sig-chip').innerText(), /On track\s*Auth rewrite 0\/3/);
 
   // At risk, orange: the last /rundown left a decision open.
@@ -184,11 +198,13 @@ test('the chip over the list and its card, through every status, closing by ✕ 
   await card.waitFor({ state: 'detached' });
   assert.equal(await page.locator('#modal-root .modal').count(), 0, 'Esc closes the card');
 
-  // The avatar menu has it, next to Rundown.
+  // The avatar menu has it among the core rows, and Rundown in the Labs group after them.
   await page.locator('#btn-avatar').click();
   const rows = await page.locator('.menu-pop .menu-item span:not(.menu-ico)').allInnerTexts();
   const at = rows.findIndex((r) => r.startsWith('Signal'));
-  assert.ok(at >= 0 && rows[at + 1]?.startsWith('Rundown'), rows.join(', '));
+  const out = rows.findIndex((r) => r.startsWith('Sign out'));
+  const rd = rows.findIndex((r) => r.startsWith('Rundown'));
+  assert.ok(at >= 0 && at < out && out < rd, rows.join(', '));
   await page.keyboard.press('Escape');
 
   // Off track, red: past its due date with issues left.
@@ -213,12 +229,12 @@ test('the chip over the list and its card, through every status, closing by ✕ 
   });
   await page.waitForFunction(() => document.querySelector('#signal .sig-what')?.textContent?.startsWith('Auth rewrite'));
 
-  // Goals and Rundown off in Labs: still there, as No goal, and the card offers neither.
+  // Goals and Rundown off in Labs: no goal to show, so the chip goes; the card says No goal and offers neither.
   await send(page, { t: 'labs.set', patch: { ops: false, rundown: false } });
-  await waitLevel(page, 'no-goal');
-  assert.match(await page.locator('#signal .sig-chip').innerText(), /No goal\s*Turn on Goals or Rundown in Labs/, 'never "Set a goal" with Goals off');
-  await page.locator('#signal .sig-chip').click();
-  await card.waitFor();
+  await page.locator('#signal .sig-chip').waitFor({ state: 'detached', timeout: 20_000 });
+  await openCard(page);
+  assert.match(await card.innerText(), /No goal/i);
+  assert.doesNotMatch(await card.innerText(), /Set a goal/, 'never "Set a goal" with Goals off');
   assert.equal(await card.locator('footer .btn', { hasText: 'Open Rundown' }).isVisible(), false);
   assert.equal(await card.locator('footer .btn', { hasText: 'Open Goals' }).isVisible(), false);
   await page.keyboard.press('Escape');

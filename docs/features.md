@@ -2,7 +2,7 @@
 
 What Kipdeck does. Back to the [README](../README.md).
 
-The inbox at `/` is the product, and the first section here is all most people need. The sections after it describe the whole office in detail: much of that is the 3D Deck at `/deck` and the other [Labs](labs.md) (goals, meetings, voice, ambience, Proof of Merge), each on as Kipdeck ships until an admin switches it off.
+The inbox at `/` is the product, and the first section here is all most people need. The sections after it describe the whole office in detail: much of that is the 3D Deck at `/deck` and the other [Labs](labs.md) (goals, meetings, voice, ambience, Proof of Merge), each off as Kipdeck ships until an admin switches it on.
 
 ## The inbox
 

@@ -1,6 +1,7 @@
-// The avatar menu, top right: the few things that aren't the inbox, in one short list: Numbers,
-// Settings, Help and keys, and signing out (with the GitHub boards and the queue above them while
-// that lab is on). A dropdown, not a window: a click outside or Esc puts it away.
+// The avatar menu, top right: the few things that aren't the inbox, in one short list. The core rows
+// first (Numbers, Signal, Settings, Help and keys, signing out), then the Labs group last: the GitHub
+// boards and the queue, Rundown and Enter the Deck while their labs are on, and Labs itself to switch
+// them. A dropdown, not a window: a click outside or Esc puts it away.
 
 import { h } from '../ui/dom';
 import { icon, type IconName } from '../ui/icons';
