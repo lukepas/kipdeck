@@ -1,7 +1,7 @@
 // The agent gate (see shared/gate.ts): agents' requests to act on other agents, waiting for a person,
 // the standing grants that let some through, and the record of what agents did. Everyone hears the
-// state (in the welcome, and on every change); anyone signed in decides a proposal, and only
-// admins add or take back grants.
+// state (in the welcome, and on every change); an admin or the account the asking agent runs as
+// decides a proposal, and only admins add or take back grants.
 
 import type { GateAction, GateState } from '../gate.js';
 

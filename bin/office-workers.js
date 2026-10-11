@@ -37,8 +37,8 @@ const USAGE = `Usage:
   office-workers mcp                            serve these as MCP tools on stdio
 
 hire, home and tell wait for a person's approval unless an admin gave agents on this project a
-standing permission: then the command says so and exits 0, and the outcome arrives later as a
-message in your session.`;
+standing permission. While one waits, the command says so and exits 0, and the outcome arrives
+later as a message in your session.`;
 
 /** A mistake in how the command was called: the usage is shown with it. */
 export class UsageError extends Error {}

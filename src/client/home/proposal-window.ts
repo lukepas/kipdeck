@@ -20,7 +20,7 @@ export function openProposalWindow(net: Net, id: string) {
   const reject = h('button.btn', { type: 'button' }, 'Reject');
   const approve = h('button.btn.primary', { type: 'button' }, 'Approve');
   const facts: [string, string][] = [
-    ['Asked by', who === p.by.name ? p.by.name : `${who} (${p.by.name})`],
+    ['Asked by', (who === p.by.name ? p.by.name : `${who} (${p.by.name})`) + (store.rosterEntry(p.by.id) ? '' : ', no longer running')],
     ['Project', p.floorName],
     ['Wants to', GATE_ACTION_LABEL[p.action]],
     ...(p.action === 'hire' ? [] : ([['For', targetWords(p)]] as [string, string][])),
@@ -60,5 +60,6 @@ export function openProposalWindow(net: Net, id: string) {
   };
   approve.addEventListener('click', () => send(true));
   reject.addEventListener('click', () => send(false));
-  setTimeout(() => approve.focus(), 30);
+  // Focus starts on what is asked, never on Approve: an Enter typed by habit must not run a request unread.
+  setTimeout(() => (el.querySelector<HTMLElement>('.gate-text') ?? note).focus(), 30);
 }

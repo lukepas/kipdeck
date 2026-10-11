@@ -171,7 +171,8 @@ test('an agent deploying another waits in Needs you, then approve, reject and a 
   // 1. A request waits in Needs you, and nothing is deployed for it yet.
   const one = lead('[hire] Lead one');
   const request = page.locator('.sec-needs-you .row.proposal', { hasText: 'wants to deploy a new agent' });
-  await request.waitFor({ timeout: 30_000 });
+  // The stand-in agent has to start and ask first, which takes a while on a loaded machine.
+  await request.waitFor({ timeout: 90_000 });
   assert.match(await request.innerText(), /Lead one wants to deploy a new agent/);
   assert.match(readFileSync(path.join(heard, `${one}.reply`), 'utf8'), /"proposed":true.*A person has to approve this first/);
   assert.equal(agents().length, 1);
@@ -184,6 +185,8 @@ test('an agent deploying another waits in Needs you, then approve, reject and a 
   assert.equal(await card.locator('.close').count(), 1, 'the window has its close button');
   assert.equal(await card.locator('.gate-text').innerText(), 'Sub task from Lead one (demo)');
   assert.match(await card.locator('.gate-facts').innerText(), /Asked by\s+Lead one/);
+  // Focus starts on the task, never on Approve, so a stray Enter runs nothing unread.
+  await page.waitForFunction(() => document.activeElement?.classList.contains('gate-text'));
   await shot(page, 'gate-request');
   await page.keyboard.press('Escape');
   await card.waitFor({ state: 'detached' });

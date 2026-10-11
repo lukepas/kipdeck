@@ -219,8 +219,31 @@ test('only an admin or the account the asking agent runs as decides', () => {
   assert.equal(mayDecide(o.ctx, 'acct-2', p.id), false);
   assert.equal(mayDecide(o.ctx, 'acct-1', p.id), true);
   const office = o.gate.propose({ floor: 'f1', floorName: 'shop', action: 'tell', by: { id: 'w1', name: 'Byte' }, req: { action: 'tell', worker: 'w2', text: 'x' } });
-  assert.equal(mayDecide(o.ctx, 'acct-2', office.id), true, 'an agent that runs as the office: anyone signed in');
-  assert.equal(mayDecide(fakeOffice(true).ctx, 'acct-2', p.id), true);
+  assert.equal(mayDecide(o.ctx, 'acct-2', office.id), false, 'an agent that runs as the office: only an admin');
+  const asAdmin = { ...o.ctx, meOf: () => ({ admin: true }) } as unknown as Ctx;
+  assert.equal(mayDecide(asAdmin, 'acct-2', office.id), true);
+  assert.equal(mayDecide(asAdmin, 'acct-2', p.id), true);
+});
+
+test('hires asked at the same moment cannot all slip under a grant limit', async () => {
+  const o = fakeOffice();
+  o.gate.grant('f1', 'hire', 1, 'Ada');
+  // Each hire waits on the fetch of its base before it counts as running, as a real one does.
+  let open!: () => void;
+  const fetched = new Promise<void>((r) => (open = r));
+  (o.floor.workers as unknown as { fetchBase: () => Promise<void> }).fetchBase = () => fetched;
+  (o.floor.project as { branch?: string }).branch = 'main';
+  const ask = () => gateOrRun(o.ctx, o.floor, o.me, { action: 'hire', ask: { prompt: 'Write the tests' } }, { text: 'Write the tests' });
+  const first = ask();
+  const second = await ask();
+  assert.equal(second.status, 202, 'the second waits for a person: the first holds the only place');
+  open();
+  assert.equal((await first).status, 200);
+  assert.equal(o.spawned.length, 1);
+  // Once it has started the hold is gone, and the running agent counts instead.
+  assert.equal((await ask()).status, 202);
+  o.workers.delete('n1');
+  assert.equal((await ask()).status, 200, 'with Pixel gone there is room again');
 });
 
 test('says what came of a request', () => {

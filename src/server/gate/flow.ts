@@ -26,7 +26,13 @@ export async function gateOrRun(ctx: Ctx, floor: Floor, me: WorkerInfo, req: Gat
   const by = { id: me.id, name: me.name, ...(taskOf(me) ? { task: taskOf(me) } : {}) };
   const grant = ctx.gate.covers(floor.id, req.action, (id) => !!floor.workers.get(id));
   if (grant) {
-    const r = await runRequest(ctx, floor, actor, req);
+    const release = req.action === 'hire' ? ctx.gate.holdHire(floor.id) : () => {};
+    let r: Reply;
+    try {
+      r = await runRequest(ctx, floor, actor, req);
+    } finally {
+      release();
+    }
     const failed = failureOf(r);
     ctx.gate.log({
       floor: floor.id,
@@ -55,7 +61,8 @@ export async function gateOrRun(ctx: Ctx, floor: Floor, me: WorkerInfo, req: Gat
 export function mayDecide(ctx: Ctx, accountId: string | undefined, id: string): boolean {
   const p = ctx.gate.get(id);
   if (!p) return true;
-  return ctx.meOf(accountId).admin || !p.owner || p.owner === accountId;
+  // An agent that runs as the office (no account) is an admin's to decide for.
+  return ctx.meOf(accountId).admin || (!!p.owner && p.owner === accountId);
 }
 
 /**
@@ -82,6 +89,7 @@ export async function decide(ctx: Ctx, who: string, id: string, approve: boolean
   const r = await runRequest(ctx, floor, { id: p.by.id, name: p.by.name, owner: p.owner }, p.req);
   const failed = failureOf(r);
   ctx.gate.settle(p, failed ? 'failed' : 'approved', who, failed);
+  ctx.toastFloor(floor, `${who} approved${failed ? ', but it failed' : ''}: ${proposalTitle(p)}`, failed ? 'warn' : 'info');
   tellProposer(floor, p, decisionMessage(p, true, who, resultWords(p.req, r)));
   return failed ? `Approved, but it failed: ${failed}` : undefined;
 }

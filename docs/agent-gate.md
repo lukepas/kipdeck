@@ -20,19 +20,19 @@ When an agent calls `hire_worker`, `tell_worker` or `send_home` (or `office-work
 
 ![An agent's request to deploy another, open in full with Approve and Reject](img/agent-gate-request.png)
 
-**Approve** runs the request exactly as it would have run before the gate: the same desk choice, worktree, issue claim, toasts and checks (a fork's or an outsider's pull request is still refused). **Reject** runs nothing. The window has a box for a reason. The window's close button (top right) and Esc close it without deciding, and it closes by itself once anyone else decides.
+**Approve** runs the request exactly as it would have run before the gate: the same desk choice, worktree, issue claim, toasts and checks (a fork's or an outsider's pull request is still refused). **Reject** runs nothing. The window has a box for a reason. The window's close button (top right) and Esc close it without deciding, and it closes by itself once anyone else decides. The window opens with the focus on the text, not on Approve, so an Enter pressed out of habit runs nothing. If the asking agent has gone home meanwhile, the window says so; Approve still runs the request.
 
 Either way the asking agent hears the outcome in its own session, as a message that starts with `[Kipdeck]`: *Ada approved your request to deploy a new agent (proposal 3f2a...). Hired Pixel at Desk 4 on branch office/pixel-1.*, or *Ada rejected your request to message Nova (proposal 3f2a...), so it did not happen. Their reason: Nova is busy.* An agent that has stopped is not woken just to hear this; the activity record still has it.
 
 While it waits, the agent is told so at once: the tool answers that a person has to approve it first, that nothing has happened yet, and not to send the same request again. The `office-workers` command prints the same to stderr and exits 0. One agent can have at most 5 requests waiting at once; past that it is refused until some are decided.
 
-Who can decide: an admin, or the account the asking agent runs as. On the shared password, everyone signed in is an admin. Visitors to the read-only demo cannot decide.
+Who can decide: an admin, or the account the asking agent runs as. A request from an agent that runs as the office itself (no account) is for an admin. On the shared password, everyone signed in is an admin. Visitors to the read-only demo cannot decide.
 
 ## Standing permissions
 
 Some teams want a lead agent to fan work out without a click for every sub-agent. **Settings > Agents > Agents acting on other agents** lets an admin give a standing permission, per project and per action:
 
-- **Deploy a new agent**, with an optional limit: the most agents that other agents deployed on that project may be running at once. At the limit the next request waits for a person again.
+- **Deploy a new agent**, with an optional limit: the most agents that other agents deployed on that project may be running at once. At the limit the next request waits for a person again. Hires that are still starting count too, so several asked at the same moment cannot all slip under it.
 - **Message another agent**.
 - **Stop and remove agents**.
 

@@ -30,6 +30,8 @@ export class AgentGate {
   private pending: Pending[] = [];
   private grants: Grant[] = [];
   private hired = new Map<string, Set<string>>();
+  /** Hires a grant let through that haven't started yet, per floor: they count towards its limit too. */
+  private starting = new Map<string, number>();
   private activity: GateActivity[] = [];
   private readonly file?: string;
 
@@ -72,7 +74,24 @@ export class AgentGate {
 
   /** The grant that lets an agent on `floor` do `action` now, if one does. */
   covers(floor: string, action: GateAction, alive: (workerId: string) => boolean): Grant | undefined {
-    return grantFor(this.grants, floor, action, action === 'hire' ? this.running(floor, alive) : 0);
+    return grantFor(this.grants, floor, action, action === 'hire' ? this.running(floor, alive) + (this.starting.get(floor) ?? 0) : 0);
+  }
+
+  /**
+   * Holds a place under a hire grant's limit while that hire starts (it waits on the fetch of its
+   * base before it counts as running), so hires asked at the same moment can't all slip under the
+   * limit. Call the returned function once the hire has started or failed.
+   */
+  holdHire(floor: string): () => void {
+    this.starting.set(floor, (this.starting.get(floor) ?? 0) + 1);
+    let held = true;
+    return () => {
+      if (!held) return;
+      held = false;
+      const n = (this.starting.get(floor) ?? 1) - 1;
+      if (n > 0) this.starting.set(floor, n);
+      else this.starting.delete(floor);
+    };
   }
 
   /** An agent deployed `workerId` on `floor`: it counts towards a hire grant's limit while it works. */
