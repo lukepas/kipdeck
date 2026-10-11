@@ -7,6 +7,7 @@
 .st-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .st-chip { display: inline-flex; align-items: center; min-height: 28px; max-width: 100%; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface-2); color: var(--text); font-size: 13px; text-align: left; cursor: pointer; }
 .st-chip:hover:not(:disabled) { border-color: var(--line-strong); background: var(--surface-1); }
+.st-chip[aria-pressed="true"] { border-color: var(--act); background: var(--surface-1); }
 .st-chip:focus-visible { outline: 2px solid var(--act); outline-offset: 1px; }
 .st-chip:disabled { opacity: .5; cursor: not-allowed; }
 .setup-card .st-go:disabled { opacity: .5; cursor: not-allowed; }

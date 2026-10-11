@@ -32,7 +32,8 @@ function candidates(f: RepoFacts): Starter[] {
   const out: Starter[] = [];
   const issue = f.issues?.[0];
   if (issue) {
-    const title = issue.title.replace(/\s+/g, ' ').trim();
+    // Anyone can title an issue: one line, and no quote or backtick that could end the quoted title early.
+    const title = issue.title.replace(/\s+/g, ' ').replace(/["`]/g, "'").trim();
     out.push({
       kind: 'issue',
       label: clip(`Fix #${issue.number}: ${title}`, 48),

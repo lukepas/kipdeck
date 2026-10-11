@@ -114,3 +114,24 @@ test('Bring in: admins only, and only sessions the office itself found running',
   setupHandlers['setup.adopt'](make(true), c, { t: 'setup.adopt', sessions: [{ provider: 'claude', id: ID_A }] });
   assert.deepEqual(warned, ['That session is no longer running here'], 'a session id the page made up is never resumed');
 });
+
+test('one look a call, however many projects: ps once, each Codex process once', () => {
+  const { home, dir, deps } = setup();
+  const other = path.join(home, 'code', 'other');
+  mkdirSync(other, { recursive: true });
+  let ps = 0;
+  const cwds: number[] = [];
+  const counted: LiveDeps = { ...deps, codexPids: () => (ps++, [201, 202]), cwdOf: (pid) => (cwds.push(pid), deps.cwdOf(pid)) };
+  const found = liveSessions([{ floor: 'f1', dir }, { floor: 'f2', dir: other }], () => false, counted);
+  assert.equal(ps, 1);
+  assert.deepEqual(cwds, [201, 202]);
+  assert.deepEqual(
+    found.filter((s) => s.provider === 'claude').map((s) => [s.floor, s.id, s.title]),
+    [
+      ['f1', ID_B, 'Fix the flaky checkout test'],
+      ['f1', ID_A, 'acme-1'],
+    ],
+  );
+  assert.deepEqual(liveSessions([], () => false, counted), []);
+  assert.equal(ps, 1, 'no projects, no look');
+});

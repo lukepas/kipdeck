@@ -135,6 +135,7 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   const picked = (await chips.nth(1).getAttribute('title')) ?? '';
   await chips.nth(1).click();
   assert.equal(await page.locator('#first-task').inputValue(), picked);
+  assert.deepEqual(await page.locator('.first-run .st-chip[aria-pressed="true"]').allInnerTexts(), [await chips.nth(1).innerText()], 'the picked chip shows as picked');
   // The empty pane shows the loop's three steps (whatever the labs), not a blueprint.
   assert.deepEqual((await page.locator('.pane .pv-step .pv-sec').allInnerTexts()).map((s) => s.trim()), ['It works', 'It asks', 'You review']);
   await page.locator('.first-run .st-go').click();
@@ -143,6 +144,7 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   assert.equal(await firstSheet.locator('#deploy-prompt').inputValue(), picked);
   await page.keyboard.press('Escape');
   await firstSheet.waitFor({ state: 'detached' });
+  assert.equal(await page.locator('#first-task').inputValue(), picked, 'closing the sheet keeps the task in the box');
 
   await deploy(page, '[ask] Fix the flaky checkout test (demo)');
   await row(page, 'needs-you', 'Fix the flaky checkout test').waitFor({ timeout: 30_000 });

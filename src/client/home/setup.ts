@@ -167,10 +167,8 @@ export function setupCard(net: Net, deploy: (prompt: string, provider?: AgentPro
   const canDeploy = project && !!agent;
   const why = canDeploy ? undefined : !project ? 'Add a project first' : 'Install or sign in an agent first';
   loadStarter();
-  const box = starter?.taskBox(s, agent, canDeploy, why, (prompt) => {
-    deploy(prompt, agent);
-    starter?.clearDraft();
-  });
+  // Deploy opens the sheet on the task; the box keeps it until an agent is really on its way (starter.ts).
+  const box = starter?.taskBox(s, agent, canDeploy, why, (prompt) => deploy(prompt, agent));
   const rows = h('ol.su-rows', { 'aria-label': 'Setup' }, agentsRow(s), projectRow(s, net, admin), githubRow(s, net));
   // Everything found: one line says what, and the rows fold under Details. Anonymous usage numbers
   // are asked about in Settings, never before the first agent.

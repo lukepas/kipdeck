@@ -51,10 +51,14 @@ function textarea(onInput: () => void): HTMLTextAreaElement {
 /** The task box, its chips and its Deploy button: `deploy` takes the task. */
 export function taskBox(s: SetupState, agent: AgentProvider | undefined, canDeploy: boolean, why: string | undefined, deploy: (prompt: string) => void): HTMLElement {
   const go = h('button.btn.primary.big.st-go', { type: 'button' }, icon('plus', 16), 'Deploy your first agent') as HTMLButtonElement;
+  const list = s.starters ?? [];
+  let chips: HTMLElement[] = [];
   const sync = () => {
     const empty = !draft.trim();
     go.disabled = !canDeploy || empty;
     go.title = !canDeploy ? (why ?? '') : empty ? 'Type a task, or pick one below' : '';
+    // The chip whose task is in the box shows as picked, until the words are changed.
+    chips.forEach((el, i) => el.setAttribute('aria-pressed', String(list[i]?.prompt === draft)));
   };
   const ta = textarea(sync);
   ta.disabled = !canDeploy;
@@ -66,11 +70,14 @@ export function taskBox(s: SetupState, agent: AgentProvider | undefined, canDepl
     }
   };
   go.onclick = () => draft.trim() && deploy(draft.trim());
-  const chips = (s.starters ?? []).map((c) => chip(c, canDeploy, () => {
+  chips = list.map((c) => chip(c, canDeploy, () => {
     draft = c.prompt;
     ta.value = draft;
     sync();
+    // From its first word, so the whole task can be read before it goes.
     ta.focus();
+    ta.setSelectionRange(0, 0);
+    ta.scrollTop = 0;
   }));
   sync();
   return h(
@@ -105,7 +112,7 @@ export function sessionsBox(s: SetupState, net: Net): HTMLElement | null {
     {},
     h('div.st-found', {}, h('span', {}, h('b', {}, `${all.length} agent session${all.length === 1 ? '' : 's'} running`), ` in ${where}`), bring),
     h('ul.st-list', {}, ...all.map(sessionRow)),
-    can.length ? h('div.st-note', {},'Each one carries on in your inbox with the whole conversation so far. Your terminal keeps running its own copy: quit it there when you like.') : null,
+    can.length ? h('div.st-note', {}, 'Each one carries on in your inbox with the whole conversation so far, in the project folder itself rather than a branch of its own. Your terminal keeps its own copy: quit it there so the two don\'t edit the same files.') : null,
   );
 }
 
@@ -129,3 +136,9 @@ export function clearDraft() {
   draft = '';
   if (box) box.value = '';
 }
+
+// Deploy only opens the sheet, and closing it keeps the task here: the box is emptied once the first
+// agent is really on the roster.
+store.on('roster', () => {
+  if (store.roster.length && draft) clearDraft();
+});
