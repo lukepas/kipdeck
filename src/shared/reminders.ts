@@ -88,3 +88,19 @@ export function reminderSnoozed(r: Pick<Reminder, 'snooze'>, now: number): boole
 
 /** A reminder key as a browser may send it back: kind, a colon, and ids. */
 export const REMINDER_KEY = /^[a-z-]{1,24}:[A-Za-z0-9:._-]{1,96}$/;
+
+/** What a reminder's button says (Mission control and the inbox draw it before either loads its actions). */
+export function reminderAction(r: Reminder): string {
+  switch (r.kind) {
+    case 'approved-unmerged':
+      return 'Merge';
+    case 'queue-paused':
+      return 'Open the queue';
+    case 'milestone-overdue':
+      return 'See the goals';
+    case 'unpushed-asleep':
+      return 'Review changes';
+    default:
+      return 'Look into it';
+  }
+}

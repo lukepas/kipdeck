@@ -18,6 +18,7 @@ export function setMissionOpen(fn: () => boolean) {
 import { openPrompt } from '../prompt';
 import type { PullThen } from '../pull';
 import { confirmSendHome } from '../sendhome';
+import { setEventOpener } from './timeline';
 
 /** What Mission control needs from the view it's in. */
 export interface MissionDeps {
@@ -154,22 +155,6 @@ export function runReminder(deps: MissionDeps, r: Reminder) {
   });
 }
 
-/** What a reminder's button says. */
-export function reminderAction(r: Reminder): string {
-  switch (r.kind) {
-    case 'approved-unmerged':
-      return 'Merge';
-    case 'queue-paused':
-      return 'Open the queue';
-    case 'milestone-overdue':
-      return 'See the goals';
-    case 'unpushed-asleep':
-      return 'Review changes';
-    default:
-      return 'Look into it';
-  }
-}
-
 /** Puts a reminder aside until `until`, dismisses it ('change'), or brings it back (null). */
 export function snoozeReminder(net: Net, r: Reminder, until: number | 'change' | null) {
   net.send({ t: 'reminder.snooze', key: r.key, until });
@@ -197,6 +182,8 @@ export function openEvent(deps: MissionDeps, ev: TimelineEvent) {
     if (ev.worker) toast(`${ev.name ?? 'That worker'} has gone home`, 'warn');
   });
 }
+
+setEventOpener(openEvent);
 
 /** Puts a worker aside for `ms`, until it changes ('change'), or no longer (null). */
 export function snooze(net: Net, e: RosterEntry, until: number | 'change' | null) {

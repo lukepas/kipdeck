@@ -143,8 +143,14 @@ test('Bring in: a Claude Code session running in the project carries on in the i
   await bring.click();
 
   // It's an agent now, under the session's title, and the first-run card has made way for the inbox.
-  await page.locator('.row', { hasText: TITLE }).waitFor({ timeout: 30_000 });
-  await page.locator('.first-run').waitFor({ state: 'detached', timeout: 15_000 });
+  await page.locator('.first-run').waitFor({ state: 'detached', timeout: 30_000 });
+  // The stand-in session has nothing to do, so it may already have gone idle, into the folded Idle
+  // section, before the list is drawn: open the fold to find it.
+  const idle = page.locator('button.sec-h[aria-expanded=false]');
+  const row = page.locator('.row', { hasText: TITLE });
+  await row.or(idle).first().waitFor({ timeout: 30_000 });
+  if (!(await row.count())) await idle.click();
+  await row.waitFor({ timeout: 15_000 });
   // Claude Code was asked for a copy of that session, not the session itself.
   const deadline = Date.now() + 10_000;
   while (!existsSync(argsLog) && Date.now() < deadline) await new Promise((r) => setTimeout(r, 100));

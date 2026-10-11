@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { APPROVED_UNMERGED_MS, NEEDS_INPUT_LONG_MS, QUEUE_PAUSED_MS, UNPUSHED_ASLEEP_MS } from '../src/shared/attention.js';
-import { REMINDER_KEY, findReminders, reminderSnoozed, type ReminderFloor } from '../src/shared/reminders.js';
+import { REMINDER_KEY, findReminders, reminderAction, reminderSnoozed, type ReminderFloor } from '../src/shared/reminders.js';
 import type { GhIssue, GhPull, Mission, RosterEntry } from '../src/shared/protocol.js';
 import { DISMISS_GRACE_MS, MissionStore } from '../src/server/mission.js';
 import { zeroTotals } from '../src/shared/mission.js';
@@ -173,4 +173,13 @@ test('the sweep toasts a new reminder once, again an hour on, tells the channel 
   r2.sweepReminders();
   assert.equal(r2.reminders().find((x) => x.kind === 'queue-paused')?.snooze?.by, 'Ana');
   assert.equal(toasts.length, before, 'still dismissed: no toast');
+});
+
+test("a reminder's button says what pressing it does", () => {
+  const label = (kind: string) => reminderAction({ kind } as Parameters<typeof reminderAction>[0]);
+  assert.equal(label('approved-unmerged'), 'Merge');
+  assert.equal(label('queue-paused'), 'Open the queue');
+  assert.equal(label('milestone-overdue'), 'See the goals');
+  assert.equal(label('unpushed-asleep'), 'Review changes');
+  assert.equal(label('needs-input-long'), 'Look into it');
 });

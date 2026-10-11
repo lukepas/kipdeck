@@ -6,11 +6,10 @@
 // (PeerInfo.lite), not standing anywhere in it.
 
 import { Net } from './net';
+import type { RosterEntry } from '../shared/protocol';
 import { AVATAR_COLORS, loadProfile, loadSettings, saveProfile, store } from './state';
 import { randomLook, randomName } from '../shared/avatar';
 import { $, doingNow, onDoingChange, onModalChange, readingNow, toast } from './ui/dom';
-import { routeWorktreeMessage } from './ui/prompt';
-import { runAction } from './ui/mission/act';
 import { watchStuck } from './ui/mission/watch';
 import { DesktopNotifier, waitingOnSomeone } from './notify';
 // The tab title counts the agents waiting on someone, on every project, as the 3D bridge's does.
@@ -36,9 +35,12 @@ const settings = loadSettings();
 const notifier = new DesktopNotifier(() => settings.notify, (id) => home.select(id, 'terminal'));
 const actions = installHome(net, settings, notifier);
 // The installable app: presence, the service worker, and a tapped push opening its agent (pwa/).
+/** Opens an agent the way Mission control's Look does, loading its actions (and their dialogs) when first wanted. */
+const look = (e: RosterEntry) => void lazy.missionAct().then((m) => m.runAction(actions.deps, e, 'look'));
+
 installPwa(net, (id) => {
   const e = store.roster.find((r) => r.id === id);
-  if (e) runAction(actions.deps, e, 'look');
+  if (e) look(e);
   else home.select(id, 'terminal');
 });
 
@@ -48,7 +50,8 @@ let bootVersion = '';
 net.onStatus((up) => $('conn').classList.toggle('hidden', up));
 net.onMessage((msg) => {
   store.apply(msg);
-  routeWorktreeMessage(msg);
+  // What a worktree holds only ever answers a dialog that asked, so the dialogs (ui/prompt) are loaded by then.
+  if (msg.t === 'worker.worktree') void lazy.prompt().then((m) => m.routeWorktreeMessage(msg));
   homeMessage(net, actions, msg);
   switch (msg.t) {
     case 'welcome':
@@ -91,7 +94,7 @@ store.on('floors', renderTitle);
 store.on('project', renderTitle);
 // Stuck anywhere: a notification while you're away, and a buzz.
 watchStuck((e, reason) => {
-  notifier.stuck(e, reason, () => runAction(actions.deps, e, 'look'));
+  notifier.stuck(e, reason, () => look(e));
   if (e.floor === store.floor) navigator.vibrate?.(200);
 });
 

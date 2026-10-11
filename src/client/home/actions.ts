@@ -10,8 +10,8 @@ import type { Net } from '../net';
 import { loadSettings, MISSION_TABS, saveSettings, store, type MissionTab } from '../state';
 import { toast } from '../ui/dom';
 import type { BoardActions } from '../ui/github/prompts';
-import { reminderAction, runReminder, type MissionDeps } from '../ui/mission/act';
-import { confirmDialog, lostWorktreeDialog, openPrompt } from '../ui/prompt';
+import type { MissionDeps } from '../ui/mission/act';
+import { reminderAction } from '../../shared/reminders';
 import { clearComments, commentsNote } from './brief';
 import { onProject, openDeploy } from './deploy';
 import * as lazy from './lazy';
@@ -77,16 +77,17 @@ export function createActions(net: Net): Actions {
   function fixLost(id: string) {
     const w = store.workers.get(id);
     if (!w?.lost || !w.worktree) return;
+    const { lost, worktree } = w;
     const others = [...store.workers.values()].filter((o) => o.lost && o.id !== w.id);
-    lostWorktreeDialog({
+    void lazy.prompt().then(({ lostWorktreeDialog }) => lostWorktreeDialog({
       name: agentRef(w),
-      worktree: w.worktree,
-      lost: w.lost,
-      workspace: w.repos?.length ? w.worktree.path.replace(/[\\/][^\\/]*$/, '') : undefined,
+      worktree,
+      lost,
+      workspace: w.repos?.length ? worktree.path.replace(/[\\/][^\\/]*$/, '') : undefined,
       others: others.map((o) => agentRef(o)),
       rebuild: (all) => net.send({ t: 'worker.rebuild', workerId: w.id, all }),
       sendHome: () => stop(store.rosterEntry(w.id) ?? ({ id: w.id, name: w.name, kind: w.kind, provider: w.provider, task: w.task, floor: store.floor } as RosterEntry)),
-    });
+    }));
   }
 
   /** Mission control, on `tab` or the one it was last on (kept with this browser's settings). */
@@ -141,7 +142,7 @@ export function createActions(net: Net): Actions {
   }
 
   function sendBack(e: RosterEntry) {
-    openPrompt({
+    void lazy.prompt().then(({ openPrompt }) => openPrompt({
       title: `Send back to ${entryRef(e)}`,
       subtitle: 'Your note goes to the same agent, which keeps working on the same branch.',
       placeholder: 'What should it change?',
@@ -152,15 +153,15 @@ export function createActions(net: Net): Actions {
         net.send({ t: 'inbox.sendBack', workerId: e.id, note });
         clearComments(e.id);
       },
-    });
+    }));
   }
 
   function stop(e: RosterEntry, merged = false) {
     const branch = e.branch ? ` Its branch ${e.branch} stays, so nothing it did is lost.` : '';
     if (merged) {
-      return confirmDialog(`Archive ${entryRef(e)}?`, 'Its work is merged. Its session ends, and its worktree and branch are removed.', 'Archive', () => net.send({ t: 'worker.kill', workerId: e.id, cleanup: 'all' }));
+      return void lazy.prompt().then(({ confirmDialog }) => confirmDialog(`Archive ${entryRef(e)}?`, 'Its work is merged. Its session ends, and its worktree and branch are removed.', 'Archive', () => net.send({ t: 'worker.kill', workerId: e.id, cleanup: 'all' })));
     }
-    confirmDialog(`Stop ${entryRef(e)}?`, `Its session ends and it leaves the inbox.${branch}`, 'Stop agent', () => net.send({ t: 'worker.kill', workerId: e.id, cleanup: 'keep' }));
+    void lazy.prompt().then(({ confirmDialog }) => confirmDialog(`Stop ${entryRef(e)}?`, `Its session ends and it leaves the inbox.${branch}`, 'Stop agent', () => net.send({ t: 'worker.kill', workerId: e.id, cleanup: 'keep' })));
   }
 
   function act(e: RosterEntry, action: RowAction) {
@@ -192,7 +193,7 @@ export function createActions(net: Net): Actions {
       case 'send-home':
         return stop(e, e.pr?.state === 'merged');
       case 'give-task':
-        return openPrompt({ title: `Give ${entryRef(e)} a task`, placeholder: 'What should it do?', onSubmit: (text) => net.send({ t: 'worker.prompt', workerId: e.id, prompt: text }) });
+        return void lazy.prompt().then(({ openPrompt }) => openPrompt({ title: `Give ${entryRef(e)} a task`, placeholder: 'What should it do?', onSubmit: (text) => net.send({ t: 'worker.prompt', workerId: e.id, prompt: text }) }));
       default:
         return show(e.id, 'terminal');
     }
@@ -200,7 +201,7 @@ export function createActions(net: Net): Actions {
 
   return {
     act,
-    remind: (r) => runReminder(deps, r),
+    remind: (r) => void lazy.missionAct().then((m) => m.runReminder(deps, r)),
     reminderLabel: reminderAction,
     merge,
     undoMerge: undo,
