@@ -12,7 +12,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { AGENT_PROVIDERS, PROVIDER_META, type AgentProvider } from '../shared/providers.js';
 import type { SetupAgent, SetupGithub } from '../shared/protocol.js';
-import { resolveCommand } from './workers/process.js';
+import { resolveCommand, resolveCommandAsync } from './workers/process.js';
 
 /** The agents the inbox is built and tested with; the others are beta. */
 export const CERTIFIED: readonly AgentProvider[] = ['claude', 'codex', 'cursor'];
@@ -80,6 +80,16 @@ export function checkAgents(find: (cmd: string) => string | null = resolveComman
     out.push({ provider, certified, installed, ...(signed !== undefined ? { signedIn: signed } : {}), ...(fix ? { fix } : {}) });
   }
   return out.sort((a, b) => Number(b.certified) - Number(a.certified) || CERTIFIED.indexOf(a.provider) - CERTIFIED.indexOf(b.provider));
+}
+
+/**
+ * checkAgents without blocking the office: a command that's only on the login shell's PATH takes a
+ * shell to find, a second or more each, so they're all looked for at once, in the background.
+ */
+export async function checkAgentsAsync(find: (cmd: string) => Promise<string | null> = resolveCommandAsync, env: NodeJS.ProcessEnv = process.env, home = os.homedir()): Promise<SetupAgent[]> {
+  const bins = [...new Set(AGENT_PROVIDERS.map((p) => (p === 'custom' ? '' : PROVIDER_META[p].bin)).filter((b): b is string => !!b))];
+  const found = new Map(await Promise.all(bins.map(async (b) => [b, await find(b)] as const)));
+  return checkAgents((b) => found.get(b) ?? null, env, home);
 }
 
 /** Who `gh` is signed in as, or why it isn't. Never asks anything. */

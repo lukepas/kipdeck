@@ -15,7 +15,8 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Browser } from 'playwright-core';
-import { demoNote } from '../src/shared/demo.js';
+import { demoNote, fitsPill } from '../src/shared/demo.js';
+import { launchCommand } from '../src/server/runcmd.js';
 import { bundleWhy } from './support/bundle.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -92,17 +93,23 @@ test('the demo on your computer: the pill, a question from Codex opening by itse
   const note = page.locator('#demo.hb-demo');
   await note.waitFor();
   assert.match((await note.getAttribute('title')) ?? '', /Scripted agents on a throwaway repo \(acme-shop\)/);
-  assert.equal(await note.locator('code').innerText(), demoNote({ readOnly: false, project: 'acme-shop' }).command);
-  // At 1440x900 the whole command shows (not cut to "kipde..."), and its copy button sits clear of the search box.
+  // The command this demo was started with (here: node and this checkout's bin script, too long to
+  // show): a Copy command button with all of it, also in the pill's tooltip.
+  const run = demoNote({ readOnly: false, project: 'acme-shop', run: launchCommand() }).command;
+  assert.equal(await note.locator('.copy').getAttribute('aria-label'), `Copy ${run}`, 'the button copies all of it');
+  assert.ok(((await note.getAttribute('title')) ?? '').includes(run));
+  if (fitsPill(run)) assert.equal(await note.locator('code').innerText(), run);
+  else assert.equal(await note.locator('code').count(), 0);
+  // At 1440x900 nothing in the pill is cut (not "kipde..."), and its copy button sits clear of the search box.
   const pillFits = () =>
     page.evaluate(() => {
-      const code = document.querySelector('#demo.hb-demo code') as HTMLElement;
+      const code = document.querySelector('#demo.hb-demo code') as HTMLElement | null;
       const copy = document.querySelector('#demo.hb-demo .copy') as HTMLElement;
       const search = document.querySelector('.hb-search') as HTMLElement;
       const a = copy.getBoundingClientRect();
       const b = search.getBoundingClientRect();
       const overlap = a.right > b.left && b.right > a.left && a.bottom > b.top && b.bottom > a.top;
-      return { clipped: code.scrollWidth > code.clientWidth, overlap };
+      return { clipped: !!code && code.scrollWidth > code.clientWidth, overlap };
     });
   assert.deepEqual(await pillFits(), { clipped: false, overlap: false }, 'the demo pill shows its whole command at 1440x900');
 

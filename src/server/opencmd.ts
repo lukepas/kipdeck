@@ -4,6 +4,7 @@
 import { openBrowser } from './browser.js';
 import { CLI, PRODUCT } from '../shared/copy.js';
 import { LOCAL_KEY_HEADER, officeDataDir, readLocalFile } from './local.js';
+import { homeFlag, launchCommand } from './runcmd.js';
 
 const OPEN_HELP = `${CLI} open - open the running ${PRODUCT} in your browser, signed in
 
@@ -23,7 +24,8 @@ Options:
 export async function askOffice(home: string | undefined, route: string, body: unknown = {}): Promise<{ ok: true; url: string; data: Record<string, unknown> } | { ok: false; error: string }> {
   const dataDir = officeDataDir(home);
   const local = readLocalFile(dataDir);
-  const notRunning = `${PRODUCT} isn't running here. Start it with \`npx ${CLI}\`.`;
+  // Started the way this command was (npx, a linked `kipdeck`, or node and its path), for that office.
+  const notRunning = `${PRODUCT} isn't running here. Start it with \`${launchCommand()}${homeFlag(home)}\`.`;
   if (!local) return { ok: false, error: notRunning };
   let res: Response;
   try {

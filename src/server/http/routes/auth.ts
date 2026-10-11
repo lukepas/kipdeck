@@ -4,6 +4,8 @@ import type http from 'node:http';
 import type { Ctx } from '../../office/context.js';
 import { str } from '../../office/input.js';
 import { localRequest, ownerName, passwordless } from '../../local.js';
+import { officeCommand } from '../../runcmd.js';
+import { PRODUCT } from '../../../shared/copy.js';
 import { clientIp, isSecure, readBody, send } from '../util.js';
 import type { Route } from '../router.js';
 
@@ -54,11 +56,18 @@ export async function login(ctx: Ctx, req: http.IncomingMessage, res: http.Serve
  * Which fields the sign-in forms ask for. `local`: this browser is on the computer of an office that
  * signs its owner in from the terminal, so the page says how instead of asking for a password first.
  */
-export const loginOptions = (ctx: Ctx, req?: http.IncomingMessage) => ({
-  accounts: ctx.accounts.any,
-  shared: ctx.accounts.sharedPassword,
-  local: !!req && !ctx.accounts.any && ctx.accounts.sharedPassword && passwordless(ctx.cfg) && localRequest(req),
-});
+export const loginOptions = (ctx: Ctx, req?: http.IncomingMessage) => {
+  const local = !!req && !ctx.accounts.any && ctx.accounts.sharedPassword && passwordless(ctx.cfg) && localRequest(req);
+  // `open`: the command that gets a new link, as it can be typed on this computer (runcmd.ts).
+  return { accounts: ctx.accounts.any, shared: ctx.accounts.sharedPassword, local, ...(local ? { open: officeCommand('open', ctx.cfg.dir) } : {}) };
+};
+
+/** Why a sign-in link didn't work, and the command that gets a new one: the sign-in page shows both. */
+export function linkRefusal(ctx: Ctx, key: string): { error: string; why: string; open: string } {
+  const open = officeCommand('open', ctx.cfg.dir);
+  const why = ctx.accounts.sharedPassword && ctx.auth.linkKeyUsed(key) ? 'That sign-in link was already used: each one works once.' : `That sign-in link is not valid. Links stop working when ${PRODUCT} restarts.`;
+  return { error: `${why} Run \`${open}\` in a terminal on this computer for a new one.`, why, open };
+}
 
 /**
  * An invite link: `peek` says who it's for; otherwise it makes the account and signs it in.
@@ -115,9 +124,8 @@ export const authRoutes = {
       if (!localRequest(req)) return send(res, 403, { error: 'Sign-in links only work on the computer the office runs on. Sign in with the office password.' });
       const guess = await readGuess(ctx, req, res);
       if (!guess) return;
-      if (!ctx.accounts.sharedPassword || !ctx.auth.useLinkKey(str(guess.body.key, 128))) {
-        return send(res, 410, { error: 'That sign-in link was already used. Run `kipdeck open` on this computer for a new one.' });
-      }
+      const key = str(guess.body.key, 128);
+      if (!ctx.accounts.sharedPassword || !ctx.auth.useLinkKey(key)) return send(res, 410, linkRefusal(ctx, key));
       ctx.auth.recordSuccess(guess.ip);
       return send(res, 200, { ok: true }, signedIn(ctx, req));
     },

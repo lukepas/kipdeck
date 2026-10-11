@@ -14,6 +14,7 @@ import { commandLineLabs } from './labs.js';
 import { telemetryForbidden } from './telemetry.js';
 import { brandEnv } from './brandenv.js';
 import { freshDemoHome, type DemoWorkspace } from './demo/workspace.js';
+import { startedAs } from './runcmd.js';
 
 export interface Config {
   /** The office's own folder: the building's data lives in its .agent-office. */
@@ -306,7 +307,7 @@ export function loadConfig(argv: string[]): Config {
     switch (a) {
       case '-h':
       case '--help':
-        process.stdout.write(HELP);
+        process.stdout.write(HELP + startedAs());
         process.exit(0);
       case '-p':
       case '--port':

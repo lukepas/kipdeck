@@ -7,6 +7,17 @@ import type { Accounts } from '../src/server/accounts.js';
 
 const auth = () => new Auth(randomBytes(32), randomBytes(16), 'secret', {} as Accounts);
 
+test('a used sign-in link is told apart from one that was never valid', () => {
+  const a = auth();
+  const key = a.linkKey();
+  assert.equal(a.linkKeyUsed(key), false);
+  assert.equal(a.useLinkKey(key), true);
+  assert.equal(a.linkKeyUsed(key), true);
+  assert.equal(a.useLinkKey(key), false);
+  assert.equal(a.linkKeyUsed('x'.repeat(32)), false);
+  assert.equal(a.linkKeyUsed(''), false);
+});
+
 test('a sign-in link works once', () => {
   const a = auth();
   const key = a.linkKey();

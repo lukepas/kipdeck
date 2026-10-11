@@ -27,9 +27,9 @@ const base = `http://127.0.0.1:${PORT}`;
 const W = 1440;
 const H = 900;
 const WALL = process.env.REC_DECK === '1';
-/** Whether `npx kipdeck` works yet (src/shared/demo.ts ON_NPM): until it does, the cards show the from-source command and steps. */
+/** Whether `npx kipdeck` works yet (src/shared/demo.ts ON_NPM): until it does, the cards show npx running it from GitHub. */
 const ON_NPM = /export const ON_NPM = true;/.test(readFileSync(path.join(ROOT, 'src', 'shared', 'demo.ts'), 'utf8'));
-const DEMO_CMD = ON_NPM ? 'npx kipdeck --demo' : 'kipdeck --demo';
+const DEMO_CMD = ON_NPM ? 'npx kipdeck --demo' : 'npx github:zbagdzevicius/kipdeck --demo';
 const REPO = 'github.com/zbagdzevicius/kipdeck';
 
 const home = mkdtempSync(path.join(tmpdir(), 'demo-record-home-'));
@@ -295,7 +295,7 @@ const lines = started
   .filter((l) => l.trim() && !/Sign in \(the link|Lost the tab|password|Ctrl\+C|closing/.test(l))
   .map((l) => l.replace(/\/var\/folders\/\S+?\/(kipdeck-demo-)/, '/tmp/$1').replace(/&/g, '&amp;').replace(/</g, '&lt;'));
 await card('terminal', `<div style="width:1180px;border-radius:14px;background:#14181d;color:#e6e9ec;box-shadow:0 20px 60px rgba(0,0,0,.25);font:22px/1.6 ui-monospace,Menlo,monospace;padding:28px 34px"><div style="color:#7d8a96">$ <span style="color:#fff">${DEMO_CMD}</span></div>${lines.map((l) => `<div style="white-space:pre-wrap;padding-left:2ch;text-indent:-2ch">${l.trim()}</div>`).join('')}</div>`);
-await card('end', `<div style="max-width:1040px;text-align:center"><div>${mark}</div><h1 style="font-size:50px;line-height:1.15;letter-spacing:-.02em;margin:24px 0 14px">Kipdeck</h1><p style="font-size:28px;color:#4a5560;margin:0 0 34px">One inbox for Claude Code, Codex and Cursor: who is waiting on you, the answer, the diff and the merge.</p><code style="display:inline-block;font:30px ui-monospace,Menlo,monospace;padding:14px 24px;border-radius:10px;background:#fff;border:1px solid #d5dbe1">${DEMO_CMD}</code><p style="font:600 26px ui-monospace,Menlo,monospace;color:#13171c;margin:22px 0 0">${REPO}</p>${ON_NPM ? '' : '<p style="font-size:22px;color:#4a5560;margin:12px 0 0">Not on npm yet: clone, npm install, npm run build, npm link.</p>'}<p style="font-size:20px;color:#6b7680;margin:26px 0 0">Open source. Runs on your machine or your team's dev box.<br>Recorded with the demo's scripted agents: no model ran.</p></div>`);
+await card('end', `<div style="max-width:1040px;text-align:center"><div>${mark}</div><h1 style="font-size:50px;line-height:1.15;letter-spacing:-.02em;margin:24px 0 14px">Kipdeck</h1><p style="font-size:28px;color:#4a5560;margin:0 0 34px">One inbox for Claude Code, Codex and Cursor: who is waiting on you, the answer, the diff and the merge.</p><code style="display:inline-block;font:30px ui-monospace,Menlo,monospace;padding:14px 24px;border-radius:10px;background:#fff;border:1px solid #d5dbe1">${DEMO_CMD}</code><p style="font:600 26px ui-monospace,Menlo,monospace;color:#13171c;margin:22px 0 0">${REPO}</p>${ON_NPM ? '' : '<p style="font-size:22px;color:#4a5560;margin:12px 0 0">Not on npm yet: npx runs it straight from GitHub.</p>'}<p style="font-size:20px;color:#6b7680;margin:26px 0 0">Open source. Runs on your machine or your team's dev box.<br>Recorded with the demo's scripted agents: no model ran.</p></div>`);
 const sideCaption = async (name, text) => {
   const page = await cardBrowser.newPage({ viewport: { width: W, height: H } });
   await page.setContent(`<!doctype html><html><body style="margin:0;width:${W}px;height:${H}px;background:transparent"><div style="position:absolute;left:56px;top:50%;transform:translateY(-50%);width:400px;padding:16px 22px;border-radius:12px;background:rgba(17,20,24,.9);color:#fff;font:600 26px/1.35 system-ui,sans-serif;box-shadow:0 8px 30px rgba(0,0,0,.25)">${text}</div></body></html>`);

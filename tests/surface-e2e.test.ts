@@ -240,7 +240,7 @@ test('Enter the Deck: in the top bar, never orange, D and Go to Deck go to /deck
       return {
         projectShrinks: getComputedStyle(document.getElementById('project')!).flexShrink,
         tagCut: tag.scrollWidth > tag.clientWidth + 1,
-        codeWidth: document.querySelector('#demo .demo-run code')?.getBoundingClientRect().width ?? 0,
+        codeWidth: document.querySelector('#demo .demo-run .fix')?.getBoundingClientRect().width ?? 0,
         search: document.querySelector('.hb-search')!.getBoundingClientRect().width,
         label: !!document.querySelector('.hb #to-deck .deck-cta-label')?.getClientRects().length,
         scroll: document.documentElement.scrollWidth,
@@ -248,7 +248,7 @@ test('Enter the Deck: in the top bar, never orange, D and Go to Deck go to /deck
     });
     assert.equal(bar.projectShrinks, '0', `${width}: the project picker keeps its name`);
     assert.equal(bar.tagCut, false, `${width}: the demo tag reads whole`);
-    if (width >= 1440) assert.ok(bar.codeWidth >= 50, `${width}: the demo's command keeps its first word (${bar.codeWidth}px)`);
+    if (width >= 1440) assert.ok(bar.codeWidth >= 50, `${width}: the demo's command (or its Copy command button) keeps its room (${bar.codeWidth}px)`);
     assert.ok(bar.search >= 200, `${width}: search keeps its room (${bar.search}px)`);
     assert.equal(bar.label, width >= 1440, `${width}: the pill says Enter the Deck only where the bar has room`);
     assert.equal(bar.scroll, width);

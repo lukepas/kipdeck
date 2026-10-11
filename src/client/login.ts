@@ -18,28 +18,46 @@ const NAME_KEY = 'agent-office.login-name';
 /** Where to go once in: the Deck if that's where you were headed (see loginUrl in net.ts), else home. */
 const NEXT = isDeckPath(new URLSearchParams(location.search).get('next') ?? '') ? DECK_PATH : '/';
 
+/** Why the sign-in link didn't work (`why`, without the command) and the whole message (`error`). */
+interface LinkRefusal {
+  error: string;
+  why?: string;
+}
+
 // A sign-in link from the office's terminal (/login#key=...): it works once, so take it out of the
 // address bar and trade it for a session. The key is after the #, so it never reaches a server log.
-const linkKey = new URLSearchParams(location.hash.slice(1)).get('key');
-if (linkKey) {
+// Resolves to why it didn't work, or to nothing when there was no link.
+async function tryLink(): Promise<LinkRefusal | undefined> {
+  const linkKey = new URLSearchParams(location.hash.slice(1)).get('key');
+  if (!linkKey) return undefined;
   history.replaceState(null, '', location.pathname + location.search);
-  void fetch('/api/link', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ key: linkKey }) })
-    .then(async (res) => {
-      if (res.ok) return location.replace(NEXT);
-      error.textContent = ((await res.json().catch(() => ({}))) as { error?: string }).error ?? 'Could not sign in';
-    })
-    .catch(() => void (error.textContent = 'Server unreachable'));
+  try {
+    const res = await fetch('/api/link', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ key: linkKey }) });
+    if (res.ok) {
+      location.replace(NEXT);
+      // Signed in: the page is going away, so nothing below runs.
+      return await new Promise<never>(() => {});
+    }
+    const body = (await res.json().catch(() => ({}))) as Partial<LinkRefusal>;
+    return { error: body.error ?? 'Could not sign in', why: body.why };
+  } catch {
+    return { error: 'Server unreachable' };
+  }
 }
 
 // On the computer the office runs on, with no password chosen for it: the way in is the terminal
-// (`kipdeck open`), and the password form waits behind a link.
+// (`kipdeck open`), and the password form waits behind a link. That holds after a used or a bad
+// sign-in link too: it says which, above the command that gets a new one.
 const local = document.getElementById('local') as HTMLDivElement;
-function showLocal() {
+function showLocal(command: string | undefined, refused?: LinkRefusal) {
   local.hidden = false;
   form.hidden = true;
   sub.textContent = TAGLINE;
-  // The command that works today: from the clone until Kipdeck is on npm.
-  const cmd = openCommand();
+  const why = document.getElementById('local-why') as HTMLParagraphElement;
+  why.hidden = !refused;
+  why.textContent = refused ? (refused.why ?? refused.error) : '';
+  // The office says how it can be typed here (node and its path, npx, or kipdeck once linked).
+  const cmd = command ?? openCommand();
   // A break allowed only after a slash, so a narrow screen wraps the path, never a file name.
   document.getElementById('open-cmd')!.replaceChildren(
     ...cmd.split(/(?<=\/)/).flatMap((part, i) => {
@@ -65,10 +83,14 @@ function showLocal() {
 }
 
 // Ask for a name once people have accounts; it's optional while the shared password still works.
-void fetch('/api/login', { cache: 'no-store' })
-  .then((r) => r.json())
-  .then(({ accounts, shared, local: here }: { accounts: boolean; shared: boolean; local?: boolean }) => {
-    if (here && !linkKey) return showLocal();
+void tryLink()
+  .then(async (refused) => {
+    const opts = (await (await fetch('/api/login', { cache: 'no-store' })).json()) as { accounts: boolean; shared: boolean; local?: boolean; open?: string };
+    return { refused, ...opts };
+  })
+  .then(({ refused, accounts, shared, local: here, open }) => {
+    if (here) return showLocal(open, refused);
+    if (refused) error.textContent = refused.error;
     if (!accounts && shared) return;
     nameRow.hidden = false;
     nameInput.required = !shared;

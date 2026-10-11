@@ -5,6 +5,7 @@
 
 import type { ServerMsg, SetupAgent, SetupState } from '../../shared/protocol';
 import { PROVIDER_META, type AgentProvider } from '../../shared/providers';
+import { INSTALL_COMMAND } from '../../shared/demo';
 import type { Net } from '../net';
 import { store } from '../state';
 import { h, toast } from '../ui/dom';
@@ -107,7 +108,7 @@ function projectRow(s: SetupState, net: Net, admin: boolean): HTMLElement {
     input.addEventListener('keydown', (e) => e.key === 'Enter' && add());
     parts.push(h('span.su-line.su-clone', {}, s.startedIn ? 'or clone one from GitHub:' : 'Clone one from GitHub:', input, list, h('button.btn.small', { type: 'button', onclick: add }, 'Add')));
   }
-  if (!parts.length) parts.push(h('span.su-say', {}, admin ? 'Start Kipdeck inside a git repository (cd into it, then npx kipdeck), or sign GitHub in to clone one.' : 'An admin adds projects.'));
+  if (!parts.length) parts.push(h('span.su-say', {}, admin ? `Start Kipdeck inside a git repository (cd into it, then ${s.run ?? INSTALL_COMMAND}), or sign GitHub in to clone one.` : 'An admin adds projects.'));
   return row(false, 'Project', ...parts);
 }
 

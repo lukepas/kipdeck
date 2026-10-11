@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Install Kipdeck (the inbox for your AI coding agents) from npm and start it, for anyone who would
-# rather have a `kipdeck` command than type `npx kipdeck` each time:
+# rather have a `kipdeck` command than type the npx command each time:
 #
 #   curl -fsSL https://raw.githubusercontent.com/zbagdzevicius/kipdeck/main/install.sh | bash
 #
@@ -59,10 +59,15 @@ check_requirements() {
 from_source() {
   cat >&2 <<'EOF'
 
-Kipdeck is not on npm yet. Run it from source (Node.js 20+ and git):
+Kipdeck is not on npm yet. In your repository, run it straight from GitHub
+(Node.js 20+ and git; the first run builds it, a few minutes):
+
+  cd ~/code/your-project && npx github:zbagdzevicius/kipdeck
+
+Or from a clone, with a kipdeck command on your PATH:
 
   git clone https://github.com/zbagdzevicius/kipdeck
-  cd kipdeck && npm install && npm run build && npm link
+  cd kipdeck && npm install && npm link
   cd ~/code/your-project && kipdeck
 
 EOF

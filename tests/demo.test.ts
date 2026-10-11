@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import WebSocket from 'ws';
-import { DEMO_REVIEWER, ON_NPM, READ_ONLY_REFUSAL, demoNote } from '../src/shared/demo.js';
+import { DEMO_COMMAND, DEMO_REVIEWER, INSTALL_COMMAND, ON_NPM, READ_ONLY_REFUSAL, demoNote, fitsPill } from '../src/shared/demo.js';
 import { DESK_BY_ID, deskBuilt } from '../src/shared/layout.js';
 import { FLEET, REVIEWS, SEED_FILES, dueReviews, improvised, roundOver, type DemoAgent } from '../src/server/demo/script.js';
 import { READ_ONLY_ALLOWS, readOnlyRefuses } from '../src/server/demo/readonly.js';
@@ -66,24 +66,26 @@ test('everything the demo writes says it is demo data', () => {
   for (const a of FLEET) for (const s of a.steps) for (const [file, text] of Object.entries(s.write ?? {})) assert.match(text, /\[demo\]|\(demo\)/, `${a.key}: ${file}`);
   for (const s of improvised('Do a thing', 'do-a-thing')) for (const text of Object.values(s.write ?? {})) assert.match(text, /\[demo\]/);
   assert.match(demoNote({ readOnly: false, project: 'acme-shop' }).text, /Scripted agents/);
-  assert.equal(demoNote({ readOnly: true, project: 'acme-shop' }, true).command, 'npx kipdeck --demo');
-  assert.equal(demoNote({ readOnly: false, project: 'acme-shop' }, true).command, 'npx kipdeck');
-  // Until kipdeck is on npm, nothing shows an npx command that 404s; the public repository is the way in.
+  // Until kipdeck is on npm, nothing shows `npx kipdeck` (a 404): npx runs it from the public repository.
   if (!ON_NPM) {
-    assert.doesNotMatch(READ_ONLY_REFUSAL, /npx|private beta/);
-    assert.match(READ_ONLY_REFUSAL, /github\.com\/zbagdzevicius\/kipdeck/);
+    assert.equal(DEMO_COMMAND, 'npx github:zbagdzevicius/kipdeck --demo');
+    for (const s of [READ_ONLY_REFUSAL, demoNote({ readOnly: true, project: 'acme-shop' }).text]) assert.doesNotMatch(s, /npx kipdeck|private beta|not on npm/);
   }
-  for (const readOnly of [true, false]) {
-    const note = demoNote({ readOnly, project: 'acme-shop' }, false);
-    assert.doesNotMatch(note.command ?? '', /npx|git clone|agent-office/);
-    assert.match(note.text, /not on npm yet/i);
-  }
-  // A visitor to the hosted demo is sent to the run-from-source steps; the clone's own demo names the kipdeck binary.
-  assert.equal(demoNote({ readOnly: true, project: 'acme-shop' }, false).command, undefined);
-  assert.match(demoNote({ readOnly: true, project: 'acme-shop' }, false).lead, /from source/);
-  assert.doesNotMatch(demoNote({ readOnly: true, project: 'acme-shop' }, false).text, /private beta|ask the team/);
-  assert.equal(demoNote({ readOnly: true, project: 'acme-shop' }, false).href, 'https://github.com/zbagdzevicius/kipdeck#from-source');
-  assert.equal(demoNote({ readOnly: false, project: 'acme-shop' }, false).command, 'kipdeck');
+  // A visitor to the hosted demo copies the command that runs the demo on their computer.
+  assert.equal(demoNote({ readOnly: true, project: 'acme-shop' }).command, DEMO_COMMAND);
+  assert.ok(READ_ONLY_REFUSAL.includes(DEMO_COMMAND));
+  // On your own computer, the command the demo was started with (server/runcmd.ts), else the npx one.
+  const run = 'node ~/code/kipdeck/bin/agent-office.js';
+  assert.equal(demoNote({ readOnly: false, project: 'acme-shop', run }).command, run);
+  assert.match(demoNote({ readOnly: false, project: 'acme-shop', run }).text, /run node ~\/code\/kipdeck\/bin\/agent-office\.js inside your repository/);
+  assert.equal(demoNote({ readOnly: false, project: 'acme-shop' }).command, INSTALL_COMMAND);
+});
+
+test('the pill shows a short command itself, and a long one only behind its copy button', () => {
+  assert.ok(fitsPill('kipdeck'));
+  assert.ok(fitsPill('npx kipdeck --demo'));
+  assert.ok(!fitsPill('npx github:zbagdzevicius/kipdeck'));
+  assert.ok(!fitsPill('node ~/kipdeck/bin/agent-office.js'));
 });
 
 test('the scripted reviewer: one review per agent at a time, after its wait, faster at a faster pace', () => {

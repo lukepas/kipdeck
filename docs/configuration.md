@@ -14,8 +14,11 @@ Already have a checkout? Pick its repository anyway: a checkout of it that's alr
 
 ## Command line
 
+Here `kipdeck` stands for the way you run it: `npx github:zbagdzevicius/kipdeck` until it is on npm, `node <clone>/bin/agent-office.js` from a clone, or `kipdeck` once it is on your PATH (`npm link`). `--help` says which one you used, and every command Kipdeck prints for itself (the banner, `open`'s hint, the sign-in page, the demo pill, the setup card) is already in the form that works on that computer, with `--home <dir>` when the office is not in `~/agent-office` (`src/server/runcmd.ts`). Started by npx, those commands run the copy npx installed (`node <npm cache>/.../bin/agent-office.js open`), since a second `npx` of a GitHub spec fetches and builds it again.
+
 ```
-kipdeck [dir] [options]      (npx kipdeck, or agent-office: the same command)
+kipdeck [dir] [options]      (until it is on npm: npx github:zbagdzevicius/kipdeck, or node <clone>/bin/agent-office.js;
+                              agent-office is the same command)
 
       --home <dir>        Where the office keeps its data without a [dir] (default ~/agent-office)
       --projects <dir>    Where new floors are cloned, as <dir>/<owner>/<repo> (default ~/agent-office;

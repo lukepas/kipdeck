@@ -108,8 +108,13 @@ test('an office is passwordless only on loopback with no password chosen for it'
 });
 
 test('the sign-in page offers `kipdeck open` on this computer, and the password through a proxy', async () => {
-  assert.equal(JSON.parse((await call('/api/login')).body).local, true);
-  assert.equal(JSON.parse((await call('/api/login', { headers: { 'x-forwarded-for': '203.0.113.9' } })).body).local, false);
+  const { officeCommand } = await import('../src/server/runcmd.js');
+  const here = JSON.parse((await call('/api/login')).body);
+  assert.equal(here.local, true);
+  assert.equal(here.open, officeCommand('open', home), 'the command for a new link, as typed on this computer');
+  const proxied = JSON.parse((await call('/api/login', { headers: { 'x-forwarded-for': '203.0.113.9' } })).body);
+  assert.equal(proxied.local, false);
+  assert.equal(proxied.open, undefined);
   assert.equal(JSON.parse((await call('/api/login', { headers: { host: `127.0.0.1:${port}` } })).body).local, true);
 });
 
@@ -126,7 +131,18 @@ test('a sign-in link works once, on this computer only', async () => {
   assert.equal(ok.status, 200);
   const cookie = String(ok.headers['set-cookie']?.[0] ?? '').split(';')[0];
   assert.match(cookie, /^ao_session_\d+=/);
-  assert.equal((await call('/api/link', { method: 'POST', headers: own(), body: { key } })).status, 410, 'used up');
+  const again = await call('/api/link', { method: 'POST', headers: own(), body: { key } });
+  assert.equal(again.status, 410, 'used up');
+  // It says it was used, and the command that gets a new one, as it can be typed here (runcmd.ts).
+  const { officeCommand } = await import('../src/server/runcmd.js');
+  const used = JSON.parse(again.body);
+  assert.match(used.why, /already used/);
+  assert.equal(used.open, officeCommand('open', home));
+  assert.ok(used.error.includes(used.open));
+  // A made-up key is not "already used": it's not valid.
+  const bogus = JSON.parse((await call('/api/link', { method: 'POST', headers: own(), body: { key: 'bogus' } })).body);
+  assert.match(bogus.why, /not valid/);
+  assert.doesNotMatch(bogus.why, /already used/);
   // Signed in, it says what to call you: git's user.name.
   const me = JSON.parse((await call('/api/whoami', { headers: { cookie } })).body);
   assert.equal(me.name, 'Ada Lovelace');

@@ -31,6 +31,8 @@ export interface SetupState {
   github: SetupGithub;
   /** Anonymous usage numbers (see docs/security.md): on, and whether this office may turn them on at all. */
   telemetry: { on: boolean; allowed: boolean; why?: string };
+  /** The command that starts Kipdeck, as it was started here (server/runcmd.ts): what to run inside a repository. */
+  run?: string;
 }
 
 export type SetupClientMsg =

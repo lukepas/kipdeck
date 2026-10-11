@@ -1,10 +1,11 @@
 // The demo's pill in the top bar (`kipdeck --demo`, see shared/demo.ts): one short line saying the
-// agents are scripted, with the command to run it for real (or, in the hosted demo before npm, an ask
-// for access), so the inbox itself starts at the top of the list. On a phone it is the tag alone. The whole note is its tooltip. A demo office has no Get started checklist (shipped.ts):
+// agents are scripted, with the command to run it for real (the hosted demo: to run the demo on your
+// computer), so the inbox itself starts at the top of the list. On a phone it is the tag alone. The whole note is its tooltip. A demo office has no Get started checklist (shipped.ts):
 // the demo shows the loop, it doesn't teach it.
-import { demoNote, type DemoInfo } from '../../shared/demo';
+import { demoNote, fitsPill, type DemoInfo } from '../../shared/demo';
 import type { ServerMsg } from '../../shared/protocol';
-import { h } from '../ui/dom';
+import { h, toast } from '../ui/dom';
+import { icon } from '../ui/icons';
 import { copyLine } from './setup';
 import { home } from './state';
 import './demo.css';
@@ -24,8 +25,20 @@ export function renderDemo(demo: DemoInfo | undefined, where: HTMLElement) {
   where.classList.toggle('hidden', !demo);
   if (!demo) return home.change();
   const note = demoNote(demo);
-  where.title = note.command ? `${note.text} ${note.lead}: ${note.command}` : note.text;
-  const lead = note.href ? h('a.demo-lead', { href: note.href, target: '_blank', rel: 'noopener' }, note.lead) : h('span.demo-lead', {}, note.command ? `${note.lead}:` : note.lead);
-  where.append(h('span.demo-tag', {}, 'Demo'), h('span.demo-text', {}, note.short), h('span.demo-run', {}, lead, note.command ? copyLine(note.command) : null));
+  where.title = note.text;
+  where.append(h('span.demo-tag', {}, 'Demo'), h('span.demo-text', {}, note.short), h('span.demo-run', {}, h('span.demo-lead', {}, `${note.lead}:`), runLine(note.command)));
   home.change();
+}
+
+/** The command to copy: shown when it's short, else a Copy command button (shared/demo.ts fitsPill). */
+function runLine(command: string): HTMLElement {
+  if (fitsPill(command)) return copyLine(command);
+  const btn = h('button.btn.quiet.small.copy.copy-cmd', { type: 'button', title: command, 'aria-label': `Copy ${command}` }, icon('copy', 12), 'Copy command');
+  btn.addEventListener('click', () => {
+    void navigator.clipboard?.writeText(command).then(
+      () => toast('Copied'),
+      () => {},
+    );
+  });
+  return h('span.fix', {}, btn);
 }

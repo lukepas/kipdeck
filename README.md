@@ -8,14 +8,14 @@
 The inbox for your AI coding agents. Full control and clarity over every AI coding agent you run, in one place. See who is waiting on you and for how long, then answer, review and merge without leaving it.
 
 ```bash
-npx kipdeck
+npx github:zbagdzevicius/kipdeck
 ```
 
-> Not on npm yet: the name waits on a trademark search ([business/naming.md](business/naming.md)). Until it is published, [run it from source](#from-source).
+> Not on npm yet: the name waits on a trademark search ([business/naming.md](business/naming.md)). Until it is published, npx runs it straight from this repository. The first run installs and builds it, which takes a few minutes; after that the terminal prints the exact command for everything else (a new sign-in link, attach). Or [run it from source](#from-source).
 
 ![Kipdeck in 30 seconds: Codex's question opens by itself and is answered in one box, Claude Code's diff is reviewed and merged into Shipped today (the demo's scripted agents, no model)](docs/img/demo.gif)
 
-No agents yet? `npx kipdeck --demo` plays five scripted ones on a throwaway repository, no CLI, sign-in or model needed ([the demo](docs/demo.md)).
+No agents yet? `npx github:zbagdzevicius/kipdeck --demo` plays five scripted ones on a throwaway repository, no CLI, sign-in or model needed ([the demo](docs/demo.md)).
 
 Run it inside the repository you work in. It opens in your browser, signed in, with that repository as your first project. Claude Code, Codex and Cursor run side by side (OpenCode, Pi, Grok, Muse and DeepSeek Harness in beta), each on a branch of its own, and you answer, review and merge from one page, on your laptop or your phone. It runs on your machine or your team's dev box, and nothing leaves it.
 
@@ -38,50 +38,52 @@ You need **Node.js 20+**, **git** and one agent CLI: **Claude Code** (`npm insta
 In the repository you work in:
 
 ```bash
-npx kipdeck
+npx github:zbagdzevicius/kipdeck
 ```
 
-1. It starts on `http://localhost:4600` (or the next free port) and opens your browser, **already signed in**. On your own computer there is no password to type: the link it opens works once, and `npx kipdeck open` makes a new one if you lose the tab. Only your computer can reach it.
+1. It says `Starting Kipdeck...` at once and a line for each slow step, then starts on `http://localhost:4600` (or the next free port) and opens your browser, **already signed in**. On your own computer there is no password to type: the link it opens works once, and the terminal prints the command that makes a new one if you lose the tab (`open`, typed the way this copy runs: `kipdeck open` once it is on your PATH, otherwise `node <path>/bin/agent-office.js open`, with `--home` for an office outside `~/agent-office`). A used or stale link opens the same page with that command on it, never a password form. Only your computer can reach it.
 2. The repository you started it in is your first project. Started somewhere else, the setup card offers to clone one from GitHub.
 3. The **setup card** says which agents it found and whether each is signed in, the project, and GitHub, with the one line to run for anything that isn't ready.
 4. **Deploy your first agent** starts one on a safe task (a 5-line SUMMARY.md on how to run the repository). It shows up under **Working** within seconds and under **To review** when it's done.
 
-Nothing asks you anything in the terminal, and there are no settings to fill in. From a clean machine to the first agent at work takes under two minutes, most of it npm downloading; `design/time-to-first-agent.mjs` times it (from a local `npm pack` tarball until the package is on npm).
+Nothing asks you anything in the terminal, and there are no settings to fill in. From a clean machine to the first agent at work takes under two minutes once it is installed; until it is on npm the first `npx` run also builds it, a few minutes more. `design/time-to-first-agent.mjs` times it (from a local `npm pack` tarball until the package is on npm).
 
 ### From source
 
-Until `kipdeck` is on npm, build it once, link it, and run it from inside the repository you work in:
+A clone runs the same way, and starts in seconds every time. `npm install` builds it:
 
 ```bash
-git clone https://github.com/zbagdzevicius/kipdeck
-cd kipdeck && npm install && npm run build && npm link     # npm link puts kipdeck on your PATH
-cd ~/code/your-project && kipdeck                           # what npx kipdeck will run
-kipdeck --demo                                              # the demo, anywhere
+git clone https://github.com/zbagdzevicius/kipdeck ~/kipdeck
+cd ~/kipdeck && npm install
+cd ~/code/your-project && node ~/kipdeck/bin/agent-office.js      # or: npm link once in ~/kipdeck, then kipdeck
+node ~/kipdeck/bin/agent-office.js --demo                         # the demo, anywhere
 ```
 
-The demo's pill copies that same `kipdeck` command.
+The demo's pill copies the command you started the demo with, without `--demo`.
+
+From here on, `kipdeck` stands for the way you run it: `npx github:zbagdzevicius/kipdeck`, `node <clone>/bin/agent-office.js`, or `kipdeck` once it is on your PATH (`npm link` in the clone). `kipdeck --help` says which one you used, and every command Kipdeck prints is already in that form.
 
 Common options:
 
 ```bash
-npx kipdeck --port 4700                 # this port or nothing
-npx kipdeck ~/code/my-project           # keep the office's data in that project, as agent-office did
-npx kipdeck --host 0.0.0.0              # let your network in (then everyone else signs in with a password)
-npx kipdeck --password 'correct horse'  # a password, even on this computer
-npx kipdeck --no-open                   # print the sign-in link instead of opening a browser
-npx kipdeck --telemetry                 # share anonymous usage numbers (off by default)
+kipdeck --port 4700                 # this port or nothing
+kipdeck ~/code/my-project           # keep the office's data in that project, as agent-office did
+kipdeck --host 0.0.0.0              # let your network in (then everyone else signs in with a password)
+kipdeck --password 'correct horse'  # a password, even on this computer
+kipdeck --no-open                   # print the sign-in link instead of opening a browser
+kipdeck --telemetry                 # share anonymous usage numbers (off by default)
 ```
 
-`npx kipdeck rundown [path]` writes a project's map (its parts by status, inferred from the code, no Claude needed) into `.rundown/`, and `npx kipdeck rundown install` adds the `/rundown` skill to Claude Code for Claude's own read; see [docs/rundown.md](docs/rundown.md).
+`kipdeck rundown [path]` writes a project's map (its parts by status, inferred from the code, no Claude needed) into `.rundown/`, and `kipdeck rundown install` adds the `/rundown` skill to Claude Code for Claude's own read; see [docs/rundown.md](docs/rundown.md).
 
-Once it is on npm, to have a `kipdeck` command instead: `npm install -g kipdeck`, or [`install.sh`](install.sh) (macOS and Linux) and [`install.ps1`](install.ps1) (Windows), which install the same package. Until then those print the from-source steps above, and `npm link` gives you the same command. Every option is in [docs/configuration.md](docs/configuration.md); choosing models and providers per agent is in [docs/agents.md](docs/agents.md).
+Once it is on npm, to have a `kipdeck` command instead: `npm install -g` with its package name, or [`install.sh`](install.sh) (macOS and Linux) and [`install.ps1`](install.ps1) (Windows), which install the same package. Until then those print the from-source steps above, and `npm link` gives you the same command. Every option is in [docs/configuration.md](docs/configuration.md); choosing models and providers per agent is in [docs/agents.md](docs/agents.md).
 
 ## Attach an agent you already started
 
 Started Claude Code or Codex in a terminal before Kipdeck was running? Quit it there (Ctrl+C or `/exit`), then in the same folder:
 
 ```bash
-npx kipdeck attach
+kipdeck attach
 ```
 
 It finds that folder's newest Claude Code or Codex session in the CLI's own files, and the running Kipdeck carries it on as one of its agents: the same conversation, now in the inbox with its terminal, its questions, its changes and the merge. `--list` shows the folder's sessions, `--session <id>` picks one, and Cursor needs `--agent cursor --session <id>` (`cursor-agent ls` lists them).
@@ -145,7 +147,7 @@ ssh -L 4600:localhost:4600 office@<your-office-ip>
 
 Their key logs in as a locked-down `office` user that can only forward to the office port: no shell, no other ports. Running the office on your own computer, or on your own domain over HTTPS? Skip this step.
 
-A teammate with Kipdeck on their computer can run `npx kipdeck tunnel office@<your-office-ip>` instead of the `ssh` line: it opens the same tunnel, and every web server a worker starts opens on their computer too ([docs/tunnel.md](docs/tunnel.md)).
+A teammate with Kipdeck on their computer can run `kipdeck tunnel office@<your-office-ip>` instead of the `ssh` line: it opens the same tunnel, and every web server a worker starts opens on their computer too ([docs/tunnel.md](docs/tunnel.md)).
 
 **2. Make them an account.** Open **Accounts** (Ctrl+K) and make an invite link. Name it (or let them pick) and make them a *Member* or an *Admin*. The link works once, for 7 days, and they choose their own password. Make one for yourself too, as an admin.
 
@@ -194,13 +196,24 @@ Server edits restart the server, not the workers. After changing `ptyhost.ts`, b
 
 The rules for coding agents working on this repository are in [`AGENTS.md`](AGENTS.md), which Codex, OpenCode and most other agent CLIs read. `CLAUDE.md` only imports it for Claude Code, so new rules go in `AGENTS.md`.
 
-The npm package ships the built `dist/` (`files` in `package.json`), so `npx kipdeck` builds nothing on the user's machine: run `npm run build` before `npm publish` (`prepare` does it on `npm pack` and `npm publish`). `install.sh` and `install.ps1` install that package.
+### Publishing to npm
+
+The npm package ships the built `dist/` (`files` in `package.json`: the app, the server, the showcase and the rundown script), so an install from npm builds nothing on the user's machine. `prepare` runs `npm run build` on `npm pack`, `npm publish` and a GitHub install (`npx github:zbagdzevicius/kipdeck`), and `publishConfig.access` is `public`, which a scoped name needs. Both bin names (`kipdeck`, `agent-office`) run the same script, so `npx <any name>` finds it. To publish under a scope you own, for example `@kipdeck/kipdeck`:
+
+```bash
+npm login
+npm pkg set name=@kipdeck/kipdeck
+npm pack && tar -tzf kipdeck-kipdeck-*.tgz | head    # check what ships
+npm publish
+```
+
+Then, in the same release: set `NPM_PACKAGE` to that name and `ON_NPM` to `true` in `src/shared/demo.ts` (every command Kipdeck and its pages print switches to `npx <name>`), point the README's first command, `install.sh` and `install.ps1` at it, and set `KIPDECK_NPM_PUBLISHED=1` for the landing page ([docs/landing.md](docs/landing.md)). A copy started by `npx <name>` already prints `npx <name>` for itself (`src/server/runcmd.ts` reads the spec npx installed).
 
 ## More
 
 - [The inbox](docs/inbox.md): the home page, its loop, the setup card, Numbers, Settings, its keys and the shipped log
 - [Signal](docs/signal.md): the project's status at one look over the inbox list (On track, At risk, Off track or No goal), the rules behind it, and Copy as text for Slack
-- [The demo](docs/demo.md): `npx kipdeck --demo` with five scripted agents, the hosted read-only demo, and the scripts that make the video, the GIF and the deck's screenshots
+- [The demo](docs/demo.md): `npx github:zbagdzevicius/kipdeck --demo` with five scripted agents, the hosted read-only demo, and the scripts that make the video, the GIF and the deck's screenshots
 - [Metrics for the deck](docs/metrics.md): what each number means, where it comes from, and what not to show
 - [The landing page](docs/landing.md): `site/landing/` (`npm run build:site`, then `npm run preview:site`), what each section's motion shows, the one file that holds the product's name, its speed budgets (`npm run perf:site`), accessibility and search tags, the design-partner ask, and how to deploy it to Cloudflare Pages ([site/landing/README.md](site/landing/README.md))
 - [Features](docs/features.md): the inbox first, then the whole office in detail
