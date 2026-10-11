@@ -22,6 +22,7 @@ import { icon, LEVEL_ICON } from '../ui/icons';
 import { countdownWords, heldUntil, inFlight } from './merge-hold';
 import { approvalRow } from './approval';
 import { home } from './state';
+import { proposalRows, proposalWaits } from './proposals';
 
 export interface ListDeps {
   /** A row's primary button. */
@@ -94,7 +95,7 @@ export function waitingNow(view: InboxView = currentView()): Waiting {
   const listed = new Set(store.roster.map((e) => e.id));
   const loose = looseReminders(store.reminders, listed, now, home.project || undefined);
   return {
-    needYou: [...view.sections['needs-you'].map((r) => r.att.since), ...(home.owner === 'mine' ? [] : loose.map((r) => r.since))],
+    needYou: [...view.sections['needs-you'].map((r) => r.att.since), ...(home.owner === 'mine' ? [] : loose.map((r) => r.since)), ...proposalWaits()],
     toReview: view.sections.review.filter((r) => !inFlight(r.entry.id)).map((r) => r.att.since),
   };
 }
@@ -212,7 +213,8 @@ export function renderList(root: HTMLElement, deps: ListDeps, firstRun: () => HT
   const now = Date.now();
   const view = currentView();
   const listed = new Set(store.roster.map((e) => e.id));
-  const loose = looseReminders(store.reminders, listed, now, home.project || undefined).map((r) => reminderRow(r, deps, now));
+  // Agents' requests (proposals.ts) wait in Needs you first, then reminders about no agent in the list.
+  const loose = [...proposalRows(now), ...looseReminders(store.reminders, listed, now, home.project || undefined).map((r) => reminderRow(r, deps, now))];
   const anyAgent = store.roster.some((e) => !home.project || e.floor === home.project);
   if (!anyAgent && !loose.length && !home.query) {
     root.replaceChildren(firstRun());

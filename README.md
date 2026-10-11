@@ -114,7 +114,7 @@ More in [docs/labs.md](docs/labs.md).
 - **Numbers.** Human wait time, changes merged, the merge rate and agent-hours, the last 7 days against the 7 days before, and the merge rate per agent and model with its N, from the signed shipped log on your machine ([metrics](docs/metrics.md)).
 - **Settings in three panes.** Account, Agents and Notifications. Seven keys, and Help on **?** ([controls](docs/controls.md)).
 - **Teams.** Accounts with invite links, a shared dev box reached by SSH tunnel or Tailscale, and the team's Slack or Discord channel ([below](#teams-and-servers)).
-- **Agents that manage agents.** Every agent can list, deploy, message and stop the others through the `kipdeck` MCP server or the `office-workers` command ([agents](docs/agents.md)).
+- **Agents that manage agents, with you in charge.** Every agent can list the others through the `kipdeck` MCP server or the `office-workers` command ([agents](docs/agents.md)). When one asks to deploy, message or stop another, the request waits in Needs you with its full text until you approve or reject it, unless an admin gave that project a standing permission in Settings > Agents; every such action is on a record there ([agents acting on agents](docs/agent-gate.md)).
 - **Mission control** (with the GitHub boards and queue lab on): the same ranking with reminders, the review inbox and the digest of what happened while you were away ([mission control](docs/mission-control.md)).
 
 Everything else, the 3D Deck with its crew, moments and ambience, goals and the timeline, meetings, voice and Proof of Merge on testnets, is in [Labs](#labs) (all off until an admin switches them on) and described in [features](docs/features.md).
@@ -220,6 +220,7 @@ Then, in the same release: set `NPM_PACKAGE` to that name and `ON_NPM` to `true`
 - [The landing page](docs/landing.md): `site/landing/` (`npm run build:site`, then `npm run preview:site`), what each section's motion shows, the one file that holds the product's name, its speed budgets (`npm run perf:site`), accessibility and search tags, the design-partner ask, and how to deploy it to Cloudflare Pages ([site/landing/README.md](site/landing/README.md))
 - [Features](docs/features.md): the inbox first, then the whole office in detail
 - [Controls](docs/controls.md): the inbox's keys and menu, the Deck's keys, and a terminal's
+- [Agents acting on agents](docs/agent-gate.md): an agent's request to deploy, message or stop another waits in Needs you; standing permissions per project, and the activity record
 - [Agents](docs/agents.md): every harness Kipdeck runs (Claude Code, Codex, Cursor; OpenCode, Grok, Muse, DeepSeek Harness and Pi in beta), models and effort, and the prompts
 - [Configuration](docs/configuration.md): every command-line option, and where Kipdeck keeps its data
 - [Teams and servers](docs/self-hosting.md): one script each for AWS, Azure, Railway, Fly.io and Dokploy, the one-line setup for any Ubuntu or Debian server, or by hand behind Caddy or nginx; references for [AWS](docs/aws.md), [Azure](docs/azure.md), [Railway](docs/railway.md), [Fly.io](docs/fly.md) and [Dokploy](docs/dokploy.md)

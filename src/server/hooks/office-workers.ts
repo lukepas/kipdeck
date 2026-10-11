@@ -1,8 +1,8 @@
 import type http from 'node:http';
-import { stoodDown } from '../../shared/copy.js';
-import { agentRef } from '../../shared/agentname.js';
-import { notLeaving } from '../leave-on-merge.js';
-import { findWorker, readHireRequest, readHomeRequest, readPrRequest, workerRow, type PullsView } from '../office-workers.js';
+import { findWorker, readHireRequest, readHomeRequest, readPrRequest, workerRow, type HireRequest, type PullsView } from '../office-workers.js';
+import { homeList, type Reply } from '../gate/actions.js';
+import { gateOrRun } from '../gate/flow.js';
+import { PROVIDER_META } from '../../shared/providers.js';
 import { gh } from '../github.js';
 import { parsePullUrl } from '../workers/pr.js';
 import { sameRepo } from '../../shared/floors.js';
@@ -50,6 +50,8 @@ async function pullOf(floor: Floor, n: number, repo?: string): Promise<{ number:
  * (its worktree and branch go too, unless they hold work), POST /tell types a prompt to one, POST /pr
  * says which pull request is one's (for one the office couldn't tell by itself). The
  * worker's own hook token says who's asking, and the floor hears who did what, as from anyone.
+ * A hire, a tell or a send-home goes through the agent gate (gate/flow.ts): it runs at once only
+ * under a standing grant, and otherwise waits in Needs you for a person (202, with what to do meanwhile).
  */
 export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: http.ServerResponse, url: URL) {
   const workerId = url.searchParams.get('worker') ?? '';
@@ -109,39 +111,11 @@ export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: ht
   if (action === '/home') {
     const ask = readHomeRequest(body);
     if (typeof ask === 'string') return send(res, 400, { error: ask });
-    type Outcome = { worker: string; id?: string; went?: boolean; note?: string; error?: string; skipped?: string };
-    const results: Outcome[] = [];
-    const going: { w: WorkerInfo; why?: string }[] = [];
-    if (ask.merged) {
-      for (const w of floor.workers.list()) {
-        const landed = floor.landed(w);
-        if (!landed) continue;
-        const why = landed.prs?.length ? `its pull requests merged (${landed.prs.join(', ')})` : `PR #${landed.pr} merged`;
-        const staying = w.id === me.id ? "that's you" : notLeaving(w);
-        if (staying) results.push({ worker: w.name, id: w.id, skipped: `${why}, but it's ${staying}` });
-        else going.push({ w, why });
-      }
-    } else {
-      for (const key of ask.workers) {
-        const w = findWorker(floor.workers.list(), key);
-        if (typeof w === 'string') results.push({ worker: key, error: w });
-        else if (w.id === me.id) results.push({ worker: w.name, id: w.id, error: "That's you: someone else has to send you home" });
-        else if (!going.some((g) => g.w === w)) going.push({ w });
-      }
-    }
-    // One at a time: git takes a lock on the repository's refs to delete a branch.
-    for (const { w, why } of going) {
-      if (floor.workers.get(w.id) !== w) {
-        results.push({ worker: w.name, id: w.id, skipped: 'it had already gone' });
-        continue;
-      }
-      ctx.toastFloor(floor, stoodDown(agentRef(w), why, who));
-      const { note, error } = await floor.sendHome(w.id, ask.cleanup);
-      if (note) ctx.toastFloor(floor, note);
-      if (error) ctx.toastFloor(floor, error, 'warn');
-      results.push({ worker: w.name, id: w.id, went: true, ...(note ? { note } : {}), ...(error ? { error } : {}) });
-    }
-    return send(res, 200, { results });
+    const { results, going } = homeList(floor, me.id, ask);
+    // Nobody to send: nothing for a person to decide.
+    if (!going.length) return send(res, 200, { results });
+    const shown = { targets: going.map((g) => g.w.name), ...(ask.merged ? { merged: true } : {}), ...(ask.cleanup ? { details: [`Worktrees and branches: ${ask.cleanup}`] } : {}) };
+    return reply(res, await gateOrRun(ctx, floor, me, { action: 'home', ask }, shown));
   }
 
   if (action === '/tell') {
@@ -156,11 +130,7 @@ export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: ht
     // Never a fork's or an outsider's PR to check out and run (see shared/pulltrust.ts).
     const untrusted = await floor.github.checkoutProblem(text);
     if (untrusted) return send(res, 403, { error: untrusted });
-    let err = floor.workers.prompt(w.id, text, who);
-    // Stopped or asleep: it wakes up with this as its next message.
-    if (err === 'Worker is not running') err = floor.workers.resume(w.id, text);
-    if (err) return send(res, 400, { error: err });
-    return send(res, 200, { ok: true, worker: row(w.id) });
+    return reply(res, await gateOrRun(ctx, floor, me, { action: 'tell', worker: w.id, text }, { targets: [w.name], text }));
   }
 
   if (action === '/pr') {
@@ -182,27 +152,21 @@ export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: ht
   if (typeof ask === 'string') return send(res, 400, { error: ask });
   const untrusted = ask.prompt ? await floor.github.checkoutProblem(ask.prompt) : undefined;
   if (untrusted) return send(res, 403, { error: untrusted });
-  const desk = ask.desk ?? nextFreeSeat((id) => floor.workers.deskOccupied(id), floor.plan.wing)?.id;
-  if (!desk) return send(res, 409, { error: 'Every desk and bean bag is taken: send someone home first' });
-  // A model or effort is the office's default worker's unless it says whose.
-  const provider = ask.provider ?? (ask.model || ask.effort ? floor.workers.officeDefault.provider : undefined);
-  const worktree = ask.worktree ?? !!floor.project.branch;
-  // Its worktree starts from what's on GitHub now, like one hired from a desk.
-  if (worktree) await floor.workers.fetchBase();
-  if (!ctx.floors.has(floor.id)) return send(res, 410, { error: 'This floor closed' });
-  // It runs as whoever the asking worker runs as.
-  const owner = floor.workers.ownerOf(me.id);
-  const goal = ask.goal ? floor.mission.find(ask.goal) : undefined;
-  if (ask.goal && !goal) return send(res, 400, { error: `No milestone here is called ${ask.goal}: get_mission lists them` });
-  const r = floor.workers.spawn(desk, who, ask.prompt, worktree, 'agent', provider, ask.model, ask.effort, undefined, owner, [], { goal: goal?.id, issue: ask.issue });
-  if (typeof r === 'string') return send(res, 400, { error: r });
-  ctx.toastFloor(floor, `${who} deployed ${r.name}${ask.issue ? ` for issue #${ask.issue}` : ' with a task'}`);
-  if (ask.issue) {
-    const n = ask.issue;
-    floor.queue.dropIssue(n);
-    const as = owner ? ctx.signins.ghAs(owner) : undefined;
-    if (typeof as === 'string') ctx.toastFloor(floor, `Couldn't assign issue #${n} on GitHub: ${as}`, 'warn');
-    else void floor.github.claim(n, as).then((e) => e && ctx.toastFloor(floor, `Couldn't assign issue #${n} on GitHub: ${e}`, 'warn'));
-  }
-  send(res, 200, { ok: true, worker: row(r.id) });
+  if (ask.goal && !floor.mission.find(ask.goal)) return send(res, 400, { error: `No milestone here is called ${ask.goal}: get_mission lists them` });
+  return reply(res, await gateOrRun(ctx, floor, me, { action: 'hire', ask }, { text: ask.prompt, details: hireDetails(ask) }));
+}
+
+/** Sends what an action answered. */
+const reply = (res: http.ServerResponse, r: Reply) => send(res, r.status, r.body);
+
+/** What a hire asks for besides its task, in words, for the person deciding it. */
+function hireDetails(ask: HireRequest): string[] {
+  return [
+    ask.provider ? `Agent: ${PROVIDER_META[ask.provider]?.label ?? ask.provider}` : '',
+    ask.model ? `Model: ${ask.model}` : '',
+    ask.effort ? `Effort: ${ask.effort}` : '',
+    ask.issue ? `Issue #${ask.issue}` : '',
+    ask.goal ? `Milestone: ${ask.goal}` : '',
+    ask.worktree === false ? 'In the main checkout, not a worktree of its own' : '',
+  ].filter(Boolean);
 }

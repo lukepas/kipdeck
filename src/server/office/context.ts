@@ -34,6 +34,7 @@ import type { DemoDirector } from '../demo/director.js';
 import type { RundownService } from '../rundown/service.js';
 import type { BriefLog } from '../brief/log.js';
 import type { ApprovalDesk } from '../approvals.js';
+import type { AgentGate } from '../gate/store.js';
 import type { AgentProvider, FloorInfo, Me, Reminder, ReminderSnooze, ReviewPull, RosterEntry, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
 import type { Client } from './client.js';
 import type { Spot } from './input.js';
@@ -88,6 +89,8 @@ export interface BuildingServices {
   limitsOf(c: Client): PlanLimitsReader;
   /** Queues everywhere may be waiting for room under the worker limit: let them look again. */
   pumpQueues(except?: Floor): void;
+  /** Agents acting on other agents: proposals for a person, standing grants, the record (see gate/). */
+  gate: AgentGate;
 }
 
 /** Made as the floors open (office/floors.ts). */

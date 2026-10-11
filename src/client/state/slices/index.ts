@@ -13,6 +13,7 @@ import { accounts } from './accounts';
 import { approvals } from './approvals';
 import { bounties } from './bounties';
 import { floorPlan } from './floor-plan';
+import { gate } from './gate';
 import { labs } from './labs';
 import { leaveOnMerge } from './leave-on-merge';
 import { machine } from './machine';
@@ -61,4 +62,5 @@ export const SLICES: readonly Slice[] = [
   rundown,
   signal,
   approvals,
+  gate,
 ];

@@ -7,6 +7,7 @@ import { bountiesHandlers, bountiesView } from './bounties.js';
 import { briefHandlers } from './brief.js';
 import { changesHandlers, changesHooks } from './changes.js';
 import { floorHandlers, projectView } from './floors.js';
+import { gateHandlers } from './gate.js';
 import { githubHandlers, issuesView, pullsView } from './github.js';
 import { inboxHandlers } from './inbox.js';
 import { labsHandlers } from './labs.js';
@@ -38,6 +39,7 @@ export const handlers: HandlerMap<ClientMsg> = {
   ...briefHandlers,
   ...changesHandlers,
   ...floorHandlers,
+  ...gateHandlers,
   ...githubHandlers,
   ...inboxHandlers,
   ...labsHandlers,

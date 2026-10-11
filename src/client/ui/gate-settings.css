@@ -1,0 +1,13 @@
+/* Settings > Agents: standing permissions for agents, and the record of what agents did (gate-settings.ts). */
+.gate-intro { margin-bottom: 10px; }
+.gate-grants, .gate-record { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.gate-grants li, .gate-record li { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; padding: 7px 10px; background: var(--surface-2); border-radius: var(--radius); font-size: 13px; }
+.gate-grant, .gate-line { flex: 1 1 240px; min-width: 0; overflow-wrap: anywhere; }
+.gate-by { color: var(--muted); font-size: 12px; }
+.gate-grants .btn { margin-left: auto; }
+.gate-record li.o-rejected .gate-line, .gate-record li.o-failed .gate-line { color: var(--muted); }
+.gate-record li.o-proposed { box-shadow: inset 2px 0 0 var(--signal); }
+.gate-add { display: flex; flex-wrap: wrap; gap: 8px; }
+.gate-add select, .gate-add input { flex: 1 1 160px; min-width: 0; font: inherit; font-size: 14px; color: var(--text); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 7px 10px; background: var(--void); outline: none; }
+.gate-add select:focus, .gate-add input:focus { border-color: var(--act); }
+.gate-add .btn { flex: none; }
