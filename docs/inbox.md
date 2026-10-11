@@ -38,9 +38,9 @@ The words the inbox, its windows, its notifications and the CLI use:
 | task | | What an agent was asked to do, and its name |
 | branch, worktree | desk, console, seat | Where an agent's work lives |
 | Idle | Ready | An agent with nothing to do: waiting for a task, asleep, merged or snoozed |
-| Stop | send home, stand down (in the inbox) | Ending an agent's session |
+| Stop, Archive | send home, stand down | Ending an agent's session (Archive once its work is merged) |
 
-`tests/one-name.test.ts` holds this: it reads every string of those surfaces (`src/client/home/`, `notify.ts`, Mission control, Signal and Rundown's windows, the shared ranking, Signal and reminder rules, and the server's CLI help, setup, webhook, timeline, toasts and errors) and fails when one says worker, floor, desk, unit, crew, office or elevator, uses a nickname, or puts an agent's nickname or seat code into a string instead of going through `agentname.ts`. Identifiers are not copy and stay: the `.agent-office` data folder, the `AGENT_OFFICE_*` variables, `office/*` branches and flags such as `--max-workers`.
+`tests/one-name.test.ts` holds this: it reads every string of those surfaces (`src/client/home/`, `notify.ts`, Mission control, Signal and Rundown's windows, the Changes, queue, GitHub and stop dialogs the inbox opens, the shared ranking, Signal and reminder rules, and the server's CLI help, setup, project list, webhook, timeline, toasts and errors) and fails when one says worker, floor, desk, unit, crew, office or elevator, uses a nickname, or puts an agent's nickname or seat code into a string instead of going through `agentname.ts`. Identifiers are not copy and stay: the `.agent-office` data folder, the `AGENT_OFFICE_*` variables, `office/*` branches and flags such as `--max-workers`.
 
 ## The first visit
 

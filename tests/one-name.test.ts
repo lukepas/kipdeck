@@ -11,6 +11,8 @@ import path from 'node:path';
 import { literals } from './support/literals.ts';
 import { agentBadge, agentHeading, agentName, agentRef, alertTitle, taskTitle } from '../src/shared/agentname.ts';
 import { NAMES } from '../src/server/workers/worker.ts';
+import { stoodDown } from '../src/shared/copy.ts';
+import { reviewInbox } from '../src/shared/review.ts';
 
 const root = path.join(import.meta.dirname, '..');
 
@@ -26,6 +28,14 @@ export const SURFACES: readonly string[] = [
   ...tsFiles('src/client/home'),
   'src/client/notify.ts',
   'src/client/ui/agentbadge.ts',
+  // The windows the inbox docks in its pane or opens over itself: Changes, the stop dialogs, the queue.
+  'src/client/ui/changes.ts',
+  'src/client/ui/sendhome.ts',
+  'src/client/ui/prompt.ts',
+  'src/client/ui/queue.ts',
+  'src/client/ui/boards.ts',
+  'src/client/ui/github/issue-window.ts',
+  'src/client/ui/github/pull-window.ts',
   ...tsFiles('src/client/ui/mission'),
   ...tsFiles('src/client/ui/signal'),
   ...tsFiles('src/client/ui/rundown'),
@@ -60,6 +70,11 @@ export const SURFACES: readonly string[] = [
   'src/server/workers/worktree.ts',
   'src/server/workers/says.ts',
   'src/server/queue.ts',
+  'src/server/building.ts',
+  'src/server/floor.ts',
+  'src/server/changes.ts',
+  'src/server/ws/handlers/floors.ts',
+  'src/server/rundown/service.ts',
 ];
 
 /** The old vocabulary, as a whole word. */

@@ -43,7 +43,7 @@ const USAGE_SCAN_MS = 10_000;
 /** How often a terminal with new output is saved to disk, so even a crash loses at most this much. */
 const SAVE_SCROLLBACK_MS = 15_000;
 /** Between a worker's saved scrollback and what it prints after the office restarted. */
-const RESTORED_NOTE = '\x1b[2m──── the office restarted · earlier output above ────\x1b[0m\r\n';
+const RESTORED_NOTE = '\x1b[2m──── Kipdeck restarted · earlier output above ────\x1b[0m\r\n';
 
 export class WorkerManager {
   private workers = new Map<string, Worker>();
@@ -126,7 +126,7 @@ export class WorkerManager {
     this.tasks = new WorkerTasks(this.ctx, claude, childEnv());
     this.worktrees = new WorkerTrees(this.ctx);
     this.prs = new WorkerPrs(this.ctx);
-    this.host = new PtyHost(dataDir, () => this.events.toast("The workers' terminal host stopped - resuming them", 'warn'));
+    this.host = new PtyHost(dataDir, () => this.events.toast("The agents' terminal host stopped - resuming them", 'warn'));
     this.scrollback = new ScrollbackStore(dataDir);
     this.drops = new DropStore(dataDir);
     restoreWorkers(this.statePath, this.dir, this.workers, this.defaultProvider, (deskId) => this.deskOccupied(deskId));
@@ -252,8 +252,8 @@ export class WorkerManager {
     if (seat.station && !prompt?.trim()) return 'Tell the board agent what to do';
     if (!seat.room !== !meeting) return seat.room ? 'Only a meeting seats workers at the meeting table: call one in the meeting room' : 'A meeting seats its workers at the meeting table';
     if (meeting && (kind !== 'agent' || worktree)) return 'A meeting seats agents, in its own worktree';
-    if (repos.length && (kind !== 'agent' || !worktree || seat.station || meeting)) return 'Only a worker in its own worktree can work in other repositories too';
-    if (repos.length > MAX_REPOS) return `A worker can take on at most ${MAX_REPOS} other repositories`;
+    if (repos.length && (kind !== 'agent' || !worktree || seat.station || meeting)) return 'Only an agent in its own worktree can work in other repositories too';
+    if (repos.length > MAX_REPOS) return `An agent can take on at most ${MAX_REPOS} other repositories`;
     if (kind === 'shell' && provider !== undefined) return 'Shell workers do not have an agent provider';
     if (kind === 'agent' && selectedProvider === 'custom' && this.defaultProvider !== 'custom') return 'Custom is not the configured agent provider';
     if (kind === 'agent') {
@@ -326,7 +326,7 @@ export class WorkerManager {
   resume(id: string, prompt?: string): string | undefined {
     const w = this.workers.get(id);
     if (!w) return 'No such agent';
-    if (w.pty || w.dsh) return 'Worker is already running';
+    if (w.pty || w.dsh) return 'That agent is already running';
     if (this.worktrees.checkLost(w, true)) return lostMessage(w.info);
     clockWork(w.info, 'starting');
     w.info.status = 'starting';
@@ -525,7 +525,7 @@ export class WorkerManager {
       this.emitUpdate(w);
       return undefined;
     }
-    if (!w.pty) return 'Worker is not running';
+    if (!w.pty) return 'That agent is not running';
     const clean = text.replace(/\r\n?/g, '\n').trim();
     if (!clean) return 'Empty prompt';
     // Bracketed paste keeps multi-line prompts in one message, then Enter submits.

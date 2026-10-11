@@ -58,14 +58,14 @@ export function repoPicker(options: { id: string; name: string }[] | undefined, 
 }
 
 export function openPrompt(opts: PromptOptions) {
-  const ta = h('textarea', { rows: 7, placeholder: opts.placeholder ?? 'What should the worker work on?', 'aria-label': 'Prompt' }) as HTMLTextAreaElement;
+  const ta = h('textarea', { rows: 7, placeholder: opts.placeholder ?? 'What should the agent work on?', 'aria-label': 'Prompt' }) as HTMLTextAreaElement;
   ta.value = opts.initial ?? '';
   const wtBox = h('input', { type: 'checkbox', id: 'wt-toggle' }) as HTMLInputElement;
   wtBox.checked = worktreePref();
   const wtRow = opts.worktreeOption
     ? h(
         'label',
-        { for: 'wt-toggle', style: 'display:flex;gap:8px;align-items:center;margin:10px 0 0;font-weight:700;cursor:pointer', title: 'Isolate this worker on its own branch so parallel workers never collide' },
+        { for: 'wt-toggle', style: 'display:flex;gap:8px;align-items:center;margin:10px 0 0;font-weight:700;cursor:pointer', title: 'Keep this agent on its own branch so agents working in parallel never collide' },
         wtBox,
         'Work in its own git worktree & branch',
     )
@@ -162,15 +162,15 @@ function inspectWorktree(workerId: string, ask: () => void): Promise<WorktreeSta
     setTimeout(() => {
       if (worktreeChecks.get(workerId) !== resolve) return;
       worktreeChecks.delete(workerId);
-      resolve({ exists: true, dirty: 0, ahead: 0, unpushed: 0, error: 'the office did not answer' });
+      resolve({ exists: true, dirty: 0, ahead: 0, unpushed: 0, error: 'Kipdeck did not answer' });
     }, 8000);
   });
 }
 
 const CLEANUP_LABEL: Record<WorktreeCleanup, string> = {
-  all: 'Stand down and remove both',
-  worktree: 'Stand down and remove worktree',
-  keep: 'Stand down',
+  all: 'Stop and remove both',
+  worktree: 'Stop and remove worktree',
+  keep: 'Stop agent',
 };
 
 /**
@@ -220,12 +220,12 @@ export function sendHomeDialog(opts: SendHomeOptions) {
   const no = h('button.btn', { type: 'button' }, 'Never mind');
   const form = h(
     'form.modal',
-    { role: 'dialog', 'aria-label': `Send ${opts.name} home?` },
-    h('header', {}, h('h2', {}, `Send ${opts.name} home?`)),
+    { role: 'dialog', 'aria-label': `Stop ${opts.name}?` },
+    h('header', {}, h('h2', {}, `Stop ${opts.name}?`)),
     h(
       'div.body',
       {},
-      h('p', { style: 'margin:0 0 12px;font-weight:700' }, `This stops the session at ${opts.where} for everyone and frees the desk. ${opts.name} worked ${across ? `in worktrees of ${across.join(', ')}, each` : 'in its own worktree'} on ${branch}:`),
+      h('p', { style: 'margin:0 0 12px;font-weight:700' }, `This stops its session for everyone. It worked ${across ? `in worktrees of ${across.join(', ')}, each` : 'in its own worktree'} on ${branch}:`),
       list,
       status,
     ),
@@ -285,7 +285,7 @@ export function lostWorktreeDialog(opts: LostWorktreeOptions) {
   }[opts.lost.branch];
   const one = h('button.btn.primary', { type: 'button' }, 'Rebuild worktree');
   const all = others.length ? h('button.btn', { type: 'button' }, `Rebuild all ${others.length + 1}`) : null;
-  const home = h('button.btn.danger', { type: 'button' }, 'Stand down...');
+  const home = h('button.btn.danger', { type: 'button' }, 'Stop agent...');
   const look = opts.openTerminal ? h('button.btn', { type: 'button' }, 'Open terminal') : null;
   const el = h(
     'div.modal.lost-worktree',

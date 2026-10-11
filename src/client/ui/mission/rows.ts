@@ -45,7 +45,7 @@ function moreMenu(deps: MissionDeps, r: Ranked): HTMLElement {
       ? [btn('Wake it up', () => snooze(deps.net, e, null), 'Take the snooze off: it asks for attention again')]
       : [...SNOOZE_CHOICES.map((c) => btn(`Snooze ${c.label}`, () => snooze(deps.net, e, Date.now() + c.ms))), btn('Snooze until it changes', () => snooze(deps.net, e, 'change'))]),
     linkPicker(deps, r),
-    btn('Stand down', () => runAction(deps, e, 'send-home')),
+    btn('Stop', () => runAction(deps, e, 'send-home')),
   );
 }
 
@@ -61,7 +61,7 @@ export function rosterRow(deps: MissionDeps, r: Ranked, now: number, opts: { sho
   const link = e.goalTitle || e.issue ? linkLabel(e) : '';
   const more = moreMenu(deps, r);
   more.hidden = !expanded.has(e.id);
-  const toggle = h('button.btn.icon.mc-dots', { type: 'button', 'aria-label': `More for ${agentRef(e)}`, 'aria-expanded': String(!more.hidden), title: 'Snooze, link to a milestone, open the terminal, stand down' }, icon('more', 16));
+  const toggle = h('button.btn.icon.mc-dots', { type: 'button', 'aria-label': `More for ${agentRef(e)}`, 'aria-expanded': String(!more.hidden), title: 'Snooze, link to a milestone, open the terminal, stop' }, icon('more', 16));
   toggle.addEventListener('click', () => {
     more.hidden = !more.hidden;
     if (more.hidden) expanded.delete(e.id);

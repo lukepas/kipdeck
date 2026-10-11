@@ -173,8 +173,8 @@ export class Building {
    */
   cancel(id: string, why: string, may: (owner: string | undefined) => boolean): string | undefined {
     const p = this.pendingFloor(id);
-    if (!p) return this.defs.some((d) => d.id === id) ? 'That floor is already there' : 'No such project';
-    if (!may(p.owner)) return 'Only admins, or whoever added it, can stop a floor on its way';
+    if (!p) return this.defs.some((d) => d.id === id) ? 'That project is already there' : 'No such project';
+    if (!may(p.owner)) return 'Only admins, or whoever added it, can stop a project on its way';
     if (!p.run) return "There's no clone to stop yet - try again in a moment";
     p.run.stop(why);
     return undefined;
@@ -198,7 +198,7 @@ export class Building {
       if (!run) {
         dropLog(s.log);
         if (checkoutAt(def.dir, repo, pending.empty) !== 'ok') {
-          done(`Cloning ${repo} stopped when the office restarted - add it again`);
+          done(`Cloning ${repo} stopped when Kipdeck restarted - add it again`);
           continue;
         }
         this.defs.push(def);
@@ -226,7 +226,7 @@ export class Building {
   shutdown(keep: boolean) {
     for (const p of this.cloning.values()) {
       if (keep) p.run?.release();
-      else p.run?.stop('The office closed before the clone finished');
+      else p.run?.stop('Kipdeck closed before the clone finished');
     }
     if (keep) return;
     this.cloning.clear();
@@ -266,7 +266,7 @@ export class Building {
     const known = this.defs.find((d) => path.resolve(d.dir) === abs);
     if (known) return known;
     if (!existsSync(abs) || !statSync(abs).isDirectory()) return `${tildify(abs)} isn't a folder`;
-    if (this.defs.length + this.cloning.size >= MAX_FLOORS) return `The building is full (${MAX_FLOORS} floors)`;
+    if (this.defs.length + this.cloning.size >= MAX_FLOORS) return `There is no room for another project (${MAX_FLOORS} at most)`;
     const overlaps = this.defs.find((d) => within(abs, path.resolve(d.dir)) || within(path.resolve(d.dir), abs));
     if (overlaps) return `${tildify(abs)} overlaps the ${overlaps.name} project's checkout (${tildify(overlaps.dir)})`;
     const repo = originRepo(abs);
@@ -291,7 +291,7 @@ export class Building {
    */
   remove(id: string, by = '?'): FloorDef | string {
     const def = this.defs.find((d) => d.id === id);
-    if (!def) return this.pendingFloor(id) ? "That floor is still being cloned - stop it, or take it off once it's there" : 'No such project';
+    if (!def) return this.pendingFloor(id) ? "That project is still being cloned - stop it, or remove it once it's there" : 'No such project';
     this.defs = this.defs.filter((d) => d !== def);
     if (this.isLocal(id)) {
       this.localId = undefined;
@@ -311,9 +311,9 @@ export class Building {
   async add(input: string, by: string, started: (def: FloorDef) => void, account?: string, anyRepo = true): Promise<FloorDef | string> {
     const wanted = normalizeRepo(input);
     if (!wanted) return 'Pick a repository, or type it as owner/name';
-    if (this.defs.some((d) => sameRepo(d.repo, wanted))) return `${wanted} already has a floor`;
+    if (this.defs.some((d) => sameRepo(d.repo, wanted))) return `${wanted} is already a project`;
     if (this.cloning.has(wanted.toLowerCase())) return `${wanted} is already being cloned`;
-    if (this.defs.length + this.cloning.size >= MAX_FLOORS) return `The building is full (${MAX_FLOORS} floors)`;
+    if (this.defs.length + this.cloning.size >= MAX_FLOORS) return `There is no room for another project (${MAX_FLOORS} at most)`;
     // The office's own checkout, taken off before: it moves back in where it is, not into a second clone.
     const home = this.local;
     if (this.localOff && home && sameRepo(home.repo, wanted) && existsSync(home.dir)) {
@@ -332,16 +332,16 @@ export class Building {
       const view = JSON.parse(await gh(['repo', 'view', wanted, '--json', 'nameWithOwner,isEmpty,viewerPermission'], this.dataDir, 30_000)) as { nameWithOwner?: string; isEmpty?: boolean; viewerPermission?: string };
       repo = normalizeRepo(view.nameWithOwner) ?? wanted;
       empty = view.isEmpty === true;
-      if (!anyRepo && !PUSHERS.has(String(view.viewerPermission))) return `Only admins can add a floor for ${repo}: the office's GitHub login can't push to it`;
+      if (!anyRepo && !PUSHERS.has(String(view.viewerPermission))) return `Only admins can add a project for ${repo}: Kipdeck's GitHub login can't push to it`;
     } catch (err) {
       return `Couldn't find ${wanted} on GitHub: ${(err as Error).message}`;
     }
     const key = repo.toLowerCase();
-    if (this.defs.some((d) => sameRepo(d.repo, repo))) return `${repo} already has a floor`;
+    if (this.defs.some((d) => sameRepo(d.repo, repo))) return `${repo} is already a project`;
     if (this.cloning.has(key)) return `${repo} is already being cloned`;
     const [owner, name] = repo.split('/');
     const dest = path.join(this.projectsDir, owner, name);
-    if (this.defs.some((d) => path.resolve(d.dir) === dest)) return `${dest} is already a floor`;
+    if (this.defs.some((d) => path.resolve(d.dir) === dest)) return `${dest} is already a project`;
     const def = this.newDef(name, repo, dest, by);
     const pending: Pending = { def, owner: account, empty };
     this.cloning.set(key, pending);
@@ -377,7 +377,7 @@ export class Building {
     } catch (err) {
       return `Couldn't make ${this.logsDir}: ${(err as Error).message}`;
     }
-    if (symlinkOnTheWay(this.logsDir)) return `${this.logsDir} is a symlink; the office only writes its clone logs in a real folder`;
+    if (symlinkOnTheWay(this.logsDir)) return `${this.logsDir} is a symlink; Kipdeck only writes its clone logs in a real folder`;
     const run = await CloneRun.start(repo, dest, path.join(this.logsDir, `${repo.replace('/', '__')}.log`), { ...this.opts.clone, changed: () => this.cloneChanged?.() });
     if (typeof run === 'string') return run;
     p.run = run;
@@ -483,7 +483,7 @@ export class Building {
     try {
       writeState(this.file, JSON.stringify(this.defs, null, 2));
     } catch (err) {
-      console.error(`kipdeck: couldn't save the floors: ${(err as Error).message}`);
+      console.error(`kipdeck: couldn't save the projects: ${(err as Error).message}`);
     }
   }
 

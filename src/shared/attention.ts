@@ -66,7 +66,7 @@ export const ACTION_LABEL: Record<NextAction, string> = {
   'hand-back': 'Hand back',
   resume: 'Resume',
   rebuild: 'Rebuild',
-  'send-home': 'Stand down',
+  'send-home': 'Archive',
   'give-task': 'Give it a task',
   'approve-payout': 'Approve payout',
   'set-wallet': 'Set payout wallet',
@@ -153,7 +153,7 @@ export function attention(e: RosterEntry, now: number): Attention {
     const forgotten = ago >= FORGOTTEN_MS;
     return at('review', 'review', waited, forgotten ? 'Done, nobody looked' : 'Done', forgotten ? `forgotten: done ${duration(ago)} ago, nobody looked` : `done ${duration(ago)} ago`);
   }
-  if (pr?.state === 'merged' && !busy) return at('review', 'send-home', waited, `PR #${pr.number} merged`, `PR #${pr.number} merged: it can stand down`);
+  if (pr?.state === 'merged' && !busy) return at('review', 'send-home', waited, `PR #${pr.number} merged`, `PR #${pr.number} merged: it can be archived`);
   if (pr?.state === 'open' && !busy) {
     if (pr.conflicting) return at('review', 'hand-back', waited, `PR #${pr.number} has conflicts`, `PR #${pr.number} has merge conflicts`);
     if (pr.review === 'changes') return at('review', 'hand-back', waited, `PR #${pr.number}: changes asked`, `PR #${pr.number}: changes requested`);

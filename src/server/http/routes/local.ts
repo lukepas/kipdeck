@@ -1,7 +1,7 @@
 // What commands on this computer ask the running office for (`kipdeck open`, `kipdeck attach`):
 // only from this computer, never from a page (no Origin), and only with the local key from the
 // office's local.json, which only its owner can read (see local.ts).
-import { agentRef } from '../../../shared/agentname.js';
+import { agentHeading, agentRef } from '../../../shared/agentname.js';
 import { existsSync, statSync } from 'node:fs';
 import type http from 'node:http';
 import path from 'node:path';
@@ -102,7 +102,7 @@ export const localRoutes = {
         floor.workers.annotate(info.id, {});
       }
       ctx.toastAll(`${by} attached a ${PROVIDER_META[provider].name} session to ${floor.def.name}`);
-      return send(res, 200, { worker: info.id, name: info.name, project: floor.def.name });
+      return send(res, 200, { worker: info.id, name: agentHeading(info), project: floor.def.name });
     },
   },
 } satisfies Record<string, Route>;

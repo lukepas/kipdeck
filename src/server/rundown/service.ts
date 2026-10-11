@@ -38,7 +38,7 @@ const CACHE_MAX = 50_000;
 /** The longest anyone waits on ensure() (the download route) before hearing there's none (ms). */
 export const ENSURE_MS = 45_000;
 /** What a page is told when a computation failed; the detail (which may hold a server path) is logged. */
-export const READ_ERROR = "Couldn't read this project. The office's log says why.";
+export const READ_ERROR = "Couldn't read this project. Kipdeck's log says why.";
 
 export const OFFICE_VERSION = '1.0.0';
 /** How long after a floor is primed its first map starts, so opening the office isn't slowed by it (ms). */

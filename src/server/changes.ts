@@ -18,7 +18,7 @@ const MAX_COUNT_BYTES = 8 * 1024 * 1024;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
 export interface ChangesTarget {
-  /** The worker's name, for toasts. */
+  /** The agent as a sentence names it (shared/agentname.ts agentRef), for toasts. */
   name: string;
   /** Absolute directory it works in. */
   cwd: string;
@@ -289,7 +289,7 @@ export class Changes {
       await git(['add', '-A'], t.cwd);
       await git(['commit', '-q', '-m', msg], t.cwd, 120_000, env);
       const subject = msg.split('\n')[0];
-      this.events.toast(`${who} committed "${subject.length > 60 ? `${subject.slice(0, 57)}...` : subject}" at ${t.name}'s desk`, 'info');
+      this.events.toast(`${who} committed "${subject.length > 60 ? `${subject.slice(0, 57)}...` : subject}" for ${t.name}`, 'info');
     });
   }
 
@@ -301,12 +301,12 @@ export class Changes {
         if (!file?.uncommitted) return 'That file has no uncommitted changes';
         if (file.status === '?') await git(['clean', '-f', '--', file.path], t.cwd);
         else await git(['restore', '--source=HEAD', '--staged', '--worktree', '--', ...(file.from ? [file.from] : []), file.path], t.cwd);
-        this.events.toast(`${who} discarded the changes to ${path.basename(file.path)} at ${t.name}'s desk`, 'info');
+        this.events.toast(`${who} discarded the changes to ${path.basename(file.path)} for ${t.name}`, 'info');
       } else {
         const n = w.last?.files.filter((f) => f.uncommitted).length ?? 0;
         await git(['reset', '-q', '--hard'], t.cwd);
         await git(['clean', '-fd'], t.cwd);
-        this.events.toast(`${who} discarded ${n ? `${n} uncommitted change${n > 1 ? 's' : ''}` : 'the uncommitted changes'} at ${t.name}'s desk`, 'info');
+        this.events.toast(`${who} discarded ${n ? `${n} uncommitted change${n > 1 ? 's' : ''}` : 'the uncommitted changes'} of ${t.name}`, 'info');
       }
       return undefined;
     });
