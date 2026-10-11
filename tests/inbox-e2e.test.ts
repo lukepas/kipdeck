@@ -123,6 +123,26 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   // First run: one card, one button, and no checklist or Shipped today yet.
   await page.locator('.first-run').waitFor({ timeout: 15_000 });
   assert.equal(await page.locator('#checklist:not(.hidden)').count(), 0);
+  // The task box asks what you were about to ask, with three suggestions from the repository; one
+  // fills the box, and Deploy opens the sheet on it.
+  await page.locator('.first-run .st-ask', { hasText: /^What were you about to ask .+\?$/ }).waitFor({ timeout: 30_000 });
+  const chips = page.locator('.first-run .st-chip');
+  await chips.first().waitFor({ timeout: 15_000 });
+  assert.equal(await chips.count(), 3);
+  assert.equal(await page.locator('.first-run .st-go').isDisabled(), true, 'nothing to deploy until there is a task');
+  await page.locator('#first-task').fill('Fix the typo in the footer');
+  assert.equal(await page.locator('.first-run .st-go').isDisabled(), false, 'typing a task enables Deploy');
+  const picked = (await chips.nth(1).getAttribute('title')) ?? '';
+  await chips.nth(1).click();
+  assert.equal(await page.locator('#first-task').inputValue(), picked);
+  // The empty pane shows the loop's three steps (whatever the labs), not a blueprint.
+  assert.deepEqual((await page.locator('.pane .pv-step .pv-sec').allInnerTexts()).map((s) => s.trim()), ['It works', 'It asks', 'You review']);
+  await page.locator('.first-run .st-go').click();
+  const firstSheet = page.locator('.modal.deploy');
+  await firstSheet.waitFor();
+  assert.equal(await firstSheet.locator('#deploy-prompt').inputValue(), picked);
+  await page.keyboard.press('Escape');
+  await firstSheet.waitFor({ state: 'detached' });
 
   await deploy(page, '[ask] Fix the flaky checkout test (demo)');
   await row(page, 'needs-you', 'Fix the flaky checkout test').waitFor({ timeout: 30_000 });

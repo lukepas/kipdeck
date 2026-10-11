@@ -288,7 +288,8 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
     if (!e) {
       if (home.selected && !store.rosterEntry(home.selected)) home.selected = undefined;
       // While the Deck lab is on (it ships on), the project's deck plan fills the empty pane (loaded only then).
-      if (store.lab('bridge')) void showPlan();
+      // Before the first agent the loop's three steps show instead (preview.ts), whatever the labs.
+      if (store.lab('bridge') && store.roster.length) void showPlan();
       else {
         // Drawn again only when what it says changes, so a roster tick doesn't restart the cleared check.
         const next = emptyState(actions);

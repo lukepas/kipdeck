@@ -38,7 +38,7 @@ function timeline(a: DemoAgent) {
   return out;
 }
 
-test('the fleet: five agents on Claude Code, Codex and Cursor; one asks at about 0:20, one finishes at about 0:35, two keep working', () => {
+test('the fleet: five agents on Claude Code, Codex and Cursor; it opens with one in Needs you and one in To review, a third at about 0:50, two keep working', () => {
   assert.equal(FLEET.length, 5);
   assert.deepEqual([...new Set(FLEET.map((a) => a.provider))].sort(), ['claude', 'codex', 'cursor']);
   assert.equal(new Set(FLEET.map((a) => a.key)).size, 5);
@@ -48,8 +48,11 @@ test('the fleet: five agents on Claude Code, Codex and Cursor; one asks at about
     assert.ok(desk && deskBuilt(desk, 0) && !desk.station && !desk.room, `${a.deskId} is a desk on the first wing`);
   }
   const at = Object.fromEntries(FLEET.map((a) => [a.key, timeline(a)]));
-  assert.ok(at['flaky-test'].ask! >= 15 && at['flaky-test'].ask! <= 25, `asks at ${at['flaky-test'].ask}`);
-  assert.ok(at['rate-limit'].finish! >= 30 && at['rate-limit'].finish! <= 40, `finishes at ${at['rate-limit'].finish}`);
+  // Within seconds of opening, the demo has a question to answer and a change to review (the coach strip's first two steps).
+  assert.ok(at['flaky-test'].ask! >= 2 && at['flaky-test'].ask! <= 6, `asks at ${at['flaky-test'].ask}`);
+  assert.ok(at['rate-limit'].finish! >= 8 && at['rate-limit'].finish! <= 15, `finishes at ${at['rate-limit'].finish}`);
+  // The question comes first, well ahead, so the pane opens on it by itself.
+  assert.ok(at['rate-limit'].finish! - at['flaky-test'].ask! >= 5, 'the question comes first');
   assert.ok(at.readme.finish! >= 45 && at.readme.finish! <= 55);
   for (const key of ['sdk', 'settings']) {
     const a = FLEET.find((x) => x.key === key)!;

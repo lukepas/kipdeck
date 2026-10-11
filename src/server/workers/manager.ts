@@ -234,9 +234,9 @@ export class WorkerManager {
    * (see meetings.ts), in the meeting's own worktree, which everyone at the table shares. `repos` are
    * other floors' repositories a worker in its own worktree works in too (see makeWorkspace). `link`
    * is the issue it's there for and the milestone it works towards (see MissionHooks.goalFor), and
-   * `session` one of its CLI's own sessions to carry on (`kipdeck attach` adopting it).
+   * `session` one of its CLI's own sessions to carry on (adopt.ts), `fork` a copy of it.
    */
-  spawn(deskId: string, by: string, prompt?: string, worktree = false, kind: WorkerKind = 'agent', provider?: AgentProvider, model?: string, effort?: AgentEffort, meeting?: { id: string; worktree?: WorkerInfo['worktree'] }, owner?: string, repos: RepoSource[] = [], link: { goal?: string; issue?: number; session?: string } = {}): WorkerInfo | string {
+  spawn(deskId: string, by: string, prompt?: string, worktree = false, kind: WorkerKind = 'agent', provider?: AgentProvider, model?: string, effort?: AgentEffort, meeting?: { id: string; worktree?: WorkerInfo['worktree'] }, owner?: string, repos: RepoSource[] = [], link: { goal?: string; issue?: number; session?: string; fork?: boolean } = {}): WorkerInfo | string {
     // Nobody picked (a board agent, say): the office's default worker, model and effort included.
     if (kind === 'agent' && provider === undefined) ({ provider, model, effort } = this.officeDefault);
     const selectedProvider = kind === 'agent' ? provider : undefined;
@@ -307,7 +307,7 @@ export class WorkerManager {
       meeting: meeting?.id,
       issue: kind === 'agent' ? link.issue : undefined,
       goal: kind === 'agent' ? this.mission.goalFor(link.goal, link.issue) : undefined,
-      sessionId: kind === 'agent' ? link.session : undefined,
+      sessionId: kind === 'agent' ? link.session : undefined, forkOf: kind === 'agent' && link.fork ? link.session : undefined,
     };
     const w = newWorker(info, newTracker());
     w.owner = owner;
