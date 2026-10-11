@@ -28,6 +28,7 @@ import type { UsageClientMsg, UsageServerMsg } from './protocol/usage.js';
 import type { WorkerClientMsg, WorkerServerMsg } from './protocol/workers.js';
 import type { RundownClientMsg, RundownServerMsg } from './protocol/rundown.js';
 import type { SignalClientMsg, SignalServerMsg } from './protocol/signal.js';
+import type { ApprovalsClientMsg, ApprovalsServerMsg } from './protocol/approvals.js';
 
 export * from './protocol/accounts.js';
 export * from './protocol/agents.js';
@@ -54,6 +55,7 @@ export * from './protocol/usage.js';
 export * from './protocol/workers.js';
 export * from './protocol/rundown.js';
 export * from './protocol/signal.js';
+export * from './protocol/approvals.js';
 
 export type ClientMsg =
   | PresenceClientMsg
@@ -81,7 +83,8 @@ export type ClientMsg =
   | SetupClientMsg
   | RundownClientMsg
   | SignalClientMsg
-  | BriefClientMsg;
+  | BriefClientMsg
+  | ApprovalsClientMsg;
 
 export type ServerMsg =
   | PresenceServerMsg
@@ -107,4 +110,5 @@ export type ServerMsg =
   | SetupServerMsg
   | RundownServerMsg
   | SignalServerMsg
-  | BriefServerMsg;
+  | BriefServerMsg
+  | ApprovalsServerMsg;

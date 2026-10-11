@@ -21,6 +21,7 @@ import * as lazy from './lazy';
 import { agentMark, currentView, entryTitle, waitingNow, whereLabel } from './list';
 import { commentsOf, installBrief, reviewBrief } from './brief';
 import { questionCard } from './question';
+import { approvalCard } from './approval';
 import { emptyState, markCleared, placeDeckPlan } from './empty';
 import { home, type PaneTab } from './state';
 
@@ -69,9 +70,10 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
   const tabs = h('nav.pane-tabs', { role: 'tablist', 'aria-label': 'Agent' });
   const review = h('div.pane-review');
   const card = questionCard(net);
+  const approval = approvalCard(net);
   const body = h('div.pane-body');
   const empty = h('div.pane-empty');
-  root.replaceChildren(empty, back, head, tabs, review, card.el, body);
+  root.replaceChildren(empty, back, head, tabs, review, approval.el, card.el, body);
   installBrief(net, body);
 
   /** What the body shows now, so a re-render only remounts when that changes. */
@@ -227,7 +229,8 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
       home.select(e.id, 'changes');
       return;
     }
-    card.show(e);
+    // A permission request from the agent's hook takes the question card's place (approval.ts).
+    card.show(approval.show(e) ? undefined : e);
     root.classList.toggle('has-agent', !!e);
     document.body.classList.toggle('pane-open', home.paneOpen && !!e);
     if (!e) {

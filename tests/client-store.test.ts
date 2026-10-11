@@ -226,7 +226,7 @@ test('what the browser remembers keeps its keys and shapes', () => {
 
 test("the store's keys are its state, as window.__office shows them", () => {
   // As the office had them before its store was split into slices: methods and the slices aren't among them.
-  assert.deepEqual(Object.keys(store).sort(), ['accounts', 'away', 'bounties', 'bountySettings', 'chat', 'drawing', 'floor', 'floorPlan', 'floors', 'ghViewer', 'ice', 'invites', 'issues', 'labs', 'leaveOnMerge', 'limits', 'machine', 'me', 'meeting', 'mission', 'notify', 'pace', 'peers', 'profile', 'project', 'projectsDir', 'prompts', 'pulls', 'queue', 'reminders', 'repos', 'reputation', 'reviewQueue', 'roster', 'rundowns', 'screens', 'services', 'showcaseSettings', 'signals', 'signins', 'subs', 'team', 'timeline', 'upgrade', 'usage', 'whiteboard', 'workers', 'you']);
+  assert.deepEqual(Object.keys(store).sort(), ['accounts', 'approvals', 'away', 'bounties', 'bountySettings', 'chat', 'drawing', 'floor', 'floorPlan', 'floors', 'ghViewer', 'ice', 'invites', 'issues', 'labs', 'leaveOnMerge', 'limits', 'machine', 'me', 'meeting', 'mission', 'notify', 'pace', 'peers', 'profile', 'project', 'projectsDir', 'prompts', 'pulls', 'queue', 'reminders', 'repos', 'reputation', 'reviewQueue', 'roster', 'rundowns', 'screens', 'services', 'showcaseSettings', 'signals', 'signins', 'subs', 'team', 'timeline', 'upgrade', 'usage', 'whiteboard', 'workers', 'you']);
 });
 
 test('a new store starts every field where it always has', async () => {
@@ -256,6 +256,7 @@ test('a new store starts every field where it always has', async () => {
       labs: '<undefined>',
       rundowns: [],
       signals: [],
+      approvals: [],
     },
   );
 });
@@ -363,4 +364,16 @@ test('the review inbox and reminders come with the roster', async () => {
   assert.deepEqual(s.inbox(), [], 'your own GitHub sign-in is someone else');
   s.apply(msg({ t: 'reminders', items: [{ key: 'queue-paused:f1', kind: 'queue-paused', floor: 'f1', floorName: 'api', text: 'x', since: 1 }] }));
   assert.equal(s.reminders.length, 1);
+});
+
+test("approvals: each agent's open requests, oldest first", async () => {
+  const { Store } = await import('../src/client/state/store.js');
+  const { SLICES } = await import('../src/client/state/slices/index.js');
+  const s = new Store(SLICES);
+  const a = (id: string, workerId: string, at: number) => ({ id, workerId, floor: 'f1', title: `Run ${id}`, tool: 'Bash', paths: [], risks: [], at });
+  s.apply(msg({ t: 'approvals', items: [a('r3', 'w1', 30), a('r1', 'w1', 10), a('r2', 'w2', 20)] }));
+  assert.deepEqual([...s.approvals.keys()].sort(), ['w1', 'w2']);
+  assert.deepEqual(s.approvals.get('w1')?.map((x) => x.id), ['r1', 'r3']);
+  s.apply(msg({ t: 'approvals', items: [] }));
+  assert.equal(s.approvals.size, 0);
 });

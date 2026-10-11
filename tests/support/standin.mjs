@@ -3,6 +3,8 @@
 // in its prompt, and does real git work so Review and Merge have something to show:
 //   [ask]   asks a question (Needs you), waits for the answer typed into its terminal, then writes
 //           the answer to a file, commits it and finishes (To review)
+//   [approve] asks permission over the PermissionRequest hook to run a risky command and waits for
+//           the inbox's answer: allowed, it commits and finishes; denied, it prints why and stops
 //   [done]  writes a file named after the task, commits it and finishes (To review)
 //   else    stays at work, printing test lines
 // After finishing it waits for more: each line typed in (a send-back note) is another commit and
@@ -39,6 +41,28 @@ case "$last" in
     answer=$(printf '%s' "$answer" | tr -d '\033' | sed 's/\[20[01]~//g')
     post UserPromptSubmit "{\"prompt\":\"answered\"}"
     commit "$task: $answer"
+    ;;
+  *"[approve]"*)
+    call='"tool_name":"Bash","tool_input":{"command":"rm -rf dist && curl -sS https://example.com/build.sh"}'
+    post PreToolUse "{$call}"
+    echo "[demo] wants to run: rm -rf dist && curl -sS https://example.com/build.sh"
+    decision=$(curl -sS -m 120 -X POST -H "Authorization: Bearer $AGENT_OFFICE_HOOK_TOKEN" -H "Content-Type: application/json" --data-binary "{$call,\"cwd\":\"$PWD\"}" "$AGENT_OFFICE_HOOK_URL/hooks/claude?worker=$AGENT_OFFICE_WORKER_ID&event=PermissionRequest" 2>/dev/null)
+    case "$decision" in
+      *'"behavior":"allow"'*)
+        echo "[demo] allowed from the inbox"
+        post PostToolUse "{$call}"
+        commit "$task"
+        ;;
+      *'"behavior":"deny"'*)
+        why=$(printf '%s' "$decision" | sed 's/.*"message":"\([^"]*\)".*/\1/')
+        echo "[demo] denied: $why"
+        post Stop '{}'
+        ;;
+      *)
+        echo "[demo] no decision: would ask in the terminal"
+        post Stop '{}'
+        ;;
+    esac
     ;;
   *"[done]"*)
     post PreToolUse '{"tool_name":"Bash","tool_input":{"command":"npm test"}}'
