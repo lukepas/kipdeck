@@ -12,6 +12,7 @@ import { ChatLog } from '../history.js';
 import { Labs } from '../labs.js';
 import { ShipLog } from '../shiplog.js';
 import { Telemetry } from '../telemetry.js';
+import { ApprovalDesk } from '../approvals.js';
 import type { Core, Ctx } from './context.js';
 import type { Client } from './client.js';
 
@@ -45,5 +46,14 @@ export function createCore(ctx: Ctx, cfg: Config, publicDir: string): Core {
   const shipped = new ShipLog(cfg.dataDir);
   // Anonymous usage numbers: off unless someone turns them on.
   const telemetry = new Telemetry(cfg.dataDir, cfg.telemetry);
-  return { cfg, publicDir, accounts, auth, hosts, clients, chat, officeName, models, building, floors, labs, shipped, telemetry };
+  // Permission requests held open for the inbox, told to the pages watching them.
+  const approvals = new ApprovalDesk({
+    publish: (msg, to) => {
+      for (const id of to) {
+        const c = clients.get(id);
+        if (c) ctx.sendTo(c, msg);
+      }
+    },
+  });
+  return { cfg, publicDir, accounts, auth, hosts, clients, chat, officeName, models, building, floors, labs, shipped, telemetry, approvals };
 }

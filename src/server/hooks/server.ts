@@ -39,6 +39,9 @@ export async function startHookServer(ctx: Ctx): Promise<{ hookServer: http.Serv
     if (!workers) return send(res, 401, {});
     const event = url.searchParams.get('event') ?? '';
     const ok = workers.handleProviderHook(route as AgentProvider, workerId, token, event, payload);
+    // A permission request waits here for its answer from the inbox (see approvals.ts).
+    if (ok && ctx.approvals.holds(route, event) && ctx.approvals.open(workerId, ctx.workerFloor(workerId)?.id ?? '', payload, res)) return;
+    if (ok) ctx.approvals.movedOn(workerId, event, payload);
     send(res, ok ? 200 : 401, {});
   });
   // Workers' terminals outlive a restart of the office (see ptys.ts) with this address in their

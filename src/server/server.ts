@@ -76,6 +76,7 @@ export async function startServer(cfg: Config, opts: StartOptions = {}) {
     ctx.signins.shutdown();
     for (const c of ctx.clients.values()) c.ws.close();
     server.close();
+    ctx.approvals.close();
     hookServer.close();
   };
 

@@ -19,6 +19,7 @@ import { store } from '../state';
 import { h } from '../ui/dom';
 import { icon, LEVEL_ICON } from '../ui/icons';
 import { countdownWords, heldUntil, inFlight } from './merge-hold';
+import { approvalRow } from './approval';
 import { home } from './state';
 
 export interface ListDeps {
@@ -107,11 +108,13 @@ function workingStatus(r: Ranked, title: string): string {
 function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTMLElement {
   const e = r.entry;
   const title = entryTitle(e);
-  const { action, label } = rowAction(r.att);
+  // A permission request from its hook: Approve, what it wants to run and its risk tags (approval.ts).
+  const ask = approvalRow(e.id);
+  const { action, label } = ask ? { action: rowAction(r.att).action, label: ask.label } : rowAction(r.att);
   const provider = PROVIDER_META[e.provider ?? 'claude']?.label ?? 'Agent';
   // Working: what it's doing right now (workingStatus). To review: what it changed. Otherwise why it's
   // here, in the ranking's words.
-  const status = section === 'working' ? workingStatus(r, title) : (section === 'review' && changeSummary(e.work)) || rowStatus(r.att, title);
+  const status = ask ? ask.status : section === 'working' ? workingStatus(r, title) : (section === 'review' && changeSummary(e.work)) || rowStatus(r.att, title);
   const selected = home.selected === e.id;
   const where = rowWhere(e);
   const owner = ownerLabel(e);
@@ -124,7 +127,7 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
   const spoken = [`${title}: ${e.name}`, provider, LEVEL_LABEL[r.att.level], waits && !away ? `${AGE_PREFIX[section]} ${waitWords(now - r.att.since)}` : '', owner ? `deployed by ${e.createdBy}` : ''].filter(Boolean).join(', ');
   return h(
     'li.row',
-    { class: `l-${r.att.level} s-${section}${selected ? ' selected' : ''}${r.att.snoozed ? ' snoozed' : ''}${held ? ' holding' : ''}`, 'data-id': e.id, 'data-section': section, style: style || undefined },
+    { class: `l-${r.att.level} s-${section}${ask ? ' approval' : ''}${selected ? ' selected' : ''}${r.att.snoozed ? ' snoozed' : ''}${held ? ' holding' : ''}`, 'data-id': e.id, 'data-section': section, style: style || undefined },
     h(
       'button.row-main',
       { type: 'button', 'aria-current': selected ? 'true' : undefined, 'aria-label': spoken, onclick: () => home.select(e.id, section === 'review' ? 'changes' : 'terminal') },
@@ -133,7 +136,7 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
         'span.row-text',
         {},
         h('span.row-title', {}, title),
-        h('span.row-sub', {}, held ? h('span.row-status.row-hold', { 'data-until': String(until), 'data-prefix': 'Merging in' }, `Merging in ${countdownWords(until - now)}`) : h('span.row-status', { title: r.att.reason ?? r.att.label }, away ? 'Merging...' : status), owner ? h('span.row-owner', { title: `Deployed by ${e.createdBy}` }, owner) : null, where ? h('span.row-where', {}, where) : null),
+        h('span.row-sub', {}, held ? h('span.row-status.row-hold', { 'data-until': String(until), 'data-prefix': 'Merging in' }, `Merging in ${countdownWords(until - now)}`) : h('span.row-status', { title: r.att.reason ?? r.att.label }, away ? 'Merging...' : status), ask?.tags ?? null, owner ? h('span.row-owner', { title: `Deployed by ${e.createdBy}` }, owner) : null, where ? h('span.row-where', {}, where) : null),
       ),
       away ? null : ageEl(section, r.att, now),
     ),

@@ -32,6 +32,7 @@ import type { Telemetry } from '../telemetry.js';
 import type { ShipLog } from '../shiplog.js';
 import type { DemoDirector } from '../demo/director.js';
 import type { RundownService } from '../rundown/service.js';
+import type { ApprovalDesk } from '../approvals.js';
 import type { AgentProvider, FloorInfo, Me, Reminder, ReminderSnooze, ReviewPull, RosterEntry, ServerMsg, ServiceInfo, ServicesState, SignInKind } from '../../shared/protocol.js';
 import type { Client } from './client.js';
 import type { Spot } from './input.js';
@@ -64,6 +65,8 @@ export interface Core {
   shipped: ShipLog;
   /** Anonymous usage numbers, off unless someone turns them on (see telemetry.ts). */
   telemetry: Telemetry;
+  /** Permission requests held open while someone decides in the inbox (see approvals.ts). */
+  approvals: ApprovalDesk;
 }
 
 /** Made once the hook server listens, before any floor opens (office/services.ts). */

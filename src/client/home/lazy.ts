@@ -41,6 +41,7 @@ export const settings = once(() => import('./settings'));
 export const numbers = once(() => import('./numbers'));
 export const rundown = once(() => import('../ui/rundown'));
 export const signal = once(() => import('../ui/signal'));
+export const approval = once(() => import('./approval-card'));
 export const accounts = once(() => import('../ui/accounts'), (m) => m.routeAccountsMessage);
 
 /** After a reconnect the office has forgotten which terminal and which changes this page follows: tell it again. */
