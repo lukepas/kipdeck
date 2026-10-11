@@ -143,6 +143,12 @@ test('a sign-in link works once, on this computer only', async () => {
   const bogus = JSON.parse((await call('/api/link', { method: 'POST', headers: own(), body: { key: 'bogus' } })).body);
   assert.match(bogus.why, /not valid/);
   assert.doesNotMatch(bogus.why, /already used/);
+  // The same old link in a browser that is still signed in (the terminal's scrollback): straight in,
+  // with no new session issued.
+  const stale = await call('/api/link', { method: 'POST', headers: { ...own(), cookie }, body: { key } });
+  assert.equal(stale.status, 200);
+  assert.equal(stale.headers['set-cookie'], undefined);
+  assert.equal(JSON.parse(stale.body).already, true);
   // Signed in, it says what to call you: git's user.name.
   const me = JSON.parse((await call('/api/whoami', { headers: { cookie } })).body);
   assert.equal(me.name, 'Ada Lovelace');

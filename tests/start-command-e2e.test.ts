@@ -113,6 +113,10 @@ test('a used or made-up link opens the page with the open command, never the pas
   // First time: in.
   await page.goto(link);
   await page.waitForURL(`http://localhost:${port}/`);
+  // The same link again in that browser, still signed in (clicked from the terminal's scrollback): straight back in.
+  await page.goto('about:blank');
+  await page.goto(link);
+  await page.waitForURL(`http://localhost:${port}/`);
   // Again, in a browser that's signed out: the page says it was used, with the command, no form.
   const fresh = await browser.newPage({ viewport: { width: 390, height: 844 } });
   fresh.on('pageerror', (e) => errors.push(e.message));

@@ -97,7 +97,8 @@ function nodeCommand(env: RunEnv): string {
  */
 export function launchCommand(env: RunEnv = runEnv()): string {
   const spec = npxSpec(env.root);
-  if (spec) return `npx ${spec}`;
+  // A tarball or folder spec is a path, which may have spaces in it.
+  if (spec) return `npx ${shellWord(spec, env)}`;
   return onPath(env) ?? nodeCommand(env);
 }
 
@@ -121,10 +122,15 @@ export function defaultOfficeDir(home = os.homedir()): string {
   return path.join(home, 'agent-office');
 }
 
-/** `--home <dir>` for an office anywhere but the default folder, so the command finds this one. */
-export function homeFlag(officeDir: string | undefined, env: Pick<RunEnv, 'win' | 'home'> = runEnv()): string {
-  if (!officeDir || path.resolve(officeDir) === path.resolve(defaultOfficeDir(env.home))) return '';
-  return ` --home ${shellWord(path.resolve(officeDir), env)}`;
+/**
+ * `--home <dir>` for an office anywhere but the default folder, so the command finds this one. With
+ * AGENT_OFFICE_HOME pointing elsewhere, `open` alone would look there, so ~/agent-office gets it too.
+ */
+export function homeFlag(officeDir: string | undefined, env: Pick<RunEnv, 'win' | 'home'> = runEnv(), envHome = process.env.AGENT_OFFICE_HOME): string {
+  if (!officeDir) return '';
+  const dir = path.resolve(officeDir);
+  if (dir === path.resolve(defaultOfficeDir(env.home)) && (!envHome || path.resolve(envHome) === dir)) return '';
+  return ` --home ${shellWord(dir, env)}`;
 }
 
 /** A command for the office in `officeDir`, as typed beside it: `node .../agent-office.js open --home ~/x`. */

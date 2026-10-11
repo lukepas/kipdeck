@@ -125,7 +125,12 @@ export const authRoutes = {
       const guess = await readGuess(ctx, req, res);
       if (!guess) return;
       const key = str(guess.body.key, 128);
-      if (!ctx.accounts.sharedPassword || !ctx.auth.useLinkKey(key)) return send(res, 410, linkRefusal(ctx, key));
+      if (!ctx.accounts.sharedPassword || !ctx.auth.useLinkKey(key)) {
+        // An old link from the terminal's scrollback, in a browser that is still signed in: just go in
+        // (no new session is issued), rather than "signed out, run this command".
+        if (ctx.auth.fromRequest(req)) return send(res, 200, { ok: true, already: true });
+        return send(res, 410, linkRefusal(ctx, key));
+      }
       ctx.auth.recordSuccess(guess.ip);
       return send(res, 200, { ok: true }, signedIn(ctx, req));
     },

@@ -66,6 +66,9 @@ test('started by npx: the spec npx installed it from, and node for a command bes
   // A tarball from npm pack: npm writes it relative to the _npx folder, the command needs it whole.
   writeFileSync(path.join(cache, 'package.json'), JSON.stringify({ dependencies: { '@kipdeck/kipdeck': 'file:../../../kipdeck-0.1.0.tgz' } }));
   assert.equal(npxSpec(root), `file:${path.join(tmp, 'kipdeck-0.1.0.tgz')}`);
+  // A tarball in a folder with a space: quoted, so the printed command still runs.
+  writeFileSync(path.join(cache, 'package.json'), JSON.stringify({ dependencies: { '@kipdeck/kipdeck': 'file:/opt/my builds/kipdeck-0.1.0.tgz' } }));
+  assert.equal(launchCommand(env(root)), "npx 'file:/opt/my builds/kipdeck-0.1.0.tgz'");
 });
 
 test('paths are quoted only when they must be, and the home folder is ~', () => {
@@ -80,8 +83,11 @@ test('paths are quoted only when they must be, and the home folder is ~', () => 
 
 test('--home only for an office outside the default folder, so the command finds this one', () => {
   const e = { win: false, home: '/home/ada' };
-  assert.equal(homeFlag('/home/ada/agent-office', e), '');
+  assert.equal(homeFlag('/home/ada/agent-office', e, undefined), '');
   assert.equal(homeFlag(undefined, e), '');
+  // AGENT_OFFICE_HOME elsewhere: `open` alone would look there, so the default folder is named too.
+  assert.equal(homeFlag('/home/ada/agent-office', e, '/srv/office'), ' --home ~/agent-office');
+  assert.equal(homeFlag('/home/ada/agent-office', e, '/home/ada/agent-office'), '');
   assert.equal(homeFlag('/tmp/kipdeck-demo-x', e), ' --home /tmp/kipdeck-demo-x');
   assert.equal(homeFlag('/home/ada/code/shop', e), ' --home ~/code/shop');
   const root = install(path.join(tmp, 'office-cmd'));
