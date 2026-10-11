@@ -5,6 +5,7 @@ import { accountsHandlers } from './accounts.js';
 import { bountiesHandlers, bountiesView } from './bounties.js';
 import { changesHandlers, changesHooks } from './changes.js';
 import { floorHandlers, projectView } from './floors.js';
+import { gateHandlers } from './gate.js';
 import { githubHandlers, issuesView, pullsView } from './github.js';
 import { inboxHandlers } from './inbox.js';
 import { labsHandlers } from './labs.js';
@@ -34,6 +35,7 @@ export const handlers: HandlerMap<ClientMsg> = {
   ...bountiesHandlers,
   ...changesHandlers,
   ...floorHandlers,
+  ...gateHandlers,
   ...githubHandlers,
   ...inboxHandlers,
   ...labsHandlers,

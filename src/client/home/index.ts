@@ -24,6 +24,7 @@ import { currentView, renderList } from './list';
 import { closeMenu, menuOpen, toggleMenu, type MenuEntry } from './menu';
 import { renderOwner } from './owner';
 import { installPane, paneMessage } from './pane';
+import { installProposals } from './proposals';
 import { openPalette, type Command } from './palette';
 import { renderChecklist, renderShipped } from './shipped';
 import { renderPulse } from './pulse';
@@ -209,7 +210,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
   };
   home.on(renderAll);
   onSetupChange(renderAll);
-  for (const t of ['roster', 'reminders', 'floors', 'labs', 'workers'] as const) store.on(t, renderAll);
+  for (const t of ['roster', 'reminders', 'floors', 'labs', 'workers', 'gate'] as const) store.on(t, renderAll);
   // The wait clocks tick each second in place; the rest (the wait bars, the idle times) every 30.
   setInterval(renderAll, 30_000);
   startClocks();
@@ -238,6 +239,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
   });
 
   installPane($('pane'), net, actions);
+  installProposals(net);
   installSignal(net, openSignal);
   installKeys(actions, palette, search);
   window.addEventListener('blur', () => menuOpen() && closeMenu());

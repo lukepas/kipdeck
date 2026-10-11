@@ -34,7 +34,11 @@ const USAGE = `Usage:
                                                 desk, from the worker's own branch, or by a Claude
                                                 Code worker running gh pr create
   office-workers pr --none [--worker <name|id>] take that pull request off the worker again
-  office-workers mcp                            serve these as MCP tools on stdio`;
+  office-workers mcp                            serve these as MCP tools on stdio
+
+hire, home and tell wait for a person's approval unless an admin gave agents on this project a
+standing permission: then the command says so and exits 0, and the outcome arrives later as a
+message in your session.`;
 
 /** A mistake in how the command was called: the usage is shown with it. */
 export class UsageError extends Error {}
@@ -290,6 +294,9 @@ export function formatLinked(answer) {
 const MCP_VERSIONS = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05'];
 
 const WORKER_NOTE = 'A worker is named by its name (e.g. "Mochi") or its id, as list_workers shows them.';
+const GATE_NOTE =
+  'A person may have to approve this first. Then nothing happens yet: the result says it waits for approval, and whether it was approved, and what came of it, ' +
+  'arrives later as a message in your session. Do not send the same request again meanwhile.';
 
 export const TOOLS = [
   {
@@ -308,8 +315,9 @@ export const TOOLS = [
     name: 'hire_worker',
     title: 'Hire a worker',
     description:
-      'Hires a new coding agent (a worker) at a free console in Kipdeck to do a task. It starts right away, in its own git worktree on a fresh branch unless worktree is false, ' +
-      'and knows nothing but the prompt: make it complete (what to change and where, how to check it, and to open a pull request).',
+      'Hires a new coding agent (a worker) at a free console in Kipdeck to do a task. It starts once allowed, in its own git worktree on a fresh branch unless worktree is false, ' +
+      'and knows nothing but the prompt: make it complete (what to change and where, how to check it, and to open a pull request). ' +
+      GATE_NOTE,
     inputSchema: {
       type: 'object',
       properties: {
@@ -346,7 +354,9 @@ export const TOOLS = [
       "(the office's go-home-once-merged rule); the result lists who stayed and why. cleanup keep keeps the worktree and branch, worktree deletes just the worktree, " +
       'and all deletes both even when that loses work: use all only when the user asked for it. A worktree kept this way stays after its worker has gone ' +
       '(git worktree remove and git branch -D delete it, if the user wants that work thrown away). You cannot send yourself home. ' +
-      WORKER_NOTE,
+      WORKER_NOTE +
+      ' ' +
+      GATE_NOTE,
     inputSchema: {
       type: 'object',
       properties: {
@@ -361,7 +371,7 @@ export const TOOLS = [
   {
     name: 'tell_worker',
     title: 'Tell a worker',
-    description: "Types a message into another agent's (worker's) terminal as its next prompt; one that stopped starts again with it. " + WORKER_NOTE,
+    description: "Types a message into another agent's (worker's) terminal as its next prompt; one that stopped starts again with it. " + WORKER_NOTE + ' ' + GATE_NOTE,
     inputSchema: {
       type: 'object',
       properties: {
@@ -402,6 +412,7 @@ const INSTRUCTIONS =
   "rather than looking for the agents with git, ps or HTTP calls. list_workers says where each one's pull request stands (merged: true means it merged), hire_worker " +
   'puts a new agent to work, send_home sends agents home and deletes their worktrees and branches, tell_worker gives one a prompt, and link_pr says which pull request is a ' +
   "worker's when list_workers does not show it. get_mission says what the team is working towards. Everyone in the office sees who did what. " +
+  'Hiring, sending home and telling usually wait for a person to approve them: the outcome comes back later as a message in your session. ' +
   'The office-workers command on your PATH does the same from a shell.';
 
 /** Runs a tool; resolves to its text, and whether nothing it was asked came off, or throws with why it failed. */
@@ -409,22 +420,31 @@ async function runTool(name, args, io) {
   const a = args && typeof args === 'object' ? args : {};
   if (name === 'list_workers') return { text: JSON.stringify(await call('list', undefined, io), null, 1) };
   if (name === 'get_mission') return { text: JSON.stringify(await call('mission', undefined, io), null, 1) };
+  if (name === 'hire_worker' || name === 'send_home' || name === 'tell_worker') {
+    const answer = await call(name === 'hire_worker' ? 'hire' : name === 'send_home' ? 'home' : 'tell', a, io);
+    if (answer.proposed) return { text: proposedText(answer) };
+    return gatedResult(name, answer, a);
+  }
+  if (name === 'link_pr') return { text: formatLinked(await call('pr', a, io)) };
+  throw new Error(`Unknown tool: ${name}`);
+}
+
+/** What a hire, send-home or tell answered once it ran. */
+function gatedResult(name, answer, a) {
   if (name === 'hire_worker') {
-    const answer = await call('hire', a, io);
     const w = answer.worker ?? {};
     return { text: `Hired ${w.name} at ${w.desk}${w.worktree ? ` on branch ${w.worktree.branch}` : ''} (id ${w.id}).\n${JSON.stringify(w, null, 1)}` };
   }
   if (name === 'send_home') {
-    const answer = await call('home', a, io);
     const results = answer.results ?? [];
     return { text: formatHome(answer, a.merged === true), isError: results.some((r) => r.error) && !results.some((r) => r.went || r.skipped) };
   }
-  if (name === 'tell_worker') {
-    const answer = await call('tell', a, io);
-    return { text: `Told ${answer.worker?.name ?? a.worker}.` };
-  }
-  if (name === 'link_pr') return { text: formatLinked(await call('pr', a, io)) };
-  throw new Error(`Unknown tool: ${name}`);
+  return { text: `Told ${answer.worker?.name ?? a.worker}.` };
+}
+
+/** A request that waits for a person: what the office said to do meanwhile. */
+export function proposedText(answer) {
+  return answer?.message ?? `Waiting for a person to approve it (proposal ${answer?.proposal?.id ?? '?'}).`;
 }
 
 /**
@@ -515,6 +535,12 @@ export async function main(argv, io = {}) {
   const out = io.out ?? ((s) => process.stdout.write(s + '\n'));
   const err = io.err ?? ((s) => process.stderr.write(s + '\n'));
   const ctx = { env, fetch: fetchImpl };
+  /** A request that waits for a person: says so (the proposal itself with --json), and that's not a failure. */
+  const waiting = (answer, json) => {
+    if (json) out(JSON.stringify(answer, null, 2));
+    err(proposedText(answer));
+    return 0;
+  };
   try {
     const cmd = parseArgs(argv);
     if (cmd.cmd === 'help') {
@@ -544,6 +570,7 @@ export async function main(argv, io = {}) {
     }
     if (cmd.cmd === 'home') {
       const answer = await call('home', { ...(cmd.merged ? { merged: true } : { workers: cmd.workers }), ...(cmd.cleanup ? { cleanup: cmd.cleanup } : {}) }, ctx);
+      if (answer.proposed) return waiting(answer, cmd.json);
       out(cmd.json ? JSON.stringify(answer, null, 2) : formatHome(answer, cmd.merged));
       return (answer.results ?? []).some((r) => r.error) ? 1 : 0;
     }
@@ -551,6 +578,7 @@ export async function main(argv, io = {}) {
       const text = (await prompt()).trim();
       if (!text) throw new UsageError('The prompt is empty');
       const answer = await call('tell', { worker: cmd.worker, prompt: text }, ctx);
+      if (answer.proposed) return waiting(answer, false);
       err(`Told ${answer.worker?.name ?? cmd.worker}.`);
       return 0;
     }
@@ -564,6 +592,7 @@ export async function main(argv, io = {}) {
     body.prompt = (await prompt()).trim();
     if (!body.prompt) throw new UsageError('The new worker needs a task: pipe it in or pass --prompt "…"');
     const answer = await call('hire', body, ctx);
+    if (answer.proposed) return waiting(answer, json);
     const w = answer.worker ?? {};
     if (json) out(JSON.stringify(w, null, 2));
     else {
