@@ -5,6 +5,7 @@
 // "Download map.html" saves the same self-contained page the /rundown skill writes. Loaded the first
 // time it opens (home/lazy.ts). A top-right close and Esc put it away; on the bridge that is straight
 // back into mouse-look (input/focus.ts).
+import { INFERRED_NOTE } from '../../../shared/rundown/infer';
 import type { Net } from '../../net';
 import { store } from '../../state';
 import { h, openModal, toast, type Modal } from '../dom';
@@ -76,7 +77,7 @@ export function openRundown(net: Net, opts: RundownOptions = {}): RundownWindow 
     const now = new Date();
     body.replaceChildren(
       ...(view?.error ? [h('p.rd-banner.warn', {}, view.error)] : []),
-      ...(r.parts.some((p) => p.statusSource === 'inferred') ? [h('p.rd-banner', {}, 'Statuses inferred. Run /rundown in this project for a real read.')] : []),
+      ...(r.parts.some((p) => p.statusSource === 'inferred') ? [h('p.rd-banner.rd-inferred', {}, INFERRED_NOTE)] : []),
       overview(r),
       changes(r),
       h('section.rd-parts', { 'aria-label': 'Parts map' }, h('h3', {}, 'Parts map'), needsYou(r, openPart), h('div.rd-scroll', {}, treemap(r, openPart, part)), selected ? partDetail(r, selected, () => ((part = null), render())) : null),

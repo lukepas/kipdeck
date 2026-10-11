@@ -4,6 +4,7 @@
 // the one next thing, and Copy as text for a chat. Loaded the first time it opens (home/lazy.ts). A
 // top-right ✕ and Esc put it away.
 
+import { INFERRED_NOTE } from '../../../shared/rundown/infer';
 import { BURN_DAYS, noGoalLine, SIGNAL_GLYPH, SIGNAL_LABEL, signalLine, type Signal } from '../../../shared/signal';
 import { store } from '../../state';
 import type { SignalView } from '../../home/signal';
@@ -48,7 +49,7 @@ function paceCol(s: Signal): HTMLElement {
 function decisionsCol(s: Signal): HTMLElement {
   const d = s.decisions;
   if (!store.lab('rundown')) return column('Decisions', '-', 'Rundown is off in Labs');
-  if (s.rundown !== 'fresh') return column('Decisions', '-', s.rundown === 'stale' ? 'The last /rundown is too old' : 'No /rundown in this project yet');
+  if (s.rundown !== 'fresh' || (s.inferred && !d.open)) return column('Decisions', '-', s.rundown === 'stale' ? 'The last /rundown is too old' : 'No /rundown in this project yet');
   if (!d.open) return column('Decisions', '0 open', 'From /rundown');
   // The reason over the columns already quotes the question when a decision set the status: said once.
   const quoted = s.reasons.some((r) => r.rule === 'decision');
@@ -68,7 +69,10 @@ function body(v: SignalView): HTMLElement[] {
   }
   const next = s.next ? h('div.sg-next', {}, h('span.sg-label', {}, 'Next'), h('span.sg-next-text', {}, s.next.text), h('span.sg-sub', {}, s.next.from)) : null;
   const stale = s.staleNote ? h('p.sg-stale', {}, s.staleNote) : null;
-  return [head, h('div.sg-cols', {}, milestoneCol(s), paceCol(s), decisionsCol(s)), ...(next ? [next] : []), ...(stale ? [stale] : [])];
+  // The map's parts, and while it's only inferred from the code, how to get Claude's read of it.
+  const parts = s.parts ? h('p.sg-parts', {}, s.parts) : null;
+  const inferred = s.inferred ? h('p.sg-inferred', {}, INFERRED_NOTE) : null;
+  return [head, h('div.sg-cols', {}, milestoneCol(s), paceCol(s), decisionsCol(s)), ...(parts ? [parts] : []), ...(next ? [next] : []), ...(inferred ? [inferred] : []), ...(stale ? [stale] : [])];
 }
 
 /** Opens the card, or redraws the open one. */

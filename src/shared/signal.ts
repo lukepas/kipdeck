@@ -6,11 +6,14 @@
 //
 // The milestone comes from Goals first (it is live), and from the last /rundown only when Goals has no
 // active milestone and the rundown is under STALE_RUNDOWN_DAYS old. A rundown older than that feeds
-// nothing at all, and the card says how old it is.
+// nothing at all, and the card says how old it is. With no /rundown in the project, the office's own map
+// inferred from the code stands in (protocol/signal.ts, RundownGist.source): its parts and a next thing,
+// but no stuck part (only a person or Claude can say what a part waits on), so it never sets a status.
 
 import { NEEDS_INPUT_LONG_MS, type Ranked } from './attention.js';
 import type { Decision, Milestone, Part } from './rundown/schema.js';
 import type { RundownGist, SignalGoal } from './protocol/signal.js';
+import { partsLine } from './signal-parts.js';
 
 const DAY_MS = 24 * 60 * 60_000;
 
@@ -71,6 +74,10 @@ export interface Signal {
   decisions: { open: number; oldestDays?: number; first?: string };
   /** The one next thing, and where it came from. */
   next: { text: string; from: string } | null;
+  /** The map's parts by status in one line ("8 parts: 3 done, 3 in progress"), when there's a map. */
+  parts: string | null;
+  /** What's read is the office's map inferred from the code: no /rundown judgement yet. */
+  inferred: boolean;
   /** The last /rundown: read, too old to use, or none to read. */
   rundown: 'fresh' | 'stale' | 'none';
   /** The last /rundown is too old to use: say so. */
@@ -195,13 +202,13 @@ export function computeSignal(input: SignalInput): Signal {
   const level: SignalLevel = !milestone ? 'no-goal' : reasons.some((r) => r.level === 'off-track') ? 'off-track' : reasons.length ? 'at-risk' : 'on-track';
   reasons.sort((a, b) => (a.level === b.level ? 0 : a.level === 'off-track' ? -1 : 1));
 
-  // The one next thing: the skill's next step, else the longest wait on you.
+  // The one next thing: the skill's next step, else the longest wait on you, else what the office's
+  // inferred map suggests (a person waiting comes before a guess from the code).
   let next: Signal['next'] = null;
-  if (rundown?.next) next = { text: rundown.next, from: `from /rundown, ${ago(daysBetween(rundown.at, now))}` };
-  else if (waiting.length || input.ranked.some((r) => r.att.level === 'needs-you' && !r.att.snoozed)) {
-    const first = waiting[0] ?? input.ranked.find((r) => r.att.level === 'needs-you' && !r.att.snoozed)!;
-    next = { text: `Answer ${first.entry.name}`, from: 'from the inbox' };
-  }
+  const asking = waiting[0] ?? input.ranked.find((r) => r.att.level === 'needs-you' && !r.att.snoozed);
+  if (rundown?.next && rundown.source !== 'inferred') next = { text: rundown.next, from: `from /rundown, ${ago(daysBetween(rundown.at, now))}` };
+  else if (asking) next = { text: `Answer ${asking.entry.name}`, from: 'from the inbox' };
+  else if (rundown?.next) next = { text: rundown.next, from: 'inferred from the code' };
 
   return {
     level,
@@ -212,6 +219,8 @@ export function computeSignal(input: SignalInput): Signal {
     pace: { week, before, trend },
     decisions: { open: rundown?.decisionsOpen ?? 0, ...(oldestDays !== undefined ? { oldestDays } : {}), ...(rundown?.decisions[0] ? { first: rundown.decisions[0].question } : {}) },
     next,
+    parts: partsLine(rundown?.parts),
+    inferred: rundown?.source === 'inferred',
     rundown: rundown ? 'fresh' : stale !== undefined ? 'stale' : 'none',
     ...(stale !== undefined ? { staleNote: `The last /rundown is ${stale} days old: run /rundown again` } : {}),
   };

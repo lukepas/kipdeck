@@ -5,6 +5,10 @@
 // skill's own .rundown/rundown.json when the project has one (read only, capped, checked), otherwise the
 // parts and statuses are inferred. The office never writes into .rundown/: its own diff base is
 // .agent-office/rundown/state.json.
+//
+// A floor's first map is also built once with nobody watching (prime(), asked for by first.ts when a
+// floor opens with the lab on), so the window opens with it and Signal has parts to read. It's kept
+// here in memory, never written to .rundown/.
 
 import { createHash } from 'node:crypto';
 import { mkdirSync, realpathSync } from 'node:fs';
@@ -35,6 +39,8 @@ export const ENSURE_MS = 45_000;
 export const READ_ERROR = "Couldn't read this project. The office's log says why.";
 
 export const OFFICE_VERSION = '1.0.0';
+/** How long after a floor is primed its first map starts, so opening the office isn't slowed by it (ms). */
+export const PRIME_DELAY_MS = 2_000;
 
 interface Entry {
   rundown: Rundown | null;
@@ -51,6 +57,8 @@ export interface RundownHost {
   floor(id: string): Floor | undefined;
   /** Sends to these connections. */
   send(clientIds: readonly string[], msg: ServerMsg): void;
+  /** A floor's map was computed (or computed again): Signal's gist reads it. */
+  computed?(floorId: string): void;
   now?(): number;
 }
 
@@ -70,6 +78,8 @@ export class RundownService {
   private closed = false;
   /** Who waits for a floor's next computation (the download route). */
   private waiters = new Map<string, ((r: Rundown | null) => void)[]>();
+  /** Floors whose first map has been asked for, and the timers that start the ones still waiting. */
+  private primed = new Map<string, NodeJS.Timeout | null>();
 
   constructor(private host: RundownHost) {}
 
@@ -122,6 +132,33 @@ export class RundownService {
     }
   }
 
+  /**
+   * Builds the floor's first map in the background, PRIME_DELAY_MS from now, with nobody watching: once
+   * per floor for as long as the office runs, through the same one-at-a-time queue. False when it was
+   * already asked for, or there's no such floor.
+   */
+  prime(floorId: string, delayMs = PRIME_DELAY_MS): boolean {
+    if (this.closed || this.primed.has(floorId) || !this.host.floor(floorId)) return false;
+    const start = () => {
+      this.primed.set(floorId, null);
+      const e = this.entry(floorId);
+      if (!e.rundown && !e.computing) this.enqueue(floorId);
+    };
+    if (delayMs <= 0) {
+      start();
+      return true;
+    }
+    const timer = setTimeout(start, delayMs);
+    timer.unref?.();
+    this.primed.set(floorId, timer);
+    return true;
+  }
+
+  /** The floor's map as it stands (null before the first is computed): read by Signal's gist. */
+  current(floorId: string): Rundown | null {
+    return this.entries.get(floorId)?.rundown ?? null;
+  }
+
   /** Computes `floorId` again now; why not, when it was refreshed under REFRESH_GAP_MS ago or the floor isn't there. */
   refresh(floorId: string): string | undefined {
     if (!this.host.floor(floorId)) return 'No such project';
@@ -145,6 +182,9 @@ export class RundownService {
   /** Forgets a floor taken off the building. */
   forget(floorId: string) {
     this.entries.delete(floorId);
+    const t = this.primed.get(floorId);
+    if (t) clearTimeout(t);
+    this.primed.delete(floorId);
     for (const [c, f] of this.watchers) if (f === floorId) this.watchers.delete(c);
     this.settle(floorId, null);
   }
@@ -184,6 +224,7 @@ export class RundownService {
     this.closed = true;
     if (this.timer) clearInterval(this.timer);
     this.timer = undefined;
+    for (const t of this.primed.values()) if (t) clearTimeout(t);
     // Nobody is left hanging on a queue that won't run again.
     for (const floorId of [...this.waiters.keys()]) this.settle(floorId, null);
     this.queue = [];
@@ -229,6 +270,7 @@ export class RundownService {
         }
         this.tell(floorId);
         this.settle(floorId, e.rundown);
+        if (e.rundown) this.host.computed?.(floorId);
       }
     } finally {
       this.running = false;

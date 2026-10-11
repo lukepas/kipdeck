@@ -17,6 +17,7 @@ import { createChainServices } from './chain.js';
 import { Showcase } from '../showcase/service.js';
 import { DemoDirector } from '../demo/director.js';
 import { RundownService } from '../rundown/service.js';
+import { pushGist } from '../signal/push.js';
 import type { ServiceInfo, ServicesState } from '../../shared/protocol.js';
 import type { BuildingServices, Ctx, LateServices } from './context.js';
 import type { Client } from './client.js';
@@ -158,7 +159,8 @@ export function createLateServices(ctx: Ctx): LateServices {
   const showcase = new Showcase(ctx);
   // --demo: the scripted agents, and the read-only demo's reviewer (started with the clocks, timers.ts).
   const demo = cfg.demo?.workspace ? new DemoDirector(ctx, cfg.demo.workspace, cfg.demo.readOnly) : undefined;
-  // Each floor's rundown, computed only while someone watches it (Labs).
-  const rundown = new RundownService({ floor: (id) => floors.get(id), send: (ids, msg) => ids.forEach((id) => clients.get(id) && ctx.sendTo(clients.get(id)!, msg)) });
+  // Each floor's rundown: its first map once in the background, then while someone watches it (Labs).
+  // Each new map reaches Signal's chip too (signal/push.ts).
+  const rundown = new RundownService({ floor: (id) => floors.get(id), send: (ids, msg) => ids.forEach((id) => clients.get(id) && ctx.sendTo(clients.get(id)!, msg)), computed: (id) => void pushGist(ctx, id) });
   return { team, tailnet, services, upgrader, servicesState, bounties, showcase, rundown, ...(demo ? { demo } : {}), ...createChainServices(ctx, bounties) };
 }

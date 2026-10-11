@@ -17,7 +17,8 @@ export const signalHandlers = {
     if (!throttle(c, `signal:${floor.id}`, PEEK_GAP_MS)) return;
     // A floor taken off the building since the last peek leaves no cached gist behind.
     keepGists(ctx.floors.keys());
-    void signalGist(floor, { ops: ctx.labs.on('ops'), rundown: ctx.labs.on('rundown') })
+    // Without a /rundown in the project, the office's own map of it stands in (rundown/first.ts).
+    void signalGist(floor, { ops: ctx.labs.on('ops'), rundown: ctx.labs.on('rundown') }, Date.now(), ctx.rundown?.current(floor.id) ?? null)
       .then((gist) => ctx.sendTo(c, { t: 'signal.gist', gist }))
       .catch((err) => console.warn(`agent-office: signal for ${floor.def.name} failed: ${err instanceof Error ? err.message : String(err)}`));
   },

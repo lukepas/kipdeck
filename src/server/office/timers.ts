@@ -3,6 +3,7 @@ import { SLOW_CLIENT_BYTES } from './client.js';
 import { ROSTER_TICK_MS } from './roster.js';
 import { REMINDER_SWEEP_MS } from './reminders.js';
 import { TELEMETRY_SWEEP_MS } from '../telemetry.js';
+import { startFirstMaps } from '../rundown/first.js';
 
 /** How often the people in the office are stamped as here (Accounts.seenAll), so a crash loses at most this much of it. */
 export const SEEN_MS = 60_000;
@@ -56,8 +57,11 @@ export function startTimers(ctx: Ctx): () => void {
   const usage = setInterval(() => ctx.telemetry.on && ctx.telemetry.sweep(ctx.rosterEntries(), ctx.shipped.recent()), TELEMETRY_SWEEP_MS);
   // The demo's scripted agents, and the read-only demo's reviewer (demo/director.ts).
   const stopDemo = ctx.demo?.start();
+  // Each project's first map, in the background, while the Rundown lab is on (rundown/first.ts).
+  const stopFirstMaps = startFirstMaps(ctx);
 
   return () => {
+    stopFirstMaps();
     stopDemo?.();
     clearInterval(usage);
     clearInterval(seen);
