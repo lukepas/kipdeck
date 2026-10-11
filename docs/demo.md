@@ -33,7 +33,7 @@ Each first wait is dated back so the demo shows waits the way a real team's morn
 Then it's yours:
 
 1. **Answer.** Press **Answer** on Codex's row (or Enter): its question card opens in the pane. Press **1 Fix the selector** (the stand-in takes the one digit, as Claude Code does), or type an answer in the box. The row goes back to Working, a settled toast says it's back at work, and a little later Codex's fix is in To review.
-2. **Review.** **Review changes** on Claude Code's row opens the diff beside the list, with *into main* over it.
+2. **Review.** **Review changes** on Claude Code's row opens the diff beside the list, with its review brief over it: the task, what it says it did, *npm test passed*, and one flag, since it touches the login route (*Touches sign-in or permission code: api/login.js.*). Codex's fix, once it's in To review, shows the question it asked with your answer, and its test run that failed before the fix and passed after. Click a line number in the diff to leave a comment for Send back.
 3. **Merge.** **Merge** waits about seven seconds behind a toast that says *Merging into main on this computer*, with **Undo**. Then it merges its branch into `acme-shop`'s `main` on your computer, the toast turns to *Merged into main on this computer* with how long it waited on you, and the change lands in **Shipped today**, signed in the shipped log.
 4. **Send back** with a note works too: the stand-in commits the note and finishes again.
 5. **Deploy agent** works with any task: the stand-in writes a short note about it in `notes/`, commits it, and finishes.

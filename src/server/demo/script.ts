@@ -269,7 +269,7 @@ export const FLEET: DemoAgent[] = [
     waited: 12,
     steps: [
       { after: 3, tool: 'Read: web/checkout.test.js' },
-      { after: 5, tool: 'Bash: npm test -- web', say: ['', 'not ok 1 - checkout shows the total', '  # failed 2 of 5 runs: .total was empty'] },
+      { after: 5, tool: 'Bash: npm test -- web', say: ['', 'not ok 1 - checkout shows the total', '  # failed 2 of 5 runs: .total was empty', '# fail 1'] },
       { after: 5, tool: 'Read: web/checkout.js', say: ['.total is drawn twice and the first one is empty while the order loads.'] },
       { after: 5, ask: 'The total is empty while the order loads. How should I fix the test?', choices: ['Fix the selector', 'Update the snapshot'] },
       { after: 4, tool: 'Edit: web/checkout.test.js', write: { 'web/checkout.test.js': CHECKOUT_TEST_FIXED } },

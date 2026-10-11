@@ -1,0 +1,49 @@
+/* The review brief above the diff (brief/index.ts) and the line comments in it (brief/comments.ts). */
+.pane-review { flex-wrap: wrap; }
+.rv-brief { flex: 1 0 100%; max-height: 42vh; overflow: auto; display: flex; flex-direction: column; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line); font-size: 13px; }
+.rv-brief.loading { padding-bottom: 6px; }
+.rb-dim { margin: 0; color: var(--muted); }
+.rb-verdict { display: flex; align-items: flex-start; gap: 8px; line-height: 1.45; }
+.rb-verdict > .ico { flex: none; margin-top: 2px; }
+.rb-verdict.ready > .ico { color: var(--text); }
+.rb-verdict.gap > .ico { color: var(--warn); }
+.rb-gaps { margin: 4px 0 0; padding-left: 18px; }
+.rb-gaps li { margin: 2px 0; }
+.rb-rows { display: flex; flex-direction: column; gap: 6px; }
+.rb-row { display: grid; grid-template-columns: 76px 1fr; gap: 10px; align-items: baseline; }
+.rb-label { color: var(--muted); font: 600 11px var(--font-ui); text-transform: uppercase; letter-spacing: .04em; }
+.rb-val { min-width: 0; }
+.rb-text { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.rb-text.clamped { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.rb-more { height: 22px; padding: 0 6px; margin-top: 2px; font-size: 12px; }
+.rb-since summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-top: 4px; }
+.rb-since ol { margin: 4px 0 0; padding-left: 18px; }
+.rb-qa { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.rb-qa li { display: flex; flex-direction: column; }
+.rb-q { overflow-wrap: anywhere; }
+.rb-a { color: var(--muted); overflow-wrap: anywhere; }
+.rb-run code { font: 12px var(--font-mono); }
+.rb-run.bad, .rb-ci.bad { color: var(--bad); }
+.rb-count { font-weight: 600; }
+.rv-acts .tab-n { margin-left: 6px; }
+
+/* A comment under its line in the diff, and the box to write one. */
+.diff-lines .dl .ln { cursor: pointer; }
+.diff-lines .dl .ln:hover { color: var(--text); text-decoration: underline; }
+.rb-note { display: flex; align-items: flex-start; gap: 8px; margin: 2px 8px 4px 96px; padding: 6px 8px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface-2); color: var(--text); font: 13px/1.4 var(--font-ui); white-space: pre-wrap; }
+.rb-note > .ico { flex: none; margin-top: 2px; color: var(--muted); }
+.rb-note-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.rb-note-x { flex: none; height: 22px; width: 22px; padding: 0; display: inline-grid; place-items: center; }
+.rb-compose { margin: 2px 8px 6px 96px; padding: 8px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface-1); font-family: var(--font-ui); }
+.rb-compose textarea { width: 100%; box-sizing: border-box; resize: vertical; font: 13px/1.4 var(--font-ui); }
+.rb-compose-acts { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; color: var(--muted); }
+.rb-compose-acts .grow { flex: 1; }
+/* The review bar is a column on a narrow screen (home.css): the brief takes its own height there. */
+@media (max-width: 899px) {
+  .pane-review { flex-wrap: nowrap; }
+  .rv-brief { flex: none; max-height: 34vh; }
+}
+@media (max-width: 599px) {
+  .rb-row { grid-template-columns: 1fr; gap: 2px; }
+  .rb-note, .rb-compose { margin-left: 8px; }
+}

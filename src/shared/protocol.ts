@@ -6,6 +6,7 @@
 
 import type { AccountsClientMsg, AccountsServerMsg, SignInsClientMsg, TeamClientMsg } from './protocol/accounts.js';
 import type { BountiesClientMsg, BountiesServerMsg } from './protocol/bounties.js';
+import type { BriefClientMsg, BriefServerMsg } from './protocol/brief.js';
 import type { ChangesClientMsg, ChangesServerMsg } from './protocol/changes.js';
 import type { FloorClientMsg, FloorServerMsg, PlanClientMsg } from './protocol/floors.js';
 import type { GitHubClientMsg, GitHubServerMsg } from './protocol/github.js';
@@ -31,6 +32,7 @@ import type { SignalClientMsg, SignalServerMsg } from './protocol/signal.js';
 export * from './protocol/accounts.js';
 export * from './protocol/agents.js';
 export * from './protocol/bounties.js';
+export * from './protocol/brief.js';
 export * from './protocol/changes.js';
 export * from './protocol/floors.js';
 export * from './protocol/github.js';
@@ -78,7 +80,8 @@ export type ClientMsg =
   | InboxClientMsg
   | SetupClientMsg
   | RundownClientMsg
-  | SignalClientMsg;
+  | SignalClientMsg
+  | BriefClientMsg;
 
 export type ServerMsg =
   | PresenceServerMsg
@@ -103,4 +106,5 @@ export type ServerMsg =
   | InboxServerMsg
   | SetupServerMsg
   | RundownServerMsg
-  | SignalServerMsg;
+  | SignalServerMsg
+  | BriefServerMsg;

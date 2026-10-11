@@ -21,6 +21,7 @@ import type { Actions } from './actions';
 import { onProject } from './deploy';
 import * as lazy from './lazy';
 import { agentMark, currentView, entryTitle, waitingNow, whereLabel } from './list';
+import { commentsOf, installBrief, reviewBrief } from './brief';
 import { questionCard } from './question';
 import { preview } from './preview';
 import { home, type PaneTab } from './state';
@@ -119,6 +120,7 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
   const body = h('div.pane-body');
   const empty = h('div.pane-empty');
   root.replaceChildren(empty, back, head, tabs, review, card.el, body);
+  installBrief(net, body);
 
   /** What the body shows now, so a re-render only remounts when that changes. */
   let mounted: { id: string; tab: PaneTab } | null = null;
@@ -184,22 +186,26 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
     const mergeLabel = merging ? 'Merging...' : pr ? `Merge PR #${pr.number}` : prFirst ? 'Merge locally' : 'Merge';
     // Drawn again on every roster tick: the button with the focus keeps it (Merge becomes Undo merge
     // in the same place), so the keyboard never falls back to the page.
-    const focused = [...review.querySelectorAll('button')].indexOf(document.activeElement as HTMLButtonElement);
+    const focused = [...review.querySelectorAll('.rv-acts button')].indexOf(document.activeElement as HTMLButtonElement);
+    // The brief above the diff (brief/): verified with nothing flagged, Merge is the one confident button.
+    const brief = merged ? undefined : reviewBrief(e);
+    const notes = commentsOf(e.id).length;
     review.replaceChildren(
+      ...(brief ? [brief.el] : []),
       h('div.rv-facts', {}, ...(facts.length ? facts.map((f, i) => h('span', { class: i === 0 && !merged ? 'rv-into' : undefined }, f)) : [h('span', {}, 'What it changed shows below.')])),
       merged
         ? h('div.rv-acts', {}, h('button.btn', { type: 'button', onclick: () => actions.stop(e, true) }, 'Archive'))
         : h(
             'div.rv-acts',
             {},
-            h('button.btn', { type: 'button', onclick: () => actions.sendBack(e) }, 'Send back'),
+            h('button.btn.rv-send-back', { type: 'button', onclick: () => actions.sendBack(e) }, 'Send back', notes ? h('span.tab-n', { title: `${notes} line comment${notes === 1 ? '' : 's'} go with it` }, String(notes)) : null),
             held
               ? h('button.btn.primary.rv-merge.rv-undo', { type: 'button', onclick: () => actions.undoMerge(e.id) }, 'Undo merge')
-              : h(prFirst ? 'button.btn.rv-merge' : 'button.btn.primary.rv-merge', { type: 'button', disabled: merging, title: mergeWords(e), onclick: () => actions.merge(e) }, mergeLabel),
+              : h(prFirst || !brief?.ready ? 'button.btn.rv-merge' : 'button.btn.primary.rv-merge', { type: 'button', disabled: merging, title: brief?.ready || !brief?.gap ? mergeWords(e) : `${mergeWords(e)}. Not verified: ${brief.gap}`, onclick: () => actions.merge(e) }, mergeLabel),
             prFirst && !held ? h('button.btn.primary.rv-open-pr', { type: 'button', title: 'Push its branch and open a pull request on GitHub', onclick: () => net.send({ t: 'worker.pr', workerId: e.id }) }, 'Open PR') : null,
           ),
     );
-    if (focused >= 0) review.querySelectorAll('button')[focused]?.focus();
+    if (focused >= 0) review.querySelectorAll<HTMLButtonElement>('.rv-acts button')[focused]?.focus();
   };
 
   const header = (e: RosterEntry) => {

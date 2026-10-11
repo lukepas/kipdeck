@@ -17,6 +17,7 @@ export const READ_ONLY_ALLOWS: ReadonlySet<string> = new Set([
   'changes.watch',
   'changes.unwatch',
   'changes.diff',
+  'brief.get',
   'inbox.log',
   'pace.get',
   'timeline.get',
