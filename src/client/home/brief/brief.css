@@ -30,6 +30,7 @@
 /* A comment under its line in the diff, and the box to write one. */
 .diff-lines .dl .ln { cursor: pointer; }
 .diff-lines .dl .ln:hover { color: var(--text); text-decoration: underline; }
+.diff-lines .dl .ln[data-own-keys]:focus-visible { outline: 2px solid var(--act); outline-offset: -2px; color: var(--text); }
 .rb-note { display: flex; align-items: flex-start; gap: 8px; margin: 2px 8px 4px 96px; padding: 6px 8px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--surface-2); color: var(--text); font: 13px/1.4 var(--font-ui); white-space: pre-wrap; }
 .rb-note > .ico { flex: none; margin-top: 2px; color: var(--muted); }
 .rb-note-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }

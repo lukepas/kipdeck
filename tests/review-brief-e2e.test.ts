@@ -249,11 +249,54 @@ test('the review brief: task, summary, answers and verification over the diff; c
   assert.equal(await page.locator('.pane .rv-merge').innerText(), 'Merge');
   await shot(page, 'brief-gap.png');
 
+  // By keyboard: one tab stop on the diff's line numbers, arrows to move, Enter to comment. Typing j
+  // and k in the comment neither picks another file nor another agent.
+  await page.locator('.pane .changes-diff .dh .path[title=".github/workflows/ci.yml"]').waitFor();
+  await page.locator('.pane .diff-lines .dl.add').first().waitFor();
+  assert.equal(await page.locator('.pane .diff-lines .ln[tabindex="0"]').count(), 1, 'one tab stop in the diff');
+  await page.locator('.pane .diff-lines .ln[data-own-keys]').focus();
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('j');
+  assert.match((await page.evaluate(() => document.activeElement?.getAttribute('aria-label'))) ?? '', /^Comment on \.github\/workflows\/ci\.yml:3\./);
+  await page.keyboard.press('Enter');
+  const keyed = page.locator('.pane .rb-compose textarea[aria-label="Comment on .github/workflows/ci.yml:3"]');
+  await keyed.waitFor();
+  await page.keyboard.type('just keep the job name');
+  await shot(page, 'brief-keyboard.png');
+  await page.keyboard.press('Enter');
+  await page.locator('.pane .rb-note', { hasText: 'just keep the job name' }).waitFor();
+  assert.equal(await page.locator('.pane .rb-note').getAttribute('data-anchor'), '.github/workflows/ci.yml:3');
+  assert.equal(await page.evaluate(() => document.activeElement?.hasAttribute('data-own-keys')), true, 'the keyboard is back on its line');
+  await page.locator('.pane-title h2', { hasText: 'Add CI and left-pad' }).waitFor();
+  assert.equal(await page.locator('.pane .changes-diff .dh .path').getAttribute('title'), '.github/workflows/ci.yml', 'still on the same file');
+  await page.locator('.pane .rv-send-back .tab-n', { hasText: '1' }).waitFor();
+
   // On a phone the brief stacks over the diff and leaves Merge on screen.
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('.pane .rv-brief .rb-verdict.gap').waitFor();
   const merge = await page.locator('.pane .rv-merge').boundingBox();
   assert.ok(merge && merge.y + merge.height <= 844, 'Merge is on screen under the brief');
   await shot(page, 'brief-phone.png');
+
+  // Sent home, its journal goes with it: briefs.json keeps only the agents still here.
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const risky = await row(page, 'review', 'Add CI and left-pad').getAttribute('data-id');
+  const kept = await row(page, 'review', 'Add the checkout total').getAttribute('data-id');
+  assert.ok(risky && kept);
+  const journals = () => {
+    try {
+      return Object.keys(JSON.parse(readFileSync(path.join(project, '.agent-office', 'briefs.json'), 'utf8')));
+    } catch {
+      return [];
+    }
+  };
+  for (let i = 0; i < 50 && !journals().includes(risky); i++) await page.waitForTimeout(100);
+  assert.ok(journals().includes(risky), 'its journal is on disk while it is here');
+  await page.locator('.pane .pane-stop').click();
+  await page.locator('.modal button', { hasText: 'Stop agent' }).click();
+  await row(page, 'review', 'Add CI and left-pad').waitFor({ state: 'detached', timeout: 15_000 });
+  for (let i = 0; i < 50 && journals().includes(risky); i++) await page.waitForTimeout(100);
+  assert.deepEqual(journals().includes(risky), false, 'its journal went with it');
+  assert.ok(journals().includes(kept), 'the other agent keeps its journal');
   assert.deepEqual(errors, []);
 });

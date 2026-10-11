@@ -58,7 +58,8 @@ export function openHelp() {
   openModal(el);
 }
 
-const typing = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || !!t.closest('.xterm'));
+// An element marked data-own-keys handles its own (a diff's line number, home/brief/comments.ts).
+const typing = (t: EventTarget | null) => t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || !!t.closest('.xterm, [data-own-keys]'));
 
 /** Puts the keyboard on the selected row in the list (after Esc, or a move). */
 export function focusSelected() {

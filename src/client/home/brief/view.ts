@@ -75,7 +75,7 @@ export function renderBrief(e: RosterEntry, b: ReviewBrief): BriefView {
       row('It says', b.summary ? clamp('rb-summary', b.summary) : h('span.rb-dim', {}, 'It left no summary of what it did.')),
       b.qa.length ? row('Asked', h('ul.rb-qa', {}, ...b.qa.map((q) => h('li', {}, h('span.rb-q', {}, q.question), h('span.rb-a', {}, q.answer ? `You said: ${q.answer}` : 'Answered in its terminal'))))) : null,
       checked(b, v, ci),
-      row('Comments', h('span', { class: comments.length ? 'rb-count' : 'rb-dim' }, comments.length ? `${comments.length} on the diff, sent with Send back.` : 'Click a line number in the diff to comment on it.')),
+      row('Comments', h('span', { class: comments.length ? 'rb-count' : 'rb-dim' }, comments.length ? `${comments.length} on the diff, sent with Send back.` : 'Click a line number in the diff (or Tab to one and press Enter) to comment on it.')),
     ),
   );
   return { el, ready: v.ready, gap: v.gaps[0] };
