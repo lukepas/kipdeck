@@ -7,6 +7,8 @@
 .row-spend { flex: none; font: 400 11px/16px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
 .row-spend::before { content: '\00b7'; margin-right: 6px; font-family: var(--font-ui); }
 .row-spend.unknown { font-style: italic; }
+.row-spend.b-warn { color: var(--review); }
+.row-spend.b-over { color: var(--signal); }
 .pane-badges { display: flex; align-items: center; gap: 8px; margin: 4px 0 0; font-size: 12px; color: var(--muted); }
 .pane-spend { font: 400 12px var(--font-mono); font-variant-numeric: tabular-nums; }
 .pane-spend.b-warn { color: var(--review); }

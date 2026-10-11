@@ -83,6 +83,8 @@ export class Spend {
   private warnedDay = '';
   private stoppedDay = '';
   private nudged = new Map<string, number>();
+  /** The input stamp each agent's terminal got from this service's own Esc, so it isn't mistaken for a person typing. */
+  private ownKeys = new Map<string, number>();
   private sentCents = -1;
 
   constructor(private deps: SpendDeps) {
@@ -211,6 +213,9 @@ export class Spend {
   private interrupt(floor: SpendFloor, info: WorkerInfo, by: string) {
     for (const key of INTERRUPT[info.provider ?? ''] ?? ['\x1b']) floor.workers.write(info.id, key, by);
     this.nudged.set(info.id, this.now());
+    // Writing to the terminal stamps WorkerInfo.lastInput like typing does: remember that stamp as ours.
+    const own = floor.workers.get(info.id)?.lastInput?.at;
+    if (own !== undefined) this.ownKeys.set(info.id, own);
   }
 
   private hold(floor: SpendFloor, info: WorkerInfo, hold: Omit<Hold, 'at' | 'wasWorking'>) {
@@ -238,12 +243,14 @@ export class Spend {
    * Lets the held agents among `ids` carry on: one that was at work is told to, one a budget held gets
    * another cap's worth of room (or the rest of the day, past today's cap). Returns the ones it let go.
    */
-  resume(ids: readonly string[], by: string): string[] {
+  resume(ids: readonly string[], by: string, opts: { budget?: boolean } = {}): string[] {
     const done: string[] = [];
     for (const id of new Set(ids)) {
       const w = this.find(id);
       const hold = w?.info.hold;
       if (!w || !hold) continue;
+      // Past a budget cap only someone who may set the caps lets it spend more (the caller says).
+      if (hold.reason !== 'paused' && opts.budget === false) continue;
       this.release(w.floor, w.info, hold);
       if (hold.wasWorking && w.info.status !== 'working' && w.info.status !== 'needs_input') w.floor.workers.prompt(id, RESUME_PROMPT, by);
       done.push(id);
@@ -257,7 +264,16 @@ export class Spend {
     if (hold.reason === 'day-cap' && !this.s.exempt.includes(info.id)) this.s.exempt.push(info.id);
     delete this.s.holds[info.id];
     this.warned.delete(info.id);
+    this.ownKeys.delete(info.id);
     floor.workers.annotate(info.id, { hold: undefined });
+  }
+
+  /** The agents among `ids` held by a budget cap. */
+  budgetHeld(ids: readonly string[]): string[] {
+    return ids.filter((id) => {
+      const r = this.find(id)?.info.hold?.reason;
+      return r === 'agent-cap' || r === 'day-cap';
+    });
   }
 
   /** Ends the sessions of the agents among `ids`, keeping their branches. Returns the ones it stopped. */
@@ -344,6 +360,7 @@ export class Spend {
     // Forget what's kept of agents that are gone: a hold at once (once any floor is open), the rest
     // after a day (their project may only be closed for now).
     const live = new Set(agents.map((a) => a.info.id));
+    for (const m of [this.nudged, this.ownKeys, this.warned]) for (const id of m.keys()) if (!live.has(id)) m.delete(id);
     for (const id of Object.keys(s.holds)) {
       if (live.has(id) || !agents.length) continue;
       delete s.holds[id];
@@ -360,11 +377,13 @@ export class Spend {
   }
 
   /**
-   * A paused agent at work again: someone typed to it since the pause (they let it go, so the hold
-   * comes off as if they'd pressed Continue), or it didn't stop (interrupt it again, now and then).
+   * A paused agent at work again: someone typed to it since a person paused it (they let it go, so
+   * the hold comes off as if they'd pressed Continue), or it didn't stop (interrupt it again, now and
+   * then). A budget hold only comes off with Continue, so typing can't spend past a cap.
    */
   private heldAtWork(floor: SpendFloor, info: WorkerInfo, hold: Hold): boolean {
-    if (info.lastInput && info.lastInput.at > hold.at + 2_000) {
+    const typed = info.lastInput?.at;
+    if (hold.reason === 'paused' && typed !== undefined && typed > hold.at + 2_000 && typed !== this.ownKeys.get(info.id)) {
       this.release(floor, info, hold);
       return true;
     }

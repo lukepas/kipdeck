@@ -1,6 +1,6 @@
 // Spend and control (see spend/service.ts): everyone sees today's spend and the caps; admins set the
-// caps and each project's default permission mode; anyone who can stop one agent can pause, resume
-// or stop several at once, as the inbox's Pause all and Stop all do.
+// caps, each project's default permission mode, and let an agent carry on past a cap; anyone who can
+// stop one agent can pause, resume or stop several at once, as the inbox's Pause all and Stop all do.
 import type { SpendClientMsg } from '../../../shared/protocol.js';
 import type { Client } from '../../office/client.js';
 import type { Ctx } from '../../office/context.js';
@@ -37,7 +37,11 @@ export const spendHandlers = {
     if (done.length) ctx.toastAll(`${c.peer.name} paused ${plural(done.length)}`);
   },
   'spend.resume'(ctx, c, msg) {
-    const done = ctx.spend.resume(idsOf(msg.workerIds), c.peer.name);
+    const ids = idsOf(msg.workerIds);
+    // Admins set the caps, so only they let an agent spend past one.
+    const admin = ctx.meOf(c.accountId).admin;
+    const done = ctx.spend.resume(ids, c.peer.name, { budget: admin });
+    if (!admin && done.length < ids.length && ctx.spend.budgetHeld(ids).length) ctx.warn(c, 'Only admins can let an agent spend past its budget');
     ctx.sendTo(c, { t: 'spend.done', kind: 'resume', workerIds: done });
     if (done.length) ctx.toastAll(`${c.peer.name} let ${plural(done.length)} carry on`);
   },

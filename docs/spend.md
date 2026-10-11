@@ -45,8 +45,10 @@ Today's figure adds up every rise in an agent's reported cost seen since midnigh
 
 At 80 percent of either cap, everyone gets a warning toast once. At 100 percent:
 
-- An agent over its own cap is paused: Kipdeck interrupts it (Esc in its terminal) and holds it in **Needs you** as *Paused: reached its $5.00 budget*. **Continue** lets it carry on with room for another cap's worth; **Stop** ends it.
+- An agent over its own cap is paused: Kipdeck interrupts it (Esc in its terminal) and holds it in **Needs you** as *Paused: reached its $5.00 budget*. **Continue** lets it carry on with room for another cap's worth; **Stop** ends it. Its spend on the row turns amber from 80 percent and orange at the cap.
 - Over the daily cap, every agent at work is paused the same way (*Paused: today's $20.00 budget is spent*). **Continue** lets that agent carry on for the rest of the day.
+
+Only an admin can **Continue** an agent a budget paused, since admins set the caps; anyone else is told so. Typing into its terminal doesn't lift a budget pause either: the agent is interrupted again until an admin decides.
 
 `--budget <usd>` on the command line is the daily cap until an admin sets one in Settings. `--budget-pause` still refuses new hires for the rest of the day once the Claude Code ledger passes `--budget`.
 
@@ -58,7 +60,7 @@ The **Pause all** button in the top bar (beside Deploy agent, while any agent ru
 - **Resume all paused**: lets every paused agent carry on. One that was at work is told to pick up where it left off.
 - **Stop all agents**: asks first, then waits 7 seconds with **Undo** before anything is sent. Each session ends and leaves the inbox, as each agent's own **Stop** does. Every branch stays.
 
-The pane has **Pause** beside **Stop** for one agent at work. Typing into a paused agent's terminal lets it go too: the pause comes off as if you had pressed Continue. An agent that keeps working after a pause (its CLI ignored the Esc) is interrupted again every 30 seconds until someone decides. Pausing sends Esc, which interrupts Claude Code, Codex and OpenCode; a CLI that ignores it needs **Stop**.
+The pane has **Pause** beside **Stop** for one agent at work. Typing into the terminal of an agent someone paused lets it go too: the pause comes off as if you had pressed Continue (a budget pause doesn't, see above). An agent that keeps working after a pause (its CLI ignored the Esc) is interrupted again every 30 seconds until someone decides. Pausing sends Esc, which interrupts Claude Code, Codex and OpenCode; a CLI that ignores it needs **Stop**.
 
 ## Where it is kept
 

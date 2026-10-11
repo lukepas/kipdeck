@@ -50,7 +50,9 @@ function modeBadge(e: Pick<RosterEntry, 'mode' | 'provider'>, always = false): H
 export function rowBadges(e: RosterEntry): HTMLElement[] {
   const said = spendOf(e);
   const chip = spendChip(said);
-  return [modeBadge(e), chip ? h('span.row-spend', { class: said.kind === 'cost' ? '' : 'unknown', title: chip.title }, chip.text) : null].filter((x): x is HTMLElement => !!x);
+  // Amber from 80 percent of its budget, orange at it, as in the pane.
+  const level = said.kind === 'cost' ? budgetLevel(said.usd, store.spend?.agentCap) : 'ok';
+  return [modeBadge(e), chip ? h('span.row-spend', { class: said.kind === 'cost' ? `b-${level}` : 'unknown', title: chip.title }, chip.text) : null].filter((x): x is HTMLElement => !!x);
 }
 
 /** The pane's line under the title: mode (said even when unknown) and spend against its cap. */

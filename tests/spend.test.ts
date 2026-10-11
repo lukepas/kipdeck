@@ -53,7 +53,7 @@ test('a paused agent needs you, with Continue as its action', () => {
 });
 
 /** A floor of fake workers that records what the service did to them. */
-function fakeFloor(id: string, workers: WorkerInfo[]) {
+function fakeFloor(id: string, workers: WorkerInfo[], clock: () => number = Date.now) {
   const writes: { id: string; data: string; by: string }[] = [];
   const prompts: { id: string; text: string }[] = [];
   const homes: string[] = [];
@@ -64,7 +64,11 @@ function fakeFloor(id: string, workers: WorkerInfo[]) {
     workers: {
       list: () => workers,
       get: (wid) => workers.find((w) => w.id === wid),
-      write: (wid, data, by) => void writes.push({ id: wid, data, by }),
+      // As WorkerManager.write does, writing stamps who typed last.
+      write: (wid, data, by) => {
+        writes.push({ id: wid, data, by });
+        workers.find((w) => w.id === wid)!.lastInput = { by, at: clock() };
+      },
       prompt: (wid, text) => (prompts.push({ id: wid, text }), undefined),
       annotate: (wid, patch) => Object.assign(workers.find((w) => w.id === wid)!, patch),
     },
@@ -167,14 +171,20 @@ test("today's cap pauses every agent at work, once, and Continue lets one go for
 
 test('a paused agent someone types to is let go; one that keeps working is interrupted again', () => {
   const a = agent('a');
-  const { floor, writes } = fakeFloor('p', [a]);
+  let clock = 0;
+  const { floor, writes } = fakeFloor('p', [a], () => clock);
   const { spend, tick, at } = service([floor]);
+  clock = at();
   assert.deepEqual(spend.pause(['a', 'missing'], 'Tess'), ['a']);
   assert.equal(a.hold?.by, 'Tess');
   assert.equal(writes.length, 1);
   tick(31_000);
+  clock = at();
   spend.sweep();
   assert.equal(writes.length, 2, 'still at work: Esc again');
+  tick(5000);
+  spend.sweep();
+  assert.equal(a.hold?.by, 'Tess', "Kipdeck's own Esc is not someone typing");
   a.lastInput = { by: 'Tess', at: at() + 5000 };
   tick(6000);
   spend.sweep();
@@ -226,4 +236,31 @@ test("a project's default mode reaches its launches; admins' choices and holds a
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
+});
+
+test('a budget hold comes off only with Continue from someone who may set the caps', () => {
+  let clock = 0;
+  const a = agent('a', { usage: usage(6) });
+  const { floor, writes, prompts } = fakeFloor('p', [a], () => clock);
+  const { spend, tick, at } = service([floor]);
+  clock = at();
+  spend.setCaps({ agentCap: 5 }, 'Admin');
+  spend.sweep();
+  assert.equal(a.hold?.reason, 'agent-cap');
+  // Someone types to it: it is still held, and interrupted again in a while.
+  tick(10_000);
+  a.lastInput = { by: 'Tess', at: at() };
+  spend.sweep();
+  assert.equal(a.hold?.reason, 'agent-cap', 'typing does not spend past a cap');
+  tick(31_000);
+  clock = at();
+  spend.sweep();
+  assert.equal(writes.length, 2);
+  assert.deepEqual(spend.budgetHeld(['a', 'x']), ['a']);
+  assert.deepEqual(spend.resume(['a'], 'Tess', { budget: false }), [], 'not an admin');
+  assert.equal(a.hold?.reason, 'agent-cap');
+  a.status = 'done';
+  assert.deepEqual(spend.resume(['a'], 'Admin', { budget: true }), ['a']);
+  assert.equal(a.hold, undefined);
+  assert.deepEqual(prompts, [{ id: 'a', text: RESUME_PROMPT }]);
 });
