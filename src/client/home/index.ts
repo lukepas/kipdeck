@@ -1,6 +1,6 @@
 // The inbox at /: puts its parts together on the page lite.ts set up. The top bar (the demo's pill, the
 // project picker, Mine or Team, search, today's pulse, Enter the Deck, Deploy agent and the avatar menu), the list on
-// the left with the checklist and Shipped today under it, the selected agent's pane on the right, the
+// the left with Signal's chip over it (signal.ts) and the checklist and Shipped today under it, the selected agent's pane on the right, the
 // keys, and the wait clocks that tick in place (clock.ts).
 
 import { checklistSeen, nextUp } from '../../shared/inbox';
@@ -27,6 +27,7 @@ import { installPane, paneMessage } from './pane';
 import { openPalette, type Command } from './palette';
 import { renderChecklist, renderShipped } from './shipped';
 import { renderPulse } from './pulse';
+import { installSignal, signalView } from './signal';
 import { deckCommands, deckMenuEntry, installDeckCta, renderDeckCta } from './deck-cta';
 import { markChanges } from './motion';
 import { askSetup, onSetupChange, setupCard, setupMessage } from './setup';
@@ -69,6 +70,8 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
   const openNumbers = () => void lazy.numbers().then((m) => m.openNumbers());
   // Labs > Rundown: the project picked in the top bar, else the first.
   const openRundown = () => void lazy.rundown().then((m) => m.openRundown(net, { floor: home.project || undefined }));
+  // Signal: the project's status at one look (the chip over the list, its card).
+  const openSignal = () => void lazy.signal().then((m) => m.openSignal({ view: () => signalView(), openRundown: (floor) => void lazy.rundown().then((r) => r.openRundown(net, { floor })), openGoals: () => actions.showMission('goals') }));
 
   // ---- The top bar ----------------------------------------------------------------------------
   const project = $('project') as HTMLSelectElement;
@@ -99,6 +102,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     { label: 'Deploy agent', hint: 'N', icon: 'plus', run: () => actions.deploy() },
     { label: 'Search agents', hint: '/', icon: 'search', run: () => search.focus() },
     { label: 'Numbers', hint: 'Wait time, merges, merge rate', icon: 'plot', run: openNumbers },
+    { label: 'Signal', hint: 'Project status: on track, at risk or off track', icon: 'target', run: openSignal },
     ...(store.lab('rundown') ? [{ label: 'Rundown', hint: "Labs: a project's parts, milestones and decisions", icon: 'overview' as const, run: openRundown }] : []),
     ...(store.lab('boards') ? workCommands() : []),
     { label: 'While you were away', icon: 'clock', run: () => recallDigest(showDigest) },
@@ -144,6 +148,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     const entries: MenuEntry[] = [
       ...work,
       { label: 'Numbers', icon: 'plot', run: openNumbers },
+      { label: 'Signal', icon: 'target', run: openSignal },
       store.lab('rundown') ? { label: 'Rundown', icon: 'overview', run: openRundown } : null,
       { label: 'Settings', icon: 'settings', run: openSettings },
       deckMenuEntry(),
@@ -233,6 +238,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
   });
 
   installPane($('pane'), net, actions);
+  installSignal(net, openSignal);
   installKeys(actions, palette, search);
   window.addEventListener('blur', () => menuOpen() && closeMenu());
   renderProjects();

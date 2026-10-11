@@ -55,6 +55,8 @@ export const home = {
   paneOpen: false,
   /** A demo office (`--demo`): no Get started checklist. */
   demo: false,
+  /** The read-only demo (`--demo --read-only`): a visitor can look but change nothing. */
+  readOnly: false,
   /** Esc emptied the pane on purpose: nothing opens in it by itself until another agent needs you (pane.ts). */
   held: false,
   /** '' for All projects, else a floor id. */

@@ -258,13 +258,18 @@ export async function stateKey(dir: string): Promise<string> {
 }
 
 /** The skill's judgement for this checkout, from its .rundown/rundown.json, if it wrote one we can trust the shape of. */
-export async function skillJudgement(dir: string): Promise<{ judgement: Judgement | null; gap?: string }> {
+export async function skillJudgement(dir: string): Promise<{ judgement: Judgement | null; gap?: string; generatedAt?: number }> {
   const text = await readSmall(dir, '.rundown/rundown.json', LIMITS.skillFileBytes + 1);
   if (text === null) return { judgement: null };
   if (text.length > LIMITS.skillFileBytes) return { judgement: null, gap: '.rundown/rundown.json is over 512 KB: left out' };
   try {
-    const v = judgementOfRundown(JSON.parse(text));
-    return v.ok ? { judgement: v.value } : { judgement: null, gap: `.rundown/rundown.json left out: ${v.error}` };
+    const raw: unknown = JSON.parse(text);
+    const v = judgementOfRundown(raw);
+    if (!v.ok) return { judgement: null, gap: `.rundown/rundown.json left out: ${v.error}` };
+    // When the skill wrote it, which a copy, checkout or pull keeps (the file's mtime they reset).
+    const stamp = raw && typeof raw === 'object' ? (raw as { generatedAt?: unknown }).generatedAt : undefined;
+    const generatedAt = typeof stamp === 'string' ? Date.parse(stamp) : NaN;
+    return { judgement: v.value, ...(Number.isFinite(generatedAt) ? { generatedAt } : {}) };
   } catch {
     return { judgement: null, gap: '.rundown/rundown.json is not JSON: left out' };
   }

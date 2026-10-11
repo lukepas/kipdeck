@@ -26,6 +26,7 @@ import type { WhiteboardClientMsg, WhiteboardServerMsg } from './protocol/whiteb
 import type { UsageClientMsg, UsageServerMsg } from './protocol/usage.js';
 import type { WorkerClientMsg, WorkerServerMsg } from './protocol/workers.js';
 import type { RundownClientMsg, RundownServerMsg } from './protocol/rundown.js';
+import type { SignalClientMsg, SignalServerMsg } from './protocol/signal.js';
 
 export * from './protocol/accounts.js';
 export * from './protocol/agents.js';
@@ -50,6 +51,7 @@ export * from './protocol/whiteboard.js';
 export * from './protocol/usage.js';
 export * from './protocol/workers.js';
 export * from './protocol/rundown.js';
+export * from './protocol/signal.js';
 
 export type ClientMsg =
   | PresenceClientMsg
@@ -75,7 +77,8 @@ export type ClientMsg =
   | LabsClientMsg
   | InboxClientMsg
   | SetupClientMsg
-  | RundownClientMsg;
+  | RundownClientMsg
+  | SignalClientMsg;
 
 export type ServerMsg =
   | PresenceServerMsg
@@ -99,4 +102,5 @@ export type ServerMsg =
   | LabsServerMsg
   | InboxServerMsg
   | SetupServerMsg
-  | RundownServerMsg;
+  | RundownServerMsg
+  | SignalServerMsg;
