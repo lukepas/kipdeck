@@ -14,6 +14,7 @@ import { openPromptEditor, rewrittenPrompts } from './prompts';
 import { setting, type SettingsPaneDef } from './settings-frame';
 import { gateSettings } from './gate-settings';
 import { spendSettings } from './settings-spend';
+import { pushSetting } from './push-settings';
 
 export type CorePane = 'account' | 'agents' | 'notify';
 
@@ -250,7 +251,7 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
     hookSave.textContent = webhook ? 'Replace' : 'Save';
     hookStatus.classList.toggle('bad', !!error);
     hookStatus.textContent = !webhook
-      ? "Paste an incoming https webhook from Slack or Discord, and that channel hears when an agent needs input, finishes or gets stuck and nobody has it open. It's for everyone."
+      ? "Paste an incoming https webhook from Slack or Discord, and that channel hears when an agent needs input, finishes or gets stuck and its push went unanswered for a few minutes with nobody at a Kipdeck tab. It's for everyone."
       : error
         ? `Posting to ${WEBHOOK_NAME[webhook.kind]} (${webhook.hint}) failed: ${error}`
         : `Posting to ${WEBHOOK_NAME[webhook.kind]} (${webhook.hint}), set by ${webhook.by} ${timeAgo(webhook.at)}${lastSentAt ? ` · last message ${timeAgo(lastSentAt)}` : ''}.`;
@@ -303,7 +304,7 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
       icon: 'bell',
       label: 'Notifications',
       blurb: 'Hear about an agent that needs you, or has something to review, while you are somewhere else.',
-      body: [setting('Desktop notifications', 'you', notifyRow, notifyNote), setting('Team channel (Slack or Discord)', 'office', hookRow, hookActions, hookStatus), ...(extra.notify ?? [])],
+      body: [pushSetting(), setting('Desktop notifications', 'you', notifyRow, notifyNote), setting('Team channel (Slack or Discord)', 'office', hookRow, hookActions, hookStatus), ...(extra.notify ?? [])],
     },
   ];
   return { panes, off: () => offs.forEach((off) => off()) };

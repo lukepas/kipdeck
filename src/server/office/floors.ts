@@ -102,11 +102,11 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
     },
     workerChanged: (floor, w) => {
       if (typeof w === 'string') {
-        ctx.webhook.onWorkerGone(w);
+        ctx.push.alerts.onWorkerGone(w);
         // Sent home: its review brief's journal goes with it (brief/log.ts).
         ctx.briefs.forget(w);
         ctx.pumpQueues(floor);
-      } else ctx.webhook.onWorker(w);
+      } else ctx.push.alerts.onWorker(w);
       ctx.machine.workersChanged();
       ctx.floorsChanged();
       ctx.rosterChanged();

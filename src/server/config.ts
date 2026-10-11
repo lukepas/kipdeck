@@ -195,7 +195,8 @@ Options:
                           is refused. Admins can lower the limit from 
                           Settings, but not raise it past this
       --webhook <url>     Post to this Slack or Discord webhook when an agent
-                          needs input, finishes or gets stuck (env AGENT_OFFICE_WEBHOOK).
+                          needs input, finishes or gets stuck and its push goes
+                          unanswered (env AGENT_OFFICE_WEBHOOK).
                           Also settable from Settings; "" turns it off
       --labs <names>      Hold labs on so admins can't switch them off (env AGENT_OFFICE_LABS):
                           boards, bridge (the Deck), ops, meetings, voice, ambience,

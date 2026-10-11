@@ -10,6 +10,7 @@ import { fileRoutes } from './files.js';
 import { githubRoutes } from './github.js';
 import { localRoutes } from './local.js';
 import { pageRoutes } from './pages.js';
+import { pushRoutes } from './push.js';
 import { reputationRoutes } from './reputation.js';
 import { rundownRoutes } from './rundown.js';
 import { searchRoutes } from './search.js';
@@ -42,6 +43,10 @@ export const routes: readonly Route[] = [
   pageRoutes.join,
   pageRoutes.favicon,
   pageRoutes.appIcon,
+  // The installable app: its service worker, manifest and icons, fetched without a session.
+  pushRoutes.worker,
+  pushRoutes.manifest,
+  pushRoutes.icons,
   // Proof of Merge (Labs, testnets), each only while the lab is on.
   // The public "Fund this issue" Action (devnet), for opted-in repositories only.
   proof(actionRoutes.manifest),
@@ -68,6 +73,12 @@ export const routes: readonly Route[] = [
   searchRoutes.search,
   serviceRoutes.forwards,
   githubRoutes.github,
+  // Push to your devices: subscribing, a test, and a notification's buttons.
+  pushRoutes.state,
+  pushRoutes.subscribe,
+  pushRoutes.unsubscribe,
+  pushRoutes.test,
+  pushRoutes.act,
   // Rundown (Labs): a project's map page as a download.
   rundownRoutes.map,
   pageRoutes.home,

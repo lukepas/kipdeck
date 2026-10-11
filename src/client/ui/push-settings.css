@@ -1,0 +1,4 @@
+/* Settings > Notifications > Push to your devices: the list of your devices under the switch. */
+.push-devices { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.push-devices li { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.push-devices li span { flex: 1; min-width: 0; overflow-wrap: anywhere; }

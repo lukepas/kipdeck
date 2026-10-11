@@ -106,25 +106,17 @@ test('a webhook pointed at this machine or the LAN is never posted to', async (t
   assert.equal(hook.set('https://169.254.169.254/latest', 'Ada'), undefined);
   assert.match((await hook.test('Ada')) ?? '', /public internet/);
   assert.equal(errors.mock.callCount(), 2);
-  hook.stop();
 });
 
-test('a worker that gets stuck is posted once it has stayed stuck through the settle time, and not if it got going again', async (t) => {
+test('a stuck worker goes to the channel through the same guard (when is push/alerts.ts\'s call)', async (t) => {
   const dir = mkdtempSync(path.join(tmpdir(), 'office-webhook-'));
   t.after(() => rmSync(dir, { recursive: true, force: true }));
   const errors = t.mock.method(console, 'error', () => {});
-  const settled = () => new Promise((r) => setTimeout(r, 30));
-  const hook = new Webhook(dir, () => 'demo', () => {}, {}, 10);
-  // Nowhere it would really post: an address this machine never posts to, so each try fails with why.
+  const hook = new Webhook(dir, () => 'demo', () => {});
+  // Nowhere it would really post: an address this machine never posts to, so the try fails with why.
   assert.equal(hook.set('https://127.0.0.1:9/hooks', 'Ada'), undefined);
   const entry = { id: 'w1', floor: 'f', floorName: 'api', deskId: 'desk-1', name: 'Mochi', color: '#fff', kind: 'agent' as const, status: 'working' as const, acked: true, createdAt: 0, tasked: true };
-  hook.onStuck(entry, 'working but silent for 12 min', () => undefined);
-  hook.onStuck({ ...entry, id: 'w2', kind: 'shell' }, 'crashed (exit 1)', () => 'crashed (exit 1)');
-  await settled();
-  assert.equal(hook.state().error, undefined, 'it got going again, and a shell is never posted');
-  hook.onStuck(entry, 'working but silent for 12 min', () => 'working but silent for 13 min');
-  for (let i = 0; i < 100 && !hook.state().error; i++) await settled();
+  assert.match((await hook.stuck(entry, 'working but silent for 13 min')) ?? '', /public internet/);
   assert.match(hook.state().error ?? '', /public internet/, 'it tried to post');
   assert.equal(errors.mock.callCount(), 1);
-  hook.stop();
 });

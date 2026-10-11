@@ -35,6 +35,9 @@ export function files(): Record<string, string> {
 /** The PNG app icons, rendered from app-icon.svg: [file, size]. */
 export const PNGS: [string, number][] = [
   ['src/client/public/apple-touch-icon.png', 180],
+  // The installed app's icons (src/client/public/manifest.webmanifest).
+  ['src/client/public/icon-192.png', 192],
+  ['src/client/public/icon-512.png', 512],
   ['site/landing/public/apple-touch-icon.png', 180],
   ['deck/site/apple-touch-icon.png', 180],
   ['design/logo/app-icon-512.png', 512],

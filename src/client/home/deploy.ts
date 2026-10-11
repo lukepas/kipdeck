@@ -12,6 +12,8 @@ import { agentMark, CERTIFIED } from './list';
 import { agentFound } from './setup';
 import { home } from './state';
 import { storageKey } from '../shared/storage-key';
+import { askOnceAtDeploy } from '../pwa/ask';
+import { pushName } from '../pwa';
 
 const LAST_AGENT = storageKey('agent');
 
@@ -131,6 +133,8 @@ export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentPr
     const choice = { provider, model: fields.model(), effort: fields.effort() };
     const floor = project.value;
     modal.close();
+    // The first Deploy asks once whether this device may hear when an agent needs you.
+    askOnceAtDeploy(pushName(), toast);
     try {
       localStorage.setItem(LAST_AGENT, provider);
     } catch {

@@ -15,6 +15,7 @@ import type { Services } from '../services.js';
 import type { Ledger } from '../usage.js';
 import type { PlanLimitsReader } from '../limits.js';
 import type { Webhook } from '../webhook.js';
+import type { PushParts } from '../push/index.js';
 import type { Machine } from '../machine.js';
 import type { Building, FloorDef } from '../building.js';
 import type { Floor } from '../floor.js';
@@ -85,6 +86,8 @@ export interface BuildingServices {
   /** Each account's own, once it runs on a Claude sign-in of its own. */
   accountLimits: Map<string, { key: string; reader: PlanLimitsReader }>;
   webhook: Webhook;
+  /** Push notifications: devices, who is at a desk, and when an agent that waits reaches whom (see push/alerts.ts). */
+  push: PushParts;
   machine: Machine;
   /** Whose plan `c` sees: their own, on an account with its own Claude sign-in; else the office's. */
   limitsOf(c: Client): PlanLimitsReader;

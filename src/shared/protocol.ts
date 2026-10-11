@@ -31,6 +31,7 @@ import type { SignalClientMsg, SignalServerMsg } from './protocol/signal.js';
 import type { ApprovalsClientMsg, ApprovalsServerMsg } from './protocol/approvals.js';
 import type { GateClientMsg, GateServerMsg } from './protocol/gate.js';
 import type { SpendClientMsg, SpendServerMsg } from './protocol/spend.js';
+import type { PushClientMsg } from './protocol/push.js';
 
 export * from './protocol/accounts.js';
 export * from './protocol/agents.js';
@@ -60,6 +61,7 @@ export * from './protocol/signal.js';
 export * from './protocol/approvals.js';
 export * from './protocol/gate.js';
 export * from './protocol/spend.js';
+export * from './protocol/push.js';
 
 export type ClientMsg =
   | PresenceClientMsg
@@ -90,7 +92,8 @@ export type ClientMsg =
   | BriefClientMsg
   | ApprovalsClientMsg
   | GateClientMsg
-  | SpendClientMsg;
+  | SpendClientMsg
+  | PushClientMsg;
 
 export type ServerMsg =
   | PresenceServerMsg
