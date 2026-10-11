@@ -4,12 +4,29 @@ Back to the [README](../README.md).
 
 Rundown is Kipdeck's map of one project: its main parts and how far each has got (done, in progress, not started, stuck), its milestones and what is left before the next one, the suggested next step, what changed since the last look, commit activity, branches and worktrees, and the decisions waiting on you, each with the default the map assumes until you answer.
 
-It comes two ways, from one implementation:
+It comes three ways, from one implementation that ships in the `kipdeck` package:
 
-- **The `/rundown` skill** in Claude Code, in any git checkout. It writes one self-contained page, `.rundown/rundown.html` (the same file as `map.html`), that opens offline with a double-click.
-- **The office** (Labs > Rundown), for every project it hosts: the Rundown window in the inbox and on the Deck, and the project as a city of light over the Deck's holo table.
+- **The office** (Labs > Rundown), for every project it hosts: the Rundown window in the inbox and on the Deck, and the project as a city of light over the Deck's holo table. It builds each project's first map by itself, so the window opens with data and Signal shows the parts ([The office's first map](#the-offices-first-map)).
+- **`kipdeck rundown [path]`** in a terminal, in any git checkout, with no office and no Claude: the facts and the parts inferred from them, as the page in `.rundown/` and a short summary.
+- **The `/rundown` skill** in Claude Code, in any git checkout, for Claude's own read of the parts, the next step and the decisions. `kipdeck rundown install` adds it. It writes one self-contained page, `.rundown/rundown.html` (the same file as `map.html`), that opens offline with a double-click.
+
+Until Claude has read a project, the window and Signal's card say so in one line: "Inferred from the code. For Claude's read, run /rundown (kipdeck rundown install adds it to Claude Code)."
 
 ![The Rundown window in the inbox](../design/shots/rundown/final/window-dark.png)
+
+## From the command line
+
+```
+kipdeck rundown                 the map of the checkout you're in
+kipdeck rundown ~/code/api      another checkout
+kipdeck rundown --open          and open the page
+kipdeck rundown install         add /rundown to Claude Code (~/.claude/skills/rundown/)
+kipdeck rundown install --dry-run
+```
+
+`kipdeck rundown [path]` runs the skill's own script (`quick`): it collects the facts, takes the parts and statuses from the last `/rundown` judgement when the skill left one and infers them from the folders otherwise, writes `.rundown/` exactly as the skill does (kept out of git through `.git/info/exclude`), and prints where the page is, the next milestone, the next step, what changed, the open decisions and the parts, about ten lines. `--no-gh` leaves out GitHub's issues and pull requests. The same guards apply: a path that isn't a folder stops it with exit 2, and your home folder or `/` is only mapped when named.
+
+`kipdeck rundown install` copies the package's `dist/rundown/rundown.mjs`, `skills/rundown/SKILL.md` and `skills/rundown/README.md` into `~/.claude/skills/rundown/`, with the installer's list, backup and diff (below). `npx kipdeck rundown install` does it without installing Kipdeck. `kipdeck rundown --help` has the options.
 
 ## The skill
 
@@ -35,9 +52,9 @@ The rest of `.rundown/` is the script's: `facts.json`, `judgement.json`, `rundow
 
 ### Where the script comes from
 
-There is one implementation: the office's own code (`src/server/rundown/` and `src/shared/rundown/`), bundled by `vite.rundown.config.ts` into one dependency-free file for Node 18 or newer, `dist/rundown/rundown.mjs` (part of `npm run build`, or `npm run build:rundown` alone). The skill's own files are `skills/rundown/SKILL.md` and `skills/rundown/README.md`. There is no copy under this repository's `.claude/skills/`, so a project skill never shadows the global one.
+There is one implementation: the office's own code (`src/server/rundown/` and `src/shared/rundown/`), bundled by `vite.rundown.config.ts` into one dependency-free file for Node 18 or newer, `dist/rundown/rundown.mjs` (part of `npm run build`, or `npm run build:rundown` alone). The skill's own files are `skills/rundown/SKILL.md` and `skills/rundown/README.md`. All three are in the npm package (its `files` list has `dist` and `skills/rundown`), so an installed Kipdeck carries the skill. There is no copy under this repository's `.claude/skills/`, so a project skill never shadows the global one.
 
-`npm run rundown:install` builds the script and puts it, `SKILL.md` and `README.md` into `~/.claude/skills/rundown/`, which makes `/rundown` work in every directory. Before it changes anything it lists what is new, changed, unchanged and taken out (the scripts of an older install), copies the whole old folder to `~/.claude/backups/rundown-<time>/`, and prints a `diff -ru` command to compare. `npm run rundown:install -- --dry-run` only prints the list and `SKILL.md`'s diff. Screenshots in the installed `examples/` are left alone. Working on Mergeline itself, the skill uses the fresh build in `dist/` when there is one. Changing `SKILL.md` needs no build; changing the collector or the page means rebuilding (and installing again for the global copy).
+`kipdeck rundown install` puts the script, `SKILL.md` and `README.md` into `~/.claude/skills/rundown/`, which makes `/rundown` work in every directory; `SKILL.md` runs the copy there, `~/.claude/skills/rundown/scripts/rundown.mjs`. Before it changes anything it lists what is new, changed, unchanged and taken out (the scripts of an older install), copies the whole old folder to `~/.claude/backups/rundown-<time>/`, and prints a `diff -ru` command to compare. `--dry-run` only prints the list and `SKILL.md`'s diff. Screenshots in the installed `examples/` are left alone. The bundled script does the same on its own (`node dist/rundown/rundown.mjs install`): it finds `SKILL.md` and `README.md` beside it in the package, or takes `--skill` and `--readme`. In a source checkout, `npm run rundown:install` builds the script first. Working on Kipdeck itself, the skill uses the fresh build in `dist/` when there is one. Changing `SKILL.md` needs no build; changing the collector or the page means rebuilding (and installing again for the global copy).
 
 ## In the office
 
@@ -54,11 +71,17 @@ Every district has a callout: its status as a glyph and a word, its name at 15 p
 
 It draws nothing while it's down or the tab is hidden. Up, it costs at most four draws (towers, lines, rings, pulses) and puts away more than that: from the conn the perf probe measured 374 draws with the city up against 393 with it down at High (budget 400), and the shots 211 against 219 at Medium. `node design/shoot-rundown.mjs` fails if the city ever costs more than what stands down for it, or goes over the tier's budget; `node design/perf-probe.mjs` times the conn with the city up once it says it's built.
 
+### The office's first map
+
+When a project opens in the office (at start, added, or cloned) with the Rundown lab on, or the lab comes back on, the office builds that project's map once in the background, with nobody watching: the facts and the inferred parts, no Claude, through the same one-at-a-time queue, 2 s after the project opens (`PRIME_DELAY_MS`) so starting the office isn't slowed. It happens once per project for as long as the office runs; after that the map only moves while someone watches it, as below. So the Rundown window opens straight onto a map, never "Computing the first rundown...", and Signal's card has the parts and a next thing to show before anyone opens the window ([Signal](signal.md)).
+
+The office keeps that map in its own memory. It writes nothing into the project's `.rundown/`, which stays the skill's and yours, and adds nothing to `.git/info/exclude`; the only file it touches is its own diff base, `.agent-office/rundown/state.json`, as it always has. Signal reads the map from memory. A restart builds it again. In the read-only demo there is no first map, as there is no rundown at all.
+
 ### What the office knows without Claude
 
-The office computes a project's map itself, with the same collector, whenever someone has it open: the facts, and parts inferred from the folders with statuses worked out from activity (changes or commits in the last 14 days are in progress, under 50 lines not started, the rest done; never stuck, since only a person or Claude can say what something waits on). The window says so: "Statuses inferred. Run /rundown in this project for a real read." Once the skill has run in the project, the office takes the parts, statuses, evidence and next step from its `.rundown/rundown.json` (read only, 512 KB at most, checked) and your milestones and decisions from the two markdown files, with its own numbers. The office never writes into `.rundown/`; what it diffs against is its own `.agent-office/rundown/state.json`, moved on when the project's HEAD moves, or when its last look was 30 minutes or more ago, so "Changed since last update" also shows uncommitted work and status changes since you last looked.
+The office computes a project's map itself, with the same collector, once when the project opens (above) and whenever someone has it open: the facts, and parts inferred from the folders with statuses worked out from activity (changes or commits in the last 14 days are in progress, under 50 lines not started, the rest done; never stuck, since only a person or Claude can say what something waits on). The window says so: "Inferred from the code. For Claude's read, run /rundown (kipdeck rundown install adds it to Claude Code)." Its suggested next step is then the one Signal's card works out from the code (the first open item of your next milestone, else the part with the most uncommitted work, else the part in progress that moved last), marked "Inferred from the code." Once the skill has run in the project, the office takes the parts, statuses, evidence and next step from its `.rundown/rundown.json` (read only, 512 KB at most, checked) and your milestones and decisions from the two markdown files, with its own numbers. The office never writes into `.rundown/`; what it diffs against is its own `.agent-office/rundown/state.json`, moved on when the project's HEAD moves, or when its last look was 30 minutes or more ago, so "Changed since last update" also shows uncommitted work and status changes since you last looked.
 
-It computes only while someone watches a project, one project at a time across the building, and looks again when HEAD or the working tree moved (checked every minute) or a pull request merged on that floor. Refresh is allowed once every 30 seconds per project. The download waits at most 45 s for a map and answers 503 rather than hang (a project taken off the building or the office closing while it waits also answer at once). A failed computation tells the page only "Couldn't read this project"; the detail, which may name server paths, goes to the office's log.
+Past its first map, it computes only while someone watches a project, one project at a time across the building, and looks again when HEAD or the working tree moved (checked every minute) or a pull request merged on that floor. Refresh is allowed once every 30 seconds per project. The download waits at most 45 s for a map and answers 503 rather than hang (a project taken off the building or the office closing while it waits also answer at once). A failed computation tells the page only "Couldn't read this project"; the detail, which may name server paths, goes to the office's log.
 
 ## The data model
 
@@ -89,7 +112,7 @@ Everything is read only, and nothing in the mapped project runs:
 ## For developers
 
 - `src/shared/rundown/`: the model (`schema.ts`, `model.ts`, `infer.ts`, `diff.ts`, `markdown.ts`, `validate.ts`), the layouts (`treemap.ts`, `heatmap.ts`, `branches.ts`, `paths.ts`) and the page (`html.ts`, `html-sections.ts`, `html-assets.ts`). Pure.
-- `src/server/rundown/`: the collector, the office's service, and the skill's CLI. `ws/handlers/rundown.ts` (watch, unwatch, refresh) and `http/routes/rundown.ts` (the download), gated by `ws/labgate.ts` and the route's `lab`.
+- `src/server/rundown/`: the collector, the office's service (`service.ts`) and each floor's first map (`first.ts`), the skill's CLI (`cli.ts`) and `kipdeck rundown` (`command.ts`, found through the command registry `src/server/commands.ts`). `ws/handlers/rundown.ts` (watch, unwatch, refresh) and `http/routes/rundown.ts` (the download), gated by `ws/labgate.ts` and the route's `lab`.
 - `src/client/ui/rundown/`: the window, loaded lazily by the inbox (`home/lazy.ts`) and the bridge. `state/slices/rundown.ts` keeps what the office sent per floor.
 - `src/client/features/rundown/`: the holo city (`world.ts` the fixture, `city.ts` the meshes and shaders, `labels.ts` and `callouts.css` the callouts, `logic.ts` the pure layouts of the city and the callout columns, `sound.ts`), its menu rows and Ctrl+K entries, and E at a district. `Holo.yieldTo` in `features/bridge/holo.ts` and `HoloHeading.yieldTo` in `features/life/heading.ts` are the seams it uses there.
-- Tests: `tests/rundown-*.test.ts` (the model, the diff, the markdown files, validation, layouts, the collector against a repository with traps in it, the handlers and route, and the built script and its page in a headless browser). Screenshots: `node design/shoot-rundown.mjs` after `npm run build`, into `design/shots/rundown/final/`; it also checks every callout is on screen, at 14 px or more, and clear of the others, from the conn, the pit and the side. `FLICKER_RUNDOWN=1 node design/flicker-check.mjs` sweeps the table with the city up.
+- Tests: `tests/rundown-*.test.ts` (the model, the diff, the markdown files, validation, layouts, the collector against a repository with traps in it, the handlers and route, and the built script and its page in a headless browser). `tests/rundown-command.test.ts` has the command's arguments, the registry and the first map; `tests/rundown-ship.test.ts` packs the package, installs the skill from it into a throwaway HOME and maps a fixture with `kipdeck rundown`; `tests/rundown-first-e2e.test.ts` starts an office on a fresh project and opens the window and Signal's card in a browser (`RUNDOWN_FIRST_SHOTS=<dir>` saves screenshots of both). Screenshots: `node design/shoot-rundown.mjs` after `npm run build`, into `design/shots/rundown/final/`; it also checks every callout is on screen, at 14 px or more, and clear of the others, from the conn, the pit and the side. `FLICKER_RUNDOWN=1 node design/flicker-check.mjs` sweeps the table with the city up.
