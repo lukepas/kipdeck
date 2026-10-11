@@ -2,7 +2,7 @@
 // (Needs you, To review, Working, Idle), the selected one's live terminal, changes and log beside the
 // list, and Shipped today under it. The inbox itself is home/; this file connects to the office,
 // signs you in and keeps the tab title and notifications current. No three.js: the 3D Deck is a
-// view of its own at /deck, its lab on by default. You're in the office as someone on the 2D view
+// view of its own at /deck, its lab off by default. You're in the office as someone on the 2D view
 // (PeerInfo.lite), not standing anywhere in it.
 
 import { Net } from './net';

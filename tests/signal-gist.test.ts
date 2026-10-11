@@ -76,6 +76,8 @@ function office(floor: GistFloor, readOnly = false) {
   const sent: { to: string; msg: ServerMsg }[] = [];
   const warned: string[] = [];
   const labs = new Labs(undefined);
+  // Labs ship off; Signal reads milestones from Goals and Rundown, so an admin has them on here.
+  labs.set({ ops: true, rundown: true }, 'test');
   const ctx = {
     cfg: { demo: readOnly ? { readOnly: true } : undefined },
     labs,

@@ -59,7 +59,7 @@
   --working: #c9d2dc;
   --proof: #a68bff;
   --settled: #3ddc97;
-  /* The Deck's instruments and quiet work, and the home page's way in to it (home/deck-cta.css). */
+  /* The Deck's instruments and quiet work. */
   --ship: #6fc3df;
   --ship-tint: rgb(111 195 223 / .10);
   /* The data palette: telling things apart (a yoke, a sign, a pin), never a state (shared/datacolors.ts). */

@@ -3,13 +3,11 @@
 // with the question card over it while it asks something), Changes (the diff, its checks and pull
 // request, the branch it merges into, Merge and Send back) and Log (what happened to it). On a wide
 // screen it is never empty while something waits: with nothing selected, the oldest that needs you
-// (or is ready to review) opens by itself. With nobody waiting it says so, with the day so far.
+// (or is ready to review) opens by itself. With nobody waiting it says All clear, with what shipped today (empty.ts).
 // On a phone the pane covers the list, with a Back button.
 
 import { attention, duration } from '../../shared/attention';
 import { intoWords, mergeWords, nextUp, rowAction, sectionOf } from '../../shared/inbox';
-import { todayPulse } from '../../shared/metrics';
-import { waitWords } from '../../shared/wait';
 import type { RosterEntry, ServerMsg, TimelineEvent } from '../../shared/protocol';
 import { PROVIDER_META } from '../../shared/providers';
 import type { Net } from '../net';
@@ -20,9 +18,9 @@ import { modelBadge } from '../ui/provider';
 import type { Actions } from './actions';
 import { onProject } from './deploy';
 import * as lazy from './lazy';
-import { agentMark, currentView, entryTitle, waitingNow, whereLabel } from './list';
+import { agentMark, currentView, entryTitle, whereLabel } from './list';
 import { questionCard } from './question';
-import { preview } from './preview';
+import { emptyState, markCleared, placeDeckPlan } from './empty';
 import { home, type PaneTab } from './state';
 
 /** Wide enough for the list and the pane side by side (lite.css). */
@@ -63,52 +61,6 @@ function workLine(e: RosterEntry): string {
 
 const CHECKS: Record<string, string> = { pass: 'checks passing', fail: 'checks failing', pending: 'checks running', none: 'no checks' };
 const REVIEW: Record<string, string> = { approved: 'approved', changes: 'changes requested', required: 'review required' };
-
-/** "3 agents working, 1 merged today, median wait 32s today": the day so far, for the calm pane. */
-export function daySoFar(working: number, merged: number, medianWaitMs: number | undefined): string {
-  const parts = [working ? `${working} agent${working === 1 ? '' : 's'} working` : 'no agent working', `${merged} merged today`];
-  if (medianWaitMs !== undefined) parts.push(`median wait ${waitWords(medianWaitMs)} today`);
-  const s = parts.join(', ');
-  return `${s[0].toUpperCase()}${s.slice(1)}.`;
-}
-
-/** When the last one waiting on you was dealt with, so the cleared queue is marked once, just then. */
-let clearedAt = 0;
-
-/** The pane with nothing selected: what's waiting and one button to start on it, or, with nobody waiting, the day so far. */
-function emptyState(actions: Actions): HTMLElement {
-  const keys = h('p.pe-keys', {}, h('kbd', {}, 'Up'), h('kbd', {}, 'Down'), ' to move · ', h('kbd', {}, 'Enter'), ' to open · ', h('kbd', {}, '?'), ' for help');
-  if (!store.roster.length) return preview();
-  const view = currentView();
-  const next = nextUp(view);
-  const n = view.counts;
-  if (!n['needs-you'] && !n.review) {
-    // Cleared just now: the check draws itself in, once (under reduced motion it is simply there).
-    const earned = clearedAt > 0 && Date.now() - clearedAt < 1_500;
-    clearedAt = 0;
-    const records = home.project ? home.records.filter((r) => r.floor === home.project) : home.records;
-    const day = todayPulse(records, waitingNow(view), Date.now());
-    return h(
-      'div.pe.calm',
-      { class: earned ? 'earned' : '' },
-      h('span.pe-ok', {}, icon('check', 20)),
-      h('h2', {}, 'Nobody waiting'),
-      h('p', {}, daySoFar(n.working, day.merged, day.medianWaitMs)),
-      h('button.btn', { type: 'button', onclick: () => actions.deploy() }, icon('plus', 16), 'Deploy agent'),
-      keys,
-    );
-  }
-  const line = n['needs-you'] ? `${n['needs-you']} agent${n['needs-you'] === 1 ? ' needs' : 's need'} you` : `${n.review} change${n.review === 1 ? '' : 's'} to review`;
-  const sub = n.working ? `${n.working} agent${n.working === 1 ? ' is' : 's are'} working.` : 'No agent is working right now.';
-  return h(
-    'div.pe',
-    {},
-    h('h2', {}, line),
-    h('p', {}, sub),
-    next ? h(n['needs-you'] ? 'button.btn.primary.needs-you' : 'button.btn.primary', { type: 'button', 'data-id': next.id, onclick: () => home.select(next.id, next.status === 'needs_input' ? 'terminal' : 'changes') }, n['needs-you'] ? 'Start with the oldest' : 'Review the oldest') : null,
-    keys,
-  );
-}
 
 export function installPane(root: HTMLElement, net: Net, actions: Actions) {
   const back = h('button.btn.pane-back', { type: 'button', onclick: () => home.select(undefined), 'aria-label': 'Back to the inbox' }, icon('back', 16), 'Inbox');
@@ -233,19 +185,6 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
     );
   };
 
-  let plan: HTMLElement | undefined;
-  const showPlan = async () => {
-    if (!plan) {
-      plan = h('div.lite-plot');
-      const { mountLitePlot } = await import('../lite-plot');
-      mountLitePlot(plan, (id) => home.select(id, 'terminal'));
-    }
-    if (plan.parentElement !== empty) {
-      delete empty.dataset.key;
-      empty.replaceChildren(plan);
-    }
-  };
-
   /** The agents last seen waiting on you, so one that newly does opens again after an Esc or a merge. */
   let waitingIds = new Set<string>();
   /** With nothing selected on a wide screen: the oldest that needs you, else the oldest to review. */
@@ -253,7 +192,7 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
     const view = currentView();
     const now = new Set([...view.sections['needs-you'], ...view.sections.review].map((r) => r.entry.id));
     if ([...now].some((id) => !waitingIds.has(id))) home.held = false;
-    if (waitingIds.size && !now.size) clearedAt = Date.now();
+    if (waitingIds.size && !now.size) markCleared();
     waitingIds = now;
     if (!wide() || home.held || home.selected) return false;
     const next = nextUp(view);
@@ -287,17 +226,15 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
     document.body.classList.toggle('pane-open', home.paneOpen && !!e);
     if (!e) {
       if (home.selected && !store.rosterEntry(home.selected)) home.selected = undefined;
-      // While the Deck lab is on (it ships on), the project's deck plan fills the empty pane (loaded only then).
-      if (store.lab('bridge')) void showPlan();
-      else {
-        // Drawn again only when what it says changes, so a roster tick doesn't restart the cleared check.
-        const next = emptyState(actions);
-        const key = next.outerHTML.replace(/ earned/, '');
-        if (empty.dataset.key !== key || !empty.firstElementChild) {
-          empty.dataset.key = key;
-          empty.replaceChildren(next);
-        }
+      // The work first (empty.ts); the deck plan under it only while the Deck lab is on.
+      // Drawn again only when what it says changes, so a roster tick doesn't restart the cleared check.
+      const next = emptyState(actions);
+      const key = next.outerHTML.replace(/ earned/, '');
+      if (empty.dataset.key !== key || !empty.firstElementChild) {
+        empty.dataset.key = key;
+        empty.replaceChildren(next);
       }
+      void placeDeckPlan(empty);
       void unmount();
       return;
     }

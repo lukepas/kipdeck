@@ -1,5 +1,5 @@
 // Ctrl+K: one box to reach any agent by its task or name, and every command the inbox has. Type to
-// narrow it, Up and Down to move, Enter to go.
+// narrow it (labels before hints, palette-match.ts), Up and Down to move, Enter to go.
 
 import { agentBadge } from '../../shared/agentname';
 import { h, openModal } from '../ui/dom';
@@ -7,6 +7,7 @@ import { icon, type IconName } from '../ui/icons';
 import { store } from '../state';
 import { rankOf, entryTitle, whereLabel } from './list';
 import { home } from './state';
+import { matchCommands } from './palette-match';
 
 export interface Command {
   label: string;
@@ -37,7 +38,7 @@ export function openPalette(commands: () => Command[]) {
   const paint = () => {
     const q = input.value.trim().toLowerCase();
     const all = [...commands(), ...agents()];
-    items = q ? all.filter((c) => `${c.label} ${c.hint ?? ''}`.toLowerCase().includes(q)) : all;
+    items = matchCommands(all, q);
     at = Math.min(at, Math.max(0, items.length - 1));
     list.replaceChildren(
       ...items.map((c, i) =>

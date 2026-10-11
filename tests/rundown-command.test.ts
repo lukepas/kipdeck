@@ -83,6 +83,8 @@ function office(readOnly = false, at: Floor = floor, clock?: { t: number }) {
   const broadcast: ServerMsg[] = [];
   const computed: string[] = [];
   const labs = new Labs(undefined);
+  // Labs ship off; these tests are about the Rundown lab, so it starts on, as an admin would switch it.
+  labs.set({ rundown: true }, 'test');
   const rundown = new RundownService({
     floor: (id) => (id === 'f1' ? at : undefined),
     send: (_ids, msg) => sent.push(msg),

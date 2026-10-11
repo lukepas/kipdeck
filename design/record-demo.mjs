@@ -252,7 +252,7 @@ try {
   if (WALL) {
     const wall = await recorded('wall', { width: W, height: H });
     await signIn(wall.page);
-    // The Deck is in Labs (on by default; the lab's internal id is still `bridge`), so make sure it's on.
+    // The Deck is a lab (off by default; its internal id is still `bridge`), so switch it on.
     await wall.page.goto(`${base}/`);
     await wall.page.waitForFunction(() => !!window.__lite?.store.project, null, { timeout: 30_000 });
     await wall.page.evaluate(() => window.__lite.net.send({ t: 'labs.set', patch: { bridge: true } }));

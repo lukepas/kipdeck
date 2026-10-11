@@ -1,16 +1,17 @@
-// The office's labs (see shared/labs.ts): every one on until an admin switches it off from the Labs
+// The office's labs (see shared/labs.ts): every one off until an admin switches it on from the Labs
 // window, unless the command line holds it on (--labs, AGENT_OFFICE_LABS, or a chain flag for proof)
 // or holds it off (--labs -proof, or --labs none).
 // An admin's choice is kept in the office's data folder through the state-file helpers, as
-// { v: 2, on, by, at }. A file with no `v` was written while labs were off by default, when saving
-// one switch wrote all seven, so its falses are the old defaults and not anyone's choice: only its
-// trues carry over, and every other lab takes today's default, on. A lab a file doesn't name is on.
+// { v: 2, on, by, at }, and every value in such a file is kept as it is: an office that saved its labs
+// while they shipped on keeps what it had. A file with no `v` was written while labs were off by
+// default the first time, when saving one switch wrote all seven, so only its trues carry over. A lab
+// a file doesn't name (one added since) takes today's default, off.
 import path from 'node:path';
 import { cleanLabs, defaultLabs, LAB_IDS, type LabId, type Labs as LabsOn, type LabsState } from '../shared/labs.js';
 import { readStateJson, writeState } from './safefs.js';
 import type { ChainFlags } from './chain/flags.js';
 
-/** The labs.json format written since labs went on by default. */
+/** The labs.json format: every lab it names is someone's choice (or what the office had when it was saved). */
 export const LABS_FILE_VERSION = 2;
 
 interface Saved {
@@ -24,7 +25,7 @@ interface Saved {
 export function readSavedLabs(raw: unknown): LabsOn {
   const file = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
   if (file.v === LABS_FILE_VERSION) return cleanLabs(file.on);
-  // An older office: keep what someone switched on, and let the rest fall to the default.
+  // The oldest offices: keep what someone switched on, and let the rest fall to the default (off).
   const on = file.on && typeof file.on === 'object' ? (file.on as Record<string, unknown>) : {};
   return cleanLabs(Object.fromEntries(Object.entries(on).filter(([, v]) => v === true)));
 }
@@ -47,7 +48,7 @@ export class Labs {
     try {
       raw = this.file ? (readStateJson(this.file) as Record<string, unknown>) : undefined;
     } catch {
-      // a broken file means the defaults: all on
+      // a broken file means the defaults: all off
     }
     this.saved = {
       v: LABS_FILE_VERSION,
@@ -98,7 +99,7 @@ export class Labs {
  */
 export function commandLineLabs(labs: { on: LabId[]; off: LabId[]; unknown: string[] }, chain: ChainFlags): { labs: LabId[]; labsOff: LabId[] } {
   if (labs.unknown.length) {
-    console.error(`kipdeck: --labs: unknown lab ${labs.unknown.map((u) => JSON.stringify(u)).join(', ')} (boards, bridge, ops, meetings, voice, ambience, proof, all or none; a leading minus holds one off)`);
+    console.error(`kipdeck: --labs: unknown lab ${labs.unknown.map((u) => JSON.stringify(u)).join(', ')} (boards, bridge, ops, meetings, voice, ambience, proof, rundown, all or none; a leading minus holds one off)`);
     process.exit(2);
   }
   const on = new Set(labs.on);

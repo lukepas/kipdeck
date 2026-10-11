@@ -1,6 +1,6 @@
 // Signal's chip at the head of the inbox list: the project's status at one look (shared/signal.ts),
-// one line, its glyph by shape (● On track, ▲ At risk, ■ Off track, ○ No goal), the milestone and how
-// far it got. A click opens the card (ui/signal/, loaded the first time). It shows the project picked
+// one line, its glyph by shape (● On track, ▲ At risk, ■ Off track), the milestone and how far it got.
+// It shows only once the project has a goal: with none, the list starts with the work. A click opens the card (ui/signal/, loaded the first time). It shows the project picked
 // in the top bar; under All projects, the one you're on (else the first), named on the chip.
 //
 // What it reads is on the page already: the Goals milestone (the floor you're on, live), the ranking
@@ -120,8 +120,9 @@ export function installSignal(net: Net, open: () => void) {
   let drawn = '';
   const render = () => {
     const v = signalView();
-    // The setup card has the page to itself until the first agent.
-    const hide = !v || !!document.querySelector('#inbox .first-run');
+    // The setup card has the page to itself until the first agent, and with no goal there is no status
+    // to show yet: the chip waits for a milestone (Signal stays in the menu and the palette).
+    const hide = !v || v.signal.level === 'no-goal' || !!document.querySelector('#inbox .first-run');
     root.classList.toggle('hidden', hide);
     if (hide) return void ((drawn = ''), root.replaceChildren());
     if (v.floor !== shownFloor) {

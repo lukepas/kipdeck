@@ -205,8 +205,8 @@ test('answers the open routes before anyone signs in', async () => {
 });
 
 test('Proof of Merge routes are not there while Proof of Merge is off in Labs', async () => {
-  // Switched off by an admin: nobody signed in is sent to sign in, as for any other page.
-  assert.deepEqual(office.labs.set({ proof: false }, 'test'), ['proof'], 'on as the office ships');
+  // Off as the office ships: nobody signed in is sent to sign in, as for any other page.
+  assert.equal(office.labs.on('proof'), false, 'off as the office ships');
   assert.equal((await get('/actions.json')).headers.get('location'), '/login');
   assert.equal((await get('/api/actions/fund?repo=a/b&issue=1')).status, 401);
   assert.equal((await get('/pom/')).headers.get('location'), '/login');
@@ -254,8 +254,8 @@ test('answers the signed-in routes', async () => {
   const me = { cookie };
   const who = (await (await get('/api/whoami', me)).json()) as { ok: boolean; me: unknown; labs: { on: Record<string, boolean>; forced: string[] } };
   assert.deepEqual({ ok: who.ok, me: who.me }, { ok: true, me: { admin: true } });
-  // Every lab is on as the office ships.
-  assert.deepEqual(who.labs.on, { boards: true, bridge: true, ops: true, meetings: true, voice: true, ambience: true, proof: true, rundown: true });
+  // Every lab is off as the office ships (the Proof of Merge tests above switched that one on).
+  assert.deepEqual(who.labs.on, { boards: false, bridge: false, ops: false, meetings: false, voice: false, ambience: false, proof: true, rundown: false });
   assert.deepEqual(who.labs.forced, []);
   // Home is the inbox; the Deck is a page of its own at /deck, and its old /bridge address lands
   // there with its query; the old 2D view's address lands home.

@@ -98,10 +98,12 @@ test('the avatar menu, three-pane Settings, Numbers after a merge, and Help, eac
   const item = (label: string) => page.locator('.menu-pop .menu-item', { hasText: label }).first();
   const modals = () => page.locator('#modal-root .modal').count();
 
-  // The menu in plain words: with every lab on as the office ships, the boards and the queue first,
-  // then the four rows and Enter the Deck.
+  // The menu in plain words: with every lab off as the office ships, the core rows and then Labs.
   const rows = await menu();
-  for (const row of ['Issues', 'Pull requests', 'Task queue', 'Mission control', 'Numbers', 'Settings', 'Enter the Deck', 'Help and keys', 'Sign out']) assert.ok(rows.some((r) => r.startsWith(row)), `the menu has ${row}: ${rows.join(', ')}`);
+  assert.deepEqual(rows, ['Numbers', 'Signal', 'Settings', 'Help and keys', 'Sign out', 'Labs'], rows.join(', '));
+  assert.equal(await page.locator('.menu-pop .menu-group').allInnerTexts().then((g) => g.join()), 'Labs', 'one heading, before the labs');
+  await page.keyboard.press('Escape');
+  await menu();
 
   // Settings: three panes, none of the bridge's.
   await item('Settings').click();
@@ -156,9 +158,9 @@ test('the avatar menu, three-pane Settings, Numbers after a merge, and Help, eac
   const help = page.locator('.modal.keys-help');
   await help.waitFor();
   assert.equal(await help.locator('.help-loop li').count(), 4);
-  // The six keys, and D for the Deck while it's on.
-  assert.equal(await help.locator('dt').count(), 7);
-  assert.match(await help.locator('dl').innerText(), /Enter the Deck/);
+  // The six keys; D for the Deck only while its lab is on, and it ships off.
+  assert.equal(await help.locator('dt').count(), 6);
+  assert.doesNotMatch(await help.locator('dl').innerText(), /Enter the Deck/);
   await help.locator('header .close').click();
   assert.equal(await modals(), 0, 'the ✕ closes Help');
   await page.keyboard.press('?');
@@ -170,7 +172,18 @@ test('the avatar menu, three-pane Settings, Numbers after a merge, and Help, eac
   await context.close();
 });
 
-test('Enter the Deck: in the top bar, never orange, D and Go to Deck go to /deck, a row on a phone, gone with the lab off', { timeout: 120_000 }, async (t) => {
+/** Switches labs as the demo's admin does, over a socket of its own. */
+async function setLabs(page: import('playwright-core').Page, patch: Record<string, boolean>) {
+  await page.evaluate((p) => new Promise<void>((resolve) => {
+    const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
+    ws.onopen = () => {
+      ws.send(JSON.stringify({ t: 'labs.set', patch: p }));
+      setTimeout(() => (ws.close(), resolve()), 500);
+    };
+  }), patch);
+}
+
+test('first sight with every lab off: no Deck pill, no Signal chip without a goal, the empty pane shows the work, Ctrl+K puts labels first', { timeout: 120_000 }, async (t) => {
   if (why) return t.skip(why);
   const context = await browser!.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
   t.after(() => context.close());
@@ -180,99 +193,163 @@ test('Enter the Deck: in the top bar, never orange, D and Go to Deck go to /deck
   await page.goto(`${base}/login`);
   assert.equal(await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD), 200);
   await page.goto(`${base}/`);
-  const cta = page.locator('.hb #to-deck');
-  await cta.waitFor({ state: 'visible', timeout: 30_000 });
-  assert.equal(await cta.getAttribute('href'), '/deck');
-  assert.match(await cta.innerText(), /Enter the Deck/);
-  await page.locator('.sec-working .row').first().waitFor({ timeout: 30_000 });
-  await page.waitForFunction(() => !document.querySelector('#to-deck .deck-cta-live')?.classList.contains('hidden'));
-  assert.match(await cta.locator('.deck-cta-live').innerText(), /\d+\s*(at work|on deck)/);
-  // Ship-cyan, the Deck's colour: nothing in it is the Signal orange that means someone needs you.
-  const colours = await cta.evaluate((el) => {
-    const signal = getComputedStyle(document.documentElement).getPropertyValue('--signal').trim();
-    const probe = document.createElement('span');
-    probe.style.color = signal;
-    document.body.append(probe);
-    const orange = getComputedStyle(probe).color;
-    probe.remove();
-    const used = [el, ...el.querySelectorAll('*')].flatMap((n) => {
-      const s = getComputedStyle(n);
-      return [s.color, s.borderTopColor, s.backgroundColor];
+  await page.locator('.sec-working .row, .sec-needs-you .row, .sec-review .row').first().waitFor({ timeout: 30_000 });
+  assert.equal(await page.locator('.deck-cta, #to-deck, #to-deck-row').count(), 0, 'no Enter the Deck in the top bar or over the list');
+  // The demo has no goal: no Signal chip over the list.
+  await page.waitForTimeout(500);
+  assert.equal(await page.locator('#signal .sig-chip').count(), 0, 'no No goal strip');
+  assert.ok(await page.locator('#signal').evaluate((el) => el.classList.contains('hidden')));
+
+  // Nothing selected: the work, never the deck plan or the chain.
+  await page.locator('.sec-needs-you .row, .sec-review .row').first().waitFor({ timeout: 30_000 });
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press('Escape');
+  const empty = page.locator('.pane-empty');
+  await empty.locator('.pe').waitFor({ timeout: 15_000 });
+  const said = await empty.innerText();
+  assert.doesNotMatch(said, /ESCROW|ERC-8004|PROOF|REVIEW BAY/);
+  assert.equal(await empty.locator('.lite-plot').count(), 0, 'no deck plan with the Deck lab off');
+  if (await empty.locator('.pe-next').count()) {
+    assert.match(said, /Next up: (needs you|to review)/i);
+    assert.match(said, /waiting \d/);
+    await empty.locator('.pe-item').waitFor();
+  } else {
+    assert.match(said, /All clear/i);
+  }
+
+  // Ctrl+K: the core commands first, the labs last, and "labs" finds Labs before Rundown's hint.
+  await page.keyboard.press('Control+k');
+  const palette = page.locator('.modal.palette');
+  await palette.waitFor();
+  const labels = await palette.locator('.pal-label').allInnerTexts();
+  assert.equal(labels[0], 'Deploy agent');
+  assert.ok(labels.indexOf('Labs') > labels.indexOf('Help and keys'), labels.join(', '));
+  assert.ok(!labels.includes('Go to Deck') && !labels.includes('Issues'), 'no lab commands with the labs off');
+  await page.keyboard.type('labs');
+  assert.equal(await palette.locator('.pal-list li.on .pal-label').innerText(), 'Labs');
+  await page.keyboard.press('Escape');
+  assert.equal(await palette.count(), 0);
+
+  // With the pill gone the bar keeps its context at every width: the project picker never shrinks,
+  // the demo's tag reads whole, search keeps room to type in, and nothing scrolls sideways.
+  for (const width of [390, 1024, 1440]) {
+    const other = await browser!.newContext({ viewport: { width, height: 844 }, ...(width < 600 ? { isMobile: true, hasTouch: true } : {}), storageState: await context.storageState() });
+    const p = await other.newPage();
+    p.on('pageerror', (e) => errors.push(e.message));
+    await p.goto(`${base}/`);
+    await p.locator('#demo .demo-tag').waitFor({ state: 'attached', timeout: 30_000 });
+    // No helper functions inside: the test runner's transform would name them with a helper the page lacks.
+    const bar = await p.evaluate(() => {
+      const tag = document.querySelector('#demo .demo-tag')!;
+      return {
+        projectShrinks: getComputedStyle(document.getElementById('project')!).flexShrink,
+        tagCut: tag.scrollWidth > tag.clientWidth + 1,
+        search: document.querySelector('.hb-search')!.getBoundingClientRect().width,
+        deck: document.querySelectorAll('.deck-cta, #to-deck, #to-deck-row').length,
+        scroll: document.documentElement.scrollWidth,
+      };
     });
-    return { orange, used };
+    assert.equal(bar.deck, 0, `${width}: no Enter the Deck on the page`);
+    assert.equal(bar.scroll, width, `${width}: no sideways scroll`);
+    if (width >= 900) {
+      assert.equal(bar.projectShrinks, '0', `${width}: the project picker keeps its name`);
+      assert.equal(bar.tagCut, false, `${width}: the demo tag reads whole`);
+      assert.ok(bar.search >= 200, `${width}: search keeps its room (${bar.search}px)`);
+    }
+    await other.close();
+  }
+  assert.deepEqual(errors, []);
+});
+
+test('Enter the Deck: a row in the avatar menu with the lab on, D and Go to Deck go to /deck, gone with the lab off', { timeout: 120_000 }, async (t) => {
+  if (why) return t.skip(why);
+  const context = await browser!.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'dark' });
+  t.after(() => context.close());
+  const page = await context.newPage();
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  await page.goto(`${base}/login`);
+  assert.equal(await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD), 200);
+  await page.goto(`${base}/`);
+  await page.locator('.sec-working .row, .sec-needs-you .row, .sec-review .row').first().waitFor({ timeout: 30_000 });
+  // Off as it ships: D does nothing.
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press('d');
+  await page.waitForTimeout(300);
+  assert.equal(new URL(page.url()).pathname, '/');
+
+  await setLabs(page, { bridge: true });
+  t.after(() => setLabs(page, { bridge: false }).catch(() => {}));
+  const menuRows = async () => {
+    await page.locator('#btn-avatar').click();
+    await page.locator('.menu-pop').waitFor();
+    return page.locator('.menu-pop .menu-item span:not(.menu-ico)').allInnerTexts();
+  };
+  let rows = await menuRows();
+  for (let i = 0; i < 20 && !rows.includes('Enter the Deck'); i++) {
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(250);
+    rows = await menuRows();
+  }
+  assert.ok(rows.indexOf('Enter the Deck') > rows.indexOf('Sign out'), `the Deck is in the Labs group: ${rows.join(', ')}`);
+  assert.ok(rows.indexOf('Enter the Deck') < rows.indexOf('Labs'));
+  const note = await page.locator('.menu-pop .menu-item', { hasText: 'Enter the Deck' }).locator('small').innerText();
+  assert.match(note, /^(\d+ at work|D)$/);
+  await page.keyboard.press('Escape');
+  // Still no pill in the top bar: the menu is the way in.
+  assert.equal(await page.locator('.hb .deck-cta, #to-deck').count(), 0);
+  // With nothing selected, the deck plan sits under the work.
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.keyboard.press('Escape');
+  await page.locator('.pane-empty .pe').waitFor({ timeout: 15_000 });
+  await page.locator('.pane-empty .lite-plot').waitFor({ timeout: 15_000 });
+  assert.equal(await page.locator('.pane-empty > :first-child').evaluate((el) => el.classList.contains('pe') || el.classList.contains('pv')), true, 'the work first');
+  // Proof of Merge is off and not set up: no Proof corner on the plan.
+  assert.doesNotMatch(await page.locator('.pane-empty .lite-plot').innerHTML(), /ESCROW|ERC-8004/);
+  // Switched on but still not set up: no corner either.
+  await setLabs(page, { proof: true });
+  t.after(() => setLabs(page, { proof: false }).catch(() => {}));
+  await page.waitForFunction(() => (window as any).__lite.store.lab('proof'));
+  await page.waitForTimeout(500);
+  assert.doesNotMatch(await page.locator('.pane-empty .lite-plot').innerHTML(), /ESCROW|ERC-8004/);
+  // Set up (as --reputation would): the plan is drawn again with its corner, and only one plan stays.
+  await page.evaluate(() => {
+    const l = (window as any).__lite;
+    l.store.reputation = { enabled: true, agents: [], harnesses: [], owed: 0 };
+    l.store.emit('roster');
   });
-  assert.ok(!colours.used.includes(colours.orange), `Enter the Deck uses Signal orange (${colours.orange})`);
-  // The palette has Go to Deck.
+  await page.waitForFunction(() => /ESCROW/.test(document.querySelector('.pane-empty .lite-plot')?.innerHTML ?? ''), undefined, { timeout: 15_000 });
+  assert.equal(await page.locator('.pane-empty .lite-plot').count(), 1, 'the old plan is gone');
+  await setLabs(page, { proof: false });
+  await page.waitForFunction(() => !(window as any).__lite.store.lab('proof'));
+  await page.waitForFunction(() => !/ESCROW/.test(document.querySelector('.pane-empty .lite-plot')?.innerHTML ?? 'ESCROW'), undefined, { timeout: 15_000 });
+  assert.equal(await page.locator('.pane-empty .lite-plot').count(), 1);
+
+  // The palette has Go to Deck, among the labs.
   await page.keyboard.press('Control+k');
   await page.locator('.modal.palette').waitFor();
   await page.keyboard.type('Go to Deck');
-  assert.ok(await page.locator('.modal.palette .pal-list', { hasText: 'Go to Deck' }).isVisible());
+  assert.equal(await page.locator('.modal.palette .pal-list li.on .pal-label').innerText(), 'Go to Deck');
   await page.keyboard.press('Escape');
   // D, outside a box, goes to the Deck.
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
   await Promise.all([page.waitForURL(`${base}/deck`, { timeout: 15_000 }), page.keyboard.press('d')]);
   await page.goBack();
+  await page.locator('#btn-avatar').waitFor();
 
-  // On a phone: a row over the list, at least 44px to tap, and nothing scrolls sideways.
-  const phone = await browser!.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, storageState: await context.storageState() });
-  t.after(() => phone.close());
-  const p2 = await phone.newPage();
-  await p2.goto(`${base}/`);
-  const row = p2.locator('#to-deck-row');
-  await row.waitFor({ state: 'visible', timeout: 30_000 });
-  assert.equal(await p2.locator('.hb #to-deck').isVisible(), false, 'the bar keeps its search box on a phone');
-  const box = (await row.boundingBox())!;
-  assert.ok(box.height >= 44 && box.x >= 12 && box.x + box.width <= 390 - 12, JSON.stringify(box));
-  assert.equal(await p2.evaluate(() => document.documentElement.scrollWidth), 390);
-
-  // On a laptop the pill gives way before the bar's context does: the project picker never shrinks,
-  // the demo's tag and command stay readable, and search keeps room to type in.
-  for (const width of [1024, 1440]) {
-    const lap = await browser!.newContext({ viewport: { width, height: 800 }, storageState: await context.storageState() });
-    t.after(() => lap.close());
-    const p3 = await lap.newPage();
-    await p3.goto(`${base}/`);
-    await p3.locator('.hb #to-deck').waitFor({ state: 'visible', timeout: 30_000 });
-    await p3.locator('#demo .demo-tag').waitFor({ timeout: 30_000 });
-    // No helper functions inside: the test runner's transform would name them with a helper the page lacks.
-    const bar = await p3.evaluate(() => {
-      const tag = document.querySelector('#demo .demo-tag')!;
-      return {
-        projectShrinks: getComputedStyle(document.getElementById('project')!).flexShrink,
-        tagCut: tag.scrollWidth > tag.clientWidth + 1,
-        codeWidth: document.querySelector('#demo .demo-run code')?.getBoundingClientRect().width ?? 0,
-        search: document.querySelector('.hb-search')!.getBoundingClientRect().width,
-        label: !!document.querySelector('.hb #to-deck .deck-cta-label')?.getClientRects().length,
-        scroll: document.documentElement.scrollWidth,
-      };
-    });
-    assert.equal(bar.projectShrinks, '0', `${width}: the project picker keeps its name`);
-    assert.equal(bar.tagCut, false, `${width}: the demo tag reads whole`);
-    if (width >= 1440) assert.ok(bar.codeWidth >= 50, `${width}: the demo's command keeps its first word (${bar.codeWidth}px)`);
-    assert.ok(bar.search >= 200, `${width}: search keeps its room (${bar.search}px)`);
-    assert.equal(bar.label, width >= 1440, `${width}: the pill says Enter the Deck only where the bar has room`);
-    assert.equal(bar.scroll, width);
+  // An admin switches the Deck lab off again: the row and D are gone.
+  await setLabs(page, { bridge: false });
+  rows = await menuRows();
+  for (let i = 0; i < 20 && rows.includes('Enter the Deck'); i++) {
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(250);
+    rows = await menuRows();
   }
-
-  // An admin switches the Deck lab off: the way in is gone, and D does nothing.
-  await page.evaluate(() => new Promise<void>((resolve) => {
-    const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ t: 'labs.set', patch: { bridge: false } }));
-      setTimeout(() => (ws.close(), resolve()), 500);
-    };
-  }));
-  await cta.waitFor({ state: 'hidden', timeout: 15_000 });
+  assert.ok(!rows.includes('Enter the Deck'), rows.join(', '));
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
   await page.keyboard.press('d');
   await page.waitForTimeout(300);
   assert.equal(new URL(page.url()).pathname, '/');
-  await page.evaluate(() => new Promise<void>((resolve) => {
-    const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
-    ws.onopen = () => {
-      ws.send(JSON.stringify({ t: 'labs.set', patch: { bridge: true } }));
-      setTimeout(() => (ws.close(), resolve()), 500);
-    };
-  }));
-  await cta.waitFor({ state: 'visible', timeout: 15_000 });
   assert.deepEqual(errors, []);
 });

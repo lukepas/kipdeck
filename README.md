@@ -21,10 +21,10 @@ Run it inside the repository you work in. It opens in your browser, signed in, w
 
 [**Run it**](#run-it) · [**Try the demo**](docs/demo.md) · [**Attach an agent**](#attach-an-agent-you-already-started) · [**Teams and servers**](docs/self-hosting.md) · [**Labs**](#labs) · [**Docs**](docs/features.md)
 
-- **One loop.** **Deploy agent**, get pinged when it needs you, answer its question in one box, review the diff beside the list and Merge, and it lands in **Shipped today**. The oldest agent waiting on you opens by itself; the top bar says how many need you and how many are ready to review, with the oldest wait ticking, the median wait today and what merged today. Merge waits a few seconds for Undo and names where it goes. See [the inbox](docs/inbox.md).
+- **One loop.** **Deploy agent**, get pinged when it needs you, answer its question in one box, review the diff beside the list and Merge, and it lands in **Shipped today**. The oldest agent waiting on you opens by itself, and with nothing selected the pane shows the next item that needs you, or All clear with what shipped today; the top bar says how many need you and how many are ready to review, with the oldest wait ticking, the median wait today and what merged today. Merge waits a few seconds for Undo and names where it goes. See [the inbox](docs/inbox.md).
 - **One ranking, one set of names.** `src/shared/attention.ts` decides the order and names the five states everywhere: Needs you, Stuck, To review, Working and Idle. The inbox's sections (Needs you with the stuck ones in it, To review, Working, Idle), Mission control, the tab title and notifications all read from it ([the inbox](docs/inbox.md) has the full list).
 - **A record of what shipped.** Every merge and send-back is kept on your machine as a signed record: which agent and model, the prompt, and who reviewed it. **Numbers** shows human wait time and the merge rate per agent and model from it.
-- **The Deck.** **Enter the Deck** in the top bar (or **D**) takes you to `/deck`: the same agents at their stations on a 3D starship bridge, a wall display for a team room. It and the rest beyond the inbox (goals and the timeline, meetings, voice, Proof of Merge on testnets) are [Labs](#labs), all on as Kipdeck ships; an admin switches off what a team doesn't want.
+- **The Deck.** With its lab on, **Enter the Deck** in the avatar menu (or **D**) takes you to `/deck`: the same agents at their stations on a 3D starship bridge, a wall display for a team room. It and the rest beyond the inbox (goals and the timeline, meetings, voice, Rundown, Proof of Merge on testnets) are [Labs](#labs), all off as Kipdeck ships; an admin switches on what a team wants.
 
 | | |
 | --- | --- |
@@ -88,18 +88,18 @@ It finds that folder's newest Claude Code or Codex session in the CLI's own file
 
 ## Labs
 
-Labs are the parts beyond the inbox. Each is on as the office ships, so a first visit sees all of it, the Deck first. An admin switches any of them off for everyone from **Open Labs...** at the foot of Settings > Account on the home page (or Labs in Ctrl+K) or the Deck's menu, and the choice is kept in the office's `labs.json`; `--labs bridge,ops` (or `AGENT_OFFICE_LABS`) holds some on from the command line so nobody can switch them off, and `--labs -proof` (or `--labs none`) holds them off. Turning one off hides it; nothing is deleted. A lab being on never asks the browser for anything by itself: the microphone and screen sharing wait for your click, sound for your first click or key, and Proof of Merge stays on testnets and sends nothing anywhere until an admin sets up its keys and flags.
+Labs are the parts beyond the inbox. Each is off as the office ships, so a first visit sees the inbox and nothing else. An admin switches any of them on for everyone from **Labs** at the foot of the avatar menu, **Open Labs...** at the foot of Settings > Account (or Labs in Ctrl+K) or the Deck's menu, and the choice is kept in the office's `labs.json` (an office that saved its labs before keeps them); `--labs bridge,ops` (or `AGENT_OFFICE_LABS`) holds some on from the command line so nobody can switch them off, and `--labs -proof` (or `--labs none`) holds them off. Turning one off hides it; nothing is deleted. A lab being on never asks the browser for anything by itself: the microphone and screen sharing wait for your click, sound for your first click or key, and Proof of Merge stays on testnets and sends nothing anywhere until an admin sets up its keys and flags.
 
 | Lab | What it brings (switching it off hides it) |
 | --- | --- |
 | GitHub boards and queue | Issues, Pull requests, the Task queue and Mission control in the home page's avatar menu and Ctrl+K. |
-| Deck (3D) | **Enter the Deck** in the home page's top bar (and **D**, and Go to Deck in Ctrl+K), and the deck plan in the pane while no agent is selected. `/deck` itself always opens. |
+| Deck (3D) | **Enter the Deck** in the avatar menu's Labs group (and **D**, and Go to Deck in Ctrl+K), and a small deck plan under the work in the empty pane. `/deck` itself always opens. |
 | Goals and timeline | Goals and milestones, the Timeline and Records tabs in Mission control, the Deck's mission strip and the Services board. |
 | Meetings | The Review bay and the planning whiteboard. |
 | Voice | Voice chat, screen sharing and the dictation mic in prompt boxes and terminals. |
 | Deck ambience | The Deck in full: mascot, ship's voice, hands, celebrations, start of watch, ship motion and the ambience bed (from your first click or key). Off, the Deck starts calm. |
 | Rundown | A map of each project: its parts by status, milestones, commit activity, branches and the decisions waiting on you, in the inbox (avatar menu and Ctrl+K) and as a city of light over the Deck's holo table. The office builds each project's first map by itself, so the window opens with data and Signal shows the parts. The same map the `/rundown` Claude Code skill draws, which ships in the package (`kipdeck rundown install`); see [docs/rundown.md](docs/rundown.md). |
-| Proof of Merge (testnets) | Bounties and payouts, attestations, ERC-8004 reputation, x402 paid tasks and `/pom/`. Their HTTP routes don't exist and their socket messages go nowhere while it's off. Any chain flag (`--x402`, `--attest`, `--reputation`) holds it on. |
+| Proof of Merge (testnets) | Bounties and payouts, attestations, ERC-8004 reputation, x402 paid tasks and `/pom/`. Their HTTP routes don't exist and their socket messages go nowhere while it's off. Any chain flag (`--x402`, `--attest`, `--reputation`) holds it on. The Proof corner, the ledger and the payout counter show only once bounties or a chain flag are set up. |
 
 More in [docs/labs.md](docs/labs.md).
 
@@ -113,7 +113,7 @@ More in [docs/labs.md](docs/labs.md).
 - **Agents that manage agents.** Every agent can list, deploy, message and stop the others through the `kipdeck` MCP server or the `office-workers` command ([agents](docs/agents.md)).
 - **Mission control** (with the GitHub boards and queue lab on): the same ranking with reminders, the review inbox and the digest of what happened while you were away ([mission control](docs/mission-control.md)).
 
-Everything else, the 3D Deck with its crew, moments and ambience, goals and the timeline, meetings, voice and Proof of Merge on testnets, is in [Labs](#labs) (all on unless an admin switches them off) and described in [features](docs/features.md).
+Everything else, the 3D Deck with its crew, moments and ambience, goals and the timeline, meetings, voice and Proof of Merge on testnets, is in [Labs](#labs) (all off until an admin switches them on) and described in [features](docs/features.md).
 
 ## Teams and servers
 
@@ -175,7 +175,7 @@ deploy/dokploy.sh ssh 'node /opt/agent-office/bin/agent-office.js accounts invit
 
 ## Controls
 
-Seven keys on the home page: **Ctrl+K** (find an agent or a command), **N** (deploy an agent), **Enter** (answer or review the selected agent; it never merges), **Esc** (back to the list, or close a window), **/** (search), **?** (Help) and **D** (enter the Deck). Up and Down move the selection. Everything else is a row's button or the avatar menu: Numbers, Settings, Help and Sign out (Labs is in Settings and Ctrl+K). The Deck's keys (walking, the Overview, voice) are in [docs/controls.md](docs/controls.md#the-deck-labs).
+Seven keys on the home page: **Ctrl+K** (find an agent or a command), **N** (deploy an agent), **Enter** (answer or review the selected agent; it never merges), **Esc** (back to the list, or close a window), **/** (search), **?** (Help) and **D** (enter the Deck). Up and Down move the selection. Everything else is a row's button or the avatar menu: Numbers, Signal, Settings, Help and Sign out, then Labs last (also in Settings and Ctrl+K). **D** works only while the Deck lab is on. The Deck's keys (walking, the Overview, voice) are in [docs/controls.md](docs/controls.md#the-deck-labs).
 
 ## Development
 

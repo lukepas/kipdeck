@@ -1,10 +1,11 @@
 // The inbox at /: puts its parts together on the page lite.ts set up. The top bar (the demo's pill, the
-// project picker, Mine or Team, search, today's pulse, Enter the Deck, Deploy agent and the avatar menu), the list on
+// project picker, Mine or Team, search, today's pulse, Deploy agent and the avatar menu), the list on
 // the left with Signal's chip over it (signal.ts) and the checklist and Shipped today under it, the selected agent's pane on the right, the
 // keys, and the wait clocks that tick in place (clock.ts).
 
 import { checklistSeen, nextUp } from '../../shared/inbox';
 import { waitWords } from '../../shared/wait';
+import { LAB_IDS } from '../../shared/labs';
 import type { ServerMsg } from '../../shared/protocol';
 import type { Net } from '../net';
 import { store } from '../state';
@@ -28,7 +29,7 @@ import { openPalette, type Command } from './palette';
 import { renderChecklist, renderShipped } from './shipped';
 import { renderPulse } from './pulse';
 import { installSignal, signalView } from './signal';
-import { deckCommands, deckMenuEntry, installDeckCta, renderDeckCta } from './deck-cta';
+import { deckCommands, deckMenuEntry } from './deck-link';
 import { markChanges } from './motion';
 import { askSetup, onSetupChange, setupCard, setupMessage } from './setup';
 import { demoMessage } from './demo';
@@ -92,26 +93,26 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     home.change();
   });
 
-  installDeckCta();
   $('btn-deploy').prepend(icon('plus', 16));
   $('btn-deploy').addEventListener('click', () => actions.deploy());
 
   const theme = toggleLight;
   applyLight();
 
+  // The loop's commands first, then the other core windows; the labs last (only while each is on).
   const commands = (): Command[] => [
     { label: 'Deploy agent', hint: 'N', icon: 'plus', run: () => actions.deploy() },
     { label: 'Search agents', hint: '/', icon: 'search', run: () => search.focus() },
     { label: 'Numbers', hint: 'Wait time, merges, merge rate', icon: 'plot', run: openNumbers },
     { label: 'Signal', hint: 'Project status: on track, at risk or off track', icon: 'target', run: openSignal },
-    ...(store.lab('rundown') ? [{ label: 'Rundown', hint: "Labs: a project's parts, milestones and decisions", icon: 'overview' as const, run: openRundown }] : []),
-    ...(store.lab('boards') ? workCommands() : []),
     { label: 'While you were away', icon: 'clock', run: () => recallDigest(showDigest) },
     { label: 'Settings', hint: 'Account, agents, notifications', icon: 'settings', run: openSettings },
     { label: 'Light or dark', icon: 'contrast', run: theme },
-    ...deckCommands(),
-    { label: 'Labs', hint: 'The Deck, meetings, voice...', icon: 'labs', run: () => actions.openLabs() },
     { label: 'Help and keys', hint: '?', icon: 'help', run: openHelp },
+    ...(store.lab('rundown') ? [{ label: 'Rundown', hint: "Labs: a project's parts, milestones and decisions", icon: 'overview' as const, run: openRundown }] : []),
+    ...(store.lab('boards') ? workCommands() : []),
+    ...deckCommands(),
+    { label: 'Labs', hint: 'Switch on the Deck, meetings, voice...', icon: 'labs', run: () => actions.openLabs() },
   ];
   const palette = () => openPalette(commands);
   /**
@@ -120,9 +121,9 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
    */
   function workCommands(): Command[] {
     return [
-      { label: 'Issues', hint: 'GitHub', icon: 'issue', run: () => actions.openBoard('issues') },
-      { label: 'Pull requests', hint: 'GitHub', icon: 'pull', run: () => actions.openBoard('pulls') },
-      { label: 'Task queue', hint: 'Labs', icon: 'queue', run: () => actions.openQueue() },
+      { label: 'Issues', hint: 'Labs: GitHub issues', icon: 'issue', run: () => actions.openBoard('issues') },
+      { label: 'Pull requests', hint: 'Labs: GitHub pull requests', icon: 'pull', run: () => actions.openBoard('pulls') },
+      { label: 'Task queue', hint: 'Labs: issues and tasks waiting for an agent', icon: 'queue', run: () => actions.openQueue() },
       { label: 'Mission control', hint: 'Labs: every project on one board', icon: 'mission', run: () => actions.showMission() },
     ];
   }
@@ -135,26 +136,26 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
   };
   avatar.addEventListener('click', () => {
     const open = (n: number) => (n ? String(n) : '');
-    // Four rows: the inbox is home, so nothing here manages work. Labs is in Settings and the commands.
-    const work: MenuEntry[] = store.lab('boards')
+    // The core rows first; the labs last, under their own heading, with Labs itself to switch them on.
+    const boards: MenuEntry[] = store.lab('boards')
       ? [
-          { group: 'Labs' },
           { label: 'Issues', icon: 'issue', note: open(store.issues.items.filter((i) => i.state === 'OPEN').length), run: () => actions.openBoard('issues') },
           { label: 'Pull requests', icon: 'pull', note: open(store.pulls.items.filter((p) => p.state === 'OPEN').length), run: () => actions.openBoard('pulls') },
           { label: 'Task queue', icon: 'queue', note: open(store.queue.tasks.filter((t) => t.status !== 'done').length), run: () => actions.openQueue() },
           { label: 'Mission control', icon: 'mission', run: () => actions.showMission() },
-          { group: 'Kipdeck' },
         ]
       : [];
     const entries: MenuEntry[] = [
-      ...work,
       { label: 'Numbers', icon: 'plot', run: openNumbers },
       { label: 'Signal', icon: 'target', run: openSignal },
-      store.lab('rundown') ? { label: 'Rundown', icon: 'overview', run: openRundown } : null,
       { label: 'Settings', icon: 'settings', run: openSettings },
-      deckMenuEntry(),
       { label: 'Help and keys', icon: 'help', note: '?', run: openHelp },
       { label: 'Sign out', icon: 'logout', run: () => void fetch('/api/logout', { method: 'POST' }).finally(() => location.assign('/login')) },
+      { group: 'Labs' },
+      ...boards,
+      store.lab('rundown') ? { label: 'Rundown', icon: 'overview', run: openRundown } : null,
+      deckMenuEntry(),
+      { label: 'Labs', icon: 'labs', note: `${LAB_IDS.filter((id) => store.lab(id)).length} on`, run: () => actions.openLabs() },
     ];
     toggleMenu(avatar, store.profile.name, entries);
   });
@@ -205,7 +206,6 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     renderPulse([$('pulse'), $('pulse-list')], openNumbers);
     renderOwner($('owner'));
     renderDigest();
-    renderDeckCta();
     paintAvatar();
   };
   home.on(renderAll);

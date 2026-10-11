@@ -1,6 +1,6 @@
 # Proof of Merge bounties
 
-Kipdeck's Proof of Merge bounties, part of the Proof of Merge lab. The lab is on as Kipdeck ships; bounties themselves stay off until an admin turns them on.
+Kipdeck's Proof of Merge bounties, part of the Proof of Merge lab. The lab is off as Kipdeck ships, and with it on, bounties themselves stay off until an admin turns them on.
 
 Back to the [README](../README.md).
 
