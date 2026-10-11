@@ -6,8 +6,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { setTimeout as sleep } from 'node:timers/promises';
 import type { RosterEntry, WorkerInfo } from '../src/shared/protocol.js';
-import { PRESENCE_MS, pushHandled, pushKind, pushPayload, type PushPayload } from '../src/shared/push.js';
+import { PRESENCE_MS, pushKind, pushPayload, type PushPayload } from '../src/shared/push.js';
 import { Alerts } from '../src/server/push/alerts.js';
+import { pushHandled } from '../src/client/pwa/handled.js';
 import type { Device } from '../src/server/push/devices.js';
 import { Presence } from '../src/server/push/presence.js';
 

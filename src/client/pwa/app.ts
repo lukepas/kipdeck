@@ -2,8 +2,8 @@
 // registered, a tapped push taking you to its agent (in this tab, told by the service worker, or a
 // new one opened on /?agent=<id>), and a push taken down once its agent no longer waits on anyone.
 
-import { pushHandled } from '../../shared/push';
 import { store } from '../state';
+import { pushHandled } from './handled';
 import { pushName } from './index';
 import { registration } from './sw';
 
