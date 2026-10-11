@@ -4,6 +4,7 @@
 
 import { laneLayout } from './branches.js';
 import { heatmap, weeksFor } from './heatmap.js';
+import { INFERRED_NOTE } from './infer.js';
 import { itemsLeft, statusCounts } from './model.js';
 import { partOfPath } from './paths.js';
 import { STATUS_LABEL, STATUSES, type Part, type Rundown, type Status } from './schema.js';
@@ -102,7 +103,7 @@ ${box.w > 60 && box.h > 34 ? `<g transform="translate(${box.x + 9},${box.y + 9})
   const rows = r.parts
     .map((p) => `<tr><td><button type="button" data-part="${esc(p.id)}" class="more-btn">${esc(p.name)}</button><div class="note">${esc(p.summary)}</div></td><td>${statusTag(p.status)}${p.waitingOn ? `<div class="note">Waiting on ${esc(p.waitingOn)}</div>` : ''}</td><td class="n">${fmt(p.metrics.lines)}</td><td class="n">${p.metrics.testFiles}</td><td class="n">${p.metrics.todo + p.metrics.fixme}</td><td class="n">${p.metrics.commits30d}</td><td>${esc(p.metrics.lastCommit?.slice(0, 10) ?? '')}</td></tr>`)
     .join('');
-  const inferred = r.parts.some((p) => p.statusSource === 'inferred') ? '<p class="note">Statuses inferred from activity. Run /rundown in this project for a real read.</p>' : '';
+  const inferred = r.parts.some((p) => p.statusSource === 'inferred') ? `<p class="note">${esc(INFERRED_NOTE)}</p>` : '';
   // What needs the person first, whole: a stuck part's name and what it waits on, never clipped.
   const stuck = r.parts.filter((p) => p.status === 'stuck');
   const needs = stuck.length ? `<div class="needs"><div class="label">Needs you</div><ul>${stuck.map((p) => `<li><button type="button" class="more-btn" data-part="${esc(p.id)}">${esc(p.name)}</button>: waiting on ${esc(p.waitingOn ?? 'something not named yet')}</li>`).join('')}</ul></div>` : '';
