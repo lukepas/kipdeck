@@ -8,6 +8,7 @@ import { SLOW_CLIENT_BYTES, type Client } from './client.js';
 import { proofFloor } from './chain.js';
 import { ownerName } from '../local.js';
 import { CLI } from '../../shared/copy.js';
+import { primeFloors } from '../rundown/first.js';
 
 /** Finding floors, the elevator's list of them, and taking one off the building. */
 export function floorHelpers(ctx: Ctx): FloorHelpers {
@@ -150,6 +151,8 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
     try {
       const floor = new Floor(def, floorContext);
       floors.set(def.id, floor);
+      // Its first map, in the background (Labs > Rundown).
+      primeFloors(ctx, [floor.id]);
       return floor;
     } catch (err) {
       console.error(`kipdeck: couldn't open the ${def.name} floor: ${(err as Error).message}`);

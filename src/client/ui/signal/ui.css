@@ -33,6 +33,8 @@
 .sg-next .sg-sub { grid-column: 2; }
 .sg-next-text { font-size: 14px; overflow-wrap: anywhere; }
 .sg-stale { margin: 0; font-size: 13px; color: var(--muted); }
+.sg-parts { margin: 0; font: 500 13px/1.4 var(--font-mono); color: var(--text); font-variant-numeric: tabular-nums; }
+.sg-inferred { margin: 0; font-size: 13px; line-height: 1.45; color: var(--muted); }
 
 @media (max-width: 599px) {
   .sg-cols { grid-template-columns: 1fr; }

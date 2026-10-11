@@ -5,6 +5,9 @@
 import { partOfPath, topFolder } from './paths.js';
 import { emptyMetrics, type Evidence, type Facts, type Part, type PartMetrics, type Status } from './schema.js';
 
+/** What the Rundown window and Signal's card say while a map has no judgement of Claude's in it yet. */
+export const INFERRED_NOTE = "Inferred from the code. For Claude's read, run /rundown (kipdeck rundown install adds it to Claude Code).";
+
 /** The most parts inferred from folders; the rest fall into the catch-all. */
 export const INFERRED_MAX = 8;
 /** A folder holding more than this share of the lines is split into its own subfolders. */

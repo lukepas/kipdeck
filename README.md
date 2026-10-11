@@ -72,6 +72,8 @@ npx kipdeck --no-open                   # print the sign-in link instead of open
 npx kipdeck --telemetry                 # share anonymous usage numbers (off by default)
 ```
 
+`npx kipdeck rundown [path]` writes a project's map (its parts by status, inferred from the code, no Claude needed) into `.rundown/`, and `npx kipdeck rundown install` adds the `/rundown` skill to Claude Code for Claude's own read; see [docs/rundown.md](docs/rundown.md).
+
 Once it is on npm, to have a `kipdeck` command instead: `npm install -g kipdeck`, or [`install.sh`](install.sh) (macOS and Linux) and [`install.ps1`](install.ps1) (Windows), which install the same package. Until then those print the from-source steps above, and `npm link` gives you the same command. Every option is in [docs/configuration.md](docs/configuration.md); choosing models and providers per agent is in [docs/agents.md](docs/agents.md).
 
 ## Attach an agent you already started
@@ -96,7 +98,7 @@ Labs are the parts beyond the inbox. Each is on as the office ships, so a first 
 | Meetings | The Review bay and the planning whiteboard. |
 | Voice | Voice chat, screen sharing and the dictation mic in prompt boxes and terminals. |
 | Deck ambience | The Deck in full: mascot, ship's voice, hands, celebrations, start of watch, ship motion and the ambience bed (from your first click or key). Off, the Deck starts calm. |
-| Rundown | A map of each project: its parts by status, milestones, commit activity, branches and the decisions waiting on you, in the inbox (avatar menu and Ctrl+K) and as a city of light over the Deck's holo table. The same map the `/rundown` Claude Code skill draws; see [docs/rundown.md](docs/rundown.md). |
+| Rundown | A map of each project: its parts by status, milestones, commit activity, branches and the decisions waiting on you, in the inbox (avatar menu and Ctrl+K) and as a city of light over the Deck's holo table. The office builds each project's first map by itself, so the window opens with data and Signal shows the parts. The same map the `/rundown` Claude Code skill draws, which ships in the package (`kipdeck rundown install`); see [docs/rundown.md](docs/rundown.md). |
 | Proof of Merge (testnets) | Bounties and payouts, attestations, ERC-8004 reputation, x402 paid tasks and `/pom/`. Their HTTP routes don't exist and their socket messages go nowhere while it's off. Any chain flag (`--x402`, `--attest`, `--reputation`) holds it on. |
 
 More in [docs/labs.md](docs/labs.md).
