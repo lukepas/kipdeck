@@ -1,0 +1,21 @@
+/* Signal's chip (signal.ts): one line at the head of the inbox list. The glyph's shape carries the
+   status; only Off track is red, and At risk turns Signal orange only when a person can clear it
+   (data-person). The rest stays steel, so the chip never shouts over the list under it. */
+.sig-head { margin: 0 0 12px; }
+.sig-chip { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 32px; padding: 5px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-1); color: var(--text); font: inherit; font-size: 13px; text-align: left; cursor: pointer; white-space: nowrap; overflow: hidden; }
+.sig-chip:hover { border-color: var(--line-strong); background: var(--surface-2); }
+.sig-chip:focus-visible { outline: 2px solid var(--act); outline-offset: 1px; }
+.sig-glyph { flex: none; width: 14px; text-align: center; font-size: 12px; line-height: 1; color: var(--working); }
+.sig-word { flex: none; font-weight: 600; }
+.sig-what { flex: none; min-width: 0; max-width: 55%; overflow: hidden; text-overflow: ellipsis; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sig-what::before { content: '·'; margin-right: 8px; color: var(--faint); }
+.sig-more { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--faint); font-size: 12px; }
+.sig-more:empty { display: none; }
+.sig-more::before { content: '-'; margin-right: 8px; }
+.sig-chip[data-level='off-track'] .sig-glyph, .sig-chip[data-level='off-track'] .sig-word { color: var(--stuck); }
+.sig-chip[data-level='off-track'] { border-left: 3px solid var(--stuck); padding-left: 10px; }
+.sig-chip[data-level='at-risk'][data-person] { border-left: 3px solid var(--signal); padding-left: 10px; }
+.sig-chip[data-level='at-risk'][data-person] .sig-glyph, .sig-chip[data-level='at-risk'][data-person] .sig-word { color: var(--signal); }
+.sig-chip[data-level='no-goal'] .sig-glyph, .sig-chip[data-level='no-goal'] .sig-word { color: var(--muted); font-weight: 500; }
+/* On a phone the reason folds away: the status and the milestone are the one look. */
+@media (max-width: 599px) { .sig-more { display: none; } .sig-what { max-width: none; flex: 1; } }
