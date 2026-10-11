@@ -17,7 +17,7 @@ Each one reads by its shape alone, in grayscale too:
 | ● | On track | There is a milestone, and no rule below fired. |
 | ▲ | At risk | The forecast lands too close to the due date, a decision is open, someone has waited on you for over an hour, or merges fell off. |
 | ■ | Off track (red) | The milestone is past its due date with issues left, an agent on this milestone is stuck, or `/rundown` marked a part stuck. |
-| ○ | No goal (muted) | Neither Goals nor a recent `/rundown` has a milestone. Signal never says On track just because it knows nothing. |
+| ○ | No goal (muted) | Neither Goals nor a recent `/rundown` (nor your `.rundown/milestones.md`) has a milestone. Signal never says On track just because it knows nothing, or because the office has a map of the code. |
 
 At risk turns Signal orange only when a person can clear it (an open decision, a long wait on you), since orange in Kipdeck always means someone is needed. Otherwise it stays steel.
 
@@ -33,6 +33,17 @@ Every threshold is a named constant in `src/shared/signal.ts`:
 
 Goals comes first, because it's live: the active milestone in Mission control's Goals tab (the Goals and timeline lab), with its issues closed out of the issues it lists. Only when Goals has no active milestone does Signal show the next milestone from the last `/rundown`, with its items done out of all. The card says which source it shows.
 
+## Before anyone runs /rundown
+
+A project nobody has run `/rundown` in still has a map: the office builds one of every project it hosts, inferred from the code ([Rundown](rundown.md#the-offices-first-map)). With no `.rundown/rundown.json`, Signal reads that map instead:
+
+- **Parts**: the card shows them by status in one line, *8 parts: 3 done, 3 in progress, 1 not started, 1 stuck* (statuses no part has are left out; *9 parts, all in progress* when they share one). The same line shows when the skill has run, from its parts, and Copy as text carries it when there's no milestone.
+- **Next**: the first open item of your active milestone in `.rundown/milestones.md` when there is one, else *Finish or commit the work in storefront (1 uncommitted file)* for the part with the most uncommitted work, else *Carry on with api (last commit 2026-10-06)* for the part in progress that moved last. The line under it says it's inferred, once. A next step from `/rundown` comes first, and an agent waiting on you comes before an inferred one.
+- **The status** doesn't move for it. With no milestone in Goals or `milestones.md` it's still No goal, never On track. An inferred status is never a stuck part (only a person or Claude can say what a part waits on), so it never sets Off track; a part someone marked stuck still does.
+- The card adds one line: "Inferred from the code. For Claude's read, run /rundown (kipdeck rundown install adds it to Claude Code)." The Decisions column says there's no `/rundown` yet.
+
+The skill's `rundown.json`, once there, wins over the office's map when it carries a judgement: a part status Claude or a person set, or a next step. One written from the facts alone (by `kipdeck rundown` or `/rundown quick` before any full run) is read as if it weren't there, and the office's map stands in. A stale skill rundown is still stale: it feeds nothing, and the office's map doesn't stand in for it. The office's own map is never called stale, since the office keeps it current itself (see Freshness below). A milestone from your `milestones.md` shows as *From milestones.md* while the map is inferred.
+
 A `.rundown/rundown.json` that is `STALE_RUNDOWN_DAYS` (7) days old or more feeds nothing (its age is the older of the skill's `generatedAt` and the file's modification time, so an old rundown that was copied or pulled stays old): no milestone, no decisions, no stuck parts, no next step. The card says how old it is and suggests running `/rundown` again.
 
 ## The forecast
@@ -45,7 +56,8 @@ For a Goals milestone with a due date, the card says *due Oct 24, pace says ~Oct
 - **Milestone**: the title, done out of all, and where it came from. A milestone with no issues yet says so on the chip rather than 0/0.
 - **Pace, 7 days**: merges in the last 7 days from the signed shipped log, against the 7 before.
 - **Decisions**: the open ones in the last `/rundown`, the oldest one's age and its question (the gist carries the oldest few by name, whatever order `decisions.md` lists them in) (left out when the reason above already quotes it).
-- **Next**: the `/rundown` skill's next step and how old it is, else *Answer* the agent that has waited on you longest.
+- **Next**: the `/rundown` skill's next step and how old it is, else *Answer* the agent that has waited on you longest, else the next thing inferred from the office's map.
+- **Parts**: the map's parts by status in one line, and while the map is only inferred from the code, the line that says how to get Claude's read.
 - **Copy as text** puts one line on the clipboard, plain ASCII, ready for Slack: *acme-shop: At risk. Auth rewrite 5/9 issues, due Oct 30, pace says ~Oct 27 (rough). 1 decision open: "JWT or opaque tokens?". 12 merged this week (9 the week before). Next: Wire the refresh endpoint.*
 - **Open Rundown** while the Rundown lab is on, and **Open Goals** while Goals can be reached (the Goals and timeline lab and the GitHub boards and queue lab, which Mission control sits behind) and the card is about the floor you're on. With No goal, the chip and the card name the same thing to do: set a goal, run `/rundown`, or turn a lab on (the GitHub boards lab when only it is off). In the read-only demo they suggest nothing and offer neither window, since a visitor can't act on them.
 
@@ -53,13 +65,14 @@ The top-right ✕ and Esc close it.
 
 ## Freshness, and what the office reads
 
-Most of what Signal shows is already on the page: the Goals milestone of the floor you're on, the ranking and the shipped log. The rest comes in a small gist over the socket (`signal.peek` and `signal.gist`, in `src/shared/protocol/signal.ts`): the Goals milestone of a project you aren't on, its issues closed lately, and what the last `/rundown` left in `.rundown/`. The office reads `rundown.json` through Rundown's own `skillJudgement()` (capped at 512 KB and checked), with the person's `milestones.md` and `decisions.md` over the skill's guesses, and keeps the gist per project until one of those files changes. It never runs git, never computes a map and never polls. The page asks when it connects, when the project picked changes, when the tab comes back into view (at most once a minute), when a milestone moves on the timeline and when the Rundown window's map of the project changes. The office answers one peek per project a second (`PEEK_GAP_MS`); the page holds a sooner one back until then rather than lose it. A peek names a project by its id only, never a path. Each part of the gist follows its own lab, and the read-only demo drops the message without a word.
+Most of what Signal shows is already on the page: the Goals milestone of the floor you're on, the ranking and the shipped log. The rest comes in a small gist over the socket (`signal.peek` and `signal.gist`, in `src/shared/protocol/signal.ts`): the Goals milestone of a project you aren't on, its issues closed lately, and what the last `/rundown` left in `.rundown/`, else the office's own map of the project (`source: 'inferred'`, with its parts by status). The office reads `rundown.json` through Rundown's own `skillJudgement()` (capped at 512 KB and checked), with the person's `milestones.md` and `decisions.md` over the skill's guesses, reads its own map from memory (`ctx.rundown.current`), and keeps the gist per project until one of those files or the map changes. Signal never computes a map and never polls. A peek at a project whose map nobody is watching asks Rundown to look at HEAD and the working tree, at most once a minute, and to queue a new map only when either moved (`RundownService.freshen`). When the office's map of a project is computed (its first map, or a newer one), the office sends that project's gist to everyone without being asked, once per change (`src/server/signal/push.ts`), so the card fills in as soon as there's a map. The page asks when it connects, when the project picked changes, when the tab comes back into view (at most once a minute), when a milestone moves on the timeline and when the Rundown window's map of the project changes. The office answers one peek per project a second (`PEEK_GAP_MS`); the page holds a sooner one back until then rather than lose it. A peek names a project by its id only, never a path. Each part of the gist follows its own lab, and the read-only demo drops the message without a word.
 
 ## For developers
 
 - `src/shared/signal.ts`: the rules, the forecast, the chip's words and the copy line (`tests/signal.test.ts`).
-- `src/server/signal/gist.ts` and `src/server/ws/handlers/signal.ts`: the gist and its handler (`tests/signal-gist.test.ts`).
+- `src/shared/signal-parts.ts`: the parts line and the next thing inferred from a map (`tests/signal-inferred.test.ts`).
+- `src/server/signal/gist.ts` and `src/server/ws/handlers/signal.ts`: the gist and its handler (`tests/signal-gist.test.ts`), and `src/server/signal/push.ts`, the gist sent when the office's map moves on.
 - `src/client/state/slices/signal.ts`: the gists the page has, by project.
 - `src/client/home/signal.ts`: the chip, and what it asks for when.
 - `src/client/ui/signal/`: the card, loaded the first time it opens (`home/lazy.ts`).
-- `tests/signal-e2e.test.ts` walks every status in a browser, and `node --import tsx design/shoot-signal.ts` (after `npm run build`) shoots the chip and the card in each status, dark and light, at 1440 px and on a phone.
+- `tests/signal-e2e.test.ts` walks every status in a browser, `tests/rundown-first-e2e.test.ts` checks the card on a fresh project (the parts line, the inferred next thing, the line about `/rundown`), and `node --import tsx design/shoot-signal.ts` (after `npm run build`) shoots the chip and the card in each status, dark and light, at 1440 px and on a phone.

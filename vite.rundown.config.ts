@@ -3,8 +3,9 @@ import { resolve } from 'node:path';
 
 // The /rundown skill's script: the office's own collector and page (src/server/rundown/cli.ts,
 // src/shared/rundown/) as one dependency-free ESM file for Node 18 or newer, dist/rundown/rundown.mjs.
-// `npm run rundown:install` copies it, with skills/rundown/SKILL.md and README.md, into ~/.claude/skills/rundown/
-// (after listing what changes and backing up what was there).
+// The npm package ships it with skills/rundown/SKILL.md and README.md, and `kipdeck rundown install` (or
+// `npm run rundown:install` in a source checkout) copies all three into ~/.claude/skills/rundown/ (after
+// listing what changes and backing up what was there).
 export default defineConfig({
   publicDir: false,
   logLevel: 'warn',

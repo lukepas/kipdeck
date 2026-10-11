@@ -102,6 +102,7 @@ Usage:
   kipdeck prune [dir] [--dry-run] [--force]
   kipdeck accounts [list|invite|revoke|role|password] ...
   kipdeck tunnel [office@address | url]
+  kipdeck rundown [path] | install [--dry-run]
 
 Runs the inbox for your coding agents, at http://localhost:4600 (or the next
 free port). Each project is a git checkout, and every agent works on a branch of
@@ -133,6 +134,9 @@ Commands:
   tunnel                  On your own computer, for an office that runs somewhere
                           else: every web server a worker starts there opens on the
                           same port here, by itself (see tunnel --help)
+  rundown                 Write or refresh a checkout's project map in .rundown/,
+                          no Claude needed; rundown install adds the /rundown
+                          skill to Claude Code (see rundown --help)
 
 Options:
       --home <dir>        Where the office keeps its data when no [dir] is given

@@ -10,32 +10,12 @@ import { freePort } from './port.js';
 import { gitTop, within } from './checkouts.js';
 import { checkAgents } from './firstrun.js';
 import { PROVIDER_META } from '../shared/providers.js';
+import { commandOf } from './commands.js';
 
 const argv = process.argv.slice(2);
-if (argv[0] === 'prune') {
-  const { prune } = await import('./prune.js');
-  process.exit(await prune(argv.slice(1)));
-}
-if (argv[0] === 'accounts') {
-  const { accountsCommand } = await import('./accounts.js');
-  process.exit(accountsCommand(argv.slice(1)));
-}
-if (argv[0] === 'setup') {
-  const { setupCommand } = await import('./setup.js');
-  process.exit(await setupCommand(argv.slice(1)));
-}
-if (argv[0] === 'tunnel') {
-  const { tunnelCommand } = await import('./tunnel/index.js');
-  process.exit(await tunnelCommand(argv.slice(1)));
-}
-if (argv[0] === 'attach') {
-  const { attachCommand } = await import('./attach.js');
-  process.exit(await attachCommand(argv.slice(1)));
-}
-if (argv[0] === 'open') {
-  const { openCommand } = await import('./opencmd.js');
-  process.exit(await openCommand(argv.slice(1)));
-}
+// `kipdeck prune`, `kipdeck rundown` and the rest (commands.ts): run it and stop, no office.
+const command = commandOf(argv);
+if (command) process.exit(await command(argv.slice(1)));
 
 const cfg = loadConfig(argv);
 await ensureSelfSigned(cfg);

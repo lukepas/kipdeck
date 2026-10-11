@@ -15,7 +15,18 @@ and you get one offline HTML page in `<repo>/.rundown/rundown.html`:
 - "Your call": decisions only you can make, each with its DEFAULT
 - a facts appendix: languages, folders, largest files, scripts, packages, CI, docs, TODOs
 
-The same model and page power Mergeline's Rundown window and the holo city on its bridge.
+The same model and page power Kipdeck's Rundown window and the holo city on its Deck.
+
+## Install
+
+```
+npx kipdeck rundown install            # or: kipdeck rundown install
+npx kipdeck rundown install --dry-run  # only list what would change
+```
+
+It copies the script, this README and SKILL.md from the `kipdeck` package into
+`~/.claude/skills/rundown/`, after listing what changes and backing up the old folder to
+`~/.claude/backups/rundown-<time>/`. `kipdeck rundown [path]` writes the map without Claude.
 
 ## Use
 
@@ -48,7 +59,7 @@ Every command takes `--root <dir>` and `--no-gh`. Node 18 or newer, no dependenc
 | `judgement.json` | Claude | Parts with paths, status, evidence and waitingOn; the next step; first proposals for milestones and decisions |
 | `milestones.md` | you (first draft by Claude) | Milestones, "Done when", checklist items |
 | `decisions.md` | you and Claude | Open and resolved decisions with options, DEFAULT and your Answer |
-| `rundown.json` | renderer | The merged model the page draws (Mergeline reads it too) |
+| `rundown.json` | renderer | The merged model the page draws (Kipdeck reads it too) |
 | `rundown.html`, `map.html` | renderer | The page (the same file under both names) |
 | `state.json` | renderer | The diff base for the next run, written last so a failed run never moves it |
 | `history/` | renderer | The previous 20 `state.json` files |
@@ -77,7 +88,8 @@ for a run. The page also has a theme toggle, remembered per browser.
 
 ## Where it comes from
 
-The source is `skills/rundown/` and `src/server/rundown/` + `src/shared/rundown/` in the Mergeline
-repository; `npm run rundown:install` builds `dist/rundown/rundown.mjs` and installs it here with
-this README and SKILL.md, after listing what changes and backing up the old folder to
-`~/.claude/backups/rundown-<time>/`. `npm run rundown:install -- --dry-run` only shows the list.
+The source is `skills/rundown/` and `src/server/rundown/` + `src/shared/rundown/` in the Kipdeck
+repository. The `kipdeck` npm package ships the built `dist/rundown/rundown.mjs` with this README
+and SKILL.md, and `kipdeck rundown install` puts them here. In a source checkout,
+`npm run rundown:install` builds the script first and does the same (`-- --dry-run` only shows
+the list).
