@@ -32,7 +32,7 @@ test('a snooze that ran out on a worker who still needs someone is a reminder', 
   const [r] = findReminders({ roster: [e], floors: [floor()], unpushed: new Map() }, NOW);
   assert.equal(r.kind, 'snooze-over');
   assert.equal(r.key, `snooze-over:w1:${NOW - 5 * MIN}`);
-  assert.match(r.text, /^Mochi: Ana's snooze ran out, and it still says forgotten: done/);
+  assert.match(r.text, /^Agent: Ana's snooze ran out, and it still says forgotten: done/);
   // Still snoozed, or seen to since: nothing.
   assert.deepEqual(kinds([floor()], [{ ...e, snooze: { ...e.snooze!, until: NOW + MIN } }]), []);
   assert.deepEqual(kinds([floor()], [{ ...e, acked: true }]), []);
@@ -140,14 +140,14 @@ test('the sweep toasts a new reminder once, again an hour on, tells the channel 
   // A new question waiting an hour: a toast, and the channel hears once.
   roster = [...roster, entry({ id: 'w2', name: 'Pip', status: 'needs_input', waitingSince: NOW + QUEUE_PAUSED_MS - NEEDS_INPUT_LONG_MS })];
   r.sweepReminders();
-  assert.deepEqual([toasts.length, posted], [2, ['Pip has waited on an answer for 1 h']]);
+  assert.deepEqual([toasts.length, posted], [2, ['Agent has waited on an answer for 1 h']]);
   // Dismissed: shown with who did it, never toasted again; another key is gone.
   assert.equal(r.snoozeReminder('queue-paused:f1', { until: 'change', by: 'Ana', at: now }), undefined);
   assert.equal(r.reminders().find((x) => x.kind === 'queue-paused')?.snooze?.by, 'Ana');
   assert.equal(r.snoozeReminder('queue-paused:nope', null), 'That reminder is gone');
   now = NOW + QUEUE_PAUSED_MS + 61 * MIN;
   r.sweepReminders();
-  assert.deepEqual(toasts.slice(2).map((x) => x.split(' has')[0]), ['Reminder: Mochi', 'Reminder: Pip'], 'an hour on, the open ones come up again, and not the dismissed one');
+  assert.deepEqual(toasts.slice(2).map((x) => x.split(' has')[0]), ['Reminder: Agent', 'Reminder: Agent'], 'an hour on, the open ones come up again, and not the dismissed one');
   assert.equal(posted.length, 1);
   // Unpaused: it's gone, and a while later so is its dismissal.
   queue.maxWorkers = 2;

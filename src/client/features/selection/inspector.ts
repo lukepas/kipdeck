@@ -32,7 +32,7 @@ function attentionOf(w: WorkerInfo): Attention {
   const r = store.ranked(store.floor).find((x) => x.entry.id === w.id);
   if (r) return r.att;
   const level = w.status === 'needs_input' ? 'needs-you' : w.status === 'working' || w.status === 'starting' ? 'working' : 'parked';
-  return { level, label: level === 'needs-you' ? 'Needs an answer' : level === 'working' ? 'Working' : 'Ready', since: w.waitingSince ?? w.createdAt, action: 'look', snoozed: false };
+  return { level, label: level === 'needs-you' ? 'Needs an answer' : level === 'working' ? 'Working' : 'Idle', since: w.waitingSince ?? w.createdAt, action: 'look', snoozed: false };
 }
 
 /**

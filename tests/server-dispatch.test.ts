@@ -276,9 +276,9 @@ test('answers the signed-in routes', async () => {
     assert.deepEqual(await res.json(), { error });
   };
   await bad(await get('/api/gh/pull?number=0', me), 400, 'Bad number');
-  await bad(await get('/api/gh/pull?number=3&floor=nope', me), 404, 'No such floor');
-  await bad(await get('/api/docs?floor=nope', me), 404, 'No such floor');
-  await bad(await get('/api/whiteboard/file?floor=nope', me), 404, 'No such floor');
+  await bad(await get('/api/gh/pull?number=3&floor=nope', me), 404, 'No such project');
+  await bad(await get('/api/docs?floor=nope', me), 404, 'No such project');
+  await bad(await get('/api/whiteboard/file?floor=nope', me), 404, 'No such project');
   await bad(await get(`/api/whiteboard/file?floor=${floor}&id=nope`, me), 404, 'No such picture');
   await bad(await get('/api/term/drop', me), 405, 'Method not allowed');
   await bad(await post('/api/term/drop', '', me), 403, 'Forbidden');
@@ -362,7 +362,7 @@ test('welcomes a browser and dispatches what it sends', async () => {
 
   // Only for Ada: a floor that isn't there, sign-ins on the shared password, and the accounts list.
   a.send({ t: 'floor.go', floor: 'nope' });
-  assert.deepEqual(await a.take('toast', (m) => m.level === 'warn'), { t: 'toast', text: 'No such floor', level: 'warn' });
+  assert.deepEqual(await a.take('toast', (m) => m.level === 'warn'), { t: 'toast', text: 'No such project', level: 'warn' });
   a.send({ t: 'signins.get' });
   assert.equal((await a.take('toast', (m) => m.level === 'warn')).text, "On the shared office password, workers run on the office's own sign-ins");
   a.send({ t: 'accounts.get' });
@@ -508,7 +508,7 @@ test('mission control: the timeline, the review queue and reminders', async () =
   a.send({ t: 'worker.spawn', deskId: 'desk-3', kind: 'shell' });
   const hired = (await a.take('timeline.event', (m) => m.event.kind === 'hired')).event;
   assert.equal(hired.floor, floor.id);
-  assert.match(hired.text, /^Ed hired .+ \(a shell\)$/);
+  assert.equal(hired.text, 'Ed deployed the shell');
   const id = hired.worker!;
   a.send({ t: 'timeline.get' });
   const page = await a.take('timeline', (m) => m.since === undefined);
@@ -592,16 +592,16 @@ test('settings, accounts, sign-ins and the boards answer as before', async () =>
   a.send({ t: 'changes.watch', workerId: 'nope' });
   a.send({ t: 'changes.unwatch', workerId: 'nope' });
   a.send({ t: 'changes.diff', workerId: 'nope', path: 'a.ts' });
-  assert.deepEqual(await a.take('changes.diff'), { t: 'changes.diff', workerId: 'nope', path: 'a.ts', diff: '', truncated: false, error: 'No such worker' });
+  assert.deepEqual(await a.take('changes.diff'), { t: 'changes.diff', workerId: 'nope', path: 'a.ts', diff: '', truncated: false, error: 'No such agent' });
   a.send({ t: 'worker.resume', workerId: 'nope' });
-  await warned('No such worker');
+  await warned('No such agent');
   a.send({ t: 'worker.prompt', workerId: 'nope', prompt: 'hi' });
-  await warned('No such worker');
+  await warned('No such agent');
 
   a.send({ t: 'worker.spawn', deskId: 'desk-1', provider: 'nope' });
   await warned('Unknown agent provider');
   a.send({ t: 'worker.spawn', deskId: 'desk-1', kind: 'shell', repos: ['nope'] });
-  await warned('That project is no longer in the building');
+  await warned('That project is no longer open');
   a.send({ t: 'worker.kill', workerId: 'nope' });
   a.send({ t: 'worker.detach', workerId: 'nope' });
   a.send({ t: 'worker.attach', workerId: 'nope' });

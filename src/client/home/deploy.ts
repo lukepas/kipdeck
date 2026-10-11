@@ -38,7 +38,7 @@ function lastAgent(): AgentProvider | undefined {
 /** Opens the sheet. `prompt` fills the box (the first-run starter task), `provider` picks the agent; `started` hears when an agent was asked for. */
 export function openDeploy(net: Net, opts: { prompt?: string; provider?: AgentProvider; started?(at: number): void } = {}) {
   const floors = store.floors.filter((f) => !f.cloning);
-  if (!floors.length) return toast('Add a project first: the office has none open', 'warn');
+  if (!floors.length) return toast('Add a project first: none is open yet', 'warn');
   const project = h('select', { id: 'deploy-project', 'aria-label': 'Project' }, ...floors.map((f) => h('option', { value: f.id }, f.name))) as HTMLSelectElement;
   project.value = floors.some((f) => f.id === home.project) ? home.project : (store.floor ?? floors[0].id);
 

@@ -125,7 +125,7 @@ test("a member can't add a floor for a repository the office can't push to; an a
   process.env.FAKE_GH_PERM = 'READ';
   const building = new Building(dataDir, projects, fast);
   const r = await building.add('acme/game', 'Sam', () => assert.fail('no clone starts'), 'member-1', false);
-  assert.match(String(r), /Only admins can add a floor for acme\/game/);
+  assert.match(String(r), /Only admins can add a project for acme\/game/);
   assert.equal(existsSync(path.join(projects, 'acme', 'game')), false);
   const ok = await building.add('acme/game', 'Ada', () => {}, 'admin-1', true);
   assert.equal(typeof ok, 'object', String(ok));
@@ -161,7 +161,7 @@ test('a clone can be stopped by an admin or whoever added it', async (t) => {
   await until(() => !alive(pid));
   assert.ok(!alive(pid));
   assert.deepEqual(building.list(), []);
-  assert.equal(building.cancel(id, 'again', () => true), 'No such floor');
+  assert.equal(building.cancel(id, 'again', () => true), 'No such project');
 });
 
 test('a restart mid-clone picks the clone back up, and it becomes its floor', async (t) => {

@@ -1,4 +1,5 @@
 import './terminal.css';
+import { agentHeading, agentRef } from '../../shared/agentname';
 import { termMeta } from './term-meta';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
@@ -129,7 +130,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
   if (!info) return;
 
   const dot = unitSign(info.deskId);
-  const title = h('h2', {}, info.kind === 'agent' ? `${engineLabel(info, store.project)} · ${info.name}` : info.name);
+  const title = h('h2', {}, info.kind === 'agent' ? `${engineLabel(info, store.project)} · ${agentHeading(info)}` : 'Shell');
   const pill = h('span.pill', {}, '');
   const cost = h('span.cost', {});
   const viewers = h('div.viewers', {});
@@ -146,7 +147,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
     title: 'Send Esc to the terminal (Ctrl+[): closes a menu like /skills, or interrupts the agent. The Esc key on its own leaves the terminal',
     'aria-label': 'Send Esc to the terminal',
   }, 'Esc');
-  const changesBtn = h('button.btn', { type: 'button', title: 'What this worker changed: files, diff, commit, open a PR (C at the desk)' }, 'Changes');
+  const changesBtn = h('button.btn', { type: 'button', title: 'What this agent changed: files, diff, commit, open a PR' }, 'Changes');
   const closeBtn = h('button.btn.close', { title: 'Leave the console (Esc or Ctrl+]) · the Esc button or Ctrl+[ sends Esc to the terminal', 'aria-label': 'Close' }, icon('close', 16));
   const host = h('div.term-host', { 'data-drop': 'Drop screenshots or files here to put them in the terminal' });
   const keys = h('div.term-keys', { role: 'group', 'aria-label': 'Keys' });
@@ -174,7 +175,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
   );
   host.append(mic.live);
   // The keypad has an Esc of its own, and a on its prompt box.
-  const el = h('div.modal.term', { role: 'dialog', 'aria-label': `${info.name} console` }, h('header', {}, dot, title, pill, cost, viewers, typed, modelsBtn, keypad ? null : mic.button, keypad ? null : escBtn, onChanges ? changesBtn : null, closeBtn), tabs.bar, meta.el, host, tabs.pages, keypad);
+  const el = h('div.modal.term', { role: 'dialog', 'aria-label': `Terminal of ${agentRef(info)}` }, h('header', {}, dot, title, pill, cost, viewers, typed, modelsBtn, keypad ? null : mic.button, keypad ? null : escBtn, onChanges ? changesBtn : null, closeBtn), tabs.bar, meta.el, host, tabs.pages, keypad);
 
   const term = new Terminal({
     fontFamily: '"JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',

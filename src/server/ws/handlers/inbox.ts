@@ -1,6 +1,7 @@
 // The inbox's own actions (see shared/inbox.ts): merging an agent's work from its row, sending it back
 // with a note, and the shipped log. Every review that ends either way is written to the log, signed
 // (see shiplog.ts), and told to everyone so their Shipped today and merge rates stay current.
+import { agentRef } from '../../../shared/agentname.js';
 import path from 'node:path';
 import { childEnv } from '../../workers.js';
 import { SEND_BACK_MAX, type InboxClientMsg, type ShipRecord, type WorkerInfo } from '../../../shared/protocol.js';
@@ -67,7 +68,7 @@ export function mergeWork(ctx: Ctx, by: Reviewer, workerId: string, reply: (r: {
   const done = (extra: Partial<ShipRecord>) => {
     const record = logged(ctx, floor, info, { ...base, kind: 'merged', ...extra });
     reply({ record });
-    ctx.toastFloor(floor, `${who} merged ${base.task ? `"${base.task}"` : `${info.name}'s work`}${extra.pr ? ` (PR #${extra.pr.number})` : ''}`, 'info', by.client?.id);
+    ctx.toastFloor(floor, `${who} merged ${base.task ? `"${base.task}"` : `the work of ${agentRef(info)}`}${extra.pr ? ` (PR #${extra.pr.number})` : ''}`, 'info', by.client?.id);
   };
   const pr = ctx.rosterEntryOf(info.id)?.pr;
   if (pr?.state === 'merged') return fail(`PR #${pr.number} is merged already`);
@@ -87,7 +88,7 @@ export function mergeWork(ctx: Ctx, by: Reviewer, workerId: string, reply: (r: {
     );
   }
   const task = base.task ?? info.prompt?.split('\n')[0] ?? 'agent work';
-  const message = `${task.slice(0, 72)}\n\nMerged from the inbox by ${who}. Work by ${info.name} (${[base.provider, base.model].filter(Boolean).join(', ') || 'agent'}).`;
+  const message = `${task.slice(0, 72)}\n\nMerged from the inbox by ${who}. Work by an agent (${[base.provider, base.model].filter(Boolean).join(', ') || 'agent'}).`;
   const env = by.accountId ? ctx.signins.apply(by.accountId, childEnv(), [], 'github') : undefined;
   void localMerge({
     projectDir: floor.dir,
@@ -115,7 +116,7 @@ export const inboxHandlers = {
       const err = w.floor.workers.prompt(w.wid, note, who);
       if (err) return ctx.warn(c, err);
       logged(ctx, w.floor, w.info, { ...about(w.floor, w.info, who), kind: 'sent-back', note });
-      ctx.toastFloor(w.floor, `${who} sent ${w.info.name}'s work back`, 'info', c.id);
+      ctx.toastFloor(w.floor, `${who} sent ${agentRef(w.info)} back`, 'info', c.id);
     };
     // Typed into an agent, so never a fork's or an outsider's PR to check out and run (see shared/pulltrust.ts).
     w.floor.github.guardCheckout(note, send, (why) => ctx.warn(c, why));

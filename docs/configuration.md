@@ -10,21 +10,21 @@ The office keeps its data in `~/agent-office` (`--home` or `AGENT_OFFICE_HOME` t
 
 Started (with no `[dir]`) inside a git repository, a new office makes that repository its first project, where it is: no clone, and its agents' state in its own `.agent-office/` (kept out of git through `.git/info/exclude`). Started in another repository later, the setup card offers **Use <folder>**. The office also keeps, in its data folder, `local.json` (where it runs and its local key, for `kipdeck open` and `kipdeck attach`; mode 0600, gone when it stops) and `telemetry.json` (the usage-numbers switch, off as it ships; see [Security](security.md#anonymous-usage-numbers)).
 
-Already have a checkout? Pick its repository anyway: a checkout of it that's already where the workspace folder would clone it is used as it is. You can still start the office in a project, `agent-office ~/code/my-project`: that project becomes a floor, and the office keeps its data in `~/code/my-project/.agent-office` as it did before there were floors. An office that already ran in a project carries on in it when you start `agent-office` there again. An admin can take that project off the building in the Floors window like any other floor.
+Already have a checkout? Pick its repository anyway: a checkout of it that's already where the workspace folder would clone it is used as it is. You can still start the office in a project, `agent-office ~/code/my-project`: that project is its first project, and Kipdeck keeps its data in `~/code/my-project/.agent-office` as it always has. An office that already ran in a project carries on in it when you start `agent-office` there again. An admin can remove that project from the project list like any other.
 
 ## Command line
 
 ```
 kipdeck [dir] [options]      (npx kipdeck, or agent-office: the same command)
 
-      --home <dir>        Where the office keeps its data without a [dir] (default ~/agent-office)
-      --projects <dir>    Where new floors are cloned, as <dir>/<owner>/<repo> (default ~/agent-office;
+      --home <dir>        Where Kipdeck keeps its data without a [dir] (default ~/agent-office)
+      --projects <dir>    Where new projects are cloned, as <dir>/<owner>/<repo> (default ~/agent-office;
                           also settable from ⚙️ Settings)
   -p, --port <n>          Port (env PORT): that port or nothing. Without it, 4600 or the next free one
   -H, --host <addr>       Bind address (default 127.0.0.1; 0.0.0.0 lets your network in)
-      --password <pw>     Office password (env AGENT_OFFICE_PASSWORD). Without one, on 127.0.0.1 there is
+      --password <pw>     Shared password (env AGENT_OFFICE_PASSWORD). Without one, on 127.0.0.1 there is
                           nothing to type: the terminal's sign-in link, or `kipdeck open`
-      --no-open           Don't open the office in your browser when it starts
+      --no-open           Don't open Kipdeck in your browser when it starts
       --agent <cmd>       Default agent command (default "claude")
       --agent-args <str>  Extra args for the configured agent, e.g. "--model opus"
       --dsh-profile <n>   DeepSeek Harness profile over ACP (default "acp")
@@ -32,22 +32,22 @@ kipdeck [dir] [options]      (npx kipdeck, or agent-office: the same command)
       --tls-key <file>    …and key
       --self-signed       Serve HTTPS with a generated self-signed cert
       --trust-proxy       Trust X-Forwarded-* (behind Caddy/nginx)
-      --allowed-host <n>  Another name the office is reached at (repeatable, env AGENT_OFFICE_ALLOWED_HOSTS;
+      --allowed-host <n>  Another name Kipdeck is reached at (repeatable, env AGENT_OFFICE_ALLOWED_HOSTS;
                           ".example.com" allows every name under it). IPs, localhost, this machine's name,
                           the public host and the tailnet name are always allowed
-      --worker-env <names> More of the office's environment variables for workers, e.g. "AWS_PROFILE,SENTRY_*"
-                          (repeatable, env AGENT_OFFICE_WORKER_ENV); workers get an allowlist by default
-      --inherit-env       Pass workers the office's whole environment (env AGENT_OFFICE_INHERIT_ENV=1)
+      --worker-env <names> More of Kipdeck's environment variables for agents, e.g. "AWS_PROFILE,SENTRY_*"
+                          (repeatable, env AGENT_OFFICE_WORKER_ENV); agents get an allowlist by default
+      --inherit-env       Pass agents Kipdeck's whole environment (env AGENT_OFFICE_INHERIT_ENV=1)
       --turn <url>        Add a TURN server for voice, e.g. turn:user:pass@host:3478
                           (env AGENT_OFFICE_TURN, several separated by spaces)
       --budget <usd>      Daily tracked Claude Code budget (OpenCode/Codex/Grok/Muse/DSH excluded)
-      --budget-pause      ...and nobody can hire a new worker until the next day
-      --max-workers <n>   Run at most n workers at once, across every floor (env AGENT_OFFICE_MAX_WORKERS)
-      --webhook <url>     Post to this Slack / Discord webhook when a worker needs input, finishes or gets stuck
+      --budget-pause      ...and nobody can deploy a new agent until the next day
+      --max-workers <n>   Run at most n agents at once, across every project (env AGENT_OFFICE_MAX_WORKERS)
+      --webhook <url>     Post to this Slack / Discord webhook when an agent needs you, finishes or gets stuck
       --x402              Take paid tasks over x402, testnets only (see docs/x402.md), with
                           --x402-pay-to <0x>, --x402-repos <owner/name,...> and optionally --x402-price,
                           --x402-pay-to-solana, --x402-facilitator, --x402-asset (env AGENT_OFFICE_X402_*)
-      --attest            Attest every office PR a person merges on Base Sepolia (see docs/proof-of-merge.md),
+      --attest            Attest every agent PR a person merges on Base Sepolia (see docs/proof-of-merge.md),
                           with optionally --attest-key-file, --attest-rpc, --attest-schema, --attest-mode,
                           --attest-contract, --attest-eas (env AGENT_OFFICE_ATTEST_*)
       --telemetry         Share anonymous usage numbers (env KIPDECK_TELEMETRY=1); off by default,
@@ -91,14 +91,14 @@ kipdeck setup [--projects <dir>] [--project <owner/repo>]... [--home <dir>]
   Nothing asks this when the office starts any more (the setup card does): a
   walkthrough of the workspace folder, GitHub sign-in and repositories to clone as
   projects, on request. With --projects / --project it asks nothing, for scripts.
-  Run it while the office is stopped.
+  Run it while Kipdeck is stopped.
 
 agent-office prune [dir] [-n|--dry-run] [-f|--force]
 
-  Removes leftover worker worktrees under .agent-office/worktrees/ and their
-  office/* branches, in one floor's checkout (dir). Anything with uncommitted changes or unpushed commits is
-  kept unless --force is given. A worker across several projects has worktrees of them in its
-  own floor's workspace: prune each project to clear those out.
+  Removes leftover agent worktrees under .agent-office/worktrees/ and their
+  office/* branches, in one project's checkout (dir). Anything with uncommitted changes or unpushed commits is
+  kept unless --force is given. An agent across several projects has worktrees of them in its
+  own project's workspace: prune each project to clear those out.
 
 agent-office accounts [list | invite [name] [--admin] | revoke <name> | signout <name> | role <name> admin|member | password on|off] [-d <dir>]
 

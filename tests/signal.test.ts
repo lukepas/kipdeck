@@ -120,7 +120,7 @@ test('Off track: only a stuck agent linked to the shown milestone counts, snooze
   assert.equal(computeSignal(input({ ranked: [agent('stuck', { goal: 'g1' }, NOW, true)] })).level, 'on-track', 'snoozed');
   const one = computeSignal(input({ ranked: [agent('stuck', { goal: 'g1' })] }));
   assert.equal(one.level, 'off-track');
-  assert.equal(one.reasons[0].text, 'cobalt-3 is stuck on this milestone');
+  assert.equal(one.reasons[0].text, 'Agent is stuck on this milestone');
   const two = computeSignal(input({ ranked: [agent('stuck', { goal: 'g1', name: 'a' }), agent('stuck', { goal: 'g1', name: 'b' })] }));
   assert.equal(two.reasons[0].text, '2 agents are stuck on this milestone');
   // A rundown milestone has no agents linked to it.
@@ -179,8 +179,8 @@ test('At risk, orange: an open rundown decision, or a needs-you wait over an hou
   const over = computeSignal(input({ ranked: [agent('needs-you', {}, NOW - LONG_WAIT_MS - 60_000)] }));
   assert.equal(over.level, 'at-risk');
   assert.equal(over.person, true);
-  assert.equal(over.reasons[0].text, 'cobalt-3 has waited on you over 1 h');
-  assert.deepEqual(over.next, { text: 'Answer cobalt-3', from: 'from the inbox' });
+  assert.equal(over.reasons[0].text, 'Agent has waited on you over 1 h');
+  assert.deepEqual(over.next, { text: 'Answer the agent', from: 'from the inbox' });
   assert.equal(computeSignal(input({ ranked: [agent('needs-you', {}, NOW - 3 * LONG_WAIT_MS, true)] })).level, 'on-track', 'snoozed');
 });
 
@@ -205,7 +205,7 @@ test('Off track wins over At risk, and its reasons come first', () => {
 test('the next thing: the skill\'s next step with its age, else the inbox', () => {
   assert.deepEqual(computeSignal(input({ rundown: gist({ next: 'Wire the refresh endpoint', at: NOW - 2 * DAY }) })).next, { text: 'Wire the refresh endpoint', from: 'from /rundown, 2 days ago' });
   assert.deepEqual(computeSignal(input({ rundown: gist({ next: 'X', at: NOW }) })).next?.from, 'from /rundown, today');
-  assert.deepEqual(computeSignal(input({ ranked: [agent('needs-you')] })).next, { text: 'Answer cobalt-3', from: 'from the inbox' });
+  assert.deepEqual(computeSignal(input({ ranked: [agent('needs-you')] })).next, { text: 'Answer the agent', from: 'from the inbox' });
   assert.equal(computeSignal(input()).next, null);
 });
 

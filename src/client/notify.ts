@@ -3,6 +3,7 @@
 // shared/title.ts), and for the floor's milestones (a pull request merged, the task queue done).
 
 import type { RosterEntry, WorkerInfo } from '../shared/protocol';
+import { alertTitle } from '../shared/agentname';
 import { alertDetail } from '../shared/status';
 
 export type NotifyPermission = NotificationPermission | 'unsupported';
@@ -48,8 +49,8 @@ export class DesktopNotifier {
   alert(w: WorkerInfo & { status: 'needs_input' | 'done' }) {
     if (!this.enabled() || notifyPermission() !== 'granted') return;
     if (!document.hidden && document.hasFocus()) return;
-    const title = w.status === 'done' ? `${w.name} is done` : `${w.name} needs you`;
-    const body = [w.task?.name, alertDetail(w)].filter(Boolean).join('\n');
+    const title = alertTitle(w, w.status === 'done' ? 'done' : 'needs-you');
+    const body = alertDetail(w) ?? '';
     this.shown.get(w.id)?.close();
     // Needs input blocks the worker, so that one stays up until you deal with it.
     const n = this.show(title, { body, tag: `worker-${w.id}`, requireInteraction: w.status === 'needs_input' });
@@ -73,7 +74,7 @@ export class DesktopNotifier {
     if (!this.enabled() || notifyPermission() !== 'granted') return;
     if (!document.hidden && document.hasFocus()) return;
     this.stuckShown.get(e.id)?.close();
-    const n = this.show(`${e.name} looks stuck`, { body: [`${e.floorName}: ${reason}`, e.task?.name].filter(Boolean).join('\n'), tag: `stuck-${e.id}` });
+    const n = this.show(alertTitle(e, 'stuck'), { body: `${e.floorName}: ${reason}`, tag: `stuck-${e.id}` });
     if (!n) return;
     n.onclick = () => {
       window.focus();
@@ -110,7 +111,7 @@ export class DesktopNotifier {
 
   /** What one looks like, from Settings. */
   sample() {
-    const n = this.show('Notifications are on', { body: 'This is how a worker that needs you, is done or gets stuck gets your attention while you are in another tab. Click one to go straight to that worker.' });
+    const n = this.show('Notifications are on', { body: 'This is how an agent that needs you, is done or gets stuck gets your attention while you are in another tab. Click one to go straight to that agent.' });
     if (!n) return;
     n.onclick = () => {
       window.focus();

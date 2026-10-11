@@ -33,6 +33,7 @@ import { markChanges } from './motion';
 import { askSetup, onSetupChange, setupCard, setupMessage } from './setup';
 import { demoMessage } from './demo';
 import { home } from './state';
+import { agentRef } from '../../shared/agentname';
 import '../ui/waitclock.css';
 import './home.css';
 
@@ -232,7 +233,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
       was.set(w.id, { status: w.status, since: w.waitingSince });
       if (before?.status === 'needs_input' && w.status !== 'needs_input' && w.lastInput?.by === store.profile.name && Date.now() - w.lastInput.at < 120_000) {
         home.check('answer');
-        settledToast(`Answered ${w.name}. Back at work.`, before.since ? `It waited on you ${waitWords(w.lastInput.at - before.since)}.` : undefined);
+        settledToast(`Answered ${agentRef(w)}. Back at work.`, before.since ? `It waited on you ${waitWords(w.lastInput.at - before.since)}.` : undefined);
       }
     }
   });

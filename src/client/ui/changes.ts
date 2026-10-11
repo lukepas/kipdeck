@@ -5,7 +5,8 @@ import { store } from '../state';
 import { h, openModal, type Modal } from './dom';
 import { confirmDialog, openPrompt } from './prompt';
 import { icon } from './icons';
-import { unitSign } from './unitsign';
+import { agentBadgeChip } from './agentbadge';
+import { agentHeading, agentRef } from '../../shared/agentname';
 
 // The Changes window at a desk: the files a worker changed and their diff against the branch the
 // office was opened on, refreshed while the worker works, with commit / discard / open-a-PR.
@@ -125,8 +126,8 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
   let requestedSig = '';
   let loading = false;
 
-  const dot = unitSign(info.deskId);
-  const title = h('h2', {}, `${info.name} · changes`);
+  const dot = agentBadgeChip(info);
+  const title = h('h2', {}, `${agentHeading(info)} · changes`);
   const branch = h('span.branch');
   const terminalBtn = h('button.btn', { type: 'button', title: 'Open the terminal instead' }, 'Open terminal');
   const closeBtn = h('button.btn.close', { 'aria-label': 'Close' }, icon('close', 16));
@@ -143,7 +144,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
   const tabs = h('nav.changes-tabs', { role: 'tablist', 'aria-label': 'Repositories' });
   const el = h(
     'div.modal.desk-changes',
-    { role: 'dialog', 'aria-label': `${info.name}'s changes`, tabindex: -1 },
+    { role: 'dialog', 'aria-label': `Changes of ${agentRef(info)}`, tabindex: -1 },
     h('header', {}, dot, title, branch, onTerminal ? terminalBtn : null, closeBtn),
     tabs,
     h('div.changes-body', {}, files, diff),
@@ -180,8 +181,8 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
         'div.changes-empty',
         {},
         h('div.big', {}, icon('branch', 32)),
-        h('p', {}, state.base === 'HEAD' ? `Nothing uncommitted in ${where()}.` : `${info.name} hasn't changed anything since ${state.base} yet.`),
-        h('p.note', {}, 'This window follows the checkout as the worker works, so changes show up here as they are made.'),
+        h('p', {}, state.base === 'HEAD' ? `Nothing uncommitted in ${where()}.` : `${agentRef(info, { start: true })} hasn't changed anything since ${state.base} yet.`),
+        h('p.note', {}, 'This window follows the checkout as the agent works, so changes show up here as they are made.'),
       ),
     );
   };
@@ -238,7 +239,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
       if (s.files.length) bits.push(plusMinus(adds, dels));
       bits.push(uncommitted ? `${uncommitted} uncommitted` : s.files.length ? 'all committed' : '');
       if (s.ahead) bits.push(`${s.ahead} commit${s.ahead > 1 ? 's' : ''} ahead of ${s.base}`);
-      if (!s.dir) bits.push(h('span', { title: "This worker works in the project folder itself, so this is everything uncommitted there - everyone's edits, not just its own." }, 'shared project folder'));
+      if (!s.dir) bits.push(h('span', { title: "This agent works in the project folder itself, so this is everything uncommitted there - everyone's edits, not just its own." }, 'shared project folder'));
       else bits.push(h('span.wt-path', { title: `Its own worktree at ${s.dir}` }, `${s.dir}`));
       summary.append(...bits.filter(Boolean).map((b) => (typeof b === 'string' ? h('span', {}, b) : b)));
     }
@@ -274,7 +275,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
 
   const renderHeader = () => {
     const w = store.workers.get(workerId);
-    if (w) title.textContent = `${w.name} · changes`;
+    if (w) title.textContent = `${agentHeading(w)} · changes`;
     const s = state;
     if (!s || s.error) branch.textContent = '';
     else branch.textContent = s.base === 'HEAD' ? `${s.branch} · uncommitted changes` : `${s.branch} · vs ${s.base}`;
@@ -330,7 +331,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
   discardBtn.addEventListener('click', () => {
     const n = state?.files.filter((f) => f.uncommitted).length ?? 0;
     confirmDialog(
-      `Discard all uncommitted changes at ${info.name}'s desk?`,
+      `Discard all uncommitted changes of ${agentRef(info)}?`,
       `This puts ${n} file${n === 1 ? '' : 's'} in ${where()} back to the last commit and deletes new files. Commits stay.${state?.dir ? '' : " That folder is shared: anyone's uncommitted edits there go too."}`,
       'Discard everything',
       () => net.send({ t: 'changes.discard', workerId, repo }),
@@ -362,7 +363,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
       ...[{ id: undefined as string | undefined, name: own, pr: w.pr }, ...repos.map((r) => ({ id: r.floor as string | undefined, name: r.name, pr: r.pr }))].map((t) =>
         h(
           'button.btn',
-          { type: 'button', role: 'tab', class: t.id === repo ? 'on' : '', 'aria-selected': t.id === repo ? 'true' : 'false', title: t.id ? `Its worktree of ${t.name}` : `Its worktree of this deck's project, ${t.name}`, onclick: () => show(t.id) },
+          { type: 'button', role: 'tab', class: t.id === repo ? 'on' : '', 'aria-selected': t.id === repo ? 'true' : 'false', title: t.id ? `Its worktree of ${t.name}` : `Its worktree of this project, ${t.name}`, onclick: () => show(t.id) },
           `${t.name}`,
           t.pr ? h('small', {}, ` · #${t.pr.number}`) : null,
         ),
@@ -397,7 +398,7 @@ export function openChanges(net: Net, workerId: string, onTerminal?: () => void,
   });
   const modal = openModal(el, {
     dock: opts.dock,
-    doing: `looking over ${info.name}'s changes`,
+    doing: `looking over the changes of ${agentRef(info)}`,
     onClose: () => {
       listeners.delete(onMsg);
       unsub();

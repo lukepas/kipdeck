@@ -1,6 +1,7 @@
 // The activity timeline: notable things that happened on a floor, kept in the floor's
 // .agent-office/timeline.jsonl (a line per event, capped, as the chat is in history.ts). The events
 // are written here from state changes only (TimelineWatch), never from what a browser sent.
+import { agentHeading, agentRef, type Nameable } from '../shared/agentname.js';
 import path from 'node:path';
 import type { GhIssue, GhPull, MeetingState, Mission, QueueState, RosterEntry, TaskStatus, TimelineEvent, TimelineKind, WorkerInfo, WorkerStatus } from '../shared/protocol.js';
 import { TIMELINE_TEXT, explorerLink } from '../shared/protocol.js';
@@ -194,8 +195,8 @@ export class TimelineWatch {
     this.t.add(e);
   }
 
-  private who(w: Pick<WorkerInfo, 'id' | 'name' | 'goal' | 'issue'>) {
-    return { worker: w.id, name: w.name, ...(w.goal ? { goal: w.goal } : {}), ...(w.issue ? { issue: w.issue } : {}) };
+  private who(w: Pick<WorkerInfo, 'id' | 'goal' | 'issue'> & Nameable) {
+    return { worker: w.id, name: agentHeading(w), ...(w.goal ? { goal: w.goal } : {}), ...(w.issue ? { issue: w.issue } : {}) };
   }
 
   /** A worker's update. */
@@ -207,12 +208,12 @@ export class TimelineWatch {
       if (w.createdAt < this.since) return;
       const goal = this.floor.goalTitle(w.goal);
       const what = [goal && `for ${goal}`, w.issue && `on #${w.issue}`].filter(Boolean).join(' ');
-      return this.add({ kind: 'hired', ...this.who(w), text: `${w.createdBy} hired ${w.name}${what ? ` ${what}` : ''}${w.kind === 'shell' ? ' (a shell)' : ''}` });
+      return this.add({ kind: 'hired', ...this.who(w), text: `${w.createdBy} deployed ${agentRef(w)}${what ? ` ${what}` : ''}` });
     }
     if (prev === w.status || w.kind !== 'agent') return;
-    if (w.status === 'needs_input') return this.routine(w, 'needs-input', needsInputText(w.name, w.activity));
-    if (w.status === 'done') return this.routine(w, 'done', `${w.name} finished${w.task?.name ? `: ${w.task.name}` : ''}`);
-    if (w.status === 'working' && (prev === 'exited' || prev === 'offline')) return this.add({ kind: 'resumed', ...this.who(w), text: `${w.name} woke up and is working again` });
+    if (w.status === 'needs_input') return this.routine(w, 'needs-input', needsInputText(agentRef(w, { start: true }), w.activity));
+    if (w.status === 'done') return this.routine(w, 'done', `${agentRef(w, { start: true })} finished`);
+    if (w.status === 'working' && (prev === 'exited' || prev === 'offline')) return this.add({ kind: 'resumed', ...this.who(w), text: `${agentRef(w, { start: true })} is working again` });
   }
 
   /** A done or needs-input event, unless it repeats the worker's last one of that kind (TIMELINE_FOLD_MS). */
@@ -234,12 +235,12 @@ export class TimelineWatch {
     const worked = workedMs(w);
     const usd = w.usage?.cost;
     const tail = [worked && `${duration(worked)} on task`, money(usd)].filter(Boolean).join(', ');
-    this.add({ kind: 'sent-home', ...this.who(w), ...(usd ? { usd } : {}), ...(worked ? { workedMs: worked } : {}), text: `${w.name} stood down${tail ? ` after ${tail}` : ''}` });
+    this.add({ kind: 'sent-home', ...this.who(w), ...(usd ? { usd } : {}), ...(worked ? { workedMs: worked } : {}), text: `${agentRef(w, { start: true })} stopped${tail ? ` after ${tail}` : ''}` });
   }
 
   /** The roster saw a worker get stuck. */
   stuck(e: RosterEntry, reason: string) {
-    this.add({ kind: 'stuck', worker: e.id, name: e.name, ...(e.goal ? { goal: e.goal } : {}), ...(e.issue ? { issue: e.issue } : {}), text: `${e.name} got stuck: ${reason}` });
+    this.add({ kind: 'stuck', worker: e.id, name: agentHeading(e), ...(e.goal ? { goal: e.goal } : {}), ...(e.issue ? { issue: e.issue } : {}), text: `${agentRef(e, { start: true })} got stuck: ${reason}` });
   }
 
   /** A bounty changed hands on chain (see server/bounties.ts): funded, claimed, paid or refunded. */
@@ -302,7 +303,7 @@ export class TimelineWatch {
       const who = shortAddress(p.payer);
       if (!was) this.add({ kind: 'task-paid', ...base, ...(p.explorer ? { link: p.explorer } : {}), text: `${who} paid ${p.amount} test USDC for the task ${t.title}: it waits for an admin` });
       if (stage === 'approved') this.add({ kind: 'task-approved', ...base, text: `The paid task ${t.title} was approved and is on the queue` });
-      else if (stage === 'rejected') this.add({ kind: 'task-rejected', ...base, text: `The paid task ${t.title} was turned down: ${p.amount} test USDC is owed back to ${who}, sent by hand from the office's wallet` });
+      else if (stage === 'rejected') this.add({ kind: 'task-rejected', ...base, text: `The paid task ${t.title} was turned down: ${p.amount} test USDC is owed back to ${who}, sent by hand from Kipdeck's wallet` });
       else if (stage === 'refunded') this.add({ kind: 'task-refunded', ...base, ...(p.refundExplorer ? { link: p.refundExplorer } : {}), text: `Refunded ${p.amount} test USDC to ${who} for the turned-down task ${t.title}` });
     }
   }

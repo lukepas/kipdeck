@@ -140,7 +140,7 @@ export function usageSwitch(net: Net, s: SetupState): HTMLElement {
       'details',
       {},
       h('summary', {}, "What's sent"),
-      h('p', {}, "Each event is its name (first agent, first answer, first merge, or one wait in Needs you), a number of minutes, a random id made when you turn this on, the Kipdeck version, your OS and the day. Never code, prompts, names, paths or repositories. Events wait in telemetry-outbox.jsonl in the office's data folder, so you can read them first. Off by default; DO_NOT_TRACK=1 keeps it off."),
+      h('p', {}, "Each event is its name (first agent, first answer, first merge, or one wait in Needs you), a number of minutes, a random id made when you turn this on, the Kipdeck version, your OS and the day. Never code, prompts, names, paths or repositories. Events wait in telemetry-outbox.jsonl in Kipdeck's data folder, so you can read them first. Off by default; DO_NOT_TRACK=1 keeps it off."),
     ),
   );
 }

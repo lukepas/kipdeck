@@ -10,6 +10,7 @@
 // inferred from the code stands in (protocol/signal.ts, RundownGist.source): its parts and a next thing,
 // but no stuck part (only a person or Claude can say what a part waits on), so it never sets a status.
 
+import { agentRef } from './agentname.js';
 import { NEEDS_INPUT_LONG_MS, type Ranked } from './attention.js';
 import type { Decision, Milestone, Part } from './rundown/schema.js';
 import type { RundownGist, SignalGoal } from './protocol/signal.js';
@@ -185,7 +186,7 @@ export function computeSignal(input: SignalInput): Signal {
   // Agents stuck on this milestone: only those linked to it (entry.goal), never the whole floor's.
   if (milestone?.source === 'goals') {
     const stuck = input.ranked.filter((r) => r.att.level === 'stuck' && !r.att.snoozed && r.entry.goal === milestone.id);
-    if (stuck.length) off('stuck-agent', stuck.length === 1 ? `${stuck[0].entry.name} is stuck on this milestone` : `${stuck.length} agents are stuck on this milestone`);
+    if (stuck.length) off('stuck-agent', stuck.length === 1 ? `${agentRef(stuck[0].entry, { start: true })} is stuck on this milestone` : `${stuck.length} agents are stuck on this milestone`);
   }
   if (rundown?.stuck) off('stuck-part', rundown.waitingOn ? `${plural(rundown.stuck, 'part')} stuck, waiting on ${rundown.waitingOn}` : `${plural(rundown.stuck, 'part')} marked stuck in /rundown`);
 
@@ -194,7 +195,7 @@ export function computeSignal(input: SignalInput): Signal {
   const oldestDays = oldest === undefined ? undefined : Math.max(0, daysBetween(oldest, now));
   if (rundown?.decisionsOpen) risk('decision', `${plural(rundown.decisionsOpen, 'decision')} open${oldestDays ? `, oldest ${plural(oldestDays, 'day')}` : ''}: "${clip(rundown.decisions[0]?.question ?? '', 80)}"`, true);
   const waiting = input.ranked.filter((r) => r.att.level === 'needs-you' && !r.att.snoozed && now - r.att.since > LONG_WAIT_MS).sort((a, b) => a.att.since - b.att.since);
-  if (waiting.length) risk('wait', `${waiting[0].entry.name} has waited on you over ${Math.floor((now - waiting[0].att.since) / 3_600_000)} h`, true);
+  if (waiting.length) risk('wait', `${agentRef(waiting[0].entry, { start: true })} has waited on you over ${Math.floor((now - waiting[0].att.since) / 3_600_000)} h`, true);
 
   // The pace of merges, week on week.
   const { week, before } = input.merges;
@@ -209,7 +210,7 @@ export function computeSignal(input: SignalInput): Signal {
   let next: Signal['next'] = null;
   const asking = waiting[0] ?? input.ranked.find((r) => r.att.level === 'needs-you' && !r.att.snoozed);
   if (rundown?.next && rundown.source !== 'inferred') next = { text: rundown.next, from: `from /rundown, ${ago(daysBetween(rundown.at, now))}` };
-  else if (asking) next = { text: `Answer ${asking.entry.name}`, from: 'from the inbox' };
+  else if (asking) next = { text: `Answer ${agentRef(asking.entry)}`, from: 'from the inbox' };
   else if (rundown?.next) next = { text: rundown.next, from: INFERRED_FROM };
 
   return {

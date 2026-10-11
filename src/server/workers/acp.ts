@@ -1,5 +1,6 @@
 // A worker that runs over ACP rather than in a terminal (DeepSeek Harness, see ProviderAdapter.transport):
 // the office holds the connection and draws what it says into the worker's terminal itself.
+import { exitedLine } from './says.js';
 import { DshSession, terminalSafe } from '../dsh.js';
 import { stampOutput, type HeadlessTerminal } from './terminal.js';
 import type { Worker, WorkerContext } from './types.js';
@@ -86,7 +87,7 @@ function acpExited(ctx: WorkerContext, w: Worker, session: DshSession, term: Hea
   info.exitCode = code ?? -1;
   info.status = 'exited';
   const hint = info.sessionId ? ' - press R to resume' : '';
-  const msg = `\r\n\x1b[2m[${info.name} exited with code ${code ?? -1}${hint}]\x1b[0m\r\n`;
+  const msg = exitedLine(info, code ?? -1, hint);
   term.write(msg);
   if (w.viewers.size) ctx.events.data(info.id, msg, [...w.viewers.keys()]);
   w.screenDirty = true;

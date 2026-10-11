@@ -128,6 +128,12 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   await row(page, 'needs-you', 'Fix the flaky checkout test').waitFor({ timeout: 30_000 });
   // The agent it just asked for is selected, its terminal in the pane.
   await page.locator('.pane.has-agent .pane-title h2', { hasText: 'Fix the flaky checkout test' }).waitFor({ timeout: 15_000 });
+  // One name (docs/inbox.md, One name): the task is the name and the CLI a badge, never a nickname.
+  const sub = await page.locator('.pane.has-agent .pane-title p').innerText();
+  assert.match(sub, /^Claude Code/, sub);
+  // The deck's nicknames (src/server/workers/worker.ts) are never shown on the home page.
+  const { NAMES } = await import('../src/server/workers/worker.js');
+  assert.doesNotMatch(sub, new RegExp(`\\b(${NAMES.join('|')})\\b`), sub);
   await deploy(page, '[done] Write the README quickstart (demo)');
   await row(page, 'review', 'Write the README quickstart').waitFor({ timeout: 30_000 });
   assert.match(await page.locator('.sec-needs-you .sec-h').innerText(), /Needs you\s*1/);
@@ -146,6 +152,8 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   await page.keyboard.type('fix the selector');
   await page.keyboard.press('Enter');
   await row(page, 'review', 'Fix the flaky checkout test').waitFor({ timeout: 30_000 });
+  // The settled toast names it by its task, as its row does.
+  await page.locator('#toasts .toast', { hasText: /Answered "Fix the flaky checkout test[^"]*"\. Back at work\./ }).waitFor({ timeout: 10_000 });
   await page.locator('.sec-needs-you .sec-empty', { hasText: 'Nothing needs you' }).waitFor();
 
   // Review: the Changes tab with what it changed and the branch it goes into, then Merge.
@@ -169,7 +177,7 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   await page.locator('.pane .rv-merge').focus();
   await page.keyboard.press('Enter');
   await hold.waitFor({ timeout: 5_000 });
-  assert.match(await hold.locator('.toast-text small').innerText(), /^Write the README quickstart \(/);
+  assert.match(await hold.locator('.toast-text small').innerText(), /^Write the README quickstart.* \(Claude Code\)\. Undo keeps it unmerged\.$/);
   await page.waitForFunction(() => document.activeElement?.matches('.pane .rv-undo'), null, { timeout: 5_000 });
   assert.match(await page.locator('#pulse .pulse-stat').nth(1).innerText(), /^1\s*to review/);
   assert.match(await row(page, 'review', 'Write the README quickstart').locator('.row-status').innerText(), /^Merging in \ds$/);

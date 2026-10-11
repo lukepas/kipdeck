@@ -6,9 +6,9 @@ Back to the [README](../README.md).
 
 Mission control answers one question: what needs a person right now, on any floor. It ranks every hired worker in the building by how much it needs someone, says why in plain words, and offers one next step. Next to that it keeps what each floor is for (its mission and milestones), so every worker, task and pull request can be tied back to a goal, an inbox of everything waiting for a review, a timeline of what happened, and reminders for what would otherwise be forgotten.
 
-Open it with **I** anywhere in the office, from the **Mission control** button on the top bar (always there), from the counters beside the deck's name (each one, *2 need you*, *1 stuck*, *3 to review*, *4 working*, opens the tab for its level: Review for to review, Attention for the rest), from the menu > **Mission control**, or from the command palette (**Ctrl+K**: *Mission control*, *Edit the mission*, *Review finished work*, *Timeline*, *While you were away*). On the home page (`/`) it's **Mission control** in the avatar menu, or Ctrl+K there. Attention and Review are always there; Goals, Timeline and Crew come with Goals and timeline on in [Labs](labs.md), and the number keys follow the tabs shown. It has a ✕ in the top right, and Esc closes it and puts you straight back into looking around. It remembers the tab you had open last.
+Open it with **I** anywhere in the office, from the **Mission control** button on the top bar (always there), from the counters beside the deck's name (each one, *2 need you*, *1 stuck*, *3 to review*, *4 working*, opens the tab for its level: Review for to review, Attention for the rest), from the menu > **Mission control**, or from the command palette (**Ctrl+K**: *Mission control*, *Edit the mission*, *Review finished work*, *Timeline*, *While you were away*). On the home page (`/`) it's **Mission control** in the avatar menu, or Ctrl+K there. Attention and Review are always there; Goals, Timeline and Records come with Goals and timeline on in [Labs](labs.md), and the number keys follow the tabs shown. It has a ✕ in the top right, and Esc closes it and puts you straight back into looking around. It remembers the tab you had open last.
 
-Inside it, **1** to **5** switch tabs (Attention, Goals, Review, Timeline, Crew; all five on one line, docked too), the arrow keys move between rows, **Enter** does the selected row's next step, and **D** docks it or floats it again.
+Inside it, **1** to **5** switch tabs (Attention, Goals, Review, Timeline, Records; all five on one line, docked too), the arrow keys move between rows, **Enter** does the selected row's next step, and **D** docks it or floats it again.
 
 ### Docked or floating
 
@@ -33,11 +33,11 @@ Every worker hired onto a console, the Standby bench or the Review bay's table, 
 | Stuck | Working but no hook event and no terminal output for 10 minutes (*working but silent for 12 min*), or for 2 minutes in the middle of a tool call for an agent with no hook for its permission prompt (Cursor); tests or a build failing again and again; crashed (*crashed (exit 1)*); its worktree was deleted; hired 15 minutes ago and never given a task; its queue task failed to start |
 | To review | Done and nobody has looked (after 30 minutes: *forgotten: done 42 min ago, nobody looked*); its pull request's checks are failing, it has merge conflicts, changes were requested, it's approved and ready to merge, or it waits for a review; commits on its branch and no pull request yet; its pull request merged, so it can go home |
 | Working | At work and showing signs of life |
-| Ready or asleep | Ready for its next task (finished and seen to), or asleep |
+| Idle | Idle: ready for its next task (finished and seen to), or asleep |
 
-Within a level, whoever has waited longest comes first. The working and *Ready or asleep* groups stay folded until you open them, so the list stays short. What waits for review is one line, *To review N*: its **Review** button does the next step for the oldest of it (opens its Changes window, its pull request or its bounty payout), and *Open the Review tab* beside it lists the lot. N is the same count as the chip's and the tab title's, so it includes pull requests no worker stands for.
+Within a level, whoever has waited longest comes first. The Working and Idle groups stay folded until you open them, so the list stays short. What waits for review is one line, *To review N*: its **Review** button does the next step for the oldest of it (opens its Changes window, its pull request or its bounty payout), and *Open the Review tab* beside it lists the lot. N is the same count as the chip's and the tab title's, so it includes pull requests no worker stands for.
 
-Each row shows the worker, its floor, what it's for (its milestone, its issue, or *unlinked* for an agent; a shell is never called that), what it's doing, the reason, how long it has been that way and what it has cost, with one button for the next step:
+Each row shows the agent by its task with its CLI as a badge, its project, what it's for (its milestone, its issue, or *unlinked* for an agent; a shell is never called that), what it's doing, the reason, how long it has been that way and what it has cost, with one button for the next step:
 
 | Button | What it does |
 | --- | --- |
@@ -48,7 +48,7 @@ Each row shows the worker, its floor, what it's for (its milestone, its issue, o
 | Hand back | Opens its pull request's window and hands it back to a worker with the review comments (its **Fix comments & merge**, or **Fix conflicts & merge**) |
 | Resume | Starts it again |
 | Rebuild | Puts its deleted worktree back, or sends it home |
-| Stand down | Stands it down, asking what to do with its worktree |
+| Stop | Stops it, asking what to do with its worktree |
 | Give it a task | Types it a first prompt |
 
 A worker on another floor takes you to its floor and its desk first, then does it.
@@ -83,13 +83,13 @@ With [agent reputation](reputation.md) on (`--reputation`), the tab ends with **
 
 Everything on every floor that waits for a person's decision, oldest first:
 
-- workers done and nobody has looked, with what they changed (*+120 -30 · 4 files*, from the Changes window's own look, taken once each time the worker comes to rest);
-- workers with commits on their branch and no pull request (**Open PR**);
+- agents done and nobody has looked, with what they changed (*+120 -30 · 4 files*, from the Changes window's own look, taken once each time the agent comes to rest);
+- agents with commits on their branch and no pull request (**Open PR**);
 - pull requests by state: waiting for a review, approved and ready to merge (**Merge**), checks failing, merge conflicts or changes requested (**Hand back**), with the checks' state beside them;
-- pull requests the office made that no worker at a desk stands for any more (from an `office/` branch, a worker's branch or a queue task; a branch counts only in the repository itself, never a fork's, since a fork can name a branch anything), and pull requests your review is requested on (yours by your own GitHub sign-in, or the office's on the shared password);
-- units whose pull request merged (**Stand down**).
+- pull requests Kipdeck made that no running agent stands for any more (from an `office/` branch, an agent's branch or a queue task; a branch counts only in the repository itself, never a fork's, since a fork can name a branch anything), and pull requests your review is requested on (yours by your own GitHub sign-in, or Kipdeck's on the shared password);
+- agents whose pull request merged (**Archive**).
 
-Each row says what it is, its floor, its goal, the checks, the diff size and how long it has waited. Opening a finished worker's work from here (reviewing its changes, its pull request, sending it home) marks it seen, as opening its terminal does. The attention chip's *to review* counts this whole list.
+Each row says what it is, its project, its goal, the checks, the diff size and how long it has waited. Opening a finished agent's work from here (reviewing its changes, its pull request, stopping it) marks it seen, as opening its terminal does. The attention chip's *to review* counts this whole list.
 
 ## Timeline
 
@@ -103,25 +103,25 @@ What happened on every floor, newest first. The office writes it from what chang
 | Resumed | An asleep worker started working again |
 | Went home | A worker went home, with its time on task and what it cost |
 | PR opened, PR closed | One of the office's pull requests opened, or closed without merging, naming the unit it is from when one is |
-| PR merged | Any pull request on the floor merged, who merged it from the PR window, and the unit it came from when it was one of theirs (its record in the Crew tab counts it) |
+| PR merged | Any pull request on the floor merged, who merged it from the PR window, and the unit it came from when it was one of theirs (its record in the Records tab counts it) |
 | Queue | A queue task started, ended or failed |
 | Meeting | A meeting was called, and when it ended, the file it wrote |
 | Mission, Milestone | The mission statement changed; a milestone was added, renamed, removed, made the active one or done |
 | Progress | A milestone's issues closed went up or down (*Auth rewrite: 5 of 7 issues closed*) |
 
-Pick a floor, a goal or a worker to see only theirs, and **Load older** for more. The whole row is a button: click it, or select it and press **Enter** or **Space**, to go to what it's about: the worker's terminal (if it's still here), the pull request, the queue or the Goals tab, on its floor. A small chevron shows on the row you point at. Its *proof* and *tx* links still open the explorer.
+Pick a project, a goal or an agent to see only theirs, and **Load older** for more. The whole row is a button: click it, or select it and press **Enter** or **Space**, to go to what it's about: the worker's terminal (if it's still here), the pull request, the queue or the Goals tab, on its floor. A small chevron shows on the row you point at. Its *proof* and *tx* links still open the explorer.
 
-## Crew
+## Records
 
-Each unit aboard, in the same order as the attention ranking (whoever needs you first), with what it's doing now and its record. The **Now** column is live: the state's glyph and phrase (*Needs an answer*, *Done*, *Working*), how long it has been that way, and its latest activity muted underneath (*Bash: npm test*). It follows the same updates as the rest of Mission control; nothing extra is asked of the server.
+Each agent, named by its task with its CLI as a badge (the same name as in the inbox, see [One name, and the words](inbox.md#one-name-and-the-words)), in the same order as the attention ranking (whoever needs you first), with what it's doing now and its record. The **Now** column is live: the state's glyph and phrase (*Needs an answer*, *Done*, *Working*), how long it has been that way, and its latest activity muted underneath (*Bash: npm test*). It follows the same updates as the rest of Mission control; nothing extra is asked of the server.
 
-The record is one line, from the deck log as far as the page has it: *A-03 the Mechanic: 41 merges, 0 reverts*. It counts outcomes only (pull requests merged and closed unmerged, times stuck, and reverts from its agent's record when the office keeps reputation), never lines of code, tokens or terminal activity, and a slow record is shown as plainly as a quick one. There is no list of people here: it is about units.
+The record is one line, from the deck log as far as the page has it: *the Mechanic: 41 merges, 0 reverts*. It counts outcomes only (pull requests merged and closed unmerged, times stuck, and reverts from its agent's record when the office keeps reputation), never lines of code, tokens or terminal activity, and a slow record is shown as plainly as a quick one. There is no list of people here: it is about agents.
 
 - **Epithets** are earned from that record, never handed out at random, and worked out again as it changes: *the Mechanic* (most merges, none reverted), *the Anchor* (its merge closed out a waypoint), *the Comeback* (stuck three times, merged each time), *the Night Owl* (most merges on the night watch, 22:00 to 05:00), *the Quick Study* (the quickest median from opened to merged, over three or more), *the Steady Hand* (five merges, never stuck) and *the Rookie* (its first day aboard). Each goes to the one unit that holds it best, and a unit wears one at most. The epithet also shows on the unit's row in the other tabs, on its callout up close and in its console's column.
 - **Chevrons**: a thin white one for 5 merges, one for a merge rate of 90% or more over 5 outcomes or more, and one for 10 merges with none reverted; one violet chevron when its agent has an ERC-8004 record on chain. Hover them for why.
-- **Unit of the watch**: the unit with the best clean record on the last watch (yesterday: the most merges with no revert against it, ties to the quicker median merge). It is the same unit all day, and it stands on the Proof corner's plinth on the deck.
+- **Best of the watch**: the agent with the best clean record on the last watch (yesterday: the most merges with no revert against it, ties to the quicker median merge). It is the same unit all day, and it stands on the Proof corner's plinth on the deck.
 
-Settings > Deck > Life > Crew epithets turns the epithets, chevrons and the unit of the watch off everywhere; the records stay.
+Settings > Deck > Life > Crew epithets turns the epithets, chevrons and the best of the watch off everywhere; the records stay.
 
 At the foot of the tab is the **Captain's log**: the day's entries the start of watch wrote to this deck's timeline (one a day, the first time a captain starts a watch there), newest first, a week of them. Each is the office's own words from real numbers: *Day 14 of the mission. Yesterday the fleet merged 9 pull requests, closed 14 issues and paid 3 bounties on devnet. Waypoint 3, Billing v2, is 60% done. Two units await orders.* The Timeline tab lists them too.
 

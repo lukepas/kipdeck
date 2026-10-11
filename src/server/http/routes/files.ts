@@ -19,7 +19,7 @@ export const fileRoutes = {
       const floor = floorParam(ctx, url);
       // Pictures on the whiteboard. Their ids are hashes of what's in them, so they never change.
       if (req.method === 'POST' && !ctx.hosts.originOk(req)) return send(res, 403, { error: 'Forbidden' });
-      if (!floor) return send(res, 404, { error: 'No such floor' });
+      if (!floor) return send(res, 404, { error: 'No such project' });
       if (req.method === 'GET') {
         const f = floor.whiteboard.file(url.searchParams.get('id') ?? '');
         if (!f) return send(res, 404, { error: 'No such picture' });
@@ -45,9 +45,9 @@ export const fileRoutes = {
       // A file dropped or pasted into a worker's terminal, kept on this machine for the terminal to type its path.
       if (req.method !== 'POST') return send(res, 405, { error: 'Method not allowed' });
       if (!ctx.hosts.originOk(req)) return send(res, 403, { error: 'Forbidden' });
-      if (!floor) return send(res, 404, { error: 'No such floor' });
+      if (!floor) return send(res, 404, { error: 'No such project' });
       const workerId = str(url.searchParams.get('worker'), 32);
-      if (!floor.workers.get(workerId)) return send(res, 404, { error: 'No such worker' });
+      if (!floor.workers.get(workerId)) return send(res, 404, { error: 'No such agent' });
       const tooBig = `That file is too big to drop into a terminal (${DROP_MAX_BYTES / 1024 / 1024} MB at most)`;
       if (Number(req.headers['content-length']) > DROP_MAX_BYTES) return send(res, 413, { error: tooBig });
       let body: Buffer;
@@ -57,7 +57,7 @@ export const fileRoutes = {
         return (err as Error).message === 'too large' ? send(res, 413, { error: tooBig }) : send(res, 400, { error: 'Bad request' });
       }
       const file = floor.workers.drop(workerId, str(url.searchParams.get('name'), 256), str(req.headers['content-type'], 128), body);
-      return file ? send(res, 200, { path: file }) : send(res, 500, { error: 'The office could not keep that file' });
+      return file ? send(res, 200, { path: file }) : send(res, 500, { error: 'Kipdeck could not keep that file' });
     },
   },
   changedFile: {
@@ -71,8 +71,8 @@ export const fileRoutes = {
       const file = str(url.searchParams.get('path'), 4096);
       const side = url.searchParams.get('side');
       if (!workerId || !file || (side !== 'old' && side !== 'new')) return send(res, 400, { error: 'Bad request' });
-      if (!floor) return send(res, 404, { error: 'No such floor' });
-      if (!floor.workers.get(workerId)) return send(res, 404, { error: 'No such worker' });
+      if (!floor) return send(res, 404, { error: 'No such project' });
+      if (!floor.workers.get(workerId)) return send(res, 404, { error: 'No such agent' });
       const r = await floor.changes.file(workerId, file, side, repoOf(url.searchParams.get('repo')));
       if ('error' in r) return send(res, r.status, { error: r.error });
       res.writeHead(200, {
@@ -94,7 +94,7 @@ export const fileRoutes = {
     async handle(ctx, { res, url, path: p }) {
       const floor = floorParam(ctx, url);
       // The bookshelf: the project's Markdown files, one to read, and the pictures in it (see docs.ts).
-      if (!floor) return send(res, 404, { error: 'No such floor' });
+      if (!floor) return send(res, 404, { error: 'No such project' });
       if (p === '/api/docs') return send(res, 200, await floor.docs.list());
       const file = str(url.searchParams.get('path'), 4096);
       if (!file) return send(res, 400, { error: 'Bad request' });

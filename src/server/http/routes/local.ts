@@ -1,6 +1,7 @@
 // What commands on this computer ask the running office for (`kipdeck open`, `kipdeck attach`):
 // only from this computer, never from a page (no Origin), and only with the local key from the
 // office's local.json, which only its owner can read (see local.ts).
+import { agentHeading, agentRef } from '../../../shared/agentname.js';
 import { existsSync, statSync } from 'node:fs';
 import type http from 'node:http';
 import path from 'node:path';
@@ -18,7 +19,7 @@ import type { Route } from '../router.js';
  */
 export function localCommand(ctx: Ctx, req: http.IncomingMessage, res: http.ServerResponse): boolean {
   if (!localRequest(req) || req.headers.origin !== undefined || req.headers['sec-fetch-site'] !== undefined) {
-    send(res, 403, { error: 'Only commands on the computer the office runs on can ask for this' });
+    send(res, 403, { error: 'Only commands on the computer Kipdeck runs on can ask for this' });
     return false;
   }
   const ip = clientIp(req, false);
@@ -27,7 +28,7 @@ export function localCommand(ctx: Ctx, req: http.IncomingMessage, res: http.Serv
     return false;
   }
   if (!localKeyOk(localKeyFrom(req.headers), ctx.cfg.secret)) {
-    send(res, 403, { error: "That isn't this office's local key" });
+    send(res, 403, { error: "That isn't this Kipdeck's local key" });
     return false;
   }
   ctx.auth.recordSuccess(ip);
@@ -55,7 +56,7 @@ export const localRoutes = {
     auth: 'public',
     handle(ctx, { req, res }) {
       if (!localCommand(ctx, req, res)) return;
-      if (!ctx.accounts.sharedPassword) return send(res, 409, { error: 'This office signs people in with their own accounts: sign in with yours' });
+      if (!ctx.accounts.sharedPassword) return send(res, 409, { error: 'This Kipdeck signs people in with their own accounts: sign in with yours' });
       return send(res, 200, { link: `/login#key=${ctx.auth.linkKey()}` });
     },
   },
@@ -86,11 +87,11 @@ export const localRoutes = {
         const def = ctx.building.addFolder(dir, by);
         if (typeof def === 'string') return send(res, 409, { error: def });
         floor = ctx.floors.get(def.id) ?? ctx.openFloor(def);
-        if (!floor) return send(res, 500, { error: `Couldn't open ${def.name} as a project - see the office's log` });
+        if (!floor) return send(res, 500, { error: `Couldn't open ${def.name} as a project - see Kipdeck's log` });
         ctx.floorsChanged();
       }
       const taken = floor.workers.list().find((w) => w.sessionId === session && w.provider === provider);
-      if (taken) return send(res, 409, { error: `That session is already in the inbox, as ${taken.name} on ${floor.def.name}` });
+      if (taken) return send(res, 409, { error: `That session is already in the inbox, as ${agentRef(taken)} on ${floor.def.name}` });
       const desk = nextFreeSeat((id) => floor.workers.deskOccupied(id), floor.plan.wing)?.id;
       if (!desk) return send(res, 409, { error: `${floor.def.name} has no room for another agent: archive one first` });
       // In the folder itself, not a worktree: the session belongs to that folder.
@@ -101,7 +102,7 @@ export const localRoutes = {
         floor.workers.annotate(info.id, {});
       }
       ctx.toastAll(`${by} attached a ${PROVIDER_META[provider].name} session to ${floor.def.name}`);
-      return send(res, 200, { worker: info.id, name: info.name, project: floor.def.name });
+      return send(res, 200, { worker: info.id, name: agentHeading(info), project: floor.def.name });
     },
   },
 } satisfies Record<string, Route>;

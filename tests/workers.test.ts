@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { agentHeading, agentRef } from '../src/shared/agentname.ts';
 import assert from 'node:assert/strict';
 import { accessSync, appendFileSync, chmodSync, constants, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
@@ -1288,7 +1289,7 @@ test('a Claude worker that opens a pull request itself has it as its own', async
   hook('PostToolUse', { ...create, tool_response: { stdout: 'https://github.com/acme/app/pull/12\n', stderr: 'Creating pull request for fix-login into main in acme/app' } });
   await waitFor(pr, (p) => p !== undefined);
   assert.deepEqual(pr(), { number: 12, url: 'https://github.com/acme/app/pull/12' });
-  assert.deepEqual(toasts, [`${worker.name} opened PR #12`]);
+  assert.deepEqual(toasts, [`${agentRef(worker, { start: true })} opened PR #12`]);
   assert.equal(JSON.parse(readFileSync(path.join(f.data, 'workers.json'), 'utf8')).find((w: { id: string }) => w.id === worker.id).pr.number, 12, 'kept across a restart');
   // A follow-up whose branch already had one: gh fails, and says which.
   hook('PostToolUseFailure', { ...create, error: 'Exit code 1\na pull request for branch "fix-more" into branch "main" already exists:\nhttps://github.com/acme/app/pull/14' });
@@ -1305,7 +1306,7 @@ test('a Claude worker that opens a pull request itself has it as its own', async
   assert.equal(workers.get(worker.id)?.pastPrs, undefined, 'said by someone: only that one');
   assert.equal(workers.linkPr(worker.id), undefined);
   assert.equal(pr(), undefined);
-  assert.equal(workers.linkPr('nobody', { number: 20, url: 'https://github.com/acme/app/pull/20' }), 'No such worker');
+  assert.equal(workers.linkPr('nobody', { number: 20, url: 'https://github.com/acme/app/pull/20' }), 'No such agent');
 });
 
 test('a worker is stamped with when it started waiting on someone, afresh each time', async (t) => {
@@ -1488,7 +1489,7 @@ test('a worktree worker that makes its own branch is followed there: O finds the
   // Sent home: the worktree goes, with its branch and the office's (which holds nothing fix-x lacks).
   const home = await workers.kill(worker.id, 'all');
   assert.equal(home.error, undefined);
-  assert.equal(home.note, `Deleted ${worker.name}'s worktree and branch fix-x`);
+  assert.equal(home.note, `${agentHeading(worker)}: deleted its worktree and branch fix-x`);
   assert.equal(git(f.root, 'branch', '--list', 'fix-x', office), '');
   assert.ok(!existsSync(cwd));
   // One that checked out a branch from before it was hired leaves that branch be.
@@ -1497,7 +1498,7 @@ test('a worktree worker that makes its own branch is followed there: O finds the
   assert.notEqual(typeof other, 'string'); if (typeof other === 'string') return;
   git(path.join(f.root, other.worktree!.path), 'checkout', '-q', 'release');
   const left = await workers.kill(other.id, 'all');
-  assert.equal(left.note, `Deleted ${other.name}'s worktree and branch ${other.worktree!.branch}`);
+  assert.equal(left.note, `${agentHeading(other)}: deleted its worktree and branch ${other.worktree!.branch}`);
   assert.equal(git(f.root, 'branch', '--list', '--format=%(refname:short)', 'release', other.worktree!.branch), 'release');
 });
 
@@ -1530,19 +1531,19 @@ test("the office's branch keeps a worker's commits once it has moved on: the dia
   // Deleting the worktree and branch anyway: release isn't the office's, and the office's has the commit.
   const sent = await workers.kill(a.w.id, 'all');
   assert.equal(sent.error, undefined);
-  assert.equal(sent.note, `Deleted ${a.w.name}'s worktree and kept branch ${a.office} - it has 1 unpushed commit`);
+  assert.equal(sent.note, `${agentHeading(a.w)}: deleted its worktree and kept branch ${a.office} - it has 1 unpushed commit`);
   assert.ok(!existsSync(a.cwd));
   assert.equal(tip(a.office), 'work at desk-1');
   assert.equal(tip('release'), 'init');
   // Sent home with no choice (the queue recycling its desk, leave-on-merge): nothing goes.
   const b = hire('desk-2', 'release');
-  assert.equal((await workers.kill(b.w.id)).note, `Kept ${b.w.name}'s worktree and branch release - it has 1 unpushed commit`);
+  assert.equal((await workers.kill(b.w.id)).note, `${agentHeading(b.w)}: kept its worktree and branch release - it has 1 unpushed commit`);
   assert.ok(existsSync(b.cwd));
   assert.equal(tip(b.office), 'work at desk-2');
   // A branch of its own, cut from main without that commit: it goes, the office's stays.
   const c = hire('desk-3', '-b', 'fix-z', 'main');
   const own = await workers.kill(c.w.id, 'all');
-  assert.equal(own.note, `Deleted ${c.w.name}'s worktree and branch fix-z, and kept branch ${c.office} - it has 1 unpushed commit`);
+  assert.equal(own.note, `${agentHeading(c.w)}: deleted its worktree and branch fix-z, and kept branch ${c.office} - it has 1 unpushed commit`);
   assert.equal(git(f.root, 'branch', '--list', 'fix-z'), '');
   assert.equal(tip(c.office), 'work at desk-3');
 });
@@ -1576,19 +1577,19 @@ test("a worker that renames the office's branch goes home with it; one that dele
   assert.equal(info.worktree!.made, undefined);
   const sent = await workers.kill(a.w.id, 'all');
   assert.equal(sent.error, undefined);
-  assert.equal(sent.note, `Deleted ${a.w.name}'s worktree and branch fix-x`);
+  assert.equal(sent.note, `${agentHeading(a.w)}: deleted its worktree and branch fix-x`);
   assert.equal(git(f.root, 'branch', '--list', 'fix-x', a.office), '');
   assert.ok(!existsSync(a.cwd));
   // Renamed with nothing unpushed (its PR merged, say) and sent home before it came to rest: all of it goes.
   const b = hire('desk-2');
   git(b.cwd, 'branch', '-m', 'fix-y');
-  assert.deepEqual(await workers.kill(b.w.id), { note: `Deleted ${b.w.name}'s worktree and branch fix-y` });
+  assert.deepEqual(await workers.kill(b.w.id), { note: `${agentHeading(b.w)}: deleted its worktree and branch fix-y` });
   assert.equal(git(f.root, 'branch', '--list', 'fix-y', b.office), '');
   // The office's branch deleted instead: git can't say whether the one it's on is its own, so it stays.
   const c = hire('desk-3');
   git(c.cwd, 'checkout', '-qb', 'fix-w');
   git(c.cwd, 'branch', '-D', c.office);
-  assert.deepEqual(await workers.kill(c.w.id, 'all'), { note: `Deleted ${c.w.name}'s worktree and kept branch fix-w` });
+  assert.deepEqual(await workers.kill(c.w.id, 'all'), { note: `${agentHeading(c.w)}: deleted its worktree and kept branch fix-w` });
   assert.equal(git(f.root, 'branch', '--list', '--format=%(refname:short)', 'fix-w', c.office), 'fix-w');
   assert.ok(!existsSync(c.cwd));
 });

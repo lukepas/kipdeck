@@ -1,5 +1,6 @@
 // Workers at their desks and the board agents at their kiosks: hiring them, their terminals, their
 // worktrees and pull requests.
+import { agentRef } from '../../../shared/agentname.js';
 import { MAX_REPOS, type RepoSource } from '../../workers.js';
 import { OPEN_CODE_MODEL_MAX } from '../../../shared/providers.js';
 import { isAgentEffort, isAgentProvider, type WorkerClientMsg } from '../../../shared/protocol.js';
@@ -30,7 +31,7 @@ export const workerHandlers = {
     const repos: RepoSource[] = [];
     for (const id of Array.isArray(msg.repos) ? [...new Set(msg.repos.slice(0, MAX_REPOS + 1).map((x) => str(x, 64)))] : []) {
       const other = ctx.floors.get(id);
-      if (!other || other === floor) return ctx.warn(c, other ? "The worker's own floor's project is already in its workspace" : 'That project is no longer in the building');
+      if (!other || other === floor) return ctx.warn(c, other ? "The agent's own project is already in its workspace" : 'That project is no longer open');
       repos.push({ floor: other.id, name: other.def.name, repo: other.def.repo, dir: other.dir });
     }
     // A shell is theirs too: `claude auth login` or `gh auth login` typed there signs them in.
@@ -40,7 +41,7 @@ export const workerHandlers = {
       const r = floor.workers.spawn(str(msg.deskId, 32), who, str(msg.prompt, 20000) || undefined, msg.worktree === true, kind, msg.provider, model, effort, undefined, c.accountId, repos, link);
       const across = repos.length ? ` across ${[floor.def.name, ...repos.map((x) => x.name)].join(' + ')}` : '';
       if (typeof r === 'string') ctx.warn(c, r);
-      else ctx.toastFloor(floor, kind === 'shell' ? `${who} opened a shell at a desk` : `${who} deployed ${r.name}${issue ? ` for issue #${issue}` : r.prompt ? ' with a task' : ''}${across}`, 'info', c.id);
+      else ctx.toastFloor(floor, kind === 'shell' ? `${who} opened a shell` : `${who} deployed ${agentRef(r)}${issue ? ` for issue #${issue}` : r.prompt ? ' with a task' : ''}${across}`, 'info', c.id);
       if (typeof r !== 'string' && issue) ctx.takeIssue(c, floor, issue);
     };
     // Every project it gets a worktree of starts from what's on GitHub.
@@ -52,7 +53,7 @@ export const workerHandlers = {
   },
   'worker.resume'(ctx, c, msg) {
     const w = workerOf(ctx, msg.workerId);
-    ctx.warn(c, w ? w.floor.workers.resume(w.wid) : 'No such worker');
+    ctx.warn(c, w ? w.floor.workers.resume(w.wid) : 'No such agent');
   },
   'worker.kill'(ctx, c, msg) {
     const who = c.peer.name;
@@ -61,7 +62,7 @@ export const workerHandlers = {
     const { floor, info } = w;
     // The worker leaves right away; its worktree is dealt with after that, and the outcome follows.
     const done = floor.sendHome(info.id, CLEANUPS.has(String(msg.cleanup)) ? msg.cleanup : undefined);
-    ctx.toastFloor(floor, `${who} sent ${info.name} home`);
+    ctx.toastFloor(floor, `${who} stopped ${agentRef(info)}`);
     void done.then(({ note, error }) => {
       if (note) ctx.toastFloor(floor, note);
       if (error) ctx.toastFloor(floor, error, 'warn');
@@ -90,14 +91,14 @@ export const workerHandlers = {
         if (!info || (id !== w.wid && !info.lost)) continue;
         const r = await floor.workers.rebuild(id);
         if (r.error) ctx.warn(c, r.error);
-        else if (!r.rebuilt) ctx.sendTo(c, { t: 'toast', text: r.note ?? `${info.name}'s worktree is already there`, level: 'info' });
+        else if (!r.rebuilt) ctx.sendTo(c, { t: 'toast', text: r.note ?? `The worktree of ${agentRef(info)} is already there`, level: 'info' });
         else {
-          names.push(info.name);
+          names.push(agentRef(info));
           if (r.note) notes.push(r.note);
         }
       }
       if (!names.length) return;
-      const whose = names.length === 1 ? `${names[0]}'s worktree` : `the worktrees of ${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+      const whose = names.length === 1 ? `the worktree of ${names[0]}` : `the worktrees of ${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
       ctx.toastFloor(floor, `${who} rebuilt ${whose}${notes.length ? ` - ${notes.join('; ')}` : ''}`);
     })();
   },
@@ -121,13 +122,13 @@ export const workerHandlers = {
     const w = workerOf(ctx, msg.workerId);
     const prompt = str(msg.prompt, 20000);
     const send = () => {
-      const err = w ? w.floor.workers.prompt(w.wid, prompt, who) : 'No such worker';
+      const err = w ? w.floor.workers.prompt(w.wid, prompt, who) : 'No such agent';
       ctx.warn(c, err);
       const issue = w?.info.kind === 'agent' ? issueNumber(msg.issue) : undefined;
       if (w && !err && issue) {
         // It's there for that issue now, and on the milestone the issue is on when it had none.
         w.floor.workers.annotate(w.wid, { issue, goal: w.info.goal ?? w.floor.mission.goalFor(undefined, issue) });
-        ctx.toastFloor(w.floor, `${who} handed issue #${issue} to ${w.info.name}`);
+        ctx.toastFloor(w.floor, `${who} handed issue #${issue} to ${agentRef(w.info)}`);
         ctx.takeIssue(c, w.floor, issue);
       }
     };
@@ -145,7 +146,7 @@ export const workerHandlers = {
     ctx.withSignIn(c, hires ? ctx.claudeFor(floor.workers.officeDefault.provider) : undefined, () => {
       const r = floor.workers.station(deskId, who, str(msg.prompt, 20000), c.accountId);
       if (typeof r === 'string') ctx.warn(c, r);
-      else if (r.hired) ctx.toastFloor(floor, `${who} asked the ${r.info.name} something`);
+      else if (r.hired) ctx.toastFloor(floor, `${who} asked ${agentRef(r.info)} something`);
     });
   },
   'worker.pr'(ctx, c, msg) {
@@ -156,16 +157,16 @@ export const workerHandlers = {
     ctx.withGitHub(c, (as) => void floor.workers.openPr(wid, who, as).then((r) => {
       if (typeof r === 'string') return ctx.warn(c, r);
       const info = floor.workers.get(wid);
-      const name = info?.name ?? 'the worker';
+      const name = info ? agentRef(info) : 'the agent';
       const [one] = r.prs;
-      if (r.prs.length === 1 && !one.repo) ctx.toastFloor(floor, one.existed ? `${name}'s branch already has PR #${one.number}` : `${who} opened PR #${one.number} for ${name}`);
+      if (r.prs.length === 1 && !one.repo) ctx.toastFloor(floor, one.existed ? `The branch of ${name} already has PR #${one.number}` : `${who} opened PR #${one.number} for ${name}`);
       else {
         // Across repositories: one line for them all.
         const list = r.prs.map((p) => `${p.repo} #${p.number}`).join(', ');
-        ctx.toastFloor(floor, r.prs.every((p) => p.existed) ? `${name}'s pull requests are already open: ${list}` : `${who} opened ${name}'s pull requests: ${list}`);
+        ctx.toastFloor(floor, r.prs.every((p) => p.existed) ? `The pull requests of ${name} are already open: ${list}` : `${who} opened the pull requests of ${name}: ${list}`);
       }
       const dirty = r.prs.filter((p) => p.dirty);
-      if (dirty.length) ctx.warn(c, `${name} still has uncommitted changes in ${dirty.some((p) => p.repo) ? `its worktree${dirty.length > 1 ? 's' : ''} of ${dirty.map((p) => p.repo).join(', ')}` : 'its worktree'} - they are not in the PR`);
+      if (dirty.length) ctx.warn(c, `${name.charAt(0).toUpperCase()}${name.slice(1)} still has uncommitted changes in ${dirty.some((p) => p.repo) ? `its worktree${dirty.length > 1 ? 's' : ''} of ${dirty.map((p) => p.repo).join(', ')}` : 'its worktree'} - they are not in the PR`);
       for (const f of r.failed) ctx.warn(c, f);
       // Put it on the board now rather than at the next poll. A refresh already in flight
       // returns at once and can miss it, so look again shortly after.

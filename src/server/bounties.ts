@@ -1,7 +1,6 @@
 // Proof of Merge bounties, building-wide: devnet USDC or test tokens escrowed against GitHub issues (the Solana
-// program in onchain/solana), claimed for the office PR a worker opened for the issue, and paid to
-// the worker's owner's wallet only after a person with write access merged it and an office admin
-// approved. Off until an admin turns it on in Settings.
+// program in onchain/solana), claimed for the PR an agent opened for the issue, and paid to its owner's wallet
+// only after a person with write access merged it and an admin approved. Off until an admin turns it on.
 //
 // The chain holds the money and its rules; this keeps each floor in step with it on every look at
 // the floor's pull requests: what was funded, which PR claims what (never a fork's: Floor.officePull),
@@ -20,6 +19,7 @@ import { pullFacts, type GhRun } from './chain/merge-proof.js';
 import { mergerPseudonym, pseudonymSecret } from './chain/pseudonym.js';
 import { actionGet, actionPost, prepareFund, type FundingParts } from './chain/funding.js';
 import { tokenSymbol } from '../shared/money.js';
+import { agentHeading, agentRef } from '../shared/agentname.js';
 
 type ToastLevel = 'info' | 'warn' | 'error';
 
@@ -349,7 +349,7 @@ export class Bounties {
     b.phase = 'released';
     delete b.note;
     if (!store.tx(b, 'paid', sig)) return this.explorer(sig);
-    floor.watch.bounty('bounty-paid', { issue: b.issue, pr: b.claimPr, tx: sig, worker: b.workerId, name: b.workerName, text: `${how} ${this.money(amount)} to ${b.workerName ?? 'the office'} for PR #${b.claimPr}` });
+    floor.watch.bounty('bounty-paid', { issue: b.issue, pr: b.claimPr, tx: sig, worker: b.workerId, name: b.workerName, text: `${how} ${this.money(amount)} for PR #${b.claimPr}${b.workerName ? ` ("${b.workerName}")` : ''}` });
     const url = this.explorer(sig);
     this.deps.broadcast({ t: 'bounty.paid', floor: floor.id, issue: b.issue, pr: b.claimPr ?? 0, amount: amount.toString(), symbol: this.token.symbol, ...(b.workerName ? { workerName: b.workerName } : {}), ...(url ? { url } : {}) });
     return url;
@@ -380,9 +380,9 @@ export class Bounties {
     const owner = w ? floor.workers.ownerOf(w.id) : undefined;
     const wallet = this.settings.wallet(owner);
     b.workerId = w?.id;
-    b.workerName = w?.name;
+    b.workerName = w ? agentHeading(w, 40) : undefined;
     if (!wallet) {
-      b.note = `set a payout wallet (Settings, Bounties) for ${w ? `${w.name}'s owner` : 'the office'} to claim it with PR #${p.number}`;
+      b.note = `set a payout wallet (Settings, Bounties) for ${w ? `whoever deployed ${agentRef(w)}` : 'Kipdeck'} to claim it with PR #${p.number}`;
       return store.put(b);
     }
     try {
@@ -391,7 +391,7 @@ export class Bounties {
       delete b.facts;
       b.claimPr = p.number;
       delete b.note;
-      if (store.tx(b, 'claimed', r.signature)) floor.watch.bounty('bounty-claimed', { issue: b.issue, pr: p.number, tx: r.signature, worker: w?.id, name: w?.name, text: `PR #${p.number} claimed #${b.issue}'s bounty${w ? ` for ${w.name}` : ''}` });
+      if (store.tx(b, 'claimed', r.signature)) floor.watch.bounty('bounty-claimed', { issue: b.issue, pr: p.number, tx: r.signature, worker: w?.id, name: b.workerName, text: `PR #${p.number} claimed #${b.issue}'s bounty${w ? ` for ${agentRef(w)}` : ''}` });
     } catch (err) {
       b.note = `couldn't claim it: ${(err as Error).message}`;
     }

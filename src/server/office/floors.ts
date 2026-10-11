@@ -7,7 +7,7 @@ import type { Ctx, FloorHelpers, FloorsOpen } from './context.js';
 import { SLOW_CLIENT_BYTES, type Client } from './client.js';
 import { proofFloor } from './chain.js';
 import { ownerName } from '../local.js';
-import { CLI } from '../../shared/copy.js';
+import { CLI, PRODUCT } from '../../shared/copy.js';
 import { primeFloors } from '../rundown/first.js';
 
 /** Finding floors, the elevator's list of them, and taking one off the building. */
@@ -53,8 +53,8 @@ export function floorHelpers(ctx: Ctx): FloorHelpers {
       if (c.peer.floor === floor.id) {
         if (next) ctx.goToFloor(c, next);
         else ctx.toLobby(c);
-        ctx.sendTo(c, { t: 'toast', text: next ? `${who} took ${name} off the building, so you're on ${next.def.name} now` : `${who} took ${name}, the last floor, off the building`, level: 'warn' });
-      } else ctx.sendTo(c, { t: 'toast', text: `${who} took ${name} off the building`, level: 'info' });
+        ctx.sendTo(c, { t: 'toast', text: next ? `${who} removed the project ${name}, so you're on ${next.def.name} now` : `${who} removed ${name}, the last project`, level: 'warn' });
+      } else ctx.sendTo(c, { t: 'toast', text: `${who} removed the project ${name}`, level: 'info' });
     }
     ctx.floors.delete(floor.id);
     floor.shutdown();
@@ -145,7 +145,7 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
   const worksIn = (from: Floor, on: Floor) => from.workers.list().some((w) => w.repos?.some((r) => r.floor === on.id));
   const openFloor = (def: FloorDef): Floor | undefined => {
     if (!existsSync(def.dir)) {
-      console.error(`kipdeck: the ${def.name} floor's checkout is gone (${def.dir}) - it stays closed until it's back`);
+      console.error(`kipdeck: the checkout of the project ${def.name} is gone (${def.dir}) - it stays closed until it's back`);
       return undefined;
     }
     try {
@@ -155,12 +155,12 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
       primeFloors(ctx, [floor.id]);
       return floor;
     } catch (err) {
-      console.error(`kipdeck: couldn't open the ${def.name} floor: ${(err as Error).message}`);
+      console.error(`kipdeck: couldn't open the project ${def.name}: ${(err as Error).message}`);
       return undefined;
     }
   };
   // Started in a project: it's a floor too (the one it has always been).
-  if (cfg.project) ctx.building.ensureLocal(cfg.project, 'the office');
+  if (cfg.project) ctx.building.ensureLocal(cfg.project, PRODUCT);
   // A new office started inside a git checkout: that's the project you work in, so it's the first one.
   if (cfg.startedIn && !ctx.building.list().length) {
     const r = ctx.building.addFolder(cfg.startedIn, ownerName());
@@ -176,8 +176,8 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
       return ctx.toastAll(`${r}`, 'warn');
     }
     if (!openFloor(r)) return;
-    console.log(`  the ${r.name} floor's clone finished (${r.dir})`);
-    ctx.toastAll(`New floor: ${r.name}, added by ${r.addedBy}`);
+    console.log(`  the project ${r.name} finished cloning (${r.dir})`);
+    ctx.toastAll(`New project: ${r.name}, added by ${r.addedBy}`);
   });
   // Workers still running from the last office are back at their desks before anyone walks in.
   await Promise.all([...floors.values()].map((f) => f.ready));
