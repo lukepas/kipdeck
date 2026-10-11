@@ -161,6 +161,6 @@ export function createLateServices(ctx: Ctx): LateServices {
   const demo = cfg.demo?.workspace ? new DemoDirector(ctx, cfg.demo.workspace, cfg.demo.readOnly) : undefined;
   // Each floor's rundown: its first map once in the background, then while someone watches it (Labs).
   // Each new map reaches Signal's chip too (signal/push.ts).
-  const rundown = new RundownService({ floor: (id) => floors.get(id), send: (ids, msg) => ids.forEach((id) => clients.get(id) && ctx.sendTo(clients.get(id)!, msg)), computed: (id) => void pushGist(ctx, id) });
+  const rundown = new RundownService({ floor: (id) => floors.get(id), send: (ids, msg) => ids.forEach((id) => clients.get(id) && ctx.sendTo(clients.get(id)!, msg)), computed: (id) => void pushGist(ctx, id), enabled: () => ctx.labs.on('rundown') && !cfg.demo?.readOnly });
   return { team, tailnet, services, upgrader, servicesState, bounties, showcase, rundown, ...(demo ? { demo } : {}), ...createChainServices(ctx, bounties) };
 }

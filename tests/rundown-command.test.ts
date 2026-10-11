@@ -4,7 +4,8 @@
 // and Signal's gist pushed to everyone when the office's map of a floor moves on.
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,9 +13,9 @@ import { COMMANDS, commandOf } from '../src/server/commands.js';
 import { packagedFiles, packageRoot, parseRundownArgs, RUNDOWN_HELP } from '../src/server/rundown/command.js';
 import { packagedSkill } from '../src/server/rundown/cli.js';
 import { primeFloors, startFirstMaps } from '../src/server/rundown/first.js';
-import { RundownService } from '../src/server/rundown/service.js';
+import { POLL_MS, RundownService } from '../src/server/rundown/service.js';
 import { pushGist } from '../src/server/signal/push.js';
-import { forgetGists } from '../src/server/signal/gist.js';
+import { forgetGists, officeGist } from '../src/server/signal/gist.js';
 import { Labs } from '../src/server/labs.js';
 import { dispatch } from '../src/server/ws/dispatch.js';
 import type { Ctx } from '../src/server/office/context.js';
@@ -77,12 +78,18 @@ test("the package's skill files: found from the source and from the bundled scri
 
 const floor = { id: 'f1', dir: fx.repo, def: { id: 'f1', name: 'Fixture' }, workers: { list: () => [] }, github: { pulls: { items: [], fetchedAt: 0 }, issues: { items: [], fetchedAt: 0 } }, mission: { state: () => ({ milestones: [], active: undefined }) }, timeline: { list: () => ({ events: [] }) } } as unknown as Floor;
 
-function office(readOnly = false) {
+function office(readOnly = false, at: Floor = floor, clock?: { t: number }) {
   const sent: ServerMsg[] = [];
   const broadcast: ServerMsg[] = [];
   const computed: string[] = [];
   const labs = new Labs(undefined);
-  const rundown = new RundownService({ floor: (id) => (id === 'f1' ? floor : undefined), send: (_ids, msg) => sent.push(msg), computed: (id) => computed.push(id) });
+  const rundown = new RundownService({
+    floor: (id) => (id === 'f1' ? at : undefined),
+    send: (_ids, msg) => sent.push(msg),
+    computed: (id) => computed.push(id),
+    enabled: () => labs.on('rundown') && !readOnly,
+    ...(clock ? { now: () => clock.t } : {}),
+  });
   const ctx = {
     cfg: { demo: readOnly ? { readOnly: true } : undefined },
     labs,
@@ -163,4 +170,75 @@ test("Signal's gist goes to everyone when the office's map moves on, once per ch
   assert.deepEqual(ro.broadcast, []);
   o.rundown.close();
   ro.rundown.close();
+});
+
+/** A new checkout with work in src/a: one commit, and two files not committed yet. */
+function freshRepo(name: string): { dir: string; floor: Floor; git: (...args: string[]) => void } {
+  const dir = path.join(tmp, name);
+  mkdirSync(path.join(dir, 'src', 'a'), { recursive: true });
+  const git = (...args: string[]) => void execFileSync('git', ['-c', 'user.email=t@example.invalid', '-c', 'user.name=T', ...args], { cwd: dir, stdio: 'ignore' });
+  git('init', '-q', '-b', 'main');
+  writeFileSync(path.join(dir, 'src', 'a', 'base.ts'), Array.from({ length: 80 }, (_, i) => `export const b${i} = ${i};`).join('\n') + '\n');
+  git('add', '.');
+  git('commit', '-q', '-m', 'Start');
+  writeFileSync(path.join(dir, 'src', 'a', 'one.ts'), 'export const one = 1;\n');
+  writeFileSync(path.join(dir, 'src', 'a', 'two.ts'), 'export const two = 2;\n');
+  return { dir, floor: { ...floor, dir } as unknown as Floor, git };
+}
+
+test("a first map nobody has seen doesn't move the office's diff base; the first person to see it does", async () => {
+  const repo = freshRepo('unseen');
+  const o = office(false, repo.floor);
+  o.rundown.prime('f1', 0);
+  await until(() => o.rundown.current('f1') !== null);
+  const state = path.join(repo.dir, '.agent-office', 'rundown', 'state.json');
+  assert.equal(existsSync(state), false, 'nothing saved for a map nobody saw');
+  o.rundown.watch('c1', 'f1');
+  assert.equal(existsSync(state), true, 'saved once someone sees it');
+  o.rundown.close();
+});
+
+test("Signal's peek keeps the first map current: a commit shows in the next thing, at most once per POLL_MS", async () => {
+  const repo = freshRepo('freshen');
+  const clock = { t: Date.now() };
+  const o = office(false, repo.floor, clock);
+  o.rundown.prime('f1', 0);
+  await until(() => o.rundown.current('f1') !== null);
+  const before = officeGist(o.rundown.current('f1')!).next;
+  assert.match(before ?? '', /^Finish or commit the work in .*\(2 uncommitted files\)$/);
+  repo.git('add', '.');
+  repo.git('commit', '-q', '-m', 'Finish a');
+  assert.equal(await o.rundown.freshen('f1'), false, 'too soon after the last look');
+  clock.t += POLL_MS;
+  assert.equal(await o.rundown.freshen('f1'), true);
+  await until(() => o.computed.length === 2);
+  const after = officeGist(o.rundown.current('f1')!).next;
+  assert.notEqual(after, before);
+  assert.doesNotMatch(after ?? '', /uncommitted/);
+  // Nothing moved since: no computation.
+  clock.t += POLL_MS;
+  assert.equal(await o.rundown.freshen('f1'), false);
+  // A merge landing (invalidate) recomputes a primed floor nobody watches too.
+  writeFileSync(path.join(repo.dir, 'src', 'a', 'three.ts'), 'export const three = 3;\n');
+  o.rundown.invalidate('f1');
+  await until(() => o.computed.length === 3);
+  assert.match(officeGist(o.rundown.current('f1')!).next ?? '', /1 uncommitted file/);
+  // With the lab off, a peek computes nothing.
+  o.labs.set({ rundown: false }, 'test');
+  clock.t += POLL_MS;
+  assert.equal(await o.rundown.freshen('f1'), false);
+  o.rundown.close();
+});
+
+test('the Rundown lab switched off while a first map waits: nothing is computed, and switching it back asks again', async () => {
+  const o = office();
+  assert.equal(primeFloors(o.ctx), 1);
+  o.labs.set({ rundown: false }, 'test');
+  await new Promise((r) => setTimeout(r, 2_300));
+  assert.equal(o.rundown.current('f1'), null);
+  assert.deepEqual(o.computed, []);
+  o.labs.set({ rundown: true }, 'test');
+  assert.equal(o.rundown.prime('f1', 0), true, 'forgotten, so it can be asked for again');
+  await until(() => o.rundown.current('f1') !== null);
+  o.rundown.close();
 });

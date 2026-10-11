@@ -110,7 +110,7 @@ export interface LateServices {
   reputationIndex?: ReputationIndex;
   /** The public showcase at /pom/, off until an admin turns it on (see showcase/service.ts). */
   showcase: Showcase;
-  /** Each floor's rundown, while someone watches it (Labs, see rundown/service.ts). */
+  /** Each floor's rundown: its first map once in the background, then while someone watches it or Signal peeks (Labs, see rundown/service.ts and rundown/first.ts). */
   rundown: RundownService;
   /** With --demo: seats the scripted agents and, in the read-only demo, plays the reviewer (see demo/director.ts). */
   demo?: DemoDirector;

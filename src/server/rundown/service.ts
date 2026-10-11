@@ -8,7 +8,9 @@
 //
 // A floor's first map is also built once with nobody watching (prime(), asked for by first.ts when a
 // floor opens with the lab on), so the window opens with it and Signal has parts to read. It's kept
-// here in memory, never written to .rundown/.
+// here in memory, never written to .rundown/. Signal's peek keeps it current (freshen(): the same cheap
+// look at HEAD and the working tree, at most once per POLL_MS, no timer of its own). A map nobody has
+// looked at yet doesn't move the office's diff base: that is saved only once someone sees it.
 
 import { createHash } from 'node:crypto';
 import { mkdirSync, realpathSync } from 'node:fs';
@@ -51,6 +53,12 @@ interface Entry {
   cache: StatCache;
   refreshedAt: number;
   queued: boolean;
+  /** The queued computation is one someone asked to see (a watcher, a refresh, a download): it saves the office's diff base. */
+  persist: boolean;
+  /** Saves the diff base of a map computed with nobody watching, once someone sees it. */
+  pendingSave?: () => void;
+  /** When HEAD and the working tree were last looked at for this floor. */
+  checkedAt: number;
 }
 
 export interface RundownHost {
@@ -59,6 +67,8 @@ export interface RundownHost {
   send(clientIds: readonly string[], msg: ServerMsg): void;
   /** A floor's map was computed (or computed again): Signal's gist reads it. */
   computed?(floorId: string): void;
+  /** Whether the office may compute maps nobody asked for (the Rundown lab is on, not the read-only demo). */
+  enabled?(): boolean;
   now?(): number;
 }
 
@@ -90,7 +100,7 @@ export class RundownService {
   private entry(floorId: string): Entry {
     let e = this.entries.get(floorId);
     if (!e) {
-      e = { rundown: null, computing: false, cache: new Map(), refreshedAt: 0, queued: false };
+      e = { rundown: null, computing: false, cache: new Map(), refreshedAt: 0, queued: false, persist: false, checkedAt: 0 };
       this.entries.set(floorId, e);
     }
     return e;
@@ -118,6 +128,8 @@ export class RundownService {
     this.watchers.set(clientId, floorId);
     const e = this.entry(floorId);
     if (!e.rundown && !e.computing) this.enqueue(floorId);
+    // Someone sees the map built with nobody watching: from now on, changes count from it.
+    this.save(e);
     this.host.send([clientId], this.message(floorId));
     this.timer ??= setInterval(() => void this.poll(), POLL_MS);
     this.timer.unref?.();
@@ -140,9 +152,14 @@ export class RundownService {
   prime(floorId: string, delayMs = PRIME_DELAY_MS): boolean {
     if (this.closed || this.primed.has(floorId) || !this.host.floor(floorId)) return false;
     const start = () => {
+      // The lab went off (or the floor went) while it waited: forgotten, so the lab coming back asks again.
+      if (this.closed || !this.host.floor(floorId) || this.host.enabled?.() === false) {
+        this.primed.delete(floorId);
+        return;
+      }
       this.primed.set(floorId, null);
       const e = this.entry(floorId);
-      if (!e.rundown && !e.computing) this.enqueue(floorId);
+      if (!e.rundown && !e.computing) this.enqueue(floorId, false);
     };
     if (delayMs <= 0) {
       start();
@@ -151,6 +168,24 @@ export class RundownService {
     const timer = setTimeout(start, delayMs);
     timer.unref?.();
     this.primed.set(floorId, timer);
+    return true;
+  }
+
+  /**
+   * Brings an unwatched floor's map up to date when Signal peeks at it: at most once per POLL_MS, a look
+   * at HEAD and the working tree, and a computation through the queue only when either moved. Watched
+   * floors are kept current by poll(). True when one was queued.
+   */
+  async freshen(floorId: string): Promise<boolean> {
+    if (this.closed || this.host.enabled?.() === false || !this.host.floor(floorId) || this.watching(floorId).length) return false;
+    const e = this.entries.get(floorId);
+    if (!e?.rundown || e.computing || e.queued || this.now() - e.checkedAt < POLL_MS) return false;
+    e.checkedAt = this.now();
+    const floor = this.host.floor(floorId);
+    if (!floor) return false;
+    const key = await stateKey(floor.dir);
+    if (key === e.key || e.computing || e.queued || this.closed) return false;
+    this.enqueue(floorId, false);
     return true;
   }
 
@@ -171,12 +206,20 @@ export class RundownService {
     return undefined;
   }
 
-  /** Something changed on a floor (a merge landed): recompute it if anyone watches. */
+  /** Something changed on a floor (a merge landed): recompute it if anyone watches, or if its first map was built. */
   invalidate(floorId: string) {
     const e = this.entries.get(floorId);
     if (!e) return;
     e.key = undefined;
     if (this.watching(floorId).length) this.enqueue(floorId);
+    else if (e.rundown && this.primed.has(floorId) && this.host.enabled?.() !== false) this.enqueue(floorId, false);
+  }
+
+  /** Saves the diff base a computation with nobody watching left waiting. */
+  private save(e: Entry) {
+    const save = e.pendingSave;
+    e.pendingSave = undefined;
+    save?.();
   }
 
   /** Forgets a floor taken off the building. */
@@ -230,8 +273,10 @@ export class RundownService {
     this.queue = [];
   }
 
-  private enqueue(floorId: string) {
+  /** Queues `floorId`; `persist` false for a computation nobody asked to see (a first map, a peek's freshen). */
+  private enqueue(floorId: string, persist = true) {
     const e = this.entry(floorId);
+    if (persist) e.persist = true;
     if (e.queued) return;
     e.queued = true;
     this.queue.push(floorId);
@@ -247,6 +292,8 @@ export class RundownService {
         const floorId = this.queue.shift()!;
         const e = this.entry(floorId);
         e.queued = false;
+        const persist = e.persist;
+        e.persist = false;
         const floor = this.host.floor(floorId);
         if (!floor) {
           this.settle(floorId, null);
@@ -257,9 +304,13 @@ export class RundownService {
         try {
           const key = await stateKey(floor.dir);
           if (!e.rundown || key !== e.key) {
-            e.rundown = await computeRundown(floor, e.cache, this.now());
+            const map = await computeMap(floor, e.cache, this.now());
+            e.rundown = map.rundown;
             e.key = key;
+            e.pendingSave = map.save;
           }
+          e.checkedAt = this.now();
+          if (persist || this.watching(floorId).length) this.save(e);
           e.error = undefined;
         } catch (err) {
           e.error = READ_ERROR;
@@ -317,6 +368,15 @@ export async function skillJudgement(dir: string): Promise<{ judgement: Judgemen
   }
 }
 
+/**
+ * Whether a rundown.json carries a judgement of Claude's or a person's: a judged status on its parts or
+ * a next step. One `kipdeck rundown` or `/rundown quick` wrote from the facts alone carries neither (its
+ * milestones and decisions are the person's files, which are read on their own).
+ */
+export function hasJudgement(j: Judgement | null): j is Judgement {
+  return !!j && (!!j.parts?.length || !!j.nextStep);
+}
+
 /** The unit holding each of the floor's worktrees, by absolute path. */
 function owners(floor: Floor): (p: string) => string | null {
   // Git names worktrees by their real path (/private/var on a Mac): compare real paths on both sides.
@@ -344,8 +404,18 @@ function githubOf(floor: Floor): Facts['github'] {
   };
 }
 
-/** A floor's rundown now, and the office's own diff base moved on when HEAD did. */
+/** A floor's rundown now, and the office's own diff base moved on when HEAD did (saved). */
 export async function computeRundown(floor: Floor, cache: StatCache, now: number): Promise<Rundown> {
+  const map = await computeMap(floor, cache, now);
+  map.save();
+  return map.rundown;
+}
+
+/**
+ * A floor's rundown now, and `save`, which writes the office's diff base moved on to it. Left unsaved
+ * for a map nobody has seen yet, so a restart or a peek doesn't use up "Changed since last update".
+ */
+export async function computeMap(floor: Floor, cache: StatCache, now: number): Promise<{ rundown: Rundown; save: () => void }> {
   const dir = floor.dir;
   const c = await collect(dir, { budgetMs: LIMITS.officeMs, cache, owner: owners(floor), shownRoot: floor.def.name, github: githubOf(floor), now: new Date(now) });
   const skill = await skillJudgement(dir);
@@ -361,13 +431,15 @@ export async function computeRundown(floor: Floor, cache: StatCache, now: number
   // uncommitted work and status changes show too, not only commits.
   if (office.current && (office.current.head !== head || now - Date.parse(office.current.generatedAt) >= BASE_GAP_MS)) office.base = office.current;
   const since = office.base?.head ? await commitsSince(gitRunner(dir, () => {}), office.base.head) : null;
-  const r = buildRundown({ facts: c.facts, project: { ...c.project, name: floor.def.name }, generator: { name: 'agent-office', version: OFFICE_VERSION, mode: skill.judgement ? 'quick' : 'facts' }, judgement: skill.judgement, milestonesMd, decisionsMd, prev: office.base, since, now: new Date(now) });
+  const r = buildRundown({ facts: c.facts, project: { ...c.project, name: floor.def.name }, generator: { name: 'agent-office', version: OFFICE_VERSION, mode: hasJudgement(skill.judgement) ? 'quick' : 'facts' }, judgement: skill.judgement, milestonesMd, decisionsMd, prev: office.base, since, now: new Date(now) });
   office.current = toState(r);
-  try {
-    mkdirSync(stateDir, { recursive: true, mode: 0o700 });
-    writeState(stateFile, `${JSON.stringify(office)}\n`);
-  } catch (err) {
-    console.warn(`agent-office: rundown state for ${floor.def.name} not saved: ${err instanceof Error ? err.message : String(err)}`);
-  }
-  return r;
+  const save = () => {
+    try {
+      mkdirSync(stateDir, { recursive: true, mode: 0o700 });
+      writeState(stateFile, `${JSON.stringify(office)}\n`);
+    } catch (err) {
+      console.warn(`agent-office: rundown state for ${floor.def.name} not saved: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  };
+  return { rundown: r, save };
 }
