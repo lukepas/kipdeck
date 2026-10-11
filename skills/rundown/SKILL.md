@@ -13,11 +13,12 @@ All output goes to `<git top>/.rundown/`. Never change anything else in the proj
 
 ## The script
 
-One script, built from the Mergeline repository's own code (`src/server/rundown/`,
-`src/shared/rundown/`), so this page and the office's Rundown window are the same map.
+One script, built from Kipdeck's own code (`src/server/rundown/`, `src/shared/rundown/`), so this
+page and the office's Rundown window are the same map. The installer copies it next to this file.
 
-- `RUNDOWN=~/.claude/skills/rundown/scripts/rundown.mjs` (this skill's own copy).
-- Working on Mergeline itself, with `dist/rundown/rundown.mjs` built in it: use that build
+- `RUNDOWN=~/.claude/skills/rundown/scripts/rundown.mjs` (this skill's own copy, put there by
+  `kipdeck rundown install`).
+- Working on Kipdeck itself, with `dist/rundown/rundown.mjs` built in it: use that build
   instead (`npm run build:rundown` after changing the collector or the page).
 
 Never run a `rundown.mjs` from some other repository's tree: that would be running its code.
@@ -138,14 +139,17 @@ stuck one waits on; the next milestone and the items left; the next step; what c
 ## In the office
 
 With Labs > Rundown on, Kipdeck shows each project's map in the inbox (avatar menu and Ctrl+K)
-and as a city of light over the Deck's holo table. It
-reads this skill's `.rundown/rundown.json` for the parts, statuses and next step, and the two
-markdown files; without them it infers statuses from activity.
+and as a city of light over the Deck's holo table, and builds a first map of every project it
+hosts by itself, inferred from the code. It reads this skill's `.rundown/rundown.json` for the
+parts, statuses and next step, and the two markdown files; without them it infers statuses from
+activity. `kipdeck rundown [path]` writes the same inferred map from a terminal, with no Claude.
 
 ## Updating this skill
 
-The source is `skills/rundown/` in the Mergeline repository. `npm run rundown:install` builds the
-script and copies it with this file and README.md into `~/.claude/skills/rundown/`: it lists
-what changes first, backs the old folder up to `~/.claude/backups/rundown-<time>/`, and takes out
-the scripts of an older install (they stay in the backup). `npm run rundown:install -- --dry-run`
-only shows the list and this file's diff.
+This file, README.md and the built script ship in the `kipdeck` npm package (`skills/rundown/`
+and `dist/rundown/rundown.mjs`). `kipdeck rundown install` (or `npx kipdeck rundown install`)
+copies all three into `~/.claude/skills/rundown/`: it lists what changes first, backs the old
+folder up to `~/.claude/backups/rundown-<time>/`, and takes out the scripts of an older install
+(they stay in the backup). `kipdeck rundown install --dry-run` only shows the list and this file's
+diff. In a source checkout of Kipdeck, `npm run rundown:install` builds the script first and does
+the same.
