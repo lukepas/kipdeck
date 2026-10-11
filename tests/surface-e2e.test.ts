@@ -100,7 +100,7 @@ test('the avatar menu, three-pane Settings, Numbers after a merge, and Help, eac
 
   // The menu in plain words: with every lab off as the office ships, the core rows and then Labs.
   const rows = await menu();
-  assert.deepEqual(rows, ['Numbers', 'Signal', 'Settings', 'Help and keys', 'Sign out', 'Labs'], rows.join(', '));
+  assert.deepEqual(rows, ['Numbers', 'Signal', 'Settings', 'Pair a phone', 'Help and keys', 'Sign out', 'Labs'], rows.join(', '));
   assert.equal(await page.locator('.menu-pop .menu-group').allInnerTexts().then((g) => g.join()), 'Labs', 'one heading, before the labs');
   await page.keyboard.press('Escape');
   await menu();

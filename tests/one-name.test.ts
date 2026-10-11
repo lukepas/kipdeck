@@ -110,7 +110,7 @@ function textOf(literal: string): string {
 function isCopy(text: string): boolean {
   // A script the page inlines (Rundown's) is code, whatever words it uses.
   if (/\bfunction\s*\(|\bvar\s/.test(text)) return false;
-  if (/^[.#]?[\w-]+([.#\s][.#]?[\w-]+)*$/.test(text) && /[.#]/.test(text) && !/[A-Z]/.test(text.charAt(0))) return false;
+  if (/^[.#]?[\w-]+(([.#\s]|,\s*)[.#]?[\w-]+)*$/.test(text) && /[.#]/.test(text) && !/[A-Z]/.test(text.charAt(0))) return false;
   return /\s/.test(text.trim()) || /^[A-Z][a-z]+$/.test(text);
 }
 

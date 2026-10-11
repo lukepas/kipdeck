@@ -28,7 +28,11 @@ function idOf(seg: string | undefined): string | undefined {
 
 /** What an address opens, or undefined when it isn't one of the inbox's. `search` is the query (?tab=...). */
 export function parseHomePath(pathname: string, search = ''): HomeRoute | undefined {
-  if (pathname === '/' || pathname === '/index.html') return { kind: 'home' };
+  if (pathname === '/' || pathname === '/index.html') {
+    // A push opened with no Kipdeck tab (shared/push.ts): /?agent=<id> opens that agent.
+    const agent = idOf(new URLSearchParams(search).get('agent') ?? '');
+    return agent ? { kind: 'agent', project: '', agent } : { kind: 'home' };
+  }
   const parts = pathname.split('/');
   // ['', 'a', project, agent] or ['', 'p', project], with an optional trailing slash.
   if (parts[parts.length - 1] === '' && parts.length > 2) parts.pop();

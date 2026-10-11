@@ -63,7 +63,7 @@ export function paneBadges(e: RosterEntry): HTMLElement | null {
   const cap = store.spend?.agentCap;
   const level = said.kind === 'cost' ? budgetLevel(said.usd, cap) : 'ok';
   const spend = chip ? h('span.pane-spend', { class: `b-${level}`, title: chip.title }, cap && said.kind === 'cost' ? `${chip.text} of ${fmtCost(cap)}` : chip.text) : null;
-  return h('p.pane-badges', {}, modeBadge(e, true), spend);
+  return h('div.pane-badges', {}, modeBadge(e, true), spend);
 }
 
 /** The pane's Pause, beside Stop, for an agent at work. */

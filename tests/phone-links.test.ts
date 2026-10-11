@@ -24,11 +24,9 @@ async function posted(t: Parameters<Parameters<typeof test>[1]>[0], url: string,
     return stringify.apply(JSON, args);
   });
   // Every name resolves to this machine, which is never posted to: nothing leaves it.
-  const hook = new Webhook(dir, () => 'acme-shop', () => {}, { resolve: (_h, cb) => cb(null, [{ address: '127.0.0.1', family: 4 }]) });
-  t.after(() => hook.stop());
+  const hook = new Webhook(dir, () => 'acme-shop', () => {}, (id) => (id === worker.id ? worker : undefined), { resolve: (_h, cb) => cb(null, [{ address: '127.0.0.1', family: 4 }]) });
   hook.link = link;
   assert.equal(hook.set(url, 'Ada'), undefined);
-  hook.onWorker(worker);
   hook.onReminder({ floorName: 'acme-shop', text: 'Mochi has waited on you for over an hour', worker: 'w1' } as Reminder);
   for (let i = 0; i < 200 && !hook.state().error; i++) await new Promise((r) => setTimeout(r, 10));
   assert.match(hook.state().error ?? '', /public internet/, 'it was never sent');

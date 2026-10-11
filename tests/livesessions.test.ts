@@ -89,7 +89,7 @@ test('adopting: only a CLI that can fork takes a running session, and a session 
   assert.deepEqual(codex, { ok: false, status: 400, error: "Codex can't carry on a session that is still running: quit it in its terminal first" });
   const again = adoptSession(ctx, { dir: '/x', provider: 'claude', session: ID_A, fork: true }, 'Ada');
   assert.equal(again.ok, false);
-  assert.match((again as { error: string }).error, /already in the inbox, as Byte on acme/);
+  assert.match((again as { error: string }).error, /already in the inbox, as the Claude Code agent on acme/);
   assert.equal((adoptSession(ctx, { dir: '/x', provider: 'claude', session: '--evil' }, 'Ada') as { status: number }).status, 400);
 });
 
