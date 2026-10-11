@@ -7,9 +7,10 @@
 //   node rundown.mjs brief   [--root <dir>]             a compact digest for Claude to judge from
 //   node rundown.mjs render  [--root <dir>] [--mode full|quick] [--open] [--theme dark|light] [--accent <name|#hex>]
 //   node rundown.mjs quick   [--root <dir>] [--open]    collect, then render with the last judgement
-//   node rundown.mjs install --skill <SKILL.md> [--readme <README.md>] [--dry-run]
+//   node rundown.mjs install [--skill <SKILL.md>] [--readme <README.md>] [--dry-run]
 //                                                       itself, SKILL.md and README.md into ~/.claude/skills/rundown/,
-//                                                       after a diff and a backup of what was there
+//                                                       after a diff and a backup of what was there (SKILL.md and
+//                                                       README.md default to the package's skills/rundown/)
 //
 // Everything it writes is in <git top>/.rundown/ (kept out of git through .git/info/exclude, never
 // .gitignore): the page as rundown.html and map.html, rundown.json, state.json and history/. It never
@@ -25,6 +26,7 @@ import { fileURLToPath } from 'node:url';
 import { readState, type Since } from '../../shared/rundown/diff.js';
 import { accentHex, renderPage, type PageStyle } from '../../shared/rundown/html.js';
 import { appendDecisions, writeDecisions, writeMilestones } from '../../shared/rundown/markdown.js';
+import { inferredNext, partCounts, partsLine } from '../../shared/signal-parts.js';
 import { buildRundown, isoLocal, itemsLeft } from '../../shared/rundown/model.js';
 import { LIMITS, type Facts, type Judgement, type Rundown, type RundownProject } from '../../shared/rundown/schema.js';
 import { validateJudgement } from '../../shared/rundown/validate.js';
@@ -263,11 +265,15 @@ export function summary(r: Rundown, mapPath: string): string {
   const L = [`Rundown: ${mapPath}`];
   const ms = r.milestones.find((m) => m.id === r.nextMilestone);
   L.push(ms ? `Next milestone: ${ms.id} ${ms.name}, ${itemsLeft(r)} item${itemsLeft(r) === 1 ? '' : 's'} left${ms.due ? ` (due ${ms.due})` : ''}${ms.source === 'proposed' ? ' [proposed: edit .rundown/milestones.md]' : ''}` : 'Next milestone: none');
-  L.push(r.nextStep ? `Next step: ${r.nextStep.text} (${r.nextStep.why})` : 'Next step: none yet (run the full /rundown for one)');
+  // Without Claude's next step, the one the office's window and Signal's card work out from the code.
+  const guess = r.nextStep ? null : inferredNext(r);
+  L.push(r.nextStep ? `Next step: ${r.nextStep.text} (${r.nextStep.why})` : guess ? `Next step: ${guess} (inferred from the code)` : 'Next step: none yet (run the full /rundown for one)');
   L.push(r.previous ? (r.changes.length ? `Changed since ${r.previous.generatedAt.slice(0, 16).replace('T', ' ')}:\n${r.changes.slice(0, 8).map((c) => `  - ${c.text}`).join('\n')}` : 'Nothing changed since the last rundown') : 'First rundown');
   const open = r.decisions.filter((d) => !d.answer);
   L.push(open.length ? `Your call:\n${open.map((d) => `  - ${d.id}. ${d.question} Default: ${d.default}`).join('\n')}` : 'Your call: nothing open');
   const parts = r.parts.map((p) => `${p.name} ${p.status}${p.waitingOn ? ` (waiting on ${p.waitingOn})` : ''}`).join('; ');
+  const counts = partsLine(partCounts(r.parts));
+  if (counts) L.push(counts);
   L.push(`Parts: ${parts}${r.parts.some((p) => p.statusSource === 'inferred') ? ' [inferred]' : ''}`);
   if (r.facts.gaps.length) L.push(`Gaps: ${r.facts.gaps.join('; ')}`);
   return L.join('\n');
@@ -316,6 +322,19 @@ export function planInstall(dir: string, files: Map<string, string>): InstallPla
 }
 
 /**
+ * The skill's own files that ship beside this script in the kipdeck package (dist/rundown/rundown.mjs
+ * and skills/rundown/), so an install from the package needs no --skill. Null for a copy that has none
+ * beside it (the installed one in ~/.claude/skills/rundown/scripts/).
+ */
+export function packagedSkill(self: string): { skill: string; readme?: string } | null {
+  const dir = path.resolve(path.dirname(self), '..', '..', 'skills', 'rundown');
+  const skill = path.join(dir, 'SKILL.md');
+  if (!existsSync(skill)) return null;
+  const readme = path.join(dir, 'README.md');
+  return { skill, ...(existsSync(readme) ? { readme } : {}) };
+}
+
+/**
  * Puts this build, SKILL.md and README.md into ~/.claude/skills/rundown/ (or `dir`). It says first what
  * changes; with --dry-run that's all, and SKILL.md's diff is shown. Otherwise the whole folder is copied
  * to ~/.claude/backups/rundown-<time>/ before anything in it changes, the stale scripts of an older
@@ -323,7 +342,8 @@ export function planInstall(dir: string, files: Map<string, string>): InstallPla
  */
 export function install(a: Pick<Args, 'skill' | 'readme' | 'dryRun'>, dir = path.join(os.homedir(), '.claude', 'skills', 'rundown'), backups = path.join(os.homedir(), '.claude', 'backups'), self = fileURLToPath(import.meta.url)): number {
   const files = new Map<string, string>([['scripts/rundown.mjs', self]]);
-  for (const [rel, src] of [['SKILL.md', a.skill], ['README.md', a.readme]] as const) {
+  const packaged = packagedSkill(self);
+  for (const [rel, src] of [['SKILL.md', a.skill ?? packaged?.skill], ['README.md', a.readme ?? packaged?.readme]] as const) {
     if (!src) continue;
     if (!existsSync(src)) {
       console.error(`rundown: no such file: ${src}`);
@@ -364,7 +384,8 @@ export function install(a: Pick<Args, 'skill' | 'readme' | 'dryRun'>, dir = path
   return 0;
 }
 
-export async function main(argv: string[]): Promise<number> {
+/** Runs a command; `rendered` hears the map a render or quick run wrote, and where its page is. */
+export async function main(argv: string[], rendered?: (r: Rundown, map: string) => void): Promise<number> {
   const a = parseArgs(argv);
   if (a.cmd === 'install') return install(a);
   if (!['collect', 'facts', 'brief', 'render', 'quick'].includes(a.cmd)) {
@@ -398,6 +419,7 @@ export async function main(argv: string[]): Promise<number> {
   const r = await render({ ...a, mode: a.cmd === 'quick' ? 'quick' : a.mode }, root, out, repo, collected);
   const map = path.join(out, 'rundown.html');
   console.log(summary(r, tildify(map)));
+  rendered?.(r, map);
   if (a.open) openFile(map);
   return 0;
 }

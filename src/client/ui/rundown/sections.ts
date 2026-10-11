@@ -2,6 +2,7 @@
 // details, the milestone timeline, "Your call" and the facts. Drawn with the deck's own tokens and glyphs.
 import { itemsLeft, statusCounts } from '../../../shared/rundown/model';
 import { STATUSES, STATUS_LABEL, type Part, type Rundown } from '../../../shared/rundown/schema';
+import { inferredNext } from '../../../shared/signal-parts';
 import { h } from '../dom';
 import { icon } from '../icons';
 import { statusChip } from './glyph';
@@ -29,7 +30,11 @@ export function overview(r: Rundown): HTMLElement {
     h('div.rd-bar', { role: 'img', 'aria-label': STATUSES.map((st) => `${STATUS_LABEL[st]} ${counts[st]}`).join(', ') }, ...STATUSES.filter((st) => counts[st]).map((st) => h('span', { class: `st-${st}`, style: `width:${(counts[st] / total) * 100}%` }))),
     h('div.rd-legend', {}, ...STATUSES.map((st) => h('span', {}, statusChip(st), ` ${counts[st]}`))),
   );
-  const step = r.nextStep;
+  // Without Claude's next step, the same one Signal's card works out from the code (signal-parts.ts).
+  // The window's banner already says the map is inferred: the tile doesn't say it twice.
+  const guess = r.nextStep ? null : inferredNext(r);
+  const banner = r.parts.some((p) => p.statusSource === 'inferred');
+  const step = r.nextStep ?? (guess ? { text: guess, why: banner ? '' : 'Inferred from the code.' } : null);
   return h(
     'section.rd-kpis',
     { 'aria-label': 'Status overview' },

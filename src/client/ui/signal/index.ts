@@ -4,7 +4,8 @@
 // the one next thing, and Copy as text for a chat. Loaded the first time it opens (home/lazy.ts). A
 // top-right ✕ and Esc put it away.
 
-import { BURN_DAYS, noGoalLine, SIGNAL_GLYPH, SIGNAL_LABEL, signalLine, type Signal } from '../../../shared/signal';
+import { INFERRED_NOTE } from '../../../shared/rundown/infer';
+import { BURN_DAYS, INFERRED_FROM, noGoalLine, SIGNAL_GLYPH, SIGNAL_LABEL, signalLine, type Signal } from '../../../shared/signal';
 import { store } from '../../state';
 import type { SignalView } from '../../home/signal';
 import { h, openModal, toast, type Modal } from '../dom';
@@ -37,7 +38,7 @@ function milestoneCol(s: Signal): HTMLElement {
   if (!m) return column('Milestone', '-', store.lab('ops') ? 'None active in Goals' : 'Goals is off in Labs');
   const share = m.total ? Math.round((m.done / m.total) * 100) : 0;
   const bar = h('span.sg-bar', { role: 'img', 'aria-label': `${m.done} of ${m.total} ${m.unit} done` }, h('i', { style: `width:${share}%` }));
-  return column('Milestone', m.title, h('span.sg-sub.sg-num', {}, `${m.done}/${m.total} ${m.unit}`), bar, m.source === 'goals' ? 'From Goals' : 'From /rundown');
+  return column('Milestone', m.title, h('span.sg-sub.sg-num', {}, `${m.done}/${m.total} ${m.unit}`), bar, m.source === 'goals' ? 'From Goals' : s.inferred ? 'From milestones.md' : 'From /rundown');
 }
 
 function paceCol(s: Signal): HTMLElement {
@@ -48,7 +49,7 @@ function paceCol(s: Signal): HTMLElement {
 function decisionsCol(s: Signal): HTMLElement {
   const d = s.decisions;
   if (!store.lab('rundown')) return column('Decisions', '-', 'Rundown is off in Labs');
-  if (s.rundown !== 'fresh') return column('Decisions', '-', s.rundown === 'stale' ? 'The last /rundown is too old' : 'No /rundown in this project yet');
+  if (s.rundown !== 'fresh' || (s.inferred && !d.open)) return column('Decisions', '-', s.rundown === 'stale' ? 'The last /rundown is too old' : 'No /rundown in this project yet');
   if (!d.open) return column('Decisions', '0 open', 'From /rundown');
   // The reason over the columns already quotes the question when a decision set the status: said once.
   const quoted = s.reasons.some((r) => r.rule === 'decision');
@@ -66,9 +67,14 @@ function body(v: SignalView): HTMLElement[] {
   if (s.level === 'no-goal') {
     head.querySelector('.sg-why')!.append(h('span.sg-line', {}, noGoalLine(v.sources)));
   }
-  const next = s.next ? h('div.sg-next', {}, h('span.sg-label', {}, 'Next'), h('span.sg-next-text', {}, s.next.text), h('span.sg-sub', {}, s.next.from)) : null;
+  // An inferred next thing has no "from" of its own: the line under it already says it's inferred.
+  const from = s.next && !(s.inferred && s.next.from === INFERRED_FROM) ? h('span.sg-sub', {}, s.next.from) : null;
+  const next = s.next ? h('div.sg-next', {}, h('span.sg-label', {}, 'Next'), h('span.sg-next-text', {}, s.next.text), from) : null;
   const stale = s.staleNote ? h('p.sg-stale', {}, s.staleNote) : null;
-  return [head, h('div.sg-cols', {}, milestoneCol(s), paceCol(s), decisionsCol(s)), ...(next ? [next] : []), ...(stale ? [stale] : [])];
+  // The map's parts, and while it's only inferred from the code, how to get Claude's read of it.
+  const parts = s.parts ? h('p.sg-parts', {}, s.parts) : null;
+  const inferred = s.inferred ? h('p.sg-inferred', {}, INFERRED_NOTE) : null;
+  return [head, h('div.sg-cols', {}, milestoneCol(s), paceCol(s), decisionsCol(s)), ...(parts ? [parts] : []), ...(next ? [next] : []), ...(inferred ? [inferred] : []), ...(stale ? [stale] : [])];
 }
 
 /** Opens the card, or redraws the open one. */

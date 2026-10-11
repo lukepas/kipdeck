@@ -2,8 +2,12 @@
 // issues closed lately, while the ops lab is on, and what the /rundown skill last wrote, while the
 // rundown lab is on. The rundown part reads the skill's own files the way the office's rundown does
 // (skillJudgement() for .rundown/rundown.json, capped and checked, and the person's milestones.md and
-// decisions.md over the skill's guesses), read only. No git, no collector, no polling: a page asks,
-// and the answer comes from a cache per floor that holds while none of the three files changed.
+// decisions.md over the skill's guesses), read only. With no rundown.json, or one that carries no
+// judgement (written from the facts alone by `kipdeck rundown`), it reads the office's own map
+// of the floor instead (Rundown's first map, inferred from the code and kept in the office's memory):
+// its parts by status and a next thing, never a stuck part. No git, no collector, no polling here: a page
+// asks (or the office's map moves on, push.ts), and the answer comes from a cache per floor that holds
+// while none of the three files and the office's map changed.
 
 import { lstat } from 'node:fs/promises';
 import path from 'node:path';
@@ -11,11 +15,12 @@ import { milestoneOf, milestoneProgress } from '../../shared/mission.js';
 import { issuesClosed } from '../../shared/pace.js';
 import { parseDecisions, parseMilestones } from '../../shared/rundown/markdown.js';
 import { withStates } from '../../shared/rundown/model.js';
-import { LIMITS, type Decision, type Judgement } from '../../shared/rundown/schema.js';
+import { LIMITS, type Decision, type Judgement, type Rundown } from '../../shared/rundown/schema.js';
 import type { GhIssue, Mission, RundownGist, SignalGist, TimelineEvent } from '../../shared/protocol.js';
 import { BURN_DAYS, gistOf } from '../../shared/signal.js';
+import { inferredNext, partCounts } from '../../shared/signal-parts.js';
 import { readSmall } from '../rundown/files.js';
-import { skillJudgement } from '../rundown/service.js';
+import { hasJudgement, skillJudgement } from '../rundown/service.js';
 
 const DAY_MS = 24 * 60 * 60_000;
 /** The skill's files the gist reads, under the project's checkout. */
@@ -68,15 +73,30 @@ function decisionsOf(j: Judgement, md: string | null): Pick<Decision, 'id' | 'qu
   return [...fromMd, ...(j.decisions ?? []).filter((d) => !have.has(d.id)).map((d) => ({ id: d.id, question: d.question, raised: d.raised, answer: null }))];
 }
 
-/** The rundown part of the gist: null with no readable .rundown/rundown.json. */
-export async function rundownGist(floorId: string, dir: string): Promise<RundownGist | null> {
-  const { key, at } = await filesKey(dir);
+/**
+ * The gist of the office's own map, when the skill hasn't run: the person's milestones and decisions it
+ * read, its parts by status, and the next thing worked out from them. A stuck part counts toward Off
+ * track only when someone said so, never when the status was inferred.
+ */
+export function officeGist(r: Rundown): RundownGist {
+  const said = r.parts.filter((p) => p.statusSource !== 'inferred');
+  const gist = gistOf(Date.parse(r.generatedAt), said, r.milestones, r.nextStep?.text ?? inferredNext(r), r.decisions);
+  return { source: 'inferred', parts: partCounts(r.parts), ...gist };
+}
+
+/** The rundown part of the gist: the skill's .rundown/rundown.json, else the office's map (`office`), else null. */
+export async function rundownGist(floorId: string, dir: string, office: Rundown | null = null): Promise<RundownGist | null> {
+  const files = await filesKey(dir);
+  const at = files.at;
+  const key = `${files.key}|${office?.generatedAt ?? '-'}`;
   const hit = cache.get(floorId);
   if (hit && hit.key === key) return hit.gist;
   let gist: RundownGist | null = null;
   if (at !== null) {
     const { judgement, generatedAt } = await skillJudgement(dir);
-    if (judgement) {
+    // One written from the facts alone (`kipdeck rundown`, `/rundown quick` with no judgement) says
+    // nothing the office's map doesn't: read as if there were none.
+    if (hasJudgement(judgement)) {
       const [milestonesMd, decisionsMd] = await Promise.all([readSmall(dir, FILES[1], LIMITS.skillFileBytes), readSmall(dir, FILES[2], LIMITS.skillFileBytes)]);
       const parsed = milestonesMd === null ? null : parseMilestones(milestonesMd);
       const milestones = parsed
@@ -84,9 +104,10 @@ export async function rundownGist(floorId: string, dir: string): Promise<Rundown
         : withStates((judgement.milestones ?? []).map((m) => ({ id: m.id, name: m.name, doneWhen: m.doneWhen, due: m.due ?? null, items: m.items.map((i) => ({ text: i.text, done: i.done, partId: i.partId ?? null })) })), 'proposed');
       const parts = (judgement.parts ?? []).map((p) => ({ status: p.status, waitingOn: p.waitingOn ?? null }));
       // Its age is the older of when the skill wrote it and the file's mtime: a copied or pulled old rundown stays old.
-      gist = gistOf(generatedAt !== undefined ? Math.min(generatedAt, at) : at, parts, milestones, judgement.nextStep?.text ?? null, decisionsOf(judgement, decisionsMd));
+      gist = { source: 'skill', parts: partCounts(parts), ...gistOf(generatedAt !== undefined ? Math.min(generatedAt, at) : at, parts, milestones, judgement.nextStep?.text ?? null, decisionsOf(judgement, decisionsMd)) };
     }
   }
+  if (!gist && office) gist = officeGist(office);
   cache.set(floorId, { key, gist });
   return gist;
 }
@@ -109,8 +130,8 @@ export function burnDays(events: readonly Pick<TimelineEvent, 'at' | 'kind' | 't
   return Math.min(BURN_DAYS, Math.max(1, Math.ceil((now - first) / DAY_MS)));
 }
 
-/** A floor's gist, each part only while its lab is on. */
-export async function signalGist(floor: GistFloor, labs: { ops: boolean; rundown: boolean }, now = Date.now()): Promise<SignalGist> {
+/** A floor's gist, each part only while its lab is on. `office` is the office's own map of it (ctx.rundown.current), if it has one. */
+export async function signalGist(floor: GistFloor, labs: { ops: boolean; rundown: boolean }, now = Date.now(), office: Rundown | null = null): Promise<SignalGist> {
   let goal: SignalGist['goal'] = null;
   let burn: SignalGist['burn'] = null;
   if (labs.ops) {
@@ -125,6 +146,6 @@ export async function signalGist(floor: GistFloor, labs: { ops: boolean; rundown
       burn = { goal: m.id, closed: issuesClosed(events), days: burnDays(all, now) };
     }
   }
-  const rundown = labs.rundown ? await rundownGist(floor.id, floor.dir) : null;
+  const rundown = labs.rundown ? await rundownGist(floor.id, floor.dir, office) : null;
   return { floor: floor.id, goal, burn, rundown };
 }

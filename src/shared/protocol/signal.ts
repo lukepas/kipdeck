@@ -1,8 +1,9 @@
 // Signal: a project's status at one look (see shared/signal.ts). Most of it is worked out in the page
 // from what it already holds; this pair carries the rest, a small gist of one floor that the page
 // can't see by itself: its Goals milestone when it isn't the floor you're on, how many of that
-// milestone's issues closed lately, and what the /rundown skill last wrote in .rundown/. Read only:
-// the office never computes a map, runs git or polls for it (server/signal/gist.ts).
+// milestone's issues closed lately, and what the /rundown skill last wrote in .rundown/, or else the
+// office's own map inferred from the code (Rundown's first map, rundown/first.ts). Signal itself never
+// computes a map, runs git or polls for one (server/signal/gist.ts).
 
 /** The active Goals milestone of a floor, as far as its board knows. */
 export interface SignalGoal {
@@ -15,13 +16,26 @@ export interface SignalGoal {
   issues: number;
 }
 
-/** What the last /rundown said that Signal reads: never the map itself. */
+/** A map's parts by status. */
+export interface PartCounts {
+  total: number;
+  done: number;
+  inProgress: number;
+  notStarted: number;
+  stuck: number;
+}
+
+/** What the last /rundown said that Signal reads (or the office's inferred map, without one): never the map itself. */
 export interface RundownGist {
+  /** The skill's .rundown/rundown.json, or the office's own map inferred from the code when the skill hasn't run (left out: the skill). */
+  source?: 'skill' | 'inferred';
+  /** The map's parts by status. */
+  parts?: PartCounts;
   /** When .rundown/rundown.json was last written (ms since epoch). */
   at: number;
   /** The first milestone not done, with its items done and in all. */
   milestone: { id: string; title: string; done: number; total: number; due?: string } | null;
-  /** The one suggested next step, in the skill's words. */
+  /** The one suggested next step, in the skill's words (or worked out from the inferred map). */
   next: string | null;
   /** How many decisions are unanswered, and the oldest few (YYYY-MM-DD raised, when known). */
   decisionsOpen: number;
@@ -38,7 +52,7 @@ export interface SignalGist {
   goal: SignalGoal | null;
   /** Issues of that milestone closed in the last `days` days (from the timeline's progress events): BURN_DAYS, or the milestone's age when younger. */
   burn: { goal: string; closed: number; days: number } | null;
-  /** The last /rundown (the rundown lab), null with no readable .rundown/rundown.json. */
+  /** The last /rundown (the rundown lab), else the office's inferred map; null with neither. */
   rundown: RundownGist | null;
 }
 
