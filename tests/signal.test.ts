@@ -15,6 +15,7 @@ import {
   gistOf,
   LONG_WAIT_MS,
   noGoalHint,
+  noGoalLine,
   PEEK_GAP_MS,
   peekDelay,
   PACE_MIN_BEFORE,
@@ -50,8 +51,16 @@ test('No goal: neither Goals nor a fresh rundown has a milestone, whatever else 
   assert.equal(chipText(s, { goals: true, rundown: true }), 'Set a goal');
   // The chip only suggests what this page can do.
   assert.equal(chipText(s, { goals: false, rundown: true }), 'Run /rundown');
-  assert.equal(chipText(s, { goals: false, rundown: false }), 'Turn on Goals in Labs');
+  assert.equal(chipText(s, { goals: false, rundown: false }), 'Turn on Goals or Rundown in Labs');
   assert.equal(noGoalHint({ goals: true, rundown: false }), 'Set a goal');
+  // Goals on but the boards lab Mission control sits behind is off: name the lab that's off.
+  assert.equal(noGoalHint({ goals: false, rundown: false, boardsOff: true }), 'Turn on GitHub boards or Rundown in Labs');
+  // The card says the same as the chip.
+  for (const src of [{ goals: false, rundown: false }, { goals: false, rundown: false, boardsOff: true }]) assert.ok(noGoalLine(src).includes(noGoalHint(src)), noGoalLine(src));
+  assert.match(noGoalLine({ goals: true, rundown: true }), /Set a milestone in Goals/);
+  // The read-only demo suggests nothing a visitor can't do.
+  assert.equal(noGoalHint({ goals: true, rundown: true, readOnly: true }), 'No milestone set');
+  assert.doesNotMatch(noGoalLine({ goals: true, rundown: true, readOnly: true }), /Set|Run|Turn on/);
   assert.equal(computeSignal(input({ goal: null })).level, 'no-goal');
 });
 
@@ -238,7 +247,8 @@ test('the gist of a rundown: the active milestone, open decisions, and only the 
     milestone: { id: 'M2', title: 'Next one', done: 1, total: 2, due: '2026-10-24' },
     next: 'Do the thing',
     decisionsOpen: 4,
-    decisions: [{ id: 'D1', question: 'Q1?', raised: '2026-10-01' }, { id: 'D3', question: 'Q3?' }, { id: 'D4', question: 'Q4?', raised: '2026-10-04' }],
+    // Oldest first, an undated one after every dated one.
+    decisions: [{ id: 'D1', question: 'Q1?', raised: '2026-10-01' }, { id: 'D4', question: 'Q4?', raised: '2026-10-04' }, { id: 'D5', question: 'Q5?', raised: '2026-10-05' }],
     stuck: 2,
     waitingOn: 'a key',
   });
@@ -249,4 +259,24 @@ test('a peek sooner than the office answers is held back until just after the ga
   assert.equal(peekDelay(NOW - PEEK_GAP_MS, NOW), 0);
   const wait = peekDelay(NOW - 200, NOW);
   assert.ok(wait > PEEK_GAP_MS - 200 && wait <= PEEK_GAP_MS, `${wait}`);
+});
+
+test('a milestone with no issues yet says so on the chip, never 0/0', () => {
+  const s = computeSignal(input({ goal: goal({ closed: 0, issues: 0 }) }));
+  assert.equal(chipText(s, { goals: true, rundown: true }), 'Auth rewrite, no issues yet');
+});
+
+test("the gist's open decisions are the oldest, whatever order decisions.md lists them in", () => {
+  const g = gistOf(NOW, [], [], null, [
+    { id: 'D1', question: 'newest A', raised: day(-1), answer: null },
+    { id: 'D2', question: 'B', raised: day(-2), answer: null },
+    { id: 'D3', question: 'undated', answer: null },
+    { id: 'D4', question: 'C', raised: day(-3), answer: null },
+    { id: 'D5', question: 'the oldest', raised: day(-40), answer: null },
+  ]);
+  assert.equal(g.decisionsOpen, 5);
+  assert.deepEqual(g.decisions.map((d) => d.id), ['D5', 'D4', 'D2']);
+  const s = computeSignal(input({ rundown: { ...g, at: NOW } }));
+  assert.equal(s.decisions.oldestDays, 40);
+  assert.match(s.reasons.find((r) => r.rule === 'decision')!.text, /oldest 40 days: "the oldest"/);
 });

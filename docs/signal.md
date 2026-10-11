@@ -33,21 +33,21 @@ Every threshold is a named constant in `src/shared/signal.ts`:
 
 Goals comes first, because it's live: the active milestone in Mission control's Goals tab (the Goals and timeline lab), with its issues closed out of the issues it lists. Only when Goals has no active milestone does Signal show the next milestone from the last `/rundown`, with its items done out of all. The card says which source it shows.
 
-A `.rundown/rundown.json` that is `STALE_RUNDOWN_DAYS` (7) days old or more feeds nothing: no milestone, no decisions, no stuck parts, no next step. The card says how old it is and suggests running `/rundown` again.
+A `.rundown/rundown.json` that is `STALE_RUNDOWN_DAYS` (7) days old or more feeds nothing (its age is the older of the skill's `generatedAt` and the file's modification time, so an old rundown that was copied or pulled stays old): no milestone, no decisions, no stuck parts, no next step. The card says how old it is and suggests running `/rundown` again.
 
 ## The forecast
 
-For a Goals milestone with a due date, the card says *due Oct 24, pace says ~Oct 27 (rough)*. The pace is the milestone's issues closed over the last `BURN_DAYS` (14) days, from the timeline's progress events, which is the same count the Deck's fleet log uses (`issuesClosed` in `src/shared/pace.ts`). A milestone younger than 14 days (counted from its first line on the timeline) is measured over its own days, and with nothing closed yet the card says *no pace yet*, which sets no rule. Once a whole 14 days pass with nothing closed, the status is At risk: *No issues closed in 14 days*. A `/rundown` milestone has no pace to go by, so it shows only its due date. Past the due date, the card says how many days late it is, and the reason says what's left.
+For a Goals milestone with a due date, the card says *due Oct 24, pace says ~Oct 27 (rough)*. The pace is the milestone's issues closed over the last `BURN_DAYS` (14) days, from the timeline's progress events, which is the same count the Deck's fleet log uses (`issuesClosed` in `src/shared/pace.ts`). A milestone younger than 14 days (counted from its *added the milestone* line on the timeline) is measured over its own days; when the timeline no longer has that line, its age is unknown and the whole 14 days count, and with nothing closed yet the card says *no pace yet*, which sets no rule. Once a whole 14 days pass with nothing closed, the status is At risk: *No issues closed in 14 days*. A `/rundown` milestone has no pace to go by, so it shows only its due date. Past the due date, the card says how many days late it is, and the reason says what's left.
 
 ## The card
 
 - The project, the status with its reasons, and the forecast.
-- **Milestone**: the title, done out of all, and where it came from.
+- **Milestone**: the title, done out of all, and where it came from. A milestone with no issues yet says so on the chip rather than 0/0.
 - **Pace, 7 days**: merges in the last 7 days from the signed shipped log, against the 7 before.
-- **Decisions**: the open ones in the last `/rundown`, the oldest one's age and its question (left out when the reason above already quotes it).
+- **Decisions**: the open ones in the last `/rundown`, the oldest one's age and its question (the gist carries the oldest few by name, whatever order `decisions.md` lists them in) (left out when the reason above already quotes it).
 - **Next**: the `/rundown` skill's next step and how old it is, else *Answer* the agent that has waited on you longest.
 - **Copy as text** puts one line on the clipboard, plain ASCII, ready for Slack: *acme-shop: At risk. Auth rewrite 5/9 issues, due Oct 30, pace says ~Oct 27 (rough). 1 decision open: "JWT or opaque tokens?". 12 merged this week (9 the week before). Next: Wire the refresh endpoint.*
-- **Open Rundown** while the Rundown lab is on, and **Open Goals** while Goals can be reached (the Goals and timeline lab and the GitHub boards and queue lab, which Mission control sits behind) and the card is about the floor you're on.
+- **Open Rundown** while the Rundown lab is on, and **Open Goals** while Goals can be reached (the Goals and timeline lab and the GitHub boards and queue lab, which Mission control sits behind) and the card is about the floor you're on. With No goal, the chip and the card name the same thing to do: set a goal, run `/rundown`, or turn a lab on (the GitHub boards lab when only it is off). In the read-only demo they suggest nothing and offer neither window, since a visitor can't act on them.
 
 The top-right ✕ and Esc close it.
 

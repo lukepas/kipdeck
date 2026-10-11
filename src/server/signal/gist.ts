@@ -33,10 +33,16 @@ export interface GistFloor {
 /** The last rundown gist of each floor, and the files' sizes and times it was read at. */
 const cache = new Map<string, { key: string; gist: RundownGist | null }>();
 
-/** Forgets every cached gist (a floor taken off the building, or a test). */
+/** Forgets every cached gist, or one floor's (a test). */
 export function forgetGists(floorId?: string) {
   if (floorId === undefined) cache.clear();
   else cache.delete(floorId);
+}
+
+/** Forgets the gists of floors no longer on the building: each peek calls it with the floors there are. */
+export function keepGists(floorIds: Iterable<string>) {
+  const keep = new Set(floorIds);
+  for (const id of cache.keys()) if (!keep.has(id)) cache.delete(id);
 }
 
 /** The folder, and each file's time and size or '-' when it isn't a plain file: the gist only changes when this does. */
@@ -69,7 +75,7 @@ export async function rundownGist(floorId: string, dir: string): Promise<Rundown
   if (hit && hit.key === key) return hit.gist;
   let gist: RundownGist | null = null;
   if (at !== null) {
-    const { judgement } = await skillJudgement(dir);
+    const { judgement, generatedAt } = await skillJudgement(dir);
     if (judgement) {
       const [milestonesMd, decisionsMd] = await Promise.all([readSmall(dir, FILES[1], LIMITS.skillFileBytes), readSmall(dir, FILES[2], LIMITS.skillFileBytes)]);
       const parsed = milestonesMd === null ? null : parseMilestones(milestonesMd);
@@ -77,21 +83,29 @@ export async function rundownGist(floorId: string, dir: string): Promise<Rundown
         ? withStates(parsed.milestones, parsed.proposed ? 'proposed' : 'milestones.md')
         : withStates((judgement.milestones ?? []).map((m) => ({ id: m.id, name: m.name, doneWhen: m.doneWhen, due: m.due ?? null, items: m.items.map((i) => ({ text: i.text, done: i.done, partId: i.partId ?? null })) })), 'proposed');
       const parts = (judgement.parts ?? []).map((p) => ({ status: p.status, waitingOn: p.waitingOn ?? null }));
-      gist = gistOf(at, parts, milestones, judgement.nextStep?.text ?? null, decisionsOf(judgement, decisionsMd));
+      // Its age is the older of when the skill wrote it and the file's mtime: a copied or pulled old rundown stays old.
+      gist = gistOf(generatedAt !== undefined ? Math.min(generatedAt, at) : at, parts, milestones, judgement.nextStep?.text ?? null, decisionsOf(judgement, decisionsMd));
     }
   }
   cache.set(floorId, { key, gist });
   return gist;
 }
 
+/** The timeline's line for a milestone being made (server/timeline.ts missionChanged): "<who> added the milestone <title>". */
+export function isAdded(e: Pick<TimelineEvent, 'kind' | 'text'>): boolean {
+  return e.kind === 'milestone' && /(^|\s)added the milestone(\s|$)/.test(e.text);
+}
+
 /**
- * The days a milestone's pace is counted over: BURN_DAYS, or fewer when the first event the timeline
- * has for it (its "added" line) is younger, so a milestone made today has no pace yet rather than none.
- * With nothing on the timeline for it, its age is unknown and the whole window counts.
+ * The days a milestone's pace is counted over: BURN_DAYS, or fewer when the timeline still has the
+ * line it was added with and that is younger, so a milestone made today has no pace yet rather than none.
+ * Without that line (made before the timeline logged it, or trimmed off a busy timeline) its age is
+ * unknown and the whole window counts: a later event is no sign of when it was made.
  */
-export function burnDays(events: readonly Pick<TimelineEvent, 'at'>[], now: number): number {
-  if (!events.length) return BURN_DAYS;
-  const first = events.reduce((t, e) => Math.min(t, e.at), now);
+export function burnDays(events: readonly Pick<TimelineEvent, 'at' | 'kind' | 'text'>[], now: number): number {
+  const added = events.filter(isAdded);
+  if (!added.length) return BURN_DAYS;
+  const first = added.reduce((t, e) => Math.min(t, e.at), now);
   return Math.min(BURN_DAYS, Math.max(1, Math.ceil((now - first) / DAY_MS)));
 }
 

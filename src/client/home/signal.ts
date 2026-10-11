@@ -70,7 +70,7 @@ export function signalView(now = Date.now()): SignalView | null {
   const project = store.floors.find((f) => f.id === floor)?.name ?? floor;
   const named = !home.project && store.floors.filter((f) => !f.cloning).length > 1;
   // Goals lives in Mission control, which sits behind the GitHub boards lab too.
-  const sources = { goals: store.lab('boards') && store.lab('ops'), rundown: store.lab('rundown') };
+  const sources: SignalSources = { goals: store.lab('boards') && store.lab('ops'), rundown: store.lab('rundown'), ...(store.lab('ops') && !store.lab('boards') ? { boardsOff: true } : {}), ...(home.readOnly ? { readOnly: true } : {}) };
   return { floor, project, signal: computeSignal(signalInput(floor, now)), at: now, named, sources };
 }
 

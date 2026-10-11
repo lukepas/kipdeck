@@ -221,16 +221,32 @@ export function computeSignal(input: SignalInput): Signal {
 export interface SignalSources {
   goals: boolean;
   rundown: boolean;
+  /** Goals is on, but the GitHub boards lab Mission control sits behind is off. */
+  boardsOff?: boolean;
+  /** The read-only demo: a visitor can set nothing, so nothing is suggested. */
+  readOnly?: boolean;
 }
 
-/** What to do about No goal, given where a milestone can come from. */
+/** What to do about No goal, given where a milestone can come from: the chip and the card say the same. */
 export function noGoalHint(src: SignalSources): string {
-  return src.goals ? 'Set a goal' : src.rundown ? 'Run /rundown' : 'Turn on Goals in Labs';
+  if (src.readOnly) return 'No milestone set';
+  if (src.goals) return 'Set a goal';
+  if (src.rundown) return 'Run /rundown';
+  return src.boardsOff ? 'Turn on GitHub boards or Rundown in Labs' : 'Turn on Goals or Rundown in Labs';
+}
+
+/** The card's line under No goal. */
+export function noGoalLine(src: SignalSources): string {
+  if (src.readOnly) return 'No milestone in Goals or /rundown for this project.';
+  const how = src.goals ? 'Set a milestone in Goals' : src.rundown ? 'Run /rundown in this project' : noGoalHint(src);
+  return `No milestone in Goals or /rundown. ${how} and this card says how it's going.`;
 }
 
 /** What the chip says after the status: the milestone and how far it got, else what to do about none. */
 export function chipText(s: Signal, src: SignalSources): string {
   if (!s.milestone) return noGoalHint(src);
+  // 0/0 would read as progress being tracked: say there's nothing to count yet.
+  if (s.milestone.total === 0) return `${s.milestone.title}, no ${s.milestone.unit} yet`;
   return `${s.milestone.title} ${s.milestone.done}/${s.milestone.total}`;
 }
 
@@ -274,7 +290,9 @@ export function signalLine(project: string, s: Signal): string {
 /** The gist Signal reads, from what a rundown holds: its milestones, next step, decisions and parts. */
 export function gistOf(at: number, parts: readonly Pick<Part, 'status' | 'waitingOn'>[], milestones: readonly Milestone[], next: string | null, decisions: readonly Pick<Decision, 'id' | 'question' | 'raised' | 'answer'>[]): RundownGist {
   const m = milestones.find((x) => x.state === 'active') ?? null;
-  const open = decisions.filter((d) => !d.answer);
+  // Oldest first (undated last), so the gist's few are the oldest and the card's "oldest" is right.
+  const raisedAt = (d: { raised?: string }) => dayAt(d.raised) ?? Number.POSITIVE_INFINITY;
+  const open = decisions.filter((d) => !d.answer).sort((a, b) => raisedAt(a) - raisedAt(b));
   const stuck = parts.filter((p) => p.status === 'stuck');
   const waitingOn = stuck.find((p) => p.waitingOn)?.waitingOn ?? undefined;
   return {

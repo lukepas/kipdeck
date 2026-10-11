@@ -119,6 +119,28 @@ test('the chip over the list and its card, through every status, closing by ✕ 
   assert.ok(place.search >= 200, `search keeps its room (${place.search}px)`);
   assert.match(await page.locator('#signal .sig-chip').innerText(), /No goal\s*Set a goal/);
 
+  // The read-only demo: a visitor can set nothing, so nothing is suggested and neither window is offered.
+  await page.evaluate(() => {
+    const l = (window as any).__lite;
+    l.home.readOnly = true;
+    l.store.emit('floors');
+  });
+  await page.waitForFunction(() => document.querySelector('#signal .sig-what')?.textContent === 'No milestone set');
+  await page.locator('#signal .sig-chip').click();
+  const roCard = page.locator('.modal.signal');
+  await roCard.waitFor();
+  assert.doesNotMatch(await roCard.locator('.sg-status').innerText(), /Set a|Run \/rundown|Turn on/);
+  assert.equal(await roCard.locator('footer .btn', { hasText: 'Open Rundown' }).isVisible(), false);
+  assert.equal(await roCard.locator('footer .btn', { hasText: 'Open Goals' }).isVisible(), false);
+  await page.keyboard.press('Escape');
+  await roCard.waitFor({ state: 'detached' });
+  await page.evaluate(() => {
+    const l = (window as any).__lite;
+    l.home.readOnly = false;
+    l.store.emit('floors');
+  });
+  await page.waitForFunction(() => document.querySelector('#signal .sig-what')?.textContent === 'Set a goal');
+
   // On track: a Goals milestone due in a month.
   await send(page, { t: 'mission.milestone', op: 'add', title: 'Auth rewrite', issues: [1, 2, 3], due: day(30) });
   await waitLevel(page, 'on-track');
@@ -194,7 +216,7 @@ test('the chip over the list and its card, through every status, closing by ✕ 
   // Goals and Rundown off in Labs: still there, as No goal, and the card offers neither.
   await send(page, { t: 'labs.set', patch: { ops: false, rundown: false } });
   await waitLevel(page, 'no-goal');
-  assert.match(await page.locator('#signal .sig-chip').innerText(), /No goal\s*Turn on Goals in Labs/, 'never "Set a goal" with Goals off');
+  assert.match(await page.locator('#signal .sig-chip').innerText(), /No goal\s*Turn on Goals or Rundown in Labs/, 'never "Set a goal" with Goals off');
   await page.locator('#signal .sig-chip').click();
   await card.waitFor();
   assert.equal(await card.locator('footer .btn', { hasText: 'Open Rundown' }).isVisible(), false);

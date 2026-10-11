@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { Labs } from '../src/server/labs.js';
 import { dispatch } from '../src/server/ws/dispatch.js';
-import { burnDays, forgetGists, signalGist, type GistFloor } from '../src/server/signal/gist.js';
+import { burnDays, forgetGists, keepGists, signalGist, type GistFloor } from '../src/server/signal/gist.js';
 import { writeDecisions, writeMilestones } from '../src/shared/rundown/markdown.js';
 import { LIMITS } from '../src/shared/rundown/schema.js';
 import type { Ctx } from '../src/server/office/context.js';
@@ -216,11 +216,49 @@ test('the read-only demo drops a peek without a word', async () => {
 });
 
 test("a milestone younger than the window counts its pace over its own days", async () => {
+  const made = (at: number) => ({ at, kind: 'milestone' as const, text: 'Ana added the milestone Auth rewrite' });
   assert.equal(burnDays([], NOW), 14, 'nothing on the timeline: its age is unknown, the whole window counts');
-  assert.equal(burnDays([{ at: NOW - 20 * DAY }, { at: NOW - DAY }], NOW), 14);
-  assert.equal(burnDays([{ at: NOW - 2.5 * DAY }], NOW), 3);
-  assert.equal(burnDays([{ at: NOW - 60_000 }], NOW), 1, 'made a minute ago: one day, never zero');
+  assert.equal(burnDays([made(NOW - 20 * DAY), progress(NOW - DAY, 0, 1)], NOW), 14);
+  assert.equal(burnDays([made(NOW - 2.5 * DAY)], NOW), 3);
+  assert.equal(burnDays([made(NOW - 60_000)], NOW), 1, 'made a minute ago: one day, never zero');
   const added = { id: 'e-add', at: NOW - 3 * DAY, kind: 'milestone', floor: 'f1', goal: 'g1', text: 'added the milestone' } as TimelineEvent;
   const g = await signalGist(floorAt(project('young'), mission(), [added, progress(NOW - DAY, 0, 1)]), { ops: true, rundown: false }, NOW);
   assert.deepEqual(g.burn, { goal: 'g1', closed: 1, days: 3 });
+});
+
+test("without its added line, a milestone's age is unknown: a recent progress event never shrinks the window", async () => {
+  // Made before the timeline logged "added", or trimmed off a busy one: 3 of 20 closed, the only event 2 h ago.
+  assert.equal(burnDays([progress(NOW - 2 * 3_600_000, 2, 3)], NOW), 14);
+  assert.equal(burnDays([{ at: NOW - DAY, kind: 'milestone', text: 'Ana renamed Auth to Auth rewrite' }], NOW), 14, 'a rename is no sign of its age');
+  const g = await signalGist(floorAt(project('old-goal'), mission(), [progress(NOW - 2 * 3_600_000, 2, 3)]), { ops: true, rundown: false }, NOW);
+  assert.deepEqual(g.burn, { goal: 'g1', closed: 1, days: 14 });
+});
+
+test("a rundown's age is when the skill wrote it, even when a copy or pull gave the file a fresh mtime", async () => {
+  forgetGists();
+  const dir = project('copied');
+  const written = NOW - 9 * DAY;
+  writeFileSync(path.join(dir, '.rundown', 'rundown.json'), rundownJson({ generatedAt: new Date(written).toISOString() }));
+  const g = (await signalGist(floorAt(dir), { ops: false, rundown: true })).rundown!;
+  assert.equal(g.at, written);
+  // A generatedAt from the future (a skewed clock) never makes it younger than the file.
+  forgetGists();
+  const ahead = project('ahead');
+  const file = path.join(ahead, '.rundown', 'rundown.json');
+  writeFileSync(file, rundownJson({ generatedAt: new Date(NOW + 5 * DAY).toISOString() }));
+  const old = new Date(NOW - 2 * DAY);
+  utimesSync(file, old, old);
+  assert.equal(Math.round((await signalGist(floorAt(ahead), { ops: false, rundown: true })).rundown!.at / 1000), Math.round(old.getTime() / 1000));
+});
+
+test('a floor taken off the building leaves no cached gist behind', async () => {
+  forgetGists();
+  const dir = project('gone');
+  writeFileSync(path.join(dir, '.rundown', 'rundown.json'), rundownJson());
+  const f = floorAt(dir);
+  const first = (await signalGist(f, { ops: false, rundown: true })).rundown;
+  keepGists(['f1']);
+  assert.equal((await signalGist(f, { ops: false, rundown: true })).rundown, first, 'still on the building: kept');
+  keepGists([]);
+  assert.notEqual((await signalGist(f, { ops: false, rundown: true })).rundown, first, 'off the building: forgotten');
 });

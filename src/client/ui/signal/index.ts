@@ -4,7 +4,7 @@
 // the one next thing, and Copy as text for a chat. Loaded the first time it opens (home/lazy.ts). A
 // top-right ✕ and Esc put it away.
 
-import { BURN_DAYS, SIGNAL_GLYPH, SIGNAL_LABEL, signalLine, type Signal } from '../../../shared/signal';
+import { BURN_DAYS, noGoalLine, SIGNAL_GLYPH, SIGNAL_LABEL, signalLine, type Signal } from '../../../shared/signal';
 import { store } from '../../state';
 import type { SignalView } from '../../home/signal';
 import { h, openModal, toast, type Modal } from '../dom';
@@ -64,8 +64,7 @@ function body(v: SignalView): HTMLElement[] {
     h('div.sg-why', {}, h('b.sg-word', {}, SIGNAL_LABEL[s.level]), ...(s.forecast ? [h('span.sg-line', {}, s.forecast)] : []), ...s.reasons.map((r) => h('span.sg-line.sg-reason', { 'data-level': r.level, 'data-person': r.person ? '1' : undefined }, r.text))),
   );
   if (s.level === 'no-goal') {
-    const how = v.sources.goals ? 'Set a milestone in Goals' : v.sources.rundown ? 'Run /rundown in this project' : 'Turn on Goals or Rundown in Labs';
-    head.querySelector('.sg-why')!.append(h('span.sg-line', {}, `No milestone in Goals or /rundown. ${how} and this card says how it's going.`));
+    head.querySelector('.sg-why')!.append(h('span.sg-line', {}, noGoalLine(v.sources)));
   }
   const next = s.next ? h('div.sg-next', {}, h('span.sg-label', {}, 'Next'), h('span.sg-next-text', {}, s.next.text), h('span.sg-sub', {}, s.next.from)) : null;
   const stale = s.staleNote ? h('p.sg-stale', {}, s.staleNote) : null;
@@ -93,9 +92,10 @@ export function openSignal(deps: SignalDeps): Modal | null {
     title.textContent = v.project;
     asOf.textContent = `as of ${new Date(v.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     main.replaceChildren(...body(v));
-    rundownBtn.classList.toggle('hidden', !deps.openRundown || !store.lab('rundown'));
+    // The read-only demo drops Rundown's request, so its window would never fill: not offered there.
+    rundownBtn.classList.toggle('hidden', !deps.openRundown || !store.lab('rundown') || !!v.sources.readOnly);
     // Goals opens on the floor you're on: hidden when the card is about another project.
-    goalsBtn.classList.toggle('hidden', !deps.openGoals || !v.sources.goals || v.floor !== store.floor);
+    goalsBtn.classList.toggle('hidden', !deps.openGoals || !v.sources.goals || v.floor !== store.floor || !!v.sources.readOnly);
   };
   copyBtn.addEventListener('click', () => {
     const line = signalLine(view.project, view.signal);
