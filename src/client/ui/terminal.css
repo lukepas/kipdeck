@@ -42,9 +42,11 @@
 @media (pointer: coarse) {
   .term-keypad .term-say { flex-wrap: wrap; }
   .term-keys { flex-basis: 100%; overflow-x: auto; }
-  .term-keys .btn { flex: 1 0 auto; height: 40px; }
+  .term-keys .btn { flex: 1 0 auto; height: 44px; }
   .term-keys .btn.touch-only { display: inline-flex; }
 }
+/* Esc or ^C waiting for its second tap (terminal.ts KEYPAD). */
+.term-keys .btn.armed { background: var(--stuck-tint); color: var(--bad); }
 .term-say { display: flex; gap: 8px; }
 .modal .term-say input[type=text] { flex: 1; min-width: 0; padding: 8px 10px; }
 .modal.term header .typed { font-size: 12px; font-weight: 400; color: var(--muted); white-space: nowrap; }

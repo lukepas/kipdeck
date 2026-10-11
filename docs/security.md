@@ -49,6 +49,17 @@ Started on your own computer, Kipdeck listens on `127.0.0.1` and has no password
 - **When there is a password.** With `--password`, a claim link (`deploy/provision.sh`), `--host 0.0.0.0` or any other address, the office is not passwordless: the sign-in page asks for the password or an account, and the terminal prints the password as before. On a passwordless office the password still exists (generated, in `config.json`); the sign-in page offers it one click behind `kipdeck open` (`npx kipdeck open` once it is on npm).
 - **Your name.** On a passwordless office, someone on the shared password goes by git's `user.name` on that computer instead of being asked (the old *Who is it?* window is gone). On any other office, a made-up name until they change it.
 
+## Paired devices
+
+**Pair a phone** signs a phone in with a one-time code instead of a password ([on your phone](inbox.md#on-your-phone)).
+
+- **The code.** A signed-in browser asks for it (`POST /api/pair`, its Origin checked like a sign-in). It is 24 random bytes, works once and for ten minutes, and is kept only as a hash, in memory, at most 16 at a time; a restart forgets them. It is bound to the session that made it: the phone signs in as the same account, or on the shared password. The QR code carries it after the `#` (`/login#pair=...`), so it never reaches a server log or a `Referer`, and the page takes it out of the address bar before it does anything else.
+- **Trading it in.** `POST /api/pair/redeem` takes it from any address (that is the point: a phone on the Wi-Fi, the tailnet or the office's domain), counts each try against the address like a password guess, and checks the Origin like the other sign-in POSTs, so another site can't spend a visitor's code. A used, unknown or expired code answers 410 with the same words.
+- **The device's sign-in.** Its own cookie (HttpOnly, SameSite=Lax, Secure over https), signed with a key of its own derived from the office's secret, lasting 400 days and rolled forward on each visit (`GET /api/device`). It stops the moment the device leaves the list (`devices.json` in the office's data folder): **Revoke** in Settings (its owner, or an admin), or **Sign out** on the device itself. It also stops when its account is revoked, or, on the shared password, when the shared password is switched off. Signing out an account's other browsers, or a new password, does not sign out a paired device; revoke it in Settings. Open WebSockets of a revoked device are closed at once.
+- **Plain HTTP.** On a local network address without TLS the window warns that anyone on the same Wi-Fi can read the traffic, the code included. A secure address (`AGENT_OFFICE_PUBLIC_URL`, an https link the office also answers to, or its tailnet name) comes first whenever there is one.
+
+`tests/devices.test.ts` and `tests/pairing.test.ts` try each of these.
+
 ## Anonymous usage numbers
 
 Off unless someone turns them on: the setup card's switch (admins), `--telemetry` or `KIPDECK_TELEMETRY=1`. `DO_NOT_TRACK=1`, `KIPDECK_TELEMETRY=0` or `--no-telemetry` keep them off for good, and the switch says why. The code is `src/server/telemetry.ts`.
@@ -140,7 +151,7 @@ The hosted demo (`kipdeck --demo --read-only`, [the demo](demo.md#the-hosted-dem
 
 ## Sessions
 
-- A sign-in lasts 7 days (it was 14). `AGENT_OFFICE_SESSION_DAYS` sets it, from 1 to 90.
+- A sign-in lasts 7 days (it was 14). `AGENT_OFFICE_SESSION_DAYS` sets it, from 1 to 90. A paired device's lasts until it is revoked (see [Paired devices](#paired-devices)).
 - **Signing out ends the session on the office's side too**, so a copy of the cookie stops working. With the shared password, that one sign-in is revoked by its id, and the list survives a restart (`.agent-office/revoked-sessions.json`). With an account, every sign-in of that account ends: each account has a session generation, and signing out moves it on. So does a new password (Settings, **You**, **Password**, or `POST /api/password` with `current` and `password`, which answers with a fresh cookie for the browser that asked), and `agent-office accounts signout <name>`. Open WebSockets of a session that ended are closed within seconds.
 - Changing the shared password still signs out everyone who used it, revoking an account still signs it out at once, and switching the shared password off still signs out everyone who came in with it.
 

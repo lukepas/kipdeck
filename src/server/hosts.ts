@@ -48,13 +48,28 @@ export function parseAllowedHosts(raw: string | undefined): string[] {
     .filter((s) => s && s !== '.');
 }
 
+/**
+ * AGENT_OFFICE_PUBLIC_URL as an origin, when it's an https link; else undefined. The office's own secure
+ * address (a domain behind a proxy, a Cloudflare or ngrok tunnel): links sent out of the office and the
+ * Pair a phone code use it (phone.ts), and the office answers to its name.
+ */
+export function publicUrl(env: string | undefined = process.env.AGENT_OFFICE_PUBLIC_URL): string | undefined {
+  if (!env) return undefined;
+  try {
+    const u = new URL(env.trim());
+    return u.protocol === 'https:' && !u.username && !u.password ? u.origin : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export class HostGuard {
   private names: Set<string>;
   private suffixes: string[];
 
   constructor(private cfg: HostConfig) {
     const machine = os.hostname().toLowerCase().replace(/\.$/, '');
-    const names = ['localhost', machine, `${machine.split('.')[0]}.local`, cfg.tailnet, cfg.publicHost && hostnameOf(cfg.publicHost), hostnameOf(cfg.host), ...cfg.allowedHosts.filter((h) => !h.startsWith('.'))];
+    const names = ['localhost', machine, `${machine.split('.')[0]}.local`, cfg.tailnet, cfg.publicHost && hostnameOf(cfg.publicHost), publicUrl() && new URL(publicUrl()!).hostname, hostnameOf(cfg.host), ...cfg.allowedHosts.filter((h) => !h.startsWith('.'))];
     this.names = new Set(names.filter((n): n is string => !!n));
     this.suffixes = ['.localhost', ...cfg.allowedHosts.filter((h) => h.startsWith('.'))];
   }

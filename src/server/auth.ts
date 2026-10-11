@@ -3,11 +3,18 @@ import type { IncomingMessage } from 'node:http';
 import path from 'node:path';
 import type { Account, Accounts } from './accounts.js';
 import { readStateJson, writeState } from './safefs.js';
+import { Devices } from './devices.js';
 
 export const COOKIE_NAME = 'ao_session';
 /** How long a sign-in lasts by default: a week (AGENT_OFFICE_SESSION_DAYS changes it, 1 to 90). */
 export const SESSION_DAYS = 7;
 const DAY_MS = 24 * 60 * 60_000;
+/**
+ * How long a paired device's sign-in lasts: 400 days, the longest a browser keeps a cookie. It rolls
+ * forward each time the device opens the inbox (GET /api/device), so a phone in use never signs out;
+ * revoking it in Settings ends it at once.
+ */
+export const DEVICE_TTL_MS = 400 * DAY_MS;
 
 /** The session length AGENT_OFFICE_SESSION_DAYS asks for, in ms, or the default. */
 export function sessionTtl(env: string | undefined = process.env.AGENT_OFFICE_SESSION_DAYS): number {
@@ -27,6 +34,8 @@ export interface Session {
   nonce: string;
   /** The account's session generation it was signed in at: signing out or a new password bumps it. */
   gen?: number;
+  /** A paired device's sign-in (see devices.ts): it lasts until revoked, whatever the generation says. */
+  device?: string;
   exp: number;
 }
 
@@ -75,7 +84,11 @@ export class Auth {
   private key: Buffer;
   /** Signs account sessions, which outlive a change of the shared password. */
   private accountKey: Buffer;
+  /** Signs paired devices' sessions, which outlive a change of either password and end when revoked. */
+  private deviceKey: Buffer;
   private revoked: Revoked;
+  /** Paired devices and the codes that pair them (see devices.ts). */
+  readonly devices: Devices;
 
   constructor(
     private verifier: Buffer,
@@ -89,7 +102,9 @@ export class Auth {
   ) {
     this.key = createHmac('sha256', secret).update('session:').update(verifier).digest();
     this.accountKey = createHmac('sha256', secret).update('account-session:').digest();
+    this.deviceKey = createHmac('sha256', secret).update('device-session:').digest();
     this.revoked = new Revoked(dataDir);
+    this.devices = new Devices(dataDir);
   }
 
   /** scrypt runs on the libuv pool, so guessing can't stall the event loop. */
@@ -148,6 +163,13 @@ export class Auth {
     return `${payload}.${this.sign(payload, !!accountId)}`;
   }
 
+  /** A paired device's session cookie value (see devices.ts): for its account, or the shared password. */
+  issueDevice(deviceId: string, accountId?: string): string {
+    const body = { exp: Date.now() + DEVICE_TTL_MS, n: randomBytes(8).toString('hex'), d: deviceId, ...(accountId ? { u: accountId } : {}) };
+    const payload = Buffer.from(JSON.stringify(body)).toString('base64url');
+    return `${payload}.${this.sign(payload, 'device')}`;
+  }
+
   /**
    * Who a cookie signs in, if anyone. A revoked account, the shared password once it's switched
    * off, a signed-out session and an account's sessions from before it signed out or changed its
@@ -158,17 +180,23 @@ export class Auth {
     const dot = token.indexOf('.');
     if (dot < 1) return undefined;
     const payload = token.slice(0, dot);
-    let body: { exp?: unknown; u?: unknown; n?: unknown; g?: unknown };
+    let body: { exp?: unknown; u?: unknown; n?: unknown; g?: unknown; d?: unknown };
     try {
       body = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
     } catch {
       return undefined;
     }
     const accountId = typeof body?.u === 'string' ? body.u : undefined;
+    const device = typeof body?.d === 'string' ? body.d : undefined;
     const sig = Buffer.from(token.slice(dot + 1));
-    const expected = Buffer.from(this.sign(payload, !!accountId));
+    const expected = Buffer.from(this.sign(payload, device ? 'device' : !!accountId));
     if (sig.length !== expected.length || !timingSafeEqual(sig, expected)) return undefined;
     if (typeof body.exp !== 'number' || typeof body.n !== 'string') return undefined;
+    if (device) {
+      const s = this.current({ nonce: body.n, exp: body.exp, device, ...(accountId ? { account: { id: accountId } as Account } : {}) });
+      if (s) this.devices.seen(device);
+      return s;
+    }
     return this.current({ nonce: body.n, exp: body.exp, ...(accountId ? { account: { id: accountId } as Account, gen: typeof body.g === 'number' ? body.g : 0 } : {}) });
   }
 
@@ -178,6 +206,14 @@ export class Auth {
    */
   current(s: Session): Session | undefined {
     if (s.exp <= Date.now()) return undefined;
+    if (s.device) {
+      // A paired device: still on the list, still the same owner, and that owner still signs in.
+      const d = this.devices.get(s.device);
+      if (!d || d.account !== s.account?.id) return undefined;
+      if (!s.account) return this.accounts.sharedPassword ? { nonce: s.nonce, exp: s.exp, device: s.device } : undefined;
+      const account = this.accounts.get(s.account.id);
+      return account ? { account, nonce: s.nonce, exp: s.exp, device: s.device } : undefined;
+    }
     if (!s.account) return this.accounts.sharedPassword && !this.revoked.has(s.nonce) ? { nonce: s.nonce, exp: s.exp } : undefined;
     const account = this.accounts.get(s.account.id);
     if (!account || (account.gen ?? 0) !== s.gen) return undefined;
@@ -189,7 +225,9 @@ export class Auth {
    * one sign-in, or every sign-in of an account (its generation moves on).
    */
   revoke(s: Session) {
-    if (s.account) this.accounts.bumpSessions(s.account.id);
+    // A paired device signing out leaves the list: the account's other sign-ins stay in.
+    if (s.device) this.devices.remove(s.device);
+    else if (s.account) this.accounts.bumpSessions(s.account.id);
     else this.revoked.add(s.nonce, s.exp);
   }
 
@@ -213,16 +251,16 @@ export class Auth {
    * its cookie only opens worker servers (fromAnyCookie), never the office's own routes or /ws on
    * that port, so a page the worker's server served there can't use it against the office.
    */
-  cookie(req: IncomingMessage, token: string, secure: boolean, relay = false): string {
-    return `${relay ? cookieName(req).replace(COOKIE_NAME, RELAY_COOKIE_NAME) : cookieName(req)}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(this.ttlMs / 1000)}${secure ? '; Secure' : ''}`;
+  cookie(req: IncomingMessage, token: string, secure: boolean, relay = false, ttlMs = this.ttlMs): string {
+    return `${relay ? cookieName(req).replace(COOKIE_NAME, RELAY_COOKIE_NAME) : cookieName(req)}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${Math.floor(ttlMs / 1000)}${secure ? '; Secure' : ''}`;
   }
 
   clearCookie(req: IncomingMessage): string {
     return `${cookieName(req)}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`;
   }
 
-  private sign(payload: string, account: boolean): string {
-    return createHmac('sha256', account ? this.accountKey : this.key).update(payload).digest('base64url');
+  private sign(payload: string, kind: boolean | 'device'): string {
+    return createHmac('sha256', kind === 'device' ? this.deviceKey : kind ? this.accountKey : this.key).update(payload).digest('base64url');
   }
 }
 

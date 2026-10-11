@@ -79,18 +79,22 @@ export interface TerminalOptions {
 }
 
 /** The keypad's keys: what each types, or a function of the terminal for the ones that depend on its mode. */
-const KEYPAD: { label: string; title: string; keys: string | ((term: Terminal) => string); touch?: boolean }[] = [
+// The ones that interrupt the agent (Esc, ^C) are last, away from the answers, and on a touch screen
+// take a second tap (`stops`), so a thumb that slips off 3 doesn't end forty minutes of work.
+const KEYPAD: { label: string; title: string; keys: string | ((term: Terminal) => string); touch?: boolean; stops?: boolean }[] = [
   { label: '1', title: 'Answer 1 (yes, in a permission prompt)', keys: '1' },
   { label: '2', title: 'Answer 2', keys: '2' },
   { label: '3', title: 'Answer 3', keys: '3' },
-  { label: 'Esc', title: 'Esc: close a menu, or interrupt the agent', keys: '\x1b' },
-  { label: '^C', title: 'Ctrl+C', keys: '\x03' },
   // The keys a phone's keyboard hasn't got: only on a touch screen.
   { label: 'Up', title: 'Up', keys: (t) => (t.modes.applicationCursorKeysMode ? '\x1bOA' : '\x1b[A'), touch: true },
   { label: 'Down', title: 'Down', keys: (t) => (t.modes.applicationCursorKeysMode ? '\x1bOB' : '\x1b[B'), touch: true },
   { label: 'Enter', title: 'Enter', keys: '\r', touch: true },
   { label: 'Tab', title: 'Tab', keys: '\t', touch: true },
+  { label: 'Esc', title: 'Esc: close a menu, or interrupt the agent', keys: '\x1b', stops: true },
+  { label: '^C', title: 'Ctrl+C', keys: '\x03', stops: true },
 ];
+/** A touch screen, where Esc and ^C on the keypad ask for a second tap. */
+const coarse = () => matchMedia('(pointer: coarse)').matches;
 
 let current: { workerId: string; modal: Modal; find(f: TerminalFind): void; reply(): void; screen(): string[] } | null = null;
 const listeners = new Set<(msg: ServerMsg) => void>();
@@ -516,8 +520,19 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
     const b = h('button.btn', { type: 'button', title: k.title, 'aria-label': k.title, class: k.touch ? 'touch-only' : '' }, k.label);
     // Not the terminal's focus: a key from here shouldn't bring up the phone's keyboard.
     b.addEventListener('pointerdown', (e) => e.preventDefault());
+    let armed: ReturnType<typeof setTimeout> | undefined;
     b.addEventListener('click', () => {
       if (b.hasAttribute('disabled')) return;
+      if (k.stops && coarse() && !armed) {
+        b.textContent = 'Tap again';
+        b.classList.add('armed');
+        armed = setTimeout(() => ((armed = undefined), (b.textContent = k.label), b.classList.remove('armed')), 2_500);
+        return;
+      }
+      clearTimeout(armed);
+      armed = undefined;
+      b.textContent = k.label;
+      b.classList.remove('armed');
       sendSize(true);
       sayTyping();
       term.input(typeof k.keys === 'string' ? k.keys : k.keys(term));

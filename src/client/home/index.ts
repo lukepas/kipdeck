@@ -32,6 +32,7 @@ import { deckCommands, deckMenuEntry, installDeckCta, renderDeckCta } from './de
 import { markChanges } from './motion';
 import { askSetup, onSetupChange, setupCard, setupMessage } from './setup';
 import { demoMessage } from './demo';
+import { installPhone, phoneCommands, phoneMenuEntry } from './phone';
 import { home } from './state';
 import '../ui/waitclock.css';
 import './home.css';
@@ -109,6 +110,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     { label: 'Settings', hint: 'Account, agents, notifications', icon: 'settings', run: openSettings },
     { label: 'Light or dark', icon: 'contrast', run: theme },
     ...deckCommands(),
+    ...phoneCommands(),
     { label: 'Labs', hint: 'The Deck, meetings, voice...', icon: 'labs', run: () => actions.openLabs() },
     { label: 'Help and keys', hint: '?', icon: 'help', run: openHelp },
   ];
@@ -152,6 +154,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
       store.lab('rundown') ? { label: 'Rundown', icon: 'overview', run: openRundown } : null,
       { label: 'Settings', icon: 'settings', run: openSettings },
       deckMenuEntry(),
+      phoneMenuEntry(),
       { label: 'Help and keys', icon: 'help', note: '?', run: openHelp },
       { label: 'Sign out', icon: 'logout', run: () => void fetch('/api/logout', { method: 'POST' }).finally(() => location.assign('/login')) },
     ];
@@ -240,6 +243,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
   installPane($('pane'), net, actions);
   installSignal(net, openSignal);
   installKeys(actions, palette, search);
+  installPhone();
   window.addEventListener('blur', () => menuOpen() && closeMenu());
   renderProjects();
   renderAll();

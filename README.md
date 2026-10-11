@@ -66,7 +66,7 @@ Common options:
 ```bash
 npx kipdeck --port 4700                 # this port or nothing
 npx kipdeck ~/code/my-project           # keep the office's data in that project, as agent-office did
-npx kipdeck --host 0.0.0.0              # let your network in (then everyone else signs in with a password)
+npx kipdeck --host 0.0.0.0              # let your network in (others sign in with a password, or pair a phone)
 npx kipdeck --password 'correct horse'  # a password, even on this computer
 npx kipdeck --no-open                   # print the sign-in link instead of opening a browser
 npx kipdeck --telemetry                 # share anonymous usage numbers (off by default)
@@ -107,6 +107,7 @@ More in [docs/labs.md](docs/labs.md).
 
 - **The inbox.** Every agent in four sections (Needs you, To review, Working, Ready), one button per row, the selected agent's live terminal, diff and log beside the list, and Shipped today under it ([the inbox](docs/inbox.md)). It draws after about 175 kB on any laptop or phone; the old `/lite` address goes there.
 - **Deploy, attach, answer, review, merge.** The Deploy sheet starts an agent on a branch of its own; `kipdeck attach` adopts one started in a terminal; Answer, Review changes, Fix checks and Merge do what they say, with or without GitHub. With a GitHub repository and no pull request yet, Open PR comes first. On a team, each row says whose agent it is, and **Mine / Team** filters the inbox.
+- **Your phone.** **Pair a phone** (avatar menu, or Ctrl+K) shows a QR code that signs your phone in once, without a password; the phone stays signed in until you revoke it under Settings > Account > Paired devices. Every agent has its own address (`/a/<project>/<agent>`, a project is `/p/<project>`), so Back closes what you opened, a link opens the same agent on another device, and the team channel's posts link to the agent once the office has a secure address ([on your phone](docs/inbox.md#on-your-phone)).
 - **Numbers.** Human wait time, changes merged, the merge rate and agent-hours, the last 7 days against the 7 days before, and the merge rate per agent and model with its N, from the signed shipped log on your machine ([metrics](docs/metrics.md)).
 - **Settings in three panes.** Account, Agents and Notifications. Seven keys, and Help on **?** ([controls](docs/controls.md)).
 - **Teams.** Accounts with invite links, a shared dev box reached by SSH tunnel or Tailscale, and the team's Slack or Discord channel ([below](#teams-and-servers)).

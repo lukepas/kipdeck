@@ -65,6 +65,8 @@ export class Webhook {
   private stuckPending = new Map<string, NodeJS.Timeout>();
   private chain: Promise<unknown> = Promise.resolve();
   private backlog = 0;
+  /** A link that opens a worker in the inbox, when the office has a secure address to link to (see phone.ts). */
+  link?: (w: WorkerInfo) => string | undefined;
 
   constructor(
     dataDir: string,
@@ -205,18 +207,20 @@ export class Webhook {
   private async send(saved: Saved, msg: { kind: PostKind; title: string; detail?: string; worker?: WorkerInfo }): Promise<string | undefined> {
     const url = new URL(saved.url);
     const kind = webhookKind(url);
+    const link = msg.worker && this.link?.(msg.worker);
     let body: unknown;
     if (kind === 'slack') {
-      body = { text: `*${slackEscape(msg.title)}*${msg.detail ? `\n>${slackEscape(msg.detail)}` : ''}` };
+      body = { text: `*${slackEscape(msg.title)}*${msg.detail ? `\n>${slackEscape(msg.detail)}` : ''}${link ? `\n<${link}|Open it in Kipdeck>` : ''}` };
     } else if (kind === 'discord') {
       // No @everyone or role pings, whatever a worker's text says.
-      body = { content: `**${msg.title}**${msg.detail ? `\n> ${msg.detail}` : ''}`, username: 'Kipdeck', allowed_mentions: { parse: [] } };
+      body = { content: `**${msg.title}**${msg.detail ? `\n> ${msg.detail}` : ''}${link ? `\n${link}` : ''}`, username: 'Kipdeck', allowed_mentions: { parse: [] } };
     } else {
       const w = msg.worker;
       body = {
         text: msg.detail ? `${msg.title}\n${msg.detail}` : msg.title,
         event: msg.kind,
         project: this.project(w?.id),
+        ...(link ? { link } : {}),
         worker: w && { id: w.id, name: w.name, desk: w.deskId, status: w.status, task: w.task?.name, branch: w.worktree?.branch },
       };
     }

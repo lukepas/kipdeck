@@ -38,7 +38,7 @@ Then it's yours:
 4. **Send back** with a note works too: the stand-in commits the note and finishes again.
 5. **Deploy agent** works with any task: the stand-in writes a short note about it in `notes/`, commits it, and finishes.
 
-To see it on your phone, start it with `--host 0.0.0.0` and sign in from the phone with the password the terminal prints.
+To see it on your phone, start it with `--host 0.0.0.0`, open **Pair a phone** in the avatar menu and scan the code with the phone (on the same Wi-Fi; it warns that this is plain HTTP). Or sign in from the phone with the password the terminal prints.
 
 ## The hosted demo
 

@@ -265,7 +265,8 @@ test('Enter the Deck: in the top bar, never orange, D and Go to Deck go to /deck
   await cta.waitFor({ state: 'hidden', timeout: 15_000 });
   await page.keyboard.press('d');
   await page.waitForTimeout(300);
-  assert.equal(new URL(page.url()).pathname, '/');
+  // Still the inbox: at / or at the agent the pane opened by itself (/a/<project>/<agent>), never the Deck.
+  assert.match(new URL(page.url()).pathname, /^\/(a\/[^/]+\/[^/]+)?$/);
   await page.evaluate(() => new Promise<void>((resolve) => {
     const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
     ws.onopen = () => {
