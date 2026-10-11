@@ -8,6 +8,7 @@ import { Services } from '../services.js';
 import { Ledger } from '../usage.js';
 import { PlanLimitsReader } from '../limits.js';
 import { Webhook } from '../webhook.js';
+import { createPush } from '../push/index.js';
 import { Machine } from '../machine.js';
 import type { Floor } from '../floor.js';
 import { OfficePrompts } from '../prompts.js';
@@ -89,11 +90,14 @@ export function createServices(ctx: Ctx): BuildingServices {
   };
 
   // Slack / Discord pings for workers that need input or finish (set from Settings or --webhook).
-  const webhook = new Webhook(cfg.dataDir, (workerId) => (workerId && ctx.workerFloor(workerId)?.def.name) || ctx.officeName, (state) => ctx.broadcast({ t: 'notify', state }));
+  const project = (workerId?: string) => (workerId && ctx.workerFloor(workerId)?.def.name) || ctx.officeName;
+  const webhook = new Webhook(cfg.dataDir, project, (state) => ctx.broadcast({ t: 'notify', state }), (id) => ctx.workerFloor(id)?.workers.get(id));
   if (cfg.webhook !== undefined) {
     const err = webhook.set(cfg.webhook, 'the command line');
     if (err) console.error(`kipdeck: --webhook: ${err}`);
   }
+  // Pushes to people's devices first, the channel above once they go unanswered (push/alerts.ts).
+  const push = createPush(cfg.dataDir, webhook, project);
 
   // The machine's CPU and memory, for the monitor on the wall and a warning before hiring, and the
   // most workers the office runs at once, across every floor (--max-workers, or Settings).
@@ -117,7 +121,7 @@ export function createServices(ctx: Ctx): BuildingServices {
     });
   };
 
-  return { prompts, leaveOnMerge, ledger, signins, limits, accountLimits, webhook, machine, limitsOf, pumpQueues };
+  return { prompts, leaveOnMerge, ledger, signins, limits, accountLimits, webhook, push, machine, limitsOf, pumpQueues };
 }
 
 /** What's made once the floors are open: the SSH team, the tailnet, workers' web servers, pictures and upgrades. */

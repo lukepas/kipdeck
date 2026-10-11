@@ -63,7 +63,7 @@ The same ranking runs everywhere: the counters on the top bar (a glyph and a num
 
 **N** goes to the workers waiting on someone in the ranking's order: the ones that need you first, then the ones that are done, longest-waiting first within each. After the last one on your floor it takes you to the next floor's, and one that needs you on another floor comes before one here that's only done. Snoozed ones are skipped.
 
-A worker that gets stuck dings on your floor and, while you're in another tab, pops up a desktop notification wherever it is. After the same few seconds' wait as the other alerts, the team's webhook gets a line about it too. Nothing else new dings.
+A worker that gets stuck dings on your floor and, while you're in another tab, pops up a desktop notification wherever it is. After the same few seconds' wait as the other alerts, it pushes to your devices, and the team's webhook gets a line about it once that push goes unanswered with nobody at a desk (see [Push to your devices](push.md)). Nothing else new dings.
 
 ## Goals
 

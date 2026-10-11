@@ -68,9 +68,19 @@ Off unless someone turns them on: the setup card's switch (admins), `--telemetry
 
 ## Links the office fetches
 
-The only link the office fetches on someone's say-so is the team webhook (the picture proxy went with the wall pictures). It goes through `src/server/netguard.ts`. It resolves the link's name itself, in the connection's own lookup, and refuses the whole name when any address it resolves to is loopback, private (`10/8`, `172.16/12`, `192.168/16`), carrier-grade NAT and Tailscale (`100.64/10`), link-local and cloud metadata (`169.254/16`, `fe80::/10`), unique local (`fc00::/7`, which holds AWS's `fd00:ec2::254`), multicast, documentation or reserved. IPv6 forms that carry an IPv4 address are checked too: IPv4-mapped (`::ffff:a.b.c.d`) and NAT64 (`64:ff9b::/96`) by the address inside them, and IPv4-compatible (`::/96`), IPv4-translated (`::ffff:0:0:0/96`), 6to4 (`2002::/16`) and Teredo (`2001::/32`) are refused outright. Checking the address the connection really goes to means a name that resolves to a public address once and a private one the next time (DNS rebinding) gets nowhere. Redirects are followed one at a time, at most five, and each target is checked again, scheme included.
+The only links the office fetches on someone's say-so are the team webhook and push subscriptions (the picture proxy went with the wall pictures). It goes through `src/server/netguard.ts`. It resolves the link's name itself, in the connection's own lookup, and refuses the whole name when any address it resolves to is loopback, private (`10/8`, `172.16/12`, `192.168/16`), carrier-grade NAT and Tailscale (`100.64/10`), link-local and cloud metadata (`169.254/16`, `fe80::/10`), unique local (`fc00::/7`, which holds AWS's `fd00:ec2::254`), multicast, documentation or reserved. IPv6 forms that carry an IPv4 address are checked too: IPv4-mapped (`::ffff:a.b.c.d`) and NAT64 (`64:ff9b::/96`) by the address inside them, and IPv4-compatible (`::/96`), IPv4-translated (`::ffff:0:0:0/96`), 6to4 (`2002::/16`) and Teredo (`2001::/32`) are refused outright. Checking the address the connection really goes to means a name that resolves to a public address once and a private one the next time (DNS rebinding) gets nowhere. Redirects are followed one at a time, at most five, and each target is checked again, scheme included.
 
 The webhook is also https only (its path is the secret), is never redirected, and only admins can change it. An http webhook saved before this is dropped when the office starts.
+
+## Push notifications
+
+[Push](push.md) sends to links browsers hand the office when they subscribe, so a subscription is a link someone signed in chose:
+
+- **Only push services.** The office keeps and sends to a subscription only when it is an https link on Google's, Mozilla's, Apple's or Microsoft's push service (`fcm.googleapis.com`, `push.services.mozilla.com`, `push.apple.com`, `notify.windows.com` and their subdomains), and sends through the guarded fetch below, never redirected. Anything else is refused when it is handed over.
+- **Encrypted and signed.** A push body is encrypted for the one browser it is for (RFC 8291) and signed with the office's VAPID key (RFC 8292), both with `node:crypto`, so the push service sees neither what an agent asked nor which project. The key pair is in `.agent-office/vapid.json` and the devices in `.agent-office/push.json`, both mode 0600.
+- **Your own devices.** Settings lists and removes only the devices of the account (or, on the shared password, the name) asking. On the shared password everyone signed in is trusted the same, as everywhere else.
+- **A notification's buttons.** Snooze and Mark seen come back to `POST /api/push/act` with the page's session cookie, from the office's own origin (the same check as signing in), and only from a device the office already sends to. Answering and approving are never done from a notification: they open the inbox.
+- **What loads without a session.** The service worker (`/sw.js`), the manifest and its two icons, as browsers fetch them without cookies. None of them holds anything about the office.
 
 ## Terminal web tabs
 

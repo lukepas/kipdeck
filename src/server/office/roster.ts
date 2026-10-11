@@ -27,7 +27,7 @@ export function rosterFloor(f: Floor): RosterFloor {
 /**
  * The building-wide roster: every hired worker on every floor (the board agents left out), sent to
  * everyone at most a few times a second and only when it changed, as the elevator's list is. Each
- * time it goes out, a worker that just got stuck is passed to the team's webhook.
+ * time it goes out, a worker that just got stuck is passed to the alerts (push, then the team's channel).
  */
 export function rosterHelpers(ctx: Ctx): RosterHelpers {
   const rosterEntries = (): RosterEntry[] => {
@@ -53,17 +53,17 @@ export function rosterHelpers(ctx: Ctx): RosterHelpers {
       if (a.level !== 'stuck' || a.snoozed) continue;
       next.add(e.id);
       if (stuck && !stuck.has(e.id)) {
-        ctx.webhook.onStuck(e, a.reason ?? 'stuck', () => stillStuck(e.id));
+        ctx.push.alerts.onStuck(e, a.reason ?? 'stuck', () => stillStuck(e.id));
         ctx.floors.get(e.floor)?.watch.stuck(e, a.reason ?? 'stuck');
       }
     }
     stuck = next;
   };
-  /** Why it's still stuck, or undefined once it isn't (the webhook looks again before it posts). */
+  /** Why it's still stuck, or undefined once it isn't (the alerts look again before each step). */
   const stillStuck = (id: string): string | undefined => {
     const e = entryOf(id);
     const a = e && attention(e, Date.now());
-    return a && a.level === 'stuck' && !a.snoozed && !ctx.workerFloor(id)?.workers.get(id)?.viewers.length ? (a.reason ?? 'stuck') : undefined;
+    return a && a.level === 'stuck' && !a.snoozed ? (a.reason ?? 'stuck') : undefined;
   };
 
   /** The pull requests waiting for a person that no worker on the roster stands for (see review.ts). */

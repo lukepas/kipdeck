@@ -18,6 +18,7 @@ import { renderTitle } from './shared/title';
 import { homeMessage, installHome } from './home';
 import { home } from './home/state';
 import * as lazy from './home/lazy';
+import { installPwa } from './pwa';
 
 // Sent back here because this browser can't draw the 3D bridge (see noWebGL in core/scene.ts).
 if (new URLSearchParams(location.search).get('why') === 'webgl') {
@@ -34,6 +35,12 @@ const settings = loadSettings();
 // A click on a notification selects that agent's row, its terminal open.
 const notifier = new DesktopNotifier(() => settings.notify, (id) => home.select(id, 'terminal'));
 const actions = installHome(net, settings, notifier);
+// The installable app: presence, the service worker, and a tapped push opening its agent (pwa/).
+installPwa(net, (id) => {
+  const e = store.roster.find((r) => r.id === id);
+  if (e) runAction(actions.deps, e, 'look');
+  else home.select(id, 'terminal');
+});
 
 /** The server version this page was loaded with. */
 let bootVersion = '';

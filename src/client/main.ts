@@ -5,6 +5,7 @@ import { AVATAR_COLORS, store, loadProfile, loadSettings, saveProfile } from './
 import { randomLook } from '../shared/avatar';
 import { PlayerController } from './player';
 import { Voice } from './voice';
+import { trackPresence } from './pwa/presence';
 import { $ } from './ui/dom';
 import { elevatorPanelOpen } from './ui/elevator';
 import { onModelsProgress, preloadModels } from './world/models';
@@ -140,6 +141,8 @@ parts.tv = installTv(ctx, { shares: () => parts.talk.currentShares(), watch: () 
 // You, and how you talk to the office.
 parts.net = new Net(() => store.profile, () => parts.arrival.whereNow());
 parts.voice = new Voice(parts.net);
+// Using the Deck counts as being at your desk: no pushes while you're here (pwa/presence.ts).
+trackPresence(parts.net);
 parts.me = makeMe(ctx);
 parts.settings = loadSettings();
 // Before anything reads the settings: without Bridge ambience the bridge starts calm (features/labs).

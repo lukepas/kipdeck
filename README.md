@@ -109,6 +109,7 @@ More in [docs/labs.md](docs/labs.md).
 - **Deploy, attach, answer, review, merge.** The Deploy sheet starts an agent on a branch of its own; `kipdeck attach` adopts one started in a terminal; Answer, Review changes, Fix checks and Merge do what they say, with or without GitHub. With a GitHub repository and no pull request yet, Open PR comes first. On a team, each row says whose agent it is, and **Mine / Team** filters the inbox.
 - **Numbers.** Human wait time, changes merged, the merge rate and agent-hours, the last 7 days against the 7 days before, and the merge rate per agent and model with its N, from the signed shipped log on your machine ([metrics](docs/metrics.md)).
 - **Settings in three panes.** Account, Agents and Notifications. Seven keys, and Help on **?** ([controls](docs/controls.md)).
+- **Push to your phone.** Kipdeck installs as an app, and an agent that needs an answer, wants an approval, has work to review or is stuck reaches your devices with a push titled by its task. The first Deploy asks once; Slack or Discord hears only if the push goes unanswered for a few minutes with nobody at a Kipdeck tab ([push](docs/push.md)).
 - **Teams.** Accounts with invite links, a shared dev box reached by SSH tunnel or Tailscale, and the team's Slack or Discord channel ([below](#teams-and-servers)).
 - **Agents that manage agents.** Every agent can list, deploy, message and stop the others through the `kipdeck` MCP server or the `office-workers` command ([agents](docs/agents.md)).
 - **Mission control** (with the GitHub boards and queue lab on): the same ranking with reminders, the review inbox and the digest of what happened while you were away ([mission control](docs/mission-control.md)).
@@ -199,6 +200,7 @@ The npm package ships the built `dist/` (`files` in `package.json`), so `npx kip
 ## More
 
 - [The inbox](docs/inbox.md): the home page, its loop, the setup card, Numbers, Settings, its keys and the shipped log
+- [Push to your devices](docs/push.md): installing Kipdeck as an app, Web Push to your phone and laptop, who gets a push and when, and when Slack or Discord hears after it
 - [Signal](docs/signal.md): the project's status at one look over the inbox list (On track, At risk, Off track or No goal), the rules behind it, and Copy as text for Slack
 - [The demo](docs/demo.md): `npx kipdeck --demo` with five scripted agents, the hosted read-only demo, and the scripts that make the video, the GIF and the deck's screenshots
 - [Metrics for the deck](docs/metrics.md): what each number means, where it comes from, and what not to show
