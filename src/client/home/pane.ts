@@ -20,7 +20,7 @@ import { onProject } from './deploy';
 import * as lazy from './lazy';
 import { agentMark, currentView, entryTitle, whereLabel } from './list';
 import { questionCard } from './question';
-import { deckPlan, emptyState, markCleared } from './empty';
+import { emptyState, markCleared, placeDeckPlan } from './empty';
 import { home, type PaneTab } from './state';
 
 /** Wide enough for the list and the pane side by side (lite.css). */
@@ -234,10 +234,7 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
         empty.dataset.key = key;
         empty.replaceChildren(next);
       }
-      void deckPlan().then((plan) => {
-        if (plan && plan.parentElement !== empty) empty.append(plan);
-        if (!plan) empty.querySelector('.lite-plot')?.remove();
-      });
+      void placeDeckPlan(empty);
       void unmount();
       return;
     }

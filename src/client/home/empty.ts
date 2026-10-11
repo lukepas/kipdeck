@@ -67,7 +67,7 @@ export function emptyState(actions: Actions): HTMLElement {
             h('ol', {}, ...pane.shipped.map(shippedItem)),
             pane.total > pane.shipped.length ? h('p.pe-more', {}, `and ${pane.total - pane.shipped.length} more in Shipped today`) : null,
           )
-        : h('p.pe-more', {}, 'Nothing merged yet today.'),
+        : null, // the line above already says 0 merged today
       h('button.btn', { type: 'button', onclick: () => actions.deploy() }, icon('plus', 16), 'Deploy agent'),
       keys,
     );
@@ -92,15 +92,36 @@ export function emptyState(actions: Actions): HTMLElement {
 }
 
 /** The deck plan under the empty pane, while the Deck lab is on; rebuilt when Proof of Merge's readiness changes. */
-let plan: { el: HTMLElement; proof: boolean } | undefined;
-export async function deckPlan(): Promise<HTMLElement | null> {
-  if (!store.lab('bridge')) return null;
-  const proof = proofReady();
-  if (!plan || plan.proof !== proof) {
-    const el = h('div.lite-plot', { 'aria-label': 'Deck plan' });
-    plan = { el, proof };
-    const { mountLitePlot } = await import('../lite-plot');
-    mountLitePlot(el, (id) => home.select(id, 'terminal'));
+let plan: { el: HTMLElement; proof: boolean; stop?: () => void; gone?: boolean } | undefined;
+
+/** Stops the plan's live painting and forgets it (the lab went off, or it is being rebuilt). */
+function dropPlan() {
+  if (!plan) return;
+  plan.gone = true;
+  plan.stop?.();
+  plan = undefined;
+}
+
+async function deckPlan(): Promise<HTMLElement | null> {
+  if (!store.lab('bridge')) {
+    dropPlan();
+    return null;
   }
-  return plan.el;
+  const proof = proofReady();
+  if (plan && plan.proof === proof) return plan.el;
+  dropPlan();
+  const mine: NonNullable<typeof plan> = { el: h('div.lite-plot', { 'aria-label': 'Deck plan' }), proof };
+  plan = mine;
+  const { mountLitePlot } = await import('../lite-plot');
+  // Replaced while the module loaded: never start painting a plan nobody shows.
+  if (mine.gone) return plan?.el ?? null;
+  mine.stop = mountLitePlot(mine.el, (id) => home.select(id, 'terminal')).stop;
+  return mine.el;
+}
+
+/** Puts the deck plan (or none, with the lab off) under the work in `box`, and takes away any older one. */
+export async function placeDeckPlan(box: HTMLElement) {
+  const el = await deckPlan();
+  for (const old of box.querySelectorAll('.lite-plot')) if (old !== el) old.remove();
+  if (el && el.parentElement !== box) box.append(el);
 }

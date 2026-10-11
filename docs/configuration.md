@@ -60,9 +60,9 @@ kipdeck [dir] [options]      (npx kipdeck, or agent-office: the same command)
                           only GET requests and looking are taken, and a scripted reviewer answers,
                           merges and starts over (env KIPDECK_DEMO=read-only). See docs/demo.md
       --labs <names>      Hold labs on, comma separated: boards, bridge (the Deck), ops, meetings,
-                          voice, ambience, proof, or all (env AGENT_OFFICE_LABS). All are on by
-                          default and admins can switch them off from Labs in the office, except
-                          the ones held on here (see docs/labs.md). A chain flag
+                          voice, ambience, proof, rundown, or all (env AGENT_OFFICE_LABS). All
+                          are off by default and admins can switch them on from Labs in the
+                          office; the ones held on here stay on (see docs/labs.md). A chain flag
                           (--x402, --attest, --reputation) holds proof on. A leading
                           minus holds a lab off instead (--labs -proof,-voice), and
                           none holds all of them off, for an inbox-only office

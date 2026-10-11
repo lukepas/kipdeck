@@ -80,10 +80,13 @@ test('the empty pane is the work: no deck plan or chain words unless the Deck la
   const pane = src('src/client/home/pane.ts');
   assert.doesNotMatch(empty + pane, /ESCROW|ERC-8004/);
   // The plan is only loaded with the Deck lab on, after the work, and its Proof corner only once Proof of Merge is set up.
-  assert.match(empty, /if \(!store\.lab\('bridge'\)\) return null;/);
+  assert.match(empty, /if \(!store\.lab\('bridge'\)\) \{\s*dropPlan\(\);\s*return null;/);
   assert.match(empty, /const proof = proofReady\(\);/);
   assert.match(src('src/client/lite-plot.ts'), /proof: proofReady\(\)/);
-  assert.match(pane, /const next = emptyState\(actions\);[\s\S]*void deckPlan\(\)/);
+  assert.match(pane, /const next = emptyState\(actions\);[\s\S]*void placeDeckPlan\(empty\)/);
+  // A rebuilt plan (Proof of Merge set up since) replaces the old one and stops its painting.
+  assert.match(empty, /for \(const old of box\.querySelectorAll\('\.lite-plot'\)\) if \(old !== el\) old\.remove\(\);/);
+  assert.match(src('src/client/lite-plot.ts'), /stop: \(\) => \{\s*clearInterval\(timer\);\s*for \(const off of offs\) off\(\);/);
 });
 
 test('the palette matches labels before hints: "labs" finds Labs before Rundown', () => {

@@ -9,8 +9,8 @@ import { podGoals } from '../shared/pods';
 import { address } from '../shared/callsign';
 import { LEVEL_LABEL } from '../shared/attention';
 
-/** Mounts the plot in `box` and keeps it current; `pick` opens a unit. */
-export function mountLitePlot(box: HTMLElement, pick: (id: string) => void): Plot {
+/** Mounts the plot in `box` and keeps it current until `stop`; `pick` opens a unit. */
+export function mountLitePlot(box: HTMLElement, pick: (id: string) => void): { plot: Plot; stop: () => void } {
   const plot = new Plot({ kind: 'live', onPick: pick, proof: proofReady() });
   box.replaceChildren(plot.el);
 
@@ -35,13 +35,21 @@ export function mountLitePlot(box: HTMLElement, pick: (id: string) => void): Plo
     plot.setPodGoals(Object.fromEntries(Object.entries(goals).flatMap(([k, g]) => (g?.title ? [[k, g.title]] : []))));
     plot.setDeck(store.currentFloor()?.name ?? 'Deck');
   };
-  for (const t of ['roster', 'workers', 'floor'] as const) store.on(t, paintUnits);
-  for (const t of ['roster', 'floor', 'floors'] as const) store.on(t, paintGoals);
-  store.on('mission', paintMission);
+  const offs = [
+    ...(['roster', 'workers', 'floor'] as const).map((t) => store.on(t, paintUnits)),
+    ...(['roster', 'floor', 'floors'] as const).map((t) => store.on(t, paintGoals)),
+    store.on('mission', paintMission),
+  ];
   paintUnits();
   paintMission();
   paintGoals();
   // Waiting times move on by themselves, and so can the ranking.
-  setInterval(paintUnits, 30_000);
-  return plot;
+  const timer = setInterval(paintUnits, 30_000);
+  return {
+    plot,
+    stop: () => {
+      clearInterval(timer);
+      for (const off of offs) off();
+    },
+  };
 }

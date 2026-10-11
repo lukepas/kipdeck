@@ -229,6 +229,35 @@ test('first sight with every lab off: no Deck pill, no Signal chip without a goa
   assert.equal(await palette.locator('.pal-list li.on .pal-label').innerText(), 'Labs');
   await page.keyboard.press('Escape');
   assert.equal(await palette.count(), 0);
+
+  // With the pill gone the bar keeps its context at every width: the project picker never shrinks,
+  // the demo's tag reads whole, search keeps room to type in, and nothing scrolls sideways.
+  for (const width of [390, 1024, 1440]) {
+    const other = await browser!.newContext({ viewport: { width, height: 844 }, ...(width < 600 ? { isMobile: true, hasTouch: true } : {}), storageState: await context.storageState() });
+    const p = await other.newPage();
+    p.on('pageerror', (e) => errors.push(e.message));
+    await p.goto(`${base}/`);
+    await p.locator('#demo .demo-tag').waitFor({ state: 'attached', timeout: 30_000 });
+    // No helper functions inside: the test runner's transform would name them with a helper the page lacks.
+    const bar = await p.evaluate(() => {
+      const tag = document.querySelector('#demo .demo-tag')!;
+      return {
+        projectShrinks: getComputedStyle(document.getElementById('project')!).flexShrink,
+        tagCut: tag.scrollWidth > tag.clientWidth + 1,
+        search: document.querySelector('.hb-search')!.getBoundingClientRect().width,
+        deck: document.querySelectorAll('.deck-cta, #to-deck, #to-deck-row').length,
+        scroll: document.documentElement.scrollWidth,
+      };
+    });
+    assert.equal(bar.deck, 0, `${width}: no Enter the Deck on the page`);
+    assert.equal(bar.scroll, width, `${width}: no sideways scroll`);
+    if (width >= 900) {
+      assert.equal(bar.projectShrinks, '0', `${width}: the project picker keeps its name`);
+      assert.equal(bar.tagCut, false, `${width}: the demo tag reads whole`);
+      assert.ok(bar.search >= 200, `${width}: search keeps its room (${bar.search}px)`);
+    }
+    await other.close();
+  }
   assert.deepEqual(errors, []);
 });
 
@@ -277,6 +306,24 @@ test('Enter the Deck: a row in the avatar menu with the lab on, D and Go to Deck
   assert.equal(await page.locator('.pane-empty > :first-child').evaluate((el) => el.classList.contains('pe') || el.classList.contains('pv')), true, 'the work first');
   // Proof of Merge is off and not set up: no Proof corner on the plan.
   assert.doesNotMatch(await page.locator('.pane-empty .lite-plot').innerHTML(), /ESCROW|ERC-8004/);
+  // Switched on but still not set up: no corner either.
+  await setLabs(page, { proof: true });
+  t.after(() => setLabs(page, { proof: false }).catch(() => {}));
+  await page.waitForFunction(() => (window as any).__lite.store.lab('proof'));
+  await page.waitForTimeout(500);
+  assert.doesNotMatch(await page.locator('.pane-empty .lite-plot').innerHTML(), /ESCROW|ERC-8004/);
+  // Set up (as --reputation would): the plan is drawn again with its corner, and only one plan stays.
+  await page.evaluate(() => {
+    const l = (window as any).__lite;
+    l.store.reputation = { enabled: true, agents: [], harnesses: [], owed: 0 };
+    l.store.emit('roster');
+  });
+  await page.waitForFunction(() => /ESCROW/.test(document.querySelector('.pane-empty .lite-plot')?.innerHTML ?? ''), undefined, { timeout: 15_000 });
+  assert.equal(await page.locator('.pane-empty .lite-plot').count(), 1, 'the old plan is gone');
+  await setLabs(page, { proof: false });
+  await page.waitForFunction(() => !(window as any).__lite.store.lab('proof'));
+  await page.waitForFunction(() => !/ESCROW/.test(document.querySelector('.pane-empty .lite-plot')?.innerHTML ?? 'ESCROW'), undefined, { timeout: 15_000 });
+  assert.equal(await page.locator('.pane-empty .lite-plot').count(), 1);
 
   // The palette has Go to Deck, among the labs.
   await page.keyboard.press('Control+k');
