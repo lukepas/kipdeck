@@ -19,6 +19,11 @@ export interface AlertDeps {
   presence: Pick<Presence, 'present' | 'anyone'>;
   /** The project a worker works on (its floor's name). */
   project(workerId: string): string;
+  /**
+   * Whose devices a worker's pushes go to: its owner's account ("a:<id>"), else the name it was
+   * deployed by on the shared password ("n:<name>"), as devices.ts's personOf keys them.
+   */
+  owner(workerId: string, createdBy: string): string;
   /** Tests only. */
   settleMs?: number;
   escalateMs?: number;
@@ -62,7 +67,7 @@ export class Alerts {
         const cur = this.latest.get(w.id) ?? w;
         return pushPayload({ kind: pushKind(cur) ?? kind, worker: cur.id, task: cur.task?.name, name: cur.name, project: this.d.project(cur.id), detail: alertDetail(cur) });
       },
-      owner: () => this.latest.get(w.id)?.createdBy,
+      owner: () => this.ownerOf(w.id),
       channel: () => {
         const cur = this.latest.get(w.id);
         if (cur && (cur.status === 'needs_input' || cur.status === 'done')) void this.d.webhook.alert(cur, cur.status);
@@ -82,7 +87,7 @@ export class Alerts {
     this.begin(`stuck:${e.id}`, {
       still: () => !!still(),
       payload: () => pushPayload({ kind: 'stuck', worker: e.id, task: e.task?.name, name: e.name, project: e.floorName, detail: still() ?? reason }),
-      owner: () => this.latest.get(e.id)?.createdBy,
+      owner: () => this.ownerOf(e.id),
       channel: () => {
         const why = still();
         if (why) void this.d.webhook.stuck(e, why, this.latest.get(e.id));
@@ -95,6 +100,11 @@ export class Alerts {
     const mine = this.d.devices.all().filter((x) => x.person === person);
     const sent = await Promise.all(mine.map((x) => this.d.devices.send(x, pushPayload({ kind: 'test', detail: 'This is how an agent that needs you reaches this device.' }), { ttl: 600 })));
     return sent.filter((s) => s === 'sent').length;
+  }
+
+  private ownerOf(id: string): string | undefined {
+    const w = this.latest.get(id);
+    return w ? this.d.owner(id, w.createdBy) : undefined;
   }
 
   stop() {
@@ -130,7 +140,7 @@ export class Alerts {
   /** Pushes to everyone it's for who isn't at a desk and wasn't pushed yet; resolves to how many devices took it. */
   private async pushTo(wait: Wait, payload: PushPayload, owner: string | undefined): Promise<number> {
     const all = this.d.devices.all();
-    const theirs = owner ? all.filter((x) => x.name === owner) : [];
+    const theirs = owner ? all.filter((x) => x.person === owner) : [];
     const targets = (theirs.length ? theirs : all).filter((x) => !wait.pushed.has(x.person) && !this.d.presence.present(x.person));
     for (const x of targets) wait.pushed.add(x.person);
     const out = await Promise.all(targets.map((x: Device) => this.d.devices.send(x, payload, { urgency: urgencyOf(payload.kind) })));

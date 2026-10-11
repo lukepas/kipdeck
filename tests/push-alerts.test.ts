@@ -6,7 +6,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { setTimeout as sleep } from 'node:timers/promises';
 import type { RosterEntry, WorkerInfo } from '../src/shared/protocol.js';
-import { PRESENCE_MS, pushKind, pushPayload, type PushPayload } from '../src/shared/push.js';
+import { PRESENCE_MS, pushHandled, pushKind, pushPayload, type PushPayload } from '../src/shared/push.js';
 import { Alerts } from '../src/server/push/alerts.js';
 import type { Device } from '../src/server/push/devices.js';
 import { Presence } from '../src/server/push/presence.js';
@@ -30,6 +30,8 @@ function rig(devices: Device[] = []) {
     devices: { all: () => devices, send: async (d, payload) => (pushes.push({ to: d.person, payload }), 'sent') },
     presence,
     project: () => 'shop',
+    // Tess and Ola have accounts; Sam goes by a name on the shared password.
+    owner: (_id, by) => (by === 'Sam' ? `n:${by}` : `a:${by.toLowerCase()}`),
     settleMs: SETTLE,
     escalateMs: ESCALATE,
   });
@@ -172,4 +174,25 @@ test('what a push says: approvals are told apart from questions, and long text i
   assert.equal(p.url, '/?agent=w%201');
   assert.equal(p.body, 'Wants your approval in shop\nWants permission: Bash');
   assert.deepEqual(pushPayload({ kind: 'test' }).actions, []);
+});
+
+test('a shown push comes down once it is dealt with; a stuck one only once it is snoozed', () => {
+  const now = 1_000;
+  assert.equal(pushHandled('question', { status: 'needs_input' }, now), false);
+  assert.equal(pushHandled('question', { status: 'working' }, now), true, 'answered');
+  assert.equal(pushHandled('review', { status: 'done', acked: false }, now), false);
+  assert.equal(pushHandled('review', { status: 'done', acked: true }, now), true, 'seen');
+  assert.equal(pushHandled('question', { status: 'needs_input', snooze: { until: now + 1 } }, now), true, 'snoozed');
+  assert.equal(pushHandled('question', { status: 'needs_input', snooze: { until: now - 1 } }, now), false, 'the snooze ran out');
+  assert.equal(pushHandled('stuck', { status: 'working' }, now), false, 'a stuck agent looks busy');
+  assert.equal(pushHandled('stuck', { status: 'working', snooze: { until: 'change' } }, now), true);
+  assert.equal(pushHandled('question', undefined, now), false, 'an agent this page does not know');
+});
+
+test('the owner is matched by account, not by a name someone on the shared password can take', async () => {
+  const { alerts, pushes } = rig([device('a:tess', 'Tess'), device('n:Tess', 'Tess')]);
+  waits(alerts, worker({ createdBy: 'Tess' }), { status: 'needs_input', activity: 'Which one?' });
+  await sleep(SETTLE + 15);
+  assert.deepEqual(pushes.map((p) => p.to), ['a:tess']);
+  alerts.stop();
 });

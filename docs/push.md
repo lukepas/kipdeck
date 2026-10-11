@@ -6,7 +6,7 @@ Back to the [README](../README.md).
 
 ## Turning it on
 
-Kipdeck asks once, at your first **Deploy agent**: you just handed an agent work it will come back to you about. Allow notifications and that browser becomes one of your devices. It never asks again, whatever you answered. **Settings > Notifications > Push to your devices** turns it on or off for the browser you are in, sends a test push, and lists your other devices with **Remove** for each (a lost phone, an old browser).
+Kipdeck asks once, at your first **Deploy agent**: you just handed an agent work it will come back to you about. Allow notifications and that browser becomes one of your devices. It never asks again, whatever you answered. Where the browser can't take pushes at all (plain http over the LAN, an iPhone before Add to Home Screen) it doesn't count as asked, so the first Deploy where it can still asks. **Settings > Notifications > Push to your devices** turns it on or off for the browser you are in, sends a test push, and lists your other devices with **Remove** for each (a lost phone, an old browser).
 
 Push needs a secure page: `https://`, or `http://localhost` on your own computer (an SSH tunnel to a server counts). On plain http over the LAN the browser has no push at all, and Settings says so.
 
@@ -26,7 +26,7 @@ A push goes out when an agent:
 
 It has to stay that way for 5 seconds first, so a flicker never buzzes a phone. A snoozed agent sends nothing, and neither does a finished turn somebody already looked at.
 
-The push's title is the agent's task, the name the inbox lists it by. Under it: what it wants and in which project, then its question or what it wants to run. Pushes about the same agent replace each other. On a device with a Kipdeck page open, a push comes down by itself once somebody gets to that agent.
+The push's title is the agent's task, the name the inbox lists it by. Under it: what it wants and in which project, then its question or what it wants to run. Pushes about the same agent replace each other. On a device with a Kipdeck page open, a push comes down by itself once somebody gets to that agent or snoozes it (a stuck one only once it is snoozed, since a stuck agent can look busy all along).
 
 Where the platform shows buttons (Chrome and Edge on Android and desktop; not Safari), each push has two:
 
@@ -37,11 +37,13 @@ Where the platform shows buttons (Chrome and Edge on Android and desktop; not Sa
 | Ready for review | **Review** (opens the agent), **Mark seen** |
 | Looks stuck | **Look** (opens the agent), **Snooze 1h** |
 
-Answering and approving always happen in the inbox, where you can see what you are agreeing to. Tapping the push itself brings up a Kipdeck tab already open on that agent, or opens one.
+Answering and approving always happen in the inbox, where you can see what you are agreeing to. Tapping the push itself brings up an inbox tab already open on that agent, or opens one on `/?agent=<id>` (a Deck tab left open is not used: it can't show the agent's terminal).
 
 ## Who gets it
 
-The push goes to the devices of whoever deployed the agent. When that person has no devices, it goes to everyone's devices with push on.
+The push goes to the devices of whoever deployed the agent: their account's devices, or on the shared password the devices kept under the name they deployed it with. When that person has no devices, it goes to everyone's devices with push on.
+
+Each person keeps up to 10 devices; turning push on in an eleventh browser replaces their oldest. The office keeps up to 200 in all.
 
 Nobody is pushed while they are at their desk: a Kipdeck page of theirs (the inbox or the Deck) is focused and they used it (a key, a click, a scroll, a tap) within the last 2 minutes. A tab left open with nobody touching it stops counting after those 2 minutes, and so does a terminal the inbox opened by itself on a wide screen.
 
@@ -58,7 +60,7 @@ The timings live in `src/shared/push.ts` (`PUSH_SETTLE_MS`, `ESCALATE_MS`, `PRES
 
 ## What is kept, and what leaves
 
-- The office's VAPID key pair is made the first time push is used and kept in `.agent-office/vapid.json` in the office home, readable by the office's user only. Deleting it makes a new pair, and every device has to turn push on again.
+- The office's VAPID key pair is made the first time push is used and kept in `.agent-office/vapid.json` in the office home, readable by the office's user only. Deleting it makes a new pair and forgets every device; each browser with push on subscribes again under the new key the next time it opens Kipdeck.
 - Each device is kept in `.agent-office/push.json` (its push service's link, its keys, whose it is and what browser), also readable by the office's user only.
 - A push is encrypted for the one browser it is for (RFC 8291, `aes128gcm`) and signed with the office's key (VAPID, RFC 8292), all with Node's own `node:crypto`. The push service (Google's, Mozilla's, Apple's or Microsoft's) only ever sees an encrypted body.
 - The office only sends to those push services, over https, through the same guarded fetch as the webhook. See [Security](security.md#push-notifications).

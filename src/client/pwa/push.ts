@@ -67,6 +67,19 @@ export async function enablePush(name: string): Promise<string | undefined> {
   }
 }
 
+/**
+ * Push was on here, but the office made new keys since (its vapid.json was deleted or lost), which
+ * also forgot every device: subscribes again with the new key, so this browser doesn't sit there
+ * showing On while nothing can reach it. Run when the page loads.
+ */
+export async function refreshPush(name: string): Promise<void> {
+  if (!pushSupported() || Notification.permission !== 'granted') return;
+  const key = (await subscription())?.options.applicationServerKey;
+  if (!key) return;
+  const state = await pushState(name);
+  if (state && b64u(key) !== state.key) await enablePush(name);
+}
+
 /** Turns push off for this browser. */
 export async function disablePush(name: string): Promise<void> {
   const sub = await subscription();

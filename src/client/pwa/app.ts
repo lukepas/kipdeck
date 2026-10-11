@@ -2,13 +2,24 @@
 // registered, a tapped push taking you to its agent (in this tab, told by the service worker, or a
 // new one opened on /?agent=<id>), and a push taken down once its agent no longer waits on anyone.
 
+import { pushHandled } from '../../shared/push';
 import { store } from '../state';
-import { waitingOnSomeone } from '../notify';
+import { pushName } from './index';
 import { registration } from './sw';
+
+/** What a shown push carries (public/sw.js). */
+interface PushData {
+  worker?: string;
+  kind?: string;
+}
+
+const handled = (d: PushData | null) => !!d?.worker && pushHandled(d.kind, store.workers.get(d.worker), Date.now());
 
 export function installApp(open: (workerId: string) => void) {
   void registration();
   if (!('serviceWorker' in navigator)) return;
+  // Push on here, under keys the office no longer has: on again under its new ones.
+  if ('Notification' in window && Notification.permission === 'granted') void import('./push').then((m) => m.refreshPush(pushName()));
 
   navigator.serviceWorker.addEventListener('message', (e: MessageEvent<{ t?: string; worker?: unknown }>) => {
     if (e.data?.t === 'kipdeck.open' && typeof e.data.worker === 'string') open(e.data.worker);
@@ -39,11 +50,7 @@ export function installApp(open: (workerId: string) => void) {
     tidy = window.setTimeout(async () => {
       const r = await registration();
       const shown = (await r?.getNotifications().catch(() => [])) ?? [];
-      for (const n of shown) {
-        const id = (n.data as { worker?: string } | null)?.worker;
-        const w = id ? store.workers.get(id) : undefined;
-        if (w && !waitingOnSomeone(w)) n.close();
-      }
+      for (const n of shown) if (handled(n.data as PushData | null)) n.close();
     }, 1000);
   });
 }

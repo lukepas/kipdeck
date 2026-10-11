@@ -45,10 +45,13 @@ async function act(action, worker) {
   }).catch(() => {});
 }
 
-/** To the agent: a Kipdeck tab already open is brought up and told which, else one opens on it. */
+/**
+ * To the agent: an inbox tab already open is brought up and told which, else one opens on it. Only
+ * the inbox (/) knows the message; a Deck or login tab left open would just come up and do nothing.
+ */
 async function open(data) {
   const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-  const home = wins.find((c) => new URL(c.url).pathname === '/') || wins[0];
+  const home = wins.find((c) => new URL(c.url).pathname === '/');
   if (home) {
     await home.focus().catch(() => {});
     home.postMessage({ t: 'kipdeck.open', worker: data.worker });

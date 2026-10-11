@@ -122,9 +122,13 @@ test('installable, present while used, push on at the first Deploy, and off agai
       endpoint: ${JSON.stringify(ENDPOINT)},
       options: { applicationServerKey: null },
       toJSON: function () { return { endpoint: ${JSON.stringify(ENDPOINT)}, keys: ${JSON.stringify(keys)} }; },
-      unsubscribe: function () { sub = null; return Promise.resolve(true); },
+      unsubscribe: function () { sub = null; sessionStorage.removeItem('fake-sub'); return Promise.resolve(true); },
     };
-    PushManager.prototype.subscribe = function () { sub = fake; return Promise.resolve(fake); };
+    // The subscription outlives a reload, as a real one does.
+    if (sessionStorage.getItem('fake-sub')) sub = fake;
+    // Subscribed under keys the office no longer has (its vapid.json went): any other 65-byte key.
+    if (sessionStorage.getItem('stale-key')) fake.options.applicationServerKey = new Uint8Array(65).fill(4).buffer;
+    PushManager.prototype.subscribe = function (o) { fake.options.applicationServerKey = o.applicationServerKey.buffer; sessionStorage.removeItem('stale-key'); sub = fake; sessionStorage.setItem('fake-sub', '1'); return Promise.resolve(fake); };
     PushManager.prototype.getSubscription = function () { return Promise.resolve(sub); };
   `);
   const page = await context.newPage();
@@ -177,6 +181,18 @@ test('installable, present while used, push on at the first Deploy, and off agai
   assert.equal(await act('https://fcm.googleapis.com/fcm/send/someone-else'), 403);
   assert.equal(await act(ENDPOINT), 200);
   await page.waitForFunction(() => [...(window as any).__lite.store.workers.values()].some((x: { snooze?: { by: string } }) => x.snooze?.by === 'Tess'), null, { timeout: 5_000 });
+
+  // A tapped push with no Kipdeck tab open opens /?agent=<id>: the inbox selects that agent and
+  // tidies the address.
+  const agentId = await page.evaluate(() => [...(window as any).__lite.store.workers.values()].find((x: { kind: string }) => x.kind === 'agent').id as string);
+  // This time the browser's subscription is under keys the office no longer has: loading the page
+  // subscribes again under the office's own.
+  await page.evaluate(() => sessionStorage.setItem('stale-key', '1'));
+  await page.goto(`${base}/?agent=${encodeURIComponent(agentId)}`);
+  await page.waitForFunction((id) => (window as any).__lite?.home.selected === id, agentId, { timeout: 15_000 });
+  assert.equal(new URL(page.url()).search, '', 'the address is tidied');
+  await page.waitForFunction(() => !sessionStorage.getItem('stale-key'), null, { timeout: 10_000 });
+  assert.equal((await devices()).length, 1, 'still one device after subscribing again');
 
   // Settings > Notifications: push is on, this device is listed, and a second Deploy doesn't ask again.
   await page.locator('#btn-avatar').click();

@@ -15,7 +15,9 @@ import { encrypt, keysOk, newVapidKeys, vapidAuth, vapidOk, type ReceiverKeys, t
 const SUBJECT = 'https://github.com/zbagdzevicius/kipdeck';
 /** The push services browsers use: Google's (Chrome, Edge, Android), Mozilla's, Apple's and Microsoft's. */
 const PUSH_HOSTS = ['fcm.googleapis.com', 'android.googleapis.com', 'push.services.mozilla.com', 'push.apple.com', 'notify.windows.com'];
-const MAX_DEVICES = 50;
+/** The most devices the office keeps, and the most one person has: a new one past that replaces their oldest. */
+const MAX_DEVICES = 200;
+const MAX_PER_PERSON = 10;
 const TIMEOUT_MS = 10_000;
 
 /** One device as the office keeps it. */
@@ -98,8 +100,15 @@ export class PushDevices {
     // A browser subscribes with the public key it was handed, so there is one by now.
     this.keys();
     const had = this.list.find((d) => d.endpoint === endpoint);
+    const rest = this.list.filter((d) => d !== had);
+    // One person can't push everyone else's devices out: past their own limit their oldest goes,
+    // and a full office takes no one new.
+    if (rest.length >= MAX_DEVICES && !rest.some((d) => d.person === who.person)) return 'The office keeps no more devices. Remove an old one in Settings first.';
+    const mine = rest.filter((d) => d.person === who.person);
+    // Newest first, so the oldest are at the end; a full office makes room from their own too.
+    const drop = new Set(mine.slice(rest.length >= MAX_DEVICES ? Math.min(MAX_PER_PERSON, mine.length) - 1 : MAX_PER_PERSON - 1));
     const device: Device = { id: had?.id ?? randomBytes(6).toString('hex'), person: who.person, name: who.name.slice(0, 60), label: who.label.slice(0, 60), at: Date.now(), endpoint, keys: { p256dh: sub.keys.p256dh, auth: sub.keys.auth } };
-    this.list = [device, ...this.list.filter((d) => d !== had)].slice(0, MAX_DEVICES);
+    this.list = [device, ...rest.filter((d) => !drop.has(d))].slice(0, MAX_DEVICES);
     this.persist();
     return undefined;
   }

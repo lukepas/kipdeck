@@ -97,7 +97,7 @@ export function createServices(ctx: Ctx): BuildingServices {
     if (err) console.error(`kipdeck: --webhook: ${err}`);
   }
   // Pushes to people's devices first, the channel above once they go unanswered (push/alerts.ts).
-  const push = createPush(cfg.dataDir, webhook, project);
+  const push = createPush(cfg.dataDir, webhook, project, (id) => ctx.workerFloor(id)?.workers.ownerOf(id));
 
   // The machine's CPU and memory, for the monitor on the wall and a warning before hiring, and the
   // most workers the office runs at once, across every floor (--max-workers, or Settings).

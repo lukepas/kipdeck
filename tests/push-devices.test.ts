@@ -108,3 +108,14 @@ test('a device is labeled from its browser', () => {
   assert.equal(deviceLabel('Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) Gecko/20100101 Firefox/131.0'), 'Firefox on macOS');
   assert.equal(deviceLabel(undefined), 'Browser');
 });
+
+test("one person can't push everyone else's devices out: past ten their own oldest goes", () => {
+  const d = new PushDevices(home());
+  const ola = { person: personOf('acc2', 'Ola'), name: 'Ola', label: 'Firefox on Linux' };
+  assert.equal(d.add({ endpoint: 'https://fcm.googleapis.com/fcm/send/ola', keys: browserKeys() }, ola), undefined);
+  for (let i = 0; i < 25; i++) assert.equal(d.add({ endpoint: `https://fcm.googleapis.com/fcm/send/tess-${i}`, keys: browserKeys() }, who), undefined);
+  assert.equal(d.of(ola.person).length, 1, "Ola's phone is still there");
+  assert.equal(d.of(who.person).length, 10);
+  assert.ok(d.byEndpoint('https://fcm.googleapis.com/fcm/send/tess-24'), 'the newest is kept');
+  assert.equal(d.byEndpoint('https://fcm.googleapis.com/fcm/send/tess-0'), undefined, 'the oldest went');
+});
