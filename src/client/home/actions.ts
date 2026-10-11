@@ -12,6 +12,7 @@ import { toast } from '../ui/dom';
 import type { BoardActions } from '../ui/github/prompts';
 import { reminderAction, runReminder, type MissionDeps } from '../ui/mission/act';
 import { confirmDialog, lostWorktreeDialog, openPrompt } from '../ui/prompt';
+import { clearComments, commentsNote } from './brief';
 import { onProject, openDeploy } from './deploy';
 import * as lazy from './lazy';
 import { currentView, entryRef, entryTitle } from './list';
@@ -145,7 +146,12 @@ export function createActions(net: Net): Actions {
       subtitle: 'Your note goes to the same agent, which keeps working on the same branch.',
       placeholder: 'What should it change?',
       submitLabel: 'Send back',
-      onSubmit: (note) => net.send({ t: 'inbox.sendBack', workerId: e.id, note }),
+      // The line comments left on its diff go with it, anchored (brief/comments.ts).
+      initial: commentsNote(e.id),
+      onSubmit: (note) => {
+        net.send({ t: 'inbox.sendBack', workerId: e.id, note });
+        clearComments(e.id);
+      },
     });
   }
 

@@ -3,6 +3,7 @@
 import type { ClientMsg } from '../../../shared/protocol.js';
 import { accountsHandlers } from './accounts.js';
 import { bountiesHandlers, bountiesView } from './bounties.js';
+import { briefHandlers } from './brief.js';
 import { changesHandlers, changesHooks } from './changes.js';
 import { floorHandlers, projectView } from './floors.js';
 import { githubHandlers, issuesView, pullsView } from './github.js';
@@ -32,6 +33,7 @@ import type { FeatureHooks, HandlerMap, ViewPieces } from './types.js';
 export const handlers: HandlerMap<ClientMsg> = {
   ...accountsHandlers,
   ...bountiesHandlers,
+  ...briefHandlers,
   ...changesHandlers,
   ...floorHandlers,
   ...githubHandlers,
