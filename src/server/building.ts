@@ -173,7 +173,7 @@ export class Building {
    */
   cancel(id: string, why: string, may: (owner: string | undefined) => boolean): string | undefined {
     const p = this.pendingFloor(id);
-    if (!p) return this.defs.some((d) => d.id === id) ? 'That floor is already there' : 'No such floor';
+    if (!p) return this.defs.some((d) => d.id === id) ? 'That floor is already there' : 'No such project';
     if (!may(p.owner)) return 'Only admins, or whoever added it, can stop a floor on its way';
     if (!p.run) return "There's no clone to stop yet - try again in a moment";
     p.run.stop(why);
@@ -291,7 +291,7 @@ export class Building {
    */
   remove(id: string, by = '?'): FloorDef | string {
     const def = this.defs.find((d) => d.id === id);
-    if (!def) return this.pendingFloor(id) ? "That floor is still being cloned - stop it, or take it off once it's there" : 'No such floor';
+    if (!def) return this.pendingFloor(id) ? "That floor is still being cloned - stop it, or take it off once it's there" : 'No such project';
     this.defs = this.defs.filter((d) => d !== def);
     if (this.isLocal(id)) {
       this.localId = undefined;

@@ -1,4 +1,5 @@
 import './terminal.css';
+import { agentHeading, agentRef } from '../../shared/agentname';
 import { termMeta } from './term-meta';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
@@ -129,7 +130,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
   if (!info) return;
 
   const dot = unitSign(info.deskId);
-  const title = h('h2', {}, info.kind === 'agent' ? `${engineLabel(info, store.project)} · ${info.name}` : info.name);
+  const title = h('h2', {}, info.kind === 'agent' ? `${engineLabel(info, store.project)} · ${agentHeading(info)}` : 'Shell');
   const pill = h('span.pill', {}, '');
   const cost = h('span.cost', {});
   const viewers = h('div.viewers', {});
@@ -174,7 +175,7 @@ export function openTerminal(net: Net, workerId: string, onChanges?: () => void,
   );
   host.append(mic.live);
   // The keypad has an Esc of its own, and a on its prompt box.
-  const el = h('div.modal.term', { role: 'dialog', 'aria-label': `${info.name} console` }, h('header', {}, dot, title, pill, cost, viewers, typed, modelsBtn, keypad ? null : mic.button, keypad ? null : escBtn, onChanges ? changesBtn : null, closeBtn), tabs.bar, meta.el, host, tabs.pages, keypad);
+  const el = h('div.modal.term', { role: 'dialog', 'aria-label': `Terminal of ${agentRef(info)}` }, h('header', {}, dot, title, pill, cost, viewers, typed, modelsBtn, keypad ? null : mic.button, keypad ? null : escBtn, onChanges ? changesBtn : null, closeBtn), tabs.bar, meta.el, host, tabs.pages, keypad);
 
   const term = new Terminal({
     fontFamily: '"JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace',

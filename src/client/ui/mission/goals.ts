@@ -2,6 +2,7 @@
 // in place (Enter saves, Esc cancels), how far each milestone has got and what it has cost, the
 // workers nobody linked to anything, and telling the workers when the mission changes.
 
+import { agentHeading, agentRef } from '../../../shared/agentname';
 import { icon } from '../icons';
 import { duration } from '../../../shared/attention';
 import { MISSION_LIMITS, milestoneProgress, toLink, unlinked } from '../../../shared/mission';
@@ -88,8 +89,8 @@ function milestoneRow(deps: MissionDeps, m: MissionMilestone, i: number, n: numb
       inlineEdit({ text: m.issues.join(', '), empty: 'none yet: add issue numbers like 12, 14', label: 'the issue numbers', max: 400, can, save: (s) => send({ op: 'update', id: m.id, issues: parseIssues(s) }), render: () => h('ul.mc-issues', {}, ...issues) }),
       h('span.mc-label', {}, 'Due'),
       inlineEdit({ text: m.due ?? '', empty: 'no date', label: 'the due date (YYYY-MM-DD)', max: 10, can, save: (s) => send({ op: 'update', id: m.id, due: s.trim() || null }) }),
-      h('span.mc-label', {}, 'Workers'),
-      h('span', {}, workers.length ? workers.map((e) => e.name).join(', ') : 'nobody yet'),
+      h('span.mc-label', {}, 'Agents'),
+      h('span', {}, workers.length ? workers.map((e) => agentRef(e)).join(', ') : 'nobody yet'),
     ),
   );
 }
@@ -101,11 +102,11 @@ let tellOpen = false;
 function tellBox(deps: MissionDeps): HTMLElement | null {
   const agents = [...store.workers.values()].filter((w) => w.kind === 'agent' && !w.lost && store.rosterEntry(w.id));
   if (!agents.length || (!store.mission.statement && !store.mission.milestones.length)) return null;
-  const picks = agents.map((w) => ({ id: w.id, box: h('input', { type: 'checkbox', checked: w.status === 'working' }) as HTMLInputElement, name: w.name }));
-  const box = h('details.mc-tell', { open: tellOpen }, h('summary', {}, 'Tell the workers about a change')) as HTMLDetailsElement;
+  const picks = agents.map((w) => ({ id: w.id, box: h('input', { type: 'checkbox', checked: w.status === 'working' }) as HTMLInputElement, name: agentHeading(w) }));
+  const box = h('details.mc-tell', { open: tellOpen }, h('summary', {}, 'Tell the agents about a change')) as HTMLDetailsElement;
   box.addEventListener('toggle', () => (tellOpen = box.open));
   box.append(
-    h('p.mc-note', {}, 'Workers are never interrupted when the mission changes. Pick the ones to tell: they get a one-line note as their next prompt, and carry on with their task.'),
+    h('p.mc-note', {}, 'Agents are never interrupted when the mission changes. Pick the ones to tell: they get a one-line note as their next prompt, and carry on with their task.'),
     h('div.mc-picks', {}, ...picks.map((p) => h('label', {}, p.box, p.name))),
     h('button.btn.small', { type: 'button', onclick: () => deps.net.send({ t: 'mission.tell', workers: picks.filter((p) => p.box.checked).map((p) => p.id) }) }, 'Tell them'),
   );
@@ -130,7 +131,7 @@ function emptyMission(deps: MissionDeps, can: boolean, statement: HTMLElement): 
     {},
     h('span.mc-empty-icon', { 'aria-hidden': 'true' }, icon('target', 28)),
     h('h3', {}, 'Give this deck a mission'),
-    h('p', {}, 'Every unit deployed here is told the mission, and Mission control links their work to its milestones, so you see what moves it forward and what does not.'),
+    h('p', {}, 'Every agent deployed here is told the mission, and Mission control links their work to its milestones, so you see what moves it forward and what does not.'),
     can ? h('div.mc-empty-btns', {}, h('button.btn.primary', { type: 'button', onclick: write }, 'Write the mission')) : h('p.mc-note', {}, 'Only admins can set the mission on this deck.'),
     h(
       'div.mc-example',
@@ -181,8 +182,8 @@ export function renderGoals(deps: MissionDeps): HTMLElement {
     h('section.mc-statement', {}, h('h3', {}, 'Mission'), statement, h('p.mc-note', {}, [changed, m.locked ? 'Locked: only admins can change it' : ''].filter(Boolean).join(' · '))),
     store.me.admin ? h('label.mc-lock', {}, h('input', { type: 'checkbox', checked: !!m.locked, onchange: (e: Event) => deps.net.send({ t: 'mission.lock', locked: (e.target as HTMLInputElement).checked }) }), 'Only admins can change the mission') : null,
     h('section', {}, h('h3', {}, 'Milestones'), m.milestones.length ? h('ol.mc-milestones', {}, ...m.milestones.map((x, i) => milestoneRow(deps, x, i, m.milestones.length, can))) : h('p.mc-empty', {}, 'No milestones yet. Each one is a step of the mission, with the issues it covers.'), can && m.milestones.length < MISSION_LIMITS.milestones ? add : null),
-    lost.length ? h('section.mc-unlinked', {}, h('h3', {}, `Unlinked: ${lost.length}`), h('p.mc-note', {}, 'Workers with no milestone and no issue: link each one, so the reason it is here is not lost.'), h('ul', {}, ...lost.map((e) => linkRow(e.id, e.name)))) : null,
-    noTarget ? h('p.mc-note.mc-link-hint', {}, 'Add a milestone to link workers to it.') : null,
+    lost.length ? h('section.mc-unlinked', {}, h('h3', {}, `Unlinked: ${lost.length}`), h('p.mc-note', {}, 'Agents with no milestone and no issue: link each one, so the reason it is here is not lost.'), h('ul', {}, ...lost.map((e) => linkRow(e.id, agentHeading(e))))) : null,
+    noTarget ? h('p.mc-note.mc-link-hint', {}, 'Add a milestone to link agents to it.') : null,
     tellBox(deps),
     renderAgents(),
     renderLogbook(),

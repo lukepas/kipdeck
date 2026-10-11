@@ -8,7 +8,7 @@ export const projectView: ViewPieces['project'] = (_ctx, floor) => floor?.projec
 export const floorHandlers = {
   'floor.go'(ctx, c, msg) {
     const floor = ctx.floors.get(str(msg.floor, 64));
-    if (!floor) ctx.warn(c, ctx.building.pending().some((d) => d.id === msg.floor) ? "That floor is still being cloned - it'll be ready in a moment" : 'No such floor');
+    if (!floor) ctx.warn(c, ctx.building.pending().some((d) => d.id === msg.floor) ? "That floor is still being cloned - it'll be ready in a moment" : 'No such project');
     else ctx.goToFloor(c, floor, arrivalSpot(msg.at));
   },
   'floor.repos'(ctx, c, msg) {

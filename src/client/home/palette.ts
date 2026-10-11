@@ -1,6 +1,7 @@
 // Ctrl+K: one box to reach any agent by its task or name, and every command the inbox has. Type to
 // narrow it, Up and Down to move, Enter to go.
 
+import { agentBadge } from '../../shared/agentname';
 import { h, openModal } from '../ui/dom';
 import { icon, type IconName } from '../ui/icons';
 import { store } from '../state';
@@ -27,7 +28,7 @@ export function openPalette(commands: () => Command[]) {
       const r = rankOf(e.id);
       return {
         label: entryTitle(e),
-        hint: `${e.name} · ${whereLabel(e)}`,
+        hint: `${agentBadge(e)} · ${whereLabel(e)}`,
         icon: 'unit' as IconName,
         run: () => home.select(e.id, r?.att.level === 'review' ? 'changes' : 'terminal'),
       };

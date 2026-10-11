@@ -1,10 +1,10 @@
 // Pull requests for a worker's branch: finding and opening them, drafting their title and body,
 // and listing the pull requests of one change across repositories in each of them.
+import { agentBadge, agentRef } from '../../shared/agentname.js';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import type { WorkerInfo } from '../../shared/protocol.js';
 import { normalizeRepo, sameRepo } from '../../shared/floors.js';
-import { DESK_BY_ID } from '../../shared/layout.js';
 import { isBusy } from '../../shared/status.js';
 import { gh } from '../github.js';
 import type { GhAs } from '../signins.js';
@@ -130,7 +130,7 @@ function draftPr(info: WorkerInfo, commits: string[], by: string, other?: { home
   parts.push(`## Commits\n\n${commits.map((c) => `- \`${c.slice(0, c.indexOf(' '))}\` ${c.slice(c.indexOf(' ') + 1)}`).join('\n')}`);
   if (closes && !other) parts.push(`Closes #${closes}`);
   else if (closes && other?.home) parts.push(`Part of ${other.home}#${closes}`);
-  parts.push(`_Opened from Kipdeck by ${by} · ${info.name} at ${DESK_BY_ID.get(info.deskId)?.label ?? info.deskId}_`);
+  parts.push(`_Opened from Kipdeck by ${by} · ${agentBadge(info)}_`);
   return { title, body: parts.join('\n\n') };
 }
 
@@ -169,7 +169,7 @@ export class WorkerPrs {
       target.pr = { number: pr.number, url: pr.url };
       this.ctx.persist();
       this.ctx.emit(w);
-      this.ctx.events.toast(`${info.name} opened PR #${pr.number}${other ? ` in ${other.name}` : ''}`, 'info');
+      this.ctx.events.toast(`${agentRef(info, { start: true })} opened PR #${pr.number}${other ? ` in ${other.name}` : ''}`, 'info');
     });
   }
 
@@ -180,7 +180,7 @@ export class WorkerPrs {
    */
   link(id: string, pr: { number: number; url: string } | undefined): string | undefined {
     const w = this.ctx.workers.get(id);
-    if (!w) return 'No such worker';
+    if (!w) return 'No such agent';
     w.info.pr = pr;
     // Whoever says so knows better than what the office gathered.
     w.info.pastPrs = undefined;
@@ -198,17 +198,17 @@ export class WorkerPrs {
    */
   async openPr(id: string, by: string, as?: GhAs): Promise<{ prs: OpenedPr[]; failed: string[] } | string> {
     const w = this.ctx.workers.get(id);
-    if (!w) return 'No such worker';
+    if (!w) return 'No such agent';
     const { info } = w;
     const wt = info.worktree;
-    if (!wt) return `${info.name} works in the main checkout - only workers with their own worktree can open a PR`;
-    if (info.prOpening) return `${info.name}'s pull request is already being opened`;
+    if (!wt) return `${agentRef(info, { start: true })} works in the main checkout - only agents with their own worktree can open a PR`;
+    if (info.prOpening) return `The pull request of ${agentRef(info)} is already being opened`;
     if (isBusy(info.status)) {
-      return `${info.name} is still ${info.status === 'needs_input' ? 'waiting on input' : info.status} - wait until it's done`;
+      return `${agentRef(info, { start: true })} is still ${info.status === 'needs_input' ? 'waiting on input' : info.status} - wait until it's done`;
     }
     if (info.repos?.length) return this.openPrs(w, by, as);
     const cwd = path.join(this.ctx.dir, wt.path);
-    if (!existsSync(cwd)) return `${info.name}'s worktree is gone (${wt.path})`;
+    if (!existsSync(cwd)) return `The worktree of ${agentRef(info)} is gone (${wt.path})`;
     info.prOpening = true;
     this.ctx.emit(w);
     try {
@@ -217,7 +217,7 @@ export class WorkerPrs {
       const branch = info.worktree?.branch ?? wt.branch;
       const commits = (await run('git', ['log', '--reverse', '--format=%h %s', `${wt.base}..${branch}`], cwd)).split('\n').filter(Boolean);
       const dirty = (await run('git', ['status', '--porcelain'], cwd)) !== '';
-      if (!commits.length) return dirty ? `${info.name} hasn't committed anything yet - ask it to commit first` : `${info.name} has no commits on ${branch} yet`;
+      if (!commits.length) return dirty ? `${agentRef(info, { start: true })} hasn't committed anything yet - ask it to commit first` : `${agentRef(info, { start: true })} has no commits on ${branch} yet`;
       const open = await findOpenPr(branch, cwd);
       if (open) {
         info.pr = open;
@@ -232,7 +232,7 @@ export class WorkerPrs {
       this.ctx.persist();
       return { prs: [{ number, url, existed: false, dirty }], failed: [] };
     } catch (err) {
-      return `Couldn't open a PR for ${info.name}: ${(err as Error).message}`;
+      return `Couldn't open a PR for ${agentRef(info)}: ${(err as Error).message}`;
     } finally {
       info.prOpening = false;
       // The worker may have been sent home meanwhile; an update would bring it back as a ghost.
@@ -255,7 +255,7 @@ export class WorkerPrs {
       ...info.repos!.map((r) => ({ ...r, own: false, set: (pr: { number: number; url: string }) => (r.pr = pr) })),
     ];
     const gone = parts.filter((p) => !existsSync(path.join(this.ctx.dir, p.path)));
-    if (gone.length) return `${info.name}'s worktree${gone.length > 1 ? 's' : ''} of ${gone.map((p) => p.name).join(', ')} ${gone.length > 1 ? 'are' : 'is'} gone`;
+    if (gone.length) return `The worktree${gone.length > 1 ? 's' : ''} of ${agentRef(info)} in ${gone.map((p) => p.name).join(', ')} ${gone.length > 1 ? 'are' : 'is'} gone`;
     info.prOpening = true;
     this.ctx.emit(w);
     const prs: (OpenedPr & { cwd: string })[] = [];
@@ -290,7 +290,7 @@ export class WorkerPrs {
       }
       if (!prs.length) {
         if (failed.length) return failed.join('; ');
-        return uncommitted.length ? `${info.name} hasn't committed anything yet in ${uncommitted.join(', ')} - ask it to commit first` : `${info.name} has no commits on ${wt.branch} yet in any of its repositories`;
+        return uncommitted.length ? `${agentRef(info, { start: true })} hasn't committed anything yet in ${uncommitted.join(', ')} - ask it to commit first` : `${agentRef(info, { start: true })} has no commits on ${wt.branch} yet in any of its repositories`;
       }
       if (prs.length > 1 && prs.some((p) => !p.existed)) {
         for (const p of prs) {

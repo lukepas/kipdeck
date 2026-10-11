@@ -13,7 +13,8 @@ import { AGE_PREFIX, ageLabel, ALWAYS_OPEN, buildInbox, changeSummary, INBOX_SEC
 import type { Waiting } from '../../shared/metrics';
 import { waitTone, waitWords } from '../../shared/wait';
 import type { Reminder, RosterEntry } from '../../shared/protocol';
-import { headline, rowStatus } from '../../shared/rowtext';
+import { rowStatus } from '../../shared/rowtext';
+import { agentName, agentRef, type Nameable } from '../../shared/agentname';
 import { PROVIDER_META, type AgentProvider } from '../../shared/providers';
 import { store } from '../state';
 import { h } from '../ui/dom';
@@ -44,11 +45,20 @@ export function agentMark(provider: AgentProvider | undefined, kind: RosterEntry
   return h('span.agent-mark', { class: `p-${provider ?? 'agent'}`, title: label, 'aria-hidden': 'true' }, letters);
 }
 
-/** What the agent is on, in plain words: its task, else its first prompt (on this project), else what it's doing. */
-export function entryTitle(e: RosterEntry): string {
+/** The entry with what this page knows of its worker (its title and first prompt, on this project). */
+function nameable(e: RosterEntry): Nameable {
   const w = e.floor === store.floor ? store.workers.get(e.id) : undefined;
-  const head = headline(e.task ?? (w?.title ? { name: w.title } : undefined), w?.prompt ?? e.activity);
-  return head.title || (e.status === 'idle' ? 'Waiting for a task' : 'Getting started');
+  return { ...e, title: w?.title, prompt: w?.prompt };
+}
+
+/** What the agent is on, in plain words: its one name (shared/agentname.ts), the same as every surface. */
+export function entryTitle(e: RosterEntry): string {
+  return agentName(nameable(e));
+}
+
+/** The agent as a toast or a dialog names it: its task in quotes, else "the Codex agent". */
+export function entryRef(e: RosterEntry, start = false): string {
+  return agentRef(nameable(e), { start });
 }
 
 /** "api / fix-the-login-3f2a": the project, and the branch when it has one of its own (the pane's header). */
@@ -121,7 +131,7 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
   // A merge on its way: the row no longer waits on you, so its clock stops and its status counts down.
   const away = held || inFlight(e.id);
   const style = waits && !away ? `--wait:${waitShare(r.att.since, now).toFixed(3)}` : '';
-  const spoken = [`${title}: ${e.name}`, provider, LEVEL_LABEL[r.att.level], waits && !away ? `${AGE_PREFIX[section]} ${waitWords(now - r.att.since)}` : '', owner ? `deployed by ${e.createdBy}` : ''].filter(Boolean).join(', ');
+  const spoken = [title, provider, LEVEL_LABEL[r.att.level], waits && !away ? `${AGE_PREFIX[section]} ${waitWords(now - r.att.since)}` : '', owner ? `deployed by ${e.createdBy}` : ''].filter(Boolean).join(', ');
   return h(
     'li.row',
     { class: `l-${r.att.level} s-${section}${selected ? ' selected' : ''}${r.att.snoozed ? ' snoozed' : ''}${held ? ' holding' : ''}`, 'data-id': e.id, 'data-section': section, style: style || undefined },
@@ -158,7 +168,7 @@ function reminderRow(r: Reminder, deps: ListDeps, now: number): HTMLElement {
 
 /**
  * A row's clock: "waiting 38s" in its wait's tone. A wait on you carries `data-since`, so clock.ts
- * ticks its text each second without drawing the list again; the calm sections ("ready 2h", "snoozed
+ * ticks its text each second without drawing the list again; the calm sections ("idle 2h", "snoozed
  * 1h") move on with the 30 second redraw.
  */
 function ageEl(section: InboxSection, att: { since: number; snoozed?: boolean }, now: number): HTMLElement {

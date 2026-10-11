@@ -2,6 +2,7 @@
 // terminal, the Changes window, a pull request and the queue, and how it gets you to another floor;
 // the rest (riding there first, snoozing, linking, sending home, marking finished work seen) is here.
 
+import { agentRef } from '../../../shared/agentname';
 import { attention, type NextAction } from '../../../shared/attention';
 import type { Reminder, ReviewPull, RosterEntry, TimelineEvent } from '../../../shared/protocol';
 import type { ReviewPayout } from '../../../shared/review';
@@ -65,7 +66,7 @@ export function onFloor(deps: MissionDeps, where: { floor: string; floorName: st
 
 /** Runs `then` on the worker's floor: right away on yours, else once you've got there. */
 export function onFloorOf(deps: MissionDeps, e: RosterEntry, then: () => void) {
-  onFloor(deps, { floor: e.floor, floorName: e.floorName, deskId: e.deskId, what: e.name }, then);
+  onFloor(deps, { floor: e.floor, floorName: e.floorName, deskId: e.deskId, what: agentRef(e) }, then);
 }
 
 /** Looking at a finished worker's work from the Review tab is seeing it, as opening its terminal is. */
@@ -75,7 +76,7 @@ const SEES: ReadonlySet<NextAction | 'terminal'> = new Set(['review', 'open-pr',
 export function runAction(deps: MissionDeps, e: RosterEntry, action: NextAction | 'terminal') {
   onFloorOf(deps, e, () => {
     const w = store.workers.get(e.id);
-    if (!w) return toast(`${e.name} has gone home`, 'warn');
+    if (!w) return toast(`${agentRef(e, { start: true })} has stopped`, 'warn');
     closeAllModals();
     if (SEES.has(action) && w.status === 'done' && !w.acked) deps.net.send({ t: 'worker.ack', workerId: w.id });
     const pr = e.pr?.number;
@@ -102,7 +103,7 @@ export function runAction(deps: MissionDeps, e: RosterEntry, action: NextAction 
         return confirmSendHome(deps.net, w);
       case 'give-task':
         return openPrompt({
-          title: `Give ${w.name} a task`,
+          title: `Give ${agentRef(w)} a task`,
           subtitle: store.mission.statement ? 'It already knows the deck\'s mission; say what to do.' : undefined,
           onSubmit: (text) => deps.net.send({ t: 'worker.prompt', workerId: w.id, prompt: text }),
         });
@@ -130,7 +131,7 @@ export function runPayout(deps: MissionDeps, p: ReviewPayout, action: NextAction
   openPrompt({
     title: 'Your payout wallet',
     placeholder: 'Your Solana devnet address',
-    subtitle: 'A Solana devnet address (not a key). Bounties your workers\' pull requests claim are paid there once a person merges them and an admin approves.',
+    subtitle: 'A Solana devnet address (not a key). Bounties your agents\' pull requests claim are paid there once a person merges them and an admin approves.',
     onSubmit: (text) => deps.net.send({ t: 'bounty.wallet', address: text.trim() }),
   });
 }
@@ -139,7 +140,7 @@ export function runPayout(deps: MissionDeps, p: ReviewPayout, action: NextAction
 export function runReminder(deps: MissionDeps, r: Reminder) {
   const e = r.worker ? store.rosterEntry(r.worker) : undefined;
   if (e) return runAction(deps, e, r.kind === 'unpushed-asleep' ? 'review' : attention(e, Date.now()).action);
-  if (r.worker) return toast('That worker has gone home', 'warn');
+  if (r.worker) return toast('That agent has stopped', 'warn');
   onFloor(deps, { floor: r.floor, floorName: r.floorName, what: 'a reminder' }, () => {
     if (r.pr) {
       closeAllModals();

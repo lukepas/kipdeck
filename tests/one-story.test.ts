@@ -65,7 +65,7 @@ test('the tab title says the count, the project and the name in plain ASCII', ()
 });
 
 test('five states, named once: the sections and the ranking use STATE_LABEL', () => {
-  assert.deepEqual(Object.values(STATE_LABEL), ['Needs you', 'Stuck', 'To review', 'Working', 'Ready']);
+  assert.deepEqual(Object.values(STATE_LABEL), ['Needs you', 'Stuck', 'To review', 'Working', 'Idle']);
   assert.equal(LEVEL_LABEL, STATE_LABEL);
   for (const s of INBOX_SECTIONS) assert.ok(Object.values(STATE_LABEL).includes(SECTION_LABEL[s]), `${s} is called ${SECTION_LABEL[s]}`);
 });

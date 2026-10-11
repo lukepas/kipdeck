@@ -21,22 +21,22 @@ const SHOWN = 12;
 /** Folders people keep their code in, in the home folder: the first one that's there is the suggestion. */
 const CODE_FOLDERS = ['Workspace', 'workspace', 'Developer', 'code', 'Code', 'projects', 'Projects', 'repos', 'src', 'dev', 'git', 'GitHub', 'github'];
 
-const SETUP_HELP = `${CLI} setup - pick where projects are cloned and which ones are floors
+const SETUP_HELP = `${CLI} setup - pick where projects are cloned and which ones to add
 
 Usage:
   ${CLI} setup [--projects <dir>] [--project <owner/repo>]... [--home <dir>]
 
 In a terminal it walks you through it: the workspace folder new projects are cloned
-into, signing the GitHub CLI in, and picking repositories to clone as floors. Given
+into, signing the GitHub CLI in, and picking repositories to clone as projects. Given
 --projects or --project it does just that and asks nothing, for scripts.
 
-Nothing asks this when the office starts: its setup card in the browser does the
-same. Run it while the office is stopped.
+Nothing asks this when Kipdeck starts: its setup card in the browser does the
+same. Run it while Kipdeck is stopped.
 
 Options:
-      --home <dir>        The office to set up (default ~/agent-office, env AGENT_OFFICE_HOME)
+      --home <dir>        The Kipdeck to set up (default ~/agent-office, env AGENT_OFFICE_HOME)
       --projects <dir>    Clone new projects into <dir>/<owner>/<repo> from now on
-      --project <repo>    Clone this repository (owner/name or a GitHub URL) as a floor.
+      --project <repo>    Clone this repository (owner/name or a GitHub URL) as a project.
                           Repeat it for more than one
   -h, --help              Show this help
 `;
@@ -85,7 +85,7 @@ export async function setupCommand(argv: string[]): Promise<number> {
   const dataDir = path.join(dir, '.agent-office');
   mkdirSync(dataDir, { recursive: true, mode: 0o700 });
   if (await officeRunning(dataDir)) {
-    console.error(`kipdeck setup: the office in ${tildify(dir)} is running. Add projects from its elevator, and pick the workspace folder in Settings.`);
+    console.error(`kipdeck setup: Kipdeck in ${tildify(dir)} is running. Add projects from its project list in the browser, and pick the workspace folder in Settings.`);
     return 1;
   }
   const building = new Building(dataDir, inProject ? path.join(os.homedir(), 'agent-office') : dir, { terminal: true });
@@ -111,8 +111,8 @@ export async function setupCommand(argv: string[]): Promise<number> {
   const floors = building.list();
   console.log(
     floors.length
-      ? `\n  The office in ${tildify(dir)} has ${floors.length} floor${floors.length === 1 ? '' : 's'}: ${floors.map((f) => f.name).join(', ')}.`
-      : `\n  The office in ${tildify(dir)} has no floors yet: every project is a floor of the building.`,
+      ? `\n  Kipdeck in ${tildify(dir)} has ${floors.length} project${floors.length === 1 ? '' : 's'}: ${floors.map((f) => f.name).join(', ')}.`
+      : `\n  Kipdeck in ${tildify(dir)} has no projects yet.`,
   );
   await walkthrough(building, dataDir, true);
   return 0;
@@ -123,7 +123,7 @@ async function walkthrough(building: Building, dataDir: string, askFolder: boole
   if (askFolder) await pickFolder(building);
   const login = await githubLogin(dataDir);
   if (!login) {
-    console.log('\n  Add projects from the elevator in the office once gh is ready (or run `kipdeck setup` again).');
+    console.log('\n  Add projects from the project list in the browser once gh is ready (or run `kipdeck setup` again).');
     return;
   }
   await pickProjects(building, login);
@@ -132,7 +132,7 @@ async function walkthrough(building: Building, dataDir: string, askFolder: boole
 async function pickFolder(building: Building) {
   const now = building.projectsDirState();
   const suggestion = now.custom ? now.dir : tildify(suggestedFolder(building.projectsDir));
-  console.log(`\n  Where should the office clone your projects? Each one goes in <folder>/<owner>/<repo>.`);
+  console.log(`\n  Where should Kipdeck clone your projects? Each one goes in <folder>/<owner>/<repo>.`);
   for (;;) {
     const answer = (await ask(`     Folder [${suggestion}]: `)) || suggestion;
     const err = building.setProjectsDir(answer, whoAmI());
@@ -171,14 +171,14 @@ async function githubLogin(cwd: string): Promise<string | undefined> {
     }
     if (me.missing) {
       const how = process.platform === 'darwin' ? 'brew install gh' : process.platform === 'win32' ? 'winget install GitHub.cli' : 'sudo apt install gh';
-      console.log(`\n  The office clones projects with the GitHub CLI (gh), which isn't installed.\n     Install it (${how}, or see https://cli.github.com), then run \`gh auth login\`.`);
+      console.log(`\n  Kipdeck clones projects with the GitHub CLI (gh), which isn't installed.\n     Install it (${how}, or see https://cli.github.com), then run \`gh auth login\`.`);
       return undefined;
     }
     if (!me.signedOut || tried) {
       console.log(`\n  Couldn't reach GitHub with gh: ${me.error}`);
       return undefined;
     }
-    console.log("\n  The office clones projects with the GitHub CLI (gh), and it isn't signed in.");
+    console.log("\n  Kipdeck clones projects with the GitHub CLI (gh), and it isn't signed in.");
     if (/^n/i.test(await ask('     Sign in to GitHub now? [Y/n] '))) return undefined;
     spawnSync('gh', ['auth', 'login'], { stdio: 'inherit' });
   }
@@ -213,7 +213,7 @@ async function pickProjects(building: Building, login: string) {
   let added = 0;
   for (;;) {
     const answer = await ask(
-      added ? '\n  Add another? A number, owner/name or a word to search. Enter opens the office: ' : '\n  Pick a number, type owner/name or a word to search. Enter skips: ',
+      added ? '\n  Add another? A number, owner/name or a word to search. Enter opens Kipdeck: ' : '\n  Pick a number, type owner/name or a word to search. Enter skips: ',
     );
     if (!answer) return;
     let pick: string | undefined;
@@ -249,7 +249,7 @@ async function addFloor(building: Building, repo: string, by: string): Promise<b
     console.log(`     x ${r}`);
     return false;
   }
-  console.log(`     ok ${r.repo ?? r.name} is floor ${building.list().indexOf(r) + 1}`);
+  console.log(`     ok ${r.repo ?? r.name} is project ${building.list().indexOf(r) + 1}`);
   return true;
 }
 
@@ -258,7 +258,7 @@ function printRepos(list: RepoChoice[], building: Building) {
   const nameWidth = Math.min(40, Math.max(...list.map((r) => r.name.length)));
   const floors = building.list();
   list.forEach((r, i) => {
-    const note = floors.some((f) => sameRepo(f.repo, r.name)) ? '(a floor already)' : [r.private ? 'private' : '', r.description ?? ''].filter(Boolean).join(' · ');
+    const note = floors.some((f) => sameRepo(f.repo, r.name)) ? '(a project already)' : [r.private ? 'private' : '', r.description ?? ''].filter(Boolean).join(' · ');
     const line = `    ${String(i + 1).padStart(2)}. ${r.name.padEnd(nameWidth)}  ${note}`.trimEnd();
     console.log(line.length > width ? `${line.slice(0, width - 3)}...` : line);
   });

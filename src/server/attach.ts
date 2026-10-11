@@ -30,7 +30,7 @@ Options:
                           \`cursor-agent ls\` lists them)
       --list              List this folder's sessions and exit
   -y, --yes               Don't stop to ask whether the agent was quit
-      --home <dir>        The office to attach to (default ~/agent-office)
+      --home <dir>        The Kipdeck to attach to (default ~/agent-office)
   -h, --help              Show this help
 `;
 

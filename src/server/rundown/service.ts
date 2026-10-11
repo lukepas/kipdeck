@@ -17,7 +17,7 @@ import { mkdirSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import type { Floor } from '../floor.js';
 import type { ServerMsg } from '../../shared/protocol.js';
-import { callSign } from '../../shared/callsign.js';
+import { agentHeading } from '../../shared/agentname.js';
 import { readState as readRundownState, toState } from '../../shared/rundown/diff.js';
 import { buildRundown } from '../../shared/rundown/model.js';
 import { LIMITS, type Facts, type Judgement, type Rundown, type RundownState } from '../../shared/rundown/schema.js';
@@ -377,7 +377,7 @@ export function hasJudgement(j: Judgement | null): j is Judgement {
   return !!j && (!!j.parts?.length || !!j.nextStep);
 }
 
-/** The unit holding each of the floor's worktrees, by absolute path. */
+/** The agent holding each of the project's worktrees, named by its task, by absolute path. */
 function owners(floor: Floor): (p: string) => string | null {
   // Git names worktrees by their real path (/private/var on a Mac): compare real paths on both sides.
   const real = (p: string) => {
@@ -388,7 +388,7 @@ function owners(floor: Floor): (p: string) => string | null {
     }
   };
   const map = new Map<string, string>();
-  for (const w of floor.workers.list()) if (w.worktree) map.set(real(path.resolve(floor.dir, w.worktree.path)), callSign(w.deskId) || w.name);
+  for (const w of floor.workers.list()) if (w.worktree) map.set(real(path.resolve(floor.dir, w.worktree.path)), agentHeading(w, 40));
   return (p) => map.get(real(p)) ?? null;
 }
 

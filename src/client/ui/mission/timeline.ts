@@ -126,9 +126,9 @@ export function renderTimeline(deps: MissionDeps, net: Net): HTMLElement {
   const filters = !t.events.length ? null : h(
     'div.mc-filters',
     {},
-    showFloor ? picker('Floor', 'floor', 'All decks', new Map(store.floors.filter((f) => !f.cloning).map((f) => [f.id, f.name]))) : null,
+    showFloor ? picker('Project', 'floor', 'All projects', new Map(store.floors.filter((f) => !f.cloning).map((f) => [f.id, f.name]))) : null,
     goals.size ? picker('Goal', 'goal', 'Every goal', goals) : null,
-    workers.size ? picker('Worker', 'worker', 'Every worker', workers) : null,
+    workers.size ? picker('Agent', 'worker', 'Every agent', workers) : null,
   );
   const oldest = t.events.at(-1);
   const older = t.more && oldest ? h('button.btn.small.tl-more', { type: 'button', onclick: () => net.send({ t: 'timeline.get', before: oldest.at }) }, 'Load older') : null;

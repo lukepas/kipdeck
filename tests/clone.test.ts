@@ -161,7 +161,7 @@ test('a clone can be stopped by an admin or whoever added it', async (t) => {
   await until(() => !alive(pid));
   assert.ok(!alive(pid));
   assert.deepEqual(building.list(), []);
-  assert.equal(building.cancel(id, 'again', () => true), 'No such floor');
+  assert.equal(building.cancel(id, 'again', () => true), 'No such project');
 });
 
 test('a restart mid-clone picks the clone back up, and it becomes its floor', async (t) => {

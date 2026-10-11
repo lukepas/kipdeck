@@ -14,7 +14,8 @@ import { reminderAction, runReminder, type MissionDeps } from '../ui/mission/act
 import { confirmDialog, lostWorktreeDialog, openPrompt } from '../ui/prompt';
 import { onProject, openDeploy } from './deploy';
 import * as lazy from './lazy';
-import { currentView, entryTitle } from './list';
+import { currentView, entryRef, entryTitle } from './list';
+import { agentRef } from '../../shared/agentname';
 import { holdMerge, isHeld, mergeLanded, undoMerge } from './merge-hold';
 import { home } from './state';
 
@@ -77,13 +78,13 @@ export function createActions(net: Net): Actions {
     if (!w?.lost || !w.worktree) return;
     const others = [...store.workers.values()].filter((o) => o.lost && o.id !== w.id);
     lostWorktreeDialog({
-      name: w.name,
+      name: agentRef(w),
       worktree: w.worktree,
       lost: w.lost,
       workspace: w.repos?.length ? w.worktree.path.replace(/[\\/][^\\/]*$/, '') : undefined,
-      others: others.map((o) => o.name),
+      others: others.map((o) => agentRef(o)),
       rebuild: (all) => net.send({ t: 'worker.rebuild', workerId: w.id, all }),
-      sendHome: () => stop(store.rosterEntry(w.id) ?? ({ id: w.id, name: w.name } as RosterEntry)),
+      sendHome: () => stop(store.rosterEntry(w.id) ?? ({ id: w.id, name: w.name, kind: w.kind, provider: w.provider, task: w.task, floor: store.floor } as RosterEntry)),
     });
   }
 
@@ -140,7 +141,7 @@ export function createActions(net: Net): Actions {
 
   function sendBack(e: RosterEntry) {
     openPrompt({
-      title: `Send back to ${e.name}`,
+      title: `Send back to ${entryRef(e)}`,
       subtitle: 'Your note goes to the same agent, which keeps working on the same branch.',
       placeholder: 'What should it change?',
       submitLabel: 'Send back',
@@ -151,9 +152,9 @@ export function createActions(net: Net): Actions {
   function stop(e: RosterEntry, merged = false) {
     const branch = e.branch ? ` Its branch ${e.branch} stays, so nothing it did is lost.` : '';
     if (merged) {
-      return confirmDialog(`Archive ${e.name}?`, 'Its work is merged. Its session ends, and its worktree and branch are removed.', 'Archive', () => net.send({ t: 'worker.kill', workerId: e.id, cleanup: 'all' }));
+      return confirmDialog(`Archive ${entryRef(e)}?`, 'Its work is merged. Its session ends, and its worktree and branch are removed.', 'Archive', () => net.send({ t: 'worker.kill', workerId: e.id, cleanup: 'all' }));
     }
-    confirmDialog(`Stop ${e.name}?`, `Its session ends and it leaves the inbox.${branch}`, 'Stop agent', () => net.send({ t: 'worker.kill', workerId: e.id, cleanup: 'keep' }));
+    confirmDialog(`Stop ${entryRef(e)}?`, `Its session ends and it leaves the inbox.${branch}`, 'Stop agent', () => net.send({ t: 'worker.kill', workerId: e.id, cleanup: 'keep' }));
   }
 
   function act(e: RosterEntry, action: RowAction) {
@@ -174,7 +175,7 @@ export function createActions(net: Net): Actions {
       case 'fix-checks':
         if (!e.pr) return show(e.id, 'changes');
         net.send({ t: 'worker.prompt', workerId: e.id, prompt: fixChecksPrompt(e.pr.number) });
-        return toast(`Asked ${e.name} to fix the checks on PR #${e.pr.number}`);
+        return toast(`Asked ${entryRef(e)} to fix the checks on PR #${e.pr.number}`);
       case 'resume':
         net.send({ t: 'worker.resume', workerId: e.id });
         return show(e.id, 'terminal');
@@ -183,7 +184,7 @@ export function createActions(net: Net): Actions {
       case 'send-home':
         return stop(e, e.pr?.state === 'merged');
       case 'give-task':
-        return openPrompt({ title: `Give ${e.name} a task`, placeholder: 'What should it do?', onSubmit: (text) => net.send({ t: 'worker.prompt', workerId: e.id, prompt: text }) });
+        return openPrompt({ title: `Give ${entryRef(e)} a task`, placeholder: 'What should it do?', onSubmit: (text) => net.send({ t: 'worker.prompt', workerId: e.id, prompt: text }) });
       default:
         return show(e.id, 'terminal');
     }

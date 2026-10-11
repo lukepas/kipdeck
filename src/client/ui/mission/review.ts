@@ -94,5 +94,5 @@ export function renderReview(deps: MissionDeps, ranked: Ranked[], now: number): 
     if (!r) return i.pull ? pullRow(deps, i, now, showFloor) : i.payout ? payoutRow(deps, i, now, showFloor) : null;
     return rosterRow(deps, r, now, { showFloor, extra: [...facts(i), bountyChip(r.entry)] });
   });
-  return h('div.mc-review', {}, h('p.mc-note', {}, 'Oldest first. Opening a finished worker\'s work marks it seen.'), h('ul.mc-rows', {}, ...rows));
+  return h('div.mc-review', {}, h('p.mc-note', {}, 'Oldest first. Opening a finished agent\'s work marks it seen.'), h('ul.mc-rows', {}, ...rows));
 }

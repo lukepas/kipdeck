@@ -277,11 +277,11 @@ export function lostWorktreeDialog(opts: LostWorktreeOptions) {
   const { name, others } = opts;
   const { branch } = opts.worktree;
   const folder = opts.workspace ?? opts.worktree.path;
-  const title = `${name}'s worktree was deleted`;
+  const title = `Worktree deleted: ${name}`;
   const what = {
-    here: `Its branch ${branch} is still here. Rebuilding checks it out again in the same place, and ${name} carries on its conversation; only uncommitted changes went with the folder.`,
-    origin: `Its branch ${branch} was deleted too, but it had been pushed: rebuilding checks origin's copy out again in the same place, and ${name} carries on its conversation.`,
-    gone: `Its branch ${branch} was deleted too and was never pushed, so the work on it is gone. Rebuilding makes the branch again from where it started, and ${name} carries on its conversation.`,
+    here: `Its branch ${branch} is still here. Rebuilding checks it out again in the same place, and the agent carries on its conversation; only uncommitted changes went with the folder.`,
+    origin: `Its branch ${branch} was deleted too, but it had been pushed: rebuilding checks origin's copy out again in the same place, and the agent carries on its conversation.`,
+    gone: `Its branch ${branch} was deleted too and was never pushed, so the work on it is gone. Rebuilding makes the branch again from where it started, and the agent carries on its conversation.`,
   }[opts.lost.branch];
   const one = h('button.btn.primary', { type: 'button' }, 'Rebuild worktree');
   const all = others.length ? h('button.btn', { type: 'button' }, `Rebuild all ${others.length + 1}`) : null;
@@ -294,9 +294,9 @@ export function lostWorktreeDialog(opts: LostWorktreeOptions) {
     h(
       'div.body',
       {},
-      h('p', { style: 'margin:0 0 10px;font-weight:700' }, `${folder} was deleted outside agent-office, so ${name} ${opts.openTerminal ? 'is running in a folder that no longer exists' : "can't start there"}.`),
+      h('p', { style: 'margin:0 0 10px;font-weight:700' }, `${folder} was deleted outside Kipdeck, so the agent ${opts.openTerminal ? 'is running in a folder that no longer exists' : "can't start there"}.`),
       h('p.wt-status', { style: 'margin:0' }, what),
-      others.length ? h('p.wt-status.warn', {}, `${plural(others.length, 'other worker')} on this deck lost ${others.length === 1 ? 'its worktree' : 'their worktrees'} too: ${others.join(', ')}.`) : null,
+      others.length ? h('p.wt-status.warn', {}, `${plural(others.length, 'other agent')} in this project lost ${others.length === 1 ? 'its worktree' : 'their worktrees'} too: ${others.join(', ')}.`) : null,
     ),
     h('footer', {}, home, h('span.grow'), look, all, one),
   );

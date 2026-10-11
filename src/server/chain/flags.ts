@@ -142,8 +142,8 @@ export function takeChainFlag(f: ChainFlags, argv: string[], i: number): number 
 
 export const CHAIN_HELP = `      --x402              Take paid tasks over x402 (testnets only, env
                           AGENT_OFFICE_X402=1): POST /api/x402/task puts a task
-                          on a floor's queue, held until an admin approves it
-      --x402-pay-to <0x>  The office's Base Sepolia address paid tasks pay to
+                          on a project's queue, held until an admin approves it
+      --x402-pay-to <0x>  Kipdeck's Base Sepolia address paid tasks pay to
       --x402-pay-to-solana <addr>
                           ...and its Solana devnet address, to take devnet USDC too
       --x402-repos <list> owner/name repositories paid tasks may be for (required)
@@ -151,7 +151,7 @@ export const CHAIN_HELP = `      --x402              Take paid tasks over x402 (
       --x402-facilitator <url>
                           Verifies and settles payments (default x402.org's)
       --x402-asset <0x>   A test token standing in for Circle's Base Sepolia USDC
-      --attest            Attest every office PR a person merges on Base Sepolia
+      --attest            Attest every agent PR a person merges on Base Sepolia
                           (EAS; env AGENT_OFFICE_ATTEST=1)
       --attest-repos <list>
                           owner/name public repositories to attest (required:
@@ -168,14 +168,14 @@ export const CHAIN_HELP = `      --x402              Take paid tasks over x402 (
                           The schema UID (default: onchain/attest/deployments)
       --attest-mode eas|event, --attest-contract <0x>
                           The MergeAttestor fallback instead of EAS
-      --reputation        ERC-8004 identities for the office's agents, and
+      --reputation        ERC-8004 identities for Kipdeck's agents, and
                           feedback for every attested merge, revert or close
                           (needs --attest; env AGENT_OFFICE_REPUTATION=1)
       --reputation-registrar-key-file <path>
                           Owns the identities (default
                           ~/.config/agent-office-chain/base-registrar.json)
       --reputation-card-base <https url>
-                          Where this office is reached: agent cards are
+                          Where this Kipdeck is reached: agent cards are
                           <url>/agents/<id>.json
       --reputation-identity <0x>, --reputation-registry <0x>
                           Registries on a local node (default: the live

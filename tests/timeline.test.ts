@@ -108,12 +108,13 @@ test('the watch writes what changed, never what was already so', () => {
 
     const texts = t.list({ limit: 100 }).events.reverse().map((e) => e.text);
     assert.deepEqual(texts, [
-      'Ed hired Mochi for Auth on #12',
-      'Mochi wants permission to use Bash',
-      'Mochi finished: Fix login',
-      'Mochi woke up and is working again',
-      'Mochi stood down after 25 min on task, $1.50',
-      'Pip got stuck: working but silent for 12 min',
+      // Named by the task (shared/agentname.ts), else its CLI: never a nickname, never its activity line.
+      'Ed deployed the agent for Auth on #12',
+      'Agent wants permission to use Bash',
+      '"Fix login" finished',
+      'Agent is working again',
+      'Agent stopped after 25 min on task, $1.50',
+      'Agent got stuck: working but silent for 12 min',
       'PR #3 opened: PR 3',
       'PR #1 closed without merging: PR 1',
       'Ana merged PR #2: PR 2',
@@ -151,9 +152,9 @@ test('the digest says what happened while you were away in one line', () => {
     ev({ kind: 'progress', goal: 'm1', name: 'Auth rewrite', from: 3, to: 4, of: 7, at: NOW - 2 * MIN }),
     ev({ kind: 'progress', goal: 'm1', name: 'Auth rewrite', from: 4, to: 5, of: 7, at: NOW - MIN }),
   ];
-  assert.equal(digest(events, ranked).summary, '3 PRs merged, 2 workers finished and wait for review, 1 got stuck, Auth rewrite moved from 3/7 to 5/7');
+  assert.equal(digest(events, ranked).summary, '3 PRs merged, 2 agents finished and wait for review, 1 got stuck, Auth rewrite moved from 3/7 to 5/7');
   const more = digest([ev({ kind: 'done', worker: 'a' }), ev({ kind: 'done', worker: 'c' }), ev({ kind: 'needs-input', worker: 'd' }), ev({ kind: 'hired', worker: 'e' }), ev({ kind: 'sent-home', worker: 'f' }), ev({ kind: 'task-failed' }), ev({ kind: 'milestone-done', name: 'Docs' })], ranked);
-  assert.equal(more.summary, '2 workers finished (1 still waits for review), 1 waits on an answer, 1 queue task failed, 1 worker hired, 1 stood down, Docs completed');
+  assert.equal(more.summary, '2 agents finished (1 still waits for review), 1 waits on an answer, 1 queue task failed, 1 agent deployed, 1 stopped, Docs completed');
   assert.equal(digest([], ranked).summary, 'Nothing much happened');
   assert.equal(digest([ev({ kind: 'mission' }), ev({ kind: 'milestone' }), ev({ kind: 'pr-opened' }), ev({ kind: 'meeting-ended' })], ranked).summary, '1 PR opened, 1 meeting ended, the mission changed, 1 milestone change');
   assert.equal(digest([ev({ kind: 'resumed', worker: 'a' })], ranked).summary, '1 small thing happened');
@@ -168,7 +169,7 @@ test("a permission prompt's input never reaches the timeline, and an older offic
     const w = new TimelineWatch(t, { goalTitle: () => undefined, officePull: () => false }, NOW - MIN);
     w.worker(worker());
     w.worker(worker({ status: 'needs_input', activity: 'Approve the plan?' }));
-    assert.equal(t.list({ limit: 1 }).events[0].text, 'Mochi needs input', 'a question is said to be one, not quoted');
+    assert.equal(t.list({ limit: 1 }).events[0].text, 'Agent needs input', 'a question is said to be one, not quoted');
     const file = path.join(dir, 'timeline.jsonl');
     writeFileSync(file, `${JSON.stringify({ id: 'a1', at: NOW, kind: 'needs-input', text: 'Mochi needs input: Wants permission: Bash: export TOKEN=sk-123' })}\n`);
     assert.equal(new Timeline(dir, 'f1').list({ limit: 1 }).events[0].text, 'Mochi wants permission to use Bash');
@@ -195,7 +196,7 @@ test('every turn of the same task is one "finished" on the timeline, not one per
     t.mock.timers.tick(TIMELINE_FOLD_MS);
     w.worker(worker({ status: 'working', task: { name: 'Docs', summary: '' } }));
     w.worker(worker({ status: 'done', task: { name: 'Docs', summary: '' } }));
-    assert.deepEqual(tl.list({ limit: 100 }).events.filter((e) => e.kind === 'done').map((e) => e.text).reverse(), ['Mochi finished: Fix login', 'Mochi finished: Docs', 'Mochi finished: Docs']);
+    assert.deepEqual(tl.list({ limit: 100 }).events.filter((e) => e.kind === 'done').map((e) => e.text).reverse(), ['"Fix login" finished', '"Docs" finished', '"Docs" finished']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

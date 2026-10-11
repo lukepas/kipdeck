@@ -15,7 +15,7 @@ and opens it. --print prints the link instead.
 
 Options:
       --print             Print the link, don't open a browser
-      --home <dir>        The office to open (default ~/agent-office, env AGENT_OFFICE_HOME)
+      --home <dir>        The ${PRODUCT} to open (default ~/agent-office, env AGENT_OFFICE_HOME)
   -h, --help              Show this help
 `;
 
@@ -32,7 +32,7 @@ export async function askOffice(home: string | undefined, route: string, body: u
     return { ok: false, error: notRunning };
   }
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-  if (!res.ok) return { ok: false, error: typeof data.error === 'string' ? data.error : `The office answered ${res.status}` };
+  if (!res.ok) return { ok: false, error: typeof data.error === 'string' ? data.error : `${PRODUCT} answered ${res.status}` };
   return { ok: true, url: local.url, data };
 }
 

@@ -39,15 +39,16 @@ export const ATTENTION_LEVELS: readonly AttentionLevel[] = ['needs-you', 'stuck'
 
 /**
  * The five states, named once for every surface: the home page's sections, the bridge's rail and
- * instruments, Mission control, the deck and the landing page. 'parked' is Ready, the word the status
- * pill uses for an idle agent, so an agent is called one thing everywhere.
+ * instruments, Mission control, the deck and the landing page. 'parked' is Idle, the word the status
+ * pill uses for an idle agent, so an agent is called one thing everywhere. (It was Ready, which in
+ * code review reads as ready to merge: the opposite of what it holds.)
  */
 export const STATE_LABEL: Readonly<Record<AttentionLevel, string>> = {
   'needs-you': 'Needs you',
   stuck: 'Stuck',
   review: 'To review',
   working: 'Working',
-  parked: 'Ready',
+  parked: 'Idle',
 };
 /** The ranking's name for a level: STATE_LABEL, under the name the views already import. */
 export const LEVEL_LABEL = STATE_LABEL;
@@ -166,7 +167,7 @@ export function attention(e: RosterEntry, now: number): Attention {
   }
   if (busy) return at('working', 'look', e.workingSince ?? waited, e.status === 'starting' ? 'Starting' : 'Working');
   if (e.status === 'exited' || e.status === 'offline') return at('parked', 'resume', waited, 'Asleep');
-  return at('parked', e.tasked ? 'review' : 'give-task', waited, 'Ready');
+  return at('parked', e.tasked ? 'review' : 'give-task', waited, 'Idle');
 }
 
 /**

@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { NAV } from '../../shared/copy.js';
+import { exitedLine, resumeFailed, signInNeeded } from './says.js';
 import path from 'node:path';
 import type { AgentChoice, AgentEffort, AgentProvider, TerminalHit, WorkerInfo, WorkerKind, WorkerRepo, WorkerStatus } from '../../shared/protocol.js';
 import { AGENT_PROVIDERS, takesEffort, takesModel } from '../../shared/providers.js';
@@ -276,11 +276,11 @@ export class WorkerManager {
       if (typeof made === 'string') return made;
       if ('repos' in made) {
         ({ worktree: wt, repos: others } = made);
-        for (const note of made.notes) this.events.toast(`${name}'s worktree of ${note}`, 'info');
+        for (const note of made.notes) this.events.toast(`The new agent's worktree of ${note}`, 'info');
       } else {
         const { note, ...ref } = made;
         wt = ref;
-        if (note) this.events.toast(`${name}'s worktree ${note}`, 'info');
+        if (note) this.events.toast(`The new agent's worktree ${note}`, 'info');
       }
     }
     const info: WorkerInfo = {
@@ -325,7 +325,7 @@ export class WorkerManager {
   /** Starts a worker that isn't running again, carrying on its session, with `prompt` as its next message. */
   resume(id: string, prompt?: string): string | undefined {
     const w = this.workers.get(id);
-    if (!w) return 'No such worker';
+    if (!w) return 'No such agent';
     if (w.pty || w.dsh) return 'Worker is already running';
     if (this.worktrees.checkLost(w, true)) return lostMessage(w.info);
     clockWork(w.info, 'starting');
@@ -514,7 +514,7 @@ export class WorkerManager {
   /** Types a prompt into the agent's input box and submits it; `by` is the person who sent it, if any. */
   prompt(id: string, text: string, by?: string): string | undefined {
     const w = this.workers.get(id);
-    if (!w) return 'No such worker';
+    if (!w) return 'No such agent';
     if (w.dsh) {
       const clean = text.replace(/\r\n?/g, '\n').trim();
       if (!clean) return 'Empty prompt';
@@ -705,7 +705,7 @@ export class WorkerManager {
     if (info.repos?.length) env.GIT_CEILING_DIRECTORIES = [path.dirname(cwd), env.GIT_CEILING_DIRECTORIES].filter(Boolean).join(path.delimiter);
     if (w.owner && this.runAs) {
       if (adapter?.signIn && !this.runAs.claudeReady(w.owner)) {
-        this.startFailed(w, `whoever hired ${info.name} (${info.createdBy}) isn't signed in to Claude - they can sign in under ${NAV.signins}, then press R here`);
+        this.startFailed(w, signInNeeded(info));
         return;
       }
       this.runAs.apply(w.owner, env, [this.dir, cwd]);
@@ -828,7 +828,7 @@ export class WorkerManager {
       // Resuming a conversation Claude no longer has ("No conversation found") exits before Claude
       // ever starts. Start a fresh one rather than leave the worker asleep.
       if (adapter?.freshIfResumeFails && resumeSessionId && info.status === 'starting' && !this.closing) {
-        this.events.toast(`${info.name}'s last conversation couldn't be resumed - starting a fresh one`, 'warn');
+        this.events.toast(resumeFailed(info), 'warn');
         this.launch(w, undefined, undefined);
         return;
       }
@@ -836,7 +836,7 @@ export class WorkerManager {
       clockWork(info, 'exited');
       info.status = 'exited';
       const hint = info.kind === 'shell' ? ' - press R to restart' : info.sessionId ? ' - press R to resume' : '';
-      const msg = `\r\n\x1b[2m[${info.name} exited with code ${exitCode}${hint}]\x1b[0m\r\n`;
+      const msg = exitedLine(info, exitCode, hint);
       term.write(msg);
       if (w.viewers.size) this.events.data(info.id, msg, [...w.viewers.keys()]);
       w.screenDirty = true;

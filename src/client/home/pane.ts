@@ -215,7 +215,7 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
         'div.pane-title',
         {},
         h('h2', {}, entryTitle(e)),
-        h('p', {}, [e.name, agent, model, worked > 60_000 ? `worked ${duration(worked)}` : '', whereLabel(e)].filter(Boolean).join(' · ')),
+        h('p', {}, [agent, model, worked > 60_000 ? `worked ${duration(worked)}` : '', whereLabel(e)].filter(Boolean).join(' · ')),
       ),
       h(
         'div.pane-acts',

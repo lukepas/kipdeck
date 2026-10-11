@@ -5,7 +5,7 @@ import type { Ranked } from './attention.js';
 import type { TimelineEvent } from './protocol.js';
 
 export interface Digest {
-  /** "3 PRs merged, 2 workers finished and wait for review, 1 got stuck, Auth rewrite moved from 3/7 to 5/7". */
+  /** "3 PRs merged, 2 agents finished and wait for review, 1 got stuck, Auth rewrite moved from 3/7 to 5/7". */
   summary: string;
   /** The same, a piece each. */
   parts: string[];
@@ -45,7 +45,7 @@ export function digest(events: readonly TimelineEvent[], ranked: readonly Ranked
   const done = workers(sorted, 'done');
   if (done.size) {
     const waiting = [...done].filter((id) => level.get(id)?.level === 'review' && level.get(id)?.action === 'review').length;
-    parts.push(waiting === done.size ? `${n(done.size, 'worker')} finished and wait${done.size === 1 ? 's' : ''} for review` : waiting ? `${n(done.size, 'worker')} finished (${waiting} still wait${waiting === 1 ? 's' : ''} for review)` : `${n(done.size, 'worker')} finished`);
+    parts.push(waiting === done.size ? `${n(done.size, 'agent')} finished and wait${done.size === 1 ? 's' : ''} for review` : waiting ? `${n(done.size, 'agent')} finished (${waiting} still wait${waiting === 1 ? 's' : ''} for review)` : `${n(done.size, 'agent')} finished`);
   }
   const stuck = workers(sorted, 'stuck');
   if (stuck.size) parts.push(`${stuck.size} got stuck`);
@@ -54,9 +54,9 @@ export function digest(events: readonly TimelineEvent[], ranked: readonly Ranked
   const failed = sorted.filter((e) => e.kind === 'task-failed').length;
   if (failed) parts.push(`${n(failed, 'queue task')} failed`);
   const hired = workers(sorted, 'hired').size;
-  if (hired) parts.push(`${n(hired, 'worker')} hired`);
+  if (hired) parts.push(`${n(hired, 'agent')} deployed`);
   const home = workers(sorted, 'sent-home').size;
-  if (home) parts.push(`${home} stood down`);
+  if (home) parts.push(`${home} stopped`);
   const opened = sorted.filter((e) => e.kind === 'pr-opened').length;
   if (opened) parts.push(`${n(opened, 'PR')} opened`);
   const meetings = sorted.filter((e) => e.kind === 'meeting-ended').length;
