@@ -122,6 +122,17 @@ test('on a phone, an agent has an address, Back closes it, and the pane is thumb
   );
   assert.deepEqual(small, [], 'every control in the pane is at least 44px');
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth), 390, 'nothing scrolls sideways');
+  // The terminal fits its box: the end of a long line isn't cut off at the screen's edge.
+  await page.locator('.term-host .xterm-screen').waitFor();
+  const term = await page.evaluate(() => {
+    // Inside the padding, which is the space the terminal was measured to fit in.
+    const box = document.querySelector<HTMLElement>('.term-host .xterm')!;
+    const host = document.querySelector<HTMLElement>('.term-host')!;
+    const right = Math.min(box.getBoundingClientRect().right - parseFloat(getComputedStyle(box).paddingRight), host.getBoundingClientRect().right - parseFloat(getComputedStyle(host).paddingRight));
+    const screen = document.querySelector('.term-host .xterm-screen')!.getBoundingClientRect();
+    return { host: Math.round(right), screen: Math.round(screen.right) };
+  });
+  assert.ok(term.screen <= term.host, `the terminal's text ends at ${term.screen}px, inside its box (${term.host}px)`);
 
   // The browser's Back (a phone's back gesture) closes the agent and stays in the inbox.
   await page.goBack();

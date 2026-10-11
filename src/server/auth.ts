@@ -163,6 +163,27 @@ export class Auth {
     return `${payload}.${this.sign(payload, !!accountId)}`;
   }
 
+  /**
+   * What a paired device's sign-in is bound to besides the device list: its account's password (a new
+   * one ends it), or for the shared password the password itself (a new office password ends it).
+   * Signing out elsewhere doesn't touch it, so a laptop's Sign out leaves the phone in.
+   */
+  deviceStamp(account?: Account): string {
+    const h = createHmac('sha256', this.deviceKey);
+    if (account) h.update(`account:${account.id}:${account.salt}:${account.hash}`);
+    else h.update('shared:').update(this.key);
+    return h.digest('base64url').slice(0, 22);
+  }
+
+  /** Whether a device on the list still signs in as its owner: the account is there, and neither password changed since it was paired. */
+  deviceLive(d: { account?: string; stamp: string }): boolean {
+    const account = d.account ? this.accounts.get(d.account) : undefined;
+    if (d.account && !account) return false;
+    const want = Buffer.from(this.deviceStamp(account));
+    const got = Buffer.from(d.stamp);
+    return want.length === got.length && timingSafeEqual(want, got);
+  }
+
   /** A paired device's session cookie value (see devices.ts): for its account, or the shared password. */
   issueDevice(deviceId: string, accountId?: string): string {
     const body = { exp: Date.now() + DEVICE_TTL_MS, n: randomBytes(8).toString('hex'), d: deviceId, ...(accountId ? { u: accountId } : {}) };
@@ -209,7 +230,7 @@ export class Auth {
     if (s.device) {
       // A paired device: still on the list, still the same owner, and that owner still signs in.
       const d = this.devices.get(s.device);
-      if (!d || d.account !== s.account?.id) return undefined;
+      if (!d || d.account !== s.account?.id || !this.deviceLive(d)) return undefined;
       if (!s.account) return this.accounts.sharedPassword ? { nonce: s.nonce, exp: s.exp, device: s.device } : undefined;
       const account = this.accounts.get(s.account.id);
       return account ? { account, nonce: s.nonce, exp: s.exp, device: s.device } : undefined;

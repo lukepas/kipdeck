@@ -14,7 +14,7 @@ const TABS: readonly HomeTab[] = ['terminal', 'changes', 'log'];
 /** Longest project or agent id an address carries; ids are far shorter. */
 const MAX_ID = 128;
 
-/** A path segment back to an id, or undefined when it isn't one (empty, too long, or with a slash in it). */
+/** A path segment back to an id, or undefined when it isn't one (empty, a dot path, too long, or with a slash in it). */
 function idOf(seg: string | undefined): string | undefined {
   if (!seg) return undefined;
   let id: string;
@@ -23,7 +23,7 @@ function idOf(seg: string | undefined): string | undefined {
   } catch {
     return undefined;
   }
-  return id && id.length <= MAX_ID && !/[/\\\0-\x1f]/.test(id) ? id : undefined;
+  return id && id !== '.' && id !== '..' && id.length <= MAX_ID && !/[/\\\0-\x1f]/.test(id) ? id : undefined;
 }
 
 /** What an address opens, or undefined when it isn't one of the inbox's. `search` is the query (?tab=...). */

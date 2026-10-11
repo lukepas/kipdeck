@@ -17,6 +17,11 @@ export interface Device {
   by: string;
   createdAt: number;
   lastSeen: number;
+  /**
+   * What its sign-in is bound to besides this list (Auth.deviceStamp): its account's password, or the
+   * shared password. A new password ends it.
+   */
+  stamp: string;
 }
 
 /** A code not used yet: whose session made it, and until when it works. */
@@ -25,6 +30,7 @@ interface Pending {
   account?: string;
   by: string;
   exp: number;
+  stamp: string;
   /** Set once a phone used it, so the page showing it can say so. */
   paired?: { device: string; name: string };
 }
@@ -51,8 +57,8 @@ export class Devices {
       const saved = readStateJson<{ devices?: unknown[] }>(this.file);
       for (const d of saved?.devices ?? []) {
         const v = d as Partial<Device>;
-        if (typeof v?.id === 'string' && typeof v.name === 'string' && typeof v.by === 'string' && typeof v.createdAt === 'number' && typeof v.lastSeen === 'number') {
-          this.list.set(v.id, { id: v.id, name: v.name, by: v.by, createdAt: v.createdAt, lastSeen: v.lastSeen, ...(typeof v.account === 'string' ? { account: v.account } : {}) });
+        if (typeof v?.id === 'string' && typeof v.name === 'string' && typeof v.by === 'string' && typeof v.createdAt === 'number' && typeof v.lastSeen === 'number' && typeof v.stamp === 'string') {
+          this.list.set(v.id, { id: v.id, name: v.name, by: v.by, createdAt: v.createdAt, lastSeen: v.lastSeen, stamp: v.stamp, ...(typeof v.account === 'string' ? { account: v.account } : {}) });
         }
       }
     } catch {
@@ -68,14 +74,18 @@ export class Devices {
     return [...this.list.values()].sort((a, b) => b.lastSeen - a.lastSeen);
   }
 
-  /** A new one-time code for whoever is signed in as `account` (none: the shared password). */
-  offer(by: string, account: string | undefined, now = Date.now()): { id: string; token: string; expiresAt: number } {
+  /**
+   * A new one-time code for whoever is signed in as `account` (none: the shared password). `stamp` is
+   * what the device's sign-in will be bound to (Auth.deviceStamp), taken now, so a new password before
+   * the code is used makes the device it pairs useless too.
+   */
+  offer(by: string, account: string | undefined, stamp: string, now = Date.now()): { id: string; token: string; expiresAt: number } {
     this.sweep(now);
     if (this.pending.size >= MAX_PENDING) this.pending.delete(this.pending.keys().next().value!);
     const token = randomBytes(24).toString('base64url');
     const id = randomBytes(8).toString('hex');
     const exp = now + PAIR_TTL_MS;
-    this.pending.set(hash(token), { id, by, exp, ...(account ? { account } : {}) });
+    this.pending.set(hash(token), { id, by, exp, stamp, ...(account ? { account } : {}) });
     return { id, token, expiresAt: exp };
   }
 
@@ -85,7 +95,7 @@ export class Devices {
     const key = hash(token);
     const p = this.pending.get(key);
     if (!p || p.paired || p.exp <= now) return undefined;
-    const device: Device = { id: randomBytes(12).toString('hex'), name, by: p.by, createdAt: now, lastSeen: now, ...(p.account ? { account: p.account } : {}) };
+    const device: Device = { id: randomBytes(12).toString('hex'), name, by: p.by, createdAt: now, lastSeen: now, stamp: p.stamp, ...(p.account ? { account: p.account } : {}) };
     p.paired = { device: device.id, name };
     this.list.set(device.id, device);
     if (this.list.size > MAX_DEVICES) {

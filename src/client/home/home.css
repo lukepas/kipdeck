@@ -170,7 +170,9 @@ button.sec-h:hover { color: var(--text); }
 
 /* A terminal or Changes window docked in the pane (dom.ts dockModal): the pane is its frame. The
    terminal gets an inner margin, so its text never sits on the edge or runs flush in the light theme. */
-.docked > .modal.term.in-dock > .term-host { padding: 12px 12px 8px 16px; background: #0d131a; /* TERM_THEME.background (ui/termtheme.ts): the margin is the terminal's own color in both themes */ }
+.docked > .modal.term.in-dock > .term-host { padding: 0; background: #0d131a; /* TERM_THEME.background (ui/termtheme.ts): the margin is the terminal's own color in both themes */ }
+/* On the terminal itself, not its box, so the fit addon leaves room for it (see ui/terminal.css). */
+.docked > .modal.term.in-dock > .term-host .xterm { padding: 12px 12px 8px 16px; }
 /* Keyboard hints are for keyboards: none on a touch screen. */
 @media (hover: none) and (pointer: coarse) { .pe-keys, .hb-kbd { display: none; } }
 .docked { flex: 1; min-height: 0; display: flex; flex-direction: column; }

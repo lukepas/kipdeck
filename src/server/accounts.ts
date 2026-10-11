@@ -401,7 +401,7 @@ export function accountsCommand(argv: string[]): number {
       if (!a) return fail(`there's no account called ${arg}`);
       if (cmd === 'signout') {
         accounts.bumpSessions(a.id);
-        console.log(`Signed ${a.name} out of every browser. They're signed out of the office within seconds.`);
+        console.log(`Signed ${a.name} out of every browser. They're signed out of the office within seconds. Phones they paired stay in: revoke those in Settings > Account > Paired devices.`);
         return 0;
       }
       if (cmd === 'revoke') {

@@ -154,7 +154,7 @@ test('a phone pairs once with the code, and gets a sign-in of its own that lasts
   assert.equal((await call('/api/whoami', { host: PHONE, cookie: phone })).status, 401);
   assert.equal((await call('/api/devices', { cookie: me })).json().devices.length, 0);
   assert.equal((await call('/api/whoami', { cookie: me })).status, 200, 'the laptop is still in');
-  assert.deepEqual(said.mock.calls.map((c) => String(c.arguments[0]).trim()), ['iPhone was paired by Office password', 'Work phone (paired by Office password) was revoked']);
+  assert.deepEqual(said.mock.calls.map((c) => String(c.arguments[0]).trim()), ['iPhone was paired with the office password', 'Work phone (paired with the office password) was revoked']);
 });
 
 test('signing out on a paired phone unpairs it, and leaves the other sign-ins alone', async (t) => {

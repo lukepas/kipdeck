@@ -12,8 +12,8 @@ import { publicUrl } from '../src/server/hosts.js';
 import { cleanDeviceName, deviceName, pairLink, PAIR_TTL_MS, seenWords } from '../src/shared/devices.js';
 
 // Pairing a phone: one-time codes, the devices they make, and the long-lived sign-in a device gets,
-// which ends the moment it's revoked (and not before, whatever happens to the account's other
-// sign-ins). Then where a phone can reach the office from, and the words Settings shows.
+// which ends the moment it's revoked or its owner's password changes (and not when the account signs
+// out somewhere else). Then where a phone can reach the office from, and the words Settings shows.
 
 function office(t: { after(fn: () => void): void }) {
   const dir = mkdtempSync(path.join(tmpdir(), 'office-devices-'));
@@ -33,7 +33,7 @@ test('a pairing code works once, only until it runs out, and says when it was us
   const { dir } = office(t);
   const d = new Devices(dir);
   const now = 1_000_000;
-  const o = d.offer('Ada', 'acc1', now);
+  const o = d.offer('Ada', 'acc1', 'stamp', now);
   assert.equal(o.expiresAt, now + PAIR_TTL_MS);
   assert.deepEqual(d.status(o.id, 'acc1', now), { paired: undefined, expired: false });
   // Someone else's session can't watch it.
@@ -45,7 +45,7 @@ test('a pairing code works once, only until it runs out, and says when it was us
   assert.equal(d.redeem(o.token, 'Again', now + 2000), undefined, 'a used code is gone');
   assert.deepEqual(d.status(o.id, 'acc1', now + 2000), { paired: 'iPhone', expired: false });
 
-  const late = d.offer('Ada', undefined, now);
+  const late = d.offer('Ada', undefined, 'stamp', now);
   assert.equal(d.redeem(late.token, 'Late', now + PAIR_TTL_MS), undefined, 'a code that ran out');
   assert.equal(d.redeem('', 'Nothing', now), undefined);
   assert.equal(d.redeem('made-up', 'Guess', now), undefined);
@@ -64,7 +64,7 @@ test("a paired device's sign-in lasts until it's revoked, and only it is signed 
   const { accounts, auth } = office(t);
   const ada = await account(accounts, 'Ada');
   const a = auth();
-  const code = a.devices.offer('Ada', ada.id);
+  const code = a.devices.offer('Ada', ada.id, a.deviceStamp(ada));
   const phone = a.devices.redeem(code.token, 'iPhone')!;
   const token = a.issueDevice(phone.id, ada.id);
   const s = a.verify(token);
@@ -92,8 +92,8 @@ test('revoking the device, or the account, or switching the shared password off 
   const { accounts, auth } = office(t);
   const a = auth();
   const ada = await account(accounts, 'Ada');
-  const mine = a.devices.redeem(a.devices.offer('Ada', ada.id).token, 'Phone')!;
-  const shared = a.devices.redeem(a.devices.offer('Owner', undefined).token, 'Tablet')!;
+  const mine = a.devices.redeem(a.devices.offer('Ada', ada.id, a.deviceStamp(ada)).token, 'Phone')!;
+  const shared = a.devices.redeem(a.devices.offer('Owner', undefined, a.deviceStamp()).token, 'Tablet')!;
   const t1 = a.issueDevice(mine.id, ada.id);
   const t2 = a.issueDevice(shared.id);
   assert.ok(a.verify(t1) && a.verify(t2));
@@ -118,6 +118,38 @@ test('revoking the device, or the account, or switching the shared password off 
 
   accounts.revoke(ada.id);
   assert.equal(a.verify(t1), undefined, 'the account is gone');
+});
+
+test("a new password ends a paired device's sign-in, its account's or the shared one", async (t) => {
+  const { accounts, auth } = office(t);
+  const a = auth();
+  const ada = await account(accounts, 'Ada');
+  const phone = a.devices.redeem(a.devices.offer('Ada', ada.id, a.deviceStamp(ada)).token, 'Phone')!;
+  const token = a.issueDevice(phone.id, ada.id);
+  assert.ok(a.verify(token));
+  assert.ok(a.deviceLive(phone));
+  assert.equal(await accounts.setPassword(ada.id, 'a brand new password'), undefined);
+  assert.equal(a.verify(token), undefined, "Ada's new password signs the phone out");
+  assert.equal(a.deviceLive(phone), false, 'and Settings drops it from the list');
+
+  // A code made before the new password pairs nothing that works.
+  const early = a.devices.offer('Ada', ada.id, a.deviceStamp(accounts.get(ada.id)));
+  await accounts.setPassword(ada.id, 'and another new password');
+  const late = a.devices.redeem(early.token, 'Late phone')!;
+  assert.equal(a.deviceLive(late), false);
+  assert.equal(a.verify(a.issueDevice(late.id, ada.id)), undefined);
+
+  // On the shared password: the office restarted with another password (another verifier).
+  const dir = mkdtempSync(path.join(tmpdir(), 'office-devices-shared-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const secret = randomBytes(16).toString('hex');
+  const salt = randomBytes(16);
+  const before = new Auth(randomBytes(32), salt, secret, accounts, dir);
+  const tablet = before.devices.redeem(before.devices.offer('Owner', undefined, before.deviceStamp()).token, 'Tablet')!;
+  const shared = before.issueDevice(tablet.id);
+  assert.ok(before.verify(shared));
+  const after = new Auth(randomBytes(32), salt, secret, accounts, dir);
+  assert.equal(after.verify(shared), undefined, 'a new office password signs it out');
 });
 
 test('where a phone can reach the office: its secure addresses first, the local network over HTTP, or nowhere', () => {

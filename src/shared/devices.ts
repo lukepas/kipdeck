@@ -8,7 +8,7 @@ export interface DeviceView {
   name: string;
   /** Whose it is: the account's name, or undefined for the shared office password. */
   owner?: string;
-  /** Who showed the code it was paired with. */
+  /** Who showed the code it was paired with; '' when it was a session on the shared office password. */
   by: string;
   createdAt: number;
   lastSeen: number;

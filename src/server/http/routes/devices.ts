@@ -27,8 +27,10 @@ async function body(req: http.IncomingMessage, res: http.ServerResponse): Promis
   send(res, 400, { error: 'Bad request' });
 }
 
-/** The name a session goes by on a device it paired: the account's, else the owner's on their own computer. */
-const whoOf = (ctx: Ctx, s: Session) => s.account?.name ?? (passwordless(ctx.cfg) ? ownerName() || 'You' : 'Office password');
+/** Who paired a device: the account's name, else the owner's on their own computer, else '' for the shared office password. */
+const whoOf = (ctx: Ctx, s: Session) => s.account?.name ?? (passwordless(ctx.cfg) ? ownerName() || 'You' : '');
+/** "paired by Ada", or "paired with the office password". */
+const pairedBy = (d: Device) => (d.by ? `paired by ${d.by}` : 'paired with the office password');
 
 /** A session may see and change a device: its own, or any as an admin. */
 const mayManage = (ctx: Ctx, s: Session, d: Device) => d.account === s.account?.id || ctx.meOf(s.account?.id).admin;
@@ -63,8 +65,13 @@ export const deviceRoutes = {
       const name = cleanDeviceName(b.name) ?? deviceName(String(req.headers['user-agent'] ?? ''));
       const d = ctx.auth.devices.redeem(str(b.token, 128), name);
       if (!d) return send(res, 410, { error: PAIR_GONE });
+      // Its owner's password changed after the code was made: the device would be signed out anyway.
+      if (!ctx.auth.deviceLive(d)) {
+        ctx.auth.devices.remove(d.id);
+        return send(res, 410, { error: PAIR_GONE });
+      }
       ctx.auth.recordSuccess(ip);
-      console.log(`  ${d.name} was paired by ${d.by}`);
+      console.log(`  ${d.name} was ${pairedBy(d)}`);
       return send(res, 200, { ok: true, name: d.name }, deviceCookie(ctx, req, d));
     },
   },
@@ -75,7 +82,7 @@ export const deviceRoutes = {
     auth: 'session',
     handle(ctx, { req, res, session }) {
       if (!ctx.hosts.postOk(req)) return send(res, 403, { error: 'Forbidden' });
-      const o = ctx.auth.devices.offer(whoOf(ctx, session), session.account?.id);
+      const o = ctx.auth.devices.offer(whoOf(ctx, session), session.account?.id, ctx.auth.deviceStamp(session.account));
       const addresses = pairAddresses(ctx.cfg, { host: ctx.hosts.requestHost(req), secure: isSecure(req, ctx.cfg) });
       const offer: PairOffer = { ...o, addresses, loopbackOnly: loopbackOnly(ctx.cfg) };
       return send(res, 200, offer);
@@ -105,6 +112,8 @@ export const deviceRoutes = {
     path: '/api/devices',
     auth: 'session',
     handle(ctx, { res, session }) {
+      // A device whose owner's password changed since can't sign in any more: it leaves the list.
+      for (const d of ctx.auth.devices.all()) if (!ctx.auth.deviceLive(d)) ctx.auth.devices.remove(d.id);
       const list = ctx.auth.devices.all().filter((d) => mayManage(ctx, session, d));
       return send(res, 200, { devices: list.map((d) => view(ctx, d, session)) });
     },
@@ -137,7 +146,7 @@ export const deviceRoutes = {
       const d = ctx.auth.devices.get(str(b.id, 64));
       if (!d || !mayManage(ctx, session, d)) return send(res, 404, { error: 'No such device' });
       ctx.auth.devices.remove(d.id);
-      console.log(`  ${d.name} (paired by ${d.by}) was revoked`);
+      console.log(`  ${d.name} (${pairedBy(d)}) was revoked`);
       ctx.accountsChanged();
       return send(res, 200, { ok: true });
     },

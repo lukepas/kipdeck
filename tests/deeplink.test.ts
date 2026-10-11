@@ -19,7 +19,7 @@ test('an agent, a project and home parse back to what built them', () => {
 });
 
 test('anything else is not one of the inbox addresses', () => {
-  for (const p of ['/deck', '/a', '/a/', '/a/x', '/a/x/y/z', '/p', '/p/', '/p/x/y', '/a//y', '/a/x/%2F', '/a/x/%E0%A4%A', '/q/x', 'a/x/y', `/p/${'x'.repeat(200)}`]) {
+  for (const p of ['/deck', '/a', '/a/', '/a/x', '/a/x/y/z', '/p', '/p/', '/p/x/y', '/a//y', '/a/x/%2F', '/a/x/%E0%A4%A', '/q/x', 'a/x/y', '/a/%2E%2E/y', '/p/.', `/p/${'x'.repeat(200)}`]) {
     assert.equal(parseHomePath(p), undefined, p);
     assert.equal(isDeepHomePath(p), false, p);
   }
