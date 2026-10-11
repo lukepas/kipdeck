@@ -5,7 +5,8 @@
 // ~/.claude/skills/rundown/ from the files this package ships (dist/rundown/rundown.mjs and
 // skills/rundown/), with the installer's list, backup and diff.
 
-import { existsSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CLI } from '../../shared/copy.js';
@@ -89,6 +90,16 @@ export function packagedFiles(root: string): { script: string; skill: string; re
   return { script, skill, readme };
 }
 
+/** Whether `dir` is a folder inside a git checkout: a map is only written into one, never into a home folder or a stray parent. */
+export function inGit(dir: string): boolean {
+  try {
+    execFileSync('git', ['-C', dir, 'rev-parse', '--show-toplevel'], { stdio: 'ignore', timeout: 10_000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** `kipdeck rundown ...`: returns the exit code. `root` is the package's top folder (a test's packed layout). */
 export async function rundownCommand(argv: string[], root = packageRoot()): Promise<number> {
   const a = parseRundownArgs(argv);
@@ -110,6 +121,12 @@ export async function rundownCommand(argv: string[], root = packageRoot()): Prom
     const code = install({ skill: files.skill, readme: existsSync(files.readme) ? files.readme : undefined, dryRun: a.dryRun }, undefined, undefined, files.script);
     if (code === 0 && !a.dryRun) console.log('Type /rundown in Claude Code, in any git checkout, for the full map with Claude\'s read.');
     return code;
+  }
+  // A folder outside git gets nothing written: a missing one or a file the script refuses itself.
+  const where = path.resolve(a.path ?? process.cwd());
+  if (existsSync(where) && statSync(where).isDirectory() && !inGit(where)) {
+    console.error(`${CLI} rundown: ${a.path ?? where} is not inside a git checkout`);
+    return 2;
   }
   let inferred = false;
   const code = await main(['quick', ...(a.path !== undefined ? ['--root', a.path] : []), ...(a.open ? ['--open'] : []), ...(a.gh ? [] : ['--no-gh'])], (r) => {

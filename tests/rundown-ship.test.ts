@@ -16,6 +16,9 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { INFERRED_NOTE } from '../src/shared/rundown/infer.js';
+import { forgetGists, rundownGist } from '../src/server/signal/gist.js';
+import { computeSignal } from '../src/shared/signal.js';
+import { sampleRundown } from './support/rundown-sample.js';
 import { bundleWhy } from './support/bundle.js';
 import { makeRundownFixture } from './support/rundown-fixture.js';
 
@@ -102,7 +105,7 @@ test('kipdeck rundown install, from the unpacked package, into a throwaway HOME'
   assert.equal(help.status, 0);
 });
 
-test('kipdeck rundown <path> writes the map of a checkout with no Claude, kept out of git', () => {
+test('kipdeck rundown <path> writes the map of a checkout with no Claude, kept out of git', async () => {
   const home = path.join(tmp, 'map-home');
   mkdirSync(home, { recursive: true });
   const run = (...args: string[]) => spawnSync(process.execPath, ['--import', 'tsx', path.join(ROOT, 'src', 'server', 'cli.ts'), 'rundown', ...args], { cwd: ROOT, encoding: 'utf8', env: { ...process.env, HOME: home }, timeout: 60_000 });
@@ -112,6 +115,12 @@ test('kipdeck rundown <path> writes the map of a checkout with no Claude, kept o
   assert.match(lines[0], /^Rundown: .*\/\.rundown\/rundown\.html$/);
   assert.match(first.stdout, /First rundown/);
   assert.match(first.stdout, /Parts: .*\[inferred\]/);
+  // The same next step the office's window and Signal's card infer, and the parts in one line.
+  assert.match(first.stdout, /^Next step: .+ \(inferred from the code\)$/m);
+  assert.match(first.stdout, /^\d+ parts?(: |, all )/m);
+  // The page says it too, not "Run /rundown for a suggestion".
+  const page = readFileSync(path.join(fx.repo, '.rundown', 'map.html'), 'utf8');
+  assert.doesNotMatch(page, /Run \/rundown for a suggestion/);
   assert.equal(lines.at(-1), INFERRED_NOTE);
   assert.ok(lines.length <= 12, `a short summary (${lines.length} lines)`);
   const out = path.join(fx.repo, '.rundown');
@@ -126,6 +135,21 @@ test('kipdeck rundown <path> writes the map of a checkout with no Claude, kept o
   const second = run(fx.repo, '--no-gh');
   assert.equal(second.status, 0, second.stderr);
   assert.match(second.stdout, /Nothing changed since the last rundown|Changed since/);
+  // Signal reads that file as no judgement at all: the office's own map still stands in, with its parts and next thing.
+  forgetGists();
+  const gist = await rundownGist('ship', fx.repo, sampleRundown());
+  assert.equal(gist?.source, 'inferred');
+  assert.equal(gist?.parts?.total, 4);
+  const s = computeSignal({ now: Date.now(), goal: null, burn: null, rundown: gist, ranked: [], merges: { week: 0, before: 0 } });
+  assert.equal(s.inferred, true);
+  assert.ok(s.parts && s.next, 'a parts line and a next thing');
+  // A folder outside git: refused, nothing written into it.
+  const nogit = path.join(tmp, 'nogit');
+  mkdirSync(nogit, { recursive: true });
+  const outside = run(nogit, '--no-gh');
+  assert.equal(outside.status, 2);
+  assert.match(outside.stderr, /is not inside a git checkout/);
+  assert.equal(existsSync(path.join(nogit, '.rundown')), false);
   // A folder that isn't there: exit 2, nothing made.
   const missing = run(path.join(tmp, 'no-such'), '--no-gh');
   assert.equal(missing.status, 2);

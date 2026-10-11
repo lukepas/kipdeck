@@ -26,6 +26,7 @@ import { fileURLToPath } from 'node:url';
 import { readState, type Since } from '../../shared/rundown/diff.js';
 import { accentHex, renderPage, type PageStyle } from '../../shared/rundown/html.js';
 import { appendDecisions, writeDecisions, writeMilestones } from '../../shared/rundown/markdown.js';
+import { inferredNext, partCounts, partsLine } from '../../shared/signal-parts.js';
 import { buildRundown, isoLocal, itemsLeft } from '../../shared/rundown/model.js';
 import { LIMITS, type Facts, type Judgement, type Rundown, type RundownProject } from '../../shared/rundown/schema.js';
 import { validateJudgement } from '../../shared/rundown/validate.js';
@@ -264,11 +265,15 @@ export function summary(r: Rundown, mapPath: string): string {
   const L = [`Rundown: ${mapPath}`];
   const ms = r.milestones.find((m) => m.id === r.nextMilestone);
   L.push(ms ? `Next milestone: ${ms.id} ${ms.name}, ${itemsLeft(r)} item${itemsLeft(r) === 1 ? '' : 's'} left${ms.due ? ` (due ${ms.due})` : ''}${ms.source === 'proposed' ? ' [proposed: edit .rundown/milestones.md]' : ''}` : 'Next milestone: none');
-  L.push(r.nextStep ? `Next step: ${r.nextStep.text} (${r.nextStep.why})` : 'Next step: none yet (run the full /rundown for one)');
+  // Without Claude's next step, the one the office's window and Signal's card work out from the code.
+  const guess = r.nextStep ? null : inferredNext(r);
+  L.push(r.nextStep ? `Next step: ${r.nextStep.text} (${r.nextStep.why})` : guess ? `Next step: ${guess} (inferred from the code)` : 'Next step: none yet (run the full /rundown for one)');
   L.push(r.previous ? (r.changes.length ? `Changed since ${r.previous.generatedAt.slice(0, 16).replace('T', ' ')}:\n${r.changes.slice(0, 8).map((c) => `  - ${c.text}`).join('\n')}` : 'Nothing changed since the last rundown') : 'First rundown');
   const open = r.decisions.filter((d) => !d.answer);
   L.push(open.length ? `Your call:\n${open.map((d) => `  - ${d.id}. ${d.question} Default: ${d.default}`).join('\n')}` : 'Your call: nothing open');
   const parts = r.parts.map((p) => `${p.name} ${p.status}${p.waitingOn ? ` (waiting on ${p.waitingOn})` : ''}`).join('; ');
+  const counts = partsLine(partCounts(r.parts));
+  if (counts) L.push(counts);
   L.push(`Parts: ${parts}${r.parts.some((p) => p.statusSource === 'inferred') ? ' [inferred]' : ''}`);
   if (r.facts.gaps.length) L.push(`Gaps: ${r.facts.gaps.join('; ')}`);
   return L.join('\n');

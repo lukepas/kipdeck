@@ -5,6 +5,7 @@
 import { laneLayout } from './branches.js';
 import { heatmap, weeksFor } from './heatmap.js';
 import { INFERRED_NOTE } from './infer.js';
+import { inferredNext } from '../signal-parts.js';
 import { itemsLeft, statusCounts } from './model.js';
 import { partOfPath } from './paths.js';
 import { STATUS_LABEL, STATUSES, type Part, type Rundown, type Status } from './schema.js';
@@ -46,7 +47,9 @@ export function overview(r: Rundown): string {
   const git = r.facts.git;
   const unc = git ? git.uncommitted.staged + git.uncommitted.modified + git.uncommitted.deleted + git.uncommitted.untracked : null;
   const up = git?.upstream;
-  const step = r.nextStep;
+  // Without Claude's next step, the same one the office's window and Signal's card work out from the code.
+  const guess = r.nextStep ? null : inferredNext(r);
+  const step = r.nextStep ?? (guess ? { text: guess, why: 'Inferred from the code.' } : null);
   return `<section aria-labelledby="h-over"><h2 id="h-over">Status overview</h2><div class="kpis">
 <div class="card"><div class="label">Parts</div><div class="big">${r.parts.length}</div><div class="bar" role="img" aria-label="Parts by status">${bar}</div><div class="legend">${legend}</div></div>
 <div class="card"><div class="label">Next milestone</div>${ms ? `<div class="big">${esc(ms.id)} ${esc(ms.name)}</div><div class="sub">${plural(left, 'item')} left${ms.due ? `, due ${esc(ms.due)}` : ''}</div>` : `<div class="big">None</div><div class="sub">${r.milestones.length ? 'Every milestone is done' : 'No milestones yet: add them in .rundown/milestones.md'}</div>`}</div>
