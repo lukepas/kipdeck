@@ -23,6 +23,7 @@ Run it inside the repository you work in. It opens in your browser, signed in, w
 
 - **One loop.** **Deploy agent**, get pinged when it needs you, answer its question in one box, review the diff beside the list and Merge, and it lands in **Shipped today**. The oldest agent waiting on you opens by itself; the top bar says how many need you and how many are ready to review, with the oldest wait ticking, the median wait today and what merged today. Merge waits a few seconds for Undo and names where it goes. See [the inbox](docs/inbox.md).
 - **One ranking, one set of names.** `src/shared/attention.ts` decides the order and names the five states everywhere: Needs you, Stuck, To review, Working and Ready. The inbox's sections (Needs you with the stuck ones in it, To review, Working, Ready), Mission control, the tab title and notifications all read from it ([the inbox](docs/inbox.md) has the full list).
+- **Spend and control.** Each row shows the agent's permission mode (`bypass`, `auto`, `edits`, `ask`, `plan`, read off the command line it started with) and what it has spent, with `cost ?` for a CLI that reports none. The pulse has today's spend. Admins set a default mode per project and budget caps per agent and per day in Settings: a warning at 80 percent, and at 100 percent the agent is paused into Needs you. **Pause all** in the top bar (and Ctrl+K) pauses, resumes or stops every agent, with Undo. See [spend and control](docs/spend.md).
 - **A record of what shipped.** Every merge and send-back is kept on your machine as a signed record: which agent and model, the prompt, and who reviewed it. **Numbers** shows human wait time and the merge rate per agent and model from it.
 - **The Deck.** **Enter the Deck** in the top bar (or **D**) takes you to `/deck`: the same agents at their stations on a 3D starship bridge, a wall display for a team room. It and the rest beyond the inbox (goals and the timeline, meetings, voice, Proof of Merge on testnets) are [Labs](#labs), all on as Kipdeck ships; an admin switches off what a team doesn't want.
 
@@ -199,6 +200,7 @@ The npm package ships the built `dist/` (`files` in `package.json`), so `npx kip
 ## More
 
 - [The inbox](docs/inbox.md): the home page, its loop, the setup card, Numbers, Settings, its keys and the shipped log
+- [Spend and control](docs/spend.md): each agent's permission mode badge, spend on rows and in the pulse, budget caps that pause an agent into Needs you, and Pause all, Resume all and Stop all
 - [Signal](docs/signal.md): the project's status at one look over the inbox list (On track, At risk, Off track or No goal), the rules behind it, and Copy as text for Slack
 - [The demo](docs/demo.md): `npx kipdeck --demo` with five scripted agents, the hosted read-only demo, and the scripts that make the video, the GIF and the deck's screenshots
 - [Metrics for the deck](docs/metrics.md): what each number means, where it comes from, and what not to show

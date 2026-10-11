@@ -1,0 +1,25 @@
+/* Spend and control (spend.ts): the mode badge and spend chip on rows and in the pane, today's spend in
+   the pulse, and Pause all in the top bar. Bypass is the one mode in the signal color: it never asks. */
+.mode-badge { flex: none; display: inline-block; padding: 0 5px; border: 1px solid var(--line); border-radius: var(--radius-chip); font: 500 10px/15px var(--font-mono); color: var(--muted); text-transform: lowercase; }
+.mode-badge.m-risk { border-color: var(--signal); color: var(--signal); }
+.mode-badge.m-free { border-color: var(--line-strong); color: var(--text); }
+.mode-badge.m-unknown { border-style: dashed; }
+.row-spend { flex: none; font: 400 11px/16px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.row-spend::before { content: '\00b7'; margin-right: 6px; font-family: var(--font-ui); }
+.row-spend.unknown { font-style: italic; }
+.pane-badges { display: flex; align-items: center; gap: 8px; margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+.pane-spend { font: 400 12px var(--font-mono); font-variant-numeric: tabular-nums; }
+.pane-spend.b-warn { color: var(--review); }
+.pane-spend.b-over { color: var(--signal); }
+.pulse-stat.p-spend.b-warn b { color: var(--review); }
+.pulse-stat.p-spend.b-over b { color: var(--signal); }
+.list-pulse .pulse-stat.p-spend { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--line); }
+@media (max-width: 1600px) { .hb-pulse .p-spend span { display: none; } }
+/* Spend takes the place of merged today in a narrower top bar; merges are still in Shipped today. */
+@media (max-width: 1500px) { .hb-pulse .p-spend ~ .p-merged, .hb-pulse .p-merged:has(~ .p-spend) { display: none; } }
+/* Under 1080px the top bar keeps its room for search; spend is still on every row and in the pane. */
+@media (min-width: 900px) and (max-width: 1079px) { .hb-pulse .p-spend { display: none; } }
+.hb-fleet { flex: none; height: 34px; padding: 0 10px; gap: 6px; white-space: nowrap; }
+.hb-fleet.has-paused { border-color: var(--signal); color: var(--signal); }
+@media (max-width: 1600px) { .hb-fleet-label { display: none; } .hb-fleet { padding: 0 9px; } }
+@media (max-width: 899px) { .hb-fleet { height: 44px; width: 44px; padding: 0; justify-content: center; } }

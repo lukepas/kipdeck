@@ -17,7 +17,7 @@ import { ScrollbackStore, searchTerminal, terminalTail } from '../history.js';
 import { DSH_PROFILE_DEFAULT } from '../dsh.js';
 import { DropStore } from '../drops.js';
 import type { Capacity } from '../machine.js';
-import { PROVIDERS, providerAdapter, titleNoise, type LaunchPlan, type ProviderFloor } from '../providers/index.js';
+import { PROVIDERS, providerAdapter, titleNoise, withMode, type LaunchPlan, type ProviderFloor } from '../providers/index.js';
 import { launchAcp } from './acp.js';
 import { clockWork } from './clock.js';
 import { childEnv } from './env.js';
@@ -220,7 +220,7 @@ export class WorkerManager {
   }
 
   /** Links a worker to a milestone or an issue, snoozes it, marks its finished turn seen, or dates its wait (the demo's); an undefined field there takes it off. */
-  annotate(id: string, patch: Partial<Pick<WorkerInfo, 'goal' | 'issue' | 'snooze' | 'acked' | 'waitingSince'>>): WorkerInfo | undefined {
+  annotate(id: string, patch: Partial<Pick<WorkerInfo, 'goal' | 'issue' | 'snooze' | 'acked' | 'waitingSince' | 'hold'>>): WorkerInfo | undefined {
     const w = this.workers.get(id);
     if (!w) return undefined;
     Object.assign(w.info, patch);
@@ -680,7 +680,7 @@ export class WorkerManager {
     const commandPath = isShell ? undefined : configured ? this.agentPath : resolveCommand(command);
     const base = isShell ? (WIN && !process.env.SHELL ? [] : ['-l']) : configured ? [...this.agentArgs] : [];
     // Its provider's command line, and anything it sets for this run (see ProviderAdapter.launch).
-    const plan: LaunchPlan = adapter ? adapter.launch({ h: this.handleOf(w), args: base, prompt, resumeSessionId, station: DESK_BY_ID.get(info.deskId)?.station, cwd, setup: this.setups[adapter.id] }) : { args: base };
+    const plan: LaunchPlan = adapter ? withMode(adapter.launch({ h: this.handleOf(w), args: base, prompt, resumeSessionId, station: DESK_BY_ID.get(info.deskId)?.station, cwd, setup: this.setups[adapter.id] }), info, this.dir) : { args: base };
     const { args } = plan;
     if (plan.rotateToken) w.hookToken = randomBytes(16).toString('hex');
     const env = childEnv();

@@ -3,6 +3,7 @@
 // 2D view all use, so they never disagree. Every threshold is here, and only here.
 
 import type { RosterEntry } from './protocol.js';
+import { holdLabel } from './spend.js';
 
 /** Working, but no hook event and no terminal output for this long: it may be stuck. */
 export const SILENT_MS = 10 * 60_000;
@@ -53,10 +54,11 @@ export const STATE_LABEL: Readonly<Record<AttentionLevel, string>> = {
 export const LEVEL_LABEL = STATE_LABEL;
 
 /** The one thing to do next about a worker. */
-export type NextAction = 'answer' | 'look' | 'review' | 'open-pr' | 'fix-checks' | 'merge' | 'hand-back' | 'resume' | 'rebuild' | 'send-home' | 'give-task' | 'approve-payout' | 'set-wallet';
+export type NextAction = 'answer' | 'unpause' | 'look' | 'review' | 'open-pr' | 'fix-checks' | 'merge' | 'hand-back' | 'resume' | 'rebuild' | 'send-home' | 'give-task' | 'approve-payout' | 'set-wallet';
 
 export const ACTION_LABEL: Record<NextAction, string> = {
   answer: 'Answer',
+  unpause: 'Continue',
   look: 'Look into it',
   review: 'Review changes',
   'open-pr': 'Open PR',
@@ -129,6 +131,8 @@ export function attention(e: RosterEntry, now: number): Attention {
   const at = (level: AttentionLevel, action: NextAction, since: number, label: string, reason?: string): Attention => ({ level, action, since, label, snoozed, ...(reason ? { reason } : {}) });
 
   if (e.lost) return at('stuck', 'rebuild', waited, 'Worktree deleted', 'worktree deleted');
+  // Paused by a person or a budget cap (shared/spend.ts): it waits on someone to let it carry on or stop it.
+  if (e.hold) return at('needs-you', 'unpause', e.hold.at, holdLabel(e.hold), holdLabel(e.hold).toLowerCase());
   if (e.status === 'needs_input') {
     // An activity that's only the asking tool's name (Codex's request_user_input) says less than this.
     const said = spokenActivity(e.activity);

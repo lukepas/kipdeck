@@ -21,6 +21,7 @@ export const READ_ONLY_ALLOWS: ReadonlySet<string> = new Set([
   'pace.get',
   'timeline.get',
   'team.get',
+  'spend.get',
 ]);
 
 /**

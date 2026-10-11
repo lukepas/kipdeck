@@ -23,6 +23,7 @@ import * as lazy from './lazy';
 import { agentMark, currentView, entryTitle, waitingNow, whereLabel } from './list';
 import { questionCard } from './question';
 import { preview } from './preview';
+import { spendUi } from './spend-slot';
 import { home, type PaneTab } from './state';
 
 /** Wide enough for the list and the pane side by side (lite.css). */
@@ -216,10 +217,12 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
         {},
         h('h2', {}, entryTitle(e)),
         h('p', {}, [e.name, agent, model, worked > 60_000 ? `worked ${duration(worked)}` : '', whereLabel(e)].filter(Boolean).join(' · ')),
+        spendUi()?.paneBadges(e) ?? null,
       ),
       h(
         'div.pane-acts',
         {},
+        spendUi()?.pauseButton(e) ?? null,
         asleep ? null : h('button.btn.quiet.pane-stop', { type: 'button', title: 'End its session; its branch stays', onclick: () => actions.stop(e) }, 'Stop'),
         // The row's action again, unless it's only "open this", which the pane already is, or Answer,
         // which the question card under the tabs is.

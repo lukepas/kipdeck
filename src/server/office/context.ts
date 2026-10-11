@@ -28,6 +28,7 @@ import type { ReputationIndex } from '../chain/rep-index.js';
 import type { MergeProofs } from '../chain/attest.js';
 import type { Showcase } from '../showcase/service.js';
 import type { Labs } from '../labs.js';
+import type { Spend } from '../spend/service.js';
 import type { Telemetry } from '../telemetry.js';
 import type { ShipLog } from '../shiplog.js';
 import type { DemoDirector } from '../demo/director.js';
@@ -82,6 +83,8 @@ export interface BuildingServices {
   limitsOf(c: Client): PlanLimitsReader;
   /** Queues everywhere may be waiting for room under the worker limit: let them look again. */
   pumpQueues(except?: Floor): void;
+  /** Spend today, the budget caps, each project's default permission mode, and pausing agents in bulk (see spend/service.ts). */
+  spend: Spend;
 }
 
 /** Made as the floors open (office/floors.ts). */

@@ -27,6 +27,7 @@ import type { UsageClientMsg, UsageServerMsg } from './protocol/usage.js';
 import type { WorkerClientMsg, WorkerServerMsg } from './protocol/workers.js';
 import type { RundownClientMsg, RundownServerMsg } from './protocol/rundown.js';
 import type { SignalClientMsg, SignalServerMsg } from './protocol/signal.js';
+import type { SpendClientMsg, SpendServerMsg } from './protocol/spend.js';
 
 export * from './protocol/accounts.js';
 export * from './protocol/agents.js';
@@ -52,6 +53,7 @@ export * from './protocol/usage.js';
 export * from './protocol/workers.js';
 export * from './protocol/rundown.js';
 export * from './protocol/signal.js';
+export * from './protocol/spend.js';
 
 export type ClientMsg =
   | PresenceClientMsg
@@ -78,7 +80,8 @@ export type ClientMsg =
   | InboxClientMsg
   | SetupClientMsg
   | RundownClientMsg
-  | SignalClientMsg;
+  | SignalClientMsg
+  | SpendClientMsg;
 
 export type ServerMsg =
   | PresenceServerMsg
@@ -103,4 +106,5 @@ export type ServerMsg =
   | InboxServerMsg
   | SetupServerMsg
   | RundownServerMsg
-  | SignalServerMsg;
+  | SignalServerMsg
+  | SpendServerMsg;

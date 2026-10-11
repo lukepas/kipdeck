@@ -26,6 +26,7 @@ import { services } from './services';
 import { showcase } from './showcase';
 import { signal } from './signal';
 import { signins } from './signins';
+import { spend } from './spend';
 import { team } from './team';
 import { timeline } from './timeline';
 import { upgrade } from './upgrade';
@@ -59,4 +60,5 @@ export const SLICES: readonly Slice[] = [
   labs,
   rundown,
   signal,
+  spend,
 ];

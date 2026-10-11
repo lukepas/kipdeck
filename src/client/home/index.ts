@@ -32,6 +32,7 @@ import { deckCommands, deckMenuEntry, installDeckCta, renderDeckCta } from './de
 import { markChanges } from './motion';
 import { askSetup, onSetupChange, setupCard, setupMessage } from './setup';
 import { demoMessage } from './demo';
+import { installSpend, spendMessage, spendUi } from './spend-slot';
 import { home } from './state';
 import '../ui/waitclock.css';
 import './home.css';
@@ -43,6 +44,7 @@ export function homeMessage(net: Net, actions: Actions, msg: ServerMsg) {
   paneMessage(msg);
   setupMessage(msg);
   demoMessage(msg, $('demo'));
+  spendMessage(msg);
   switch (msg.t) {
     case 'welcome':
       void rewatch(net);
@@ -100,6 +102,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
 
   const commands = (): Command[] => [
     { label: 'Deploy agent', hint: 'N', icon: 'plus', run: () => actions.deploy() },
+    ...(spendUi()?.spendCommands() ?? []),
     { label: 'Search agents', hint: '/', icon: 'search', run: () => search.focus() },
     { label: 'Numbers', hint: 'Wait time, merges, merge rate', icon: 'plot', run: openNumbers },
     { label: 'Signal', hint: 'Project status: on track, at risk or off track', icon: 'target', run: openSignal },
@@ -209,7 +212,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
   };
   home.on(renderAll);
   onSetupChange(renderAll);
-  for (const t of ['roster', 'reminders', 'floors', 'labs', 'workers'] as const) store.on(t, renderAll);
+  for (const t of ['roster', 'reminders', 'floors', 'labs', 'workers', 'spend'] as const) store.on(t, renderAll);
   // The wait clocks tick each second in place; the rest (the wait bars, the idle times) every 30.
   setInterval(renderAll, 30_000);
   startClocks();
@@ -238,6 +241,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
   });
 
   installPane($('pane'), net, actions);
+  installSpend(net);
   installSignal(net, openSignal);
   installKeys(actions, palette, search);
   window.addEventListener('blur', () => menuOpen() && closeMenu());

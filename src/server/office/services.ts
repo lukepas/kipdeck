@@ -18,6 +18,7 @@ import { Showcase } from '../showcase/service.js';
 import { DemoDirector } from '../demo/director.js';
 import { RundownService } from '../rundown/service.js';
 import { pushGist } from '../signal/push.js';
+import { createSpend } from '../spend/office.js';
 import type { ServiceInfo, ServicesState } from '../../shared/protocol.js';
 import type { BuildingServices, Ctx, LateServices } from './context.js';
 import type { Client } from './client.js';
@@ -117,7 +118,9 @@ export function createServices(ctx: Ctx): BuildingServices {
     });
   };
 
-  return { prompts, leaveOnMerge, ledger, signins, limits, accountLimits, webhook, machine, limitsOf, pumpQueues };
+  // Spend today, the budget caps, each project's default permission mode, and pausing in bulk (spend/).
+  const spend = createSpend(ctx);
+  return { prompts, leaveOnMerge, ledger, signins, limits, accountLimits, webhook, machine, limitsOf, pumpQueues, spend };
 }
 
 /** What's made once the floors are open: the SSH team, the tailnet, workers' web servers, pictures and upgrades. */

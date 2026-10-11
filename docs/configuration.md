@@ -26,7 +26,9 @@ kipdeck [dir] [options]      (npx kipdeck, or agent-office: the same command)
                           nothing to type: the terminal's sign-in link, or `kipdeck open`
       --no-open           Don't open the office in your browser when it starts
       --agent <cmd>       Default agent command (default "claude")
-      --agent-args <str>  Extra args for the configured agent, e.g. "--model opus"
+      --agent-args <str>  Extra args for the configured agent, e.g. "--model opus" (env AGENT_OFFICE_AGENT_ARGS).
+                          A permission mode here ("--permission-mode acceptEdits") shows as each row's
+                          badge and wins over a project's default mode (see docs/spend.md)
       --dsh-profile <n>   DeepSeek Harness profile over ACP (default "acp")
       --tls-cert <file>   Serve HTTPS with this cert…
       --tls-key <file>    …and key
@@ -40,8 +42,9 @@ kipdeck [dir] [options]      (npx kipdeck, or agent-office: the same command)
       --inherit-env       Pass workers the office's whole environment (env AGENT_OFFICE_INHERIT_ENV=1)
       --turn <url>        Add a TURN server for voice, e.g. turn:user:pass@host:3478
                           (env AGENT_OFFICE_TURN, several separated by spaces)
-      --budget <usd>      Daily tracked Claude Code budget (OpenCode/Codex/Grok/Muse/DSH excluded)
-      --budget-pause      ...and nobody can hire a new worker until the next day
+      --budget <usd>      Daily budget: the daily cap in Settings > Agents > Budget until an admin sets
+                          one there; at it, agents at work are paused into Needs you (see docs/spend.md)
+      --budget-pause      ...and nobody can hire a new worker until the next day (tracked Claude Code spend)
       --max-workers <n>   Run at most n workers at once, across every floor (env AGENT_OFFICE_MAX_WORKERS)
       --webhook <url>     Post to this Slack / Discord webhook when a worker needs input, finishes or gets stuck
       --x402              Take paid tasks over x402, testnets only (see docs/x402.md), with
