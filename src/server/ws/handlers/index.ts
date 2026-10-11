@@ -18,6 +18,7 @@ import { reputationHandlers } from './reputation.js';
 import { rundownHandlers, rundownHooks } from './rundown.js';
 import { servicesView, settingsHandlers } from './settings.js';
 import { setupHandlers } from './setup.js';
+import { signalHandlers } from './signal.js';
 import { showcaseHandlers } from './showcase.js';
 import { signinsHandlers } from './signins.js';
 import { teamHandlers } from './team.js';
@@ -46,6 +47,7 @@ export const handlers: HandlerMap<ClientMsg> = {
   ...rundownHandlers,
   ...settingsHandlers,
   ...setupHandlers,
+  ...signalHandlers,
   ...showcaseHandlers,
   ...signinsHandlers,
   ...teamHandlers,
