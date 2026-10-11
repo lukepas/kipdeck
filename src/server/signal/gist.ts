@@ -2,9 +2,10 @@
 // issues closed lately, while the ops lab is on, and what the /rundown skill last wrote, while the
 // rundown lab is on. The rundown part reads the skill's own files the way the office's rundown does
 // (skillJudgement() for .rundown/rundown.json, capped and checked, and the person's milestones.md and
-// decisions.md over the skill's guesses), read only. With no rundown.json, it reads the office's own map
+// decisions.md over the skill's guesses), read only. With no rundown.json, or one that carries no
+// judgement (written from the facts alone by `kipdeck rundown`), it reads the office's own map
 // of the floor instead (Rundown's first map, inferred from the code and kept in the office's memory):
-// its parts by status and a next thing, never a stuck part. No git, no collector, no polling: a page
+// its parts by status and a next thing, never a stuck part. No git, no collector, no polling here: a page
 // asks (or the office's map moves on, push.ts), and the answer comes from a cache per floor that holds
 // while none of the three files and the office's map changed.
 
@@ -19,7 +20,7 @@ import type { GhIssue, Mission, RundownGist, SignalGist, TimelineEvent } from '.
 import { BURN_DAYS, gistOf } from '../../shared/signal.js';
 import { inferredNext, partCounts } from '../../shared/signal-parts.js';
 import { readSmall } from '../rundown/files.js';
-import { skillJudgement } from '../rundown/service.js';
+import { hasJudgement, skillJudgement } from '../rundown/service.js';
 
 const DAY_MS = 24 * 60 * 60_000;
 /** The skill's files the gist reads, under the project's checkout. */
@@ -93,7 +94,9 @@ export async function rundownGist(floorId: string, dir: string, office: Rundown 
   let gist: RundownGist | null = null;
   if (at !== null) {
     const { judgement, generatedAt } = await skillJudgement(dir);
-    if (judgement) {
+    // One written from the facts alone (`kipdeck rundown`, `/rundown quick` with no judgement) says
+    // nothing the office's map doesn't: read as if there were none.
+    if (hasJudgement(judgement)) {
       const [milestonesMd, decisionsMd] = await Promise.all([readSmall(dir, FILES[1], LIMITS.skillFileBytes), readSmall(dir, FILES[2], LIMITS.skillFileBytes)]);
       const parsed = milestonesMd === null ? null : parseMilestones(milestonesMd);
       const milestones = parsed

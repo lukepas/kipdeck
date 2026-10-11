@@ -3,7 +3,7 @@
 // project's map in the background (rundown/first.ts) and Signal's gist reaches the page by itself; then
 // the Rundown window opens straight onto the map (never "Computing...") with the line that says it's
 // inferred, and Signal's card shows the parts line, a next thing inferred from the code and the same
-// line, while still saying No goal. Nothing is written into the project's .rundown/.
+// line (each said once per surface), while still saying No goal. Nothing is written into the project's .rundown/.
 // With RUNDOWN_FIRST_SHOTS=<dir>, it also saves screenshots of the window and the card there.
 // Skipped (not failed) when there's no build (npm run build), the build is older than the client's
 // sources, or there's no browser playwright-core can start.
@@ -139,7 +139,10 @@ test("a fresh project: the map is there before anyone asks, and Signal reads it"
   const tree = await win.locator('.rd-tree').evaluate((el) => el.textContent ?? '');
   for (const part of ['api', 'storefront', 'checkout']) assert.match(tree, new RegExp(part), `${part} is a part on the map`);
   // The same next thing the Signal card shows, never a blank "run /rundown for one".
-  assert.match(await win.locator('.rd-tile-kpi.next').innerText(), /Finish or commit the work in storefront[\s\S]*Inferred from the code/);
+  // Said once, by the banner: the tile doesn't repeat it.
+  const tile = await win.locator('.rd-tile-kpi.next').innerText();
+  assert.match(tile, /Finish or commit the work in storefront/);
+  assert.doesNotMatch(tile, /Inferred from the code/);
   await page.waitForTimeout(400);
   await shot(page, 'rundown-window-fresh-dark');
   await page.keyboard.press('Escape');
@@ -153,7 +156,9 @@ test("a fresh project: the map is there before anyone asks, and Signal reads it"
   await card.waitFor();
   assert.equal(await card.locator('.sg-status').getAttribute('data-level'), 'no-goal');
   assert.match(await card.locator('.sg-parts').innerText(), /^4 parts: 1 done, 2 in progress, 1 not started$/);
-  assert.match(await card.locator('.sg-next').innerText(), /Finish or commit the work in storefront \(1 uncommitted file\)[\s\S]*inferred from the code/);
+  const next = await card.locator('.sg-next').innerText();
+  assert.match(next, /Finish or commit the work in storefront \(1 uncommitted file\)/);
+  assert.doesNotMatch(next, /inferred from the code/, 'the line under it says so, once');
   assert.equal((await card.locator('.sg-inferred').innerText()).trim(), INFERRED_NOTE);
   await page.waitForTimeout(300);
   await shot(page, 'signal-card-fresh-dark', '.modal.signal');

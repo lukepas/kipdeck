@@ -18,7 +18,7 @@ export function partCounts(parts: readonly Pick<Part, 'status'>[]): PartCounts {
   return c;
 }
 
-/** "8 parts: 3 done, 3 in progress, 1 stuck": the statuses no part has are left out. Null with no parts. */
+/** "8 parts: 3 done, 3 in progress, 1 stuck": the statuses no part has are left out ("9 parts, all in progress" when they share one). Null with no parts. */
 export function partsLine(c: PartCounts | undefined): string | null {
   if (!c || c.total <= 0) return null;
   const each = [
@@ -28,6 +28,8 @@ export function partsLine(c: PartCounts | undefined): string | null {
     [c.stuck, 'stuck'],
   ] as const;
   const said = each.filter(([n]) => n > 0).map(([n, w]) => `${n} ${w}`);
+  const all = each.find(([n]) => n === c.total);
+  if (all && c.total > 1) return `${c.total} parts, all ${all[1]}`;
   return `${c.total} ${c.total === 1 ? 'part' : 'parts'}${said.length ? `: ${said.join(', ')}` : ''}`;
 }
 
@@ -43,6 +45,7 @@ export function inferredNext(r: Pick<Rundown, 'parts' | 'milestones' | 'nextMile
   const dirty = [...going].filter((p) => p.metrics.uncommitted > 0).sort((a, b) => b.metrics.uncommitted - a.metrics.uncommitted)[0];
   if (dirty) return `Finish or commit the work in ${dirty.name} (${dirty.metrics.uncommitted} uncommitted ${dirty.metrics.uncommitted === 1 ? 'file' : 'files'})`;
   const last = [...going].filter((p) => p.metrics.lastCommit).sort((a, b) => (b.metrics.lastCommit ?? '').localeCompare(a.metrics.lastCommit ?? ''))[0];
-  if (last) return `Carry on with ${last.name} (${last.metrics.commits30d} ${last.metrics.commits30d === 1 ? 'commit' : 'commits'} in 30 days)`;
+  // Its last commit's day, not a count: the collector's commits30d adds up file touches, not commits.
+  if (last) return `Carry on with ${last.name} (last commit ${last.metrics.lastCommit!.slice(0, 10)})`;
   return null;
 }

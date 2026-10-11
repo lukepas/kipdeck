@@ -31,6 +31,8 @@ export const PACE_DROP = 0.5;
 export const PACE_MIN_BEFORE = 4;
 /** The most open decisions a gist carries by name. */
 export const GIST_DECISIONS = 3;
+/** Where a next thing the office inferred from the code comes from. */
+export const INFERRED_FROM = 'inferred from the code';
 /** The least time between two peeks at one floor from one page (ms): the office answers no sooner. */
 export const PEEK_GAP_MS = 1000;
 
@@ -127,9 +129,9 @@ export function forecastAt(m: Pick<SignalMilestone, 'done' | 'total'>, burn: Sig
   return now + (left / (burn.closed / burn.days)) * DAY_MS;
 }
 
-/** A rundown gist that's too old to read: how many days old, else undefined. */
+/** A rundown gist that's too old to read: how many days old, else undefined. Never the office's own map, which it keeps current itself. */
 export function staleDays(g: RundownGist | null, now: number): number | undefined {
-  if (!g) return undefined;
+  if (!g || g.source === 'inferred') return undefined;
   const days = Math.floor((now - g.at) / DAY_MS);
   return days >= STALE_RUNDOWN_DAYS ? days : undefined;
 }
@@ -208,7 +210,7 @@ export function computeSignal(input: SignalInput): Signal {
   const asking = waiting[0] ?? input.ranked.find((r) => r.att.level === 'needs-you' && !r.att.snoozed);
   if (rundown?.next && rundown.source !== 'inferred') next = { text: rundown.next, from: `from /rundown, ${ago(daysBetween(rundown.at, now))}` };
   else if (asking) next = { text: `Answer ${asking.entry.name}`, from: 'from the inbox' };
-  else if (rundown?.next) next = { text: rundown.next, from: 'inferred from the code' };
+  else if (rundown?.next) next = { text: rundown.next, from: INFERRED_FROM };
 
   return {
     level,
@@ -288,7 +290,7 @@ export function signalLine(project: string, s: Signal): string {
   };
   const parts: string[] = [end(`${project}: ${SIGNAL_LABEL[s.level]}`)];
   if (s.milestone) parts.push(end(`${s.milestone.title} ${s.milestone.done}/${s.milestone.total} ${s.milestone.unit}${s.forecast ? `, ${s.forecast}` : ''}`));
-  else parts.push('No milestone set.');
+  else parts.push('No milestone set.', ...(s.parts ? [end(s.parts)] : []));
   if (s.reasons[0]) parts.push(end(s.reasons[0].text));
   const pace = `${s.pace.week} merged this week (${s.pace.before} the week before)`;
   parts.push(end(s.decisions.open && s.reasons[0]?.rule !== 'decision' ? `${pace}, ${plural(s.decisions.open, 'decision')} open` : pace));

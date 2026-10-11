@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { computeSignal, type SignalInput } from '../src/shared/signal.js';
+import { computeSignal, signalLine, STALE_RUNDOWN_DAYS, type SignalInput } from '../src/shared/signal.js';
 import { inferredNext, partCounts, partsLine } from '../src/shared/signal-parts.js';
 import { INFERRED_NOTE } from '../src/shared/rundown/infer.js';
 import { forgetGists, officeGist, rundownGist, signalGist, type GistFloor } from '../src/server/signal/gist.js';
@@ -26,6 +26,8 @@ test('the parts line counts every status, and leaves out the ones no part has', 
   assert.equal(partsLine(partCounts([{ status: 'in-progress' }])), '1 part: 1 in progress');
   assert.equal(partsLine(partCounts([])), null);
   assert.equal(partsLine(undefined), null);
+  // When every part shares one status, it says so plainly.
+  assert.equal(partsLine(partCounts([{ status: 'in-progress' }, { status: 'in-progress' }, { status: 'in-progress' }])), '3 parts, all in progress');
 });
 
 test('the inferred next thing: the milestone item first, then uncommitted work, then the part that moved last', () => {
@@ -34,7 +36,10 @@ test('the inferred next thing: the milestone item first, then uncommitted work, 
   // src/client has the uncommitted file.
   assert.equal(inferredNext(r), 'Finish or commit the work in src/client (1 uncommitted file)');
   const clean: Rundown = { ...r, parts: r.parts.map((p) => ({ ...p, metrics: { ...p.metrics, uncommitted: 0 } })) };
-  assert.equal(inferredNext(clean), 'Carry on with src/server (5 commits in 30 days)');
+  assert.equal(inferredNext(clean), 'Carry on with src/server (last commit 2026-10-06)');
+  // commits30d adds up file touches (one commit over 20 files counts 20): it never reaches the text.
+  const busy: Rundown = { ...clean, parts: clean.parts.map((p) => ({ ...p, metrics: { ...p.metrics, commits30d: 3992 } })) };
+  assert.doesNotMatch(inferredNext(busy) ?? '', /3992|commits/);
   const quiet: Rundown = { ...clean, parts: clean.parts.map((p) => ({ ...p, status: 'done' as const })) };
   assert.equal(inferredNext(quiet), null);
   const withMilestone = sampleRundown({ milestonesMd: '# Milestones\n\n## M1 Launch\n\nDone when: it ships\n\n- [x] Landing page\n- [ ] Sign-up flow\n' });
@@ -118,6 +123,22 @@ test("the gist falls back to the office's map only with no rundown.json, and fol
   const s = computeSignal(input(skill));
   assert.equal(s.inferred, false);
   assert.match(s.next?.from ?? '', /^from \/rundown/);
+});
+
+test("the office's map is never called a stale /rundown, however old: it keeps its parts line and next thing", () => {
+  const old = { ...officeGist(sampleRundown()), at: NOW.getTime() - (STALE_RUNDOWN_DAYS + 1) * 86_400_000 };
+  const s = computeSignal(input(old));
+  assert.equal(s.staleNote, undefined);
+  assert.equal(s.rundown, 'fresh');
+  assert.equal(s.parts, '4 parts: 1 done, 2 in progress, 1 not started');
+  assert.equal(s.next?.text, 'Finish or commit the work in src/client (1 uncommitted file)');
+  // A skill rundown that old is still stale.
+  assert.match(computeSignal(input({ ...old, source: 'skill' })).staleNote ?? '', /The last \/rundown is 8 days old/);
+});
+
+test('Copy as text carries the parts line when there is no milestone', () => {
+  const line = signalLine('acme', computeSignal(input(officeGist(sampleRundown()))));
+  assert.match(line, /No milestone set\. 4 parts: 1 done, 2 in progress, 1 not started\. /);
 });
 
 test('an agent waiting on you comes before a next thing guessed from the code, never before the skill\'s', () => {

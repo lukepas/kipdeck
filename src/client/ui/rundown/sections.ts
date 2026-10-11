@@ -31,8 +31,10 @@ export function overview(r: Rundown): HTMLElement {
     h('div.rd-legend', {}, ...STATUSES.map((st) => h('span', {}, statusChip(st), ` ${counts[st]}`))),
   );
   // Without Claude's next step, the same one Signal's card works out from the code (signal-parts.ts).
+  // The window's banner already says the map is inferred: the tile doesn't say it twice.
   const guess = r.nextStep ? null : inferredNext(r);
-  const step = r.nextStep ?? (guess ? { text: guess, why: 'Inferred from the code.' } : null);
+  const banner = r.parts.some((p) => p.statusSource === 'inferred');
+  const step = r.nextStep ?? (guess ? { text: guess, why: banner ? '' : 'Inferred from the code.' } : null);
   return h(
     'section.rd-kpis',
     { 'aria-label': 'Status overview' },
