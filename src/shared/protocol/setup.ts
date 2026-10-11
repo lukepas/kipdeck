@@ -4,6 +4,7 @@
 // changes without someone clicking.
 
 import type { AgentProvider } from '../providers.js';
+import type { Starter } from '../starters.js';
 
 export interface SetupAgent {
   provider: AgentProvider;
@@ -24,6 +25,21 @@ export interface SetupGithub {
   error?: string;
 }
 
+/** An agent session running in a terminal in one of the projects' folders (server/livesessions.ts). */
+export interface SetupSession {
+  provider: AgentProvider;
+  id: string;
+  /** The project whose folder it runs in. */
+  floor: string;
+  /** Last active (ms). */
+  at: number;
+  /** What it was asked first, when that can be read. */
+  title?: string;
+  /** Whether Bring in can carry it on while it keeps running (Claude Code forks it); else `why` says what to do. */
+  canAdopt: boolean;
+  why?: string;
+}
+
 export interface SetupState {
   agents: SetupAgent[];
   /** The checkout the office was started in, and its project once it is one. */
@@ -33,6 +49,10 @@ export interface SetupState {
   telemetry: { on: boolean; allowed: boolean; why?: string };
   /** The command that starts Kipdeck, as it was started here (server/runcmd.ts): what to run inside a repository. */
   run?: string;
+  /** The first-run task box's suggestions, drawn from the project (server/starters.ts). */
+  starters?: Starter[];
+  /** Agent sessions running in the projects' folders right now (admins only: their titles are someone's prompts). */
+  sessions?: SetupSession[];
 }
 
 export type SetupClientMsg =
@@ -41,6 +61,8 @@ export type SetupClientMsg =
   /** Admins: add the checkout the office was started in as a project. */
   | { t: 'setup.useFolder' }
   /** Admins: share anonymous usage numbers, or stop. */
-  | { t: 'setup.telemetry'; on: boolean };
+  | { t: 'setup.telemetry'; on: boolean }
+  /** Admins: carry these running sessions on as agents (Bring in), leaving each running in its terminal. */
+  | { t: 'setup.adopt'; sessions: { provider: AgentProvider; id: string }[] };
 
 export type SetupServerMsg = { t: 'setup'; state: SetupState };

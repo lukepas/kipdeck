@@ -219,6 +219,9 @@ export const claude: ProviderAdapter<undefined, ClaudeSetup> = {
     // The queue agent only ever adds to the queue: without these it can't touch the checkout's files.
     if (station === 'queue') args.push('--disallowedTools', ...QUEUE_AGENT_DISALLOWED_TOOLS);
     if (resumeSessionId) args.push('--resume', resumeSessionId);
+    // A session still running in someone's terminal (see adopt.ts): carry on a copy of it. Once Claude
+    // reports the copy's own id, resuming that one needs no fork.
+    if (resumeSessionId && info.forkOf === resumeSessionId) args.push('--fork-session');
     // `--` so a prompt like "- fix login" is never parsed as a CLI option.
     if (prompt) args.push('--', prompt);
     return { args };

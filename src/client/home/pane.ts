@@ -234,7 +234,8 @@ export function installPane(root: HTMLElement, net: Net, actions: Actions) {
         empty.dataset.key = key;
         empty.replaceChildren(next);
       }
-      void placeDeckPlan(empty);
+      // Before the first agent the loop's three steps show alone (preview.ts), whatever the labs.
+      if (store.roster.length) void placeDeckPlan(empty);
       void unmount();
       return;
     }

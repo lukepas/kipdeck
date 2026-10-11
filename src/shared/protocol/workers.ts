@@ -74,6 +74,8 @@ export interface WorkerInfo {
   prOpening?: boolean;
   title?: string;
   sessionId?: string;
+  /** The session it was started as a copy of (`claude --fork-session`), so the one still running in a terminal keeps its own. */
+  forkOf?: string;
   exitCode?: number;
   cols: number;
   rows: number;

@@ -79,7 +79,7 @@ after(async () => {
   await rm(root, { recursive: true, force: true, maxRetries: 20, retryDelay: 100 });
 });
 
-test('the demo on your computer: the pill, a question from Codex opening by itself, answered from its card, a diff from Claude Code, a merge, and Cursor in To review', { timeout: 90_000 }, async (t) => {
+test('the demo on your computer: the coach strip, a question from Codex opening by itself, answered from its card, a diff from Claude Code, a merge, and Cursor in To review', { timeout: 90_000 }, async (t) => {
   if (why) return t.skip(why);
   const context = await browser!.newContext({ viewport: { width: 1440, height: 900 }, colorScheme: 'light' });
   const page = await context.newPage();
@@ -89,34 +89,43 @@ test('the demo on your computer: the pill, a question from Codex opening by itse
   assert.equal(await page.evaluate(async (password) => (await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password }) })).status, PASSWORD), 200);
   await page.goto(`${base}/`);
 
-  // One pill in the top bar says it's the demo, with the command to run it for real; no checklist.
+  // A small tag in the top bar says it's the demo; the coach strip over the inbox walks the loop and
+  // ends on running it for real, with the command to copy. No checklist.
   const note = page.locator('#demo.hb-demo');
   await note.waitFor();
   assert.match((await note.getAttribute('title')) ?? '', /Scripted agents on a throwaway repo \(acme-shop\)/);
+  assert.equal(await note.locator('code').count(), 0, 'the top bar no longer carries the command');
+  const coach = page.locator('#demo-coach');
+  await coach.waitFor();
+  const coachSteps = () => coach.locator('.coach-step').allInnerTexts();
+  assert.deepEqual((await coachSteps()).map((s) => s.replace(/^\d\s*/, '').trim().split('\n')[0].trim()), ['Answer the question in Needs you', 'Review the change and merge it', 'Run it on your repo']);
   // The command this demo was started with (here: node and this checkout's bin script, too long to
-  // show): a Copy command button with all of it, also in the pill's tooltip.
+  // show): a Copy command button with all of it, also in the step's tooltip.
   const run = demoNote({ readOnly: false, project: 'acme-shop', run: launchCommand() }).command;
-  assert.equal(await note.locator('.copy').getAttribute('aria-label'), `Copy ${run}`, 'the button copies all of it');
-  assert.ok(((await note.getAttribute('title')) ?? '').includes(run));
-  if (fitsPill(run)) assert.equal(await note.locator('code').innerText(), run);
-  else assert.equal(await note.locator('code').count(), 0);
-  // At 1440x900 nothing in the pill is cut (not "kipde..."), and its copy button sits clear of the search box.
+  assert.equal(await coach.locator('.coach-last .copy').getAttribute('aria-label'), `Copy ${run}`, 'the button copies all of it');
+  assert.ok(((await coach.locator('.coach-last').getAttribute('title')) ?? '').includes(run));
+  if (fitsPill(run)) assert.equal(await coach.locator('.coach-last code').innerText(), run);
+  else assert.equal(await coach.locator('.coach-last code').count(), 0);
+  // The command is whole at 1440x900 and its copy button sits clear of the search box.
   const pillFits = () =>
     page.evaluate(() => {
-      const code = document.querySelector('#demo.hb-demo code') as HTMLElement | null;
-      const copy = document.querySelector('#demo.hb-demo .copy') as HTMLElement;
+      const code = document.querySelector('#demo-coach .coach-last code') as HTMLElement | null;
+      const copy = document.querySelector('#demo-coach .coach-last .copy') as HTMLElement;
       const search = document.querySelector('.hb-search') as HTMLElement;
       const a = copy.getBoundingClientRect();
       const b = search.getBoundingClientRect();
       const overlap = a.right > b.left && b.right > a.left && a.bottom > b.top && b.bottom > a.top;
       return { clipped: !!code && code.scrollWidth > code.clientWidth, overlap };
     });
-  assert.deepEqual(await pillFits(), { clipped: false, overlap: false }, 'the demo pill shows its whole command at 1440x900');
+  assert.deepEqual(await pillFits(), { clipped: false, overlap: false }, 'the coach strip shows its whole command at 1440x900');
 
   const row = (section: string, text: string) => page.locator(`.sec-${section} .row`, { hasText: text }).first();
   await row('needs-you', 'Fix the flaky checkout test').waitFor({ timeout: 30_000 });
   assert.deepEqual(await pillFits(), { clipped: false, overlap: false }, 'still whole once the bar fills (counters, Enter the Deck)');
-  assert.match(await row('needs-you', 'Fix the flaky checkout test').locator('.row-status').innerText(), /How should I fix the test\?$/, 'Codex names only its asking tool: the row says the question read off its terminal (server/workers/asked.ts)');
+  // The demo opens with one in each: a change to review arrives within seconds of the question.
+  await row('review', 'Add rate limiting').waitFor({ timeout: 15_000 });
+  // Codex names only its asking tool: the row says the question read off its terminal (server/workers/asked.ts).
+  await row('needs-you', 'Fix the flaky checkout test').locator('.row-status', { hasText: /How should I fix the test\?$/ }).waitFor({ timeout: 10_000 });
   assert.match(await row('needs-you', 'Fix the flaky checkout test').locator('.agent-mark').getAttribute('class') ?? '', /p-codex/);
 
   assert.equal(await page.locator('#checklist').isVisible(), false, 'no Get started checklist in the demo');
@@ -139,6 +148,8 @@ test('the demo on your computer: the pill, a question from Codex opening by itse
   assert.equal(await page.locator('.pane .changes-files li').count(), 3);
   await page.locator('.pane .rv-merge').click();
   await page.locator('.ship', { hasText: 'Add rate limiting' }).waitFor({ timeout: 20_000 });
+  // Both steps the demo opened with are done: the strip checks them off.
+  await coach.locator('.coach-step.done').nth(1).waitFor({ timeout: 10_000 });
 
   await row('review', 'Write the README quickstart').waitFor({ timeout: 30_000 });
   assert.match(await row('review', 'Write the README quickstart').locator('.agent-mark').getAttribute('class') ?? '', /p-cursor/);

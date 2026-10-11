@@ -244,7 +244,7 @@ test('first sight with every lab off: no Deck pill, no Signal chip without a goa
       return {
         projectShrinks: getComputedStyle(document.getElementById('project')!).flexShrink,
         tagCut: tag.scrollWidth > tag.clientWidth + 1,
-        codeWidth: document.querySelector('#demo .demo-run .fix')?.getBoundingClientRect().width ?? 0,
+        codeWidth: document.querySelector('#demo-coach .coach-last .fix')?.getBoundingClientRect().width ?? 0,
         search: document.querySelector('.hb-search')!.getBoundingClientRect().width,
         deck: document.querySelectorAll('.deck-cta, #to-deck, #to-deck-row').length,
         scroll: document.documentElement.scrollWidth,
@@ -257,7 +257,7 @@ test('first sight with every lab off: no Deck pill, no Signal chip without a goa
       assert.equal(bar.tagCut, false, `${width}: the demo tag reads whole`);
       assert.ok(bar.search >= 200, `${width}: search keeps its room (${bar.search}px)`);
     }
-    if (width >= 1440) assert.ok(bar.codeWidth >= 50, `${width}: the demo's command (or its Copy command button) keeps its room (${bar.codeWidth}px)`);
+    if (width >= 1440) assert.ok(bar.codeWidth >= 50, `${width}: the coach strip's command (or its Copy command button) keeps its room (${bar.codeWidth}px)`);
     await other.close();
   }
   assert.deepEqual(errors, []);

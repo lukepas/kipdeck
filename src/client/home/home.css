@@ -83,7 +83,6 @@ button.sec-h:hover { color: var(--text); }
 .first-run h2 { margin: 0; font: 600 20px/1.2 var(--font-ui); letter-spacing: -.01em; }
 .first-run p { margin: 0; max-width: 46ch; color: var(--muted); font-size: 14px; line-height: 1.5; }
 .first-run .big { height: 42px; padding: 0 18px; gap: 8px; font-size: 15px; }
-.first-run .first-hint { font-size: 12px; }
 .inbox + .checklist { margin-top: 24px; }
 .checklist { margin-bottom: 20px; padding: 14px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface-1); }
 .cl-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
