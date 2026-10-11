@@ -30,7 +30,10 @@
   },
   "files": [
     "bin",
-    "dist",
+    "dist/public",
+    "dist/server",
+    "dist/showcase",
+    "dist/rundown",
     "skills/rundown",
     "NOTICE"
   ],
@@ -53,6 +56,9 @@
   },
   "engines": {
     "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "license": "MIT",
   "dependencies": {

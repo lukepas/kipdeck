@@ -2,8 +2,9 @@
 // started in as a project, and turning the anonymous usage numbers on or off (admins).
 import path from 'node:path';
 import type { SetupClientMsg, SetupGithub, SetupState } from '../../../shared/protocol.js';
-import { checkAgents, checkGithub } from '../../firstrun.js';
+import { checkAgentsAsync, checkGithub } from '../../firstrun.js';
 import type { Ctx } from '../../office/context.js';
+import { launchCommand } from '../../runcmd.js';
 import type { HandlerMap } from './types.js';
 
 /** GitHub is asked again at most this often, unless someone presses Check again. */
@@ -17,10 +18,11 @@ export async function setupState(ctx: Ctx, fresh = false): Promise<SetupState> {
   const dir = ctx.cfg.startedIn;
   const floor = dir ? ctx.building.list().find((d) => path.resolve(d.dir) === path.resolve(dir)) : undefined;
   return {
-    agents: checkAgents(),
+    agents: await checkAgentsAsync(),
     ...(dir ? { startedIn: { dir, name: path.basename(dir), ...(floor ? { floor: floor.id } : {}) } } : {}),
     github: await github.state,
     telemetry: ctx.telemetry.state(),
+    run: launchCommand(),
   };
 }
 

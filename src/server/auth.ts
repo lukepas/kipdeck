@@ -71,6 +71,8 @@ export class Auth {
   private attempts = new Map<string, { count: number; resetAt: number }>();
   /** Hashes of the one-time sign-in links' keys that haven't been used yet. */
   private links = new Set<string>();
+  /** Hashes of the ones already used (the latest few), so a second try says so instead of "not valid". */
+  private usedLinks = new Set<string>();
   /** Signs shared-password sessions. Derived from the password too, so changing it logs those out. */
   private key: Buffer;
   /** Signs account sessions, which outlive a change of the shared password. */
@@ -137,7 +139,15 @@ export class Auth {
 
   /** Uses up a sign-in link: true the first time its key is given, never again. */
   useLinkKey(key: string): boolean {
-    return !!key && this.links.delete(linkHash(key));
+    if (!key || !this.links.delete(linkHash(key))) return false;
+    if (this.usedLinks.size >= MAX_LINKS) this.usedLinks.delete(this.usedLinks.values().next().value!);
+    this.usedLinks.add(linkHash(key));
+    return true;
+  }
+
+  /** Whether a key is one of the latest links already used (a restart forgets them, like the links). */
+  linkKeyUsed(key: string): boolean {
+    return !!key && this.usedLinks.has(linkHash(key));
   }
 
   /** A session cookie's value: for that account, or for the shared password when there's none. */

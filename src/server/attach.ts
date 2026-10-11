@@ -9,6 +9,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { CLI, PRODUCT } from '../shared/copy.js';
+import { officeCommand } from './runcmd.js';
 import { PROVIDER_META, type AgentProvider } from '../shared/providers.js';
 import { gitTop } from './checkouts.js';
 import { askOffice } from './opencmd.js';
@@ -194,7 +195,7 @@ export async function attachCommand(argv: string[]): Promise<number> {
   let pick: FoundSession | undefined;
   if (session) pick = found.find((s) => s.id === session) ?? { provider: agent ?? 'claude', id: session, at: Date.now() };
   else if (agent === 'cursor') {
-    console.error(`${CLI} attach: Cursor keeps its chats where ${PRODUCT} can't read them. Run \`cursor-agent ls\`, then ${CLI} attach --agent cursor --session <chat id>`);
+    console.error(`${CLI} attach: Cursor keeps its chats where ${PRODUCT} can't read them. Run \`cursor-agent ls\`, then \`${officeCommand('attach --agent cursor --session <chat id>', home)}\``);
     return 2;
   } else pick = found[0];
   if (!pick) {

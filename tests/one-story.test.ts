@@ -12,7 +12,7 @@ import { ago } from '../src/shared/rowtext.js';
 import { WAIT_AMBER_MS, WAIT_RED_MS, waitTone, waitWords } from '../src/shared/wait.js';
 import { ALERT_DEFAULTS } from '../src/client/state/persist.js';
 import { DESCRIPTION, PRODUCT, TAGLINE, tabTitle } from '../src/shared/copy.js';
-import { SOURCE_RUN_COMMAND, demoNote, openCommand } from '../src/shared/demo.js';
+import { INSTALL_COMMAND, ON_NPM, demoNote, openCommand } from '../src/shared/demo.js';
 import { BRANDS } from '../site/landing/brand.ts';
 import type { RosterEntry } from '../src/shared/protocol.js';
 
@@ -144,19 +144,18 @@ test('one tagline and one description: README, package.json, the installers, the
   for (const f of ['src/client/showcase/index.html', 'src/client/login.html', 'src/client/index.html', 'src/server/config.ts']) assert.doesNotMatch(read(f), /mission control for|one inbox for every/i, f);
 });
 
-test('the command to run a clone is the one the landing page and the README give', () => {
-  // Before npm, a clone is linked once with npm link and runs as kipdeck from any repository.
-  assert.match(read('README.md'), /npm link/);
-  assert.match(read('site/landing/index.html'), /npm link/);
-  assert.equal(SOURCE_RUN_COMMAND, BRANDS.kipdeck.pkg);
-  // The sign-in page never offers a command that 404s before npm.
-  assert.equal(openCommand(false), `${SOURCE_RUN_COMMAND} open`);
-  assert.equal(openCommand(true), 'npx kipdeck open');
-  assert.doesNotMatch(read('src/client/login.html'), /npx kipdeck open/);
+test('the command to run it is the one the README gives, and never one that 404s', () => {
+  // Before npm, npx runs it from the public repository; the README leads with that same command.
+  assert.ok(read('README.md').split('\n').slice(0, 20).join('\n').includes(INSTALL_COMMAND), 'the README opens with the npx command');
+  assert.equal(INSTALL_COMMAND, ON_NPM ? `npx ${BRANDS.kipdeck.pkg}` : 'npx github:zbagdzevicius/kipdeck');
+  if (!ON_NPM) for (const f of ['README.md', 'src/client/login.html', 'src/server/opencmd.ts', 'src/server/cli.ts']) assert.doesNotMatch(read(f), /npx kipdeck\b(?![-@])/, f);
+  // The sign-in page's fallback (the office normally says how it can be typed there).
+  assert.equal(openCommand(), `${INSTALL_COMMAND} open`);
 });
 
-test('the demo pill copies the same command the sign-in page and the README give', () => {
-  assert.equal(demoNote({ readOnly: false, project: 'acme-shop' }, false).command, SOURCE_RUN_COMMAND);
+test('the demo pill copies the same command the README gives, or the one the office was started with', () => {
+  assert.equal(demoNote({ readOnly: false, project: 'acme-shop' }).command, INSTALL_COMMAND);
+  assert.equal(demoNote({ readOnly: false, project: 'acme-shop', run: 'kipdeck' }).command, 'kipdeck');
 });
 
 test('every doc says Kipdeck in its opening lines', () => {
