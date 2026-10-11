@@ -13,6 +13,7 @@ import { agentFields, choiceLabel, officeChoice } from './provider';
 import { openPromptEditor, rewrittenPrompts } from './prompts';
 import { setting, type SettingsPaneDef } from './settings-frame';
 import { gateSettings } from './gate-settings';
+import { spendSettings } from './settings-spend';
 
 export type CorePane = 'account' | 'agents' | 'notify';
 
@@ -285,10 +286,11 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
       id: 'agents',
       icon: 'units',
       label: 'Agents',
-      blurb: 'What agents start on, how many run at once, what happens after a merge, and what agents may do to each other. These apply to everyone using this Kipdeck.',
+      blurb: 'What agents start on, how many run at once, what they may do and spend, what happens after a merge, and what they may do to each other. These apply to everyone using this Kipdeck.',
       body: [
         setting('Default agent', 'office', agentNow, agent.element, agentActions, agentNote),
         setting('Agents at once', 'office', limitRow, limitNote),
+        ...spendSettings(net, follow),
         setting('After a merge', 'office', leaveRow, leaveNote),
         setting('Projects folder', 'office', dirRow, dirActions, dirNote),
         setting('Prompts', 'office', promptsOpen, promptsNote),

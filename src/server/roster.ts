@@ -69,9 +69,12 @@ export function rosterEntry(f: RosterFloor, w: WorkerInfo): RosterEntry {
     ...(task?.outcome === 'failed' ? { taskFailed: true } : {}),
     ...(w.issue ? { issue: w.issue } : {}),
     ...(w.goal && goalTitle ? { goal: w.goal, goalTitle } : {}),
-    ...(u && (u.cost > 0 || u.calls > 0) ? { usd: u.cost, tokens: u.input + u.output + u.cacheRead + u.cacheWrite } : {}),
+    // A cost its CLI doesn't price (costKnown false) is left out rather than shown as $0.
+    ...(u && (u.cost > 0 || u.calls > 0 || (u.totalTokens ?? 0) > 0) ? { ...(u.costKnown === false ? {} : { usd: u.cost }), tokens: u.totalTokens ?? u.input + u.output + u.cacheRead + u.cacheWrite } : {}),
     ...(w.workedMs !== undefined ? { workedMs: w.workedMs } : {}),
     ...(w.workingSince !== undefined ? { workingSince: w.workingSince } : {}),
     ...(w.snooze ? { snooze: { ...w.snooze } } : {}),
+    ...(w.kind === 'agent' && w.mode ? { mode: w.mode } : {}),
+    ...(w.hold ? { hold: { ...w.hold } } : {}),
   };
 }

@@ -21,9 +21,11 @@ The home page (`/`, [the inbox](inbox.md)) has six keys, and D for the Deck. Non
 Up and Down (or j and k) move the selection. Everything else is a click or a tap: a row's one button, **Deploy agent** in the top bar, and the avatar menu at the top right, core rows first and the Labs group last:
 
 - **Numbers**: human wait time, merges and the merge rate ([metrics](metrics.md)).
-- **Settings**: three panes. **Account** (who you're signed in as, your password, light or dark, teammates and anonymous usage numbers for admins), **Agents** (the default agent and model, how many run at once, what happens after a merge, where new projects are cloned, the prompts) and **Notifications** (desktop notifications, and the team's Slack or Discord channel).
+- **Settings**: three panes. **Account** (who you're signed in as, your password, light or dark, teammates and anonymous usage numbers for admins), **Agents** (the default agent and model, how many run at once, each project's default permission mode, the budget caps, what happens after a merge, where new projects are cloned, the prompts) and **Notifications** (desktop notifications, and the team's Slack or Discord channel).
 - **Signal**, **Help and keys** and **Sign out**.
 - **Labs**, last: Issues, Pull requests, the Task queue and Mission control with the GitHub boards and queue lab on, **Rundown** and **Enter the Deck** with theirs on, and **Labs** itself to switch them (also at the foot of Settings > Account, and in Ctrl+K). Every lab ships off.
+
+**Pause all** in the top bar, while any agent runs, opens a menu: pause every agent at work, resume the paused ones, or stop them all (it asks first and waits 7 seconds for Undo). The same three are in Ctrl+K as *Pause all agents*, *Resume paused agents* and *Stop all agents*, each shown only when it would do something. See [spend and control](spend.md).
 
 While you were away and light or dark are one Ctrl+K away. Every window has a close button at its top right, and Esc closes it too.
 

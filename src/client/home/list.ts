@@ -23,6 +23,7 @@ import { countdownWords, heldUntil, inFlight } from './merge-hold';
 import { approvalRow } from './approval';
 import { home } from './state';
 import { proposalRows, proposalWaits } from './proposals';
+import { spendUi } from './spend-slot';
 
 export interface ListDeps {
   /** A row's primary button. */
@@ -147,7 +148,7 @@ function row(r: Ranked, section: InboxSection, deps: ListDeps, now: number): HTM
         'span.row-text',
         {},
         h('span.row-title', {}, title),
-        h('span.row-sub', {}, held ? h('span.row-status.row-hold', { 'data-until': String(until), 'data-prefix': 'Merging in' }, `Merging in ${countdownWords(until - now)}`) : h('span.row-status', { title: r.att.reason ?? r.att.label }, away ? 'Merging...' : status), ask?.tags ?? null, owner ? h('span.row-owner', { title: `Deployed by ${e.createdBy}` }, owner) : null, where ? h('span.row-where', {}, where) : null),
+        h('span.row-sub', {}, held ? h('span.row-status.row-hold', { 'data-until': String(until), 'data-prefix': 'Merging in' }, `Merging in ${countdownWords(until - now)}`) : h('span.row-status', { title: r.att.reason ?? r.att.label }, away ? 'Merging...' : status), ask?.tags ?? null, owner ? h('span.row-owner', { title: `Deployed by ${e.createdBy}` }, owner) : null, ...(spendUi()?.rowBadges(e) ?? []), where ? h('span.row-where', {}, where) : null),
       ),
       away ? null : ageEl(section, r.att, now),
     ),

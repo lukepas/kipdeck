@@ -28,6 +28,7 @@ import type { ReputationIndex } from '../chain/rep-index.js';
 import type { MergeProofs } from '../chain/attest.js';
 import type { Showcase } from '../showcase/service.js';
 import type { Labs } from '../labs.js';
+import type { Spend } from '../spend/service.js';
 import type { Telemetry } from '../telemetry.js';
 import type { ShipLog } from '../shiplog.js';
 import type { DemoDirector } from '../demo/director.js';
@@ -91,6 +92,8 @@ export interface BuildingServices {
   pumpQueues(except?: Floor): void;
   /** Agents acting on other agents: proposals for a person, standing grants, the record (see gate/). */
   gate: AgentGate;
+  /** Spend today, the budget caps, each project's default permission mode, and pausing agents in bulk (see spend/service.ts). */
+  spend: Spend;
 }
 
 /** Made as the floors open (office/floors.ts). */

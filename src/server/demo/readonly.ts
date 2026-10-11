@@ -23,6 +23,7 @@ export const READ_ONLY_ALLOWS: ReadonlySet<string> = new Set([
   'timeline.get',
   'team.get',
   'approvals.get',
+  'spend.get',
 ]);
 
 /**

@@ -182,6 +182,8 @@ export function createActions(net: Net): Actions {
         if (!e.pr) return show(e.id, 'changes');
         net.send({ t: 'worker.prompt', workerId: e.id, prompt: fixChecksPrompt(e.pr.number) });
         return toast(`Asked ${entryRef(e)} to fix the checks on PR #${e.pr.number}`);
+      case 'unpause':
+        return net.send({ t: 'spend.resume', workerIds: [e.id] });
       case 'resume':
         net.send({ t: 'worker.resume', workerId: e.id });
         return show(e.id, 'terminal');

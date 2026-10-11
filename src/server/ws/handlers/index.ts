@@ -24,6 +24,7 @@ import { setupHandlers } from './setup.js';
 import { signalHandlers } from './signal.js';
 import { showcaseHandlers } from './showcase.js';
 import { signinsHandlers } from './signins.js';
+import { spendHandlers } from './spend.js';
 import { teamHandlers } from './team.js';
 import { timelineHandlers } from './timeline.js';
 import { usageHandlers } from './usage.js';
@@ -56,6 +57,7 @@ export const handlers: HandlerMap<ClientMsg> = {
   ...signalHandlers,
   ...showcaseHandlers,
   ...signinsHandlers,
+  ...spendHandlers,
   ...teamHandlers,
   ...timelineHandlers,
   ...usageHandlers,
