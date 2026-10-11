@@ -129,6 +129,9 @@ test('a used or made-up link opens the page with the open command, never the pas
   assert.match(await fresh.locator('#local-why').innerText(), /not valid/);
   assert.equal(await fresh.locator('#form').isVisible(), false);
   if (process.env.KIPDECK_SHOTS) await fresh.screenshot({ path: path.join(process.env.KIPDECK_SHOTS, 'signin-bogus-link.png') });
+  // A long node path wraps inside the card: on a 390 phone the card stays on screen and nothing scrolls sideways.
+  const fit = await fresh.evaluate(() => ({ right: document.querySelector('.card')!.getBoundingClientRect().right, scroll: document.documentElement.scrollWidth, width: innerWidth }));
+  assert.ok(fit.right <= fit.width && fit.scroll <= fit.width, `the card fits a 390 screen: ${JSON.stringify(fit)}`);
   // No link at all: the same card, with nothing to explain.
   await fresh.goto('about:blank');
   await fresh.goto(`http://localhost:${port}/login`);

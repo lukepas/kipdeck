@@ -58,9 +58,9 @@ function showLocal(command: string | undefined, refused?: LinkRefusal) {
   why.textContent = refused ? (refused.why ?? refused.error) : '';
   // The office says how it can be typed here (node and its path, npx, or kipdeck once linked).
   const cmd = command ?? openCommand();
-  // A break allowed only after a slash, so a narrow screen wraps the path, never a file name.
+  // A break allowed only after a slash or a space, so a narrow screen wraps the path, never a file name.
   document.getElementById('open-cmd')!.replaceChildren(
-    ...cmd.split(/(?<=\/)/).flatMap((part, i) => {
+    ...cmd.split(/(?<=[/ ])/).flatMap((part, i) => {
       const span = document.createElement('span');
       span.textContent = part;
       return i ? [document.createElement('wbr'), span] : [span];
