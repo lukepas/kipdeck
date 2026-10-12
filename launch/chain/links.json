@@ -34,6 +34,10 @@
       "checked": "HTTP 200 on 2026-10-10; the pitch deck, team slide read"
     },
     {
+      "url": "https://kipdeck-demo.vercel.app",
+      "checked": "HTTP 200 on 2026-10-12; the replay demo, deployed from dist/replay (docs/demo.md)"
+    },
+    {
       "url": "https://explorer.solana.com/tx/2CNXXdgQU9Teyem2Zfd39TtUXiB1mLhyjy6PfbLA2ZzE7kADbReYc8ppRC6FkLVpPQ98Gwpdy6j22bp4LSELWD8r?cluster=devnet",
       "checked": "getSignatureStatuses over api.devnet.solana.com on 2026-10-10: finalized, no error (the release shown in the demo cut)"
     },

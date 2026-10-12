@@ -37,7 +37,9 @@ test('SUBMIT.md pastes the kit word for word, and every disclosure names the sam
     if (source !== undefined) assert.equal(f.text, source, `SUBMIT.md "${f.name}" differs from the kit`);
   }
   assert.equal(kit.get('Prior work disclosure'), disclosure.get('Disclosure (Colosseum)'));
-  const stamps = new Set(['colosseum-worlds-fair.md', 'disclosure.md', 'SUBMIT.md'].flatMap((f) => [...read(f).matchAll(/226452e4\.\.([0-9a-f]{8})\b/g)].map((m) => m[1])));
+  // The pasted whats-new list is git output: a commit title there may quote an older stamp.
+  const stamped = (f: string) => read(f).split(/^## The commit list, generated on/m)[0];
+  const stamps = new Set(['colosseum-worlds-fair.md', 'disclosure.md', 'SUBMIT.md'].flatMap((f) => [...stamped(f).matchAll(/226452e4\.\.([0-9a-f]{8})\b/g)].map((m) => m[1])));
   assert.equal(stamps.size, 1, `stamped commits: ${[...stamps]}`);
   const [sha] = stamps;
   assert.doesNotThrow(() => git('merge-base', '--is-ancestor', sha, 'HEAD'), `${sha} is not on this branch`);
