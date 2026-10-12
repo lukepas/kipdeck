@@ -27,7 +27,7 @@ What `up` does, in about five minutes the first time:
 4. Adds a **TCP proxy** in front of the container's port 22, something like `zephyr.proxy.rlwy.net:17738`. That's the only way in: the service never gets an HTTP domain, so the office itself is never on the internet.
 5. Builds this checkout with [`deploy/container/Dockerfile`](../deploy/container/Dockerfile): Node 22, git, the GitHub CLI, build tools and sshd. **Claude Code** is installed onto the volume the first time the office starts, so it keeps updating itself. The restart policy is *Always*, so a crash brings it straight back.
 6. Signs the GitHub CLI in with your local `gh auth token` (kept on the volume), and gives git your name and email.
-7. Opens an SSH tunnel and your browser at `http://localhost:4600`. **The first page shows the office password once. Write it down.** The office then keeps only a hash of it.
+7. Opens an SSH tunnel and your browser at `http://localhost:4600`. **The first page shows the shared password once. Write it down.** The office then keeps only a hash of it.
 
 The office listens on `127.0.0.1:4600` inside its container, and everyone reaches it through the tunnel. `localhost` counts as a secure origin, so voice and screen sharing work, with no certificates to manage. Your key logs in as `agentoffice`, the user that runs the office (`deploy/railway.sh ssh` gives you its shell). The office starts with no floors: open Floors (it opens by itself) and pick one of the repositories your GitHub token can see.
 
@@ -65,7 +65,7 @@ deploy/railway.sh reset-password       # new password, shown once; signs everyon
 deploy/railway.sh ssh | logs           # a shell in the container / follow the office's logs
 ```
 
-**Updating.** Pull the latest agent-office into your clone and run `deploy/railway.sh update`. **⬆️ Upgrade the office** in the **☰** menu is for servers set up with `deploy/provision.sh`: a container's code comes from its image.
+**Updating.** Pull the latest agent-office into your clone and run `deploy/railway.sh update`. **Update Kipdeck** in the **☰** menu is for servers set up with `deploy/provision.sh`: a container's code comes from its image.
 
 **Claude sign-in.** Pass `--claude-token "$(claude setup-token)"` (your Claude subscription) or `--anthropic-api-key <key>`; either becomes a variable on the service. Or pass neither, and run `/login` in the first worker's terminal: that sign-in is kept on the volume.
 

@@ -115,7 +115,7 @@ test('only admins add the folder the office was started in, or switch the usage 
 
   const admin = fakeCtx(true);
   setupHandlers['setup.useFolder'](admin.ctx, admin.c, { t: 'setup.useFolder' });
-  assert.deepEqual(admin.warned, ['The office was not started inside a git repository']);
+  assert.deepEqual(admin.warned, ['Kipdeck was not started inside a git repository']);
 
   const here = fakeCtx(true);
   const dir = repo(path.join(here.root, 'web'));

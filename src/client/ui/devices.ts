@@ -28,7 +28,7 @@ export function devicesSetting(pair: (paired: () => void) => void): HTMLElement 
 
   const row = (d: DeviceView): HTMLElement => {
     const name = h('span.device-name', {}, d.name, d.current ? h('span.you', {}, 'this device') : null);
-    const text = h('div.device-text', {}, name, h('span.device-when', {}, [`seen ${seenWords(d.lastSeen, Date.now())}`, `paired ${day(d.createdAt)} ${d.by ? `by ${d.by}` : 'with the office password'}`, d.owner && d.owner !== d.by ? `signs in as ${d.owner}` : ''].filter(Boolean).join(' · ')));
+    const text = h('div.device-text', {}, name, h('span.device-when', {}, [`seen ${seenWords(d.lastSeen, Date.now())}`, `paired ${day(d.createdAt)} ${d.by ? `by ${d.by}` : 'with the shared password'}`, d.owner && d.owner !== d.by ? `signs in as ${d.owner}` : ''].filter(Boolean).join(' · ')));
     const rename = h('button.btn.quiet', { type: 'button', 'aria-label': `Rename ${d.name}`, title: 'Rename' }, icon('edit', 14));
     const revoke = h('button.btn.danger', { type: 'button' }, 'Revoke');
     const li = h('li.device', {}, text, h('div.device-acts', {}, rename, revoke));

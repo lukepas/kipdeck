@@ -3,7 +3,7 @@ import { agentRef } from '../shared/agentname.js';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { isAgentProvider, type AgentChoice, type AgentEffort, type AgentProvider, type GhPull, type QueuePayment, type QueueState, type QueueTask, type WorkerInfo, type WorkerStatus } from '../shared/protocol.js';
-import { DESK_BY_ID, SEATS } from '../shared/layout.js';
+import { SEATS } from '../shared/layout.js';
 import { seatForGoal } from '../shared/pods.js';
 import { validateWorkerEffort, validateWorkerModel } from './agents.js';
 import { savedEffort, savedModel, takesEffort, takesModel } from '../shared/providers.js';
@@ -449,7 +449,7 @@ export class TaskQueue {
       t.startedAt = Date.now();
       t.error = undefined;
       this.lastStatus.set(r.id, r.status);
-      this.events.toast(`${r.name} sat down at ${DESK_BY_ID.get(desk)?.label ?? 'a desk'} to work on ${label(t)}`, 'info');
+      this.events.toast(`${r.name} started work on ${label(t)}`, 'info');
       if (t.issue !== undefined) {
         const issue = t.issue;
         void this.events.claimIssue(issue, t.owner).then((err) => {

@@ -183,7 +183,7 @@ export function renderUsage() {
             `cache write ${fmtTokens(currentOpenCodeCacheWrite)} · cache read ${fmtTokens(currentOpenCodeCacheRead)}`,
           ].join('\n'),
         },
-        `OpenCode ${currentOpenCodeIncomplete ? "partial" : "current desks"} ${amount} · ${fmtTokens(currentOpenCodeTokens)} tokens`,
+        `OpenCode ${currentOpenCodeIncomplete ? "partial" : "current agents"} ${amount} · ${fmtTokens(currentOpenCodeTokens)} tokens`,
       ),
     );
   }
@@ -201,7 +201,7 @@ export function renderUsage() {
             `cache write ${fmtTokens(currentCodexCacheWrite)} · cache read ${fmtTokens(currentCodexCacheRead)}`,
           ].join('\n'),
         },
-        `Codex ${currentCodexIncomplete ? 'partial' : 'current desks'} ${amount} · ${fmtTokens(currentCodexTokens)} tokens`,
+        `Codex ${currentCodexIncomplete ? 'partial' : 'current agents'} ${amount} · ${fmtTokens(currentCodexTokens)} tokens`,
       ),
     );
   }

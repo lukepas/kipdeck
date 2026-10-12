@@ -82,7 +82,7 @@ test("a milestone's progress: its issues closed, PRs open, workers on it, and wh
   assert.deepEqual(toLink({ statement: '', milestones: mission().milestones.map((x) => ({ ...x, done: true })) }, roster), []);
   // A milestone with no issues has nothing to show a bar for.
   assert.equal(progressLine({ closed: 0, issues: 0, workers: 0 }), 'no issues linked yet');
-  assert.equal(progressLine({ closed: 1, issues: 3, workers: 2 }), '1/3 issues · 2 workers');
+  assert.equal(progressLine({ closed: 1, issues: 3, workers: 2 }), '1/3 issues · 2 agents');
   assert.deepEqual([linkLabel(e({})), linkLabel(shell), linkLabel(e({ issue: 4 })), linkLabel(e({ goalTitle: 'Auth', issue: 4 }))], ['unlinked', '', '#4', 'Auth · #4']);
 });
 

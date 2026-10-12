@@ -4,7 +4,7 @@
 // projects, never workers, floors, desks, units, crew or an office. This test reads the string
 // literals of every file the inbox can load (its import graph from src/client/lite.ts and
 // src/client/home/index.ts, every window home/lazy.ts opens included), the HTML pages and the
-// server's CLI and errors, and fails when one brings the old words or the nicknames back. The 3D
+// server's CLI, errors and toasts, and fails when one brings the old words or the nicknames back. The 3D
 // Deck (src/client/features, world, core and the Deck-only files named in the glossary) keeps its own.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -136,12 +136,25 @@ export const NAMED: readonly string[] = [
   'src/server/rundown/service.ts',
 ];
 
+/** The Deck's own server handler: the signs over its desks and how far its back office is built out. */
+const DECK_ONLY_SERVER: readonly string[] = ['src/server/ws/handlers/plan.ts'];
+
 /**
  * Files the graph doesn't reach whose strings people read in the inbox's words, beyond the server
- * files above: every error the HTTP routes send back to a page, and the two 2D windows the Deck
- * opens over the same vocabulary (its palette and Upgrade).
+ * files above: every error the HTTP routes send back to a page, every toast and warning a WebSocket
+ * handler sends (Settings, accounts, team and sign-ins answer through them), and the two 2D windows
+ * the Deck opens over the same vocabulary (its palette and Upgrade).
  */
-const LISTED: readonly string[] = ['src/client/ui/palette.ts', 'src/client/ui/upgrade.ts', ...tsFiles('src/server/http/routes')];
+const LISTED: readonly string[] = [
+  'src/client/ui/palette.ts',
+  'src/client/ui/upgrade.ts',
+  'src/server/signins.ts',
+  'src/server/clone.ts',
+  'src/server/github.ts',
+  'src/server/whiteboard.ts',
+  ...tsFiles('src/server/http/routes'),
+  ...tsFiles('src/server/ws/handlers').filter((f) => !DECK_ONLY_SERVER.includes(f)),
+];
 
 /** The files whose strings people read in the inbox, its windows, its notifications and the CLI. */
 export const SURFACES: readonly string[] = [...new Set([...inboxGraph(), ...NAMED, ...LISTED])];
@@ -154,22 +167,45 @@ const OLD_WORDS = /\b(workers?|floors?|desks?|offices?|units?|elevators?|crew)\b
  * AGENT_OFFICE_HOME), the office/* branches, the hook scripts' names (office-queue, office-workers),
  * --flags and the plot's p-unit class. They are stripped before the old words are looked for.
  */
-const IDENTIFIERS = /\bp-unit\b|\.?agent-office\b|\bAGENT_OFFICE_\w+|\boffice\/[\w*<>-]*|\boffice-(workers|queue)\b|\boffice@|(^|\s)--[\w-]+/g;
+const IDENTIFIERS = /\bp-unit\b|\.?agent-office\b|\bAGENT_OFFICE_\w+|\boffice\/[\w*<>-]*|\boffice-(workers|queue)\b|\boffice@|(^|[\s(])--[\w-]+/g;
 
-/** A template literal's text without its ${...} parts (code, not copy). */
+/**
+ * A template literal's text with each ${...} part read as one placeholder (#): the part is code,
+ * not copy, but the words around it still read as a sentence ("Worker ${n}" is copy).
+ */
 function textOf(literal: string): string {
-  let out = '';
+  return parts(literal).text;
+}
+
+/** A template literal's text (see textOf) and the code inside its ${...} parts. */
+function parts(literal: string): { text: string; code: string[] } {
+  let text = '';
+  const code: string[] = [];
   let depth = 0;
+  let start = 0;
   for (let i = 0; i < literal.length; i++) {
     if (depth === 0 && literal.startsWith('${', i)) {
       depth = 1;
+      start = i + 2;
       i++;
     } else if (depth > 0) {
       if (literal[i] === '{') depth++;
-      else if (literal[i] === '}') depth--;
-    } else out += literal[i];
+      else if (literal[i] === '}' && --depth === 0) {
+        code.push(literal.slice(start, i));
+        text += '#';
+      }
+    } else text += literal[i];
   }
-  return out;
+  return { text, code };
+}
+
+/**
+ * A literal's text and the text of every string inside its ${...} parts, at any depth:
+ * `paired ${by ? `by ${by}` : 'with the shared password'}` is three pieces of copy.
+ */
+function pieces(literal: string): string[] {
+  const { text, code } = parts(literal);
+  return [text, ...code.flatMap((c) => literals(c).flatMap((l) => pieces(l.text)))];
 }
 
 /**
@@ -187,7 +223,7 @@ function isCopy(text: string): boolean {
 function copyOf(files: readonly string[]): { at: string; text: string }[] {
   return files.flatMap((f) =>
     literals(readFileSync(path.join(root, f), 'utf8'))
-      .map(({ line, text }) => ({ at: `${f}:${line}`, text: textOf(text) }))
+      .flatMap(({ line, text }) => pieces(text).map((t) => ({ at: `${f}:${line}`, text: t })))
       .filter((l) => isCopy(l.text)),
   );
 }
@@ -209,6 +245,12 @@ test("the inbox's graph reaches the windows it opens and leaves the 3D Deck out"
   assert.ok(!graph.some((f) => f.startsWith('src/client/features/')));
   // The glossary names every Deck-only file the graph leaves out.
   const words = readFileSync(path.join(root, 'docs/voice.md'), 'utf8');
+  for (const f of DECK_ONLY_SERVER) {
+    assert.ok(words.includes(`\`${f}\``), `docs/voice.md names ${f} as Deck-only`);
+    assert.ok(!SURFACES.includes(f), `${f} is left out`);
+  }
+  // Settings answers through the WebSocket handlers: their toasts and warnings are checked.
+  assert.ok(SURFACES.includes('src/server/ws/handlers/settings.ts'));
   for (const f of ['src/client/features/', 'src/client/world/', 'src/client/core/', 'src/client/ui/help.ts', 'src/client/ui/elevator.ts', 'src/client/ui/floormenu.ts', 'src/shared/shipvoice.ts', 'src/shared/commendations.ts']) {
     assert.ok(words.includes(`\`${f}\``), `docs/voice.md names ${f} as Deck-only`);
     assert.ok(DECK_ONLY.some((d) => d.test(f.endsWith('/') ? `${f}x.ts` : f)), `${f} is left out of the graph`);
@@ -254,7 +296,9 @@ test("the client's title, alt, aria-label and placeholder text speaks the glossa
   for (const f of SURFACES.filter((s) => s.startsWith('src/client/'))) {
     const src = readFileSync(path.join(root, f), 'utf8');
     for (const m of src.matchAll(attr)) {
-      const hit = OLD_WORDS.exec(textOf(m[2]).replace(IDENTIFIERS, '').replace(THE_CREW, ''));
+      const hit = pieces(m[2])
+        .map((t) => OLD_WORDS.exec(t.replace(IDENTIFIERS, '').replace(THE_CREW, '')))
+        .find(Boolean);
       if (hit) bad.push(`${f}:${src.slice(0, m.index).split('\n').length}: "${hit[0]}" in ${m[0].slice(0, 90)}`);
     }
   }
@@ -301,7 +345,12 @@ test('the scanner skips identifiers and code, and catches copy', () => {
   assert.equal(isCopy('li.mc-row'), false);
   assert.equal(isCopy('Workers'), true);
   assert.equal(isCopy('No such floor'), true);
-  assert.equal(textOf('Asked ${e.name} to go'), 'Asked  to go');
+  assert.equal(textOf('Asked ${e.name} to go'), 'Asked # to go');
+  // A placeholder keeps a one-word label with a number on it a sentence, and strings inside ${...} are read too.
+  assert.ok(isCopy(textOf('Worker ${roles.length + 1}')));
+  assert.ok(OLD_WORDS.test(textOf('${n} worker${n === 1 ? "" : "s"}')) && isCopy(textOf('${n} worker${n === 1 ? "" : "s"}')));
+  assert.deepEqual(pieces("paired ${by ? `by ${by}` : 'with the office password'}"), ['paired #', 'by #', 'with the office password']);
+  assert.equal(isCopy(textOf('desk-${n}')), false);
   assert.equal('prune leftover .agent-office/worktrees and office/* branches'.replace(IDENTIFIERS, '').match(OLD_WORDS), null);
   assert.equal('kipdeck: --max-workers needs a number'.replace(IDENTIFIERS, '').match(OLD_WORDS), null);
   assert.ok(OLD_WORDS.test('Hire a worker at a desk'));

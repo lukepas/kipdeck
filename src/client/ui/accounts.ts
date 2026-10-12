@@ -76,7 +76,7 @@ export function openAccounts(net: Net) {
       revoke.addEventListener('click', () =>
         confirmDialog(
           `Revoke ${a.name}?`,
-          `Their account is deleted and they're signed out everywhere right away. Terminals they typed in keep running. ${s.sharedPassword ? `If ${a.name} also knows the shared office password, they can still use that: switch it off below.` : ''}`,
+          `Their account is deleted and they're signed out everywhere right away. Terminals they typed in keep running. ${s.sharedPassword ? `If ${a.name} also knows the shared password, they can still use that: switch it off below.` : ''}`,
           'Revoke',
           () => net.send({ t: 'accounts.revoke', accountId: a.id }),
         ),

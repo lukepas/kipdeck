@@ -206,7 +206,7 @@ function meetingForm(net: Net, preset: MeetingPreset | undefined, done: () => vo
     renderRoles();
   });
   plus.addEventListener('click', () => {
-    if (roles.length < def().seats.max) roles.push(def().roles[roles.length] ?? `Worker ${roles.length + 1}`);
+    if (roles.length < def().seats.max) roles.push(def().roles[roles.length] ?? `Agent ${roles.length + 1}`);
     renderRoles();
   });
   outputIn.addEventListener('input', () => {

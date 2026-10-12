@@ -37,8 +37,9 @@ The 3D Deck keeps its own words, because they name things you see on the ship. T
 - `src/client/ui/help.ts` (the Deck's help), `src/client/ui/elevator.ts` (its project switcher) and `src/client/ui/floormenu.ts`
 - `src/shared/shipvoice.ts` (VESPER's phrasebook) and `src/shared/commendations.ts` (the plinth's plaque)
 - the counters in `src/client/bridge.html`
+- `src/server/ws/handlers/plan.ts` (the signs over the Deck's desks and its back office)
 
-`tests/one-name.test.ts` holds this table. It follows the import graph from `src/client/lite.ts`, `src/client/home/index.ts` and the scripts of the sign-in, join and claim pages, through every static and dynamic `import()` in `src/client` and `src/shared` and so every window `src/client/home/lazy.ts` opens, leaves out the Deck-only files above, adds the server's CLI, setup and HTTP route errors, and fails when a string, an HTML page or a `title`, `alt`, `aria-label` or `placeholder` says worker, floor, desk, unit, office or elevator. A new file the inbox imports is checked from the day it lands.
+`tests/one-name.test.ts` holds this table. It follows the import graph from `src/client/lite.ts`, `src/client/home/index.ts` and the scripts of the sign-in, join and claim pages, through every static and dynamic `import()` in `src/client` and `src/shared` and so every window `src/client/home/lazy.ts` opens, leaves out the Deck-only files above, adds the server's CLI, setup, HTTP route errors, the toasts and warnings its WebSocket handlers send and the sign-in, clone and GitHub errors they pass on, and fails when a string (including the strings inside a template's `${...}`), an HTML page or a `title`, `alt`, `aria-label` or `placeholder` says worker, floor, desk, unit, office or elevator. A new file the inbox imports is checked from the day it lands.
 
 ## The rules
 
