@@ -19,7 +19,7 @@ import { buildSite } from '../site/build.mjs';
 import { serve } from '../site/serve.mjs';
 
 const dir = mkdtempSync(path.join(tmpdir(), 'landing-scenes-'));
-// Built as the page will be once the source is public: the clone command and the terminal are on it.
+// Built as the page will be once the source is public: the npx github command and the terminal are on it.
 await buildSite({ env: {}, outDir: dir, card: false });
 const { server, url } = await serve(dir, 0);
 
@@ -140,7 +140,7 @@ test('section 06 looks finished within a second of coming into view, and its ter
   const { page, errors } = await open(t);
   // Before the terminal runs, every line is already in the accessibility tree.
   const tree = await page.locator('#from-source').ariaSnapshot();
-  assert.match(tree, /npm install/);
+  assert.match(tree, /npx github:zbagdzevicius\/kipdeck/);
   assert.match(tree, /running at\s+http:\/\/localhost:4600/);
   await page.evaluate(() => document.querySelector('#yours .measured')!.scrollIntoView({ block: 'center' }));
   await page.waitForTimeout(1200);
@@ -174,7 +174,8 @@ test('the footer tells the truth about the wait, and answering there clears it',
   await page.waitForTimeout(500);
   assert.equal(await page.locator('#end-h').textContent(), 'Codex is waiting on you.');
   await page.locator('.calm-answer').click();
-  assert.equal(await page.locator('#end-h').textContent(), 'Nothing waits on you.');
+  // The fact first, then one warm clause in its own span, only once nobody waits.
+  assert.equal(await page.locator('#end-h').textContent(), 'Nothing waits on you. Kip has the watch.');
   assert.equal(await page.locator('[data-pulse-count]').textContent(), '0');
   assert.deepEqual(errors, []);
 });

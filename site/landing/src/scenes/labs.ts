@@ -1,12 +1,12 @@
-// 09 Labs: what else is in the box. As the Deck tile rises into view, five inbox rows lift off
+// 09 Labs, the B-sides: off by default. As the Deck tile rises into view, five inbox rows lift off
 // the page, tilt back and spread into consoles around a deck: the same agents, now at stations,
 // each with a unit seated at it that keeps its status glyph (the one that needs you glows Signal).
 // A ship-cyan sweep starts once the deck has settled. On a capable device the deck then hands over
 // to a small three.js bridge, drawn in a worker so it never blocks a scroll (fx/bridge.ts; loaded only
 // now, only here); elsewhere the CSS deck stays.
 //
-// One command line drives the tiles: "npm start -- --labs bridge,ops,boards,voice,meetings" from a
-// clone (the build swaps in "npx kipdeck --labs ..." once npm is published, site/build.mjs). Every
+// One command line drives the tiles: "npx github:owner/repo --labs bridge,ops,boards,voice,meetings"
+// (the build swaps in "npx kipdeck --labs ..." once npm is published, site/build.mjs). Every
 // lab is off by default in the office and this command holds these on, so the tiles start on; as the section arrives a scanline
 // powers each tile in turn. Pressing a flag holds its lab off (the flag reads "-voice", as the real
 // --labs does) or on again. The flags work without motion too (they only toggle).

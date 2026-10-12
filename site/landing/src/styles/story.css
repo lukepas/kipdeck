@@ -9,6 +9,36 @@
 .hero-copy > * { grid-column: 1; }
 .hero-copy > .label, .hero-copy > h1 { grid-column: 1 / -1; }
 .hero .app.mini { grid-column: 2; grid-row: 3 / span 7; align-self: start; margin-top: 6px; }
+/* The sunset behind Kip: a dusk glow rising from the inbox's top edge where he stands, with the
+   grain on it, and nowhere else on the page. It sits right of the headline and above the inbox, so
+   it is never under text, a control or a state mark (the inbox covers its horizon). Warmth waits
+   for a quiet moment: while an agent waits on the visitor it stays a low ember, and it comes up
+   once, over a beat, when nobody is waiting. None in the light set, in print or on one column. */
+.hero-sunset { display: none; }
+@media (min-width: 861px) {
+  /* A zero-height anchor just under the inbox's top edge (it takes no room in the grid); the glow
+     hangs above it. Its bottom 48px sit behind the inbox and fade out, so where the glow passes the
+     inbox's right edge its horizon is soft, not a cut. */
+  .hero-sunset {
+    display: block; position: relative; z-index: 0; grid-column: 2; grid-row: 3; align-self: start; justify-self: end;
+    /* Centred on Kip, who stands about 65px in from the inbox's right edge (kip/moments/hero.ts),
+       and narrow enough to stay right of the headline's last letter at every width. */
+    --sun-w: clamp(240px, 22vw, 340px);
+    width: var(--sun-w); height: 0; margin: 54px calc(65px - var(--sun-w) / 2) 0 0; pointer-events: none;
+    opacity: .2; transition: opacity var(--t-beat) var(--ease);
+  }
+  .hero-sunset::before {
+    content: ''; position: absolute; left: 0; right: 0; bottom: 0; aspect-ratio: 2 / 1;
+    background: var(--grain), var(--sunset); background-size: 160px 160px, 100% 100%;
+    -webkit-mask-image: radial-gradient(50% 100% at 50% 100%, black 50%, transparent), linear-gradient(to top, transparent, black 48px);
+    -webkit-mask-composite: source-in;
+    mask-image: radial-gradient(50% 100% at 50% 100%, black 50%, transparent), linear-gradient(to top, transparent, black 48px);
+    mask-composite: intersect;
+  }
+  .hero .app.mini { position: relative; z-index: 1; }
+  .hero.quiet .hero-sunset { opacity: .9; }
+}
+@media print { .hero-sunset { display: none; } }
 .hero-h { font-size: clamp(46px, 8vw, 128px); margin: 0 0 clamp(28px, 4vh, 44px); }
 .hero-h .w { display: inline-block; transform-origin: 0 80%; }
 /* Each word sits in a box sized by an invisible copy at its final width, so the inhale on the width
@@ -35,16 +65,16 @@ html.js:not(.agent-waiting) .hero-h .waiting { color: var(--text); }
 .hero-sub code { color: var(--text); white-space: nowrap; }
 
 .cmd { position: relative; display: flex; align-items: center; gap: 10px; max-width: 620px; min-height: 52px; padding: 6px 6px 6px 16px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--code-bg); color: var(--term-text); }
-.cmd-prompt { color: #5f6c7a; font-family: var(--font-mono); }
-.cmd-text { flex: 1; min-width: 0; padding: 6px 0; font-size: 13px; line-height: 1.55; white-space: normal; overflow-wrap: normal; color: #e8ecef; }
+.cmd-prompt { color: var(--term-faint); font-family: var(--font-mono); }
+.cmd-text { flex: 1; min-width: 0; padding: 6px 0; font-size: 13px; line-height: 1.55; white-space: normal; overflow-wrap: normal; color: var(--term-ink); }
 /* A command breaks only between its && steps (ui/controls.ts commandSteps), and a long address
    only after a slash, never in the middle of a word. */
 .cmd-text .step { display: inline-block; max-width: 100%; }
 .cmd-text::-webkit-scrollbar { display: none; }
-.copy { flex: none; height: 38px; min-width: 88px; padding: 0 14px; text-align: center; border: 1px solid #3a4756; border-radius: 3px; background: #141b23; color: #e8ecef; font: 500 13px/1 var(--font-ui); cursor: pointer; transition: border-color var(--t-ui) var(--ease), background-color var(--t-ui) var(--ease); }
-.copy:hover { border-color: #8a97a5; }
+.copy { flex: none; height: 38px; min-width: 88px; padding: 0 14px; text-align: center; border: 1px solid var(--term-edge); border-radius: var(--radius); background: var(--term-raised); color: var(--term-ink); font: 500 13px/1 var(--font-ui); cursor: pointer; transition: border-color var(--t-ui) var(--ease), background-color var(--t-ui) var(--ease); }
+.copy:hover { border-color: var(--term-dim); }
 /* min-width holds the button at its widest label (Select it), so Copy turning into Copied never rewraps the command. */
-.copy.done { border-color: var(--settled); color: #3ddc97; }
+.copy.done { border-color: var(--term-ok); color: var(--term-ok); }
 .unpublished { margin: 10px 0 0; font-size: 12.5px; }
 .unpublished a { color: var(--text); }
 .cta { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 22px; }
@@ -56,6 +86,7 @@ html.js:not(.agent-waiting) .hero-h .waiting { color: var(--text); }
 .try.lit .cmd:not([hidden]) { animation: cmd-lit 1400ms var(--ease-out); }
 @keyframes cmd-lit { 0% { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent); } 100% { box-shadow: 0 0 0 0 transparent; } }
 .demo-note { margin: 10px 0 0; font-size: 13.5px; color: var(--text); }
+.demo-note .warm { color: var(--muted); }
 .facts { display: flex; flex-wrap: wrap; gap: 14px 34px; margin-top: 34px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
 .facts li { display: flex; flex-direction: column; gap: 2px; }
 .facts b { font-size: 24px; font-weight: 500; color: var(--text); letter-spacing: -.02em; }
@@ -109,7 +140,7 @@ svg.st { overflow: visible; }
 /* The ghost cursor that answers once, after six idle seconds. */
 .ghost-cursor { position: fixed; left: 0; top: 0; z-index: 70; pointer-events: none; opacity: 0; transition: opacity 320ms var(--ease); will-change: transform; }
 .ghost-cursor.in { opacity: 1; }
-.ghost-cursor svg { display: block; margin: -3px 0 0 -5px; fill: #f4f6f8; stroke: #0b0b0c; stroke-width: 1.3; stroke-linejoin: round; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .45)); transform-origin: 5px 3px; transition: transform 140ms var(--ease); }
+.ghost-cursor svg { display: block; margin: -3px 0 0 -5px; fill: var(--cursor-fill); stroke: var(--cursor-edge); stroke-width: 1.3; stroke-linejoin: round; filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .45)); transform-origin: 5px 3px; transition: transform 140ms var(--ease); }
 .ghost-cursor.press svg { transform: scale(.84); }
 .ghost-cursor i { position: absolute; left: -18px; top: -18px; width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--settled); opacity: 0; }
 .ghost-cursor.press i { animation: ghost-ring 640ms var(--ease-out) both; }

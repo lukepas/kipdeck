@@ -5,7 +5,7 @@
 //
 // What it holds the page to: the Kipdeck name and never one from before the rename; nothing loaded from
 // other sites; every staged surface labelled as demo data, measured or illustrative; every chain
-// value marked testnet; the from-source command until the build says npm is published; one
+// value marked testnet; the npx github:owner/repo command until the build says npm is published; one
 // repository per brand, named in brand.ts; a first screen that says what it is and a hero command
 // that runs the demo; a hero that opens asking and never contradicts itself; copy that matches the
 // code (http by default, the kipdeck binary, no internal paths); a design-partner ask by email; a
@@ -21,7 +21,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, type Browser } from 'playwright-core';
 // @ts-expect-error a plain .mjs script with no types
-import { buildPage, buildSite, repoOf } from '../site/build.mjs';
+import { buildPage, buildSite, cardHtml, cardTones, repoOf } from '../site/build.mjs';
 // @ts-expect-error a plain .mjs script with no types
 import { serve } from '../site/serve.mjs';
 import { LOGO_COLORS, faviconSvg, logoPaths } from '../src/shared/logo.ts';
@@ -38,7 +38,7 @@ async function built(env: Record<string, string>): Promise<Served> {
   return { dir, url, html: readFileSync(path.join(dir, 'index.html'), 'utf8'), close: () => server.close() };
 }
 
-// The repository is public, so the default build (no settings) links it: the clone command, the
+// The repository is public, so the default build (no settings) links it: the npx github command, the
 // terminal, the Source link. `closed` is a build for a brand whose repository is private.
 const main = await built({});
 const closed = await built({ KIPDECK_REPO_PUBLIC: '0' });
@@ -97,9 +97,9 @@ test('one name: the page says Kipdeck and never another product name', () => {
   assert.match(main.html, /<meta property="og:title" content="Kipdeck: /);
   assert.doesNotMatch(a, /ugc army|ugc-army|mergeline/i);
   assert.doesNotMatch(main.html, /\{\{\w+\}\}/, 'no brand token left unfilled');
-  // Links and the clone use the real repository address, and the clone lands in a folder named kipdeck.
+  // Links and the start command use the real repository: npx runs it straight from GitHub (PR #43).
   assert.equal(repoOf(main.html), 'https://github.com/zbagdzevicius/kipdeck');
-  assert.match(main.html, /data-copy="git clone https:\/\/github\.com\/zbagdzevicius\/kipdeck kipdeck &amp;&amp; cd kipdeck &amp;&amp; npm install &amp;&amp; npm start -- --demo"/);
+  assert.match(main.html, /data-copy="npx github:zbagdzevicius\/kipdeck --demo"/);
   assert.match(main.html, /"codeRepository":"https:\/\/github\.com\/zbagdzevicius\/kipdeck"/);
 });
 
@@ -131,10 +131,14 @@ test("the header, the mini inbox and the footer draw Kip's mark, with his favico
   assert.equal(readFileSync(path.join(main.dir, 'favicon-alert.svg'), 'utf8'), faviconSvg(LOGO_COLORS.signal));
 });
 
-test('the share card leads with Kip, his light lit in Signal', () => {
-  const card = readFileSync(path.join(ROOT, 'site', 'build.mjs'), 'utf8');
-  assert.ok(card.includes(`data-logo="mark" width="44" height="44" viewBox="0 0 32 32" fill="#e8ecef">${logoPaths('mark')}</svg>`));
+test('the share card leads with Kip, his light lit in Signal, on the warm night tones', async () => {
+  const fonts = path.join(ROOT, 'src', 'client', 'styles', 'fonts');
+  const card = cardHtml({ name: 'Kipdeck', lead: 'KIP', muted: 'DECK', archivo: path.join(fonts, 'archivo-latin.woff2'), mono: path.join(fonts, 'jetbrains-mono-latin.woff2'), tones: await cardTones() });
+  assert.ok(card.includes(`data-logo="mark" width="44" height="44" viewBox="0 0 32 32" fill="#f2ece3">${logoPaths('mark')}</svg>`));
   assert.match(card, /\.top \.signal\{fill:#ff6a1a\}/);
+  assert.match(card, /background:#15120f;color:#f2ece3/);
+  // No slate left from before the warm palette.
+  assert.doesNotMatch(card, /#0d131a|#e8ecef|#8a97a5|#141b23|#3a4756/i);
 });
 
 test('vercel.json builds the page and sends the same headers as public/_headers', () => {
@@ -169,7 +173,9 @@ test('the build fills in the addresses, opens the CSP to the waitlist only, and 
   assert.match(html, /data-link="demo" href="#try-demo">Copy the demo command</, 'without a hosted demo the button says what it does');
   assert.match(filled, /data-link="repo" href="https:\/\/github\.com\/example\/agent-inbox"/);
   assert.match(filled, /data-link="repo-run" href="https:\/\/github\.com\/example\/agent-inbox#from-source"/);
-  assert.match(filled, /data-copy="git clone https:\/\/github\.com\/example\/agent-inbox &amp;&amp; cd agent-inbox &amp;&amp;/);
+  assert.match(filled, /data-copy="npx github:example\/agent-inbox --demo"/);
+  assert.match(filled, /<span data-unpublished>npx github:example\/agent-inbox --labs<\/span>/);
+  assert.doesNotMatch(filled, /github:zbagdzevicius/);
   assert.ok(!filled.includes(repoOf(html)), 'no link left to the brand repository');
   assert.throws(() => buildPage(html, { KIPDECK_WAITLIST_URL: 'http://wait.example.eu/' }), /must be https/);
   assert.throws(() => buildPage(html, { KIPDECK_DEMO_URL: 'not a url' }), /not a URL/);
@@ -177,7 +183,9 @@ test('the build fills in the addresses, opens the CSP to the waitlist only, and 
 
 test('while the repository is private the page points nowhere a visitor cannot follow', () => {
   const html = closed.html;
-  assert.doesNotMatch(html, /git clone|data-link="repo"|data-link="repo-docs"|data-link="repo-run"|id="from-source"|codeRepository|<!-- runnable -->/);
+  assert.doesNotMatch(html, /npx github:|data-link="repo"|data-link="repo-docs"|data-link="repo-run"|id="from-source"|codeRepository|<!-- runnable -->/);
+  // A clone is the only way to run a private repository, so Labs says it the clone's way.
+  assert.match(html, /<span data-unpublished>npm start -- --labs<\/span>/);
   // The film leads, and the design-partner email is the second button.
   const cta = (/<div class="cta">[\s\S]*?<\/div>/.exec(html) ?? [''])[0];
   assert.match(cta, /class="btn primary magnetic" type="button" data-watch/);
@@ -191,7 +199,7 @@ test('while the repository is private the page points nowhere a visitor cannot f
   // The default build (the repository is public) links it everywhere.
   assert.match(main.html, /data-link="repo" href="https:\/\/github\.com\/zbagdzevicius\/kipdeck"/);
   assert.match(main.html, /"codeRepository":"https:\/\/github\.com\/zbagdzevicius\/kipdeck"/);
-  assert.match(main.html, /data-copy="git clone https:\/\/github\.com\/zbagdzevicius\/kipdeck kipdeck &amp;&amp; cd kipdeck &amp;&amp;/);
+  assert.match(main.html, /data-copy="npx github:zbagdzevicius\/kipdeck --demo"/);
   // KIPDECK_REPO_URL counts as public even beside KIPDECK_REPO_PUBLIC=0.
   const moved = buildPage(main.html, { KIPDECK_REPO_PUBLIC: '0', KIPDECK_REPO_URL: 'https://github.com/example/agent-inbox' });
   assert.match(moved, /data-link="repo" href="https:\/\/github\.com\/example\/agent-inbox"/);
@@ -200,19 +208,19 @@ test('while the repository is private the page points nowhere a visitor cannot f
 test('the Labs command line never shows an npx command that npm does not have yet', () => {
   const labsOf = (html: string) => (/<div class="cmd labs-cmd"[\s\S]*?<\/div>/.exec(html) ?? [''])[0];
   const labs = labsOf(main.html);
-  assert.match(labs, /<span data-unpublished>npm start -- --labs<\/span>/);
+  assert.match(labs, /<span data-unpublished>npx github:zbagdzevicius\/kipdeck --labs<\/span>/);
   assert.match(labs, /<span data-published hidden>npx kipdeck --labs<\/span>/);
   const published = labsOf(buildPage(main.html, { KIPDECK_NPM_PUBLISHED: '1' }));
-  assert.doesNotMatch(published, /npm start|data-unpublished|data-published hidden/);
+  assert.doesNotMatch(published, /npx github:|data-unpublished|data-published hidden/);
   assert.match(published, /<span data-published>npx kipdeck --labs<\/span> <span class="flags">/);
 });
 
-test('until npm is published the page says so and shows the from-source command; published, npx takes its place', () => {
+test('until npm is published the page says so and runs it from GitHub with npx; published, npx kipdeck takes its place', () => {
   assert.match(main.html, /Not on npm yet/);
   assert.match(main.html, /data-unpublished>/);
   assert.match(main.html, /data-published hidden/);
   const published = buildPage(main.html, { KIPDECK_NPM_PUBLISHED: '1', KIPDECK_REPO_PUBLIC: '1' });
-  assert.doesNotMatch(published, /data-unpublished|Not on npm yet|git clone/);
+  assert.doesNotMatch(published, /data-unpublished|Not on npm yet|npx github:/);
   assert.match(published, /<div class="cmd" data-published>/);
   assert.match(published, /data-copy="npx kipdeck --demo"/);
 });
@@ -236,7 +244,7 @@ test('every staged surface is labelled: demo data, measured or illustrative; eve
   assert.doesNotMatch(source, /\b(customers|users love|trusted by|testimonial)\b/i, 'no invented traction');
 });
 
-test('the first screen: the sentence, the from-source command, Try the demo and Watch; nothing loaded from elsewhere', { skip: why || false }, async (t) => {
+test('the first screen: the sentence, the one-line start command, Try the demo and Watch; nothing loaded from elsewhere', { skip: why || false }, async (t) => {
   const { page, requests, errors } = await open(t);
   assert.equal(await page.title(), 'Kipdeck: the inbox for your AI coding agents');
   assert.equal((await page.locator('h1').innerText()).replace(/\s+/g, ' ').replace(/\s*\d{1,2}:\d\d\s*/, ' ').trim(), 'Your agents are waiting on you.');
@@ -247,7 +255,7 @@ test('the first screen: the sentence, the from-source command, Try the demo and 
   assert.equal(await page.locator('[data-published]:visible').count(), 0);
   // The hero's command is the demo's, and says what the demo is. Without a hosted demo, Try the
   // demo copies that same command and lights it.
-  assert.match(await page.locator('#try-demo .cmd-text:visible').innerText(), /^git clone .* && npm start -- --demo$/);
+  assert.match(await page.locator('#try-demo .cmd-text:visible').innerText(), /^npx github:zbagdzevicius\/kipdeck --demo$/);
   assert.match(await page.locator('#try-demo').innerText(), /No agent CLI, sign-in or model needed/);
   await page.locator('[data-link="demo"]').click();
   assert.equal(await page.locator('#try-demo.lit').count(), 1);
@@ -336,7 +344,7 @@ test('the private build opens on the film and the design-partner ask, and every 
 test('a command breaks only between its steps, never inside a word', { skip: why || false }, async (t) => {
   const { page } = await open(t, main.url, { width: 390, height: 844 });
   const text = page.locator('#try-demo .cmd[data-unpublished] .cmd-text');
-  assert.match(await text.innerText(), /^git clone .* && npm start -- --demo$/);
+  assert.match(await text.innerText(), /^npx github:zbagdzevicius\/kipdeck --demo$/);
   const split = await text.evaluate((el) => {
     const r = document.createRange();
     const out: string[] = [];
@@ -459,7 +467,7 @@ test('the copy matches the code: http by default, the kipdeck binary, Cursor CLI
   // The page ends on Teams and the ask: no section after it, only the footer.
   const order = [...page.matchAll(/<section [^>]*id="([^"]+)"/g)].map((m) => m[1]);
   assert.equal(order.at(-1), 'teams');
-  assert.doesNotMatch(page.slice(page.indexOf('id="end"')), /git clone|class="cmd"/, 'the footer has no command block');
+  assert.doesNotMatch(page.slice(page.indexOf('id="end"')), /npx github:|class="cmd"/, 'the footer has no command block');
 });
 
 test('a Vercel build gets absolute share-card addresses from its production domain', () => {
