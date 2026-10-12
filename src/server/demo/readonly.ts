@@ -3,36 +3,11 @@
 // terminal's screen, a diff, the shipped log, where they are); everything else is dropped, with a
 // toast at most every few seconds saying why. Over HTTP only GET and HEAD are answered (http/router.ts).
 // The scripted reviewer acts from the server (director.ts), never through a socket.
-import { READ_ONLY_REFUSAL } from '../../shared/demo.js';
+import { READ_ONLY_ALLOWS, READ_ONLY_QUIET as QUIET, READ_ONLY_REFUSAL } from '../../shared/demo.js';
 import type { Ctx } from '../office/context.js';
 import type { Client } from '../office/client.js';
 
-/** What a visitor may send: looking, never changing. */
-export const READ_ONLY_ALLOWS: ReadonlySet<string> = new Set([
-  'ping',
-  'doing',
-  'worker.attach',
-  'worker.detach',
-  'worker.worktree',
-  'changes.watch',
-  'changes.unwatch',
-  'changes.diff',
-  'brief.get',
-  'inbox.log',
-  'pace.get',
-  'timeline.get',
-  'team.get',
-  'approvals.get',
-  'spend.get',
-]);
-
-/**
- * What a page sends by itself rather than someone asking for it, presence a visitor has no use for
- * (nobody has an avatar on the home page), usage-limit lookups that would reach other services, and a
- * project's rundown and Signal's gist of it (its contributors, uncommitted paths, branches and decisions
- * are not for anonymous visitors, as its download isn't): dropped without a word.
- */
-const QUIET: ReadonlySet<string> = new Set(['term.resize', 'term.typing', 'profile', 'rtc', 'voice', 'setup.check', 'move', 'sit', 'act', 'limits.refresh', 'rundown.watch', 'rundown.unwatch', 'signal.peek', 'here']);
+export { READ_ONLY_ALLOWS };
 
 /** The least time between two refusals told to one visitor. */
 const TOLD_GAP_MS = 4000;
