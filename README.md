@@ -74,6 +74,7 @@ kipdeck --host 0.0.0.0              # let your network in (others sign in with a
 kipdeck --password 'correct horse'  # a password, even on this computer
 kipdeck --no-open                   # print the sign-in link instead of opening a browser
 kipdeck --telemetry                 # share anonymous usage numbers (off by default)
+kipdeck --labs proof                # turn on Proof of Merge (testnets), the Colosseum entry's payout layer
 ```
 
 `kipdeck rundown [path]` writes a project's map (its parts by status, inferred from the code, no Claude needed) into `.rundown/`, and `kipdeck rundown install` adds the `/rundown` skill to Claude Code for Claude's own read; see [docs/rundown.md](docs/rundown.md).
