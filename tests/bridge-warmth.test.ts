@@ -93,6 +93,18 @@ test('the bridge sheets that went warm write no hex of their own', () => {
   assert.match(card, /\.moment-card-eyebrow \{[^}]*var\(--label-font\)[^}]*var\(--label-track\)[^}]*uppercase[^}]*var\(--tape\)/, 'the still card greets in the tape label');
   const launch = readFileSync(path.join(import.meta.dirname, '../src/client/features/launch/index.ts'), 'utf8');
   assert.match(launch, /eyebrow: waiting \? undefined : hello/, 'no greeting on the still card while someone waits');
+  assert.match(launch, /if \(cards\.card\?\.eyebrow && parts\.giveWay\.attention\(\)\) cards\.plain\(\);\n\s*if \(phase === 'idle'\) return;/, 'a call while the still card is up takes its greeting off at once');
+});
+
+test('screen readers hear the facts before the greeting (docs/voice.md, fact first)', () => {
+  const src = (f: string) => readFileSync(path.join(import.meta.dirname, f), 'utf8');
+  const log = src('../src/client/features/launch/watchlog.ts');
+  assert.match(log, /h\('div\.watch-eyebrow', \{ hidden: true, 'aria-hidden': 'true' \}\)/, 'the log glass greeting is not read on its own');
+  assert.match(log, /setAttribute\('aria-label', `\$\{head\}\. \$\{body\}\$\{hello\}`\)/, 'the log is read first, the greeting last');
+  const card = src('../src/client/features/moments/card.ts');
+  assert.match(card, /h\('p\.moment-card-eyebrow', \{ hidden: true, 'aria-hidden': 'true' \}\)/, 'the still card greeting is not read before its title');
+  assert.match(card, /this\.title, this\.body, this\.voice, this\.eyebrowSaid, close/, 'the greeting is read after the card body');
+  assert.match(card, /plain\(\) \{[\s\S]*?eyebrow: undefined \};[\s\S]*?this\.eyebrow\.hidden = true;[\s\S]*?this\.eyebrowSaid\.textContent = '';\n  \}/, 'plain() drops the greeting, seen and heard');
 });
 
 test('the start of watch greets the crew: aboard the first time, the night shift late, else back', () => {

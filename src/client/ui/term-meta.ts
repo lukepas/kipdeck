@@ -19,7 +19,7 @@ import { chevronMarks } from './mission/crew';
 const line = (label: string, value: Node | string | null | undefined) => (value ? h('div.tm-line', {}, h('span.tm-k', {}, label), h('span.tm-v', {}, value)) : null);
 
 export function termMeta(): { el: HTMLElement; paint(w: WorkerInfo): void } {
-  const el = h('aside.term-meta', { 'aria-label': 'Unit' });
+  const el = h('aside.term-meta', { 'aria-label': 'Agent' });
   let last = '';
   const paint = (w: WorkerInfo) => {
     const att = store.ranked(store.floor).find((r) => r.entry.id === w.id)?.att;

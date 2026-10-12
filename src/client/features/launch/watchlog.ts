@@ -8,7 +8,7 @@ import { h } from '../../ui/dom';
 import { logLines, typedAt } from './logic';
 
 export class WatchLog {
-  private readonly eyebrow = h('div.watch-eyebrow', { hidden: true });
+  private readonly eyebrow = h('div.watch-eyebrow', { hidden: true, 'aria-hidden': 'true' });
   private readonly head = h('div.watch-head');
   private readonly body = h('div.watch-body');
   private readonly scan = h('div.watch-scan');
@@ -35,8 +35,9 @@ export class WatchLog {
     this.rows = this.lines.map(() => h('p.watch-line'));
     this.body.replaceChildren(...this.rows);
     // Screen readers get the whole log at once, not a letter at a time.
-    const hello = this.eyebrow.hidden ? '' : `${this.eyebrow.textContent}. `;
-    this.el.setAttribute('aria-label', `${hello}${head}. ${body}`);
+    // The facts first, the greeting after them (docs/voice.md, fact first).
+    const hello = this.eyebrow.hidden ? '' : ` ${this.eyebrow.textContent}.`;
+    this.el.setAttribute('aria-label', `${head}. ${body}${hello}`);
     this.shown = '';
   }
 

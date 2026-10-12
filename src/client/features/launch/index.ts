@@ -275,6 +275,8 @@ export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' |
         start(kind, last ?? bootAt);
       }
     }
+    // A call while the still card greets: the greeting goes at once, the log stays (docs/voice.md).
+    if (cards.card?.eyebrow && parts.giveWay.attention()) cards.plain();
     if (phase === 'idle') return;
     const t = clock - startedAt;
     if (phase === 'yield') {
