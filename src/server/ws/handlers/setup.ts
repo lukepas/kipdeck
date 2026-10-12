@@ -3,7 +3,7 @@
 // livesessions.ts), and turning the anonymous usage numbers on or off (admins).
 import path from 'node:path';
 import type { SetupClientMsg, SetupGithub, SetupState } from '../../../shared/protocol.js';
-import { checkAgentsAsync, checkGithub } from '../../firstrun.js';
+import { checkAgentsAsync, checkGithub, findConfigured } from '../../firstrun.js';
 import { launchCommand } from '../../runcmd.js';
 import { adoptSession, sessionTaken } from '../../adopt.js';
 import { liveSessions } from '../../livesessions.js';
@@ -36,7 +36,7 @@ export async function setupState(ctx: Ctx, fresh = false, admin = false, late?: 
   const first = floor ?? defs[0];
   const coming = first ? starters(first.dir, true, fresh).catch(() => [] as Starter[]) : undefined;
   let waited: Starter[] | undefined;
-  const [gh, agents] = await Promise.all([github.state, checkAgentsAsync(), coming && Promise.race([coming.then((c) => (waited = c)), new Promise((r) => setTimeout(r, STARTERS_WAIT_MS).unref?.())])]);
+  const [gh, agents] = await Promise.all([github.state, checkAgentsAsync(findConfigured(ctx.cfg.agentCmd)), coming && Promise.race([coming.then((c) => (waited = c)), new Promise((r) => setTimeout(r, STARTERS_WAIT_MS).unref?.())])]);
   const sessions = admin ? liveSessions(defs.map((d) => ({ floor: d.id, dir: d.dir })), (p, id) => !!sessionTaken(ctx, p, id)) : [];
   const state: SetupState = {
     agents,
