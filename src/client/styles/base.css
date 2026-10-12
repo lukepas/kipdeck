@@ -142,6 +142,9 @@ code, kbd, pre, .mono { font-family: var(--font-mono); font-variant-numeric: tab
 /* ---------- Modals ---------- */
 .backdrop { position: fixed; inset: 0; background: var(--scrim); display: grid; place-items: center; padding: 16px; z-index: 50; animation: fade var(--t-ui) var(--ease); }
 @keyframes fade { from { opacity: 0; } }
+/* A window is a native <dialog> opened with showModal() (ui/dialog.ts): the browser's own frame off, the scrim stays on .backdrop. */
+dialog.backdrop { margin: 0; border: 0; width: auto; height: auto; max-width: none; max-height: none; color: inherit; overflow: visible; }
+dialog.backdrop::backdrop { background: transparent; }
 .modal { position: relative; background: var(--surface-1); border: 1px solid var(--line-strong); border-radius: var(--radius-modal); width: min(560px, 100%); max-height: calc(100vh - 32px); display: flex; flex-direction: column; overflow: hidden; animation: rise var(--t-ui) var(--ease); }
 /* A window you have to answer before going on (no Esc): a 2px Signal rule on top. */
 .modal.blocking { border-top: 2px solid var(--signal); }

@@ -204,7 +204,7 @@ test('mode badges, spend in the pulse, Pause all with Undo and Continue, a budge
   await page.locator('.modal.palette').waitFor();
   await page.keyboard.type('Stop all');
   await page.keyboard.press('Enter');
-  const confirm = page.locator('.modal[role=alertdialog]', { hasText: 'Stop all 2 agents?' });
+  const confirm = page.locator('[role=alertdialog] > .modal', { hasText: 'Stop all 2 agents?' });
   await confirm.waitFor();
   await confirm.locator('button', { hasText: 'Stop all' }).click();
   const stopping = page.locator('#toasts .toast.spend-hold', { hasText: 'Stopping 2 agents' });
@@ -216,7 +216,7 @@ test('mode badges, spend in the pulse, Pause all with Undo and Continue, a budge
   // Again, and let the hold run out: both sessions end and leave the inbox.
   await fleet.click();
   await page.locator('.menu-pop button', { hasText: 'Stop all agents' }).click();
-  await page.locator('.modal[role=alertdialog] button', { hasText: 'Stop all' }).click();
+  await page.locator('[role=alertdialog] > .modal button', { hasText: 'Stop all' }).click();
   await page.locator('.first-run').waitFor({ timeout: 20_000 });
   assert.deepEqual(errors, []);
 });
