@@ -95,7 +95,7 @@ main { max-width: 1232px; margin: 0 auto; padding: 0 16px 24px; }
 .last-what span { font-size: 16px; font-weight: 600; }
 
 /* ---------- The deck, rendered ---------- */
-.deck-shot { margin: 40px 0 0; display: grid; gap: 0; border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; background: #0d131a; }
+.deck-shot { margin: 40px 0 0; display: grid; gap: 0; border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; background: #15120f; }
 .deck-shot img { display: block; width: 100%; height: auto; }
 .deck-shot figcaption { display: flex; flex-direction: column; gap: 10px; padding: 20px; background: var(--surface-1); border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
 .deck-shot figcaption .eyebrow { margin: 0; }

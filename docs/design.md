@@ -2,11 +2,91 @@
 
 Back to the [README](../README.md).
 
-Kipdeck looks and behaves the same on every surface: the home page at `/`, the 3D Deck at `/deck`, the sign-in pages and the `/pom/` showcase. The Deck and the showcase are [Labs](labs.md), off by default. This page walks through it as it is on screen: what each surface shows, how things move and sound, demo mode, and how to check a change. The rules and tokens themselves (colors, type, the status table, voice) are the short contract in [DESIGN.md](../DESIGN.md); where the deck's places are is [The deck](deck.md).
+Kipdeck looks and behaves the same on every surface: the home page at `/`, the 3D Deck at `/deck`, the sign-in pages and the `/pom/` showcase. The Deck and the showcase are [Labs](labs.md), off by default. This page walks through it as it is on screen: what each surface shows, how things move and sound, demo mode, and how to check a change. The rules and tokens themselves (colors, type, the status table, voice) are the short contract in [DESIGN.md](../DESIGN.md), the crew look is [Warmth](#warmth-the-crew-look) below and the words are [docs/voice.md](voice.md); where the deck's places are is [The deck](deck.md).
 
 ## The idea in one paragraph
 
 The deck is calm by default. Floors, consoles and units are slate and steel, and hue is zoned: Signal orange (hue 20 to 40) only when a unit needs a person, red when it is stuck, amber-yellow when its work waits for review, violet for proof on chain, ship-cyan for the instruments and quiet work, and the command's gold and brass (hue about 48, desaturated) on the dais and the chair. Every state also has its own shape (a solid diamond, a hollow triangle with a bar, a hollow circle with a dot), so the screen still reads in grayscale, for color-blind people and in compressed video. One ranking, `src/shared/attention.ts`, decides who needs someone, and everything that counts or orders units reads it: the top bar, the needs-you chip, the Attention board, the Units rail, the 2D plan, the favicon and the marks over the units. Counts are said in two places only: the top bar and the Attention board's header.
+
+## Warmth: the crew look
+
+Kipdeck is a scrappy crew's cockpit with a tape deck playing, not a cold console. The warmth comes from the ground (warm graphite and paper in place of blue slate), softer corners on the things that talk to you, Kip in the quiet moments, and the words ([docs/voice.md](voice.md)). The layout, density, scan order, status hues and glyphs do not change, so a grayscale screenshot reads exactly as before. Fun stops the moment something needs you.
+
+The tokens are in `src/client/styles/tokens.css`, mirrored as hex for canvases in `src/shared/tones.ts`. `tests/tones.test.ts` keeps the two equal, holds every text token at 4.5:1 and every field edge at 3:1 on each surface, and keeps the neutrals at OKLCH chroma under 0.03 with a warm hue.
+
+### Palette
+
+Ratios are WCAG 2.x, against void / surface-1 / surface-2 / surface-3.
+
+| Token | Dark (default) | Ratios | Light (print) | Ratios | Use |
+| --- | --- | --- | --- | --- | --- |
+| `--void` | `#15120F` | | `#F8F4ED` | | page and scene |
+| `--surface-1` | `#1C1814` | | `#FFFDF9` | | panels, modals |
+| `--surface-2` | `#231E1A` | | `#F1ECE3` | | raised: buttons, cards |
+| `--surface-3` | `#2B2520` | | `#E7E0D5` | | hover and selected |
+| `--line` | `#342D27` | decorative | `#DED6C9` | decorative | hairlines |
+| `--line-strong` | `#4D443B` | 1.96 on void | `#C4B9A8` | 1.90 on s1 | card and panel edges (decorative) |
+| `--line-input` (new) | `#7D7266` | 3.97 / 3.76 / 3.51 / 3.22 | `#7F7466` | 4.17 / 4.50 / 3.89 / 3.49 | the edge of a field, toggle or checkbox |
+| `--text` (and `--act`) | `#F2ECE3` | 15.89 / 15.03 / 14.06 / 12.88 | `#1C1814` | 16.09 / 17.37 / 15.00 / 13.46 | text, primary button, focus ring |
+| `--muted` | `#A69C8F` | 6.91 / 6.53 / 6.11 / 5.60 | `#5F574D` | 6.48 / 6.99 / 6.04 / 5.42 | second lines |
+| `--faint` | `#7A7064` | 3.85 / 3.64 / 3.40 / 3.12 | `#8A7F70` | 3.58 / 3.86 / 3.34 / 2.99 | marks and dividers only, never meaning |
+| `--working` | `#D6CDC1` | 11.87 / 11.23 / 10.50 / 9.63 | `#5F574D` | as muted | working, quiet |
+| `--tape` (new) | `#E6D9C3` | 13.40 / 12.67 / 11.85 / 10.86 | `#6B5A46` | 6.03 / 6.51 / 5.62 / 5.04 | tape-label eyebrows only |
+| `--plum` (new) | `#8A6F86` | decorative | `#7A5F76` | decorative | the tape stripe's third line only |
+| `--on-signal`, `--on-act` | `#15120F` | 6.51 on Signal, 15.89 on cream | `#FFFFFF`, void | | text on a filled button |
+
+The state hues keep their values and glyphs: dark Signal `#FF6A1A` (6.51 / 6.16 / 5.76 / 5.28), Stuck `#FF4D5E` (5.75 / 5.44 / 5.09 / 4.66, up from 4.47 on the slate hover surface), Review `#F5C542` (11.51 and up), Proof `#A68BFF` (6.89 / 6.52 / 6.10 / 5.59), Settled `#3DDC97` (10.56 and up), Ship `#6FC3DF` (9.37 and up). In light: Signal 5.92 / 6.39 / 5.52 / 4.95, Stuck 5.50 / 5.93 / 5.12 / 4.60, Review 5.41 / 5.83 / 5.04 / 4.52, Settled 4.89 / 5.28 / 4.56 / 4.09, so light-mode settled text stays on void, surface-1 and surface-2. Tints keep their alphas; `--scrim` is `rgb(10 8 6 / .62)` and `--hud-fill` `rgb(28 24 20 / .85)`.
+
+The extras, each with one home:
+
+- **Tape stripe** (`--tape-stripe`, 5px tall): three 1px lines in ship, tape and plum under the inbox's top bar, the Deck HUD's top bar and the landing nav. It is the one ornament in the chrome.
+- **Sunset** (`--sunset`, from `--sunset-1` apricot `#F2B48C` through `--sunset-2` dusty rose `#C47F93` and `--sunset-3` plum `#4A3560` to the void): a glow behind Kip on the sign-in page and the landing hero only. Never in the app's chrome, never in a row, never next to a state mark, never under text or a focusable control. These are the two places with no state on screen, so its apricot cannot be read as Signal.
+- **Grain** (`--grain`, 3% noise as an inline SVG data URI, allowed by `img-src data:`): the sign-in page's ground and the landing hero only. Never on panes, the terminal, a diff or under focusable text. It is `none` in the light sets and in print.
+
+No new accent hue goes into the inbox: a warm accent would collide with Signal or review. Brass and conn gold stay on the Deck.
+
+### Type
+
+The CSP is `font-src 'self'` (`src/server/csp.ts`, `site/landing/index.html`), so no Google Fonts: Archivo and JetBrains Mono stay, from the vendored subsets, and the 250 kB budget is untouched. Warmth comes from Archivo's own width axis.
+
+- **Hero** (`--stretch-hero` 125%, `--weight-hero` 700): the landing headline and the sign-in heading (Welcome back). Wide letters give a 70s mission-patch feel.
+- **Celebrate** (`--stretch-celebrate` 110%, `--weight-celebrate` 650, sentence case): All clear, Shipped today.
+- **Display** (`--stretch-display` 118%): the wordmark and modal headers, as today.
+- **Tape label** (`--label-font` mono, `--label-size` 10px, uppercase, `--label-track` .12em, in `--tape`): warm eyebrows only: the greeting (MORNING, NIGHT SHIFT), SHIPPED TODAY, the demo coach strip, the landing's section kickers ("Side A: the loop", "B-sides" for Labs) and the Deck's board headers. "It asks" is a decision surface and keeps its Signal treatment, not a tape label.
+- In-app section labels go sentence case at weight 600 with no letter-spacing. UI and data type stay as they are.
+
+### Shape
+
+| Element | Radius |
+| --- | --- |
+| Buttons, inputs, rows | `--radius` 4px (unchanged) |
+| State chips | `--radius-chip` 2px (unchanged) |
+| Panels, cards, toasts, the empty pane, the sign-in card | `--radius-panel` 6px |
+| Modals | `--radius-modal` 8px |
+| Neutral tags (provider badge, project tag) | `--radius-pill` |
+
+State glyphs never take a radius. Hairlines stay 1px and dense panels get no shadow. The 2px Signal rule on top of a blocking modal stays. The focus ring takes the radius of what it rings.
+
+### Motion
+
+- The state cadences are untouched: the 120ms open, the 1.2s needs-you pulse, the 1 Hz stuck blink.
+- A warm beat (`--t-beat` 600ms) plays once per event and never loops: the tuft bounce on merge, Kip's cheer in the toast, the all-clear check drawing, the Shipped count rolling like a tape counter (the existing odometer).
+- Only Kip may use `--ease-soft`, which overshoots by 4% at most. Chrome keeps `--ease` and never overshoots, presses down or bounces.
+- No confetti, particles or staggered lists. Kip's idle loops are slow (a breath of 4s or longer) and pause in a hidden tab.
+- Nothing warm plays while Needs you is above zero; a queued beat is dropped if a question arrives. Nothing moves near a row that needs you except the existing pulse.
+- Under `prefers-reduced-motion`, Ship motion Off or Silent running, every beat is a cut and Kip is a still pose, through the existing rule at the end of `tokens.css`.
+
+### Sound
+
+The inbox gets a **Crew sounds** switch in Settings, off by default. Three synthesized cues, each under 300ms, no audio files: a tape-deck click with a two-note rise on merge, a single low warm note on all clear, and a soft hum on the first job handed out. No sound on errors, approvals, Stop, cost or anything plain. The needs-you and stuck cues stay as they are and stay the loudest; the Deck's sound and its default are unchanged. A hidden tab plays the state cues only.
+
+### Per surface
+
+- **Inbox** (`src/client/home`): warm neutrals, the tape stripe under the top bar, 6px panels. Personality lives only in the empty pane (greeting, Kip pose, All clear), empty sections, Shipped today, toasts after a done action and the setup card. Rows, scan order, pulse, counts and the pane's decision cards stay literal. Inputs move to `--line-input`.
+- **Deck** (`src/client/world`, `ui`): already the warmest surface; Kip's 3D behaviours stay. The HUD takes the warm neutrals (the boards' `PANEL` and `INK` read `src/shared/tones.ts`), board headers take the tape-label style, the Attention board stays strict. Visible "unit" becomes the task name or "agent". No new animation.
+- **Sign-in and demo** (`login`, `join`, `claim`, the demo banner and coach): the card at 6px with the hero heading "Welcome back" (first claim "Welcome aboard"), Kip's wave pose on a sunset glow with grain behind the card, never under it. No Signal. The long sign-in command already wraps inside the card on `/`; keep it that way. The demo coach ends on "That's the loop. Now run it on your repo."
+- **Landing** (`site/landing`, [docs/landing.md](landing.md)): the hero gets the sunset behind Kip and the 125% headline; the headline copy stays. Section kickers become tape labels. The wait chart keeps Signal on neutral, in its own section, away from the gradient. Claims, pricing and security copy stay plain. Kip is inline SVG only, for the perf budget. The light set already uses the warm paper.
+- **CLI** (`bin/`, `src/server/startup.ts`, `src/server/cli.ts`): "Starting Kipdeck..." prints instantly and unchanged. At most one warm line at ready ("Kip's on watch.") and one at exit (the session tally). Errors, help, `--json` and account output stay plain. No ANSI colour beyond what exists, no ASCII art.
 
 ## The logo
 

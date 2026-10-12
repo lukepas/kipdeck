@@ -241,6 +241,7 @@ Labs and the Deck:
 - [Rundown](docs/rundown.md): the project map, as the `/rundown` skill in any repository and in the office, its data model and its limits
 - [Mission control](docs/mission-control.md): the attention ranking, the floor's mission and milestones, linking work to goals, the review inbox, the timeline, reminders and the digest
 - [Design system](docs/design.md): each surface on screen, the motion and the deck's sound, demo mode, and how to check a design change with `design/shoot.mjs`
+- [Voice](docs/voice.md): the crew voice, before and after copy, Kip's states, the signature moments and where fun is forbidden
 - [The deck](docs/deck.md): what's where on the 3D deck, cell addresses, and the Overview camera
 - Proof of Merge on testnets (a lab; nothing goes on chain until an admin sets up its keys and flags, and not part of the product's pitch): [bounties](docs/bounties.md), [attestations on Base Sepolia](docs/proof-of-merge.md), [ERC-8004 reputation](docs/reputation.md), [the public showcase](docs/showcase.md), [paid tasks over x402](docs/x402.md) and [the chain launch kit's tools](docs/launch.md) (archived)
 

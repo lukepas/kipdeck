@@ -12,7 +12,7 @@ The tokens live in `src/client/styles/tokens.css`. Every sheet uses them by name
 2. **Hue is zoned.** The floor is slate and steel, and each hue has one owner. Signal orange (hue 20 to 40, saturation over 40%) means a person is needed and nothing else; red means stuck; amber-yellow means waiting for review; violet means on-chain proof; ship-cyan is the instruments' and quiet work's; and the command's gold and brass (hue about 48, desaturated, metallic) are the dais's, the chair's and the stations' footwell practicals' alone, steady and never a state. The lights themselves stay out of the state hues: the cool key is a blue-indigo starlight (hue about 230) and the warm one a warm white of low chroma. Space outside is free to be vivid (magenta, indigo, teal) as long as it keeps clear of orange, red and proof's violet. No decoration takes a state's hue, so an orange anywhere in the room is someone who needs you. A wait clock ages by weight, never by hue: muted while fresh, white and bold from 5 minutes, heavier and underlined from 30 (`src/shared/wait.ts`, styled once in `ui/waitclock.css` and drawn on the canvases by `ui/waitink.ts`), the same on the inbox and the bridge, so a late clock never borrows review's amber or stuck's red. A state's mark sits at its hue's full strength and no brighter: past that the tone mapping washes it toward white.
 3. **Shape carries every state on its own.** Each state has a glyph (below), so the screen still reads in grayscale, for color-blind people and in compressed video.
 4. **One ranking.** `src/shared/attention.ts` decides who needs someone. The top-bar counters, the Units rail, Mission control, the 2D view, the Attention board, the tab title and the favicon all read it, so they never disagree. Rows say it the same way everywhere (`src/shared/rowtext.ts`): one title with its [tag] as a chip, one status phrase with no time in it, and one relative time ('<1m', '4m', '2h').
-5. **Lines, not boxes of shadow.** 1px hairlines, 4px corners (2px on chips), surfaces that step by tone. Only HUD pieces floating over the 3D canvas get the 85% fill and one soft shadow.
+5. **Lines, not boxes of shadow.** 1px hairlines, 4px corners on buttons, inputs and rows (2px on state chips, 6px on panels, cards and toasts, 8px on modals), surfaces that step by tone. Only HUD pieces floating over the 3D canvas get the 85% fill and one soft shadow.
 6. **Data is mono.** Counts, timers, call signs, hashes, amounts, branch names and keys are JetBrains Mono with tabular numerals. Words are Archivo.
 7. **The room has three zones of value.** From the captain's chair, by Night: the hull at luma 6 to 30 (it reads as the dark it is, not slate haze), the stations and the units at 40 to 120 (lit by the pods' warm lamps and rimmed by cool starlight), and the information plane, the arc's type and chrome, at 170 to 235 on its own dark smoked backing. Space is saturated and mid-high in value, never brighter than the arc's type, and it sinks to a quarter behind and round the boards. The grade sets the floor of it (a black point and a film toe, no tint lifted into the darks), and the haze is a floor fog under about a metre, never a veil over the room. An effect worth having is one you can see from the chair: nothing is tuned to sit under notice.
 8. **Motion has a rhythm.** A state's cadence is its own (the 1 Hz stuck blink, the needs-you pulse); ambient motion is slower than 4 s a period or a steady drift; a beat (the duck on a new call, a merge's sweep, the jump) is short, eased in and out, and over. Ambient motion stops under reduced motion, Ship motion Off and in a hidden tab; light changes (the duck, the spotlight) still happen, they don't move. The motion layer over the room (taking the conn, the arc's scan and chase, the hail, the stuck sweep, the kinetic type, the warp's fold, the mission complete, the Night and Day iris, and at rest the pulse down the canopy's ribs and the wake over the glass) runs on time uniforms, instance attributes or one tween per event: no geometry rebuilt per frame, no recompile after load, no pass added, no canvas painted but on a change of data, and at most 0.6 ms a frame at High (0.2 at Low). Each beat is visible from the chair at a glance, and with less motion it is a 400 ms crossfade or a still outline in its hue. A countdown is said in one place.
@@ -21,16 +21,18 @@ The tokens live in `src/client/styles/tokens.css`. Every sheet uses them by name
 
 | Token | Dark (default) | Print | Use |
 | --- | --- | --- | --- |
-| `--void` | `#0D131A` | `#F4F6F8` | page and scene background |
-| `--surface-1` | `#141B23` | `#FFFFFF` | panels, modals |
-| `--surface-2` | `#1A222C` | `#EEF1F4` | raised: buttons, cards |
-| `--surface-3` | `#212A35` | `#E3E8ED` | hover and selected |
-| `--line` / `--line-strong` | `#26313D` / `#3A4756` | `#D5DBE1` / `#B4BEC8` | hairlines |
-| `--text` / `--muted` | `#E8ECEF` / `#8A97A5` | `#0D131A` / `#56616D` | text; `--act` (the text color) fills the one primary button per view and draws the focus ring |
+| `--void` | `#15120F` | `#F8F4ED` | page and scene background |
+| `--surface-1` | `#1C1814` | `#FFFDF9` | panels, modals |
+| `--surface-2` | `#231E1A` | `#F1ECE3` | raised: buttons, cards |
+| `--surface-3` | `#2B2520` | `#E7E0D5` | hover and selected |
+| `--line` / `--line-strong` | `#342D27` / `#4D443B` | `#DED6C9` / `#C4B9A8` | hairlines |
+| `--line-input` | `#7D7266` | `#7F7466` | the edge of a field, toggle or checkbox, 3:1 or more |
+| `--text` / `--muted` | `#F2ECE3` / `#A69C8F` | `#1C1814` / `#5F574D` | text; `--act` (the text color) fills the one primary button per view and draws the focus ring |
+| `--tape` / `--plum` | `#E6D9C3` / `#8A6F86` | `#6B5A46` / `#7A5F76` | tape-label eyebrows, and the tape stripe's third line; never a state |
 | `--signal` | `#FF6A1A` | `#C2410C` | needs you, and nothing else |
 | `--stuck` | `#FF4D5E` | `#C01F33` | stuck or failed, always with the triangle |
 | `--review` | `#F5C542` | `#8A5A00` | to review |
-| `--working` | `#C9D2DC` | `#56616D` | working, quiet |
+| `--working` | `#D6CDC1` | `#5F574D` | working, quiet |
 | `--proof` | `#A68BFF` | `#5B3FD1` | escrow, EAS, ERC-8004, x402, `/pom/` only |
 | `--settled` | `#3DDC97` | `#0F7A4F` | the small "settled on devnet" tick, never a fill |
 
@@ -38,7 +40,7 @@ The 3D deck uses the same ramp by Night (`DECK` in `src/client/world/office/mate
 
 **Bridge lights.** The 3D deck has a Night (low light) and a Day (high light) palette, and the page follows it: Night is the dark column above, Day the print column (Settings > Deck, or Auto to follow the system). By day the ship is in high orbit over a sunlit planet, whose limb arcs across the canopy over the arc: the floor is a mid-dark deck plate `#7C8794`, walls and hull `#8A95A2` (albedo about 0.3 at most, the warm sun key does the brightening), consoles darker than by night (`#141A22`, tops `#171E27`) and units keep their graphite; lettering on walls and floor turns dark (`DAY_PALETTE` and `DAY_INK` in `src/client/features/lights/modes.ts`). Two rules hold in both: an attention mark never sits on a light or mid-tone surface, but on instrument black of its own (a `#101720` disc under every unit's ring, a 92% `#0D131A` chip under every callout), which keeps every state at 4.5:1 or better (`tests/lights.test.ts`); and the room never tints with a state. Brightness turns the lights, not the exposure, so what gives its own light (boards, callouts, marks) reads the same at every step.
 
-Each hue also has a `-tint` (12% over the surface) for a row or chip background. Every state color passes WCAG AA for text on `--void` and `--surface-1`; `--stuck` on `--surface-3` is 4.47:1, so stuck text sits on the lower surfaces.
+Each hue also has a `-tint` (12% over the surface) for a row or chip background. Every state color passes WCAG AA for text on `--void`, `--surface-1` and `--surface-2`, and dark `--stuck` now reads 4.66:1 on `--surface-3`. The neutrals are warm graphite and paper (hue about 60, OKLCH chroma under 0.03, `tests/tones.test.ts`); the sunset and grain are for the sign-in page and the landing hero only. The full table with every ratio is [docs/design.md, Warmth](docs/design.md#warmth-the-crew-look).
 
 ## Status language
 
@@ -102,4 +104,4 @@ Upstream credit stays where it was and is in the home page's Help > About: "Buil
 
 ## Voice
 
-Calm ops voice: units, deploy, stand down, on deck, decks. Verb plus object on buttons ("Approve payout", "Enter deck"). No exclamation marks, no emoji, at most one military-adjacent word per screen, and never war, attack, kill or troops. Selection is a bracket, never a reticle.
+The crew voice, in full in [docs/voice.md](docs/voice.md): fact first, then at most one warm clause; fun only when nothing waits; agents named by their task; "the crew" for the group only in greetings, empty states and celebrations. Verb plus object on buttons ("Approve payout", "Enter deck"). One exclamation mark in the whole product (the first merge), no emoji, no pop-culture references, and never war, attack, kill or troops. Errors, approvals, sign-in, cost and destructive confirms stay plain (`tests/voice.test.ts`). Selection is a bracket, never a reticle.
