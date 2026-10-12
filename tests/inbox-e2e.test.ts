@@ -208,10 +208,13 @@ test('deploy, needs you, answer, review, merge: the loop on the home page', asyn
   await page.waitForTimeout(500);
   assert.equal(execFileSync('git', ['log', '--merges', '--format=%s', 'main'], { cwd: project, encoding: 'utf8' }).trim(), '', 'nothing merged after Esc');
   assert.equal(await page.locator('.pane .rv-merge').innerText(), 'Merge');
-  // Merge again and let the hold run out: it lands, and the same toast says so with a check.
+  // Merge again and let the hold run out: it lands, and the same toast says so. The first merge in
+  // this browser is one short sentence, with no wait beside it and no line under it.
   await page.locator('.pane .rv-merge').click();
   await page.locator('.ship', { hasText: 'Write the README quickstart' }).waitFor({ timeout: 30_000 });
-  await page.locator('#toasts .toast.settled', { hasText: 'Merged into main on this computer' }).waitFor({ timeout: 5_000 });
+  const landed = page.locator('#toasts .toast.settled', { hasText: 'First merge: Write the README quickstart!' });
+  await landed.waitFor({ timeout: 5_000 });
+  assert.doesNotMatch(await landed.innerText(), /Waited|Merged into/);
   assert.match(await page.locator('.shipped .sec-total').innerText(), /^1 merged/);
   // The next one to review is selected.
   await page.locator('.pane-title h2', { hasText: 'Fix the flaky checkout test' }).waitFor({ timeout: 10_000 });
