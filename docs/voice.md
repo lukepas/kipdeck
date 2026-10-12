@@ -30,10 +30,11 @@ Real strings from `origin/ux/integration`. "Keep" rows are as important as the r
 
 | Where | Before | After |
 | --- | --- | --- |
-| `src/server/startup.ts:27` | Opened in your browser, signed in. | Opened in your browser, signed in. Kip's on watch. |
+| `src/server/startup.ts` addressLines | Opened in your browser, signed in. | Opened in your browser, signed in. Kip's on watch. (Only at a terminal and while nobody is in Needs you; piped or logged output stays plain.) |
 | `src/server/startup.ts:28` | Lost the tab? Run `x` for a new link. | Keep. It already has the voice. |
 | `src/server/cli.ts:144` | Ctrl+C stops it. | Keep. One warm line per run is spent on startup and exit. |
-| exit (new, `src/server/cli.ts`) | closing Kipdeck - agents keep running for the next start... | Kipdeck stopped. 3 shipped this session; your agents keep working. |
+| exit on a restart (SIGTERM, `src/server/startup.ts` goodbye) | closing Kipdeck - agents keep running for the next start... | Kipdeck stopped. 3 shipped this session; your agents keep working. |
+| exit on Ctrl+C (`src/server/startup.ts` goodbye) | closing Kipdeck... | Kipdeck stopped, and its agents with it. 3 shipped this session. (Ctrl+C stops the agents, so the line says so. The tally is left out when nothing merged.) |
 | `src/client/home/setup.ts:165` | Looking for your agents and projects... | Checking who's aboard: agents and projects... |
 | `src/client/home/setup.ts:180` | Deploy your first agent | Give your first agent a job |
 | `src/client/home/setup.ts:181` | It works on a branch of its own. When it needs an answer or has something to review, it shows up here. | It works on its own branch and comes back here when it needs you or has something to show. |

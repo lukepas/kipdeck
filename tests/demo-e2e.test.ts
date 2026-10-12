@@ -98,7 +98,7 @@ test('the demo on your computer: the coach strip, a question from Codex opening 
   const coach = page.locator('#demo-coach');
   await coach.waitFor();
   const coachSteps = () => coach.locator('.coach-step').allInnerTexts();
-  assert.deepEqual((await coachSteps()).map((s) => s.replace(/^\d\s*/, '').trim().split('\n')[0].trim()), ['Answer the question in Needs you', 'Review the change and merge it', 'Run it on your repo']);
+  assert.deepEqual((await coachSteps()).map((s) => s.replace(/^\d\s*/, '').trim().split('\n')[0].trim()), ['Answer the question in Needs you', 'Review the change and merge it', "That's the loop. Now run it on your repo."]);
   // The command this demo was started with (here: node and this checkout's bin script, too long to
   // show): a Copy command button with all of it, also in the step's tooltip.
   const run = demoNote({ readOnly: false, project: 'acme-shop', run: launchCommand() }).command;

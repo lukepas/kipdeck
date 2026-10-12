@@ -1,10 +1,12 @@
 // Only what's needed to pick a command or say "Starting Kipdeck..." loads before it is said: the
 // rest (the server and everything under it) takes a second or more to load on its own.
-import { CLI, PRODUCT } from '../shared/copy.js';
+import { CLI } from '../shared/copy.js';
 import { commandOf } from './commands.js';
-import { STARTING, addressLines, block, startsOffice, step } from './startup.js';
+import { STARTING, addressLines, block, goodbye, mergedSince, startsOffice, step } from './startup.js';
 
 const argv = process.argv.slice(2);
+// When this run began: the goodbye counts what merged since.
+const startedAt = Date.now();
 // `kipdeck prune`, `kipdeck rundown` and the rest (commands.ts): run it and stop, no office.
 const command = commandOf(argv);
 if (command) process.exit(await command(argv.slice(1)));
@@ -79,9 +81,10 @@ const stop = (signal: NodeJS.Signals) => {
   closing = true;
   // The demo's agents never outlive it: its home goes with it (demo/index.ts).
   const keep = signal === 'SIGTERM' && !cfg.demo;
-  console.log(keep ? `\n  closing ${PRODUCT} - agents keep running for the next start...` : `\n  closing ${PRODUCT}...`);
+  const merged = mergedSince(office.shipped.recent(), startedAt);
   removeLocalFile(cfg.dataDir);
   office.shutdown(keep);
+  console.log(`\n  ${goodbye({ merged, keep })}`);
   setTimeout(() => {
     if (cfg.demo) void import('./demo/index.js').then((d) => d.removeDemoHome(cfg)).finally(() => process.exit(0));
     else process.exit(0);
@@ -120,7 +123,9 @@ const projectLine = floors.length
   ? floors.map((f) => `${f.def.name}${here_(f.def.dir) ? ' (this folder)' : ''}`).join(', ')
   : `none yet - add one in the browser${cfg.startedIn ? '' : ' (start inside a git repository to use it)'}`;
 // The address and the way in first: finding the agent CLIs can take seconds (a login shell each).
-console.log(block(addressLines({ urls: [...urls], signIn, opened, openCmd })));
+// The one warm clause at ready: for a person at the terminal, and only while nobody waits on them.
+const waiting = floors.some((f) => f.workers.list().some((w) => w.status === 'needs_input'));
+console.log(block(addressLines({ urls: [...urls], signIn, opened, openCmd, warm: atTerminal && !waiting })));
 if (!cfg.demo) step('Looking for agent CLIs...');
 const agents = cfg.demo ? [] : await checkAgentsAsync();
 const usable = agents.filter((a) => a.installed && a.signedIn !== false);

@@ -88,6 +88,8 @@ export async function startServer(cfg: Config, opts: StartOptions = {}) {
     server,
     shutdown,
     accounts: ctx.accounts,
+    /** The shipped log, for the terminal's tally when it stops (startup.ts goodbye). */
+    shipped: ctx.shipped,
     publicDir,
     hookPort,
     signInLink,
