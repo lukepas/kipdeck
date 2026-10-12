@@ -81,7 +81,7 @@ test("the pit wall's numbers, the latest wait cleared, and the captain's bar", (
   assert.deepEqual(t.latest, { kind: 'reply', at: T + 3 * H, ms: 2 * M });
   assert.equal(captainsBar(t.cleared), '2 PRs through review today');
   assert.equal(captainsBar({ reviews: 0, recovered: 0 }), null, 'never a row of zeros');
-  assert.equal(captainsBar({ reviews: 1, recovered: 2 }), '2 units back on task, 1 PR through review today');
+  assert.equal(captainsBar({ reviews: 1, recovered: 2 }), '2 agents back on task, 1 PR through review today');
 });
 
 test('the server notes how long a unit waited for an answer, and keeps it', () => {

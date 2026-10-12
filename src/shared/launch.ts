@@ -46,19 +46,22 @@ export function yesterdayLine(y: LogInput['yesterday']): string {
   return parts.length ? `Yesterday the fleet ${listed(parts)}.` : 'Yesterday was quiet: nothing merged and no issues closed.';
 }
 
-/** The log's sentence about the crew on this deck. */
+/**
+ * The log's sentence about the crew on this deck (docs/voice.md): agents by what they need from you,
+ * "the crew" only for the group, and the next step when nobody is aboard.
+ */
 export function crewLine(u: LogInput['units']): string {
-  if (!u.aboard) return 'No units aboard yet.';
+  if (!u.aboard) return 'No agents aboard yet. Give one a job when you are ready.';
   const parts: string[] = [];
-  if (u.review) parts.push(`${count(u.review)} ${u.review === 1 ? 'unit waits' : 'units wait'} for your review.`);
-  if (u.idle) parts.push(`${count(u.idle)} ${u.idle === 1 ? 'unit awaits' : 'units await'} orders.`);
-  return parts.length ? parts.join(' ') : 'Every unit is at work.';
+  if (u.review) parts.push(`${count(u.review)} ${u.review === 1 ? 'agent waits' : 'agents wait'} for your review.`);
+  if (u.idle) parts.push(`${count(u.idle)} ${u.idle === 1 ? 'agent is' : 'agents are'} ready for a job.`);
+  return parts.length ? parts.join(' ') : 'The crew is at work.';
 }
 
 /**
- * The captain's log for the day: "Day 14 of the mission. Yesterday the fleet merged 9 pull requests,
- * closed 14 issues and paid 3 bounties on devnet. Waypoint 3, Billing v2, is 60% done. Two units
- * await orders." At most TIMELINE_TEXT long: the waypoint's title is shortened first, then the crew's
+ * The day's log: "Day 14 of the mission. Yesterday the fleet merged 9 pull requests, closed 14
+ * issues and paid 3 bounties on devnet. Waypoint 3, Billing v2, is 60% done. Two agents are ready for
+ * a job." At most TIMELINE_TEXT long: the waypoint's title is shortened first, then the crew's
  * sentence goes.
  */
 export function captainsLog(i: LogInput): string {
@@ -142,7 +145,7 @@ export function debriefOf(i: DebriefInput, voice: 'on' | 'plain' | 'off', seed: 
   if (i.attested) lines.push(`${plural(i.attested, 'merge')} attested on Base Sepolia.`);
   for (const t of i.reached) lines.push(`Waypoint reached: ${clip(t, 60)}.`);
   for (const m of i.moved) if (m.to !== m.from) lines.push(`${clip(m.title, 40)}: ${m.from} of ${m.of} issues closed, now ${m.to}.`);
-  if (i.recovered) lines.push(`${plural(i.recovered, 'unit')} came back from stuck and landed ${i.recovered === 1 ? 'its' : 'their'} work.`);
+  if (i.recovered) lines.push(`${plural(i.recovered, 'agent')} came back from stuck and landed ${i.recovered === 1 ? 'its' : 'their'} work.`);
   if (i.hired) lines.push(`${plural(i.hired, 'unit')} came aboard.`);
   const quiet = !lines.length;
   if (quiet) lines.push('Nothing landed while you were away.');

@@ -37,7 +37,7 @@ import { debugHandle } from '../giveway';
 import { MomentCards } from '../moments/card';
 import { WatchLog } from './watchlog';
 import { DebriefPanel } from './debrief';
-import { dayKey, DEBRIEF_MS, DEBRIEF_WAITING_MS, LAUNCH, LAUNCH_MS, LAUNCH_YIELD, LOG_WAIT_MS, STILL_CARD_MS } from './logic';
+import { dayKey, DEBRIEF_MS, DEBRIEF_WAITING_MS, LAUNCH, LAUNCH_MS, LAUNCH_YIELD, LOG_WAIT_MS, STILL_CARD_MS, welcomeLine } from './logic';
 
 const WATCH_KEY = 'agent-office.watch';
 /** How long the load's start of watch waits for the deck, its crew and its log to arrive (ms). */
@@ -183,6 +183,8 @@ export function installLaunch(ctx: Ctx, parts: Pick<Parts, 'giveWay' | 'alert' |
     since = from;
     panel.close(false);
     if (kind === 'debrief') return openDebrief(false);
+    // The crew's greeting over the log, worked out before this launch is noted: aboard the first time.
+    crawl.greet(welcomeLine({ first: launchedOn() === '', hour: new Date().getHours() }));
     markLaunched(Date.now());
     ctx.net.send({ t: 'log.write', floor: store.floor ?? '' });
     // Under reduced motion, Ship motion Off or Silent running, or out of view: the still card.

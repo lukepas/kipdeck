@@ -60,7 +60,7 @@ function chip(g: CanvasRenderingContext2D, W: number, H: number) {
   const r = H * 0.1;
   g.beginPath();
   g.roundRect(2, 2, W - 4, H - 4, r);
-  g.fillStyle = 'rgba(11, 18, 25, 0.84)';
+  g.fillStyle = 'rgba(15, 13, 11, 0.84)';
   g.fill();
   g.lineWidth = 3;
   g.strokeStyle = DECK.steel;

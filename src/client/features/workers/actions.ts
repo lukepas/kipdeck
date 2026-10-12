@@ -369,7 +369,7 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
         parts: [
           h('span.title', {}, STATION_AGENT[kind].name),
           aside(info.offer.replace(/^Ask me /, '')),
-          full ? h('span.cost', {}, `Deck full · ${m.workers} of ${m.limit} units`) : key('E', 'Prompt'),
+          full ? h('span.cost', {}, `Deck full · ${m.workers} of ${m.limit} agents`) : key('E', 'Prompt'),
         ],
       };
     }

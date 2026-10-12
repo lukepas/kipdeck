@@ -49,7 +49,7 @@ export function paintMonitor(s: Screen, c: MonitorCard) {
   const svc = c.service;
   titleBar(g, W, 'Service monitor', svc ? `:${svc.port}` : 'none', svc ? DECK.ship : INK.lineStrong);
   if (!svc) {
-    emptyBody(g, W, H, 'No service running', 'A unit\'s dev server shows here once it starts');
+    emptyBody(g, W, H, 'No service running', 'An agent\'s dev server shows here once it starts');
     s.texture.needsUpdate = true;
     return;
   }

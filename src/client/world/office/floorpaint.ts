@@ -265,7 +265,7 @@ declare const __REVISION__: string;
 /** The title block's drawing: a ruled rectangle split into cells, the way a drawing's title block is. */
 function paintTitle(g: CanvasRenderingContext2D, W: number, H: number, info: TitleInfo) {
   g.clearRect(0, 0, W, H);
-  g.fillStyle = 'rgba(13,19,26,0.55)';
+  g.fillStyle = 'rgba(19,16,13,0.55)';
   g.fillRect(0, 0, W, H);
   g.strokeStyle = DECK.steel;
   g.lineWidth = 4;

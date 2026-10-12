@@ -76,7 +76,7 @@ export function installMonitor(ctx: Ctx, parts: MonitorParts) {
     const why = blocked(s);
     const w = s ? store.workers.get(s.workerId) : undefined;
     return {
-      service: s && { port: s.port, title: title(s), who: [w?.name ?? 'A unit', w?.worktree?.branch].filter(Boolean).join(' - '), command: s.command },
+      service: s && { port: s.port, title: title(s), who: [w?.name ?? 'An agent', w?.worktree?.branch].filter(Boolean).join(' - '), command: s.command },
       count: store.services.items.length,
       mode: why ? 'open' : 'live',
       why: why ?? undefined,

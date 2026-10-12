@@ -328,7 +328,7 @@ export function setGlyph(u: UnitBody, letters: string) {
   }
   u.glyphAt.clear();
   if (!letters) return;
-  const plate = textPlane(letters, { face: 'mono', size: 40, color: '#8A97A5' });
+  const plate = textPlane(letters, { face: 'mono', size: 40, color: DECK.muted });
   plate.scale.multiplyScalar(0.16);
   u.glyphAt.add(plate);
 }

@@ -118,7 +118,7 @@ export class Plot {
     if (art) this.el.setAttribute('aria-hidden', 'true');
     else {
       this.el.setAttribute('role', 'img');
-      this.el.setAttribute('aria-label', 'The deck plan: the mission table, four pods of consoles and where each unit is');
+      this.el.setAttribute('aria-label', 'The deck plan: the mission table, four pods of consoles and where each agent is');
     }
     this.el.append(defs(), grid(art), structure(), zones(!!opts.proof));
     this.table = el('g', { class: 'p-table' });
