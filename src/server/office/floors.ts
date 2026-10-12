@@ -9,6 +9,7 @@ import { proofFloor } from './chain.js';
 import { ownerName } from '../local.js';
 import { CLI, PRODUCT } from '../../shared/copy.js';
 import { primeFloors } from '../rundown/first.js';
+import { deliverHeld } from '../gate/flow.js';
 
 /** Finding floors, the elevator's list of them, and taking one off the building. */
 export function floorHelpers(ctx: Ctx): FloorHelpers {
@@ -101,6 +102,7 @@ export async function openFloors(ctx: Ctx, hookPort: number): Promise<FloorsOpen
       }
     },
     workerChanged: (floor, w) => {
+      deliverHeld(ctx, floor, w);
       if (typeof w === 'string') {
         ctx.push.alerts.onWorkerGone(w);
         // Sent home: its review brief's journal goes with it (brief/log.ts).

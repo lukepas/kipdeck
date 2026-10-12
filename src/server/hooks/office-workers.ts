@@ -1,6 +1,6 @@
 import type http from 'node:http';
 import { findWorker, readHireRequest, readHomeRequest, readPrRequest, workerRow, type HireRequest, type PullsView } from '../office-workers.js';
-import { homeList, type Reply } from '../gate/actions.js';
+import { cleanupWords, homeList, type Reply } from '../gate/actions.js';
 import { gateOrRun } from '../gate/flow.js';
 import { PROVIDER_META } from '../../shared/providers.js';
 import { gh } from '../github.js';
@@ -114,8 +114,9 @@ export async function officeWorkers(ctx: Ctx, req: http.IncomingMessage, res: ht
     const { results, going } = homeList(floor, me.id, ask);
     // Nobody to send: nothing for a person to decide.
     if (!going.length) return send(res, 200, { results });
-    const shown = { targets: going.map((g) => g.w.name), ...(ask.merged ? { merged: true } : {}), ...(ask.cleanup ? { details: [`Worktrees and branches: ${ask.cleanup}`] } : {}) };
-    return reply(res, await gateOrRun(ctx, floor, me, { action: 'home', ask }, shown));
+    const shown = { targets: going.map((g) => g.w.name), ...(ask.merged ? { merged: true } : {}), ...(ask.cleanup ? { details: [cleanupWords(ask.cleanup)] } : {}) };
+    const only = going.map((g) => ({ id: g.w.id, name: g.w.name }));
+    return reply(res, await gateOrRun(ctx, floor, me, { action: 'home', ask, only }, shown));
   }
 
   if (action === '/tell') {

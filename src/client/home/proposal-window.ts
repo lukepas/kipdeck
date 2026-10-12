@@ -18,9 +18,11 @@ export function openProposalWindow(net: Net, id: string) {
   const who = proposerName(p);
   const note = h('textarea.gate-note', { rows: 2, maxlength: String(GATE_NOTE_MAX), placeholder: 'Optional: why not (the agent is told)', 'aria-label': 'Reason for rejecting, told to the agent' }) as HTMLTextAreaElement;
   const reject = h('button.btn', { type: 'button' }, 'Reject');
-  const approve = h('button.btn.primary', { type: 'button' }, 'Approve');
+  // An agent sent home since it asked has nobody left to act for: its request can only be turned down.
+  const gone = !store.rosterEntry(p.by.id);
+  const approve = h('button.btn.primary', { type: 'button', disabled: gone, title: gone ? 'Its agent has gone home' : undefined }, 'Approve');
   const facts: [string, string][] = [
-    ['Asked by', (who === p.by.name ? p.by.name : `${who} (${p.by.name})`) + (store.rosterEntry(p.by.id) ? '' : ', no longer running')],
+    ['Asked by', (who === p.by.name ? p.by.name : `${who} (${p.by.name})`) + (gone ? ', gone home' : '')],
     ['Project', p.floorName],
     ['Wants to', GATE_ACTION_LABEL[p.action]],
     ...(p.action === 'hire' ? [] : ([['For', targetWords(p)]] as [string, string][])),
@@ -37,7 +39,9 @@ export function openProposalWindow(net: Net, id: string) {
       h('dl.gate-facts', {}, ...facts.flatMap(([k, v]) => [h('dt', {}, k), h('dd', {}, v)])),
       p.details?.length ? h('ul.gate-details', {}, ...p.details.map((d) => h('li', {}, d))) : null,
       p.text ? h('div.gate-text-wrap', {}, h('div.gate-label', {}, p.action === 'hire' ? 'The new agent\'s task, in full' : 'The message, in full'), h('pre.gate-text', { tabindex: '0' }, p.text)) : null,
-      h('p.gate-hint', {}, 'Approve runs it exactly as the agent asked. Reject tells the agent it did not happen. Standing permissions are in Settings > Agents.'),
+      gone
+        ? h('p.gate-hint.gate-gone', {}, `Its agent has gone home - reject to clear it. ${p.by.name} is not here any more to act on an approval.`)
+        : h('p.gate-hint', {}, 'Approve runs it exactly as the agent asked. Reject tells the agent it did not happen. Standing permissions are in Settings > Agents.'),
       note,
     ),
     h('footer', {}, reject, approve),

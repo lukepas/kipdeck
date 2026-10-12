@@ -65,19 +65,33 @@ export function mayDecide(ctx: Ctx, accountId: string | undefined, id: string): 
   return ctx.meOf(accountId).admin || (!!p.owner && p.owner === accountId);
 }
 
+/** Terminal escape sequences (CSI, OSC and the rest that start with ESC), and the C0 and C1 control characters. */
+const ESCAPES = /\u001b(?:\[[0-?]*[ -/]*[@-~]|\][^\u0007\u001b]*(?:\u0007|\u001b\\)?|[ -/]*[0-~])|\u009b[0-?]*[ -/]*[@-~]/g;
+const CONTROLS = /[\u0000-\u001f\u007f-\u009f]+/g;
+
+/** A person's reason on one line, with no control characters or escape sequences: it is typed into the agent's session. */
+export const cleanNote = (note: string | undefined): string | undefined =>
+  note?.replace(ESCAPES, '').replace(CONTROLS, ' ').replace(/\s+/g, ' ').trim() || undefined;
+
 /**
  * `who` approves or rejects proposal `id`. An approved request runs exactly as it would have; the
  * agent that asked hears either way, in its own session. Resolves to an error when nothing was decided.
+ * A request whose agent has gone home since can only be rejected: nobody is left to act for, so it
+ * stays waiting until someone rejects it.
  */
 export async function decide(ctx: Ctx, who: string, id: string, approve: boolean, note?: string): Promise<string | undefined> {
+  const waiting = ctx.gate.get(id);
+  if (!waiting) return 'Someone already decided that request';
+  const at = ctx.floors.get(waiting.floor);
+  if (approve && at && !at.workers.get(waiting.by.id)) return `${waiting.by.name} has gone home since it asked, so its request can only be rejected`;
   const p = ctx.gate.take(id);
   if (!p) return 'Someone already decided that request';
   const floor = ctx.floors.get(p.floor);
-  const reason = note?.trim() || undefined;
+  const reason = cleanNote(note);
   if (!approve) {
     ctx.gate.settle(p, 'rejected', who, reason);
     if (floor) {
-      tellProposer(floor, p, decisionMessage(p, false, who, undefined, reason));
+      tellProposer(ctx, floor, p, decisionMessage(p, false, who, undefined, reason));
       ctx.toastFloor(floor, `${who} rejected: ${proposalTitle(p)}`);
     }
     return undefined;
@@ -90,16 +104,31 @@ export async function decide(ctx: Ctx, who: string, id: string, approve: boolean
   const failed = failureOf(r);
   ctx.gate.settle(p, failed ? 'failed' : 'approved', who, failed);
   ctx.toastFloor(floor, `${who} approved${failed ? ', but it failed' : ''}: ${proposalTitle(p)}`, failed ? 'warn' : 'info');
-  tellProposer(floor, p, decisionMessage(p, true, who, resultWords(p.req, r)));
+  tellProposer(ctx, floor, p, decisionMessage(p, true, who, resultWords(p.req, r)));
   return failed ? `Approved, but it failed: ${failed}` : undefined;
 }
 
 /**
  * Types the outcome into the asking agent's session, if it is still running there. One that stopped
- * isn't woken for it: the record says what happened.
+ * isn't woken for it: the record says what happened, and the message waits until it runs again.
  */
-function tellProposer(floor: Floor, p: Proposal, text: string) {
+function tellProposer(ctx: Ctx, floor: Floor, p: Proposal, text: string) {
   const w = floor.workers.get(p.by.id);
   if (!w || w.kind !== 'agent') return;
-  floor.workers.prompt(w.id, text);
+  if (floor.workers.prompt(w.id, text) === 'Worker is not running') ctx.gate.hold(w.id, text);
+}
+
+/** Statuses in which an agent waits for its next message, so a held outcome can be typed in. */
+const READY = new Set<WorkerInfo['status']>(['idle', 'done']);
+
+/**
+ * A worker's update (or its id once it has gone home): an agent that stopped before hearing how its
+ * requests ended hears it once it is running again and waiting for a message.
+ */
+export function deliverHeld(ctx: Ctx, floor: Floor, w: WorkerInfo | string) {
+  if (typeof w === 'string') return ctx.gate.forget(w);
+  if (w.kind !== 'agent' || !READY.has(w.status)) return;
+  const held = ctx.gate.takeHeld(w.id);
+  if (!held.length) return;
+  if (floor.workers.prompt(w.id, held.join('\n\n'))) for (const text of held) ctx.gate.hold(w.id, text);
 }

@@ -236,8 +236,23 @@ test('an agent deploying another waits in Needs you, then approve, reject and a 
   await page.locator('#btn-avatar').click();
   await page.locator('[role=menuitem]', { hasText: 'Settings' }).first().click();
   await page.locator('.settings-pane:not(.hidden) .gate-record li', { hasText: 'Lead three: deploy a new agent, allowed by a standing permission from Tess' }).waitFor({ timeout: 10_000 });
+  // 6. Take the permission back: requests wait again, and one whose agent went home since can only be rejected.
+  await page.locator('.settings-pane:not(.hidden) .gate-grants li button', { hasText: 'Take back' }).click();
+  await page.locator('.settings-pane:not(.hidden) .gate-grants li').waitFor({ state: 'detached', timeout: 10_000 });
   await page.keyboard.press('Escape');
   await page.locator('.modal.settings').waitFor({ state: 'detached' });
+  const four = lead('[hire] Lead four');
+  const fourth = page.locator('.sec-needs-you .row.proposal', { hasText: 'Lead four wants to deploy a new agent' });
+  await fourth.waitFor({ timeout: 30_000 });
+  await (office!.floors()[0] as unknown as { sendHome(id: string): Promise<unknown> }).sendHome(four);
+  await fourth.locator('.row-status', { hasText: 'Its agent has gone home - reject to clear it' }).waitFor({ timeout: 10_000 });
+  await fourth.locator('.row-act').click();
+  await card.waitFor();
+  assert.equal(await card.locator('button.primary', { hasText: 'Approve' }).isDisabled(), true, 'nobody is left to act for');
+  assert.match(await card.locator('.gate-gone').innerText(), /Its agent has gone home - reject to clear it/);
+  await card.locator('button', { hasText: 'Reject' }).click();
+  await fourth.waitFor({ state: 'detached', timeout: 10_000 });
+  assert.ok(!agents().some((w) => w.prompt === 'Sub task from Lead four (demo)'));
 
   assert.deepEqual(errors, []);
 });
