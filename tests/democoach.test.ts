@@ -1,9 +1,9 @@
 // The demo's coach strip (shared/democoach.ts, home/demo.ts): answer, review, then "Run it on your
-// repo" with the command to copy, each step
-// checked off once it has happened.
+// repo" with the command to copy, each step checked off once it has happened. The last step turns
+// into "That's the loop. Now run it on your repo." only once the loop has run and nothing waits.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { coachRun, coachSteps } from '../src/shared/democoach.js';
+import { LOOP_DONE, RUN_IT, coachRun, coachSteps } from '../src/shared/democoach.js';
 import { DEMO_COMMAND, INSTALL_COMMAND } from '../src/shared/demo.js';
 import { LOOP_STEPS } from '../src/client/home/preview.js';
 
@@ -19,6 +19,17 @@ test('three steps that end at "Run it on your repo", checked off as they happen'
   assert.deepEqual(coachSteps(local, { asked: true, needsYou: 0, merged: 1 }).map((s) => s.done), [true, true, false]);
   // In the read-only demo the scripted reviewer acts, so the steps say what to watch.
   assert.deepEqual(coachSteps(hosted, { asked: false, needsYou: 0, merged: 0 }).map((s) => s.label), ['Watch an agent ask', 'Watch the review and merge', 'Run it on your repo']);
+});
+
+test('"That\'s the loop" only once the loop has run, and never while a question waits', () => {
+  const last = (seen: { asked: boolean; needsYou: number; merged: number }, d = local) => coachSteps(d, seen)[2].label;
+  assert.equal(RUN_IT, 'Run it on your repo');
+  assert.equal(LOOP_DONE, "That's the loop. Now run it on your repo.");
+  assert.equal(last({ asked: true, needsYou: 1, merged: 0 }), RUN_IT, 'nothing done yet');
+  assert.equal(last({ asked: true, needsYou: 0, merged: 0 }), RUN_IT, 'answered, not merged');
+  assert.equal(last({ asked: true, needsYou: 1, merged: 1 }), RUN_IT, 'merged, but a question waits');
+  assert.equal(last({ asked: true, needsYou: 0, merged: 1 }), LOOP_DONE);
+  assert.equal(last({ asked: true, needsYou: 0, merged: 1 }, hosted), LOOP_DONE);
 });
 
 test('the last step: the command to copy, the one this demo was started with when it says', () => {

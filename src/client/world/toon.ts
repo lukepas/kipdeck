@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
-import { matte, matteUnique } from './office/materials';
+import { DECK, matte, matteUnique } from './office/materials';
 
 // The shapes and labels everything in the world is built from. The materials were toon-shaded once;
 // now toon() and toonUnique() are a thin shim over world/office/materials.ts (matte, slightly rough,
@@ -104,10 +104,10 @@ function textTexture(text: string, opts: TextOpts) {
     ctx.roundRect(2, 2, w - 4, h - 4, Math.max(2, size * 0.12));
     ctx.fill();
     ctx.lineWidth = Math.max(2, size * 0.05);
-    ctx.strokeStyle = opts.border ?? '#3A4756';
+    ctx.strokeStyle = opts.border ?? DECK.steel;
     ctx.stroke();
   }
-  ctx.fillStyle = opts.color ?? '#E8ECEF';
+  ctx.fillStyle = opts.color ?? DECK.text;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(text, w / 2 + (track * size) / 2, h / 2 + size * 0.05);

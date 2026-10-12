@@ -16,7 +16,6 @@ import type { DesktopNotifier } from '../notify';
 import type { Settings } from '../state';
 import { applyLight, toggleLight } from '../lite-theme';
 import { createActions, type Actions } from './actions';
-import { settledToast } from './beat';
 import { startClocks, tickClocks } from './clock';
 import { installKeys, openHelp } from './keys';
 import * as lazy from './lazy';
@@ -37,7 +36,8 @@ import { demoMessage } from './demo';
 import { installSpend, spendMessage, spendUi } from './spend-slot';
 import { installPhone, phoneCommands, phoneMenuEntry } from './phone';
 import { home } from './state';
-import { agentRef } from '../../shared/agentname';
+import { agentHeading } from '../../shared/agentname';
+import { sayAnswered, sayFirstJob, welcomeLine } from './warm';
 import '../ui/waitclock.css';
 import './home.css';
 
@@ -178,18 +178,15 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     renderAll();
   };
   const renderDigest = () => {
-    const card = digestShown
-      ? digestCard(
-          actions.deps,
-          () => {
-            digestShown = false;
-            const next = nextUp(currentView());
-            home.select(next?.id, next?.status === 'needs_input' ? 'terminal' : 'changes');
-          },
-          () => ((digestShown = false), renderAll()),
-        )
-      : null;
-    digest.replaceChildren(...(card ? [h('ul.digest', {}, card)] : []));
+    const showNext = () => {
+      digestShown = false;
+      const next = nextUp(currentView());
+      home.select(next?.id, next?.status === 'needs_input' ? 'terminal' : 'changes');
+    };
+    const card = digestShown ? digestCard(actions.deps, showNext, () => ((digestShown = false), renderAll())) : null;
+    // Back after a night away, a line over it says so (warm.ts).
+    const welcome = card ? welcomeLine(store.away?.since, showNext) : null;
+    digest.replaceChildren(...(welcome ? [welcome] : []), ...(card ? [h('ul.digest', {}, card)] : []));
   };
   watchAway(net, showDigest, () => false);
 
@@ -229,6 +226,8 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
     if (!mine) return;
     home.deployedAt = 0;
     home.select(mine.id, 'terminal');
+    // The very first job this browser gave out, with nothing else on the roster: said once (warm.ts).
+    if (store.roster.length === 1) sayFirstJob(agentHeading(mine));
   });
 
   // Answering a question counts for the checklist, and gets a small settled beat: an agent you typed
@@ -240,7 +239,7 @@ export function installHome(net: Net, settings: Settings, notifier: DesktopNotif
       was.set(w.id, { status: w.status, since: w.waitingSince });
       if (before?.status === 'needs_input' && w.status !== 'needs_input' && w.lastInput?.by === store.profile.name && Date.now() - w.lastInput.at < 120_000) {
         home.check('answer');
-        settledToast(`Answered ${agentRef(w)}. Back at work.`, before.since ? `It waited on you ${waitWords(w.lastInput.at - before.since)}.` : undefined);
+        sayAnswered(w.id, agentHeading(w), before.since ? `It waited on you ${waitWords(w.lastInput.at - before.since)}.` : undefined);
       }
     }
   });

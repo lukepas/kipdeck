@@ -5,6 +5,7 @@ import { defineConfig, type Plugin } from 'vite';
 import { resolve } from 'node:path';
 import { brandFor, type Brand } from './brand.ts';
 import { siteEnv } from '../env.mjs';
+import { npxSpec } from '../npx.mjs';
 
 const here = import.meta.dirname;
 
@@ -28,7 +29,7 @@ export function jsonLd(brand: Brand): string {
   return JSON.stringify(data).replace(/</g, '\\u003c');
 }
 
-/** {{name}}, {{tagline}}, {{lead}}, {{muted}}, {{pkg}}, {{repo}}, {{folder}}, {{contact}}, {{ogTitle}}, {{ogDescription}}, {{ogImageAlt}} and {{jsonld}} in the HTML. */
+/** {{name}}, {{tagline}}, {{lead}}, {{muted}}, {{pkg}}, {{repo}}, {{npx}}, {{contact}}, {{ogTitle}}, {{ogDescription}}, {{ogImageAlt}} and {{jsonld}} in the HTML. */
 function brandHtml(brand: Brand): Plugin {
   const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
   const values: Record<string, string> = {
@@ -38,7 +39,8 @@ function brandHtml(brand: Brand): Plugin {
     muted: brand.wordmark.muted,
     pkg: brand.pkg,
     repo: brand.repo,
-    folder: brand.folder,
+    // The start command until npm is published: npx straight from the repository (github:owner/repo).
+    npx: npxSpec(brand.repo),
     contact: brand.contact,
     ogTitle: brand.ogTitle,
     ogDescription: brand.ogDescription,

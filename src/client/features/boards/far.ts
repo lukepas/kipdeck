@@ -7,7 +7,7 @@
 // One painter for every panel, so they read alike; each says what its counts are.
 import * as THREE from 'three';
 import { drawDone, drawGlyph } from '../../world/glyphs';
-import { INK, MONO, UI, clip, ground, type Screen } from './screen';
+import { INK, MONO, TAPE_LABEL, UI, clip, ground, type Screen } from './screen';
 import type { Chip } from './table';
 
 /** Past `at` metres a panel shows its far face; back under `back` its table again; checked every `every` s. */
@@ -51,9 +51,10 @@ export function paintFar(s: Screen, unitsPerM: number, f: FarSpec) {
   g.fillRect(0, 0, W, Math.max(4, Math.round(H * 0.018)));
   g.textBaseline = 'middle';
   g.textAlign = 'left';
-  g.font = UI(700, titleSize);
-  g.letterSpacing = '4px';
-  g.fillStyle = INK.dim;
+  // Its name as a tape label, like the near face's header (screen.ts titleBar).
+  g.font = MONO(titleSize, TAPE_LABEL.weight);
+  g.letterSpacing = `${Math.round(titleSize * TAPE_LABEL.track)}px`;
+  g.fillStyle = INK.tape;
   g.fillText(clip(g, f.title.toUpperCase(), W - pad * 2), pad, pad + titleSize * 0.6);
   g.letterSpacing = '0px';
   const top = pad + titleSize * 1.25;

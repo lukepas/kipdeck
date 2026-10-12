@@ -17,7 +17,7 @@ import { DECK } from '../../world/office/materials';
 import { DESK_BY_ID, TV, cellOf } from '../../../shared/layout';
 import { callSign } from '../../../shared/callsign';
 import { PANEL } from '../boards/world';
-import { INK, MONO, UI, UNITS_PER_M, clip, screen } from '../boards/screen';
+import { INK, MONO, SMOKED, UI, UNITS_PER_M, clip, screen } from '../boards/screen';
 import { drawDone, drawGlyph } from '../../world/glyphs';
 import { cardCell, heroFirst, planHero, wideRows, type HeroKind, type HeroPlan } from './plan';
 
@@ -36,9 +36,9 @@ export const HEADER_COUNTS: readonly (readonly [HeroKind, string])[] = [
 export const HERO = { pad: 28, head: 92, rule: 6, foot: 54, gap: 10 } as const;
 
 /** Smoked backing: the board's ground lets a little of space through (the face is drawn as glass). */
-const GROUND = 'rgba(8,12,18,0.94)';
-const CARD = '#162029';
-const CARD_QUIET = 'rgba(22,32,41,0.75)';
+const GROUND = SMOKED;
+const CARD = INK.card;
+const CARD_QUIET = 'rgba(28,24,20,0.75)';
 
 /** A state's glyph on the canvas; done is its own check. */
 function mark(g: CanvasRenderingContext2D, kind: HeroKind, x: number, y: number, r: number) {
@@ -300,7 +300,7 @@ function paintChips(g: CanvasRenderingContext2D, W: number, H: number, plan: Her
     const text = `${word} ${c.n}`;
     const w = g.measureText(text).width + 74;
     if (x + w > W - pad) break;
-    g.fillStyle = 'rgba(22,32,41,0.9)';
+    g.fillStyle = 'rgba(28,24,20,0.9)';
     g.fillRect(x, y, w, h);
     g.fillStyle = HERO_HUE[c.kind];
     g.fillRect(x, y, 6, h);

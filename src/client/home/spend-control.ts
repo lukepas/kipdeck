@@ -79,7 +79,7 @@ export function paused(net: Net, ids: string[]) {
   const kind = asked;
   asked = undefined;
   if (kind !== 'pause') return;
-  if (!ids.length) return note('Nothing to pause: no agent was at work.');
+  if (!ids.length) return note('Nothing to pause: nobody was at work.');
   holdToast(`Paused ${plural(ids.length)}`, 'They wait in Needs you until you let them carry on.', 8_000, () => resumeAgents(net, ids));
 }
 

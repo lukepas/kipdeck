@@ -1,0 +1,7 @@
+/* The inbox's warm words (warm.ts): the all-clear's heading and warm line, welcome back and the
+   zero-wait line. The celebrate type only; never a state hue. Kip's own sheet is kip-moments.css. */
+.warm-line { font: 400 14px/1.45 var(--font-ui); color: var(--muted); }
+.warm-welcome { margin: 0 0 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--surface-1); color: var(--text); font-size: 13px; }
+.warm-link { padding: 0; border: 0; background: none; color: var(--text); font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.warm-link:focus-visible { outline: 2px solid var(--act); outline-offset: 2px; }
+.warm-zero { margin: 6px 0 0; font-size: 13px; color: var(--muted); }

@@ -23,7 +23,7 @@
     translate3d(calc(var(--fx) + (var(--tx) - var(--fx)) * var(--lift)), calc(var(--fy) + (var(--ty) - var(--fy)) * var(--lift)), calc(var(--lift) * 14px))
     rotateZ(calc(var(--ta) * var(--lift)));
 }
-.station::after { content: ''; position: absolute; inset: -1px; border-radius: 3px; background: color-mix(in srgb, var(--ship) 10%, #05080b); border: 1px solid var(--ship-dim); transform: translateZ(calc(var(--lift) * -14px)); opacity: var(--lift); }
+.station::after { content: ''; position: absolute; inset: -1px; border-radius: 3px; background: color-mix(in srgb, var(--ship) 10%, var(--code-bg)); border: 1px solid var(--ship-dim); transform: translateZ(calc(var(--lift) * -14px)); opacity: var(--lift); }
 .station::before { content: ''; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px; background: var(--working); }
 .station.s-needs::before { background: var(--signal); }
 .station.s-review::before { background: var(--review); }
