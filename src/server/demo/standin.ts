@@ -68,20 +68,22 @@ function post(event, payload) {
   });
 }
 
-/** A tool call: "Bash: npm test" is the Bash tool on "npm test". */
-async function use(line) {
+/** A tool call: "Bash: npm test" is the Bash tool on "npm test". out is what it prints, sent with the call's end as the real CLIs do (the review brief reads a test run's result off it). */
+async function use(line, out) {
   const at = line.indexOf(': ');
   const name = at > 0 ? line.slice(0, at) : line;
   const detail = at > 0 ? line.slice(at + 2) : '';
   const id = 'demo_' + ++tool;
+  const stdout = (out || []).join('\n');
   console.log(bold('● ' + name) + (detail ? '(' + detail + ')' : ''));
   if (play.route === 'claude') {
     const input = detail ? { [name === 'Bash' ? 'command' : 'file_path']: detail } : {};
     await post('PreToolUse', { tool_name: name, tool_input: input });
-    await post('PostToolUse', { tool_name: name, tool_input: input, tool_response: { stdout: '' } });
+    await post('PostToolUse', { tool_name: name, tool_input: input, tool_response: { stdout } });
   } else {
-    await post('PreToolUse', { tool_name: line, tool_use_id: id });
-    await post('PostToolUse', { tool_name: line, tool_use_id: id });
+    const input = name === 'Bash' && detail ? { command: detail } : {};
+    await post('PreToolUse', { tool_name: line, tool_use_id: id, tool_input: input });
+    await post('PostToolUse', { tool_name: line, tool_use_id: id, tool_input: input, tool_response: { stdout } });
   }
 }
 
@@ -149,7 +151,7 @@ async function run() {
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
     await sleep(step.after);
-    if (step.tool) await use(step.tool);
+    if (step.tool) await use(step.tool, step.say);
     if (step.write) {
       for (const [file, text] of Object.entries(step.write)) {
         fs.mkdirSync(path.dirname(file), { recursive: true });
@@ -173,12 +175,13 @@ async function run() {
       picks = 0;
       if (/^[1-9]$/.test(answer) && choices[Number(answer) - 1]) answer = choices[Number(answer) - 1];
       console.log(dim('  (answered: ' + answer + ')'));
-      await post('PostToolUse', { tool_name: ask, tool_use_id: id, tool_input: {} });
+      await post('PostToolUse', { tool_name: ask, tool_use_id: id, tool_input: input, tool_response: { answers: { [step.ask]: answer } } });
     }
     if (step.finish) {
       commit(step.finish);
       for (const line of [''].concat(step.say ? [] : ['Done (demo).'])) console.log(line);
-      await post('Stop', {});
+      // Its last message, as the real CLIs' Stop hooks carry it: the review brief's summary.
+      await post('Stop', { last_assistant_message: (step.say || []).concat(['Committed: ' + step.finish + ' (demo).']).join('\n') });
       break;
     }
     // Two hours at most, then it stops by itself.
@@ -192,7 +195,7 @@ async function run() {
     fs.appendFileSync('NOTES.md', '- [demo] ' + more + '\n');
     commit(more);
     console.log('Done (demo): noted in NOTES.md.');
-    await post('Stop', {});
+    await post('Stop', { last_assistant_message: 'Noted in NOTES.md and committed (demo).' });
   }
 }
 run().catch((err) => {

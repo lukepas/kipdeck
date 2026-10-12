@@ -2,7 +2,8 @@
  * The Proof corner keeping up with the chain: the rail's tally of merges paid out on devnet (the top
  * bar's violet counter, see ui/counters.ts), the vault armed while a bounty is held in escrow and its
  * lid lifting when one is released, and a lit step on the plinth for each unit with a reputation
- * record, glowing for a moment as one is added. The corner itself is world.ts.
+ * record, glowing for a moment as one is added. The corner itself is world.ts, hidden until Proof of
+ * Merge is on and set up (shared/proof-ready.ts).
  *
  * A release the merge beat is carrying over (features/beats) is held back from the rail until its
  * pulse parks there: expect() when it sets off, arrive() when it lands, which also lifts the lid. Whatever
@@ -14,6 +15,7 @@ import { store } from '../../state';
 import { proofTally } from '../../ui/counters';
 import { ledgerView } from './ledger';
 import { FarWatch } from '../boards/far';
+import { proofReady } from '../../proof-ready';
 
 /** A payout as the server says it (bounty.paid). */
 type Paid = Extract<ServerMsg, { t: 'bounty.paid' }>;
@@ -30,6 +32,8 @@ export function installProofCorner(ctx: Ctx) {
   let steps = -1;
   let glowT = Infinity;
   function render() {
+    // No corner at all until Proof of Merge is on and set up.
+    proof.setShown(proofReady());
     proof.setTally(Math.max(0, proofTally().released - pending));
     const held = Object.values(store.bounties ?? {}).some((b) => b?.enabled && b.items.some((i) => i.phase !== 'open' && i.phase !== 'released'));
     proof.setArmed(held);
@@ -53,7 +57,7 @@ export function installProofCorner(ctx: Ctx) {
     proof.setLedger(v, far.far);
   }
   window.setInterval(() => !document.hidden && paintLedger(), 60_000);
-  for (const topic of ['bounties', 'reputation', 'floors', 'floor'] as const) store.on(topic, render);
+  for (const topic of ['bounties', 'reputation', 'floors', 'floor', 'labs'] as const) store.on(topic, render);
   render();
 
   let since = Infinity;

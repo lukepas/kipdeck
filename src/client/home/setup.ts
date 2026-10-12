@@ -1,10 +1,12 @@
 // The setup card: what the home page shows before the first agent. Three rows the office fills in by
-// itself (the agent CLIs it found, the project, GitHub, which is optional), then one button that
-// deploys the first agent on a safe task. A row that isn't ready says the one line that fixes it.
-// The state comes from the office (server/firstrun.ts, the `setup` message).
+// itself (the agent CLIs it found, the project, GitHub, which is optional), then the task box
+// (starter.ts): what you were about to ask your agent, with three suggestions from the repository, and
+// Bring in for sessions already running in its folder. A row that isn't ready says the one line that
+// fixes it. The state comes from the office (server/firstrun.ts, the `setup` message).
 
 import type { ServerMsg, SetupAgent, SetupState } from '../../shared/protocol';
 import { PROVIDER_META, type AgentProvider } from '../../shared/providers';
+import { INSTALL_COMMAND } from '../../shared/demo';
 import type { Net } from '../net';
 import { store } from '../state';
 import { h, toast } from '../ui/dom';
@@ -12,16 +14,27 @@ import { icon } from '../ui/icons';
 import { agentMark } from './list';
 import './setup.css';
 
-/** The first agent's task: something every repository has an answer to, that changes nothing that matters. */
-export const STARTER_PROMPT = 'Read this repository and write a SUMMARY.md of at most 5 lines on how to install, run and test it. Change no other file.';
-
 let state: SetupState | undefined;
 let repos: string[] = [];
 let changed: () => void = () => {};
+/** The task box and Bring in (starter.ts), loaded once the card is wanted so the inbox loads no more up front. */
+let starter: typeof import('./starter') | undefined;
+let loading = false;
+function loadStarter() {
+  if (starter || loading) return;
+  loading = true;
+  void import('./starter').then((m) => {
+    starter = m;
+    changed();
+  });
+}
 
 /** The office answered: the card's state, the repositories gh can see, a project that was added or not. */
 export function setupMessage(msg: ServerMsg) {
-  if (msg.t === 'setup') state = msg.state;
+  if (msg.t === 'setup') {
+    state = msg.state;
+    if (!store.roster.length) loadStarter();
+  }
   else if (msg.t === 'floor.repos') repos = msg.repos.slice(0, 50).map((r) => r.name);
   else if (msg.t === 'floor.added' && msg.error) toast(msg.error, 'warn');
   else return;
@@ -107,7 +120,7 @@ function projectRow(s: SetupState, net: Net, admin: boolean): HTMLElement {
     input.addEventListener('keydown', (e) => e.key === 'Enter' && add());
     parts.push(h('span.su-line.su-clone', {}, s.startedIn ? 'or clone one from GitHub:' : 'Clone one from GitHub:', input, list, h('button.btn.small', { type: 'button', onclick: add }, 'Add')));
   }
-  if (!parts.length) parts.push(h('span.su-say', {}, admin ? 'Start Kipdeck inside a git repository (cd into it, then npx kipdeck), or sign GitHub in to clone one.' : 'An admin adds projects.'));
+  if (!parts.length) parts.push(h('span.su-say', {}, admin ? `Start Kipdeck inside a git repository (cd into it, then ${s.run ?? INSTALL_COMMAND}), or sign GitHub in to clone one.` : 'An admin adds projects.'));
   return row(false, 'Project', ...parts);
 }
 
@@ -140,7 +153,7 @@ export function usageSwitch(net: Net, s: SetupState): HTMLElement {
       'details',
       {},
       h('summary', {}, "What's sent"),
-      h('p', {}, "Each event is its name (first agent, first answer, first merge, or one wait in Needs you), a number of minutes, a random id made when you turn this on, the Kipdeck version, your OS and the day. Never code, prompts, names, paths or repositories. Events wait in telemetry-outbox.jsonl in the office's data folder, so you can read them first. Off by default; DO_NOT_TRACK=1 keeps it off."),
+      h('p', {}, "Each event is its name (first agent, first answer, first merge, or one wait in Needs you), a number of minutes, a random id made when you turn this on, the Kipdeck version, your OS and the day. Never code, prompts, names, paths or repositories. Events wait in telemetry-outbox.jsonl in Kipdeck's data folder, so you can read them first. Off by default; DO_NOT_TRACK=1 keeps it off."),
     ),
   );
 }
@@ -153,12 +166,10 @@ export function setupCard(net: Net, deploy: (prompt: string, provider?: AgentPro
   const project = store.floors.some((f) => !f.cloning);
   const agent = firstReadyAgent();
   const canDeploy = project && !!agent;
-  const go = h(
-    'button.btn.primary.big',
-    { type: 'button', disabled: !canDeploy, title: canDeploy ? undefined : !project ? 'Add a project first' : 'Install or sign in an agent first', onclick: () => deploy(STARTER_PROMPT, agent) },
-    icon('plus', 16),
-    'Deploy your first agent',
-  );
+  const why = canDeploy ? undefined : !project ? 'Add a project first' : 'Install or sign in an agent first';
+  loadStarter();
+  // Deploy opens the sheet on the task; the box keeps it until an agent is really on its way (starter.ts).
+  const box = starter?.taskBox(s, agent, canDeploy, why, (prompt) => deploy(prompt, agent));
   const rows = h('ol.su-rows', { 'aria-label': 'Setup' }, agentsRow(s), projectRow(s, net, admin), githubRow(s, net));
   // Everything found: one line says what, and the rows fold under Details. Anonymous usage numbers
   // are asked about in Settings, never before the first agent.
@@ -170,8 +181,8 @@ export function setupCard(net: Net, deploy: (prompt: string, provider?: AgentPro
     h('p', {}, 'It works on a branch of its own. When it needs an answer or has something to review, it shows up here.'),
     summary,
     canDeploy ? null : rows,
-    go,
-    h('p.first-hint', {}, 'It starts with a safe task: a 5-line SUMMARY.md on how to run this repo.'),
+    starter?.sessionsBox(s, net) ?? null,
+    box ?? null,
     canDeploy ? h('details.su-details', {}, h('summary', {}, 'Details'), rows) : null,
   );
 }

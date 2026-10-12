@@ -21,6 +21,7 @@ import { needsSigningIn, openSignIns } from '../../ui/signins';
 import { openTeam } from '../../ui/team';
 import { openUpgrade } from '../../ui/upgrade';
 import { openLabs } from '../../ui/labs';
+import { proofReady } from '../../proof-ready';
 import { openWhiteboard } from '../whiteboard/ui';
 import { qualityMenuAction } from '../quality/menu';
 import { rundownMenuActions } from '../rundown';
@@ -80,7 +81,7 @@ export function installHud(ctx: Ctx, parts: HudParts) {
       { id: 'services', icon: 'services', label: 'Services', section: 'Work', lab: 'ops', count: () => store.services.items.length, title: () => 'Web servers the units are running', run: () => openServices() },
       { id: 'docs', icon: 'docs', label: 'Docs', section: 'Work', title: () => "The project's docs", run: parts.bookshelf.showBookshelf },
       // ---- Proof: what is settled on testnets (Labs > Proof of Merge) ----------------------------------
-      { id: 'ledger', icon: 'proof', label: 'Proof ledger', section: 'Proof', lab: 'proof', title: () => 'The public Proof of Merge ledger at /pom/ (opens a new tab)', run: () => window.open('/pom/', '_blank', 'noopener') },
+      { id: 'ledger', icon: 'proof', label: 'Proof ledger', section: 'Proof', lab: 'proof', shown: proofReady, title: () => 'The public Proof of Merge ledger at /pom/ (opens a new tab)', run: () => window.open('/pom/', '_blank', 'noopener') },
       { id: 'bounties', icon: 'bounty', label: 'Bounties and payouts', section: 'Proof', lab: 'proof', title: () => 'Devnet USDC or test tokens escrowed on issues, paid only on a human merge', run: () => showSettings('bounties') },
       // ---- Deck: this office --------------------------------------------------------------------------
       { id: 'elevator', icon: 'decks', label: 'Projects', section: 'Deck', count: () => store.floors.reduce((n, f) => n + (f.id === store.floor ? 0 : f.waiting), 0), title: () => 'Go to another project, or add one', run: travel.showElevator },

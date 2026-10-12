@@ -220,13 +220,13 @@ test('sending a worker across repositories home checks every worktree, and delet
   assert.equal(state?.dirty, 1);
   // Nobody said what to do, and api holds work: everything stays.
   const kept = await workers.kill(w.id);
-  assert.match(kept.note ?? '', /Kept .*worktrees and branch office\/\S+ in web, api - api has 1 uncommitted change/);
+  assert.match(kept.note ?? '', /: kept its worktrees and branch office\/\S+ in web, api - api has 1 uncommitted change/);
   assert.ok(existsSync(path.join(ws, 'api', 'server.js')));
 
   const w2 = hire();
   const ws2 = path.join(f.a, '.agent-office', 'worktrees', w2.worktree!.branch.slice('office/'.length));
   const done = await workers.kill(w2.id, 'all');
-  assert.match(done.note ?? '', /Deleted .*worktrees and branch office\/\S+ in web, api/);
+  assert.match(done.note ?? '', /: deleted its worktrees and branch office\/\S+ in web, api/);
   assert.equal(existsSync(ws2), false);
   assert.equal(git(f.a, 'branch', '--list', w2.worktree!.branch), '');
   assert.equal(git(f.b, 'branch', '--list', w2.worktree!.branch), '');
@@ -322,7 +322,7 @@ test('the Changes window follows each repository of a worker across repositories
   assert.equal(await changes.commit('w1', 'Add new.js', 'Cody', undefined, 'floor-api'), undefined);
   assert.equal(git(cwd, 'log', '-1', '--format=%s'), 'Add new.js');
   // Its own floor's checkout is a different target.
-  assert.equal(await changes.diff('w1', 'new.js'), 'No such worker');
+  assert.equal(await changes.diff('w1', 'new.js'), 'No such agent');
 });
 
 test('prune leaves a workspace with worktrees in it alone, and lists the other repository’s branch as checked out elsewhere', async (t) => {

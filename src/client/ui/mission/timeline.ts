@@ -7,7 +7,7 @@ import { explorerLink } from '../../../shared/protocol';
 import type { Net } from '../../net';
 import { store } from '../../state';
 import { h, timeAgo } from '../dom';
-import { openEvent, type MissionDeps } from './act';
+import type { MissionDeps } from './act';
 import { locateButton } from './locate';
 
 export const KIND_LABEL: Record<TimelineKind, string> = {
@@ -72,6 +72,19 @@ function picker(label: string, key: keyof typeof filter, all: string, options: M
 /** Keys that press a row that is a button, as they press a button. */
 export const ROW_PRESS_KEYS: ReadonlySet<string> = new Set(['Enter', ' ']);
 
+// The inbox's digest draws these rows on the home page, so what a row opens (act.ts, with its dialogs)
+// is not part of the first load (tests/home-budget.test.ts). act.ts hands its opener over as it loads:
+// with Mission control that is before any row is drawn, and on the home page a drawn row starts it.
+type Opener = (deps: MissionDeps, e: TimelineEvent) => void;
+let opener: Opener | undefined;
+
+/** act.ts, as it loads: what pressing a row does. */
+export function setEventOpener(fn: Opener) {
+  opener = fn;
+}
+
+const loadOpener = () => import('./act').then((m) => m.openEvent);
+
 /**
  * One event: when, where, what kind, what happened. The whole row is the button that opens what
  * it's about (a chevron shows on hover); its links and Locate do their own thing.
@@ -79,7 +92,8 @@ export const ROW_PRESS_KEYS: ReadonlySet<string> = new Set(['Enter', ' ']);
 export function eventRow(deps: MissionDeps, e: TimelineEvent, showFloor: boolean): HTMLElement {
   const floorName = store.floors.find((f) => f.id === e.floor)?.name ?? '';
   const unit = e.worker ? store.rosterEntry(e.worker) : undefined;
-  const open = () => openEvent(deps, e);
+  if (!opener) void loadOpener();
+  const open = () => (opener ? opener(deps, e) : void loadOpener().then((fn) => fn(deps, e)));
   const row = h(
     'li.mc-row.tl-row',
     { class: e.kind, tabindex: '0', role: 'button', 'aria-label': `Open: ${e.text}`, 'data-id': `${e.floor}:${e.id}` },
@@ -126,9 +140,9 @@ export function renderTimeline(deps: MissionDeps, net: Net): HTMLElement {
   const filters = !t.events.length ? null : h(
     'div.mc-filters',
     {},
-    showFloor ? picker('Floor', 'floor', 'All decks', new Map(store.floors.filter((f) => !f.cloning).map((f) => [f.id, f.name]))) : null,
+    showFloor ? picker('Project', 'floor', 'All projects', new Map(store.floors.filter((f) => !f.cloning).map((f) => [f.id, f.name]))) : null,
     goals.size ? picker('Goal', 'goal', 'Every goal', goals) : null,
-    workers.size ? picker('Worker', 'worker', 'Every worker', workers) : null,
+    workers.size ? picker('Agent', 'worker', 'Every agent', workers) : null,
   );
   const oldest = t.events.at(-1);
   const older = t.more && oldest ? h('button.btn.small.tl-more', { type: 'button', onclick: () => net.send({ t: 'timeline.get', before: oldest.at }) }, 'Load older') : null;

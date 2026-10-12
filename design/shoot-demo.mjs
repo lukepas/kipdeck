@@ -153,7 +153,7 @@ try {
   await wait(400);
   await shot(page, 'merged-phone');
 
-  // The Deck (Labs, on by default; its lab id is still `bridge`) as a team's wall display: the same agents, the Overview turning slowly.
+  // The Deck (a lab, off by default, though `/deck` itself always opens; its lab id is still `bridge`) as a team's wall display: the same agents, the Overview turning slowly.
   if (WITH_3D && want('deck-wall-desktop')) {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.evaluate(() => window.__lite.net.send({ t: 'labs.set', patch: { bridge: true } }));

@@ -99,7 +99,7 @@ export function reviewInbox(ranked: readonly Ranked[], queue: readonly ReviewPul
   }
   for (const p of payouts) {
     const { since, ...payout } = p;
-    const reason = p.kind === 'approve' ? `Approve payout of ${p.amount} to ${p.workerName ?? 'the office'} for PR #${p.pr}` : (p.note ?? 'set a payout wallet to claim this bounty');
+    const reason = p.kind === 'approve' ? `Approve payout of ${p.amount} for PR #${p.pr}${p.workerName ? ` ("${p.workerName}")` : ''}` : (p.note ?? 'set a payout wallet to claim this bounty');
     out.push({ key: `bounty:${p.floor}:${p.issue}`, floor: p.floor, floorName: p.floorName, since, reason, action: p.kind === 'approve' ? 'approve-payout' : 'set-wallet', payout, snoozed: false });
   }
   return out.sort((a, b) => Number(a.snoozed) - Number(b.snoozed) || a.since - b.since || a.key.localeCompare(b.key));

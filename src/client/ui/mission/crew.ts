@@ -1,17 +1,17 @@
-// Mission control's Crew tab: the units aboard with their one-line records ("A-03 the Mechanic: 41
-// merges, 0 reverts"), the chevrons they wear and why, and the unit of the watch. Units only: there
+// Mission control's Records tab: the agents with their one-line records ("the Mechanic: 41 merges,
+// 0 reverts"), each named by its task, the chevrons they wear and why, and the best of the watch. Agents only: there
 // is no list of people here, and slow records are shown as plainly as quick ones. The epithet chip on
 // a row (crewBits) is the same in the Attention and Review tabs. Rules in shared/epithet.ts and
 // shared/commendations.ts; the book in client/shared/crew.ts.
 
 import './crew.css';
-import { callSign } from '../../../shared/callsign';
 import { rosterLine } from '../../../shared/commendations';
 import { crewBook, crewOn, epithetOf } from '../../shared/crew';
 import type { Chevrons } from '../../../shared/commendations';
 import { store } from '../../state';
 import { h } from '../dom';
-import { unitSign } from '../unitsign';
+import { agentBadgeChip } from '../agentbadge';
+import { agentHeading, agentName } from '../../../shared/agentname';
 import type { Ranked } from '../../../shared/attention';
 import type { MissionDeps } from './act';
 import { crewNow, crewOrder } from './crewnow';
@@ -61,7 +61,7 @@ export function renderCrew(deps: MissionDeps, ranked: Ranked[], now: number): HT
   const watch = watchId ? store.roster.find((e) => e.id === watchId) : undefined;
   const rows = units.map((e) => {
     const ep = on ? book.epithets.get(e.id) : undefined;
-    const line = rosterLine(callSign(e.deskId) || e.name, ep?.title, book.logs.get(e.id), book.reverts.get(e.id) ?? 0);
+    const line = rosterLine('', ep?.title, book.logs.get(e.id), book.reverts.get(e.id) ?? 0).replace(/^: /, '');
     const r = byId.get(e.id);
     return h(
       'li.mc-row.crew-row',
@@ -69,15 +69,15 @@ export function renderCrew(deps: MissionDeps, ranked: Ranked[], now: number): HT
       h(
         'div.mc-main.crew-main',
         {},
-        unitSign(e.deskId),
-        h('div.mc-who', {}, h('span.mc-name', {}, e.name), h('span.mc-sub', {}, e.floorName)),
+        agentBadgeChip(e),
+        h('div.mc-who', {}, h('span.mc-name', { title: agentName(e) }, agentName(e)), h('span.mc-sub', {}, e.floorName)),
         nowCell(r, now),
         h(
           'div.mc-what',
           {},
           h('span.crew-line', { title: ep ? `${ep.title}: ${ep.why}` : line }, line),
           ...(on ? [chevronMarks(book.chevrons(e.id))] : []),
-          e.id === watchId && on ? h('span.crew-watch', { title: 'The best clean record on the last watch' }, 'Unit of the watch') : null,
+          e.id === watchId && on ? h('span.crew-watch', { title: 'The best clean record on the last watch' }, 'Best of the watch') : null,
         ),
         h('div.mc-btns', {}, locateButton(deps, e)),
       ),
@@ -89,10 +89,10 @@ export function renderCrew(deps: MissionDeps, ranked: Ranked[], now: number): HT
     h(
       'p.mc-note',
       {},
-      'Records from the deck log as far as it is loaded: merges, pull requests closed unmerged, times stuck, and reverts from the agent record when the office keeps one. Units only, never people. ',
-      on ? '' : 'Crew epithets are off in Settings > Deck > Life, so titles and chevrons are hidden.',
+      'Records from the deck log as far as it is loaded: merges, pull requests closed unmerged, times stuck, and reverts from the agent record when Kipdeck keeps one. Agents only, never people. ',
+      on ? '' : 'Epithets are off in Settings > Deck > Life, so titles and chevrons are hidden.',
     ),
-    on && watch ? h('p.crew-watch-line', {}, h('span.crew-watch', {}, 'Unit of the watch'), ` ${callSign(watch.deskId) || watch.name} ${watch.name}${book.epithets.get(watch.id) ? `, ${book.epithets.get(watch.id)!.title}` : ''}: the best clean record on the last watch.`) : null,
-    rows.length ? h('ul.mc-rows', {}, ...rows) : h('p.mc-empty', {}, 'No units aboard yet. Deploy one and its record starts with its first merge.'),
+    on && watch ? h('p.crew-watch-line', {}, h('span.crew-watch', {}, 'Best of the watch'), ` ${agentHeading(watch)}${book.epithets.get(watch.id) ? `, ${book.epithets.get(watch.id)!.title}` : ''}: the best clean record on the last watch.`) : null,
+    rows.length ? h('ul.mc-rows', {}, ...rows) : h('p.mc-empty', {}, 'No agents yet. Deploy one and its record starts with its first merge.'),
   );
 }

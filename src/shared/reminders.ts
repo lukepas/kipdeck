@@ -4,6 +4,7 @@
 // its due date, a worker asleep for a day with commits nobody pushed, a question waiting over an hour.
 // Pure: the server's sweep (server/reminders.ts) calls it once a minute. Thresholds live in attention.ts.
 
+import { agentHeading, agentRef } from './agentname.js';
 import { APPROVED_UNMERGED_MS, NEEDS_INPUT_LONG_MS, QUEUE_PAUSED_MS, UNPUSHED_ASLEEP_MS, attention, duration } from './attention.js';
 import type { GhIssue, GhPull, Mission, Reminder, RosterEntry } from './protocol.js';
 
@@ -45,17 +46,17 @@ export function findReminders(input: ReminderInput, now: number): Reminder[] {
     if (s && typeof s.until === 'number' && s.until <= now) {
       const a = attention(e, now);
       if (a.level === 'needs-you' || a.level === 'stuck' || a.level === 'review') {
-        out.push({ ...base, key: `snooze-over:${e.id}:${s.until}`, kind: 'snooze-over', since: s.until, text: `${e.name}: ${s.by}'s snooze ran out, and it still ${a.reason ? `says ${a.reason}` : 'needs someone'}` });
+        out.push({ ...base, key: `snooze-over:${e.id}:${s.until}`, kind: 'snooze-over', since: s.until, text: `${agentHeading(e)}: ${s.by}'s snooze ran out, and it still ${a.reason ? `says ${a.reason}` : 'needs someone'}` });
       }
     }
     if (e.kind === 'agent' && e.status === 'needs_input' && !(s && (s.until === 'change' || s.until > now))) {
       const since = e.waitingSince ?? e.createdAt;
-      if (now - since >= NEEDS_INPUT_LONG_MS) out.push({ ...base, key: `needs-input-long:${e.id}:${since}`, kind: 'needs-input-long', since, text: `${e.name} has waited on an answer for ${duration(now - since)}` });
+      if (now - since >= NEEDS_INPUT_LONG_MS) out.push({ ...base, key: `needs-input-long:${e.id}:${since}`, kind: 'needs-input-long', since, text: `${agentRef(e, { start: true })} has waited on an answer for ${duration(now - since)}` });
     }
     const unpushed = input.unpushed.get(e.id) ?? 0;
     if (unpushed > 0 && (e.status === 'exited' || e.status === 'offline')) {
       const since = lastSign(e);
-      if (now - since >= UNPUSHED_ASLEEP_MS) out.push({ ...base, key: `unpushed-asleep:${e.id}`, kind: 'unpushed-asleep', since, text: `${e.name} has been asleep ${duration(now - since)} with ${unpushed} commit${unpushed === 1 ? '' : 's'} nobody pushed` });
+      if (now - since >= UNPUSHED_ASLEEP_MS) out.push({ ...base, key: `unpushed-asleep:${e.id}`, kind: 'unpushed-asleep', since, text: `${agentRef(e, { start: true })} has been asleep ${duration(now - since)} with ${unpushed} commit${unpushed === 1 ? '' : 's'} nobody pushed` });
     }
   }
   const today = new Date(now).toISOString().slice(0, 10);
@@ -87,3 +88,19 @@ export function reminderSnoozed(r: Pick<Reminder, 'snooze'>, now: number): boole
 
 /** A reminder key as a browser may send it back: kind, a colon, and ids. */
 export const REMINDER_KEY = /^[a-z-]{1,24}:[A-Za-z0-9:._-]{1,96}$/;
+
+/** What a reminder's button says (Mission control and the inbox draw it before either loads its actions). */
+export function reminderAction(r: Reminder): string {
+  switch (r.kind) {
+    case 'approved-unmerged':
+      return 'Merge';
+    case 'queue-paused':
+      return 'Open the queue';
+    case 'milestone-overdue':
+      return 'See the goals';
+    case 'unpushed-asleep':
+      return 'Review changes';
+    default:
+      return 'Look into it';
+  }
+}

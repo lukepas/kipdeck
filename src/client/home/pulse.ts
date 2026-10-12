@@ -11,6 +11,7 @@ import { store } from '../state';
 import { h } from '../ui/dom';
 import { waitingNow } from './list';
 import { home } from './state';
+import { spendUi } from './spend-slot';
 import './pulse.css';
 
 function stat(label: string, value: string, cls = '', title?: string, ...more: HTMLElement[]): HTMLElement {
@@ -50,6 +51,7 @@ export function renderPulse(roots: HTMLElement[], openNumbers: () => void) {
         stat('to review', String(p.toReview), p.toReview ? 'p-review' : 'p-zero', p.needYou ? undefined : longest, ...(!p.needYou && clock ? [clock] : [])),
         stat('median wait today', median, 'p-median', "How long today's reviewed work waited on a person, the middle value"),
         stat('merged today', String(p.merged), 'p-merged'),
+        spendUi()?.pulseSpend() ?? null,
       ),
     );
   }

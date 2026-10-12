@@ -93,6 +93,9 @@ test("a folder's Claude Code sessions, newest first, titled by what they were as
     ],
   );
   assert.deepEqual(claudeSessions(path.join(root, 'elsewhere'), home, {}), []);
+  // Asked for some sessions only (Bring in's titles): the others aren't read.
+  assert.deepEqual(claudeSessions(repo, home, {}, new Set([found[0].id])).map((s) => s.id), [found[0].id]);
+  assert.deepEqual(claudeSessions(repo, home, {}, new Set()), []);
 });
 
 test("Codex sessions are this folder's when their first line says so", async () => {

@@ -10,6 +10,7 @@ import { store, type MissionTab } from '../state';
 import { h } from './dom';
 import { icon, LEVEL_ICON } from './icons';
 import { sumUnits, tokenUnits } from '../../shared/money';
+import { proofReady } from '../proof-ready';
 
 /** The levels on the bar, most urgent first; parked units are not counted there. */
 const SHOWN: readonly AttentionLevel[] = ['needs-you', 'stuck', 'review', 'working'];
@@ -53,7 +54,9 @@ export function mountCounters(el: HTMLElement, open: (tab: MissionTab) => void):
   function render() {
     const counts = store.counts();
     const proof = proofTally();
-    const key = JSON.stringify([counts, proof.released, [...proof.amounts]]);
+    // The payout counter only with Proof of Merge on and set up (shared/proof-ready.ts).
+    const shown = proofReady() && !!proof.network;
+    const key = JSON.stringify([counts, proof.released, [...proof.amounts], shown]);
     if (key === last) return;
     last = key;
     const buttons = SHOWN.map((level) => {
@@ -72,7 +75,7 @@ export function mountCounters(el: HTMLElement, open: (tab: MissionTab) => void):
         h('span.cw', {}, countWord(level, n)),
       );
     });
-    const tally = proof.network
+    const tally = shown
       ? h(
           'button.counter.c-proof',
           { type: 'button', title: `Proof of Merge on ${proof.network}: bounties paid only on a human merge. Open the review inbox`, onclick: () => open('review') },
@@ -86,7 +89,7 @@ export function mountCounters(el: HTMLElement, open: (tab: MissionTab) => void):
     el.replaceChildren(...buttons, ...(tally ? [h('span.counter-sep', { 'aria-hidden': 'true' }), tally] : []));
     was = { ...counts, proof: proof.released };
   }
-  const offs = (['roster', 'bounties', 'workers', 'signins', 'floors'] as const).map((t) => store.on(t, render));
+  const offs = (['roster', 'bounties', 'workers', 'signins', 'floors', 'labs', 'reputation'] as const).map((t) => store.on(t, render));
   // Times in a state move a unit between levels without a message (working long enough to be stuck).
   const timer = setInterval(render, 30_000);
   render();

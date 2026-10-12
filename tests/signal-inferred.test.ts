@@ -144,7 +144,7 @@ test('Copy as text carries the parts line when there is no milestone', () => {
 test('an agent waiting on you comes before a next thing guessed from the code, never before the skill\'s', () => {
   const asking = [{ att: { level: 'needs-you', snoozed: false, since: NOW.getTime() - 60_000 }, entry: { name: 'Grok', goal: undefined } }] as unknown as SignalInput['ranked'];
   const inferred = computeSignal(input(officeGist(sampleRundown()), { ranked: asking }));
-  assert.deepEqual(inferred.next, { text: 'Answer Grok', from: 'from the inbox' });
+  assert.deepEqual(inferred.next, { text: 'Answer the agent', from: 'from the inbox' });
   const skill = computeSignal(input({ ...officeGist(sampleRundown()), source: 'skill', next: 'Ship the API' }, { ranked: asking }));
   assert.equal(skill.next?.text, 'Ship the API');
 });

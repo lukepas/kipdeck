@@ -66,16 +66,18 @@ export async function startServer(cfg: Config, opts: StartOptions = {}) {
     ctx.upgrader.stop();
     services.stop();
     tailnet.stop();
-    ctx.webhook.stop();
+    ctx.push.alerts.stop();
     ctx.machine.stop();
     for (const f of ctx.floors.values()) f.shutdown(keep);
     ctx.building.shutdown(keep);
     ctx.ledger.flush();
+    ctx.briefs.flush();
     ctx.limits.close();
     for (const a of ctx.accountLimits.values()) a.reader.close();
     ctx.signins.shutdown();
     for (const c of ctx.clients.values()) c.ws.close();
     server.close();
+    ctx.approvals.close();
     hookServer.close();
   };
 

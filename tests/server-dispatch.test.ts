@@ -205,8 +205,8 @@ test('answers the open routes before anyone signs in', async () => {
 });
 
 test('Proof of Merge routes are not there while Proof of Merge is off in Labs', async () => {
-  // Switched off by an admin: nobody signed in is sent to sign in, as for any other page.
-  assert.deepEqual(office.labs.set({ proof: false }, 'test'), ['proof'], 'on as the office ships');
+  // Off as the office ships: nobody signed in is sent to sign in, as for any other page.
+  assert.equal(office.labs.on('proof'), false, 'off as the office ships');
   assert.equal((await get('/actions.json')).headers.get('location'), '/login');
   assert.equal((await get('/api/actions/fund?repo=a/b&issue=1')).status, 401);
   assert.equal((await get('/pom/')).headers.get('location'), '/login');
@@ -254,8 +254,8 @@ test('answers the signed-in routes', async () => {
   const me = { cookie };
   const who = (await (await get('/api/whoami', me)).json()) as { ok: boolean; me: unknown; labs: { on: Record<string, boolean>; forced: string[] } };
   assert.deepEqual({ ok: who.ok, me: who.me }, { ok: true, me: { admin: true } });
-  // Every lab is on as the office ships.
-  assert.deepEqual(who.labs.on, { boards: true, bridge: true, ops: true, meetings: true, voice: true, ambience: true, proof: true, rundown: true });
+  // Every lab is off as the office ships (the Proof of Merge tests above switched that one on).
+  assert.deepEqual(who.labs.on, { boards: false, bridge: false, ops: false, meetings: false, voice: false, ambience: false, proof: true, rundown: false });
   assert.deepEqual(who.labs.forced, []);
   // Home is the inbox; the Deck is a page of its own at /deck, and its old /bridge address lands
   // there with its query; the old 2D view's address lands home.
@@ -276,9 +276,9 @@ test('answers the signed-in routes', async () => {
     assert.deepEqual(await res.json(), { error });
   };
   await bad(await get('/api/gh/pull?number=0', me), 400, 'Bad number');
-  await bad(await get('/api/gh/pull?number=3&floor=nope', me), 404, 'No such floor');
-  await bad(await get('/api/docs?floor=nope', me), 404, 'No such floor');
-  await bad(await get('/api/whiteboard/file?floor=nope', me), 404, 'No such floor');
+  await bad(await get('/api/gh/pull?number=3&floor=nope', me), 404, 'No such project');
+  await bad(await get('/api/docs?floor=nope', me), 404, 'No such project');
+  await bad(await get('/api/whiteboard/file?floor=nope', me), 404, 'No such project');
   await bad(await get(`/api/whiteboard/file?floor=${floor}&id=nope`, me), 404, 'No such picture');
   await bad(await get('/api/term/drop', me), 405, 'Method not allowed');
   await bad(await post('/api/term/drop', '', me), 403, 'Forbidden');
@@ -362,7 +362,7 @@ test('welcomes a browser and dispatches what it sends', async () => {
 
   // Only for Ada: a floor that isn't there, sign-ins on the shared password, and the accounts list.
   a.send({ t: 'floor.go', floor: 'nope' });
-  assert.deepEqual(await a.take('toast', (m) => m.level === 'warn'), { t: 'toast', text: 'No such floor', level: 'warn' });
+  assert.deepEqual(await a.take('toast', (m) => m.level === 'warn'), { t: 'toast', text: 'No such project', level: 'warn' });
   a.send({ t: 'signins.get' });
   assert.equal((await a.take('toast', (m) => m.level === 'warn')).text, "On the shared office password, workers run on the office's own sign-ins");
   a.send({ t: 'accounts.get' });
@@ -508,7 +508,7 @@ test('mission control: the timeline, the review queue and reminders', async () =
   a.send({ t: 'worker.spawn', deskId: 'desk-3', kind: 'shell' });
   const hired = (await a.take('timeline.event', (m) => m.event.kind === 'hired')).event;
   assert.equal(hired.floor, floor.id);
-  assert.match(hired.text, /^Ed hired .+ \(a shell\)$/);
+  assert.equal(hired.text, 'Ed deployed the shell');
   const id = hired.worker!;
   a.send({ t: 'timeline.get' });
   const page = await a.take('timeline', (m) => m.since === undefined);
@@ -592,16 +592,16 @@ test('settings, accounts, sign-ins and the boards answer as before', async () =>
   a.send({ t: 'changes.watch', workerId: 'nope' });
   a.send({ t: 'changes.unwatch', workerId: 'nope' });
   a.send({ t: 'changes.diff', workerId: 'nope', path: 'a.ts' });
-  assert.deepEqual(await a.take('changes.diff'), { t: 'changes.diff', workerId: 'nope', path: 'a.ts', diff: '', truncated: false, error: 'No such worker' });
+  assert.deepEqual(await a.take('changes.diff'), { t: 'changes.diff', workerId: 'nope', path: 'a.ts', diff: '', truncated: false, error: 'No such agent' });
   a.send({ t: 'worker.resume', workerId: 'nope' });
-  await warned('No such worker');
+  await warned('No such agent');
   a.send({ t: 'worker.prompt', workerId: 'nope', prompt: 'hi' });
-  await warned('No such worker');
+  await warned('No such agent');
 
   a.send({ t: 'worker.spawn', deskId: 'desk-1', provider: 'nope' });
   await warned('Unknown agent provider');
   a.send({ t: 'worker.spawn', deskId: 'desk-1', kind: 'shell', repos: ['nope'] });
-  await warned('That project is no longer in the building');
+  await warned('That project is no longer open');
   a.send({ t: 'worker.kill', workerId: 'nope' });
   a.send({ t: 'worker.detach', workerId: 'nope' });
   a.send({ t: 'worker.attach', workerId: 'nope' });

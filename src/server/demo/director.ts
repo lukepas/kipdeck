@@ -10,6 +10,7 @@ import type { Ctx } from '../office/context.js';
 import { mergeWork } from '../ws/handlers/inbox.js';
 import { DEMO_PROJECT, FLEET, REVIEWS, backdate, dueReviews, roundOver, type SeenAgent } from './script.js';
 import { demoGit, type DemoWorkspace } from './workspace.js';
+import { launchCommand } from '../runcmd.js';
 
 /** How often the hosted demo's reviewer looks at the agents. */
 const LOOK_MS = 500;
@@ -37,7 +38,8 @@ export class DemoDirector {
     private ws: DemoWorkspace,
     readOnly: boolean,
   ) {
-    this.info = { readOnly, project: DEMO_PROJECT };
+    // On your own computer, the pill's next step is the same command without --demo (runcmd.ts).
+    this.info = { readOnly, project: DEMO_PROJECT, ...(readOnly ? {} : { run: launchCommand() }) };
   }
 
   /** Starts the first round; returns what stops it. */

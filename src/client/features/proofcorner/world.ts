@@ -32,6 +32,8 @@ export interface ProofCorner {
   setStepGlow(k: number): void;
   /** Paints the ledger's two tables: the escrow and the ERC-8004 records (ledger.ts); from far off, its headline counts (boards/far.ts). */
   setLedger(v: LedgerView, far: boolean): void;
+  /** Shows the corner, or leaves the deck without it while Proof of Merge is off or not set up (shared/proof-ready.ts). */
+  setShown(on: boolean): void;
   /** The ledger's screen, for how far it is from you. */
   readonly ledger: THREE.Object3D;
 }
@@ -169,6 +171,9 @@ export const proofCorner: Fixture<'proof'> = (site) => {
     setLedger(v, far) {
       if (far) paintFar(ledgerScreen, LEDGER_UNITS, ledgerFar(v));
       else paintLedger(ledgerScreen, v);
+    },
+    setShown(on) {
+      group.visible = on;
     },
     ledger: ledgerFace,
   };

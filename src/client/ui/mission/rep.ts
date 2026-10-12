@@ -44,7 +44,7 @@ export function repBits(workerId: string): HTMLElement[] {
   const href = safeHref(s?.latest) ?? safeHref(a.card);
   const chip = href ? h('a.mc-rep', { href, target: '_blank', rel: 'noopener noreferrer', title: details(a, s) }, text) : h('span.mc-rep', { title: details(a, s) }, text);
   const hint = revertHint(s);
-  return [chip, ...(hint ? [h('span.mc-rep-hint', { title: 'A hint only: it never holds a worker up or moves it in the ranking' }, hint)] : [])];
+  return [chip, ...(hint ? [h('span.mc-rep-hint', { title: 'A hint only: it never holds an agent up or moves it in the ranking' }, hint)] : [])];
 }
 
 /** The Agents section of the Goals tab: every agent identity with its record, or nothing when reputation is off. */

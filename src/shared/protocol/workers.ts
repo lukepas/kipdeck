@@ -3,6 +3,8 @@
 import type { AgentEffort, AgentProvider } from './agents.js';
 import type { Snooze } from './mission.js';
 import type { Usage } from './usage.js';
+import type { Hold } from './spend.js';
+import type { Autonomy } from '../autonomy.js';
 
 export type WorkerStatus =
   | 'starting' // PTY launched, agent booting
@@ -74,6 +76,8 @@ export interface WorkerInfo {
   prOpening?: boolean;
   title?: string;
   sessionId?: string;
+  /** The session it was started as a copy of (`claude --fork-session`), so the one still running in a terminal keeps its own. */
+  forkOf?: string;
   exitCode?: number;
   cols: number;
   rows: number;
@@ -113,6 +117,10 @@ export interface WorkerInfo {
   goal?: string;
   /** Put aside on purpose, so it stops asking for attention (see Snooze). */
   snooze?: Snooze;
+  /** Its permission mode, as the command line it was last started with says (see shared/autonomy.ts). */
+  mode?: Autonomy;
+  /** Paused by a person or a budget cap, waiting in Needs you (see server/spend/). */
+  hold?: Hold;
 }
 
 /** Where the branch of a worker whose worktree was deleted still is (see WorkerInfo.lost). */

@@ -4,6 +4,7 @@
  * at a desk; and what the hint bar says at a desk or a board agent's kiosk. Also what the boards'
  * buttons do with a worker.
  */
+import { agentRef } from '../../../shared/agentname';
 import { STATION_AGENT, deskSeat, type DeskDef } from '../../../shared/layout';
 import { OFFICE_PLAN } from '../../../shared/plan';
 import { canLabel } from '../../../shared/floorplan';
@@ -199,14 +200,14 @@ export function installWorkerActions(ctx: Ctx, parts: WorkerActionsParts) {
     if (!w.lost || !w.worktree) return;
     const others = [...store.workers.values()].filter((o) => o.lost && o.id !== w.id);
     lostWorktreeDialog({
-      name: w.name,
+      name: agentRef(w),
       worktree: w.worktree,
       lost: w.lost,
       workspace: w.repos?.length ? w.worktree.path.replace(/[\\/][^\\/]*$/, '') : undefined,
-      others: others.map((o) => o.name),
+      others: others.map((o) => agentRef(o)),
       openTerminal: isAsleep(w.status) ? undefined : () => openTerminal(net, w.id, () => openWorkerChanges(w.id)),
       rebuild: (all) => {
-        toast(all ? `Rebuilding ${others.length + 1} worktrees...` : `Rebuilding ${w.name}'s worktree...`);
+        toast(all ? `Rebuilding ${others.length + 1} worktrees...` : `Rebuilding the worktree of ${agentRef(w)}...`);
         net.send({ t: 'worker.rebuild', workerId: w.id, all });
       },
       sendHome: () => killWorker(w.id),

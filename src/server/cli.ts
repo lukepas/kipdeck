@@ -1,21 +1,26 @@
-import os from 'node:os';
-import path from 'node:path';
-import { loadConfig, ensureSelfSigned } from './config.js';
-import { startServer } from './server.js';
-import { tildify } from './building.js';
-import { openBrowser } from './browser.js';
+// Only what's needed to pick a command or say "Starting Kipdeck..." loads before it is said: the
+// rest (the server and everything under it) takes a second or more to load on its own.
 import { CLI, PRODUCT } from '../shared/copy.js';
-import { loopbackName, passwordless, removeLocalFile, writeLocalFile } from './local.js';
-import { freePort } from './port.js';
-import { gitTop, within } from './checkouts.js';
-import { checkAgents } from './firstrun.js';
-import { PROVIDER_META } from '../shared/providers.js';
 import { commandOf } from './commands.js';
+import { STARTING, addressLines, block, startsOffice, step } from './startup.js';
 
 const argv = process.argv.slice(2);
 // `kipdeck prune`, `kipdeck rundown` and the rest (commands.ts): run it and stop, no office.
 const command = commandOf(argv);
 if (command) process.exit(await command(argv.slice(1)));
+if (startsOffice(argv)) console.log(`\n  ${STARTING}`);
+
+const os = (await import('node:os')).default;
+const path = (await import('node:path')).default;
+const { loadConfig, ensureSelfSigned } = await import('./config.js');
+const { startServer } = await import('./server.js');
+const { openBrowser } = await import('./browser.js');
+const { loopbackName, passwordless, removeLocalFile, writeLocalFile } = await import('./local.js');
+const { freePort } = await import('./port.js');
+const { gitTop, within } = await import('./checkouts.js');
+const { checkAgentsAsync } = await import('./firstrun.js');
+const { PROVIDER_META } = await import('../shared/providers.js');
+const { officeCommand } = await import('./runcmd.js');
 
 const cfg = loadConfig(argv);
 await ensureSelfSigned(cfg);
@@ -24,6 +29,7 @@ const top = cfg.project || cfg.demo ? undefined : gitTop(process.cwd());
 if (top && !within(cfg.dir, top)) cfg.startedIn = top;
 // The demo: scripted agents on a throwaway repository of its own (demo/).
 if (cfg.demo) {
+  step("Setting up the demo's throwaway repository...");
   const { setUpDemo } = await import('./demo/index.js');
   const ws = setUpDemo(cfg);
   if (typeof ws === 'string') {
@@ -38,6 +44,7 @@ const atTerminal = interactive();
 if (!cfg.portGiven) cfg.port = (await freePort(cfg.host, cfg.port)) || cfg.port;
 
 let office: Awaited<ReturnType<typeof startServer>>;
+step(cfg.demo ? 'Opening the demo project...' : 'Opening your projects...');
 try {
   office = await startServer(cfg);
 } catch (err) {
@@ -62,61 +69,6 @@ if (everywhere) {
 const api = `${scheme}://${everywhere ? '127.0.0.1' : cfg.host.includes(':') ? `[${cfg.host}]` : cfg.host}:${cfg.port}`;
 writeLocalFile(cfg.dataDir, here, api, cfg.secret);
 
-// How the command was typed: `npx kipdeck` has no `kipdeck` on the PATH to run again.
-const again = process.env.npm_command === 'exec' ? `npx ${CLI}` : CLI;
-
-function passwordLine() {
-  if (!office.accounts.sharedPassword) return `off - everyone signs in with their own account (${CLI} accounts)`;
-  if (!cfg.passwordGenerated) return '(from --password / AGENT_OFFICE_PASSWORD)';
-  if (cfg.claimToken && !cfg.claimed) return 'shown exactly once to whoever opens the claim link (/claim?t=...)';
-  if (cfg.claimed || !cfg.password) return '(already claimed - never shown again; reset with --reset-password)';
-  return cfg.password;
-}
-
-// A link that signs this computer's browser in once, opened there, so there's no password to copy.
-// Not for an office that's claimed from a link (deploy/provision.sh) or signed in to with accounts only.
-let signIn = '';
-let opened = false;
-if (office.accounts.sharedPassword && !cfg.claimToken && (atTerminal || loopback)) {
-  signIn = here + office.signInLink();
-  if (cfg.open && atTerminal) opened = openBrowser(signIn);
-}
-const noPassword = passwordless(cfg);
-
-const floors = office.floors();
-const here_ = (dir: string) => [cfg.project, cfg.startedIn].some((d) => d && path.resolve(dir) === path.resolve(d));
-const projectLine = floors.length
-  ? floors.map((f) => `${f.def.name}${here_(f.def.dir) ? ' (this folder)' : ''}`).join(', ')
-  : `none yet - add one in the browser${cfg.startedIn ? '' : ' (start inside a git repository to use it)'}`;
-const agents = checkAgents();
-const usable = agents.filter((a) => a.installed && a.signedIn !== false);
-const agentsLine = usable.length
-  ? usable.map((a) => PROVIDER_META[a.provider].label).join(', ')
-  : agents.some((a) => a.installed)
-    ? 'found, but not signed in - the browser says how'
-    : `none found - install Claude Code, Codex or Cursor (e.g. ${agents.find((a) => a.provider === 'claude')?.fix ?? 'npm install -g @anthropic-ai/claude-code'})`;
-
-const demoLines = cfg.demo
-  ? [
-      cfg.demo.readOnly ? '  Demo, read only: visitors are signed in to watch; a scripted reviewer answers and merges.' : '  Demo: five scripted agents on a throwaway repository. No model runs and your code is not touched.',
-      `  project   ${cfg.demo.workspace?.repo ?? ''}${cfg.demo.temp ? ' (deleted when you stop it)' : ''}`,
-    ]
-  : [`  project   ${projectLine}`, `  agents    ${agentsLine}`];
-const lines = [
-  '',
-  `  ${PRODUCT} is running at ${[...urls].join('  ')}`,
-  signIn ? (opened ? '  Opened in your browser, signed in.' : `  Sign in (the link works once): ${signIn}`) : '',
-  signIn ? `  Lost the tab? Run \`${again} open\` for a new link.` : '',
-  '',
-  ...demoLines,
-  noPassword || cfg.demo?.readOnly ? '' : `  password  ${passwordLine()}`,
-  '',
-  loopback ? '  Only this computer can reach it (--host 0.0.0.0 lets your network in). Ctrl+C stops it.' : '  Ctrl+C stops it.',
-  cfg.tls || loopback ? '' : '  Tip: voice and screen share need https off localhost: use a reverse proxy or --self-signed.',
-  '',
-];
-console.log(lines.filter((l, i) => l !== '' || lines[i - 1] !== '').join('\n'));
-
 let closing = false;
 // SIGTERM is a restart (tsx watch reloading, a plain `kill`, systemd): workers keep running in their
 // terminal host and the next office picks them back up. Ctrl+C closes the office and stops them.
@@ -139,3 +91,59 @@ const stop = (signal: NodeJS.Signals) => {
 process.on('unhandledRejection', (err) => console.error(`${CLI}: unhandled rejection`, err));
 process.on('SIGINT', stop);
 process.on('SIGTERM', stop);
+
+// The command that gets a new sign-in link, as it can be typed here: `kipdeck` is on the PATH only
+// after npm link, so it's often node and this install's path, with --home for an office elsewhere.
+const openCmd = officeCommand('open', cfg.dir);
+
+function passwordLine() {
+  if (!office.accounts.sharedPassword) return `off - everyone signs in with their own account (${officeCommand('accounts', cfg.dir)})`;
+  if (!cfg.passwordGenerated) return '(from --password / AGENT_OFFICE_PASSWORD)';
+  if (cfg.claimToken && !cfg.claimed) return 'shown exactly once to whoever opens the claim link (/claim?t=...)';
+  if (cfg.claimed || !cfg.password) return '(already claimed - never shown again; reset with --reset-password)';
+  return cfg.password;
+}
+
+// A link that signs this computer's browser in once, opened there, so there's no password to copy.
+// Not for an office that's claimed from a link (deploy/provision.sh) or signed in to with accounts only.
+let signIn = '';
+let opened = false;
+if (office.accounts.sharedPassword && !cfg.claimToken && (atTerminal || loopback)) {
+  signIn = here + office.signInLink();
+  if (cfg.open && atTerminal) opened = openBrowser(signIn);
+}
+const noPassword = passwordless(cfg);
+
+const floors = office.floors();
+const here_ = (dir: string) => [cfg.project, cfg.startedIn].some((d) => d && path.resolve(dir) === path.resolve(d));
+const projectLine = floors.length
+  ? floors.map((f) => `${f.def.name}${here_(f.def.dir) ? ' (this folder)' : ''}`).join(', ')
+  : `none yet - add one in the browser${cfg.startedIn ? '' : ' (start inside a git repository to use it)'}`;
+// The address and the way in first: finding the agent CLIs can take seconds (a login shell each).
+console.log(block(addressLines({ urls: [...urls], signIn, opened, openCmd })));
+if (!cfg.demo) step('Looking for agent CLIs...');
+const agents = cfg.demo ? [] : await checkAgentsAsync();
+const usable = agents.filter((a) => a.installed && a.signedIn !== false);
+const agentsLine = usable.length
+  ? usable.map((a) => PROVIDER_META[a.provider].label).join(', ')
+  : agents.some((a) => a.installed)
+    ? 'found, but not signed in - the browser says how'
+    : `none found - install Claude Code, Codex or Cursor (e.g. ${agents.find((a) => a.provider === 'claude')?.fix ?? 'npm install -g @anthropic-ai/claude-code'})`;
+
+const demoLines = cfg.demo
+  ? [
+      cfg.demo.readOnly ? '  Demo, read only: visitors are signed in to watch; a scripted reviewer answers and merges.' : '  Demo: five scripted agents on a throwaway repository. No model runs and your code is not touched.',
+      `  project   ${cfg.demo.workspace?.repo ?? ''}${cfg.demo.temp ? ' (deleted when you stop it)' : ''}`,
+    ]
+  : [`  project   ${projectLine}`, `  agents    ${agentsLine}`];
+const lines = [
+  '',
+  ...demoLines,
+  noPassword || cfg.demo?.readOnly ? '' : `  password  ${passwordLine()}`,
+  '',
+  loopback ? '  Only this computer can reach it (--host 0.0.0.0 lets your network in). Ctrl+C stops it.' : '  Ctrl+C stops it.',
+  cfg.tls || loopback ? '' : '  Tip: voice and screen share need https off localhost: use a reverse proxy or --self-signed.',
+  '',
+];
+console.log(block(lines));
+

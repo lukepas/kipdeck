@@ -1,5 +1,5 @@
 import './boards.css';
-import { OFFICE_PLAN } from '../../shared/plan';
+import { agentBadge, agentHeading, agentRef } from '../../shared/agentname';
 import type { GhIssue, GhLabel, GhPull, WorkerInfo } from '../../shared/protocol';
 import type { Net } from '../net';
 import { store, workerForPull } from '../state';
@@ -89,12 +89,12 @@ function labelChips(labels: GhLabel[]) {
 
 /** A chip naming a worker and desk, color-coded to match the worker back on the floor. */
 function workerChip(w: WorkerInfo, title: string) {
-  return h('span.desk-link', { style: `--dot:${w.color}`, title }, `${w.name} · ${OFFICE_PLAN.byId.get(w.deskId)?.label ?? 'a console'}`);
+  return h('span.desk-link', { style: `--dot:${w.color}`, title }, `${agentHeading(w, 40)} · ${agentBadge(w)}`);
 }
 
-/** A chip naming the worker and desk a pull request came from. */
+/** A chip naming the agent a pull request came from, by its task (shared/agentname.ts). */
 function deskChip(w: WorkerInfo) {
-  return workerChip(w, `Opened from ${w.name}'s desk (${w.worktree?.branch ?? 'its branch'})`);
+  return workerChip(w, `Opened by ${agentRef(w)} (${w.worktree?.branch ?? 'its branch'})`);
 }
 
 /** Where an issue stands on the queue, for its card. */
@@ -105,8 +105,8 @@ function queueChip(issue: number): Node | '' {
   if (t.status === 'queued') return h('span.qchip', {}, `${store.queue.tasks.find((x) => x.status === 'queued') === t ? 'up next' : 'queued'} · ${provider}`);
   if (t.status === 'running') {
     const w = t.workerId ? store.workers.get(t.workerId) : undefined;
-    if (w) return workerChip(w, `${w.name} is working on this at ${OFFICE_PLAN.byId.get(w.deskId)?.label ?? 'a desk'} · ${provider}`);
-    return h('span.qchip.running', {}, `${t.workerName ?? 'a worker'} · ${provider}`);
+    if (w) return workerChip(w, `${agentRef(w, { start: true })} is working on this · ${provider}`);
+    return h('span.qchip.running', {}, `running · ${provider}`);
   }
   return t.pr ? h('span.qchip.done', {}, `PR #${t.pr.number} · ${provider}`) : '';
 }
@@ -258,7 +258,7 @@ export function openBoard(kind: 'issues' | 'pulls', net: Net, actions: BoardActi
       for (const col of issueColumns(store.issues.items)) {
         body.append(
           column(col, all, (it, i) =>
-            card(it.number, it.title, [...labelChips(it.labels), bountyChip(it.number, net), queueChip(it.number), it.assignees.length ? `${it.assignees.join(', ')}` : it.taken ? 'handed to a worker' : `by ${it.author}`, it.comments ? `${it.comments}` : '', timeAgo(it.updatedAt)], i, () => openIssue(it, net, actions), () => openLabels('issue', it, net)),
+            card(it.number, it.title, [...labelChips(it.labels), bountyChip(it.number, net), queueChip(it.number), it.assignees.length ? `${it.assignees.join(', ')}` : it.taken ? 'handed to an agent' : `by ${it.author}`, it.comments ? `${it.comments}` : '', timeAgo(it.updatedAt)], i, () => openIssue(it, net, actions), () => openLabels('issue', it, net)),
           ),
         );
       }

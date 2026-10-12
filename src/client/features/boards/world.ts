@@ -358,7 +358,7 @@ export class QueueBoardTexture {
     const rows: Row[] = [
       ...running.map((t): Row => {
         const w = t.workerId ? workers.get(t.workerId) : undefined;
-        const st = { starting: 'starting', idle: 'ready', working: 'working', needs_input: 'needs you', done: 'done', exited: 'stopped', offline: 'asleep' }[w?.status ?? 'working'];
+        const st = { starting: 'starting', idle: 'idle', working: 'working', needs_input: 'needs you', done: 'done', exited: 'stopped', offline: 'asleep' }[w?.status ?? 'working'];
         const needs = w?.status === 'needs_input';
         return { hue: needs ? PANEL.signal : PANEL.working, mark: glyphMark(needs ? 'needs-you' : 'working'), tag: tag(t), text: title(t), side: st, sideColor: needs ? PANEL.signal : INK.dim, sub: t.workerName ?? 'a unit' };
       }),

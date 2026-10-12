@@ -7,7 +7,7 @@
 //
 // One command line drives the tiles: "npm start -- --labs bridge,ops,boards,voice,meetings" from a
 // clone (the build swaps in "npx kipdeck --labs ..." once npm is published, site/build.mjs). Every
-// lab is on by default, as in the office, so the tiles start on; as the section arrives a scanline
+// lab is off by default in the office and this command holds these on, so the tiles start on; as the section arrives a scanline
 // powers each tile in turn. Pressing a flag holds its lab off (the flag reads "-voice", as the real
 // --labs does) or on again. The flags work without motion too (they only toggle).
 import { env, tier } from '../engine/env';
@@ -49,7 +49,7 @@ export function mountLabs(section: HTMLElement) {
     }
   }, { fallback: 'view', viewEnd: 0.32 });
 
-  // Every lab is on, as it ships; as the command line comes into view a scanline powers each tile in order.
+  // Every lab the command holds on; as the command line comes into view a scanline powers each tile in order.
   bento.classList.add('staged');
   flags.forEach((f) => power(f, false));
   const io = new IntersectionObserver(([e]) => {

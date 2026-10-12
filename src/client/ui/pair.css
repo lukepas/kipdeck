@@ -1,0 +1,41 @@
+/* Pair a phone (ui/pair.ts) and the paired devices in Settings (ui/devices.ts). */
+.pair { width: min(460px, 100%); }
+.pair-body { display: flex; flex-direction: column; gap: 12px; }
+.pair-intro { margin: 0; font-size: 14px; line-height: 1.45; color: var(--muted); }
+.pair-via { flex-wrap: wrap; }
+.pair-qr { align-self: center; width: min(260px, 70vw); aspect-ratio: 1; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); background: #fff; }
+.pair-qr svg { display: block; width: 100%; height: 100%; }
+.pair-qr.spent { opacity: .15; }
+.pair-note { display: flex; flex-direction: column; gap: 4px; padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--line); font-size: 13px; line-height: 1.45; }
+.pair-note p { margin: 0; color: var(--muted); }
+.pair-note.ok { flex-direction: row; align-items: center; gap: 8px; color: var(--settled); }
+.pair-note.ok span { color: var(--text); }
+.pair-note.warn { border-color: var(--warn); }
+.pair-note.warn strong { color: var(--warn); }
+.pair-note.bad { border-color: var(--bad); }
+.pair-note.bad strong { color: var(--bad); }
+.pair-done { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--settled); }
+.pair-done span { color: var(--text); }
+.pair-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.pair-left { margin: 0; font-size: 13px; color: var(--muted); }
+.pair-acts { display: flex; gap: 8px; }
+.pair-acts .btn, .pair-via .btn { min-height: 36px; }
+.pair-more summary { cursor: pointer; font-size: 13px; color: var(--muted); }
+.pair-link { display: block; margin-top: 6px; font: 12px/1.4 var(--font-mono); overflow-wrap: anywhere; user-select: all; }
+
+.devices { list-style: none; margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius); }
+.devices:empty { display: none; }
+.device { display: flex; align-items: center; gap: 12px; padding: 10px 12px; }
+.device + .device { border-top: 1px solid var(--line); }
+.device-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.device-name { font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
+.device-name .you { margin-left: 6px; font-weight: 500; font-size: 12px; color: var(--muted); }
+.device-when { font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+.device-acts { display: flex; gap: 6px; flex: none; }
+.device-acts .btn { min-height: 36px; }
+.device-acts .btn.danger { color: var(--bad); }
+.device input { font: inherit; min-width: 0; width: 100%; padding: 4px 8px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface-2); color: var(--text); }
+@media (max-width: 520px) {
+  .device { flex-wrap: wrap; }
+  .device-acts { width: 100%; justify-content: flex-end; }
+}

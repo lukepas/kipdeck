@@ -1,0 +1,2 @@
+/* Agents' requests in Needs you (proposals.ts): the row's mark. The window is proposal-window.css. */
+.agent-mark.proposal { color: var(--signal); }

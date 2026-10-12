@@ -12,6 +12,9 @@ import { h, timeAgo } from './dom';
 import { agentFields, choiceLabel, officeChoice } from './provider';
 import { openPromptEditor, rewrittenPrompts } from './prompts';
 import { setting, type SettingsPaneDef } from './settings-frame';
+import { gateSettings } from './gate-settings';
+import { spendSettings } from './settings-spend';
+import { pushSetting } from './push-settings';
 
 export type CorePane = 'account' | 'agents' | 'notify';
 
@@ -140,14 +143,14 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
     leaveRow.replaceChildren(
       ...([
         [true, 'Archive them'],
-        [false, 'Keep them in Ready'],
+        [false, 'Keep them in Idle'],
       ] as const).map(([value, label]) =>
         h('button.btn', { type: 'button', role: 'radio', 'aria-checked': String(on === value), class: on === value ? 'on' : '', onclick: () => store.leaveOnMerge.on !== value && net.send({ t: 'leaveOnMerge.set', on: value }) }, label),
       ),
     );
     const now = on
       ? "Once an agent's pull request merges and it isn't working or waiting on you, its session ends and its worktree and branch are deleted. A worktree with uncommitted changes, or commits that aren't on GitHub, is kept."
-      : 'An agent whose pull request merged stays in Ready until someone archives it.';
+      : 'An agent whose pull request merged stays in Idle until someone archives it.';
     leaveNote.textContent = `${now} The same for everyone${by ? `, set by ${by}${at ? ` ${timeAgo(at)}` : ''}` : ''}.`;
   }, 'leaveOnMerge');
 
@@ -248,7 +251,7 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
     hookSave.textContent = webhook ? 'Replace' : 'Save';
     hookStatus.classList.toggle('bad', !!error);
     hookStatus.textContent = !webhook
-      ? "Paste an incoming https webhook from Slack or Discord, and that channel hears when an agent needs input, finishes or gets stuck and nobody has it open. It's for everyone."
+      ? "Paste an incoming https webhook from Slack or Discord, and that channel hears when an agent needs input, finishes or gets stuck and its push went unanswered for a few minutes with nobody at a Kipdeck tab. It's for everyone."
       : error
         ? `Posting to ${WEBHOOK_NAME[webhook.kind]} (${webhook.hint}) failed: ${error}`
         : `Posting to ${WEBHOOK_NAME[webhook.kind]} (${webhook.hint}), set by ${webhook.by} ${timeAgo(webhook.at)}${lastSentAt ? ` · last message ${timeAgo(lastSentAt)}` : ''}.`;
@@ -262,6 +265,10 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
   };
   hookSave.addEventListener('click', saveHook);
   hookInput.addEventListener('keydown', (e) => e.key === 'Enter' && saveHook());
+
+  // What agents may do to other agents without asking, and the record of what they did (gate-settings.ts).
+  const gate = gateSettings(net);
+  offs.push(gate.off);
 
   const extra = d.extra ?? {};
   const panes: SettingsPaneDef<CorePane>[] = [
@@ -280,13 +287,15 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
       id: 'agents',
       icon: 'units',
       label: 'Agents',
-      blurb: 'What agents start on, how many run at once, and what happens after a merge. These apply to everyone using this Kipdeck.',
+      blurb: 'What agents start on, how many run at once, what they may do and spend, what happens after a merge, and what they may do to each other. These apply to everyone using this Kipdeck.',
       body: [
         setting('Default agent', 'office', agentNow, agent.element, agentActions, agentNote),
         setting('Agents at once', 'office', limitRow, limitNote),
+        ...spendSettings(net, follow),
         setting('After a merge', 'office', leaveRow, leaveNote),
         setting('Projects folder', 'office', dirRow, dirActions, dirNote),
         setting('Prompts', 'office', promptsOpen, promptsNote),
+        ...gate.nodes,
         ...(extra.agents ?? []),
       ],
     },
@@ -295,7 +304,7 @@ export function corePanes(d: CoreDeps): { panes: SettingsPaneDef<CorePane>[]; of
       icon: 'bell',
       label: 'Notifications',
       blurb: 'Hear about an agent that needs you, or has something to review, while you are somewhere else.',
-      body: [setting('Desktop notifications', 'you', notifyRow, notifyNote), setting('Team channel (Slack or Discord)', 'office', hookRow, hookActions, hookStatus), ...(extra.notify ?? [])],
+      body: [pushSetting(), setting('Desktop notifications', 'you', notifyRow, notifyNote), setting('Team channel (Slack or Discord)', 'office', hookRow, hookActions, hookStatus), ...(extra.notify ?? [])],
     },
   ];
   return { panes, off: () => offs.forEach((off) => off()) };

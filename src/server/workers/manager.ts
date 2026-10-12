@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { NAV } from '../../shared/copy.js';
+import { exitedLine, resumeFailed, signInNeeded } from './says.js';
 import path from 'node:path';
 import type { AgentChoice, AgentEffort, AgentProvider, TerminalHit, WorkerInfo, WorkerKind, WorkerRepo, WorkerStatus } from '../../shared/protocol.js';
 import { AGENT_PROVIDERS, takesEffort, takesModel } from '../../shared/providers.js';
@@ -17,7 +17,7 @@ import { ScrollbackStore, searchTerminal, terminalTail } from '../history.js';
 import { DSH_PROFILE_DEFAULT } from '../dsh.js';
 import { DropStore } from '../drops.js';
 import type { Capacity } from '../machine.js';
-import { PROVIDERS, providerAdapter, titleNoise, type LaunchPlan, type ProviderFloor } from '../providers/index.js';
+import { PROVIDERS, providerAdapter, titleNoise, withMode, type LaunchPlan, type ProviderFloor } from '../providers/index.js';
 import { launchAcp } from './acp.js';
 import { clockWork } from './clock.js';
 import { childEnv } from './env.js';
@@ -43,7 +43,7 @@ const USAGE_SCAN_MS = 10_000;
 /** How often a terminal with new output is saved to disk, so even a crash loses at most this much. */
 const SAVE_SCROLLBACK_MS = 15_000;
 /** Between a worker's saved scrollback and what it prints after the office restarted. */
-const RESTORED_NOTE = '\x1b[2m──── the office restarted · earlier output above ────\x1b[0m\r\n';
+const RESTORED_NOTE = '\x1b[2m──── Kipdeck restarted · earlier output above ────\x1b[0m\r\n';
 
 export class WorkerManager {
   private workers = new Map<string, Worker>();
@@ -126,7 +126,7 @@ export class WorkerManager {
     this.tasks = new WorkerTasks(this.ctx, claude, childEnv());
     this.worktrees = new WorkerTrees(this.ctx);
     this.prs = new WorkerPrs(this.ctx);
-    this.host = new PtyHost(dataDir, () => this.events.toast("The workers' terminal host stopped - resuming them", 'warn'));
+    this.host = new PtyHost(dataDir, () => this.events.toast("The agents' terminal host stopped - resuming them", 'warn'));
     this.scrollback = new ScrollbackStore(dataDir);
     this.drops = new DropStore(dataDir);
     restoreWorkers(this.statePath, this.dir, this.workers, this.defaultProvider, (deskId) => this.deskOccupied(deskId));
@@ -220,7 +220,7 @@ export class WorkerManager {
   }
 
   /** Links a worker to a milestone or an issue, snoozes it, marks its finished turn seen, or dates its wait (the demo's); an undefined field there takes it off. */
-  annotate(id: string, patch: Partial<Pick<WorkerInfo, 'goal' | 'issue' | 'snooze' | 'acked' | 'waitingSince'>>): WorkerInfo | undefined {
+  annotate(id: string, patch: Partial<Pick<WorkerInfo, 'goal' | 'issue' | 'snooze' | 'acked' | 'waitingSince' | 'hold'>>): WorkerInfo | undefined {
     const w = this.workers.get(id);
     if (!w) return undefined;
     Object.assign(w.info, patch);
@@ -234,9 +234,9 @@ export class WorkerManager {
    * (see meetings.ts), in the meeting's own worktree, which everyone at the table shares. `repos` are
    * other floors' repositories a worker in its own worktree works in too (see makeWorkspace). `link`
    * is the issue it's there for and the milestone it works towards (see MissionHooks.goalFor), and
-   * `session` one of its CLI's own sessions to carry on (`kipdeck attach` adopting it).
+   * `session` one of its CLI's own sessions to carry on (adopt.ts), `fork` a copy of it.
    */
-  spawn(deskId: string, by: string, prompt?: string, worktree = false, kind: WorkerKind = 'agent', provider?: AgentProvider, model?: string, effort?: AgentEffort, meeting?: { id: string; worktree?: WorkerInfo['worktree'] }, owner?: string, repos: RepoSource[] = [], link: { goal?: string; issue?: number; session?: string } = {}): WorkerInfo | string {
+  spawn(deskId: string, by: string, prompt?: string, worktree = false, kind: WorkerKind = 'agent', provider?: AgentProvider, model?: string, effort?: AgentEffort, meeting?: { id: string; worktree?: WorkerInfo['worktree'] }, owner?: string, repos: RepoSource[] = [], link: { goal?: string; issue?: number; session?: string; fork?: boolean } = {}): WorkerInfo | string {
     // Nobody picked (a board agent, say): the office's default worker, model and effort included.
     if (kind === 'agent' && provider === undefined) ({ provider, model, effort } = this.officeDefault);
     const selectedProvider = kind === 'agent' ? provider : undefined;
@@ -252,8 +252,8 @@ export class WorkerManager {
     if (seat.station && !prompt?.trim()) return 'Tell the board agent what to do';
     if (!seat.room !== !meeting) return seat.room ? 'Only a meeting seats workers at the meeting table: call one in the meeting room' : 'A meeting seats its workers at the meeting table';
     if (meeting && (kind !== 'agent' || worktree)) return 'A meeting seats agents, in its own worktree';
-    if (repos.length && (kind !== 'agent' || !worktree || seat.station || meeting)) return 'Only a worker in its own worktree can work in other repositories too';
-    if (repos.length > MAX_REPOS) return `A worker can take on at most ${MAX_REPOS} other repositories`;
+    if (repos.length && (kind !== 'agent' || !worktree || seat.station || meeting)) return 'Only an agent in its own worktree can work in other repositories too';
+    if (repos.length > MAX_REPOS) return `An agent can take on at most ${MAX_REPOS} other repositories`;
     if (kind === 'shell' && provider !== undefined) return 'Shell workers do not have an agent provider';
     if (kind === 'agent' && selectedProvider === 'custom' && this.defaultProvider !== 'custom') return 'Custom is not the configured agent provider';
     if (kind === 'agent') {
@@ -276,11 +276,11 @@ export class WorkerManager {
       if (typeof made === 'string') return made;
       if ('repos' in made) {
         ({ worktree: wt, repos: others } = made);
-        for (const note of made.notes) this.events.toast(`${name}'s worktree of ${note}`, 'info');
+        for (const note of made.notes) this.events.toast(`The new agent's worktree of ${note}`, 'info');
       } else {
         const { note, ...ref } = made;
         wt = ref;
-        if (note) this.events.toast(`${name}'s worktree ${note}`, 'info');
+        if (note) this.events.toast(`The new agent's worktree ${note}`, 'info');
       }
     }
     const info: WorkerInfo = {
@@ -307,7 +307,7 @@ export class WorkerManager {
       meeting: meeting?.id,
       issue: kind === 'agent' ? link.issue : undefined,
       goal: kind === 'agent' ? this.mission.goalFor(link.goal, link.issue) : undefined,
-      sessionId: kind === 'agent' ? link.session : undefined,
+      sessionId: kind === 'agent' ? link.session : undefined, forkOf: kind === 'agent' && link.fork ? link.session : undefined,
     };
     const w = newWorker(info, newTracker());
     w.owner = owner;
@@ -325,8 +325,8 @@ export class WorkerManager {
   /** Starts a worker that isn't running again, carrying on its session, with `prompt` as its next message. */
   resume(id: string, prompt?: string): string | undefined {
     const w = this.workers.get(id);
-    if (!w) return 'No such worker';
-    if (w.pty || w.dsh) return 'Worker is already running';
+    if (!w) return 'No such agent';
+    if (w.pty || w.dsh) return 'That agent is already running';
     if (this.worktrees.checkLost(w, true)) return lostMessage(w.info);
     clockWork(w.info, 'starting');
     w.info.status = 'starting';
@@ -514,7 +514,7 @@ export class WorkerManager {
   /** Types a prompt into the agent's input box and submits it; `by` is the person who sent it, if any. */
   prompt(id: string, text: string, by?: string): string | undefined {
     const w = this.workers.get(id);
-    if (!w) return 'No such worker';
+    if (!w) return 'No such agent';
     if (w.dsh) {
       const clean = text.replace(/\r\n?/g, '\n').trim();
       if (!clean) return 'Empty prompt';
@@ -525,7 +525,7 @@ export class WorkerManager {
       this.emitUpdate(w);
       return undefined;
     }
-    if (!w.pty) return 'Worker is not running';
+    if (!w.pty) return 'That agent is not running';
     const clean = text.replace(/\r\n?/g, '\n').trim();
     if (!clean) return 'Empty prompt';
     // Bracketed paste keeps multi-line prompts in one message, then Enter submits.
@@ -680,7 +680,7 @@ export class WorkerManager {
     const commandPath = isShell ? undefined : configured ? this.agentPath : resolveCommand(command);
     const base = isShell ? (WIN && !process.env.SHELL ? [] : ['-l']) : configured ? [...this.agentArgs] : [];
     // Its provider's command line, and anything it sets for this run (see ProviderAdapter.launch).
-    const plan: LaunchPlan = adapter ? adapter.launch({ h: this.handleOf(w), args: base, prompt, resumeSessionId, station: DESK_BY_ID.get(info.deskId)?.station, cwd, setup: this.setups[adapter.id] }) : { args: base };
+    const plan: LaunchPlan = adapter ? withMode(adapter.launch({ h: this.handleOf(w), args: base, prompt, resumeSessionId, station: DESK_BY_ID.get(info.deskId)?.station, cwd, setup: this.setups[adapter.id] }), info, this.dir) : { args: base };
     const { args } = plan;
     if (plan.rotateToken) w.hookToken = randomBytes(16).toString('hex');
     const env = childEnv();
@@ -705,7 +705,7 @@ export class WorkerManager {
     if (info.repos?.length) env.GIT_CEILING_DIRECTORIES = [path.dirname(cwd), env.GIT_CEILING_DIRECTORIES].filter(Boolean).join(path.delimiter);
     if (w.owner && this.runAs) {
       if (adapter?.signIn && !this.runAs.claudeReady(w.owner)) {
-        this.startFailed(w, `whoever hired ${info.name} (${info.createdBy}) isn't signed in to Claude - they can sign in under ${NAV.signins}, then press R here`);
+        this.startFailed(w, signInNeeded(info));
         return;
       }
       this.runAs.apply(w.owner, env, [this.dir, cwd]);
@@ -828,7 +828,7 @@ export class WorkerManager {
       // Resuming a conversation Claude no longer has ("No conversation found") exits before Claude
       // ever starts. Start a fresh one rather than leave the worker asleep.
       if (adapter?.freshIfResumeFails && resumeSessionId && info.status === 'starting' && !this.closing) {
-        this.events.toast(`${info.name}'s last conversation couldn't be resumed - starting a fresh one`, 'warn');
+        this.events.toast(resumeFailed(info), 'warn');
         this.launch(w, undefined, undefined);
         return;
       }
@@ -836,7 +836,7 @@ export class WorkerManager {
       clockWork(info, 'exited');
       info.status = 'exited';
       const hint = info.kind === 'shell' ? ' - press R to restart' : info.sessionId ? ' - press R to resume' : '';
-      const msg = `\r\n\x1b[2m[${info.name} exited with code ${exitCode}${hint}]\x1b[0m\r\n`;
+      const msg = exitedLine(info, exitCode, hint);
       term.write(msg);
       if (w.viewers.size) this.events.data(info.id, msg, [...w.viewers.keys()]);
       w.screenDirty = true;

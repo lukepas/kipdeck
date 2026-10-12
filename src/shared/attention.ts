@@ -3,6 +3,7 @@
 // 2D view all use, so they never disagree. Every threshold is here, and only here.
 
 import type { RosterEntry } from './protocol.js';
+import { holdLabel } from './spend.js';
 
 /** Working, but no hook event and no terminal output for this long: it may be stuck. */
 export const SILENT_MS = 10 * 60_000;
@@ -39,24 +40,26 @@ export const ATTENTION_LEVELS: readonly AttentionLevel[] = ['needs-you', 'stuck'
 
 /**
  * The five states, named once for every surface: the home page's sections, the bridge's rail and
- * instruments, Mission control, the deck and the landing page. 'parked' is Ready, the word the status
- * pill uses for an idle agent, so an agent is called one thing everywhere.
+ * instruments, Mission control, the deck and the landing page. 'parked' is Idle, the word the status
+ * pill uses for an idle agent, so an agent is called one thing everywhere. (It was Ready, which in
+ * code review reads as ready to merge: the opposite of what it holds.)
  */
 export const STATE_LABEL: Readonly<Record<AttentionLevel, string>> = {
   'needs-you': 'Needs you',
   stuck: 'Stuck',
   review: 'To review',
   working: 'Working',
-  parked: 'Ready',
+  parked: 'Idle',
 };
 /** The ranking's name for a level: STATE_LABEL, under the name the views already import. */
 export const LEVEL_LABEL = STATE_LABEL;
 
 /** The one thing to do next about a worker. */
-export type NextAction = 'answer' | 'look' | 'review' | 'open-pr' | 'fix-checks' | 'merge' | 'hand-back' | 'resume' | 'rebuild' | 'send-home' | 'give-task' | 'approve-payout' | 'set-wallet';
+export type NextAction = 'answer' | 'unpause' | 'look' | 'review' | 'open-pr' | 'fix-checks' | 'merge' | 'hand-back' | 'resume' | 'rebuild' | 'send-home' | 'give-task' | 'approve-payout' | 'set-wallet';
 
 export const ACTION_LABEL: Record<NextAction, string> = {
   answer: 'Answer',
+  unpause: 'Continue',
   look: 'Look into it',
   review: 'Review changes',
   'open-pr': 'Open PR',
@@ -65,7 +68,7 @@ export const ACTION_LABEL: Record<NextAction, string> = {
   'hand-back': 'Hand back',
   resume: 'Resume',
   rebuild: 'Rebuild',
-  'send-home': 'Stand down',
+  'send-home': 'Archive',
   'give-task': 'Give it a task',
   'approve-payout': 'Approve payout',
   'set-wallet': 'Set payout wallet',
@@ -129,6 +132,8 @@ export function attention(e: RosterEntry, now: number): Attention {
   const at = (level: AttentionLevel, action: NextAction, since: number, label: string, reason?: string): Attention => ({ level, action, since, label, snoozed, ...(reason ? { reason } : {}) });
 
   if (e.lost) return at('stuck', 'rebuild', waited, 'Worktree deleted', 'worktree deleted');
+  // Paused by a person or a budget cap (shared/spend.ts): it waits on someone to let it carry on or stop it.
+  if (e.hold) return at('needs-you', 'unpause', e.hold.at, holdLabel(e.hold), holdLabel(e.hold).toLowerCase());
   if (e.status === 'needs_input') {
     // An activity that's only the asking tool's name (Codex's request_user_input) says less than this.
     const said = spokenActivity(e.activity);
@@ -152,7 +157,7 @@ export function attention(e: RosterEntry, now: number): Attention {
     const forgotten = ago >= FORGOTTEN_MS;
     return at('review', 'review', waited, forgotten ? 'Done, nobody looked' : 'Done', forgotten ? `forgotten: done ${duration(ago)} ago, nobody looked` : `done ${duration(ago)} ago`);
   }
-  if (pr?.state === 'merged' && !busy) return at('review', 'send-home', waited, `PR #${pr.number} merged`, `PR #${pr.number} merged: it can stand down`);
+  if (pr?.state === 'merged' && !busy) return at('review', 'send-home', waited, `PR #${pr.number} merged`, `PR #${pr.number} merged: it can be archived`);
   if (pr?.state === 'open' && !busy) {
     if (pr.conflicting) return at('review', 'hand-back', waited, `PR #${pr.number} has conflicts`, `PR #${pr.number} has merge conflicts`);
     if (pr.review === 'changes') return at('review', 'hand-back', waited, `PR #${pr.number}: changes asked`, `PR #${pr.number}: changes requested`);
@@ -166,7 +171,7 @@ export function attention(e: RosterEntry, now: number): Attention {
   }
   if (busy) return at('working', 'look', e.workingSince ?? waited, e.status === 'starting' ? 'Starting' : 'Working');
   if (e.status === 'exited' || e.status === 'offline') return at('parked', 'resume', waited, 'Asleep');
-  return at('parked', e.tasked ? 'review' : 'give-task', waited, 'Ready');
+  return at('parked', e.tasked ? 'review' : 'give-task', waited, 'Idle');
 }
 
 /**

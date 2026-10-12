@@ -251,7 +251,7 @@ export function clip(text: string, max: number): string {
 
 export const STATUS_LABEL: Record<string, string> = {
   starting: 'starting',
-  idle: 'ready',
+  idle: 'idle',
   working: 'working',
   needs_input: 'needs you',
   done: 'done',

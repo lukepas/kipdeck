@@ -1,5 +1,5 @@
 // Branches and worktrees in the Rundown window: the default branch along the bottom, each branch a lane
-// forking off where it left it, ahead and behind, a worktree's unit by it (shared/rundown/branches.ts).
+// forking off where it left it, ahead and behind, the agent on a worktree by it (shared/rundown/branches.ts).
 import { laneLayout } from '../../../shared/rundown/branches';
 import type { GitFacts } from '../../../shared/rundown/schema';
 import { h } from '../dom';
@@ -21,7 +21,7 @@ export function branchLanes(git: GitFacts, def: string | null, now: Date): HTMLE
     if (!l.isDefault) svg.append(s('path', { class: cls, d: `M${x(l.from)} ${baseY} C ${x(l.from) + 14} ${baseY}, ${x(l.from) + 4} ${y}, ${x(l.from) + 18} ${y}` }));
     svg.append(s('line', { class: cls, x1: l.isDefault ? x(0) : x(l.from) + 18, y1: y, x2: end, y2: y }), s('circle', { class: l.isDefault ? 'tip def' : 'tip', cx: end, cy: y, r: 4 }));
     const meta = `${l.isDefault ? '' : `+${l.ahead} / -${l.behind} · `}${l.date.slice(0, 10)}${l.merged && !l.isDefault ? ' · merged' : ''}`;
-    svg.append(s('text', { x: X1 + 14, y: y + 4, class: l.merged && !l.isDefault ? 'mg' : '' }, l.name.length > 32 ? `${l.name.slice(0, 29)}...` : l.name, s('tspan', { class: 'meta' }, `  ${meta}`), l.worktree ? s('tspan', { class: 'wt' }, `  worktree${l.worktree.owner ? ` ${l.worktree.owner}` : ''}`) : null));
+    svg.append(s('text', { x: X1 + 14, y: y + 4, class: l.merged && !l.isDefault ? 'mg' : '' }, l.name.length > 32 ? `${l.name.slice(0, 29)}...` : l.name, s('tspan', { class: 'meta' }, `  ${meta}`), l.worktree ? s('tspan', { class: 'wt' }, `  worktree${l.worktree.owner ? ` of ${l.worktree.owner}` : ''}`) : null));
   });
   return h('div.rd-scroll', {}, svg, L.rest.length ? h('p.rd-note', {}, `And ${L.rest.length} more: ${L.rest.map((b) => b.name).join(', ')}`) : null);
 }

@@ -20,7 +20,7 @@ const LEVEL_WHAT: Record<AttentionLevel, string> = {
   stuck: 'Silent, crashed, failing, or never given a task',
   review: 'Done and not looked at, or a pull request to see to',
   working: 'At work and showing signs of life',
-  parked: 'Ready for its next task (finished and seen to), or asleep',
+  parked: 'Idle: ready for its next task (finished and seen to), or asleep',
 };
 
 /** The folds you opened, kept while the window is open. */
@@ -64,7 +64,7 @@ export function renderAttention(deps: MissionDeps, ranked: Ranked[], now: number
   const counts = store.counts();
   const reminders = renderReminders(deps, now);
   const review = reviewLine(deps, counts.review, ranked);
-  if (!ranked.length) return h('div.mc-attention', {}, reminders, review, h('p.mc-empty', {}, review ? 'No workers are hired.' : 'Nobody is hired yet. Hire a worker at a desk, or put a task on the queue.'));
+  if (!ranked.length) return h('div.mc-attention', {}, reminders, review, h('p.mc-empty', {}, review ? 'No agents are running.' : 'No agents yet. Deploy one, or put a task on the queue.'));
   const sections: HTMLElement[] = [];
   for (const level of ATTENTION_LEVELS) {
     if (level === 'review') {

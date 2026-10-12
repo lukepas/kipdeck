@@ -46,7 +46,8 @@ body.lite { margin: 0; background: var(--void); color: var(--text); font-family:
   .hb-avatar { width: 44px; height: 44px; }
   .hb-brand { padding: 12px; margin: 0 -8px 0 -12px; }
 }
-@media (max-width: 420px) { .hb-deploy { padding: 0 10px; } }
+/* A phone: Deploy says only that, so Search keeps room for its word. */
+@media (max-width: 480px) { .hb-deploy { padding: 0 12px; } .hb-deploy-more { display: none; } }
 
 /* What floats over the page stays put on the screen. */
 /* Toasts sit at the bottom of the list's column, never over the pane's reply box, Send or Merge. On a
