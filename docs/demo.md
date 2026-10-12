@@ -58,10 +58,10 @@ https://kipdeck-demo.vercel.app is the hosted demo with nothing live behind it: 
 - **Building and deploying it.** `npm run build:replay` writes `dist/replay/`: the page, the tape and `deploy/replay/vercel.json` (its headers: a content security policy with no socket and no frames, `nosniff`, `noindex`). It is the Vercel project `kipdeck-demo`, deployed from that folder with the Vercel CLI:
 
 ```bash
-npm run build && cd dist/replay && vercel link --yes --project kipdeck-demo && rm -f .env.local && vercel deploy --prod --yes
+npm run build && vercel deploy dist/replay --prod --yes --project kipdeck-demo
 ```
 
-`vercel link` writes the project's settings to `.env.local` in that folder; delete it before deploying, so it is never uploaded. Any static host serves `dist/replay/` the same way. Tests: `tests/replay.test.ts` (the tape's parts, the scrubber and the committed tape) and `tests/replay-e2e.test.ts` (the built page on a plain static server, in a browser, with no socket).
+Deploy with `--project` rather than `vercel link`: linking writes the project's settings to an `.env.local` in the folder that would be uploaded with it, and connects the project to the GitHub repository, which would build the landing page into it on every push (`kipdeck-demo` is not connected to Git). Any static host serves `dist/replay/` the same way. Tests: `tests/replay.test.ts` (the tape's parts, the scrubber and the committed tape) and `tests/replay-e2e.test.ts` (the built page on a plain static server, in a browser, with no socket).
 
 ## Faster
 
