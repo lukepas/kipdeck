@@ -44,7 +44,7 @@ Every program in this folder asks what existed before and what we built. This pa
 The Colosseum form's prior work answer, at most 1,500 characters:
 
 ```field name="Disclosure (Colosseum)" max-chars=1500
-Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..bc4ea245 except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
+Kipdeck is built on agent-office (github.com/AgentSystemLabs/agent-office), MIT, by webdevcody / AgentSystemLabs and community contributors. Upstream started on 2026-09-25, inside the contest period. We are not its authors and not affiliated. Upstream built the 3D office, desks where coding agent CLIs run in live terminals, voice, the GitHub boards and the deploy scripts. Our history starts from two snapshot imports of upstream (commits 01d85bbb = upstream 665aeec, and 226452e4 = upstream 1bc3028, both 2026-09-30); all of that is theirs, and so are 11 upstream pull requests we re-committed under our name (listed with their authors in launch/chain/disclosure.md). Ours, all written during the contest (our first commit is 2026-09-30): the inbox and mission control (attention ranking, review inbox, goals, timeline), a security layer (state files, network and host guards, CSP, worker environment allowlist, untrusted PR handling), and Proof of Merge, the payout layer: the Solana escrow program and SDK, bounties in the office with a Fund this issue Blink, a GitHub Action attester, x402 paid tasks, EAS attestations and ERC-8004 reputation on Base Sepolia, a chain-only indexer and the public showcase. Nothing on-chain existed upstream. Our commits are every commit in 226452e4..6c315a1c except those 11, the import 01d85bbb and 2 Dependabot bumps. Testnets only. Diff: https://github.com/zbagdzevicius/kipdeck/compare/226452e4...main
 ```
 
 A short form, where a field is tiny:
@@ -131,7 +131,7 @@ The output of `whats-new.ts` for the submitted commit, pasted as it came out.
 Kipdeck is built on agent-office (https://github.com/AgentSystemLabs/agent-office), MIT-licensed, Copyright (c) 2026 AgentSystemLabs, created by webdevcody (Web Dev Cody), AgentSystemLabs; its first commit is dated 2026-09-25.
 Our history starts from snapshot imports of upstream, not from upstream's own commits: 01d85bbb (upstream 665aeec) and 226452e4 (upstream 1bc3028). Everything in them is upstream work, not ours. This list counts from 226452e4 (upstream 1bc3028, 2026-09-30). The MIT license text and copyright notice are kept in LICENSE.
 
-In 226452e4..bc4ea245 (merges left out): 582 commits. 568 ours; 11 upstream pull requests re-committed under our name; 2 by bots or other authors; 1 snapshot imports. 2652 files differ from upstream's snapshot, upstream's re-committed pull requests included.
+In 226452e4..6c315a1c (merges left out): 586 commits. 572 ours; 11 upstream pull requests re-committed under our name; 2 by bots or other authors; 1 snapshot imports. 2664 files differ from upstream's snapshot, upstream's re-committed pull requests included.
 
 Ours:
 
@@ -703,6 +703,10 @@ Ours:
 - 2026-10-11 7a0c2b94 Rundown ships in the package: kipdeck rundown, and every project's first map (#33)
 - 2026-10-12 839cc146 UX overhaul: ten fixes from the UX audit (#34-#43)
 - 2026-10-12 bc4ea245 Warmth: the crew voice, Kip and a warmer look across inbox, Deck, landing and CLI (#45-#50)
+- 2026-10-12 f9bb14df Setup card: the office's own --agent counts as its CLI (fixes inbox-e2e on CI) (#51)
+- 2026-10-12 f4849291 Inbox: move to the next item after an answer, the same as after a merge (#53)
+- 2026-10-12 dbd7dda2 Glossary page, and a copy lint that covers every window the inbox opens (#54)
+- 2026-10-12 6c315a1c Windows are real dialogs: focus stays inside and comes back (#55)
 
 Upstream, not ours (upstream pull requests re-committed in our history; the author is the upstream author):
 
@@ -1111,6 +1115,7 @@ Code:
 - modified: src/client/features/workers/views.ts
 - deleted: src/client/framerate.ts
 - added: src/client/home/actions.ts
+- added: src/client/home/advance.ts
 - added: src/client/home/approval-card.ts
 - added: src/client/home/approval.css
 - added: src/client/home/approval.ts
@@ -1143,6 +1148,7 @@ Code:
 - added: src/client/home/motion.ts
 - added: src/client/home/numbers.css
 - added: src/client/home/numbers.ts
+- added: src/client/home/on-project.ts
 - added: src/client/home/owner.css
 - added: src/client/home/owner.ts
 - added: src/client/home/palette-match.ts
@@ -1322,6 +1328,7 @@ Code:
 - added: src/client/ui/counters.css
 - added: src/client/ui/counters.ts
 - added: src/client/ui/devices.ts
+- added: src/client/ui/dialog.ts
 - added: src/client/ui/dictate.css
 - added: src/client/ui/dictate.ts
 - modified: src/client/ui/dom.ts
@@ -1775,7 +1782,9 @@ Code:
 - added: src/server/ws/handlers/setup.ts
 - added: src/server/ws/handlers/showcase.ts
 - added: src/server/ws/handlers/signal.ts
+- modified: src/server/ws/handlers/signins.ts
 - added: src/server/ws/handlers/spend.ts
+- modified: src/server/ws/handlers/team.ts
 - added: src/server/ws/handlers/timeline.ts
 - modified: src/server/ws/handlers/types.ts
 - modified: src/server/ws/handlers/whiteboard.ts
@@ -2126,6 +2135,7 @@ Tests:
 - modified: tests/agents.test.ts
 - added: tests/alert.test.ts
 - added: tests/amphitheater.test.ts
+- added: tests/answer-advance.test.ts
 - added: tests/approval.test.ts
 - added: tests/approvals-desk.test.ts
 - added: tests/approvals-e2e.test.ts
@@ -2169,6 +2179,8 @@ Tests:
 - deleted: tests/desk-props-model.test.ts
 - added: tests/destination.test.ts
 - added: tests/devices.test.ts
+- added: tests/dialog-e2e.test.ts
+- added: tests/dialog.test.ts
 - added: tests/dictation.test.ts
 - added: tests/diegetic-ui.test.ts
 - deleted: tests/dog-model.test.ts
@@ -2189,6 +2201,7 @@ Tests:
 - modified: tests/github.test.ts
 - added: tests/giveway.test.ts
 - deleted: tests/glb.ts
+- added: tests/glossary.test.ts
 - added: tests/hands.test.ts
 - added: tests/heartbeat.test.ts
 - modified: tests/history.test.ts
@@ -2240,6 +2253,7 @@ Tests:
 - added: tests/mission-e2e.test.ts
 - added: tests/mission.test.ts
 - modified: tests/models.test.ts
+- added: tests/moment-card-esc.test.ts
 - added: tests/monitor.test.ts
 - added: tests/motion-layer.test.ts
 - added: tests/motion.test.ts
@@ -2336,7 +2350,9 @@ Tests:
 - added: tests/storage-key.test.ts
 - deleted: tests/sun.test.ts
 - added: tests/support/bundle.ts
+- added: tests/support/fake-dom.ts
 - added: tests/support/literals.ts
+- added: tests/support/pagetext.ts
 - added: tests/support/rundown-fixture.ts
 - added: tests/support/rundown-sample.ts
 - added: tests/support/showcase-fixture.ts
