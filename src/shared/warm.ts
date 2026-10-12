@@ -63,6 +63,16 @@ export function firstMergeLine(sinceStartMs: number, quiet = true): string {
   return quiet ? `First merge! ${after} after you started. Track one, in Shipped today.` : `Your first merge, ${after} after you started. It's in Shipped today.`;
 }
 
+/**
+ * What the landed merge toast adds after its fact: the first merge's line, else the tape count while
+ * nothing needs you. The Kip sticker (`sticker`, the toast's first-merge class) only shows while
+ * nothing needs you, since Kip gives way to a waiting person. The first merge stays up a little longer.
+ */
+export function landedNote(merged: Said, first: string | undefined, quiet: boolean): { after?: string; sticker: boolean; ms: number } {
+  const after = first ?? (quiet ? merged.warm : undefined);
+  return { ...(after ? { after } : {}), sticker: !!first && quiet, ms: first ? 6500 : 4500 };
+}
+
 /** The first job this browser gave out: "Fix the flaky checkout test is aboard." then where it comes back. */
 export function firstJobLine(task: string): Said {
   return { fact: `${task} is aboard.`, warm: "It'll come back here when it needs you." };

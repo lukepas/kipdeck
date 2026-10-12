@@ -47,7 +47,7 @@ The words the inbox, its windows, its notifications and the CLI use:
 The inbox speaks in the crew voice of [docs/voice.md](voice.md) only when nothing needs you. Each line says its fact first; the warm clause after it sits in its own span and is left off while anyone is in Needs you (a question, a due reminder or an agent request). The words are `src/shared/warm.ts`, put on the page by `src/client/home/warm.ts`.
 
 - **After you answer**: *Fix the flaky checkout test is back at work.* with *Thanks.* at most once a minute, and *It waited on you 12m.* under it.
-- **A merge lands**: *Merged: Fix the flaky checkout test. Waited on you 32s.* then *3 on today's tape.*, with where it went under it (*Merged PR #12 into main.*).
+- **A merge lands**: *Merged: Fix the flaky checkout test. Waited on you 32s.* then *3 on today's tape.*, with where it went under it (*Merged PR #12 into main.*). The first merge in a browser says its own line in place of the tape count and gets the `first-merge` class for Kip's sticker; while someone waits it says *Your first merge, 4m after you started. It's in Shipped today.* with no sticker (`landedNote`).
 - **The first job** a browser gives out, with no other agent on the roster: *Fix the flaky checkout test is aboard. It'll come back here when it needs you.* Once.
 - **Back after 8 hours**: over the *While you were away* card, *Welcome back. While you were out: 4 merged, 1 waiting 2h*, the waiting part a link to the next one that needs you.
 - **The all-clear pane** and **Shipped today**: the greeting, the warm line and the zero-wait day (see [The page](#the-page)).

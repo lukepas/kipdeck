@@ -8,7 +8,7 @@
 import { agentBadge } from '../../shared/agentname';
 import { mergeWords } from '../../shared/inbox';
 import type { RosterEntry, ShipRecord } from '../../shared/protocol';
-import { mergedLine } from '../../shared/warm';
+import { landedNote, mergedLine } from '../../shared/warm';
 import { h } from '../ui/dom';
 import { icon } from '../ui/icons';
 import { settle } from './beat';
@@ -132,10 +132,11 @@ export function mergeLanded(workerId: string, result: { error?: string; record?:
   // "Merged: <task>. Waited on you 32s." first, then the first merge's line or the day's tape count
   // (only while nothing needs you), and where it went under it.
   const line = mergedLine(s.entry.title, result.record?.waitedMs, say.onTape);
-  const after = say.first ?? (say.quiet ? line.warm : undefined);
-  text?.replaceChildren(line.fact, ...(after ? [' ', h('span.warm-said', {}, after)] : []), h('small', {}, `${mergeWords(s.entry, true)}.`));
+  const note = landedNote(line, say.first, say.quiet);
+  text?.replaceChildren(line.fact, ...(note.after ? [' ', h('span.warm-said', {}, note.after)] : []), h('small', {}, `${mergeWords(s.entry, true)}.`));
   settle(s.toast);
-  if (say.first) s.toast.classList.add('first-merge');
-  fade(s.toast, say.first ? 6500 : 4500);
+  // The Kip sticker hangs on this class (docs/voice.md: Kip gives way while someone needs you).
+  if (note.sticker) s.toast.classList.add('first-merge');
+  fade(s.toast, note.ms);
   return true;
 }

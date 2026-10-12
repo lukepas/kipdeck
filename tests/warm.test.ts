@@ -11,6 +11,7 @@ import {
   firstJobLine,
   firstMergeLine,
   greeting,
+  landedNote,
   mergedLine,
   sayAll,
   shiftAt,
@@ -97,4 +98,15 @@ test('the warm lines keep to the voice: no banned words, no emoji, one exclamati
     assert.doesNotMatch(l, /!/, l);
     assert.doesNotMatch(l, /[\u{1F300}-\u{1FAFF}—–…‘’“”]/u, l);
   }
+});
+
+test('the landed merge toast: the tape count and the Kip sticker only while nothing needs you', () => {
+  const line = mergedLine('Fix the flaky checkout test', 32_000, 3);
+  assert.deepEqual(landedNote(line, undefined, true), { after: "3 on today's tape.", sticker: false, ms: 4500 });
+  assert.deepEqual(landedNote(line, undefined, false), { sticker: false, ms: 4500 });
+  const first = firstMergeLine(4 * 60_000, true);
+  assert.deepEqual(landedNote(line, first, true), { after: first, sticker: true, ms: 6500 });
+  // Someone is waiting: the plain first-merge line, and no sticker next to them.
+  const plain = firstMergeLine(4 * 60_000, false);
+  assert.deepEqual(landedNote(line, plain, false), { after: plain, sticker: false, ms: 6500 });
 });

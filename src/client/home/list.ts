@@ -186,7 +186,7 @@ function ageEl(section: InboxSection, att: { since: number; snoozed?: boolean },
 const EMPTY: Record<InboxSection, string> = {
   'needs-you': 'Nothing needs you.',
   review: 'Nothing to review.',
-  working: "Nobody's working right now. Give one a job when you're ready.",
+  working: "Nobody's working right now. Give an agent a job when you're ready.",
   idle: '',
 };
 

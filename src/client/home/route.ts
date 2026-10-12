@@ -88,7 +88,7 @@ export function installRoutes() {
     setTimeout(() => {
       if (pending !== r) return;
       pending = undefined;
-      toast(r.kind === 'agent' ? "That agent isn't here any more. It may have been archived; the inbox has the rest." : "That project isn't open in this Kipdeck. An admin can add it.", 'warn');
+      toast(r.kind === 'agent' ? "That agent isn't here any more. It may have been archived. Pick another from the list." : "That project isn't open in this Kipdeck. An admin can add it.", 'warn');
       sync();
     }, WAIT_MS);
   };
