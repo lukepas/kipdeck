@@ -6,7 +6,7 @@ import { notLeaving } from '../leave-on-merge.js';
 import { findWorker, workerRow, type HireRequest, type HomeRequest, type PullsView } from '../office-workers.js';
 import type { Floor } from '../floor.js';
 import { nextFreeSeat } from '../../shared/layout.js';
-import type { WorkerInfo } from '../../shared/protocol.js';
+import type { WorkerInfo, WorktreeCleanup } from '../../shared/protocol.js';
 import { attention } from '../../shared/attention.js';
 import type { Ctx } from '../office/context.js';
 
@@ -24,7 +24,11 @@ export interface Reply {
 }
 
 /** An agent's request to act on other agents, as kept while it waits for a person. */
-export type GateRequest = { action: 'hire'; ask: HireRequest } | { action: 'tell'; worker: string; text: string } | { action: 'home'; ask: HomeRequest };
+export type GateRequest =
+  | { action: 'hire'; ask: HireRequest }
+  | { action: 'tell'; worker: string; text: string }
+  /** `only`: the agents a person was shown, so approving never sends home one they didn't see. */
+  | { action: 'home'; ask: HomeRequest; only?: { id: string; name: string }[] };
 
 /** A worker's row as list_workers shows it, for `meId` asking. */
 export function rowOf(ctx: Ctx, floor: Floor, meId: string, id: string) {
@@ -108,9 +112,19 @@ export function homeList(floor: Floor, actorId: string, ask: HomeRequest) {
   return { results, going };
 }
 
-/** Sends workers home for `actor`, one at a time: git takes a lock on the repository's refs to delete a branch. */
-export async function runHome(ctx: Ctx, floor: Floor, actor: Actor, ask: HomeRequest): Promise<Reply> {
-  const { results, going } = homeList(floor, actor.id, ask);
+/**
+ * Sends workers home for `actor`, one at a time: git takes a lock on the repository's refs to delete a
+ * branch. With `only`, just those of the agents a person approved that would still go.
+ */
+export async function runHome(ctx: Ctx, floor: Floor, actor: Actor, ask: HomeRequest, only?: { id: string; name: string }[]): Promise<Reply> {
+  let { results, going } = homeList(floor, actor.id, ask);
+  if (only) {
+    // A name can belong to a newer agent by now, and more pull requests can have merged: neither was approved.
+    const ids = new Set(only.map((o) => o.id));
+    results = results.filter((r) => r.id !== undefined && ids.has(r.id));
+    going = going.filter((g) => ids.has(g.w.id));
+    for (const o of only) if (!going.some((g) => g.w.id === o.id) && !results.some((r) => r.id === o.id)) results.push({ worker: o.name, id: o.id, skipped: 'it had already gone' });
+  }
   for (const { w, why } of going) {
     if (floor.workers.get(w.id) !== w) {
       results.push({ worker: w.name, id: w.id, skipped: 'it had already gone' });
@@ -125,11 +139,18 @@ export async function runHome(ctx: Ctx, floor: Floor, actor: Actor, ask: HomeReq
   return { status: 200, body: { results } };
 }
 
+/** What a send-home does to worktrees and branches, in words for the person deciding it. */
+export function cleanupWords(cleanup: WorktreeCleanup): string {
+  if (cleanup === 'all') return 'Deletes their worktrees, with any changes not committed, and their branches (a branch with commits not pushed anywhere is kept)';
+  if (cleanup === 'worktree') return 'Deletes their worktrees, with any changes not committed, and keeps their branches';
+  return 'Keeps their worktrees and branches';
+}
+
 /** Runs a request that may happen now. */
 export function runRequest(ctx: Ctx, floor: Floor, actor: Actor, req: GateRequest): Promise<Reply> {
   if (req.action === 'hire') return runHire(ctx, floor, actor, req.ask);
   if (req.action === 'tell') return runTell(ctx, floor, actor, req.worker, req.text);
-  return runHome(ctx, floor, actor, req.ask);
+  return runHome(ctx, floor, actor, req.ask, req.only);
 }
 
 /** Why a reply means nothing came of it, if it does: its error, or every send-home's. */

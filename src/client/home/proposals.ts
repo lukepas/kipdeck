@@ -45,7 +45,7 @@ function proposalRow(p: Proposal, now: number): HTMLElement {
       'button.row-main',
       { type: 'button', 'aria-label': `${title}: agent request on ${p.floorName}`, onclick: open },
       h('span.agent-mark.proposal', { 'aria-hidden': 'true' }, icon('lock', 14)),
-      h('span.row-text', {}, h('span.row-title', {}, title), h('span.row-sub', {}, h('span.row-status', {}, 'Agent request: approve or reject'), h('span.row-where', {}, p.floorName))),
+      h('span.row-text', {}, h('span.row-title', {}, title), h('span.row-sub', {}, h('span.row-status', {}, store.rosterEntry(p.by.id) ? 'Agent request: approve or reject' : 'Its agent has gone home - reject to clear it'), h('span.row-where', {}, p.floorName))),
       h('span.row-age.wait-clock', { 'data-since': String(p.at), 'data-prefix': AGE_PREFIX['needs-you'], 'data-tone': waitTone(now - p.at) }, ageLabel('needs-you', { since: p.at }, now)),
     ),
     h('button.btn.row-act.act', { type: 'button', onclick: open, 'aria-label': `Decide: ${title}` }, 'Decide'),

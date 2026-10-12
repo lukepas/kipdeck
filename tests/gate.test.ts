@@ -10,8 +10,8 @@ import { Readable } from 'node:stream';
 import { proposalTitle, targetWords, type Grant, type Proposal } from '../src/shared/gate.js';
 import { activityLine, cleanGrant, decisionMessage, grantFor, readLimit, waitingMessage } from '../src/shared/gate-rules.js';
 import { AgentGate } from '../src/server/gate/store.js';
-import { decide, gateOrRun, mayDecide } from '../src/server/gate/flow.js';
-import { failureOf, resultWords } from '../src/server/gate/actions.js';
+import { cleanNote, decide, deliverHeld, gateOrRun, mayDecide } from '../src/server/gate/flow.js';
+import { cleanupWords, failureOf, resultWords } from '../src/server/gate/actions.js';
 import { handleMcp, main } from '../bin/office-workers.js';
 import type { Ctx } from '../src/server/office/context.js';
 import type { Floor } from '../src/server/floor.js';
@@ -244,6 +244,92 @@ test('hires asked at the same moment cannot all slip under a grant limit', async
   assert.equal((await ask()).status, 202);
   o.workers.delete('n1');
   assert.equal((await ask()).status, 200, 'with Pixel gone there is room again');
+});
+
+test("a send-home approved later only sends the agents that were shown", async () => {
+  const o = fakeOffice();
+  // Byte asks to send Nova home; by the time a person approves, Nova has left and a newer agent took the name.
+  const asked = await gateOrRun(o.ctx, o.floor, o.me, { action: 'home', ask: { workers: ['Nova'], merged: false }, only: [{ id: 'w2', name: 'Nova' }] }, { targets: ['Nova'] });
+  assert.equal(asked.status, 202);
+  o.workers.delete('w2');
+  o.workers.set('w3', { ...o.workers.get('w1')!, id: 'w3', name: 'Nova', deskId: 'desk-9' });
+  const [p] = o.gate.state().proposals;
+  assert.equal(await decide(o.ctx, 'Ada', p.id, true), undefined);
+  assert.ok(o.workers.has('w3'), 'the newer Nova was never approved, so it stays');
+  assert.match(o.prompts.at(-1)!.text, /Nova stayed: it had already gone\./);
+});
+
+test("a request whose agent has gone home can only be rejected", async () => {
+  const o = fakeOffice();
+  assert.equal((await gateOrRun(o.ctx, o.floor, o.me, { action: 'hire', ask: { prompt: 'More tests' } }, { text: 'More tests' })).status, 202);
+  o.workers.delete('w1');
+  const [p] = o.gate.state().proposals;
+  assert.match(String(await decide(o.ctx, 'Ada', p.id, true)), /Byte has gone home since it asked, so its request can only be rejected/);
+  assert.equal(o.spawned.length, 0, 'nothing ran');
+  assert.equal(o.gate.state().proposals.length, 1, 'it still waits, for someone to reject it');
+  assert.equal(await decide(o.ctx, 'Ada', p.id, false), undefined);
+  assert.equal(o.gate.state().proposals.length, 0);
+  assert.equal(o.gate.record()[0].outcome, 'rejected');
+  assert.equal(o.prompts.length, 0, 'nobody is left to tell');
+});
+
+test('the reason typed to the agent is one line, with no control characters or escape sequences', async () => {
+  assert.equal(cleanNote('not\nnow\u001b[201~ ok'), 'not now ok');
+  assert.equal(cleanNote('a\u001b]0;title\u0007b\u001bc\u009b2Jc\td'), 'abc d');
+  assert.equal(cleanNote(' \u0000\r\n '), undefined);
+  const o = fakeOffice();
+  await gateOrRun(o.ctx, o.floor, o.me, { action: 'tell', worker: 'w2', text: 'x' }, { targets: ['Nova'], text: 'x' });
+  const [p] = o.gate.state().proposals;
+  assert.equal(await decide(o.ctx, 'Ada', p.id, false, 'not\nnow\u001b[201~\r ok'), undefined);
+  assert.match(o.prompts[0].text, /Their reason: not now ok\./);
+  assert.doesNotMatch(o.prompts[0].text, /[\u0000-\u001f\u007f-\u009f]/);
+  assert.equal(o.gate.record()[0].note, 'not now ok');
+});
+
+test('a stopped agent is not woken for an outcome: it hears it once it runs again', async () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'gate-held-'));
+  try {
+    const o = fakeOffice();
+    (o.ctx as unknown as { gate: AgentGate }).gate = new AgentGate(dir);
+    const ctx = o.ctx;
+    let running = false;
+    const woke: string[] = [];
+    const told: string[] = [];
+    const workers = o.floor.workers as unknown as { prompt: (id: string, text: string) => string | undefined; resume: (id: string) => undefined };
+    workers.prompt = (_id, text) => (running ? (told.push(text), undefined) : 'Worker is not running');
+    workers.resume = (id) => (woke.push(id), undefined);
+    await gateOrRun(ctx, o.floor, o.me, { action: 'tell', worker: 'w2', text: 'x' }, { targets: ['Nova'], text: 'x' });
+    const [p] = ctx.gate.state().proposals;
+    assert.equal(await decide(ctx, 'Ada', p.id, false, 'Nova is busy'), undefined);
+    assert.deepEqual(woke, [], 'not woken');
+    assert.equal(ctx.gate.record()[0].outcome, 'rejected', 'the record has it meanwhile');
+
+    // A restart keeps it.
+    (ctx as unknown as { gate: AgentGate }).gate = new AgentGate(dir);
+    const byte = o.workers.get('w1')!;
+    deliverHeld(ctx, o.floor, { ...byte, status: 'exited' });
+    running = true;
+    deliverHeld(ctx, o.floor, { ...byte, status: 'working' });
+    assert.deepEqual(told, [], 'not while it is busy');
+    deliverHeld(ctx, o.floor, { ...byte, status: 'done' });
+    assert.equal(told.length, 1);
+    assert.match(told[0], /Ada rejected your request to message Nova .*Their reason: Nova is busy\./);
+    deliverHeld(ctx, o.floor, { ...byte, status: 'done' });
+    assert.equal(told.length, 1, 'told once');
+
+    // One that goes home first never hears it, and nothing is kept for it.
+    ctx.gate.hold('w1', 'later');
+    deliverHeld(ctx, o.floor, 'w1');
+    assert.deepEqual(ctx.gate.takeHeld('w1'), []);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('says plainly what a send-home does to worktrees and branches', () => {
+  assert.match(cleanupWords('all'), /^Deletes their worktrees, with any changes not committed, and their branches \(a branch with commits not pushed anywhere is kept\)$/);
+  assert.match(cleanupWords('worktree'), /keeps their branches/);
+  assert.equal(cleanupWords('keep'), 'Keeps their worktrees and branches');
 });
 
 test('says what came of a request', () => {
